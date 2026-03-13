@@ -13,9 +13,10 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const query = req.scope.resolve("query") as {
     graph: (args: { entity: string; fields: string[]; filters?: Record<string, unknown> }) => Promise<{ data: unknown[] }>
   }
+  // productType — для storefront (фильтр BESPOKE, UX); variants — для variant_id при «Купить комплект».
   const { data: itemsWithProduct } = await query.graph({
     entity: "room_set_item",
-    fields: ["*", "product.*"],
+    fields: ["*", "product.*", "product.productType.*", "product.variants.*"],
     filters: { room_set_id: roomSet.id },
   })
   const items = (itemsWithProduct ?? []) as Array<Record<string, unknown> & { sort_order?: number }>

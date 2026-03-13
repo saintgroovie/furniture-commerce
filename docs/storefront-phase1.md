@@ -224,7 +224,7 @@ apps/storefront/
 
 - **Список `/rooms`:** запрос `GET /store/room-sets`, отображение карточек (RoomSetCard) с ссылкой на `/rooms/[slug]`.
 - **Страница `/rooms/[slug]`:** запрос `GET /store/room-sets/:slug`; в ответе room_set с полями и массив items (каждый item с product). Отобразить описание, цену «от», список товаров (название, количество, при необходимости цена из product).
-- **CTA «Купить комплект»:** для каждого item взять product; по product_type (STANDARD/CONFIGURABLE) вызвать добавление в корзину (variant_id). BESPOKE-товары в корзину не добавлять; при желании показать сообщение «Товар X доступен по запросу» или оставить только добавление допускаемых типов.
+- **CTA «Купить комплект»:** backend отдаёт в room set items product с productType и variants; для каждого item по product_type (STANDARD/CONFIGURABLE) вызвать добавление в корзину (variant_id). BESPOKE не добавлять. Если cart-eligible items 0 (пустой комплект или все BESPOKE) — не создавать корзину, показать сообщение; success только при добавлении хотя бы одного item; при частичном сбое — сообщение «Проверьте корзину и повторите попытку», без rollback.
 - **CTA «Адаптировать под мою комнату»:** переход на `/bespoke?room_set_id=...` (или открытие формы с room_set_id); в форме после создания Lead отправить BespokeRequest с room_set_id, без product_id.
 
 Вся логика «что можно в корзину» — на backend; storefront только использует product_type из ответа и не добавляет в корзину позиции с BESPOKE.

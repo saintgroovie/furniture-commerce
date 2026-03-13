@@ -144,6 +144,12 @@ Backend является источником истины.
 
 ---
 
+## RoomSet buy flow (storefront Phase 1) — полировка
+
+Backend: GET /store/room-sets/:slug расширен — в items подгружаются product.productType.* и product.variants.* для корректного UX (фильтр BESPOKE, variant_id). Storefront: RoomSetCta — cart-eligible items считаются до ensureCart; при 0 eligible (пустой комплект или все BESPOKE) корзина не создаётся, показывается сообщение; success только при добавлении хотя бы одного item; при ошибке в цикле — сообщение «Проверьте корзину и повторите попытку», без rollback.
+
+---
+
 ## Checkout Phase 1 (storefront) — полировка
 
 Полировка checkout: (1) completeCart — безопасный разбор ошибки: тело ответа читается один раз через res.text(), затем JSON.parse с fallback на текст или «Ошибка оформления заказа»; (2) корзина существует, но пуста (0 items) → показ empty_cart и очистка session вместо invalid_cart_state; invalid_cart_state только при 404/недоступная корзина. Docs: storefront-phase1 уточнён (empty_cart / invalid_cart_state).
