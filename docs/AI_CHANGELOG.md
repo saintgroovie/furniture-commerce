@@ -144,6 +144,12 @@ Backend является источником истины.
 
 ---
 
+## UI state polish (catalog, rooms, product CTA)
+
+getProducts: безопасный разбор ошибки — чтение body один раз (text), попытка JSON.parse и извлечение message, иначе текст ответа или fallback. Catalog и rooms: в error state добавлен тот же h1, что в empty/success («Каталог» / «Комнаты»). ProductCta: при STANDARD/CONFIGURABLE без variantId показывается текст «Нет варианта для заказа» вместо пустой области CTA. Docs: storefront-phase1 (уточнение error/cta fallback), PROJECT_STATUS.
+
+---
+
 ## RoomSet buy flow (storefront Phase 1) — полировка
 
 Backend: GET /store/room-sets/:slug расширен — в items подгружаются product.productType.* и product.variants.* для корректного UX (фильтр BESPOKE, variant_id). Storefront: RoomSetCta — cart-eligible items считаются до ensureCart; при 0 eligible (пустой комплект или все BESPOKE) корзина не создаётся, показывается сообщение; success только при добавлении хотя бы одного item; при ошибке в цикле — сообщение «Проверьте корзину и повторите попытку», без rollback.

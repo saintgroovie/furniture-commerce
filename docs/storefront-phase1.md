@@ -127,7 +127,7 @@ apps/storefront/
 - **loading** → skeleton grid.
 - **success** → рендер списка товаров.
 - **empty** → сообщение «Товары не найдены».
-- **error** → сообщение «Не удалось загрузить каталог».
+- **error** → сообщение «Не удалось загрузить каталог»; тот же h1, что в empty/success.
 
 ### Product (/product/[id])
 
@@ -137,14 +137,14 @@ apps/storefront/
 - **error** → ошибка загрузки.
 - **cta_pending** → disable CTA.
 - **cta_success** → confirmation UI.
-- **cta_error** → показать server error.
+- **cta_error** → показать server error. При отсутствии variant для STANDARD/CONFIGURABLE — текст «Нет варианта для заказа» (UI fallback).
 
 ### Rooms (/rooms)
 
 - **loading** → skeleton.
 - **success** → список Room Sets.
 - **empty** → «Комплекты не найдены».
-- **error** → ошибка загрузки.
+- **error** → ошибка загрузки; тот же h1, что в empty/success.
 
 ### Room set (/rooms/[slug])
 
