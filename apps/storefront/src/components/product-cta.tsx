@@ -60,7 +60,12 @@ export function ProductCta({ product }: Props) {
         <Link href={productId ? `/bespoke?product_id=${productId}` : "/bespoke"} style={{ marginLeft: "0.5rem" }}>
           Сделать по моим размерам
         </Link>
-        {success && <span style={{ color: "green", marginLeft: "0.5rem" }}>Добавлено</span>}
+        {success && (
+          <>
+            <span style={{ color: "green", marginLeft: "0.5rem" }}>Добавлено</span>
+            <Link href="/cart" style={{ marginLeft: "0.5rem" }}>В корзину</Link>
+          </>
+        )}
         {error && <span style={{ color: "red", marginLeft: "0.5rem" }}>{error}</span>}
       </p>
     )
@@ -75,7 +80,12 @@ export function ProductCta({ product }: Props) {
       ) : (
         <span style={{ fontSize: "0.9rem" }}>Нет варианта для заказа.</span>
       )}
-      {success && <span style={{ color: "green", marginLeft: "0.5rem" }}>Добавлено</span>}
+      {success && (
+        <>
+          <span style={{ color: "green", marginLeft: "0.5rem" }}>Добавлено</span>
+          <Link href="/cart" style={{ marginLeft: "0.5rem" }}>В корзину</Link>
+        </>
+      )}
       {error && <span style={{ color: "red", marginLeft: "0.5rem" }}>{error}</span>}
     </p>
   )

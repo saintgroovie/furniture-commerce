@@ -144,6 +144,12 @@ Backend является источником истины.
 
 ---
 
+## Cart navigation UX (storefront Phase 1)
+
+ProductCta и RoomSetCta: при success после добавления в корзину показывается ссылка «В корзину» на `/cart` (только в success-state). CartSummary: в состояниях empty и invalid_state добавлены ссылки «В комнаты» и «На главную» рядом с «В каталог». Header без изменений (статичная ссылка на корзину). Docs: storefront-phase1, PROJECT_STATUS.
+
+---
+
 ## UI state polish (catalog, rooms, product CTA)
 
 getProducts: безопасный разбор ошибки — чтение body один раз (text), попытка JSON.parse и извлечение message, иначе текст ответа или fallback. Catalog и rooms: в error state добавлен тот же h1, что в empty/success («Каталог» / «Комнаты»). ProductCta: при STANDARD/CONFIGURABLE без variantId показывается текст «Нет варианта для заказа» вместо пустой области CTA. Docs: storefront-phase1 (уточнение error/cta fallback), PROJECT_STATUS.

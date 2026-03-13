@@ -169,7 +169,7 @@ apps/storefront/
 - **ready** → line items + итог.
 - **mutating** → disable item actions; после мутации: mutation → getCart → render.
 - **error** → ошибка загрузки/удаления.
-- **invalid_state** → cart_id есть, но cart не существует; сообщение + очистка session.
+- **invalid_state** → cart_id есть, но cart не существует; сообщение + очистка session. В empty и invalid_state навигация: В каталог, в комнаты, на главную.
 
 ### Checkout (/checkout)
 
@@ -214,7 +214,9 @@ apps/storefront/
 - **STANDARD:** показывать только «Добавить в корзину». По клику — ensureCart + addLineItem; при ошибке backend — cta_error.
 - **CONFIGURABLE:** показывать «Добавить в корзину» и «Сделать по моим размерам» (ссылка на `/bespoke?product_id=...`).
 - **BESPOKE:** показывать только «Получить расчёт» (ссылка на `/bespoke?product_id=...`). Никогда не показывать «Добавить в корзину».
-- **Room set:** «Купить комплект» (ensureCart + addLineItem только для cart-eligible товаров; BESPOKE не добавлять) и «Адаптировать под мою комнату» (ссылка на `/bespoke?room_set_id=...`). CTA success/error после «Купить комплект».
+- **Room set:** «Купить комплект» (ensureCart + addLineItem только для cart-eligible товаров; BESPOKE не добавлять) и «Адаптировать под мою комнату» (ссылка на `/bespoke?room_set_id=...`). CTA success/error после «Купить комплект». При success — ссылка «В корзину» (только в success-state).
+
+При success после add to cart / buy set — ссылка «В корзину» на `/cart` только в момент success; не показывать при error или 0 eligible.
 
 Никакой дублирующей бизнес-логики на фронте: только отображение кнопок по product_type и вызов API.
 

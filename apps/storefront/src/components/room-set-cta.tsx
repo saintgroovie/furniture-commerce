@@ -76,7 +76,12 @@ export function RoomSetCta({ roomSet }: Props) {
           Часть товаров доступна только по запросу.
         </span>
       )}
-      {success && <span style={{ color: "green", marginLeft: "0.5rem" }}>Добавлено в корзину</span>}
+      {success && (
+        <>
+          <span style={{ color: "green", marginLeft: "0.5rem" }}>Добавлено в корзину</span>
+          <Link href="/cart" style={{ marginLeft: "0.5rem" }}>В корзину</Link>
+        </>
+      )}
       {error && <span style={{ color: "red", marginLeft: "0.5rem" }}>{error}</span>}
     </p>
   )
