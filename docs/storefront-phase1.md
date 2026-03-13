@@ -157,10 +157,10 @@ apps/storefront/
 ### Bespoke (/bespoke)
 
 - **idle / editing** → форма.
-- **submitting** → disable submit.
-- **success** → confirmation message.
-- **error_validation** → ошибки полей.
-- **error_server** → общая ошибка.
+- **submitting** → disable submit; защита от двойной отправки (ref guard).
+- **success** → подтверждение «Заявка отправлена. Менеджер свяжется с вами.» и ссылки: В каталог, в комнаты, на главную.
+- **error_validation** → ошибки полей (например отсутствие email).
+- **error_server** → сообщение от backend при наличии, иначе fallback.
 
 ### Cart (/cart)
 

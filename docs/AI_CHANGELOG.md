@@ -144,6 +144,12 @@ Backend является источником истины.
 
 ---
 
+## Bespoke flow polish (storefront Phase 1)
+
+Success state: подтверждение «Заявка отправлена. Менеджер свяжется с вами.» и навигационные ссылки (В каталог, в комнаты, на главную), как на cart empty/invalid_state. Защита от двойной отправки — submittingRef в BespokeForm. createLead и createBespokeRequest: безопасный разбор ошибки (body один раз, message из JSON, иначе текст, иначе fallback); форма в error_server показывает e.message. Статическая metadata для /bespoke (title, description). Без новых полей формы, без изменений backend. Docs: storefront-phase1 (Bespoke state contract), PROJECT_STATUS.
+
+---
+
 ## SEO и metadata (storefront Phase 1)
 
 Базовая SEO-инфраструктура: layout — metadataBase (getSiteUrl), default title/description, title.template «%s | Woodright», openGraph (siteName, locale), Organization JSON-LD. Статическая metadata для главной, каталога, комнат, корзины, checkout (cart/checkout — robots noindex, nofollow). generateMetadata для product и room set (getProduct, getRoomSetBySlug), canonical, openGraph; при 404/ошибке — нейтральные meta. Product JSON-LD на странице товара; ItemList JSON-LD на /catalog при success. Хелпер getSiteUrl() в lib/api/base.ts, NEXT_PUBLIC_SITE_URL в .env.example. Вся metadata и JSON-LD — server-side; без нового backend API. Docs: storefront-phase1 (раздел 8), PROJECT_STATUS.
@@ -159,6 +165,24 @@ ProductCta и RoomSetCta: при success после добавления в ко
 ## UI state polish (catalog, rooms, product CTA)
 
 getProducts: безопасный разбор ошибки — чтение body один раз (text), попытка JSON.parse и извлечение message, иначе текст ответа или fallback. Catalog и rooms: в error state добавлен тот же h1, что в empty/success («Каталог» / «Комнаты»). ProductCta: при STANDARD/CONFIGURABLE без variantId показывается текст «Нет варианта для заказа» вместо пустой области CTA. Docs: storefront-phase1 (уточнение error/cta fallback), PROJECT_STATUS.
+
+---
+
+## Docker dev environment (aligned to MEDUSA_DOCKER_GUIDE.md)
+
+Docker setup полностью переработан по MEDUSA_DOCKER_GUIDE.md:
+
+- Yarn 4 инициализирован в backend и storefront (`.yarnrc.yml`, `yarn.lock`, `packageManager` в package.json).
+- docker-compose.yml: postgres, redis, medusa (backend), storefront — с правильными volumes для `node_modules`, `network: host` для build, `env_file`, named containers.
+- Backend и storefront Dockerfile + start.sh по шаблону guide: `corepack enable` → `yarn install` → `yarn dev`.
+- medusa-config.ts: добавлен `redisUrl` и admin vite config (host 0.0.0.0, HMR port 5173).
+- .env.example обновлены: CORS с портами 8000/5173/9000 + 127.0.0.1, REDIS_URL, MEDUSA_BACKEND_URL для SSR, NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY.
+- .dockerignore: не исключает `.yarn/`.
+- Storefront port: 8000 (was 3000).
+- Убран `output: "standalone"` из next.config.js (dev mode).
+- base.ts (storefront): SSR/client URL split сохранён — `MEDUSA_BACKEND_URL` для сервера (http://medusa:9000), `NEXT_PUBLIC_MEDUSA_BACKEND_URL` для браузера (http://localhost:9000).
+- Удалены: docker-entrypoint.sh (заменён на start.sh), docs/DOCKER.md (заменён MEDUSA_DOCKER_GUIDE.md).
+- Бизнес-логика, модули, API, архитектура — без изменений.
 
 ---
 

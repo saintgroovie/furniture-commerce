@@ -30,20 +30,35 @@ v0.1-backend-foundation
 
 ## Storefront
 
-Phase 1 в работе.
+**Phase 1.** Status: functional + polished.
 
-Реализовано:
+Implemented:
 
-- Skeleton, API clients (products, room-sets, leads, bespoke-requests, cart, checkout).
-- Cart session (cookie cart_id, ensureCart, add/remove, CartSummary).
-- Страницы: главная, catalog, product/[id], rooms, rooms/[slug], bespoke, cart, checkout.
-- Checkout Phase 1: форма (email, адрес), order summary (состав корзины), updateCart + completeCart, все состояния по State Contract (loading, empty_cart, ready, submitting, success, error_validation, error_server, invalid_cart_state), очистка cart_id после успеха, защита от двойной отправки.
-- Storefront Phase 1 State Contract зафиксирован в storefront-phase1.md (Core Rules, Mutation Contract, Запрещено, полный State Contract и CTA Contract).
-- Cart navigation UX: после add to cart / buy set в success показывается ссылка «В корзину»; на /cart в empty и invalid_state — ссылки В каталог, в комнаты, на главную.
-- UI state polish: getProducts — безопасный разбор ошибки (body один раз, message из JSON, fallback); catalog/rooms — h1 в error state; ProductCta — fallback «Нет варианта для заказа» при отсутствии variant.
-- RoomSet buy flow: payload GET /store/room-sets/:slug с productType и variants; edge cases — пустой комплект / все BESPOKE (сообщение, без создания корзины), success только при ≥1 item, частичный сбой без rollback.
-- Консистентные UI состояния: catalog/rooms — skeleton при loading, empty/error с фиксированными сообщениями; product/room set — not_found vs error, skeleton; cart — loading skeleton, empty, ready, mutating, error, invalid_state (404 → очистка session); checkout — invalid_cart_state при CART_NOT_FOUND, skeleton при loading. CTA по product_type (backend authoritative).
-- SEO и metadata: layout (metadataBase, default title/description, title.template, openGraph, Organization JSON-LD); статическая metadata для /, /catalog, /rooms, /cart, /checkout (cart/checkout — noindex); generateMetadata + canonical для /product/[id] и /rooms/[slug]; Product JSON-LD на странице товара, ItemList на /catalog; хелпер getSiteUrl(), env NEXT_PUBLIC_SITE_URL.
+- Catalog page
+- Product page
+- Rooms and Room Sets pages
+- Room Set buy flow
+- Cart page
+- Checkout flow
+- Bespoke request flow
+- SEO metadata
+
+UX polish completed:
+
+- UI state consistency
+- Cart navigation improvements
+- CTA feedback after add-to-cart
+- Safe API error parsing
+- Bespoke form UX polish
+- Navigation after success states
+
+Architecture constraints preserved:
+
+- thin storefront
+- backend as source of truth
+- no global cart store
+- no client-side business logic
+- no BFF layer
 
 ## Known limitations (MVP)
 
@@ -55,6 +70,13 @@ Phase 1 в работе.
 ## Docs для AI
 
 При больших задачах подключать контекст: **MASTER_PROMPT.md** — системный промпт; **AI_WORKING_RULES.md** — 10 правил, checklist, red flags; **SYSTEM_BOUNDARIES.md** — неизменяемые архитектурные границы; **CODEMAP.md** — карта проекта; **storefront-phase1.md** — State/CTA/Mutation contract.
+
+## Запуск
+
+- **Docker (рекомендуется):** `docker compose up --build` из корня. Подробно — **docs/MEDUSA_DOCKER_GUIDE.md**.
+- **Порты:** storefront :8000, backend API :9000, admin :5173, postgres :5432, redis :6379.
+- **Package manager:** Yarn 4 (`corepack enable` обязателен перед `yarn`).
+- **После seed:** скопировать Publishable API Key из админки в `apps/storefront/.env.local` и `docker compose up -d --force-recreate storefront`.
 
 ## Next step
 
