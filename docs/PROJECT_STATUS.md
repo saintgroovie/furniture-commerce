@@ -43,6 +43,7 @@ Phase 1 в работе.
 - UI state polish: getProducts — безопасный разбор ошибки (body один раз, message из JSON, fallback); catalog/rooms — h1 в error state; ProductCta — fallback «Нет варианта для заказа» при отсутствии variant.
 - RoomSet buy flow: payload GET /store/room-sets/:slug с productType и variants; edge cases — пустой комплект / все BESPOKE (сообщение, без создания корзины), success только при ≥1 item, частичный сбой без rollback.
 - Консистентные UI состояния: catalog/rooms — skeleton при loading, empty/error с фиксированными сообщениями; product/room set — not_found vs error, skeleton; cart — loading skeleton, empty, ready, mutating, error, invalid_state (404 → очистка session); checkout — invalid_cart_state при CART_NOT_FOUND, skeleton при loading. CTA по product_type (backend authoritative).
+- SEO и metadata: layout (metadataBase, default title/description, title.template, openGraph, Organization JSON-LD); статическая metadata для /, /catalog, /rooms, /cart, /checkout (cart/checkout — noindex); generateMetadata + canonical для /product/[id] и /rooms/[slug]; Product JSON-LD на странице товара, ItemList на /catalog; хелпер getSiteUrl(), env NEXT_PUBLIC_SITE_URL.
 
 ## Known limitations (MVP)
 

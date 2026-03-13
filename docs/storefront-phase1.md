@@ -233,7 +233,18 @@ apps/storefront/
 
 ---
 
-## 8. Definition of Done — Storefront Phase 1
+## 8. SEO и metadata (Phase 1)
+
+- **Источник:** все metadata и JSON-LD генерируются на сервере (layout, page, generateMetadata). Без client-side SEO.
+- **Layout:** metadataBase из `getSiteUrl()` (env `NEXT_PUBLIC_SITE_URL`), дефолтный title/description, title.template `"%s | Woodright"`, базовый openGraph (siteName, locale). Organization JSON-LD один раз в layout.
+- **Статические страницы** (/, /catalog, /rooms): свой title, description, openGraph в `export const metadata`.
+- **Динамические** (/product/[id], /rooms/[slug]): `generateMetadata` с вызовом существующих API (getProduct, getRoomSetBySlug); title, description, openGraph, alternates.canonical; при 404/ошибке — нейтральные значения.
+- **Cart, Checkout:** статическая metadata с `robots: { index: false, follow: false }`.
+- **Structured data:** Product JSON-LD на странице товара; ItemList JSON-LD на /catalog (при успешном списке); Organization в layout. Без нового backend API, без дублирования данных.
+
+---
+
+## 9. Definition of Done — Storefront Phase 1
 
 - Реализованы страницы: `/`, `/catalog`, `/product/[id]`, `/rooms`, `/rooms/[slug]`, `/bespoke`, `/cart`, `/checkout`.
 - Каталог: данные с `GET /store/products`, фильтры по category_id и product_type (query params → тот же endpoint).

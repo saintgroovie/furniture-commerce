@@ -144,6 +144,12 @@ Backend является источником истины.
 
 ---
 
+## SEO и metadata (storefront Phase 1)
+
+Базовая SEO-инфраструктура: layout — metadataBase (getSiteUrl), default title/description, title.template «%s | Woodright», openGraph (siteName, locale), Organization JSON-LD. Статическая metadata для главной, каталога, комнат, корзины, checkout (cart/checkout — robots noindex, nofollow). generateMetadata для product и room set (getProduct, getRoomSetBySlug), canonical, openGraph; при 404/ошибке — нейтральные meta. Product JSON-LD на странице товара; ItemList JSON-LD на /catalog при success. Хелпер getSiteUrl() в lib/api/base.ts, NEXT_PUBLIC_SITE_URL в .env.example. Вся metadata и JSON-LD — server-side; без нового backend API. Docs: storefront-phase1 (раздел 8), PROJECT_STATUS.
+
+---
+
 ## Cart navigation UX (storefront Phase 1)
 
 ProductCta и RoomSetCta: при success после добавления в корзину показывается ссылка «В корзину» на `/cart` (только в success-state). CartSummary: в состояниях empty и invalid_state добавлены ссылки «В комнаты» и «На главную» рядом с «В каталог». Header без изменений (статичная ссылка на корзину). Docs: storefront-phase1, PROJECT_STATUS.

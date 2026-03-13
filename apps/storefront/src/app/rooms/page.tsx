@@ -1,6 +1,17 @@
 import Link from "next/link"
+import type { Metadata } from "next"
 import { RoomSetCard } from "@/components/room-set-card"
 import { getRoomSets } from "@/lib/api/room-sets"
+
+export const metadata: Metadata = {
+  title: "Комнаты",
+  description: "Готовые комплекты мебели Woodright по комнатам. Подбор мебели для гостиной, спальни, кабинета и др.",
+  openGraph: {
+    title: "Комнаты и готовые комплекты | Woodright",
+    description: "Готовые комплекты мебели по комнатам.",
+    url: "/rooms",
+  },
+}
 
 export default async function RoomsPage() {
   let data: { room_sets?: unknown[] } = {}
