@@ -18,6 +18,7 @@
     "@medusajs/medusa": "^2.0.0"
   },
   "devDependencies": {
+    "@medusajs/cli": "^2.0.0",
     "@types/node": "^20.0.0",
     "typescript": "^5.0.0"
   },
