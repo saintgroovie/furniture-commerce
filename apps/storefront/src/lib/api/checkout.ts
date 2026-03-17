@@ -1,15 +1,15 @@
-import { getBaseUrl } from "./base"
+import { getBaseUrl, medusaFetch } from "./base"
 
 export async function getRegions() {
   const base = getBaseUrl()
-  const res = await fetch(`${base}/store/regions`)
+  const res = await medusaFetch(`${base}/store/regions`)
   if (!res.ok) throw new Error(await res.text())
   return res.json()
 }
 
 export async function completeCart(cartId: string) {
   const base = getBaseUrl()
-  const res = await fetch(`${base}/store/carts/${cartId}/complete`, {
+  const res = await medusaFetch(`${base}/store/carts/${cartId}/complete`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({}),
