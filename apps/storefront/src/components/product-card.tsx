@@ -1,10 +1,5 @@
 import Link from "next/link"
-
-type Variant = {
-  id?: string
-  calculated_price?: { calculated_amount?: number }
-  prices?: Array<{ amount?: number }>
-}
+import { formatRub, getPrice } from "@/lib/format"
 
 type Product = {
   id: string
@@ -12,51 +7,42 @@ type Product = {
   description?: string
   handle?: string
   thumbnail?: string
-  variants?: Variant[]
-  custom_product_type?: { product_type?: string }
+  variants?: Array<{
+    id?: string
+    calculated_price?: { calculated_amount?: number }
+    prices?: Array<{ amount?: number }>
+  }>
+  product_classification?: { product_type?: string }
 }
 
-function getPrice(product: Product): number | null {
-  const v = product.variants?.[0]
-  if (!v) return null
-  if (v.calculated_price?.calculated_amount != null) return v.calculated_price.calculated_amount
-  if (v.prices?.length && v.prices[0].amount != null) return v.prices[0].amount
-  return null
-}
-
-function formatRub(amount: number): string {
-  return amount.toLocaleString("ru-RU") + " ₽"
+const BADGE_LABELS: Record<string, string> = {
+  BESPOKE: "На заказ",
 }
 
 export function ProductCard({ product }: { product: Product }) {
-  const type = product.custom_product_type?.product_type
+  const type = product.product_classification?.product_type
   const price = getPrice(product)
+  const badgeLabel = type ? BADGE_LABELS[type] : undefined
 
   return (
-    <div className="card">
-      {product.thumbnail && (
+    <Link href={`/product/${product.id}`} className="card card-link product-card">
+      {product.thumbnail ? (
         <img
           src={product.thumbnail}
           alt={product.title}
           className="card-img"
+          loading="lazy"
         />
+      ) : (
+        <div className="card-img card-img-placeholder" aria-hidden="true" />
       )}
       <div className="card-body">
-        <h3>
-          <Link href={`/product/${product.id}`}>{product.title}</Link>
-        </h3>
-        {type && <span className="badge">{type}</span>}
+        <h3>{product.title}</h3>
         {price != null && (
-          <p className="price" style={{ marginTop: "0.5rem" }}>{formatRub(price)}</p>
+          <p className="price">{formatRub(price)}</p>
         )}
-        {product.description && (
-          <p className="info-text" style={{ marginTop: "0.5rem" }}>
-            {product.description.length > 100
-              ? product.description.slice(0, 100).trim() + "…"
-              : product.description}
-          </p>
-        )}
+        {badgeLabel && <span className="badge">{badgeLabel}</span>}
       </div>
-    </div>
+    </Link>
   )
 }

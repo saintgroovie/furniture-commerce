@@ -29,7 +29,7 @@ export default async function CatalogPage({
 
   let data: { products?: unknown[] } = {}
   try {
-    data = await getProducts(activeType ? { product_type: activeType } : undefined)
+    data = await getProducts()
   } catch {
     return (
       <div data-state="error">
@@ -42,7 +42,10 @@ export default async function CatalogPage({
     )
   }
   const products = data.products ?? []
-  const list = Array.isArray(products) ? products : []
+  const all = Array.isArray(products) ? products : []
+  const list = activeType
+    ? all.filter((p: any) => p.product_classification?.product_type === activeType)
+    : all
 
   const base = getSiteUrl()
   const itemListJsonLd = list.length > 0 ? {

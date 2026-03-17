@@ -16,8 +16,9 @@ async function ensureNotBespokeForCart(
   res: MedusaResponse,
   next: MedusaNextFunction
 ) {
+  const body = req.body as Record<string, any>
   const variantId =
-    req.body?.variant_id ?? req.body?.items?.[0]?.variant_id
+    body?.variant_id ?? body?.items?.[0]?.variant_id
 
   if (!variantId) {
     return next()
@@ -55,7 +56,7 @@ async function ensureNotBespokeForCart(
     }
     const result = await query.graph({
       entity: "product",
-      fields: ["*", "productType.*"],
+      fields: ["*", "product_classification.*"],
       filters: { id: productId },
     })
     products = result?.data ?? []
@@ -67,8 +68,8 @@ async function ensureNotBespokeForCart(
     return
   }
 
-  const product = products?.[0] as { productType?: { product_type?: string } } | undefined
-  const productType = product?.productType?.product_type
+  const product = products?.[0] as { product_classification?: { product_type?: string } } | undefined
+  const productType = product?.product_classification?.product_type
 
   if (productType === BESPOKE) {
     res.status(400).json({

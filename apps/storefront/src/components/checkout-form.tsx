@@ -5,6 +5,7 @@ import Link from "next/link"
 import { getCartIdFromSession, clearCartIdFromSession } from "@/lib/cart/session"
 import { getCart, updateCart, CART_NOT_FOUND } from "@/lib/api/cart"
 import { completeCart } from "@/lib/api/checkout"
+import { formatRub } from "@/lib/format"
 
 type CheckoutState =
   | "empty_cart"
@@ -15,10 +16,6 @@ type CheckoutState =
   | "validation_error"
   | "server_error"
   | "invalid_cart_state"
-
-function formatRub(amount: number): string {
-  return amount.toLocaleString("ru-RU") + " ₽"
-}
 
 export function CheckoutForm() {
   const [state, setState] = useState<CheckoutState>("loading")

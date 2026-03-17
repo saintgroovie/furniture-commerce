@@ -9,20 +9,7 @@ function truncate(str: string, max: number): string {
   return str.slice(0, max - 3).trim() + "..."
 }
 
-function getPrice(product: Record<string, unknown>): number | null {
-  const variants = product.variants as Array<Record<string, unknown>> | undefined
-  const v = variants?.[0]
-  if (!v) return null
-  const cp = v.calculated_price as Record<string, unknown> | undefined
-  if (cp?.calculated_amount != null) return Number(cp.calculated_amount)
-  const prices = v.prices as Array<Record<string, unknown>> | undefined
-  if (prices?.length && prices[0].amount != null) return Number(prices[0].amount)
-  return null
-}
-
-function formatRub(amount: number): string {
-  return amount.toLocaleString("ru-RU") + " ₽"
-}
+import { formatRub, getPrice } from "@/lib/format"
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const base = getSiteUrl()
@@ -92,7 +79,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
   const images = product.images as Array<{ url?: string }> | undefined
   const mainImage = thumbnail || images?.[0]?.url
   const price = getPrice(product)
-  const productType = (product.custom_product_type as Record<string, string> | undefined)?.product_type
+  const productType = (product.product_classification as Record<string, string> | undefined)?.product_type
 
   const productJsonLd = {
     "@context": "https://schema.org",

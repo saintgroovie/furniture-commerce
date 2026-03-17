@@ -4,7 +4,7 @@ import { BESPOKE_REQUEST_STATUS } from "../../../../modules/bespoke-request/mode
 
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const id = req.params.id as string
-  const bespokeService = req.scope.resolve(BESPOKE_REQUEST_MODULE)
+  const bespokeService = req.scope.resolve(BESPOKE_REQUEST_MODULE) as any
   const bespokeRequest = await bespokeService.retrieveBespokeRequest(id)
   if (!bespokeRequest) {
     res.status(404).json({ message: "Bespoke request not found" })
@@ -23,7 +23,7 @@ export async function PATCH(req: MedusaRequest, res: MedusaResponse) {
     })
     return
   }
-  const bespokeService = req.scope.resolve(BESPOKE_REQUEST_MODULE)
+  const bespokeService = req.scope.resolve(BESPOKE_REQUEST_MODULE) as any
   const hasUpdates =
     body.status != null ||
     body.internal_notes !== undefined ||

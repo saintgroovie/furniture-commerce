@@ -12,7 +12,7 @@ export function ProductCta({ product }: Props) {
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const productType = (product.custom_product_type as Record<string, string> | undefined)?.product_type
+  const productType = (product.product_classification as Record<string, string> | undefined)?.product_type
   const variants = (product.variants as unknown[]) ?? []
   const firstVariant = Array.isArray(variants) ? variants[0] : undefined
   const variantId = firstVariant && typeof firstVariant === "object" && "id" in firstVariant

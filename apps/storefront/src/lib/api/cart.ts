@@ -7,7 +7,21 @@ export async function createCart() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({}),
   })
-  if (!res.ok) throw new Error(await res.text())
+  if (!res.ok) {
+    const text = await res.text()
+    let message = "Не удалось создать корзину."
+    try {
+      const data = text ? JSON.parse(text) : null
+      if (data && typeof data.message === "string") {
+        message = data.message
+      } else if (text) {
+        message = text
+      }
+    } catch {
+      if (text) message = text
+    }
+    throw new Error(message)
+  }
   return res.json()
 }
 
@@ -17,7 +31,21 @@ export async function getCart(cartId: string) {
   const base = getBaseUrl()
   const res = await medusaFetch(`${base}/store/carts/${cartId}`)
   if (res.status === 404) throw new Error(CART_NOT_FOUND)
-  if (!res.ok) throw new Error(await res.text())
+  if (!res.ok) {
+    const text = await res.text()
+    let message = "Не удалось загрузить корзину."
+    try {
+      const data = text ? JSON.parse(text) : null
+      if (data && typeof data.message === "string") {
+        message = data.message
+      } else if (text) {
+        message = text
+      }
+    } catch {
+      if (text) message = text
+    }
+    throw new Error(message)
+  }
   return res.json()
 }
 
@@ -32,8 +60,19 @@ export async function updateCart(
     body: JSON.stringify(body),
   })
   if (!res.ok) {
-    const data = await res.json().catch(() => ({}))
-    throw new Error((data as { message?: string }).message ?? await res.text())
+    const text = await res.text()
+    let message = "Не удалось обновить корзину."
+    try {
+      const data = text ? JSON.parse(text) : null
+      if (data && typeof data.message === "string") {
+        message = data.message
+      } else if (text) {
+        message = text
+      }
+    } catch {
+      if (text) message = text
+    }
+    throw new Error(message)
   }
   return res.json()
 }
@@ -46,8 +85,19 @@ export async function addLineItem(cartId: string, body: { variant_id: string; qu
     body: JSON.stringify(body),
   })
   if (!res.ok) {
-    const data = await res.json().catch(() => ({}))
-    throw new Error(data.message ?? await res.text())
+    const text = await res.text()
+    let message = "Не удалось добавить товар в корзину."
+    try {
+      const data = text ? JSON.parse(text) : null
+      if (data && typeof data.message === "string") {
+        message = data.message
+      } else if (text) {
+        message = text
+      }
+    } catch {
+      if (text) message = text
+    }
+    throw new Error(message)
   }
   return res.json()
 }
@@ -57,6 +107,20 @@ export async function removeLineItem(cartId: string, lineId: string) {
   const res = await medusaFetch(`${base}/store/carts/${cartId}/line-items/${lineId}`, {
     method: "DELETE",
   })
-  if (!res.ok) throw new Error(await res.text())
+  if (!res.ok) {
+    const text = await res.text()
+    let message = "Не удалось удалить товар из корзины."
+    try {
+      const data = text ? JSON.parse(text) : null
+      if (data && typeof data.message === "string") {
+        message = data.message
+      } else if (text) {
+        message = text
+      }
+    } catch {
+      if (text) message = text
+    }
+    throw new Error(message)
+  }
   return res.json()
 }

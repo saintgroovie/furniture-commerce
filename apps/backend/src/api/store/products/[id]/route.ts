@@ -14,7 +14,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   }
   const { data } = await query.graph({
     entity: "product",
-    fields: ["*", "variants.*", "images.*", "productType.*"],
+    fields: ["*", "variants.*", "images.*", "product_classification.*"],
     filters: { id },
   })
   const product = Array.isArray(data) ? data[0] : undefined

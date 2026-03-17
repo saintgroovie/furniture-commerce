@@ -45,7 +45,7 @@ services:
       - "5173:5173"
     environment:
       NODE_ENV: development
-      DATABASE_URL: postgres://postgres:postgres@postgres:5432/medusa-store
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/medusa-store?sslmode=disable
       REDIS_URL: redis://redis:6379
     env_file:
       - ./apps/backend/.env

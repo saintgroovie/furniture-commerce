@@ -4,12 +4,9 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { getCartIdFromSession, clearCartIdFromSession } from "@/lib/cart/session"
 import { getCart, removeLineItem, CART_NOT_FOUND } from "@/lib/api/cart"
+import { formatRub } from "@/lib/format"
 
 type CartViewState = "loading" | "empty" | "ready" | "mutating" | "error" | "invalid_state"
-
-function formatRub(amount: number): string {
-  return amount.toLocaleString("ru-RU") + " ₽"
-}
 
 export function CartSummary() {
   const [cart, setCart] = useState<Record<string, unknown> | null>(null)

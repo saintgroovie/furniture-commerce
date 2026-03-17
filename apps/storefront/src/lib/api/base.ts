@@ -15,11 +15,17 @@ function getPublishableKey(): string {
 }
 
 /** Fetch wrapper that adds the publishable API key header. */
-export function medusaFetch(url: string, init?: RequestInit): Promise<Response> {
+export async function medusaFetch(url: string, init?: RequestInit): Promise<Response> {
   const key = getPublishableKey()
   const headers = new Headers(init?.headers)
   if (key) {
     headers.set("x-publishable-api-key", key)
   }
-  return fetch(url, { ...init, headers })
+  try {
+    return await fetch(url, { ...init, headers })
+  } catch {
+    throw new Error(
+      `Не удалось выполнить запрос к ${url}. Убедитесь, что backend запущен и доступен.`
+    )
+  }
 }

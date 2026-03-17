@@ -2,7 +2,7 @@ import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ROOM_SET_MODULE } from "../../../modules/room-set"
 
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
-  const roomSetService = req.scope.resolve(ROOM_SET_MODULE)
+  const roomSetService = req.scope.resolve(ROOM_SET_MODULE) as any
   const list = await roomSetService.listRoomSets({}, { order: { created_at: "DESC" } })
   res.json({ room_sets: list })
 }
@@ -19,7 +19,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     style?: string
     is_active?: boolean
   }
-  const roomSetService = req.scope.resolve(ROOM_SET_MODULE)
+  const roomSetService = req.scope.resolve(ROOM_SET_MODULE) as any
   const [roomSet] = await roomSetService.createRoomSets({
     title: body.title,
     slug: body.slug,

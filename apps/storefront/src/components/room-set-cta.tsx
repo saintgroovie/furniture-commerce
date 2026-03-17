@@ -16,7 +16,7 @@ export function RoomSetCta({ roomSet }: Props) {
   const items = (roomSet.items as Array<Record<string, unknown>>) ?? []
   const bespokeCount = items.filter((item) => {
     const product = item.product as Record<string, unknown> | undefined
-    return (product?.custom_product_type as Record<string, string> | undefined)?.product_type === "BESPOKE"
+    return (product?.product_classification as Record<string, string> | undefined)?.product_type === "BESPOKE"
   }).length
 
   function getCartEligibleItems(): Array<{ variantId: string; quantity: number }> {
@@ -24,7 +24,7 @@ export function RoomSetCta({ roomSet }: Props) {
     for (const item of items) {
       const product = item.product as Record<string, unknown> | undefined
       if (!product) continue
-      const productType = (product.custom_product_type as Record<string, string> | undefined)?.product_type
+      const productType = (product.product_classification as Record<string, string> | undefined)?.product_type
       if (productType === "BESPOKE") continue
       const variants = (product.variants as unknown[]) ?? []
       const firstVariant = Array.isArray(variants) ? variants[0] : undefined

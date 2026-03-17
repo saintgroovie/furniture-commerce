@@ -90,7 +90,7 @@ export default async function RoomSetPage({ params }: { params: { slug: string }
               const product = item.product as Record<string, unknown> | undefined
               const title = (product?.title as string) ?? "—"
               const qty = Number((item as { quantity?: number }).quantity ?? 1)
-              const type = (product?.custom_product_type as Record<string, string> | undefined)?.product_type
+              const type = (product?.product_classification as Record<string, string> | undefined)?.product_type
               return (
                 <li key={i} className="room-set-item">
                   <span>{title} × {qty}</span>

@@ -69,78 +69,128 @@ export default async function seed({ container }: ExecArgs) {
   }
 
   logger.info("Seeding region РФ / RUB...")
-  await createRegionsWorkflow(container).run({
-    input: { regions: [REGION_RUB] },
-  })
+  try {
+    await createRegionsWorkflow(container).run({
+      input: { regions: [REGION_RUB] },
+    })
+  } catch {
+    logger.info("Region already exists, skipping.")
+  }
 
-  const productModule = container.resolve(Modules.PRODUCT)
+  const productModule = container.resolve(Modules.PRODUCT) as any
   logger.info("Seeding categories...")
   const createdCategories: Array<{ id: string; handle: string }> = []
   for (const c of CATEGORIES) {
-    const [created] = await productModule.createProductCategories({ name: c.name, handle: c.handle })
-    createdCategories.push({ id: created.id, handle: c.handle })
+    try {
+      const existing = await productModule.listProductCategories({ handle: c.handle }, { take: 1 })
+      if (existing?.length) {
+        createdCategories.push({ id: existing[0].id, handle: c.handle })
+        continue
+      }
+    } catch { /* ignore */ }
+    const created = await productModule.createProductCategories({ name: c.name, handle: c.handle })
+    const cat = Array.isArray(created) ? created[0] : created
+    createdCategories.push({ id: cat.id, handle: c.handle })
   }
   const categoryIdByHandle = Object.fromEntries(createdCategories.map((c) => [c.handle, c.id]))
 
   let createdProducts: Array<{ id: string; title: string; sku: string }> = []
-  try {
-    const { result } = await createProductsWorkflow(container).run({
-      input: {
-        products: PRODUCTS.map((p) => ({
-          title: p.title,
-          description: p.description ?? "",
-          status: "published",
-          options: [{ title: "Default", values: ["Default"] }],
-          variants: [{ title: p.title, sku: p.sku, options: { Default: "Default" } }],
-        })),
-      },
-    })
-    createdProducts = (result ?? []).map((pr: { id: string; title: string; variants?: Array<{ sku: string }> }) => ({
+
+  const existingProducts = await productModule.listProducts(
+    {},
+    { take: 100, relations: ["variants"] }
+  )
+  if (existingProducts?.length) {
+    logger.info(`Found ${existingProducts.length} existing products, reusing.`)
+    createdProducts = existingProducts.map((pr: any) => ({
       id: pr.id,
       title: pr.title,
       sku: pr.variants?.[0]?.sku ?? "",
     }))
-  } catch (e) {
-    logger.info("createProductsWorkflow failed (ensure DB migrated and default shipping/sales channel exist). Skipping products. " + String(e))
+  } else {
+    try {
+      const { result } = await createProductsWorkflow(container).run({
+        input: {
+          products: PRODUCTS.map((p) => ({
+            title: p.title,
+            handle: p.sku,
+            description: p.description ?? "",
+            status: "published" as const,
+            options: [{ title: "Default", values: ["Default"] }],
+            variants: [{ title: p.title, sku: p.sku, options: { Default: "Default" } }],
+          })),
+        },
+      })
+      createdProducts = (result ?? []).map((pr: any) => ({
+        id: pr.id,
+        title: pr.title,
+        sku: pr.variants?.[0]?.sku ?? "",
+      }))
+    } catch (e: any) {
+      const msg = e?.message ?? JSON.stringify(e, null, 2)
+      logger.info("createProductsWorkflow failed: " + msg)
+    }
   }
 
   if (createdProducts.length === 0) {
-    logger.info("No products created. Skipping product_type links and room set item links.")
+    logger.info("No products found/created. Skipping product_type links and room set item links.")
     return
   }
 
   const productIdBySku = Object.fromEntries(createdProducts.map((p) => [p.sku, p.id]))
+  const productDefBySku = Object.fromEntries(PRODUCTS.map((p) => [p.sku, p]))
 
   logger.info("Linking products to categories...")
   for (const c of CATEGORIES) {
     const categoryId = categoryIdByHandle[c.handle]
-    const productIds = createdProducts.filter((_, i) => PRODUCTS[i].category_handle === c.handle).map((p) => p.id)
+    const productIds = createdProducts
+      .filter((p) => productDefBySku[p.sku]?.category_handle === c.handle)
+      .map((p) => p.id)
     if (categoryId && productIds.length) {
-      await batchLinkProductsToCategoryWorkflow(container).run({
-        input: { id: categoryId, add: productIds },
-      })
+      try {
+        await batchLinkProductsToCategoryWorkflow(container).run({
+          input: { id: categoryId, add: productIds },
+        })
+      } catch { /* already linked */ }
     }
   }
 
-  const productExtensionService = container.resolve(PRODUCT_EXTENSION_MODULE)
+  const productExtensionService = container.resolve(PRODUCT_EXTENSION_MODULE) as any
+  const query = container.resolve("query") as any
+
   logger.info("Linking product_type to products...")
-  for (let i = 0; i < createdProducts.length; i++) {
-    const product = createdProducts[i]
-    const productTypeRow = await productExtensionService.createProductTypes({
-      product_type: PRODUCTS[i].product_type,
+  for (const product of createdProducts) {
+    const def = productDefBySku[product.sku]
+    if (!def) continue
+    try {
+      const { data } = await query.graph({
+        entity: "product",
+        fields: ["id", "product_classification.*"],
+        filters: { id: product.id },
+      })
+      if (data?.[0]?.product_classification?.id) continue
+    } catch { /* not linked yet */ }
+
+    const productTypeRow = await productExtensionService.createProductClassifications({
+      product_type: def.product_type,
     })
-    const productType = Array.isArray(productTypeRow) ? productTypeRow[0] : productTypeRow
+    const pt = Array.isArray(productTypeRow) ? productTypeRow[0] : productTypeRow
     await link.create({
       [Modules.PRODUCT]: { product_id: product.id },
-      [PRODUCT_EXTENSION_MODULE]: { product_type_id: productType.id },
+      [PRODUCT_EXTENSION_MODULE]: { product_classification_id: pt.id },
     })
   }
 
-  const roomSetService = container.resolve(ROOM_SET_MODULE)
+  const roomSetService = container.resolve(ROOM_SET_MODULE) as any
   logger.info("Seeding room sets...")
   const createdRoomSets: Array<{ id: string; slug: string }> = []
   for (const rs of ROOM_SETS) {
-    const [created] = await roomSetService.createRoomSets({
+    const existing = await roomSetService.listRoomSets({ slug: rs.slug }, { take: 1 })
+    if (existing?.length) {
+      createdRoomSets.push({ id: existing[0].id, slug: rs.slug })
+      continue
+    }
+    const created = await roomSetService.createRoomSets({
       title: rs.title,
       slug: rs.slug,
       description: `${rs.title} — готовый комплект`,
@@ -149,22 +199,28 @@ export default async function seed({ container }: ExecArgs) {
       style: rs.style,
       is_active: true,
     })
-    createdRoomSets.push({ id: created.id, slug: rs.slug })
+    const rsObj = Array.isArray(created) ? created[0] : created
+    createdRoomSets.push({ id: rsObj.id, slug: rs.slug })
   }
 
   const createdRoomSetById = Object.fromEntries(createdRoomSets.map((c) => [c.slug, c.id]))
   for (const rs of ROOM_SETS) {
     const roomSetId = createdRoomSetById[rs.slug]
     if (!roomSetId) continue
+
+    const existingItems = await roomSetService.listRoomSetItems({ room_set_id: roomSetId }, { take: 100 })
+    if (existingItems?.length) continue
+
     for (let idx = 0; idx < rs.product_skus.length; idx++) {
       const sku = rs.product_skus[idx]
       const productId = productIdBySku[sku]
       if (!productId) continue
-      const [item] = await roomSetService.createRoomSetItems({
+      const itemResult = await roomSetService.createRoomSetItems({
         room_set_id: roomSetId,
         quantity: 1,
         sort_order: idx,
       })
+      const item = Array.isArray(itemResult) ? itemResult[0] : itemResult
       await link.create({
         [Modules.PRODUCT]: { product_id: productId },
         [ROOM_SET_MODULE]: { room_set_item_id: item.id },
