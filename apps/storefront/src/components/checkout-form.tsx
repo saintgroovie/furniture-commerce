@@ -1,10 +1,5 @@
 "use client"
 
-/**
- * Checkout Phase 1: только вызов API и отображение состояний. Без бизнес-логики.
- * Данные корзины и завершение заказа — только через Medusa store API.
- * Mutation: action → pending → API → success (clear session, show success) | error (feedback).
- */
 import { useEffect, useState, useRef } from "react"
 import Link from "next/link"
 import { getCartIdFromSession, clearCartIdFromSession } from "@/lib/cart/session"
@@ -20,6 +15,10 @@ type CheckoutState =
   | "validation_error"
   | "server_error"
   | "invalid_cart_state"
+
+function formatRub(amount: number): string {
+  return amount.toLocaleString("ru-RU") + " ₽"
+}
 
 export function CheckoutForm() {
   const [state, setState] = useState<CheckoutState>("loading")
@@ -117,11 +116,13 @@ export function CheckoutForm() {
 
   if (state === "empty_cart") {
     return (
-      <div data-state="empty_cart">
+      <div data-state="empty_cart" className="status-message">
         <p>Корзина пуста. Оформление заказа недоступно.</p>
-        <p>
-          <Link href="/catalog">В каталог</Link>, <Link href="/rooms">в комнаты</Link> или <Link href="/cart">в корзину</Link>.
-        </p>
+        <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
+          <Link href="/catalog">В каталог</Link>
+          <Link href="/rooms">В комнаты</Link>
+          <Link href="/cart">В корзину</Link>
+        </div>
       </div>
     )
   }
@@ -129,31 +130,36 @@ export function CheckoutForm() {
   if (state === "loading") {
     return (
       <div data-state="loading">
-        <div style={{ height: "2rem", backgroundColor: "#f5f5f5", marginBottom: "0.5rem" }} aria-hidden />
-        <div style={{ height: "4rem", backgroundColor: "#f5f5f5", marginBottom: "0.5rem" }} aria-hidden />
-        <div style={{ height: "3rem", backgroundColor: "#f5f5f5" }} aria-hidden />
+        <div className="skeleton" style={{ height: "6rem", marginBottom: "1rem" }} aria-hidden />
+        <div className="skeleton" style={{ height: "12rem" }} aria-hidden />
       </div>
     )
   }
 
   if (state === "invalid_cart_state") {
     return (
-      <div data-state="invalid_cart_state">
+      <div data-state="invalid_cart_state" className="status-message">
         <p>Корзина повреждена или недоступна.</p>
-        <p><Link href="/catalog">В каталог</Link> или <Link href="/cart">В корзину</Link>.</p>
+        <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
+          <Link href="/catalog">В каталог</Link>
+          <Link href="/cart">В корзину</Link>
+        </div>
       </div>
     )
   }
 
   if (state === "success") {
     return (
-      <div data-state="success">
-        <p style={{ fontWeight: "bold" }}>Заказ оформлен.</p>
-        {orderId && <p>Номер заказа: {orderId}</p>}
-        <p>Оплата по ссылке: менеджер отправит вам ссылку на оплату отдельно.</p>
-        <p>
-          <Link href="/catalog">В каталог</Link>
+      <div data-state="success" className="status-message">
+        <h2>Заказ оформлен</h2>
+        {orderId && <p style={{ marginTop: "0.5rem" }}>Номер заказа: <strong>{orderId}</strong></p>}
+        <p className="info-text" style={{ marginTop: "0.75rem" }}>
+          Оплата по ссылке: менеджер отправит вам ссылку на оплату отдельно.
         </p>
+        <div className="nav-links nav-links-center" style={{ marginTop: "1.5rem" }}>
+          <Link href="/catalog">В каталог</Link>
+          <Link href="/">На главную</Link>
+        </div>
       </div>
     )
   }
@@ -166,33 +172,61 @@ export function CheckoutForm() {
     return (
       <div data-state={dataState}>
         {items.length > 0 && (
-          <section style={{ marginBottom: "1.5rem" }} aria-label="Состав заказа">
-            <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "0.5rem" }}>Состав заказа</h2>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-              {items.map((item: Record<string, unknown>) => (
-                <li key={String(item.id)} style={{ marginBottom: "0.25rem" }}>
-                  {(item.title as string) ?? "—"} × {Number((item as { quantity?: number }).quantity ?? 1)}
-                </li>
-              ))}
-            </ul>
+          <section className="order-summary" aria-label="Состав заказа">
+            <h2>Состав заказа</h2>
+            {items.map((item: Record<string, unknown>) => {
+              const qty = Number((item as { quantity?: number }).quantity ?? 1)
+              const itemTotal = (item as { total?: number }).total ?? (item as { subtotal?: number }).subtotal
+              return (
+                <div key={String(item.id)} className="order-summary-item">
+                  <span>{(item.title as string) ?? "—"} × {qty}</span>
+                  {itemTotal != null && <span>{formatRub(itemTotal)}</span>}
+                </div>
+              )
+            })}
             {total != null && !Number.isNaN(total) && (
-              <p style={{ marginTop: "0.5rem", fontWeight: 600 }}>Итого: {total} ₽</p>
+              <div className="order-summary-total">
+                <span>Итого</span>
+                <span>{formatRub(total)}</span>
+              </div>
             )}
           </section>
         )}
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxWidth: "400px" }}>
-          <label>Email * <input name="email" type="email" required disabled={state === "submitting"} /></label>
-          <label>Имя * <input name="first_name" type="text" required disabled={state === "submitting"} /></label>
-          <label>Фамилия * <input name="last_name" type="text" required disabled={state === "submitting"} /></label>
-          <label>Адрес * <input name="address_1" type="text" required disabled={state === "submitting"} /></label>
-          <label>Город * <input name="city" type="text" required disabled={state === "submitting"} /></label>
-          <label>Индекс * <input name="postal_code" type="text" required disabled={state === "submitting"} /></label>
-          <label>Страна <input name="country_code" type="text" defaultValue="ru" disabled={state === "submitting"} /></label>
-          <button type="submit" disabled={state === "submitting"}>
+
+        <form onSubmit={handleSubmit} className="form-stack">
+          <div className="form-field">
+            <label htmlFor="checkout-email">Email *</label>
+            <input id="checkout-email" name="email" type="email" required disabled={state === "submitting"} />
+          </div>
+          <div className="form-field">
+            <label htmlFor="checkout-first-name">Имя *</label>
+            <input id="checkout-first-name" name="first_name" type="text" required disabled={state === "submitting"} />
+          </div>
+          <div className="form-field">
+            <label htmlFor="checkout-last-name">Фамилия *</label>
+            <input id="checkout-last-name" name="last_name" type="text" required disabled={state === "submitting"} />
+          </div>
+          <div className="form-field">
+            <label htmlFor="checkout-address">Адрес *</label>
+            <input id="checkout-address" name="address_1" type="text" required disabled={state === "submitting"} />
+          </div>
+          <div className="form-field">
+            <label htmlFor="checkout-city">Город *</label>
+            <input id="checkout-city" name="city" type="text" required disabled={state === "submitting"} />
+          </div>
+          <div className="form-field">
+            <label htmlFor="checkout-postal">Индекс *</label>
+            <input id="checkout-postal" name="postal_code" type="text" required disabled={state === "submitting"} />
+          </div>
+          <div className="form-field">
+            <label htmlFor="checkout-country">Страна</label>
+            <input id="checkout-country" name="country_code" type="text" defaultValue="ru" disabled={state === "submitting"} />
+          </div>
+          <button type="submit" disabled={state === "submitting"} className="btn btn-primary">
             {state === "submitting" ? "Оформление…" : "Оформить заказ"}
           </button>
           {(state === "validation_error" || state === "server_error") && errorMessage && (
-            <p style={{ color: "red" }} role="alert">{errorMessage}</p>
+            <p className="feedback-error" role="alert">{errorMessage}</p>
           )}
         </form>
       </div>

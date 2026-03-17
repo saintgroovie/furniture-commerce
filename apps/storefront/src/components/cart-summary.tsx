@@ -1,16 +1,15 @@
 "use client"
 
-/**
- * Данные корзины загружаются только на клиенте. Нет cart_id в cookie → пустая корзина (cart не создаётся).
- * После remove — removeLineItem() и повторный getCart(); без global cart store.
- * invalid_state: cart_id есть, но cart не существует (404) → очистка session, сообщение.
- */
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { getCartIdFromSession, clearCartIdFromSession } from "@/lib/cart/session"
 import { getCart, removeLineItem, CART_NOT_FOUND } from "@/lib/api/cart"
 
 type CartViewState = "loading" | "empty" | "ready" | "mutating" | "error" | "invalid_state"
+
+function formatRub(amount: number): string {
+  return amount.toLocaleString("ru-RU") + " ₽"
+}
 
 export function CartSummary() {
   const [cart, setCart] = useState<Record<string, unknown> | null>(null)
@@ -27,8 +26,15 @@ export function CartSummary() {
     }
     getCart(cartId)
       .then((data: { cart?: Record<string, unknown> }) => {
-        setCart(data.cart ?? null)
-        setViewState("ready")
+        const c = data.cart ?? null
+        const items = (c?.items as unknown[]) ?? []
+        if (!c || !Array.isArray(items) || items.length === 0) {
+          setCart(null)
+          setViewState("empty")
+        } else {
+          setCart(c)
+          setViewState("ready")
+        }
       })
       .catch((e: unknown) => {
         if (e instanceof Error && e.message === CART_NOT_FOUND) {
@@ -48,7 +54,12 @@ export function CartSummary() {
     try {
       await removeLineItem(cartId, lineId)
       const data = await getCart(cartId)
-      setCart(data.cart ?? null)
+      const c = data.cart ?? null
+      setCart(c)
+      const items = (c?.items as unknown[]) ?? []
+      if (!Array.isArray(items) || items.length === 0) {
+        setViewState("empty")
+      }
     } catch {
       setError("Ошибка удаления")
     } finally {
@@ -59,20 +70,33 @@ export function CartSummary() {
   if (viewState === "loading") {
     return (
       <div data-state="loading">
-        <div style={{ height: "2rem", backgroundColor: "#f5f5f5", marginBottom: "0.5rem" }} aria-hidden />
-        <div style={{ height: "4rem", backgroundColor: "#f5f5f5", marginBottom: "0.5rem" }} aria-hidden />
-        <div style={{ height: "3rem", backgroundColor: "#f5f5f5" }} aria-hidden />
+        <div className="skeleton" style={{ height: "4rem", marginBottom: "0.75rem" }} aria-hidden />
+        <div className="skeleton" style={{ height: "4rem", marginBottom: "0.75rem" }} aria-hidden />
+        <div className="skeleton" style={{ height: "3rem" }} aria-hidden />
       </div>
     )
   }
-  if (viewState === "error") return <p data-state="error" style={{ color: "red" }}>{error}</p>
+
+  if (viewState === "error") {
+    return (
+      <div data-state="error">
+        <p className="feedback-error">{error}</p>
+        <div className="nav-links" style={{ marginTop: "1rem" }}>
+          <Link href="/catalog">В каталог</Link>
+        </div>
+      </div>
+    )
+  }
+
   if (viewState === "invalid_state") {
     return (
-      <div data-state="invalid_state">
+      <div data-state="invalid_state" className="status-message">
         <p>Корзина недоступна.</p>
-        <p>
-          <Link href="/catalog">В каталог</Link>, <Link href="/rooms">в комнаты</Link>, <Link href="/">на главную</Link>.
-        </p>
+        <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
+          <Link href="/catalog">В каталог</Link>
+          <Link href="/rooms">В комнаты</Link>
+          <Link href="/">На главную</Link>
+        </div>
       </div>
     )
   }
@@ -80,11 +104,13 @@ export function CartSummary() {
   const cartId = getCartIdFromSession()
   if (!cartId || !cart) {
     return (
-      <div data-state="empty">
+      <div data-state="empty" className="status-message">
         <p>Корзина пуста.</p>
-        <p>
-          <Link href="/catalog">В каталог</Link>, <Link href="/rooms">в комнаты</Link>, <Link href="/">на главную</Link>.
-        </p>
+        <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
+          <Link href="/catalog">В каталог</Link>
+          <Link href="/rooms">В комнаты</Link>
+          <Link href="/">На главную</Link>
+        </div>
       </div>
     )
   }
@@ -92,36 +118,64 @@ export function CartSummary() {
   const items = (cart.items as Array<Record<string, unknown>>) ?? []
   if (items.length === 0) {
     return (
-      <div data-state="empty">
+      <div data-state="empty" className="status-message">
         <p>Корзина пуста.</p>
-        <p>
-          <Link href="/catalog">В каталог</Link>, <Link href="/rooms">в комнаты</Link>, <Link href="/">на главную</Link>.
-        </p>
+        <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
+          <Link href="/catalog">В каталог</Link>
+          <Link href="/rooms">В комнаты</Link>
+          <Link href="/">На главную</Link>
+        </div>
       </div>
     )
   }
 
+  const total = cart.total != null ? Number(cart.total) : null
+
   return (
     <div data-state={mutating ? "mutating" : "ready"}>
-      <ul style={{ listStyle: "none", marginTop: "0.5rem" }}>
-        {items.map((item: Record<string, unknown>) => (
-          <li key={String(item.id)} style={{ marginBottom: "0.5rem", display: "flex", gap: "0.5rem", alignItems: "center" }}>
-            <span>{(item.title as string) ?? "—"} × {Number((item as { quantity?: number }).quantity ?? 1)}</span>
-            <button
-              type="button"
-              onClick={() => handleRemove(cartId, item.id as string)}
-              disabled={mutating}
-              style={{ fontSize: "0.85rem" }}
-            >
-              Удалить
-            </button>
-          </li>
-        ))}
+      <ul className="cart-items">
+        {items.map((item: Record<string, unknown>) => {
+          const qty = Number((item as { quantity?: number }).quantity ?? 1)
+          const unitPrice = (item as { unit_price?: number }).unit_price
+          const itemTotal = (item as { total?: number }).total ?? (item as { subtotal?: number }).subtotal
+          return (
+            <li key={String(item.id)} className="cart-item">
+              <div className="cart-item-info">
+                <span className="cart-item-title">{(item.title as string) ?? "—"}</span>
+                <span className="cart-item-meta">
+                  {qty > 1 ? `${qty} шт.` : "1 шт."}
+                  {unitPrice != null ? ` · ${formatRub(unitPrice)}` : ""}
+                </span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                {itemTotal != null && <span className="price">{formatRub(itemTotal)}</span>}
+                <button
+                  type="button"
+                  onClick={() => handleRemove(cartId, item.id as string)}
+                  disabled={mutating}
+                  className="btn-danger"
+                >
+                  Удалить
+                </button>
+              </div>
+            </li>
+          )
+        })}
       </ul>
-      {mutating && <p>Обновление…</p>}
-      <p style={{ marginTop: "1rem" }}>
-        <Link href="/checkout">Оформить заказ</Link>
-      </p>
+
+      {total != null && !Number.isNaN(total) && (
+        <div className="cart-total">
+          <span>Итого</span>
+          <span>{formatRub(total)}</span>
+        </div>
+      )}
+
+      {mutating && <p className="note" style={{ marginTop: "0.5rem" }}>Обновление…</p>}
+      {error && <p className="feedback-error" style={{ marginTop: "0.5rem" }}>{error}</p>}
+
+      <div style={{ marginTop: "1.5rem" }}>
+        <Link href="/checkout" className="btn btn-primary">Оформить заказ</Link>
+      </div>
     </div>
   )
 }

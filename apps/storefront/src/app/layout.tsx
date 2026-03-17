@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import Link from "next/link"
 import { getSiteUrl } from "@/lib/api/base"
 import "./globals.css"
 
@@ -31,15 +32,21 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
-        <header style={{ padding: "1rem", borderBottom: "1px solid #eee" }}>
-          <nav>
-            <a href="/" style={{ marginRight: "1rem" }}>Главная</a>
-            <a href="/catalog" style={{ marginRight: "1rem" }}>Каталог</a>
-            <a href="/rooms" style={{ marginRight: "1rem" }}>Комнаты</a>
-            <a href="/cart">Корзина</a>
-          </nav>
+        <header className="site-header">
+          <div className="container">
+            <Link href="/" className="logo">Woodright</Link>
+            <nav>
+              <Link href="/catalog">Каталог</Link>
+              <Link href="/rooms">Комнаты</Link>
+              <Link href="/bespoke">Расчёт</Link>
+              <Link href="/cart">Корзина</Link>
+            </nav>
+          </div>
         </header>
-        <main style={{ padding: "1rem" }}>{children}</main>
+        <main className="container page-section">{children}</main>
+        <footer className="site-footer">
+          <div className="container">© Woodright</div>
+        </footer>
       </body>
     </html>
   )

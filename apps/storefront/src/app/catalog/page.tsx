@@ -14,34 +14,38 @@ export const metadata: Metadata = {
   },
 }
 
-export default async function CatalogPage() {
+const PRODUCT_TYPE_LABELS: Record<string, string> = {
+  STANDARD: "Стандартные",
+  CONFIGURABLE: "Конфигурируемые",
+  BESPOKE: "На заказ",
+}
+
+export default async function CatalogPage({
+  searchParams,
+}: {
+  searchParams: { product_type?: string }
+}) {
+  const activeType = searchParams.product_type ?? null
+
   let data: { products?: unknown[] } = {}
   try {
-    data = await getProducts()
+    data = await getProducts(activeType ? { product_type: activeType } : undefined)
   } catch {
     return (
       <div data-state="error">
         <h1>Каталог</h1>
-        <p>Не удалось загрузить каталог.</p>
-        <p><Link href="/">На главную</Link></p>
+        <p className="info-text" style={{ marginTop: "0.5rem" }}>Не удалось загрузить каталог.</p>
+        <div className="nav-links" style={{ marginTop: "1rem" }}>
+          <Link href="/">На главную</Link>
+        </div>
       </div>
     )
   }
   const products = data.products ?? []
   const list = Array.isArray(products) ? products : []
 
-  if (list.length === 0) {
-    return (
-      <div data-state="empty">
-        <h1>Каталог</h1>
-        <p>Товары не найдены.</p>
-        <p><Link href="/">На главную</Link></p>
-      </div>
-    )
-  }
-
   const base = getSiteUrl()
-  const itemListJsonLd = {
+  const itemListJsonLd = list.length > 0 ? {
     "@context": "https://schema.org",
     "@type": "ItemList",
     numberOfItems: list.length,
@@ -51,23 +55,55 @@ export default async function CatalogPage() {
       url: `${base}/product/${p.id}`,
       name: (p.title as string) ?? undefined,
     })),
-  }
+  } : null
 
   return (
-    <div data-state="success">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
-      />
+    <div data-state={list.length === 0 ? "empty" : "success"}>
+      {itemListJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
+        />
+      )}
+
       <h1>Каталог</h1>
-      <p>Фильтры: временный UI.</p>
-      <ul style={{ listStyle: "none", display: "flex", flexWrap: "wrap", gap: "1rem" }}>
-        {list.map((p: { id?: string }) => (
-          <li key={p.id}>
-            <ProductCard product={p} />
-          </li>
+
+      <nav className="filter-tabs" style={{ marginTop: "1rem" }} aria-label="Фильтр по типу">
+        <Link
+          href="/catalog"
+          className={activeType === null ? "filter-tab filter-tab-active" : "filter-tab"}
+        >
+          Все
+        </Link>
+        {Object.entries(PRODUCT_TYPE_LABELS).map(([key, label]) => (
+          <Link
+            key={key}
+            href={`/catalog?product_type=${key}`}
+            className={activeType === key ? "filter-tab filter-tab-active" : "filter-tab"}
+          >
+            {label}
+          </Link>
         ))}
-      </ul>
+      </nav>
+
+      {list.length === 0 ? (
+        <div className="status-message">
+          <p>Товары не найдены.</p>
+          {activeType && (
+            <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
+              <Link href="/catalog">Показать все</Link>
+            </div>
+          )}
+        </div>
+      ) : (
+        <ul className="product-grid">
+          {list.map((p: { id?: string }) => (
+            <li key={p.id}>
+              <ProductCard product={p as any} />
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }

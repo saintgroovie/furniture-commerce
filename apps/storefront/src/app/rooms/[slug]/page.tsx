@@ -39,41 +39,69 @@ export default async function RoomSetPage({ params }: { params: { slug: string }
   } catch (e) {
     if (e instanceof Error && e.message === NOT_FOUND) {
       return (
-        <div data-state="not_found">
-          <p>Комплект не найден.</p>
-          <p><Link href="/rooms">К списку комнат</Link></p>
+        <div data-state="not_found" className="status-message">
+          <h1>Комплект не найден</h1>
+          <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
+            <Link href="/rooms">К списку комнат</Link>
+          </div>
         </div>
       )
     }
     return (
-      <div data-state="error">
+      <div data-state="error" className="status-message">
+        <h1>Ошибка</h1>
         <p>Не удалось загрузить комплект.</p>
-        <p><Link href="/rooms">К списку комнат</Link></p>
+        <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
+          <Link href="/rooms">К списку комнат</Link>
+        </div>
       </div>
     )
   }
   const roomSet = data.room_set
   if (!roomSet) {
     return (
-      <div data-state="not_found">
-        <p>Комплект не найден.</p>
-        <p><Link href="/rooms">К списку комнат</Link></p>
+      <div data-state="not_found" className="status-message">
+        <h1>Комплект не найден</h1>
+        <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
+          <Link href="/rooms">К списку комнат</Link>
+        </div>
       </div>
     )
   }
-  const items = (roomSet.items as unknown[]) ?? []
+
+  const items = (roomSet.items as Array<Record<string, unknown>>) ?? []
+  const priceFrom = roomSet.price_from as number | null | undefined
+
   return (
     <div data-state="success">
       <h1>{(roomSet.title as string) ?? "Комната"}</h1>
-      <p>{String(roomSet.description ?? "")}</p>
-      <p>Цена от: {roomSet.price_from != null ? String(roomSet.price_from) : "—"}</p>
-      <ul>
-        {items.map((item: Record<string, unknown>, i: number) => (
-          <li key={i}>
-            {(item.product as Record<string, unknown>)?.title ?? "—"} × {Number((item as { quantity?: number }).quantity ?? 1)}
-          </li>
-        ))}
-      </ul>
+      {roomSet.description && <p className="info-text" style={{ marginTop: "0.5rem" }}>{String(roomSet.description)}</p>}
+      {priceFrom != null && (
+        <p className="price" style={{ marginTop: "0.75rem", fontSize: "1.2rem" }}>
+          от {priceFrom.toLocaleString("ru-RU")} ₽
+        </p>
+      )}
+
+      {items.length > 0 && (
+        <>
+          <h2 style={{ marginTop: "1.5rem" }}>Состав комплекта</h2>
+          <ul className="room-set-items">
+            {items.map((item: Record<string, unknown>, i: number) => {
+              const product = item.product as Record<string, unknown> | undefined
+              const title = (product?.title as string) ?? "—"
+              const qty = Number((item as { quantity?: number }).quantity ?? 1)
+              const type = (product?.custom_product_type as Record<string, string> | undefined)?.product_type
+              return (
+                <li key={i} className="room-set-item">
+                  <span>{title} × {qty}</span>
+                  {type && <span className="badge">{type}</span>}
+                </li>
+              )
+            })}
+          </ul>
+        </>
+      )}
+
       <RoomSetCta roomSet={roomSet} />
     </div>
   )

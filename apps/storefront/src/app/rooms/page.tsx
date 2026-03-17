@@ -21,8 +21,10 @@ export default async function RoomsPage() {
     return (
       <div data-state="error">
         <h1>Комнаты</h1>
-        <p>Не удалось загрузить комнаты.</p>
-        <p><Link href="/">На главную</Link></p>
+        <p className="info-text" style={{ marginTop: "0.5rem" }}>Не удалось загрузить комнаты.</p>
+        <div className="nav-links" style={{ marginTop: "1rem" }}>
+          <Link href="/">На главную</Link>
+        </div>
       </div>
     )
   }
@@ -33,8 +35,12 @@ export default async function RoomsPage() {
     return (
       <div data-state="empty">
         <h1>Комнаты</h1>
-        <p>Комплекты не найдены.</p>
-        <p><Link href="/">На главную</Link></p>
+        <div className="status-message">
+          <p>Комплекты не найдены.</p>
+          <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
+            <Link href="/">На главную</Link>
+          </div>
+        </div>
       </div>
     )
   }
@@ -42,10 +48,10 @@ export default async function RoomsPage() {
   return (
     <div data-state="success">
       <h1>Комнаты</h1>
-      <ul style={{ listStyle: "none", display: "flex", flexWrap: "wrap", gap: "1rem" }}>
-        {list.map((rs: { id?: string; slug?: string }) => (
+      <ul className="product-grid" style={{ marginTop: "1.5rem" }}>
+        {list.map((rs: { id?: string }) => (
           <li key={rs.id}>
-            <RoomSetCard roomSet={rs} />
+            <RoomSetCard roomSet={rs as any} />
           </li>
         ))}
       </ul>

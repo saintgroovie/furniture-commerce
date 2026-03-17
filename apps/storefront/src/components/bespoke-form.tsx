@@ -22,7 +22,7 @@ export function BespokeForm() {
     const email = (form.elements.namedItem("email") as HTMLInputElement)?.value?.trim() ?? ""
     const name = (form.elements.namedItem("name") as HTMLInputElement)?.value?.trim() ?? ""
     const phone = (form.elements.namedItem("phone") as HTMLInputElement)?.value?.trim() ?? ""
-    const comment = (form.elements.namedItem("comment") as HTMLInputElement)?.value?.trim() ?? ""
+    const comment = (form.elements.namedItem("comment") as HTMLTextAreaElement)?.value?.trim() ?? ""
 
     if (!email) {
       setStatus("error_validation")
@@ -59,32 +59,56 @@ export function BespokeForm() {
 
   if (status === "success") {
     return (
-      <div data-state="success">
-        <p>Заявка отправлена. Менеджер свяжется с вами.</p>
-        <p>
-          <Link href="/catalog">В каталог</Link>, <Link href="/rooms">в комнаты</Link>, <Link href="/">на главную</Link>.
-        </p>
+      <div data-state="success" className="status-message">
+        <h2>Заявка отправлена</h2>
+        <p>Менеджер свяжется с вами.</p>
+        <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
+          <Link href="/catalog">В каталог</Link>
+          <Link href="/rooms">В комнаты</Link>
+          <Link href="/">На главную</Link>
+        </div>
       </div>
     )
   }
 
+  const dataState =
+    status === "submitting" ? "submitting" :
+    status === "error_validation" ? "error_validation" :
+    status === "error_server" ? "error_server" :
+    "idle"
+
   return (
     <form
       onSubmit={handleSubmit}
-      data-state={status === "submitting" ? "submitting" : status === "error_validation" ? "error_validation" : status === "error_server" ? "error_server" : "idle"}
-      style={{ display: "flex", flexDirection: "column", gap: "0.5rem", maxWidth: "400px" }}
+      data-state={dataState}
+      className="form-stack"
     >
-      <label>Имя <input name="name" type="text" /></label>
-      <label>Email * <input name="email" type="email" /></label>
-      <label>Телефон <input name="phone" type="tel" /></label>
-      <label>Комментарий <input name="comment" type="text" /></label>
       {productId && <input type="hidden" name="product_id" value={productId} />}
       {roomSetId && <input type="hidden" name="room_set_id" value={roomSetId} />}
-      <button type="submit" disabled={status === "submitting"}>
+
+      <div className="form-field">
+        <label htmlFor="bespoke-name">Имя</label>
+        <input id="bespoke-name" name="name" type="text" />
+      </div>
+      <div className="form-field">
+        <label htmlFor="bespoke-email">Email *</label>
+        <input id="bespoke-email" name="email" type="email" required />
+      </div>
+      <div className="form-field">
+        <label htmlFor="bespoke-phone">Телефон</label>
+        <input id="bespoke-phone" name="phone" type="tel" />
+      </div>
+      <div className="form-field">
+        <label htmlFor="bespoke-comment">Комментарий</label>
+        <textarea id="bespoke-comment" name="comment" rows={3} />
+      </div>
+
+      <button type="submit" disabled={status === "submitting"} className="btn btn-primary">
         {status === "submitting" ? "Отправка…" : "Отправить"}
       </button>
+
       {(status === "error_validation" || status === "error_server") && (
-        <p style={{ color: "red" }} role="alert">{errorMessage}</p>
+        <p className="feedback-error" role="alert">{errorMessage}</p>
       )}
     </form>
   )
