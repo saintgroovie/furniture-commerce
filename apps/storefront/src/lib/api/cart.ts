@@ -102,6 +102,31 @@ export async function addLineItem(cartId: string, body: { variant_id: string; qu
   return res.json()
 }
 
+export async function updateLineItem(cartId: string, lineId: string, body: { quantity: number }) {
+  const base = getBaseUrl()
+  const res = await medusaFetch(`${base}/store/carts/${cartId}/line-items/${lineId}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) {
+    const text = await res.text()
+    let message = "Не удалось обновить количество."
+    try {
+      const data = text ? JSON.parse(text) : null
+      if (data && typeof data.message === "string") {
+        message = data.message
+      } else if (text) {
+        message = text
+      }
+    } catch {
+      if (text) message = text
+    }
+    throw new Error(message)
+  }
+  return res.json()
+}
+
 export async function removeLineItem(cartId: string, lineId: string) {
   const base = getBaseUrl()
   const res = await medusaFetch(`${base}/store/carts/${cartId}/line-items/${lineId}`, {
