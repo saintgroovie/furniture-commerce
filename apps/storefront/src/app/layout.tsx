@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import Link from "next/link"
 import { getSiteUrl } from "@/lib/api/base"
+import { NavDropdown } from "@/components/nav-dropdown"
 import "./globals.css"
 
 const inter = Inter({
@@ -46,14 +47,15 @@ export default function RootLayout({
               <span className="header-top-left">Шоурум: Москва</span>
               <Link href="/" className="logo">WOODRIGHT</Link>
               <div className="header-top-right">
-                <div className="nav-dropdown">
-                  <Link href="/designers/terms" className="nav-dropdown-trigger">Дизайнерам</Link>
-                  <div className="nav-dropdown-menu">
-                    <Link href="/designers/terms">Условия сотрудничества</Link>
-                    <Link href="/designers/materials">Материалы</Link>
-                    <Link href="/designers/request">Оставить заявку</Link>
-                  </div>
-                </div>
+                <NavDropdown
+                  href="/designers/terms"
+                  label="Дизайнерам"
+                  items={[
+                    { label: "Условия сотрудничества", href: "/designers/terms" },
+                    { label: "Материалы", href: "/designers/materials" },
+                    { label: "Оставить заявку", href: "/designers/request" },
+                  ]}
+                />
                 <Link href="/contacts">Контакты</Link>
               </div>
             </div>
@@ -63,43 +65,47 @@ export default function RootLayout({
           <div className="header-main">
             <div className="container header-main-inner">
               <nav className="header-nav" aria-label="Основная навигация">
-                <div className="nav-dropdown">
-                  <Link href="/catalog" className="nav-dropdown-trigger">Каталог</Link>
-                  <div className="nav-dropdown-menu">
-                    <Link href="/catalog">Все</Link>
-                    <Link href="/catalog?product_type=STANDARD">Готовые</Link>
-                    <Link href="/catalog?product_type=CONFIGURABLE">С выбором исполнения</Link>
-                  </div>
-                </div>
+                <NavDropdown
+                  href="/catalog"
+                  label="Каталог"
+                  items={[
+                    { label: "Все", href: "/catalog" },
+                    { label: "Готовые", href: "/catalog?product_type=STANDARD" },
+                    { label: "С выбором исполнения", href: "/catalog?product_type=CONFIGURABLE" },
+                  ]}
+                />
 
                 <Link href="/rooms" className="header-nav-link">Комнаты</Link>
 
-                <div className="nav-dropdown">
-                  <Link href="/kids" className="nav-dropdown-trigger">Детская</Link>
-                  <div className="nav-dropdown-menu">
-                    <Link href="/kids/catalog">Каталог</Link>
-                    <Link href="/kids/rooms">Комнаты</Link>
-                    <Link href="/kids">О разделе</Link>
-                  </div>
-                </div>
+                <NavDropdown
+                  href="/kids"
+                  label="Детская"
+                  items={[
+                    { label: "Каталог", href: "/kids/catalog" },
+                    { label: "Комнаты", href: "/kids/rooms" },
+                    { label: "О разделе", href: "/kids" },
+                  ]}
+                />
 
-                <div className="nav-dropdown">
-                  <Link href="/bespoke" className="nav-dropdown-trigger">По проекту</Link>
-                  <div className="nav-dropdown-menu">
-                    <Link href="/bespoke">Как это работает</Link>
-                    <Link href="/bespoke/catalog">Направления</Link>
-                    <Link href="/bespoke/request">Оставить заявку</Link>
-                  </div>
-                </div>
+                <NavDropdown
+                  href="/bespoke"
+                  label="По проекту"
+                  items={[
+                    { label: "Как это работает", href: "/bespoke" },
+                    { label: "Направления", href: "/bespoke/catalog" },
+                    { label: "Оставить заявку", href: "/bespoke/request" },
+                  ]}
+                />
 
-                <div className="nav-dropdown">
-                  <Link href="/about" className="nav-dropdown-trigger">О бренде</Link>
-                  <div className="nav-dropdown-menu">
-                    <Link href="/about">О компании</Link>
-                    <Link href="/about/production">Производство</Link>
-                    <Link href="/about/materials">Материалы</Link>
-                  </div>
-                </div>
+                <NavDropdown
+                  href="/about"
+                  label="О бренде"
+                  items={[
+                    { label: "О компании", href: "/about" },
+                    { label: "Производство", href: "/about/production" },
+                    { label: "Материалы", href: "/about/materials" },
+                  ]}
+                />
               </nav>
               <Link href="/cart" className="header-cart-link" aria-label="Корзина">Корзина</Link>
             </div>
