@@ -31,6 +31,10 @@
 | **product-rules.md** | Правила типов товаров (STANDARD / CONFIGURABLE / BESPOKE), корзина, Room Set. |
 | **admin-flows.md** | Поведение админки: Room Sets, Leads, Bespoke Requests, Payment Links. |
 | **storefront-phase1.md** | Архитектура storefront Phase 1: страницы, API, компоненты, CTA, DoD. |
+| **storefront-design-implementation-rules.md** | Design system: visual direction, color palette, typography, spacing, anti-patterns. |
+| **storefront-page-patterns.md** | Page-level patterns: homepage, catalog, PDP, cart, room sets, bespoke. |
+| **storefront-component-principles.md** | Component-level principles: header, cards, buttons, forms, gallery, badges. |
+| **storefront-ui-refactor-brief.md** | Phased UI refactor plan (A-E). Phases A-D completed, Phase E next. |
 | **development-rules.md** | Обязательные правила разработки (документация, модули, не менять core). |
 | **architecture-guardrails.md** | Архитектурные ограничения (без BFF, без микросервисов, storefront без бизнес-логики). |
 | **PROJECT_STATUS.md** | Текущее состояние: backend Phase 1, storefront, ограничения MVP, следующий шаг. |
@@ -66,8 +70,9 @@ Backend не форкается; расширение только через м
 **Структура и ответственность:**
 
 - **src/app/** — маршруты Next.js App Router: layout, главная, catalog, product/[id], rooms, rooms/[slug], bespoke, cart, checkout.
-- **src/components/** — UI-компоненты: product-card, product-cta, room-set-card, room-set-cta, bespoke-form, cart-summary.
+- **src/components/** — UI-компоненты: product-card, product-cta, room-set-card, room-set-cta, bespoke-form, cart-summary, checkout-form.
 - **src/lib/api/** — вызовы backend: products, room-sets, leads, bespoke-requests, cart, checkout, base (URL).
+- **src/lib/format.ts** — shared presentation utilities: `formatRub` (price formatting), `getPrice` (variant price extraction).
 - **src/lib/cart/session.ts** — сессия корзины: чтение/запись cart_id в cookie, ensureCart (создание корзины через backend при отсутствии).
 
 Storefront только отображает данные и вызывает API; правила (например, кто идёт в корзину) определяет backend.

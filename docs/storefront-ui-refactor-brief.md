@@ -333,7 +333,7 @@
 
 ## 8. Phased Implementation Plan
 
-### Phase A: Foundation Polish
+### Phase A: Foundation Polish ✅ COMPLETED
 
 **Цель:** установить visual foundation — палитру, типографику, spacing tokens — чтобы всё последующее строилось на правильной основе.
 
@@ -359,9 +359,11 @@
 
 **Expected outcome:** сайт визуально "потеплеет", типографика станет спокойнее, общее ощущение сдвинется от generic к premium. При этом layout, content, behavior — идентичны.
 
+**Результат:** warm palette (#2c2420 fg, #faf8f5 bg), Inter font via next/font, 7 spacing tokens, heading weights 500, button size 0.9375rem, warm hover/focus/skeleton colors, filter-tab radius 6px, max-width 1200px. `lib/format.ts` создан с `formatRub` + `getPrice`. Все 4 дубликата заменены импортами.
+
 ---
 
-### Phase B: Catalog and Card System
+### Phase B: Catalog and Card System ✅ COMPLETED
 
 **Цель:** привести product card и catalog к target quality. Это самые visible и repeated компоненты.
 
@@ -394,9 +396,11 @@
 
 **Expected outcome:** каталог выглядит как premium furniture grid, а не generic card layout. Крупные изображения, чистые карточки, единый ритм.
 
+**Результат:** product card — full-card clickable `<Link>`, description removed, badge only for BESPOKE ("На заказ"), scoped `aspect-ratio: 4/5` image, image placeholder, `loading="lazy"`, `.product-card .card-body` flex layout. Room-set-card — full-card clickable, description removed, scoped `aspect-ratio: 16/9` (landscape), inline styles → CSS, `formatRub` imported, image placeholder. `<Image>` migration deferred — image domains unconfirmed.
+
 ---
 
-### Phase C: PDP and Room Sets
+### Phase C: PDP and Room Sets ✅ COMPLETED
 
 **Цель:** улучшить две ключевые detail-страницы: товар и комплект комнаты.
 
@@ -431,9 +435,11 @@
 
 **Expected outcome:** PDP — крупное изображение, spacious layout, confident typography. Room set — visual hero, clickable products in composition.
 
+**Результат:** PDP grid `3fr 2fr`, image `aspect-ratio: 4/5`, `.product-detail-header` + `.product-detail-price` CSS classes, badge BESPOKE-only. Room-set-card — clickable, 16:9 landscape, no description, CSS-managed spacing. Room-set detail — hero image rendered, `.room-set-detail` flex layout, product links in items, badge labels, inline styles removed. CTA components untouched.
+
 ---
 
-### Phase D: Cart, Checkout, Bespoke Refinement
+### Phase D: Cart, Checkout, Bespoke Refinement ✅ COMPLETED
 
 **Цель:** привести utility-страницы к тому же visual standard без изменения behavior.
 
@@ -466,9 +472,11 @@
 
 **Expected outcome:** единообразный spacing, typography и цвет на всех страницах. Utility-страницы выглядят как часть одного бренда.
 
+**Результат:** `.service-page` wrapper для cart/checkout/bespoke (flex column + gap). Cart — `.cart-item-actions` CSS class, checkout CTA via `.cta-group`, `.note` margin inline removed. Checkout — section headings ("Контактные данные" / "Адрес доставки"), success state inline styles removed. Bespoke — intro paragraph added, CTA "Отправить заявку", success nav-links CSS-managed. `.status-message .nav-links` CSS rule eliminates 6+ inline marginTop instances. `.form-section-title` CSS class for form grouping.
+
 ---
 
-### Phase E: Content-Driven Final Pass
+### Phase E: Content-Driven Final Pass ⏳ NEXT
 
 **Цель:** final visual polish, который имеет смысл только при наличии реального контента.
 

@@ -30,7 +30,7 @@ v0.1-backend-foundation
 
 ## Storefront
 
-**Phase 1.** Status: functional + polished.
+**Phase 1.** Status: functional + UI polish Phases A-D completed.
 
 Implemented:
 
@@ -51,6 +51,15 @@ UX polish completed:
 - Safe API error parsing
 - Bespoke form UX polish
 - Navigation after success states
+
+UI refactor completed (Phases A-D):
+
+- Phase A: warm palette tokens, Inter font, spacing scale, typography foundation
+- Phase B: product card cleanup (clickable, description removed, badge labels, 4:5 image), room-set-card cleanup (clickable, 16:9 image, description removed)
+- Phase C: PDP grid 3fr/2fr + 4:5 image, room-set detail hero image + product links, badge labels
+- Phase D: cart/checkout/bespoke inline styles → CSS, checkout section headings, bespoke intro + CTA copy, .service-page layout
+- Shared utilities: lib/format.ts (formatRub, getPrice)
+- `<Image>` migration deferred — image domains unconfirmed
 
 Architecture constraints preserved:
 
@@ -85,4 +94,4 @@ Architecture constraints preserved:
 
 ## Next step
 
-Полировка storefront Phase 1 (UI, фильтры каталога, отображение цен) или переход к Phase 2 (админка).
+Phase E (content-driven final pass): homepage sections, PDP gallery, editorial room-set cards — requires real content/images. Or: `<Image>` migration (requires confirming image domains), mobile hamburger menu, Phase 2 (admin).
