@@ -7,7 +7,7 @@ Phase 1 completed.
 Реализовано:
 
 - Medusa backend
-- ProductType extension
+- ProductClassification extension (таблица `product_classification`)
 - RoomSet + RoomSetItem
 - Lead
 - BespokeRequest
@@ -62,10 +62,15 @@ Architecture constraints preserved:
 
 ## Known limitations (MVP)
 
-- product_type filter выполняется in-memory
+- product_type filter выполняется client-side (storefront); server-side фильтрация снята из-за ограничений Medusa store API query params
 - category filter зависит от имени связи product-category в Medusa
 - webhook payment не реализован
 - CONFIGURABLE пока имеет один вариант (заглушка)
+
+## Self-audit log
+
+- `f8f7a01` — fix: room_set_item snapshot содержал product_id, которого нет в модели и миграции. Удалён из snapshot. Предотвращает некорректные future migrations.
+- `ed342cd` — cleanup: rename ProductType → ProductClassification в модели, сервисе, комментариях, файле. Чисто технический rename для соответствия Medusa v2 naming.
 
 ## Docs для AI
 

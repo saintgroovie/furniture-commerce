@@ -6,7 +6,7 @@
 
 ## Medusa core (используем как есть + расширения)
 
-- **Product** — плюс поле `product_type`: `STANDARD` | `CONFIGURABLE` | `BESPOKE`.
+- **Product** — расширен связью с **ProductClassification** (таблица `product_classification`, поле `product_type`: `STANDARD` | `CONFIGURABLE` | `BESPOKE`).
 - **Product Variant, Product Option, Category** — без изменений структуры.
 - **Cart, Line Item, Order, Customer** — без изменений. При необходимости — только metadata.
 

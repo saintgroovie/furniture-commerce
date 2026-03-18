@@ -93,15 +93,17 @@ BESPOKE — нельзя в корзину, только запрос
 
 ---
 
-## 6. ProductType
+## 6. ProductClassification
 
 Тип товара хранится в отдельной модели:
 
-ProductType
+ProductClassification
+
+Таблица: `product_classification`. Поле: `product_type` (enum: STANDARD | CONFIGURABLE | BESPOKE).
 
 Связь:
 
-Product 1 → 1 ProductType
+Product 1 → 1 ProductClassification
 
 Это бизнес-правило проекта.
 

@@ -61,7 +61,7 @@ Storefront должен:
 Основные сущности системы:
 
 Product  
-ProductType  
+ProductClassification  
 RoomSet  
 RoomSetItem  
 Lead  
@@ -74,7 +74,7 @@ PaymentLink
 
 # 5. Типы товаров
 
-Тип товара хранится в отдельной сущности ProductType.
+Тип товара хранится в отдельной сущности ProductClassification (таблица `product_classification`, поле `product_type`).
 
 Типы:
 
