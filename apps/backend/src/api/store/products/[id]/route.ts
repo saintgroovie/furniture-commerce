@@ -1,7 +1,7 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 
 /**
- * Детали продукта по id. Возвращает продукт с вариантами, изображениями и productType для storefront.
+ * Детали продукта по id. Возвращает продукт с вариантами, изображениями и product_classification для storefront.
  */
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const id = req.params.id as string

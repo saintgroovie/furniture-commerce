@@ -29,22 +29,23 @@ const PRODUCTS: Array<{
   category_handle: string
   product_type: "STANDARD" | "CONFIGURABLE" | "BESPOKE"
   description?: string
+  price: number
 }> = [
-  { title: "Стул Лофт", sku: "stul-loft", category_handle: "stulya", product_type: "STANDARD", description: "Стул в стиле лофт" },
-  { title: "Тумба прикроватная", sku: "tumba-prikrovatnaya", category_handle: "tumby", product_type: "STANDARD" },
-  { title: "Полка настенная", sku: "polka-nastennaya", category_handle: "shkafy", product_type: "STANDARD" },
-  { title: "Стол обеденный Лофт", sku: "stol-obedennyj-loft", category_handle: "stoly", product_type: "CONFIGURABLE", description: "Материал: дуб, орех. Размеры: 120, 140 см" },
-  { title: "Комод трёхдверный", sku: "komod-trehdvernyj", category_handle: "shkafy", product_type: "CONFIGURABLE" },
-  { title: "Стол письменный", sku: "stol-pismennyj", category_handle: "stoly", product_type: "CONFIGURABLE" },
-  { title: "Кухня на заказ", sku: "kuhnya-na-zakaz", category_handle: "shkafy", product_type: "BESPOKE" },
-  { title: "Гардеробная", sku: "garderobnaya", category_handle: "shkafy", product_type: "BESPOKE" },
-  { title: "Шкаф в нишу", sku: "shkaf-v-nishu", category_handle: "shkafy", product_type: "BESPOKE" },
-  { title: "Стул офисный", sku: "stul-ofisnyj", category_handle: "stulya", product_type: "STANDARD" },
-  { title: "Тумба ТВ", sku: "tumba-tv", category_handle: "tumby", product_type: "CONFIGURABLE" },
-  { title: "Кровать детская", sku: "krovat-detskaya", category_handle: "shkafy", product_type: "STANDARD" },
-  { title: "Письменный стол школьный", sku: "stol-shkolnyj", category_handle: "stoly", product_type: "CONFIGURABLE" },
-  { title: "Стеллаж книжный", sku: "stellazh-knizhnyj", category_handle: "shkafy", product_type: "STANDARD" },
-  { title: "Стол компьютерный", sku: "stol-kompyuternyj", category_handle: "stoly", product_type: "CONFIGURABLE" },
+  { title: "Стул Лофт", sku: "stul-loft", category_handle: "stulya", product_type: "STANDARD", description: "Стул в стиле лофт", price: 8500 },
+  { title: "Тумба прикроватная", sku: "tumba-prikrovatnaya", category_handle: "tumby", product_type: "STANDARD", price: 12000 },
+  { title: "Полка настенная", sku: "polka-nastennaya", category_handle: "shkafy", product_type: "STANDARD", price: 4500 },
+  { title: "Стол обеденный Лофт", sku: "stol-obedennyj-loft", category_handle: "stoly", product_type: "CONFIGURABLE", description: "Материал: дуб, орех. Размеры: 120, 140 см", price: 35000 },
+  { title: "Комод трёхдверный", sku: "komod-trehdvernyj", category_handle: "shkafy", product_type: "CONFIGURABLE", price: 28000 },
+  { title: "Стол письменный", sku: "stol-pismennyj", category_handle: "stoly", product_type: "CONFIGURABLE", price: 22000 },
+  { title: "Кухня на заказ", sku: "kuhnya-na-zakaz", category_handle: "shkafy", product_type: "BESPOKE", price: 150000 },
+  { title: "Гардеробная", sku: "garderobnaya", category_handle: "shkafy", product_type: "BESPOKE", price: 120000 },
+  { title: "Шкаф в нишу", sku: "shkaf-v-nishu", category_handle: "shkafy", product_type: "BESPOKE", price: 80000 },
+  { title: "Стул офисный", sku: "stul-ofisnyj", category_handle: "stulya", product_type: "STANDARD", price: 9500 },
+  { title: "Тумба ТВ", sku: "tumba-tv", category_handle: "tumby", product_type: "CONFIGURABLE", price: 18000 },
+  { title: "Кровать детская", sku: "krovat-detskaya", category_handle: "shkafy", product_type: "STANDARD", price: 25000 },
+  { title: "Письменный стол школьный", sku: "stol-shkolnyj", category_handle: "stoly", product_type: "CONFIGURABLE", price: 15000 },
+  { title: "Стеллаж книжный", sku: "stellazh-knizhnyj", category_handle: "shkafy", product_type: "STANDARD", price: 14000 },
+  { title: "Стол компьютерный", sku: "stol-kompyuternyj", category_handle: "stoly", product_type: "CONFIGURABLE", price: 20000 },
 ]
 
 // Room Sets с явным списком товаров по sku. Состав логичный для типа комнаты.
@@ -117,7 +118,12 @@ export default async function seed({ container }: ExecArgs) {
             description: p.description ?? "",
             status: "published" as const,
             options: [{ title: "Default", values: ["Default"] }],
-            variants: [{ title: p.title, sku: p.sku, options: { Default: "Default" } }],
+            variants: [{
+              title: p.title,
+              sku: p.sku,
+              options: { Default: "Default" },
+              prices: [{ amount: p.price * 100, currency_code: "rub" }],
+            }],
           })),
         },
       })
@@ -139,6 +145,51 @@ export default async function seed({ container }: ExecArgs) {
 
   const productIdBySku = Object.fromEntries(createdProducts.map((p) => [p.sku, p.id]))
   const productDefBySku = Object.fromEntries(PRODUCTS.map((p) => [p.sku, p]))
+
+  // --- Stock location + inventory ---
+  logger.info("Setting up stock location and inventory...")
+  const stockLocationService = container.resolve(Modules.STOCK_LOCATION) as any
+  const inventoryService = container.resolve(Modules.INVENTORY) as any
+  const salesChannelService = container.resolve(Modules.SALES_CHANNEL) as any
+
+  let stockLocationId: string
+  const existingLocations = await stockLocationService.listStockLocations({ name: "Основной склад" }, { take: 1 })
+  if (existingLocations?.length) {
+    stockLocationId = existingLocations[0].id
+    logger.info(`Reusing stock location: ${stockLocationId}`)
+  } else {
+    const sl = await stockLocationService.createStockLocations({
+      name: "Основной склад",
+      address: { address_1: "Москва", country_code: "ru" },
+    })
+    stockLocationId = (Array.isArray(sl) ? sl[0] : sl).id
+    logger.info(`Created stock location: ${stockLocationId}`)
+  }
+
+  const [defaultSalesChannel] = await salesChannelService.listSalesChannels({}, { take: 1 })
+  if (defaultSalesChannel) {
+    try {
+      await link.create({
+        [Modules.SALES_CHANNEL]: { sales_channel_id: defaultSalesChannel.id },
+        [Modules.STOCK_LOCATION]: { stock_location_id: stockLocationId },
+      })
+    } catch { /* already linked */ }
+  }
+
+  const allInventoryItems = await inventoryService.listInventoryItems({}, { take: 200 })
+  for (const invItem of (allInventoryItems ?? [])) {
+    const existingLevels = await inventoryService.listInventoryLevels(
+      { inventory_item_id: invItem.id, location_id: stockLocationId },
+      { take: 1 }
+    )
+    if (existingLevels?.length) continue
+    await inventoryService.createInventoryLevels({
+      inventory_item_id: invItem.id,
+      location_id: stockLocationId,
+      stocked_quantity: 100,
+    })
+  }
+  logger.info("Stock location and inventory setup done.")
 
   logger.info("Linking products to categories...")
   for (const c of CATEGORIES) {

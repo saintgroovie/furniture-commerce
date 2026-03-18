@@ -2,6 +2,7 @@ import Link from "next/link"
 import type { Metadata } from "next"
 import { getSiteUrl } from "@/lib/api/base"
 import { getProduct, NOT_FOUND } from "@/lib/api/products"
+import { formatRub, getPrice } from "@/lib/format"
 import { ProductCta } from "@/components/product-cta"
 
 function truncate(str: string, max: number): string {
@@ -9,7 +10,9 @@ function truncate(str: string, max: number): string {
   return str.slice(0, max - 3).trim() + "..."
 }
 
-import { formatRub, getPrice } from "@/lib/format"
+const BADGE_LABELS: Record<string, string> = {
+  BESPOKE: "На заказ",
+}
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const base = getSiteUrl()
@@ -80,6 +83,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
   const mainImage = thumbnail || images?.[0]?.url
   const price = getPrice(product)
   const productType = (product.product_classification as Record<string, string> | undefined)?.product_type
+  const badgeLabel = productType ? BADGE_LABELS[productType] : undefined
 
   const productJsonLd = {
     "@context": "https://schema.org",
@@ -105,11 +109,11 @@ export default async function ProductPage({ params }: { params: { id: string } }
           )}
         </div>
         <div className="product-detail-info">
-          <div>
+          <div className="product-detail-header">
             <h1>{(product.title as string) ?? "Товар"}</h1>
-            {productType && <span className="badge" style={{ marginTop: "0.5rem", display: "inline-block" }}>{productType}</span>}
+            {badgeLabel && <span className="badge">{badgeLabel}</span>}
           </div>
-          {price != null && <p className="price" style={{ fontSize: "1.35rem" }}>{formatRub(price)}</p>}
+          {price != null && <p className="price product-detail-price">{formatRub(price)}</p>}
           {product.description && <p className="info-text">{String(product.description)}</p>}
           <ProductCta product={product} />
         </div>

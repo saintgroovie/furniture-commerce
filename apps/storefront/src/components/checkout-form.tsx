@@ -177,14 +177,14 @@ export function CheckoutForm() {
               return (
                 <div key={String(item.id)} className="order-summary-item">
                   <span>{(item.title as string) ?? "—"} × {qty}</span>
-                  {itemTotal != null && <span>{formatRub(itemTotal)}</span>}
+                  {itemTotal != null && <span>{formatRub(Number(itemTotal) / 100)}</span>}
                 </div>
               )
             })}
             {total != null && !Number.isNaN(total) && (
               <div className="order-summary-total">
                 <span>Итого</span>
-                <span>{formatRub(total)}</span>
+                <span>{formatRub(total / 100)}</span>
               </div>
             )}
           </section>

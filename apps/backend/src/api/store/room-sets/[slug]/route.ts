@@ -15,7 +15,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   }
   const { data: itemsWithProduct } = await query.graph({
     entity: "room_set_item",
-    fields: ["*", "product.*", "product.product_classification.*", "product.variants.*"],
+    fields: ["*", "product.*", "product.product_classification.*", "product.variants.*", "product.variants.prices.*"],
     filters: { room_set_id: roomSet.id },
   })
   const items = ((itemsWithProduct ?? []) as Array<Record<string, unknown> & { sort_order?: number }>)

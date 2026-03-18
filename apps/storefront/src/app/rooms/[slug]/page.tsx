@@ -2,11 +2,16 @@ import Link from "next/link"
 import type { Metadata } from "next"
 import { getSiteUrl } from "@/lib/api/base"
 import { getRoomSetBySlug, NOT_FOUND } from "@/lib/api/room-sets"
+import { formatRub } from "@/lib/format"
 import { RoomSetCta } from "@/components/room-set-cta"
 
 function truncate(str: string, max: number): string {
   if (str.length <= max) return str
   return str.slice(0, max - 3).trim() + "..."
+}
+
+const BADGE_LABELS: Record<string, string> = {
+  BESPOKE: "На заказ",
 }
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
@@ -69,37 +74,53 @@ export default async function RoomSetPage({ params }: { params: { slug: string }
     )
   }
 
+  const heroImage = roomSet.hero_image as string | undefined
   const items = (roomSet.items as Array<Record<string, unknown>>) ?? []
   const priceFrom = roomSet.price_from as number | null | undefined
 
   return (
-    <div data-state="success">
-      <h1>{(roomSet.title as string) ?? "Комната"}</h1>
-      {roomSet.description && <p className="info-text" style={{ marginTop: "0.5rem" }}>{String(roomSet.description)}</p>}
-      {priceFrom != null && (
-        <p className="price" style={{ marginTop: "0.75rem", fontSize: "1.2rem" }}>
-          от {priceFrom.toLocaleString("ru-RU")} ₽
-        </p>
+    <div data-state="success" className="room-set-detail">
+      {heroImage && (
+        <img
+          src={heroImage}
+          alt={String(roomSet.title ?? "")}
+          className="room-set-hero-img"
+        />
       )}
 
+      <div className="room-set-detail-header">
+        <h1>{(roomSet.title as string) ?? "Комната"}</h1>
+        {roomSet.description && <p className="info-text">{String(roomSet.description)}</p>}
+        {priceFrom != null && (
+          <p className="price room-set-detail-price">от {formatRub(priceFrom)}</p>
+        )}
+      </div>
+
       {items.length > 0 && (
-        <>
-          <h2 style={{ marginTop: "1.5rem" }}>Состав комплекта</h2>
+        <div>
+          <h2>Состав комплекта</h2>
           <ul className="room-set-items">
             {items.map((item: Record<string, unknown>, i: number) => {
               const product = item.product as Record<string, unknown> | undefined
               const title = (product?.title as string) ?? "—"
+              const productId = product?.id as string | undefined
               const qty = Number((item as { quantity?: number }).quantity ?? 1)
               const type = (product?.product_classification as Record<string, string> | undefined)?.product_type
+              const badgeLabel = type ? BADGE_LABELS[type] : undefined
               return (
                 <li key={i} className="room-set-item">
-                  <span>{title} × {qty}</span>
-                  {type && <span className="badge">{type}</span>}
+                  <span>
+                    {productId ? (
+                      <Link href={`/product/${productId}`}>{title}</Link>
+                    ) : title}
+                    {" × "}{qty}
+                  </span>
+                  {badgeLabel && <span className="badge">{badgeLabel}</span>}
                 </li>
               )
             })}
           </ul>
-        </>
+        </div>
       )}
 
       <RoomSetCta roomSet={roomSet} />

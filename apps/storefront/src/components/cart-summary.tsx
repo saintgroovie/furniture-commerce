@@ -141,11 +141,11 @@ export function CartSummary() {
                 <span className="cart-item-title">{(item.title as string) ?? "—"}</span>
                 <span className="cart-item-meta">
                   {qty > 1 ? `${qty} шт.` : "1 шт."}
-                  {unitPrice != null ? ` · ${formatRub(unitPrice)}` : ""}
+                  {unitPrice != null ? ` · ${formatRub(unitPrice / 100)}` : ""}
                 </span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                {itemTotal != null && <span className="price">{formatRub(itemTotal)}</span>}
+                {itemTotal != null && <span className="price">{formatRub(Number(itemTotal) / 100)}</span>}
                 <button
                   type="button"
                   onClick={() => handleRemove(cartId, item.id as string)}
@@ -163,7 +163,7 @@ export function CartSummary() {
       {total != null && !Number.isNaN(total) && (
         <div className="cart-total">
           <span>Итого</span>
-          <span>{formatRub(total)}</span>
+          <span>{formatRub(total / 100)}</span>
         </div>
       )}
 
