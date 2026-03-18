@@ -62,7 +62,7 @@ export function BespokeForm() {
       <div data-state="success" className="status-message">
         <h2>Заявка отправлена</h2>
         <p>Менеджер свяжется с вами.</p>
-        <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
+        <div className="nav-links nav-links-center">
           <Link href="/catalog">В каталог</Link>
           <Link href="/rooms">В комнаты</Link>
           <Link href="/">На главную</Link>
@@ -104,7 +104,7 @@ export function BespokeForm() {
       </div>
 
       <button type="submit" disabled={status === "submitting"} className="btn btn-primary">
-        {status === "submitting" ? "Отправка…" : "Отправить"}
+        {status === "submitting" ? "Отправка заявки…" : "Отправить заявку"}
       </button>
 
       {(status === "error_validation" || status === "error_server") && (

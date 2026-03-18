@@ -9,8 +9,9 @@ export const metadata: Metadata = {
 
 export default function BespokePage() {
   return (
-    <div>
+    <div className="service-page">
       <h1>Заявка на расчёт</h1>
+      <p className="info-text">Расскажите о вашем проекте — мы подготовим индивидуальный расчёт и свяжемся с вами.</p>
       <Suspense fallback={<p>Загрузка…</p>}>
         <BespokeForm />
       </Suspense>

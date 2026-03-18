@@ -89,7 +89,7 @@ export function CartSummary() {
     return (
       <div data-state="invalid_state" className="status-message">
         <p>Корзина недоступна.</p>
-        <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
+        <div className="nav-links nav-links-center">
           <Link href="/catalog">В каталог</Link>
           <Link href="/rooms">В комнаты</Link>
           <Link href="/">На главную</Link>
@@ -103,7 +103,7 @@ export function CartSummary() {
     return (
       <div data-state="empty" className="status-message">
         <p>Корзина пуста.</p>
-        <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
+        <div className="nav-links nav-links-center">
           <Link href="/catalog">В каталог</Link>
           <Link href="/rooms">В комнаты</Link>
           <Link href="/">На главную</Link>
@@ -117,7 +117,7 @@ export function CartSummary() {
     return (
       <div data-state="empty" className="status-message">
         <p>Корзина пуста.</p>
-        <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
+        <div className="nav-links nav-links-center">
           <Link href="/catalog">В каталог</Link>
           <Link href="/rooms">В комнаты</Link>
           <Link href="/">На главную</Link>
@@ -144,7 +144,7 @@ export function CartSummary() {
                   {unitPrice != null ? ` · ${formatRub(unitPrice / 100)}` : ""}
                 </span>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <div className="cart-item-actions">
                 {itemTotal != null && <span className="price">{formatRub(Number(itemTotal) / 100)}</span>}
                 <button
                   type="button"
@@ -167,10 +167,10 @@ export function CartSummary() {
         </div>
       )}
 
-      {mutating && <p className="note" style={{ marginTop: "0.5rem" }}>Обновление…</p>}
+      {mutating && <p className="note">Обновление…</p>}
       {error && <p className="feedback-error" style={{ marginTop: "0.5rem" }}>{error}</p>}
 
-      <div style={{ marginTop: "1.5rem" }}>
+      <div className="cta-group">
         <Link href="/checkout" className="btn btn-primary">Оформить заказ</Link>
       </div>
     </div>

@@ -115,7 +115,7 @@ export function CheckoutForm() {
     return (
       <div data-state="empty_cart" className="status-message">
         <p>Корзина пуста. Оформление заказа недоступно.</p>
-        <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
+        <div className="nav-links nav-links-center">
           <Link href="/catalog">В каталог</Link>
           <Link href="/rooms">В комнаты</Link>
           <Link href="/cart">В корзину</Link>
@@ -137,7 +137,7 @@ export function CheckoutForm() {
     return (
       <div data-state="invalid_cart_state" className="status-message">
         <p>Корзина повреждена или недоступна.</p>
-        <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
+        <div className="nav-links nav-links-center">
           <Link href="/catalog">В каталог</Link>
           <Link href="/cart">В корзину</Link>
         </div>
@@ -149,11 +149,11 @@ export function CheckoutForm() {
     return (
       <div data-state="success" className="status-message">
         <h2>Заказ оформлен</h2>
-        {orderId && <p style={{ marginTop: "0.5rem" }}>Номер заказа: <strong>{orderId}</strong></p>}
-        <p className="info-text" style={{ marginTop: "0.75rem" }}>
+        {orderId && <p>Номер заказа: <strong>{orderId}</strong></p>}
+        <p className="info-text">
           Оплата по ссылке: менеджер отправит вам ссылку на оплату отдельно.
         </p>
-        <div className="nav-links nav-links-center" style={{ marginTop: "1.5rem" }}>
+        <div className="nav-links nav-links-center">
           <Link href="/catalog">В каталог</Link>
           <Link href="/">На главную</Link>
         </div>
@@ -191,6 +191,7 @@ export function CheckoutForm() {
         )}
 
         <form onSubmit={handleSubmit} className="form-stack">
+          <h3 className="form-section-title">Контактные данные</h3>
           <div className="form-field">
             <label htmlFor="checkout-email">Email *</label>
             <input id="checkout-email" name="email" type="email" required disabled={state === "submitting"} />
@@ -203,6 +204,7 @@ export function CheckoutForm() {
             <label htmlFor="checkout-last-name">Фамилия *</label>
             <input id="checkout-last-name" name="last_name" type="text" required disabled={state === "submitting"} />
           </div>
+          <h3 className="form-section-title">Адрес доставки</h3>
           <div className="form-field">
             <label htmlFor="checkout-address">Адрес *</label>
             <input id="checkout-address" name="address_1" type="text" required disabled={state === "submitting"} />

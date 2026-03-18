@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function CartPage() {
   return (
-    <div>
+    <div className="service-page">
       <h1>Корзина</h1>
       <CartSummary />
     </div>

@@ -90,6 +90,12 @@ img {
   padding-block: var(--space-xl);
 }
 
+.service-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
 /* ---- Site Header ---- */
 
 .site-header {
@@ -347,6 +353,13 @@ button:disabled,
   min-height: 80px;
 }
 
+.form-section-title {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-fg-secondary);
+  padding-top: var(--space-sm);
+}
+
 /* ---- Filter Tabs ---- */
 
 .filter-tabs {
@@ -406,6 +419,10 @@ button:disabled,
 
 .nav-links-center {
   justify-content: center;
+}
+
+.status-message .nav-links {
+  margin-top: var(--space-lg);
 }
 
 /* ---- Inline Feedback ---- */
@@ -660,6 +677,12 @@ button:disabled,
 .cart-item-meta {
   font-size: 0.85rem;
   color: var(--color-fg-muted);
+}
+
+.cart-item-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
 }
 
 .cart-total {
