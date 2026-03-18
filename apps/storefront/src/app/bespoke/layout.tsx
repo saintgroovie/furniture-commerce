@@ -1,0 +1,29 @@
+import type { Metadata } from "next"
+import Link from "next/link"
+
+export const metadata: Metadata = {
+  title: { default: "На заказ", template: "%s | На заказ | Woodright" },
+  description:
+    "Мебель на заказ. Кухни, гардеробные, шкафы — индивидуальные проекты по вашим размерам.",
+}
+
+export default function BespokeLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <div className="bespoke-theme">
+      <nav className="bespoke-nav" aria-label="На заказ">
+        <Link href="/bespoke" className="bespoke-nav-title">
+          На заказ
+        </Link>
+        <div className="bespoke-nav-links">
+          <Link href="/bespoke/catalog">Каталог</Link>
+          <Link href="/bespoke/request">Заявка на расчёт</Link>
+        </div>
+      </nav>
+      {children}
+    </div>
+  )
+}

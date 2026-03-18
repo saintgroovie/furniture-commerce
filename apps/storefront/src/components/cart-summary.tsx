@@ -5,6 +5,7 @@ import Link from "next/link"
 import { getCartIdFromSession, clearCartIdFromSession } from "@/lib/cart/session"
 import { getCart, removeLineItem, CART_NOT_FOUND } from "@/lib/api/cart"
 import { formatRub } from "@/lib/format"
+import { resolveKidsProducts } from "@/lib/kids"
 
 type CartViewState = "loading" | "empty" | "ready" | "mutating" | "error" | "invalid_state"
 
@@ -13,6 +14,7 @@ export function CartSummary() {
   const [viewState, setViewState] = useState<CartViewState>("loading")
   const [mutating, setMutating] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [kidsIds, setKidsIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     const cartId = getCartIdFromSession()
@@ -21,8 +23,14 @@ export function CartSummary() {
       setViewState("empty")
       return
     }
+
+    const kidsPromise = resolveKidsProducts()
+      .then((data) => data.ids)
+      .catch(() => new Set<string>())
+
     getCart(cartId)
-      .then((data: { cart?: Record<string, unknown> }) => {
+      .then(async (data: { cart?: Record<string, unknown> }) => {
+        setKidsIds(await kidsPromise)
         const c = data.cart ?? null
         const items = (c?.items as unknown[]) ?? []
         if (!c || !Array.isArray(items) || items.length === 0) {
@@ -128,37 +136,61 @@ export function CartSummary() {
 
   const total = cart.total != null ? Number(cart.total) : null
 
+  const adultItems = items.filter(
+    (item) => !kidsIds.has((item as { product_id?: string }).product_id ?? "")
+  )
+  const kidsItems = items.filter(
+    (item) => kidsIds.has((item as { product_id?: string }).product_id ?? "")
+  )
+  const showHeaders = adultItems.length > 0 && kidsItems.length > 0
+
+  function renderItem(item: Record<string, unknown>) {
+    const qty = Number((item as { quantity?: number }).quantity ?? 1)
+    const unitPrice = (item as { unit_price?: number }).unit_price
+    const itemTotal = (item as { total?: number }).total ?? (item as { subtotal?: number }).subtotal
+    return (
+      <li key={String(item.id)} className="cart-item">
+        <div className="cart-item-info">
+          <span className="cart-item-title">{(item.title as string) ?? "—"}</span>
+          <span className="cart-item-meta">
+            {qty > 1 ? `${qty} шт.` : "1 шт."}
+            {unitPrice != null ? ` · ${formatRub(unitPrice / 100)}` : ""}
+          </span>
+        </div>
+        <div className="cart-item-actions">
+          {itemTotal != null && <span className="price">{formatRub(Number(itemTotal) / 100)}</span>}
+          <button
+            type="button"
+            onClick={() => handleRemove(cartId, item.id as string)}
+            disabled={mutating}
+            className="btn-danger"
+          >
+            Удалить
+          </button>
+        </div>
+      </li>
+    )
+  }
+
   return (
     <div data-state={mutating ? "mutating" : "ready"}>
-      <ul className="cart-items">
-        {items.map((item: Record<string, unknown>) => {
-          const qty = Number((item as { quantity?: number }).quantity ?? 1)
-          const unitPrice = (item as { unit_price?: number }).unit_price
-          const itemTotal = (item as { total?: number }).total ?? (item as { subtotal?: number }).subtotal
-          return (
-            <li key={String(item.id)} className="cart-item">
-              <div className="cart-item-info">
-                <span className="cart-item-title">{(item.title as string) ?? "—"}</span>
-                <span className="cart-item-meta">
-                  {qty > 1 ? `${qty} шт.` : "1 шт."}
-                  {unitPrice != null ? ` · ${formatRub(unitPrice / 100)}` : ""}
-                </span>
-              </div>
-              <div className="cart-item-actions">
-                {itemTotal != null && <span className="price">{formatRub(Number(itemTotal) / 100)}</span>}
-                <button
-                  type="button"
-                  onClick={() => handleRemove(cartId, item.id as string)}
-                  disabled={mutating}
-                  className="btn-danger"
-                >
-                  Удалить
-                </button>
-              </div>
-            </li>
-          )
-        })}
-      </ul>
+      {adultItems.length > 0 && (
+        <div>
+          {showHeaders && <h3 className="cart-section-title">Woodright</h3>}
+          <ul className="cart-items">{adultItems.map(renderItem)}</ul>
+        </div>
+      )}
+
+      {kidsItems.length > 0 && (
+        <div>
+          {showHeaders && (
+            <h3 className="cart-section-title cart-section-title-kids">
+              Woodright Kids
+            </h3>
+          )}
+          <ul className="cart-items">{kidsItems.map(renderItem)}</ul>
+        </div>
+      )}
 
       {total != null && !Number.isNaN(total) && (
         <div className="cart-total">

@@ -3,21 +3,22 @@ import type { Metadata } from "next"
 import { ProductCard } from "@/components/product-card"
 import { getSiteUrl } from "@/lib/api/base"
 import { getProducts } from "@/lib/api/products"
+import { resolveKidsProducts } from "@/lib/kids"
+import { BESPOKE_PRODUCT_TYPE } from "@/lib/bespoke"
 
 export const metadata: Metadata = {
   title: "Каталог",
-  description: "Каталог мебели Woodright. Стандартные и конфигурируемые товары, мебель на заказ.",
+  description: "Каталог мебели Woodright. Готовые товары и товары с вариациями.",
   openGraph: {
     title: "Каталог мебели | Woodright",
-    description: "Каталог мебели Woodright. Стандартные и конфигурируемые товары.",
+    description: "Каталог мебели Woodright. Готовые товары и товары с вариациями.",
     url: "/catalog",
   },
 }
 
 const PRODUCT_TYPE_LABELS: Record<string, string> = {
-  STANDARD: "Стандартные",
-  CONFIGURABLE: "Конфигурируемые",
-  BESPOKE: "На заказ",
+  STANDARD: "Готовые",
+  CONFIGURABLE: "С выбором исполнения",
 }
 
 export default async function CatalogPage({
@@ -42,7 +43,20 @@ export default async function CatalogPage({
     )
   }
   const products = data.products ?? []
-  const all = Array.isArray(products) ? products : []
+  const allRaw = Array.isArray(products) ? products : []
+
+  let kidsIds: Set<string>
+  try {
+    kidsIds = (await resolveKidsProducts()).ids
+  } catch {
+    kidsIds = new Set()
+  }
+  const all = allRaw.filter(
+    (p: any) =>
+      !kidsIds.has(p.id) &&
+      p.product_classification?.product_type !== BESPOKE_PRODUCT_TYPE
+  )
+
   const list = activeType
     ? all.filter((p: any) => p.product_classification?.product_type === activeType)
     : all
@@ -71,23 +85,28 @@ export default async function CatalogPage({
 
       <h1>Каталог</h1>
 
-      <nav className="filter-tabs" style={{ marginTop: "1rem" }} aria-label="Фильтр по типу">
-        <Link
-          href="/catalog"
-          className={activeType === null ? "filter-tab filter-tab-active" : "filter-tab"}
-        >
-          Все
-        </Link>
-        {Object.entries(PRODUCT_TYPE_LABELS).map(([key, label]) => (
+      <div className="catalog-controls" style={{ marginTop: "1rem" }}>
+        <nav className="filter-tabs" aria-label="Фильтр по типу">
           <Link
-            key={key}
-            href={`/catalog?product_type=${key}`}
-            className={activeType === key ? "filter-tab filter-tab-active" : "filter-tab"}
+            href="/catalog"
+            className={activeType === null ? "filter-tab filter-tab-active" : "filter-tab"}
           >
-            {label}
+            Все
           </Link>
-        ))}
-      </nav>
+          {Object.entries(PRODUCT_TYPE_LABELS).map(([key, label]) => (
+            <Link
+              key={key}
+              href={`/catalog?product_type=${key}`}
+              className={activeType === key ? "filter-tab filter-tab-active" : "filter-tab"}
+            >
+              {label}
+            </Link>
+          ))}
+        </nav>
+        <Link href="/bespoke" className="catalog-cta">
+          Индивидуальный проект →
+        </Link>
+      </div>
 
       {list.length === 0 ? (
         <div className="status-message">

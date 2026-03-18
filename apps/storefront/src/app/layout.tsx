@@ -45,7 +45,8 @@ export default function RootLayout({
             <nav>
               <Link href="/catalog">Каталог</Link>
               <Link href="/rooms">Комнаты</Link>
-              <Link href="/bespoke">Расчёт</Link>
+              <Link href="/kids">Детская</Link>
+              <Link href="/bespoke">На заказ</Link>
               <Link href="/cart">Корзина</Link>
             </nav>
           </div>

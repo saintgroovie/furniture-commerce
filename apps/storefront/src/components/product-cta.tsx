@@ -39,7 +39,7 @@ export function ProductCta({ product }: Props) {
   if (productType === "BESPOKE") {
     return (
       <div className="cta-group">
-        <Link href={productId ? `/bespoke?product_id=${productId}` : "/bespoke"} className="btn btn-primary">
+        <Link href={productId ? `/bespoke/request?product_id=${productId}` : "/bespoke/request"} className="btn btn-primary">
           Получить расчёт
         </Link>
       </div>
@@ -57,7 +57,7 @@ export function ProductCta({ product }: Props) {
           ) : (
             <span className="info-text">Нет варианта для заказа.</span>
           )}
-          <Link href={productId ? `/bespoke?product_id=${productId}` : "/bespoke"} className="btn btn-secondary">
+          <Link href={productId ? `/bespoke/request?product_id=${productId}` : "/bespoke/request"} className="btn btn-secondary">
             Сделать по моим размерам
           </Link>
         </div>

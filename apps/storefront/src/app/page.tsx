@@ -19,7 +19,7 @@ export default function HomePage() {
       <div className="hero-actions">
         <Link href="/catalog" className="btn btn-primary">Каталог</Link>
         <Link href="/rooms" className="btn btn-secondary">Комнаты</Link>
-        <Link href="/bespoke" className="btn btn-secondary">Заявка на расчёт</Link>
+        <Link href="/bespoke" className="btn btn-secondary">На заказ</Link>
       </div>
     </div>
   )
