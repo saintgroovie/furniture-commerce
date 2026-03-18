@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 
 export const metadata: Metadata = {
-  title: { default: "На заказ", template: "%s | На заказ | Woodright" },
+  title: { default: "По проекту", template: "%s | По проекту | Woodright" },
   description:
     "Мебель на заказ. Кухни, гардеробные, шкафы — индивидуальные проекты по вашим размерам.",
 }
@@ -14,9 +14,9 @@ export default function BespokeLayout({
 }) {
   return (
     <div className="bespoke-theme">
-      <nav className="bespoke-nav" aria-label="На заказ">
+      <nav className="bespoke-nav" aria-label="По проекту">
         <Link href="/bespoke" className="bespoke-nav-title">
-          На заказ
+          По проекту
         </Link>
         <div className="bespoke-nav-links">
           <Link href="/bespoke/catalog">Каталог</Link>

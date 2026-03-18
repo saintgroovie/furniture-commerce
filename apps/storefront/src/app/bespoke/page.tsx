@@ -2,11 +2,11 @@ import type { Metadata } from "next"
 import Link from "next/link"
 
 export const metadata: Metadata = {
-  title: "На заказ",
+  title: "По проекту",
   description:
-    "Мебель на заказ Woodright. Кухни, гардеробные, шкафы — индивидуальные проекты по вашим размерам.",
+    "Мебель по проекту Woodright. Кухни, гардеробные, шкафы — индивидуальные проекты по вашим размерам.",
   openGraph: {
-    title: "На заказ | Woodright",
+    title: "По проекту | Woodright",
     description:
       "Кухни, гардеробные, шкафы и другая мебель — индивидуальные проекты по вашим размерам.",
     url: "/bespoke",
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 export default function BespokePage() {
   return (
     <div className="hero">
-      <h1>Мебель на заказ</h1>
+      <h1>Мебель по проекту</h1>
       <p>
         Кухни, гардеробные, шкафы и другая мебель — спроектируем и изготовим
         по вашим размерам из натуральных материалов.

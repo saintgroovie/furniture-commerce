@@ -6,9 +6,9 @@ import { resolveBespokeProducts } from "@/lib/bespoke"
 export const metadata: Metadata = {
   title: "Каталог",
   description:
-    "Мебель на заказ Woodright. Кухни, гардеробные, шкафы — индивидуальные проекты.",
+    "Мебель по проекту Woodright. Кухни, гардеробные, шкафы — индивидуальные проекты.",
   openGraph: {
-    title: "Мебель на заказ | Woodright",
+    title: "По проекту — каталог | Woodright",
     description: "Кухни, гардеробные, шкафы — индивидуальные проекты.",
     url: "/bespoke/catalog",
   },
@@ -23,12 +23,12 @@ export default async function BespokeCatalogPage() {
   } catch {
     return (
       <div data-state="error">
-        <h1>Мебель на заказ</h1>
+        <h1>Мебель по проекту</h1>
         <p className="info-text" style={{ marginTop: "0.5rem" }}>
           Не удалось загрузить каталог.
         </p>
         <div className="nav-links" style={{ marginTop: "1rem" }}>
-          <Link href="/bespoke">В раздел «На заказ»</Link>
+          <Link href="/bespoke">В раздел «По проекту»</Link>
         </div>
       </div>
     )
@@ -37,7 +37,7 @@ export default async function BespokeCatalogPage() {
   if (products.length === 0) {
     return (
       <div data-state="empty">
-        <h1>Мебель на заказ</h1>
+        <h1>Мебель по проекту</h1>
         <div className="status-message">
           <p>Товары пока не добавлены.</p>
           <div
@@ -45,7 +45,7 @@ export default async function BespokeCatalogPage() {
             style={{ marginTop: "1rem" }}
           >
             <Link href="/bespoke/request">Заявка на расчёт</Link>
-            <Link href="/bespoke">В раздел «На заказ»</Link>
+            <Link href="/bespoke">В раздел «По проекту»</Link>
           </div>
         </div>
       </div>
@@ -54,7 +54,7 @@ export default async function BespokeCatalogPage() {
 
   return (
     <div data-state="success">
-      <h1>Мебель на заказ</h1>
+      <h1>Мебель по проекту</h1>
       <p className="info-text" style={{ marginTop: "0.5rem" }}>
         Кухни, гардеробные, шкафы и другие проекты по индивидуальным размерам.
       </p>

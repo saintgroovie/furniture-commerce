@@ -186,6 +186,20 @@ mvp-scope.md
 
 ---
 
+# Правила публичного naming
+
+## 13. Публичные labels storefront
+
+Все user-facing labels (навигация, headings, CTA, filter tabs, badges) должны соответствовать:
+
+naming-system.md
+
+При добавлении нового label — сначала добавить его в `naming-system.md`, затем использовать в коде.
+
+Legacy labels из таблицы в `naming-system.md` не использовать как primary public labels.
+
+---
+
 # Поведение при неясности
 
 Если требование неясно:

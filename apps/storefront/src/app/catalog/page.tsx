@@ -104,7 +104,7 @@ export default async function CatalogPage({
           ))}
         </nav>
         <Link href="/bespoke" className="catalog-cta">
-          Индивидуальный проект →
+          По проекту →
         </Link>
       </div>
 

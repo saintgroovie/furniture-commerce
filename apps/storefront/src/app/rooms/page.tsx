@@ -2,6 +2,7 @@ import Link from "next/link"
 import type { Metadata } from "next"
 import { RoomSetCard } from "@/components/room-set-card"
 import { getRoomSets } from "@/lib/api/room-sets"
+import { KIDS_ROOM_TYPE } from "@/lib/kids"
 
 export const metadata: Metadata = {
   title: "Комнаты",
@@ -29,7 +30,34 @@ export default async function RoomsPage() {
     )
   }
   const roomSets = data.room_sets ?? []
-  const list = Array.isArray(roomSets) ? roomSets : []
+  const all = Array.isArray(roomSets) ? roomSets : []
+  const list = all.filter((rs: any) => rs.room_type !== KIDS_ROOM_TYPE)
+
+  const kidsEntry = (
+    <section className="cross-entry-block cross-entry-kids">
+      <div className="cross-entry-header">
+        <h2 className="cross-entry-heading">Детские комнаты</h2>
+        <p className="cross-entry-text">
+          Готовые решения для детской — безопасные материалы, продуманная эргономика и дизайн, который растёт вместе с ребёнком.
+        </p>
+      </div>
+      <div className="cross-entry-tiles">
+        <div className="cross-entry-tile">
+          <span className="cross-entry-tile-icon" aria-hidden="true">◈</span>
+          <span className="cross-entry-tile-label">Безопасные материалы</span>
+        </div>
+        <div className="cross-entry-tile">
+          <span className="cross-entry-tile-icon" aria-hidden="true">◇</span>
+          <span className="cross-entry-tile-label">Продуманная эргономика</span>
+        </div>
+        <div className="cross-entry-tile">
+          <span className="cross-entry-tile-icon" aria-hidden="true">○</span>
+          <span className="cross-entry-tile-label">Растёт с ребёнком</span>
+        </div>
+      </div>
+      <Link href="/kids/rooms" className="btn cross-entry-btn">В раздел детской →</Link>
+    </section>
+  )
 
   if (list.length === 0) {
     return (
@@ -41,6 +69,7 @@ export default async function RoomsPage() {
             <Link href="/">На главную</Link>
           </div>
         </div>
+        {kidsEntry}
       </div>
     )
   }
@@ -55,6 +84,7 @@ export default async function RoomsPage() {
           </li>
         ))}
       </ul>
+      {kidsEntry}
     </div>
   )
 }

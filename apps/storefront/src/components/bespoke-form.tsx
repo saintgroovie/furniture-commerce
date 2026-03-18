@@ -63,7 +63,7 @@ export function BespokeForm() {
         <h2>Заявка отправлена</h2>
         <p>Менеджер свяжется с вами.</p>
         <div className="nav-links nav-links-center">
-          <Link href="/bespoke">На заказ</Link>
+          <Link href="/bespoke">По проекту</Link>
           <Link href="/catalog">В каталог</Link>
           <Link href="/">На главную</Link>
         </div>
