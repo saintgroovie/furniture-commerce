@@ -1,6 +1,6 @@
 # Furniture Backend (Medusa v2)
 
-Backend для мебельного ecommerce + bespoke. Источник требований: `/docs/MASTER_PRD.md`, `/docs/architecture.md`, `/docs/data-model.md`.
+Backend для мебельного ecommerce + bespoke. Источник требований: `/docs/project/MASTER_PRD.md`, `/docs/architecture/architecture.md`, `/docs/architecture/data-model.md`.
 
 ## Стек
 
@@ -40,7 +40,7 @@ npx medusa db:sync-links
 - **bespoke-request** — BespokeRequest (запрос на расчёт), явные поля: dimensions, materials, budget, comment, status.
 - **payment-link** — PaymentLink (ручной режим в MVP, без webhook).
 
-## API (по /docs/api.md)
+## API (по /docs/architecture/api.md)
 
 **Store:**  
 `GET /store/products` (query: product_type, category_id), `GET /store/room-sets`, `GET /store/room-sets/:slug`, `POST /store/leads`, `POST /store/bespoke-requests`.
@@ -54,6 +54,6 @@ Middleware на `POST /store/carts/:id/line-items`: перед стандарт�
 
 ## Документация
 
-- Архитектура и модель данных: `/docs/architecture.md`, `/docs/data-model.md`.
-- API и продуктовые правила: `/docs/api.md`, `/docs/product-rules.md`.
-- MVP и этапы: `/docs/mvp-scope.md`, `/docs/phases.md`.
+- Архитектура и модель данных: `/docs/architecture/architecture.md`, `/docs/architecture/data-model.md`.
+- API и продуктовые правила: `/docs/architecture/api.md`, `/docs/guidelines/product-rules.md`.
+- MVP и этапы: `/docs/project/mvp-scope.md`, `/docs/project/phases.md`.
