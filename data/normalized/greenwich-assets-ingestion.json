@@ -1,0 +1,2612 @@
+[
+  {
+    "product_handle": "greenwich-gr-09-1-mirror",
+    "product_code": "GR-09-1",
+    "workbook_row_key": "greenwich:GR-09-1",
+    "storage_key": "products/greenwich/GR-09-1_temp_main_01.png",
+    "role": "thumbnail",
+    "asset_tier": "temporary_pdf",
+    "asset_quality": "temporary_pdf"
+  },
+  {
+    "product_handle": "greenwich-gr-05-1",
+    "product_code": "GR-05-1",
+    "workbook_row_key": "greenwich:GR-05-1",
+    "storage_key": "products/greenwich/GR-05-1_main_01.jpg",
+    "role": "thumbnail",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-05-1",
+    "product_code": "GR-05-1",
+    "workbook_row_key": "greenwich:GR-05-1",
+    "storage_key": "products/greenwich/GR-05-1_gallery_01.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-05-1",
+    "product_code": "GR-05-1",
+    "workbook_row_key": "greenwich:GR-05-1",
+    "storage_key": "products/greenwich/GR-05-1_gallery_02.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-05-1",
+    "product_code": "GR-05-1",
+    "workbook_row_key": "greenwich:GR-05-1",
+    "storage_key": "products/greenwich/GR-05-1_gallery_03.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-05-1",
+    "product_code": "GR-05-1",
+    "workbook_row_key": "greenwich:GR-05-1",
+    "storage_key": "products/greenwich/GR-05-1_gallery_04.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-05-1",
+    "product_code": "GR-05-1",
+    "workbook_row_key": "greenwich:GR-05-1",
+    "storage_key": "products/greenwich/GR-05-1_gallery_05.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-05-1",
+    "product_code": "GR-05-1",
+    "workbook_row_key": "greenwich:GR-05-1",
+    "storage_key": "products/greenwich/GR-05-1_gallery_06.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-05-1",
+    "product_code": "GR-05-1",
+    "workbook_row_key": "greenwich:GR-05-1",
+    "storage_key": "products/greenwich/GR-05-1_gallery_07.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-05-1",
+    "product_code": "GR-05-1",
+    "workbook_row_key": "greenwich:GR-05-1",
+    "storage_key": "products/greenwich/GR-05-1_gallery_08.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-05-1",
+    "product_code": "GR-05-1",
+    "workbook_row_key": "greenwich:GR-05-1",
+    "storage_key": "products/greenwich/GR-05-1_gallery_09.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-05-1",
+    "product_code": "GR-05-1",
+    "workbook_row_key": "greenwich:GR-05-1",
+    "storage_key": "products/greenwich/GR-05-1_gallery_10.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-05-1",
+    "product_code": "GR-05-1",
+    "workbook_row_key": "greenwich:GR-05-1",
+    "storage_key": "products/greenwich/GR-05-1_gallery_11.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-05-1",
+    "product_code": "GR-05-1",
+    "workbook_row_key": "greenwich:GR-05-1",
+    "storage_key": "products/greenwich/GR-05-1_gallery_12.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-05-1",
+    "product_code": "GR-05-1",
+    "workbook_row_key": "greenwich:GR-05-1",
+    "storage_key": "products/greenwich/GR-05-1_gallery_13.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-05-1",
+    "product_code": "GR-05-1",
+    "workbook_row_key": "greenwich:GR-05-1",
+    "storage_key": "products/greenwich/GR-05-1_gallery_14.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-05-1",
+    "product_code": "GR-05-1",
+    "workbook_row_key": "greenwich:GR-05-1",
+    "storage_key": "products/greenwich/GR-05-1_gallery_15.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-44-1",
+    "product_code": "GR-44-1",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "storage_key": "products/greenwich/GR-44-1_main_01.jpg",
+    "role": "thumbnail",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-44-1",
+    "product_code": "GR-44-1",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "storage_key": "products/greenwich/GR-44-1_gallery_01.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-44-1",
+    "product_code": "GR-44-1",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "storage_key": "products/greenwich/GR-44-1_gallery_02.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-44-1",
+    "product_code": "GR-44-1",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "storage_key": "products/greenwich/GR-44-1_gallery_03.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-44-1",
+    "product_code": "GR-44-1",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "storage_key": "products/greenwich/GR-44-1_gallery_04.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-44-1",
+    "product_code": "GR-44-1",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "storage_key": "products/greenwich/GR-44-1_gallery_05.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-44-1",
+    "product_code": "GR-44-1",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "storage_key": "products/greenwich/GR-44-1_gallery_06.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-44-1",
+    "product_code": "GR-44-1",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "storage_key": "products/greenwich/GR-44-1_gallery_07.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-44-1",
+    "product_code": "GR-44-1",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "storage_key": "products/greenwich/GR-44-1_gallery_08.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-44-1",
+    "product_code": "GR-44-1",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "storage_key": "products/greenwich/GR-44-1_gallery_09.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-44-1",
+    "product_code": "GR-44-1",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "storage_key": "products/greenwich/GR-44-1_gallery_10.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-44-1",
+    "product_code": "GR-44-1",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "storage_key": "products/greenwich/GR-44-1_gallery_11.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-44-1",
+    "product_code": "GR-44-1",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "storage_key": "products/greenwich/GR-44-1_gallery_12.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-44-1",
+    "product_code": "GR-44-1",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "storage_key": "products/greenwich/GR-44-1_gallery_13.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-44-1",
+    "product_code": "GR-44-1",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "storage_key": "products/greenwich/GR-44-1_gallery_14.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-44-1",
+    "product_code": "GR-44-1",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "storage_key": "products/greenwich/GR-44-1_gallery_15.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-44-1",
+    "product_code": "GR-44-1",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "storage_key": "products/greenwich/GR-44-1_gallery_16.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-44-1",
+    "product_code": "GR-44-1",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "storage_key": "products/greenwich/GR-44-1_gallery_17.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-44-1",
+    "product_code": "GR-44-1",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "storage_key": "products/greenwich/GR-44-1_gallery_18.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-44-1",
+    "product_code": "GR-44-1",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "storage_key": "products/greenwich/GR-44-1_gallery_19.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-67-1",
+    "product_code": "GR-67-1",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "storage_key": "products/greenwich/GR-67-1_main_01.jpg",
+    "role": "thumbnail",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-67-1",
+    "product_code": "GR-67-1",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "storage_key": "products/greenwich/GR-67-1_gallery_01.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-67-1",
+    "product_code": "GR-67-1",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "storage_key": "products/greenwich/GR-67-1_gallery_02.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-67-1",
+    "product_code": "GR-67-1",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "storage_key": "products/greenwich/GR-67-1_gallery_03.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-67-1",
+    "product_code": "GR-67-1",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "storage_key": "products/greenwich/GR-67-1_gallery_04.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-67-1",
+    "product_code": "GR-67-1",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "storage_key": "products/greenwich/GR-67-1_gallery_05.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-67-1",
+    "product_code": "GR-67-1",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "storage_key": "products/greenwich/GR-67-1_gallery_06.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-67-1",
+    "product_code": "GR-67-1",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "storage_key": "products/greenwich/GR-67-1_gallery_07.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-67-1",
+    "product_code": "GR-67-1",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "storage_key": "products/greenwich/GR-67-1_gallery_08.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-67-1",
+    "product_code": "GR-67-1",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "storage_key": "products/greenwich/GR-67-1_gallery_09.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-67-1",
+    "product_code": "GR-67-1",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "storage_key": "products/greenwich/GR-67-1_gallery_10.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-67-1",
+    "product_code": "GR-67-1",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "storage_key": "products/greenwich/GR-67-1_gallery_11.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-67-1",
+    "product_code": "GR-67-1",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "storage_key": "products/greenwich/GR-67-1_gallery_12.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-67-1",
+    "product_code": "GR-67-1",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "storage_key": "products/greenwich/GR-67-1_gallery_13.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-67-1",
+    "product_code": "GR-67-1",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "storage_key": "products/greenwich/GR-67-1_gallery_14.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-67-1",
+    "product_code": "GR-67-1",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "storage_key": "products/greenwich/GR-67-1_gallery_15.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-67-1",
+    "product_code": "GR-67-1",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "storage_key": "products/greenwich/GR-67-1_gallery_16.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-67-1",
+    "product_code": "GR-67-1",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "storage_key": "products/greenwich/GR-67-1_gallery_17.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-67-1",
+    "product_code": "GR-67-1",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "storage_key": "products/greenwich/GR-67-1_gallery_18.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-67-1",
+    "product_code": "GR-67-1",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "storage_key": "products/greenwich/GR-67-1_gallery_19.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-67-1",
+    "product_code": "GR-67-1",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "storage_key": "products/greenwich/GR-67-1_gallery_20.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-42-1",
+    "product_code": "GR-42-1",
+    "workbook_row_key": "greenwich:GR-42-1",
+    "storage_key": "products/greenwich/GR-42-1_temp_main_01.png",
+    "role": "thumbnail",
+    "asset_tier": "temporary_pdf",
+    "asset_quality": "temporary_pdf"
+  },
+  {
+    "product_handle": "greenwich-gr-08-1",
+    "product_code": "GR-08-1",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "storage_key": "products/greenwich/GR-08-1_main_01.jpg",
+    "role": "thumbnail",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-1",
+    "product_code": "GR-08-1",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "storage_key": "products/greenwich/GR-08-1_gallery_01.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-1",
+    "product_code": "GR-08-1",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "storage_key": "products/greenwich/GR-08-1_gallery_02.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-1",
+    "product_code": "GR-08-1",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "storage_key": "products/greenwich/GR-08-1_gallery_03.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-1",
+    "product_code": "GR-08-1",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "storage_key": "products/greenwich/GR-08-1_gallery_04.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-1",
+    "product_code": "GR-08-1",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "storage_key": "products/greenwich/GR-08-1_gallery_05.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-1",
+    "product_code": "GR-08-1",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "storage_key": "products/greenwich/GR-08-1_gallery_06.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-1",
+    "product_code": "GR-08-1",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "storage_key": "products/greenwich/GR-08-1_gallery_07.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-1",
+    "product_code": "GR-08-1",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "storage_key": "products/greenwich/GR-08-1_gallery_08.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-1",
+    "product_code": "GR-08-1",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "storage_key": "products/greenwich/GR-08-1_gallery_09.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-1",
+    "product_code": "GR-08-1",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "storage_key": "products/greenwich/GR-08-1_gallery_10.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-1",
+    "product_code": "GR-08-1",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "storage_key": "products/greenwich/GR-08-1_gallery_11.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-1",
+    "product_code": "GR-08-1",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "storage_key": "products/greenwich/GR-08-1_gallery_12.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-1",
+    "product_code": "GR-08-1",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "storage_key": "products/greenwich/GR-08-1_gallery_13.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-1",
+    "product_code": "GR-08-1",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "storage_key": "products/greenwich/GR-08-1_gallery_14.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-1",
+    "product_code": "GR-08-1",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "storage_key": "products/greenwich/GR-08-1_gallery_15.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-1",
+    "product_code": "GR-08-1",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "storage_key": "products/greenwich/GR-08-1_gallery_16.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-1",
+    "product_code": "GR-08-1",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "storage_key": "products/greenwich/GR-08-1_gallery_17.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-1",
+    "product_code": "GR-08-1",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "storage_key": "products/greenwich/GR-08-1_gallery_18.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-1",
+    "product_code": "GR-08-1",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "storage_key": "products/greenwich/GR-08-1_gallery_19.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-1",
+    "product_code": "GR-08-1",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "storage_key": "products/greenwich/GR-08-1_gallery_20.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-2",
+    "product_code": "GR-08-2",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "storage_key": "products/greenwich/GR-08-2_main_01.jpg",
+    "role": "thumbnail",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-2",
+    "product_code": "GR-08-2",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "storage_key": "products/greenwich/GR-08-2_gallery_01.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-2",
+    "product_code": "GR-08-2",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "storage_key": "products/greenwich/GR-08-2_gallery_02.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-2",
+    "product_code": "GR-08-2",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "storage_key": "products/greenwich/GR-08-2_gallery_03.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-2",
+    "product_code": "GR-08-2",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "storage_key": "products/greenwich/GR-08-2_gallery_04.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-2",
+    "product_code": "GR-08-2",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "storage_key": "products/greenwich/GR-08-2_gallery_05.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-2",
+    "product_code": "GR-08-2",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "storage_key": "products/greenwich/GR-08-2_gallery_06.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-2",
+    "product_code": "GR-08-2",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "storage_key": "products/greenwich/GR-08-2_gallery_07.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-2",
+    "product_code": "GR-08-2",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "storage_key": "products/greenwich/GR-08-2_gallery_08.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-2",
+    "product_code": "GR-08-2",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "storage_key": "products/greenwich/GR-08-2_gallery_09.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-2",
+    "product_code": "GR-08-2",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "storage_key": "products/greenwich/GR-08-2_gallery_10.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-2",
+    "product_code": "GR-08-2",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "storage_key": "products/greenwich/GR-08-2_gallery_11.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-2",
+    "product_code": "GR-08-2",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "storage_key": "products/greenwich/GR-08-2_gallery_12.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-2",
+    "product_code": "GR-08-2",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "storage_key": "products/greenwich/GR-08-2_gallery_13.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-2",
+    "product_code": "GR-08-2",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "storage_key": "products/greenwich/GR-08-2_gallery_14.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-2",
+    "product_code": "GR-08-2",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "storage_key": "products/greenwich/GR-08-2_gallery_15.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-2",
+    "product_code": "GR-08-2",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "storage_key": "products/greenwich/GR-08-2_gallery_16.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-2",
+    "product_code": "GR-08-2",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "storage_key": "products/greenwich/GR-08-2_gallery_17.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-2",
+    "product_code": "GR-08-2",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "storage_key": "products/greenwich/GR-08-2_gallery_18.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-2",
+    "product_code": "GR-08-2",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "storage_key": "products/greenwich/GR-08-2_gallery_19.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-2",
+    "product_code": "GR-08-2",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "storage_key": "products/greenwich/GR-08-2_gallery_20.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-08-2",
+    "product_code": "GR-08-2",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "storage_key": "products/greenwich/GR-08-2_gallery_21.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-26-1",
+    "product_code": "GR-26-1",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "storage_key": "products/greenwich/GR-26-1_main_01.jpg",
+    "role": "thumbnail",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-26-1",
+    "product_code": "GR-26-1",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "storage_key": "products/greenwich/GR-26-1_gallery_01.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-26-1",
+    "product_code": "GR-26-1",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "storage_key": "products/greenwich/GR-26-1_gallery_02.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-26-1",
+    "product_code": "GR-26-1",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "storage_key": "products/greenwich/GR-26-1_gallery_03.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-26-1",
+    "product_code": "GR-26-1",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "storage_key": "products/greenwich/GR-26-1_gallery_04.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-26-1",
+    "product_code": "GR-26-1",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "storage_key": "products/greenwich/GR-26-1_gallery_05.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-26-1",
+    "product_code": "GR-26-1",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "storage_key": "products/greenwich/GR-26-1_gallery_06.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-26-1",
+    "product_code": "GR-26-1",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "storage_key": "products/greenwich/GR-26-1_gallery_07.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-26-1",
+    "product_code": "GR-26-1",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "storage_key": "products/greenwich/GR-26-1_gallery_08.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-26-1",
+    "product_code": "GR-26-1",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "storage_key": "products/greenwich/GR-26-1_gallery_09.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-26-1",
+    "product_code": "GR-26-1",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "storage_key": "products/greenwich/GR-26-1_gallery_10.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-26-1",
+    "product_code": "GR-26-1",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "storage_key": "products/greenwich/GR-26-1_gallery_11.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-26-1",
+    "product_code": "GR-26-1",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "storage_key": "products/greenwich/GR-26-1_gallery_12.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-26-1",
+    "product_code": "GR-26-1",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "storage_key": "products/greenwich/GR-26-1_gallery_13.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-26-1",
+    "product_code": "GR-26-1",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "storage_key": "products/greenwich/GR-26-1_gallery_14.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-26-1",
+    "product_code": "GR-26-1",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "storage_key": "products/greenwich/GR-26-1_gallery_15.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-26-1",
+    "product_code": "GR-26-1",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "storage_key": "products/greenwich/GR-26-1_gallery_16.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-26-1",
+    "product_code": "GR-26-1",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "storage_key": "products/greenwich/GR-26-1_gallery_17.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-26-1",
+    "product_code": "GR-26-1",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "storage_key": "products/greenwich/GR-26-1_gallery_18.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-26-1",
+    "product_code": "GR-26-1",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "storage_key": "products/greenwich/GR-26-1_gallery_19.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-26-1",
+    "product_code": "GR-26-1",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "storage_key": "products/greenwich/GR-26-1_gallery_20.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-26-1",
+    "product_code": "GR-26-1",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "storage_key": "products/greenwich/GR-26-1_gallery_21.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-26-1",
+    "product_code": "GR-26-1",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "storage_key": "products/greenwich/GR-26-1_gallery_22.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-26-1",
+    "product_code": "GR-26-1",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "storage_key": "products/greenwich/GR-26-1_gallery_23.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-26-1",
+    "product_code": "GR-26-1",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "storage_key": "products/greenwich/GR-26-1_gallery_24.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-1",
+    "product_code": "GR-02-1",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "storage_key": "products/greenwich/GR-02-1_main_01.jpg",
+    "role": "thumbnail",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-1",
+    "product_code": "GR-02-1",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "storage_key": "products/greenwich/GR-02-1_gallery_01.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-1",
+    "product_code": "GR-02-1",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "storage_key": "products/greenwich/GR-02-1_gallery_02.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-1",
+    "product_code": "GR-02-1",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "storage_key": "products/greenwich/GR-02-1_gallery_03.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-1",
+    "product_code": "GR-02-1",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "storage_key": "products/greenwich/GR-02-1_gallery_04.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-1",
+    "product_code": "GR-02-1",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "storage_key": "products/greenwich/GR-02-1_gallery_05.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-1",
+    "product_code": "GR-02-1",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "storage_key": "products/greenwich/GR-02-1_gallery_06.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-1",
+    "product_code": "GR-02-1",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "storage_key": "products/greenwich/GR-02-1_gallery_07.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-1",
+    "product_code": "GR-02-1",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "storage_key": "products/greenwich/GR-02-1_gallery_08.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-1",
+    "product_code": "GR-02-1",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "storage_key": "products/greenwich/GR-02-1_gallery_09.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-1",
+    "product_code": "GR-02-1",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "storage_key": "products/greenwich/GR-02-1_gallery_10.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-1",
+    "product_code": "GR-02-1",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "storage_key": "products/greenwich/GR-02-1_gallery_11.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-1",
+    "product_code": "GR-02-1",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "storage_key": "products/greenwich/GR-02-1_gallery_12.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-1",
+    "product_code": "GR-02-1",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "storage_key": "products/greenwich/GR-02-1_gallery_13.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-1",
+    "product_code": "GR-02-1",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "storage_key": "products/greenwich/GR-02-1_gallery_14.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-1",
+    "product_code": "GR-02-1",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "storage_key": "products/greenwich/GR-02-1_gallery_15.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-1",
+    "product_code": "GR-02-1",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "storage_key": "products/greenwich/GR-02-1_gallery_16.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-1",
+    "product_code": "GR-02-1",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "storage_key": "products/greenwich/GR-02-1_gallery_17.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-1",
+    "product_code": "GR-02-1",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "storage_key": "products/greenwich/GR-02-1_gallery_18.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-1",
+    "product_code": "GR-02-1",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "storage_key": "products/greenwich/GR-02-1_gallery_19.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-1",
+    "product_code": "GR-02-1",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "storage_key": "products/greenwich/GR-02-1_gallery_20.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-1",
+    "product_code": "GR-02-1",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "storage_key": "products/greenwich/GR-02-1_gallery_21.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-1",
+    "product_code": "GR-02-1",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "storage_key": "products/greenwich/GR-02-1_gallery_22.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-2",
+    "product_code": "GR-02-2",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "storage_key": "products/greenwich/GR-02-2_main_01.jpg",
+    "role": "thumbnail",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-2",
+    "product_code": "GR-02-2",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "storage_key": "products/greenwich/GR-02-2_gallery_01.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-2",
+    "product_code": "GR-02-2",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "storage_key": "products/greenwich/GR-02-2_gallery_02.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-2",
+    "product_code": "GR-02-2",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "storage_key": "products/greenwich/GR-02-2_gallery_03.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-2",
+    "product_code": "GR-02-2",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "storage_key": "products/greenwich/GR-02-2_gallery_04.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-2",
+    "product_code": "GR-02-2",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "storage_key": "products/greenwich/GR-02-2_gallery_05.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-2",
+    "product_code": "GR-02-2",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "storage_key": "products/greenwich/GR-02-2_gallery_06.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-2",
+    "product_code": "GR-02-2",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "storage_key": "products/greenwich/GR-02-2_gallery_07.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-2",
+    "product_code": "GR-02-2",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "storage_key": "products/greenwich/GR-02-2_gallery_08.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-2",
+    "product_code": "GR-02-2",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "storage_key": "products/greenwich/GR-02-2_gallery_09.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-2",
+    "product_code": "GR-02-2",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "storage_key": "products/greenwich/GR-02-2_gallery_10.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-2",
+    "product_code": "GR-02-2",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "storage_key": "products/greenwich/GR-02-2_gallery_11.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-2",
+    "product_code": "GR-02-2",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "storage_key": "products/greenwich/GR-02-2_gallery_12.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-2",
+    "product_code": "GR-02-2",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "storage_key": "products/greenwich/GR-02-2_gallery_13.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-2",
+    "product_code": "GR-02-2",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "storage_key": "products/greenwich/GR-02-2_gallery_14.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-2",
+    "product_code": "GR-02-2",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "storage_key": "products/greenwich/GR-02-2_gallery_15.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-2",
+    "product_code": "GR-02-2",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "storage_key": "products/greenwich/GR-02-2_gallery_16.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-2",
+    "product_code": "GR-02-2",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "storage_key": "products/greenwich/GR-02-2_gallery_17.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-2",
+    "product_code": "GR-02-2",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "storage_key": "products/greenwich/GR-02-2_gallery_18.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-02-2",
+    "product_code": "GR-02-2",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "storage_key": "products/greenwich/GR-02-2_gallery_19.jpg",
+    "role": "gallery",
+    "asset_tier": "ready",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-09-1-bed-90",
+    "product_code": "GR-09-1",
+    "workbook_row_key": "greenwich:GR-09-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_01.jpg",
+    "role": "thumbnail",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-09-1-bed-90",
+    "product_code": "GR-09-1",
+    "workbook_row_key": "greenwich:GR-09-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_01.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-09-1-bed-90",
+    "product_code": "GR-09-1",
+    "workbook_row_key": "greenwich:GR-09-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_02.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-09-1-bed-90",
+    "product_code": "GR-09-1",
+    "workbook_row_key": "greenwich:GR-09-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_03.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-09-1-bed-90",
+    "product_code": "GR-09-1",
+    "workbook_row_key": "greenwich:GR-09-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_04.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-09-1-bed-90",
+    "product_code": "GR-09-1",
+    "workbook_row_key": "greenwich:GR-09-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_05.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-09-1-bed-90",
+    "product_code": "GR-09-1",
+    "workbook_row_key": "greenwich:GR-09-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_06.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-09-1-bed-90",
+    "product_code": "GR-09-1",
+    "workbook_row_key": "greenwich:GR-09-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_07.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-09-1-bed-90",
+    "product_code": "GR-09-1",
+    "workbook_row_key": "greenwich:GR-09-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_08.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-09-1-bed-90",
+    "product_code": "GR-09-1",
+    "workbook_row_key": "greenwich:GR-09-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_09.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-09-1-bed-90",
+    "product_code": "GR-09-1",
+    "workbook_row_key": "greenwich:GR-09-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_10.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-09-1-bed-90",
+    "product_code": "GR-09-1",
+    "workbook_row_key": "greenwich:GR-09-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_11.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-09-1-bed-90",
+    "product_code": "GR-09-1",
+    "workbook_row_key": "greenwich:GR-09-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_12.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-09-1-bed-90",
+    "product_code": "GR-09-1",
+    "workbook_row_key": "greenwich:GR-09-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_13.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-09-1-bed-90",
+    "product_code": "GR-09-1",
+    "workbook_row_key": "greenwich:GR-09-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_14.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-09-1-bed-90",
+    "product_code": "GR-09-1",
+    "workbook_row_key": "greenwich:GR-09-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_15.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-09-1-bed-90",
+    "product_code": "GR-09-1",
+    "workbook_row_key": "greenwich:GR-09-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_16.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-09-1-bed-90",
+    "product_code": "GR-09-1",
+    "workbook_row_key": "greenwich:GR-09-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_plane_17.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-09-1-bed-90",
+    "product_code": "GR-09-1",
+    "workbook_row_key": "greenwich:GR-09-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_plane_18.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-09-1-bed-90",
+    "product_code": "GR-09-1",
+    "workbook_row_key": "greenwich:GR-09-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_plane_19.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-09-1-bed-90",
+    "product_code": "GR-09-1",
+    "workbook_row_key": "greenwich:GR-09-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_plane_20.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-09-1-bed-90",
+    "product_code": "GR-09-1",
+    "workbook_row_key": "greenwich:GR-09-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_plane_21.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-09-1-bed-90",
+    "product_code": "GR-09-1",
+    "workbook_row_key": "greenwich:GR-09-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_plane_22.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-09-1-bed-90",
+    "product_code": "GR-09-1",
+    "workbook_row_key": "greenwich:GR-09-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_plane_23.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-12-1",
+    "product_code": "GR-12-1",
+    "workbook_row_key": "greenwich:GR-12-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_01.jpg",
+    "role": "thumbnail",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-12-1",
+    "product_code": "GR-12-1",
+    "workbook_row_key": "greenwich:GR-12-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_01.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-12-1",
+    "product_code": "GR-12-1",
+    "workbook_row_key": "greenwich:GR-12-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_02.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-12-1",
+    "product_code": "GR-12-1",
+    "workbook_row_key": "greenwich:GR-12-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_03.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-12-1",
+    "product_code": "GR-12-1",
+    "workbook_row_key": "greenwich:GR-12-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_04.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-12-1",
+    "product_code": "GR-12-1",
+    "workbook_row_key": "greenwich:GR-12-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_05.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-12-1",
+    "product_code": "GR-12-1",
+    "workbook_row_key": "greenwich:GR-12-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_06.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-12-1",
+    "product_code": "GR-12-1",
+    "workbook_row_key": "greenwich:GR-12-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_07.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-12-1",
+    "product_code": "GR-12-1",
+    "workbook_row_key": "greenwich:GR-12-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_08.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-12-1",
+    "product_code": "GR-12-1",
+    "workbook_row_key": "greenwich:GR-12-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_09.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-12-1",
+    "product_code": "GR-12-1",
+    "workbook_row_key": "greenwich:GR-12-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_10.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-12-1",
+    "product_code": "GR-12-1",
+    "workbook_row_key": "greenwich:GR-12-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_11.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-12-1",
+    "product_code": "GR-12-1",
+    "workbook_row_key": "greenwich:GR-12-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_12.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-12-1",
+    "product_code": "GR-12-1",
+    "workbook_row_key": "greenwich:GR-12-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_13.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-12-1",
+    "product_code": "GR-12-1",
+    "workbook_row_key": "greenwich:GR-12-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_14.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-12-1",
+    "product_code": "GR-12-1",
+    "workbook_row_key": "greenwich:GR-12-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_15.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-12-1",
+    "product_code": "GR-12-1",
+    "workbook_row_key": "greenwich:GR-12-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_16.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-12-1",
+    "product_code": "GR-12-1",
+    "workbook_row_key": "greenwich:GR-12-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_plane_17.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-12-1",
+    "product_code": "GR-12-1",
+    "workbook_row_key": "greenwich:GR-12-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_plane_18.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-12-1",
+    "product_code": "GR-12-1",
+    "workbook_row_key": "greenwich:GR-12-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_plane_19.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-12-1",
+    "product_code": "GR-12-1",
+    "workbook_row_key": "greenwich:GR-12-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_plane_20.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-12-1",
+    "product_code": "GR-12-1",
+    "workbook_row_key": "greenwich:GR-12-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_plane_21.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-12-1",
+    "product_code": "GR-12-1",
+    "workbook_row_key": "greenwich:GR-12-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_plane_22.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-12-1",
+    "product_code": "GR-12-1",
+    "workbook_row_key": "greenwich:GR-12-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_plane_23.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-14-1",
+    "product_code": "GR-14-1",
+    "workbook_row_key": "greenwich:GR-14-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_01.jpg",
+    "role": "thumbnail",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-14-1",
+    "product_code": "GR-14-1",
+    "workbook_row_key": "greenwich:GR-14-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_01.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-14-1",
+    "product_code": "GR-14-1",
+    "workbook_row_key": "greenwich:GR-14-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_02.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-14-1",
+    "product_code": "GR-14-1",
+    "workbook_row_key": "greenwich:GR-14-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_03.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-14-1",
+    "product_code": "GR-14-1",
+    "workbook_row_key": "greenwich:GR-14-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_04.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-14-1",
+    "product_code": "GR-14-1",
+    "workbook_row_key": "greenwich:GR-14-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_05.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-14-1",
+    "product_code": "GR-14-1",
+    "workbook_row_key": "greenwich:GR-14-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_06.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-14-1",
+    "product_code": "GR-14-1",
+    "workbook_row_key": "greenwich:GR-14-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_07.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-14-1",
+    "product_code": "GR-14-1",
+    "workbook_row_key": "greenwich:GR-14-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_08.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-14-1",
+    "product_code": "GR-14-1",
+    "workbook_row_key": "greenwich:GR-14-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_09.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-14-1",
+    "product_code": "GR-14-1",
+    "workbook_row_key": "greenwich:GR-14-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_10.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-14-1",
+    "product_code": "GR-14-1",
+    "workbook_row_key": "greenwich:GR-14-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_11.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-14-1",
+    "product_code": "GR-14-1",
+    "workbook_row_key": "greenwich:GR-14-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_12.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-14-1",
+    "product_code": "GR-14-1",
+    "workbook_row_key": "greenwich:GR-14-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_13.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-14-1",
+    "product_code": "GR-14-1",
+    "workbook_row_key": "greenwich:GR-14-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_14.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-14-1",
+    "product_code": "GR-14-1",
+    "workbook_row_key": "greenwich:GR-14-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_15.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-14-1",
+    "product_code": "GR-14-1",
+    "workbook_row_key": "greenwich:GR-14-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_16.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-14-1",
+    "product_code": "GR-14-1",
+    "workbook_row_key": "greenwich:GR-14-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_plane_17.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-14-1",
+    "product_code": "GR-14-1",
+    "workbook_row_key": "greenwich:GR-14-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_plane_18.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-14-1",
+    "product_code": "GR-14-1",
+    "workbook_row_key": "greenwich:GR-14-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_plane_19.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-14-1",
+    "product_code": "GR-14-1",
+    "workbook_row_key": "greenwich:GR-14-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_plane_20.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-14-1",
+    "product_code": "GR-14-1",
+    "workbook_row_key": "greenwich:GR-14-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_plane_21.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-14-1",
+    "product_code": "GR-14-1",
+    "workbook_row_key": "greenwich:GR-14-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_plane_22.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-14-1",
+    "product_code": "GR-14-1",
+    "workbook_row_key": "greenwich:GR-14-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_plane_23.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-16-1",
+    "product_code": "GR-16-1",
+    "workbook_row_key": "greenwich:GR-16-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_01.jpg",
+    "role": "thumbnail",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-16-1",
+    "product_code": "GR-16-1",
+    "workbook_row_key": "greenwich:GR-16-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_01.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-16-1",
+    "product_code": "GR-16-1",
+    "workbook_row_key": "greenwich:GR-16-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_02.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-16-1",
+    "product_code": "GR-16-1",
+    "workbook_row_key": "greenwich:GR-16-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_03.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-16-1",
+    "product_code": "GR-16-1",
+    "workbook_row_key": "greenwich:GR-16-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_04.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-16-1",
+    "product_code": "GR-16-1",
+    "workbook_row_key": "greenwich:GR-16-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_05.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-16-1",
+    "product_code": "GR-16-1",
+    "workbook_row_key": "greenwich:GR-16-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_06.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-16-1",
+    "product_code": "GR-16-1",
+    "workbook_row_key": "greenwich:GR-16-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_07.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-16-1",
+    "product_code": "GR-16-1",
+    "workbook_row_key": "greenwich:GR-16-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_08.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-16-1",
+    "product_code": "GR-16-1",
+    "workbook_row_key": "greenwich:GR-16-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_09.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-16-1",
+    "product_code": "GR-16-1",
+    "workbook_row_key": "greenwich:GR-16-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_10.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-16-1",
+    "product_code": "GR-16-1",
+    "workbook_row_key": "greenwich:GR-16-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_11.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-16-1",
+    "product_code": "GR-16-1",
+    "workbook_row_key": "greenwich:GR-16-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_12.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-16-1",
+    "product_code": "GR-16-1",
+    "workbook_row_key": "greenwich:GR-16-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_13.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-16-1",
+    "product_code": "GR-16-1",
+    "workbook_row_key": "greenwich:GR-16-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_14.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-16-1",
+    "product_code": "GR-16-1",
+    "workbook_row_key": "greenwich:GR-16-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_15.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-16-1",
+    "product_code": "GR-16-1",
+    "workbook_row_key": "greenwich:GR-16-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_16.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-16-1",
+    "product_code": "GR-16-1",
+    "workbook_row_key": "greenwich:GR-16-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_plane_17.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-16-1",
+    "product_code": "GR-16-1",
+    "workbook_row_key": "greenwich:GR-16-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_plane_18.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-16-1",
+    "product_code": "GR-16-1",
+    "workbook_row_key": "greenwich:GR-16-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_plane_19.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-16-1",
+    "product_code": "GR-16-1",
+    "workbook_row_key": "greenwich:GR-16-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_plane_20.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-16-1",
+    "product_code": "GR-16-1",
+    "workbook_row_key": "greenwich:GR-16-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_plane_21.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-16-1",
+    "product_code": "GR-16-1",
+    "workbook_row_key": "greenwich:GR-16-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_plane_22.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-16-1",
+    "product_code": "GR-16-1",
+    "workbook_row_key": "greenwich:GR-16-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_plane_23.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-18-1",
+    "product_code": "GR-18-1",
+    "workbook_row_key": "greenwich:GR-18-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_01.jpg",
+    "role": "thumbnail",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-18-1",
+    "product_code": "GR-18-1",
+    "workbook_row_key": "greenwich:GR-18-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_01.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-18-1",
+    "product_code": "GR-18-1",
+    "workbook_row_key": "greenwich:GR-18-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_02.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-18-1",
+    "product_code": "GR-18-1",
+    "workbook_row_key": "greenwich:GR-18-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_03.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-18-1",
+    "product_code": "GR-18-1",
+    "workbook_row_key": "greenwich:GR-18-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_04.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-18-1",
+    "product_code": "GR-18-1",
+    "workbook_row_key": "greenwich:GR-18-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_05.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-18-1",
+    "product_code": "GR-18-1",
+    "workbook_row_key": "greenwich:GR-18-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_06.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-18-1",
+    "product_code": "GR-18-1",
+    "workbook_row_key": "greenwich:GR-18-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_07.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-18-1",
+    "product_code": "GR-18-1",
+    "workbook_row_key": "greenwich:GR-18-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_frame_08.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-18-1",
+    "product_code": "GR-18-1",
+    "workbook_row_key": "greenwich:GR-18-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_09.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-18-1",
+    "product_code": "GR-18-1",
+    "workbook_row_key": "greenwich:GR-18-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_10.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-18-1",
+    "product_code": "GR-18-1",
+    "workbook_row_key": "greenwich:GR-18-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_11.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-18-1",
+    "product_code": "GR-18-1",
+    "workbook_row_key": "greenwich:GR-18-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_12.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-18-1",
+    "product_code": "GR-18-1",
+    "workbook_row_key": "greenwich:GR-18-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_13.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-18-1",
+    "product_code": "GR-18-1",
+    "workbook_row_key": "greenwich:GR-18-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_14.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-18-1",
+    "product_code": "GR-18-1",
+    "workbook_row_key": "greenwich:GR-18-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_15.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-18-1",
+    "product_code": "GR-18-1",
+    "workbook_row_key": "greenwich:GR-18-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_cloud_16.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-18-1",
+    "product_code": "GR-18-1",
+    "workbook_row_key": "greenwich:GR-18-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_plane_17.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-18-1",
+    "product_code": "GR-18-1",
+    "workbook_row_key": "greenwich:GR-18-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_plane_18.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-18-1",
+    "product_code": "GR-18-1",
+    "workbook_row_key": "greenwich:GR-18-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_plane_19.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-18-1",
+    "product_code": "GR-18-1",
+    "workbook_row_key": "greenwich:GR-18-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_plane_20.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-18-1",
+    "product_code": "GR-18-1",
+    "workbook_row_key": "greenwich:GR-18-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_plane_21.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-18-1",
+    "product_code": "GR-18-1",
+    "workbook_row_key": "greenwich:GR-18-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_plane_22.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  },
+  {
+    "product_handle": "greenwich-gr-18-1",
+    "product_code": "GR-18-1",
+    "workbook_row_key": "greenwich:GR-18-1",
+    "storage_key": "products/greenwich/beds-shared/GR-BED-POOL_plane_23.jpg",
+    "role": "gallery",
+    "asset_tier": "bed_shared_pool",
+    "asset_quality": "ok"
+  }
+]

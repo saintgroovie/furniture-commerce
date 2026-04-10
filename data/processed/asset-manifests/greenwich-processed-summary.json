@@ -1,0 +1,34 @@
+{
+  "generated": "2026-03-19T02:15:16",
+  "collection": "greenwich",
+  "stats": {
+    "total_processed": 193,
+    "ready_assets": 168,
+    "bed_shared_pool_assets": 23,
+    "temporary_pdf_assets": 2,
+    "main_images": 10,
+    "gallery_images": 160,
+    "unique_ready_products": 8,
+    "unique_temp_products": 2,
+    "bed_products_covered": 5,
+    "total_products_covered": 15,
+    "total_file_size_bytes": 26814568,
+    "total_file_size_mb": 25.57,
+    "warnings_count": 7,
+    "duplicate_hashes": 3
+  },
+  "output_directories": {
+    "ready_items": "data/processed/storefront-assets/greenwich",
+    "bed_shared_pool": "data/processed/storefront-assets/greenwich/beds-shared"
+  },
+  "temporary_pdf_products": [
+    {
+      "workbook_row_key": "greenwich:GR-09-1",
+      "canonical_name": "Зеркало навесное"
+    },
+    {
+      "workbook_row_key": "greenwich:GR-42-1",
+      "canonical_name": "Тумба ТВ"
+    }
+  ]
+}

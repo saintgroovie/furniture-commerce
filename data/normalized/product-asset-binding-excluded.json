@@ -1,0 +1,1866 @@
+[
+  {
+    "workbook_row_key": "accessories:A-07-1",
+    "product_code_normalized": "A-07-1",
+    "canonical_name": "Сундук пиратский",
+    "collection_name_normalized": "accessories",
+    "exclusion_reason": "no_image_source",
+    "notes": "Excluded from production subset: no_image_source"
+  },
+  {
+    "workbook_row_key": "accessories:A-31-3",
+    "product_code_normalized": "A-31-3",
+    "canonical_name": "Шкатулка малая",
+    "collection_name_normalized": "accessories",
+    "exclusion_reason": "no_image_source",
+    "notes": "Excluded from production subset: no_image_source"
+  },
+  {
+    "workbook_row_key": "accessories:A-50-1",
+    "product_code_normalized": "A-50-1",
+    "canonical_name": "Подушка декоративная",
+    "collection_name_normalized": "accessories",
+    "exclusion_reason": "no_image_source",
+    "notes": "Excluded from production subset: no_image_source"
+  },
+  {
+    "workbook_row_key": "accessories:A-50-2",
+    "product_code_normalized": "A-50-2",
+    "canonical_name": "Подушка декоративная",
+    "collection_name_normalized": "accessories",
+    "exclusion_reason": "no_image_source",
+    "notes": "Excluded from production subset: no_image_source"
+  },
+  {
+    "workbook_row_key": "accessories:A-51-3",
+    "product_code_normalized": "A-51-3",
+    "canonical_name": "Валик декоративный",
+    "collection_name_normalized": "accessories",
+    "exclusion_reason": "no_image_source",
+    "notes": "Excluded from production subset: no_image_source"
+  },
+  {
+    "workbook_row_key": "accessories:A-31-1",
+    "product_code_normalized": "A-31-1",
+    "canonical_name": "Шкатулка большая",
+    "collection_name_normalized": "accessories",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "accessories:A-31-2",
+    "product_code_normalized": "A-31-2",
+    "canonical_name": "Шкатулка средняя",
+    "collection_name_normalized": "accessories",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "accessories:A-31-4",
+    "product_code_normalized": "A-31-4",
+    "canonical_name": "Шкатулка малая фигурная",
+    "collection_name_normalized": "accessories",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-03-1",
+    "product_code_normalized": "CO-03-1",
+    "canonical_name": "Шкаф для одежды 3-дв.",
+    "collection_name_normalized": "country-london-paris",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-17-2",
+    "product_code_normalized": "CO-17-2",
+    "canonical_name": "Кровать 2- сп. (160*200) с подъемн. мех.",
+    "collection_name_normalized": "country-london-paris",
+    "exclusion_reason": "no_image_source",
+    "notes": "Excluded from production subset: no_image_source"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-18-2",
+    "product_code_normalized": "CO-18-2",
+    "canonical_name": "Кровать 2- сп. (180*200) с подъемн. мех.",
+    "collection_name_normalized": "country-london-paris",
+    "exclusion_reason": "no_image_source",
+    "notes": "Excluded from production subset: no_image_source"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-23-1",
+    "product_code_normalized": "CO-23-1",
+    "canonical_name": "Стул",
+    "collection_name_normalized": "country-london-paris",
+    "exclusion_reason": "no_image_source",
+    "notes": "Excluded from production subset: no_image_source"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-30-1",
+    "product_code_normalized": "CO-30-1",
+    "canonical_name": "Часы",
+    "collection_name_normalized": "country-london-paris",
+    "exclusion_reason": "no_image_source",
+    "notes": "Excluded from production subset: no_image_source"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-69-2",
+    "product_code_normalized": "CO-69-2",
+    "canonical_name": "Полка книжная большая",
+    "collection_name_normalized": "country-london-paris",
+    "exclusion_reason": "no_image_source",
+    "notes": "Excluded from production subset: no_image_source"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-69-4",
+    "product_code_normalized": "CO-69-4",
+    "canonical_name": "Полка книжная большая с башенками",
+    "collection_name_normalized": "country-london-paris",
+    "exclusion_reason": "no_image_source",
+    "notes": "Excluded from production subset: no_image_source"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-83-1",
+    "product_code_normalized": "CO-83-1",
+    "canonical_name": "Столешница пеленальная",
+    "collection_name_normalized": "country-london-paris",
+    "exclusion_reason": "no_image_source",
+    "notes": "Excluded from production subset: no_image_source"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-d4",
+    "product_code_normalized": "CO-d4",
+    "canonical_name": "Полка в шкаф",
+    "collection_name_normalized": "country-london-paris",
+    "exclusion_reason": "no_image_source",
+    "notes": "Excluded from production subset: no_image_source"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-d5",
+    "product_code_normalized": "CO-d5",
+    "canonical_name": "Полка в  столы",
+    "collection_name_normalized": "country-london-paris",
+    "exclusion_reason": "no_image_source",
+    "notes": "Excluded from production subset: no_image_source"
+  },
+  {
+    "workbook_row_key": "country-london-paris:СО-65-3",
+    "product_code_normalized": "СО-65-3",
+    "canonical_name": "Стол письменный 1-тумб. ОЯ",
+    "collection_name_normalized": "country-london-paris",
+    "exclusion_reason": "no_image_source",
+    "notes": "Excluded from production subset: no_image_source"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-16-2",
+    "product_code_normalized": "CO-16-2",
+    "canonical_name": "Кровать 1,5 сп. (140*190) с подъем мех",
+    "collection_name_normalized": "country-london-paris",
+    "exclusion_reason": "pdf_unconfirmed",
+    "notes": "Excluded from production subset: pdf_unconfirmed"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-66-2",
+    "product_code_normalized": "CO-66-2",
+    "canonical_name": "Стол письменный 2-тумб. ПЯ",
+    "collection_name_normalized": "country-london-paris",
+    "exclusion_reason": "pdf_unconfirmed",
+    "notes": "Excluded from production subset: pdf_unconfirmed"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-66-3",
+    "product_code_normalized": "CO-66-3",
+    "canonical_name": "Стол письменный 2-тумб.ЯП",
+    "collection_name_normalized": "country-london-paris",
+    "exclusion_reason": "pdf_unconfirmed",
+    "notes": "Excluded from production subset: pdf_unconfirmed"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-69-3",
+    "product_code_normalized": "CO-69-3",
+    "canonical_name": "Надстройка для письменного стола",
+    "collection_name_normalized": "country-london-paris",
+    "exclusion_reason": "pdf_unconfirmed",
+    "notes": "Excluded from production subset: pdf_unconfirmed"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-69-5",
+    "product_code_normalized": "CO-69-5",
+    "canonical_name": "Полка книжная",
+    "collection_name_normalized": "country-london-paris",
+    "exclusion_reason": "pdf_unconfirmed",
+    "notes": "Excluded from production subset: pdf_unconfirmed"
+  },
+  {
+    "workbook_row_key": "country-london-paris:СО-65-4",
+    "product_code_normalized": "СО-65-4",
+    "canonical_name": "Стол письменный 1-тумб. ЯО",
+    "collection_name_normalized": "country-london-paris",
+    "exclusion_reason": "pdf_unconfirmed",
+    "notes": "Excluded from production subset: pdf_unconfirmed"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-02-2",
+    "product_code_normalized": "GR-02-2",
+    "canonical_name": "Гардероб 2-дв.",
+    "collection_name_normalized": "greenwich",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-05-1",
+    "product_code_normalized": "GR-05-1",
+    "canonical_name": "Комод",
+    "collection_name_normalized": "greenwich",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-09-1",
+    "product_code_normalized": "GR-09-1",
+    "canonical_name": "Кровать  1-сп. (90*200)",
+    "collection_name_normalized": "greenwich",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-12-1",
+    "product_code_normalized": "GR-12-1",
+    "canonical_name": "Кровать  1,5-сп. (120*200)",
+    "collection_name_normalized": "greenwich",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-14-1",
+    "product_code_normalized": "GR-14-1",
+    "canonical_name": "Кровать  1,5-сп. (140*200)",
+    "collection_name_normalized": "greenwich",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-16-1",
+    "product_code_normalized": "GR-16-1",
+    "canonical_name": "Кровать  2-сп. (160*200)",
+    "collection_name_normalized": "greenwich",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-18-1",
+    "product_code_normalized": "GR-18-1",
+    "canonical_name": "Кровать  2-сп. (180*200)",
+    "collection_name_normalized": "greenwich",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-26-1",
+    "product_code_normalized": "GR-26-1",
+    "canonical_name": "Шкаф-витрина Кристалл",
+    "collection_name_normalized": "greenwich",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-44-1",
+    "product_code_normalized": "GR-44-1",
+    "canonical_name": "Консоль",
+    "collection_name_normalized": "greenwich",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-67-1",
+    "product_code_normalized": "GR-67-1",
+    "canonical_name": "Рабочий стол",
+    "collection_name_normalized": "greenwich",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-02-1",
+    "product_code_normalized": "GR-02-1",
+    "canonical_name": "Гардероб 2 -х дв.  с ящиками",
+    "collection_name_normalized": "greenwich",
+    "exclusion_reason": "pdf_unconfirmed",
+    "notes": "Excluded from production subset: pdf_unconfirmed"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-08-1",
+    "product_code_normalized": "GR-08-1",
+    "canonical_name": "Прикроватная тумба с 2 ящиками",
+    "collection_name_normalized": "greenwich",
+    "exclusion_reason": "pdf_unconfirmed",
+    "notes": "Excluded from production subset: pdf_unconfirmed"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-08-2",
+    "product_code_normalized": "GR-08-2",
+    "canonical_name": "Прикроватная тумба с 1 ящиком",
+    "collection_name_normalized": "greenwich",
+    "exclusion_reason": "pdf_unconfirmed",
+    "notes": "Excluded from production subset: pdf_unconfirmed"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-09-1",
+    "product_code_normalized": "GR-09-1",
+    "canonical_name": "Зеркало навесное",
+    "collection_name_normalized": "greenwich",
+    "exclusion_reason": "pdf_unconfirmed",
+    "notes": "Excluded from production subset: pdf_unconfirmed"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-42-1",
+    "product_code_normalized": "GR-42-1",
+    "canonical_name": "Тумба ТВ",
+    "collection_name_normalized": "greenwich",
+    "exclusion_reason": "pdf_unconfirmed",
+    "notes": "Excluded from production subset: pdf_unconfirmed"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-00-1",
+    "product_code_normalized": "MNm-00-1",
+    "canonical_name": "Шкаф для одежды угловой (модуль/ручка слева)",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-00-2",
+    "product_code_normalized": "MNm-00-2",
+    "canonical_name": "Шкаф для одежды угловой (модуль/ручка справа)",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-01-1",
+    "product_code_normalized": "MNm-01-1",
+    "canonical_name": "Шкаф для одежды 1-дв. (модуль/Ш/ручка слева)",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-01-2",
+    "product_code_normalized": "MNm-01-2",
+    "canonical_name": "Шкаф для одежды 1-дв. (модуль/Ш/ручка справа)",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-01-3",
+    "product_code_normalized": "MNm-01-3",
+    "canonical_name": "Шкаф для одежды 1-дв. (модуль/ЯШ/ручка слева)",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-01-4",
+    "product_code_normalized": "MNm-01-4",
+    "canonical_name": "Шкаф для одежды 1-дв. (модуль/ЯШ/ручка справа)",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-01-5",
+    "product_code_normalized": "MNm-01-5",
+    "canonical_name": "Шкаф для одежды 1-дв. (модуль/ЯП/ручка слева)",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-01-6",
+    "product_code_normalized": "MNm-01-6",
+    "canonical_name": "Шкаф для одежды 1-дв. (модуль/ЯП/ручка справа)",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-02-3",
+    "product_code_normalized": "MNm-02-3",
+    "canonical_name": "Шкаф для одежды 2-дв. (модуль/ЯП)",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-03-2",
+    "product_code_normalized": "MNm-03-2",
+    "canonical_name": "Шкаф для одежды 3-дв. (модуль/ЯШ+П+ЯШ)",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-03-3",
+    "product_code_normalized": "MNm-03-3",
+    "canonical_name": "Шкаф для одежды 3-дв. (модуль/Ш+ЯП+Ш)",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-03-4",
+    "product_code_normalized": "MNm-03-4",
+    "canonical_name": "Шкаф для одежды 3-дв. (модуль/2Ш+ЯП+Ш)",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-05-4",
+    "product_code_normalized": "MNm-05-4",
+    "canonical_name": "Комод с зеркалом",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-14-1",
+    "product_code_normalized": "MNm-14-1",
+    "canonical_name": "Кровать 1-сп. (90*190)",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-14-2",
+    "product_code_normalized": "MNm-14-2",
+    "canonical_name": "Кровать 1-сп. (90*190) без изножья",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-14-3",
+    "product_code_normalized": "MNm-14-3",
+    "canonical_name": "Кровать 1-сп.(90*190)с подъем мех",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-15-3",
+    "product_code_normalized": "MNm-15-3",
+    "canonical_name": "Кровать 1,5-сп. (120*190) с подъем мех",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-16-3",
+    "product_code_normalized": "MNm-16-3",
+    "canonical_name": "Кровать 1,5-сп. (140*190) с подъем мех",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-17-2",
+    "product_code_normalized": "MNm-17-2",
+    "canonical_name": "Кровать 2-сп. (160*200) без изножья",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-17-3",
+    "product_code_normalized": "MNm-17-3",
+    "canonical_name": "Кровать 2-сп. (160*200) с подъем мех",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-18-2",
+    "product_code_normalized": "MNm-18-2",
+    "canonical_name": "Кровать 2-сп. (180*200) без изножья",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-18-3",
+    "product_code_normalized": "MNm-18-3",
+    "canonical_name": "Кровать 2-сп. (180*200) с подъем мех",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-61-2",
+    "product_code_normalized": "MNm-61-2",
+    "canonical_name": "Шкаф книжный 1-дв. (модуль/ручка слева)",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-61-4",
+    "product_code_normalized": "MNm-61-4",
+    "canonical_name": "Шкаф книжный 3-дв. (модуль)",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-65-1",
+    "product_code_normalized": "MNm-65-1",
+    "canonical_name": "Стол письменный 1-тумб. 0П",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-66-1",
+    "product_code_normalized": "MNm-66-1",
+    "canonical_name": "Стол письменный 2-тумб. ПП",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-66-2",
+    "product_code_normalized": "MNm-66-2",
+    "canonical_name": "Стол письменный 2-тумб. ПЯ",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-66-4",
+    "product_code_normalized": "MNm-66-4",
+    "canonical_name": "Стол письменный 2-тумб. ЯЯ",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "monchelsea:MN-49-1",
+    "product_code_normalized": "MN-49-1",
+    "canonical_name": "Обувница",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "no_image_source",
+    "notes": "Excluded from production subset: no_image_source"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-00-3",
+    "product_code_normalized": "MNm-00-3",
+    "canonical_name": "Шкаф книжный угловой ручка справа",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "no_image_source",
+    "notes": "Excluded from production subset: no_image_source"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-00-4",
+    "product_code_normalized": "MNm-00-4",
+    "canonical_name": "Шкаф книжный угловой ручка слева",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "no_image_source",
+    "notes": "Excluded from production subset: no_image_source"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-02-1",
+    "product_code_normalized": "MNm-02-1",
+    "canonical_name": "Шкаф для одежды 2-дв. (модуль/Ш)",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-02-2",
+    "product_code_normalized": "MNm-02-2",
+    "canonical_name": "Шкаф для одежды 2-дв. (модуль/ЯШ)",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-03-1",
+    "product_code_normalized": "MNm-03-1",
+    "canonical_name": "Шкаф для одежды 3-дв. (модуль/П+ЯШ+Ш)",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-05-2",
+    "product_code_normalized": "MNm-05-2",
+    "canonical_name": "Комод широкий",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-05-3",
+    "product_code_normalized": "MNm-05-3",
+    "canonical_name": "Комод высокий",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-06-1",
+    "product_code_normalized": "MNm-06-1",
+    "canonical_name": "Столик  туалетный с зеркалом",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-06-2",
+    "product_code_normalized": "MNm-06-2",
+    "canonical_name": "Столик туалетный без зеркала",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-08-1",
+    "product_code_normalized": "MNm-08-1",
+    "canonical_name": "Тумбочка прикроватная",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-09-1",
+    "product_code_normalized": "MNm-09-1",
+    "canonical_name": "Зеркало навесное",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-09-2",
+    "product_code_normalized": "MNm-09-2",
+    "canonical_name": "Зеркало напольное",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-09-3",
+    "product_code_normalized": "MNm-09-3",
+    "canonical_name": "Зеркало настольное",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-15-1",
+    "product_code_normalized": "MNm-15-1",
+    "canonical_name": "Кровать 1,5-сп. (120*190)",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-15-2",
+    "product_code_normalized": "MNm-15-2",
+    "canonical_name": "Кровать 1,5-сп. (120*190) без изножья",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-16-1",
+    "product_code_normalized": "MNm-16-1",
+    "canonical_name": "Кровать 1,5-сп. (140*190)",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-16-2",
+    "product_code_normalized": "MNm-16-2",
+    "canonical_name": "Кровать 1,5-сп. (140*190) без изножья",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-17-1",
+    "product_code_normalized": "MNm-17-1",
+    "canonical_name": "Кровать 2-сп. (160*200)",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-18-1",
+    "product_code_normalized": "MNm-18-1",
+    "canonical_name": "Кровать 2-сп. (180*200)",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-23-1",
+    "product_code_normalized": "MNm-23-1",
+    "canonical_name": "Стул",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-42-1",
+    "product_code_normalized": "MNm-42-1",
+    "canonical_name": "Тумба для телевизора",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-42-2",
+    "product_code_normalized": "MNm-42-2",
+    "canonical_name": "Тумба для телевизора (модуль)",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-55-1",
+    "product_code_normalized": "MNm-55-1",
+    "canonical_name": "Банкетка малая",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-57-3",
+    "product_code_normalized": "MNm-57-3",
+    "canonical_name": "Диван с выкатной кроватью",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-61-1",
+    "product_code_normalized": "MNm-61-1",
+    "canonical_name": "Шкаф книжный 2-дв. (модуль)",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-61-3",
+    "product_code_normalized": "MNm-61-3",
+    "canonical_name": "Шкаф книжный 1-дв. (модуль/ручка справа)",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-62-1",
+    "product_code_normalized": "MNm-62-1",
+    "canonical_name": "Секция угловая открытая (модуль)",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-65-2",
+    "product_code_normalized": "MNm-65-2",
+    "canonical_name": "Стол письменный 1-тумб. П0",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-65-3",
+    "product_code_normalized": "MNm-65-3",
+    "canonical_name": "Стол письменный 1-тумб. 0Я",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-65-4",
+    "product_code_normalized": "MNm-65-4",
+    "canonical_name": "Стол письменный 1-тумб. Я0",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-66-3",
+    "product_code_normalized": "MNm-66-3",
+    "canonical_name": "Стол письменный 2-тумб. ЯП",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-69-1",
+    "product_code_normalized": "MNm-69-1",
+    "canonical_name": "Полка навесная (модуль)",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-69-2",
+    "product_code_normalized": "MNm-69-2",
+    "canonical_name": "Полка навесная с дверкой (модуль)",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-69-3",
+    "product_code_normalized": "MNm-69-3",
+    "canonical_name": "Полка книжная",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "monchelsea:row_31",
+    "product_code_normalized": null,
+    "canonical_name": "Кровать 2-сп. (160*200) с выс.сп. С жест. Филенкой",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "monchelsea:row_32",
+    "product_code_normalized": null,
+    "canonical_name": "Кровать 2-сп. (160*200) с выс.сп. С мяг. Филенкой",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "monchelsea:row_76",
+    "product_code_normalized": null,
+    "canonical_name": "Этажерка большая 6-полок",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "monchelsea:row_77",
+    "product_code_normalized": null,
+    "canonical_name": "Этажерка малая 3-полоки",
+    "collection_name_normalized": "monchelsea",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "oliver:OL-15-3",
+    "product_code_normalized": "OL-15-3",
+    "canonical_name": "Кровать 1,5-сп. (120*190) с подъемн.мех-змом",
+    "collection_name_normalized": "oliver",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "oliver:OL-16-3",
+    "product_code_normalized": "OL-16-3",
+    "canonical_name": "Кровать 1,5-сп. (140*190) с подъемн.мех",
+    "collection_name_normalized": "oliver",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "oliver:OL-08-Н",
+    "product_code_normalized": "OL-08-Н",
+    "canonical_name": "Тумбочка для рукоделия",
+    "collection_name_normalized": "oliver",
+    "exclusion_reason": "no_image_source",
+    "notes": "Excluded from production subset: no_image_source"
+  },
+  {
+    "workbook_row_key": "oliver:OL-14-3",
+    "product_code_normalized": "OL-14-3",
+    "canonical_name": "Кровать  1-сп. (90*190) с под механиз SINGLE",
+    "collection_name_normalized": "oliver",
+    "exclusion_reason": "no_image_source",
+    "notes": "Excluded from production subset: no_image_source"
+  },
+  {
+    "workbook_row_key": "oxford:MC-14-1",
+    "product_code_normalized": "MC-14-1",
+    "canonical_name": "Комплекс Мой замок (кровать 90*190)",
+    "collection_name_normalized": "oxford",
+    "exclusion_reason": "no_image_source",
+    "notes": "Excluded from production subset: no_image_source"
+  },
+  {
+    "workbook_row_key": "oxford:MC-99-1",
+    "product_code_normalized": "MC-99-1",
+    "canonical_name": "Комплекс Мой замок (без кровати)",
+    "collection_name_normalized": "oxford",
+    "exclusion_reason": "no_image_source",
+    "notes": "Excluded from production subset: no_image_source"
+  },
+  {
+    "workbook_row_key": "oxford:Ox-1-1-N",
+    "product_code_normalized": "Ox-1-1-N",
+    "canonical_name": "Съемный чехол в стандартной ткани  1-2 категории на нижнюю кровать",
+    "collection_name_normalized": "oxford",
+    "exclusion_reason": "no_image_source",
+    "notes": "Excluded from production subset: no_image_source"
+  },
+  {
+    "workbook_row_key": "oxford:SH-14-1",
+    "product_code_normalized": "SH-14-1",
+    "canonical_name": "Комплекс Милый дом (кровать 90*190)",
+    "collection_name_normalized": "oxford",
+    "exclusion_reason": "no_image_source",
+    "notes": "Excluded from production subset: no_image_source"
+  },
+  {
+    "workbook_row_key": "oxford:SH-99-1",
+    "product_code_normalized": "SH-99-1",
+    "canonical_name": "Комплекс Милый дом (без кровати)",
+    "collection_name_normalized": "oxford",
+    "exclusion_reason": "no_image_source",
+    "notes": "Excluded from production subset: no_image_source"
+  },
+  {
+    "workbook_row_key": "oxford:MC-84-1",
+    "product_code_normalized": "MC-84-1",
+    "canonical_name": "Бортик к кровати малый",
+    "collection_name_normalized": "oxford",
+    "exclusion_reason": "pdf_unconfirmed",
+    "notes": "Excluded from production subset: pdf_unconfirmed"
+  },
+  {
+    "workbook_row_key": "oxford:MC-84-2",
+    "product_code_normalized": "MC-84-2",
+    "canonical_name": "Бортик к кровати большой",
+    "collection_name_normalized": "oxford",
+    "exclusion_reason": "pdf_unconfirmed",
+    "notes": "Excluded from production subset: pdf_unconfirmed"
+  },
+  {
+    "workbook_row_key": "oxford:OX-08-1",
+    "product_code_normalized": "OX-08-1",
+    "canonical_name": "Тумба прикроватная (для верхнего яруса)",
+    "collection_name_normalized": "oxford",
+    "exclusion_reason": "pdf_unconfirmed",
+    "notes": "Excluded from production subset: pdf_unconfirmed"
+  },
+  {
+    "workbook_row_key": "oxford:OX-14-1",
+    "product_code_normalized": "OX-14-1",
+    "canonical_name": "Комплекс Оксфорд-1 (нижняя кровать без матраса 90*185)",
+    "collection_name_normalized": "oxford",
+    "exclusion_reason": "pdf_unconfirmed",
+    "notes": "Excluded from production subset: pdf_unconfirmed"
+  },
+  {
+    "workbook_row_key": "oxford:OX-14-11",
+    "product_code_normalized": "OX-14-11",
+    "canonical_name": "Нижняя кровать без матраса увеличенная (120*185)",
+    "collection_name_normalized": "oxford",
+    "exclusion_reason": "pdf_unconfirmed",
+    "notes": "Excluded from production subset: pdf_unconfirmed"
+  },
+  {
+    "workbook_row_key": "oxford:OX-14-2",
+    "product_code_normalized": "OX-14-2",
+    "canonical_name": "Комплекс Оксфорд-2 (нижняя кровать 90*185 с матрасом в чехле, ткани в ассортименте)",
+    "collection_name_normalized": "oxford",
+    "exclusion_reason": "pdf_unconfirmed",
+    "notes": "Excluded from production subset: pdf_unconfirmed"
+  },
+  {
+    "workbook_row_key": "oxford:OX-84-1",
+    "product_code_normalized": "OX-84-1",
+    "canonical_name": "Бортик к кровати малый",
+    "collection_name_normalized": "oxford",
+    "exclusion_reason": "pdf_unconfirmed",
+    "notes": "Excluded from production subset: pdf_unconfirmed"
+  },
+  {
+    "workbook_row_key": "oxford:OX-84-2",
+    "product_code_normalized": "OX-84-2",
+    "canonical_name": "Бортик к кровати большой",
+    "collection_name_normalized": "oxford",
+    "exclusion_reason": "pdf_unconfirmed",
+    "notes": "Excluded from production subset: pdf_unconfirmed"
+  },
+  {
+    "workbook_row_key": "oxford:OX-90-1",
+    "product_code_normalized": "OX-90-1",
+    "canonical_name": "Комплекс Оксфорд-1 с выдвижной столешницей без  нижней кровати",
+    "collection_name_normalized": "oxford",
+    "exclusion_reason": "pdf_unconfirmed",
+    "notes": "Excluded from production subset: pdf_unconfirmed"
+  },
+  {
+    "workbook_row_key": "oxford:OX-90-2",
+    "product_code_normalized": "OX-90-2",
+    "canonical_name": "Комплекс Оксфорд-2  без выдвижной столешницы с нижней кроватью и матрасом в чехле (ткани в ассортименте)",
+    "collection_name_normalized": "oxford",
+    "exclusion_reason": "pdf_unconfirmed",
+    "notes": "Excluded from production subset: pdf_unconfirmed"
+  },
+  {
+    "workbook_row_key": "oxford:OX-90-3",
+    "product_code_normalized": "OX-90-3",
+    "canonical_name": "КомплексОксфорд-3 со шкафом и столом (без нижней кровати)",
+    "collection_name_normalized": "oxford",
+    "exclusion_reason": "pdf_unconfirmed",
+    "notes": "Excluded from production subset: pdf_unconfirmed"
+  },
+  {
+    "workbook_row_key": "oxford:OX-90-4",
+    "product_code_normalized": "OX-90-4",
+    "canonical_name": "Комплекс Oxford-4 Кровать-чердак - без полок и ящиков внутри  (без нижней кровати)",
+    "collection_name_normalized": "oxford",
+    "exclusion_reason": "pdf_unconfirmed",
+    "notes": "Excluded from production subset: pdf_unconfirmed"
+  },
+  {
+    "workbook_row_key": "oxford:S-OX-02",
+    "product_code_normalized": "S-OX-02",
+    "canonical_name": "Стеновая панель на всю длину ОКСФОРД",
+    "collection_name_normalized": "oxford",
+    "exclusion_reason": "pdf_unconfirmed",
+    "notes": "Excluded from production subset: pdf_unconfirmed"
+  },
+  {
+    "workbook_row_key": "oxford:S-OX-03",
+    "product_code_normalized": "S-OX-03",
+    "canonical_name": "Полка навесная квадратная с 3-мя ящиками OXFORD",
+    "collection_name_normalized": "oxford",
+    "exclusion_reason": "pdf_unconfirmed",
+    "notes": "Excluded from production subset: pdf_unconfirmed"
+  },
+  {
+    "workbook_row_key": "oxford:S-OX-04",
+    "product_code_normalized": "S-OX-04",
+    "canonical_name": "Полка навесная квадратная Оксфорд",
+    "collection_name_normalized": "oxford",
+    "exclusion_reason": "pdf_unconfirmed",
+    "notes": "Excluded from production subset: pdf_unconfirmed"
+  },
+  {
+    "workbook_row_key": "oxford:S-OX-05",
+    "product_code_normalized": "S-OX-05",
+    "canonical_name": "Ступени с перилами и ящиками ОКСФОРД",
+    "collection_name_normalized": "oxford",
+    "exclusion_reason": "pdf_unconfirmed",
+    "notes": "Excluded from production subset: pdf_unconfirmed"
+  },
+  {
+    "workbook_row_key": "oxford:SH-84-1",
+    "product_code_normalized": "SH-84-1",
+    "canonical_name": "Бортик к кровати малый",
+    "collection_name_normalized": "oxford",
+    "exclusion_reason": "pdf_unconfirmed",
+    "notes": "Excluded from production subset: pdf_unconfirmed"
+  },
+  {
+    "workbook_row_key": "oxford:SH-84-2",
+    "product_code_normalized": "SH-84-2",
+    "canonical_name": "Бортик к кровати большой",
+    "collection_name_normalized": "oxford",
+    "exclusion_reason": "pdf_unconfirmed",
+    "notes": "Excluded from production subset: pdf_unconfirmed"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-16-1",
+    "product_code_normalized": "PR-16-1",
+    "canonical_name": "Кровать 1,5-сп.140*190 без изножья",
+    "collection_name_normalized": "princess-rose",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-65-5",
+    "product_code_normalized": "PR-65-5",
+    "canonical_name": "Стол письменный 1-тумб. 0П (ручки СВАРОВСКИ)",
+    "collection_name_normalized": "princess-rose",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-65-6",
+    "product_code_normalized": "PR-65-6",
+    "canonical_name": "Стол письменный 1-тумб. П0 (ручки СВАРОВСКИ)",
+    "collection_name_normalized": "princess-rose",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-65-7",
+    "product_code_normalized": "PR-65-7",
+    "canonical_name": "Стол письменный 1-тумб. 0Я (ручки СВАРОВСКИ)",
+    "collection_name_normalized": "princess-rose",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-65-8",
+    "product_code_normalized": "PR-65-8",
+    "canonical_name": "Стол письменный 1-тумб. Я0 (ручки СВАРОВСКИ)",
+    "collection_name_normalized": "princess-rose",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-66-6",
+    "product_code_normalized": "PR-66-6",
+    "canonical_name": "Стол письменный 2-тумб. ПЯ (ручки СВАРОВСКИ)",
+    "collection_name_normalized": "princess-rose",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-66-7",
+    "product_code_normalized": "PR-66-7",
+    "canonical_name": "Стол письменный 2-тумб. ЯП (ручки СВАРОВСКИ)",
+    "collection_name_normalized": "princess-rose",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-68-2",
+    "product_code_normalized": "PR-68-2",
+    "canonical_name": "Этажерка большая 6 полок",
+    "collection_name_normalized": "princess-rose",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-95-2",
+    "product_code_normalized": "PR-95-2",
+    "canonical_name": "Кровать - трансформер (80*150) без рисунка",
+    "collection_name_normalized": "princess-rose",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-09-2",
+    "product_code_normalized": "PR-09-2",
+    "canonical_name": "Зеркало напольное",
+    "collection_name_normalized": "princess-rose",
+    "exclusion_reason": "no_image_source",
+    "notes": "Excluded from production subset: no_image_source"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-95-3",
+    "product_code_normalized": "PR-95-3",
+    "canonical_name": "Кровать - трансформер (80*150) с тканью",
+    "collection_name_normalized": "princess-rose",
+    "exclusion_reason": "no_image_source",
+    "notes": "Excluded from production subset: no_image_source"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-02-1",
+    "product_code_normalized": "PR-02-1",
+    "canonical_name": "Шкаф для одежды 2-дв. с рисунком",
+    "collection_name_normalized": "princess-rose",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-03-1",
+    "product_code_normalized": "PR-03-1",
+    "canonical_name": "Шкаф для одежды 3-дв. с рисунком",
+    "collection_name_normalized": "princess-rose",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-05-1",
+    "product_code_normalized": "PR-05-1",
+    "canonical_name": "Комод стандартный (ручки Swarovski)",
+    "collection_name_normalized": "princess-rose",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-06-1",
+    "product_code_normalized": "PR-06-1",
+    "canonical_name": "Столик туалетный (ручки СВАРОВСКИ)",
+    "collection_name_normalized": "princess-rose",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-08-1",
+    "product_code_normalized": "PR-08-1",
+    "canonical_name": "Тумбочка прикроватная (ручки СВАРОВСКИ)",
+    "collection_name_normalized": "princess-rose",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-14-1",
+    "product_code_normalized": "PR-14-1",
+    "canonical_name": "Кровать 1-сп. (90*190) с рисунком, без изн.",
+    "collection_name_normalized": "princess-rose",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-15-1",
+    "product_code_normalized": "PR-15-1",
+    "canonical_name": "Кровать 1,5-сп. (120*190) с рисунком,без изн.",
+    "collection_name_normalized": "princess-rose",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-23-1",
+    "product_code_normalized": "PR-23-1",
+    "canonical_name": "Стул",
+    "collection_name_normalized": "princess-rose",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-30-1",
+    "product_code_normalized": "PR-30-1",
+    "canonical_name": "Часы",
+    "collection_name_normalized": "princess-rose",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-42-1",
+    "product_code_normalized": "PR-42-1",
+    "canonical_name": "Тумба для телевизора (ручки СВАРОВСКИ)",
+    "collection_name_normalized": "princess-rose",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-55-1",
+    "product_code_normalized": "PR-55-1",
+    "canonical_name": "Банкетка малая",
+    "collection_name_normalized": "princess-rose",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-55-2",
+    "product_code_normalized": "PR-55-2",
+    "canonical_name": "Банкетка большая",
+    "collection_name_normalized": "princess-rose",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-61-1",
+    "product_code_normalized": "PR-61-1",
+    "canonical_name": "Шкаф книжный с рисунком",
+    "collection_name_normalized": "princess-rose",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-62-1",
+    "product_code_normalized": "PR-62-1",
+    "canonical_name": "Стеллаж для книг",
+    "collection_name_normalized": "princess-rose",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-68-1",
+    "product_code_normalized": "PR-68-1",
+    "canonical_name": "Этажерка малая 3 полки",
+    "collection_name_normalized": "princess-rose",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-81-1",
+    "product_code_normalized": "PR-81-1",
+    "canonical_name": "Столик  детский",
+    "collection_name_normalized": "princess-rose",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-82-1",
+    "product_code_normalized": "PR-82-1",
+    "canonical_name": "Стульчик  детский с рисунком",
+    "collection_name_normalized": "princess-rose",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-83-1",
+    "product_code_normalized": "PR-83-1",
+    "canonical_name": "Столешница пеленальная съемная с рисунком",
+    "collection_name_normalized": "princess-rose",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-84-1",
+    "product_code_normalized": "PR-84-1",
+    "canonical_name": "Бортик к кровати малый",
+    "collection_name_normalized": "princess-rose",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-84-2",
+    "product_code_normalized": "PR-84-2",
+    "canonical_name": "Бортик к кровати большой",
+    "collection_name_normalized": "princess-rose",
+    "exclusion_reason": "no_processed_assets",
+    "notes": "No disk or legacy processed assets available"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-09-1",
+    "product_code_normalized": "PR-09-1",
+    "canonical_name": "Зеркало навесное",
+    "collection_name_normalized": "princess-rose",
+    "exclusion_reason": "pdf_unconfirmed",
+    "notes": "Excluded from production subset: pdf_unconfirmed"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-69-1",
+    "product_code_normalized": "PR-69-1",
+    "canonical_name": "Полка книжная",
+    "collection_name_normalized": "princess-rose",
+    "exclusion_reason": "pdf_unconfirmed",
+    "notes": "Excluded from production subset: pdf_unconfirmed"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-95-1",
+    "product_code_normalized": "PR-95-1",
+    "canonical_name": "Кровать - трансформер (80*150) с рисунком",
+    "collection_name_normalized": "princess-rose",
+    "exclusion_reason": "pdf_unconfirmed",
+    "notes": "Excluded from production subset: pdf_unconfirmed"
+  },
+  {
+    "workbook_row_key": "provence:PV-08-3",
+    "product_code_normalized": "PV-08-3",
+    "canonical_name": "Тумбочка прикроватная с 2 ящиками",
+    "collection_name_normalized": "provence",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "provence:PV-14-2",
+    "product_code_normalized": "PV-14-2",
+    "canonical_name": "Кровать 1-сп. (90*190) с тканью без изножья",
+    "collection_name_normalized": "provence",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "provence:PV-16-2",
+    "product_code_normalized": "PV-16-2",
+    "canonical_name": "Кровать 1,5-сп. (140*190) с тканью без изножья",
+    "collection_name_normalized": "provence",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "provence:PV-17-2",
+    "product_code_normalized": "PV-17-2",
+    "canonical_name": "Кровать 2-сп. (160*200) с тканью без изножья",
+    "collection_name_normalized": "provence",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "provence:PV-18-2",
+    "product_code_normalized": "PV-18-2",
+    "canonical_name": "Кровать 2-сп. (180*200) с тканью без изножья",
+    "collection_name_normalized": "provence",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "notes": "Excluded from production subset: fuzzy_unconfirmed"
+  },
+  {
+    "workbook_row_key": "provence:PV-30-1",
+    "product_code_normalized": "PV-30-1",
+    "canonical_name": "Часы",
+    "collection_name_normalized": "provence",
+    "exclusion_reason": "no_image_source",
+    "notes": "Excluded from production subset: no_image_source"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-01-1",
+    "product_code_normalized": "WW-01-1",
+    "canonical_name": "Шкаф для одежды 1-дв. 440 (ручка лев/прав)",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_base_image_only",
+    "notes": "Excluded from production subset: vv_base_image_only"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-01-3",
+    "product_code_normalized": "WW-01-3",
+    "canonical_name": "Шкаф для одежды 1-дв.(высокий)560 (ручка лев/прав)",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_base_image_only",
+    "notes": "Excluded from production subset: vv_base_image_only"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-02-1",
+    "product_code_normalized": "WW-02-1",
+    "canonical_name": "Шкаф для одежды 2-дв. 440",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_base_image_only",
+    "notes": "Excluded from production subset: vv_base_image_only"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-02-3",
+    "product_code_normalized": "WW-02-3",
+    "canonical_name": "Шкаф для одежды 2-дв.,высокий,560",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_base_image_only",
+    "notes": "Excluded from production subset: vv_base_image_only"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-03-1",
+    "product_code_normalized": "WW-03-1",
+    "canonical_name": "Шкаф для одежды 3-дв.440",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_base_image_only",
+    "notes": "Excluded from production subset: vv_base_image_only"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-03-3",
+    "product_code_normalized": "WW-03-3",
+    "canonical_name": "Шкаф для одежды 3-дв.высокий ,560",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_base_image_only",
+    "notes": "Excluded from production subset: vv_base_image_only"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-40-1",
+    "product_code_normalized": "WW-40-1",
+    "canonical_name": "Шкаф комбинированный   440",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_base_image_only",
+    "notes": "Excluded from production subset: vv_base_image_only"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-40-3",
+    "product_code_normalized": "WW-40-3",
+    "canonical_name": "Шкаф комбинированный,высокий,560",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_base_image_only",
+    "notes": "Excluded from production subset: vv_base_image_only"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-42-1",
+    "product_code_normalized": "WW-42-1",
+    "canonical_name": "Тумба для телевизора",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_base_image_only",
+    "notes": "Excluded from production subset: vv_base_image_only"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-61-1",
+    "product_code_normalized": "WW-61-1",
+    "canonical_name": "Шкаф книжный со стеклом 440",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_base_image_only",
+    "notes": "Excluded from production subset: vv_base_image_only"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-61-3",
+    "product_code_normalized": "WW-61-3",
+    "canonical_name": "Шкаф книжный со стеклом,высокий,560",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_base_image_only",
+    "notes": "Excluded from production subset: vv_base_image_only"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-62-1",
+    "product_code_normalized": "WW-62-1",
+    "canonical_name": "Стеллаж для книг   440",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_base_image_only",
+    "notes": "Excluded from production subset: vv_base_image_only"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-62-3",
+    "product_code_normalized": "WW-62-3",
+    "canonical_name": "Стеллаж для книг   высокий и гл.560",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_base_image_only",
+    "notes": "Excluded from production subset: vv_base_image_only"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-65-1",
+    "product_code_normalized": "WW-65-1",
+    "canonical_name": "Стол письменный 1-тумб. 0П",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_base_image_only",
+    "notes": "Excluded from production subset: vv_base_image_only"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-66-1",
+    "product_code_normalized": "WW-66-1",
+    "canonical_name": "Стол письменный 2-тумб.ПП",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_base_image_only",
+    "notes": "Excluded from production subset: vv_base_image_only"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-01-2",
+    "product_code_normalized": "WW-01-2",
+    "canonical_name": "Шкаф для одежды 1-дв. 560 (ручка лев/прав)",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-02-2",
+    "product_code_normalized": "WW-02-2",
+    "canonical_name": "Шкаф для одежды 2-дв.560",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-03-2",
+    "product_code_normalized": "WW-03-2",
+    "canonical_name": "Шкаф для одежды 3-дв.560",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-05-1",
+    "product_code_normalized": "WW-05-1",
+    "canonical_name": "Комод стандартный 440",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-05-2",
+    "product_code_normalized": "WW-05-2",
+    "canonical_name": "Комод стандартный 560",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-05-3",
+    "product_code_normalized": "WW-05-3",
+    "canonical_name": "Комод высокий    440",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-05-4",
+    "product_code_normalized": "WW-05-4",
+    "canonical_name": "Комод высокий   560",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-06-1",
+    "product_code_normalized": "WW-06-1",
+    "canonical_name": "Столик туалетный с зеркалом",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-07-1",
+    "product_code_normalized": "WW-07-1",
+    "canonical_name": "Ящик для игрушек с подъем. мех.",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-08-1",
+    "product_code_normalized": "WW-08-1",
+    "canonical_name": "Тумбочка прикроватная",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-09-1",
+    "product_code_normalized": "WW-09-1",
+    "canonical_name": "Зеркало навесное овальное",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-09-2",
+    "product_code_normalized": "WW-09-2",
+    "canonical_name": "Зеркало напольное",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-13-1",
+    "product_code_normalized": "WW-13-1",
+    "canonical_name": "Кровать детская (80*150)",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-13-2",
+    "product_code_normalized": "WW-13-2",
+    "canonical_name": "Кровать детская (80*150) с ящиками",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-14-1",
+    "product_code_normalized": "WW-14-1",
+    "canonical_name": "Кровать 1-сп. (90*190)",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-14-2",
+    "product_code_normalized": "WW-14-2",
+    "canonical_name": "Кровать 1-сп. (90*190) с ящиками",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-15-1",
+    "product_code_normalized": "WW-15-1",
+    "canonical_name": "Кровать 1,5-сп. (120*190)",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-15-2",
+    "product_code_normalized": "WW-15-2",
+    "canonical_name": "Кровать 1,5-сп. (120*190) с ящиками",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-23-1",
+    "product_code_normalized": "WW-23-1",
+    "canonical_name": "Стул",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-30-1",
+    "product_code_normalized": "WW-30-1",
+    "canonical_name": "Часы",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-40-2",
+    "product_code_normalized": "WW-40-2",
+    "canonical_name": "Шкаф комбинированный   560",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-55-1",
+    "product_code_normalized": "WW-55-1",
+    "canonical_name": "Банкетка малая",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-57-1",
+    "product_code_normalized": "WW-57-1",
+    "canonical_name": "Диван малый (80*150)",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-57-2",
+    "product_code_normalized": "WW-57-2",
+    "canonical_name": "Диван большой (90*190)",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-61-2",
+    "product_code_normalized": "WW-61-2",
+    "canonical_name": "Шкаф книжный со стеклом 560",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-62-2",
+    "product_code_normalized": "WW-62-2",
+    "canonical_name": "Стеллаж для книг   560",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-64-1",
+    "product_code_normalized": "WW-64-1",
+    "canonical_name": "Стол-бюро",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-65-2",
+    "product_code_normalized": "WW-65-2",
+    "canonical_name": "Стол письменный 1-тумб. П0",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-65-3",
+    "product_code_normalized": "WW-65-3",
+    "canonical_name": "Cтол письменный 1-тумб.ОЯ",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-65-4",
+    "product_code_normalized": "WW-65-4",
+    "canonical_name": "Стол письменный 1-тумб.ЯО",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-66-2",
+    "product_code_normalized": "WW-66-2",
+    "canonical_name": "Стол письменный 2-тумб.ПЯ",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-66-3",
+    "product_code_normalized": "WW-66-3",
+    "canonical_name": "Стол письменный 2-тумб.ЯП",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-66-4",
+    "product_code_normalized": "WW-66-4",
+    "canonical_name": "Стол письменный 2-тумб.ЯЯ",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-67-1",
+    "product_code_normalized": "WW-67-1",
+    "canonical_name": "Стол рабочий",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-69-1",
+    "product_code_normalized": "WW-69-1",
+    "canonical_name": "Полка книжная",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-81-1",
+    "product_code_normalized": "WW-81-1",
+    "canonical_name": "Столик  детский",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-82-1",
+    "product_code_normalized": "WW-82-1",
+    "canonical_name": "Стульчик  детский",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-83-1",
+    "product_code_normalized": "WW-83-1",
+    "canonical_name": "Столешница пеленальная съемная",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-84-1",
+    "product_code_normalized": "WW-84-1",
+    "canonical_name": "Бортик к кровати малый",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-84-2",
+    "product_code_normalized": "WW-84-2",
+    "canonical_name": "Бортик к кровати большой",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-85-1",
+    "product_code_normalized": "WW-85-1",
+    "canonical_name": "Кроватка для новорожденного (60*120)",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-86-1",
+    "product_code_normalized": "WW-86-1",
+    "canonical_name": "Каркас для балдахина",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-95-1",
+    "product_code_normalized": "WW-95-1",
+    "canonical_name": "Кровать - трансформер (80*150) с рисунком",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-95-3",
+    "product_code_normalized": "WW-95-3",
+    "canonical_name": "Кровать - трансформер (80*150) с тканью",
+    "collection_name_normalized": "willie-winkie",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "notes": "Excluded from production subset: vv_painting_decision_pending"
+  }
+]

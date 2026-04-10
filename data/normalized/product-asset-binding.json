@@ -1,0 +1,6191 @@
+[
+  {
+    "workbook_row_key": "country-london-paris:CO-02-1",
+    "product_code_normalized": "CO-02-1",
+    "canonical_name": "Шкаф для одежды 2-дв.",
+    "collection_name_normalized": "country-london-paris",
+    "category_normalized": "wardrobe",
+    "price_normalized": 84600.0,
+    "dimensions_normalized": {
+      "height_mm": 2200,
+      "width_mm": 1200,
+      "depth_mm": 640
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/country-london-paris/CO-02-1_gallery_01.jpg",
+      "width": 1000,
+      "height": 1000,
+      "file_size": 29442,
+      "source_type": "gallery_as_main"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-02-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 31946,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-02-1_gallery_03.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 34916,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-02-1_color_blue_01.jpg",
+        "color_hint": "blue",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 32209,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-02-1_color_blue_02.jpg",
+        "color_hint": "blue",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 35267,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-02-1_color_grey_01.jpg",
+        "color_hint": "grey",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 35474,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-02-1_color_grey_02.jpg",
+        "color_hint": "grey",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 33695,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-02-1_color_olive_01.jpg",
+        "color_hint": "olive",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 34936,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-02-1_color_olive_02.jpg",
+        "color_hint": "olive",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 37440,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "source_type_main": "gallery_as_main",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "gallery_only",
+    "asset_provenance_refs": [
+      "4955f276d0b3",
+      "51e031acfe79",
+      "ffded813125c"
+    ],
+    "readiness_status": "ready_with_caveat",
+    "notes": "No dedicated main image; using first gallery image"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-05-1",
+    "product_code_normalized": "CO-05-1",
+    "canonical_name": "Комод",
+    "collection_name_normalized": "country-london-paris",
+    "category_normalized": "dresser",
+    "price_normalized": 39200.0,
+    "dimensions_normalized": {
+      "height_mm": 810,
+      "width_mm": 900,
+      "depth_mm": 560
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/country-london-paris/CO-05-1_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 63450,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-05-1_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 41668,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-05-1_color_blue_01.jpg",
+        "color_hint": "blue",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 43348,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-05-1_color_blue_02.jpg",
+        "color_hint": "blue",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 40178,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-05-1_color_grey_01.jpg",
+        "color_hint": "grey",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 48048,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-05-1_color_grey_02.jpg",
+        "color_hint": "grey",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 42104,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-05-1_color_olive_01.jpg",
+        "color_hint": "olive",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 44046,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-05-1_color_olive_02.jpg",
+        "color_hint": "olive",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 40977,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "1c27ea9e9956",
+      "c0f3590acfe9"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-08-1",
+    "product_code_normalized": "CO-08-1",
+    "canonical_name": "Тумбочка прикроватная",
+    "collection_name_normalized": "country-london-paris",
+    "category_normalized": "nightstand",
+    "price_normalized": 16900.0,
+    "dimensions_normalized": {
+      "height_mm": 600,
+      "width_mm": 500,
+      "depth_mm": 440
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/country-london-paris/CO-08-1_gallery_01.jpg",
+      "width": 1000,
+      "height": 1000,
+      "file_size": 37023,
+      "source_type": "gallery_as_main"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-08-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 34396,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-08-1_color_blue_01.jpg",
+        "color_hint": "blue",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 38309,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-08-1_color_blue_02.jpg",
+        "color_hint": "blue",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 34065,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-08-1_color_grey_01.jpg",
+        "color_hint": "grey",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 40854,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-08-1_color_grey_02.jpg",
+        "color_hint": "grey",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 35421,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-08-1_color_olive_01.jpg",
+        "color_hint": "olive",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 38975,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-08-1_color_olive_02.jpg",
+        "color_hint": "olive",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 35512,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "source_type_main": "gallery_as_main",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "gallery_only",
+    "asset_provenance_refs": [
+      "1cb4282b65e7",
+      "907679950434"
+    ],
+    "readiness_status": "ready_with_caveat",
+    "notes": "No dedicated main image; using first gallery image"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-14-2",
+    "product_code_normalized": "CO-14-2",
+    "canonical_name": "Кровать 1 сп. (90*190) с подъем мех",
+    "collection_name_normalized": "country-london-paris",
+    "category_normalized": "bed",
+    "price_normalized": 50100.0,
+    "dimensions_normalized": {
+      "height_mm": 1100,
+      "width_mm": 982,
+      "depth_mm": 1994
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/country-london-paris/CO-14-2_gallery_01.jpg",
+      "width": 1000,
+      "height": 1000,
+      "file_size": 40527,
+      "source_type": "gallery_as_main"
+    },
+    "processed_gallery_images": [],
+    "processed_color_variant_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-14-2_color_torno_01.jpg",
+        "color_hint": "torno",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 23829,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "source_type_main": "gallery_as_main",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "gallery_only",
+    "asset_provenance_refs": [
+      "16af1f438f4b"
+    ],
+    "readiness_status": "ready_with_caveat",
+    "notes": "No dedicated main image; using first gallery image"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-15-2",
+    "product_code_normalized": "CO-15-2",
+    "canonical_name": "Кровать 1,5 сп. (120*190) с подъем мех",
+    "collection_name_normalized": "country-london-paris",
+    "category_normalized": "bed",
+    "price_normalized": 62000.0,
+    "dimensions_normalized": {
+      "height_mm": 1150,
+      "width_mm": 1282,
+      "depth_mm": 1990
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/country-london-paris/CO-15-2_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 122019,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-15-2_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 33047,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-15-2_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 35752,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-15-2_gallery_03.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 27667,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-15-2_gallery_04.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 42334,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-15-2_gallery_05.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 34243,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "52f8b3f853c0",
+      "5b4755e739e2",
+      "ed4dd41609a1",
+      "fd6e8189e03f"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-61-1",
+    "product_code_normalized": "CO-61-1",
+    "canonical_name": "Шкаф книжный со стеклом",
+    "collection_name_normalized": "country-london-paris",
+    "category_normalized": "wardrobe",
+    "price_normalized": 82000.0,
+    "dimensions_normalized": {
+      "height_mm": 2200,
+      "width_mm": 1200,
+      "depth_mm": 428
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/country-london-paris/CO-61-1_gallery_01.jpg",
+      "width": 1000,
+      "height": 1000,
+      "file_size": 30475,
+      "source_type": "gallery_as_main"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-61-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 39668,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-61-1_gallery_03.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 37540,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-61-1_color_blue_01.jpg",
+        "color_hint": "blue",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 39573,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-61-1_color_blue_02.jpg",
+        "color_hint": "blue",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 39372,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-61-1_color_grey_01.jpg",
+        "color_hint": "grey",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 40359,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-61-1_color_grey_02.jpg",
+        "color_hint": "grey",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 37546,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-61-1_color_olive_01.jpg",
+        "color_hint": "olive",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 42416,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-61-1_color_olive_02.jpg",
+        "color_hint": "olive",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 40801,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "source_type_main": "gallery_as_main",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "gallery_only",
+    "asset_provenance_refs": [
+      "8dac083fc77a",
+      "915b7f201510",
+      "d16a961b6602"
+    ],
+    "readiness_status": "ready_with_caveat",
+    "notes": "No dedicated main image; using first gallery image"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-62-1",
+    "product_code_normalized": "CO-62-1",
+    "canonical_name": "Стеллаж широкий",
+    "collection_name_normalized": "country-london-paris",
+    "category_normalized": "bookcase",
+    "price_normalized": 64300.0,
+    "dimensions_normalized": {
+      "height_mm": 2200,
+      "width_mm": 1200,
+      "depth_mm": 428
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/country-london-paris/CO-62-1_gallery_01.jpg",
+      "width": 1000,
+      "height": 1000,
+      "file_size": 31213,
+      "source_type": "gallery_as_main"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-62-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 31662,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-62-1_gallery_03.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 36320,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-62-1_gallery_04.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 39140,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-62-1_gallery_05.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 31213,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-62-1_color_blue_01.jpg",
+        "color_hint": "blue",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 38747,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-62-1_color_blue_02.jpg",
+        "color_hint": "blue",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 36661,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-62-1_color_grey_01.jpg",
+        "color_hint": "grey",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 36133,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-62-1_color_grey_02.jpg",
+        "color_hint": "grey",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 36733,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-62-1_color_olive_01.jpg",
+        "color_hint": "olive",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 38971,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "source_type_main": "gallery_as_main",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "gallery_only",
+    "asset_provenance_refs": [
+      "7e7ad389f9eb",
+      "943d4fbbf8c3",
+      "d30446466d5b"
+    ],
+    "readiness_status": "ready_with_caveat",
+    "notes": "No dedicated main image; using first gallery image"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-62-2",
+    "product_code_normalized": "CO-62-2",
+    "canonical_name": "Стеллаж узкий с дверью",
+    "collection_name_normalized": "country-london-paris",
+    "category_normalized": "bookcase",
+    "price_normalized": 28300.0,
+    "dimensions_normalized": {
+      "height_mm": 1900,
+      "width_mm": 412,
+      "depth_mm": 400
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/country-london-paris/CO-62-2_gallery_01.jpg",
+      "width": 1000,
+      "height": 1000,
+      "file_size": 25566,
+      "source_type": "gallery_as_main"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-62-2_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 24873,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-62-2_gallery_03.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 22900,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-62-2_gallery_04.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 28192,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "gallery_as_main",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "gallery_only",
+    "asset_provenance_refs": [
+      "040ae8650150",
+      "df728f5a728a",
+      "ff41fdbb47f0"
+    ],
+    "readiness_status": "ready_with_caveat",
+    "notes": "No dedicated main image; using first gallery image"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-62-3",
+    "product_code_normalized": "CO-62-3",
+    "canonical_name": "Стеллаж узкий с ящиком",
+    "collection_name_normalized": "country-london-paris",
+    "category_normalized": "bookcase",
+    "price_normalized": 32100.0,
+    "dimensions_normalized": {
+      "height_mm": 1900,
+      "width_mm": 412,
+      "depth_mm": 400
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/country-london-paris/CO-62-3_gallery_01.jpg",
+      "width": 1000,
+      "height": 1000,
+      "file_size": 21758,
+      "source_type": "gallery_as_main"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-62-3_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 21867,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "gallery_as_main",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "gallery_only",
+    "asset_provenance_refs": [
+      "6e91161b2137",
+      "cc8204a28c6b"
+    ],
+    "readiness_status": "ready_with_caveat",
+    "notes": "No dedicated main image; using first gallery image"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-65-1",
+    "product_code_normalized": "CO-65-1",
+    "canonical_name": "Стол письменный 1-тумб. 0П",
+    "collection_name_normalized": "country-london-paris",
+    "category_normalized": "table",
+    "price_normalized": 37500.0,
+    "dimensions_normalized": {
+      "height_mm": 780,
+      "width_mm": 1132,
+      "depth_mm": 640
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/country-london-paris/CO-65-1_gallery_01.jpg",
+      "width": 1000,
+      "height": 1000,
+      "file_size": 33352,
+      "source_type": "gallery_as_main"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-65-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 34302,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-65-1_color_blue_01.jpg",
+        "color_hint": "blue",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 37138,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-65-1_color_blue_02.jpg",
+        "color_hint": "blue",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 35870,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-65-1_color_grey_01.jpg",
+        "color_hint": "grey",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 36612,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-65-1_color_grey_02.jpg",
+        "color_hint": "grey",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 35610,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-65-1_color_olive_01.jpg",
+        "color_hint": "olive",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 34562,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-65-1_color_olive_02.jpg",
+        "color_hint": "olive",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 36043,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-65-1_color_white_01.jpg",
+        "color_hint": "white",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 28668,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-65-1_color_white_02.jpg",
+        "color_hint": "white",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 27968,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "source_type_main": "gallery_as_main",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "gallery_only",
+    "asset_provenance_refs": [
+      "c681128e83c8",
+      "fd6670a17392"
+    ],
+    "readiness_status": "ready_with_caveat",
+    "notes": "No dedicated main image; using first gallery image"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-65-2",
+    "product_code_normalized": "CO-65-2",
+    "canonical_name": "Стол письменный 1-тумб. П0",
+    "collection_name_normalized": "country-london-paris",
+    "category_normalized": "table",
+    "price_normalized": 37500.0,
+    "dimensions_normalized": {
+      "height_mm": 780,
+      "width_mm": 1132,
+      "depth_mm": 640
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/country-london-paris/CO-65-2_gallery_01.jpg",
+      "width": 1000,
+      "height": 1000,
+      "file_size": 35845,
+      "source_type": "gallery_as_main"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-65-2_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 34399,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-65-2_color_blue_01.jpg",
+        "color_hint": "blue",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 38596,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-65-2_color_blue_02.jpg",
+        "color_hint": "blue",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 36116,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-65-2_color_grey_01.jpg",
+        "color_hint": "grey",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 38864,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-65-2_color_grey_02.jpg",
+        "color_hint": "grey",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 34582,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-65-2_color_olive_01.jpg",
+        "color_hint": "olive",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 35179,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-65-2_color_olive_02.jpg",
+        "color_hint": "olive",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 34717,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "source_type_main": "gallery_as_main",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "gallery_only",
+    "asset_provenance_refs": [
+      "49e4f6e55940",
+      "bc283f2e2e61"
+    ],
+    "readiness_status": "ready_with_caveat",
+    "notes": "No dedicated main image; using first gallery image"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-66-1",
+    "product_code_normalized": "CO-66-1",
+    "canonical_name": "Стол письменный 2-тумб. ЯЯ",
+    "collection_name_normalized": "country-london-paris",
+    "category_normalized": "table",
+    "price_normalized": 52600.0,
+    "dimensions_normalized": {
+      "height_mm": 780,
+      "width_mm": 1550,
+      "depth_mm": 700
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/country-london-paris/CO-66-1_gallery_01.jpg",
+      "width": 1000,
+      "height": 1000,
+      "file_size": 31586,
+      "source_type": "gallery_as_main"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-66-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 31571,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-66-1_color_blue_01.jpg",
+        "color_hint": "blue",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 32488,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-66-1_color_blue_02.jpg",
+        "color_hint": "blue",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 30023,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-66-1_color_grey_01.jpg",
+        "color_hint": "grey",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 33127,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-66-1_color_grey_02.jpg",
+        "color_hint": "grey",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 31041,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-66-1_color_olive_01.jpg",
+        "color_hint": "olive",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 33590,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-66-1_color_olive_02.jpg",
+        "color_hint": "olive",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 32877,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "source_type_main": "gallery_as_main",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "gallery_only",
+    "asset_provenance_refs": [
+      "05292f974c3b",
+      "991dd63ea3dc"
+    ],
+    "readiness_status": "ready_with_caveat",
+    "notes": "No dedicated main image; using first gallery image"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-69-1",
+    "product_code_normalized": "CO-69-1",
+    "canonical_name": "Полка книжная малая",
+    "collection_name_normalized": "country-london-paris",
+    "category_normalized": "shelf",
+    "price_normalized": 4300.0,
+    "dimensions_normalized": {
+      "height_mm": 350,
+      "width_mm": 700,
+      "depth_mm": 160
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/country-london-paris/CO-69-1_gallery_01.jpg",
+      "width": 1000,
+      "height": 1000,
+      "file_size": 24941,
+      "source_type": "gallery_as_main"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-69-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 27517,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-69-1_gallery_03.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 27827,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-69-1_gallery_04.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 21722,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/country-london-paris/CO-69-1_gallery_05.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 20733,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "gallery_as_main",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "gallery_only",
+    "asset_provenance_refs": [
+      "21d1a64ba620",
+      "30808e85a8f0",
+      "b0a68e60f951"
+    ],
+    "readiness_status": "ready_with_caveat",
+    "notes": "No dedicated main image; using first gallery image"
+  },
+  {
+    "workbook_row_key": "oliver:OL-00-1",
+    "product_code_normalized": "OL-00-1",
+    "canonical_name": "Шкаф угловой  (руч.лев/пр)",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "wardrobe",
+    "price_normalized": 119900.0,
+    "dimensions_normalized": {
+      "height_mm": 2062,
+      "width_mm": 672,
+      "depth_mm": 672
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-00-1_main.jpg",
+      "width": 820,
+      "height": 820,
+      "file_size": 23026,
+      "source_type": "legacy_fallback"
+    },
+    "processed_gallery_images": [],
+    "processed_color_variant_images": [],
+    "source_type_main": "legacy_fallback",
+    "source_types_gallery": [],
+    "asset_quality_status": "legacy_fallback",
+    "asset_provenance_refs": [
+      "dae28b75ac16"
+    ],
+    "readiness_status": "ready_with_caveat",
+    "notes": "Main image from legacy site, not white-bg product shot"
+  },
+  {
+    "workbook_row_key": "oliver:OL-01-2",
+    "product_code_normalized": "OL-01-2",
+    "canonical_name": "Шкаф для одежды 1-дв. с зеркалом  (руч.лев/пр)",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "mirror",
+    "price_normalized": 111900.0,
+    "dimensions_normalized": {
+      "height_mm": 2110,
+      "width_mm": 814,
+      "depth_mm": 540
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-01-2_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 42003,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-01-2_gallery_01.jpg",
+        "width": 1000,
+        "height": 999,
+        "file_size": 29085,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-01-2_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 26671,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-01-2_gallery_03.jpg",
+        "width": 601,
+        "height": 601,
+        "file_size": 22202,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-01-2_gallery_04.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 28752,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "273695ef6028",
+      "3c964ae7f838",
+      "7037bc9f1f38",
+      "72b99ba6160e"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-02-1",
+    "product_code_normalized": "OL-02-1",
+    "canonical_name": "Шкаф для одежды 2-дв.",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "wardrobe",
+    "price_normalized": 157900.0,
+    "dimensions_normalized": {
+      "height_mm": 2110,
+      "width_mm": 1230,
+      "depth_mm": 540
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-02-1_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 60829,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-02-1_gallery_01.jpg",
+        "width": 999,
+        "height": 1000,
+        "file_size": 37757,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-02-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 37839,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-02-1_gallery_03.jpg",
+        "width": 601,
+        "height": 601,
+        "file_size": 26390,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "0b13546638e2",
+      "4fa475b00ff5",
+      "7bd7e0e4c509",
+      "b7ac736405c5"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-03-1",
+    "product_code_normalized": "OL-03-1",
+    "canonical_name": "Шкаф для одежды 3-дв.",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "wardrobe",
+    "price_normalized": 258900.0,
+    "dimensions_normalized": {
+      "height_mm": 2346,
+      "width_mm": 1790,
+      "depth_mm": 642
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-03-1_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 85351,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-03-1_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 41803,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-03-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 47439,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-03-1_gallery_03.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 56896,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-03-1_gallery_04.jpg",
+        "width": 600,
+        "height": 601,
+        "file_size": 32238,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-03-1_gallery_05.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 55638,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-03-1_gallery_06.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 56896,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "0fd144f83a2d",
+      "9a393e9199ac",
+      "d5f23218932e",
+      "fb328907e8c1"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-05-1",
+    "product_code_normalized": "OL-05-1",
+    "canonical_name": "Комод стандартный",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "dresser",
+    "price_normalized": 89900.0,
+    "dimensions_normalized": {
+      "height_mm": 812,
+      "width_mm": 900,
+      "depth_mm": 555
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-05-1_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 64073,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-05-1_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 45141,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-05-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 999,
+        "file_size": 42107,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "18636ebc7720",
+      "94ce09ee15eb",
+      "afb62c7e8ea3"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-05-2",
+    "product_code_normalized": "OL-05-2",
+    "canonical_name": "Комод широкий",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "dresser",
+    "price_normalized": 123500.0,
+    "dimensions_normalized": {
+      "height_mm": 812,
+      "width_mm": 1300,
+      "depth_mm": 555
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-05-2_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 88746,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-05-2_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 40027,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-05-2_gallery_02.jpg",
+        "width": 999,
+        "height": 1000,
+        "file_size": 37401,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "0d283050bdef",
+      "76a31aa57ef1",
+      "787f5cf3f497"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-05-3",
+    "product_code_normalized": "OL-05-3",
+    "canonical_name": "Комод высокий",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "dresser",
+    "price_normalized": 119500.0,
+    "dimensions_normalized": {
+      "height_mm": 1318,
+      "width_mm": 760,
+      "depth_mm": 555
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-05-3_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 79557,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-05-3_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 42392,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-05-3_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 39553,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "420ff4928c75",
+      "bfd3ac401bcd",
+      "ed5c88ab1865"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-05-Н",
+    "product_code_normalized": "OL-05-Н",
+    "canonical_name": "Комод высокий (ниже на 1 ярус ящиков)",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "dresser",
+    "price_normalized": 110000.0,
+    "dimensions_normalized": {
+      "height_mm": 1136,
+      "width_mm": 760,
+      "depth_mm": 555
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-05-Н_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 62731,
+      "source_type": "legacy_fallback"
+    },
+    "processed_gallery_images": [],
+    "processed_color_variant_images": [],
+    "source_type_main": "legacy_fallback",
+    "source_types_gallery": [],
+    "asset_quality_status": "legacy_fallback",
+    "asset_provenance_refs": [
+      "60c3ac351410"
+    ],
+    "readiness_status": "ready_with_caveat",
+    "notes": "Main image from legacy site, not white-bg product shot"
+  },
+  {
+    "workbook_row_key": "oliver:OL-06-1",
+    "product_code_normalized": "OL-06-1",
+    "canonical_name": "Столик  туалетный с зеркалом",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "mirror",
+    "price_normalized": 81950.0,
+    "dimensions_normalized": {
+      "height_mm": 1434,
+      "width_mm": 1130,
+      "depth_mm": 440
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-06-1_main.jpg",
+      "width": 1199,
+      "height": 1200,
+      "file_size": 54940,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-06-1_gallery_01.jpg",
+        "width": 999,
+        "height": 1000,
+        "file_size": 37494,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-06-1_gallery_02.jpg",
+        "width": 999,
+        "height": 1000,
+        "file_size": 44127,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "284451994899",
+      "3820a5ffd207",
+      "53c534180f78"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-07-1",
+    "product_code_normalized": "OL-07-1",
+    "canonical_name": "Сундук",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "chest",
+    "price_normalized": 39900.0,
+    "dimensions_normalized": {
+      "height_mm": 548,
+      "width_mm": 820,
+      "depth_mm": 450
+    },
+    "processed_main_image": null,
+    "processed_gallery_images": [],
+    "processed_color_variant_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-07-1_color_leona_01.jpg",
+        "color_hint": "leona",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 31361,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-07-1_color_leona_02.jpg",
+        "color_hint": "leona",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 38367,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-07-1_color_lillian_01.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 41979,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-07-1_color_linda_01.jpg",
+        "color_hint": "linda",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 29517,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-07-1_color_lorna_01.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 32734,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "source_type_main": null,
+    "source_types_gallery": [],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-08-1",
+    "product_code_normalized": "OL-08-1",
+    "canonical_name": "Зеркало навесное овальное",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "nightstand",
+    "price_normalized": 34950.0,
+    "dimensions_normalized": {
+      "height_mm": 650,
+      "width_mm": 500,
+      "depth_mm": 455
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-08-1_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 90449,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-08-1_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 38418,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-08-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 999,
+        "file_size": 35571,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "6534de5d7f65",
+      "aa466cce6a35",
+      "ab03d15d64d7"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-08-1",
+    "product_code_normalized": "OL-08-1",
+    "canonical_name": "Тумбочка прикроватная",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "nightstand",
+    "price_normalized": 34950.0,
+    "dimensions_normalized": {
+      "height_mm": 650,
+      "width_mm": 500,
+      "depth_mm": 455
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-08-1_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 90449,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-08-1_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 38418,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-08-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 999,
+        "file_size": 35571,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "6534de5d7f65",
+      "aa466cce6a35",
+      "ab03d15d64d7"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-08-2",
+    "product_code_normalized": "OL-08-2",
+    "canonical_name": "Тумбочка прикроватная  с дверкой (руч.лев/пр)",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "nightstand",
+    "price_normalized": 39950.0,
+    "dimensions_normalized": {
+      "height_mm": 650,
+      "width_mm": 500,
+      "depth_mm": 455
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-08-2_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 59034,
+      "source_type": "legacy_fallback"
+    },
+    "processed_gallery_images": [],
+    "processed_color_variant_images": [],
+    "source_type_main": "legacy_fallback",
+    "source_types_gallery": [],
+    "asset_quality_status": "legacy_fallback",
+    "asset_provenance_refs": [
+      "3410d6b0f9d7"
+    ],
+    "readiness_status": "ready_with_caveat",
+    "notes": "Main image from legacy site, not white-bg product shot"
+  },
+  {
+    "workbook_row_key": "oliver:OL-09-2",
+    "product_code_normalized": "OL-09-2",
+    "canonical_name": "Зеркало напольное",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "mirror",
+    "price_normalized": 38900.0,
+    "dimensions_normalized": {
+      "height_mm": 1586,
+      "width_mm": 664,
+      "depth_mm": 484
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-09-2_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 54072,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-09-2_gallery_01.jpg",
+        "width": 1000,
+        "height": 999,
+        "file_size": 24649,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-09-2_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 21540,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "3d21a66bec85",
+      "87d3c10c93f4",
+      "8ee4117d5b89"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-14-1",
+    "product_code_normalized": "OL-14-1",
+    "canonical_name": "Кровать 1-сп. (90*190)",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "bed",
+    "price_normalized": 72900.0,
+    "dimensions_normalized": {
+      "height_mm": 1150,
+      "width_mm": 990,
+      "depth_mm": 2030
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-14-1_gallery_01.jpg",
+      "width": 1000,
+      "height": 1000,
+      "file_size": 47023,
+      "source_type": "gallery_as_main"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-14-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 56744,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-14-1_gallery_03.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 53460,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-14-1_gallery_04.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 55349,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-14-1_color_lillian_01.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 45797,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-14-1_color_lillian_02.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 50745,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-14-1_color_lillian_03.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 51672,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-14-1_color_lillian_04.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 53435,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-14-1_color_lillian_05.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 56230,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "source_type_main": "gallery_as_main",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "gallery_only",
+    "asset_provenance_refs": [
+      "52cbaa28b712",
+      "63ede4203e4e",
+      "d9b0392ec1a3"
+    ],
+    "readiness_status": "ready_with_caveat",
+    "notes": "No dedicated main image; using first gallery image"
+  },
+  {
+    "workbook_row_key": "oliver:OL-14-2",
+    "product_code_normalized": "OL-14-2",
+    "canonical_name": "Кровать 1-сп. (90*190) без изножья",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "bed",
+    "price_normalized": 69900.0,
+    "dimensions_normalized": {
+      "height_mm": 1150,
+      "width_mm": 990,
+      "depth_mm": 2030
+    },
+    "processed_main_image": null,
+    "processed_gallery_images": [],
+    "processed_color_variant_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-14-2_color_lillian_01.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 37439,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-14-2_color_lillian_02.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 39847,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-14-2_color_lillian_03.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 41114,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-14-2_color_lillian_04.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 39646,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-14-2_color_lillian_05.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 42570,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-14-2_color_lorna_01.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 38453,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-14-2_color_lorna_02.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 43093,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-14-2_color_lorna_03.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 41854,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-14-2_color_lorna_04.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 42339,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "source_type_main": null,
+    "source_types_gallery": [],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-15-1",
+    "product_code_normalized": "OL-15-1",
+    "canonical_name": "Кровать 1,5-сп. (120*190)",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "bed",
+    "price_normalized": 91900.0,
+    "dimensions_normalized": {
+      "height_mm": 1150,
+      "width_mm": 1290,
+      "depth_mm": 2030
+    },
+    "processed_main_image": null,
+    "processed_gallery_images": [],
+    "processed_color_variant_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-15-1_color_lorna_01.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 45458,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "source_type_main": null,
+    "source_types_gallery": [],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-15-2",
+    "product_code_normalized": "OL-15-2",
+    "canonical_name": "Кровать 1,5-сп. (120*190) без изножья",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "bed",
+    "price_normalized": 98900.0,
+    "dimensions_normalized": {
+      "height_mm": 1150,
+      "width_mm": 1290,
+      "depth_mm": 2030
+    },
+    "processed_main_image": null,
+    "processed_gallery_images": [],
+    "processed_color_variant_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-15-2_color_lorna_01.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 999,
+        "file_size": 46874,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "source_type_main": null,
+    "source_types_gallery": [],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-16-1",
+    "product_code_normalized": "OL-16-1",
+    "canonical_name": "Кровать 1,5-сп. (140*190)",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "bed",
+    "price_normalized": 99900.0,
+    "dimensions_normalized": {
+      "height_mm": 1150,
+      "width_mm": 1490,
+      "depth_mm": 2030
+    },
+    "processed_main_image": null,
+    "processed_gallery_images": [],
+    "processed_color_variant_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-16-1_color_lillian_01.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 58261,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-16-1_color_lillian_02.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 65503,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-16-1_color_lillian_03.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 66000,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-16-1_color_lillian_04.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 64473,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-16-1_color_lillian_05.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 65887,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-16-1_color_lorna_01.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 61450,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-16-1_color_lorna_02.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 71970,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-16-1_color_lorna_03.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 71374,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-16-1_color_lorna_04.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 72690,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "source_type_main": null,
+    "source_types_gallery": [],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-16-2",
+    "product_code_normalized": "OL-16-2",
+    "canonical_name": "Кровать 1,5-сп. (140*190) без изножья",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "bed",
+    "price_normalized": 91900.0,
+    "dimensions_normalized": {
+      "height_mm": 1150,
+      "width_mm": 1490,
+      "depth_mm": 2030
+    },
+    "processed_main_image": null,
+    "processed_gallery_images": [],
+    "processed_color_variant_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-16-2_color_lillian_01.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 66318,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-16-2_color_lillian_02.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 71352,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-16-2_color_lillian_03.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 70619,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-16-2_color_lillian_04.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 69624,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-16-2_color_lillian_05.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 70843,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-16-2_color_lorna_01.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 68581,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-16-2_color_lorna_02.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 72946,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-16-2_color_lorna_03.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 72877,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-16-2_color_lorna_04.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 73133,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "source_type_main": null,
+    "source_types_gallery": [],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-17-1",
+    "product_code_normalized": "OL-17-1",
+    "canonical_name": "Кровать 2-сп. (160*200)",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "bed",
+    "price_normalized": 134900.0,
+    "dimensions_normalized": {
+      "height_mm": 1180,
+      "width_mm": 1690,
+      "depth_mm": 2130
+    },
+    "processed_main_image": null,
+    "processed_gallery_images": [],
+    "processed_color_variant_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-17-1_color_lillian_01.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 54562,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-17-1_color_lillian_02.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 62698,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-17-1_color_lillian_03.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 60936,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-17-1_color_lillian_04.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 58943,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-17-1_color_lillian_05.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 61259,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-17-1_color_lorna_01.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 55370,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-17-1_color_lorna_02.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 66776,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-17-1_color_lorna_03.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 66134,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-17-1_color_lorna_04.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 67621,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "source_type_main": null,
+    "source_types_gallery": [],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-17-2",
+    "product_code_normalized": "OL-17-2",
+    "canonical_name": "Кровать 2-сп. (160*200) без изножья",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "bed",
+    "price_normalized": 123900.0,
+    "dimensions_normalized": {
+      "height_mm": 1180,
+      "width_mm": 1690,
+      "depth_mm": 2130
+    },
+    "processed_main_image": null,
+    "processed_gallery_images": [],
+    "processed_color_variant_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-17-2_color_lillian_01.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 62827,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-17-2_color_lillian_02.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 66777,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-17-2_color_lillian_03.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 66249,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-17-2_color_lillian_04.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 65388,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-17-2_color_lillian_05.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 66580,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-17-2_color_lorna_01.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 63586,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-17-2_color_lorna_02.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 69053,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-17-2_color_lorna_03.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 68861,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-17-2_color_lorna_04.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 69236,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "source_type_main": null,
+    "source_types_gallery": [],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-17-3",
+    "product_code_normalized": "OL-17-3",
+    "canonical_name": "Кровать 2-сп. (160*200) с подъемн.мех-змом",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "bed",
+    "price_normalized": 156900.0,
+    "dimensions_normalized": {
+      "height_mm": 1180,
+      "width_mm": 1690,
+      "depth_mm": 2130
+    },
+    "processed_main_image": null,
+    "processed_gallery_images": [],
+    "processed_color_variant_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-17-3_color_lillian_01.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 61331,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-17-3_color_lillian_02.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 68096,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-17-3_color_lorna_01.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 70494,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "source_type_main": null,
+    "source_types_gallery": [],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-18-1",
+    "product_code_normalized": "OL-18-1",
+    "canonical_name": "Кровать 2-сп. (180*200)",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "bed",
+    "price_normalized": 149900.0,
+    "dimensions_normalized": {
+      "height_mm": 1180,
+      "width_mm": 1890,
+      "depth_mm": 2130
+    },
+    "processed_main_image": null,
+    "processed_gallery_images": [],
+    "processed_color_variant_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-18-1_color_lillian_01.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 52938,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-18-1_color_lillian_02.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 60802,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-18-1_color_lillian_03.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 59896,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-18-1_color_lillian_04.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 56416,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-18-1_color_lillian_05.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 58218,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-18-1_color_lorna_01.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 65797,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-18-1_color_lorna_02.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 65014,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-18-1_color_lorna_03.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 66345,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "source_type_main": null,
+    "source_types_gallery": [],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-18-2",
+    "product_code_normalized": "OL-18-2",
+    "canonical_name": "Кровать 2-сп. (180*200) без изножья",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "bed",
+    "price_normalized": 137900.0,
+    "dimensions_normalized": {
+      "height_mm": 1180,
+      "width_mm": 1890,
+      "depth_mm": 2130
+    },
+    "processed_main_image": null,
+    "processed_gallery_images": [],
+    "processed_color_variant_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-18-2_color_lillian_01.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 60326,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-18-2_color_lillian_02.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 63507,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-18-2_color_lillian_03.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 63047,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-18-2_color_lillian_04.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 61589,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-18-2_color_lillian_05.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 62474,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-18-2_color_lorna_01.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 60467,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-18-2_color_lorna_02.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 65512,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-18-2_color_lorna_03.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 65333,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-18-2_color_lorna_04.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 65728,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "source_type_main": null,
+    "source_types_gallery": [],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-21-1",
+    "product_code_normalized": "OL-21-1",
+    "canonical_name": "Стол обеденный раздвижной",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "table",
+    "price_normalized": 212000.0,
+    "dimensions_normalized": {
+      "height_mm": 780,
+      "width_mm": 1940,
+      "depth_mm": 1000
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-21-1_gallery_01.jpg",
+      "width": 1000,
+      "height": 1000,
+      "file_size": 30744,
+      "source_type": "gallery_as_main"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-21-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 999,
+        "file_size": 26634,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-21-1_gallery_03.jpg",
+        "width": 1000,
+        "height": 999,
+        "file_size": 33488,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-21-1_gallery_04.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 21893,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "gallery_as_main",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "gallery_only",
+    "asset_provenance_refs": [
+      "2dcb4215395f",
+      "5e0b0738cf28",
+      "779763061366"
+    ],
+    "readiness_status": "ready_with_caveat",
+    "notes": "No dedicated main image; using first gallery image"
+  },
+  {
+    "workbook_row_key": "oliver:OL-23-1",
+    "product_code_normalized": "OL-23-1",
+    "canonical_name": "Стул",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "chair",
+    "price_normalized": 27900.0,
+    "dimensions_normalized": {
+      "height_mm": 905,
+      "width_mm": 480,
+      "depth_mm": 460
+    },
+    "processed_main_image": null,
+    "processed_gallery_images": [],
+    "processed_color_variant_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-23-1_color_leona_01.jpg",
+        "color_hint": "leona",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 24536,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-23-1_color_leona_02.jpg",
+        "color_hint": "leona",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 38164,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-23-1_color_leona_03.jpg",
+        "color_hint": "leona",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 42293,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-23-1_color_lillian_01.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 24771,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-23-1_color_lillian_02.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 39996,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-23-1_color_lillian_03.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 48171,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-23-1_color_lillian_04.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 46323,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-23-1_color_lillian_05.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 42502,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-23-1_color_lillian_06.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 51415,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-23-1_color_linda_01.jpg",
+        "color_hint": "linda",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 20591,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-23-1_color_linda_02.jpg",
+        "color_hint": "linda",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 49781,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-23-1_color_linda_03.jpg",
+        "color_hint": "linda",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 48372,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-23-1_color_linda_04.jpg",
+        "color_hint": "linda",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 39545,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-23-1_color_linda_05.jpg",
+        "color_hint": "linda",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 49094,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-23-1_color_lorna_01.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 34355,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-23-1_color_lorna_02.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 34782,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-23-1_color_lorna_03.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 53692,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-23-1_color_lorna_04.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 52721,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-23-1_color_lorna_05.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 38538,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-23-1_color_lorna_06.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 51539,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-23-1_color_torno_01.jpg",
+        "color_hint": "torno",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 35931,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-23-1_color_torno_02.jpg",
+        "color_hint": "torno",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 35198,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-23-1_color_torno_03.jpg",
+        "color_hint": "torno",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 52516,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-23-1_color_torno_04.jpg",
+        "color_hint": "torno",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 52829,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-23-1_color_torno_05.jpg",
+        "color_hint": "torno",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 59047,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-23-1_color_torno_06.jpg",
+        "color_hint": "torno",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 53099,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "source_type_main": null,
+    "source_types_gallery": [],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-25-1",
+    "product_code_normalized": "OL-25-1",
+    "canonical_name": "Комод столовый",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "dresser",
+    "price_normalized": 142900.0,
+    "dimensions_normalized": {
+      "height_mm": 940,
+      "width_mm": 1686,
+      "depth_mm": 550
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-25-1_main.jpg",
+      "width": 1199,
+      "height": 1200,
+      "file_size": 73165,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-25-1_gallery_01.jpg",
+        "width": 1000,
+        "height": 999,
+        "file_size": 40842,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-25-1_gallery_02.jpg",
+        "width": 999,
+        "height": 1000,
+        "file_size": 39666,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-25-1_gallery_03.jpg",
+        "width": 601,
+        "height": 601,
+        "file_size": 29750,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-25-1_gallery_04.jpg",
+        "width": 999,
+        "height": 1000,
+        "file_size": 39666,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "2c3e4279d509",
+      "8a61b998a9d0",
+      "aa08f8c8c87d",
+      "e7b01b4a0f98"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-26-1",
+    "product_code_normalized": "OL-26-1",
+    "canonical_name": "Шкаф буфетный со стеклом/филенгками.",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "wardrobe",
+    "price_normalized": 150650.0,
+    "dimensions_normalized": {
+      "height_mm": 2110,
+      "width_mm": 1000,
+      "depth_mm": 520
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-26-1_gallery_01.jpg",
+      "width": 1000,
+      "height": 1000,
+      "file_size": 42888,
+      "source_type": "gallery_as_main"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-26-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 46886,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-26-1_gallery_03.jpg",
+        "width": 999,
+        "height": 1000,
+        "file_size": 38743,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-26-1_gallery_04.jpg",
+        "width": 601,
+        "height": 601,
+        "file_size": 27707,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-26-1_gallery_05.jpg",
+        "width": 999,
+        "height": 1000,
+        "file_size": 38743,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "gallery_as_main",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "gallery_only",
+    "asset_provenance_refs": [
+      "64f8a5b002d4",
+      "9ffec5b9ef94",
+      "f1186d0f878d"
+    ],
+    "readiness_status": "ready_with_caveat",
+    "notes": "No dedicated main image; using first gallery image"
+  },
+  {
+    "workbook_row_key": "oliver:OL-26-2",
+    "product_code_normalized": "OL-26-2",
+    "canonical_name": "Шкаф-витрина",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "wardrobe",
+    "price_normalized": 159900.0,
+    "dimensions_normalized": {
+      "height_mm": 2110,
+      "width_mm": 1030,
+      "depth_mm": 430
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-26-2_gallery_01.jpg",
+      "width": 1000,
+      "height": 1000,
+      "file_size": 48711,
+      "source_type": "gallery_as_main"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-26-2_gallery_02.jpg",
+        "width": 1000,
+        "height": 999,
+        "file_size": 43050,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-26-2_gallery_03.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 38150,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-26-2_gallery_04.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 38479,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-26-2_gallery_05.jpg",
+        "width": 600,
+        "height": 601,
+        "file_size": 30803,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "gallery_as_main",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "gallery_only",
+    "asset_provenance_refs": [
+      "38b5b6b8b436",
+      "673a74e9bc07",
+      "67c2b9d77d74"
+    ],
+    "readiness_status": "ready_with_caveat",
+    "notes": "No dedicated main image; using first gallery image"
+  },
+  {
+    "workbook_row_key": "oliver:OL-30-1",
+    "product_code_normalized": "OL-30-1",
+    "canonical_name": "Часы",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "clock",
+    "price_normalized": 9950.0,
+    "dimensions_normalized": {
+      "height_mm": 416,
+      "width_mm": 299,
+      "depth_mm": 36
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-30-1_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 100514,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-30-1_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 45723,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-30-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 54317,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "ba661edfbb2b",
+      "e9aa6611e4a2",
+      "ff27a4f2d38f"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-42-1",
+    "product_code_normalized": "OL-42-1",
+    "canonical_name": "Тумба для телевизора",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "nightstand",
+    "price_normalized": 55950.0,
+    "dimensions_normalized": {
+      "height_mm": 530,
+      "width_mm": 1220,
+      "depth_mm": 470
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-42-1_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 44090,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-42-1_gallery_01.jpg",
+        "width": 999,
+        "height": 1000,
+        "file_size": 29889,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-42-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 31053,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-42-1_gallery_03.jpg",
+        "width": 601,
+        "height": 601,
+        "file_size": 23899,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "1af9431fe097",
+      "9919e9302bf9",
+      "fae29f919374",
+      "ffb026c6e8cb"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-43-1",
+    "product_code_normalized": "OL-43-1",
+    "canonical_name": "Столик чайный  круглый",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "table",
+    "price_normalized": 19950.0,
+    "dimensions_normalized": {
+      "height_mm": 750,
+      "width_mm": 600,
+      "depth_mm": 600
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-43-1_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 71773,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-43-1_gallery_01.jpg",
+        "width": 1000,
+        "height": 999,
+        "file_size": 24316,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-43-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 34432,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "01ec73bdc34c",
+      "22811d76c28e",
+      "8d26868c16e3"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-44-1",
+    "product_code_normalized": "OL-44-1",
+    "canonical_name": "Консоль",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "console",
+    "price_normalized": 45900.0,
+    "dimensions_normalized": {
+      "height_mm": 800,
+      "width_mm": 1000,
+      "depth_mm": 350
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-44-1_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 37586,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-44-1_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 33224,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "366462686915",
+      "66e99c53444e"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-44-2",
+    "product_code_normalized": "OL-44-2",
+    "canonical_name": "Консоль с полками",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "shelf",
+    "price_normalized": 70950.0,
+    "dimensions_normalized": {
+      "height_mm": 940,
+      "width_mm": 1260,
+      "depth_mm": 355
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-44-2_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 58574,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-44-2_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 46753,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-44-2_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 37693,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "2d18c6f96bfa",
+      "9bb55b4cbe14",
+      "e56afad0a1a7"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-55-1",
+    "product_code_normalized": "OL-55-1",
+    "canonical_name": "Банкетка малая",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "bench",
+    "price_normalized": 14500.0,
+    "dimensions_normalized": {
+      "height_mm": 440,
+      "width_mm": 420,
+      "depth_mm": 350
+    },
+    "processed_main_image": null,
+    "processed_gallery_images": [],
+    "processed_color_variant_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-55-1_color_leona_01.jpg",
+        "color_hint": "leona",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 65643,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-55-1_color_lorna_01.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 54127,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-55-1_color_lorna_02.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 65141,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-55-1_color_torno_01.jpg",
+        "color_hint": "torno",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 71824,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "source_type_main": null,
+    "source_types_gallery": [],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-55-2",
+    "product_code_normalized": "OL-55-2",
+    "canonical_name": "Банкетка большая",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "bench",
+    "price_normalized": 19900.0,
+    "dimensions_normalized": {
+      "height_mm": 415,
+      "width_mm": 970,
+      "depth_mm": 350
+    },
+    "processed_main_image": null,
+    "processed_gallery_images": [],
+    "processed_color_variant_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-55-2_color_lorna_01.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 33263,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-55-2_color_lorna_02.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 52810,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "source_type_main": null,
+    "source_types_gallery": [],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-56-1",
+    "product_code_normalized": "OL-56-1",
+    "canonical_name": "Кресло",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "armchair",
+    "price_normalized": 58900.0,
+    "dimensions_normalized": {
+      "height_mm": 850,
+      "width_mm": 810,
+      "depth_mm": 710
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-56-1_gallery_01.jpg",
+      "width": 1000,
+      "height": 999,
+      "file_size": 57269,
+      "source_type": "gallery_as_main"
+    },
+    "processed_gallery_images": [],
+    "processed_color_variant_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-56-1_color_lillian_01.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 999,
+        "file_size": 89757,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "source_type_main": "gallery_as_main",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "gallery_only",
+    "asset_provenance_refs": [
+      "323b9a27b5ab"
+    ],
+    "readiness_status": "ready_with_caveat",
+    "notes": "No dedicated main image; using first gallery image"
+  },
+  {
+    "workbook_row_key": "oliver:OL-57-1",
+    "product_code_normalized": "OL-57-1",
+    "canonical_name": "Диван малый",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "sofa",
+    "price_normalized": 118000.0,
+    "dimensions_normalized": {
+      "height_mm": 932,
+      "width_mm": 1630,
+      "depth_mm": 914
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-57-1_gallery_01.jpg",
+      "width": 853,
+      "height": 853,
+      "file_size": 72825,
+      "source_type": "gallery_as_main"
+    },
+    "processed_gallery_images": [],
+    "processed_color_variant_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-57-1_color_lilian_01.jpg",
+        "color_hint": "lilian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 47620,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "source_type_main": "gallery_as_main",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "gallery_only",
+    "asset_provenance_refs": [
+      "d845f5fae290"
+    ],
+    "readiness_status": "ready_with_caveat",
+    "notes": "No dedicated main image; using first gallery image"
+  },
+  {
+    "workbook_row_key": "oliver:OL-57-2",
+    "product_code_normalized": "OL-57-2",
+    "canonical_name": "Диван большой",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "sofa",
+    "price_normalized": 145000.0,
+    "dimensions_normalized": {
+      "height_mm": 932,
+      "width_mm": 2010,
+      "depth_mm": 914
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-57-2_main.jpg",
+      "width": 1100,
+      "height": 1100,
+      "file_size": 329564,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [],
+    "processed_color_variant_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-57-2_color_lillian_01.jpg",
+        "color_hint": "lillian",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 47557,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "e99d397b349f"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-57-3",
+    "product_code_normalized": "OL-57-3",
+    "canonical_name": "Диван-кровать малый (140*190)",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "sofa",
+    "price_normalized": 125000.0,
+    "dimensions_normalized": {
+      "height_mm": 932,
+      "width_mm": 1630,
+      "depth_mm": 753
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-57-3_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 99625,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-57-3_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 62992,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-57-3_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 55446,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "05f092e986eb",
+      "79c3f6ddd1db",
+      "fd2b6dbc2dc8"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-61-1",
+    "product_code_normalized": "OL-61-1",
+    "canonical_name": "Шкаф книжный со стеклом",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "wardrobe",
+    "price_normalized": 137900.0,
+    "dimensions_normalized": {
+      "height_mm": 2110,
+      "width_mm": 1030,
+      "depth_mm": 430
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-61-1_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 54144,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-61-1_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 41818,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-61-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 46625,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-61-1_gallery_03.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 38566,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-61-1_gallery_04.jpg",
+        "width": 601,
+        "height": 600,
+        "file_size": 26966,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "5d546906d6af",
+      "5efb65f6e67e",
+      "60de33a333b1",
+      "a880b7fc6160"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-61-2",
+    "product_code_normalized": "OL-61-2",
+    "canonical_name": "Шкаф кабинетный",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "wardrobe",
+    "price_normalized": 121900.0,
+    "dimensions_normalized": {
+      "height_mm": 1120,
+      "width_mm": 2180,
+      "depth_mm": 430
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-61-2_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 72577,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-61-2_gallery_01.jpg",
+        "width": 1000,
+        "height": 999,
+        "file_size": 41421,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-61-2_gallery_02.jpg",
+        "width": 1000,
+        "height": 999,
+        "file_size": 38337,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-61-2_gallery_03.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 38346,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-61-2_gallery_04.jpg",
+        "width": 601,
+        "height": 601,
+        "file_size": 29264,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "44cc102e61f8",
+      "4bb2e93a59c2",
+      "81799ccd99f7",
+      "b13b9803f5eb"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-62-1",
+    "product_code_normalized": "OL-62-1",
+    "canonical_name": "Стеллаж для книг",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "bookcase",
+    "price_normalized": 103900.0,
+    "dimensions_normalized": {
+      "height_mm": 2110,
+      "width_mm": 1030,
+      "depth_mm": 430
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-62-1_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 67241,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-62-1_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 37856,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-62-1_gallery_02.jpg",
+        "width": 999,
+        "height": 1000,
+        "file_size": 34336,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-62-1_gallery_03.jpg",
+        "width": 600,
+        "height": 600,
+        "file_size": 27255,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "03a474f1fde2",
+      "5f2a2712bfbb",
+      "8292cb478929",
+      "f0f6000f3517"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-62-2",
+    "product_code_normalized": "OL-62-2",
+    "canonical_name": "Стеллаж широкий",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "bookcase",
+    "price_normalized": 72900.0,
+    "dimensions_normalized": {
+      "height_mm": 1461,
+      "width_mm": 1230,
+      "depth_mm": 434
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-62-2_main.jpg",
+      "width": 1199,
+      "height": 1200,
+      "file_size": 76363,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-62-2_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 41301,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "254c422d8a8b",
+      "b1e9b4872850"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-64-1",
+    "product_code_normalized": "OL-64-1",
+    "canonical_name": "Стол-бюро",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "table",
+    "price_normalized": 188900.0,
+    "dimensions_normalized": {
+      "height_mm": 1285,
+      "width_mm": 1560,
+      "depth_mm": 705
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-64-1_main.jpg",
+      "width": 1200,
+      "height": 1199,
+      "file_size": 87117,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-64-1_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 50914,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-64-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 61207,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-64-1_gallery_03.jpg",
+        "width": 601,
+        "height": 600,
+        "file_size": 45061,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "6f8d5c10b618",
+      "9d29ff98402f",
+      "c3b64081241c",
+      "f5418a2ddc59"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-65-1",
+    "product_code_normalized": "OL-65-1",
+    "canonical_name": "Стол письменный 1-тумб. 0П",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "table",
+    "price_normalized": 89900.0,
+    "dimensions_normalized": {
+      "height_mm": 780,
+      "width_mm": 1162,
+      "depth_mm": 600
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-65-1_gallery_01.jpg",
+      "width": 1000,
+      "height": 1000,
+      "file_size": 42654,
+      "source_type": "gallery_as_main"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-65-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 34312,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-65-1_gallery_03.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 56683,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-65-1_gallery_04.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 47031,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "gallery_as_main",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "gallery_only",
+    "asset_provenance_refs": [
+      "17b69191e6fe",
+      "1d2b61224bc3",
+      "c05d4a7a6ba8"
+    ],
+    "readiness_status": "ready_with_caveat",
+    "notes": "No dedicated main image; using first gallery image"
+  },
+  {
+    "workbook_row_key": "oliver:OL-65-2",
+    "product_code_normalized": "OL-65-2",
+    "canonical_name": "Стол письменный 1-тумб. П0",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "table",
+    "price_normalized": 89900.0,
+    "dimensions_normalized": {
+      "height_mm": 780,
+      "width_mm": 1162,
+      "depth_mm": 600
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-65-2_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 65870,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-65-2_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 39476,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-65-2_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 44314,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-65-2_gallery_03.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 39491,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "310cfad13943",
+      "5174d07cf112",
+      "569a9525fe36",
+      "df783e91bb97"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-66-1",
+    "product_code_normalized": "OL-66-1",
+    "canonical_name": "Стол письменный 2-тумб. ПП",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "table",
+    "price_normalized": 131900.0,
+    "dimensions_normalized": {
+      "height_mm": 780,
+      "width_mm": 1560,
+      "depth_mm": 700
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-66-1_gallery_01.jpg",
+      "width": 1000,
+      "height": 1000,
+      "file_size": 39277,
+      "source_type": "gallery_as_main"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-66-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 999,
+        "file_size": 36600,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-66-1_gallery_03.jpg",
+        "width": 1000,
+        "height": 999,
+        "file_size": 38335,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-66-1_gallery_04.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 41160,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-66-1_gallery_05.jpg",
+        "width": 601,
+        "height": 600,
+        "file_size": 26269,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "gallery_as_main",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "gallery_only",
+    "asset_provenance_refs": [
+      "4536fe5457cc",
+      "949de7c621a0",
+      "b4f8b97c8f8f"
+    ],
+    "readiness_status": "ready_with_caveat",
+    "notes": "No dedicated main image; using first gallery image"
+  },
+  {
+    "workbook_row_key": "oliver:OL-66-4",
+    "product_code_normalized": "OL-66-4",
+    "canonical_name": "Стол кабинетный письменный 2-тумб. ПП",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "table",
+    "price_normalized": 152600.0,
+    "dimensions_normalized": {
+      "height_mm": 780,
+      "width_mm": 1560,
+      "depth_mm": 720
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-66-4_main.jpg",
+      "width": 1199,
+      "height": 1200,
+      "file_size": 54647,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-66-4_gallery_01.jpg",
+        "width": 999,
+        "height": 1000,
+        "file_size": 38365,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-66-4_gallery_02.jpg",
+        "width": 999,
+        "height": 1000,
+        "file_size": 40470,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-66-4_gallery_03.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 30005,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-66-4_gallery_04.jpg",
+        "width": 600,
+        "height": 601,
+        "file_size": 27443,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "a5a70a50717c",
+      "df83435477d5",
+      "e0614508c6f2",
+      "f487b8283d5e"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-67-1",
+    "product_code_normalized": "OL-67-1",
+    "canonical_name": "Стол рабочий",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "table",
+    "price_normalized": 69900.0,
+    "dimensions_normalized": {
+      "height_mm": 790,
+      "width_mm": 1100,
+      "depth_mm": 600
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-67-1_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 47410,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-67-1_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 27256,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-67-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 999,
+        "file_size": 24405,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "0e81bc7cde65",
+      "7e4ed4522c01",
+      "8da28b3d7211"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-68-1",
+    "product_code_normalized": "OL-68-1",
+    "canonical_name": "Этажерка малая 3 полки",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "shelf",
+    "price_normalized": 24900.0,
+    "dimensions_normalized": {
+      "height_mm": 913,
+      "width_mm": 850,
+      "depth_mm": 320
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-68-1_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 42833,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-68-1_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 34510,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-68-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 27825,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "8fc0bdf5726e",
+      "af2b69a8d3fc",
+      "b3bd5b5683a0"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-68-2",
+    "product_code_normalized": "OL-68-2",
+    "canonical_name": "Этажерка большая 6 полок",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "bookcase",
+    "price_normalized": 48900.0,
+    "dimensions_normalized": {
+      "height_mm": 1978,
+      "width_mm": 850,
+      "depth_mm": 320
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-68-2_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 55947,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-68-2_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 27814,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-68-2_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 23408,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "6e25b1845f45",
+      "73fb302c7319",
+      "79631c135aca"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-69-1",
+    "product_code_normalized": "OL-69-1",
+    "canonical_name": "Полка книжная 1-ярусная",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "shelf",
+    "price_normalized": 14900.0,
+    "dimensions_normalized": {
+      "height_mm": 473,
+      "width_mm": 920,
+      "depth_mm": 207
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-69-1_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 64647,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-69-1_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 26941,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-69-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 26477,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "3a22074ba15b",
+      "8ff7dfdcfff6",
+      "b5e4bcb4d2c7"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-69-2",
+    "product_code_normalized": "OL-69-2",
+    "canonical_name": "Полка книжная 2-ярусная",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "shelf",
+    "price_normalized": 18000.0,
+    "dimensions_normalized": {
+      "height_mm": 551,
+      "width_mm": 920,
+      "depth_mm": 175
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-69-2_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 94959,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-69-2_gallery_01.jpg",
+        "width": 1000,
+        "height": 999,
+        "file_size": 34915,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-69-2_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 31505,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "b132bc305278",
+      "ed38ea384c93",
+      "f36fb338e4d9"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-69-3",
+    "product_code_normalized": "OL-69-3",
+    "canonical_name": "Полка книжная 3-ярусная",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "shelf",
+    "price_normalized": 22900.0,
+    "dimensions_normalized": {
+      "height_mm": 789,
+      "width_mm": 920,
+      "depth_mm": 175
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-69-3_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 64225,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-69-3_gallery_01.jpg",
+        "width": 1000,
+        "height": 999,
+        "file_size": 41011,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-69-3_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 23346,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "6d58dc5bfad7",
+      "6d88fe831caf",
+      "f4ebe82be476"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-69-4",
+    "product_code_normalized": "OL-69-4",
+    "canonical_name": "Полка книжная угловая",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "shelf",
+    "price_normalized": 13900.0,
+    "dimensions_normalized": {
+      "height_mm": 1063,
+      "width_mm": 310,
+      "depth_mm": 310
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-69-4_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 57618,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-69-4_gallery_01.jpg",
+        "width": 1000,
+        "height": 999,
+        "file_size": 26480,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-69-4_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 38867,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "13f9206ad32a",
+      "9cca5d5d24f2",
+      "cefadb52c0f9"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-81-1",
+    "product_code_normalized": "OL-81-1",
+    "canonical_name": "Столик  детский",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "table",
+    "price_normalized": 39900.0,
+    "dimensions_normalized": {
+      "height_mm": 570,
+      "width_mm": 780,
+      "depth_mm": 580
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-81-1_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 44442,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-81-1_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 29367,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-81-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 30964,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "052a45a0f910",
+      "7ebf04a12f1a",
+      "d8e25bdc3428"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-82-1",
+    "product_code_normalized": "OL-82-1",
+    "canonical_name": "Стульчик  детский",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "chair",
+    "price_normalized": 14300.0,
+    "dimensions_normalized": {
+      "height_mm": 714,
+      "width_mm": 300,
+      "depth_mm": 310
+    },
+    "processed_main_image": null,
+    "processed_gallery_images": [],
+    "processed_color_variant_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-82-1_color_linda_01.jpg",
+        "color_hint": "linda",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 36487,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-82-1_color_linda_02.jpg",
+        "color_hint": "linda",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 36880,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-82-1_color_lorna_01.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 28754,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-82-1_color_lorna_02.jpg",
+        "color_hint": "lorna",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 38216,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-82-1_color_torno_01.jpg",
+        "color_hint": "torno",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 25701,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-82-1_color_torno_02.jpg",
+        "color_hint": "torno",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 27589,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-82-1_color_torno_03.jpg",
+        "color_hint": "torno",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 32140,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-82-1_color_torno_04.jpg",
+        "color_hint": "torno",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 32882,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "source_type_main": null,
+    "source_types_gallery": [],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-83-1",
+    "product_code_normalized": "OL-83-1",
+    "canonical_name": "Столешница пеленальная съемная",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "table",
+    "price_normalized": 14950.0,
+    "dimensions_normalized": {
+      "height_mm": 180,
+      "width_mm": 881,
+      "depth_mm": 750
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-83-1_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 63125,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-83-1_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 13236,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-83-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 12039,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "122de92c1f69",
+      "2f446f46041c",
+      "7c45ca21bd74"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-84-1",
+    "product_code_normalized": "OL-84-1",
+    "canonical_name": "Бортик к кровати малый",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "bed-guard",
+    "price_normalized": 5500.0,
+    "dimensions_normalized": {
+      "height_mm": 300,
+      "width_mm": 700,
+      "depth_mm": 40
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-84-1_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 28205,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-84-1_gallery_01.jpg",
+        "width": 600,
+        "height": 600,
+        "file_size": 24597,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "2477cac64677",
+      "7ad19356add0"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-84-2",
+    "product_code_normalized": "OL-84-2",
+    "canonical_name": "Бортик к кровати большой",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "bed-guard",
+    "price_normalized": 7500.0,
+    "dimensions_normalized": {
+      "height_mm": 300,
+      "width_mm": 1000,
+      "depth_mm": 40
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-84-2_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 24041,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "49852659e46b"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-85-1",
+    "product_code_normalized": "OL-85-1",
+    "canonical_name": "Кроватка для новорожденного (60*120)",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "bed",
+    "price_normalized": 72700.0,
+    "dimensions_normalized": {
+      "height_mm": 1288,
+      "width_mm": 740,
+      "depth_mm": 1310
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-85-1_main.jpg",
+      "width": 1200,
+      "height": 1199,
+      "file_size": 98536,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-85-1_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 67465,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-85-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 72121,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "120678cd5f55",
+      "3b222a57b112",
+      "a6c287e1cba6"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-85-2",
+    "product_code_normalized": "OL-85-2",
+    "canonical_name": "Кроватка приставная + матрас",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "bed",
+    "price_normalized": 33900.0,
+    "dimensions_normalized": {
+      "height_mm": 900,
+      "width_mm": 576,
+      "depth_mm": 965
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-85-2_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 88953,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-85-2_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 64149,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-85-2_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 48481,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "35dcb2713b36",
+      "5b892ea88741",
+      "6a527ce28d8c"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-86-1",
+    "product_code_normalized": "OL-86-1",
+    "canonical_name": "Каркас для балдахина",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "canopy-frame",
+    "price_normalized": 5500.0,
+    "dimensions_normalized": {
+      "height_mm": 190,
+      "width_mm": 400,
+      "depth_mm": 250
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-86-1_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 31588,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-86-1_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 17784,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "411b4d6da8b6",
+      "95fb8b4e4938"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-95-1",
+    "product_code_normalized": "OL-95-1",
+    "canonical_name": "Кровать - трансформер (80*150) с рисунком",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "bed",
+    "price_normalized": 118000.0,
+    "dimensions_normalized": {
+      "height_mm": 1179,
+      "width_mm": 906,
+      "depth_mm": 1806
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-95-1_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 61089,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-95-1_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 35899,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-95-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 31188,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/oliver/OL-95-1_gallery_03.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 23953,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "1978cb3bd6f7",
+      "21a6f61bb4c9",
+      "9e2195a20c3f",
+      "a48cfbd5ad57"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-95-3",
+    "product_code_normalized": "OL-95-3",
+    "canonical_name": "Кровать - трансформер (80*150) с тканью",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "bed",
+    "price_normalized": 118700.0,
+    "dimensions_normalized": {
+      "height_mm": 1179,
+      "width_mm": 906,
+      "depth_mm": 1806
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/oliver/OL-95-3_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 70946,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "0bfc029da109"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "provence:PV-02-1",
+    "product_code_normalized": "PV-02-1",
+    "canonical_name": "Шкаф для одежды 2-дв.",
+    "collection_name_normalized": "provence",
+    "category_normalized": "wardrobe",
+    "price_normalized": 141300.0,
+    "dimensions_normalized": {
+      "height_mm": 2080,
+      "width_mm": 1200,
+      "depth_mm": 631
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/provence/PV-02-1_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 68604,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-02-1_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 40946,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-02-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 35954,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "93ee657f9323",
+      "a1a138002319",
+      "dcdd3b9fb078"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "provence:PV-03-1",
+    "product_code_normalized": "PV-03-1",
+    "canonical_name": "Шкаф для одежды 3-дв.",
+    "collection_name_normalized": "provence",
+    "category_normalized": "wardrobe",
+    "price_normalized": 205700.0,
+    "dimensions_normalized": {
+      "height_mm": 2140,
+      "width_mm": 1735,
+      "depth_mm": 631
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/provence/PV-03-1_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 73881,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-03-1_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 50019,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-03-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 42118,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "0233a1964ed2",
+      "297c2eb167e5",
+      "8c9882263401"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "provence:PV-05-2",
+    "product_code_normalized": "PV-05-2",
+    "canonical_name": "Комод стандартный",
+    "collection_name_normalized": "provence",
+    "category_normalized": "dresser",
+    "price_normalized": 66600.0,
+    "dimensions_normalized": {
+      "height_mm": 902,
+      "width_mm": 900,
+      "depth_mm": 572
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/provence/PV-05-2_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 192865,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-05-2_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 46018,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-05-2_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 48330,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-05-2_gallery_03.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 118098,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "1e097fd12e38",
+      "68bc77765b61",
+      "e265e188e8a2",
+      "f2c2077145c9"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "provence:PV-06-2",
+    "product_code_normalized": "PV-06-2",
+    "canonical_name": "Столик туалетный",
+    "collection_name_normalized": "provence",
+    "category_normalized": "table",
+    "price_normalized": 47300.0,
+    "dimensions_normalized": {
+      "height_mm": 750,
+      "width_mm": 1202,
+      "depth_mm": 502
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/provence/PV-06-2_main.jpg",
+      "width": 1199,
+      "height": 1200,
+      "file_size": 95572,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-06-2_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 38104,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-06-2_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 27242,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-06-2_gallery_03.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 49513,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-06-2_gallery_04.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 46980,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "1db563e6531a",
+      "388a3ab9698b",
+      "bd476503f9ee",
+      "f5ee61ca0e2b"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "provence:PV-08-2",
+    "product_code_normalized": "PV-08-2",
+    "canonical_name": "Тумбочка прикроватная",
+    "collection_name_normalized": "provence",
+    "category_normalized": "nightstand",
+    "price_normalized": 23300.0,
+    "dimensions_normalized": {
+      "height_mm": 600,
+      "width_mm": 530,
+      "depth_mm": 450
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/provence/PV-08-2_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 94522,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-08-2_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 29780,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-08-2_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 25948,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-08-2_gallery_03.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 61943,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "39525e35e895",
+      "3dc3546e3dc6",
+      "7a62e786cdd3",
+      "c1d19e38954b"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "provence:PV-09-1",
+    "product_code_normalized": "PV-09-1",
+    "canonical_name": "Зеркало навесное",
+    "collection_name_normalized": "provence",
+    "category_normalized": "mirror",
+    "price_normalized": 13600.0,
+    "dimensions_normalized": {
+      "height_mm": 800,
+      "width_mm": 600,
+      "depth_mm": 30
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/provence/PV-09-1_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 68927,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-09-1_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 29711,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-09-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 30416,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "6b40bbbcc3d6",
+      "d7d0fa441046",
+      "febe5da06323"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "provence:PV-09-2",
+    "product_code_normalized": "PV-09-2",
+    "canonical_name": "Зеркало напольное",
+    "collection_name_normalized": "provence",
+    "category_normalized": "mirror",
+    "price_normalized": 48900.0,
+    "dimensions_normalized": {
+      "height_mm": 1670,
+      "width_mm": 650,
+      "depth_mm": 391
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/provence/PV-09-2_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 37730,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-09-2_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 25462,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "024fddac7837",
+      "62ecbf676027"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "provence:PV-14-1",
+    "product_code_normalized": "PV-14-1",
+    "canonical_name": "Кровать 1-сп. (90*190) без изножья",
+    "collection_name_normalized": "provence",
+    "category_normalized": "bed",
+    "price_normalized": 57600.0,
+    "dimensions_normalized": {
+      "height_mm": 1063,
+      "width_mm": 994,
+      "depth_mm": 2010
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/provence/PV-14-1_main.jpg",
+      "width": 522,
+      "height": 532,
+      "file_size": 12261,
+      "source_type": "legacy_fallback"
+    },
+    "processed_gallery_images": [],
+    "processed_color_variant_images": [],
+    "source_type_main": "legacy_fallback",
+    "source_types_gallery": [],
+    "asset_quality_status": "low_res_temporary",
+    "asset_provenance_refs": [
+      "0215a8c9eab4"
+    ],
+    "readiness_status": "ready_with_caveat",
+    "notes": "522x532, legacy screenshot"
+  },
+  {
+    "workbook_row_key": "provence:PV-15-1",
+    "product_code_normalized": "PV-15-1",
+    "canonical_name": "Кровать 1,5-сп. (120*190) без изножья",
+    "collection_name_normalized": "provence",
+    "category_normalized": "bed",
+    "price_normalized": 70300.0,
+    "dimensions_normalized": {
+      "height_mm": 1073,
+      "width_mm": 1294,
+      "depth_mm": 2010
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/provence/PV-15-1_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 107463,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "fd63a003cd2b"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "provence:PV-15-2",
+    "product_code_normalized": "PV-15-2",
+    "canonical_name": "Кровать 1,5-сп. (120*190) с тканью без изножья",
+    "collection_name_normalized": "provence",
+    "category_normalized": "bed",
+    "price_normalized": 70300.0,
+    "dimensions_normalized": {
+      "height_mm": 1073,
+      "width_mm": 1294,
+      "depth_mm": 2010
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/provence/PV-15-2_gallery_01.jpg",
+      "width": 1000,
+      "height": 1000,
+      "file_size": 70843,
+      "source_type": "gallery_as_main"
+    },
+    "processed_gallery_images": [],
+    "processed_color_variant_images": [],
+    "source_type_main": "gallery_as_main",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "gallery_only",
+    "asset_provenance_refs": [
+      "50126d49152e"
+    ],
+    "readiness_status": "ready_with_caveat",
+    "notes": "No dedicated main image; using first gallery image"
+  },
+  {
+    "workbook_row_key": "provence:PV-16-1",
+    "product_code_normalized": "PV-16-1",
+    "canonical_name": "Кровать 1,5-сп. (140*190) без изножья",
+    "collection_name_normalized": "provence",
+    "category_normalized": "bed",
+    "price_normalized": 77300.0,
+    "dimensions_normalized": {
+      "height_mm": 1092,
+      "width_mm": 1494,
+      "depth_mm": 2010
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/provence/PV-16-1_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 108261,
+      "source_type": "legacy_fallback"
+    },
+    "processed_gallery_images": [],
+    "processed_color_variant_images": [],
+    "source_type_main": "legacy_fallback",
+    "source_types_gallery": [],
+    "asset_quality_status": "legacy_fallback",
+    "asset_provenance_refs": [
+      "1ec0caf87810"
+    ],
+    "readiness_status": "ready_with_caveat",
+    "notes": "Main image from legacy site, not white-bg product shot"
+  },
+  {
+    "workbook_row_key": "provence:PV-17-1",
+    "product_code_normalized": "PV-17-1",
+    "canonical_name": "Кровать 2-сп. (160*200) без изножья",
+    "collection_name_normalized": "provence",
+    "category_normalized": "bed",
+    "price_normalized": 79700.0,
+    "dimensions_normalized": {
+      "height_mm": 1111,
+      "width_mm": 1694,
+      "depth_mm": 2110
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/provence/PV-17-1_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 102461,
+      "source_type": "legacy_fallback"
+    },
+    "processed_gallery_images": [],
+    "processed_color_variant_images": [],
+    "source_type_main": "legacy_fallback",
+    "source_types_gallery": [],
+    "asset_quality_status": "legacy_fallback",
+    "asset_provenance_refs": [
+      "05954ab07420"
+    ],
+    "readiness_status": "ready_with_caveat",
+    "notes": "Main image from legacy site, not white-bg product shot"
+  },
+  {
+    "workbook_row_key": "provence:PV-18-1",
+    "product_code_normalized": "PV-18-1",
+    "canonical_name": "Кровать 2-сп. (180*200) без изножья",
+    "collection_name_normalized": "provence",
+    "category_normalized": "bed",
+    "price_normalized": 82900.0,
+    "dimensions_normalized": {
+      "height_mm": 1121,
+      "width_mm": 1894,
+      "depth_mm": 2110
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/provence/PV-18-1_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 120375,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-18-1_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 66798,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-18-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 52804,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "17ecc3cdce06",
+      "703d5dcc216c",
+      "c42f0fabee69"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "provence:PV-23-1",
+    "product_code_normalized": "PV-23-1",
+    "canonical_name": "Стул",
+    "collection_name_normalized": "provence",
+    "category_normalized": "chair",
+    "price_normalized": 24900.0,
+    "dimensions_normalized": {
+      "height_mm": 905,
+      "width_mm": 480,
+      "depth_mm": 460
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/provence/PV-23-1_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 68236,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-23-1_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 46320,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-23-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 40944,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-23-1_gallery_03.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 40789,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "4fc7f8930c72",
+      "c357f8130a9d",
+      "ded9325264fd",
+      "e52e0b2c1ccf"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "provence:PV-42-2",
+    "product_code_normalized": "PV-42-2",
+    "canonical_name": "Тумба для телевизора",
+    "collection_name_normalized": "provence",
+    "category_normalized": "nightstand",
+    "price_normalized": 47800.0,
+    "dimensions_normalized": {
+      "height_mm": 584,
+      "width_mm": 1160,
+      "depth_mm": 476
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/provence/PV-42-2_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 96567,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-42-2_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 41236,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-42-2_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 61668,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "4bc1ae051c50",
+      "6bf8e5316db3",
+      "77092af8ffae"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "provence:PV-43-1",
+    "product_code_normalized": "PV-43-1",
+    "canonical_name": "Столик чайный",
+    "collection_name_normalized": "provence",
+    "category_normalized": "table",
+    "price_normalized": 20500.0,
+    "dimensions_normalized": {
+      "height_mm": 750,
+      "width_mm": 600,
+      "depth_mm": 600
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/provence/PV-43-1_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 38452,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-43-1_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 23088,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "7bd11ae76e04",
+      "f55432517bbe"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "provence:PV-55-1",
+    "product_code_normalized": "PV-55-1",
+    "canonical_name": "Банкетка малая",
+    "collection_name_normalized": "provence",
+    "category_normalized": "bench",
+    "price_normalized": 19900.0,
+    "dimensions_normalized": {
+      "height_mm": 450,
+      "width_mm": 470,
+      "depth_mm": 400
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/provence/PV-55-1_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 96997,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-55-1_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 54085,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-55-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 35234,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-55-1_gallery_03.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 57375,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "099bf0e8b070",
+      "3541b1c94fea",
+      "36829a62f13f",
+      "89cb1a334f84"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "provence:PV-55-2",
+    "product_code_normalized": "PV-55-2",
+    "canonical_name": "Банкетка большая",
+    "collection_name_normalized": "provence",
+    "category_normalized": "bench",
+    "price_normalized": 26700.0,
+    "dimensions_normalized": {
+      "height_mm": 450,
+      "width_mm": 850,
+      "depth_mm": 400
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/provence/PV-55-2_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 84171,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "c379ef0d9b16"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "provence:PV-61-1",
+    "product_code_normalized": "PV-61-1",
+    "canonical_name": "Шкаф книжный",
+    "collection_name_normalized": "provence",
+    "category_normalized": "wardrobe",
+    "price_normalized": 122100.0,
+    "dimensions_normalized": {
+      "height_mm": 2080,
+      "width_mm": 1200,
+      "depth_mm": 465
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/provence/PV-61-1_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 120409,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-61-1_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 45316,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-61-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 39941,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-61-1_gallery_03.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 72968,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "4f3a7a9779bc",
+      "7a2106ee731d",
+      "9b2265f32c79",
+      "c3f9dc31dfed"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "provence:PV-62-1",
+    "product_code_normalized": "PV-62-1",
+    "canonical_name": "Стеллаж для книг",
+    "collection_name_normalized": "provence",
+    "category_normalized": "bookcase",
+    "price_normalized": 82100.0,
+    "dimensions_normalized": {
+      "height_mm": 2080,
+      "width_mm": 1200,
+      "depth_mm": 465
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/provence/PV-62-1_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 96811,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-62-1_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 36428,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-62-1_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 30027,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-62-1_gallery_03.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 63456,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "16b490f93f0a",
+      "2a4d572fe25c",
+      "ab38fa62595e",
+      "fe867fb3fd91"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "provence:PV-65-5",
+    "product_code_normalized": "PV-65-5",
+    "canonical_name": "Стол письменный 1-тумб. 0П",
+    "collection_name_normalized": "provence",
+    "category_normalized": "table",
+    "price_normalized": 68300.0,
+    "dimensions_normalized": {
+      "height_mm": 750,
+      "width_mm": 1140,
+      "depth_mm": 647
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/provence/PV-65-5_gallery_01.jpg",
+      "width": 1000,
+      "height": 1000,
+      "file_size": 40014,
+      "source_type": "gallery_as_main"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-65-5_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 33982,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "gallery_as_main",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "gallery_only",
+    "asset_provenance_refs": [
+      "7f5d67d16fc5",
+      "8c2bff3ad03e"
+    ],
+    "readiness_status": "ready_with_caveat",
+    "notes": "No dedicated main image; using first gallery image"
+  },
+  {
+    "workbook_row_key": "provence:PV-65-6",
+    "product_code_normalized": "PV-65-6",
+    "canonical_name": "Стол письменный 1-тумб. П0",
+    "collection_name_normalized": "provence",
+    "category_normalized": "table",
+    "price_normalized": 68300.0,
+    "dimensions_normalized": {
+      "height_mm": 750,
+      "width_mm": 1140,
+      "depth_mm": 647
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/provence/PV-65-6_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 50363,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "1ad209ae536f"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "provence:PV-65-7",
+    "product_code_normalized": "PV-65-7",
+    "canonical_name": "Стол письменный 1-тумб. 0Я",
+    "collection_name_normalized": "provence",
+    "category_normalized": "table",
+    "price_normalized": 83000.0,
+    "dimensions_normalized": {
+      "height_mm": 750,
+      "width_mm": 1140,
+      "depth_mm": 647
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/provence/PV-65-7_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 57053,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-65-7_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 33167,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "4e35a63cb27f",
+      "79c135be11e4"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "provence:PV-65-8",
+    "product_code_normalized": "PV-65-8",
+    "canonical_name": "Стол письменный 1-тумб. Я0",
+    "collection_name_normalized": "provence",
+    "category_normalized": "table",
+    "price_normalized": 83000.0,
+    "dimensions_normalized": {
+      "height_mm": 750,
+      "width_mm": 1140,
+      "depth_mm": 647
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/provence/PV-65-8_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 104086,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-65-8_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 37555,
+        "source_type": "disk_white_bg"
+      },
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-65-8_gallery_02.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 67442,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "41f5a6f35be6",
+      "a31d064bdd33",
+      "c98ff3ea4257"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "provence:PV-66-6",
+    "product_code_normalized": "PV-66-6",
+    "canonical_name": "Стол письменный 2-тумб. ПЯ",
+    "collection_name_normalized": "provence",
+    "category_normalized": "table",
+    "price_normalized": 103700.0,
+    "dimensions_normalized": {
+      "height_mm": 750,
+      "width_mm": 1535,
+      "depth_mm": 700
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/provence/PV-66-6_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 56560,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "e073dd162f92"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "provence:PV-66-7",
+    "product_code_normalized": "PV-66-7",
+    "canonical_name": "Стол письменный 2-тумб. ЯП",
+    "collection_name_normalized": "provence",
+    "category_normalized": "table",
+    "price_normalized": 103700.0,
+    "dimensions_normalized": {
+      "height_mm": 750,
+      "width_mm": 1535,
+      "depth_mm": 700
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/provence/PV-66-7_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 45623,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-66-7_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 39677,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "0c85c1014d8c",
+      "ed5278ed983b"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "provence:PV-68-1",
+    "product_code_normalized": "PV-68-1",
+    "canonical_name": "Этажерка малая 3 полки",
+    "collection_name_normalized": "provence",
+    "category_normalized": "shelf",
+    "price_normalized": 17700.0,
+    "dimensions_normalized": {
+      "height_mm": 800,
+      "width_mm": 480,
+      "depth_mm": 350
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/provence/PV-68-1_main.jpg",
+      "width": 225,
+      "height": 287,
+      "file_size": 7098,
+      "source_type": "legacy_fallback"
+    },
+    "processed_gallery_images": [],
+    "processed_color_variant_images": [],
+    "source_type_main": "legacy_fallback",
+    "source_types_gallery": [],
+    "asset_quality_status": "needs_reshoot",
+    "asset_provenance_refs": [
+      "890d99d3d6b0"
+    ],
+    "readiness_status": "ready_with_caveat",
+    "notes": "225x287, too small for product page"
+  },
+  {
+    "workbook_row_key": "provence:PV-68-2",
+    "product_code_normalized": "PV-68-2",
+    "canonical_name": "Этажерка большая 6 полок",
+    "collection_name_normalized": "provence",
+    "category_normalized": "bookcase",
+    "price_normalized": 58600.0,
+    "dimensions_normalized": {
+      "height_mm": 1770,
+      "width_mm": 885,
+      "depth_mm": 362
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/provence/PV-68-2_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 83131,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-68-2_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 53117,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "098cac46d3ee",
+      "d058526eec25"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  },
+  {
+    "workbook_row_key": "provence:PV-69-1",
+    "product_code_normalized": "PV-69-1",
+    "canonical_name": "Полка книжная",
+    "collection_name_normalized": "provence",
+    "category_normalized": "shelf",
+    "price_normalized": 7600.0,
+    "dimensions_normalized": {
+      "height_mm": 318,
+      "width_mm": 700,
+      "depth_mm": 245
+    },
+    "processed_main_image": {
+      "processed_path": "data/processed/storefront-assets/provence/PV-69-1_main.jpg",
+      "width": 1200,
+      "height": 1200,
+      "file_size": 23213,
+      "source_type": "disk_white_bg"
+    },
+    "processed_gallery_images": [
+      {
+        "processed_path": "data/processed/storefront-assets/provence/PV-69-1_gallery_01.jpg",
+        "width": 1000,
+        "height": 1000,
+        "file_size": 16194,
+        "source_type": "disk_white_bg"
+      }
+    ],
+    "processed_color_variant_images": [],
+    "source_type_main": "disk_white_bg",
+    "source_types_gallery": [
+      "disk_white_bg"
+    ],
+    "asset_quality_status": "ok",
+    "asset_provenance_refs": [
+      "4ab07b0d9608",
+      "6e86c0f86e92"
+    ],
+    "readiness_status": "ready",
+    "notes": ""
+  }
+]

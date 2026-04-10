@@ -1,0 +1,80 @@
+{
+  "total_mapped": 109,
+  "seed_ready": 81,
+  "seed_ready_with_caveat": 28,
+  "total_excluded": 233,
+  "collections": [
+    "country-london-paris",
+    "oliver",
+    "provence"
+  ],
+  "collections_count": 3,
+  "categories": [
+    "baldahiny",
+    "bortiki",
+    "chasy",
+    "divany",
+    "komody",
+    "konsoli",
+    "kresla",
+    "krovati",
+    "polki",
+    "shkafy",
+    "skameyki",
+    "stellazhi",
+    "stoly",
+    "stulya",
+    "sunduki",
+    "tumby",
+    "zerkala"
+  ],
+  "categories_count": 17,
+  "per_collection": {
+    "country-london-paris": {
+      "seed_ready": 2,
+      "caveat": 11,
+      "total": 13
+    },
+    "oliver": {
+      "seed_ready": 56,
+      "caveat": 11,
+      "total": 67
+    },
+    "provence": {
+      "seed_ready": 23,
+      "caveat": 6,
+      "total": 29
+    }
+  },
+  "per_category": {
+    "shkafy": 12,
+    "komody": 7,
+    "tumby": 7,
+    "krovati": 23,
+    "stellazhi": 8,
+    "stoly": 21,
+    "polki": 9,
+    "zerkala": 5,
+    "sunduki": 1,
+    "stulya": 3,
+    "chasy": 1,
+    "konsoli": 1,
+    "skameyki": 4,
+    "kresla": 1,
+    "divany": 3,
+    "bortiki": 2,
+    "baldahiny": 1
+  },
+  "product_types": {
+    "CONFIGURABLE": 105,
+    "STANDARD": 4
+  },
+  "with_main_image": 94,
+  "with_gallery": 76,
+  "total_upload_refs": 444,
+  "exclusion_categories": {
+    "blocked_by_business_decision": 63,
+    "no_confirmed_assets": 86,
+    "unresolved_mapping": 84
+  }
+}

@@ -1,0 +1,79 @@
+[
+  {
+    "workbook_row_key": "oliver:OL-00-1",
+    "product_code_normalized": "OL-00-1",
+    "canonical_name": "Шкаф угловой  (руч.лев/пр)",
+    "collection_name_normalized": "oliver",
+    "mapping_status": "promoted",
+    "main_image_url": "https://woodright.ru/images/detailed/11/ol-04-1-i1.jpg",
+    "main_image_type": "legacy_site",
+    "gallery_count": 0,
+    "gallery_urls": []
+  },
+  {
+    "workbook_row_key": "oliver:OL-05-Н",
+    "product_code_normalized": "OL-05-Н",
+    "canonical_name": "Комод высокий (ниже на 1 ярус ящиков)",
+    "collection_name_normalized": "oliver",
+    "mapping_status": "promoted",
+    "main_image_url": "https://woodright.ru/images/detailed/8/ol-05-3-i1.jpg",
+    "main_image_type": "legacy_site",
+    "gallery_count": 0,
+    "gallery_urls": []
+  },
+  {
+    "workbook_row_key": "oliver:OL-08-2",
+    "product_code_normalized": "OL-08-2",
+    "canonical_name": "Тумбочка прикроватная  с дверкой (руч.лев/пр)",
+    "collection_name_normalized": "oliver",
+    "mapping_status": "promoted",
+    "main_image_url": "https://woodright.ru/images/detailed/8/ol-08-1-i1.jpg",
+    "main_image_type": "legacy_site",
+    "gallery_count": 0,
+    "gallery_urls": []
+  },
+  {
+    "workbook_row_key": "provence:PV-14-1",
+    "product_code_normalized": "PV-14-1",
+    "canonical_name": "Кровать 1-сп. (90*190) без изножья",
+    "collection_name_normalized": "provence",
+    "mapping_status": "promoted",
+    "main_image_url": "https://woodright.ru/images/detailed/11/Screenshot_101_j3q4-5k.png",
+    "main_image_type": "legacy_site",
+    "gallery_count": 0,
+    "gallery_urls": []
+  },
+  {
+    "workbook_row_key": "provence:PV-16-1",
+    "product_code_normalized": "PV-16-1",
+    "canonical_name": "Кровать 1,5-сп. (140*190) без изножья",
+    "collection_name_normalized": "provence",
+    "mapping_status": "promoted",
+    "main_image_url": "https://woodright.ru/images/detailed/8/pv-15-1-i1.jpg",
+    "main_image_type": "legacy_site",
+    "gallery_count": 0,
+    "gallery_urls": []
+  },
+  {
+    "workbook_row_key": "provence:PV-17-1",
+    "product_code_normalized": "PV-17-1",
+    "canonical_name": "Кровать 2-сп. (160*200) без изножья",
+    "collection_name_normalized": "provence",
+    "mapping_status": "promoted",
+    "main_image_url": "https://woodright.ru/images/detailed/8/pv-18-1-i1.jpg",
+    "main_image_type": "legacy_site",
+    "gallery_count": 0,
+    "gallery_urls": []
+  },
+  {
+    "workbook_row_key": "provence:PV-68-1",
+    "product_code_normalized": "PV-68-1",
+    "canonical_name": "Этажерка малая 3 полки",
+    "collection_name_normalized": "provence",
+    "mapping_status": "promoted",
+    "main_image_url": "https://woodright.ru/images/detailed/11/Screenshot_45.png",
+    "main_image_type": "legacy_site",
+    "gallery_count": 0,
+    "gallery_urls": []
+  }
+]

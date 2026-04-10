@@ -1,0 +1,512 @@
+[
+  {
+    "workbook_row_key": "greenwich:GR-09-1",
+    "product_code_normalized": "GR-09-1",
+    "canonical_name": "Кровать  1-сп. (90*200)",
+    "collection": "greenwich",
+    "main_image": {
+      "source_type": "legacy_site",
+      "source_ref": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg",
+      "is_verified": false,
+      "confidence": 0.5
+    },
+    "gallery_images": [
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_frame_natural_beige.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_frame_dark_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_frame_dark_beige.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_frame_dark_beige.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_fame_natural_darkblue.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_fame_natural_darkblue.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_fame_natural_darkblue.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_fame_dark_darkblue.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_fame_dark_darkblue.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_fame_dark_darkblue.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/noliver_var2_View03.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/noliver_var2_View03.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "noliver_var2_View03.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/noliver_var2_View02.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/noliver_var2_View02.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "noliver_var2_View02.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/noliver_var2_View01.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/noliver_var2_View01.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "noliver_var2_View01.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/sizes10.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/sizes10.webp",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "sizes10.webp"
+        }
+      }
+    ],
+    "mapping_status": "fuzzy",
+    "confidence": 0.5,
+    "match_basis": "greenwich_bed_type_match",
+    "source_type": "legacy_fallback",
+    "source_decision_reason": "legacy_fallback",
+    "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+    "legacy_title_matched": "Кровать Frame",
+    "review_notes": "Legacy match is fuzzy (greenwich_bed_type_match) — needs manual review; Legacy image used as fallback (low confidence)"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-12-1",
+    "product_code_normalized": "GR-12-1",
+    "canonical_name": "Кровать  1,5-сп. (120*200)",
+    "collection": "greenwich",
+    "main_image": {
+      "source_type": "legacy_site",
+      "source_ref": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg",
+      "is_verified": false,
+      "confidence": 0.5
+    },
+    "gallery_images": [
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_frame_natural_beige.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_frame_dark_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_frame_dark_beige.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_frame_dark_beige.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_fame_natural_darkblue.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_fame_natural_darkblue.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_fame_natural_darkblue.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_fame_dark_darkblue.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_fame_dark_darkblue.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_fame_dark_darkblue.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/noliver_var2_View03.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/noliver_var2_View03.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "noliver_var2_View03.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/noliver_var2_View02.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/noliver_var2_View02.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "noliver_var2_View02.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/noliver_var2_View01.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/noliver_var2_View01.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "noliver_var2_View01.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/sizes10.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/sizes10.webp",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "sizes10.webp"
+        }
+      }
+    ],
+    "mapping_status": "fuzzy",
+    "confidence": 0.5,
+    "match_basis": "greenwich_bed_type_match",
+    "source_type": "legacy_fallback",
+    "source_decision_reason": "legacy_fallback",
+    "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+    "legacy_title_matched": "Кровать Frame",
+    "review_notes": "Legacy match is fuzzy (greenwich_bed_type_match) — needs manual review; Legacy image used as fallback (low confidence)"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-14-1",
+    "product_code_normalized": "GR-14-1",
+    "canonical_name": "Кровать  1,5-сп. (140*200)",
+    "collection": "greenwich",
+    "main_image": {
+      "source_type": "legacy_site",
+      "source_ref": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg",
+      "is_verified": false,
+      "confidence": 0.5
+    },
+    "gallery_images": [
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_frame_natural_beige.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_frame_dark_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_frame_dark_beige.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_frame_dark_beige.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_fame_natural_darkblue.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_fame_natural_darkblue.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_fame_natural_darkblue.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_fame_dark_darkblue.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_fame_dark_darkblue.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_fame_dark_darkblue.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/noliver_var2_View03.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/noliver_var2_View03.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "noliver_var2_View03.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/noliver_var2_View02.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/noliver_var2_View02.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "noliver_var2_View02.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/noliver_var2_View01.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/noliver_var2_View01.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "noliver_var2_View01.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/sizes10.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/sizes10.webp",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "sizes10.webp"
+        }
+      }
+    ],
+    "mapping_status": "fuzzy",
+    "confidence": 0.5,
+    "match_basis": "greenwich_bed_type_match",
+    "source_type": "legacy_fallback",
+    "source_decision_reason": "legacy_fallback",
+    "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+    "legacy_title_matched": "Кровать Frame",
+    "review_notes": "Legacy match is fuzzy (greenwich_bed_type_match) — needs manual review; Legacy image used as fallback (low confidence)"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-16-1",
+    "product_code_normalized": "GR-16-1",
+    "canonical_name": "Кровать  2-сп. (160*200)",
+    "collection": "greenwich",
+    "main_image": {
+      "source_type": "legacy_site",
+      "source_ref": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg",
+      "is_verified": false,
+      "confidence": 0.5
+    },
+    "gallery_images": [
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_frame_natural_beige.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_frame_dark_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_frame_dark_beige.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_frame_dark_beige.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_fame_natural_darkblue.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_fame_natural_darkblue.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_fame_natural_darkblue.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_fame_dark_darkblue.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_fame_dark_darkblue.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_fame_dark_darkblue.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/noliver_var2_View03.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/noliver_var2_View03.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "noliver_var2_View03.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/noliver_var2_View02.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/noliver_var2_View02.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "noliver_var2_View02.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/noliver_var2_View01.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/noliver_var2_View01.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "noliver_var2_View01.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/sizes10.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/sizes10.webp",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "sizes10.webp"
+        }
+      }
+    ],
+    "mapping_status": "fuzzy",
+    "confidence": 0.5,
+    "match_basis": "greenwich_bed_type_match",
+    "source_type": "legacy_fallback",
+    "source_decision_reason": "legacy_fallback",
+    "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+    "legacy_title_matched": "Кровать Frame",
+    "review_notes": "Legacy match is fuzzy (greenwich_bed_type_match) — needs manual review; Legacy image used as fallback (low confidence)"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-18-1",
+    "product_code_normalized": "GR-18-1",
+    "canonical_name": "Кровать  2-сп. (180*200)",
+    "collection": "greenwich",
+    "main_image": {
+      "source_type": "legacy_site",
+      "source_ref": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg",
+      "is_verified": false,
+      "confidence": 0.5
+    },
+    "gallery_images": [
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_frame_natural_beige.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_frame_dark_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_frame_dark_beige.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_frame_dark_beige.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_fame_natural_darkblue.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_fame_natural_darkblue.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_fame_natural_darkblue.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_fame_dark_darkblue.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_fame_dark_darkblue.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_fame_dark_darkblue.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/noliver_var2_View03.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/noliver_var2_View03.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "noliver_var2_View03.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/noliver_var2_View02.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/noliver_var2_View02.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "noliver_var2_View02.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/noliver_var2_View01.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/noliver_var2_View01.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "noliver_var2_View01.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/sizes10.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/sizes10.webp",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "sizes10.webp"
+        }
+      }
+    ],
+    "mapping_status": "fuzzy",
+    "confidence": 0.5,
+    "match_basis": "greenwich_bed_type_match",
+    "source_type": "legacy_fallback",
+    "source_decision_reason": "legacy_fallback",
+    "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+    "legacy_title_matched": "Кровать Frame",
+    "review_notes": "Legacy match is fuzzy (greenwich_bed_type_match) — needs manual review; Legacy image used as fallback (low confidence)"
+  }
+]

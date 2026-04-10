@@ -22,7 +22,7 @@ export async function medusaFetch(url: string, init?: RequestInit): Promise<Resp
     headers.set("x-publishable-api-key", key)
   }
   try {
-    return await fetch(url, { ...init, headers })
+    return await fetch(url, { ...init, headers, cache: "no-store" })
   } catch {
     throw new Error(
       `Не удалось выполнить запрос к ${url}. Убедитесь, что backend запущен и доступен.`

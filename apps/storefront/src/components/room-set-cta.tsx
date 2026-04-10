@@ -68,7 +68,7 @@ export function RoomSetCta({ roomSet }: Props) {
         <button type="button" onClick={handleBuySet} disabled={adding} className="btn btn-primary">
           {adding ? "Добавление…" : "Купить комплект"}
         </button>
-        <Link href={id ? `/bespoke?room_set_id=${id}` : "/bespoke"} className="btn btn-secondary">
+        <Link href={id ? `/bespoke/request?room_set_id=${encodeURIComponent(id)}` : "/bespoke"} className="btn btn-secondary">
           Адаптировать под мою комнату
         </Link>
       </div>

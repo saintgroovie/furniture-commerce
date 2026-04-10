@@ -1,0 +1,3425 @@
+[
+  {
+    "workbook_row_key": "greenwich:GR-09-1",
+    "product_code_normalized": "GR-09-1",
+    "canonical_name": "Зеркало навесное",
+    "collection": "greenwich",
+    "main_image": {
+      "source_type": "pdf_embedded",
+      "source_ref": "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p11_i0_1509x970.png"
+    },
+    "gallery_images": [],
+    "mapping_status": "pdf_candidate",
+    "confidence": 0.0,
+    "match_basis": "no_match",
+    "source_type": "pdf_preferred_low_legacy_confidence",
+    "source_decision_reason": "pdf_preferred_low_legacy_confidence",
+    "legacy_page_url": null,
+    "legacy_title_matched": null,
+    "review_notes": "PDF image preferred; legacy confidence too low for main"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-05-1",
+    "product_code_normalized": "GR-05-1",
+    "canonical_name": "Комод",
+    "collection": "greenwich",
+    "main_image": {
+      "source_type": "legacy_site",
+      "source_ref": "https://woodright.ru/images/detailed/10/greenwich_capuchino04.jpg",
+      "is_verified": true,
+      "confidence": 0.8
+    },
+    "gallery_images": [
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_capuchino05.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_capuchino05.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/komod-scale-ru-16/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_capuchino05.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_capuchino06.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_capuchino06.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/komod-scale-ru-16/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_capuchino06.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__2__73ak-gy.jpeg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__2__73ak-gy.jpeg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/komod-scale-ru-16/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "2022-02-11_12-08-53__2__73ak-gy.jpeg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/sizes2.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/sizes2.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/komod-scale-ru-16/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "sizes2.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_white04.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_white04.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/komod-scale-ru-16/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_white04.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_graphite04.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_graphite04.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/komod-scale-ru-16/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_graphite04.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_green04.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_green04.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/komod-scale-ru-16/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_green04.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_cacao04.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_cacao04.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/komod-scale-ru-16/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_cacao04.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_olive04.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_olive04.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/komod-scale-ru-16/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_olive04.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_powder04.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_powder04.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/komod-scale-ru-16/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_powder04.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_grey-blue04.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_grey-blue04.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/komod-scale-ru-16/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_grey-blue04.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_grey04.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_grey04.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/komod-scale-ru-16/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_grey04.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_darkblue04.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_darkblue04.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/komod-scale-ru-16/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_darkblue04.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_cream04.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_cream04.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/komod-scale-ru-16/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_cream04.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_terracote04.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_terracote04.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/komod-scale-ru-16/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_terracote04.jpg"
+        }
+      }
+    ],
+    "mapping_status": "verified",
+    "confidence": 0.8,
+    "match_basis": "exact_canonical_name_within_greenwich",
+    "source_type": "legacy_preferred",
+    "source_decision_reason": "legacy_preferred",
+    "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/komod-scale-ru-16/",
+    "legacy_title_matched": "Комод Scale",
+    "review_notes": "High-confidence legacy match (exact_canonical_name_within_greenwich); Legacy image used as main"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-44-1",
+    "product_code_normalized": "GR-44-1",
+    "canonical_name": "Консоль",
+    "collection": "greenwich",
+    "main_image": {
+      "source_type": "legacy_site",
+      "source_ref": "https://woodright.ru/images/detailed/11/greenwich_green07_d5hh-4j.jpg",
+      "is_verified": true,
+      "confidence": 0.8
+    },
+    "gallery_images": [
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_green08_hg0r-cp.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_green08_hg0r-cp.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/konsol-step/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_green08_hg0r-cp.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_green09_w9xd-ku.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_green09_w9xd-ku.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/konsol-step/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_green09_w9xd-ku.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/sizes5.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/sizes5.webp",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/konsol-step/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "sizes5.webp"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/012.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/012.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/konsol-step/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "012.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/014.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/014.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/konsol-step/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "014.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/011.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/011.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/konsol-step/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "011.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/013.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/013.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/konsol-step/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "013.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/010.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/010.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/konsol-step/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "010.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_white07_0ehl-bq.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_white07_0ehl-bq.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/konsol-step/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_white07_0ehl-bq.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_graphite07_cmwj-2w.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_graphite07_cmwj-2w.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/konsol-step/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_graphite07_cmwj-2w.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_cacao07_60f5-48.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_cacao07_60f5-48.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/konsol-step/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_cacao07_60f5-48.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_capuchino07.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_capuchino07.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/konsol-step/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_capuchino07.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_olive07_9p92-33.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_olive07_9p92-33.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/konsol-step/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_olive07_9p92-33.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_powder07_8lbj-u5.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_powder07_8lbj-u5.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/konsol-step/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_powder07_8lbj-u5.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_grey-blue07_pnyh-yd.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_grey-blue07_pnyh-yd.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/konsol-step/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_grey-blue07_pnyh-yd.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_grey07_fnfs-n0.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_grey07_fnfs-n0.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/konsol-step/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_grey07_fnfs-n0.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_darkblue07_tynd-0c.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_darkblue07_tynd-0c.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/konsol-step/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_darkblue07_tynd-0c.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_cream07_9nls-zz.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_cream07_9nls-zz.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/konsol-step/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_cream07_9nls-zz.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_terracote07_suda-hi.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_terracote07_suda-hi.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/konsol-step/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_terracote07_suda-hi.jpg"
+        }
+      }
+    ],
+    "mapping_status": "verified",
+    "confidence": 0.8,
+    "match_basis": "exact_canonical_name_within_greenwich",
+    "source_type": "legacy_preferred",
+    "source_decision_reason": "legacy_preferred",
+    "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/konsol-step/",
+    "legacy_title_matched": "Консоль Step",
+    "review_notes": "High-confidence legacy match (exact_canonical_name_within_greenwich); Legacy image used as main"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-67-1",
+    "product_code_normalized": "GR-67-1",
+    "canonical_name": "Рабочий стол",
+    "collection": "greenwich",
+    "main_image": {
+      "source_type": "legacy_site",
+      "source_ref": "https://woodright.ru/images/detailed/10/greenwich_capuchino16.jpg",
+      "is_verified": true,
+      "confidence": 0.8
+    },
+    "gallery_images": [
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_capuchino17.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_capuchino17.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/rabochiy-stol-base/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_capuchino17.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_capuchino18.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_capuchino18.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/rabochiy-stol-base/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_capuchino18.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino16.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino16.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/rabochiy-stol-base/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_dark_capuchino16.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino17.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino17.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/rabochiy-stol-base/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_dark_capuchino17.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino18.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino18.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/rabochiy-stol-base/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_dark_capuchino18.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/sizes6.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/sizes6.webp",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/rabochiy-stol-base/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "sizes6.webp"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__3_.jpeg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__3_.jpeg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/rabochiy-stol-base/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "2022-02-11_12-08-53__3_.jpeg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__1_.jpeg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__1_.jpeg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/rabochiy-stol-base/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "2022-02-11_12-08-53__1_.jpeg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53.jpeg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53.jpeg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/rabochiy-stol-base/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "2022-02-11_12-08-53.jpeg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_white16.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_white16.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/rabochiy-stol-base/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_white16.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_graphite16.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_graphite16.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/rabochiy-stol-base/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_graphite16.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_green16.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_green16.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/rabochiy-stol-base/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_green16.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_cacao16.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_cacao16.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/rabochiy-stol-base/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_cacao16.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_olive16.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_olive16.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/rabochiy-stol-base/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_olive16.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_powder16.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_powder16.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/rabochiy-stol-base/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_powder16.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_grey-blue16.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_grey-blue16.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/rabochiy-stol-base/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_grey-blue16.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_grey16.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_grey16.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/rabochiy-stol-base/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_grey16.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_darkblue16.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_darkblue16.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/rabochiy-stol-base/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_darkblue16.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_cream16.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_cream16.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/rabochiy-stol-base/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_cream16.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_terracote16.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_terracote16.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/rabochiy-stol-base/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_terracote16.jpg"
+        }
+      }
+    ],
+    "mapping_status": "verified",
+    "confidence": 0.8,
+    "match_basis": "exact_canonical_name_within_greenwich",
+    "source_type": "legacy_preferred",
+    "source_decision_reason": "legacy_preferred",
+    "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/rabochiy-stol-base/",
+    "legacy_title_matched": "Рабочий стол Base",
+    "review_notes": "High-confidence legacy match (exact_canonical_name_within_greenwich); Legacy image used as main"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-42-1",
+    "product_code_normalized": "GR-42-1",
+    "canonical_name": "Тумба ТВ",
+    "collection": "greenwich",
+    "main_image": {
+      "source_type": "pdf_embedded",
+      "source_ref": "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p7_i2_1531x1360.png"
+    },
+    "gallery_images": [],
+    "mapping_status": "pdf_candidate",
+    "confidence": 0.0,
+    "match_basis": "no_match",
+    "source_type": "pdf_preferred_low_legacy_confidence",
+    "source_decision_reason": "pdf_preferred_low_legacy_confidence",
+    "legacy_page_url": null,
+    "legacy_title_matched": null,
+    "review_notes": "PDF image preferred; legacy confidence too low for main"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-08-1",
+    "product_code_normalized": "GR-08-1",
+    "canonical_name": "Прикроватная тумба с 2 ящиками",
+    "collection": "greenwich",
+    "main_image": {
+      "source_type": "pdf_embedded",
+      "source_ref": "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p9_i0_1536x970.png"
+    },
+    "gallery_images": [
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_grey-blue10.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_grey-blue10.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-hole/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_grey-blue10.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_grey-blue11.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_grey-blue11.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-hole/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_grey-blue11.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_grey-blue12.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_grey-blue12.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-hole/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_grey-blue12.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_dark_grey-blue10.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_dark_grey-blue10.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-hole/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_dark_grey-blue10.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_dark_grey-blue11.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_dark_grey-blue11.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-hole/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_dark_grey-blue11.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_dark_grey-blue12.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_dark_grey-blue12.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-hole/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_dark_grey-blue12.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/sizes3.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/sizes3.webp",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-hole/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "sizes3.webp"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/greenwich_wideheader_View01.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/greenwich_wideheader_View01.webp",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-hole/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_wideheader_View01.webp"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/greenwich_wideheader_View02.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/greenwich_wideheader_View02.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-hole/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_wideheader_View02.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_white10.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_white10.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-hole/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_white10.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_graphite10.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_graphite10.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-hole/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_graphite10.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_green10.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_green10.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-hole/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_green10.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_cacao10.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_cacao10.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-hole/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_cacao10.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_capuchino10.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_capuchino10.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-hole/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_capuchino10.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_olive10.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_olive10.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-hole/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_olive10.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_powder10.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_powder10.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-hole/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_powder10.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_grey10.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_grey10.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-hole/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_grey10.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_darkblue10.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_darkblue10.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-hole/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_darkblue10.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_cream10.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_cream10.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-hole/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_cream10.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_terracote10.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_terracote10.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-hole/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_terracote10.jpg"
+        }
+      }
+    ],
+    "mapping_status": "high_confidence",
+    "confidence": 0.75,
+    "match_basis": "manual_greenwich_mapping",
+    "source_type": "pdf_preferred_low_legacy_confidence",
+    "source_decision_reason": "pdf_preferred_low_legacy_confidence",
+    "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-hole/",
+    "legacy_title_matched": "Прикроватная тумба Hole",
+    "review_notes": "Good match (manual_greenwich_mapping) — near verified; PDF image preferred; legacy confidence too low for main"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-08-2",
+    "product_code_normalized": "GR-08-2",
+    "canonical_name": "Прикроватная тумба с 1 ящиком",
+    "collection": "greenwich",
+    "main_image": {
+      "source_type": "pdf_embedded",
+      "source_ref": "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p10_i0_1764x1143.png"
+    },
+    "gallery_images": [
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_capuchino13.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_capuchino13.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-stone/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_capuchino13.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_capuchino14.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_capuchino14.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-stone/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_capuchino14.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_capuchino15.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_capuchino15.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-stone/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_capuchino15.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino13.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino13.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-stone/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_dark_capuchino13.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino14.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino14.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-stone/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_dark_capuchino14.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino15.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino15.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-stone/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_dark_capuchino15.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/sizes4.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/sizes4.webp",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-stone/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "sizes4.webp"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__3_.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__3_.webp",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-stone/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "2022-02-11_12-08-53__3_.webp"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__4_.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__4_.webp",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-stone/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "2022-02-11_12-08-53__4_.webp"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53.webp",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-stone/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "2022-02-11_12-08-53.webp"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_white13.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_white13.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-stone/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_white13.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_graphite13.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_graphite13.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-stone/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_graphite13.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_green13.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_green13.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-stone/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_green13.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_cacao13.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_cacao13.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-stone/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_cacao13.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_olive13.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_olive13.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-stone/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_olive13.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_powder13.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_powder13.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-stone/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_powder13.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_grey-blue13.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_grey-blue13.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-stone/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_grey-blue13.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_grey13.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_grey13.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-stone/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_grey13.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_darkblue13.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_darkblue13.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-stone/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_darkblue13.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_cream13.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_cream13.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-stone/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_cream13.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_terracote13.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_terracote13.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-stone/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_terracote13.jpg"
+        }
+      }
+    ],
+    "mapping_status": "high_confidence",
+    "confidence": 0.75,
+    "match_basis": "manual_greenwich_mapping",
+    "source_type": "pdf_preferred_low_legacy_confidence",
+    "source_decision_reason": "pdf_preferred_low_legacy_confidence",
+    "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-stone/",
+    "legacy_title_matched": "Прикроватная тумба Stone",
+    "review_notes": "Good match (manual_greenwich_mapping) — near verified; PDF image preferred; legacy confidence too low for main"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-26-1",
+    "product_code_normalized": "GR-26-1",
+    "canonical_name": "Шкаф-витрина Кристалл",
+    "collection": "greenwich",
+    "main_image": {
+      "source_type": "legacy_site",
+      "source_ref": "https://woodright.ru/images/detailed/10/greenwich_capuchino19.jpg",
+      "is_verified": true,
+      "confidence": 0.85
+    },
+    "gallery_images": [
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_capuchino20.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_capuchino20.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/shkaf-vitrina-cristal/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_capuchino20.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_capuchino21.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_capuchino21.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/shkaf-vitrina-cristal/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_capuchino21.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino19.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino19.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/shkaf-vitrina-cristal/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_dark_capuchino19.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino20.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino20.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/shkaf-vitrina-cristal/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_dark_capuchino20.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino21.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino21.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/shkaf-vitrina-cristal/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_dark_capuchino21.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/sizes7.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/sizes7.webp",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/shkaf-vitrina-cristal/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "sizes7.webp"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/Cristal_габариты.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/Cristal_габариты.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/shkaf-vitrina-cristal/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "Cristal_габариты.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__1__6zk2-uo.jpeg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__1__6zk2-uo.jpeg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/shkaf-vitrina-cristal/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "2022-02-11_12-08-53__1__6zk2-uo.jpeg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/022.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/022.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/shkaf-vitrina-cristal/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "022.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/025.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/025.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/shkaf-vitrina-cristal/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "025.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/021.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/021.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/shkaf-vitrina-cristal/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "021.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/023.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/023.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/shkaf-vitrina-cristal/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "023.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/024.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/024.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/shkaf-vitrina-cristal/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "024.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_white19_wm0l-xh.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_white19_wm0l-xh.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/shkaf-vitrina-cristal/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_white19_wm0l-xh.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_graphite19_effa-c7.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_graphite19_effa-c7.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/shkaf-vitrina-cristal/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_graphite19_effa-c7.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_green19_n3cg-c5.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_green19_n3cg-c5.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/shkaf-vitrina-cristal/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_green19_n3cg-c5.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_cacao19_wobb-2d.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_cacao19_wobb-2d.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/shkaf-vitrina-cristal/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_cacao19_wobb-2d.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_olive19_aojz-ns.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_olive19_aojz-ns.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/shkaf-vitrina-cristal/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_olive19_aojz-ns.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_powder19_iobx-hr.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_powder19_iobx-hr.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/shkaf-vitrina-cristal/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_powder19_iobx-hr.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_grey-blue19_eytj-kh.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_grey-blue19_eytj-kh.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/shkaf-vitrina-cristal/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_grey-blue19_eytj-kh.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_grey19_0tjg-36.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_grey19_0tjg-36.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/shkaf-vitrina-cristal/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_grey19_0tjg-36.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_darkblue19_a1fi-rc.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_darkblue19_a1fi-rc.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/shkaf-vitrina-cristal/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_darkblue19_a1fi-rc.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_cream19_nyw2-xb.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_cream19_nyw2-xb.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/shkaf-vitrina-cristal/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_cream19_nyw2-xb.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_terracote19.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_terracote19.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/shkaf-vitrina-cristal/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_terracote19.jpg"
+        }
+      }
+    ],
+    "mapping_status": "verified",
+    "confidence": 0.85,
+    "match_basis": "abbreviation_match",
+    "source_type": "legacy_preferred",
+    "source_decision_reason": "legacy_preferred",
+    "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/shkaf-vitrina-cristal/",
+    "legacy_title_matched": "Шкаф-витрина Cristal",
+    "review_notes": "High-confidence legacy match (abbreviation_match); Legacy image used as main"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-02-1",
+    "product_code_normalized": "GR-02-1",
+    "canonical_name": "Гардероб 2 -х дв.  с ящиками",
+    "collection": "greenwich",
+    "main_image": {
+      "source_type": "pdf_embedded",
+      "source_ref": "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p5_i1_1498x967.png"
+    },
+    "gallery_images": [
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_capuchino22.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_capuchino22.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-level/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_capuchino22.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_capuchino23.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_capuchino23.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-level/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_capuchino23.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_capuchino24.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_capuchino24.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-level/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_capuchino24.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino22.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino22.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-level/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_dark_capuchino22.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino23.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino23.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-level/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_dark_capuchino23.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino24.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino24.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-level/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_dark_capuchino24.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/06.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/06.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-level/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "06.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/08.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/08.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-level/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "08.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/09.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/09.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-level/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "09.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/sizes8.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/sizes8.webp",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-level/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "sizes8.webp"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/Габариты.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/Габариты.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-level/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "Габариты.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_white22.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_white22.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-level/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_white22.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_graphite22.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_graphite22.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-level/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_graphite22.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_green22.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_green22.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-level/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_green22.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_cacao22.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_cacao22.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-level/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_cacao22.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_olive22.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_olive22.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-level/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_olive22.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_powder22.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_powder22.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-level/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_powder22.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_grey-blue22.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_grey-blue22.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-level/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_grey-blue22.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_grey22.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_grey22.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-level/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_grey22.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_darkblue22.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_darkblue22.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-level/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_darkblue22.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_cream22.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_cream22.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-level/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_cream22.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_terracote22.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_terracote22.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-level/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_terracote22.jpg"
+        }
+      }
+    ],
+    "mapping_status": "high_confidence",
+    "confidence": 0.75,
+    "match_basis": "manual_greenwich_mapping",
+    "source_type": "pdf_preferred_low_legacy_confidence",
+    "source_decision_reason": "pdf_preferred_low_legacy_confidence",
+    "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/garderob-level/",
+    "legacy_title_matched": "Гардероб Level",
+    "review_notes": "Good match (manual_greenwich_mapping) — near verified; PDF image preferred; legacy confidence too low for main"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-02-2",
+    "product_code_normalized": "GR-02-2",
+    "canonical_name": "Гардероб 2-дв.",
+    "collection": "greenwich",
+    "main_image": {
+      "source_type": "legacy_site",
+      "source_ref": "https://woodright.ru/images/detailed/11/greenwich_white25_sldj-a6.jpg",
+      "is_verified": false,
+      "confidence": 0.75
+    },
+    "gallery_images": [
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_white26_2fk4-zy.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_white26_2fk4-zy.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-total/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_white26_2fk4-zy.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_white27_mo08-mr.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_white27_mo08-mr.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-total/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_white27_mo08-mr.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_dark_white_25_yjuv-3o.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_dark_white_25_yjuv-3o.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-total/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_dark_white_25_yjuv-3o.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_dark_white_26_z5gd-m1.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_dark_white_26_z5gd-m1.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-total/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_dark_white_26_z5gd-m1.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_dark_white_27_7xl8-ho.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_dark_white_27_7xl8-ho.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-total/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_dark_white_27_7xl8-ho.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/sizes9.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/sizes9.webp",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-total/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "sizes9.webp"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/наполнение_Total_snkm-ig.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/наполнение_Total_snkm-ig.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-total/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "наполнение_Total_snkm-ig.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/Габариты_Total_fdj5-3e.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/Габариты_Total_fdj5-3e.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-total/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "Габариты_Total_fdj5-3e.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_graphite25_93k2-vb.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_graphite25_93k2-vb.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-total/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_graphite25_93k2-vb.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_green25_h9su-oj.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_green25_h9su-oj.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-total/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_green25_h9su-oj.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_cacao25_y8tr-dt.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_cacao25_y8tr-dt.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-total/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_cacao25_y8tr-dt.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_capuchino25.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_capuchino25.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-total/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_capuchino25.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_olive25_2rw3-nv.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_olive25_2rw3-nv.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-total/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_olive25_2rw3-nv.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_powder25_kna2-z6.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_powder25_kna2-z6.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-total/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_powder25_kna2-z6.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_grey-blue25.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_grey-blue25.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-total/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_grey-blue25.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_grey25_ljbz-js.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_grey25_ljbz-js.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-total/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_grey25_ljbz-js.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_darkblue25_lk7c-rp.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_darkblue25_lk7c-rp.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-total/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_darkblue25_lk7c-rp.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_cream25_1atz-w9.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_cream25_1atz-w9.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-total/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_cream25_1atz-w9.jpg"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/11/greenwich_terracote25_7v2n-do.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/11/greenwich_terracote25_7v2n-do.jpg",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/garderob-total/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_terracote25_7v2n-do.jpg"
+        }
+      }
+    ],
+    "mapping_status": "high_confidence",
+    "confidence": 0.75,
+    "match_basis": "manual_greenwich_mapping",
+    "source_type": "legacy_preferred",
+    "source_decision_reason": "legacy_preferred",
+    "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/garderob-total/",
+    "legacy_title_matched": "Гардероб Total",
+    "review_notes": "Good match (manual_greenwich_mapping) — near verified; Legacy image used as main"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-09-1",
+    "product_code_normalized": "GR-09-1",
+    "canonical_name": "Кровать  1-сп. (90*200)",
+    "collection": "greenwich",
+    "main_image": {
+      "source_type": "legacy_site",
+      "source_ref": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg",
+      "is_verified": false,
+      "confidence": 0.75,
+      "design_family": "frame",
+      "note": "Frame selected as representative main; all 3 designs available in gallery"
+    },
+    "gallery_images": [
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_frame_natural_beige.jpg",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_frame_dark_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_frame_dark_beige.jpg",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_frame_dark_beige.jpg",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_fame_natural_darkblue.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_fame_natural_darkblue.jpg",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_fame_natural_darkblue.jpg",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_fame_dark_darkblue.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_fame_dark_darkblue.jpg",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_fame_dark_darkblue.jpg",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/noliver_var2_View03.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/noliver_var2_View03.jpg",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "noliver_var2_View03.jpg",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/noliver_var2_View02.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/noliver_var2_View02.jpg",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "noliver_var2_View02.jpg",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/noliver_var2_View01.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/noliver_var2_View01.jpg",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "noliver_var2_View01.jpg",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/sizes10.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/sizes10.webp",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "sizes10.webp",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_cloud_natural_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_cloud_natural_beige.jpg",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_cloud_natural_beige.jpg",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_cloud_dark_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_cloud_dark_beige.jpg",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_cloud_dark_beige.jpg",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_cloud_dark_darkblue.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_cloud_dark_darkblue.jpg",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_cloud_dark_darkblue.jpg",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/bedroom2_int_View01.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/bedroom2_int_View01.jpg",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "bedroom2_int_View01.jpg",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__3__0gh9-64.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__3__0gh9-64.webp",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "2022-02-11_12-08-53__3__0gh9-64.webp",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__4__lqea-yq.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__4__lqea-yq.webp",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "2022-02-11_12-08-53__4__lqea-yq.webp",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/bedroom2_int_View04.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/bedroom2_int_View04.jpg",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "bedroom2_int_View04.jpg",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/sizes12.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/sizes12.jpg",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "sizes12.jpg",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_plane_natural_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_plane_natural_beige.jpg",
+        "design_family": "plane",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_plane_natural_beige.jpg",
+          "design_family_title": "Кровать Plane"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_plane_dark_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_plane_dark_beige.jpg",
+        "design_family": "plane",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_plane_dark_beige.jpg",
+          "design_family_title": "Кровать Plane"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_plane_natural_darkblue.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_plane_natural_darkblue.jpg",
+        "design_family": "plane",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_plane_natural_darkblue.jpg",
+          "design_family_title": "Кровать Plane"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_plane_dark_darkblue.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_plane_dark_darkblue.jpg",
+        "design_family": "plane",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_plane_dark_darkblue.jpg",
+          "design_family_title": "Кровать Plane"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/greenwich_wideheader_View02_7nwd-jk.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/greenwich_wideheader_View02_7nwd-jk.jpg",
+        "design_family": "plane",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_wideheader_View02_7nwd-jk.jpg",
+          "design_family_title": "Кровать Plane"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/greenwich_wideheader_View01_0f24-bk.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/greenwich_wideheader_View01_0f24-bk.jpg",
+        "design_family": "plane",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_wideheader_View01_0f24-bk.jpg",
+          "design_family_title": "Кровать Plane"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/sizes11.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/sizes11.webp",
+        "design_family": "plane",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "sizes11.webp",
+          "design_family_title": "Кровать Plane"
+        }
+      }
+    ],
+    "mapping_status": "resolved_shared_visual_pool",
+    "confidence": 0.75,
+    "match_basis": "confirmed_design_family_pool",
+    "source_type": "legacy_shared_pool",
+    "source_decision_reason": "business_confirmed_design_agnostic",
+    "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+    "legacy_title_matched": "Кровать Frame (representative)",
+    "review_notes": "Business confirmed: Frame/Cloud/Plane are headboard design variants. All 3 design families pooled as shared imagery for all bed sizes. Product identity remains workbook-driven (size-based)."
+  },
+  {
+    "workbook_row_key": "greenwich:GR-12-1",
+    "product_code_normalized": "GR-12-1",
+    "canonical_name": "Кровать  1,5-сп. (120*200)",
+    "collection": "greenwich",
+    "main_image": {
+      "source_type": "legacy_site",
+      "source_ref": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg",
+      "is_verified": false,
+      "confidence": 0.75,
+      "design_family": "frame",
+      "note": "Frame selected as representative main; all 3 designs available in gallery"
+    },
+    "gallery_images": [
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_frame_natural_beige.jpg",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_frame_dark_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_frame_dark_beige.jpg",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_frame_dark_beige.jpg",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_fame_natural_darkblue.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_fame_natural_darkblue.jpg",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_fame_natural_darkblue.jpg",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_fame_dark_darkblue.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_fame_dark_darkblue.jpg",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_fame_dark_darkblue.jpg",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/noliver_var2_View03.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/noliver_var2_View03.jpg",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "noliver_var2_View03.jpg",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/noliver_var2_View02.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/noliver_var2_View02.jpg",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "noliver_var2_View02.jpg",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/noliver_var2_View01.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/noliver_var2_View01.jpg",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "noliver_var2_View01.jpg",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/sizes10.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/sizes10.webp",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "sizes10.webp",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_cloud_natural_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_cloud_natural_beige.jpg",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_cloud_natural_beige.jpg",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_cloud_dark_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_cloud_dark_beige.jpg",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_cloud_dark_beige.jpg",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_cloud_dark_darkblue.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_cloud_dark_darkblue.jpg",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_cloud_dark_darkblue.jpg",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/bedroom2_int_View01.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/bedroom2_int_View01.jpg",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "bedroom2_int_View01.jpg",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__3__0gh9-64.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__3__0gh9-64.webp",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "2022-02-11_12-08-53__3__0gh9-64.webp",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__4__lqea-yq.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__4__lqea-yq.webp",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "2022-02-11_12-08-53__4__lqea-yq.webp",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/bedroom2_int_View04.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/bedroom2_int_View04.jpg",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "bedroom2_int_View04.jpg",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/sizes12.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/sizes12.jpg",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "sizes12.jpg",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_plane_natural_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_plane_natural_beige.jpg",
+        "design_family": "plane",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_plane_natural_beige.jpg",
+          "design_family_title": "Кровать Plane"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_plane_dark_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_plane_dark_beige.jpg",
+        "design_family": "plane",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_plane_dark_beige.jpg",
+          "design_family_title": "Кровать Plane"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_plane_natural_darkblue.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_plane_natural_darkblue.jpg",
+        "design_family": "plane",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_plane_natural_darkblue.jpg",
+          "design_family_title": "Кровать Plane"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_plane_dark_darkblue.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_plane_dark_darkblue.jpg",
+        "design_family": "plane",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_plane_dark_darkblue.jpg",
+          "design_family_title": "Кровать Plane"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/greenwich_wideheader_View02_7nwd-jk.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/greenwich_wideheader_View02_7nwd-jk.jpg",
+        "design_family": "plane",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_wideheader_View02_7nwd-jk.jpg",
+          "design_family_title": "Кровать Plane"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/greenwich_wideheader_View01_0f24-bk.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/greenwich_wideheader_View01_0f24-bk.jpg",
+        "design_family": "plane",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_wideheader_View01_0f24-bk.jpg",
+          "design_family_title": "Кровать Plane"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/sizes11.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/sizes11.webp",
+        "design_family": "plane",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "sizes11.webp",
+          "design_family_title": "Кровать Plane"
+        }
+      }
+    ],
+    "mapping_status": "resolved_shared_visual_pool",
+    "confidence": 0.75,
+    "match_basis": "confirmed_design_family_pool",
+    "source_type": "legacy_shared_pool",
+    "source_decision_reason": "business_confirmed_design_agnostic",
+    "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+    "legacy_title_matched": "Кровать Frame (representative)",
+    "review_notes": "Business confirmed: Frame/Cloud/Plane are headboard design variants. All 3 design families pooled as shared imagery for all bed sizes. Product identity remains workbook-driven (size-based)."
+  },
+  {
+    "workbook_row_key": "greenwich:GR-14-1",
+    "product_code_normalized": "GR-14-1",
+    "canonical_name": "Кровать  1,5-сп. (140*200)",
+    "collection": "greenwich",
+    "main_image": {
+      "source_type": "legacy_site",
+      "source_ref": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg",
+      "is_verified": false,
+      "confidence": 0.75,
+      "design_family": "frame",
+      "note": "Frame selected as representative main; all 3 designs available in gallery"
+    },
+    "gallery_images": [
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_frame_natural_beige.jpg",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_frame_dark_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_frame_dark_beige.jpg",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_frame_dark_beige.jpg",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_fame_natural_darkblue.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_fame_natural_darkblue.jpg",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_fame_natural_darkblue.jpg",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_fame_dark_darkblue.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_fame_dark_darkblue.jpg",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_fame_dark_darkblue.jpg",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/noliver_var2_View03.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/noliver_var2_View03.jpg",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "noliver_var2_View03.jpg",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/noliver_var2_View02.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/noliver_var2_View02.jpg",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "noliver_var2_View02.jpg",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/noliver_var2_View01.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/noliver_var2_View01.jpg",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "noliver_var2_View01.jpg",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/sizes10.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/sizes10.webp",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "sizes10.webp",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_cloud_natural_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_cloud_natural_beige.jpg",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_cloud_natural_beige.jpg",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_cloud_dark_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_cloud_dark_beige.jpg",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_cloud_dark_beige.jpg",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_cloud_dark_darkblue.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_cloud_dark_darkblue.jpg",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_cloud_dark_darkblue.jpg",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/bedroom2_int_View01.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/bedroom2_int_View01.jpg",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "bedroom2_int_View01.jpg",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__3__0gh9-64.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__3__0gh9-64.webp",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "2022-02-11_12-08-53__3__0gh9-64.webp",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__4__lqea-yq.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__4__lqea-yq.webp",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "2022-02-11_12-08-53__4__lqea-yq.webp",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/bedroom2_int_View04.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/bedroom2_int_View04.jpg",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "bedroom2_int_View04.jpg",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/sizes12.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/sizes12.jpg",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "sizes12.jpg",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_plane_natural_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_plane_natural_beige.jpg",
+        "design_family": "plane",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_plane_natural_beige.jpg",
+          "design_family_title": "Кровать Plane"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_plane_dark_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_plane_dark_beige.jpg",
+        "design_family": "plane",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_plane_dark_beige.jpg",
+          "design_family_title": "Кровать Plane"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_plane_natural_darkblue.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_plane_natural_darkblue.jpg",
+        "design_family": "plane",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_plane_natural_darkblue.jpg",
+          "design_family_title": "Кровать Plane"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_plane_dark_darkblue.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_plane_dark_darkblue.jpg",
+        "design_family": "plane",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_plane_dark_darkblue.jpg",
+          "design_family_title": "Кровать Plane"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/greenwich_wideheader_View02_7nwd-jk.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/greenwich_wideheader_View02_7nwd-jk.jpg",
+        "design_family": "plane",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_wideheader_View02_7nwd-jk.jpg",
+          "design_family_title": "Кровать Plane"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/greenwich_wideheader_View01_0f24-bk.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/greenwich_wideheader_View01_0f24-bk.jpg",
+        "design_family": "plane",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_wideheader_View01_0f24-bk.jpg",
+          "design_family_title": "Кровать Plane"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/sizes11.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/sizes11.webp",
+        "design_family": "plane",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "sizes11.webp",
+          "design_family_title": "Кровать Plane"
+        }
+      }
+    ],
+    "mapping_status": "resolved_shared_visual_pool",
+    "confidence": 0.75,
+    "match_basis": "confirmed_design_family_pool",
+    "source_type": "legacy_shared_pool",
+    "source_decision_reason": "business_confirmed_design_agnostic",
+    "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+    "legacy_title_matched": "Кровать Frame (representative)",
+    "review_notes": "Business confirmed: Frame/Cloud/Plane are headboard design variants. All 3 design families pooled as shared imagery for all bed sizes. Product identity remains workbook-driven (size-based)."
+  },
+  {
+    "workbook_row_key": "greenwich:GR-16-1",
+    "product_code_normalized": "GR-16-1",
+    "canonical_name": "Кровать  2-сп. (160*200)",
+    "collection": "greenwich",
+    "main_image": {
+      "source_type": "legacy_site",
+      "source_ref": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg",
+      "is_verified": false,
+      "confidence": 0.75,
+      "design_family": "frame",
+      "note": "Frame selected as representative main; all 3 designs available in gallery"
+    },
+    "gallery_images": [
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_frame_natural_beige.jpg",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_frame_dark_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_frame_dark_beige.jpg",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_frame_dark_beige.jpg",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_fame_natural_darkblue.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_fame_natural_darkblue.jpg",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_fame_natural_darkblue.jpg",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_fame_dark_darkblue.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_fame_dark_darkblue.jpg",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_fame_dark_darkblue.jpg",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/noliver_var2_View03.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/noliver_var2_View03.jpg",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "noliver_var2_View03.jpg",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/noliver_var2_View02.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/noliver_var2_View02.jpg",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "noliver_var2_View02.jpg",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/noliver_var2_View01.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/noliver_var2_View01.jpg",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "noliver_var2_View01.jpg",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/sizes10.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/sizes10.webp",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "sizes10.webp",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_cloud_natural_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_cloud_natural_beige.jpg",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_cloud_natural_beige.jpg",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_cloud_dark_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_cloud_dark_beige.jpg",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_cloud_dark_beige.jpg",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_cloud_dark_darkblue.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_cloud_dark_darkblue.jpg",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_cloud_dark_darkblue.jpg",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/bedroom2_int_View01.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/bedroom2_int_View01.jpg",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "bedroom2_int_View01.jpg",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__3__0gh9-64.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__3__0gh9-64.webp",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "2022-02-11_12-08-53__3__0gh9-64.webp",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__4__lqea-yq.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__4__lqea-yq.webp",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "2022-02-11_12-08-53__4__lqea-yq.webp",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/bedroom2_int_View04.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/bedroom2_int_View04.jpg",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "bedroom2_int_View04.jpg",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/sizes12.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/sizes12.jpg",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "sizes12.jpg",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_plane_natural_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_plane_natural_beige.jpg",
+        "design_family": "plane",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_plane_natural_beige.jpg",
+          "design_family_title": "Кровать Plane"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_plane_dark_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_plane_dark_beige.jpg",
+        "design_family": "plane",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_plane_dark_beige.jpg",
+          "design_family_title": "Кровать Plane"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_plane_natural_darkblue.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_plane_natural_darkblue.jpg",
+        "design_family": "plane",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_plane_natural_darkblue.jpg",
+          "design_family_title": "Кровать Plane"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_plane_dark_darkblue.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_plane_dark_darkblue.jpg",
+        "design_family": "plane",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_plane_dark_darkblue.jpg",
+          "design_family_title": "Кровать Plane"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/greenwich_wideheader_View02_7nwd-jk.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/greenwich_wideheader_View02_7nwd-jk.jpg",
+        "design_family": "plane",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_wideheader_View02_7nwd-jk.jpg",
+          "design_family_title": "Кровать Plane"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/greenwich_wideheader_View01_0f24-bk.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/greenwich_wideheader_View01_0f24-bk.jpg",
+        "design_family": "plane",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_wideheader_View01_0f24-bk.jpg",
+          "design_family_title": "Кровать Plane"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/sizes11.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/sizes11.webp",
+        "design_family": "plane",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "sizes11.webp",
+          "design_family_title": "Кровать Plane"
+        }
+      }
+    ],
+    "mapping_status": "resolved_shared_visual_pool",
+    "confidence": 0.75,
+    "match_basis": "confirmed_design_family_pool",
+    "source_type": "legacy_shared_pool",
+    "source_decision_reason": "business_confirmed_design_agnostic",
+    "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+    "legacy_title_matched": "Кровать Frame (representative)",
+    "review_notes": "Business confirmed: Frame/Cloud/Plane are headboard design variants. All 3 design families pooled as shared imagery for all bed sizes. Product identity remains workbook-driven (size-based)."
+  },
+  {
+    "workbook_row_key": "greenwich:GR-18-1",
+    "product_code_normalized": "GR-18-1",
+    "canonical_name": "Кровать  2-сп. (180*200)",
+    "collection": "greenwich",
+    "main_image": {
+      "source_type": "legacy_site",
+      "source_ref": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg",
+      "is_verified": false,
+      "confidence": 0.75,
+      "design_family": "frame",
+      "note": "Frame selected as representative main; all 3 designs available in gallery"
+    },
+    "gallery_images": [
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_frame_natural_beige.jpg",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_frame_dark_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_frame_dark_beige.jpg",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_frame_dark_beige.jpg",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_fame_natural_darkblue.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_fame_natural_darkblue.jpg",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_fame_natural_darkblue.jpg",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_fame_dark_darkblue.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_fame_dark_darkblue.jpg",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_fame_dark_darkblue.jpg",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/noliver_var2_View03.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/noliver_var2_View03.jpg",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "noliver_var2_View03.jpg",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/noliver_var2_View02.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/noliver_var2_View02.jpg",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "noliver_var2_View02.jpg",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/noliver_var2_View01.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/noliver_var2_View01.jpg",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "noliver_var2_View01.jpg",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/sizes10.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/sizes10.webp",
+        "design_family": "frame",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "sizes10.webp",
+          "design_family_title": "Кровать Frame"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_cloud_natural_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_cloud_natural_beige.jpg",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_cloud_natural_beige.jpg",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_cloud_dark_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_cloud_dark_beige.jpg",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_cloud_dark_beige.jpg",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_cloud_dark_darkblue.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_cloud_dark_darkblue.jpg",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_cloud_dark_darkblue.jpg",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/bedroom2_int_View01.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/bedroom2_int_View01.jpg",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "bedroom2_int_View01.jpg",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__3__0gh9-64.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__3__0gh9-64.webp",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "2022-02-11_12-08-53__3__0gh9-64.webp",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__4__lqea-yq.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__4__lqea-yq.webp",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "2022-02-11_12-08-53__4__lqea-yq.webp",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/bedroom2_int_View04.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/bedroom2_int_View04.jpg",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "bedroom2_int_View04.jpg",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/sizes12.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/sizes12.jpg",
+        "design_family": "cloud",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "sizes12.jpg",
+          "design_family_title": "Кровать Cloud"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_plane_natural_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_plane_natural_beige.jpg",
+        "design_family": "plane",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_plane_natural_beige.jpg",
+          "design_family_title": "Кровать Plane"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_plane_dark_beige.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_plane_dark_beige.jpg",
+        "design_family": "plane",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_plane_dark_beige.jpg",
+          "design_family_title": "Кровать Plane"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_plane_natural_darkblue.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_plane_natural_darkblue.jpg",
+        "design_family": "plane",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_plane_natural_darkblue.jpg",
+          "design_family_title": "Кровать Plane"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/10/greenwich_plane_dark_darkblue.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_plane_dark_darkblue.jpg",
+        "design_family": "plane",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_plane_dark_darkblue.jpg",
+          "design_family_title": "Кровать Plane"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/greenwich_wideheader_View02_7nwd-jk.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/greenwich_wideheader_View02_7nwd-jk.jpg",
+        "design_family": "plane",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_wideheader_View02_7nwd-jk.jpg",
+          "design_family_title": "Кровать Plane"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/greenwich_wideheader_View01_0f24-bk.jpg",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/greenwich_wideheader_View01_0f24-bk.jpg",
+        "design_family": "plane",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "greenwich_wideheader_View01_0f24-bk.jpg",
+          "design_family_title": "Кровать Plane"
+        }
+      },
+      {
+        "url": "https://woodright.ru/images/detailed/9/sizes11.webp",
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/9/sizes11.webp",
+        "design_family": "plane",
+        "asset_role": "shared_visual_pool",
+        "provenance": {
+          "scraped_from": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+          "scrape_date": "2026-03-19",
+          "original_filename": "sizes11.webp",
+          "design_family_title": "Кровать Plane"
+        }
+      }
+    ],
+    "mapping_status": "resolved_shared_visual_pool",
+    "confidence": 0.75,
+    "match_basis": "confirmed_design_family_pool",
+    "source_type": "legacy_shared_pool",
+    "source_decision_reason": "business_confirmed_design_agnostic",
+    "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+    "legacy_title_matched": "Кровать Frame (representative)",
+    "review_notes": "Business confirmed: Frame/Cloud/Plane are headboard design variants. All 3 design families pooled as shared imagery for all bed sizes. Product identity remains workbook-driven (size-based)."
+  }
+]

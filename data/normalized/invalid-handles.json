@@ -1,0 +1,16 @@
+{
+  "audited_at_utc": "2026-04-10T00:15:16Z",
+  "source_file": "data/normalized/seed-products.fixed.json",
+  "validation_regex": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+  "invalid_count": 1,
+  "entries": [
+    {
+      "workbook_row_key": "oliver:OL-05-Н",
+      "canonical_name": "Комод высокий (ниже на 1 ярус ящиков)",
+      "original_handle": "ol-05-н",
+      "why_invalid": "contains_non_ascii_or_non_slug_character (Medusa requires URL-safe handle: [a-z0-9-] segments)",
+      "proposed_normalized_handle": "ol-05-n",
+      "normalization_rule_notes": "lowercase+homoglyph_map+collapse_non_alnum_to_hyphen"
+    }
+  ]
+}

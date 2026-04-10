@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Woodright Asset Upload Manifest",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "workbook_row_key",
+      "product_code_normalized",
+      "processed_path",
+      "target_storage_key",
+      "asset_role",
+      "upload_status"
+    ],
+    "properties": {
+      "workbook_row_key": { "type": "string" },
+      "product_code_normalized": { "type": "string" },
+      "canonical_name": { "type": "string" },
+      "collection_name_normalized": { "type": "string" },
+      "processed_path": { "type": "string" },
+      "target_storage_key": { "type": "string" },
+      "asset_role": {
+        "type": "string",
+        "enum": ["main", "gallery", "color_variant"]
+      },
+      "source_type": {
+        "type": "string",
+        "enum": ["disk_white_bg", "legacy_fallback", "gallery_as_main", "pdf_temporary"]
+      },
+      "asset_quality_status": {
+        "type": "string",
+        "enum": ["ok", "low_res_temporary", "needs_reshoot", "legacy_fallback", "gallery_only"]
+      },
+      "width": { "type": ["integer", "null"] },
+      "height": { "type": ["integer", "null"] },
+      "file_size": { "type": ["integer", "null"] },
+      "upload_status": {
+        "type": "string",
+        "enum": ["planned", "uploaded", "failed", "skipped"]
+      },
+      "public_url": { "type": ["string", "null"] },
+      "notes": { "type": "string" }
+    }
+  }
+}

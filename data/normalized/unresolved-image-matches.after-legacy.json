@@ -1,0 +1,1830 @@
+{
+  "missing_product_code": [
+    {
+      "product_code": null,
+      "collection": "monchelsea",
+      "name": "Кровать 2-сп. (160*200) с выс.сп. С жест. Филенкой",
+      "workbook_key": "monchelsea:row_31"
+    },
+    {
+      "product_code": null,
+      "collection": "monchelsea",
+      "name": "Кровать 2-сп. (160*200) с выс.сп. С мяг. Филенкой",
+      "workbook_key": "monchelsea:row_32"
+    },
+    {
+      "product_code": null,
+      "collection": "monchelsea",
+      "name": "Этажерка большая 6-полок",
+      "workbook_key": "monchelsea:row_76"
+    },
+    {
+      "product_code": null,
+      "collection": "monchelsea",
+      "name": "Этажерка малая 3-полоки",
+      "workbook_key": "monchelsea:row_77"
+    }
+  ],
+  "ambiguous_name_match": [
+    {
+      "product_code": "OL-57-2",
+      "collection": "oliver",
+      "name": "Диван большой",
+      "workbook_key": "oliver:OL-57-2",
+      "match_basis": "name_in_collection",
+      "confidence": 0.7,
+      "legacy_title": "Диван большой  80*190 OLIVER"
+    },
+    {
+      "product_code": "OL-05-Н",
+      "collection": "oliver",
+      "name": "Комод высокий (ниже на 1 ярус ящиков)",
+      "workbook_key": "oliver:OL-05-Н",
+      "match_basis": "name_in_collection",
+      "confidence": 0.7,
+      "legacy_title": "Комод высокий OLIVER"
+    },
+    {
+      "product_code": "OL-15-3",
+      "collection": "oliver",
+      "name": "Кровать 1,5-сп. (120*190) с подъемн.мех-змом",
+      "workbook_key": "oliver:OL-15-3",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.3,
+      "legacy_title": "Кровать  90*190 с изножьем OLIVER"
+    },
+    {
+      "product_code": "OL-16-3",
+      "collection": "oliver",
+      "name": "Кровать 1,5-сп. (140*190) с подъемн.мех",
+      "workbook_key": "oliver:OL-16-3",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.3,
+      "legacy_title": "Кровать  90*190 с изножьем OLIVER"
+    },
+    {
+      "product_code": "OL-17-3",
+      "collection": "oliver",
+      "name": "Кровать 2-сп. (160*200) с подъемн.мех-змом",
+      "workbook_key": "oliver:OL-17-3",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.3,
+      "legacy_title": "Кровать  90*190 с изножьем OLIVER"
+    },
+    {
+      "product_code": "OL-65-1",
+      "collection": "oliver",
+      "name": "Стол письменный 1-тумб. 0П",
+      "workbook_key": "oliver:OL-65-1",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.3,
+      "legacy_title": "Стол письменный с тумбой OLIVER"
+    },
+    {
+      "product_code": "OL-66-1",
+      "collection": "oliver",
+      "name": "Стол письменный 2-тумб. ПП",
+      "workbook_key": "oliver:OL-66-1",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.3,
+      "legacy_title": "Стол письменный с тумбой OLIVER"
+    },
+    {
+      "product_code": "OL-08-2",
+      "collection": "oliver",
+      "name": "Тумбочка прикроватная  с дверкой (руч.лев/пр)",
+      "workbook_key": "oliver:OL-08-2",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.3,
+      "legacy_title": "Тумбочка прикроватная OLIVER"
+    },
+    {
+      "product_code": "OL-26-1",
+      "collection": "oliver",
+      "name": "Шкаф буфетный со стеклом/филенгками.",
+      "workbook_key": "oliver:OL-26-1",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.3,
+      "legacy_title": "Шкаф книжный со стеклом OLIVER"
+    },
+    {
+      "product_code": "OL-00-1",
+      "collection": "oliver",
+      "name": "Шкаф угловой  (руч.лев/пр)",
+      "workbook_key": "oliver:OL-00-1",
+      "match_basis": "name_in_collection",
+      "confidence": 0.7,
+      "legacy_title": "Шкаф угловой OLIVER"
+    },
+    {
+      "product_code": "GR-05-1",
+      "collection": "greenwich",
+      "name": "Комод",
+      "workbook_key": "greenwich:GR-05-1",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.3,
+      "legacy_title": "Комод Scale"
+    },
+    {
+      "product_code": "GR-44-1",
+      "collection": "greenwich",
+      "name": "Консоль",
+      "workbook_key": "greenwich:GR-44-1",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.3,
+      "legacy_title": "Консоль Step"
+    },
+    {
+      "product_code": "GR-67-1",
+      "collection": "greenwich",
+      "name": "Рабочий стол",
+      "workbook_key": "greenwich:GR-67-1",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.4,
+      "legacy_title": "Рабочий стол Base"
+    },
+    {
+      "product_code": "GR-26-1",
+      "collection": "greenwich",
+      "name": "Шкаф-витрина Кристалл",
+      "workbook_key": "greenwich:GR-26-1",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.3,
+      "legacy_title": "Шкаф-витрина Cristal"
+    },
+    {
+      "product_code": "GR-02-2",
+      "collection": "greenwich",
+      "name": "Гардероб 2-дв.",
+      "workbook_key": "greenwich:GR-02-2",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.3,
+      "legacy_title": "Гардероб Level"
+    },
+    {
+      "product_code": "GR-09-1",
+      "collection": "greenwich",
+      "name": "Кровать  1-сп. (90*200)",
+      "workbook_key": "greenwich:GR-09-1",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.3,
+      "legacy_title": "Кровать Frame"
+    },
+    {
+      "product_code": "GR-12-1",
+      "collection": "greenwich",
+      "name": "Кровать  1,5-сп. (120*200)",
+      "workbook_key": "greenwich:GR-12-1",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.3,
+      "legacy_title": "Кровать Frame"
+    },
+    {
+      "product_code": "GR-14-1",
+      "collection": "greenwich",
+      "name": "Кровать  1,5-сп. (140*200)",
+      "workbook_key": "greenwich:GR-14-1",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.3,
+      "legacy_title": "Кровать Frame"
+    },
+    {
+      "product_code": "GR-16-1",
+      "collection": "greenwich",
+      "name": "Кровать  2-сп. (160*200)",
+      "workbook_key": "greenwich:GR-16-1",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.3,
+      "legacy_title": "Кровать Frame"
+    },
+    {
+      "product_code": "GR-18-1",
+      "collection": "greenwich",
+      "name": "Кровать  2-сп. (180*200)",
+      "workbook_key": "greenwich:GR-18-1",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.3,
+      "legacy_title": "Кровать Frame"
+    },
+    {
+      "product_code": "PV-14-1",
+      "collection": "provence",
+      "name": "Кровать 1-сп. (90*190) без изножья",
+      "workbook_key": "provence:PV-14-1",
+      "match_basis": "name_in_collection",
+      "confidence": 0.7,
+      "legacy_title": "Кровать 1-сп. (90х190) без изножья PROVENCE"
+    },
+    {
+      "product_code": "PV-14-2",
+      "collection": "provence",
+      "name": "Кровать 1-сп. (90*190) с тканью без изножья",
+      "workbook_key": "provence:PV-14-2",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.4,
+      "legacy_title": "Кровать 1-сп. (90х190) без изножья PROVENCE"
+    },
+    {
+      "product_code": "PV-15-2",
+      "collection": "provence",
+      "name": "Кровать 1,5-сп. (120*190) с тканью без изножья",
+      "workbook_key": "provence:PV-15-2",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.4,
+      "legacy_title": "Кровать 1,5-сп.  (120х190) без изножья PROVENCE"
+    },
+    {
+      "product_code": "PV-16-1",
+      "collection": "provence",
+      "name": "Кровать 1,5-сп. (140*190) без изножья",
+      "workbook_key": "provence:PV-16-1",
+      "match_basis": "name_in_collection",
+      "confidence": 0.7,
+      "legacy_title": "Кровать 1,5-сп.  (120х190) без изножья PROVENCE"
+    },
+    {
+      "product_code": "PV-16-2",
+      "collection": "provence",
+      "name": "Кровать 1,5-сп. (140*190) с тканью без изножья",
+      "workbook_key": "provence:PV-16-2",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.4,
+      "legacy_title": "Кровать 1,5-сп.  (120х190) без изножья PROVENCE"
+    },
+    {
+      "product_code": "PV-17-1",
+      "collection": "provence",
+      "name": "Кровать 2-сп. (160*200) без изножья",
+      "workbook_key": "provence:PV-17-1",
+      "match_basis": "name_in_collection",
+      "confidence": 0.7,
+      "legacy_title": "Кровать 2-сп. (180х200) без изножья PROVENCE"
+    },
+    {
+      "product_code": "PV-17-2",
+      "collection": "provence",
+      "name": "Кровать 2-сп. (160*200) с тканью без изножья",
+      "workbook_key": "provence:PV-17-2",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.4,
+      "legacy_title": "Кровать 2-сп. (180х200) без изножья PROVENCE"
+    },
+    {
+      "product_code": "PV-18-2",
+      "collection": "provence",
+      "name": "Кровать 2-сп. (180*200) с тканью без изножья",
+      "workbook_key": "provence:PV-18-2",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.4,
+      "legacy_title": "Кровать 2-сп. (180х200) без изножья PROVENCE"
+    },
+    {
+      "product_code": "PV-65-5",
+      "collection": "provence",
+      "name": "Стол письменный 1-тумб. 0П",
+      "workbook_key": "provence:PV-65-5",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.45,
+      "legacy_title": "Стол письменный 1-тумб. ОЯ PROVENCE"
+    },
+    {
+      "product_code": "PV-65-7",
+      "collection": "provence",
+      "name": "Стол письменный 1-тумб. 0Я",
+      "workbook_key": "provence:PV-65-7",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.45,
+      "legacy_title": "Стол письменный 1-тумб. ОЯ PROVENCE"
+    },
+    {
+      "product_code": "PV-42-2",
+      "collection": "provence",
+      "name": "Тумба для телевизора",
+      "workbook_key": "provence:PV-42-2",
+      "match_basis": "name_in_collection",
+      "confidence": 0.7,
+      "legacy_title": "Тумба для телевизора PROVENCE"
+    },
+    {
+      "product_code": "PV-08-3",
+      "collection": "provence",
+      "name": "Тумбочка прикроватная с 2 ящиками",
+      "workbook_key": "provence:PV-08-3",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.36,
+      "legacy_title": "Тумбочка прикроватная с одним ящиком PROVENCE"
+    },
+    {
+      "product_code": "PV-68-2",
+      "collection": "provence",
+      "name": "Этажерка большая 6 полок",
+      "workbook_key": "provence:PV-68-2",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.3,
+      "legacy_title": "Этажерка большая PROVENCE"
+    },
+    {
+      "product_code": "PV-68-1",
+      "collection": "provence",
+      "name": "Этажерка малая 3 полки",
+      "workbook_key": "provence:PV-68-1",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.3,
+      "legacy_title": "Этажерка малая PROVENCE"
+    },
+    {
+      "product_code": "PR-84-2",
+      "collection": "princess-rose",
+      "name": "Бортик к кровати большой",
+      "workbook_key": "princess-rose:PR-84-2",
+      "match_basis": "name_in_collection",
+      "confidence": 0.7,
+      "legacy_title": "Бортик к кровати большой PRINCESS ROSE"
+    },
+    {
+      "product_code": "PR-84-1",
+      "collection": "princess-rose",
+      "name": "Бортик к кровати малый",
+      "workbook_key": "princess-rose:PR-84-1",
+      "match_basis": "name_in_collection",
+      "confidence": 0.7,
+      "legacy_title": "Бортик к кровати малый PRINCESS ROSE"
+    },
+    {
+      "product_code": "PR-95-2",
+      "collection": "princess-rose",
+      "name": "Кровать - трансформер (80*150) без рисунка",
+      "workbook_key": "princess-rose:PR-95-2",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.36,
+      "legacy_title": "Кровать- трансформер без рисунка (80*150) PRINCESS ROSE"
+    },
+    {
+      "product_code": "PR-16-1",
+      "collection": "princess-rose",
+      "name": "Кровать 1,5-сп.140*190 без изножья",
+      "workbook_key": "princess-rose:PR-16-1",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.45,
+      "legacy_title": "Кровать 1-сп. без изножья (90х190) PRINCESS ROSE"
+    },
+    {
+      "product_code": "PR-65-5",
+      "collection": "princess-rose",
+      "name": "Стол письменный 1-тумб. 0П (ручки СВАРОВСКИ)",
+      "workbook_key": "princess-rose:PR-65-5",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.3,
+      "legacy_title": "Стол письменный 1-тумбовый ПО (ручки Swarovski) PRINCESS ROSE"
+    },
+    {
+      "product_code": "PR-65-7",
+      "collection": "princess-rose",
+      "name": "Стол письменный 1-тумб. 0Я (ручки СВАРОВСКИ)",
+      "workbook_key": "princess-rose:PR-65-7",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.3,
+      "legacy_title": "Стол письменный 1-тумбовый ПО (ручки Swarovski) PRINCESS ROSE"
+    },
+    {
+      "product_code": "PR-65-6",
+      "collection": "princess-rose",
+      "name": "Стол письменный 1-тумб. П0 (ручки СВАРОВСКИ)",
+      "workbook_key": "princess-rose:PR-65-6",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.3,
+      "legacy_title": "Стол письменный 1-тумбовый ПО (ручки Swarovski) PRINCESS ROSE"
+    },
+    {
+      "product_code": "PR-65-8",
+      "collection": "princess-rose",
+      "name": "Стол письменный 1-тумб. Я0 (ручки СВАРОВСКИ)",
+      "workbook_key": "princess-rose:PR-65-8",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.3,
+      "legacy_title": "Стол письменный 1-тумбовый ПО (ручки Swarovski) PRINCESS ROSE"
+    },
+    {
+      "product_code": "PR-66-6",
+      "collection": "princess-rose",
+      "name": "Стол письменный 2-тумб. ПЯ (ручки СВАРОВСКИ)",
+      "workbook_key": "princess-rose:PR-66-6",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.3,
+      "legacy_title": "Стол письменный 1-тумбовый ПО (ручки Swarovski) PRINCESS ROSE"
+    },
+    {
+      "product_code": "PR-66-7",
+      "collection": "princess-rose",
+      "name": "Стол письменный 2-тумб. ЯП (ручки СВАРОВСКИ)",
+      "workbook_key": "princess-rose:PR-66-7",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.45,
+      "legacy_title": "Стол письменный 2-тумбовый ЯП (ручки Swarovski) PRINCESS ROSE"
+    },
+    {
+      "product_code": "PR-68-1",
+      "collection": "princess-rose",
+      "name": "Этажерка малая 3 полки",
+      "workbook_key": "princess-rose:PR-68-1",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.3,
+      "legacy_title": "Этажерка малая PRINCESS ROSE"
+    },
+    {
+      "product_code": "PR-68-2",
+      "collection": "princess-rose",
+      "name": "Этажерка большая 6 полок",
+      "workbook_key": "princess-rose:PR-68-2",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.3,
+      "legacy_title": "Этажерка большая (ручки Swarovski) PRINCESS ROSE"
+    },
+    {
+      "product_code": "CO-03-1",
+      "collection": "country-london-paris",
+      "name": "Шкаф для одежды 3-дв.",
+      "workbook_key": "country-london-paris:CO-03-1",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.45,
+      "legacy_title": "Шкаф для одежды 2-дв. COUNTRY"
+    },
+    {
+      "product_code": "MNm-05-4",
+      "collection": "monchelsea",
+      "name": "Комод с зеркалом",
+      "workbook_key": "monchelsea:MNm-05-4",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.3,
+      "legacy_title": "Столик  туалетный с зеркалом MONCHELSEA"
+    },
+    {
+      "product_code": "MNm-15-1",
+      "collection": "monchelsea",
+      "name": "Кровать 1,5-сп. (120*190)",
+      "workbook_key": "monchelsea:MNm-15-1",
+      "match_basis": "name_in_collection",
+      "confidence": 0.7,
+      "legacy_title": "Кровать 1,5-сп. (140х190) MONCHELSEA"
+    },
+    {
+      "product_code": "MNm-15-3",
+      "collection": "monchelsea",
+      "name": "Кровать 1,5-сп. (120*190) с подъем мех",
+      "workbook_key": "monchelsea:MNm-15-3",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.36,
+      "legacy_title": "Кровать 1,5-сп. (120х190) с подъемным механизмом MONCHELSEA"
+    },
+    {
+      "product_code": "MNm-16-1",
+      "collection": "monchelsea",
+      "name": "Кровать 1,5-сп. (140*190)",
+      "workbook_key": "monchelsea:MNm-16-1",
+      "match_basis": "name_in_collection",
+      "confidence": 0.7,
+      "legacy_title": "Кровать 1,5-сп. (140х190) MONCHELSEA"
+    },
+    {
+      "product_code": "MNm-16-3",
+      "collection": "monchelsea",
+      "name": "Кровать 1,5-сп. (140*190) с подъем мех",
+      "workbook_key": "monchelsea:MNm-16-3",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.36,
+      "legacy_title": "Кровать 1,5-сп. (120х190) с подъемным механизмом MONCHELSEA"
+    },
+    {
+      "product_code": "MNm-14-1",
+      "collection": "monchelsea",
+      "name": "Кровать 1-сп. (90*190)",
+      "workbook_key": "monchelsea:MNm-14-1",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.3,
+      "legacy_title": "Кровать двухспальная (160х200) MONCHELSEA"
+    },
+    {
+      "product_code": "MNm-14-2",
+      "collection": "monchelsea",
+      "name": "Кровать 1-сп. (90*190) без изножья",
+      "workbook_key": "monchelsea:MNm-14-2",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.45,
+      "legacy_title": "Кровать 1,5-сп. (140х190) без изножья MONCHELSEA"
+    },
+    {
+      "product_code": "MNm-14-3",
+      "collection": "monchelsea",
+      "name": "Кровать 1-сп.(90*190)с подъем мех",
+      "workbook_key": "monchelsea:MNm-14-3",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.36,
+      "legacy_title": "Кровать 1-сп. (90х190) с подъемным механизмом MONCHELSEA"
+    },
+    {
+      "product_code": "MNm-17-1",
+      "collection": "monchelsea",
+      "name": "Кровать 2-сп. (160*200)",
+      "workbook_key": "monchelsea:MNm-17-1",
+      "match_basis": "name_in_collection",
+      "confidence": 0.7,
+      "legacy_title": "Кровать 2-сп. (180х200) MONCHELSEA"
+    },
+    {
+      "product_code": "MNm-17-2",
+      "collection": "monchelsea",
+      "name": "Кровать 2-сп. (160*200) без изножья",
+      "workbook_key": "monchelsea:MNm-17-2",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.45,
+      "legacy_title": "Кровать 1,5-сп. (140х190) без изножья MONCHELSEA"
+    },
+    {
+      "product_code": "MNm-17-3",
+      "collection": "monchelsea",
+      "name": "Кровать 2-сп. (160*200) с подъем мех",
+      "workbook_key": "monchelsea:MNm-17-3",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.36,
+      "legacy_title": "Кровать 2-сп. (160х200) с подъемным механизмом MONCHELSEA"
+    },
+    {
+      "product_code": "MNm-18-2",
+      "collection": "monchelsea",
+      "name": "Кровать 2-сп. (180*200) без изножья",
+      "workbook_key": "monchelsea:MNm-18-2",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.45,
+      "legacy_title": "Кровать 1,5-сп. (140х190) без изножья MONCHELSEA"
+    },
+    {
+      "product_code": "MNm-18-3",
+      "collection": "monchelsea",
+      "name": "Кровать 2-сп. (180*200) с подъем мех",
+      "workbook_key": "monchelsea:MNm-18-3",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.36,
+      "legacy_title": "Кровать 2-сп. (160х200) с подъемным механизмом MONCHELSEA"
+    },
+    {
+      "product_code": "MNm-69-3",
+      "collection": "monchelsea",
+      "name": "Полка книжная",
+      "workbook_key": "monchelsea:MNm-69-3",
+      "match_basis": "name_in_collection",
+      "confidence": 0.7,
+      "legacy_title": "Полка книжная MONCHELSEA"
+    },
+    {
+      "product_code": "MNm-65-1",
+      "collection": "monchelsea",
+      "name": "Стол письменный 1-тумб. 0П",
+      "workbook_key": "monchelsea:MNm-65-1",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.45,
+      "legacy_title": "Стол письменный 1-тумб. ОЯ MONCHELSEA"
+    },
+    {
+      "product_code": "MNm-66-1",
+      "collection": "monchelsea",
+      "name": "Стол письменный 2-тумб. ПП",
+      "workbook_key": "monchelsea:MNm-66-1",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.45,
+      "legacy_title": "Стол письменный 2-тумб. ЯП MONCHELSEA"
+    },
+    {
+      "product_code": "MNm-66-2",
+      "collection": "monchelsea",
+      "name": "Стол письменный 2-тумб. ПЯ",
+      "workbook_key": "monchelsea:MNm-66-2",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.45,
+      "legacy_title": "Стол письменный 2-тумб. ЯП MONCHELSEA"
+    },
+    {
+      "product_code": "MNm-66-4",
+      "collection": "monchelsea",
+      "name": "Стол письменный 2-тумб. ЯЯ",
+      "workbook_key": "monchelsea:MNm-66-4",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.45,
+      "legacy_title": "Стол письменный 2-тумб. ЯП MONCHELSEA"
+    },
+    {
+      "product_code": "MNm-42-2",
+      "collection": "monchelsea",
+      "name": "Тумба для телевизора (модуль)",
+      "workbook_key": "monchelsea:MNm-42-2",
+      "match_basis": "name_in_collection",
+      "confidence": 0.7,
+      "legacy_title": "Тумба для телевизора MONCHELSEA"
+    },
+    {
+      "product_code": "MNm-01-1",
+      "collection": "monchelsea",
+      "name": "Шкаф для одежды 1-дв. (модуль/Ш/ручка слева)",
+      "workbook_key": "monchelsea:MNm-01-1",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.45,
+      "legacy_title": "Шкаф для одежды 2-дв.  (ЯШ) MONCHELSEA"
+    },
+    {
+      "product_code": "MNm-01-2",
+      "collection": "monchelsea",
+      "name": "Шкаф для одежды 1-дв. (модуль/Ш/ручка справа)",
+      "workbook_key": "monchelsea:MNm-01-2",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.45,
+      "legacy_title": "Шкаф для одежды 2-дв.  (ЯШ) MONCHELSEA"
+    },
+    {
+      "product_code": "MNm-01-5",
+      "collection": "monchelsea",
+      "name": "Шкаф для одежды 1-дв. (модуль/ЯП/ручка слева)",
+      "workbook_key": "monchelsea:MNm-01-5",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.45,
+      "legacy_title": "Шкаф для одежды 2-дв.  (ЯШ) MONCHELSEA"
+    },
+    {
+      "product_code": "MNm-01-6",
+      "collection": "monchelsea",
+      "name": "Шкаф для одежды 1-дв. (модуль/ЯП/ручка справа)",
+      "workbook_key": "monchelsea:MNm-01-6",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.45,
+      "legacy_title": "Шкаф для одежды 2-дв.  (ЯШ) MONCHELSEA"
+    },
+    {
+      "product_code": "MNm-01-3",
+      "collection": "monchelsea",
+      "name": "Шкаф для одежды 1-дв. (модуль/ЯШ/ручка слева)",
+      "workbook_key": "monchelsea:MNm-01-3",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.45,
+      "legacy_title": "Шкаф для одежды 2-дв.  (ЯШ) MONCHELSEA"
+    },
+    {
+      "product_code": "MNm-01-4",
+      "collection": "monchelsea",
+      "name": "Шкаф для одежды 1-дв. (модуль/ЯШ/ручка справа)",
+      "workbook_key": "monchelsea:MNm-01-4",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.45,
+      "legacy_title": "Шкаф для одежды 2-дв.  (ЯШ) MONCHELSEA"
+    },
+    {
+      "product_code": "MNm-02-3",
+      "collection": "monchelsea",
+      "name": "Шкаф для одежды 2-дв. (модуль/ЯП)",
+      "workbook_key": "monchelsea:MNm-02-3",
+      "match_basis": "name_in_collection",
+      "confidence": 0.7,
+      "legacy_title": "Шкаф для одежды 2-дв.  (ЯШ) MONCHELSEA"
+    },
+    {
+      "product_code": "MNm-03-3",
+      "collection": "monchelsea",
+      "name": "Шкаф для одежды 3-дв. (модуль/Ш+ЯП+Ш)",
+      "workbook_key": "monchelsea:MNm-03-3",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.45,
+      "legacy_title": "Шкаф для одежды 2-дв.  (ЯШ) MONCHELSEA"
+    },
+    {
+      "product_code": "MNm-03-2",
+      "collection": "monchelsea",
+      "name": "Шкаф для одежды 3-дв. (модуль/ЯШ+П+ЯШ)",
+      "workbook_key": "monchelsea:MNm-03-2",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.45,
+      "legacy_title": "Шкаф для одежды 2-дв.  (ЯШ) MONCHELSEA"
+    },
+    {
+      "product_code": "MNm-03-4",
+      "collection": "monchelsea",
+      "name": "Шкаф для одежды 3-дв. (модуль/2Ш+ЯП+Ш)",
+      "workbook_key": "monchelsea:MNm-03-4",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.45,
+      "legacy_title": "Шкаф для одежды 2-дв.  (ЯШ) MONCHELSEA"
+    },
+    {
+      "product_code": "MNm-00-1",
+      "collection": "monchelsea",
+      "name": "Шкаф для одежды угловой (модуль/ручка слева)",
+      "workbook_key": "monchelsea:MNm-00-1",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.45,
+      "legacy_title": "Шкаф для одежды 2-дв.  (ЯШ) MONCHELSEA"
+    },
+    {
+      "product_code": "MNm-00-2",
+      "collection": "monchelsea",
+      "name": "Шкаф для одежды угловой (модуль/ручка справа)",
+      "workbook_key": "monchelsea:MNm-00-2",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.45,
+      "legacy_title": "Шкаф для одежды 2-дв.  (ЯШ) MONCHELSEA"
+    },
+    {
+      "product_code": "MNm-61-2",
+      "collection": "monchelsea",
+      "name": "Шкаф книжный 1-дв. (модуль/ручка слева)",
+      "workbook_key": "monchelsea:MNm-61-2",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.4,
+      "legacy_title": "Шкаф книжный однодверный MONCHELSEA"
+    },
+    {
+      "product_code": "MNm-61-4",
+      "collection": "monchelsea",
+      "name": "Шкаф книжный 3-дв. (модуль)",
+      "workbook_key": "monchelsea:MNm-61-4",
+      "match_basis": "fuzzy_name",
+      "confidence": 0.4,
+      "legacy_title": "Шкаф книжный однодверный MONCHELSEA"
+    }
+  ],
+  "collection_conflict": [],
+  "room_only_image": [],
+  "legacy_only_product": [
+    {
+      "product_code": null,
+      "collection": "princess-rose",
+      "name": "Кровать-трансформер с тканью (80х150) PRINCESS ROSE",
+      "page_url": "https://woodright.ru/kollekcii/princess-rose/krovat-transformer-s-tkanyu-80h150-princess-rose/"
+    },
+    {
+      "product_code": "OL-84-1",
+      "collection": "molly-ru",
+      "name": "Бортик к кровати малый Molly",
+      "page_url": "https://woodright.ru/kollekcii/molly-ru/bortik-k-krovati-malyy-molly/"
+    },
+    {
+      "product_code": "OL-84-1",
+      "collection": "molly",
+      "name": "Бортик к кровати большой Molly",
+      "page_url": "https://woodright.ru/kollekcii/molly/bortik-k-krovati-bolshoy-molly/"
+    },
+    {
+      "product_code": null,
+      "collection": "country-london-paris",
+      "name": "Комод",
+      "page_url": "https://woodright.ru/kollekcii/london/komod/"
+    },
+    {
+      "product_code": "MO-05-1",
+      "collection": "molly-ru",
+      "name": "Комод стандартный Molly (гл.560)",
+      "page_url": "https://woodright.ru/kollekcii/molly-ru/komod-standartnyy-molly-gl.560/"
+    },
+    {
+      "product_code": "MN-05-3",
+      "collection": "monchelsea",
+      "name": "Комод высокий темный дуб Monchelsea",
+      "page_url": "https://woodright.ru/kollekcii/monchelsea/komod-vysokiy-temnyy-dub-monchelsea/"
+    },
+    {
+      "product_code": "MN-05-2",
+      "collection": "monchelsea",
+      "name": "Комод широкий дуб темный Monchelsea",
+      "page_url": "https://woodright.ru/kollekcii/monchelsea/komod-shirokiy-dub-temnyy/"
+    },
+    {
+      "product_code": null,
+      "collection": "greenwich",
+      "name": "Кровать Cloud",
+      "page_url": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/"
+    },
+    {
+      "product_code": null,
+      "collection": "greenwich",
+      "name": "Кровать Plane",
+      "page_url": "https://woodright.ru/kollekcii/greenwich/krovat-plane/"
+    },
+    {
+      "product_code": null,
+      "collection": "princess-rose",
+      "name": "Кровать с изножьем (140х190) PRINCESS ROSE",
+      "page_url": "https://woodright.ru/kollekcii/princess-rose/krovat-s-iznozhem-140h190-princess-rose/"
+    },
+    {
+      "product_code": "PR-15-2",
+      "collection": "princess-rose",
+      "name": "Кровать 1,5 сп. без изножья (120х190) PRINCESS ROSE",
+      "page_url": "https://woodright.ru/kollekcii/princess-rose/krovat-1-5-sp.-120190-princess-rose/"
+    },
+    {
+      "product_code": "PR-15-2",
+      "collection": "princess-rose",
+      "name": "Кровать 1,5 сп. без изножья (140х190) PRINCESS ROSE",
+      "page_url": "https://woodright.ru/kollekcii/princess-rose/krovat-1-5-sp.-bez-iznozhya-140h190-princess-rose/"
+    },
+    {
+      "product_code": null,
+      "collection": "provence",
+      "name": "Кровать 1,5-сп. (140х190) без изножья PROVENCE",
+      "page_url": "https://woodright.ru/kollekcii/provence/krovat-double-universalnaya-140h190-bez-iznozhya-provence/"
+    },
+    {
+      "product_code": null,
+      "collection": "provence",
+      "name": "Кровать 2-сп. (160х200) без изножья PROVENCE",
+      "page_url": "https://woodright.ru/kollekcii/provence/krovat-king-dvuhspalnaya-160h200-bez-iznozhya-provence/"
+    },
+    {
+      "product_code": null,
+      "collection": "monchelsea",
+      "name": "Кровать 2-сп. (180х200) с подъемным механизмом MONCHELSEA",
+      "page_url": "https://woodright.ru/kollekcii/monchelsea/krovat-super-king-dvuhspalnaya-180h200-s-podemnikom-monchelsea/"
+    },
+    {
+      "product_code": null,
+      "collection": "molly-ru",
+      "name": "Кровать 1-сп. (90х190) с ящиками Molly",
+      "page_url": "https://woodright.ru/kollekcii/molly-ru/krovat-1-sp.-90h190-s-yaschikami-molly/"
+    },
+    {
+      "product_code": "OL-09-1",
+      "collection": "oliver",
+      "name": "Зеркало навесное овальное OLIVER",
+      "page_url": "https://woodright.ru/kollekcii/oliver/zerkalo-navesnoe-ovalnoe-oliver/"
+    },
+    {
+      "product_code": null,
+      "collection": "black-isle",
+      "name": "Этажерка малая 3 полки BLACK ISLE",
+      "page_url": "https://woodright.ru/kollekcii/black-isle/etazherka-malaya-3-polki-black-isle/"
+    },
+    {
+      "product_code": "MO-30-1",
+      "collection": "molly-ru",
+      "name": "Часы Molly",
+      "page_url": "https://woodright.ru/kollekcii/molly-ru/chasy/"
+    },
+    {
+      "product_code": "MN-09-2",
+      "collection": "monchelsea",
+      "name": "Зеркало напольное дуб темный Monchelsea",
+      "page_url": "https://woodright.ru/kollekcii/monchelsea/zerkalo-napolnoe-dub-temnyy-monchelsea/"
+    },
+    {
+      "product_code": "OL-86-1",
+      "collection": "molly",
+      "name": "Каркас для балдахина Molly",
+      "page_url": "https://woodright.ru/kollekcii/molly/karkas-dlya-baldahina-molly/"
+    },
+    {
+      "product_code": "BI-62-2",
+      "collection": "black-isle",
+      "name": "Стеллаж широкий BLACK ISLE",
+      "page_url": "https://woodright.ru/kollekcii/black-isle/stellazh-shirokiy-black-isle/"
+    },
+    {
+      "product_code": "PR-65-1",
+      "collection": "princess-rose",
+      "name": "Стол письменный 1-тумбовый ОП (ручки Swarovski) PRINCESS ROSE",
+      "page_url": "https://woodright.ru/kollekcii/princess-rose/stol-pismennyy-1-tumbovyy-op-ruchki-swarovski-princess-rose/"
+    },
+    {
+      "product_code": "PR-65-4",
+      "collection": "princess-rose",
+      "name": "Стол письменный 1-тумбовый ЯО (ручки Swarovski) PRINCESS ROSE",
+      "page_url": "https://woodright.ru/kollekcii/princess-rose/stol-pismennyy-1-tumbovyy-yao-ruchki-swarovski-princess-rose/"
+    },
+    {
+      "product_code": "PR-65-3",
+      "collection": "princess-rose",
+      "name": "Стол письменный 1-тумбовый ОЯ (ручки Swarovski) PRINCESS ROSE",
+      "page_url": "https://woodright.ru/kollekcii/princess-rose/stol-pismennyy-1-tumbovyy-oya-ruchki-swarovski-princess-rose/"
+    },
+    {
+      "product_code": "PV-65-1",
+      "collection": "provence",
+      "name": "Стол письменный 1-тумб. ОП PROVENCE",
+      "page_url": "https://woodright.ru/kollekcii/provence/stol-pismennyy-odna-tumba-sprava-provence/"
+    },
+    {
+      "product_code": null,
+      "collection": "molly-ru",
+      "name": "Стол письменный 2-тумб. ЯП Molly",
+      "page_url": "https://woodright.ru/kollekcii/molly-ru/stol-pismennyy-2-tumb.-yap-molly/"
+    },
+    {
+      "product_code": "MN-65-4",
+      "collection": "monchelsea",
+      "name": "Стол письменный 1-тумб. ЯО дуб темный Monchelsea",
+      "page_url": "https://woodright.ru/kollekcii/monchelsea/stol-pismennyy-1-tumb.-yao-dub-temnyy-monchelsea/"
+    },
+    {
+      "product_code": null,
+      "collection": "greenwich",
+      "name": "Прикроватная тумба Hole",
+      "page_url": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-hole/"
+    },
+    {
+      "product_code": null,
+      "collection": "greenwich",
+      "name": "Прикроватная тумба Stone",
+      "page_url": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-stone/"
+    },
+    {
+      "product_code": "MN-42-1",
+      "collection": "monchelsea",
+      "name": "Тумба для телевизора дуб темный Monchelsea",
+      "page_url": "https://woodright.ru/kollekcii/monchelsea/tumba-dlya-televizora-dub-temnyy-monchelsea/"
+    },
+    {
+      "product_code": null,
+      "collection": "molly",
+      "name": "Тумба ТВ Molly",
+      "page_url": "https://woodright.ru/kollekcii/molly/tumba-tv-molly/"
+    },
+    {
+      "product_code": null,
+      "collection": "greenwich",
+      "name": "Гардероб Total",
+      "page_url": "https://woodright.ru/kollekcii/greenwich/garderob-total/"
+    },
+    {
+      "product_code": null,
+      "collection": "oliver",
+      "name": "Шкаф буфетный OLIVER",
+      "page_url": "https://woodright.ru/kollekcii/oliver/shkaf-bufetnyy-so-steklom-oliver/"
+    },
+    {
+      "product_code": null,
+      "collection": "monchelsea",
+      "name": "Шкаф угловой MONCHELSEA",
+      "page_url": "https://woodright.ru/kollekcii/monchelsea/shkaf-uglovoy-monchelsea/"
+    },
+    {
+      "product_code": null,
+      "collection": "eksklyuzivnye-predmety",
+      "name": "Шкаф 2-дверный встроенный с распашными дверями",
+      "page_url": "https://woodright.ru/kollekcii/eksklyuzivnye-predmety/shkaf-2-dvernyy-s-raspashnymi-dveryami/"
+    },
+    {
+      "product_code": null,
+      "collection": "eksklyuzivnye-predmety",
+      "name": "Шкаф 1-дверный. встроенный",
+      "page_url": "https://woodright.ru/kollekcii/eksklyuzivnye-predmety/shkaf-1-dvernyy.-vstroennyy/"
+    },
+    {
+      "product_code": "BI-02-1",
+      "collection": "black-isle",
+      "name": "Шкаф для одежды 2-дв BLACK ISLE",
+      "page_url": "https://woodright.ru/kollekcii/black-isle/shkaf-dlya-odezhdy-2-dv-black-isle/"
+    },
+    {
+      "product_code": null,
+      "collection": "country-london-paris",
+      "name": "Шкаф 3-дв. COUNTRY",
+      "page_url": "https://woodright.ru/kollekcii/country/shkaf-trehdvernyy-country/"
+    },
+    {
+      "product_code": "MO-03-1",
+      "collection": "molly-ru",
+      "name": "Шкаф для одежды 3-дв. Molly, высокий",
+      "page_url": "https://woodright.ru/kollekcii/molly-ru/shkaf-dlya-odezhdy-3-dv.-molly-vysokiy/"
+    },
+    {
+      "product_code": "MO-61-1",
+      "collection": "molly-ru",
+      "name": "Шкаф книжный со стеклом Molly, высокий",
+      "page_url": "https://woodright.ru/kollekcii/molly-ru/shkaf-knizhnyy-so-steklom-molly-vysokiy/"
+    },
+    {
+      "product_code": "MO-02-1",
+      "collection": "molly-ru",
+      "name": "Шкаф для одежды 2-дв. Molly, высокий",
+      "page_url": "https://woodright.ru/kollekcii/molly-ru/shkaf-dlya-odezhdy-2-dv.-molly-vysokiy/"
+    },
+    {
+      "product_code": "MO-01-1",
+      "collection": "molly-ru",
+      "name": "Шкаф для одежды 1-дв. Molly, высокий",
+      "page_url": "https://woodright.ru/kollekcii/molly-ru/shkaf-dlya-odezhdy-1-dv.-molly-vysokiy/"
+    },
+    {
+      "product_code": "MN-02-2",
+      "collection": "monchelsea",
+      "name": "Шкаф для одежды 2-дв. (ЯШ) дуб темный",
+      "page_url": "https://woodright.ru/kollekcii/monchelsea/shkaf-dlya-odezhdy-2-dv.-yash-dub-temnyy/"
+    },
+    {
+      "product_code": "MO-40-1",
+      "collection": "molly",
+      "name": "Шкаф комбинированный Molly, высокий",
+      "page_url": "https://woodright.ru/kollekcii/molly/shkaf-kombinirovannyy-molly-vysokiy/"
+    }
+  ],
+  "disk_only_image": [],
+  "vv_variant_decision_blocked": [
+    {
+      "product_code": "WW-55-1",
+      "collection": "willie-winkie",
+      "name": "Банкетка малая",
+      "workbook_key": "willie-winkie:WW-55-1"
+    },
+    {
+      "product_code": "WW-84-2",
+      "collection": "willie-winkie",
+      "name": "Бортик к кровати большой",
+      "workbook_key": "willie-winkie:WW-84-2"
+    },
+    {
+      "product_code": "WW-84-1",
+      "collection": "willie-winkie",
+      "name": "Бортик к кровати малый",
+      "workbook_key": "willie-winkie:WW-84-1"
+    },
+    {
+      "product_code": "WW-57-2",
+      "collection": "willie-winkie",
+      "name": "Диван большой (90*190)",
+      "workbook_key": "willie-winkie:WW-57-2"
+    },
+    {
+      "product_code": "WW-57-1",
+      "collection": "willie-winkie",
+      "name": "Диван малый (80*150)",
+      "workbook_key": "willie-winkie:WW-57-1"
+    },
+    {
+      "product_code": "WW-09-1",
+      "collection": "willie-winkie",
+      "name": "Зеркало навесное овальное",
+      "workbook_key": "willie-winkie:WW-09-1"
+    },
+    {
+      "product_code": "WW-09-2",
+      "collection": "willie-winkie",
+      "name": "Зеркало напольное",
+      "workbook_key": "willie-winkie:WW-09-2"
+    },
+    {
+      "product_code": "WW-86-1",
+      "collection": "willie-winkie",
+      "name": "Каркас для балдахина",
+      "workbook_key": "willie-winkie:WW-86-1"
+    },
+    {
+      "product_code": "WW-05-3",
+      "collection": "willie-winkie",
+      "name": "Комод высокий    440",
+      "workbook_key": "willie-winkie:WW-05-3"
+    },
+    {
+      "product_code": "WW-05-4",
+      "collection": "willie-winkie",
+      "name": "Комод высокий   560",
+      "workbook_key": "willie-winkie:WW-05-4"
+    },
+    {
+      "product_code": "WW-05-1",
+      "collection": "willie-winkie",
+      "name": "Комод стандартный 440",
+      "workbook_key": "willie-winkie:WW-05-1"
+    },
+    {
+      "product_code": "WW-05-2",
+      "collection": "willie-winkie",
+      "name": "Комод стандартный 560",
+      "workbook_key": "willie-winkie:WW-05-2"
+    },
+    {
+      "product_code": "WW-85-1",
+      "collection": "willie-winkie",
+      "name": "Кроватка для новорожденного (60*120)",
+      "workbook_key": "willie-winkie:WW-85-1"
+    },
+    {
+      "product_code": "WW-95-1",
+      "collection": "willie-winkie",
+      "name": "Кровать - трансформер (80*150) с рисунком",
+      "workbook_key": "willie-winkie:WW-95-1"
+    },
+    {
+      "product_code": "WW-95-3",
+      "collection": "willie-winkie",
+      "name": "Кровать - трансформер (80*150) с тканью",
+      "workbook_key": "willie-winkie:WW-95-3"
+    },
+    {
+      "product_code": "WW-15-1",
+      "collection": "willie-winkie",
+      "name": "Кровать 1,5-сп. (120*190)",
+      "workbook_key": "willie-winkie:WW-15-1"
+    },
+    {
+      "product_code": "WW-15-2",
+      "collection": "willie-winkie",
+      "name": "Кровать 1,5-сп. (120*190) с ящиками",
+      "workbook_key": "willie-winkie:WW-15-2"
+    },
+    {
+      "product_code": "WW-14-1",
+      "collection": "willie-winkie",
+      "name": "Кровать 1-сп. (90*190)",
+      "workbook_key": "willie-winkie:WW-14-1"
+    },
+    {
+      "product_code": "WW-14-2",
+      "collection": "willie-winkie",
+      "name": "Кровать 1-сп. (90*190) с ящиками",
+      "workbook_key": "willie-winkie:WW-14-2"
+    },
+    {
+      "product_code": "WW-13-1",
+      "collection": "willie-winkie",
+      "name": "Кровать детская (80*150)",
+      "workbook_key": "willie-winkie:WW-13-1"
+    },
+    {
+      "product_code": "WW-13-2",
+      "collection": "willie-winkie",
+      "name": "Кровать детская (80*150) с ящиками",
+      "workbook_key": "willie-winkie:WW-13-2"
+    },
+    {
+      "product_code": "WW-69-1",
+      "collection": "willie-winkie",
+      "name": "Полка книжная",
+      "workbook_key": "willie-winkie:WW-69-1"
+    },
+    {
+      "product_code": "WW-62-1",
+      "collection": "willie-winkie",
+      "name": "Стеллаж для книг   440",
+      "workbook_key": "willie-winkie:WW-62-1"
+    },
+    {
+      "product_code": "WW-62-2",
+      "collection": "willie-winkie",
+      "name": "Стеллаж для книг   560",
+      "workbook_key": "willie-winkie:WW-62-2"
+    },
+    {
+      "product_code": "WW-62-3",
+      "collection": "willie-winkie",
+      "name": "Стеллаж для книг   высокий и гл.560",
+      "workbook_key": "willie-winkie:WW-62-3"
+    },
+    {
+      "product_code": "WW-65-1",
+      "collection": "willie-winkie",
+      "name": "Стол письменный 1-тумб. 0П",
+      "workbook_key": "willie-winkie:WW-65-1"
+    },
+    {
+      "product_code": "WW-65-2",
+      "collection": "willie-winkie",
+      "name": "Стол письменный 1-тумб. П0",
+      "workbook_key": "willie-winkie:WW-65-2"
+    },
+    {
+      "product_code": "WW-65-3",
+      "collection": "willie-winkie",
+      "name": "Cтол письменный 1-тумб.ОЯ",
+      "workbook_key": "willie-winkie:WW-65-3"
+    },
+    {
+      "product_code": "WW-65-4",
+      "collection": "willie-winkie",
+      "name": "Стол письменный 1-тумб.ЯО",
+      "workbook_key": "willie-winkie:WW-65-4"
+    },
+    {
+      "product_code": "WW-66-1",
+      "collection": "willie-winkie",
+      "name": "Стол письменный 2-тумб.ПП",
+      "workbook_key": "willie-winkie:WW-66-1"
+    },
+    {
+      "product_code": "WW-66-3",
+      "collection": "willie-winkie",
+      "name": "Стол письменный 2-тумб.ЯП",
+      "workbook_key": "willie-winkie:WW-66-3"
+    },
+    {
+      "product_code": "WW-66-2",
+      "collection": "willie-winkie",
+      "name": "Стол письменный 2-тумб.ПЯ",
+      "workbook_key": "willie-winkie:WW-66-2"
+    },
+    {
+      "product_code": "WW-66-4",
+      "collection": "willie-winkie",
+      "name": "Стол письменный 2-тумб.ЯЯ",
+      "workbook_key": "willie-winkie:WW-66-4"
+    },
+    {
+      "product_code": "WW-67-1",
+      "collection": "willie-winkie",
+      "name": "Стол рабочий",
+      "workbook_key": "willie-winkie:WW-67-1"
+    },
+    {
+      "product_code": "WW-64-1",
+      "collection": "willie-winkie",
+      "name": "Стол-бюро",
+      "workbook_key": "willie-winkie:WW-64-1"
+    },
+    {
+      "product_code": "WW-83-1",
+      "collection": "willie-winkie",
+      "name": "Столешница пеленальная съемная",
+      "workbook_key": "willie-winkie:WW-83-1"
+    },
+    {
+      "product_code": "WW-81-1",
+      "collection": "willie-winkie",
+      "name": "Столик  детский",
+      "workbook_key": "willie-winkie:WW-81-1"
+    },
+    {
+      "product_code": "WW-06-1",
+      "collection": "willie-winkie",
+      "name": "Столик туалетный с зеркалом",
+      "workbook_key": "willie-winkie:WW-06-1"
+    },
+    {
+      "product_code": "WW-23-1",
+      "collection": "willie-winkie",
+      "name": "Стул",
+      "workbook_key": "willie-winkie:WW-23-1"
+    },
+    {
+      "product_code": "WW-82-1",
+      "collection": "willie-winkie",
+      "name": "Стульчик  детский",
+      "workbook_key": "willie-winkie:WW-82-1"
+    },
+    {
+      "product_code": "WW-42-1",
+      "collection": "willie-winkie",
+      "name": "Тумба для телевизора",
+      "workbook_key": "willie-winkie:WW-42-1"
+    },
+    {
+      "product_code": "WW-08-1",
+      "collection": "willie-winkie",
+      "name": "Тумбочка прикроватная",
+      "workbook_key": "willie-winkie:WW-08-1"
+    },
+    {
+      "product_code": "WW-30-1",
+      "collection": "willie-winkie",
+      "name": "Часы",
+      "workbook_key": "willie-winkie:WW-30-1"
+    },
+    {
+      "product_code": "WW-01-1",
+      "collection": "willie-winkie",
+      "name": "Шкаф для одежды 1-дв. 440 (ручка лев/прав)",
+      "workbook_key": "willie-winkie:WW-01-1"
+    },
+    {
+      "product_code": "WW-01-2",
+      "collection": "willie-winkie",
+      "name": "Шкаф для одежды 1-дв. 560 (ручка лев/прав)",
+      "workbook_key": "willie-winkie:WW-01-2"
+    },
+    {
+      "product_code": "WW-01-3",
+      "collection": "willie-winkie",
+      "name": "Шкаф для одежды 1-дв.(высокий)560 (ручка лев/прав)",
+      "workbook_key": "willie-winkie:WW-01-3"
+    },
+    {
+      "product_code": "WW-02-1",
+      "collection": "willie-winkie",
+      "name": "Шкаф для одежды 2-дв. 440",
+      "workbook_key": "willie-winkie:WW-02-1"
+    },
+    {
+      "product_code": "WW-02-2",
+      "collection": "willie-winkie",
+      "name": "Шкаф для одежды 2-дв.560",
+      "workbook_key": "willie-winkie:WW-02-2"
+    },
+    {
+      "product_code": "WW-02-3",
+      "collection": "willie-winkie",
+      "name": "Шкаф для одежды 2-дв.,высокий,560",
+      "workbook_key": "willie-winkie:WW-02-3"
+    },
+    {
+      "product_code": "WW-03-1",
+      "collection": "willie-winkie",
+      "name": "Шкаф для одежды 3-дв.440",
+      "workbook_key": "willie-winkie:WW-03-1"
+    },
+    {
+      "product_code": "WW-03-2",
+      "collection": "willie-winkie",
+      "name": "Шкаф для одежды 3-дв.560",
+      "workbook_key": "willie-winkie:WW-03-2"
+    },
+    {
+      "product_code": "WW-03-3",
+      "collection": "willie-winkie",
+      "name": "Шкаф для одежды 3-дв.высокий ,560",
+      "workbook_key": "willie-winkie:WW-03-3"
+    },
+    {
+      "product_code": "WW-61-1",
+      "collection": "willie-winkie",
+      "name": "Шкаф книжный со стеклом 440",
+      "workbook_key": "willie-winkie:WW-61-1"
+    },
+    {
+      "product_code": "WW-61-2",
+      "collection": "willie-winkie",
+      "name": "Шкаф книжный со стеклом 560",
+      "workbook_key": "willie-winkie:WW-61-2"
+    },
+    {
+      "product_code": "WW-61-3",
+      "collection": "willie-winkie",
+      "name": "Шкаф книжный со стеклом,высокий,560",
+      "workbook_key": "willie-winkie:WW-61-3"
+    },
+    {
+      "product_code": "WW-40-1",
+      "collection": "willie-winkie",
+      "name": "Шкаф комбинированный   440",
+      "workbook_key": "willie-winkie:WW-40-1"
+    },
+    {
+      "product_code": "WW-40-2",
+      "collection": "willie-winkie",
+      "name": "Шкаф комбинированный   560",
+      "workbook_key": "willie-winkie:WW-40-2"
+    },
+    {
+      "product_code": "WW-40-3",
+      "collection": "willie-winkie",
+      "name": "Шкаф комбинированный,высокий,560",
+      "workbook_key": "willie-winkie:WW-40-3"
+    },
+    {
+      "product_code": "WW-07-1",
+      "collection": "willie-winkie",
+      "name": "Ящик для игрушек с подъем. мех.",
+      "workbook_key": "willie-winkie:WW-07-1"
+    }
+  ],
+  "needs_business_review": [],
+  "no_legacy_match_needs_pdf": [
+    {
+      "product_code": "OL-14-3",
+      "collection": "oliver",
+      "name": "Кровать  1-сп. (90*190) с под механиз SINGLE",
+      "workbook_key": "oliver:OL-14-3"
+    },
+    {
+      "product_code": "OL-21-1",
+      "collection": "oliver",
+      "name": "Стол обеденный раздвижной",
+      "workbook_key": "oliver:OL-21-1"
+    },
+    {
+      "product_code": "OL-08-Н",
+      "collection": "oliver",
+      "name": "Тумбочка для рукоделия",
+      "workbook_key": "oliver:OL-08-Н"
+    },
+    {
+      "product_code": "OL-26-2",
+      "collection": "oliver",
+      "name": "Шкаф-витрина",
+      "workbook_key": "oliver:OL-26-2"
+    },
+    {
+      "product_code": "GR-09-1",
+      "collection": "greenwich",
+      "name": "Зеркало навесное",
+      "workbook_key": "greenwich:GR-09-1"
+    },
+    {
+      "product_code": "GR-42-1",
+      "collection": "greenwich",
+      "name": "Тумба ТВ",
+      "workbook_key": "greenwich:GR-42-1"
+    },
+    {
+      "product_code": "GR-08-1",
+      "collection": "greenwich",
+      "name": "Прикроватная тумба с 2 ящиками",
+      "workbook_key": "greenwich:GR-08-1"
+    },
+    {
+      "product_code": "GR-08-2",
+      "collection": "greenwich",
+      "name": "Прикроватная тумба с 1 ящиком",
+      "workbook_key": "greenwich:GR-08-2"
+    },
+    {
+      "product_code": "GR-02-1",
+      "collection": "greenwich",
+      "name": "Гардероб 2 -х дв.  с ящиками",
+      "workbook_key": "greenwich:GR-02-1"
+    },
+    {
+      "product_code": "PV-30-1",
+      "collection": "provence",
+      "name": "Часы",
+      "workbook_key": "provence:PV-30-1"
+    },
+    {
+      "product_code": "PR-09-1",
+      "collection": "princess-rose",
+      "name": "Зеркало навесное",
+      "workbook_key": "princess-rose:PR-09-1"
+    },
+    {
+      "product_code": "PR-09-2",
+      "collection": "princess-rose",
+      "name": "Зеркало напольное",
+      "workbook_key": "princess-rose:PR-09-2"
+    },
+    {
+      "product_code": "PR-95-1",
+      "collection": "princess-rose",
+      "name": "Кровать - трансформер (80*150) с рисунком",
+      "workbook_key": "princess-rose:PR-95-1"
+    },
+    {
+      "product_code": "PR-95-3",
+      "collection": "princess-rose",
+      "name": "Кровать - трансформер (80*150) с тканью",
+      "workbook_key": "princess-rose:PR-95-3"
+    },
+    {
+      "product_code": "PR-69-1",
+      "collection": "princess-rose",
+      "name": "Полка книжная",
+      "workbook_key": "princess-rose:PR-69-1"
+    },
+    {
+      "product_code": "CO-14-2",
+      "collection": "country-london-paris",
+      "name": "Кровать 1 сп. (90*190) с подъем мех",
+      "workbook_key": "country-london-paris:CO-14-2"
+    },
+    {
+      "product_code": "CO-16-2",
+      "collection": "country-london-paris",
+      "name": "Кровать 1,5 сп. (140*190) с подъем мех",
+      "workbook_key": "country-london-paris:CO-16-2"
+    },
+    {
+      "product_code": "CO-17-2",
+      "collection": "country-london-paris",
+      "name": "Кровать 2- сп. (160*200) с подъемн. мех.",
+      "workbook_key": "country-london-paris:CO-17-2"
+    },
+    {
+      "product_code": "CO-18-2",
+      "collection": "country-london-paris",
+      "name": "Кровать 2- сп. (180*200) с подъемн. мех.",
+      "workbook_key": "country-london-paris:CO-18-2"
+    },
+    {
+      "product_code": "CO-69-3",
+      "collection": "country-london-paris",
+      "name": "Надстройка для письменного стола",
+      "workbook_key": "country-london-paris:CO-69-3"
+    },
+    {
+      "product_code": "CO-69-1",
+      "collection": "country-london-paris",
+      "name": "Полка книжная малая",
+      "workbook_key": "country-london-paris:CO-69-1"
+    },
+    {
+      "product_code": "CO-69-2",
+      "collection": "country-london-paris",
+      "name": "Полка книжная большая",
+      "workbook_key": "country-london-paris:CO-69-2"
+    },
+    {
+      "product_code": "CO-69-4",
+      "collection": "country-london-paris",
+      "name": "Полка книжная большая с башенками",
+      "workbook_key": "country-london-paris:CO-69-4"
+    },
+    {
+      "product_code": "CO-69-5",
+      "collection": "country-london-paris",
+      "name": "Полка книжная",
+      "workbook_key": "country-london-paris:CO-69-5"
+    },
+    {
+      "product_code": "CO-62-2",
+      "collection": "country-london-paris",
+      "name": "Стеллаж узкий с дверью",
+      "workbook_key": "country-london-paris:CO-62-2"
+    },
+    {
+      "product_code": "CO-62-3",
+      "collection": "country-london-paris",
+      "name": "Стеллаж узкий с ящиком",
+      "workbook_key": "country-london-paris:CO-62-3"
+    },
+    {
+      "product_code": "CO-65-1",
+      "collection": "country-london-paris",
+      "name": "Стол письменный 1-тумб. 0П",
+      "workbook_key": "country-london-paris:CO-65-1"
+    },
+    {
+      "product_code": "CO-65-2",
+      "collection": "country-london-paris",
+      "name": "Стол письменный 1-тумб. П0",
+      "workbook_key": "country-london-paris:CO-65-2"
+    },
+    {
+      "product_code": "СО-65-3",
+      "collection": "country-london-paris",
+      "name": "Стол письменный 1-тумб. ОЯ",
+      "workbook_key": "country-london-paris:СО-65-3"
+    },
+    {
+      "product_code": "СО-65-4",
+      "collection": "country-london-paris",
+      "name": "Стол письменный 1-тумб. ЯО",
+      "workbook_key": "country-london-paris:СО-65-4"
+    },
+    {
+      "product_code": "CO-66-1",
+      "collection": "country-london-paris",
+      "name": "Стол письменный 2-тумб. ЯЯ",
+      "workbook_key": "country-london-paris:CO-66-1"
+    },
+    {
+      "product_code": "CO-66-2",
+      "collection": "country-london-paris",
+      "name": "Стол письменный 2-тумб. ПЯ",
+      "workbook_key": "country-london-paris:CO-66-2"
+    },
+    {
+      "product_code": "CO-66-3",
+      "collection": "country-london-paris",
+      "name": "Стол письменный 2-тумб.ЯП",
+      "workbook_key": "country-london-paris:CO-66-3"
+    },
+    {
+      "product_code": "CO-83-1",
+      "collection": "country-london-paris",
+      "name": "Столешница пеленальная",
+      "workbook_key": "country-london-paris:CO-83-1"
+    },
+    {
+      "product_code": "CO-d5",
+      "collection": "country-london-paris",
+      "name": "Полка в  столы",
+      "workbook_key": "country-london-paris:CO-d5"
+    },
+    {
+      "product_code": "CO-23-1",
+      "collection": "country-london-paris",
+      "name": "Стул",
+      "workbook_key": "country-london-paris:CO-23-1"
+    },
+    {
+      "product_code": "CO-08-1",
+      "collection": "country-london-paris",
+      "name": "Тумбочка прикроватная",
+      "workbook_key": "country-london-paris:CO-08-1"
+    },
+    {
+      "product_code": "CO-d4",
+      "collection": "country-london-paris",
+      "name": "Полка в шкаф",
+      "workbook_key": "country-london-paris:CO-d4"
+    },
+    {
+      "product_code": "CO-61-1",
+      "collection": "country-london-paris",
+      "name": "Шкаф книжный со стеклом",
+      "workbook_key": "country-london-paris:CO-61-1"
+    },
+    {
+      "product_code": "CO-30-1",
+      "collection": "country-london-paris",
+      "name": "Часы",
+      "workbook_key": "country-london-paris:CO-30-1"
+    },
+    {
+      "product_code": "MNm-00-3",
+      "collection": "monchelsea",
+      "name": "Шкаф книжный угловой ручка справа",
+      "workbook_key": "monchelsea:MNm-00-3"
+    },
+    {
+      "product_code": "MNm-00-4",
+      "collection": "monchelsea",
+      "name": "Шкаф книжный угловой ручка слева",
+      "workbook_key": "monchelsea:MNm-00-4"
+    },
+    {
+      "product_code": "MN-49-1",
+      "collection": "monchelsea",
+      "name": "Обувница",
+      "workbook_key": "monchelsea:MN-49-1"
+    },
+    {
+      "product_code": "A-51-3",
+      "collection": "accessories",
+      "name": "Валик декоративный",
+      "workbook_key": "accessories:A-51-3"
+    },
+    {
+      "product_code": "A-50-1",
+      "collection": "accessories",
+      "name": "Подушка декоративная",
+      "workbook_key": "accessories:A-50-1"
+    },
+    {
+      "product_code": "A-50-2",
+      "collection": "accessories",
+      "name": "Подушка декоративная",
+      "workbook_key": "accessories:A-50-2"
+    },
+    {
+      "product_code": "A-07-1",
+      "collection": "accessories",
+      "name": "Сундук пиратский",
+      "workbook_key": "accessories:A-07-1"
+    },
+    {
+      "product_code": "A-31-1",
+      "collection": "accessories",
+      "name": "Шкатулка большая",
+      "workbook_key": "accessories:A-31-1"
+    },
+    {
+      "product_code": "A-31-3",
+      "collection": "accessories",
+      "name": "Шкатулка малая",
+      "workbook_key": "accessories:A-31-3"
+    },
+    {
+      "product_code": "A-31-4",
+      "collection": "accessories",
+      "name": "Шкатулка малая фигурная",
+      "workbook_key": "accessories:A-31-4"
+    },
+    {
+      "product_code": "A-31-2",
+      "collection": "accessories",
+      "name": "Шкатулка средняя",
+      "workbook_key": "accessories:A-31-2"
+    }
+  ],
+  "oxford_collection_absent": [
+    {
+      "product_code": "OX-90-1",
+      "collection": "oxford",
+      "name": "Комплекс Оксфорд-1 с выдвижной столешницей без  нижней кровати",
+      "workbook_key": "oxford:OX-90-1"
+    },
+    {
+      "product_code": "OX-14-1",
+      "collection": "oxford",
+      "name": "Комплекс Оксфорд-1 (нижняя кровать без матраса 90*185)",
+      "workbook_key": "oxford:OX-14-1"
+    },
+    {
+      "product_code": "OX-14-11",
+      "collection": "oxford",
+      "name": "Нижняя кровать без матраса увеличенная (120*185)",
+      "workbook_key": "oxford:OX-14-11"
+    },
+    {
+      "product_code": "OX-90-2",
+      "collection": "oxford",
+      "name": "Комплекс Оксфорд-2  без выдвижной столешницы с нижней кроватью и матрасом в чехле (ткани в ассортименте)",
+      "workbook_key": "oxford:OX-90-2"
+    },
+    {
+      "product_code": "OX-14-2",
+      "collection": "oxford",
+      "name": "Комплекс Оксфорд-2 (нижняя кровать 90*185 с матрасом в чехле, ткани в ассортименте)",
+      "workbook_key": "oxford:OX-14-2"
+    },
+    {
+      "product_code": "OX-90-3",
+      "collection": "oxford",
+      "name": "КомплексОксфорд-3 со шкафом и столом (без нижней кровати)",
+      "workbook_key": "oxford:OX-90-3"
+    },
+    {
+      "product_code": "OX-90-4",
+      "collection": "oxford",
+      "name": "Комплекс Oxford-4 Кровать-чердак - без полок и ящиков внутри  (без нижней кровати)",
+      "workbook_key": "oxford:OX-90-4"
+    },
+    {
+      "product_code": "OX-84-2",
+      "collection": "oxford",
+      "name": "Бортик к кровати большой",
+      "workbook_key": "oxford:OX-84-2"
+    },
+    {
+      "product_code": "OX-84-1",
+      "collection": "oxford",
+      "name": "Бортик к кровати малый",
+      "workbook_key": "oxford:OX-84-1"
+    },
+    {
+      "product_code": "OX-08-1",
+      "collection": "oxford",
+      "name": "Тумба прикроватная (для верхнего яруса)",
+      "workbook_key": "oxford:OX-08-1"
+    },
+    {
+      "product_code": "S-OX-04",
+      "collection": "oxford",
+      "name": "Полка навесная квадратная Оксфорд",
+      "workbook_key": "oxford:S-OX-04"
+    },
+    {
+      "product_code": "S-OX-03",
+      "collection": "oxford",
+      "name": "Полка навесная квадратная с 3-мя ящиками OXFORD",
+      "workbook_key": "oxford:S-OX-03"
+    },
+    {
+      "product_code": "S-OX-02",
+      "collection": "oxford",
+      "name": "Стеновая панель на всю длину ОКСФОРД",
+      "workbook_key": "oxford:S-OX-02"
+    },
+    {
+      "product_code": "S-OX-05",
+      "collection": "oxford",
+      "name": "Ступени с перилами и ящиками ОКСФОРД",
+      "workbook_key": "oxford:S-OX-05"
+    },
+    {
+      "product_code": "SH-99-1",
+      "collection": "oxford",
+      "name": "Комплекс Милый дом (без кровати)",
+      "workbook_key": "oxford:SH-99-1"
+    },
+    {
+      "product_code": "SH-14-1",
+      "collection": "oxford",
+      "name": "Комплекс Милый дом (кровать 90*190)",
+      "workbook_key": "oxford:SH-14-1"
+    },
+    {
+      "product_code": "SH-84-2",
+      "collection": "oxford",
+      "name": "Бортик к кровати большой",
+      "workbook_key": "oxford:SH-84-2"
+    },
+    {
+      "product_code": "SH-84-1",
+      "collection": "oxford",
+      "name": "Бортик к кровати малый",
+      "workbook_key": "oxford:SH-84-1"
+    },
+    {
+      "product_code": "MC-99-1",
+      "collection": "oxford",
+      "name": "Комплекс Мой замок (без кровати)",
+      "workbook_key": "oxford:MC-99-1"
+    },
+    {
+      "product_code": "MC-14-1",
+      "collection": "oxford",
+      "name": "Комплекс Мой замок (кровать 90*190)",
+      "workbook_key": "oxford:MC-14-1"
+    },
+    {
+      "product_code": "MC-84-2",
+      "collection": "oxford",
+      "name": "Бортик к кровати большой",
+      "workbook_key": "oxford:MC-84-2"
+    },
+    {
+      "product_code": "MC-84-1",
+      "collection": "oxford",
+      "name": "Бортик к кровати малый",
+      "workbook_key": "oxford:MC-84-1"
+    },
+    {
+      "product_code": "Ox-1-1-N",
+      "collection": "oxford",
+      "name": "Съемный чехол в стандартной ткани  1-2 категории на нижнюю кровать",
+      "workbook_key": "oxford:Ox-1-1-N"
+    }
+  ]
+}

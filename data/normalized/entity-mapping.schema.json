@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Woodright Entity Mapping",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "workbook_row_key",
+      "product_code_normalized",
+      "canonical_name",
+      "collection_name_normalized",
+      "readiness_status"
+    ],
+    "properties": {
+      "workbook_row_key": { "type": "string" },
+      "product_code_normalized": { "type": "string" },
+      "canonical_name": { "type": "string" },
+      "collection_name_normalized": { "type": "string" },
+      "category_normalized": { "type": "string" },
+      "price_normalized": { "type": ["number", "null"] },
+      "dimensions_normalized": { "type": ["object", "null"] },
+
+      "medusa_product_handle": { "type": "string" },
+      "medusa_product_title": { "type": "string" },
+      "medusa_collection_handle": { "type": "string" },
+      "medusa_collection_title": { "type": "string" },
+      "medusa_category_handle": { "type": "string" },
+      "medusa_category_title": { "type": "string" },
+      "medusa_product_type": {
+        "type": "string",
+        "enum": ["STANDARD", "CONFIGURABLE", "BESPOKE"]
+      },
+      "medusa_variant_sku": { "type": "string" },
+      "medusa_price_amount": { "type": ["integer", "null"] },
+
+      "variant_strategy": {
+        "type": "string",
+        "enum": ["single_default", "future_finish_variants", "vv_painting_variants"]
+      },
+
+      "asset_binding_ref": { "type": "string" },
+      "upload_manifest_refs": {
+        "type": "array",
+        "items": { "type": "string" }
+      },
+      "main_image_storage_key": { "type": ["string", "null"] },
+      "gallery_storage_keys": {
+        "type": "array",
+        "items": { "type": "string" }
+      },
+      "asset_quality_status": { "type": "string" },
+
+      "readiness_status": {
+        "type": "string",
+        "enum": ["seed_ready", "seed_ready_with_caveat", "excluded"]
+      },
+      "mapping_notes": { "type": "string" },
+
+      "excluded_reason": { "type": ["string", "null"] },
+      "blocked_reason": { "type": ["string", "null"] },
+      "needs_business_decision": { "type": "boolean" }
+    }
+  }
+}

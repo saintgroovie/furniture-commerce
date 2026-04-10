@@ -1,0 +1,3720 @@
+[
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-09-1_main_01.png",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-09-1_temp_main_01.png",
+    "processed_filename": "GR-09-1_temp_main_01.png",
+    "workbook_row_key": "greenwich:GR-09-1",
+    "canonical_name": "Зеркало навесное",
+    "product_code_normalized": "GR-09-1",
+    "original_legacy_url": "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p11_i0_1509x970.png",
+    "image_role": "main",
+    "asset_tier": "temporary_pdf",
+    "sha256": "527c8a4489c8ee513cd245435f13faaf706c738f4d1dc9261e397c15dc9c906e",
+    "dimensions": [
+      1509,
+      970
+    ],
+    "file_size_bytes": 1536735
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-05-1_main_01.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-05-1_main_01.jpg",
+    "processed_filename": "GR-05-1_main_01.jpg",
+    "workbook_row_key": "greenwich:GR-05-1",
+    "canonical_name": "Комод",
+    "product_code_normalized": "GR-05-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_capuchino04.jpg",
+    "image_role": "main",
+    "asset_tier": "ready",
+    "sha256": "d8d06c18262ec43b40723ffe8853637c314a667543cbf70fd98342c1c1455226",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 89848
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-05-1_gallery_01.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-05-1_gallery_01.jpg",
+    "processed_filename": "GR-05-1_gallery_01.jpg",
+    "workbook_row_key": "greenwich:GR-05-1",
+    "canonical_name": "Комод",
+    "product_code_normalized": "GR-05-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_capuchino05.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "63f025f5ae4000455d96c7c2695ea087993f9c8d6eee2074055e502f0cc05171",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 94810
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-05-1_gallery_02.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-05-1_gallery_02.jpg",
+    "processed_filename": "GR-05-1_gallery_02.jpg",
+    "workbook_row_key": "greenwich:GR-05-1",
+    "canonical_name": "Комод",
+    "product_code_normalized": "GR-05-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_capuchino06.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "23ed331aeeba48442ef6639bf3726d3d7f571da26b0d46bbce7d8b7a1a381ac1",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 91041
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-05-1_gallery_03.jpeg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-05-1_gallery_03.jpg",
+    "processed_filename": "GR-05-1_gallery_03.jpg",
+    "workbook_row_key": "greenwich:GR-05-1",
+    "canonical_name": "Комод",
+    "product_code_normalized": "GR-05-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__2__73ak-gy.jpeg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "f578903055e412a84d4f9d0bd8965a40927638d8569c59af9bb310978d301646",
+    "dimensions": [
+      1024,
+      640
+    ],
+    "file_size_bytes": 77530
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-05-1_gallery_04.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-05-1_gallery_04.jpg",
+    "processed_filename": "GR-05-1_gallery_04.jpg",
+    "workbook_row_key": "greenwich:GR-05-1",
+    "canonical_name": "Комод",
+    "product_code_normalized": "GR-05-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/9/sizes2.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "8d4ba2064eb4e4569414cb1a1dab68527542b4682fca36edb956add0cbb74279",
+    "dimensions": [
+      1100,
+      1100
+    ],
+    "file_size_bytes": 31056
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-05-1_gallery_05.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-05-1_gallery_05.jpg",
+    "processed_filename": "GR-05-1_gallery_05.jpg",
+    "workbook_row_key": "greenwich:GR-05-1",
+    "canonical_name": "Комод",
+    "product_code_normalized": "GR-05-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_white04.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "0fabc32b9c80b3d19fb0ade1529582f01e33ef85c9dc715d3413d0d24b10eb6c",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 69645
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-05-1_gallery_06.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-05-1_gallery_06.jpg",
+    "processed_filename": "GR-05-1_gallery_06.jpg",
+    "workbook_row_key": "greenwich:GR-05-1",
+    "canonical_name": "Комод",
+    "product_code_normalized": "GR-05-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_graphite04.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "4a1fb2d24bc222487da48574982e288e06a82dec454116b9b819b75c62bd53f0",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 99305
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-05-1_gallery_07.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-05-1_gallery_07.jpg",
+    "processed_filename": "GR-05-1_gallery_07.jpg",
+    "workbook_row_key": "greenwich:GR-05-1",
+    "canonical_name": "Комод",
+    "product_code_normalized": "GR-05-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_green04.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "4e6bda4e5e76acca19cecdac527bbe961d6ecdbbca250dd5351738527ac8511f",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 90581
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-05-1_gallery_08.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-05-1_gallery_08.jpg",
+    "processed_filename": "GR-05-1_gallery_08.jpg",
+    "workbook_row_key": "greenwich:GR-05-1",
+    "canonical_name": "Комод",
+    "product_code_normalized": "GR-05-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_cacao04.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "e498ef8be6d1b93f3b31a69a5e1ddb94998d8476dd7fa5a08f7e0c82c3cb83a9",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 94743
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-05-1_gallery_09.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-05-1_gallery_09.jpg",
+    "processed_filename": "GR-05-1_gallery_09.jpg",
+    "workbook_row_key": "greenwich:GR-05-1",
+    "canonical_name": "Комод",
+    "product_code_normalized": "GR-05-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_olive04.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "5537269970e55769ed12a9820d87754eb1f6d4548f7082d845451bcdeb8827d5",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 83557
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-05-1_gallery_10.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-05-1_gallery_10.jpg",
+    "processed_filename": "GR-05-1_gallery_10.jpg",
+    "workbook_row_key": "greenwich:GR-05-1",
+    "canonical_name": "Комод",
+    "product_code_normalized": "GR-05-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_powder04.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "e578fa3ec3321d486cdc01c99db75f3ea459b6fc9e8deb1f97f255aa79dee87b",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 75377
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-05-1_gallery_11.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-05-1_gallery_11.jpg",
+    "processed_filename": "GR-05-1_gallery_11.jpg",
+    "workbook_row_key": "greenwich:GR-05-1",
+    "canonical_name": "Комод",
+    "product_code_normalized": "GR-05-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_grey-blue04.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "4df0902441e2d8311f235b9668fd6703e31ea25f1ea91f6e3363fd1d1b079766",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 83321
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-05-1_gallery_12.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-05-1_gallery_12.jpg",
+    "processed_filename": "GR-05-1_gallery_12.jpg",
+    "workbook_row_key": "greenwich:GR-05-1",
+    "canonical_name": "Комод",
+    "product_code_normalized": "GR-05-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_grey04.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "d82672a1afe09d45451447a56bb47014ce92558307fb2957cf55a326a530787d",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 73254
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-05-1_gallery_13.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-05-1_gallery_13.jpg",
+    "processed_filename": "GR-05-1_gallery_13.jpg",
+    "workbook_row_key": "greenwich:GR-05-1",
+    "canonical_name": "Комод",
+    "product_code_normalized": "GR-05-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_darkblue04.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "e223c9b2acbe1f5d26cb22f26b3a3ddb42697c98d5dd6042510054b3d631f50d",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 97633
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-05-1_gallery_14.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-05-1_gallery_14.jpg",
+    "processed_filename": "GR-05-1_gallery_14.jpg",
+    "workbook_row_key": "greenwich:GR-05-1",
+    "canonical_name": "Комод",
+    "product_code_normalized": "GR-05-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_cream04.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "fc808927757a785dc1b5b70986d70db94db01f27e5fdbdc6013c9faee745e0b5",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 72368
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-05-1_gallery_15.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-05-1_gallery_15.jpg",
+    "processed_filename": "GR-05-1_gallery_15.jpg",
+    "workbook_row_key": "greenwich:GR-05-1",
+    "canonical_name": "Комод",
+    "product_code_normalized": "GR-05-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_terracote04.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "2a03472655e3e587805530d993378ad48f4ee38dbf6839d173b25a0111221083",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 92309
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-44-1_main_01.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-44-1_main_01.jpg",
+    "processed_filename": "GR-44-1_main_01.jpg",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "canonical_name": "Консоль",
+    "product_code_normalized": "GR-44-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_green07_d5hh-4j.jpg",
+    "image_role": "main",
+    "asset_tier": "ready",
+    "sha256": "66e930a1599a643de930954ed7b969d18c65697ea0dcb270d77df3fa33c7e28a",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 66524
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-44-1_gallery_01.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-44-1_gallery_01.jpg",
+    "processed_filename": "GR-44-1_gallery_01.jpg",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "canonical_name": "Консоль",
+    "product_code_normalized": "GR-44-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_green08_hg0r-cp.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "b184c75190020bcdd9e3b84c4a2d2d8383dfc2dc9a2bde7f9f1e367720aa8039",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 62753
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-44-1_gallery_02.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-44-1_gallery_02.jpg",
+    "processed_filename": "GR-44-1_gallery_02.jpg",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "canonical_name": "Консоль",
+    "product_code_normalized": "GR-44-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_green09_w9xd-ku.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "a8af0040b2bb6c2a049547755886939f551a0b9b1b41720e8c6f6ed9d3bfe91a",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 67291
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-44-1_gallery_03.webp",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-44-1_gallery_03.jpg",
+    "processed_filename": "GR-44-1_gallery_03.jpg",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "canonical_name": "Консоль",
+    "product_code_normalized": "GR-44-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/9/sizes5.webp",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "a59e857230dd63dc0597a33116f0aad8d7a7049c2edffe50d0e4fc8d146b56a0",
+    "dimensions": [
+      969,
+      969
+    ],
+    "file_size_bytes": 23057
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-44-1_gallery_04.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-44-1_gallery_04.jpg",
+    "processed_filename": "GR-44-1_gallery_04.jpg",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "canonical_name": "Консоль",
+    "product_code_normalized": "GR-44-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/012.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "df5b9de761ed909eeb4d6cc89a7e9838ead1d2d116e00a0d27d1dac48be5e9d4",
+    "dimensions": [
+      1574,
+      1574
+    ],
+    "file_size_bytes": 347450
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-44-1_gallery_05.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-44-1_gallery_05.jpg",
+    "processed_filename": "GR-44-1_gallery_05.jpg",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "canonical_name": "Консоль",
+    "product_code_normalized": "GR-44-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/014.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "177910ac0b8e426c2fcbe0ce81783922b4b5b57f5ac645f8ba6a04f0d86b1245",
+    "dimensions": [
+      1574,
+      1574
+    ],
+    "file_size_bytes": 329958
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-44-1_gallery_06.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-44-1_gallery_06.jpg",
+    "processed_filename": "GR-44-1_gallery_06.jpg",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "canonical_name": "Консоль",
+    "product_code_normalized": "GR-44-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/011.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "4af6528c4c9a4d8f978e0129e21ef752fe2b914495b1e058817e0ddd0a255057",
+    "dimensions": [
+      1574,
+      1574
+    ],
+    "file_size_bytes": 358180
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-44-1_gallery_07.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-44-1_gallery_07.jpg",
+    "processed_filename": "GR-44-1_gallery_07.jpg",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "canonical_name": "Консоль",
+    "product_code_normalized": "GR-44-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/013.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "dade4473d943a7ac9e97533908e45ca77597801441eaf746b79da99137539069",
+    "dimensions": [
+      1574,
+      1574
+    ],
+    "file_size_bytes": 336689
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-44-1_gallery_08.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-44-1_gallery_08.jpg",
+    "processed_filename": "GR-44-1_gallery_08.jpg",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "canonical_name": "Консоль",
+    "product_code_normalized": "GR-44-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/010.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "03baf5848756bc83364479797b74c253b9436c162b60cd92e2ef03c4d0a78088",
+    "dimensions": [
+      1574,
+      1574
+    ],
+    "file_size_bytes": 389457
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-44-1_gallery_09.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-44-1_gallery_09.jpg",
+    "processed_filename": "GR-44-1_gallery_09.jpg",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "canonical_name": "Консоль",
+    "product_code_normalized": "GR-44-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_white07_0ehl-bq.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "d2996912387741d0b1da781b928f8a784f087be9c688a4e84a96308d68cd0351",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 59921
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-44-1_gallery_10.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-44-1_gallery_10.jpg",
+    "processed_filename": "GR-44-1_gallery_10.jpg",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "canonical_name": "Консоль",
+    "product_code_normalized": "GR-44-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_graphite07_cmwj-2w.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "8b83d904c7b75bd8227c1ab292fb12a13436c831749bb857dc1f0d59ce9c8049",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 67899
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-44-1_gallery_11.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-44-1_gallery_11.jpg",
+    "processed_filename": "GR-44-1_gallery_11.jpg",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "canonical_name": "Консоль",
+    "product_code_normalized": "GR-44-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_cacao07_60f5-48.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "c67f64eebf3ebb0abba83d242c2cb115df9bc58adde1751b6eb01d3f147d8945",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 66648
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-44-1_gallery_12.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-44-1_gallery_12.jpg",
+    "processed_filename": "GR-44-1_gallery_12.jpg",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "canonical_name": "Консоль",
+    "product_code_normalized": "GR-44-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_capuchino07.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "77024663999a78b0e8a4f39be4da69a171af75c6cfcb2907a73083f62d99a9f1",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 65185
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-44-1_gallery_13.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-44-1_gallery_13.jpg",
+    "processed_filename": "GR-44-1_gallery_13.jpg",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "canonical_name": "Консоль",
+    "product_code_normalized": "GR-44-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_olive07_9p92-33.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "dc24b34ad4c9fd00d9064d26b4d71469233b6ee00efaf7cda926f7f6413b5e1c",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 64329
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-44-1_gallery_14.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-44-1_gallery_14.jpg",
+    "processed_filename": "GR-44-1_gallery_14.jpg",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "canonical_name": "Консоль",
+    "product_code_normalized": "GR-44-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_powder07_8lbj-u5.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "3a8bb80b83aafea93f245d6886f2f28a38bb5724607bfc6e1956dc4621346e61",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 62056
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-44-1_gallery_15.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-44-1_gallery_15.jpg",
+    "processed_filename": "GR-44-1_gallery_15.jpg",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "canonical_name": "Консоль",
+    "product_code_normalized": "GR-44-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_grey-blue07_pnyh-yd.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "6dc4beab502f769ab2e71db365b0b50999527162dff493d425e3e50e957300c6",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 63734
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-44-1_gallery_16.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-44-1_gallery_16.jpg",
+    "processed_filename": "GR-44-1_gallery_16.jpg",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "canonical_name": "Консоль",
+    "product_code_normalized": "GR-44-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_grey07_fnfs-n0.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "34821b2461bf8edb6fbd89e45429a6d8d5a05db137185cb9980787eaf3d8306b",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 61007
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-44-1_gallery_17.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-44-1_gallery_17.jpg",
+    "processed_filename": "GR-44-1_gallery_17.jpg",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "canonical_name": "Консоль",
+    "product_code_normalized": "GR-44-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_darkblue07_tynd-0c.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "e3d0e740df81906d216cf2cb4e25e27d899547e57932e0ef6607c534ef6b560f",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 67659
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-44-1_gallery_18.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-44-1_gallery_18.jpg",
+    "processed_filename": "GR-44-1_gallery_18.jpg",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "canonical_name": "Консоль",
+    "product_code_normalized": "GR-44-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_cream07_9nls-zz.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "5ff13927072c66f203aa2870e25cb4f84e3fdab504757ad086944f567e1409c3",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 60928
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-44-1_gallery_19.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-44-1_gallery_19.jpg",
+    "processed_filename": "GR-44-1_gallery_19.jpg",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "canonical_name": "Консоль",
+    "product_code_normalized": "GR-44-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_terracote07_suda-hi.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "780fa23dfbf381aefdd08715fd7982ea19073280939bb2be2bc28ac1f7eee8e6",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 66623
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-67-1_main_01.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-67-1_main_01.jpg",
+    "processed_filename": "GR-67-1_main_01.jpg",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "canonical_name": "Рабочий стол",
+    "product_code_normalized": "GR-67-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_capuchino16.jpg",
+    "image_role": "main",
+    "asset_tier": "ready",
+    "sha256": "65c3936cc323c3cff85fb4866958b874dae75e72d0a3f564895c8e2d60bc8e62",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 62534
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-67-1_gallery_01.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-67-1_gallery_01.jpg",
+    "processed_filename": "GR-67-1_gallery_01.jpg",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "canonical_name": "Рабочий стол",
+    "product_code_normalized": "GR-67-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_capuchino17.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "d01b0d76a9f68b7a010aeada237230d3067caff197e2053aa5681b1bb33d7e73",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 62348
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-67-1_gallery_02.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-67-1_gallery_02.jpg",
+    "processed_filename": "GR-67-1_gallery_02.jpg",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "canonical_name": "Рабочий стол",
+    "product_code_normalized": "GR-67-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_capuchino18.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "07f69382f9f843acf30e6e8d10e8bb62218f3cb8153884adf49cd557c1a4c895",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 63220
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-67-1_gallery_03.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-67-1_gallery_03.jpg",
+    "processed_filename": "GR-67-1_gallery_03.jpg",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "canonical_name": "Рабочий стол",
+    "product_code_normalized": "GR-67-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino16.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "a0de45b745a433683f7435c1aade0344c89c9ffd96245f5b428223df84e88139",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 59215
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-67-1_gallery_04.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-67-1_gallery_04.jpg",
+    "processed_filename": "GR-67-1_gallery_04.jpg",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "canonical_name": "Рабочий стол",
+    "product_code_normalized": "GR-67-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino17.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "74f3b1bc098dfd3c47466afa99cae4a5261cbb2d61de0975335c7d9f3b68c9bf",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 59745
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-67-1_gallery_05.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-67-1_gallery_05.jpg",
+    "processed_filename": "GR-67-1_gallery_05.jpg",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "canonical_name": "Рабочий стол",
+    "product_code_normalized": "GR-67-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino18.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "0d392b36b700f1abbcd9d6ccfc6731b1c6801ead1ddf82b05c841666005de465",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 59920
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-67-1_gallery_06.webp",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-67-1_gallery_06.jpg",
+    "processed_filename": "GR-67-1_gallery_06.jpg",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "canonical_name": "Рабочий стол",
+    "product_code_normalized": "GR-67-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/9/sizes6.webp",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "906230d3f08168dab33a768e8d8e3f2b851abc8044daa10e892074c85d8a5d40",
+    "dimensions": [
+      969,
+      969
+    ],
+    "file_size_bytes": 22566
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-67-1_gallery_07.jpeg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-67-1_gallery_07.jpg",
+    "processed_filename": "GR-67-1_gallery_07.jpg",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "canonical_name": "Рабочий стол",
+    "product_code_normalized": "GR-67-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__3_.jpeg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "8687b1ba41cddcee5debc5754ee78190bb558f531ec5ae2f78835c1838402997",
+    "dimensions": [
+      1024,
+      640
+    ],
+    "file_size_bytes": 106864
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-67-1_gallery_08.jpeg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-67-1_gallery_08.jpg",
+    "processed_filename": "GR-67-1_gallery_08.jpg",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "canonical_name": "Рабочий стол",
+    "product_code_normalized": "GR-67-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__1_.jpeg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "1a75c63b733215e72724574af919290237a15d51d2f2476c67e511b83dd29a17",
+    "dimensions": [
+      1024,
+      640
+    ],
+    "file_size_bytes": 84068
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-67-1_gallery_09.jpeg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-67-1_gallery_09.jpg",
+    "processed_filename": "GR-67-1_gallery_09.jpg",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "canonical_name": "Рабочий стол",
+    "product_code_normalized": "GR-67-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53.jpeg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "a824aecef8b65ede951ae8baf04e9303ab358e79a771750007ea3d8570ff1eba",
+    "dimensions": [
+      1024,
+      640
+    ],
+    "file_size_bytes": 109338
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-67-1_gallery_10.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-67-1_gallery_10.jpg",
+    "processed_filename": "GR-67-1_gallery_10.jpg",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "canonical_name": "Рабочий стол",
+    "product_code_normalized": "GR-67-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_white16.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "d5c70e1ccfe4d3a278d299787093a72d0668abf8b7dd1be1ce5ca9b43dc85a9c",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 57103
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-67-1_gallery_11.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-67-1_gallery_11.jpg",
+    "processed_filename": "GR-67-1_gallery_11.jpg",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "canonical_name": "Рабочий стол",
+    "product_code_normalized": "GR-67-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_graphite16.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "b0d4ce0b61d2ed503bc4f12f5a21ef440d5238926cfe825913ca193d2f45578b",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 65094
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-67-1_gallery_12.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-67-1_gallery_12.jpg",
+    "processed_filename": "GR-67-1_gallery_12.jpg",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "canonical_name": "Рабочий стол",
+    "product_code_normalized": "GR-67-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_green16.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "30b366842e3b898bc5b53380c92ba1bf282f1bc2ca05690a5a9c6d56ec173fd0",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 64790
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-67-1_gallery_13.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-67-1_gallery_13.jpg",
+    "processed_filename": "GR-67-1_gallery_13.jpg",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "canonical_name": "Рабочий стол",
+    "product_code_normalized": "GR-67-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_cacao16.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "d08b54fa4e305a93bf86680270e5c8dc1eae4e0de0ac71b8d54f6f3087eeaeed",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 64306
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-67-1_gallery_14.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-67-1_gallery_14.jpg",
+    "processed_filename": "GR-67-1_gallery_14.jpg",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "canonical_name": "Рабочий стол",
+    "product_code_normalized": "GR-67-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_olive16.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "8b1c79b790bc7aca1dc9b4a166fd5e0781d692fe9ba2d5e8043026e7a224f84a",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 61713
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-67-1_gallery_15.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-67-1_gallery_15.jpg",
+    "processed_filename": "GR-67-1_gallery_15.jpg",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "canonical_name": "Рабочий стол",
+    "product_code_normalized": "GR-67-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_powder16.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "490c0ec0cc3c9a7bf45026b029b6b53e89b37aa92d9ae8cdf2d423ed553f6f7f",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 59404
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-67-1_gallery_16.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-67-1_gallery_16.jpg",
+    "processed_filename": "GR-67-1_gallery_16.jpg",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "canonical_name": "Рабочий стол",
+    "product_code_normalized": "GR-67-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_grey-blue16.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "2487c3ace16ee7c839bc91820109f47bc41fe908ad5b128df6ee7dda70b23264",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 60947
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-67-1_gallery_17.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-67-1_gallery_17.jpg",
+    "processed_filename": "GR-67-1_gallery_17.jpg",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "canonical_name": "Рабочий стол",
+    "product_code_normalized": "GR-67-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_grey16.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "2026fbd0b78746dbb4e4919c944bd5a11143daed0f2c85466c071efb1a68c166",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 58390
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-67-1_gallery_18.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-67-1_gallery_18.jpg",
+    "processed_filename": "GR-67-1_gallery_18.jpg",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "canonical_name": "Рабочий стол",
+    "product_code_normalized": "GR-67-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_darkblue16.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "c623c21f4304f80eb8b41e6014268dc9583c0c36baff67dcbb0586a321688250",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 65002
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-67-1_gallery_19.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-67-1_gallery_19.jpg",
+    "processed_filename": "GR-67-1_gallery_19.jpg",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "canonical_name": "Рабочий стол",
+    "product_code_normalized": "GR-67-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_cream16.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "df7e4eb86a0482534e4795993fd6907d7a9d5b1b96e60b0b99443332f7769883",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 58450
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-67-1_gallery_20.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-67-1_gallery_20.jpg",
+    "processed_filename": "GR-67-1_gallery_20.jpg",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "canonical_name": "Рабочий стол",
+    "product_code_normalized": "GR-67-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_terracote16.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "4b94b41de98a0c5deda31c72e0a787852f8744a2afbed0e8c067a65f96cac20c",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 65047
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-42-1_main_01.png",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-42-1_temp_main_01.png",
+    "processed_filename": "GR-42-1_temp_main_01.png",
+    "workbook_row_key": "greenwich:GR-42-1",
+    "canonical_name": "Тумба ТВ",
+    "product_code_normalized": "GR-42-1",
+    "original_legacy_url": "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p7_i2_1531x1360.png",
+    "image_role": "main",
+    "asset_tier": "temporary_pdf",
+    "sha256": "fad98d864fce9dc52e8e2f263bccf19728c216d12d79bd236b0e608e6d9f06cf",
+    "dimensions": [
+      1531,
+      1360
+    ],
+    "file_size_bytes": 4008876
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-1_main_01.png",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-1_main_01.jpg",
+    "processed_filename": "GR-08-1_main_01.jpg",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "canonical_name": "Прикроватная тумба с 2 ящиками",
+    "product_code_normalized": "GR-08-1",
+    "original_legacy_url": "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p9_i0_1536x970.png",
+    "image_role": "main",
+    "asset_tier": "ready",
+    "sha256": "5cfea606529c3fa220012839d34c74b67c178bd691b99d6d67e5d9dfb2c88660",
+    "dimensions": [
+      1536,
+      970
+    ],
+    "file_size_bytes": 264241
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-1_gallery_01.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-1_gallery_01.jpg",
+    "processed_filename": "GR-08-1_gallery_01.jpg",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "canonical_name": "Прикроватная тумба с 2 ящиками",
+    "product_code_normalized": "GR-08-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_grey-blue10.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "f936fe34a97c843d88e67a22fa89643adde1460f57d42161a4d9adf187104b36",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 78796
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-1_gallery_02.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-1_gallery_02.jpg",
+    "processed_filename": "GR-08-1_gallery_02.jpg",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "canonical_name": "Прикроватная тумба с 2 ящиками",
+    "product_code_normalized": "GR-08-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_grey-blue11.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "95d7305bdf026c9e9091c241cee03ae5ff6625d9ad7dc1959a5925bac7bd21e8",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 68660
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-1_gallery_03.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-1_gallery_03.jpg",
+    "processed_filename": "GR-08-1_gallery_03.jpg",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "canonical_name": "Прикроватная тумба с 2 ящиками",
+    "product_code_normalized": "GR-08-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_grey-blue12.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "6a6f74501c0d6d0a71bd40f1569a72f526ce47f376357c773e214ecab5247eac",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 80110
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-1_gallery_04.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-1_gallery_04.jpg",
+    "processed_filename": "GR-08-1_gallery_04.jpg",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "canonical_name": "Прикроватная тумба с 2 ящиками",
+    "product_code_normalized": "GR-08-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_dark_grey-blue10.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "4dcffc5521fab42bd6105e19b8b8711f778fc6de5ba725ccb76b00b58fdf7a1e",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 65179
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-1_gallery_05.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-1_gallery_05.jpg",
+    "processed_filename": "GR-08-1_gallery_05.jpg",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "canonical_name": "Прикроватная тумба с 2 ящиками",
+    "product_code_normalized": "GR-08-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_dark_grey-blue11.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "93ea02a2813646b5140cde3d24a74abedd6b3ffe2ed26f32b48ff130fde4890d",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 57595
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-1_gallery_06.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-1_gallery_06.jpg",
+    "processed_filename": "GR-08-1_gallery_06.jpg",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "canonical_name": "Прикроватная тумба с 2 ящиками",
+    "product_code_normalized": "GR-08-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_dark_grey-blue12.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "f709a0a8afcf92b22aa3555422833e656bf2cf5a2ece91366097ae0cc797dd4f",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 65502
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-1_gallery_07.webp",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-1_gallery_07.jpg",
+    "processed_filename": "GR-08-1_gallery_07.jpg",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "canonical_name": "Прикроватная тумба с 2 ящиками",
+    "product_code_normalized": "GR-08-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/9/sizes3.webp",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "ff922861d06321999bedf99f582f3d1f500b729c608c94816bd32f6c31081c9e",
+    "dimensions": [
+      969,
+      969
+    ],
+    "file_size_bytes": 23225
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-1_gallery_08.webp",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-1_gallery_08.jpg",
+    "processed_filename": "GR-08-1_gallery_08.jpg",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "canonical_name": "Прикроватная тумба с 2 ящиками",
+    "product_code_normalized": "GR-08-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/9/greenwich_wideheader_View01.webp",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "7344cb294c1fb7b49f2727e58c0349cbb450040a73a8fbf7f982b8fbb0fe8163",
+    "dimensions": [
+      1280,
+      853
+    ],
+    "file_size_bytes": 211076
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-1_gallery_09.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-1_gallery_09.jpg",
+    "processed_filename": "GR-08-1_gallery_09.jpg",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "canonical_name": "Прикроватная тумба с 2 ящиками",
+    "product_code_normalized": "GR-08-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/9/greenwich_wideheader_View02.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "5138fdd6d2048627b0e1c59f069e373f0c4f9f31552bb042398c966378d8ec78",
+    "dimensions": [
+      1800,
+      1200
+    ],
+    "file_size_bytes": 351908
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-1_gallery_10.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-1_gallery_10.jpg",
+    "processed_filename": "GR-08-1_gallery_10.jpg",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "canonical_name": "Прикроватная тумба с 2 ящиками",
+    "product_code_normalized": "GR-08-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_white10.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "a862b9392ed967190b378c833378cc31969d113b5bee9beca5dc5ad25022e145",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 75635
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-1_gallery_11.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-1_gallery_11.jpg",
+    "processed_filename": "GR-08-1_gallery_11.jpg",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "canonical_name": "Прикроватная тумба с 2 ящиками",
+    "product_code_normalized": "GR-08-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_graphite10.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "7cfe4287b86f56ef5f2b9eff479f7909143dd68600d6803e08539b11e779d04c",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 83112
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-1_gallery_12.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-1_gallery_12.jpg",
+    "processed_filename": "GR-08-1_gallery_12.jpg",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "canonical_name": "Прикроватная тумба с 2 ящиками",
+    "product_code_normalized": "GR-08-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_green10.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "ddd21e29c5dc98a6cd371a0f645fd2e5f4722d547cb361b63f97cbfcffc891d2",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 81108
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-1_gallery_13.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-1_gallery_13.jpg",
+    "processed_filename": "GR-08-1_gallery_13.jpg",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "canonical_name": "Прикроватная тумба с 2 ящиками",
+    "product_code_normalized": "GR-08-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_cacao10.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "e378d7a3021d15c1019bc271db4a3115f0519dae3ce8fe9913b400bebd5d8e4a",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 81853
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-1_gallery_14.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-1_gallery_14.jpg",
+    "processed_filename": "GR-08-1_gallery_14.jpg",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "canonical_name": "Прикроватная тумба с 2 ящиками",
+    "product_code_normalized": "GR-08-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_capuchino10.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "04a0d676994551473ab2bb7651a6f8bb8d766e9bfa5d31d08d9ed0e2cdeae16c",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 80677
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-1_gallery_15.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-1_gallery_15.jpg",
+    "processed_filename": "GR-08-1_gallery_15.jpg",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "canonical_name": "Прикроватная тумба с 2 ящиками",
+    "product_code_normalized": "GR-08-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_olive10.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "2fbfaaa6d2e89d72ba62d6f0595fe57e7490396846b63369a9d1ddaa41f5306f",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 79806
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-1_gallery_16.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-1_gallery_16.jpg",
+    "processed_filename": "GR-08-1_gallery_16.jpg",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "canonical_name": "Прикроватная тумба с 2 ящиками",
+    "product_code_normalized": "GR-08-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_powder10.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "f54276c0f6c91779397a4b8f2f4d0da58846efdc50a70e9299fa6deae4e8d1ea",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 77400
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-1_gallery_17.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-1_gallery_17.jpg",
+    "processed_filename": "GR-08-1_gallery_17.jpg",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "canonical_name": "Прикроватная тумба с 2 ящиками",
+    "product_code_normalized": "GR-08-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_grey10.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "aa797690acfa37c21919a0d9b00ce9ce714abc7fe62c80a765d4a1aa82b20f40",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 76642
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-1_gallery_18.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-1_gallery_18.jpg",
+    "processed_filename": "GR-08-1_gallery_18.jpg",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "canonical_name": "Прикроватная тумба с 2 ящиками",
+    "product_code_normalized": "GR-08-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_darkblue10.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "c08313ad5293375211c0e411ae7c300a976a6151e6088ca5dc35876b387b6a43",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 83492
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-1_gallery_19.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-1_gallery_19.jpg",
+    "processed_filename": "GR-08-1_gallery_19.jpg",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "canonical_name": "Прикроватная тумба с 2 ящиками",
+    "product_code_normalized": "GR-08-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_cream10.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "1ba64027a24657e20b82fbf0040428d0b544121553e6205be38d5729fdbc945c",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 76686
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-1_gallery_20.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-1_gallery_20.jpg",
+    "processed_filename": "GR-08-1_gallery_20.jpg",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "canonical_name": "Прикроватная тумба с 2 ящиками",
+    "product_code_normalized": "GR-08-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_terracote10.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "e9d6e85bcd1972e261553dbfd77923339b8bc3c3b011b32e53e76b680d3fd288",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 81690
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-2_main_01.png",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-2_main_01.jpg",
+    "processed_filename": "GR-08-2_main_01.jpg",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "canonical_name": "Прикроватная тумба с 1 ящиком",
+    "product_code_normalized": "GR-08-2",
+    "original_legacy_url": "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p10_i0_1764x1143.png",
+    "image_role": "main",
+    "asset_tier": "ready",
+    "sha256": "9f49a7240a016782f5e4e3d2e3cd6dae9a3bb97c577f284fba4d1ed24aaf0bf8",
+    "dimensions": [
+      1764,
+      1143
+    ],
+    "file_size_bytes": 453758
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-2_gallery_01.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-2_gallery_01.jpg",
+    "processed_filename": "GR-08-2_gallery_01.jpg",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "canonical_name": "Прикроватная тумба с 1 ящиком",
+    "product_code_normalized": "GR-08-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_capuchino13.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "d5e0d5281c72f77f2ef60daf8936e7d7f46bc3d08805b0ffcbd52db572f448d0",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 91817
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-2_gallery_02.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-2_gallery_02.jpg",
+    "processed_filename": "GR-08-2_gallery_02.jpg",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "canonical_name": "Прикроватная тумба с 1 ящиком",
+    "product_code_normalized": "GR-08-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_capuchino14.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "8884cf6e2b9009c83e07e7f29db41dd9a9f9d4473861dcadeaf5a413243bbaeb",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 78701
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-2_gallery_03.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-2_gallery_03.jpg",
+    "processed_filename": "GR-08-2_gallery_03.jpg",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "canonical_name": "Прикроватная тумба с 1 ящиком",
+    "product_code_normalized": "GR-08-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_capuchino15.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "76cff6328cace47e62495b06377dcd1d04fbe79a025c3fad9cfc0c6d2922570e",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 94494
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-2_gallery_04.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-2_gallery_04.jpg",
+    "processed_filename": "GR-08-2_gallery_04.jpg",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "canonical_name": "Прикроватная тумба с 1 ящиком",
+    "product_code_normalized": "GR-08-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino13.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "4d6ead90e60e13d5c54d5041b6b03c8e39b8b751b143b1b3dfdb5dd72bf29b6d",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 82985
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-2_gallery_05.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-2_gallery_05.jpg",
+    "processed_filename": "GR-08-2_gallery_05.jpg",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "canonical_name": "Прикроватная тумба с 1 ящиком",
+    "product_code_normalized": "GR-08-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino14.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "be69ffa24fd1ee12afcfc712b9efc653e11e29e3ab8f1cfa00c3f651e06ca8cc",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 72090
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-2_gallery_06.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-2_gallery_06.jpg",
+    "processed_filename": "GR-08-2_gallery_06.jpg",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "canonical_name": "Прикроватная тумба с 1 ящиком",
+    "product_code_normalized": "GR-08-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino15.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "0b302f6f3909d7af00cbd8ea57abfc7c3caf5ebb69f67f7ddafd4b921b2961c9",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 82329
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-2_gallery_07.webp",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-2_gallery_07.jpg",
+    "processed_filename": "GR-08-2_gallery_07.jpg",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "canonical_name": "Прикроватная тумба с 1 ящиком",
+    "product_code_normalized": "GR-08-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/9/sizes4.webp",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "a39408aa56e0590794d007644e2f52599508315f2ae413416f913182a275d332",
+    "dimensions": [
+      969,
+      969
+    ],
+    "file_size_bytes": 23493
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-2_gallery_08.webp",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-2_gallery_08.jpg",
+    "processed_filename": "GR-08-2_gallery_08.jpg",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "canonical_name": "Прикроватная тумба с 1 ящиком",
+    "product_code_normalized": "GR-08-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__3_.webp",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "7f30ecc991c6fdae9abcdc5548ec4d566360d300dcea7ab7198de518786aabf2",
+    "dimensions": [
+      1024,
+      640
+    ],
+    "file_size_bytes": 116649
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-2_gallery_09.webp",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-2_gallery_09.jpg",
+    "processed_filename": "GR-08-2_gallery_09.jpg",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "canonical_name": "Прикроватная тумба с 1 ящиком",
+    "product_code_normalized": "GR-08-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__4_.webp",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "900b63edb8b19ddf1d87726cade9203f4ef9f00cad04994f59750ec40c44ce0b",
+    "dimensions": [
+      1024,
+      640
+    ],
+    "file_size_bytes": 116020
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-2_gallery_10.webp",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-2_gallery_10.jpg",
+    "processed_filename": "GR-08-2_gallery_10.jpg",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "canonical_name": "Прикроватная тумба с 1 ящиком",
+    "product_code_normalized": "GR-08-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53.webp",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "2d6c0110b667997f8a921f698cdfd1c7848106af7147fc41b2696e56c146c018",
+    "dimensions": [
+      1024,
+      640
+    ],
+    "file_size_bytes": 121046
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-2_gallery_11.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-2_gallery_11.jpg",
+    "processed_filename": "GR-08-2_gallery_11.jpg",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "canonical_name": "Прикроватная тумба с 1 ящиком",
+    "product_code_normalized": "GR-08-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_white13.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "7d655404bc60fba206ecdc8b847a8a288a7900c36f207ffcf54cfc3c89d7bf23",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 74716
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-2_gallery_12.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-2_gallery_12.jpg",
+    "processed_filename": "GR-08-2_gallery_12.jpg",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "canonical_name": "Прикроватная тумба с 1 ящиком",
+    "product_code_normalized": "GR-08-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_graphite13.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "b0e0d2f3ff8b47352ebf915381b98533677cfdfbd906a8a5e1371df9034ca3ff",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 100765
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-2_gallery_13.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-2_gallery_13.jpg",
+    "processed_filename": "GR-08-2_gallery_13.jpg",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "canonical_name": "Прикроватная тумба с 1 ящиком",
+    "product_code_normalized": "GR-08-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_green13.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "d3c5ee00df4d2dad97accb595ddf59c535a2001b91b20c40a43f5a2d88182afe",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 94715
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-2_gallery_14.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-2_gallery_14.jpg",
+    "processed_filename": "GR-08-2_gallery_14.jpg",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "canonical_name": "Прикроватная тумба с 1 ящиком",
+    "product_code_normalized": "GR-08-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_cacao13.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "89ddd550079588ee20019ba614a08279f58b3af4763779b956247e3ef3e28ace",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 97189
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-2_gallery_15.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-2_gallery_15.jpg",
+    "processed_filename": "GR-08-2_gallery_15.jpg",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "canonical_name": "Прикроватная тумба с 1 ящиком",
+    "product_code_normalized": "GR-08-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_olive13.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "8f778e37f7d7e8dc7aeb11ad4259975d2e871de5002f4e78af457620743f5cec",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 89087
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-2_gallery_16.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-2_gallery_16.jpg",
+    "processed_filename": "GR-08-2_gallery_16.jpg",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "canonical_name": "Прикроватная тумба с 1 ящиком",
+    "product_code_normalized": "GR-08-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_powder13.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "f9a1b9a54750da7b84d9b2d7ff884d18a1c385c8d31018af5949f3adb83b7758",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 81482
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-2_gallery_17.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-2_gallery_17.jpg",
+    "processed_filename": "GR-08-2_gallery_17.jpg",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "canonical_name": "Прикроватная тумба с 1 ящиком",
+    "product_code_normalized": "GR-08-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_grey-blue13.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "463c2b9343f69695184d7365def27a4f7bbc82ed819b0b19d1d68d52fee585fd",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 85484
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-2_gallery_18.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-2_gallery_18.jpg",
+    "processed_filename": "GR-08-2_gallery_18.jpg",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "canonical_name": "Прикроватная тумба с 1 ящиком",
+    "product_code_normalized": "GR-08-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_grey13.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "9065c81f799b8eec1d44cd449b2123909d6e381743a721a90998cf3c6d0d1bf1",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 77283
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-2_gallery_19.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-2_gallery_19.jpg",
+    "processed_filename": "GR-08-2_gallery_19.jpg",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "canonical_name": "Прикроватная тумба с 1 ящиком",
+    "product_code_normalized": "GR-08-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_darkblue13.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "87b2f67c7b8cb7d1f5ec34c5cdc853a40ad194f0f2919aeb0cf084c884b972d1",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 99988
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-2_gallery_20.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-2_gallery_20.jpg",
+    "processed_filename": "GR-08-2_gallery_20.jpg",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "canonical_name": "Прикроватная тумба с 1 ящиком",
+    "product_code_normalized": "GR-08-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_cream13.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "fc671127a2538a459bd187ab5fb70f53ca102482514c16081082ed1a6096701c",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 78500
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-08-2_gallery_21.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-08-2_gallery_21.jpg",
+    "processed_filename": "GR-08-2_gallery_21.jpg",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "canonical_name": "Прикроватная тумба с 1 ящиком",
+    "product_code_normalized": "GR-08-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_terracote13.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "ec0330a8630e51912aea67b8f3ed6ca7170986017c7c0c069058b73811d9e699",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 96475
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-26-1_main_01.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-26-1_main_01.jpg",
+    "processed_filename": "GR-26-1_main_01.jpg",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "canonical_name": "Шкаф-витрина Кристалл",
+    "product_code_normalized": "GR-26-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_capuchino19.jpg",
+    "image_role": "main",
+    "asset_tier": "ready",
+    "sha256": "368129e4ef7ae0fba062c05b72ffbe5f53cf065b6b6ee4863408c0dce1613700",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 67993
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-26-1_gallery_01.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-26-1_gallery_01.jpg",
+    "processed_filename": "GR-26-1_gallery_01.jpg",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "canonical_name": "Шкаф-витрина Кристалл",
+    "product_code_normalized": "GR-26-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_capuchino20.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "c2cf8555f2d765a0f68d62c1d3b56f4ccbe350d22987f5b4b123907f562f08ce",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 68088
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-26-1_gallery_02.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-26-1_gallery_02.jpg",
+    "processed_filename": "GR-26-1_gallery_02.jpg",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "canonical_name": "Шкаф-витрина Кристалл",
+    "product_code_normalized": "GR-26-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_capuchino21.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "f67b111c62def2f2abeb562440996adc1a8146fd618344ac1c25400692f97cd4",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 68564
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-26-1_gallery_03.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-26-1_gallery_03.jpg",
+    "processed_filename": "GR-26-1_gallery_03.jpg",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "canonical_name": "Шкаф-витрина Кристалл",
+    "product_code_normalized": "GR-26-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino19.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "1075f33d364d3cf48412529f17805eecb6073d830186f7681ce8615f0a8bbbf1",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 65814
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-26-1_gallery_04.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-26-1_gallery_04.jpg",
+    "processed_filename": "GR-26-1_gallery_04.jpg",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "canonical_name": "Шкаф-витрина Кристалл",
+    "product_code_normalized": "GR-26-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino20.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "102b14f2e98b30526b69403a91487cf6dd98fdd4ca5f6b44cf66d4c809efe032",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 66515
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-26-1_gallery_05.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-26-1_gallery_05.jpg",
+    "processed_filename": "GR-26-1_gallery_05.jpg",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "canonical_name": "Шкаф-витрина Кристалл",
+    "product_code_normalized": "GR-26-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino21.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "ade2c1f99c0b784940b9502b5e16631ecf56aa4cfaaaa289aecf3e29b5f13179",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 65919
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-26-1_gallery_06.webp",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-26-1_gallery_06.jpg",
+    "processed_filename": "GR-26-1_gallery_06.jpg",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "canonical_name": "Шкаф-витрина Кристалл",
+    "product_code_normalized": "GR-26-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/9/sizes7.webp",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "b29a5b58391413b3d9ecbadec7a49410254641103c84af3b4b2522e5c74959d9",
+    "dimensions": [
+      969,
+      969
+    ],
+    "file_size_bytes": 35299
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-26-1_gallery_07.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-26-1_gallery_07.jpg",
+    "processed_filename": "GR-26-1_gallery_07.jpg",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "canonical_name": "Шкаф-витрина Кристалл",
+    "product_code_normalized": "GR-26-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/Cristal_габариты.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "77592465a1eb64eed37962463717e7a0161e67463e22b250da72123b78f0c5df",
+    "dimensions": [
+      5281,
+      3743
+    ],
+    "file_size_bytes": 616583
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-26-1_gallery_08.jpeg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-26-1_gallery_08.jpg",
+    "processed_filename": "GR-26-1_gallery_08.jpg",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "canonical_name": "Шкаф-витрина Кристалл",
+    "product_code_normalized": "GR-26-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__1__6zk2-uo.jpeg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "1a75c63b733215e72724574af919290237a15d51d2f2476c67e511b83dd29a17",
+    "dimensions": [
+      1024,
+      640
+    ],
+    "file_size_bytes": 84068
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-26-1_gallery_09.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-26-1_gallery_09.jpg",
+    "processed_filename": "GR-26-1_gallery_09.jpg",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "canonical_name": "Шкаф-витрина Кристалл",
+    "product_code_normalized": "GR-26-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/022.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "b1e3c2252f37b5adc210670411f24da28dbd0cdaef37eee41dfa8aa4c4da0dfa",
+    "dimensions": [
+      1574,
+      1574
+    ],
+    "file_size_bytes": 349228
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-26-1_gallery_10.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-26-1_gallery_10.jpg",
+    "processed_filename": "GR-26-1_gallery_10.jpg",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "canonical_name": "Шкаф-витрина Кристалл",
+    "product_code_normalized": "GR-26-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/025.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "c2c1e60cf21c58ed4dcb827f7e1ceb2e8967b82f314406bc02026ee7131ab303",
+    "dimensions": [
+      1574,
+      1574
+    ],
+    "file_size_bytes": 364542
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-26-1_gallery_11.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-26-1_gallery_11.jpg",
+    "processed_filename": "GR-26-1_gallery_11.jpg",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "canonical_name": "Шкаф-витрина Кристалл",
+    "product_code_normalized": "GR-26-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/021.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "fb553d2d78cff7099775b3c6670a539f098a47c9cf6a861d3ee1f051cdff6f4a",
+    "dimensions": [
+      1574,
+      1574
+    ],
+    "file_size_bytes": 344642
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-26-1_gallery_12.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-26-1_gallery_12.jpg",
+    "processed_filename": "GR-26-1_gallery_12.jpg",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "canonical_name": "Шкаф-витрина Кристалл",
+    "product_code_normalized": "GR-26-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/023.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "613e2c1efe732eeaa27e2c8eda31fc9a6c90c21c2f821a6a04559c9494ab0f10",
+    "dimensions": [
+      1574,
+      1574
+    ],
+    "file_size_bytes": 338232
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-26-1_gallery_13.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-26-1_gallery_13.jpg",
+    "processed_filename": "GR-26-1_gallery_13.jpg",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "canonical_name": "Шкаф-витрина Кристалл",
+    "product_code_normalized": "GR-26-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/024.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "06ecda5810873af53fd25de7ef0eb525be44098c844222b399b4bdc8acd0af4a",
+    "dimensions": [
+      1574,
+      1574
+    ],
+    "file_size_bytes": 342067
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-26-1_gallery_14.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-26-1_gallery_14.jpg",
+    "processed_filename": "GR-26-1_gallery_14.jpg",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "canonical_name": "Шкаф-витрина Кристалл",
+    "product_code_normalized": "GR-26-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_white19_wm0l-xh.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "b40d6e3575323f277302a578c8abbc1947663b07b93e13ec9e24b60380f0d226",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 62070
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-26-1_gallery_15.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-26-1_gallery_15.jpg",
+    "processed_filename": "GR-26-1_gallery_15.jpg",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "canonical_name": "Шкаф-витрина Кристалл",
+    "product_code_normalized": "GR-26-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_graphite19_effa-c7.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "dae2e059c4b9b3a76176481683705798ab93f6433f585aacdea8866695c4cb71",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 69657
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-26-1_gallery_16.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-26-1_gallery_16.jpg",
+    "processed_filename": "GR-26-1_gallery_16.jpg",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "canonical_name": "Шкаф-витрина Кристалл",
+    "product_code_normalized": "GR-26-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_green19_n3cg-c5.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "250ad7868cf6bdae0ac17bf2c63fe0c1e8ab188f0b0d466030f9c997a0f1f50b",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 69586
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-26-1_gallery_17.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-26-1_gallery_17.jpg",
+    "processed_filename": "GR-26-1_gallery_17.jpg",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "canonical_name": "Шкаф-витрина Кристалл",
+    "product_code_normalized": "GR-26-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_cacao19_wobb-2d.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "4d53fe47fd5d0a989b82a550e9396761b42daf680acfff51df97f2fee8e3b7ed",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 69883
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-26-1_gallery_18.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-26-1_gallery_18.jpg",
+    "processed_filename": "GR-26-1_gallery_18.jpg",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "canonical_name": "Шкаф-витрина Кристалл",
+    "product_code_normalized": "GR-26-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_olive19_aojz-ns.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "96334415df1e3c269e0fe7c7970f775efe05d4cc36d9efeb03f11f3dd751b624",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 67060
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-26-1_gallery_19.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-26-1_gallery_19.jpg",
+    "processed_filename": "GR-26-1_gallery_19.jpg",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "canonical_name": "Шкаф-витрина Кристалл",
+    "product_code_normalized": "GR-26-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_powder19_iobx-hr.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "5f0adffd35cb8311b10b2e722285dff3de5cd5ed374114d702f4378f60730f49",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 64907
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-26-1_gallery_20.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-26-1_gallery_20.jpg",
+    "processed_filename": "GR-26-1_gallery_20.jpg",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "canonical_name": "Шкаф-витрина Кристалл",
+    "product_code_normalized": "GR-26-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_grey-blue19_eytj-kh.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "8a3d0420f88ea6124b75f6e99d41a4694fac7c13b69dfdc5110d42d24a790f9b",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 67834
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-26-1_gallery_21.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-26-1_gallery_21.jpg",
+    "processed_filename": "GR-26-1_gallery_21.jpg",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "canonical_name": "Шкаф-витрина Кристалл",
+    "product_code_normalized": "GR-26-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_grey19_0tjg-36.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "ec20fefdc7345b118b8496145c9675853ca8d83508c818c76bf581030c7c7ff0",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 63969
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-26-1_gallery_22.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-26-1_gallery_22.jpg",
+    "processed_filename": "GR-26-1_gallery_22.jpg",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "canonical_name": "Шкаф-витрина Кристалл",
+    "product_code_normalized": "GR-26-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_darkblue19_a1fi-rc.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "25ad7b6b919ee1b8ce33641fe9aed3c75eec8b7d061588e62b5b7b73500712ec",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 71820
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-26-1_gallery_23.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-26-1_gallery_23.jpg",
+    "processed_filename": "GR-26-1_gallery_23.jpg",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "canonical_name": "Шкаф-витрина Кристалл",
+    "product_code_normalized": "GR-26-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_cream19_nyw2-xb.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "240cd401fd5eec7b366e6afba3f617036cdc625d246ec05dfb038e18e0c1997b",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 63704
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-26-1_gallery_24.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-26-1_gallery_24.jpg",
+    "processed_filename": "GR-26-1_gallery_24.jpg",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "canonical_name": "Шкаф-витрина Кристалл",
+    "product_code_normalized": "GR-26-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_terracote19.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "c68d2d3b6b4b17b0f2261ebae3ea824c5c3d7df8b4dd2f53838534e6bbd1f204",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 70744
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-1_main_01.png",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-1_main_01.jpg",
+    "processed_filename": "GR-02-1_main_01.jpg",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "canonical_name": "Гардероб 2 -х дв.  с ящиками",
+    "product_code_normalized": "GR-02-1",
+    "original_legacy_url": "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p5_i1_1498x967.png",
+    "image_role": "main",
+    "asset_tier": "ready",
+    "sha256": "623de93a049a53662eaedca9da6076fcbaf5d4ca99dd3edb74925fd9fb095071",
+    "dimensions": [
+      1498,
+      967
+    ],
+    "file_size_bytes": 163563
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-1_gallery_01.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-1_gallery_01.jpg",
+    "processed_filename": "GR-02-1_gallery_01.jpg",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "canonical_name": "Гардероб 2 -х дв.  с ящиками",
+    "product_code_normalized": "GR-02-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_capuchino22.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "86d6ed804004838d4426dda822a1994a69d8a5b6b62e7617ce48eeb65efc6d79",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 66527
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-1_gallery_02.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-1_gallery_02.jpg",
+    "processed_filename": "GR-02-1_gallery_02.jpg",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "canonical_name": "Гардероб 2 -х дв.  с ящиками",
+    "product_code_normalized": "GR-02-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_capuchino23.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "2f33e5603c7529d64ad0594d8f351a49bf660544f55ca8e542cd35b96b1f07f3",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 66359
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-1_gallery_03.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-1_gallery_03.jpg",
+    "processed_filename": "GR-02-1_gallery_03.jpg",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "canonical_name": "Гардероб 2 -х дв.  с ящиками",
+    "product_code_normalized": "GR-02-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_capuchino24.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "361d289f3030925a247db6ea7a894885f909d0d2fd921b1b83570427e8bae2de",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 66305
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-1_gallery_04.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-1_gallery_04.jpg",
+    "processed_filename": "GR-02-1_gallery_04.jpg",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "canonical_name": "Гардероб 2 -х дв.  с ящиками",
+    "product_code_normalized": "GR-02-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino22.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "aaaeea9ab9617753992fc7be656edec4470605876abae6410a9c1fd91edcbcbb",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 63954
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-1_gallery_05.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-1_gallery_05.jpg",
+    "processed_filename": "GR-02-1_gallery_05.jpg",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "canonical_name": "Гардероб 2 -х дв.  с ящиками",
+    "product_code_normalized": "GR-02-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino23.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "66f6eff4dd6c48a01370261749c87702bd8cc36e4e4078b4c20bee22911bd2f5",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 64073
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-1_gallery_06.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-1_gallery_06.jpg",
+    "processed_filename": "GR-02-1_gallery_06.jpg",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "canonical_name": "Гардероб 2 -х дв.  с ящиками",
+    "product_code_normalized": "GR-02-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_dark_capuchino24.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "49887b8c0c1be2273418e77783f27b35eb3c489736ea0adf727934daa1c1f4d4",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 64386
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-1_gallery_07.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-1_gallery_07.jpg",
+    "processed_filename": "GR-02-1_gallery_07.jpg",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "canonical_name": "Гардероб 2 -х дв.  с ящиками",
+    "product_code_normalized": "GR-02-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/06.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "21f89b64afe8d663b2a8e85141aee50a6a6589905bbf16ede98c063cc7413841",
+    "dimensions": [
+      1600,
+      1000
+    ],
+    "file_size_bytes": 173921
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-1_gallery_08.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-1_gallery_08.jpg",
+    "processed_filename": "GR-02-1_gallery_08.jpg",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "canonical_name": "Гардероб 2 -х дв.  с ящиками",
+    "product_code_normalized": "GR-02-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/08.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "6d8d879b3a3422957e918812379be1320dee295b39fbd2bc9bcd92b1654f2459",
+    "dimensions": [
+      1600,
+      1000
+    ],
+    "file_size_bytes": 212713
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-1_gallery_09.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-1_gallery_09.jpg",
+    "processed_filename": "GR-02-1_gallery_09.jpg",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "canonical_name": "Гардероб 2 -х дв.  с ящиками",
+    "product_code_normalized": "GR-02-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/09.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "fd77637639cf3e218806a90b390fee6c11d634f24c0f650c958ab8c2efffeb79",
+    "dimensions": [
+      1600,
+      1000
+    ],
+    "file_size_bytes": 242549
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-1_gallery_10.webp",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-1_gallery_10.jpg",
+    "processed_filename": "GR-02-1_gallery_10.jpg",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "canonical_name": "Гардероб 2 -х дв.  с ящиками",
+    "product_code_normalized": "GR-02-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/9/sizes8.webp",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "40d91318de11958746782ca92edb90ff3f5f91e41834ba03205040ce1ebc7df4",
+    "dimensions": [
+      969,
+      969
+    ],
+    "file_size_bytes": 29562
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-1_gallery_11.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-1_gallery_11.jpg",
+    "processed_filename": "GR-02-1_gallery_11.jpg",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "canonical_name": "Гардероб 2 -х дв.  с ящиками",
+    "product_code_normalized": "GR-02-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/Габариты.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "676953c5c8273fd77ca990b4b8a68272534f5946efc822accf3c430727b9a97a",
+    "dimensions": [
+      7176,
+      3739
+    ],
+    "file_size_bytes": 748544
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-1_gallery_12.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-1_gallery_12.jpg",
+    "processed_filename": "GR-02-1_gallery_12.jpg",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "canonical_name": "Гардероб 2 -х дв.  с ящиками",
+    "product_code_normalized": "GR-02-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_white22.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "d24dff3ce57dc4ea7de7fd53e038d3a5c93f33ef9ec9891f91bb29933fb38a5e",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 54186
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-1_gallery_13.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-1_gallery_13.jpg",
+    "processed_filename": "GR-02-1_gallery_13.jpg",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "canonical_name": "Гардероб 2 -х дв.  с ящиками",
+    "product_code_normalized": "GR-02-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_graphite22.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "674b79ececfee766c1c138c253faba2978d68bcce7c7a8de0d5c2a9275912abb",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 67714
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-1_gallery_14.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-1_gallery_14.jpg",
+    "processed_filename": "GR-02-1_gallery_14.jpg",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "canonical_name": "Гардероб 2 -х дв.  с ящиками",
+    "product_code_normalized": "GR-02-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_green22.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "18f1381065cb546b96cd1cf09ba86337511038c5c7d5a63ebd5eeca774267fba",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 67674
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-1_gallery_15.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-1_gallery_15.jpg",
+    "processed_filename": "GR-02-1_gallery_15.jpg",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "canonical_name": "Гардероб 2 -х дв.  с ящиками",
+    "product_code_normalized": "GR-02-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_cacao22.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "cb9bc82d993f3b29a9cea57f0c40b6833305e4fa6d94eafcb141f2bd4f4feb39",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 68161
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-1_gallery_16.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-1_gallery_16.jpg",
+    "processed_filename": "GR-02-1_gallery_16.jpg",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "canonical_name": "Гардероб 2 -х дв.  с ящиками",
+    "product_code_normalized": "GR-02-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_olive22.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "9983ed278dce1ef007e895e0ea8f25fdf25e8adccef09839da0236c674d6a57b",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 63821
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-1_gallery_17.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-1_gallery_17.jpg",
+    "processed_filename": "GR-02-1_gallery_17.jpg",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "canonical_name": "Гардероб 2 -х дв.  с ящиками",
+    "product_code_normalized": "GR-02-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_powder22.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "629880fc1ad2388bf45774e7ab4f160e7650a731621ecdf4d2c2b919b82fdcb5",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 59287
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-1_gallery_18.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-1_gallery_18.jpg",
+    "processed_filename": "GR-02-1_gallery_18.jpg",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "canonical_name": "Гардероб 2 -х дв.  с ящиками",
+    "product_code_normalized": "GR-02-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_grey-blue22.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "e5e49f1f989fd3bb7e90bc1c31e3f02ffdb601411597389c7fabffa0d1fcf62b",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 62887
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-1_gallery_19.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-1_gallery_19.jpg",
+    "processed_filename": "GR-02-1_gallery_19.jpg",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "canonical_name": "Гардероб 2 -х дв.  с ящиками",
+    "product_code_normalized": "GR-02-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_grey22.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "0b0389c75f979dd67035dcbec5fde60abce16a37d4d051998f607318f3b1b6b6",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 56036
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-1_gallery_20.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-1_gallery_20.jpg",
+    "processed_filename": "GR-02-1_gallery_20.jpg",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "canonical_name": "Гардероб 2 -х дв.  с ящиками",
+    "product_code_normalized": "GR-02-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_darkblue22.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "04b5c53e957771219013e0917695c861b7fa0602bd8f5dd59ac170fdf541e019",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 70252
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-1_gallery_21.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-1_gallery_21.jpg",
+    "processed_filename": "GR-02-1_gallery_21.jpg",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "canonical_name": "Гардероб 2 -х дв.  с ящиками",
+    "product_code_normalized": "GR-02-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_cream22.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "2d7ee6c8c48a87c59b637b9bf0b054c578cd2c260d98b5f2bba01224d03932ab",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 56535
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-1_gallery_22.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-1_gallery_22.jpg",
+    "processed_filename": "GR-02-1_gallery_22.jpg",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "canonical_name": "Гардероб 2 -х дв.  с ящиками",
+    "product_code_normalized": "GR-02-1",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_terracote22.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "070f552be39bb5b5cc0a65788241059e9a897d3d7192571f9902a102d1e19bad",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 68180
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-2_main_01.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-2_main_01.jpg",
+    "processed_filename": "GR-02-2_main_01.jpg",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "canonical_name": "Гардероб 2-дв.",
+    "product_code_normalized": "GR-02-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_white25_sldj-a6.jpg",
+    "image_role": "main",
+    "asset_tier": "ready",
+    "sha256": "03fb39e82e56d410678b8b1c2d16c38e3e5d12cc3e8fea24c3d657d5f8e0639f",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 50663
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-2_gallery_01.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-2_gallery_01.jpg",
+    "processed_filename": "GR-02-2_gallery_01.jpg",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "canonical_name": "Гардероб 2-дв.",
+    "product_code_normalized": "GR-02-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_white26_2fk4-zy.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "730ddee677bf39e3366d46b5d06d50469c5224f35a04e86caa395b5efae1f2c6",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 45914
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-2_gallery_02.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-2_gallery_02.jpg",
+    "processed_filename": "GR-02-2_gallery_02.jpg",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "canonical_name": "Гардероб 2-дв.",
+    "product_code_normalized": "GR-02-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_white27_mo08-mr.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "d48a944da0b3d81e1f7d105e6f5eb327edab7c9916397071340aed3fca33fb10",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 51292
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-2_gallery_03.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-2_gallery_03.jpg",
+    "processed_filename": "GR-02-2_gallery_03.jpg",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "canonical_name": "Гардероб 2-дв.",
+    "product_code_normalized": "GR-02-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_dark_white_25_yjuv-3o.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "6f4ebaddeb89d7051b47786b899bfe91441f34cfc448a214a3b5f1382eb1cdab",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 51347
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-2_gallery_04.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-2_gallery_04.jpg",
+    "processed_filename": "GR-02-2_gallery_04.jpg",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "canonical_name": "Гардероб 2-дв.",
+    "product_code_normalized": "GR-02-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_dark_white_26_z5gd-m1.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "cb5f53cb533a368f66e940a047dac4e064e1ab9630da73b44bdf375c48e93c92",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 46820
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-2_gallery_05.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-2_gallery_05.jpg",
+    "processed_filename": "GR-02-2_gallery_05.jpg",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "canonical_name": "Гардероб 2-дв.",
+    "product_code_normalized": "GR-02-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_dark_white_27_7xl8-ho.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "9ccbbf2a52043a99b48115df846085f60ca90a2367442ac48c2833d1b28cc1e7",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 52296
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-2_gallery_06.webp",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-2_gallery_06.jpg",
+    "processed_filename": "GR-02-2_gallery_06.jpg",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "canonical_name": "Гардероб 2-дв.",
+    "product_code_normalized": "GR-02-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/9/sizes9.webp",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "01743b5803861c60786b5e78df052005ba943d61e1b48900842f7aaed8e269c6",
+    "dimensions": [
+      969,
+      969
+    ],
+    "file_size_bytes": 27752
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-2_gallery_07.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-2_gallery_07.jpg",
+    "processed_filename": "GR-02-2_gallery_07.jpg",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "canonical_name": "Гардероб 2-дв.",
+    "product_code_normalized": "GR-02-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/наполнение_Total_snkm-ig.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "7d25ba72200409d91af42af7dfbce59cd37bdec7c174ee7f0925f0f4b8fa559b",
+    "dimensions": [
+      4446,
+      6090
+    ],
+    "file_size_bytes": 727048
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-2_gallery_08.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-2_gallery_08.jpg",
+    "processed_filename": "GR-02-2_gallery_08.jpg",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "canonical_name": "Гардероб 2-дв.",
+    "product_code_normalized": "GR-02-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/Габариты_Total_fdj5-3e.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "ae33658e5090cf01ad27bc710c638e0a0d9e8a29133317d638ccc373111fe8a3",
+    "dimensions": [
+      7176,
+      3739
+    ],
+    "file_size_bytes": 703709
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-2_gallery_09.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-2_gallery_09.jpg",
+    "processed_filename": "GR-02-2_gallery_09.jpg",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "canonical_name": "Гардероб 2-дв.",
+    "product_code_normalized": "GR-02-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_graphite25_93k2-vb.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "cc0487d31f8c81515eca3bb6d9880279bf9c05aa564aa0fe99919241093e6bc4",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 57246
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-2_gallery_10.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-2_gallery_10.jpg",
+    "processed_filename": "GR-02-2_gallery_10.jpg",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "canonical_name": "Гардероб 2-дв.",
+    "product_code_normalized": "GR-02-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_green25_h9su-oj.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "fe264d990e0e33e97a9c835e7de7f0e86cef359534efd0116f78144aafe2d8c1",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 59391
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-2_gallery_11.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-2_gallery_11.jpg",
+    "processed_filename": "GR-02-2_gallery_11.jpg",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "canonical_name": "Гардероб 2-дв.",
+    "product_code_normalized": "GR-02-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_cacao25_y8tr-dt.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "328a54fa73f8db0eb6b8b2234502e02ec820af5e5451b7500528cd82468eda8a",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 58954
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-2_gallery_12.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-2_gallery_12.jpg",
+    "processed_filename": "GR-02-2_gallery_12.jpg",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "canonical_name": "Гардероб 2-дв.",
+    "product_code_normalized": "GR-02-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_capuchino25.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "fa59012a5d64da4a5b67f50cd075695cb38d06db290f36a4c027e9275c2c6398",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 59148
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-2_gallery_13.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-2_gallery_13.jpg",
+    "processed_filename": "GR-02-2_gallery_13.jpg",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "canonical_name": "Гардероб 2-дв.",
+    "product_code_normalized": "GR-02-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_olive25_2rw3-nv.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "0a9ad12f0397321777541ca739c2a6cf70ce1c2429294f077197a25c023527a6",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 58506
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-2_gallery_14.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-2_gallery_14.jpg",
+    "processed_filename": "GR-02-2_gallery_14.jpg",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "canonical_name": "Гардероб 2-дв.",
+    "product_code_normalized": "GR-02-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_powder25_kna2-z6.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "6bd9eb7f0175104d6b1f9a5dcc36220719009090908b13abc45493513efa28a5",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 55432
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-2_gallery_15.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-2_gallery_15.jpg",
+    "processed_filename": "GR-02-2_gallery_15.jpg",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "canonical_name": "Гардероб 2-дв.",
+    "product_code_normalized": "GR-02-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_grey-blue25.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "b318974fcbc3a13258eb92ae9a577d43d19f5b3f4fa658a1a2e2076d079a81d7",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 56666
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-2_gallery_16.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-2_gallery_16.jpg",
+    "processed_filename": "GR-02-2_gallery_16.jpg",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "canonical_name": "Гардероб 2-дв.",
+    "product_code_normalized": "GR-02-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_grey25_ljbz-js.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "0cb19c80a606f32eb2cae72f0ea6f82a6a315c8dae60fe98263f56ccb0cbc6b2",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 51590
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-2_gallery_17.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-2_gallery_17.jpg",
+    "processed_filename": "GR-02-2_gallery_17.jpg",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "canonical_name": "Гардероб 2-дв.",
+    "product_code_normalized": "GR-02-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_darkblue25_lk7c-rp.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "8d3ce4212d72327c6388a3a7d86b761f90856b2c0dac0ff8537530b9cf355450",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 61120
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-2_gallery_18.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-2_gallery_18.jpg",
+    "processed_filename": "GR-02-2_gallery_18.jpg",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "canonical_name": "Гардероб 2-дв.",
+    "product_code_normalized": "GR-02-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_cream25_1atz-w9.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "a550c718576a56c8d934fc3d79ce1effe25bbea857064e29541dde767fb33432",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 53397
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/GR-02-2_gallery_19.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/GR-02-2_gallery_19.jpg",
+    "processed_filename": "GR-02-2_gallery_19.jpg",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "canonical_name": "Гардероб 2-дв.",
+    "product_code_normalized": "GR-02-2",
+    "original_legacy_url": "https://woodright.ru/images/detailed/11/greenwich_terracote25_7v2n-do.jpg",
+    "image_role": "gallery",
+    "asset_tier": "ready",
+    "sha256": "c84e6752af1b4558e1af284bf6aeb2ed21a5aba3cf048516d5929aec8a5a957c",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 60199
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_frame_01.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_frame_01.jpg",
+    "processed_filename": "GR-BED-POOL_frame_01.jpg",
+    "workbook_row_keys": [
+      "greenwich:GR-09-1",
+      "greenwich:GR-12-1",
+      "greenwich:GR-14-1",
+      "greenwich:GR-16-1",
+      "greenwich:GR-18-1"
+    ],
+    "canonical_names": [
+      "Кровать  1-сп. (90*200)",
+      "Кровать  1,5-сп. (120*200)",
+      "Кровать  1,5-сп. (140*200)",
+      "Кровать  2-сп. (160*200)",
+      "Кровать  2-сп. (180*200)"
+    ],
+    "product_codes": [
+      "GR-09-1",
+      "GR-12-1",
+      "GR-14-1",
+      "GR-16-1",
+      "GR-18-1"
+    ],
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg",
+    "design_family_hint": "frame",
+    "asset_role": "main_candidate",
+    "asset_tier": "bed_shared_pool",
+    "sha256": "d2b85d27fb890a1273e815ba24bb59d5bc22a16b9b23308b5d5de84d84cd4555",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 58225
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_frame_02.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_frame_02.jpg",
+    "processed_filename": "GR-BED-POOL_frame_02.jpg",
+    "workbook_row_keys": [
+      "greenwich:GR-09-1",
+      "greenwich:GR-12-1",
+      "greenwich:GR-14-1",
+      "greenwich:GR-16-1",
+      "greenwich:GR-18-1"
+    ],
+    "canonical_names": [
+      "Кровать  1-сп. (90*200)",
+      "Кровать  1,5-сп. (120*200)",
+      "Кровать  1,5-сп. (140*200)",
+      "Кровать  2-сп. (160*200)",
+      "Кровать  2-сп. (180*200)"
+    ],
+    "product_codes": [
+      "GR-09-1",
+      "GR-12-1",
+      "GR-14-1",
+      "GR-16-1",
+      "GR-18-1"
+    ],
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_frame_dark_beige.jpg",
+    "design_family_hint": "frame",
+    "asset_role": "shared_visual_pool",
+    "asset_tier": "bed_shared_pool",
+    "sha256": "02bb038fa3b67c075f0eead94ddd2d8dc2b2a584a0b9b8896a944d2d4e5fa1ed",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 58946
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_frame_03.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_frame_03.jpg",
+    "processed_filename": "GR-BED-POOL_frame_03.jpg",
+    "workbook_row_keys": [
+      "greenwich:GR-09-1",
+      "greenwich:GR-12-1",
+      "greenwich:GR-14-1",
+      "greenwich:GR-16-1",
+      "greenwich:GR-18-1"
+    ],
+    "canonical_names": [
+      "Кровать  1-сп. (90*200)",
+      "Кровать  1,5-сп. (120*200)",
+      "Кровать  1,5-сп. (140*200)",
+      "Кровать  2-сп. (160*200)",
+      "Кровать  2-сп. (180*200)"
+    ],
+    "product_codes": [
+      "GR-09-1",
+      "GR-12-1",
+      "GR-14-1",
+      "GR-16-1",
+      "GR-18-1"
+    ],
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_fame_natural_darkblue.jpg",
+    "design_family_hint": "frame",
+    "asset_role": "shared_visual_pool",
+    "asset_tier": "bed_shared_pool",
+    "sha256": "d3c0c0643c95b38e42d9bdd0d8df747086bee1f1ef4fb526d0bea424722cdc4e",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 58695
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_frame_04.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_frame_04.jpg",
+    "processed_filename": "GR-BED-POOL_frame_04.jpg",
+    "workbook_row_keys": [
+      "greenwich:GR-09-1",
+      "greenwich:GR-12-1",
+      "greenwich:GR-14-1",
+      "greenwich:GR-16-1",
+      "greenwich:GR-18-1"
+    ],
+    "canonical_names": [
+      "Кровать  1-сп. (90*200)",
+      "Кровать  1,5-сп. (120*200)",
+      "Кровать  1,5-сп. (140*200)",
+      "Кровать  2-сп. (160*200)",
+      "Кровать  2-сп. (180*200)"
+    ],
+    "product_codes": [
+      "GR-09-1",
+      "GR-12-1",
+      "GR-14-1",
+      "GR-16-1",
+      "GR-18-1"
+    ],
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_fame_dark_darkblue.jpg",
+    "design_family_hint": "frame",
+    "asset_role": "shared_visual_pool",
+    "asset_tier": "bed_shared_pool",
+    "sha256": "1957e0483c9bd8fd95911a2e90e23d992959bf399f33d53231a9fb97ef19fe2a",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 58166
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_frame_05.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_frame_05.jpg",
+    "processed_filename": "GR-BED-POOL_frame_05.jpg",
+    "workbook_row_keys": [
+      "greenwich:GR-09-1",
+      "greenwich:GR-12-1",
+      "greenwich:GR-14-1",
+      "greenwich:GR-16-1",
+      "greenwich:GR-18-1"
+    ],
+    "canonical_names": [
+      "Кровать  1-сп. (90*200)",
+      "Кровать  1,5-сп. (120*200)",
+      "Кровать  1,5-сп. (140*200)",
+      "Кровать  2-сп. (160*200)",
+      "Кровать  2-сп. (180*200)"
+    ],
+    "product_codes": [
+      "GR-09-1",
+      "GR-12-1",
+      "GR-14-1",
+      "GR-16-1",
+      "GR-18-1"
+    ],
+    "original_legacy_url": "https://woodright.ru/images/detailed/9/noliver_var2_View03.jpg",
+    "design_family_hint": "frame",
+    "asset_role": "shared_visual_pool",
+    "asset_tier": "bed_shared_pool",
+    "sha256": "02ab26699b81be411883cf263f1eb31604238c5e2513aeb5d924ccaefaf88d70",
+    "dimensions": [
+      1500,
+      1000
+    ],
+    "file_size_bytes": 184095
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_frame_06.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_frame_06.jpg",
+    "processed_filename": "GR-BED-POOL_frame_06.jpg",
+    "workbook_row_keys": [
+      "greenwich:GR-09-1",
+      "greenwich:GR-12-1",
+      "greenwich:GR-14-1",
+      "greenwich:GR-16-1",
+      "greenwich:GR-18-1"
+    ],
+    "canonical_names": [
+      "Кровать  1-сп. (90*200)",
+      "Кровать  1,5-сп. (120*200)",
+      "Кровать  1,5-сп. (140*200)",
+      "Кровать  2-сп. (160*200)",
+      "Кровать  2-сп. (180*200)"
+    ],
+    "product_codes": [
+      "GR-09-1",
+      "GR-12-1",
+      "GR-14-1",
+      "GR-16-1",
+      "GR-18-1"
+    ],
+    "original_legacy_url": "https://woodright.ru/images/detailed/9/noliver_var2_View02.jpg",
+    "design_family_hint": "frame",
+    "asset_role": "shared_visual_pool",
+    "asset_tier": "bed_shared_pool",
+    "sha256": "d29d36dfae4ba268a940c70bab8b5d8857d65ac5e2fd8105a5233cdbfd47f266",
+    "dimensions": [
+      1500,
+      1000
+    ],
+    "file_size_bytes": 180598
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_frame_07.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_frame_07.jpg",
+    "processed_filename": "GR-BED-POOL_frame_07.jpg",
+    "workbook_row_keys": [
+      "greenwich:GR-09-1",
+      "greenwich:GR-12-1",
+      "greenwich:GR-14-1",
+      "greenwich:GR-16-1",
+      "greenwich:GR-18-1"
+    ],
+    "canonical_names": [
+      "Кровать  1-сп. (90*200)",
+      "Кровать  1,5-сп. (120*200)",
+      "Кровать  1,5-сп. (140*200)",
+      "Кровать  2-сп. (160*200)",
+      "Кровать  2-сп. (180*200)"
+    ],
+    "product_codes": [
+      "GR-09-1",
+      "GR-12-1",
+      "GR-14-1",
+      "GR-16-1",
+      "GR-18-1"
+    ],
+    "original_legacy_url": "https://woodright.ru/images/detailed/9/noliver_var2_View01.jpg",
+    "design_family_hint": "frame",
+    "asset_role": "shared_visual_pool",
+    "asset_tier": "bed_shared_pool",
+    "sha256": "b78eb2f2c5e43189d1d9cbf4322df18ac7dc1062ec79c91f9c99a623db1d1e64",
+    "dimensions": [
+      1500,
+      1000
+    ],
+    "file_size_bytes": 197230
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_frame_08.webp",
+    "processed_path": "data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_frame_08.jpg",
+    "processed_filename": "GR-BED-POOL_frame_08.jpg",
+    "workbook_row_keys": [
+      "greenwich:GR-09-1",
+      "greenwich:GR-12-1",
+      "greenwich:GR-14-1",
+      "greenwich:GR-16-1",
+      "greenwich:GR-18-1"
+    ],
+    "canonical_names": [
+      "Кровать  1-сп. (90*200)",
+      "Кровать  1,5-сп. (120*200)",
+      "Кровать  1,5-сп. (140*200)",
+      "Кровать  2-сп. (160*200)",
+      "Кровать  2-сп. (180*200)"
+    ],
+    "product_codes": [
+      "GR-09-1",
+      "GR-12-1",
+      "GR-14-1",
+      "GR-16-1",
+      "GR-18-1"
+    ],
+    "original_legacy_url": "https://woodright.ru/images/detailed/9/sizes10.webp",
+    "design_family_hint": "frame",
+    "asset_role": "shared_visual_pool",
+    "asset_tier": "bed_shared_pool",
+    "sha256": "10234f39a3267b5546a95216b9aed5c984936537e007f9653356dbfcecd7052f",
+    "dimensions": [
+      969,
+      969
+    ],
+    "file_size_bytes": 40503
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_cloud_09.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_cloud_09.jpg",
+    "processed_filename": "GR-BED-POOL_cloud_09.jpg",
+    "workbook_row_keys": [
+      "greenwich:GR-09-1",
+      "greenwich:GR-12-1",
+      "greenwich:GR-14-1",
+      "greenwich:GR-16-1",
+      "greenwich:GR-18-1"
+    ],
+    "canonical_names": [
+      "Кровать  1-сп. (90*200)",
+      "Кровать  1,5-сп. (120*200)",
+      "Кровать  1,5-сп. (140*200)",
+      "Кровать  2-сп. (160*200)",
+      "Кровать  2-сп. (180*200)"
+    ],
+    "product_codes": [
+      "GR-09-1",
+      "GR-12-1",
+      "GR-14-1",
+      "GR-16-1",
+      "GR-18-1"
+    ],
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_cloud_natural_beige.jpg",
+    "design_family_hint": "cloud",
+    "asset_role": "main_candidate",
+    "asset_tier": "bed_shared_pool",
+    "sha256": "f44c63a9278ae9fd6895ba26c17204f162211994731102fdc6914dcf22ee628c",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 84503
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_cloud_10.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_cloud_10.jpg",
+    "processed_filename": "GR-BED-POOL_cloud_10.jpg",
+    "workbook_row_keys": [
+      "greenwich:GR-09-1",
+      "greenwich:GR-12-1",
+      "greenwich:GR-14-1",
+      "greenwich:GR-16-1",
+      "greenwich:GR-18-1"
+    ],
+    "canonical_names": [
+      "Кровать  1-сп. (90*200)",
+      "Кровать  1,5-сп. (120*200)",
+      "Кровать  1,5-сп. (140*200)",
+      "Кровать  2-сп. (160*200)",
+      "Кровать  2-сп. (180*200)"
+    ],
+    "product_codes": [
+      "GR-09-1",
+      "GR-12-1",
+      "GR-14-1",
+      "GR-16-1",
+      "GR-18-1"
+    ],
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_cloud_dark_beige.jpg",
+    "design_family_hint": "cloud",
+    "asset_role": "shared_visual_pool",
+    "asset_tier": "bed_shared_pool",
+    "sha256": "9b91fdbb27663914f9184c73de61de909decdac68d8f522c55ce799f4f3e339f",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 84373
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_cloud_11.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_cloud_11.jpg",
+    "processed_filename": "GR-BED-POOL_cloud_11.jpg",
+    "workbook_row_keys": [
+      "greenwich:GR-09-1",
+      "greenwich:GR-12-1",
+      "greenwich:GR-14-1",
+      "greenwich:GR-16-1",
+      "greenwich:GR-18-1"
+    ],
+    "canonical_names": [
+      "Кровать  1-сп. (90*200)",
+      "Кровать  1,5-сп. (120*200)",
+      "Кровать  1,5-сп. (140*200)",
+      "Кровать  2-сп. (160*200)",
+      "Кровать  2-сп. (180*200)"
+    ],
+    "product_codes": [
+      "GR-09-1",
+      "GR-12-1",
+      "GR-14-1",
+      "GR-16-1",
+      "GR-18-1"
+    ],
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_cloud_dark_darkblue.jpg",
+    "design_family_hint": "cloud",
+    "asset_role": "shared_visual_pool",
+    "asset_tier": "bed_shared_pool",
+    "sha256": "64207cb4ef63fef3c4d82478154b79ab2551c0e018060ab0d196459e871732c2",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 80366
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_cloud_12.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_cloud_12.jpg",
+    "processed_filename": "GR-BED-POOL_cloud_12.jpg",
+    "workbook_row_keys": [
+      "greenwich:GR-09-1",
+      "greenwich:GR-12-1",
+      "greenwich:GR-14-1",
+      "greenwich:GR-16-1",
+      "greenwich:GR-18-1"
+    ],
+    "canonical_names": [
+      "Кровать  1-сп. (90*200)",
+      "Кровать  1,5-сп. (120*200)",
+      "Кровать  1,5-сп. (140*200)",
+      "Кровать  2-сп. (160*200)",
+      "Кровать  2-сп. (180*200)"
+    ],
+    "product_codes": [
+      "GR-09-1",
+      "GR-12-1",
+      "GR-14-1",
+      "GR-16-1",
+      "GR-18-1"
+    ],
+    "original_legacy_url": "https://woodright.ru/images/detailed/9/bedroom2_int_View01.jpg",
+    "design_family_hint": "cloud",
+    "asset_role": "shared_visual_pool",
+    "asset_tier": "bed_shared_pool",
+    "sha256": "ce61660e2b232caac07e715fcd4fce26d1c9baf98f456a0a99cee6bc6e1a3abe",
+    "dimensions": [
+      1600,
+      1000
+    ],
+    "file_size_bytes": 223929
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_cloud_13.webp",
+    "processed_path": "data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_cloud_13.jpg",
+    "processed_filename": "GR-BED-POOL_cloud_13.jpg",
+    "workbook_row_keys": [
+      "greenwich:GR-09-1",
+      "greenwich:GR-12-1",
+      "greenwich:GR-14-1",
+      "greenwich:GR-16-1",
+      "greenwich:GR-18-1"
+    ],
+    "canonical_names": [
+      "Кровать  1-сп. (90*200)",
+      "Кровать  1,5-сп. (120*200)",
+      "Кровать  1,5-сп. (140*200)",
+      "Кровать  2-сп. (160*200)",
+      "Кровать  2-сп. (180*200)"
+    ],
+    "product_codes": [
+      "GR-09-1",
+      "GR-12-1",
+      "GR-14-1",
+      "GR-16-1",
+      "GR-18-1"
+    ],
+    "original_legacy_url": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__3__0gh9-64.webp",
+    "design_family_hint": "cloud",
+    "asset_role": "shared_visual_pool",
+    "asset_tier": "bed_shared_pool",
+    "sha256": "7f30ecc991c6fdae9abcdc5548ec4d566360d300dcea7ab7198de518786aabf2",
+    "dimensions": [
+      1024,
+      640
+    ],
+    "file_size_bytes": 116649
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_cloud_14.webp",
+    "processed_path": "data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_cloud_14.jpg",
+    "processed_filename": "GR-BED-POOL_cloud_14.jpg",
+    "workbook_row_keys": [
+      "greenwich:GR-09-1",
+      "greenwich:GR-12-1",
+      "greenwich:GR-14-1",
+      "greenwich:GR-16-1",
+      "greenwich:GR-18-1"
+    ],
+    "canonical_names": [
+      "Кровать  1-сп. (90*200)",
+      "Кровать  1,5-сп. (120*200)",
+      "Кровать  1,5-сп. (140*200)",
+      "Кровать  2-сп. (160*200)",
+      "Кровать  2-сп. (180*200)"
+    ],
+    "product_codes": [
+      "GR-09-1",
+      "GR-12-1",
+      "GR-14-1",
+      "GR-16-1",
+      "GR-18-1"
+    ],
+    "original_legacy_url": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__4__lqea-yq.webp",
+    "design_family_hint": "cloud",
+    "asset_role": "shared_visual_pool",
+    "asset_tier": "bed_shared_pool",
+    "sha256": "900b63edb8b19ddf1d87726cade9203f4ef9f00cad04994f59750ec40c44ce0b",
+    "dimensions": [
+      1024,
+      640
+    ],
+    "file_size_bytes": 116020
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_cloud_15.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_cloud_15.jpg",
+    "processed_filename": "GR-BED-POOL_cloud_15.jpg",
+    "workbook_row_keys": [
+      "greenwich:GR-09-1",
+      "greenwich:GR-12-1",
+      "greenwich:GR-14-1",
+      "greenwich:GR-16-1",
+      "greenwich:GR-18-1"
+    ],
+    "canonical_names": [
+      "Кровать  1-сп. (90*200)",
+      "Кровать  1,5-сп. (120*200)",
+      "Кровать  1,5-сп. (140*200)",
+      "Кровать  2-сп. (160*200)",
+      "Кровать  2-сп. (180*200)"
+    ],
+    "product_codes": [
+      "GR-09-1",
+      "GR-12-1",
+      "GR-14-1",
+      "GR-16-1",
+      "GR-18-1"
+    ],
+    "original_legacy_url": "https://woodright.ru/images/detailed/9/bedroom2_int_View04.jpg",
+    "design_family_hint": "cloud",
+    "asset_role": "shared_visual_pool",
+    "asset_tier": "bed_shared_pool",
+    "sha256": "105d68b728f2b4634419b1503f6bff3b78c9e55a534eb8593fdab6fca049a579",
+    "dimensions": [
+      1600,
+      1000
+    ],
+    "file_size_bytes": 222439
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_cloud_16.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_cloud_16.jpg",
+    "processed_filename": "GR-BED-POOL_cloud_16.jpg",
+    "workbook_row_keys": [
+      "greenwich:GR-09-1",
+      "greenwich:GR-12-1",
+      "greenwich:GR-14-1",
+      "greenwich:GR-16-1",
+      "greenwich:GR-18-1"
+    ],
+    "canonical_names": [
+      "Кровать  1-сп. (90*200)",
+      "Кровать  1,5-сп. (120*200)",
+      "Кровать  1,5-сп. (140*200)",
+      "Кровать  2-сп. (160*200)",
+      "Кровать  2-сп. (180*200)"
+    ],
+    "product_codes": [
+      "GR-09-1",
+      "GR-12-1",
+      "GR-14-1",
+      "GR-16-1",
+      "GR-18-1"
+    ],
+    "original_legacy_url": "https://woodright.ru/images/detailed/9/sizes12.jpg",
+    "design_family_hint": "cloud",
+    "asset_role": "shared_visual_pool",
+    "asset_tier": "bed_shared_pool",
+    "sha256": "7271f4383a98b95314f9d56fec55bedcbff71733762e538c6d34b40d300e825c",
+    "dimensions": [
+      1100,
+      1100
+    ],
+    "file_size_bytes": 60297
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_plane_17.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_plane_17.jpg",
+    "processed_filename": "GR-BED-POOL_plane_17.jpg",
+    "workbook_row_keys": [
+      "greenwich:GR-09-1",
+      "greenwich:GR-12-1",
+      "greenwich:GR-14-1",
+      "greenwich:GR-16-1",
+      "greenwich:GR-18-1"
+    ],
+    "canonical_names": [
+      "Кровать  1-сп. (90*200)",
+      "Кровать  1,5-сп. (120*200)",
+      "Кровать  1,5-сп. (140*200)",
+      "Кровать  2-сп. (160*200)",
+      "Кровать  2-сп. (180*200)"
+    ],
+    "product_codes": [
+      "GR-09-1",
+      "GR-12-1",
+      "GR-14-1",
+      "GR-16-1",
+      "GR-18-1"
+    ],
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_plane_natural_beige.jpg",
+    "design_family_hint": "plane",
+    "asset_role": "main_candidate",
+    "asset_tier": "bed_shared_pool",
+    "sha256": "a4b010915f90330d30c4248d1bc808f32a283dac099fcde15b9ecd85d80ee73b",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 59422
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_plane_18.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_plane_18.jpg",
+    "processed_filename": "GR-BED-POOL_plane_18.jpg",
+    "workbook_row_keys": [
+      "greenwich:GR-09-1",
+      "greenwich:GR-12-1",
+      "greenwich:GR-14-1",
+      "greenwich:GR-16-1",
+      "greenwich:GR-18-1"
+    ],
+    "canonical_names": [
+      "Кровать  1-сп. (90*200)",
+      "Кровать  1,5-сп. (120*200)",
+      "Кровать  1,5-сп. (140*200)",
+      "Кровать  2-сп. (160*200)",
+      "Кровать  2-сп. (180*200)"
+    ],
+    "product_codes": [
+      "GR-09-1",
+      "GR-12-1",
+      "GR-14-1",
+      "GR-16-1",
+      "GR-18-1"
+    ],
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_plane_dark_beige.jpg",
+    "design_family_hint": "plane",
+    "asset_role": "shared_visual_pool",
+    "asset_tier": "bed_shared_pool",
+    "sha256": "7d11fe3b4cc5c06bde04cbdfb792912f745fb265ef2322b39f3b199e2c2432ae",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 59531
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_plane_19.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_plane_19.jpg",
+    "processed_filename": "GR-BED-POOL_plane_19.jpg",
+    "workbook_row_keys": [
+      "greenwich:GR-09-1",
+      "greenwich:GR-12-1",
+      "greenwich:GR-14-1",
+      "greenwich:GR-16-1",
+      "greenwich:GR-18-1"
+    ],
+    "canonical_names": [
+      "Кровать  1-сп. (90*200)",
+      "Кровать  1,5-сп. (120*200)",
+      "Кровать  1,5-сп. (140*200)",
+      "Кровать  2-сп. (160*200)",
+      "Кровать  2-сп. (180*200)"
+    ],
+    "product_codes": [
+      "GR-09-1",
+      "GR-12-1",
+      "GR-14-1",
+      "GR-16-1",
+      "GR-18-1"
+    ],
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_plane_natural_darkblue.jpg",
+    "design_family_hint": "plane",
+    "asset_role": "shared_visual_pool",
+    "asset_tier": "bed_shared_pool",
+    "sha256": "be3565fbf6cc3cf23d79cd8b9cd583959bfeeb457908fc2269652f22c703b6cf",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 60042
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_plane_20.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_plane_20.jpg",
+    "processed_filename": "GR-BED-POOL_plane_20.jpg",
+    "workbook_row_keys": [
+      "greenwich:GR-09-1",
+      "greenwich:GR-12-1",
+      "greenwich:GR-14-1",
+      "greenwich:GR-16-1",
+      "greenwich:GR-18-1"
+    ],
+    "canonical_names": [
+      "Кровать  1-сп. (90*200)",
+      "Кровать  1,5-сп. (120*200)",
+      "Кровать  1,5-сп. (140*200)",
+      "Кровать  2-сп. (160*200)",
+      "Кровать  2-сп. (180*200)"
+    ],
+    "product_codes": [
+      "GR-09-1",
+      "GR-12-1",
+      "GR-14-1",
+      "GR-16-1",
+      "GR-18-1"
+    ],
+    "original_legacy_url": "https://woodright.ru/images/detailed/10/greenwich_plane_dark_darkblue.jpg",
+    "design_family_hint": "plane",
+    "asset_role": "shared_visual_pool",
+    "asset_tier": "bed_shared_pool",
+    "sha256": "9b9e46fba706401bf549bf0ac6ac9d0b3af19e1f17e8eeb34b4950afc39e42a3",
+    "dimensions": [
+      1200,
+      1200
+    ],
+    "file_size_bytes": 59784
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_plane_21.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_plane_21.jpg",
+    "processed_filename": "GR-BED-POOL_plane_21.jpg",
+    "workbook_row_keys": [
+      "greenwich:GR-09-1",
+      "greenwich:GR-12-1",
+      "greenwich:GR-14-1",
+      "greenwich:GR-16-1",
+      "greenwich:GR-18-1"
+    ],
+    "canonical_names": [
+      "Кровать  1-сп. (90*200)",
+      "Кровать  1,5-сп. (120*200)",
+      "Кровать  1,5-сп. (140*200)",
+      "Кровать  2-сп. (160*200)",
+      "Кровать  2-сп. (180*200)"
+    ],
+    "product_codes": [
+      "GR-09-1",
+      "GR-12-1",
+      "GR-14-1",
+      "GR-16-1",
+      "GR-18-1"
+    ],
+    "original_legacy_url": "https://woodright.ru/images/detailed/9/greenwich_wideheader_View02_7nwd-jk.jpg",
+    "design_family_hint": "plane",
+    "asset_role": "shared_visual_pool",
+    "asset_tier": "bed_shared_pool",
+    "sha256": "8bec6f791be5e80f87b2558bd24b76f063e9e9fb4ca3165b7a9ffe469dc894ba",
+    "dimensions": [
+      1800,
+      1200
+    ],
+    "file_size_bytes": 350042
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_plane_22.jpg",
+    "processed_path": "data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_plane_22.jpg",
+    "processed_filename": "GR-BED-POOL_plane_22.jpg",
+    "workbook_row_keys": [
+      "greenwich:GR-09-1",
+      "greenwich:GR-12-1",
+      "greenwich:GR-14-1",
+      "greenwich:GR-16-1",
+      "greenwich:GR-18-1"
+    ],
+    "canonical_names": [
+      "Кровать  1-сп. (90*200)",
+      "Кровать  1,5-сп. (120*200)",
+      "Кровать  1,5-сп. (140*200)",
+      "Кровать  2-сп. (160*200)",
+      "Кровать  2-сп. (180*200)"
+    ],
+    "product_codes": [
+      "GR-09-1",
+      "GR-12-1",
+      "GR-14-1",
+      "GR-16-1",
+      "GR-18-1"
+    ],
+    "original_legacy_url": "https://woodright.ru/images/detailed/9/greenwich_wideheader_View01_0f24-bk.jpg",
+    "design_family_hint": "plane",
+    "asset_role": "shared_visual_pool",
+    "asset_tier": "bed_shared_pool",
+    "sha256": "5d703271f7d395aea817380a68ec0c074a5a0a4e312501c4c5e38f340edf109a",
+    "dimensions": [
+      1800,
+      1200
+    ],
+    "file_size_bytes": 327676
+  },
+  {
+    "raw_source_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_plane_23.webp",
+    "processed_path": "data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_plane_23.jpg",
+    "processed_filename": "GR-BED-POOL_plane_23.jpg",
+    "workbook_row_keys": [
+      "greenwich:GR-09-1",
+      "greenwich:GR-12-1",
+      "greenwich:GR-14-1",
+      "greenwich:GR-16-1",
+      "greenwich:GR-18-1"
+    ],
+    "canonical_names": [
+      "Кровать  1-сп. (90*200)",
+      "Кровать  1,5-сп. (120*200)",
+      "Кровать  1,5-сп. (140*200)",
+      "Кровать  2-сп. (160*200)",
+      "Кровать  2-сп. (180*200)"
+    ],
+    "product_codes": [
+      "GR-09-1",
+      "GR-12-1",
+      "GR-14-1",
+      "GR-16-1",
+      "GR-18-1"
+    ],
+    "original_legacy_url": "https://woodright.ru/images/detailed/9/sizes11.webp",
+    "design_family_hint": "plane",
+    "asset_role": "shared_visual_pool",
+    "asset_tier": "bed_shared_pool",
+    "sha256": "601b6f879549a8d18a8968f3b3bcd4f98afc43841ae63767ecc52173000d2439",
+    "dimensions": [
+      969,
+      969
+    ],
+    "file_size_bytes": 35710
+  }
+]

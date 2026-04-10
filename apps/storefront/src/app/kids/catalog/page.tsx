@@ -2,6 +2,8 @@ import Link from "next/link"
 import type { Metadata } from "next"
 import { ProductCard } from "@/components/product-card"
 import { resolveKidsProducts } from "@/lib/kids"
+import { groupProductsForDisplay } from "@/lib/display-group"
+import { isProductInActiveCatalogScope } from "@/lib/catalog-scope"
 
 export const metadata: Metadata = {
   title: "Каталог",
@@ -18,8 +20,10 @@ export default async function KidsCatalogPage() {
   let products: Array<Record<string, unknown>> = []
 
   try {
-    const kidsData = await resolveKidsProducts()
-    products = kidsData.products
+    const     kidsData = await resolveKidsProducts()
+    products = kidsData.products.filter((p) =>
+      isProductInActiveCatalogScope(p)
+    )
   } catch {
     return (
       <div data-state="error">
@@ -52,6 +56,8 @@ export default async function KidsCatalogPage() {
     )
   }
 
+  const displayEntries = groupProductsForDisplay(products)
+
   return (
     <div data-state="success">
       <h1>Мебель для детской</h1>
@@ -59,9 +65,12 @@ export default async function KidsCatalogPage() {
         Подборка мебели из наших готовых комплектов для детских комнат.
       </p>
       <ul className="product-grid" style={{ marginTop: "1.5rem" }}>
-        {products.map((p) => (
-          <li key={p.id as string}>
-            <ProductCard product={p as any} />
+        {displayEntries.map((entry) => (
+          <li key={(entry.product as any).id as string}>
+            <ProductCard
+              product={entry.product as any}
+              displayGroup={entry.displayGroup}
+            />
           </li>
         ))}
       </ul>

@@ -1,9 +1,30 @@
 import Link from "next/link"
 import type { Metadata } from "next"
 import { getSiteUrl } from "@/lib/api/base"
-import { getProduct, NOT_FOUND } from "@/lib/api/products"
+import { getProduct, getProducts, NOT_FOUND } from "@/lib/api/products"
 import { formatRub, getPrice } from "@/lib/format"
 import { ProductCta } from "@/components/product-cta"
+import { getDisplayGroupMembers } from "@/lib/display-group"
+import {
+  getCollectionLabel,
+  getSubcollectionLabel,
+  getCanonicalName,
+  getArticle,
+  getDimensions,
+  formatDimensionsLabeled,
+} from "@/lib/product-metadata"
+
+function collectProductImageUrls(product: Record<string, unknown>): string[] {
+  const urls: string[] = []
+  const thumb = product.thumbnail as string | undefined
+  const images = product.images as Array<{ url?: string }> | undefined
+  if (thumb) urls.push(thumb)
+  for (const im of images ?? []) {
+    const u = im?.url
+    if (typeof u === "string" && u && !urls.includes(u)) urls.push(u)
+  }
+  return urls
+}
 
 function truncate(str: string, max: number): string {
   if (str.length <= max) return str
@@ -78,12 +99,29 @@ export default async function ProductPage({ params }: { params: { id: string } }
   }
 
   const base = getSiteUrl()
-  const thumbnail = product.thumbnail as string | undefined
-  const images = product.images as Array<{ url?: string }> | undefined
-  const mainImage = thumbnail || images?.[0]?.url
+  const galleryUrls = collectProductImageUrls(product)
+  const mainImage = galleryUrls[0]
   const price = getPrice(product)
   const productType = (product.product_classification as Record<string, string> | undefined)?.product_type
   const badgeLabel = productType ? BADGE_LABELS[productType] : undefined
+
+  const meta = product.metadata as Record<string, unknown> | undefined
+  let displayGroupMembers: Record<string, unknown>[] = []
+  if (meta?.display_group && meta?.collection) {
+    try {
+      const plist = await getProducts()
+      const list = (plist.products ?? []) as Record<string, unknown>[]
+      displayGroupMembers = getDisplayGroupMembers(product, list)
+    } catch {
+      /* ignore — PDP still usable */
+    }
+  }
+
+  const titleStr = String(product.title ?? "Товар")
+  const canonicalName = getCanonicalName(product)
+  const showCanonicalLine =
+    canonicalName != null &&
+    canonicalName.toLowerCase() !== titleStr.trim().toLowerCase()
 
   const productJsonLd = {
     "@context": "https://schema.org",
@@ -103,19 +141,75 @@ export default async function ProductPage({ params }: { params: { id: string } }
       <div className="product-detail">
         <div>
           {mainImage ? (
-            <img src={mainImage} alt={String(product.title ?? "")} className="product-detail-img" />
+            <img src={mainImage} alt={titleStr} className="product-detail-img" />
           ) : (
             <div className="product-detail-img skeleton" />
           )}
+          {galleryUrls.length > 1 && (
+            <ul className="product-detail-gallery" aria-label="Галерея">
+              {galleryUrls.slice(1).map((url) => (
+                <li key={url}>
+                  <img src={url} alt="" loading="lazy" />
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
         <div className="product-detail-info">
-          <div className="product-detail-header">
-            <h1>{(product.title as string) ?? "Товар"}</h1>
-            {badgeLabel && <span className="badge">{badgeLabel}</span>}
-          </div>
+          {(() => {
+            const collectionLabel = getCollectionLabel(product)
+            const subcollectionLabel = getSubcollectionLabel(product)
+            const article = getArticle(product)
+            const dim = getDimensions(product)
+            return (
+              <>
+                {(collectionLabel || subcollectionLabel) && (
+                  <span className="pdp-collection-label">
+                    {[collectionLabel, subcollectionLabel].filter(Boolean).join(" · ")}
+                  </span>
+                )}
+                <div className="product-detail-header">
+                  <h1>{titleStr}</h1>
+                  {badgeLabel && <span className="badge">{badgeLabel}</span>}
+                </div>
+                {showCanonicalLine && canonicalName && (
+                  <span className="pdp-canonical-name">{canonicalName}</span>
+                )}
+                {article && (
+                  <span className="pdp-article">Арт. {article}</span>
+                )}
+                {dim && (
+                  <span className="pdp-dimensions">{formatDimensionsLabeled(dim)}</span>
+                )}
+              </>
+            )
+          })()}
           {price != null && <p className="price product-detail-price">{formatRub(price)}</p>}
-          {product.description && <p className="info-text">{String(product.description)}</p>}
           <ProductCta product={product} />
+          {displayGroupMembers.length > 0 && (
+            <section className="pdp-related-sizes" aria-labelledby="pdp-sizes-heading">
+              <h2 id="pdp-sizes-heading" className="pdp-related-sizes-title">
+                Другие размеры
+              </h2>
+              <ul className="pdp-related-sizes-list">
+                {displayGroupMembers.map((m) => {
+                  const mid = m.id as string
+                  const mt = String(m.title ?? "Вариант")
+                  const mp = getPrice(m)
+                  return (
+                    <li key={mid}>
+                      <Link href={`/product/${mid}`} className="pdp-related-sizes-link">
+                        <span>{mt}</span>
+                        {mp != null && (
+                          <span className="pdp-related-sizes-price">{formatRub(mp)}</span>
+                        )}
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ul>
+            </section>
+          )}
         </div>
       </div>
     </div>

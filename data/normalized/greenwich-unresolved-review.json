@@ -1,0 +1,169 @@
+[
+  {
+    "workbook_row_key": "greenwich:GR-09-1",
+    "product_code_normalized": "GR-09-1",
+    "canonical_name": "Зеркало навесное",
+    "workbook_row_index": 6,
+    "current_mapping_status": "pdf_candidate",
+    "current_confidence": 0.7,
+    "candidate_legacy_titles": [],
+    "candidate_legacy_urls": [],
+    "candidate_image_sources": [
+      {
+        "source_type": "pdf_embedded",
+        "source_ref": "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p11_i0_1509x970.png",
+        "pdf_name": "Зеркало Frame",
+        "resolution": "1509x970",
+        "confidence": 0.7
+      }
+    ],
+    "source_priority_if_confirmed": "pdf_embedded (only source available)",
+    "review_question": "No legacy page exists for this mirror. PDF image at 1509x970 is the only source. Is the PDF image quality sufficient as a temporary main image?",
+    "recommended_action": "accept_pdf_as_temporary",
+    "review_status": "accepted_temporary",
+    "category": "pdf_only",
+    "notes": "Product named 'Зеркало Frame' in Greenwich.pdf. Shares code GR-09-1 with Кровать 1-сп. — see duplicate code section. No legacy page, no disk source. PDF copied locally as temp."
+  },
+  {
+    "workbook_row_key": "greenwich:GR-42-1",
+    "product_code_normalized": "GR-42-1",
+    "canonical_name": "Тумба ТВ",
+    "workbook_row_index": 10,
+    "current_mapping_status": "pdf_candidate",
+    "current_confidence": 0.7,
+    "candidate_legacy_titles": [],
+    "candidate_legacy_urls": [],
+    "candidate_image_sources": [
+      {
+        "source_type": "pdf_embedded",
+        "source_ref": "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p7_i2_1531x1360.png",
+        "pdf_name": "Тумба ТВ Wide",
+        "resolution": "1531x1360",
+        "confidence": 0.7
+      }
+    ],
+    "source_priority_if_confirmed": "pdf_embedded (only source available)",
+    "review_question": "No legacy page exists for this TV stand. PDF image at 1531x1360 is the only source. Accept as temporary main image?",
+    "recommended_action": "accept_pdf_as_temporary",
+    "review_status": "accepted_temporary",
+    "category": "pdf_only",
+    "notes": "Named 'Тумба ТВ Wide' in Greenwich.pdf. Good resolution. Matches workbook 'Тумба ТВ' with high semantic confidence. PDF copied locally as temp."
+  },
+  {
+    "workbook_row_key": "greenwich:GR-09-1",
+    "product_code_normalized": "GR-09-1",
+    "canonical_name": "Кровать  1-сп. (90*200)",
+    "workbook_row_index": 16,
+    "current_mapping_status": "resolved_shared_visual_pool",
+    "current_confidence": 0.75,
+    "candidate_legacy_titles": ["Кровать Frame", "Кровать Cloud", "Кровать Plane"],
+    "candidate_legacy_urls": [
+      "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+      "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+      "https://woodright.ru/kollekcii/greenwich/krovat-plane/"
+    ],
+    "candidate_image_sources": [
+      {
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg",
+        "legacy_title": "Кровать Frame",
+        "gallery_count": 8,
+        "confidence": 0.75,
+        "match_basis": "confirmed_design_family_pool"
+      },
+      {
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_cloud_natural_beige.jpg",
+        "legacy_title": "Кровать Cloud",
+        "gallery_count": 8,
+        "confidence": 0.75
+      },
+      {
+        "source_type": "legacy_site",
+        "source_ref": "https://woodright.ru/images/detailed/10/greenwich_plane_natural_beige.jpg",
+        "legacy_title": "Кровать Plane",
+        "gallery_count": 7,
+        "confidence": 0.75
+      }
+    ],
+    "source_priority_if_confirmed": "legacy_site Frame as main + Cloud/Plane as gallery",
+    "review_question": "RESOLVED: Business confirmed design-agnostic pooling.",
+    "recommended_action": "resolved",
+    "review_status": "resolved",
+    "category": "bed_mapping",
+    "resolution": "Business confirmed Frame/Cloud/Plane are headboard design variants. All 23 images pooled. Frame as representative main.",
+    "notes": "Shares code GR-09-1 with Зеркало навесное. Workbook width 1030mm (90cm mattress). Resolved 2026-03-19."
+  },
+  {
+    "workbook_row_key": "greenwich:GR-12-1",
+    "product_code_normalized": "GR-12-1",
+    "canonical_name": "Кровать  1,5-сп. (120*200)",
+    "workbook_row_index": 17,
+    "current_mapping_status": "resolved_shared_visual_pool",
+    "current_confidence": 0.75,
+    "candidate_legacy_titles": ["Кровать Frame", "Кровать Cloud", "Кровать Plane"],
+    "candidate_legacy_urls": [
+      "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+      "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+      "https://woodright.ru/kollekcii/greenwich/krovat-plane/"
+    ],
+    "review_status": "resolved",
+    "category": "bed_mapping",
+    "resolution": "Same as GR-09-1 bed. Shared pool applies to all sizes.",
+    "notes": "Workbook width 1330mm (120cm mattress). Resolved 2026-03-19."
+  },
+  {
+    "workbook_row_key": "greenwich:GR-14-1",
+    "product_code_normalized": "GR-14-1",
+    "canonical_name": "Кровать  1,5-сп. (140*200)",
+    "workbook_row_index": 18,
+    "current_mapping_status": "resolved_shared_visual_pool",
+    "current_confidence": 0.75,
+    "candidate_legacy_titles": ["Кровать Frame", "Кровать Cloud", "Кровать Plane"],
+    "candidate_legacy_urls": [
+      "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+      "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+      "https://woodright.ru/kollekcii/greenwich/krovat-plane/"
+    ],
+    "review_status": "resolved",
+    "category": "bed_mapping",
+    "resolution": "Same as GR-09-1 bed. Shared pool applies to all sizes.",
+    "notes": "Workbook width 1530mm (140cm mattress). Resolved 2026-03-19."
+  },
+  {
+    "workbook_row_key": "greenwich:GR-16-1",
+    "product_code_normalized": "GR-16-1",
+    "canonical_name": "Кровать  2-сп. (160*200)",
+    "workbook_row_index": 19,
+    "current_mapping_status": "resolved_shared_visual_pool",
+    "current_confidence": 0.75,
+    "candidate_legacy_titles": ["Кровать Frame", "Кровать Cloud", "Кровать Plane"],
+    "candidate_legacy_urls": [
+      "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+      "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+      "https://woodright.ru/kollekcii/greenwich/krovat-plane/"
+    ],
+    "review_status": "resolved",
+    "category": "bed_mapping",
+    "resolution": "Same as GR-09-1 bed. Shared pool applies to all sizes.",
+    "notes": "Workbook width 1730mm (160cm mattress). Resolved 2026-03-19."
+  },
+  {
+    "workbook_row_key": "greenwich:GR-18-1",
+    "product_code_normalized": "GR-18-1",
+    "canonical_name": "Кровать  2-сп. (180*200)",
+    "workbook_row_index": 20,
+    "current_mapping_status": "resolved_shared_visual_pool",
+    "current_confidence": 0.75,
+    "candidate_legacy_titles": ["Кровать Frame", "Кровать Cloud", "Кровать Plane"],
+    "candidate_legacy_urls": [
+      "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+      "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+      "https://woodright.ru/kollekcii/greenwich/krovat-plane/"
+    ],
+    "review_status": "resolved",
+    "category": "bed_mapping",
+    "resolution": "Same as GR-09-1 bed. Shared pool applies to all sizes.",
+    "notes": "Workbook width 1930mm (180cm mattress). Resolved 2026-03-19."
+  }
+]

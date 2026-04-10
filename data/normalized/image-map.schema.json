@@ -1,0 +1,110 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Woodright Image Map",
+  "description": "Maps workbook products to image assets from legacy site, Yandex Disk, and other sources.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "workbook_row_key",
+      "product_code_normalized",
+      "collection_name_normalized",
+      "canonical_name",
+      "mapping_status",
+      "confidence"
+    ],
+    "properties": {
+      "workbook_row_key": {
+        "type": "string",
+        "description": "Unique key: '{collection}:{product_code}' or '{collection}:row_{index}' for items without code"
+      },
+      "product_code_normalized": {
+        "type": ["string", "null"],
+        "description": "Normalized product code from workbook (e.g., OL-55-2, GR-09-1)"
+      },
+      "collection_name_normalized": {
+        "type": "string",
+        "description": "Collection slug (e.g., oliver, greenwich, willie-winkie)"
+      },
+      "canonical_name": {
+        "type": "string",
+        "description": "Product name from workbook (Russian)"
+      },
+      "main_image": {
+        "type": ["object", "null"],
+        "description": "Primary product image",
+        "properties": {
+          "source_type": {
+            "type": "string",
+            "enum": ["legacy_site", "yandex_disk", "pdf_catalog", "front_folder", "manual_upload", "placeholder"]
+          },
+          "source_ref": {
+            "type": "string",
+            "description": "URL or file path to the image"
+          },
+          "local_path": {
+            "type": ["string", "null"],
+            "description": "Local path after download (null if not yet downloaded)"
+          },
+          "is_verified": {
+            "type": "boolean"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      },
+      "gallery_images": {
+        "type": "array",
+        "description": "Additional product images (angles, details)",
+        "items": {
+          "type": "object",
+          "properties": {
+            "source_type": { "type": "string" },
+            "source_ref": { "type": "string" },
+            "local_path": { "type": ["string", "null"] },
+            "is_verified": { "type": "boolean" },
+            "confidence": { "type": "number" }
+          }
+        }
+      },
+      "interior_images": {
+        "type": "array",
+        "description": "Product shown in room context",
+        "items": {
+          "type": "object",
+          "properties": {
+            "source_type": { "type": "string" },
+            "source_ref": { "type": "string" },
+            "local_path": { "type": ["string", "null"] },
+            "room_hint": { "type": ["string", "null"] },
+            "is_verified": { "type": "boolean" },
+            "confidence": { "type": "number" }
+          }
+        }
+      },
+      "source_priority": {
+        "type": "array",
+        "description": "Ordered list of preferred sources for this product",
+        "items": { "type": "string" }
+      },
+      "mapping_status": {
+        "type": "string",
+        "enum": ["verified", "fuzzy", "missing", "blocked"],
+        "description": "verified=exact code match, fuzzy=name match needs review, missing=no image found, blocked=needs business decision"
+      },
+      "confidence": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1,
+        "description": "Overall mapping confidence (0=none, 1=certain)"
+      },
+      "review_notes": {
+        "type": ["string", "null"],
+        "description": "Semicolon-separated notes about mapping issues"
+      }
+    }
+  }
+}

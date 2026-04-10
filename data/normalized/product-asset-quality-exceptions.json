@@ -1,0 +1,282 @@
+[
+  {
+    "workbook_row_key": "country-london-paris:CO-02-1",
+    "product_code_normalized": "CO-02-1",
+    "canonical_name": "Шкаф для одежды 2-дв.",
+    "collection_name_normalized": "country-london-paris",
+    "quality_flag": "gallery_only",
+    "quality_notes": "No dedicated main image; using first gallery image",
+    "main_source_type": "gallery_as_main",
+    "main_dimensions": "1000x1000"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-08-1",
+    "product_code_normalized": "CO-08-1",
+    "canonical_name": "Тумбочка прикроватная",
+    "collection_name_normalized": "country-london-paris",
+    "quality_flag": "gallery_only",
+    "quality_notes": "No dedicated main image; using first gallery image",
+    "main_source_type": "gallery_as_main",
+    "main_dimensions": "1000x1000"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-14-2",
+    "product_code_normalized": "CO-14-2",
+    "canonical_name": "Кровать 1 сп. (90*190) с подъем мех",
+    "collection_name_normalized": "country-london-paris",
+    "quality_flag": "gallery_only",
+    "quality_notes": "No dedicated main image; using first gallery image",
+    "main_source_type": "gallery_as_main",
+    "main_dimensions": "1000x1000"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-61-1",
+    "product_code_normalized": "CO-61-1",
+    "canonical_name": "Шкаф книжный со стеклом",
+    "collection_name_normalized": "country-london-paris",
+    "quality_flag": "gallery_only",
+    "quality_notes": "No dedicated main image; using first gallery image",
+    "main_source_type": "gallery_as_main",
+    "main_dimensions": "1000x1000"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-62-1",
+    "product_code_normalized": "CO-62-1",
+    "canonical_name": "Стеллаж широкий",
+    "collection_name_normalized": "country-london-paris",
+    "quality_flag": "gallery_only",
+    "quality_notes": "No dedicated main image; using first gallery image",
+    "main_source_type": "gallery_as_main",
+    "main_dimensions": "1000x1000"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-62-2",
+    "product_code_normalized": "CO-62-2",
+    "canonical_name": "Стеллаж узкий с дверью",
+    "collection_name_normalized": "country-london-paris",
+    "quality_flag": "gallery_only",
+    "quality_notes": "No dedicated main image; using first gallery image",
+    "main_source_type": "gallery_as_main",
+    "main_dimensions": "1000x1000"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-62-3",
+    "product_code_normalized": "CO-62-3",
+    "canonical_name": "Стеллаж узкий с ящиком",
+    "collection_name_normalized": "country-london-paris",
+    "quality_flag": "gallery_only",
+    "quality_notes": "No dedicated main image; using first gallery image",
+    "main_source_type": "gallery_as_main",
+    "main_dimensions": "1000x1000"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-65-1",
+    "product_code_normalized": "CO-65-1",
+    "canonical_name": "Стол письменный 1-тумб. 0П",
+    "collection_name_normalized": "country-london-paris",
+    "quality_flag": "gallery_only",
+    "quality_notes": "No dedicated main image; using first gallery image",
+    "main_source_type": "gallery_as_main",
+    "main_dimensions": "1000x1000"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-65-2",
+    "product_code_normalized": "CO-65-2",
+    "canonical_name": "Стол письменный 1-тумб. П0",
+    "collection_name_normalized": "country-london-paris",
+    "quality_flag": "gallery_only",
+    "quality_notes": "No dedicated main image; using first gallery image",
+    "main_source_type": "gallery_as_main",
+    "main_dimensions": "1000x1000"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-66-1",
+    "product_code_normalized": "CO-66-1",
+    "canonical_name": "Стол письменный 2-тумб. ЯЯ",
+    "collection_name_normalized": "country-london-paris",
+    "quality_flag": "gallery_only",
+    "quality_notes": "No dedicated main image; using first gallery image",
+    "main_source_type": "gallery_as_main",
+    "main_dimensions": "1000x1000"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-69-1",
+    "product_code_normalized": "CO-69-1",
+    "canonical_name": "Полка книжная малая",
+    "collection_name_normalized": "country-london-paris",
+    "quality_flag": "gallery_only",
+    "quality_notes": "No dedicated main image; using first gallery image",
+    "main_source_type": "gallery_as_main",
+    "main_dimensions": "1000x1000"
+  },
+  {
+    "workbook_row_key": "oliver:OL-00-1",
+    "product_code_normalized": "OL-00-1",
+    "canonical_name": "Шкаф угловой  (руч.лев/пр)",
+    "collection_name_normalized": "oliver",
+    "quality_flag": "legacy_fallback",
+    "quality_notes": "Main image from legacy site, not white-bg product shot",
+    "main_source_type": "legacy_fallback",
+    "main_dimensions": "820x820"
+  },
+  {
+    "workbook_row_key": "oliver:OL-05-Н",
+    "product_code_normalized": "OL-05-Н",
+    "canonical_name": "Комод высокий (ниже на 1 ярус ящиков)",
+    "collection_name_normalized": "oliver",
+    "quality_flag": "legacy_fallback",
+    "quality_notes": "Main image from legacy site, not white-bg product shot",
+    "main_source_type": "legacy_fallback",
+    "main_dimensions": "1200x1200"
+  },
+  {
+    "workbook_row_key": "oliver:OL-08-2",
+    "product_code_normalized": "OL-08-2",
+    "canonical_name": "Тумбочка прикроватная  с дверкой (руч.лев/пр)",
+    "collection_name_normalized": "oliver",
+    "quality_flag": "legacy_fallback",
+    "quality_notes": "Main image from legacy site, not white-bg product shot",
+    "main_source_type": "legacy_fallback",
+    "main_dimensions": "1200x1200"
+  },
+  {
+    "workbook_row_key": "oliver:OL-14-1",
+    "product_code_normalized": "OL-14-1",
+    "canonical_name": "Кровать 1-сп. (90*190)",
+    "collection_name_normalized": "oliver",
+    "quality_flag": "gallery_only",
+    "quality_notes": "No dedicated main image; using first gallery image",
+    "main_source_type": "gallery_as_main",
+    "main_dimensions": "1000x1000"
+  },
+  {
+    "workbook_row_key": "oliver:OL-21-1",
+    "product_code_normalized": "OL-21-1",
+    "canonical_name": "Стол обеденный раздвижной",
+    "collection_name_normalized": "oliver",
+    "quality_flag": "gallery_only",
+    "quality_notes": "No dedicated main image; using first gallery image",
+    "main_source_type": "gallery_as_main",
+    "main_dimensions": "1000x1000"
+  },
+  {
+    "workbook_row_key": "oliver:OL-26-1",
+    "product_code_normalized": "OL-26-1",
+    "canonical_name": "Шкаф буфетный со стеклом/филенгками.",
+    "collection_name_normalized": "oliver",
+    "quality_flag": "gallery_only",
+    "quality_notes": "No dedicated main image; using first gallery image",
+    "main_source_type": "gallery_as_main",
+    "main_dimensions": "1000x1000"
+  },
+  {
+    "workbook_row_key": "oliver:OL-26-2",
+    "product_code_normalized": "OL-26-2",
+    "canonical_name": "Шкаф-витрина",
+    "collection_name_normalized": "oliver",
+    "quality_flag": "gallery_only",
+    "quality_notes": "No dedicated main image; using first gallery image",
+    "main_source_type": "gallery_as_main",
+    "main_dimensions": "1000x1000"
+  },
+  {
+    "workbook_row_key": "oliver:OL-56-1",
+    "product_code_normalized": "OL-56-1",
+    "canonical_name": "Кресло",
+    "collection_name_normalized": "oliver",
+    "quality_flag": "gallery_only",
+    "quality_notes": "No dedicated main image; using first gallery image",
+    "main_source_type": "gallery_as_main",
+    "main_dimensions": "1000x999"
+  },
+  {
+    "workbook_row_key": "oliver:OL-57-1",
+    "product_code_normalized": "OL-57-1",
+    "canonical_name": "Диван малый",
+    "collection_name_normalized": "oliver",
+    "quality_flag": "gallery_only",
+    "quality_notes": "No dedicated main image; using first gallery image",
+    "main_source_type": "gallery_as_main",
+    "main_dimensions": "853x853"
+  },
+  {
+    "workbook_row_key": "oliver:OL-65-1",
+    "product_code_normalized": "OL-65-1",
+    "canonical_name": "Стол письменный 1-тумб. 0П",
+    "collection_name_normalized": "oliver",
+    "quality_flag": "gallery_only",
+    "quality_notes": "No dedicated main image; using first gallery image",
+    "main_source_type": "gallery_as_main",
+    "main_dimensions": "1000x1000"
+  },
+  {
+    "workbook_row_key": "oliver:OL-66-1",
+    "product_code_normalized": "OL-66-1",
+    "canonical_name": "Стол письменный 2-тумб. ПП",
+    "collection_name_normalized": "oliver",
+    "quality_flag": "gallery_only",
+    "quality_notes": "No dedicated main image; using first gallery image",
+    "main_source_type": "gallery_as_main",
+    "main_dimensions": "1000x1000"
+  },
+  {
+    "workbook_row_key": "provence:PV-14-1",
+    "product_code_normalized": "PV-14-1",
+    "canonical_name": "Кровать 1-сп. (90*190) без изножья",
+    "collection_name_normalized": "provence",
+    "quality_flag": "low_res_temporary",
+    "quality_notes": "522x532, legacy screenshot",
+    "main_source_type": "legacy_fallback",
+    "main_dimensions": "522x532"
+  },
+  {
+    "workbook_row_key": "provence:PV-15-2",
+    "product_code_normalized": "PV-15-2",
+    "canonical_name": "Кровать 1,5-сп. (120*190) с тканью без изножья",
+    "collection_name_normalized": "provence",
+    "quality_flag": "gallery_only",
+    "quality_notes": "No dedicated main image; using first gallery image",
+    "main_source_type": "gallery_as_main",
+    "main_dimensions": "1000x1000"
+  },
+  {
+    "workbook_row_key": "provence:PV-16-1",
+    "product_code_normalized": "PV-16-1",
+    "canonical_name": "Кровать 1,5-сп. (140*190) без изножья",
+    "collection_name_normalized": "provence",
+    "quality_flag": "legacy_fallback",
+    "quality_notes": "Main image from legacy site, not white-bg product shot",
+    "main_source_type": "legacy_fallback",
+    "main_dimensions": "1200x1200"
+  },
+  {
+    "workbook_row_key": "provence:PV-17-1",
+    "product_code_normalized": "PV-17-1",
+    "canonical_name": "Кровать 2-сп. (160*200) без изножья",
+    "collection_name_normalized": "provence",
+    "quality_flag": "legacy_fallback",
+    "quality_notes": "Main image from legacy site, not white-bg product shot",
+    "main_source_type": "legacy_fallback",
+    "main_dimensions": "1200x1200"
+  },
+  {
+    "workbook_row_key": "provence:PV-65-5",
+    "product_code_normalized": "PV-65-5",
+    "canonical_name": "Стол письменный 1-тумб. 0П",
+    "collection_name_normalized": "provence",
+    "quality_flag": "gallery_only",
+    "quality_notes": "No dedicated main image; using first gallery image",
+    "main_source_type": "gallery_as_main",
+    "main_dimensions": "1000x1000"
+  },
+  {
+    "workbook_row_key": "provence:PV-68-1",
+    "product_code_normalized": "PV-68-1",
+    "canonical_name": "Этажерка малая 3 полки",
+    "collection_name_normalized": "provence",
+    "quality_flag": "needs_reshoot",
+    "quality_notes": "225x287, too small for product page",
+    "main_source_type": "legacy_fallback",
+    "main_dimensions": "225x287"
+  }
+]

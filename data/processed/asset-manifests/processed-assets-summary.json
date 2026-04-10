@@ -1,0 +1,45 @@
+{
+  "total_entries": 434,
+  "processed": 0,
+  "skipped_existing": 434,
+  "dedup_copies": 0,
+  "failed": 0,
+  "total_raw_bytes": 0,
+  "total_processed_bytes": 20831617,
+  "total_raw_mb": 0.0,
+  "total_processed_mb": 19.9,
+  "compression_ratio": 0,
+  "low_res_count": 0,
+  "role_breakdown": {
+    "color_variant": 170,
+    "gallery": 199,
+    "main": 65
+  },
+  "per_collection": {
+    "country-london-paris": {
+      "processed": 0,
+      "skipped": 89,
+      "failed": 0,
+      "dedup": 0,
+      "raw_bytes": 0,
+      "processed_bytes": 3180282
+    },
+    "oliver": {
+      "processed": 0,
+      "skipped": 279,
+      "failed": 0,
+      "dedup": 0,
+      "raw_bytes": 0,
+      "processed_bytes": 13822674
+    },
+    "provence": {
+      "processed": 0,
+      "skipped": 66,
+      "failed": 0,
+      "dedup": 0,
+      "raw_bytes": 0,
+      "processed_bytes": 3828661
+    }
+  },
+  "completed_at": "2026-03-19T01:36:53"
+}

@@ -5,6 +5,8 @@ import { getSiteUrl } from "@/lib/api/base"
 import { getProducts } from "@/lib/api/products"
 import { resolveKidsProducts } from "@/lib/kids"
 import { BESPOKE_PRODUCT_TYPE } from "@/lib/bespoke"
+import { groupProductsForDisplay } from "@/lib/display-group"
+import { isProductInActiveCatalogScope } from "@/lib/catalog-scope"
 
 export const metadata: Metadata = {
   title: "Каталог",
@@ -54,28 +56,31 @@ export default async function CatalogPage({
   const all = allRaw.filter(
     (p: any) =>
       !kidsIds.has(p.id) &&
-      p.product_classification?.product_type !== BESPOKE_PRODUCT_TYPE
+      p.product_classification?.product_type !== BESPOKE_PRODUCT_TYPE &&
+      isProductInActiveCatalogScope(p as Record<string, unknown>)
   )
 
-  const list = activeType
+  const filtered = activeType
     ? all.filter((p: any) => p.product_classification?.product_type === activeType)
     : all
 
+  const displayEntries = groupProductsForDisplay(filtered as Record<string, unknown>[])
+
   const base = getSiteUrl()
-  const itemListJsonLd = list.length > 0 ? {
+  const itemListJsonLd = displayEntries.length > 0 ? {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    numberOfItems: list.length,
-    itemListElement: list.map((p: { id?: string; title?: string }, i: number) => ({
+    numberOfItems: displayEntries.length,
+    itemListElement: displayEntries.map((entry, i: number) => ({
       "@type": "ListItem",
       position: i + 1,
-      url: `${base}/product/${p.id}`,
-      name: (p.title as string) ?? undefined,
+      url: `${base}/product/${(entry.product as any).id}`,
+      name: ((entry.product as any).title as string) ?? undefined,
     })),
   } : null
 
   return (
-    <div data-state={list.length === 0 ? "empty" : "success"}>
+    <div data-state={displayEntries.length === 0 ? "empty" : "success"}>
       {itemListJsonLd && (
         <script
           type="application/ld+json"
@@ -108,7 +113,7 @@ export default async function CatalogPage({
         </Link>
       </div>
 
-      {list.length === 0 ? (
+      {displayEntries.length === 0 ? (
         <div className="status-message">
           <p>Товары не найдены.</p>
           {activeType && (
@@ -119,9 +124,12 @@ export default async function CatalogPage({
         </div>
       ) : (
         <ul className="product-grid">
-          {list.map((p: { id?: string }) => (
-            <li key={p.id}>
-              <ProductCard product={p as any} />
+          {displayEntries.map((entry) => (
+            <li key={(entry.product as any).id}>
+              <ProductCard
+                product={entry.product as any}
+                displayGroup={entry.displayGroup}
+              />
             </li>
           ))}
         </ul>

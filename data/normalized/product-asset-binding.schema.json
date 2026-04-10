@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Woodright Product-Asset Binding",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "workbook_row_key",
+      "product_code_normalized",
+      "canonical_name",
+      "collection_name_normalized",
+      "readiness_status"
+    ],
+    "properties": {
+      "workbook_row_key": { "type": "string" },
+      "product_code_normalized": { "type": "string" },
+      "canonical_name": { "type": "string" },
+      "collection_name_normalized": { "type": "string" },
+      "category_normalized": { "type": "string" },
+      "price_normalized": { "type": ["number", "null"] },
+      "dimensions_normalized": { "type": ["object", "null"] },
+      "processed_main_image": {
+        "type": ["object", "null"],
+        "properties": {
+          "processed_path": { "type": "string" },
+          "width": { "type": ["integer", "null"] },
+          "height": { "type": ["integer", "null"] },
+          "file_size": { "type": ["integer", "null"] },
+          "source_type": { "type": "string", "enum": ["disk_white_bg", "legacy_fallback", "pdf_temporary", "gallery_as_main"] }
+        }
+      },
+      "processed_gallery_images": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "processed_path": { "type": "string" },
+            "width": { "type": ["integer", "null"] },
+            "height": { "type": ["integer", "null"] },
+            "file_size": { "type": ["integer", "null"] },
+            "source_type": { "type": "string" }
+          }
+        }
+      },
+      "processed_color_variant_images": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "processed_path": { "type": "string" },
+            "color_hint": { "type": ["string", "null"] },
+            "width": { "type": ["integer", "null"] },
+            "height": { "type": ["integer", "null"] },
+            "file_size": { "type": ["integer", "null"] },
+            "source_type": { "type": "string" }
+          }
+        }
+      },
+      "source_type_main": {
+        "type": ["string", "null"],
+        "enum": ["disk_white_bg", "legacy_fallback", "pdf_temporary", "gallery_as_main", null]
+      },
+      "source_types_gallery": {
+        "type": "array",
+        "items": { "type": "string" }
+      },
+      "asset_quality_status": {
+        "type": "string",
+        "enum": ["ok", "low_res_temporary", "needs_reshoot", "legacy_fallback", "pdf_temporary", "gallery_only", "blocked", "missing"]
+      },
+      "asset_provenance_refs": {
+        "type": "array",
+        "items": { "type": "string" }
+      },
+      "readiness_status": {
+        "type": "string",
+        "enum": ["ready", "ready_with_caveat", "excluded"]
+      },
+      "notes": { "type": "string" }
+    }
+  }
+}

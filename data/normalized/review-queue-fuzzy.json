@@ -1,0 +1,1062 @@
+[
+  {
+    "workbook_row_key": "country-london-paris:CO-03-1",
+    "collection_name_normalized": "country-london-paris",
+    "product_code_normalized": "CO-03-1",
+    "canonical_name": "Шкаф для одежды 3-дв.",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.45,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/8/co-02-1-iso-1.jpg"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": false,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "greenwich:GR-02-2",
+    "collection_name_normalized": "greenwich",
+    "product_code_normalized": "GR-02-2",
+    "canonical_name": "Гардероб 2-дв.",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.4,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/10/greenwich_capuchino22.jpg"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Greenwich.pdf p6"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": true,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "greenwich:GR-05-1",
+    "collection_name_normalized": "greenwich",
+    "product_code_normalized": "GR-05-1",
+    "canonical_name": "Комод",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.4,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/10/greenwich_capuchino04.jpg"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Greenwich.pdf p7"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": true,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "greenwich:GR-09-1",
+    "collection_name_normalized": "greenwich",
+    "product_code_normalized": "GR-09-1",
+    "canonical_name": "Кровать  1-сп. (90*200)",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.4,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Greenwich.pdf p11"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": true,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "greenwich:GR-12-1",
+    "collection_name_normalized": "greenwich",
+    "product_code_normalized": "GR-12-1",
+    "canonical_name": "Кровать  1,5-сп. (120*200)",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.4,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Greenwich.pdf p9"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": true,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "greenwich:GR-14-1",
+    "collection_name_normalized": "greenwich",
+    "product_code_normalized": "GR-14-1",
+    "canonical_name": "Кровать  1,5-сп. (140*200)",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.4,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Greenwich.pdf p9"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": true,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "greenwich:GR-16-1",
+    "collection_name_normalized": "greenwich",
+    "product_code_normalized": "GR-16-1",
+    "canonical_name": "Кровать  2-сп. (160*200)",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.4,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Greenwich.pdf p9"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": true,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "greenwich:GR-18-1",
+    "collection_name_normalized": "greenwich",
+    "product_code_normalized": "GR-18-1",
+    "canonical_name": "Кровать  2-сп. (180*200)",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.4,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Greenwich.pdf p9"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": true,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-00-1",
+    "collection_name_normalized": "monchelsea",
+    "product_code_normalized": "MNm-00-1",
+    "canonical_name": "Шкаф для одежды угловой (модуль/ручка слева)",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.45,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/8/mn-02-2-i1.jpg"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": false,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-00-2",
+    "collection_name_normalized": "monchelsea",
+    "product_code_normalized": "MNm-00-2",
+    "canonical_name": "Шкаф для одежды угловой (модуль/ручка справа)",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.45,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/8/mn-02-2-i1.jpg"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": false,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-01-1",
+    "collection_name_normalized": "monchelsea",
+    "product_code_normalized": "MNm-01-1",
+    "canonical_name": "Шкаф для одежды 1-дв. (модуль/Ш/ручка слева)",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.45,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/8/mn-02-2-i1.jpg"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": false,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-01-2",
+    "collection_name_normalized": "monchelsea",
+    "product_code_normalized": "MNm-01-2",
+    "canonical_name": "Шкаф для одежды 1-дв. (модуль/Ш/ручка справа)",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.45,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/8/mn-02-2-i1.jpg"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": false,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-01-3",
+    "collection_name_normalized": "monchelsea",
+    "product_code_normalized": "MNm-01-3",
+    "canonical_name": "Шкаф для одежды 1-дв. (модуль/ЯШ/ручка слева)",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.45,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/8/mn-02-2-i1.jpg"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": false,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-01-4",
+    "collection_name_normalized": "monchelsea",
+    "product_code_normalized": "MNm-01-4",
+    "canonical_name": "Шкаф для одежды 1-дв. (модуль/ЯШ/ручка справа)",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.45,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/8/mn-02-2-i1.jpg"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": false,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-01-5",
+    "collection_name_normalized": "monchelsea",
+    "product_code_normalized": "MNm-01-5",
+    "canonical_name": "Шкаф для одежды 1-дв. (модуль/ЯП/ручка слева)",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.45,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/8/mn-02-2-i1.jpg"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": false,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-01-6",
+    "collection_name_normalized": "monchelsea",
+    "product_code_normalized": "MNm-01-6",
+    "canonical_name": "Шкаф для одежды 1-дв. (модуль/ЯП/ручка справа)",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.45,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/8/mn-02-2-i1.jpg"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": false,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-02-3",
+    "collection_name_normalized": "monchelsea",
+    "product_code_normalized": "MNm-02-3",
+    "canonical_name": "Шкаф для одежды 2-дв. (модуль/ЯП)",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.7999999999999999,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/8/mn-02-2-i1.jpg"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Monchelsea.pdf p18"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": true,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-03-2",
+    "collection_name_normalized": "monchelsea",
+    "product_code_normalized": "MNm-03-2",
+    "canonical_name": "Шкаф для одежды 3-дв. (модуль/ЯШ+П+ЯШ)",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.45,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/8/mn-02-2-i1.jpg"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": false,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-03-3",
+    "collection_name_normalized": "monchelsea",
+    "product_code_normalized": "MNm-03-3",
+    "canonical_name": "Шкаф для одежды 3-дв. (модуль/Ш+ЯП+Ш)",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.55,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/8/mn-02-2-i1.jpg"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Monchelsea.pdf p6"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": true,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-03-4",
+    "collection_name_normalized": "monchelsea",
+    "product_code_normalized": "MNm-03-4",
+    "canonical_name": "Шкаф для одежды 3-дв. (модуль/2Ш+ЯП+Ш)",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.45,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/8/mn-02-2-i1.jpg"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": false,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-05-4",
+    "collection_name_normalized": "monchelsea",
+    "product_code_normalized": "MNm-05-4",
+    "canonical_name": "Комод с зеркалом",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.4,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/8/mn-06-1-i1.jpg"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Monchelsea.pdf p9"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": true,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-14-1",
+    "collection_name_normalized": "monchelsea",
+    "product_code_normalized": "MNm-14-1",
+    "canonical_name": "Кровать 1-сп. (90*190)",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.3,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/11/mn-18-1-i1.jpg"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": false,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-14-2",
+    "collection_name_normalized": "monchelsea",
+    "product_code_normalized": "MNm-14-2",
+    "canonical_name": "Кровать 1-сп. (90*190) без изножья",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.45,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/11/112.png"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": false,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-14-3",
+    "collection_name_normalized": "monchelsea",
+    "product_code_normalized": "MNm-14-3",
+    "canonical_name": "Кровать 1-сп.(90*190)с подъем мех",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.36,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/11/Screenshot_101_5fiw-8x.png"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": false,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-15-3",
+    "collection_name_normalized": "monchelsea",
+    "product_code_normalized": "MNm-15-3",
+    "canonical_name": "Кровать 1,5-сп. (120*190) с подъем мех",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.36,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/11/mn-16-2-i1.jpg"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": false,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-16-3",
+    "collection_name_normalized": "monchelsea",
+    "product_code_normalized": "MNm-16-3",
+    "canonical_name": "Кровать 1,5-сп. (140*190) с подъем мех",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.36,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/11/mn-16-2-i1.jpg"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": false,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-17-2",
+    "collection_name_normalized": "monchelsea",
+    "product_code_normalized": "MNm-17-2",
+    "canonical_name": "Кровать 2-сп. (160*200) без изножья",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.45,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/11/112.png"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": false,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-17-3",
+    "collection_name_normalized": "monchelsea",
+    "product_code_normalized": "MNm-17-3",
+    "canonical_name": "Кровать 2-сп. (160*200) с подъем мех",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.36,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/11/Screenshot_101_jz0n-u0.png"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": false,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-18-2",
+    "collection_name_normalized": "monchelsea",
+    "product_code_normalized": "MNm-18-2",
+    "canonical_name": "Кровать 2-сп. (180*200) без изножья",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.45,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/11/112.png"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": false,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-18-3",
+    "collection_name_normalized": "monchelsea",
+    "product_code_normalized": "MNm-18-3",
+    "canonical_name": "Кровать 2-сп. (180*200) с подъем мех",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.36,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/11/Screenshot_101_jz0n-u0.png"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": false,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-61-2",
+    "collection_name_normalized": "monchelsea",
+    "product_code_normalized": "MNm-61-2",
+    "canonical_name": "Шкаф книжный 1-дв. (модуль/ручка слева)",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.4,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/8/mn-61-3-i1.jpg"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": false,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-61-4",
+    "collection_name_normalized": "monchelsea",
+    "product_code_normalized": "MNm-61-4",
+    "canonical_name": "Шкаф книжный 3-дв. (модуль)",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.4,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/8/mn-61-3-i1.jpg"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": false,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-65-1",
+    "collection_name_normalized": "monchelsea",
+    "product_code_normalized": "MNm-65-1",
+    "canonical_name": "Стол письменный 1-тумб. 0П",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.55,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/8/mn-65-3-i3.jpg"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Monchelsea.pdf p14"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": true,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-66-1",
+    "collection_name_normalized": "monchelsea",
+    "product_code_normalized": "MNm-66-1",
+    "canonical_name": "Стол письменный 2-тумб. ПП",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.45,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/8/mn-66-3-i1.jpg"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": false,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-66-2",
+    "collection_name_normalized": "monchelsea",
+    "product_code_normalized": "MNm-66-2",
+    "canonical_name": "Стол письменный 2-тумб. ПЯ",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.45,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/8/mn-66-3-i1.jpg"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": false,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-66-4",
+    "collection_name_normalized": "monchelsea",
+    "product_code_normalized": "MNm-66-4",
+    "canonical_name": "Стол письменный 2-тумб. ЯЯ",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.45,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/8/mn-66-3-i1.jpg"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": false,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-15-3",
+    "collection_name_normalized": "oliver",
+    "product_code_normalized": "OL-15-3",
+    "canonical_name": "Кровать 1,5-сп. (120*190) с подъемн.мех-змом",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.3,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/8/ol-14-1-lillian-140.jpg"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": false,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "oliver:OL-16-3",
+    "collection_name_normalized": "oliver",
+    "product_code_normalized": "OL-16-3",
+    "canonical_name": "Кровать 1,5-сп. (140*190) с подъемн.мех",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.3,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/8/ol-14-1-lillian-140.jpg"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": false,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-16-1",
+    "collection_name_normalized": "princess-rose",
+    "product_code_normalized": "PR-16-1",
+    "canonical_name": "Кровать 1,5-сп.140*190 без изножья",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.45,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/11/pr-14-2-i1.jpg"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": false,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-65-5",
+    "collection_name_normalized": "princess-rose",
+    "product_code_normalized": "PR-65-5",
+    "canonical_name": "Стол письменный 1-тумб. 0П (ручки СВАРОВСКИ)",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.4,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/11/pr-65-2-iso-1.jpg"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Princess Rose.pdf p10"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": true,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-65-6",
+    "collection_name_normalized": "princess-rose",
+    "product_code_normalized": "PR-65-6",
+    "canonical_name": "Стол письменный 1-тумб. П0 (ручки СВАРОВСКИ)",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.4,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/11/pr-65-2-iso-1.jpg"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Princess Rose.pdf p10"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": true,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-65-7",
+    "collection_name_normalized": "princess-rose",
+    "product_code_normalized": "PR-65-7",
+    "canonical_name": "Стол письменный 1-тумб. 0Я (ручки СВАРОВСКИ)",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.4,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/11/pr-65-2-iso-1.jpg"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Princess Rose.pdf p10"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": true,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-65-8",
+    "collection_name_normalized": "princess-rose",
+    "product_code_normalized": "PR-65-8",
+    "canonical_name": "Стол письменный 1-тумб. Я0 (ручки СВАРОВСКИ)",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.4,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/11/pr-65-2-iso-1.jpg"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Princess Rose.pdf p10"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": true,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-66-6",
+    "collection_name_normalized": "princess-rose",
+    "product_code_normalized": "PR-66-6",
+    "canonical_name": "Стол письменный 2-тумб. ПЯ (ручки СВАРОВСКИ)",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.4,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/11/pr-65-2-iso-1.jpg"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Princess Rose.pdf p10"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": true,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-66-7",
+    "collection_name_normalized": "princess-rose",
+    "product_code_normalized": "PR-66-7",
+    "canonical_name": "Стол письменный 2-тумб. ЯП (ручки СВАРОВСКИ)",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.55,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/11/pr-66-3-i1.jpg"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Princess Rose.pdf p10"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": true,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-68-2",
+    "collection_name_normalized": "princess-rose",
+    "product_code_normalized": "PR-68-2",
+    "canonical_name": "Этажерка большая 6 полок",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.3,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/11/no-product_5joz-z4.jpg"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": false,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-95-2",
+    "collection_name_normalized": "princess-rose",
+    "product_code_normalized": "PR-95-2",
+    "canonical_name": "Кровать - трансформер (80*150) без рисунка",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.45999999999999996,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/11/трансформер_без_росписи.jpg"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Princess Rose.pdf p7"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": true,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "provence:PV-08-3",
+    "collection_name_normalized": "provence",
+    "product_code_normalized": "PV-08-3",
+    "canonical_name": "Тумбочка прикроватная с 2 ящиками",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.36,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/8/pv-08-2-i1.jpg"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": false,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "provence:PV-14-2",
+    "collection_name_normalized": "provence",
+    "product_code_normalized": "PV-14-2",
+    "canonical_name": "Кровать 1-сп. (90*190) с тканью без изножья",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.4,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/11/Screenshot_101_j3q4-5k.png"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": false,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "provence:PV-16-2",
+    "collection_name_normalized": "provence",
+    "product_code_normalized": "PV-16-2",
+    "canonical_name": "Кровать 1,5-сп. (140*190) с тканью без изножья",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.4,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/8/pv-15-1-i1.jpg"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": false,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "provence:PV-17-2",
+    "collection_name_normalized": "provence",
+    "product_code_normalized": "PV-17-2",
+    "canonical_name": "Кровать 2-сп. (160*200) с тканью без изножья",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.4,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/8/pv-18-1-i1.jpg"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": false,
+    "fuzzy_match_name": ""
+  },
+  {
+    "workbook_row_key": "provence:PV-18-2",
+    "collection_name_normalized": "provence",
+    "product_code_normalized": "PV-18-2",
+    "canonical_name": "Кровать 2-сп. (180*200) с тканью без изножья",
+    "current_mapping_status": "fuzzy",
+    "confidence": 0.4,
+    "candidate_sources": [
+      {
+        "type": "legacy_site",
+        "ref": "https://woodright.ru/images/detailed/8/pv-18-1-i1.jpg"
+      }
+    ],
+    "preferred_source_if_confirmed": "legacy_fuzzy",
+    "review_status": "pending",
+    "review_notes": "",
+    "has_pdf_evidence": false,
+    "fuzzy_match_name": ""
+  }
+]

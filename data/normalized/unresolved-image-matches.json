@@ -1,0 +1,638 @@
+{
+  "missing_product_code": [
+    {
+      "product_code": null,
+      "collection": "monchelsea",
+      "name": "Кровать 2-сп. (160*200) с выс.сп. С жест. Филенкой",
+      "row_index": 31,
+      "source_sheet": "МОНЧЕЛСИ"
+    },
+    {
+      "product_code": null,
+      "collection": "monchelsea",
+      "name": "Кровать 2-сп. (160*200) с выс.сп. С мяг. Филенкой",
+      "row_index": 32,
+      "source_sheet": "МОНЧЕЛСИ"
+    },
+    {
+      "product_code": null,
+      "collection": "monchelsea",
+      "name": "Этажерка большая 6-полок",
+      "row_index": 76,
+      "source_sheet": "МОНЧЕЛСИ"
+    },
+    {
+      "product_code": null,
+      "collection": "monchelsea",
+      "name": "Этажерка малая 3-полоки",
+      "row_index": 77,
+      "source_sheet": "МОНЧЕЛСИ"
+    }
+  ],
+  "ambiguous_name_match": [],
+  "collection_conflict": [],
+  "room_only_image": [
+    {
+      "product_code": null,
+      "collection": null,
+      "name": "Room page: kids",
+      "row_index": null,
+      "source_sheet": null,
+      "room_type": "kids",
+      "source_ref": "https://woodright.ru/komnaty/detskie/"
+    },
+    {
+      "product_code": null,
+      "collection": null,
+      "name": "Room page: bedroom",
+      "row_index": null,
+      "source_sheet": null,
+      "room_type": "bedroom",
+      "source_ref": "https://woodright.ru/komnaty/spalni/"
+    },
+    {
+      "product_code": null,
+      "collection": null,
+      "name": "Room page: living_room",
+      "row_index": null,
+      "source_sheet": null,
+      "room_type": "living_room",
+      "source_ref": "https://woodright.ru/komnaty/gostinye/"
+    },
+    {
+      "product_code": null,
+      "collection": null,
+      "name": "Room page: office",
+      "row_index": null,
+      "source_sheet": null,
+      "room_type": "office",
+      "source_ref": "https://woodright.ru/komnaty/kabinety/"
+    }
+  ],
+  "legacy_only_image": [
+    {
+      "product_code": null,
+      "collection": "tudor-oak",
+      "name": "Tudor Oak collection",
+      "row_index": null,
+      "source_sheet": null,
+      "source_ref": "https://woodright.ru/tudor-oak-ru/",
+      "reason": "Present on legacy site, absent from workbook. Possibly discontinued."
+    }
+  ],
+  "disk_only_image": [
+    {
+      "product_code": null,
+      "collection": null,
+      "name": "G503-pvw.jpg",
+      "row_index": null,
+      "source_sheet": null,
+      "source_ref": "/Front/G503-pvw.jpg"
+    },
+    {
+      "product_code": null,
+      "collection": null,
+      "name": "L386.jpg",
+      "row_index": null,
+      "source_sheet": null,
+      "source_ref": "/Front/L386.jpg"
+    },
+    {
+      "product_code": null,
+      "collection": null,
+      "name": "R765-pvs.jpg",
+      "row_index": null,
+      "source_sheet": null,
+      "source_ref": "/Front/R765-pvs.jpg"
+    },
+    {
+      "product_code": null,
+      "collection": null,
+      "name": "R765-mn-big.jpg",
+      "row_index": null,
+      "source_sheet": null,
+      "source_ref": "/Front/R765-mn-big.jpg"
+    },
+    {
+      "product_code": null,
+      "collection": null,
+      "name": "f398.jpg",
+      "row_index": null,
+      "source_sheet": null,
+      "source_ref": "/Front/f398.jpg"
+    },
+    {
+      "product_code": null,
+      "collection": null,
+      "name": "f405.jpg",
+      "row_index": null,
+      "source_sheet": null,
+      "source_ref": "/Front/f405.jpg"
+    },
+    {
+      "product_code": null,
+      "collection": null,
+      "name": "f464.jpg",
+      "row_index": null,
+      "source_sheet": null,
+      "source_ref": "/Front/f464.jpg"
+    },
+    {
+      "product_code": null,
+      "collection": null,
+      "name": "g396.jpg",
+      "row_index": null,
+      "source_sheet": null,
+      "source_ref": "/Front/g396.jpg"
+    },
+    {
+      "product_code": null,
+      "collection": null,
+      "name": "h356.jpg",
+      "row_index": null,
+      "source_sheet": null,
+      "source_ref": "/Front/h356.jpg"
+    },
+    {
+      "product_code": null,
+      "collection": null,
+      "name": "h393.jpg",
+      "row_index": null,
+      "source_sheet": null,
+      "source_ref": "/Front/h393.jpg"
+    },
+    {
+      "product_code": null,
+      "collection": null,
+      "name": "j453.jpg",
+      "row_index": null,
+      "source_sheet": null,
+      "source_ref": "/Front/j453.jpg"
+    },
+    {
+      "product_code": null,
+      "collection": null,
+      "name": "k427.jpg",
+      "row_index": null,
+      "source_sheet": null,
+      "source_ref": "/Front/k427.jpg"
+    },
+    {
+      "product_code": null,
+      "collection": null,
+      "name": "m477.jpg",
+      "row_index": null,
+      "source_sheet": null,
+      "source_ref": "/Front/m477.jpg"
+    },
+    {
+      "product_code": null,
+      "collection": null,
+      "name": "s444.jpg",
+      "row_index": null,
+      "source_sheet": null,
+      "source_ref": "/Front/s444.jpg"
+    }
+  ],
+  "vv_variant_decision_blocked": [
+    {
+      "product_code": "WW-55-1",
+      "collection": "willie-winkie",
+      "name": "Банкетка малая",
+      "row_index": 11,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-84-2",
+      "collection": "willie-winkie",
+      "name": "Бортик к кровати большой",
+      "row_index": 12,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-84-1",
+      "collection": "willie-winkie",
+      "name": "Бортик к кровати малый",
+      "row_index": 13,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-57-2",
+      "collection": "willie-winkie",
+      "name": "Диван большой (90*190)",
+      "row_index": 14,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-57-1",
+      "collection": "willie-winkie",
+      "name": "Диван малый (80*150)",
+      "row_index": 15,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-09-1",
+      "collection": "willie-winkie",
+      "name": "Зеркало навесное овальное",
+      "row_index": 16,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-09-2",
+      "collection": "willie-winkie",
+      "name": "Зеркало напольное",
+      "row_index": 17,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-86-1",
+      "collection": "willie-winkie",
+      "name": "Каркас для балдахина",
+      "row_index": 18,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-05-3",
+      "collection": "willie-winkie",
+      "name": "Комод высокий    440",
+      "row_index": 19,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-05-4",
+      "collection": "willie-winkie",
+      "name": "Комод высокий   560",
+      "row_index": 20,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-05-1",
+      "collection": "willie-winkie",
+      "name": "Комод стандартный 440",
+      "row_index": 21,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-05-2",
+      "collection": "willie-winkie",
+      "name": "Комод стандартный 560",
+      "row_index": 22,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-85-1",
+      "collection": "willie-winkie",
+      "name": "Кроватка для новорожденного (60*120)",
+      "row_index": 23,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-95-1",
+      "collection": "willie-winkie",
+      "name": "Кровать - трансформер (80*150) с рисунком",
+      "row_index": 24,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-95-3",
+      "collection": "willie-winkie",
+      "name": "Кровать - трансформер (80*150) с тканью",
+      "row_index": 25,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-15-1",
+      "collection": "willie-winkie",
+      "name": "Кровать 1,5-сп. (120*190)",
+      "row_index": 26,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-15-2",
+      "collection": "willie-winkie",
+      "name": "Кровать 1,5-сп. (120*190) с ящиками",
+      "row_index": 27,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-14-1",
+      "collection": "willie-winkie",
+      "name": "Кровать 1-сп. (90*190)",
+      "row_index": 28,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-14-2",
+      "collection": "willie-winkie",
+      "name": "Кровать 1-сп. (90*190) с ящиками",
+      "row_index": 29,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-13-1",
+      "collection": "willie-winkie",
+      "name": "Кровать детская (80*150)",
+      "row_index": 30,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-13-2",
+      "collection": "willie-winkie",
+      "name": "Кровать детская (80*150) с ящиками",
+      "row_index": 31,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-69-1",
+      "collection": "willie-winkie",
+      "name": "Полка книжная",
+      "row_index": 32,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-62-1",
+      "collection": "willie-winkie",
+      "name": "Стеллаж для книг   440",
+      "row_index": 33,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-62-2",
+      "collection": "willie-winkie",
+      "name": "Стеллаж для книг   560",
+      "row_index": 34,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-62-3",
+      "collection": "willie-winkie",
+      "name": "Стеллаж для книг   высокий и гл.560",
+      "row_index": 35,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-65-1",
+      "collection": "willie-winkie",
+      "name": "Стол письменный 1-тумб. 0П",
+      "row_index": 36,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-65-2",
+      "collection": "willie-winkie",
+      "name": "Стол письменный 1-тумб. П0",
+      "row_index": 37,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-65-3",
+      "collection": "willie-winkie",
+      "name": "Cтол письменный 1-тумб.ОЯ",
+      "row_index": 38,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-65-4",
+      "collection": "willie-winkie",
+      "name": "Стол письменный 1-тумб.ЯО",
+      "row_index": 39,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-66-1",
+      "collection": "willie-winkie",
+      "name": "Стол письменный 2-тумб.ПП",
+      "row_index": 40,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-66-3",
+      "collection": "willie-winkie",
+      "name": "Стол письменный 2-тумб.ЯП",
+      "row_index": 41,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-66-2",
+      "collection": "willie-winkie",
+      "name": "Стол письменный 2-тумб.ПЯ",
+      "row_index": 42,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-66-4",
+      "collection": "willie-winkie",
+      "name": "Стол письменный 2-тумб.ЯЯ",
+      "row_index": 43,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-67-1",
+      "collection": "willie-winkie",
+      "name": "Стол рабочий",
+      "row_index": 44,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-64-1",
+      "collection": "willie-winkie",
+      "name": "Стол-бюро",
+      "row_index": 45,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-83-1",
+      "collection": "willie-winkie",
+      "name": "Столешница пеленальная съемная",
+      "row_index": 46,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-81-1",
+      "collection": "willie-winkie",
+      "name": "Столик  детский",
+      "row_index": 47,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-06-1",
+      "collection": "willie-winkie",
+      "name": "Столик туалетный с зеркалом",
+      "row_index": 48,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-23-1",
+      "collection": "willie-winkie",
+      "name": "Стул",
+      "row_index": 49,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-82-1",
+      "collection": "willie-winkie",
+      "name": "Стульчик  детский",
+      "row_index": 50,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-42-1",
+      "collection": "willie-winkie",
+      "name": "Тумба для телевизора",
+      "row_index": 51,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-08-1",
+      "collection": "willie-winkie",
+      "name": "Тумбочка прикроватная",
+      "row_index": 52,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-30-1",
+      "collection": "willie-winkie",
+      "name": "Часы",
+      "row_index": 53,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-01-1",
+      "collection": "willie-winkie",
+      "name": "Шкаф для одежды 1-дв. 440 (ручка лев/прав)",
+      "row_index": 54,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-01-2",
+      "collection": "willie-winkie",
+      "name": "Шкаф для одежды 1-дв. 560 (ручка лев/прав)",
+      "row_index": 55,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-01-3",
+      "collection": "willie-winkie",
+      "name": "Шкаф для одежды 1-дв.(высокий)560 (ручка лев/прав)",
+      "row_index": 56,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-02-1",
+      "collection": "willie-winkie",
+      "name": "Шкаф для одежды 2-дв. 440",
+      "row_index": 57,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-02-2",
+      "collection": "willie-winkie",
+      "name": "Шкаф для одежды 2-дв.560",
+      "row_index": 58,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-02-3",
+      "collection": "willie-winkie",
+      "name": "Шкаф для одежды 2-дв.,высокий,560",
+      "row_index": 59,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-03-1",
+      "collection": "willie-winkie",
+      "name": "Шкаф для одежды 3-дв.440",
+      "row_index": 60,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-03-2",
+      "collection": "willie-winkie",
+      "name": "Шкаф для одежды 3-дв.560",
+      "row_index": 61,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-03-3",
+      "collection": "willie-winkie",
+      "name": "Шкаф для одежды 3-дв.высокий ,560",
+      "row_index": 62,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-61-1",
+      "collection": "willie-winkie",
+      "name": "Шкаф книжный со стеклом 440",
+      "row_index": 63,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-61-2",
+      "collection": "willie-winkie",
+      "name": "Шкаф книжный со стеклом 560",
+      "row_index": 64,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-61-3",
+      "collection": "willie-winkie",
+      "name": "Шкаф книжный со стеклом,высокий,560",
+      "row_index": 65,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-40-1",
+      "collection": "willie-winkie",
+      "name": "Шкаф комбинированный   440",
+      "row_index": 66,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-40-2",
+      "collection": "willie-winkie",
+      "name": "Шкаф комбинированный   560",
+      "row_index": 67,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-40-3",
+      "collection": "willie-winkie",
+      "name": "Шкаф комбинированный,высокий,560",
+      "row_index": 68,
+      "source_sheet": "ВВ"
+    },
+    {
+      "product_code": "WW-07-1",
+      "collection": "willie-winkie",
+      "name": "Ящик для игрушек с подъем. мех.",
+      "row_index": 69,
+      "source_sheet": "ВВ"
+    }
+  ],
+  "needs_business_review": [
+    {
+      "product_code": "A-51-3",
+      "collection": "accessories",
+      "name": "Валик декоративный",
+      "row_index": 5,
+      "source_sheet": "Аксессуары",
+      "reason": "Accessory with parse warnings; needs image sourcing review"
+    },
+    {
+      "product_code": "A-50-1",
+      "collection": "accessories",
+      "name": "Подушка декоративная",
+      "row_index": 6,
+      "source_sheet": "Аксессуары",
+      "reason": "Accessory with parse warnings; needs image sourcing review"
+    },
+    {
+      "product_code": "A-50-2",
+      "collection": "accessories",
+      "name": "Подушка декоративная",
+      "row_index": 7,
+      "source_sheet": "Аксессуары",
+      "reason": "Accessory with parse warnings; needs image sourcing review"
+    }
+  ]
+}

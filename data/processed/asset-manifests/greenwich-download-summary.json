@@ -1,0 +1,35 @@
+{
+  "generated": "2026-03-19",
+  "collection": "greenwich",
+  "scope": "production_ready_subset_only",
+  "stats": {
+    "production_ready_items": 8,
+    "pdf_temporary_items": 2,
+    "excluded_beds": 5,
+    "total_main_images": 8,
+    "total_gallery_images": 160,
+    "total_download_urls": 165,
+    "local_pdf_copies": 5
+  },
+  "total_manifest_entries": 170,
+  "excluded_items": {
+    "beds_blocked_by_design_decision": 5,
+    "bed_codes": [
+      "GR-09-1 (bed)",
+      "GR-12-1",
+      "GR-14-1",
+      "GR-16-1",
+      "GR-18-1"
+    ]
+  },
+  "pdf_temporary_items": {
+    "count": 2,
+    "items": [
+      "GR-09-1 (Зеркало навесное)",
+      "GR-42-1 (Тумба ТВ)"
+    ],
+    "note": "PDF images accepted as temporary fallback; not mixed with legacy/disk preferred assets"
+  },
+  "download_target_directory": "data/raw/downloaded-assets/greenwich/",
+  "naming_convention": "{CODE}_{ROLE}_{INDEX}.{ext}"
+}

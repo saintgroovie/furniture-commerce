@@ -1,0 +1,802 @@
+[
+  {
+    "workbook_row_key": "country-london-paris:CO-16-2",
+    "collection_name_normalized": "country-london-paris",
+    "product_code_normalized": "CO-16-2",
+    "canonical_name": "Кровать 1,5 сп. (140*190) с подъем мех",
+    "current_mapping_status": "pdf_candidate",
+    "confidence": 0.6,
+    "candidate_sources": [
+      {
+        "type": "pdf_embedded",
+        "ref": "data/raw/pdf-assets/extracted/London/London_p5_i0_1088x833.png"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "London.pdf p5"
+      }
+    ],
+    "preferred_source_if_confirmed": "pdf_fallback",
+    "review_status": "pending",
+    "review_notes": "",
+    "pdf_source": "London.pdf",
+    "pdf_page": 5,
+    "pdf_match_reason": "collection_extra:кровать полутороспальная",
+    "pdf_product_name": "Кровать полутороспальная"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-66-2",
+    "collection_name_normalized": "country-london-paris",
+    "product_code_normalized": "CO-66-2",
+    "canonical_name": "Стол письменный 2-тумб. ПЯ",
+    "current_mapping_status": "pdf_candidate",
+    "confidence": 0.6,
+    "candidate_sources": [
+      {
+        "type": "pdf_embedded",
+        "ref": "data/raw/pdf-assets/extracted/Country/Country_p5_i2_852x443.png"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Country.pdf p5"
+      }
+    ],
+    "preferred_source_if_confirmed": "pdf_fallback",
+    "review_status": "pending",
+    "review_notes": "",
+    "pdf_source": "Country.pdf",
+    "pdf_page": 5,
+    "pdf_match_reason": "substring:0.75",
+    "pdf_product_name": "Стол письменный 2–тумбовый"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-66-3",
+    "collection_name_normalized": "country-london-paris",
+    "product_code_normalized": "CO-66-3",
+    "canonical_name": "Стол письменный 2-тумб.ЯП",
+    "current_mapping_status": "pdf_candidate",
+    "confidence": 0.6,
+    "candidate_sources": [
+      {
+        "type": "pdf_embedded",
+        "ref": "data/raw/pdf-assets/extracted/Country/Country_p5_i2_852x443.png"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Country.pdf p5"
+      }
+    ],
+    "preferred_source_if_confirmed": "pdf_fallback",
+    "review_status": "pending",
+    "review_notes": "",
+    "pdf_source": "Country.pdf",
+    "pdf_page": 5,
+    "pdf_match_reason": "substring:0.75",
+    "pdf_product_name": "Стол письменный 2–тумбовый"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-69-3",
+    "collection_name_normalized": "country-london-paris",
+    "product_code_normalized": "CO-69-3",
+    "canonical_name": "Надстройка для письменного стола",
+    "current_mapping_status": "pdf_candidate",
+    "confidence": 0.7,
+    "candidate_sources": [
+      {
+        "type": "pdf_embedded",
+        "ref": "data/raw/pdf-assets/extracted/Country/Country_p5_i2_852x443.png"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Country.pdf p5"
+      }
+    ],
+    "preferred_source_if_confirmed": "pdf_fallback",
+    "review_status": "pending",
+    "review_notes": "",
+    "pdf_source": "Country.pdf",
+    "pdf_page": 5,
+    "pdf_match_reason": "exact_normalized",
+    "pdf_product_name": "Надстройка для письменного стола"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-69-5",
+    "collection_name_normalized": "country-london-paris",
+    "product_code_normalized": "CO-69-5",
+    "canonical_name": "Полка книжная",
+    "current_mapping_status": "pdf_candidate",
+    "confidence": 0.55,
+    "candidate_sources": [
+      {
+        "type": "pdf_embedded",
+        "ref": "data/raw/pdf-assets/extracted/London/London_p8_i0_821x625.png"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "London.pdf p8"
+      }
+    ],
+    "preferred_source_if_confirmed": "pdf_fallback",
+    "review_status": "pending",
+    "review_notes": "",
+    "pdf_source": "London.pdf",
+    "pdf_page": 8,
+    "pdf_match_reason": "substring:0.50",
+    "pdf_product_name": "Полка"
+  },
+  {
+    "workbook_row_key": "country-london-paris:СО-65-4",
+    "collection_name_normalized": "country-london-paris",
+    "product_code_normalized": "СО-65-4",
+    "canonical_name": "Стол письменный 1-тумб. ЯО",
+    "current_mapping_status": "pdf_candidate",
+    "confidence": 0.6,
+    "candidate_sources": [
+      {
+        "type": "pdf_embedded",
+        "ref": "data/raw/pdf-assets/extracted/Country/Country_p5_i2_852x443.png"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Country.pdf p5"
+      }
+    ],
+    "preferred_source_if_confirmed": "pdf_fallback",
+    "review_status": "pending",
+    "review_notes": "",
+    "pdf_source": "Country.pdf",
+    "pdf_page": 5,
+    "pdf_match_reason": "substring:0.75",
+    "pdf_product_name": "Стол письменный 1–тумбовый"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-02-1",
+    "collection_name_normalized": "greenwich",
+    "product_code_normalized": "GR-02-1",
+    "canonical_name": "Гардероб 2 -х дв.  с ящиками",
+    "current_mapping_status": "pdf_candidate",
+    "confidence": 0.7,
+    "candidate_sources": [
+      {
+        "type": "pdf_embedded",
+        "ref": "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p5_i1_1498x967.png"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Greenwich.pdf p5"
+      }
+    ],
+    "preferred_source_if_confirmed": "pdf_fallback",
+    "review_status": "pending",
+    "review_notes": "",
+    "pdf_source": "Greenwich.pdf",
+    "pdf_page": 5,
+    "pdf_match_reason": "greenwich_map:гардероб level",
+    "pdf_product_name": "Гардероб Level"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-08-1",
+    "collection_name_normalized": "greenwich",
+    "product_code_normalized": "GR-08-1",
+    "canonical_name": "Прикроватная тумба с 2 ящиками",
+    "current_mapping_status": "pdf_candidate",
+    "confidence": 0.7,
+    "candidate_sources": [
+      {
+        "type": "pdf_embedded",
+        "ref": "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p9_i0_1536x970.png"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Greenwich.pdf p9"
+      }
+    ],
+    "preferred_source_if_confirmed": "pdf_fallback",
+    "review_status": "pending",
+    "review_notes": "",
+    "pdf_source": "Greenwich.pdf",
+    "pdf_page": 9,
+    "pdf_match_reason": "greenwich_map:прикроватная тумба stone",
+    "pdf_product_name": "Прикроватная тумба Stone"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-08-2",
+    "collection_name_normalized": "greenwich",
+    "product_code_normalized": "GR-08-2",
+    "canonical_name": "Прикроватная тумба с 1 ящиком",
+    "current_mapping_status": "pdf_candidate",
+    "confidence": 0.7,
+    "candidate_sources": [
+      {
+        "type": "pdf_embedded",
+        "ref": "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p10_i0_1764x1143.png"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Greenwich.pdf p10"
+      }
+    ],
+    "preferred_source_if_confirmed": "pdf_fallback",
+    "review_status": "pending",
+    "review_notes": "",
+    "pdf_source": "Greenwich.pdf",
+    "pdf_page": 10,
+    "pdf_match_reason": "greenwich_map:прикроватная тумба hole",
+    "pdf_product_name": "Прикроватная тумба Hole"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-09-1",
+    "collection_name_normalized": "greenwich",
+    "product_code_normalized": "GR-09-1",
+    "canonical_name": "Зеркало навесное",
+    "current_mapping_status": "pdf_candidate",
+    "confidence": 0.7,
+    "candidate_sources": [
+      {
+        "type": "pdf_embedded",
+        "ref": "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p11_i0_1509x970.png"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Greenwich.pdf p11"
+      }
+    ],
+    "preferred_source_if_confirmed": "pdf_fallback",
+    "review_status": "pending",
+    "review_notes": "",
+    "pdf_source": "Greenwich.pdf",
+    "pdf_page": 11,
+    "pdf_match_reason": "greenwich_map:зеркало frame",
+    "pdf_product_name": "Зеркало Frame"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-42-1",
+    "collection_name_normalized": "greenwich",
+    "product_code_normalized": "GR-42-1",
+    "canonical_name": "Тумба ТВ",
+    "current_mapping_status": "pdf_candidate",
+    "confidence": 0.7,
+    "candidate_sources": [
+      {
+        "type": "pdf_embedded",
+        "ref": "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p7_i2_1531x1360.png"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Greenwich.pdf p7"
+      }
+    ],
+    "preferred_source_if_confirmed": "pdf_fallback",
+    "review_status": "pending",
+    "review_notes": "",
+    "pdf_source": "Greenwich.pdf",
+    "pdf_page": 7,
+    "pdf_match_reason": "greenwich_map:тумба тв wide",
+    "pdf_product_name": "Тумба ТВ Wide"
+  },
+  {
+    "workbook_row_key": "oxford:MC-84-1",
+    "collection_name_normalized": "oxford",
+    "product_code_normalized": "MC-84-1",
+    "canonical_name": "Бортик к кровати малый",
+    "current_mapping_status": "pdf_candidate",
+    "confidence": 0.55,
+    "candidate_sources": [
+      {
+        "type": "pdf_embedded",
+        "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Oxford_full.pdf p7"
+      }
+    ],
+    "preferred_source_if_confirmed": "pdf_fallback",
+    "review_status": "pending",
+    "review_notes": "",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 7,
+    "pdf_match_reason": "oxford_page_hint:бортик",
+    "pdf_product_name": "бортик"
+  },
+  {
+    "workbook_row_key": "oxford:MC-84-2",
+    "collection_name_normalized": "oxford",
+    "product_code_normalized": "MC-84-2",
+    "canonical_name": "Бортик к кровати большой",
+    "current_mapping_status": "pdf_candidate",
+    "confidence": 0.55,
+    "candidate_sources": [
+      {
+        "type": "pdf_embedded",
+        "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Oxford_full.pdf p7"
+      }
+    ],
+    "preferred_source_if_confirmed": "pdf_fallback",
+    "review_status": "pending",
+    "review_notes": "",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 7,
+    "pdf_match_reason": "oxford_page_hint:бортик",
+    "pdf_product_name": "бортик"
+  },
+  {
+    "workbook_row_key": "oxford:OX-08-1",
+    "collection_name_normalized": "oxford",
+    "product_code_normalized": "OX-08-1",
+    "canonical_name": "Тумба прикроватная (для верхнего яруса)",
+    "current_mapping_status": "pdf_candidate",
+    "confidence": 0.55,
+    "candidate_sources": [
+      {
+        "type": "pdf_embedded",
+        "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Oxford_full.pdf p7"
+      }
+    ],
+    "preferred_source_if_confirmed": "pdf_fallback",
+    "review_status": "pending",
+    "review_notes": "",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 7,
+    "pdf_match_reason": "oxford_page_hint:тумба прикроватная",
+    "pdf_product_name": "тумба прикроватная"
+  },
+  {
+    "workbook_row_key": "oxford:OX-14-1",
+    "collection_name_normalized": "oxford",
+    "product_code_normalized": "OX-14-1",
+    "canonical_name": "Комплекс Оксфорд-1 (нижняя кровать без матраса 90*185)",
+    "current_mapping_status": "pdf_candidate",
+    "confidence": 0.55,
+    "candidate_sources": [
+      {
+        "type": "pdf_embedded",
+        "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i1_887x621.png"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Oxford_full.pdf p6"
+      }
+    ],
+    "preferred_source_if_confirmed": "pdf_fallback",
+    "review_status": "pending",
+    "review_notes": "",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 6,
+    "pdf_match_reason": "oxford_page_hint:комплекс оксфорд 1",
+    "pdf_product_name": "комплекс оксфорд 1"
+  },
+  {
+    "workbook_row_key": "oxford:OX-14-11",
+    "collection_name_normalized": "oxford",
+    "product_code_normalized": "OX-14-11",
+    "canonical_name": "Нижняя кровать без матраса увеличенная (120*185)",
+    "current_mapping_status": "pdf_candidate",
+    "confidence": 0.55,
+    "candidate_sources": [
+      {
+        "type": "pdf_embedded",
+        "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p5_i0_947x949.png"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Oxford_full.pdf p5"
+      }
+    ],
+    "preferred_source_if_confirmed": "pdf_fallback",
+    "review_status": "pending",
+    "review_notes": "",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 5,
+    "pdf_match_reason": "oxford_page_hint:нижняя кровать",
+    "pdf_product_name": "нижняя кровать"
+  },
+  {
+    "workbook_row_key": "oxford:OX-14-2",
+    "collection_name_normalized": "oxford",
+    "product_code_normalized": "OX-14-2",
+    "canonical_name": "Комплекс Оксфорд-2 (нижняя кровать 90*185 с матрасом в чехле, ткани в ассортименте)",
+    "current_mapping_status": "pdf_candidate",
+    "confidence": 0.55,
+    "candidate_sources": [
+      {
+        "type": "pdf_embedded",
+        "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Oxford_full.pdf p7"
+      }
+    ],
+    "preferred_source_if_confirmed": "pdf_fallback",
+    "review_status": "pending",
+    "review_notes": "",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 7,
+    "pdf_match_reason": "oxford_page_hint:комплекс оксфорд 2",
+    "pdf_product_name": "комплекс оксфорд 2"
+  },
+  {
+    "workbook_row_key": "oxford:OX-84-1",
+    "collection_name_normalized": "oxford",
+    "product_code_normalized": "OX-84-1",
+    "canonical_name": "Бортик к кровати малый",
+    "current_mapping_status": "pdf_candidate",
+    "confidence": 0.55,
+    "candidate_sources": [
+      {
+        "type": "pdf_embedded",
+        "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Oxford_full.pdf p7"
+      }
+    ],
+    "preferred_source_if_confirmed": "pdf_fallback",
+    "review_status": "pending",
+    "review_notes": "",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 7,
+    "pdf_match_reason": "oxford_page_hint:бортик",
+    "pdf_product_name": "бортик"
+  },
+  {
+    "workbook_row_key": "oxford:OX-84-2",
+    "collection_name_normalized": "oxford",
+    "product_code_normalized": "OX-84-2",
+    "canonical_name": "Бортик к кровати большой",
+    "current_mapping_status": "pdf_candidate",
+    "confidence": 0.55,
+    "candidate_sources": [
+      {
+        "type": "pdf_embedded",
+        "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Oxford_full.pdf p7"
+      }
+    ],
+    "preferred_source_if_confirmed": "pdf_fallback",
+    "review_status": "pending",
+    "review_notes": "",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 7,
+    "pdf_match_reason": "oxford_page_hint:бортик",
+    "pdf_product_name": "бортик"
+  },
+  {
+    "workbook_row_key": "oxford:OX-90-1",
+    "collection_name_normalized": "oxford",
+    "product_code_normalized": "OX-90-1",
+    "canonical_name": "Комплекс Оксфорд-1 с выдвижной столешницей без  нижней кровати",
+    "current_mapping_status": "pdf_candidate",
+    "confidence": 0.55,
+    "candidate_sources": [
+      {
+        "type": "pdf_embedded",
+        "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i1_887x621.png"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Oxford_full.pdf p6"
+      }
+    ],
+    "preferred_source_if_confirmed": "pdf_fallback",
+    "review_status": "pending",
+    "review_notes": "",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 6,
+    "pdf_match_reason": "oxford_page_hint:с выдвижной столешницей",
+    "pdf_product_name": "с выдвижной столешницей"
+  },
+  {
+    "workbook_row_key": "oxford:OX-90-2",
+    "collection_name_normalized": "oxford",
+    "product_code_normalized": "OX-90-2",
+    "canonical_name": "Комплекс Оксфорд-2  без выдвижной столешницы с нижней кроватью и матрасом в чехле (ткани в ассортименте)",
+    "current_mapping_status": "pdf_candidate",
+    "confidence": 0.55,
+    "candidate_sources": [
+      {
+        "type": "pdf_embedded",
+        "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Oxford_full.pdf p7"
+      }
+    ],
+    "preferred_source_if_confirmed": "pdf_fallback",
+    "review_status": "pending",
+    "review_notes": "",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 7,
+    "pdf_match_reason": "oxford_page_hint:без выдвижной столешницы",
+    "pdf_product_name": "без выдвижной столешницы"
+  },
+  {
+    "workbook_row_key": "oxford:OX-90-3",
+    "collection_name_normalized": "oxford",
+    "product_code_normalized": "OX-90-3",
+    "canonical_name": "КомплексОксфорд-3 со шкафом и столом (без нижней кровати)",
+    "current_mapping_status": "pdf_candidate",
+    "confidence": 0.55,
+    "candidate_sources": [
+      {
+        "type": "pdf_embedded",
+        "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Oxford_full.pdf p7"
+      }
+    ],
+    "preferred_source_if_confirmed": "pdf_fallback",
+    "review_status": "pending",
+    "review_notes": "",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 7,
+    "pdf_match_reason": "oxford_page_hint:комплексоксфорд",
+    "pdf_product_name": "комплексоксфорд"
+  },
+  {
+    "workbook_row_key": "oxford:OX-90-4",
+    "collection_name_normalized": "oxford",
+    "product_code_normalized": "OX-90-4",
+    "canonical_name": "Комплекс Oxford-4 Кровать-чердак - без полок и ящиков внутри  (без нижней кровати)",
+    "current_mapping_status": "pdf_candidate",
+    "confidence": 0.55,
+    "candidate_sources": [
+      {
+        "type": "pdf_embedded",
+        "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Oxford_full.pdf p7"
+      }
+    ],
+    "preferred_source_if_confirmed": "pdf_fallback",
+    "review_status": "pending",
+    "review_notes": "",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 7,
+    "pdf_match_reason": "oxford_page_hint:комплекс oxford",
+    "pdf_product_name": "комплекс oxford"
+  },
+  {
+    "workbook_row_key": "oxford:S-OX-02",
+    "collection_name_normalized": "oxford",
+    "product_code_normalized": "S-OX-02",
+    "canonical_name": "Стеновая панель на всю длину ОКСФОРД",
+    "current_mapping_status": "pdf_candidate",
+    "confidence": 0.55,
+    "candidate_sources": [
+      {
+        "type": "pdf_embedded",
+        "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i1_887x621.png"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Oxford_full.pdf p6"
+      }
+    ],
+    "preferred_source_if_confirmed": "pdf_fallback",
+    "review_status": "pending",
+    "review_notes": "",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 6,
+    "pdf_match_reason": "oxford_page_hint:стеновая панель",
+    "pdf_product_name": "стеновая панель"
+  },
+  {
+    "workbook_row_key": "oxford:S-OX-03",
+    "collection_name_normalized": "oxford",
+    "product_code_normalized": "S-OX-03",
+    "canonical_name": "Полка навесная квадратная с 3-мя ящиками OXFORD",
+    "current_mapping_status": "pdf_candidate",
+    "confidence": 0.55,
+    "candidate_sources": [
+      {
+        "type": "pdf_embedded",
+        "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i1_887x621.png"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Oxford_full.pdf p6"
+      }
+    ],
+    "preferred_source_if_confirmed": "pdf_fallback",
+    "review_status": "pending",
+    "review_notes": "",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 6,
+    "pdf_match_reason": "oxford_page_hint:полка навесная",
+    "pdf_product_name": "полка навесная"
+  },
+  {
+    "workbook_row_key": "oxford:S-OX-04",
+    "collection_name_normalized": "oxford",
+    "product_code_normalized": "S-OX-04",
+    "canonical_name": "Полка навесная квадратная Оксфорд",
+    "current_mapping_status": "pdf_candidate",
+    "confidence": 0.55,
+    "candidate_sources": [
+      {
+        "type": "pdf_embedded",
+        "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i1_887x621.png"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Oxford_full.pdf p6"
+      }
+    ],
+    "preferred_source_if_confirmed": "pdf_fallback",
+    "review_status": "pending",
+    "review_notes": "",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 6,
+    "pdf_match_reason": "oxford_page_hint:полка навесная",
+    "pdf_product_name": "полка навесная"
+  },
+  {
+    "workbook_row_key": "oxford:S-OX-05",
+    "collection_name_normalized": "oxford",
+    "product_code_normalized": "S-OX-05",
+    "canonical_name": "Ступени с перилами и ящиками ОКСФОРД",
+    "current_mapping_status": "pdf_candidate",
+    "confidence": 0.55,
+    "candidate_sources": [
+      {
+        "type": "pdf_embedded",
+        "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p4_i0_1306x951.png"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Oxford_full.pdf p4"
+      }
+    ],
+    "preferred_source_if_confirmed": "pdf_fallback",
+    "review_status": "pending",
+    "review_notes": "",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 4,
+    "pdf_match_reason": "oxford_page_hint:ступен",
+    "pdf_product_name": "ступен"
+  },
+  {
+    "workbook_row_key": "oxford:SH-84-1",
+    "collection_name_normalized": "oxford",
+    "product_code_normalized": "SH-84-1",
+    "canonical_name": "Бортик к кровати малый",
+    "current_mapping_status": "pdf_candidate",
+    "confidence": 0.55,
+    "candidate_sources": [
+      {
+        "type": "pdf_embedded",
+        "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Oxford_full.pdf p7"
+      }
+    ],
+    "preferred_source_if_confirmed": "pdf_fallback",
+    "review_status": "pending",
+    "review_notes": "",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 7,
+    "pdf_match_reason": "oxford_page_hint:бортик",
+    "pdf_product_name": "бортик"
+  },
+  {
+    "workbook_row_key": "oxford:SH-84-2",
+    "collection_name_normalized": "oxford",
+    "product_code_normalized": "SH-84-2",
+    "canonical_name": "Бортик к кровати большой",
+    "current_mapping_status": "pdf_candidate",
+    "confidence": 0.55,
+    "candidate_sources": [
+      {
+        "type": "pdf_embedded",
+        "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Oxford_full.pdf p7"
+      }
+    ],
+    "preferred_source_if_confirmed": "pdf_fallback",
+    "review_status": "pending",
+    "review_notes": "",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 7,
+    "pdf_match_reason": "oxford_page_hint:бортик",
+    "pdf_product_name": "бортик"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-09-1",
+    "collection_name_normalized": "princess-rose",
+    "product_code_normalized": "PR-09-1",
+    "canonical_name": "Зеркало навесное",
+    "current_mapping_status": "pdf_candidate",
+    "confidence": 0.7,
+    "candidate_sources": [
+      {
+        "type": "pdf_embedded",
+        "ref": "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p12_i2_829x526.png"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Princess Rose.pdf p12"
+      }
+    ],
+    "preferred_source_if_confirmed": "pdf_fallback",
+    "review_status": "pending",
+    "review_notes": "",
+    "pdf_source": "Princess Rose.pdf",
+    "pdf_page": 12,
+    "pdf_match_reason": "exact_normalized",
+    "pdf_product_name": "Зеркало навесное"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-69-1",
+    "collection_name_normalized": "princess-rose",
+    "product_code_normalized": "PR-69-1",
+    "canonical_name": "Полка книжная",
+    "current_mapping_status": "pdf_candidate",
+    "confidence": 0.7,
+    "candidate_sources": [
+      {
+        "type": "pdf_embedded",
+        "ref": "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p12_i2_829x526.png"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Princess Rose.pdf p12"
+      }
+    ],
+    "preferred_source_if_confirmed": "pdf_fallback",
+    "review_status": "pending",
+    "review_notes": "",
+    "pdf_source": "Princess Rose.pdf",
+    "pdf_page": 12,
+    "pdf_match_reason": "exact_normalized",
+    "pdf_product_name": "Полка книжная"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-95-1",
+    "collection_name_normalized": "princess-rose",
+    "product_code_normalized": "PR-95-1",
+    "canonical_name": "Кровать - трансформер (80*150) с рисунком",
+    "current_mapping_status": "pdf_candidate",
+    "confidence": 0.55,
+    "candidate_sources": [
+      {
+        "type": "pdf_embedded",
+        "ref": "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p11_i1_773x773.png"
+      },
+      {
+        "type": "pdf_evidence",
+        "ref": "Princess Rose.pdf p11"
+      }
+    ],
+    "preferred_source_if_confirmed": "pdf_fallback",
+    "review_status": "pending",
+    "review_notes": "",
+    "pdf_source": "Princess Rose.pdf",
+    "pdf_page": 11,
+    "pdf_match_reason": "substring:0.50",
+    "pdf_product_name": "Кровать - трансформер"
+  }
+]

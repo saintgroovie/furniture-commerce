@@ -1,0 +1,19 @@
+{
+  "generated": "2026-03-19",
+  "collection": "greenwich",
+  "scope": "bed_imagery_pool_only",
+  "business_decision": "Frame/Cloud/Plane confirmed as headboard design variants",
+  "stats": {
+    "bed_workbook_rows": 5,
+    "design_families": 3,
+    "unique_images_in_pool": 23,
+    "frame_images": 8,
+    "cloud_images": 8,
+    "plane_images": 7,
+    "main_candidates": 3,
+    "total_manifest_entries": 23
+  },
+  "download_target_directory": "data/raw/downloaded-assets/greenwich/beds/",
+  "naming_convention": "GR-BED-POOL_{DESIGN}_{INDEX}.{ext}",
+  "keying_note": "GR-09-1 is duplicate code (mirror + bed). Compound key (workbook_row_key + canonical_name) required."
+}

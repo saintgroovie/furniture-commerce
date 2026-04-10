@@ -1,0 +1,46 @@
+{
+  "total_files": 441,
+  "unique_products": 108,
+  "products_with_main": 93,
+  "duplicates_removed": 3,
+  "total_size_bytes": 21206489,
+  "total_size_mb": 20.2,
+  "roles": {
+    "color_variant": 170,
+    "gallery": 178,
+    "main": 93
+  },
+  "per_collection": {
+    "country-london-paris": {
+      "main": 13,
+      "gallery": 26,
+      "color_variant": 50,
+      "total": 89
+    },
+    "oliver": {
+      "main": 51,
+      "gallery": 111,
+      "color_variant": 120,
+      "total": 282
+    },
+    "provence": {
+      "main": 29,
+      "gallery": 41,
+      "color_variant": 0,
+      "total": 70
+    }
+  },
+  "quality_breakdown": {
+    "ok": 413,
+    "gallery_only": 21,
+    "legacy_fallback": 5,
+    "low_res_temporary": 1,
+    "needs_reshoot": 1
+  },
+  "source_breakdown": {
+    "disk_white_bg": 413,
+    "gallery_as_main": 21,
+    "legacy_fallback": 7
+  },
+  "storage_key_prefix": "products"
+}

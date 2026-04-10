@@ -1,0 +1,3234 @@
+[
+  {
+    "workbook_row_key": "accessories:A-07-1",
+    "product_code_normalized": "A-07-1",
+    "canonical_name": "Сундук пиратский",
+    "collection_name_normalized": "accessories",
+    "category_normalized": "chest",
+    "price_normalized": 20800.0,
+    "dimensions_normalized": {
+      "height_mm": 340,
+      "width_mm": 510,
+      "depth_mm": 320
+    },
+    "preferred_image_source": null,
+    "asset_status": "missing",
+    "exclusion_reason": "no_image_source",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "accessories:A-31-3",
+    "product_code_normalized": "A-31-3",
+    "canonical_name": "Шкатулка малая",
+    "collection_name_normalized": "accessories",
+    "category_normalized": "jewelry-box",
+    "price_normalized": 5500.0,
+    "dimensions_normalized": {
+      "height_mm": 50,
+      "width_mm": 150,
+      "depth_mm": 150
+    },
+    "preferred_image_source": null,
+    "asset_status": "missing",
+    "exclusion_reason": "no_image_source",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "accessories:A-50-1",
+    "product_code_normalized": "A-50-1",
+    "canonical_name": "Подушка декоративная",
+    "collection_name_normalized": "accessories",
+    "category_normalized": "cushion",
+    "price_normalized": 2100.0,
+    "dimensions_normalized": null,
+    "preferred_image_source": null,
+    "asset_status": "missing",
+    "exclusion_reason": "no_image_source",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "accessories:A-50-2",
+    "product_code_normalized": "A-50-2",
+    "canonical_name": "Подушка декоративная",
+    "collection_name_normalized": "accessories",
+    "category_normalized": "cushion",
+    "price_normalized": 2600.0,
+    "dimensions_normalized": null,
+    "preferred_image_source": null,
+    "asset_status": "missing",
+    "exclusion_reason": "no_image_source",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "accessories:A-51-3",
+    "product_code_normalized": "A-51-3",
+    "canonical_name": "Валик декоративный",
+    "collection_name_normalized": "accessories",
+    "category_normalized": "bolster",
+    "price_normalized": 5600.0,
+    "dimensions_normalized": null,
+    "preferred_image_source": null,
+    "asset_status": "missing",
+    "exclusion_reason": "no_image_source",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-03-1",
+    "product_code_normalized": "CO-03-1",
+    "canonical_name": "Шкаф для одежды 3-дв.",
+    "collection_name_normalized": "country-london-paris",
+    "category_normalized": "wardrobe",
+    "price_normalized": 154400.0,
+    "dimensions_normalized": {
+      "height_mm": 2200,
+      "width_mm": 1732,
+      "depth_mm": 640
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/8/co-02-1-iso-1.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-16-2",
+    "product_code_normalized": "CO-16-2",
+    "canonical_name": "Кровать 1,5 сп. (140*190) с подъем мех",
+    "collection_name_normalized": "country-london-paris",
+    "category_normalized": "bed",
+    "price_normalized": 70200.0,
+    "dimensions_normalized": {
+      "height_mm": 1150,
+      "width_mm": 1482,
+      "depth_mm": 1990
+    },
+    "preferred_image_source": {
+      "type": "pdf_embedded",
+      "ref": "data/raw/pdf-assets/extracted/London/London_p5_i0_1088x833.png"
+    },
+    "asset_status": "pdf_candidate",
+    "exclusion_reason": "pdf_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-17-2",
+    "product_code_normalized": "CO-17-2",
+    "canonical_name": "Кровать 2- сп. (160*200) с подъемн. мех.",
+    "collection_name_normalized": "country-london-paris",
+    "category_normalized": "bed",
+    "price_normalized": 78000.0,
+    "dimensions_normalized": {
+      "height_mm": 1150,
+      "width_mm": 1682,
+      "depth_mm": 2090
+    },
+    "preferred_image_source": null,
+    "asset_status": "missing",
+    "exclusion_reason": "no_image_source",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-18-2",
+    "product_code_normalized": "CO-18-2",
+    "canonical_name": "Кровать 2- сп. (180*200) с подъемн. мех.",
+    "collection_name_normalized": "country-london-paris",
+    "category_normalized": "bed",
+    "price_normalized": 85800.0,
+    "dimensions_normalized": {
+      "height_mm": 1150,
+      "width_mm": 1882,
+      "depth_mm": 2090
+    },
+    "preferred_image_source": null,
+    "asset_status": "missing",
+    "exclusion_reason": "no_image_source",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-23-1",
+    "product_code_normalized": "CO-23-1",
+    "canonical_name": "Стул",
+    "collection_name_normalized": "country-london-paris",
+    "category_normalized": "chair",
+    "price_normalized": 24800.0,
+    "dimensions_normalized": {
+      "height_mm": 905,
+      "width_mm": 480,
+      "depth_mm": 460
+    },
+    "preferred_image_source": null,
+    "asset_status": "missing",
+    "exclusion_reason": "no_image_source",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-30-1",
+    "product_code_normalized": "CO-30-1",
+    "canonical_name": "Часы",
+    "collection_name_normalized": "country-london-paris",
+    "category_normalized": "clock",
+    "price_normalized": 5400.0,
+    "dimensions_normalized": {
+      "height_mm": 380,
+      "width_mm": 260,
+      "depth_mm": 30
+    },
+    "preferred_image_source": null,
+    "asset_status": "missing",
+    "exclusion_reason": "no_image_source",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-66-2",
+    "product_code_normalized": "CO-66-2",
+    "canonical_name": "Стол письменный 2-тумб. ПЯ",
+    "collection_name_normalized": "country-london-paris",
+    "category_normalized": "table",
+    "price_normalized": 46300.0,
+    "dimensions_normalized": {
+      "height_mm": 780,
+      "width_mm": 1550,
+      "depth_mm": 700
+    },
+    "preferred_image_source": {
+      "type": "pdf_embedded",
+      "ref": "data/raw/pdf-assets/extracted/Country/Country_p5_i2_852x443.png"
+    },
+    "asset_status": "pdf_candidate",
+    "exclusion_reason": "pdf_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-66-3",
+    "product_code_normalized": "CO-66-3",
+    "canonical_name": "Стол письменный 2-тумб.ЯП",
+    "collection_name_normalized": "country-london-paris",
+    "category_normalized": "table",
+    "price_normalized": 46300.0,
+    "dimensions_normalized": {
+      "height_mm": 780,
+      "width_mm": 1550,
+      "depth_mm": 700
+    },
+    "preferred_image_source": {
+      "type": "pdf_embedded",
+      "ref": "data/raw/pdf-assets/extracted/Country/Country_p5_i2_852x443.png"
+    },
+    "asset_status": "pdf_candidate",
+    "exclusion_reason": "pdf_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-69-2",
+    "product_code_normalized": "CO-69-2",
+    "canonical_name": "Полка книжная большая",
+    "collection_name_normalized": "country-london-paris",
+    "category_normalized": "shelf",
+    "price_normalized": 6800.0,
+    "dimensions_normalized": {
+      "height_mm": 350,
+      "width_mm": 1100,
+      "depth_mm": 160
+    },
+    "preferred_image_source": null,
+    "asset_status": "missing",
+    "exclusion_reason": "no_image_source",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-69-3",
+    "product_code_normalized": "CO-69-3",
+    "canonical_name": "Надстройка для письменного стола",
+    "collection_name_normalized": "country-london-paris",
+    "category_normalized": "desk-hutch",
+    "price_normalized": 24100.0,
+    "dimensions_normalized": {
+      "height_mm": 820,
+      "width_mm": 1510,
+      "depth_mm": 300
+    },
+    "preferred_image_source": {
+      "type": "pdf_embedded",
+      "ref": "data/raw/pdf-assets/extracted/Country/Country_p5_i2_852x443.png"
+    },
+    "asset_status": "pdf_candidate",
+    "exclusion_reason": "pdf_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-69-4",
+    "product_code_normalized": "CO-69-4",
+    "canonical_name": "Полка книжная большая с башенками",
+    "collection_name_normalized": "country-london-paris",
+    "category_normalized": "shelf",
+    "price_normalized": 9500.0,
+    "dimensions_normalized": {
+      "height_mm": 350,
+      "width_mm": 1100,
+      "depth_mm": 160
+    },
+    "preferred_image_source": null,
+    "asset_status": "missing",
+    "exclusion_reason": "no_image_source",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-69-5",
+    "product_code_normalized": "CO-69-5",
+    "canonical_name": "Полка книжная",
+    "collection_name_normalized": "country-london-paris",
+    "category_normalized": "shelf",
+    "price_normalized": 7500.0,
+    "dimensions_normalized": {
+      "height_mm": 350,
+      "width_mm": 1100,
+      "depth_mm": 160
+    },
+    "preferred_image_source": {
+      "type": "pdf_embedded",
+      "ref": "data/raw/pdf-assets/extracted/London/London_p8_i0_821x625.png"
+    },
+    "asset_status": "pdf_candidate",
+    "exclusion_reason": "pdf_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-83-1",
+    "product_code_normalized": "CO-83-1",
+    "canonical_name": "Столешница пеленальная",
+    "collection_name_normalized": "country-london-paris",
+    "category_normalized": "table",
+    "price_normalized": 13100.0,
+    "dimensions_normalized": {
+      "height_mm": 180,
+      "width_mm": 881,
+      "depth_mm": 750
+    },
+    "preferred_image_source": null,
+    "asset_status": "missing",
+    "exclusion_reason": "no_image_source",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-d4",
+    "product_code_normalized": "CO-d4",
+    "canonical_name": "Полка в шкаф",
+    "collection_name_normalized": "country-london-paris",
+    "category_normalized": "shelf",
+    "price_normalized": 8700.0,
+    "dimensions_normalized": {
+      "height_mm": 18,
+      "width_mm": 544,
+      "depth_mm": 1084
+    },
+    "preferred_image_source": null,
+    "asset_status": "missing",
+    "exclusion_reason": "no_image_source",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-d5",
+    "product_code_normalized": "CO-d5",
+    "canonical_name": "Полка в  столы",
+    "collection_name_normalized": "country-london-paris",
+    "category_normalized": "shelf",
+    "price_normalized": 3400.0,
+    "dimensions_normalized": {
+      "height_mm": 18,
+      "width_mm": 398,
+      "depth_mm": 540
+    },
+    "preferred_image_source": null,
+    "asset_status": "missing",
+    "exclusion_reason": "no_image_source",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "country-london-paris:СО-65-3",
+    "product_code_normalized": "СО-65-3",
+    "canonical_name": "Стол письменный 1-тумб. ОЯ",
+    "collection_name_normalized": "country-london-paris",
+    "category_normalized": "table",
+    "price_normalized": 45500.0,
+    "dimensions_normalized": {
+      "height_mm": 780,
+      "width_mm": 1132,
+      "depth_mm": 640
+    },
+    "preferred_image_source": null,
+    "asset_status": "missing",
+    "exclusion_reason": "no_image_source",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "country-london-paris:СО-65-4",
+    "product_code_normalized": "СО-65-4",
+    "canonical_name": "Стол письменный 1-тумб. ЯО",
+    "collection_name_normalized": "country-london-paris",
+    "category_normalized": "table",
+    "price_normalized": 45500.0,
+    "dimensions_normalized": {
+      "height_mm": 780,
+      "width_mm": 1132,
+      "depth_mm": 640
+    },
+    "preferred_image_source": {
+      "type": "pdf_embedded",
+      "ref": "data/raw/pdf-assets/extracted/Country/Country_p5_i2_852x443.png"
+    },
+    "asset_status": "pdf_candidate",
+    "exclusion_reason": "pdf_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-02-1",
+    "product_code_normalized": "GR-02-1",
+    "canonical_name": "Гардероб 2 -х дв.  с ящиками",
+    "collection_name_normalized": "greenwich",
+    "category_normalized": "wardrobe",
+    "price_normalized": 169200.0,
+    "dimensions_normalized": {
+      "height_mm": 2100,
+      "width_mm": 1193,
+      "depth_mm": 520
+    },
+    "preferred_image_source": {
+      "type": "pdf_embedded",
+      "ref": "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p5_i1_1498x967.png"
+    },
+    "asset_status": "pdf_candidate",
+    "exclusion_reason": "pdf_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-02-2",
+    "product_code_normalized": "GR-02-2",
+    "canonical_name": "Гардероб 2-дв.",
+    "collection_name_normalized": "greenwich",
+    "category_normalized": "wardrobe",
+    "price_normalized": 167450.0,
+    "dimensions_normalized": {
+      "height_mm": 2100,
+      "width_mm": 1193,
+      "depth_mm": 520
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/10/greenwich_capuchino22.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-05-1",
+    "product_code_normalized": "GR-05-1",
+    "canonical_name": "Комод",
+    "collection_name_normalized": "greenwich",
+    "category_normalized": "dresser",
+    "price_normalized": 109500.0,
+    "dimensions_normalized": {
+      "height_mm": 630,
+      "width_mm": 1244,
+      "depth_mm": 512
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/10/greenwich_capuchino04.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-08-1",
+    "product_code_normalized": "GR-08-1",
+    "canonical_name": "Прикроватная тумба с 2 ящиками",
+    "collection_name_normalized": "greenwich",
+    "category_normalized": "nightstand",
+    "price_normalized": 36500.0,
+    "dimensions_normalized": {
+      "height_mm": 532,
+      "width_mm": 664,
+      "depth_mm": 460
+    },
+    "preferred_image_source": {
+      "type": "pdf_embedded",
+      "ref": "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p9_i0_1536x970.png"
+    },
+    "asset_status": "pdf_candidate",
+    "exclusion_reason": "pdf_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-08-2",
+    "product_code_normalized": "GR-08-2",
+    "canonical_name": "Прикроватная тумба с 1 ящиком",
+    "collection_name_normalized": "greenwich",
+    "category_normalized": "nightstand",
+    "price_normalized": 31200.0,
+    "dimensions_normalized": {
+      "height_mm": 532,
+      "width_mm": 664,
+      "depth_mm": 460
+    },
+    "preferred_image_source": {
+      "type": "pdf_embedded",
+      "ref": "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p10_i0_1764x1143.png"
+    },
+    "asset_status": "pdf_candidate",
+    "exclusion_reason": "pdf_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-09-1",
+    "product_code_normalized": "GR-09-1",
+    "canonical_name": "Зеркало навесное",
+    "collection_name_normalized": "greenwich",
+    "category_normalized": "bed",
+    "price_normalized": 71900.0,
+    "dimensions_normalized": {
+      "height_mm": 1050,
+      "width_mm": 1030,
+      "depth_mm": 2207
+    },
+    "preferred_image_source": {
+      "type": "pdf_embedded",
+      "ref": "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p11_i0_1509x970.png"
+    },
+    "asset_status": "pdf_candidate",
+    "exclusion_reason": "pdf_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-09-1",
+    "product_code_normalized": "GR-09-1",
+    "canonical_name": "Кровать  1-сп. (90*200)",
+    "collection_name_normalized": "greenwich",
+    "category_normalized": "bed",
+    "price_normalized": 71900.0,
+    "dimensions_normalized": {
+      "height_mm": 1050,
+      "width_mm": 1030,
+      "depth_mm": 2207
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-12-1",
+    "product_code_normalized": "GR-12-1",
+    "canonical_name": "Кровать  1,5-сп. (120*200)",
+    "collection_name_normalized": "greenwich",
+    "category_normalized": "bed",
+    "price_normalized": 81100.0,
+    "dimensions_normalized": {
+      "height_mm": 1050,
+      "width_mm": 1330,
+      "depth_mm": 2207
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-14-1",
+    "product_code_normalized": "GR-14-1",
+    "canonical_name": "Кровать  1,5-сп. (140*200)",
+    "collection_name_normalized": "greenwich",
+    "category_normalized": "bed",
+    "price_normalized": 89700.0,
+    "dimensions_normalized": {
+      "height_mm": 1050,
+      "width_mm": 1530,
+      "depth_mm": 2207
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-16-1",
+    "product_code_normalized": "GR-16-1",
+    "canonical_name": "Кровать  2-сп. (160*200)",
+    "collection_name_normalized": "greenwich",
+    "category_normalized": "bed",
+    "price_normalized": 94000.0,
+    "dimensions_normalized": {
+      "height_mm": 1050,
+      "width_mm": 1730,
+      "depth_mm": 2207
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-18-1",
+    "product_code_normalized": "GR-18-1",
+    "canonical_name": "Кровать  2-сп. (180*200)",
+    "collection_name_normalized": "greenwich",
+    "category_normalized": "bed",
+    "price_normalized": 110400.0,
+    "dimensions_normalized": {
+      "height_mm": 1050,
+      "width_mm": 1930,
+      "depth_mm": 2207
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "greenwich:GR-42-1",
+    "product_code_normalized": "GR-42-1",
+    "canonical_name": "Тумба ТВ",
+    "collection_name_normalized": "greenwich",
+    "category_normalized": "nightstand",
+    "price_normalized": 68800.0,
+    "dimensions_normalized": {
+      "height_mm": 460,
+      "width_mm": 1600,
+      "depth_mm": 460
+    },
+    "preferred_image_source": {
+      "type": "pdf_embedded",
+      "ref": "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p7_i2_1531x1360.png"
+    },
+    "asset_status": "pdf_candidate",
+    "exclusion_reason": "pdf_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "monchelsea:MN-49-1",
+    "product_code_normalized": "MN-49-1",
+    "canonical_name": "Обувница",
+    "collection_name_normalized": "monchelsea",
+    "category_normalized": "shoe-rack",
+    "price_normalized": 44330.0,
+    "dimensions_normalized": {
+      "height_mm": 1295,
+      "width_mm": 755,
+      "depth_mm": 285
+    },
+    "preferred_image_source": null,
+    "asset_status": "missing",
+    "exclusion_reason": "no_image_source",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-00-1",
+    "product_code_normalized": "MNm-00-1",
+    "canonical_name": "Шкаф для одежды угловой (модуль/ручка слева)",
+    "collection_name_normalized": "monchelsea",
+    "category_normalized": "wardrobe",
+    "price_normalized": 196570.0,
+    "dimensions_normalized": {
+      "height_mm": 2400,
+      "width_mm": 1049,
+      "depth_mm": 1049
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/8/mn-02-2-i1.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-00-2",
+    "product_code_normalized": "MNm-00-2",
+    "canonical_name": "Шкаф для одежды угловой (модуль/ручка справа)",
+    "collection_name_normalized": "monchelsea",
+    "category_normalized": "wardrobe",
+    "price_normalized": 196570.0,
+    "dimensions_normalized": {
+      "height_mm": 2400,
+      "width_mm": 1049,
+      "depth_mm": 1049
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/8/mn-02-2-i1.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-00-3",
+    "product_code_normalized": "MNm-00-3",
+    "canonical_name": "Шкаф книжный угловой ручка справа",
+    "collection_name_normalized": "monchelsea",
+    "category_normalized": "wardrobe",
+    "price_normalized": 140580.0,
+    "dimensions_normalized": {
+      "height_mm": 2400,
+      "width_mm": 857,
+      "depth_mm": 857
+    },
+    "preferred_image_source": null,
+    "asset_status": "missing",
+    "exclusion_reason": "no_image_source",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-00-4",
+    "product_code_normalized": "MNm-00-4",
+    "canonical_name": "Шкаф книжный угловой ручка слева",
+    "collection_name_normalized": "monchelsea",
+    "category_normalized": "wardrobe",
+    "price_normalized": 140580.0,
+    "dimensions_normalized": {
+      "height_mm": 2400,
+      "width_mm": 857,
+      "depth_mm": 857
+    },
+    "preferred_image_source": null,
+    "asset_status": "missing",
+    "exclusion_reason": "no_image_source",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-01-1",
+    "product_code_normalized": "MNm-01-1",
+    "canonical_name": "Шкаф для одежды 1-дв. (модуль/Ш/ручка слева)",
+    "collection_name_normalized": "monchelsea",
+    "category_normalized": "wardrobe",
+    "price_normalized": 96690.0,
+    "dimensions_normalized": {
+      "height_mm": 2400,
+      "width_mm": 654,
+      "depth_mm": 645
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/8/mn-02-2-i1.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-01-2",
+    "product_code_normalized": "MNm-01-2",
+    "canonical_name": "Шкаф для одежды 1-дв. (модуль/Ш/ручка справа)",
+    "collection_name_normalized": "monchelsea",
+    "category_normalized": "wardrobe",
+    "price_normalized": 96690.0,
+    "dimensions_normalized": {
+      "height_mm": 2400,
+      "width_mm": 654,
+      "depth_mm": 645
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/8/mn-02-2-i1.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-01-3",
+    "product_code_normalized": "MNm-01-3",
+    "canonical_name": "Шкаф для одежды 1-дв. (модуль/ЯШ/ручка слева)",
+    "collection_name_normalized": "monchelsea",
+    "category_normalized": "wardrobe",
+    "price_normalized": 118030.0,
+    "dimensions_normalized": {
+      "height_mm": 2400,
+      "width_mm": 654,
+      "depth_mm": 645
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/8/mn-02-2-i1.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-01-4",
+    "product_code_normalized": "MNm-01-4",
+    "canonical_name": "Шкаф для одежды 1-дв. (модуль/ЯШ/ручка справа)",
+    "collection_name_normalized": "monchelsea",
+    "category_normalized": "wardrobe",
+    "price_normalized": 118030.0,
+    "dimensions_normalized": {
+      "height_mm": 2400,
+      "width_mm": 654,
+      "depth_mm": 645
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/8/mn-02-2-i1.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-01-5",
+    "product_code_normalized": "MNm-01-5",
+    "canonical_name": "Шкаф для одежды 1-дв. (модуль/ЯП/ручка слева)",
+    "collection_name_normalized": "monchelsea",
+    "category_normalized": "wardrobe",
+    "price_normalized": 133540.0,
+    "dimensions_normalized": {
+      "height_mm": 2400,
+      "width_mm": 654,
+      "depth_mm": 645
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/8/mn-02-2-i1.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-01-6",
+    "product_code_normalized": "MNm-01-6",
+    "canonical_name": "Шкаф для одежды 1-дв. (модуль/ЯП/ручка справа)",
+    "collection_name_normalized": "monchelsea",
+    "category_normalized": "wardrobe",
+    "price_normalized": 133540.0,
+    "dimensions_normalized": {
+      "height_mm": 2400,
+      "width_mm": 654,
+      "depth_mm": 645
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/8/mn-02-2-i1.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-02-3",
+    "product_code_normalized": "MNm-02-3",
+    "canonical_name": "Шкаф для одежды 2-дв. (модуль/ЯП)",
+    "collection_name_normalized": "monchelsea",
+    "category_normalized": "wardrobe",
+    "price_normalized": 203720.0,
+    "dimensions_normalized": {
+      "height_mm": 2400,
+      "width_mm": 1206,
+      "depth_mm": 645
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/8/mn-02-2-i1.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-03-2",
+    "product_code_normalized": "MNm-03-2",
+    "canonical_name": "Шкаф для одежды 3-дв. (модуль/ЯШ+П+ЯШ)",
+    "collection_name_normalized": "monchelsea",
+    "category_normalized": "wardrobe",
+    "price_normalized": 271590.0,
+    "dimensions_normalized": {
+      "height_mm": 2400,
+      "width_mm": 1862,
+      "depth_mm": 645
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/8/mn-02-2-i1.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-03-3",
+    "product_code_normalized": "MNm-03-3",
+    "canonical_name": "Шкаф для одежды 3-дв. (модуль/Ш+ЯП+Ш)",
+    "collection_name_normalized": "monchelsea",
+    "category_normalized": "wardrobe",
+    "price_normalized": 217200.0,
+    "dimensions_normalized": {
+      "height_mm": 2400,
+      "width_mm": 1862,
+      "depth_mm": 645
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/8/mn-02-2-i1.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-03-4",
+    "product_code_normalized": "MNm-03-4",
+    "canonical_name": "Шкаф для одежды 3-дв. (модуль/2Ш+ЯП+Ш)",
+    "collection_name_normalized": "monchelsea",
+    "category_normalized": "wardrobe",
+    "price_normalized": 238480.0,
+    "dimensions_normalized": {
+      "height_mm": 2400,
+      "width_mm": 1862,
+      "depth_mm": 645
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/8/mn-02-2-i1.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-05-4",
+    "product_code_normalized": "MNm-05-4",
+    "canonical_name": "Комод с зеркалом",
+    "collection_name_normalized": "monchelsea",
+    "category_normalized": "dresser",
+    "price_normalized": 162580.0,
+    "dimensions_normalized": {
+      "height_mm": 924,
+      "width_mm": 1506,
+      "depth_mm": 507
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/8/mn-06-1-i1.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-14-1",
+    "product_code_normalized": "MNm-14-1",
+    "canonical_name": "Кровать 1-сп. (90*190)",
+    "collection_name_normalized": "monchelsea",
+    "category_normalized": "bed",
+    "price_normalized": 68530.0,
+    "dimensions_normalized": {
+      "height_mm": 1050,
+      "width_mm": 1110,
+      "depth_mm": 2030
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/11/mn-18-1-i1.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-14-2",
+    "product_code_normalized": "MNm-14-2",
+    "canonical_name": "Кровать 1-сп. (90*190) без изножья",
+    "collection_name_normalized": "monchelsea",
+    "category_normalized": "bed",
+    "price_normalized": 63910.0,
+    "dimensions_normalized": {
+      "height_mm": 1050,
+      "width_mm": 1110,
+      "depth_mm": 2030
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/11/112.png"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-14-3",
+    "product_code_normalized": "MNm-14-3",
+    "canonical_name": "Кровать 1-сп.(90*190)с подъем мех",
+    "collection_name_normalized": "monchelsea",
+    "category_normalized": "bed",
+    "price_normalized": 89100.0,
+    "dimensions_normalized": {
+      "height_mm": 1060,
+      "width_mm": 1596,
+      "depth_mm": 1997
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/11/Screenshot_101_5fiw-8x.png"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-15-3",
+    "product_code_normalized": "MNm-15-3",
+    "canonical_name": "Кровать 1,5-сп. (120*190) с подъем мех",
+    "collection_name_normalized": "monchelsea",
+    "category_normalized": "bed",
+    "price_normalized": 104610.0,
+    "dimensions_normalized": {
+      "height_mm": 1060,
+      "width_mm": 1410,
+      "depth_mm": 2030
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/11/mn-16-2-i1.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-16-3",
+    "product_code_normalized": "MNm-16-3",
+    "canonical_name": "Кровать 1,5-сп. (140*190) с подъем мех",
+    "collection_name_normalized": "monchelsea",
+    "category_normalized": "bed",
+    "price_normalized": 111210.0,
+    "dimensions_normalized": {
+      "height_mm": 1060,
+      "width_mm": 1596,
+      "depth_mm": 1997
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/11/mn-16-2-i1.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-17-2",
+    "product_code_normalized": "MNm-17-2",
+    "canonical_name": "Кровать 2-сп. (160*200) без изножья",
+    "collection_name_normalized": "monchelsea",
+    "category_normalized": "bed",
+    "price_normalized": 92510.0,
+    "dimensions_normalized": {
+      "height_mm": 1060,
+      "width_mm": 1810,
+      "depth_mm": 2130
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/11/112.png"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-17-3",
+    "product_code_normalized": "MNm-17-3",
+    "canonical_name": "Кровать 2-сп. (160*200) с подъем мех",
+    "collection_name_normalized": "monchelsea",
+    "category_normalized": "bed",
+    "price_normalized": 124630.0,
+    "dimensions_normalized": {
+      "height_mm": 1060,
+      "width_mm": 1796,
+      "depth_mm": 2097
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/11/Screenshot_101_jz0n-u0.png"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-18-2",
+    "product_code_normalized": "MNm-18-2",
+    "canonical_name": "Кровать 2-сп. (180*200) без изножья",
+    "collection_name_normalized": "monchelsea",
+    "category_normalized": "bed",
+    "price_normalized": 98560.0,
+    "dimensions_normalized": {
+      "height_mm": 1060,
+      "width_mm": 2010,
+      "depth_mm": 2130
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/11/112.png"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-18-3",
+    "product_code_normalized": "MNm-18-3",
+    "canonical_name": "Кровать 2-сп. (180*200) с подъем мех",
+    "collection_name_normalized": "monchelsea",
+    "category_normalized": "bed",
+    "price_normalized": 129690.0,
+    "dimensions_normalized": {
+      "height_mm": 1060,
+      "width_mm": 1996,
+      "depth_mm": 2097
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/11/Screenshot_101_jz0n-u0.png"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-61-2",
+    "product_code_normalized": "MNm-61-2",
+    "canonical_name": "Шкаф книжный 1-дв. (модуль/ручка слева)",
+    "collection_name_normalized": "monchelsea",
+    "category_normalized": "wardrobe",
+    "price_normalized": 96030.0,
+    "dimensions_normalized": {
+      "height_mm": 2400,
+      "width_mm": 654,
+      "depth_mm": 453
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/8/mn-61-3-i1.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-61-4",
+    "product_code_normalized": "MNm-61-4",
+    "canonical_name": "Шкаф книжный 3-дв. (модуль)",
+    "collection_name_normalized": "monchelsea",
+    "category_normalized": "wardrobe",
+    "price_normalized": 241890.0,
+    "dimensions_normalized": {
+      "height_mm": 2400,
+      "width_mm": 1862,
+      "depth_mm": 453
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/8/mn-61-3-i1.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-65-1",
+    "product_code_normalized": "MNm-65-1",
+    "canonical_name": "Стол письменный 1-тумб. 0П",
+    "collection_name_normalized": "monchelsea",
+    "category_normalized": "table",
+    "price_normalized": 84370.0,
+    "dimensions_normalized": {
+      "height_mm": 780,
+      "width_mm": 1200,
+      "depth_mm": 600
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/8/mn-65-3-i3.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-66-1",
+    "product_code_normalized": "MNm-66-1",
+    "canonical_name": "Стол письменный 2-тумб. ПП",
+    "collection_name_normalized": "monchelsea",
+    "category_normalized": "table",
+    "price_normalized": 120450.0,
+    "dimensions_normalized": {
+      "height_mm": 780,
+      "width_mm": 1680,
+      "depth_mm": 700
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/8/mn-66-3-i1.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-66-2",
+    "product_code_normalized": "MNm-66-2",
+    "canonical_name": "Стол письменный 2-тумб. ПЯ",
+    "collection_name_normalized": "monchelsea",
+    "category_normalized": "table",
+    "price_normalized": 128700.0,
+    "dimensions_normalized": {
+      "height_mm": 780,
+      "width_mm": 1680,
+      "depth_mm": 700
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/8/mn-66-3-i1.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-66-4",
+    "product_code_normalized": "MNm-66-4",
+    "canonical_name": "Стол письменный 2-тумб. ЯЯ",
+    "collection_name_normalized": "monchelsea",
+    "category_normalized": "table",
+    "price_normalized": 140910.0,
+    "dimensions_normalized": {
+      "height_mm": 780,
+      "width_mm": 1680,
+      "depth_mm": 700
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/8/mn-66-3-i1.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "monchelsea:row_31",
+    "product_code_normalized": null,
+    "canonical_name": "Кровать 2-сп. (160*200) с выс.сп. С жест. Филенкой",
+    "collection_name_normalized": "monchelsea",
+    "category_normalized": "",
+    "price_normalized": null,
+    "dimensions_normalized": null,
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "monchelsea:row_32",
+    "product_code_normalized": null,
+    "canonical_name": "Кровать 2-сп. (160*200) с выс.сп. С мяг. Филенкой",
+    "collection_name_normalized": "monchelsea",
+    "category_normalized": "",
+    "price_normalized": null,
+    "dimensions_normalized": null,
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "monchelsea:row_76",
+    "product_code_normalized": null,
+    "canonical_name": "Этажерка большая 6-полок",
+    "collection_name_normalized": "monchelsea",
+    "category_normalized": "",
+    "price_normalized": null,
+    "dimensions_normalized": null,
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "monchelsea:row_77",
+    "product_code_normalized": null,
+    "canonical_name": "Этажерка малая 3-полоки",
+    "collection_name_normalized": "monchelsea",
+    "category_normalized": "",
+    "price_normalized": null,
+    "dimensions_normalized": null,
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "oliver:OL-08-Н",
+    "product_code_normalized": "OL-08-Н",
+    "canonical_name": "Тумбочка для рукоделия",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "nightstand",
+    "price_normalized": 32500.0,
+    "dimensions_normalized": {
+      "height_mm": 908,
+      "width_mm": 550,
+      "depth_mm": 555
+    },
+    "preferred_image_source": null,
+    "asset_status": "missing",
+    "exclusion_reason": "no_image_source",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "oliver:OL-14-3",
+    "product_code_normalized": "OL-14-3",
+    "canonical_name": "Кровать  1-сп. (90*190) с под механиз SINGLE",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "bed",
+    "price_normalized": 89900.0,
+    "dimensions_normalized": {
+      "height_mm": 1150,
+      "width_mm": 990,
+      "depth_mm": 2030
+    },
+    "preferred_image_source": null,
+    "asset_status": "missing",
+    "exclusion_reason": "no_image_source",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "oliver:OL-15-3",
+    "product_code_normalized": "OL-15-3",
+    "canonical_name": "Кровать 1,5-сп. (120*190) с подъемн.мех-змом",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "bed",
+    "price_normalized": 126900.0,
+    "dimensions_normalized": {
+      "height_mm": 1150,
+      "width_mm": 1290,
+      "depth_mm": 2030
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/8/ol-14-1-lillian-140.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "oliver:OL-16-3",
+    "product_code_normalized": "OL-16-3",
+    "canonical_name": "Кровать 1,5-сп. (140*190) с подъемн.мех",
+    "collection_name_normalized": "oliver",
+    "category_normalized": "bed",
+    "price_normalized": 134900.0,
+    "dimensions_normalized": {
+      "height_mm": 1150,
+      "width_mm": 1490,
+      "depth_mm": 2030
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/8/ol-14-1-lillian-140.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "oxford:MC-14-1",
+    "product_code_normalized": "MC-14-1",
+    "canonical_name": "Комплекс Мой замок (кровать 90*190)",
+    "collection_name_normalized": "oxford",
+    "category_normalized": "complex",
+    "price_normalized": 41700.0,
+    "dimensions_normalized": {
+      "height_mm": 700,
+      "width_mm": 994,
+      "depth_mm": 1995
+    },
+    "preferred_image_source": null,
+    "asset_status": "missing",
+    "exclusion_reason": "no_image_source",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "oxford:MC-84-1",
+    "product_code_normalized": "MC-84-1",
+    "canonical_name": "Бортик к кровати малый",
+    "collection_name_normalized": "oxford",
+    "category_normalized": "bed-guard",
+    "price_normalized": 4800.0,
+    "dimensions_normalized": {
+      "height_mm": 300,
+      "width_mm": 700,
+      "depth_mm": 40
+    },
+    "preferred_image_source": {
+      "type": "pdf_embedded",
+      "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png"
+    },
+    "asset_status": "pdf_candidate",
+    "exclusion_reason": "pdf_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "oxford:MC-84-2",
+    "product_code_normalized": "MC-84-2",
+    "canonical_name": "Бортик к кровати большой",
+    "collection_name_normalized": "oxford",
+    "category_normalized": "bed-guard",
+    "price_normalized": 6600.0,
+    "dimensions_normalized": {
+      "height_mm": 300,
+      "width_mm": 1000,
+      "depth_mm": 40
+    },
+    "preferred_image_source": {
+      "type": "pdf_embedded",
+      "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png"
+    },
+    "asset_status": "pdf_candidate",
+    "exclusion_reason": "pdf_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "oxford:MC-99-1",
+    "product_code_normalized": "MC-99-1",
+    "canonical_name": "Комплекс Мой замок (без кровати)",
+    "collection_name_normalized": "oxford",
+    "category_normalized": "complex",
+    "price_normalized": 289000.0,
+    "dimensions_normalized": {
+      "height_mm": 2500,
+      "width_mm": 1730,
+      "depth_mm": 960
+    },
+    "preferred_image_source": null,
+    "asset_status": "missing",
+    "exclusion_reason": "no_image_source",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "oxford:OX-08-1",
+    "product_code_normalized": "OX-08-1",
+    "canonical_name": "Тумба прикроватная (для верхнего яруса)",
+    "collection_name_normalized": "oxford",
+    "category_normalized": "nightstand",
+    "price_normalized": 33900.0,
+    "dimensions_normalized": {
+      "height_mm": 500,
+      "width_mm": 395,
+      "depth_mm": 440
+    },
+    "preferred_image_source": {
+      "type": "pdf_embedded",
+      "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png"
+    },
+    "asset_status": "pdf_candidate",
+    "exclusion_reason": "pdf_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "oxford:OX-14-1",
+    "product_code_normalized": "OX-14-1",
+    "canonical_name": "Комплекс Оксфорд-1 (нижняя кровать без матраса 90*185)",
+    "collection_name_normalized": "oxford",
+    "category_normalized": "complex",
+    "price_normalized": 29000.0,
+    "dimensions_normalized": {
+      "height_mm": 257,
+      "width_mm": 945,
+      "depth_mm": 1895
+    },
+    "preferred_image_source": {
+      "type": "pdf_embedded",
+      "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i1_887x621.png"
+    },
+    "asset_status": "pdf_candidate",
+    "exclusion_reason": "pdf_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "oxford:OX-14-11",
+    "product_code_normalized": "OX-14-11",
+    "canonical_name": "Нижняя кровать без матраса увеличенная (120*185)",
+    "collection_name_normalized": "oxford",
+    "category_normalized": "bed",
+    "price_normalized": 37000.0,
+    "dimensions_normalized": {
+      "height_mm": 257,
+      "width_mm": 1245,
+      "depth_mm": 1895
+    },
+    "preferred_image_source": {
+      "type": "pdf_embedded",
+      "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p5_i0_947x949.png"
+    },
+    "asset_status": "pdf_candidate",
+    "exclusion_reason": "pdf_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "oxford:OX-14-2",
+    "product_code_normalized": "OX-14-2",
+    "canonical_name": "Комплекс Оксфорд-2 (нижняя кровать 90*185 с матрасом в чехле, ткани в ассортименте)",
+    "collection_name_normalized": "oxford",
+    "category_normalized": "complex",
+    "price_normalized": 64600.0,
+    "dimensions_normalized": {
+      "height_mm": 257,
+      "width_mm": 953,
+      "depth_mm": 1950
+    },
+    "preferred_image_source": {
+      "type": "pdf_embedded",
+      "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png"
+    },
+    "asset_status": "pdf_candidate",
+    "exclusion_reason": "pdf_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "oxford:OX-84-1",
+    "product_code_normalized": "OX-84-1",
+    "canonical_name": "Бортик к кровати малый",
+    "collection_name_normalized": "oxford",
+    "category_normalized": "bed-guard",
+    "price_normalized": 4800.0,
+    "dimensions_normalized": {
+      "height_mm": 300,
+      "width_mm": 700,
+      "depth_mm": 40
+    },
+    "preferred_image_source": {
+      "type": "pdf_embedded",
+      "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png"
+    },
+    "asset_status": "pdf_candidate",
+    "exclusion_reason": "pdf_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "oxford:OX-84-2",
+    "product_code_normalized": "OX-84-2",
+    "canonical_name": "Бортик к кровати большой",
+    "collection_name_normalized": "oxford",
+    "category_normalized": "bed-guard",
+    "price_normalized": 6800.0,
+    "dimensions_normalized": {
+      "height_mm": 300,
+      "width_mm": 1000,
+      "depth_mm": 40
+    },
+    "preferred_image_source": {
+      "type": "pdf_embedded",
+      "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png"
+    },
+    "asset_status": "pdf_candidate",
+    "exclusion_reason": "pdf_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "oxford:OX-90-1",
+    "product_code_normalized": "OX-90-1",
+    "canonical_name": "Комплекс Оксфорд-1 с выдвижной столешницей без  нижней кровати",
+    "collection_name_normalized": "oxford",
+    "category_normalized": "complex",
+    "price_normalized": 406200.0,
+    "dimensions_normalized": {
+      "height_mm": 1930,
+      "width_mm": 2605,
+      "depth_mm": 1392
+    },
+    "preferred_image_source": {
+      "type": "pdf_embedded",
+      "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i1_887x621.png"
+    },
+    "asset_status": "pdf_candidate",
+    "exclusion_reason": "pdf_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "oxford:OX-90-2",
+    "product_code_normalized": "OX-90-2",
+    "canonical_name": "Комплекс Оксфорд-2  без выдвижной столешницы с нижней кроватью и матрасом в чехле (ткани в ассортименте)",
+    "collection_name_normalized": "oxford",
+    "category_normalized": "complex",
+    "price_normalized": 386700.0,
+    "dimensions_normalized": {
+      "height_mm": 1930,
+      "width_mm": 2605,
+      "depth_mm": 1392
+    },
+    "preferred_image_source": {
+      "type": "pdf_embedded",
+      "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png"
+    },
+    "asset_status": "pdf_candidate",
+    "exclusion_reason": "pdf_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "oxford:OX-90-3",
+    "product_code_normalized": "OX-90-3",
+    "canonical_name": "КомплексОксфорд-3 со шкафом и столом (без нижней кровати)",
+    "collection_name_normalized": "oxford",
+    "category_normalized": "complex",
+    "price_normalized": 416600.0,
+    "dimensions_normalized": {
+      "height_mm": 1930,
+      "width_mm": 2605,
+      "depth_mm": 1392
+    },
+    "preferred_image_source": {
+      "type": "pdf_embedded",
+      "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png"
+    },
+    "asset_status": "pdf_candidate",
+    "exclusion_reason": "pdf_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "oxford:OX-90-4",
+    "product_code_normalized": "OX-90-4",
+    "canonical_name": "Комплекс Oxford-4 Кровать-чердак - без полок и ящиков внутри  (без нижней кровати)",
+    "collection_name_normalized": "oxford",
+    "category_normalized": "complex",
+    "price_normalized": 280000.0,
+    "dimensions_normalized": {
+      "height_mm": 1930,
+      "width_mm": 2605,
+      "depth_mm": 1392
+    },
+    "preferred_image_source": {
+      "type": "pdf_embedded",
+      "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png"
+    },
+    "asset_status": "pdf_candidate",
+    "exclusion_reason": "pdf_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "oxford:Ox-1-1-N",
+    "product_code_normalized": "Ox-1-1-N",
+    "canonical_name": "Съемный чехол в стандартной ткани  1-2 категории на нижнюю кровать",
+    "collection_name_normalized": "oxford",
+    "category_normalized": "bed",
+    "price_normalized": 13500.0,
+    "dimensions_normalized": {
+      "height_mm": 900,
+      "width_mm": 1850,
+      "depth_mm": 200
+    },
+    "preferred_image_source": null,
+    "asset_status": "missing",
+    "exclusion_reason": "no_image_source",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "oxford:S-OX-02",
+    "product_code_normalized": "S-OX-02",
+    "canonical_name": "Стеновая панель на всю длину ОКСФОРД",
+    "collection_name_normalized": "oxford",
+    "category_normalized": "wall-panel",
+    "price_normalized": 75900.0,
+    "dimensions_normalized": null,
+    "preferred_image_source": {
+      "type": "pdf_embedded",
+      "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i1_887x621.png"
+    },
+    "asset_status": "pdf_candidate",
+    "exclusion_reason": "pdf_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "oxford:S-OX-03",
+    "product_code_normalized": "S-OX-03",
+    "canonical_name": "Полка навесная квадратная с 3-мя ящиками OXFORD",
+    "collection_name_normalized": "oxford",
+    "category_normalized": "shelf",
+    "price_normalized": 26200.0,
+    "dimensions_normalized": null,
+    "preferred_image_source": {
+      "type": "pdf_embedded",
+      "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i1_887x621.png"
+    },
+    "asset_status": "pdf_candidate",
+    "exclusion_reason": "pdf_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "oxford:S-OX-04",
+    "product_code_normalized": "S-OX-04",
+    "canonical_name": "Полка навесная квадратная Оксфорд",
+    "collection_name_normalized": "oxford",
+    "category_normalized": "shelf",
+    "price_normalized": 10600.0,
+    "dimensions_normalized": {
+      "height_mm": 404,
+      "width_mm": 416,
+      "depth_mm": 300
+    },
+    "preferred_image_source": {
+      "type": "pdf_embedded",
+      "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i1_887x621.png"
+    },
+    "asset_status": "pdf_candidate",
+    "exclusion_reason": "pdf_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "oxford:S-OX-05",
+    "product_code_normalized": "S-OX-05",
+    "canonical_name": "Ступени с перилами и ящиками ОКСФОРД",
+    "collection_name_normalized": "oxford",
+    "category_normalized": "toy-box",
+    "price_normalized": 77100.0,
+    "dimensions_normalized": null,
+    "preferred_image_source": {
+      "type": "pdf_embedded",
+      "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p4_i0_1306x951.png"
+    },
+    "asset_status": "pdf_candidate",
+    "exclusion_reason": "pdf_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "oxford:SH-14-1",
+    "product_code_normalized": "SH-14-1",
+    "canonical_name": "Комплекс Милый дом (кровать 90*190)",
+    "collection_name_normalized": "oxford",
+    "category_normalized": "complex",
+    "price_normalized": 41100.0,
+    "dimensions_normalized": {
+      "height_mm": 820,
+      "width_mm": 1002,
+      "depth_mm": 2045
+    },
+    "preferred_image_source": null,
+    "asset_status": "missing",
+    "exclusion_reason": "no_image_source",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "oxford:SH-84-1",
+    "product_code_normalized": "SH-84-1",
+    "canonical_name": "Бортик к кровати малый",
+    "collection_name_normalized": "oxford",
+    "category_normalized": "bed-guard",
+    "price_normalized": 4800.0,
+    "dimensions_normalized": {
+      "height_mm": 300,
+      "width_mm": 700,
+      "depth_mm": 40
+    },
+    "preferred_image_source": {
+      "type": "pdf_embedded",
+      "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png"
+    },
+    "asset_status": "pdf_candidate",
+    "exclusion_reason": "pdf_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "oxford:SH-84-2",
+    "product_code_normalized": "SH-84-2",
+    "canonical_name": "Бортик к кровати большой",
+    "collection_name_normalized": "oxford",
+    "category_normalized": "bed-guard",
+    "price_normalized": 6800.0,
+    "dimensions_normalized": {
+      "height_mm": 300,
+      "width_mm": 1000,
+      "depth_mm": 40
+    },
+    "preferred_image_source": {
+      "type": "pdf_embedded",
+      "ref": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png"
+    },
+    "asset_status": "pdf_candidate",
+    "exclusion_reason": "pdf_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "oxford:SH-99-1",
+    "product_code_normalized": "SH-99-1",
+    "canonical_name": "Комплекс Милый дом (без кровати)",
+    "collection_name_normalized": "oxford",
+    "category_normalized": "complex",
+    "price_normalized": 301900.0,
+    "dimensions_normalized": {
+      "height_mm": 2500,
+      "width_mm": 1764,
+      "depth_mm": 1000
+    },
+    "preferred_image_source": null,
+    "asset_status": "missing",
+    "exclusion_reason": "no_image_source",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-09-1",
+    "product_code_normalized": "PR-09-1",
+    "canonical_name": "Зеркало навесное",
+    "collection_name_normalized": "princess-rose",
+    "category_normalized": "mirror",
+    "price_normalized": 15600.0,
+    "dimensions_normalized": {
+      "height_mm": 800,
+      "width_mm": 600,
+      "depth_mm": 30
+    },
+    "preferred_image_source": {
+      "type": "pdf_embedded",
+      "ref": "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p12_i2_829x526.png"
+    },
+    "asset_status": "pdf_candidate",
+    "exclusion_reason": "pdf_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-09-2",
+    "product_code_normalized": "PR-09-2",
+    "canonical_name": "Зеркало напольное",
+    "collection_name_normalized": "princess-rose",
+    "category_normalized": "mirror",
+    "price_normalized": 49400.0,
+    "dimensions_normalized": {
+      "height_mm": 1670,
+      "width_mm": 650,
+      "depth_mm": 391
+    },
+    "preferred_image_source": null,
+    "asset_status": "missing",
+    "exclusion_reason": "no_image_source",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-16-1",
+    "product_code_normalized": "PR-16-1",
+    "canonical_name": "Кровать 1,5-сп.140*190 без изножья",
+    "collection_name_normalized": "princess-rose",
+    "category_normalized": "bed",
+    "price_normalized": 88900.0,
+    "dimensions_normalized": {
+      "height_mm": 1092,
+      "width_mm": 1494,
+      "depth_mm": 2010
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/11/pr-14-2-i1.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-65-5",
+    "product_code_normalized": "PR-65-5",
+    "canonical_name": "Стол письменный 1-тумб. 0П (ручки СВАРОВСКИ)",
+    "collection_name_normalized": "princess-rose",
+    "category_normalized": "table",
+    "price_normalized": 78500.0,
+    "dimensions_normalized": {
+      "height_mm": 750,
+      "width_mm": 1140,
+      "depth_mm": 647
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/11/pr-65-2-iso-1.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-65-6",
+    "product_code_normalized": "PR-65-6",
+    "canonical_name": "Стол письменный 1-тумб. П0 (ручки СВАРОВСКИ)",
+    "collection_name_normalized": "princess-rose",
+    "category_normalized": "table",
+    "price_normalized": 78500.0,
+    "dimensions_normalized": {
+      "height_mm": 750,
+      "width_mm": 1140,
+      "depth_mm": 647
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/11/pr-65-2-iso-1.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-65-7",
+    "product_code_normalized": "PR-65-7",
+    "canonical_name": "Стол письменный 1-тумб. 0Я (ручки СВАРОВСКИ)",
+    "collection_name_normalized": "princess-rose",
+    "category_normalized": "table",
+    "price_normalized": 95400.0,
+    "dimensions_normalized": {
+      "height_mm": 750,
+      "width_mm": 1140,
+      "depth_mm": 647
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/11/pr-65-2-iso-1.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-65-8",
+    "product_code_normalized": "PR-65-8",
+    "canonical_name": "Стол письменный 1-тумб. Я0 (ручки СВАРОВСКИ)",
+    "collection_name_normalized": "princess-rose",
+    "category_normalized": "table",
+    "price_normalized": 95400.0,
+    "dimensions_normalized": {
+      "height_mm": 750,
+      "width_mm": 1140,
+      "depth_mm": 647
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/11/pr-65-2-iso-1.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-66-6",
+    "product_code_normalized": "PR-66-6",
+    "canonical_name": "Стол письменный 2-тумб. ПЯ (ручки СВАРОВСКИ)",
+    "collection_name_normalized": "princess-rose",
+    "category_normalized": "table",
+    "price_normalized": 119300.0,
+    "dimensions_normalized": {
+      "height_mm": 750,
+      "width_mm": 1535,
+      "depth_mm": 700
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/11/pr-65-2-iso-1.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-66-7",
+    "product_code_normalized": "PR-66-7",
+    "canonical_name": "Стол письменный 2-тумб. ЯП (ручки СВАРОВСКИ)",
+    "collection_name_normalized": "princess-rose",
+    "category_normalized": "table",
+    "price_normalized": 119300.0,
+    "dimensions_normalized": {
+      "height_mm": 750,
+      "width_mm": 1535,
+      "depth_mm": 700
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/11/pr-66-3-i1.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-68-2",
+    "product_code_normalized": "PR-68-2",
+    "canonical_name": "Этажерка большая 6 полок",
+    "collection_name_normalized": "princess-rose",
+    "category_normalized": "bookcase",
+    "price_normalized": 65100.0,
+    "dimensions_normalized": {
+      "height_mm": 1770,
+      "width_mm": 885,
+      "depth_mm": 362
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/11/no-product_5joz-z4.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-69-1",
+    "product_code_normalized": "PR-69-1",
+    "canonical_name": "Полка книжная",
+    "collection_name_normalized": "princess-rose",
+    "category_normalized": "shelf",
+    "price_normalized": 8700.0,
+    "dimensions_normalized": {
+      "height_mm": 318,
+      "width_mm": 700,
+      "depth_mm": 245
+    },
+    "preferred_image_source": {
+      "type": "pdf_embedded",
+      "ref": "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p12_i2_829x526.png"
+    },
+    "asset_status": "pdf_candidate",
+    "exclusion_reason": "pdf_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-95-1",
+    "product_code_normalized": "PR-95-1",
+    "canonical_name": "Кровать - трансформер (80*150) с рисунком",
+    "collection_name_normalized": "princess-rose",
+    "category_normalized": "bed",
+    "price_normalized": 126500.0,
+    "dimensions_normalized": {
+      "height_mm": 1179,
+      "width_mm": 906,
+      "depth_mm": 1806
+    },
+    "preferred_image_source": {
+      "type": "pdf_embedded",
+      "ref": "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p11_i1_773x773.png"
+    },
+    "asset_status": "pdf_candidate",
+    "exclusion_reason": "pdf_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-95-2",
+    "product_code_normalized": "PR-95-2",
+    "canonical_name": "Кровать - трансформер (80*150) без рисунка",
+    "collection_name_normalized": "princess-rose",
+    "category_normalized": "bed",
+    "price_normalized": 125900.0,
+    "dimensions_normalized": {
+      "height_mm": 1179,
+      "width_mm": 906,
+      "depth_mm": 1806
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/11/трансформер_без_росписи.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-95-3",
+    "product_code_normalized": "PR-95-3",
+    "canonical_name": "Кровать - трансформер (80*150) с тканью",
+    "collection_name_normalized": "princess-rose",
+    "category_normalized": "bed",
+    "price_normalized": 128600.0,
+    "dimensions_normalized": {
+      "height_mm": 1179,
+      "width_mm": 906,
+      "depth_mm": 1806
+    },
+    "preferred_image_source": null,
+    "asset_status": "missing",
+    "exclusion_reason": "no_image_source",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "provence:PV-08-3",
+    "product_code_normalized": "PV-08-3",
+    "canonical_name": "Тумбочка прикроватная с 2 ящиками",
+    "collection_name_normalized": "provence",
+    "category_normalized": "nightstand",
+    "price_normalized": 34300.0,
+    "dimensions_normalized": {
+      "height_mm": 600,
+      "width_mm": 530,
+      "depth_mm": 450
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/8/pv-08-2-i1.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "provence:PV-14-2",
+    "product_code_normalized": "PV-14-2",
+    "canonical_name": "Кровать 1-сп. (90*190) с тканью без изножья",
+    "collection_name_normalized": "provence",
+    "category_normalized": "bed",
+    "price_normalized": 57600.0,
+    "dimensions_normalized": {
+      "height_mm": 1063,
+      "width_mm": 994,
+      "depth_mm": 2010
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/11/Screenshot_101_j3q4-5k.png"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "provence:PV-16-2",
+    "product_code_normalized": "PV-16-2",
+    "canonical_name": "Кровать 1,5-сп. (140*190) с тканью без изножья",
+    "collection_name_normalized": "provence",
+    "category_normalized": "bed",
+    "price_normalized": 77300.0,
+    "dimensions_normalized": {
+      "height_mm": 1092,
+      "width_mm": 1494,
+      "depth_mm": 2010
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/8/pv-15-1-i1.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "provence:PV-17-2",
+    "product_code_normalized": "PV-17-2",
+    "canonical_name": "Кровать 2-сп. (160*200) с тканью без изножья",
+    "collection_name_normalized": "provence",
+    "category_normalized": "bed",
+    "price_normalized": 79700.0,
+    "dimensions_normalized": {
+      "height_mm": 1111,
+      "width_mm": 1694,
+      "depth_mm": 2110
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/8/pv-18-1-i1.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "provence:PV-18-2",
+    "product_code_normalized": "PV-18-2",
+    "canonical_name": "Кровать 2-сп. (180*200) с тканью без изножья",
+    "collection_name_normalized": "provence",
+    "category_normalized": "bed",
+    "price_normalized": 82900.0,
+    "dimensions_normalized": {
+      "height_mm": 1121,
+      "width_mm": 1894,
+      "depth_mm": 2110
+    },
+    "preferred_image_source": {
+      "type": "legacy_site",
+      "ref": "https://woodright.ru/images/detailed/8/pv-18-1-i1.jpg"
+    },
+    "asset_status": "fuzzy",
+    "exclusion_reason": "fuzzy_unconfirmed",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "provence:PV-30-1",
+    "product_code_normalized": "PV-30-1",
+    "canonical_name": "Часы",
+    "collection_name_normalized": "provence",
+    "category_normalized": "clock",
+    "price_normalized": 6000.0,
+    "dimensions_normalized": {
+      "height_mm": 374,
+      "width_mm": 288,
+      "depth_mm": 40
+    },
+    "preferred_image_source": null,
+    "asset_status": "missing",
+    "exclusion_reason": "no_image_source",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-01-1",
+    "product_code_normalized": "WW-01-1",
+    "canonical_name": "Шкаф для одежды 1-дв. 440 (ручка лев/прав)",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "wardrobe",
+    "price_normalized": 120670.0,
+    "dimensions_normalized": {
+      "height_mm": 1973,
+      "width_mm": 780,
+      "depth_mm": 440
+    },
+    "preferred_image_source": {
+      "type": "product_photos",
+      "ref": "/WOODRIGHT/Контент /Шкафы /ww-01-1-ab.jpg"
+    },
+    "asset_status": "disk_candidate",
+    "exclusion_reason": "vv_base_image_only",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-01-2",
+    "product_code_normalized": "WW-01-2",
+    "canonical_name": "Шкаф для одежды 1-дв. 560 (ручка лев/прав)",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "wardrobe",
+    "price_normalized": 133430.0,
+    "dimensions_normalized": {
+      "height_mm": 1973,
+      "width_mm": 780,
+      "depth_mm": 560
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-01-3",
+    "product_code_normalized": "WW-01-3",
+    "canonical_name": "Шкаф для одежды 1-дв.(высокий)560 (ручка лев/прав)",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "wardrobe",
+    "price_normalized": 142450.0,
+    "dimensions_normalized": {
+      "height_mm": 2220,
+      "width_mm": 780,
+      "depth_mm": 560
+    },
+    "preferred_image_source": {
+      "type": "product_photos",
+      "ref": "/WOODRIGHT/Контент /Шкафы /ww-01-3-ab.jpg"
+    },
+    "asset_status": "disk_candidate",
+    "exclusion_reason": "vv_base_image_only",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-02-1",
+    "product_code_normalized": "WW-02-1",
+    "canonical_name": "Шкаф для одежды 2-дв. 440",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "wardrobe",
+    "price_normalized": 148280.0,
+    "dimensions_normalized": {
+      "height_mm": 1973,
+      "width_mm": 1040,
+      "depth_mm": 440
+    },
+    "preferred_image_source": {
+      "type": "product_photos",
+      "ref": "/WOODRIGHT/Контент /Шкафы /ww-02-1-ab.jpg"
+    },
+    "asset_status": "disk_candidate",
+    "exclusion_reason": "vv_base_image_only",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-02-2",
+    "product_code_normalized": "WW-02-2",
+    "canonical_name": "Шкаф для одежды 2-дв.560",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "wardrobe",
+    "price_normalized": 163450.0,
+    "dimensions_normalized": {
+      "height_mm": 1973,
+      "width_mm": 1040,
+      "depth_mm": 560
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-02-3",
+    "product_code_normalized": "WW-02-3",
+    "canonical_name": "Шкаф для одежды 2-дв.,высокий,560",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "wardrobe",
+    "price_normalized": 187000.0,
+    "dimensions_normalized": {
+      "height_mm": 2220,
+      "width_mm": 1040,
+      "depth_mm": 560
+    },
+    "preferred_image_source": {
+      "type": "product_photos",
+      "ref": "/WOODRIGHT/Контент /Шкафы /ww-02-3-ab.jpg"
+    },
+    "asset_status": "disk_candidate",
+    "exclusion_reason": "vv_base_image_only",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-03-1",
+    "product_code_normalized": "WW-03-1",
+    "canonical_name": "Шкаф для одежды 3-дв.440",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "wardrobe",
+    "price_normalized": 207900.0,
+    "dimensions_normalized": {
+      "height_mm": 1973,
+      "width_mm": 1540,
+      "depth_mm": 440
+    },
+    "preferred_image_source": {
+      "type": "product_photos",
+      "ref": "/WOODRIGHT/Контент /Шкафы /ww-03-1.jpg"
+    },
+    "asset_status": "disk_candidate",
+    "exclusion_reason": "vv_base_image_only",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-03-2",
+    "product_code_normalized": "WW-03-2",
+    "canonical_name": "Шкаф для одежды 3-дв.560",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "wardrobe",
+    "price_normalized": 228140.0,
+    "dimensions_normalized": {
+      "height_mm": 1973,
+      "width_mm": 1540,
+      "depth_mm": 560
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-03-3",
+    "product_code_normalized": "WW-03-3",
+    "canonical_name": "Шкаф для одежды 3-дв.высокий ,560",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "wardrobe",
+    "price_normalized": 249040.0,
+    "dimensions_normalized": {
+      "height_mm": 2220,
+      "width_mm": 1540,
+      "depth_mm": 560
+    },
+    "preferred_image_source": {
+      "type": "product_photos",
+      "ref": "/WOODRIGHT/Контент /Шкафы /ww-03-3-ab.jpg"
+    },
+    "asset_status": "disk_candidate",
+    "exclusion_reason": "vv_base_image_only",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-05-1",
+    "product_code_normalized": "WW-05-1",
+    "canonical_name": "Комод стандартный 440",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "dresser",
+    "price_normalized": 83820.0,
+    "dimensions_normalized": {
+      "height_mm": 900,
+      "width_mm": 840,
+      "depth_mm": 440
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-05-2",
+    "product_code_normalized": "WW-05-2",
+    "canonical_name": "Комод стандартный 560",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "dresser",
+    "price_normalized": 93940.0,
+    "dimensions_normalized": {
+      "height_mm": 900,
+      "width_mm": 840,
+      "depth_mm": 560
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-05-3",
+    "product_code_normalized": "WW-05-3",
+    "canonical_name": "Комод высокий    440",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "dresser",
+    "price_normalized": 113080.0,
+    "dimensions_normalized": {
+      "height_mm": 1370,
+      "width_mm": 650,
+      "depth_mm": 440
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-05-4",
+    "product_code_normalized": "WW-05-4",
+    "canonical_name": "Комод высокий   560",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "dresser",
+    "price_normalized": 122950.0,
+    "dimensions_normalized": {
+      "height_mm": 1370,
+      "width_mm": 650,
+      "depth_mm": 560
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-06-1",
+    "product_code_normalized": "WW-06-1",
+    "canonical_name": "Столик туалетный с зеркалом",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "mirror",
+    "price_normalized": 59730.0,
+    "dimensions_normalized": {
+      "height_mm": 1613,
+      "width_mm": 1140,
+      "depth_mm": 440
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-07-1",
+    "product_code_normalized": "WW-07-1",
+    "canonical_name": "Ящик для игрушек с подъем. мех.",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "toy-box",
+    "price_normalized": 41360.0,
+    "dimensions_normalized": {
+      "height_mm": 452,
+      "width_mm": 744,
+      "depth_mm": 444
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-08-1",
+    "product_code_normalized": "WW-08-1",
+    "canonical_name": "Тумбочка прикроватная",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "nightstand",
+    "price_normalized": 25510.0,
+    "dimensions_normalized": {
+      "height_mm": 500,
+      "width_mm": 440,
+      "depth_mm": 440
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-09-1",
+    "product_code_normalized": "WW-09-1",
+    "canonical_name": "Зеркало навесное овальное",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "mirror",
+    "price_normalized": 14040.0,
+    "dimensions_normalized": {
+      "height_mm": 902,
+      "width_mm": 544,
+      "depth_mm": 30
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-09-2",
+    "product_code_normalized": "WW-09-2",
+    "canonical_name": "Зеркало напольное",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "mirror",
+    "price_normalized": 38060.0,
+    "dimensions_normalized": {
+      "height_mm": 1586,
+      "width_mm": 664,
+      "depth_mm": 484
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-13-1",
+    "product_code_normalized": "WW-13-1",
+    "canonical_name": "Кровать детская (80*150)",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "bed",
+    "price_normalized": 87890.0,
+    "dimensions_normalized": {
+      "height_mm": 1030,
+      "width_mm": 920,
+      "depth_mm": 1640
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-13-2",
+    "product_code_normalized": "WW-13-2",
+    "canonical_name": "Кровать детская (80*150) с ящиками",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "bed",
+    "price_normalized": 105270.0,
+    "dimensions_normalized": {
+      "height_mm": 1030,
+      "width_mm": 920,
+      "depth_mm": 1640
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-14-1",
+    "product_code_normalized": "WW-14-1",
+    "canonical_name": "Кровать 1-сп. (90*190)",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "bed",
+    "price_normalized": 90750.0,
+    "dimensions_normalized": {
+      "height_mm": 1030,
+      "width_mm": 996,
+      "depth_mm": 2020
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-14-2",
+    "product_code_normalized": "WW-14-2",
+    "canonical_name": "Кровать 1-сп. (90*190) с ящиками",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "bed",
+    "price_normalized": 137170.0,
+    "dimensions_normalized": {
+      "height_mm": 1030,
+      "width_mm": 996,
+      "depth_mm": 2020
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-15-1",
+    "product_code_normalized": "WW-15-1",
+    "canonical_name": "Кровать 1,5-сп. (120*190)",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "bed",
+    "price_normalized": 108900.0,
+    "dimensions_normalized": {
+      "height_mm": 1030,
+      "width_mm": 1286,
+      "depth_mm": 2020
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-15-2",
+    "product_code_normalized": "WW-15-2",
+    "canonical_name": "Кровать 1,5-сп. (120*190) с ящиками",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "bed",
+    "price_normalized": 170280.0,
+    "dimensions_normalized": {
+      "height_mm": 1030,
+      "width_mm": 1286,
+      "depth_mm": 2020
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-23-1",
+    "product_code_normalized": "WW-23-1",
+    "canonical_name": "Стул",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "chair",
+    "price_normalized": 27610.0,
+    "dimensions_normalized": {
+      "height_mm": 1020,
+      "width_mm": 485,
+      "depth_mm": 545
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-30-1",
+    "product_code_normalized": "WW-30-1",
+    "canonical_name": "Часы",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "clock",
+    "price_normalized": 11990.0,
+    "dimensions_normalized": {
+      "height_mm": 374,
+      "width_mm": 288,
+      "depth_mm": 42
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-40-1",
+    "product_code_normalized": "WW-40-1",
+    "canonical_name": "Шкаф комбинированный   440",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "wardrobe",
+    "price_normalized": 239360.0,
+    "dimensions_normalized": {
+      "height_mm": 1973,
+      "width_mm": 1930,
+      "depth_mm": 440
+    },
+    "preferred_image_source": {
+      "type": "product_photos",
+      "ref": "/WOODRIGHT/Контент /Шкафы /ww-40-1-ab.jpg"
+    },
+    "asset_status": "disk_candidate",
+    "exclusion_reason": "vv_base_image_only",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-40-2",
+    "product_code_normalized": "WW-40-2",
+    "canonical_name": "Шкаф комбинированный   560",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "wardrobe",
+    "price_normalized": 272580.0,
+    "dimensions_normalized": {
+      "height_mm": 1973,
+      "width_mm": 1930,
+      "depth_mm": 560
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-40-3",
+    "product_code_normalized": "WW-40-3",
+    "canonical_name": "Шкаф комбинированный,высокий,560",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "wardrobe",
+    "price_normalized": 298100.0,
+    "dimensions_normalized": {
+      "height_mm": 2220,
+      "width_mm": 1930,
+      "depth_mm": 560
+    },
+    "preferred_image_source": {
+      "type": "product_photos",
+      "ref": "/WOODRIGHT/Контент /Шкафы /ww-40-3-ab.jpg"
+    },
+    "asset_status": "disk_candidate",
+    "exclusion_reason": "vv_base_image_only",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-42-1",
+    "product_code_normalized": "WW-42-1",
+    "canonical_name": "Тумба для телевизора",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "nightstand",
+    "price_normalized": 69520.0,
+    "dimensions_normalized": {
+      "height_mm": 550,
+      "width_mm": 1508,
+      "depth_mm": 440
+    },
+    "preferred_image_source": {
+      "type": "product_photos",
+      "ref": "/WOODRIGHT/Контент /Шкафы /ww-42-1-ab.jpg"
+    },
+    "asset_status": "disk_candidate",
+    "exclusion_reason": "vv_base_image_only",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-55-1",
+    "product_code_normalized": "WW-55-1",
+    "canonical_name": "Банкетка малая",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "bench",
+    "price_normalized": 14080.0,
+    "dimensions_normalized": {
+      "height_mm": 360,
+      "width_mm": 420,
+      "depth_mm": 350
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-57-1",
+    "product_code_normalized": "WW-57-1",
+    "canonical_name": "Диван малый (80*150)",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "sofa",
+    "price_normalized": 107250.0,
+    "dimensions_normalized": {
+      "height_mm": 1050,
+      "width_mm": 1640,
+      "depth_mm": 900
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-57-2",
+    "product_code_normalized": "WW-57-2",
+    "canonical_name": "Диван большой (90*190)",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "sofa",
+    "price_normalized": 140920.0,
+    "dimensions_normalized": {
+      "height_mm": 1100,
+      "width_mm": 2020,
+      "depth_mm": 990
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-61-1",
+    "product_code_normalized": "WW-61-1",
+    "canonical_name": "Шкаф книжный со стеклом 440",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "wardrobe",
+    "price_normalized": 132550.0,
+    "dimensions_normalized": {
+      "height_mm": 1973,
+      "width_mm": 940,
+      "depth_mm": 440
+    },
+    "preferred_image_source": {
+      "type": "product_photos",
+      "ref": "/WOODRIGHT/Контент /Шкафы /ww-61-1-ab.jpg"
+    },
+    "asset_status": "disk_candidate",
+    "exclusion_reason": "vv_base_image_only",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-61-2",
+    "product_code_normalized": "WW-61-2",
+    "canonical_name": "Шкаф книжный со стеклом 560",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "wardrobe",
+    "price_normalized": 138600.0,
+    "dimensions_normalized": {
+      "height_mm": 1973,
+      "width_mm": 940,
+      "depth_mm": 560
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-61-3",
+    "product_code_normalized": "WW-61-3",
+    "canonical_name": "Шкаф книжный со стеклом,высокий,560",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "wardrobe",
+    "price_normalized": 150370.0,
+    "dimensions_normalized": {
+      "height_mm": 2220,
+      "width_mm": 940,
+      "depth_mm": 560
+    },
+    "preferred_image_source": {
+      "type": "product_photos",
+      "ref": "/WOODRIGHT/Контент /Шкафы /ww-61-3-ab.jpg"
+    },
+    "asset_status": "disk_candidate",
+    "exclusion_reason": "vv_base_image_only",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-62-1",
+    "product_code_normalized": "WW-62-1",
+    "canonical_name": "Стеллаж для книг   440",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "bookcase",
+    "price_normalized": 99390.0,
+    "dimensions_normalized": {
+      "height_mm": 1973,
+      "width_mm": 940,
+      "depth_mm": 440
+    },
+    "preferred_image_source": {
+      "type": "product_photos",
+      "ref": "/WOODRIGHT/Контент /Шкафы /ww-62-1-ab.jpg"
+    },
+    "asset_status": "disk_candidate",
+    "exclusion_reason": "vv_base_image_only",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-62-2",
+    "product_code_normalized": "WW-62-2",
+    "canonical_name": "Стеллаж для книг   560",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "bookcase",
+    "price_normalized": 109340.0,
+    "dimensions_normalized": {
+      "height_mm": 1973,
+      "width_mm": 940,
+      "depth_mm": 560
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-62-3",
+    "product_code_normalized": "WW-62-3",
+    "canonical_name": "Стеллаж для книг   высокий и гл.560",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "bookcase",
+    "price_normalized": 118800.0,
+    "dimensions_normalized": {
+      "height_mm": 2220,
+      "width_mm": 940,
+      "depth_mm": 560
+    },
+    "preferred_image_source": {
+      "type": "product_photos",
+      "ref": "/WOODRIGHT/Контент /Шкафы /ww-62-3-ab.jpg"
+    },
+    "asset_status": "disk_candidate",
+    "exclusion_reason": "vv_base_image_only",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-64-1",
+    "product_code_normalized": "WW-64-1",
+    "canonical_name": "Стол-бюро",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "table",
+    "price_normalized": 133760.0,
+    "dimensions_normalized": {
+      "height_mm": 1170,
+      "width_mm": 1300,
+      "depth_mm": 720
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-65-1",
+    "product_code_normalized": "WW-65-1",
+    "canonical_name": "Стол письменный 1-тумб. 0П",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "table",
+    "price_normalized": 81180.0,
+    "dimensions_normalized": {
+      "height_mm": 780,
+      "width_mm": 1118,
+      "depth_mm": 700
+    },
+    "preferred_image_source": {
+      "type": "product_photos",
+      "ref": "/WOODRIGHT/Контент /Шкафы /ww-65-1-ab.jpg"
+    },
+    "asset_status": "disk_candidate",
+    "exclusion_reason": "vv_base_image_only",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-65-2",
+    "product_code_normalized": "WW-65-2",
+    "canonical_name": "Стол письменный 1-тумб. П0",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "table",
+    "price_normalized": 81180.0,
+    "dimensions_normalized": {
+      "height_mm": 780,
+      "width_mm": 1118,
+      "depth_mm": 700
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-65-3",
+    "product_code_normalized": "WW-65-3",
+    "canonical_name": "Cтол письменный 1-тумб.ОЯ",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "table",
+    "price_normalized": 90860.0,
+    "dimensions_normalized": {
+      "height_mm": 780,
+      "width_mm": 1118,
+      "depth_mm": 700
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-65-4",
+    "product_code_normalized": "WW-65-4",
+    "canonical_name": "Стол письменный 1-тумб.ЯО",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "table",
+    "price_normalized": 90860.0,
+    "dimensions_normalized": {
+      "height_mm": 780,
+      "width_mm": 1118,
+      "depth_mm": 700
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-66-1",
+    "product_code_normalized": "WW-66-1",
+    "canonical_name": "Стол письменный 2-тумб.ПП",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "table",
+    "price_normalized": 114400.0,
+    "dimensions_normalized": {
+      "height_mm": 780,
+      "width_mm": 1540,
+      "depth_mm": 700
+    },
+    "preferred_image_source": {
+      "type": "product_photos",
+      "ref": "/WOODRIGHT/Контент /Шкафы /ww-66-1-ab.jpg"
+    },
+    "asset_status": "disk_candidate",
+    "exclusion_reason": "vv_base_image_only",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-66-2",
+    "product_code_normalized": "WW-66-2",
+    "canonical_name": "Стол письменный 2-тумб.ПЯ",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "table",
+    "price_normalized": 123310.0,
+    "dimensions_normalized": {
+      "height_mm": 780,
+      "width_mm": 1540,
+      "depth_mm": 700
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-66-3",
+    "product_code_normalized": "WW-66-3",
+    "canonical_name": "Стол письменный 2-тумб.ЯП",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "table",
+    "price_normalized": 123310.0,
+    "dimensions_normalized": {
+      "height_mm": 780,
+      "width_mm": 1540,
+      "depth_mm": 700
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-66-4",
+    "product_code_normalized": "WW-66-4",
+    "canonical_name": "Стол письменный 2-тумб.ЯЯ",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "table",
+    "price_normalized": 132990.0,
+    "dimensions_normalized": {
+      "height_mm": 780,
+      "width_mm": 1540,
+      "depth_mm": 700
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-67-1",
+    "product_code_normalized": "WW-67-1",
+    "canonical_name": "Стол рабочий",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "table",
+    "price_normalized": 85250.0,
+    "dimensions_normalized": {
+      "height_mm": 780,
+      "width_mm": 1300,
+      "depth_mm": 720
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-69-1",
+    "product_code_normalized": "WW-69-1",
+    "canonical_name": "Полка книжная",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "shelf",
+    "price_normalized": 9570.0,
+    "dimensions_normalized": {
+      "height_mm": 200,
+      "width_mm": 800,
+      "depth_mm": 200
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-81-1",
+    "product_code_normalized": "WW-81-1",
+    "canonical_name": "Столик  детский",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "table",
+    "price_normalized": 22660.0,
+    "dimensions_normalized": {
+      "height_mm": 540,
+      "width_mm": 600,
+      "depth_mm": 440
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-82-1",
+    "product_code_normalized": "WW-82-1",
+    "canonical_name": "Стульчик  детский",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "chair",
+    "price_normalized": 13310.0,
+    "dimensions_normalized": {
+      "height_mm": 600,
+      "width_mm": 250,
+      "depth_mm": 290
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-83-1",
+    "product_code_normalized": "WW-83-1",
+    "canonical_name": "Столешница пеленальная съемная",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "table",
+    "price_normalized": 15180.0,
+    "dimensions_normalized": {
+      "height_mm": 150,
+      "width_mm": 881,
+      "depth_mm": 750
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-84-1",
+    "product_code_normalized": "WW-84-1",
+    "canonical_name": "Бортик к кровати малый",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "bed-guard",
+    "price_normalized": 5940.0,
+    "dimensions_normalized": {
+      "height_mm": 300,
+      "width_mm": 700,
+      "depth_mm": 40
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-84-2",
+    "product_code_normalized": "WW-84-2",
+    "canonical_name": "Бортик к кровати большой",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "bed-guard",
+    "price_normalized": 7920.0,
+    "dimensions_normalized": {
+      "height_mm": 300,
+      "width_mm": 1000,
+      "depth_mm": 40
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-85-1",
+    "product_code_normalized": "WW-85-1",
+    "canonical_name": "Кроватка для новорожденного (60*120)",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "bed",
+    "price_normalized": 110440.0,
+    "dimensions_normalized": {
+      "height_mm": 1040,
+      "width_mm": 730,
+      "depth_mm": 1300
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-86-1",
+    "product_code_normalized": "WW-86-1",
+    "canonical_name": "Каркас для балдахина",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "canopy-frame",
+    "price_normalized": 5280.0,
+    "dimensions_normalized": {
+      "height_mm": 190,
+      "width_mm": 400,
+      "depth_mm": 250
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-95-1",
+    "product_code_normalized": "WW-95-1",
+    "canonical_name": "Кровать - трансформер (80*150) с рисунком",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "bed",
+    "price_normalized": 139150.0,
+    "dimensions_normalized": {
+      "height_mm": 1179,
+      "width_mm": 906,
+      "depth_mm": 1806
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  },
+  {
+    "workbook_row_key": "willie-winkie:WW-95-3",
+    "product_code_normalized": "WW-95-3",
+    "canonical_name": "Кровать - трансформер (80*150) с тканью",
+    "collection_name_normalized": "willie-winkie",
+    "category_normalized": "bed",
+    "price_normalized": 141460.0,
+    "dimensions_normalized": {
+      "height_mm": 1179,
+      "width_mm": 906,
+      "depth_mm": 1806
+    },
+    "preferred_image_source": null,
+    "asset_status": "blocked",
+    "exclusion_reason": "vv_painting_decision_pending",
+    "readiness_status": "excluded"
+  }
+]

@@ -1,0 +1,842 @@
+{
+  "generated": "2026-03-19",
+  "scope": "greenwich_bed_pool",
+  "stats": {
+    "total": 23,
+    "success": 23,
+    "failed": 0,
+    "skipped": 0,
+    "bytes_downloaded": 4491972,
+    "bytes_downloaded_mb": 4.28
+  },
+  "entries": [
+    {
+      "workbook_row_keys": [
+        "greenwich:GR-09-1",
+        "greenwich:GR-12-1",
+        "greenwich:GR-14-1",
+        "greenwich:GR-16-1",
+        "greenwich:GR-18-1"
+      ],
+      "canonical_names": [
+        "Кровать  1-сп. (90*200)",
+        "Кровать  1,5-сп. (120*200)",
+        "Кровать  1,5-сп. (140*200)",
+        "Кровать  2-сп. (160*200)",
+        "Кровать  2-сп. (180*200)"
+      ],
+      "product_codes": [
+        "GR-09-1",
+        "GR-12-1",
+        "GR-14-1",
+        "GR-16-1",
+        "GR-18-1"
+      ],
+      "source_ref": "https://woodright.ru/images/detailed/10/greenwich_frame_natural_beige.jpg",
+      "source_type": "legacy_site",
+      "asset_role": "main_candidate",
+      "design_family_hint": "frame",
+      "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+      "legacy_title": "Кровать Frame",
+      "original_filename": "greenwich_frame_natural_beige.jpg",
+      "target_filename": "GR-BED-POOL_frame_01.jpg",
+      "target_raw_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_frame_01.jpg",
+      "download_action": "fetch_url",
+      "notes": "Shared pool image from Frame design family. Used by all 5 Greenwich bed size entries.",
+      "download_status": "success",
+      "file_size_bytes": 219106
+    },
+    {
+      "workbook_row_keys": [
+        "greenwich:GR-09-1",
+        "greenwich:GR-12-1",
+        "greenwich:GR-14-1",
+        "greenwich:GR-16-1",
+        "greenwich:GR-18-1"
+      ],
+      "canonical_names": [
+        "Кровать  1-сп. (90*200)",
+        "Кровать  1,5-сп. (120*200)",
+        "Кровать  1,5-сп. (140*200)",
+        "Кровать  2-сп. (160*200)",
+        "Кровать  2-сп. (180*200)"
+      ],
+      "product_codes": [
+        "GR-09-1",
+        "GR-12-1",
+        "GR-14-1",
+        "GR-16-1",
+        "GR-18-1"
+      ],
+      "source_ref": "https://woodright.ru/images/detailed/10/greenwich_frame_dark_beige.jpg",
+      "source_type": "legacy_site",
+      "asset_role": "shared_visual_pool",
+      "design_family_hint": "frame",
+      "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+      "legacy_title": "Кровать Frame",
+      "original_filename": "greenwich_frame_dark_beige.jpg",
+      "target_filename": "GR-BED-POOL_frame_02.jpg",
+      "target_raw_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_frame_02.jpg",
+      "download_action": "fetch_url",
+      "notes": "Shared pool image from Frame design family. Used by all 5 Greenwich bed size entries.",
+      "download_status": "success",
+      "file_size_bytes": 215529
+    },
+    {
+      "workbook_row_keys": [
+        "greenwich:GR-09-1",
+        "greenwich:GR-12-1",
+        "greenwich:GR-14-1",
+        "greenwich:GR-16-1",
+        "greenwich:GR-18-1"
+      ],
+      "canonical_names": [
+        "Кровать  1-сп. (90*200)",
+        "Кровать  1,5-сп. (120*200)",
+        "Кровать  1,5-сп. (140*200)",
+        "Кровать  2-сп. (160*200)",
+        "Кровать  2-сп. (180*200)"
+      ],
+      "product_codes": [
+        "GR-09-1",
+        "GR-12-1",
+        "GR-14-1",
+        "GR-16-1",
+        "GR-18-1"
+      ],
+      "source_ref": "https://woodright.ru/images/detailed/10/greenwich_fame_natural_darkblue.jpg",
+      "source_type": "legacy_site",
+      "asset_role": "shared_visual_pool",
+      "design_family_hint": "frame",
+      "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+      "legacy_title": "Кровать Frame",
+      "original_filename": "greenwich_fame_natural_darkblue.jpg",
+      "target_filename": "GR-BED-POOL_frame_03.jpg",
+      "target_raw_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_frame_03.jpg",
+      "download_action": "fetch_url",
+      "notes": "Shared pool image from Frame design family. Used by all 5 Greenwich bed size entries.",
+      "download_status": "success",
+      "file_size_bytes": 222604
+    },
+    {
+      "workbook_row_keys": [
+        "greenwich:GR-09-1",
+        "greenwich:GR-12-1",
+        "greenwich:GR-14-1",
+        "greenwich:GR-16-1",
+        "greenwich:GR-18-1"
+      ],
+      "canonical_names": [
+        "Кровать  1-сп. (90*200)",
+        "Кровать  1,5-сп. (120*200)",
+        "Кровать  1,5-сп. (140*200)",
+        "Кровать  2-сп. (160*200)",
+        "Кровать  2-сп. (180*200)"
+      ],
+      "product_codes": [
+        "GR-09-1",
+        "GR-12-1",
+        "GR-14-1",
+        "GR-16-1",
+        "GR-18-1"
+      ],
+      "source_ref": "https://woodright.ru/images/detailed/10/greenwich_fame_dark_darkblue.jpg",
+      "source_type": "legacy_site",
+      "asset_role": "shared_visual_pool",
+      "design_family_hint": "frame",
+      "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+      "legacy_title": "Кровать Frame",
+      "original_filename": "greenwich_fame_dark_darkblue.jpg",
+      "target_filename": "GR-BED-POOL_frame_04.jpg",
+      "target_raw_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_frame_04.jpg",
+      "download_action": "fetch_url",
+      "notes": "Shared pool image from Frame design family. Used by all 5 Greenwich bed size entries.",
+      "download_status": "success",
+      "file_size_bytes": 221036
+    },
+    {
+      "workbook_row_keys": [
+        "greenwich:GR-09-1",
+        "greenwich:GR-12-1",
+        "greenwich:GR-14-1",
+        "greenwich:GR-16-1",
+        "greenwich:GR-18-1"
+      ],
+      "canonical_names": [
+        "Кровать  1-сп. (90*200)",
+        "Кровать  1,5-сп. (120*200)",
+        "Кровать  1,5-сп. (140*200)",
+        "Кровать  2-сп. (160*200)",
+        "Кровать  2-сп. (180*200)"
+      ],
+      "product_codes": [
+        "GR-09-1",
+        "GR-12-1",
+        "GR-14-1",
+        "GR-16-1",
+        "GR-18-1"
+      ],
+      "source_ref": "https://woodright.ru/images/detailed/9/noliver_var2_View03.jpg",
+      "source_type": "legacy_site",
+      "asset_role": "shared_visual_pool",
+      "design_family_hint": "frame",
+      "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+      "legacy_title": "Кровать Frame",
+      "original_filename": "noliver_var2_View03.jpg",
+      "target_filename": "GR-BED-POOL_frame_05.jpg",
+      "target_raw_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_frame_05.jpg",
+      "download_action": "fetch_url",
+      "notes": "Shared pool image from Frame design family. Used by all 5 Greenwich bed size entries.",
+      "download_status": "success",
+      "file_size_bytes": 173714
+    },
+    {
+      "workbook_row_keys": [
+        "greenwich:GR-09-1",
+        "greenwich:GR-12-1",
+        "greenwich:GR-14-1",
+        "greenwich:GR-16-1",
+        "greenwich:GR-18-1"
+      ],
+      "canonical_names": [
+        "Кровать  1-сп. (90*200)",
+        "Кровать  1,5-сп. (120*200)",
+        "Кровать  1,5-сп. (140*200)",
+        "Кровать  2-сп. (160*200)",
+        "Кровать  2-сп. (180*200)"
+      ],
+      "product_codes": [
+        "GR-09-1",
+        "GR-12-1",
+        "GR-14-1",
+        "GR-16-1",
+        "GR-18-1"
+      ],
+      "source_ref": "https://woodright.ru/images/detailed/9/noliver_var2_View02.jpg",
+      "source_type": "legacy_site",
+      "asset_role": "shared_visual_pool",
+      "design_family_hint": "frame",
+      "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+      "legacy_title": "Кровать Frame",
+      "original_filename": "noliver_var2_View02.jpg",
+      "target_filename": "GR-BED-POOL_frame_06.jpg",
+      "target_raw_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_frame_06.jpg",
+      "download_action": "fetch_url",
+      "notes": "Shared pool image from Frame design family. Used by all 5 Greenwich bed size entries.",
+      "download_status": "success",
+      "file_size_bytes": 169837
+    },
+    {
+      "workbook_row_keys": [
+        "greenwich:GR-09-1",
+        "greenwich:GR-12-1",
+        "greenwich:GR-14-1",
+        "greenwich:GR-16-1",
+        "greenwich:GR-18-1"
+      ],
+      "canonical_names": [
+        "Кровать  1-сп. (90*200)",
+        "Кровать  1,5-сп. (120*200)",
+        "Кровать  1,5-сп. (140*200)",
+        "Кровать  2-сп. (160*200)",
+        "Кровать  2-сп. (180*200)"
+      ],
+      "product_codes": [
+        "GR-09-1",
+        "GR-12-1",
+        "GR-14-1",
+        "GR-16-1",
+        "GR-18-1"
+      ],
+      "source_ref": "https://woodright.ru/images/detailed/9/noliver_var2_View01.jpg",
+      "source_type": "legacy_site",
+      "asset_role": "shared_visual_pool",
+      "design_family_hint": "frame",
+      "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+      "legacy_title": "Кровать Frame",
+      "original_filename": "noliver_var2_View01.jpg",
+      "target_filename": "GR-BED-POOL_frame_07.jpg",
+      "target_raw_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_frame_07.jpg",
+      "download_action": "fetch_url",
+      "notes": "Shared pool image from Frame design family. Used by all 5 Greenwich bed size entries.",
+      "download_status": "success",
+      "file_size_bytes": 167610
+    },
+    {
+      "workbook_row_keys": [
+        "greenwich:GR-09-1",
+        "greenwich:GR-12-1",
+        "greenwich:GR-14-1",
+        "greenwich:GR-16-1",
+        "greenwich:GR-18-1"
+      ],
+      "canonical_names": [
+        "Кровать  1-сп. (90*200)",
+        "Кровать  1,5-сп. (120*200)",
+        "Кровать  1,5-сп. (140*200)",
+        "Кровать  2-сп. (160*200)",
+        "Кровать  2-сп. (180*200)"
+      ],
+      "product_codes": [
+        "GR-09-1",
+        "GR-12-1",
+        "GR-14-1",
+        "GR-16-1",
+        "GR-18-1"
+      ],
+      "source_ref": "https://woodright.ru/images/detailed/9/sizes10.webp",
+      "source_type": "legacy_site",
+      "asset_role": "shared_visual_pool",
+      "design_family_hint": "frame",
+      "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/krovat-frame/",
+      "legacy_title": "Кровать Frame",
+      "original_filename": "sizes10.webp",
+      "target_filename": "GR-BED-POOL_frame_08.webp",
+      "target_raw_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_frame_08.webp",
+      "download_action": "fetch_url",
+      "notes": "Shared pool image from Frame design family. Used by all 5 Greenwich bed size entries.",
+      "download_status": "success",
+      "file_size_bytes": 22602
+    },
+    {
+      "workbook_row_keys": [
+        "greenwich:GR-09-1",
+        "greenwich:GR-12-1",
+        "greenwich:GR-14-1",
+        "greenwich:GR-16-1",
+        "greenwich:GR-18-1"
+      ],
+      "canonical_names": [
+        "Кровать  1-сп. (90*200)",
+        "Кровать  1,5-сп. (120*200)",
+        "Кровать  1,5-сп. (140*200)",
+        "Кровать  2-сп. (160*200)",
+        "Кровать  2-сп. (180*200)"
+      ],
+      "product_codes": [
+        "GR-09-1",
+        "GR-12-1",
+        "GR-14-1",
+        "GR-16-1",
+        "GR-18-1"
+      ],
+      "source_ref": "https://woodright.ru/images/detailed/10/greenwich_cloud_natural_beige.jpg",
+      "source_type": "legacy_site",
+      "asset_role": "main_candidate",
+      "design_family_hint": "cloud",
+      "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+      "legacy_title": "Кровать Cloud",
+      "original_filename": "greenwich_cloud_natural_beige.jpg",
+      "target_filename": "GR-BED-POOL_cloud_09.jpg",
+      "target_raw_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_cloud_09.jpg",
+      "download_action": "fetch_url",
+      "notes": "Shared pool image from Cloud design family. Used by all 5 Greenwich bed size entries.",
+      "download_status": "success",
+      "file_size_bytes": 315639
+    },
+    {
+      "workbook_row_keys": [
+        "greenwich:GR-09-1",
+        "greenwich:GR-12-1",
+        "greenwich:GR-14-1",
+        "greenwich:GR-16-1",
+        "greenwich:GR-18-1"
+      ],
+      "canonical_names": [
+        "Кровать  1-сп. (90*200)",
+        "Кровать  1,5-сп. (120*200)",
+        "Кровать  1,5-сп. (140*200)",
+        "Кровать  2-сп. (160*200)",
+        "Кровать  2-сп. (180*200)"
+      ],
+      "product_codes": [
+        "GR-09-1",
+        "GR-12-1",
+        "GR-14-1",
+        "GR-16-1",
+        "GR-18-1"
+      ],
+      "source_ref": "https://woodright.ru/images/detailed/10/greenwich_cloud_dark_beige.jpg",
+      "source_type": "legacy_site",
+      "asset_role": "shared_visual_pool",
+      "design_family_hint": "cloud",
+      "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+      "legacy_title": "Кровать Cloud",
+      "original_filename": "greenwich_cloud_dark_beige.jpg",
+      "target_filename": "GR-BED-POOL_cloud_10.jpg",
+      "target_raw_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_cloud_10.jpg",
+      "download_action": "fetch_url",
+      "notes": "Shared pool image from Cloud design family. Used by all 5 Greenwich bed size entries.",
+      "download_status": "success",
+      "file_size_bytes": 311492
+    },
+    {
+      "workbook_row_keys": [
+        "greenwich:GR-09-1",
+        "greenwich:GR-12-1",
+        "greenwich:GR-14-1",
+        "greenwich:GR-16-1",
+        "greenwich:GR-18-1"
+      ],
+      "canonical_names": [
+        "Кровать  1-сп. (90*200)",
+        "Кровать  1,5-сп. (120*200)",
+        "Кровать  1,5-сп. (140*200)",
+        "Кровать  2-сп. (160*200)",
+        "Кровать  2-сп. (180*200)"
+      ],
+      "product_codes": [
+        "GR-09-1",
+        "GR-12-1",
+        "GR-14-1",
+        "GR-16-1",
+        "GR-18-1"
+      ],
+      "source_ref": "https://woodright.ru/images/detailed/10/greenwich_cloud_dark_darkblue.jpg",
+      "source_type": "legacy_site",
+      "asset_role": "shared_visual_pool",
+      "design_family_hint": "cloud",
+      "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+      "legacy_title": "Кровать Cloud",
+      "original_filename": "greenwich_cloud_dark_darkblue.jpg",
+      "target_filename": "GR-BED-POOL_cloud_11.jpg",
+      "target_raw_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_cloud_11.jpg",
+      "download_action": "fetch_url",
+      "notes": "Shared pool image from Cloud design family. Used by all 5 Greenwich bed size entries.",
+      "download_status": "success",
+      "file_size_bytes": 316762
+    },
+    {
+      "workbook_row_keys": [
+        "greenwich:GR-09-1",
+        "greenwich:GR-12-1",
+        "greenwich:GR-14-1",
+        "greenwich:GR-16-1",
+        "greenwich:GR-18-1"
+      ],
+      "canonical_names": [
+        "Кровать  1-сп. (90*200)",
+        "Кровать  1,5-сп. (120*200)",
+        "Кровать  1,5-сп. (140*200)",
+        "Кровать  2-сп. (160*200)",
+        "Кровать  2-сп. (180*200)"
+      ],
+      "product_codes": [
+        "GR-09-1",
+        "GR-12-1",
+        "GR-14-1",
+        "GR-16-1",
+        "GR-18-1"
+      ],
+      "source_ref": "https://woodright.ru/images/detailed/9/bedroom2_int_View01.jpg",
+      "source_type": "legacy_site",
+      "asset_role": "shared_visual_pool",
+      "design_family_hint": "cloud",
+      "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+      "legacy_title": "Кровать Cloud",
+      "original_filename": "bedroom2_int_View01.jpg",
+      "target_filename": "GR-BED-POOL_cloud_12.jpg",
+      "target_raw_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_cloud_12.jpg",
+      "download_action": "fetch_url",
+      "notes": "Shared pool image from Cloud design family. Used by all 5 Greenwich bed size entries.",
+      "download_status": "success",
+      "file_size_bytes": 190654
+    },
+    {
+      "workbook_row_keys": [
+        "greenwich:GR-09-1",
+        "greenwich:GR-12-1",
+        "greenwich:GR-14-1",
+        "greenwich:GR-16-1",
+        "greenwich:GR-18-1"
+      ],
+      "canonical_names": [
+        "Кровать  1-сп. (90*200)",
+        "Кровать  1,5-сп. (120*200)",
+        "Кровать  1,5-сп. (140*200)",
+        "Кровать  2-сп. (160*200)",
+        "Кровать  2-сп. (180*200)"
+      ],
+      "product_codes": [
+        "GR-09-1",
+        "GR-12-1",
+        "GR-14-1",
+        "GR-16-1",
+        "GR-18-1"
+      ],
+      "source_ref": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__3__0gh9-64.webp",
+      "source_type": "legacy_site",
+      "asset_role": "shared_visual_pool",
+      "design_family_hint": "cloud",
+      "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+      "legacy_title": "Кровать Cloud",
+      "original_filename": "2022-02-11_12-08-53__3__0gh9-64.webp",
+      "target_filename": "GR-BED-POOL_cloud_13.webp",
+      "target_raw_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_cloud_13.webp",
+      "download_action": "fetch_url",
+      "notes": "Shared pool image from Cloud design family. Used by all 5 Greenwich bed size entries.",
+      "download_status": "success",
+      "file_size_bytes": 84994
+    },
+    {
+      "workbook_row_keys": [
+        "greenwich:GR-09-1",
+        "greenwich:GR-12-1",
+        "greenwich:GR-14-1",
+        "greenwich:GR-16-1",
+        "greenwich:GR-18-1"
+      ],
+      "canonical_names": [
+        "Кровать  1-сп. (90*200)",
+        "Кровать  1,5-сп. (120*200)",
+        "Кровать  1,5-сп. (140*200)",
+        "Кровать  2-сп. (160*200)",
+        "Кровать  2-сп. (180*200)"
+      ],
+      "product_codes": [
+        "GR-09-1",
+        "GR-12-1",
+        "GR-14-1",
+        "GR-16-1",
+        "GR-18-1"
+      ],
+      "source_ref": "https://woodright.ru/images/detailed/9/2022-02-11_12-08-53__4__lqea-yq.webp",
+      "source_type": "legacy_site",
+      "asset_role": "shared_visual_pool",
+      "design_family_hint": "cloud",
+      "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+      "legacy_title": "Кровать Cloud",
+      "original_filename": "2022-02-11_12-08-53__4__lqea-yq.webp",
+      "target_filename": "GR-BED-POOL_cloud_14.webp",
+      "target_raw_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_cloud_14.webp",
+      "download_action": "fetch_url",
+      "notes": "Shared pool image from Cloud design family. Used by all 5 Greenwich bed size entries.",
+      "download_status": "success",
+      "file_size_bytes": 86136
+    },
+    {
+      "workbook_row_keys": [
+        "greenwich:GR-09-1",
+        "greenwich:GR-12-1",
+        "greenwich:GR-14-1",
+        "greenwich:GR-16-1",
+        "greenwich:GR-18-1"
+      ],
+      "canonical_names": [
+        "Кровать  1-сп. (90*200)",
+        "Кровать  1,5-сп. (120*200)",
+        "Кровать  1,5-сп. (140*200)",
+        "Кровать  2-сп. (160*200)",
+        "Кровать  2-сп. (180*200)"
+      ],
+      "product_codes": [
+        "GR-09-1",
+        "GR-12-1",
+        "GR-14-1",
+        "GR-16-1",
+        "GR-18-1"
+      ],
+      "source_ref": "https://woodright.ru/images/detailed/9/bedroom2_int_View04.jpg",
+      "source_type": "legacy_site",
+      "asset_role": "shared_visual_pool",
+      "design_family_hint": "cloud",
+      "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+      "legacy_title": "Кровать Cloud",
+      "original_filename": "bedroom2_int_View04.jpg",
+      "target_filename": "GR-BED-POOL_cloud_15.jpg",
+      "target_raw_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_cloud_15.jpg",
+      "download_action": "fetch_url",
+      "notes": "Shared pool image from Cloud design family. Used by all 5 Greenwich bed size entries.",
+      "download_status": "success",
+      "file_size_bytes": 207079
+    },
+    {
+      "workbook_row_keys": [
+        "greenwich:GR-09-1",
+        "greenwich:GR-12-1",
+        "greenwich:GR-14-1",
+        "greenwich:GR-16-1",
+        "greenwich:GR-18-1"
+      ],
+      "canonical_names": [
+        "Кровать  1-сп. (90*200)",
+        "Кровать  1,5-сп. (120*200)",
+        "Кровать  1,5-сп. (140*200)",
+        "Кровать  2-сп. (160*200)",
+        "Кровать  2-сп. (180*200)"
+      ],
+      "product_codes": [
+        "GR-09-1",
+        "GR-12-1",
+        "GR-14-1",
+        "GR-16-1",
+        "GR-18-1"
+      ],
+      "source_ref": "https://woodright.ru/images/detailed/9/sizes12.jpg",
+      "source_type": "legacy_site",
+      "asset_role": "shared_visual_pool",
+      "design_family_hint": "cloud",
+      "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/",
+      "legacy_title": "Кровать Cloud",
+      "original_filename": "sizes12.jpg",
+      "target_filename": "GR-BED-POOL_cloud_16.jpg",
+      "target_raw_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_cloud_16.jpg",
+      "download_action": "fetch_url",
+      "notes": "Shared pool image from Cloud design family. Used by all 5 Greenwich bed size entries.",
+      "download_status": "success",
+      "file_size_bytes": 50982
+    },
+    {
+      "workbook_row_keys": [
+        "greenwich:GR-09-1",
+        "greenwich:GR-12-1",
+        "greenwich:GR-14-1",
+        "greenwich:GR-16-1",
+        "greenwich:GR-18-1"
+      ],
+      "canonical_names": [
+        "Кровать  1-сп. (90*200)",
+        "Кровать  1,5-сп. (120*200)",
+        "Кровать  1,5-сп. (140*200)",
+        "Кровать  2-сп. (160*200)",
+        "Кровать  2-сп. (180*200)"
+      ],
+      "product_codes": [
+        "GR-09-1",
+        "GR-12-1",
+        "GR-14-1",
+        "GR-16-1",
+        "GR-18-1"
+      ],
+      "source_ref": "https://woodright.ru/images/detailed/10/greenwich_plane_natural_beige.jpg",
+      "source_type": "legacy_site",
+      "asset_role": "main_candidate",
+      "design_family_hint": "plane",
+      "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+      "legacy_title": "Кровать Plane",
+      "original_filename": "greenwich_plane_natural_beige.jpg",
+      "target_filename": "GR-BED-POOL_plane_17.jpg",
+      "target_raw_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_plane_17.jpg",
+      "download_action": "fetch_url",
+      "notes": "Shared pool image from Plane design family. Used by all 5 Greenwich bed size entries.",
+      "download_status": "success",
+      "file_size_bytes": 227857
+    },
+    {
+      "workbook_row_keys": [
+        "greenwich:GR-09-1",
+        "greenwich:GR-12-1",
+        "greenwich:GR-14-1",
+        "greenwich:GR-16-1",
+        "greenwich:GR-18-1"
+      ],
+      "canonical_names": [
+        "Кровать  1-сп. (90*200)",
+        "Кровать  1,5-сп. (120*200)",
+        "Кровать  1,5-сп. (140*200)",
+        "Кровать  2-сп. (160*200)",
+        "Кровать  2-сп. (180*200)"
+      ],
+      "product_codes": [
+        "GR-09-1",
+        "GR-12-1",
+        "GR-14-1",
+        "GR-16-1",
+        "GR-18-1"
+      ],
+      "source_ref": "https://woodright.ru/images/detailed/10/greenwich_plane_dark_beige.jpg",
+      "source_type": "legacy_site",
+      "asset_role": "shared_visual_pool",
+      "design_family_hint": "plane",
+      "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+      "legacy_title": "Кровать Plane",
+      "original_filename": "greenwich_plane_dark_beige.jpg",
+      "target_filename": "GR-BED-POOL_plane_18.jpg",
+      "target_raw_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_plane_18.jpg",
+      "download_action": "fetch_url",
+      "notes": "Shared pool image from Plane design family. Used by all 5 Greenwich bed size entries.",
+      "download_status": "success",
+      "file_size_bytes": 224533
+    },
+    {
+      "workbook_row_keys": [
+        "greenwich:GR-09-1",
+        "greenwich:GR-12-1",
+        "greenwich:GR-14-1",
+        "greenwich:GR-16-1",
+        "greenwich:GR-18-1"
+      ],
+      "canonical_names": [
+        "Кровать  1-сп. (90*200)",
+        "Кровать  1,5-сп. (120*200)",
+        "Кровать  1,5-сп. (140*200)",
+        "Кровать  2-сп. (160*200)",
+        "Кровать  2-сп. (180*200)"
+      ],
+      "product_codes": [
+        "GR-09-1",
+        "GR-12-1",
+        "GR-14-1",
+        "GR-16-1",
+        "GR-18-1"
+      ],
+      "source_ref": "https://woodright.ru/images/detailed/10/greenwich_plane_natural_darkblue.jpg",
+      "source_type": "legacy_site",
+      "asset_role": "shared_visual_pool",
+      "design_family_hint": "plane",
+      "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+      "legacy_title": "Кровать Plane",
+      "original_filename": "greenwich_plane_natural_darkblue.jpg",
+      "target_filename": "GR-BED-POOL_plane_19.jpg",
+      "target_raw_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_plane_19.jpg",
+      "download_action": "fetch_url",
+      "notes": "Shared pool image from Plane design family. Used by all 5 Greenwich bed size entries.",
+      "download_status": "success",
+      "file_size_bytes": 235105
+    },
+    {
+      "workbook_row_keys": [
+        "greenwich:GR-09-1",
+        "greenwich:GR-12-1",
+        "greenwich:GR-14-1",
+        "greenwich:GR-16-1",
+        "greenwich:GR-18-1"
+      ],
+      "canonical_names": [
+        "Кровать  1-сп. (90*200)",
+        "Кровать  1,5-сп. (120*200)",
+        "Кровать  1,5-сп. (140*200)",
+        "Кровать  2-сп. (160*200)",
+        "Кровать  2-сп. (180*200)"
+      ],
+      "product_codes": [
+        "GR-09-1",
+        "GR-12-1",
+        "GR-14-1",
+        "GR-16-1",
+        "GR-18-1"
+      ],
+      "source_ref": "https://woodright.ru/images/detailed/10/greenwich_plane_dark_darkblue.jpg",
+      "source_type": "legacy_site",
+      "asset_role": "shared_visual_pool",
+      "design_family_hint": "plane",
+      "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+      "legacy_title": "Кровать Plane",
+      "original_filename": "greenwich_plane_dark_darkblue.jpg",
+      "target_filename": "GR-BED-POOL_plane_20.jpg",
+      "target_raw_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_plane_20.jpg",
+      "download_action": "fetch_url",
+      "notes": "Shared pool image from Plane design family. Used by all 5 Greenwich bed size entries.",
+      "download_status": "success",
+      "file_size_bytes": 234959
+    },
+    {
+      "workbook_row_keys": [
+        "greenwich:GR-09-1",
+        "greenwich:GR-12-1",
+        "greenwich:GR-14-1",
+        "greenwich:GR-16-1",
+        "greenwich:GR-18-1"
+      ],
+      "canonical_names": [
+        "Кровать  1-сп. (90*200)",
+        "Кровать  1,5-сп. (120*200)",
+        "Кровать  1,5-сп. (140*200)",
+        "Кровать  2-сп. (160*200)",
+        "Кровать  2-сп. (180*200)"
+      ],
+      "product_codes": [
+        "GR-09-1",
+        "GR-12-1",
+        "GR-14-1",
+        "GR-16-1",
+        "GR-18-1"
+      ],
+      "source_ref": "https://woodright.ru/images/detailed/9/greenwich_wideheader_View02_7nwd-jk.jpg",
+      "source_type": "legacy_site",
+      "asset_role": "shared_visual_pool",
+      "design_family_hint": "plane",
+      "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+      "legacy_title": "Кровать Plane",
+      "original_filename": "greenwich_wideheader_View02_7nwd-jk.jpg",
+      "target_filename": "GR-BED-POOL_plane_21.jpg",
+      "target_raw_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_plane_21.jpg",
+      "download_action": "fetch_url",
+      "notes": "Shared pool image from Plane design family. Used by all 5 Greenwich bed size entries.",
+      "download_status": "success",
+      "file_size_bytes": 297797
+    },
+    {
+      "workbook_row_keys": [
+        "greenwich:GR-09-1",
+        "greenwich:GR-12-1",
+        "greenwich:GR-14-1",
+        "greenwich:GR-16-1",
+        "greenwich:GR-18-1"
+      ],
+      "canonical_names": [
+        "Кровать  1-сп. (90*200)",
+        "Кровать  1,5-сп. (120*200)",
+        "Кровать  1,5-сп. (140*200)",
+        "Кровать  2-сп. (160*200)",
+        "Кровать  2-сп. (180*200)"
+      ],
+      "product_codes": [
+        "GR-09-1",
+        "GR-12-1",
+        "GR-14-1",
+        "GR-16-1",
+        "GR-18-1"
+      ],
+      "source_ref": "https://woodright.ru/images/detailed/9/greenwich_wideheader_View01_0f24-bk.jpg",
+      "source_type": "legacy_site",
+      "asset_role": "shared_visual_pool",
+      "design_family_hint": "plane",
+      "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+      "legacy_title": "Кровать Plane",
+      "original_filename": "greenwich_wideheader_View01_0f24-bk.jpg",
+      "target_filename": "GR-BED-POOL_plane_22.jpg",
+      "target_raw_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_plane_22.jpg",
+      "download_action": "fetch_url",
+      "notes": "Shared pool image from Plane design family. Used by all 5 Greenwich bed size entries.",
+      "download_status": "success",
+      "file_size_bytes": 278017
+    },
+    {
+      "workbook_row_keys": [
+        "greenwich:GR-09-1",
+        "greenwich:GR-12-1",
+        "greenwich:GR-14-1",
+        "greenwich:GR-16-1",
+        "greenwich:GR-18-1"
+      ],
+      "canonical_names": [
+        "Кровать  1-сп. (90*200)",
+        "Кровать  1,5-сп. (120*200)",
+        "Кровать  1,5-сп. (140*200)",
+        "Кровать  2-сп. (160*200)",
+        "Кровать  2-сп. (180*200)"
+      ],
+      "product_codes": [
+        "GR-09-1",
+        "GR-12-1",
+        "GR-14-1",
+        "GR-16-1",
+        "GR-18-1"
+      ],
+      "source_ref": "https://woodright.ru/images/detailed/9/sizes11.webp",
+      "source_type": "legacy_site",
+      "asset_role": "shared_visual_pool",
+      "design_family_hint": "plane",
+      "legacy_page_url": "https://woodright.ru/kollekcii/greenwich/krovat-plane/",
+      "legacy_title": "Кровать Plane",
+      "original_filename": "sizes11.webp",
+      "target_filename": "GR-BED-POOL_plane_23.webp",
+      "target_raw_path": "data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_plane_23.webp",
+      "download_action": "fetch_url",
+      "notes": "Shared pool image from Plane design family. Used by all 5 Greenwich bed size entries.",
+      "download_status": "success",
+      "file_size_bytes": 17928
+    }
+  ]
+}

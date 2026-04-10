@@ -1,0 +1,46 @@
+{
+  "total_bound": 109,
+  "total_excluded": 233,
+  "readiness": {
+    "ready_with_caveat": 28,
+    "ready": 81
+  },
+  "quality_breakdown": {
+    "gallery_only": 21,
+    "ok": 81,
+    "legacy_fallback": 5,
+    "low_res_temporary": 1,
+    "needs_reshoot": 1
+  },
+  "with_main_image": 94,
+  "with_gallery": 76,
+  "with_color_variants": 28,
+  "total_gallery_images": 180,
+  "total_color_images": 170,
+  "quality_exceptions_count": 28,
+  "per_collection": {
+    "country-london-paris": {
+      "ready": 2,
+      "caveat": 11,
+      "total": 13
+    },
+    "oliver": {
+      "ready": 56,
+      "caveat": 11,
+      "total": 67
+    },
+    "provence": {
+      "ready": 23,
+      "caveat": 6,
+      "total": 29
+    }
+  },
+  "exclusion_reasons": {
+    "no_image_source": 28,
+    "no_processed_assets": 58,
+    "fuzzy_unconfirmed": 52,
+    "pdf_unconfirmed": 32,
+    "vv_painting_decision_pending": 48,
+    "vv_base_image_only": 15
+  }
+}

@@ -11,7 +11,8 @@
     "db:generate": "medusa db:generate",
     "db:migrate": "medusa db:migrate",
     "db:sync-links": "medusa db:sync-links",
-    "seed": "medusa exec ./src/scripts/seed.ts"
+    "seed": "medusa exec ./src/scripts/seed.ts",
+    "refresh-greenwich": "medusa exec ./src/scripts/refresh-greenwich.ts"
   },
   "dependencies": {
     "@medusajs/framework": "^2.0.0",

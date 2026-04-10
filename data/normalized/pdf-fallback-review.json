@@ -1,0 +1,1175 @@
+[
+  {
+    "workbook_row_key": "oxford:OX-90-1",
+    "product_code": "OX-90-1",
+    "collection": "oxford",
+    "canonical_name": "Комплекс Оксфорд-1 с выдвижной столешницей без  нижней кровати",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 6,
+    "pdf_name_raw": "с выдвижной столешницей",
+    "match_reason": "oxford_page_hint:с выдвижной столешницей",
+    "confidence": 0.55,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i1_887x621.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Oxford_full/Oxford_full_page_06.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i0_887x614.png",
+      "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i1_887x621.png"
+    ]
+  },
+  {
+    "workbook_row_key": "oxford:OX-14-1",
+    "product_code": "OX-14-1",
+    "collection": "oxford",
+    "canonical_name": "Комплекс Оксфорд-1 (нижняя кровать без матраса 90*185)",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 6,
+    "pdf_name_raw": "комплекс оксфорд 1",
+    "match_reason": "oxford_page_hint:комплекс оксфорд 1",
+    "confidence": 0.55,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i1_887x621.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Oxford_full/Oxford_full_page_06.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i0_887x614.png",
+      "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i1_887x621.png"
+    ]
+  },
+  {
+    "workbook_row_key": "oxford:OX-90-2",
+    "product_code": "OX-90-2",
+    "collection": "oxford",
+    "canonical_name": "Комплекс Оксфорд-2  без выдвижной столешницы с нижней кроватью и матрасом в чехле (ткани в ассортименте)",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 7,
+    "pdf_name_raw": "без выдвижной столешницы",
+    "match_reason": "oxford_page_hint:без выдвижной столешницы",
+    "confidence": 0.55,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Oxford_full/Oxford_full_page_07.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png"
+    ]
+  },
+  {
+    "workbook_row_key": "oxford:OX-14-2",
+    "product_code": "OX-14-2",
+    "collection": "oxford",
+    "canonical_name": "Комплекс Оксфорд-2 (нижняя кровать 90*185 с матрасом в чехле, ткани в ассортименте)",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 7,
+    "pdf_name_raw": "комплекс оксфорд 2",
+    "match_reason": "oxford_page_hint:комплекс оксфорд 2",
+    "confidence": 0.55,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Oxford_full/Oxford_full_page_07.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png"
+    ]
+  },
+  {
+    "workbook_row_key": "oxford:OX-90-4",
+    "product_code": "OX-90-4",
+    "collection": "oxford",
+    "canonical_name": "Комплекс Oxford-4 Кровать-чердак - без полок и ящиков внутри  (без нижней кровати)",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 7,
+    "pdf_name_raw": "комплекс oxford",
+    "match_reason": "oxford_page_hint:комплекс oxford",
+    "confidence": 0.55,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Oxford_full/Oxford_full_page_07.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png"
+    ]
+  },
+  {
+    "workbook_row_key": "oxford:S-OX-05",
+    "product_code": "S-OX-05",
+    "collection": "oxford",
+    "canonical_name": "Ступени с перилами и ящиками ОКСФОРД",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 4,
+    "pdf_name_raw": "ступен",
+    "match_reason": "oxford_page_hint:ступен",
+    "confidence": 0.55,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p4_i0_1306x951.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Oxford_full/Oxford_full_page_04.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p4_i0_1306x951.png"
+    ]
+  },
+  {
+    "workbook_row_key": "oxford:OX-14-11",
+    "product_code": "OX-14-11",
+    "collection": "oxford",
+    "canonical_name": "Нижняя кровать без матраса увеличенная (120*185)",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 5,
+    "pdf_name_raw": "нижняя кровать",
+    "match_reason": "oxford_page_hint:нижняя кровать",
+    "confidence": 0.55,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p5_i0_947x949.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Oxford_full/Oxford_full_page_05.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p5_i0_947x949.png",
+      "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p5_i1_480x1182.png",
+      "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p5_i2_521x429.png",
+      "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p5_i3_522x445.png"
+    ]
+  },
+  {
+    "workbook_row_key": "oxford:S-OX-02",
+    "product_code": "S-OX-02",
+    "collection": "oxford",
+    "canonical_name": "Стеновая панель на всю длину ОКСФОРД",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 6,
+    "pdf_name_raw": "стеновая панель",
+    "match_reason": "oxford_page_hint:стеновая панель",
+    "confidence": 0.55,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i1_887x621.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Oxford_full/Oxford_full_page_06.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i0_887x614.png",
+      "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i1_887x621.png"
+    ]
+  },
+  {
+    "workbook_row_key": "oxford:S-OX-04",
+    "product_code": "S-OX-04",
+    "collection": "oxford",
+    "canonical_name": "Полка навесная квадратная Оксфорд",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 6,
+    "pdf_name_raw": "полка навесная",
+    "match_reason": "oxford_page_hint:полка навесная",
+    "confidence": 0.55,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i1_887x621.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Oxford_full/Oxford_full_page_06.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i0_887x614.png",
+      "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i1_887x621.png"
+    ]
+  },
+  {
+    "workbook_row_key": "oxford:S-OX-03",
+    "product_code": "S-OX-03",
+    "collection": "oxford",
+    "canonical_name": "Полка навесная квадратная с 3-мя ящиками OXFORD",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 6,
+    "pdf_name_raw": "полка навесная",
+    "match_reason": "oxford_page_hint:полка навесная",
+    "confidence": 0.55,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i1_887x621.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Oxford_full/Oxford_full_page_06.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i0_887x614.png",
+      "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i1_887x621.png"
+    ]
+  },
+  {
+    "workbook_row_key": "oxford:OX-90-3",
+    "product_code": "OX-90-3",
+    "collection": "oxford",
+    "canonical_name": "КомплексОксфорд-3 со шкафом и столом (без нижней кровати)",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 7,
+    "pdf_name_raw": "комплексоксфорд",
+    "match_reason": "oxford_page_hint:комплексоксфорд",
+    "confidence": 0.55,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Oxford_full/Oxford_full_page_07.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png"
+    ]
+  },
+  {
+    "workbook_row_key": "oxford:OX-08-1",
+    "product_code": "OX-08-1",
+    "collection": "oxford",
+    "canonical_name": "Тумба прикроватная (для верхнего яруса)",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 7,
+    "pdf_name_raw": "тумба прикроватная",
+    "match_reason": "oxford_page_hint:тумба прикроватная",
+    "confidence": 0.55,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Oxford_full/Oxford_full_page_07.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png"
+    ]
+  },
+  {
+    "workbook_row_key": "oxford:OX-84-2",
+    "product_code": "OX-84-2",
+    "collection": "oxford",
+    "canonical_name": "Бортик к кровати большой",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 7,
+    "pdf_name_raw": "бортик",
+    "match_reason": "oxford_page_hint:бортик",
+    "confidence": 0.55,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Oxford_full/Oxford_full_page_07.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png"
+    ]
+  },
+  {
+    "workbook_row_key": "oxford:SH-84-2",
+    "product_code": "SH-84-2",
+    "collection": "oxford",
+    "canonical_name": "Бортик к кровати большой",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 7,
+    "pdf_name_raw": "бортик",
+    "match_reason": "oxford_page_hint:бортик",
+    "confidence": 0.55,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Oxford_full/Oxford_full_page_07.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png"
+    ]
+  },
+  {
+    "workbook_row_key": "oxford:MC-84-2",
+    "product_code": "MC-84-2",
+    "collection": "oxford",
+    "canonical_name": "Бортик к кровати большой",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 7,
+    "pdf_name_raw": "бортик",
+    "match_reason": "oxford_page_hint:бортик",
+    "confidence": 0.55,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Oxford_full/Oxford_full_page_07.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png"
+    ]
+  },
+  {
+    "workbook_row_key": "oxford:OX-84-1",
+    "product_code": "OX-84-1",
+    "collection": "oxford",
+    "canonical_name": "Бортик к кровати малый",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 7,
+    "pdf_name_raw": "бортик",
+    "match_reason": "oxford_page_hint:бортик",
+    "confidence": 0.55,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Oxford_full/Oxford_full_page_07.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png"
+    ]
+  },
+  {
+    "workbook_row_key": "oxford:SH-84-1",
+    "product_code": "SH-84-1",
+    "collection": "oxford",
+    "canonical_name": "Бортик к кровати малый",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 7,
+    "pdf_name_raw": "бортик",
+    "match_reason": "oxford_page_hint:бортик",
+    "confidence": 0.55,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Oxford_full/Oxford_full_page_07.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png"
+    ]
+  },
+  {
+    "workbook_row_key": "oxford:MC-84-1",
+    "product_code": "MC-84-1",
+    "collection": "oxford",
+    "canonical_name": "Бортик к кровати малый",
+    "pdf_source": "Oxford_full.pdf",
+    "pdf_page": 7,
+    "pdf_name_raw": "бортик",
+    "match_reason": "oxford_page_hint:бортик",
+    "confidence": 0.55,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Oxford_full/Oxford_full_page_07.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png"
+    ]
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-61-1",
+    "product_code": "CO-61-1",
+    "collection": "country-london-paris",
+    "canonical_name": "Шкаф книжный со стеклом",
+    "pdf_source": "Country.pdf",
+    "pdf_page": 3,
+    "pdf_name_raw": "Шкаф книжный со стеклом",
+    "match_reason": "exact_normalized",
+    "confidence": 0.7,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Country/Country_p3_i0_1306x975.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Country/Country_page_03.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Country/Country_p3_i0_1306x975.png",
+      "data/raw/pdf-assets/extracted/Country/Country_p3_i1_450x826.png",
+      "data/raw/pdf-assets/extracted/Country/Country_p3_i2_466x818.png"
+    ]
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-62-2",
+    "product_code": "CO-62-2",
+    "collection": "country-london-paris",
+    "canonical_name": "Стеллаж узкий с дверью",
+    "pdf_source": "Country.pdf",
+    "pdf_page": 4,
+    "pdf_name_raw": "Стеллаж узкий с дверью",
+    "match_reason": "exact_normalized",
+    "confidence": 0.7,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Country/Country_p4_i0_881x596.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Country/Country_page_04.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Country/Country_p4_i0_881x596.png"
+    ]
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-14-2",
+    "product_code": "CO-14-2",
+    "collection": "country-london-paris",
+    "canonical_name": "кровать 1 спальная",
+    "pdf_source": "Country.pdf",
+    "pdf_page": 4,
+    "pdf_name_raw": "Кровать 1–спальная",
+    "match_reason": "collection_extra:кровать 1 спальная",
+    "confidence": 0.6,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Country/Country_p4_i0_881x596.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Country/Country_page_04.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Country/Country_p4_i0_881x596.png"
+    ]
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-08-1",
+    "product_code": "CO-08-1",
+    "collection": "country-london-paris",
+    "canonical_name": "Тумбочка прикроватная",
+    "pdf_source": "Country.pdf",
+    "pdf_page": 4,
+    "pdf_name_raw": "Тумбочка прикроватная",
+    "match_reason": "exact_normalized",
+    "confidence": 0.7,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Country/Country_p4_i0_881x596.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Country/Country_page_04.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Country/Country_p4_i0_881x596.png"
+    ]
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-66-1",
+    "product_code": "CO-66-1",
+    "collection": "country-london-paris",
+    "canonical_name": "Стол письменный 2-тумб. ЯЯ",
+    "pdf_source": "Country.pdf",
+    "pdf_page": 5,
+    "pdf_name_raw": "Стол письменный 2–тумбовый",
+    "match_reason": "substring:0.75",
+    "confidence": 0.6,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Country/Country_p5_i2_852x443.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Country/Country_page_05.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Country/Country_p5_i0_642x464.png",
+      "data/raw/pdf-assets/extracted/Country/Country_p5_i1_630x451.png",
+      "data/raw/pdf-assets/extracted/Country/Country_p5_i2_852x443.png"
+    ]
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-66-2",
+    "product_code": "CO-66-2",
+    "collection": "country-london-paris",
+    "canonical_name": "Стол письменный 2-тумб. ПЯ",
+    "pdf_source": "Country.pdf",
+    "pdf_page": 5,
+    "pdf_name_raw": "Стол письменный 2–тумбовый",
+    "match_reason": "substring:0.75",
+    "confidence": 0.6,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Country/Country_p5_i2_852x443.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Country/Country_page_05.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Country/Country_p5_i0_642x464.png",
+      "data/raw/pdf-assets/extracted/Country/Country_p5_i1_630x451.png",
+      "data/raw/pdf-assets/extracted/Country/Country_p5_i2_852x443.png"
+    ]
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-66-3",
+    "product_code": "CO-66-3",
+    "collection": "country-london-paris",
+    "canonical_name": "Стол письменный 2-тумб.ЯП",
+    "pdf_source": "Country.pdf",
+    "pdf_page": 5,
+    "pdf_name_raw": "Стол письменный 2–тумбовый",
+    "match_reason": "substring:0.75",
+    "confidence": 0.6,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Country/Country_p5_i2_852x443.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Country/Country_page_05.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Country/Country_p5_i0_642x464.png",
+      "data/raw/pdf-assets/extracted/Country/Country_p5_i1_630x451.png",
+      "data/raw/pdf-assets/extracted/Country/Country_p5_i2_852x443.png"
+    ]
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-69-3",
+    "product_code": "CO-69-3",
+    "collection": "country-london-paris",
+    "canonical_name": "Надстройка для письменного стола",
+    "pdf_source": "Country.pdf",
+    "pdf_page": 5,
+    "pdf_name_raw": "Надстройка для письменного стола",
+    "match_reason": "exact_normalized",
+    "confidence": 0.7,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Country/Country_p5_i2_852x443.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Country/Country_page_05.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Country/Country_p5_i0_642x464.png",
+      "data/raw/pdf-assets/extracted/Country/Country_p5_i1_630x451.png",
+      "data/raw/pdf-assets/extracted/Country/Country_p5_i2_852x443.png"
+    ]
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-65-1",
+    "product_code": "CO-65-1",
+    "collection": "country-london-paris",
+    "canonical_name": "Стол письменный 1-тумб. 0П",
+    "pdf_source": "Country.pdf",
+    "pdf_page": 5,
+    "pdf_name_raw": "Стол письменный 1–тумбовый",
+    "match_reason": "substring:0.75",
+    "confidence": 0.6,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Country/Country_p5_i2_852x443.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Country/Country_page_05.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Country/Country_p5_i0_642x464.png",
+      "data/raw/pdf-assets/extracted/Country/Country_p5_i1_630x451.png",
+      "data/raw/pdf-assets/extracted/Country/Country_p5_i2_852x443.png"
+    ]
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-65-2",
+    "product_code": "CO-65-2",
+    "collection": "country-london-paris",
+    "canonical_name": "Стол письменный 1-тумб. П0",
+    "pdf_source": "Country.pdf",
+    "pdf_page": 5,
+    "pdf_name_raw": "Стол письменный 1–тумбовый",
+    "match_reason": "substring:0.75",
+    "confidence": 0.6,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Country/Country_p5_i2_852x443.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Country/Country_page_05.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Country/Country_p5_i0_642x464.png",
+      "data/raw/pdf-assets/extracted/Country/Country_p5_i1_630x451.png",
+      "data/raw/pdf-assets/extracted/Country/Country_p5_i2_852x443.png"
+    ]
+  },
+  {
+    "workbook_row_key": "country-london-paris:СО-65-4",
+    "product_code": "СО-65-4",
+    "collection": "country-london-paris",
+    "canonical_name": "Стол письменный 1-тумб. ЯО",
+    "pdf_source": "Country.pdf",
+    "pdf_page": 5,
+    "pdf_name_raw": "Стол письменный 1–тумбовый",
+    "match_reason": "substring:0.75",
+    "confidence": 0.6,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Country/Country_p5_i2_852x443.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Country/Country_page_05.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Country/Country_p5_i0_642x464.png",
+      "data/raw/pdf-assets/extracted/Country/Country_p5_i1_630x451.png",
+      "data/raw/pdf-assets/extracted/Country/Country_p5_i2_852x443.png"
+    ]
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-16-2",
+    "product_code": "CO-16-2",
+    "collection": "country-london-paris",
+    "canonical_name": "кровать полутороспальная",
+    "pdf_source": "London.pdf",
+    "pdf_page": 5,
+    "pdf_name_raw": "Кровать полутороспальная",
+    "match_reason": "collection_extra:кровать полутороспальная",
+    "confidence": 0.6,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/London/London_p5_i0_1088x833.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/London/London_page_05.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/London/London_p5_i0_1088x833.png",
+      "data/raw/pdf-assets/extracted/London/London_p5_i1_811x580.png",
+      "data/raw/pdf-assets/extracted/London/London_p5_i2_436x421.png"
+    ]
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-62-3",
+    "product_code": "CO-62-3",
+    "collection": "country-london-paris",
+    "canonical_name": "стеллаж узкий с ящиком",
+    "pdf_source": "London.pdf",
+    "pdf_page": 6,
+    "pdf_name_raw": "Стеллаж узкий с ящиком",
+    "match_reason": "collection_extra:стеллаж узкий с ящиком",
+    "confidence": 0.6,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/London/London_p6_i3_559x833.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/London/London_page_06.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/London/London_p6_i1_555x832.png",
+      "data/raw/pdf-assets/extracted/London/London_p6_i3_559x833.png"
+    ]
+  },
+  {
+    "workbook_row_key": "country-london-paris:CO-69-5",
+    "product_code": "CO-69-5",
+    "collection": "country-london-paris",
+    "canonical_name": "Полка книжная",
+    "pdf_source": "London.pdf",
+    "pdf_page": 8,
+    "pdf_name_raw": "Полка",
+    "match_reason": "substring:0.50",
+    "confidence": 0.55,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/London/London_p8_i0_821x625.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/London/London_page_08.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/London/London_p8_i0_821x625.png"
+    ]
+  },
+  {
+    "workbook_row_key": "greenwich:GR-02-1",
+    "product_code": "GR-02-1",
+    "collection": "greenwich",
+    "canonical_name": "Гардероб 2 -х дв.  с ящиками",
+    "pdf_source": "Greenwich.pdf",
+    "pdf_page": 5,
+    "pdf_name_raw": "Гардероб Level",
+    "match_reason": "greenwich_map:гардероб level",
+    "confidence": 0.7,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p5_i1_1498x967.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Greenwich/Greenwich_page_05.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p5_i0_425x751.png",
+      "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p5_i1_1498x967.png"
+    ]
+  },
+  {
+    "workbook_row_key": "greenwich:GR-02-2",
+    "product_code": "GR-02-2",
+    "collection": "greenwich",
+    "canonical_name": "Гардероб 2-дв.",
+    "pdf_source": "Greenwich.pdf",
+    "pdf_page": 6,
+    "pdf_name_raw": "Гардероб Total",
+    "match_reason": "greenwich_map:гардероб total",
+    "confidence": 0.7,
+    "was_missing": false,
+    "was_fuzzy": true,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p6_i1_1531x1362.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Greenwich/Greenwich_page_06.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p6_i0_428x756.png",
+      "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p6_i1_1531x1362.png",
+      "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p6_i2_418x741.png"
+    ]
+  },
+  {
+    "workbook_row_key": "greenwich:GR-05-1",
+    "product_code": "GR-05-1",
+    "collection": "greenwich",
+    "canonical_name": "Комод",
+    "pdf_source": "Greenwich.pdf",
+    "pdf_page": 7,
+    "pdf_name_raw": "Комод Scale",
+    "match_reason": "greenwich_map:комод scale",
+    "confidence": 0.7,
+    "was_missing": false,
+    "was_fuzzy": true,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p7_i2_1531x1360.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Greenwich/Greenwich_page_07.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p7_i0_706x704.png",
+      "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p7_i1_1200x482.png",
+      "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p7_i2_1531x1360.png"
+    ]
+  },
+  {
+    "workbook_row_key": "greenwich:GR-42-1",
+    "product_code": "GR-42-1",
+    "collection": "greenwich",
+    "canonical_name": "Тумба ТВ",
+    "pdf_source": "Greenwich.pdf",
+    "pdf_page": 7,
+    "pdf_name_raw": "Тумба ТВ Wide",
+    "match_reason": "greenwich_map:тумба тв wide",
+    "confidence": 0.7,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p7_i2_1531x1360.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Greenwich/Greenwich_page_07.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p7_i0_706x704.png",
+      "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p7_i1_1200x482.png",
+      "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p7_i2_1531x1360.png"
+    ]
+  },
+  {
+    "workbook_row_key": "greenwich:GR-09-1",
+    "product_code": "GR-09-1",
+    "collection": "greenwich",
+    "canonical_name": "Зеркало навесное",
+    "pdf_source": "Greenwich.pdf",
+    "pdf_page": 11,
+    "pdf_name_raw": "Зеркало Frame",
+    "match_reason": "greenwich_map:зеркало frame",
+    "confidence": 0.7,
+    "was_missing": true,
+    "was_fuzzy": true,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p11_i0_1509x970.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Greenwich/Greenwich_page_11.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p11_i0_1509x970.png"
+    ]
+  },
+  {
+    "workbook_row_key": "greenwich:GR-12-1",
+    "product_code": "GR-12-1",
+    "collection": "greenwich",
+    "canonical_name": "Кровать  1,5-сп. (120*200)",
+    "pdf_source": "Greenwich.pdf",
+    "pdf_page": 9,
+    "pdf_name_raw": "Кровать Cloud",
+    "match_reason": "greenwich_bed:кровать cloud",
+    "confidence": 0.5,
+    "was_missing": false,
+    "was_fuzzy": true,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p9_i0_1536x970.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Greenwich/Greenwich_page_09.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p9_i0_1536x970.png",
+      "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p9_i1_595x595.png"
+    ]
+  },
+  {
+    "workbook_row_key": "greenwich:GR-14-1",
+    "product_code": "GR-14-1",
+    "collection": "greenwich",
+    "canonical_name": "Кровать  1,5-сп. (140*200)",
+    "pdf_source": "Greenwich.pdf",
+    "pdf_page": 9,
+    "pdf_name_raw": "Кровать Cloud",
+    "match_reason": "greenwich_bed:кровать cloud",
+    "confidence": 0.5,
+    "was_missing": false,
+    "was_fuzzy": true,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p9_i0_1536x970.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Greenwich/Greenwich_page_09.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p9_i0_1536x970.png",
+      "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p9_i1_595x595.png"
+    ]
+  },
+  {
+    "workbook_row_key": "greenwich:GR-16-1",
+    "product_code": "GR-16-1",
+    "collection": "greenwich",
+    "canonical_name": "Кровать  2-сп. (160*200)",
+    "pdf_source": "Greenwich.pdf",
+    "pdf_page": 9,
+    "pdf_name_raw": "Кровать Cloud",
+    "match_reason": "greenwich_bed:кровать cloud",
+    "confidence": 0.5,
+    "was_missing": false,
+    "was_fuzzy": true,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p9_i0_1536x970.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Greenwich/Greenwich_page_09.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p9_i0_1536x970.png",
+      "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p9_i1_595x595.png"
+    ]
+  },
+  {
+    "workbook_row_key": "greenwich:GR-18-1",
+    "product_code": "GR-18-1",
+    "collection": "greenwich",
+    "canonical_name": "Кровать  2-сп. (180*200)",
+    "pdf_source": "Greenwich.pdf",
+    "pdf_page": 9,
+    "pdf_name_raw": "Кровать Cloud",
+    "match_reason": "greenwich_bed:кровать cloud",
+    "confidence": 0.5,
+    "was_missing": false,
+    "was_fuzzy": true,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p9_i0_1536x970.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Greenwich/Greenwich_page_09.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p9_i0_1536x970.png",
+      "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p9_i1_595x595.png"
+    ]
+  },
+  {
+    "workbook_row_key": "greenwich:GR-08-1",
+    "product_code": "GR-08-1",
+    "collection": "greenwich",
+    "canonical_name": "Прикроватная тумба с 2 ящиками",
+    "pdf_source": "Greenwich.pdf",
+    "pdf_page": 9,
+    "pdf_name_raw": "Прикроватная тумба Stone",
+    "match_reason": "greenwich_map:прикроватная тумба stone",
+    "confidence": 0.7,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p9_i0_1536x970.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Greenwich/Greenwich_page_09.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p9_i0_1536x970.png",
+      "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p9_i1_595x595.png"
+    ]
+  },
+  {
+    "workbook_row_key": "greenwich:GR-08-2",
+    "product_code": "GR-08-2",
+    "collection": "greenwich",
+    "canonical_name": "Прикроватная тумба с 1 ящиком",
+    "pdf_source": "Greenwich.pdf",
+    "pdf_page": 10,
+    "pdf_name_raw": "Прикроватная тумба Hole",
+    "match_reason": "greenwich_map:прикроватная тумба hole",
+    "confidence": 0.7,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p10_i0_1764x1143.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Greenwich/Greenwich_page_10.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p10_i0_1764x1143.png",
+      "data/raw/pdf-assets/extracted/Greenwich/Greenwich_p10_i1_595x595.png"
+    ]
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-03-3",
+    "product_code": "MNm-03-3",
+    "collection": "monchelsea",
+    "canonical_name": "Шкаф для одежды 3-дв. (модуль/Ш+ЯП+Ш)",
+    "pdf_source": "Monchelsea.pdf",
+    "pdf_page": 6,
+    "pdf_name_raw": "ШКАФ ДЛЯ ОДЕЖДЫ 3-ДВЕРНЫЙ",
+    "match_reason": "word_overlap:0.57",
+    "confidence": 0.5214285714285714,
+    "was_missing": false,
+    "was_fuzzy": true,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Monchelsea/Monchelsea_p6_i0_643x888.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Monchelsea/Monchelsea_page_06.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Monchelsea/Monchelsea_p6_i0_643x888.png",
+      "data/raw/pdf-assets/extracted/Monchelsea/Monchelsea_p6_i5_499x922.png"
+    ]
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-02-3",
+    "product_code": "MNm-02-3",
+    "collection": "monchelsea",
+    "canonical_name": "Шкаф для одежды 2-дв. (модуль/ЯП)",
+    "pdf_source": "Monchelsea.pdf",
+    "pdf_page": 18,
+    "pdf_name_raw": "ШКАФ ДЛЯ ОДЕЖДЫ",
+    "match_reason": "substring:0.50",
+    "confidence": 0.55,
+    "was_missing": false,
+    "was_fuzzy": true,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Monchelsea/Monchelsea_p18_i0_843x575.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Monchelsea/Monchelsea_page_18.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Monchelsea/Monchelsea_p18_i0_843x575.png"
+    ]
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-05-4",
+    "product_code": "MNm-05-4",
+    "collection": "monchelsea",
+    "canonical_name": "Комод с зеркалом",
+    "pdf_source": "Monchelsea.pdf",
+    "pdf_page": 9,
+    "pdf_name_raw": "КОМОД С ЗЕРКАЛОМ",
+    "match_reason": "exact_normalized",
+    "confidence": 0.7,
+    "was_missing": false,
+    "was_fuzzy": true,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Monchelsea/Monchelsea_p9_i0_670x979.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Monchelsea/Monchelsea_page_09.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Monchelsea/Monchelsea_p9_i0_670x979.png",
+      "data/raw/pdf-assets/extracted/Monchelsea/Monchelsea_p9_i1_795x689.png",
+      "data/raw/pdf-assets/extracted/Monchelsea/Monchelsea_p9_i2_494x494.png"
+    ]
+  },
+  {
+    "workbook_row_key": "monchelsea:MNm-65-1",
+    "product_code": "MNm-65-1",
+    "collection": "monchelsea",
+    "canonical_name": "Стол письменный 1-тумб. 0П",
+    "pdf_source": "Monchelsea.pdf",
+    "pdf_page": 14,
+    "pdf_name_raw": "СТОЛ ПИСЬМЕННЫЙ",
+    "match_reason": "substring:0.50",
+    "confidence": 0.55,
+    "was_missing": false,
+    "was_fuzzy": true,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Monchelsea/Monchelsea_p14_i0_827x490.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Monchelsea/Monchelsea_page_14.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Monchelsea/Monchelsea_p14_i0_827x490.png",
+      "data/raw/pdf-assets/extracted/Monchelsea/Monchelsea_p14_i6_697x552.png",
+      "data/raw/pdf-assets/extracted/Monchelsea/Monchelsea_p14_i7_668x471.png"
+    ]
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-95-2",
+    "product_code": "PR-95-2",
+    "collection": "princess-rose",
+    "canonical_name": "Кровать - трансформер (80*150) без рисунка",
+    "pdf_source": "Princess Rose.pdf",
+    "pdf_page": 7,
+    "pdf_name_raw": "Кровать односпальная без изножья",
+    "match_reason": "word_overlap:0.50",
+    "confidence": 0.5,
+    "was_missing": false,
+    "was_fuzzy": true,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p7_i2_1306x1158.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Princess_Rose/Princess_Rose_page_07.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p7_i0_822x822.png",
+      "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p7_i1_786x653.png",
+      "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p7_i2_1306x1158.png"
+    ]
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-65-5",
+    "product_code": "PR-65-5",
+    "collection": "princess-rose",
+    "canonical_name": "Стол письменный 1-тумб. 0П (ручки СВАРОВСКИ)",
+    "pdf_source": "Princess Rose.pdf",
+    "pdf_page": 10,
+    "pdf_name_raw": "Стол письменный 1-тумбовый",
+    "match_reason": "word_overlap:0.50",
+    "confidence": 0.5,
+    "was_missing": false,
+    "was_fuzzy": true,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p10_i3_845x549.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Princess_Rose/Princess_Rose_page_10.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p10_i0_705x478.png",
+      "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p10_i1_681x486.png",
+      "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p10_i2_656x531.png",
+      "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p10_i3_845x549.png"
+    ]
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-65-7",
+    "product_code": "PR-65-7",
+    "collection": "princess-rose",
+    "canonical_name": "Стол письменный 1-тумб. 0Я (ручки СВАРОВСКИ)",
+    "pdf_source": "Princess Rose.pdf",
+    "pdf_page": 10,
+    "pdf_name_raw": "Стол письменный 1-тумбовый",
+    "match_reason": "word_overlap:0.50",
+    "confidence": 0.5,
+    "was_missing": false,
+    "was_fuzzy": true,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p10_i3_845x549.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Princess_Rose/Princess_Rose_page_10.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p10_i0_705x478.png",
+      "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p10_i1_681x486.png",
+      "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p10_i2_656x531.png",
+      "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p10_i3_845x549.png"
+    ]
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-65-6",
+    "product_code": "PR-65-6",
+    "collection": "princess-rose",
+    "canonical_name": "Стол письменный 1-тумб. П0 (ручки СВАРОВСКИ)",
+    "pdf_source": "Princess Rose.pdf",
+    "pdf_page": 10,
+    "pdf_name_raw": "Стол письменный 1-тумбовый",
+    "match_reason": "word_overlap:0.50",
+    "confidence": 0.5,
+    "was_missing": false,
+    "was_fuzzy": true,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p10_i3_845x549.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Princess_Rose/Princess_Rose_page_10.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p10_i0_705x478.png",
+      "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p10_i1_681x486.png",
+      "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p10_i2_656x531.png",
+      "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p10_i3_845x549.png"
+    ]
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-65-8",
+    "product_code": "PR-65-8",
+    "collection": "princess-rose",
+    "canonical_name": "Стол письменный 1-тумб. Я0 (ручки СВАРОВСКИ)",
+    "pdf_source": "Princess Rose.pdf",
+    "pdf_page": 10,
+    "pdf_name_raw": "Стол письменный 1-тумбовый",
+    "match_reason": "word_overlap:0.50",
+    "confidence": 0.5,
+    "was_missing": false,
+    "was_fuzzy": true,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p10_i3_845x549.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Princess_Rose/Princess_Rose_page_10.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p10_i0_705x478.png",
+      "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p10_i1_681x486.png",
+      "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p10_i2_656x531.png",
+      "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p10_i3_845x549.png"
+    ]
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-66-6",
+    "product_code": "PR-66-6",
+    "collection": "princess-rose",
+    "canonical_name": "Стол письменный 2-тумб. ПЯ (ручки СВАРОВСКИ)",
+    "pdf_source": "Princess Rose.pdf",
+    "pdf_page": 10,
+    "pdf_name_raw": "Стол письменный 2-тумбовый",
+    "match_reason": "word_overlap:0.50",
+    "confidence": 0.5,
+    "was_missing": false,
+    "was_fuzzy": true,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p10_i3_845x549.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Princess_Rose/Princess_Rose_page_10.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p10_i0_705x478.png",
+      "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p10_i1_681x486.png",
+      "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p10_i2_656x531.png",
+      "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p10_i3_845x549.png"
+    ]
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-66-7",
+    "product_code": "PR-66-7",
+    "collection": "princess-rose",
+    "canonical_name": "Стол письменный 2-тумб. ЯП (ручки СВАРОВСКИ)",
+    "pdf_source": "Princess Rose.pdf",
+    "pdf_page": 10,
+    "pdf_name_raw": "Стол письменный 2-тумбовый",
+    "match_reason": "word_overlap:0.50",
+    "confidence": 0.5,
+    "was_missing": false,
+    "was_fuzzy": true,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p10_i3_845x549.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Princess_Rose/Princess_Rose_page_10.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p10_i0_705x478.png",
+      "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p10_i1_681x486.png",
+      "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p10_i2_656x531.png",
+      "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p10_i3_845x549.png"
+    ]
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-95-1",
+    "product_code": "PR-95-1",
+    "collection": "princess-rose",
+    "canonical_name": "Кровать - трансформер (80*150) с рисунком",
+    "pdf_source": "Princess Rose.pdf",
+    "pdf_page": 11,
+    "pdf_name_raw": "Кровать - трансформер",
+    "match_reason": "substring:0.50",
+    "confidence": 0.55,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p11_i1_773x773.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Princess_Rose/Princess_Rose_page_11.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p11_i0_649x433.png",
+      "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p11_i1_773x773.png",
+      "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p11_i3_775x500.png"
+    ]
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-69-1",
+    "product_code": "PR-69-1",
+    "collection": "princess-rose",
+    "canonical_name": "Полка книжная",
+    "pdf_source": "Princess Rose.pdf",
+    "pdf_page": 12,
+    "pdf_name_raw": "Полка книжная",
+    "match_reason": "exact_normalized",
+    "confidence": 0.7,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p12_i2_829x526.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Princess_Rose/Princess_Rose_page_12.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p12_i0_619x452.png",
+      "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p12_i2_829x526.png"
+    ]
+  },
+  {
+    "workbook_row_key": "princess-rose:PR-09-1",
+    "product_code": "PR-09-1",
+    "collection": "princess-rose",
+    "canonical_name": "Зеркало навесное",
+    "pdf_source": "Princess Rose.pdf",
+    "pdf_page": 12,
+    "pdf_name_raw": "Зеркало навесное",
+    "match_reason": "exact_normalized",
+    "confidence": 0.7,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p12_i2_829x526.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Princess_Rose/Princess_Rose_page_12.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p12_i0_619x452.png",
+      "data/raw/pdf-assets/extracted/Princess_Rose/Princess_Rose_p12_i2_829x526.png"
+    ]
+  },
+  {
+    "workbook_row_key": "oliver:OL-26-2",
+    "product_code": "OL-26-2",
+    "collection": "oliver",
+    "canonical_name": "Шкаф-витрина",
+    "pdf_source": "Oliver.pdf",
+    "pdf_page": 4,
+    "pdf_name_raw": "Шкаф-витрина",
+    "match_reason": "exact_normalized",
+    "confidence": 0.7,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Oliver/Oliver_p4_i4_495x731.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Oliver/Oliver_page_04.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Oliver/Oliver_p4_i0_413x707.png",
+      "data/raw/pdf-assets/extracted/Oliver/Oliver_p4_i3_464x731.png",
+      "data/raw/pdf-assets/extracted/Oliver/Oliver_p4_i4_495x731.png"
+    ]
+  },
+  {
+    "workbook_row_key": "oliver:OL-21-1",
+    "product_code": "OL-21-1",
+    "collection": "oliver",
+    "canonical_name": "Стол обеденный раздвижной",
+    "pdf_source": "Oliver.pdf",
+    "pdf_page": 5,
+    "pdf_name_raw": "Стол обеденный раздвижной",
+    "match_reason": "exact_normalized",
+    "confidence": 0.7,
+    "was_missing": true,
+    "was_fuzzy": false,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Oliver/Oliver_p5_i2_598x431.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Oliver/Oliver_page_05.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Oliver/Oliver_p5_i1_487x487.png",
+      "data/raw/pdf-assets/extracted/Oliver/Oliver_p5_i2_598x431.png",
+      "data/raw/pdf-assets/extracted/Oliver/Oliver_p5_i4_401x568.png"
+    ]
+  },
+  {
+    "workbook_row_key": "oliver:OL-65-1",
+    "product_code": "OL-65-1",
+    "collection": "oliver",
+    "canonical_name": "Стол письменный 1-тумб. 0П",
+    "pdf_source": "Oliver.pdf",
+    "pdf_page": 8,
+    "pdf_name_raw": "Стол письменный 1-тумбовый",
+    "match_reason": "substring:0.75",
+    "confidence": 0.6,
+    "was_missing": false,
+    "was_fuzzy": true,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Oliver/Oliver_p8_i5_877x492.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Oliver/Oliver_page_08.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Oliver/Oliver_p8_i3_455x520.png",
+      "data/raw/pdf-assets/extracted/Oliver/Oliver_p8_i5_877x492.png"
+    ]
+  },
+  {
+    "workbook_row_key": "provence:PV-65-5",
+    "product_code": "PV-65-5",
+    "collection": "provence",
+    "canonical_name": "Стол письменный 1-тумб. 0П",
+    "pdf_source": "Provence White.pdf",
+    "pdf_page": 7,
+    "pdf_name_raw": "Стол письменный 1 - тумбовый",
+    "match_reason": "substring:0.75",
+    "confidence": 0.6,
+    "was_missing": false,
+    "was_fuzzy": true,
+    "pdf_image_path": "data/raw/pdf-assets/extracted/Provence_White/Provence_White_p7_i2_1218x953.png",
+    "rendered_page_path": "data/raw/pdf-assets/pages/Provence_White/Provence_White_page_07.png",
+    "all_page_images": [
+      "data/raw/pdf-assets/extracted/Provence_White/Provence_White_p7_i0_733x465.png",
+      "data/raw/pdf-assets/extracted/Provence_White/Provence_White_p7_i2_1218x953.png"
+    ]
+  }
+]

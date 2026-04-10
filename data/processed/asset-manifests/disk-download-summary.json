@@ -1,0 +1,43 @@
+{
+  "total_files": 435,
+  "total_products": 102,
+  "priority_collections": [
+    "oliver",
+    "provence",
+    "country-london-paris",
+    "monchelsea"
+  ],
+  "per_collection": {
+    "country-london-paris": {
+      "products": 13,
+      "files": 89,
+      "main": 2,
+      "gallery": 37,
+      "color": 50
+    },
+    "monchelsea": {
+      "products": 1,
+      "files": 1,
+      "main": 1,
+      "gallery": 0,
+      "color": 0
+    },
+    "oliver": {
+      "products": 63,
+      "files": 279,
+      "main": 40,
+      "gallery": 119,
+      "color": 120
+    },
+    "provence": {
+      "products": 25,
+      "files": 66,
+      "main": 23,
+      "gallery": 43,
+      "color": 0
+    }
+  },
+  "skipped_non_priority": 26,
+  "products_without_disk_assets": 38,
+  "estimated_download_size_mb": 130.5
+}
