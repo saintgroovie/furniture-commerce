@@ -1,0 +1,31 @@
+{
+  "generated_at_utc": "2026-04-09T23:48:27Z",
+  "ASSET_BASE_URL": "http://localhost:9000/static",
+  "product_count": 109,
+  "entity_mapping_seed_eligible": 109,
+  "dedupe_skipped_count": 0,
+  "dedupe_warnings": [],
+  "handle_disambiguation": [
+    {
+      "original_handle": "ol-08-1",
+      "rows": [
+        {
+          "canonical_name": "Зеркало навесное овальное",
+          "resolved_handle": "ol-08-1-mirror",
+          "resolved_sku": "OL-08-1-MIR"
+        },
+        {
+          "canonical_name": "Тумбочка прикроватная",
+          "resolved_handle": "ol-08-1",
+          "resolved_sku": "OL-08-1"
+        }
+      ],
+      "rationale": "duplicate_workbook_row_key_oliver:OL-08-1_same_product_code; mirror_disambiguated_SKU"
+    }
+  ],
+  "collection_count": 3,
+  "category_count": 17,
+  "asset_row_count": 444,
+  "unique_handles_verified": true,
+  "warnings": []
+}

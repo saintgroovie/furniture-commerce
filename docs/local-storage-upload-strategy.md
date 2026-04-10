@@ -13,7 +13,7 @@ This strategy defines controlled asset upload into Medusa local storage for MVP/
 1. Use `asset-upload-execution-manifest.json` as the executable upload plan.
 2. For each entry:
    - read `processed_path` from `data/processed/storefront-assets/...`
-   - copy file into `apps/backend/uploads/{target_storage_key}`
+   - copy file into `apps/backend/static/{target_storage_key}`
 3. Validate destination file exists and matches source content hash.
 4. Persist deterministic run artifacts:
    - `data/processed/asset-manifests/local-upload-status.json`
@@ -22,16 +22,16 @@ This strategy defines controlled asset upload into Medusa local storage for MVP/
 
 ## Recommended local storage path layout
 
-- **Filesystem root in repo:** `apps/backend/uploads`
+- **Filesystem root in repo:** `apps/backend/static` (Medusa `express.static` → `/static/...`)
 - **Storage key root:** `products`
 - **Final layout:**
-  - `apps/backend/uploads/products/{collection}/{filename}.jpg`
+  - `apps/backend/static/products/{collection}/{filename}.jpg`
 
 Examples:
 
-- `apps/backend/uploads/products/oliver/OL-01-2_main.jpg`
-- `apps/backend/uploads/products/provence/PV-02-1_gallery_01.jpg`
-- `apps/backend/uploads/products/country-london-paris/CO-02-1_color_blue_01.jpg`
+- `apps/backend/static/products/oliver/OL-01-2_main.jpg`
+- `apps/backend/static/products/provence/PV-02-1_gallery_01.jpg`
+- `apps/backend/static/products/country-london-paris/CO-02-1_color_blue_01.jpg`
 
 ## Storage key -> public URL mapping
 
@@ -42,9 +42,9 @@ Stable key mapping rule:
 
 For local MVP/staging:
 
-- **Exact assumption:** `ASSET_BASE_URL=http://localhost:9000/uploads`
+- **Exact assumption:** `ASSET_BASE_URL=http://localhost:9000/static`
 - Example URL:
-  - `http://localhost:9000/uploads/products/oliver/OL-01-2_main.jpg`
+  - `http://localhost:9000/static/products/oliver/OL-01-2_main.jpg`
 
 ## Provenance preservation
 

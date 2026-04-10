@@ -71,6 +71,6 @@ Future expansion path after business and mapping confirmation:
 
 - Dry-run draft seed against fresh local DB.
 - Verify collection/category/product counts match `seed-summary.json`.
-- Verify all product image URLs resolve via Medusa `/uploads`.
+- Verify all product image URLs resolve via Medusa `/static/...` (local `express.static`).
 - Verify product classification links exist for all seeded products.
 - Validate no excluded product handles are present in seeded dataset.

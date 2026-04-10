@@ -1,0 +1,42 @@
+{
+  "generated_at_utc": "2026-04-10T00:15:16Z",
+  "ASSET_BASE_URL": "http://localhost:9000/static",
+  "product_count": 109,
+  "entity_mapping_seed_eligible": 109,
+  "dedupe_skipped_count": 0,
+  "dedupe_warnings": [],
+  "handle_disambiguation": [
+    {
+      "original_handle": "ol-08-1",
+      "rows": [
+        {
+          "canonical_name": "Зеркало навесное овальное",
+          "resolved_handle": "ol-08-1-mirror",
+          "resolved_sku": "OL-08-1-MIR"
+        },
+        {
+          "canonical_name": "Тумбочка прикроватная",
+          "resolved_handle": "ol-08-1",
+          "resolved_sku": "OL-08-1"
+        }
+      ],
+      "rationale": "duplicate_workbook_row_key_oliver:OL-08-1_same_product_code; mirror_disambiguated_SKU"
+    }
+  ],
+  "collection_count": 3,
+  "category_count": 17,
+  "asset_row_count": 444,
+  "unique_handles_verified": true,
+  "warnings": [],
+  "source_layer": "seed-products.fixed.json + handle URL normalization",
+  "handle_url_normalization": [
+    {
+      "workbook_row_key": "oliver:OL-05-Н",
+      "canonical_name": "Комод высокий (ниже на 1 ярус ящиков)",
+      "original_handle": "ol-05-н",
+      "normalized_handle": "ol-05-n",
+      "normalization_reason": "lowercase+homoglyph_map+collapse_non_alnum_to_hyphen"
+    }
+  ],
+  "handle_collision_resolution": []
+}

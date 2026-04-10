@@ -72,7 +72,7 @@ function loadJsonFile<T>(relativePath: string): T {
   )
 }
 
-/** Prefer fixed (unique handles), else generator output */
+/** Prefer fixed2 (URL-safe handles), then fixed (unique handles), else generator output */
 function loadJsonFileFirstExisting<T>(relativePaths: string[]): { data: T; relativePath: string } {
   for (const relativePath of relativePaths) {
     const candidates = [
@@ -123,6 +123,7 @@ export default async function seedRealDataDraft({ container }: ExecArgs) {
   )
   const { data: seedProducts, relativePath: seedProductsSource } =
     loadJsonFileFirstExisting<SeedProduct[]>([
+      "data/normalized/seed-products.fixed2.json",
       "data/normalized/seed-products.fixed.json",
       "data/normalized/seed-products.json",
     ])
@@ -255,6 +256,27 @@ export default async function seedRealDataDraft({ container }: ExecArgs) {
   const productIdByHandle = Object.fromEntries(
     targetProducts.map((product: any) => [product.handle, product.id])
   ) as Record<string, string>
+
+  logger.info("Aligning product image URLs from seed JSON...")
+  let imagesAligned = 0
+  for (const seedRow of seedProducts) {
+    const pr = targetProducts.find(
+      (p: any) => p.handle === seedRow.medusa_product_handle
+    )
+    if (!pr?.id) continue
+    try {
+      await productModule.updateProducts(pr.id, {
+        thumbnail: seedRow.main_image_url ?? null,
+        images: seedRow.image_urls.map((url) => ({ url })),
+      })
+      imagesAligned++
+    } catch (e: any) {
+      logger.info(
+        `Image URL align failed handle=${seedRow.medusa_product_handle}: ${e?.message ?? e}`
+      )
+    }
+  }
+  logger.info(`Image URLs aligned for ${imagesAligned} products`)
 
   logger.info("Linking products to categories...")
   const productsByCategory: Record<string, string[]> = {}

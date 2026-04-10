@@ -1,0 +1,21 @@
+{
+  "generated_at_utc": "2026-04-10T00:41:07+00:00",
+  "chosen_public_asset_prefix": "http://localhost:9000/static",
+  "previous_broken_prefix": "http://localhost:9000/uploads",
+  "fix_strategy": "materialize_under_apps_backend_static_and_regenerate_seed_urls_to_match_express_static_mount",
+  "runtime_repair_method": "medusa_exec_seed_real_data_ts_with_REAL_DATA_SEED_CONFIRM_image_align_loop",
+  "checked_asset_url_count": 441,
+  "ok_asset_url_count": 441,
+  "failed_asset_url_count": 0,
+  "fixed2_scope_count": 109,
+  "data_integrity_pass": true,
+  "ol_05_n_pass": true,
+  "ol_08_1_mirror_pass": true,
+  "greenwich_regression_pass": true,
+  "remaining_caveat_count": 2,
+  "remaining_caveats": [
+    "HEAD/curl checks must percent-encode non-ASCII path segments; browsers encode automatically.",
+    "Binary assets under apps/backend/static/products/ are not in git; run scripts/upload-assets-to-local-storage.py after clone."
+  ],
+  "final_verdict": "PASS"
+}

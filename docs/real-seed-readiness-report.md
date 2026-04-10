@@ -103,7 +103,7 @@ Blocking conditions for canonical replacement are not technical now; they are re
    - products in scope = 109 when using `seed-products.fixed.json`, else 108 from generator `seed-products.json`
 3. Spot-check image accessibility:
    - open several URLs from the same seed products file the script loaded
-   - confirm served from `/uploads/products/...`
+   - confirm served from `/static/products/...` (Medusa v2 static middleware)
 4. Confirm no excluded handles from `entity-mapping-excluded.json` are created.
 5. Validate product classification links exist for all seeded products.
 6. Approve caveat products for MVP visibility (especially `needs_reshoot` and legacy fallbacks).

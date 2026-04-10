@@ -16,18 +16,20 @@
 
 ## Куда копировать (локальный layout)
 
-Рекомендуемый путь от корня монорепо:
+Рекомендуемый путь от корня монорепо (совпадает с `express.static` Medusa v2 → URL `/static/...`):
 
 ```text
-apps/backend/uploads/{target_storage_key}
+apps/backend/static/{target_storage_key}
 ```
 
 Пример: ключ `products/oliver/OL-01-2_main.jpg` → файл  
-`apps/backend/uploads/products/oliver/OL-01-2_main.jpg`.
+`apps/backend/static/products/oliver/OL-01-2_main.jpg`.
+
+Скрипт `upload-assets-to-local-storage.py` материализует файлы в `apps/backend/static`. Каталог `apps/backend/uploads/` не обслуживается HTTP по умолчанию и может использоваться только как локальный архив/исторический путь.
 
 `target_storage_key` уже включает префикс `products/...` (см. `asset-upload-manifest.json`). **Не** дублировать `products` в пути.
 
-Проверка согласованности с пилотом: `seed-greenwich.ts` и комментарии в репозитории указывают на размещение под `apps/backend/uploads/products/...`.
+Проверка согласованности с пилотом: `seed-greenwich.ts` строит публичные URL как `{backend}/static/{storage_key}`; файлы лежат под `apps/backend/static/products/...`.
 
 ---
 
@@ -35,7 +37,7 @@ apps/backend/uploads/{target_storage_key}
 
 1. **Processed:** `data/processed/storefront-assets/{collection}/{FILENAME}.jpg`
 2. **Storage key:** `products/{collection}/{FILENAME}.jpg` (как в манифестах)
-3. **Локальный абсолютный путь назначения:** `{REPO_ROOT}/apps/backend/uploads/{storage_key}`
+3. **Локальный абсолютный путь назначения:** `{REPO_ROOT}/apps/backend/static/{storage_key}`
 
 Скрипт `scripts/upload-assets-to-local-storage.py` читает **`data/normalized/asset-upload-execution-manifest.json`** (только seed-eligible строки).
 
@@ -43,10 +45,10 @@ apps/backend/uploads/{target_storage_key}
 
 ## Публичный URL (MVP / staging)
 
-**Договорённый префикс для первого real-data seed:**
+**Договорённый префикс для real-data seed (Medusa v2, локальный `express.static`):**
 
 ```text
-ASSET_BASE_URL=http://localhost:9000/uploads
+ASSET_BASE_URL=http://localhost:9000/static
 ```
 
 **Итоговый URL файла:**
@@ -55,11 +57,11 @@ ASSET_BASE_URL=http://localhost:9000/uploads
 {ASSET_BASE_URL}/{target_storage_key}
 ```
 
-Пример: `http://localhost:9000/uploads/products/oliver/OL-01-2_main.jpg`.
+Пример: `http://localhost:9000/static/products/oliver/OL-01-2_main.jpg`.
 
-Для staging замените только origin: `https://staging-api.example/uploads` — **storage key не меняется**.
+Для staging замените только origin, например `https://staging-api.example/static` — **storage key не меняется**.
 
-> Примечание: в пилотном `seed-greenwich.ts` может использоваться шаблон `/static/...`. Для Oliver/Provence/CLP MVP мы **выравниваемся** с [`asset-url-mapping-notes.md`](asset-url-mapping-notes.md) и `uploads`-префиксом; при расхождении среды поправить `ASSET_BASE_URL` или nginx/static mapping **до** прогона seed.
+> Medusa v2 монтирует статику из каталога `static` приложения на путь **`/static`** (см. `@medusajs/framework` express-loader). Путь `/uploads/...` для файлов на диске **не** обслуживается этим механизмом — поэтому real-data и Greenwich используют одну модель: файлы в `apps/backend/static/`, URL с префиксом `/static/`.
 
 ---
 

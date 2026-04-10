@@ -7,7 +7,8 @@ Usage:
   python scripts/upload-assets-to-local-storage.py [--dry-run] [--overwrite-different]
 
 Env:
-  ASSET_BASE_URL default: http://localhost:9000/uploads
+  ASSET_BASE_URL default: http://localhost:9000/static
+    (Medusa v2 serves express.static from apps/backend/static at URL path /static)
   REPO_ROOT override: parent of scripts/
 """
 
@@ -25,7 +26,7 @@ from pathlib import Path
 from typing import Any
 
 REPO_ROOT = Path(os.environ.get("REPO_ROOT", Path(__file__).resolve().parent.parent))
-ASSET_BASE_URL = os.environ.get("ASSET_BASE_URL", "http://localhost:9000/uploads").rstrip("/")
+ASSET_BASE_URL = os.environ.get("ASSET_BASE_URL", "http://localhost:9000/static").rstrip("/")
 
 PATH_ENTITY_MAPPING = REPO_ROOT / "data/normalized/entity-mapping.json"
 PATH_ASSET_UPLOAD_MANIFEST = REPO_ROOT / "data/normalized/asset-upload-manifest.json"
@@ -35,7 +36,8 @@ PATH_STATUS = REPO_ROOT / "data/processed/asset-manifests/local-upload-status.js
 PATH_FAILURES = REPO_ROOT / "data/processed/asset-manifests/local-upload-failures.json"
 PATH_UPLOAD_SUMMARY = REPO_ROOT / "data/processed/asset-manifests/local-upload-summary.json"
 
-BACKEND_UPLOADS = REPO_ROOT / "apps/backend/uploads"
+# Materialization root must match Medusa express static dir (see @medusajs/framework express-loader).
+BACKEND_MATERIALIZATION_ROOT = REPO_ROOT / "apps/backend/static"
 SEED_READY = frozenset({"seed_ready", "seed_ready_with_caveat"})
 UPLOAD_READY = frozenset({"ready", "ready_with_caveat"})
 
@@ -205,7 +207,7 @@ def upload_command(*, dry_run: bool, overwrite_different: bool) -> int:
             continue
 
         src = REPO_ROOT / row["processed_path"]
-        dest = BACKEND_UPLOADS / row["target_storage_key"]
+        dest = BACKEND_MATERIALIZATION_ROOT / row["target_storage_key"]
 
         if not src.is_file():
             failed += 1
@@ -312,8 +314,10 @@ def upload_command(*, dry_run: bool, overwrite_different: bool) -> int:
         "dry_run": dry_run,
         "overwrite_different": overwrite_different,
         "ASSET_BASE_URL": ASSET_BASE_URL,
-        "uploads_root": BACKEND_UPLOADS.as_posix(),
-        "backend_uploads_root": rel(BACKEND_UPLOADS),
+        "materialization_root": BACKEND_MATERIALIZATION_ROOT.as_posix(),
+        "materialization_root_repo_relative": rel(BACKEND_MATERIALIZATION_ROOT),
+        "uploads_root": BACKEND_MATERIALIZATION_ROOT.as_posix(),
+        "backend_uploads_root": rel(BACKEND_MATERIALIZATION_ROOT),
         "manifest_path": PATH_EXEC_MANIFEST.as_posix(),
         "status_path": PATH_STATUS.as_posix(),
         "failures_path": PATH_FAILURES.as_posix(),

@@ -3,3087 +3,3087 @@
     "workbook_row_key": "country-london-paris:CO-02-1",
     "product_code_normalized": "CO-02-1",
     "storage_key": "products/country-london-paris/CO-02-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-02-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-02-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-02-1",
     "product_code_normalized": "CO-02-1",
     "storage_key": "products/country-london-paris/CO-02-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-02-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-02-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-02-1",
     "product_code_normalized": "CO-02-1",
     "storage_key": "products/country-london-paris/CO-02-1_gallery_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-02-1_gallery_03.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-02-1_gallery_03.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-02-1",
     "product_code_normalized": "CO-02-1",
     "storage_key": "products/country-london-paris/CO-02-1_color_blue_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-02-1_color_blue_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-02-1_color_blue_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-02-1",
     "product_code_normalized": "CO-02-1",
     "storage_key": "products/country-london-paris/CO-02-1_color_blue_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-02-1_color_blue_02.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-02-1_color_blue_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-02-1",
     "product_code_normalized": "CO-02-1",
     "storage_key": "products/country-london-paris/CO-02-1_color_grey_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-02-1_color_grey_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-02-1_color_grey_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-02-1",
     "product_code_normalized": "CO-02-1",
     "storage_key": "products/country-london-paris/CO-02-1_color_grey_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-02-1_color_grey_02.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-02-1_color_grey_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-02-1",
     "product_code_normalized": "CO-02-1",
     "storage_key": "products/country-london-paris/CO-02-1_color_olive_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-02-1_color_olive_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-02-1_color_olive_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-02-1",
     "product_code_normalized": "CO-02-1",
     "storage_key": "products/country-london-paris/CO-02-1_color_olive_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-02-1_color_olive_02.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-02-1_color_olive_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-05-1",
     "product_code_normalized": "CO-05-1",
     "storage_key": "products/country-london-paris/CO-05-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-05-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-05-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "country-london-paris:CO-05-1",
     "product_code_normalized": "CO-05-1",
     "storage_key": "products/country-london-paris/CO-05-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-05-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-05-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-05-1",
     "product_code_normalized": "CO-05-1",
     "storage_key": "products/country-london-paris/CO-05-1_color_blue_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-05-1_color_blue_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-05-1_color_blue_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-05-1",
     "product_code_normalized": "CO-05-1",
     "storage_key": "products/country-london-paris/CO-05-1_color_blue_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-05-1_color_blue_02.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-05-1_color_blue_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-05-1",
     "product_code_normalized": "CO-05-1",
     "storage_key": "products/country-london-paris/CO-05-1_color_grey_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-05-1_color_grey_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-05-1_color_grey_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-05-1",
     "product_code_normalized": "CO-05-1",
     "storage_key": "products/country-london-paris/CO-05-1_color_grey_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-05-1_color_grey_02.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-05-1_color_grey_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-05-1",
     "product_code_normalized": "CO-05-1",
     "storage_key": "products/country-london-paris/CO-05-1_color_olive_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-05-1_color_olive_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-05-1_color_olive_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-05-1",
     "product_code_normalized": "CO-05-1",
     "storage_key": "products/country-london-paris/CO-05-1_color_olive_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-05-1_color_olive_02.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-05-1_color_olive_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-08-1",
     "product_code_normalized": "CO-08-1",
     "storage_key": "products/country-london-paris/CO-08-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-08-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-08-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-08-1",
     "product_code_normalized": "CO-08-1",
     "storage_key": "products/country-london-paris/CO-08-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-08-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-08-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-08-1",
     "product_code_normalized": "CO-08-1",
     "storage_key": "products/country-london-paris/CO-08-1_color_blue_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-08-1_color_blue_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-08-1_color_blue_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-08-1",
     "product_code_normalized": "CO-08-1",
     "storage_key": "products/country-london-paris/CO-08-1_color_blue_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-08-1_color_blue_02.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-08-1_color_blue_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-08-1",
     "product_code_normalized": "CO-08-1",
     "storage_key": "products/country-london-paris/CO-08-1_color_grey_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-08-1_color_grey_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-08-1_color_grey_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-08-1",
     "product_code_normalized": "CO-08-1",
     "storage_key": "products/country-london-paris/CO-08-1_color_grey_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-08-1_color_grey_02.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-08-1_color_grey_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-08-1",
     "product_code_normalized": "CO-08-1",
     "storage_key": "products/country-london-paris/CO-08-1_color_olive_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-08-1_color_olive_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-08-1_color_olive_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-08-1",
     "product_code_normalized": "CO-08-1",
     "storage_key": "products/country-london-paris/CO-08-1_color_olive_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-08-1_color_olive_02.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-08-1_color_olive_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-14-2",
     "product_code_normalized": "CO-14-2",
     "storage_key": "products/country-london-paris/CO-14-2_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-14-2_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-14-2_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-14-2",
     "product_code_normalized": "CO-14-2",
     "storage_key": "products/country-london-paris/CO-14-2_color_torno_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-14-2_color_torno_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-14-2_color_torno_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-15-2",
     "product_code_normalized": "CO-15-2",
     "storage_key": "products/country-london-paris/CO-15-2_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-15-2_main.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-15-2_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "country-london-paris:CO-15-2",
     "product_code_normalized": "CO-15-2",
     "storage_key": "products/country-london-paris/CO-15-2_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-15-2_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-15-2_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-15-2",
     "product_code_normalized": "CO-15-2",
     "storage_key": "products/country-london-paris/CO-15-2_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-15-2_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-15-2_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-15-2",
     "product_code_normalized": "CO-15-2",
     "storage_key": "products/country-london-paris/CO-15-2_gallery_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-15-2_gallery_03.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-15-2_gallery_03.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-15-2",
     "product_code_normalized": "CO-15-2",
     "storage_key": "products/country-london-paris/CO-15-2_gallery_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-15-2_gallery_04.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-15-2_gallery_04.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-15-2",
     "product_code_normalized": "CO-15-2",
     "storage_key": "products/country-london-paris/CO-15-2_gallery_05.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-15-2_gallery_05.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-15-2_gallery_05.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-61-1",
     "product_code_normalized": "CO-61-1",
     "storage_key": "products/country-london-paris/CO-61-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-61-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-61-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-61-1",
     "product_code_normalized": "CO-61-1",
     "storage_key": "products/country-london-paris/CO-61-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-61-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-61-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-61-1",
     "product_code_normalized": "CO-61-1",
     "storage_key": "products/country-london-paris/CO-61-1_gallery_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-61-1_gallery_03.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-61-1_gallery_03.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-61-1",
     "product_code_normalized": "CO-61-1",
     "storage_key": "products/country-london-paris/CO-61-1_color_blue_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-61-1_color_blue_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-61-1_color_blue_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-61-1",
     "product_code_normalized": "CO-61-1",
     "storage_key": "products/country-london-paris/CO-61-1_color_blue_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-61-1_color_blue_02.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-61-1_color_blue_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-61-1",
     "product_code_normalized": "CO-61-1",
     "storage_key": "products/country-london-paris/CO-61-1_color_grey_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-61-1_color_grey_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-61-1_color_grey_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-61-1",
     "product_code_normalized": "CO-61-1",
     "storage_key": "products/country-london-paris/CO-61-1_color_grey_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-61-1_color_grey_02.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-61-1_color_grey_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-61-1",
     "product_code_normalized": "CO-61-1",
     "storage_key": "products/country-london-paris/CO-61-1_color_olive_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-61-1_color_olive_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-61-1_color_olive_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-61-1",
     "product_code_normalized": "CO-61-1",
     "storage_key": "products/country-london-paris/CO-61-1_color_olive_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-61-1_color_olive_02.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-61-1_color_olive_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-62-1",
     "product_code_normalized": "CO-62-1",
     "storage_key": "products/country-london-paris/CO-62-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-62-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-62-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-62-1",
     "product_code_normalized": "CO-62-1",
     "storage_key": "products/country-london-paris/CO-62-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-62-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-62-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-62-1",
     "product_code_normalized": "CO-62-1",
     "storage_key": "products/country-london-paris/CO-62-1_gallery_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-62-1_gallery_03.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-62-1_gallery_03.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-62-1",
     "product_code_normalized": "CO-62-1",
     "storage_key": "products/country-london-paris/CO-62-1_gallery_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-62-1_gallery_04.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-62-1_gallery_04.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-62-1",
     "product_code_normalized": "CO-62-1",
     "storage_key": "products/country-london-paris/CO-62-1_gallery_05.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-62-1_gallery_05.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-62-1_gallery_05.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-62-1",
     "product_code_normalized": "CO-62-1",
     "storage_key": "products/country-london-paris/CO-62-1_color_blue_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-62-1_color_blue_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-62-1_color_blue_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-62-1",
     "product_code_normalized": "CO-62-1",
     "storage_key": "products/country-london-paris/CO-62-1_color_blue_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-62-1_color_blue_02.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-62-1_color_blue_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-62-1",
     "product_code_normalized": "CO-62-1",
     "storage_key": "products/country-london-paris/CO-62-1_color_grey_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-62-1_color_grey_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-62-1_color_grey_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-62-1",
     "product_code_normalized": "CO-62-1",
     "storage_key": "products/country-london-paris/CO-62-1_color_grey_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-62-1_color_grey_02.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-62-1_color_grey_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-62-1",
     "product_code_normalized": "CO-62-1",
     "storage_key": "products/country-london-paris/CO-62-1_color_olive_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-62-1_color_olive_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-62-1_color_olive_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-62-2",
     "product_code_normalized": "CO-62-2",
     "storage_key": "products/country-london-paris/CO-62-2_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-62-2_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-62-2_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-62-2",
     "product_code_normalized": "CO-62-2",
     "storage_key": "products/country-london-paris/CO-62-2_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-62-2_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-62-2_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-62-2",
     "product_code_normalized": "CO-62-2",
     "storage_key": "products/country-london-paris/CO-62-2_gallery_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-62-2_gallery_03.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-62-2_gallery_03.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-62-2",
     "product_code_normalized": "CO-62-2",
     "storage_key": "products/country-london-paris/CO-62-2_gallery_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-62-2_gallery_04.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-62-2_gallery_04.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-62-3",
     "product_code_normalized": "CO-62-3",
     "storage_key": "products/country-london-paris/CO-62-3_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-62-3_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-62-3_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-62-3",
     "product_code_normalized": "CO-62-3",
     "storage_key": "products/country-london-paris/CO-62-3_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-62-3_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-62-3_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-65-1",
     "product_code_normalized": "CO-65-1",
     "storage_key": "products/country-london-paris/CO-65-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-65-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-65-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-65-1",
     "product_code_normalized": "CO-65-1",
     "storage_key": "products/country-london-paris/CO-65-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-65-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-65-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-65-1",
     "product_code_normalized": "CO-65-1",
     "storage_key": "products/country-london-paris/CO-65-1_color_blue_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-65-1_color_blue_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-65-1_color_blue_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-65-1",
     "product_code_normalized": "CO-65-1",
     "storage_key": "products/country-london-paris/CO-65-1_color_blue_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-65-1_color_blue_02.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-65-1_color_blue_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-65-1",
     "product_code_normalized": "CO-65-1",
     "storage_key": "products/country-london-paris/CO-65-1_color_grey_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-65-1_color_grey_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-65-1_color_grey_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-65-1",
     "product_code_normalized": "CO-65-1",
     "storage_key": "products/country-london-paris/CO-65-1_color_grey_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-65-1_color_grey_02.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-65-1_color_grey_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-65-1",
     "product_code_normalized": "CO-65-1",
     "storage_key": "products/country-london-paris/CO-65-1_color_olive_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-65-1_color_olive_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-65-1_color_olive_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-65-1",
     "product_code_normalized": "CO-65-1",
     "storage_key": "products/country-london-paris/CO-65-1_color_olive_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-65-1_color_olive_02.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-65-1_color_olive_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-65-1",
     "product_code_normalized": "CO-65-1",
     "storage_key": "products/country-london-paris/CO-65-1_color_white_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-65-1_color_white_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-65-1_color_white_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-65-1",
     "product_code_normalized": "CO-65-1",
     "storage_key": "products/country-london-paris/CO-65-1_color_white_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-65-1_color_white_02.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-65-1_color_white_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-65-2",
     "product_code_normalized": "CO-65-2",
     "storage_key": "products/country-london-paris/CO-65-2_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-65-2_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-65-2_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-65-2",
     "product_code_normalized": "CO-65-2",
     "storage_key": "products/country-london-paris/CO-65-2_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-65-2_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-65-2_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-65-2",
     "product_code_normalized": "CO-65-2",
     "storage_key": "products/country-london-paris/CO-65-2_color_blue_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-65-2_color_blue_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-65-2_color_blue_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-65-2",
     "product_code_normalized": "CO-65-2",
     "storage_key": "products/country-london-paris/CO-65-2_color_blue_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-65-2_color_blue_02.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-65-2_color_blue_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-65-2",
     "product_code_normalized": "CO-65-2",
     "storage_key": "products/country-london-paris/CO-65-2_color_grey_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-65-2_color_grey_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-65-2_color_grey_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-65-2",
     "product_code_normalized": "CO-65-2",
     "storage_key": "products/country-london-paris/CO-65-2_color_grey_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-65-2_color_grey_02.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-65-2_color_grey_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-65-2",
     "product_code_normalized": "CO-65-2",
     "storage_key": "products/country-london-paris/CO-65-2_color_olive_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-65-2_color_olive_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-65-2_color_olive_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-65-2",
     "product_code_normalized": "CO-65-2",
     "storage_key": "products/country-london-paris/CO-65-2_color_olive_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-65-2_color_olive_02.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-65-2_color_olive_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-66-1",
     "product_code_normalized": "CO-66-1",
     "storage_key": "products/country-london-paris/CO-66-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-66-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-66-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-66-1",
     "product_code_normalized": "CO-66-1",
     "storage_key": "products/country-london-paris/CO-66-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-66-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-66-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-66-1",
     "product_code_normalized": "CO-66-1",
     "storage_key": "products/country-london-paris/CO-66-1_color_blue_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-66-1_color_blue_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-66-1_color_blue_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-66-1",
     "product_code_normalized": "CO-66-1",
     "storage_key": "products/country-london-paris/CO-66-1_color_blue_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-66-1_color_blue_02.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-66-1_color_blue_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-66-1",
     "product_code_normalized": "CO-66-1",
     "storage_key": "products/country-london-paris/CO-66-1_color_grey_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-66-1_color_grey_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-66-1_color_grey_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-66-1",
     "product_code_normalized": "CO-66-1",
     "storage_key": "products/country-london-paris/CO-66-1_color_grey_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-66-1_color_grey_02.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-66-1_color_grey_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-66-1",
     "product_code_normalized": "CO-66-1",
     "storage_key": "products/country-london-paris/CO-66-1_color_olive_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-66-1_color_olive_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-66-1_color_olive_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-66-1",
     "product_code_normalized": "CO-66-1",
     "storage_key": "products/country-london-paris/CO-66-1_color_olive_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-66-1_color_olive_02.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-66-1_color_olive_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "country-london-paris:CO-69-1",
     "product_code_normalized": "CO-69-1",
     "storage_key": "products/country-london-paris/CO-69-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-69-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-69-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-69-1",
     "product_code_normalized": "CO-69-1",
     "storage_key": "products/country-london-paris/CO-69-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-69-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-69-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-69-1",
     "product_code_normalized": "CO-69-1",
     "storage_key": "products/country-london-paris/CO-69-1_gallery_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-69-1_gallery_03.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-69-1_gallery_03.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-69-1",
     "product_code_normalized": "CO-69-1",
     "storage_key": "products/country-london-paris/CO-69-1_gallery_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-69-1_gallery_04.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-69-1_gallery_04.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "country-london-paris:CO-69-1",
     "product_code_normalized": "CO-69-1",
     "storage_key": "products/country-london-paris/CO-69-1_gallery_05.jpg",
-    "public_url": "http://localhost:9000/uploads/products/country-london-paris/CO-69-1_gallery_05.jpg",
+    "public_url": "http://localhost:9000/static/products/country-london-paris/CO-69-1_gallery_05.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-00-1",
     "product_code_normalized": "OL-00-1",
     "storage_key": "products/oliver/OL-00-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-00-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-00-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-01-2",
     "product_code_normalized": "OL-01-2",
     "storage_key": "products/oliver/OL-01-2_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-01-2_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-01-2_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-01-2",
     "product_code_normalized": "OL-01-2",
     "storage_key": "products/oliver/OL-01-2_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-01-2_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-01-2_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-01-2",
     "product_code_normalized": "OL-01-2",
     "storage_key": "products/oliver/OL-01-2_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-01-2_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-01-2_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-01-2",
     "product_code_normalized": "OL-01-2",
     "storage_key": "products/oliver/OL-01-2_gallery_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-01-2_gallery_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-01-2_gallery_03.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-01-2",
     "product_code_normalized": "OL-01-2",
     "storage_key": "products/oliver/OL-01-2_gallery_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-01-2_gallery_04.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-01-2_gallery_04.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-02-1",
     "product_code_normalized": "OL-02-1",
     "storage_key": "products/oliver/OL-02-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-02-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-02-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-02-1",
     "product_code_normalized": "OL-02-1",
     "storage_key": "products/oliver/OL-02-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-02-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-02-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-02-1",
     "product_code_normalized": "OL-02-1",
     "storage_key": "products/oliver/OL-02-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-02-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-02-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-02-1",
     "product_code_normalized": "OL-02-1",
     "storage_key": "products/oliver/OL-02-1_gallery_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-02-1_gallery_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-02-1_gallery_03.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-03-1",
     "product_code_normalized": "OL-03-1",
     "storage_key": "products/oliver/OL-03-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-03-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-03-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-03-1",
     "product_code_normalized": "OL-03-1",
     "storage_key": "products/oliver/OL-03-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-03-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-03-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-03-1",
     "product_code_normalized": "OL-03-1",
     "storage_key": "products/oliver/OL-03-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-03-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-03-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-03-1",
     "product_code_normalized": "OL-03-1",
     "storage_key": "products/oliver/OL-03-1_gallery_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-03-1_gallery_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-03-1_gallery_03.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-03-1",
     "product_code_normalized": "OL-03-1",
     "storage_key": "products/oliver/OL-03-1_gallery_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-03-1_gallery_04.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-03-1_gallery_04.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-03-1",
     "product_code_normalized": "OL-03-1",
     "storage_key": "products/oliver/OL-03-1_gallery_05.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-03-1_gallery_05.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-03-1_gallery_05.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-03-1",
     "product_code_normalized": "OL-03-1",
     "storage_key": "products/oliver/OL-03-1_gallery_06.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-03-1_gallery_06.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-03-1_gallery_06.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-05-1",
     "product_code_normalized": "OL-05-1",
     "storage_key": "products/oliver/OL-05-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-05-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-05-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-05-1",
     "product_code_normalized": "OL-05-1",
     "storage_key": "products/oliver/OL-05-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-05-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-05-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-05-1",
     "product_code_normalized": "OL-05-1",
     "storage_key": "products/oliver/OL-05-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-05-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-05-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-05-2",
     "product_code_normalized": "OL-05-2",
     "storage_key": "products/oliver/OL-05-2_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-05-2_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-05-2_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-05-2",
     "product_code_normalized": "OL-05-2",
     "storage_key": "products/oliver/OL-05-2_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-05-2_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-05-2_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-05-2",
     "product_code_normalized": "OL-05-2",
     "storage_key": "products/oliver/OL-05-2_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-05-2_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-05-2_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-05-3",
     "product_code_normalized": "OL-05-3",
     "storage_key": "products/oliver/OL-05-3_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-05-3_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-05-3_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-05-3",
     "product_code_normalized": "OL-05-3",
     "storage_key": "products/oliver/OL-05-3_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-05-3_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-05-3_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-05-3",
     "product_code_normalized": "OL-05-3",
     "storage_key": "products/oliver/OL-05-3_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-05-3_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-05-3_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-05-Н",
     "product_code_normalized": "OL-05-Н",
     "storage_key": "products/oliver/OL-05-Н_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-05-Н_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-05-Н_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-06-1",
     "product_code_normalized": "OL-06-1",
     "storage_key": "products/oliver/OL-06-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-06-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-06-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-06-1",
     "product_code_normalized": "OL-06-1",
     "storage_key": "products/oliver/OL-06-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-06-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-06-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-06-1",
     "product_code_normalized": "OL-06-1",
     "storage_key": "products/oliver/OL-06-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-06-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-06-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-07-1",
     "product_code_normalized": "OL-07-1",
     "storage_key": "products/oliver/OL-07-1_color_leona_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-07-1_color_leona_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-07-1_color_leona_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-07-1",
     "product_code_normalized": "OL-07-1",
     "storage_key": "products/oliver/OL-07-1_color_leona_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-07-1_color_leona_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-07-1_color_leona_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-07-1",
     "product_code_normalized": "OL-07-1",
     "storage_key": "products/oliver/OL-07-1_color_lillian_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-07-1_color_lillian_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-07-1_color_lillian_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-07-1",
     "product_code_normalized": "OL-07-1",
     "storage_key": "products/oliver/OL-07-1_color_linda_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-07-1_color_linda_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-07-1_color_linda_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-07-1",
     "product_code_normalized": "OL-07-1",
     "storage_key": "products/oliver/OL-07-1_color_lorna_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-07-1_color_lorna_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-07-1_color_lorna_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-08-1",
     "product_code_normalized": "OL-08-1",
     "storage_key": "products/oliver/OL-08-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-08-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-08-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-08-1",
     "product_code_normalized": "OL-08-1",
     "storage_key": "products/oliver/OL-08-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-08-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-08-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-08-1",
     "product_code_normalized": "OL-08-1",
     "storage_key": "products/oliver/OL-08-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-08-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-08-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-08-2",
     "product_code_normalized": "OL-08-2",
     "storage_key": "products/oliver/OL-08-2_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-08-2_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-08-2_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-09-2",
     "product_code_normalized": "OL-09-2",
     "storage_key": "products/oliver/OL-09-2_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-09-2_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-09-2_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-09-2",
     "product_code_normalized": "OL-09-2",
     "storage_key": "products/oliver/OL-09-2_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-09-2_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-09-2_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-09-2",
     "product_code_normalized": "OL-09-2",
     "storage_key": "products/oliver/OL-09-2_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-09-2_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-09-2_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-14-1",
     "product_code_normalized": "OL-14-1",
     "storage_key": "products/oliver/OL-14-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-14-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-14-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-14-1",
     "product_code_normalized": "OL-14-1",
     "storage_key": "products/oliver/OL-14-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-14-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-14-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-14-1",
     "product_code_normalized": "OL-14-1",
     "storage_key": "products/oliver/OL-14-1_gallery_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-14-1_gallery_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-14-1_gallery_03.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-14-1",
     "product_code_normalized": "OL-14-1",
     "storage_key": "products/oliver/OL-14-1_gallery_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-14-1_gallery_04.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-14-1_gallery_04.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-14-1",
     "product_code_normalized": "OL-14-1",
     "storage_key": "products/oliver/OL-14-1_color_lillian_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-14-1_color_lillian_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-14-1_color_lillian_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-14-1",
     "product_code_normalized": "OL-14-1",
     "storage_key": "products/oliver/OL-14-1_color_lillian_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-14-1_color_lillian_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-14-1_color_lillian_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-14-1",
     "product_code_normalized": "OL-14-1",
     "storage_key": "products/oliver/OL-14-1_color_lillian_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-14-1_color_lillian_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-14-1_color_lillian_03.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-14-1",
     "product_code_normalized": "OL-14-1",
     "storage_key": "products/oliver/OL-14-1_color_lillian_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-14-1_color_lillian_04.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-14-1_color_lillian_04.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-14-1",
     "product_code_normalized": "OL-14-1",
     "storage_key": "products/oliver/OL-14-1_color_lillian_05.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-14-1_color_lillian_05.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-14-1_color_lillian_05.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-14-2",
     "product_code_normalized": "OL-14-2",
     "storage_key": "products/oliver/OL-14-2_color_lillian_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-14-2_color_lillian_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-14-2_color_lillian_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-14-2",
     "product_code_normalized": "OL-14-2",
     "storage_key": "products/oliver/OL-14-2_color_lillian_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-14-2_color_lillian_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-14-2_color_lillian_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-14-2",
     "product_code_normalized": "OL-14-2",
     "storage_key": "products/oliver/OL-14-2_color_lillian_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-14-2_color_lillian_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-14-2_color_lillian_03.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-14-2",
     "product_code_normalized": "OL-14-2",
     "storage_key": "products/oliver/OL-14-2_color_lillian_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-14-2_color_lillian_04.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-14-2_color_lillian_04.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-14-2",
     "product_code_normalized": "OL-14-2",
     "storage_key": "products/oliver/OL-14-2_color_lillian_05.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-14-2_color_lillian_05.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-14-2_color_lillian_05.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-14-2",
     "product_code_normalized": "OL-14-2",
     "storage_key": "products/oliver/OL-14-2_color_lorna_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-14-2_color_lorna_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-14-2_color_lorna_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-14-2",
     "product_code_normalized": "OL-14-2",
     "storage_key": "products/oliver/OL-14-2_color_lorna_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-14-2_color_lorna_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-14-2_color_lorna_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-14-2",
     "product_code_normalized": "OL-14-2",
     "storage_key": "products/oliver/OL-14-2_color_lorna_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-14-2_color_lorna_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-14-2_color_lorna_03.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-14-2",
     "product_code_normalized": "OL-14-2",
     "storage_key": "products/oliver/OL-14-2_color_lorna_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-14-2_color_lorna_04.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-14-2_color_lorna_04.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-15-1",
     "product_code_normalized": "OL-15-1",
     "storage_key": "products/oliver/OL-15-1_color_lorna_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-15-1_color_lorna_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-15-1_color_lorna_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-15-2",
     "product_code_normalized": "OL-15-2",
     "storage_key": "products/oliver/OL-15-2_color_lorna_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-15-2_color_lorna_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-15-2_color_lorna_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-16-1",
     "product_code_normalized": "OL-16-1",
     "storage_key": "products/oliver/OL-16-1_color_lillian_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-16-1_color_lillian_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-16-1_color_lillian_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-16-1",
     "product_code_normalized": "OL-16-1",
     "storage_key": "products/oliver/OL-16-1_color_lillian_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-16-1_color_lillian_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-16-1_color_lillian_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-16-1",
     "product_code_normalized": "OL-16-1",
     "storage_key": "products/oliver/OL-16-1_color_lillian_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-16-1_color_lillian_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-16-1_color_lillian_03.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-16-1",
     "product_code_normalized": "OL-16-1",
     "storage_key": "products/oliver/OL-16-1_color_lillian_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-16-1_color_lillian_04.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-16-1_color_lillian_04.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-16-1",
     "product_code_normalized": "OL-16-1",
     "storage_key": "products/oliver/OL-16-1_color_lillian_05.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-16-1_color_lillian_05.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-16-1_color_lillian_05.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-16-1",
     "product_code_normalized": "OL-16-1",
     "storage_key": "products/oliver/OL-16-1_color_lorna_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-16-1_color_lorna_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-16-1_color_lorna_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-16-1",
     "product_code_normalized": "OL-16-1",
     "storage_key": "products/oliver/OL-16-1_color_lorna_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-16-1_color_lorna_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-16-1_color_lorna_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-16-1",
     "product_code_normalized": "OL-16-1",
     "storage_key": "products/oliver/OL-16-1_color_lorna_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-16-1_color_lorna_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-16-1_color_lorna_03.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-16-1",
     "product_code_normalized": "OL-16-1",
     "storage_key": "products/oliver/OL-16-1_color_lorna_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-16-1_color_lorna_04.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-16-1_color_lorna_04.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-16-2",
     "product_code_normalized": "OL-16-2",
     "storage_key": "products/oliver/OL-16-2_color_lillian_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-16-2_color_lillian_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-16-2_color_lillian_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-16-2",
     "product_code_normalized": "OL-16-2",
     "storage_key": "products/oliver/OL-16-2_color_lillian_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-16-2_color_lillian_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-16-2_color_lillian_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-16-2",
     "product_code_normalized": "OL-16-2",
     "storage_key": "products/oliver/OL-16-2_color_lillian_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-16-2_color_lillian_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-16-2_color_lillian_03.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-16-2",
     "product_code_normalized": "OL-16-2",
     "storage_key": "products/oliver/OL-16-2_color_lillian_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-16-2_color_lillian_04.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-16-2_color_lillian_04.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-16-2",
     "product_code_normalized": "OL-16-2",
     "storage_key": "products/oliver/OL-16-2_color_lillian_05.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-16-2_color_lillian_05.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-16-2_color_lillian_05.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-16-2",
     "product_code_normalized": "OL-16-2",
     "storage_key": "products/oliver/OL-16-2_color_lorna_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-16-2_color_lorna_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-16-2_color_lorna_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-16-2",
     "product_code_normalized": "OL-16-2",
     "storage_key": "products/oliver/OL-16-2_color_lorna_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-16-2_color_lorna_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-16-2_color_lorna_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-16-2",
     "product_code_normalized": "OL-16-2",
     "storage_key": "products/oliver/OL-16-2_color_lorna_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-16-2_color_lorna_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-16-2_color_lorna_03.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-16-2",
     "product_code_normalized": "OL-16-2",
     "storage_key": "products/oliver/OL-16-2_color_lorna_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-16-2_color_lorna_04.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-16-2_color_lorna_04.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-17-1",
     "product_code_normalized": "OL-17-1",
     "storage_key": "products/oliver/OL-17-1_color_lillian_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-17-1_color_lillian_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-17-1_color_lillian_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-17-1",
     "product_code_normalized": "OL-17-1",
     "storage_key": "products/oliver/OL-17-1_color_lillian_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-17-1_color_lillian_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-17-1_color_lillian_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-17-1",
     "product_code_normalized": "OL-17-1",
     "storage_key": "products/oliver/OL-17-1_color_lillian_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-17-1_color_lillian_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-17-1_color_lillian_03.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-17-1",
     "product_code_normalized": "OL-17-1",
     "storage_key": "products/oliver/OL-17-1_color_lillian_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-17-1_color_lillian_04.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-17-1_color_lillian_04.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-17-1",
     "product_code_normalized": "OL-17-1",
     "storage_key": "products/oliver/OL-17-1_color_lillian_05.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-17-1_color_lillian_05.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-17-1_color_lillian_05.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-17-1",
     "product_code_normalized": "OL-17-1",
     "storage_key": "products/oliver/OL-17-1_color_lorna_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-17-1_color_lorna_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-17-1_color_lorna_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-17-1",
     "product_code_normalized": "OL-17-1",
     "storage_key": "products/oliver/OL-17-1_color_lorna_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-17-1_color_lorna_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-17-1_color_lorna_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-17-1",
     "product_code_normalized": "OL-17-1",
     "storage_key": "products/oliver/OL-17-1_color_lorna_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-17-1_color_lorna_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-17-1_color_lorna_03.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-17-1",
     "product_code_normalized": "OL-17-1",
     "storage_key": "products/oliver/OL-17-1_color_lorna_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-17-1_color_lorna_04.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-17-1_color_lorna_04.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-17-2",
     "product_code_normalized": "OL-17-2",
     "storage_key": "products/oliver/OL-17-2_color_lillian_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-17-2_color_lillian_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-17-2_color_lillian_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-17-2",
     "product_code_normalized": "OL-17-2",
     "storage_key": "products/oliver/OL-17-2_color_lillian_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-17-2_color_lillian_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-17-2_color_lillian_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-17-2",
     "product_code_normalized": "OL-17-2",
     "storage_key": "products/oliver/OL-17-2_color_lillian_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-17-2_color_lillian_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-17-2_color_lillian_03.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-17-2",
     "product_code_normalized": "OL-17-2",
     "storage_key": "products/oliver/OL-17-2_color_lillian_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-17-2_color_lillian_04.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-17-2_color_lillian_04.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-17-2",
     "product_code_normalized": "OL-17-2",
     "storage_key": "products/oliver/OL-17-2_color_lillian_05.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-17-2_color_lillian_05.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-17-2_color_lillian_05.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-17-2",
     "product_code_normalized": "OL-17-2",
     "storage_key": "products/oliver/OL-17-2_color_lorna_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-17-2_color_lorna_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-17-2_color_lorna_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-17-2",
     "product_code_normalized": "OL-17-2",
     "storage_key": "products/oliver/OL-17-2_color_lorna_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-17-2_color_lorna_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-17-2_color_lorna_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-17-2",
     "product_code_normalized": "OL-17-2",
     "storage_key": "products/oliver/OL-17-2_color_lorna_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-17-2_color_lorna_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-17-2_color_lorna_03.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-17-2",
     "product_code_normalized": "OL-17-2",
     "storage_key": "products/oliver/OL-17-2_color_lorna_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-17-2_color_lorna_04.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-17-2_color_lorna_04.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-17-3",
     "product_code_normalized": "OL-17-3",
     "storage_key": "products/oliver/OL-17-3_color_lillian_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-17-3_color_lillian_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-17-3_color_lillian_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-17-3",
     "product_code_normalized": "OL-17-3",
     "storage_key": "products/oliver/OL-17-3_color_lillian_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-17-3_color_lillian_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-17-3_color_lillian_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-17-3",
     "product_code_normalized": "OL-17-3",
     "storage_key": "products/oliver/OL-17-3_color_lorna_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-17-3_color_lorna_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-17-3_color_lorna_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-18-1",
     "product_code_normalized": "OL-18-1",
     "storage_key": "products/oliver/OL-18-1_color_lillian_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-18-1_color_lillian_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-18-1_color_lillian_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-18-1",
     "product_code_normalized": "OL-18-1",
     "storage_key": "products/oliver/OL-18-1_color_lillian_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-18-1_color_lillian_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-18-1_color_lillian_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-18-1",
     "product_code_normalized": "OL-18-1",
     "storage_key": "products/oliver/OL-18-1_color_lillian_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-18-1_color_lillian_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-18-1_color_lillian_03.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-18-1",
     "product_code_normalized": "OL-18-1",
     "storage_key": "products/oliver/OL-18-1_color_lillian_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-18-1_color_lillian_04.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-18-1_color_lillian_04.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-18-1",
     "product_code_normalized": "OL-18-1",
     "storage_key": "products/oliver/OL-18-1_color_lillian_05.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-18-1_color_lillian_05.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-18-1_color_lillian_05.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-18-1",
     "product_code_normalized": "OL-18-1",
     "storage_key": "products/oliver/OL-18-1_color_lorna_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-18-1_color_lorna_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-18-1_color_lorna_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-18-1",
     "product_code_normalized": "OL-18-1",
     "storage_key": "products/oliver/OL-18-1_color_lorna_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-18-1_color_lorna_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-18-1_color_lorna_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-18-1",
     "product_code_normalized": "OL-18-1",
     "storage_key": "products/oliver/OL-18-1_color_lorna_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-18-1_color_lorna_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-18-1_color_lorna_03.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-18-2",
     "product_code_normalized": "OL-18-2",
     "storage_key": "products/oliver/OL-18-2_color_lillian_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-18-2_color_lillian_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-18-2_color_lillian_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-18-2",
     "product_code_normalized": "OL-18-2",
     "storage_key": "products/oliver/OL-18-2_color_lillian_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-18-2_color_lillian_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-18-2_color_lillian_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-18-2",
     "product_code_normalized": "OL-18-2",
     "storage_key": "products/oliver/OL-18-2_color_lillian_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-18-2_color_lillian_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-18-2_color_lillian_03.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-18-2",
     "product_code_normalized": "OL-18-2",
     "storage_key": "products/oliver/OL-18-2_color_lillian_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-18-2_color_lillian_04.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-18-2_color_lillian_04.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-18-2",
     "product_code_normalized": "OL-18-2",
     "storage_key": "products/oliver/OL-18-2_color_lillian_05.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-18-2_color_lillian_05.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-18-2_color_lillian_05.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-18-2",
     "product_code_normalized": "OL-18-2",
     "storage_key": "products/oliver/OL-18-2_color_lorna_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-18-2_color_lorna_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-18-2_color_lorna_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-18-2",
     "product_code_normalized": "OL-18-2",
     "storage_key": "products/oliver/OL-18-2_color_lorna_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-18-2_color_lorna_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-18-2_color_lorna_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-18-2",
     "product_code_normalized": "OL-18-2",
     "storage_key": "products/oliver/OL-18-2_color_lorna_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-18-2_color_lorna_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-18-2_color_lorna_03.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-18-2",
     "product_code_normalized": "OL-18-2",
     "storage_key": "products/oliver/OL-18-2_color_lorna_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-18-2_color_lorna_04.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-18-2_color_lorna_04.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-21-1",
     "product_code_normalized": "OL-21-1",
     "storage_key": "products/oliver/OL-21-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-21-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-21-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-21-1",
     "product_code_normalized": "OL-21-1",
     "storage_key": "products/oliver/OL-21-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-21-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-21-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-21-1",
     "product_code_normalized": "OL-21-1",
     "storage_key": "products/oliver/OL-21-1_gallery_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-21-1_gallery_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-21-1_gallery_03.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-21-1",
     "product_code_normalized": "OL-21-1",
     "storage_key": "products/oliver/OL-21-1_gallery_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-21-1_gallery_04.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-21-1_gallery_04.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-23-1",
     "product_code_normalized": "OL-23-1",
     "storage_key": "products/oliver/OL-23-1_color_leona_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-23-1_color_leona_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-23-1_color_leona_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-23-1",
     "product_code_normalized": "OL-23-1",
     "storage_key": "products/oliver/OL-23-1_color_leona_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-23-1_color_leona_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-23-1_color_leona_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-23-1",
     "product_code_normalized": "OL-23-1",
     "storage_key": "products/oliver/OL-23-1_color_leona_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-23-1_color_leona_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-23-1_color_leona_03.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-23-1",
     "product_code_normalized": "OL-23-1",
     "storage_key": "products/oliver/OL-23-1_color_lillian_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-23-1_color_lillian_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-23-1_color_lillian_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-23-1",
     "product_code_normalized": "OL-23-1",
     "storage_key": "products/oliver/OL-23-1_color_lillian_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-23-1_color_lillian_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-23-1_color_lillian_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-23-1",
     "product_code_normalized": "OL-23-1",
     "storage_key": "products/oliver/OL-23-1_color_lillian_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-23-1_color_lillian_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-23-1_color_lillian_03.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-23-1",
     "product_code_normalized": "OL-23-1",
     "storage_key": "products/oliver/OL-23-1_color_lillian_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-23-1_color_lillian_04.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-23-1_color_lillian_04.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-23-1",
     "product_code_normalized": "OL-23-1",
     "storage_key": "products/oliver/OL-23-1_color_lillian_05.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-23-1_color_lillian_05.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-23-1_color_lillian_05.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-23-1",
     "product_code_normalized": "OL-23-1",
     "storage_key": "products/oliver/OL-23-1_color_lillian_06.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-23-1_color_lillian_06.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-23-1_color_lillian_06.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-23-1",
     "product_code_normalized": "OL-23-1",
     "storage_key": "products/oliver/OL-23-1_color_linda_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-23-1_color_linda_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-23-1_color_linda_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-23-1",
     "product_code_normalized": "OL-23-1",
     "storage_key": "products/oliver/OL-23-1_color_linda_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-23-1_color_linda_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-23-1_color_linda_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-23-1",
     "product_code_normalized": "OL-23-1",
     "storage_key": "products/oliver/OL-23-1_color_linda_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-23-1_color_linda_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-23-1_color_linda_03.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-23-1",
     "product_code_normalized": "OL-23-1",
     "storage_key": "products/oliver/OL-23-1_color_linda_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-23-1_color_linda_04.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-23-1_color_linda_04.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-23-1",
     "product_code_normalized": "OL-23-1",
     "storage_key": "products/oliver/OL-23-1_color_linda_05.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-23-1_color_linda_05.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-23-1_color_linda_05.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-23-1",
     "product_code_normalized": "OL-23-1",
     "storage_key": "products/oliver/OL-23-1_color_lorna_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-23-1_color_lorna_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-23-1_color_lorna_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-23-1",
     "product_code_normalized": "OL-23-1",
     "storage_key": "products/oliver/OL-23-1_color_lorna_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-23-1_color_lorna_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-23-1_color_lorna_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-23-1",
     "product_code_normalized": "OL-23-1",
     "storage_key": "products/oliver/OL-23-1_color_lorna_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-23-1_color_lorna_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-23-1_color_lorna_03.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-23-1",
     "product_code_normalized": "OL-23-1",
     "storage_key": "products/oliver/OL-23-1_color_lorna_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-23-1_color_lorna_04.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-23-1_color_lorna_04.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-23-1",
     "product_code_normalized": "OL-23-1",
     "storage_key": "products/oliver/OL-23-1_color_lorna_05.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-23-1_color_lorna_05.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-23-1_color_lorna_05.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-23-1",
     "product_code_normalized": "OL-23-1",
     "storage_key": "products/oliver/OL-23-1_color_lorna_06.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-23-1_color_lorna_06.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-23-1_color_lorna_06.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-23-1",
     "product_code_normalized": "OL-23-1",
     "storage_key": "products/oliver/OL-23-1_color_torno_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-23-1_color_torno_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-23-1_color_torno_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-23-1",
     "product_code_normalized": "OL-23-1",
     "storage_key": "products/oliver/OL-23-1_color_torno_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-23-1_color_torno_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-23-1_color_torno_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-23-1",
     "product_code_normalized": "OL-23-1",
     "storage_key": "products/oliver/OL-23-1_color_torno_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-23-1_color_torno_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-23-1_color_torno_03.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-23-1",
     "product_code_normalized": "OL-23-1",
     "storage_key": "products/oliver/OL-23-1_color_torno_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-23-1_color_torno_04.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-23-1_color_torno_04.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-23-1",
     "product_code_normalized": "OL-23-1",
     "storage_key": "products/oliver/OL-23-1_color_torno_05.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-23-1_color_torno_05.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-23-1_color_torno_05.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-23-1",
     "product_code_normalized": "OL-23-1",
     "storage_key": "products/oliver/OL-23-1_color_torno_06.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-23-1_color_torno_06.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-23-1_color_torno_06.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-25-1",
     "product_code_normalized": "OL-25-1",
     "storage_key": "products/oliver/OL-25-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-25-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-25-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-25-1",
     "product_code_normalized": "OL-25-1",
     "storage_key": "products/oliver/OL-25-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-25-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-25-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-25-1",
     "product_code_normalized": "OL-25-1",
     "storage_key": "products/oliver/OL-25-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-25-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-25-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-25-1",
     "product_code_normalized": "OL-25-1",
     "storage_key": "products/oliver/OL-25-1_gallery_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-25-1_gallery_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-25-1_gallery_03.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-25-1",
     "product_code_normalized": "OL-25-1",
     "storage_key": "products/oliver/OL-25-1_gallery_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-25-1_gallery_04.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-25-1_gallery_04.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-26-1",
     "product_code_normalized": "OL-26-1",
     "storage_key": "products/oliver/OL-26-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-26-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-26-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-26-1",
     "product_code_normalized": "OL-26-1",
     "storage_key": "products/oliver/OL-26-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-26-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-26-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-26-1",
     "product_code_normalized": "OL-26-1",
     "storage_key": "products/oliver/OL-26-1_gallery_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-26-1_gallery_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-26-1_gallery_03.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-26-1",
     "product_code_normalized": "OL-26-1",
     "storage_key": "products/oliver/OL-26-1_gallery_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-26-1_gallery_04.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-26-1_gallery_04.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-26-1",
     "product_code_normalized": "OL-26-1",
     "storage_key": "products/oliver/OL-26-1_gallery_05.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-26-1_gallery_05.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-26-1_gallery_05.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-26-2",
     "product_code_normalized": "OL-26-2",
     "storage_key": "products/oliver/OL-26-2_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-26-2_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-26-2_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-26-2",
     "product_code_normalized": "OL-26-2",
     "storage_key": "products/oliver/OL-26-2_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-26-2_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-26-2_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-26-2",
     "product_code_normalized": "OL-26-2",
     "storage_key": "products/oliver/OL-26-2_gallery_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-26-2_gallery_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-26-2_gallery_03.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-26-2",
     "product_code_normalized": "OL-26-2",
     "storage_key": "products/oliver/OL-26-2_gallery_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-26-2_gallery_04.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-26-2_gallery_04.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-26-2",
     "product_code_normalized": "OL-26-2",
     "storage_key": "products/oliver/OL-26-2_gallery_05.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-26-2_gallery_05.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-26-2_gallery_05.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-30-1",
     "product_code_normalized": "OL-30-1",
     "storage_key": "products/oliver/OL-30-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-30-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-30-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-30-1",
     "product_code_normalized": "OL-30-1",
     "storage_key": "products/oliver/OL-30-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-30-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-30-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-30-1",
     "product_code_normalized": "OL-30-1",
     "storage_key": "products/oliver/OL-30-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-30-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-30-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-42-1",
     "product_code_normalized": "OL-42-1",
     "storage_key": "products/oliver/OL-42-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-42-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-42-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-42-1",
     "product_code_normalized": "OL-42-1",
     "storage_key": "products/oliver/OL-42-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-42-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-42-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-42-1",
     "product_code_normalized": "OL-42-1",
     "storage_key": "products/oliver/OL-42-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-42-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-42-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-42-1",
     "product_code_normalized": "OL-42-1",
     "storage_key": "products/oliver/OL-42-1_gallery_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-42-1_gallery_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-42-1_gallery_03.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-43-1",
     "product_code_normalized": "OL-43-1",
     "storage_key": "products/oliver/OL-43-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-43-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-43-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-43-1",
     "product_code_normalized": "OL-43-1",
     "storage_key": "products/oliver/OL-43-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-43-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-43-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-43-1",
     "product_code_normalized": "OL-43-1",
     "storage_key": "products/oliver/OL-43-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-43-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-43-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-44-1",
     "product_code_normalized": "OL-44-1",
     "storage_key": "products/oliver/OL-44-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-44-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-44-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-44-1",
     "product_code_normalized": "OL-44-1",
     "storage_key": "products/oliver/OL-44-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-44-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-44-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-44-2",
     "product_code_normalized": "OL-44-2",
     "storage_key": "products/oliver/OL-44-2_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-44-2_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-44-2_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-44-2",
     "product_code_normalized": "OL-44-2",
     "storage_key": "products/oliver/OL-44-2_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-44-2_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-44-2_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-44-2",
     "product_code_normalized": "OL-44-2",
     "storage_key": "products/oliver/OL-44-2_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-44-2_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-44-2_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-55-1",
     "product_code_normalized": "OL-55-1",
     "storage_key": "products/oliver/OL-55-1_color_leona_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-55-1_color_leona_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-55-1_color_leona_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-55-1",
     "product_code_normalized": "OL-55-1",
     "storage_key": "products/oliver/OL-55-1_color_lorna_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-55-1_color_lorna_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-55-1_color_lorna_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-55-1",
     "product_code_normalized": "OL-55-1",
     "storage_key": "products/oliver/OL-55-1_color_lorna_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-55-1_color_lorna_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-55-1_color_lorna_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-55-1",
     "product_code_normalized": "OL-55-1",
     "storage_key": "products/oliver/OL-55-1_color_torno_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-55-1_color_torno_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-55-1_color_torno_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-55-2",
     "product_code_normalized": "OL-55-2",
     "storage_key": "products/oliver/OL-55-2_color_lorna_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-55-2_color_lorna_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-55-2_color_lorna_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-55-2",
     "product_code_normalized": "OL-55-2",
     "storage_key": "products/oliver/OL-55-2_color_lorna_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-55-2_color_lorna_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-55-2_color_lorna_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-56-1",
     "product_code_normalized": "OL-56-1",
     "storage_key": "products/oliver/OL-56-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-56-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-56-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-56-1",
     "product_code_normalized": "OL-56-1",
     "storage_key": "products/oliver/OL-56-1_color_lillian_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-56-1_color_lillian_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-56-1_color_lillian_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-57-1",
     "product_code_normalized": "OL-57-1",
     "storage_key": "products/oliver/OL-57-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-57-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-57-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-57-1",
     "product_code_normalized": "OL-57-1",
     "storage_key": "products/oliver/OL-57-1_color_lilian_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-57-1_color_lilian_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-57-1_color_lilian_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-57-2",
     "product_code_normalized": "OL-57-2",
     "storage_key": "products/oliver/OL-57-2_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-57-2_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-57-2_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-57-2",
     "product_code_normalized": "OL-57-2",
     "storage_key": "products/oliver/OL-57-2_color_lillian_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-57-2_color_lillian_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-57-2_color_lillian_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-57-3",
     "product_code_normalized": "OL-57-3",
     "storage_key": "products/oliver/OL-57-3_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-57-3_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-57-3_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-57-3",
     "product_code_normalized": "OL-57-3",
     "storage_key": "products/oliver/OL-57-3_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-57-3_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-57-3_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-57-3",
     "product_code_normalized": "OL-57-3",
     "storage_key": "products/oliver/OL-57-3_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-57-3_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-57-3_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-61-1",
     "product_code_normalized": "OL-61-1",
     "storage_key": "products/oliver/OL-61-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-61-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-61-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-61-1",
     "product_code_normalized": "OL-61-1",
     "storage_key": "products/oliver/OL-61-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-61-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-61-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-61-1",
     "product_code_normalized": "OL-61-1",
     "storage_key": "products/oliver/OL-61-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-61-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-61-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-61-1",
     "product_code_normalized": "OL-61-1",
     "storage_key": "products/oliver/OL-61-1_gallery_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-61-1_gallery_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-61-1_gallery_03.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-61-1",
     "product_code_normalized": "OL-61-1",
     "storage_key": "products/oliver/OL-61-1_gallery_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-61-1_gallery_04.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-61-1_gallery_04.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-61-2",
     "product_code_normalized": "OL-61-2",
     "storage_key": "products/oliver/OL-61-2_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-61-2_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-61-2_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-61-2",
     "product_code_normalized": "OL-61-2",
     "storage_key": "products/oliver/OL-61-2_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-61-2_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-61-2_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-61-2",
     "product_code_normalized": "OL-61-2",
     "storage_key": "products/oliver/OL-61-2_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-61-2_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-61-2_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-61-2",
     "product_code_normalized": "OL-61-2",
     "storage_key": "products/oliver/OL-61-2_gallery_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-61-2_gallery_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-61-2_gallery_03.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-61-2",
     "product_code_normalized": "OL-61-2",
     "storage_key": "products/oliver/OL-61-2_gallery_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-61-2_gallery_04.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-61-2_gallery_04.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-62-1",
     "product_code_normalized": "OL-62-1",
     "storage_key": "products/oliver/OL-62-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-62-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-62-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-62-1",
     "product_code_normalized": "OL-62-1",
     "storage_key": "products/oliver/OL-62-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-62-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-62-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-62-1",
     "product_code_normalized": "OL-62-1",
     "storage_key": "products/oliver/OL-62-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-62-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-62-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-62-1",
     "product_code_normalized": "OL-62-1",
     "storage_key": "products/oliver/OL-62-1_gallery_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-62-1_gallery_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-62-1_gallery_03.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-62-2",
     "product_code_normalized": "OL-62-2",
     "storage_key": "products/oliver/OL-62-2_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-62-2_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-62-2_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-62-2",
     "product_code_normalized": "OL-62-2",
     "storage_key": "products/oliver/OL-62-2_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-62-2_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-62-2_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-64-1",
     "product_code_normalized": "OL-64-1",
     "storage_key": "products/oliver/OL-64-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-64-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-64-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-64-1",
     "product_code_normalized": "OL-64-1",
     "storage_key": "products/oliver/OL-64-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-64-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-64-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-64-1",
     "product_code_normalized": "OL-64-1",
     "storage_key": "products/oliver/OL-64-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-64-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-64-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-64-1",
     "product_code_normalized": "OL-64-1",
     "storage_key": "products/oliver/OL-64-1_gallery_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-64-1_gallery_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-64-1_gallery_03.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-65-1",
     "product_code_normalized": "OL-65-1",
     "storage_key": "products/oliver/OL-65-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-65-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-65-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-65-1",
     "product_code_normalized": "OL-65-1",
     "storage_key": "products/oliver/OL-65-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-65-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-65-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-65-1",
     "product_code_normalized": "OL-65-1",
     "storage_key": "products/oliver/OL-65-1_gallery_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-65-1_gallery_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-65-1_gallery_03.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-65-1",
     "product_code_normalized": "OL-65-1",
     "storage_key": "products/oliver/OL-65-1_gallery_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-65-1_gallery_04.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-65-1_gallery_04.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-65-2",
     "product_code_normalized": "OL-65-2",
     "storage_key": "products/oliver/OL-65-2_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-65-2_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-65-2_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-65-2",
     "product_code_normalized": "OL-65-2",
     "storage_key": "products/oliver/OL-65-2_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-65-2_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-65-2_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-65-2",
     "product_code_normalized": "OL-65-2",
     "storage_key": "products/oliver/OL-65-2_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-65-2_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-65-2_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-65-2",
     "product_code_normalized": "OL-65-2",
     "storage_key": "products/oliver/OL-65-2_gallery_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-65-2_gallery_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-65-2_gallery_03.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-66-1",
     "product_code_normalized": "OL-66-1",
     "storage_key": "products/oliver/OL-66-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-66-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-66-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-66-1",
     "product_code_normalized": "OL-66-1",
     "storage_key": "products/oliver/OL-66-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-66-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-66-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-66-1",
     "product_code_normalized": "OL-66-1",
     "storage_key": "products/oliver/OL-66-1_gallery_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-66-1_gallery_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-66-1_gallery_03.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-66-1",
     "product_code_normalized": "OL-66-1",
     "storage_key": "products/oliver/OL-66-1_gallery_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-66-1_gallery_04.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-66-1_gallery_04.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-66-1",
     "product_code_normalized": "OL-66-1",
     "storage_key": "products/oliver/OL-66-1_gallery_05.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-66-1_gallery_05.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-66-1_gallery_05.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-66-4",
     "product_code_normalized": "OL-66-4",
     "storage_key": "products/oliver/OL-66-4_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-66-4_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-66-4_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-66-4",
     "product_code_normalized": "OL-66-4",
     "storage_key": "products/oliver/OL-66-4_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-66-4_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-66-4_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-66-4",
     "product_code_normalized": "OL-66-4",
     "storage_key": "products/oliver/OL-66-4_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-66-4_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-66-4_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-66-4",
     "product_code_normalized": "OL-66-4",
     "storage_key": "products/oliver/OL-66-4_gallery_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-66-4_gallery_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-66-4_gallery_03.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-66-4",
     "product_code_normalized": "OL-66-4",
     "storage_key": "products/oliver/OL-66-4_gallery_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-66-4_gallery_04.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-66-4_gallery_04.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-67-1",
     "product_code_normalized": "OL-67-1",
     "storage_key": "products/oliver/OL-67-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-67-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-67-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-67-1",
     "product_code_normalized": "OL-67-1",
     "storage_key": "products/oliver/OL-67-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-67-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-67-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-67-1",
     "product_code_normalized": "OL-67-1",
     "storage_key": "products/oliver/OL-67-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-67-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-67-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-68-1",
     "product_code_normalized": "OL-68-1",
     "storage_key": "products/oliver/OL-68-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-68-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-68-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-68-1",
     "product_code_normalized": "OL-68-1",
     "storage_key": "products/oliver/OL-68-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-68-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-68-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-68-1",
     "product_code_normalized": "OL-68-1",
     "storage_key": "products/oliver/OL-68-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-68-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-68-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-68-2",
     "product_code_normalized": "OL-68-2",
     "storage_key": "products/oliver/OL-68-2_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-68-2_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-68-2_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-68-2",
     "product_code_normalized": "OL-68-2",
     "storage_key": "products/oliver/OL-68-2_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-68-2_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-68-2_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-68-2",
     "product_code_normalized": "OL-68-2",
     "storage_key": "products/oliver/OL-68-2_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-68-2_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-68-2_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-69-1",
     "product_code_normalized": "OL-69-1",
     "storage_key": "products/oliver/OL-69-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-69-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-69-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-69-1",
     "product_code_normalized": "OL-69-1",
     "storage_key": "products/oliver/OL-69-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-69-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-69-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-69-1",
     "product_code_normalized": "OL-69-1",
     "storage_key": "products/oliver/OL-69-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-69-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-69-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-69-2",
     "product_code_normalized": "OL-69-2",
     "storage_key": "products/oliver/OL-69-2_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-69-2_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-69-2_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-69-2",
     "product_code_normalized": "OL-69-2",
     "storage_key": "products/oliver/OL-69-2_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-69-2_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-69-2_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-69-2",
     "product_code_normalized": "OL-69-2",
     "storage_key": "products/oliver/OL-69-2_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-69-2_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-69-2_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-69-3",
     "product_code_normalized": "OL-69-3",
     "storage_key": "products/oliver/OL-69-3_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-69-3_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-69-3_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-69-3",
     "product_code_normalized": "OL-69-3",
     "storage_key": "products/oliver/OL-69-3_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-69-3_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-69-3_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-69-3",
     "product_code_normalized": "OL-69-3",
     "storage_key": "products/oliver/OL-69-3_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-69-3_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-69-3_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-69-4",
     "product_code_normalized": "OL-69-4",
     "storage_key": "products/oliver/OL-69-4_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-69-4_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-69-4_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-69-4",
     "product_code_normalized": "OL-69-4",
     "storage_key": "products/oliver/OL-69-4_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-69-4_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-69-4_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-69-4",
     "product_code_normalized": "OL-69-4",
     "storage_key": "products/oliver/OL-69-4_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-69-4_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-69-4_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-81-1",
     "product_code_normalized": "OL-81-1",
     "storage_key": "products/oliver/OL-81-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-81-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-81-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-81-1",
     "product_code_normalized": "OL-81-1",
     "storage_key": "products/oliver/OL-81-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-81-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-81-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-81-1",
     "product_code_normalized": "OL-81-1",
     "storage_key": "products/oliver/OL-81-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-81-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-81-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-82-1",
     "product_code_normalized": "OL-82-1",
     "storage_key": "products/oliver/OL-82-1_color_linda_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-82-1_color_linda_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-82-1_color_linda_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-82-1",
     "product_code_normalized": "OL-82-1",
     "storage_key": "products/oliver/OL-82-1_color_linda_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-82-1_color_linda_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-82-1_color_linda_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-82-1",
     "product_code_normalized": "OL-82-1",
     "storage_key": "products/oliver/OL-82-1_color_lorna_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-82-1_color_lorna_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-82-1_color_lorna_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-82-1",
     "product_code_normalized": "OL-82-1",
     "storage_key": "products/oliver/OL-82-1_color_lorna_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-82-1_color_lorna_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-82-1_color_lorna_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-82-1",
     "product_code_normalized": "OL-82-1",
     "storage_key": "products/oliver/OL-82-1_color_torno_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-82-1_color_torno_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-82-1_color_torno_01.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-82-1",
     "product_code_normalized": "OL-82-1",
     "storage_key": "products/oliver/OL-82-1_color_torno_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-82-1_color_torno_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-82-1_color_torno_02.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-82-1",
     "product_code_normalized": "OL-82-1",
     "storage_key": "products/oliver/OL-82-1_color_torno_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-82-1_color_torno_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-82-1_color_torno_03.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-82-1",
     "product_code_normalized": "OL-82-1",
     "storage_key": "products/oliver/OL-82-1_color_torno_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-82-1_color_torno_04.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-82-1_color_torno_04.jpg",
     "role": "color_variant"
   },
   {
     "workbook_row_key": "oliver:OL-83-1",
     "product_code_normalized": "OL-83-1",
     "storage_key": "products/oliver/OL-83-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-83-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-83-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-83-1",
     "product_code_normalized": "OL-83-1",
     "storage_key": "products/oliver/OL-83-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-83-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-83-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-83-1",
     "product_code_normalized": "OL-83-1",
     "storage_key": "products/oliver/OL-83-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-83-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-83-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-84-1",
     "product_code_normalized": "OL-84-1",
     "storage_key": "products/oliver/OL-84-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-84-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-84-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-84-1",
     "product_code_normalized": "OL-84-1",
     "storage_key": "products/oliver/OL-84-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-84-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-84-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-84-2",
     "product_code_normalized": "OL-84-2",
     "storage_key": "products/oliver/OL-84-2_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-84-2_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-84-2_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-85-1",
     "product_code_normalized": "OL-85-1",
     "storage_key": "products/oliver/OL-85-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-85-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-85-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-85-1",
     "product_code_normalized": "OL-85-1",
     "storage_key": "products/oliver/OL-85-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-85-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-85-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-85-1",
     "product_code_normalized": "OL-85-1",
     "storage_key": "products/oliver/OL-85-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-85-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-85-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-85-2",
     "product_code_normalized": "OL-85-2",
     "storage_key": "products/oliver/OL-85-2_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-85-2_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-85-2_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-85-2",
     "product_code_normalized": "OL-85-2",
     "storage_key": "products/oliver/OL-85-2_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-85-2_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-85-2_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-85-2",
     "product_code_normalized": "OL-85-2",
     "storage_key": "products/oliver/OL-85-2_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-85-2_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-85-2_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-86-1",
     "product_code_normalized": "OL-86-1",
     "storage_key": "products/oliver/OL-86-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-86-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-86-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-86-1",
     "product_code_normalized": "OL-86-1",
     "storage_key": "products/oliver/OL-86-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-86-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-86-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-95-1",
     "product_code_normalized": "OL-95-1",
     "storage_key": "products/oliver/OL-95-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-95-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-95-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "oliver:OL-95-1",
     "product_code_normalized": "OL-95-1",
     "storage_key": "products/oliver/OL-95-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-95-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-95-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-95-1",
     "product_code_normalized": "OL-95-1",
     "storage_key": "products/oliver/OL-95-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-95-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-95-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-95-1",
     "product_code_normalized": "OL-95-1",
     "storage_key": "products/oliver/OL-95-1_gallery_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-95-1_gallery_03.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-95-1_gallery_03.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "oliver:OL-95-3",
     "product_code_normalized": "OL-95-3",
     "storage_key": "products/oliver/OL-95-3_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/oliver/OL-95-3_main.jpg",
+    "public_url": "http://localhost:9000/static/products/oliver/OL-95-3_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "provence:PV-02-1",
     "product_code_normalized": "PV-02-1",
     "storage_key": "products/provence/PV-02-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-02-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-02-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "provence:PV-02-1",
     "product_code_normalized": "PV-02-1",
     "storage_key": "products/provence/PV-02-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-02-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-02-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-02-1",
     "product_code_normalized": "PV-02-1",
     "storage_key": "products/provence/PV-02-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-02-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-02-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-03-1",
     "product_code_normalized": "PV-03-1",
     "storage_key": "products/provence/PV-03-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-03-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-03-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "provence:PV-03-1",
     "product_code_normalized": "PV-03-1",
     "storage_key": "products/provence/PV-03-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-03-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-03-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-03-1",
     "product_code_normalized": "PV-03-1",
     "storage_key": "products/provence/PV-03-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-03-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-03-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-05-2",
     "product_code_normalized": "PV-05-2",
     "storage_key": "products/provence/PV-05-2_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-05-2_main.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-05-2_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "provence:PV-05-2",
     "product_code_normalized": "PV-05-2",
     "storage_key": "products/provence/PV-05-2_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-05-2_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-05-2_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-05-2",
     "product_code_normalized": "PV-05-2",
     "storage_key": "products/provence/PV-05-2_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-05-2_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-05-2_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-05-2",
     "product_code_normalized": "PV-05-2",
     "storage_key": "products/provence/PV-05-2_gallery_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-05-2_gallery_03.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-05-2_gallery_03.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-06-2",
     "product_code_normalized": "PV-06-2",
     "storage_key": "products/provence/PV-06-2_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-06-2_main.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-06-2_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "provence:PV-06-2",
     "product_code_normalized": "PV-06-2",
     "storage_key": "products/provence/PV-06-2_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-06-2_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-06-2_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-06-2",
     "product_code_normalized": "PV-06-2",
     "storage_key": "products/provence/PV-06-2_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-06-2_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-06-2_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-06-2",
     "product_code_normalized": "PV-06-2",
     "storage_key": "products/provence/PV-06-2_gallery_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-06-2_gallery_03.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-06-2_gallery_03.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-06-2",
     "product_code_normalized": "PV-06-2",
     "storage_key": "products/provence/PV-06-2_gallery_04.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-06-2_gallery_04.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-06-2_gallery_04.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-08-2",
     "product_code_normalized": "PV-08-2",
     "storage_key": "products/provence/PV-08-2_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-08-2_main.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-08-2_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "provence:PV-08-2",
     "product_code_normalized": "PV-08-2",
     "storage_key": "products/provence/PV-08-2_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-08-2_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-08-2_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-08-2",
     "product_code_normalized": "PV-08-2",
     "storage_key": "products/provence/PV-08-2_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-08-2_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-08-2_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-08-2",
     "product_code_normalized": "PV-08-2",
     "storage_key": "products/provence/PV-08-2_gallery_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-08-2_gallery_03.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-08-2_gallery_03.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-09-1",
     "product_code_normalized": "PV-09-1",
     "storage_key": "products/provence/PV-09-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-09-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-09-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "provence:PV-09-1",
     "product_code_normalized": "PV-09-1",
     "storage_key": "products/provence/PV-09-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-09-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-09-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-09-1",
     "product_code_normalized": "PV-09-1",
     "storage_key": "products/provence/PV-09-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-09-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-09-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-09-2",
     "product_code_normalized": "PV-09-2",
     "storage_key": "products/provence/PV-09-2_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-09-2_main.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-09-2_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "provence:PV-09-2",
     "product_code_normalized": "PV-09-2",
     "storage_key": "products/provence/PV-09-2_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-09-2_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-09-2_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-14-1",
     "product_code_normalized": "PV-14-1",
     "storage_key": "products/provence/PV-14-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-14-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-14-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "provence:PV-15-1",
     "product_code_normalized": "PV-15-1",
     "storage_key": "products/provence/PV-15-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-15-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-15-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "provence:PV-15-2",
     "product_code_normalized": "PV-15-2",
     "storage_key": "products/provence/PV-15-2_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-15-2_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-15-2_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-16-1",
     "product_code_normalized": "PV-16-1",
     "storage_key": "products/provence/PV-16-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-16-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-16-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "provence:PV-17-1",
     "product_code_normalized": "PV-17-1",
     "storage_key": "products/provence/PV-17-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-17-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-17-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "provence:PV-18-1",
     "product_code_normalized": "PV-18-1",
     "storage_key": "products/provence/PV-18-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-18-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-18-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "provence:PV-18-1",
     "product_code_normalized": "PV-18-1",
     "storage_key": "products/provence/PV-18-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-18-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-18-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-18-1",
     "product_code_normalized": "PV-18-1",
     "storage_key": "products/provence/PV-18-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-18-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-18-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-23-1",
     "product_code_normalized": "PV-23-1",
     "storage_key": "products/provence/PV-23-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-23-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-23-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "provence:PV-23-1",
     "product_code_normalized": "PV-23-1",
     "storage_key": "products/provence/PV-23-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-23-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-23-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-23-1",
     "product_code_normalized": "PV-23-1",
     "storage_key": "products/provence/PV-23-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-23-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-23-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-23-1",
     "product_code_normalized": "PV-23-1",
     "storage_key": "products/provence/PV-23-1_gallery_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-23-1_gallery_03.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-23-1_gallery_03.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-42-2",
     "product_code_normalized": "PV-42-2",
     "storage_key": "products/provence/PV-42-2_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-42-2_main.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-42-2_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "provence:PV-42-2",
     "product_code_normalized": "PV-42-2",
     "storage_key": "products/provence/PV-42-2_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-42-2_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-42-2_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-42-2",
     "product_code_normalized": "PV-42-2",
     "storage_key": "products/provence/PV-42-2_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-42-2_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-42-2_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-43-1",
     "product_code_normalized": "PV-43-1",
     "storage_key": "products/provence/PV-43-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-43-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-43-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "provence:PV-43-1",
     "product_code_normalized": "PV-43-1",
     "storage_key": "products/provence/PV-43-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-43-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-43-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-55-1",
     "product_code_normalized": "PV-55-1",
     "storage_key": "products/provence/PV-55-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-55-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-55-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "provence:PV-55-1",
     "product_code_normalized": "PV-55-1",
     "storage_key": "products/provence/PV-55-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-55-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-55-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-55-1",
     "product_code_normalized": "PV-55-1",
     "storage_key": "products/provence/PV-55-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-55-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-55-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-55-1",
     "product_code_normalized": "PV-55-1",
     "storage_key": "products/provence/PV-55-1_gallery_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-55-1_gallery_03.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-55-1_gallery_03.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-55-2",
     "product_code_normalized": "PV-55-2",
     "storage_key": "products/provence/PV-55-2_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-55-2_main.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-55-2_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "provence:PV-61-1",
     "product_code_normalized": "PV-61-1",
     "storage_key": "products/provence/PV-61-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-61-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-61-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "provence:PV-61-1",
     "product_code_normalized": "PV-61-1",
     "storage_key": "products/provence/PV-61-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-61-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-61-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-61-1",
     "product_code_normalized": "PV-61-1",
     "storage_key": "products/provence/PV-61-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-61-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-61-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-61-1",
     "product_code_normalized": "PV-61-1",
     "storage_key": "products/provence/PV-61-1_gallery_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-61-1_gallery_03.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-61-1_gallery_03.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-62-1",
     "product_code_normalized": "PV-62-1",
     "storage_key": "products/provence/PV-62-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-62-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-62-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "provence:PV-62-1",
     "product_code_normalized": "PV-62-1",
     "storage_key": "products/provence/PV-62-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-62-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-62-1_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-62-1",
     "product_code_normalized": "PV-62-1",
     "storage_key": "products/provence/PV-62-1_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-62-1_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-62-1_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-62-1",
     "product_code_normalized": "PV-62-1",
     "storage_key": "products/provence/PV-62-1_gallery_03.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-62-1_gallery_03.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-62-1_gallery_03.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-65-5",
     "product_code_normalized": "PV-65-5",
     "storage_key": "products/provence/PV-65-5_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-65-5_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-65-5_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-65-5",
     "product_code_normalized": "PV-65-5",
     "storage_key": "products/provence/PV-65-5_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-65-5_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-65-5_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-65-6",
     "product_code_normalized": "PV-65-6",
     "storage_key": "products/provence/PV-65-6_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-65-6_main.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-65-6_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "provence:PV-65-7",
     "product_code_normalized": "PV-65-7",
     "storage_key": "products/provence/PV-65-7_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-65-7_main.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-65-7_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "provence:PV-65-7",
     "product_code_normalized": "PV-65-7",
     "storage_key": "products/provence/PV-65-7_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-65-7_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-65-7_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-65-8",
     "product_code_normalized": "PV-65-8",
     "storage_key": "products/provence/PV-65-8_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-65-8_main.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-65-8_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "provence:PV-65-8",
     "product_code_normalized": "PV-65-8",
     "storage_key": "products/provence/PV-65-8_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-65-8_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-65-8_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-65-8",
     "product_code_normalized": "PV-65-8",
     "storage_key": "products/provence/PV-65-8_gallery_02.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-65-8_gallery_02.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-65-8_gallery_02.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-66-6",
     "product_code_normalized": "PV-66-6",
     "storage_key": "products/provence/PV-66-6_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-66-6_main.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-66-6_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "provence:PV-66-7",
     "product_code_normalized": "PV-66-7",
     "storage_key": "products/provence/PV-66-7_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-66-7_main.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-66-7_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "provence:PV-66-7",
     "product_code_normalized": "PV-66-7",
     "storage_key": "products/provence/PV-66-7_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-66-7_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-66-7_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-68-1",
     "product_code_normalized": "PV-68-1",
     "storage_key": "products/provence/PV-68-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-68-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-68-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "provence:PV-68-2",
     "product_code_normalized": "PV-68-2",
     "storage_key": "products/provence/PV-68-2_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-68-2_main.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-68-2_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "provence:PV-68-2",
     "product_code_normalized": "PV-68-2",
     "storage_key": "products/provence/PV-68-2_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-68-2_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-68-2_gallery_01.jpg",
     "role": "gallery"
   },
   {
     "workbook_row_key": "provence:PV-69-1",
     "product_code_normalized": "PV-69-1",
     "storage_key": "products/provence/PV-69-1_main.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-69-1_main.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-69-1_main.jpg",
     "role": "main"
   },
   {
     "workbook_row_key": "provence:PV-69-1",
     "product_code_normalized": "PV-69-1",
     "storage_key": "products/provence/PV-69-1_gallery_01.jpg",
-    "public_url": "http://localhost:9000/uploads/products/provence/PV-69-1_gallery_01.jpg",
+    "public_url": "http://localhost:9000/static/products/provence/PV-69-1_gallery_01.jpg",
     "role": "gallery"
   }
 ]

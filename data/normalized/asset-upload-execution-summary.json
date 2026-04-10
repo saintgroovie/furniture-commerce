@@ -1,6 +1,6 @@
 {
-  "generated_at_utc": "2026-04-09T23:47:27+00:00",
-  "asset_base_url_assumption": "http://localhost:9000/uploads",
+  "generated_at_utc": "2026-04-10T00:38:26+00:00",
+  "asset_base_url_assumption": "http://localhost:9000/static",
   "eligible_workbook_row_keys": 108,
   "total_asset_rows": 441,
   "upload_ready_status_breakdown": {

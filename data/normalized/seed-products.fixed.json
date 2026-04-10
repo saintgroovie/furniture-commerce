@@ -1301,8 +1301,55 @@
     "workbook_row_key": "oliver:OL-08-1",
     "product_code_normalized": "OL-08-1",
     "canonical_name": "Зеркало навесное овальное",
-    "medusa_product_handle": "ol-08-1",
+    "medusa_product_handle": "ol-08-1-mirror",
     "medusa_product_title": "Зеркало навесное овальное",
+    "medusa_collection_handle": "oliver",
+    "medusa_collection_title": "Oliver",
+    "medusa_category_handle": "tumby",
+    "medusa_category_title": "Тумбы",
+    "medusa_product_type": "CONFIGURABLE",
+    "medusa_variant_sku": "OL-08-1-MIR",
+    "medusa_price_amount": 3495000,
+    "currency_code": "rub",
+    "variant_strategy": "single_default",
+    "dimensions_normalized": {
+      "height_mm": 650,
+      "width_mm": 500,
+      "depth_mm": 455
+    },
+    "thumbnail_url": "http://localhost:9000/static/products/oliver/OL-08-1_main.jpg",
+    "images": [
+      {
+        "url": "http://localhost:9000/static/products/oliver/OL-08-1_main.jpg"
+      },
+      {
+        "url": "http://localhost:9000/static/products/oliver/OL-08-1_gallery_01.jpg"
+      },
+      {
+        "url": "http://localhost:9000/static/products/oliver/OL-08-1_gallery_02.jpg"
+      }
+    ],
+    "image_urls": [
+      "http://localhost:9000/static/products/oliver/OL-08-1_main.jpg",
+      "http://localhost:9000/static/products/oliver/OL-08-1_gallery_01.jpg",
+      "http://localhost:9000/static/products/oliver/OL-08-1_gallery_02.jpg"
+    ],
+    "main_image_public_url": "http://localhost:9000/static/products/oliver/OL-08-1_main.jpg",
+    "main_image_url": "http://localhost:9000/static/products/oliver/OL-08-1_main.jpg",
+    "gallery_public_urls": [
+      "http://localhost:9000/static/products/oliver/OL-08-1_gallery_01.jpg",
+      "http://localhost:9000/static/products/oliver/OL-08-1_gallery_02.jpg"
+    ],
+    "asset_quality_status": "ok",
+    "readiness_status": "seed_ready",
+    "mapping_notes": "handle_fix:mirror_row_disambiguation"
+  },
+  {
+    "workbook_row_key": "oliver:OL-08-1",
+    "product_code_normalized": "OL-08-1",
+    "canonical_name": "Тумбочка прикроватная",
+    "medusa_product_handle": "ol-08-1",
+    "medusa_product_title": "Тумбочка прикроватная",
     "medusa_collection_handle": "oliver",
     "medusa_collection_title": "Oliver",
     "medusa_category_handle": "tumby",
@@ -1342,7 +1389,7 @@
     ],
     "asset_quality_status": "ok",
     "readiness_status": "seed_ready",
-    "mapping_notes": ""
+    "mapping_notes": "handle_fix:nightstand_retains_base_code"
   },
   {
     "workbook_row_key": "oliver:OL-08-2",

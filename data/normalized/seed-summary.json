@@ -1,6 +1,6 @@
 {
-  "generated_at_utc": "2026-04-09T23:47:27+00:00",
-  "ASSET_BASE_URL": "http://localhost:9000/uploads",
+  "generated_at_utc": "2026-04-10T00:37:46+00:00",
+  "ASSET_BASE_URL": "http://localhost:9000/static",
   "product_count": 108,
   "entity_mapping_seed_eligible": 109,
   "dedupe_skipped_count": 1,
