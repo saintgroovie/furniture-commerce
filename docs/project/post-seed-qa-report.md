@@ -121,3 +121,33 @@ docker exec medusa_backend test -f /server/uploads/products/oliver/OL-00-1_main.
 ```
 
 Полная выборка URL и HTTP — в [`post-seed-asset-checks.md`](post-seed-asset-checks.md).
+
+---
+
+## Greenwich final status
+
+**Technical verdict:** OK for Oliver readiness  
+**Manual browser sign-off:** pending only if final human visual/browser QA has not yet been re-run in the target environment
+
+### Evidence
+- Store API: **15/15 Greenwich products** returned with complete expected `metadata`
+- `display_group` present on the **5 bed SKUs**
+- `GR-09` mirror and bed are correctly separated at data level
+- Storefront `/catalog`: **200 OK**
+- Catalog shows:
+  - **one grouped bed card** with `от …` and `5 размеров`
+  - normal **GR-05-1** card with collection / SKU / dimensions / price
+- Bed PDP:
+  - correct selected SKU data
+  - `Другие размеры` block present
+  - **4 sibling links**
+- Mirror PDP:
+  - no `Другие размеры` block
+  - distinct preview/media from bed PDP
+- Server-rendered product and catalog pages returned expected content in the verified environment
+
+### Conclusion
+No technical inconsistencies were found in data, grouping, server-rendered page output, or Greenwich PDP/listing behavior in the verified environment.
+
+### Note
+Final release approval may still require manual browser QA in the target environment, including visual checks such as typography, spacing, responsive layout, and interaction polish.
