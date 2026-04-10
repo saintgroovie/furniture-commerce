@@ -72,6 +72,28 @@ function loadJsonFile<T>(relativePath: string): T {
   )
 }
 
+/** Prefer fixed (unique handles), else generator output */
+function loadJsonFileFirstExisting<T>(relativePaths: string[]): { data: T; relativePath: string } {
+  for (const relativePath of relativePaths) {
+    const candidates = [
+      path.join(process.cwd(), relativePath),
+      path.resolve(process.cwd(), "../../", relativePath),
+    ]
+    for (const candidate of candidates) {
+      if (fs.existsSync(candidate)) {
+        return {
+          data: JSON.parse(fs.readFileSync(candidate, "utf-8")) as T,
+          relativePath,
+        }
+      }
+    }
+  }
+
+  throw new Error(
+    `Required file not found, tried in order:\n${relativePaths.join("\n")}`
+  )
+}
+
 function normalizeCategoryName(name: string): string {
   if (!name) return name
   return name.charAt(0).toUpperCase() + name.slice(1)
@@ -99,12 +121,14 @@ export default async function seedRealDataDraft({ container }: ExecArgs) {
   const seedCategories = loadJsonFile<SeedCategory[]>(
     "data/normalized/seed-categories.json"
   )
-  const seedProducts = loadJsonFile<SeedProduct[]>(
-    "data/normalized/seed-products.json"
-  )
+  const { data: seedProducts, relativePath: seedProductsSource } =
+    loadJsonFileFirstExisting<SeedProduct[]>([
+      "data/normalized/seed-products.fixed.json",
+      "data/normalized/seed-products.json",
+    ])
 
   logger.info(
-    `Loaded products=${seedProducts.length}, collections=${seedCollections.length}, categories=${seedCategories.length}`
+    `Loaded products=${seedProducts.length} (${seedProductsSource}), collections=${seedCollections.length}, categories=${seedCategories.length}`
   )
 
   logger.info("Ensuring region РФ / RUB...")

@@ -75,7 +75,7 @@ Draft created:
 
 Draft characteristics:
 
-- consumes `seed-collections.json`, `seed-categories.json`, `seed-products.json`
+- consumes `seed-collections.json`, `seed-categories.json`, and products from `seed-products.fixed.json` when present, else `seed-products.json`
 - creates/ensures collections and categories
 - creates missing products with final public image URLs
 - links categories and product classifications
@@ -100,9 +100,9 @@ Blocking conditions for canonical replacement are not technical now; they are re
 2. Verify counts in Medusa Admin:
    - collections = 3
    - categories = 17
-   - products in scope = 108
+   - products in scope = 109 when using `seed-products.fixed.json`, else 108 from generator `seed-products.json`
 3. Spot-check image accessibility:
-   - open several URLs from `seed-products.json`
+   - open several URLs from the same seed products file the script loaded
    - confirm served from `/uploads/products/...`
 4. Confirm no excluded handles from `entity-mapping-excluded.json` are created.
 5. Validate product classification links exist for all seeded products.

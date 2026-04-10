@@ -6,18 +6,18 @@ New draft seed should consume normalized seed input layer:
 
 - `data/normalized/seed-collections.json`
 - `data/normalized/seed-categories.json`
-- `data/normalized/seed-products.json`
+- `data/normalized/seed-products.fixed.json` (preferred when present) or `data/normalized/seed-products.json`
 - `data/normalized/seed-assets.json`
 - `data/normalized/seed-summary.json` (validation/reference only)
 
-The seed implementation must not read `processed_path` directly. It should only use final public URLs from `seed-products.json` / `seed-assets.json`.
+The seed implementation must not read `processed_path` directly. It should only use final public URLs from the chosen seed products file / `seed-assets.json`.
 
 ## Creation order of entities
 
 1. Ensure region (RUB/RU) exists.
 2. Ensure product collections from `seed-collections.json`.
 3. Ensure product categories from `seed-categories.json`.
-4. Create missing products from `seed-products.json` with:
+4. Create missing products from `seed-products.fixed.json` if present, else `seed-products.json`, with:
    - title, handle, status
    - one Default option/variant
    - variant SKU and price
