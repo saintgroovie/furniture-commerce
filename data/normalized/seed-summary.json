@@ -1,0 +1,17 @@
+{
+  "generated_at_utc": "2026-04-09T23:47:27+00:00",
+  "ASSET_BASE_URL": "http://localhost:9000/uploads",
+  "product_count": 108,
+  "entity_mapping_seed_eligible": 109,
+  "dedupe_skipped_count": 1,
+  "dedupe_warnings": [
+    {
+      "medusa_product_handle": "ol-08-1",
+      "workbook_row_key": "oliver:OL-08-1",
+      "action": "skipped_duplicate_handle"
+    }
+  ],
+  "collection_count": 3,
+  "category_count": 17,
+  "asset_row_count": 441
+}

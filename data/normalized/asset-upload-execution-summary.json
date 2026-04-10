@@ -1,0 +1,24 @@
+{
+  "generated_at_utc": "2026-04-09T23:47:27+00:00",
+  "asset_base_url_assumption": "http://localhost:9000/uploads",
+  "eligible_workbook_row_keys": 108,
+  "total_asset_rows": 441,
+  "upload_ready_status_breakdown": {
+    "ready": 320,
+    "ready_with_caveat": 121
+  },
+  "asset_role_breakdown": {
+    "color_variant": 170,
+    "gallery": 178,
+    "main": 93
+  },
+  "source_json": {
+    "entity_mapping": "data/normalized/entity-mapping.json",
+    "asset_upload_manifest": "data/normalized/asset-upload-manifest.json"
+  },
+  "deterministic_sort": [
+    "workbook_row_key",
+    "target_storage_key",
+    "asset_role"
+  ]
+}
