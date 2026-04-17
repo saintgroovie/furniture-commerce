@@ -13,7 +13,8 @@
     "db:sync-links": "medusa db:sync-links",
     "seed": "medusa exec ./src/scripts/seed.ts",
     "refresh-greenwich": "medusa exec ./src/scripts/refresh-greenwich.ts",
-    "refresh-oliver": "medusa exec ./src/scripts/refresh-oliver.ts"
+    "refresh-oliver": "medusa exec ./src/scripts/refresh-oliver.ts",
+    "refresh-oliver-media": "medusa exec ./src/scripts/refresh-oliver-media.ts"
   },
   "dependencies": {
     "@medusajs/framework": "^2.0.0",
