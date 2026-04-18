@@ -14,7 +14,8 @@
     "seed": "medusa exec ./src/scripts/seed.ts",
     "refresh-greenwich": "medusa exec ./src/scripts/refresh-greenwich.ts",
     "refresh-oliver": "medusa exec ./src/scripts/refresh-oliver.ts",
-    "refresh-oliver-media": "medusa exec ./src/scripts/refresh-oliver-media.ts"
+    "refresh-oliver-media": "medusa exec ./src/scripts/refresh-oliver-media.ts",
+    "refresh-oliver-thumbnails": "medusa exec ./src/scripts/refresh-oliver-thumbnails.ts"
   },
   "dependencies": {
     "@medusajs/framework": "^2.0.0",

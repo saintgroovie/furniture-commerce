@@ -1,0 +1,110 @@
+{
+  "description": "Final approved Oliver thumbnail backfill mapping (mirror). Medusa exec uses apps/backend/data/oliver/oliver-thumbnail-approved-mapping.json. Source paths are Yandex Disk refs; static filenames were resolved via data/processed/asset-manifests/processed-assets.json.",
+  "handles": [
+    {
+      "handle": "ol-15-1",
+      "approved_source_path": "/WOODRIGHT/Контент /Коллекции /Oliver/Фото на белом фоне /ol-15-1-lorna-050.jpg",
+      "source_basename": "ol-15-1-lorna-050.jpg",
+      "resolved_static_filename": "OL-15-1_color_lorna_01.jpg",
+      "serving_path": "/static/products/oliver/OL-15-1_color_lorna_01.jpg"
+    },
+    {
+      "handle": "ol-15-2",
+      "approved_source_path": "/WOODRIGHT/Контент /Коллекции /Oliver/Фото на белом фоне /ol-15-2-lorna-050.jpg",
+      "source_basename": "ol-15-2-lorna-050.jpg",
+      "resolved_static_filename": "OL-15-2_color_lorna_01.jpg",
+      "serving_path": "/static/products/oliver/OL-15-2_color_lorna_01.jpg"
+    },
+    {
+      "handle": "ol-07-1",
+      "approved_source_path": "/WOODRIGHT/Контент /Коллекции /Oliver/Фото на белом фоне /ol-07-1-leona-050.jpg",
+      "source_basename": "ol-07-1-leona-050.jpg",
+      "resolved_static_filename": "OL-07-1_color_leona_02.jpg",
+      "serving_path": "/static/products/oliver/OL-07-1_color_leona_02.jpg"
+    },
+    {
+      "handle": "ol-14-2",
+      "approved_source_path": "/WOODRIGHT/Контент /Коллекции /Oliver/Фото на белом фоне /ol-14-2-lorna-050.jpg",
+      "source_basename": "ol-14-2-lorna-050.jpg",
+      "resolved_static_filename": "OL-14-2_color_lorna_01.jpg",
+      "serving_path": "/static/products/oliver/OL-14-2_color_lorna_01.jpg"
+    },
+    {
+      "handle": "ol-16-2",
+      "approved_source_path": "/WOODRIGHT/Контент /Коллекции /Oliver/Фото на белом фоне /ol-16-2-lorna-050.jpg",
+      "source_basename": "ol-16-2-lorna-050.jpg",
+      "resolved_static_filename": "OL-16-2_color_lorna_01.jpg",
+      "serving_path": "/static/products/oliver/OL-16-2_color_lorna_01.jpg"
+    },
+    {
+      "handle": "ol-16-1",
+      "approved_source_path": "/WOODRIGHT/Контент /Коллекции /Oliver/Фото на белом фоне /ol-16-1-lorna-050.jpg",
+      "source_basename": "ol-16-1-lorna-050.jpg",
+      "resolved_static_filename": "OL-16-1_color_lorna_01.jpg",
+      "serving_path": "/static/products/oliver/OL-16-1_color_lorna_01.jpg"
+    },
+    {
+      "handle": "ol-17-3",
+      "approved_source_path": "/WOODRIGHT/Контент /Коллекции /Oliver/Фото на белом фоне /ol-17-3-lorna-050.jpg",
+      "source_basename": "ol-17-3-lorna-050.jpg",
+      "resolved_static_filename": "OL-17-3_color_lorna_01.jpg",
+      "serving_path": "/static/products/oliver/OL-17-3_color_lorna_01.jpg"
+    },
+    {
+      "handle": "ol-18-1",
+      "approved_source_path": "/WOODRIGHT/Контент /Коллекции /Oliver/Фото на белом фоне /ol-18-1-lillian-050.jpg",
+      "source_basename": "ol-18-1-lillian-050.jpg",
+      "resolved_static_filename": "OL-18-1_color_lillian_01.jpg",
+      "serving_path": "/static/products/oliver/OL-18-1_color_lillian_01.jpg"
+    },
+    {
+      "handle": "ol-17-1",
+      "approved_source_path": "/WOODRIGHT/Контент /Коллекции /Oliver/Фото на белом фоне /ol-17-1-lorna-050.jpg",
+      "source_basename": "ol-17-1-lorna-050.jpg",
+      "resolved_static_filename": "OL-17-1_color_lorna_01.jpg",
+      "serving_path": "/static/products/oliver/OL-17-1_color_lorna_01.jpg"
+    },
+    {
+      "handle": "ol-17-2",
+      "approved_source_path": "/WOODRIGHT/Контент /Коллекции /Oliver/Фото на белом фоне /ol-17-2-lorna-050.jpg",
+      "source_basename": "ol-17-2-lorna-050.jpg",
+      "resolved_static_filename": "OL-17-2_color_lorna_01.jpg",
+      "serving_path": "/static/products/oliver/OL-17-2_color_lorna_01.jpg"
+    },
+    {
+      "handle": "ol-18-2",
+      "approved_source_path": "/WOODRIGHT/Контент /Коллекции /Oliver/Фото на белом фоне /ol-18-2-lorna-050.jpg",
+      "source_basename": "ol-18-2-lorna-050.jpg",
+      "resolved_static_filename": "OL-18-2_color_lorna_01.jpg",
+      "serving_path": "/static/products/oliver/OL-18-2_color_lorna_01.jpg"
+    },
+    {
+      "handle": "ol-23-1",
+      "approved_source_path": "/WOODRIGHT/Контент /Фото на белом фоне /Стулья /ol-23-1-lorna-050.jpg",
+      "source_basename": "ol-23-1-lorna-050.jpg",
+      "resolved_static_filename": "OL-23-1_color_lorna_02.jpg",
+      "serving_path": "/static/products/oliver/OL-23-1_color_lorna_02.jpg"
+    },
+    {
+      "handle": "ol-55-2",
+      "approved_source_path": "/WOODRIGHT/Контент /Фото на белом фоне /Стулья /ol-55-2-lorna-050.jpg",
+      "source_basename": "ol-55-2-lorna-050.jpg",
+      "resolved_static_filename": "OL-55-2_color_lorna_01.jpg",
+      "serving_path": "/static/products/oliver/OL-55-2_color_lorna_01.jpg"
+    },
+    {
+      "handle": "ol-55-1",
+      "approved_source_path": "/WOODRIGHT/Контент /Фото на белом фоне /Стулья /ol-55-1-lorna-050.jpg",
+      "source_basename": "ol-55-1-lorna-050.jpg",
+      "resolved_static_filename": "OL-55-1_color_lorna_01.jpg",
+      "serving_path": "/static/products/oliver/OL-55-1_color_lorna_01.jpg"
+    },
+    {
+      "handle": "ol-82-1",
+      "approved_source_path": "/WOODRIGHT/Контент /Коллекции /Oliver/Фото на белом фоне /ol-82-1-lorna-050.jpg",
+      "source_basename": "ol-82-1-lorna-050.jpg",
+      "resolved_static_filename": "OL-82-1_color_lorna_01.jpg",
+      "serving_path": "/static/products/oliver/OL-82-1_color_lorna_01.jpg"
+    }
+  ]
+}
