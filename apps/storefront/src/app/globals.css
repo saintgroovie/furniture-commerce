@@ -562,6 +562,31 @@ button:disabled,
   background: var(--color-bg);
 }
 
+/* Oliver: explicit “no photo” — not a fake product hero tile */
+.product-card .oliver-media-absent {
+  height: auto;
+  aspect-ratio: 4 / 5;
+  background: var(--color-bg);
+  border: 1px dashed var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.oliver-media-absent-label {
+  font-size: 0.75rem;
+  color: var(--color-fg-muted);
+  letter-spacing: 0.02em;
+}
+
+.product-detail .oliver-media-absent.product-detail-img {
+  object-fit: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--color-border);
+}
+
 .product-card .card-body {
   display: flex;
   flex-direction: column;

@@ -9,6 +9,7 @@ import {
   getDimensions,
   formatDimensionsCompact,
 } from "@/lib/product-metadata"
+import { OliverCardMedia } from "@/components/oliver-product-media"
 
 type Product = {
   id: string
@@ -51,9 +52,14 @@ export function ProductCard({
   const contextParts = [collectionLabel, subcollectionLabel, article].filter(Boolean)
   const contextLine = contextParts.length > 0 ? contextParts.join(" · ") : null
 
+  const handle = product.handle ?? ""
+  const isOliver = handle.startsWith("ol-")
+
   return (
     <Link href={`/product/${product.id}`} className="card card-link product-card">
-      {product.thumbnail ? (
+      {isOliver ? (
+        <OliverCardMedia src={product.thumbnail} title={product.title} />
+      ) : product.thumbnail ? (
         <img
           src={product.thumbnail}
           alt={product.title}

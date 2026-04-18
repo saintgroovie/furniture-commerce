@@ -4,6 +4,7 @@ import { getSiteUrl } from "@/lib/api/base"
 import { getProduct, getProducts, NOT_FOUND } from "@/lib/api/products"
 import { formatRub, getPrice } from "@/lib/format"
 import { ProductCta } from "@/components/product-cta"
+import { OliverHeroMedia } from "@/components/oliver-product-media"
 import { getDisplayGroupMembers } from "@/lib/display-group"
 import {
   getCollectionLabel,
@@ -26,6 +27,12 @@ function collectProductImageUrls(product: Record<string, unknown>): string[] {
   return urls
 }
 
+/** Same priority as PDP hero / gallery collector — thumbnail first. */
+function primaryImageForMeta(product: Record<string, unknown>): string | undefined {
+  const urls = collectProductImageUrls(product)
+  return urls[0]
+}
+
 function truncate(str: string, max: number): string {
   if (str.length <= max) return str
   return str.slice(0, max - 3).trim() + "..."
@@ -43,8 +50,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     if (!product) return { title: "Товар", alternates: { canonical: `${base}/product/${params.id}` } }
     const title = String(product.title ?? "Товар")
     const desc = product.description ? truncate(String(product.description), 160) : "Товар из каталога Woodright."
-    const images = product.images as Array<{ url?: string }> | undefined
-    const imageUrl = images?.[0]?.url
+    const imageUrl = primaryImageForMeta(product)
     return {
       title,
       description: desc,
@@ -101,6 +107,8 @@ export default async function ProductPage({ params }: { params: { id: string } }
   const base = getSiteUrl()
   const galleryUrls = collectProductImageUrls(product)
   const mainImage = galleryUrls[0]
+  const handle = String(product.handle ?? "")
+  const isOliver = handle.startsWith("ol-")
   const price = getPrice(product)
   const productType = (product.product_classification as Record<string, string> | undefined)?.product_type
   const badgeLabel = productType ? BADGE_LABELS[productType] : undefined
@@ -140,7 +148,9 @@ export default async function ProductPage({ params }: { params: { id: string } }
       />
       <div className="product-detail">
         <div>
-          {mainImage ? (
+          {isOliver ? (
+            <OliverHeroMedia src={mainImage} title={titleStr} className="product-detail-img" />
+          ) : mainImage ? (
             <img src={mainImage} alt={titleStr} className="product-detail-img" />
           ) : (
             <div className="product-detail-img skeleton" />
