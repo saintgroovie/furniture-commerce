@@ -151,3 +151,25 @@ No technical inconsistencies were found in data, grouping, server-rendered page 
 
 ### Note
 Final release approval may still require manual browser QA in the target environment, including visual checks such as typography, spacing, responsive layout, and interaction polish.
+
+---
+
+## Oliver final status
+
+**Technical verdict:** OK on validated reference stack  
+**Manual browser sign-off:** pending as a separate visual gate after deployment in the target environment
+
+### Evidence
+- **Metadata** — backfill completed and validated for Oliver products (`07cdb80` — `Oliver readiness fix`): `collection`, `collection_label`, `canonical_name`, `dimensions` from `seed-products.fixed2.json`; Store API exposes the contract for Oliver on the reference stack.
+- **Media delivery** — product media URLs normalized from `/uploads/products/oliver/...` to `/static/products/oliver/...` (`9a4d06a` — `Oliver media delivery fix`).
+- **Storefront** — consistent primary image behavior for hero, Open Graph, and explicit no-photo fallback for Oliver (`ec260bd` — `Oliver media correctness: OG image + explicit no-photo media`).
+- **API image order** — drift removed for the previously affected **11** Oliver SKUs so that `thumbnail === images[0]` (`e37b12b` — `Oliver API image-order sync`).
+- **Regression (reference stack)** — Greenwich counters / grouping checks unchanged when Oliver fixes were applied; Store API, catalog SSR, PDP SSR, and direct static media URL checks passed where exercised for Oliver.
+
+### Conclusion
+Oliver is technically ready on the validated reference stack. Remaining manual browser QA (visual polish, responsive layout, interaction) is intentionally kept separate from technical readiness.
+
+### Note
+Operational scripts that update backend product data must still be run in each target environment after deployment where the corresponding seeded Oliver data already exists, as applicable to that environment (for example: `yarn refresh-oliver`, `yarn refresh-oliver-media`, `yarn refresh-oliver-thumbnails`, `yarn sync-oliver-primary-images` from `apps/backend`).
+
+Known follow-ups outside this technical closure (not blockers for Oliver media/metadata on the reference stack): Oliver adult/kids split is not modeled yet; Oliver `display_group` is not part of this pass. Earlier draft observations in §7 about `/uploads/` reflected the pre-fix snapshot for the QA date; Oliver collection media on the reference stack is served under `/static/products/oliver/...` after the delivery fix above.
