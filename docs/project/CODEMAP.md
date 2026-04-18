@@ -44,6 +44,7 @@
 | **AI_WORKING_RULES.md** | Правила работы AI: 10 инвариантов, pre-change checklist, red flags. Подключать в больших задачах. |
 | **SYSTEM_BOUNDARIES.md** | Неизменяемые границы системы: архитектура, домен, логика, cart, product, API, расширение, сложность, docs, эскалация. |
 | **CODEMAP.md** | Карта кода для AI: структура, модули, сущности, правила, точки осторожности. |
+| **oliver-final-technical-media-readiness.md** | Закрытие Oliver technical/media readiness на reference stack: коммиты, статус OK, толкование (manual QA отдельно, другие окружения, Greenwich), без новой методологии проверки. |
 | **MEDUSA_DOCKER_GUIDE.md** | Medusa v2 в Docker: Yarn 4, volume/node_modules, env (два URL для storefront), CORS, Admin/Vite, чеклист запуска, частые ошибки. |
 
 ---
