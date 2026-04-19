@@ -2,7 +2,39 @@
  * Какие значения `product.metadata.collection` показываются в публичном каталоге.
  * Товары без `metadata.collection` пропускаются (демо seed и legacy).
  * Явно паузируемые slug скрываются.
+ *
+ * Исключение демо из канонического `seed.ts` (**`isMedusaCanonicalSeedDemoProduct`**) сюда **не**
+ * включается: этот helper используется и в kids-flow (`/kids/catalog`), где те же
+ * SKU осознанно показываются как состав детских комплектов.
  */
+
+/**
+ * В синхроне с `PRODUCTS[].sku` в `apps/backend/src/scripts/seed.ts` (`handle` при создании = sku).
+ * Скрытие на витрине: только **`/catalog`** и **`/bespoke/catalog`** (не внутри `isProductInActiveCatalogScope`).
+ */
+const MEDUSA_CANONICAL_SEED_DEMO_HANDLES = new Set([
+  "stul-loft",
+  "tumba-prikrovatnaya",
+  "polka-nastennaya",
+  "stol-obedennyj-loft",
+  "komod-trehdvernyj",
+  "stol-pismennyj",
+  "kuhnya-na-zakaz",
+  "garderobnaya",
+  "shkaf-v-nishu",
+  "stul-ofisnyj",
+  "tumba-tv",
+  "krovat-detskaya",
+  "stol-shkolnyj",
+  "stellazh-knizhnyj",
+  "stol-kompyuternyj",
+])
+
+export function isMedusaCanonicalSeedDemoProduct(product: Record<string, unknown>): boolean {
+  const handle = product.handle
+  if (typeof handle !== "string" || handle === "") return false
+  return MEDUSA_CANONICAL_SEED_DEMO_HANDLES.has(handle)
+}
 
 const PAUSED_COLLECTION_KEYS = new Set([
   "princess-rose",
