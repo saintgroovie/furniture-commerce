@@ -1,22 +1,42 @@
 import { getRoomSets, getRoomSetBySlug } from "@/lib/api/room-sets"
+import { getProducts } from "@/lib/api/products"
+import { BESPOKE_PRODUCT_TYPE } from "@/lib/bespoke"
+import {
+  isMedusaCanonicalSeedDemoProduct,
+  isOliverKidsCollectionProduct,
+  isProductInActiveCatalogScope,
+} from "@/lib/catalog-scope"
 
 export const KIDS_ROOM_TYPE = "детская"
 
 type RoomSetDetail = { room_set?: Record<string, unknown> } | null
 
 /**
- * Resolves kids-only products — products that appear in at least one
- * kids room set (room_type "детская") and in NO non-kids room sets.
+ * Resolves kids storefront assortment — union of:
  *
- * Single source of truth for the kids content criterion — used for:
- *   - inclusion in /kids/catalog
- *   - exclusion from /catalog
- *   - visual grouping in cart ("Woodright Kids" vs "Woodright")
+ * 1. **Room-set kids-only** — products in at least one kids room set
+ *    (`room_type` «детская») and in **no** non-kids room sets.
+ *    Canonical Medusa seed demo SKUs (`isMedusaCanonicalSeedDemoProduct`) are
+ *    dropped here so `/kids/catalog` is not driven by placeholder inventory.
  *
- * Cross-section products (in both kids and non-kids room sets) are
- * intentionally excluded and remain in the main catalog / adult cart group.
+ * 2. **Oliver kids line** — published store products with
+ *    `metadata.collection === OLIVER_KIDS_COLLECTION_KEY`, in active catalog
+ *    scope, not BESPOKE, and not present in any non-kids room set (same
+ *    cross-section rule as (1)).
+ *
+ * Used for:
+ *   - `/kids/catalog`
+ *   - exclusion from `/catalog` (with main catalog’s own demo/collection rules)
+ *   - cart grouping ("Woodright Kids" vs "Woodright")
  */
-export async function resolveKidsProducts(): Promise<{
+export type ResolveKidsProductsOptions = {
+  /** When set (e.g. `/catalog` already fetched `/store/products`), avoids a second identical request. */
+  storeProducts?: Array<Record<string, unknown>>
+}
+
+export async function resolveKidsProducts(
+  options?: ResolveKidsProductsOptions
+): Promise<{
   ids: Set<string>
   products: Array<Record<string, unknown>>
 }> {
@@ -74,11 +94,43 @@ export async function resolveKidsProducts(): Promise<{
     for (const item of items) {
       const product = item.product
       const pid = product?.id as string | undefined
-      if (product && pid && !ids.has(pid) && !nonKidsProductIds.has(pid)) {
+      if (
+        product &&
+        pid &&
+        !ids.has(pid) &&
+        !nonKidsProductIds.has(pid) &&
+        !isMedusaCanonicalSeedDemoProduct(product)
+      ) {
         ids.add(pid)
         products.push(product)
       }
     }
+  }
+
+  let storeProducts: Array<Record<string, unknown>> = []
+  if (options?.storeProducts) {
+    storeProducts = options.storeProducts
+  } else {
+    try {
+      const storeData = await getProducts()
+      storeProducts = (storeData.products ?? []) as Array<Record<string, unknown>>
+    } catch {
+      storeProducts = []
+    }
+  }
+
+  for (const p of storeProducts) {
+    if (!isOliverKidsCollectionProduct(p)) continue
+    if (!isProductInActiveCatalogScope(p)) continue
+    const classification = p.product_classification as
+      | { product_type?: string }
+      | undefined
+    if (classification?.product_type === BESPOKE_PRODUCT_TYPE) continue
+
+    const pid = p.id as string | undefined
+    if (!pid || ids.has(pid) || nonKidsProductIds.has(pid)) continue
+    ids.add(pid)
+    products.push(p)
   }
 
   return { ids, products }

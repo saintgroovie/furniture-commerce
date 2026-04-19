@@ -52,7 +52,11 @@ export default async function CatalogPage({
 
   let kidsIds: Set<string>
   try {
-    kidsIds = (await resolveKidsProducts()).ids
+    kidsIds = (
+      await resolveKidsProducts({
+        storeProducts: allRaw as Record<string, unknown>[],
+      })
+    ).ids
   } catch {
     kidsIds = new Set()
   }

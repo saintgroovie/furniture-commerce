@@ -4,8 +4,8 @@
  * Явно паузируемые slug скрываются.
  *
  * Исключение демо из канонического `seed.ts` (**`isMedusaCanonicalSeedDemoProduct`**) сюда **не**
- * включается: этот helper используется и в kids-flow (`/kids/catalog`), где те же
- * SKU осознанно показываются как состав детских комплектов.
+ * включается: kids-ассортимент задаётся в `resolveKidsProducts()` (room sets +
+ * `metadata.collection === oliver-kids`), где демо-SKU из seed отфильтровываются отдельно.
  */
 
 /**
@@ -51,6 +51,16 @@ const ACTIVE_COLLECTION_KEYS = new Set([
   "willie-winkie",
   "monchelsea",
 ])
+
+/** Stable ingestion key for Oliver детская линейка (`metadata.collection`). */
+export const OLIVER_KIDS_COLLECTION_KEY = "oliver-kids" as const
+
+export function isOliverKidsCollectionProduct(
+  product: Record<string, unknown>
+): boolean {
+  const meta = product.metadata as Record<string, unknown> | undefined
+  return meta?.collection === OLIVER_KIDS_COLLECTION_KEY
+}
 
 export function isProductInActiveCatalogScope(product: Record<string, unknown>): boolean {
   const meta = product.metadata as Record<string, unknown> | undefined

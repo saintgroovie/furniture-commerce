@@ -20,7 +20,7 @@ export default async function KidsCatalogPage() {
   let products: Array<Record<string, unknown>> = []
 
   try {
-    const     kidsData = await resolveKidsProducts()
+    const kidsData = await resolveKidsProducts()
     products = kidsData.products.filter((p) =>
       isProductInActiveCatalogScope(p)
     )
