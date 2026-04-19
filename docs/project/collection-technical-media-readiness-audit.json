@@ -1,0 +1,342 @@
+{
+  "generated_at_utc": "2026-04-18T22:10:56.042852+00:00",
+  "pipeline_version": "1.0",
+  "mode": "read-only",
+  "baseline_source": "data/normalized/seed-products.fixed2.json",
+  "scope_source": "apps/storefront/src/lib/catalog-scope.ts",
+  "status_set": [
+    "ok",
+    "blocked_by_paused_scope",
+    "not_in_current_baseline",
+    "needs_metadata_fix",
+    "needs_media_delivery_fix",
+    "needs_image_order_sync",
+    "needs_storefront_correctness_review",
+    "needs_manual_visual_review"
+  ],
+  "assumptions": {
+    "validated_closed_collections": [
+      "oliver"
+    ],
+    "oliver_policy": "validated reference closure remains OK unless a new cross-collection systemic issue is proven"
+  },
+  "summary": {
+    "collections_total": 10,
+    "status_counts": {
+      "blocked_by_paused_scope": 2,
+      "not_in_current_baseline": 7,
+      "ok": 1
+    },
+    "baseline_rows_total": 109,
+    "baseline_collections_total": 3,
+    "scope_active_total": 6,
+    "scope_paused_total": 4
+  },
+  "collections": [
+    {
+      "collection": "country-london-paris",
+      "scope_state": "paused",
+      "presence_in_baseline": true,
+      "baseline_product_count": 13,
+      "status": "blocked_by_paused_scope",
+      "signals": {
+        "metadata": {
+          "missing_collection": 0,
+          "missing_collection_label": 0,
+          "missing_canonical_name": 0,
+          "missing_dimensions": 0,
+          "issue_count": 0
+        },
+        "media_delivery": {
+          "legacy_upload_url_rows": 0,
+          "missing_thumbnail_rows": 0,
+          "missing_image_list_rows": 0,
+          "issue_count": 0
+        },
+        "image_order": {
+          "thumbnail_mismatch_rows": 0,
+          "rows_not_evaluated": 0
+        }
+      },
+      "unknowns": [
+        "storefront hero/gallery/open-graph/no-photo semantics are not fully derivable from baseline JSON alone",
+        "manual visual/browser sign-off is outside this read-only audit"
+      ],
+      "policy_notes": []
+    },
+    {
+      "collection": "greenwich",
+      "scope_state": "active",
+      "presence_in_baseline": false,
+      "baseline_product_count": 0,
+      "status": "not_in_current_baseline",
+      "signals": {
+        "metadata": {
+          "missing_collection": 0,
+          "missing_collection_label": 0,
+          "missing_canonical_name": 0,
+          "missing_dimensions": 0,
+          "issue_count": 0
+        },
+        "media_delivery": {
+          "legacy_upload_url_rows": 0,
+          "missing_thumbnail_rows": 0,
+          "missing_image_list_rows": 0,
+          "issue_count": 0
+        },
+        "image_order": {
+          "thumbnail_mismatch_rows": 0,
+          "rows_not_evaluated": 0
+        }
+      },
+      "unknowns": [
+        "no baseline rows; metadata/media/order signals unavailable"
+      ],
+      "policy_notes": []
+    },
+    {
+      "collection": "monchelsea",
+      "scope_state": "active",
+      "presence_in_baseline": false,
+      "baseline_product_count": 0,
+      "status": "not_in_current_baseline",
+      "signals": {
+        "metadata": {
+          "missing_collection": 0,
+          "missing_collection_label": 0,
+          "missing_canonical_name": 0,
+          "missing_dimensions": 0,
+          "issue_count": 0
+        },
+        "media_delivery": {
+          "legacy_upload_url_rows": 0,
+          "missing_thumbnail_rows": 0,
+          "missing_image_list_rows": 0,
+          "issue_count": 0
+        },
+        "image_order": {
+          "thumbnail_mismatch_rows": 0,
+          "rows_not_evaluated": 0
+        }
+      },
+      "unknowns": [
+        "no baseline rows; metadata/media/order signals unavailable"
+      ],
+      "policy_notes": []
+    },
+    {
+      "collection": "oliver",
+      "scope_state": "active",
+      "presence_in_baseline": true,
+      "baseline_product_count": 67,
+      "status": "ok",
+      "signals": {
+        "metadata": {
+          "missing_collection": 0,
+          "missing_collection_label": 0,
+          "missing_canonical_name": 0,
+          "missing_dimensions": 0,
+          "issue_count": 0
+        },
+        "media_delivery": {
+          "legacy_upload_url_rows": 0,
+          "missing_thumbnail_rows": 15,
+          "missing_image_list_rows": 0,
+          "issue_count": 15
+        },
+        "image_order": {
+          "thumbnail_mismatch_rows": 0,
+          "rows_not_evaluated": 15
+        }
+      },
+      "unknowns": [
+        "storefront hero/gallery/open-graph/no-photo semantics are not fully derivable from baseline JSON alone",
+        "manual visual/browser sign-off is outside this read-only audit"
+      ],
+      "policy_notes": [
+        "validated-closed collection: thumbnail-only signal gap is treated as non-reopen until systemic evidence exists"
+      ]
+    },
+    {
+      "collection": "oliver-adult",
+      "scope_state": "active",
+      "presence_in_baseline": false,
+      "baseline_product_count": 0,
+      "status": "not_in_current_baseline",
+      "signals": {
+        "metadata": {
+          "missing_collection": 0,
+          "missing_collection_label": 0,
+          "missing_canonical_name": 0,
+          "missing_dimensions": 0,
+          "issue_count": 0
+        },
+        "media_delivery": {
+          "legacy_upload_url_rows": 0,
+          "missing_thumbnail_rows": 0,
+          "missing_image_list_rows": 0,
+          "issue_count": 0
+        },
+        "image_order": {
+          "thumbnail_mismatch_rows": 0,
+          "rows_not_evaluated": 0
+        }
+      },
+      "unknowns": [
+        "no baseline rows; metadata/media/order signals unavailable"
+      ],
+      "policy_notes": []
+    },
+    {
+      "collection": "oliver-kids",
+      "scope_state": "active",
+      "presence_in_baseline": false,
+      "baseline_product_count": 0,
+      "status": "not_in_current_baseline",
+      "signals": {
+        "metadata": {
+          "missing_collection": 0,
+          "missing_collection_label": 0,
+          "missing_canonical_name": 0,
+          "missing_dimensions": 0,
+          "issue_count": 0
+        },
+        "media_delivery": {
+          "legacy_upload_url_rows": 0,
+          "missing_thumbnail_rows": 0,
+          "missing_image_list_rows": 0,
+          "issue_count": 0
+        },
+        "image_order": {
+          "thumbnail_mismatch_rows": 0,
+          "rows_not_evaluated": 0
+        }
+      },
+      "unknowns": [
+        "no baseline rows; metadata/media/order signals unavailable"
+      ],
+      "policy_notes": []
+    },
+    {
+      "collection": "oxford",
+      "scope_state": "paused",
+      "presence_in_baseline": false,
+      "baseline_product_count": 0,
+      "status": "not_in_current_baseline",
+      "signals": {
+        "metadata": {
+          "missing_collection": 0,
+          "missing_collection_label": 0,
+          "missing_canonical_name": 0,
+          "missing_dimensions": 0,
+          "issue_count": 0
+        },
+        "media_delivery": {
+          "legacy_upload_url_rows": 0,
+          "missing_thumbnail_rows": 0,
+          "missing_image_list_rows": 0,
+          "issue_count": 0
+        },
+        "image_order": {
+          "thumbnail_mismatch_rows": 0,
+          "rows_not_evaluated": 0
+        }
+      },
+      "unknowns": [
+        "no baseline rows; metadata/media/order signals unavailable"
+      ],
+      "policy_notes": []
+    },
+    {
+      "collection": "princess-rose",
+      "scope_state": "paused",
+      "presence_in_baseline": false,
+      "baseline_product_count": 0,
+      "status": "not_in_current_baseline",
+      "signals": {
+        "metadata": {
+          "missing_collection": 0,
+          "missing_collection_label": 0,
+          "missing_canonical_name": 0,
+          "missing_dimensions": 0,
+          "issue_count": 0
+        },
+        "media_delivery": {
+          "legacy_upload_url_rows": 0,
+          "missing_thumbnail_rows": 0,
+          "missing_image_list_rows": 0,
+          "issue_count": 0
+        },
+        "image_order": {
+          "thumbnail_mismatch_rows": 0,
+          "rows_not_evaluated": 0
+        }
+      },
+      "unknowns": [
+        "no baseline rows; metadata/media/order signals unavailable"
+      ],
+      "policy_notes": []
+    },
+    {
+      "collection": "provence",
+      "scope_state": "paused",
+      "presence_in_baseline": true,
+      "baseline_product_count": 29,
+      "status": "blocked_by_paused_scope",
+      "signals": {
+        "metadata": {
+          "missing_collection": 0,
+          "missing_collection_label": 0,
+          "missing_canonical_name": 0,
+          "missing_dimensions": 0,
+          "issue_count": 0
+        },
+        "media_delivery": {
+          "legacy_upload_url_rows": 0,
+          "missing_thumbnail_rows": 0,
+          "missing_image_list_rows": 0,
+          "issue_count": 0
+        },
+        "image_order": {
+          "thumbnail_mismatch_rows": 0,
+          "rows_not_evaluated": 0
+        }
+      },
+      "unknowns": [
+        "storefront hero/gallery/open-graph/no-photo semantics are not fully derivable from baseline JSON alone",
+        "manual visual/browser sign-off is outside this read-only audit"
+      ],
+      "policy_notes": []
+    },
+    {
+      "collection": "willie-winkie",
+      "scope_state": "active",
+      "presence_in_baseline": false,
+      "baseline_product_count": 0,
+      "status": "not_in_current_baseline",
+      "signals": {
+        "metadata": {
+          "missing_collection": 0,
+          "missing_collection_label": 0,
+          "missing_canonical_name": 0,
+          "missing_dimensions": 0,
+          "issue_count": 0
+        },
+        "media_delivery": {
+          "legacy_upload_url_rows": 0,
+          "missing_thumbnail_rows": 0,
+          "missing_image_list_rows": 0,
+          "issue_count": 0
+        },
+        "image_order": {
+          "thumbnail_mismatch_rows": 0,
+          "rows_not_evaluated": 0
+        }
+      },
+      "unknowns": [
+        "no baseline rows; metadata/media/order signals unavailable"
+      ],
+      "policy_notes": []
+    }
+  ]
+}

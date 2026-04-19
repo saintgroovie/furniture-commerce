@@ -1,6 +1,8 @@
-# Greenwich post-refresh verification
+# Greenwich post-refresh verification — локальный Docker (успех)
 
 Дата: 2026-04-10.
+
+Отчёт о **успешном** refresh в локальном контейнере. Другой контекст (песочница агента без Node в PATH): [`greenwich-post-refresh-verification.md`](greenwich-post-refresh-verification.md).
 
 ## Summary
 

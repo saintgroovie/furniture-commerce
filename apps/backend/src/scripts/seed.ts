@@ -23,6 +23,7 @@ const CATEGORIES = [
 ] as const
 
 // Явная структура: товар + категория (handle) + тип. CONFIGURABLE в MVP — один вариант-заглушка (временное упрощение, полноценные варианты позже).
+// При изменении `sku` обновите `MEDUSA_CANONICAL_SEED_DEMO_HANDLES` в `apps/storefront/src/lib/catalog-scope.ts` (витрина скрывает эти демо-карточки).
 const PRODUCTS: Array<{
   title: string
   sku: string

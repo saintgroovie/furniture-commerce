@@ -3,6 +3,8 @@
 Дата: 2026-04-10.  
 Окружение проверки: **Cursor agent sandbox** (выполнение команд в рабочей копии `furniture-commerce`).
 
+Успешный refresh в **локальном Docker** (другой прогон): [`greenwich-post-refresh-verification-local-docker-success.md`](greenwich-post-refresh-verification-local-docker-success.md).
+
 ---
 
 ## 1. Summary

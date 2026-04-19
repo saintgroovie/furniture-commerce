@@ -30,7 +30,7 @@ This is minimal, one public URL model, and consistent with Medusa v2 and existin
 - `apps/backend/src/scripts/seed-real-data.ts` — `fixed2` → `fixed` → `seed-products.json`; image URL alignment loop.
 - `data/normalized/*` — seed URLs, `asset-upload-execution-manifest.json` / summary, optional `seed-products.fixed2.json` & summaries when tracked.
 - `data/processed/asset-manifests/local-upload-*.json` — last upload run against new root.
-- Docs: `docs/assets/local-storage-upload-strategy.md`, `docs/local-storage-upload-strategy.md`, `docs/real-seed-readiness-report.md`, `docs/seed-generation-plan.md`.
+- Docs: `docs/assets/local-storage-upload-strategy.md`, `docs/project/real-seed-readiness-report.md`, `docs/project/seed-generation-plan.md`.
 - This report and `data/normalized/post-seed-asset-url-fix-summary.json`.
 
 ## Runtime actions performed

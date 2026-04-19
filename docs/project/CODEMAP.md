@@ -18,7 +18,7 @@
 
 ## docs/
 
-**Каталоги верхнего уровня:** `guidelines/`, `architecture/`, `project/`, `storefront/` (включая `catalog-*.md`), `content/`, `assets/`, `collections/` (например `collections/greenwich/`), `ingestion/` (README-навигация), `reports/`, `content-pipeline/` (только редирект README). Подробное оглавление: [`docs/README.md`](../README.md).
+**Каталоги верхнего уровня:** `guidelines/`, `architecture/`, `project/`, `storefront/` (включая `catalog-*.md`), `content/`, `assets/`, `collections/` (например `collections/greenwich/`), `ingestion/` (README-навигация), `reports/`, `content-pipeline/` (только редирект README). В корне `docs/` — **только** `README.md`; тематические `.md` не кладём в корень. Подробное оглавление: [`docs/README.md`](../README.md).
 
 Назначение основных файлов (логические имена; физические пути — с префиксом раздела, см. README):
 

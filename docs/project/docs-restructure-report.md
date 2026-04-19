@@ -102,4 +102,20 @@ docs/
 
 ---
 
+## 7. Доп. выравнивание (2026-04-19)
+
+В корне `docs/` снова появились тематические файлы (дубликаты/черновики). Приведено к [целевой IA](docs-target-structure.md):
+
+| Было (корень `docs/`) | Стало |
+|----------------------|--------|
+| `greenwich-storefront-smoke-check.md` | `docs/collections/greenwich/greenwich-storefront-smoke-check.md` |
+| `greenwich-post-refresh-verification.md` (короткий отчёт об успехе в Docker; отличался от версии в `collections/greenwich/`) | `docs/collections/greenwich/greenwich-post-refresh-verification-local-docker-success.md` |
+| `seed-generation-plan.md` | удалён (канон: [`project/seed-generation-plan.md`](seed-generation-plan.md)) |
+| `real-seed-readiness-report.md` | удалён (канон: [`project/real-seed-readiness-report.md`](real-seed-readiness-report.md)) |
+| `local-storage-upload-strategy.md` (EN) | удалён (канон: [`../assets/local-storage-upload-strategy.md`](../assets/local-storage-upload-strategy.md)) |
+
+В файлах `greenwich-post-refresh-verification.md` и `greenwich-post-refresh-verification-local-docker-success.md` добавлены взаимные ссылки (разные среды исполнения). Обновлены [`post-seed-asset-url-fix-report.md`](post-seed-asset-url-fix-report.md), [`docs/README.md`](../README.md), [`collections/README.md`](../collections/README.md), этот отчёт и [`docs-target-structure.md`](docs-target-structure.md).
+
+---
+
 *Связанные meta-документы: [docs-restructure-audit.md](docs-restructure-audit.md), [docs-target-structure.md](docs-target-structure.md).*

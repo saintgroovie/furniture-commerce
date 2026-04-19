@@ -86,7 +86,7 @@
 ## collections/ — Документация по коллекциям
 
 - [collections/README.md](collections/README.md) — навигация по коллекциям.
-- **Greenwich** — все планы, аудиты и отчёты: каталог [collections/greenwich/](collections/greenwich/) (ingestion, seed, refresh, display, preprocess, кровати и т.д.).
+- **Greenwich** — все планы, аудиты и отчёты: каталог [collections/greenwich/](collections/greenwich/) (ingestion, seed, refresh, display, preprocess, кровати и т.д.). Дополнительно там же: `greenwich-storefront-smoke-check.md`, пара отчётов post-refresh (`greenwich-post-refresh-verification.md` и `greenwich-post-refresh-verification-local-docker-success.md` — разные среды исполнения).
 - **Oliver**, **Willie Winkie** — зарезервировано: [collections/oliver/README.md](collections/oliver/README.md), [collections/willie-winkie/README.md](collections/willie-winkie/README.md).
 
 ## ingestion/ — Навигация по ingestion / seed
