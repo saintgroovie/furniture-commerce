@@ -128,6 +128,18 @@ CTA-формулировки могут быть action-oriented и отлича
 
 ---
 
+## Метаданные коллекции (`metadata.collection` / `metadata.collection_label`)
+
+Согласованные подписи для данных в Medusa (карточка товара, группировки).  
+Менять только через утверждённые ingestion / backfill шаги.
+
+| `metadata.collection` | `metadata.collection_label` |
+|------------------------|-------------------------------|
+| `oliver` | Oliver |
+| `oliver-kids` | Oliver Kids |
+
+---
+
 ## Правила применения
 
 1. Новые nav items должны использовать labels из таблицы «Навигация».

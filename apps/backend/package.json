@@ -16,7 +16,8 @@
     "refresh-oliver": "medusa exec ./src/scripts/refresh-oliver.ts",
     "refresh-oliver-media": "medusa exec ./src/scripts/refresh-oliver-media.ts",
     "refresh-oliver-thumbnails": "medusa exec ./src/scripts/refresh-oliver-thumbnails.ts",
-    "sync-oliver-primary-images": "medusa exec ./src/scripts/sync-oliver-primary-images.ts"
+    "sync-oliver-primary-images": "medusa exec ./src/scripts/sync-oliver-primary-images.ts",
+    "apply-oliver-kids-manifest": "medusa exec ./src/scripts/apply-oliver-kids-manifest.ts"
   },
   "dependencies": {
     "@medusajs/framework": "^2.0.0",

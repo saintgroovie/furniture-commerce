@@ -1,0 +1,1126 @@
+{
+  "audit_meta": {
+    "schema_version": "1.0.0",
+    "artifact_type": "backfill_candidate_manifest",
+    "purpose": "Foundational oliver-kids subset: machine-readable candidates for an approved metadata.collection mutation pass. No taxonomy expansion beyond explicit workbook + product-title alignment.",
+    "execution_forbidden": [
+      "database_update",
+      "seed_run",
+      "storefront_change",
+      "product_duplication",
+      "automatic_promotion_of_handles_not_listed_here"
+    ],
+    "sources": {
+      "medusa_product_query": "product.deleted_at IS NULL AND metadata->>'collection' = 'oliver'",
+      "workbook_parse_path": "data/raw/workbook/parsed-sheets.json",
+      "workbook_sheet": "ОЛИВЕР - ЧЕРНЫЙ"
+    },
+    "notes": [
+      "product_id values are from the reference Medusa DB snapshot used during audit; re-validate ids in target environment before apply.",
+      "Do not infer oliver-kids from mattress size alone; WW-13-* (Willie Winkie) names overlap conceptually with OL-95-* (Oliver) but are different collections.",
+      "Approved Medusa mutation path (after human sign-off): from apps/backend run `yarn apply-oliver-kids-manifest` (dry-run) then `yarn apply-oliver-kids-manifest -- --apply`. Optional env: OLIVER_KIDS_MANIFEST_PATH."
+    ]
+  },
+  "minimal_safe_backfill_plan": {
+    "goal": "Set metadata.collection to oliver-kids only for approved foundational_subset rows; adjust collection_label only per naming sign-off.",
+    "preconditions": [
+      "Product owner confirms infant/nursery (ol-85-*, ol-83-1) inclusion in kids storefront scope.",
+      "No SKU is added to non-kids room sets in a way that would drop them from resolveKidsProducts cross-section rules."
+    ],
+    "steps": [
+      "Re-query target DB: SELECT id, handle FROM product WHERE metadata->>'collection' = 'oliver' AND handle = ANY(:handles) AND deleted_at IS NULL.",
+      "Apply metadata patch only to handles intersecting foundational_subset after human sign-off on this manifest version (use Medusa exec script apply-oliver-kids-manifest.ts, not ad-hoc SQL).",
+      "Set metadata.collection = 'oliver-kids'; set metadata.collection_label per docs/storefront/naming-system.md policy (do not copy Greenwich labels).",
+      "Run GET /store/products and kids catalog QA; verify ACTIVE_COLLECTION_KEYS includes oliver-kids (storefront scope already lists it).",
+      "Archive this manifest revision in git with the mutation ticket / PR reference."
+    ],
+    "post_validate_sql_suggestions": [
+      "SELECT count(*) FROM product WHERE deleted_at IS NULL AND metadata->>'collection' = 'oliver-kids';",
+      "SELECT handle FROM product WHERE deleted_at IS NULL AND metadata->>'collection' = 'oliver' ORDER BY handle;"
+    ]
+  },
+  "foundational_subset": [
+    {
+      "product_id": "prod_01KNTBXADXJVJEG9YNWFYXXGQV",
+      "handle": "ol-81-1",
+      "title": "Столик  детский",
+      "current_collection": "oliver",
+      "proposed_collection": "oliver-kids",
+      "confidence": "high",
+      "reason": "Explicit детский in Medusa title/canonical line; same code and name on Oliver workbook sheet.",
+      "workbook_reference": {
+        "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+        "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+        "collection_name_normalized": "oliver",
+        "product_code_normalized": "OL-81-1",
+        "row_index": 57,
+        "product_name_canonical": "Столик  детский"
+      },
+      "risks": [
+        "Low: naming unambiguous vs adult Oliver SKUs."
+      ]
+    },
+    {
+      "product_id": "prod_01KNTBXADX8CT1VKVV4SNQM2D7",
+      "handle": "ol-82-1",
+      "title": "Стульчик  детский",
+      "current_collection": "oliver",
+      "proposed_collection": "oliver-kids",
+      "confidence": "high",
+      "reason": "Explicit детский; workbook OL-82-1; media audit paths reference Babysecret/Oliver (nursery context).",
+      "workbook_reference": {
+        "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+        "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+        "collection_name_normalized": "oliver",
+        "product_code_normalized": "OL-82-1",
+        "row_index": 61,
+        "product_name_canonical": "Стульчик  детский"
+      },
+      "risks": [
+        "Low for collection split; ensure marketing still treats as same physical product (no duplication)."
+      ]
+    },
+    {
+      "product_id": "prod_01KNTBXADX6G2DX0ZK33HBQDSJ",
+      "handle": "ol-83-1",
+      "title": "Столешница пеленальная съемная",
+      "current_collection": "oliver",
+      "proposed_collection": "oliver-kids",
+      "confidence": "high",
+      "reason": "Infant/nursery-specific accessory; workbook OL-83-1.",
+      "workbook_reference": {
+        "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+        "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+        "collection_name_normalized": "oliver",
+        "product_code_normalized": "OL-83-1",
+        "row_index": 56,
+        "product_name_canonical": "Столешница пеленальная съемная"
+      },
+      "risks": [
+        "Product policy: confirm infant SKUs belong in same storefront kids scope as school-age kids."
+      ]
+    },
+    {
+      "product_id": "prod_01KNTBXADX1KA6WGTERRHPPEV7",
+      "handle": "ol-84-1",
+      "title": "Бортик к кровати малый",
+      "current_collection": "oliver",
+      "proposed_collection": "oliver-kids",
+      "confidence": "high",
+      "reason": "Bed guard for crib/kids bed; workbook OL-84-1; category bed-guard in parse.",
+      "workbook_reference": {
+        "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+        "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+        "collection_name_normalized": "oliver",
+        "product_code_normalized": "OL-84-1",
+        "row_index": 10,
+        "product_name_canonical": "Бортик к кровати малый"
+      },
+      "risks": [
+        "Low: accessory tied to kids/nursery beds only."
+      ]
+    },
+    {
+      "product_id": "prod_01KNTBXADX813WWJT86D6J2E9W",
+      "handle": "ol-84-2",
+      "title": "Бортик к кровати большой",
+      "current_collection": "oliver",
+      "proposed_collection": "oliver-kids",
+      "confidence": "high",
+      "reason": "Bed guard; workbook OL-84-2.",
+      "workbook_reference": {
+        "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+        "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+        "collection_name_normalized": "oliver",
+        "product_code_normalized": "OL-84-2",
+        "row_index": 9,
+        "product_name_canonical": "Бортик к кровати большой"
+      },
+      "risks": [
+        "Low."
+      ]
+    },
+    {
+      "product_id": "prod_01KNTBXADY87EJBJ40E55JCJBS",
+      "handle": "ol-85-1",
+      "title": "Кроватка для новорожденного (60*120)",
+      "current_collection": "oliver",
+      "proposed_collection": "oliver-kids",
+      "confidence": "high",
+      "reason": "Explicit newborn crib; workbook OL-85-1.",
+      "workbook_reference": {
+        "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+        "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+        "collection_name_normalized": "oliver",
+        "product_code_normalized": "OL-85-1",
+        "row_index": 25,
+        "product_name_canonical": "Кроватка для новорожденного (60*120)"
+      },
+      "risks": [
+        "Infant vs older-kids IA/navigation scope — confirm with product before backfill."
+      ]
+    },
+    {
+      "product_id": "prod_01KNTBXADY6TTYPEZ12QTDR456",
+      "handle": "ol-85-2",
+      "title": "Кроватка приставная + матрас",
+      "current_collection": "oliver",
+      "proposed_collection": "oliver-kids",
+      "confidence": "high",
+      "reason": "Co-sleeper / newborn-adjacent crib line; workbook OL-85-2.",
+      "workbook_reference": {
+        "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+        "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+        "collection_name_normalized": "oliver",
+        "product_code_normalized": "OL-85-2",
+        "row_index": 26,
+        "product_name_canonical": "Кроватка приставная + матрас"
+      },
+      "risks": [
+        "Same infant scope policy as ol-85-1."
+      ]
+    }
+  ],
+  "needs_review": [
+    {
+      "product_id": "prod_01KNTBXADYWQNNEVG1XK6EAFWP",
+      "handle": "ol-86-1",
+      "title": "Каркас для балдахина",
+      "current_collection": "oliver",
+      "proposed_collection": "oliver-kids",
+      "confidence": "medium",
+      "reason": "Typically sold with newborn crib; workbook OL-86-1. Not explicitly детский in title.",
+      "workbook_reference": {
+        "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+        "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+        "collection_name_normalized": "oliver",
+        "product_code_normalized": "OL-86-1",
+        "row_index": 16,
+        "product_name_canonical": "Каркас для балдахина"
+      },
+      "risks": [
+        "May be bundled or sold standalone; wrong split could orphan merchandising."
+      ],
+      "needs_review": true,
+      "review_questions": [
+        "Attach to oliver-kids only when sold with ol-85-* or always kids line?"
+      ]
+    },
+    {
+      "product_id": "prod_01KNTBXADY06DZQTG915QFY9BW",
+      "handle": "ol-95-1",
+      "title": "Кровать - трансформер (80*150) с рисунком",
+      "current_collection": "oliver",
+      "proposed_collection": "oliver-kids",
+      "confidence": "medium",
+      "reason": "Small mattress format 80x150 suggests kids room; workbook OL-95-1. Title does not contain детск.",
+      "workbook_reference": {
+        "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+        "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+        "collection_name_normalized": "oliver",
+        "product_code_normalized": "OL-95-1",
+        "row_index": 27,
+        "product_name_canonical": "Кровать - трансформер (80*150) с рисунком"
+      },
+      "risks": [
+        "Naming collision risk: different collection (Willie Winkie) has SKU WW-13-* titled Кровать детская (80*150) — do not auto-map across collections.",
+        "Heuristic-by-size alone is forbidden; human must confirm Oliver line intent."
+      ],
+      "needs_review": true,
+      "review_questions": [
+        "Confirm with merchandising that OL-95-* is kids-only vs compact adult guest."
+      ]
+    },
+    {
+      "product_id": "prod_01KNTBXADYET7AC1KCG28EK9RQ",
+      "handle": "ol-95-3",
+      "title": "Кровать - трансформер (80*150) с тканью",
+      "current_collection": "oliver",
+      "proposed_collection": "oliver-kids",
+      "confidence": "medium",
+      "reason": "Pair variant to ol-95-1; workbook OL-95-3.",
+      "workbook_reference": {
+        "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+        "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+        "collection_name_normalized": "oliver",
+        "product_code_normalized": "OL-95-3",
+        "row_index": 28,
+        "product_name_canonical": "Кровать - трансформер (80*150) с тканью"
+      },
+      "risks": [
+        "Same as ol-95-1."
+      ],
+      "needs_review": true,
+      "review_questions": [
+        "If ol-95-1 is promoted, should ol-95-3 always move together?"
+      ]
+    }
+  ],
+  "excluded": {
+    "policy": [
+      "All other Oliver SKUs (metadata.collection = oliver) remain adult/general Oliver line until an explicit future manifest revision.",
+      "Greenwich collection and any metadata.collection = greenwich are out of scope.",
+      "Canonical Medusa seed demo placeholders (non-Oliver handles) are never oliver-kids candidates.",
+      "Willie Winkie / Oxford / Monchelsea workbook rows are not promoted into Oliver or oliver-kids without separate entity-mapping decisions."
+    ],
+    "entries": [
+      {
+        "product_id": "prod_01KNTBXADCXPESM7CPF6NQGBDK",
+        "handle": "ol-00-1",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "General Oliver wardrobe line; no kids/nursery signal in title or workbook category beyond shared Oliver sheet.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-00-1"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADCVVSRFRFK60X78V93",
+        "handle": "ol-01-2",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Adult wardrobe / clothing storage Oliver SKU.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-01-2"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADCQ78KTFDG2CFXRDER",
+        "handle": "ol-02-1",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Adult wardrobe Oliver SKU.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-02-1"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADCYJKGNAPE1WGQJBQZ",
+        "handle": "ol-03-1",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Adult wardrobe Oliver SKU.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-03-1"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADDACBVH2BM1JSB2MWH",
+        "handle": "ol-05-1",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "General bedroom commode; no explicit kids naming.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-05-1"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADD48JACA24PC4TXVCC",
+        "handle": "ol-05-2",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "General bedroom commode.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-05-2"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADDP2V5W6AKD074YRVF",
+        "handle": "ol-05-3",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "General bedroom commode.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-05-3"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADDBV29TSGTAFZN9W5J",
+        "handle": "ol-05-n",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "General bedroom commode variant.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-05-Н"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADD0VJ53P78YSGNCRDG",
+        "handle": "ol-06-1",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Dressing table adult bedroom.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-06-1"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADDKNMB17WD6NVSNRCY",
+        "handle": "ol-07-1",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Chest trunk general line.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-07-1"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADE04TT9T88M1SRC2T7",
+        "handle": "ol-08-1",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Nightstand adult bedroom.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-08-1"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADE4BY5ASV1EEQ9SQHZ",
+        "handle": "ol-08-1-mirror",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Mirror accessory for nightstand line.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-08-1-MIRROR"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADECY5WKNET16F2ET5W",
+        "handle": "ol-08-2",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Nightstand variant adult bedroom.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-08-2"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADFZ5RFACJQDNSGM6D2",
+        "handle": "ol-09-2",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Floor mirror general line.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-09-2"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADFFPGAVHK024D20MEQ",
+        "handle": "ol-14-1",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Single bed 90x190; no explicit kids label — do not promote by size heuristic.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-14-1"
+        },
+        "risks": [
+          "Could be teen or guest room; requires separate business rule if ever in scope."
+        ],
+        "exclusion_code": "no_explicit_kids_signal"
+      },
+      {
+        "product_id": "prod_01KNTBXADFNYAQGPEQKCM4NPZE",
+        "handle": "ol-14-2",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Single bed variant; no explicit kids label.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-14-2"
+        },
+        "risks": [],
+        "exclusion_code": "no_explicit_kids_signal"
+      },
+      {
+        "product_id": "prod_01KNTBXADF36E724RQTW6Z73B0",
+        "handle": "ol-15-1",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Bed 120x190 general line.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-15-1"
+        },
+        "risks": [],
+        "exclusion_code": "no_explicit_kids_signal"
+      },
+      {
+        "product_id": "prod_01KNTBXADG6TFW8WB9SPQ4JTGD",
+        "handle": "ol-15-2",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Bed variant general line.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-15-2"
+        },
+        "risks": [],
+        "exclusion_code": "no_explicit_kids_signal"
+      },
+      {
+        "product_id": "prod_01KNTBXADGPHKZEWKKT477WNR7",
+        "handle": "ol-16-1",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Bed 140x190 general line.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-16-1"
+        },
+        "risks": [],
+        "exclusion_code": "no_explicit_kids_signal"
+      },
+      {
+        "product_id": "prod_01KNTBXADGH3EK5BM3RAZ2Z7KT",
+        "handle": "ol-16-2",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Bed variant general line.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-16-2"
+        },
+        "risks": [],
+        "exclusion_code": "no_explicit_kids_signal"
+      },
+      {
+        "product_id": "prod_01KNTBXADHWB8K6BN1ZBM7WEWG",
+        "handle": "ol-17-1",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Double bed 160x200 adult line.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-17-1"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADHZ2MG5CDS4EAVG1RJ",
+        "handle": "ol-17-2",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Double bed variant.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-17-2"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADH2J4J6TDA5AHYNVV7",
+        "handle": "ol-17-3",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Double bed with lift mechanism; adult line.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-17-3"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADHE1YFJS2VEPCRJJBN",
+        "handle": "ol-18-1",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "King bed 180x200 adult line.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-18-1"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADJ9A2N7GQFHZ4JTGD8",
+        "handle": "ol-18-2",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "King bed variant.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-18-2"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADJNM2C7N1WJDACRGR2",
+        "handle": "ol-21-1",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Dining table general living.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-21-1"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADJHD78QK7PQ1FM260H",
+        "handle": "ol-23-1",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Dining chair adult line.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-23-1"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADK9SGFKMJV82MA9F4S",
+        "handle": "ol-25-1",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Dining sideboard.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-25-1"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADM9PT13B1VAYEPXEHE",
+        "handle": "ol-26-1",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Display cabinet dining/living.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-26-1"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADN9KCCPKCH27V1RRBF",
+        "handle": "ol-26-2",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Display cabinet variant.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-26-2"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADP6726CTE85A445K6N",
+        "handle": "ol-30-1",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Clock accessory; not kids assortment.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-30-1"
+        },
+        "risks": [],
+        "exclusion_code": "accessory_non_kids"
+      },
+      {
+        "product_id": "prod_01KNTBXADQK0E63VFJ0KQPKRVX",
+        "handle": "ol-42-1",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "TV stand living area.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-42-1"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADQK9VZ1N1X6CVH02J8",
+        "handle": "ol-43-1",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Coffee table living.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-43-1"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADR7DXSVHCM6Q99129G",
+        "handle": "ol-44-1",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Console living.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-44-1"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADRDXMGB8JRMAB1JHPS",
+        "handle": "ol-44-2",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Console with shelves living.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-44-2"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADSNY1JKR33SC2FRJX5",
+        "handle": "ol-55-1",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Bench seating; no kids-only signal.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-55-1"
+        },
+        "risks": [],
+        "exclusion_code": "no_explicit_kids_signal"
+      },
+      {
+        "product_id": "prod_01KNTBXADSBJMRQ63HAENWJ880",
+        "handle": "ol-55-2",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Bench seating large.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-55-2"
+        },
+        "risks": [],
+        "exclusion_code": "no_explicit_kids_signal"
+      },
+      {
+        "product_id": "prod_01KNTBXADV8375RHNBHRQMXQ87",
+        "handle": "ol-56-1",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Armchair living.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-56-1"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADVZVCXPHMZ1K8VZAJS",
+        "handle": "ol-57-1",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Sofa living.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-57-1"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADVKWH122FJREKPT5GD",
+        "handle": "ol-57-2",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Sofa large living.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-57-2"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADVAA49T6H127BKKJK1",
+        "handle": "ol-57-3",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Sofa-bed; adult/teen ambiguous without label — excluded from foundational subset.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-57-3"
+        },
+        "risks": [],
+        "exclusion_code": "no_explicit_kids_signal"
+      },
+      {
+        "product_id": "prod_01KNTBXADVBQXBYEJC03XRAF81",
+        "handle": "ol-61-1",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Bookcase office/living.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-61-1"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADVQ5PEJPEQG5B9X3KX",
+        "handle": "ol-61-2",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Cabinet office.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-61-2"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADV29H43B35KXJJBA18",
+        "handle": "ol-62-1",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Bookcase; homework use possible but no explicit kids naming.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-62-1"
+        },
+        "risks": [],
+        "exclusion_code": "no_explicit_kids_signal"
+      },
+      {
+        "product_id": "prod_01KNTBXADWGB0430GYR8RJR7EM",
+        "handle": "ol-62-2",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Wide bookcase; same as ol-62-1.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-62-2"
+        },
+        "risks": [],
+        "exclusion_code": "no_explicit_kids_signal"
+      },
+      {
+        "product_id": "prod_01KNTBXADW4RDEYGV3MPTD64ZR",
+        "handle": "ol-64-1",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Desk bureau office.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-64-1"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADW0MYZ9SEBBAYPS5V4",
+        "handle": "ol-65-1",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Writing desk; no explicit kids naming.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-65-1"
+        },
+        "risks": [],
+        "exclusion_code": "no_explicit_kids_signal"
+      },
+      {
+        "product_id": "prod_01KNTBXADWSAHM0DJV0SNH29AK",
+        "handle": "ol-65-2",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Writing desk variant.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-65-2"
+        },
+        "risks": [],
+        "exclusion_code": "no_explicit_kids_signal"
+      },
+      {
+        "product_id": "prod_01KNTBXADWTF7DF2JX8E3P9YYQ",
+        "handle": "ol-66-1",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Double-pedestal desk office.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-66-1"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADWW99PZJQFM2H9X7BK",
+        "handle": "ol-66-4",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Cabinet desk variant office.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-66-4"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADW4ZCGJCC9RTC6Z5KC",
+        "handle": "ol-67-1",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Work desk.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-67-1"
+        },
+        "risks": [],
+        "exclusion_code": "adult_general_oliver_line"
+      },
+      {
+        "product_id": "prod_01KNTBXADW6ZWB6HTCJ0C4XPY1",
+        "handle": "ol-68-1",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Etagere shelving general.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-68-1"
+        },
+        "risks": [],
+        "exclusion_code": "no_explicit_kids_signal"
+      },
+      {
+        "product_id": "prod_01KNTBXADW4A481E827ASE6FW3",
+        "handle": "ol-68-2",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Large etagere.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-68-2"
+        },
+        "risks": [],
+        "exclusion_code": "no_explicit_kids_signal"
+      },
+      {
+        "product_id": "prod_01KNTBXADWPT0F9X7Y2SATPPGV",
+        "handle": "ol-69-1",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Wall shelf bookcase style; no kids-only signal.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-69-1"
+        },
+        "risks": [],
+        "exclusion_code": "no_explicit_kids_signal"
+      },
+      {
+        "product_id": "prod_01KNTBXADX120D41J3EXQASJ8Q",
+        "handle": "ol-69-2",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Wall shelf variant.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-69-2"
+        },
+        "risks": [],
+        "exclusion_code": "no_explicit_kids_signal"
+      },
+      {
+        "product_id": "prod_01KNTBXADXD2X796J2TJ8SAG74",
+        "handle": "ol-69-3",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Wall shelf variant.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-69-3"
+        },
+        "risks": [],
+        "exclusion_code": "no_explicit_kids_signal"
+      },
+      {
+        "product_id": "prod_01KNTBXADXM4N27AGHDHCV5QQA",
+        "handle": "ol-69-4",
+        "current_collection": "oliver",
+        "proposed_collection": null,
+        "confidence": "high",
+        "reason": "Corner wall shelf.",
+        "workbook_reference": {
+          "parsed_sheets_path": "data/raw/workbook/parsed-sheets.json",
+          "source_sheet": "ОЛИВЕР - ЧЕРНЫЙ",
+          "product_code_normalized": "OL-69-4"
+        },
+        "risks": [],
+        "exclusion_code": "no_explicit_kids_signal"
+      }
+    ]
+  }
+}
