@@ -1,0 +1,241 @@
+{
+  "audit_meta": {
+    "pass": "oxford-4-controlled-pdf-seed-interim-2026-04-27",
+    "date": "2026-04-27",
+    "workbook_row_keys": [
+      "oxford:OX-14-1",
+      "oxford:OX-14-11",
+      "oxford:OX-90-1",
+      "oxford:S-OX-05"
+    ],
+    "readiness_status": "pdf_seed_interim",
+    "purpose": "Exact controlled-pilot subset for future filtered seed / ingestion (not executed in this pass).",
+    "preprocess_plan": "data/processed/asset-manifests/oxford-four-pdf-static-preprocess-plan.json",
+    "safety": "Excludes five needs_manual_asset Oxford SKUs and all excluded Oxford lines."
+  },
+  "seed_filter": {
+    "include_workbook_row_keys": [
+      "oxford:OX-14-1",
+      "oxford:OX-14-11",
+      "oxford:OX-90-1",
+      "oxford:S-OX-05"
+    ],
+    "exclude_all_other_oxford": true
+  },
+  "entity_mapping_rows": [
+    {
+      "workbook_row_key": "oxford:OX-14-1",
+      "product_code_normalized": "OX-14-1",
+      "canonical_name": "Комплекс Оксфорд-1 (нижняя кровать без матраса 90*185)",
+      "collection_name_normalized": "oxford",
+      "category_normalized": "complex",
+      "price_normalized": 29000.0,
+      "dimensions_normalized": {
+        "height_mm": 257,
+        "width_mm": 945,
+        "depth_mm": 1895
+      },
+      "medusa_product_handle": "ox-14-1",
+      "medusa_product_title": "Комплекс Оксфорд-1 (нижняя кровать без матраса 90*185)",
+      "medusa_collection_handle": "oxford",
+      "medusa_collection_title": "Oxford",
+      "medusa_category_handle": "complex",
+      "medusa_category_title": "Комплексы",
+      "medusa_product_type": "CONFIGURABLE",
+      "medusa_variant_sku": "OX-14-1",
+      "medusa_price_amount": 2900000,
+      "variant_strategy": "single_default",
+      "asset_binding_ref": "oxford:OX-14-1",
+      "upload_manifest_refs": [
+        "products/oxford/ox-14-1_interim_pdf_gallery_01.png",
+        "products/oxford/Oxford_full_p6_i0_887x614.png",
+        "products/oxford/Oxford_full_p6_i1_887x621.png"
+      ],
+      "main_image_storage_key": "products/oxford/ox-14-1_interim_pdf_gallery_01.png",
+      "gallery_storage_keys": [
+        "products/oxford/Oxford_full_p6_i0_887x614.png",
+        "products/oxford/Oxford_full_p6_i1_887x621.png"
+      ],
+      "asset_quality_status": "pdf_extract_interim",
+      "readiness_status": "pdf_seed_interim",
+      "mapping_notes": "Oxford-9 entity promotion (2026-04-27): interim PDF-derived keys; preprocess/copy from data/raw/pdf-assets to static products/oxford before seed. Primary source: data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i1_887x621.png | Pilot pdf_seed_interim (Oxford-4): oxford-4-controlled-pdf-seed-interim-2026-04-27.",
+      "excluded_reason": null,
+      "blocked_reason": null,
+      "needs_business_decision": false,
+      "oxford_promotion": {
+        "pass": "oxford-9-reviewed-entity-promotion",
+        "review_decision": "reviewed_promote",
+        "pdf_source": "Oxford_full.pdf",
+        "pdf_page": 6,
+        "match_reason": "oxford_page_hint:комплекс оксфорд 1",
+        "confidence": 0.55
+      },
+      "oxford_pilot": {
+        "pass": "oxford-4-controlled-pdf-seed-interim-2026-04-27",
+        "subset": "improved_pdf_only_four",
+        "preprocess_plan": "data/processed/asset-manifests/oxford-four-pdf-static-preprocess-plan.json",
+        "candidates_manifest": "data/normalized/oxford-four-pdf-seed-interim-candidates.json"
+      }
+    },
+    {
+      "workbook_row_key": "oxford:OX-14-11",
+      "product_code_normalized": "OX-14-11",
+      "canonical_name": "Нижняя кровать без матраса увеличенная (120*185)",
+      "collection_name_normalized": "oxford",
+      "category_normalized": "bed",
+      "price_normalized": 37000.0,
+      "dimensions_normalized": {
+        "height_mm": 257,
+        "width_mm": 1245,
+        "depth_mm": 1895
+      },
+      "medusa_product_handle": "ox-14-11",
+      "medusa_product_title": "Нижняя кровать без матраса увеличенная (120*185)",
+      "medusa_collection_handle": "oxford",
+      "medusa_collection_title": "Oxford",
+      "medusa_category_handle": "krovati",
+      "medusa_category_title": "Кровати",
+      "medusa_product_type": "CONFIGURABLE",
+      "medusa_variant_sku": "OX-14-11",
+      "medusa_price_amount": 3700000,
+      "variant_strategy": "single_default",
+      "asset_binding_ref": "oxford:OX-14-11",
+      "upload_manifest_refs": [
+        "products/oxford/ox-14-11_interim_pdf_gallery_01.png",
+        "products/oxford/Oxford_full_p5_i0_947x949.png",
+        "products/oxford/Oxford_full_p5_i1_480x1182.png",
+        "products/oxford/Oxford_full_p5_i2_521x429.png",
+        "products/oxford/Oxford_full_p5_i3_522x445.png"
+      ],
+      "main_image_storage_key": "products/oxford/ox-14-11_interim_pdf_gallery_01.png",
+      "gallery_storage_keys": [
+        "products/oxford/Oxford_full_p5_i0_947x949.png",
+        "products/oxford/Oxford_full_p5_i1_480x1182.png",
+        "products/oxford/Oxford_full_p5_i2_521x429.png",
+        "products/oxford/Oxford_full_p5_i3_522x445.png"
+      ],
+      "asset_quality_status": "pdf_extract_interim",
+      "readiness_status": "pdf_seed_interim",
+      "mapping_notes": "Oxford-9 entity promotion (2026-04-27): interim PDF-derived keys; preprocess/copy from data/raw/pdf-assets to static products/oxford before seed. Primary source: data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p5_i0_947x949.png | Pilot pdf_seed_interim (Oxford-4): oxford-4-controlled-pdf-seed-interim-2026-04-27.",
+      "excluded_reason": null,
+      "blocked_reason": null,
+      "needs_business_decision": false,
+      "oxford_promotion": {
+        "pass": "oxford-9-reviewed-entity-promotion",
+        "review_decision": "reviewed_promote",
+        "pdf_source": "Oxford_full.pdf",
+        "pdf_page": 5,
+        "match_reason": "oxford_page_hint:нижняя кровать",
+        "confidence": 0.55
+      },
+      "oxford_pilot": {
+        "pass": "oxford-4-controlled-pdf-seed-interim-2026-04-27",
+        "subset": "improved_pdf_only_four",
+        "preprocess_plan": "data/processed/asset-manifests/oxford-four-pdf-static-preprocess-plan.json",
+        "candidates_manifest": "data/normalized/oxford-four-pdf-seed-interim-candidates.json"
+      }
+    },
+    {
+      "workbook_row_key": "oxford:OX-90-1",
+      "product_code_normalized": "OX-90-1",
+      "canonical_name": "Комплекс Оксфорд-1 с выдвижной столешницей без  нижней кровати",
+      "collection_name_normalized": "oxford",
+      "category_normalized": "complex",
+      "price_normalized": 406200.0,
+      "dimensions_normalized": {
+        "height_mm": 1930,
+        "width_mm": 2605,
+        "depth_mm": 1392
+      },
+      "medusa_product_handle": "ox-90-1",
+      "medusa_product_title": "Комплекс Оксфорд-1 с выдвижной столешницей без  нижней кровати",
+      "medusa_collection_handle": "oxford",
+      "medusa_collection_title": "Oxford",
+      "medusa_category_handle": "complex",
+      "medusa_category_title": "Комплексы",
+      "medusa_product_type": "CONFIGURABLE",
+      "medusa_variant_sku": "OX-90-1",
+      "medusa_price_amount": 40620000,
+      "variant_strategy": "single_default",
+      "asset_binding_ref": "oxford:OX-90-1",
+      "upload_manifest_refs": [
+        "products/oxford/ox-90-1_interim_pdf_gallery_01.png",
+        "products/oxford/Oxford_full_p6_i0_887x614.png",
+        "products/oxford/Oxford_full_p6_i1_887x621.png"
+      ],
+      "main_image_storage_key": "products/oxford/ox-90-1_interim_pdf_gallery_01.png",
+      "gallery_storage_keys": [
+        "products/oxford/Oxford_full_p6_i0_887x614.png",
+        "products/oxford/Oxford_full_p6_i1_887x621.png"
+      ],
+      "asset_quality_status": "pdf_extract_interim",
+      "readiness_status": "pdf_seed_interim",
+      "mapping_notes": "Oxford-9 entity promotion (2026-04-27): interim PDF-derived keys; preprocess/copy from data/raw/pdf-assets to static products/oxford before seed. Primary source: data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i1_887x621.png | Pilot pdf_seed_interim (Oxford-4): oxford-4-controlled-pdf-seed-interim-2026-04-27.",
+      "excluded_reason": null,
+      "blocked_reason": null,
+      "needs_business_decision": false,
+      "oxford_promotion": {
+        "pass": "oxford-9-reviewed-entity-promotion",
+        "review_decision": "reviewed_promote",
+        "pdf_source": "Oxford_full.pdf",
+        "pdf_page": 6,
+        "match_reason": "oxford_page_hint:с выдвижной столешницей",
+        "confidence": 0.55
+      },
+      "oxford_pilot": {
+        "pass": "oxford-4-controlled-pdf-seed-interim-2026-04-27",
+        "subset": "improved_pdf_only_four",
+        "preprocess_plan": "data/processed/asset-manifests/oxford-four-pdf-static-preprocess-plan.json",
+        "candidates_manifest": "data/normalized/oxford-four-pdf-seed-interim-candidates.json"
+      }
+    },
+    {
+      "workbook_row_key": "oxford:S-OX-05",
+      "product_code_normalized": "S-OX-05",
+      "canonical_name": "Ступени с перилами и ящиками ОКСФОРД",
+      "collection_name_normalized": "oxford",
+      "category_normalized": "toy-box",
+      "price_normalized": 77100.0,
+      "dimensions_normalized": null,
+      "medusa_product_handle": "s-ox-05",
+      "medusa_product_title": "Ступени с перилами и ящиками ОКСФОРД",
+      "medusa_collection_handle": "oxford",
+      "medusa_collection_title": "Oxford",
+      "medusa_category_handle": "toy-box",
+      "medusa_category_title": "Ступени и ящики",
+      "medusa_product_type": "CONFIGURABLE",
+      "medusa_variant_sku": "S-OX-05",
+      "medusa_price_amount": 7710000,
+      "variant_strategy": "single_default",
+      "asset_binding_ref": "oxford:S-OX-05",
+      "upload_manifest_refs": [
+        "products/oxford/s-ox-05_interim_pdf_gallery_01.png",
+        "products/oxford/Oxford_full_p4_i0_1306x951.png"
+      ],
+      "main_image_storage_key": "products/oxford/s-ox-05_interim_pdf_gallery_01.png",
+      "gallery_storage_keys": [
+        "products/oxford/Oxford_full_p4_i0_1306x951.png"
+      ],
+      "asset_quality_status": "pdf_extract_interim",
+      "readiness_status": "pdf_seed_interim",
+      "mapping_notes": "Oxford-9 entity promotion (2026-04-27): interim PDF-derived keys; preprocess/copy from data/raw/pdf-assets to static products/oxford before seed. Primary source: data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p4_i0_1306x951.png | Pilot pdf_seed_interim (Oxford-4): oxford-4-controlled-pdf-seed-interim-2026-04-27.",
+      "excluded_reason": null,
+      "blocked_reason": null,
+      "needs_business_decision": false,
+      "oxford_promotion": {
+        "pass": "oxford-9-reviewed-entity-promotion",
+        "review_decision": "reviewed_promote",
+        "pdf_source": "Oxford_full.pdf",
+        "pdf_page": 4,
+        "match_reason": "oxford_page_hint:ступен",
+        "confidence": 0.55
+      },
+      "oxford_pilot": {
+        "pass": "oxford-4-controlled-pdf-seed-interim-2026-04-27",
+        "subset": "improved_pdf_only_four",
+        "preprocess_plan": "data/processed/asset-manifests/oxford-four-pdf-static-preprocess-plan.json",
+        "candidates_manifest": "data/normalized/oxford-four-pdf-seed-interim-candidates.json"
+      }
+    }
+  ]
+}

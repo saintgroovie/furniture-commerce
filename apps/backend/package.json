@@ -17,7 +17,12 @@
     "refresh-oliver-media": "medusa exec ./src/scripts/refresh-oliver-media.ts",
     "refresh-oliver-thumbnails": "medusa exec ./src/scripts/refresh-oliver-thumbnails.ts",
     "sync-oliver-primary-images": "medusa exec ./src/scripts/sync-oliver-primary-images.ts",
-    "apply-oliver-kids-manifest": "medusa exec ./src/scripts/apply-oliver-kids-manifest.ts"
+    "apply-oliver-kids-manifest": "medusa exec ./src/scripts/apply-oliver-kids-manifest.ts",
+    "oxford-pilot-four:materialize-static": "node ./scripts/oxford-pilot-four-materialize-static.mjs",
+    "oxford-pilot-four:smoke": "node ./scripts/oxford-pilot-four-smoke.mjs",
+    "oxford-pilot-four:seed": "medusa exec ./src/scripts/seed-oxford-pilot-four.ts",
+    "oxford-pilot-four:validate-post-ingestion": "medusa exec ./src/scripts/validate-oxford-pilot-four-post-ingestion.ts",
+    "oxford-pilot-four:sync-ingested-evidence": "node ./scripts/oxford-pilot-four-sync-ingested-evidence.mjs"
   },
   "dependencies": {
     "@medusajs/framework": "^2.0.0",
