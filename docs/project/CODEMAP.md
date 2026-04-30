@@ -18,7 +18,7 @@
 
 ## docs/
 
-**Каталоги верхнего уровня:** `guidelines/`, `architecture/`, `project/`, `storefront/` (включая `catalog-*.md`), `content/`, `assets/`, `collections/` (например `collections/greenwich/`), `ingestion/` (README-навигация), `reports/`, `content-pipeline/` (только редирект README). В корне `docs/` — **только** `README.md`; тематические `.md` не кладём в корень. Подробное оглавление: [`docs/README.md`](../README.md).
+**Каталоги верхнего уровня:** `guidelines/`, `architecture/`, `project/`, `storefront/` (включая `catalog-*.md`), `content/`, `assets/`, `collections/` (например `collections/greenwich/`, `collections/oliver/`, `collections/oxford/`), `ingestion/` (README-навигация), `reports/`, `content-pipeline/` (только редирект README). В корне `docs/` — **только** `README.md`; тематические `.md` не кладём в корень. Подробное оглавление: [`docs/README.md`](../README.md).
 
 Назначение основных файлов (логические имена; физические пути — с префиксом раздела, см. README):
 
@@ -45,6 +45,7 @@
 | **SYSTEM_BOUNDARIES.md** | Неизменяемые границы системы: архитектура, домен, логика, cart, product, API, расширение, сложность, docs, эскалация. |
 | **CODEMAP.md** | Карта кода для AI: структура, модули, сущности, правила, точки осторожности. |
 | **oliver-final-technical-media-readiness.md** | Закрытие Oliver technical/media readiness на reference stack: коммиты, статус OK, толкование (manual QA отдельно, другие окружения, Greenwich), без новой методологии проверки. |
+| **oxford-four-pilot-interim-asset-source-map.md** | Oxford-4 pilot: controlled interim static asset source map for `oxford-pilot-four-materialize-static.mjs` (`data/normalized/oxford-four-pilot-interim-asset-source-map.json`); не white-background, без rollout/unpause. |
 | **MEDUSA_DOCKER_GUIDE.md** | Medusa v2 в Docker: Yarn 4, volume/node_modules, env (два URL для storefront), CORS, Admin/Vite, чеклист запуска, частые ошибки. |
 
 ---
@@ -61,6 +62,7 @@
 - **src/api/middlewares.ts** — middleware: защита корзины (BESPOKE не допускается в line-items).
 - **src/links/** — связи между сущностями: Product ↔ ProductClassification, Product ↔ RoomSetItem.
 - **src/scripts/seed.ts** — сид: регион РФ, категории, продукты с типами, Room Sets с товарами.
+- **Oxford-4 pilot (изолированно от `seed-real-data.ts`):** `apps/backend/scripts/oxford-pilot-four-materialize-static.mjs` (materialize с поддержкой `data/normalized/oxford-four-pilot-interim-asset-source-map.json`: предпочтительный interim-static источник, fallback на PDF extract), `scripts/oxford-pilot-four-smoke.mjs` (subset + static + seed JSON), `src/scripts/seed-oxford-pilot-four.ts` (`OXFORD_PILOT_CONFIRM=1`), `src/scripts/validate-oxford-pilot-four-post-ingestion.ts` (`OXFORD_PILOT_POST_INGESTION_VALIDATE=1`, read-only после сида). Команды: `yarn oxford-pilot-four:*` в `apps/backend`. См. `docs/project/oxford-four-pilot-ingestion-dry-run.md`, `docs/project/oxford-four-pilot-interim-asset-source-map.md`, `docs/project/oxford-four-pilot-post-ingestion-validation.md`, `data/normalized/oxford-four-pilot-interim-asset-source-map.json`, `data/normalized/oxford-four-pilot-ingested-evidence.json` + `docs/project/oxford-four-pilot-ingested-evidence.md`. После коммита `oxford-four-pilot-post-ingestion-validation.json` с `verdict: ok`: `yarn oxford-pilot-four:sync-ingested-evidence` (обновляет evidence JSON).
 
 Backend не форкается; расширение только через модули, links и middleware.
 

@@ -1,0 +1,100 @@
+{
+  "audit_meta": {
+    "pass_name": "oxford_four_pilot_interim_asset_source_map",
+    "pass_kind": "controlled_interim_static_materialization_mapping",
+    "generated_date": "2026-04-30",
+    "constraints": [
+      "No seed/validation/sync execution",
+      "No catalog scope change",
+      "No Oxford unpause/rollout",
+      "No white-background claims for interim non-white sources"
+    ]
+  },
+  "source_files_checked": [
+    "data/normalized/visual-asset-candidate-manifest.json",
+    "data/normalized/seed-products.oxford-pilot-four.json",
+    "data/normalized/oxford-four-pdf-seed-interim-candidates.json"
+  ],
+  "rows": [
+    {
+      "sku": "OX-14-11",
+      "handle": "ox-14-11",
+      "approved_interim_reference": "http://localhost:9000/static/products/oxford/ox-14-11_interim_pdf_gallery_01.png",
+      "selected_source_paths": [
+        "apps/backend/static/products/oxford/ox-14-11_interim_pdf_gallery_01.png",
+        "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p5_i0_947x949.png"
+      ],
+      "target_static_path": "apps/backend/static/products/oxford/ox-14-11_interim_pdf_gallery_01.png",
+      "source_type": "non_white",
+      "confidence": "confirmed",
+      "white_background_source": false,
+      "warnings": [
+        "not_white_background"
+      ],
+      "status": "approved_for_interim_pilot_static_materialization",
+      "media_ready": false,
+      "storefront_ready": false,
+      "rollout_ready": false
+    },
+    {
+      "sku": "OX-90-1",
+      "handle": "ox-90-1",
+      "approved_interim_reference": "http://localhost:9000/static/products/oxford/ox-90-1_interim_pdf_gallery_01.png",
+      "selected_source_paths": [
+        "apps/backend/static/products/oxford/ox-90-1_interim_pdf_gallery_01.png",
+        "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i0_887x614.png"
+      ],
+      "target_static_path": "apps/backend/static/products/oxford/ox-90-1_interim_pdf_gallery_01.png",
+      "source_type": "non_white",
+      "confidence": "confirmed",
+      "white_background_source": false,
+      "warnings": [
+        "not_white_background"
+      ],
+      "status": "approved_for_interim_pilot_static_materialization",
+      "media_ready": false,
+      "storefront_ready": false,
+      "rollout_ready": false
+    },
+    {
+      "sku": "OX-14-1",
+      "handle": "ox-14-1",
+      "approved_interim_reference": "http://localhost:9000/static/products/oxford/ox-14-1_interim_pdf_gallery_01.png",
+      "selected_source_paths": [
+        "apps/backend/static/products/oxford/ox-14-1_interim_pdf_gallery_01.png",
+        "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i1_887x621.png"
+      ],
+      "target_static_path": "apps/backend/static/products/oxford/ox-14-1_interim_pdf_gallery_01.png",
+      "source_type": "non_white",
+      "confidence": "confirmed",
+      "white_background_source": false,
+      "warnings": [
+        "not_white_background"
+      ],
+      "status": "approved_for_interim_pilot_static_materialization",
+      "media_ready": false,
+      "storefront_ready": false,
+      "rollout_ready": false
+    },
+    {
+      "sku": "S-OX-05",
+      "handle": "s-ox-05",
+      "approved_interim_reference": "http://localhost:9000/static/products/oxford/s-ox-05_interim_pdf_gallery_01.png",
+      "selected_source_paths": [
+        "apps/backend/static/products/oxford/s-ox-05_interim_pdf_gallery_01.png",
+        "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p4_i0_1306x951.png"
+      ],
+      "target_static_path": "apps/backend/static/products/oxford/s-ox-05_interim_pdf_gallery_01.png",
+      "source_type": "non_white",
+      "confidence": "confirmed",
+      "white_background_source": false,
+      "warnings": [
+        "not_white_background"
+      ],
+      "status": "approved_for_interim_pilot_static_materialization",
+      "media_ready": false,
+      "storefront_ready": false,
+      "rollout_ready": false
+    }
+  ]
+}

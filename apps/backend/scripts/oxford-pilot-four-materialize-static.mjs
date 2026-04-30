@@ -23,6 +23,10 @@ const candidatesPath = path.join(
   repoRoot,
   "data/normalized/oxford-four-pdf-seed-interim-candidates.json"
 )
+const interimSourceMapPath = path.join(
+  repoRoot,
+  "data/normalized/oxford-four-pilot-interim-asset-source-map.json"
+)
 
 /** Interim hero filenames → source basename under Oxford_full (distinct heroes per SKU). */
 const INTERIM_FROM_PRIMARY = {
@@ -37,10 +41,30 @@ function storageBasename(storageKey) {
   return parts[parts.length - 1]
 }
 
+function readInterimSourceMap() {
+  if (!fs.existsSync(interimSourceMapPath)) {
+    return new Map()
+  }
+  const raw = JSON.parse(fs.readFileSync(interimSourceMapPath, "utf-8"))
+  const rows = raw.rows ?? []
+  const map = new Map()
+  for (const row of rows) {
+    const target = row.target_static_path
+    const selected = row.selected_source_paths
+    if (typeof target !== "string" || !Array.isArray(selected)) {
+      continue
+    }
+    const targetAbs = path.join(repoRoot, target)
+    map.set(path.basename(targetAbs), selected.map((p) => path.join(repoRoot, p)))
+  }
+  return map
+}
+
 function main() {
   const dryRun = process.argv.includes("--dry-run")
   const raw = JSON.parse(fs.readFileSync(candidatesPath, "utf-8"))
   const rows = raw.entity_mapping_rows ?? []
+  const interimSourceMap = readInterimSourceMap()
   const keys = new Set()
   for (const row of rows) {
     for (const k of row.upload_manifest_refs ?? []) {
@@ -53,20 +77,29 @@ function main() {
   const copies = []
   for (const storageKey of keys) {
     const base = storageBasename(storageKey)
-    let srcName = base
-    if (INTERIM_FROM_PRIMARY[base]) {
-      srcName = INTERIM_FROM_PRIMARY[base]
+    let srcCandidates = interimSourceMap.get(base) ?? []
+    if (srcCandidates.length === 0) {
+      let srcName = base
+      if (INTERIM_FROM_PRIMARY[base]) {
+        srcName = INTERIM_FROM_PRIMARY[base]
+      }
+      srcCandidates = [path.join(rawDir, srcName)]
     }
-    const src = path.join(rawDir, srcName)
     const dest = path.join(staticOxfordDir, base)
-    copies.push({ storageKey, src, dest, srcName })
+    copies.push({ storageKey, srcCandidates, dest })
   }
 
   let ok = true
-  for (const { storageKey, src, dest, srcName } of copies) {
-    if (!fs.existsSync(src)) {
-      console.error(`Missing source for ${storageKey}: ${src}`)
+  for (const { storageKey, srcCandidates, dest } of copies) {
+    const src = srcCandidates.find((p) => fs.existsSync(p))
+    if (!src) {
+      console.error(`Missing source for ${storageKey}. Checked: ${srcCandidates.join(", ")}`)
       ok = false
+      continue
+    }
+    const srcName = path.basename(src)
+    if (path.resolve(src) === path.resolve(dest)) {
+      console.log(`Source already materialized for ${storageKey}: ${path.basename(dest)}`)
       continue
     }
     if (dryRun) {
