@@ -1,0 +1,127 @@
+{
+  "audit_meta": {
+    "pass": "oxford-four-pilot-ingested-evidence",
+    "date": "2026-04-28",
+    "kind": "governance_evidence_bundle",
+    "not_storefront_rollout": true,
+    "not_full_oxford_rollout": true,
+    "ux_intent": "Oxford is not enabled on storefront; this bundle records that the four pilot SKUs used an isolated pilot ingestion path and remain hidden from active catalog scope.",
+    "evidence_closure_date": "2026-05-02",
+    "post_ingestion_validation_source": "data/normalized/oxford-four-pilot-post-ingestion-validation.json"
+  },
+  "pilot_subset": {
+    "include_workbook_row_keys": [
+      "oxford:OX-14-1",
+      "oxford:OX-14-11",
+      "oxford:OX-90-1",
+      "oxford:S-OX-05"
+    ],
+    "medusa_handles": [
+      "ox-14-1",
+      "ox-14-11",
+      "ox-90-1",
+      "s-ox-05"
+    ],
+    "entity_readiness_at_source": "pdf_seed_interim",
+    "medusa_seed_contract_readiness": "seed_ready_with_caveat",
+    "candidates_manifest": "data/normalized/oxford-four-pdf-seed-interim-candidates.json",
+    "pilot_seed_input": "data/normalized/seed-products.oxford-pilot-four.json"
+  },
+  "claims": {
+    "pilot_only_ingestion_path_implemented": {
+      "value": true,
+      "basis": "repository_artifacts",
+      "artifacts": [
+        "apps/backend/scripts/oxford-pilot-four-materialize-static.mjs",
+        "apps/backend/scripts/oxford-pilot-four-smoke.mjs",
+        "apps/backend/src/scripts/seed-oxford-pilot-four.ts",
+        "apps/backend/package.json#scripts.oxford-pilot-four:*"
+      ]
+    },
+    "post_ingestion_validation_available": {
+      "value": true,
+      "basis": "repository_artifacts",
+      "artifacts": [
+        "apps/backend/src/scripts/validate-oxford-pilot-four-post-ingestion.ts",
+        "apps/backend/package.json#scripts.oxford-pilot-four:validate-post-ingestion"
+      ],
+      "env_guard": "OXFORD_PILOT_POST_INGESTION_VALIDATE=1"
+    },
+    "post_ingestion_validation_result_committed": {
+      "value": true,
+      "committed_path": "data/normalized/oxford-four-pilot-post-ingestion-validation.json",
+      "basis": "committed_file_verdict_ok",
+      "snapshot_from_committed_report": {
+        "verdict": "ok",
+        "audit_meta_date": "2026-05-02",
+        "violations_count": 0,
+        "pilot_products_in_db": {
+          "count": 4,
+          "handles_found": [
+            "ox-14-11",
+            "ox-90-1",
+            "s-ox-05",
+            "ox-14-1"
+          ]
+        },
+        "storefront_pause_contract": {
+          "ok": true,
+          "detail": "oxford remains in PAUSED_COLLECTION_KEYS only"
+        },
+        "reference_handles": {
+          "configured": false,
+          "handles": []
+        }
+      }
+    },
+    "pre_ingestion_smoke_verdict_ok": {
+      "value": true,
+      "basis": "committed_file",
+      "source": "data/normalized/oxford-four-pilot-ingestion-smoke.json",
+      "snapshot": {
+        "verdict": "ok",
+        "date": "2026-04-28",
+        "subset_isolation_ok": true,
+        "static_files_ok": true,
+        "pilot_seed_json_ok": true
+      }
+    },
+    "oxford_remains_paused_on_storefront": {
+      "value": true,
+      "basis": "read_only_inspection",
+      "file": "apps/storefront/src/lib/catalog-scope.ts",
+      "contract": "oxford in PAUSED_COLLECTION_KEYS; not listed in ACTIVE_COLLECTION_KEYS",
+      "pilot_work_did_not_edit_storefront": true
+    },
+    "full_seed_real_data_flow_not_used_for_pilot": {
+      "value": true,
+      "basis": "pilot_exec_reads_only_seed_products_oxford_pilot_four_json",
+      "reference": "apps/backend/src/scripts/seed-oxford-pilot-four.ts"
+    },
+    "seed_products_fixed2_not_extended_with_pilot_rows": {
+      "value": true,
+      "basis": "pilot_products_live_in_separate_json_only"
+    },
+    "greenwich_oliver_baseline_not_targeted_by_pilot_scripts": {
+      "value": true,
+      "basis": "pilot_seed_and_exec_scope_excludes_fixed2_greenwich_oliver_writes_optional_reference_read_in_validate"
+    }
+  },
+  "canonical_local_run_order": [
+    "cd apps/backend",
+    "yarn oxford-pilot-four:materialize-static",
+    "yarn oxford-pilot-four:smoke",
+    "OXFORD_PILOT_CONFIRM=1 yarn oxford-pilot-four:seed",
+    "OXFORD_PILOT_POST_INGESTION_VALIDATE=1 yarn oxford-pilot-four:validate-post-ingestion"
+  ],
+  "human_readable_docs": [
+    "docs/project/oxford-four-pilot-ingestion-dry-run.md",
+    "docs/project/oxford-four-pilot-post-ingestion-validation.md",
+    "docs/project/oxford-four-pilot-ingested-evidence.md"
+  ],
+  "verdict": {
+    "governance_bundle": "ok",
+    "post_ingestion_db_evidence": "ok",
+    "explanation": "Post-ingestion validation JSON committed with verdict ok; pilot-level DB evidence closed. Oxford storefront pause and baseline isolation claims unchanged — see claims.*."
+  }
+}

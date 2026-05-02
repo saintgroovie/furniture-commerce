@@ -1,0 +1,28 @@
+{
+  "audit_meta": {
+    "pass": "oxford-four-pilot-post-ingestion-validation",
+    "date": "2026-05-02"
+  },
+  "guard": {
+    "env_required": "OXFORD_PILOT_POST_INGESTION_VALIDATE=1"
+  },
+  "storefront_pause_contract": {
+    "ok": true,
+    "detail": "oxford remains in PAUSED_COLLECTION_KEYS only"
+  },
+  "pilot_products_in_db": {
+    "count": 4,
+    "handles_found": [
+      "ox-14-11",
+      "ox-90-1",
+      "s-ox-05",
+      "ox-14-1"
+    ]
+  },
+  "reference_handles": {
+    "configured": false,
+    "handles": []
+  },
+  "violations": [],
+  "verdict": "ok"
+}
