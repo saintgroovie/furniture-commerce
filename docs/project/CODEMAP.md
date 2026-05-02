@@ -73,6 +73,8 @@
 | **`data/normalized/oxford-visual-candidate-map.json`** | Oxford workbook SKU → visual candidate mapping: pilot-four confirmed interim paths; remaining SKUs missing until Yandex/Disk or new evidence; `can_use_for_interim_card_now` / materialize flags vs media readiness. |
 | **oxford-visual-source-analysis.md** (`docs/project/`) | Human-readable Oxford visual source analysis: roots checked, inventory summary, Oxford-4 pilot block, PARTIAL verdict when Yandex not mounted. |
 | **oxford-visual-review-packet.md** (`docs/project/`) | Reviewer packet: confirmed / probable / ambiguous / missing / AI follow-up groupings for Oxford visuals (governance-only). |
+| **`data/normalized/oxford-four-pilot-visual-review-signoff.json`** | Oxford-4 pilot only: per-SKU visual review sign-off vs interim `*_interim_pdf_gallery_01.png` paths; `approved_for_interim_pilot` vs not; explicit not-approved-for media/storefront/rollout; no evidence mutation. |
+| **oxford-four-pilot-visual-review-signoff.md** (`docs/project/`) | Human-readable Oxford-4 pilot visual signoff: method, per-SKU table, paused-collection guardrails, next validation-worktree / runner step (separate commit). |
 | **product-card-photo-approval-review.md** (`docs/storefront/`) | Human approval review packet for best-available card-photo candidates: recommendation groups, pending visual review rows, policy rejects, and safe next action. |
 | **`data/normalized/storefront-best-available-photo-approval-review.json`** | Machine-readable approval review output for best-available candidates: reviewed rows, recommendation/approval status, blocked set, and implementation guardrails. |
 | **`data/normalized/storefront-mvp-best-available-media-map.json`** | Controlled MVP media fill map: per-product selected primary source, temporary fallback rationale, blocked set, and deferred AI follow-up backlog. |
@@ -85,6 +87,8 @@
 | **`data/normalized/storefront-mvp-media-pre-apply-gate.json`** | Pre-apply verification artifact (no DB): CO-02-1 Class B checks, on-disk source, `apply_gates`, mirrored blocked rows vs executor dry-run. |
 | **mvp-media-assignment-executor.md** (`docs/storefront/`) | Executor brief: dry-run vs apply, env confirm, FILE upload for local paths, Oxford paused note, CO-02-1 first candidate note. |
 | **mvp-media-pre-apply-gate.md** (`docs/storefront/`) | Human-readable pre-apply gate for CO-02-1: checks, temporary-only rationale, env gates, skipped list, rollback note, explicit no-apply. |
+| **`data/normalized/storefront-mvp-media-co02-apply-report.json`** | Post-apply evidence for controlled CO-02-1 Class B apply: command, target ids, `apply_summary`, skipped confirmation, safety fields. |
+| **mvp-media-co02-apply-report.md** (`docs/storefront/`) | Human-readable post-apply report: verdict, command, written fields, skipped rows, evidence summary, rollback, next QA step. |
 | **`data/normalized/storefront-mvp-media-source-contract.json`** | Source availability contract for MVP media safe candidate(s): canonical source refs, mount/file existence checks, executor post-check, and verdict (`source_mount_required` or ready). |
 | **mvp-media-source-contract.md** (`docs/storefront/`) | Human-readable source contract pass for MVP media: checked roots, CO-02-1 path verdict, required mount/sync before any governed apply. |
 | **`data/normalized/storefront-mvp-media-source-unblock-operator-pack.json`** | Operator unblock packet for CO-02-1: allowed mount vs static paths, forbidden actions, verification checklist, expected dry-run outcome (no apply). |

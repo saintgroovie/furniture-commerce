@@ -1,0 +1,101 @@
+{
+  "audit_meta": {
+    "pass_name": "oxford_four_pilot_visual_review_signoff",
+    "pass_kind": "governance_only_no_runtime_mutation",
+    "generated_date": "2026-05-02",
+    "basis_analysis_commit": "85919653f440608ab80a475e0dd7637338d7ce40",
+    "basis_analysis_message": "Add Oxford visual source analysis",
+    "constraints": [
+      "No seed/validation/sync/runner",
+      "No post-ingestion evidence JSON edits",
+      "No catalog-scope change",
+      "No Oxford rollout/unpause",
+      "No white-background claims",
+      "No binary asset copy/rename in this pass"
+    ],
+    "signoff_method": "repo_local_png_open_plus_canonical_name_crosscheck",
+    "signoff_note": "Visual inspection used tooling-generated image descriptions against workbook canonical_name; not a substitute for principal human sign-off before any production promotion.",
+    "overall_verdict": "OK: OXFORD-4 VISUAL REVIEW SIGNOFF PREPARED",
+    "oxford_collection_operational_status": "PAUSED"
+  },
+  "rows": [
+    {
+      "sku": "OX-14-11",
+      "handle": "ox-14-11",
+      "canonical_name": "Нижняя кровать без матраса увеличенная (120*185)",
+      "candidate_path": "apps/backend/static/products/oxford/ox-14-11_interim_pdf_gallery_01.png",
+      "review_status": "approved_for_interim_pilot",
+      "reviewer_confidence": "probable",
+      "warnings": [
+        "not_white_background",
+        "pdf_interim_lifestyle_only",
+        "possible_name_image_mismatch",
+        "frame_shows_full_loft_system_not_isolated_lower_bed_module"
+      ],
+      "white_background_source": false,
+      "approved_only_for": "interim_pilot_materialize",
+      "not_approved_for": ["media_ready", "storefront_ready", "rollout_ready"],
+      "reviewer_note": "Interim frame is a collection lifestyle shot (loft/stairs context). Acceptable only as pilot placeholder: canonical_name refers to a lower-bed SKU; image does not isolate that module. Human principal may override if marketing requires a tighter crop."
+    },
+    {
+      "sku": "OX-90-1",
+      "handle": "ox-90-1",
+      "canonical_name": "Комплекс Оксфорд-1 с выдвижной столешницей без  нижней кровати",
+      "candidate_path": "apps/backend/static/products/oxford/ox-90-1_interim_pdf_gallery_01.png",
+      "review_status": "approved_for_interim_pilot",
+      "reviewer_confidence": "confirmed",
+      "warnings": [
+        "not_white_background",
+        "pdf_interim_lifestyle_only",
+        "possible_name_image_mismatch",
+        "shared_pdf_page_context_with_OX-14-1_for_gallery_crops"
+      ],
+      "white_background_source": false,
+      "approved_only_for": "interim_pilot_materialize",
+      "not_approved_for": ["media_ready", "storefront_ready", "rollout_ready"],
+      "reviewer_note": "Hero clearly shows integrated desk under loft with drawers and pull-out desk semantics consistent with выдвижной столешницей; matches Oxford complex positioning for interim pilot only."
+    },
+    {
+      "sku": "OX-14-1",
+      "handle": "ox-14-1",
+      "canonical_name": "Комплекс Оксфорд-1 (нижняя кровать без матраса 90*185)",
+      "candidate_path": "apps/backend/static/products/oxford/ox-14-1_interim_pdf_gallery_01.png",
+      "review_status": "approved_for_interim_pilot",
+      "reviewer_confidence": "probable",
+      "warnings": [
+        "not_white_background",
+        "pdf_interim_lifestyle_only",
+        "possible_name_image_mismatch",
+        "shared_pdf_page_context_with_OX-90-1_for_gallery_crops"
+      ],
+      "white_background_source": false,
+      "approved_only_for": "interim_pilot_materialize",
+      "not_approved_for": ["media_ready", "storefront_ready", "rollout_ready"],
+      "reviewer_note": "Full loft+desk+stairs unit matches complex Оксфорд-1 line; interim acceptable for pilot. Distinctness from OX-90-1 relies on separate interim file per manifest, not on filename tokens alone."
+    },
+    {
+      "sku": "S-OX-05",
+      "handle": "s-ox-05",
+      "canonical_name": "Ступени с перилами и ящиками ОКСФОРД",
+      "candidate_path": "apps/backend/static/products/oxford/s-ox-05_interim_pdf_gallery_01.png",
+      "review_status": "approved_for_interim_pilot",
+      "reviewer_confidence": "confirmed",
+      "warnings": [
+        "not_white_background",
+        "pdf_interim_lifestyle_only",
+        "scene_includes_desk_and_other_cabinetry_not_stairs_only"
+      ],
+      "white_background_source": false,
+      "approved_only_for": "interim_pilot_materialize",
+      "not_approved_for": ["media_ready", "storefront_ready", "rollout_ready"],
+      "reviewer_note": "Stair module with turned balusters and drawer steps is visually central; consistent with ступени с перилами и ящиками for interim pilot hero despite wider room context."
+    }
+  ],
+  "summary": {
+    "approved_for_interim_pilot": 4,
+    "needs_manual_review": 0,
+    "rejected": 0,
+    "runner_executed": false,
+    "mapping_files_changed": false
+  }
+}
