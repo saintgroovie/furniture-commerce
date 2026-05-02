@@ -1,0 +1,496 @@
+{
+  "audit_meta": {
+    "pass_name": "oxford_local_mvp_media_inventory",
+    "generated_at": "2026-05-02T17:04:11.606Z",
+    "scope": "local_dev_mvp_preview_only",
+    "not_production_rollout": true,
+    "not_full_oxford_readiness": true,
+    "not_white_background_readiness": true,
+    "oxford_storefront_paused_governance_unchanged": true,
+    "constraints": [
+      "No seed/validation/sync/Oxford pilot runner",
+      "No mutation of oxford-four-pilot post-ingestion evidence JSON",
+      "No catalog-scope.ts edits",
+      "No raw asset rename/move/delete"
+    ]
+  },
+  "yandex_and_external_roots": [
+    {
+      "path": "/WOODRIGHT/Контент /Фото на белом фоне",
+      "role": "expected_yandex_white_background_mirror",
+      "mounted_or_found": false,
+      "absent_reason": "source_not_mounted"
+    },
+    {
+      "path": "/Users/leonidmbp/Yandex.Disk/WOODRIGHT/Контент /Фото на белом фоне",
+      "role": "expected_yandex_white_background_mirror",
+      "mounted_or_found": false,
+      "absent_reason": "source_not_mounted"
+    },
+    {
+      "path": "/Users/leonidmbp/Yandex Disk/WOODRIGHT/Контент /Фото на белом фоне",
+      "role": "expected_yandex_white_background_mirror",
+      "mounted_or_found": false,
+      "absent_reason": "source_not_mounted"
+    }
+  ],
+  "scan_roots": [
+    {
+      "path": "apps/backend/static/products/oxford",
+      "repo_relative": true,
+      "role": "local_scan",
+      "walk_status": "ok",
+      "note": null
+    },
+    {
+      "path": "apps/backend/static/products",
+      "repo_relative": true,
+      "role": "local_scan",
+      "walk_status": "ok",
+      "note": null
+    },
+    {
+      "path": "apps/backend/uploads/products",
+      "repo_relative": true,
+      "role": "local_scan",
+      "walk_status": "ok",
+      "note": null
+    },
+    {
+      "path": "data/raw/assets",
+      "repo_relative": true,
+      "role": "local_scan",
+      "walk_status": "ok",
+      "note": null
+    },
+    {
+      "path": "data/raw/downloaded-assets",
+      "repo_relative": true,
+      "role": "local_scan",
+      "walk_status": "ok",
+      "note": null
+    },
+    {
+      "path": "data/processed/storefront-assets",
+      "repo_relative": true,
+      "role": "local_scan",
+      "walk_status": "ok",
+      "note": null
+    },
+    {
+      "path": "data/raw/pdf-assets/extracted/Oxford_full",
+      "repo_relative": true,
+      "role": "local_scan",
+      "walk_status": "ok",
+      "note": null
+    },
+    {
+      "path": "data/raw/pdf-assets/manifests",
+      "repo_relative": true,
+      "role": "local_scan",
+      "walk_status": "ok",
+      "note": null
+    },
+    {
+      "path": "data/processed/asset-manifests",
+      "repo_relative": true,
+      "role": "local_scan",
+      "walk_status": "ok",
+      "note": null
+    }
+  ],
+  "total_inventory_records": 37,
+  "inventory_records": [
+    {
+      "inventory_id": "oxvis_inv_bs_ox_14_11_interim",
+      "repo_relative_path": "apps/backend/static/products/oxford/ox-14-11_interim_pdf_gallery_01.png",
+      "filename": "ox-14-11_interim_pdf_gallery_01.png",
+      "source_kind": "backend_static",
+      "exists_locally": true,
+      "inherited_from": "data/normalized/oxford-visual-source-inventory.json",
+      "prior_confidence": "confirmed",
+      "prior_notes": "Pilot-controlled interim static; identity from filename. Not white-background validated (PDF extract pipeline)."
+    },
+    {
+      "inventory_id": "oxvis_inv_bs_ox_14_1_interim",
+      "repo_relative_path": "apps/backend/static/products/oxford/ox-14-1_interim_pdf_gallery_01.png",
+      "filename": "ox-14-1_interim_pdf_gallery_01.png",
+      "source_kind": "backend_static",
+      "exists_locally": true,
+      "inherited_from": "data/normalized/oxford-visual-source-inventory.json",
+      "prior_confidence": "confirmed",
+      "prior_notes": "Same file bytes as Oxford_full_p6_i1 per project notes; pilot SKU binding from oxford-four-pdf-seed-interim-candidates.json."
+    },
+    {
+      "inventory_id": "oxvis_inv_bs_ox_90_1_interim",
+      "repo_relative_path": "apps/backend/static/products/oxford/ox-90-1_interim_pdf_gallery_01.png",
+      "filename": "ox-90-1_interim_pdf_gallery_01.png",
+      "source_kind": "backend_static",
+      "exists_locally": true,
+      "inherited_from": "data/normalized/oxford-visual-source-inventory.json",
+      "prior_confidence": "confirmed",
+      "prior_notes": "Interim uses Oxford_full_p6_i0 to differentiate from OX-14-1 per seed-products.oxford-pilot-four mapping_notes."
+    },
+    {
+      "inventory_id": "oxvis_inv_bs_s_ox_05_interim",
+      "repo_relative_path": "apps/backend/static/products/oxford/s-ox-05_interim_pdf_gallery_01.png",
+      "filename": "s-ox-05_interim_pdf_gallery_01.png",
+      "source_kind": "backend_static",
+      "exists_locally": true,
+      "inherited_from": "data/normalized/oxford-visual-source-inventory.json",
+      "prior_confidence": "confirmed",
+      "prior_notes": "Aligned with Oxford_full_p4 extract per pilot manifest."
+    },
+    {
+      "inventory_id": "oxvis_inv_bs_p4_i0",
+      "repo_relative_path": "apps/backend/static/products/oxford/Oxford_full_p4_i0_1306x951.png",
+      "filename": "Oxford_full_p4_i0_1306x951.png",
+      "source_kind": "backend_static",
+      "exists_locally": true,
+      "inherited_from": "data/normalized/oxford-visual-source-inventory.json",
+      "prior_confidence": "probable",
+      "prior_notes": "PDF page extract; workbook-linked to S-OX-05 in pilot evidence; other SKUs must not auto-bind."
+    },
+    {
+      "inventory_id": "oxvis_inv_bs_p5_i0",
+      "repo_relative_path": "apps/backend/static/products/oxford/Oxford_full_p5_i0_947x949.png",
+      "filename": "Oxford_full_p5_i0_947x949.png",
+      "source_kind": "backend_static",
+      "exists_locally": true,
+      "inherited_from": "data/normalized/oxford-visual-source-inventory.json",
+      "prior_confidence": "probable",
+      "prior_notes": "Gallery for OX-14-11 in pilot manifest; primary extract cited in mapping_notes."
+    },
+    {
+      "inventory_id": "oxvis_inv_bs_p5_i1",
+      "repo_relative_path": "apps/backend/static/products/oxford/Oxford_full_p5_i1_480x1182.png",
+      "filename": "Oxford_full_p5_i1_480x1182.png",
+      "source_kind": "backend_static",
+      "exists_locally": true,
+      "inherited_from": "data/normalized/oxford-visual-source-inventory.json",
+      "prior_confidence": "ambiguous",
+      "prior_notes": "Additional page-5 crop; SKU binding only via pilot gallery list."
+    },
+    {
+      "inventory_id": "oxvis_inv_bs_p5_i2",
+      "repo_relative_path": "apps/backend/static/products/oxford/Oxford_full_p5_i2_521x429.png",
+      "filename": "Oxford_full_p5_i2_521x429.png",
+      "source_kind": "backend_static",
+      "exists_locally": true,
+      "inherited_from": "data/normalized/oxford-visual-source-inventory.json",
+      "prior_confidence": "ambiguous",
+      "prior_notes": "OX-14-11 gallery only per pilot; no independent SKU token."
+    },
+    {
+      "inventory_id": "oxvis_inv_bs_p5_i3",
+      "repo_relative_path": "apps/backend/static/products/oxford/Oxford_full_p5_i3_522x445.png",
+      "filename": "Oxford_full_p5_i3_522x445.png",
+      "source_kind": "backend_static",
+      "exists_locally": true,
+      "inherited_from": "data/normalized/oxford-visual-source-inventory.json",
+      "prior_confidence": "ambiguous",
+      "prior_notes": "OX-14-11 gallery only per pilot; no independent SKU token."
+    },
+    {
+      "inventory_id": "oxvis_inv_bs_p6_i0",
+      "repo_relative_path": "apps/backend/static/products/oxford/Oxford_full_p6_i0_887x614.png",
+      "filename": "Oxford_full_p6_i0_887x614.png",
+      "source_kind": "backend_static",
+      "exists_locally": true,
+      "inherited_from": "data/normalized/oxford-visual-source-inventory.json",
+      "prior_confidence": "ambiguous",
+      "prior_notes": "Shared between OX-90-1 (hero differentiation) and OX-14-1 gallery; do not auto-assign without row context."
+    },
+    {
+      "inventory_id": "oxvis_inv_bs_p6_i1",
+      "repo_relative_path": "apps/backend/static/products/oxford/Oxford_full_p6_i1_887x621.png",
+      "filename": "Oxford_full_p6_i1_887x621.png",
+      "source_kind": "backend_static",
+      "exists_locally": true,
+      "inherited_from": "data/normalized/oxford-visual-source-inventory.json",
+      "prior_confidence": "ambiguous",
+      "prior_notes": "Primary extract for OX-14-1 per mapping_notes; also byte-identical to ox-14-1_interim file; OX-90-1 uses different hero crop."
+    },
+    {
+      "inventory_id": "oxvis_inv_pdf_p4_i0_dup",
+      "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p4_i0_1306x951.png",
+      "filename": "Oxford_full_p4_i0_1306x951.png",
+      "source_kind": "pdf_extract",
+      "exists_locally": true,
+      "inherited_from": "data/normalized/oxford-visual-source-inventory.json",
+      "prior_confidence": "probable",
+      "prior_notes": "Canonical PDF extract path; duplicate of backend_static Oxford_full_p4_i0."
+    },
+    {
+      "inventory_id": "oxvis_inv_pdf_p5_i0_dup",
+      "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p5_i0_947x949.png",
+      "filename": "Oxford_full_p5_i0_947x949.png",
+      "source_kind": "pdf_extract",
+      "exists_locally": true,
+      "inherited_from": "data/normalized/oxford-visual-source-inventory.json",
+      "prior_confidence": "probable",
+      "prior_notes": "Canonical PDF extract; pilot gallery for OX-14-11."
+    },
+    {
+      "inventory_id": "oxvis_inv_pdf_p5_i1_dup",
+      "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p5_i1_480x1182.png",
+      "filename": "Oxford_full_p5_i1_480x1182.png",
+      "source_kind": "pdf_extract",
+      "exists_locally": true,
+      "inherited_from": "data/normalized/oxford-visual-source-inventory.json",
+      "prior_confidence": "ambiguous",
+      "prior_notes": "Canonical PDF extract; OX-14-11 gallery context only."
+    },
+    {
+      "inventory_id": "oxvis_inv_pdf_p5_i2_dup",
+      "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p5_i2_521x429.png",
+      "filename": "Oxford_full_p5_i2_521x429.png",
+      "source_kind": "pdf_extract",
+      "exists_locally": true,
+      "inherited_from": "data/normalized/oxford-visual-source-inventory.json",
+      "prior_confidence": "ambiguous",
+      "prior_notes": "Canonical PDF extract; OX-14-11 gallery context only."
+    },
+    {
+      "inventory_id": "oxvis_inv_pdf_p5_i3_dup",
+      "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p5_i3_522x445.png",
+      "filename": "Oxford_full_p5_i3_522x445.png",
+      "source_kind": "pdf_extract",
+      "exists_locally": true,
+      "inherited_from": "data/normalized/oxford-visual-source-inventory.json",
+      "prior_confidence": "ambiguous",
+      "prior_notes": "Canonical PDF extract; OX-14-11 gallery context only."
+    },
+    {
+      "inventory_id": "oxvis_inv_pdf_p6_i0_dup",
+      "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i0_887x614.png",
+      "filename": "Oxford_full_p6_i0_887x614.png",
+      "source_kind": "pdf_extract",
+      "exists_locally": true,
+      "inherited_from": "data/normalized/oxford-visual-source-inventory.json",
+      "prior_confidence": "ambiguous",
+      "prior_notes": "Canonical PDF extract; shared gallery / hero ambiguity between OX-14-1 and OX-90-1."
+    },
+    {
+      "inventory_id": "oxvis_inv_pdf_p6_i1_dup",
+      "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i1_887x621.png",
+      "filename": "Oxford_full_p6_i1_887x621.png",
+      "source_kind": "pdf_extract",
+      "exists_locally": true,
+      "inherited_from": "data/normalized/oxford-visual-source-inventory.json",
+      "prior_confidence": "ambiguous",
+      "prior_notes": "Canonical PDF extract; primary for OX-14-1 per pilot mapping_notes; same bytes as ox-14-1_interim copy."
+    },
+    {
+      "inventory_id": "oxvis_inv_pdf_p2_i0",
+      "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p2_i0_949x949.png",
+      "filename": "Oxford_full_p2_i0_949x949.png",
+      "source_kind": "pdf_extract",
+      "exists_locally": true,
+      "inherited_from": "data/normalized/oxford-visual-source-inventory.json",
+      "prior_confidence": "ambiguous",
+      "prior_notes": "Not copied to backend static in current subset; no workbook SKU join."
+    },
+    {
+      "inventory_id": "oxvis_inv_pdf_p3_i0",
+      "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p3_i0_1351x951.png",
+      "filename": "Oxford_full_p3_i0_1351x951.png",
+      "source_kind": "pdf_extract",
+      "exists_locally": true,
+      "inherited_from": "data/normalized/oxford-visual-source-inventory.json",
+      "prior_confidence": "ambiguous",
+      "prior_notes": "Catalog PDF page extract only."
+    },
+    {
+      "inventory_id": "oxvis_inv_pdf_p7_i0",
+      "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png",
+      "filename": "Oxford_full_p7_i0_1320x949.png",
+      "source_kind": "pdf_extract",
+      "exists_locally": true,
+      "inherited_from": "data/normalized/oxford-visual-source-inventory.json",
+      "prior_confidence": "ambiguous",
+      "prior_notes": "Not in static oxford folder; page-level only."
+    },
+    {
+      "inventory_id": "oxvis_inv_pdf_p9_i0",
+      "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p9_i0_768x585.png",
+      "filename": "Oxford_full_p9_i0_768x585.png",
+      "source_kind": "pdf_extract",
+      "exists_locally": true,
+      "inherited_from": "data/normalized/oxford-visual-source-inventory.json",
+      "prior_confidence": "ambiguous",
+      "prior_notes": "Small diagram-scale extract; SKU unknown."
+    },
+    {
+      "inventory_id": "oxvis_inv_pdf_p9_i1",
+      "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p9_i1_785x585.png",
+      "filename": "Oxford_full_p9_i1_785x585.png",
+      "source_kind": "pdf_extract",
+      "exists_locally": true,
+      "inherited_from": "data/normalized/oxford-visual-source-inventory.json",
+      "prior_confidence": "ambiguous",
+      "prior_notes": "Small diagram-scale extract; SKU unknown."
+    },
+    {
+      "inventory_id": "oxvis_inv_fm_oxford_1",
+      "repo_relative_path": "/WOODRIGHT/Контент /Коллекции /Oxford /Oxford 1.jpg",
+      "filename": "Oxford 1.jpg",
+      "source_kind": "legacy_front",
+      "exists_locally": false,
+      "inherited_from": "data/normalized/oxford-visual-source-inventory.json",
+      "prior_confidence": "ambiguous",
+      "prior_notes": "front-manifest.json row asset_id 5a6b0b91dd03; product_code_hint null; local binary not in repo; Yandex mount required to open file."
+    },
+    {
+      "inventory_id": "oxvis_inv_fm_oxford_2",
+      "repo_relative_path": "/WOODRIGHT/Контент /Коллекции /Oxford /Oxford 2.jpg",
+      "filename": "Oxford 2.jpg",
+      "source_kind": "legacy_front",
+      "exists_locally": false,
+      "inherited_from": "data/normalized/oxford-visual-source-inventory.json",
+      "prior_confidence": "ambiguous",
+      "prior_notes": "front-manifest asset_id 0a77fd2d00cd; legacy reference only per policy."
+    },
+    {
+      "inventory_id": "oxvis_inv_fm_oxford_3",
+      "repo_relative_path": "/WOODRIGHT/Контент /Коллекции /Oxford /Oxford 3.jpg",
+      "filename": "Oxford 3.jpg",
+      "source_kind": "legacy_front",
+      "exists_locally": false,
+      "inherited_from": "data/normalized/oxford-visual-source-inventory.json",
+      "prior_confidence": "ambiguous",
+      "prior_notes": "front-manifest asset_id 80de05c6189a."
+    },
+    {
+      "inventory_id": "oxvis_inv_fm_oxford_4",
+      "repo_relative_path": "/WOODRIGHT/Контент /Коллекции /Oxford /Oxford 4.jpg",
+      "filename": "Oxford 4.jpg",
+      "source_kind": "legacy_front",
+      "exists_locally": false,
+      "inherited_from": "data/normalized/oxford-visual-source-inventory.json",
+      "prior_confidence": "ambiguous",
+      "prior_notes": "front-manifest asset_id 4eca26d85046."
+    },
+    {
+      "inventory_id": "oxvis_inv_fm_oxford_5",
+      "repo_relative_path": "/WOODRIGHT/Контент /Коллекции /Oxford /Oxford 5.jpg",
+      "filename": "Oxford 5.jpg",
+      "source_kind": "legacy_front",
+      "exists_locally": false,
+      "inherited_from": "data/normalized/oxford-visual-source-inventory.json",
+      "prior_confidence": "ambiguous",
+      "prior_notes": "front-manifest asset_id e20cdc49b3a8."
+    },
+    {
+      "inventory_id": "oxvis_inv_fm_oxford_6",
+      "repo_relative_path": "/WOODRIGHT/Контент /Коллекции /Oxford /Oxford 6.jpg",
+      "filename": "Oxford 6.jpg",
+      "source_kind": "legacy_front",
+      "exists_locally": false,
+      "inherited_from": "data/normalized/oxford-visual-source-inventory.json",
+      "prior_confidence": "ambiguous",
+      "prior_notes": "front-manifest asset_id de5b9af17634."
+    },
+    {
+      "inventory_id": "oxvis_inv_fm_oxford_7",
+      "repo_relative_path": "/WOODRIGHT/Контент /Коллекции /Oxford /Oxford 7.jpg",
+      "filename": "Oxford 7.jpg",
+      "source_kind": "legacy_front",
+      "exists_locally": false,
+      "inherited_from": "data/normalized/oxford-visual-source-inventory.json",
+      "prior_confidence": "ambiguous",
+      "prior_notes": "front-manifest asset_id f42844324ef7."
+    },
+    {
+      "inventory_key": "front_manifest:5a6b0b91dd03",
+      "inventory_id": "front_manifest_5a6b0b91dd03",
+      "repo_relative_path": null,
+      "source_ref": "/WOODRIGHT/Контент /Коллекции /Oxford /Oxford 1.jpg",
+      "filename": "Oxford 1.jpg",
+      "source_kind": "legacy_front",
+      "exists_locally": false,
+      "local_binary_status": "source_not_mounted_or_external_only",
+      "inherited_from": "data/raw/front/front-manifest.json",
+      "match_tier": "probable_filename_or_legacy_match",
+      "media_class": "legacy_reference"
+    },
+    {
+      "inventory_key": "front_manifest:0a77fd2d00cd",
+      "inventory_id": "front_manifest_0a77fd2d00cd",
+      "repo_relative_path": null,
+      "source_ref": "/WOODRIGHT/Контент /Коллекции /Oxford /Oxford 2.jpg",
+      "filename": "Oxford 2.jpg",
+      "source_kind": "legacy_front",
+      "exists_locally": false,
+      "local_binary_status": "source_not_mounted_or_external_only",
+      "inherited_from": "data/raw/front/front-manifest.json",
+      "match_tier": "probable_filename_or_legacy_match",
+      "media_class": "legacy_reference"
+    },
+    {
+      "inventory_key": "front_manifest:80de05c6189a",
+      "inventory_id": "front_manifest_80de05c6189a",
+      "repo_relative_path": null,
+      "source_ref": "/WOODRIGHT/Контент /Коллекции /Oxford /Oxford 3.jpg",
+      "filename": "Oxford 3.jpg",
+      "source_kind": "legacy_front",
+      "exists_locally": false,
+      "local_binary_status": "source_not_mounted_or_external_only",
+      "inherited_from": "data/raw/front/front-manifest.json",
+      "match_tier": "probable_filename_or_legacy_match",
+      "media_class": "legacy_reference"
+    },
+    {
+      "inventory_key": "front_manifest:4eca26d85046",
+      "inventory_id": "front_manifest_4eca26d85046",
+      "repo_relative_path": null,
+      "source_ref": "/WOODRIGHT/Контент /Коллекции /Oxford /Oxford 4.jpg",
+      "filename": "Oxford 4.jpg",
+      "source_kind": "legacy_front",
+      "exists_locally": false,
+      "local_binary_status": "source_not_mounted_or_external_only",
+      "inherited_from": "data/raw/front/front-manifest.json",
+      "match_tier": "probable_filename_or_legacy_match",
+      "media_class": "legacy_reference"
+    },
+    {
+      "inventory_key": "front_manifest:e20cdc49b3a8",
+      "inventory_id": "front_manifest_e20cdc49b3a8",
+      "repo_relative_path": null,
+      "source_ref": "/WOODRIGHT/Контент /Коллекции /Oxford /Oxford 5.jpg",
+      "filename": "Oxford 5.jpg",
+      "source_kind": "legacy_front",
+      "exists_locally": false,
+      "local_binary_status": "source_not_mounted_or_external_only",
+      "inherited_from": "data/raw/front/front-manifest.json",
+      "match_tier": "probable_filename_or_legacy_match",
+      "media_class": "legacy_reference"
+    },
+    {
+      "inventory_key": "front_manifest:de5b9af17634",
+      "inventory_id": "front_manifest_de5b9af17634",
+      "repo_relative_path": null,
+      "source_ref": "/WOODRIGHT/Контент /Коллекции /Oxford /Oxford 6.jpg",
+      "filename": "Oxford 6.jpg",
+      "source_kind": "legacy_front",
+      "exists_locally": false,
+      "local_binary_status": "source_not_mounted_or_external_only",
+      "inherited_from": "data/raw/front/front-manifest.json",
+      "match_tier": "probable_filename_or_legacy_match",
+      "media_class": "legacy_reference"
+    },
+    {
+      "inventory_key": "front_manifest:f42844324ef7",
+      "inventory_id": "front_manifest_f42844324ef7",
+      "repo_relative_path": null,
+      "source_ref": "/WOODRIGHT/Контент /Коллекции /Oxford /Oxford 7.jpg",
+      "filename": "Oxford 7.jpg",
+      "source_kind": "legacy_front",
+      "exists_locally": false,
+      "local_binary_status": "source_not_mounted_or_external_only",
+      "inherited_from": "data/raw/front/front-manifest.json",
+      "match_tier": "probable_filename_or_legacy_match",
+      "media_class": "legacy_reference"
+    }
+  ]
+}

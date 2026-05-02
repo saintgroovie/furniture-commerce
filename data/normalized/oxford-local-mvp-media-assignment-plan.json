@@ -1,0 +1,306 @@
+{
+  "audit_meta": {
+    "pass_name": "oxford_local_mvp_media_assignment_plan",
+    "generated_at": "2026-05-02T17:04:11.606Z",
+    "assignment_policy": "local_mvp_preview_confirmed_and_probable_http_urls_only"
+  },
+  "medusa_local_environment": {
+    "ok": true,
+    "base_url": "http://localhost:9000",
+    "product_count": 143
+  },
+  "rows": [
+    {
+      "sku": "OX-14-11",
+      "handle": "ox-14-11",
+      "product_in_local_medusa_db": true,
+      "product_missing_for_media_assignment": false,
+      "proposed_primary_url": "http://localhost:9000/static/products/oxford/ox-14-11_interim_pdf_gallery_01.png",
+      "proposed_primary_tier": "confirmed_existing_interim_map",
+      "proposed_gallery_urls": [
+        "http://localhost:9000/static/products/oxford/Oxford_full_p5_i0_947x949.png"
+      ],
+      "gallery_review_backlog_urls": [],
+      "local_mvp_apply_allowed": true,
+      "apply_skip_reason": null
+    },
+    {
+      "sku": "OX-90-1",
+      "handle": "ox-90-1",
+      "product_in_local_medusa_db": true,
+      "product_missing_for_media_assignment": false,
+      "proposed_primary_url": "http://localhost:9000/static/products/oxford/ox-90-1_interim_pdf_gallery_01.png",
+      "proposed_primary_tier": "confirmed_existing_interim_map",
+      "proposed_gallery_urls": [],
+      "gallery_review_backlog_urls": [
+        "http://localhost:9000/static/products/oxford/Oxford_full_p6_i0_887x614.png",
+        "http://localhost:9000/static/products/oxford/Oxford_full_p6_i1_887x621.png"
+      ],
+      "local_mvp_apply_allowed": true,
+      "apply_skip_reason": null
+    },
+    {
+      "sku": "OX-14-1",
+      "handle": "ox-14-1",
+      "product_in_local_medusa_db": true,
+      "product_missing_for_media_assignment": false,
+      "proposed_primary_url": "http://localhost:9000/static/products/oxford/ox-14-1_interim_pdf_gallery_01.png",
+      "proposed_primary_tier": "confirmed_existing_interim_map",
+      "proposed_gallery_urls": [],
+      "gallery_review_backlog_urls": [
+        "http://localhost:9000/static/products/oxford/Oxford_full_p6_i0_887x614.png",
+        "http://localhost:9000/static/products/oxford/Oxford_full_p6_i1_887x621.png"
+      ],
+      "local_mvp_apply_allowed": true,
+      "apply_skip_reason": null
+    },
+    {
+      "sku": "S-OX-05",
+      "handle": "s-ox-05",
+      "product_in_local_medusa_db": true,
+      "product_missing_for_media_assignment": false,
+      "proposed_primary_url": "http://localhost:9000/static/products/oxford/s-ox-05_interim_pdf_gallery_01.png",
+      "proposed_primary_tier": "confirmed_existing_interim_map",
+      "proposed_gallery_urls": [
+        "http://localhost:9000/static/products/oxford/Oxford_full_p4_i0_1306x951.png"
+      ],
+      "gallery_review_backlog_urls": [],
+      "local_mvp_apply_allowed": true,
+      "apply_skip_reason": null
+    },
+    {
+      "sku": "OX-90-2",
+      "handle": "ox-90-2",
+      "product_in_local_medusa_db": false,
+      "product_missing_for_media_assignment": true,
+      "proposed_primary_url": null,
+      "proposed_primary_tier": null,
+      "proposed_gallery_urls": [],
+      "gallery_review_backlog_urls": [],
+      "local_mvp_apply_allowed": false,
+      "apply_skip_reason": "product_missing_for_local_medusa"
+    },
+    {
+      "sku": "OX-14-2",
+      "handle": "ox-14-2",
+      "product_in_local_medusa_db": false,
+      "product_missing_for_media_assignment": true,
+      "proposed_primary_url": null,
+      "proposed_primary_tier": null,
+      "proposed_gallery_urls": [],
+      "gallery_review_backlog_urls": [],
+      "local_mvp_apply_allowed": false,
+      "apply_skip_reason": "product_missing_for_local_medusa"
+    },
+    {
+      "sku": "OX-90-3",
+      "handle": "ox-90-3",
+      "product_in_local_medusa_db": false,
+      "product_missing_for_media_assignment": true,
+      "proposed_primary_url": null,
+      "proposed_primary_tier": null,
+      "proposed_gallery_urls": [],
+      "gallery_review_backlog_urls": [],
+      "local_mvp_apply_allowed": false,
+      "apply_skip_reason": "product_missing_for_local_medusa"
+    },
+    {
+      "sku": "OX-90-4",
+      "handle": "ox-90-4",
+      "product_in_local_medusa_db": false,
+      "product_missing_for_media_assignment": true,
+      "proposed_primary_url": null,
+      "proposed_primary_tier": null,
+      "proposed_gallery_urls": [],
+      "gallery_review_backlog_urls": [],
+      "local_mvp_apply_allowed": false,
+      "apply_skip_reason": "product_missing_for_local_medusa"
+    },
+    {
+      "sku": "OX-84-2",
+      "handle": "ox-84-2",
+      "product_in_local_medusa_db": false,
+      "product_missing_for_media_assignment": true,
+      "proposed_primary_url": null,
+      "proposed_primary_tier": null,
+      "proposed_gallery_urls": [],
+      "gallery_review_backlog_urls": [],
+      "local_mvp_apply_allowed": false,
+      "apply_skip_reason": "product_missing_for_local_medusa"
+    },
+    {
+      "sku": "OX-84-1",
+      "handle": "ox-84-1",
+      "product_in_local_medusa_db": false,
+      "product_missing_for_media_assignment": true,
+      "proposed_primary_url": null,
+      "proposed_primary_tier": null,
+      "proposed_gallery_urls": [],
+      "gallery_review_backlog_urls": [],
+      "local_mvp_apply_allowed": false,
+      "apply_skip_reason": "product_missing_for_local_medusa"
+    },
+    {
+      "sku": "OX-08-1",
+      "handle": "ox-08-1",
+      "product_in_local_medusa_db": false,
+      "product_missing_for_media_assignment": true,
+      "proposed_primary_url": null,
+      "proposed_primary_tier": null,
+      "proposed_gallery_urls": [],
+      "gallery_review_backlog_urls": [],
+      "local_mvp_apply_allowed": false,
+      "apply_skip_reason": "product_missing_for_local_medusa"
+    },
+    {
+      "sku": "S-OX-04",
+      "handle": "s-ox-04",
+      "product_in_local_medusa_db": false,
+      "product_missing_for_media_assignment": true,
+      "proposed_primary_url": null,
+      "proposed_primary_tier": null,
+      "proposed_gallery_urls": [],
+      "gallery_review_backlog_urls": [],
+      "local_mvp_apply_allowed": false,
+      "apply_skip_reason": "product_missing_for_local_medusa"
+    },
+    {
+      "sku": "S-OX-03",
+      "handle": "s-ox-03",
+      "product_in_local_medusa_db": false,
+      "product_missing_for_media_assignment": true,
+      "proposed_primary_url": null,
+      "proposed_primary_tier": null,
+      "proposed_gallery_urls": [],
+      "gallery_review_backlog_urls": [],
+      "local_mvp_apply_allowed": false,
+      "apply_skip_reason": "product_missing_for_local_medusa"
+    },
+    {
+      "sku": "S-OX-02",
+      "handle": "s-ox-02",
+      "product_in_local_medusa_db": false,
+      "product_missing_for_media_assignment": true,
+      "proposed_primary_url": null,
+      "proposed_primary_tier": null,
+      "proposed_gallery_urls": [],
+      "gallery_review_backlog_urls": [],
+      "local_mvp_apply_allowed": false,
+      "apply_skip_reason": "product_missing_for_local_medusa"
+    },
+    {
+      "sku": "SH-99-1",
+      "handle": "sh-99-1",
+      "product_in_local_medusa_db": false,
+      "product_missing_for_media_assignment": true,
+      "proposed_primary_url": null,
+      "proposed_primary_tier": null,
+      "proposed_gallery_urls": [],
+      "gallery_review_backlog_urls": [],
+      "local_mvp_apply_allowed": false,
+      "apply_skip_reason": "product_missing_for_local_medusa"
+    },
+    {
+      "sku": "SH-14-1",
+      "handle": "sh-14-1",
+      "product_in_local_medusa_db": false,
+      "product_missing_for_media_assignment": true,
+      "proposed_primary_url": null,
+      "proposed_primary_tier": null,
+      "proposed_gallery_urls": [],
+      "gallery_review_backlog_urls": [],
+      "local_mvp_apply_allowed": false,
+      "apply_skip_reason": "product_missing_for_local_medusa"
+    },
+    {
+      "sku": "SH-84-2",
+      "handle": "sh-84-2",
+      "product_in_local_medusa_db": false,
+      "product_missing_for_media_assignment": true,
+      "proposed_primary_url": null,
+      "proposed_primary_tier": null,
+      "proposed_gallery_urls": [],
+      "gallery_review_backlog_urls": [],
+      "local_mvp_apply_allowed": false,
+      "apply_skip_reason": "product_missing_for_local_medusa"
+    },
+    {
+      "sku": "SH-84-1",
+      "handle": "sh-84-1",
+      "product_in_local_medusa_db": false,
+      "product_missing_for_media_assignment": true,
+      "proposed_primary_url": null,
+      "proposed_primary_tier": null,
+      "proposed_gallery_urls": [],
+      "gallery_review_backlog_urls": [],
+      "local_mvp_apply_allowed": false,
+      "apply_skip_reason": "product_missing_for_local_medusa"
+    },
+    {
+      "sku": "MC-99-1",
+      "handle": "mc-99-1",
+      "product_in_local_medusa_db": false,
+      "product_missing_for_media_assignment": true,
+      "proposed_primary_url": null,
+      "proposed_primary_tier": null,
+      "proposed_gallery_urls": [],
+      "gallery_review_backlog_urls": [],
+      "local_mvp_apply_allowed": false,
+      "apply_skip_reason": "product_missing_for_local_medusa"
+    },
+    {
+      "sku": "MC-14-1",
+      "handle": "mc-14-1",
+      "product_in_local_medusa_db": false,
+      "product_missing_for_media_assignment": true,
+      "proposed_primary_url": null,
+      "proposed_primary_tier": null,
+      "proposed_gallery_urls": [],
+      "gallery_review_backlog_urls": [],
+      "local_mvp_apply_allowed": false,
+      "apply_skip_reason": "product_missing_for_local_medusa"
+    },
+    {
+      "sku": "MC-84-2",
+      "handle": "mc-84-2",
+      "product_in_local_medusa_db": false,
+      "product_missing_for_media_assignment": true,
+      "proposed_primary_url": null,
+      "proposed_primary_tier": null,
+      "proposed_gallery_urls": [],
+      "gallery_review_backlog_urls": [],
+      "local_mvp_apply_allowed": false,
+      "apply_skip_reason": "product_missing_for_local_medusa"
+    },
+    {
+      "sku": "MC-84-1",
+      "handle": "mc-84-1",
+      "product_in_local_medusa_db": false,
+      "product_missing_for_media_assignment": true,
+      "proposed_primary_url": null,
+      "proposed_primary_tier": null,
+      "proposed_gallery_urls": [],
+      "gallery_review_backlog_urls": [],
+      "local_mvp_apply_allowed": false,
+      "apply_skip_reason": "product_missing_for_local_medusa"
+    },
+    {
+      "sku": "Ox-1-1-N",
+      "handle": "ox-1-1-n",
+      "product_in_local_medusa_db": false,
+      "product_missing_for_media_assignment": true,
+      "proposed_primary_url": null,
+      "proposed_primary_tier": null,
+      "proposed_gallery_urls": [],
+      "gallery_review_backlog_urls": [],
+      "local_mvp_apply_allowed": false,
+      "apply_skip_reason": "product_missing_for_local_medusa"
+    }
+  ],
+  "summary": {
+    "sku_handles_total": 23,
+    "products_in_local_medusa": 4,
+    "apply_allowed_count": 4,
+    "product_missing_count": 19
+  }
+}

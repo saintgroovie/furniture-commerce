@@ -1,0 +1,667 @@
+{
+  "audit_meta": {
+    "pass_name": "oxford_local_mvp_sku_media_candidate_map",
+    "generated_at": "2026-05-02T17:04:11.606Z",
+    "workbook_oxford_row_count": 23,
+    "sku_rows": 23,
+    "medusa_store_probe": {
+      "ok": true,
+      "base_url": "http://localhost:9000",
+      "product_count": 143
+    }
+  },
+  "rows": [
+    {
+      "sku": "OX-14-11",
+      "handle": "ox-14-11",
+      "title_or_canonical": "Нижняя кровать без матраса увеличенная (120*185)",
+      "identity_sources": [
+        "product-workbook-asset-map.json",
+        "seed-products.oxford-pilot-four.json"
+      ],
+      "product_in_local_medusa_db": true,
+      "medusa_product_id": "prod_01KQCSHV3ZHSW5J97NP8CE2FB7",
+      "product_type": "CONFIGURABLE",
+      "current_thumbnail": "http://localhost:9000/static/products/oxford/ox-14-11_interim_pdf_gallery_01.png",
+      "current_gallery_count": 5,
+      "candidate_file_count": 3,
+      "mapping_status_from_prior_map": "confirmed",
+      "candidates": [
+        {
+          "source_path_or_url": "http://localhost:9000/static/products/oxford/ox-14-11_interim_pdf_gallery_01.png",
+          "repo_relative_path": "apps/backend/static/products/oxford/ox-14-11_interim_pdf_gallery_01.png",
+          "filename": "ox-14-11_interim_pdf_gallery_01.png",
+          "source_kind": "backend_static",
+          "match_tier": "confirmed_existing_interim_map",
+          "matched_sku": "OX-14-11",
+          "matched_handle": "ox-14-11",
+          "confidence": "confirmed",
+          "media_class": "interim_non_white",
+          "recommended_use": "primary_candidate",
+          "reason": "Pilot-controlled interim static; identity from filename. Not white-background validated (PDF extract pipeline).",
+          "warnings": [
+            "not_white_background_ready"
+          ]
+        },
+        {
+          "source_path_or_url": "http://localhost:9000/static/products/oxford/Oxford_full_p5_i0_947x949.png",
+          "repo_relative_path": "apps/backend/static/products/oxford/Oxford_full_p5_i0_947x949.png",
+          "filename": "Oxford_full_p5_i0_947x949.png",
+          "source_kind": "backend_static",
+          "match_tier": "pdf_page_level_probable",
+          "matched_sku": "OX-14-11",
+          "matched_handle": "ox-14-11",
+          "confidence": "probable",
+          "media_class": "pdf_crop",
+          "recommended_use": "gallery_candidate",
+          "reason": "Gallery for OX-14-11 in pilot manifest; primary extract cited in mapping_notes.",
+          "warnings": [
+            "not_white_background_ready",
+            "page_level_not_sku_filename"
+          ]
+        },
+        {
+          "source_path_or_url": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p5_i0_947x949.png",
+          "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p5_i0_947x949.png",
+          "filename": "Oxford_full_p5_i0_947x949.png",
+          "source_kind": "pdf_extract",
+          "match_tier": "pdf_page_level_probable",
+          "matched_sku": "OX-14-11",
+          "matched_handle": "ox-14-11",
+          "confidence": "probable",
+          "media_class": "pdf_crop",
+          "recommended_use": "gallery_candidate",
+          "reason": "Canonical PDF extract; pilot gallery for OX-14-11.",
+          "warnings": [
+            "not_white_background_ready",
+            "page_level_not_sku_filename"
+          ]
+        }
+      ]
+    },
+    {
+      "sku": "OX-90-1",
+      "handle": "ox-90-1",
+      "title_or_canonical": "Комплекс Оксфорд-1 с выдвижной столешницей без  нижней кровати",
+      "identity_sources": [
+        "product-workbook-asset-map.json",
+        "seed-products.oxford-pilot-four.json"
+      ],
+      "product_in_local_medusa_db": true,
+      "medusa_product_id": "prod_01KQCSHV3ZJ5SB2ZYV4P6SJ2QR",
+      "product_type": "CONFIGURABLE",
+      "current_thumbnail": "http://localhost:9000/static/products/oxford/ox-90-1_interim_pdf_gallery_01.png",
+      "current_gallery_count": 3,
+      "candidate_file_count": 5,
+      "mapping_status_from_prior_map": "confirmed",
+      "candidates": [
+        {
+          "source_path_or_url": "http://localhost:9000/static/products/oxford/ox-90-1_interim_pdf_gallery_01.png",
+          "repo_relative_path": "apps/backend/static/products/oxford/ox-90-1_interim_pdf_gallery_01.png",
+          "filename": "ox-90-1_interim_pdf_gallery_01.png",
+          "source_kind": "backend_static",
+          "match_tier": "confirmed_existing_interim_map",
+          "matched_sku": "OX-90-1",
+          "matched_handle": "ox-90-1",
+          "confidence": "confirmed",
+          "media_class": "interim_non_white",
+          "recommended_use": "primary_candidate",
+          "reason": "Interim uses Oxford_full_p6_i0 to differentiate from OX-14-1 per seed-products.oxford-pilot-four mapping_notes.",
+          "warnings": [
+            "not_white_background_ready"
+          ]
+        },
+        {
+          "source_path_or_url": "http://localhost:9000/static/products/oxford/Oxford_full_p6_i0_887x614.png",
+          "repo_relative_path": "apps/backend/static/products/oxford/Oxford_full_p6_i0_887x614.png",
+          "filename": "Oxford_full_p6_i0_887x614.png",
+          "source_kind": "backend_static",
+          "match_tier": "ambiguous_visual_review_needed",
+          "matched_sku": null,
+          "matched_handle": null,
+          "confidence": "ambiguous",
+          "media_class": "pdf_crop",
+          "recommended_use": "keep_unassigned_for_review",
+          "reason": "Shared between OX-90-1 (hero differentiation) and OX-14-1 gallery; do not auto-assign without row context.",
+          "warnings": [
+            "not_white_background_ready",
+            "shared_p6_context_review_before_auto_primary"
+          ],
+          "shared_oxford_p6_gallery": true
+        },
+        {
+          "source_path_or_url": "http://localhost:9000/static/products/oxford/Oxford_full_p6_i1_887x621.png",
+          "repo_relative_path": "apps/backend/static/products/oxford/Oxford_full_p6_i1_887x621.png",
+          "filename": "Oxford_full_p6_i1_887x621.png",
+          "source_kind": "backend_static",
+          "match_tier": "ambiguous_visual_review_needed",
+          "matched_sku": null,
+          "matched_handle": null,
+          "confidence": "ambiguous",
+          "media_class": "pdf_crop",
+          "recommended_use": "keep_unassigned_for_review",
+          "reason": "Primary extract for OX-14-1 per mapping_notes; also byte-identical to ox-14-1_interim file; OX-90-1 uses different hero crop.",
+          "warnings": [
+            "not_white_background_ready",
+            "shared_p6_context_review_before_auto_primary"
+          ],
+          "shared_oxford_p6_gallery": true
+        },
+        {
+          "source_path_or_url": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i0_887x614.png",
+          "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i0_887x614.png",
+          "filename": "Oxford_full_p6_i0_887x614.png",
+          "source_kind": "pdf_extract",
+          "match_tier": "ambiguous_visual_review_needed",
+          "matched_sku": null,
+          "matched_handle": null,
+          "confidence": "ambiguous",
+          "media_class": "pdf_crop",
+          "recommended_use": "keep_unassigned_for_review",
+          "reason": "Canonical PDF extract; shared gallery / hero ambiguity between OX-14-1 and OX-90-1.",
+          "warnings": [
+            "not_white_background_ready",
+            "shared_p6_context_review_before_auto_primary"
+          ],
+          "shared_oxford_p6_gallery": true
+        },
+        {
+          "source_path_or_url": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i1_887x621.png",
+          "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i1_887x621.png",
+          "filename": "Oxford_full_p6_i1_887x621.png",
+          "source_kind": "pdf_extract",
+          "match_tier": "ambiguous_visual_review_needed",
+          "matched_sku": null,
+          "matched_handle": null,
+          "confidence": "ambiguous",
+          "media_class": "pdf_crop",
+          "recommended_use": "keep_unassigned_for_review",
+          "reason": "Canonical PDF extract; primary for OX-14-1 per pilot mapping_notes; same bytes as ox-14-1_interim copy.",
+          "warnings": [
+            "not_white_background_ready",
+            "shared_p6_context_review_before_auto_primary"
+          ],
+          "shared_oxford_p6_gallery": true
+        }
+      ]
+    },
+    {
+      "sku": "OX-14-1",
+      "handle": "ox-14-1",
+      "title_or_canonical": "Комплекс Оксфорд-1 (нижняя кровать без матраса 90*185)",
+      "identity_sources": [
+        "product-workbook-asset-map.json",
+        "seed-products.oxford-pilot-four.json"
+      ],
+      "product_in_local_medusa_db": true,
+      "medusa_product_id": "prod_01KQCSHV3ZWD80DKG4ZFB175FP",
+      "product_type": "CONFIGURABLE",
+      "current_thumbnail": "http://localhost:9000/static/products/oxford/ox-14-1_interim_pdf_gallery_01.png",
+      "current_gallery_count": 3,
+      "candidate_file_count": 5,
+      "mapping_status_from_prior_map": "confirmed",
+      "candidates": [
+        {
+          "source_path_or_url": "http://localhost:9000/static/products/oxford/ox-14-1_interim_pdf_gallery_01.png",
+          "repo_relative_path": "apps/backend/static/products/oxford/ox-14-1_interim_pdf_gallery_01.png",
+          "filename": "ox-14-1_interim_pdf_gallery_01.png",
+          "source_kind": "backend_static",
+          "match_tier": "confirmed_existing_interim_map",
+          "matched_sku": "OX-14-1",
+          "matched_handle": "ox-14-1",
+          "confidence": "confirmed",
+          "media_class": "interim_non_white",
+          "recommended_use": "primary_candidate",
+          "reason": "Same file bytes as Oxford_full_p6_i1 per project notes; pilot SKU binding from oxford-four-pdf-seed-interim-candidates.json.",
+          "warnings": [
+            "not_white_background_ready"
+          ]
+        },
+        {
+          "source_path_or_url": "http://localhost:9000/static/products/oxford/Oxford_full_p6_i0_887x614.png",
+          "repo_relative_path": "apps/backend/static/products/oxford/Oxford_full_p6_i0_887x614.png",
+          "filename": "Oxford_full_p6_i0_887x614.png",
+          "source_kind": "backend_static",
+          "match_tier": "ambiguous_visual_review_needed",
+          "matched_sku": null,
+          "matched_handle": null,
+          "confidence": "ambiguous",
+          "media_class": "pdf_crop",
+          "recommended_use": "keep_unassigned_for_review",
+          "reason": "Shared between OX-90-1 (hero differentiation) and OX-14-1 gallery; do not auto-assign without row context.",
+          "warnings": [
+            "not_white_background_ready",
+            "shared_p6_context_review_before_auto_primary"
+          ],
+          "shared_oxford_p6_gallery": true
+        },
+        {
+          "source_path_or_url": "http://localhost:9000/static/products/oxford/Oxford_full_p6_i1_887x621.png",
+          "repo_relative_path": "apps/backend/static/products/oxford/Oxford_full_p6_i1_887x621.png",
+          "filename": "Oxford_full_p6_i1_887x621.png",
+          "source_kind": "backend_static",
+          "match_tier": "ambiguous_visual_review_needed",
+          "matched_sku": null,
+          "matched_handle": null,
+          "confidence": "ambiguous",
+          "media_class": "pdf_crop",
+          "recommended_use": "keep_unassigned_for_review",
+          "reason": "Primary extract for OX-14-1 per mapping_notes; also byte-identical to ox-14-1_interim file; OX-90-1 uses different hero crop.",
+          "warnings": [
+            "not_white_background_ready",
+            "shared_p6_context_review_before_auto_primary"
+          ],
+          "shared_oxford_p6_gallery": true
+        },
+        {
+          "source_path_or_url": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i0_887x614.png",
+          "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i0_887x614.png",
+          "filename": "Oxford_full_p6_i0_887x614.png",
+          "source_kind": "pdf_extract",
+          "match_tier": "ambiguous_visual_review_needed",
+          "matched_sku": null,
+          "matched_handle": null,
+          "confidence": "ambiguous",
+          "media_class": "pdf_crop",
+          "recommended_use": "keep_unassigned_for_review",
+          "reason": "Canonical PDF extract; shared gallery / hero ambiguity between OX-14-1 and OX-90-1.",
+          "warnings": [
+            "not_white_background_ready",
+            "shared_p6_context_review_before_auto_primary"
+          ],
+          "shared_oxford_p6_gallery": true
+        },
+        {
+          "source_path_or_url": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i1_887x621.png",
+          "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i1_887x621.png",
+          "filename": "Oxford_full_p6_i1_887x621.png",
+          "source_kind": "pdf_extract",
+          "match_tier": "ambiguous_visual_review_needed",
+          "matched_sku": null,
+          "matched_handle": null,
+          "confidence": "ambiguous",
+          "media_class": "pdf_crop",
+          "recommended_use": "keep_unassigned_for_review",
+          "reason": "Canonical PDF extract; primary for OX-14-1 per pilot mapping_notes; same bytes as ox-14-1_interim copy.",
+          "warnings": [
+            "not_white_background_ready",
+            "shared_p6_context_review_before_auto_primary"
+          ],
+          "shared_oxford_p6_gallery": true
+        }
+      ]
+    },
+    {
+      "sku": "S-OX-05",
+      "handle": "s-ox-05",
+      "title_or_canonical": "Ступени с перилами и ящиками ОКСФОРД",
+      "identity_sources": [
+        "product-workbook-asset-map.json",
+        "seed-products.oxford-pilot-four.json"
+      ],
+      "product_in_local_medusa_db": true,
+      "medusa_product_id": "prod_01KQCSHV3ZRYAYT8GXPJAT6F4Q",
+      "product_type": "CONFIGURABLE",
+      "current_thumbnail": "http://localhost:9000/static/products/oxford/s-ox-05_interim_pdf_gallery_01.png",
+      "current_gallery_count": 2,
+      "candidate_file_count": 3,
+      "mapping_status_from_prior_map": "confirmed",
+      "candidates": [
+        {
+          "source_path_or_url": "http://localhost:9000/static/products/oxford/s-ox-05_interim_pdf_gallery_01.png",
+          "repo_relative_path": "apps/backend/static/products/oxford/s-ox-05_interim_pdf_gallery_01.png",
+          "filename": "s-ox-05_interim_pdf_gallery_01.png",
+          "source_kind": "backend_static",
+          "match_tier": "confirmed_existing_interim_map",
+          "matched_sku": "S-OX-05",
+          "matched_handle": "s-ox-05",
+          "confidence": "confirmed",
+          "media_class": "interim_non_white",
+          "recommended_use": "primary_candidate",
+          "reason": "Aligned with Oxford_full_p4 extract per pilot manifest.",
+          "warnings": [
+            "not_white_background_ready"
+          ]
+        },
+        {
+          "source_path_or_url": "http://localhost:9000/static/products/oxford/Oxford_full_p4_i0_1306x951.png",
+          "repo_relative_path": "apps/backend/static/products/oxford/Oxford_full_p4_i0_1306x951.png",
+          "filename": "Oxford_full_p4_i0_1306x951.png",
+          "source_kind": "backend_static",
+          "match_tier": "pdf_page_level_probable",
+          "matched_sku": "S-OX-05",
+          "matched_handle": "s-ox-05",
+          "confidence": "probable",
+          "media_class": "pdf_crop",
+          "recommended_use": "gallery_candidate",
+          "reason": "PDF page extract; workbook-linked to S-OX-05 in pilot evidence; other SKUs must not auto-bind.",
+          "warnings": [
+            "not_white_background_ready",
+            "page_level_not_sku_filename"
+          ]
+        },
+        {
+          "source_path_or_url": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p4_i0_1306x951.png",
+          "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p4_i0_1306x951.png",
+          "filename": "Oxford_full_p4_i0_1306x951.png",
+          "source_kind": "pdf_extract",
+          "match_tier": "pdf_page_level_probable",
+          "matched_sku": "S-OX-05",
+          "matched_handle": "s-ox-05",
+          "confidence": "probable",
+          "media_class": "pdf_crop",
+          "recommended_use": "gallery_candidate",
+          "reason": "Canonical PDF extract path; duplicate of backend_static Oxford_full_p4_i0.",
+          "warnings": [
+            "not_white_background_ready",
+            "page_level_not_sku_filename"
+          ]
+        }
+      ]
+    },
+    {
+      "sku": "OX-90-2",
+      "handle": "ox-90-2",
+      "title_or_canonical": "Комплекс Оксфорд-2  без выдвижной столешницы с нижней кроватью и матрасом в чехле (ткани в ассортименте)",
+      "identity_sources": [
+        "product-workbook-asset-map.json"
+      ],
+      "product_in_local_medusa_db": false,
+      "medusa_product_id": null,
+      "product_type": null,
+      "current_thumbnail": null,
+      "current_gallery_count": 0,
+      "candidate_file_count": 0,
+      "mapping_status_from_prior_map": "missing",
+      "candidates": []
+    },
+    {
+      "sku": "OX-14-2",
+      "handle": "ox-14-2",
+      "title_or_canonical": "Комплекс Оксфорд-2 (нижняя кровать 90*185 с матрасом в чехле, ткани в ассортименте)",
+      "identity_sources": [
+        "product-workbook-asset-map.json"
+      ],
+      "product_in_local_medusa_db": false,
+      "medusa_product_id": null,
+      "product_type": null,
+      "current_thumbnail": null,
+      "current_gallery_count": 0,
+      "candidate_file_count": 0,
+      "mapping_status_from_prior_map": "missing",
+      "candidates": []
+    },
+    {
+      "sku": "OX-90-3",
+      "handle": "ox-90-3",
+      "title_or_canonical": "КомплексОксфорд-3 со шкафом и столом (без нижней кровати)",
+      "identity_sources": [
+        "product-workbook-asset-map.json"
+      ],
+      "product_in_local_medusa_db": false,
+      "medusa_product_id": null,
+      "product_type": null,
+      "current_thumbnail": null,
+      "current_gallery_count": 0,
+      "candidate_file_count": 0,
+      "mapping_status_from_prior_map": "missing",
+      "candidates": []
+    },
+    {
+      "sku": "OX-90-4",
+      "handle": "ox-90-4",
+      "title_or_canonical": "Комплекс Oxford-4 Кровать-чердак - без полок и ящиков внутри  (без нижней кровати)",
+      "identity_sources": [
+        "product-workbook-asset-map.json"
+      ],
+      "product_in_local_medusa_db": false,
+      "medusa_product_id": null,
+      "product_type": null,
+      "current_thumbnail": null,
+      "current_gallery_count": 0,
+      "candidate_file_count": 0,
+      "mapping_status_from_prior_map": "missing",
+      "candidates": []
+    },
+    {
+      "sku": "OX-84-2",
+      "handle": "ox-84-2",
+      "title_or_canonical": "Бортик к кровати большой",
+      "identity_sources": [
+        "product-workbook-asset-map.json"
+      ],
+      "product_in_local_medusa_db": false,
+      "medusa_product_id": null,
+      "product_type": null,
+      "current_thumbnail": null,
+      "current_gallery_count": 0,
+      "candidate_file_count": 0,
+      "mapping_status_from_prior_map": "missing",
+      "candidates": []
+    },
+    {
+      "sku": "OX-84-1",
+      "handle": "ox-84-1",
+      "title_or_canonical": "Бортик к кровати малый",
+      "identity_sources": [
+        "product-workbook-asset-map.json"
+      ],
+      "product_in_local_medusa_db": false,
+      "medusa_product_id": null,
+      "product_type": null,
+      "current_thumbnail": null,
+      "current_gallery_count": 0,
+      "candidate_file_count": 0,
+      "mapping_status_from_prior_map": "missing",
+      "candidates": []
+    },
+    {
+      "sku": "OX-08-1",
+      "handle": "ox-08-1",
+      "title_or_canonical": "Тумба прикроватная (для верхнего яруса)",
+      "identity_sources": [
+        "product-workbook-asset-map.json"
+      ],
+      "product_in_local_medusa_db": false,
+      "medusa_product_id": null,
+      "product_type": null,
+      "current_thumbnail": null,
+      "current_gallery_count": 0,
+      "candidate_file_count": 0,
+      "mapping_status_from_prior_map": "missing",
+      "candidates": []
+    },
+    {
+      "sku": "S-OX-04",
+      "handle": "s-ox-04",
+      "title_or_canonical": "Полка навесная квадратная Оксфорд",
+      "identity_sources": [
+        "product-workbook-asset-map.json"
+      ],
+      "product_in_local_medusa_db": false,
+      "medusa_product_id": null,
+      "product_type": null,
+      "current_thumbnail": null,
+      "current_gallery_count": 0,
+      "candidate_file_count": 0,
+      "mapping_status_from_prior_map": "missing",
+      "candidates": []
+    },
+    {
+      "sku": "S-OX-03",
+      "handle": "s-ox-03",
+      "title_or_canonical": "Полка навесная квадратная с 3-мя ящиками OXFORD",
+      "identity_sources": [
+        "product-workbook-asset-map.json"
+      ],
+      "product_in_local_medusa_db": false,
+      "medusa_product_id": null,
+      "product_type": null,
+      "current_thumbnail": null,
+      "current_gallery_count": 0,
+      "candidate_file_count": 0,
+      "mapping_status_from_prior_map": "missing",
+      "candidates": []
+    },
+    {
+      "sku": "S-OX-02",
+      "handle": "s-ox-02",
+      "title_or_canonical": "Стеновая панель на всю длину ОКСФОРД",
+      "identity_sources": [
+        "product-workbook-asset-map.json"
+      ],
+      "product_in_local_medusa_db": false,
+      "medusa_product_id": null,
+      "product_type": null,
+      "current_thumbnail": null,
+      "current_gallery_count": 0,
+      "candidate_file_count": 0,
+      "mapping_status_from_prior_map": "missing",
+      "candidates": []
+    },
+    {
+      "sku": "SH-99-1",
+      "handle": "sh-99-1",
+      "title_or_canonical": "Комплекс Милый дом (без кровати)",
+      "identity_sources": [
+        "product-workbook-asset-map.json"
+      ],
+      "product_in_local_medusa_db": false,
+      "medusa_product_id": null,
+      "product_type": null,
+      "current_thumbnail": null,
+      "current_gallery_count": 0,
+      "candidate_file_count": 0,
+      "mapping_status_from_prior_map": "missing",
+      "candidates": []
+    },
+    {
+      "sku": "SH-14-1",
+      "handle": "sh-14-1",
+      "title_or_canonical": "Комплекс Милый дом (кровать 90*190)",
+      "identity_sources": [
+        "product-workbook-asset-map.json"
+      ],
+      "product_in_local_medusa_db": false,
+      "medusa_product_id": null,
+      "product_type": null,
+      "current_thumbnail": null,
+      "current_gallery_count": 0,
+      "candidate_file_count": 0,
+      "mapping_status_from_prior_map": "missing",
+      "candidates": []
+    },
+    {
+      "sku": "SH-84-2",
+      "handle": "sh-84-2",
+      "title_or_canonical": "Бортик к кровати большой",
+      "identity_sources": [
+        "product-workbook-asset-map.json"
+      ],
+      "product_in_local_medusa_db": false,
+      "medusa_product_id": null,
+      "product_type": null,
+      "current_thumbnail": null,
+      "current_gallery_count": 0,
+      "candidate_file_count": 0,
+      "mapping_status_from_prior_map": "missing",
+      "candidates": []
+    },
+    {
+      "sku": "SH-84-1",
+      "handle": "sh-84-1",
+      "title_or_canonical": "Бортик к кровати малый",
+      "identity_sources": [
+        "product-workbook-asset-map.json"
+      ],
+      "product_in_local_medusa_db": false,
+      "medusa_product_id": null,
+      "product_type": null,
+      "current_thumbnail": null,
+      "current_gallery_count": 0,
+      "candidate_file_count": 0,
+      "mapping_status_from_prior_map": "missing",
+      "candidates": []
+    },
+    {
+      "sku": "MC-99-1",
+      "handle": "mc-99-1",
+      "title_or_canonical": "Комплекс Мой замок (без кровати)",
+      "identity_sources": [
+        "product-workbook-asset-map.json"
+      ],
+      "product_in_local_medusa_db": false,
+      "medusa_product_id": null,
+      "product_type": null,
+      "current_thumbnail": null,
+      "current_gallery_count": 0,
+      "candidate_file_count": 0,
+      "mapping_status_from_prior_map": "missing",
+      "candidates": []
+    },
+    {
+      "sku": "MC-14-1",
+      "handle": "mc-14-1",
+      "title_or_canonical": "Комплекс Мой замок (кровать 90*190)",
+      "identity_sources": [
+        "product-workbook-asset-map.json"
+      ],
+      "product_in_local_medusa_db": false,
+      "medusa_product_id": null,
+      "product_type": null,
+      "current_thumbnail": null,
+      "current_gallery_count": 0,
+      "candidate_file_count": 0,
+      "mapping_status_from_prior_map": "missing",
+      "candidates": []
+    },
+    {
+      "sku": "MC-84-2",
+      "handle": "mc-84-2",
+      "title_or_canonical": "Бортик к кровати большой",
+      "identity_sources": [
+        "product-workbook-asset-map.json"
+      ],
+      "product_in_local_medusa_db": false,
+      "medusa_product_id": null,
+      "product_type": null,
+      "current_thumbnail": null,
+      "current_gallery_count": 0,
+      "candidate_file_count": 0,
+      "mapping_status_from_prior_map": "missing",
+      "candidates": []
+    },
+    {
+      "sku": "MC-84-1",
+      "handle": "mc-84-1",
+      "title_or_canonical": "Бортик к кровати малый",
+      "identity_sources": [
+        "product-workbook-asset-map.json"
+      ],
+      "product_in_local_medusa_db": false,
+      "medusa_product_id": null,
+      "product_type": null,
+      "current_thumbnail": null,
+      "current_gallery_count": 0,
+      "candidate_file_count": 0,
+      "mapping_status_from_prior_map": "missing",
+      "candidates": []
+    },
+    {
+      "sku": "Ox-1-1-N",
+      "handle": "ox-1-1-n",
+      "title_or_canonical": "Съемный чехол в стандартной ткани  1-2 категории на нижнюю кровать",
+      "identity_sources": [
+        "product-workbook-asset-map.json"
+      ],
+      "product_in_local_medusa_db": false,
+      "medusa_product_id": null,
+      "product_type": null,
+      "current_thumbnail": null,
+      "current_gallery_count": 0,
+      "candidate_file_count": 0,
+      "mapping_status_from_prior_map": "missing",
+      "candidates": []
+    }
+  ]
+}

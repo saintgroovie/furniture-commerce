@@ -1,0 +1,251 @@
+{
+  "audit_meta": {
+    "pass_name": "oxford_local_mvp_media_apply_result",
+    "generated_at": "2026-05-02T17:04:11.606Z",
+    "mode": "dry_run_snapshot_only"
+  },
+  "local_apply_status": "dry_run_completed_no_db_writes",
+  "apply_gate_env": "OXFORD_LOCAL_MVP_MEDIA_APPLY_CONFIRM=1",
+  "medusa_store_probe": {
+    "ok": true,
+    "base_url": "http://localhost:9000",
+    "product_count": 143
+  },
+  "snapshots": [
+    {
+      "handle": "ox-14-11",
+      "sku": "OX-14-11",
+      "outcome": "dry_run_ready",
+      "before_thumbnail": "http://localhost:9000/static/products/oxford/ox-14-11_interim_pdf_gallery_01.png",
+      "after_thumbnail_would_be": "http://localhost:9000/static/products/oxford/ox-14-11_interim_pdf_gallery_01.png",
+      "before_gallery_urls": [
+        "http://localhost:9000/static/products/oxford/ox-14-11_interim_pdf_gallery_01.png",
+        "http://localhost:9000/static/products/oxford/Oxford_full_p5_i0_947x949.png",
+        "http://localhost:9000/static/products/oxford/Oxford_full_p5_i1_480x1182.png",
+        "http://localhost:9000/static/products/oxford/Oxford_full_p5_i2_521x429.png",
+        "http://localhost:9000/static/products/oxford/Oxford_full_p5_i3_522x445.png"
+      ],
+      "after_gallery_urls_would_be": [
+        "http://localhost:9000/static/products/oxford/ox-14-11_interim_pdf_gallery_01.png",
+        "http://localhost:9000/static/products/oxford/Oxford_full_p5_i0_947x949.png"
+      ]
+    },
+    {
+      "handle": "ox-90-1",
+      "sku": "OX-90-1",
+      "outcome": "dry_run_ready",
+      "before_thumbnail": "http://localhost:9000/static/products/oxford/ox-90-1_interim_pdf_gallery_01.png",
+      "after_thumbnail_would_be": "http://localhost:9000/static/products/oxford/ox-90-1_interim_pdf_gallery_01.png",
+      "before_gallery_urls": [
+        "http://localhost:9000/static/products/oxford/ox-90-1_interim_pdf_gallery_01.png",
+        "http://localhost:9000/static/products/oxford/Oxford_full_p6_i0_887x614.png",
+        "http://localhost:9000/static/products/oxford/Oxford_full_p6_i1_887x621.png"
+      ],
+      "after_gallery_urls_would_be": [
+        "http://localhost:9000/static/products/oxford/ox-90-1_interim_pdf_gallery_01.png"
+      ]
+    },
+    {
+      "handle": "ox-14-1",
+      "sku": "OX-14-1",
+      "outcome": "dry_run_ready",
+      "before_thumbnail": "http://localhost:9000/static/products/oxford/ox-14-1_interim_pdf_gallery_01.png",
+      "after_thumbnail_would_be": "http://localhost:9000/static/products/oxford/ox-14-1_interim_pdf_gallery_01.png",
+      "before_gallery_urls": [
+        "http://localhost:9000/static/products/oxford/ox-14-1_interim_pdf_gallery_01.png",
+        "http://localhost:9000/static/products/oxford/Oxford_full_p6_i0_887x614.png",
+        "http://localhost:9000/static/products/oxford/Oxford_full_p6_i1_887x621.png"
+      ],
+      "after_gallery_urls_would_be": [
+        "http://localhost:9000/static/products/oxford/ox-14-1_interim_pdf_gallery_01.png"
+      ]
+    },
+    {
+      "handle": "s-ox-05",
+      "sku": "S-OX-05",
+      "outcome": "dry_run_ready",
+      "before_thumbnail": "http://localhost:9000/static/products/oxford/s-ox-05_interim_pdf_gallery_01.png",
+      "after_thumbnail_would_be": "http://localhost:9000/static/products/oxford/s-ox-05_interim_pdf_gallery_01.png",
+      "before_gallery_urls": [
+        "http://localhost:9000/static/products/oxford/s-ox-05_interim_pdf_gallery_01.png",
+        "http://localhost:9000/static/products/oxford/Oxford_full_p4_i0_1306x951.png"
+      ],
+      "after_gallery_urls_would_be": [
+        "http://localhost:9000/static/products/oxford/s-ox-05_interim_pdf_gallery_01.png",
+        "http://localhost:9000/static/products/oxford/Oxford_full_p4_i0_1306x951.png"
+      ]
+    },
+    {
+      "handle": "ox-90-2",
+      "sku": "OX-90-2",
+      "outcome": "skipped_no_local_product",
+      "before_thumbnail": null,
+      "after_thumbnail_would_be": null,
+      "before_gallery_urls": [],
+      "after_gallery_urls_would_be": []
+    },
+    {
+      "handle": "ox-14-2",
+      "sku": "OX-14-2",
+      "outcome": "skipped_no_local_product",
+      "before_thumbnail": null,
+      "after_thumbnail_would_be": null,
+      "before_gallery_urls": [],
+      "after_gallery_urls_would_be": []
+    },
+    {
+      "handle": "ox-90-3",
+      "sku": "OX-90-3",
+      "outcome": "skipped_no_local_product",
+      "before_thumbnail": null,
+      "after_thumbnail_would_be": null,
+      "before_gallery_urls": [],
+      "after_gallery_urls_would_be": []
+    },
+    {
+      "handle": "ox-90-4",
+      "sku": "OX-90-4",
+      "outcome": "skipped_no_local_product",
+      "before_thumbnail": null,
+      "after_thumbnail_would_be": null,
+      "before_gallery_urls": [],
+      "after_gallery_urls_would_be": []
+    },
+    {
+      "handle": "ox-84-2",
+      "sku": "OX-84-2",
+      "outcome": "skipped_no_local_product",
+      "before_thumbnail": null,
+      "after_thumbnail_would_be": null,
+      "before_gallery_urls": [],
+      "after_gallery_urls_would_be": []
+    },
+    {
+      "handle": "ox-84-1",
+      "sku": "OX-84-1",
+      "outcome": "skipped_no_local_product",
+      "before_thumbnail": null,
+      "after_thumbnail_would_be": null,
+      "before_gallery_urls": [],
+      "after_gallery_urls_would_be": []
+    },
+    {
+      "handle": "ox-08-1",
+      "sku": "OX-08-1",
+      "outcome": "skipped_no_local_product",
+      "before_thumbnail": null,
+      "after_thumbnail_would_be": null,
+      "before_gallery_urls": [],
+      "after_gallery_urls_would_be": []
+    },
+    {
+      "handle": "s-ox-04",
+      "sku": "S-OX-04",
+      "outcome": "skipped_no_local_product",
+      "before_thumbnail": null,
+      "after_thumbnail_would_be": null,
+      "before_gallery_urls": [],
+      "after_gallery_urls_would_be": []
+    },
+    {
+      "handle": "s-ox-03",
+      "sku": "S-OX-03",
+      "outcome": "skipped_no_local_product",
+      "before_thumbnail": null,
+      "after_thumbnail_would_be": null,
+      "before_gallery_urls": [],
+      "after_gallery_urls_would_be": []
+    },
+    {
+      "handle": "s-ox-02",
+      "sku": "S-OX-02",
+      "outcome": "skipped_no_local_product",
+      "before_thumbnail": null,
+      "after_thumbnail_would_be": null,
+      "before_gallery_urls": [],
+      "after_gallery_urls_would_be": []
+    },
+    {
+      "handle": "sh-99-1",
+      "sku": "SH-99-1",
+      "outcome": "skipped_no_local_product",
+      "before_thumbnail": null,
+      "after_thumbnail_would_be": null,
+      "before_gallery_urls": [],
+      "after_gallery_urls_would_be": []
+    },
+    {
+      "handle": "sh-14-1",
+      "sku": "SH-14-1",
+      "outcome": "skipped_no_local_product",
+      "before_thumbnail": null,
+      "after_thumbnail_would_be": null,
+      "before_gallery_urls": [],
+      "after_gallery_urls_would_be": []
+    },
+    {
+      "handle": "sh-84-2",
+      "sku": "SH-84-2",
+      "outcome": "skipped_no_local_product",
+      "before_thumbnail": null,
+      "after_thumbnail_would_be": null,
+      "before_gallery_urls": [],
+      "after_gallery_urls_would_be": []
+    },
+    {
+      "handle": "sh-84-1",
+      "sku": "SH-84-1",
+      "outcome": "skipped_no_local_product",
+      "before_thumbnail": null,
+      "after_thumbnail_would_be": null,
+      "before_gallery_urls": [],
+      "after_gallery_urls_would_be": []
+    },
+    {
+      "handle": "mc-99-1",
+      "sku": "MC-99-1",
+      "outcome": "skipped_no_local_product",
+      "before_thumbnail": null,
+      "after_thumbnail_would_be": null,
+      "before_gallery_urls": [],
+      "after_gallery_urls_would_be": []
+    },
+    {
+      "handle": "mc-14-1",
+      "sku": "MC-14-1",
+      "outcome": "skipped_no_local_product",
+      "before_thumbnail": null,
+      "after_thumbnail_would_be": null,
+      "before_gallery_urls": [],
+      "after_gallery_urls_would_be": []
+    },
+    {
+      "handle": "mc-84-2",
+      "sku": "MC-84-2",
+      "outcome": "skipped_no_local_product",
+      "before_thumbnail": null,
+      "after_thumbnail_would_be": null,
+      "before_gallery_urls": [],
+      "after_gallery_urls_would_be": []
+    },
+    {
+      "handle": "mc-84-1",
+      "sku": "MC-84-1",
+      "outcome": "skipped_no_local_product",
+      "before_thumbnail": null,
+      "after_thumbnail_would_be": null,
+      "before_gallery_urls": [],
+      "after_gallery_urls_would_be": []
+    },
+    {
+      "handle": "ox-1-1-n",
+      "sku": "Ox-1-1-N",
+      "outcome": "skipped_no_local_product",
+      "before_thumbnail": null,
+      "after_thumbnail_would_be": null,
+      "before_gallery_urls": [],
+      "after_gallery_urls_would_be": []
+    }
+  ],
+  "note": "No DB mutation in this artifact. Optional apply: apps/backend/src/scripts/oxford-local-mvp-media-apply.ts (medusa exec) with explicit env + --apply."
+}
