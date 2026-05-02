@@ -1,0 +1,279 @@
+import "server-only"
+import * as fs from "fs"
+import * as path from "path"
+import { getBaseUrl } from "@/lib/api/base"
+import type {
+  OxfordLocalMvpMediaReviewPayload,
+  OxfordReviewAggregate,
+  OxfordReviewMediaItem,
+  OxfordSkuReviewRow,
+  OxfordSkuReviewStatus,
+} from "@/lib/qa/oxford-local-mvp-media-review-types"
+
+export type {
+  OxfordLocalMvpMediaReviewPayload,
+  OxfordReviewAggregate,
+  OxfordReviewMediaItem,
+  OxfordSkuReviewRow,
+  OxfordSkuReviewStatus,
+} from "@/lib/qa/oxford-local-mvp-media-review-types"
+
+const INVENTORY_REL = "data/normalized/oxford-local-mvp-media-inventory.json"
+const SKU_MAP_REL = "data/normalized/oxford-local-mvp-sku-media-candidate-map.json"
+const PLAN_REL = "data/normalized/oxford-local-mvp-media-assignment-plan.json"
+
+function dataPathCandidates(rel: string): string[] {
+  return [
+    path.join(process.cwd(), rel),
+    path.resolve(process.cwd(), "../../", rel),
+    path.resolve(process.cwd(), "../..", rel),
+    path.resolve(process.cwd(), "../../../", rel),
+  ]
+}
+
+function readJsonFile(rel: string): { ok: true; data: unknown } | { ok: false; error: string } {
+  for (const abs of dataPathCandidates(rel)) {
+    if (!fs.existsSync(abs)) continue
+    try {
+      return { ok: true, data: JSON.parse(fs.readFileSync(abs, "utf8")) }
+    } catch (e) {
+      return { ok: false, error: `${rel}: ${e instanceof Error ? e.message : String(e)}` }
+    }
+  }
+  return { ok: false, error: `${rel}: file not found` }
+}
+
+function normalizeKey(s: string): string {
+  return s.trim().replace(/\\/g, "/")
+}
+
+function previewUrl(staticBase: string, sourcePathOrUrl: string, repoRelative: string | null | undefined): string | null {
+  const raw = (sourcePathOrUrl || "").trim()
+  if (raw.startsWith("http://") || raw.startsWith("https://")) return raw
+  const rel = normalizeKey(repoRelative || raw)
+  if (rel.startsWith("apps/backend/static/")) {
+    const b = staticBase.replace(/\/$/, "")
+    const suffix = rel.replace(/^apps\/backend\/static\//, "")
+    return `${b}/static/${suffix}`
+  }
+  return null
+}
+
+function mediaKeyFrom(sourcePathOrUrl: string, repoRelative: string | null | undefined, filename: string): string {
+  return normalizeKey(repoRelative || sourcePathOrUrl || filename || "unknown")
+}
+
+function inferSkuReviewStatus(row: {
+  product_in_local_medusa_db: boolean
+  media_items: OxfordReviewMediaItem[]
+  gallery_review_backlog_urls: string[]
+}): OxfordSkuReviewStatus {
+  if (!row.product_in_local_medusa_db) return "product_missing_for_media_assignment"
+  if (row.media_items.length === 0) return "no_media_candidates"
+  if (row.gallery_review_backlog_urls.length > 0) return "has_ambiguous_media"
+  const hasAmb = row.media_items.some((m) => m.confidence === "ambiguous")
+  if (hasAmb) return "has_ambiguous_media"
+  const onlyInterim = row.media_items.every(
+    (m) => m.media_class === "interim_non_white" || m.media_class === "pdf_crop" || m.media_class === "legacy_reference" || !m.media_class
+  )
+  if (onlyInterim && row.media_items.length > 0) return "has_only_interim_media"
+  return "ready_for_visual_review"
+}
+
+export async function getOxfordLocalMvpMediaReviewPayload(): Promise<OxfordLocalMvpMediaReviewPayload> {
+  const loadErrors: string[] = []
+  const invR = readJsonFile(INVENTORY_REL)
+  const mapR = readJsonFile(SKU_MAP_REL)
+  const planR = readJsonFile(PLAN_REL)
+
+  if (!invR.ok) loadErrors.push(invR.error)
+  if (!mapR.ok) loadErrors.push(mapR.error)
+  if (!planR.ok) loadErrors.push(planR.error)
+
+  const staticBase = getBaseUrl() || process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000"
+
+  const inventoryRecords = (invR.ok && Array.isArray((invR.data as { inventory_records?: unknown }).inventory_records))
+    ? ((invR.data as { inventory_records: Record<string, unknown>[] }).inventory_records ?? [])
+    : []
+
+  const skuMapRows = (mapR.ok && Array.isArray((mapR.data as { rows?: unknown }).rows))
+    ? ((mapR.data as { rows: Record<string, unknown>[] }).rows ?? [])
+    : []
+
+  const planRows = (planR.ok && Array.isArray((planR.data as { rows?: unknown }).rows))
+    ? ((planR.data as { rows: Record<string, unknown>[] }).rows ?? [])
+    : []
+
+  const planByHandle = new Map<string, Record<string, unknown>>()
+  for (const pr of planRows) {
+    const h = typeof pr.handle === "string" ? pr.handle.toLowerCase() : ""
+    if (h) planByHandle.set(h, pr)
+  }
+
+  /** Paths / URLs attached to any SKU candidate or plan slot */
+  const assignedKeys = new Set<string>()
+
+  function markAssigned(m: OxfordReviewMediaItem) {
+    assignedKeys.add(m.media_key)
+    if (m.preview_url) assignedKeys.add(normalizeKey(m.preview_url))
+  }
+
+  const sku_rows: OxfordSkuReviewRow[] = []
+  let media_confirmed = 0
+  let media_probable = 0
+  let media_ambiguous = 0
+  let media_unassigned = 0
+  let sku_rows_with_gallery_backlog = 0
+
+  for (const raw of skuMapRows) {
+    const sku = String(raw.sku ?? "")
+    const handle = String(raw.handle ?? "").toLowerCase()
+    const title = (raw.title_or_canonical as string) ?? null
+    const product_in = Boolean(raw.product_in_local_medusa_db)
+    const plan = planByHandle.get(handle) ?? {}
+    const planned_primary = (plan.proposed_primary_url as string) ?? null
+    const planned_tier = (plan.proposed_primary_tier as string) ?? null
+    const planned_gallery = Array.isArray(plan.proposed_gallery_urls) ? (plan.proposed_gallery_urls as string[]) : []
+    const backlog = Array.isArray(plan.gallery_review_backlog_urls)
+      ? (plan.gallery_review_backlog_urls as string[])
+      : []
+    if (backlog.length > 0) sku_rows_with_gallery_backlog += 1
+
+    const candidatesRaw = Array.isArray(raw.candidates) ? (raw.candidates as Record<string, unknown>[]) : []
+    const candidates: OxfordReviewMediaItem[] = candidatesRaw.map((c) => {
+      const spo = String(c.source_path_or_url ?? "")
+      const rr = typeof c.repo_relative_path === "string" ? c.repo_relative_path : null
+      const fn = String(c.filename ?? (rr ? path.basename(rr) : path.basename(spo || "file")))
+      const conf = String(c.confidence ?? "")
+      if (conf === "confirmed") media_confirmed += 1
+      else if (conf === "probable") media_probable += 1
+      else if (conf === "ambiguous") media_ambiguous += 1
+      else media_unassigned += 1
+
+      const item: OxfordReviewMediaItem = {
+        media_key: mediaKeyFrom(spo, rr, fn),
+        preview_url: previewUrl(staticBase, spo, rr),
+        source_display: spo || rr || fn,
+        filename: fn,
+        source_kind: typeof c.source_kind === "string" ? c.source_kind : undefined,
+        confidence: typeof c.confidence === "string" ? c.confidence : undefined,
+        match_tier: typeof c.match_tier === "string" ? c.match_tier : undefined,
+        media_class: typeof c.media_class === "string" ? c.media_class : undefined,
+        recommended_use: typeof c.recommended_use === "string" ? c.recommended_use : undefined,
+        matched_sku: typeof c.matched_sku === "string" ? c.matched_sku : sku,
+        matched_handle: typeof c.matched_handle === "string" ? c.matched_handle : handle,
+        warnings: Array.isArray(c.warnings) ? (c.warnings as string[]) : [],
+        is_orphan: false,
+        role: "candidate",
+      }
+      markAssigned(item)
+      return item
+    })
+
+    const media_items: OxfordReviewMediaItem[] = [...candidates]
+
+    const pushPlanUrl = (url: string | null, role: OxfordReviewMediaItem["role"]) => {
+      if (!url || !url.trim()) return
+      const u = url.trim()
+      const fn = path.basename(u.split("?")[0] || "image")
+      const mk = mediaKeyFrom(u, null, fn)
+      if (media_items.some((x) => x.media_key === mk || x.preview_url === u)) return
+      const item: OxfordReviewMediaItem = {
+        media_key: mk,
+        preview_url: u.startsWith("http") ? u : previewUrl(staticBase, u, null),
+        source_display: u,
+        filename: fn,
+        matched_sku: sku,
+        matched_handle: handle,
+        warnings: [],
+        is_orphan: false,
+        role,
+      }
+      media_items.push(item)
+      markAssigned(item)
+    }
+
+    pushPlanUrl(planned_primary, "planned_primary")
+    for (const u of planned_gallery) pushPlanUrl(u, "planned_gallery")
+    for (const u of backlog) pushPlanUrl(u, "gallery_backlog")
+
+    const rowWarnings: string[] = []
+    if (!product_in) rowWarnings.push("product_missing_for_media_assignment")
+    if (backlog.length) rowWarnings.push("has_gallery_review_backlog")
+
+    const review_status = inferSkuReviewStatus({
+      product_in_local_medusa_db: product_in,
+      media_items,
+      gallery_review_backlog_urls: backlog,
+    })
+
+    sku_rows.push({
+      sku,
+      handle,
+      title_or_canonical: title,
+      product_in_local_medusa_db: product_in,
+      planned_primary_url: planned_primary,
+      planned_primary_tier: planned_tier,
+      planned_gallery_urls: planned_gallery,
+      gallery_review_backlog_urls: backlog,
+      candidates,
+      media_items,
+      warnings: rowWarnings,
+      review_status,
+    })
+  }
+
+  const orphan_media: OxfordReviewMediaItem[] = []
+  for (const rec of inventoryRecords) {
+    const rr = typeof rec.repo_relative_path === "string" ? rec.repo_relative_path : null
+    const sr = typeof rec.source_ref === "string" ? rec.source_ref : null
+    const fn = String(rec.filename ?? (rr ? path.basename(rr) : sr ? path.basename(sr) : "unknown"))
+    const spo = rr || sr || ""
+    const mk = mediaKeyFrom(spo, rr, fn)
+    if (assignedKeys.has(mk)) continue
+    if (rr && assignedKeys.has(normalizeKey(rr))) continue
+    const pv = previewUrl(staticBase, spo, rr)
+    if (pv && assignedKeys.has(normalizeKey(pv))) continue
+
+    const oitem: OxfordReviewMediaItem = {
+      media_key: mk,
+      preview_url: pv,
+      source_display: spo || mk,
+      filename: fn,
+      source_kind: typeof rec.source_kind === "string" ? rec.source_kind : undefined,
+      confidence: typeof rec.prior_confidence === "string" ? rec.prior_confidence : undefined,
+      match_tier: typeof rec.match_tier === "string" ? rec.match_tier : undefined,
+      media_class: typeof rec.media_class === "string" ? rec.media_class : undefined,
+      recommended_use: undefined,
+      matched_sku: null,
+      matched_handle: null,
+      warnings: ["orphan_not_in_sku_candidate_map", ...(rec.local_binary_status ? [String(rec.local_binary_status)] : [])],
+      is_orphan: true,
+      role: "inventory_only",
+    }
+    if (!orphan_media.some((x) => x.media_key === oitem.media_key)) {
+      orphan_media.push(oitem)
+    }
+  }
+
+  const aggregate: OxfordReviewAggregate = {
+    total_sku_rows: sku_rows.length,
+    products_in_local_medusa: sku_rows.filter((r) => r.product_in_local_medusa_db).length,
+    product_missing_rows: sku_rows.filter((r) => !r.product_in_local_medusa_db).length,
+    total_inventory_records: inventoryRecords.length,
+    media_confirmed,
+    media_probable,
+    media_ambiguous,
+    media_unassigned,
+    sku_rows_with_gallery_backlog,
+    orphan_media_count: orphan_media.length,
+  }
+
+  return {
+    static_base_url: staticBase,
+    sku_rows,
+    orphan_media,
+    aggregate,
+    load_errors: loadErrors,
+  }
+}
