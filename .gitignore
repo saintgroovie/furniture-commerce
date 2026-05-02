@@ -11,7 +11,14 @@ node_modules/
 # --- Layer A: pipeline + runtime assets (onboarding: docs/project/repo-onboarding-and-assets-runbook.md) ---
 
 # Raw inputs (PDF/PNG/HTML/scrape/workbook parse); obtain via archive or rerun ingestion — not app source
-/data/raw/
+# Use /data/raw/* (not /data/raw/) so a negated subtree can be tracked (see docs/project/workbook-local-source-contract.md).
+/data/raw/*
+!/data/raw/workbook/
+data/raw/workbook/*.json
+!/data/raw/workbook/source/
+data/raw/workbook/source/*.xlsx
+data/raw/workbook/source/*.xlsm
+data/raw/workbook/source/*.xls
 
 # Preprocessed images (output of preprocess scripts; source is raw + manifests)
 /data/processed/storefront-assets/**

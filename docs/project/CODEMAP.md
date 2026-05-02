@@ -13,6 +13,7 @@
 - **docs/** — документация проекта (источник истины для архитектуры и правил).
 - **apps/backend/** — Medusa backend (REST API, бизнес-логика, БД).
 - **apps/storefront/** — Next.js storefront (тонкий клиент к backend).
+- **data/raw/workbook/source/retail-price-current.xlsx** — локальная копия розничного прайса (стабильное имя для Cursor/парсеров; `.xlsx` не в git). Контракт: [`workbook-local-source-contract.md`](workbook-local-source-contract.md).
 
 ---
 
@@ -38,6 +39,7 @@
 | **storefront-component-principles.md** | Component-level principles: header, cards, buttons, forms, gallery, badges. |
 | **storefront-ui-refactor-brief.md** | Phased UI refactor plan (A-E). Phases A-D completed, Phase E next. |
 | **development-rules.md** | Обязательные правила разработки (документация, модули, не менять core). |
+| **workbook-local-source-contract.md** | Локальный retail workbook в workspace: SoT прайса, путь `data/raw/workbook/source/retail-price-current.xlsx`, gitignore Excel, запреты на коммит/мутации без controlled task. |
 | **architecture-guardrails.md** | Архитектурные ограничения (без BFF, без микросервисов, storefront без бизнес-логики). |
 | **PROJECT_STATUS.md** | Текущее состояние: backend Phase 1, storefront, ограничения MVP, следующий шаг. |
 | **MASTER_PROMPT.md** | Системный промпт для Cursor: контекст, сущности, product/cart/storefront rules, workflow до и после изменений. |
