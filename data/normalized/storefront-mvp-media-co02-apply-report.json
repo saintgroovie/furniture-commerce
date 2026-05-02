@@ -1,0 +1,62 @@
+{
+  "audit_meta": {
+    "pass_name": "storefront_mvp_media_co02_apply_report",
+    "pass_kind": "post_apply_evidence_capture",
+    "generated_date": "2026-05-02",
+    "generated_by": "cursor_agent",
+    "pre_apply_artifact": "data/normalized/storefront-mvp-media-pre-apply-gate.json",
+    "executor_artifact": "data/normalized/storefront-mvp-media-assignment-executor-dry-run.json"
+  },
+  "command_executed": "cd apps/backend && MVP_MEDIA_ASSIGNMENTS_APPLY_CONFIRM=1 MVP_MEDIA_ASSIGNMENTS_ALLOW_TEMPORARY_STATIC=1 yarn mvp-media-assignments -- --apply",
+  "executor_implementation_note": "First CLI invocation in this session failed before DB write: Medusa listProducts({ sku }) is invalid on Product in Medusa v2. Script was corrected to handle-first + optional widen scan; a subsequent successful apply run wrote DB + executor artifact.",
+  "target": {
+    "product_sku_or_handle": "CO-02-1",
+    "medusa_handle": "co-02-1",
+    "medusa_product_id": "prod_01KNTBXADAKWN6BXHSYFRX0R2F",
+    "collection_key": "country-london-paris",
+    "eligibility_class": "temporary_non_white_static_local",
+    "local_source_path": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/country-london-paris/CO-02-1_gallery_01.jpg",
+    "resolved_public_url_after_file_upload": "http://localhost:9000/static/1777716293008-CO-02-1_gallery_01.jpg"
+  },
+  "apply_result": {
+    "exit_code": 0,
+    "dry_run_only": false,
+    "apply_summary": {
+      "attempted": 1,
+      "updated": 1,
+      "unchanged": 0,
+      "errors": 0
+    },
+    "apply_attempts_single_row": {
+      "outcome": "updated",
+      "detail": "thumbnail_and_images_written"
+    }
+  },
+  "evidence_checked": {
+    "executor_pass_kind": "controlled_executor_apply",
+    "eligible_rows_count": 1,
+    "eligible_white_background_v1_count": 0,
+    "apply_attempts_present": true,
+    "non_target_handles_in_apply_attempts": []
+  },
+  "skipped_rows_confirmation": {
+    "skipped_count": 10,
+    "collections_represented": [
+      "oxford",
+      "monchelsea",
+      "willie-winkie",
+      "oliver-kids"
+    ],
+    "note": "Oxford / Monchelsea / WW / Oliver / blocked placeholder rows remained skipped; no apply_attempts entries for those SKUs."
+  },
+  "safety_confirmation": {
+    "storefront_runtime_unchanged_by_this_task": true,
+    "catalog_scope_unchanged": true,
+    "metadata_stage_readiness_unchanged_by_executor": true,
+    "no_new_products": true,
+    "db_fields_written": ["thumbnail", "images"],
+    "production_media_claim": false,
+    "requires_later_white_background_replacement": true
+  },
+  "next_safe_qa_step": "Verify product co-02-1 in Medusa Admin or GET /store/products/:id — thumbnail and images[0] should match the uploaded static URL; storefront card only if catalog already lists the product. Plan white-background replacement when governed asset is available; keep MVP map note for temporary primary."
+}

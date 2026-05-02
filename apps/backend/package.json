@@ -18,6 +18,7 @@
     "refresh-oliver-thumbnails": "medusa exec ./src/scripts/refresh-oliver-thumbnails.ts",
     "sync-oliver-primary-images": "medusa exec ./src/scripts/sync-oliver-primary-images.ts",
     "apply-oliver-kids-manifest": "medusa exec ./src/scripts/apply-oliver-kids-manifest.ts",
+    "mvp-media-assignments": "medusa exec ./src/scripts/apply-mvp-media-assignments.ts",
     "oxford-pilot-four:materialize-static": "node ./scripts/oxford-pilot-four-materialize-static.mjs",
     "oxford-pilot-four:smoke": "node ./scripts/oxford-pilot-four-smoke.mjs",
     "oxford-pilot-four:seed": "medusa exec ./src/scripts/seed-oxford-pilot-four.ts",

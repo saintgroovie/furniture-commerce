@@ -1,0 +1,120 @@
+{
+  "audit_meta": {
+    "pass_name": "storefront_mvp_media_pre_apply_gate",
+    "pass_kind": "pre_apply_verification_no_db",
+    "generated_date": "2026-05-02",
+    "generated_by": "cursor_agent",
+    "scope_note": "CO-02-1 Class B temporary static only; no apply executed in this pass."
+  },
+  "source_files_checked": [
+    "data/normalized/storefront-mvp-media-assignment-executor-dry-run.json",
+    "data/normalized/storefront-mvp-media-assignment-dry-run.json",
+    "data/normalized/storefront-mvp-best-available-media-map.json",
+    "docs/storefront/mvp-media-assignment-executor.md",
+    "docs/project/CODEMAP.md"
+  ],
+  "target_rows": [
+    {
+      "product_sku_or_handle": "CO-02-1",
+      "collection_key": "country-london-paris",
+      "eligibility_class": "temporary_non_white_static_local",
+      "source_path": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/country-london-paris/CO-02-1_gallery_01.jpg",
+      "source_exists_now": true,
+      "proposed_assignment_type": "temporary_primary_image",
+      "production_media_claim": false,
+      "requires_later_white_background_replacement": true,
+      "apply_allowed_in_future": true,
+      "apply_gate_status": "pre_checks_passed",
+      "safe_to_apply_next": true,
+      "reason": "Executor eligible_rows match: confirmed identity, backend_static_existing, local path verified on disk at gate time, dry_run_verdict eligible_temporary_local_visual_ready, needs_later_white_background_replacement true, collection not oxford, collection_status future_or_paused_not_active_rollout_target (not executor-blocked substring set). production_media_claim false per executor_policy. Only one executor eligible row; no surprise Class A or extra Class B."
+    }
+  ],
+  "blocked_rows": [
+    {
+      "product_sku_or_handle": "ox-14-1 / OX-14-1",
+      "collection_key": "oxford",
+      "blocker_summary": "eligible_but_paused_scope; Oxford excluded from executor apply subset.",
+      "guardrail": "eligible_but_paused_scope_not_in_executor_apply_subset"
+    },
+    {
+      "product_sku_or_handle": "ox-14-11 / OX-14-11",
+      "collection_key": "oxford",
+      "blocker_summary": "eligible_but_paused_scope; Oxford excluded from executor apply subset.",
+      "guardrail": "eligible_but_paused_scope_not_in_executor_apply_subset"
+    },
+    {
+      "product_sku_or_handle": "ox-90-1 / OX-90-1",
+      "collection_key": "oxford",
+      "blocker_summary": "eligible_but_paused_scope; Oxford excluded from executor apply subset.",
+      "guardrail": "eligible_but_paused_scope_not_in_executor_apply_subset"
+    },
+    {
+      "product_sku_or_handle": "s-ox-05 / S-OX-05",
+      "collection_key": "oxford",
+      "blocker_summary": "eligible_but_paused_scope; Oxford excluded from executor apply subset.",
+      "guardrail": "eligible_but_paused_scope_not_in_executor_apply_subset"
+    },
+    {
+      "product_sku_or_handle": "mnm-55-1 / MNm-55-1",
+      "collection_key": "monchelsea",
+      "blocker_summary": "identity_confidence probable; Monchelsea requires human sign-off before auto-apply.",
+      "guardrail": "manual_identity_review_required"
+    },
+    {
+      "product_sku_or_handle": "WW-55-1 / ww-55-1",
+      "collection_key": "willie-winkie",
+      "blocker_summary": "Willie Winkie blocked by painting semantics.",
+      "guardrail": "blocked_by_business_or_source_gate"
+    },
+    {
+      "product_sku_or_handle": "MNm-57-3 / mnm-57-3",
+      "collection_key": "monchelsea",
+      "blocker_summary": "blocked_no_safe_visual; no deterministic candidate.",
+      "guardrail": "asset_missing"
+    },
+    {
+      "product_sku_or_handle": "MNm-09-1 / mnm-09-1",
+      "collection_key": "monchelsea",
+      "blocker_summary": "blocked_no_safe_visual; source gap.",
+      "guardrail": "asset_missing"
+    },
+    {
+      "product_sku_or_handle": "oliver-kids-related-products",
+      "collection_key": "oliver-kids",
+      "blocker_summary": "Insufficient SKU-level mapping evidence.",
+      "guardrail": "insufficient_evidence"
+    },
+    {
+      "product_sku_or_handle": "non-pilot-oxford-skus",
+      "collection_key": "oxford",
+      "blocker_summary": "Outside Oxford-4 pilot validated subset; paused collection governance.",
+      "guardrail": "paused_collection_scope"
+    }
+  ],
+  "apply_gates": {
+    "MVP_MEDIA_ASSIGNMENTS_APPLY_CONFIRM": {
+      "required_value": "1",
+      "purpose": "Human confirmation for any executor DB write path."
+    },
+    "MVP_MEDIA_ASSIGNMENTS_ALLOW_TEMPORARY_STATIC": {
+      "required_value": "1",
+      "purpose": "Class B (temporary_non_white_static_local) rows are excluded from DB writes unless this gate is set alongside APPLY_CONFIRM."
+    },
+    "executor_dry_run_snapshot": {
+      "input_artifact": "data/normalized/storefront-mvp-media-assignment-dry-run.json",
+      "executor_artifact": "data/normalized/storefront-mvp-media-assignment-executor-dry-run.json",
+      "eligible_count_at_gate": 1,
+      "eligible_white_background_v1_count_at_gate": 0,
+      "eligible_temporary_non_white_static_local_count_at_gate": 1
+    },
+    "future_apply_command_documentation_only": "MVP_MEDIA_ASSIGNMENTS_APPLY_CONFIRM=1 MVP_MEDIA_ASSIGNMENTS_ALLOW_TEMPORARY_STATIC=1 yarn mvp-media-assignments -- --apply",
+    "future_apply_command_note": "Run only from apps/backend when deliberately applying; not executed during this pre-apply gate pass."
+  },
+  "summary": {
+    "verdict": "CO-02-1 passes pre-apply verification as the sole Class B temporary local-static candidate; no additional eligible rows in executor artifact.",
+    "target_row_count": 1,
+    "blocked_row_count": 10,
+    "unexpected_eligible_rows": false,
+    "apply_executed_in_this_pass": false
+  }
+}

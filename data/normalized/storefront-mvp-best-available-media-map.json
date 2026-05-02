@@ -1,0 +1,316 @@
+{
+  "audit_meta": {
+    "pass_name": "storefront_mvp_best_available_media_fill",
+    "pass_kind": "controlled_mvp_media_planning",
+    "generated_date": "2026-05-02",
+    "selection_refresh_date": "2026-05-02",
+    "generated_by": "cursor_agent",
+    "constraints": [
+      "No runtime code changes",
+      "No seed/ingestion/validation/sync execution",
+      "No catalog-scope mutation",
+      "No production-final media assignment",
+      "No stage promotion or collection unpause",
+      "No AI image generation in this pass"
+    ]
+  },
+  "source_files_checked": [
+    "docs/guidelines/development-rules.md",
+    "docs/architecture/architecture-guardrails.md",
+    "docs/project/CODEMAP.md",
+    "data/normalized/collection-asset-intake-summary.json",
+    "docs/content/collection-asset-intake-summary.md",
+    "data/raw/front/front-manifest.json",
+    "data/raw/assets/asset-manifest-summary.json",
+    "data/raw/downloaded-assets/disk-download-summary.json",
+    "data/raw/downloaded-assets/disk-download-status.json",
+    "data/normalized/storefront-best-available-photo-candidates.json",
+    "data/normalized/product-workbook-asset-map.json",
+    "data/normalized/oxford-four-pilot-ingested-evidence.json",
+    "data/normalized/seed-products.oxford-pilot-four.json",
+    "data/normalized/visual-source-inventory-index.json",
+    "data/normalized/visual-source-product-candidate-map.json",
+    "scripts/build-visual-source-inventory.mjs",
+    "docs/storefront/visual-source-inventory-and-matching-report.md",
+    "docs/storefront/mvp-media-selection-refresh-report.md"
+  ],
+  "source_priority_model": [
+    {
+      "priority": 1,
+      "rule": "confirmed usable white-background"
+    },
+    {
+      "priority": 2,
+      "rule": "validated backend/static product media"
+    },
+    {
+      "priority": 3,
+      "rule": "legacy/front visual with clear product identity"
+    },
+    {
+      "priority": 4,
+      "rule": "catalog/PDF visual with explicit product match"
+    },
+    {
+      "priority": 5,
+      "rule": "room/context visual only when product is clearly identifiable"
+    },
+    {
+      "priority": 6,
+      "rule": "ambiguous/generic visuals are blocked for automatic use"
+    }
+  ],
+  "products": [
+    {
+      "product_sku_or_handle": "CO-02-1",
+      "product_name_if_available": null,
+      "collection_key": "country-london-paris",
+      "collection_status": "future_or_paused_not_active_rollout_target",
+      "selected_primary_image_source": "backend static (confirmed same-SKU gallery; white-bg Yandex path missing)",
+      "selected_primary_image_path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/country-london-paris/CO-02-1_gallery_01.jpg",
+      "selected_primary_image_type": "backend_static_existing",
+      "identity_confidence": "confirmed",
+      "visual_quality": "acceptable",
+      "mvp_usage_status": "use_as_temporary_primary",
+      "reason_for_choice": "Selection refresh: canonical WOODRIGHT white-background file not mounted; legacy row references same path only. Chosen existing backend/static JPEG with deterministic CO-02-1 filename (gallery_01) verified on disk via visual inventory.",
+      "fallback_reason_if_not_white_background": "Primary white-background asset unavailable until Yandex/WOODRIGHT mount or governed static materialization of co-02-1-blue-i1.jpg; interim uses confirmed non-white static hero.",
+      "needs_later_ai_generation": false,
+      "needs_later_white_background_replacement": true,
+      "implementation_note": "MVP card may use this path for planning/QA; medusa exec apply-mvp-media-assignments v1 still whitelists white_background only — see selection refresh report.",
+      "visual_inventory_evidence": {
+        "inventory_pass": "visual-source-inventory-index",
+        "inventory_pass_date": "2026-05-02",
+        "canonical_white_bg_path_local_exists": false,
+        "legacy_front_rows_for_filename_co_02_1_blue_i1_jpg": 1,
+        "selected_static_local_path_verified": true,
+        "selected_static_basename": "CO-02-1_gallery_01.jpg",
+        "backend_static_non_white_siblings_note": "Other CO-02-1_* JPEGs exist (color variants, additional gallery); gallery_01 aligned with entity-mapping main gallery key as conservative default."
+      }
+    },
+    {
+      "product_sku_or_handle": "ox-14-1 / OX-14-1",
+      "product_name_if_available": "Комплекс Оксфорд-1 (нижняя кровать без матраса 90*185)",
+      "collection_key": "oxford",
+      "collection_status": "paused_stage_2_5_pilot_only",
+      "selected_primary_image_source": "backend static pilot media",
+      "selected_primary_image_path_or_ref": "http://localhost:9000/static/products/oxford/ox-14-1_interim_pdf_gallery_01.png",
+      "selected_primary_image_type": "backend_static_existing",
+      "identity_confidence": "confirmed",
+      "visual_quality": "acceptable",
+      "mvp_usage_status": "use_as_temporary_primary",
+      "reason_for_choice": "Validated pilot media exists; no confirmed white-background for SKU.",
+      "fallback_reason_if_not_white_background": "White-background source unavailable for this Oxford pilot SKU.",
+      "needs_later_ai_generation": false,
+      "needs_later_white_background_replacement": true,
+      "implementation_note": "Interim_card_or_yandex_source candidate only; no publish implication."
+    },
+    {
+      "product_sku_or_handle": "ox-14-11 / OX-14-11",
+      "product_name_if_available": "Нижняя кровать без матраса увеличенная (120*185)",
+      "collection_key": "oxford",
+      "collection_status": "paused_stage_2_5_pilot_only",
+      "selected_primary_image_source": "backend static pilot media",
+      "selected_primary_image_path_or_ref": "http://localhost:9000/static/products/oxford/ox-14-11_interim_pdf_gallery_01.png",
+      "selected_primary_image_type": "backend_static_existing",
+      "identity_confidence": "confirmed",
+      "visual_quality": "acceptable",
+      "mvp_usage_status": "use_as_temporary_primary",
+      "reason_for_choice": "Clear pilot identity mapping and existing static media.",
+      "fallback_reason_if_not_white_background": "No confirmed white-background for pilot SKU in current intake evidence.",
+      "needs_later_ai_generation": false,
+      "needs_later_white_background_replacement": true,
+      "implementation_note": "Keep temporary status until white-background replacement is sourced."
+    },
+    {
+      "product_sku_or_handle": "ox-90-1 / OX-90-1",
+      "product_name_if_available": "Комплекс Оксфорд-1 с выдвижной столешницей без нижней кровати",
+      "collection_key": "oxford",
+      "collection_status": "paused_stage_2_5_pilot_only",
+      "selected_primary_image_source": "backend static pilot media",
+      "selected_primary_image_path_or_ref": "http://localhost:9000/static/products/oxford/ox-90-1_interim_pdf_gallery_01.png",
+      "selected_primary_image_type": "backend_static_existing",
+      "identity_confidence": "confirmed",
+      "visual_quality": "acceptable",
+      "mvp_usage_status": "use_as_temporary_primary",
+      "reason_for_choice": "Deterministic pilot subset mapping with existing static visual.",
+      "fallback_reason_if_not_white_background": "White-background coverage not confirmed for this product.",
+      "needs_later_ai_generation": false,
+      "needs_later_white_background_replacement": true,
+      "implementation_note": "Controlled pilot-only candidate; no Oxford unpause."
+    },
+    {
+      "product_sku_or_handle": "s-ox-05 / S-OX-05",
+      "product_name_if_available": "Ступени с перилами и ящиками ОКСФОРД",
+      "collection_key": "oxford",
+      "collection_status": "paused_stage_2_5_pilot_only",
+      "selected_primary_image_source": "backend static pilot media",
+      "selected_primary_image_path_or_ref": "http://localhost:9000/static/products/oxford/s-ox-05_interim_pdf_gallery_01.png",
+      "selected_primary_image_type": "backend_static_existing",
+      "identity_confidence": "confirmed",
+      "visual_quality": "acceptable",
+      "mvp_usage_status": "use_as_temporary_primary",
+      "reason_for_choice": "Pilot media path and identity evidence are explicit.",
+      "fallback_reason_if_not_white_background": "No confirmed white-background source in current evidence lane.",
+      "needs_later_ai_generation": false,
+      "needs_later_white_background_replacement": true,
+      "implementation_note": "Interim candidate only; not white_background_validated."
+    },
+    {
+      "product_sku_or_handle": "mnm-55-1 / MNm-55-1",
+      "product_name_if_available": "Банкетка малая",
+      "collection_key": "monchelsea",
+      "collection_status": "stage_0_excluded_partial_usable_with_blockers",
+      "selected_primary_image_source": "legacy/front fallback by join-key evidence",
+      "selected_primary_image_path_or_ref": "front-manifest rows where collection_hint=monchelsea and product_code_hint=MN-55-1",
+      "selected_primary_image_type": "legacy_front",
+      "identity_confidence": "probable",
+      "visual_quality": "acceptable",
+      "mvp_usage_status": "use_as_temporary_primary",
+      "reason_for_choice": "Best available visual candidate exists with high-confidence join-key evidence, but not deterministic white-background closure.",
+      "fallback_reason_if_not_white_background": "Monchelsea white-background/disk coverage remains partial and blocked.",
+      "needs_later_ai_generation": false,
+      "needs_later_white_background_replacement": true,
+      "implementation_note": "Require reviewer sign-off before any temporary usage."
+    }
+  ],
+  "blocked": [
+    {
+      "product_sku_or_handle": "WW-55-1 / ww-55-1",
+      "product_name_if_available": "Банкетка малая",
+      "collection_key": "willie-winkie",
+      "collection_status": "stage_0_excluded_blocked_by_painting_semantics",
+      "block_reason": "No safe identity-locked visual candidate; blocked business/source gate.",
+      "root_cause_type": "source_coverage",
+      "mvp_usage_status": "blocked_no_safe_visual",
+      "source_paths_checked": [
+        "data/normalized/product-workbook-asset-map.json",
+        "data/raw/front/front-manifest.json",
+        "data/normalized/collection-asset-intake-summary.json"
+      ],
+      "warnings": [
+        "Possible wrong mapping risk if forced by generic legacy image.",
+        "Must not bypass VV semantics blocker via fallback."
+      ]
+    },
+    {
+      "product_sku_or_handle": "MNm-57-3 / mnm-57-3",
+      "product_name_if_available": "Диван с выкатной кроватью",
+      "collection_key": "monchelsea",
+      "collection_status": "stage_0_excluded_partial_usable_with_blockers",
+      "block_reason": "No front/disk candidate for join key in current evidence.",
+      "root_cause_type": "asset_missing",
+      "mvp_usage_status": "blocked_no_safe_visual",
+      "source_paths_checked": [
+        "data/normalized/product-workbook-asset-map.json",
+        "data/raw/front/front-manifest.json"
+      ],
+      "warnings": [
+        "No safe visual without risk of product mismatch."
+      ]
+    },
+    {
+      "product_sku_or_handle": "MNm-09-1 / mnm-09-1",
+      "product_name_if_available": "Зеркало навесное",
+      "collection_key": "monchelsea",
+      "collection_status": "stage_0_excluded_partial_usable_with_blockers",
+      "block_reason": "Source gap; deterministic candidate missing.",
+      "root_cause_type": "asset_missing",
+      "mvp_usage_status": "blocked_no_safe_visual",
+      "source_paths_checked": [
+        "data/normalized/product-workbook-asset-map.json"
+      ],
+      "warnings": [
+        "Ambiguous replacement would violate safe matching rule."
+      ]
+    },
+    {
+      "product_sku_or_handle": "oliver-kids-related-products",
+      "product_name_if_available": null,
+      "collection_key": "oliver-kids",
+      "collection_status": "selective_backfill_track_evidence_not_complete",
+      "block_reason": "No dedicated normalized candidate packet in current source set for safe SKU-level auto-selection.",
+      "root_cause_type": "unknown",
+      "mvp_usage_status": "blocked_no_safe_visual",
+      "source_paths_checked": [
+        "docs/project/CODEMAP.md",
+        "data/normalized/collection-asset-intake-summary.json",
+        "data/raw/front/front-manifest.json"
+      ],
+      "warnings": [
+        "Needs explicit oliver-kids SKU-level mapping pass before assignment planning."
+      ]
+    },
+    {
+      "product_sku_or_handle": "non-pilot-oxford-skus",
+      "product_name_if_available": null,
+      "collection_key": "oxford",
+      "collection_status": "paused_stage_2_5_pilot_only",
+      "block_reason": "No validated safe visual mapping outside pilot subset and paused governance remains in force.",
+      "root_cause_type": "source_coverage",
+      "mvp_usage_status": "blocked_no_safe_visual",
+      "source_paths_checked": [
+        "data/normalized/collection-asset-intake-summary.json",
+        "data/normalized/oxford-four-pilot-ingested-evidence.json"
+      ],
+      "warnings": [
+        "Do not infer full Oxford readiness from pilot-only media."
+      ]
+    }
+  ],
+  "ai_generation_backlog": [
+    {
+      "product_sku_or_handle": "WW-55-1 / ww-55-1",
+      "collection_key": "willie-winkie",
+      "reason": "No safe visual candidate due source/semantics blocker.",
+      "target_followup_type": "ai_visual_followup",
+      "current_best_available_state": "missing_or_unsafe",
+      "notes": "AI generation is deferred; source/identity governance first."
+    },
+    {
+      "product_sku_or_handle": "MNm-57-3 / mnm-57-3",
+      "collection_key": "monchelsea",
+      "reason": "No deterministic source candidate in current inventories.",
+      "target_followup_type": "ai_visual_followup",
+      "current_best_available_state": "missing_or_unsafe",
+      "notes": "Can be reconsidered after manual/source closure."
+    },
+    {
+      "product_sku_or_handle": "MNm-09-1 / mnm-09-1",
+      "collection_key": "monchelsea",
+      "reason": "Blocked by source gap; safe visual unavailable.",
+      "target_followup_type": "ai_visual_followup",
+      "current_best_available_state": "missing_or_unsafe",
+      "notes": "Do not auto-fill with ambiguous mirror visuals."
+    },
+    {
+      "product_sku_or_handle": "oliver-kids-related-products",
+      "collection_key": "oliver-kids",
+      "reason": "Evidence packet is incomplete for SKU-level safe fallback mapping.",
+      "target_followup_type": "ai_visual_followup",
+      "current_best_available_state": "insufficient_evidence",
+      "notes": "Needs dedicated selective-backfill mapping pass first."
+    }
+  ],
+  "summary": {
+    "total_products_rows": 6,
+    "white_background_confirmed": 0,
+    "non_white_fallback_selected": 6,
+    "ambiguous_or_probable": 1,
+    "blocked_no_safe_visual": 5,
+    "ai_generation_backlog_count": 4,
+    "source_type_selection_counts": {
+      "white_background": 0,
+      "backend_static_existing": 5,
+      "legacy_front": 1,
+      "catalog_or_pdf": 0,
+      "room_context": 0
+    },
+    "oxford_4_mini_summary": {
+      "rows": 4,
+      "white_background_confirmed": 0,
+      "interim_non_white_candidates": 4,
+      "identity_confidence_confirmed": 4,
+      "label": "interim_card_or_yandex_source_not_white_background_validated"
+    }
+  }
+}

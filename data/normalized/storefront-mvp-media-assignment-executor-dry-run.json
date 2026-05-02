@@ -1,0 +1,139 @@
+{
+  "audit_meta": {
+    "pass_name": "storefront_mvp_media_assignment_executor_apply",
+    "pass_kind": "controlled_executor_apply",
+    "generated_date": "2026-05-02",
+    "input_artifact": "data/normalized/storefront-mvp-media-assignment-dry-run.json"
+  },
+  "source_files_checked": [
+    "data/normalized/storefront-mvp-media-assignment-dry-run.json",
+    "apps/backend/src/scripts/apply-mvp-media-assignments.ts",
+    "docs/storefront/mvp-media-assignment-dry-run.md"
+  ],
+  "executor": {
+    "script_relative": "apps/backend/src/scripts/apply-mvp-media-assignments.ts",
+    "package_script": "mvp-media-assignments"
+  },
+  "temporary_non_white_static_policy": {
+    "temporary_non_white_static_allowed": true,
+    "temporary_non_white_static_scope": "confirmed_local_static_only",
+    "production_media_claim": false,
+    "requires_later_white_background_replacement": true,
+    "apply_env_gate": "MVP_MEDIA_ASSIGNMENTS_ALLOW_TEMPORARY_STATIC=1",
+    "dry_run_eligible_count": 1
+  },
+  "dry_run_only": false,
+  "eligible_rows": [
+    {
+      "product_sku_or_handle": "CO-02-1",
+      "collection_key": "country-london-paris",
+      "proposed_image": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/country-london-paris/CO-02-1_gallery_01.jpg",
+      "proposed_assignment_type": "temporary_primary_image",
+      "current_action": "would_assign_primary_image",
+      "apply_allowed_in_future": true,
+      "reason": "Class=temporary_non_white_static_local; logical gates OK; pre_apply_source=local_path_exists",
+      "eligibility_class": "temporary_non_white_static_local",
+      "executor_policy": {
+        "temporary_non_white_static_allowed": true,
+        "temporary_non_white_static_scope": "confirmed_local_static_only",
+        "production_media_claim": false,
+        "requires_later_white_background_replacement": true
+      }
+    }
+  ],
+  "skipped_rows": [
+    {
+      "product_sku_or_handle": "ox-14-1 / OX-14-1",
+      "collection_key": "oxford",
+      "skip_reason": "dry_run_verdict=eligible_but_paused_scope",
+      "guardrail": "eligible_but_paused_scope_not_in_executor_apply_subset"
+    },
+    {
+      "product_sku_or_handle": "ox-14-11 / OX-14-11",
+      "collection_key": "oxford",
+      "skip_reason": "dry_run_verdict=eligible_but_paused_scope",
+      "guardrail": "eligible_but_paused_scope_not_in_executor_apply_subset"
+    },
+    {
+      "product_sku_or_handle": "ox-90-1 / OX-90-1",
+      "collection_key": "oxford",
+      "skip_reason": "dry_run_verdict=eligible_but_paused_scope",
+      "guardrail": "eligible_but_paused_scope_not_in_executor_apply_subset"
+    },
+    {
+      "product_sku_or_handle": "s-ox-05 / S-OX-05",
+      "collection_key": "oxford",
+      "skip_reason": "dry_run_verdict=eligible_but_paused_scope",
+      "guardrail": "eligible_but_paused_scope_not_in_executor_apply_subset"
+    },
+    {
+      "product_sku_or_handle": "mnm-55-1 / MNm-55-1",
+      "collection_key": "monchelsea",
+      "skip_reason": "identity_confidence is probable; Monchelsea excluded from auto-apply without human sign-off.",
+      "guardrail": "manual_identity_review_required"
+    },
+    {
+      "product_sku_or_handle": "WW-55-1 / ww-55-1",
+      "collection_key": "willie-winkie",
+      "skip_reason": "Willie Winkie blocked by painting semantics; no safe identity-locked visual.",
+      "guardrail": "blocked_by_business_or_source_gate"
+    },
+    {
+      "product_sku_or_handle": "MNm-57-3 / mnm-57-3",
+      "collection_key": "monchelsea",
+      "skip_reason": "blocked_no_safe_visual in MVP map; no deterministic candidate.",
+      "guardrail": "asset_missing"
+    },
+    {
+      "product_sku_or_handle": "MNm-09-1 / mnm-09-1",
+      "collection_key": "monchelsea",
+      "skip_reason": "blocked_no_safe_visual; source gap.",
+      "guardrail": "asset_missing"
+    },
+    {
+      "product_sku_or_handle": "oliver-kids-related-products",
+      "collection_key": "oliver-kids",
+      "skip_reason": "Insufficient SKU-level mapping evidence for auto-use.",
+      "guardrail": "insufficient_evidence"
+    },
+    {
+      "product_sku_or_handle": "non-pilot-oxford-skus",
+      "collection_key": "oxford",
+      "skip_reason": "Outside Oxford-4 pilot validated subset; paused collection governance.",
+      "guardrail": "paused_collection_scope"
+    }
+  ],
+  "summary": {
+    "eligible_count": 1,
+    "eligible_white_background_v1_count": 0,
+    "eligible_temporary_non_white_static_local_count": 1,
+    "skipped_count": 10,
+    "assignments_scanned": 5,
+    "source_skipped_rows_mirrored": 6
+  },
+  "apply_guardrails": [
+    "No new products; no commercial metadata changes; no collection stage/readiness mutation; no catalog-scope edits.",
+    "Oxford-4 and eligible_but_paused_scope rows are never promoted by this executor.",
+    "Class A apply: white_background + eligible_for_future_apply + CONFIRM=1; local path or http(s) URL.",
+    "Class B dry-run: eligible_temporary_local_visual_ready + backend_static_existing + local file + needs_later_white_background_replacement; Oxford excluded; collection_status not blocked.",
+    "Class B apply: additionally requires MVP_MEDIA_ASSIGNMENTS_ALLOW_TEMPORARY_STATIC=1 (no production_media_claim; later white-bg replacement required).",
+    "DB writes (--apply only): product thumbnail + images only; no variant/price/metadata."
+  ],
+  "apply_attempts": [
+    {
+      "product_sku_or_handle": "CO-02-1",
+      "collection_key": "country-london-paris",
+      "outcome": "updated",
+      "detail": "thumbnail_and_images_written",
+      "medusa_product_id": "prod_01KNTBXADAKWN6BXHSYFRX0R2F",
+      "medusa_handle": "co-02-1",
+      "target_url": "http://localhost:9000/static/1777716293008-CO-02-1_gallery_01.jpg"
+    }
+  ],
+  "apply_summary": {
+    "attempted": 1,
+    "updated": 1,
+    "unchanged": 0,
+    "errors": 0
+  }
+}

@@ -1,0 +1,864 @@
+{
+  "audit_meta": {
+    "pass_name": "visual_source_product_candidate_map",
+    "pass_kind": "read_only_matching_no_runtime_mutation",
+    "generated_date": "2026-05-02",
+    "generated_by": "scripts/build-visual-source-inventory.mjs"
+  },
+  "matching_rules": [
+    "MVP media map rows anchor primary commercial planning; inventory links by exact path_or_ref match first.",
+    "WOODRIGHT paths without local mount → mvp_card_suitability not_safe, reference_only until mount/static.",
+    "Oxford pilot rows remain temporary / paused governance; not public apply-ready.",
+    "Monchelsea probable → needs_human_review; no auto-apply.",
+    "Disk orphan files (no SKU token) listed in blocked_or_ambiguous (capped)."
+  ],
+  "candidates": [
+    {
+      "id": "cand_mvp_0",
+      "collection_key": "country-london-paris",
+      "product_sku_or_handle": "CO-02-1",
+      "product_name_if_available": null,
+      "candidate_source_id": "inv_legacy_82e826ee3221",
+      "candidate_path_or_ref": "/WOODRIGHT/Контент /Фото на белом фоне /country /co-02-1-blue-i1.jpg",
+      "source_system": "yandex_disk",
+      "source_type": "white_background",
+      "identity_match_basis": "sku_in_filename",
+      "identity_confidence": "confirmed",
+      "visual_usage_status": "reference_only",
+      "mvp_card_suitability": "not_safe",
+      "white_background_confirmed": true,
+      "needs_human_review": true,
+      "needs_later_ai_generation": false,
+      "reason": "Deterministic product code match with white-background source.",
+      "safe_next_action": "Mount Yandex/WOODRIGHT or materialize static + align ref before any card use."
+    },
+    {
+      "id": "cand_mvp_1",
+      "collection_key": "oxford",
+      "product_sku_or_handle": "ox-14-1 / OX-14-1",
+      "product_name_if_available": "Комплекс Оксфорд-1 (нижняя кровать без матраса 90*185)",
+      "candidate_source_id": "inv_norm_primary_1",
+      "candidate_path_or_ref": "http://localhost:9000/static/products/oxford/ox-14-1_interim_pdf_gallery_01.png",
+      "source_system": "backend_static_existing",
+      "source_type": "backend_static_existing",
+      "identity_match_basis": "handle_match",
+      "identity_confidence": "confirmed",
+      "visual_usage_status": "use_as_temporary_primary",
+      "mvp_card_suitability": "acceptable",
+      "white_background_confirmed": false,
+      "needs_human_review": false,
+      "needs_later_ai_generation": false,
+      "reason": "Validated pilot media exists; no confirmed white-background for SKU.",
+      "safe_next_action": "Pilot interim only; paused collection — not public apply-ready."
+    },
+    {
+      "id": "cand_mvp_2",
+      "collection_key": "oxford",
+      "product_sku_or_handle": "ox-14-11 / OX-14-11",
+      "product_name_if_available": "Нижняя кровать без матраса увеличенная (120*185)",
+      "candidate_source_id": "inv_norm_primary_2",
+      "candidate_path_or_ref": "http://localhost:9000/static/products/oxford/ox-14-11_interim_pdf_gallery_01.png",
+      "source_system": "backend_static_existing",
+      "source_type": "backend_static_existing",
+      "identity_match_basis": "handle_match",
+      "identity_confidence": "confirmed",
+      "visual_usage_status": "use_as_temporary_primary",
+      "mvp_card_suitability": "acceptable",
+      "white_background_confirmed": false,
+      "needs_human_review": false,
+      "needs_later_ai_generation": false,
+      "reason": "Clear pilot identity mapping and existing static media.",
+      "safe_next_action": "Pilot interim only; paused collection — not public apply-ready."
+    },
+    {
+      "id": "cand_mvp_3",
+      "collection_key": "oxford",
+      "product_sku_or_handle": "ox-90-1 / OX-90-1",
+      "product_name_if_available": "Комплекс Оксфорд-1 с выдвижной столешницей без нижней кровати",
+      "candidate_source_id": "inv_norm_primary_3",
+      "candidate_path_or_ref": "http://localhost:9000/static/products/oxford/ox-90-1_interim_pdf_gallery_01.png",
+      "source_system": "backend_static_existing",
+      "source_type": "backend_static_existing",
+      "identity_match_basis": "handle_match",
+      "identity_confidence": "confirmed",
+      "visual_usage_status": "use_as_temporary_primary",
+      "mvp_card_suitability": "acceptable",
+      "white_background_confirmed": false,
+      "needs_human_review": false,
+      "needs_later_ai_generation": false,
+      "reason": "Deterministic pilot subset mapping with existing static visual.",
+      "safe_next_action": "Pilot interim only; paused collection — not public apply-ready."
+    },
+    {
+      "id": "cand_mvp_4",
+      "collection_key": "oxford",
+      "product_sku_or_handle": "s-ox-05 / S-OX-05",
+      "product_name_if_available": "Ступени с перилами и ящиками ОКСФОРД",
+      "candidate_source_id": "inv_norm_primary_4",
+      "candidate_path_or_ref": "http://localhost:9000/static/products/oxford/s-ox-05_interim_pdf_gallery_01.png",
+      "source_system": "backend_static_existing",
+      "source_type": "backend_static_existing",
+      "identity_match_basis": "handle_match",
+      "identity_confidence": "confirmed",
+      "visual_usage_status": "use_as_temporary_primary",
+      "mvp_card_suitability": "acceptable",
+      "white_background_confirmed": false,
+      "needs_human_review": false,
+      "needs_later_ai_generation": false,
+      "reason": "Pilot media path and identity evidence are explicit.",
+      "safe_next_action": "Pilot interim only; paused collection — not public apply-ready."
+    },
+    {
+      "id": "cand_mvp_5",
+      "collection_key": "monchelsea",
+      "product_sku_or_handle": "mnm-55-1 / MNm-55-1",
+      "product_name_if_available": "Банкетка малая",
+      "candidate_source_id": null,
+      "candidate_path_or_ref": "front-manifest rows where collection_hint=monchelsea and product_code_hint=MN-55-1",
+      "source_system": "legacy_front",
+      "source_type": "legacy_front",
+      "identity_match_basis": "weak_text_match",
+      "identity_confidence": "probable",
+      "visual_usage_status": "use_as_temporary_primary",
+      "mvp_card_suitability": "weak_but_usable",
+      "white_background_confirmed": false,
+      "needs_human_review": true,
+      "needs_later_ai_generation": false,
+      "reason": "Best available visual candidate exists with high-confidence join-key evidence, but not deterministic white-background closure.",
+      "safe_next_action": "Dry-run executor only after source path exists; no apply without governance."
+    }
+  ],
+  "blocked_or_ambiguous": [
+    {
+      "id": "blk_mvp_0",
+      "kind": "mvp_media_map_blocked_row",
+      "product_sku_or_handle": "WW-55-1 / ww-55-1",
+      "collection_key": "willie-winkie",
+      "reason": "No safe identity-locked visual candidate; blocked business/source gate.",
+      "notes": "Possible wrong mapping risk if forced by generic legacy image.; Must not bypass VV semantics blocker via fallback."
+    },
+    {
+      "id": "blk_mvp_1",
+      "kind": "mvp_media_map_blocked_row",
+      "product_sku_or_handle": "MNm-57-3 / mnm-57-3",
+      "collection_key": "monchelsea",
+      "reason": "No front/disk candidate for join key in current evidence.",
+      "notes": "No safe visual without risk of product mismatch."
+    },
+    {
+      "id": "blk_mvp_2",
+      "kind": "mvp_media_map_blocked_row",
+      "product_sku_or_handle": "MNm-09-1 / mnm-09-1",
+      "collection_key": "monchelsea",
+      "reason": "Source gap; deterministic candidate missing.",
+      "notes": "Ambiguous replacement would violate safe matching rule."
+    },
+    {
+      "id": "blk_mvp_3",
+      "kind": "mvp_media_map_blocked_row",
+      "product_sku_or_handle": "oliver-kids-related-products",
+      "collection_key": "oliver-kids",
+      "reason": "No dedicated normalized candidate packet in current source set for safe SKU-level auto-selection.",
+      "notes": "Needs explicit oliver-kids SKU-level mapping pass before assignment planning."
+    },
+    {
+      "id": "blk_mvp_4",
+      "kind": "mvp_media_map_blocked_row",
+      "product_sku_or_handle": "non-pilot-oxford-skus",
+      "collection_key": "oxford",
+      "reason": "No validated safe visual mapping outside pilot subset and paused governance remains in force.",
+      "notes": "Do not infer full Oxford readiness from pilot-only media."
+    },
+    {
+      "id": "blk_orphan_0",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/greenwich/beds-shared/GR-BED-POOL_cloud_09.jpg",
+      "filename": "GR-BED-POOL_cloud_09.jpg",
+      "source_root": "apps/backend/static/products",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_1",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/greenwich/beds-shared/GR-BED-POOL_cloud_10.jpg",
+      "filename": "GR-BED-POOL_cloud_10.jpg",
+      "source_root": "apps/backend/static/products",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_2",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/greenwich/beds-shared/GR-BED-POOL_cloud_11.jpg",
+      "filename": "GR-BED-POOL_cloud_11.jpg",
+      "source_root": "apps/backend/static/products",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_3",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/greenwich/beds-shared/GR-BED-POOL_cloud_12.jpg",
+      "filename": "GR-BED-POOL_cloud_12.jpg",
+      "source_root": "apps/backend/static/products",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_4",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/greenwich/beds-shared/GR-BED-POOL_cloud_13.jpg",
+      "filename": "GR-BED-POOL_cloud_13.jpg",
+      "source_root": "apps/backend/static/products",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_5",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/greenwich/beds-shared/GR-BED-POOL_cloud_14.jpg",
+      "filename": "GR-BED-POOL_cloud_14.jpg",
+      "source_root": "apps/backend/static/products",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_6",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/greenwich/beds-shared/GR-BED-POOL_cloud_15.jpg",
+      "filename": "GR-BED-POOL_cloud_15.jpg",
+      "source_root": "apps/backend/static/products",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_7",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/greenwich/beds-shared/GR-BED-POOL_cloud_16.jpg",
+      "filename": "GR-BED-POOL_cloud_16.jpg",
+      "source_root": "apps/backend/static/products",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_8",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/greenwich/beds-shared/GR-BED-POOL_frame_01.jpg",
+      "filename": "GR-BED-POOL_frame_01.jpg",
+      "source_root": "apps/backend/static/products",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_9",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/greenwich/beds-shared/GR-BED-POOL_frame_02.jpg",
+      "filename": "GR-BED-POOL_frame_02.jpg",
+      "source_root": "apps/backend/static/products",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_10",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/greenwich/beds-shared/GR-BED-POOL_frame_03.jpg",
+      "filename": "GR-BED-POOL_frame_03.jpg",
+      "source_root": "apps/backend/static/products",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_11",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/greenwich/beds-shared/GR-BED-POOL_frame_04.jpg",
+      "filename": "GR-BED-POOL_frame_04.jpg",
+      "source_root": "apps/backend/static/products",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_12",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/greenwich/beds-shared/GR-BED-POOL_frame_05.jpg",
+      "filename": "GR-BED-POOL_frame_05.jpg",
+      "source_root": "apps/backend/static/products",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_13",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/greenwich/beds-shared/GR-BED-POOL_frame_06.jpg",
+      "filename": "GR-BED-POOL_frame_06.jpg",
+      "source_root": "apps/backend/static/products",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_14",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/greenwich/beds-shared/GR-BED-POOL_frame_07.jpg",
+      "filename": "GR-BED-POOL_frame_07.jpg",
+      "source_root": "apps/backend/static/products",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_15",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/greenwich/beds-shared/GR-BED-POOL_frame_08.jpg",
+      "filename": "GR-BED-POOL_frame_08.jpg",
+      "source_root": "apps/backend/static/products",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_16",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/greenwich/beds-shared/GR-BED-POOL_plane_17.jpg",
+      "filename": "GR-BED-POOL_plane_17.jpg",
+      "source_root": "apps/backend/static/products",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_17",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/greenwich/beds-shared/GR-BED-POOL_plane_18.jpg",
+      "filename": "GR-BED-POOL_plane_18.jpg",
+      "source_root": "apps/backend/static/products",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_18",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/greenwich/beds-shared/GR-BED-POOL_plane_19.jpg",
+      "filename": "GR-BED-POOL_plane_19.jpg",
+      "source_root": "apps/backend/static/products",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_19",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/greenwich/beds-shared/GR-BED-POOL_plane_20.jpg",
+      "filename": "GR-BED-POOL_plane_20.jpg",
+      "source_root": "apps/backend/static/products",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_20",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/greenwich/beds-shared/GR-BED-POOL_plane_21.jpg",
+      "filename": "GR-BED-POOL_plane_21.jpg",
+      "source_root": "apps/backend/static/products",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_21",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/greenwich/beds-shared/GR-BED-POOL_plane_22.jpg",
+      "filename": "GR-BED-POOL_plane_22.jpg",
+      "source_root": "apps/backend/static/products",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_22",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/greenwich/beds-shared/GR-BED-POOL_plane_23.jpg",
+      "filename": "GR-BED-POOL_plane_23.jpg",
+      "source_root": "apps/backend/static/products",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_23",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/oliver/OL-05-Н_main.jpg",
+      "filename": "OL-05-Н_main.jpg",
+      "source_root": "apps/backend/static/products",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_24",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/oxford/Oxford_full_p4_i0_1306x951.png",
+      "filename": "Oxford_full_p4_i0_1306x951.png",
+      "source_root": "apps/backend/static/products",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_25",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/oxford/Oxford_full_p5_i0_947x949.png",
+      "filename": "Oxford_full_p5_i0_947x949.png",
+      "source_root": "apps/backend/static/products",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_26",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/oxford/Oxford_full_p5_i1_480x1182.png",
+      "filename": "Oxford_full_p5_i1_480x1182.png",
+      "source_root": "apps/backend/static/products",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_27",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/oxford/Oxford_full_p5_i2_521x429.png",
+      "filename": "Oxford_full_p5_i2_521x429.png",
+      "source_root": "apps/backend/static/products",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_28",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/oxford/Oxford_full_p5_i3_522x445.png",
+      "filename": "Oxford_full_p5_i3_522x445.png",
+      "source_root": "apps/backend/static/products",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_29",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/oxford/Oxford_full_p6_i0_887x614.png",
+      "filename": "Oxford_full_p6_i0_887x614.png",
+      "source_root": "apps/backend/static/products",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_30",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/oxford/Oxford_full_p6_i1_887x621.png",
+      "filename": "Oxford_full_p6_i1_887x621.png",
+      "source_root": "apps/backend/static/products",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_31",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/oxford/s-ox-05_interim_pdf_gallery_01.png",
+      "filename": "s-ox-05_interim_pdf_gallery_01.png",
+      "source_root": "apps/backend/static/products",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_32",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_cloud_09.jpg",
+      "filename": "GR-BED-POOL_cloud_09.jpg",
+      "source_root": "data/raw/downloaded-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_33",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_cloud_10.jpg",
+      "filename": "GR-BED-POOL_cloud_10.jpg",
+      "source_root": "data/raw/downloaded-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_34",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_cloud_11.jpg",
+      "filename": "GR-BED-POOL_cloud_11.jpg",
+      "source_root": "data/raw/downloaded-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_35",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_cloud_12.jpg",
+      "filename": "GR-BED-POOL_cloud_12.jpg",
+      "source_root": "data/raw/downloaded-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_36",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_cloud_13.webp",
+      "filename": "GR-BED-POOL_cloud_13.webp",
+      "source_root": "data/raw/downloaded-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_37",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_cloud_14.webp",
+      "filename": "GR-BED-POOL_cloud_14.webp",
+      "source_root": "data/raw/downloaded-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_38",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_cloud_15.jpg",
+      "filename": "GR-BED-POOL_cloud_15.jpg",
+      "source_root": "data/raw/downloaded-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_39",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_cloud_16.jpg",
+      "filename": "GR-BED-POOL_cloud_16.jpg",
+      "source_root": "data/raw/downloaded-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_40",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_frame_01.jpg",
+      "filename": "GR-BED-POOL_frame_01.jpg",
+      "source_root": "data/raw/downloaded-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_41",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_frame_02.jpg",
+      "filename": "GR-BED-POOL_frame_02.jpg",
+      "source_root": "data/raw/downloaded-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_42",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_frame_03.jpg",
+      "filename": "GR-BED-POOL_frame_03.jpg",
+      "source_root": "data/raw/downloaded-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_43",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_frame_04.jpg",
+      "filename": "GR-BED-POOL_frame_04.jpg",
+      "source_root": "data/raw/downloaded-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_44",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_frame_05.jpg",
+      "filename": "GR-BED-POOL_frame_05.jpg",
+      "source_root": "data/raw/downloaded-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_45",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_frame_06.jpg",
+      "filename": "GR-BED-POOL_frame_06.jpg",
+      "source_root": "data/raw/downloaded-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_46",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_frame_07.jpg",
+      "filename": "GR-BED-POOL_frame_07.jpg",
+      "source_root": "data/raw/downloaded-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_47",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_frame_08.webp",
+      "filename": "GR-BED-POOL_frame_08.webp",
+      "source_root": "data/raw/downloaded-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_48",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_plane_17.jpg",
+      "filename": "GR-BED-POOL_plane_17.jpg",
+      "source_root": "data/raw/downloaded-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_49",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_plane_18.jpg",
+      "filename": "GR-BED-POOL_plane_18.jpg",
+      "source_root": "data/raw/downloaded-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_50",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_plane_19.jpg",
+      "filename": "GR-BED-POOL_plane_19.jpg",
+      "source_root": "data/raw/downloaded-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_51",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_plane_20.jpg",
+      "filename": "GR-BED-POOL_plane_20.jpg",
+      "source_root": "data/raw/downloaded-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_52",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_plane_21.jpg",
+      "filename": "GR-BED-POOL_plane_21.jpg",
+      "source_root": "data/raw/downloaded-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_53",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_plane_22.jpg",
+      "filename": "GR-BED-POOL_plane_22.jpg",
+      "source_root": "data/raw/downloaded-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_54",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/downloaded-assets/greenwich/beds/GR-BED-POOL_plane_23.webp",
+      "filename": "GR-BED-POOL_plane_23.webp",
+      "source_root": "data/raw/downloaded-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_55",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/downloaded-assets/legacy/oliver/ol-05-н_legacy_main.jpg",
+      "filename": "ol-05-н_legacy_main.jpg",
+      "source_root": "data/raw/downloaded-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_56",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_cloud_09.jpg",
+      "filename": "GR-BED-POOL_cloud_09.jpg",
+      "source_root": "data/processed/storefront-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_57",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_cloud_10.jpg",
+      "filename": "GR-BED-POOL_cloud_10.jpg",
+      "source_root": "data/processed/storefront-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_58",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_cloud_11.jpg",
+      "filename": "GR-BED-POOL_cloud_11.jpg",
+      "source_root": "data/processed/storefront-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_59",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_cloud_12.jpg",
+      "filename": "GR-BED-POOL_cloud_12.jpg",
+      "source_root": "data/processed/storefront-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_60",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_cloud_13.jpg",
+      "filename": "GR-BED-POOL_cloud_13.jpg",
+      "source_root": "data/processed/storefront-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_61",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_cloud_14.jpg",
+      "filename": "GR-BED-POOL_cloud_14.jpg",
+      "source_root": "data/processed/storefront-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_62",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_cloud_15.jpg",
+      "filename": "GR-BED-POOL_cloud_15.jpg",
+      "source_root": "data/processed/storefront-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_63",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_cloud_16.jpg",
+      "filename": "GR-BED-POOL_cloud_16.jpg",
+      "source_root": "data/processed/storefront-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_64",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_frame_01.jpg",
+      "filename": "GR-BED-POOL_frame_01.jpg",
+      "source_root": "data/processed/storefront-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_65",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_frame_02.jpg",
+      "filename": "GR-BED-POOL_frame_02.jpg",
+      "source_root": "data/processed/storefront-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_66",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_frame_03.jpg",
+      "filename": "GR-BED-POOL_frame_03.jpg",
+      "source_root": "data/processed/storefront-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_67",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_frame_04.jpg",
+      "filename": "GR-BED-POOL_frame_04.jpg",
+      "source_root": "data/processed/storefront-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_68",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_frame_05.jpg",
+      "filename": "GR-BED-POOL_frame_05.jpg",
+      "source_root": "data/processed/storefront-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_69",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_frame_06.jpg",
+      "filename": "GR-BED-POOL_frame_06.jpg",
+      "source_root": "data/processed/storefront-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_70",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_frame_07.jpg",
+      "filename": "GR-BED-POOL_frame_07.jpg",
+      "source_root": "data/processed/storefront-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_71",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_frame_08.jpg",
+      "filename": "GR-BED-POOL_frame_08.jpg",
+      "source_root": "data/processed/storefront-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_72",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_plane_17.jpg",
+      "filename": "GR-BED-POOL_plane_17.jpg",
+      "source_root": "data/processed/storefront-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_73",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_plane_18.jpg",
+      "filename": "GR-BED-POOL_plane_18.jpg",
+      "source_root": "data/processed/storefront-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_74",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_plane_19.jpg",
+      "filename": "GR-BED-POOL_plane_19.jpg",
+      "source_root": "data/processed/storefront-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_75",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_plane_20.jpg",
+      "filename": "GR-BED-POOL_plane_20.jpg",
+      "source_root": "data/processed/storefront-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_76",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_plane_21.jpg",
+      "filename": "GR-BED-POOL_plane_21.jpg",
+      "source_root": "data/processed/storefront-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_77",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_plane_22.jpg",
+      "filename": "GR-BED-POOL_plane_22.jpg",
+      "source_root": "data/processed/storefront-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_78",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/processed/storefront-assets/greenwich/beds-shared/GR-BED-POOL_plane_23.jpg",
+      "filename": "GR-BED-POOL_plane_23.jpg",
+      "source_root": "data/processed/storefront-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    },
+    {
+      "id": "blk_orphan_79",
+      "kind": "disk_file_no_clear_product_identity",
+      "path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/processed/storefront-assets/oliver/OL-05-Н_main.jpg",
+      "filename": "OL-05-Н_main.jpg",
+      "source_root": "data/processed/storefront-assets",
+      "reason": "No SKU-like token inferred from path/filename"
+    }
+  ],
+  "summary_by_collection": {
+    "country-london-paris": {
+      "candidates": 1,
+      "blocked": 0
+    },
+    "oxford": {
+      "candidates": 4,
+      "blocked": 1
+    },
+    "monchelsea": {
+      "candidates": 1,
+      "blocked": 2
+    },
+    "willie-winkie": {
+      "candidates": 0,
+      "blocked": 1
+    },
+    "oliver-kids": {
+      "candidates": 0,
+      "blocked": 1
+    }
+  },
+  "summary_by_source_system": {
+    "white_background": {
+      "candidates": 1,
+      "blocked": 0
+    },
+    "backend_static_existing": {
+      "candidates": 4,
+      "blocked": 0
+    },
+    "legacy_front": {
+      "candidates": 1,
+      "blocked": 0
+    }
+  },
+  "summary_by_usage_status": {
+    "reference_only": {
+      "candidates": 1,
+      "blocked": 0
+    },
+    "use_as_temporary_primary": {
+      "candidates": 5,
+      "blocked": 0
+    }
+  },
+  "summary": {
+    "candidates_count": 6,
+    "blocked_or_ambiguous_count": 85,
+    "orphan_disk_files_count": 80
+  }
+}

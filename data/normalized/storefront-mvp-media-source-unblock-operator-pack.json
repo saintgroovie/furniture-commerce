@@ -1,0 +1,83 @@
+{
+  "audit_meta": {
+    "pass_name": "storefront_mvp_media_source_unblock_operator_pack",
+    "pass_kind": "operator_instructions_only",
+    "generated_date": "2026-05-02",
+    "constraints": [
+      "No executor script changes",
+      "No media-map mutation in this pack",
+      "No source-contract verdict redefinition",
+      "No medusa --apply",
+      "No product/metadata/stage/catalog-scope/storefront changes"
+    ]
+  },
+  "target": {
+    "product_sku_or_handle": "CO-02-1",
+    "collection_key": "country-london-paris",
+    "required_filename": "co-02-1-blue-i1.jpg",
+    "canonical_expected_source_path": "/WOODRIGHT/Контент /Фото на белом фоне /country /co-02-1-blue-i1.jpg",
+    "controlled_static_target_relative": "apps/backend/static/products/country-london-paris/co-02-1-blue-i1.jpg"
+  },
+  "allowed_resolution_paths": [
+    {
+      "id": "variant_a_mount_yandex",
+      "label": "Mount or sync Yandex Disk / WOODRIGHT so canonical path exists",
+      "steps": [
+        "Ensure file exists at canonical_expected_source_path with exact required_filename.",
+        "Do not fake paths in JSON; filesystem must match controlled artifact ref.",
+        "Run dry-run only: cd apps/backend && yarn mvp-media-assignments"
+      ]
+    },
+    {
+      "id": "variant_b_repo_static",
+      "label": "Provide confirmed bytes; materialize single file under backend static",
+      "steps": [
+        "Obtain confirmed co-02-1-blue-i1.jpg for CO-02-1 only.",
+        "Write only that file to apps/backend/static/products/country-london-paris/co-02-1-blue-i1.jpg",
+        "In a governed follow-up, point MVP media dry-run / map selected_primary_image_path_or_ref to an absolute path that exists where medusa exec runs.",
+        "Run dry-run only: cd apps/backend && yarn mvp-media-assignments"
+      ]
+    }
+  ],
+  "forbidden_actions": [
+    "Substitute a different image or rename unrelated assets to co-02-1-blue-i1.jpg",
+    "Manually flip eligibility or apply_allowed_in_future without a real existing source path",
+    "Run MVP_MEDIA_ASSIGNMENTS_APPLY_CONFIRM=1 yarn mvp-media-assignments -- --apply from this pack",
+    "Mutate Oxford / Monchelsea / Willie Winkie / Oliver Kids rows while unblocking CO-02-1",
+    "Change product records, metadata, readiness/stage, catalog-scope.ts, or storefront runtime as part of source unblock"
+  ],
+  "verification_checklist": [
+    "File exists at chosen path (canonical for A, static + aligned absolute ref for B)",
+    "Human confirms image is correct CO-02-1 white-background asset",
+    "Execute only: cd apps/backend && yarn mvp-media-assignments",
+    "In storefront-mvp-media-assignment-executor-dry-run.json, CO-02-1 apply_allowed_in_future is true and pre_apply reflects local_path_exists or http_url_contract_ok"
+  ],
+  "expected_next_dry_run_result": {
+    "product_sku_or_handle": "CO-02-1",
+    "apply_allowed_in_future": true,
+    "pre_apply_detail_examples": ["local_path_exists", "http_url_contract_ok"]
+  },
+  "current_status": {
+    "verdict": "BLOCKED: source file required",
+    "automatic_resolution": "still_blocked",
+    "canonical_file_present": false,
+    "repo_contains_co_02_1_blue_i1_jpg": false,
+    "static_materialized": false,
+    "executor_dry_run_observation": {
+      "pre_apply_source": "local_path_missing",
+      "apply_allowed_in_future": false
+    }
+  },
+  "verification_passes": [
+    {
+      "date": "2026-05-02",
+      "variant_detected": "still_blocked",
+      "canonical_path_exists": false,
+      "static_path_exists": false,
+      "governed_ref_alignment_variant_b": false,
+      "dry_run_command": "cd apps/backend && yarn mvp-media-assignments",
+      "co_02_1_apply_allowed_in_future": false,
+      "co_02_1_pre_apply": "local_path_missing"
+    }
+  ]
+}

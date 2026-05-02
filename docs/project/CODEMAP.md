@@ -90,6 +90,8 @@
 | **mvp-media-pre-apply-gate.md** (`docs/storefront/`) | Human-readable pre-apply gate for CO-02-1: checks, temporary-only rationale, env gates, skipped list, rollback note, explicit no-apply. |
 | **`data/normalized/storefront-mvp-media-co02-apply-report.json`** | Post-apply evidence for controlled CO-02-1 Class B apply: command, target ids, `apply_summary`, skipped confirmation, safety fields. |
 | **mvp-media-co02-apply-report.md** (`docs/storefront/`) | Human-readable post-apply report: verdict, command, written fields, skipped rows, evidence summary, rollback, next QA step. |
+| **`data/normalized/storefront-mvp-media-co02-post-apply-qa.json`** | Post-apply QA for **co-02-1**: automated checks + **manual/browser closure** (`mvp_temporary_media_visible`, Class B flags, no apply rerun, skipped collections untouched). |
+| **mvp-media-co02-post-apply-qa.md** (`docs/storefront/`) | Human-readable post-apply QA through **manual card confirmation**: media status, safety, follow-up white-bg, next safe target (none implied). |
 | **`data/normalized/storefront-mvp-media-source-contract.json`** | Source availability contract for MVP media safe candidate(s): canonical source refs, mount/file existence checks, executor post-check, and verdict (`source_mount_required` or ready). |
 | **mvp-media-source-contract.md** (`docs/storefront/`) | Human-readable source contract pass for MVP media: checked roots, CO-02-1 path verdict, required mount/sync before any governed apply. |
 | **`data/normalized/storefront-mvp-media-source-unblock-operator-pack.json`** | Operator unblock packet for CO-02-1: allowed mount vs static paths, forbidden actions, verification checklist, expected dry-run outcome (no apply). |

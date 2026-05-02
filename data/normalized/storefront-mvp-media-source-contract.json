@@ -1,0 +1,120 @@
+{
+  "schema_version": "1.0",
+  "pass_name": "storefront_mvp_media_source_contract",
+  "pass_kind": "source_availability_check_only",
+  "generated_date": "2026-05-01",
+  "last_rechecked": {
+    "date": "2026-05-02",
+    "pass_kind": "post_source_mount_required_next_step",
+    "chosen_resolution_path_this_cursor_pass": "still_blocked",
+    "canonical_file_exists": false,
+    "repo_wide_search_co_02_1_blue_i1_jpg": false,
+    "static_materialize_target_if_variant_b": "apps/backend/static/products/country-london-paris/co-02-1-blue-i1.jpg",
+    "notes": "Neither Yandex mount nor a bytes-on-disk copy of co-02-1-blue-i1.jpg was available in-repo or at canonical path; MVP dry-run JSON refs unchanged."
+  },
+  "scope": {
+    "collection_key": "country-london-paris",
+    "product_sku_or_handle": "CO-02-1"
+  },
+  "source_ref_contract": {
+    "canonical_source_ref": "/WOODRIGHT/Контент /Фото на белом фоне /country /co-02-1-blue-i1.jpg",
+    "appears_in_artifacts": [
+      "data/normalized/storefront-mvp-media-assignment-dry-run.json",
+      "data/normalized/storefront-mvp-media-assignment-executor-dry-run.json",
+      "data/normalized/storefront-mvp-best-available-media-map.json",
+      "data/normalized/visual-asset-candidate-manifest.json",
+      "data/normalized/storefront-best-available-photo-candidates.json",
+      "data/normalized/storefront-best-available-photo-approval-review.json"
+    ]
+  },
+  "mount_checks": [
+    {
+      "path": "/WOODRIGHT/Контент /Фото на белом фоне",
+      "exists": false
+    },
+    {
+      "path": "/Users/leonidmbp/Yandex.Disk/WOODRIGHT/Контент /Фото на белом фоне",
+      "exists": false
+    },
+    {
+      "path": "/Users/leonidmbp/Yandex Disk/WOODRIGHT/Контент /Фото на белом фоне",
+      "exists": false
+    },
+    {
+      "path": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/downloaded-assets",
+      "exists": true
+    },
+    {
+      "path": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/processed/storefront-assets",
+      "exists": true
+    }
+  ],
+  "candidate_file_checks": [
+    {
+      "path": "/WOODRIGHT/Контент /Фото на белом фоне /country /co-02-1-blue-i1.jpg",
+      "exists": false
+    },
+    {
+      "path": "/Users/leonidmbp/Yandex.Disk/WOODRIGHT/Контент /Фото на белом фоне/country /co-02-1-blue-i1.jpg",
+      "exists": false
+    },
+    {
+      "path": "/Users/leonidmbp/Yandex Disk/WOODRIGHT/Контент /Фото на белом фоне/country /co-02-1-blue-i1.jpg",
+      "exists": false
+    }
+  ],
+  "executor_observation_after_check": {
+    "command": "cd apps/backend && yarn mvp-media-assignments",
+    "co_02_1_pre_apply": "local_path_missing",
+    "co_02_1_apply_allowed_in_future": false,
+    "last_verified_at": "2026-05-02"
+  },
+  "post_operator_provision_verification": {
+    "date": "2026-05-02",
+    "pass_kind": "verification_after_operator_file_or_mount_claim",
+    "variant_detected": "still_blocked",
+    "canonical_path_exists": false,
+    "static_path_exists": false,
+    "static_path_checked_absolute": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/country-london-paris/co-02-1-blue-i1.jpg",
+    "governed_ref_alignment_variant_b_attempted": false,
+    "command_run": "cd apps/backend && yarn mvp-media-assignments",
+    "executor_co_02_1": {
+      "apply_allowed_in_future": false,
+      "pre_apply_source_detail": "local_path_missing"
+    },
+    "notes": "Neither canonical WOODRIGHT path nor controlled static file was present; MVP dry-run / media-map refs left unchanged (no fictitious paths)."
+  },
+  "verdict": "source_mount_required",
+  "operator_next_safe_paths": {
+    "variant_a_mount_yandex": {
+      "when": "Yandex Disk / WOODRIGHT can be mounted at /WOODRIGHT/...",
+      "steps": [
+        "Mount or sync so canonical path exists (do not hand-edit dry-run refs).",
+        "Run: cd apps/backend && yarn mvp-media-assignments",
+        "Confirm CO-02-1: pre_apply local_path_exists (or http_url_contract_ok) and apply_allowed_in_future=true."
+      ],
+      "artifact_updates_after_success": "Refresh this JSON/MD with recheck timestamps and executor observation only."
+    },
+    "variant_b_repo_static": {
+      "when": "Mount is not possible but operator has the confirmed co-02-1-blue-i1.jpg bytes",
+      "steps": [
+        "Place file only at apps/backend/static/products/country-london-paris/co-02-1-blue-i1.jpg (no other assets).",
+        "Update controlled MVP media dry-run + media-map source ref to that absolute repo path (governed lane).",
+        "Run: cd apps/backend && yarn mvp-media-assignments",
+        "Confirm apply_allowed_in_future=true."
+      ],
+      "artifact_updates_after_success": "Refresh this JSON/MD; keep Oxford/Monchelsea/WW/Oliver rows untouched."
+    }
+  },
+  "required_operator_action": {
+    "goal": "make canonical CO-02-1 white-background source path readable on local machine",
+    "required_mount_or_sync": "Mount/sync WOODRIGHT source so that /WOODRIGHT/Контент /Фото на белом фоне /country /co-02-1-blue-i1.jpg exists locally (or explicitly replace source ref with governed reachable http(s) URL in controlled media map lane).",
+    "before_apply_check": "Re-run dry-run and confirm apply_allowed_in_future=true for CO-02-1."
+  },
+  "guardrails": [
+    "No --apply execution in this pass.",
+    "No product record writes.",
+    "No metadata/stage/catalog-scope/storefront changes.",
+    "No Oxford/Monchelsea/WW/Oliver Kids scope changes."
+  ]
+}

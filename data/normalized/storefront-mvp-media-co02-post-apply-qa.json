@@ -1,0 +1,98 @@
+{
+  "audit_meta": {
+    "pass_name": "storefront_mvp_media_co02_post_apply_qa",
+    "pass_kind": "read_only_qa_verification",
+    "generated_date": "2026-05-02",
+    "manual_qa_closure_date": "2026-05-02",
+    "generated_by": "cursor_agent",
+    "constraints": [
+      "No executor --apply",
+      "No repo file mutations except this QA artifact and paired markdown",
+      "No catalog-scope or storefront runtime edits in this pass"
+    ]
+  },
+  "product": {
+    "medusa_handle": "co-02-1",
+    "dry_run_sku_label": "CO-02-1",
+    "medusa_product_id": "prod_01KNTBXADAKWN6BXHSYFRX0R2F"
+  },
+  "manual_qa_confirmation": {
+    "browser_or_manual_visual_confirmed": true,
+    "result": "image_visible_in_product_card",
+    "operator_note": "User visually confirmed a single product image on the card.",
+    "apply_rerun": false,
+    "executor_command_not_reexecuted": "MVP_MEDIA_ASSIGNMENTS_APPLY_CONFIRM=1 MVP_MEDIA_ASSIGNMENTS_ALLOW_TEMPORARY_STATIC=1 yarn mvp-media-assignments -- --apply"
+  },
+  "media_status": "mvp_temporary_media_visible",
+  "source_class": "temporary_non_white_static_local",
+  "production_media_claim": false,
+  "requires_later_white_background_replacement": true,
+  "artifacts_reviewed": [
+    "data/normalized/storefront-mvp-media-assignment-executor-dry-run.json",
+    "docs/storefront/mvp-media-co02-apply-report.md",
+    "data/normalized/storefront-mvp-media-co02-apply-report.json"
+  ],
+  "executor_artifact_checks": {
+    "dry_run_only": false,
+    "pass_kind": "controlled_executor_apply",
+    "apply_attempts_count": 1,
+    "sole_attempt_product_sku_or_handle": "CO-02-1",
+    "sole_attempt_medusa_handle": "co-02-1",
+    "expected_target_url": "http://localhost:9000/static/1777716293008-CO-02-1_gallery_01.jpg",
+    "apply_summary_errors": 0,
+    "skipped_rows_count": 10,
+    "non_co02_handles_in_apply_attempts": []
+  },
+  "store_api_probe": {
+    "base_url": "http://localhost:9000",
+    "request": "GET /store/products/prod_01KNTBXADAKWN6BXHSYFRX0R2F?fields=%2Bmetadata",
+    "http_status": 200,
+    "publishable_key_used": true,
+    "note": "Local dev verification; `x-publishable-api-key` header required by Medusa Store API (value supplied from operator env, not stored in this artifact)."
+  },
+  "store_product_observed": {
+    "id": "prod_01KNTBXADAKWN6BXHSYFRX0R2F",
+    "handle": "co-02-1",
+    "thumbnail": "http://localhost:9000/static/1777716293008-CO-02-1_gallery_01.jpg",
+    "images_rank0_url": "http://localhost:9000/static/1777716293008-CO-02-1_gallery_01.jpg",
+    "thumbnail_matches_executor_target_url": true,
+    "images0_matches_executor_target_url": true,
+    "images_total_count": 10,
+    "product_updated_at": "2026-05-02T10:04:53.053Z",
+    "metadata_present": true,
+    "metadata_sample_keys": [
+      "mapping_notes",
+      "readiness_status",
+      "workbook_row_key",
+      "asset_quality_status",
+      "dimensions_normalized",
+      "product_code_normalized"
+    ],
+    "metadata_mutation_by_executor_script": false,
+    "metadata_byte_level_baseline_note": "Executor updateProducts payload includes only thumbnail and images; no before/after metadata JSON snapshot in repo — QA confirms by API contract + live read."
+  },
+  "skipped_collections_untouched": {
+    "oxford": true,
+    "monchelsea": true,
+    "willie_winkie": true,
+    "oliver_kids": true,
+    "blocked_placeholder_rows": true,
+    "note": "Executor skipped_rows only; no apply_attempts outside CO-02-1."
+  },
+  "safety_confirmation": {
+    "only_media_fields_aligned_with_executor": true,
+    "catalog_scope_ts_unchanged_in_this_pass": true,
+    "storefront_runtime_unchanged_in_this_pass": true,
+    "collection_stage_readiness_not_written_by_executor": true,
+    "metadata_not_mutated_by_apply_script": true,
+    "no_new_products": true,
+    "oxford_monchelsea_ww_oliver_blocked_not_in_apply_attempts": true
+  },
+  "verdict": {
+    "status": "pass_manual_qa_closed",
+    "rollback_needed": false,
+    "mismatch_notes": []
+  },
+  "remaining_follow_up": "Replace temporary gallery hero with governed white-background media when Yandex/WOODRIGHT or approved static white-bg is available; update MVP map + assignment dry-run then optional new pre-apply gate.",
+  "next_safe_mvp_media_target": "None under current executor subset until a new row is promoted through dry-run + pre-apply gate (e.g. future Class A white_background SKU); do not infer Oxford/Monchelsea/WW/Oliver from CO-02-1 success."
+}

@@ -1,0 +1,183 @@
+{
+  "audit_meta": {
+    "pass_name": "storefront_mvp_media_assignment_dry_run",
+    "pass_kind": "controlled_mvp_media_dry_run_only",
+    "generated_date": "2026-05-02",
+    "generated_by": "cursor_agent",
+    "constraints": [
+      "No DB mutations",
+      "No product record changes",
+      "No backend business logic changes",
+      "No storefront runtime changes",
+      "No catalog-scope changes",
+      "No collection publish or stage promotion",
+      "No AI-generated images",
+      "Dry-run output only"
+    ]
+  },
+  "source_files_checked": [
+    "docs/guidelines/development-rules.md",
+    "docs/architecture/architecture-guardrails.md",
+    "docs/project/CODEMAP.md",
+    "data/normalized/storefront-mvp-best-available-media-map.json",
+    "data/normalized/visual-source-inventory-index.json",
+    "data/normalized/visual-source-product-candidate-map.json",
+    "docs/storefront/visual-source-inventory-and-matching-report.md",
+    "docs/storefront/mvp-media-selection-refresh-report.md",
+    "docs/storefront/mvp-media-fill-implementation-plan.md",
+    "apps/backend/src/scripts/refresh-oliver-thumbnails.ts",
+    "apps/backend/src/scripts/refresh-oliver-media.ts",
+    "apps/backend/src/scripts/sync-oliver-primary-images.ts",
+    "apps/backend/src/scripts/seed-oxford-pilot-four.ts"
+  ],
+  "eligibility_rules": [
+    "Include only mvp_usage_status in use_as_primary | use_as_temporary_primary",
+    "eligible_for_future_apply (executor v1 aligned): identity_confidence = confirmed AND selected_primary_image_type = white_background AND resolvable local path or http(s) URL AND non-Oxford AND collection_status not blocked",
+    "eligible_temporary_local_visual_ready: confirmed identity + backend_static_existing (or legacy http URL) with resolvable path/URL for MVP card planning; NOT in medusa exec v1 white_background apply whitelist",
+    "Oxford pilot rows with confirmed interim static media: dry_run_verdict = eligible_but_paused_scope (no public catalog apply without governance)",
+    "Exclude identity_confidence probable | ambiguous | none from apply-ready",
+    "Exclude blocked_no_safe_visual, AI backlog-only rows, Willie Winkie, Monchelsea probable without human sign-off, Oliver Kids without SKU-level evidence",
+    "Exclude any apply that would imply catalog-scope or rollout promotion"
+  ],
+  "dry_run_assignments": [
+    {
+      "id": "DR-001",
+      "product_sku_or_handle": "CO-02-1",
+      "collection_key": "country-london-paris",
+      "collection_status": "future_or_paused_not_active_rollout_target",
+      "selected_primary_image_source": "backend static existing (inventory-verified local path)",
+      "selected_primary_image_path_or_ref": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/country-london-paris/CO-02-1_gallery_01.jpg",
+      "selected_primary_image_type": "backend_static_existing",
+      "identity_confidence": "confirmed",
+      "visual_quality": "acceptable",
+      "proposed_assignment_type": "temporary_primary_image",
+      "needs_later_white_background_replacement": true,
+      "dry_run_verdict": "eligible_temporary_local_visual_ready",
+      "reason": "White-background Yandex path not mounted; legacy manifest still points to same WOODRIGHT ref only. Confirmed same-SKU static JPEG exists locally (gallery_01) for MVP temporary card use.",
+      "implementation_note": "medusa exec apply-mvp-media-assignments.ts v1 gates eligible rows to white_background only — this row is planning/executor-honest as non-white local ready; expand executor whitelist in a separate approved pass before --apply for this class.",
+      "rollback_note": "Dry-run touches no data; apply rollback is no-op if apply never run, else restore prior thumbnail/images from snapshot."
+    },
+    {
+      "id": "DR-002",
+      "product_sku_or_handle": "ox-14-1 / OX-14-1",
+      "collection_key": "oxford",
+      "collection_status": "paused_stage_2_5_pilot_only",
+      "selected_primary_image_source": "backend static pilot media",
+      "selected_primary_image_path_or_ref": "http://localhost:9000/static/products/oxford/ox-14-1_interim_pdf_gallery_01.png",
+      "selected_primary_image_type": "backend_static_existing",
+      "identity_confidence": "confirmed",
+      "visual_quality": "acceptable",
+      "proposed_assignment_type": "temporary_primary_image",
+      "dry_run_verdict": "eligible_but_paused_scope",
+      "reason": "Confirmed interim non-white static media for Oxford-4 pilot; collection remains PAUSED on storefront.",
+      "implementation_note": "Not white_background_validated; only pilot-controlled backend/static paths per oxford-four evidence bundle.",
+      "rollback_note": "Do not apply to public active catalog while Oxford paused; QA/pilot DB scope only if explicitly approved."
+    },
+    {
+      "id": "DR-003",
+      "product_sku_or_handle": "ox-14-11 / OX-14-11",
+      "collection_key": "oxford",
+      "collection_status": "paused_stage_2_5_pilot_only",
+      "selected_primary_image_source": "backend static pilot media",
+      "selected_primary_image_path_or_ref": "http://localhost:9000/static/products/oxford/ox-14-11_interim_pdf_gallery_01.png",
+      "selected_primary_image_type": "backend_static_existing",
+      "identity_confidence": "confirmed",
+      "visual_quality": "acceptable",
+      "proposed_assignment_type": "temporary_primary_image",
+      "dry_run_verdict": "eligible_but_paused_scope",
+      "reason": "Oxford-4 pilot subset; interim PDF-derived hero exists with confirmed mapping.",
+      "implementation_note": "Same guardrails as DR-002; no catalog-scope change.",
+      "rollback_note": "Paused-scope only; no-op for storefront MVP until governance allows."
+    },
+    {
+      "id": "DR-004",
+      "product_sku_or_handle": "ox-90-1 / OX-90-1",
+      "collection_key": "oxford",
+      "collection_status": "paused_stage_2_5_pilot_only",
+      "selected_primary_image_source": "backend static pilot media",
+      "selected_primary_image_path_or_ref": "http://localhost:9000/static/products/oxford/ox-90-1_interim_pdf_gallery_01.png",
+      "selected_primary_image_type": "backend_static_existing",
+      "identity_confidence": "confirmed",
+      "visual_quality": "acceptable",
+      "proposed_assignment_type": "temporary_primary_image",
+      "dry_run_verdict": "eligible_but_paused_scope",
+      "reason": "Oxford-4 pilot; confirmed static interim visual.",
+      "implementation_note": "Requires explicit pilot apply gate separate from general MVP rollout.",
+      "rollback_note": "Revert pilot product media only within approved pilot scope."
+    },
+    {
+      "id": "DR-005",
+      "product_sku_or_handle": "s-ox-05 / S-OX-05",
+      "collection_key": "oxford",
+      "collection_status": "paused_stage_2_5_pilot_only",
+      "selected_primary_image_source": "backend static pilot media",
+      "selected_primary_image_path_or_ref": "http://localhost:9000/static/products/oxford/s-ox-05_interim_pdf_gallery_01.png",
+      "selected_primary_image_type": "backend_static_existing",
+      "identity_confidence": "confirmed",
+      "visual_quality": "acceptable",
+      "proposed_assignment_type": "temporary_primary_image",
+      "dry_run_verdict": "eligible_but_paused_scope",
+      "reason": "Oxford-4 pilot; confirmed static interim visual.",
+      "implementation_note": "Interim only; plan white-background replacement when source lane closes.",
+      "rollback_note": "Paused-scope only."
+    }
+  ],
+  "skipped": [
+    {
+      "product_sku_or_handle": "mnm-55-1 / MNm-55-1",
+      "collection_key": "monchelsea",
+      "skip_reason": "identity_confidence is probable; Monchelsea excluded from auto-apply without human sign-off.",
+      "blocker_type": "manual_identity_review_required",
+      "safe_next_action": "Complete human reviewer sign-off worksheet then re-run dry-run with approved row."
+    },
+    {
+      "product_sku_or_handle": "WW-55-1 / ww-55-1",
+      "collection_key": "willie-winkie",
+      "skip_reason": "Willie Winkie blocked by painting semantics; no safe identity-locked visual.",
+      "blocker_type": "blocked_by_business_or_source_gate",
+      "safe_next_action": "Resolve VV semantics gate before any media assignment planning."
+    },
+    {
+      "product_sku_or_handle": "MNm-57-3 / mnm-57-3",
+      "collection_key": "monchelsea",
+      "skip_reason": "blocked_no_safe_visual in MVP map; no deterministic candidate.",
+      "blocker_type": "asset_missing",
+      "safe_next_action": "Source intake / disk expansion then re-evaluate."
+    },
+    {
+      "product_sku_or_handle": "MNm-09-1 / mnm-09-1",
+      "collection_key": "monchelsea",
+      "skip_reason": "blocked_no_safe_visual; source gap.",
+      "blocker_type": "asset_missing",
+      "safe_next_action": "Close source gap with evidence-backed candidate before dry-run include."
+    },
+    {
+      "product_sku_or_handle": "oliver-kids-related-products",
+      "collection_key": "oliver-kids",
+      "skip_reason": "Insufficient SKU-level mapping evidence for auto-use.",
+      "blocker_type": "insufficient_evidence",
+      "safe_next_action": "Build oliver-kids SKU-level manifest then re-run eligibility."
+    },
+    {
+      "product_sku_or_handle": "non-pilot-oxford-skus",
+      "collection_key": "oxford",
+      "skip_reason": "Outside Oxford-4 pilot validated subset; paused collection governance.",
+      "blocker_type": "paused_collection_scope",
+      "safe_next_action": "Expand evidence lane only with explicit governance; do not infer from pilot media."
+    }
+  ],
+  "summary": {
+    "dry_run_assignments_total": 5,
+    "eligible_for_future_apply": 0,
+    "eligible_temporary_local_visual_ready": 1,
+    "eligible_but_paused_scope": 4,
+    "skipped_total": 6,
+    "existing_backend_scripts_reference": [
+      "apps/backend/src/scripts/refresh-oliver-thumbnails.ts — Oliver-only approved thumbnail list; not generic MVP map",
+      "apps/backend/src/scripts/refresh-oliver-media.ts — Oliver-only media refresh",
+      "apps/backend/src/scripts/sync-oliver-primary-images.ts — Oliver-only images[0] vs thumbnail sync",
+      "apps/backend/src/scripts/seed-oxford-pilot-four.ts — Oxford-4 pilot seed path (separate from fixed2); not invoked in this pass"
+    ],
+    "recommended_future_pipeline_note": "No single repo script reads storefront-mvp-best-available-media-map.json today; add a dedicated dry-run-by-default script in a future approved pass with explicit --apply."
+  }
+}
