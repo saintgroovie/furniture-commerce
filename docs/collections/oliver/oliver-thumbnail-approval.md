@@ -1,6 +1,6 @@
 # Oliver Thumbnail Approval
 
-Final approved state for Oliver thumbnail backfill. Discovery history lives in `docs/project/oliver-thumbnail-review.md`. Machine-readable mapping: `docs/project/oliver-thumbnail-approved-mapping.json` (mirror of `apps/backend/data/oliver/oliver-thumbnail-approved-mapping.json`, which Medusa reads in Docker).
+Final approved state for Oliver thumbnail backfill. Discovery history lives in [`oliver-thumbnail-review.md`](oliver-thumbnail-review.md). Machine-readable mapping: [`oliver-thumbnail-approved-mapping.json`](oliver-thumbnail-approved-mapping.json) (mirror of `apps/backend/data/oliver/oliver-thumbnail-approved-mapping.json`, which Medusa reads in Docker).
 
 Serving rule: storefront and Store API use backend-hosted static Oliver assets at `/static/products/oliver/<processed_filename>` (full URL: `{MEDUSA_BACKEND_URL}/static/products/oliver/...`). Approved Yandex paths are resolved to processed filenames via `data/processed/asset-manifests/processed-assets.json`.
 

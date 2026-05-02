@@ -335,7 +335,7 @@
 - None
 
 ## Review doc created
-- `docs/project/oliver-thumbnail-review.md`
+- `docs/collections/oliver/oliver-thumbnail-review.md`
 
 ## Next minimal step
 - Manually pick one canonical white-background shot per handle from the listed candidates and lock mapping in the thumbnail source manifest.

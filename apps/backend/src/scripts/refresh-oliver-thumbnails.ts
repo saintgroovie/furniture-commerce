@@ -2,7 +2,7 @@
  * Oliver-only thumbnail backfill for a fixed approved handle list.
  *
  * - Source of truth: `data/oliver/oliver-thumbnail-approved-mapping.json` (under apps/backend; Docker
- *   bind-mounts only this app). Mirror: `docs/project/oliver-thumbnail-approved-mapping.json`.
+ *   bind-mounts only this app). Mirror: `docs/collections/oliver/oliver-thumbnail-approved-mapping.json`.
  * - Optionally verifies each `source_basename` against `data/processed/asset-manifests/processed-assets.json`
  *   when that file is present (full monorepo checkout); skipped inside minimal backend containers.
  * - Updates `thumbnail` only (does not touch `images`, metadata, variants, prices).
@@ -46,8 +46,8 @@ type ProductRow = {
 function loadApprovedMapping(): ApprovedRow[] {
   const candidates = [
     path.join(process.cwd(), "data/oliver/oliver-thumbnail-approved-mapping.json"),
-    path.resolve(process.cwd(), "../../docs/project/oliver-thumbnail-approved-mapping.json"),
-    path.join(process.cwd(), "docs/project/oliver-thumbnail-approved-mapping.json"),
+    path.resolve(process.cwd(), "../../docs/collections/oliver/oliver-thumbnail-approved-mapping.json"),
+    path.join(process.cwd(), "docs/collections/oliver/oliver-thumbnail-approved-mapping.json"),
   ]
   for (const candidate of candidates) {
     if (fs.existsSync(candidate)) {

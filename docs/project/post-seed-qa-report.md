@@ -156,7 +156,7 @@ Final release approval may still require manual browser QA in the target environ
 
 ## Oliver final status
 
-**Canonical closure doc:** [`oliver-final-technical-media-readiness.md`](oliver-final-technical-media-readiness.md) — scope, commits, validated status, interpretation (reference stack vs manual QA vs other environments), follow-ups, conclusion.
+**Canonical closure doc:** [`../collections/oliver/oliver-final-technical-media-readiness.md`](../collections/oliver/oliver-final-technical-media-readiness.md) — scope, commits, validated status, interpretation (reference stack vs manual QA vs other environments), follow-ups, conclusion.
 
 **Technical verdict:** OK on validated reference stack  
 **Manual browser sign-off:** pending as a separate visual gate after deployment in the target environment
@@ -172,4 +172,4 @@ Final release approval may still require manual browser QA in the target environ
 Earlier draft observations in §7 about `/uploads/` reflected the pre-fix snapshot for the QA date; Oliver collection media on the reference stack is served under `/static/products/oliver/...` after the delivery fix above. Operational scripts and environment interpretation: see the canonical closure doc.
 
 ### Conclusion
-Oliver technical/media readiness is **closed** on the validated reference stack; detailed wording and next-step interpretation are in [`oliver-final-technical-media-readiness.md`](oliver-final-technical-media-readiness.md).
+Oliver technical/media readiness is **closed** on the validated reference stack; detailed wording and next-step interpretation are in [`../collections/oliver/oliver-final-technical-media-readiness.md`](../collections/oliver/oliver-final-technical-media-readiness.md).
