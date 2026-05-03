@@ -2,6 +2,7 @@ import "server-only"
 import * as fs from "fs"
 import * as path from "path"
 import { getBaseUrl, medusaFetch } from "@/lib/api/base"
+import { getFurnitureRepoDataResolution } from "@/lib/qa/furniture-repo-data-root"
 
 export type OxfordLocalMvpPlanRow = {
   sku: string
@@ -25,12 +26,18 @@ export type OxfordLocalMvpAssignmentPlan = {
 
 function planPathCandidates(): string[] {
   const rel = "data/normalized/oxford-local-mvp-media-assignment-plan.json"
-  return [
+  const { repoRoot } = getFurnitureRepoDataResolution()
+  const ordered: string[] = []
+  if (repoRoot) ordered.push(path.join(repoRoot, rel))
+  for (const c of [
     path.join(process.cwd(), rel),
     path.resolve(process.cwd(), "../../", rel),
     path.resolve(process.cwd(), "../..", rel),
     path.resolve(process.cwd(), "../../../", rel),
-  ]
+  ]) {
+    if (!ordered.includes(c)) ordered.push(c)
+  }
+  return ordered
 }
 
 export function loadOxfordLocalMvpAssignmentPlan(): OxfordLocalMvpAssignmentPlan | null {

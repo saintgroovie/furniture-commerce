@@ -2,6 +2,11 @@ import "server-only"
 import * as fs from "fs"
 import * as path from "path"
 import { getBaseUrl } from "@/lib/api/base"
+import {
+  FURNITURE_REPO_MARKERS_DESC,
+  getFurnitureRepoDataResolution,
+  type FurnitureRepoDataResolution,
+} from "@/lib/qa/furniture-repo-data-root"
 import type {
   OxfordLocalMvpMediaReviewPayload,
   OxfordReviewAggregate,
@@ -22,7 +27,7 @@ const INVENTORY_REL = "data/normalized/oxford-local-mvp-media-inventory.json"
 const SKU_MAP_REL = "data/normalized/oxford-local-mvp-sku-media-candidate-map.json"
 const PLAN_REL = "data/normalized/oxford-local-mvp-media-assignment-plan.json"
 
-function dataPathCandidates(rel: string): string[] {
+function legacyDataPathCandidates(rel: string): string[] {
   return [
     path.join(process.cwd(), rel),
     path.resolve(process.cwd(), "../../", rel),
@@ -31,16 +36,43 @@ function dataPathCandidates(rel: string): string[] {
   ]
 }
 
-function readJsonFile(rel: string): { ok: true; data: unknown } | { ok: false; error: string } {
-  for (const abs of dataPathCandidates(rel)) {
+function readJsonFile(
+  rel: string,
+  resolution: FurnitureRepoDataResolution
+): { ok: true; data: unknown } | { ok: false; error: string } {
+  const ordered: string[] = []
+  if (resolution.repoRoot) ordered.push(path.join(resolution.repoRoot, rel))
+  for (const c of legacyDataPathCandidates(rel)) {
+    if (!ordered.includes(c)) ordered.push(c)
+  }
+
+  for (const abs of ordered) {
     if (!fs.existsSync(abs)) continue
     try {
       return { ok: true, data: JSON.parse(fs.readFileSync(abs, "utf8")) }
     } catch (e) {
-      return { ok: false, error: `${rel}: ${e instanceof Error ? e.message : String(e)}` }
+      return {
+        ok: false,
+        error: `${rel}: ${e instanceof Error ? e.message : String(e)} (file=${abs}, cwd=${resolution.cwd}, repo_root=${resolution.repoRoot ?? "null"})`,
+      }
     }
   }
-  return { ok: false, error: `${rel}: file not found` }
+
+  const primaryExpected = resolution.repoRoot ? path.join(resolution.repoRoot, rel) : null
+  const legacy = legacyDataPathCandidates(rel)
+  return {
+    ok: false,
+    error: [
+      `${rel}: file not found`,
+      `process.cwd()=${resolution.cwd}`,
+      `resolved_repo_root=${resolution.repoRoot ?? "null"}`,
+      `primary_expected_path=${primaryExpected ?? "(no repo root resolved)"}`,
+      `walk_seeds=${resolution.seedsTried.join(" | ")}`,
+      resolution.repoRoot
+        ? `legacy_candidates_checked=${legacy.join(" ; ")}`
+        : `hint=could not find repo root (need ${FURNITURE_REPO_MARKERS_DESC} on same tree); legacy_candidates=${legacy.join(" ; ")}`,
+    ].join(" — "),
+  }
 }
 
 function normalizeKey(s: string): string {
@@ -82,9 +114,10 @@ function inferSkuReviewStatus(row: {
 
 export async function getOxfordLocalMvpMediaReviewPayload(): Promise<OxfordLocalMvpMediaReviewPayload> {
   const loadErrors: string[] = []
-  const invR = readJsonFile(INVENTORY_REL)
-  const mapR = readJsonFile(SKU_MAP_REL)
-  const planR = readJsonFile(PLAN_REL)
+  const resolution = getFurnitureRepoDataResolution()
+  const invR = readJsonFile(INVENTORY_REL, resolution)
+  const mapR = readJsonFile(SKU_MAP_REL, resolution)
+  const planR = readJsonFile(PLAN_REL, resolution)
 
   if (invR.ok === false) loadErrors.push(invR.error)
   if (mapR.ok === false) loadErrors.push(mapR.error)

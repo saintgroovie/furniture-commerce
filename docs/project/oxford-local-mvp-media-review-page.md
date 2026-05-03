@@ -14,6 +14,16 @@ The page at `/qa/oxford-local-mvp-media-review` is a **visual-first media board*
 
 Prerequisites: run `node scripts/build-oxford-local-mvp-media-artifacts.mjs` (or `yarn oxford-local-mvp-media:build` from `apps/backend`) so `oxford-local-mvp-media-*.json` exists.
 
+### Troubleshooting: “file not found” for the three JSON files
+
+The loader resolves the **repo root** by walking upward from `process.cwd()` (and from the compiled module path), stopping at the first directory that contains **both** `docs/project/CODEMAP.md` and `data/normalized/`. JSON is then read from `<repo>/data/normalized/oxford-local-mvp-*.json`.
+
+If you still see errors, the on-page message includes `process.cwd()`, `resolved_repo_root`, `primary_expected_path`, and `walk_seeds` to see why resolution failed.
+
+If artifacts are genuinely missing, regenerate **read-only** artifacts from repo root (no DB apply):
+
+`node scripts/build-oxford-local-mvp-media-artifacts.mjs`
+
 ---
 
 ## Header (quick orientation)
