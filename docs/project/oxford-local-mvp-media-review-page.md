@@ -1,6 +1,8 @@
-# Oxford local MVP media — visual review page
+# Oxford local MVP media — visual-first review board
 
 **Scope:** local dev / QA only. **Not** production rollout, **not** full Oxford readiness, **not** white-background readiness. Oxford remains **PAUSED** in storefront governance (`catalog-scope.ts` is not changed by this flow).
+
+The page at `/qa/oxford-local-mvp-media-review` is a **visual-first media board**: large images, SKU sidebar, candidate cards with action buttons, and a separate **unassigned** gallery. Raw JSON and long paths are tucked under **Technical details** / **Details** / **Path** expanders — not the default view.
 
 ---
 
@@ -14,36 +16,54 @@ Prerequisites: run `node scripts/build-oxford-local-mvp-media-artifacts.mjs` (or
 
 ---
 
-## What you see
+## Header (quick orientation)
 
-- **Summary counters:** SKU rows, local Medusa hits, missing products, inventory size, confidence mix, gallery-backlog rows, orphan/unmapped count.
-- **Orphan / unassigned:** inventory records not attached to any SKU candidate row — nothing is deleted from disk.
-- **SKU cards:** title, Medusa present/missing badge, `review_status`, planned primary, gallery/candidates/backlog thumbnails, per-image metadata.
-- **Preview:** HTTP URLs under Medusa `/static/` render in the browser; repo-only paths (e.g. raw `data/raw/...`) show a “no preview” placeholder — open files locally if needed.
+- Title: **Oxford local media review — dev only**
+- Badges: **local only**, **Oxford PAUSED**, **non-white / interim allowed for preview**, **no DB writes**
+- Progress: **reviewed / total** (any non-`unset` decision counts)
+- **Export decisions JSON**, **Copy JSON**, **Clear decisions**
 
 ---
 
-## `review_status` on SKU rows
+## How to review (recommended order)
 
-| Status | Meaning |
-|--------|---------|
-| `product_missing_for_media_assignment` | Workbook SKU has no product in local Medusa — do not auto-create from this page. |
-| `no_media_candidates` | No media_items after merge. |
-| `has_ambiguous_media` | Ambiguous confidence on a candidate and/or non-empty `gallery_review_backlog_urls`. |
-| `has_only_interim_media` | All attached visuals are interim / PDF / legacy class (non white-bg). |
-| `ready_for_visual_review` | Default “ok to eyeball” bucket. |
+1. **Pick a SKU** in the left sidebar (search by SKU, handle, title, or filename substring). Use filters such as *Needs review*, *No planned primary*, *Has orphan candidates on SKU*, *Product missing in Medusa*, etc.
+2. **Center panel:** read title / SKU / handle, inspect the **large planned primary**, then the **gallery & backlog** strip. Short bullet warnings explain risk in plain language; full machine warnings stay under **Technical details**.
+3. **Right column — candidates:** for each image use the big actions: **Primary**, **Gallery**, **Move** (requires “Move to SKU” field), **Remove**, **White-bg later**, **Do not use**, **Review**. The active decision is highlighted on the card. Per-image filename (short), confidence, media class, and source kind appear as badges; full path is under **Details**.
+4. **Unassigned Oxford media** (bottom): large grid of inventory not mapped to any SKU row. Set **Assign to SKU** using the field above the grid, then **Assign to SKU** on a card; or **Keep unassigned**, **Do not use**, **Needs review**. Nothing here deletes files on disk.
+5. When done, **Export decisions JSON** or **Copy JSON** and save manually as described below.
+
+**`remove_from_assignment`** means: exclude from a **future** Medusa product `images` / primary assignment — **not** deleting the file from disk or from `data/`.
+
+---
+
+## Sidebar filters (SKU list)
+
+| Filter | Intent |
+|--------|--------|
+| All SKUs | No filter |
+| Needs review | Backlog URLs, ambiguous confidence, or any image still `unset` |
+| Has / No planned primary | Planned primary present or absent |
+| Has orphan candidates on SKU | Any attached image looks orphan-like (`is_orphan`, `match_tier` containing “orphan”, or orphan-related warnings) |
+| Ambiguous / backlog items | Gallery backlog or ambiguous confidence on any candidate |
+| Status: ambiguous | Row `review_status === has_ambiguous_media` |
+| Product missing in Medusa | No product in local DB for that workbook SKU |
+| Gallery backlog | Non-empty `gallery_review_backlog_urls` |
+| No media candidates | Row status `no_media_candidates` |
+
+List rows show a small primary thumb, **in DB / no product**, and compact counts (orphan-like / confirmed / probable / ambiguous).
+
+---
+
+## Broken preview
+
+If a preview URL fails to load, the UI shows a broken state with a short snippet of the URL and **Needs source/path fix** (tags the image decision as `needs_manual_review` with `reason: preview_load_failed` when a `media_key` is available). Inventory is unchanged.
 
 ---
 
 ## Decisions (per image)
 
-Each image has a **Decision** select:
-
-- `keep_as_primary` / `keep_in_gallery` / `move_to_other_sku` / `remove_from_assignment` / `needs_manual_review` / `needs_white_bg_replacement` / `do_not_use`
-
-**`remove_from_assignment`** means: exclude from a **future** Medusa product `images` / primary assignment — **not** deleting the file from disk or from `data/`.
-
-Optional **Target SKU** when moving. **Reviewer note** and **needs_white_bg_replacement** checkbox for export.
+Same `ReviewDecision` values as before: `keep_as_primary`, `keep_in_gallery`, `move_to_other_sku`, `remove_from_assignment`, `needs_manual_review`, `needs_white_bg_replacement`, `do_not_use`, `unset`.
 
 Storage: **`localStorage`** key `oxford-local-mvp-media-review-decisions-v1` (browser-only until export).
 
@@ -51,7 +71,7 @@ Storage: **`localStorage`** key `oxford-local-mvp-media-review-decisions-v1` (br
 
 ## Export / canonical JSON on disk
 
-1. Use **Download decisions JSON** or **Copy JSON** on the page after review.
+1. Use **Export decisions JSON** or **Copy JSON** on the page after review.
 2. Save the file into the repo (manual step) as:
 
    `data/normalized/oxford-local-mvp-media-review-decisions.json`

@@ -77,7 +77,7 @@ export async function getOxfordLocalMvpMediaPreview(): Promise<{
 }> {
   const plan = loadOxfordLocalMvpAssignmentPlan()
   const rows = plan?.rows ?? []
-  const handles = [...new Set(rows.map((r) => r.handle).filter(Boolean))]
+  const handles = Array.from(new Set(rows.map((r) => r.handle).filter(Boolean)))
   const medusaProducts = await fetchStoreProductsForHandles(handles)
   const byHandle = new Map<string, StoreProduct>()
   for (const p of medusaProducts) {

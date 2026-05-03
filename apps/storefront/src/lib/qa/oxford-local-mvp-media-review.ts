@@ -86,9 +86,9 @@ export async function getOxfordLocalMvpMediaReviewPayload(): Promise<OxfordLocal
   const mapR = readJsonFile(SKU_MAP_REL)
   const planR = readJsonFile(PLAN_REL)
 
-  if (!invR.ok) loadErrors.push(invR.error)
-  if (!mapR.ok) loadErrors.push(mapR.error)
-  if (!planR.ok) loadErrors.push(planR.error)
+  if (invR.ok === false) loadErrors.push(invR.error)
+  if (mapR.ok === false) loadErrors.push(mapR.error)
+  if (planR.ok === false) loadErrors.push(planR.error)
 
   const staticBase = getBaseUrl() || process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000"
 

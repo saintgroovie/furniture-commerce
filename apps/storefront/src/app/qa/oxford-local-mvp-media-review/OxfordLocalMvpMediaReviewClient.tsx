@@ -32,16 +32,17 @@ type Props = {
   payload: OxfordLocalMvpMediaReviewPayload
 }
 
-type SkuFilter =
+type ListFilter =
   | "all"
-  | "existing"
-  | "missing"
-  | "has_ambiguous"
+  | "needs_review"
+  | "has_primary"
+  | "no_primary"
+  | "has_orphan_candidates"
+  | "attention"
+  | "ambiguous"
+  | "product_missing"
   | "gallery_backlog"
   | "no_media"
-  | "orphan_focus"
-
-type ConfFilter = "all" | "confirmed" | "probable" | "ambiguous" | "unassigned"
 
 function loadDecisions(): Record<string, StoredDecision> {
   if (typeof window === "undefined") return {}
@@ -59,15 +60,74 @@ function saveDecisions(map: Record<string, StoredDecision>) {
   localStorage.setItem(LS_KEY, JSON.stringify(map))
 }
 
-function decisionSelectValue(d: StoredDecision | undefined): ReviewDecision {
+function decisionOf(d: StoredDecision | undefined): ReviewDecision {
   return d?.decision ?? "unset"
 }
 
+function shortName(fn: string, max = 28): string {
+  if (fn.length <= max) return fn
+  return `${fn.slice(0, 14)}…${fn.slice(-10)}`
+}
+
+function humanWarning(w: string): string {
+  if (w.includes("orphan")) return "Unmapped"
+  if (w.includes("not_white")) return "Not white-bg"
+  if (w.includes("ambiguous")) return "Review"
+  if (w.includes("page_level")) return "Page-level"
+  if (w.includes("shared_p6")) return "Shared PDF"
+  if (w.includes("missing")) return "No product"
+  return "Note"
+}
+
+function rowNeedsReview(row: OxfordSkuReviewRow, decisions: Record<string, StoredDecision>): boolean {
+  if (row.gallery_review_backlog_urls.length > 0) return true
+  for (const m of row.media_items) {
+    if (m.confidence === "ambiguous") return true
+    if (decisionOf(decisions[m.media_key]) === "unset") return true
+  }
+  return false
+}
+
+function mediaLooksOrphanCandidate(m: OxfordReviewMediaItem): boolean {
+  if (m.is_orphan) return true
+  const tier = (m.match_tier ?? "").toLowerCase()
+  if (tier.includes("orphan")) return true
+  if (m.warnings.some((w) => w.toLowerCase().includes("orphan"))) return true
+  return false
+}
+
+function skuBadgeCounts(row: OxfordSkuReviewRow) {
+  let c = 0,
+    p = 0,
+    a = 0,
+    o = 0
+  for (const m of row.media_items) {
+    if (mediaLooksOrphanCandidate(m)) o++
+    if (m.confidence === "confirmed") c++
+    else if (m.confidence === "probable") p++
+    else if (m.confidence === "ambiguous") a++
+  }
+  return { c, p, a, o }
+}
+
+function totalDecisionKeys(payload: OxfordLocalMvpMediaReviewPayload): string[] {
+  const keys = new Set<string>()
+  for (const r of payload.sku_rows) for (const m of r.media_items) keys.add(m.media_key)
+  for (const m of payload.orphan_media) keys.add(m.media_key)
+  return Array.from(keys)
+}
+
+function reviewedCount(decisions: Record<string, StoredDecision>, keys: string[]): number {
+  return keys.filter((k) => decisionOf(decisions[k]) !== "unset").length
+}
+
 export function OxfordLocalMvpMediaReviewClient({ payload }: Props) {
-  const [skuFilter, setSkuFilter] = useState<SkuFilter>("all")
-  const [confFilter, setConfFilter] = useState<ConfFilter>("all")
+  const [listFilter, setListFilter] = useState<ListFilter>("all")
   const [search, setSearch] = useState("")
+  const [selectedSku, setSelectedSku] = useState<string | null>(null)
   const [decisions, setDecisions] = useState<Record<string, StoredDecision>>({})
+  const [moveTargetSku, setMoveTargetSku] = useState("")
+  const [orphanAssignSku, setOrphanAssignSku] = useState("")
 
   useEffect(() => {
     setDecisions(loadDecisions())
@@ -84,54 +144,59 @@ export function OxfordLocalMvpMediaReviewClient({ payload }: Props) {
 
   const q = search.trim().toLowerCase()
 
-  const filteredSkuRows = useMemo(() => {
+  const filteredRows = useMemo(() => {
     return payload.sku_rows.filter((row) => {
-      if (skuFilter === "existing" && !row.product_in_local_medusa_db) return false
-      if (skuFilter === "missing" && row.product_in_local_medusa_db) return false
-      if (skuFilter === "has_ambiguous" && row.review_status !== "has_ambiguous_media") return false
-      if (skuFilter === "gallery_backlog" && row.gallery_review_backlog_urls.length === 0) return false
-      if (skuFilter === "no_media" && row.review_status !== "no_media_candidates") return false
-      if (skuFilter === "orphan_focus") return false
-
-      if (confFilter !== "all") {
-        const match = row.media_items.some((m) => (m.confidence ?? "unassigned") === confFilter)
-        if (!match) return false
+      if (listFilter === "needs_review" && !rowNeedsReview(row, decisions)) return false
+      if (listFilter === "has_primary" && !row.planned_primary_url) return false
+      if (listFilter === "no_primary" && row.planned_primary_url) return false
+      if (listFilter === "has_orphan_candidates" && !row.media_items.some((m) => mediaLooksOrphanCandidate(m))) return false
+      if (listFilter === "attention") {
+        const risky =
+          row.gallery_review_backlog_urls.length > 0 ||
+          row.media_items.some((m) => m.confidence === "ambiguous")
+        if (!risky) return false
       }
+      if (listFilter === "ambiguous" && row.review_status !== "has_ambiguous_media") return false
+      if (listFilter === "product_missing" && row.product_in_local_medusa_db) return false
+      if (listFilter === "gallery_backlog" && row.gallery_review_backlog_urls.length === 0) return false
+      if (listFilter === "no_media" && row.review_status !== "no_media_candidates") return false
 
       if (q) {
         const blob = `${row.sku} ${row.handle} ${row.title_or_canonical ?? ""}`.toLowerCase()
-        const mediaHit = row.media_items.some((m) =>
-          `${m.filename} ${m.source_display} ${m.matched_sku ?? ""}`.toLowerCase().includes(q)
-        )
-        if (!blob.includes(q) && !mediaHit) return false
+        const hit = row.media_items.some((m) => m.filename.toLowerCase().includes(q))
+        if (!blob.includes(q) && !hit) return false
       }
       return true
     })
-  }, [payload.sku_rows, skuFilter, confFilter, q])
+  }, [payload.sku_rows, listFilter, q, decisions])
+
+  useEffect(() => {
+    if (filteredRows.length === 0) {
+      setSelectedSku(null)
+      return
+    }
+    if (!selectedSku || !filteredRows.some((r) => r.sku === selectedSku)) {
+      setSelectedSku(filteredRows[0].sku)
+    }
+  }, [filteredRows, selectedSku])
+
+  const selectedRow = useMemo(
+    () => payload.sku_rows.find((r) => r.sku === selectedSku) ?? null,
+    [payload.sku_rows, selectedSku]
+  )
+
+  const allKeys = useMemo(() => totalDecisionKeys(payload), [payload])
+  const reviewed = reviewedCount(decisions, allKeys)
 
   const displayOrphans = useMemo(() => {
-    if (skuFilter !== "all" && skuFilter !== "orphan_focus") return []
     return payload.orphan_media.filter((m) => {
-      if (confFilter !== "all") {
-        const c = m.confidence ?? "unassigned"
-        if (confFilter === "unassigned") {
-          if (m.confidence && m.confidence !== "unassigned") return false
-        } else if (c !== confFilter) return false
-      }
       if (q && !`${m.filename} ${m.source_display}`.toLowerCase().includes(q)) return false
       return true
     })
-  }, [payload.orphan_media, skuFilter, confFilter, q])
-
-  const showOrphanSection = skuFilter === "all" || skuFilter === "orphan_focus"
+  }, [payload.orphan_media, q])
 
   const exportJson = useCallback(() => {
     const decisionsList: Array<Record<string, unknown>> = []
-    const allKeys = new Set<string>()
-    for (const row of payload.sku_rows) {
-      for (const m of row.media_items) allKeys.add(m.media_key)
-    }
-    for (const m of payload.orphan_media) allKeys.add(m.media_key)
     for (const k of allKeys) {
       const d = decisions[k]
       if (!d || d.decision === "unset") continue
@@ -151,23 +216,24 @@ export function OxfordLocalMvpMediaReviewClient({ payload }: Props) {
         needs_white_bg_replacement: Boolean(d.needs_white_bg_replacement),
       })
     }
-
-    const doc = {
-      review_meta: {
-        scope: "oxford_local_mvp_media_visual_review",
-        status: "manual_review_pending",
-        created_at: new Date().toISOString(),
-        local_dev_only: true,
-        production_rollout: false,
+    return JSON.stringify(
+      {
+        review_meta: {
+          scope: "oxford_local_mvp_media_visual_review",
+          status: "manual_review_pending",
+          created_at: new Date().toISOString(),
+          local_dev_only: true,
+          production_rollout: false,
+        },
+        decisions: decisionsList,
       },
-      decisions: decisionsList,
-    }
-    return JSON.stringify(doc, null, 2)
-  }, [decisions, payload])
+      null,
+      2
+    )
+  }, [decisions, payload, allKeys])
 
   const downloadExport = useCallback(() => {
-    const body = exportJson()
-    const blob = new Blob([body], { type: "application/json" })
+    const blob = new Blob([exportJson()], { type: "application/json" })
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
@@ -186,11 +252,9 @@ export function OxfordLocalMvpMediaReviewClient({ payload }: Props) {
 
   if (payload.load_errors.length > 0) {
     return (
-      <div className="status-message">
-        <p>
-          <strong>Не удалось загрузить артефакты:</strong>
-        </p>
-        <ul className="info-text">
+      <div className="status-message" style={{ padding: "1.5rem" }}>
+        <strong>Не удалось загрузить данные.</strong>
+        <ul className="info-text" style={{ marginTop: "0.5rem" }}>
           {payload.load_errors.map((e) => (
             <li key={e}>{e}</li>
           ))}
@@ -199,333 +263,744 @@ export function OxfordLocalMvpMediaReviewClient({ payload }: Props) {
     )
   }
 
+  const shell: React.CSSProperties = {
+    minHeight: "100vh",
+    background: "#f0f2f5",
+    color: "#1a1a1a",
+    fontFamily: "system-ui, sans-serif",
+  }
+
   return (
-    <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 1rem 2rem" }}>
-      <div className="status-message" style={{ marginBottom: "1rem" }}>
-        <strong>Local QA only.</strong> Oxford remains PAUSED in storefront scope. Non-white / interim images are
-        allowed only for local preview — not white-background readiness or production rollout.
-      </div>
-
-      <h1 style={{ fontSize: "1.5rem" }}>Oxford local MVP — visual media review</h1>
-      <p className="info-text" style={{ marginTop: "0.5rem" }}>
-        Решения хранятся в <code>localStorage</code> ({LS_KEY}). Экспортируйте JSON и сохраните вручную как{" "}
-        <code>data/normalized/oxford-local-mvp-media-review-decisions.json</code> после ревью. Medusa DB не меняется.
-      </p>
-
-      <section
+    <div style={shell}>
+      <header
         style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
-          gap: "0.75rem",
-          marginTop: "1rem",
+          background: "#fff",
+          borderBottom: "1px solid #e2e4e8",
+          padding: "1rem 1.25rem",
+          position: "sticky",
+          top: 0,
+          zIndex: 20,
         }}
       >
-        <Counter label="SKU rows" value={payload.aggregate.total_sku_rows} />
-        <Counter label="In local Medusa" value={payload.aggregate.products_in_local_medusa} />
-        <Counter label="Missing product" value={payload.aggregate.product_missing_rows} />
-        <Counter label="Inventory records" value={payload.aggregate.total_inventory_records} />
-        <Counter label="Confirmed (candidates)" value={payload.aggregate.media_confirmed} />
-        <Counter label="Probable" value={payload.aggregate.media_probable} />
-        <Counter label="Ambiguous" value={payload.aggregate.media_ambiguous} />
-        <Counter label="Other / unassigned" value={payload.aggregate.media_unassigned} />
-        <Counter label="SKU w/ gallery backlog" value={payload.aggregate.sku_rows_with_gallery_backlog} />
-        <Counter label="Orphan / unmapped" value={payload.aggregate.orphan_media_count} />
-      </section>
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "0.75rem 1.25rem" }}>
+          <div>
+            <h1 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700 }}>Oxford local media review — dev only</h1>
+            <p style={{ margin: "0.25rem 0 0", fontSize: "0.85rem", color: "#5c6570" }}>Visual-first review board</p>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem" }}>
+            <Badge text="local only" tone="neutral" />
+            <Badge text="Oxford PAUSED" tone="amber" />
+            <Badge text="non-white / interim allowed for preview" tone="neutral" />
+            <Badge text="no DB writes" tone="green" />
+          </div>
+          <div style={{ marginLeft: "auto", display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "center" }}>
+            <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#3d4a5c" }}>
+              {reviewed} / {allKeys.length} reviewed
+            </span>
+            <button type="button" className="button" onClick={downloadExport}>
+              Export decisions JSON
+            </button>
+            <button type="button" className="button" onClick={copyExport}>
+              Copy JSON
+            </button>
+            <button
+              type="button"
+              className="button"
+              onClick={() => {
+                setDecisions({})
+                saveDecisions({})
+              }}
+            >
+              Clear decisions
+            </button>
+          </div>
+        </div>
+      </header>
 
-      <div style={{ marginTop: "1rem", display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "center" }}>
-        <label className="info-text">
-          SKU scope{" "}
-          <select
-            value={skuFilter}
-            onChange={(e) => setSkuFilter(e.target.value as SkuFilter)}
-            style={{ marginLeft: "0.35rem" }}
-          >
-            <option value="all">all</option>
-            <option value="existing">existing products</option>
-            <option value="missing">missing products</option>
-            <option value="has_ambiguous">has ambiguous</option>
-            <option value="gallery_backlog">gallery backlog</option>
-            <option value="no_media">no media</option>
-            <option value="orphan_focus">orphan / unassigned only</option>
-          </select>
-        </label>
-        <label className="info-text">
-          Confidence{" "}
-          <select
-            value={confFilter}
-            onChange={(e) => setConfFilter(e.target.value as ConfFilter)}
-            style={{ marginLeft: "0.35rem" }}
-          >
-            <option value="all">all</option>
-            <option value="confirmed">confirmed</option>
-            <option value="probable">probable</option>
-            <option value="ambiguous">ambiguous</option>
-            <option value="unassigned">unassigned</option>
-          </select>
-        </label>
-        <label className="info-text">
-          Search{" "}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "minmax(240px, 280px) minmax(0, 1fr) minmax(280px, 360px)",
+          gap: "1rem",
+          padding: "1rem",
+          maxWidth: "1600px",
+          margin: "0 auto",
+          alignItems: "start",
+        }}
+        className="oxford-review-grid oxford-review-main"
+      >
+        {/* A — Sidebar */}
+        <aside
+          className="oxford-review-sidebar"
+          style={{
+            position: "sticky",
+            top: "5.5rem",
+            alignSelf: "start",
+            maxHeight: "calc(100vh - 6rem)",
+            overflowY: "auto",
+            background: "#fff",
+            borderRadius: "12px",
+            padding: "0.85rem",
+            border: "1px solid #e2e4e8",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+          }}
+        >
           <input
+            type="search"
+            placeholder="Search SKU, handle, title…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="SKU, handle, filename…"
-            style={{ marginLeft: "0.35rem", minWidth: "12rem" }}
+            style={{
+              width: "100%",
+              padding: "0.5rem 0.65rem",
+              borderRadius: "8px",
+              border: "1px solid #cfd6dd",
+              marginBottom: "0.65rem",
+              fontSize: "0.9rem",
+            }}
           />
-        </label>
-        <button
-          type="button"
-          className="button"
-          onClick={() => {
-            setDecisions({})
-            saveDecisions({})
-          }}
-        >
-          Clear decisions (local)
-        </button>
-        <button type="button" className="button" onClick={downloadExport}>
-          Download decisions JSON
-        </button>
-        <button type="button" className="button" onClick={copyExport}>
-          Copy JSON
-        </button>
-      </div>
-
-      {showOrphanSection && (
-        <section style={{ marginTop: "2rem" }}>
-          <h2 style={{ fontSize: "1.15rem" }}>Orphan / unassigned inventory</h2>
-          <p className="info-text" style={{ marginBottom: "0.75rem" }}>
-            Записи из inventory, не попавшие в SKU candidate map. «Remove» здесь означает только исключение из
-            будущего assignment в Medusa, а не удаление файла с диска.
-          </p>
-          {displayOrphans.length === 0 ? (
-            <p className="info-text">Нет orphan-записей по текущим фильтрам.</p>
-          ) : (
-            <ul className="product-grid" style={{ listStyle: "none", padding: 0 }}>
-              {displayOrphans.map((m) => (
-                <MediaCard key={m.media_key} media={m} decisions={decisions} onChange={updateDecision} />
-              ))}
-            </ul>
-          )}
-        </section>
-      )}
-
-      {skuFilter !== "orphan_focus" && (
-        <section style={{ marginTop: "2rem" }}>
-          <h2 style={{ fontSize: "1.15rem" }}>SKU cards</h2>
-          <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: "1.25rem" }}>
-            {filteredSkuRows.map((row) => (
-              <SkuCard key={row.sku} row={row} decisions={decisions} onChange={updateDecision} />
+          <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "#5c6570", display: "block", marginBottom: "0.35rem" }}>
+            Filter
+          </label>
+          <select
+            value={listFilter}
+            onChange={(e) => setListFilter(e.target.value as ListFilter)}
+            style={{
+              width: "100%",
+              padding: "0.45rem",
+              borderRadius: "8px",
+              border: "1px solid #cfd6dd",
+              marginBottom: "0.75rem",
+              fontSize: "0.85rem",
+            }}
+          >
+            <option value="all">All SKUs</option>
+            <option value="needs_review">Needs review</option>
+            <option value="has_primary">Has planned primary</option>
+            <option value="no_primary">No planned primary</option>
+            <option value="has_orphan_candidates">Has orphan candidates on SKU</option>
+            <option value="attention">Ambiguous / backlog items</option>
+            <option value="ambiguous">Status: ambiguous</option>
+            <option value="product_missing">Product missing in Medusa</option>
+            <option value="gallery_backlog">Gallery backlog</option>
+            <option value="no_media">No media candidates</option>
+          </select>
+          <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+            {filteredRows.map((row) => (
+              <SkuListItem
+                key={row.sku}
+                row={row}
+                active={row.sku === selectedSku}
+                onSelect={() => setSelectedSku(row.sku)}
+                decisions={decisions}
+              />
             ))}
           </ul>
-          {filteredSkuRows.length === 0 && <p className="info-text">Нет строк по текущим фильтрам.</p>}
-        </section>
-      )}
-    </div>
-  )
-}
+          {filteredRows.length === 0 && <p style={{ fontSize: "0.85rem", color: "#888" }}>No rows match.</p>}
+        </aside>
 
-function Counter({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="card" style={{ padding: "0.5rem 0.65rem" }}>
-      <div className="info-text" style={{ fontSize: "0.75rem" }}>
-        {label}
-      </div>
-      <div style={{ fontSize: "1.25rem", fontWeight: 600 }}>{value}</div>
-    </div>
-  )
-}
+        {/* B — Center */}
+        <main style={{ minWidth: 0 }}>
+          {!selectedRow ? (
+            <div className="card" style={{ padding: "2rem", textAlign: "center" }}>
+              Select a SKU from the list
+            </div>
+          ) : (
+            <CenterPanel row={selectedRow} decisions={decisions} onDecision={updateDecision} />
+          )}
+        </main>
 
-function MediaCard({
-  media,
-  decisions,
-  onChange,
-}: {
-  media: OxfordReviewMediaItem
-  decisions: Record<string, StoredDecision>
-  onChange: (key: string, p: Partial<StoredDecision>) => void
-}) {
-  const d = decisions[media.media_key]
-  return (
-    <li className="card" style={{ padding: "0.65rem", maxWidth: "220px" }}>
-      <div style={{ fontSize: "0.75rem", marginBottom: "0.35rem" }}>
-        {media.is_orphan ? <strong>Orphan</strong> : media.role ?? "—"}
-      </div>
-      {media.preview_url ? (
-        <img
-          src={media.preview_url}
-          alt={media.filename}
-          style={{ width: "100%", height: "140px", objectFit: "contain", background: "#f4f4f4" }}
-        />
-      ) : (
-        <div
-          className="info-text"
+        {/* C — Candidate board */}
+        <section
+          className="oxford-review-right"
           style={{
-            height: "140px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "#eee",
-            fontSize: "0.8rem",
-            padding: "0.35rem",
-            textAlign: "center",
+            position: "sticky",
+            top: "5.5rem",
+            alignSelf: "start",
+            maxHeight: "calc(100vh - 6rem)",
+            overflowY: "auto",
+            background: "#fff",
+            borderRadius: "12px",
+            padding: "0.85rem",
+            border: "1px solid #e2e4e8",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
           }}
         >
-          No browser preview (path not served as /static/). Open file locally.
-        </div>
-      )}
-      <p className="info-text" style={{ fontSize: "0.72rem", wordBreak: "break-all", marginTop: "0.35rem" }}>
-        {media.filename}
-      </p>
-      {media.matched_sku && (
-        <p className="info-text" style={{ fontSize: "0.72rem" }}>
-          → {media.matched_sku} / {media.matched_handle}
-        </p>
-      )}
-      <p className="info-text" style={{ fontSize: "0.68rem" }}>
-        {media.confidence ?? "—"} · {media.match_tier ?? "—"}
-      </p>
-      {media.warnings.length > 0 && (
-        <ul className="info-text" style={{ fontSize: "0.65rem", margin: "0.25rem 0", paddingLeft: "1rem" }}>
-          {media.warnings.slice(0, 4).map((w) => (
-            <li key={w}>{w}</li>
-          ))}
-        </ul>
-      )}
-      <DecisionControls mediaKey={media.media_key} decisions={decisions} onChange={onChange} />
-    </li>
-  )
-}
+          <h2 style={{ margin: "0 0 0.65rem", fontSize: "0.95rem", fontWeight: 700 }}>Candidates</h2>
+          {!selectedRow ? (
+            <p style={{ fontSize: "0.85rem", color: "#888" }}>Pick a SKU to see images.</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <input
+                placeholder="Move to SKU (e.g. OX-90-1)"
+                value={moveTargetSku}
+                onChange={(e) => setMoveTargetSku(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "0.45rem",
+                  borderRadius: "8px",
+                  border: "1px solid #cfd6dd",
+                  fontSize: "0.8rem",
+                }}
+              />
+              {selectedRow.media_items.map((m) => (
+                <CandidateCard
+                  key={m.media_key}
+                  media={m}
+                  decisions={decisions}
+                  onDecision={updateDecision}
+                  moveTargetSku={moveTargetSku}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
 
-function DecisionControls({
-  mediaKey,
-  decisions,
-  onChange,
-}: {
-  mediaKey: string
-  decisions: Record<string, StoredDecision>
-  onChange: (key: string, p: Partial<StoredDecision>) => void
-}) {
-  const d = decisions[mediaKey]
-  const val = decisionSelectValue(d)
-  return (
-    <div style={{ marginTop: "0.5rem", display: "grid", gap: "0.35rem" }}>
-      <label className="info-text" style={{ fontSize: "0.72rem" }}>
-        Decision
-        <select
-          value={val}
-          onChange={(e) =>
-            onChange(mediaKey, {
-              decision: e.target.value as ReviewDecision,
-            })
-          }
-          style={{ display: "block", width: "100%", marginTop: "0.2rem", fontSize: "0.75rem" }}
+      {/* Orphan gallery — full width below grid on narrow screens handled by media query in style tag */}
+      <section style={{ padding: "0 1rem 2rem", maxWidth: "1600px", margin: "0 auto" }}>
+        <div
+          style={{
+            background: "#fff",
+            borderRadius: "12px",
+            padding: "1rem 1.25rem",
+            border: "1px solid #e2e4e8",
+            marginTop: "0.5rem",
+          }}
         >
-          <option value="unset">— unset —</option>
-          <option value="keep_as_primary">keep_as_primary</option>
-          <option value="keep_in_gallery">keep_in_gallery</option>
-          <option value="move_to_other_sku">move_to_other_sku</option>
-          <option value="remove_from_assignment">remove_from_assignment</option>
-          <option value="needs_manual_review">needs_manual_review</option>
-          <option value="needs_white_bg_replacement">needs_white_bg_replacement</option>
-          <option value="do_not_use">do_not_use</option>
-        </select>
-      </label>
-      {(val === "move_to_other_sku" || val === "remove_from_assignment") && (
-        <label className="info-text" style={{ fontSize: "0.72rem" }}>
-          Target SKU (optional)
-          <input
-            style={{ display: "block", width: "100%", fontSize: "0.75rem" }}
-            placeholder="OX-…"
-            value={d?.target_sku ?? ""}
-            onChange={(e) => onChange(mediaKey, { target_sku: e.target.value })}
-          />
-        </label>
-      )}
-      <label className="info-text" style={{ fontSize: "0.72rem" }}>
-        Note
-        <input
-          style={{ display: "block", width: "100%", fontSize: "0.75rem" }}
-          value={d?.reviewer_note ?? ""}
-          onChange={(e) => onChange(mediaKey, { reviewer_note: e.target.value })}
-        />
-      </label>
-      <label className="info-text" style={{ fontSize: "0.72rem", display: "flex", gap: "0.35rem", alignItems: "center" }}>
-        <input
-          type="checkbox"
-          checked={Boolean(d?.needs_white_bg_replacement)}
-          onChange={(e) => onChange(mediaKey, { needs_white_bg_replacement: e.target.checked })}
-        />
-        needs_white_bg_replacement
-      </label>
+          <h2 style={{ margin: "0 0 0.35rem", fontSize: "1.1rem", fontWeight: 700 }}>Unassigned Oxford media</h2>
+          <p style={{ margin: "0 0 1rem", fontSize: "0.85rem", color: "#5c6570" }}>
+            Not linked to a SKU in the candidate map. Assign does not delete files — only future Medusa assignment.
+          </p>
+          {displayOrphans.length === 0 ? (
+            <p style={{ fontSize: "0.9rem", color: "#888" }}>None right now.</p>
+          ) : (
+            <>
+              <input
+                placeholder="Assign orphan to SKU…"
+                value={orphanAssignSku}
+                onChange={(e) => setOrphanAssignSku(e.target.value)}
+                style={{
+                  maxWidth: "280px",
+                  width: "100%",
+                  padding: "0.5rem",
+                  borderRadius: "8px",
+                  border: "1px solid #cfd6dd",
+                  marginBottom: "1rem",
+                }}
+              />
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+                  gap: "1rem",
+                }}
+              >
+                {displayOrphans.map((m) => (
+                  <OrphanCard
+                    key={m.media_key}
+                    media={m}
+                    decisions={decisions}
+                    onDecision={updateDecision}
+                    assignSku={orphanAssignSku}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </section>
+
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+@media (max-width: 1100px) {
+  .oxford-review-grid { grid-template-columns: 1fr !important; }
+  .oxford-review-grid .oxford-review-sidebar,
+  .oxford-review-grid .oxford-review-right { position: static !important; max-height: none !important; }
+}`,
+        }}
+      />
     </div>
   )
 }
 
-function SkuCard({
+function Badge({ text, tone }: { text: string; tone: "neutral" | "amber" | "green" }) {
+  const bg =
+    tone === "amber" ? "#fff4e0" : tone === "green" ? "#e8f7ee" : "#eef1f4"
+  const color = tone === "amber" ? "#8a5a00" : tone === "green" ? "#1b5e2b" : "#4a5568"
+  return (
+    <span
+      style={{
+        fontSize: "0.72rem",
+        fontWeight: 600,
+        padding: "0.2rem 0.5rem",
+        borderRadius: "999px",
+        background: bg,
+        color,
+      }}
+    >
+      {text}
+    </span>
+  )
+}
+
+function SkuListItem({
+  row,
+  active,
+  onSelect,
+  decisions,
+}: {
+  row: OxfordSkuReviewRow
+  active: boolean
+  onSelect: () => void
+  decisions: Record<string, StoredDecision>
+}) {
+  const { c, p, a, o } = skuBadgeCounts(row)
+  const thumb = row.planned_primary_url || row.media_items.find((m) => m.preview_url)?.preview_url
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      style={{
+        width: "100%",
+        textAlign: "left",
+        display: "flex",
+        gap: "0.5rem",
+        alignItems: "center",
+        padding: "0.5rem",
+        borderRadius: "10px",
+        border: active ? "2px solid #2563eb" : "1px solid #e8eaed",
+        background: active ? "#eff6ff" : "#fafbfc",
+        cursor: "pointer",
+      }}
+    >
+      <div
+        style={{
+          width: 44,
+          height: 44,
+          borderRadius: "8px",
+          background: "#e8eaed",
+          flexShrink: 0,
+          overflow: "hidden",
+        }}
+      >
+        {thumb ? (
+          <img src={thumb} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        ) : null}
+      </div>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontWeight: 700, fontSize: "0.82rem" }}>{row.sku}</div>
+        <div style={{ fontSize: "0.72rem", color: "#64748b", overflow: "hidden", textOverflow: "ellipsis" }}>
+          {row.handle}
+        </div>
+        <div style={{ display: "flex", gap: "0.2rem", marginTop: "0.25rem", flexWrap: "wrap" }}>
+          <MiniBadge label={row.product_in_local_medusa_db ? "in DB" : "no product"} ok={row.product_in_local_medusa_db} />
+          {o > 0 && <MiniBadge label={`${o} orphan`} ok={false} soft />}
+          {c > 0 && <MiniBadge label={`${c} conf`} ok />}
+          {p > 0 && <MiniBadge label={`${p} prob`} ok={false} soft />}
+          {a > 0 && <MiniBadge label={`${a} amb`} ok={false} />}
+        </div>
+      </div>
+    </button>
+  )
+}
+
+function MiniBadge({ label, ok, soft }: { label: string; ok?: boolean; soft?: boolean }) {
+  const bg = ok ? "#dcfce7" : soft ? "#fef9c3" : "#fee2e2"
+  const color = ok ? "#166534" : soft ? "#854d0e" : "#991b1b"
+  return (
+    <span style={{ fontSize: "0.62rem", fontWeight: 600, padding: "0.08rem 0.28rem", borderRadius: "4px", background: bg, color }}>
+      {label}
+    </span>
+  )
+}
+
+function CenterPanel({
   row,
   decisions,
-  onChange,
+  onDecision,
 }: {
   row: OxfordSkuReviewRow
   decisions: Record<string, StoredDecision>
-  onChange: (key: string, p: Partial<StoredDecision>) => void
+  onDecision: (k: string, p: Partial<StoredDecision>) => void
 }) {
+  const plainWarnings = useMemo(() => {
+    const lines: string[] = []
+    if (!row.product_in_local_medusa_db) lines.push("No product in local Medusa — media is preview-only.")
+    if (row.gallery_review_backlog_urls.length)
+      lines.push("Some images need a human call (shared PDF / ambiguous).")
+    if (row.review_status === "has_only_interim_media") lines.push("Interim / non–white-background only.")
+    if (row.review_status === "no_media_candidates") lines.push("No images mapped for this SKU yet.")
+    return lines
+  }, [row])
+
+  const decidedForRow = row.media_items.filter((m) => decisionOf(decisions[m.media_key]) !== "unset").length
+
   return (
-    <li className="card" style={{ padding: "1rem" }}>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "baseline" }}>
-        <strong>{row.sku}</strong>
-        <span className="info-text">{row.handle}</span>
-        <span
+    <div
+      style={{
+        background: "#fff",
+        borderRadius: "12px",
+        padding: "1.25rem",
+        border: "1px solid #e2e4e8",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+      }}
+    >
+      <div style={{ marginBottom: "1rem" }}>
+        <h2 style={{ margin: 0, fontSize: "1.15rem", fontWeight: 700 }}>{row.title_or_canonical ?? row.sku}</h2>
+        <p style={{ margin: "0.35rem 0 0", fontSize: "0.9rem", color: "#64748b" }}>
+          {row.sku} · {row.handle}
+        </p>
+      </div>
+
+      <div style={{ marginBottom: "1rem" }}>
+        <div style={{ fontSize: "0.75rem", fontWeight: 600, color: "#64748b", marginBottom: "0.5rem" }}>Planned primary</div>
+        <div
           style={{
-            fontSize: "0.75rem",
-            padding: "0.15rem 0.45rem",
-            borderRadius: "4px",
-            background: row.product_in_local_medusa_db ? "#e6f4ea" : "#fdeaea",
+            borderRadius: "12px",
+            background: "#f4f5f7",
+            minHeight: "280px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "1rem",
           }}
         >
-          {row.product_in_local_medusa_db ? "product in Medusa" : "product_missing_for_media_assignment"}
-        </span>
-        <span className="info-text" style={{ fontSize: "0.75rem" }}>
-          status: {row.review_status}
-        </span>
+          {row.planned_primary_url ? (
+            <PreviewLarge
+              url={row.planned_primary_url}
+              alt="Primary"
+              onNeedsPathFix={() => {
+                const pk =
+                  row.media_items.find((m) => m.preview_url === row.planned_primary_url)?.media_key ??
+                  row.media_items.find((m) => m.role === "planned_primary")?.media_key
+                if (pk) onDecision(pk, { decision: "needs_manual_review", reason: "preview_load_failed" })
+              }}
+            />
+          ) : (
+            <span style={{ color: "#94a3b8" }}>No primary planned</span>
+          )}
+        </div>
       </div>
-      <p className="info-text" style={{ marginTop: "0.35rem" }}>
-        {row.title_or_canonical ?? "—"}
-      </p>
-      {row.warnings.length > 0 && (
-        <ul className="info-text" style={{ fontSize: "0.75rem" }}>
-          {row.warnings.map((w) => (
-            <li key={w}>{w}</li>
+
+      {(row.planned_gallery_urls.length > 0 || row.gallery_review_backlog_urls.length > 0) && (
+        <div style={{ marginBottom: "1rem" }}>
+          <div style={{ fontSize: "0.75rem", fontWeight: 600, color: "#64748b", marginBottom: "0.5rem" }}>Gallery & backlog</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+            {row.planned_gallery_urls.map((u) => (
+              <div key={u} style={{ width: 96, height: 96, borderRadius: "8px", overflow: "hidden", border: "1px solid #e2e4e8" }}>
+                <PreviewLarge url={u} alt="" />
+              </div>
+            ))}
+            {row.gallery_review_backlog_urls.map((u) => (
+              <div
+                key={`b-${u}`}
+                style={{
+                  width: 96,
+                  height: 96,
+                  borderRadius: "8px",
+                  overflow: "hidden",
+                  border: "2px dashed #f59e0b",
+                }}
+                title="Backlog — needs review"
+              >
+                <PreviewLarge url={u} alt="" />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {plainWarnings.length > 0 && (
+        <ul style={{ margin: "0 0 1rem", paddingLeft: "1.1rem", fontSize: "0.88rem", color: "#475569" }}>
+          {plainWarnings.map((t) => (
+            <li key={t}>{t}</li>
           ))}
         </ul>
       )}
-      <div style={{ marginTop: "0.75rem", display: "flex", flexWrap: "wrap", gap: "1rem" }}>
-        <div>
-          <div className="info-text" style={{ fontSize: "0.8rem", marginBottom: "0.25rem" }}>
-            Planned primary
-          </div>
-          {row.planned_primary_url ? (
-            <img
-              src={row.planned_primary_url}
-              alt="primary"
-              style={{ width: "200px", maxHeight: "160px", objectFit: "contain", background: "#f4f4f4" }}
-            />
-          ) : (
-            <span className="info-text">—</span>
+
+      <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#334155" }}>
+        Decisions on this SKU: {decidedForRow} / {row.media_items.length} images tagged
+      </div>
+
+      <details style={{ marginTop: "1rem", fontSize: "0.8rem", color: "#64748b" }}>
+        <summary style={{ cursor: "pointer", fontWeight: 600 }}>Technical details</summary>
+        <pre
+          style={{
+            marginTop: "0.5rem",
+            padding: "0.65rem",
+            background: "#f8fafc",
+            borderRadius: "8px",
+            overflow: "auto",
+            fontSize: "0.72rem",
+            maxHeight: "200px",
+          }}
+        >
+          {JSON.stringify(
+            {
+              review_status: row.review_status,
+              planned_primary_tier: row.planned_primary_tier,
+              warnings: row.warnings,
+              media_keys: row.media_items.map((m) => m.media_key),
+            },
+            null,
+            2
           )}
-          <div className="info-text" style={{ fontSize: "0.7rem", marginTop: "0.2rem" }}>{row.planned_primary_tier ?? ""}</div>
-        </div>
-        <div style={{ flex: "1", minWidth: "200px" }}>
-          <div className="info-text" style={{ fontSize: "0.8rem", marginBottom: "0.25rem" }}>
-            Gallery / candidates / backlog
+        </pre>
+      </details>
+    </div>
+  )
+}
+
+function PreviewLarge({
+  url,
+  alt = "",
+  onNeedsPathFix,
+}: {
+  url: string
+  alt?: string
+  onNeedsPathFix?: () => void
+}) {
+  const [broken, setBroken] = useState(false)
+  if (broken) {
+    return (
+      <div style={{ textAlign: "center", padding: "1rem", maxWidth: "360px" }}>
+        <div style={{ fontSize: "2rem", marginBottom: "0.35rem" }}>⚠</div>
+        <p style={{ fontSize: "0.8rem", color: "#b45309", margin: "0 0 0.5rem" }}>Preview did not load</p>
+        <p style={{ fontSize: "0.72rem", wordBreak: "break-all", color: "#64748b", margin: 0 }}>{shortName(url, 56)}</p>
+        <p style={{ fontSize: "0.72rem", marginTop: "0.5rem", color: "#94a3b8" }}>File stays in inventory.</p>
+        {onNeedsPathFix ? (
+          <button
+            type="button"
+            onClick={onNeedsPathFix}
+            style={{
+              marginTop: "0.65rem",
+              padding: "0.4rem 0.75rem",
+              fontSize: "0.75rem",
+              fontWeight: 600,
+              borderRadius: "8px",
+              border: "1px solid #cbd5e1",
+              background: "#fff",
+              cursor: "pointer",
+            }}
+          >
+            Needs source/path fix
+          </button>
+        ) : null}
+        <details style={{ marginTop: "0.5rem", fontSize: "0.68rem", color: "#94a3b8", textAlign: "left" }}>
+          <summary style={{ cursor: "pointer" }}>Full URL / path</summary>
+          <div style={{ wordBreak: "break-all", marginTop: "0.35rem" }}>{url}</div>
+        </details>
+      </div>
+    )
+  }
+  return (
+    <img
+      src={url}
+      alt={alt}
+      onError={() => setBroken(true)}
+      style={{ maxWidth: "100%", maxHeight: "min(52vh, 420px)", width: "auto", height: "auto", objectFit: "contain" }}
+    />
+  )
+}
+
+function CandidateCard({
+  media,
+  decisions,
+  onDecision,
+  moveTargetSku,
+}: {
+  media: OxfordReviewMediaItem
+  decisions: Record<string, StoredDecision>
+  onDecision: (k: string, p: Partial<StoredDecision>) => void
+  moveTargetSku: string
+}) {
+  const d = decisionOf(decisions[media.media_key])
+  const ambiguous = media.confidence === "ambiguous" || media.warnings.some((w) => w.toLowerCase().includes("ambigu"))
+
+  const btn = (label: string, dec: ReviewDecision) => {
+    const active = d === dec
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          if (dec === "move_to_other_sku" && moveTargetSku.trim()) {
+            onDecision(media.media_key, { decision: dec, target_sku: moveTargetSku.trim() })
+          } else {
+            onDecision(media.media_key, { decision: dec })
+          }
+        }}
+        style={{
+          flex: 1,
+          minWidth: "72px",
+          padding: "0.45rem 0.35rem",
+          fontSize: "0.72rem",
+          fontWeight: 600,
+          borderRadius: "8px",
+          border: active ? "2px solid #2563eb" : "1px solid #d1d9e0",
+          background: active ? "#dbeafe" : "#fff",
+          color: "#1e293b",
+          cursor: "pointer",
+        }}
+      >
+        {label}
+      </button>
+    )
+  }
+
+  return (
+    <div
+      style={{
+        borderRadius: "12px",
+        border: d !== "unset" ? "2px solid #2563eb" : "1px solid #e8eaed",
+        padding: "0.65rem",
+        background: "#fafbfc",
+      }}
+    >
+      <div style={{ borderRadius: "10px", overflow: "hidden", background: "#eef1f4", marginBottom: "0.5rem" }}>
+        {media.preview_url ? (
+          <div style={{ width: "100%", minHeight: "180px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <PreviewLarge
+              url={media.preview_url}
+              alt={media.filename}
+              onNeedsPathFix={() =>
+                onDecision(media.media_key, { decision: "needs_manual_review", reason: "preview_load_failed" })
+              }
+            />
           </div>
-          <ul className="product-grid" style={{ listStyle: "none", padding: 0, display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-            {row.media_items.map((m) => (
-              <MediaCard key={`${row.sku}-${m.media_key}`} media={m} decisions={decisions} onChange={onChange} />
+        ) : (
+          <div style={{ padding: "1.5rem", textAlign: "center", fontSize: "0.8rem", color: "#64748b" }}>
+            No in-browser preview
+            <div style={{ fontSize: "0.7rem", marginTop: "0.35rem", wordBreak: "break-all" }}>{shortName(media.source_display, 40)}</div>
+          </div>
+        )}
+      </div>
+      <div style={{ fontWeight: 600, fontSize: "0.82rem", marginBottom: "0.35rem", overflow: "hidden", textOverflow: "ellipsis" }}>
+        {shortName(media.filename, 32)}
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.25rem", marginBottom: "0.5rem" }}>
+        <TinyBadge text={media.confidence ?? "?"} />
+        <TinyBadge text={media.media_class?.replace(/_/g, " ") ?? "—"} muted />
+        <TinyBadge text={media.source_kind?.replace(/_/g, " ") ?? ""} muted />
+        {ambiguous && <span title="Needs care">⚠️</span>}
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem" }}>
+        {btn("Primary", "keep_as_primary")}
+        {btn("Gallery", "keep_in_gallery")}
+        {btn("Move", "move_to_other_sku")}
+        {btn("Remove", "remove_from_assignment")}
+        {btn("White-bg later", "needs_white_bg_replacement")}
+        {btn("Do not use", "do_not_use")}
+        {btn("Review", "needs_manual_review")}
+      </div>
+      <details style={{ marginTop: "0.5rem", fontSize: "0.72rem", color: "#64748b" }}>
+        <summary>Details</summary>
+        <div style={{ marginTop: "0.35rem", wordBreak: "break-all" }}>{media.source_display}</div>
+        {media.warnings.length > 0 && (
+          <ul style={{ margin: "0.35rem 0 0", paddingLeft: "1rem" }}>
+            {media.warnings.map((w) => (
+              <li key={w}>{humanWarning(w)}</li>
             ))}
           </ul>
-        </div>
+        )}
+      </details>
+    </div>
+  )
+}
+
+function TinyBadge({ text, muted }: { text: string; muted?: boolean }) {
+  if (!text) return null
+  return (
+    <span
+      style={{
+        fontSize: "0.65rem",
+        fontWeight: 600,
+        padding: "0.12rem 0.35rem",
+        borderRadius: "6px",
+        background: muted ? "#f1f5f9" : "#e0e7ff",
+        color: muted ? "#64748b" : "#3730a3",
+      }}
+    >
+      {text}
+    </span>
+  )
+}
+
+function OrphanCard({
+  media,
+  decisions,
+  onDecision,
+  assignSku,
+}: {
+  media: OxfordReviewMediaItem
+  decisions: Record<string, StoredDecision>
+  onDecision: (k: string, p: Partial<StoredDecision>) => void
+  assignSku: string
+}) {
+  const d = decisionOf(decisions[media.media_key])
+  return (
+    <div
+      style={{
+        borderRadius: "12px",
+        border: d !== "unset" ? "2px solid #2563eb" : "1px solid #e8eaed",
+        padding: "0.75rem",
+        background: "#fff",
+      }}
+    >
+      <div style={{ borderRadius: "10px", overflow: "hidden", background: "#f8fafc", minHeight: "200px" }}>
+        {media.preview_url ? (
+          <PreviewLarge
+            url={media.preview_url}
+            alt={media.filename}
+            onNeedsPathFix={() =>
+              onDecision(media.media_key, { decision: "needs_manual_review", reason: "preview_load_failed" })
+            }
+          />
+        ) : (
+          <div style={{ padding: "1.25rem", textAlign: "center", fontSize: "0.8rem", color: "#64748b" }}>
+            No preview
+            <div style={{ fontSize: "0.72rem", marginTop: "0.35rem" }}>{shortName(media.source_display, 36)}</div>
+          </div>
+        )}
       </div>
-    </li>
+      <p style={{ fontWeight: 600, fontSize: "0.82rem", margin: "0.5rem 0 0.25rem" }}>{shortName(media.filename, 30)}</p>
+      <TinyBadge text={media.source_kind ?? "unknown"} muted />
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem", marginTop: "0.65rem" }}>
+        <button
+          type="button"
+          className="button"
+          style={{ fontSize: "0.75rem" }}
+          onClick={() => {
+            if (assignSku.trim()) {
+              onDecision(media.media_key, { decision: "move_to_other_sku", target_sku: assignSku.trim() })
+            }
+          }}
+        >
+          Assign to SKU
+        </button>
+        <button type="button" className="button" style={{ fontSize: "0.75rem" }} onClick={() => onDecision(media.media_key, { decision: "unset" })}>
+          Keep unassigned
+        </button>
+        <button type="button" className="button" style={{ fontSize: "0.75rem" }} onClick={() => onDecision(media.media_key, { decision: "do_not_use" })}>
+          Do not use
+        </button>
+        <button
+          type="button"
+          className="button"
+          style={{ fontSize: "0.75rem" }}
+          onClick={() => onDecision(media.media_key, { decision: "needs_manual_review" })}
+        >
+          Needs review
+        </button>
+      </div>
+      {d !== "unset" && (
+        <p style={{ fontSize: "0.72rem", marginTop: "0.5rem", color: "#2563eb", fontWeight: 600 }}>Selected: {d}</p>
+      )}
+      <details style={{ marginTop: "0.5rem", fontSize: "0.72rem" }}>
+        <summary>Path</summary>
+        <div style={{ wordBreak: "break-all", color: "#64748b" }}>{media.source_display}</div>
+      </details>
+    </div>
   )
 }
