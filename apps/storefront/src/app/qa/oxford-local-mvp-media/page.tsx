@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import Link from "next/link"
 import { getOxfordLocalMvpMediaPreview } from "@/lib/qa/oxford-local-mvp-media"
 
 export const metadata: Metadata = {
@@ -25,6 +26,10 @@ export default async function OxfordLocalMvpMediaQaPage() {
         <code>data/normalized/oxford-local-mvp-media-assignment-plan.json</code> и, при доступном
         Store API, текущие товары Medusa по handle. Oxford остаётся PAUSED в общем каталоге; это не
         rollout и не production readiness.
+      </p>
+      <p className="info-text" style={{ marginTop: "0.5rem" }}>
+        <Link href="/qa/oxford-local-mvp-media-review">Visual-first media review board →</Link>{" "}
+        <span style={{ color: "var(--muted-foreground, #64748b)" }}>(/qa/oxford-local-mvp-media-review)</span>
       </p>
 
       {!plan && (

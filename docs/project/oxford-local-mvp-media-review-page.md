@@ -8,7 +8,7 @@ The page at `/qa/oxford-local-mvp-media-review` is a **visual-first media board*
 
 ## Where to open
 
-- **URL:** `/qa/oxford-local-mvp-media-review`
+- **URL:** `/qa/oxford-local-mvp-media-review` (в браузере откройте этот путь на dev-сервере storefront; отдельного пункта в главном меню нет). С страницы табличного плана **`/qa/oxford-local-mvp-media`** есть ссылка «Visual-first media review board»; на visual board — обратная ссылка на table QA.
 - **Code:** `apps/storefront/src/app/qa/oxford-local-mvp-media-review/page.tsx` (server) + `OxfordLocalMvpMediaReviewClient.tsx` (client)
 - **Data loader:** `apps/storefront/src/lib/qa/oxford-local-mvp-media-review.ts` (reads normalized JSON under `data/normalized/`)
 

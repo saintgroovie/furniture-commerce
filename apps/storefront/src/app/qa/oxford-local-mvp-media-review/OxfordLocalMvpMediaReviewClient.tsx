@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import type {
   OxfordLocalMvpMediaReviewPayload,
@@ -286,6 +287,11 @@ export function OxfordLocalMvpMediaReviewClient({ payload }: Props) {
           <div>
             <h1 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700 }}>Oxford local media review — dev only</h1>
             <p style={{ margin: "0.25rem 0 0", fontSize: "0.85rem", color: "#5c6570" }}>Visual-first review board</p>
+            <p style={{ margin: "0.35rem 0 0", fontSize: "0.8rem" }}>
+              <Link href="/qa/oxford-local-mvp-media" style={{ color: "#2563eb", fontWeight: 600 }}>
+                Table plan QA (assignment rows)
+              </Link>
+            </p>
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem" }}>
             <Badge text="local only" tone="neutral" />
