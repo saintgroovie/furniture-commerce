@@ -9,7 +9,12 @@ import {
   getDimensions,
   formatDimensionsCompact,
 } from "@/lib/product-metadata"
-import { OliverCardMedia } from "@/components/oliver-product-media"
+import { OliverCardMediaSwitcher } from "@/components/oliver-card-media-switcher"
+import { ProductCardMediaSwitcher } from "@/components/product-card-media-switcher"
+import {
+  collectExtraProductImageUrls,
+  mergeUniqueExtraUrls,
+} from "@/lib/product-images"
 
 type Product = {
   id: string
@@ -17,6 +22,7 @@ type Product = {
   description?: string
   handle?: string
   thumbnail?: string
+  images?: unknown[]
   metadata?: Record<string, unknown>
   variants?: Array<{
     id?: string
@@ -25,10 +31,19 @@ type Product = {
     prices?: Array<{ amount?: number }>
   }>
   product_classification?: { product_type?: string }
+  /** UI-only: merged gallery URLs from display_group members (listing). */
+  display_group_extra_image_urls?: string[]
 }
 
 const BADGE_LABELS: Record<string, string> = {
   BESPOKE: "На заказ",
+}
+
+function cardThumbnailSrc(product: Product): string | null {
+  const t = product.thumbnail
+  if (typeof t !== "string") return null
+  const s = t.trim()
+  return s.length > 0 ? s : null
 }
 
 export function ProductCard({
@@ -54,22 +69,40 @@ export function ProductCard({
 
   const handle = product.handle ?? ""
   const isOliver = handle.startsWith("ol-")
+  const productHref = `/product/${product.id}`
+  const thumbSrc = cardThumbnailSrc(product)
+  const mainSrcForCard = thumbSrc ?? ""
+  const groupExtras = Array.isArray(product.display_group_extra_image_urls)
+    ? product.display_group_extra_image_urls
+    : []
+  const extraSrcs = mergeUniqueExtraUrls(mainSrcForCard, [
+    collectExtraProductImageUrls(
+      product as Record<string, unknown>,
+      mainSrcForCard
+    ),
+    groupExtras,
+  ])
+
+  const mediaBlock = isOliver ? (
+    <OliverCardMediaSwitcher
+      mainSrc={mainSrcForCard}
+      extraSrcs={extraSrcs}
+      href={productHref}
+      title={product.title}
+    />
+  ) : (
+    <ProductCardMediaSwitcher
+      mainSrc={mainSrcForCard}
+      extraSrcs={extraSrcs}
+      href={productHref}
+      alt={product.title}
+    />
+  )
 
   return (
-    <Link href={`/product/${product.id}`} className="card card-link product-card">
-      {isOliver ? (
-        <OliverCardMedia src={product.thumbnail} title={product.title} />
-      ) : product.thumbnail ? (
-        <img
-          src={product.thumbnail}
-          alt={product.title}
-          className="card-img"
-          loading="lazy"
-        />
-      ) : (
-        <div className="card-img card-img-placeholder" aria-hidden="true" />
-      )}
-      <div className="card-body">
+    <div className="card product-card">
+      {mediaBlock}
+      <Link href={productHref} className="card-body card-link">
         {contextLine && (
           <span className="card-context">{contextLine}</span>
         )}
@@ -84,7 +117,7 @@ export function ProductCard({
           <span className="variant-hint">{formatGroupHint(displayGroup.count)}</span>
         )}
         {badgeLabel && <span className="badge">{badgeLabel}</span>}
-      </div>
-    </Link>
+      </Link>
+    </div>
   )
 }

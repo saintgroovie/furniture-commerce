@@ -2,6 +2,7 @@ import Link from "next/link"
 import type { Metadata } from "next"
 import { ProductCard } from "@/components/product-card"
 import { resolveBespokeProducts } from "@/lib/bespoke"
+import { groupProductsForDisplay } from "@/lib/display-group"
 
 export const metadata: Metadata = {
   title: "Каталог",
@@ -34,6 +35,8 @@ export default async function BespokeCatalogPage() {
     )
   }
 
+  const displayEntries = groupProductsForDisplay(products)
+
   if (products.length === 0) {
     return (
       <div data-state="empty">
@@ -59,9 +62,12 @@ export default async function BespokeCatalogPage() {
         Кухни, гардеробные, шкафы и другие проекты по индивидуальным размерам.
       </p>
       <ul className="product-grid" style={{ marginTop: "1.5rem" }}>
-        {products.map((p) => (
-          <li key={p.id as string}>
-            <ProductCard product={p as any} />
+        {displayEntries.map((entry) => (
+          <li key={(entry.product as { id?: string }).id as string}>
+            <ProductCard
+              product={entry.product as any}
+              displayGroup={entry.displayGroup}
+            />
           </li>
         ))}
       </ul>

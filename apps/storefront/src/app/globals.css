@@ -521,6 +521,11 @@ button:disabled,
   transition: box-shadow 0.15s;
 }
 
+/* Product catalog cards: thumb strip lives below hero — avoid clipping the strip */
+.card.product-card {
+  overflow: visible;
+}
+
 .card:hover {
   box-shadow: 0 2px 8px rgba(44, 36, 32, 0.08);
 }
@@ -555,6 +560,15 @@ button:disabled,
 
 /* ---- Product Card ---- */
 
+.product-card-media-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  border-top-left-radius: var(--radius);
+  border-top-right-radius: var(--radius);
+  overflow: hidden;
+}
+
 .product-card .card-img,
 .product-card .card-img-placeholder {
   height: auto;
@@ -587,11 +601,76 @@ button:disabled,
   border: 1px dashed var(--color-border);
 }
 
+/* Non-Oliver catalog card: hero = thumbnail; extras = optional thumb strip */
+.product-card-media-switcher {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.product-card-media-preload {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.product-card-media-thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px var(--space-sm, 0.5rem) var(--space-sm, 0.5rem);
+  min-height: 44px;
+  box-sizing: border-box;
+  align-items: center;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg);
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
+}
+
+.product-card-media-thumb {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--color-bg);
+}
+
+.product-card-media-thumb:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.product-card-media-thumb.is-active {
+  border-color: var(--color-accent);
+}
+
+.product-card-media-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 .product-card .card-body {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: var(--space-xs, 0.25rem);
+  border-bottom-left-radius: var(--radius);
+  border-bottom-right-radius: var(--radius);
+  background: var(--color-surface);
 }
 
 .card-context {
@@ -894,6 +973,99 @@ button:disabled,
   align-items: start;
 }
 
+.product-detail-media-col {
+  min-width: 0;
+}
+
+.product-pdp-media-switcher {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.product-pdp-media-hero {
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--color-bg);
+}
+
+.product-pdp-media-preload {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.product-pdp-media-thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: var(--space-sm);
+  padding: var(--space-sm) 0 0;
+  min-height: 52px;
+  box-sizing: border-box;
+  align-items: center;
+  border-top: 1px solid var(--color-border);
+}
+
+.product-pdp-media-thumb {
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--color-bg);
+}
+
+.product-pdp-media-thumb:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.product-pdp-media-thumb.is-active {
+  border-color: var(--color-accent);
+}
+
+.product-pdp-media-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* QA: /qa/catalog-media-debug */
+.catalog-media-debug-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.catalog-media-debug-table th,
+.catalog-media-debug-table td {
+  border: 1px solid var(--color-border);
+  padding: 6px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.catalog-media-debug-table th {
+  background: var(--color-bg);
+  font-weight: 600;
+}
+
+.catalog-media-debug-table code {
+  font-size: 0.75rem;
+}
+
 @media (max-width: 768px) {
   .product-detail {
     grid-template-columns: 1fr;
@@ -906,23 +1078,6 @@ button:disabled,
   background: var(--color-bg);
   aspect-ratio: 4 / 5;
   object-fit: cover;
-}
-
-.product-detail-gallery {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(4.5rem, 1fr));
-  gap: var(--space-sm);
-  list-style: none;
-  margin: var(--space-md) 0 0;
-  padding: 0;
-}
-
-.product-detail-gallery img {
-  width: 100%;
-  aspect-ratio: 1;
-  object-fit: cover;
-  border-radius: var(--radius);
-  background: var(--color-bg);
 }
 
 .product-detail-info {

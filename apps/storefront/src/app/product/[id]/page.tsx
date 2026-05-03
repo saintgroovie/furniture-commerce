@@ -4,8 +4,10 @@ import { getSiteUrl } from "@/lib/api/base"
 import { getProduct, getProducts, NOT_FOUND } from "@/lib/api/products"
 import { formatRub, getPrice } from "@/lib/format"
 import { ProductCta } from "@/components/product-cta"
-import { OliverHeroMedia } from "@/components/oliver-product-media"
+import { OliverPdpMediaSwitcher } from "@/components/oliver-pdp-media-switcher"
+import { ProductPdpMediaSwitcher } from "@/components/product-pdp-media-switcher"
 import { getDisplayGroupMembers } from "@/lib/display-group"
+import { collectDisplayGroupExtraImageUrls } from "@/lib/product-images"
 import {
   getCollectionLabel,
   getSubcollectionLabel,
@@ -15,22 +17,16 @@ import {
   formatDimensionsLabeled,
 } from "@/lib/product-metadata"
 
-function collectProductImageUrls(product: Record<string, unknown>): string[] {
-  const urls: string[] = []
-  const thumb = product.thumbnail as string | undefined
-  const images = product.images as Array<{ url?: string }> | undefined
-  if (thumb) urls.push(thumb)
-  for (const im of images ?? []) {
-    const u = im?.url
-    if (typeof u === "string" && u && !urls.includes(u)) urls.push(u)
-  }
-  return urls
+function pdpHeroThumbnail(product: Record<string, unknown>): string | undefined {
+  const t = product.thumbnail
+  if (typeof t !== "string") return undefined
+  const s = t.trim()
+  return s.length > 0 ? s : undefined
 }
 
-/** Same priority as PDP hero / gallery collector — thumbnail first. */
+/** OG / JSON-LD: same stable source as PDP hero — `thumbnail` only. */
 function primaryImageForMeta(product: Record<string, unknown>): string | undefined {
-  const urls = collectProductImageUrls(product)
-  return urls[0]
+  return pdpHeroThumbnail(product)
 }
 
 function truncate(str: string, max: number): string {
@@ -105,8 +101,6 @@ export default async function ProductPage({ params }: { params: { id: string } }
   }
 
   const base = getSiteUrl()
-  const galleryUrls = collectProductImageUrls(product)
-  const mainImage = galleryUrls[0]
   const handle = String(product.handle ?? "")
   const isOliver = handle.startsWith("ol-")
   const price = getPrice(product)
@@ -124,6 +118,13 @@ export default async function ProductPage({ params }: { params: { id: string } }
       /* ignore — PDP still usable */
     }
   }
+
+  const mainImage = pdpHeroThumbnail(product)
+  const mainNorm = mainImage ?? ""
+  const pdpExtraSrcs = collectDisplayGroupExtraImageUrls(
+    [product, ...displayGroupMembers],
+    mainNorm
+  )
 
   const titleStr = String(product.title ?? "Товар")
   const canonicalName = getCanonicalName(product)
@@ -147,22 +148,19 @@ export default async function ProductPage({ params }: { params: { id: string } }
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
       />
       <div className="product-detail">
-        <div>
+        <div className="product-detail-media-col">
           {isOliver ? (
-            <OliverHeroMedia src={mainImage} title={titleStr} className="product-detail-img" />
-          ) : mainImage ? (
-            <img src={mainImage} alt={titleStr} className="product-detail-img" />
+            <OliverPdpMediaSwitcher
+              mainSrc={mainNorm}
+              extraSrcs={pdpExtraSrcs}
+              title={titleStr}
+            />
           ) : (
-            <div className="product-detail-img skeleton" />
-          )}
-          {galleryUrls.length > 1 && (
-            <ul className="product-detail-gallery" aria-label="Галерея">
-              {galleryUrls.slice(1).map((url) => (
-                <li key={url}>
-                  <img src={url} alt="" loading="lazy" />
-                </li>
-              ))}
-            </ul>
+            <ProductPdpMediaSwitcher
+              mainSrc={mainNorm}
+              extraSrcs={pdpExtraSrcs}
+              alt={titleStr}
+            />
           )}
         </div>
         <div className="product-detail-info">

@@ -1,4 +1,5 @@
 import { getPrice } from "./format"
+import { collectDisplayGroupExtraImageUrls } from "./product-images"
 
 export type DisplayGroup = {
   count: number
@@ -71,12 +72,24 @@ export function groupProductsForDisplay(
       (representative.metadata as any)?.display_group_title ??
       representative.title
 
+    const repThumbRaw = representative.thumbnail
+    const repThumbNorm =
+      typeof repThumbRaw === "string" ? repThumbRaw.trim() : ""
+    const display_group_extra_image_urls = collectDisplayGroupExtraImageUrls(
+      members,
+      repThumbNorm
+    )
+
     const prices = members
       .map((m) => getPrice(m))
       .filter((v): v is number => v != null)
 
     result.push({
-      product: { ...representative, title: groupTitle },
+      product: {
+        ...representative,
+        title: groupTitle,
+        display_group_extra_image_urls,
+      },
       displayGroup: {
         count: members.length,
         minPrice: prices.length > 0 ? Math.min(...prices) : null,
