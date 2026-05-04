@@ -8,6 +8,7 @@ import {
   oxfordLocalMvpQaSnapshotPathCandidates,
   type FurnitureRepoDataResolution,
 } from "@/lib/qa/furniture-repo-data-root"
+import { enrichOxfordMediaPreview } from "@/lib/qa/oxford-local-mvp-media-preview"
 import type {
   OxfordLocalMvpMediaReviewPayload,
   OxfordReviewAggregate,
@@ -15,6 +16,7 @@ import type {
   OxfordSkuReviewRow,
   OxfordSkuReviewStatus,
 } from "@/lib/qa/oxford-local-mvp-media-review-types"
+import { previewCanUseImgTag } from "@/lib/qa/oxford-local-mvp-media-review-types"
 
 export type {
   OxfordLocalMvpMediaReviewPayload,
@@ -83,18 +85,6 @@ function normalizeKey(s: string): string {
   return s.trim().replace(/\\/g, "/")
 }
 
-function previewUrl(staticBase: string, sourcePathOrUrl: string, repoRelative: string | null | undefined): string | null {
-  const raw = (sourcePathOrUrl || "").trim()
-  if (raw.startsWith("http://") || raw.startsWith("https://")) return raw
-  const rel = normalizeKey(repoRelative || raw)
-  if (rel.startsWith("apps/backend/static/")) {
-    const b = staticBase.replace(/\/$/, "")
-    const suffix = rel.replace(/^apps\/backend\/static\//, "")
-    return `${b}/static/${suffix}`
-  }
-  return null
-}
-
 function mediaKeyFrom(sourcePathOrUrl: string, repoRelative: string | null | undefined, filename: string): string {
   return normalizeKey(repoRelative || sourcePathOrUrl || filename || "unknown")
 }
@@ -128,6 +118,7 @@ export async function getOxfordLocalMvpMediaReviewPayload(): Promise<OxfordLocal
   if (planR.ok === false) loadErrors.push(planR.error)
 
   const staticBase = getBaseUrl() || process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000"
+  const repoRoot = resolution.repoRoot
 
   const inventoryRecords = (invR.ok && Array.isArray((invR.data as { inventory_records?: unknown }).inventory_records))
     ? ((invR.data as { inventory_records: Record<string, unknown>[] }).inventory_records ?? [])
@@ -189,7 +180,6 @@ export async function getOxfordLocalMvpMediaReviewPayload(): Promise<OxfordLocal
 
       const item: OxfordReviewMediaItem = {
         media_key: mediaKeyFrom(spo, rr, fn),
-        preview_url: previewUrl(staticBase, spo, rr),
         source_display: spo || rr || fn,
         filename: fn,
         source_kind: typeof c.source_kind === "string" ? c.source_kind : undefined,
@@ -202,6 +192,12 @@ export async function getOxfordLocalMvpMediaReviewPayload(): Promise<OxfordLocal
         warnings: Array.isArray(c.warnings) ? (c.warnings as string[]) : [],
         is_orphan: false,
         role: "candidate",
+        ...enrichOxfordMediaPreview({
+          source_path_or_url: spo,
+          repo_relative_path: rr,
+          filename: fn,
+          repoRoot,
+        }),
       }
       markAssigned(item)
       return item
@@ -217,7 +213,6 @@ export async function getOxfordLocalMvpMediaReviewPayload(): Promise<OxfordLocal
       if (media_items.some((x) => x.media_key === mk || x.preview_url === u)) return
       const item: OxfordReviewMediaItem = {
         media_key: mk,
-        preview_url: u.startsWith("http") ? u : previewUrl(staticBase, u, null),
         source_display: u,
         filename: fn,
         matched_sku: sku,
@@ -225,6 +220,12 @@ export async function getOxfordLocalMvpMediaReviewPayload(): Promise<OxfordLocal
         warnings: [],
         is_orphan: false,
         role,
+        ...enrichOxfordMediaPreview({
+          source_path_or_url: u,
+          repo_relative_path: null,
+          filename: fn,
+          repoRoot,
+        }),
       }
       media_items.push(item)
       markAssigned(item)
@@ -269,12 +270,20 @@ export async function getOxfordLocalMvpMediaReviewPayload(): Promise<OxfordLocal
     const mk = mediaKeyFrom(spo, rr, fn)
     if (assignedKeys.has(mk)) continue
     if (rr && assignedKeys.has(normalizeKey(rr))) continue
-    const pv = previewUrl(staticBase, spo, rr)
-    if (pv && assignedKeys.has(normalizeKey(pv))) continue
+    const prevProbe = enrichOxfordMediaPreview({
+      source_path_or_url: spo,
+      repo_relative_path: rr,
+      filename: fn,
+      repoRoot,
+      exists_locally: typeof rec.exists_locally === "boolean" ? rec.exists_locally : null,
+      local_binary_status: typeof rec.local_binary_status === "string" ? String(rec.local_binary_status) : null,
+      source_kind: typeof rec.source_kind === "string" ? String(rec.source_kind) : null,
+      manifest_http_url: typeof rec.url === "string" ? String(rec.url) : null,
+    })
+    if (prevProbe.preview_url && assignedKeys.has(normalizeKey(prevProbe.preview_url))) continue
 
     const oitem: OxfordReviewMediaItem = {
       media_key: mk,
-      preview_url: pv,
       source_display: spo || mk,
       filename: fn,
       source_kind: typeof rec.source_kind === "string" ? rec.source_kind : undefined,
@@ -287,11 +296,32 @@ export async function getOxfordLocalMvpMediaReviewPayload(): Promise<OxfordLocal
       warnings: ["orphan_not_in_sku_candidate_map", ...(rec.local_binary_status ? [String(rec.local_binary_status)] : [])],
       is_orphan: true,
       role: "inventory_only",
+      ...prevProbe,
     }
     if (!orphan_media.some((x) => x.media_key === oitem.media_key)) {
       orphan_media.push(oitem)
     }
   }
+
+  function countImgPreview(ms: OxfordReviewMediaItem[]) {
+    let withImg = 0
+    let without = 0
+    for (const m of ms) {
+      if (previewCanUseImgTag(m)) withImg += 1
+      else without += 1
+    }
+    return { withImg, without }
+  }
+  let skuTotal = 0
+  let skuWith = 0
+  let skuWithout = 0
+  for (const r of sku_rows) {
+    const c = countImgPreview(r.media_items)
+    skuTotal += r.media_items.length
+    skuWith += c.withImg
+    skuWithout += c.without
+  }
+  const oc = countImgPreview(orphan_media)
 
   const aggregate: OxfordReviewAggregate = {
     total_sku_rows: sku_rows.length,
@@ -304,6 +334,11 @@ export async function getOxfordLocalMvpMediaReviewPayload(): Promise<OxfordLocal
     media_unassigned,
     sku_rows_with_gallery_backlog,
     orphan_media_count: orphan_media.length,
+    review_total_media_items: skuTotal + orphan_media.length,
+    review_media_with_img_preview: skuWith + oc.withImg,
+    review_media_without_img_preview: skuWithout + oc.without,
+    orphan_with_img_preview: oc.withImg,
+    orphan_without_img_preview: oc.without,
   }
 
   return {

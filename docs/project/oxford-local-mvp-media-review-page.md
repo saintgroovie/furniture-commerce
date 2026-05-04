@@ -46,9 +46,35 @@ If artifacts are genuinely missing on disk, regenerate **read-only** artifacts f
 ## Header (quick orientation)
 
 - Title: **Oxford local media review — dev only**
-- Badges: **local only**, **Oxford PAUSED**, **non-white / interim allowed for preview**, **no DB writes**
+- Badges: **Local QA only**, **Oxford PAUSED**, **No DB writes**, **Interim / non-white OK for preview**
+- Summary strip: SKU row count, media with working image preview, media without preview, unassigned count
 - Progress: **reviewed / total** (any non-`unset` decision counts)
 - **Export decisions JSON**, **Copy JSON**, **Clear decisions**
+
+---
+
+## Image preview resolution (why it used to look “broken”)
+
+Earlier, the loader only turned **`apps/backend/static/...`** paths into Medusa **`/static/...`** HTTP URLs. Inventory orphans under **`data/raw/pdf-assets/extracted/Oxford_full/...`** had **`preview_url: null`**, so the UI showed empty tiles or tried unusable paths — not because artifacts were wrong, but because **repo-relative data files were never surfaced to the browser**.
+
+Now each media row gets:
+
+- **`preview_status`** — e.g. `backend_static_preview_ready`, `local_file_preview_ready`, `preview_url_ready`, `manifest_only_no_local_file`, `source_not_mounted`, `file_missing`, `unsupported_path`
+- **`preview_url`** — when the browser can load an image (`http(s)`, Medusa static, or a dev-only proxy URL)
+- **`preview_error_reason`** — short human text when there is no preview
+- **`debug_source_path`** — short path for collapsed details
+
+**Preview rules (server-side):**
+
+1. **HTTP/HTTPS** — use as-is (`preview_url_ready`).
+2. **`/static/...`** — prefix with `NEXT_PUBLIC_MEDUSA_BACKEND_URL`, then `MEDUSA_BACKEND_URL`, then `http://localhost:9000` (`backend_static_preview_ready`).
+3. **`apps/backend/static/...`** — same as today: map to `{backend}/static/...` (`backend_static_preview_ready`).
+4. **Allowlisted repo `data/...` image files** (PNG/JPEG/WebP/GIF/AVIF under fixed prefixes such as `data/raw/pdf-assets/extracted/Oxford_full/`, `data/raw/assets/`, etc.) — if the file exists under resolved repo root, the UI uses a **dev-only read-only image route**:  
+   **`GET /qa/oxford-local-mvp-media-review/preview?rel=<repo-relative path>`**  
+   The route is **disabled in production** unless `OXFORD_QA_MEDIA_PREVIEW_ALLOW_PROD=1`. It rejects `..`, non-files, paths outside the allowlist, and `*.json` under `data/raw/front/`.
+5. **`legacy_front` / Yandex-style absolute paths** with `exists_locally: false` — **no `<img>`**: show **manifest-only / source not mounted** messaging (`manifest_only_no_local_file` / `source_not_mounted`). This is expected for `front-manifest.json` disk paths when the mirror is not mounted — **not an application error**.
+
+**Unassigned gallery UX:** only rows with a **working preview URL** appear in the main visual grid. Everything else is listed under **Unpreviewable references** (collapsed) so the board stays visual-first.
 
 ---
 
@@ -57,7 +83,7 @@ If artifacts are genuinely missing on disk, regenerate **read-only** artifacts f
 1. **Pick a SKU** in the left sidebar (search by SKU, handle, title, or filename substring). Use filters such as *Needs review*, *No planned primary*, *Has orphan candidates on SKU*, *Product missing in Medusa*, etc.
 2. **Center panel:** read title / SKU / handle, inspect the **large planned primary**, then the **gallery & backlog** strip. Short bullet warnings explain risk in plain language; full machine warnings stay under **Technical details**.
 3. **Right column — candidates:** for each image use the big actions: **Primary**, **Gallery**, **Move** (requires “Move to SKU” field), **Remove**, **White-bg later**, **Do not use**, **Review**. The active decision is highlighted on the card. Per-image filename (short), confidence, media class, and source kind appear as badges; full path is under **Details**.
-4. **Unassigned Oxford media** (bottom): large grid of inventory not mapped to any SKU row. Set **Assign to SKU** using the field above the grid, then **Assign to SKU** on a card; or **Keep unassigned**, **Do not use**, **Needs review**. Nothing here deletes files on disk.
+4. **Unassigned Oxford media** (bottom): large grid (previewable items only). References without a browser preview sit under **Unpreviewable references**. Set **Assign to SKU** using the field above the grid; or **Keep unassigned**, **Do not use**, **Needs review**. Nothing here deletes files on disk.
 5. When done, **Export decisions JSON** or **Copy JSON** and save manually as described below.
 
 **`remove_from_assignment`** means: exclude from a **future** Medusa product `images` / primary assignment — **not** deleting the file from disk or from `data/`.
@@ -82,9 +108,9 @@ List rows show a small primary thumb, **in DB / no product**, and compact counts
 
 ---
 
-## Broken preview
+## Failed image load (after a valid preview URL)
 
-If a preview URL fails to load, the UI shows a broken state with a short snippet of the URL and **Needs source/path fix** (tags the image decision as `needs_manual_review` with `reason: preview_load_failed` when a `media_key` is available). Inventory is unchanged.
+We **do not** leave the browser’s broken-image icon visible: `<img onError>` switches to a compact “preview failed” panel. **Needs source/path fix** tags `needs_manual_review` with `reason: preview_load_failed` when a `media_key` exists. Inventory is unchanged.
 
 ---
 

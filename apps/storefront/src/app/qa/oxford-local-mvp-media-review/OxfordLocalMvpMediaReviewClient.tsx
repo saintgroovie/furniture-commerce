@@ -7,6 +7,7 @@ import type {
   OxfordReviewMediaItem,
   OxfordSkuReviewRow,
 } from "@/lib/qa/oxford-local-mvp-media-review-types"
+import { previewCanUseImgTag } from "@/lib/qa/oxford-local-mvp-media-review-types"
 
 const LS_KEY = "oxford-local-mvp-media-review-decisions-v1"
 
@@ -196,6 +197,9 @@ export function OxfordLocalMvpMediaReviewClient({ payload }: Props) {
     })
   }, [payload.orphan_media, q])
 
+  const orphanVisual = useMemo(() => displayOrphans.filter((m) => previewCanUseImgTag(m)), [displayOrphans])
+  const orphanUnpreviewable = useMemo(() => displayOrphans.filter((m) => !previewCanUseImgTag(m)), [displayOrphans])
+
   const exportJson = useCallback(() => {
     const decisionsList: Array<Record<string, unknown>> = []
     for (const k of allKeys) {
@@ -294,10 +298,10 @@ export function OxfordLocalMvpMediaReviewClient({ payload }: Props) {
             </p>
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem" }}>
-            <Badge text="local only" tone="neutral" />
+            <Badge text="Local QA only" tone="neutral" />
             <Badge text="Oxford PAUSED" tone="amber" />
-            <Badge text="non-white / interim allowed for preview" tone="neutral" />
-            <Badge text="no DB writes" tone="green" />
+            <Badge text="No DB writes" tone="green" />
+            <Badge text="Interim / non-white OK for preview" tone="neutral" />
           </div>
           <div style={{ marginLeft: "auto", display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "center" }}>
             <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#3d4a5c" }}>
@@ -321,12 +325,38 @@ export function OxfordLocalMvpMediaReviewClient({ payload }: Props) {
             </button>
           </div>
         </div>
+        <div
+          style={{
+            marginTop: "0.75rem",
+            paddingTop: "0.75rem",
+            borderTop: "1px solid #e8eaed",
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "0.85rem 1.25rem",
+            fontSize: "0.8rem",
+            color: "#475569",
+            alignItems: "center",
+          }}
+        >
+          <span>
+            <strong>{payload.aggregate.total_sku_rows}</strong> SKU rows
+          </span>
+          <span>
+            <strong>{payload.aggregate.review_media_with_img_preview}</strong> with image preview
+          </span>
+          <span>
+            <strong>{payload.aggregate.review_media_without_img_preview}</strong> no preview (see below)
+          </span>
+          <span>
+            <strong>{payload.aggregate.orphan_media_count}</strong> unassigned in gallery
+          </span>
+        </div>
       </header>
 
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "minmax(240px, 280px) minmax(0, 1fr) minmax(280px, 360px)",
+          gridTemplateColumns: "minmax(240px, 280px) minmax(0, 1fr) minmax(280px, 380px)",
           gap: "1rem",
           padding: "1rem",
           maxWidth: "1600px",
@@ -474,9 +504,9 @@ export function OxfordLocalMvpMediaReviewClient({ payload }: Props) {
             marginTop: "0.5rem",
           }}
         >
-          <h2 style={{ margin: "0 0 0.35rem", fontSize: "1.1rem", fontWeight: 700 }}>Unassigned Oxford media</h2>
-          <p style={{ margin: "0 0 1rem", fontSize: "0.85rem", color: "#5c6570" }}>
-            Not linked to a SKU in the candidate map. Assign does not delete files — only future Medusa assignment.
+          <h2 style={{ margin: "0 0 0.35rem", fontSize: "1.15rem", fontWeight: 700 }}>Unassigned Oxford media</h2>
+          <p style={{ margin: "0 0 1rem", fontSize: "0.82rem", color: "#64748b" }}>
+            Visual gallery — only entries with a working image URL. Assign does not delete files (future Medusa assignment only).
           </p>
           {displayOrphans.length === 0 ? (
             <p style={{ fontSize: "0.9rem", color: "#888" }}>None right now.</p>
@@ -495,23 +525,43 @@ export function OxfordLocalMvpMediaReviewClient({ payload }: Props) {
                   marginBottom: "1rem",
                 }}
               />
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
-                  gap: "1rem",
-                }}
-              >
-                {displayOrphans.map((m) => (
-                  <OrphanCard
-                    key={m.media_key}
-                    media={m}
-                    decisions={decisions}
-                    onDecision={updateDecision}
-                    assignSku={orphanAssignSku}
-                  />
-                ))}
-              </div>
+              {orphanVisual.length > 0 ? (
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+                    gap: "1.1rem",
+                  }}
+                >
+                  {orphanVisual.map((m) => (
+                    <OrphanVisualCard
+                      key={m.media_key}
+                      media={m}
+                      decisions={decisions}
+                      onDecision={updateDecision}
+                      assignSku={orphanAssignSku}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <p style={{ fontSize: "0.85rem", color: "#94a3b8" }}>No previewable unassigned images in this filter.</p>
+              )}
+
+              {orphanUnpreviewable.length > 0 && (
+                <details style={{ marginTop: "1.25rem", borderRadius: "10px", border: "1px solid #e2e8f0", padding: "0.65rem 0.85rem", background: "#f8fafc" }}>
+                  <summary style={{ cursor: "pointer", fontWeight: 700, fontSize: "0.9rem", color: "#334155" }}>
+                    Unpreviewable references ({orphanUnpreviewable.length})
+                  </summary>
+                  <p style={{ fontSize: "0.78rem", color: "#64748b", margin: "0.5rem 0 0.75rem" }}>
+                    Manifest-only or paths not mounted in this environment — not shown as broken thumbnails.
+                  </p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.65rem" }}>
+                    {orphanUnpreviewable.map((m) => (
+                      <UnpreviewableOrphanRow key={m.media_key} media={m} decisions={decisions} onDecision={updateDecision} assignSku={orphanAssignSku} />
+                    ))}
+                  </div>
+                </details>
+              )}
             </>
           )}
         </div>
@@ -563,7 +613,10 @@ function SkuListItem({
   decisions: Record<string, StoredDecision>
 }) {
   const { c, p, a, o } = skuBadgeCounts(row)
-  const thumb = row.planned_primary_url || row.media_items.find((m) => m.preview_url)?.preview_url
+  const thumb =
+    row.planned_primary_url ||
+    row.media_items.find((m) => previewCanUseImgTag(m))?.preview_url ||
+    null
   return (
     <button
       type="button"
@@ -591,9 +644,7 @@ function SkuListItem({
           overflow: "hidden",
         }}
       >
-        {thumb ? (
-          <img src={thumb} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-        ) : null}
+        {thumb ? <SidebarThumb url={thumb} /> : null}
       </div>
       <div style={{ minWidth: 0 }}>
         <div style={{ fontWeight: 700, fontSize: "0.82rem" }}>{row.sku}</div>
@@ -839,9 +890,9 @@ function CandidateCard({
         }}
         style={{
           flex: 1,
-          minWidth: "72px",
-          padding: "0.45rem 0.35rem",
-          fontSize: "0.72rem",
+          minWidth: "76px",
+          padding: "0.5rem 0.4rem",
+          fontSize: "0.76rem",
           fontWeight: 600,
           borderRadius: "8px",
           border: active ? "2px solid #2563eb" : "1px solid #d1d9e0",
@@ -864,9 +915,17 @@ function CandidateCard({
         background: "#fafbfc",
       }}
     >
-      <div style={{ borderRadius: "10px", overflow: "hidden", background: "#eef1f4", marginBottom: "0.5rem" }}>
-        {media.preview_url ? (
-          <div style={{ width: "100%", minHeight: "180px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div
+        style={{
+          borderRadius: "10px",
+          overflow: "hidden",
+          background: "#eef1f4",
+          marginBottom: "0.5rem",
+          minWidth: "220px",
+        }}
+      >
+        {previewCanUseImgTag(media) && media.preview_url ? (
+          <div style={{ width: "100%", minHeight: "200px", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <PreviewLarge
               url={media.preview_url}
               alt={media.filename}
@@ -876,10 +935,12 @@ function CandidateCard({
             />
           </div>
         ) : (
-          <div style={{ padding: "1.5rem", textAlign: "center", fontSize: "0.8rem", color: "#64748b" }}>
-            No in-browser preview
-            <div style={{ fontSize: "0.7rem", marginTop: "0.35rem", wordBreak: "break-all" }}>{shortName(media.source_display, 40)}</div>
-          </div>
+          <NoPreviewTile
+            media={media}
+            onNeedsPathFix={() =>
+              onDecision(media.media_key, { decision: "needs_manual_review", reason: "preview_load_failed" })
+            }
+          />
         )}
       </div>
       <div style={{ fontWeight: 600, fontSize: "0.82rem", marginBottom: "0.35rem", overflow: "hidden", textOverflow: "ellipsis" }}>
@@ -933,7 +994,101 @@ function TinyBadge({ text, muted }: { text: string; muted?: boolean }) {
   )
 }
 
-function OrphanCard({
+function SidebarThumb({ url }: { url: string }) {
+  const [failed, setFailed] = useState(false)
+  if (failed) {
+    return <div style={{ width: "100%", height: "100%", background: "#e2e8f0" }} aria-hidden />
+  }
+  return (
+    <img
+      src={url}
+      alt=""
+      onError={() => setFailed(true)}
+      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+    />
+  )
+}
+
+function NoPreviewTile({
+  media,
+  onNeedsPathFix,
+}: {
+  media: OxfordReviewMediaItem
+  onNeedsPathFix?: () => void
+}) {
+  return (
+    <div
+      style={{
+        minHeight: 200,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "1rem",
+        textAlign: "center",
+      }}
+    >
+      <div style={{ fontSize: "0.88rem", fontWeight: 700, color: "#334155" }}>No preview</div>
+      <div style={{ fontSize: "0.76rem", color: "#64748b", marginTop: "0.45rem", maxWidth: "280px" }}>
+        {media.preview_error_reason ?? media.preview_status.replace(/_/g, " ")}
+      </div>
+      <div style={{ fontSize: "0.72rem", color: "#94a3b8", marginTop: "0.35rem" }}>{shortName(media.filename, 36)}</div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem", justifyContent: "center", marginTop: "0.65rem" }}>
+        {onNeedsPathFix ? (
+          <button type="button" className="button" style={{ fontSize: "0.72rem" }} onClick={onNeedsPathFix}>
+            Needs source/path fix
+          </button>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
+function orphanActionRow(
+  media: OxfordReviewMediaItem,
+  decisions: Record<string, StoredDecision>,
+  onDecision: (k: string, p: Partial<StoredDecision>) => void,
+  assignSku: string
+) {
+  const d = decisionOf(decisions[media.media_key])
+  return (
+    <>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem", marginTop: "0.65rem" }}>
+        <button
+          type="button"
+          className="button"
+          style={{ fontSize: "0.75rem", padding: "0.4rem 0.65rem" }}
+          onClick={() => {
+            if (assignSku.trim()) {
+              onDecision(media.media_key, { decision: "move_to_other_sku", target_sku: assignSku.trim() })
+            }
+          }}
+        >
+          Assign to SKU
+        </button>
+        <button type="button" className="button" style={{ fontSize: "0.75rem", padding: "0.4rem 0.65rem" }} onClick={() => onDecision(media.media_key, { decision: "unset" })}>
+          Keep unassigned
+        </button>
+        <button type="button" className="button" style={{ fontSize: "0.75rem", padding: "0.4rem 0.65rem" }} onClick={() => onDecision(media.media_key, { decision: "do_not_use" })}>
+          Do not use
+        </button>
+        <button
+          type="button"
+          className="button"
+          style={{ fontSize: "0.75rem", padding: "0.4rem 0.65rem" }}
+          onClick={() => onDecision(media.media_key, { decision: "needs_manual_review" })}
+        >
+          Needs review
+        </button>
+      </div>
+      {d !== "unset" && (
+        <p style={{ fontSize: "0.72rem", marginTop: "0.5rem", color: "#2563eb", fontWeight: 600 }}>Selected: {d}</p>
+      )}
+    </>
+  )
+}
+
+function OrphanVisualCard({
   media,
   decisions,
   onDecision,
@@ -952,60 +1107,65 @@ function OrphanCard({
         border: d !== "unset" ? "2px solid #2563eb" : "1px solid #e8eaed",
         padding: "0.75rem",
         background: "#fff",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
       }}
     >
-      <div style={{ borderRadius: "10px", overflow: "hidden", background: "#f8fafc", minHeight: "200px" }}>
-        {media.preview_url ? (
-          <PreviewLarge
-            url={media.preview_url}
-            alt={media.filename}
-            onNeedsPathFix={() =>
-              onDecision(media.media_key, { decision: "needs_manual_review", reason: "preview_load_failed" })
-            }
-          />
-        ) : (
-          <div style={{ padding: "1.25rem", textAlign: "center", fontSize: "0.8rem", color: "#64748b" }}>
-            No preview
-            <div style={{ fontSize: "0.72rem", marginTop: "0.35rem" }}>{shortName(media.source_display, 36)}</div>
-          </div>
-        )}
+      <div style={{ borderRadius: "10px", overflow: "hidden", background: "#f1f5f9", minHeight: "220px" }}>
+        <PreviewLarge
+          url={media.preview_url}
+          alt={media.filename}
+          onNeedsPathFix={() =>
+            onDecision(media.media_key, { decision: "needs_manual_review", reason: "preview_load_failed" })
+          }
+        />
       </div>
-      <p style={{ fontWeight: 600, fontSize: "0.82rem", margin: "0.5rem 0 0.25rem" }}>{shortName(media.filename, 30)}</p>
-      <TinyBadge text={media.source_kind ?? "unknown"} muted />
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem", marginTop: "0.65rem" }}>
-        <button
-          type="button"
-          className="button"
-          style={{ fontSize: "0.75rem" }}
-          onClick={() => {
-            if (assignSku.trim()) {
-              onDecision(media.media_key, { decision: "move_to_other_sku", target_sku: assignSku.trim() })
-            }
-          }}
-        >
-          Assign to SKU
-        </button>
-        <button type="button" className="button" style={{ fontSize: "0.75rem" }} onClick={() => onDecision(media.media_key, { decision: "unset" })}>
-          Keep unassigned
-        </button>
-        <button type="button" className="button" style={{ fontSize: "0.75rem" }} onClick={() => onDecision(media.media_key, { decision: "do_not_use" })}>
-          Do not use
-        </button>
-        <button
-          type="button"
-          className="button"
-          style={{ fontSize: "0.75rem" }}
-          onClick={() => onDecision(media.media_key, { decision: "needs_manual_review" })}
-        >
-          Needs review
-        </button>
+      <p style={{ fontWeight: 600, fontSize: "0.85rem", margin: "0.55rem 0 0.25rem" }}>{shortName(media.filename, 34)}</p>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.25rem" }}>
+        <TinyBadge text={media.source_kind?.replace(/_/g, " ") ?? "—"} muted />
+        <TinyBadge text={media.confidence ?? "?"} />
       </div>
-      {d !== "unset" && (
-        <p style={{ fontSize: "0.72rem", marginTop: "0.5rem", color: "#2563eb", fontWeight: 600 }}>Selected: {d}</p>
-      )}
-      <details style={{ marginTop: "0.5rem", fontSize: "0.72rem" }}>
-        <summary>Path</summary>
-        <div style={{ wordBreak: "break-all", color: "#64748b" }}>{media.source_display}</div>
+      {orphanActionRow(media, decisions, onDecision, assignSku)}
+      <details style={{ marginTop: "0.45rem", fontSize: "0.7rem", color: "#64748b" }}>
+        <summary>Details</summary>
+        <div style={{ wordBreak: "break-all", marginTop: "0.35rem" }}>{media.debug_source_path ?? media.source_display}</div>
+      </details>
+    </div>
+  )
+}
+
+function UnpreviewableOrphanRow({
+  media,
+  decisions,
+  onDecision,
+  assignSku,
+}: {
+  media: OxfordReviewMediaItem
+  decisions: Record<string, StoredDecision>
+  onDecision: (k: string, p: Partial<StoredDecision>) => void
+  assignSku: string
+}) {
+  return (
+    <div
+      style={{
+        borderRadius: "10px",
+        border: "1px solid #e2e8f0",
+        padding: "0.55rem 0.65rem",
+        background: "#fff",
+        display: "flex",
+        flexDirection: "column",
+        gap: "0.35rem",
+      }}
+    >
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "baseline" }}>
+        <span style={{ fontWeight: 700, fontSize: "0.82rem" }}>{shortName(media.filename, 32)}</span>
+        <TinyBadge text={media.preview_status.replace(/_/g, " ")} muted />
+        <TinyBadge text={media.source_kind?.replace(/_/g, " ") ?? ""} muted />
+      </div>
+      <div style={{ fontSize: "0.74rem", color: "#64748b" }}>{media.preview_error_reason ?? "No image URL for this reference."}</div>
+      {orphanActionRow(media, decisions, onDecision, assignSku)}
+      <details style={{ fontSize: "0.68rem", color: "#94a3b8" }}>
+        <summary>Source</summary>
+        <div style={{ wordBreak: "break-all" }}>{media.debug_source_path ?? media.source_display}</div>
       </details>
     </div>
   )
