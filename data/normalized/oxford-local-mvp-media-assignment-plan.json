@@ -1,8 +1,9 @@
 {
   "audit_meta": {
     "pass_name": "oxford_local_mvp_media_assignment_plan",
-    "generated_at": "2026-05-02T17:04:11.606Z",
-    "assignment_policy": "local_mvp_preview_confirmed_and_probable_http_urls_only"
+    "generated_at": "2026-05-04T01:31:59.460Z",
+    "assignment_policy": "local_mvp_preview_confirmed_and_probable_http_urls_only",
+    "last_expansion_merge_at": "2026-05-04T01:32:00.822Z"
   },
   "medusa_local_environment": {
     "ok": true,

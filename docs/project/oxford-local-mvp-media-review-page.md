@@ -12,7 +12,7 @@ The page at `/qa/oxford-local-mvp-media-review` is a **visual-first media board*
 - **Code:** `apps/storefront/src/app/qa/oxford-local-mvp-media-review/page.tsx` (server) + `OxfordLocalMvpMediaReviewClient.tsx` (client)
 - **Data loader:** `apps/storefront/src/lib/qa/oxford-local-mvp-media-review.ts` (reads normalized JSON under `data/normalized/`)
 
-Prerequisites: run `node scripts/build-oxford-local-mvp-media-artifacts.mjs` (or `yarn oxford-local-mvp-media:build` from `apps/backend`) so `oxford-local-mvp-media-*.json` exists.
+Prerequisites: run `node scripts/build-oxford-local-mvp-media-artifacts.mjs` (or `yarn oxford-local-mvp-media:build` from `apps/backend`) so `oxford-local-mvp-media-*.json` exists. For a **wider Oxford image pool** (extra Yandex/Volumes walks, broader `front-manifest.json` Oxford/Оксфорд rows, optional `data/raw/pdf-assets/extracted` subtree, path refs from allowlisted Oxford JSON), run **`node scripts/expand-oxford-media-source-inventory.mjs`** from repo root after the build script; it writes `data/normalized/oxford-source-expansion-*.json` and merges new inventory rows into `oxford-local-mvp-media-inventory.json` (SKU map / plan only grow when new repo files with clear SKU bindings appear). Use `--no-merge-mvp` to generate expansion reports without touching the three MVP JSON files.
 
 ### Data paths: local vs Docker (`process.cwd()=/app`)
 

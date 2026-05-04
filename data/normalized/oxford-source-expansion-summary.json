@@ -1,0 +1,43 @@
+{
+  "generated_at": "2026-05-04T01:32:00.822Z",
+  "roots_scanned": 19,
+  "roots_mounted": 11,
+  "roots_missing": 8,
+  "expansion_records_total": 61,
+  "oxford_images_found": 61,
+  "previewable_now": 23,
+  "unpreviewable": 38,
+  "white_bg_class_guess": 0,
+  "legacy_front_manifest_rows": 12,
+  "pdf_or_static_guess": 33,
+  "duplicates_flagged": 11,
+  "by_bucket": {
+    "orphan_oxford_media": 53,
+    "confirmed_sku_match": 8
+  },
+  "source_mount_needed_for_full_oxford_media_pool": {
+    "verdict": "partial_until_yandex_white_bg_mounted",
+    "expected_white_bg_roots": [
+      "/WOODRIGHT/Контент /Фото на белом фоне",
+      "/Users/leonidmbp/Yandex.Disk/WOODRIGHT/Контент /Фото на белом фоне",
+      "/Users/leonidmbp/Yandex Disk/WOODRIGHT/Контент /Фото на белом фоне"
+    ],
+    "manifest_refs_not_local": 12,
+    "operator_search_hints": {
+      "folder_tokens": [
+        "Oxford",
+        "oxford",
+        "OX",
+        "Оксфорд",
+        "OX-",
+        "S-OX",
+        "ox-",
+        "s-ox"
+      ],
+      "sku_patterns": [
+        "OX-*",
+        "S-OX-*"
+      ]
+    }
+  }
+}

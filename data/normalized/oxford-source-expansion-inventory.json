@@ -1,0 +1,1642 @@
+{
+  "audit_meta": {
+    "pass_name": "oxford_media_source_expansion_inventory",
+    "generated_at": "2026-05-04T01:32:00.822Z",
+    "scope": "local_dev_source_discovery_only",
+    "not_production_rollout": true,
+    "constraints": [
+      "No Medusa DB / seed / validation / sync / runner / media apply",
+      "No catalog-scope.ts / evidence JSON / source file moves",
+      "JSON + docs artifacts only"
+    ]
+  },
+  "roots": [
+    {
+      "source_root": "/WOODRIGHT/Контент /Фото на белом фоне",
+      "repo_relative": false,
+      "role": "yandex_white_bg_expected",
+      "status": "missing",
+      "detail": null
+    },
+    {
+      "source_root": "/Users/leonidmbp/Yandex.Disk/WOODRIGHT/Контент /Фото на белом фоне",
+      "repo_relative": false,
+      "role": "yandex_white_bg_expected",
+      "status": "missing",
+      "detail": null
+    },
+    {
+      "source_root": "/Users/leonidmbp/Yandex Disk/WOODRIGHT/Контент /Фото на белом фоне",
+      "repo_relative": false,
+      "role": "yandex_white_bg_expected",
+      "status": "missing",
+      "detail": null
+    },
+    {
+      "source_root": "/Volumes/BOOTCAMP/WOODRIGHT/Контент /Фото на белом фоне",
+      "repo_relative": false,
+      "role": "volumes_yandex_white_bg_candidate",
+      "status": "missing",
+      "detail": null
+    },
+    {
+      "source_root": "/Volumes/CapCut/WOODRIGHT/Контент /Фото на белом фоне",
+      "repo_relative": false,
+      "role": "volumes_yandex_white_bg_candidate",
+      "status": "missing",
+      "detail": null
+    },
+    {
+      "source_root": "/Volumes/CapCut Downloader/WOODRIGHT/Контент /Фото на белом фоне",
+      "repo_relative": false,
+      "role": "volumes_yandex_white_bg_candidate",
+      "status": "missing",
+      "detail": null
+    },
+    {
+      "source_root": "/Volumes/Codex Installer/WOODRIGHT/Контент /Фото на белом фоне",
+      "repo_relative": false,
+      "role": "volumes_yandex_white_bg_candidate",
+      "status": "missing",
+      "detail": null
+    },
+    {
+      "source_root": "/Volumes/Codex Installer 1/WOODRIGHT/Контент /Фото на белом фоне",
+      "repo_relative": false,
+      "role": "volumes_yandex_white_bg_candidate",
+      "status": "missing",
+      "detail": null
+    },
+    {
+      "source_root": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/oxford",
+      "repo_relative_path": "apps/backend/static/products/oxford",
+      "role": "repo_scan",
+      "status": "mounted",
+      "detail": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products/oxford"
+    },
+    {
+      "source_root": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products",
+      "repo_relative_path": "apps/backend/static/products",
+      "role": "repo_scan",
+      "status": "mounted",
+      "detail": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/static/products"
+    },
+    {
+      "source_root": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/uploads/products",
+      "repo_relative_path": "apps/backend/uploads/products",
+      "role": "repo_scan",
+      "status": "mounted",
+      "detail": "/Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend/uploads/products"
+    },
+    {
+      "source_root": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/assets",
+      "repo_relative_path": "data/raw/assets",
+      "role": "repo_scan",
+      "status": "mounted",
+      "detail": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/assets"
+    },
+    {
+      "source_root": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/downloaded-assets",
+      "repo_relative_path": "data/raw/downloaded-assets",
+      "role": "repo_scan",
+      "status": "mounted",
+      "detail": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/downloaded-assets"
+    },
+    {
+      "source_root": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/processed/storefront-assets",
+      "repo_relative_path": "data/processed/storefront-assets",
+      "role": "repo_scan",
+      "status": "mounted",
+      "detail": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/processed/storefront-assets"
+    },
+    {
+      "source_root": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/pdf-assets/extracted/Oxford_full",
+      "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford_full",
+      "role": "repo_scan",
+      "status": "mounted",
+      "detail": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/pdf-assets/extracted/Oxford_full"
+    },
+    {
+      "source_root": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/pdf-assets/extracted",
+      "repo_relative_path": "data/raw/pdf-assets/extracted",
+      "role": "repo_scan",
+      "status": "mounted",
+      "detail": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/pdf-assets/extracted"
+    },
+    {
+      "source_root": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/pdf-assets/manifests",
+      "repo_relative_path": "data/raw/pdf-assets/manifests",
+      "role": "repo_scan",
+      "status": "mounted",
+      "detail": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/pdf-assets/manifests"
+    },
+    {
+      "source_root": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/processed/asset-manifests",
+      "repo_relative_path": "data/processed/asset-manifests",
+      "role": "repo_scan",
+      "status": "mounted",
+      "detail": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/processed/asset-manifests"
+    },
+    {
+      "source_root": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/front",
+      "repo_relative_path": "data/raw/front",
+      "role": "repo_scan",
+      "status": "mounted",
+      "detail": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/raw/front"
+    }
+  ],
+  "records": [
+    {
+      "source_root": "apps/…",
+      "source_kind": "backend_static",
+      "path_or_url": "apps/backend/static/products/oxford/Oxford_full_p4_i0_1306x951.png",
+      "repo_relative_path": "apps/backend/static/products/oxford/Oxford_full_p4_i0_1306x951.png",
+      "filename": "Oxford_full_p4_i0_1306x951.png",
+      "exists_locally": true,
+      "is_previewable_now": true,
+      "preview_route_expected": "{MEDUSA_ORIGIN}/static/products/oxford/Oxford_full_p4_i0_1306x951.png",
+      "hash": "643b465e7494442f0f0c9ca6ba3a5acc075a7fd263b0e1d1fff9325db35b9bb6",
+      "size_bytes": 2230347,
+      "dimensions": {
+        "width": 1306,
+        "height": 951
+      },
+      "match_reason": "repo_walk_oxford_related_path",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "pdf_crop",
+      "warnings": [],
+      "recommended_next_action": null,
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "apps/…",
+      "source_kind": "backend_static",
+      "path_or_url": "apps/backend/static/products/oxford/Oxford_full_p5_i0_947x949.png",
+      "repo_relative_path": "apps/backend/static/products/oxford/Oxford_full_p5_i0_947x949.png",
+      "filename": "Oxford_full_p5_i0_947x949.png",
+      "exists_locally": true,
+      "is_previewable_now": true,
+      "preview_route_expected": "{MEDUSA_ORIGIN}/static/products/oxford/Oxford_full_p5_i0_947x949.png",
+      "hash": "e8a2b60df2f87966d2b93f9eb408102f525b053c81b8f02ca6e7ffdfdbdd4a3f",
+      "size_bytes": 1863023,
+      "dimensions": {
+        "width": 947,
+        "height": 949
+      },
+      "match_reason": "repo_walk_oxford_related_path",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "pdf_crop",
+      "warnings": [],
+      "recommended_next_action": null,
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "apps/…",
+      "source_kind": "backend_static",
+      "path_or_url": "apps/backend/static/products/oxford/Oxford_full_p5_i1_480x1182.png",
+      "repo_relative_path": "apps/backend/static/products/oxford/Oxford_full_p5_i1_480x1182.png",
+      "filename": "Oxford_full_p5_i1_480x1182.png",
+      "exists_locally": true,
+      "is_previewable_now": true,
+      "preview_route_expected": "{MEDUSA_ORIGIN}/static/products/oxford/Oxford_full_p5_i1_480x1182.png",
+      "hash": "c9339d59ec66747234f86526e24a63bdeb2ef606278ad98259f5069141077395",
+      "size_bytes": 620692,
+      "dimensions": {
+        "width": 480,
+        "height": 1182
+      },
+      "match_reason": "repo_walk_oxford_related_path",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "pdf_crop",
+      "warnings": [],
+      "recommended_next_action": null,
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "apps/…",
+      "source_kind": "backend_static",
+      "path_or_url": "apps/backend/static/products/oxford/Oxford_full_p5_i2_521x429.png",
+      "repo_relative_path": "apps/backend/static/products/oxford/Oxford_full_p5_i2_521x429.png",
+      "filename": "Oxford_full_p5_i2_521x429.png",
+      "exists_locally": true,
+      "is_previewable_now": true,
+      "preview_route_expected": "{MEDUSA_ORIGIN}/static/products/oxford/Oxford_full_p5_i2_521x429.png",
+      "hash": "3354263c36b365ec1c8aa6cce3671010731223c1416d25c413a53720a0bc50bd",
+      "size_bytes": 289985,
+      "dimensions": {
+        "width": 521,
+        "height": 429
+      },
+      "match_reason": "repo_walk_oxford_related_path",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "pdf_crop",
+      "warnings": [],
+      "recommended_next_action": null,
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "apps/…",
+      "source_kind": "backend_static",
+      "path_or_url": "apps/backend/static/products/oxford/Oxford_full_p5_i3_522x445.png",
+      "repo_relative_path": "apps/backend/static/products/oxford/Oxford_full_p5_i3_522x445.png",
+      "filename": "Oxford_full_p5_i3_522x445.png",
+      "exists_locally": true,
+      "is_previewable_now": true,
+      "preview_route_expected": "{MEDUSA_ORIGIN}/static/products/oxford/Oxford_full_p5_i3_522x445.png",
+      "hash": "04a695228af7dbd9733e2d5e8b2f0b380e8bf8381ba68c3a8637e68ef7e791b4",
+      "size_bytes": 224700,
+      "dimensions": {
+        "width": 522,
+        "height": 445
+      },
+      "match_reason": "repo_walk_oxford_related_path",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "pdf_crop",
+      "warnings": [],
+      "recommended_next_action": null,
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "apps/…",
+      "source_kind": "backend_static",
+      "path_or_url": "apps/backend/static/products/oxford/Oxford_full_p6_i0_887x614.png",
+      "repo_relative_path": "apps/backend/static/products/oxford/Oxford_full_p6_i0_887x614.png",
+      "filename": "Oxford_full_p6_i0_887x614.png",
+      "exists_locally": true,
+      "is_previewable_now": true,
+      "preview_route_expected": "{MEDUSA_ORIGIN}/static/products/oxford/Oxford_full_p6_i0_887x614.png",
+      "hash": "a8a0c2f922e1274ca7929bc1c691901568945da78db8992dede4eaef5a22c11b",
+      "size_bytes": 1041344,
+      "dimensions": {
+        "width": 887,
+        "height": 614
+      },
+      "match_reason": "repo_walk_oxford_related_path",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "pdf_crop",
+      "warnings": [],
+      "recommended_next_action": null,
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "apps/…",
+      "source_kind": "backend_static",
+      "path_or_url": "apps/backend/static/products/oxford/Oxford_full_p6_i1_887x621.png",
+      "repo_relative_path": "apps/backend/static/products/oxford/Oxford_full_p6_i1_887x621.png",
+      "filename": "Oxford_full_p6_i1_887x621.png",
+      "exists_locally": true,
+      "is_previewable_now": true,
+      "preview_route_expected": "{MEDUSA_ORIGIN}/static/products/oxford/Oxford_full_p6_i1_887x621.png",
+      "hash": "529bdff9b26f774bc8710a8af1d69cea75da938553e6efcf53292593e9075f9e",
+      "size_bytes": 1218560,
+      "dimensions": {
+        "width": 887,
+        "height": 621
+      },
+      "match_reason": "repo_walk_oxford_related_path",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "pdf_crop",
+      "warnings": [],
+      "recommended_next_action": null,
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "apps/…",
+      "source_kind": "backend_static",
+      "path_or_url": "apps/backend/static/products/oxford/ox-14-11_interim_pdf_gallery_01.png",
+      "repo_relative_path": "apps/backend/static/products/oxford/ox-14-11_interim_pdf_gallery_01.png",
+      "filename": "ox-14-11_interim_pdf_gallery_01.png",
+      "exists_locally": true,
+      "is_previewable_now": true,
+      "preview_route_expected": "{MEDUSA_ORIGIN}/static/products/oxford/ox-14-11_interim_pdf_gallery_01.png",
+      "hash": "e8a2b60df2f87966d2b93f9eb408102f525b053c81b8f02ca6e7ffdfdbdd4a3f",
+      "size_bytes": 1863023,
+      "dimensions": {
+        "width": 947,
+        "height": 949
+      },
+      "match_reason": "repo_walk_oxford_related_path",
+      "sku_candidates": [
+        "OX-14-11"
+      ],
+      "confidence": "high",
+      "media_class_guess": "interim_non_white",
+      "warnings": [
+        "duplicate_hash_same_bytes_as_other_entry"
+      ],
+      "recommended_next_action": null,
+      "match_bucket": "confirmed_sku_match",
+      "front_manifest_asset_id": null,
+      "dedupe_of_hash": "apps/backend/static/products/oxford/Oxford_full_p5_i0_947x949.png"
+    },
+    {
+      "source_root": "apps/…",
+      "source_kind": "backend_static",
+      "path_or_url": "apps/backend/static/products/oxford/ox-14-1_interim_pdf_gallery_01.png",
+      "repo_relative_path": "apps/backend/static/products/oxford/ox-14-1_interim_pdf_gallery_01.png",
+      "filename": "ox-14-1_interim_pdf_gallery_01.png",
+      "exists_locally": true,
+      "is_previewable_now": true,
+      "preview_route_expected": "{MEDUSA_ORIGIN}/static/products/oxford/ox-14-1_interim_pdf_gallery_01.png",
+      "hash": "529bdff9b26f774bc8710a8af1d69cea75da938553e6efcf53292593e9075f9e",
+      "size_bytes": 1218560,
+      "dimensions": {
+        "width": 887,
+        "height": 621
+      },
+      "match_reason": "repo_walk_oxford_related_path",
+      "sku_candidates": [
+        "OX-14-1"
+      ],
+      "confidence": "high",
+      "media_class_guess": "interim_non_white",
+      "warnings": [
+        "duplicate_hash_same_bytes_as_other_entry"
+      ],
+      "recommended_next_action": null,
+      "match_bucket": "confirmed_sku_match",
+      "front_manifest_asset_id": null,
+      "dedupe_of_hash": "apps/backend/static/products/oxford/Oxford_full_p6_i1_887x621.png"
+    },
+    {
+      "source_root": "apps/…",
+      "source_kind": "backend_static",
+      "path_or_url": "apps/backend/static/products/oxford/ox-90-1_interim_pdf_gallery_01.png",
+      "repo_relative_path": "apps/backend/static/products/oxford/ox-90-1_interim_pdf_gallery_01.png",
+      "filename": "ox-90-1_interim_pdf_gallery_01.png",
+      "exists_locally": true,
+      "is_previewable_now": true,
+      "preview_route_expected": "{MEDUSA_ORIGIN}/static/products/oxford/ox-90-1_interim_pdf_gallery_01.png",
+      "hash": "a8a0c2f922e1274ca7929bc1c691901568945da78db8992dede4eaef5a22c11b",
+      "size_bytes": 1041344,
+      "dimensions": {
+        "width": 887,
+        "height": 614
+      },
+      "match_reason": "repo_walk_oxford_related_path",
+      "sku_candidates": [
+        "OX-90-1"
+      ],
+      "confidence": "high",
+      "media_class_guess": "interim_non_white",
+      "warnings": [
+        "duplicate_hash_same_bytes_as_other_entry"
+      ],
+      "recommended_next_action": null,
+      "match_bucket": "confirmed_sku_match",
+      "front_manifest_asset_id": null,
+      "dedupe_of_hash": "apps/backend/static/products/oxford/Oxford_full_p6_i0_887x614.png"
+    },
+    {
+      "source_root": "apps/…",
+      "source_kind": "backend_static",
+      "path_or_url": "apps/backend/static/products/oxford/s-ox-05_interim_pdf_gallery_01.png",
+      "repo_relative_path": "apps/backend/static/products/oxford/s-ox-05_interim_pdf_gallery_01.png",
+      "filename": "s-ox-05_interim_pdf_gallery_01.png",
+      "exists_locally": true,
+      "is_previewable_now": true,
+      "preview_route_expected": "{MEDUSA_ORIGIN}/static/products/oxford/s-ox-05_interim_pdf_gallery_01.png",
+      "hash": "643b465e7494442f0f0c9ca6ba3a5acc075a7fd263b0e1d1fff9325db35b9bb6",
+      "size_bytes": 2230347,
+      "dimensions": {
+        "width": 1306,
+        "height": 951
+      },
+      "match_reason": "repo_walk_oxford_related_path",
+      "sku_candidates": [
+        "S-OX-05"
+      ],
+      "confidence": "high",
+      "media_class_guess": "interim_non_white",
+      "warnings": [
+        "duplicate_hash_same_bytes_as_other_entry"
+      ],
+      "recommended_next_action": null,
+      "match_bucket": "confirmed_sku_match",
+      "front_manifest_asset_id": null,
+      "dedupe_of_hash": "apps/backend/static/products/oxford/Oxford_full_p4_i0_1306x951.png"
+    },
+    {
+      "source_root": "data/…",
+      "source_kind": "pdf_extract",
+      "path_or_url": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p2_i0_949x949.png",
+      "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p2_i0_949x949.png",
+      "filename": "Oxford_full_p2_i0_949x949.png",
+      "exists_locally": true,
+      "is_previewable_now": true,
+      "preview_route_expected": "/qa/oxford-local-mvp-media-review/preview?rel=data%2Fraw%2Fpdf-assets%2Fextracted%2FOxford_full%2FOxford_full_p2_i0_949x949.png",
+      "hash": "44da9d1309ba8f690f6047c638998c8a8f691019bb884fd521cc7836dc2629ac",
+      "size_bytes": 1115482,
+      "dimensions": {
+        "width": 949,
+        "height": 949
+      },
+      "match_reason": "repo_walk_oxford_related_path",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "pdf_crop",
+      "warnings": [],
+      "recommended_next_action": null,
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "data/…",
+      "source_kind": "pdf_extract",
+      "path_or_url": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p3_i0_1351x951.png",
+      "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p3_i0_1351x951.png",
+      "filename": "Oxford_full_p3_i0_1351x951.png",
+      "exists_locally": true,
+      "is_previewable_now": true,
+      "preview_route_expected": "/qa/oxford-local-mvp-media-review/preview?rel=data%2Fraw%2Fpdf-assets%2Fextracted%2FOxford_full%2FOxford_full_p3_i0_1351x951.png",
+      "hash": "905178f31cfcd76370b0e7ff6a3dfc371ba3bf7c5ec060dba6a6c114243fc6eb",
+      "size_bytes": 2688053,
+      "dimensions": {
+        "width": 1351,
+        "height": 951
+      },
+      "match_reason": "repo_walk_oxford_related_path",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "pdf_crop",
+      "warnings": [],
+      "recommended_next_action": null,
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "data/…",
+      "source_kind": "pdf_extract",
+      "path_or_url": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p4_i0_1306x951.png",
+      "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p4_i0_1306x951.png",
+      "filename": "Oxford_full_p4_i0_1306x951.png",
+      "exists_locally": true,
+      "is_previewable_now": true,
+      "preview_route_expected": "/qa/oxford-local-mvp-media-review/preview?rel=data%2Fraw%2Fpdf-assets%2Fextracted%2FOxford_full%2FOxford_full_p4_i0_1306x951.png",
+      "hash": "643b465e7494442f0f0c9ca6ba3a5acc075a7fd263b0e1d1fff9325db35b9bb6",
+      "size_bytes": 2230347,
+      "dimensions": {
+        "width": 1306,
+        "height": 951
+      },
+      "match_reason": "repo_walk_oxford_related_path",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "pdf_crop",
+      "warnings": [
+        "duplicate_hash_same_bytes_as_other_entry",
+        "possible_duplicate_filename_size"
+      ],
+      "recommended_next_action": null,
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null,
+      "dedupe_of_hash": "apps/backend/static/products/oxford/Oxford_full_p4_i0_1306x951.png"
+    },
+    {
+      "source_root": "data/…",
+      "source_kind": "pdf_extract",
+      "path_or_url": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p5_i0_947x949.png",
+      "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p5_i0_947x949.png",
+      "filename": "Oxford_full_p5_i0_947x949.png",
+      "exists_locally": true,
+      "is_previewable_now": true,
+      "preview_route_expected": "/qa/oxford-local-mvp-media-review/preview?rel=data%2Fraw%2Fpdf-assets%2Fextracted%2FOxford_full%2FOxford_full_p5_i0_947x949.png",
+      "hash": "e8a2b60df2f87966d2b93f9eb408102f525b053c81b8f02ca6e7ffdfdbdd4a3f",
+      "size_bytes": 1863023,
+      "dimensions": {
+        "width": 947,
+        "height": 949
+      },
+      "match_reason": "repo_walk_oxford_related_path",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "pdf_crop",
+      "warnings": [
+        "duplicate_hash_same_bytes_as_other_entry",
+        "possible_duplicate_filename_size"
+      ],
+      "recommended_next_action": null,
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null,
+      "dedupe_of_hash": "apps/backend/static/products/oxford/Oxford_full_p5_i0_947x949.png"
+    },
+    {
+      "source_root": "data/…",
+      "source_kind": "pdf_extract",
+      "path_or_url": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p5_i1_480x1182.png",
+      "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p5_i1_480x1182.png",
+      "filename": "Oxford_full_p5_i1_480x1182.png",
+      "exists_locally": true,
+      "is_previewable_now": true,
+      "preview_route_expected": "/qa/oxford-local-mvp-media-review/preview?rel=data%2Fraw%2Fpdf-assets%2Fextracted%2FOxford_full%2FOxford_full_p5_i1_480x1182.png",
+      "hash": "c9339d59ec66747234f86526e24a63bdeb2ef606278ad98259f5069141077395",
+      "size_bytes": 620692,
+      "dimensions": {
+        "width": 480,
+        "height": 1182
+      },
+      "match_reason": "repo_walk_oxford_related_path",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "pdf_crop",
+      "warnings": [
+        "duplicate_hash_same_bytes_as_other_entry",
+        "possible_duplicate_filename_size"
+      ],
+      "recommended_next_action": null,
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null,
+      "dedupe_of_hash": "apps/backend/static/products/oxford/Oxford_full_p5_i1_480x1182.png"
+    },
+    {
+      "source_root": "data/…",
+      "source_kind": "pdf_extract",
+      "path_or_url": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p5_i2_521x429.png",
+      "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p5_i2_521x429.png",
+      "filename": "Oxford_full_p5_i2_521x429.png",
+      "exists_locally": true,
+      "is_previewable_now": true,
+      "preview_route_expected": "/qa/oxford-local-mvp-media-review/preview?rel=data%2Fraw%2Fpdf-assets%2Fextracted%2FOxford_full%2FOxford_full_p5_i2_521x429.png",
+      "hash": "3354263c36b365ec1c8aa6cce3671010731223c1416d25c413a53720a0bc50bd",
+      "size_bytes": 289985,
+      "dimensions": {
+        "width": 521,
+        "height": 429
+      },
+      "match_reason": "repo_walk_oxford_related_path",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "pdf_crop",
+      "warnings": [
+        "duplicate_hash_same_bytes_as_other_entry",
+        "possible_duplicate_filename_size"
+      ],
+      "recommended_next_action": null,
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null,
+      "dedupe_of_hash": "apps/backend/static/products/oxford/Oxford_full_p5_i2_521x429.png"
+    },
+    {
+      "source_root": "data/…",
+      "source_kind": "pdf_extract",
+      "path_or_url": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p5_i3_522x445.png",
+      "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p5_i3_522x445.png",
+      "filename": "Oxford_full_p5_i3_522x445.png",
+      "exists_locally": true,
+      "is_previewable_now": true,
+      "preview_route_expected": "/qa/oxford-local-mvp-media-review/preview?rel=data%2Fraw%2Fpdf-assets%2Fextracted%2FOxford_full%2FOxford_full_p5_i3_522x445.png",
+      "hash": "04a695228af7dbd9733e2d5e8b2f0b380e8bf8381ba68c3a8637e68ef7e791b4",
+      "size_bytes": 224700,
+      "dimensions": {
+        "width": 522,
+        "height": 445
+      },
+      "match_reason": "repo_walk_oxford_related_path",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "pdf_crop",
+      "warnings": [
+        "duplicate_hash_same_bytes_as_other_entry",
+        "possible_duplicate_filename_size"
+      ],
+      "recommended_next_action": null,
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null,
+      "dedupe_of_hash": "apps/backend/static/products/oxford/Oxford_full_p5_i3_522x445.png"
+    },
+    {
+      "source_root": "data/…",
+      "source_kind": "pdf_extract",
+      "path_or_url": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i0_887x614.png",
+      "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i0_887x614.png",
+      "filename": "Oxford_full_p6_i0_887x614.png",
+      "exists_locally": true,
+      "is_previewable_now": true,
+      "preview_route_expected": "/qa/oxford-local-mvp-media-review/preview?rel=data%2Fraw%2Fpdf-assets%2Fextracted%2FOxford_full%2FOxford_full_p6_i0_887x614.png",
+      "hash": "a8a0c2f922e1274ca7929bc1c691901568945da78db8992dede4eaef5a22c11b",
+      "size_bytes": 1041344,
+      "dimensions": {
+        "width": 887,
+        "height": 614
+      },
+      "match_reason": "repo_walk_oxford_related_path",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "pdf_crop",
+      "warnings": [
+        "duplicate_hash_same_bytes_as_other_entry",
+        "possible_duplicate_filename_size"
+      ],
+      "recommended_next_action": null,
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null,
+      "dedupe_of_hash": "apps/backend/static/products/oxford/Oxford_full_p6_i0_887x614.png"
+    },
+    {
+      "source_root": "data/…",
+      "source_kind": "pdf_extract",
+      "path_or_url": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i1_887x621.png",
+      "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p6_i1_887x621.png",
+      "filename": "Oxford_full_p6_i1_887x621.png",
+      "exists_locally": true,
+      "is_previewable_now": true,
+      "preview_route_expected": "/qa/oxford-local-mvp-media-review/preview?rel=data%2Fraw%2Fpdf-assets%2Fextracted%2FOxford_full%2FOxford_full_p6_i1_887x621.png",
+      "hash": "529bdff9b26f774bc8710a8af1d69cea75da938553e6efcf53292593e9075f9e",
+      "size_bytes": 1218560,
+      "dimensions": {
+        "width": 887,
+        "height": 621
+      },
+      "match_reason": "repo_walk_oxford_related_path",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "pdf_crop",
+      "warnings": [
+        "duplicate_hash_same_bytes_as_other_entry",
+        "possible_duplicate_filename_size"
+      ],
+      "recommended_next_action": null,
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null,
+      "dedupe_of_hash": "apps/backend/static/products/oxford/Oxford_full_p6_i1_887x621.png"
+    },
+    {
+      "source_root": "data/…",
+      "source_kind": "pdf_extract",
+      "path_or_url": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png",
+      "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p7_i0_1320x949.png",
+      "filename": "Oxford_full_p7_i0_1320x949.png",
+      "exists_locally": true,
+      "is_previewable_now": true,
+      "preview_route_expected": "/qa/oxford-local-mvp-media-review/preview?rel=data%2Fraw%2Fpdf-assets%2Fextracted%2FOxford_full%2FOxford_full_p7_i0_1320x949.png",
+      "hash": "efb68c66d440d7e4f90ac84c009b6ba5de94e99f31c9b89cea3de4d8d765e481",
+      "size_bytes": 2604127,
+      "dimensions": {
+        "width": 1320,
+        "height": 949
+      },
+      "match_reason": "repo_walk_oxford_related_path",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "pdf_crop",
+      "warnings": [],
+      "recommended_next_action": null,
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "data/…",
+      "source_kind": "pdf_extract",
+      "path_or_url": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p9_i0_768x585.png",
+      "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p9_i0_768x585.png",
+      "filename": "Oxford_full_p9_i0_768x585.png",
+      "exists_locally": true,
+      "is_previewable_now": true,
+      "preview_route_expected": "/qa/oxford-local-mvp-media-review/preview?rel=data%2Fraw%2Fpdf-assets%2Fextracted%2FOxford_full%2FOxford_full_p9_i0_768x585.png",
+      "hash": "99b86927adbdbcde6891bd9403b07de7aa4829b23584f61ea4ac3c3c1c5fd01b",
+      "size_bytes": 517932,
+      "dimensions": {
+        "width": 768,
+        "height": 585
+      },
+      "match_reason": "repo_walk_oxford_related_path",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "pdf_crop",
+      "warnings": [],
+      "recommended_next_action": null,
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "data/…",
+      "source_kind": "pdf_extract",
+      "path_or_url": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p9_i1_785x585.png",
+      "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford_full/Oxford_full_p9_i1_785x585.png",
+      "filename": "Oxford_full_p9_i1_785x585.png",
+      "exists_locally": true,
+      "is_previewable_now": true,
+      "preview_route_expected": "/qa/oxford-local-mvp-media-review/preview?rel=data%2Fraw%2Fpdf-assets%2Fextracted%2FOxford_full%2FOxford_full_p9_i1_785x585.png",
+      "hash": "543d1f7a8b4af8ea15be0d714699ed1a67c450229923015af679adce5a91c1f6",
+      "size_bytes": 530984,
+      "dimensions": {
+        "width": 785,
+        "height": 585
+      },
+      "match_reason": "repo_walk_oxford_related_path",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "pdf_crop",
+      "warnings": [],
+      "recommended_next_action": null,
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "data/…",
+      "source_kind": "pdf_extract",
+      "path_or_url": "data/raw/pdf-assets/extracted/Oxford/Oxford_p2_i0_632x629.png",
+      "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford/Oxford_p2_i0_632x629.png",
+      "filename": "Oxford_p2_i0_632x629.png",
+      "exists_locally": true,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": "3323928061a6e96ad85f853c47af47a08f5238af968a62e0f049640af6980358",
+      "size_bytes": 323923,
+      "dimensions": {
+        "width": 632,
+        "height": 629
+      },
+      "match_reason": "repo_walk_oxford_related_path",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "interim_non_white",
+      "warnings": [],
+      "recommended_next_action": null,
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "data/…",
+      "source_kind": "pdf_extract",
+      "path_or_url": "data/raw/pdf-assets/extracted/Oxford/Oxford_p2_i1_475x472.png",
+      "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford/Oxford_p2_i1_475x472.png",
+      "filename": "Oxford_p2_i1_475x472.png",
+      "exists_locally": true,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": "78c0ada5d5e76600307749f92f744a6c870c6a0ab535dc8a8a02dfe645fe87a8",
+      "size_bytes": 235762,
+      "dimensions": {
+        "width": 475,
+        "height": 472
+      },
+      "match_reason": "repo_walk_oxford_related_path",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "interim_non_white",
+      "warnings": [],
+      "recommended_next_action": null,
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "data/…",
+      "source_kind": "pdf_extract",
+      "path_or_url": "data/raw/pdf-assets/extracted/Oxford/Oxford_p2_i2_474x472.png",
+      "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford/Oxford_p2_i2_474x472.png",
+      "filename": "Oxford_p2_i2_474x472.png",
+      "exists_locally": true,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": "c5d71b84f975f538195f83f07a1771524a16da99790d5d3c35b0559a35e28c4b",
+      "size_bytes": 265001,
+      "dimensions": {
+        "width": 474,
+        "height": 472
+      },
+      "match_reason": "repo_walk_oxford_related_path",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "interim_non_white",
+      "warnings": [],
+      "recommended_next_action": null,
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "data/…",
+      "source_kind": "pdf_extract",
+      "path_or_url": "data/raw/pdf-assets/extracted/Oxford/Oxford_p2_i3_632x630.png",
+      "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford/Oxford_p2_i3_632x630.png",
+      "filename": "Oxford_p2_i3_632x630.png",
+      "exists_locally": true,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": "18a7eacb77f231f123a548750298ac2005f116286210a75bf5cae4854fde7f2c",
+      "size_bytes": 415325,
+      "dimensions": {
+        "width": 632,
+        "height": 630
+      },
+      "match_reason": "repo_walk_oxford_related_path",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "interim_non_white",
+      "warnings": [],
+      "recommended_next_action": null,
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "data/…",
+      "source_kind": "pdf_extract",
+      "path_or_url": "data/raw/pdf-assets/extracted/Oxford/Oxford_p3_i0_1351x951.png",
+      "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford/Oxford_p3_i0_1351x951.png",
+      "filename": "Oxford_p3_i0_1351x951.png",
+      "exists_locally": true,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": "4f2d5eea4fda0e872c534448cd9cf60e65d4605f9fce947bf65200522d85ad96",
+      "size_bytes": 2795266,
+      "dimensions": {
+        "width": 1351,
+        "height": 951
+      },
+      "match_reason": "repo_walk_oxford_related_path",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "interim_non_white",
+      "warnings": [],
+      "recommended_next_action": null,
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "data/…",
+      "source_kind": "pdf_extract",
+      "path_or_url": "data/raw/pdf-assets/extracted/Oxford/Oxford_p4_i0_886x886.png",
+      "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford/Oxford_p4_i0_886x886.png",
+      "filename": "Oxford_p4_i0_886x886.png",
+      "exists_locally": true,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": "cc1a851fa6d6acff3aeef4de9b886d7f46bbadda31d9c4753b6be63e4a73fac5",
+      "size_bytes": 1467608,
+      "dimensions": {
+        "width": 886,
+        "height": 886
+      },
+      "match_reason": "repo_walk_oxford_related_path",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "interim_non_white",
+      "warnings": [],
+      "recommended_next_action": null,
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "data/…",
+      "source_kind": "pdf_extract",
+      "path_or_url": "data/raw/pdf-assets/extracted/Oxford/Oxford_p4_i1_564x886.png",
+      "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford/Oxford_p4_i1_564x886.png",
+      "filename": "Oxford_p4_i1_564x886.png",
+      "exists_locally": true,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": "0b031f52070eb51ab791193ad0c1b739f0cc8f025b57e86a79fc422eee6c1932",
+      "size_bytes": 803867,
+      "dimensions": {
+        "width": 564,
+        "height": 886
+      },
+      "match_reason": "repo_walk_oxford_related_path",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "interim_non_white",
+      "warnings": [],
+      "recommended_next_action": null,
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "data/…",
+      "source_kind": "pdf_extract",
+      "path_or_url": "data/raw/pdf-assets/extracted/Oxford/Oxford_p5_i0_884x625.png",
+      "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford/Oxford_p5_i0_884x625.png",
+      "filename": "Oxford_p5_i0_884x625.png",
+      "exists_locally": true,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": "0e641f1377a8653df13bf0bc1ae71ecbe5b604117e859bacd801e91fb2497a26",
+      "size_bytes": 1067785,
+      "dimensions": {
+        "width": 884,
+        "height": 625
+      },
+      "match_reason": "repo_walk_oxford_related_path",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "interim_non_white",
+      "warnings": [],
+      "recommended_next_action": null,
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "data/…",
+      "source_kind": "pdf_extract",
+      "path_or_url": "data/raw/pdf-assets/extracted/Oxford/Oxford_p5_i1_889x625.png",
+      "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford/Oxford_p5_i1_889x625.png",
+      "filename": "Oxford_p5_i1_889x625.png",
+      "exists_locally": true,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": "81ea8884a7821955c8444c17384da93260e713c920760d590197e80de0941ca1",
+      "size_bytes": 1208948,
+      "dimensions": {
+        "width": 889,
+        "height": 625
+      },
+      "match_reason": "repo_walk_oxford_related_path",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "interim_non_white",
+      "warnings": [],
+      "recommended_next_action": null,
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "data/…",
+      "source_kind": "pdf_extract",
+      "path_or_url": "data/raw/pdf-assets/extracted/Oxford/Oxford_p7_i0_768x585.png",
+      "repo_relative_path": "data/raw/pdf-assets/extracted/Oxford/Oxford_p7_i0_768x585.png",
+      "filename": "Oxford_p7_i0_768x585.png",
+      "exists_locally": true,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": "e8ee7aba3288c6aad210d585e1014abb86022d795534da00bc3119675c552e5b",
+      "size_bytes": 523224,
+      "dimensions": {
+        "width": 768,
+        "height": 585
+      },
+      "match_reason": "repo_walk_oxford_related_path",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "interim_non_white",
+      "warnings": [],
+      "recommended_next_action": null,
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "data/raw/front/front-manifest.json",
+      "source_kind": "legacy_front_manifest",
+      "path_or_url": "/WOODRIGHT/Контент /Коллекции /Oxford /Oxford 1.jpg",
+      "repo_relative_path": null,
+      "filename": "Oxford 1.jpg",
+      "exists_locally": false,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": null,
+      "size_bytes": 1797120,
+      "dimensions": null,
+      "match_reason": "front_manifest_oxford_predicate",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "legacy_reference",
+      "warnings": [
+        "manifest_path_not_resolved_locally"
+      ],
+      "recommended_next_action": "Mount Yandex/WOODRIGHT mirror or copy asset into repo for preview.",
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": "5a6b0b91dd03"
+    },
+    {
+      "source_root": "data/raw/front/front-manifest.json",
+      "source_kind": "legacy_front_manifest",
+      "path_or_url": "/WOODRIGHT/Контент /Коллекции /Oxford /Oxford 2.jpg",
+      "repo_relative_path": null,
+      "filename": "Oxford 2.jpg",
+      "exists_locally": false,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": null,
+      "size_bytes": 1584128,
+      "dimensions": null,
+      "match_reason": "front_manifest_oxford_predicate",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "legacy_reference",
+      "warnings": [
+        "manifest_path_not_resolved_locally"
+      ],
+      "recommended_next_action": "Mount Yandex/WOODRIGHT mirror or copy asset into repo for preview.",
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": "0a77fd2d00cd"
+    },
+    {
+      "source_root": "data/raw/front/front-manifest.json",
+      "source_kind": "legacy_front_manifest",
+      "path_or_url": "/WOODRIGHT/Контент /Коллекции /Oxford /Oxford 3.jpg",
+      "repo_relative_path": null,
+      "filename": "Oxford 3.jpg",
+      "exists_locally": false,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": null,
+      "size_bytes": 1254400,
+      "dimensions": null,
+      "match_reason": "front_manifest_oxford_predicate",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "legacy_reference",
+      "warnings": [
+        "manifest_path_not_resolved_locally"
+      ],
+      "recommended_next_action": "Mount Yandex/WOODRIGHT mirror or copy asset into repo for preview.",
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": "80de05c6189a"
+    },
+    {
+      "source_root": "data/raw/front/front-manifest.json",
+      "source_kind": "legacy_front_manifest",
+      "path_or_url": "/WOODRIGHT/Контент /Коллекции /Oxford /Oxford 4.jpg",
+      "repo_relative_path": null,
+      "filename": "Oxford 4.jpg",
+      "exists_locally": false,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": null,
+      "size_bytes": 1740800,
+      "dimensions": null,
+      "match_reason": "front_manifest_oxford_predicate",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "legacy_reference",
+      "warnings": [
+        "manifest_path_not_resolved_locally"
+      ],
+      "recommended_next_action": "Mount Yandex/WOODRIGHT mirror or copy asset into repo for preview.",
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": "4eca26d85046"
+    },
+    {
+      "source_root": "data/raw/front/front-manifest.json",
+      "source_kind": "legacy_front_manifest",
+      "path_or_url": "/WOODRIGHT/Контент /Коллекции /Oxford /Oxford 5.jpg",
+      "repo_relative_path": null,
+      "filename": "Oxford 5.jpg",
+      "exists_locally": false,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": null,
+      "size_bytes": 3121152,
+      "dimensions": null,
+      "match_reason": "front_manifest_oxford_predicate",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "legacy_reference",
+      "warnings": [
+        "manifest_path_not_resolved_locally"
+      ],
+      "recommended_next_action": "Mount Yandex/WOODRIGHT mirror or copy asset into repo for preview.",
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": "e20cdc49b3a8"
+    },
+    {
+      "source_root": "data/raw/front/front-manifest.json",
+      "source_kind": "legacy_front_manifest",
+      "path_or_url": "/WOODRIGHT/Контент /Коллекции /Oxford /Oxford 6.jpg",
+      "repo_relative_path": null,
+      "filename": "Oxford 6.jpg",
+      "exists_locally": false,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": null,
+      "size_bytes": 4367360,
+      "dimensions": null,
+      "match_reason": "front_manifest_oxford_predicate",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "legacy_reference",
+      "warnings": [
+        "manifest_path_not_resolved_locally"
+      ],
+      "recommended_next_action": "Mount Yandex/WOODRIGHT mirror or copy asset into repo for preview.",
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": "de5b9af17634"
+    },
+    {
+      "source_root": "data/raw/front/front-manifest.json",
+      "source_kind": "legacy_front_manifest",
+      "path_or_url": "/WOODRIGHT/Контент /Коллекции /Oxford /Oxford 7.jpg",
+      "repo_relative_path": null,
+      "filename": "Oxford 7.jpg",
+      "exists_locally": false,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": null,
+      "size_bytes": 2635776,
+      "dimensions": null,
+      "match_reason": "front_manifest_oxford_predicate",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "legacy_reference",
+      "warnings": [
+        "manifest_path_not_resolved_locally"
+      ],
+      "recommended_next_action": "Mount Yandex/WOODRIGHT mirror or copy asset into repo for preview.",
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": "f42844324ef7"
+    },
+    {
+      "source_root": "data/raw/front/front-manifest.json",
+      "source_kind": "legacy_front_manifest",
+      "path_or_url": "/WOODRIGHT/Контент /Размеры /Оксфорд 1 спереди.jpg",
+      "repo_relative_path": null,
+      "filename": "Оксфорд 1 спереди.jpg",
+      "exists_locally": false,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": null,
+      "size_bytes": 1159168,
+      "dimensions": null,
+      "match_reason": "front_manifest_oxford_predicate",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "interim_non_white",
+      "warnings": [
+        "manifest_path_not_resolved_locally"
+      ],
+      "recommended_next_action": "Mount Yandex/WOODRIGHT mirror or copy asset into repo for preview.",
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": "65076f23da9a"
+    },
+    {
+      "source_root": "data/raw/front/front-manifest.json",
+      "source_kind": "legacy_front_manifest",
+      "path_or_url": "/WOODRIGHT/Контент /Размеры /Оксфорд 2 спереди.jpg",
+      "repo_relative_path": null,
+      "filename": "Оксфорд 2 спереди.jpg",
+      "exists_locally": false,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": null,
+      "size_bytes": 851968,
+      "dimensions": null,
+      "match_reason": "front_manifest_oxford_predicate",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "interim_non_white",
+      "warnings": [
+        "manifest_path_not_resolved_locally"
+      ],
+      "recommended_next_action": "Mount Yandex/WOODRIGHT mirror or copy asset into repo for preview.",
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": "0512798e717a"
+    },
+    {
+      "source_root": "data/raw/front/front-manifest.json",
+      "source_kind": "legacy_front_manifest",
+      "path_or_url": "/WOODRIGHT/Контент /Размеры /Оксфорд сверху.jpg",
+      "repo_relative_path": null,
+      "filename": "Оксфорд сверху.jpg",
+      "exists_locally": false,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": null,
+      "size_bytes": 572416,
+      "dimensions": null,
+      "match_reason": "front_manifest_oxford_predicate",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "interim_non_white",
+      "warnings": [
+        "manifest_path_not_resolved_locally"
+      ],
+      "recommended_next_action": "Mount Yandex/WOODRIGHT mirror or copy asset into repo for preview.",
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": "0e008875456a"
+    },
+    {
+      "source_root": "data/raw/front/front-manifest.json",
+      "source_kind": "legacy_front_manifest",
+      "path_or_url": "/WOODRIGHT/Контент /Размеры /Оксфорд сзади.jpg",
+      "repo_relative_path": null,
+      "filename": "Оксфорд сзади.jpg",
+      "exists_locally": false,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": null,
+      "size_bytes": 721920,
+      "dimensions": null,
+      "match_reason": "front_manifest_oxford_predicate",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "interim_non_white",
+      "warnings": [
+        "manifest_path_not_resolved_locally"
+      ],
+      "recommended_next_action": "Mount Yandex/WOODRIGHT mirror or copy asset into repo for preview.",
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": "c4a5dae67dc5"
+    },
+    {
+      "source_root": "data/raw/front/front-manifest.json",
+      "source_kind": "legacy_front_manifest",
+      "path_or_url": "/WOODRIGHT/Контент /Размеры /Оксфорд справа.jpg",
+      "repo_relative_path": null,
+      "filename": "Оксфорд справа.jpg",
+      "exists_locally": false,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": null,
+      "size_bytes": 818176,
+      "dimensions": null,
+      "match_reason": "front_manifest_oxford_predicate",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "interim_non_white",
+      "warnings": [
+        "manifest_path_not_resolved_locally"
+      ],
+      "recommended_next_action": "Mount Yandex/WOODRIGHT mirror or copy asset into repo for preview.",
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": "67c4db177c92"
+    },
+    {
+      "source_root": "data/normalized/oxford-visual-source-inventory.json",
+      "source_kind": "normalized_json_path_reference",
+      "path_or_url": "ox-14-11_interim_pdf_gallery_01.png",
+      "repo_relative_path": null,
+      "filename": "ox-14-11_interim_pdf_gallery_01.png",
+      "exists_locally": false,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": null,
+      "size_bytes": null,
+      "dimensions": null,
+      "match_reason": "path_string_in_oxford-visual-source-inventory.json",
+      "sku_candidates": [
+        "OX-14-11"
+      ],
+      "confidence": "high",
+      "media_class_guess": "interim_non_white",
+      "warnings": [
+        "json_reference_file_missing_on_disk"
+      ],
+      "recommended_next_action": "Restore missing path or regenerate upstream artifact.",
+      "match_bucket": "confirmed_sku_match",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "data/normalized/oxford-visual-source-inventory.json",
+      "source_kind": "normalized_json_path_reference",
+      "path_or_url": "ox-14-1_interim_pdf_gallery_01.png",
+      "repo_relative_path": null,
+      "filename": "ox-14-1_interim_pdf_gallery_01.png",
+      "exists_locally": false,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": null,
+      "size_bytes": null,
+      "dimensions": null,
+      "match_reason": "path_string_in_oxford-visual-source-inventory.json",
+      "sku_candidates": [
+        "OX-14-1"
+      ],
+      "confidence": "high",
+      "media_class_guess": "interim_non_white",
+      "warnings": [
+        "json_reference_file_missing_on_disk"
+      ],
+      "recommended_next_action": "Restore missing path or regenerate upstream artifact.",
+      "match_bucket": "confirmed_sku_match",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "data/normalized/oxford-visual-source-inventory.json",
+      "source_kind": "normalized_json_path_reference",
+      "path_or_url": "ox-90-1_interim_pdf_gallery_01.png",
+      "repo_relative_path": null,
+      "filename": "ox-90-1_interim_pdf_gallery_01.png",
+      "exists_locally": false,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": null,
+      "size_bytes": null,
+      "dimensions": null,
+      "match_reason": "path_string_in_oxford-visual-source-inventory.json",
+      "sku_candidates": [
+        "OX-90-1"
+      ],
+      "confidence": "high",
+      "media_class_guess": "interim_non_white",
+      "warnings": [
+        "json_reference_file_missing_on_disk"
+      ],
+      "recommended_next_action": "Restore missing path or regenerate upstream artifact.",
+      "match_bucket": "confirmed_sku_match",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "data/normalized/oxford-visual-source-inventory.json",
+      "source_kind": "normalized_json_path_reference",
+      "path_or_url": "s-ox-05_interim_pdf_gallery_01.png",
+      "repo_relative_path": null,
+      "filename": "s-ox-05_interim_pdf_gallery_01.png",
+      "exists_locally": false,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": null,
+      "size_bytes": null,
+      "dimensions": null,
+      "match_reason": "path_string_in_oxford-visual-source-inventory.json",
+      "sku_candidates": [
+        "S-OX-05"
+      ],
+      "confidence": "high",
+      "media_class_guess": "interim_non_white",
+      "warnings": [
+        "json_reference_file_missing_on_disk"
+      ],
+      "recommended_next_action": "Restore missing path or regenerate upstream artifact.",
+      "match_bucket": "confirmed_sku_match",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "data/normalized/oxford-visual-source-inventory.json",
+      "source_kind": "normalized_json_path_reference",
+      "path_or_url": "Oxford_full_p4_i0_1306x951.png",
+      "repo_relative_path": null,
+      "filename": "Oxford_full_p4_i0_1306x951.png",
+      "exists_locally": false,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": null,
+      "size_bytes": null,
+      "dimensions": null,
+      "match_reason": "path_string_in_oxford-visual-source-inventory.json",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "pdf_crop",
+      "warnings": [
+        "json_reference_file_missing_on_disk"
+      ],
+      "recommended_next_action": "Restore missing path or regenerate upstream artifact.",
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "data/normalized/oxford-visual-source-inventory.json",
+      "source_kind": "normalized_json_path_reference",
+      "path_or_url": "Oxford_full_p5_i0_947x949.png",
+      "repo_relative_path": null,
+      "filename": "Oxford_full_p5_i0_947x949.png",
+      "exists_locally": false,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": null,
+      "size_bytes": null,
+      "dimensions": null,
+      "match_reason": "path_string_in_oxford-visual-source-inventory.json",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "pdf_crop",
+      "warnings": [
+        "json_reference_file_missing_on_disk"
+      ],
+      "recommended_next_action": "Restore missing path or regenerate upstream artifact.",
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "data/normalized/oxford-visual-source-inventory.json",
+      "source_kind": "normalized_json_path_reference",
+      "path_or_url": "Oxford_full_p5_i1_480x1182.png",
+      "repo_relative_path": null,
+      "filename": "Oxford_full_p5_i1_480x1182.png",
+      "exists_locally": false,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": null,
+      "size_bytes": null,
+      "dimensions": null,
+      "match_reason": "path_string_in_oxford-visual-source-inventory.json",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "pdf_crop",
+      "warnings": [
+        "json_reference_file_missing_on_disk"
+      ],
+      "recommended_next_action": "Restore missing path or regenerate upstream artifact.",
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "data/normalized/oxford-visual-source-inventory.json",
+      "source_kind": "normalized_json_path_reference",
+      "path_or_url": "Oxford_full_p5_i2_521x429.png",
+      "repo_relative_path": null,
+      "filename": "Oxford_full_p5_i2_521x429.png",
+      "exists_locally": false,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": null,
+      "size_bytes": null,
+      "dimensions": null,
+      "match_reason": "path_string_in_oxford-visual-source-inventory.json",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "pdf_crop",
+      "warnings": [
+        "json_reference_file_missing_on_disk"
+      ],
+      "recommended_next_action": "Restore missing path or regenerate upstream artifact.",
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "data/normalized/oxford-visual-source-inventory.json",
+      "source_kind": "normalized_json_path_reference",
+      "path_or_url": "Oxford_full_p5_i3_522x445.png",
+      "repo_relative_path": null,
+      "filename": "Oxford_full_p5_i3_522x445.png",
+      "exists_locally": false,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": null,
+      "size_bytes": null,
+      "dimensions": null,
+      "match_reason": "path_string_in_oxford-visual-source-inventory.json",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "pdf_crop",
+      "warnings": [
+        "json_reference_file_missing_on_disk"
+      ],
+      "recommended_next_action": "Restore missing path or regenerate upstream artifact.",
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "data/normalized/oxford-visual-source-inventory.json",
+      "source_kind": "normalized_json_path_reference",
+      "path_or_url": "Oxford_full_p6_i0_887x614.png",
+      "repo_relative_path": null,
+      "filename": "Oxford_full_p6_i0_887x614.png",
+      "exists_locally": false,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": null,
+      "size_bytes": null,
+      "dimensions": null,
+      "match_reason": "path_string_in_oxford-visual-source-inventory.json",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "pdf_crop",
+      "warnings": [
+        "json_reference_file_missing_on_disk"
+      ],
+      "recommended_next_action": "Restore missing path or regenerate upstream artifact.",
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "data/normalized/oxford-visual-source-inventory.json",
+      "source_kind": "normalized_json_path_reference",
+      "path_or_url": "Oxford_full_p6_i1_887x621.png",
+      "repo_relative_path": null,
+      "filename": "Oxford_full_p6_i1_887x621.png",
+      "exists_locally": false,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": null,
+      "size_bytes": null,
+      "dimensions": null,
+      "match_reason": "path_string_in_oxford-visual-source-inventory.json",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "pdf_crop",
+      "warnings": [
+        "json_reference_file_missing_on_disk"
+      ],
+      "recommended_next_action": "Restore missing path or regenerate upstream artifact.",
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "data/normalized/oxford-visual-source-inventory.json",
+      "source_kind": "normalized_json_path_reference",
+      "path_or_url": "Oxford_full_p2_i0_949x949.png",
+      "repo_relative_path": null,
+      "filename": "Oxford_full_p2_i0_949x949.png",
+      "exists_locally": false,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": null,
+      "size_bytes": null,
+      "dimensions": null,
+      "match_reason": "path_string_in_oxford-visual-source-inventory.json",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "pdf_crop",
+      "warnings": [
+        "json_reference_file_missing_on_disk"
+      ],
+      "recommended_next_action": "Restore missing path or regenerate upstream artifact.",
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "data/normalized/oxford-visual-source-inventory.json",
+      "source_kind": "normalized_json_path_reference",
+      "path_or_url": "Oxford_full_p3_i0_1351x951.png",
+      "repo_relative_path": null,
+      "filename": "Oxford_full_p3_i0_1351x951.png",
+      "exists_locally": false,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": null,
+      "size_bytes": null,
+      "dimensions": null,
+      "match_reason": "path_string_in_oxford-visual-source-inventory.json",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "pdf_crop",
+      "warnings": [
+        "json_reference_file_missing_on_disk"
+      ],
+      "recommended_next_action": "Restore missing path or regenerate upstream artifact.",
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "data/normalized/oxford-visual-source-inventory.json",
+      "source_kind": "normalized_json_path_reference",
+      "path_or_url": "Oxford_full_p7_i0_1320x949.png",
+      "repo_relative_path": null,
+      "filename": "Oxford_full_p7_i0_1320x949.png",
+      "exists_locally": false,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": null,
+      "size_bytes": null,
+      "dimensions": null,
+      "match_reason": "path_string_in_oxford-visual-source-inventory.json",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "pdf_crop",
+      "warnings": [
+        "json_reference_file_missing_on_disk"
+      ],
+      "recommended_next_action": "Restore missing path or regenerate upstream artifact.",
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "data/normalized/oxford-visual-source-inventory.json",
+      "source_kind": "normalized_json_path_reference",
+      "path_or_url": "Oxford_full_p9_i0_768x585.png",
+      "repo_relative_path": null,
+      "filename": "Oxford_full_p9_i0_768x585.png",
+      "exists_locally": false,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": null,
+      "size_bytes": null,
+      "dimensions": null,
+      "match_reason": "path_string_in_oxford-visual-source-inventory.json",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "pdf_crop",
+      "warnings": [
+        "json_reference_file_missing_on_disk"
+      ],
+      "recommended_next_action": "Restore missing path or regenerate upstream artifact.",
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null
+    },
+    {
+      "source_root": "data/normalized/oxford-visual-source-inventory.json",
+      "source_kind": "normalized_json_path_reference",
+      "path_or_url": "Oxford_full_p9_i1_785x585.png",
+      "repo_relative_path": null,
+      "filename": "Oxford_full_p9_i1_785x585.png",
+      "exists_locally": false,
+      "is_previewable_now": false,
+      "preview_route_expected": null,
+      "hash": null,
+      "size_bytes": null,
+      "dimensions": null,
+      "match_reason": "path_string_in_oxford-visual-source-inventory.json",
+      "sku_candidates": [],
+      "confidence": "low",
+      "media_class_guess": "pdf_crop",
+      "warnings": [
+        "json_reference_file_missing_on_disk"
+      ],
+      "recommended_next_action": "Restore missing path or regenerate upstream artifact.",
+      "match_bucket": "orphan_oxford_media",
+      "front_manifest_asset_id": null
+    }
+  ]
+}
