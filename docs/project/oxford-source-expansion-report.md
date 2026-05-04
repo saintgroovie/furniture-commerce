@@ -1,6 +1,6 @@
 # Oxford source expansion report
 
-**Generated:** 2026-05-04T01:32:00.822Z  
+**Generated:** 2026-05-04T01:46:48.995Z  
 **Verdict:** Local dev **source discovery / inventory expansion** only — **not** rollout, **not** white-background certification.
 
 ## A. Verdict
@@ -8,36 +8,45 @@
 - Expansion pass indexed **61** Oxford-related image references (after path/hash dedupe).
 - **23** are previewable on the storefront review board today (repo-relative allowlisted paths or backend static HTTP).
 - **38** are not previewable in-browser from current Next rules (external disk paths, missing files, or non-allowlisted data paths).
-- Full white-background Yandex pool requires **WOODRIGHT** mirror mount; see `source_mount_needed_for_full_oxford_media_pool` in `data/normalized/oxford-source-expansion-summary.json`.
+- Full white-background Yandex pool requires **WOODRIGHT** mirror mount **or** an explicit operator path; see `source_mount_needed_for_full_oxford_media_pool` and `operator_provided_roots` in `data/normalized/oxford-source-expansion-summary.json`.
+- Records under an operator-mounted root outside repo/`data/` include warning `preview_allowlist_followup_needed_for_operator_root` (**0** rows this run) — inventory only until a separate preview-allowlist change is approved.
 
-## B. Roots scanned / mount status
+## B. Operator-provided WOODRIGHT / white-background root
+
+- **Env (not committed, machine-local):** `WOODRIGHT_WHITE_BG_ROOT` (single path) and/or `WOODRIGHT_WHITE_BG_ROOTS` (multiple paths, `:` separator on Unix).
+- **Example:** `WOODRIGHT_WHITE_BG_ROOT="/actual/path/to/Фото на белом фоне" node scripts/expand-oxford-media-source-inventory.mjs`
+- **This run — operator roots configured:** *(none)*
+- **Mounted:** 0, **missing / not found:** 0 (see `roots` entries with `role: "operator_provided_root"` and `operator_root_missing`).
+- Paths may contain **spaces** or **Cyrillic**; the script normalizes via `path.normalize` and uses Node `fs` only (read-only).
+
+## C. Roots scanned / mount status
 
 - Total root probes: **19**
 - Mounted: **11**, Missing: **8**
 - Details: `oxford-source-expansion-inventory.json` → `roots`.
 
-## C. Oxford images found
+## D. Oxford images found
 
 - **61** records in expansion inventory.
 
-## D. Previewable vs unpreviewable
+## E. Previewable vs unpreviewable
 
 - Previewable now: **23**
 - Not previewable: **38**
 
-## E. SKU assignment coverage (heuristic buckets)
+## F. SKU assignment coverage (heuristic buckets)
 
 {
   "orphan_oxford_media": 53,
   "confirmed_sku_match": 8
 }
 
-## F. Review board / MVP JSON merge
+## G. Review board / MVP JSON merge
 
-- Merge MVP artifacts: **yes** (inventory +31, sku candidates +0, plan gallery URLs +0).
+- Merge MVP artifacts: **yes** (inventory +0, sku candidates +0, plan gallery URLs +0).
 - Re-run storefront after merge; ensure repo `data/` is visible to Next (Docker mounts) or sync QA JSON copies.
 
-## G. Artifacts
+## H. Artifacts
 
 | Artifact | Purpose |
 |----------|---------|
@@ -45,14 +54,15 @@
 | `data/normalized/oxford-source-expansion-summary.json` | Counts + mount-needed block |
 | `scripts/expand-oxford-media-source-inventory.mjs` | Regenerator |
 
-## H. Safety facts
+## I. Safety facts
 
 - No Medusa DB writes; no seed/validation/sync/runner; no media apply.
 - No `catalog-scope.ts` edits; no Oxford pilot evidence JSON edits.
 - No source image copy/move/delete; no binary commits from this script.
+- Operator `WOODRIGHT_*` paths live only in your shell env or local docs — **do not** commit `.env` with real disk paths unless your team policy allows it.
 
-## I. Next manual step
+## J. Next manual step
 
-1. Mount Yandex Disk / **WOODRIGHT** paths listed in summary JSON and re-run this script to pull additional bytes + hashes for white-background candidates.
-2. Open `/qa/oxford-local-mvp-media-review` and confirm new **unassigned** / SKU rows show previews for new static/repo files.
+1. Mount Yandex / locate **Фото на белом фоне**, then either rely on default probes or set `WOODRIGHT_WHITE_BG_ROOT` to the **actual** directory and re-run this script.
+2. Open `/qa/oxford-local-mvp-media-review` — operator-root files appear in **inventory** first; in-browser preview for absolute paths is a **separate** allowlist task if needed.
 3. Optional: `node apps/storefront/scripts/sync-oxford-local-mvp-qa-json.mjs` if using Docker without `data/` mount.

@@ -8,6 +8,10 @@
  *   node scripts/expand-oxford-media-source-inventory.mjs
  *   node scripts/expand-oxford-media-source-inventory.mjs --no-merge-mvp
  *
+ * Optional operator paths (not committed; local machine only):
+ *   WOODRIGHT_WHITE_BG_ROOT="/path/to/Фото на белом фоне" node scripts/expand-oxford-media-source-inventory.mjs
+ *   WOODRIGHT_WHITE_BG_ROOTS="/path/a:/path/b" node scripts/expand-oxford-media-source-inventory.mjs
+ *
  * Writes:
  *   data/normalized/oxford-source-expansion-inventory.json
  *   data/normalized/oxford-source-expansion-summary.json
@@ -84,6 +88,48 @@ function isImageFile(name) {
 
 function posix(s) {
   return String(s || "").replace(/\\/g, "/").trim()
+}
+
+/**
+ * Operator-supplied WOODRIGHT / Yandex white-background folder (read-only scan).
+ * Paths may contain spaces or Cyrillic; never committed via env.
+ */
+function normalizeOperatorWhiteBgRoot(raw) {
+  const t = String(raw ?? "").trim()
+  if (!t) return null
+  try {
+    let s = t.replace(/\\/g, "/")
+    if (s.startsWith("~/")) s = path.join(process.env.HOME || "", s.slice(2))
+    else if (s === "~") s = process.env.HOME || s
+    return path.normalize(s)
+  } catch {
+    return null
+  }
+}
+
+/** @returns {{ normalized: string, env: string }[]} */
+function collectOperatorProvidedWhiteBgRoots() {
+  const ordered = []
+  const r1 = process.env.WOODRIGHT_WHITE_BG_ROOT
+  if (r1 && String(r1).trim()) ordered.push({ raw: String(r1).trim(), env: "WOODRIGHT_WHITE_BG_ROOT" })
+  const r2 = process.env.WOODRIGHT_WHITE_BG_ROOTS
+  if (r2 && String(r2).trim()) {
+    for (const part of String(r2).split(":")) {
+      const p = part.trim()
+      if (p) ordered.push({ raw: p, env: "WOODRIGHT_WHITE_BG_ROOTS" })
+    }
+  }
+  const seen = new Set()
+  const out = []
+  for (const { raw, env } of ordered) {
+    const normalized = normalizeOperatorWhiteBgRoot(raw)
+    if (!normalized) continue
+    const key = normalized.toLowerCase()
+    if (seen.has(key)) continue
+    seen.add(key)
+    out.push({ normalized, env })
+  }
+  return out
 }
 
 function isOxfordRelatedRel(rel) {
@@ -261,6 +307,7 @@ function inferSourceKindFromRel(rel) {
 }
 
 function inferMediaClassGuess(rel, filename, sourceKind) {
+  if (sourceKind === "operator_provided_white_bg") return "white_background_candidate_unverified"
   const lower = (posix(rel) + filename).toLowerCase()
   if (lower.includes("фото на белом") || lower.includes("white_bg")) return "white_background_candidate_unverified"
   if (/_interim_pdf_gallery/i.test(filename)) return "interim_non_white"
@@ -451,6 +498,7 @@ function buildExpansionRecord(opts) {
     warnings,
     recommended_next_action,
     manifest_row,
+    operatorProvidedRoot,
   } = opts
 
   const fn = filename || path.basename(path_or_url || "")
@@ -470,6 +518,9 @@ function buildExpansionRecord(opts) {
       preview_route_expected: null,
     }
     warnings.push("external_absolute_path_not_in_storefront_preview_allowlist")
+    if (operatorProvidedRoot) {
+      warnings.push("preview_allowlist_followup_needed_for_operator_root")
+    }
     recommended_next_action =
       recommended_next_action ||
       "Copy into repo under apps/backend/static/products/oxford/ or data/raw/... allowlisted path, or extend preview policy explicitly."
@@ -684,8 +735,25 @@ function main() {
   const noMerge = argv.has("--no-merge-mvp")
   const iso = new Date().toISOString()
   const knownSkus = loadKnownOxfordSkus()
+  const operatorEntries = collectOperatorProvidedWhiteBgRoots()
+  const operatorRootNormSet = new Set(operatorEntries.map((e) => path.normalize(e.normalized).toLowerCase()))
 
   const rootsReport = []
+
+  for (const { normalized, env } of operatorEntries) {
+    const c = classifyAbsoluteRoot(normalized)
+    const status =
+      c.status === "mounted" ? "mounted" : c.status === "missing" ? "missing" : c.status === "empty" ? "empty" : "not_accessible"
+    rootsReport.push({
+      source_root: normalized,
+      repo_relative: false,
+      role: "operator_provided_root",
+      env_source: env,
+      status,
+      detail: c.detail,
+      operator_root_missing: status === "missing",
+    })
+  }
 
   for (const p of ABSOLUTE_YANDEX_ROOT_CANDIDATES) {
     const c = classifyAbsoluteRoot(p)
@@ -765,11 +833,16 @@ function main() {
     )
   }
 
-  const absScanRoots = [...ABSOLUTE_YANDEX_ROOT_CANDIDATES, ...discoverVolumeYandexRoots()]
+  const absScanRoots = [
+    ...operatorEntries.map((e) => e.normalized),
+    ...ABSOLUTE_YANDEX_ROOT_CANDIDATES,
+    ...discoverVolumeYandexRoots(),
+  ]
   const seenAbs = new Set()
   for (const root of absScanRoots) {
     const c = classifyAbsoluteRoot(root)
     if (c.status !== "mounted") continue
+    const fromOperator = operatorRootNormSet.has(path.normalize(root).toLowerCase())
     const files = []
     walkAbsoluteImages(root, 14, files)
     for (const abs of files) {
@@ -781,19 +854,20 @@ function main() {
       expansionRecords.push(
         buildExpansionRecord({
           source_root: root,
-          source_kind: "yandex_or_external_disk",
+          source_kind: fromOperator ? "operator_provided_white_bg" : "yandex_or_external_disk",
           path_or_url: abs,
           repo_relative_path: null,
           filename: path.basename(abs),
           exists_locally: exists,
           knownSkus,
-          match_reason: "absolute_yandex_tree_walk",
+          match_reason: fromOperator ? "operator_provided_white_bg_walk" : "absolute_yandex_tree_walk",
           hash,
           size_bytes,
           dimensions,
           warnings: [],
           recommended_next_action: null,
           manifest_row: null,
+          operatorProvidedRoot: fromOperator,
         })
       )
     }
@@ -875,8 +949,20 @@ function main() {
 
   const deduped = dedupeExpansionRecords(expansionRecords)
 
+  const opRoots = rootsReport.filter((r) => r.role === "operator_provided_root")
   const summary = {
     generated_at: iso,
+    operator_provided_roots: operatorEntries.map((e) => ({
+      path: e.normalized,
+      env: e.env,
+    })),
+    operator_roots_mounted: opRoots.filter((r) => r.status === "mounted").length,
+    operator_roots_missing: opRoots.filter((r) => r.status === "missing").length,
+    next_command_example:
+      'WOODRIGHT_WHITE_BG_ROOT="/actual/path/to/Фото на белом фоне" node scripts/expand-oxford-media-source-inventory.mjs',
+    preview_allowlist_followup_needed_for_operator_root: deduped.filter((r) =>
+      (r.warnings || []).includes("preview_allowlist_followup_needed_for_operator_root")
+    ).length,
     roots_scanned: rootsReport.length,
     roots_mounted: rootsReport.filter((r) => r.status === "mounted").length,
     roots_missing: rootsReport.filter((r) => r.status === "missing").length,
@@ -894,6 +980,7 @@ function main() {
     source_mount_needed_for_full_oxford_media_pool: {
       verdict: "partial_until_yandex_white_bg_mounted",
       expected_white_bg_roots: ABSOLUTE_YANDEX_ROOT_CANDIDATES,
+      operator_override_env: ["WOODRIGHT_WHITE_BG_ROOT", "WOODRIGHT_WHITE_BG_ROOTS"],
       manifest_refs_not_local: deduped.filter(
         (r) => r.source_kind === "legacy_front_manifest" && !r.exists_locally
       ).length,
@@ -947,33 +1034,42 @@ function main() {
 - Expansion pass indexed **${deduped.length}** Oxford-related image references (after path/hash dedupe).
 - **${summary.previewable_now}** are previewable on the storefront review board today (repo-relative allowlisted paths or backend static HTTP).
 - **${summary.unpreviewable}** are not previewable in-browser from current Next rules (external disk paths, missing files, or non-allowlisted data paths).
-- Full white-background Yandex pool requires **WOODRIGHT** mirror mount; see \`source_mount_needed_for_full_oxford_media_pool\` in \`data/normalized/oxford-source-expansion-summary.json\`.
+- Full white-background Yandex pool requires **WOODRIGHT** mirror mount **or** an explicit operator path; see \`source_mount_needed_for_full_oxford_media_pool\` and \`operator_provided_roots\` in \`data/normalized/oxford-source-expansion-summary.json\`.
+- Records under an operator-mounted root outside repo/\`data/\` include warning \`preview_allowlist_followup_needed_for_operator_root\` (**${summary.preview_allowlist_followup_needed_for_operator_root}** rows this run) — inventory only until a separate preview-allowlist change is approved.
 
-## B. Roots scanned / mount status
+## B. Operator-provided WOODRIGHT / white-background root
+
+- **Env (not committed, machine-local):** \`WOODRIGHT_WHITE_BG_ROOT\` (single path) and/or \`WOODRIGHT_WHITE_BG_ROOTS\` (multiple paths, \`:\` separator on Unix).
+- **Example:** \`${summary.next_command_example}\`
+- **This run — operator roots configured:** ${summary.operator_provided_roots.length ? summary.operator_provided_roots.map((o) => `\`${o.path}\` (${o.env})`).join("; ") : "*(none)*"}
+- **Mounted:** ${summary.operator_roots_mounted}, **missing / not found:** ${summary.operator_roots_missing} (see \`roots\` entries with \`role: "operator_provided_root"\` and \`operator_root_missing\`).
+- Paths may contain **spaces** or **Cyrillic**; the script normalizes via \`path.normalize\` and uses Node \`fs\` only (read-only).
+
+## C. Roots scanned / mount status
 
 - Total root probes: **${rootsReport.length}**
 - Mounted: **${summary.roots_mounted}**, Missing: **${summary.roots_missing}**
 - Details: \`oxford-source-expansion-inventory.json\` → \`roots\`.
 
-## C. Oxford images found
+## D. Oxford images found
 
 - **${summary.oxford_images_found}** records in expansion inventory.
 
-## D. Previewable vs unpreviewable
+## E. Previewable vs unpreviewable
 
 - Previewable now: **${summary.previewable_now}**
 - Not previewable: **${summary.unpreviewable}**
 
-## E. SKU assignment coverage (heuristic buckets)
+## F. SKU assignment coverage (heuristic buckets)
 
 ${JSON.stringify(summary.by_bucket, null, 2)}
 
-## F. Review board / MVP JSON merge
+## G. Review board / MVP JSON merge
 
 - Merge MVP artifacts: **${mergeResult.merged ? "yes" : "skipped"}**${mergeResult.merged ? ` (inventory +${mergeResult.addedInv}, sku candidates +${mergeResult.addedCand}, plan gallery URLs +${mergeResult.planGalleryAdds})` : ""}.
 - Re-run storefront after merge; ensure repo \`data/\` is visible to Next (Docker mounts) or sync QA JSON copies.
 
-## G. Artifacts
+## H. Artifacts
 
 | Artifact | Purpose |
 |----------|---------|
@@ -981,16 +1077,17 @@ ${JSON.stringify(summary.by_bucket, null, 2)}
 | \`data/normalized/oxford-source-expansion-summary.json\` | Counts + mount-needed block |
 | \`scripts/expand-oxford-media-source-inventory.mjs\` | Regenerator |
 
-## H. Safety facts
+## I. Safety facts
 
 - No Medusa DB writes; no seed/validation/sync/runner; no media apply.
 - No \`catalog-scope.ts\` edits; no Oxford pilot evidence JSON edits.
 - No source image copy/move/delete; no binary commits from this script.
+- Operator \`WOODRIGHT_*\` paths live only in your shell env or local docs — **do not** commit \`.env\` with real disk paths unless your team policy allows it.
 
-## I. Next manual step
+## J. Next manual step
 
-1. Mount Yandex Disk / **WOODRIGHT** paths listed in summary JSON and re-run this script to pull additional bytes + hashes for white-background candidates.
-2. Open \`/qa/oxford-local-mvp-media-review\` and confirm new **unassigned** / SKU rows show previews for new static/repo files.
+1. Mount Yandex / locate **Фото на белом фоне**, then either rely on default probes or set \`WOODRIGHT_WHITE_BG_ROOT\` to the **actual** directory and re-run this script.
+2. Open \`/qa/oxford-local-mvp-media-review\` — operator-root files appear in **inventory** first; in-browser preview for absolute paths is a **separate** allowlist task if needed.
 3. Optional: \`node apps/storefront/scripts/sync-oxford-local-mvp-qa-json.mjs\` if using Docker without \`data/\` mount.
 `
   fs.mkdirSync(path.dirname(reportPath), { recursive: true })

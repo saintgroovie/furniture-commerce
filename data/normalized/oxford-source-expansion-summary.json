@@ -1,5 +1,10 @@
 {
-  "generated_at": "2026-05-04T01:32:00.822Z",
+  "generated_at": "2026-05-04T01:46:48.995Z",
+  "operator_provided_roots": [],
+  "operator_roots_mounted": 0,
+  "operator_roots_missing": 0,
+  "next_command_example": "WOODRIGHT_WHITE_BG_ROOT=\"/actual/path/to/Фото на белом фоне\" node scripts/expand-oxford-media-source-inventory.mjs",
+  "preview_allowlist_followup_needed_for_operator_root": 0,
   "roots_scanned": 19,
   "roots_mounted": 11,
   "roots_missing": 8,
@@ -21,6 +26,10 @@
       "/WOODRIGHT/Контент /Фото на белом фоне",
       "/Users/leonidmbp/Yandex.Disk/WOODRIGHT/Контент /Фото на белом фоне",
       "/Users/leonidmbp/Yandex Disk/WOODRIGHT/Контент /Фото на белом фоне"
+    ],
+    "operator_override_env": [
+      "WOODRIGHT_WHITE_BG_ROOT",
+      "WOODRIGHT_WHITE_BG_ROOTS"
     ],
     "manifest_refs_not_local": 12,
     "operator_search_hints": {
