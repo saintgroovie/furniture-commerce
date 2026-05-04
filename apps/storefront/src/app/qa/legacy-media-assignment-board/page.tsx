@@ -8,5 +8,9 @@ export const metadata: Metadata = {
 }
 
 export default function LegacyMediaAssignmentBoardPage() {
-  return <LegacyMediaAssignmentBoardClient />
+  return (
+    <div className="legacy-media-assignment-board-root">
+      <LegacyMediaAssignmentBoardClient />
+    </div>
+  )
 }

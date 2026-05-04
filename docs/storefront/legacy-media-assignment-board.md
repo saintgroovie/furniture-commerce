@@ -2,14 +2,16 @@
 
 ## Purpose
 
-Interactive **triage only** for aligning **legacy / front-manifest / repo-local** images with **seed-derived** product handles (`data/normalized/seed-products.json`).  
-This is **not** a production rollout surface: **no Medusa apply**, no catalog-scope changes, no seed or evidence JSON mutation from the UI.
+**Visual media assignment system** for manually aligning **legacy / front-manifest / repo-local** images with **seed-derived** products (`data/normalized/seed-products.json`).  
+This is **not** a production rollout surface: **no Medusa apply**, no catalog-scope changes, no seed or evidence JSON mutation from the UI. Backend remains the source of truth.
 
 ## Open the page
 
-Local storefront (default port from `package.json`):
+Local storefront (see `apps/storefront/package.json` for port, usually **8000**):
 
 - `http://localhost:8000/qa/legacy-media-assignment-board`
+
+Start Next.js from **`furniture-commerce/apps/storefront`** (or a cwd where `docs/project/CODEMAP.md` and `data/normalized/` resolve) so read-only API routes can find repo JSON.
 
 In **production** (`NODE_ENV=production`) the board and its JSON/bootstrap routes return **404** unless `LEGACY_MEDIA_QA_BOARD_ALLOW_PROD=1` is set (discouraged).
 
@@ -28,28 +30,36 @@ Outputs:
 - `data/normalized/legacy-media-product-candidate-map.json`
 - `data/normalized/legacy-media-assignment-decisions.template.json`
 
-The page loads large JSON via **read-only GET** routes under `/qa/legacy-media-assignment-board/api/*` (no write API).
+Large JSON is loaded via **read-only GET** routes under `/qa/legacy-media-assignment-board/api/*` (no write API).
 
-## Behaviour
+## How to use the UI
 
-- **Summary** and **filters** (collection, confidence, previewable, source type, assigned state, text search).
-- **Product lanes:** handle, SKU, collection, current seed thumbnails, heuristic **candidates** (read-only chips), **manually assigned** slots with role selector.
-- **Unassigned pool:** drag from here onto a lane; drop back onto the pool to unassign.
-- **Ambiguous** (identity) strip for quick access.
-- **Unpreviewable references:** text rows only (no broken `<img>` for `/WOODRIGHT` or missing files).
+1. **Collections (left)** — Pick **All collections**, a named collection, or **Unknown / unmatched hints** to filter the board. Active collection is highlighted.
+2. **Filters (compact row)** — Search by SKU, handle, filename, or product title; narrow by confidence, source type, assignment state, previewable-only, and product focus (no current media / has candidates / has manual assignments). **Reset filters** clears them.
+3. **Product cards (center)** — Each card shows current seed thumbnails, counts, and a **status badge** (e.g. no current media, has candidates, manually assigned, needs review). Click a card to **select** it (blue outline); selection enables quick actions in the pool.
+4. **Zones per product** — **Primary** (one slot), **Gallery** (ordered; drag one tile onto another in the same lane to swap order), **Reference only**, **Rejected for this product**. Drag from the **media pool** into a zone, or drag onto the “return to unassigned” strip on the card to clear assignments. No broken `<img>` for unpreviewable refs.
+5. **Media pool (right)** — Tabs: **Unassigned**, **Ambiguous**, **Confirmed**, **Unpreviewable** (text rows only), **Rejected** (global). Grid cards show preview, hints, and badges. Buttons: **→ Primary / Gallery / Reference** (require selected product), **Reject for product** (lane reject), **Reject (global)**. Only the first **120** items per tab are shown, with a message to narrow filters.
+6. **Export** — **Copy JSON** / **Download JSON** saves `legacy-media-assignment-decisions.json` shape (see below). **Clear local decisions** wipes `localStorage`.
 
-### Roles (export)
+## Persistence
 
-Per assigned image: `primary_candidate` | `gallery_candidate` | `reference_only` | `do_not_use`.  
-**Reject** sends an item to `rejections` with reason `not_this_product`.
+- **localStorage** key: `furniture-legacy-media-assignment-decisions-v1` (same key as before; payload may be **v2** zones + global rejections).
+- Older **v1** `{ version: 1, assignments, rejections }` blobs are **migrated on load** into v2 zones (roles map to Primary / Gallery / Reference / lane reject; global rejections preserved).
 
-### Persistence
+## Export JSON shape (v2)
 
-- Decisions: **browser `localStorage`** only (key `furniture-legacy-media-assignment-decisions-v1`).
-- **Copy JSON** / **Download JSON** produce a document compatible with saving as  
-  `data/normalized/legacy-media-assignment-decisions.json` (operator handoff; **not** auto-ingested by this task).
+Copy/Download produces JSON including:
 
-### Image preview (allowlisted)
+- `version`: **2**
+- `exported_at`: ISO timestamp
+- `review_meta`: scope, governance flags
+- `products[]`: per product `handle`, `sku`, `collection`, `primary_candidate`, `gallery_candidates`, `reference_only`, `rejected` (lane-level rejects)
+- `global_rejections[]`: not-this-product / global rejects
+- `legacy_assignments_v1_flat`: flattened rows for scripts that still expect v1-style `assignments` (optional compatibility)
+
+This is **handoff only** — not auto-applied to Medusa.
+
+## Image preview (allowlisted)
 
 Dev-only proxy: `/qa/legacy-media-assignment-board/preview?rel=…`  
 Allowlisted repo-relative roots (no path traversal):
@@ -61,22 +71,12 @@ Allowlisted repo-relative roots (no path traversal):
 - `data/raw/pdf-assets/`
 - `data/raw/assets/`
 
-Backend static is also shown via `NEXT_PUBLIC_MEDUSA_BACKEND_URL` `/static/...` when the inventory row resolves to `apps/backend/static/...`.
+HTTP(S) previews only when already present on inventory rows. `/WOODRIGHT` / Yandex paths without a local file appear under **Unpreviewable** as text, not as `<img>`.
 
 ## Confidence semantics (matcher)
 
-See `docs/storefront/legacy-media-product-candidate-map.md`. Short version:
-
-| Value | Meaning |
-|-------|---------|
-| **confirmed** | Strong deterministic signal (SKU hint, SKU in path/filename, or basename matches an existing seed product image). |
-| **probable** | Single strong heuristic candidate, lower certainty than confirmed. |
-| **ambiguous** | Multiple products score similarly. |
-| **unmatched** | No candidate above threshold. |
-| **unpreviewable** | Reference exists but **no local preview** in this environment; `identity_confidence` in JSON still records the heuristic identity tier. |
-
-Legacy media remains a **hint** layer; ambiguous or unmatched items belong in backlog / manual review, not silent auto-card promotion.
+See `docs/storefront/legacy-media-product-candidate-map.md`.
 
 ## Next safe step (out of scope here)
 
-After exporting reviewed `legacy-media-assignment-decisions.json`, a **separate gated executor** (dry-run first, explicit env confirm) may consume approved rows — **not** implemented in this QA board task.
+After exporting reviewed decisions JSON, use a **separate gated executor** (dry-run first, explicit env confirm) if you need to consume approved rows — **not** part of this board.

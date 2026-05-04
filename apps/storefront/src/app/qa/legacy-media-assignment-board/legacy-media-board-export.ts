@@ -1,0 +1,199 @@
+/**
+ * Pure helpers: localStorage migration + export document shape for legacy media QA board.
+ * No server I/O.
+ */
+
+export type ProductZoneState = {
+  primary: string | null
+  gallery: string[]
+  reference_only: string[]
+  lane_rejected: string[]
+}
+
+export type GlobalRejection = { inventory_id: string; reason: string }
+
+export type PersistedV1Assignment = {
+  inventory_id: string
+  target_handle: string
+  role: "primary_candidate" | "gallery_candidate" | "reference_only" | "do_not_use"
+  sort_order: number
+}
+
+export type PersistedV1 = {
+  version: 1
+  assignments: PersistedV1Assignment[]
+  rejections: GlobalRejection[]
+}
+
+export type PersistedV2 = {
+  version: 2
+  zonesByHandle: Record<string, ProductZoneState>
+  globalRejections: GlobalRejection[]
+}
+
+export type ProductExportRow = {
+  handle: string
+  sku: string
+  collection: string
+  primary_candidate: string | null
+  gallery_candidates: string[]
+  reference_only: string[]
+  rejected: string[]
+}
+
+export function emptyZones(): ProductZoneState {
+  return { primary: null, gallery: [], reference_only: [], lane_rejected: [] }
+}
+
+export function migrateV1ToV2(v1: PersistedV1): PersistedV2 {
+  const zonesByHandle: Record<string, ProductZoneState> = {}
+  const ensure = (h: string): ProductZoneState => {
+    const k = h.toLowerCase()
+    if (!zonesByHandle[k]) zonesByHandle[k] = emptyZones()
+    return zonesByHandle[k]
+  }
+  const sorted = [...v1.assignments].sort((a, b) => a.sort_order - b.sort_order)
+  for (const a of sorted) {
+    const z = ensure(a.target_handle)
+    if (a.role === "primary_candidate") {
+      if (z.primary && z.primary !== a.inventory_id) z.gallery.unshift(z.primary)
+      z.primary = a.inventory_id
+    } else if (a.role === "gallery_candidate") {
+      if (!z.gallery.includes(a.inventory_id)) z.gallery.push(a.inventory_id)
+    } else if (a.role === "reference_only") {
+      if (!z.reference_only.includes(a.inventory_id)) z.reference_only.push(a.inventory_id)
+    } else if (a.role === "do_not_use") {
+      if (!z.lane_rejected.includes(a.inventory_id)) z.lane_rejected.push(a.inventory_id)
+    }
+  }
+  return { version: 2, zonesByHandle, globalRejections: [...v1.rejections] }
+}
+
+export function parsePersisted(raw: unknown): PersistedV2 | null {
+  if (!raw || typeof raw !== "object") return null
+  const o = raw as Record<string, unknown>
+  if (o.version === 2 && o.zonesByHandle && typeof o.zonesByHandle === "object") {
+    return normalizeV2(o as Record<string, unknown>)
+  }
+  if (o.version === 1 && Array.isArray(o.assignments)) {
+    return migrateV1ToV2(o as unknown as PersistedV1)
+  }
+  if (Array.isArray(o.assignments) && !o.zonesByHandle) {
+    return migrateV1ToV2({
+      version: 1,
+      assignments: o.assignments as PersistedV1["assignments"],
+      rejections: (Array.isArray(o.rejections) ? o.rejections : []) as GlobalRejection[],
+    })
+  }
+  return null
+}
+
+function normalizeV2(o: Record<string, unknown>): PersistedV2 {
+  const zb = (o.zonesByHandle ?? {}) as Record<string, unknown>
+  const zonesByHandle: Record<string, ProductZoneState> = {}
+  for (const [h, z] of Object.entries(zb)) {
+    if (!z || typeof z !== "object") continue
+    const zz = z as Record<string, unknown>
+    zonesByHandle[h.toLowerCase()] = {
+      primary: typeof zz.primary === "string" ? zz.primary : null,
+      gallery: Array.isArray(zz.gallery) ? zz.gallery.map(String) : [],
+      reference_only: Array.isArray(zz.reference_only) ? zz.reference_only.map(String) : [],
+      lane_rejected: Array.isArray(zz.lane_rejected) ? zz.lane_rejected.map(String) : [],
+    }
+  }
+  const gr = Array.isArray(o.globalRejections) ? o.globalRejections : []
+  const globalRejections: GlobalRejection[] = gr
+    .filter((r) => r && typeof r === "object")
+    .map((r) => {
+      const x = r as Record<string, unknown>
+      return { inventory_id: String(x.inventory_id ?? ""), reason: String(x.reason ?? "") }
+    })
+    .filter((r) => r.inventory_id)
+  return { version: 2, zonesByHandle, globalRejections }
+}
+
+export function collectAllAssignedIds(zones: Record<string, ProductZoneState>): Set<string> {
+  const s = new Set<string>()
+  for (const z of Object.values(zones)) {
+    if (z.primary) s.add(z.primary)
+    for (const id of z.gallery) s.add(id)
+    for (const id of z.reference_only) s.add(id)
+    for (const id of z.lane_rejected) s.add(id)
+  }
+  return s
+}
+
+export function removeIdFromAllZones(zones: Record<string, ProductZoneState>, id: string): Record<string, ProductZoneState> {
+  const next: Record<string, ProductZoneState> = {}
+  for (const [h, z] of Object.entries(zones)) {
+    const nz: ProductZoneState = {
+      primary: z.primary === id ? null : z.primary,
+      gallery: z.gallery.filter((x) => x !== id),
+      reference_only: z.reference_only.filter((x) => x !== id),
+      lane_rejected: z.lane_rejected.filter((x) => x !== id),
+    }
+    const has = nz.primary || nz.gallery.length || nz.reference_only.length || nz.lane_rejected.length
+    if (has) next[h] = nz
+  }
+  return next
+}
+
+export function buildExportDocument(params: {
+  exportedAt: string
+  products: Array<{ handle: string; sku: string; collection: string }>
+  zonesByHandle: Record<string, ProductZoneState>
+  globalRejections: GlobalRejection[]
+  notes?: string | null
+}): Record<string, unknown> {
+  const { exportedAt, products, zonesByHandle, globalRejections, notes } = params
+  const productsOut: ProductExportRow[] = products.map((p) => {
+    const h = p.handle.toLowerCase()
+    const z = zonesByHandle[h] ?? emptyZones()
+    return {
+      handle: p.handle,
+      sku: p.sku,
+      collection: p.collection,
+      primary_candidate: z.primary,
+      gallery_candidates: [...z.gallery],
+      reference_only: [...z.reference_only],
+      rejected: [...z.lane_rejected],
+    }
+  })
+  return {
+    version: 2,
+    exported_at: exportedAt,
+    review_meta: {
+      scope: "legacy_media_assignment_board",
+      status: "exported_from_storefront_qa",
+      local_dev_only: true,
+      production_rollout: false,
+      compatible_filename: "data/normalized/legacy-media-assignment-decisions.json",
+      schema: "legacy_media_assignment_v2",
+    },
+    products: productsOut,
+    global_rejections: globalRejections,
+    notes: notes ?? null,
+    /** Backward-compatible flat view for scripts that still expect v1-style rows */
+    legacy_assignments_v1_flat: flattenToV1Assignments(zonesByHandle),
+  }
+}
+
+function flattenToV1Assignments(zonesByHandle: Record<string, ProductZoneState>): PersistedV1Assignment[] {
+  const out: PersistedV1Assignment[] = []
+  for (const [handle, z] of Object.entries(zonesByHandle)) {
+    let order = 0
+    if (z.primary) {
+      out.push({ inventory_id: z.primary, target_handle: handle, role: "primary_candidate", sort_order: order++ })
+    }
+    for (const id of z.gallery) {
+      out.push({ inventory_id: id, target_handle: handle, role: "gallery_candidate", sort_order: order++ })
+    }
+    for (const id of z.reference_only) {
+      out.push({ inventory_id: id, target_handle: handle, role: "reference_only", sort_order: order++ })
+    }
+    for (const id of z.lane_rejected) {
+      out.push({ inventory_id: id, target_handle: handle, role: "do_not_use", sort_order: order++ })
+    }
+  }
+  return out
+}
