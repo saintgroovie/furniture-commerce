@@ -180,6 +180,98 @@ Partially closes audit items **F-004**, **F-005** (PDP); catalog multi-image beh
 | **Commit** | Не считать финальным media-fix, пока вручную не подтверждено **отсутствие видимых broken images** после этого pass. |
 | **Not changed** | Backend, seed/ingestion, metadata, `catalog-scope.ts`, evidence JSON. |
 
+## Lessons learned from safe media extras fix
+
+Scoped UI stabilization and follow-up extras work (including commit **`305b1d8`** — *storefront: safe catalog and PDP media extras without broken gallery*) reinforced the following **contract** for every collection rollout to storefront:
+
+1. **`product.thumbnail` is the only stable hero** for catalog cards and PDP main image. Do not replace or “improve” it from `images[]`, merge logic, or `display_group` aggregation.
+2. **`images[]`, sibling SKUs, and group-level media** are **optional extras** only. They must never be required for a correct hero.
+3. **Never break the main image to ship a gallery.** If extras fail, the card must still show a working hero or the agreed no-photo fallback.
+4. **Do not render extras without a loadability check** (e.g. successful image decode / `onLoad` / verified strip) where broken extras would be visible.
+5. **No visible broken `<img>`** in hero or thumbnail strip; filter or hide broken extras before paint.
+6. **`display_group` must not be implemented by mutating** the representative’s `thumbnail` or `images` in the object passed to cards. That blurs UX grouping with product data and caused regressions.
+7. **Acceptable pattern:** a **UI-only** field (e.g. `display_group_extra_image_urls`) computed at listing time, **without** writing back to Medusa or changing `thumbnail` / `images` on the representative.
+8. **`display_group` is a UX grouping concern**, not an excuse to change canonical product media fields in the storefront payload.
+9. **Greenwich was a working reference**, not proof that all collections share the same **media-shape** (same `images[]` on every group member). Validate each collection.
+10. **Oliver** (`ol-` handles / `OliverCardMedia` / `OliverPdpMediaSwitcher`) needs **its own** QA path; do not assume non-Oliver rules transfer unchanged.
+11. **Paused collections** must not be evaluated as “catalog broken” via `/catalog` when `catalog-scope` intentionally hides them — classify as **`governance_scope_followup`**, not `frontend_polish`.
+12. **Broken image in the browser** is not always a frontend bug: if the URL is stored but the file is not served, route **`asset_pipeline_followup`** (materialize / ingestion / server), not storefront hacks.
+13. **`tsc` passing is necessary but not sufficient** for media/UI changes — **browser QA is mandatory** before merge/commit.
+
+## Collection media rollout checklist
+
+Use this checklist **per collection** before treating storefront media as rollout-ready (in addition to collection governance gates — **do not conflate** with Oxford / Monchelsea / WW / Oliver Kids governance tracks).
+
+### A. Data / API diagnostics
+
+- [ ] Confirm **`metadata.collection`** (or equivalent) and collection key vs paused/active scope.
+- [ ] **Product count** from Store API (`GET /store/products` or scoped query used in production paths).
+- [ ] Count after **`isProductInActiveCatalogScope`** (and other catalog filters: kids, BESPOKE, demo handles, etc.).
+- [ ] **Grouped card count** after `groupProductsForDisplay` (if used on the target surface).
+- [ ] Count of products / cards with **`display_group`** (and distinct group keys).
+- [ ] Histogram: cards with **0 / 1 / 2+** usable media URLs (hero + extras policy as defined for that release).
+- [ ] Count of products with **missing or empty `thumbnail`** (hero cannot be fixed in UI-only work).
+- [ ] Count with **missing or empty `images[]`** where extras are expected.
+- [ ] For each **`display_group`**: count members with **distinct `thumbnail`** values; distinct **`images[]`** fingerprints (length + first URL hash or similar read-only summary).
+- [ ] Flag **suspicious / invalid / broken** extra URL candidates (empty, duplicate, malformed protocol).
+- [ ] Classify URL shapes (read-only): **valid absolute**, **empty**, **duplicate**, **`/uploads`**, **`/static`**, **absolute external**, **internal hostname** (e.g. Docker-only), **likely missing file** (after operator check).
+
+### B. UI diagnostics
+
+- [ ] **`/catalog`** (and filters) for the collection’s cards.
+- [ ] **`/bespoke/catalog`** if the collection appears there (grouping parity with catalog where applicable).
+- [ ] **PDP** for representative + at least one sibling SKU if `display_group` exists.
+- [ ] Any **collection-specific** UI branches (if present in code paths).
+- [ ] **Oliver-like** special branches if applicable.
+- [ ] **`/qa/catalog-media-debug`** (or other QA route) if used in the release for read-only tables.
+
+### C. Visual QA gates (browser)
+
+- [ ] **Hero visible** on card and PDP.
+- [ ] **No broken hero** (no empty `src`, no persistent broken icon).
+- [ ] **No visible broken thumbnail strip** (extras only after verification policy).
+- [ ] **Single-photo card**: no empty strip / no layout hole where strip was expected absent.
+- [ ] **Grouped card**: extras strip only if extras **actually load**; broken extras do not appear as broken tiles.
+- [ ] **Thumbnail / extra click** does not navigate to PDP (only hero / text / designated hit targets do, per design).
+- [ ] **Hero / title / body click** opens PDP as required.
+- [ ] **PDP hero** switches safely when interactive extras exist (no replacement of hero by broken extra).
+- [ ] **Broken extra** never replaces hero.
+- [ ] **No severe layout jump** when extras appear/disappear.
+- [ ] **No severe performance regression** (strip size cap, lazy rules respected).
+
+### D. Classification (pick one primary bucket per issue)
+
+| Label | When to use |
+|-------|----------------|
+| **`frontend_polish`** | UI mis-assembles or mis-displays **already available** valid media; fix is storefront-only. |
+| **`asset_pipeline_followup`** | File missing on disk, URL 404, Medusa stores a path that does not serve, source not materialized — **not** fixed by hiding in CSS. |
+| **`governance_scope_followup`** | Collection **paused** or outside **active catalog-scope**; do not “fix” via storefront. |
+| **`manual_visual_review`** | Human must choose primary / gallery / interim acceptability. |
+| **`data_shape_followup`** | Store API shape differs from expectations; **no backend change** in the same UI-only task without a separate approved task. |
+
+### E. Commit policy
+
+- **Media UI fix** → **one scoped commit** (storefront-only unless explicitly approved).
+- **Asset materialization / DB / seed** → **separate commit** (and governance), never mixed with UI polish.
+- **`catalog-scope` / rollout stage** → **separate governance decision**, not bundled into a media UI fix.
+- **Evidence JSON** → **do not edit** inside a UI-fix commit.
+- **Backend / seed / Medusa DB** → **do not touch** in a UI-fix commit.
+- **Oxford / Monchelsea / WW / Oliver Kids governance** → **do not mix** with general storefront media polish commits or checklists.
+- **Never `git add -A`**; stage files explicitly.
+- **Do not commit** media/UI changes **until browser QA** is done (see § Lessons learned, item 13).
+
+## Mistakes to avoid
+
+- Treating **`images[]`** as always non-empty, always same shape across collections, or always loadable.
+- **Blindly nulling** `/uploads/` / `/static/` strings **or** showing them **without** verifying they resolve on the **browser-visible** origin (storefront vs Medusa).
+- **Replacing `thumbnail`** with merged group URLs or first gallery frame.
+- Assuming **Greenwich** proves **all** collections behave the same on listing and extras.
+- **Patching asset gaps** in the storefront (fake URLs, silent skips of hero, hardcoded fallbacks per collection) instead of **`asset_pipeline_followup`**.
+- Using **paused** collections to judge `/catalog` “broken gallery” when scope intentionally excludes them.
+- **Broad `tsconfig` / package / build-system** changes piggybacked on a local media fix.
+- **Committing media fixes** with only `tsc` green — **no browser QA**.
+- **Merging UI stabilization** and **asset pipeline apply** (or governance evidence updates) in **one commit**.
+
 ## Safe Next Steps
 
 Implementation pass only for safe UI-polish findings:
