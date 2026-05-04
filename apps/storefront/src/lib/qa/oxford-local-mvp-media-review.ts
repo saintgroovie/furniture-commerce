@@ -5,6 +5,7 @@ import { getBaseUrl } from "@/lib/api/base"
 import {
   FURNITURE_REPO_MARKERS_DESC,
   getFurnitureRepoDataResolution,
+  oxfordLocalMvpQaSnapshotPathCandidates,
   type FurnitureRepoDataResolution,
 } from "@/lib/qa/furniture-repo-data-root"
 import type {
@@ -42,6 +43,9 @@ function readJsonFile(
 ): { ok: true; data: unknown } | { ok: false; error: string } {
   const ordered: string[] = []
   if (resolution.repoRoot) ordered.push(path.join(resolution.repoRoot, rel))
+  for (const c of oxfordLocalMvpQaSnapshotPathCandidates(rel)) {
+    if (!ordered.includes(c)) ordered.push(c)
+  }
   for (const c of legacyDataPathCandidates(rel)) {
     if (!ordered.includes(c)) ordered.push(c)
   }
@@ -70,7 +74,7 @@ function readJsonFile(
       `walk_seeds=${resolution.seedsTried.join(" | ")}`,
       resolution.repoRoot
         ? `legacy_candidates_checked=${legacy.join(" ; ")}`
-        : `hint=could not find repo root (need ${FURNITURE_REPO_MARKERS_DESC} on same tree); legacy_candidates=${legacy.join(" ; ")}`,
+        : `hint=could not find repo root (need ${FURNITURE_REPO_MARKERS_DESC} on same tree, or Docker readonly mounts ./data and ./docs onto /app, or run apps/storefront/scripts/sync-oxford-local-mvp-qa-json.mjs); legacy_candidates=${legacy.join(" ; ")}`,
     ].join(" — "),
   }
 }

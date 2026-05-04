@@ -12,6 +12,17 @@ const MARKER_DATA_NORMALIZED = path.join("data", "normalized")
 
 export const FURNITURE_REPO_MARKERS_DESC = "docs/project/CODEMAP.md and data/normalized/"
 
+/**
+ * Optional dev-only JSON copies under `apps/storefront/qa-data/oxford-local-mvp/`
+ * when Docker (or other runtimes) cannot mount repo `data/` + `docs/` into `/app`.
+ * Populate with `node apps/storefront/scripts/sync-oxford-local-mvp-qa-json.mjs` from repo root.
+ */
+export function oxfordLocalMvpQaSnapshotPathCandidates(relFromRepoRoot: string): string[] {
+  if (!relFromRepoRoot.includes("oxford-local-mvp")) return []
+  const bn = path.basename(relFromRepoRoot)
+  return [path.join(process.cwd(), "qa-data", "oxford-local-mvp", bn)]
+}
+
 function dirHasRepoMarkers(absDir: string): boolean {
   return fs.existsSync(path.join(absDir, MARKER_CODEMAP)) && fs.existsSync(path.join(absDir, MARKER_DATA_NORMALIZED))
 }

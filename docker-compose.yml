@@ -75,6 +75,10 @@ services:
       - ./apps/storefront:/app
       - storefront_node_modules:/app/node_modules
       - storefront_next:/app/.next
+      # Dev/QA only: Oxford local MVP JSON + repo markers for storefront loaders (read-only).
+      # Without this, cwd=/app only sees apps/storefront; data/normalized lives at repo root.
+      - ./data:/app/data:ro
+      - ./docs:/app/docs:ro
     networks:
       - medusa_network
 

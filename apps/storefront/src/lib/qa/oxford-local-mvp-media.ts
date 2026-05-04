@@ -2,7 +2,7 @@ import "server-only"
 import * as fs from "fs"
 import * as path from "path"
 import { getBaseUrl, medusaFetch } from "@/lib/api/base"
-import { getFurnitureRepoDataResolution } from "@/lib/qa/furniture-repo-data-root"
+import { getFurnitureRepoDataResolution, oxfordLocalMvpQaSnapshotPathCandidates } from "@/lib/qa/furniture-repo-data-root"
 
 export type OxfordLocalMvpPlanRow = {
   sku: string
@@ -29,6 +29,9 @@ function planPathCandidates(): string[] {
   const { repoRoot } = getFurnitureRepoDataResolution()
   const ordered: string[] = []
   if (repoRoot) ordered.push(path.join(repoRoot, rel))
+  for (const c of oxfordLocalMvpQaSnapshotPathCandidates(rel)) {
+    if (!ordered.includes(c)) ordered.push(c)
+  }
   for (const c of [
     path.join(process.cwd(), rel),
     path.resolve(process.cwd(), "../../", rel),

@@ -14,13 +14,30 @@ The page at `/qa/oxford-local-mvp-media-review` is a **visual-first media board*
 
 Prerequisites: run `node scripts/build-oxford-local-mvp-media-artifacts.mjs` (or `yarn oxford-local-mvp-media:build` from `apps/backend`) so `oxford-local-mvp-media-*.json` exists.
 
-### Troubleshooting: “file not found” for the three JSON files
+### Data paths: local vs Docker (`process.cwd()=/app`)
 
-The loader resolves the **repo root** by walking upward from `process.cwd()` (and from the compiled module path), stopping at the first directory that contains **both** `docs/project/CODEMAP.md` and `data/normalized/`. JSON is then read from `<repo>/data/normalized/oxford-local-mvp-*.json`.
+Loaders look for:
 
-If you still see errors, the on-page message includes `process.cwd()`, `resolved_repo_root`, `primary_expected_path`, and `walk_seeds` to see why resolution failed.
+1. **Resolved repo root** — walk up from `process.cwd()` and from the bundled module path until a directory contains **both** `docs/project/CODEMAP.md` and `data/normalized/`, then read `<root>/data/normalized/oxford-local-mvp-*.json`.
+2. **`qa-data` snapshot** — `apps/storefront/qa-data/oxford-local-mvp/*.json` (same basenames as in `data/normalized/`). Optional when the runtime cannot see the full repo tree.
+3. **Legacy relative paths** — e.g. `../../data/normalized/...` from a non-container dev cwd.
 
-If artifacts are genuinely missing, regenerate **read-only** artifacts from repo root (no DB apply):
+**Docker Compose (preferred for dev):** the repo `docker-compose.yml` mounts the storefront app as `./apps/storefront:/app` only exposes the app tree, so by default `/app` does **not** include repo `data/` or `docs/`. The storefront service adds **read-only** mounts:
+
+- `./data:/app/data:ro`
+- `./docs:/app/docs:ro`
+
+After that, `/app` satisfies the repo markers (`/app/docs/project/CODEMAP.md` and `/app/data/normalized/`), loaders resolve `repo_root=/app`, and the three JSON files are read from `/app/data/normalized/oxford-local-mvp-*.json`. Restart the storefront container after changing compose.
+
+**If you cannot change Docker mounts:** from repo root run:
+
+`node apps/storefront/scripts/sync-oxford-local-mvp-qa-json.mjs`
+
+(or `yarn qa:sync-oxford-local-mvp-json` from `apps/storefront`). That copies **only** the three Oxford local MVP JSON artifacts into `apps/storefront/qa-data/oxford-local-mvp/` (gitignored `*.json`; directory kept via `.gitkeep`). The loader tries those paths when repo root resolution fails.
+
+**Error hint:** `process.cwd()=/app` and `resolved_repo_root=null` means the container (or process) does not see `docs/` + `data/normalized` on one tree — add the compose readonly volumes or run the sync script.
+
+If artifacts are genuinely missing on disk, regenerate **read-only** artifacts from repo root (no DB apply):
 
 `node scripts/build-oxford-local-mvp-media-artifacts.mjs`
 
