@@ -1,0 +1,94 @@
+{
+  "audit_meta": {
+    "pass_name": "woodright_white_bg_root_discovery",
+    "pass_kind": "read_only_local_filesystem_probe",
+    "generated_at": "2026-05-05T01:10:53.705Z",
+    "generated_by": "scripts/find-woodright-white-bg-root.mjs",
+    "platform": "darwin",
+    "verdict": "no_woodright_white_bg_root_found",
+    "paths_searched": {
+      "mdfind": "mdfind (Spotlight)",
+      "mdfind_query": "kMDItemFSName == \"WOODRIGHT\"c || kMDItemFSName == \"Фото на белом фоне\"c || kMDItemFSName == \"Контент\"c || kMDItemFSName == \"Yandex\"c || kMDItemFSName == \"Yandex Disk\"c || kMDItemFSName == \"Yandex.Disk\"c",
+      "find_commands": [
+        {
+          "kind": "cloud_storage_per_provider",
+          "provider_roots_scanned": [],
+          "provider_roots_total": 0,
+          "maxdepth": 8,
+          "timeout_ms_per_find": 12000,
+          "directory_name_predicates": [
+            "WOODRIGHT",
+            "Yandex.Disk",
+            "Yandex Disk",
+            "YandexDisk",
+            "Yandex",
+            "Фото на белом фоне",
+            "Контент"
+          ]
+        },
+        {
+          "kind": "home_bounded",
+          "root": "/Users/leonidmbp",
+          "maxdepth": 5,
+          "timeout_ms": 25000,
+          "directory_name_predicates": [
+            "WOODRIGHT",
+            "Yandex.Disk",
+            "Yandex Disk",
+            "YandexDisk",
+            "Yandex",
+            "Фото на белом фоне",
+            "Контент"
+          ]
+        },
+        {
+          "kind": "volumes_bounded",
+          "root": "/Volumes",
+          "maxdepth": 10,
+          "timeout_ms": 30000,
+          "directory_name_predicates": [
+            "WOODRIGHT",
+            "Yandex.Disk",
+            "Yandex Disk",
+            "YandexDisk",
+            "Yandex",
+            "Фото на белом фоне",
+            "Контент"
+          ]
+        }
+      ],
+      "note": "CloudStorage: up to 10 immediate child folders under ~/Library/CloudStorage, each with its own bounded find (timeouts avoid multi-minute hangs on huge cloud mirrors)."
+    },
+    "mdfind": {
+      "ok": true,
+      "lines": [
+        "/Library/Application Support/Yandex",
+        "/Users/leonidmbp/Library/Application Support/Yandex",
+        "/Users/leonidmbp/Downloads/woodright"
+      ]
+    },
+    "expansion": {
+      "ran": false,
+      "skipped_reason": null,
+      "command": null,
+      "exit_code": null
+    },
+    "next_steps_if_not_found": [
+      "Yandex/WOODRIGHT source not found on local filesystem.",
+      "Likely causes: Yandex Disk not installed, not logged in, not synced, or folder is online-only.",
+      "Open Yandex Disk app or Finder, ensure WOODRIGHT / «Фото на белом фоне» is available offline, then re-run this script."
+    ]
+  },
+  "candidates": [
+    {
+      "absolute_path": "/Users/leonidmbp/Downloads/woodright",
+      "exists": true,
+      "oxford_related_image_count": 0,
+      "sample_files": [],
+      "scanned_files_cap": 714,
+      "recommendation": "not_relevant",
+      "white_bg_path_heuristic": false
+    }
+  ],
+  "auto_expansion_pick": null
+}

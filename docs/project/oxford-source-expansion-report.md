@@ -19,6 +19,22 @@
 - **Mounted:** 0, **missing / not found:** 0 (see `roots` entries with `role: "operator_provided_root"` and `operator_root_missing`).
 - Paths may contain **spaces** or **Cyrillic**; the script normalizes via `path.normalize` and uses Node `fs` only (read-only).
 
+### How to find source root automatically
+
+On macOS, run the read-only discovery helper from the repo root (Spotlight `mdfind` plus bounded `find` under `~/Library/CloudStorage`, `$HOME`, and `/Volumes`). It scores candidates, prints Oxford-related image counts, and writes:
+
+- `data/normalized/woodright-white-bg-root-discovery.json`
+- `docs/project/woodright-white-bg-root-discovery.md`
+
+Commands:
+
+```bash
+node scripts/find-woodright-white-bg-root.mjs
+node scripts/find-woodright-white-bg-root.mjs --run-expansion
+```
+
+With `--run-expansion`, it sets `WOODRIGHT_WHITE_BG_ROOT` or `WOODRIGHT_WHITE_BG_ROOTS` for `scripts/expand-oxford-media-source-inventory.mjs` only when the discovery pass auto-picks a suitable path (otherwise it skips expansion and records the reason in the discovery JSON).
+
 ## C. Roots scanned / mount status
 
 - Total root probes: **19**
