@@ -8,6 +8,18 @@ import type {
   OxfordSkuReviewRow,
 } from "@/lib/qa/oxford-local-mvp-media-review-types"
 import { previewCanUseImgTag } from "@/lib/qa/oxford-local-mvp-media-review-types"
+import {
+  decisionSummary,
+  humanBacklogReasonShort,
+  humanConfidence,
+  humanMediaClass,
+  humanSourceKind,
+  humanSuggestedNextAction,
+  isExternalAbsolutePath,
+  rowDecisionCount,
+  rowNeedsAttention,
+  skuRowHumanStatus,
+} from "./oxford-media-review-labels"
 
 const LS_KEY = "oxford-local-mvp-media-review-decisions-v1"
 
@@ -20,6 +32,18 @@ export type ReviewDecision =
   | "needs_manual_review"
   | "needs_white_bg_replacement"
   | "do_not_use"
+  /** Source/reference backlog only (no image preview) */
+  | "needs_source_recovery"
+  | "keep_as_reference"
+  | "ignore_until_source_mounted"
+  | "do_not_use_reference"
+
+const BACKLOG_REFERENCE_DECISIONS = new Set<ReviewDecision>([
+  "needs_source_recovery",
+  "keep_as_reference",
+  "ignore_until_source_mounted",
+  "do_not_use_reference",
+])
 
 export type StoredDecision = {
   decision: ReviewDecision
@@ -45,6 +69,10 @@ type ListFilter =
   | "product_missing"
   | "gallery_backlog"
   | "no_media"
+  | "has_decisions"
+  | "has_candidates"
+
+type ReviewMode = "sku" | "unassigned" | "backlog"
 
 function loadDecisions(): Record<string, StoredDecision> {
   if (typeof window === "undefined") return {}
@@ -81,15 +109,6 @@ function humanWarning(w: string): string {
   return "Note"
 }
 
-function rowNeedsReview(row: OxfordSkuReviewRow, decisions: Record<string, StoredDecision>): boolean {
-  if (row.gallery_review_backlog_urls.length > 0) return true
-  for (const m of row.media_items) {
-    if (m.confidence === "ambiguous") return true
-    if (decisionOf(decisions[m.media_key]) === "unset") return true
-  }
-  return false
-}
-
 function mediaLooksOrphanCandidate(m: OxfordReviewMediaItem): boolean {
   if (m.is_orphan) return true
   const tier = (m.match_tier ?? "").toLowerCase()
@@ -124,6 +143,7 @@ function reviewedCount(decisions: Record<string, StoredDecision>, keys: string[]
 }
 
 export function OxfordLocalMvpMediaReviewClient({ payload }: Props) {
+  const [mode, setMode] = useState<ReviewMode>("sku")
   const [listFilter, setListFilter] = useState<ListFilter>("all")
   const [search, setSearch] = useState("")
   const [selectedSku, setSelectedSku] = useState<string | null>(null)
@@ -148,8 +168,9 @@ export function OxfordLocalMvpMediaReviewClient({ payload }: Props) {
 
   const filteredRows = useMemo(() => {
     return payload.sku_rows.filter((row) => {
-      if (listFilter === "needs_review" && !rowNeedsReview(row, decisions)) return false
+      if (listFilter === "needs_review" && !rowNeedsAttention(row, decisions)) return false
       if (listFilter === "has_primary" && !row.planned_primary_url) return false
+      if (listFilter === "has_candidates" && row.media_items.length === 0) return false
       if (listFilter === "no_primary" && row.planned_primary_url) return false
       if (listFilter === "has_orphan_candidates" && !row.media_items.some((m) => mediaLooksOrphanCandidate(m))) return false
       if (listFilter === "attention") {
@@ -162,6 +183,8 @@ export function OxfordLocalMvpMediaReviewClient({ payload }: Props) {
       if (listFilter === "product_missing" && row.product_in_local_medusa_db) return false
       if (listFilter === "gallery_backlog" && row.gallery_review_backlog_urls.length === 0) return false
       if (listFilter === "no_media" && row.review_status !== "no_media_candidates") return false
+      if (listFilter === "has_decisions" && !row.media_items.some((m) => decisionOf(decisions[m.media_key]) !== "unset"))
+        return false
 
       if (q) {
         const blob = `${row.sku} ${row.handle} ${row.title_or_canonical ?? ""}`.toLowerCase()
@@ -189,6 +212,35 @@ export function OxfordLocalMvpMediaReviewClient({ payload }: Props) {
 
   const allKeys = useMemo(() => totalDecisionKeys(payload), [payload])
   const reviewed = reviewedCount(decisions, allKeys)
+  const dStrip = useMemo(() => decisionSummary(decisions, allKeys), [decisions, allKeys])
+
+  const backlogStats = useMemo(() => {
+    const rows = payload.orphan_media.filter((m) => !previewCanUseImgTag(m))
+    let sourceNotMounted = 0
+    let manifestOnly = 0
+    let missingLocal = 0
+    let unsupported = 0
+    let needsRecovery = 0
+    let externalAbs = 0
+    for (const m of rows) {
+      if (isExternalAbsolutePath(m)) externalAbs += 1
+      const c = m.backlog_classification
+      if (c === "source_not_mounted") sourceNotMounted += 1
+      else if (c === "manifest_only_legacy_reference") manifestOnly += 1
+      else if (c === "missing_local_file") missingLocal += 1
+      else if (c === "unsupported_reference") unsupported += 1
+      else if (c === "needs_source_recovery") needsRecovery += 1
+    }
+    return {
+      total: rows.length,
+      sourceNotMounted,
+      manifestOnly,
+      missingLocal,
+      unsupported,
+      needsRecovery,
+      externalAbs,
+    }
+  }, [payload.orphan_media])
 
   const displayOrphans = useMemo(() => {
     return payload.orphan_media.filter((m) => {
@@ -201,19 +253,65 @@ export function OxfordLocalMvpMediaReviewClient({ payload }: Props) {
   const orphanUnpreviewable = useMemo(() => displayOrphans.filter((m) => !previewCanUseImgTag(m)), [displayOrphans])
 
   const exportJson = useCallback(() => {
+    function findMedia(mediaKey: string): OxfordReviewMediaItem | null {
+      for (const r of payload.sku_rows) {
+        const m = r.media_items.find((x) => x.media_key === mediaKey)
+        if (m) return m
+      }
+      return payload.orphan_media.find((x) => x.media_key === mediaKey) ?? null
+    }
+
+    function exportBacklogReason(m: OxfordReviewMediaItem): string {
+      const c = m.backlog_classification
+      if (c === "source_not_mounted" || c === "manifest_only_legacy_reference") return "source_not_mounted_or_manifest_only"
+      if (c === "missing_local_file") return "missing_local_file_under_data"
+      if (c === "unsupported_reference") return "unsupported_path_for_preview"
+      if (c === "needs_source_recovery") return "needs_source_recovery"
+      if (c === "not_actionable_in_visual_review") return "not_actionable_in_visual_review"
+      return "unpreviewable_reference"
+    }
+
     const decisionsList: Array<Record<string, unknown>> = []
+    const backlogReferenceDecisions: Array<Record<string, unknown>> = []
+
     for (const k of allKeys) {
       const d = decisions[k]
       if (!d || d.decision === "unset") continue
       const row = payload.sku_rows.find((r) => r.media_items.some((x) => x.media_key === k))
-      const media =
-        row?.media_items.find((x) => x.media_key === k) ?? payload.orphan_media.find((x) => x.media_key === k)
+      const media = findMedia(k)
+      if (!media) continue
+
+      const visualOk = previewCanUseImgTag(media)
+      let dec = d.decision
+
+      if (!visualOk) {
+        if (dec === "do_not_use") dec = "do_not_use_reference"
+        if (!BACKLOG_REFERENCE_DECISIONS.has(dec)) continue
+        backlogReferenceDecisions.push({
+          media_key: k,
+          sku: row?.sku ?? media.matched_sku ?? null,
+          handle: row?.handle ?? media.matched_handle ?? null,
+          filename: media.filename,
+          source_kind: media.source_kind ?? null,
+          backlog_classification: media.backlog_classification ?? null,
+          decision: dec,
+          visual_reviewable: false,
+          reason: exportBacklogReason(media),
+          target_sku: d.target_sku ?? null,
+          reviewer_note: d.reviewer_note ?? "",
+        })
+        continue
+      }
+
+      if (BACKLOG_REFERENCE_DECISIONS.has(dec)) continue
+
       decisionsList.push({
-        sku: row?.sku ?? media?.matched_sku ?? null,
-        handle: row?.handle ?? media?.matched_handle ?? null,
-        media_url_or_path: media?.preview_url ?? media?.source_display ?? "",
-        filename: media?.filename ?? "",
-        decision: d.decision,
+        sku: row?.sku ?? media.matched_sku ?? null,
+        handle: row?.handle ?? media.matched_handle ?? null,
+        media_url_or_path: media.preview_url ?? media.source_display ?? "",
+        filename: media.filename,
+        decision: dec,
+        visual_reviewable: true,
         target_sku: d.target_sku ?? null,
         target_handle: d.target_handle ?? null,
         reason: d.reason ?? "",
@@ -231,6 +329,7 @@ export function OxfordLocalMvpMediaReviewClient({ payload }: Props) {
           production_rollout: false,
         },
         decisions: decisionsList,
+        backlog_reference_decisions: backlogReferenceDecisions,
       },
       null,
       2
@@ -258,7 +357,7 @@ export function OxfordLocalMvpMediaReviewClient({ payload }: Props) {
   if (payload.load_errors.length > 0) {
     return (
       <div className="status-message" style={{ padding: "1.5rem" }}>
-        <strong>Не удалось загрузить данные.</strong>
+        <strong>Could not load review data.</strong>
         <ul className="info-text" style={{ marginTop: "0.5rem" }}>
           {payload.load_errors.map((e) => (
             <li key={e}>{e}</li>
@@ -270,45 +369,90 @@ export function OxfordLocalMvpMediaReviewClient({ payload }: Props) {
 
   const shell: React.CSSProperties = {
     minHeight: "100vh",
-    background: "#f0f2f5",
-    color: "#1a1a1a",
-    fontFamily: "system-ui, sans-serif",
+    background: "#eef1f5",
+    color: "#111827",
+    fontFamily: "system-ui, -apple-system, Segoe UI, sans-serif",
   }
+
+  const tabBtn = (m: ReviewMode, label: string) => {
+    const on = mode === m
+    return (
+      <button
+        type="button"
+        key={m}
+        onClick={() => setMode(m)}
+        style={{
+          padding: "0.55rem 1.1rem",
+          fontSize: "0.9rem",
+          fontWeight: 600,
+          borderRadius: "10px",
+          border: on ? "2px solid #2563eb" : "1px solid #d1d9e6",
+          background: on ? "#eff6ff" : "#fff",
+          color: on ? "#1d4ed8" : "#334155",
+          cursor: "pointer",
+        }}
+      >
+        {label}
+      </button>
+    )
+  }
+
+  const lowUnassignedPool = payload.aggregate.orphan_with_img_preview <= 3
 
   return (
     <div style={shell}>
       <header
         style={{
           background: "#fff",
-          borderBottom: "1px solid #e2e4e8",
-          padding: "1rem 1.25rem",
+          borderBottom: "1px solid #e5e7eb",
+          padding: "1.1rem 1.35rem",
           position: "sticky",
           top: 0,
-          zIndex: 20,
+          zIndex: 30,
+          boxShadow: "0 1px 0 rgba(0,0,0,0.04)",
         }}
       >
-        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "0.75rem 1.25rem" }}>
-          <div>
-            <h1 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700 }}>Oxford local media review — dev only</h1>
-            <p style={{ margin: "0.25rem 0 0", fontSize: "0.85rem", color: "#5c6570" }}>Visual-first review board</p>
-            <p style={{ margin: "0.35rem 0 0", fontSize: "0.8rem" }}>
-              <Link href="/qa/oxford-local-mvp-media" style={{ color: "#2563eb", fontWeight: 600 }}>
-                Table plan QA (assignment rows)
-              </Link>
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", gap: "1rem 1.5rem" }}>
+          <div style={{ flex: "1 1 240px", minWidth: 0 }}>
+            <h1 style={{ margin: 0, fontSize: "1.45rem", fontWeight: 700, letterSpacing: "-0.02em" }}>Oxford media review</h1>
+            <p style={{ margin: "0.4rem 0 0", fontSize: "0.95rem", color: "#64748b", maxWidth: "42rem", lineHeight: 1.45 }}>
+              Local QA board for sorting available Oxford images. No DB writes.
             </p>
+            <div style={{ marginTop: "0.65rem", display: "flex", flexWrap: "wrap", gap: "0.5rem 1rem", fontSize: "0.88rem" }}>
+              <Link href="/qa/oxford-local-mvp-media" style={{ color: "#2563eb", fontWeight: 600 }}>
+                Table plan QA
+              </Link>
+              <span style={{ color: "#cbd5e1" }} aria-hidden>
+                ·
+              </span>
+              <button
+                type="button"
+                onClick={() => void navigator.clipboard.writeText("docs/project/oxford-source-expansion-report.md")}
+                style={{
+                  background: "none",
+                  border: "none",
+                  padding: 0,
+                  color: "#2563eb",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  font: "inherit",
+                }}
+                title="Copies repo-relative path to clipboard"
+              >
+                Source expansion report (copy path)
+              </button>
+            </div>
           </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem" }}>
-            <Badge text="Local QA only" tone="neutral" />
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem", alignItems: "center" }}>
+            <Badge text="Local only" tone="neutral" />
             <Badge text="Oxford PAUSED" tone="amber" />
             <Badge text="No DB writes" tone="green" />
-            <Badge text="Interim / non-white OK for preview" tone="neutral" />
+            <Badge text="Interim media" tone="neutral" />
+            <Badge text="Not production-ready" tone="neutral" />
           </div>
-          <div style={{ marginLeft: "auto", display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "center" }}>
-            <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#3d4a5c" }}>
-              {reviewed} / {allKeys.length} reviewed
-            </span>
-            <button type="button" className="button" onClick={downloadExport}>
-              Export decisions JSON
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "center" }}>
+            <button type="button" className="button" onClick={downloadExport} style={{ fontWeight: 600 }}>
+              Export decisions
             </button>
             <button type="button" className="button" onClick={copyExport}>
               Copy JSON
@@ -325,259 +469,398 @@ export function OxfordLocalMvpMediaReviewClient({ payload }: Props) {
             </button>
           </div>
         </div>
+
         <div
           style={{
-            marginTop: "0.75rem",
-            paddingTop: "0.75rem",
-            borderTop: "1px solid #e8eaed",
+            marginTop: "0.85rem",
+            paddingTop: "0.85rem",
+            borderTop: "1px solid #f1f5f9",
             display: "flex",
             flexWrap: "wrap",
-            gap: "0.85rem 1.25rem",
-            fontSize: "0.8rem",
-            color: "#475569",
+            gap: "0.75rem 1.25rem",
             alignItems: "center",
+            fontSize: "0.84rem",
+            color: "#475569",
           }}
         >
-          <span>
-            <strong>{payload.aggregate.total_sku_rows}</strong> SKU rows
+          <span style={{ fontWeight: 600 }}>
+            Progress: {reviewed} / {allKeys.length} reviewed
           </span>
+          <span style={{ color: "#94a3b8" }}>|</span>
           <span>
-            <strong>{payload.aggregate.review_media_with_img_preview}</strong> with image preview
+            Recorded: <strong>{reviewed}</strong> decisions (export to save)
           </span>
+          <span style={{ color: "#94a3b8" }}>|</span>
           <span>
-            <strong>{payload.aggregate.review_media_without_img_preview}</strong> no preview (see below)
-          </span>
-          <span>
-            <strong>{payload.aggregate.orphan_media_count}</strong> unassigned in gallery
+            Primary {dStrip.primary} · Gallery {dStrip.gallery} · Move {dStrip.move} · Remove {dStrip.remove} · White-bg later{" "}
+            {dStrip.whiteBgLater} · Do not use {dStrip.doNotUse}
+            {dStrip.other ? ` · Other ${dStrip.other}` : ""}
           </span>
         </div>
-      </header>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "minmax(240px, 280px) minmax(0, 1fr) minmax(280px, 380px)",
-          gap: "1rem",
-          padding: "1rem",
-          maxWidth: "1600px",
-          margin: "0 auto",
-          alignItems: "start",
-        }}
-        className="oxford-review-grid oxford-review-main"
-      >
-        {/* A — Sidebar */}
-        <aside
-          className="oxford-review-sidebar"
-          style={{
-            position: "sticky",
-            top: "5.5rem",
-            alignSelf: "start",
-            maxHeight: "calc(100vh - 6rem)",
-            overflowY: "auto",
-            background: "#fff",
-            borderRadius: "12px",
-            padding: "0.85rem",
-            border: "1px solid #e2e4e8",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
-          }}
-        >
-          <input
-            type="search"
-            placeholder="Search SKU, handle, title…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+        <div style={{ marginTop: "0.85rem", display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "center" }}>
+          {tabBtn("sku", "Review by SKU")}
+          {tabBtn("unassigned", "Unassigned images")}
+          {tabBtn("backlog", "Source backlog")}
+        </div>
+
+        {lowUnassignedPool && (
+          <div
             style={{
-              width: "100%",
-              padding: "0.5rem 0.65rem",
-              borderRadius: "8px",
-              border: "1px solid #cfd6dd",
-              marginBottom: "0.65rem",
-              fontSize: "0.9rem",
-            }}
-          />
-          <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "#5c6570", display: "block", marginBottom: "0.35rem" }}>
-            Filter
-          </label>
-          <select
-            value={listFilter}
-            onChange={(e) => setListFilter(e.target.value as ListFilter)}
-            style={{
-              width: "100%",
-              padding: "0.45rem",
-              borderRadius: "8px",
-              border: "1px solid #cfd6dd",
-              marginBottom: "0.75rem",
-              fontSize: "0.85rem",
+              marginTop: "0.85rem",
+              padding: "0.75rem 1rem",
+              borderRadius: "10px",
+              background: "#fffbeb",
+              border: "1px solid #fde68a",
+              fontSize: "0.88rem",
+              color: "#92400e",
+              maxWidth: "52rem",
+              lineHeight: 1.5,
             }}
           >
-            <option value="all">All SKUs</option>
-            <option value="needs_review">Needs review</option>
-            <option value="has_primary">Has planned primary</option>
-            <option value="no_primary">No planned primary</option>
-            <option value="has_orphan_candidates">Has orphan candidates on SKU</option>
-            <option value="attention">Ambiguous / backlog items</option>
-            <option value="ambiguous">Status: ambiguous</option>
-            <option value="product_missing">Product missing in Medusa</option>
-            <option value="gallery_backlog">Gallery backlog</option>
-            <option value="no_media">No media candidates</option>
-          </select>
-          <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-            {filteredRows.map((row) => (
-              <SkuListItem
-                key={row.sku}
-                row={row}
-                active={row.sku === selectedSku}
-                onSelect={() => setSelectedSku(row.sku)}
-                decisions={decisions}
-              />
-            ))}
-          </ul>
-          {filteredRows.length === 0 && <p style={{ fontSize: "0.85rem", color: "#888" }}>No rows match.</p>}
-        </aside>
+            <strong>Only {payload.aggregate.orphan_with_img_preview} previewable unassigned images</strong> right now — that is
+            not the full Oxford pool. Mount WOODRIGHT/Yandex or run{" "}
+            <code style={{ fontSize: "0.8em" }}>node scripts/expand-oxford-media-source-inventory.mjs</code> to expand inventory.
+          </div>
+        )}
+      </header>
 
-        {/* B — Center */}
-        <main style={{ minWidth: 0 }}>
-          {!selectedRow ? (
-            <div className="card" style={{ padding: "2rem", textAlign: "center" }}>
-              Select a SKU from the list
-            </div>
-          ) : (
-            <CenterPanel row={selectedRow} decisions={decisions} onDecision={updateDecision} />
-          )}
-        </main>
-
-        {/* C — Candidate board */}
-        <section
-          className="oxford-review-right"
-          style={{
-            position: "sticky",
-            top: "5.5rem",
-            alignSelf: "start",
-            maxHeight: "calc(100vh - 6rem)",
-            overflowY: "auto",
-            background: "#fff",
-            borderRadius: "12px",
-            padding: "0.85rem",
-            border: "1px solid #e2e4e8",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
-          }}
-        >
-          <h2 style={{ margin: "0 0 0.65rem", fontSize: "0.95rem", fontWeight: 700 }}>Candidates</h2>
-          {!selectedRow ? (
-            <p style={{ fontSize: "0.85rem", color: "#888" }}>Pick a SKU to see images.</p>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              <input
-                placeholder="Move to SKU (e.g. OX-90-1)"
-                value={moveTargetSku}
-                onChange={(e) => setMoveTargetSku(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "0.45rem",
-                  borderRadius: "8px",
-                  border: "1px solid #cfd6dd",
-                  fontSize: "0.8rem",
-                }}
-              />
-              {selectedRow.media_items.map((m) => (
-                <CandidateCard
-                  key={m.media_key}
-                  media={m}
-                  decisions={decisions}
-                  onDecision={updateDecision}
-                  moveTargetSku={moveTargetSku}
-                />
-              ))}
-            </div>
-          )}
-        </section>
-      </div>
-
-      {/* Orphan gallery — full width below grid on narrow screens handled by media query in style tag */}
-      <section style={{ padding: "0 1rem 2rem", maxWidth: "1600px", margin: "0 auto" }}>
+      {mode === "sku" && (
         <div
           style={{
-            background: "#fff",
-            borderRadius: "12px",
-            padding: "1rem 1.25rem",
-            border: "1px solid #e2e4e8",
-            marginTop: "0.5rem",
+            display: "grid",
+            gridTemplateColumns: "minmax(260px, 300px) minmax(0, 1fr)",
+            gap: "1.1rem",
+            padding: "1.1rem",
+            maxWidth: "1680px",
+            margin: "0 auto",
+            alignItems: "start",
           }}
+          className="oxford-review-grid oxford-review-main-sku"
         >
-          <h2 style={{ margin: "0 0 0.35rem", fontSize: "1.15rem", fontWeight: 700 }}>Unassigned Oxford media</h2>
-          <p style={{ margin: "0 0 1rem", fontSize: "0.82rem", color: "#64748b" }}>
-            Visual gallery — only entries with a working image URL. Assign does not delete files (future Medusa assignment only).
-          </p>
-          {displayOrphans.length === 0 ? (
-            <p style={{ fontSize: "0.9rem", color: "#888" }}>None right now.</p>
-          ) : (
-            <>
-              <input
-                placeholder="Assign orphan to SKU…"
-                value={orphanAssignSku}
-                onChange={(e) => setOrphanAssignSku(e.target.value)}
-                style={{
-                  maxWidth: "280px",
-                  width: "100%",
-                  padding: "0.5rem",
-                  borderRadius: "8px",
-                  border: "1px solid #cfd6dd",
-                  marginBottom: "1rem",
-                }}
-              />
-              {orphanVisual.length > 0 ? (
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
-                    gap: "1.1rem",
-                  }}
-                >
-                  {orphanVisual.map((m) => (
-                    <OrphanVisualCard
-                      key={m.media_key}
-                      media={m}
-                      decisions={decisions}
-                      onDecision={updateDecision}
-                      assignSku={orphanAssignSku}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <p style={{ fontSize: "0.85rem", color: "#94a3b8" }}>No previewable unassigned images in this filter.</p>
-              )}
+          <aside
+            className="oxford-review-sidebar"
+            style={{
+              position: "sticky",
+              top: "12.5rem",
+              alignSelf: "start",
+              maxHeight: "calc(100vh - 13rem)",
+              overflowY: "auto",
+              background: "#fff",
+              borderRadius: "14px",
+              padding: "1rem",
+              border: "1px solid #e5e7eb",
+              boxShadow: "0 4px 14px rgba(15,23,42,0.06)",
+            }}
+          >
+            <input
+              type="search"
+              placeholder="Search SKU, handle, title…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "0.55rem 0.7rem",
+                borderRadius: "10px",
+                border: "1px solid #d1d9e6",
+                marginBottom: "0.65rem",
+                fontSize: "0.9rem",
+              }}
+            />
+            <label style={{ fontSize: "0.72rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              Filter SKUs
+            </label>
+            <select
+              value={listFilter}
+              onChange={(e) => setListFilter(e.target.value as ListFilter)}
+              style={{
+                width: "100%",
+                padding: "0.5rem",
+                borderRadius: "10px",
+                border: "1px solid #d1d9e6",
+                marginTop: "0.35rem",
+                marginBottom: "0.85rem",
+                fontSize: "0.85rem",
+              }}
+            >
+              <option value="all">All SKUs</option>
+              <option value="needs_review">Needs review</option>
+              <option value="has_candidates">Has candidates</option>
+              <option value="has_primary">Has planned primary</option>
+              <option value="no_primary">No primary</option>
+              <option value="has_orphan_candidates">Has orphan-like candidates</option>
+              <option value="attention">Ambiguous / backlog items</option>
+              <option value="ambiguous">Ambiguous only (row)</option>
+              <option value="product_missing">Missing product</option>
+              <option value="gallery_backlog">Gallery backlog</option>
+              <option value="no_media">No media</option>
+              <option value="has_decisions">Has decisions</option>
+            </select>
+            <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: "0.45rem" }}>
+              {filteredRows.map((row) => (
+                <SkuListItem
+                  key={row.sku}
+                  row={row}
+                  active={row.sku === selectedSku}
+                  onSelect={() => setSelectedSku(row.sku)}
+                  decisions={decisions}
+                />
+              ))}
+            </ul>
+            {filteredRows.length === 0 && <p style={{ fontSize: "0.88rem", color: "#94a3b8" }}>No SKUs match this filter.</p>}
+          </aside>
 
-              {orphanUnpreviewable.length > 0 && (
-                <details style={{ marginTop: "1.25rem", borderRadius: "10px", border: "1px solid #e2e8f0", padding: "0.65rem 0.85rem", background: "#f8fafc" }}>
-                  <summary style={{ cursor: "pointer", fontWeight: 700, fontSize: "0.9rem", color: "#334155" }}>
-                    Unpreviewable references ({orphanUnpreviewable.length})
-                  </summary>
-                  <p style={{ fontSize: "0.78rem", color: "#64748b", margin: "0.5rem 0 0.75rem" }}>
-                    Manifest-only or paths not mounted in this environment — not shown as broken thumbnails.
+          <main style={{ minWidth: 0 }}>
+            {!selectedRow ? (
+              <div
+                style={{
+                  padding: "3rem 2rem",
+                  textAlign: "center",
+                  background: "#fff",
+                  borderRadius: "14px",
+                  border: "1px dashed #cbd5e1",
+                }}
+              >
+                <p style={{ margin: 0, fontSize: "1rem", color: "#64748b" }}>Select a SKU from the list to review images.</p>
+              </div>
+            ) : (
+              <div
+                style={{
+                  background: "#fff",
+                  borderRadius: "14px",
+                  border: "1px solid #e5e7eb",
+                  boxShadow: "0 4px 14px rgba(15,23,42,0.06)",
+                  padding: "1.25rem 1.35rem",
+                }}
+              >
+                <CenterPanel row={selectedRow} decisions={decisions} onDecision={updateDecision} />
+                <div style={{ marginTop: "1.75rem", paddingTop: "1.35rem", borderTop: "1px solid #f1f5f9" }}>
+                  <h2 style={{ margin: "0 0 0.5rem", fontSize: "1.05rem", fontWeight: 700 }}>Candidates</h2>
+                  <p style={{ margin: "0 0 1rem", fontSize: "0.86rem", color: "#64748b" }}>
+                    Tap an action to tag this image. <strong>Remove</strong> means remove from a future assignment — not delete the file on disk.
                   </p>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.65rem" }}>
-                    {orphanUnpreviewable.map((m) => (
-                      <UnpreviewableOrphanRow key={m.media_key} media={m} decisions={decisions} onDecision={updateDecision} assignSku={orphanAssignSku} />
+                  <input
+                    placeholder="Move to SKU (e.g. OX-90-1)"
+                    value={moveTargetSku}
+                    onChange={(e) => setMoveTargetSku(e.target.value)}
+                    style={{
+                      maxWidth: "320px",
+                      width: "100%",
+                      padding: "0.5rem 0.65rem",
+                      borderRadius: "10px",
+                      border: "1px solid #d1d9e6",
+                      fontSize: "0.88rem",
+                      marginBottom: "1.1rem",
+                    }}
+                  />
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+                      gap: "1.15rem",
+                    }}
+                  >
+                    {selectedRow.media_items.map((m) => (
+                      <CandidateCard
+                        key={m.media_key}
+                        media={m}
+                        decisions={decisions}
+                        onDecision={updateDecision}
+                        moveTargetSku={moveTargetSku}
+                      />
                     ))}
                   </div>
-                </details>
-              )}
-            </>
-          )}
+                </div>
+              </div>
+            )}
+          </main>
         </div>
-      </section>
+      )}
+
+      {mode === "unassigned" && (
+        <section style={{ padding: "1.1rem", maxWidth: "1680px", margin: "0 auto" }}>
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: "14px",
+              padding: "1.35rem",
+              border: "1px solid #e5e7eb",
+              boxShadow: "0 4px 14px rgba(15,23,42,0.06)",
+            }}
+          >
+            <h2 style={{ margin: "0 0 0.35rem", fontSize: "1.2rem", fontWeight: 700 }}>Unassigned images</h2>
+            <p style={{ margin: "0 0 1rem", fontSize: "0.92rem", color: "#64748b", maxWidth: "40rem", lineHeight: 1.5 }}>
+              Only images with a working preview. Assign to a SKU when you are ready — nothing here deletes files.
+            </p>
+            {displayOrphans.length === 0 ? (
+              <p style={{ fontSize: "0.95rem", color: "#94a3b8" }}>No unassigned rows in the current data.</p>
+            ) : (
+              <>
+                <input
+                  type="search"
+                  placeholder="Filter by filename…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  style={{
+                    maxWidth: "320px",
+                    width: "100%",
+                    padding: "0.55rem 0.7rem",
+                    borderRadius: "10px",
+                    border: "1px solid #d1d9e6",
+                    marginBottom: "0.85rem",
+                    fontSize: "0.9rem",
+                  }}
+                />
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.65rem", alignItems: "center", marginBottom: "1.1rem" }}>
+                  <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#475569" }}>Assign to SKU</label>
+                  <input
+                    placeholder="e.g. OX-14-11"
+                    value={orphanAssignSku}
+                    onChange={(e) => setOrphanAssignSku(e.target.value)}
+                    style={{
+                      maxWidth: "220px",
+                      width: "100%",
+                      padding: "0.5rem 0.65rem",
+                      borderRadius: "10px",
+                      border: "1px solid #d1d9e6",
+                      fontSize: "0.88rem",
+                    }}
+                  />
+                </div>
+                {orphanVisual.length > 0 ? (
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+                      gap: "1.25rem",
+                    }}
+                  >
+                    {orphanVisual.map((m) => (
+                      <OrphanVisualCard
+                        key={m.media_key}
+                        media={m}
+                        decisions={decisions}
+                        onDecision={updateDecision}
+                        assignSku={orphanAssignSku}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      padding: "1.25rem",
+                      borderRadius: "12px",
+                      background: "#f8fafc",
+                      border: "1px solid #e2e8f0",
+                      fontSize: "0.92rem",
+                      color: "#475569",
+                    }}
+                  >
+                    <p style={{ margin: "0 0 0.5rem" }}>
+                      No previewable unassigned images match this filter. More files need a{" "}
+                      <strong>WOODRIGHT/Yandex</strong> mount or repo-local discovery.
+                    </p>
+                    <p style={{ margin: 0, fontSize: "0.86rem", color: "#64748b" }}>
+                      Run <code>node scripts/expand-oxford-media-source-inventory.mjs</code> from repo root after mounting source, then refresh this page.
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </section>
+      )}
+
+      {mode === "backlog" && (
+        <section style={{ padding: "1.1rem", maxWidth: "1680px", margin: "0 auto" }}>
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: "14px",
+              padding: "1.35rem",
+              border: "1px solid #e5e7eb",
+              boxShadow: "0 4px 14px rgba(15,23,42,0.06)",
+            }}
+          >
+            <h2 style={{ margin: "0 0 0.35rem", fontSize: "1.2rem", fontWeight: 700 }}>Source backlog</h2>
+            <p style={{ margin: "0 0 1.1rem", fontSize: "0.92rem", color: "#64748b", maxWidth: "44rem", lineHeight: 1.55 }}>
+              References without a browser preview — triage only. Use the <strong>Source backlog</strong> tab for manifests and
+              disk paths; do not expect a visual sort here. <strong>Remove</strong> in export still means “exclude from assignment”, not delete on disk.
+            </p>
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "0.65rem 1.1rem",
+                marginBottom: "1.25rem",
+                fontSize: "0.86rem",
+                color: "#334155",
+              }}
+            >
+              <StatChip label="Total backlog rows" value={backlogStats.total} />
+              <StatChip label="Source not mounted" value={backlogStats.sourceNotMounted} />
+              <StatChip label="Manifest-only" value={backlogStats.manifestOnly} />
+              <StatChip label="Missing local file" value={backlogStats.missingLocal} />
+              <StatChip label="External path" value={backlogStats.externalAbs} />
+            </div>
+            {backlogStats.sourceNotMounted > 0 && (
+              <div
+                style={{
+                  marginBottom: "1.1rem",
+                  padding: "0.85rem 1rem",
+                  borderRadius: "10px",
+                  background: "#f8fafc",
+                  border: "1px solid #e2e8f0",
+                  fontSize: "0.9rem",
+                  color: "#475569",
+                  maxWidth: "48rem",
+                  lineHeight: 1.5,
+                }}
+              >
+                <strong>WOODRIGHT/Yandex source is not mounted</strong> for some rows. This board only shows repo-local Oxford
+                media with previews until you mount the mirror or run source expansion with{" "}
+                <code style={{ fontSize: "0.85em" }}>WOODRIGHT_WHITE_BG_ROOT</code>.
+              </div>
+            )}
+            {orphanUnpreviewable.length === 0 ? (
+              <p style={{ color: "#64748b" }}>No backlog rows — everything in inventory has a preview or is assigned.</p>
+            ) : (
+              <SourceReferenceBacklogTable rows={orphanUnpreviewable} decisions={decisions} onDecision={updateDecision} />
+            )}
+          </div>
+        </section>
+      )}
 
       <style
         dangerouslySetInnerHTML={{
           __html: `
 @media (max-width: 1100px) {
-  .oxford-review-grid { grid-template-columns: 1fr !important; }
-  .oxford-review-grid .oxford-review-sidebar,
-  .oxford-review-grid .oxford-review-right { position: static !important; max-height: none !important; }
+  .oxford-review-main-sku { grid-template-columns: 1fr !important; }
+  .oxford-review-main-sku .oxford-review-sidebar { position: static !important; max-height: none !important; }
 }`,
         }}
       />
     </div>
+  )
+}
+
+function StatChip({ label, value }: { label: string; value: number }) {
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "0.35rem",
+        padding: "0.35rem 0.65rem",
+        borderRadius: "999px",
+        background: "#f1f5f9",
+        border: "1px solid #e2e8f0",
+        fontWeight: 600,
+      }}
+    >
+      <span style={{ color: "#64748b", fontWeight: 500 }}>{label}</span>
+      <span>{value}</span>
+    </span>
   )
 }
 
@@ -613,10 +896,20 @@ function SkuListItem({
   decisions: Record<string, StoredDecision>
 }) {
   const { c, p, a, o } = skuBadgeCounts(row)
+  const status = skuRowHumanStatus(row, decisions)
+  const decided = rowDecisionCount(row, decisions)
   const thumb =
     row.planned_primary_url ||
     row.media_items.find((m) => previewCanUseImgTag(m))?.preview_url ||
     null
+  const statusColor =
+    status === "Ready"
+      ? "#15803d"
+      : status === "Missing product" || status === "No media"
+        ? "#b45309"
+        : status === "Ambiguous"
+          ? "#c2410c"
+          : "#1d4ed8"
   return (
     <button
       type="button"
@@ -625,10 +918,10 @@ function SkuListItem({
         width: "100%",
         textAlign: "left",
         display: "flex",
-        gap: "0.5rem",
-        alignItems: "center",
-        padding: "0.5rem",
-        borderRadius: "10px",
+        gap: "0.55rem",
+        alignItems: "flex-start",
+        padding: "0.55rem",
+        borderRadius: "12px",
         border: active ? "2px solid #2563eb" : "1px solid #e8eaed",
         background: active ? "#eff6ff" : "#fafbfc",
         cursor: "pointer",
@@ -636,9 +929,9 @@ function SkuListItem({
     >
       <div
         style={{
-          width: 44,
-          height: 44,
-          borderRadius: "8px",
+          width: 48,
+          height: 48,
+          borderRadius: "10px",
           background: "#e8eaed",
           flexShrink: 0,
           overflow: "hidden",
@@ -646,17 +939,18 @@ function SkuListItem({
       >
         {thumb ? <SidebarThumb url={thumb} /> : null}
       </div>
-      <div style={{ minWidth: 0 }}>
-        <div style={{ fontWeight: 700, fontSize: "0.82rem" }}>{row.sku}</div>
-        <div style={{ fontSize: "0.72rem", color: "#64748b", overflow: "hidden", textOverflow: "ellipsis" }}>
-          {row.handle}
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <div style={{ fontWeight: 700, fontSize: "0.84rem" }}>{row.sku}</div>
+        <div style={{ fontSize: "0.72rem", color: "#64748b", overflow: "hidden", textOverflow: "ellipsis" }}>{row.handle}</div>
+        <div style={{ fontSize: "0.7rem", fontWeight: 700, color: statusColor, marginTop: "0.2rem" }}>{status}</div>
+        <div style={{ fontSize: "0.68rem", color: "#64748b", marginTop: "0.15rem" }}>
+          {row.media_items.length} candidates · {decided} decided
         </div>
-        <div style={{ display: "flex", gap: "0.2rem", marginTop: "0.25rem", flexWrap: "wrap" }}>
-          <MiniBadge label={row.product_in_local_medusa_db ? "in DB" : "no product"} ok={row.product_in_local_medusa_db} />
-          {o > 0 && <MiniBadge label={`${o} orphan`} ok={false} soft />}
-          {c > 0 && <MiniBadge label={`${c} conf`} ok />}
-          {p > 0 && <MiniBadge label={`${p} prob`} ok={false} soft />}
-          {a > 0 && <MiniBadge label={`${a} amb`} ok={false} />}
+        <div style={{ display: "flex", gap: "0.2rem", marginTop: "0.28rem", flexWrap: "wrap" }}>
+          {o > 0 && <MiniBadge label={`${o} unmapped`} ok={false} soft />}
+          {c > 0 && <MiniBadge label={`${c} confirmed`} ok />}
+          {p > 0 && <MiniBadge label={`${p} probable`} ok={false} soft />}
+          {a > 0 && <MiniBadge label={`${a} ambiguous`} ok={false} />}
         </div>
       </div>
     </button>
@@ -693,23 +987,40 @@ function CenterPanel({
   }, [row])
 
   const decidedForRow = row.media_items.filter((m) => decisionOf(decisions[m.media_key]) !== "unset").length
+  const rowStatus = skuRowHumanStatus(row, decisions)
 
   return (
-    <div
-      style={{
-        background: "#fff",
-        borderRadius: "12px",
-        padding: "1.25rem",
-        border: "1px solid #e2e4e8",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-      }}
-    >
-      <div style={{ marginBottom: "1rem" }}>
-        <h2 style={{ margin: 0, fontSize: "1.15rem", fontWeight: 700 }}>{row.title_or_canonical ?? row.sku}</h2>
-        <p style={{ margin: "0.35rem 0 0", fontSize: "0.9rem", color: "#64748b" }}>
-          {row.sku} · {row.handle}
-        </p>
+    <div>
+      <div style={{ marginBottom: "1.1rem", display: "flex", flexWrap: "wrap", gap: "0.65rem", alignItems: "center" }}>
+        <h2 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, flex: "1 1 200px" }}>{row.title_or_canonical ?? row.sku}</h2>
+        <span
+          style={{
+            fontSize: "0.75rem",
+            fontWeight: 700,
+            padding: "0.25rem 0.6rem",
+            borderRadius: "999px",
+            background: row.product_in_local_medusa_db ? "#dcfce7" : "#ffedd5",
+            color: row.product_in_local_medusa_db ? "#166534" : "#9a3412",
+          }}
+        >
+          {row.product_in_local_medusa_db ? "Product in local DB" : "Missing product"}
+        </span>
+        <span
+          style={{
+            fontSize: "0.75rem",
+            fontWeight: 700,
+            padding: "0.25rem 0.6rem",
+            borderRadius: "999px",
+            background: "#e0e7ff",
+            color: "#3730a3",
+          }}
+        >
+          {rowStatus}
+        </span>
       </div>
+      <p style={{ margin: "0 0 1rem", fontSize: "0.92rem", color: "#64748b" }}>
+        {row.sku} · {row.handle}
+      </p>
 
       <div style={{ marginBottom: "1rem" }}>
         <div style={{ fontSize: "0.75rem", fontWeight: 600, color: "#64748b", marginBottom: "0.5rem" }}>Planned primary</div>
@@ -777,34 +1088,26 @@ function CenterPanel({
         </ul>
       )}
 
-      <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#334155" }}>
-        Decisions on this SKU: {decidedForRow} / {row.media_items.length} images tagged
+      <div style={{ fontSize: "0.88rem", fontWeight: 600, color: "#334155" }}>
+        Tagged {decidedForRow} / {row.media_items.length} images on this SKU
       </div>
 
-      <details style={{ marginTop: "1rem", fontSize: "0.8rem", color: "#64748b" }}>
-        <summary style={{ cursor: "pointer", fontWeight: 600 }}>Technical details</summary>
-        <pre
-          style={{
-            marginTop: "0.5rem",
-            padding: "0.65rem",
-            background: "#f8fafc",
-            borderRadius: "8px",
-            overflow: "auto",
-            fontSize: "0.72rem",
-            maxHeight: "200px",
-          }}
-        >
-          {JSON.stringify(
-            {
-              review_status: row.review_status,
-              planned_primary_tier: row.planned_primary_tier,
-              warnings: row.warnings,
-              media_keys: row.media_items.map((m) => m.media_key),
-            },
-            null,
-            2
-          )}
-        </pre>
+      <details style={{ marginTop: "1rem", fontSize: "0.82rem", color: "#64748b" }}>
+        <summary style={{ cursor: "pointer", fontWeight: 600 }}>Row notes</summary>
+        <ul style={{ margin: "0.5rem 0 0", paddingLeft: "1.15rem" }}>
+          <li>System status: {row.review_status.replace(/_/g, " ")}</li>
+          {row.planned_primary_tier ? <li>Primary tier: {row.planned_primary_tier.replace(/_/g, " ")}</li> : null}
+          {row.warnings.length > 0 ? (
+            <li>
+              Flags:{" "}
+              {row.warnings
+                .slice(0, 4)
+                .map((w) => humanWarning(w))
+                .join(", ")}
+              {row.warnings.length > 4 ? "…" : ""}
+            </li>
+          ) : null}
+        </ul>
       </details>
     </div>
   )
@@ -909,19 +1212,20 @@ function CandidateCard({
   return (
     <div
       style={{
-        borderRadius: "12px",
+        borderRadius: "14px",
         border: d !== "unset" ? "2px solid #2563eb" : "1px solid #e8eaed",
-        padding: "0.65rem",
+        padding: "0.75rem",
         background: "#fafbfc",
+        minWidth: "240px",
       }}
     >
       <div
         style={{
-          borderRadius: "10px",
+          borderRadius: "12px",
           overflow: "hidden",
           background: "#eef1f4",
-          marginBottom: "0.5rem",
-          minWidth: "220px",
+          marginBottom: "0.55rem",
+          minHeight: "200px",
         }}
       >
         {previewCanUseImgTag(media) && media.preview_url ? (
@@ -946,12 +1250,19 @@ function CandidateCard({
       <div style={{ fontWeight: 600, fontSize: "0.82rem", marginBottom: "0.35rem", overflow: "hidden", textOverflow: "ellipsis" }}>
         {shortName(media.filename, 32)}
       </div>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.25rem", marginBottom: "0.5rem" }}>
-        <TinyBadge text={media.confidence ?? "?"} />
-        <TinyBadge text={media.media_class?.replace(/_/g, " ") ?? "—"} muted />
-        <TinyBadge text={media.source_kind?.replace(/_/g, " ") ?? ""} muted />
-        {ambiguous && <span title="Needs care">⚠️</span>}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3rem", marginBottom: "0.55rem" }}>
+        <TinyBadge text={humanConfidence(media.confidence)} title={media.confidence ?? ""} />
+        <TinyBadge text={humanMediaClass(media.media_class)} muted title={media.media_class ?? ""} />
+        <TinyBadge text={humanSourceKind(media.source_kind)} muted title={media.source_kind ?? ""} />
+        {ambiguous && (
+          <span title="Needs a human call" style={{ fontSize: "0.75rem" }}>
+            ⚠
+          </span>
+        )}
       </div>
+      {d !== "unset" && (
+        <p style={{ fontSize: "0.78rem", fontWeight: 700, color: "#1d4ed8", marginBottom: "0.45rem" }}>Choice: {visualDecisionHuman(d)}</p>
+      )}
       <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem" }}>
         {btn("Primary", "keep_as_primary")}
         {btn("Gallery", "keep_in_gallery")}
@@ -959,9 +1270,8 @@ function CandidateCard({
         {btn("Remove", "remove_from_assignment")}
         {btn("White-bg later", "needs_white_bg_replacement")}
         {btn("Do not use", "do_not_use")}
-        {btn("Review", "needs_manual_review")}
       </div>
-      <details style={{ marginTop: "0.5rem", fontSize: "0.72rem", color: "#64748b" }}>
+      <details style={{ marginTop: "0.55rem", fontSize: "0.72rem", color: "#64748b" }}>
         <summary>Details</summary>
         <div style={{ marginTop: "0.35rem", wordBreak: "break-all" }}>{media.source_display}</div>
         {media.warnings.length > 0 && (
@@ -971,12 +1281,28 @@ function CandidateCard({
             ))}
           </ul>
         )}
+        <button
+          type="button"
+          style={{
+            marginTop: "0.45rem",
+            fontSize: "0.72rem",
+            color: "#2563eb",
+            background: "none",
+            border: "none",
+            padding: 0,
+            cursor: "pointer",
+            textDecoration: "underline",
+          }}
+          onClick={() => onDecision(media.media_key, { decision: "needs_manual_review" })}
+        >
+          Flag for manual review
+        </button>
       </details>
     </div>
   )
 }
 
-function TinyBadge({ text, muted }: { text: string; muted?: boolean }) {
+function TinyBadge({ text, muted, title }: { text: string; muted?: boolean; title?: string }) {
   if (!text) return null
   return (
     <span
@@ -988,6 +1314,7 @@ function TinyBadge({ text, muted }: { text: string; muted?: boolean }) {
         background: muted ? "#f1f5f9" : "#e0e7ff",
         color: muted ? "#64748b" : "#3730a3",
       }}
+      title={title}
     >
       {text}
     </span>
@@ -1028,9 +1355,11 @@ function NoPreviewTile({
         textAlign: "center",
       }}
     >
-      <div style={{ fontSize: "0.88rem", fontWeight: 700, color: "#334155" }}>No preview</div>
-      <div style={{ fontSize: "0.76rem", color: "#64748b", marginTop: "0.45rem", maxWidth: "280px" }}>
-        {media.preview_error_reason ?? media.preview_status.replace(/_/g, " ")}
+      <div style={{ fontSize: "0.9rem", fontWeight: 700, color: "#334155" }}>Not reviewable here</div>
+      <div style={{ fontSize: "0.78rem", color: "#64748b", marginTop: "0.45rem", maxWidth: "280px", lineHeight: 1.45 }}>
+        {media.preview_status === "manifest_only_no_local_file" || media.preview_status === "source_not_mounted"
+          ? "This is a reference, not a reviewable image yet."
+          : media.preview_error_reason ?? "No preview available in this board."}
       </div>
       <div style={{ fontSize: "0.72rem", color: "#94a3b8", marginTop: "0.35rem" }}>{shortName(media.filename, 36)}</div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem", justifyContent: "center", marginTop: "0.65rem" }}>
@@ -1064,7 +1393,7 @@ function orphanActionRow(
             }
           }}
         >
-          Assign to SKU
+          Assign
         </button>
         <button type="button" className="button" style={{ fontSize: "0.75rem", padding: "0.4rem 0.65rem" }} onClick={() => onDecision(media.media_key, { decision: "unset" })}>
           Keep unassigned
@@ -1082,7 +1411,7 @@ function orphanActionRow(
         </button>
       </div>
       {d !== "unset" && (
-        <p style={{ fontSize: "0.72rem", marginTop: "0.5rem", color: "#2563eb", fontWeight: 600 }}>Selected: {d}</p>
+        <p style={{ fontSize: "0.72rem", marginTop: "0.5rem", color: "#2563eb", fontWeight: 600 }}>Selected: {visualDecisionHuman(d)}</p>
       )}
     </>
   )
@@ -1121,8 +1450,8 @@ function OrphanVisualCard({
       </div>
       <p style={{ fontWeight: 600, fontSize: "0.85rem", margin: "0.55rem 0 0.25rem" }}>{shortName(media.filename, 34)}</p>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "0.25rem" }}>
-        <TinyBadge text={media.source_kind?.replace(/_/g, " ") ?? "—"} muted />
-        <TinyBadge text={media.confidence ?? "?"} />
+        <TinyBadge text={humanSourceKind(media.source_kind)} muted />
+        <TinyBadge text={humanConfidence(media.confidence)} />
       </div>
       {orphanActionRow(media, decisions, onDecision, assignSku)}
       <details style={{ marginTop: "0.45rem", fontSize: "0.7rem", color: "#64748b" }}>
@@ -1133,40 +1462,137 @@ function OrphanVisualCard({
   )
 }
 
-function UnpreviewableOrphanRow({
-  media,
+const BACKLOG_DECISION_OPTIONS: Array<{ decision: ReviewDecision; label: string }> = [
+  { decision: "needs_source_recovery", label: "Needs recovery" },
+  { decision: "keep_as_reference", label: "Keep as reference" },
+  { decision: "ignore_until_source_mounted", label: "Ignore for now" },
+  { decision: "do_not_use_reference", label: "Do not use" },
+]
+
+function backlogDecisionHuman(d: ReviewDecision): string {
+  switch (d) {
+    case "needs_source_recovery":
+      return "Needs recovery"
+    case "keep_as_reference":
+      return "Keep as reference"
+    case "ignore_until_source_mounted":
+      return "Ignore for now"
+    case "do_not_use_reference":
+    case "do_not_use":
+      return "Do not use"
+    default:
+      return d.replace(/_/g, " ")
+  }
+}
+
+function visualDecisionHuman(d: ReviewDecision): string {
+  switch (d) {
+    case "keep_as_primary":
+      return "Primary"
+    case "keep_in_gallery":
+      return "Gallery"
+    case "move_to_other_sku":
+      return "Move"
+    case "remove_from_assignment":
+      return "Remove"
+    case "needs_white_bg_replacement":
+      return "White-bg later"
+    case "do_not_use":
+      return "Do not use"
+    case "needs_manual_review":
+      return "Needs review"
+    case "unset":
+      return "—"
+    default:
+      return d.replace(/_/g, " ")
+  }
+}
+
+function SourceReferenceBacklogTable({
+  rows,
   decisions,
   onDecision,
-  assignSku,
 }: {
-  media: OxfordReviewMediaItem
+  rows: OxfordReviewMediaItem[]
   decisions: Record<string, StoredDecision>
   onDecision: (k: string, p: Partial<StoredDecision>) => void
-  assignSku: string
 }) {
+  const sorted = useMemo(
+    () =>
+      [...rows].sort((a, b) => {
+        const ca = a.backlog_classification ?? ""
+        const cb = b.backlog_classification ?? ""
+        return ca.localeCompare(cb) || a.filename.localeCompare(b.filename)
+      }),
+    [rows]
+  )
+
   return (
-    <div
-      style={{
-        borderRadius: "10px",
-        border: "1px solid #e2e8f0",
-        padding: "0.55rem 0.65rem",
-        background: "#fff",
-        display: "flex",
-        flexDirection: "column",
-        gap: "0.35rem",
-      }}
-    >
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "baseline" }}>
-        <span style={{ fontWeight: 700, fontSize: "0.82rem" }}>{shortName(media.filename, 32)}</span>
-        <TinyBadge text={media.preview_status.replace(/_/g, " ")} muted />
-        <TinyBadge text={media.source_kind?.replace(/_/g, " ") ?? ""} muted />
-      </div>
-      <div style={{ fontSize: "0.74rem", color: "#64748b" }}>{media.preview_error_reason ?? "No image URL for this reference."}</div>
-      {orphanActionRow(media, decisions, onDecision, assignSku)}
-      <details style={{ fontSize: "0.68rem", color: "#94a3b8" }}>
-        <summary>Source</summary>
-        <div style={{ wordBreak: "break-all" }}>{media.debug_source_path ?? media.source_display}</div>
-      </details>
+    <div style={{ overflowX: "auto", marginTop: "0.35rem" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.76rem" }}>
+        <thead>
+          <tr style={{ textAlign: "left", color: "#64748b", borderBottom: "1px solid #e2e8f0" }}>
+            <th style={{ padding: "0.35rem 0.45rem", fontWeight: 600 }}>File</th>
+            <th style={{ padding: "0.35rem 0.45rem", fontWeight: 600 }}>Source</th>
+            <th style={{ padding: "0.35rem 0.45rem", fontWeight: 600 }}>Issue</th>
+            <th style={{ padding: "0.35rem 0.45rem", fontWeight: 600 }}>Suggested next step</th>
+            <th style={{ padding: "0.35rem 0.45rem", fontWeight: 600 }}>Decision</th>
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.map((m) => {
+            const raw = decisionOf(decisions[m.media_key])
+            const d = raw === "do_not_use" ? "do_not_use_reference" : raw
+            const backlogSelected = BACKLOG_REFERENCE_DECISIONS.has(d)
+            return (
+              <tr key={m.media_key} style={{ borderBottom: "1px solid #f1f5f9", verticalAlign: "top" }}>
+                <td style={{ padding: "0.45rem", fontWeight: 600, maxWidth: "220px" }}>
+                  <div title={m.source_display}>{shortName(m.filename, 44)}</div>
+                </td>
+                <td style={{ padding: "0.45rem", color: "#475569", whiteSpace: "nowrap" }}>{humanSourceKind(m.source_kind)}</td>
+                <td style={{ padding: "0.45rem", color: "#475569" }}>{humanBacklogReasonShort(m)}</td>
+                <td style={{ padding: "0.45rem", color: "#334155", fontWeight: 500 }}>{humanSuggestedNextAction(m)}</td>
+                <td style={{ padding: "0.45rem" }}>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "0.25rem" }}>
+                    {BACKLOG_DECISION_OPTIONS.map(({ decision: dec, label }) => {
+                      const active = backlogSelected && d === dec
+                      return (
+                        <button
+                          key={dec}
+                          type="button"
+                          className="button"
+                          style={{
+                            fontSize: "0.68rem",
+                            padding: "0.28rem 0.45rem",
+                            borderColor: active ? "#2563eb" : undefined,
+                            background: active ? "#eff6ff" : undefined,
+                          }}
+                          onClick={() => onDecision(m.media_key, { decision: dec })}
+                        >
+                          {label}
+                        </button>
+                      )
+                    })}
+                    <button
+                      type="button"
+                      className="button"
+                      style={{ fontSize: "0.68rem", padding: "0.28rem 0.45rem" }}
+                      onClick={() => onDecision(m.media_key, { decision: "unset" })}
+                    >
+                      Clear
+                    </button>
+                  </div>
+                  {backlogSelected && (
+                    <div style={{ fontSize: "0.68rem", marginTop: "0.35rem", color: "#2563eb", fontWeight: 600 }}>
+                      Selected: {backlogDecisionHuman(d)}
+                    </div>
+                  )}
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
     </div>
   )
 }

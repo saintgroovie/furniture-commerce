@@ -3,9 +3,9 @@ import { getOxfordLocalMvpMediaReviewPayload } from "@/lib/qa/oxford-local-mvp-m
 import { OxfordLocalMvpMediaReviewClient } from "./OxfordLocalMvpMediaReviewClient"
 
 export const metadata: Metadata = {
-  title: "Oxford local MVP media — visual review",
+  title: "Oxford media review — local QA",
   description:
-    "Локальный визуальный разбор Oxford MVP media: inventory + SKU map + plan. Не production rollout; Oxford PAUSED.",
+    "Desktop-first media board for sorting Oxford MVP images by SKU, unassigned pool, and source backlog. Local dev only; no DB writes; Oxford PAUSED.",
 }
 
 export default async function OxfordLocalMvpMediaReviewPage() {
