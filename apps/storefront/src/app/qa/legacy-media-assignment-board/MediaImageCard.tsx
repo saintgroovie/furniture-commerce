@@ -8,6 +8,7 @@ type CardSize = "compact" | "normal" | "large" | "xlarge"
 type Props = {
   inventoryId: string
   inv: InvItem
+  productHandle?: string | null
   previewUrl: string | null
   useImg: boolean
   caption: string
@@ -25,6 +26,8 @@ type Props = {
   /** Max visible filename characters before ellipsis. */
   filenameMaxLen?: number
   onOpenDetail?: () => void
+  onCardPointerDownCapture?: (e: React.PointerEvent) => void
+  onCardClickCapture?: (e: React.MouseEvent) => void
   children?: React.ReactNode
 }
 
@@ -39,6 +42,7 @@ function truncateMiddle(s: string, max: number) {
 export function MediaImageCard({
   inventoryId,
   inv,
+  productHandle = null,
   previewUrl,
   useImg,
   caption,
@@ -51,6 +55,8 @@ export function MediaImageCard({
   detailTitle,
   filenameMaxLen = 32,
   onOpenDetail,
+  onCardPointerDownCapture,
+  onCardClickCapture,
   children,
 }: Props) {
   const w = cardPx[size]
@@ -64,9 +70,14 @@ export function MediaImageCard({
   return (
     <div
       data-inventory-id={inventoryId}
+      data-media-card="true"
+      data-media-id={inventoryId}
+      data-product-handle={productHandle || ""}
       draggable={canDrag}
       onDragStart={canDrag ? onDragStart : undefined}
       onDragEnd={canDrag ? onDragEnd : undefined}
+      onPointerDownCapture={onCardPointerDownCapture}
+      onClickCapture={onCardClickCapture}
       style={{
         width: w + 16,
         borderRadius: 12,

@@ -44,6 +44,36 @@ async function fetchBoardJson(url: string): Promise<{ ok: true; data: Record<str
 
 type PoolTab = "suggested" | "unassigned" | "ambiguous" | "confirmed" | "unpreviewable" | "rejected"
 type ZoneDrop = "primary" | "gallery" | "reference" | "lane_reject" | "unassigned"
+type ActionSource = "button" | "manual" | "drag"
+
+type TargetSnapshot = {
+  tagName: string
+  className: string
+  mediaId: string
+  productHandle: string
+  closestCard: string
+  closestDraggable: string
+  closestDropZone: string
+  actionButton: string
+}
+
+type DevDiagnostics = {
+  lastPointerDown: TargetSnapshot | null
+  lastClick: TargetSnapshot | null
+  lastDragStart: TargetSnapshot | null
+  lastDragOver: TargetSnapshot | null
+  lastDrop: TargetSnapshot | null
+  cardHandlerFired: boolean
+  buttonHandlerFired: boolean
+  stateUpdateRequested: boolean
+  stateActuallyChanged: boolean
+  lastAction: string
+  lastError: string
+  source: ActionSource | "none"
+  mediaId: string
+  productHandle: string
+  targetZone: string
+}
 
 type ProductUiKind =
   | "no_candidates"
@@ -154,6 +184,28 @@ function swapGallery(zones: Record<string, ProductZoneState>, handle: string, a:
 }
 
 type BoardState = { zones: Record<string, ProductZoneState>; grej: GlobalRejection[] }
+
+function describeTargetFromElement(el: EventTarget | null): TargetSnapshot | null {
+  if (!(el instanceof HTMLElement)) return null
+  const nearestCard = el.closest("[data-media-card]") as HTMLElement | null
+  const nearestDrop = el.closest("[data-drop-zone]") as HTMLElement | null
+  const nearestDraggable = el.closest("[draggable='true']") as HTMLElement | null
+  const nearestAction = el.closest("[data-action-button]") as HTMLElement | null
+  return {
+    tagName: el.tagName.toLowerCase(),
+    className: String(el.className || ""),
+    mediaId: nearestCard?.dataset.mediaId || "",
+    productHandle: nearestCard?.dataset.productHandle || nearestDrop?.dataset.productHandle || "",
+    closestCard: nearestCard ? nearestCard.tagName.toLowerCase() : "",
+    closestDraggable: nearestDraggable ? nearestDraggable.tagName.toLowerCase() : "",
+    closestDropZone: nearestDrop?.dataset.dropZone || "",
+    actionButton: nearestAction?.dataset.actionButton || "",
+  }
+}
+
+function boardStateEqual(a: BoardState, b: BoardState): boolean {
+  return JSON.stringify(a) === JSON.stringify(b)
+}
 
 function writeLegacyDragData(e: React.DragEvent, p: LegacyMediaDragPayload): boolean {
   const s = JSON.stringify(p)
@@ -361,6 +413,25 @@ export function LegacyMediaAssignmentBoardClient() {
   const [lastDropTarget, setLastDropTarget] = useState<string>("—")
   const [lastDragAction, setLastDragAction] = useState<string>("—")
   const [dragError, setDragError] = useState<string>("")
+  const [manualMediaId, setManualMediaId] = useState("")
+  const [manualZone, setManualZone] = useState<ZoneDrop>("primary")
+  const [diag, setDiag] = useState<DevDiagnostics>({
+    lastPointerDown: null,
+    lastClick: null,
+    lastDragStart: null,
+    lastDragOver: null,
+    lastDrop: null,
+    cardHandlerFired: false,
+    buttonHandlerFired: false,
+    stateUpdateRequested: false,
+    stateActuallyChanged: false,
+    lastAction: "—",
+    lastError: "",
+    source: "none",
+    mediaId: "",
+    productHandle: "",
+    targetZone: "",
+  })
 
   const invById = useMemo(() => {
     const m = new Map<string, InvItem>()
@@ -487,6 +558,26 @@ export function LegacyMediaAssignmentBoardClient() {
     const t = window.setTimeout(() => setExportFeedback(null), 2800)
     return () => window.clearTimeout(t)
   }, [exportFeedback])
+
+  useEffect(() => {
+    const onPointerDown = (ev: PointerEvent) => setDiag((d) => ({ ...d, lastPointerDown: describeTargetFromElement(ev.target) }))
+    const onClick = (ev: MouseEvent) => setDiag((d) => ({ ...d, lastClick: describeTargetFromElement(ev.target) }))
+    const onDragStart = (ev: DragEvent) => setDiag((d) => ({ ...d, lastDragStart: describeTargetFromElement(ev.target) }))
+    const onDragOver = (ev: DragEvent) => setDiag((d) => ({ ...d, lastDragOver: describeTargetFromElement(ev.target) }))
+    const onDrop = (ev: DragEvent) => setDiag((d) => ({ ...d, lastDrop: describeTargetFromElement(ev.target) }))
+    document.addEventListener("pointerdown", onPointerDown, true)
+    document.addEventListener("click", onClick, true)
+    document.addEventListener("dragstart", onDragStart, true)
+    document.addEventListener("dragover", onDragOver, true)
+    document.addEventListener("drop", onDrop, true)
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown, true)
+      document.removeEventListener("click", onClick, true)
+      document.removeEventListener("dragstart", onDragStart, true)
+      document.removeEventListener("dragover", onDragOver, true)
+      document.removeEventListener("drop", onDrop, true)
+    }
+  }, [])
 
   const invSummary = invDoc?.summary as {
     total_items?: number
@@ -697,29 +788,86 @@ export function LegacyMediaAssignmentBoardClient() {
   }
 
   const markGlobalReject = (inventoryId: string) => {
-    setBoard((b) => ({
-      zones: removeIdFromAllZones(b.zones, inventoryId),
-      grej: [...b.grej.filter((r) => r.inventory_id !== inventoryId), { inventory_id: inventoryId, reason: "not_this_product" }],
-    }))
+    const prev = board
+    const next = {
+      zones: removeIdFromAllZones(prev.zones, inventoryId),
+      grej: [...prev.grej.filter((r) => r.inventory_id !== inventoryId), { inventory_id: inventoryId, reason: "not_this_product" }],
+    }
+    const changed = !boardStateEqual(prev, next)
+    setBoard(next)
     setLastDragAction("global reject")
-    setDragError("")
+    setDragError(changed ? "" : "state unchanged")
+    setDiag((d) => ({
+      ...d,
+      buttonHandlerFired: true,
+      stateUpdateRequested: true,
+      stateActuallyChanged: changed,
+      lastAction: "global reject",
+      lastError: changed ? "" : "state unchanged",
+      source: "button",
+      mediaId: inventoryId,
+      productHandle: selectedHandle || "",
+      targetZone: "global_reject",
+    }))
   }
 
-  const assignToSelected = (inventoryId: string, zone: "primary" | "gallery" | "reference" | "lane_reject") => {
-    if (!selectedHandle) return
-    setBoard((b) => {
-      const out = moveInventoryToZone(b.zones, b.grej, selectedHandle, zone, inventoryId, null)
-      return { zones: out.zones, grej: out.globalRejections }
-    })
-    const lab = zone === "lane_reject" ? "product reject" : zone
-    setLastDragAction(`quick → ${lab}`)
-    setDragError("")
-  }
+  const applyAssignment = useCallback(
+    (source: ActionSource, inventoryId: string, zone: ZoneDrop, explicitHandle?: string | null) => {
+      const activeHandle = (explicitHandle || selectedHandle || "").trim()
+      if (!activeHandle && zone !== "unassigned") {
+        const msg = "Select product first"
+        setDragError(msg)
+        setLastDragAction("blocked")
+        setDiag((d) => ({
+          ...d,
+          buttonHandlerFired: source === "button" ? true : d.buttonHandlerFired,
+          stateUpdateRequested: true,
+          stateActuallyChanged: false,
+          lastAction: "blocked",
+          lastError: msg,
+          source,
+          mediaId: inventoryId,
+          productHandle: "",
+          targetZone: zone,
+        }))
+        return false
+      }
+
+      const prev = board
+      const next =
+        zone === "unassigned"
+          ? { zones: removeIdFromAllZones(prev.zones, inventoryId), grej: prev.grej.filter((r) => r.inventory_id !== inventoryId) }
+          : (() => {
+              const out = moveInventoryToZone(prev.zones, prev.grej, activeHandle, zone as Exclude<ZoneDrop, "unassigned">, inventoryId, null)
+              return { zones: out.zones, grej: out.globalRejections }
+            })()
+
+      const changed = !boardStateEqual(prev, next)
+      setBoard(next)
+      setLastDragAction(`${source} → ${zone}`)
+      setDragError(changed ? "" : "state unchanged")
+      setDiag((d) => ({
+        ...d,
+        buttonHandlerFired: source === "button" ? true : d.buttonHandlerFired,
+        stateUpdateRequested: true,
+        stateActuallyChanged: changed,
+        lastAction: `${source} -> ${zone}`,
+        lastError: changed ? "" : "state unchanged",
+        source,
+        mediaId: inventoryId,
+        productHandle: activeHandle,
+        targetZone: zone,
+      }))
+      return changed
+    },
+    [board, selectedHandle]
+  )
 
   const dropZoneStable = (e: React.DragEvent, handle: string, zone: ZoneDrop) => {
     e.preventDefault()
     e.stopPropagation()
     setDragHoverZoneKey(null)
+    setDiag((d) => ({ ...d, lastDrop: describeTargetFromElement(e.target) }))
     const payload = readLegacyDragData(e)
     if (!payload?.mediaId) {
       setDragStart("no")
@@ -728,16 +876,39 @@ export function LegacyMediaAssignmentBoardClient() {
       setLastDragAction("ignored (empty payload)")
       setDragError("empty payload")
       setDraggingMediaId(null)
+      setDiag((d) => ({
+        ...d,
+        stateUpdateRequested: true,
+        stateActuallyChanged: false,
+        lastAction: "ignored (empty payload)",
+        lastError: "empty payload",
+        source: "drag",
+        mediaId: "",
+        targetZone: zone,
+        productHandle: handle,
+      }))
       return
     }
     const r = resolveBoardAfterDrop(board, e, handle, zone, payload)
+    const changed = !boardStateEqual(board, r.next)
     setBoard(r.next)
     setDraggingMediaId(null)
     setDragStart("no")
     setPayloadWritten("n/a")
     setLastDropTarget(zone === "lane_reject" ? "Product Rejected" : zone === "unassigned" ? "Unassigned return strip" : zone[0].toUpperCase() + zone.slice(1))
     setLastDragAction(r.action)
-    setDragError("")
+    setDragError(changed ? "" : "state unchanged")
+    setDiag((d) => ({
+      ...d,
+      stateUpdateRequested: true,
+      stateActuallyChanged: changed,
+      lastAction: r.action,
+      lastError: changed ? "" : "state unchanged",
+      source: "drag",
+      mediaId: payload.mediaId,
+      productHandle: handle,
+      targetZone: zone,
+    }))
   }
 
   const exportJson = useCallback(() => {
@@ -917,6 +1088,7 @@ export function LegacyMediaAssignmentBoardClient() {
       <div
         data-legacy-drop-target="true"
         data-drop-kind="product-zone"
+        data-drop-zone={zone}
         data-product-handle={hlc}
         data-zone={dataZoneAttr}
         onDragEnter={(e) => {
@@ -969,6 +1141,7 @@ export function LegacyMediaAssignmentBoardClient() {
       <MediaImageCard
         inventoryId={id}
         inv={inv}
+        productHandle={handle}
         previewUrl={pv.url}
         useImg={pv.useImg}
         caption={pv.caption}
@@ -980,6 +1153,7 @@ export function LegacyMediaAssignmentBoardClient() {
           inv.previewable
             ? (e) => {
                 e.stopPropagation()
+                setDiag((d) => ({ ...d, cardHandlerFired: true }))
                 setDragStart("yes")
                 setLastDropTarget("—")
                 const ok = writeLegacyDragData(e, {
@@ -1003,8 +1177,19 @@ export function LegacyMediaAssignmentBoardClient() {
           setDragHoverZoneKey(null)
         }}
         onOpenDetail={() => setInspectorId(id)}
+        onCardPointerDownCapture={(e) => setDiag((d) => ({ ...d, lastPointerDown: describeTargetFromElement(e.target) }))}
+        onCardClickCapture={(e) => setDiag((d) => ({ ...d, lastClick: describeTargetFromElement(e.target) }))}
         filenameMaxLen={22}
-      />
+      >
+        <button
+          type="button"
+          data-action-button="return-unassigned"
+          style={{ ...miniBtn, marginTop: 6, width: "100%" }}
+          onClick={() => applyAssignment("button", id, "unassigned", handle)}
+        >
+          Return to Unassigned
+        </button>
+      </MediaImageCard>
     )
   }
 
@@ -1053,6 +1238,10 @@ export function LegacyMediaAssignmentBoardClient() {
 
   const inspectorInv = inspectorId ? invById.get(inspectorId) : null
   const inspectorCe = inspectorId ? candById.get(inspectorId) : null
+  const targetSummary = (s: TargetSnapshot | null): string =>
+    !s
+      ? "—"
+      : `${s.tagName}${s.className ? `.${s.className}` : ""} media=${s.mediaId || "—"} product=${s.productHandle || "—"} card=${s.closestCard || "—"} draggable=${s.closestDraggable || "—"} drop=${s.closestDropZone || "—"} action=${s.actionButton || "—"}`
 
   /** Sticky chrome height (header + workflow) for column scroll regions */
   const headerH = 200
@@ -1199,6 +1388,7 @@ export function LegacyMediaAssignmentBoardClient() {
         <div
           data-legacy-drop-target="true"
           data-drop-kind="unassigned"
+          data-drop-zone="unassigned"
           data-product-handle={h}
           onDragEnter={(e) => {
             e.preventDefault()
@@ -1738,6 +1928,36 @@ export function LegacyMediaAssignmentBoardClient() {
                   ) : null}
                 </p>
               )}
+              <div style={{ marginTop: 10, borderTop: "1px dashed #cbd5e1", paddingTop: 10 }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: "#64748b", textTransform: "uppercase", marginBottom: 6 }}>Manual assignment panel</div>
+                <div style={{ fontSize: 11, color: selectedHandle ? "#334155" : "#b45309", marginBottom: 6 }}>
+                  Active product: <strong>{selectedHandle || "Select product first"}</strong>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 6 }}>
+                  <input
+                    value={manualMediaId}
+                    onChange={(e) => setManualMediaId(e.target.value)}
+                    placeholder="media id"
+                    style={{ ...inputStyle, fontSize: 12, padding: "6px 8px" }}
+                  />
+                  <select value={manualZone} onChange={(e) => setManualZone(e.target.value as ZoneDrop)} style={{ ...inputStyle, fontSize: 12, padding: "6px 8px" }}>
+                    <option value="primary">primary</option>
+                    <option value="gallery">gallery</option>
+                    <option value="reference">reference</option>
+                    <option value="lane_reject">rejected</option>
+                    <option value="unassigned">unassigned</option>
+                  </select>
+                  <button
+                    type="button"
+                    data-action-button="manual-apply"
+                    style={miniBtn}
+                    disabled={!manualMediaId.trim() || (!selectedHandle && manualZone !== "unassigned")}
+                    onClick={() => applyAssignment("manual", manualMediaId.trim(), manualZone)}
+                  >
+                    Apply
+                  </button>
+                </div>
+              </div>
             </div>
             <div style={{ flex: 1, overflowY: "auto", padding: 12 }}>
               {poolTab === "unpreviewable" ? (
@@ -1791,6 +2011,7 @@ export function LegacyMediaAssignmentBoardClient() {
                           <MediaImageCard
                             inventoryId={id}
                             inv={inv}
+                            productHandle={selectedHandle}
                             previewUrl={pv.url}
                             useImg={pv.useImg}
                             caption={pv.caption}
@@ -1802,6 +2023,7 @@ export function LegacyMediaAssignmentBoardClient() {
                               inv.previewable
                                 ? (e) => {
                                     e.stopPropagation()
+                                    setDiag((d) => ({ ...d, cardHandlerFired: true }))
                                     setDragStart("yes")
                                     setLastDropTarget("—")
                                     const ok = writeLegacyDragData(e, {
@@ -1825,6 +2047,8 @@ export function LegacyMediaAssignmentBoardClient() {
                               setDragHoverZoneKey(null)
                             }}
                             onOpenDetail={() => setInspectorId(id)}
+                            onCardPointerDownCapture={(e) => setDiag((d) => ({ ...d, lastPointerDown: describeTargetFromElement(e.target) }))}
+                            onCardClickCapture={(e) => setDiag((d) => ({ ...d, lastClick: describeTargetFromElement(e.target) }))}
                             filenameMaxLen={focusMode && selectedHandle ? 20 : 26}
                             detailTitle={inv.source_path || inv.repo_relative_path || inv.filename}
                           />
@@ -1834,6 +2058,8 @@ export function LegacyMediaAssignmentBoardClient() {
                           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                             <button
                               type="button"
+                              data-action-button="primary"
+                              data-media-id={id}
                               draggable={false}
                               style={miniBtn}
                               disabled={!selectedHandle}
@@ -1843,12 +2069,14 @@ export function LegacyMediaAssignmentBoardClient() {
                                 e.preventDefault()
                                 e.stopPropagation()
                               }}
-                              onClick={() => assignToSelected(id, "primary")}
+                              onClick={() => applyAssignment("button", id, "primary")}
                             >
                               Primary
                             </button>
                             <button
                               type="button"
+                              data-action-button="gallery"
+                              data-media-id={id}
                               draggable={false}
                               style={miniBtn}
                               disabled={!selectedHandle}
@@ -1858,12 +2086,14 @@ export function LegacyMediaAssignmentBoardClient() {
                                 e.preventDefault()
                                 e.stopPropagation()
                               }}
-                              onClick={() => assignToSelected(id, "gallery")}
+                              onClick={() => applyAssignment("button", id, "gallery")}
                             >
                               Gallery
                             </button>
                             <button
                               type="button"
+                              data-action-button="reference"
+                              data-media-id={id}
                               draggable={false}
                               style={miniBtn}
                               disabled={!selectedHandle}
@@ -1873,12 +2103,14 @@ export function LegacyMediaAssignmentBoardClient() {
                                 e.preventDefault()
                                 e.stopPropagation()
                               }}
-                              onClick={() => assignToSelected(id, "reference")}
+                              onClick={() => applyAssignment("button", id, "reference")}
                             >
                               Ref
                             </button>
                             <button
                               type="button"
+                              data-action-button="reject"
+                              data-media-id={id}
                               draggable={false}
                               style={miniBtn}
                               disabled={!selectedHandle}
@@ -1888,12 +2120,14 @@ export function LegacyMediaAssignmentBoardClient() {
                                 e.preventDefault()
                                 e.stopPropagation()
                               }}
-                              onClick={() => assignToSelected(id, "lane_reject")}
+                              onClick={() => applyAssignment("button", id, "lane_reject")}
                             >
                               Reject
                             </button>
                             <button
                               type="button"
+                              data-action-button="global-reject"
+                              data-media-id={id}
                               draggable={false}
                               style={{ ...miniBtn, color: "#b91c1c", borderColor: "#fecaca" }}
                               onMouseDown={(e) => e.stopPropagation()}
@@ -1901,7 +2135,10 @@ export function LegacyMediaAssignmentBoardClient() {
                                 e.preventDefault()
                                 e.stopPropagation()
                               }}
-                              onClick={() => markGlobalReject(id)}
+                              onClick={() => {
+                                setDiag((d) => ({ ...d, buttonHandlerFired: true }))
+                                markGlobalReject(id)
+                              }}
                             >
                               Global ✕
                             </button>
@@ -1932,29 +2169,21 @@ export function LegacyMediaAssignmentBoardClient() {
               aria-live="polite"
             >
               <div>
-                <strong style={{ color: "#334155" }}>DnD (dev)</strong>
+                <strong style={{ color: "#334155" }}>Diagnostics (dev)</strong>
               </div>
-              <div>
-                Drag start: <strong style={{ color: dragStart === "yes" ? "#15803d" : "#64748b" }}>{dragStart}</strong>
-              </div>
-              <div>
-                Dragging:{" "}
-                <span style={{ color: "#0f172a", fontWeight: 600 }}>
-                  {draggingMediaId || "—"}
-                </span>
-              </div>
-              <div>
-                Payload written: <strong style={{ color: payloadWritten === "yes" ? "#15803d" : payloadWritten === "no" ? "#b91c1c" : "#64748b" }}>{payloadWritten}</strong>
-              </div>
-              <div>
-                Last drop target: <span style={{ color: "#0f172a", fontWeight: 600 }}>{lastDropTarget}</span>
-              </div>
-              <div>
-                Last action: <span style={{ color: "#0f172a", fontWeight: 600 }}>{lastDragAction}</span>
-              </div>
-              <div>
-                Last error: <span style={{ color: dragError ? "#b91c1c" : "#64748b" }}>{dragError || "—"}</span>
-              </div>
+              <div>Last pointerdown: <span style={{ color: "#0f172a" }}>{targetSummary(diag.lastPointerDown)}</span></div>
+              <div>Last click: <span style={{ color: "#0f172a" }}>{targetSummary(diag.lastClick)}</span></div>
+              <div>Last dragstart: <span style={{ color: "#0f172a" }}>{targetSummary(diag.lastDragStart)}</span></div>
+              <div>Last dragover: <span style={{ color: "#0f172a" }}>{targetSummary(diag.lastDragOver)}</span></div>
+              <div>Last drop target: <span style={{ color: "#0f172a" }}>{targetSummary(diag.lastDrop)}</span></div>
+              <div>Card handler fired: <strong>{diag.cardHandlerFired ? "yes" : "no"}</strong></div>
+              <div>Button handler fired: <strong>{diag.buttonHandlerFired ? "yes" : "no"}</strong></div>
+              <div>State update requested: <strong>{diag.stateUpdateRequested ? "yes" : "no"}</strong></div>
+              <div>State changed: <strong style={{ color: diag.stateActuallyChanged ? "#15803d" : "#64748b" }}>{diag.stateActuallyChanged ? "yes" : "no"}</strong></div>
+              <div>Source/media/product/zone: <span style={{ color: "#0f172a" }}>{`${diag.source} / ${diag.mediaId || "—"} / ${diag.productHandle || "—"} / ${diag.targetZone || "—"}`}</span></div>
+              <div>Payload written: <strong style={{ color: payloadWritten === "yes" ? "#15803d" : payloadWritten === "no" ? "#b91c1c" : "#64748b" }}>{payloadWritten}</strong></div>
+              <div>Last action: <span style={{ color: "#0f172a", fontWeight: 600 }}>{lastDragAction || diag.lastAction}</span></div>
+              <div>Last error: <span style={{ color: dragError || diag.lastError ? "#b91c1c" : "#64748b" }}>{dragError || diag.lastError || "—"}</span></div>
             </div>
           </div>
 
@@ -2041,16 +2270,16 @@ export function LegacyMediaAssignmentBoardClient() {
               {selectedHandle ? (
                 <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 6 }}>
                   <div style={{ fontSize: 11, fontWeight: 800, color: "#64748b", textTransform: "uppercase" }}>Apply to {selectedHandle}</div>
-                  <button type="button" style={miniBtn} onClick={() => assignToSelected(inspectorId, "primary")}>
+                  <button type="button" data-action-button="inspector-primary" style={miniBtn} onClick={() => applyAssignment("button", inspectorId, "primary")}>
                     Primary
                   </button>
-                  <button type="button" style={miniBtn} onClick={() => assignToSelected(inspectorId, "gallery")}>
+                  <button type="button" data-action-button="inspector-gallery" style={miniBtn} onClick={() => applyAssignment("button", inspectorId, "gallery")}>
                     Gallery
                   </button>
-                  <button type="button" style={miniBtn} onClick={() => assignToSelected(inspectorId, "reference")}>
+                  <button type="button" data-action-button="inspector-reference" style={miniBtn} onClick={() => applyAssignment("button", inspectorId, "reference")}>
                     Ref
                   </button>
-                  <button type="button" style={miniBtn} onClick={() => assignToSelected(inspectorId, "lane_reject")}>
+                  <button type="button" data-action-button="inspector-reject" style={miniBtn} onClick={() => applyAssignment("button", inspectorId, "lane_reject")}>
                     Reject
                   </button>
                 </div>
