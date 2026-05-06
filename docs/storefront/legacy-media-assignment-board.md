@@ -26,7 +26,21 @@ The server must find the monorepo root by walking up from `process.cwd()` and fr
 
   (Alias: `FURNITURE_COMMERCE_ROOT` — same meaning.)
 
-Then restart Next. After a fix, the board’s error line will include the API `hint` text when the response is JSON.
+Then restart Next. The board shows a **Retry** button and prints the JSON **Server response details** when an API fails.
+
+### Read-only API error JSON (dev diagnostics)
+
+`/qa/legacy-media-assignment-board/api/{inventory,candidates,products}` return **200** with the same bodies as before on success. On failure they return **500** with a machine-readable `error` code (never arbitrary path traversal):
+
+| `error` | Meaning |
+|---------|---------|
+| `repo_root_not_resolved` | `cwd`, `checked_paths` (seeds walked), `expected_markers`, `hint` |
+| `missing_file` | `missing_file` (repo-relative path), `resolved_repo_root`, `absolute_path_checked`, `cwd` |
+| `read_failed` | `missing_file`, `message` |
+| `parse_error` | `parse_error`, `path` |
+| `invalid_seed_shape` | **products** route only — `seed-products.json` is not a JSON array |
+
+**Docker on port 8000:** if the container’s filesystem does not include both `docs/` and `data/normalized/` at the resolved repo root, you still get `repo_root_not_resolved` or `missing_file`. Prefer **host Next from `apps/storefront`** against a full checkout, or mount `./docs` and `./data` read-only into the container and set `FURNITURE_REPO_ROOT` — do not change compose without team confirmation.
 
 In **production** (`NODE_ENV=production`) the board returns **404** unless `LEGACY_MEDIA_QA_BOARD_ALLOW_PROD=1` (discouraged).
 

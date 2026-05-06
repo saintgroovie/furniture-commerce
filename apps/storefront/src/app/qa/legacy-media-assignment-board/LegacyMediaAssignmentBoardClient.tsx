@@ -25,18 +25,17 @@ const UNKNOWN_COLLECTION = "__unknown__"
 const API_BASE = "/qa/legacy-media-assignment-board/api"
 const PREVIEW_ROUTE = "/qa/legacy-media-assignment-board/preview"
 
-async function throwIfApiFailed(res: Response, label: string): Promise<void> {
-  if (res.ok) return
-  let msg = `${label} ${res.status}`
+async function fetchBoardJson(url: string): Promise<{ ok: true; data: Record<string, unknown> } | { ok: false; status: number; body: Record<string, unknown> }> {
+  const res = await fetch(url)
+  const text = await res.text()
+  let body: Record<string, unknown> = {}
   try {
-    const raw = await res.text()
-    const j = JSON.parse(raw) as { error?: string; hint?: string }
-    if (j?.error) msg = `${label} ${res.status}: ${j.error}`
-    if (j?.hint) msg = `${msg} — ${j.hint}`
+    body = JSON.parse(text) as Record<string, unknown>
   } catch {
-    /* keep msg */
+    body = { _non_json_response: text.slice(0, 500) }
   }
-  throw new Error(msg)
+  if (!res.ok) return { ok: false, status: res.status, body }
+  return { ok: true, data: body }
 }
 
 type PoolTab = "unassigned" | "ambiguous" | "confirmed" | "unpreviewable" | "rejected"
@@ -231,8 +230,17 @@ const PRODUCT_STATUS_META: Record<
 
 type BoardState = { zones: Record<string, ProductZoneState>; grej: GlobalRejection[] }
 
+type LegacyBoardLoadFailure = {
+  endpoint: string
+  label: string
+  status: number
+  body: Record<string, unknown>
+}
+
 export function LegacyMediaAssignmentBoardClient() {
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [loadFailureDetail, setLoadFailureDetail] = useState<LegacyBoardLoadFailure | null>(null)
+  const [retryNonce, setRetryNonce] = useState(0)
   const [invDoc, setInvDoc] = useState<{ items: InvItem[]; summary: Record<string, unknown> } | null>(null)
   const [candDoc, setCandDoc] = useState<{ entries: CandidateEntry[]; summary: Record<string, unknown> } | null>(null)
   const [products, setProducts] = useState<ProductRow[]>([])
@@ -302,18 +310,30 @@ export function LegacyMediaAssignmentBoardClient() {
     async function load() {
       setLoading(true)
       setLoadError(null)
+      setLoadFailureDetail(null)
+      const endpoints = [
+        { label: "inventory", path: "/inventory" },
+        { label: "candidates", path: "/candidates" },
+        { label: "products", path: "/products" },
+      ] as const
       try {
-        const [r1, r2, r3] = await Promise.all([
-          fetch(`${API_BASE}/inventory`),
-          fetch(`${API_BASE}/candidates`),
-          fetch(`${API_BASE}/products`),
-        ])
-        await throwIfApiFailed(r1, "inventory")
-        await throwIfApiFailed(r2, "candidates")
-        await throwIfApiFailed(r3, "products")
-        const j1 = (await r1.json()) as { items: InvItem[]; summary: Record<string, unknown> }
-        const j2 = (await r2.json()) as { entries: CandidateEntry[]; summary: Record<string, unknown> }
-        const j3 = (await r3.json()) as { products: ProductRow[] }
+        const results: Record<string, unknown>[] = []
+        for (const ep of endpoints) {
+          const url = `${API_BASE}${ep.path}`
+          const r = await fetchBoardJson(url)
+          if (r.ok === false) {
+            if (!cancelled) {
+              setLoadFailureDetail({ endpoint: url, label: ep.label, status: r.status, body: r.body })
+              const code = typeof r.body.error === "string" ? r.body.error : "request_failed"
+              setLoadError(`${ep.label} ${r.status} (${code})`)
+            }
+            return
+          }
+          results.push(r.data)
+        }
+        const j1 = results[0] as { items: InvItem[]; summary: Record<string, unknown> }
+        const j2 = results[1] as { entries: CandidateEntry[]; summary: Record<string, unknown> }
+        const j3 = results[2] as { products: ProductRow[] }
         if (cancelled) return
         setInvDoc(j1)
         setCandDoc(j2)
@@ -328,7 +348,7 @@ export function LegacyMediaAssignmentBoardClient() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [retryNonce])
 
   useEffect(() => {
     if (!invDoc || typeof window === "undefined") return
@@ -710,14 +730,74 @@ export function LegacyMediaAssignmentBoardClient() {
     )
   }
   if (loadError) {
+    const b = loadFailureDetail?.body
     return (
-      <div style={{ padding: 32, fontFamily: "system-ui", maxWidth: 640, color: "#334155" }}>
-        <h1 style={{ fontSize: 20 }}>Legacy Media Assignment Board</h1>
-        <p>Could not load data: {loadError}</p>
-        <p style={{ fontSize: 14, color: "#64748b" }}>
-          Run from repo root: <code>node scripts/build-legacy-media-inventory.mjs</code> and{" "}
-          <code>node scripts/build-legacy-media-product-candidate-map.mjs</code>. Start Next from <code>apps/storefront</code> so repo markers resolve.
+      <div style={{ padding: 32, fontFamily: "system-ui", maxWidth: 720, color: "#334155" }}>
+        <h1 style={{ fontSize: 22, marginBottom: 8 }}>Legacy Media Assignment Board</h1>
+        <p style={{ fontSize: 16, fontWeight: 700, color: "#b91c1c", marginBottom: 6 }}>Inventory data could not be loaded</p>
+        <p style={{ marginBottom: 16 }}>
+          <strong>Endpoint:</strong> {loadFailureDetail?.endpoint ?? "(unknown)"} · <strong>Status:</strong> {loadFailureDetail?.status ?? "—"}
         </p>
+        <p style={{ marginBottom: 8, color: "#64748b" }}>Summary: {loadError}</p>
+        <div
+          style={{
+            background: "#f8fafc",
+            border: "1px solid #e2e8f0",
+            borderRadius: 12,
+            padding: "16px 18px",
+            marginBottom: 20,
+          }}
+        >
+          <div style={{ fontWeight: 800, marginBottom: 10, fontSize: 13 }}>Action checklist</div>
+          <ol style={{ margin: 0, paddingLeft: 20, lineHeight: 1.7, fontSize: 14 }}>
+            <li>
+              From repo root: <code>node scripts/build-legacy-media-inventory.mjs</code>
+            </li>
+            <li>
+              From repo root: <code>node scripts/build-legacy-media-product-candidate-map.mjs</code>
+            </li>
+            <li>
+              Start Next from <code>apps/storefront</code> (full checkout with <code>docs/project/CODEMAP.md</code> and <code>data/normalized/</code>).
+            </li>
+            <li>
+              Docker / custom cwd: set <code>FURNITURE_REPO_ROOT</code> to the absolute repo path and restart Next (see docs).
+            </li>
+          </ol>
+        </div>
+        {b && Object.keys(b).length > 0 ? (
+          <details open style={{ marginBottom: 20 }}>
+            <summary style={{ fontWeight: 700, cursor: "pointer", marginBottom: 8 }}>Server response details</summary>
+            <pre
+              style={{
+                fontSize: 12,
+                background: "#0f172a",
+                color: "#e2e8f0",
+                padding: 14,
+                borderRadius: 10,
+                overflow: "auto",
+                maxHeight: 320,
+              }}
+            >
+              {JSON.stringify(b, null, 2)}
+            </pre>
+          </details>
+        ) : null}
+        <button
+          type="button"
+          onClick={() => setRetryNonce((n) => n + 1)}
+          style={{
+            padding: "10px 18px",
+            borderRadius: 10,
+            border: "none",
+            background: "#0f172a",
+            color: "#fff",
+            fontWeight: 700,
+            fontSize: 14,
+            cursor: "pointer",
+          }}
+        >
+          Retry
+        </button>
       </div>
     )
   }

@@ -16,6 +16,23 @@ const MARKER_DATA_NORMALIZED = path.join("data", "normalized")
 
 export const FURNITURE_REPO_MARKERS_DESC = "docs/project/CODEMAP.md and data/normalized/"
 
+/** Relative paths that must exist under repo root for auto-resolution. */
+export const FURNITURE_REPO_EXPECTED_MARKER_RELPATHS = [MARKER_CODEMAP, MARKER_DATA_NORMALIZED] as const
+
+/**
+ * Standard JSON body when repo root cannot be resolved (legacy media QA API routes).
+ */
+export function legacyMediaQaRepoRootFailurePayload(resolution: FurnitureRepoDataResolution): Record<string, unknown> {
+  return {
+    error: "repo_root_not_resolved",
+    cwd: resolution.cwd,
+    checked_paths: resolution.seedsTried,
+    expected_markers: [...FURNITURE_REPO_EXPECTED_MARKER_RELPATHS],
+    hint:
+      "Set FURNITURE_REPO_ROOT (or FURNITURE_COMMERCE_ROOT) to the absolute furniture-commerce repo path, or run Next from apps/storefront inside a full checkout with docs/ and data/ on disk.",
+  }
+}
+
 /**
  * Optional dev-only JSON copies under `apps/storefront/qa-data/oxford-local-mvp/`
  * when Docker (or other runtimes) cannot mount repo `data/` + `docs/` into `/app`.
