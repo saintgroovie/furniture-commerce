@@ -61,6 +61,7 @@ services:
       dockerfile: Dockerfile
       network: host
     container_name: medusa_storefront
+    working_dir: /app
     restart: unless-stopped
     depends_on:
       - medusa
@@ -69,14 +70,17 @@ services:
     environment:
       NEXT_PUBLIC_MEDUSA_BACKEND_URL: http://localhost:9000
       MEDUSA_BACKEND_URL: http://medusa:9000
+      # Repo root inside container: storefront app at /app + read-only ./data and ./docs mounts below
+      # (see volumes). Resolves `getFurnitureRepoDataResolution()` for Legacy Media QA board and similar loaders.
+      FURNITURE_REPO_ROOT: /app
     env_file:
       - ./apps/storefront/.env.local
     volumes:
       - ./apps/storefront:/app
       - storefront_node_modules:/app/node_modules
       - storefront_next:/app/.next
-      # Dev/QA only: Oxford local MVP JSON + repo markers for storefront loaders (read-only).
-      # Without this, cwd=/app only sees apps/storefront; data/normalized lives at repo root.
+      # Read-only repo slices so /app has `data/normalized/*.json` and `docs/project/CODEMAP.md` (markers for
+      # `furniture-repo-data-root.ts`). Required for `/qa/legacy-media-assignment-board` API routes in Docker.
       - ./data:/app/data:ro
       - ./docs:/app/docs:ro
     networks:

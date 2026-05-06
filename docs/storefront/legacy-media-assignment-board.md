@@ -9,11 +9,24 @@
 
 ## Open the page
 
-Local storefront (port from `apps/storefront/package.json`, often **8000**):
+### Host Next (recommended for QA)
 
-- `http://localhost:8000/qa/legacy-media-assignment-board`
+- From **`furniture-commerce/apps/storefront`**: `yarn dev` (port often **8000** in package.json, or override `PORT`).
+- URL: `http://localhost:<port>/qa/legacy-media-assignment-board`
+- `process.cwd()` is the storefront app; resolution walks up to the monorepo root **or** uses `FURNITURE_REPO_ROOT` if set.
 
-Start Next from **`furniture-commerce/apps/storefront`** so read-only `api/*` routes resolve repo `data/normalized/*.json`.
+### Docker storefront (`docker-compose.yml` in repo root)
+
+The **storefront** service uses `WORKDIR` **`/app`** (the `apps/storefront` bind mount). Repo markers for `getFurnitureRepoDataResolution()` must exist **under that same logical root**:
+
+- `docs/project/CODEMAP.md` → mount host `./docs` at **`/app/docs`** (read-only).
+- `data/normalized/` → mount host `./data` at **`/app/data`** (read-only).
+
+Compose sets **`FURNITURE_REPO_ROOT=/app`** so the resolver pins the container root even if walk-up seeds differ. Restart the storefront container after changing compose.
+
+- URL (default published port): `http://localhost:8000/qa/legacy-media-assignment-board`
+
+Run **`docker compose`** from **`furniture-commerce`** (repo root) so `./data` and `./docs` resolve correctly.
 
 ### If APIs return 500 (`Repo root not resolved`)
 
@@ -40,7 +53,7 @@ Then restart Next. The board shows a **Retry** button and prints the JSON **Serv
 | `parse_error` | `parse_error`, `path` |
 | `invalid_seed_shape` | **products** route only — `seed-products.json` is not a JSON array |
 
-**Docker on port 8000:** if the container’s filesystem does not include both `docs/` and `data/normalized/` at the resolved repo root, you still get `repo_root_not_resolved` or `missing_file`. Prefer **host Next from `apps/storefront`** against a full checkout, or mount `./docs` and `./data` read-only into the container and set `FURNITURE_REPO_ROOT` — do not change compose without team confirmation.
+**Docker on port 8000:** if `./docs` or `./data` is missing on the host, bind mounts fail or markers are absent → `repo_root_not_resolved` / `missing_file`. Use the repo’s `docker-compose.yml` storefront service (mounts + `FURNITURE_REPO_ROOT=/app`) or host Next as above.
 
 In **production** (`NODE_ENV=production`) the board returns **404** unless `LEGACY_MEDIA_QA_BOARD_ALLOW_PROD=1` (discouraged).
 
