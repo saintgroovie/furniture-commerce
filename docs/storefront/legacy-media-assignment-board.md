@@ -72,7 +72,7 @@ The sticky header includes a **five-step workflow** strip:
 1. **Choose collection** — Sidebar: **All collections**, a named collection, or **Unknown / unmatched** (media rows where collection hints could not be inferred). Search narrows long collection lists. Badges show **products**, **media**, **matcher candidate rows**, **assigned**, and **ambiguous** counts for that slice.
 2. **Select product** — Click a product card or **Review**. The card shows handle, title, SKU, collection badge, thumbnail, assigned/candidate counts, and a **status** pill (e.g. *Needs review*, *Has auto matches*, *Manually edited*, *Ready candidate*, *No candidates*, *Ambiguous*, *Has storefront media*).
 3. **Review images** — Use the **Media pool** (tabs below). Prefer **Suggested** when a product is selected to see rows whose matcher **top candidate** matches that handle. Open **Inspector** from a tile for full paths, confidence, and candidate list.
-4. **Assign roles** — Only in the **Selected product** panel: **Primary**, **Gallery**, **Reference only**, **Rejected for this product**. Drag from the pool or use quick actions. Drag tiles onto the **return strip** under the storefront thumbnails to send them back to the unassigned pool (clears lane placement).
+4. **Assign roles** — Only in the **Selected product** panel: **Primary**, **Gallery**, **Reference only**, **Rejected for this product**. Use the **⋮⋮ Drag** handle on pool tiles (pointer drag) or quick actions. Drop assigned tiles onto the **return strip** under the storefront thumbnails to send them back to the unassigned pool (clears lane placement).
 5. **Export JSON** — **Copy JSON** or **Download JSON**. The header explains that export is **local decisions only**, does **not** update Medusa, and where to save the file (see Persistence). Success text appears after copy/download. **Clear local decisions** asks for confirmation first.
 
 The workflow strip also echoes **active collection**, **selected product**, **local decision slot count**, and a short export disclaimer.
@@ -106,14 +106,14 @@ Cap: first **120** items per tab with **Showing first 120 images — narrow filt
 
 ---
 
-## Drag and drop
+## Drag by handle (pointer)
 
-- **Start the drag from the visible “⋮⋮ Drag” bar** on each previewable tile (grab cursor). That handle is the reliable HTML5 drag source; the preview `<img>` stays **`draggable={false}`** so the browser does not hijack the gesture with a native image drag. For convenience, the card root may also be draggable when previewable, but QA should prefer the handle if anything feels flaky in a given browser.
-- Each drag carries one **JSON payload** (`type: "legacy_media"`, `mediaId`, optional `fromProductHandle`, `fromZone`, `fromIndex`) written to **`text/plain`** and **`application/json`** so `dataTransfer.getData` works consistently in Chromium/WebKit/Firefox (older custom MIME-only payloads are still read on drop when present).
-- **Unpreviewable** inventory appears only in the **Unpreviewable** tab as **text rows** — not as draggable image cards. Previewable pool tiles expose the drag handle when a file can be shown.
-- **Drop zones** (Primary / Gallery / Reference / Reject / return strip) call **`preventDefault`** on drag-over, show a **highlight** and short **“Drop to …”** label while the pointer is over them, and read **`text/plain`** first on drop.
-- The **Media pool** footer includes a compact **DnD (dev)** line block: drag session on/off, dragging id/filename, payload written yes/no, last drop description, and last DnD error — so QA can confirm drag start and drops without the console.
-- Dropping onto the **empty workspace** (no product selected) does nothing to lanes and updates feedback to **Select a product first.**
+- **Start from the “⋮⋮ Drag” handle** on each previewable tile (`pointerdown`, primary button). The board uses **pointer-based drag** (not native browser drag-and-drop): a **ghost overlay** follows the cursor, and **drop targets** are detected with `elementFromPoint` + `data-legacy-drop-target` markers. The preview `<img>` stays **`draggable={false}`** and is not a drag handle.
+- **Unpreviewable** inventory appears only in the **Unpreviewable** tab as **text rows** — no drag handle there.
+- **Drop zones** (Primary / Gallery / Reference / Reject / return strip) expose explicit **`data-legacy-drop-target`** attributes; while dragging, the zone under the pointer **highlights** and the label can switch to a short **“Drop to …”** hint. Releasing outside a valid target **cancels** the drag without changing board state.
+- The **Media pool** footer includes a compact **Drag (dev)** block: pointer drag idle/active, dragging id/filename, hover target label, last action, and last error — so QA can confirm the handle “grabbed” without the console.
+- **Quick actions** (**Primary** / **Gallery** / **Ref** / **Reject** / **Global ✕**) remain the full fallback if dragging is inconvenient.
+- With **no product selected**, lane targets are not shown; use quick actions after selecting a SKU, or select a product first.
 
 ---
 

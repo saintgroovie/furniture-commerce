@@ -53,3 +53,29 @@ export type LegacyMediaDragPayload = {
   fromZone?: LegacyMediaDragZone | null
   fromIndex?: number | null
 }
+
+/** Pointer-based drag session (QA board only; not persisted). */
+export type ActivePointerDragState = {
+  mediaId: string
+  fromProductHandle: string | null
+  fromZone: LegacyMediaDragZone | null
+  fromIndex: number | null
+  startX: number
+  startY: number
+  currentX: number
+  currentY: number
+  filename: string
+  previewUrl: string | null
+}
+
+/** Resolved drop target under the pointer for highlight + drop commit. */
+export type HoveredLegacyDropTarget = {
+  /** Matches workspace zone highlight keys, e.g. `handle|primary` or `return|handle`. */
+  highlightKey: string
+  /** Short label for dev status. */
+  label: string
+  targetHandle: string
+  targetZone: "primary" | "gallery" | "reference" | "lane_reject" | "unassigned"
+  /** When hovering a gallery tile, the inventory id under the pointer (insert-before / swap). */
+  galleryHoverInventoryId: string | null
+}

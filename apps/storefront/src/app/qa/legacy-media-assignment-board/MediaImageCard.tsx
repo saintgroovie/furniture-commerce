@@ -13,15 +13,13 @@ type Props = {
   caption: string
   badges?: string[]
   size?: CardSize
-  /** When true, shows a dedicated drag handle (recommended for HTML5 DnD reliability). */
-  draggable?: boolean
-  /** Visual feedback while this card is the active drag source (parent-driven). */
-  isDragging?: boolean
-  /** Must be set together with `draggable` for the handle to appear; fires on the handle element only. */
-  onDragStart?: (e: React.DragEvent) => void
-  onDragEnd?: (e: React.DragEvent) => void
-  /** If true, root card is also draggable (fallback); handle remains the primary affordance. Default false — handle-only avoids nested interactive / img blocking drag start. */
-  allowRootDrag?: boolean
+  /** Visual feedback while this card is the active pointer-drag source (parent-driven). */
+  isPointerDragging?: boolean
+  /**
+   * When set, shows the “⋮⋮ Drag” handle and starts pointer-drag from pointerdown (primary button only).
+   * Does not use native HTML5 drag.
+   */
+  onPointerDragHandleDown?: (e: React.PointerEvent) => void
   /** Full path / context for hover (not shown inline). */
   detailTitle?: string
   /** Max visible filename characters before ellipsis. */
@@ -46,11 +44,8 @@ export function MediaImageCard({
   caption,
   badges = [],
   size = "normal",
-  draggable = true,
-  isDragging = false,
-  onDragStart,
-  onDragEnd,
-  allowRootDrag = false,
+  isPointerDragging = false,
+  onPointerDragHandleDown,
   detailTitle,
   filenameMaxLen = 32,
   onOpenDetail,
@@ -58,43 +53,29 @@ export function MediaImageCard({
 }: Props) {
   const w = cardPx[size]
   const [imgBroken, setImgBroken] = useState(false)
-  const [handleGrabbing, setHandleGrabbing] = useState(false)
   const showImg = useImg && previewUrl && !imgBroken
   const fullPathTitle = detailTitle ?? inv.source_path ?? inv.repo_relative_path ?? inv.filename
   const nameShown = truncateMiddle(inv.filename, filenameMaxLen)
 
-  const showDragHandle = Boolean(draggable && onDragStart)
-  const rootDraggable = Boolean(allowRootDrag && draggable && onDragStart)
-
-  const runDragStart = (e: React.DragEvent) => {
-    onDragStart?.(e)
-  }
-
-  const runDragEnd = (e: React.DragEvent) => {
-    setHandleGrabbing(false)
-    onDragEnd?.(e)
-  }
+  const showDragHandle = Boolean(onPointerDragHandleDown)
 
   return (
     <div
       data-inventory-id={inventoryId}
-      draggable={rootDraggable}
-      onDragStart={rootDraggable ? runDragStart : undefined}
-      onDragEnd={rootDraggable ? runDragEnd : undefined}
       style={{
         width: w + 16,
         borderRadius: 12,
-        border: isDragging || handleGrabbing ? "2px solid #2563eb" : "1px solid #e2e8f0",
-        background: isDragging || handleGrabbing ? "#eff6ff" : "#fff",
-        boxShadow: isDragging ? "0 4px 14px rgba(37,99,235,0.2)" : "0 1px 2px rgba(15,23,42,0.06)",
+        border: isPointerDragging ? "2px solid #2563eb" : "1px solid #e2e8f0",
+        background: isPointerDragging ? "#eff6ff" : "#fff",
+        boxShadow: isPointerDragging ? "0 4px 14px rgba(37,99,235,0.2)" : "0 1px 2px rgba(15,23,42,0.06)",
         padding: size === "xlarge" || size === "large" ? 10 : 8,
         cursor: "default",
         userSelect: "none",
-        opacity: isDragging ? 0.92 : 1,
+        opacity: isPointerDragging ? 0.88 : 1,
+        touchAction: "none",
       }}
     >
       <div
-        draggable={false}
         role={onOpenDetail ? "button" : undefined}
         tabIndex={onOpenDetail ? 0 : undefined}
         onClick={(e) => {
@@ -133,7 +114,6 @@ export function MediaImageCard({
           />
         ) : null}
         <div
-          draggable={false}
           style={{
             display: showImg ? "none" : "flex",
             position: showImg ? "absolute" : "relative",
@@ -169,7 +149,6 @@ export function MediaImageCard({
         ) : null}
       </div>
       <div
-        draggable={false}
         title={fullPathTitle}
         style={{
           marginTop: 8,
@@ -185,7 +164,7 @@ export function MediaImageCard({
         {nameShown}
       </div>
       {badges.length > 0 ? (
-        <div draggable={false} style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 4 }}>
+        <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 4 }}>
           {badges.map((b) => (
             <span
               key={b}
@@ -211,45 +190,43 @@ export function MediaImageCard({
         </div>
       ) : null}
       {showDragHandle ? (
-        <div
-          draggable
-          role="separator"
-          aria-orientation="horizontal"
-          aria-label="Drag to assign image"
-          title="Drag this image to Primary, Gallery, Reference, or Rejected"
-          onDragStart={(e) => {
+        <button
+          type="button"
+          aria-label="Drag handle — press and drag to assign image"
+          title="Drag by this handle to assign the image"
+          onPointerDown={(e) => {
+            if (e.button !== 0) return
+            e.preventDefault()
             e.stopPropagation()
-            setHandleGrabbing(true)
-            runDragStart(e)
-          }}
-          onDragEnd={(e) => {
-            e.stopPropagation()
-            runDragEnd(e)
+            onPointerDragHandleDown?.(e)
           }}
           style={{
             marginTop: 8,
             padding: "10px 12px",
             minHeight: 40,
+            width: "100%",
             boxSizing: "border-box",
             borderRadius: 8,
             border: "1px solid #94a3b8",
-            background: handleGrabbing || isDragging ? "#bfdbfe" : "#e2e8f0",
+            background: isPointerDragging ? "#bfdbfe" : "#e2e8f0",
             fontSize: 12,
             fontWeight: 800,
             color: "#0f172a",
-            cursor: handleGrabbing || isDragging ? "grabbing" : "grab",
+            cursor: isPointerDragging ? "grabbing" : "grab",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             gap: 8,
             flexShrink: 0,
+            fontFamily: "inherit",
+            touchAction: "none",
           }}
         >
           <span aria-hidden style={{ fontSize: 14, lineHeight: 1, letterSpacing: 1 }}>
             ⋮⋮
           </span>
           <span>Drag</span>
-        </div>
+        </button>
       ) : null}
       {children}
     </div>
