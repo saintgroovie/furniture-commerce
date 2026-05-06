@@ -331,6 +331,25 @@ type LegacyBoardLoadFailure = {
   body: Record<string, unknown>
 }
 
+/** Dev-visible DnD telemetry for this QA page only */
+type DndPanelState = {
+  dragSessionActive: boolean
+  draggingMediaId: string | null
+  draggingFilename: string | null
+  payloadWritten: boolean | null
+  lastDrop: string
+  lastError: string
+}
+
+const DND_PANEL_INIT: DndPanelState = {
+  dragSessionActive: false,
+  draggingMediaId: null,
+  draggingFilename: null,
+  payloadWritten: null,
+  lastDrop: "—",
+  lastError: "",
+}
+
 export function LegacyMediaAssignmentBoardClient() {
   const [loadError, setLoadError] = useState<string | null>(null)
   const [loadFailureDetail, setLoadFailureDetail] = useState<LegacyBoardLoadFailure | null>(null)
@@ -359,7 +378,39 @@ export function LegacyMediaAssignmentBoardClient() {
   const [exportFeedback, setExportFeedback] = useState<"copy" | "download" | null>(null)
   const [dragHoverZoneKey, setDragHoverZoneKey] = useState<string | null>(null)
   const [draggingMediaId, setDraggingMediaId] = useState<string | null>(null)
-  const [dndStatus, setDndStatus] = useState<{ last: string }>({ last: "—" })
+  const [dndPanel, setDndPanel] = useState<DndPanelState>(DND_PANEL_INIT)
+
+  const recordDragStart = useCallback((e: React.DragEvent, mediaId: string, filename: string, writePayload: () => void) => {
+    let written = false
+    let errMsg = ""
+    try {
+      writePayload()
+      written = true
+    } catch (ex) {
+      errMsg = ex instanceof Error ? ex.message : String(ex)
+    }
+    setDndPanel((p) => ({
+      ...p,
+      dragSessionActive: true,
+      draggingMediaId: mediaId,
+      draggingFilename: filename,
+      payloadWritten: written,
+      lastError: errMsg,
+    }))
+    setDraggingMediaId(mediaId)
+  }, [])
+
+  const recordDragEnd = useCallback(() => {
+    setDndPanel((p) => ({
+      ...p,
+      dragSessionActive: false,
+      draggingMediaId: null,
+      draggingFilename: null,
+      payloadWritten: null,
+    }))
+    setDraggingMediaId(null)
+    setDragHoverZoneKey(null)
+  }, [])
 
   const invById = useMemo(() => {
     const m = new Map<string, InvItem>()
@@ -700,7 +751,7 @@ export function LegacyMediaAssignmentBoardClient() {
       zones: removeIdFromAllZones(b.zones, inventoryId),
       grej: [...b.grej.filter((r) => r.inventory_id !== inventoryId), { inventory_id: inventoryId, reason: "not_this_product" }],
     }))
-    setDndStatus({ last: "global reject" })
+    setDndPanel((p) => ({ ...p, lastDrop: "global reject", lastError: "" }))
   }
 
   const assignToSelected = (inventoryId: string, zone: "primary" | "gallery" | "reference" | "lane_reject") => {
@@ -710,7 +761,7 @@ export function LegacyMediaAssignmentBoardClient() {
       return { zones: out.zones, grej: out.globalRejections }
     })
     const lab = zone === "lane_reject" ? "product reject" : zone
-    setDndStatus({ last: `quick → ${lab}` })
+    setDndPanel((p) => ({ ...p, lastDrop: `quick → ${lab}`, lastError: "" }))
   }
 
   const dropZoneStable = (e: React.DragEvent, handle: string, zone: ZoneDrop) => {
@@ -719,8 +770,12 @@ export function LegacyMediaAssignmentBoardClient() {
     setDragHoverZoneKey(null)
     const payload = readLegacyDragData(e)
     if (!payload?.mediaId) {
-      setDraggingMediaId(null)
-      setDndStatus({ last: "ignored (no payload)" })
+      recordDragEnd()
+      setDndPanel((p) => ({
+        ...p,
+        lastDrop: "ignored (no payload)",
+        lastError: "drop had no readable drag payload",
+      }))
       return
     }
     let nextAction = "—"
@@ -729,8 +784,12 @@ export function LegacyMediaAssignmentBoardClient() {
       nextAction = r.action
       return r.next
     })
-    setDraggingMediaId(null)
-    setDndStatus({ last: nextAction })
+    recordDragEnd()
+    setDndPanel((p) => ({
+      ...p,
+      lastDrop: nextAction,
+      lastError: "",
+    }))
   }
 
   const exportJson = useCallback(() => {
@@ -963,22 +1022,26 @@ export function LegacyMediaAssignmentBoardClient() {
         caption={pv.caption}
         badges={["Assigned"]}
         size="compact"
+        allowRootDrag={inv.previewable}
+        draggable={inv.previewable}
         isDragging={draggingMediaId === id}
-        onDragStart={(e) => {
-          e.stopPropagation()
-          writeLegacyDragData(e, {
-            type: "legacy_media",
-            mediaId: id,
-            fromProductHandle: handle,
-            fromZone: zone,
-            fromIndex: gi >= 0 ? gi : null,
-          })
-          setDraggingMediaId(id)
-        }}
-        onDragEnd={() => {
-          setDraggingMediaId(null)
-          setDragHoverZoneKey(null)
-        }}
+        onDragStart={
+          inv.previewable
+            ? (e) => {
+                e.stopPropagation()
+                recordDragStart(e, id, inv.filename, () =>
+                  writeLegacyDragData(e, {
+                    type: "legacy_media",
+                    mediaId: id,
+                    fromProductHandle: handle,
+                    fromZone: zone,
+                    fromIndex: gi >= 0 ? gi : null,
+                  })
+                )
+              }
+            : undefined
+        }
+        onDragEnd={inv.previewable ? () => recordDragEnd() : undefined}
         onOpenDetail={() => setInspectorId(id)}
         filenameMaxLen={22}
       />
@@ -1106,9 +1169,9 @@ export function LegacyMediaAssignmentBoardClient() {
           }}
           onDrop={(e) => {
             e.preventDefault()
-            setDraggingMediaId(null)
-            setDragHoverZoneKey(null)
-            if (readLegacyDragData(e)) setDndStatus({ last: "Select a product first." })
+            const payload = readLegacyDragData(e)
+            recordDragEnd()
+            if (payload) setDndPanel((p) => ({ ...p, lastDrop: "Select a product first.", lastError: "" }))
           }}
           style={{
             background: "#fff",
@@ -1694,7 +1757,8 @@ export function LegacyMediaAssignmentBoardClient() {
                 </p>
               ) : (
                 <p style={{ margin: "10px 0 0", fontSize: 12, color: "#64748b" }}>
-                  Dragging or quick actions apply to <strong>{selectedHandle}</strong>.
+                  Start a drag from the <strong>Drag</strong> bar on each tile (not the preview). Quick actions and drops apply to{" "}
+                  <strong>{selectedHandle}</strong>.
                   {focusMode ? (
                     <>
                       {" "}
@@ -1761,24 +1825,26 @@ export function LegacyMediaAssignmentBoardClient() {
                             caption={pv.caption}
                             badges={poolBadges.slice(0, 3)}
                             size={focusMode && selectedHandle ? "xlarge" : "large"}
+                            allowRootDrag={inv.previewable}
                             draggable={inv.previewable}
                             isDragging={draggingMediaId === id}
-                            onDragStart={(e) => {
-                              if (!inv.previewable) return
-                              e.stopPropagation()
-                              writeLegacyDragData(e, {
-                                type: "legacy_media",
-                                mediaId: id,
-                                fromProductHandle: null,
-                                fromZone: "pool",
-                                fromIndex: null,
-                              })
-                              setDraggingMediaId(id)
-                            }}
-                            onDragEnd={() => {
-                              setDraggingMediaId(null)
-                              setDragHoverZoneKey(null)
-                            }}
+                            onDragStart={
+                              inv.previewable
+                                ? (e) => {
+                                    e.stopPropagation()
+                                    recordDragStart(e, id, inv.filename, () =>
+                                      writeLegacyDragData(e, {
+                                        type: "legacy_media",
+                                        mediaId: id,
+                                        fromProductHandle: null,
+                                        fromZone: "pool",
+                                        fromIndex: null,
+                                      })
+                                    )
+                                  }
+                                : undefined
+                            }
+                            onDragEnd={inv.previewable ? () => recordDragEnd() : undefined}
                             onOpenDetail={() => setInspectorId(id)}
                             filenameMaxLen={focusMode && selectedHandle ? 20 : 26}
                             detailTitle={inv.source_path || inv.repo_relative_path || inv.filename}
@@ -1789,41 +1855,75 @@ export function LegacyMediaAssignmentBoardClient() {
                           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                             <button
                               type="button"
+                              draggable={false}
                               style={miniBtn}
                               disabled={!selectedHandle}
                               title={!selectedHandle ? "Select a product first" : undefined}
+                              onMouseDown={(e) => e.stopPropagation()}
+                              onDragStart={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                              }}
                               onClick={() => assignToSelected(id, "primary")}
                             >
                               Primary
                             </button>
                             <button
                               type="button"
+                              draggable={false}
                               style={miniBtn}
                               disabled={!selectedHandle}
                               title={!selectedHandle ? "Select a product first" : undefined}
+                              onMouseDown={(e) => e.stopPropagation()}
+                              onDragStart={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                              }}
                               onClick={() => assignToSelected(id, "gallery")}
                             >
                               Gallery
                             </button>
                             <button
                               type="button"
+                              draggable={false}
                               style={miniBtn}
                               disabled={!selectedHandle}
                               title={!selectedHandle ? "Select a product first" : undefined}
+                              onMouseDown={(e) => e.stopPropagation()}
+                              onDragStart={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                              }}
                               onClick={() => assignToSelected(id, "reference")}
                             >
                               Ref
                             </button>
                             <button
                               type="button"
+                              draggable={false}
                               style={miniBtn}
                               disabled={!selectedHandle}
                               title={!selectedHandle ? "Select a product first" : undefined}
+                              onMouseDown={(e) => e.stopPropagation()}
+                              onDragStart={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                              }}
                               onClick={() => assignToSelected(id, "lane_reject")}
                             >
                               Reject
                             </button>
-                            <button type="button" style={{ ...miniBtn, color: "#b91c1c", borderColor: "#fecaca" }} onClick={() => markGlobalReject(id)}>
+                            <button
+                              type="button"
+                              draggable={false}
+                              style={{ ...miniBtn, color: "#b91c1c", borderColor: "#fecaca" }}
+                              onMouseDown={(e) => e.stopPropagation()}
+                              onDragStart={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                              }}
+                              onClick={() => markGlobalReject(id)}
+                            >
                               Global ✕
                             </button>
                           </div>
@@ -1841,25 +1941,43 @@ export function LegacyMediaAssignmentBoardClient() {
             </div>
             <div
               style={{
-                fontSize: 11,
-                padding: "8px 12px",
+                fontSize: 10,
+                padding: "10px 12px",
                 borderTop: "1px solid #e2e8f0",
-                color: "#64748b",
-                display: "flex",
-                flexWrap: "wrap",
-                gap: 10,
-                justifyContent: "space-between",
-                alignItems: "center",
+                color: "#475569",
+                display: "grid",
+                gap: 4,
                 background: "#fafafa",
+                lineHeight: 1.35,
               }}
               aria-live="polite"
             >
-              <span>
-                <strong style={{ color: "#334155" }}>Drag</strong> ready
-              </span>
-              <span style={{ textAlign: "right", maxWidth: 260 }}>
-                Last: <span style={{ color: "#0f172a", fontWeight: 600 }}>{dndStatus.last}</span>
-              </span>
+              <div>
+                <strong style={{ color: "#334155" }}>DnD (dev)</strong>
+              </div>
+              <div>
+                Drag start:{" "}
+                <strong style={{ color: dndPanel.dragSessionActive ? "#15803d" : "#64748b" }}>{dndPanel.dragSessionActive ? "yes" : "no"}</strong>
+              </div>
+              <div>
+                Dragging:{" "}
+                <span style={{ color: "#0f172a", fontWeight: 600 }}>
+                  {dndPanel.draggingMediaId ? `${dndPanel.draggingMediaId}` : "—"}
+                  {dndPanel.draggingFilename ? ` · ${dndPanel.draggingFilename}` : ""}
+                </span>
+              </div>
+              <div>
+                Payload written:{" "}
+                <strong style={{ color: dndPanel.payloadWritten === true ? "#15803d" : dndPanel.payloadWritten === false ? "#b91c1c" : "#94a3b8" }}>
+                  {dndPanel.payloadWritten === null ? "n/a" : dndPanel.payloadWritten ? "yes" : "no"}
+                </strong>
+              </div>
+              <div>
+                Last drop: <span style={{ color: "#0f172a", fontWeight: 600 }}>{dndPanel.lastDrop}</span>
+              </div>
+              <div>
+                Last DnD error: <span style={{ color: dndPanel.lastError ? "#b91c1c" : "#64748b" }}>{dndPanel.lastError || "—"}</span>
+              </div>
             </div>
           </div>
 

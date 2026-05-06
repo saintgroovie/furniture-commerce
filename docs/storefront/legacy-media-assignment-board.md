@@ -108,12 +108,12 @@ Cap: first **120** items per tab with **Showing first 120 images — narrow filt
 
 ## Drag and drop
 
+- **Start the drag from the visible “⋮⋮ Drag” bar** on each previewable tile (grab cursor). That handle is the reliable HTML5 drag source; the preview `<img>` stays **`draggable={false}`** so the browser does not hijack the gesture with a native image drag. For convenience, the card root may also be draggable when previewable, but QA should prefer the handle if anything feels flaky in a given browser.
 - Each drag carries one **JSON payload** (`type: "legacy_media"`, `mediaId`, optional `fromProductHandle`, `fromZone`, `fromIndex`) written to **`text/plain`** and **`application/json`** so `dataTransfer.getData` works consistently in Chromium/WebKit/Firefox (older custom MIME-only payloads are still read on drop when present).
-- **Preview `<img>`** elements are **`draggable={false}`** so the browser does not start a native “drag image URL” session instead of the card’s drag.
-- **Unpreviewable** inventory appears only in the **Unpreviewable** tab as **text rows** — not as draggable image cards. Previewable pool tiles are draggable when a file can be shown.
-- **Drop zones** (Primary / Gallery / Reference / Reject / return strip) show a **highlight** and short **“Drop to …”** label while the pointer is over them during a drag.
-- The **Media pool** footer shows **Drag ready** and the **last** successful lane action (e.g. assigned to primary, removed to unassigned) so you can confirm a drop landed without opening the console.
-- Dropping onto the **empty workspace** (no product selected) does nothing to lanes and sets feedback to **Select a product first.**
+- **Unpreviewable** inventory appears only in the **Unpreviewable** tab as **text rows** — not as draggable image cards. Previewable pool tiles expose the drag handle when a file can be shown.
+- **Drop zones** (Primary / Gallery / Reference / Reject / return strip) call **`preventDefault`** on drag-over, show a **highlight** and short **“Drop to …”** label while the pointer is over them, and read **`text/plain`** first on drop.
+- The **Media pool** footer includes a compact **DnD (dev)** line block: drag session on/off, dragging id/filename, payload written yes/no, last drop description, and last DnD error — so QA can confirm drag start and drops without the console.
+- Dropping onto the **empty workspace** (no product selected) does nothing to lanes and updates feedback to **Select a product first.**
 
 ---
 
