@@ -23,13 +23,19 @@ export const FURNITURE_REPO_EXPECTED_MARKER_RELPATHS = [MARKER_CODEMAP, MARKER_D
  * Standard JSON body when repo root cannot be resolved (legacy media QA API routes).
  */
 export function legacyMediaQaRepoRootFailurePayload(resolution: FurnitureRepoDataResolution): Record<string, unknown> {
+  const dockerish =
+    resolution.cwd === "/app" ||
+    resolution.seedsTried.some((p) => p === "/app" || p.startsWith("/app/"))
+  const hintDocker =
+    "Docker storefront: repo markers must exist under /app (bind-mount repo ./data -> /app/data and ./docs -> /app/docs per docker-compose.yml, then `docker compose up -d --force-recreate storefront`). Setting FURNITURE_REPO_ROOT alone does not create files if those mounts are missing."
+  const hintGeneral =
+    "Set FURNITURE_REPO_ROOT (or FURNITURE_COMMERCE_ROOT) to the absolute furniture-commerce repo path, or run Next from apps/storefront inside a full checkout with docs/ and data/ on disk."
   return {
     error: "repo_root_not_resolved",
     cwd: resolution.cwd,
     checked_paths: resolution.seedsTried,
     expected_markers: [...FURNITURE_REPO_EXPECTED_MARKER_RELPATHS],
-    hint:
-      "Set FURNITURE_REPO_ROOT (or FURNITURE_COMMERCE_ROOT) to the absolute furniture-commerce repo path, or run Next from apps/storefront inside a full checkout with docs/ and data/ on disk.",
+    hint: dockerish ? `${hintGeneral} ${hintDocker}` : hintGeneral,
   }
 }
 
@@ -93,6 +99,11 @@ function computeResolution(): FurnitureRepoDataResolution {
   const envRoot = (process.env.FURNITURE_REPO_ROOT || process.env.FURNITURE_COMMERCE_ROOT || "").trim()
   if (envRoot) {
     push(envRoot)
+  }
+
+  const initCwd = (process.env.INIT_CWD || "").trim()
+  if (initCwd) {
+    push(initCwd)
   }
 
   push(cwd)
