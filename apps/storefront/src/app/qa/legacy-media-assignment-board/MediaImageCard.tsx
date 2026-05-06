@@ -13,13 +13,13 @@ type Props = {
   caption: string
   badges?: string[]
   size?: CardSize
-  /** Visual feedback while this card is the active pointer-drag source (parent-driven). */
-  isPointerDragging?: boolean
-  /**
-   * When set, shows the “⋮⋮ Drag” handle and starts pointer-drag from pointerdown (primary button only).
-   * Does not use native HTML5 drag.
-   */
-  onPointerDragHandleDown?: (e: React.PointerEvent) => void
+  /** Native HTML5 drag source toggle. */
+  draggable?: boolean
+  /** Visual feedback while this card is the active drag source (parent-driven). */
+  isDragging?: boolean
+  /** Drag handlers are attached to the card root. */
+  onDragStart?: (e: React.DragEvent) => void
+  onDragEnd?: (e: React.DragEvent) => void
   /** Full path / context for hover (not shown inline). */
   detailTitle?: string
   /** Max visible filename characters before ellipsis. */
@@ -44,8 +44,10 @@ export function MediaImageCard({
   caption,
   badges = [],
   size = "normal",
-  isPointerDragging = false,
-  onPointerDragHandleDown,
+  draggable = true,
+  isDragging = false,
+  onDragStart,
+  onDragEnd,
   detailTitle,
   filenameMaxLen = 32,
   onOpenDetail,
@@ -57,22 +59,24 @@ export function MediaImageCard({
   const fullPathTitle = detailTitle ?? inv.source_path ?? inv.repo_relative_path ?? inv.filename
   const nameShown = truncateMiddle(inv.filename, filenameMaxLen)
 
-  const showDragHandle = Boolean(onPointerDragHandleDown)
+  const canDrag = Boolean(draggable && onDragStart)
 
   return (
     <div
       data-inventory-id={inventoryId}
+      draggable={canDrag}
+      onDragStart={canDrag ? onDragStart : undefined}
+      onDragEnd={canDrag ? onDragEnd : undefined}
       style={{
         width: w + 16,
         borderRadius: 12,
-        border: isPointerDragging ? "2px solid #2563eb" : "1px solid #e2e8f0",
-        background: isPointerDragging ? "#eff6ff" : "#fff",
-        boxShadow: isPointerDragging ? "0 4px 14px rgba(37,99,235,0.2)" : "0 1px 2px rgba(15,23,42,0.06)",
+        border: isDragging ? "2px solid #2563eb" : "1px solid #e2e8f0",
+        background: isDragging ? "#eff6ff" : "#fff",
+        boxShadow: isDragging ? "0 4px 14px rgba(37,99,235,0.2)" : "0 1px 2px rgba(15,23,42,0.06)",
         padding: size === "xlarge" || size === "large" ? 10 : 8,
-        cursor: "default",
+        cursor: canDrag ? "grab" : "default",
         userSelect: "none",
-        opacity: isPointerDragging ? 0.88 : 1,
-        touchAction: "none",
+        opacity: isDragging ? 0.9 : 1,
       }}
     >
       <div
@@ -189,17 +193,9 @@ export function MediaImageCard({
           ))}
         </div>
       ) : null}
-      {showDragHandle ? (
-        <button
-          type="button"
-          aria-label="Drag handle — press and drag to assign image"
-          title="Drag by this handle to assign the image"
-          onPointerDown={(e) => {
-            if (e.button !== 0) return
-            e.preventDefault()
-            e.stopPropagation()
-            onPointerDragHandleDown?.(e)
-          }}
+      {canDrag ? (
+        <div
+          aria-hidden
           style={{
             marginTop: 8,
             padding: "10px 12px",
@@ -208,25 +204,24 @@ export function MediaImageCard({
             boxSizing: "border-box",
             borderRadius: 8,
             border: "1px solid #94a3b8",
-            background: isPointerDragging ? "#bfdbfe" : "#e2e8f0",
+            background: isDragging ? "#bfdbfe" : "#e2e8f0",
             fontSize: 12,
             fontWeight: 800,
             color: "#0f172a",
-            cursor: isPointerDragging ? "grabbing" : "grab",
+            cursor: isDragging ? "grabbing" : "grab",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             gap: 8,
             flexShrink: 0,
             fontFamily: "inherit",
-            touchAction: "none",
           }}
         >
           <span aria-hidden style={{ fontSize: 14, lineHeight: 1, letterSpacing: 1 }}>
             ⋮⋮
           </span>
           <span>Drag</span>
-        </button>
+        </div>
       ) : null}
       {children}
     </div>

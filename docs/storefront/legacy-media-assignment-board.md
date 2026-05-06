@@ -72,7 +72,7 @@ The sticky header includes a **five-step workflow** strip:
 1. **Choose collection** — Sidebar: **All collections**, a named collection, or **Unknown / unmatched** (media rows where collection hints could not be inferred). Search narrows long collection lists. Badges show **products**, **media**, **matcher candidate rows**, **assigned**, and **ambiguous** counts for that slice.
 2. **Select product** — Click a product card or **Review**. The card shows handle, title, SKU, collection badge, thumbnail, assigned/candidate counts, and a **status** pill (e.g. *Needs review*, *Has auto matches*, *Manually edited*, *Ready candidate*, *No candidates*, *Ambiguous*, *Has storefront media*).
 3. **Review images** — Use the **Media pool** (tabs below). Prefer **Suggested** when a product is selected to see rows whose matcher **top candidate** matches that handle. Open **Inspector** from a tile for full paths, confidence, and candidate list.
-4. **Assign roles** — Only in the **Selected product** panel: **Primary**, **Gallery**, **Reference only**, **Rejected for this product**. Use the **⋮⋮ Drag** handle on pool tiles (pointer drag) or quick actions. Drop assigned tiles onto the **return strip** under the storefront thumbnails to send them back to the unassigned pool (clears lane placement).
+4. **Assign roles** — Only in the **Selected product** panel: **Primary**, **Gallery**, **Reference only**, **Rejected for this product**. Drag from a previewable tile card (the **⋮⋮ Drag** bar is a visual hint, not a required-only handle), or use quick actions. Drop assigned tiles onto the **return strip** under the storefront thumbnails to send them back to the unassigned pool (clears lane placement).
 5. **Export JSON** — **Copy JSON** or **Download JSON**. The header explains that export is **local decisions only**, does **not** update Medusa, and where to save the file (see Persistence). Success text appears after copy/download. **Clear local decisions** asks for confirmation first.
 
 The workflow strip also echoes **active collection**, **selected product**, **local decision slot count**, and a short export disclaimer.
@@ -106,12 +106,12 @@ Cap: first **120** items per tab with **Showing first 120 images — narrow filt
 
 ---
 
-## Drag by handle (pointer)
+## Drag and drop
 
-- **Start from the “⋮⋮ Drag” handle** on each previewable tile (`pointerdown`, primary button). The board uses **pointer-based drag** (not native browser drag-and-drop): a **ghost overlay** follows the cursor, and **drop targets** are detected with `elementFromPoint` + `data-legacy-drop-target` markers. The preview `<img>` stays **`draggable={false}`** and is not a drag handle.
+- The board uses native HTML5 drag-and-drop for previewable tiles. You can grab the card itself; the **⋮⋮ Drag** bar remains as an affordance.
 - **Unpreviewable** inventory appears only in the **Unpreviewable** tab as **text rows** — no drag handle there.
 - **Drop zones** (Primary / Gallery / Reference / Reject / return strip) expose explicit **`data-legacy-drop-target`** attributes; while dragging, the zone under the pointer **highlights** and the label can switch to a short **“Drop to …”** hint. Releasing outside a valid target **cancels** the drag without changing board state.
-- The **Media pool** footer includes a compact **Drag (dev)** block: pointer drag idle/active, dragging id/filename, hover target label, last action, and last error — so QA can confirm the handle “grabbed” without the console.
+- The **Media pool** footer includes a compact **DnD (dev)** block: drag start yes/no, payload written yes/no, last drop target, last action, and last error.
 - **Quick actions** (**Primary** / **Gallery** / **Ref** / **Reject** / **Global ✕**) remain the full fallback if dragging is inconvenient.
 - With **no product selected**, lane targets are not shown; use quick actions after selecting a SKU, or select a product first.
 
