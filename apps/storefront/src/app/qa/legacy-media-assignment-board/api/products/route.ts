@@ -1,7 +1,7 @@
 import * as fs from "fs"
 import * as path from "path"
 import { NextResponse } from "next/server"
-import { getFurnitureRepoDataResolution } from "@/lib/qa/furniture-repo-data-root"
+import { FURNITURE_REPO_MARKERS_DESC, getFurnitureRepoDataResolution } from "@/lib/qa/furniture-repo-data-root"
 
 export const dynamic = "force-dynamic"
 
@@ -21,9 +21,19 @@ export async function GET(): Promise<Response> {
   if (prodBlocked()) {
     return new NextResponse("Not found", { status: 404 })
   }
-  const { repoRoot } = getFurnitureRepoDataResolution()
+  const { repoRoot, seedsTried, cwd } = getFurnitureRepoDataResolution()
   if (!repoRoot) {
-    return NextResponse.json({ error: "Repo root not resolved" }, { status: 500 })
+    return NextResponse.json(
+      {
+        error: "Repo root not resolved",
+        hint:
+          "Set FURNITURE_REPO_ROOT to the absolute furniture-commerce repo path (must contain CODEMAP.md and data/normalized/). Or run Next from apps/storefront inside a full checkout.",
+        markers: FURNITURE_REPO_MARKERS_DESC,
+        cwd,
+        ...(process.env.NODE_ENV !== "production" ? { seedsTried } : {}),
+      },
+      { status: 500 }
+    )
   }
   const abs = path.join(repoRoot, REL)
   try {

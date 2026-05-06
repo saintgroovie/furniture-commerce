@@ -25,6 +25,20 @@ const UNKNOWN_COLLECTION = "__unknown__"
 const API_BASE = "/qa/legacy-media-assignment-board/api"
 const PREVIEW_ROUTE = "/qa/legacy-media-assignment-board/preview"
 
+async function throwIfApiFailed(res: Response, label: string): Promise<void> {
+  if (res.ok) return
+  let msg = `${label} ${res.status}`
+  try {
+    const raw = await res.text()
+    const j = JSON.parse(raw) as { error?: string; hint?: string }
+    if (j?.error) msg = `${label} ${res.status}: ${j.error}`
+    if (j?.hint) msg = `${msg} — ${j.hint}`
+  } catch {
+    /* keep msg */
+  }
+  throw new Error(msg)
+}
+
 type PoolTab = "unassigned" | "ambiguous" | "confirmed" | "unpreviewable" | "rejected"
 type ZoneDrop = "primary" | "gallery" | "reference" | "lane_reject" | "unassigned"
 
@@ -294,9 +308,9 @@ export function LegacyMediaAssignmentBoardClient() {
           fetch(`${API_BASE}/candidates`),
           fetch(`${API_BASE}/products`),
         ])
-        if (!r1.ok) throw new Error(`inventory ${r1.status}`)
-        if (!r2.ok) throw new Error(`candidates ${r2.status}`)
-        if (!r3.ok) throw new Error(`products ${r3.status}`)
+        await throwIfApiFailed(r1, "inventory")
+        await throwIfApiFailed(r2, "candidates")
+        await throwIfApiFailed(r3, "products")
         const j1 = (await r1.json()) as { items: InvItem[]; summary: Record<string, unknown> }
         const j2 = (await r2.json()) as { entries: CandidateEntry[]; summary: Record<string, unknown> }
         const j3 = (await r3.json()) as { products: ProductRow[] }

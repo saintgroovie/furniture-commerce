@@ -15,6 +15,19 @@ Local storefront (port from `apps/storefront/package.json`, often **8000**):
 
 Start Next from **`furniture-commerce/apps/storefront`** so read-only `api/*` routes resolve repo `data/normalized/*.json`.
 
+### If APIs return 500 (`Repo root not resolved`)
+
+The server must find the monorepo root by walking up from `process.cwd()` and from this module’s path until both exist: `docs/project/CODEMAP.md` and the directory `data/normalized/`.
+
+- Run **`yarn dev` from `apps/storefront`** inside a **full** `furniture-commerce` checkout (not a partial copy without `docs/` or `data/`).
+- Or set an explicit absolute path (e.g. Docker):
+
+  `FURNITURE_REPO_ROOT=/absolute/path/to/furniture-commerce`
+
+  (Alias: `FURNITURE_COMMERCE_ROOT` — same meaning.)
+
+Then restart Next. After a fix, the board’s error line will include the API `hint` text when the response is JSON.
+
 In **production** (`NODE_ENV=production`) the board returns **404** unless `LEGACY_MEDIA_QA_BOARD_ALLOW_PROD=1` (discouraged).
 
 ---
