@@ -3,7 +3,7 @@
 import { useState } from "react"
 import type { InvItem } from "./legacy-media-board-types"
 
-type CardSize = "compact" | "normal" | "large"
+type CardSize = "compact" | "normal" | "large" | "xlarge"
 
 type Props = {
   inventoryId: string
@@ -24,7 +24,7 @@ type Props = {
   children?: React.ReactNode
 }
 
-const cardPx: Record<CardSize, number> = { compact: 88, normal: 120, large: 160 }
+const cardPx: Record<CardSize, number> = { compact: 88, normal: 120, large: 160, xlarge: 196 }
 
 function truncateMiddle(s: string, max: number) {
   if (s.length <= max) return s
@@ -69,7 +69,7 @@ export function MediaImageCard({
         border: "1px solid #e2e8f0",
         background: "#fff",
         boxShadow: "0 1px 2px rgba(15,23,42,0.06)",
-        padding: size === "large" ? 10 : 8,
+        padding: size === "xlarge" || size === "large" ? 10 : 8,
         cursor: draggable ? "grab" : "default",
       }}
     >
@@ -119,7 +119,7 @@ export function MediaImageCard({
             justifyContent: "center",
             textAlign: "center",
             padding: 8,
-            fontSize: size === "large" ? 11 : size === "compact" ? 9 : 10,
+            fontSize: size === "xlarge" || size === "large" ? 11 : size === "compact" ? 9 : 10,
             color: "#475569",
             lineHeight: 1.35,
           }}
@@ -149,7 +149,7 @@ export function MediaImageCard({
         title={fullPathTitle}
         style={{
           marginTop: 8,
-          fontSize: size === "large" ? 12 : size === "compact" ? 10 : 11,
+          fontSize: size === "xlarge" || size === "large" ? 12 : size === "compact" ? 10 : 11,
           fontWeight: 600,
           color: "#0f172a",
           lineHeight: 1.25,

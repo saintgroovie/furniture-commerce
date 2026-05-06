@@ -38,7 +38,7 @@ async function fetchBoardJson(url: string): Promise<{ ok: true; data: Record<str
   return { ok: true, data: body }
 }
 
-type PoolTab = "unassigned" | "ambiguous" | "confirmed" | "unpreviewable" | "rejected"
+type PoolTab = "suggested" | "unassigned" | "ambiguous" | "confirmed" | "unpreviewable" | "rejected"
 type ZoneDrop = "primary" | "gallery" | "reference" | "lane_reject" | "unassigned"
 
 type ProductUiKind =
@@ -53,6 +53,14 @@ type ProductUiKind =
 function medusaOrigin(): string {
   const u = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000"
   return u.replace(/\/$/, "")
+}
+
+function unpreviewableHumanReason(inv: InvItem): string {
+  const raw = (inv.preview_reason || "").toLowerCase()
+  if (!inv.exists_locally) return "Local source missing — file not found under the resolved repo root."
+  if (raw.includes("mount") || raw.includes("not found") || raw.includes("missing")) return "Path not mounted or missing in this environment."
+  if (raw.includes("preview") || raw.includes("rule")) return "Not previewable for this board (no safe preview rule)."
+  return inv.preview_reason || "Unpreviewable reference."
 }
 
 function clientPreviewUrl(inv: InvItem): { url: string | null; useImg: boolean; caption: string } {
@@ -215,7 +223,7 @@ const PRODUCT_STATUS_META: Record<
     hint: "Primary set with no ambiguous flags on matched rows.",
   },
   problem_ambiguous: {
-    label: "Problem / ambiguous",
+    label: "Ambiguous",
     bg: "#fee2e2",
     fg: "#b91c1c",
     hint: "Assignments exist but some linked media is still ambiguous.",
@@ -257,7 +265,7 @@ export function LegacyMediaAssignmentBoardClient() {
 
   const [board, setBoard] = useState<BoardState>({ zones: {}, grej: [] })
   const [selectedHandle, setSelectedHandle] = useState<string | null>(null)
-  const [poolTab, setPoolTab] = useState<PoolTab>("unassigned")
+  const [poolTab, setPoolTab] = useState<PoolTab>("suggested")
   const [hydrated, setHydrated] = useState(false)
   const skipNextPersist = useRef(false)
   const [focusMode, setFocusMode] = useState(false)
@@ -491,6 +499,17 @@ export function LegacyMediaAssignmentBoardClient() {
     return unassignedPoolIds.filter((id) => (candById.get(id)?.confidence || "") === "confirmed")
   }, [unassignedPoolIds, candById])
 
+  const suggestedPoolIds = useMemo(() => {
+    const th = selectedHandle?.trim().toLowerCase() || ""
+    return unassignedPoolIds.filter((id) => {
+      const ce = candById.get(id)
+      const top = ce?.top_candidate
+      if (!top) return false
+      if (th) return top.medusa_product_handle.toLowerCase() === th
+      return true
+    })
+  }, [unassignedPoolIds, candById, selectedHandle])
+
   const rejectedPoolItems = useMemo(() => board.grej, [board.grej])
 
   const unpreviewableRows = useMemo(() => {
@@ -504,7 +523,9 @@ export function LegacyMediaAssignmentBoardClient() {
 
   const productsFiltered = useMemo(() => {
     let list = [...products]
-    if (sidebarCollection && sidebarCollection !== UNKNOWN_COLLECTION) {
+    if (sidebarCollection === UNKNOWN_COLLECTION) {
+      list = list.filter((p) => !(p.collection || "").trim())
+    } else if (sidebarCollection && sidebarCollection !== UNKNOWN_COLLECTION) {
       list = list.filter((p) => (p.collection || "").toLowerCase() === sidebarCollection)
     }
     const q = search.trim().toLowerCase()
@@ -573,7 +594,7 @@ export function LegacyMediaAssignmentBoardClient() {
   const clearLocal = () => {
     if (
       !window.confirm(
-        "Clear all local lane assignments and global rejections from this browser? This cannot be undone (except by re-importing JSON)."
+        "Clear all local lane assignments and global rejections from this browser? This cannot be undone except by re-importing a saved JSON file."
       )
     ) {
       return
@@ -678,12 +699,13 @@ export function LegacyMediaAssignmentBoardClient() {
   }
 
   const poolIdsForTab = useMemo(() => {
+    if (poolTab === "suggested") return suggestedPoolIds
     if (poolTab === "unassigned") return unassignedPoolIds
     if (poolTab === "ambiguous") return ambiguousPoolIds
     if (poolTab === "confirmed") return confirmedPoolIds
     if (poolTab === "rejected") return rejectedPoolItems.map((r) => r.inventory_id)
     return []
-  }, [poolTab, unassignedPoolIds, ambiguousPoolIds, confirmedPoolIds, rejectedPoolItems])
+  }, [poolTab, suggestedPoolIds, unassignedPoolIds, ambiguousPoolIds, confirmedPoolIds, rejectedPoolItems])
 
   const poolIdsForTabFocused = useMemo(() => {
     if (!focusMode || !selectedHandle) return poolIdsForTab
@@ -706,6 +728,17 @@ export function LegacyMediaAssignmentBoardClient() {
   }, [sidebarCollection])
 
   const selectedProduct = selectedHandle ? productByHandle.get(selectedHandle.toLowerCase()) ?? null : null
+
+  const poolEmptyMessage = useMemo(() => {
+    if (poolTab === "suggested") {
+      return selectedHandle
+        ? "No suggested images for this product with the current filters."
+        : "No system-suggested rows in the pool — select a product or open Unassigned."
+    }
+    if (poolTab === "rejected") return "No global rejections yet."
+    if (poolTab === "unpreviewable") return "No unpreviewable references match these filters."
+    return "No media matches these filters."
+  }, [poolTab, selectedHandle])
 
   const assignedElsewhere = useCallback(
     (inventoryId: string): string | null => {
@@ -843,7 +876,7 @@ export function LegacyMediaAssignmentBoardClient() {
   const sidebarStats = (coll: string) => {
     const prodN =
       coll === UNKNOWN_COLLECTION
-        ? products.length
+        ? products.filter((p) => !(p.collection || "").trim()).length
         : coll === ""
           ? products.length
           : products.filter((p) => (p.collection || "").toLowerCase() === coll).length
@@ -851,6 +884,19 @@ export function LegacyMediaAssignmentBoardClient() {
     let assignedN = 0
     let ambN = 0
     let unassignedN = 0
+    let candRows = 0
+    for (const e of candDoc?.entries ?? []) {
+      const it = invById.get(e.inventory_id)
+      if (!it) continue
+      const ce = candById.get(e.inventory_id)
+      const matchColl =
+        coll === ""
+          ? true
+          : coll === UNKNOWN_COLLECTION
+            ? isUnknownHintItem(it, ce)
+            : (it.collection_hint || "").toLowerCase() === coll || (e.top_candidate?.medusa_collection_handle || "").toLowerCase() === coll
+      if (matchColl) candRows++
+    }
     for (const it of invDoc?.items ?? []) {
       const ce = candById.get(it.id)
       const matchColl =
@@ -867,27 +913,27 @@ export function LegacyMediaAssignmentBoardClient() {
         if (ce?.identity_confidence === "ambiguous") ambN++
       }
     }
-    return { prodN, mediaN, assignedN, ambN, unassignedN }
+    return { prodN, mediaN, assignedN, ambN, unassignedN, candRows }
   }
 
   const inspectorInv = inspectorId ? invById.get(inspectorId) : null
   const inspectorCe = inspectorId ? candById.get(inspectorId) : null
 
-  const headerH = 132
+  /** Sticky chrome height (header + workflow) for column scroll regions */
+  const headerH = 200
+
+  const exportReady = Boolean(exportFeedback) || localDecisionSlots > 0
 
   const workflowSteps = (
     <div
       style={{
         display: "flex",
         flexWrap: "wrap",
-        gap: 8,
+        gap: 10,
         alignItems: "center",
-        padding: "10px 20px",
-        borderBottom: "1px solid #e2e8f0",
-        background: "#fff",
-        position: "sticky",
-        top: 72,
-        zIndex: 18,
+        padding: "10px 20px 12px",
+        borderTop: "1px solid #e2e8f0",
+        background: "#f8fafc",
       }}
     >
       {(
@@ -896,7 +942,7 @@ export function LegacyMediaAssignmentBoardClient() {
           { n: 2, t: "Select product", done: Boolean(selectedHandle) },
           { n: 3, t: "Review images", done: Boolean(selectedHandle) },
           { n: 4, t: "Assign roles", done: localDecisionSlots > 0 },
-          { n: 5, t: "Export JSON", done: false },
+          { n: 5, t: "Export JSON", done: exportReady },
         ] as const
       ).map((s, i, arr) => (
         <div key={s.n} style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -920,20 +966,20 @@ export function LegacyMediaAssignmentBoardClient() {
           {i < arr.length - 1 ? <span style={{ color: "#cbd5e1", fontSize: 14 }}>→</span> : null}
         </div>
       ))}
-      <div style={{ marginLeft: "auto", fontSize: 12, color: "#475569", textAlign: "right", maxWidth: 420, lineHeight: 1.4 }}>
-        <strong>{collectionLabel}</strong>
-        {selectedHandle ? (
-          <>
-            {" · "}
-            <strong>{selectedHandle}</strong>
-          </>
-        ) : (
-          <> · No product selected</>
-        )}
-        <br />
-        <span style={{ color: "#64748b" }}>
-          Local slots: <strong>{localDecisionSlots}</strong> · Export copies browser-only decisions (not Medusa).
-        </span>
+      <div style={{ marginLeft: "auto", fontSize: 12, color: "#475569", textAlign: "right", maxWidth: 460, lineHeight: 1.45 }}>
+        <div>
+          <span style={{ color: "#64748b" }}>Collection:</span> <strong>{collectionLabel}</strong>
+        </div>
+        <div style={{ marginTop: 2 }}>
+          <span style={{ color: "#64748b" }}>Product:</span>{" "}
+          <strong>{selectedHandle || "— none"}</strong>
+        </div>
+        <div style={{ marginTop: 2, color: "#64748b" }}>
+          Local decisions: <strong>{localDecisionSlots}</strong>
+          <span style={{ marginLeft: 8, fontSize: 11 }}>
+            Exports local decisions only. Does not update Medusa.
+          </span>
+        </div>
       </div>
     </div>
   )
@@ -952,9 +998,9 @@ export function LegacyMediaAssignmentBoardClient() {
             marginBottom: 16,
           }}
         >
-          <div style={{ fontSize: 16, fontWeight: 700, color: "#0f172a", marginBottom: 8 }}>Select a product to assign images</div>
-          <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5 }}>
-            Pick a row in the product list (or turn on <strong>Focus mode</strong> after selecting). Drag from the media pool into Primary / Gallery / Reference, or use quick actions.
+          <div style={{ fontSize: 18, fontWeight: 800, color: "#0f172a", marginBottom: 10 }}>Select a product to start assigning images.</div>
+          <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, maxWidth: 520, marginLeft: "auto", marginRight: "auto" }}>
+            Choose a product from the list (or switch to <strong>Focus mode</strong> after you pick one). Then drag from the media pool or use quick actions on each tile.
           </p>
         </section>
       )
@@ -997,9 +1043,8 @@ export function LegacyMediaAssignmentBoardClient() {
                 {selectedProduct.collection || "— collection"}
               </span>
             </div>
-            <p style={{ margin: "14px 0 0", fontSize: 13, color: "#64748b", maxWidth: fullWidth ? 720 : 560, lineHeight: 1.5 }}>
-              <strong>Assigned</strong> = Primary + Gallery + Reference for this SKU. <strong>Rejected for this product</strong> stays in the export lane. Drag from the
-              pool or use quick actions on tiles. Return items via the strip below.
+            <p style={{ margin: "14px 0 0", fontSize: 13, color: "#64748b", maxWidth: fullWidth ? 720 : 560, lineHeight: 1.55 }}>
+              Drag images into zones below or use quick actions from the media pool. Drop tiles on the strip under the previews to return them to the pool.
             </p>
           </div>
           <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
@@ -1009,9 +1054,9 @@ export function LegacyMediaAssignmentBoardClient() {
             ))}
           </div>
         </div>
-        <div style={{ marginTop: 10, fontSize: 12, color: "#64748b" }}>
-          Current storefront images: <strong>{selectedProduct.image_urls.length}</strong> · Matcher rows for this handle: <strong>{candCount}</strong> · Local slots:{" "}
-          <strong>{(z.primary ? 1 : 0) + z.gallery.length + z.reference_only.length + z.lane_rejected.length}</strong>
+        <div style={{ marginTop: 10, fontSize: 12, color: "#94a3b8" }}>
+          Storefront images: {selectedProduct.image_urls.length} · Suggested matcher rows: {candCount} · Assigned slots:{" "}
+          {(z.primary ? 1 : 0) + z.gallery.length + z.reference_only.length + z.lane_rejected.length}
         </div>
         <div
           onDragOver={(e) => e.preventDefault()}
@@ -1073,73 +1118,112 @@ export function LegacyMediaAssignmentBoardClient() {
         fontSize: 14,
       }}
     >
-      <header
+      <div
         style={{
           position: "sticky",
           top: 0,
           zIndex: 20,
           background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
           borderBottom: "1px solid #e2e8f0",
-          padding: "14px 20px 10px",
         }}
       >
-        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", gap: 16, justifyContent: "space-between" }}>
-          <div>
-            <h1 style={{ margin: 0, fontSize: 20, fontWeight: 800, letterSpacing: "-0.03em" }}>Legacy media assignment</h1>
-            <p style={{ margin: "6px 0 0", fontSize: 13, color: "#64748b", maxWidth: 520 }}>
-              Dev-only triage: map legacy files to seed products. <strong>No Medusa apply</strong> — export JSON when finished.
-            </p>
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
-            <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 600, color: "#334155", cursor: "pointer" }}>
-              <input type="checkbox" checked={focusMode} onChange={(e) => setFocusMode(e.target.checked)} />
-              Focus mode
-            </label>
-            <div style={{ width: 1, height: 28, background: "#e2e8f0" }} />
-            <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-end" }}>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "flex-end" }}>
-                <span style={primaryPill}>
-                  Reviewed products: <b>{toolbarCounts.productsReviewed}</b>
-                </span>
-                <span style={primaryPill}>
-                  With assignments: <b>{toolbarCounts.productsWithAssigned}</b>
-                </span>
-                <span style={primaryPill}>
-                  Unassigned media: <b>{toolbarCounts.unassigned}</b>
-                </span>
-              </div>
-              <div style={{ fontSize: 11, color: "#94a3b8" }}>
-                Total {toolbarCounts.total} · Previewable {toolbarCounts.previewable} · Ambiguous rows {toolbarCounts.ambiguous} · Global rejects{" "}
-                {toolbarCounts.rejected}
-              </div>
+        <header style={{ padding: "14px 20px 8px" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", gap: 16, justifyContent: "space-between" }}>
+            <div style={{ minWidth: 0 }}>
+              <h1 style={{ margin: 0, fontSize: 21, fontWeight: 800, letterSpacing: "-0.03em", color: "#0f172a" }}>Legacy media assignment</h1>
+              <p style={{ margin: "6px 0 0", fontSize: 13, color: "#64748b", maxWidth: 560, lineHeight: 1.45 }}>
+                Manual QA workspace: match legacy images to seed products. This page never writes Medusa — only your browser and exported JSON.
+              </p>
+            </div>
+            <div style={{ display: "inline-flex", borderRadius: 999, border: "1px solid #e2e8f0", overflow: "hidden", flexShrink: 0 }}>
+              <button
+                type="button"
+                onClick={() => setFocusMode(false)}
+                style={{
+                  ...segToggleBtn,
+                  background: !focusMode ? "#0f172a" : "#fff",
+                  color: !focusMode ? "#fff" : "#475569",
+                }}
+              >
+                Board mode
+              </button>
+              <button
+                type="button"
+                onClick={() => setFocusMode(true)}
+                style={{
+                  ...segToggleBtn,
+                  background: focusMode ? "#0f172a" : "#fff",
+                  color: focusMode ? "#fff" : "#475569",
+                }}
+              >
+                Focus mode
+              </button>
             </div>
           </div>
-        </div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 12, alignItems: "center" }}>
-          <button type="button" onClick={() => void copyJson()} style={btnPrimary}>
-            Copy JSON
-          </button>
-          <button type="button" onClick={downloadJson} style={btnPrimary}>
-            Download JSON
-          </button>
-          {exportFeedback === "copy" ? (
-            <span style={successHint}>Copied to clipboard.</span>
-          ) : exportFeedback === "download" ? (
-            <span style={successHint}>Download started.</span>
-          ) : null}
-          <button type="button" onClick={clearLocal} style={btnGhost}>
-            Clear local decisions…
-          </button>
-          <button type="button" onClick={resetFilters} style={btnGhost}>
-            Reset filters
-          </button>
-          <p style={{ margin: 0, marginLeft: "auto", fontSize: 12, color: "#64748b", maxWidth: 360, textAlign: "right" }}>
-            Exports <strong>local decisions only</strong>. Does not update Medusa or production media.
+          <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+            <span style={{ fontSize: 10, fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.08em", marginRight: 4 }}>Primary</span>
+            <span style={primaryPill}>
+              Products reviewed: <b>{toolbarCounts.productsReviewed}</b>
+            </span>
+            <span style={primaryPill}>
+              With assignments: <b>{toolbarCounts.productsWithAssigned}</b>
+            </span>
+            <span style={primaryPill}>
+              Unassigned media: <b>{toolbarCounts.unassigned}</b>
+            </span>
+          </div>
+          <div
+            style={{
+              marginTop: 8,
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 12,
+              alignItems: "center",
+              fontSize: 11,
+              color: "#94a3b8",
+            }}
+            aria-label="Secondary inventory stats"
+          >
+            <span style={{ fontWeight: 700, color: "#cbd5e1", textTransform: "uppercase", letterSpacing: "0.06em" }}>Secondary</span>
+            <span>total {toolbarCounts.total}</span>
+            <span>·</span>
+            <span>previewable {toolbarCounts.previewable}</span>
+            <span>·</span>
+            <span>ambiguous {toolbarCounts.ambiguous}</span>
+            <span>·</span>
+            <span>rejected {toolbarCounts.rejected}</span>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 12, alignItems: "center" }}>
+            <button type="button" onClick={() => void copyJson()} style={btnPrimary}>
+              Copy JSON
+            </button>
+            <button type="button" onClick={downloadJson} style={btnPrimary}>
+              Download JSON
+            </button>
+            {exportFeedback === "copy" ? (
+              <span style={successHint} role="status">
+                Copied to clipboard.
+              </span>
+            ) : exportFeedback === "download" ? (
+              <span style={successHint} role="status">
+                Download started — check your downloads folder.
+              </span>
+            ) : null}
+            <button type="button" onClick={clearLocal} style={btnGhost}>
+              Clear local decisions…
+            </button>
+            <button type="button" onClick={resetFilters} style={btnGhost}>
+              Reset filters
+            </button>
+          </div>
+          <p style={{ margin: "10px 0 0", fontSize: 12, color: "#64748b", lineHeight: 1.5, maxWidth: 720 }}>
+            <strong>This does not update Medusa.</strong> Save the exported JSON as{" "}
+            <code style={{ background: "#f1f5f9", padding: "2px 6px", borderRadius: 6 }}>data/normalized/legacy-media-assignment-decisions.json</code> when you are
+            ready to hand it off. Exports <strong>local decisions only</strong>.
           </p>
-        </div>
-      </header>
-
-      {workflowSteps}
+        </header>
+        {workflowSteps}
+      </div>
 
       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "stretch", minHeight: `calc(100vh - ${headerH}px)` }}>
         <aside
@@ -1154,6 +1238,7 @@ export function LegacyMediaAssignmentBoardClient() {
             alignSelf: "flex-start",
             maxHeight: `calc(100vh - ${headerH}px)`,
             overflowY: "auto",
+            display: focusMode ? "none" : "block",
           }}
         >
           <div style={{ fontSize: 11, fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>Collections</div>
@@ -1168,6 +1253,11 @@ export function LegacyMediaAssignmentBoardClient() {
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
               <span style={navBadge}>{sidebarStats("").prodN} products</span>
               <span style={navBadge}>{sidebarStats("").mediaN} media</span>
+              <span style={navBadge}>{sidebarStats("").candRows} candidates</span>
+              <span style={navBadge}>{sidebarStats("").assignedN} assigned</span>
+              {sidebarStats("").ambN > 0 ? (
+                <span style={{ ...navBadge, background: "#fef3c7", color: "#b45309" }}>{sidebarStats("").ambN} amb</span>
+              ) : null}
             </div>
           </button>
           {collectionKeysFiltered.map((ck) => {
@@ -1177,8 +1267,10 @@ export function LegacyMediaAssignmentBoardClient() {
               <button key={ck} type="button" onClick={() => setSidebarCollection(ck)} style={navItem(active)}>
                 <div style={{ fontWeight: 700, fontSize: 14, textTransform: "capitalize" }}>{ck.replace(/-/g, " ")}</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
+                  <span style={navBadge}>{st.prodN} products</span>
                   <span style={navBadge}>{st.mediaN} media</span>
-                  <span style={navBadge}>{st.assignedN} asg</span>
+                  <span style={navBadge}>{st.candRows} candidates</span>
+                  <span style={navBadge}>{st.assignedN} assigned</span>
                   {st.ambN > 0 ? <span style={{ ...navBadge, background: "#fef3c7", color: "#b45309" }}>{st.ambN} amb</span> : null}
                 </div>
               </button>
@@ -1186,19 +1278,37 @@ export function LegacyMediaAssignmentBoardClient() {
           })}
           <div style={{ marginTop: 16, paddingTop: 14, borderTop: "2px dashed #cbd5e1" }}>
             <button type="button" onClick={() => setSidebarCollection(UNKNOWN_COLLECTION)} style={{ ...navItem(sidebarCollection === UNKNOWN_COLLECTION), background: "#f8fafc" }}>
+              {(() => {
+                const u = sidebarStats(UNKNOWN_COLLECTION)
+                return (
+                  <>
               <div style={{ fontWeight: 700, fontSize: 13, color: "#64748b" }}>Unknown / unmatched</div>
-              <div style={{ marginTop: 8 }}>
-                <span style={{ ...navBadge, background: "#e2e8f0", color: "#475569" }}>{collectionMediaCount(UNKNOWN_COLLECTION)} media rows</span>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
+                <span style={{ ...navBadge, background: "#e2e8f0", color: "#475569" }}>{u.prodN} products</span>
+                <span style={{ ...navBadge, background: "#e2e8f0", color: "#475569" }}>{collectionMediaCount(UNKNOWN_COLLECTION)} media</span>
+                <span style={{ ...navBadge, background: "#e2e8f0", color: "#475569" }}>{u.candRows} candidates</span>
+                <span style={{ ...navBadge, background: "#e2e8f0", color: "#475569" }}>{u.assignedN} assigned</span>
+                {u.ambN > 0 ? (
+                  <span style={{ ...navBadge, background: "#fef3c7", color: "#b45309" }}>{u.ambN} amb</span>
+                ) : null}
               </div>
+                  </>
+                )
+              })()}
               <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 8, lineHeight: 1.35 }}>Matcher could not infer collection — triage carefully.</div>
             </button>
           </div>
         </aside>
 
-        <main style={{ flex: 1, minWidth: 280, padding: 16, overflowY: "auto" }}>
-          {!sidebarCollection && !search ? (
-            <p style={{ margin: "0 0 14px", padding: "12px 14px", background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 10, color: "#1e40af", fontSize: 13 }}>
-              <strong>Start here:</strong> choose a collection (or stay on <em>All</em>), then select a product. The media pool stays on the right.
+        <main style={{ flex: focusMode ? 3 : 1, minWidth: 280, padding: 16, overflowY: "auto" }}>
+          {sidebarCollection === "" && !selectedHandle ? (
+            <p style={{ margin: "0 0 14px", padding: "12px 14px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 10, color: "#475569", fontSize: 13 }}>
+              <strong>Select a collection to start.</strong> Pick one in the sidebar or stay on <em>All collections</em> to see every product — then choose a product row to load the workspace.
+            </p>
+          ) : null}
+          {sidebarCollection !== "" && !selectedHandle && !focusMode ? (
+            <p style={{ margin: "0 0 14px", padding: "12px 14px", background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 10, color: "#1e3a8a", fontSize: 13 }}>
+              <strong>Select a product to assign images.</strong> Use <em>Review</em> on a row or click the card — the workspace and pool actions apply to that SKU only.
             </p>
           ) : null}
 
@@ -1265,8 +1375,8 @@ export function LegacyMediaAssignmentBoardClient() {
 
           {focusMode && !selectedHandle ? (
             <div style={{ padding: 40, textAlign: "center", color: "#64748b", background: "#fff", borderRadius: 14, border: "1px solid #e2e8f0" }}>
-              <div style={{ fontSize: 17, fontWeight: 700, color: "#0f172a", marginBottom: 8 }}>Focus mode needs a product</div>
-              Turn off Focus mode to browse the list, or click a product row first.
+              <div style={{ fontSize: 17, fontWeight: 700, color: "#0f172a", marginBottom: 8 }}>Select a product to assign images.</div>
+              Switch to <strong>Board mode</strong> to browse collections and the full list, or pick a product first.
             </div>
           ) : (
             <>
@@ -1279,7 +1389,8 @@ export function LegacyMediaAssignmentBoardClient() {
                   </div>
                   {productsFiltered.length === 0 ? (
                     <div style={{ padding: 28, background: "#fff", borderRadius: 12, border: "1px dashed #cbd5e1", color: "#64748b", textAlign: "center" }}>
-                      No products match filters. Widen search or pick another collection.
+                      <div style={{ fontWeight: 700, color: "#0f172a", marginBottom: 6 }}>No products in this view</div>
+                      <div>Widen search, choose another collection, or return to All collections.</div>
                     </div>
                   ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -1309,15 +1420,17 @@ export function LegacyMediaAssignmentBoardClient() {
                             }}
                             style={{
                               borderRadius: 12,
-                              border: selected ? "2px solid #2563eb" : "1px solid #e2e8f0",
+                              border: selected ? "3px solid #2563eb" : "1px solid #e2e8f0",
                               background: selected ? "#eff6ff" : "#fff",
-                              padding: "12px 14px",
+                              padding: "14px 16px",
                               cursor: "pointer",
                               display: "flex",
                               flexWrap: "wrap",
                               gap: 14,
                               alignItems: "center",
-                              boxShadow: selected ? "0 4px 16px rgba(37,99,235,0.12)" : "0 1px 2px rgba(15,23,42,0.04)",
+                              boxShadow: selected ? "0 6px 22px rgba(37,99,235,0.18)" : "0 1px 2px rgba(15,23,42,0.04)",
+                              outline: selected ? "2px solid rgba(37,99,235,0.25)" : undefined,
+                              outlineOffset: selected ? 2 : undefined,
                             }}
                           >
                             <div style={{ display: "flex", gap: 12, alignItems: "center", minWidth: 0, flex: 1 }}>
@@ -1344,16 +1457,16 @@ export function LegacyMediaAssignmentBoardClient() {
                                 </div>
                               )}
                               <div style={{ minWidth: 0 }}>
-                                <div style={{ fontWeight: 800, fontSize: 16, color: "#0f172a", lineHeight: 1.2 }}>{p.handle}</div>
-                                <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>{p.sku}</div>
+                                <div style={{ fontWeight: 800, fontSize: 18, color: "#0f172a", lineHeight: 1.2 }}>{p.handle}</div>
                                 {p.title ? (
-                                  <div style={{ fontSize: 13, color: "#334155", marginTop: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                  <div style={{ fontSize: 14, color: "#334155", marginTop: 4, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                     {p.title}
                                   </div>
                                 ) : null}
+                                <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>SKU {p.sku}</div>
                                 <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
                                   <span style={{ ...miniCollBadge }}>{p.collection || "—"}</span>
-                                  <span style={{ ...statusPill, background: meta.bg, color: meta.fg }} title={meta.hint}>
+                                  <span style={{ ...statusPill, background: meta.bg, color: meta.fg, textTransform: "none", letterSpacing: "0.01em" }} title={meta.hint}>
                                     {meta.label}
                                   </span>
                                 </div>
@@ -1372,7 +1485,7 @@ export function LegacyMediaAssignmentBoardClient() {
                                   setInspectorId(null)
                                 }}
                               >
-                                Review product
+                                Review
                               </button>
                             </div>
                           </article>
@@ -1403,9 +1516,10 @@ export function LegacyMediaAssignmentBoardClient() {
           <div style={{ width: inspectorId ? 280 : 400, display: "flex", flexDirection: "column", minWidth: 0 }}>
             <div style={{ padding: "12px 14px", borderBottom: "1px solid #e2e8f0" }}>
               <div style={{ fontSize: 11, fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", marginBottom: 8 }}>Media pool</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, maxHeight: 120, overflowY: "auto" }}>
                 {(
                   [
+                    ["suggested", "Suggested"],
                     ["unassigned", "Unassigned"],
                     ["ambiguous", "Ambiguous"],
                     ["confirmed", "Confirmed"],
@@ -1428,7 +1542,9 @@ export function LegacyMediaAssignmentBoardClient() {
                 ))}
               </div>
               {!selectedHandle ? (
-                <p style={{ margin: "10px 0 0", fontSize: 12, color: "#b45309", lineHeight: 1.4 }}>Select a product first — quick lane actions stay disabled until a SKU is active.</p>
+                <p style={{ margin: "10px 0 0", fontSize: 12, color: "#b45309", lineHeight: 1.4 }}>
+                  Quick actions stay disabled until a product is selected. <strong>Select a product first.</strong>
+                </p>
               ) : (
                 <p style={{ margin: "10px 0 0", fontSize: 12, color: "#64748b" }}>
                   Dragging or quick actions apply to <strong>{selectedHandle}</strong>.
@@ -1445,7 +1561,7 @@ export function LegacyMediaAssignmentBoardClient() {
               {poolTab === "unpreviewable" ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
                   {unpreviewableRows.length === 0 ? (
-                    <div style={{ padding: 20, color: "#64748b", fontSize: 13 }}>No media in this filter.</div>
+                    <div style={{ padding: 20, color: "#64748b", fontSize: 13 }}>{poolEmptyMessage}</div>
                   ) : (
                     unpreviewableRows.slice(0, POOL_LIMIT).map((it) => (
                       <div
@@ -1463,20 +1579,18 @@ export function LegacyMediaAssignmentBoardClient() {
                         onClick={() => setInspectorId(it.id)}
                       >
                         <div style={{ fontWeight: 700, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.filename}</div>
-                        <div style={{ color: "#64748b" }}>{it.preview_reason || "Unpreviewable reference — local source may be missing."}</div>
+                        <div style={{ color: "#64748b" }}>{unpreviewableHumanReason(it)}</div>
                       </div>
                     ))
                   )}
                   {unpreviewableRows.length > POOL_LIMIT ? (
                     <p style={{ fontSize: 12, color: "#64748b", padding: 10 }}>
-                      Showing first {POOL_LIMIT} rows — narrow filters to see more.
+                      Showing first {POOL_LIMIT} images — narrow filters to see more.
                     </p>
                   ) : null}
                 </div>
               ) : poolShown.length === 0 ? (
-                <div style={{ padding: 24, color: "#64748b", fontSize: 14, textAlign: "center" }}>
-                  {poolTab === "rejected" ? "No global rejections yet." : "No media in this filter."}
-                </div>
+                <div style={{ padding: 24, color: "#64748b", fontSize: 14, textAlign: "center" }}>{poolEmptyMessage}</div>
               ) : (
                 <>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(148px, 1fr))", gap: 12 }}>
@@ -1499,14 +1613,14 @@ export function LegacyMediaAssignmentBoardClient() {
                             useImg={pv.useImg}
                             caption={pv.caption}
                             badges={poolBadges.slice(0, 3)}
-                            size="large"
+                            size={focusMode && selectedHandle ? "xlarge" : "large"}
                             onDragStart={(e) => setDragPayload(e, id)}
                             onOpenDetail={() => setInspectorId(id)}
-                            filenameMaxLen={26}
+                            filenameMaxLen={focusMode && selectedHandle ? 20 : 26}
                             detailTitle={inv.source_path || inv.repo_relative_path || inv.filename}
                           />
                           {elsewhere ? (
-                            <div style={{ fontSize: 11, color: "#b45309", lineHeight: 1.35 }}>Already assigned to {elsewhere}</div>
+                            <div style={{ fontSize: 11, color: "#b45309", lineHeight: 1.35 }}>This image is already assigned to {elsewhere}.</div>
                           ) : null}
                           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                             <button
@@ -1555,7 +1669,7 @@ export function LegacyMediaAssignmentBoardClient() {
                   </div>
                   {poolOverflow > 0 ? (
                     <p style={{ marginTop: 14, fontSize: 12, color: "#64748b", lineHeight: 1.45 }}>
-                      Showing first {POOL_LIMIT} of {poolIdsForTabFocused.length} images — narrow filters or switch collection.
+                      Showing first {POOL_LIMIT} images — narrow filters to see more.
                     </p>
                   ) : null}
                 </>
@@ -1601,6 +1715,9 @@ export function LegacyMediaAssignmentBoardClient() {
                   <dt style={{ fontWeight: 700, color: "#94a3b8", fontSize: 10, textTransform: "uppercase" }}>Type / preview</dt>
                   <dd style={{ margin: "4px 0 0" }}>
                     {inspectorInv.source_type} · {inspectorInv.previewable ? "previewable" : "not previewable"}
+                    {!inspectorInv.previewable ? (
+                      <div style={{ marginTop: 6, color: "#b45309" }}>{unpreviewableHumanReason(inspectorInv)}</div>
+                    ) : null}
                   </dd>
                 </div>
                 {inspectorCe ? (
@@ -1622,7 +1739,7 @@ export function LegacyMediaAssignmentBoardClient() {
                       <dd style={{ margin: "4px 0 0" }}>{inspectorInv.collection_hint || inspectorCe.top_candidate?.medusa_collection_handle || "—"}</dd>
                     </div>
                     <div>
-                      <dt style={{ fontWeight: 700, color: "#94a3b8", fontSize: 10, textTransform: "uppercase" }}>Candidates</dt>
+                      <dt style={{ fontWeight: 700, color: "#94a3b8", fontSize: 10, textTransform: "uppercase" }}>Matched candidates</dt>
                       <dd style={{ margin: "4px 0 0", maxHeight: 140, overflowY: "auto" }}>
                         {(inspectorCe.candidates || []).slice(0, 6).map((c, i) => (
                           <div key={i} style={{ marginBottom: 6, padding: 6, background: "#fff", borderRadius: 8, border: "1px solid #e2e8f0" }}>
@@ -1657,7 +1774,7 @@ export function LegacyMediaAssignmentBoardClient() {
                   </button>
                 </div>
               ) : (
-                <p style={{ marginTop: 14, fontSize: 12, color: "#b45309" }}>Select a product to enable lane actions.</p>
+                <p style={{ marginTop: 14, fontSize: 12, color: "#b45309" }}>Select a product first.</p>
               )}
             </div>
           ) : null}
@@ -1757,5 +1874,13 @@ const miniCta: React.CSSProperties = {
   border: "1px solid #2563eb",
   background: "#fff",
   color: "#1d4ed8",
+  cursor: "pointer",
+}
+
+const segToggleBtn: React.CSSProperties = {
+  fontSize: 13,
+  fontWeight: 600,
+  padding: "8px 16px",
+  border: "none",
   cursor: "pointer",
 }

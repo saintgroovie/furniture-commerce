@@ -3,7 +3,7 @@
 ## Purpose
 
 **Visual media assignment** for aligning legacy / front-manifest / repo-local images with **seed-derived** products (`data/normalized/seed-products.json`).  
-**Not** production rollout: **no Medusa apply**, no catalog-scope edits, no seed or evidence mutation from this UI. Export JSON is a **handoff artifact** only.
+**Not** production rollout: **no Medusa apply**, no catalog-scope edits, no seed or evidence mutation from this UI. Export JSON is a **handoff artifact** only — the board does **not** run any executor and does **not** update production media.
 
 ---
 
@@ -22,7 +22,13 @@ The **storefront** service uses `WORKDIR` **`/app`** (the `apps/storefront` bind
 - `docs/project/CODEMAP.md` → mount host `./docs` at **`/app/docs`** (read-only).
 - `data/normalized/` → mount host `./data` at **`/app/data`** (read-only).
 
-Compose sets **`FURNITURE_REPO_ROOT=/app`** so the resolver pins the container root even if walk-up seeds differ. Restart the storefront container after changing compose.
+Compose sets **`FURNITURE_REPO_ROOT=/app`** so the resolver pins the container root even if walk-up seeds differ.
+
+**After changing compose volumes or env**, recreate the container so Next picks up mounts and env:
+
+```bash
+docker compose up -d --force-recreate storefront
+```
 
 - URL (default published port): `http://localhost:8000/qa/legacy-media-assignment-board`
 
@@ -59,40 +65,26 @@ In **production** (`NODE_ENV=production`) the board returns **404** unless `LEGA
 
 ---
 
-## Workflow (at a glance)
+## Workflow (numbered header)
 
-The page follows a simple sequence:
+The sticky header includes a **five-step workflow** strip:
 
-1. **Choose collection** — Left sidebar: **All collections**, a specific collection, or **Unknown / unmatched** (matcher could not infer collection). Use the search box to filter long collection lists.
-2. **Select product** — Click a product row or **Review product**. The row shows status (e.g. *Has auto matches*, *Needs review*, *Manually edited*), collection badge, thumbnail, and candidate counts.
-3. **Review images** — Use the **Media pool** (right): previews, badges, and optional **Inspector** (open via **Details** on a tile or by clicking an unpreviewable list row).
-4. **Assign roles** — Only in the **Selected product** panel (center): **Primary**, **Gallery**, **Reference only**, **Rejected for this product**. Drag from the pool into a zone, or use **Primary / Gallery / Ref / Reject** on a tile. Drag into the “return to unassigned” strip to clear a lane placement.
-5. **Export JSON** — **Copy JSON** or **Download JSON**. Text explains this is **browser-local decisions only**; a short success hint appears after copy/download. **Clear local decisions** asks for confirmation first.
+1. **Choose collection** — Sidebar: **All collections**, a named collection, or **Unknown / unmatched** (media rows where collection hints could not be inferred). Search narrows long collection lists. Badges show **products**, **media**, **matcher candidate rows**, **assigned**, and **ambiguous** counts for that slice.
+2. **Select product** — Click a product card or **Review**. The card shows handle, title, SKU, collection badge, thumbnail, assigned/candidate counts, and a **status** pill (e.g. *Needs review*, *Has auto matches*, *Manually edited*, *Ready candidate*, *No candidates*, *Ambiguous*, *Has storefront media*).
+3. **Review images** — Use the **Media pool** (tabs below). Prefer **Suggested** when a product is selected to see rows whose matcher **top candidate** matches that handle. Open **Inspector** from a tile for full paths, confidence, and candidate list.
+4. **Assign roles** — Only in the **Selected product** panel: **Primary**, **Gallery**, **Reference only**, **Rejected for this product**. Drag from the pool or use quick actions. Drag tiles onto the **return strip** under the storefront thumbnails to send them back to the unassigned pool (clears lane placement).
+5. **Export JSON** — **Copy JSON** or **Download JSON**. The header explains that export is **local decisions only**, does **not** update Medusa, and where to save the file (see Persistence). Success text appears after copy/download. **Clear local decisions** asks for confirmation first.
 
-**Header** shows primary metrics (reviewed products, products with assignments, unassigned media) and a compact secondary line (total, previewable, ambiguous, global rejects).
-
----
-
-## Focus mode
-
-Toggle **Focus mode** in the header when you want to work on **one SKU** without scrolling past every product card.
-
-- Hides the full product list; keeps the **Selected product** workspace and the pool.
-- When a product is selected, the pool tabs (**Unassigned** / **Ambiguous** / **Confirmed** / **Rejected**) only list media whose matcher **candidates** include that handle (top match or candidate list).
-- If Focus mode is on but no product is selected, the UI prompts you to pick a product or turn Focus off.
+The workflow strip also echoes **active collection**, **selected product**, **local decision slot count**, and a short export disclaimer.
 
 ---
 
-## Inspector
+## Board mode vs Focus mode
 
-Click **Details** on a pool tile (or an unpreviewable row) to open the **Inspector** beside the pool:
+Use the **Board mode** / **Focus mode** toggle in the header (segmented control).
 
-- Large preview (or reason text)
-- Filename, full source path, source type, previewability
-- Confidence / identity confidence (when a candidate row exists)
-- SKU / handle / collection hints
-- Short list of matcher candidates
-- The same **Primary / Gallery / Ref / Reject** actions for the **currently selected product** (disabled messaging if none selected)
+- **Board mode** (default): **Collections** sidebar, **Products** list, **Selected product** workspace, **Media pool** + **Inspector**.
+- **Focus mode**: hides the collections sidebar and the full product list so you can concentrate on **one SKU**. The **Selected product** workspace stays central; the **Media pool** remains on the right. When a product is selected, pool tabs respect **Focus** filtering: only inventory whose matcher **candidates** include that handle (same behavior as before). Pool image cards render **larger** in Focus mode. If Focus is on but no product is selected, the UI tells you to switch to Board mode or pick a product first.
 
 ---
 
@@ -100,22 +92,38 @@ Click **Details** on a pool tile (or an unpreviewable row) to open the **Inspect
 
 | Tab | Contents |
 |-----|----------|
-| **Unassigned** | Not in any lane and not globally rejected; respects sidebar + “More filters”. |
+| **Suggested** | Unassigned rows with a matcher **top candidate**. If a product is selected, only rows whose top candidate handle matches that product. |
+| **Unassigned** | Not in any lane and not globally rejected; respects sidebar + **More filters**. |
 | **Ambiguous** | Subset with `identity_confidence === ambiguous`. |
 | **Confirmed** | Subset with matcher `confidence === confirmed`. |
-| **Unpreviewable** | **Compact text list** (no image grid): filename + reason; full path in tooltip / Inspector. |
+| **Unpreviewable** | **Compact text list only** (no `<img>` grid): filename + humanized reason (local missing / not mounted / no preview rule). Full path in tooltip; click a row to open **Inspector**. |
 | **Rejected** | Global rejections only. |
 
-Quick actions: **Primary**, **Gallery**, **Ref**, **Reject** (lane), **Global ✕**. They are disabled until a product is selected; tooltip / copy explains **Select a product first**.
+Quick actions: **Primary**, **Gallery**, **Ref**, **Reject** (per-product lane), **Global ✕**. They stay **disabled** until a product is selected; copy explains **Select a product first.**  
+If another product already owns an image in a lane, the pool shows **This image is already assigned to …**
 
-Cap: first **120** items per tab with a message to narrow filters.
+Cap: first **120** items per tab with **Showing first 120 images — narrow filters to see more.**
+
+---
+
+## Inspector
+
+Click **Details** on a pool tile (or an unpreviewable row) to open the **Inspector** beside the pool:
+
+- Preview (or failure caption / unpreviewable reason)
+- Filename, full source path, source type, previewability (+ humanized unpreviewable reason when applicable)
+- Confidence / identity confidence (when a candidate row exists)
+- SKU / handle / collection hints
+- **Matched candidates** (short list)
+- **Primary / Gallery / Ref / Reject** for the **currently selected product** (or **Select a product first.**)
 
 ---
 
 ## Persistence & export
 
 - **localStorage** key: `furniture-legacy-media-assignment-decisions-v1` (unchanged). Payload may be **v2** (`zonesByHandle` + `globalRejections`). Older **v1** blobs are **migrated on load**.
-- **Copy / Download** uses `buildExportDocument` — **v2** shape: `version`, `exported_at`, `review_meta`, `products[]`, `global_rejections`, `legacy_assignments_v1_flat`, etc. Same compatibility as before; **does not** write `data/normalized/legacy-media-assignment-decisions.json` automatically — you save the file yourself.
+- **Copy / Download** uses `buildExportDocument` — **v2** shape: `version`, `exported_at`, `review_meta`, `products[]`, `global_rejections`, `legacy_assignments_v1_flat`, etc. **Do not** change this shape from the board; compatibility with existing `data/normalized/legacy-media-assignment-decisions.json` is required.
+- The UI reminds you to save manually as **`data/normalized/legacy-media-assignment-decisions.json`** when handing off — the browser **never** writes that path for you.
 
 ---
 
@@ -145,4 +153,4 @@ See `docs/storefront/legacy-media-product-candidate-map.md`.
 
 ## Next safe step (out of scope)
 
-A **separate gated executor** may consume approved export JSON — **not** part of this board.
+A **separate gated executor** may consume approved export JSON — **not** part of this board and **not** invoked from this UI.
