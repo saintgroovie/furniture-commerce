@@ -49,9 +49,11 @@ export type LegacyMediaDragZone = "primary" | "gallery" | "reference" | "lane_re
 export type LegacyMediaDragPayload = {
   type: "legacy_media"
   mediaId: string
+  source?: "pool" | "assigned" | "gallery" | "variant"
   fromProductHandle?: string | null
   fromZone?: LegacyMediaDragZone | null
   fromIndex?: number | null
+  fromVariantKey?: string | null
 }
 
 /** Pointer-based drag session (QA board only; not persisted). */

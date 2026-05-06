@@ -23,8 +23,10 @@ import type {
 import { MediaImageCard } from "./MediaImageCard"
 
 const LS_KEY = "furniture-legacy-media-assignment-decisions-v1"
+const LS_VARIANTS_KEY = "furniture-legacy-media-assignment-variants-v1"
 const POOL_LIMIT = 120
 const UNKNOWN_COLLECTION = "__unknown__"
+const DEFAULT_VARIANT_KEY = "__default__"
 const API_BASE = "/qa/legacy-media-assignment-board/api"
 const PREVIEW_ROUTE = "/qa/legacy-media-assignment-board/preview"
 const DND_JSON = "application/json"
@@ -73,7 +75,21 @@ type DevDiagnostics = {
   mediaId: string
   productHandle: string
   targetZone: string
+  dragSource: string
+  laneId: string
+  variantKey: string
+  reorderFrom: string
+  reorderTo: string
 }
+type VariantDecisionState = {
+  label: string
+  primary: string | null
+  gallery: string[]
+  reference: string[]
+  rejected: string[]
+}
+
+type VariantsByHandle = Record<string, Record<string, VariantDecisionState>>
 
 type ProductUiKind =
   | "no_candidates"
@@ -133,6 +149,18 @@ function cloneZone(z: ProductZoneState | undefined): ProductZoneState {
   }
 }
 
+function emptyVariant(label = "Default"): VariantDecisionState {
+  return { label, primary: null, gallery: [], reference: [], rejected: [] }
+}
+
+function toZoneState(v: VariantDecisionState): ProductZoneState {
+  return { primary: v.primary, gallery: [...v.gallery], reference_only: [...v.reference], lane_rejected: [...v.rejected] }
+}
+
+function fromZoneState(z: ProductZoneState, label = "Default"): VariantDecisionState {
+  return { label, primary: z.primary, gallery: [...z.gallery], reference: [...z.reference_only], rejected: [...z.lane_rejected] }
+}
+
 function moveInventoryToZone(
   zones: Record<string, ProductZoneState>,
   globalRejections: GlobalRejection[],
@@ -185,15 +213,23 @@ function swapGallery(zones: Record<string, ProductZoneState>, handle: string, a:
 
 type BoardState = { zones: Record<string, ProductZoneState>; grej: GlobalRejection[] }
 
+function asElementTarget(target: EventTarget | null): HTMLElement | null {
+  if (target instanceof HTMLElement) return target
+  if (target instanceof Element) return target as HTMLElement
+  if (target instanceof Node) return target.parentElement
+  return null
+}
+
 function describeTargetFromElement(el: EventTarget | null): TargetSnapshot | null {
-  if (!(el instanceof HTMLElement)) return null
-  const nearestCard = el.closest("[data-media-card]") as HTMLElement | null
-  const nearestDrop = el.closest("[data-drop-zone]") as HTMLElement | null
-  const nearestDraggable = el.closest("[draggable='true']") as HTMLElement | null
-  const nearestAction = el.closest("[data-action-button]") as HTMLElement | null
+  const targetEl = asElementTarget(el)
+  if (!targetEl) return null
+  const nearestCard = targetEl.closest("[data-media-card]") as HTMLElement | null
+  const nearestDrop = targetEl.closest("[data-drop-zone]") as HTMLElement | null
+  const nearestDraggable = targetEl.closest("[draggable='true']") as HTMLElement | null
+  const nearestAction = targetEl.closest("[data-action-button]") as HTMLElement | null
   return {
-    tagName: el.tagName.toLowerCase(),
-    className: String(el.className || ""),
+    tagName: targetEl.tagName.toLowerCase(),
+    className: String(targetEl.className || ""),
     mediaId: nearestCard?.dataset.mediaId || "",
     productHandle: nearestCard?.dataset.productHandle || nearestDrop?.dataset.productHandle || "",
     closestCard: nearestCard ? nearestCard.tagName.toLowerCase() : "",
@@ -415,6 +451,9 @@ export function LegacyMediaAssignmentBoardClient() {
   const [dragError, setDragError] = useState<string>("")
   const [manualMediaId, setManualMediaId] = useState("")
   const [manualZone, setManualZone] = useState<ZoneDrop>("primary")
+  const [variantsByHandle, setVariantsByHandle] = useState<VariantsByHandle>({})
+  const [activeVariantByHandle, setActiveVariantByHandle] = useState<Record<string, string>>({})
+  const [newVariantLabel, setNewVariantLabel] = useState("")
   const [diag, setDiag] = useState<DevDiagnostics>({
     lastPointerDown: null,
     lastClick: null,
@@ -431,6 +470,11 @@ export function LegacyMediaAssignmentBoardClient() {
     mediaId: "",
     productHandle: "",
     targetZone: "",
+    dragSource: "—",
+    laneId: "—",
+    variantKey: "—",
+    reorderFrom: "—",
+    reorderTo: "—",
   })
 
   const invById = useMemo(() => {
@@ -527,6 +571,17 @@ export function LegacyMediaAssignmentBoardClient() {
       const v2 = loadPersistedRaw(raw)
       if (v2) {
         setBoard({ zones: v2.zonesByHandle, grej: v2.globalRejections })
+        const seeded: VariantsByHandle = {}
+        for (const [handle, z] of Object.entries(v2.zonesByHandle)) {
+          seeded[handle] = { [DEFAULT_VARIANT_KEY]: fromZoneState(z, "Default") }
+        }
+        setVariantsByHandle(seeded)
+      }
+      const rawVariants = localStorage.getItem(LS_VARIANTS_KEY)
+      if (rawVariants) {
+        const parsed = JSON.parse(rawVariants) as { variantsByHandle?: VariantsByHandle; activeVariantByHandle?: Record<string, string> }
+        if (parsed.variantsByHandle && typeof parsed.variantsByHandle === "object") setVariantsByHandle(parsed.variantsByHandle)
+        if (parsed.activeVariantByHandle && typeof parsed.activeVariantByHandle === "object") setActiveVariantByHandle(parsed.activeVariantByHandle)
       }
     } catch {
       /* ignore */
@@ -534,6 +589,15 @@ export function LegacyMediaAssignmentBoardClient() {
       setHydrated(true)
     }
   }, [invDoc])
+
+  useEffect(() => {
+    if (!hydrated || typeof window === "undefined") return
+    try {
+      localStorage.setItem(LS_VARIANTS_KEY, JSON.stringify({ variantsByHandle, activeVariantByHandle }))
+    } catch {
+      /* ignore */
+    }
+  }, [hydrated, variantsByHandle, activeVariantByHandle])
 
   const persist = useCallback((zones: Record<string, ProductZoneState>, grej: GlobalRejection[]) => {
     const payload: PersistedV2 = { version: 2, zonesByHandle: zones, globalRejections: grej }
@@ -767,10 +831,13 @@ export function LegacyMediaAssignmentBoardClient() {
       return
     }
     setBoard({ zones: {}, grej: [] })
+    setVariantsByHandle({})
+    setActiveVariantByHandle({})
     setSelectedHandle(null)
     setInspectorId(null)
     try {
       localStorage.removeItem(LS_KEY)
+      localStorage.removeItem(LS_VARIANTS_KEY)
     } catch {
       /* ignore */
     }
@@ -812,8 +879,10 @@ export function LegacyMediaAssignmentBoardClient() {
   }
 
   const applyAssignment = useCallback(
-    (source: ActionSource, inventoryId: string, zone: ZoneDrop, explicitHandle?: string | null) => {
+    (source: ActionSource, inventoryId: string, zone: ZoneDrop, explicitHandle?: string | null, explicitVariantKey?: string | null) => {
       const activeHandle = (explicitHandle || selectedHandle || "").trim()
+      const hh = activeHandle.toLowerCase()
+      const chosenVariantKey = (explicitVariantKey || activeVariantByHandle[hh] || DEFAULT_VARIANT_KEY).trim() || DEFAULT_VARIANT_KEY
       if (!activeHandle && zone !== "unassigned") {
         const msg = "Select product first"
         setDragError(msg)
@@ -844,6 +913,38 @@ export function LegacyMediaAssignmentBoardClient() {
 
       const changed = !boardStateEqual(prev, next)
       setBoard(next)
+      setVariantsByHandle((prevV) => {
+        if (zone === "unassigned") {
+          const out: VariantsByHandle = {}
+          for (const [ph, variants] of Object.entries(prevV)) {
+            out[ph] = {}
+            for (const [vk, vv] of Object.entries(variants)) {
+              out[ph][vk] = {
+                ...vv,
+                primary: vv.primary === inventoryId ? null : vv.primary,
+                gallery: vv.gallery.filter((x) => x !== inventoryId),
+                reference: vv.reference.filter((x) => x !== inventoryId),
+                rejected: vv.rejected.filter((x) => x !== inventoryId),
+              }
+            }
+          }
+          return out
+        }
+        const hVariants = prevV[hh] ?? { [DEFAULT_VARIANT_KEY]: fromZoneState(board.zones[hh] ?? emptyZones(), "Default") }
+        const active = hVariants[chosenVariantKey] ?? emptyVariant(chosenVariantKey === DEFAULT_VARIANT_KEY ? "Default" : chosenVariantKey)
+        const cleaned = {
+          ...active,
+          primary: active.primary === inventoryId ? null : active.primary,
+          gallery: active.gallery.filter((x) => x !== inventoryId),
+          reference: active.reference.filter((x) => x !== inventoryId),
+          rejected: active.rejected.filter((x) => x !== inventoryId),
+        }
+        if (zone === "primary") cleaned.primary = inventoryId
+        if (zone === "gallery") cleaned.gallery = [...cleaned.gallery, inventoryId]
+        if (zone === "reference") cleaned.reference = [...cleaned.reference, inventoryId]
+        if (zone === "lane_reject") cleaned.rejected = [...cleaned.rejected, inventoryId]
+        return { ...prevV, [hh]: { ...hVariants, [chosenVariantKey]: cleaned } }
+      })
       setLastDragAction(`${source} → ${zone}`)
       setDragError(changed ? "" : "state unchanged")
       setDiag((d) => ({
@@ -857,10 +958,12 @@ export function LegacyMediaAssignmentBoardClient() {
         mediaId: inventoryId,
         productHandle: activeHandle,
         targetZone: zone,
+        dragSource: source,
+        variantKey: chosenVariantKey,
       }))
       return changed
     },
-    [board, selectedHandle]
+    [board, selectedHandle, activeVariantByHandle]
   )
 
   const dropZoneStable = (e: React.DragEvent, handle: string, zone: ZoneDrop) => {
@@ -886,12 +989,25 @@ export function LegacyMediaAssignmentBoardClient() {
         mediaId: "",
         targetZone: zone,
         productHandle: handle,
+        dragSource: "unknown",
       }))
       return
     }
     const r = resolveBoardAfterDrop(board, e, handle, zone, payload)
     const changed = !boardStateEqual(board, r.next)
     setBoard(r.next)
+    setVariantsByHandle((prevV) => {
+      const hh = handle.toLowerCase()
+      const vk = activeVariantByHandle[hh] || payload.fromVariantKey || DEFAULT_VARIANT_KEY
+      const base = r.next.zones[hh] ?? emptyZones()
+      return {
+        ...prevV,
+        [hh]: {
+          ...(prevV[hh] ?? { [DEFAULT_VARIANT_KEY]: fromZoneState(board.zones[hh] ?? emptyZones(), "Default") }),
+          [vk]: { ...(prevV[hh]?.[vk] ?? emptyVariant(vk === DEFAULT_VARIANT_KEY ? "Default" : vk)), ...fromZoneState(base, prevV[hh]?.[vk]?.label || "Default") },
+        },
+      }
+    })
     setDraggingMediaId(null)
     setDragStart("no")
     setPayloadWritten("n/a")
@@ -908,19 +1024,29 @@ export function LegacyMediaAssignmentBoardClient() {
       mediaId: payload.mediaId,
       productHandle: handle,
       targetZone: zone,
+      dragSource: payload.source || payload.fromZone || "unknown",
+      laneId: payload.fromZone || "—",
+      variantKey: payload.fromVariantKey || "—",
+      reorderFrom: payload.fromIndex != null ? String(payload.fromIndex) : "—",
+      reorderTo: r.action === "gallery reordered" ? "set" : "—",
     }))
   }
 
   const exportJson = useCallback(() => {
     const exportedAt = new Date().toISOString()
-    return buildExportDocument({
+    const base = buildExportDocument({
       exportedAt,
       products: products.map((p) => ({ handle: p.handle, sku: p.sku, collection: p.collection })),
       zonesByHandle: board.zones,
       globalRejections: board.grej,
       notes: null,
     })
-  }, [products, board.zones, board.grej])
+    return {
+      ...base,
+      variant_decisions: variantsByHandle,
+      active_variant_by_handle: activeVariantByHandle,
+    }
+  }, [products, board.zones, board.grej, variantsByHandle, activeVariantByHandle])
 
   const copyJson = async () => {
     const text = JSON.stringify(exportJson(), null, 2)
@@ -1145,6 +1271,10 @@ export function LegacyMediaAssignmentBoardClient() {
         previewUrl={pv.url}
         useImg={pv.useImg}
         caption={pv.caption}
+        sourcePath={inv.repo_relative_path || inv.source_path}
+        sourceType={inv.source_type}
+        confidenceLabel={candById.get(id)?.confidence || null}
+        previewable={inv.previewable}
         badges={["Assigned"]}
         size="compact"
         draggable={inv.previewable}
@@ -1159,9 +1289,11 @@ export function LegacyMediaAssignmentBoardClient() {
                 const ok = writeLegacyDragData(e, {
                   type: "legacy_media",
                   mediaId: id,
+                  source: zone === "gallery" ? "gallery" : "assigned",
                   fromProductHandle: handle,
                   fromZone: zone,
                   fromIndex: gi >= 0 ? gi : null,
+                  fromVariantKey: activeVariantByHandle[handle.toLowerCase()] || DEFAULT_VARIANT_KEY,
                 })
                 setPayloadWritten(ok ? "yes" : "no")
                 setDraggingMediaId(id)
@@ -1333,7 +1465,10 @@ export function LegacyMediaAssignmentBoardClient() {
       )
     }
     const h = selectedHandle.toLowerCase()
-    const z = board.zones[h] ?? emptyZones()
+    const vByHandle = variantsByHandle[h] ?? { [DEFAULT_VARIANT_KEY]: fromZoneState(board.zones[h] ?? emptyZones(), "Default") }
+    const activeVariantKey = activeVariantByHandle[h] || Object.keys(vByHandle)[0] || DEFAULT_VARIANT_KEY
+    const activeVariant = vByHandle[activeVariantKey] ?? emptyVariant(activeVariantKey === DEFAULT_VARIANT_KEY ? "Default" : activeVariantKey)
+    const z = toZoneState(activeVariant)
     const candCount = entryList.filter((e) => e.top_candidate?.medusa_product_handle.toLowerCase() === h).length
 
     return (
@@ -1370,8 +1505,53 @@ export function LegacyMediaAssignmentBoardClient() {
                 {selectedProduct.collection || "— collection"}
               </span>
             </div>
+            <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+              <span style={{ fontSize: 11, color: "#64748b", fontWeight: 700 }}>Color variants:</span>
+              {Object.entries(vByHandle).map(([vk, vv]) => (
+                <button
+                  key={vk}
+                  type="button"
+                  onClick={() => setActiveVariantByHandle((prev) => ({ ...prev, [h]: vk }))}
+                  style={{
+                    ...miniBtn,
+                    padding: "4px 10px",
+                    background: vk === activeVariantKey ? "#0f172a" : "#f8fafc",
+                    color: vk === activeVariantKey ? "#fff" : "#334155",
+                    borderColor: vk === activeVariantKey ? "#0f172a" : "#cbd5e1",
+                  }}
+                >
+                  {vv.label}
+                </button>
+              ))}
+              <input
+                value={newVariantLabel}
+                onChange={(e) => setNewVariantLabel(e.target.value)}
+                placeholder="add variant label"
+                style={{ ...inputStyle, maxWidth: 180, fontSize: 12, padding: "4px 8px" }}
+              />
+              <button
+                type="button"
+                style={{ ...miniBtn, padding: "4px 10px" }}
+                onClick={() => {
+                  const label = newVariantLabel.trim()
+                  if (!label) return
+                  const key = label.toLowerCase().replace(/\s+/g, "_")
+                  setVariantsByHandle((prev) => ({
+                    ...prev,
+                    [h]: {
+                      ...(prev[h] ?? { [DEFAULT_VARIANT_KEY]: fromZoneState(board.zones[h] ?? emptyZones(), "Default") }),
+                      [key]: prev[h]?.[key] ?? emptyVariant(label),
+                    },
+                  }))
+                  setActiveVariantByHandle((prev) => ({ ...prev, [h]: key }))
+                  setNewVariantLabel("")
+                }}
+              >
+                Add variant
+              </button>
+            </div>
             <p style={{ margin: "14px 0 0", fontSize: 13, color: "#64748b", maxWidth: fullWidth ? 720 : 560, lineHeight: 1.55 }}>
-              Use the <strong>Drag</strong> handle on pool tiles or the buttons on each image. Drop assigned tiles on the strip under the storefront thumbnails to return them to the pool.
+              Assignment target: <strong>{activeVariant.label}</strong>. Use drag or explicit buttons; drop assigned tiles on the strip under thumbnails to return them to the pool.
             </p>
           </div>
           <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
@@ -1589,11 +1769,10 @@ export function LegacyMediaAssignmentBoardClient() {
         {workflowSteps}
       </div>
 
-      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "stretch", minHeight: `calc(100vh - ${headerH}px)` }}>
+      <div style={{ display: "grid", gridTemplateColumns: focusMode ? "minmax(0,1fr) minmax(360px,420px)" : "minmax(240px,280px) minmax(0,1fr) minmax(360px,440px)", alignItems: "stretch", minHeight: `calc(100vh - ${headerH}px)` }}>
         <aside
           style={{
-            width: 280,
-            flexShrink: 0,
+            width: "100%",
             borderRight: "1px solid #e2e8f0",
             background: "#fff",
             padding: 16,
@@ -1664,7 +1843,7 @@ export function LegacyMediaAssignmentBoardClient() {
           </div>
         </aside>
 
-        <main style={{ flex: focusMode ? 3 : 1, minWidth: 280, padding: 16, overflowY: "auto" }}>
+        <main style={{ minWidth: 0, padding: 16, overflowY: "auto" }}>
           {sidebarCollection === "" && !selectedHandle ? (
             <p style={{ margin: "0 0 14px", padding: "12px 14px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 10, color: "#475569", fontSize: 13 }}>
               <strong>Select a collection to start.</strong> Pick one in the sidebar or stay on <em>All collections</em> to see every product — then choose a product row to load the workspace.
@@ -1797,7 +1976,7 @@ export function LegacyMediaAssignmentBoardClient() {
                               outlineOffset: selected ? 2 : undefined,
                             }}
                           >
-                            <div style={{ display: "flex", gap: 12, alignItems: "center", minWidth: 0, flex: 1 }}>
+                            <div style={{ display: "flex", gap: 10, alignItems: "center", minWidth: 0, flex: 1 }}>
                               {p.image_urls[0] ? (
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img
@@ -1828,9 +2007,9 @@ export function LegacyMediaAssignmentBoardClient() {
                                 </div>
                               )}
                               <div style={{ minWidth: 0 }}>
-                                <div style={{ fontWeight: 800, fontSize: 18, color: "#0f172a", lineHeight: 1.2 }}>{p.handle}</div>
+                                <div style={{ fontWeight: 800, fontSize: 15, color: "#0f172a", lineHeight: 1.25 }}>{p.handle}</div>
                                 {p.title ? (
-                                  <div style={{ fontSize: 14, color: "#334155", marginTop: 4, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                  <div style={{ fontSize: 12, color: "#334155", marginTop: 4, fontWeight: 600, lineHeight: 1.3, maxHeight: 34, overflow: "hidden" }}>
                                     {p.title}
                                   </div>
                                 ) : null}
@@ -1872,8 +2051,7 @@ export function LegacyMediaAssignmentBoardClient() {
 
         <aside
           style={{
-            width: inspectorId ? 460 : 400,
-            flexShrink: 0,
+            width: "100%",
             borderLeft: "1px solid #e2e8f0",
             background: "#fff",
             display: "flex",
@@ -1884,7 +2062,7 @@ export function LegacyMediaAssignmentBoardClient() {
             alignSelf: "flex-start",
           }}
         >
-          <div style={{ width: inspectorId ? 280 : 400, display: "flex", flexDirection: "column", minWidth: 0 }}>
+          <div style={{ width: inspectorId ? 250 : "100%", display: "flex", flexDirection: "column", minWidth: 0 }}>
             <div style={{ padding: "12px 14px", borderBottom: "1px solid #e2e8f0" }}>
               <div style={{ fontSize: 11, fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", marginBottom: 8 }}>Media pool</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, maxHeight: 120, overflowY: "auto" }}>
@@ -1933,7 +2111,7 @@ export function LegacyMediaAssignmentBoardClient() {
                 <div style={{ fontSize: 11, color: selectedHandle ? "#334155" : "#b45309", marginBottom: 6 }}>
                   Active product: <strong>{selectedHandle || "Select product first"}</strong>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 6 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: 6 }}>
                   <input
                     value={manualMediaId}
                     onChange={(e) => setManualMediaId(e.target.value)}
@@ -1947,12 +2125,40 @@ export function LegacyMediaAssignmentBoardClient() {
                     <option value="lane_reject">rejected</option>
                     <option value="unassigned">unassigned</option>
                   </select>
+                  <select
+                    value={selectedHandle ? activeVariantByHandle[selectedHandle.toLowerCase()] || DEFAULT_VARIANT_KEY : DEFAULT_VARIANT_KEY}
+                    onChange={(e) => {
+                      const sk = selectedHandle?.toLowerCase()
+                      if (!sk) return
+                      const vk = e.target.value
+                      setActiveVariantByHandle((prev) => ({ ...prev, [sk]: vk }))
+                    }}
+                    style={{ ...inputStyle, fontSize: 12, padding: "6px 8px" }}
+                  >
+                    {selectedHandle
+                      ? Object.entries(variantsByHandle[selectedHandle.toLowerCase()] ?? { [DEFAULT_VARIANT_KEY]: emptyVariant("Default") }).map(([k, v]) => (
+                          <option key={k} value={k}>
+                            {v.label}
+                          </option>
+                        ))
+                      : (
+                        <option value={DEFAULT_VARIANT_KEY}>Default</option>
+                      )}
+                  </select>
                   <button
                     type="button"
                     data-action-button="manual-apply"
                     style={miniBtn}
                     disabled={!manualMediaId.trim() || (!selectedHandle && manualZone !== "unassigned")}
-                    onClick={() => applyAssignment("manual", manualMediaId.trim(), manualZone)}
+                    onClick={() =>
+                      applyAssignment(
+                        "manual",
+                        manualMediaId.trim(),
+                        manualZone,
+                        selectedHandle,
+                        selectedHandle ? activeVariantByHandle[selectedHandle.toLowerCase()] || DEFAULT_VARIANT_KEY : DEFAULT_VARIANT_KEY
+                      )
+                    }
                   >
                     Apply
                   </button>
@@ -2015,6 +2221,10 @@ export function LegacyMediaAssignmentBoardClient() {
                             previewUrl={pv.url}
                             useImg={pv.useImg}
                             caption={pv.caption}
+                            sourcePath={inv.repo_relative_path || inv.source_path}
+                            sourceType={inv.source_type}
+                            confidenceLabel={ce?.confidence || null}
+                            previewable={inv.previewable}
                             badges={poolBadges.slice(0, 3)}
                             size={focusMode && selectedHandle ? "xlarge" : "large"}
                             draggable={inv.previewable}
@@ -2029,6 +2239,7 @@ export function LegacyMediaAssignmentBoardClient() {
                                     const ok = writeLegacyDragData(e, {
                                       type: "legacy_media",
                                       mediaId: id,
+                                      source: "pool",
                                       fromProductHandle: null,
                                       fromZone: "pool",
                                       fromIndex: null,
@@ -2181,6 +2392,8 @@ export function LegacyMediaAssignmentBoardClient() {
               <div>State update requested: <strong>{diag.stateUpdateRequested ? "yes" : "no"}</strong></div>
               <div>State changed: <strong style={{ color: diag.stateActuallyChanged ? "#15803d" : "#64748b" }}>{diag.stateActuallyChanged ? "yes" : "no"}</strong></div>
               <div>Source/media/product/zone: <span style={{ color: "#0f172a" }}>{`${diag.source} / ${diag.mediaId || "—"} / ${diag.productHandle || "—"} / ${diag.targetZone || "—"}`}</span></div>
+              <div>Last drag source/lane/variant: <span style={{ color: "#0f172a" }}>{`${diag.dragSource} / ${diag.laneId} / ${diag.variantKey}`}</span></div>
+              <div>Last reorder: <span style={{ color: "#0f172a" }}>{`${diag.reorderFrom} -> ${diag.reorderTo}`}</span></div>
               <div>Payload written: <strong style={{ color: payloadWritten === "yes" ? "#15803d" : payloadWritten === "no" ? "#b91c1c" : "#64748b" }}>{payloadWritten}</strong></div>
               <div>Last action: <span style={{ color: "#0f172a", fontWeight: 600 }}>{lastDragAction || diag.lastAction}</span></div>
               <div>Last error: <span style={{ color: dragError || diag.lastError ? "#b91c1c" : "#64748b" }}>{dragError || diag.lastError || "—"}</span></div>

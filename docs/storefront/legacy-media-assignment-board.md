@@ -113,14 +113,23 @@ Cap: first **120** items per tab with **Showing first 120 images — narrow filt
 - **Drop zones** (Primary / Gallery / Reference / Reject / return strip) expose explicit **`data-legacy-drop-target`** attributes; while dragging, the zone under the pointer **highlights** and the label can switch to a short **“Drop to …”** hint. Releasing outside a valid target **cancels** the drag without changing board state.
 - The **Media pool** footer includes a compact **DnD (dev)** block: drag start yes/no, payload written yes/no, last drop target, last action, and last error.
 - The diagnostics block also prints last pointer/click/drag/drop targets with resolved `data-*` metadata (`data-media-card`, `data-media-id`, `data-product-handle`, `data-drop-zone`, `data-action-button`) and state-transition telemetry (`state update requested`, `state changed`).
+- Diagnostics also include drag context: source (`pool` / `assigned` / `gallery` / `variant`), lane/zone, active variant key, and reorder markers.
 - **Quick actions** (**Primary** / **Gallery** / **Ref** / **Reject** / **Global ✕**) remain the full fallback if dragging is inconvenient.
 - With **no product selected**, lane targets are not shown; use quick actions after selecting a SKU, or select a product first.
 
 ## Manual assignment panel
 
 - Located in the media pool chrome; accepts `media id` + target zone.
+- Includes active variant selector; apply targets the selected product + selected variant lane.
 - Uses the same immutable assignment flow as drag/buttons.
 - Shows active selected product and blocks lane assignment when no product is selected.
+
+## Color variant layer (dev-only)
+
+- Selected product workspace has **Color variants** pills/tabs.
+- Each variant has independent lanes: `Primary`, `Gallery`, `Reference`, `Rejected`.
+- `Gallery` order is preserved per variant and included in export.
+- Existing v2 board decisions remain loadable; default mapping uses `__default__`.
 
 ---
 

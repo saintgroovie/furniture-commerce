@@ -23,6 +23,10 @@ type Props = {
   onDragEnd?: (e: React.DragEvent) => void
   /** Full path / context for hover (not shown inline). */
   detailTitle?: string
+  sourcePath?: string | null
+  sourceType?: string | null
+  confidenceLabel?: string | null
+  previewable?: boolean
   /** Max visible filename characters before ellipsis. */
   filenameMaxLen?: number
   onOpenDetail?: () => void
@@ -53,6 +57,10 @@ export function MediaImageCard({
   onDragStart,
   onDragEnd,
   detailTitle,
+  sourcePath,
+  sourceType,
+  confidenceLabel,
+  previewable = true,
   filenameMaxLen = 32,
   onOpenDetail,
   onCardPointerDownCapture,
@@ -177,6 +185,34 @@ export function MediaImageCard({
         }}
       >
         {nameShown}
+      </div>
+      <div
+        title={sourcePath || ""}
+        style={{
+          marginTop: 4,
+          fontSize: 10,
+          color: "#64748b",
+          lineHeight: 1.25,
+          display: "-webkit-box",
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: "vertical",
+          overflow: "hidden",
+          wordBreak: "break-all",
+          minHeight: 24,
+        }}
+      >
+        {sourcePath || "—"}
+      </div>
+      <div style={{ marginTop: 6, display: "flex", gap: 4, flexWrap: "wrap" }}>
+        {sourceType ? (
+          <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 999, background: "#f1f5f9", color: "#334155" }}>{sourceType}</span>
+        ) : null}
+        {confidenceLabel ? (
+          <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 999, background: "#eef2ff", color: "#3730a3" }}>{confidenceLabel}</span>
+        ) : null}
+        <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 999, background: previewable ? "#dcfce7" : "#fee2e2", color: previewable ? "#166534" : "#991b1b" }}>
+          {previewable ? "previewable" : "unpreviewable"}
+        </span>
       </div>
       {badges.length > 0 ? (
         <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 4 }}>
