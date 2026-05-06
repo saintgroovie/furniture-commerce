@@ -42,3 +42,14 @@ export type ProductRow = {
   title: string | null
   image_urls: string[]
 }
+
+/** Drag payload for legacy media board (written to dataTransfer as JSON + text/plain). */
+export type LegacyMediaDragZone = "primary" | "gallery" | "reference" | "lane_reject" | "pool"
+
+export type LegacyMediaDragPayload = {
+  type: "legacy_media"
+  mediaId: string
+  fromProductHandle?: string | null
+  fromZone?: LegacyMediaDragZone | null
+  fromIndex?: number | null
+}

@@ -13,13 +13,16 @@ import {
   type PersistedV2,
   type ProductZoneState,
 } from "./legacy-media-board-export"
-import type { CandidateEntry, InvItem, ProductRow } from "./legacy-media-board-types"
+import type { CandidateEntry, InvItem, LegacyMediaDragPayload, LegacyMediaDragZone, ProductRow } from "./legacy-media-board-types"
 import { MediaImageCard } from "./MediaImageCard"
 
 const LS_KEY = "furniture-legacy-media-assignment-decisions-v1"
+/** Legacy MIME keys (older board builds); still read on drop for compatibility */
 const DND_INV = "application/x-legacy-inv"
 const DND_HANDLE = "application/x-legacy-handle"
 const DND_ZONE = "application/x-legacy-zone"
+const DND_JSON = "application/json"
+const DND_TEXT = "text/plain"
 const POOL_LIMIT = 120
 const UNKNOWN_COLLECTION = "__unknown__"
 const API_BASE = "/qa/legacy-media-assignment-board/api"
@@ -149,6 +152,91 @@ function swapGallery(zones: Record<string, ProductZoneState>, handle: string, a:
   return { ...zones, [h]: z }
 }
 
+type BoardState = { zones: Record<string, ProductZoneState>; grej: GlobalRejection[] }
+
+function writeLegacyDragData(e: React.DragEvent, p: LegacyMediaDragPayload) {
+  const s = JSON.stringify(p)
+  e.dataTransfer.setData(DND_TEXT, s)
+  try {
+    e.dataTransfer.setData(DND_JSON, s)
+  } catch {
+    /* Safari private mode etc. */
+  }
+  e.dataTransfer.effectAllowed = "move"
+}
+
+function readLegacyDragData(e: React.DragEvent): LegacyMediaDragPayload | null {
+  let raw = ""
+  try {
+    raw = e.dataTransfer.getData(DND_JSON) || e.dataTransfer.getData(DND_TEXT)
+  } catch {
+    raw = e.dataTransfer.getData(DND_TEXT)
+  }
+  if (raw) {
+    try {
+      const o = JSON.parse(raw) as LegacyMediaDragPayload
+      if (o?.type === "legacy_media" && typeof o.mediaId === "string") return o
+    } catch {
+      /* fall through */
+    }
+  }
+  const legacyId = e.dataTransfer.getData(DND_INV)
+  if (legacyId) {
+    const zh = (e.dataTransfer.getData(DND_HANDLE) || "").trim()
+    const zz = (e.dataTransfer.getData(DND_ZONE) || "").trim()
+    const validZ = ["primary", "gallery", "reference", "lane_reject"].includes(zz)
+    return {
+      type: "legacy_media",
+      mediaId: legacyId,
+      fromProductHandle: zh || null,
+      fromZone: validZ ? (zz as LegacyMediaDragZone) : zh ? null : "pool",
+    }
+  }
+  return null
+}
+
+function resolveBoardAfterDrop(
+  b: BoardState,
+  e: React.DragEvent,
+  targetHandle: string,
+  targetZone: ZoneDrop,
+  payload: LegacyMediaDragPayload
+): { next: BoardState; action: string } {
+  const mediaId = payload.mediaId
+  const srcH = (payload.fromProductHandle || "").toLowerCase()
+  const srcZ = payload.fromZone || ""
+
+  if (targetZone === "unassigned") {
+    return {
+      next: { zones: removeIdFromAllZones(b.zones, mediaId), grej: b.grej.filter((r) => r.inventory_id !== mediaId) },
+      action: "removed to unassigned",
+    }
+  }
+
+  const th = targetHandle.toLowerCase()
+  if (targetZone === "gallery" && srcH === th && srcZ === "gallery") {
+    const overEl = (e.target as HTMLElement).closest("[data-inventory-id]")
+    const overId = overEl?.getAttribute("data-inventory-id") || null
+    if (overId && overId !== mediaId) {
+      return { next: { ...b, zones: swapGallery(b.zones, targetHandle, mediaId, overId) }, action: "gallery reordered" }
+    }
+  }
+
+  const overEl = (e.target as HTMLElement).closest("[data-inventory-id]")
+  const insertBefore = targetZone === "gallery" ? overEl?.getAttribute("data-inventory-id") : null
+  const out = moveInventoryToZone(
+    b.zones,
+    b.grej,
+    targetHandle,
+    targetZone as "primary" | "gallery" | "reference" | "lane_reject",
+    mediaId,
+    insertBefore && insertBefore !== mediaId ? insertBefore : null
+  )
+  const lab =
+    targetZone === "primary" ? "primary" : targetZone === "gallery" ? "gallery" : targetZone === "reference" ? "reference" : "rejected (product)"
+  return { next: { zones: out.zones, grej: out.globalRejections }, action: `assigned to ${lab}` }
+}
+
 function loadPersistedRaw(raw: string | null): PersistedV2 | null {
   if (!raw) return null
   try {
@@ -236,8 +324,6 @@ const PRODUCT_STATUS_META: Record<
   },
 }
 
-type BoardState = { zones: Record<string, ProductZoneState>; grej: GlobalRejection[] }
-
 type LegacyBoardLoadFailure = {
   endpoint: string
   label: string
@@ -271,6 +357,9 @@ export function LegacyMediaAssignmentBoardClient() {
   const [focusMode, setFocusMode] = useState(false)
   const [inspectorId, setInspectorId] = useState<string | null>(null)
   const [exportFeedback, setExportFeedback] = useState<"copy" | "download" | null>(null)
+  const [dragHoverZoneKey, setDragHoverZoneKey] = useState<string | null>(null)
+  const [draggingMediaId, setDraggingMediaId] = useState<string | null>(null)
+  const [dndStatus, setDndStatus] = useState<{ last: string }>({ last: "—" })
 
   const invById = useMemo(() => {
     const m = new Map<string, InvItem>()
@@ -577,20 +666,6 @@ export function LegacyMediaAssignmentBoardClient() {
 
   const localDecisionSlots = assignedInZones.size + board.grej.length
 
-  const setDragPayload = (e: React.DragEvent, inventoryId: string, handle?: string, zone?: string) => {
-    e.dataTransfer.setData(DND_INV, inventoryId)
-    if (handle) e.dataTransfer.setData(DND_HANDLE, handle)
-    if (zone) e.dataTransfer.setData(DND_ZONE, zone)
-    e.dataTransfer.effectAllowed = "move"
-  }
-
-  const readDragPayload = (e: React.DragEvent) => {
-    const inventoryId = e.dataTransfer.getData(DND_INV)
-    const handle = e.dataTransfer.getData(DND_HANDLE) || ""
-    const zone = e.dataTransfer.getData(DND_ZONE) || ""
-    return { inventoryId, handle, zone }
-  }
-
   const clearLocal = () => {
     if (
       !window.confirm(
@@ -625,6 +700,7 @@ export function LegacyMediaAssignmentBoardClient() {
       zones: removeIdFromAllZones(b.zones, inventoryId),
       grej: [...b.grej.filter((r) => r.inventory_id !== inventoryId), { inventory_id: inventoryId, reason: "not_this_product" }],
     }))
+    setDndStatus({ last: "global reject" })
   }
 
   const assignToSelected = (inventoryId: string, zone: "primary" | "gallery" | "reference" | "lane_reject") => {
@@ -633,38 +709,28 @@ export function LegacyMediaAssignmentBoardClient() {
       const out = moveInventoryToZone(b.zones, b.grej, selectedHandle, zone, inventoryId, null)
       return { zones: out.zones, grej: out.globalRejections }
     })
+    const lab = zone === "lane_reject" ? "product reject" : zone
+    setDndStatus({ last: `quick → ${lab}` })
   }
 
   const dropZoneStable = (e: React.DragEvent, handle: string, zone: ZoneDrop) => {
     e.preventDefault()
-    const { inventoryId, handle: srcH, zone: srcZone } = readDragPayload(e)
-    if (!inventoryId) return
+    e.stopPropagation()
+    setDragHoverZoneKey(null)
+    const payload = readLegacyDragData(e)
+    if (!payload?.mediaId) {
+      setDraggingMediaId(null)
+      setDndStatus({ last: "ignored (no payload)" })
+      return
+    }
+    let nextAction = "—"
     setBoard((b) => {
-      if (zone === "unassigned") {
-        return {
-          zones: removeIdFromAllZones(b.zones, inventoryId),
-          grej: b.grej.filter((r) => r.inventory_id !== inventoryId),
-        }
-      }
-      if (zone === "gallery" && srcH === handle.toLowerCase() && srcZone === "gallery") {
-        const overEl = (e.target as HTMLElement).closest("[data-inventory-id]")
-        const overId = overEl?.getAttribute("data-inventory-id") || null
-        if (overId && overId !== inventoryId) {
-          return { ...b, zones: swapGallery(b.zones, handle, inventoryId, overId) }
-        }
-      }
-      const overEl = (e.target as HTMLElement).closest("[data-inventory-id]")
-      const insertBefore = zone === "gallery" ? overEl?.getAttribute("data-inventory-id") : null
-      const out = moveInventoryToZone(
-        b.zones,
-        b.grej,
-        handle,
-        zone as "primary" | "gallery" | "reference" | "lane_reject",
-        inventoryId,
-        insertBefore && insertBefore !== inventoryId ? insertBefore : null
-      )
-      return { zones: out.zones, grej: out.globalRejections }
+      const r = resolveBoardAfterDrop(b, e, handle, zone, payload)
+      nextAction = r.action
+      return r.next
     })
+    setDraggingMediaId(null)
+    setDndStatus({ last: nextAction })
   }
 
   const exportJson = useCallback(() => {
@@ -835,27 +901,58 @@ export function LegacyMediaAssignmentBoardClient() {
     )
   }
 
-  const zoneBox = (label: string, handle: string, zone: Exclude<ZoneDrop, "unassigned">, children: React.ReactNode) => (
-    <div
-      onDragOver={(e) => e.preventDefault()}
-      onDrop={(e) => dropZoneStable(e, handle, zone)}
-      style={{
-        minHeight: 108,
-        borderRadius: 12,
-        border: "1px dashed #cbd5e1",
-        background: "#f8fafc",
-        padding: 10,
-      }}
-    >
-      <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</div>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "flex-start" }}>{children}</div>
-    </div>
-  )
+  const zoneBox = (label: string, dropHint: string, handle: string, zone: Exclude<ZoneDrop, "unassigned">, children: React.ReactNode) => {
+    const zk = `${handle.toLowerCase()}|${zone}`
+    const hot = dragHoverZoneKey === zk
+    return (
+      <div
+        data-drop-zone={zk}
+        onDragEnter={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          setDragHoverZoneKey(zk)
+        }}
+        onDragOver={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          e.dataTransfer.dropEffect = "move"
+          setDragHoverZoneKey(zk)
+        }}
+        onDragLeave={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragHoverZoneKey((k) => (k === zk ? null : k))
+        }}
+        onDrop={(e) => dropZoneStable(e, handle, zone)}
+        style={{
+          minHeight: 132,
+          borderRadius: 14,
+          border: hot ? "2px solid #2563eb" : "1px dashed #cbd5e1",
+          background: hot ? "#eff6ff" : "#f8fafc",
+          padding: 14,
+          transition: "border 0.12s ease, background 0.12s ease",
+        }}
+      >
+        <div
+          style={{
+            fontSize: 11,
+            fontWeight: 800,
+            color: hot ? "#1d4ed8" : "#64748b",
+            marginBottom: 8,
+            textTransform: "uppercase",
+            letterSpacing: "0.06em",
+          }}
+        >
+          {hot ? dropHint : label}
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "flex-start" }}>{children}</div>
+      </div>
+    )
+  }
 
-  const renderZoneThumb = (id: string, handle: string, zone: string) => {
+  const renderZoneThumb = (id: string, handle: string, zone: LegacyMediaDragZone) => {
     const inv = invById.get(id)
     if (!inv) return null
     const pv = clientPreviewUrl(inv)
+    const gi = zone === "gallery" ? (board.zones[handle.toLowerCase()]?.gallery.indexOf(id) ?? -1) : -1
     return (
       <MediaImageCard
         key={id}
@@ -866,7 +963,22 @@ export function LegacyMediaAssignmentBoardClient() {
         caption={pv.caption}
         badges={["Assigned"]}
         size="compact"
-        onDragStart={(e) => setDragPayload(e, id, handle, zone)}
+        isDragging={draggingMediaId === id}
+        onDragStart={(e) => {
+          e.stopPropagation()
+          writeLegacyDragData(e, {
+            type: "legacy_media",
+            mediaId: id,
+            fromProductHandle: handle,
+            fromZone: zone,
+            fromIndex: gi >= 0 ? gi : null,
+          })
+          setDraggingMediaId(id)
+        }}
+        onDragEnd={() => {
+          setDraggingMediaId(null)
+          setDragHoverZoneKey(null)
+        }}
         onOpenDetail={() => setInspectorId(id)}
         filenameMaxLen={22}
       />
@@ -988,6 +1100,16 @@ export function LegacyMediaAssignmentBoardClient() {
     if (!selectedHandle || !selectedProduct) {
       return (
         <section
+          onDragOver={(e) => {
+            e.preventDefault()
+            e.dataTransfer.dropEffect = "none"
+          }}
+          onDrop={(e) => {
+            e.preventDefault()
+            setDraggingMediaId(null)
+            setDragHoverZoneKey(null)
+            if (readLegacyDragData(e)) setDndStatus({ last: "Select a product first." })
+          }}
           style={{
             background: "#fff",
             borderRadius: 14,
@@ -1001,6 +1123,9 @@ export function LegacyMediaAssignmentBoardClient() {
           <div style={{ fontSize: 18, fontWeight: 800, color: "#0f172a", marginBottom: 10 }}>Select a product to start assigning images.</div>
           <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, maxWidth: 520, marginLeft: "auto", marginRight: "auto" }}>
             Choose a product from the list (or switch to <strong>Focus mode</strong> after you pick one). Then drag from the media pool or use quick actions on each tile.
+          </p>
+          <p style={{ margin: "12px 0 0", fontSize: 12, color: "#b45309" }}>
+            <strong>Select a product first</strong> to drop images into Primary / Gallery — or use quick actions in the pool after selecting a SKU.
           </p>
         </section>
       )
@@ -1044,13 +1169,13 @@ export function LegacyMediaAssignmentBoardClient() {
               </span>
             </div>
             <p style={{ margin: "14px 0 0", fontSize: 13, color: "#64748b", maxWidth: fullWidth ? 720 : 560, lineHeight: 1.55 }}>
-              Drag images into zones below or use quick actions from the media pool. Drop tiles on the strip under the previews to return them to the pool.
+              Drag images from the pool or use buttons on each image. Drop tiles on the strip under the previews to return them to the pool.
             </p>
           </div>
           <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
             {selectedProduct.image_urls.slice(0, 4).map((u) => (
               // eslint-disable-next-line @next/next/no-img-element
-              <img key={u} src={u} alt="" width={72} height={72} style={{ borderRadius: 10, objectFit: "cover", border: "1px solid #e2e8f0" }} />
+              <img key={u} src={u} alt="" width={72} height={72} draggable={false} style={{ borderRadius: 10, objectFit: "cover", border: "1px solid #e2e8f0" }} />
             ))}
           </div>
         </div>
@@ -1059,19 +1184,38 @@ export function LegacyMediaAssignmentBoardClient() {
           {(z.primary ? 1 : 0) + z.gallery.length + z.reference_only.length + z.lane_rejected.length}
         </div>
         <div
-          onDragOver={(e) => e.preventDefault()}
+          onDragEnter={(e) => {
+            e.preventDefault()
+            setDragHoverZoneKey(`return|${h}`)
+          }}
+          onDragOver={(e) => {
+            e.preventDefault()
+            e.dataTransfer.dropEffect = "move"
+            setDragHoverZoneKey(`return|${h}`)
+          }}
+          onDragLeave={(e) => {
+            const zk = `return|${h}`
+            if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragHoverZoneKey((k) => (k === zk ? null : k))
+          }}
           onDrop={(e) => dropZoneStable(e, selectedHandle, "unassigned")}
           style={{
             marginTop: 14,
-            padding: "10px 12px",
-            borderRadius: 10,
-            background: "#f8fafc",
-            border: "1px solid #e2e8f0",
+            padding: "14px 14px",
+            borderRadius: 12,
+            background: dragHoverZoneKey === `return|${h}` ? "#eff6ff" : "#f8fafc",
+            border: dragHoverZoneKey === `return|${h}` ? "2px dashed #2563eb" : "1px solid #e2e8f0",
             fontSize: 12,
-            color: "#64748b",
+            color: dragHoverZoneKey === `return|${h}` ? "#1e40af" : "#64748b",
+            transition: "border 0.12s ease, background 0.12s ease",
           }}
         >
-          Drop assigned tiles here to return them to the <strong>unassigned</strong> pool (removes lane placement).
+          {dragHoverZoneKey === `return|${h}` ? (
+            <strong>Drop to remove from lanes</strong>
+          ) : (
+            <>
+              Drop assigned tiles here to return them to the <strong>unassigned</strong> pool (removes lane placement).
+            </>
+          )}
         </div>
         <div
           style={{
@@ -1081,9 +1225,10 @@ export function LegacyMediaAssignmentBoardClient() {
             gap: 12,
           }}
         >
-          {zoneBox("Primary", selectedHandle, "primary", z.primary ? renderZoneThumb(z.primary, selectedHandle, "primary") : <span style={muted}>Drop one primary</span>)}
+          {zoneBox("Primary", "Drop to Primary", selectedHandle, "primary", z.primary ? renderZoneThumb(z.primary, selectedHandle, "primary") : <span style={muted}>Drop one primary</span>)}
           {zoneBox(
             "Gallery",
+            "Drop to Gallery",
             selectedHandle,
             "gallery",
             <>
@@ -1093,12 +1238,14 @@ export function LegacyMediaAssignmentBoardClient() {
           )}
           {zoneBox(
             "Reference only",
+            "Drop to Reference",
             selectedHandle,
             "reference",
             z.reference_only.length ? z.reference_only.map((id) => renderZoneThumb(id, selectedHandle, "reference")) : <span style={muted}>Optional reference shots</span>
           )}
           {zoneBox(
             "Rejected for this product",
+            "Drop to reject (this SKU)",
             selectedHandle,
             "lane_reject",
             z.lane_rejected.length ? z.lane_rejected.map((id) => renderZoneThumb(id, selectedHandle, "lane_reject")) : <span style={muted}>Not used on this SKU</span>
@@ -1614,7 +1761,24 @@ export function LegacyMediaAssignmentBoardClient() {
                             caption={pv.caption}
                             badges={poolBadges.slice(0, 3)}
                             size={focusMode && selectedHandle ? "xlarge" : "large"}
-                            onDragStart={(e) => setDragPayload(e, id)}
+                            draggable={inv.previewable}
+                            isDragging={draggingMediaId === id}
+                            onDragStart={(e) => {
+                              if (!inv.previewable) return
+                              e.stopPropagation()
+                              writeLegacyDragData(e, {
+                                type: "legacy_media",
+                                mediaId: id,
+                                fromProductHandle: null,
+                                fromZone: "pool",
+                                fromIndex: null,
+                              })
+                              setDraggingMediaId(id)
+                            }}
+                            onDragEnd={() => {
+                              setDraggingMediaId(null)
+                              setDragHoverZoneKey(null)
+                            }}
                             onOpenDetail={() => setInspectorId(id)}
                             filenameMaxLen={focusMode && selectedHandle ? 20 : 26}
                             detailTitle={inv.source_path || inv.repo_relative_path || inv.filename}
@@ -1674,6 +1838,28 @@ export function LegacyMediaAssignmentBoardClient() {
                   ) : null}
                 </>
               )}
+            </div>
+            <div
+              style={{
+                fontSize: 11,
+                padding: "8px 12px",
+                borderTop: "1px solid #e2e8f0",
+                color: "#64748b",
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 10,
+                justifyContent: "space-between",
+                alignItems: "center",
+                background: "#fafafa",
+              }}
+              aria-live="polite"
+            >
+              <span>
+                <strong style={{ color: "#334155" }}>Drag</strong> ready
+              </span>
+              <span style={{ textAlign: "right", maxWidth: 260 }}>
+                Last: <span style={{ color: "#0f172a", fontWeight: 600 }}>{dndStatus.last}</span>
+              </span>
             </div>
           </div>
 

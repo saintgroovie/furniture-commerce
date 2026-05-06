@@ -14,6 +14,8 @@ type Props = {
   badges?: string[]
   size?: CardSize
   draggable?: boolean
+  /** Visual feedback while this card is the active drag source */
+  isDragging?: boolean
   onDragStart?: (e: React.DragEvent) => void
   onDragEnd?: (e: React.DragEvent) => void
   /** Full path / context for hover (not shown inline). */
@@ -41,6 +43,7 @@ export function MediaImageCard({
   badges = [],
   size = "normal",
   draggable = true,
+  isDragging = false,
   onDragStart,
   onDragEnd,
   detailTitle,
@@ -66,11 +69,13 @@ export function MediaImageCard({
       style={{
         width: w + 16,
         borderRadius: 12,
-        border: "1px solid #e2e8f0",
-        background: "#fff",
-        boxShadow: "0 1px 2px rgba(15,23,42,0.06)",
+        border: isDragging ? "2px solid #2563eb" : "1px solid #e2e8f0",
+        background: isDragging ? "#eff6ff" : "#fff",
+        boxShadow: isDragging ? "0 4px 14px rgba(37,99,235,0.2)" : "0 1px 2px rgba(15,23,42,0.06)",
         padding: size === "xlarge" || size === "large" ? 10 : 8,
         cursor: draggable ? "grab" : "default",
+        userSelect: "none",
+        opacity: isDragging ? 0.92 : 1,
       }}
     >
       <div
@@ -106,7 +111,8 @@ export function MediaImageCard({
             alt=""
             width={w}
             height={w}
-            style={{ objectFit: "cover", display: "block" }}
+            draggable={false}
+            style={{ objectFit: "cover", display: "block", ...({ WebkitUserDrag: "none" } as Record<string, string>) }}
             onError={() => setImgBroken(true)}
           />
         ) : null}
@@ -184,6 +190,24 @@ export function MediaImageCard({
               {b}
             </span>
           ))}
+        </div>
+      ) : null}
+      {draggable ? (
+        <div
+          style={{
+            marginTop: 6,
+            fontSize: 10,
+            fontWeight: 700,
+            color: "#64748b",
+            display: "flex",
+            alignItems: "center",
+            gap: 4,
+            letterSpacing: "0.02em",
+          }}
+          aria-hidden
+        >
+          <span style={{ color: "#94a3b8" }}>⋮⋮</span>
+          <span>Drag</span>
         </div>
       ) : null}
       {children}
