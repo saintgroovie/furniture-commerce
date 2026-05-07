@@ -19,6 +19,7 @@ import type {
   LegacyMediaDragPayload,
   LegacyMediaDragZone,
   ProductRow,
+  SuggestedVariant,
 } from "./legacy-media-board-types"
 import { MediaImageCard } from "./MediaImageCard"
 
@@ -30,8 +31,8 @@ const DEFAULT_VARIANT_KEY = "__default__"
 const API_BASE = "/qa/legacy-media-assignment-board/api"
 const PREVIEW_ROUTE = "/qa/legacy-media-assignment-board/preview"
 const DND_JSON = "application/json"
-const DEV_SENTINEL = "Legacy Board UI v3b30469+ visible"
-const DEV_SENTINEL_BUILD = "2026-05-07T13:15Z"
+const DEV_SENTINEL = "Legacy Board UI assisted variants visible"
+const DEV_SENTINEL_BUILD = "2026-05-07T14:45Z"
 
 async function fetchBoardJson(url: string): Promise<{ ok: true; data: Record<string, unknown> } | { ok: false; status: number; body: Record<string, unknown> }> {
   const res = await fetch(url)
@@ -90,8 +91,19 @@ type VariantDecisionState = {
   reference: string[]
   rejected: string[]
 }
+type VariantStatus = "suggested" | "confirmed" | "edited" | "rejected"
+type VariantMetaState = {
+  colorSkuOrArticle: string
+  sourceUrl: string | null
+  sourcePathHints: string[]
+  reasons: string[]
+  confidence: "high" | "medium" | "low"
+  status: VariantStatus
+  fetchedAt: string
+}
 
 type VariantsByHandle = Record<string, Record<string, VariantDecisionState>>
+type VariantMetaByHandle = Record<string, Record<string, VariantMetaState>>
 
 type ProductUiKind =
   | "no_candidates"
@@ -161,6 +173,21 @@ function toZoneState(v: VariantDecisionState): ProductZoneState {
 
 function fromZoneState(z: ProductZoneState, label = "Default"): VariantDecisionState {
   return { label, primary: z.primary, gallery: [...z.gallery], reference: [...z.reference_only], rejected: [...z.lane_rejected] }
+}
+
+function titleFromToken(token: string): string {
+  if (!token) return "Unknown"
+  return token
+    .split(/[_-]+/)
+    .filter(Boolean)
+    .map((x) => x[0]?.toUpperCase() + x.slice(1))
+    .join(" ")
+}
+
+function extractColorToken(inv: InvItem): string {
+  const hay = `${inv.filename} ${inv.source_path || ""} ${inv.repo_relative_path || ""}`.toLowerCase()
+  const m = hay.match(/(?:color|colour)[_-]([a-z0-9-]+)/)
+  return m?.[1] || ""
 }
 
 function moveInventoryToZone(
@@ -454,7 +481,9 @@ export function LegacyMediaAssignmentBoardClient() {
   const [manualMediaId, setManualMediaId] = useState("")
   const [manualZone, setManualZone] = useState<ZoneDrop>("primary")
   const [variantsByHandle, setVariantsByHandle] = useState<VariantsByHandle>({})
+  const [variantMetaByHandle, setVariantMetaByHandle] = useState<VariantMetaByHandle>({})
   const [activeVariantByHandle, setActiveVariantByHandle] = useState<Record<string, string>>({})
+  const [rejectedSuggestedVariantsByHandle, setRejectedSuggestedVariantsByHandle] = useState<Record<string, string[]>>({})
   const [newVariantLabel, setNewVariantLabel] = useState("")
   const [diagExpanded, setDiagExpanded] = useState(false)
   const [diag, setDiag] = useState<DevDiagnostics>({
@@ -582,9 +611,18 @@ export function LegacyMediaAssignmentBoardClient() {
       }
       const rawVariants = localStorage.getItem(LS_VARIANTS_KEY)
       if (rawVariants) {
-        const parsed = JSON.parse(rawVariants) as { variantsByHandle?: VariantsByHandle; activeVariantByHandle?: Record<string, string> }
+        const parsed = JSON.parse(rawVariants) as {
+          variantsByHandle?: VariantsByHandle
+          variantMetaByHandle?: VariantMetaByHandle
+          activeVariantByHandle?: Record<string, string>
+          rejectedSuggestedVariantsByHandle?: Record<string, string[]>
+        }
         if (parsed.variantsByHandle && typeof parsed.variantsByHandle === "object") setVariantsByHandle(parsed.variantsByHandle)
+        if (parsed.variantMetaByHandle && typeof parsed.variantMetaByHandle === "object") setVariantMetaByHandle(parsed.variantMetaByHandle)
         if (parsed.activeVariantByHandle && typeof parsed.activeVariantByHandle === "object") setActiveVariantByHandle(parsed.activeVariantByHandle)
+        if (parsed.rejectedSuggestedVariantsByHandle && typeof parsed.rejectedSuggestedVariantsByHandle === "object") {
+          setRejectedSuggestedVariantsByHandle(parsed.rejectedSuggestedVariantsByHandle)
+        }
       }
     } catch {
       /* ignore */
@@ -596,11 +634,14 @@ export function LegacyMediaAssignmentBoardClient() {
   useEffect(() => {
     if (!hydrated || typeof window === "undefined") return
     try {
-      localStorage.setItem(LS_VARIANTS_KEY, JSON.stringify({ variantsByHandle, activeVariantByHandle }))
+      localStorage.setItem(
+        LS_VARIANTS_KEY,
+        JSON.stringify({ variantsByHandle, variantMetaByHandle, activeVariantByHandle, rejectedSuggestedVariantsByHandle })
+      )
     } catch {
       /* ignore */
     }
-  }, [hydrated, variantsByHandle, activeVariantByHandle])
+  }, [hydrated, variantsByHandle, variantMetaByHandle, activeVariantByHandle, rejectedSuggestedVariantsByHandle])
 
   const persist = useCallback((zones: Record<string, ProductZoneState>, grej: GlobalRejection[]) => {
     const payload: PersistedV2 = { version: 2, zonesByHandle: zones, globalRejections: grej }
@@ -841,7 +882,9 @@ export function LegacyMediaAssignmentBoardClient() {
     }
     setBoard({ zones: {}, grej: [] })
     setVariantsByHandle({})
+    setVariantMetaByHandle({})
     setActiveVariantByHandle({})
+    setRejectedSuggestedVariantsByHandle({})
     setSelectedHandle(null)
     setInspectorId(null)
     try {
@@ -952,6 +995,21 @@ export function LegacyMediaAssignmentBoardClient() {
         if (zone === "gallery") cleaned.gallery = [...cleaned.gallery, inventoryId]
         if (zone === "reference") cleaned.reference = [...cleaned.reference, inventoryId]
         if (zone === "lane_reject") cleaned.rejected = [...cleaned.rejected, inventoryId]
+        setVariantMetaByHandle((prevMeta) => ({
+          ...prevMeta,
+          [hh]: {
+            ...(prevMeta[hh] ?? {}),
+            [chosenVariantKey]: {
+              colorSkuOrArticle: prevMeta[hh]?.[chosenVariantKey]?.colorSkuOrArticle || "",
+              sourceUrl: prevMeta[hh]?.[chosenVariantKey]?.sourceUrl || null,
+              sourcePathHints: prevMeta[hh]?.[chosenVariantKey]?.sourcePathHints || [],
+              reasons: prevMeta[hh]?.[chosenVariantKey]?.reasons || ["manual assignment"],
+              confidence: prevMeta[hh]?.[chosenVariantKey]?.confidence || "low",
+              status: "edited",
+              fetchedAt: prevMeta[hh]?.[chosenVariantKey]?.fetchedAt || new Date().toISOString(),
+            },
+          },
+        }))
         return { ...prevV, [hh]: { ...hVariants, [chosenVariantKey]: cleaned } }
       })
       setLastDragAction(`${source} → ${zone}`)
@@ -973,6 +1031,54 @@ export function LegacyMediaAssignmentBoardClient() {
       return changed
     },
     [board, selectedHandle, activeVariantByHandle]
+  )
+
+  const updateVariantDecision = useCallback(
+    (handle: string, variantKey: string, updater: (prev: VariantDecisionState) => VariantDecisionState, action: string, mediaId: string) => {
+      const hh = handle.toLowerCase()
+      setVariantsByHandle((prev) => {
+        const variants = prev[hh] ?? { [DEFAULT_VARIANT_KEY]: fromZoneState(board.zones[hh] ?? emptyZones(), "Default") }
+        const prevVariant = variants[variantKey] ?? emptyVariant(variantKey === DEFAULT_VARIANT_KEY ? "Default" : variantKey)
+        const nextVariant = updater(prevVariant)
+        setBoard((boardPrev) => ({
+          ...boardPrev,
+          zones: {
+            ...boardPrev.zones,
+            [hh]: toZoneState(nextVariant),
+          },
+        }))
+        setVariantMetaByHandle((prevMeta) => ({
+          ...prevMeta,
+          [hh]: {
+            ...(prevMeta[hh] ?? {}),
+            [variantKey]: {
+              colorSkuOrArticle: prevMeta[hh]?.[variantKey]?.colorSkuOrArticle || "",
+              sourceUrl: prevMeta[hh]?.[variantKey]?.sourceUrl || null,
+              sourcePathHints: prevMeta[hh]?.[variantKey]?.sourcePathHints || [],
+              reasons: prevMeta[hh]?.[variantKey]?.reasons || ["manual order control"],
+              confidence: prevMeta[hh]?.[variantKey]?.confidence || "low",
+              status: "edited",
+              fetchedAt: prevMeta[hh]?.[variantKey]?.fetchedAt || new Date().toISOString(),
+            },
+          },
+        }))
+        return { ...prev, [hh]: { ...variants, [variantKey]: nextVariant } }
+      })
+      setDiag((d) => ({
+        ...d,
+        stateUpdateRequested: true,
+        stateActuallyChanged: true,
+        lastAction: action,
+        lastError: "",
+        source: "button",
+        mediaId,
+        productHandle: handle,
+        targetZone: "variant_gallery",
+        dragSource: "variant",
+        variantKey,
+      }))
+    },
+    [board.zones]
   )
 
   const dropZoneStable = (e: React.DragEvent, handle: string, zone: ZoneDrop) => {
@@ -1054,8 +1160,9 @@ export function LegacyMediaAssignmentBoardClient() {
       ...base,
       variant_decisions: variantsByHandle,
       active_variant_by_handle: activeVariantByHandle,
+      confirmed_variant_sources: variantMetaByHandle,
     }
-  }, [products, board.zones, board.grej, variantsByHandle, activeVariantByHandle])
+  }, [products, board.zones, board.grej, variantsByHandle, activeVariantByHandle, variantMetaByHandle])
 
   const copyJson = async () => {
     const text = JSON.stringify(exportJson(), null, 2)
@@ -1107,6 +1214,69 @@ export function LegacyMediaAssignmentBoardClient() {
   }, [sidebarCollection])
 
   const selectedProduct = selectedHandle ? productByHandle.get(selectedHandle.toLowerCase()) ?? null : null
+  const suggestedVariantsForSelected = useMemo<SuggestedVariant[]>(() => {
+    if (!selectedHandle) return []
+    const h = selectedHandle.toLowerCase()
+    const rejected = new Set(rejectedSuggestedVariantsByHandle[h] ?? [])
+    const groups = new Map<
+      string,
+      {
+        label: string
+        colorSkuOrArticle: string
+        sourceUrl: string | null
+        sourcePathHints: Set<string>
+        mediaIds: string[]
+        confidence: "high" | "medium" | "low"
+        reasons: Set<string>
+      }
+    >()
+    for (const it of invDoc?.items ?? []) {
+      const ce = candById.get(it.id)
+      const linked =
+        ce?.top_candidate?.medusa_product_handle.toLowerCase() === h ||
+        (ce?.candidates ?? []).some((c) => c.medusa_product_handle.toLowerCase() === h) ||
+        (it.handle_hint || "").toLowerCase() === h ||
+        (it.sku_hint || "").toLowerCase() === h
+      if (!linked) continue
+      const token = extractColorToken(it)
+      if (!token) continue
+      const key = `color_${token}`
+      if (rejected.has(key)) continue
+      const current = groups.get(key) ?? {
+        label: titleFromToken(token),
+        colorSkuOrArticle: it.sku_hint || ce?.top_candidate?.medusa_variant_sku || "",
+        sourceUrl: it.legacy_product_url || it.page_url || it.url || null,
+        sourcePathHints: new Set<string>(),
+        mediaIds: [],
+        confidence: ce?.confidence === "confirmed" ? "high" : ce?.confidence === "probable" ? "medium" : "low",
+        reasons: new Set<string>(),
+      }
+      current.mediaIds.push(it.id)
+      if (it.source_path) current.sourcePathHints.add(it.source_path)
+      if (it.repo_relative_path) current.sourcePathHints.add(it.repo_relative_path)
+      current.reasons.add(`filename token color_${token}`)
+      if (it.source_path?.toLowerCase().includes(`color_${token}`)) current.reasons.add(`source path token color_${token}`)
+      if (it.sku_hint) current.reasons.add("sku hint match")
+      if (ce?.top_candidate?.medusa_product_handle.toLowerCase() === h) current.reasons.add("candidate map top handle match")
+      if (it.legacy_product_url || it.page_url || it.url) current.reasons.add("legacy source url/hint present")
+      groups.set(key, current)
+    }
+    return Array.from(groups.entries())
+      .map(([variantKey, v]) => ({
+        variantKey,
+        label: v.label,
+        colorNameRaw: variantKey.replace(/^color_/, ""),
+        colorSkuOrArticle: v.colorSkuOrArticle,
+        sourceUrl: v.sourceUrl,
+        sourcePathHints: Array.from(v.sourcePathHints).slice(0, 3),
+        mediaIds: v.mediaIds,
+        primaryCandidateId: v.mediaIds[0] || null,
+        galleryCandidateIds: v.mediaIds.slice(1),
+        confidence: v.confidence,
+        reasons: Array.from(v.reasons),
+      }))
+      .sort((a, b) => b.mediaIds.length - a.mediaIds.length)
+  }, [selectedHandle, rejectedSuggestedVariantsByHandle, invDoc, candById])
 
   const poolEmptyMessage = useMemo(() => {
     if (poolTab === "suggested") {
@@ -1271,6 +1441,7 @@ export function LegacyMediaAssignmentBoardClient() {
     const inv = invById.get(id)
     if (!inv) return null
     const pv = clientPreviewUrl(inv)
+    const vk = activeVariantByHandle[handle.toLowerCase()] || DEFAULT_VARIANT_KEY
     const gi = zone === "gallery" ? (board.zones[handle.toLowerCase()]?.gallery.indexOf(id) ?? -1) : -1
     return (
       <MediaImageCard
@@ -1330,6 +1501,86 @@ export function LegacyMediaAssignmentBoardClient() {
         >
           Return to Unassigned
         </button>
+        {zone === "gallery" ? (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, marginTop: 4 }}>
+            <button
+              type="button"
+              data-action-button="gallery-move-left"
+              style={miniBtn}
+              onClick={() =>
+                updateVariantDecision(
+                  handle,
+                  vk,
+                  (prev) => {
+                    const idx = prev.gallery.indexOf(id)
+                    if (idx <= 0) return prev
+                    const next = [...prev.gallery]
+                    ;[next[idx - 1], next[idx]] = [next[idx], next[idx - 1]]
+                    return { ...prev, gallery: next }
+                  },
+                  "gallery move left",
+                  id
+                )
+              }
+            >
+              Move left
+            </button>
+            <button
+              type="button"
+              data-action-button="gallery-move-right"
+              style={miniBtn}
+              onClick={() =>
+                updateVariantDecision(
+                  handle,
+                  vk,
+                  (prev) => {
+                    const idx = prev.gallery.indexOf(id)
+                    if (idx < 0 || idx >= prev.gallery.length - 1) return prev
+                    const next = [...prev.gallery]
+                    ;[next[idx + 1], next[idx]] = [next[idx], next[idx + 1]]
+                    return { ...prev, gallery: next }
+                  },
+                  "gallery move right",
+                  id
+                )
+              }
+            >
+              Move right
+            </button>
+            <button
+              type="button"
+              data-action-button="gallery-set-primary"
+              style={miniBtn}
+              onClick={() =>
+                updateVariantDecision(
+                  handle,
+                  vk,
+                  (prev) => ({ ...prev, primary: id, gallery: prev.gallery.filter((x) => x !== id) }),
+                  "set primary from gallery",
+                  id
+                )
+              }
+            >
+              Set as Primary
+            </button>
+            <button
+              type="button"
+              data-action-button="gallery-remove"
+              style={miniBtn}
+              onClick={() =>
+                updateVariantDecision(
+                  handle,
+                  vk,
+                  (prev) => ({ ...prev, gallery: prev.gallery.filter((x) => x !== id) }),
+                  "remove from gallery",
+                  id
+                )
+              }
+            >
+              Remove
+            </button>
+          </div>
+        ) : null}
       </MediaImageCard>
     )
   }
@@ -1475,10 +1726,13 @@ export function LegacyMediaAssignmentBoardClient() {
     }
     const h = selectedHandle.toLowerCase()
     const vByHandle = variantsByHandle[h] ?? { [DEFAULT_VARIANT_KEY]: fromZoneState(board.zones[h] ?? emptyZones(), "Default") }
+    const vmByHandle = variantMetaByHandle[h] ?? {}
     const activeVariantKey = activeVariantByHandle[h] || Object.keys(vByHandle)[0] || DEFAULT_VARIANT_KEY
     const activeVariant = vByHandle[activeVariantKey] ?? emptyVariant(activeVariantKey === DEFAULT_VARIANT_KEY ? "Default" : activeVariantKey)
+    const activeVariantMeta = vmByHandle[activeVariantKey] ?? null
     const z = toZoneState(activeVariant)
     const candCount = entryList.filter((e) => e.top_candidate?.medusa_product_handle.toLowerCase() === h).length
+    const suggestions = suggestedVariantsForSelected.filter((s) => !vByHandle[s.variantKey])
 
     return (
       <section
@@ -1564,12 +1818,206 @@ export function LegacyMediaAssignmentBoardClient() {
                       [key]: prev[h]?.[key] ?? emptyVariant(label),
                     },
                   }))
+                  setVariantMetaByHandle((prev) => ({
+                    ...prev,
+                    [h]: {
+                      ...(prev[h] ?? {}),
+                      [key]: prev[h]?.[key] ?? {
+                        colorSkuOrArticle: "",
+                        sourceUrl: null,
+                        sourcePathHints: [],
+                        reasons: ["manual add variant"],
+                        confidence: "low",
+                        status: "edited",
+                        fetchedAt: new Date().toISOString(),
+                      },
+                    },
+                  }))
                   setActiveVariantByHandle((prev) => ({ ...prev, [h]: key }))
                   setNewVariantLabel("")
                 }}
               >
                 Add variant
               </button>
+            </div>
+            <div style={{ marginTop: 8, fontSize: 11, color: "#475569" }}>
+              Active variant: <strong>{activeVariant.label}</strong> · status:{" "}
+              <strong>{activeVariantMeta?.status || (activeVariantKey === DEFAULT_VARIANT_KEY ? "confirmed" : "edited")}</strong>
+            </div>
+            <div style={{ marginTop: 12, border: "1px solid #cbd5e1", background: "#f8fafc", borderRadius: 10, padding: 10 }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: "#475569", textTransform: "uppercase", marginBottom: 8 }}>Suggested color variants</div>
+              {suggestions.length === 0 ? (
+                <div style={{ fontSize: 12, color: "#64748b" }}>No legacy color suggestions found for this product.</div>
+              ) : (
+                <div style={{ display: "grid", gap: 8 }}>
+                  {suggestions.slice(0, 4).map((s) => (
+                    <div key={s.variantKey} style={{ border: "1px solid #e2e8f0", borderRadius: 8, background: "#fff", padding: 8 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>
+                        {s.label} <span style={{ fontSize: 11, color: "#64748b" }}>({s.confidence})</span>
+                      </div>
+                      <div style={{ fontSize: 11, color: "#475569", marginTop: 4 }}>
+                        SKU/article: <strong>{s.colorSkuOrArticle || "—"}</strong> · source: <span title={s.sourceUrl || s.sourcePathHints[0] || ""}>{s.sourceUrl || s.sourcePathHints[0] || "legacy source unavailable"}</span>
+                      </div>
+                      <div style={{ fontSize: 11, color: "#64748b", marginTop: 4 }}>Reasons: {s.reasons.join(", ")}</div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
+                        <button
+                          type="button"
+                          style={miniBtn}
+                          onClick={() => {
+                            setVariantsByHandle((prev) => ({
+                              ...prev,
+                              [h]: {
+                                ...(prev[h] ?? {}),
+                                [s.variantKey]: prev[h]?.[s.variantKey] ?? {
+                                  label: s.label,
+                                  primary: null,
+                                  gallery: [],
+                                  reference: [],
+                                  rejected: [],
+                                },
+                              },
+                            }))
+                            setVariantMetaByHandle((prev) => ({
+                              ...prev,
+                              [h]: {
+                                ...(prev[h] ?? {}),
+                                [s.variantKey]: {
+                                  colorSkuOrArticle: s.colorSkuOrArticle,
+                                  sourceUrl: s.sourceUrl,
+                                  sourcePathHints: s.sourcePathHints,
+                                  reasons: s.reasons,
+                                  confidence: s.confidence,
+                                  status: "confirmed",
+                                  fetchedAt: new Date().toISOString(),
+                                },
+                              },
+                            }))
+                            setActiveVariantByHandle((prev) => ({ ...prev, [h]: s.variantKey }))
+                          }}
+                        >
+                          Confirm variant
+                        </button>
+                        <button
+                          type="button"
+                          style={miniBtn}
+                          disabled={!(s.primaryCandidateId || s.mediaIds[0])}
+                          onClick={() => {
+                            const pid = s.primaryCandidateId || s.mediaIds[0]
+                            if (!pid) return
+                            applyAssignment("button", pid, "primary", selectedHandle, s.variantKey)
+                          }}
+                        >
+                          Confirm primary
+                        </button>
+                        <button
+                          type="button"
+                          style={miniBtn}
+                          onClick={() => {
+                            setVariantsByHandle((prev) => {
+                              const variants = prev[h] ?? {}
+                              const base = variants[s.variantKey] ?? emptyVariant(s.label)
+                              return { ...prev, [h]: { ...variants, [s.variantKey]: { ...base, gallery: [...s.galleryCandidateIds] } } }
+                            })
+                            setBoard((prev) => ({
+                              ...prev,
+                              zones: {
+                                ...prev.zones,
+                                [h]: { ...(prev.zones[h] ?? emptyZones()), gallery: [...s.galleryCandidateIds] },
+                              },
+                            }))
+                            setActiveVariantByHandle((prev) => ({ ...prev, [h]: s.variantKey }))
+                          }}
+                        >
+                          Confirm gallery
+                        </button>
+                        <button
+                          type="button"
+                          style={miniBtn}
+                          onClick={() => {
+                            setVariantsByHandle((prev) => {
+                              const variants = prev[h] ?? {}
+                              return {
+                                ...prev,
+                                [h]: {
+                                  ...variants,
+                                  [s.variantKey]: {
+                                    label: s.label,
+                                    primary: s.primaryCandidateId || null,
+                                    gallery: [...s.galleryCandidateIds],
+                                    reference: [],
+                                    rejected: [],
+                                  },
+                                },
+                              }
+                            })
+                            setBoard((prev) => ({
+                              ...prev,
+                              zones: {
+                                ...prev.zones,
+                                [h]: {
+                                  ...(prev.zones[h] ?? emptyZones()),
+                                  primary: s.primaryCandidateId || null,
+                                  gallery: [...s.galleryCandidateIds],
+                                  reference_only: [],
+                                  lane_rejected: [],
+                                },
+                              },
+                            }))
+                            setVariantMetaByHandle((prev) => ({
+                              ...prev,
+                              [h]: {
+                                ...(prev[h] ?? {}),
+                                [s.variantKey]: {
+                                  colorSkuOrArticle: s.colorSkuOrArticle,
+                                  sourceUrl: s.sourceUrl,
+                                  sourcePathHints: s.sourcePathHints,
+                                  reasons: s.reasons,
+                                  confidence: s.confidence,
+                                  status: "confirmed",
+                                  fetchedAt: new Date().toISOString(),
+                                },
+                              },
+                            }))
+                            setActiveVariantByHandle((prev) => ({ ...prev, [h]: s.variantKey }))
+                            setDiag((d) => ({ ...d, stateUpdateRequested: true, stateActuallyChanged: true, lastAction: "confirm all for variant", lastError: "" }))
+                          }}
+                        >
+                          Confirm all for this variant
+                        </button>
+                        <button
+                          type="button"
+                          style={miniBtn}
+                          onClick={() =>
+                            setRejectedSuggestedVariantsByHandle((prev) => ({
+                              ...prev,
+                              [h]: Array.from(new Set([...(prev[h] ?? []), s.variantKey])),
+                            }))
+                          }
+                        >
+                          Reject suggestion
+                        </button>
+                        <button
+                          type="button"
+                          style={miniBtn}
+                          onClick={() => {
+                            const next = window.prompt("Edit variant label", s.label)
+                            if (!next?.trim()) return
+                            setVariantsByHandle((prev) => ({
+                              ...prev,
+                              [h]: {
+                                ...(prev[h] ?? {}),
+                                [s.variantKey]: { ...(prev[h]?.[s.variantKey] ?? emptyVariant(next.trim())), label: next.trim() },
+                              },
+                            }))
+                          }}
+                        >
+                          Edit label
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <p style={{ margin: "14px 0 0", fontSize: 13, color: "#64748b", maxWidth: fullWidth ? 720 : 560, lineHeight: 1.55 }}>
               Assignment target: <strong>{activeVariant.label}</strong>. Use drag or explicit buttons; drop assigned tiles on the strip under thumbnails to return them to the pool.
@@ -1651,6 +2099,20 @@ export function LegacyMediaAssignmentBoardClient() {
                   {renderZoneThumb(id, selectedHandle, "gallery")}
                 </div>
               ))}
+              <div style={{ display: "flex", gap: 4, flexWrap: "wrap", width: "100%" }}>
+                <button type="button" style={{ ...miniBtn, opacity: 0.8 }} disabled>
+                  Move left
+                </button>
+                <button type="button" style={{ ...miniBtn, opacity: 0.8 }} disabled>
+                  Move right
+                </button>
+                <button type="button" style={{ ...miniBtn, opacity: 0.8 }} disabled>
+                  Set as Primary
+                </button>
+                <button type="button" style={{ ...miniBtn, opacity: 0.8 }} disabled>
+                  Remove
+                </button>
+              </div>
               <span style={muted}>Drop on the zone to append · drop on another tile to insert or swap order</span>
             </>
           )}

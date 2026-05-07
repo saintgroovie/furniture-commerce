@@ -10,6 +10,9 @@ export type InvItem = {
   exists_locally: boolean
   previewable: boolean
   preview_reason: string | null
+  url?: string | null
+  page_url?: string | null
+  legacy_product_url?: string | null
 }
 
 export type CandidateEntry = {
@@ -54,6 +57,20 @@ export type LegacyMediaDragPayload = {
   fromZone?: LegacyMediaDragZone | null
   fromIndex?: number | null
   fromVariantKey?: string | null
+}
+
+export type SuggestedVariant = {
+  variantKey: string
+  label: string
+  colorNameRaw: string
+  colorSkuOrArticle: string
+  sourceUrl: string | null
+  sourcePathHints: string[]
+  mediaIds: string[]
+  primaryCandidateId: string | null
+  galleryCandidateIds: string[]
+  confidence: "high" | "medium" | "low"
+  reasons: string[]
 }
 
 /** Pointer-based drag session (QA board only; not persisted). */

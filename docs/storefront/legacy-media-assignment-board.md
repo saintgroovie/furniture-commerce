@@ -77,6 +77,13 @@ The sticky header includes a **five-step workflow** strip:
 
 The workflow strip also echoes **active collection**, **selected product**, **local decision slot count**, and a short export disclaimer.
 
+## Assisted variants (dev-only)
+
+- Visible delivery sentinel in page chrome: `Legacy Board UI assisted variants visible`.
+- Selected product workspace now includes **Suggested color variants** derived from legacy filename/path tokens (`color_*`) + candidate map handle/SKU hints.
+- Per suggestion actions: `Confirm variant`, `Confirm primary`, `Confirm gallery`, `Confirm all for this variant`, `Reject suggestion`, `Edit label`.
+- Gallery order no longer depends on internal lane drag: assigned gallery cards expose explicit controls (`Move left`, `Move right`, `Set as Primary`, `Remove`).
+
 ---
 
 ## Board mode vs Focus mode
