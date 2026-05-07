@@ -30,6 +30,8 @@ const DEFAULT_VARIANT_KEY = "__default__"
 const API_BASE = "/qa/legacy-media-assignment-board/api"
 const PREVIEW_ROUTE = "/qa/legacy-media-assignment-board/preview"
 const DND_JSON = "application/json"
+const DEV_SENTINEL = "Legacy Board UI v3b30469+ visible"
+const DEV_SENTINEL_BUILD = "2026-05-07T13:15Z"
 
 async function fetchBoardJson(url: string): Promise<{ ok: true; data: Record<string, unknown> } | { ok: false; status: number; body: Record<string, unknown> }> {
   const res = await fetch(url)
@@ -454,6 +456,7 @@ export function LegacyMediaAssignmentBoardClient() {
   const [variantsByHandle, setVariantsByHandle] = useState<VariantsByHandle>({})
   const [activeVariantByHandle, setActiveVariantByHandle] = useState<Record<string, string>>({})
   const [newVariantLabel, setNewVariantLabel] = useState("")
+  const [diagExpanded, setDiagExpanded] = useState(false)
   const [diag, setDiag] = useState<DevDiagnostics>({
     lastPointerDown: null,
     lastClick: null,
@@ -799,6 +802,12 @@ export function LegacyMediaAssignmentBoardClient() {
     }
     return list
   }, [products, sidebarCollection, search, productAdvanced, candDoc, board.zones])
+
+  useEffect(() => {
+    if (selectedHandle) return
+    if (productsFiltered.length === 0) return
+    setSelectedHandle(productsFiltered[0].handle)
+  }, [selectedHandle, productsFiltered])
 
   const entryList = useMemo(() => candDoc?.entries ?? [], [candDoc])
 
@@ -1485,7 +1494,19 @@ export function LegacyMediaAssignmentBoardClient() {
         <div style={{ display: "flex", flexWrap: "wrap", gap: 16, justifyContent: "space-between", alignItems: "flex-start" }}>
           <div style={{ minWidth: 0, flex: 1 }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em" }}>Selected product</div>
-            <h2 style={{ margin: "6px 0 4px", fontSize: 22, fontWeight: 800, letterSpacing: "-0.03em", color: "#0f172a" }}>
+            <h2
+              style={{
+                margin: "6px 0 4px",
+                fontSize: 19,
+                fontWeight: 800,
+                letterSpacing: "-0.02em",
+                color: "#0f172a",
+                display: "-webkit-box",
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+              }}
+            >
               {selectedProduct.title || selectedProduct.handle}
             </h2>
             <div style={{ fontSize: 14, color: "#475569", display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
@@ -1554,10 +1575,10 @@ export function LegacyMediaAssignmentBoardClient() {
               Assignment target: <strong>{activeVariant.label}</strong>. Use drag or explicit buttons; drop assigned tiles on the strip under thumbnails to return them to the pool.
             </p>
           </div>
-          <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 104px)", gap: 8, flexShrink: 0 }}>
             {selectedProduct.image_urls.slice(0, 4).map((u) => (
               // eslint-disable-next-line @next/next/no-img-element
-              <img key={u} src={u} alt="" width={72} height={72} draggable={false} style={{ borderRadius: 10, objectFit: "cover", border: "1px solid #e2e8f0" }} />
+              <img key={u} src={u} alt="" width={104} height={104} draggable={false} style={{ width: 104, height: 104, borderRadius: 10, objectFit: "cover", border: "1px solid #e2e8f0" }} />
             ))}
           </div>
         </div>
@@ -1671,6 +1692,21 @@ export function LegacyMediaAssignmentBoardClient() {
           borderBottom: "1px solid #e2e8f0",
         }}
       >
+        <div
+          style={{
+            margin: "8px 20px 0",
+            padding: "10px 12px",
+            borderRadius: 10,
+            border: "2px solid #7c2d12",
+            background: "#ffedd5",
+            color: "#7c2d12",
+            fontSize: 14,
+            fontWeight: 800,
+            letterSpacing: "0.01em",
+          }}
+        >
+          {DEV_SENTINEL} · {DEV_SENTINEL_BUILD}
+        </div>
         <header style={{ padding: "14px 20px 8px" }}>
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", gap: 16, justifyContent: "space-between" }}>
             <div style={{ minWidth: 0 }}>
@@ -1769,7 +1805,14 @@ export function LegacyMediaAssignmentBoardClient() {
         {workflowSteps}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: focusMode ? "minmax(0,1fr) minmax(360px,420px)" : "minmax(240px,280px) minmax(0,1fr) minmax(360px,440px)", alignItems: "stretch", minHeight: `calc(100vh - ${headerH}px)` }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: focusMode ? "minmax(520px,1fr) minmax(500px,520px)" : "280px minmax(520px,1fr) minmax(500px,520px)",
+          alignItems: "stretch",
+          minHeight: `calc(100vh - ${headerH}px)`,
+        }}
+      >
         <aside
           style={{
             width: "100%",
@@ -2055,14 +2098,14 @@ export function LegacyMediaAssignmentBoardClient() {
             borderLeft: "1px solid #e2e8f0",
             background: "#fff",
             display: "flex",
-            flexDirection: "row",
+            flexDirection: "column",
             maxHeight: `calc(100vh - ${headerH}px)`,
             position: "sticky",
             top: headerH,
             alignSelf: "flex-start",
           }}
         >
-          <div style={{ width: inspectorId ? 250 : "100%", display: "flex", flexDirection: "column", minWidth: 0 }}>
+          <div style={{ width: "100%", display: "flex", flexDirection: "column", minWidth: 0 }}>
             <div style={{ padding: "12px 14px", borderBottom: "1px solid #e2e8f0" }}>
               <div style={{ fontSize: 11, fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", marginBottom: 8 }}>Media pool</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, maxHeight: 120, overflowY: "auto" }}>
@@ -2366,22 +2409,19 @@ export function LegacyMediaAssignmentBoardClient() {
                 </>
               )}
             </div>
-            <div
-              style={{
-                fontSize: 10,
-                padding: "10px 12px",
-                borderTop: "1px solid #e2e8f0",
-                color: "#475569",
-                display: "grid",
-                gap: 4,
-                background: "#fafafa",
-                lineHeight: 1.35,
-              }}
-              aria-live="polite"
-            >
-              <div>
-                <strong style={{ color: "#334155" }}>Diagnostics (dev)</strong>
-              </div>
+            <details open={diagExpanded} onToggle={(e) => setDiagExpanded((e.currentTarget as HTMLDetailsElement).open)} style={{ borderTop: "1px solid #e2e8f0", background: "#fafafa" }}>
+              <summary style={{ cursor: "pointer", padding: "10px 12px", fontSize: 11, fontWeight: 800, color: "#334155" }}>Diagnostics (dev)</summary>
+              <div
+                style={{
+                  fontSize: 10,
+                  padding: "0 12px 10px",
+                  color: "#475569",
+                  display: "grid",
+                  gap: 4,
+                  lineHeight: 1.35,
+                }}
+                aria-live="polite"
+              >
               <div>Last pointerdown: <span style={{ color: "#0f172a" }}>{targetSummary(diag.lastPointerDown)}</span></div>
               <div>Last click: <span style={{ color: "#0f172a" }}>{targetSummary(diag.lastClick)}</span></div>
               <div>Last dragstart: <span style={{ color: "#0f172a" }}>{targetSummary(diag.lastDragStart)}</span></div>
@@ -2397,18 +2437,18 @@ export function LegacyMediaAssignmentBoardClient() {
               <div>Payload written: <strong style={{ color: payloadWritten === "yes" ? "#15803d" : payloadWritten === "no" ? "#b91c1c" : "#64748b" }}>{payloadWritten}</strong></div>
               <div>Last action: <span style={{ color: "#0f172a", fontWeight: 600 }}>{lastDragAction || diag.lastAction}</span></div>
               <div>Last error: <span style={{ color: dragError || diag.lastError ? "#b91c1c" : "#64748b" }}>{dragError || diag.lastError || "—"}</span></div>
-            </div>
+              </div>
+            </details>
           </div>
 
           {inspectorId && inspectorInv ? (
             <div
               style={{
-                width: 320,
-                borderLeft: "1px solid #e2e8f0",
+                borderTop: "1px solid #e2e8f0",
                 background: "#f8fafc",
                 padding: 14,
                 overflowY: "auto",
-                flexShrink: 0,
+                maxHeight: 360,
               }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
