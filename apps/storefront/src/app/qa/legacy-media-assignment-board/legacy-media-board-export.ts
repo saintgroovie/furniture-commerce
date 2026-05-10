@@ -3,6 +3,9 @@
  * No server I/O.
  */
 
+import type { LegacyColorEnrichmentResult } from "@/lib/qa/legacy-color-article-enrichment"
+import type { VariantMetaByHandle, VariantMetaState } from "./legacy-media-board-types"
+
 export type ProductZoneState = {
   primary: string | null
   gallery: string[]
@@ -193,6 +196,121 @@ function flattenToV1Assignments(zonesByHandle: Record<string, ProductZoneState>)
     }
     for (const id of z.lane_rejected) {
       out.push({ inventory_id: id, target_handle: handle, role: "do_not_use", sort_order: order++ })
+    }
+  }
+  return out
+}
+
+export function defaultVariantMeta(productSkuHint: string, overrides?: Partial<VariantMetaState>): VariantMetaState {
+  return {
+    productSkuHint,
+    legacyColorName: null,
+    legacyColorArticle: null,
+    legacyColorArticleStatus: "unavailable",
+    sourceUrl: null,
+    fetchStatus: "idle",
+    confidence: "low",
+    reasons: [],
+    sourcePathHints: [],
+    status: "suggested",
+    fetchedAt: new Date().toISOString(),
+    useLegacyName: false,
+    useLegacyArticle: false,
+    editedLegacyArticle: null,
+    ...overrides,
+  }
+}
+
+export function variantMetaFromEnrichmentAndSuggestion(params: {
+  productSkuHint: string
+  suggestionReasons: string[]
+  suggestionConfidence: "high" | "medium" | "low"
+  suggestionSourcePathHints: string[]
+  suggestionSourceUrl: string | null
+  enrichment: LegacyColorEnrichmentResult | null
+  useLegacyName: boolean
+  useLegacyArticle: boolean
+  editedLegacyArticle: string | null
+  status: VariantMetaState["status"]
+}): VariantMetaState {
+  const enc = params.enrichment
+  return defaultVariantMeta(params.productSkuHint, {
+    legacyColorName: enc?.legacy_color_name ?? null,
+    legacyColorArticle: enc?.legacy_color_article ?? null,
+    legacyColorArticleStatus: (enc?.legacy_color_article_status ?? "unavailable") as VariantMetaState["legacyColorArticleStatus"],
+    sourceUrl: enc?.source_url ?? params.suggestionSourceUrl,
+    fetchStatus: (enc?.fetch_status ?? "no_urls") as VariantMetaState["fetchStatus"],
+    confidence: (enc?.confidence ?? params.suggestionConfidence) as VariantMetaState["confidence"],
+    reasons: [...params.suggestionReasons, ...(enc?.reasons ?? [])],
+    sourcePathHints: [...params.suggestionSourcePathHints],
+    status: params.status,
+    useLegacyName: params.useLegacyName,
+    useLegacyArticle: params.useLegacyArticle,
+    editedLegacyArticle: params.editedLegacyArticle,
+  })
+}
+
+function normSkuHint(s: string): string {
+  return s.replace(/\s+/g, "").replace(/_/g, "-").toLowerCase()
+}
+
+/** Hydrate variant meta from older localStorage that used colorSkuOrArticle / camelCase sourceUrl. */
+export function migrateLegacyVariantMetaRow(raw: unknown, productSkuHint: string): VariantMetaState {
+  if (!raw || typeof raw !== "object") return defaultVariantMeta(productSkuHint)
+  const r = raw as Record<string, unknown>
+  if (typeof r.productSkuHint === "string" && r.productSkuHint.length > 0) {
+    return { ...defaultVariantMeta(productSkuHint), ...(raw as VariantMetaState) }
+  }
+  const base = normSkuHint(productSkuHint)
+  const oldArticle = String(r.colorSkuOrArticle ?? "").trim()
+  const legacyFromOld = oldArticle && normSkuHint(oldArticle) !== base ? oldArticle : null
+  const src = r.sourceUrl != null ? String(r.sourceUrl) : null
+  return defaultVariantMeta(productSkuHint, {
+    legacyColorArticle: legacyFromOld,
+    legacyColorArticleStatus: legacyFromOld ? "found" : "unavailable",
+    sourceUrl: src,
+    sourcePathHints: Array.isArray(r.sourcePathHints) ? r.sourcePathHints.map(String) : [],
+    reasons: Array.isArray(r.reasons) ? r.reasons.map(String) : ["migrated_from_assisted_v1_variant_meta"],
+    confidence: r.confidence === "high" || r.confidence === "medium" || r.confidence === "low" ? r.confidence : "low",
+    status: r.status === "suggested" || r.status === "confirmed" || r.status === "edited" || r.status === "rejected" ? r.status : "edited",
+    fetchedAt: typeof r.fetchedAt === "string" ? r.fetchedAt : new Date().toISOString(),
+    useLegacyName: false,
+    useLegacyArticle: Boolean(legacyFromOld),
+    editedLegacyArticle: null,
+  })
+}
+
+/** Export slice: snake_case fields for handoff JSON (matches QA contract). */
+export function serializeVariantMetaForExport(meta: VariantMetaState): Record<string, unknown> {
+  const resolvedArticle =
+    meta.editedLegacyArticle?.trim() ||
+    (meta.useLegacyArticle ? meta.legacyColorArticle : null) ||
+    null
+  return {
+    product_sku_hint: meta.productSkuHint,
+    legacy_color_name: meta.legacyColorName,
+    legacy_color_article: resolvedArticle,
+    legacy_color_article_parsed: meta.legacyColorArticle,
+    legacy_color_article_status: meta.legacyColorArticleStatus,
+    source_url: meta.sourceUrl,
+    fetch_status: meta.fetchStatus,
+    confidence: meta.confidence,
+    reasons: meta.reasons,
+    use_legacy_name: meta.useLegacyName,
+    use_legacy_article: meta.useLegacyArticle,
+    edited_legacy_article: meta.editedLegacyArticle,
+    source_path_hints: meta.sourcePathHints,
+    variant_decision_status: meta.status,
+    fetched_at: meta.fetchedAt,
+  }
+}
+
+export function serializeAllVariantMetaExport(variantMetaByHandle: VariantMetaByHandle): Record<string, Record<string, Record<string, unknown>>> {
+  const out: Record<string, Record<string, Record<string, unknown>>> = {}
+  for (const [h, row] of Object.entries(variantMetaByHandle)) {
+    out[h] = {}
+    for (const [vk, m] of Object.entries(row)) {
+      out[h][vk] = serializeVariantMetaForExport(m)
     }
   }
   return out

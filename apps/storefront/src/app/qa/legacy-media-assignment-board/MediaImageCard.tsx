@@ -29,6 +29,8 @@ type Props = {
   previewable?: boolean
   /** Max visible filename characters before ellipsis. */
   filenameMaxLen?: number
+  /** QA board: lane id (primary / gallery / …) for diagnostics. */
+  dataZone?: string | null
   onOpenDetail?: () => void
   onCardPointerDownCapture?: (e: React.PointerEvent) => void
   onCardClickCapture?: (e: React.MouseEvent) => void
@@ -62,6 +64,7 @@ export function MediaImageCard({
   confidenceLabel,
   previewable = true,
   filenameMaxLen = 32,
+  dataZone = null,
   onOpenDetail,
   onCardPointerDownCapture,
   onCardClickCapture,
@@ -81,6 +84,7 @@ export function MediaImageCard({
       data-media-card="true"
       data-media-id={inventoryId}
       data-product-handle={productHandle || ""}
+      data-zone={dataZone || ""}
       draggable={canDrag}
       onDragStart={canDrag ? onDragStart : undefined}
       onDragEnd={canDrag ? onDragEnd : undefined}

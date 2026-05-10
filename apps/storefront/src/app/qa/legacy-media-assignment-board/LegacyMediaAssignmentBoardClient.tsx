@@ -4,10 +4,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   buildExportDocument,
   collectAllAssignedIds,
+  defaultVariantMeta,
   emptyZones,
+  migrateLegacyVariantMetaRow,
   migrateV1ToV2,
   parsePersisted,
   removeIdFromAllZones,
+  serializeAllVariantMetaExport,
+  variantMetaFromEnrichmentAndSuggestion,
   type GlobalRejection,
   type PersistedV1,
   type PersistedV2,
@@ -16,11 +20,15 @@ import {
 import type {
   CandidateEntry,
   InvItem,
+  LegacyColorEnrichmentResult,
   LegacyMediaDragPayload,
   LegacyMediaDragZone,
   ProductRow,
   SuggestedVariant,
+  VariantMetaByHandle,
+  VariantMetaState,
 } from "./legacy-media-board-types"
+import { pickHtmlCandidateUrls } from "@/lib/qa/legacy-color-article-enrichment"
 import { MediaImageCard } from "./MediaImageCard"
 
 const LS_KEY = "furniture-legacy-media-assignment-decisions-v1"
@@ -31,8 +39,8 @@ const DEFAULT_VARIANT_KEY = "__default__"
 const API_BASE = "/qa/legacy-media-assignment-board/api"
 const PREVIEW_ROUTE = "/qa/legacy-media-assignment-board/preview"
 const DND_JSON = "application/json"
-const DEV_SENTINEL = "Legacy Board UI assisted variants visible"
-const DEV_SENTINEL_BUILD = "2026-05-07T14:45Z"
+const DEV_SENTINEL = "Legacy Board UI color article enrichment + product SKU hint split"
+const DEV_SENTINEL_BUILD = "2026-05-10T18:00Z"
 
 async function fetchBoardJson(url: string): Promise<{ ok: true; data: Record<string, unknown> } | { ok: false; status: number; body: Record<string, unknown> }> {
   const res = await fetch(url)
@@ -49,7 +57,7 @@ async function fetchBoardJson(url: string): Promise<{ ok: true; data: Record<str
 
 type PoolTab = "suggested" | "unassigned" | "ambiguous" | "confirmed" | "unpreviewable" | "rejected"
 type ZoneDrop = "primary" | "gallery" | "reference" | "lane_reject" | "unassigned"
-type ActionSource = "button" | "manual" | "drag"
+type ActionSource = "button" | "assigned-button" | "manual" | "drag"
 
 type TargetSnapshot = {
   tagName: string
@@ -77,6 +85,8 @@ type DevDiagnostics = {
   source: ActionSource | "none"
   mediaId: string
   productHandle: string
+  /** Zone the media moved from (assigned lane id or pool). */
+  fromZone: string
   targetZone: string
   dragSource: string
   laneId: string
@@ -91,19 +101,7 @@ type VariantDecisionState = {
   reference: string[]
   rejected: string[]
 }
-type VariantStatus = "suggested" | "confirmed" | "edited" | "rejected"
-type VariantMetaState = {
-  colorSkuOrArticle: string
-  sourceUrl: string | null
-  sourcePathHints: string[]
-  reasons: string[]
-  confidence: "high" | "medium" | "low"
-  status: VariantStatus
-  fetchedAt: string
-}
-
 type VariantsByHandle = Record<string, Record<string, VariantDecisionState>>
-type VariantMetaByHandle = Record<string, Record<string, VariantMetaState>>
 
 type ProductUiKind =
   | "no_candidates"
@@ -173,6 +171,36 @@ function toZoneState(v: VariantDecisionState): ProductZoneState {
 
 function fromZoneState(z: ProductZoneState, label = "Default"): VariantDecisionState {
   return { label, primary: z.primary, gallery: [...z.gallery], reference: [...z.reference_only], rejected: [...z.lane_rejected] }
+}
+
+function stripMediaIdFromVariantSlots(vv: VariantDecisionState, inventoryId: string): VariantDecisionState {
+  return {
+    ...vv,
+    primary: vv.primary === inventoryId ? null : vv.primary,
+    gallery: vv.gallery.filter((x) => x !== inventoryId),
+    reference: vv.reference.filter((x) => x !== inventoryId),
+    rejected: vv.rejected.filter((x) => x !== inventoryId),
+  }
+}
+
+function findVariantKeyOwningMedia(variants: Record<string, VariantDecisionState>, mediaId: string): string | null {
+  for (const [vk, vv] of Object.entries(variants)) {
+    if (vv.primary === mediaId || vv.gallery.includes(mediaId) || vv.reference.includes(mediaId) || vv.rejected.includes(mediaId)) return vk
+  }
+  return null
+}
+
+function mergeVariantMeta(
+  prev: VariantMetaState | undefined,
+  productSkuHint: string,
+  patch: Partial<VariantMetaState>
+): VariantMetaState {
+  const base = prev ?? defaultVariantMeta(productSkuHint)
+  return { ...base, ...patch, fetchedAt: patch.fetchedAt ?? new Date().toISOString() }
+}
+
+function suggestionEnrichmentKey(handle: string, variantKey: string): string {
+  return `${handle.toLowerCase()}::${variantKey}`
 }
 
 function titleFromToken(token: string): string {
@@ -484,6 +512,12 @@ export function LegacyMediaAssignmentBoardClient() {
   const [variantMetaByHandle, setVariantMetaByHandle] = useState<VariantMetaByHandle>({})
   const [activeVariantByHandle, setActiveVariantByHandle] = useState<Record<string, string>>({})
   const [rejectedSuggestedVariantsByHandle, setRejectedSuggestedVariantsByHandle] = useState<Record<string, string[]>>({})
+  type EnrichmentCacheEntry = { loading: boolean; data: LegacyColorEnrichmentResult | null; error: string | null }
+  const [enrichmentByKey, setEnrichmentByKey] = useState<Record<string, EnrichmentCacheEntry>>({})
+  type SuggestionPref = { useLegacyName: boolean; useLegacyArticle: boolean; editedLegacyArticle: string | null }
+  const [suggestionRowPrefs, setSuggestionRowPrefs] = useState<Record<string, SuggestionPref>>({})
+  const enrichInflight = useRef(new Set<string>())
+  const enrichLoadedRef = useRef(new Set<string>())
   const [newVariantLabel, setNewVariantLabel] = useState("")
   const [diagExpanded, setDiagExpanded] = useState(false)
   const [diag, setDiag] = useState<DevDiagnostics>({
@@ -505,6 +539,7 @@ export function LegacyMediaAssignmentBoardClient() {
     dragSource: "—",
     laneId: "—",
     variantKey: "—",
+    fromZone: "—",
     reorderFrom: "—",
     reorderTo: "—",
   })
@@ -618,30 +653,51 @@ export function LegacyMediaAssignmentBoardClient() {
           rejectedSuggestedVariantsByHandle?: Record<string, string[]>
         }
         if (parsed.variantsByHandle && typeof parsed.variantsByHandle === "object") setVariantsByHandle(parsed.variantsByHandle)
-        if (parsed.variantMetaByHandle && typeof parsed.variantMetaByHandle === "object") setVariantMetaByHandle(parsed.variantMetaByHandle)
+        if (parsed.variantMetaByHandle && typeof parsed.variantMetaByHandle === "object") {
+          const raw = parsed.variantMetaByHandle as Record<string, Record<string, unknown>>
+          const skuFor = (handle: string) =>
+            products.find((p) => p.handle.toLowerCase() === handle.toLowerCase())?.sku?.trim() || ""
+          const migrated: VariantMetaByHandle = {}
+          for (const [ph, row] of Object.entries(raw)) {
+            migrated[ph] = {}
+            const sku = skuFor(ph)
+            for (const [vk, cell] of Object.entries(row)) {
+              migrated[ph][vk] = migrateLegacyVariantMetaRow(cell, sku)
+            }
+          }
+          setVariantMetaByHandle(migrated)
+        }
         if (parsed.activeVariantByHandle && typeof parsed.activeVariantByHandle === "object") setActiveVariantByHandle(parsed.activeVariantByHandle)
         if (parsed.rejectedSuggestedVariantsByHandle && typeof parsed.rejectedSuggestedVariantsByHandle === "object") {
           setRejectedSuggestedVariantsByHandle(parsed.rejectedSuggestedVariantsByHandle)
         }
+        const spr = (parsed as { suggestionRowPrefs?: Record<string, SuggestionPref> }).suggestionRowPrefs
+        if (spr && typeof spr === "object") setSuggestionRowPrefs(spr)
       }
     } catch {
       /* ignore */
     } finally {
       setHydrated(true)
     }
-  }, [invDoc])
+  }, [invDoc, products])
 
   useEffect(() => {
     if (!hydrated || typeof window === "undefined") return
     try {
       localStorage.setItem(
         LS_VARIANTS_KEY,
-        JSON.stringify({ variantsByHandle, variantMetaByHandle, activeVariantByHandle, rejectedSuggestedVariantsByHandle })
+        JSON.stringify({
+          variantsByHandle,
+          variantMetaByHandle,
+          activeVariantByHandle,
+          rejectedSuggestedVariantsByHandle,
+          suggestionRowPrefs,
+        })
       )
     } catch {
       /* ignore */
     }
-  }, [hydrated, variantsByHandle, variantMetaByHandle, activeVariantByHandle, rejectedSuggestedVariantsByHandle])
+  }, [hydrated, variantsByHandle, variantMetaByHandle, activeVariantByHandle, rejectedSuggestedVariantsByHandle, suggestionRowPrefs])
 
   const persist = useCallback((zones: Record<string, ProductZoneState>, grej: GlobalRejection[]) => {
     const payload: PersistedV2 = { version: 2, zonesByHandle: zones, globalRejections: grej }
@@ -885,6 +941,10 @@ export function LegacyMediaAssignmentBoardClient() {
     setVariantMetaByHandle({})
     setActiveVariantByHandle({})
     setRejectedSuggestedVariantsByHandle({})
+    setEnrichmentByKey({})
+    setSuggestionRowPrefs({})
+    enrichLoadedRef.current.clear()
+    enrichInflight.current.clear()
     setSelectedHandle(null)
     setInspectorId(null)
     try {
@@ -926,12 +986,20 @@ export function LegacyMediaAssignmentBoardClient() {
       source: "button",
       mediaId: inventoryId,
       productHandle: selectedHandle || "",
+      fromZone: "pool",
       targetZone: "global_reject",
     }))
   }
 
   const applyAssignment = useCallback(
-    (source: ActionSource, inventoryId: string, zone: ZoneDrop, explicitHandle?: string | null, explicitVariantKey?: string | null) => {
+    (
+      source: ActionSource,
+      inventoryId: string,
+      zone: ZoneDrop,
+      explicitHandle?: string | null,
+      explicitVariantKey?: string | null,
+      diagFromZone?: string | null
+    ) => {
       const activeHandle = (explicitHandle || selectedHandle || "").trim()
       const hh = activeHandle.toLowerCase()
       const chosenVariantKey = (explicitVariantKey || activeVariantByHandle[hh] || DEFAULT_VARIANT_KEY).trim() || DEFAULT_VARIANT_KEY
@@ -941,7 +1009,7 @@ export function LegacyMediaAssignmentBoardClient() {
         setLastDragAction("blocked")
         setDiag((d) => ({
           ...d,
-          buttonHandlerFired: source === "button" ? true : d.buttonHandlerFired,
+          buttonHandlerFired: source === "button" || source === "assigned-button" ? true : d.buttonHandlerFired,
           stateUpdateRequested: true,
           stateActuallyChanged: false,
           lastAction: "blocked",
@@ -949,6 +1017,7 @@ export function LegacyMediaAssignmentBoardClient() {
           source,
           mediaId: inventoryId,
           productHandle: "",
+          fromZone: diagFromZone ?? "pool",
           targetZone: zone,
         }))
         return false
@@ -971,52 +1040,39 @@ export function LegacyMediaAssignmentBoardClient() {
           for (const [ph, variants] of Object.entries(prevV)) {
             out[ph] = {}
             for (const [vk, vv] of Object.entries(variants)) {
-              out[ph][vk] = {
-                ...vv,
-                primary: vv.primary === inventoryId ? null : vv.primary,
-                gallery: vv.gallery.filter((x) => x !== inventoryId),
-                reference: vv.reference.filter((x) => x !== inventoryId),
-                rejected: vv.rejected.filter((x) => x !== inventoryId),
-              }
+              out[ph][vk] = stripMediaIdFromVariantSlots(vv, inventoryId)
             }
           }
           return out
         }
-        const hVariants = prevV[hh] ?? { [DEFAULT_VARIANT_KEY]: fromZoneState(board.zones[hh] ?? emptyZones(), "Default") }
-        const active = hVariants[chosenVariantKey] ?? emptyVariant(chosenVariantKey === DEFAULT_VARIANT_KEY ? "Default" : chosenVariantKey)
-        const cleaned = {
-          ...active,
-          primary: active.primary === inventoryId ? null : active.primary,
-          gallery: active.gallery.filter((x) => x !== inventoryId),
-          reference: active.reference.filter((x) => x !== inventoryId),
-          rejected: active.rejected.filter((x) => x !== inventoryId),
+        const prevH = prevV[hh] ?? {}
+        const hVariants: Record<string, VariantDecisionState> = {}
+        for (const [vk, vv] of Object.entries(prevH)) {
+          hVariants[vk] = stripMediaIdFromVariantSlots(vv, inventoryId)
         }
-        if (zone === "primary") cleaned.primary = inventoryId
-        if (zone === "gallery") cleaned.gallery = [...cleaned.gallery, inventoryId]
-        if (zone === "reference") cleaned.reference = [...cleaned.reference, inventoryId]
-        if (zone === "lane_reject") cleaned.rejected = [...cleaned.rejected, inventoryId]
+        const labelForChosen =
+          prevH[chosenVariantKey]?.label ?? (chosenVariantKey === DEFAULT_VARIANT_KEY ? "Default" : titleFromToken(chosenVariantKey.replace(/^color_/, "")))
+        hVariants[chosenVariantKey] = fromZoneState(next.zones[hh] ?? emptyZones(), labelForChosen)
+        return { ...prevV, [hh]: hVariants }
+      })
+      if (zone !== "unassigned") {
+        const phSku = productByHandle.get(hh)?.sku?.trim() || ""
         setVariantMetaByHandle((prevMeta) => ({
           ...prevMeta,
           [hh]: {
             ...(prevMeta[hh] ?? {}),
-            [chosenVariantKey]: {
-              colorSkuOrArticle: prevMeta[hh]?.[chosenVariantKey]?.colorSkuOrArticle || "",
-              sourceUrl: prevMeta[hh]?.[chosenVariantKey]?.sourceUrl || null,
-              sourcePathHints: prevMeta[hh]?.[chosenVariantKey]?.sourcePathHints || [],
-              reasons: prevMeta[hh]?.[chosenVariantKey]?.reasons || ["manual assignment"],
-              confidence: prevMeta[hh]?.[chosenVariantKey]?.confidence || "low",
+            [chosenVariantKey]: mergeVariantMeta(prevMeta[hh]?.[chosenVariantKey], phSku, {
+              reasons: prevMeta[hh]?.[chosenVariantKey]?.reasons?.length ? prevMeta[hh]![chosenVariantKey]!.reasons : ["manual assignment"],
               status: "edited",
-              fetchedAt: prevMeta[hh]?.[chosenVariantKey]?.fetchedAt || new Date().toISOString(),
-            },
+            }),
           },
         }))
-        return { ...prevV, [hh]: { ...hVariants, [chosenVariantKey]: cleaned } }
-      })
+      }
       setLastDragAction(`${source} → ${zone}`)
       setDragError(changed ? "" : "state unchanged")
       setDiag((d) => ({
         ...d,
-        buttonHandlerFired: source === "button" ? true : d.buttonHandlerFired,
+        buttonHandlerFired: source === "button" || source === "assigned-button" ? true : d.buttonHandlerFired,
         stateUpdateRequested: true,
         stateActuallyChanged: changed,
         lastAction: `${source} -> ${zone}`,
@@ -1024,17 +1080,25 @@ export function LegacyMediaAssignmentBoardClient() {
         source,
         mediaId: inventoryId,
         productHandle: activeHandle,
+        fromZone: diagFromZone ?? (source === "button" ? "pool" : source === "assigned-button" ? "assigned_lane" : d.fromZone),
         targetZone: zone,
         dragSource: source,
         variantKey: chosenVariantKey,
       }))
       return changed
     },
-    [board, selectedHandle, activeVariantByHandle]
+    [board, selectedHandle, activeVariantByHandle, productByHandle]
   )
 
   const updateVariantDecision = useCallback(
-    (handle: string, variantKey: string, updater: (prev: VariantDecisionState) => VariantDecisionState, action: string, mediaId: string) => {
+    (
+      handle: string,
+      variantKey: string,
+      updater: (prev: VariantDecisionState) => VariantDecisionState,
+      action: string,
+      mediaId: string,
+      diagCtx?: { fromZone?: string; targetZone?: string }
+    ) => {
       const hh = handle.toLowerCase()
       setVariantsByHandle((prev) => {
         const variants = prev[hh] ?? { [DEFAULT_VARIANT_KEY]: fromZoneState(board.zones[hh] ?? emptyZones(), "Default") }
@@ -1047,19 +1111,15 @@ export function LegacyMediaAssignmentBoardClient() {
             [hh]: toZoneState(nextVariant),
           },
         }))
+        const phSku = productByHandle.get(hh)?.sku?.trim() || ""
         setVariantMetaByHandle((prevMeta) => ({
           ...prevMeta,
           [hh]: {
             ...(prevMeta[hh] ?? {}),
-            [variantKey]: {
-              colorSkuOrArticle: prevMeta[hh]?.[variantKey]?.colorSkuOrArticle || "",
-              sourceUrl: prevMeta[hh]?.[variantKey]?.sourceUrl || null,
-              sourcePathHints: prevMeta[hh]?.[variantKey]?.sourcePathHints || [],
-              reasons: prevMeta[hh]?.[variantKey]?.reasons || ["manual order control"],
-              confidence: prevMeta[hh]?.[variantKey]?.confidence || "low",
+            [variantKey]: mergeVariantMeta(prevMeta[hh]?.[variantKey], phSku, {
+              reasons: prevMeta[hh]?.[variantKey]?.reasons?.length ? prevMeta[hh]![variantKey]!.reasons : ["manual order control"],
               status: "edited",
-              fetchedAt: prevMeta[hh]?.[variantKey]?.fetchedAt || new Date().toISOString(),
-            },
+            }),
           },
         }))
         return { ...prev, [hh]: { ...variants, [variantKey]: nextVariant } }
@@ -1070,15 +1130,16 @@ export function LegacyMediaAssignmentBoardClient() {
         stateActuallyChanged: true,
         lastAction: action,
         lastError: "",
-        source: "button",
+        source: "assigned-button",
         mediaId,
         productHandle: handle,
-        targetZone: "variant_gallery",
+        fromZone: diagCtx?.fromZone ?? "variant_lane",
+        targetZone: diagCtx?.targetZone ?? "variant_workspace",
         dragSource: "variant",
         variantKey,
       }))
     },
-    [board.zones]
+    [board.zones, productByHandle]
   )
 
   const dropZoneStable = (e: React.DragEvent, handle: string, zone: ZoneDrop) => {
@@ -1102,6 +1163,7 @@ export function LegacyMediaAssignmentBoardClient() {
         lastError: "empty payload",
         source: "drag",
         mediaId: "",
+        fromZone: "—",
         targetZone: zone,
         productHandle: handle,
         dragSource: "unknown",
@@ -1138,6 +1200,7 @@ export function LegacyMediaAssignmentBoardClient() {
       source: "drag",
       mediaId: payload.mediaId,
       productHandle: handle,
+      fromZone: payload.fromZone != null ? String(payload.fromZone) : "—",
       targetZone: zone,
       dragSource: payload.source || payload.fromZone || "unknown",
       laneId: payload.fromZone || "—",
@@ -1160,7 +1223,7 @@ export function LegacyMediaAssignmentBoardClient() {
       ...base,
       variant_decisions: variantsByHandle,
       active_variant_by_handle: activeVariantByHandle,
-      confirmed_variant_sources: variantMetaByHandle,
+      confirmed_variant_sources: serializeAllVariantMetaExport(variantMetaByHandle),
     }
   }, [products, board.zones, board.grej, variantsByHandle, activeVariantByHandle, variantMetaByHandle])
 
@@ -1217,15 +1280,17 @@ export function LegacyMediaAssignmentBoardClient() {
   const suggestedVariantsForSelected = useMemo<SuggestedVariant[]>(() => {
     if (!selectedHandle) return []
     const h = selectedHandle.toLowerCase()
+    const productSkuHint = (productByHandle.get(h)?.sku || "").trim()
+    const seedImageUrls = [...(productByHandle.get(h)?.image_urls ?? [])]
     const rejected = new Set(rejectedSuggestedVariantsByHandle[h] ?? [])
     const groups = new Map<
       string,
       {
         label: string
-        colorSkuOrArticle: string
         sourceUrl: string | null
         sourcePathHints: Set<string>
         mediaIds: string[]
+        pageUrlCandidates: Set<string>
         confidence: "high" | "medium" | "low"
         reasons: Set<string>
       }
@@ -1244,19 +1309,22 @@ export function LegacyMediaAssignmentBoardClient() {
       if (rejected.has(key)) continue
       const current = groups.get(key) ?? {
         label: titleFromToken(token),
-        colorSkuOrArticle: it.sku_hint || ce?.top_candidate?.medusa_variant_sku || "",
         sourceUrl: it.legacy_product_url || it.page_url || it.url || null,
         sourcePathHints: new Set<string>(),
         mediaIds: [],
+        pageUrlCandidates: new Set<string>(),
         confidence: ce?.confidence === "confirmed" ? "high" : ce?.confidence === "probable" ? "medium" : "low",
         reasons: new Set<string>(),
       }
       current.mediaIds.push(it.id)
       if (it.source_path) current.sourcePathHints.add(it.source_path)
       if (it.repo_relative_path) current.sourcePathHints.add(it.repo_relative_path)
+      for (const u of [it.legacy_product_url, it.page_url, it.url]) {
+        if (u && String(u).trim()) current.pageUrlCandidates.add(String(u).trim())
+      }
       current.reasons.add(`filename token color_${token}`)
       if (it.source_path?.toLowerCase().includes(`color_${token}`)) current.reasons.add(`source path token color_${token}`)
-      if (it.sku_hint) current.reasons.add("sku hint match")
+      if (it.sku_hint) current.reasons.add("sku hint match (inventory row)")
       if (ce?.top_candidate?.medusa_product_handle.toLowerCase() === h) current.reasons.add("candidate map top handle match")
       if (it.legacy_product_url || it.page_url || it.url) current.reasons.add("legacy source url/hint present")
       groups.set(key, current)
@@ -1266,7 +1334,9 @@ export function LegacyMediaAssignmentBoardClient() {
         variantKey,
         label: v.label,
         colorNameRaw: variantKey.replace(/^color_/, ""),
-        colorSkuOrArticle: v.colorSkuOrArticle,
+        productSkuHint,
+        candidatePageUrls: pickHtmlCandidateUrls(Array.from(v.pageUrlCandidates)),
+        seedImageUrls,
         sourceUrl: v.sourceUrl,
         sourcePathHints: Array.from(v.sourcePathHints).slice(0, 3),
         mediaIds: v.mediaIds,
@@ -1276,7 +1346,54 @@ export function LegacyMediaAssignmentBoardClient() {
         reasons: Array.from(v.reasons),
       }))
       .sort((a, b) => b.mediaIds.length - a.mediaIds.length)
-  }, [selectedHandle, rejectedSuggestedVariantsByHandle, invDoc, candById])
+  }, [selectedHandle, rejectedSuggestedVariantsByHandle, invDoc, candById, productByHandle])
+
+  useEffect(() => {
+    enrichLoadedRef.current.clear()
+    enrichInflight.current.clear()
+  }, [selectedHandle])
+
+  useEffect(() => {
+    if (!selectedHandle || !selectedProduct?.sku) return
+    let cancelled = false
+    const h = selectedHandle.toLowerCase()
+    const sku = selectedProduct.sku.trim()
+    for (const s of suggestedVariantsForSelected) {
+      const sk = suggestionEnrichmentKey(h, s.variantKey)
+      if (enrichInflight.current.has(sk) || enrichLoadedRef.current.has(sk)) continue
+      enrichInflight.current.add(sk)
+      setEnrichmentByKey((prev) => ({ ...prev, [sk]: { loading: true, data: prev[sk]?.data ?? null, error: null } }))
+      void fetch(`${API_BASE}/enrich-color-article`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          product_sku_hint: sku,
+          color_token: s.colorNameRaw,
+          candidate_urls: Array.from(new Set([...s.candidatePageUrls, ...s.seedImageUrls])),
+        }),
+      })
+        .then(async (res) => {
+          const j = (await res.json()) as LegacyColorEnrichmentResult
+          if (cancelled) return
+          enrichLoadedRef.current.add(sk)
+          setEnrichmentByKey((prev) => ({ ...prev, [sk]: { loading: false, data: j, error: null } }))
+        })
+        .catch((e) => {
+          enrichInflight.current.delete(sk)
+          if (cancelled) return
+          setEnrichmentByKey((prev) => ({
+            ...prev,
+            [sk]: { loading: false, data: null, error: e instanceof Error ? e.message : String(e) },
+          }))
+        })
+        .finally(() => {
+          enrichInflight.current.delete(sk)
+        })
+    }
+    return () => {
+      cancelled = true
+    }
+  }, [selectedHandle, selectedProduct?.sku, suggestedVariantsForSelected])
 
   const poolEmptyMessage = useMemo(() => {
     if (poolTab === "suggested") {
@@ -1437,17 +1554,305 @@ export function LegacyMediaAssignmentBoardClient() {
     )
   }
 
-  const renderZoneThumb = (id: string, handle: string, zone: LegacyMediaDragZone) => {
+  const renderZoneThumb = (
+    id: string,
+    handle: string,
+    zone: LegacyMediaDragZone,
+    variantKeyForActions: string,
+    variantsForHandle: Record<string, VariantDecisionState>
+  ) => {
     const inv = invById.get(id)
     if (!inv) return null
     const pv = clientPreviewUrl(inv)
-    const vk = activeVariantByHandle[handle.toLowerCase()] || DEFAULT_VARIANT_KEY
-    const gi = zone === "gallery" ? (board.zones[handle.toLowerCase()]?.gallery.indexOf(id) ?? -1) : -1
+    const vk = variantKeyForActions
+    const vv = variantsForHandle[vk]
+    const gi = zone === "gallery" ? (vv?.gallery.indexOf(id) ?? -1) : -1
+    const ownerVk = findVariantKeyOwningMedia(variantsForHandle, id)
+    const crossVariant = ownerVk !== null && ownerVk !== vk
+    const shieldBtn = {
+      draggable: false as const,
+      onMouseDown: (e: React.MouseEvent) => {
+        e.stopPropagation()
+      },
+      onDragStart: (e: React.DragEvent) => {
+        e.preventDefault()
+        e.stopPropagation()
+      },
+    }
+    const zoneActions = (
+      <>
+        {zone === "primary" ? (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, marginTop: 4 }}>
+            <button
+              type="button"
+              data-action-button="primary-to-gallery"
+              style={miniBtn}
+              {...shieldBtn}
+              onClick={() => applyAssignment("assigned-button", id, "gallery", handle, vk, "primary")}
+            >
+              Move to Gallery
+            </button>
+            <button
+              type="button"
+              data-action-button="primary-to-reference"
+              style={miniBtn}
+              {...shieldBtn}
+              onClick={() => applyAssignment("assigned-button", id, "reference", handle, vk, "primary")}
+            >
+              Move to Reference
+            </button>
+            <button
+              type="button"
+              data-action-button="primary-reject"
+              style={miniBtn}
+              {...shieldBtn}
+              onClick={() => applyAssignment("assigned-button", id, "lane_reject", handle, vk, "primary")}
+            >
+              Reject for product
+            </button>
+            <button
+              type="button"
+              data-action-button="primary-return"
+              style={miniBtn}
+              {...shieldBtn}
+              onClick={() => applyAssignment("assigned-button", id, "unassigned", handle, vk, "primary")}
+            >
+              Return to Unassigned
+            </button>
+          </div>
+        ) : null}
+        {zone === "gallery" ? (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, marginTop: 4 }}>
+            <button
+              type="button"
+              data-action-button="gallery-move-first"
+              style={miniBtn}
+              {...shieldBtn}
+              onClick={() =>
+                updateVariantDecision(
+                  handle,
+                  vk,
+                  (prev) => {
+                    const g = prev.gallery.filter((x) => x !== id)
+                    return { ...prev, gallery: [id, ...g] }
+                  },
+                  "gallery move first",
+                  id,
+                  { fromZone: "gallery", targetZone: "gallery_reorder" }
+                )
+              }
+            >
+              Move first
+            </button>
+            <button
+              type="button"
+              data-action-button="gallery-move-last"
+              style={miniBtn}
+              {...shieldBtn}
+              onClick={() =>
+                updateVariantDecision(
+                  handle,
+                  vk,
+                  (prev) => {
+                    const g = prev.gallery.filter((x) => x !== id)
+                    return { ...prev, gallery: [...g, id] }
+                  },
+                  "gallery move last",
+                  id,
+                  { fromZone: "gallery", targetZone: "gallery_reorder" }
+                )
+              }
+            >
+              Move last
+            </button>
+            <button
+              type="button"
+              data-action-button="gallery-move-left"
+              style={miniBtn}
+              {...shieldBtn}
+              onClick={() =>
+                updateVariantDecision(
+                  handle,
+                  vk,
+                  (prev) => {
+                    const idx = prev.gallery.indexOf(id)
+                    if (idx <= 0) return prev
+                    const next = [...prev.gallery]
+                    ;[next[idx - 1], next[idx]] = [next[idx], next[idx - 1]]
+                    return { ...prev, gallery: next }
+                  },
+                  "gallery move left",
+                  id,
+                  { fromZone: "gallery", targetZone: "gallery_reorder" }
+                )
+              }
+            >
+              Move left
+            </button>
+            <button
+              type="button"
+              data-action-button="gallery-move-right"
+              style={miniBtn}
+              {...shieldBtn}
+              onClick={() =>
+                updateVariantDecision(
+                  handle,
+                  vk,
+                  (prev) => {
+                    const idx = prev.gallery.indexOf(id)
+                    if (idx < 0 || idx >= prev.gallery.length - 1) return prev
+                    const next = [...prev.gallery]
+                    ;[next[idx + 1], next[idx]] = [next[idx], next[idx + 1]]
+                    return { ...prev, gallery: next }
+                  },
+                  "gallery move right",
+                  id,
+                  { fromZone: "gallery", targetZone: "gallery_reorder" }
+                )
+              }
+            >
+              Move right
+            </button>
+            <button
+              type="button"
+              data-action-button="gallery-set-primary"
+              style={miniBtn}
+              {...shieldBtn}
+              onClick={() =>
+                updateVariantDecision(
+                  handle,
+                  vk,
+                  (prev) => ({ ...prev, primary: id, gallery: prev.gallery.filter((x) => x !== id) }),
+                  "set primary from gallery",
+                  id,
+                  { fromZone: "gallery", targetZone: "primary" }
+                )
+              }
+            >
+              Set as Primary
+            </button>
+            <button
+              type="button"
+              data-action-button="gallery-remove"
+              style={miniBtn}
+              {...shieldBtn}
+              onClick={() =>
+                updateVariantDecision(
+                  handle,
+                  vk,
+                  (prev) => ({ ...prev, gallery: prev.gallery.filter((x) => x !== id) }),
+                  "remove from gallery",
+                  id,
+                  { fromZone: "gallery", targetZone: "unassigned_pool" }
+                )
+              }
+            >
+              Remove from Gallery
+            </button>
+            <button
+              type="button"
+              data-action-button="gallery-return"
+              style={miniBtn}
+              {...shieldBtn}
+              onClick={() => applyAssignment("assigned-button", id, "unassigned", handle, vk, "gallery")}
+            >
+              Return to Unassigned
+            </button>
+          </div>
+        ) : null}
+        {zone === "reference" ? (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, marginTop: 4 }}>
+            <button
+              type="button"
+              data-action-button="ref-to-primary"
+              style={miniBtn}
+              {...shieldBtn}
+              onClick={() => applyAssignment("assigned-button", id, "primary", handle, vk, "reference")}
+            >
+              Move to Primary
+            </button>
+            <button
+              type="button"
+              data-action-button="ref-to-gallery"
+              style={miniBtn}
+              {...shieldBtn}
+              onClick={() => applyAssignment("assigned-button", id, "gallery", handle, vk, "reference")}
+            >
+              Move to Gallery
+            </button>
+            <button
+              type="button"
+              data-action-button="ref-return"
+              style={miniBtn}
+              {...shieldBtn}
+              onClick={() => applyAssignment("assigned-button", id, "unassigned", handle, vk, "reference")}
+            >
+              Return to Unassigned
+            </button>
+          </div>
+        ) : null}
+        {zone === "lane_reject" ? (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, marginTop: 4 }}>
+            <button
+              type="button"
+              data-action-button="rej-to-primary"
+              style={miniBtn}
+              {...shieldBtn}
+              onClick={() => applyAssignment("assigned-button", id, "primary", handle, vk, "lane_reject")}
+            >
+              Move to Primary
+            </button>
+            <button
+              type="button"
+              data-action-button="rej-to-gallery"
+              style={miniBtn}
+              {...shieldBtn}
+              onClick={() => applyAssignment("assigned-button", id, "gallery", handle, vk, "lane_reject")}
+            >
+              Move to Gallery
+            </button>
+            <button
+              type="button"
+              data-action-button="rej-return"
+              style={miniBtn}
+              {...shieldBtn}
+              onClick={() => applyAssignment("assigned-button", id, "unassigned", handle, vk, "lane_reject")}
+            >
+              Return to Unassigned
+            </button>
+          </div>
+        ) : null}
+        <button
+          type="button"
+          data-action-button="assigned-details"
+          style={{ ...miniBtn, marginTop: 6, width: "100%" }}
+          {...shieldBtn}
+          onClick={() => setInspectorId(id)}
+        >
+          Details / Inspect
+        </button>
+        {crossVariant ? (
+          <div style={{ marginTop: 6, fontSize: 10, color: "#b45309", lineHeight: 1.35 }}>
+            Variant source: <strong>{ownerVk ? variantsForHandle[ownerVk]?.label || ownerVk : "—"}</strong>
+            <button
+              type="button"
+              data-action-button="move-to-active-variant"
+              style={{ ...miniBtn, marginTop: 4, width: "100%" }}
+              {...shieldBtn}
+              onClick={() => applyAssignment("assigned-button", id, "gallery", handle, vk, `other_variant:${ownerVk}`)}
+            >
+              Move to active variant (gallery)
+            </button>
+          </div>
+        ) : null}
+      </>
+    )
     return (
       <MediaImageCard
         inventoryId={id}
         inv={inv}
         productHandle={handle}
+        dataZone={zone}
         previewUrl={pv.url}
         useImg={pv.useImg}
         caption={pv.caption}
@@ -1455,7 +1860,7 @@ export function LegacyMediaAssignmentBoardClient() {
         sourceType={inv.source_type}
         confidenceLabel={candById.get(id)?.confidence || null}
         previewable={inv.previewable}
-        badges={["Assigned"]}
+        badges={["Assigned", zone]}
         size="compact"
         draggable={inv.previewable}
         isDragging={draggingMediaId === id}
@@ -1473,7 +1878,7 @@ export function LegacyMediaAssignmentBoardClient() {
                   fromProductHandle: handle,
                   fromZone: zone,
                   fromIndex: gi >= 0 ? gi : null,
-                  fromVariantKey: activeVariantByHandle[handle.toLowerCase()] || DEFAULT_VARIANT_KEY,
+                  fromVariantKey: vk,
                 })
                 setPayloadWritten(ok ? "yes" : "no")
                 setDraggingMediaId(id)
@@ -1493,94 +1898,7 @@ export function LegacyMediaAssignmentBoardClient() {
         onCardClickCapture={(e) => setDiag((d) => ({ ...d, lastClick: describeTargetFromElement(e.target) }))}
         filenameMaxLen={22}
       >
-        <button
-          type="button"
-          data-action-button="return-unassigned"
-          style={{ ...miniBtn, marginTop: 6, width: "100%" }}
-          onClick={() => applyAssignment("button", id, "unassigned", handle)}
-        >
-          Return to Unassigned
-        </button>
-        {zone === "gallery" ? (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, marginTop: 4 }}>
-            <button
-              type="button"
-              data-action-button="gallery-move-left"
-              style={miniBtn}
-              onClick={() =>
-                updateVariantDecision(
-                  handle,
-                  vk,
-                  (prev) => {
-                    const idx = prev.gallery.indexOf(id)
-                    if (idx <= 0) return prev
-                    const next = [...prev.gallery]
-                    ;[next[idx - 1], next[idx]] = [next[idx], next[idx - 1]]
-                    return { ...prev, gallery: next }
-                  },
-                  "gallery move left",
-                  id
-                )
-              }
-            >
-              Move left
-            </button>
-            <button
-              type="button"
-              data-action-button="gallery-move-right"
-              style={miniBtn}
-              onClick={() =>
-                updateVariantDecision(
-                  handle,
-                  vk,
-                  (prev) => {
-                    const idx = prev.gallery.indexOf(id)
-                    if (idx < 0 || idx >= prev.gallery.length - 1) return prev
-                    const next = [...prev.gallery]
-                    ;[next[idx + 1], next[idx]] = [next[idx], next[idx + 1]]
-                    return { ...prev, gallery: next }
-                  },
-                  "gallery move right",
-                  id
-                )
-              }
-            >
-              Move right
-            </button>
-            <button
-              type="button"
-              data-action-button="gallery-set-primary"
-              style={miniBtn}
-              onClick={() =>
-                updateVariantDecision(
-                  handle,
-                  vk,
-                  (prev) => ({ ...prev, primary: id, gallery: prev.gallery.filter((x) => x !== id) }),
-                  "set primary from gallery",
-                  id
-                )
-              }
-            >
-              Set as Primary
-            </button>
-            <button
-              type="button"
-              data-action-button="gallery-remove"
-              style={miniBtn}
-              onClick={() =>
-                updateVariantDecision(
-                  handle,
-                  vk,
-                  (prev) => ({ ...prev, gallery: prev.gallery.filter((x) => x !== id) }),
-                  "remove from gallery",
-                  id
-                )
-              }
-            >
-              Remove
-            </button>
-          </div>
-        ) : null}
+        {zoneActions}
       </MediaImageCard>
     )
   }
@@ -1822,15 +2140,10 @@ export function LegacyMediaAssignmentBoardClient() {
                     ...prev,
                     [h]: {
                       ...(prev[h] ?? {}),
-                      [key]: prev[h]?.[key] ?? {
-                        colorSkuOrArticle: "",
-                        sourceUrl: null,
-                        sourcePathHints: [],
+                      [key]: mergeVariantMeta(prev[h]?.[key], selectedProduct.sku.trim() || "", {
                         reasons: ["manual add variant"],
-                        confidence: "low",
                         status: "edited",
-                        fetchedAt: new Date().toISOString(),
-                      },
+                      }),
                     },
                   }))
                   setActiveVariantByHandle((prev) => ({ ...prev, [h]: key }))
@@ -1843,6 +2156,33 @@ export function LegacyMediaAssignmentBoardClient() {
             <div style={{ marginTop: 8, fontSize: 11, color: "#475569" }}>
               Active variant: <strong>{activeVariant.label}</strong> · status:{" "}
               <strong>{activeVariantMeta?.status || (activeVariantKey === DEFAULT_VARIANT_KEY ? "confirmed" : "edited")}</strong>
+              {activeVariantMeta ? (
+                <span style={{ display: "block", marginTop: 4, lineHeight: 1.55 }}>
+                  Product SKU hint: <strong>{activeVariantMeta.productSkuHint || selectedProduct.sku || "—"}</strong>
+                  <br />
+                  Legacy color article:{" "}
+                  <strong>
+                    {activeVariantMeta.editedLegacyArticle?.trim() ||
+                      activeVariantMeta.legacyColorArticle ||
+                      "—"}
+                  </strong>{" "}
+                  <span style={{ color: "#64748b" }}>({activeVariantMeta.legacyColorArticleStatus})</span>
+                  <br />
+                  Legacy color name: <strong>{activeVariantMeta.legacyColorName || "—"}</strong>
+                  <br />
+                  Source URL:{" "}
+                  {activeVariantMeta.sourceUrl ? (
+                    <a href={activeVariantMeta.sourceUrl} target="_blank" rel="noreferrer" style={{ color: "#2563eb" }}>
+                      {activeVariantMeta.sourceUrl}
+                    </a>
+                  ) : (
+                    "—"
+                  )}
+                  <br />
+                  Fetch status: <strong>{activeVariantMeta.fetchStatus}</strong> · confidence:{" "}
+                  <strong>{activeVariantMeta.confidence}</strong>
+                </span>
+              ) : null}
             </div>
             <div style={{ marginTop: 12, border: "1px solid #cbd5e1", background: "#f8fafc", borderRadius: 10, padding: 10 }}>
               <div style={{ fontSize: 11, fontWeight: 800, color: "#475569", textTransform: "uppercase", marginBottom: 8 }}>Suggested color variants</div>
@@ -1850,16 +2190,111 @@ export function LegacyMediaAssignmentBoardClient() {
                 <div style={{ fontSize: 12, color: "#64748b" }}>No legacy color suggestions found for this product.</div>
               ) : (
                 <div style={{ display: "grid", gap: 8 }}>
-                  {suggestions.slice(0, 4).map((s) => (
+                  {suggestions.slice(0, 4).map((s) => {
+                    const sk = suggestionEnrichmentKey(h, s.variantKey)
+                    const encState = enrichmentByKey[sk]
+                    const enc = encState?.data ?? null
+                    const loading = Boolean(encState?.loading)
+                    const defPref: SuggestionPref = { useLegacyName: false, useLegacyArticle: false, editedLegacyArticle: null }
+                    const prefs = suggestionRowPrefs[sk] ?? defPref
+                    const normSku = (x: string) => x.replace(/\s+/g, "").replace(/_/g, "-").toLowerCase()
+                    const parsedArticle =
+                      enc?.legacy_color_article && normSku(enc.legacy_color_article) !== normSku(s.productSkuHint)
+                        ? enc.legacy_color_article
+                        : null
+                    const articleLine = prefs.editedLegacyArticle?.trim() || parsedArticle || "—"
+                    const statusLine = loading ? "pending" : enc?.legacy_color_article_status ?? (encState?.error ? "unavailable" : "unavailable")
+                    const metaForConfirm = () =>
+                      variantMetaFromEnrichmentAndSuggestion({
+                        productSkuHint: s.productSkuHint,
+                        suggestionReasons: s.reasons,
+                        suggestionConfidence: s.confidence,
+                        suggestionSourcePathHints: s.sourcePathHints,
+                        suggestionSourceUrl: s.sourceUrl,
+                        enrichment: enc,
+                        useLegacyName: prefs.useLegacyName,
+                        useLegacyArticle: prefs.useLegacyArticle,
+                        editedLegacyArticle: prefs.editedLegacyArticle,
+                        status: "confirmed",
+                      })
+                    return (
                     <div key={s.variantKey} style={{ border: "1px solid #e2e8f0", borderRadius: 8, background: "#fff", padding: 8 }}>
                       <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>
                         {s.label} <span style={{ fontSize: 11, color: "#64748b" }}>({s.confidence})</span>
                       </div>
                       <div style={{ fontSize: 11, color: "#475569", marginTop: 4 }}>
-                        SKU/article: <strong>{s.colorSkuOrArticle || "—"}</strong> · source: <span title={s.sourceUrl || s.sourcePathHints[0] || ""}>{s.sourceUrl || s.sourcePathHints[0] || "legacy source unavailable"}</span>
+                        Product SKU hint: <strong>{s.productSkuHint || "—"}</strong> <span style={{ color: "#94a3b8" }}>(not legacy color article)</span>
                       </div>
-                      <div style={{ fontSize: 11, color: "#64748b", marginTop: 4 }}>Reasons: {s.reasons.join(", ")}</div>
+                      <div style={{ fontSize: 11, color: "#475569", marginTop: 2 }}>
+                        Legacy color article: <strong>{articleLine}</strong> · status: <strong>{statusLine}</strong>
+                        {loading ? <span style={{ color: "#64748b" }}> · fetch…</span> : null}
+                      </div>
+                      <div style={{ fontSize: 11, color: "#475569", marginTop: 2 }}>
+                        Legacy color name: <strong>{enc?.legacy_color_name || "—"}</strong>
+                      </div>
+                      <div style={{ fontSize: 11, color: "#475569", marginTop: 2 }}>
+                        Source URL:{" "}
+                        {enc?.source_url || s.sourceUrl ? (
+                          <a href={(enc?.source_url || s.sourceUrl) as string} target="_blank" rel="noreferrer" style={{ color: "#2563eb", wordBreak: "break-all" }}>
+                            {(enc?.source_url || s.sourceUrl) as string}
+                          </a>
+                        ) : (
+                          <span title={s.sourcePathHints[0] || ""}>{s.sourcePathHints[0] || "legacy source unavailable"}</span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 11, color: "#475569", marginTop: 2 }}>
+                        Fetch/parse: <strong>{loading ? "pending" : enc?.fetch_status ?? (encState?.error ? "client_error" : "idle")}</strong>
+                        {encState?.error ? <span style={{ color: "#b91c1c" }}> · {encState.error}</span> : null}
+                      </div>
+                      <div style={{ fontSize: 11, color: "#64748b", marginTop: 4 }}>Reasons: {(enc?.reasons?.length ? [...s.reasons, ...enc.reasons] : s.reasons).join(", ")}</div>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
+                        <button
+                          type="button"
+                          style={{
+                            ...miniBtn,
+                            background: prefs.useLegacyName ? "#0f172a" : "#fff",
+                            color: prefs.useLegacyName ? "#fff" : "#334155",
+                          }}
+                          onClick={() =>
+                            setSuggestionRowPrefs((prev) => ({
+                              ...prev,
+                              [sk]: { ...(prev[sk] ?? defPref), useLegacyName: !(prev[sk]?.useLegacyName ?? false) },
+                            }))
+                          }
+                        >
+                          Use legacy name
+                        </button>
+                        <button
+                          type="button"
+                          style={{
+                            ...miniBtn,
+                            background: prefs.useLegacyArticle ? "#0f172a" : "#fff",
+                            color: prefs.useLegacyArticle ? "#fff" : "#334155",
+                          }}
+                          onClick={() =>
+                            setSuggestionRowPrefs((prev) => ({
+                              ...prev,
+                              [sk]: { ...(prev[sk] ?? defPref), useLegacyArticle: !(prev[sk]?.useLegacyArticle ?? false) },
+                            }))
+                          }
+                        >
+                          Use legacy article
+                        </button>
+                        <button
+                          type="button"
+                          style={miniBtn}
+                          onClick={() => {
+                            const next = window.prompt("Edit legacy color article (manual)", prefs.editedLegacyArticle || parsedArticle || "")
+                            if (next === null) return
+                            const t = next.trim()
+                            setSuggestionRowPrefs((prev) => ({
+                              ...prev,
+                              [sk]: { ...(prev[sk] ?? defPref), editedLegacyArticle: t || null, useLegacyArticle: t.length > 0 },
+                            }))
+                          }}
+                        >
+                          Edit article
+                        </button>
                         <button
                           type="button"
                           style={miniBtn}
@@ -1869,7 +2304,7 @@ export function LegacyMediaAssignmentBoardClient() {
                               [h]: {
                                 ...(prev[h] ?? {}),
                                 [s.variantKey]: prev[h]?.[s.variantKey] ?? {
-                                  label: s.label,
+                                  label: prefs.useLegacyName && enc?.legacy_color_name ? enc.legacy_color_name : s.label,
                                   primary: null,
                                   gallery: [],
                                   reference: [],
@@ -1881,15 +2316,7 @@ export function LegacyMediaAssignmentBoardClient() {
                               ...prev,
                               [h]: {
                                 ...(prev[h] ?? {}),
-                                [s.variantKey]: {
-                                  colorSkuOrArticle: s.colorSkuOrArticle,
-                                  sourceUrl: s.sourceUrl,
-                                  sourcePathHints: s.sourcePathHints,
-                                  reasons: s.reasons,
-                                  confidence: s.confidence,
-                                  status: "confirmed",
-                                  fetchedAt: new Date().toISOString(),
-                                },
+                                [s.variantKey]: metaForConfirm(),
                               },
                             }))
                             setActiveVariantByHandle((prev) => ({ ...prev, [h]: s.variantKey }))
@@ -1941,7 +2368,7 @@ export function LegacyMediaAssignmentBoardClient() {
                                 [h]: {
                                   ...variants,
                                   [s.variantKey]: {
-                                    label: s.label,
+                                    label: prefs.useLegacyName && enc?.legacy_color_name ? enc.legacy_color_name : s.label,
                                     primary: s.primaryCandidateId || null,
                                     gallery: [...s.galleryCandidateIds],
                                     reference: [],
@@ -1967,15 +2394,7 @@ export function LegacyMediaAssignmentBoardClient() {
                               ...prev,
                               [h]: {
                                 ...(prev[h] ?? {}),
-                                [s.variantKey]: {
-                                  colorSkuOrArticle: s.colorSkuOrArticle,
-                                  sourceUrl: s.sourceUrl,
-                                  sourcePathHints: s.sourcePathHints,
-                                  reasons: s.reasons,
-                                  confidence: s.confidence,
-                                  status: "confirmed",
-                                  fetchedAt: new Date().toISOString(),
-                                },
+                                [s.variantKey]: metaForConfirm(),
                               },
                             }))
                             setActiveVariantByHandle((prev) => ({ ...prev, [h]: s.variantKey }))
@@ -2015,7 +2434,8 @@ export function LegacyMediaAssignmentBoardClient() {
                         </button>
                       </div>
                     </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
             </div>
@@ -2080,40 +2500,32 @@ export function LegacyMediaAssignmentBoardClient() {
             gap: 12,
           }}
         >
-          {zoneBox("Primary", "Drop to Primary", selectedHandle, "primary", z.primary ? renderZoneThumb(z.primary, selectedHandle, "primary") : <span style={muted}>Drop one primary</span>)}
+          {zoneBox(
+            "Primary",
+            "Drop to Primary",
+            selectedHandle,
+            "primary",
+            z.primary ? renderZoneThumb(z.primary, selectedHandle, "primary", activeVariantKey, vByHandle) : <span style={muted}>Drop one primary</span>
+          )}
           {zoneBox(
             "Gallery",
             "Drop to Gallery",
             selectedHandle,
             "gallery",
             <>
-              {z.gallery.map((id) => (
+              {z.gallery.map((gid) => (
                 <div
-                  key={id}
+                  key={gid}
                   data-legacy-drop-target="true"
                   data-drop-kind="product-zone"
                   data-product-handle={selectedHandle.toLowerCase()}
                   data-zone="gallery"
-                  data-inventory-id={id}
+                  data-inventory-id={gid}
                 >
-                  {renderZoneThumb(id, selectedHandle, "gallery")}
+                  {renderZoneThumb(gid, selectedHandle, "gallery", activeVariantKey, vByHandle)}
                 </div>
               ))}
-              <div style={{ display: "flex", gap: 4, flexWrap: "wrap", width: "100%" }}>
-                <button type="button" style={{ ...miniBtn, opacity: 0.8 }} disabled>
-                  Move left
-                </button>
-                <button type="button" style={{ ...miniBtn, opacity: 0.8 }} disabled>
-                  Move right
-                </button>
-                <button type="button" style={{ ...miniBtn, opacity: 0.8 }} disabled>
-                  Set as Primary
-                </button>
-                <button type="button" style={{ ...miniBtn, opacity: 0.8 }} disabled>
-                  Remove
-                </button>
-              </div>
-              <span style={muted}>Drop on the zone to append · drop on another tile to insert or swap order</span>
+              <span style={muted}>Drop on the zone to append · drop on another tile to insert or swap order · or use buttons on each tile.</span>
             </>
           )}
           {zoneBox(
@@ -2121,14 +2533,14 @@ export function LegacyMediaAssignmentBoardClient() {
             "Drop to Reference",
             selectedHandle,
             "reference",
-            z.reference_only.length ? z.reference_only.map((id) => renderZoneThumb(id, selectedHandle, "reference")) : <span style={muted}>Optional reference shots</span>
+            z.reference_only.length ? z.reference_only.map((rid) => renderZoneThumb(rid, selectedHandle, "reference", activeVariantKey, vByHandle)) : <span style={muted}>Optional reference shots</span>
           )}
           {zoneBox(
             "Rejected for this product",
             "Drop to reject (this SKU)",
             selectedHandle,
             "lane_reject",
-            z.lane_rejected.length ? z.lane_rejected.map((id) => renderZoneThumb(id, selectedHandle, "lane_reject")) : <span style={muted}>Not used on this SKU</span>
+            z.lane_rejected.length ? z.lane_rejected.map((jid) => renderZoneThumb(jid, selectedHandle, "lane_reject", activeVariantKey, vByHandle)) : <span style={muted}>Not used on this SKU</span>
           )}
         </div>
       </section>
@@ -2893,7 +3305,11 @@ export function LegacyMediaAssignmentBoardClient() {
               <div>Button handler fired: <strong>{diag.buttonHandlerFired ? "yes" : "no"}</strong></div>
               <div>State update requested: <strong>{diag.stateUpdateRequested ? "yes" : "no"}</strong></div>
               <div>State changed: <strong style={{ color: diag.stateActuallyChanged ? "#15803d" : "#64748b" }}>{diag.stateActuallyChanged ? "yes" : "no"}</strong></div>
-              <div>Source/media/product/zone: <span style={{ color: "#0f172a" }}>{`${diag.source} / ${diag.mediaId || "—"} / ${diag.productHandle || "—"} / ${diag.targetZone || "—"}`}</span></div>
+              <div>Source/media/product: <span style={{ color: "#0f172a" }}>{`${diag.source} / ${diag.mediaId || "—"} / ${diag.productHandle || "—"}`}</span></div>
+              <div>
+                From zone → target zone:{" "}
+                <span style={{ color: "#0f172a" }}>{`${diag.fromZone || "—"} → ${diag.targetZone || "—"}`}</span>
+              </div>
               <div>Last drag source/lane/variant: <span style={{ color: "#0f172a" }}>{`${diag.dragSource} / ${diag.laneId} / ${diag.variantKey}`}</span></div>
               <div>Last reorder: <span style={{ color: "#0f172a" }}>{`${diag.reorderFrom} -> ${diag.reorderTo}`}</span></div>
               <div>Payload written: <strong style={{ color: payloadWritten === "yes" ? "#15803d" : payloadWritten === "no" ? "#b91c1c" : "#64748b" }}>{payloadWritten}</strong></div>

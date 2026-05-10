@@ -1,3 +1,5 @@
+import type { LegacyColorArticleStatus, LegacyColorEnrichmentFetchStatus } from "@/lib/qa/legacy-color-article-enrichment"
+
 export type InvItem = {
   id: string
   source_type: string
@@ -44,6 +46,8 @@ export type ProductRow = {
   collection: string
   title: string | null
   image_urls: string[]
+  /** From seed-products.json — basename of each image URL for hints. */
+  image_basenames?: string[]
 }
 
 /** Drag payload for legacy media board (written to dataTransfer as JSON + text/plain). */
@@ -59,11 +63,39 @@ export type LegacyMediaDragPayload = {
   fromVariantKey?: string | null
 }
 
+export type LegacyBoardVariantStatus = "suggested" | "confirmed" | "edited" | "rejected"
+
+export type VariantMetaFetchStatus = LegacyColorEnrichmentFetchStatus | "idle" | "pending"
+
+export type VariantMetaState = {
+  productSkuHint: string
+  legacyColorName: string | null
+  legacyColorArticle: string | null
+  legacyColorArticleStatus: LegacyColorArticleStatus | "pending"
+  sourceUrl: string | null
+  fetchStatus: VariantMetaFetchStatus
+  confidence: "high" | "medium" | "low"
+  reasons: string[]
+  sourcePathHints: string[]
+  status: LegacyBoardVariantStatus
+  fetchedAt: string
+  useLegacyName: boolean
+  useLegacyArticle: boolean
+  editedLegacyArticle: string | null
+}
+
+export type VariantMetaByHandle = Record<string, Record<string, VariantMetaState>>
+
 export type SuggestedVariant = {
   variantKey: string
   label: string
   colorNameRaw: string
-  colorSkuOrArticle: string
+  /** Catalog / Medusa product SKU — never shown as legacy color article. */
+  productSkuHint: string
+  /** Ordered legacy page URL candidates (inventory + deduped). */
+  candidatePageUrls: string[]
+  /** Seed image URLs for this product (may be non-HTML; server skips binary). */
+  seedImageUrls: string[]
   sourceUrl: string | null
   sourcePathHints: string[]
   mediaIds: string[]
@@ -98,3 +130,5 @@ export type HoveredLegacyDropTarget = {
   /** When hovering a gallery tile, the inventory id under the pointer (insert-before / swap). */
   galleryHoverInventoryId: string | null
 }
+
+export type { LegacyColorArticleStatus, LegacyColorEnrichmentResult } from "@/lib/qa/legacy-color-article-enrichment"
