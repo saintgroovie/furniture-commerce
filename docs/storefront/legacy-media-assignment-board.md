@@ -49,7 +49,7 @@ Then restart Next. The board shows a **Retry** button and prints the JSON **Serv
 
 ### Read-only API error JSON (dev diagnostics)
 
-`/qa/legacy-media-assignment-board/api/{inventory,candidates,products}` return **200** with the same bodies as before on success. On failure they return **500** with a machine-readable `error` code (never arbitrary path traversal):
+`/qa/legacy-media-assignment-board/api/{inventory,candidates,products,enrich-color-article}` return **200** with the same bodies as before on success (enrich: `GET` smoke JSON, `POST` enrichment body). On failure they return **500** with a machine-readable `error` code (never arbitrary path traversal):
 
 | `error` | Meaning |
 |---------|---------|
@@ -79,10 +79,13 @@ The workflow strip also echoes **active collection**, **selected product**, **lo
 
 ## Assisted variants (dev-only)
 
-- Visible delivery sentinel in page chrome: `Legacy Board UI assisted variants visible`.
-- Selected product workspace now includes **Suggested color variants** derived from legacy filename/path tokens (`color_*`) + candidate map handle/SKU hints.
-- Per suggestion actions: `Confirm variant`, `Confirm primary`, `Confirm gallery`, `Confirm all for this variant`, `Reject suggestion`, `Edit label`.
-- Gallery order no longer depends on internal lane drag: assigned gallery cards expose explicit controls (`Move left`, `Move right`, `Set as Primary`, `Remove`).
+- Visible delivery sentinel in page chrome (updates with each pass): e.g. `Legacy Board UI color article enrichment + product SKU hint split`.
+- Selected product workspace includes **Suggested color variants** derived from legacy filename/path tokens (`color_*`) + candidate map handle/SKU hints.
+- **Product SKU hint** (Medusa / seed `medusa_variant_sku`, e.g. `CO-02-1`) is shown separately from **Legacy color article** — the UI never treats the product SKU as the legacy color article.
+- **Legacy color article enrichment** (read-only QA): `POST /qa/legacy-media-assignment-board/api/enrich-color-article` with `{ product_sku_hint, color_token, candidate_urls[] }`. The server tries HTML candidate URLs from inventory (`legacy_product_url`, `page_url`, `url` minus direct image URLs) plus seed image URLs (skipped as HTML); parses pages heuristically (JSON-LD + token windows). Statuses: **found** / **not_found** / **unavailable** / **parse_failed**; fetch statuses include **no_urls**, **http_error**, **timeout**, etc. Failures do not block the page.
+- Per suggestion: **Use legacy name**, **Use legacy article**, **Edit article**, then **Confirm variant** / **Confirm primary** / **Confirm gallery** / **Confirm all for this variant**, **Reject suggestion**, **Edit label**.
+- **Export** `confirmed_variant_sources` rows use snake_case handoff fields (`product_sku_hint`, `legacy_color_name`, `legacy_color_article`, `legacy_color_article_status`, `source_url`, `fetch_status`, `confidence`, `reasons`, flags for use/edit). **localStorage** variants blob also stores `suggestionRowPrefs` for row toggles.
+- Gallery order does **not** rely on internal lane drag: assigned gallery cards expose explicit controls (`Move left`, `Move right`, `Set as Primary`, `Remove`). Internal lane drag remains best-effort only.
 
 ---
 

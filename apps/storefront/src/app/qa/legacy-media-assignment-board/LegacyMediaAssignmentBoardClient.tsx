@@ -1373,8 +1373,15 @@ export function LegacyMediaAssignmentBoardClient() {
         }),
       })
         .then(async (res) => {
-          const j = (await res.json()) as LegacyColorEnrichmentResult
+          const j = (await res.json()) as LegacyColorEnrichmentResult & { error?: string }
           if (cancelled) return
+          if (!res.ok) {
+            setEnrichmentByKey((prev) => ({
+              ...prev,
+              [sk]: { loading: false, data: null, error: typeof j.error === "string" ? j.error : `http_${res.status}` },
+            }))
+            return
+          }
           enrichLoadedRef.current.add(sk)
           setEnrichmentByKey((prev) => ({ ...prev, [sk]: { loading: false, data: j, error: null } }))
         })
@@ -2434,7 +2441,7 @@ export function LegacyMediaAssignmentBoardClient() {
                         </button>
                       </div>
                     </div>
-                    )
+                    );
                   })}
                 </div>
               )}
