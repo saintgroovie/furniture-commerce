@@ -205,10 +205,12 @@ export function MediaImageCard({
           WebkitBoxOrient: "vertical",
           overflow: "hidden",
           wordBreak: "break-all",
+          overflowWrap: "anywhere",
           minHeight: 24,
+          maxWidth: "100%",
         }}
       >
-        {sourcePath || "—"}
+        {sourcePath ? truncateMiddle(sourcePath, Math.max(48, filenameMaxLen * 2)) : "—"}
       </div>
       <div style={{ marginTop: 6, display: "flex", gap: 4, flexWrap: "wrap" }}>
         {sourceType ? (

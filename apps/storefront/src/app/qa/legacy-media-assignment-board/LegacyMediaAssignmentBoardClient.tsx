@@ -208,6 +208,12 @@ function mergeVariantMeta(
   return { ...base, ...patch, fetchedAt: patch.fetchedAt ?? new Date().toISOString() }
 }
 
+function truncateMiddleClient(s: string, max: number): string {
+  if (!s || s.length <= max) return s
+  const half = Math.floor((max - 1) / 2)
+  return `${s.slice(0, half)}…${s.slice(s.length - half)}`
+}
+
 function suggestionEnrichmentKey(handle: string, variantKey: string): string {
   return `${handle.toLowerCase()}::${variantKey}`
 }
@@ -1584,7 +1590,8 @@ export function LegacyMediaAssignmentBoardClient() {
     handle: string,
     zone: LegacyMediaDragZone,
     variantKeyForActions: string,
-    variantsForHandle: Record<string, VariantDecisionState>
+    variantsForHandle: Record<string, VariantDecisionState>,
+    size: "compact" | "normal" | "large" = "compact"
   ) => {
     const inv = invById.get(id)
     if (!inv) return null
@@ -1611,11 +1618,12 @@ export function LegacyMediaAssignmentBoardClient() {
     const zoneActions = (
       <>
         {zone === "primary" ? (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, marginTop: 4 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 4, marginTop: 4 }}>
             <button
               type="button"
               data-action-button="primary-to-gallery"
               style={miniBtn}
+              title="Move to Gallery"
               {...shieldBtn}
               onClick={stopCardClick(() => applyAssignment("assigned-button", id, "gallery", handle, vk, "primary"))}
             >
@@ -1625,6 +1633,7 @@ export function LegacyMediaAssignmentBoardClient() {
               type="button"
               data-action-button="primary-to-reference"
               style={miniBtn}
+              title="Move to Reference"
               {...shieldBtn}
               onClick={stopCardClick(() => applyAssignment("assigned-button", id, "reference", handle, vk, "primary"))}
             >
@@ -1644,6 +1653,7 @@ export function LegacyMediaAssignmentBoardClient() {
               type="button"
               data-action-button="primary-return"
               style={miniBtn}
+              title="Return to Unassigned"
               {...shieldBtn}
               onClick={stopCardClick(() => applyAssignment("assigned-button", id, "unassigned", handle, vk, "primary"))}
             >
@@ -1652,7 +1662,7 @@ export function LegacyMediaAssignmentBoardClient() {
           </div>
         ) : null}
         {zone === "gallery" ? (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, marginTop: 4 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 4, marginTop: 4 }}>
             <button
               type="button"
               data-action-button="gallery-move-first"
@@ -1747,6 +1757,7 @@ export function LegacyMediaAssignmentBoardClient() {
               type="button"
               data-action-button="gallery-set-primary"
               style={miniBtn}
+              title="Set as Primary"
               {...shieldBtn}
               onClick={stopCardClick(() =>
                 updateVariantDecision(
@@ -1765,6 +1776,7 @@ export function LegacyMediaAssignmentBoardClient() {
               type="button"
               data-action-button="gallery-remove"
               style={miniBtn}
+              title="Remove from Gallery (back to pool)"
               {...shieldBtn}
               onClick={stopCardClick(() =>
                 updateVariantDecision(
@@ -1783,6 +1795,7 @@ export function LegacyMediaAssignmentBoardClient() {
               type="button"
               data-action-button="gallery-return"
               style={miniBtn}
+              title="Return to Unassigned"
               {...shieldBtn}
               onClick={stopCardClick(() => applyAssignment("assigned-button", id, "unassigned", handle, vk, "gallery"))}
             >
@@ -1791,11 +1804,12 @@ export function LegacyMediaAssignmentBoardClient() {
           </div>
         ) : null}
         {zone === "reference" ? (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, marginTop: 4 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 4, marginTop: 4 }}>
             <button
               type="button"
               data-action-button="ref-to-primary"
               style={miniBtn}
+              title="Move to Primary"
               {...shieldBtn}
               onClick={stopCardClick(() => applyAssignment("assigned-button", id, "primary", handle, vk, "reference"))}
             >
@@ -1805,6 +1819,7 @@ export function LegacyMediaAssignmentBoardClient() {
               type="button"
               data-action-button="ref-to-gallery"
               style={miniBtn}
+              title="Move to Gallery"
               {...shieldBtn}
               onClick={stopCardClick(() => applyAssignment("assigned-button", id, "gallery", handle, vk, "reference"))}
             >
@@ -1814,6 +1829,7 @@ export function LegacyMediaAssignmentBoardClient() {
               type="button"
               data-action-button="ref-return"
               style={miniBtn}
+              title="Return to Unassigned"
               {...shieldBtn}
               onClick={stopCardClick(() => applyAssignment("assigned-button", id, "unassigned", handle, vk, "reference"))}
             >
@@ -1822,11 +1838,12 @@ export function LegacyMediaAssignmentBoardClient() {
           </div>
         ) : null}
         {zone === "lane_reject" ? (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, marginTop: 4 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 4, marginTop: 4 }}>
             <button
               type="button"
               data-action-button="rej-to-primary"
               style={miniBtn}
+              title="Move to Primary"
               {...shieldBtn}
               onClick={stopCardClick(() => applyAssignment("assigned-button", id, "primary", handle, vk, "lane_reject"))}
             >
@@ -1836,6 +1853,7 @@ export function LegacyMediaAssignmentBoardClient() {
               type="button"
               data-action-button="rej-to-gallery"
               style={miniBtn}
+              title="Move to Gallery"
               {...shieldBtn}
               onClick={stopCardClick(() => applyAssignment("assigned-button", id, "gallery", handle, vk, "lane_reject"))}
             >
@@ -1845,6 +1863,7 @@ export function LegacyMediaAssignmentBoardClient() {
               type="button"
               data-action-button="rej-return"
               style={miniBtn}
+              title="Return to Unassigned"
               {...shieldBtn}
               onClick={stopCardClick(() => applyAssignment("assigned-button", id, "unassigned", handle, vk, "lane_reject"))}
             >
@@ -1856,6 +1875,7 @@ export function LegacyMediaAssignmentBoardClient() {
           type="button"
           data-action-button="assigned-details"
           style={{ ...miniBtn, marginTop: 6, width: "100%" }}
+          title="Open Inspector for this assigned media"
           {...shieldBtn}
           onClick={stopCardClick(() => setInspectorId(id))}
         >
@@ -1868,6 +1888,7 @@ export function LegacyMediaAssignmentBoardClient() {
               type="button"
               data-action-button="move-to-active-variant"
               style={{ ...miniBtn, marginTop: 4, width: "100%" }}
+              title="Move this media into the currently active variant's Gallery"
               {...shieldBtn}
               onClick={stopCardClick(() => applyAssignment("assigned-button", id, "gallery", handle, vk, `other_variant:${ownerVk}`))}
             >
@@ -1891,7 +1912,7 @@ export function LegacyMediaAssignmentBoardClient() {
         confidenceLabel={candById.get(id)?.confidence || null}
         previewable={inv.previewable}
         badges={["Assigned", zone]}
-        size="compact"
+        size={size}
         draggable={inv.previewable}
         isDragging={draggingMediaId === id}
         onDragStart={
@@ -2181,35 +2202,66 @@ export function LegacyMediaAssignmentBoardClient() {
                 Add variant
               </button>
             </div>
-            <div style={{ marginTop: 8, fontSize: 11, color: "#475569" }}>
-              Active variant: <strong>{activeVariant.label}</strong> · status:{" "}
-              <strong>{activeVariantMeta?.status || (activeVariantKey === DEFAULT_VARIANT_KEY ? "confirmed" : "edited")}</strong>
-              {activeVariantMeta ? (
-                <span style={{ display: "block", marginTop: 4, lineHeight: 1.55 }}>
-                  Product SKU hint: <strong>{activeVariantMeta.productSkuHint || selectedProduct.sku || "—"}</strong>
-                  <br />
-                  Legacy color article:{" "}
-                  <strong>
-                    {activeVariantMeta.editedLegacyArticle?.trim() ||
-                      activeVariantMeta.legacyColorArticle ||
-                      "—"}
-                  </strong>{" "}
-                  <span style={{ color: "#64748b" }}>({activeVariantMeta.legacyColorArticleStatus})</span>
-                  <br />
-                  Legacy color name: <strong>{activeVariantMeta.legacyColorName || "—"}</strong>
-                  <br />
-                  Source URL:{" "}
-                  {activeVariantMeta.sourceUrl ? (
-                    <a href={activeVariantMeta.sourceUrl} target="_blank" rel="noreferrer" style={{ color: "#2563eb" }}>
-                      {activeVariantMeta.sourceUrl}
-                    </a>
-                  ) : (
-                    "—"
-                  )}
-                  <br />
-                  Fetch status: <strong>{activeVariantMeta.fetchStatus}</strong> · confidence:{" "}
-                  <strong>{activeVariantMeta.confidence}</strong>
+            <div style={{ marginTop: 8, fontSize: 11, color: "#475569", lineHeight: 1.5 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "baseline" }}>
+                <span>
+                  Active variant: <strong>{activeVariant.label}</strong>
                 </span>
+                <span style={{ color: "#64748b" }}>·</span>
+                <span>
+                  status:{" "}
+                  <strong>{activeVariantMeta?.status || (activeVariantKey === DEFAULT_VARIANT_KEY ? "confirmed" : "edited")}</strong>
+                </span>
+              </div>
+              {activeVariantMeta ? (
+                <>
+                  <div style={{ marginTop: 4 }}>
+                    Legacy color article:{" "}
+                    <strong>
+                      {activeVariantMeta.editedLegacyArticle?.trim() ||
+                        activeVariantMeta.legacyColorArticle ||
+                        "—"}
+                    </strong>{" "}
+                    <span style={{ color: "#64748b" }}>({activeVariantMeta.legacyColorArticleStatus})</span>
+                  </div>
+                  <div style={{ marginTop: 2, fontSize: 10, color: "#94a3b8" }}>
+                    Product SKU hint: <span style={{ color: "#64748b" }}>{activeVariantMeta.productSkuHint || selectedProduct.sku || "—"}</span> · not a legacy color article
+                  </div>
+                  <details style={{ marginTop: 4 }}>
+                    <summary
+                      style={{
+                        cursor: "pointer",
+                        fontSize: 10,
+                        color: "#94a3b8",
+                        fontWeight: 700,
+                        letterSpacing: "0.04em",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Source / fetch (why?)
+                    </summary>
+                    <div style={{ marginTop: 4, fontSize: 11, color: "#475569", overflowWrap: "anywhere", wordBreak: "break-word" }}>
+                      Legacy color name: <strong>{activeVariantMeta.legacyColorName || "—"}</strong>
+                      <br />
+                      Source URL:{" "}
+                      {activeVariantMeta.sourceUrl ? (
+                        <a
+                          href={activeVariantMeta.sourceUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{ color: "#2563eb", overflowWrap: "anywhere", wordBreak: "break-all" }}
+                        >
+                          {activeVariantMeta.sourceUrl}
+                        </a>
+                      ) : (
+                        "—"
+                      )}
+                      <br />
+                      Fetch: <strong>{activeVariantMeta.fetchStatus}</strong> · confidence:{" "}
+                      <strong>{activeVariantMeta.confidence}</strong>
+                    </div>
+                  </details>
+                </>
               ) : null}
             </div>
             <div style={{ marginTop: 12, border: "1px solid #cbd5e1", background: "#f8fafc", borderRadius: 10, padding: 10 }}>
@@ -2245,36 +2297,79 @@ export function LegacyMediaAssignmentBoardClient() {
                         editedLegacyArticle: prefs.editedLegacyArticle,
                         status: "confirmed",
                       })
+                    const combinedReasons = enc?.reasons?.length ? [...s.reasons, ...enc.reasons] : s.reasons
+                    const sourceUrl = (enc?.source_url || s.sourceUrl) as string | null
+                    const fetchSummary = loading ? "pending" : enc?.fetch_status ?? (encState?.error ? "client_error" : "idle")
                     return (
                     <div key={s.variantKey} style={{ border: "1px solid #e2e8f0", borderRadius: 8, background: "#fff", padding: 8 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>
-                        {s.label} <span style={{ fontSize: 11, color: "#64748b" }}>({s.confidence})</span>
+                      <div
+                        style={{
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: 6,
+                          alignItems: "baseline",
+                          rowGap: 2,
+                        }}
+                      >
+                        <strong style={{ fontSize: 13, color: "#0f172a", overflowWrap: "anywhere" }}>{s.label}</strong>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: "#3730a3", background: "#eef2ff", padding: "2px 6px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                          {s.confidence}
+                        </span>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: "#475569", background: "#f1f5f9", padding: "2px 6px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                          {statusLine}
+                        </span>
+                        {loading ? (
+                          <span style={{ fontSize: 10, color: "#64748b" }}>fetch…</span>
+                        ) : null}
                       </div>
                       <div style={{ fontSize: 11, color: "#475569", marginTop: 4 }}>
-                        Product SKU hint: <strong>{s.productSkuHint || "—"}</strong> <span style={{ color: "#94a3b8" }}>(not legacy color article)</span>
+                        Legacy article: <strong style={{ overflowWrap: "anywhere" }}>{articleLine}</strong>
                       </div>
-                      <div style={{ fontSize: 11, color: "#475569", marginTop: 2 }}>
-                        Legacy color article: <strong>{articleLine}</strong> · status: <strong>{statusLine}</strong>
-                        {loading ? <span style={{ color: "#64748b" }}> · fetch…</span> : null}
+                      <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 2 }}>
+                        Product SKU hint: <span style={{ color: "#64748b" }}>{s.productSkuHint || "—"}</span> · not a legacy color article
                       </div>
-                      <div style={{ fontSize: 11, color: "#475569", marginTop: 2 }}>
-                        Legacy color name: <strong>{enc?.legacy_color_name || "—"}</strong>
-                      </div>
-                      <div style={{ fontSize: 11, color: "#475569", marginTop: 2 }}>
-                        Source URL:{" "}
-                        {enc?.source_url || s.sourceUrl ? (
-                          <a href={(enc?.source_url || s.sourceUrl) as string} target="_blank" rel="noreferrer" style={{ color: "#2563eb", wordBreak: "break-all" }}>
-                            {(enc?.source_url || s.sourceUrl) as string}
-                          </a>
-                        ) : (
-                          <span title={s.sourcePathHints[0] || ""}>{s.sourcePathHints[0] || "legacy source unavailable"}</span>
-                        )}
-                      </div>
-                      <div style={{ fontSize: 11, color: "#475569", marginTop: 2 }}>
-                        Fetch/parse: <strong>{loading ? "pending" : enc?.fetch_status ?? (encState?.error ? "client_error" : "idle")}</strong>
-                        {encState?.error ? <span style={{ color: "#b91c1c" }}> · {encState.error}</span> : null}
-                      </div>
-                      <div style={{ fontSize: 11, color: "#64748b", marginTop: 4 }}>Reasons: {(enc?.reasons?.length ? [...s.reasons, ...enc.reasons] : s.reasons).join(", ")}</div>
+                      <details style={{ marginTop: 4 }}>
+                        <summary
+                          style={{
+                            cursor: "pointer",
+                            fontSize: 10,
+                            color: "#94a3b8",
+                            fontWeight: 700,
+                            letterSpacing: "0.04em",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          Why? — source / reasons
+                        </summary>
+                        <div style={{ marginTop: 4, fontSize: 11, color: "#475569", overflowWrap: "anywhere", wordBreak: "break-word", lineHeight: 1.45 }}>
+                          <div>Legacy color name: <strong>{enc?.legacy_color_name || "—"}</strong></div>
+                          <div style={{ marginTop: 2 }}>
+                            Source URL:{" "}
+                            {sourceUrl ? (
+                              <a
+                                href={sourceUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                title={sourceUrl}
+                                style={{ color: "#2563eb", overflowWrap: "anywhere", wordBreak: "break-all" }}
+                              >
+                                {truncateMiddleClient(sourceUrl, 64)}
+                              </a>
+                            ) : (
+                              <span title={s.sourcePathHints[0] || ""}>{s.sourcePathHints[0] ? truncateMiddleClient(s.sourcePathHints[0], 64) : "legacy source unavailable"}</span>
+                            )}
+                          </div>
+                          <div style={{ marginTop: 2 }}>
+                            Fetch / parse: <strong>{fetchSummary}</strong>
+                            {encState?.error ? <span style={{ color: "#b91c1c" }}> · {encState.error}</span> : null}
+                          </div>
+                          {combinedReasons.length > 0 ? (
+                            <div style={{ marginTop: 2, color: "#64748b" }}>
+                              Reasons: {combinedReasons.join(", ")}
+                            </div>
+                          ) : null}
+                        </div>
+                      </details>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
                         <button
                           type="button"
@@ -2471,11 +2566,158 @@ export function LegacyMediaAssignmentBoardClient() {
               Assignment target: <strong>{activeVariant.label}</strong>. Use drag or explicit buttons; drop assigned tiles on the strip under thumbnails to return them to the pool.
             </p>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 104px)", gap: 8, flexShrink: 0 }}>
-            {selectedProduct.image_urls.slice(0, 4).map((u) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img key={u} src={u} alt="" width={104} height={104} draggable={false} style={{ width: 104, height: 104, borderRadius: 10, objectFit: "cover", border: "1px solid #e2e8f0" }} />
-            ))}
+          <div
+            data-selected-product-main-media="true"
+            data-product-handle={h}
+            data-active-variant-key={activeVariantKey}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+              flexShrink: 0,
+              minWidth: 0,
+              maxWidth: 760,
+              alignSelf: "stretch",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "baseline",
+                gap: 8,
+                flexWrap: "wrap",
+              }}
+            >
+              <span style={{ fontSize: 10, fontWeight: 800, color: "#0f172a", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                Current main media
+              </span>
+              <span style={{ fontSize: 10, color: "#94a3b8" }}>
+                live controls · variant <strong style={{ color: "#475569" }}>{activeVariant.label}</strong>
+              </span>
+            </div>
+            {z.primary || z.gallery.length > 0 ? (
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 12,
+                  rowGap: 12,
+                  alignItems: "flex-start",
+                  justifyContent: "flex-start",
+                }}
+              >
+                {z.primary ? (
+                  <div
+                    data-legacy-drop-target="true"
+                    data-drop-kind="product-zone"
+                    data-drop-zone="primary"
+                    data-product-handle={h}
+                    data-zone="primary"
+                    data-inventory-id={z.primary}
+                    data-main-media-slot="primary"
+                    style={{ flex: "0 0 auto" }}
+                  >
+                    {renderZoneThumb(z.primary, selectedHandle, "primary", activeVariantKey, vByHandle, "large")}
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      flex: "0 0 auto",
+                      width: 176,
+                      minHeight: 176,
+                      borderRadius: 12,
+                      border: "1px dashed #cbd5e1",
+                      background: "#f8fafc",
+                      color: "#94a3b8",
+                      fontSize: 11,
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.04em",
+                      padding: 12,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      textAlign: "center",
+                      lineHeight: 1.4,
+                    }}
+                    data-main-media-slot="primary-empty"
+                  >
+                    Primary empty — assign from pool
+                  </div>
+                )}
+                {z.gallery.slice(0, 3).map((gid) => (
+                  <div
+                    key={gid}
+                    data-legacy-drop-target="true"
+                    data-drop-kind="product-zone"
+                    data-drop-zone="gallery"
+                    data-product-handle={h}
+                    data-zone="gallery"
+                    data-inventory-id={gid}
+                    data-main-media-slot="gallery"
+                    style={{ flex: "0 0 auto" }}
+                  >
+                    {renderZoneThumb(gid, selectedHandle, "gallery", activeVariantKey, vByHandle, "large")}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div
+                style={{
+                  borderRadius: 12,
+                  border: "1px dashed #cbd5e1",
+                  background: "#f8fafc",
+                  padding: "12px 14px",
+                  fontSize: 12,
+                  lineHeight: 1.45,
+                  color: "#64748b",
+                  maxWidth: 360,
+                }}
+                data-main-media-slot="empty"
+              >
+                <strong style={{ color: "#0f172a" }}>No assigned photos yet.</strong> Use the <em>Primary</em> / <em>Gallery</em> buttons in the pool on the right, or drag a tile into the lane zones below. Once assigned, photos appear here with live <strong>Set as Primary · Move left/right · Return</strong> controls.
+              </div>
+            )}
+            {z.gallery.length > 3 ? (
+              <div style={{ fontSize: 11, color: "#64748b" }}>
+                +{z.gallery.length - 3} more gallery photo{z.gallery.length - 3 === 1 ? "" : "s"} in the Gallery zone below — same controls.
+              </div>
+            ) : null}
+            {selectedProduct.image_urls.length > 0 ? (
+              <details style={{ marginTop: 2 }}>
+                <summary
+                  style={{
+                    cursor: "pointer",
+                    fontSize: 10,
+                    color: "#94a3b8",
+                    fontWeight: 700,
+                    letterSpacing: "0.04em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Storefront catalog reference ({selectedProduct.image_urls.length} seed image{selectedProduct.image_urls.length === 1 ? "" : "s"}, not assigned)
+                </summary>
+                <div style={{ marginTop: 8, display: "grid", gridTemplateColumns: "repeat(4, 64px)", gap: 6 }}>
+                  {selectedProduct.image_urls.slice(0, 8).map((u) => (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      key={u}
+                      src={u}
+                      alt=""
+                      width={64}
+                      height={64}
+                      draggable={false}
+                      title="Storefront catalog (seed) image — not assigned, not exported."
+                      style={{ width: 64, height: 64, borderRadius: 6, objectFit: "cover", border: "1px solid #e2e8f0", opacity: 0.85 }}
+                    />
+                  ))}
+                </div>
+                <div style={{ marginTop: 6, fontSize: 10, color: "#94a3b8", lineHeight: 1.4 }}>
+                  These are the current storefront / catalog seed images for context only. They are <strong>not</strong> in any lane and do not affect export. Use the actionable photos above to manage assignment.
+                </div>
+              </details>
+            ) : null}
           </div>
         </div>
         <div style={{ marginTop: 10, fontSize: 12, color: "#94a3b8" }}>
@@ -3339,6 +3581,8 @@ export function LegacyMediaAssignmentBoardClient() {
                   display: "grid",
                   gap: 4,
                   lineHeight: 1.35,
+                  overflowWrap: "anywhere",
+                  wordBreak: "break-word",
                 }}
                 aria-live="polite"
               >
@@ -3373,7 +3617,10 @@ export function LegacyMediaAssignmentBoardClient() {
                 background: "#f8fafc",
                 padding: 14,
                 overflowY: "auto",
-                maxHeight: 360,
+                overflowX: "hidden",
+                maxHeight: 320,
+                overflowWrap: "anywhere",
+                wordBreak: "break-word",
               }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
@@ -3525,6 +3772,13 @@ const miniBtn: React.CSSProperties = {
   border: "1px solid #cbd5e1",
   background: "#fff",
   cursor: "pointer",
+  /** keep buttons inside their grid cell so adjacent cards don't visually overlap (minmax(0, 1fr) layout) */
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+  minWidth: 0,
+  maxWidth: "100%",
+  boxSizing: "border-box",
 }
 const primaryPill: React.CSSProperties = {
   fontSize: 12,
