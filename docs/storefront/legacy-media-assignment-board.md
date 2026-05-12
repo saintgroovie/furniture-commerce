@@ -85,7 +85,7 @@ The workflow strip also echoes **active collection**, **selected product**, **lo
 - **Legacy color article enrichment** (read-only QA): `POST /qa/legacy-media-assignment-board/api/enrich-color-article` with `{ product_sku_hint, color_token, candidate_urls[] }`. The server tries HTML candidate URLs from inventory (`legacy_product_url`, `page_url`, `url` minus direct image URLs) plus seed image URLs (skipped as HTML); parses pages heuristically (JSON-LD + token windows). Statuses: **found** / **not_found** / **unavailable** / **parse_failed**; fetch statuses include **no_urls**, **http_error**, **timeout**, etc. Failures do not block the page.
 - Per suggestion: **Use legacy name**, **Use legacy article**, **Edit article**, then **Confirm variant** / **Confirm primary** / **Confirm gallery** / **Confirm all for this variant**, **Reject suggestion**, **Edit label**.
 - **Export** `confirmed_variant_sources` rows use snake_case handoff fields (`product_sku_hint`, `legacy_color_name`, `legacy_color_article`, `legacy_color_article_status`, `source_url`, `fetch_status`, `confidence`, `reasons`, flags for use/edit). **localStorage** variants blob also stores `suggestionRowPrefs` for row toggles.
-- Gallery order does **not** rely on internal lane drag: assigned gallery cards expose explicit controls (`Move left`, `Move right`, `Set as Primary`, `Remove`). Internal lane drag remains best-effort only.
+- Gallery order does **not** rely on internal lane drag: assigned lane cards expose explicit **`data-action-button`** controls (move first/last/left/right, set primary, remove / return, plus primary/reference/rejected moves). Those actions render **above** the card’s **Drag** strip so they stay visible; clicks use propagation shields so they are not treated as drag. Internal lane drag remains best-effort only.
 
 ---
 
@@ -95,6 +95,8 @@ Use the **Board mode** / **Focus mode** toggle in the header (segmented control)
 
 - **Board mode** (default): **Collections** sidebar, **Products** list, **Selected product** workspace, **Media pool** + **Inspector**.
 - **Focus mode**: hides the collections sidebar and the full product list so you can concentrate on **one SKU**. The **Selected product** workspace stays central; the **Media pool** remains on the right. When a product is selected, pool tabs respect **Focus** filtering: only inventory whose matcher **candidates** include that handle (same behavior as before). Pool image cards render **larger** in Focus mode. If Focus is on but no product is selected, the UI tells you to switch to Board mode or pick a product first.
+
+**Viewport layout:** The page root is a fixed **`100vh`** column: the sentinel + header + workflow strip stay at the top; the three-column grid (or two in Focus mode) fills the remaining height with **`min-height: 0`** on the grid and columns so **Media pool** tiles scroll inside the right column instead of growing the whole document. **Diagnostics** stays below the pool in that column; collapsed by default it does not steal scroll height from the pool.
 
 ---
 

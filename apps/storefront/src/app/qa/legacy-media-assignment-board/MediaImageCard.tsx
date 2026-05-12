@@ -34,6 +34,8 @@ type Props = {
   onOpenDetail?: () => void
   onCardPointerDownCapture?: (e: React.PointerEvent) => void
   onCardClickCapture?: (e: React.MouseEvent) => void
+  /** When true, render lane action buttons above the drag strip so controls stay visible on assigned cards. */
+  assignedControlsAboveDrag?: boolean
   children?: React.ReactNode
 }
 
@@ -68,6 +70,7 @@ export function MediaImageCard({
   onOpenDetail,
   onCardPointerDownCapture,
   onCardClickCapture,
+  assignedControlsAboveDrag = false,
   children,
 }: Props) {
   const w = cardPx[size]
@@ -244,6 +247,7 @@ export function MediaImageCard({
           ))}
         </div>
       ) : null}
+      {assignedControlsAboveDrag ? children : null}
       {canDrag ? (
         <div
           aria-hidden
@@ -274,7 +278,7 @@ export function MediaImageCard({
           <span>Drag</span>
         </div>
       ) : null}
-      {children}
+      {!assignedControlsAboveDrag ? children : null}
     </div>
   )
 }

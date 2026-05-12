@@ -173,6 +173,15 @@ function fromZoneState(z: ProductZoneState, label = "Default"): VariantDecisionS
   return { label, primary: z.primary, gallery: [...z.gallery], reference: [...z.reference_only], rejected: [...z.lane_rejected] }
 }
 
+function variantDecisionEqual(a: VariantDecisionState, b: VariantDecisionState): boolean {
+  if (a.label !== b.label || a.primary !== b.primary) return false
+  if (a.gallery.length !== b.gallery.length || a.reference.length !== b.reference.length || a.rejected.length !== b.rejected.length) return false
+  for (let i = 0; i < a.gallery.length; i++) if (a.gallery[i] !== b.gallery[i]) return false
+  for (let i = 0; i < a.reference.length; i++) if (a.reference[i] !== b.reference[i]) return false
+  for (let i = 0; i < a.rejected.length; i++) if (a.rejected[i] !== b.rejected[i]) return false
+  return true
+}
+
 function stripMediaIdFromVariantSlots(vv: VariantDecisionState, inventoryId: string): VariantDecisionState {
   return {
     ...vv,
@@ -492,6 +501,8 @@ export function LegacyMediaAssignmentBoardClient() {
   const [productAdvanced, setProductAdvanced] = useState<"" | "no_current_media" | "has_candidates" | "has_manual">("")
 
   const [board, setBoard] = useState<BoardState>({ zones: {}, grej: [] })
+  const boardRef = useRef(board)
+  boardRef.current = board
   const [selectedHandle, setSelectedHandle] = useState<string | null>(null)
   const [poolTab, setPoolTab] = useState<PoolTab>("suggested")
   const [hydrated, setHydrated] = useState(false)
@@ -1100,10 +1111,16 @@ export function LegacyMediaAssignmentBoardClient() {
       diagCtx?: { fromZone?: string; targetZone?: string }
     ) => {
       const hh = handle.toLowerCase()
+      let noop = false
       setVariantsByHandle((prev) => {
-        const variants = prev[hh] ?? { [DEFAULT_VARIANT_KEY]: fromZoneState(board.zones[hh] ?? emptyZones(), "Default") }
+        const variants =
+          prev[hh] ?? { [DEFAULT_VARIANT_KEY]: fromZoneState(boardRef.current.zones[hh] ?? emptyZones(), "Default") }
         const prevVariant = variants[variantKey] ?? emptyVariant(variantKey === DEFAULT_VARIANT_KEY ? "Default" : variantKey)
         const nextVariant = updater(prevVariant)
+        if (variantDecisionEqual(prevVariant, nextVariant)) {
+          noop = true
+          return prev
+        }
         setBoard((boardPrev) => ({
           ...boardPrev,
           zones: {
@@ -1126,10 +1143,11 @@ export function LegacyMediaAssignmentBoardClient() {
       })
       setDiag((d) => ({
         ...d,
+        buttonHandlerFired: true,
         stateUpdateRequested: true,
-        stateActuallyChanged: true,
+        stateActuallyChanged: !noop,
         lastAction: action,
-        lastError: "",
+        lastError: noop ? "no state change" : "",
         source: "assigned-button",
         mediaId,
         productHandle: handle,
@@ -1139,7 +1157,7 @@ export function LegacyMediaAssignmentBoardClient() {
         variantKey,
       }))
     },
-    [board.zones, productByHandle]
+    [productByHandle]
   )
 
   const dropZoneStable = (e: React.DragEvent, handle: string, zone: ZoneDrop) => {
@@ -1586,6 +1604,10 @@ export function LegacyMediaAssignmentBoardClient() {
         e.stopPropagation()
       },
     }
+    const stopCardClick = (fn: () => void) => (e: React.MouseEvent) => {
+      e.stopPropagation()
+      fn()
+    }
     const zoneActions = (
       <>
         {zone === "primary" ? (
@@ -1595,7 +1617,7 @@ export function LegacyMediaAssignmentBoardClient() {
               data-action-button="primary-to-gallery"
               style={miniBtn}
               {...shieldBtn}
-              onClick={() => applyAssignment("assigned-button", id, "gallery", handle, vk, "primary")}
+              onClick={stopCardClick(() => applyAssignment("assigned-button", id, "gallery", handle, vk, "primary"))}
             >
               Move to Gallery
             </button>
@@ -1604,7 +1626,7 @@ export function LegacyMediaAssignmentBoardClient() {
               data-action-button="primary-to-reference"
               style={miniBtn}
               {...shieldBtn}
-              onClick={() => applyAssignment("assigned-button", id, "reference", handle, vk, "primary")}
+              onClick={stopCardClick(() => applyAssignment("assigned-button", id, "reference", handle, vk, "primary"))}
             >
               Move to Reference
             </button>
@@ -1612,17 +1634,18 @@ export function LegacyMediaAssignmentBoardClient() {
               type="button"
               data-action-button="primary-reject"
               style={miniBtn}
+              title="Reject for this product"
               {...shieldBtn}
-              onClick={() => applyAssignment("assigned-button", id, "lane_reject", handle, vk, "primary")}
+              onClick={stopCardClick(() => applyAssignment("assigned-button", id, "lane_reject", handle, vk, "primary"))}
             >
-              Reject for product
+              Reject
             </button>
             <button
               type="button"
               data-action-button="primary-return"
               style={miniBtn}
               {...shieldBtn}
-              onClick={() => applyAssignment("assigned-button", id, "unassigned", handle, vk, "primary")}
+              onClick={stopCardClick(() => applyAssignment("assigned-button", id, "unassigned", handle, vk, "primary"))}
             >
               Return to Unassigned
             </button>
@@ -1635,7 +1658,7 @@ export function LegacyMediaAssignmentBoardClient() {
               data-action-button="gallery-move-first"
               style={miniBtn}
               {...shieldBtn}
-              onClick={() =>
+              onClick={stopCardClick(() =>
                 updateVariantDecision(
                   handle,
                   vk,
@@ -1647,7 +1670,7 @@ export function LegacyMediaAssignmentBoardClient() {
                   id,
                   { fromZone: "gallery", targetZone: "gallery_reorder" }
                 )
-              }
+              )}
             >
               Move first
             </button>
@@ -1656,7 +1679,7 @@ export function LegacyMediaAssignmentBoardClient() {
               data-action-button="gallery-move-last"
               style={miniBtn}
               {...shieldBtn}
-              onClick={() =>
+              onClick={stopCardClick(() =>
                 updateVariantDecision(
                   handle,
                   vk,
@@ -1668,7 +1691,7 @@ export function LegacyMediaAssignmentBoardClient() {
                   id,
                   { fromZone: "gallery", targetZone: "gallery_reorder" }
                 )
-              }
+              )}
             >
               Move last
             </button>
@@ -1677,7 +1700,7 @@ export function LegacyMediaAssignmentBoardClient() {
               data-action-button="gallery-move-left"
               style={miniBtn}
               {...shieldBtn}
-              onClick={() =>
+              onClick={stopCardClick(() =>
                 updateVariantDecision(
                   handle,
                   vk,
@@ -1692,7 +1715,7 @@ export function LegacyMediaAssignmentBoardClient() {
                   id,
                   { fromZone: "gallery", targetZone: "gallery_reorder" }
                 )
-              }
+              )}
             >
               Move left
             </button>
@@ -1701,7 +1724,7 @@ export function LegacyMediaAssignmentBoardClient() {
               data-action-button="gallery-move-right"
               style={miniBtn}
               {...shieldBtn}
-              onClick={() =>
+              onClick={stopCardClick(() =>
                 updateVariantDecision(
                   handle,
                   vk,
@@ -1716,7 +1739,7 @@ export function LegacyMediaAssignmentBoardClient() {
                   id,
                   { fromZone: "gallery", targetZone: "gallery_reorder" }
                 )
-              }
+              )}
             >
               Move right
             </button>
@@ -1725,7 +1748,7 @@ export function LegacyMediaAssignmentBoardClient() {
               data-action-button="gallery-set-primary"
               style={miniBtn}
               {...shieldBtn}
-              onClick={() =>
+              onClick={stopCardClick(() =>
                 updateVariantDecision(
                   handle,
                   vk,
@@ -1734,7 +1757,7 @@ export function LegacyMediaAssignmentBoardClient() {
                   id,
                   { fromZone: "gallery", targetZone: "primary" }
                 )
-              }
+              )}
             >
               Set as Primary
             </button>
@@ -1743,7 +1766,7 @@ export function LegacyMediaAssignmentBoardClient() {
               data-action-button="gallery-remove"
               style={miniBtn}
               {...shieldBtn}
-              onClick={() =>
+              onClick={stopCardClick(() =>
                 updateVariantDecision(
                   handle,
                   vk,
@@ -1752,7 +1775,7 @@ export function LegacyMediaAssignmentBoardClient() {
                   id,
                   { fromZone: "gallery", targetZone: "unassigned_pool" }
                 )
-              }
+              )}
             >
               Remove from Gallery
             </button>
@@ -1761,7 +1784,7 @@ export function LegacyMediaAssignmentBoardClient() {
               data-action-button="gallery-return"
               style={miniBtn}
               {...shieldBtn}
-              onClick={() => applyAssignment("assigned-button", id, "unassigned", handle, vk, "gallery")}
+              onClick={stopCardClick(() => applyAssignment("assigned-button", id, "unassigned", handle, vk, "gallery"))}
             >
               Return to Unassigned
             </button>
@@ -1774,7 +1797,7 @@ export function LegacyMediaAssignmentBoardClient() {
               data-action-button="ref-to-primary"
               style={miniBtn}
               {...shieldBtn}
-              onClick={() => applyAssignment("assigned-button", id, "primary", handle, vk, "reference")}
+              onClick={stopCardClick(() => applyAssignment("assigned-button", id, "primary", handle, vk, "reference"))}
             >
               Move to Primary
             </button>
@@ -1783,7 +1806,7 @@ export function LegacyMediaAssignmentBoardClient() {
               data-action-button="ref-to-gallery"
               style={miniBtn}
               {...shieldBtn}
-              onClick={() => applyAssignment("assigned-button", id, "gallery", handle, vk, "reference")}
+              onClick={stopCardClick(() => applyAssignment("assigned-button", id, "gallery", handle, vk, "reference"))}
             >
               Move to Gallery
             </button>
@@ -1792,7 +1815,7 @@ export function LegacyMediaAssignmentBoardClient() {
               data-action-button="ref-return"
               style={miniBtn}
               {...shieldBtn}
-              onClick={() => applyAssignment("assigned-button", id, "unassigned", handle, vk, "reference")}
+              onClick={stopCardClick(() => applyAssignment("assigned-button", id, "unassigned", handle, vk, "reference"))}
             >
               Return to Unassigned
             </button>
@@ -1805,7 +1828,7 @@ export function LegacyMediaAssignmentBoardClient() {
               data-action-button="rej-to-primary"
               style={miniBtn}
               {...shieldBtn}
-              onClick={() => applyAssignment("assigned-button", id, "primary", handle, vk, "lane_reject")}
+              onClick={stopCardClick(() => applyAssignment("assigned-button", id, "primary", handle, vk, "lane_reject"))}
             >
               Move to Primary
             </button>
@@ -1814,7 +1837,7 @@ export function LegacyMediaAssignmentBoardClient() {
               data-action-button="rej-to-gallery"
               style={miniBtn}
               {...shieldBtn}
-              onClick={() => applyAssignment("assigned-button", id, "gallery", handle, vk, "lane_reject")}
+              onClick={stopCardClick(() => applyAssignment("assigned-button", id, "gallery", handle, vk, "lane_reject"))}
             >
               Move to Gallery
             </button>
@@ -1823,7 +1846,7 @@ export function LegacyMediaAssignmentBoardClient() {
               data-action-button="rej-return"
               style={miniBtn}
               {...shieldBtn}
-              onClick={() => applyAssignment("assigned-button", id, "unassigned", handle, vk, "lane_reject")}
+              onClick={stopCardClick(() => applyAssignment("assigned-button", id, "unassigned", handle, vk, "lane_reject"))}
             >
               Return to Unassigned
             </button>
@@ -1834,7 +1857,7 @@ export function LegacyMediaAssignmentBoardClient() {
           data-action-button="assigned-details"
           style={{ ...miniBtn, marginTop: 6, width: "100%" }}
           {...shieldBtn}
-          onClick={() => setInspectorId(id)}
+          onClick={stopCardClick(() => setInspectorId(id))}
         >
           Details / Inspect
         </button>
@@ -1846,7 +1869,7 @@ export function LegacyMediaAssignmentBoardClient() {
               data-action-button="move-to-active-variant"
               style={{ ...miniBtn, marginTop: 4, width: "100%" }}
               {...shieldBtn}
-              onClick={() => applyAssignment("assigned-button", id, "gallery", handle, vk, `other_variant:${ownerVk}`)}
+              onClick={stopCardClick(() => applyAssignment("assigned-button", id, "gallery", handle, vk, `other_variant:${ownerVk}`))}
             >
               Move to active variant (gallery)
             </button>
@@ -1904,6 +1927,7 @@ export function LegacyMediaAssignmentBoardClient() {
         onCardPointerDownCapture={(e) => setDiag((d) => ({ ...d, lastPointerDown: describeTargetFromElement(e.target) }))}
         onCardClickCapture={(e) => setDiag((d) => ({ ...d, lastClick: describeTargetFromElement(e.target) }))}
         filenameMaxLen={22}
+        assignedControlsAboveDrag
       >
         {zoneActions}
       </MediaImageCard>
@@ -1959,9 +1983,6 @@ export function LegacyMediaAssignmentBoardClient() {
     !s
       ? "—"
       : `${s.tagName}${s.className ? `.${s.className}` : ""} media=${s.mediaId || "—"} product=${s.productHandle || "—"} card=${s.closestCard || "—"} draggable=${s.closestDraggable || "—"} drop=${s.closestDropZone || "—"} action=${s.actionButton || "—"}`
-
-  /** Sticky chrome height (header + workflow) for column scroll regions */
-  const headerH = 200
 
   const exportReady = Boolean(exportFeedback) || localDecisionSlots > 0
 
@@ -2557,7 +2578,11 @@ export function LegacyMediaAssignmentBoardClient() {
   return (
     <div
       style={{
-        minHeight: "100vh",
+        height: "100vh",
+        maxHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
         background: "#eef2f6",
         color: "#0f172a",
         fontFamily: 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
@@ -2569,6 +2594,7 @@ export function LegacyMediaAssignmentBoardClient() {
           position: "sticky",
           top: 0,
           zIndex: 20,
+          flexShrink: 0,
           background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
           borderBottom: "1px solid #e2e8f0",
         }}
@@ -2688,10 +2714,13 @@ export function LegacyMediaAssignmentBoardClient() {
 
       <div
         style={{
+          flex: 1,
+          minHeight: 0,
           display: "grid",
           gridTemplateColumns: focusMode ? "minmax(520px,1fr) minmax(500px,520px)" : "280px minmax(520px,1fr) minmax(500px,520px)",
+          gridTemplateRows: "minmax(0, 1fr)",
           alignItems: "stretch",
-          minHeight: `calc(100vh - ${headerH}px)`,
+          overflow: "hidden",
         }}
       >
         <aside
@@ -2700,11 +2729,9 @@ export function LegacyMediaAssignmentBoardClient() {
             borderRight: "1px solid #e2e8f0",
             background: "#fff",
             padding: 16,
-            position: "sticky",
-            top: headerH,
-            alignSelf: "flex-start",
-            maxHeight: `calc(100vh - ${headerH}px)`,
+            minHeight: 0,
             overflowY: "auto",
+            overflowX: "hidden",
             display: focusMode ? "none" : "block",
           }}
         >
@@ -2767,7 +2794,7 @@ export function LegacyMediaAssignmentBoardClient() {
           </div>
         </aside>
 
-        <main style={{ minWidth: 0, padding: 16, overflowY: "auto" }}>
+        <main style={{ minWidth: 0, minHeight: 0, padding: 16, overflowY: "auto", overflowX: "hidden" }}>
           {sidebarCollection === "" && !selectedHandle ? (
             <p style={{ margin: "0 0 14px", padding: "12px 14px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 10, color: "#475569", fontSize: 13 }}>
               <strong>Select a collection to start.</strong> Pick one in the sidebar or stay on <em>All collections</em> to see every product — then choose a product row to load the workspace.
@@ -2980,14 +3007,22 @@ export function LegacyMediaAssignmentBoardClient() {
             background: "#fff",
             display: "flex",
             flexDirection: "column",
-            maxHeight: `calc(100vh - ${headerH}px)`,
-            position: "sticky",
-            top: headerH,
-            alignSelf: "flex-start",
+            minHeight: 0,
+            minWidth: 0,
+            overflow: "hidden",
           }}
         >
-          <div style={{ width: "100%", display: "flex", flexDirection: "column", minWidth: 0 }}>
-            <div style={{ padding: "12px 14px", borderBottom: "1px solid #e2e8f0" }}>
+          <div
+            style={{
+              width: "100%",
+              flex: 1,
+              minHeight: 0,
+              display: "flex",
+              flexDirection: "column",
+              minWidth: 0,
+            }}
+          >
+            <div style={{ flexShrink: 0, padding: "12px 14px", borderBottom: "1px solid #e2e8f0" }}>
               <div style={{ fontSize: 11, fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", marginBottom: 8 }}>Media pool</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, maxHeight: 120, overflowY: "auto" }}>
                 {(
@@ -3089,7 +3124,7 @@ export function LegacyMediaAssignmentBoardClient() {
                 </div>
               </div>
             </div>
-            <div style={{ flex: 1, overflowY: "auto", padding: 12 }}>
+            <div style={{ flex: 1, minHeight: 0, overflowY: "auto", overflowX: "hidden", padding: 12 }}>
               {poolTab === "unpreviewable" ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
                   {unpreviewableRows.length === 0 ? (
@@ -3290,7 +3325,11 @@ export function LegacyMediaAssignmentBoardClient() {
                 </>
               )}
             </div>
-            <details open={diagExpanded} onToggle={(e) => setDiagExpanded((e.currentTarget as HTMLDetailsElement).open)} style={{ borderTop: "1px solid #e2e8f0", background: "#fafafa" }}>
+            <details
+              open={diagExpanded}
+              onToggle={(e) => setDiagExpanded((e.currentTarget as HTMLDetailsElement).open)}
+              style={{ flexShrink: 0, borderTop: "1px solid #e2e8f0", background: "#fafafa" }}
+            >
               <summary style={{ cursor: "pointer", padding: "10px 12px", fontSize: 11, fontWeight: 800, color: "#334155" }}>Diagnostics (dev)</summary>
               <div
                 style={{
@@ -3329,6 +3368,7 @@ export function LegacyMediaAssignmentBoardClient() {
           {inspectorId && inspectorInv ? (
             <div
               style={{
+                flexShrink: 0,
                 borderTop: "1px solid #e2e8f0",
                 background: "#f8fafc",
                 padding: 14,
