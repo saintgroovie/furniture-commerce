@@ -117,7 +117,7 @@ export async function POST(req: Request): Promise<Response> {
           continue
         }
         return NextResponse.json(
-          buildEnrichmentFound(productSkuHint, parsed.article, parsed.name, url, tried, parsed.reasons, parsed.confidence),
+          buildEnrichmentFound(productSkuHint, parsed.article, parsed.name, url, tried, parsed.reasons, parsed.confidence, parsed.source_method),
           { status: 200 }
         )
       }

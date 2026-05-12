@@ -2007,34 +2007,84 @@ export function LegacyMediaAssignmentBoardClient() {
 
   const exportReady = Boolean(exportFeedback) || localDecisionSlots > 0
 
+  /**
+   * Quick check: does product `handle` have at least one not-yet-confirmed
+   * (and not-rejected) suggested color variant? Used by the review-flow
+   * navigation buttons to skip products that are already settled.
+   */
+  const productHasUnconfirmedSuggestions = (handle: string): boolean => {
+    const h = handle.toLowerCase()
+    const rejected = new Set(rejectedSuggestedVariantsByHandle[h] ?? [])
+    const variants = variantsByHandle[h] ?? {}
+    for (const it of invDoc?.items ?? []) {
+      const ce = candById.get(it.id)
+      const linked =
+        ce?.top_candidate?.medusa_product_handle.toLowerCase() === h ||
+        (ce?.candidates ?? []).some((c) => c.medusa_product_handle.toLowerCase() === h) ||
+        (it.handle_hint || "").toLowerCase() === h ||
+        (it.sku_hint || "").toLowerCase() === h
+      if (!linked) continue
+      const token = extractColorToken(it)
+      if (!token) continue
+      const key = `color_${token}`
+      if (rejected.has(key)) continue
+      if (variants[key]) continue
+      return true
+    }
+    return false
+  }
+
+  /**
+   * Navigate to the next product (in `productsFiltered` order) that still has
+   * suggestions waiting for review. Falls back to the next product in the list
+   * if none have unconfirmed suggestions.
+   */
+  const goToNextProductWithSuggestions = (fromHandle?: string) => {
+    if (productsFiltered.length === 0) return
+    const startIdx = fromHandle
+      ? productsFiltered.findIndex((p) => p.handle.toLowerCase() === fromHandle.toLowerCase())
+      : -1
+    for (let off = 1; off <= productsFiltered.length; off++) {
+      const i = (Math.max(0, startIdx) + off) % productsFiltered.length
+      const p = productsFiltered[i]
+      if (productHasUnconfirmedSuggestions(p.handle)) {
+        setSelectedHandle(p.handle)
+        return
+      }
+    }
+    /* All settled — just go to the next product in the list */
+    const i = (Math.max(0, startIdx) + 1) % productsFiltered.length
+    setSelectedHandle(productsFiltered[i].handle)
+  }
+
   const workflowSteps = (
     <div
       style={{
         display: "flex",
         flexWrap: "wrap",
-        gap: 10,
+        gap: 8,
         alignItems: "center",
-        padding: "10px 20px 12px",
+        padding: "6px 20px 8px",
         borderTop: "1px solid #e2e8f0",
         background: "#f8fafc",
       }}
     >
       {(
         [
-          { n: 1, t: "Choose collection", done: true },
-          { n: 2, t: "Select product", done: Boolean(selectedHandle) },
-          { n: 3, t: "Review images", done: Boolean(selectedHandle) },
-          { n: 4, t: "Assign roles", done: localDecisionSlots > 0 },
-          { n: 5, t: "Export JSON", done: exportReady },
+          { n: 1, t: "Collection", done: true },
+          { n: 2, t: "Product", done: Boolean(selectedHandle) },
+          { n: 3, t: "Review", done: Boolean(selectedHandle) },
+          { n: 4, t: "Assign", done: localDecisionSlots > 0 },
+          { n: 5, t: "Export", done: exportReady },
         ] as const
       ).map((s, i, arr) => (
-        <div key={s.n} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div key={s.n} style={{ display: "flex", alignItems: "center", gap: 5 }}>
           <div
             style={{
-              width: 26,
-              height: 26,
+              width: 18,
+              height: 18,
               borderRadius: 999,
-              fontSize: 12,
+              fontSize: 10,
               fontWeight: 800,
               display: "flex",
               alignItems: "center",
@@ -2045,24 +2095,20 @@ export function LegacyMediaAssignmentBoardClient() {
           >
             {s.n}
           </div>
-          <span style={{ fontSize: 12, fontWeight: s.done ? 700 : 500, color: s.done ? "#0f172a" : "#64748b" }}>{s.t}</span>
-          {i < arr.length - 1 ? <span style={{ color: "#cbd5e1", fontSize: 14 }}>→</span> : null}
+          <span style={{ fontSize: 11, fontWeight: s.done ? 700 : 500, color: s.done ? "#0f172a" : "#64748b" }}>{s.t}</span>
+          {i < arr.length - 1 ? <span style={{ color: "#cbd5e1", fontSize: 12 }}>→</span> : null}
         </div>
       ))}
-      <div style={{ marginLeft: "auto", fontSize: 12, color: "#475569", textAlign: "right", maxWidth: 460, lineHeight: 1.45 }}>
-        <div>
+      <div style={{ marginLeft: "auto", fontSize: 11, color: "#475569", display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
+        <span>
           <span style={{ color: "#64748b" }}>Collection:</span> <strong>{collectionLabel}</strong>
-        </div>
-        <div style={{ marginTop: 2 }}>
-          <span style={{ color: "#64748b" }}>Product:</span>{" "}
-          <strong>{selectedHandle || "— none"}</strong>
-        </div>
-        <div style={{ marginTop: 2, color: "#64748b" }}>
-          Local decisions: <strong>{localDecisionSlots}</strong>
-          <span style={{ marginLeft: 8, fontSize: 11 }}>
-            Exports local decisions only. Does not update Medusa.
-          </span>
-        </div>
+        </span>
+        <span>
+          <span style={{ color: "#64748b" }}>Product:</span> <strong>{selectedHandle || "— none"}</strong>
+        </span>
+        <span style={{ color: "#64748b" }}>
+          Slots: <strong>{localDecisionSlots}</strong> · local-only
+        </span>
       </div>
     </div>
   )
@@ -2100,6 +2146,81 @@ export function LegacyMediaAssignmentBoardClient() {
     const z = toZoneState(activeVariant)
     const candCount = entryList.filter((e) => e.top_candidate?.medusa_product_handle.toLowerCase() === h).length
     const suggestions = suggestedVariantsForSelected.filter((s) => !vByHandle[s.variantKey])
+    const totalSuggestions = suggestedVariantsForSelected.length
+    const confirmedSuggestionCount = suggestedVariantsForSelected.filter((s) => Boolean(vByHandle[s.variantKey])).length
+    const leftSuggestionCount = Math.max(0, totalSuggestions - confirmedSuggestionCount)
+    const allSuggestionsReviewed = totalSuggestions > 0 && leftSuggestionCount === 0
+
+    /**
+     * One-shot confirmation: writes variants[h][vk] + meta + active variant for every
+     * suggestion in `arr` and mirrors `board.zones[h]` to the LAST entry so the
+     * Current main media panel jumps to the just-confirmed variant. Used by per-card
+     * `Confirm all` and by the bulk-action toolbar.
+     */
+    const confirmAllForSuggestions = (arr: typeof suggestions) => {
+      if (!arr.length) return
+      const variantUpdates: Record<string, VariantDecisionState> = {}
+      const metaUpdates: Record<string, VariantMetaState> = {}
+      for (const s of arr) {
+        const sk = suggestionEnrichmentKey(h, s.variantKey)
+        const enc = enrichmentByKey[sk]?.data ?? null
+        const prefs = suggestionRowPrefs[sk] ?? { useLegacyName: false, useLegacyArticle: false, editedLegacyArticle: null }
+        variantUpdates[s.variantKey] = {
+          label: prefs.useLegacyName && enc?.legacy_color_name ? enc.legacy_color_name : s.label,
+          primary: s.primaryCandidateId || null,
+          gallery: [...s.galleryCandidateIds],
+          reference: [],
+          rejected: [],
+        }
+        metaUpdates[s.variantKey] = variantMetaFromEnrichmentAndSuggestion({
+          productSkuHint: s.productSkuHint,
+          suggestionReasons: s.reasons,
+          suggestionConfidence: s.confidence,
+          suggestionSourcePathHints: s.sourcePathHints,
+          suggestionSourceUrl: s.sourceUrl,
+          enrichment: enc,
+          useLegacyName: prefs.useLegacyName,
+          useLegacyArticle: prefs.useLegacyArticle,
+          editedLegacyArticle: prefs.editedLegacyArticle,
+          status: "confirmed",
+        })
+      }
+      const lastVariant = arr[arr.length - 1]
+      setVariantsByHandle((prev) => ({
+        ...prev,
+        [h]: { ...(prev[h] ?? {}), ...variantUpdates },
+      }))
+      setVariantMetaByHandle((prev) => ({
+        ...prev,
+        [h]: { ...(prev[h] ?? {}), ...metaUpdates },
+      }))
+      setBoard((prev) => ({
+        ...prev,
+        zones: {
+          ...prev.zones,
+          [h]: {
+            ...(prev.zones[h] ?? emptyZones()),
+            primary: lastVariant.primaryCandidateId || null,
+            gallery: [...lastVariant.galleryCandidateIds],
+            reference_only: [],
+            lane_rejected: [],
+          },
+        },
+      }))
+      setActiveVariantByHandle((prev) => ({ ...prev, [h]: lastVariant.variantKey }))
+      setDiag((d) => ({
+        ...d,
+        stateUpdateRequested: true,
+        stateActuallyChanged: true,
+        lastAction: `confirm ${arr.length} suggestion${arr.length === 1 ? "" : "s"} for variant`,
+        lastError: "",
+      }))
+    }
+    const confirmAllVisible = () => confirmAllForSuggestions(suggestions)
+    const confirmHighConfidence = () => confirmAllForSuggestions(suggestions.filter((s) => s.confidence === "high"))
+    const skipCurrentProduct = () => {
+      goToNextProductWithSuggestions(h)
+    }
 
     return (
       <section
@@ -2464,77 +2585,297 @@ export function LegacyMediaAssignmentBoardClient() {
           </div>
         </section>
 
-        {/* SECTION 4 — Suggested color variants (compact full-width list) */}
-        <div style={{ border: "1px solid #e2e8f0", borderRadius: 12, padding: 12, background: "#fff", minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
-            <span style={{ fontSize: 10, fontWeight: 800, color: "#0f172a", textTransform: "uppercase", letterSpacing: "0.06em" }}>Suggested color variants</span>
-            <span style={{ fontSize: 11, color: "#94a3b8" }}>
-              {suggestions.length === 0 ? "no suggestions" : `${suggestions.length} candidate${suggestions.length === 1 ? "" : "s"}`}
-            </span>
+        {/* SECTION 4 — Suggested color variants — compact review flow */}
+        <div
+          data-suggested-variants-panel="true"
+          data-product-handle={h}
+          style={{ border: "1px solid #e2e8f0", borderRadius: 12, padding: 12, background: "#fff", minWidth: 0 }}
+        >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap", marginBottom: 8, rowGap: 6 }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 10, fontWeight: 800, color: "#0f172a", textTransform: "uppercase", letterSpacing: "0.06em" }}>Suggested color variants</span>
+              {totalSuggestions > 0 ? (
+                <span
+                  data-suggestions-counter="true"
+                  style={{ fontSize: 11, color: "#64748b" }}
+                >
+                  <strong>{totalSuggestions}</strong> suggestion{totalSuggestions === 1 ? "" : "s"} · <strong>{confirmedSuggestionCount}</strong> confirmed ·{" "}
+                  <strong>{leftSuggestionCount}</strong> left
+                </span>
+              ) : (
+                <span style={{ fontSize: 11, color: "#94a3b8" }}>no suggestions</span>
+              )}
+              <span
+                data-product-review-status={allSuggestionsReviewed ? "ready" : "needs-review"}
+                style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.04em",
+                  padding: "2px 8px",
+                  borderRadius: 999,
+                  background: allSuggestionsReviewed ? "#dcfce7" : totalSuggestions === 0 ? "#f1f5f9" : "#fef3c7",
+                  color: allSuggestionsReviewed ? "#166534" : totalSuggestions === 0 ? "#64748b" : "#92400e",
+                }}
+              >
+                {totalSuggestions === 0 ? "no review needed" : allSuggestionsReviewed ? "Ready to export" : "Needs review"}
+              </span>
+            </div>
+            <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+              <button
+                type="button"
+                data-action-button="suggestions-confirm-all-visible"
+                style={{ ...btnPrimaryMini }}
+                disabled={suggestions.length === 0}
+                title={suggestions.length === 0 ? "Nothing left to confirm for this product" : `Confirm ${suggestions.length} unreviewed suggestion${suggestions.length === 1 ? "" : "s"} as primary + gallery`}
+                onClick={confirmAllVisible}
+              >
+                Confirm all ({suggestions.length})
+              </button>
+              <button
+                type="button"
+                data-action-button="suggestions-confirm-high"
+                style={miniBtn}
+                disabled={suggestions.filter((s) => s.confidence === "high").length === 0}
+                title="Confirm only suggestions whose matcher confidence is high"
+                onClick={confirmHighConfidence}
+              >
+                Confirm high-confidence
+              </button>
+              <button
+                type="button"
+                data-action-button="suggestions-skip-product"
+                style={miniBtn}
+                onClick={skipCurrentProduct}
+                title="Move to the next product that still has unconfirmed suggestions"
+              >
+                Skip product
+              </button>
+              <button
+                type="button"
+                data-action-button="suggestions-next-product"
+                style={miniBtn}
+                onClick={() => goToNextProductWithSuggestions(h)}
+                title="Jump to the next product whose suggestions are not yet confirmed"
+              >
+                Next product →
+              </button>
+            </div>
           </div>
           {suggestions.length === 0 ? (
-            <div style={{ fontSize: 12, color: "#64748b" }}>No legacy color suggestions found for this product.</div>
+            <div style={{ fontSize: 12, color: "#64748b" }}>
+              {totalSuggestions === 0
+                ? "No legacy color suggestions found for this product."
+                : "All suggestions confirmed for this product. Edit them in Color variants above or jump to the next product."}
+            </div>
           ) : (
-                <div style={{ display: "grid", gap: 8 }}>
-                  {suggestions.slice(0, 4).map((s) => {
-                    const sk = suggestionEnrichmentKey(h, s.variantKey)
-                    const encState = enrichmentByKey[sk]
-                    const enc = encState?.data ?? null
-                    const loading = Boolean(encState?.loading)
-                    const defPref: SuggestionPref = { useLegacyName: false, useLegacyArticle: false, editedLegacyArticle: null }
-                    const prefs = suggestionRowPrefs[sk] ?? defPref
-                    const normSku = (x: string) => x.replace(/\s+/g, "").replace(/_/g, "-").toLowerCase()
-                    const parsedArticle =
-                      enc?.legacy_color_article && normSku(enc.legacy_color_article) !== normSku(s.productSkuHint)
-                        ? enc.legacy_color_article
-                        : null
-                    const articleLine = prefs.editedLegacyArticle?.trim() || parsedArticle || "—"
-                    const statusLine = loading ? "pending" : enc?.legacy_color_article_status ?? (encState?.error ? "unavailable" : "unavailable")
-                    const metaForConfirm = () =>
-                      variantMetaFromEnrichmentAndSuggestion({
-                        productSkuHint: s.productSkuHint,
-                        suggestionReasons: s.reasons,
-                        suggestionConfidence: s.confidence,
-                        suggestionSourcePathHints: s.sourcePathHints,
-                        suggestionSourceUrl: s.sourceUrl,
-                        enrichment: enc,
-                        useLegacyName: prefs.useLegacyName,
-                        useLegacyArticle: prefs.useLegacyArticle,
-                        editedLegacyArticle: prefs.editedLegacyArticle,
-                        status: "confirmed",
-                      })
-                    const combinedReasons = enc?.reasons?.length ? [...s.reasons, ...enc.reasons] : s.reasons
-                    const sourceUrl = (enc?.source_url || s.sourceUrl) as string | null
-                    const fetchSummary = loading ? "pending" : enc?.fetch_status ?? (encState?.error ? "client_error" : "idle")
-                    return (
-                    <div key={s.variantKey} style={{ border: "1px solid #e2e8f0", borderRadius: 8, background: "#fff", padding: 8 }}>
+            <div style={{ display: "grid", gap: 10 }}>
+              {suggestions.slice(0, 6).map((s) => {
+                const sk = suggestionEnrichmentKey(h, s.variantKey)
+                const encState = enrichmentByKey[sk]
+                const enc = encState?.data ?? null
+                const loading = Boolean(encState?.loading)
+                const defPref: SuggestionPref = { useLegacyName: false, useLegacyArticle: false, editedLegacyArticle: null }
+                const prefs = suggestionRowPrefs[sk] ?? defPref
+                const normSku = (x: string) => x.replace(/\s+/g, "").replace(/_/g, "-").toLowerCase()
+                const parsedArticle =
+                  enc?.legacy_color_article && normSku(enc.legacy_color_article) !== normSku(s.productSkuHint)
+                    ? enc.legacy_color_article
+                    : null
+                const articleLine = prefs.editedLegacyArticle?.trim() || parsedArticle || null
+                const articleStatusRaw = loading ? "pending" : enc?.legacy_color_article_status ?? (encState?.error ? "unavailable" : "unavailable")
+                const articleStatus = articleStatusRaw === "found" ? "found" : articleStatusRaw === "not_found" ? "not found" : articleStatusRaw
+                const sourceMethod = enc?.source_method ?? null
+                const sourceUrl = (enc?.source_url || s.sourceUrl) as string | null
+                const fetchSummary = loading ? "pending" : enc?.fetch_status ?? (encState?.error ? "client_error" : "idle")
+                const combinedReasons = enc?.reasons?.length ? [...s.reasons, ...enc.reasons] : s.reasons
+                const galleryPreview = [s.primaryCandidateId, ...s.galleryCandidateIds].filter(Boolean) as string[]
+                const cardStatus: "suggested" | "edited" = prefs.editedLegacyArticle || prefs.useLegacyArticle || prefs.useLegacyName ? "edited" : "suggested"
+
+                return (
+                  <article
+                    key={s.variantKey}
+                    data-suggestion-card="true"
+                    data-variant-key={s.variantKey}
+                    style={{
+                      border: "1px solid #e2e8f0",
+                      borderRadius: 10,
+                      background: "#fff",
+                      padding: 10,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 8,
+                      minWidth: 0,
+                    }}
+                  >
+                    {/* HEADER: label + confidence + status pills + article + source method */}
+                    <header style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 0 }}>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "baseline", rowGap: 4 }}>
+                        <strong style={{ fontSize: 14, color: "#0f172a", overflowWrap: "anywhere" }}>{s.label}</strong>
+                        <span style={pillIndigo}>{s.confidence}</span>
+                        <span style={pillSlate}>{cardStatus}</span>
+                        <span
+                          style={{
+                            ...pillSlate,
+                            background: articleStatus === "found" ? "#dcfce7" : articleStatus === "pending" ? "#dbeafe" : "#fef3c7",
+                            color: articleStatus === "found" ? "#166534" : articleStatus === "pending" ? "#1e40af" : "#92400e",
+                          }}
+                        >
+                          article: {articleStatus}
+                        </span>
+                        {loading ? <span style={{ fontSize: 10, color: "#64748b" }}>fetch…</span> : null}
+                      </div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "baseline", rowGap: 2, fontSize: 11, color: "#475569" }}>
+                        <span>
+                          Article: <strong style={{ overflowWrap: "anywhere" }}>{articleLine ?? "—"}</strong>
+                        </span>
+                        {sourceMethod ? (
+                          <span style={{ fontSize: 10, color: "#94a3b8" }}>
+                            via <strong style={{ color: "#475569" }}>{sourceMethod}</strong>
+                          </span>
+                        ) : articleStatus === "not found" ? (
+                          <span style={{ fontSize: 10, color: "#b45309" }}>article not found · SKU is never the article</span>
+                        ) : null}
+                        <span style={{ marginLeft: "auto", fontSize: 10, color: "#94a3b8" }}>
+                          SKU hint: <span style={{ color: "#64748b" }}>{s.productSkuHint || "—"}</span>
+                        </span>
+                      </div>
+                    </header>
+
+                    {/* BODY: primary candidate + horizontal gallery strip preview */}
+                    {galleryPreview.length > 0 ? (
                       <div
-                        style={{
-                          display: "flex",
-                          flexWrap: "wrap",
-                          gap: 6,
-                          alignItems: "baseline",
-                          rowGap: 2,
-                        }}
+                        data-suggestion-thumbs="true"
+                        style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-start", minWidth: 0 }}
                       >
-                        <strong style={{ fontSize: 13, color: "#0f172a", overflowWrap: "anywhere" }}>{s.label}</strong>
-                        <span style={{ fontSize: 10, fontWeight: 700, color: "#3730a3", background: "#eef2ff", padding: "2px 6px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                          {s.confidence}
-                        </span>
-                        <span style={{ fontSize: 10, fontWeight: 700, color: "#475569", background: "#f1f5f9", padding: "2px 6px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                          {statusLine}
-                        </span>
-                        {loading ? (
-                          <span style={{ fontSize: 10, color: "#64748b" }}>fetch…</span>
+                        {galleryPreview.slice(0, 6).map((mid, idx) => {
+                          const inv = invById.get(mid)
+                          const pv = inv ? clientPreviewUrl(inv) : null
+                          const previewUrl = pv?.url ?? null
+                          const isPrimary = idx === 0
+                          return (
+                            <div
+                              key={mid}
+                              data-suggestion-thumb={isPrimary ? "primary" : "gallery"}
+                              data-media-id={mid}
+                              style={{
+                                width: isPrimary ? 96 : 72,
+                                height: isPrimary ? 96 : 72,
+                                borderRadius: 8,
+                                border: isPrimary ? "2px solid #2563eb" : "1px solid #e2e8f0",
+                                background: "#f8fafc",
+                                overflow: "hidden",
+                                position: "relative",
+                                flex: "0 0 auto",
+                              }}
+                              title={inv?.filename || mid}
+                            >
+                              {previewUrl ? (
+                                /* eslint-disable-next-line @next/next/no-img-element */
+                                <img
+                                  src={previewUrl}
+                                  alt=""
+                                  width={isPrimary ? 96 : 72}
+                                  height={isPrimary ? 96 : 72}
+                                  draggable={false}
+                                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                />
+                              ) : (
+                                <div style={{ fontSize: 9, color: "#94a3b8", padding: 4, lineHeight: 1.2, height: "100%", display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
+                                  {inv?.filename ? truncateMiddleClient(inv.filename, 24) : "no preview"}
+                                </div>
+                              )}
+                              {isPrimary ? (
+                                <span
+                                  style={{
+                                    position: "absolute",
+                                    top: 2,
+                                    left: 2,
+                                    fontSize: 9,
+                                    fontWeight: 700,
+                                    color: "#fff",
+                                    background: "#2563eb",
+                                    padding: "1px 5px",
+                                    borderRadius: 6,
+                                    letterSpacing: "0.04em",
+                                    textTransform: "uppercase",
+                                  }}
+                                >
+                                  Primary
+                                </span>
+                              ) : null}
+                            </div>
+                          )
+                        })}
+                        {galleryPreview.length > 6 ? (
+                          <div style={{ fontSize: 10, color: "#64748b", alignSelf: "center" }}>
+                            +{galleryPreview.length - 6}
+                          </div>
                         ) : null}
                       </div>
-                      <div style={{ fontSize: 11, color: "#475569", marginTop: 4 }}>
-                        Legacy article: <strong style={{ overflowWrap: "anywhere" }}>{articleLine}</strong>
-                      </div>
-                      <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 2 }}>
-                        Product SKU hint: <span style={{ color: "#64748b" }}>{s.productSkuHint || "—"}</span> · not a legacy color article
-                      </div>
-                      <details style={{ marginTop: 4 }}>
+                    ) : (
+                      <div style={{ fontSize: 11, color: "#94a3b8" }}>No candidate images yet for this variant.</div>
+                    )}
+
+                    {/* FOOTER: Confirm all (primary) + secondary actions + collapsed Details */}
+                    <footer style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", rowGap: 6 }}>
+                      <button
+                        type="button"
+                        data-action-button="suggestion-confirm-all"
+                        style={btnPrimaryMini}
+                        title="Confirm this variant + primary + gallery in current candidate order. Reorder later in Current main media."
+                        onClick={() => confirmAllForSuggestions([s])}
+                      >
+                        Confirm all
+                      </button>
+                      <button
+                        type="button"
+                        data-action-button="suggestion-edit-label"
+                        style={miniBtn}
+                        onClick={() => {
+                          const next = window.prompt("Edit variant label", s.label)
+                          if (!next?.trim()) return
+                          setVariantsByHandle((prev) => ({
+                            ...prev,
+                            [h]: {
+                              ...(prev[h] ?? {}),
+                              [s.variantKey]: { ...(prev[h]?.[s.variantKey] ?? emptyVariant(next.trim())), label: next.trim() },
+                            },
+                          }))
+                        }}
+                      >
+                        Edit label
+                      </button>
+                      <button
+                        type="button"
+                        data-action-button="suggestion-edit-article"
+                        style={miniBtn}
+                        onClick={() => {
+                          const next = window.prompt("Edit legacy color article (manual)", prefs.editedLegacyArticle || parsedArticle || "")
+                          if (next === null) return
+                          const t = next.trim()
+                          setSuggestionRowPrefs((prev) => ({
+                            ...prev,
+                            [sk]: { ...(prev[sk] ?? defPref), editedLegacyArticle: t || null, useLegacyArticle: t.length > 0 },
+                          }))
+                        }}
+                      >
+                        Edit article
+                      </button>
+                      <button
+                        type="button"
+                        data-action-button="suggestion-reject"
+                        style={miniBtn}
+                        onClick={() =>
+                          setRejectedSuggestedVariantsByHandle((prev) => ({
+                            ...prev,
+                            [h]: Array.from(new Set([...(prev[h] ?? []), s.variantKey])),
+                          }))
+                        }
+                      >
+                        Reject
+                      </button>
+                      <details style={{ marginLeft: "auto" }}>
                         <summary
                           style={{
                             cursor: "pointer",
@@ -2545,9 +2886,9 @@ export function LegacyMediaAssignmentBoardClient() {
                             textTransform: "uppercase",
                           }}
                         >
-                          Why? — source / reasons
+                          Details
                         </summary>
-                        <div style={{ marginTop: 4, fontSize: 11, color: "#475569", overflowWrap: "anywhere", wordBreak: "break-word", lineHeight: 1.45 }}>
+                        <div style={{ marginTop: 6, fontSize: 11, color: "#475569", overflowWrap: "anywhere", wordBreak: "break-word", lineHeight: 1.45 }}>
                           <div>Legacy color name: <strong>{enc?.legacy_color_name || "—"}</strong></div>
                           <div style={{ marginTop: 2 }}>
                             Source URL:{" "}
@@ -2559,217 +2900,61 @@ export function LegacyMediaAssignmentBoardClient() {
                                 title={sourceUrl}
                                 style={{ color: "#2563eb", overflowWrap: "anywhere", wordBreak: "break-all" }}
                               >
-                                {truncateMiddleClient(sourceUrl, 64)}
+                                {truncateMiddleClient(sourceUrl, 72)}
                               </a>
                             ) : (
-                              <span title={s.sourcePathHints[0] || ""}>{s.sourcePathHints[0] ? truncateMiddleClient(s.sourcePathHints[0], 64) : "legacy source unavailable"}</span>
+                              <span title={s.sourcePathHints[0] || ""}>
+                                {s.sourcePathHints[0] ? truncateMiddleClient(s.sourcePathHints[0], 72) : "legacy source unavailable"}
+                              </span>
                             )}
                           </div>
                           <div style={{ marginTop: 2 }}>
-                            Fetch / parse: <strong>{fetchSummary}</strong>
+                            Source method: <strong>{sourceMethod || "—"}</strong> · Fetch / parse: <strong>{fetchSummary}</strong>
                             {encState?.error ? <span style={{ color: "#b91c1c" }}> · {encState.error}</span> : null}
                           </div>
-                          {combinedReasons.length > 0 ? (
-                            <div style={{ marginTop: 2, color: "#64748b" }}>
-                              Reasons: {combinedReasons.join(", ")}
-                            </div>
-                          ) : null}
+                          <div style={{ marginTop: 2 }}>
+                            Filename tokens / reasons:{" "}
+                            <span style={{ color: "#64748b" }}>{combinedReasons.length ? combinedReasons.join(", ") : "—"}</span>
+                          </div>
+                          <div style={{ marginTop: 6, display: "flex", gap: 6, flexWrap: "wrap" }}>
+                            <button
+                              type="button"
+                              style={{ ...miniBtn, background: prefs.useLegacyName ? "#0f172a" : "#fff", color: prefs.useLegacyName ? "#fff" : "#334155" }}
+                              onClick={() =>
+                                setSuggestionRowPrefs((prev) => ({
+                                  ...prev,
+                                  [sk]: { ...(prev[sk] ?? defPref), useLegacyName: !(prev[sk]?.useLegacyName ?? false) },
+                                }))
+                              }
+                            >
+                              Use legacy name
+                            </button>
+                            <button
+                              type="button"
+                              style={{ ...miniBtn, background: prefs.useLegacyArticle ? "#0f172a" : "#fff", color: prefs.useLegacyArticle ? "#fff" : "#334155" }}
+                              onClick={() =>
+                                setSuggestionRowPrefs((prev) => ({
+                                  ...prev,
+                                  [sk]: { ...(prev[sk] ?? defPref), useLegacyArticle: !(prev[sk]?.useLegacyArticle ?? false) },
+                                }))
+                              }
+                            >
+                              Use legacy article
+                            </button>
+                          </div>
                         </div>
                       </details>
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
-                        <button
-                          type="button"
-                          style={{
-                            ...miniBtn,
-                            background: prefs.useLegacyName ? "#0f172a" : "#fff",
-                            color: prefs.useLegacyName ? "#fff" : "#334155",
-                          }}
-                          onClick={() =>
-                            setSuggestionRowPrefs((prev) => ({
-                              ...prev,
-                              [sk]: { ...(prev[sk] ?? defPref), useLegacyName: !(prev[sk]?.useLegacyName ?? false) },
-                            }))
-                          }
-                        >
-                          Use legacy name
-                        </button>
-                        <button
-                          type="button"
-                          style={{
-                            ...miniBtn,
-                            background: prefs.useLegacyArticle ? "#0f172a" : "#fff",
-                            color: prefs.useLegacyArticle ? "#fff" : "#334155",
-                          }}
-                          onClick={() =>
-                            setSuggestionRowPrefs((prev) => ({
-                              ...prev,
-                              [sk]: { ...(prev[sk] ?? defPref), useLegacyArticle: !(prev[sk]?.useLegacyArticle ?? false) },
-                            }))
-                          }
-                        >
-                          Use legacy article
-                        </button>
-                        <button
-                          type="button"
-                          style={miniBtn}
-                          onClick={() => {
-                            const next = window.prompt("Edit legacy color article (manual)", prefs.editedLegacyArticle || parsedArticle || "")
-                            if (next === null) return
-                            const t = next.trim()
-                            setSuggestionRowPrefs((prev) => ({
-                              ...prev,
-                              [sk]: { ...(prev[sk] ?? defPref), editedLegacyArticle: t || null, useLegacyArticle: t.length > 0 },
-                            }))
-                          }}
-                        >
-                          Edit article
-                        </button>
-                        <button
-                          type="button"
-                          style={miniBtn}
-                          onClick={() => {
-                            setVariantsByHandle((prev) => ({
-                              ...prev,
-                              [h]: {
-                                ...(prev[h] ?? {}),
-                                [s.variantKey]: prev[h]?.[s.variantKey] ?? {
-                                  label: prefs.useLegacyName && enc?.legacy_color_name ? enc.legacy_color_name : s.label,
-                                  primary: null,
-                                  gallery: [],
-                                  reference: [],
-                                  rejected: [],
-                                },
-                              },
-                            }))
-                            setVariantMetaByHandle((prev) => ({
-                              ...prev,
-                              [h]: {
-                                ...(prev[h] ?? {}),
-                                [s.variantKey]: metaForConfirm(),
-                              },
-                            }))
-                            setActiveVariantByHandle((prev) => ({ ...prev, [h]: s.variantKey }))
-                          }}
-                        >
-                          Confirm variant
-                        </button>
-                        <button
-                          type="button"
-                          style={miniBtn}
-                          disabled={!(s.primaryCandidateId || s.mediaIds[0])}
-                          onClick={() => {
-                            const pid = s.primaryCandidateId || s.mediaIds[0]
-                            if (!pid) return
-                            applyAssignment("button", pid, "primary", selectedHandle, s.variantKey)
-                          }}
-                        >
-                          Confirm primary
-                        </button>
-                        <button
-                          type="button"
-                          style={miniBtn}
-                          onClick={() => {
-                            setVariantsByHandle((prev) => {
-                              const variants = prev[h] ?? {}
-                              const base = variants[s.variantKey] ?? emptyVariant(s.label)
-                              return { ...prev, [h]: { ...variants, [s.variantKey]: { ...base, gallery: [...s.galleryCandidateIds] } } }
-                            })
-                            setBoard((prev) => ({
-                              ...prev,
-                              zones: {
-                                ...prev.zones,
-                                [h]: { ...(prev.zones[h] ?? emptyZones()), gallery: [...s.galleryCandidateIds] },
-                              },
-                            }))
-                            setActiveVariantByHandle((prev) => ({ ...prev, [h]: s.variantKey }))
-                          }}
-                        >
-                          Confirm gallery
-                        </button>
-                        <button
-                          type="button"
-                          style={miniBtn}
-                          onClick={() => {
-                            setVariantsByHandle((prev) => {
-                              const variants = prev[h] ?? {}
-                              return {
-                                ...prev,
-                                [h]: {
-                                  ...variants,
-                                  [s.variantKey]: {
-                                    label: prefs.useLegacyName && enc?.legacy_color_name ? enc.legacy_color_name : s.label,
-                                    primary: s.primaryCandidateId || null,
-                                    gallery: [...s.galleryCandidateIds],
-                                    reference: [],
-                                    rejected: [],
-                                  },
-                                },
-                              }
-                            })
-                            setBoard((prev) => ({
-                              ...prev,
-                              zones: {
-                                ...prev.zones,
-                                [h]: {
-                                  ...(prev.zones[h] ?? emptyZones()),
-                                  primary: s.primaryCandidateId || null,
-                                  gallery: [...s.galleryCandidateIds],
-                                  reference_only: [],
-                                  lane_rejected: [],
-                                },
-                              },
-                            }))
-                            setVariantMetaByHandle((prev) => ({
-                              ...prev,
-                              [h]: {
-                                ...(prev[h] ?? {}),
-                                [s.variantKey]: metaForConfirm(),
-                              },
-                            }))
-                            setActiveVariantByHandle((prev) => ({ ...prev, [h]: s.variantKey }))
-                            setDiag((d) => ({ ...d, stateUpdateRequested: true, stateActuallyChanged: true, lastAction: "confirm all for variant", lastError: "" }))
-                          }}
-                        >
-                          Confirm all for this variant
-                        </button>
-                        <button
-                          type="button"
-                          style={miniBtn}
-                          onClick={() =>
-                            setRejectedSuggestedVariantsByHandle((prev) => ({
-                              ...prev,
-                              [h]: Array.from(new Set([...(prev[h] ?? []), s.variantKey])),
-                            }))
-                          }
-                        >
-                          Reject suggestion
-                        </button>
-                        <button
-                          type="button"
-                          style={miniBtn}
-                          onClick={() => {
-                            const next = window.prompt("Edit variant label", s.label)
-                            if (!next?.trim()) return
-                            setVariantsByHandle((prev) => ({
-                              ...prev,
-                              [h]: {
-                                ...(prev[h] ?? {}),
-                                [s.variantKey]: { ...(prev[h]?.[s.variantKey] ?? emptyVariant(next.trim())), label: next.trim() },
-                              },
-                            }))
-                          }}
-                        >
-                          Edit label
-                        </button>
-                      </div>
-                    </div>
-                    );
-                  })}
-                </div>
+                    </footer>
+                  </article>
+                )
+              })}
+            </div>
           )}
-          <p style={{ margin: "10px 0 0", fontSize: 12, color: "#64748b", lineHeight: 1.5 }}>
-            Assignment target: <strong>{activeVariant.label}</strong>. Drag pool tiles into Primary / Gallery, or use the buttons on each tile. Drop assigned tiles on the unassigned strip in <em>Current main media</em> to return them to the pool.
-          </p>
+          {suggestions.length > 6 ? (
+            <p style={{ margin: "8px 0 0", fontSize: 11, color: "#94a3b8" }}>
+              Showing first 6 of {suggestions.length}. Confirm or skip these, then more will surface on the next pass.
+            </p>
+          ) : null}
         </div>
 
         {/* SECTION 5 — Storefront catalog reference (collapsed, full width) */}
@@ -2837,113 +3022,112 @@ export function LegacyMediaAssignmentBoardClient() {
       >
         <div
           style={{
-            margin: "8px 20px 0",
-            padding: "10px 12px",
-            borderRadius: 10,
-            border: "2px solid #7c2d12",
-            background: "#ffedd5",
-            color: "#7c2d12",
-            fontSize: 14,
-            fontWeight: 800,
+            margin: "6px 16px 0",
+            padding: "5px 10px",
+            borderRadius: 6,
+            border: "1px solid #fdba74",
+            background: "#fff7ed",
+            color: "#9a3412",
+            fontSize: 11,
+            fontWeight: 700,
             letterSpacing: "0.01em",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 8,
+            overflowWrap: "anywhere",
           }}
+          title={`${DEV_SENTINEL} · ${DEV_SENTINEL_BUILD}`}
         >
-          {DEV_SENTINEL} · {DEV_SENTINEL_BUILD}
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>
+            {DEV_SENTINEL} · {DEV_SENTINEL_BUILD}
+          </span>
+          <span style={{ fontSize: 10, fontWeight: 700, color: "#9a3412", flexShrink: 0 }}>QA dev-only</span>
         </div>
-        <header style={{ padding: "14px 20px 8px" }}>
-          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", gap: 16, justifyContent: "space-between" }}>
-            <div style={{ minWidth: 0 }}>
-              <h1 style={{ margin: 0, fontSize: 21, fontWeight: 800, letterSpacing: "-0.03em", color: "#0f172a" }}>Legacy media assignment</h1>
-              <p style={{ margin: "6px 0 0", fontSize: 13, color: "#64748b", maxWidth: 560, lineHeight: 1.45 }}>
-                Manual QA workspace: match legacy images to seed products. This page never writes Medusa — only your browser and exported JSON.
-              </p>
+        <header style={{ padding: "8px 16px 6px", display: "flex", flexDirection: "column", gap: 6 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10, justifyContent: "space-between", rowGap: 6 }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 10, minWidth: 0, flexWrap: "wrap" }}>
+              <h1 style={{ margin: 0, fontSize: 17, fontWeight: 800, letterSpacing: "-0.02em", color: "#0f172a" }}>Legacy media assignment</h1>
+              <span style={{ fontSize: 11, color: "#94a3b8" }}>local-only · never writes Medusa</span>
             </div>
-            <div style={{ display: "inline-flex", borderRadius: 999, border: "1px solid #e2e8f0", overflow: "hidden", flexShrink: 0 }}>
-              <button
-                type="button"
-                onClick={() => setFocusMode(false)}
-                style={{
-                  ...segToggleBtn,
-                  background: !focusMode ? "#0f172a" : "#fff",
-                  color: !focusMode ? "#fff" : "#475569",
-                }}
-              >
-                Board mode
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+              <div style={{ display: "inline-flex", borderRadius: 999, border: "1px solid #e2e8f0", overflow: "hidden" }}>
+                <button
+                  type="button"
+                  onClick={() => setFocusMode(false)}
+                  style={{
+                    ...segToggleBtn,
+                    padding: "5px 10px",
+                    fontSize: 11,
+                    background: !focusMode ? "#0f172a" : "#fff",
+                    color: !focusMode ? "#fff" : "#475569",
+                  }}
+                >
+                  Board
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFocusMode(true)}
+                  style={{
+                    ...segToggleBtn,
+                    padding: "5px 10px",
+                    fontSize: 11,
+                    background: focusMode ? "#0f172a" : "#fff",
+                    color: focusMode ? "#fff" : "#475569",
+                  }}
+                >
+                  Focus
+                </button>
+              </div>
+              <button type="button" onClick={() => void copyJson()} style={{ ...btnPrimary, padding: "6px 12px", fontSize: 12 }}>
+                Copy JSON
               </button>
-              <button
-                type="button"
-                onClick={() => setFocusMode(true)}
-                style={{
-                  ...segToggleBtn,
-                  background: focusMode ? "#0f172a" : "#fff",
-                  color: focusMode ? "#fff" : "#475569",
-                }}
-              >
-                Focus mode
+              <button type="button" onClick={downloadJson} style={{ ...btnPrimary, padding: "6px 12px", fontSize: 12 }}>
+                Download JSON
+              </button>
+              <button type="button" onClick={clearLocal} style={{ ...btnGhost, padding: "6px 10px", fontSize: 11 }}>
+                Clear local
+              </button>
+              <button type="button" onClick={resetFilters} style={{ ...btnGhost, padding: "6px 10px", fontSize: 11 }}>
+                Reset filters
               </button>
             </div>
-          </div>
-          <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
-            <span style={{ fontSize: 10, fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.08em", marginRight: 4 }}>Primary</span>
-            <span style={primaryPill}>
-              Products reviewed: <b>{toolbarCounts.productsReviewed}</b>
-            </span>
-            <span style={primaryPill}>
-              With assignments: <b>{toolbarCounts.productsWithAssigned}</b>
-            </span>
-            <span style={primaryPill}>
-              Unassigned media: <b>{toolbarCounts.unassigned}</b>
-            </span>
           </div>
           <div
             style={{
-              marginTop: 8,
               display: "flex",
               flexWrap: "wrap",
-              gap: 12,
+              gap: 10,
               alignItems: "center",
               fontSize: 11,
-              color: "#94a3b8",
+              color: "#475569",
+              rowGap: 4,
             }}
-            aria-label="Secondary inventory stats"
           >
-            <span style={{ fontWeight: 700, color: "#cbd5e1", textTransform: "uppercase", letterSpacing: "0.06em" }}>Secondary</span>
-            <span>total {toolbarCounts.total}</span>
-            <span>·</span>
-            <span>previewable {toolbarCounts.previewable}</span>
-            <span>·</span>
-            <span>ambiguous {toolbarCounts.ambiguous}</span>
-            <span>·</span>
-            <span>rejected {toolbarCounts.rejected}</span>
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 12, alignItems: "center" }}>
-            <button type="button" onClick={() => void copyJson()} style={btnPrimary}>
-              Copy JSON
-            </button>
-            <button type="button" onClick={downloadJson} style={btnPrimary}>
-              Download JSON
-            </button>
+            <span style={{ fontSize: 10, fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em" }}>Stats</span>
+            <span>reviewed <strong>{toolbarCounts.productsReviewed}</strong></span>
+            <span style={{ color: "#cbd5e1" }}>·</span>
+            <span>with assignments <strong>{toolbarCounts.productsWithAssigned}</strong></span>
+            <span style={{ color: "#cbd5e1" }}>·</span>
+            <span>unassigned media <strong>{toolbarCounts.unassigned}</strong></span>
+            <span style={{ color: "#cbd5e1" }}>·</span>
+            <span style={{ color: "#94a3b8" }}>total {toolbarCounts.total} · previewable {toolbarCounts.previewable} · ambiguous {toolbarCounts.ambiguous} · rejected {toolbarCounts.rejected}</span>
             {exportFeedback === "copy" ? (
-              <span style={successHint} role="status">
-                Copied to clipboard.
-              </span>
+              <span style={successHint} role="status">Copied.</span>
             ) : exportFeedback === "download" ? (
-              <span style={successHint} role="status">
-                Download started — check your downloads folder.
-              </span>
+              <span style={successHint} role="status">Download started.</span>
             ) : null}
-            <button type="button" onClick={clearLocal} style={btnGhost}>
-              Clear local decisions…
-            </button>
-            <button type="button" onClick={resetFilters} style={btnGhost}>
-              Reset filters
-            </button>
+            <details style={{ marginLeft: "auto" }}>
+              <summary style={{ cursor: "pointer", fontSize: 10, color: "#94a3b8", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                Export hint
+              </summary>
+              <p style={{ margin: "4px 0 0", fontSize: 11, color: "#64748b", lineHeight: 1.5, maxWidth: 520 }}>
+                <strong>This does not update Medusa.</strong> Save the exported JSON as{" "}
+                <code style={{ background: "#f1f5f9", padding: "2px 6px", borderRadius: 6 }}>data/normalized/legacy-media-assignment-decisions.json</code> when you are
+                ready to hand it off. Exports <strong>local decisions only</strong>.
+              </p>
+            </details>
           </div>
-          <p style={{ margin: "10px 0 0", fontSize: 12, color: "#64748b", lineHeight: 1.5, maxWidth: 720 }}>
-            <strong>This does not update Medusa.</strong> Save the exported JSON as{" "}
-            <code style={{ background: "#f1f5f9", padding: "2px 6px", borderRadius: 6 }}>data/normalized/legacy-media-assignment-decisions.json</code> when you are
-            ready to hand it off. Exports <strong>local decisions only</strong>.
-          </p>
         </header>
         {workflowSteps}
       </div>
@@ -3396,7 +3580,15 @@ export function LegacyMediaAssignmentBoardClient() {
                 <div style={{ padding: 24, color: "#64748b", fontSize: 14, textAlign: "center" }}>{poolEmptyMessage}</div>
               ) : (
                 <>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(148px, 1fr))", gap: 12 }}>
+                  <div
+                    data-media-pool-grid="true"
+                    style={{
+                      display: "grid",
+                      /** card width is 136px+16 ≈ 152px in `normal`; min 144 keeps cards from clipping the right edge of the aside */
+                      gridTemplateColumns: focusMode ? "repeat(auto-fill, minmax(180px, 1fr))" : "repeat(auto-fill, minmax(144px, 1fr))",
+                      gap: 10,
+                    }}
+                  >
                     {poolShown.map((id) => {
                       const inv = invById.get(id)
                       if (!inv) return null
@@ -3408,7 +3600,7 @@ export function LegacyMediaAssignmentBoardClient() {
                         poolBadges.push(String(inv.collection_hint || ce?.top_candidate?.medusa_collection_handle))
                       }
                       return (
-                        <div key={id} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        <div key={id} style={{ display: "flex", flexDirection: "column", gap: 8, minWidth: 0 }}>
                           <MediaImageCard
                             inventoryId={id}
                             inv={inv}
@@ -3421,7 +3613,7 @@ export function LegacyMediaAssignmentBoardClient() {
                             confidenceLabel={ce?.confidence || null}
                             previewable={inv.previewable}
                             badges={poolBadges.slice(0, 3)}
-                            size={focusMode && selectedHandle ? "xlarge" : "large"}
+                            size={focusMode && selectedHandle ? "large" : "normal"}
                             draggable={inv.previewable}
                             isDragging={draggingMediaId === id}
                             onDragStart={
@@ -3773,6 +3965,33 @@ const miniBtn: React.CSSProperties = {
   minWidth: 0,
   maxWidth: "100%",
   boxSizing: "border-box",
+}
+/** Dark-filled compact button — used for the primary action in the review flow ("Confirm all"). */
+const btnPrimaryMini: React.CSSProperties = {
+  ...miniBtn,
+  background: "#0f172a",
+  color: "#fff",
+  borderColor: "#0f172a",
+}
+const pillIndigo: React.CSSProperties = {
+  fontSize: 10,
+  fontWeight: 700,
+  color: "#3730a3",
+  background: "#eef2ff",
+  padding: "2px 6px",
+  borderRadius: 999,
+  textTransform: "uppercase",
+  letterSpacing: "0.04em",
+}
+const pillSlate: React.CSSProperties = {
+  fontSize: 10,
+  fontWeight: 700,
+  color: "#475569",
+  background: "#f1f5f9",
+  padding: "2px 6px",
+  borderRadius: 999,
+  textTransform: "uppercase",
+  letterSpacing: "0.04em",
 }
 const primaryPill: React.CSSProperties = {
   fontSize: 12,
