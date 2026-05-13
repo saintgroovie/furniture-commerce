@@ -17,6 +17,8 @@ import {
   type PersistedV2,
   type ProductZoneState,
 } from "./legacy-media-board-export"
+import { matchAllSeedUrls, orderedInventoryIdsFromSeedUrls, type SeedUrlMatchRow } from "./seed-inventory-match"
+import { StorefrontSeedMediaCard } from "./StorefrontSeedMediaCard"
 import type {
   CandidateEntry,
   InvItem,
@@ -57,7 +59,7 @@ async function fetchBoardJson(url: string): Promise<{ ok: true; data: Record<str
 
 type PoolTab = "suggested" | "unassigned" | "ambiguous" | "confirmed" | "unpreviewable" | "rejected"
 type ZoneDrop = "primary" | "gallery" | "reference" | "lane_reject" | "unassigned"
-type ActionSource = "button" | "assigned-button" | "manual" | "drag"
+type ActionSource = "button" | "assigned-button" | "manual" | "drag" | "selected-product-default"
 
 type TargetSnapshot = {
   tagName: string
@@ -1026,7 +1028,7 @@ export function LegacyMediaAssignmentBoardClient() {
         setLastDragAction("blocked")
         setDiag((d) => ({
           ...d,
-          buttonHandlerFired: source === "button" || source === "assigned-button" ? true : d.buttonHandlerFired,
+          buttonHandlerFired: source === "button" || source === "assigned-button" || source === "selected-product-default" ? true : d.buttonHandlerFired,
           stateUpdateRequested: true,
           stateActuallyChanged: false,
           lastAction: "blocked",
@@ -1089,7 +1091,7 @@ export function LegacyMediaAssignmentBoardClient() {
       setDragError(changed ? "" : "state unchanged")
       setDiag((d) => ({
         ...d,
-        buttonHandlerFired: source === "button" || source === "assigned-button" ? true : d.buttonHandlerFired,
+        buttonHandlerFired: source === "button" || source === "assigned-button" || source === "selected-product-default" ? true : d.buttonHandlerFired,
         stateUpdateRequested: true,
         stateActuallyChanged: changed,
         lastAction: `${source} -> ${zone}`,
@@ -1097,7 +1099,15 @@ export function LegacyMediaAssignmentBoardClient() {
         source,
         mediaId: inventoryId,
         productHandle: activeHandle,
-        fromZone: diagFromZone ?? (source === "button" ? "pool" : source === "assigned-button" ? "assigned_lane" : d.fromZone),
+        fromZone:
+          diagFromZone ??
+          (source === "button"
+            ? "pool"
+            : source === "assigned-button"
+              ? "assigned_lane"
+              : source === "selected-product-default"
+                ? "storefront_seed_strip"
+                : d.fromZone),
         targetZone: zone,
         dragSource: source,
         variantKey: chosenVariantKey,
@@ -1114,7 +1124,7 @@ export function LegacyMediaAssignmentBoardClient() {
       updater: (prev: VariantDecisionState) => VariantDecisionState,
       action: string,
       mediaId: string,
-      diagCtx?: { fromZone?: string; targetZone?: string }
+      diagCtx?: { fromZone?: string; targetZone?: string; source?: ActionSource }
     ) => {
       const hh = handle.toLowerCase()
       let noop = false
@@ -1154,7 +1164,7 @@ export function LegacyMediaAssignmentBoardClient() {
         stateActuallyChanged: !noop,
         lastAction: action,
         lastError: noop ? "no state change" : "",
-        source: "assigned-button",
+        source: diagCtx?.source ?? "assigned-button",
         mediaId,
         productHandle: handle,
         fromZone: diagCtx?.fromZone ?? "variant_lane",
@@ -1371,6 +1381,62 @@ export function LegacyMediaAssignmentBoardClient() {
       }))
       .sort((a, b) => b.mediaIds.length - a.mediaIds.length)
   }, [selectedHandle, rejectedSuggestedVariantsByHandle, invDoc, candById, productByHandle])
+
+  /** Seed storefront URLs → legacy inventory ids (path/filename), for badges + auto-draft. */
+  const seedMatchRowsForSelected = useMemo((): SeedUrlMatchRow[] => {
+    if (!selectedHandle || !selectedProduct || !invDoc?.items?.length) return []
+    return matchAllSeedUrls(selectedProduct.image_urls, selectedHandle, selectedProduct.sku || "", invDoc.items)
+  }, [selectedHandle, selectedProduct, invDoc])
+
+  const seedInvIdsMatchedFromStorefront = useMemo(() => {
+    if (!selectedHandle || !selectedProduct || !invDoc?.items?.length) return new Set<string>()
+    const ids = orderedInventoryIdsFromSeedUrls(
+      selectedProduct.image_urls,
+      selectedHandle,
+      selectedProduct.sku || "",
+      invDoc.items
+    )
+    return new Set(ids)
+  }, [selectedHandle, selectedProduct, invDoc])
+
+  /** When Default variant is active and all lanes are empty, mirror storefront seed order into Primary+Gallery using matched inventory ids. */
+  useEffect(() => {
+    if (!hydrated || !selectedHandle || !invDoc?.items?.length || !selectedProduct?.image_urls?.length) return
+    const hh = selectedHandle.toLowerCase()
+    const activeVk = (activeVariantByHandle[hh] || DEFAULT_VARIANT_KEY).trim()
+    if (activeVk !== DEFAULT_VARIANT_KEY) return
+
+    const z = board.zones[hh] ?? emptyZones()
+    const empty =
+      !z.primary && z.gallery.length === 0 && z.reference_only.length === 0 && z.lane_rejected.length === 0
+    if (!empty) return
+
+    const ordered = orderedInventoryIdsFromSeedUrls(
+      selectedProduct.image_urls,
+      hh,
+      selectedProduct.sku || "",
+      invDoc.items
+    )
+    if (ordered.length === 0) return
+
+    const nextZones: ProductZoneState = {
+      primary: ordered[0] ?? null,
+      gallery: ordered.slice(1),
+      reference_only: [],
+      lane_rejected: [],
+    }
+    setBoard((prev) => ({
+      ...prev,
+      zones: { ...prev.zones, [hh]: nextZones },
+    }))
+    setVariantsByHandle((prev) => ({
+      ...prev,
+      [hh]: {
+        ...(prev[hh] ?? {}),
+        [DEFAULT_VARIANT_KEY]: fromZoneState(nextZones, "Default"),
+      },
+    }))
+  }, [hydrated, selectedHandle, selectedProduct, invDoc, board.zones, activeVariantByHandle])
 
   useEffect(() => {
     enrichLoadedRef.current.clear()
@@ -1601,6 +1667,10 @@ export function LegacyMediaAssignmentBoardClient() {
     const gi = zone === "gallery" ? (vv?.gallery.indexOf(id) ?? -1) : -1
     const ownerVk = findVariantKeyOwningMedia(variantsForHandle, id)
     const crossVariant = ownerVk !== null && ownerVk !== vk
+    const assignSrc: ActionSource =
+      selectedHandle?.toLowerCase() === handle.toLowerCase() && seedInvIdsMatchedFromStorefront.has(id)
+        ? "selected-product-default"
+        : "assigned-button"
     const shieldBtn = {
       draggable: false as const,
       onMouseDown: (e: React.MouseEvent) => {
@@ -1625,7 +1695,7 @@ export function LegacyMediaAssignmentBoardClient() {
               style={miniBtn}
               title="Move to Gallery"
               {...shieldBtn}
-              onClick={stopCardClick(() => applyAssignment("assigned-button", id, "gallery", handle, vk, "primary"))}
+              onClick={stopCardClick(() => applyAssignment(assignSrc, id, "gallery", handle, vk, "primary"))}
             >
               Move to Gallery
             </button>
@@ -1635,7 +1705,7 @@ export function LegacyMediaAssignmentBoardClient() {
               style={miniBtn}
               title="Move to Reference"
               {...shieldBtn}
-              onClick={stopCardClick(() => applyAssignment("assigned-button", id, "reference", handle, vk, "primary"))}
+              onClick={stopCardClick(() => applyAssignment(assignSrc, id, "reference", handle, vk, "primary"))}
             >
               Move to Reference
             </button>
@@ -1645,7 +1715,7 @@ export function LegacyMediaAssignmentBoardClient() {
               style={miniBtn}
               title="Reject for this product"
               {...shieldBtn}
-              onClick={stopCardClick(() => applyAssignment("assigned-button", id, "lane_reject", handle, vk, "primary"))}
+              onClick={stopCardClick(() => applyAssignment(assignSrc, id, "lane_reject", handle, vk, "primary"))}
             >
               Reject
             </button>
@@ -1655,7 +1725,7 @@ export function LegacyMediaAssignmentBoardClient() {
               style={miniBtn}
               title="Return to Unassigned"
               {...shieldBtn}
-              onClick={stopCardClick(() => applyAssignment("assigned-button", id, "unassigned", handle, vk, "primary"))}
+              onClick={stopCardClick(() => applyAssignment(assignSrc, id, "unassigned", handle, vk, "primary"))}
             >
               Return to Unassigned
             </button>
@@ -1678,7 +1748,7 @@ export function LegacyMediaAssignmentBoardClient() {
                   },
                   "gallery move first",
                   id,
-                  { fromZone: "gallery", targetZone: "gallery_reorder" }
+                  { fromZone: "gallery", targetZone: "gallery_reorder", source: assignSrc }
                 )
               )}
             >
@@ -1699,7 +1769,7 @@ export function LegacyMediaAssignmentBoardClient() {
                   },
                   "gallery move last",
                   id,
-                  { fromZone: "gallery", targetZone: "gallery_reorder" }
+                  { fromZone: "gallery", targetZone: "gallery_reorder", source: assignSrc }
                 )
               )}
             >
@@ -1723,7 +1793,7 @@ export function LegacyMediaAssignmentBoardClient() {
                   },
                   "gallery move left",
                   id,
-                  { fromZone: "gallery", targetZone: "gallery_reorder" }
+                  { fromZone: "gallery", targetZone: "gallery_reorder", source: assignSrc }
                 )
               )}
             >
@@ -1747,7 +1817,7 @@ export function LegacyMediaAssignmentBoardClient() {
                   },
                   "gallery move right",
                   id,
-                  { fromZone: "gallery", targetZone: "gallery_reorder" }
+                  { fromZone: "gallery", targetZone: "gallery_reorder", source: assignSrc }
                 )
               )}
             >
@@ -1766,7 +1836,7 @@ export function LegacyMediaAssignmentBoardClient() {
                   (prev) => ({ ...prev, primary: id, gallery: prev.gallery.filter((x) => x !== id) }),
                   "set primary from gallery",
                   id,
-                  { fromZone: "gallery", targetZone: "primary" }
+                  { fromZone: "gallery", targetZone: "primary", source: assignSrc }
                 )
               )}
             >
@@ -1785,7 +1855,7 @@ export function LegacyMediaAssignmentBoardClient() {
                   (prev) => ({ ...prev, gallery: prev.gallery.filter((x) => x !== id) }),
                   "remove from gallery",
                   id,
-                  { fromZone: "gallery", targetZone: "unassigned_pool" }
+                  { fromZone: "gallery", targetZone: "unassigned_pool", source: assignSrc }
                 )
               )}
             >
@@ -1797,7 +1867,7 @@ export function LegacyMediaAssignmentBoardClient() {
               style={miniBtn}
               title="Return to Unassigned"
               {...shieldBtn}
-              onClick={stopCardClick(() => applyAssignment("assigned-button", id, "unassigned", handle, vk, "gallery"))}
+              onClick={stopCardClick(() => applyAssignment(assignSrc, id, "unassigned", handle, vk, "gallery"))}
             >
               Return to Unassigned
             </button>
@@ -1811,7 +1881,7 @@ export function LegacyMediaAssignmentBoardClient() {
               style={miniBtn}
               title="Move to Primary"
               {...shieldBtn}
-              onClick={stopCardClick(() => applyAssignment("assigned-button", id, "primary", handle, vk, "reference"))}
+              onClick={stopCardClick(() => applyAssignment(assignSrc, id, "primary", handle, vk, "reference"))}
             >
               Move to Primary
             </button>
@@ -1821,7 +1891,7 @@ export function LegacyMediaAssignmentBoardClient() {
               style={miniBtn}
               title="Move to Gallery"
               {...shieldBtn}
-              onClick={stopCardClick(() => applyAssignment("assigned-button", id, "gallery", handle, vk, "reference"))}
+              onClick={stopCardClick(() => applyAssignment(assignSrc, id, "gallery", handle, vk, "reference"))}
             >
               Move to Gallery
             </button>
@@ -1831,7 +1901,7 @@ export function LegacyMediaAssignmentBoardClient() {
               style={miniBtn}
               title="Return to Unassigned"
               {...shieldBtn}
-              onClick={stopCardClick(() => applyAssignment("assigned-button", id, "unassigned", handle, vk, "reference"))}
+              onClick={stopCardClick(() => applyAssignment(assignSrc, id, "unassigned", handle, vk, "reference"))}
             >
               Return to Unassigned
             </button>
@@ -1845,7 +1915,7 @@ export function LegacyMediaAssignmentBoardClient() {
               style={miniBtn}
               title="Move to Primary"
               {...shieldBtn}
-              onClick={stopCardClick(() => applyAssignment("assigned-button", id, "primary", handle, vk, "lane_reject"))}
+              onClick={stopCardClick(() => applyAssignment(assignSrc, id, "primary", handle, vk, "lane_reject"))}
             >
               Move to Primary
             </button>
@@ -1855,7 +1925,7 @@ export function LegacyMediaAssignmentBoardClient() {
               style={miniBtn}
               title="Move to Gallery"
               {...shieldBtn}
-              onClick={stopCardClick(() => applyAssignment("assigned-button", id, "gallery", handle, vk, "lane_reject"))}
+              onClick={stopCardClick(() => applyAssignment(assignSrc, id, "gallery", handle, vk, "lane_reject"))}
             >
               Move to Gallery
             </button>
@@ -1865,7 +1935,7 @@ export function LegacyMediaAssignmentBoardClient() {
               style={miniBtn}
               title="Return to Unassigned"
               {...shieldBtn}
-              onClick={stopCardClick(() => applyAssignment("assigned-button", id, "unassigned", handle, vk, "lane_reject"))}
+              onClick={stopCardClick(() => applyAssignment(assignSrc, id, "unassigned", handle, vk, "lane_reject"))}
             >
               Return to Unassigned
             </button>
@@ -1890,7 +1960,7 @@ export function LegacyMediaAssignmentBoardClient() {
               style={{ ...miniBtn, marginTop: 4, width: "100%" }}
               title="Move this media into the currently active variant's Gallery"
               {...shieldBtn}
-              onClick={stopCardClick(() => applyAssignment("assigned-button", id, "gallery", handle, vk, `other_variant:${ownerVk}`))}
+              onClick={stopCardClick(() => applyAssignment(assignSrc, id, "gallery", handle, vk, `other_variant:${ownerVk}`))}
             >
               Move to active variant (gallery)
             </button>
@@ -1911,7 +1981,11 @@ export function LegacyMediaAssignmentBoardClient() {
         sourceType={inv.source_type}
         confidenceLabel={candById.get(id)?.confidence || null}
         previewable={inv.previewable}
-        badges={["Assigned", zone]}
+        badges={[
+          ...(selectedHandle?.toLowerCase() === handle.toLowerCase() && seedInvIdsMatchedFromStorefront.has(id) ? ["storefront seed"] : []),
+          "Assigned",
+          zone,
+        ]}
         size={size}
         draggable={inv.previewable}
         isDragging={draggingMediaId === id}
@@ -2439,6 +2513,76 @@ export function LegacyMediaAssignmentBoardClient() {
             </span>
           </div>
 
+          {selectedProduct.image_urls.length > 0 ? (
+            <div
+              data-default-storefront-seed-strip="true"
+              style={{
+                padding: "10px 12px",
+                borderRadius: 10,
+                border: "1px solid #bfdbfe",
+                background: "#eff6ff",
+                marginBottom: 8,
+                minWidth: 0,
+              }}
+            >
+              <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 8, alignItems: "baseline" }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#1e3a8a" }}>
+                  {seedMatchRowsForSelected.length > 0 && seedMatchRowsForSelected.every((r) => r.invId)
+                    ? "Default storefront photos · matched to legacy inventory · editable draft"
+                    : seedMatchRowsForSelected.some((r) => r.invId)
+                      ? "Default storefront photos · partial match (see seed-only cards)"
+                      : "Default storefront photos · no inventory path match"}
+                </span>
+                <span style={{ fontSize: 10, color: "#64748b" }}>
+                  Source: <strong>seed-products</strong> image_urls · Same files appear in Primary/Gallery when matched to inventory rows
+                </span>
+              </div>
+              {seedMatchRowsForSelected.some((r) => !r.invId) ? (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 10 }}>
+                  {seedMatchRowsForSelected
+                    .filter((r) => !r.invId)
+                    .map((r) => (
+                      <StorefrontSeedMediaCard
+                        key={r.seedUrl}
+                        seedUrl={r.seedUrl}
+                        basename={r.basename}
+                        reason={r.reason}
+                        onCopyUrl={() => {
+                          void navigator.clipboard.writeText(r.seedUrl).catch(() => {})
+                          setDiag((d) => ({
+                            ...d,
+                            buttonHandlerFired: true,
+                            stateUpdateRequested: true,
+                            stateActuallyChanged: false,
+                            lastAction: "copy seed url",
+                            lastError: "",
+                            source: "selected-product-default",
+                            mediaId: r.basename,
+                            productHandle: selectedHandle || "",
+                            fromZone: "storefront_seed_strip",
+                            targetZone: "clipboard",
+                          }))
+                        }}
+                        onInspect={() => {
+                          setDiag((d) => ({
+                            ...d,
+                            buttonHandlerFired: true,
+                            lastAction: "inspect storefront seed url",
+                            source: "selected-product-default",
+                            mediaId: r.basename,
+                            productHandle: selectedHandle || "",
+                            fromZone: "storefront_seed_strip",
+                            targetZone: "diagnostics",
+                          }))
+                          window.alert(`Storefront seed (no legacy inventory id)\n\n${r.seedUrl}\n\n${r.reason}`)
+                        }}
+                      />
+                    ))}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
           {zoneBox(
             "Primary",
             "Drop to Primary",
@@ -2450,7 +2594,8 @@ export function LegacyMediaAssignmentBoardClient() {
               </div>
             ) : (
               <span style={muted}>
-                Primary empty — use <strong>Set as Primary</strong> on any pool tile, or drop a tile here.
+                Primary empty — matching storefront seeds auto-fill here when lanes were empty; use <strong>Set as Primary</strong> on a pool tile or drop
+                here.
               </span>
             )
           )}
@@ -2957,7 +3102,7 @@ export function LegacyMediaAssignmentBoardClient() {
           ) : null}
         </div>
 
-        {/* SECTION 5 — Storefront catalog reference (collapsed, full width) */}
+        {/* SECTION 5 — Full seed URL list (reference only; editable matched tiles live in Current main media) */}
         {selectedProduct.image_urls.length > 0 ? (
           <details style={{ border: "1px solid #e2e8f0", borderRadius: 12, padding: "10px 12px", background: "#fff", minWidth: 0 }}>
             <summary
@@ -2970,25 +3115,19 @@ export function LegacyMediaAssignmentBoardClient() {
                 textTransform: "uppercase",
               }}
             >
-              Storefront catalog reference ({selectedProduct.image_urls.length} seed image{selectedProduct.image_urls.length === 1 ? "" : "s"}, not assigned)
+              All storefront seed URLs ({selectedProduct.image_urls.length}) — reference
             </summary>
-            <div style={{ marginTop: 8, display: "grid", gridTemplateColumns: "repeat(auto-fill, 64px)", gap: 6 }}>
-              {selectedProduct.image_urls.slice(0, 8).map((u) => (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  key={u}
-                  src={u}
-                  alt=""
-                  width={64}
-                  height={64}
-                  draggable={false}
-                  title="Storefront catalog (seed) image — not assigned, not exported."
-                  style={{ width: 64, height: 64, borderRadius: 6, objectFit: "cover", border: "1px solid #e2e8f0", opacity: 0.85 }}
-                />
+            <ul style={{ margin: "8px 0 0", paddingLeft: 18, fontSize: 11, color: "#475569", lineHeight: 1.5, overflowWrap: "anywhere" }}>
+              {selectedProduct.image_urls.map((u) => (
+                <li key={u}>
+                  <a href={u} target="_blank" rel="noreferrer" style={{ color: "#2563eb" }}>
+                    {u}
+                  </a>
+                </li>
               ))}
-            </div>
+            </ul>
             <div style={{ marginTop: 6, fontSize: 10, color: "#94a3b8", lineHeight: 1.4 }}>
-              These are the current storefront / catalog seed images for context only. They are <strong>not</strong> in any lane and do not affect export. Use the actionable photos in <em>Current main media</em> above to manage assignment.
+              Matched seeds are editable in <strong>Current main media</strong> (Primary/Gallery) with full lane controls and export via inventory ids. Unmatched seeds appear as seed-only cards in the blue strip above.
             </div>
           </details>
         ) : null}
@@ -3485,64 +3624,68 @@ export function LegacyMediaAssignmentBoardClient() {
                   ) : null}
                 </p>
               )}
-              <div style={{ marginTop: 10, borderTop: "1px dashed #cbd5e1", paddingTop: 10 }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: "#64748b", textTransform: "uppercase", marginBottom: 6 }}>Manual assignment panel</div>
-                <div style={{ fontSize: 11, color: selectedHandle ? "#334155" : "#b45309", marginBottom: 6 }}>
-                  Active product: <strong>{selectedHandle || "Select product first"}</strong>
+              <details style={{ marginTop: 10, borderTop: "1px dashed #cbd5e1", paddingTop: 10 }}>
+                <summary style={{ cursor: "pointer", fontSize: 11, fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                  Manual assignment (by media id)
+                </summary>
+                <div style={{ marginTop: 8 }}>
+                  <div style={{ fontSize: 11, color: selectedHandle ? "#334155" : "#b45309", marginBottom: 6 }}>
+                    Active product: <strong>{selectedHandle || "Select product first"}</strong>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 6 }}>
+                    <input
+                      value={manualMediaId}
+                      onChange={(e) => setManualMediaId(e.target.value)}
+                      placeholder="media id"
+                      style={{ ...inputStyle, fontSize: 12, padding: "6px 8px", gridColumn: "1 / -1" }}
+                    />
+                    <select value={manualZone} onChange={(e) => setManualZone(e.target.value as ZoneDrop)} style={{ ...inputStyle, fontSize: 12, padding: "6px 8px" }}>
+                      <option value="primary">primary</option>
+                      <option value="gallery">gallery</option>
+                      <option value="reference">reference</option>
+                      <option value="lane_reject">rejected</option>
+                      <option value="unassigned">unassigned</option>
+                    </select>
+                    <select
+                      value={selectedHandle ? activeVariantByHandle[selectedHandle.toLowerCase()] || DEFAULT_VARIANT_KEY : DEFAULT_VARIANT_KEY}
+                      onChange={(e) => {
+                        const sk = selectedHandle?.toLowerCase()
+                        if (!sk) return
+                        const vk = e.target.value
+                        setActiveVariantByHandle((prev) => ({ ...prev, [sk]: vk }))
+                      }}
+                      style={{ ...inputStyle, fontSize: 12, padding: "6px 8px" }}
+                    >
+                      {selectedHandle
+                        ? Object.entries(variantsByHandle[selectedHandle.toLowerCase()] ?? { [DEFAULT_VARIANT_KEY]: emptyVariant("Default") }).map(([k, v]) => (
+                            <option key={k} value={k}>
+                              {v.label}
+                            </option>
+                          ))
+                        : (
+                          <option value={DEFAULT_VARIANT_KEY}>Default</option>
+                        )}
+                    </select>
+                    <button
+                      type="button"
+                      data-action-button="manual-apply"
+                      style={{ ...miniBtn, gridColumn: "1 / -1" }}
+                      disabled={!manualMediaId.trim() || (!selectedHandle && manualZone !== "unassigned")}
+                      onClick={() =>
+                        applyAssignment(
+                          "manual",
+                          manualMediaId.trim(),
+                          manualZone,
+                          selectedHandle,
+                          selectedHandle ? activeVariantByHandle[selectedHandle.toLowerCase()] || DEFAULT_VARIANT_KEY : DEFAULT_VARIANT_KEY
+                        )
+                      }
+                    >
+                      Apply
+                    </button>
+                  </div>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: 6 }}>
-                  <input
-                    value={manualMediaId}
-                    onChange={(e) => setManualMediaId(e.target.value)}
-                    placeholder="media id"
-                    style={{ ...inputStyle, fontSize: 12, padding: "6px 8px" }}
-                  />
-                  <select value={manualZone} onChange={(e) => setManualZone(e.target.value as ZoneDrop)} style={{ ...inputStyle, fontSize: 12, padding: "6px 8px" }}>
-                    <option value="primary">primary</option>
-                    <option value="gallery">gallery</option>
-                    <option value="reference">reference</option>
-                    <option value="lane_reject">rejected</option>
-                    <option value="unassigned">unassigned</option>
-                  </select>
-                  <select
-                    value={selectedHandle ? activeVariantByHandle[selectedHandle.toLowerCase()] || DEFAULT_VARIANT_KEY : DEFAULT_VARIANT_KEY}
-                    onChange={(e) => {
-                      const sk = selectedHandle?.toLowerCase()
-                      if (!sk) return
-                      const vk = e.target.value
-                      setActiveVariantByHandle((prev) => ({ ...prev, [sk]: vk }))
-                    }}
-                    style={{ ...inputStyle, fontSize: 12, padding: "6px 8px" }}
-                  >
-                    {selectedHandle
-                      ? Object.entries(variantsByHandle[selectedHandle.toLowerCase()] ?? { [DEFAULT_VARIANT_KEY]: emptyVariant("Default") }).map(([k, v]) => (
-                          <option key={k} value={k}>
-                            {v.label}
-                          </option>
-                        ))
-                      : (
-                        <option value={DEFAULT_VARIANT_KEY}>Default</option>
-                      )}
-                  </select>
-                  <button
-                    type="button"
-                    data-action-button="manual-apply"
-                    style={miniBtn}
-                    disabled={!manualMediaId.trim() || (!selectedHandle && manualZone !== "unassigned")}
-                    onClick={() =>
-                      applyAssignment(
-                        "manual",
-                        manualMediaId.trim(),
-                        manualZone,
-                        selectedHandle,
-                        selectedHandle ? activeVariantByHandle[selectedHandle.toLowerCase()] || DEFAULT_VARIANT_KEY : DEFAULT_VARIANT_KEY
-                      )
-                    }
-                  >
-                    Apply
-                  </button>
-                </div>
-              </div>
+              </details>
             </div>
             <div style={{ flex: 1, minHeight: 0, overflowY: "auto", overflowX: "hidden", padding: 12 }}>
               {poolTab === "unpreviewable" ? (
@@ -3584,8 +3727,11 @@ export function LegacyMediaAssignmentBoardClient() {
                     data-media-pool-grid="true"
                     style={{
                       display: "grid",
-                      /** card width is 136px+16 ≈ 152px in `normal`; min 144 keeps cards from clipping the right edge of the aside */
-                      gridTemplateColumns: focusMode ? "repeat(auto-fill, minmax(180px, 1fr))" : "repeat(auto-fill, minmax(144px, 1fr))",
+                      width: "100%",
+                      maxWidth: "100%",
+                      boxSizing: "border-box",
+                      /** minmax(0,1fr) lets tracks shrink so fixed-width cards do not clip the aside */
+                      gridTemplateColumns: focusMode ? "repeat(auto-fill, minmax(min(180px, 100%), 1fr))" : "repeat(auto-fill, minmax(min(144px, 100%), 1fr))",
                       gap: 10,
                     }}
                   >
@@ -3667,7 +3813,13 @@ export function LegacyMediaAssignmentBoardClient() {
                                 e.preventDefault()
                                 e.stopPropagation()
                               }}
-                              onClick={() => applyAssignment("button", id, "primary")}
+                              onClick={() =>
+                                applyAssignment(
+                                  selectedHandle && seedInvIdsMatchedFromStorefront.has(id) ? "selected-product-default" : "button",
+                                  id,
+                                  "primary"
+                                )
+                              }
                             >
                               Primary
                             </button>
@@ -3684,7 +3836,13 @@ export function LegacyMediaAssignmentBoardClient() {
                                 e.preventDefault()
                                 e.stopPropagation()
                               }}
-                              onClick={() => applyAssignment("button", id, "gallery")}
+                              onClick={() =>
+                                applyAssignment(
+                                  selectedHandle && seedInvIdsMatchedFromStorefront.has(id) ? "selected-product-default" : "button",
+                                  id,
+                                  "gallery"
+                                )
+                              }
                             >
                               Gallery
                             </button>
@@ -3701,7 +3859,13 @@ export function LegacyMediaAssignmentBoardClient() {
                                 e.preventDefault()
                                 e.stopPropagation()
                               }}
-                              onClick={() => applyAssignment("button", id, "reference")}
+                              onClick={() =>
+                                applyAssignment(
+                                  selectedHandle && seedInvIdsMatchedFromStorefront.has(id) ? "selected-product-default" : "button",
+                                  id,
+                                  "reference"
+                                )
+                              }
                             >
                               Ref
                             </button>

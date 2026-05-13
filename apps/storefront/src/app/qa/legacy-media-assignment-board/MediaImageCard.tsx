@@ -94,7 +94,9 @@ export function MediaImageCard({
       onPointerDownCapture={onCardPointerDownCapture}
       onClickCapture={onCardClickCapture}
       style={{
-        width: w + 16,
+        width: "100%",
+        maxWidth: w + 16,
+        boxSizing: "border-box",
         borderRadius: 12,
         border: isDragging ? "2px solid #2563eb" : "1px solid #e2e8f0",
         background: isDragging ? "#eff6ff" : "#fff",
@@ -123,8 +125,10 @@ export function MediaImageCard({
         title={fullPathTitle}
         style={{
           position: "relative",
-          width: w,
-          height: w,
+          width: "100%",
+          maxWidth: w,
+          margin: "0 auto",
+          aspectRatio: "1",
           borderRadius: 10,
           overflow: "hidden",
           background: "#f1f5f9",
@@ -139,7 +143,13 @@ export function MediaImageCard({
             width={w}
             height={w}
             draggable={false}
-            style={{ objectFit: "cover", display: "block", ...({ WebkitUserDrag: "none" } as Record<string, string>) }}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              display: "block",
+              ...({ WebkitUserDrag: "none" } as Record<string, string>),
+            }}
             onError={() => setImgBroken(true)}
           />
         ) : null}
