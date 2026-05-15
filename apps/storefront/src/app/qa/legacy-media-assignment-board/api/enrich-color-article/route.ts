@@ -1,8 +1,13 @@
-import * as crypto from "crypto"
 import * as fs from "fs"
 import * as path from "path"
 import { NextResponse } from "next/server"
 import { getFurnitureRepoDataResolution, legacyMediaQaRepoRootFailurePayload } from "@/lib/qa/furniture-repo-data-root"
+import {
+  applyIndexedMatchToEnrichment,
+  legacyCacheHtmlPath,
+  matchIndexedColorArticle,
+  readCachedLegacyHtml,
+} from "@/lib/qa/legacy-color-article-index"
 import {
   buildEnrichmentFound,
   buildEnrichmentUnreachable,
@@ -35,23 +40,6 @@ type Body = {
   candidate_map_sku?: string
   candidate_urls?: Array<string | { url: string; source?: string }>
   hover_evidence?: HoverEvidenceInput[]
-}
-
-function legacyCacheHtmlPath(repoRoot: string, url: string): string {
-  const hash = crypto.createHash("md5").update(url).digest("hex")
-  return path.join(repoRoot, "data", "raw", "legacy", "cache", `${hash}.html`)
-}
-
-function readCachedLegacyHtml(repoRoot: string, url: string): string | null {
-  const cachePath = legacyCacheHtmlPath(repoRoot, url)
-  try {
-    if (!fs.existsSync(cachePath)) return null
-    const buf = fs.readFileSync(cachePath)
-    if (buf.byteLength > LEGACY_MAX_HTML_BYTES) return null
-    return buf.toString("utf8")
-  } catch {
-    return null
-  }
 }
 
 function readLegacyPageUrlFromLegacyProducts(repoRoot: string, productSkuHint: string, productHandle: string): string | null {
@@ -247,9 +235,51 @@ export async function POST(req: Request): Promise<Response> {
     return NextResponse.json({ error: "missing_color_token" }, { status: 400 })
   }
 
+  const productHandle = String(body.product_handle ?? "").trim()
   const urlCandidates = collectUrlCandidates(body, resolution.repoRoot)
   const htmlUrls = pickHtmlCandidateUrls(urlCandidates.map((c) => c.url))
   const tried = urlCandidates.map((c) => c.url)
+
+  const indexed = matchIndexedColorArticle(resolution.repoRoot, {
+    product_handle: productHandle,
+    product_sku_hint: productSkuHint,
+    color_token: colorToken,
+    filename_color_token: filenameToken,
+    candidate_map_sku: candidateMapSku,
+    candidate_urls: urlCandidates,
+  })
+  if (indexed.status === "found" && indexed.legacy_color_article) {
+    const pdpUrl = indexed.matched_pdp?.legacy_url || htmlUrls[0] || ""
+    const html = indexed.matched_pdp ? readCachedLegacyHtml(resolution.repoRoot, indexed.matched_pdp.legacy_url) : null
+    const base =
+      html && pdpUrl
+        ? enrichFromFetchedHtml({
+            html,
+            colorToken,
+            productSkuHint,
+            filenameToken,
+            candidateMapSku,
+            sourceUrl: pdpUrl,
+            urlsChecked: [],
+            triedUrls: tried,
+          }).result
+        : buildEnrichmentFound(
+            productSkuHint,
+            filenameToken,
+            candidateMapSku,
+            indexed.legacy_color_article,
+            indexed.legacy_color_name,
+            pdpUrl,
+            [],
+            indexed.matched_swatch ? [indexed.matched_swatch] : [],
+            tried,
+            indexed.reasons,
+            indexed.confidence,
+            indexed.legacy_article_source_method || "hover-title",
+            indexed.raw_evidence_snippet
+          )
+    return NextResponse.json(applyIndexedMatchToEnrichment(base, indexed), { status: 200 })
+  }
 
   const urlsChecked: LegacyUrlChecked[] = []
   for (const c of urlCandidates.slice(0, 12)) {
@@ -335,7 +365,7 @@ export async function POST(req: Request): Promise<Response> {
         lastOutcome = { ...lastOutcome, reasons: [...parseReasons, ...lastOutcome.reasons] }
       }
       if (outcome.kind === "found") {
-        return NextResponse.json(lastOutcome, { status: 200 })
+        return NextResponse.json(applyIndexedMatchToEnrichment(lastOutcome, indexed), { status: 200 })
       }
     } catch (e) {
       const r = buildEnrichmentUnreachable(
@@ -355,10 +385,10 @@ export async function POST(req: Request): Promise<Response> {
 
   if (lastOutcome && lastHtmlUrl) {
     if (lastOutcome.legacy_color_article_status === "hover_required") {
-      return NextResponse.json(lastOutcome, { status: 200 })
+      return NextResponse.json(applyIndexedMatchToEnrichment(lastOutcome, indexed), { status: 200 })
     }
     if (lastOutcome.legacy_color_article_status === "not_found") {
-      return NextResponse.json(lastOutcome, { status: 200 })
+      return NextResponse.json(applyIndexedMatchToEnrichment(lastOutcome, indexed), { status: 200 })
     }
   }
 

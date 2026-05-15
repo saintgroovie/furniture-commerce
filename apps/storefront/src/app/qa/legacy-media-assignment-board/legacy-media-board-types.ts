@@ -154,4 +154,18 @@ export type HoveredLegacyDropTarget = {
   galleryHoverInventoryId: string | null
 }
 
+import type { LegacyColorEnrichmentResult } from "@/lib/qa/legacy-color-article-enrichment"
+import type { ArticleScanProgress, IndexedArticleCandidate, IndexedArticleMatchStatus } from "@/lib/qa/legacy-color-article-index-types"
+
 export type { LegacyColorArticleStatus, LegacyColorEnrichmentResult } from "@/lib/qa/legacy-color-article-enrichment"
+export type { ArticleScanProgress, IndexedArticleCandidate, IndexedArticleMatchStatus } from "@/lib/qa/legacy-color-article-index-types"
+
+/** Enrichment payload may include read-only index audit fields from QA API. */
+export type LegacyColorEnrichmentWithIndex = LegacyColorEnrichmentResult & {
+  indexed_article_status?: IndexedArticleMatchStatus
+  indexed_pdp_url?: string | null
+  indexed_cache_path?: string | null
+  indexed_article_ui?: string
+  article_candidates?: IndexedArticleCandidate[]
+  rejected_article_candidates?: IndexedArticleCandidate[]
+}

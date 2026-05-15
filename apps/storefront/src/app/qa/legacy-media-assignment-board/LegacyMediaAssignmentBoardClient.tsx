@@ -1396,7 +1396,7 @@ export function LegacyMediaAssignmentBoardClient() {
       const ce = candById.get(it.id)
       const token = extractColorToken(it)
       if (!token) continue
-      const identity = classifyMediaProductIdentity(it, ce, selectedHandle, productSkuHint)
+      const identity = classifyMediaProductIdentity(it, ce, handle, productSkuHint)
       if (identity.tier === "excluded") continue
       const baseKey = `color_${token}`
       const variantKey = identity.tier === "needs_identity_review" ? `${baseKey}__review` : baseKey
@@ -1466,7 +1466,7 @@ export function LegacyMediaAssignmentBoardClient() {
       return b.mediaIds.length - a.mediaIds.length
     })
     },
-    [rejectedSuggestedVariantsByHandle, invDoc, candById, productByHandle]
+    [rejectedSuggestedVariantsByHandle, invDoc, candById, productByHandle, selectedHandle]
   )
 
   const suggestedVariantsForSelected = useMemo<SuggestedVariant[]>(() => {
@@ -1495,7 +1495,7 @@ export function LegacyMediaAssignmentBoardClient() {
           .filter((s) => s.identityTier === "this_sku")
           .map((s) => ({
             product_handle: h,
-            product_sku_hint: p.sku.trim(),
+            product_sku_hint: (p.sku || "").trim(),
             variant_key: s.variantKey,
             color_token: s.colorNameRaw,
             filename_color_token: s.filenameColorToken,
@@ -1611,7 +1611,7 @@ export function LegacyMediaAssignmentBoardClient() {
     if (!selectedHandle || !selectedProduct?.sku) return
     let cancelled = false
     const h = selectedHandle.toLowerCase()
-    const sku = selectedProduct.sku.trim()
+    const sku = (selectedProduct.sku || "").trim()
     for (const s of suggestedVariantsForSelected) {
       const sk = suggestionEnrichmentKey(h, s.variantKey)
       if (enrichInflight.current.has(sk) || enrichLoadedRef.current.has(sk)) continue

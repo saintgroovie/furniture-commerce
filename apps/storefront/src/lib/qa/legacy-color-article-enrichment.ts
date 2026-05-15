@@ -721,7 +721,7 @@ function sanitizeSwatchArticles(
   }))
 }
 
-function collectAllSwatchesFromHtml(
+export function collectAllSwatchesFromHtml(
   html: string,
   colorToken: string,
   productSkuHint: string,
