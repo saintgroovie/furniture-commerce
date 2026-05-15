@@ -1,9 +1,14 @@
 /**
- * Dev/QA only: heuristics to extract legacy color SKU/article from fetched HTML.
- * No Medusa / catalog mutation. Best-effort parsing — callers must surface honest status.
+ * Dev/QA only: read-only legacy color article extraction from legacy product pages.
+ * Never treats product SKU / handle / filename token / candidate-map SKU as color article.
  */
 
-export type LegacyColorArticleStatus = "found" | "not_found" | "unavailable" | "parse_failed"
+export type LegacyColorArticleStatus =
+  | "found"
+  | "not_found"
+  | "legacy_fetch_unreachable"
+  | "parse_failed"
+  | "hover_required"
 
 export type LegacyColorEnrichmentFetchStatus =
   | "ok"
@@ -12,40 +17,91 @@ export type LegacyColorEnrichmentFetchStatus =
   | "timeout"
   | "non_html"
   | "parse_exception"
+  | "legacy_unreachable"
 
-/**
- * Where in the HTML the legacy color article was discovered.
- * - hover-title: a `title=` attribute (legacy site uses these on hover swatches)
- * - aria-label: ARIA `aria-label` attribute
- * - data-attr: any `data-*` attribute (data-sku, data-article, data-variant, …)
- * - alt: `alt=` on an image
- * - html-text: text/JSON-LD body match (the legacy parser path)
- */
-export type LegacyColorArticleSourceMethod =
+export type LegacyArticleSourceMethod =
+  | "hover-tooltip"
   | "hover-title"
   | "aria-label"
   | "data-attr"
   | "alt"
-  | "html-text"
+  | "nearby-text"
+  | "embedded-json"
+  | "unavailable"
+
+export type LegacyUrlFetchStatus =
+  | "ok"
+  | "http_error"
+  | "timeout"
+  | "unreachable"
+  | "skipped_non_html"
+  | "not_attempted"
+
+export type LegacyUrlChecked = {
+  url: string
+  source: string
+  fetch_status: LegacyUrlFetchStatus
+  http_status: number | null
+  error: string | null
+  reachable_from_api: boolean
+}
+
+export type LegacySwatchChecked = {
+  selector_hint: string
+  color_token_match: boolean
+  attributes_before: Record<string, string>
+  hover_text: string | null
+  article: string | null
+  color_name: string | null
+  source_method: LegacyArticleSourceMethod | "unavailable"
+  raw_snippet: string
+}
+
+export type HoverEvidenceInput = {
+  selector?: string
+  attributes_before?: Record<string, string>
+  hover_text?: string
+  title?: string
+  aria_label?: string
+  data_attrs?: Record<string, string>
+  outer_html_snippet?: string
+}
+
+export type LegacyUrlCandidate = { url: string; source: string }
 
 export type LegacyColorEnrichmentResult = {
   product_sku_hint: string
+  filename_color_token: string | null
+  candidate_map_sku: string | null
   legacy_color_name: string | null
   legacy_color_article: string | null
+  legacy_article_source_method: LegacyArticleSourceMethod | null
+  legacy_article_source_url: string | null
   legacy_color_article_status: LegacyColorArticleStatus
+  /** @deprecated use legacy_article_source_url */
   source_url: string | null
-  source_method: LegacyColorArticleSourceMethod | null
+  /** @deprecated use legacy_article_source_method */
+  source_method: LegacyArticleSourceMethod | null
   fetch_status: LegacyColorEnrichmentFetchStatus
+  urls_checked: LegacyUrlChecked[]
+  swatches_checked: LegacySwatchChecked[]
   confidence: "high" | "medium" | "low"
   reasons: string[]
+  raw_evidence_snippet: string | null
+  hover_status: "not_needed" | "required" | "supplied" | "unavailable"
   tried_urls: string[]
 }
 
 const IMAGE_EXT = /\.(jpe?g|png|gif|webp|svg|avif|bmp|ico|pdf)(\?|#|$)/i
+const ARTICLE_TOKEN_RE = /\b([A-Z]{1,6}[-_/][0-9]{1,3}(?:[-_/][A-Za-z0-9]{1,12}){1,4})\b/gi
 
 export function looksLikeDirectMediaUrl(url: string): boolean {
   const u = url.split("?")[0] || ""
   return IMAGE_EXT.test(u)
+}
+
+export function normSku(s: string): string {
+  return s.replace(/\s+/g, "").replace(/_/g, "-").toLowerCase()
 }
 
 /** Prefer HTML product pages over direct image/binary URLs. */
@@ -64,334 +120,538 @@ export function pickHtmlCandidateUrls(urls: string[]): string[] {
   return out
 }
 
-function normSku(s: string): string {
-  return s.replace(/\s+/g, "").replace(/_/g, "-").toLowerCase()
+export function dedupeUrlCandidates(candidates: LegacyUrlCandidate[]): LegacyUrlCandidate[] {
+  const out: LegacyUrlCandidate[] = []
+  const seen = new Set<string>()
+  for (const c of candidates) {
+    const u = String(c.url || "").trim()
+    if (!u || !/^https?:\/\//i.test(u)) continue
+    const k = u.split("#")[0].toLowerCase()
+    if (seen.has(k)) continue
+    seen.add(k)
+    out.push({ url: u, source: c.source || "unknown" })
+  }
+  return out
 }
 
-function walkJsonLdForSku(node: unknown, out: Set<string>): void {
-  if (node == null) return
-  if (typeof node === "string") {
-    const t = node.trim()
-    if (/^[A-Za-z0-9][A-Za-z0-9._/-]{3,40}$/.test(t) && /[-_]/.test(t)) out.add(t)
-    return
-  }
-  if (Array.isArray(node)) {
-    for (const x of node) walkJsonLdForSku(x, out)
-    return
-  }
-  if (typeof node === "object") {
-    const o = node as Record<string, unknown>
-    for (const k of ["sku", "productID", "product_id", "mpn", "gtin", "article"]) {
-      const v = o[k]
-      if (typeof v === "string") walkJsonLdForSku(v, out)
-    }
-    for (const v of Object.values(o)) walkJsonLdForSku(v, out)
-  }
+function decodeHtmlEntities(s: string): string {
+  return s
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
 }
 
-function extractNameFromJsonLd(node: unknown): string | null {
-  if (!node || typeof node !== "object") return null
-  const o = node as Record<string, unknown>
-  const n = o.name
-  if (typeof n === "string" && n.trim()) return n.trim()
-  if (typeof o.title === "string" && o.title.trim()) return o.title.trim()
-  return null
-}
-
-/**
- * Pull `attr="value"` pairs of the given attribute name from an HTML string.
- * Cheap regex scanner; does not normalize entities (callers compare lower-cased).
- */
 function readAttributeValues(html: string, attrName: string): string[] {
   const out: string[] = []
   const re = new RegExp(`${attrName}\\s*=\\s*("([^"]*)"|'([^']*)')`, "gi")
   let m: RegExpExecArray | null
   while ((m = re.exec(html)) !== null) {
-    const v = (m[2] ?? m[3] ?? "").trim()
+    const v = decodeHtmlEntities((m[2] ?? m[3] ?? "").trim())
     if (v) out.push(v)
   }
   return out
 }
 
-/**
- * Pull all `data-*="value"` pairs (name + value). Used to harvest legacy hover
- * tooltip data such as `data-sku`, `data-article`, `data-variant`, `data-color`.
- */
 function readDataAttributes(html: string): { name: string; value: string }[] {
   const out: { name: string; value: string }[] = []
   const re = /data-([a-z][a-z0-9_-]*)\s*=\s*("([^"]*)"|'([^']*)')/gi
   let m: RegExpExecArray | null
   while ((m = re.exec(html)) !== null) {
     const name = (m[1] ?? "").toLowerCase()
-    const value = (m[3] ?? m[4] ?? "").trim()
+    const value = decodeHtmlEntities((m[3] ?? m[4] ?? "").trim())
     if (!name || !value) continue
     out.push({ name, value })
   }
   return out
 }
 
-const ARTICLE_TOKEN_RE = /\b([A-Z]{1,6}[-_/][0-9]{1,3}(?:[-_/][A-Za-z0-9]{1,12}){1,4})\b/g
+function tokenMatchesColor(hay: string, colorToken: string): boolean {
+  const t = (colorToken || "").toLowerCase().replace(/_/g, "-")
+  if (!t) return false
+  const h = hay.toLowerCase()
+  return h.includes(t) || h.includes(t.replace(/-/g, ""))
+}
 
-/**
- * Scan an attribute value for the first article-like token that:
- *  - differs from base product SKU (normalised),
- *  - extends base SKU (high preference) OR contains the color token,
- * Returns null when nothing usable.
- */
-function pickArticleFromAttrValue(
+function isDisallowedArticle(article: string, productSkuHint: string, filenameToken: string, candidateMapSku: string): boolean {
+  const n = normSku(article)
+  if (!n) return true
+  if (n === normSku(productSkuHint)) return true
+  if (filenameToken && n === normSku(filenameToken)) return true
+  if (candidateMapSku && n === normSku(candidateMapSku)) return true
+  return false
+}
+
+function extractArticleTokenFromText(
   value: string,
-  base: string,
-  token: string
-): { article: string; matchKind: "extended_base" | "token_match" | "any" } | null {
-  let m: RegExpExecArray | null
-  const re = new RegExp(ARTICLE_TOKEN_RE.source, "g")
-  while ((m = re.exec(value)) !== null) {
-    const raw = m[1].replace(/_/g, "-")
-    const n = normSku(raw)
-    if (!n || n === base) continue
-    if (n.startsWith(base) && n.length > base.length) {
-      return { article: raw, matchKind: "extended_base" }
-    }
-    if (token && (n.includes(token) || raw.toLowerCase().includes(token))) {
-      return { article: raw, matchKind: "token_match" }
-    }
-  }
-  // Fall back to any extended token when value is itself a swatch label and
-  // not blatantly the base sku (used when value === "AB-12-X" exactly).
-  const trimmed = value.trim().replace(/_/g, "-")
-  if (/^[A-Z]{1,6}[-_/][0-9]{1,3}[-_/][A-Za-z0-9]{1,12}(?:[-_/][A-Za-z0-9]{1,12})*$/i.test(trimmed)) {
-    if (normSku(trimmed) !== base) return { article: trimmed, matchKind: "any" }
-  }
-  return null
-}
-
-export type LegacyArticleParseHit = {
-  article: string
-  name: string | null
-  confidence: "high" | "medium" | "low"
-  source_method: LegacyColorArticleSourceMethod
-  reasons: string[]
-}
-
-/**
- * Best-effort: find a color-specific article distinct from base product SKU.
- *
- * Looks first at hover-related DOM attributes (legacy storefronts surface
- * swatch articles via `title`, `aria-label`, `alt`, and `data-*`), then falls
- * back to the JSON-LD / text-body parser. Returns the matched value and the
- * `source_method` so the UI can show "via hover" / "via aria-label" / etc.
- */
-export function parseLegacyColorArticleFromHtml(
-  html: string,
-  colorToken: string,
-  productSkuHint: string
-): LegacyArticleParseHit | { article: null; name: null; confidence: "low"; source_method: null; reasons: string[] } {
-  const reasons: string[] = []
+  productSkuHint: string,
+  filenameToken: string,
+  candidateMapSku: string,
+  colorToken: string
+): { article: string; colorName: string | null } | null {
   const base = normSku(productSkuHint)
-  const token = (colorToken || "").toLowerCase().replace(/_/g, "-")
-  if (!html.trim()) {
-    return { article: null, name: null, confidence: "low", source_method: null, reasons: ["empty_html"] }
-  }
+  const raw = decodeHtmlEntities(value.trim())
+  if (!raw) return null
 
-  /* 1) Hover-related attributes first: legacy site swatches usually expose the
-   *    article-style SKU via `title=`, `aria-label=`, `alt=`, or `data-*=`.
-   *    These attributes typically appear right on the variant link/image. */
-  const attrSources: Array<{ method: LegacyColorArticleSourceMethod; values: string[] }> = [
-    { method: "hover-title", values: readAttributeValues(html, "title") },
-    { method: "aria-label", values: readAttributeValues(html, "aria-label") },
-    { method: "alt", values: readAttributeValues(html, "alt") },
-  ]
-  const dataAttrs = readDataAttributes(html)
-  const dataValues = dataAttrs
-    .filter((d) => /sku|article|product|variant|color|colour|ref|code/.test(d.name))
-    .map((d) => d.value)
-  attrSources.push({ method: "data-attr", values: dataValues })
-
-  for (const src of attrSources) {
-    for (const raw of src.values) {
-      // The legacy tooltip frequently mixes color name + article: "Дуб сонома · CO-02-1-D"
-      // Try the raw value first.
-      const hit = pickArticleFromAttrValue(raw, base, token)
-      if (hit) {
-        reasons.push(`${src.method}:${hit.matchKind}`)
-        const confidence: "high" | "medium" | "low" = hit.matchKind === "extended_base" ? "high" : hit.matchKind === "token_match" ? "high" : "medium"
-        return {
-          article: hit.article,
-          name: null,
-          confidence,
-          source_method: src.method,
-          reasons,
-        }
-      }
-    }
+  let m: RegExpExecArray | null
+  const re = new RegExp(ARTICLE_TOKEN_RE.source, "gi")
+  const hits: string[] = []
+  while ((m = re.exec(raw)) !== null) {
+    const tok = m[1].replace(/_/g, "-")
+    if (!isDisallowedArticle(tok, productSkuHint, filenameToken, candidateMapSku)) hits.push(tok)
   }
+  if (!hits.length) return null
 
-  /* 2) JSON-LD parsing (text body, structured product data) */
-  const skuCandidates = new Set<string>()
-  const ldRe = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi
-  let lm: RegExpExecArray | null
-  while ((lm = ldRe.exec(html)) !== null) {
-    const chunk = lm[1]?.trim()
-    if (!chunk) continue
-    try {
-      const parsed: unknown = JSON.parse(chunk)
-      const nodes = Array.isArray(parsed) ? parsed : [parsed]
-      for (const node of nodes) {
-        walkJsonLdForSku(node, skuCandidates)
-      }
-    } catch {
-      reasons.push("json_ld_parse_skip")
-    }
-  }
-  for (const s of Array.from(skuCandidates)) {
-    const n = normSku(s)
-    if (!n || n === base) continue
-    if (n.startsWith(base) && n.length > base.length) {
-      reasons.push("json_ld_extended_sku")
-      return { article: s.replace(/\s+/g, ""), name: extractNameFromJsonLd(nodesFromLd(html)[0]), confidence: "high", source_method: "html-text", reasons }
-    }
-    if (token && (n.includes(token) || n.endsWith(`-${token}`) || n.includes(`-${token}-`))) {
-      reasons.push("json_ld_token_match")
-      return { article: s.replace(/\s+/g, ""), name: extractNameFromJsonLd(nodesFromLd(html)[0]), confidence: "high", source_method: "html-text", reasons }
-    }
-  }
+  const extended = hits.find((h) => normSku(h).startsWith(base) && normSku(h).length > base.length)
+  const tokenHit = hits.find((h) => colorToken && normSku(h).includes(colorToken.replace(/_/g, "-")))
+  const article = extended || tokenHit || hits[0]
+  if (isDisallowedArticle(article, productSkuHint, filenameToken, candidateMapSku)) return null
 
-  /* 3) Body text window scan around color token */
-  const lowerHtml = html.toLowerCase()
-  const tokenVariants = new Set<string>([token, token.replace(/-/g, "")].filter(Boolean))
-  const idxs: number[] = []
-  for (const tv of Array.from(tokenVariants)) {
-    if (!tv) continue
-    let pos = 0
-    while (pos < lowerHtml.length) {
-      const i = lowerHtml.indexOf(tv, pos)
-      if (i < 0) break
-      idxs.push(i)
-      pos = i + Math.max(1, tv.length)
-    }
-  }
+  const parts = raw.split(/[·•|/–—-]+/).map((p) => p.trim()).filter(Boolean)
+  const colorName =
+    parts.find((p) => !ARTICLE_TOKEN_RE.test(p) && p.length > 1 && !normSku(p).includes(normSku(article)))?.slice(0, 80) ||
+    null
 
-  const extendedRe = /\b([A-Z]{1,6}[-_/][0-9]{1,3}[-_/][A-Za-z0-9]+(?:[-_/][A-Za-z0-9]{2,})+)\b/g
-  const baseRe = /\b([A-Z]{1,6}[-_/][0-9]{1,3}[-_/][0-9]{1,3})\b/g
-
-  for (const i of idxs.slice(0, 24)) {
-    const slice = html.slice(Math.max(0, i - 500), Math.min(html.length, i + 500))
-    let m: RegExpExecArray | null
-    extendedRe.lastIndex = 0
-    while ((m = extendedRe.exec(slice)) !== null) {
-      const raw = m[1].replace(/_/g, "-")
-      const n = normSku(raw)
-      if (n === base) continue
-      if (n.startsWith(base) && n.length > base.length) {
-        reasons.push("regex_window_extended_base")
-        return { article: raw, name: null, confidence: "medium", source_method: "html-text", reasons }
-      }
-      if (token && (n.includes(token) || raw.toLowerCase().includes(token))) {
-        reasons.push("regex_window_token")
-        return { article: raw, name: null, confidence: "medium", source_method: "html-text", reasons }
-      }
-    }
-  }
-
-  baseRe.lastIndex = 0
-  const globalExtended: string[] = []
-  let bm: RegExpExecArray | null
-  while ((bm = baseRe.exec(html)) !== null) {
-    const tail = html.slice(bm.index + bm[0].length, bm.index + bm[0].length + 12)
-    const ext = bm[0] + (tail.match(/^[-_/][A-Za-z0-9]{2,}/)?.[0] || "")
-    if (normSku(ext) !== base) globalExtended.push(ext.replace(/_/g, "-"))
-  }
-  for (const raw of globalExtended) {
-    const n = normSku(raw)
-    if (n === base) continue
-    if (token && n.includes(token)) {
-      reasons.push("global_scan_token")
-      return { article: raw, name: null, confidence: "low", source_method: "html-text", reasons }
-    }
-  }
-
-  return { article: null, name: null, confidence: "low", source_method: null, reasons: [...reasons, "no_sku_match_in_html"] }
+  return { article, colorName }
 }
 
-function nodesFromLd(html: string): unknown[] {
-  const out: unknown[] = []
-  const ldRe = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi
-  let lm: RegExpExecArray | null
-  while ((lm = ldRe.exec(html)) !== null) {
-    const chunk = lm[1]?.trim()
-    if (!chunk) continue
-    try {
-      const parsed: unknown = JSON.parse(chunk)
-      if (Array.isArray(parsed)) out.push(...parsed)
-      else out.push(parsed)
-    } catch {
-      /* skip */
+type AttrHit = { method: LegacyArticleSourceMethod; value: string }
+
+function collectAttrHits(attrs: Record<string, string>): AttrHit[] {
+  const out: AttrHit[] = []
+  const map: Array<[LegacyArticleSourceMethod, string[]]> = [
+    ["hover-title", ["title"]],
+    ["aria-label", ["aria-label", "aria_label"]],
+    ["alt", ["alt"]],
+  ]
+  for (const [method, keys] of map) {
+    for (const k of keys) {
+      const v = attrs[k]
+      if (v) out.push({ method, value: v })
+    }
+  }
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k.startsWith("data-") && /sku|article|product|variant|color|colour|ref|code/.test(k)) {
+      out.push({ method: "data-attr", value: v })
     }
   }
   return out
 }
 
-export function buildEnrichmentUnavailable(
+function snippetFromAttrs(attrs: Record<string, string>, max = 220): string {
+  const parts = Object.entries(attrs)
+    .slice(0, 8)
+    .map(([k, v]) => `${k}="${v.slice(0, 80)}"`)
+  return parts.join(" ").slice(0, max)
+}
+
+/** Extract swatch-like elements from static HTML (no hover). */
+export function extractSwatchesFromHtml(html: string, colorToken: string): LegacySwatchChecked[] {
+  const swatches: LegacySwatchChecked[] = []
+  const tagRe =
+    /<(a|button|span|li|div|label|img)\b([^>]*(?:class|data-|title|aria-label|alt)[^>]*)>/gi
+  let m: RegExpExecArray | null
+  let idx = 0
+  while ((m = tagRe.exec(html)) !== null) {
+    const tag = (m[1] || "div").toLowerCase()
+    const attrChunk = m[2] || ""
+    const classVal = attrChunk.match(/class\s*=\s*("([^"]*)"|'([^']*)')/i)?.[2] ?? attrChunk.match(/class\s*=\s*("([^"]*)"|'([^']*)')/i)?.[3] ?? ""
+    const swatchLike =
+      /swatch|color|colour|variant|option|thumb|palette/i.test(classVal) ||
+      /data-(color|variant|sku|article|option)/i.test(attrChunk)
+    if (!swatchLike && tag !== "img") continue
+
+    const attrs: Record<string, string> = {}
+    for (const name of ["title", "aria-label", "alt", "class", "href", "data-color", "data-variant", "data-sku", "data-article"]) {
+      const v = attrChunk.match(new RegExp(`${name}\\s*=\\s*("([^"]*)"|'([^']*)')`, "i"))
+      if (v) attrs[name] = decodeHtmlEntities((v[2] ?? v[3] ?? "").trim())
+    }
+    for (const d of readDataAttributes(attrChunk)) {
+      attrs[`data-${d.name}`] = d.value
+    }
+
+    const attrHay = Object.values(attrs).join(" ")
+    const colorMatch = tokenMatchesColor(attrHay, colorToken)
+    if (!colorMatch && colorToken) continue
+
+    const selectorHint = `${tag}.${(classVal || "swatch").split(/\s+/).slice(0, 2).join(".")}[${idx}]`
+    idx += 1
+
+    let article: string | null = null
+    let colorName: string | null = null
+    let sourceMethod: LegacyArticleSourceMethod | "unavailable" = "unavailable"
+
+    for (const hit of collectAttrHits(attrs)) {
+      const parsed = extractArticleTokenFromText(hit.value, "", "", "", colorToken)
+      if (parsed) {
+        article = parsed.article
+        colorName = parsed.colorName
+        sourceMethod = hit.method
+        break
+      }
+    }
+
+    swatches.push({
+      selector_hint: selectorHint,
+      color_token_match: colorMatch,
+      attributes_before: attrs,
+      hover_text: null,
+      article,
+      color_name: colorName,
+      source_method: sourceMethod,
+      raw_snippet: snippetFromAttrs(attrs),
+    })
+    if (swatches.length >= 40) break
+  }
+  return swatches
+}
+
+export function resolveArticleFromSwatches(
+  swatches: LegacySwatchChecked[],
+  colorToken: string,
   productSkuHint: string,
+  filenameToken: string,
+  candidateMapSku: string
+): {
+  article: string | null
+  colorName: string | null
+  sourceMethod: LegacyArticleSourceMethod | null
+  rawSnippet: string | null
+  swatch: LegacySwatchChecked | null
+} {
+  const matching = swatches.filter((s) => s.color_token_match)
+  for (const s of matching) {
+    if (!s.article) continue
+    if (isDisallowedArticle(s.article, productSkuHint, filenameToken, candidateMapSku)) continue
+    return {
+      article: s.article,
+      colorName: s.color_name,
+      sourceMethod: s.source_method === "unavailable" ? null : s.source_method,
+      rawSnippet: s.raw_snippet,
+      swatch: s,
+    }
+  }
+  return { article: null, colorName: null, sourceMethod: null, rawSnippet: null, swatch: null }
+}
+
+/** Apply browser hover evidence (from external Playwright script or operator). */
+export function resolveArticleFromHoverEvidence(
+  evidence: HoverEvidenceInput[],
+  colorToken: string,
+  productSkuHint: string,
+  filenameToken: string,
+  candidateMapSku: string
+): {
+  article: string | null
+  colorName: string | null
+  sourceMethod: LegacyArticleSourceMethod | null
+  rawSnippet: string | null
+  swatch: LegacySwatchChecked | null
+} {
+  for (const ev of evidence) {
+    const attrs: Record<string, string> = { ...(ev.attributes_before ?? {}) }
+    if (ev.title) attrs.title = ev.title
+    if (ev.aria_label) attrs["aria-label"] = ev.aria_label
+    if (ev.data_attrs) {
+      for (const [k, v] of Object.entries(ev.data_attrs)) attrs[k.startsWith("data-") ? k : `data-${k}`] = v
+    }
+
+    const attrHay = [Object.values(attrs).join(" "), ev.hover_text ?? "", ev.outer_html_snippet ?? ""].join(" ")
+    if (colorToken && !tokenMatchesColor(attrHay, colorToken)) continue
+
+    const texts: Array<{ method: LegacyArticleSourceMethod; value: string }> = []
+    if (ev.hover_text) texts.push({ method: "hover-tooltip", value: ev.hover_text })
+    for (const hit of collectAttrHits(attrs)) texts.push(hit)
+
+    for (const t of texts) {
+      const parsed = extractArticleTokenFromText(t.value, productSkuHint, filenameToken, candidateMapSku, colorToken)
+      if (parsed) {
+        const swatch: LegacySwatchChecked = {
+          selector_hint: ev.selector || "hover-evidence",
+          color_token_match: true,
+          attributes_before: attrs,
+          hover_text: ev.hover_text ?? null,
+          article: parsed.article,
+          color_name: parsed.colorName,
+          source_method: t.method,
+          raw_snippet: (ev.outer_html_snippet || ev.hover_text || snippetFromAttrs(attrs)).slice(0, 280),
+        }
+        return {
+          article: parsed.article,
+          colorName: parsed.colorName,
+          sourceMethod: t.method,
+          rawSnippet: swatch.raw_snippet,
+          swatch,
+        }
+      }
+    }
+  }
+  return { article: null, colorName: null, sourceMethod: null, rawSnippet: null, swatch: null }
+}
+
+export function finalizeEnrichmentResult(
+  base: Omit<
+    LegacyColorEnrichmentResult,
+    "source_url" | "source_method" | "legacy_article_source_url" | "legacy_article_source_method"
+  > & {
+    legacy_article_source_url?: string | null
+    legacy_article_source_method?: LegacyArticleSourceMethod | null
+  }
+): LegacyColorEnrichmentResult {
+  return {
+    ...base,
+    legacy_article_source_url: base.legacy_article_source_url ?? null,
+    legacy_article_source_method: base.legacy_article_source_method ?? null,
+    source_url: base.legacy_article_source_url ?? null,
+    source_method: base.legacy_article_source_method ?? null,
+  }
+}
+
+export function buildEnrichmentUnreachable(
+  productSkuHint: string,
+  filenameToken: string | null,
+  candidateMapSku: string | null,
   fetchStatus: LegacyColorEnrichmentFetchStatus,
   reasons: string[],
+  urlsChecked: LegacyUrlChecked[],
   triedUrls: string[]
 ): LegacyColorEnrichmentResult {
-  const articleStatus: LegacyColorArticleStatus = fetchStatus === "parse_exception" ? "parse_failed" : "unavailable"
-  return {
+  const articleStatus: LegacyColorArticleStatus =
+    fetchStatus === "parse_exception" ? "parse_failed" : "legacy_fetch_unreachable"
+  return finalizeEnrichmentResult({
     product_sku_hint: productSkuHint,
+    filename_color_token: filenameToken,
+    candidate_map_sku: candidateMapSku,
     legacy_color_name: null,
     legacy_color_article: null,
     legacy_color_article_status: articleStatus,
-    source_url: null,
-    source_method: null,
     fetch_status: fetchStatus,
+    urls_checked: urlsChecked,
+    swatches_checked: [],
     confidence: "low",
     reasons,
+    raw_evidence_snippet: null,
+    hover_status: "unavailable",
     tried_urls: triedUrls,
-  }
+  })
 }
 
 export function buildEnrichmentNotFound(
   productSkuHint: string,
+  filenameToken: string | null,
+  candidateMapSku: string | null,
   sourceUrl: string,
+  urlsChecked: LegacyUrlChecked[],
+  swatchesChecked: LegacySwatchChecked[],
   triedUrls: string[],
-  extraReasons: string[]
+  extraReasons: string[],
+  rawSnippet: string | null
 ): LegacyColorEnrichmentResult {
-  return {
+  return finalizeEnrichmentResult({
     product_sku_hint: productSkuHint,
+    filename_color_token: filenameToken,
+    candidate_map_sku: candidateMapSku,
     legacy_color_name: null,
     legacy_color_article: null,
     legacy_color_article_status: "not_found",
-    source_url: sourceUrl,
-    source_method: null,
+    legacy_article_source_url: sourceUrl,
     fetch_status: "ok",
+    urls_checked: urlsChecked,
+    swatches_checked: swatchesChecked,
     confidence: "low",
-    reasons: ["html_fetched_no_color_article", ...extraReasons],
+    reasons: ["html_fetched_swatch_scan_no_color_article", ...extraReasons],
+    raw_evidence_snippet: rawSnippet,
+    hover_status: swatchesChecked.length ? "required" : "unavailable",
     tried_urls: triedUrls,
-  }
+  })
+}
+
+export function buildEnrichmentHoverRequired(
+  productSkuHint: string,
+  filenameToken: string | null,
+  candidateMapSku: string | null,
+  sourceUrl: string,
+  urlsChecked: LegacyUrlChecked[],
+  swatchesChecked: LegacySwatchChecked[],
+  triedUrls: string[],
+  reasons: string[],
+  rawSnippet: string | null
+): LegacyColorEnrichmentResult {
+  return finalizeEnrichmentResult({
+    product_sku_hint: productSkuHint,
+    filename_color_token: filenameToken,
+    candidate_map_sku: candidateMapSku,
+    legacy_color_name: null,
+    legacy_color_article: null,
+    legacy_color_article_status: "hover_required",
+    legacy_article_source_url: sourceUrl,
+    fetch_status: "ok",
+    urls_checked: urlsChecked,
+    swatches_checked: swatchesChecked,
+    confidence: "low",
+    reasons: ["legacy_page_reachable_hover_extraction_needed", ...reasons],
+    raw_evidence_snippet: rawSnippet,
+    hover_status: "required",
+    tried_urls: triedUrls,
+  })
 }
 
 export function buildEnrichmentFound(
   productSkuHint: string,
+  filenameToken: string | null,
+  candidateMapSku: string | null,
   article: string,
   name: string | null,
   sourceUrl: string,
+  urlsChecked: LegacyUrlChecked[],
+  swatchesChecked: LegacySwatchChecked[],
   triedUrls: string[],
   parseReasons: string[],
   confidence: "high" | "medium" | "low",
-  sourceMethod: LegacyColorArticleSourceMethod | null = "html-text"
+  sourceMethod: LegacyArticleSourceMethod,
+  rawSnippet: string | null
 ): LegacyColorEnrichmentResult {
-  return {
+  return finalizeEnrichmentResult({
     product_sku_hint: productSkuHint,
+    filename_color_token: filenameToken,
+    candidate_map_sku: candidateMapSku,
     legacy_color_name: name,
     legacy_color_article: article,
     legacy_color_article_status: "found",
-    source_url: sourceUrl,
-    source_method: sourceMethod,
+    legacy_article_source_url: sourceUrl,
+    legacy_article_source_method: sourceMethod,
     fetch_status: "ok",
+    urls_checked: urlsChecked,
+    swatches_checked: swatchesChecked,
     confidence,
     reasons: parseReasons,
+    raw_evidence_snippet: rawSnippet,
+    hover_status: "not_needed",
     tried_urls: triedUrls,
+  })
+}
+
+export type EnrichFromHtmlParams = {
+  html: string
+  colorToken: string
+  productSkuHint: string
+  filenameToken: string | null
+  candidateMapSku: string | null
+  sourceUrl: string
+  urlsChecked: LegacyUrlChecked[]
+  triedUrls: string[]
+}
+
+/** Parse static HTML for swatch attributes; never falls back to product SKU / JSON-LD body scan. */
+export function enrichFromFetchedHtml(params: EnrichFromHtmlParams):
+  | { kind: "found"; result: LegacyColorEnrichmentResult }
+  | { kind: "hover_required"; result: LegacyColorEnrichmentResult }
+  | { kind: "not_found"; result: LegacyColorEnrichmentResult } {
+  const swatches = extractSwatchesFromHtml(params.html, params.colorToken).map((s) => ({
+    ...s,
+    article:
+      s.article && isDisallowedArticle(s.article, params.productSkuHint, params.filenameToken || "", params.candidateMapSku || "")
+        ? null
+        : s.article,
+  }))
+
+  const resolved = resolveArticleFromSwatches(
+    swatches,
+    params.colorToken,
+    params.productSkuHint,
+    params.filenameToken || "",
+    params.candidateMapSku || ""
+  )
+
+  if (resolved.article && resolved.sourceMethod) {
+    return {
+      kind: "found",
+      result: buildEnrichmentFound(
+        params.productSkuHint,
+        params.filenameToken,
+        params.candidateMapSku,
+        resolved.article,
+        resolved.colorName,
+        params.sourceUrl,
+        params.urlsChecked,
+        swatches,
+        params.triedUrls,
+        [`swatch_${resolved.sourceMethod}`],
+        "high",
+        resolved.sourceMethod,
+        resolved.rawSnippet
+      ),
+    }
+  }
+
+  const colorSwatches = swatches.filter((s) => s.color_token_match)
+  if (colorSwatches.length > 0) {
+    const sample = colorSwatches[0]
+    return {
+      kind: "hover_required",
+      result: buildEnrichmentHoverRequired(
+        params.productSkuHint,
+        params.filenameToken,
+        params.candidateMapSku,
+        params.sourceUrl,
+        params.urlsChecked,
+        swatches,
+        params.triedUrls,
+        [`swatches_for_color=${colorSwatches.length}`, "static_html_missing_hover_article"],
+        sample.raw_snippet
+      ),
+    }
+  }
+
+  return {
+    kind: "not_found",
+    result: buildEnrichmentNotFound(
+      params.productSkuHint,
+      params.filenameToken,
+      params.candidateMapSku,
+      params.sourceUrl,
+      params.urlsChecked,
+      swatches,
+      params.triedUrls,
+      swatches.length ? ["swatches_present_no_color_token_match"] : ["no_swatch_elements_detected"],
+      swatches[0]?.raw_snippet ?? null
+    ),
   }
 }
+
+/** @deprecated Static-only path; use enrichFromFetchedHtml. Kept for tests importing the name. */
+export function parseLegacyColorArticleFromHtml(
+  html: string,
+  colorToken: string,
+  productSkuHint: string
+): {
+  article: string | null
+  name: string | null
+  confidence: "high" | "medium" | "low"
+  source_method: LegacyArticleSourceMethod | null
+  reasons: string[]
+} {
+  const r = enrichFromFetchedHtml({
+    html,
+    colorToken,
+    productSkuHint,
+    filenameToken: null,
+    candidateMapSku: null,
+    sourceUrl: "",
+    urlsChecked: [],
+    triedUrls: [],
+  })
+  const res = r.result
+  return {
+    article: res.legacy_color_article,
+    name: res.legacy_color_name,
+    confidence: res.confidence,
+    source_method: res.legacy_article_source_method,
+    reasons: res.reasons,
+  }
+}
+
+export const LEGACY_FETCH_TIMEOUT_MS = 10_000
+export const LEGACY_MAX_HTML_BYTES = 1_500_000

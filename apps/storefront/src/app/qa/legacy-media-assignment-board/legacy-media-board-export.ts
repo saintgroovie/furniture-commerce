@@ -204,9 +204,17 @@ function flattenToV1Assignments(zonesByHandle: Record<string, ProductZoneState>)
 export function defaultVariantMeta(productSkuHint: string, overrides?: Partial<VariantMetaState>): VariantMetaState {
   return {
     productSkuHint,
+    filenameColorToken: null,
+    candidateMapSku: null,
     legacyColorName: null,
     legacyColorArticle: null,
-    legacyColorArticleStatus: "unavailable",
+    legacyColorArticleStatus: "legacy_fetch_unreachable",
+    legacyArticleSourceMethod: null,
+    legacyArticleSourceUrl: null,
+    rawEvidenceSnippet: null,
+    urlsChecked: [],
+    swatchesChecked: [],
+    hoverStatus: null,
     sourceUrl: null,
     fetchStatus: "idle",
     confidence: "low",
@@ -223,6 +231,8 @@ export function defaultVariantMeta(productSkuHint: string, overrides?: Partial<V
 
 export function variantMetaFromEnrichmentAndSuggestion(params: {
   productSkuHint: string
+  filenameColorToken?: string | null
+  candidateMapSku?: string | null
   suggestionReasons: string[]
   suggestionConfidence: "high" | "medium" | "low"
   suggestionSourcePathHints: string[]
@@ -234,18 +244,27 @@ export function variantMetaFromEnrichmentAndSuggestion(params: {
   status: VariantMetaState["status"]
 }): VariantMetaState {
   const enc = params.enrichment
+  const articleFound = enc?.legacy_color_article_status === "found" && Boolean(enc?.legacy_color_article)
   return defaultVariantMeta(params.productSkuHint, {
+    filenameColorToken: enc?.filename_color_token ?? params.filenameColorToken ?? null,
+    candidateMapSku: enc?.candidate_map_sku ?? params.candidateMapSku ?? null,
     legacyColorName: enc?.legacy_color_name ?? null,
     legacyColorArticle: enc?.legacy_color_article ?? null,
-    legacyColorArticleStatus: (enc?.legacy_color_article_status ?? "unavailable") as VariantMetaState["legacyColorArticleStatus"],
-    sourceUrl: enc?.source_url ?? params.suggestionSourceUrl,
+    legacyColorArticleStatus: (enc?.legacy_color_article_status ?? "legacy_fetch_unreachable") as VariantMetaState["legacyColorArticleStatus"],
+    legacyArticleSourceMethod: enc?.legacy_article_source_method ?? enc?.source_method ?? null,
+    legacyArticleSourceUrl: enc?.legacy_article_source_url ?? enc?.source_url ?? params.suggestionSourceUrl,
+    rawEvidenceSnippet: enc?.raw_evidence_snippet ?? null,
+    urlsChecked: enc?.urls_checked ?? [],
+    swatchesChecked: enc?.swatches_checked ?? [],
+    hoverStatus: enc?.hover_status ?? null,
+    sourceUrl: enc?.legacy_article_source_url ?? enc?.source_url ?? params.suggestionSourceUrl,
     fetchStatus: (enc?.fetch_status ?? "no_urls") as VariantMetaState["fetchStatus"],
     confidence: (enc?.confidence ?? params.suggestionConfidence) as VariantMetaState["confidence"],
     reasons: [...params.suggestionReasons, ...(enc?.reasons ?? [])],
     sourcePathHints: [...params.suggestionSourcePathHints],
     status: params.status,
     useLegacyName: params.useLegacyName,
-    useLegacyArticle: params.useLegacyArticle,
+    useLegacyArticle: articleFound ? params.useLegacyArticle : false,
     editedLegacyArticle: params.editedLegacyArticle,
   })
 }
@@ -267,7 +286,7 @@ export function migrateLegacyVariantMetaRow(raw: unknown, productSkuHint: string
   const src = r.sourceUrl != null ? String(r.sourceUrl) : null
   return defaultVariantMeta(productSkuHint, {
     legacyColorArticle: legacyFromOld,
-    legacyColorArticleStatus: legacyFromOld ? "found" : "unavailable",
+    legacyColorArticleStatus: legacyFromOld ? "found" : "legacy_fetch_unreachable",
     sourceUrl: src,
     sourcePathHints: Array.isArray(r.sourcePathHints) ? r.sourcePathHints.map(String) : [],
     reasons: Array.isArray(r.reasons) ? r.reasons.map(String) : ["migrated_from_assisted_v1_variant_meta"],
@@ -288,12 +307,18 @@ export function serializeVariantMetaForExport(meta: VariantMetaState): Record<st
     null
   return {
     product_sku_hint: meta.productSkuHint,
+    filename_color_token: meta.filenameColorToken,
+    candidate_map_sku: meta.candidateMapSku,
     legacy_color_name: meta.legacyColorName,
     legacy_color_article: resolvedArticle,
     legacy_color_article_parsed: meta.legacyColorArticle,
     legacy_color_article_status: meta.legacyColorArticleStatus,
+    legacy_article_source_method: meta.legacyArticleSourceMethod,
+    legacy_article_source_url: meta.legacyArticleSourceUrl,
+    raw_evidence_snippet: meta.rawEvidenceSnippet,
     source_url: meta.sourceUrl,
     fetch_status: meta.fetchStatus,
+    hover_status: meta.hoverStatus,
     confidence: meta.confidence,
     reasons: meta.reasons,
     use_legacy_name: meta.useLegacyName,
