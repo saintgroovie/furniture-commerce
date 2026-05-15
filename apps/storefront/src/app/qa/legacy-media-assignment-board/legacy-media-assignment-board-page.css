@@ -1,0 +1,27 @@
+/* QA board: break out of storefront .container (max-width 1200px) and use full viewport. */
+main.container.page-section:has(.legacy-media-assignment-board-root) {
+  max-width: none;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+.legacy-media-assignment-board-root {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.legacy-media-assignment-board-root .legacy-board-shell {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.legacy-media-assignment-board-root [data-media-pool-grid="true"] > * {
+  min-width: 0;
+}
+
+.legacy-media-assignment-board-root [data-media-card="true"] {
+  max-width: 100%;
+  box-sizing: border-box;
+}

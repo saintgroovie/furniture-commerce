@@ -1,4 +1,9 @@
-import type { LegacyColorArticleStatus, LegacyColorEnrichmentFetchStatus } from "@/lib/qa/legacy-color-article-enrichment"
+import type {
+  LegacyColorArticleStatus,
+  LegacyColorEnrichmentFetchStatus,
+  LegacySwatchChecked,
+  LegacyUrlChecked,
+} from "@/lib/qa/legacy-color-article-enrichment"
 
 export type InvItem = {
   id: string
@@ -69,9 +74,17 @@ export type VariantMetaFetchStatus = LegacyColorEnrichmentFetchStatus | "idle" |
 
 export type VariantMetaState = {
   productSkuHint: string
+  filenameColorToken: string | null
+  candidateMapSku: string | null
   legacyColorName: string | null
   legacyColorArticle: string | null
   legacyColorArticleStatus: LegacyColorArticleStatus | "pending"
+  legacyArticleSourceMethod: string | null
+  legacyArticleSourceUrl: string | null
+  rawEvidenceSnippet: string | null
+  urlsChecked: LegacyUrlChecked[]
+  swatchesChecked: LegacySwatchChecked[]
+  hoverStatus: string | null
   sourceUrl: string | null
   fetchStatus: VariantMetaFetchStatus
   confidence: "high" | "medium" | "low"
@@ -86,14 +99,20 @@ export type VariantMetaState = {
 
 export type VariantMetaByHandle = Record<string, Record<string, VariantMetaState>>
 
+export type LegacyUrlCandidateWithSource = { url: string; source: string }
+
 export type SuggestedVariant = {
   variantKey: string
   label: string
   colorNameRaw: string
   /** Catalog / Medusa product SKU — never shown as legacy color article. */
   productSkuHint: string
-  /** Ordered legacy page URL candidates (inventory + deduped). */
-  candidatePageUrls: string[]
+  /** Filename/path color token only — not a legacy article. */
+  filenameColorToken: string
+  /** Matcher top candidate SKU — not a legacy article. */
+  candidateMapSku: string | null
+  /** Ordered legacy page URL candidates with provenance. */
+  candidatePageUrls: LegacyUrlCandidateWithSource[]
   /** Seed image URLs for this product (may be non-HTML; server skips binary). */
   seedImageUrls: string[]
   sourceUrl: string | null
@@ -103,6 +122,10 @@ export type SuggestedVariant = {
   galleryCandidateIds: string[]
   confidence: "high" | "medium" | "low"
   reasons: string[]
+  identityTier: "this_sku" | "needs_identity_review"
+  identityNotes: string[]
+  foreignHandle: string | null
+  foreignSku: string | null
 }
 
 /** Pointer-based drag session (QA board only; not persisted). */

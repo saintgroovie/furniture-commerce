@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { LegacyMediaAssignmentBoardClient } from "./LegacyMediaAssignmentBoardClient"
+import "./legacy-media-assignment-board-page.css"
 
 export const metadata: Metadata = {
   title: "Legacy media assignment board (QA)",

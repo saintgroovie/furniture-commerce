@@ -18,6 +18,7 @@ import {
   type ProductZoneState,
 } from "./legacy-media-board-export"
 import { matchAllSeedUrls, orderedInventoryIdsFromSeedUrls, type SeedUrlMatchRow } from "./seed-inventory-match"
+import { classifyMediaProductIdentity } from "./suggestion-product-guard"
 import { StorefrontSeedMediaCard } from "./StorefrontSeedMediaCard"
 import type {
   CandidateEntry,
@@ -30,7 +31,6 @@ import type {
   VariantMetaByHandle,
   VariantMetaState,
 } from "./legacy-media-board-types"
-import { pickHtmlCandidateUrls } from "@/lib/qa/legacy-color-article-enrichment"
 import { MediaImageCard } from "./MediaImageCard"
 
 const LS_KEY = "furniture-legacy-media-assignment-decisions-v1"
@@ -41,8 +41,8 @@ const DEFAULT_VARIANT_KEY = "__default__"
 const API_BASE = "/qa/legacy-media-assignment-board/api"
 const PREVIEW_ROUTE = "/qa/legacy-media-assignment-board/preview"
 const DND_JSON = "application/json"
-const DEV_SENTINEL = "Legacy Board UI color article enrichment + product SKU hint split"
-const DEV_SENTINEL_BUILD = "2026-05-10T18:00Z"
+const DEV_SENTINEL = "Legacy Board swatch-hover color article audit (SKU hint split)"
+const DEV_SENTINEL_BUILD = "2026-05-15T12:00Z"
 
 async function fetchBoardJson(url: string): Promise<{ ok: true; data: Record<string, unknown> } | { ok: false; status: number; body: Record<string, unknown> }> {
   const res = await fetch(url)
@@ -218,6 +218,26 @@ function truncateMiddleClient(s: string, max: number): string {
 
 function suggestionEnrichmentKey(handle: string, variantKey: string): string {
   return `${handle.toLowerCase()}::${variantKey}`
+}
+
+function legacyArticleStatusLabel(status: string): string {
+  if (status === "found") return "found"
+  if (status === "not_found") return "not found"
+  if (status === "legacy_fetch_unreachable") return "legacy fetch unreachable"
+  if (status === "hover_required") return "hover required"
+  if (status === "parse_failed") return "parse failed"
+  if (status === "pending") return "pending"
+  return status
+}
+
+function legacyArticleCardLine(status: string, article: string | null): string {
+  if (status === "found" && article) return article
+  if (status === "hover_required") return "hover required"
+  if (status === "legacy_fetch_unreachable") return "legacy fetch unreachable"
+  if (status === "not_found") return "not found"
+  if (status === "parse_failed") return "parse failed"
+  if (status === "pending") return "…"
+  return "—"
 }
 
 function titleFromToken(token: string): string {
@@ -1317,69 +1337,94 @@ export function LegacyMediaAssignmentBoardClient() {
     const productSkuHint = (productByHandle.get(h)?.sku || "").trim()
     const seedImageUrls = [...(productByHandle.get(h)?.image_urls ?? [])]
     const rejected = new Set(rejectedSuggestedVariantsByHandle[h] ?? [])
-    const groups = new Map<
-      string,
-      {
-        label: string
-        sourceUrl: string | null
-        sourcePathHints: Set<string>
-        mediaIds: string[]
-        pageUrlCandidates: Set<string>
-        confidence: "high" | "medium" | "low"
-        reasons: Set<string>
-      }
-    >()
+    type GroupAcc = {
+      label: string
+      sourceUrl: string | null
+      sourcePathHints: Set<string>
+      thisSkuIds: string[]
+      reviewIds: string[]
+      pageUrlCandidates: Map<string, string>
+      candidateMapSku: string | null
+      confidence: "high" | "medium" | "low"
+      reasons: Set<string>
+      identityNotes: Set<string>
+      foreignHandle: string | null
+      foreignSku: string | null
+    }
+    const groups = new Map<string, GroupAcc>()
     for (const it of invDoc?.items ?? []) {
       const ce = candById.get(it.id)
-      const linked =
-        ce?.top_candidate?.medusa_product_handle.toLowerCase() === h ||
-        (ce?.candidates ?? []).some((c) => c.medusa_product_handle.toLowerCase() === h) ||
-        (it.handle_hint || "").toLowerCase() === h ||
-        (it.sku_hint || "").toLowerCase() === h
-      if (!linked) continue
       const token = extractColorToken(it)
       if (!token) continue
-      const key = `color_${token}`
-      if (rejected.has(key)) continue
-      const current = groups.get(key) ?? {
-        label: titleFromToken(token),
+      const identity = classifyMediaProductIdentity(it, ce, selectedHandle, productSkuHint)
+      if (identity.tier === "excluded") continue
+      const baseKey = `color_${token}`
+      const variantKey = identity.tier === "needs_identity_review" ? `${baseKey}__review` : baseKey
+      if (rejected.has(variantKey) || rejected.has(baseKey)) continue
+      const current = groups.get(variantKey) ?? {
+        label: identity.tier === "needs_identity_review" ? `${titleFromToken(token)} · review` : titleFromToken(token),
         sourceUrl: it.legacy_product_url || it.page_url || it.url || null,
         sourcePathHints: new Set<string>(),
-        mediaIds: [],
-        pageUrlCandidates: new Set<string>(),
+        thisSkuIds: [],
+        reviewIds: [],
+        pageUrlCandidates: new Map<string, string>(),
+        candidateMapSku: ce?.top_candidate?.medusa_variant_sku?.trim() || null,
         confidence: ce?.confidence === "confirmed" ? "high" : ce?.confidence === "probable" ? "medium" : "low",
         reasons: new Set<string>(),
+        identityNotes: new Set<string>(),
+        foreignHandle: identity.foreignHandle,
+        foreignSku: identity.foreignSku,
       }
-      current.mediaIds.push(it.id)
+      if (identity.tier === "this_sku") current.thisSkuIds.push(it.id)
+      else current.reviewIds.push(it.id)
+      for (const r of identity.reasons) current.identityNotes.add(r)
       if (it.source_path) current.sourcePathHints.add(it.source_path)
       if (it.repo_relative_path) current.sourcePathHints.add(it.repo_relative_path)
       for (const u of [it.legacy_product_url, it.page_url, it.url]) {
-        if (u && String(u).trim()) current.pageUrlCandidates.add(String(u).trim())
+        if (u && String(u).trim()) current.pageUrlCandidates.set(String(u).trim(), "inventory")
       }
       current.reasons.add(`filename token color_${token}`)
-      if (it.source_path?.toLowerCase().includes(`color_${token}`)) current.reasons.add(`source path token color_${token}`)
-      if (it.sku_hint) current.reasons.add("sku hint match (inventory row)")
-      if (ce?.top_candidate?.medusa_product_handle.toLowerCase() === h) current.reasons.add("candidate map top handle match")
-      if (it.legacy_product_url || it.page_url || it.url) current.reasons.add("legacy source url/hint present")
-      groups.set(key, current)
+      if (identity.tier === "this_sku" && ce?.top_candidate?.medusa_product_handle.toLowerCase() === h) {
+        current.reasons.add("candidate map top handle match")
+      }
+      if (identity.tier === "needs_identity_review") {
+        current.reasons.add("needs identity review — not bulk-confirm safe")
+      }
+      groups.set(variantKey, current)
     }
-    return Array.from(groups.entries())
-      .map(([variantKey, v]) => ({
+    const out: SuggestedVariant[] = []
+    for (const [variantKey, v] of Array.from(groups.entries())) {
+      const isReview = variantKey.endsWith("__review")
+      const mediaIds = isReview ? v.reviewIds : v.thisSkuIds
+      if (mediaIds.length === 0) continue
+      const colorNameRaw = variantKey.replace(/^color_/, "").replace(/__review$/, "")
+      const identityTier = isReview ? "needs_identity_review" : "this_sku"
+      out.push({
         variantKey,
         label: v.label,
-        colorNameRaw: variantKey.replace(/^color_/, ""),
+        colorNameRaw,
         productSkuHint,
-        candidatePageUrls: pickHtmlCandidateUrls(Array.from(v.pageUrlCandidates)),
+        filenameColorToken: colorNameRaw,
+        candidateMapSku: v.candidateMapSku,
+        candidatePageUrls: Array.from(v.pageUrlCandidates.entries()).map(([url, source]) => ({ url, source })),
         seedImageUrls,
         sourceUrl: v.sourceUrl,
         sourcePathHints: Array.from(v.sourcePathHints).slice(0, 3),
-        mediaIds: v.mediaIds,
-        primaryCandidateId: v.mediaIds[0] || null,
-        galleryCandidateIds: v.mediaIds.slice(1),
-        confidence: v.confidence,
+        mediaIds,
+        primaryCandidateId: mediaIds[0] || null,
+        galleryCandidateIds: mediaIds.slice(1),
+        confidence: identityTier === "this_sku" ? v.confidence : "low",
         reasons: Array.from(v.reasons),
-      }))
-      .sort((a, b) => b.mediaIds.length - a.mediaIds.length)
+        identityTier,
+        identityNotes: Array.from(v.identityNotes).slice(0, 6),
+        foreignHandle: v.foreignHandle,
+        foreignSku: v.foreignSku,
+      })
+    }
+    return out.sort((a, b) => {
+      if (a.identityTier !== b.identityTier) return a.identityTier === "this_sku" ? -1 : 1
+      return b.mediaIds.length - a.mediaIds.length
+    })
   }, [selectedHandle, rejectedSuggestedVariantsByHandle, invDoc, candById, productByHandle])
 
   /** Seed storefront URLs → legacy inventory ids (path/filename), for badges + auto-draft. */
@@ -1457,9 +1502,16 @@ export function LegacyMediaAssignmentBoardClient() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          product_handle: h,
+          variant_key: s.variantKey,
           product_sku_hint: sku,
           color_token: s.colorNameRaw,
-          candidate_urls: Array.from(new Set([...s.candidatePageUrls, ...s.seedImageUrls])),
+          filename_color_token: s.filenameColorToken,
+          candidate_map_sku: s.candidateMapSku,
+          candidate_urls: [
+            ...s.candidatePageUrls,
+            ...s.seedImageUrls.map((url) => ({ url, source: "seed_image_url_skipped_as_html" })),
+          ],
         }),
       })
         .then(async (res) => {
@@ -2088,16 +2140,13 @@ export function LegacyMediaAssignmentBoardClient() {
    */
   const productHasUnconfirmedSuggestions = (handle: string): boolean => {
     const h = handle.toLowerCase()
+    const sku = (productByHandle.get(h)?.sku || "").trim()
     const rejected = new Set(rejectedSuggestedVariantsByHandle[h] ?? [])
     const variants = variantsByHandle[h] ?? {}
     for (const it of invDoc?.items ?? []) {
       const ce = candById.get(it.id)
-      const linked =
-        ce?.top_candidate?.medusa_product_handle.toLowerCase() === h ||
-        (ce?.candidates ?? []).some((c) => c.medusa_product_handle.toLowerCase() === h) ||
-        (it.handle_hint || "").toLowerCase() === h ||
-        (it.sku_hint || "").toLowerCase() === h
-      if (!linked) continue
+      const identity = classifyMediaProductIdentity(it, ce, handle, sku)
+      if (identity.tier !== "this_sku") continue
       const token = extractColorToken(it)
       if (!token) continue
       const key = `color_${token}`
@@ -2219,11 +2268,15 @@ export function LegacyMediaAssignmentBoardClient() {
     const activeVariantMeta = vmByHandle[activeVariantKey] ?? null
     const z = toZoneState(activeVariant)
     const candCount = entryList.filter((e) => e.top_candidate?.medusa_product_handle.toLowerCase() === h).length
-    const suggestions = suggestedVariantsForSelected.filter((s) => !vByHandle[s.variantKey])
-    const totalSuggestions = suggestedVariantsForSelected.length
-    const confirmedSuggestionCount = suggestedVariantsForSelected.filter((s) => Boolean(vByHandle[s.variantKey])).length
+    const safeSuggestions = suggestedVariantsForSelected.filter((s) => s.identityTier === "this_sku")
+    const reviewSuggestions = suggestedVariantsForSelected.filter((s) => s.identityTier === "needs_identity_review")
+    const suggestions = safeSuggestions.filter((s) => !vByHandle[s.variantKey])
+    const totalSuggestions = safeSuggestions.length
+    const confirmedSuggestionCount = safeSuggestions.filter((s) => Boolean(vByHandle[s.variantKey])).length
     const leftSuggestionCount = Math.max(0, totalSuggestions - confirmedSuggestionCount)
     const allSuggestionsReviewed = totalSuggestions > 0 && leftSuggestionCount === 0
+    const galleryItemCount = (z.primary ? 1 : 0) + z.gallery.length
+    const confirmedVariantCount = Object.keys(vByHandle).filter((vk) => vk !== DEFAULT_VARIANT_KEY || galleryItemCount > 0).length
 
     /**
      * One-shot confirmation: writes variants[h][vk] + meta + active variant for every
@@ -2248,13 +2301,15 @@ export function LegacyMediaAssignmentBoardClient() {
         }
         metaUpdates[s.variantKey] = variantMetaFromEnrichmentAndSuggestion({
           productSkuHint: s.productSkuHint,
+          filenameColorToken: s.filenameColorToken,
+          candidateMapSku: s.candidateMapSku,
           suggestionReasons: s.reasons,
           suggestionConfidence: s.confidence,
           suggestionSourcePathHints: s.sourcePathHints,
           suggestionSourceUrl: s.sourceUrl,
           enrichment: enc,
           useLegacyName: prefs.useLegacyName,
-          useLegacyArticle: prefs.useLegacyArticle,
+          useLegacyArticle: enc?.legacy_color_article_status === "found" ? prefs.useLegacyArticle : false,
           editedLegacyArticle: prefs.editedLegacyArticle,
           status: "confirmed",
         })
@@ -2290,8 +2345,9 @@ export function LegacyMediaAssignmentBoardClient() {
         lastError: "",
       }))
     }
-    const confirmAllVisible = () => confirmAllForSuggestions(suggestions)
-    const confirmHighConfidence = () => confirmAllForSuggestions(suggestions.filter((s) => s.confidence === "high"))
+    const confirmAllVisible = () => confirmAllForSuggestions(suggestions.filter((s) => s.identityTier === "this_sku"))
+    const confirmHighConfidence = () =>
+      confirmAllForSuggestions(suggestions.filter((s) => s.identityTier === "this_sku" && s.confidence === "high"))
     const skipCurrentProduct = () => {
       goToNextProductWithSuggestions(h)
     }
@@ -2781,8 +2837,8 @@ export function LegacyMediaAssignmentBoardClient() {
                 type="button"
                 data-action-button="suggestions-confirm-high"
                 style={miniBtn}
-                disabled={suggestions.filter((s) => s.confidence === "high").length === 0}
-                title="Confirm only suggestions whose matcher confidence is high"
+                disabled={suggestions.filter((s) => s.identityTier === "this_sku" && s.confidence === "high").length === 0}
+                title="Confirm only this-SKU suggestions whose matcher confidence is high"
                 onClick={confirmHighConfidence}
               >
                 Confirm high-confidence
@@ -2822,17 +2878,16 @@ export function LegacyMediaAssignmentBoardClient() {
                 const loading = Boolean(encState?.loading)
                 const defPref: SuggestionPref = { useLegacyName: false, useLegacyArticle: false, editedLegacyArticle: null }
                 const prefs = suggestionRowPrefs[sk] ?? defPref
-                const normSku = (x: string) => x.replace(/\s+/g, "").replace(/_/g, "-").toLowerCase()
-                const parsedArticle =
-                  enc?.legacy_color_article && normSku(enc.legacy_color_article) !== normSku(s.productSkuHint)
-                    ? enc.legacy_color_article
-                    : null
-                const articleLine = prefs.editedLegacyArticle?.trim() || parsedArticle || null
-                const articleStatusRaw = loading ? "pending" : enc?.legacy_color_article_status ?? (encState?.error ? "unavailable" : "unavailable")
-                const articleStatus = articleStatusRaw === "found" ? "found" : articleStatusRaw === "not_found" ? "not found" : articleStatusRaw
-                const sourceMethod = enc?.source_method ?? null
-                const sourceUrl = (enc?.source_url || s.sourceUrl) as string | null
+                const legacyArticle =
+                  enc?.legacy_color_article_status === "found" ? enc?.legacy_color_article ?? null : null
+                const articleLine = prefs.editedLegacyArticle?.trim() || legacyArticle || null
+                const articleStatusRaw = loading ? "pending" : enc?.legacy_color_article_status ?? (encState?.error ? "legacy_fetch_unreachable" : "legacy_fetch_unreachable")
+                const articleStatus = legacyArticleStatusLabel(articleStatusRaw)
+                const legacyArticleCard = legacyArticleCardLine(articleStatusRaw, legacyArticle)
+                const sourceMethod = enc?.legacy_article_source_method ?? enc?.source_method ?? null
+                const sourceUrl = (enc?.legacy_article_source_url || enc?.source_url || s.sourceUrl) as string | null
                 const fetchSummary = loading ? "pending" : enc?.fetch_status ?? (encState?.error ? "client_error" : "idle")
+                const canUseLegacyArticle = articleStatusRaw === "found" && Boolean(legacyArticle)
                 const combinedReasons = enc?.reasons?.length ? [...s.reasons, ...enc.reasons] : s.reasons
                 const galleryPreview = [s.primaryCandidateId, ...s.galleryCandidateIds].filter(Boolean) as string[]
                 const cardStatus: "suggested" | "edited" = prefs.editedLegacyArticle || prefs.useLegacyArticle || prefs.useLegacyName ? "edited" : "suggested"
@@ -2857,13 +2912,28 @@ export function LegacyMediaAssignmentBoardClient() {
                     <header style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 0 }}>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "baseline", rowGap: 4 }}>
                         <strong style={{ fontSize: 14, color: "#0f172a", overflowWrap: "anywhere" }}>{s.label}</strong>
+                        <span style={{ ...pillSlate, background: "#dcfce7", color: "#166534" }}>This SKU</span>
                         <span style={pillIndigo}>{s.confidence}</span>
                         <span style={pillSlate}>{cardStatus}</span>
                         <span
                           style={{
                             ...pillSlate,
-                            background: articleStatus === "found" ? "#dcfce7" : articleStatus === "pending" ? "#dbeafe" : "#fef3c7",
-                            color: articleStatus === "found" ? "#166534" : articleStatus === "pending" ? "#1e40af" : "#92400e",
+                            background:
+                              articleStatusRaw === "found"
+                                ? "#dcfce7"
+                                : articleStatusRaw === "pending"
+                                  ? "#dbeafe"
+                                  : articleStatusRaw === "legacy_fetch_unreachable"
+                                    ? "#fee2e2"
+                                    : "#fef3c7",
+                            color:
+                              articleStatusRaw === "found"
+                                ? "#166534"
+                                : articleStatusRaw === "pending"
+                                  ? "#1e40af"
+                                  : articleStatusRaw === "legacy_fetch_unreachable"
+                                    ? "#b91c1c"
+                                    : "#92400e",
                           }}
                         >
                           article: {articleStatus}
@@ -2872,18 +2942,25 @@ export function LegacyMediaAssignmentBoardClient() {
                       </div>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "baseline", rowGap: 2, fontSize: 11, color: "#475569" }}>
                         <span>
-                          Article: <strong style={{ overflowWrap: "anywhere" }}>{articleLine ?? "—"}</strong>
+                          Legacy color article: <strong style={{ overflowWrap: "anywhere" }}>{legacyArticleCard}</strong>
                         </span>
                         {sourceMethod ? (
                           <span style={{ fontSize: 10, color: "#94a3b8" }}>
                             via <strong style={{ color: "#475569" }}>{sourceMethod}</strong>
                           </span>
-                        ) : articleStatus === "not found" ? (
-                          <span style={{ fontSize: 10, color: "#b45309" }}>article not found · SKU is never the article</span>
+                        ) : null}
+                        {articleLine && articleStatusRaw === "found" ? (
+                          <span style={{ fontSize: 10, color: "#64748b" }}>
+                            resolved: <strong>{articleLine}</strong>
+                          </span>
                         ) : null}
                         <span style={{ marginLeft: "auto", fontSize: 10, color: "#94a3b8" }}>
-                          SKU hint: <span style={{ color: "#64748b" }}>{s.productSkuHint || "—"}</span>
+                          Product SKU hint: <span style={{ color: "#64748b" }}>{s.productSkuHint || "—"}</span>
                         </span>
+                      </div>
+                      <div style={{ fontSize: 10, color: "#94a3b8", display: "flex", flexWrap: "wrap", gap: 8 }}>
+                        <span>Filename token: {s.filenameColorToken || "—"}</span>
+                        <span>Candidate map SKU: {s.candidateMapSku || "—"}</span>
                       </div>
                     </header>
 
@@ -2996,7 +3073,7 @@ export function LegacyMediaAssignmentBoardClient() {
                         data-action-button="suggestion-edit-article"
                         style={miniBtn}
                         onClick={() => {
-                          const next = window.prompt("Edit legacy color article (manual)", prefs.editedLegacyArticle || parsedArticle || "")
+                          const next = window.prompt("Edit legacy color article (manual)", prefs.editedLegacyArticle || legacyArticle || "")
                           if (next === null) return
                           const t = next.trim()
                           setSuggestionRowPrefs((prev) => ({
@@ -3054,8 +3131,52 @@ export function LegacyMediaAssignmentBoardClient() {
                             )}
                           </div>
                           <div style={{ marginTop: 2 }}>
+                            Status: <strong>{articleStatus}</strong> · Hover: <strong>{enc?.hover_status || "—"}</strong>
+                          </div>
+                          <div style={{ marginTop: 4 }}>
+                            <strong>URLs checked</strong>
+                            <ul style={{ margin: "4px 0 0", paddingLeft: 16 }}>
+                              {(enc?.urls_checked?.length
+                                ? enc.urls_checked
+                                : s.candidatePageUrls.map((c) => ({
+                                    url: c.url,
+                                    source: c.source,
+                                    fetch_status: "not_attempted" as const,
+                                    http_status: null,
+                                    error: null,
+                                    reachable_from_api: false,
+                                  }))
+                              )
+                                .slice(0, 8)
+                                .map((u) => (
+                                  <li key={`${u.url}-${u.source}`} style={{ marginBottom: 4 }}>
+                                    <span style={{ color: "#64748b" }}>[{u.source}]</span>{" "}
+                                    <a href={u.url} target="_blank" rel="noreferrer" style={{ color: "#2563eb" }}>
+                                      {truncateMiddleClient(u.url, 56)}
+                                    </a>
+                                    <br />
+                                    <span style={{ fontSize: 10, color: "#94a3b8" }}>
+                                      fetch: {u.fetch_status}
+                                      {u.http_status != null ? ` · HTTP ${u.http_status}` : ""}
+                                      {u.error ? ` · ${u.error}` : ""}
+                                      {u.reachable_from_api ? " · reachable from QA API" : " · unreachable from QA API"}
+                                    </span>
+                                  </li>
+                                ))}
+                            </ul>
+                          </div>
+                          <div style={{ marginTop: 2 }}>
                             Source method: <strong>{sourceMethod || "—"}</strong> · Fetch / parse: <strong>{fetchSummary}</strong>
                             {encState?.error ? <span style={{ color: "#b91c1c" }}> · {encState.error}</span> : null}
+                          </div>
+                          <div style={{ marginTop: 2 }}>
+                            Raw evidence:{" "}
+                            <span style={{ color: "#64748b", fontFamily: "ui-monospace, monospace", fontSize: 10 }}>
+                              {enc?.raw_evidence_snippet || "—"}
+                            </span>
+                          </div>
+                          <div style={{ marginTop: 2 }}>
+                            Swatches inspected: <strong>{enc?.swatches_checked?.length ?? 0}</strong>
                           </div>
                           <div style={{ marginTop: 2 }}>
                             Filename tokens / reasons:{" "}
@@ -3076,13 +3197,26 @@ export function LegacyMediaAssignmentBoardClient() {
                             </button>
                             <button
                               type="button"
-                              style={{ ...miniBtn, background: prefs.useLegacyArticle ? "#0f172a" : "#fff", color: prefs.useLegacyArticle ? "#fff" : "#334155" }}
-                              onClick={() =>
+                              disabled={!canUseLegacyArticle}
+                              title={
+                                canUseLegacyArticle
+                                  ? "Apply parsed legacy color article"
+                                  : "Only available when legacy_color_article_status is found"
+                              }
+                              style={{
+                                ...miniBtn,
+                                background: prefs.useLegacyArticle ? "#0f172a" : "#fff",
+                                color: prefs.useLegacyArticle ? "#fff" : "#334155",
+                                opacity: canUseLegacyArticle ? 1 : 0.45,
+                                cursor: canUseLegacyArticle ? "pointer" : "not-allowed",
+                              }}
+                              onClick={() => {
+                                if (!canUseLegacyArticle) return
                                 setSuggestionRowPrefs((prev) => ({
                                   ...prev,
                                   [sk]: { ...(prev[sk] ?? defPref), useLegacyArticle: !(prev[sk]?.useLegacyArticle ?? false) },
                                 }))
-                              }
+                              }}
                             >
                               Use legacy article
                             </button>
@@ -3100,6 +3234,95 @@ export function LegacyMediaAssignmentBoardClient() {
               Showing first 6 of {suggestions.length}. Confirm or skip these, then more will surface on the next pass.
             </p>
           ) : null}
+        </div>
+
+        {reviewSuggestions.length > 0 ? (
+          <div
+            data-needs-identity-review-panel="true"
+            style={{ border: "1px solid #fde68a", borderRadius: 12, padding: 12, background: "#fffbeb", minWidth: 0 }}
+          >
+            <span style={{ fontSize: 10, fontWeight: 800, color: "#92400e", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              Needs identity review
+            </span>
+            <p style={{ margin: "6px 0 10px", fontSize: 11, color: "#78350f", lineHeight: 1.45 }}>
+              Same color token but another SKU/handle may own these files. Not included in <strong>Confirm all</strong> — inspect in Details, then assign manually from the pool.
+            </p>
+            <div style={{ display: "grid", gap: 8 }}>
+              {reviewSuggestions.slice(0, 4).map((s) => (
+                <article
+                  key={s.variantKey}
+                  data-suggestion-review-card="true"
+                  style={{ border: "1px solid #fcd34d", borderRadius: 8, padding: 10, background: "#fff", minWidth: 0 }}
+                >
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "baseline" }}>
+                    <strong style={{ fontSize: 13, color: "#0f172a" }}>{s.label}</strong>
+                    <span style={{ ...pillSlate, background: "#fef3c7", color: "#92400e" }}>Needs identity review</span>
+                    {s.foreignHandle ? (
+                      <span style={{ fontSize: 10, color: "#b45309" }}>other handle: {s.foreignHandle}</span>
+                    ) : null}
+                    {s.foreignSku ? <span style={{ fontSize: 10, color: "#b45309" }}>other sku: {s.foreignSku}</span> : null}
+                  </div>
+                  <details style={{ marginTop: 6 }}>
+                    <summary style={{ cursor: "pointer", fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase" }}>
+                      Why included / excluded from bulk confirm
+                    </summary>
+                    <ul style={{ margin: "6px 0 0", paddingLeft: 16, fontSize: 11, color: "#475569", lineHeight: 1.45 }}>
+                      {s.identityNotes.map((note) => (
+                        <li key={note}>{note}</li>
+                      ))}
+                    </ul>
+                  </details>
+                  <button
+                    type="button"
+                    style={{ ...miniBtn, marginTop: 8, opacity: 0.55, cursor: "not-allowed" }}
+                    disabled
+                    title="Resolve identity in the media pool — bulk confirm disabled for cross-SKU color matches"
+                  >
+                    Confirm all (disabled)
+                  </button>
+                </article>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        <div
+          data-export-status-panel="true"
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 12,
+            alignItems: "center",
+            padding: "10px 14px",
+            borderRadius: 10,
+            border: "1px solid #e2e8f0",
+            background: "#f8fafc",
+            fontSize: 12,
+            color: "#475569",
+          }}
+        >
+          <span style={{ fontSize: 10, fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em" }}>Confirmed / export</span>
+          <span>
+            Variants <strong>{confirmedVariantCount}</strong>
+          </span>
+          <span style={{ color: "#cbd5e1" }}>·</span>
+          <span>
+            Gallery items <strong>{galleryItemCount}</strong>
+          </span>
+          <span style={{ color: "#cbd5e1" }}>·</span>
+          <span
+            style={{
+              fontSize: 10,
+              fontWeight: 700,
+              textTransform: "uppercase",
+              padding: "2px 8px",
+              borderRadius: 999,
+              background: allSuggestionsReviewed ? "#dcfce7" : "#fef3c7",
+              color: allSuggestionsReviewed ? "#166534" : "#92400e",
+            }}
+          >
+            {allSuggestionsReviewed ? "Export ready" : "Needs review"}
+          </span>
         </div>
 
         {/* SECTION 5 — Full seed URL list (reference only; editable matched tiles live in Current main media) */}
@@ -3137,7 +3360,10 @@ export function LegacyMediaAssignmentBoardClient() {
 
   return (
     <div
+      className="legacy-board-shell"
       style={{
+        width: "100%",
+        boxSizing: "border-box",
         height: "100vh",
         maxHeight: "100vh",
         display: "flex",
@@ -3272,11 +3498,19 @@ export function LegacyMediaAssignmentBoardClient() {
       </div>
 
       <div
+        data-legacy-board-grid="true"
         style={{
           flex: 1,
           minHeight: 0,
+          minWidth: 0,
+          width: "100%",
+          boxSizing: "border-box",
           display: "grid",
-          gridTemplateColumns: focusMode ? "minmax(520px,1fr) minmax(500px,520px)" : "280px minmax(520px,1fr) minmax(500px,520px)",
+          gridTemplateColumns: focusMode
+            ? "minmax(0, 1fr) clamp(420px, 30vw, 560px)"
+            : "clamp(240px, 18vw, 320px) minmax(560px, 1fr) clamp(420px, 30vw, 560px)",
+          gap: 16,
+          padding: "0 16px 16px",
           gridTemplateRows: "minmax(0, 1fr)",
           alignItems: "stretch",
           overflow: "hidden",
@@ -3560,6 +3794,7 @@ export function LegacyMediaAssignmentBoardClient() {
         </main>
 
         <aside
+          data-legacy-board-right-aside="true"
           style={{
             width: "100%",
             borderLeft: "1px solid #e2e8f0",
@@ -3568,6 +3803,8 @@ export function LegacyMediaAssignmentBoardClient() {
             flexDirection: "column",
             minHeight: 0,
             minWidth: 0,
+            maxWidth: "100%",
+            boxSizing: "border-box",
             overflow: "hidden",
           }}
         >
@@ -3731,7 +3968,9 @@ export function LegacyMediaAssignmentBoardClient() {
                       maxWidth: "100%",
                       boxSizing: "border-box",
                       /** minmax(0,1fr) lets tracks shrink so fixed-width cards do not clip the aside */
-                      gridTemplateColumns: focusMode ? "repeat(auto-fill, minmax(min(180px, 100%), 1fr))" : "repeat(auto-fill, minmax(min(144px, 100%), 1fr))",
+                      gridTemplateColumns: focusMode
+                        ? "repeat(auto-fill, minmax(min(150px, 100%), 1fr))"
+                        : "repeat(auto-fill, minmax(min(150px, 100%), 1fr))",
                       gap: 10,
                     }}
                   >

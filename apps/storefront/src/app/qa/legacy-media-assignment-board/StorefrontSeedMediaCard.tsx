@@ -28,7 +28,9 @@ export function StorefrontSeedMediaCard({ seedUrl, basename, reason, onInspect, 
       data-storefront-seed-card="true"
       data-seed-url={seedUrl}
       style={{
-        width: 148,
+        width: "100%",
+        maxWidth: 148,
+        boxSizing: "border-box",
         borderRadius: 12,
         border: "1px solid #fde68a",
         background: "#fffbeb",
