@@ -4,6 +4,8 @@ import { useState } from "react"
 import type { InvItem } from "./legacy-media-board-types"
 
 type CardSize = "compact" | "normal" | "large" | "xlarge"
+/** full = default QA card; pool = media drawer (image-first, minimal metadata). */
+type CardDisplayMode = "full" | "pool"
 
 type Props = {
   inventoryId: string
@@ -14,27 +16,21 @@ type Props = {
   caption: string
   badges?: string[]
   size?: CardSize
-  /** Native HTML5 drag source toggle. */
+  displayMode?: CardDisplayMode
   draggable?: boolean
-  /** Visual feedback while this card is the active drag source (parent-driven). */
   isDragging?: boolean
-  /** Drag handlers are attached to the card root. */
   onDragStart?: (e: React.DragEvent) => void
   onDragEnd?: (e: React.DragEvent) => void
-  /** Full path / context for hover (not shown inline). */
   detailTitle?: string
   sourcePath?: string | null
   sourceType?: string | null
   confidenceLabel?: string | null
   previewable?: boolean
-  /** Max visible filename characters before ellipsis. */
   filenameMaxLen?: number
-  /** QA board: lane id (primary / gallery / …) for diagnostics. */
   dataZone?: string | null
   onOpenDetail?: () => void
   onCardPointerDownCapture?: (e: React.PointerEvent) => void
   onCardClickCapture?: (e: React.MouseEvent) => void
-  /** When true, render lane action buttons above the drag strip so controls stay visible on assigned cards. */
   assignedControlsAboveDrag?: boolean
   children?: React.ReactNode
 }
@@ -56,6 +52,7 @@ export function MediaImageCard({
   caption,
   badges = [],
   size = "normal",
+  displayMode = "full",
   draggable = true,
   isDragging = false,
   onDragStart,
@@ -74,11 +71,11 @@ export function MediaImageCard({
   children,
 }: Props) {
   const w = cardPx[size]
+  const poolMode = displayMode === "pool"
   const [imgBroken, setImgBroken] = useState(false)
   const showImg = useImg && previewUrl && !imgBroken
   const fullPathTitle = detailTitle ?? inv.source_path ?? inv.repo_relative_path ?? inv.filename
-  const nameShown = truncateMiddle(inv.filename, filenameMaxLen)
-
+  const nameShown = truncateMiddle(inv.filename, poolMode ? Math.min(filenameMaxLen, 22) : filenameMaxLen)
   const canDrag = Boolean(draggable && onDragStart)
 
   return (
@@ -101,7 +98,7 @@ export function MediaImageCard({
         border: isDragging ? "2px solid #2563eb" : "1px solid #e2e8f0",
         background: isDragging ? "#eff6ff" : "#fff",
         boxShadow: isDragging ? "0 4px 14px rgba(37,99,235,0.2)" : "0 1px 2px rgba(15,23,42,0.06)",
-        padding: size === "xlarge" || size === "large" ? 10 : 8,
+        padding: poolMode ? 6 : size === "xlarge" || size === "large" ? 10 : 8,
         cursor: canDrag ? "grab" : "default",
         userSelect: "none",
         opacity: isDragging ? 0.9 : 1,
@@ -132,7 +129,6 @@ export function MediaImageCard({
           borderRadius: 10,
           overflow: "hidden",
           background: "#f1f5f9",
-          outline: onOpenDetail ? "none" : undefined,
         }}
       >
         {showImg ? (
@@ -143,32 +139,25 @@ export function MediaImageCard({
             width={w}
             height={w}
             draggable={false}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              display: "block",
-              ...({ WebkitUserDrag: "none" } as Record<string, string>),
-            }}
+            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
             onError={() => setImgBroken(true)}
           />
-        ) : null}
-        <div
-          style={{
-            display: showImg ? "none" : "flex",
-            position: showImg ? "absolute" : "relative",
-            inset: 0,
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-            padding: 8,
-            fontSize: size === "xlarge" || size === "large" ? 11 : size === "compact" ? 9 : 10,
-            color: "#475569",
-            lineHeight: 1.35,
-          }}
-        >
-          {imgBroken ? "Preview failed" : caption || "No preview"}
-        </div>
+        ) : (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
+              padding: 8,
+              fontSize: 10,
+              color: "#475569",
+              textAlign: "center",
+            }}
+          >
+            {imgBroken ? "Preview failed" : caption || "No preview"}
+          </div>
+        )}
         {onOpenDetail ? (
           <span
             style={{
@@ -184,18 +173,17 @@ export function MediaImageCard({
               pointerEvents: "none",
             }}
           >
-            Details
+            Inspect
           </span>
         ) : null}
       </div>
       <div
         title={fullPathTitle}
         style={{
-          marginTop: 8,
-          fontSize: size === "xlarge" || size === "large" ? 12 : size === "compact" ? 10 : 11,
+          marginTop: poolMode ? 6 : 8,
+          fontSize: poolMode ? 10 : 11,
           fontWeight: 600,
           color: "#0f172a",
-          lineHeight: 1.25,
           overflow: "hidden",
           textOverflow: "ellipsis",
           whiteSpace: "nowrap",
@@ -203,91 +191,63 @@ export function MediaImageCard({
       >
         {nameShown}
       </div>
-      <div
-        title={sourcePath || ""}
-        style={{
-          marginTop: 4,
-          fontSize: 10,
-          color: "#64748b",
-          lineHeight: 1.25,
-          display: "-webkit-box",
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: "vertical",
-          overflow: "hidden",
-          wordBreak: "break-all",
-          overflowWrap: "anywhere",
-          minHeight: 24,
-          maxWidth: "100%",
-        }}
-      >
-        {sourcePath ? truncateMiddle(sourcePath, Math.max(48, filenameMaxLen * 2)) : "—"}
-      </div>
-      <div style={{ marginTop: 6, display: "flex", gap: 4, flexWrap: "wrap" }}>
-        {sourceType ? (
-          <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 999, background: "#f1f5f9", color: "#334155" }}>{sourceType}</span>
-        ) : null}
-        {confidenceLabel ? (
+      {!poolMode ? (
+        <>
+          <div
+            title={sourcePath || ""}
+            style={{
+              marginTop: 4,
+              fontSize: 10,
+              color: "#64748b",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {sourcePath ? truncateMiddle(sourcePath, Math.max(48, filenameMaxLen * 2)) : "—"}
+          </div>
+          <div style={{ marginTop: 6, display: "flex", gap: 4, flexWrap: "wrap" }}>
+            {sourceType ? (
+              <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 999, background: "#f1f5f9", color: "#334155" }}>{sourceType}</span>
+            ) : null}
+            {confidenceLabel ? (
+              <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 999, background: "#eef2ff", color: "#3730a3" }}>{confidenceLabel}</span>
+            ) : null}
+          </div>
+          {badges.length > 0 ? (
+            <div style={{ marginTop: 6, display: "flex", flexWrap: "wrap", gap: 4 }}>
+              {badges.slice(0, 2).map((b) => (
+                <span key={b} style={{ fontSize: 9, padding: "2px 6px", borderRadius: 999, background: "#eef2ff", color: "#3730a3" }} title={b}>
+                  {b}
+                </span>
+              ))}
+            </div>
+          ) : null}
+        </>
+      ) : confidenceLabel ? (
+        <div style={{ marginTop: 4 }}>
           <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 999, background: "#eef2ff", color: "#3730a3" }}>{confidenceLabel}</span>
-        ) : null}
-        <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 999, background: previewable ? "#dcfce7" : "#fee2e2", color: previewable ? "#166534" : "#991b1b" }}>
-          {previewable ? "previewable" : "unpreviewable"}
-        </span>
-      </div>
-      {badges.length > 0 ? (
-        <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 4 }}>
-          {badges.map((b) => (
-            <span
-              key={b}
-              style={{
-                fontSize: 9,
-                fontWeight: 600,
-                textTransform: "uppercase",
-                letterSpacing: "0.02em",
-                padding: "3px 7px",
-                borderRadius: 999,
-                background: "#eef2ff",
-                color: "#3730a3",
-                maxWidth: "100%",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-              title={b}
-            >
-              {b}
-            </span>
-          ))}
         </div>
       ) : null}
       {assignedControlsAboveDrag ? children : null}
       {canDrag ? (
         <div
           aria-hidden
+          title="Drag to assign"
           style={{
-            marginTop: 8,
-            padding: "10px 12px",
-            minHeight: 40,
-            width: "100%",
-            boxSizing: "border-box",
+            marginTop: poolMode ? 6 : 8,
+            padding: poolMode ? "5px 8px" : "8px 10px",
             borderRadius: 8,
-            border: "1px solid #94a3b8",
-            background: isDragging ? "#bfdbfe" : "#e2e8f0",
-            fontSize: 12,
-            fontWeight: 800,
-            color: "#0f172a",
+            border: "1px solid #cbd5e1",
+            background: isDragging ? "#bfdbfe" : "#f1f5f9",
+            fontSize: 10,
+            fontWeight: 700,
+            color: "#475569",
             cursor: isDragging ? "grabbing" : "grab",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 8,
-            flexShrink: 0,
-            fontFamily: "inherit",
+            textAlign: "center",
           }}
         >
-          <span aria-hidden style={{ fontSize: 14, lineHeight: 1, letterSpacing: 1 }}>
-            ⋮⋮
-          </span>
-          <span>Drag</span>
+          {poolMode ? "⋮⋮" : "⋮⋮ Drag"}
         </div>
       ) : null}
       {!assignedControlsAboveDrag ? children : null}
