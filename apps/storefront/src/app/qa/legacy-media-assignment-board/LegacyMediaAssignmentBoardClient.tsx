@@ -3178,6 +3178,33 @@ export function LegacyMediaAssignmentBoardClient() {
                           <div style={{ marginTop: 2 }}>
                             Swatches inspected: <strong>{enc?.swatches_checked?.length ?? 0}</strong>
                           </div>
+                          {(enc?.swatches_checked?.length ?? 0) > 0 ? (
+                            <ul style={{ margin: "4px 0 0", paddingLeft: 16, fontSize: 10, color: "#64748b" }}>
+                              {enc!.swatches_checked.slice(0, 12).map((sw, swIdx) => (
+                                <li key={`${sw.selector_hint}-${swIdx}`} style={{ marginBottom: 4 }}>
+                                  <span style={{ fontFamily: "ui-monospace, monospace" }}>{sw.selector_hint}</span>
+                                  {" · "}
+                                  method: <strong>{sw.source_method}</strong>
+                                  {" · "}
+                                  article: <strong>{sw.article || "—"}</strong>
+                                  {sw.color_name ? (
+                                    <>
+                                      {" · "}
+                                      name: <strong>{sw.color_name}</strong>
+                                    </>
+                                  ) : null}
+                                  {" · "}
+                                  color match: <strong>{sw.color_token_match ? "yes" : "no"}</strong>
+                                  {sw.hover_text ? (
+                                    <>
+                                      <br />
+                                      <span style={{ color: "#94a3b8" }}>hover/title: {sw.hover_text.slice(0, 120)}</span>
+                                    </>
+                                  ) : null}
+                                </li>
+                              ))}
+                            </ul>
+                          ) : null}
                           <div style={{ marginTop: 2 }}>
                             Filename tokens / reasons:{" "}
                             <span style={{ color: "#64748b" }}>{combinedReasons.length ? combinedReasons.join(", ") : "—"}</span>

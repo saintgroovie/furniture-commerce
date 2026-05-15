@@ -1,3 +1,4 @@
+import * as crypto from "crypto"
 import * as fs from "fs"
 import * as path from "path"
 import { NextResponse } from "next/server"
@@ -34,6 +35,49 @@ type Body = {
   candidate_map_sku?: string
   candidate_urls?: Array<string | { url: string; source?: string }>
   hover_evidence?: HoverEvidenceInput[]
+}
+
+function legacyCacheHtmlPath(repoRoot: string, url: string): string {
+  const hash = crypto.createHash("md5").update(url).digest("hex")
+  return path.join(repoRoot, "data", "raw", "legacy", "cache", `${hash}.html`)
+}
+
+function readCachedLegacyHtml(repoRoot: string, url: string): string | null {
+  const cachePath = legacyCacheHtmlPath(repoRoot, url)
+  try {
+    if (!fs.existsSync(cachePath)) return null
+    const buf = fs.readFileSync(cachePath)
+    if (buf.byteLength > LEGACY_MAX_HTML_BYTES) return null
+    return buf.toString("utf8")
+  } catch {
+    return null
+  }
+}
+
+function readLegacyPageUrlFromLegacyProducts(repoRoot: string, productSkuHint: string, productHandle: string): string | null {
+  const productsPath = path.join(repoRoot, "data", "raw", "legacy", "legacy-products.json")
+  if (!fs.existsSync(productsPath)) return null
+  try {
+    const raw = JSON.parse(fs.readFileSync(productsPath, "utf8")) as unknown
+    if (!Array.isArray(raw)) return null
+    const skuNorm = productSkuHint.replace(/\s+/g, "").replace(/_/g, "-").toUpperCase()
+    const handleNorm = productHandle.toLowerCase()
+    for (const row of raw) {
+      if (!row || typeof row !== "object") continue
+      const o = row as Record<string, unknown>
+      const code = String(o.product_code_from_image ?? o.product_code_raw ?? "")
+        .replace(/\s+/g, "")
+        .replace(/_/g, "-")
+        .toUpperCase()
+      const pageUrl = String(o.page_url ?? "").trim()
+      if (!pageUrl.startsWith("http")) continue
+      if (code && code === skuNorm) return pageUrl
+      if (handleNorm && pageUrl.toLowerCase().includes(handleNorm.replace(/_/g, "-"))) return pageUrl
+    }
+  } catch {
+    return null
+  }
+  return null
 }
 
 function readLegacyPageUrlFromImageMap(repoRoot: string, productSkuHint: string, productHandle: string): string | null {
@@ -75,6 +119,8 @@ function collectUrlCandidates(body: Body, repoRoot: string | null): LegacyUrlCan
     const handle = String(body.product_handle ?? "").trim()
     const fromMap = readLegacyPageUrlFromImageMap(repoRoot, sku, handle)
     if (fromMap) out.push({ url: fromMap, source: "image_map_legacy_page_url_readonly" })
+    const fromProducts = readLegacyPageUrlFromLegacyProducts(repoRoot, sku, handle)
+    if (fromProducts) out.push({ url: fromProducts, source: "legacy_products_json_page_url_readonly" })
   }
   return dedupeUrlCandidates(out)
 }
@@ -264,7 +310,12 @@ export async function POST(req: Request): Promise<Response> {
   let anyReachable = false
 
   for (const url of htmlUrls.slice(0, 8)) {
-    const html = await fetchHtml(url)
+    let html = await fetchHtml(url)
+    let parseReasons: string[] = []
+    if (!html && resolution.repoRoot) {
+      html = readCachedLegacyHtml(resolution.repoRoot, url)
+      if (html) parseReasons = ["legacy_html_from_repo_cache"]
+    }
     if (!html) continue
     anyReachable = true
     lastHtmlUrl = url
@@ -280,8 +331,11 @@ export async function POST(req: Request): Promise<Response> {
         triedUrls: tried,
       })
       lastOutcome = outcome.result
+      if (parseReasons.length) {
+        lastOutcome = { ...lastOutcome, reasons: [...parseReasons, ...lastOutcome.reasons] }
+      }
       if (outcome.kind === "found") {
-        return NextResponse.json(outcome.result, { status: 200 })
+        return NextResponse.json(lastOutcome, { status: 200 })
       }
     } catch (e) {
       const r = buildEnrichmentUnreachable(

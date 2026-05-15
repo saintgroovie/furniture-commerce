@@ -94,6 +94,23 @@ export type LegacyColorEnrichmentResult = {
 
 const IMAGE_EXT = /\.(jpe?g|png|gif|webp|svg|avif|bmp|ico|pdf)(\?|#|$)/i
 const ARTICLE_TOKEN_RE = /\b([A-Z]{1,6}[-_/][0-9]{1,3}(?:[-_/][A-Za-z0-9]{1,12}){1,4})\b/gi
+/** CS-Cart laminate / legacy color codes in swatch title (e.g. G503, S499, М442). */
+const LAMINATE_ARTICLE_RE = /\b([A-Za-zА-Яа-я][0-9]{3,4})\b/
+
+const COLOR_TOKEN_ALIASES: Record<string, string[]> = {
+  blue: ["blue", "син", "голуб", "navy", "n436"],
+  grey: ["grey", "gray", "сер", "графит", "graphite", "grey-blue", "grey_blue"],
+  gray: ["grey", "gray", "сер", "графит", "graphite"],
+  olive: ["olive", "олив", "изумруд", "green", "зелен"],
+  green: ["green", "изумруд", "олив", "зелен"],
+  white: ["white", "бел", "white25"],
+  cream: ["cream", "крем", "беж", "капуч", "cappuccino", "capuch"],
+  brown: ["brown", "какао", "cacao", "корич"],
+  graphite: ["graphite", "графит", "graphite25"],
+  powder: ["powder", "пудр"],
+  capuchino: ["capuch", "капуч", "cappuccino"],
+  cacao: ["cacao", "какао"],
+}
 
 export function looksLikeDirectMediaUrl(url: string): boolean {
   const u = url.split("?")[0] || ""
@@ -168,11 +185,36 @@ function readDataAttributes(html: string): { name: string; value: string }[] {
   return out
 }
 
-function tokenMatchesColor(hay: string, colorToken: string): boolean {
+function normalizeLaminateArticleCode(code: string): string {
+  return code
+    .replace(/\u0410/g, "A")
+    .replace(/\u0412/g, "B")
+    .replace(/\u0413/g, "G")
+    .replace(/\u0415/g, "E")
+    .replace(/\u041a/g, "K")
+    .replace(/\u041b/g, "L")
+    .replace(/\u041c/g, "M")
+    .replace(/\u041d/g, "H")
+    .replace(/\u041e/g, "O")
+    .replace(/\u0421/g, "C")
+    .replace(/\u0422/g, "T")
+    .replace(/\u0423/g, "Y")
+    .replace(/\u0425/g, "X")
+    .replace(/\u043d/g, "H")
+    .toUpperCase()
+}
+
+function colorLabelMatchesToken(labelHay: string, colorToken: string): boolean {
   const t = (colorToken || "").toLowerCase().replace(/_/g, "-")
-  if (!t) return false
-  const h = hay.toLowerCase()
+  if (!t) return true
+  const h = labelHay.toLowerCase()
+  const aliases = COLOR_TOKEN_ALIASES[t] ?? [t]
+  if (aliases.some((a) => h.includes(a))) return true
   return h.includes(t) || h.includes(t.replace(/-/g, ""))
+}
+
+function tokenMatchesColor(hay: string, colorToken: string): boolean {
+  return colorLabelMatchesToken(hay, colorToken)
 }
 
 function isDisallowedArticle(article: string, productSkuHint: string, filenameToken: string, candidateMapSku: string): boolean {
@@ -182,6 +224,28 @@ function isDisallowedArticle(article: string, productSkuHint: string, filenameTo
   if (filenameToken && n === normSku(filenameToken)) return true
   if (candidateMapSku && n === normSku(candidateMapSku)) return true
   return false
+}
+
+/** Parse CS-Cart swatch label like "Белый G503" or hover title " Графит S499 ". */
+export function parseLegacySwatchLabelText(
+  value: string,
+  productSkuHint: string,
+  filenameToken: string,
+  candidateMapSku: string
+): { article: string; colorName: string | null } | null {
+  const raw = decodeHtmlEntities(value.trim())
+  if (!raw) return null
+
+  const laminate = raw.match(LAMINATE_ARTICLE_RE)
+  if (laminate?.[1]) {
+    const article = normalizeLaminateArticleCode(laminate[1])
+    if (article.length >= 4 && !isDisallowedArticle(article, productSkuHint, filenameToken, candidateMapSku)) {
+      const colorName = raw.replace(laminate[0], "").replace(/\s+/g, " ").trim() || null
+      return { article, colorName: colorName && colorName.length > 1 ? colorName.slice(0, 80) : null }
+    }
+  }
+
+  return extractArticleTokenFromText(raw, productSkuHint, filenameToken, candidateMapSku, "")
 }
 
 function extractArticleTokenFromText(
@@ -247,8 +311,105 @@ function snippetFromAttrs(attrs: Record<string, string>, max = 220): string {
   return parts.join(" ").slice(0, max)
 }
 
-/** Extract swatch-like elements from static HTML (no hover). */
-export function extractSwatchesFromHtml(html: string, colorToken: string): LegacySwatchChecked[] {
+/**
+ * CS-Cart / Unitheme: color swatches expose hover text in static `title` on
+ * `ty-product-options__image--wrapper.cm-tooltip` (no real browser hover needed).
+ */
+export function extractCsCartTyProductOptionSwatches(
+  html: string,
+  colorToken: string,
+  productSkuHint: string,
+  filenameToken: string,
+  candidateMapSku: string
+): LegacySwatchChecked[] {
+  const swatches: LegacySwatchChecked[] = []
+  const swatchTitleRe =
+    /<a\b[^>]*class="[^"]*ty-product-options__image--wrapper[^"]*"[^>]*title\s*=\s*("([^"]*)"|'([^']*)')[^>]*>/gi
+  let tm: RegExpExecArray | null
+  let swIdx = 0
+  while ((tm = swatchTitleRe.exec(html)) !== null) {
+    const title = decodeHtmlEntities((tm[2] ?? tm[3] ?? "").trim())
+    const block = html.slice(Math.max(0, tm.index - 400), tm.index + 800)
+    const imgSrc =
+      block.match(/data-ca-variation-image\s*=\s*("([^"]*)"|'([^']*)')/i)?.[2] ??
+      block.match(/data-ca-variation-image\s*=\s*("([^"]*)"|'([^']*)')/i)?.[3] ??
+      ""
+    const attrHay = [title, imgSrc].filter(Boolean).join(" ")
+    const parsed = parseLegacySwatchLabelText(title, productSkuHint, filenameToken, candidateMapSku)
+    swatches.push({
+      selector_hint: `a.ty-product-options__image--wrapper.cm-tooltip[${swIdx}]`,
+      color_token_match: colorLabelMatchesToken(attrHay, colorToken),
+      attributes_before: { title, ...(imgSrc ? { "data-ca-variation-image": imgSrc } : {}) },
+      hover_text: title,
+      article: parsed?.article ?? null,
+      color_name: parsed?.colorName ?? null,
+      source_method: parsed?.article ? "hover-title" : "unavailable",
+      raw_snippet: title.slice(0, 220),
+    })
+    swIdx += 1
+    if (swatches.length >= 48) break
+  }
+  const childRe = /<div class="ty-product-option-child">\s*([^<]+?)\s*<\/div>/gi
+  let cm: RegExpExecArray | null
+  while ((cm = childRe.exec(html)) !== null) {
+    const label = decodeHtmlEntities(cm[1].trim())
+    const parsed = parseLegacySwatchLabelText(label, productSkuHint, filenameToken, candidateMapSku)
+    if (!parsed) continue
+    swatches.push({
+      selector_hint: `div.ty-product-option-child[${swatches.length}]`,
+      color_token_match: colorLabelMatchesToken(label, colorToken),
+      attributes_before: { "option-child-label": label },
+      hover_text: label,
+      article: parsed.article,
+      color_name: parsed.colorName,
+      source_method: "nearby-text",
+      raw_snippet: label.slice(0, 220),
+    })
+  }
+  return swatches
+}
+
+export function extractEmbeddedJsonSwatchHints(
+  html: string,
+  colorToken: string,
+  productSkuHint: string,
+  filenameToken: string,
+  candidateMapSku: string
+): LegacySwatchChecked[] {
+  const out: LegacySwatchChecked[] = []
+  const scriptRe = /<script[^>]*>([\s\S]*?)<\/script>/gi
+  let sm: RegExpExecArray | null
+  let si = 0
+  while ((sm = scriptRe.exec(html)) !== null) {
+    const body = sm[1]
+    if (!/variant|feature|product_option|variation/i.test(body)) continue
+    const hay = body.slice(0, 120_000)
+    const parsed = parseLegacySwatchLabelText(hay, productSkuHint, filenameToken, candidateMapSku)
+    if (!parsed) continue
+    if (colorToken && !colorLabelMatchesToken(hay, colorToken)) continue
+    out.push({
+      selector_hint: `script.embedded-json[${si}]`,
+      color_token_match: colorLabelMatchesToken(hay, colorToken),
+      attributes_before: {},
+      hover_text: null,
+      article: parsed.article,
+      color_name: parsed.colorName,
+      source_method: "embedded-json",
+      raw_snippet: hay.slice(0, 220),
+    })
+    si += 1
+    if (out.length >= 12) break
+  }
+  return out
+}
+
+export function extractSwatchesFromHtml(
+  html: string,
+  colorToken: string,
+  productSkuHint: string,
+  filenameToken: string,
+  candidateMapSku: string
+): LegacySwatchChecked[] {
   const swatches: LegacySwatchChecked[] = []
   const tagRe =
     /<(a|button|span|li|div|label|img)\b([^>]*(?:class|data-|title|aria-label|alt)[^>]*)>/gi
@@ -258,6 +419,9 @@ export function extractSwatchesFromHtml(html: string, colorToken: string): Legac
     const tag = (m[1] || "div").toLowerCase()
     const attrChunk = m[2] || ""
     const classVal = attrChunk.match(/class\s*=\s*("([^"]*)"|'([^']*)')/i)?.[2] ?? attrChunk.match(/class\s*=\s*("([^"]*)"|'([^']*)')/i)?.[3] ?? ""
+    if (/ty-product-filters|color-filter|facet|sidebar-filter|cm-product-filters/i.test(classVal + attrChunk)) {
+      continue
+    }
     const swatchLike =
       /swatch|color|colour|variant|option|thumb|palette/i.test(classVal) ||
       /data-(color|variant|sku|article|option)/i.test(attrChunk)
@@ -284,7 +448,7 @@ export function extractSwatchesFromHtml(html: string, colorToken: string): Legac
     let sourceMethod: LegacyArticleSourceMethod | "unavailable" = "unavailable"
 
     for (const hit of collectAttrHits(attrs)) {
-      const parsed = extractArticleTokenFromText(hit.value, "", "", "", colorToken)
+      const parsed = parseLegacySwatchLabelText(hit.value, productSkuHint, filenameToken, candidateMapSku)
       if (parsed) {
         article = parsed.article
         colorName = parsed.colorName
@@ -544,18 +708,55 @@ export type EnrichFromHtmlParams = {
   triedUrls: string[]
 }
 
+function sanitizeSwatchArticles(
+  swatches: LegacySwatchChecked[],
+  productSkuHint: string,
+  filenameToken: string,
+  candidateMapSku: string
+): LegacySwatchChecked[] {
+  return swatches.map((s) => ({
+    ...s,
+    article:
+      s.article && isDisallowedArticle(s.article, productSkuHint, filenameToken, candidateMapSku) ? null : s.article,
+  }))
+}
+
+function collectAllSwatchesFromHtml(
+  html: string,
+  colorToken: string,
+  productSkuHint: string,
+  filenameToken: string,
+  candidateMapSku: string
+): LegacySwatchChecked[] {
+  const fn = filenameToken || ""
+  const cm = candidateMapSku || ""
+  const csCart = extractCsCartTyProductOptionSwatches(html, colorToken, productSkuHint, fn, cm)
+  const embedded = extractEmbeddedJsonSwatchHints(html, colorToken, productSkuHint, fn, cm)
+  const generic = extractSwatchesFromHtml(html, colorToken, productSkuHint, fn, cm)
+  const merged = [...csCart, ...embedded, ...generic]
+  const seen = new Set<string>()
+  const out: LegacySwatchChecked[] = []
+  for (const s of merged) {
+    const key = `${s.selector_hint}::${s.raw_snippet.slice(0, 80)}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    out.push(s)
+  }
+  return sanitizeSwatchArticles(out, productSkuHint, fn, cm)
+}
+
 /** Parse static HTML for swatch attributes; never falls back to product SKU / JSON-LD body scan. */
 export function enrichFromFetchedHtml(params: EnrichFromHtmlParams):
   | { kind: "found"; result: LegacyColorEnrichmentResult }
   | { kind: "hover_required"; result: LegacyColorEnrichmentResult }
   | { kind: "not_found"; result: LegacyColorEnrichmentResult } {
-  const swatches = extractSwatchesFromHtml(params.html, params.colorToken).map((s) => ({
-    ...s,
-    article:
-      s.article && isDisallowedArticle(s.article, params.productSkuHint, params.filenameToken || "", params.candidateMapSku || "")
-        ? null
-        : s.article,
-  }))
+  const swatches = collectAllSwatchesFromHtml(
+    params.html,
+    params.colorToken,
+    params.productSkuHint,
+    params.filenameToken || "",
+    params.candidateMapSku || ""
+  )
 
   const resolved = resolveArticleFromSwatches(
     swatches,
