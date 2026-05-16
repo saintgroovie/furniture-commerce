@@ -20,14 +20,18 @@ import {
 } from "./legacy-media-board-export"
 import {
   DEFAULT_VARIANT_KEY,
-  DEFAULT_VARIANT_LABEL_RU,
+  LABEL_NEEDS_REVIEW_RU,
   displayLabelFromColorToken,
+  inferColorTokenFromSeedUrls,
+  labelNeedsReviewStyle,
   migrateVariantLabelFields,
   resolveVariantDisplayLabel,
   reviewSuffixRu,
   sourceLabelForVariantKey,
   type VariantLabelFields,
+  type VariantLabelStatus,
 } from "./legacy-color-variant-labels"
+import { pickAutoPrimaryForCandidates } from "./legacy-variant-primary-heuristic"
 import { matchAllSeedUrls, orderedInventoryIdsFromSeedUrls, type SeedUrlMatchRow } from "./seed-inventory-match"
 import { classifyMediaProductIdentity } from "./suggestion-product-guard"
 import { StorefrontSeedMediaCard } from "./StorefrontSeedMediaCard"
@@ -54,8 +58,8 @@ const UNKNOWN_COLLECTION = "__unknown__"
 const API_BASE = "/qa/legacy-media-assignment-board/api"
 const PREVIEW_ROUTE = "/qa/legacy-media-assignment-board/preview"
 const DND_JSON = "application/json"
-const DEV_SENTINEL = "Legacy Board Russian color variant labels + rename"
-const DEV_SENTINEL_BUILD = "2026-05-15T23:30Z"
+const DEV_SENTINEL = "Legacy Board per-variant Primary/Gallery + color labels"
+const DEV_SENTINEL_BUILD = "2026-05-16T12:00Z"
 
 async function fetchBoardJson(url: string): Promise<{ ok: true; data: Record<string, unknown> } | { ok: false; status: number; body: Record<string, unknown> }> {
   const res = await fetch(url)
@@ -114,6 +118,9 @@ type VariantDecisionState = VariantLabelFields & {
   gallery: string[]
   reference: string[]
   rejected: string[]
+  primaryManualOverride?: boolean
+  primaryAutoPicked?: boolean
+  primaryNeedsReview?: boolean
 }
 type VariantsByHandle = Record<string, Record<string, VariantDecisionState>>
 
@@ -175,36 +182,80 @@ function cloneZone(z: ProductZoneState | undefined): ProductZoneState {
   }
 }
 
-function emptyVariant(label = DEFAULT_VARIANT_LABEL_RU, extras?: Partial<VariantLabelFields>): VariantDecisionState {
+function emptyVariant(label = LABEL_NEEDS_REVIEW_RU, extras?: Partial<VariantDecisionState>): VariantDecisionState {
   return {
     label,
     sourceLabel: extras?.sourceLabel ?? null,
     labelEditedByUser: extras?.labelEditedByUser ?? false,
+    labelStatus: extras?.labelStatus ?? "needs_review",
     primary: null,
     gallery: [],
     reference: [],
     rejected: [],
+    primaryManualOverride: extras?.primaryManualOverride ?? false,
+    primaryAutoPicked: extras?.primaryAutoPicked ?? false,
+    primaryNeedsReview: extras?.primaryNeedsReview ?? false,
   }
 }
 
 function withResolvedVariantLabel(
   variantKey: string,
   variant: VariantDecisionState,
-  opts?: { legacyColorName?: string | null; productSkuHint?: string | null; preferLegacyColorName?: boolean }
+  opts?: {
+    legacyColorName?: string | null
+    productSkuHint?: string | null
+    preferLegacyColorName?: boolean
+    seedImageUrls?: string[]
+  }
 ): VariantDecisionState {
   const resolved = resolveVariantDisplayLabel({
     variantKey,
     persistedLabel: variant.label,
     sourceLabel: variant.sourceLabel,
     labelEditedByUser: variant.labelEditedByUser,
+    labelStatus: variant.labelStatus,
     legacyColorName: opts?.legacyColorName,
     preferLegacyColorName: opts?.preferLegacyColorName,
     productSkuHint: opts?.productSkuHint,
+    seedImageUrls: opts?.seedImageUrls,
   })
   return {
     ...variant,
     label: variant.labelEditedByUser ? variant.label : resolved.displayLabel,
     sourceLabel: variant.sourceLabel ?? resolved.sourceLabel,
+    labelStatus: variant.labelEditedByUser ? "user_edited" : resolved.labelStatus,
+  }
+}
+
+function buildVariantMediaFromCandidates(
+  candidateIds: string[],
+  invById: Map<string, InvItem>,
+  seedOrder: string[],
+  existing?: VariantDecisionState | null
+): Pick<
+  VariantDecisionState,
+  "primary" | "gallery" | "primaryManualOverride" | "primaryAutoPicked" | "primaryNeedsReview"
+> {
+  if (existing?.primaryManualOverride && existing.primary) {
+    const gallery = [
+      ...existing.gallery.filter((id) => id !== existing.primary),
+      ...candidateIds.filter((id) => id !== existing.primary && !existing.gallery.includes(id)),
+    ]
+    return {
+      primary: existing.primary,
+      gallery: Array.from(new Set(gallery)),
+      primaryManualOverride: true,
+      primaryAutoPicked: false,
+      primaryNeedsReview: false,
+    }
+  }
+  const pick = pickAutoPrimaryForCandidates(candidateIds, invById, { seedOrder })
+  return {
+    primary: pick.primaryId,
+    gallery: pick.galleryIds,
+    primaryManualOverride: false,
+    primaryAutoPicked: pick.autoPicked,
+    primaryNeedsReview: pick.needsReview,
   }
 }
 
@@ -248,13 +299,16 @@ function toZoneState(v: VariantDecisionState): ProductZoneState {
   return { primary: v.primary, gallery: [...v.gallery], reference_only: [...v.reference], lane_rejected: [...v.rejected] }
 }
 
-function fromZoneState(z: ProductZoneState, label = DEFAULT_VARIANT_LABEL_RU, extras?: Partial<VariantLabelFields>): VariantDecisionState {
+function fromZoneState(z: ProductZoneState, label = LABEL_NEEDS_REVIEW_RU, extras?: Partial<VariantDecisionState>): VariantDecisionState {
   return {
     ...emptyVariant(label, extras),
     primary: z.primary,
     gallery: [...z.gallery],
     reference: [...z.reference_only],
     rejected: [...z.lane_rejected],
+    primaryManualOverride: extras?.primaryManualOverride,
+    primaryAutoPicked: extras?.primaryAutoPicked,
+    primaryNeedsReview: extras?.primaryNeedsReview,
   }
 }
 
@@ -783,7 +837,7 @@ export function LegacyMediaAssignmentBoardClient() {
         const seeded: VariantsByHandle = {}
         for (const [handle, z] of Object.entries(v2.zonesByHandle)) {
           seeded[handle] = {
-            [DEFAULT_VARIANT_KEY]: fromZoneState(z, DEFAULT_VARIANT_LABEL_RU, { sourceLabel: "default" }),
+            [DEFAULT_VARIANT_KEY]: fromZoneState(z, LABEL_NEEDS_REVIEW_RU, { sourceLabel: "default" }),
           }
         }
         setVariantsByHandle(seeded)
@@ -805,11 +859,13 @@ export function LegacyMediaAssignmentBoardClient() {
             const metaRow = parsed.variantMetaByHandle?.[ph] ?? {}
             for (const [vk, cell] of Object.entries(row)) {
               const meta = metaRow[vk]
+              const prod = products.find((p) => p.handle.toLowerCase() === ph.toLowerCase())
               migratedVariants[ph][vk] = {
                 ...cell,
                 ...migrateVariantLabelFields(vk, cell, {
                   legacyColorName: meta?.legacyColorName,
                   productSkuHint: skuFor(ph),
+                  seedImageUrls: prod?.image_urls,
                 }),
               }
             }
@@ -1235,9 +1291,14 @@ export function LegacyMediaAssignmentBoardClient() {
               legacyColorName: metaChosen?.legacyColorName,
               productSkuHint: phSku,
             }).displayLabel
+        const manualPrimary = zone === "primary"
         hVariants[chosenVariantKey] = fromZoneState(next.zones[hh] ?? emptyZones(), labelForChosen, {
           sourceLabel: prevChosen?.sourceLabel ?? sourceLabelForVariantKey(chosenVariantKey),
           labelEditedByUser: prevChosen?.labelEditedByUser,
+          labelStatus: prevChosen?.labelStatus,
+          primaryManualOverride: manualPrimary ? true : prevChosen?.primaryManualOverride ?? false,
+          primaryAutoPicked: manualPrimary ? false : prevChosen?.primaryAutoPicked ?? false,
+          primaryNeedsReview: manualPrimary ? false : prevChosen?.primaryNeedsReview ?? false,
         })
         return { ...prevV, [hh]: hVariants }
       })
@@ -1297,13 +1358,13 @@ export function LegacyMediaAssignmentBoardClient() {
       setVariantsByHandle((prev) => {
         const variants =
           prev[hh] ?? {
-            [DEFAULT_VARIANT_KEY]: fromZoneState(boardRef.current.zones[hh] ?? emptyZones(), DEFAULT_VARIANT_LABEL_RU, {
+            [DEFAULT_VARIANT_KEY]: fromZoneState(boardRef.current.zones[hh] ?? emptyZones(), LABEL_NEEDS_REVIEW_RU, {
               sourceLabel: "default",
             }),
           }
         const prevVariant =
           variants[variantKey] ??
-          emptyVariant(variantKey === DEFAULT_VARIANT_KEY ? DEFAULT_VARIANT_LABEL_RU : variantKey)
+          emptyVariant(variantKey === DEFAULT_VARIANT_KEY ? LABEL_NEEDS_REVIEW_RU : variantKey)
         const nextVariant = updater(prevVariant)
         if (variantDecisionEqual(prevVariant, nextVariant)) {
           noop = true
@@ -1387,11 +1448,11 @@ export function LegacyMediaAssignmentBoardClient() {
         ...prevV,
         [hh]: {
           ...(prevV[hh] ?? {
-            [DEFAULT_VARIANT_KEY]: fromZoneState(board.zones[hh] ?? emptyZones(), DEFAULT_VARIANT_LABEL_RU, { sourceLabel: "default" }),
+            [DEFAULT_VARIANT_KEY]: fromZoneState(board.zones[hh] ?? emptyZones(), LABEL_NEEDS_REVIEW_RU, { sourceLabel: "default" }),
           }),
           [vk]: {
-            ...(prevV[hh]?.[vk] ?? emptyVariant(vk === DEFAULT_VARIANT_KEY ? DEFAULT_VARIANT_LABEL_RU : vk)),
-            ...fromZoneState(base, prevV[hh]?.[vk]?.label || DEFAULT_VARIANT_LABEL_RU, {
+            ...(prevV[hh]?.[vk] ?? emptyVariant(vk === DEFAULT_VARIANT_KEY ? LABEL_NEEDS_REVIEW_RU : vk)),
+            ...fromZoneState(base, prevV[hh]?.[vk]?.label || LABEL_NEEDS_REVIEW_RU, {
               sourceLabel: prevV[hh]?.[vk]?.sourceLabel,
               labelEditedByUser: prevV[hh]?.[vk]?.labelEditedByUser,
             }),
@@ -1705,9 +1766,16 @@ export function LegacyMediaAssignmentBoardClient() {
     )
     if (ordered.length === 0) return
 
+    const invMap = new Map(invDoc.items.map((it) => [it.id, it]))
+    const media = buildVariantMediaFromCandidates(ordered, invMap, ordered, null)
+    const labelResolved = resolveVariantDisplayLabel({
+      variantKey: DEFAULT_VARIANT_KEY,
+      seedImageUrls: selectedProduct.image_urls,
+      productSkuHint: (selectedProduct.sku || "").trim(),
+    })
     const nextZones: ProductZoneState = {
-      primary: ordered[0] ?? null,
-      gallery: ordered.slice(1),
+      primary: media.primary,
+      gallery: media.gallery,
       reference_only: [],
       lane_rejected: [],
     }
@@ -1719,10 +1787,39 @@ export function LegacyMediaAssignmentBoardClient() {
       ...prev,
       [hh]: {
         ...(prev[hh] ?? {}),
-        [DEFAULT_VARIANT_KEY]: fromZoneState(nextZones, DEFAULT_VARIANT_LABEL_RU, { sourceLabel: "default" }),
+        [DEFAULT_VARIANT_KEY]: fromZoneState(nextZones, labelResolved.displayLabel, {
+          sourceLabel: labelResolved.sourceLabel,
+          labelStatus: labelResolved.labelStatus,
+          primaryAutoPicked: media.primaryAutoPicked,
+          primaryNeedsReview: media.primaryNeedsReview,
+          primaryManualOverride: false,
+        }),
       },
     }))
   }, [hydrated, selectedHandle, selectedProduct, invDoc, board.zones, activeVariantByHandle])
+
+  /** Mirror active variant lanes into product zones for drag/drop + legacy export compatibility. */
+  useEffect(() => {
+    if (!hydrated || !selectedHandle) return
+    const hh = selectedHandle.toLowerCase()
+    const vk = activeVariantByHandle[hh] || DEFAULT_VARIANT_KEY
+    const vv = variantsByHandle[hh]?.[vk]
+    if (!vv) return
+    const nextZ = toZoneState(vv)
+    const cur = board.zones[hh]
+    if (
+      cur &&
+      cur.primary === nextZ.primary &&
+      cur.gallery.length === nextZ.gallery.length &&
+      cur.gallery.every((id, i) => id === nextZ.gallery[i])
+    ) {
+      return
+    }
+    setBoard((prev) => ({
+      ...prev,
+      zones: { ...prev.zones, [hh]: nextZ },
+    }))
+  }, [hydrated, selectedHandle, activeVariantByHandle, variantsByHandle, board.zones])
 
   useEffect(() => {
     enrichLoadedRef.current.clear()
@@ -2127,7 +2224,14 @@ export function LegacyMediaAssignmentBoardClient() {
                 updateVariantDecision(
                   handle,
                   vk,
-                  (prev) => ({ ...prev, primary: id, gallery: prev.gallery.filter((x) => x !== id) }),
+                  (prev) => ({
+                    ...prev,
+                    primary: id,
+                    gallery: prev.gallery.filter((x) => x !== id),
+                    primaryManualOverride: true,
+                    primaryAutoPicked: false,
+                    primaryNeedsReview: false,
+                  }),
                   "set primary from gallery",
                   id,
                   { fromZone: "gallery", targetZone: "primary", source: assignSrc }
@@ -2363,7 +2467,21 @@ export function LegacyMediaAssignmentBoardClient() {
         if (ce?.identity_confidence === "ambiguous") ambN++
       }
     }
-    return { prodN, mediaN, assignedN, ambN, unassignedN, candRows }
+    let safeCandN = 0
+    let reviewCandN = 0
+    if (coll === "oxford" || coll === "monchelsea") {
+      for (const e of candDoc?.entries ?? []) {
+        const it = invById.get(e.inventory_id)
+        if (!it) continue
+        const matchColl =
+          (it.collection_hint || "").toLowerCase() === coll ||
+          (e.top_candidate?.medusa_collection_handle || "").toLowerCase() === coll
+        if (!matchColl) continue
+        if (e.identity_confidence === "confirmed" || e.confidence === "confirmed") safeCandN++
+        else if (e.identity_confidence === "ambiguous" || e.confidence === "ambiguous") reviewCandN++
+      }
+    }
+    return { prodN, mediaN, assignedN, ambN, unassignedN, candRows, safeCandN, reviewCandN }
   }
 
   const inspectorInv = inspectorId ? invById.get(inspectorId) : null
@@ -2520,7 +2638,7 @@ export function LegacyMediaAssignmentBoardClient() {
     const vByHandle =
       variantsByHandle[h] ??
       {
-        [DEFAULT_VARIANT_KEY]: fromZoneState(board.zones[h] ?? emptyZones(), DEFAULT_VARIANT_LABEL_RU, { sourceLabel: "default" }),
+        [DEFAULT_VARIANT_KEY]: fromZoneState(board.zones[h] ?? emptyZones(), LABEL_NEEDS_REVIEW_RU, { sourceLabel: "default" }),
       }
     const vmByHandle = variantMetaByHandle[h] ?? {}
     const activeVariantKey = activeVariantByHandle[h] || Object.keys(vByHandle)[0] || DEFAULT_VARIANT_KEY
@@ -2528,11 +2646,14 @@ export function LegacyMediaAssignmentBoardClient() {
     const activeVariantMeta = vmByHandle[activeVariantKey] ?? null
     const activeVariant =
       vByHandle[activeVariantKey] ??
-      emptyVariant(activeVariantKey === DEFAULT_VARIANT_KEY ? DEFAULT_VARIANT_LABEL_RU : activeVariantKey)
-    const activeVariantDisplay = withResolvedVariantLabel(activeVariantKey, activeVariant, {
+      emptyVariant(activeVariantKey === DEFAULT_VARIANT_KEY ? LABEL_NEEDS_REVIEW_RU : activeVariantKey)
+    const activeResolved = withResolvedVariantLabel(activeVariantKey, activeVariant, {
       legacyColorName: activeVariantMeta?.legacyColorName,
       productSkuHint,
-    }).label
+      seedImageUrls: selectedProduct.image_urls,
+    })
+    const activeVariantDisplay = activeResolved.label
+    const activeLabelStatus = activeResolved.labelStatus
     const z = toZoneState(activeVariant)
     const candCount = entryList.filter((e) => e.top_candidate?.medusa_product_handle.toLowerCase() === h).length
     const safeSuggestions = suggestedVariantsForSelected.filter((s) => s.identityTier === "this_sku")
@@ -2564,15 +2685,28 @@ export function LegacyMediaAssignmentBoardClient() {
           editedLegacyArticle: null,
           chosenArticleCandidateIndex: null,
         }
-        const displayLabel = resolveSuggestionDisplayLabel(s, enc, prefs, null, s.productSkuHint)
+        const labelResolved = resolveSuggestionDisplayLabel(s, enc, prefs, null, s.productSkuHint)
+        const candidateIds = [s.primaryCandidateId, ...s.galleryCandidateIds].filter(Boolean) as string[]
+        const invMap = new Map((invDoc?.items ?? []).map((it) => [it.id, it]))
+        const media = buildVariantMediaFromCandidates(candidateIds, invMap, candidateIds, null)
         variantUpdates[s.variantKey] = {
-          label: displayLabel,
+          label: labelResolved,
           sourceLabel: sourceLabelForVariantKey(s.variantKey),
           labelEditedByUser: Boolean(prefs.displayLabelEdited),
-          primary: s.primaryCandidateId || null,
-          gallery: [...s.galleryCandidateIds],
+          labelStatus: prefs.displayLabelEdited
+            ? "user_edited"
+            : resolveVariantDisplayLabel({
+                variantKey: s.variantKey,
+                legacyColorName: enc?.legacy_color_name,
+                productSkuHint: s.productSkuHint,
+              }).labelStatus,
+          primary: media.primary,
+          gallery: media.gallery,
           reference: [],
           rejected: [],
+          primaryManualOverride: false,
+          primaryAutoPicked: media.primaryAutoPicked,
+          primaryNeedsReview: media.primaryNeedsReview,
         }
         metaUpdates[s.variantKey] = variantMetaFromEnrichmentAndSuggestion({
           productSkuHint: s.productSkuHint,
@@ -2589,7 +2723,8 @@ export function LegacyMediaAssignmentBoardClient() {
           status: "confirmed",
         })
       }
-      const lastVariant = arr[arr.length - 1]
+      const lastKey = arr[arr.length - 1]?.variantKey
+      const lastState = lastKey ? variantUpdates[lastKey] : null
       setVariantsByHandle((prev) => ({
         ...prev,
         [h]: { ...(prev[h] ?? {}), ...variantUpdates },
@@ -2598,20 +2733,21 @@ export function LegacyMediaAssignmentBoardClient() {
         ...prev,
         [h]: { ...(prev[h] ?? {}), ...metaUpdates },
       }))
-      setBoard((prev) => ({
-        ...prev,
-        zones: {
-          ...prev.zones,
-          [h]: {
-            ...(prev.zones[h] ?? emptyZones()),
-            primary: lastVariant.primaryCandidateId || null,
-            gallery: [...lastVariant.galleryCandidateIds],
-            reference_only: [],
-            lane_rejected: [],
+      if (lastState) {
+        setBoard((prev) => ({
+          ...prev,
+          zones: {
+            ...prev.zones,
+            [h]: {
+              primary: lastState.primary,
+              gallery: [...lastState.gallery],
+              reference_only: [],
+              lane_rejected: [],
+            },
           },
-        },
-      }))
-      setActiveVariantByHandle((prev) => ({ ...prev, [h]: lastVariant.variantKey }))
+        }))
+      }
+      if (lastKey) setActiveVariantByHandle((prev) => ({ ...prev, [h]: lastKey }))
       setDiag((d) => ({
         ...d,
         stateUpdateRequested: true,
@@ -2758,10 +2894,12 @@ export function LegacyMediaAssignmentBoardClient() {
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", rowGap: 6 }}>
             {Object.entries(vByHandle).map(([vk, vv]) => {
-              const chipLabel = withResolvedVariantLabel(vk, vv, {
+              const chipResolved = withResolvedVariantLabel(vk, vv, {
                 legacyColorName: vmByHandle[vk]?.legacyColorName,
                 productSkuHint,
-              }).label
+              })
+              const chipLabel = chipResolved.label
+              const chipNeedsReview = labelNeedsReviewStyle(chipResolved.labelStatus)
               return (
               <button
                 key={vk}
@@ -2771,10 +2909,11 @@ export function LegacyMediaAssignmentBoardClient() {
                 style={{
                   ...miniBtn,
                   padding: "4px 10px",
-                  background: vk === activeVariantKey ? "#0f172a" : "#f8fafc",
-                  color: vk === activeVariantKey ? "#fff" : "#334155",
-                  borderColor: vk === activeVariantKey ? "#0f172a" : "#cbd5e1",
+                  background: vk === activeVariantKey ? "#0f172a" : chipNeedsReview ? "#fffbeb" : "#f8fafc",
+                  color: vk === activeVariantKey ? "#fff" : chipNeedsReview ? "#92400e" : "#334155",
+                  borderColor: vk === activeVariantKey ? "#0f172a" : chipNeedsReview ? "#fcd34d" : "#cbd5e1",
                   maxWidth: 220,
+                  fontStyle: chipNeedsReview && vk !== activeVariantKey ? "italic" : "normal",
                 }}
               >
                 {chipLabel}
@@ -2830,7 +2969,7 @@ export function LegacyMediaAssignmentBoardClient() {
                     ...prev,
                     [h]: {
                       ...(prev[h] ?? {
-                        [DEFAULT_VARIANT_KEY]: fromZoneState(board.zones[h] ?? emptyZones(), DEFAULT_VARIANT_LABEL_RU, {
+                        [DEFAULT_VARIANT_KEY]: fromZoneState(board.zones[h] ?? emptyZones(), LABEL_NEEDS_REVIEW_RU, {
                           sourceLabel: "default",
                         }),
                       }),
@@ -2944,13 +3083,23 @@ export function LegacyMediaAssignmentBoardClient() {
           }}
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 10, fontWeight: 800, color: "#0f172a", textTransform: "uppercase", letterSpacing: "0.06em" }}>1 · Current photos for this SKU</span>
-            <span style={{ fontSize: 10, color: "#94a3b8" }}>
-              вариант <strong style={{ color: "#475569" }}>{activeVariantDisplay}</strong> · primary <strong>{z.primary ? 1 : 0}</strong> · gallery <strong>{z.gallery.length}</strong>
+            <span style={{ fontSize: 10, fontWeight: 800, color: "#0f172a", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              1 · Цвет: {activeVariantDisplay}
+            </span>
+            <span style={{ fontSize: 10, color: "#94a3b8", display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+              {labelNeedsReviewStyle(activeLabelStatus) ? (
+                <span style={{ ...pillSlate, background: "#fef3c7", color: "#92400e" }}>уточните название</span>
+              ) : null}
+              {activeVariant.primaryAutoPicked ? (
+                <span style={{ ...pillSlate, background: "#dbeafe", color: "#1e40af" }}>Primary выбран автоматически</span>
+              ) : null}
+              {activeVariant.primaryNeedsReview ? (
+                <span style={{ ...pillSlate, background: "#fee2e2", color: "#b91c1c" }}>Проверь primary</span>
+              ) : null}
             </span>
           </div>
 
-          {selectedProduct.image_urls.length > 0 ? (
+          {selectedProduct.image_urls.length > 0 && activeVariantKey === DEFAULT_VARIANT_KEY ? (
             <div
               data-default-storefront-seed-strip="true"
               style={{
@@ -2964,15 +3113,9 @@ export function LegacyMediaAssignmentBoardClient() {
             >
               <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 8, alignItems: "baseline" }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: "#1e3a8a" }}>
-                  {seedMatchRowsForSelected.length > 0 && seedMatchRowsForSelected.every((r) => r.invId)
-                    ? "Default storefront photos · matched to legacy inventory · editable draft"
-                    : seedMatchRowsForSelected.some((r) => r.invId)
-                      ? "Default storefront photos · partial match (see seed-only cards)"
-                      : "Default storefront photos · no inventory path match"}
+                  Storefront seeds для варианта «{activeVariantDisplay}»
                 </span>
-                <span style={{ fontSize: 10, color: "#64748b" }}>
-                  Matched seeds are editable below; unmatched stay as reference-only cards.
-                </span>
+                <span style={{ fontSize: 10, color: "#64748b" }}>Назначайте в Primary / Gallery этого цвета ниже</span>
               </div>
               {seedMatchRowsForSelected.some((r) => r.invId) ? (
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 10, minWidth: 0 }}>
@@ -3037,7 +3180,7 @@ export function LegacyMediaAssignmentBoardClient() {
           ) : null}
 
           {zoneBox(
-            "Primary",
+            "Primary photo (этот цвет)",
             "Drop to Primary",
             selectedHandle,
             "primary",
@@ -3054,7 +3197,7 @@ export function LegacyMediaAssignmentBoardClient() {
           )}
 
           {zoneBox(
-            "Gallery",
+            "Gallery (этот цвет)",
             "Drop to Gallery",
             selectedHandle,
             "gallery",
@@ -3354,6 +3497,26 @@ export function LegacyMediaAssignmentBoardClient() {
                   confirmedVariant,
                   productSkuHint
                 )
+                const suggestionLabelStatus = resolveVariantDisplayLabel({
+                  variantKey: s.variantKey,
+                  persistedLabel: prefs.displayLabel ?? s.label,
+                  labelEditedByUser: prefs.displayLabelEdited,
+                  legacyColorName: enc?.legacy_color_name,
+                  productSkuHint,
+                  preferLegacyColorName: prefs.useLegacyName,
+                }).labelStatus
+                const candidateIds = galleryPreview
+                const previewMedia = buildVariantMediaFromCandidates(
+                  candidateIds,
+                  invById,
+                  candidateIds,
+                  confirmedVariant ?? null
+                )
+                const primaryPreviewId = confirmedVariant?.primary ?? previewMedia.primary
+                const galleryRest = (confirmedVariant ? confirmedVariant.gallery : previewMedia.gallery).filter(
+                  (id) => id && id !== primaryPreviewId
+                )
+                const galleryPreviewOrdered = primaryPreviewId ? [primaryPreviewId, ...galleryRest] : galleryRest
 
                 return (
                   <article
@@ -3372,9 +3535,20 @@ export function LegacyMediaAssignmentBoardClient() {
                     }}
                   >
                     <header style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", minWidth: 0 }}>
-                        <strong style={{ fontSize: 15, color: "#0f172a", overflowWrap: "anywhere" }} data-variant-display-label="true">
+                        <strong
+                          style={{
+                            fontSize: 15,
+                            color: labelNeedsReviewStyle(suggestionLabelStatus) ? "#b45309" : "#0f172a",
+                            overflowWrap: "anywhere",
+                            fontStyle: labelNeedsReviewStyle(suggestionLabelStatus) ? "italic" : "normal",
+                          }}
+                          data-variant-display-label="true"
+                        >
                           {suggestionDisplayLabel}
                         </strong>
+                        {labelNeedsReviewStyle(suggestionLabelStatus) ? (
+                          <span style={{ ...pillSlate, background: "#fef3c7", color: "#92400e" }}>уточните название</span>
+                        ) : null}
                         <span style={pillIndigo}>{s.confidence}</span>
                         <span
                           style={{
@@ -3407,17 +3581,29 @@ export function LegacyMediaAssignmentBoardClient() {
                         <span style={{ ...pillSlate, marginLeft: "auto" }}>{cardStatus}</span>
                     </header>
 
-                    {/* BODY: primary candidate + horizontal gallery strip preview */}
-                    {galleryPreview.length > 0 ? (
-                      <div
-                        data-suggestion-thumbs="true"
-                        style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-start", minWidth: 0 }}
-                      >
-                        {galleryPreview.slice(0, 6).map((mid, idx) => {
+                    {/* BODY: Primary + Gallery preview for this color variant */}
+                    {galleryPreviewOrdered.length > 0 ? (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+                          <span style={{ fontSize: 10, fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                            Primary photo · Gallery
+                          </span>
+                          {!confirmedVariant && previewMedia.primaryAutoPicked ? (
+                            <span style={{ ...pillSlate, background: "#dbeafe", color: "#1e40af" }}>Primary выбран автоматически</span>
+                          ) : null}
+                          {(confirmedVariant?.primaryNeedsReview || previewMedia.primaryNeedsReview) && !confirmedVariant?.primaryManualOverride ? (
+                            <span style={{ ...pillSlate, background: "#fee2e2", color: "#b91c1c" }}>Проверь primary</span>
+                          ) : null}
+                        </div>
+                        <div
+                          data-suggestion-thumbs="true"
+                          style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-start", minWidth: 0 }}
+                        >
+                        {galleryPreviewOrdered.slice(0, 6).map((mid) => {
                           const inv = invById.get(mid)
                           const pv = inv ? clientPreviewUrl(inv) : null
                           const previewUrl = pv?.url ?? null
-                          const isPrimary = idx === 0
+                          const isPrimary = mid === primaryPreviewId
                           return (
                             <div
                               key={mid}
@@ -3472,11 +3658,12 @@ export function LegacyMediaAssignmentBoardClient() {
                             </div>
                           )
                         })}
-                        {galleryPreview.length > 6 ? (
+                        {galleryPreviewOrdered.length > 6 ? (
                           <div style={{ fontSize: 10, color: "#64748b", alignSelf: "center" }}>
-                            +{galleryPreview.length - 6}
+                            +{galleryPreviewOrdered.length - 6}
                           </div>
                         ) : null}
+                      </div>
                       </div>
                     ) : (
                       <div style={{ fontSize: 11, color: "#94a3b8" }}>No candidate images yet for this variant.</div>
@@ -3509,6 +3696,7 @@ export function LegacyMediaAssignmentBoardClient() {
                                   ...confirmedVariant,
                                   label: next,
                                   labelEditedByUser: true,
+                                  labelStatus: "user_edited",
                                   sourceLabel: confirmedVariant.sourceLabel ?? sourceLabelForVariantKey(s.variantKey),
                                 },
                               },
@@ -3845,27 +4033,140 @@ export function LegacyMediaAssignmentBoardClient() {
               data-confirmed-variants-summary="true"
               style={{
                 marginTop: 10,
-                padding: "8px 10px",
-                borderRadius: 8,
+                padding: "10px 12px",
+                borderRadius: 10,
                 background: "#f0fdf4",
                 border: "1px solid #bbf7d0",
-                fontSize: 11,
-                color: "#166534",
-                lineHeight: 1.45,
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+                minWidth: 0,
               }}
             >
-              <strong>Подтверждено вариантов: {confirmedVariantCount}</strong>
-              {" · "}
-              {Object.entries(vByHandle)
-                .filter(([vk]) => vk !== DEFAULT_VARIANT_KEY || galleryItemCount > 0)
-                .slice(0, 6)
-                .map(([vk, vv]) =>
-                  withResolvedVariantLabel(vk, vv, {
-                    legacyColorName: vmByHandle[vk]?.legacyColorName,
-                    productSkuHint,
-                  }).label
-                )
-                .join(", ")}
+              <span style={{ fontSize: 10, fontWeight: 800, color: "#166534", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                Подтверждённые цвета · {confirmedVariantCount}
+              </span>
+              <div style={{ display: "grid", gap: 8 }}>
+                {Object.entries(vByHandle)
+                  .filter(([vk, vv]) => vk !== DEFAULT_VARIANT_KEY || (vv.primary ? 1 : 0) + vv.gallery.length > 0)
+                  .map(([vk, vv]) => {
+                    const resolved = withResolvedVariantLabel(vk, vv, {
+                      legacyColorName: vmByHandle[vk]?.legacyColorName,
+                      productSkuHint,
+                    })
+                    const readiness =
+                      resolved.labelStatus === "needs_review"
+                        ? "уточните цвет"
+                        : vv.primaryNeedsReview && !vv.primaryManualOverride
+                          ? "проверьте primary"
+                          : vv.primary
+                            ? "готово"
+                            : "нет primary"
+                    const stripIds = vv.primary ? [vv.primary, ...vv.gallery.filter((id) => id !== vv.primary)] : vv.gallery
+                    return (
+                      <div
+                        key={vk}
+                        data-confirmed-variant-row="true"
+                        data-variant-key={vk}
+                        style={{
+                          border: "1px solid #bbf7d0",
+                          borderRadius: 8,
+                          padding: 8,
+                          background: "#fff",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 6,
+                          minWidth: 0,
+                        }}
+                      >
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+                          <strong
+                            style={{
+                              fontSize: 13,
+                              color: labelNeedsReviewStyle(resolved.labelStatus) ? "#b45309" : "#0f172a",
+                              fontStyle: labelNeedsReviewStyle(resolved.labelStatus) ? "italic" : "normal",
+                            }}
+                          >
+                            {resolved.label}
+                          </strong>
+                          <button
+                            type="button"
+                            style={{ ...miniBtn, padding: "2px 8px", fontSize: 10 }}
+                            onClick={() => {
+                              const next = promptVariantRename(resolved.label)
+                              if (!next) return
+                              setVariantsByHandle((prev) => ({
+                                ...prev,
+                                [h]: {
+                                  ...(prev[h] ?? {}),
+                                  [vk]: {
+                                    ...vv,
+                                    label: next,
+                                    labelEditedByUser: true,
+                                    labelStatus: "user_edited",
+                                    sourceLabel: vv.sourceLabel ?? sourceLabelForVariantKey(vk),
+                                  },
+                                },
+                              }))
+                            }}
+                          >
+                            Переименовать
+                          </button>
+                          <span style={{ ...pillSlate, marginLeft: "auto", background: "#dcfce7", color: "#166534" }}>{readiness}</span>
+                        </div>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+                          <span style={{ fontSize: 10, fontWeight: 700, color: "#64748b" }}>Primary</span>
+                          {vv.primaryAutoPicked && !vv.primaryManualOverride ? (
+                            <span style={{ ...pillSlate, background: "#dbeafe", color: "#1e40af", fontSize: 9 }}>auto</span>
+                          ) : null}
+                          <span style={{ fontSize: 10, color: "#64748b" }}>Gallery · {vv.gallery.length}</span>
+                        </div>
+                        {stripIds.length > 0 ? (
+                          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                            {stripIds.slice(0, 5).map((mid) => {
+                              const inv = invById.get(mid)
+                              const pv = inv ? clientPreviewUrl(inv) : null
+                              const isPrimary = mid === vv.primary
+                              return (
+                                <div
+                                  key={mid}
+                                  style={{
+                                    width: isPrimary ? 56 : 44,
+                                    height: isPrimary ? 56 : 44,
+                                    borderRadius: 6,
+                                    border: isPrimary ? "2px solid #2563eb" : "1px solid #e2e8f0",
+                                    overflow: "hidden",
+                                    background: "#f8fafc",
+                                    flex: "0 0 auto",
+                                  }}
+                                >
+                                  {pv?.url ? (
+                                    /* eslint-disable-next-line @next/next/no-img-element */
+                                    <img src={pv.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                  ) : (
+                                    <div style={{ fontSize: 8, color: "#94a3b8", padding: 2 }}>—</div>
+                                  )}
+                                </div>
+                              )
+                            })}
+                            {stripIds.length > 5 ? (
+                              <span style={{ fontSize: 10, color: "#64748b", alignSelf: "center" }}>+{stripIds.length - 5}</span>
+                            ) : null}
+                          </div>
+                        ) : (
+                          <span style={{ fontSize: 10, color: "#94a3b8" }}>Нет фото — подтвердите из Suggestions или назначьте из пула</span>
+                        )}
+                        <button
+                          type="button"
+                          style={{ ...miniBtn, alignSelf: "flex-start", fontSize: 10 }}
+                          onClick={() => setActiveVariantByHandle((prev) => ({ ...prev, [h]: vk }))}
+                        >
+                          Редактировать в Current
+                        </button>
+                      </div>
+                    )
+                  })}
+              </div>
             </div>
           ) : null}
 
@@ -4195,6 +4496,16 @@ export function LegacyMediaAssignmentBoardClient() {
                   <span style={navBadge}>{st.candRows} candidates</span>
                   <span style={navBadge}>{st.assignedN} assigned</span>
                   {st.ambN > 0 ? <span style={{ ...navBadge, background: "#fef3c7", color: "#b45309" }}>{st.ambN} amb</span> : null}
+                  {st.safeCandN > 0 ? (
+                    <span style={{ ...navBadge, background: "#dcfce7", color: "#166534" }} data-collection-safe-candidates="true">
+                      {st.safeCandN} safe
+                    </span>
+                  ) : null}
+                  {st.reviewCandN > 0 ? (
+                    <span style={{ ...navBadge, background: "#fef9c3", color: "#854d0e" }} data-collection-needs-identity-review="true">
+                      {st.reviewCandN} identity
+                    </span>
+                  ) : null}
                 </div>
               </button>
             )
@@ -4541,7 +4852,7 @@ export function LegacyMediaAssignmentBoardClient() {
                       {selectedHandle
                         ? Object.entries(
                             variantsByHandle[selectedHandle.toLowerCase()] ?? {
-                              [DEFAULT_VARIANT_KEY]: emptyVariant(DEFAULT_VARIANT_LABEL_RU, { sourceLabel: "default" }),
+                              [DEFAULT_VARIANT_KEY]: emptyVariant(LABEL_NEEDS_REVIEW_RU, { sourceLabel: "default" }),
                             }
                           ).map(([k, v]) => (
                             <option key={k} value={k}>

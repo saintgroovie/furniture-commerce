@@ -335,7 +335,11 @@ export type VariantDecisionExportSlice = {
   display_label: string
   source_label: string
   label_edited_by_user: boolean
+  label_status: "user_edited" | "legacy" | "inferred" | "needs_review"
   primary: string | null
+  primary_manual_override: boolean
+  primary_auto_picked: boolean
+  primary_needs_review: boolean
   gallery: string[]
   reference: string[]
   rejected: string[]
@@ -350,10 +354,14 @@ export function serializeVariantDecisionsForExport(
         label: string
         sourceLabel?: string | null
         labelEditedByUser?: boolean
+        labelStatus?: "user_edited" | "legacy" | "inferred" | "needs_review"
         primary: string | null
         gallery: string[]
         reference: string[]
         rejected: string[]
+        primaryManualOverride?: boolean
+        primaryAutoPicked?: boolean
+        primaryNeedsReview?: boolean
       }
     >
   >,
@@ -369,7 +377,11 @@ export function serializeVariantDecisionsForExport(
         display_label: v.label,
         source_label: source,
         label_edited_by_user: Boolean(v.labelEditedByUser),
+        label_status: v.labelStatus ?? (v.labelEditedByUser ? "user_edited" : "inferred"),
         primary: v.primary,
+        primary_manual_override: Boolean(v.primaryManualOverride),
+        primary_auto_picked: Boolean(v.primaryAutoPicked),
+        primary_needs_review: Boolean(v.primaryNeedsReview),
         gallery: [...v.gallery],
         reference: [...v.reference],
         rejected: [...v.rejected],
