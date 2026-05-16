@@ -44,8 +44,8 @@ const DEFAULT_VARIANT_KEY = "__default__"
 const API_BASE = "/qa/legacy-media-assignment-board/api"
 const PREVIEW_ROUTE = "/qa/legacy-media-assignment-board/preview"
 const DND_JSON = "application/json"
-const DEV_SENTINEL = "Legacy Board indexed swatch color articles (read-only PDP cache)"
-const DEV_SENTINEL_BUILD = "2026-05-15T18:00Z"
+const DEV_SENTINEL = "Legacy Board review flow UX (single-product cockpit)"
+const DEV_SENTINEL_BUILD = "2026-05-15T21:00Z"
 
 async function fetchBoardJson(url: string): Promise<{ ok: true; data: Record<string, unknown> } | { ok: false; status: number; body: Record<string, unknown> }> {
   const res = await fetch(url)
@@ -2309,6 +2309,17 @@ export function LegacyMediaAssignmentBoardClient() {
     setSelectedHandle(productsFiltered[i].handle)
   }
 
+  const selectedWorkflowPhotosDone = Boolean(
+    selectedHandle &&
+      (() => {
+        const hz = selectedHandle.toLowerCase()
+        const z = board.zones[hz] ?? emptyZones()
+        return Boolean(z.primary) || z.gallery.length > 0
+      })()
+  )
+  const selectedWorkflowSuggestionsDone =
+    Boolean(selectedHandle) && !productHasUnconfirmedSuggestions(selectedHandle)
+
   const workflowSteps = (
     <div
       style={{
@@ -2323,11 +2334,10 @@ export function LegacyMediaAssignmentBoardClient() {
     >
       {(
         [
-          { n: 1, t: "Collection", done: true },
-          { n: 2, t: "Product", done: Boolean(selectedHandle) },
-          { n: 3, t: "Review", done: Boolean(selectedHandle) },
-          { n: 4, t: "Assign", done: localDecisionSlots > 0 },
-          { n: 5, t: "Export", done: exportReady },
+          { n: 1, t: "Product", done: Boolean(selectedHandle) },
+          { n: 2, t: "Photos", done: selectedWorkflowPhotosDone },
+          { n: 3, t: "Suggestions", done: selectedWorkflowSuggestionsDone },
+          { n: 4, t: "Export", done: exportReady },
         ] as const
       ).map((s, i, arr) => (
         <div key={s.n} style={{ display: "flex", alignItems: "center", gap: 5 }}>
@@ -2510,7 +2520,7 @@ export function LegacyMediaAssignmentBoardClient() {
           }}
         >
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 10, fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em" }}>Review cockpit</div>
+            <div style={{ fontSize: 10, fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em" }}>Review flow · step 4 next product</div>
             <div style={{ fontSize: 13, color: "#475569", marginTop: 2 }}>
               <strong style={{ color: "#0f172a" }}>{collectionLabel}</strong>
               {" · "}
@@ -2589,10 +2599,16 @@ export function LegacyMediaAssignmentBoardClient() {
           </div>
         </header>
 
-        {/* SECTION 2 — Color variants panel (full width) */}
-        <div style={{ border: "1px solid #e2e8f0", borderRadius: 12, padding: 12, background: "#fff", minWidth: 0 }}>
+        <details
+          open={Object.keys(vByHandle).length > 1}
+          style={{ border: "1px solid #e2e8f0", borderRadius: 12, padding: 12, background: "#fff", minWidth: 0 }}
+        >
+          <summary style={{ cursor: "pointer", fontSize: 10, fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            Color variants & legacy article (advanced)
+          </summary>
+          <div style={{ marginTop: 10 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
-            <span style={{ fontSize: 10, fontWeight: 800, color: "#0f172a", textTransform: "uppercase", letterSpacing: "0.06em" }}>Варианты цвета</span>
+            <span style={{ fontSize: 10, fontWeight: 800, color: "#0f172a", textTransform: "uppercase", letterSpacing: "0.06em" }}>Active variant</span>
             <span style={{ fontSize: 11, color: "#475569" }}>
               Active: <strong>{activeVariant.label}</strong>
               {" · "}
@@ -2643,7 +2659,7 @@ export function LegacyMediaAssignmentBoardClient() {
                     ...prev,
                     [h]: {
                       ...(prev[h] ?? {}),
-                      [key]: mergeVariantMeta(prev[h]?.[key], selectedProduct.sku.trim() || "", {
+                      [key]: mergeVariantMeta(prev[h]?.[key], (selectedProduct.sku || "").trim() || "", {
                         reasons: ["manual add variant"],
                         status: "edited",
                       }),
@@ -2720,10 +2736,12 @@ export function LegacyMediaAssignmentBoardClient() {
               </details>
             </div>
           ) : null}
-        </div>
+          </div>
+        </details>
 
-        {/* SECTION 3 — Current main media panel (full width, actionable lanes) */}
+        {/* Current main media — actionable lanes */}
         <section
+          data-review-step="1"
           data-selected-product-main-media="true"
           data-product-handle={h}
           data-active-variant-key={activeVariantKey}
@@ -2739,7 +2757,7 @@ export function LegacyMediaAssignmentBoardClient() {
           }}
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 10, fontWeight: 800, color: "#0f172a", textTransform: "uppercase", letterSpacing: "0.06em" }}>Текущие фото товара</span>
+            <span style={{ fontSize: 10, fontWeight: 800, color: "#0f172a", textTransform: "uppercase", letterSpacing: "0.06em" }}>1 · Current photos for this SKU</span>
             <span style={{ fontSize: 10, color: "#94a3b8" }}>
               вариант <strong style={{ color: "#475569" }}>{activeVariant.label}</strong> · primary <strong>{z.primary ? 1 : 0}</strong> · gallery <strong>{z.gallery.length}</strong>
             </span>
@@ -2766,9 +2784,25 @@ export function LegacyMediaAssignmentBoardClient() {
                       : "Default storefront photos · no inventory path match"}
                 </span>
                 <span style={{ fontSize: 10, color: "#64748b" }}>
-                  Source: <strong>seed-products</strong> image_urls · Same files appear in Primary/Gallery when matched to inventory rows
+                  Matched seeds are editable below; unmatched stay as reference-only cards.
                 </span>
               </div>
+              {seedMatchRowsForSelected.some((r) => r.invId) ? (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 10, minWidth: 0 }}>
+                  {seedMatchRowsForSelected
+                    .filter((r): r is typeof r & { invId: string } => Boolean(r.invId))
+                    .map((r) => {
+                      const invId = r.invId
+                      const zone: LegacyMediaDragZone =
+                        z.primary === invId ? "primary" : z.gallery.includes(invId) ? "gallery" : "gallery"
+                      return (
+                        <div key={`seed-${r.seedUrl}`} style={{ flex: "0 0 auto", minWidth: 0 }}>
+                          {renderZoneThumb(invId, selectedHandle, zone, activeVariantKey, vByHandle, "compact")}
+                        </div>
+                      )
+                    })}
+                </div>
+              ) : null}
               {seedMatchRowsForSelected.some((r) => !r.invId) ? (
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 10 }}>
                   {seedMatchRowsForSelected
@@ -2962,7 +2996,7 @@ export function LegacyMediaAssignmentBoardClient() {
           </div>
         </section>
 
-        <section
+        <details
           data-article-scan-panel="true"
           style={{
             border: "1px solid #dbeafe",
@@ -2973,9 +3007,12 @@ export function LegacyMediaAssignmentBoardClient() {
             marginBottom: 0,
           }}
         >
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-            <span style={{ fontSize: 10, fontWeight: 800, color: "#1e3a8a", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-              Legacy article index scan
+          <summary style={{ cursor: "pointer", fontSize: 10, fontWeight: 800, color: "#1e3a8a", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            Legacy article index scan (optional)
+          </summary>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", justifyContent: "space-between", marginBottom: 8, marginTop: 10 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: "#475569" }}>
+              Batch scan PDP cache for swatch articles
             </span>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               <button
@@ -3010,17 +3047,18 @@ export function LegacyMediaAssignmentBoardClient() {
           ) : (
             <div style={{ fontSize: 11, color: "#94a3b8" }}>Run scan to index swatch articles from repo PDP cache (read-only).</div>
           )}
-        </section>
+        </details>
 
-        {/* SECTION 4 — Suggested color variants — compact review flow */}
+        {/* SECTION 2 — Suggested color variants — compact review flow */}
         <div
+          data-review-step="2"
           data-suggested-variants-panel="true"
           data-product-handle={h}
           style={{ border: "1px solid #e2e8f0", borderRadius: 12, padding: 12, background: "#fff", minWidth: 0 }}
         >
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap", marginBottom: 8, rowGap: 6 }}>
             <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
-              <span style={{ fontSize: 10, fontWeight: 800, color: "#0f172a", textTransform: "uppercase", letterSpacing: "0.06em" }}>Предложения по цветам</span>
+              <span style={{ fontSize: 10, fontWeight: 800, color: "#0f172a", textTransform: "uppercase", letterSpacing: "0.06em" }}>2 · Suggested variants for this SKU</span>
               {totalSuggestions > 0 ? (
                 <span
                   data-suggestions-counter="true"
@@ -3166,6 +3204,7 @@ export function LegacyMediaAssignmentBoardClient() {
                         ) : loading ? (
                           <span style={{ fontSize: 11, color: "#64748b" }}>…</span>
                         ) : null}
+                        <span style={{ ...pillSlate, marginLeft: "auto" }}>{cardStatus}</span>
                     </header>
 
                     {/* BODY: primary candidate + horizontal gallery strip preview */}
@@ -3650,6 +3689,7 @@ export function LegacyMediaAssignmentBoardClient() {
         ) : null}
 
         <div
+          data-review-step="3"
           data-export-status-panel="true"
           style={{
             display: "flex",
@@ -3664,7 +3704,7 @@ export function LegacyMediaAssignmentBoardClient() {
             color: "#475569",
           }}
         >
-          <span style={{ fontSize: 10, fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em" }}>Confirmed / export</span>
+          <span style={{ fontSize: 10, fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em" }}>3 · Confirmed / export</span>
           <span>
             Variants <strong>{confirmedVariantCount}</strong>
           </span>
@@ -4032,11 +4072,18 @@ export function LegacyMediaAssignmentBoardClient() {
             <>
               {renderSelectedWorkspace(focusMode)}
               {!focusMode ? (
-                <section>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
-                    <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: "#0f172a" }}>Products in this view</h3>
-                    <span style={{ fontSize: 12, color: "#64748b" }}>{productsFiltered.length} rows</span>
-                  </div>
+                <details open={!selectedHandle} style={{ marginBottom: 14 }}>
+                  <summary style={{ fontWeight: 700, fontSize: 13, color: "#334155", cursor: "pointer" }}>
+                    Products in this view ({productsFiltered.length})
+                    {selectedHandle ? " — switch SKU" : ""}
+                  </summary>
+                  <div style={{ marginTop: 10 }}>
+                  {!selectedHandle ? (
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
+                      <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: "#0f172a" }}>Pick a product to review</h3>
+                      <span style={{ fontSize: 12, color: "#64748b" }}>{productsFiltered.length} rows</span>
+                    </div>
+                  ) : null}
                   {productsFiltered.length === 0 ? (
                     <div style={{ padding: 28, background: "#fff", borderRadius: 12, border: "1px dashed #cbd5e1", color: "#64748b", textAlign: "center" }}>
                       <div style={{ fontWeight: 700, color: "#0f172a", marginBottom: 6 }}>No products in this view</div>
@@ -4150,13 +4197,15 @@ export function LegacyMediaAssignmentBoardClient() {
                       })}
                     </div>
                   )}
-                </section>
+                    </div>
+                  </details>
               ) : null}
             </>
           )}
         </main>
 
         <aside
+          data-media-pool-aside="true"
           data-legacy-board-right-aside="true"
           style={{
             width: "100%",
@@ -4287,7 +4336,7 @@ export function LegacyMediaAssignmentBoardClient() {
                 </div>
               </details>
             </div>
-            <div style={{ flex: 1, minHeight: 0, overflowY: "auto", overflowX: "hidden", padding: 12 }}>
+            <div data-media-pool-scroll="true" style={{ flex: 1, minHeight: 0, overflowY: "auto", overflowX: "hidden", padding: 12 }}>
               {poolTab === "unpreviewable" ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
                   {unpreviewableRows.length === 0 ? (

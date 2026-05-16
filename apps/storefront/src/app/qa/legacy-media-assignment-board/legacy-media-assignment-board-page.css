@@ -14,6 +14,43 @@ main.container.page-section:has(.legacy-media-assignment-board-root) {
 
 .legacy-media-assignment-board-root .legacy-board-shell {
   width: 100%;
+  max-width: 100vw;
+  box-sizing: border-box;
+}
+
+.legacy-media-assignment-board-root [data-legacy-board-grid="true"] {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.legacy-media-assignment-board-root [data-legacy-board-grid="true"] > aside,
+.legacy-media-assignment-board-root [data-legacy-board-grid="true"] > main,
+.legacy-media-assignment-board-root [data-legacy-board-grid="true"] > [data-media-pool-aside="true"] {
+  min-width: 0;
+  min-height: 0;
+}
+
+.legacy-media-assignment-board-root [data-media-pool-aside="true"] {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.legacy-media-assignment-board-root [data-media-pool-scroll="true"] {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.legacy-media-assignment-board-root [data-media-pool-grid="true"] {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   box-sizing: border-box;
 }
 
@@ -24,4 +61,21 @@ main.container.page-section:has(.legacy-media-assignment-board-root) {
 .legacy-media-assignment-board-root [data-media-card="true"] {
   max-width: 100%;
   box-sizing: border-box;
+}
+
+.legacy-media-assignment-board-root [data-review-canvas="true"] {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.legacy-media-assignment-board-root [data-review-step="true"] {
+  min-width: 0;
+}
+
+.legacy-media-assignment-board-root [data-suggestion-card="true"] {
+  max-width: 100%;
+}
+
+.legacy-media-assignment-board-root [data-default-storefront-seed-strip="true"] [data-media-card="true"] {
+  max-width: min(220px, 100%);
 }
