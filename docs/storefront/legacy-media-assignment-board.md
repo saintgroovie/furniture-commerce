@@ -84,8 +84,8 @@ The workflow strip also echoes **active collection**, **selected product**, **lo
 
 For the selected product and **active color variant**, the center column uses explicit lanes:
 
-1. **Главное фото / Primary** — one large slot (~200px). Empty state explains how to set primary via ★ or pool.
-2. **Галерея / Gallery** — horizontal scroll strip; cards are **≥180px** wide with compact controls (← → ★ ✕, more in ⋯).
+1. **Главное фото / Primary** — one large slot (~200px). Empty state explains how to set primary via **★ Главное** on a gallery card or **Главное** in the media pool.
+2. **Галерея / Gallery** — horizontal scroll strip; cards are **≥180px** wide with compact controls (← → **★ Главное** ✕, **Сделать главным** in ⋯).
 3. **Default photos available** — compact 72px thumbnails only when storefront seed URLs are **not** already in Primary/Gallery (no duplicate seed table).
 4. **Reference / Rejected** — collapsed `<details>` lanes.
 5. **Color suggestions** — below current media; confirm flow unchanged.
@@ -99,7 +99,7 @@ Pool tiles: **Primary** / **Gallery** / **More** (Ref, Reject, Global in More). 
 The selected-product workspace is organised as an operator **review cockpit**, not a debug console:
 
 - **`[data-review-cockpit="true"]`** — collection, product progress (`N / M` products), status pill (**Нужна проверка** / **Готово к экспорту**), **Prev** / **Next** / **Skip**. Technical workflow counters live under **Workflow debug** in the header strip.
-- **`[data-review-canvas="true"]`** — central stack only: **Текущие фото товара** (Primary + Gallery with compact `←` `→` `★` `✕` chips and *More* for advanced lane moves), **Предложения по цветам** (one primary CTA **Подтвердить вариант** per card; **Изменить** / **Отклонить** / **Почему?** for debug), **Подтверждено вариантов** summary when variants exist.
+- **`[data-review-canvas="true"]`** — central stack only: **Текущие фото товара** (Primary + Gallery with compact `←` `→` `★ Главное` `✕` chips, badge **Главное фото** on the primary slot, and *More* → **Сделать главным**), **Предложения по цветам** (one primary CTA **Подтвердить вариант** per card; **Изменить** / **Отклонить** / **Почему?** for debug), **Подтверждено вариантов** summary when variants exist.
 - **Right column** — **Media pool · N items**; pool cards use `MediaImageCard` `displayMode="pool"` (image-first, no inline paths). **Primary** / **Gallery** + **More** (Ref / Reject / Global). **Manual assignment** and **Debug / Diagnostics** are `<details>` collapsed by default.
 - Human-readable legacy article statuses in the UI (e.g. **Артикул найден**, **Старый сайт недоступен**). SKU hint, fetch status, swatch evidence, URLs, and reasons appear only under **Почему?** on suggestion cards.
 

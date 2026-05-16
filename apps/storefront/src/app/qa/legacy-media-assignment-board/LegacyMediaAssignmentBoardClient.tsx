@@ -423,7 +423,7 @@ function SuggestionVariantThumb({
             textTransform: "uppercase",
           }}
         >
-          Primary
+          Главное
         </span>
       ) : null}
     </div>
@@ -2383,6 +2383,7 @@ export function LegacyMediaAssignmentBoardClient() {
           vk={vk}
           gi={gi}
           assignSrc={assignSrc}
+          isCurrentPrimary={vv?.primary === id}
           shieldBtn={shieldBtn}
           stopCardClick={stopCardClick}
           chipBtn={chipBtn}
@@ -2455,11 +2456,12 @@ export function LegacyMediaAssignmentBoardClient() {
         confidenceLabel={candById.get(id)?.confidence || null}
         previewable={canDrag}
         badges={[
+          ...(zone === "primary" ? ["Главное фото"] : []),
           ...(selectedHandle?.toLowerCase() === handle.toLowerCase() && seedInvIdsMatchedFromStorefront.has(id) ? ["storefront seed"] : []),
           ...(!inv ? ["missing inv map"] : []),
           ...(pv.reason ? ["preview fallback"] : []),
           "Assigned",
-          zone,
+          ...(zone === "primary" ? [] : [zone]),
         ]}
         size={size}
         draggable={canDrag}
@@ -3259,7 +3261,7 @@ export function LegacyMediaAssignmentBoardClient() {
                 >
                   <strong style={{ fontSize: 14, color: "#334155" }}>Главное фото не выбрано</strong>
                   <span style={{ fontSize: 12, color: "#64748b", lineHeight: 1.45 }}>
-                    Нажмите <strong>★</strong> на фото из галереи или выберите <strong>Primary</strong> в media pool.
+                    Нажмите <strong>★ Главное</strong> на фото из галереи или выберите <strong>Главное</strong> в media pool.
                   </span>
                 </div>
               )
@@ -5185,7 +5187,8 @@ export function LegacyMediaAssignmentBoardClient() {
                               draggable={false}
                               style={miniBtn}
                               disabled={!selectedHandle}
-                              title={!selectedHandle ? "Select a product first" : undefined}
+                              title={!selectedHandle ? "Select a product first" : "Сделать главным фото"}
+                              aria-label="Сделать главным фото"
                               onMouseDown={(e) => e.stopPropagation()}
                               onDragStart={(e) => {
                                 e.preventDefault()
@@ -5199,7 +5202,7 @@ export function LegacyMediaAssignmentBoardClient() {
                                 )
                               }
                             >
-                              Primary
+                              Главное
                             </button>
                             <button
                               type="button"
@@ -5426,8 +5429,15 @@ export function LegacyMediaAssignmentBoardClient() {
               {selectedHandle ? (
                 <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 6 }}>
                   <div style={{ fontSize: 11, fontWeight: 800, color: "#64748b", textTransform: "uppercase" }}>Apply to {selectedHandle}</div>
-                  <button type="button" data-action-button="inspector-primary" style={miniBtn} onClick={() => applyAssignment("button", inspectorId, "primary")}>
-                    Primary
+                  <button
+                    type="button"
+                    data-action-button="inspector-primary"
+                    style={miniBtn}
+                    title="Сделать главным фото"
+                    aria-label="Сделать главным фото"
+                    onClick={() => applyAssignment("button", inspectorId, "primary")}
+                  >
+                    Сделать главным
                   </button>
                   <button type="button" data-action-button="inspector-gallery" style={miniBtn} onClick={() => applyAssignment("button", inspectorId, "gallery")}>
                     Gallery

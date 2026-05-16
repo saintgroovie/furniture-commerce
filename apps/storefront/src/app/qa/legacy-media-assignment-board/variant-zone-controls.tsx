@@ -35,6 +35,20 @@ type Props = {
   onApply: (src: ActionSource, zone: "primary" | "gallery" | "reference" | "lane_reject" | "unassigned", from: LegacyMediaDragZone) => void
   onUpdateGallery: (fn: (prev: { gallery: string[]; primary: string | null } & Record<string, unknown>) => { gallery: string[]; primary: string | null } & Record<string, unknown>) => void
   onSetPrimaryFromGallery: () => void
+  /** When true, hide set-primary actions (already the variant primary). */
+  isCurrentPrimary?: boolean
+}
+
+const primaryBadgeStyle: CSSProperties = {
+  fontSize: 10,
+  fontWeight: 800,
+  padding: "3px 8px",
+  borderRadius: 6,
+  background: "#dbeafe",
+  color: "#1e40af",
+  border: "1px solid #93c5fd",
+  letterSpacing: "0.02em",
+  whiteSpace: "nowrap",
 }
 
 function MoreMenu({ children }: { children: ReactNode }) {
@@ -65,11 +79,42 @@ function MoreMenu({ children }: { children: ReactNode }) {
 }
 
 export function VariantZoneControls(p: Props) {
-  const { zone, id, shieldBtn, stopCardClick, chipBtn, miniBtn, btnDangerChip, assignSrc, onInspect, onApply, onUpdateGallery, onSetPrimaryFromGallery } = p
+  const {
+    zone,
+    id,
+    shieldBtn,
+    stopCardClick,
+    chipBtn,
+    miniBtn,
+    btnDangerChip,
+    assignSrc,
+    onInspect,
+    onApply,
+    onUpdateGallery,
+    onSetPrimaryFromGallery,
+    isCurrentPrimary = false,
+  } = p
+
+  const setPrimaryFromGalleryBtn = (compact: boolean) => (
+    <button
+      type="button"
+      data-action-button={compact ? "gallery-set-primary" : "gallery-set-primary-more"}
+      style={compact ? { ...chipBtn, whiteSpace: "nowrap" } : miniBtn}
+      title="Сделать главным фото"
+      aria-label="Сделать главным фото"
+      {...shieldBtn}
+      onClick={stopCardClick(onSetPrimaryFromGallery)}
+    >
+      {compact ? "★ Главное" : "Сделать главным"}
+    </button>
+  )
 
   if (zone === "primary") {
     return (
       <div style={compactCtrlRow} data-variant-zone-controls="primary">
+        <span data-primary-badge="true" style={primaryBadgeStyle}>
+          Главное фото
+        </span>
         <button type="button" data-action-button="primary-to-gallery" style={chipBtn} title="В галерею" {...shieldBtn} onClick={stopCardClick(() => onApply(assignSrc, "gallery", "primary"))}>
           В галерею
         </button>
@@ -112,13 +157,12 @@ export function VariantZoneControls(p: Props) {
         }))}>
           →
         </button>
-        <button type="button" data-action-button="gallery-set-primary" style={chipBtn} title="Сделать главным" {...shieldBtn} onClick={stopCardClick(onSetPrimaryFromGallery)}>
-          ★
-        </button>
+        {!isCurrentPrimary ? setPrimaryFromGalleryBtn(true) : null}
         <button type="button" data-action-button="gallery-remove" style={chipBtn} title="Убрать из галереи" {...shieldBtn} onClick={stopCardClick(() => onUpdateGallery((prev) => ({ ...prev, gallery: prev.gallery.filter((x) => x !== id) })))}>
           ✕
         </button>
         <MoreMenu>
+          {!isCurrentPrimary ? setPrimaryFromGalleryBtn(false) : null}
           <button type="button" style={miniBtn} title="Move first" {...shieldBtn} onClick={stopCardClick(() => onUpdateGallery((prev) => ({ ...prev, gallery: [id, ...prev.gallery.filter((x) => x !== id)] })))}>
             Move first
           </button>
@@ -145,8 +189,15 @@ export function VariantZoneControls(p: Props) {
   return (
     <div style={compactCtrlRow} data-variant-zone-controls={zone}>
       <MoreMenu>
-        <button type="button" style={miniBtn} title="Primary" {...shieldBtn} onClick={stopCardClick(() => onApply(assignSrc, "primary", zone))}>
-          Primary
+        <button
+          type="button"
+          style={miniBtn}
+          title="Сделать главным фото"
+          aria-label="Сделать главным фото"
+          {...shieldBtn}
+          onClick={stopCardClick(() => onApply(assignSrc, "primary", zone))}
+        >
+          Сделать главным
         </button>
         <button type="button" style={miniBtn} title="Gallery" {...shieldBtn} onClick={stopCardClick(() => onApply(assignSrc, "gallery", zone))}>
           Gallery
