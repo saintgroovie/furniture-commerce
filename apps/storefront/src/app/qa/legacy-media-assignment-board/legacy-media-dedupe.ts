@@ -5,7 +5,12 @@
 
 import type { CandidateEntry, InvItem } from "./legacy-media-board-types"
 import { explicitProductTokenFromMedia, normSku } from "./suggestion-product-guard"
-import { pickAutoPrimaryForCandidates, scorePrimaryCandidate } from "./legacy-variant-primary-heuristic"
+import { scorePrimaryCandidate } from "./legacy-variant-primary-heuristic"
+import {
+  compareIdsByVisualRole,
+  pickPrimaryAndGalleryByVisualRole,
+  sortIdsByVisualRole,
+} from "./legacy-media-visual-role-ranking"
 
 export type InvItemDedupeFields = InvItem & {
   duplicate_group_key?: string | null
@@ -348,25 +353,19 @@ export function dedupeAndSortVariantMedia(
       const ia = orderIndex.get(a)
       const ib = orderIndex.get(b)
       if (ia == null && ib == null) {
-        const sa = invById.get(a) ? galleryQualityScore(invById.get(a)!, unique.indexOf(a)) : 0
-        const sb = invById.get(b) ? galleryQualityScore(invById.get(b)!, unique.indexOf(b)) : 0
-        return sb - sa
+        return compareIdsByVisualRole(a, b, invById as Map<string, InvItem>)
       }
       if (ia == null) return 1
       if (ib == null) return -1
       return ia - ib
     })
   } else {
-    visiblePreviewable.sort((a, b) => {
-      const ia = invById.get(a)
-      const ib = invById.get(b)
-      const sa = ia ? galleryQualityScore(ia, unique.indexOf(a)) : 0
-      const sb = ib ? galleryQualityScore(ib, unique.indexOf(b)) : 0
-      return sb - sa
-    })
+    const { sorted: roleSorted } = sortIdsByVisualRole(visiblePreviewable, invById as Map<string, InvItem>)
+    visiblePreviewable.length = 0
+    visiblePreviewable.push(...roleSorted)
   }
 
-  const pick = pickAutoPrimaryForCandidates(visiblePreviewable, invById as Map<string, InvItem>, {
+  const pick = pickPrimaryAndGalleryByVisualRole(visiblePreviewable, invById as Map<string, InvItem>, {
     seedOrder: preserve.length > 0 ? preserve : opts?.seedOrder,
   })
 
@@ -379,12 +378,6 @@ export function dedupeAndSortVariantMedia(
       if (ia === -1) return 1
       if (ib === -1) return -1
       return ia - ib
-    })
-  } else {
-    gallerySorted = gallerySorted.sort((a, b) => {
-      const ia = invById.get(a)
-      const ib = invById.get(b)
-      return (ib ? galleryQualityScore(ib, 0) : 0) - (ia ? galleryQualityScore(ia, 0) : 0)
     })
   }
 

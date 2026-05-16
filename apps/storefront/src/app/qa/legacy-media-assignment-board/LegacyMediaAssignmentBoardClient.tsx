@@ -36,9 +36,16 @@ import {
   mergeGalleryPreservingOrder,
   variantHasEstablishedGalleryOrder,
   withManualGalleryOrder,
+  withRecommendedGalleryOrder,
   type GalleryOrderSource,
 } from "./legacy-variant-gallery-order"
-import { pickAutoPrimaryForCandidates } from "./legacy-variant-primary-heuristic"
+import {
+  classifyVisualRole,
+  pickPrimaryAndGalleryByVisualRole,
+  primaryCandidateBadgeRu,
+  VISUAL_ROLE_BADGE_RU,
+  VISUAL_ROLE_RANKING_TOOLTIP_RU,
+} from "./legacy-media-visual-role-ranking"
 import { matchAllSeedUrls, orderedInventoryIdsFromSeedUrls, type SeedUrlMatchRow } from "./seed-inventory-match"
 import { classifyMediaProductIdentity, explicitProductTokenFromMedia, normHandle, normSku } from "./suggestion-product-guard"
 import { VariantZoneControls } from "./variant-zone-controls"
@@ -312,18 +319,40 @@ function buildVariantMediaFromCandidates(
     }
   }
 
-  const pick = pickAutoPrimaryForCandidates(deduped.visibleIds, invById, {
+  const pickMeta = pickPrimaryAndGalleryByVisualRole(deduped.visibleIds, invById, {
     seedOrder: preserveOrder?.length ? preserveOrder : seedOrder,
   })
+  const primary = deduped.primaryCandidateId ?? pickMeta.primaryId
+  const gallery =
+    deduped.galleryCandidateIds.length > 0
+      ? deduped.galleryCandidateIds
+      : pickMeta.galleryIds.filter((id) => id !== primary)
   return {
-    primary: pick.primaryId,
-    gallery: deduped.galleryCandidateIds.length ? deduped.galleryCandidateIds : pick.galleryIds,
+    primary,
+    gallery,
     primaryManualOverride: false,
-    primaryAutoPicked: pick.autoPicked,
-    primaryNeedsReview: pick.needsReview,
+    primaryAutoPicked: true,
+    primaryNeedsReview: pickMeta.needsReview,
     galleryOrderSource: "suggestion",
     galleryOrderLocked: false,
   }
+}
+
+function applyRecommendedVisualOrderToVariant(
+  variant: VariantDecisionState,
+  invById: Map<string, InvItem>
+): VariantDecisionState {
+  const ids = [...(variant.primary ? [variant.primary] : []), ...variant.gallery.filter((id) => id !== variant.primary)]
+  if (ids.length === 0) return variant
+  const pick = pickPrimaryAndGalleryByVisualRole(ids, invById)
+  return withRecommendedGalleryOrder({
+    ...variant,
+    primary: pick.primaryId,
+    gallery: pick.galleryIds,
+    primaryAutoPicked: false,
+    primaryManualOverride: false,
+    primaryNeedsReview: pick.needsReview,
+  })
 }
 
 function stubInvForBoardThumb(mediaId: string, reason: string): InvItem {
@@ -2442,6 +2471,8 @@ export function LegacyMediaAssignmentBoardClient() {
     )
     const cardInv = inv ?? stubInvForBoardThumb(id, pv.reason || pv.caption || "missing inventory row")
     const canDrag = Boolean(inv?.previewable ?? pv.useImg)
+    const visualRole = inv ? classifyVisualRole(inv) : null
+    const roleBadge = visualRole ? VISUAL_ROLE_BADGE_RU[visualRole] : null
     return (
       <MediaImageCard
         inventoryId={id}
@@ -2456,6 +2487,7 @@ export function LegacyMediaAssignmentBoardClient() {
         confidenceLabel={candById.get(id)?.confidence || null}
         previewable={canDrag}
         badges={[
+          ...(roleBadge ? [roleBadge] : []),
           ...(zone === "primary" ? ["Главное фото"] : []),
           ...(selectedHandle?.toLowerCase() === handle.toLowerCase() && seedInvIdsMatchedFromStorefront.has(id) ? ["storefront seed"] : []),
           ...(!inv ? ["missing inv map"] : []),
@@ -3211,7 +3243,24 @@ export function LegacyMediaAssignmentBoardClient() {
               {activeVariant.primaryAutoPicked ? (
                 <span style={{ ...pillSlate, background: "#dbeafe", color: "#1e40af" }}>Primary выбран автоматически</span>
               ) : null}
-              {activeVariant.primaryNeedsReview ? (
+              {z.primary && invById.get(z.primary)
+                ? (() => {
+                    const pr = classifyVisualRole(invById.get(z.primary)!)
+                    const pill = primaryCandidateBadgeRu(pr, Boolean(activeVariant.primaryNeedsReview))
+                    return pill ? (
+                      <span
+                        style={{
+                          ...pillSlate,
+                          background: activeVariant.primaryNeedsReview ? "#fee2e2" : "#dcfce7",
+                          color: activeVariant.primaryNeedsReview ? "#b91c1c" : "#166534",
+                        }}
+                      >
+                        {pill}
+                      </span>
+                    ) : null
+                  })()
+                : null}
+              {activeVariant.primaryNeedsReview && !invById.get(z.primary || "") ? (
                 <span style={{ ...pillSlate, background: "#fee2e2", color: "#b91c1c" }}>Проверь primary</span>
               ) : null}
             </span>
@@ -3278,9 +3327,35 @@ export function LegacyMediaAssignmentBoardClient() {
               minWidth: 0,
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, marginBottom: 10 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
               <h3 style={{ margin: 0, fontSize: 13, fontWeight: 800, color: "#0f172a" }}>Галерея</h3>
-              <span style={{ fontSize: 11, color: "#64748b" }}>{z.gallery.length} фото</span>
+              <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                <span style={{ fontSize: 11, color: "#64748b" }}>{z.gallery.length} фото</span>
+                <button
+                  type="button"
+                  data-action-button="apply-recommended-visual-order"
+                  style={miniBtn}
+                  title={VISUAL_ROLE_RANKING_TOOLTIP_RU}
+                  onClick={() =>
+                    updateVariantDecision(
+                      h,
+                      activeVariantKey,
+                      (prev) => applyRecommendedVisualOrderToVariant(prev, invById),
+                      "apply recommended visual role order",
+                      z.primary || z.gallery[0] || "",
+                      { source: "manual", fromZone: "variant_workspace", targetZone: "gallery_reorder" }
+                    )
+                  }
+                >
+                  Упорядочить по типам фото
+                </button>
+                <details>
+                  <summary style={{ fontSize: 10, color: "#64748b", cursor: "pointer" }}>Порядок фото</summary>
+                  <p style={{ margin: "4px 0 0", fontSize: 10, color: "#64748b", maxWidth: 280, lineHeight: 1.35 }}>
+                    {VISUAL_ROLE_RANKING_TOOLTIP_RU}
+                  </p>
+                </details>
+              </div>
             </div>
             {zoneBox(
               "",

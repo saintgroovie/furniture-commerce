@@ -2,7 +2,7 @@
  * QA-only: preserve user-defined gallery order for legacy media board variants.
  */
 
-export type GalleryOrderSource = "manual" | "seed" | "suggestion" | "auto"
+export type GalleryOrderSource = "manual" | "seed" | "suggestion" | "auto" | "recommended"
 
 export type VariantGalleryOrderFields = {
   gallery: string[]
@@ -19,7 +19,7 @@ export function variantHasEstablishedGalleryOrder(
 ): boolean {
   if (!variant || variant.gallery.length === 0) return false
   if (variant.galleryOrderLocked) return true
-  if (variant.galleryOrderSource === "manual") return true
+  if (variant.galleryOrderSource === "manual" || variant.galleryOrderSource === "recommended") return true
   if (variant.primaryManualOverride) return true
   if (variant.galleryOrderSource === "seed" || variant.galleryOrderSource === "suggestion") return false
   if (metaStatus === "edited" || metaStatus === "confirmed") return true
@@ -67,5 +67,15 @@ export function withManualGalleryOrder<T extends VariantGalleryOrderFields>(vari
     galleryOrderSource: "manual",
     galleryOrderLocked: true,
     primaryAutoPicked: false,
+  }
+}
+
+export function withRecommendedGalleryOrder<T extends VariantGalleryOrderFields>(variant: T): T {
+  return {
+    ...variant,
+    galleryOrderSource: "recommended",
+    galleryOrderLocked: true,
+    primaryAutoPicked: false,
+    primaryManualOverride: false,
   }
 }
