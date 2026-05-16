@@ -3,7 +3,7 @@
 import { useState } from "react"
 import type { InvItem } from "./legacy-media-board-types"
 
-type CardSize = "compact" | "normal" | "large" | "xlarge"
+type CardSize = "compact" | "normal" | "large" | "xlarge" | "primary" | "gallery"
 /** full = default QA card; pool = media drawer (image-first, minimal metadata). */
 type CardDisplayMode = "full" | "pool"
 
@@ -32,10 +32,19 @@ type Props = {
   onCardPointerDownCapture?: (e: React.PointerEvent) => void
   onCardClickCapture?: (e: React.MouseEvent) => void
   assignedControlsAboveDrag?: boolean
+  /** Workspace lanes: hide path line, cap badges. */
+  workspaceMinimal?: boolean
   children?: React.ReactNode
 }
 
-const cardPx: Record<CardSize, number> = { compact: 88, normal: 120, large: 160, xlarge: 196 }
+const cardPx: Record<CardSize, number> = {
+  compact: 88,
+  normal: 120,
+  large: 160,
+  xlarge: 196,
+  primary: 200,
+  gallery: 180,
+}
 
 function truncateMiddle(s: string, max: number) {
   if (s.length <= max) return s
@@ -68,10 +77,12 @@ export function MediaImageCard({
   onCardPointerDownCapture,
   onCardClickCapture,
   assignedControlsAboveDrag = false,
+  workspaceMinimal = false,
   children,
 }: Props) {
   const w = cardPx[size]
   const poolMode = displayMode === "pool"
+  const minimal = workspaceMinimal || size === "primary" || size === "gallery"
   const [imgBroken, setImgBroken] = useState(false)
   const showImg = useImg && previewUrl && !imgBroken
   const fullPathTitle = detailTitle ?? inv.source_path ?? inv.repo_relative_path ?? inv.filename
@@ -91,8 +102,8 @@ export function MediaImageCard({
       onPointerDownCapture={onCardPointerDownCapture}
       onClickCapture={onCardClickCapture}
       style={{
-        width: "100%",
-        maxWidth: w + 16,
+        width: minimal ? w + 20 : "100%",
+        maxWidth: minimal ? w + 20 : w + 16,
         boxSizing: "border-box",
         borderRadius: 12,
         border: isDragging ? "2px solid #2563eb" : "1px solid #e2e8f0",
@@ -191,7 +202,7 @@ export function MediaImageCard({
       >
         {nameShown}
       </div>
-      {!poolMode ? (
+      {!poolMode && !minimal ? (
         <>
           <div
             title={sourcePath || ""}
@@ -224,13 +235,21 @@ export function MediaImageCard({
             </div>
           ) : null}
         </>
+      ) : !poolMode && minimal && badges.length > 0 ? (
+        <div style={{ marginTop: 6, display: "flex", flexWrap: "wrap", gap: 4 }}>
+          {badges.slice(0, 2).map((b) => (
+            <span key={b} style={{ fontSize: 9, padding: "2px 6px", borderRadius: 999, background: "#eef2ff", color: "#3730a3" }} title={b}>
+              {b}
+            </span>
+          ))}
+        </div>
       ) : confidenceLabel ? (
         <div style={{ marginTop: 4 }}>
           <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 999, background: "#eef2ff", color: "#3730a3" }}>{confidenceLabel}</span>
         </div>
       ) : null}
       {assignedControlsAboveDrag ? children : null}
-      {canDrag ? (
+      {canDrag && !minimal ? (
         <div
           aria-hidden
           title="Drag to assign"

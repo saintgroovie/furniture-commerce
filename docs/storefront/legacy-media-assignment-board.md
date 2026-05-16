@@ -80,6 +80,20 @@ The sticky header includes a **five-step workflow** strip:
 
 The workflow strip also echoes **active collection**, **selected product**, **local decision slot count**, and a short export disclaimer.
 
+## Active variant media workspace (Primary-first)
+
+For the selected product and **active color variant**, the center column uses explicit lanes:
+
+1. **Главное фото / Primary** — one large slot (~200px). Empty state explains how to set primary via ★ or pool.
+2. **Галерея / Gallery** — horizontal scroll strip; cards are **≥180px** wide with compact controls (← → ★ ✕, more in ⋯).
+3. **Default photos available** — compact 72px thumbnails only when storefront seed URLs are **not** already in Primary/Gallery (no duplicate seed table).
+4. **Reference / Rejected** — collapsed `<details>` lanes.
+5. **Color suggestions** — below current media; confirm flow unchanged.
+
+**Layout (1440px):** `minmax(220px,260px) | minmax(720px,1fr) | minmax(380px,460px)`; **Focus** mode hides the left sidebar and widens center + pool.
+
+Pool tiles: **Primary** / **Gallery** / **More** (Ref, Reject, Global in More). Manual assignment and Diagnostics stay collapsed.
+
 ## Review cockpit UX (operator flow)
 
 The selected-product workspace is organised as an operator **review cockpit**, not a debug console:

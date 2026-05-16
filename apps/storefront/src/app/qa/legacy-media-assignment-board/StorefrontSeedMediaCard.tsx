@@ -16,13 +16,29 @@ type Props = {
   seedUrl: string
   basename: string
   reason: string
+  compact?: boolean
   onInspect: () => void
   onCopyUrl: () => void
 }
 
 /** QA-only: storefront seed image with no legacy inventory id — honest disabled lane actions. */
-export function StorefrontSeedMediaCard({ seedUrl, basename, reason, onInspect, onCopyUrl }: Props) {
+export function StorefrontSeedMediaCard({ seedUrl, basename, reason, compact = false, onInspect, onCopyUrl }: Props) {
   const disabledReason = "Seed-only image: no legacy media id matched yet — export uses inventory ids only."
+  if (compact) {
+    return (
+      <div data-storefront-seed-card="true" data-seed-url={seedUrl} title={`${basename}\n${reason}`} style={{ width: 72, flex: "0 0 72px" }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={seedUrl}
+          alt=""
+          width={72}
+          height={72}
+          style={{ width: 72, height: 72, objectFit: "cover", borderRadius: 8, border: "1px solid #fde68a", background: "#fffbeb" }}
+          draggable={false}
+        />
+      </div>
+    )
+  }
   return (
     <div
       data-storefront-seed-card="true"

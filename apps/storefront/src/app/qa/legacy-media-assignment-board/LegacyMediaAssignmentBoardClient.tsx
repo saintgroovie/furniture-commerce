@@ -34,6 +34,7 @@ import {
 import { pickAutoPrimaryForCandidates } from "./legacy-variant-primary-heuristic"
 import { matchAllSeedUrls, orderedInventoryIdsFromSeedUrls, type SeedUrlMatchRow } from "./seed-inventory-match"
 import { classifyMediaProductIdentity } from "./suggestion-product-guard"
+import { VariantZoneControls } from "./variant-zone-controls"
 import { StorefrontSeedMediaCard } from "./StorefrontSeedMediaCard"
 import type {
   CandidateEntry,
@@ -58,8 +59,8 @@ const UNKNOWN_COLLECTION = "__unknown__"
 const API_BASE = "/qa/legacy-media-assignment-board/api"
 const PREVIEW_ROUTE = "/qa/legacy-media-assignment-board/preview"
 const DND_JSON = "application/json"
-const DEV_SENTINEL = "Legacy Board per-variant Primary/Gallery + color labels"
-const DEV_SENTINEL_BUILD = "2026-05-16T12:00Z"
+const DEV_SENTINEL = "Legacy Board Primary-first variant workspace layout"
+const DEV_SENTINEL_BUILD = "2026-05-16T22:00Z"
 
 async function fetchBoardJson(url: string): Promise<{ ok: true; data: Record<string, unknown> } | { ok: false; status: number; body: Record<string, unknown> }> {
   const res = await fetch(url)
@@ -2016,26 +2017,28 @@ export function LegacyMediaAssignmentBoardClient() {
         }}
         onDrop={(e) => dropZoneStable(e, handle, zone)}
         style={{
-          minHeight: 132,
+          minHeight: label ? 132 : 0,
           borderRadius: 14,
-          border: hot ? "2px solid #2563eb" : "1px dashed #cbd5e1",
-          background: hot ? "#eff6ff" : "#f8fafc",
-          padding: 14,
+          border: hot ? "2px solid #2563eb" : label ? "1px dashed #cbd5e1" : "none",
+          background: hot ? "#eff6ff" : label ? "#f8fafc" : "transparent",
+          padding: label || hot ? 14 : 0,
           transition: "border 0.12s ease, background 0.12s ease",
         }}
       >
-        <div
-          style={{
-            fontSize: 11,
-            fontWeight: 800,
-            color: hot ? "#1d4ed8" : "#64748b",
-            marginBottom: 8,
-            textTransform: "uppercase",
-            letterSpacing: "0.06em",
-          }}
-        >
-          {hot ? dropHint : label}
-        </div>
+        {label || hot ? (
+          <div
+            style={{
+              fontSize: 11,
+              fontWeight: 800,
+              color: hot ? "#1d4ed8" : "#64748b",
+              marginBottom: label ? 8 : 0,
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+            }}
+          >
+            {hot ? dropHint : label}
+          </div>
+        ) : null}
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "flex-start" }}>{children}</div>
       </div>
     )
@@ -2047,7 +2050,7 @@ export function LegacyMediaAssignmentBoardClient() {
     zone: LegacyMediaDragZone,
     variantKeyForActions: string,
     variantsForHandle: Record<string, VariantDecisionState>,
-    size: "compact" | "normal" | "large" = "compact"
+    size: "compact" | "normal" | "large" | "primary" | "gallery" = "compact"
   ) => {
     const inv = invById.get(id)
     if (!inv) return null
@@ -2077,278 +2080,52 @@ export function LegacyMediaAssignmentBoardClient() {
     }
     const zoneActions = (
       <>
-        {zone === "primary" ? (
-          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 4, marginTop: 4 }}>
-            <button
-              type="button"
-              data-action-button="primary-to-gallery"
-              style={miniBtn}
-              title="Move to Gallery"
-              {...shieldBtn}
-              onClick={stopCardClick(() => applyAssignment(assignSrc, id, "gallery", handle, vk, "primary"))}
-            >
-              Move to Gallery
-            </button>
-            <button
-              type="button"
-              data-action-button="primary-to-reference"
-              style={miniBtn}
-              title="Move to Reference"
-              {...shieldBtn}
-              onClick={stopCardClick(() => applyAssignment(assignSrc, id, "reference", handle, vk, "primary"))}
-            >
-              Move to Reference
-            </button>
-            <button
-              type="button"
-              data-action-button="primary-reject"
-              style={miniBtn}
-              title="Reject for this product"
-              {...shieldBtn}
-              onClick={stopCardClick(() => applyAssignment(assignSrc, id, "lane_reject", handle, vk, "primary"))}
-            >
-              Reject
-            </button>
-            <button
-              type="button"
-              data-action-button="primary-return"
-              style={miniBtn}
-              title="Return to Unassigned"
-              {...shieldBtn}
-              onClick={stopCardClick(() => applyAssignment(assignSrc, id, "unassigned", handle, vk, "primary"))}
-            >
-              Return to Unassigned
-            </button>
-          </div>
-        ) : null}
-        {zone === "gallery" ? (
-          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 4, marginTop: 4 }}>
-            <button
-              type="button"
-              data-action-button="gallery-move-first"
-              style={miniBtn}
-              {...shieldBtn}
-              onClick={stopCardClick(() =>
-                updateVariantDecision(
-                  handle,
-                  vk,
-                  (prev) => {
-                    const g = prev.gallery.filter((x) => x !== id)
-                    return { ...prev, gallery: [id, ...g] }
-                  },
-                  "gallery move first",
-                  id,
-                  { fromZone: "gallery", targetZone: "gallery_reorder", source: assignSrc }
-                )
-              )}
-            >
-              Move first
-            </button>
-            <button
-              type="button"
-              data-action-button="gallery-move-last"
-              style={miniBtn}
-              {...shieldBtn}
-              onClick={stopCardClick(() =>
-                updateVariantDecision(
-                  handle,
-                  vk,
-                  (prev) => {
-                    const g = prev.gallery.filter((x) => x !== id)
-                    return { ...prev, gallery: [...g, id] }
-                  },
-                  "gallery move last",
-                  id,
-                  { fromZone: "gallery", targetZone: "gallery_reorder", source: assignSrc }
-                )
-              )}
-            >
-              Move last
-            </button>
-            <button
-              type="button"
-              data-action-button="gallery-move-left"
-              style={chipBtn}
-              title="Move left"
-              {...shieldBtn}
-              onClick={stopCardClick(() =>
-                updateVariantDecision(
-                  handle,
-                  vk,
-                  (prev) => {
-                    const idx = prev.gallery.indexOf(id)
-                    if (idx <= 0) return prev
-                    const next = [...prev.gallery]
-                    ;[next[idx - 1], next[idx]] = [next[idx], next[idx - 1]]
-                    return { ...prev, gallery: next }
-                  },
-                  "gallery move left",
-                  id,
-                  { fromZone: "gallery", targetZone: "gallery_reorder", source: assignSrc }
-                )
-              )}
-            >
-              ←
-            </button>
-            <button
-              type="button"
-              data-action-button="gallery-move-right"
-              style={miniBtn}
-              {...shieldBtn}
-              onClick={stopCardClick(() =>
-                updateVariantDecision(
-                  handle,
-                  vk,
-                  (prev) => {
-                    const idx = prev.gallery.indexOf(id)
-                    if (idx < 0 || idx >= prev.gallery.length - 1) return prev
-                    const next = [...prev.gallery]
-                    ;[next[idx + 1], next[idx]] = [next[idx], next[idx + 1]]
-                    return { ...prev, gallery: next }
-                  },
-                  "gallery move right",
-                  id,
-                  { fromZone: "gallery", targetZone: "gallery_reorder", source: assignSrc }
-                )
-              )}
-            >
-              →
-            </button>
-            <button
-              type="button"
-              data-action-button="gallery-set-primary"
-              style={miniBtn}
-              title="Set as Primary"
-              {...shieldBtn}
-              onClick={stopCardClick(() =>
-                updateVariantDecision(
-                  handle,
-                  vk,
-                  (prev) => ({
-                    ...prev,
-                    primary: id,
-                    gallery: prev.gallery.filter((x) => x !== id),
-                    primaryManualOverride: true,
-                    primaryAutoPicked: false,
-                    primaryNeedsReview: false,
-                  }),
-                  "set primary from gallery",
-                  id,
-                  { fromZone: "gallery", targetZone: "primary", source: assignSrc }
-                )
-              )}
-            >
-              ★
-            </button>
-            <button
-              type="button"
-              data-action-button="gallery-remove"
-              style={miniBtn}
-              title="Remove from Gallery (back to pool)"
-              {...shieldBtn}
-              onClick={stopCardClick(() =>
-                updateVariantDecision(
-                  handle,
-                  vk,
-                  (prev) => ({ ...prev, gallery: prev.gallery.filter((x) => x !== id) }),
-                  "remove from gallery",
-                  id,
-                  { fromZone: "gallery", targetZone: "unassigned_pool", source: assignSrc }
-                )
-              )}
-            >
-              ✕
-            </button>
-            <button
-              type="button"
-              data-action-button="gallery-return"
-              style={miniBtn}
-              title="Return to Unassigned"
-              {...shieldBtn}
-              onClick={stopCardClick(() => applyAssignment(assignSrc, id, "unassigned", handle, vk, "gallery"))}
-            >
-              Return to Unassigned
-            </button>
-          </div>
-        ) : null}
-        {zone === "reference" ? (
-          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 4, marginTop: 4 }}>
-            <button
-              type="button"
-              data-action-button="ref-to-primary"
-              style={miniBtn}
-              title="Move to Primary"
-              {...shieldBtn}
-              onClick={stopCardClick(() => applyAssignment(assignSrc, id, "primary", handle, vk, "reference"))}
-            >
-              Move to Primary
-            </button>
-            <button
-              type="button"
-              data-action-button="ref-to-gallery"
-              style={miniBtn}
-              title="Move to Gallery"
-              {...shieldBtn}
-              onClick={stopCardClick(() => applyAssignment(assignSrc, id, "gallery", handle, vk, "reference"))}
-            >
-              Move to Gallery
-            </button>
-            <button
-              type="button"
-              data-action-button="ref-return"
-              style={miniBtn}
-              title="Return to Unassigned"
-              {...shieldBtn}
-              onClick={stopCardClick(() => applyAssignment(assignSrc, id, "unassigned", handle, vk, "reference"))}
-            >
-              Return to Unassigned
-            </button>
-          </div>
-        ) : null}
-        {zone === "lane_reject" ? (
-          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 4, marginTop: 4 }}>
-            <button
-              type="button"
-              data-action-button="rej-to-primary"
-              style={miniBtn}
-              title="Move to Primary"
-              {...shieldBtn}
-              onClick={stopCardClick(() => applyAssignment(assignSrc, id, "primary", handle, vk, "lane_reject"))}
-            >
-              Move to Primary
-            </button>
-            <button
-              type="button"
-              data-action-button="rej-to-gallery"
-              style={miniBtn}
-              title="Move to Gallery"
-              {...shieldBtn}
-              onClick={stopCardClick(() => applyAssignment(assignSrc, id, "gallery", handle, vk, "lane_reject"))}
-            >
-              Move to Gallery
-            </button>
-            <button
-              type="button"
-              data-action-button="rej-return"
-              style={miniBtn}
-              title="Return to Unassigned"
-              {...shieldBtn}
-              onClick={stopCardClick(() => applyAssignment(assignSrc, id, "unassigned", handle, vk, "lane_reject"))}
-            >
-              Return to Unassigned
-            </button>
-          </div>
-        ) : null}
-        <button
-          type="button"
-          data-action-button="assigned-details"
-          style={{ ...miniBtn, marginTop: 6, width: "100%" }}
-          title="Open Inspector for this assigned media"
-          {...shieldBtn}
-          onClick={stopCardClick(() => setInspectorId(id))}
-        >
-          Details / Inspect
-        </button>
+        <VariantZoneControls
+          zone={zone}
+          id={id}
+          handle={handle}
+          vk={vk}
+          gi={gi}
+          assignSrc={assignSrc}
+          shieldBtn={shieldBtn}
+          stopCardClick={stopCardClick}
+          chipBtn={chipBtn}
+          miniBtn={miniBtn}
+          btnDangerChip={btnDangerChip}
+          onInspect={() => setInspectorId(id)}
+          onApply={(src, target, from) => applyAssignment(src, id, target, handle, vk, from)}
+          onUpdateGallery={(mut) =>
+            updateVariantDecision(
+              handle,
+              vk,
+              (prev) => mut(prev) as VariantDecisionState,
+              "gallery lane action",
+              id,
+              {
+                fromZone: zone === "gallery" ? "gallery" : zone,
+                targetZone: "gallery_reorder",
+                source: assignSrc,
+              }
+            )
+          }
+          onSetPrimaryFromGallery={() =>
+            updateVariantDecision(
+              handle,
+              vk,
+              (prev) => ({
+                ...prev,
+                primary: id,
+                gallery: prev.gallery.filter((x) => x !== id),
+                primaryManualOverride: true,
+                primaryAutoPicked: false,
+                primaryNeedsReview: false,
+              }),
+              "set primary from gallery",
+              id,
+              { fromZone: "gallery", targetZone: "primary", source: assignSrc }
+            )
+          }
+        />
         {crossVariant ? (
           <div style={{ marginTop: 6, fontSize: 10, color: "#b45309", lineHeight: 1.35 }}>
             Variant source: <strong>{ownerVk ? variantsForHandle[ownerVk]?.label || ownerVk : "—"}</strong>
@@ -2420,6 +2197,7 @@ export function LegacyMediaAssignmentBoardClient() {
         onCardPointerDownCapture={(e) => setDiag((d) => ({ ...d, lastPointerDown: describeTargetFromElement(e.target) }))}
         onCardClickCapture={(e) => setDiag((d) => ({ ...d, lastClick: describeTargetFromElement(e.target) }))}
         filenameMaxLen={22}
+        workspaceMinimal={size === "primary" || size === "gallery"}
         assignedControlsAboveDrag
       >
         {zoneActions}
@@ -2762,6 +2540,12 @@ export function LegacyMediaAssignmentBoardClient() {
     const skipCurrentProduct = () => {
       goToNextProductWithSuggestions(h)
     }
+    const variantLaneIds = new Set([...(z.primary ? [z.primary] : []), ...z.gallery])
+    const seedRowsPendingAssign = seedMatchRowsForSelected.filter((r) => r.invId && !variantLaneIds.has(r.invId))
+    const seedRowsOnlyNoInv = seedMatchRowsForSelected.filter((r) => !r.invId)
+    const showCompactSeedBlock =
+      selectedProduct.image_urls.length > 0 && (seedRowsPendingAssign.length > 0 || seedRowsOnlyNoInv.length > 0)
+
     const productIdx = productsFiltered.findIndex((p) => p.handle.toLowerCase() === h)
     const productOrdinal = productIdx >= 0 ? productIdx + 1 : 0
     const productTotal = productsFiltered.length
@@ -3099,132 +2883,205 @@ export function LegacyMediaAssignmentBoardClient() {
             </span>
           </div>
 
-          {selectedProduct.image_urls.length > 0 && activeVariantKey === DEFAULT_VARIANT_KEY ? (
+          <section
+            data-variant-primary-slot="true"
+            style={{
+              border: "1px solid #e2e8f0",
+              borderRadius: 12,
+              padding: 14,
+              background: "#fff",
+              minWidth: 0,
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, marginBottom: 10 }}>
+              <h3 style={{ margin: 0, fontSize: 13, fontWeight: 800, color: "#0f172a", letterSpacing: "0.02em" }}>Главное фото</h3>
+              <span style={{ fontSize: 10, color: "#94a3b8", fontWeight: 700, textTransform: "uppercase" }}>Primary</span>
+            </div>
+            {zoneBox(
+              "",
+              "Drop to Primary",
+              selectedHandle,
+              "primary",
+              z.primary ? (
+                <div data-main-media-slot="primary" style={{ width: 200, maxWidth: "100%", flex: "0 0 auto" }}>
+                  {renderZoneThumb(z.primary, selectedHandle, "primary", activeVariantKey, vByHandle, "primary")}
+                </div>
+              ) : (
+                <div
+                  data-primary-empty-state="true"
+                  style={{
+                    width: "100%",
+                    maxWidth: 420,
+                    minHeight: 160,
+                    borderRadius: 12,
+                    border: "2px dashed #cbd5e1",
+                    background: "#f8fafc",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: 20,
+                    textAlign: "center",
+                    gap: 6,
+                  }}
+                >
+                  <strong style={{ fontSize: 14, color: "#334155" }}>Главное фото не выбрано</strong>
+                  <span style={{ fontSize: 12, color: "#64748b", lineHeight: 1.45 }}>
+                    Нажмите <strong>★</strong> на фото из галереи или выберите <strong>Primary</strong> в media pool.
+                  </span>
+                </div>
+              )
+            )}
+          </section>
+
+          <section
+            data-variant-gallery-strip="true"
+            style={{
+              border: "1px solid #e2e8f0",
+              borderRadius: 12,
+              padding: 14,
+              background: "#fff",
+              minWidth: 0,
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, marginBottom: 10 }}>
+              <h3 style={{ margin: 0, fontSize: 13, fontWeight: 800, color: "#0f172a" }}>Галерея</h3>
+              <span style={{ fontSize: 11, color: "#64748b" }}>{z.gallery.length} фото</span>
+            </div>
+            {zoneBox(
+              "",
+              "Drop to Gallery",
+              selectedHandle,
+              "gallery",
+              z.gallery.length === 0 ? (
+                <span style={muted}>Галерея пуста — перетащите фото из media pool или нажмите Gallery.</span>
+              ) : (
+                <div
+                  data-gallery-scroll-strip="true"
+                  style={{
+                    display: "flex",
+                    gap: 12,
+                    overflowX: "auto",
+                    overflowY: "hidden",
+                    paddingBottom: 6,
+                    width: "100%",
+                    minWidth: 0,
+                  }}
+                >
+                  {z.gallery.map((gid) => (
+                    <div
+                      key={gid}
+                      data-legacy-drop-target="true"
+                      data-drop-kind="product-zone"
+                      data-drop-zone="gallery"
+                      data-product-handle={h}
+                      data-zone="gallery"
+                      data-inventory-id={gid}
+                      data-main-media-slot="gallery"
+                      style={{ flex: "0 0 196px", width: 196, minWidth: 180, maxWidth: 196 }}
+                    >
+                      {renderZoneThumb(gid, selectedHandle, "gallery", activeVariantKey, vByHandle, "gallery")}
+                    </div>
+                  ))}
+                </div>
+              )
+            )}
+          </section>
+
+          {showCompactSeedBlock ? (
             <div
-              data-default-storefront-seed-strip="true"
+              data-default-storefront-seed-compact="true"
               style={{
                 padding: "10px 12px",
                 borderRadius: 10,
                 border: "1px solid #bfdbfe",
-                background: "#eff6ff",
-                marginBottom: 8,
+                background: "#f8fafc",
                 minWidth: 0,
               }}
             >
-              <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 8, alignItems: "baseline" }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: "#1e3a8a" }}>
-                  Storefront seeds для варианта «{activeVariantDisplay}»
-                </span>
-                <span style={{ fontSize: 10, color: "#64748b" }}>Назначайте в Primary / Gallery этого цвета ниже</span>
+              <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 8, alignItems: "center" }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#1e3a8a" }}>Default photos available</span>
+                {seedRowsPendingAssign.length > 0 ? (
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    <button
+                      type="button"
+                      style={btnPrimaryMini}
+                      onClick={() => {
+                        const ids = seedRowsPendingAssign.map((r) => r.invId).filter(Boolean) as string[]
+                        if (!ids.length) return
+                        updateVariantDecision(
+                          h,
+                          activeVariantKey,
+                          (prev) => ({
+                            ...prev,
+                            gallery: Array.from(new Set([...prev.gallery, ...ids])),
+                          }),
+                          "add all pending seeds to gallery",
+                          ids[0],
+                          { source: "selected-product-default", fromZone: "storefront_seed_strip", targetZone: "gallery" }
+                        )
+                      }}
+                    >
+                      Добавить все в галерею
+                    </button>
+                    <button
+                      type="button"
+                      style={miniBtn}
+                      onClick={() => {
+                        const first = seedRowsPendingAssign.find((r) => r.invId)?.invId
+                        if (!first) return
+                        updateVariantDecision(
+                          h,
+                          activeVariantKey,
+                          (prev) => ({
+                            ...prev,
+                            primary: first,
+                            gallery: prev.gallery.filter((x) => x !== first),
+                            primaryManualOverride: true,
+                            primaryAutoPicked: false,
+                            primaryNeedsReview: false,
+                          }),
+                          "set primary from pending seed",
+                          first,
+                          { source: "selected-product-default", fromZone: "storefront_seed_strip", targetZone: "primary" }
+                        )
+                      }}
+                    >
+                      Выбрать главное
+                    </button>
+                  </div>
+                ) : null}
               </div>
-              {seedMatchRowsForSelected.some((r) => r.invId) ? (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 10, minWidth: 0 }}>
-                  {seedMatchRowsForSelected
-                    .filter((r): r is typeof r & { invId: string } => Boolean(r.invId))
-                    .map((r) => {
-                      const invId = r.invId
-                      const zone: LegacyMediaDragZone =
-                        z.primary === invId ? "primary" : z.gallery.includes(invId) ? "gallery" : "gallery"
-                      return (
-                        <div key={`seed-${r.seedUrl}`} style={{ flex: "0 0 auto", minWidth: 0 }}>
-                          {renderZoneThumb(invId, selectedHandle, zone, activeVariantKey, vByHandle, "compact")}
-                        </div>
-                      )
-                    })}
+              {seedRowsPendingAssign.length > 0 ? (
+                <div style={{ display: "flex", gap: 8, marginTop: 10, overflowX: "auto", paddingBottom: 4 }}>
+                  {seedRowsPendingAssign.map((r) => (
+                    <div key={r.seedUrl} style={{ flex: "0 0 72px", width: 72 }} title={r.basename}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={r.seedUrl} alt="" width={72} height={72} style={{ width: 72, height: 72, objectFit: "cover", borderRadius: 8, border: "1px solid #bfdbfe" }} />
+                    </div>
+                  ))}
                 </div>
               ) : null}
-              {seedMatchRowsForSelected.some((r) => !r.invId) ? (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 10 }}>
-                  {seedMatchRowsForSelected
-                    .filter((r) => !r.invId)
-                    .map((r) => (
+              {seedRowsOnlyNoInv.length > 0 ? (
+                <details style={{ marginTop: 8 }}>
+                  <summary style={{ fontSize: 10, color: "#64748b", cursor: "pointer" }}>Seed-only URLs ({seedRowsOnlyNoInv.length})</summary>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+                    {seedRowsOnlyNoInv.map((r) => (
                       <StorefrontSeedMediaCard
                         key={r.seedUrl}
                         seedUrl={r.seedUrl}
                         basename={r.basename}
                         reason={r.reason}
-                        onCopyUrl={() => {
-                          void navigator.clipboard.writeText(r.seedUrl).catch(() => {})
-                          setDiag((d) => ({
-                            ...d,
-                            buttonHandlerFired: true,
-                            stateUpdateRequested: true,
-                            stateActuallyChanged: false,
-                            lastAction: "copy seed url",
-                            lastError: "",
-                            source: "selected-product-default",
-                            mediaId: r.basename,
-                            productHandle: selectedHandle || "",
-                            fromZone: "storefront_seed_strip",
-                            targetZone: "clipboard",
-                          }))
-                        }}
-                        onInspect={() => {
-                          setDiag((d) => ({
-                            ...d,
-                            buttonHandlerFired: true,
-                            lastAction: "inspect storefront seed url",
-                            source: "selected-product-default",
-                            mediaId: r.basename,
-                            productHandle: selectedHandle || "",
-                            fromZone: "storefront_seed_strip",
-                            targetZone: "diagnostics",
-                          }))
-                          window.alert(`Storefront seed (no legacy inventory id)\n\n${r.seedUrl}\n\n${r.reason}`)
-                        }}
+                        compact
+                        onCopyUrl={() => void navigator.clipboard.writeText(r.seedUrl).catch(() => {})}
+                        onInspect={() => window.alert(`Storefront seed (no legacy inventory id)\n\n${r.seedUrl}\n\n${r.reason}`)}
                       />
                     ))}
-                </div>
+                  </div>
+                </details>
               ) : null}
             </div>
           ) : null}
-
-          {zoneBox(
-            "Primary photo (этот цвет)",
-            "Drop to Primary",
-            selectedHandle,
-            "primary",
-            z.primary ? (
-              <div data-main-media-slot="primary" style={{ flex: "0 0 auto" }}>
-                {renderZoneThumb(z.primary, selectedHandle, "primary", activeVariantKey, vByHandle, "large")}
-              </div>
-            ) : (
-              <span style={muted}>
-                Primary empty — matching storefront seeds auto-fill here when lanes were empty; use <strong>Set as Primary</strong> on a pool tile or drop
-                here.
-              </span>
-            )
-          )}
-
-          {zoneBox(
-            "Gallery (этот цвет)",
-            "Drop to Gallery",
-            selectedHandle,
-            "gallery",
-            <>
-              {z.gallery.length === 0 ? (
-                <span style={muted}>
-                  No gallery items yet — use the <strong>Gallery</strong> button on pool tiles or drop one here.
-                </span>
-              ) : (
-                z.gallery.map((gid) => (
-                  <div
-                    key={gid}
-                    data-legacy-drop-target="true"
-                    data-drop-kind="product-zone"
-                    data-drop-zone="gallery"
-                    data-product-handle={h}
-                    data-zone="gallery"
-                    data-inventory-id={gid}
-                    data-main-media-slot="gallery"
-                    style={{ flex: "0 0 auto" }}
-                  >
-                    {renderZoneThumb(gid, selectedHandle, "gallery", activeVariantKey, vByHandle, "large")}
-                  </div>
-                ))
-              )}
-            </>
-          )}
 
           {/* Reference + Rejected — collapsible secondary lanes, side-by-side at full width */}
           <div style={{ display: "grid", gridTemplateColumns: fullWidth ? "repeat(2, minmax(0, 1fr))" : "1fr", gap: 12 }}>
@@ -4444,8 +4301,8 @@ export function LegacyMediaAssignmentBoardClient() {
           boxSizing: "border-box",
           display: "grid",
           gridTemplateColumns: focusMode
-            ? "minmax(0, 1fr) clamp(420px, 30vw, 560px)"
-            : "clamp(240px, 18vw, 320px) minmax(560px, 1fr) clamp(420px, 30vw, 560px)",
+            ? "minmax(820px, 1fr) minmax(420px, 520px)"
+            : "minmax(220px, 260px) minmax(720px, 1fr) minmax(380px, 460px)",
           gap: 16,
           padding: "0 16px 16px",
           gridTemplateRows: "minmax(0, 1fr)",
@@ -4928,9 +4785,7 @@ export function LegacyMediaAssignmentBoardClient() {
                       maxWidth: "100%",
                       boxSizing: "border-box",
                       /** minmax(0,1fr) lets tracks shrink so fixed-width cards do not clip the aside */
-                      gridTemplateColumns: focusMode
-                        ? "repeat(auto-fill, minmax(min(150px, 100%), 1fr))"
-                        : "repeat(auto-fill, minmax(min(150px, 100%), 1fr))",
+                      gridTemplateColumns: "1fr",
                       gap: 10,
                     }}
                   >
