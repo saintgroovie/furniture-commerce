@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import {
   buildExportDocument,
   collectAllAssignedIds,
@@ -32,6 +32,12 @@ import {
   type VariantLabelStatus,
 } from "./legacy-color-variant-labels"
 import { dedupeAndSortVariantMedia, type InvItemDedupeFields } from "./legacy-media-dedupe"
+import {
+  mergeGalleryPreservingOrder,
+  variantHasEstablishedGalleryOrder,
+  withManualGalleryOrder,
+  type GalleryOrderSource,
+} from "./legacy-variant-gallery-order"
 import { pickAutoPrimaryForCandidates } from "./legacy-variant-primary-heuristic"
 import { matchAllSeedUrls, orderedInventoryIdsFromSeedUrls, type SeedUrlMatchRow } from "./seed-inventory-match"
 import { classifyMediaProductIdentity } from "./suggestion-product-guard"
@@ -123,6 +129,9 @@ type VariantDecisionState = VariantLabelFields & {
   primaryManualOverride?: boolean
   primaryAutoPicked?: boolean
   primaryNeedsReview?: boolean
+  /** QA-only: how gallery order was established (not exported). */
+  galleryOrderSource?: GalleryOrderSource | null
+  galleryOrderLocked?: boolean
 }
 type VariantsByHandle = Record<string, Record<string, VariantDecisionState>>
 
@@ -229,35 +238,218 @@ function withResolvedVariantLabel(
   }
 }
 
+function migrateVariantGalleryOrderOnLoad(
+  variant: VariantDecisionState,
+  metaStatus?: string | null
+): VariantDecisionState {
+  if (variant.galleryOrderSource === "manual" || variant.galleryOrderLocked) return variant
+  if (
+    variant.gallery.length > 0 &&
+    (variant.primaryManualOverride || metaStatus === "edited" || metaStatus === "confirmed")
+  ) {
+    return { ...variant, galleryOrderSource: "manual", galleryOrderLocked: true }
+  }
+  return variant
+}
+
+function galleryOrderTouched(prev: VariantDecisionState, next: VariantDecisionState): boolean {
+  if (prev.primary !== next.primary) return true
+  if (prev.gallery.length !== next.gallery.length) return true
+  return prev.gallery.some((id, i) => id !== next.gallery[i])
+}
+
 function buildVariantMediaFromCandidates(
   candidateIds: string[],
   invById: Map<string, InvItem>,
   seedOrder: string[],
-  existing?: VariantDecisionState | null
+  existing?: VariantDecisionState | null,
+  metaStatus?: string | null
 ): Pick<
   VariantDecisionState,
-  "primary" | "gallery" | "primaryManualOverride" | "primaryAutoPicked" | "primaryNeedsReview"
+  | "primary"
+  | "gallery"
+  | "primaryManualOverride"
+  | "primaryAutoPicked"
+  | "primaryNeedsReview"
+  | "galleryOrderSource"
+  | "galleryOrderLocked"
 > {
+  const invDedupe = new Map<string, InvItemDedupeFields>()
+  for (const [id, row] of Array.from(invById.entries())) invDedupe.set(id, row)
+  const candById = new Map<string, CandidateEntry>()
+  const preserveOrder =
+    existing && variantHasEstablishedGalleryOrder(existing, metaStatus) ? existing.gallery : undefined
+  const deduped = dedupeAndSortVariantMedia(candidateIds, invDedupe, candById, {
+    seedOrder,
+    preserveGalleryOrder: preserveOrder,
+  })
+
   if (existing?.primaryManualOverride && existing.primary) {
-    const gallery = [
-      ...existing.gallery.filter((id) => id !== existing.primary),
-      ...candidateIds.filter((id) => id !== existing.primary && !existing.gallery.includes(id)),
-    ]
     return {
       primary: existing.primary,
-      gallery: Array.from(new Set(gallery)),
+      gallery: mergeGalleryPreservingOrder(existing.gallery, deduped.galleryCandidateIds, existing.primary),
       primaryManualOverride: true,
       primaryAutoPicked: false,
       primaryNeedsReview: false,
+      galleryOrderSource: existing.galleryOrderSource ?? "manual",
+      galleryOrderLocked: true,
     }
   }
-  const pick = pickAutoPrimaryForCandidates(candidateIds, invById, { seedOrder })
+
+  if (existing && variantHasEstablishedGalleryOrder(existing, metaStatus)) {
+    const primary = existing.primary ?? deduped.primaryCandidateId
+    return {
+      primary,
+      gallery: mergeGalleryPreservingOrder(existing.gallery, deduped.galleryCandidateIds, primary),
+      primaryManualOverride: existing.primaryManualOverride ?? false,
+      primaryAutoPicked: existing.primary ? !existing.primaryManualOverride : deduped.primaryCandidateId === primary,
+      primaryNeedsReview: false,
+      galleryOrderSource: existing.galleryOrderSource ?? "manual",
+      galleryOrderLocked: true,
+    }
+  }
+
+  const pick = pickAutoPrimaryForCandidates(deduped.visibleIds, invById, {
+    seedOrder: preserveOrder?.length ? preserveOrder : seedOrder,
+  })
   return {
     primary: pick.primaryId,
-    gallery: pick.galleryIds,
+    gallery: deduped.galleryCandidateIds.length ? deduped.galleryCandidateIds : pick.galleryIds,
     primaryManualOverride: false,
     primaryAutoPicked: pick.autoPicked,
     primaryNeedsReview: pick.needsReview,
+    galleryOrderSource: "suggestion",
+    galleryOrderLocked: false,
+  }
+}
+
+function stubInvForBoardThumb(mediaId: string, reason: string): InvItem {
+  const seedBasename = mediaId.includes("/") ? (mediaId.split("/").pop() ?? mediaId) : mediaId
+  return {
+    id: mediaId,
+    source_type: "qa_missing_inventory",
+    source_path: reason,
+    repo_relative_path: null,
+    filename: seedBasename,
+    collection_hint: null,
+    sku_hint: null,
+    handle_hint: null,
+    exists_locally: false,
+    previewable: false,
+    preview_reason: reason,
+  }
+}
+
+function SuggestionVariantThumb({
+  mid,
+  isPrimary,
+  inv,
+  seedRows,
+}: {
+  mid: string
+  isPrimary: boolean
+  inv: InvItem | undefined
+  seedRows: SeedUrlMatchRow[]
+}) {
+  const [broken, setBroken] = useState(false)
+  const thumbPv = boardThumbPreview(mid, inv, seedRows)
+  const showImg = Boolean(thumbPv.url && thumbPv.useImg && !broken)
+  const box: CSSProperties = {
+    width: isPrimary ? 96 : 72,
+    height: isPrimary ? 96 : 72,
+    borderRadius: 8,
+    border: isPrimary ? "2px solid #2563eb" : "1px solid #e2e8f0",
+    background: "#f8fafc",
+    overflow: "hidden",
+    position: "relative",
+    flex: "0 0 auto",
+  }
+  const filename = inv?.filename || mid
+  const title = [filename, inv?.source_path, thumbPv.reason].filter(Boolean).join(" · ")
+  return (
+    <div
+      data-suggestion-thumb={isPrimary ? "primary" : "gallery"}
+      data-media-id={mid}
+      style={box}
+      title={title}
+    >
+      {showImg ? (
+        /* eslint-disable-next-line @next/next/no-img-element */
+        <img
+          src={thumbPv.url!}
+          alt=""
+          width={isPrimary ? 96 : 72}
+          height={isPrimary ? 96 : 72}
+          draggable={false}
+          onError={() => setBroken(true)}
+          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+        />
+      ) : (
+        <div
+          style={{
+            fontSize: 9,
+            color: "#64748b",
+            padding: 4,
+            lineHeight: 1.2,
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+            gap: 2,
+          }}
+        >
+          <span style={{ fontWeight: 700 }}>{truncateMiddleClient(filename, 22)}</span>
+          <span style={{ color: "#94a3b8" }}>{broken ? "preview failed" : thumbPv.caption || thumbPv.reason || "no preview"}</span>
+        </div>
+      )}
+      {isPrimary ? (
+        <span
+          style={{
+            position: "absolute",
+            top: 2,
+            left: 2,
+            fontSize: 9,
+            fontWeight: 700,
+            color: "#fff",
+            background: "#2563eb",
+            padding: "1px 5px",
+            borderRadius: 6,
+            letterSpacing: "0.04em",
+            textTransform: "uppercase",
+          }}
+        >
+          Primary
+        </span>
+      ) : null}
+    </div>
+  )
+}
+
+function boardThumbPreview(
+  mediaId: string,
+  inv: InvItem | undefined,
+  seedRows: SeedUrlMatchRow[]
+): { url: string | null; useImg: boolean; caption: string; reason: string } {
+  if (inv) {
+    const pv = clientPreviewUrl(inv)
+    if (pv.url) return { ...pv, reason: "" }
+    const seedRow = seedRows.find((r) => r.invId === mediaId)
+    if (seedRow?.seedUrl) {
+      return { url: seedRow.seedUrl, useImg: true, caption: "", reason: "seed storefront URL (inventory preview unavailable)" }
+    }
+    return { url: null, useImg: false, caption: pv.caption, reason: unpreviewableHumanReason(inv) }
+  }
+  const seedRow = seedRows.find((r) => r.invId === mediaId)
+  if (seedRow?.seedUrl) {
+    return { url: seedRow.seedUrl, useImg: true, caption: "", reason: "seed storefront URL (id not in inventory map)" }
+  }
+  return {
+    url: null,
+    useImg: false,
+    caption: "Missing inventory row",
+    reason: `Media id "${mediaId}" not found in inventory map`,
   }
 }
 
@@ -864,7 +1056,7 @@ export function LegacyMediaAssignmentBoardClient() {
             for (const [vk, cell] of Object.entries(row)) {
               const meta = metaRow[vk]
               const prod = products.find((p) => p.handle.toLowerCase() === ph.toLowerCase())
-              migratedVariants[ph][vk] = {
+              const labeled = {
                 ...cell,
                 ...migrateVariantLabelFields(vk, cell, {
                   legacyColorName: meta?.legacyColorName,
@@ -872,6 +1064,7 @@ export function LegacyMediaAssignmentBoardClient() {
                   seedImageUrls: prod?.image_urls,
                 }),
               }
+              migratedVariants[ph][vk] = migrateVariantGalleryOrderOnLoad(labeled, meta?.status)
             }
           }
           setVariantsByHandle(migratedVariants)
@@ -1296,14 +1489,18 @@ export function LegacyMediaAssignmentBoardClient() {
               productSkuHint: phSku,
             }).displayLabel
         const manualPrimary = zone === "primary"
-        hVariants[chosenVariantKey] = fromZoneState(next.zones[hh] ?? emptyZones(), labelForChosen, {
-          sourceLabel: prevChosen?.sourceLabel ?? sourceLabelForVariantKey(chosenVariantKey),
-          labelEditedByUser: prevChosen?.labelEditedByUser,
-          labelStatus: prevChosen?.labelStatus,
-          primaryManualOverride: manualPrimary ? true : prevChosen?.primaryManualOverride ?? false,
-          primaryAutoPicked: manualPrimary ? false : prevChosen?.primaryAutoPicked ?? false,
-          primaryNeedsReview: manualPrimary ? false : prevChosen?.primaryNeedsReview ?? false,
-        })
+        hVariants[chosenVariantKey] = withManualGalleryOrder(
+          fromZoneState(next.zones[hh] ?? emptyZones(), labelForChosen, {
+            sourceLabel: prevChosen?.sourceLabel ?? sourceLabelForVariantKey(chosenVariantKey),
+            labelEditedByUser: prevChosen?.labelEditedByUser,
+            labelStatus: prevChosen?.labelStatus,
+            primaryManualOverride: manualPrimary ? true : prevChosen?.primaryManualOverride ?? false,
+            primaryAutoPicked: manualPrimary ? false : prevChosen?.primaryAutoPicked ?? false,
+            primaryNeedsReview: manualPrimary ? false : prevChosen?.primaryNeedsReview ?? false,
+            galleryOrderSource: prevChosen?.galleryOrderSource,
+            galleryOrderLocked: prevChosen?.galleryOrderLocked,
+          })
+        )
         return { ...prevV, [hh]: hVariants }
       })
       if (zone !== "unassigned") {
@@ -1369,18 +1566,24 @@ export function LegacyMediaAssignmentBoardClient() {
         const prevVariant =
           variants[variantKey] ??
           emptyVariant(variantKey === DEFAULT_VARIANT_KEY ? LABEL_NEEDS_REVIEW_RU : variantKey)
-        const nextVariant = updater(prevVariant)
+        let nextVariant = updater(prevVariant)
+        if (galleryOrderTouched(prevVariant, nextVariant)) {
+          nextVariant = withManualGalleryOrder(nextVariant)
+        }
         if (variantDecisionEqual(prevVariant, nextVariant)) {
           noop = true
           return prev
         }
-        setBoard((boardPrev) => ({
-          ...boardPrev,
-          zones: {
-            ...boardPrev.zones,
-            [hh]: toZoneState(nextVariant),
-          },
-        }))
+        const activeVk = activeVariantByHandle[hh] || DEFAULT_VARIANT_KEY
+        if (variantKey === activeVk) {
+          setBoard((boardPrev) => ({
+            ...boardPrev,
+            zones: {
+              ...boardPrev.zones,
+              [hh]: toZoneState(nextVariant),
+            },
+          }))
+        }
         const phSku = productByHandle.get(hh)?.sku?.trim() || ""
         setVariantMetaByHandle((prevMeta) => ({
           ...prevMeta,
@@ -1410,7 +1613,7 @@ export function LegacyMediaAssignmentBoardClient() {
         variantKey,
       }))
     },
-    [productByHandle]
+    [productByHandle, activeVariantByHandle]
   )
 
   const dropZoneStable = (e: React.DragEvent, handle: string, zone: ZoneDrop) => {
@@ -1454,13 +1657,16 @@ export function LegacyMediaAssignmentBoardClient() {
           ...(prevV[hh] ?? {
             [DEFAULT_VARIANT_KEY]: fromZoneState(board.zones[hh] ?? emptyZones(), LABEL_NEEDS_REVIEW_RU, { sourceLabel: "default" }),
           }),
-          [vk]: {
+          [vk]: withManualGalleryOrder({
             ...(prevV[hh]?.[vk] ?? emptyVariant(vk === DEFAULT_VARIANT_KEY ? LABEL_NEEDS_REVIEW_RU : vk)),
             ...fromZoneState(base, prevV[hh]?.[vk]?.label || LABEL_NEEDS_REVIEW_RU, {
               sourceLabel: prevV[hh]?.[vk]?.sourceLabel,
               labelEditedByUser: prevV[hh]?.[vk]?.labelEditedByUser,
+              primaryManualOverride: prevV[hh]?.[vk]?.primaryManualOverride,
+              primaryAutoPicked: prevV[hh]?.[vk]?.primaryAutoPicked,
+              primaryNeedsReview: prevV[hh]?.[vk]?.primaryNeedsReview,
             }),
-          },
+          }),
         },
       }
     })
@@ -1771,6 +1977,15 @@ export function LegacyMediaAssignmentBoardClient() {
     const activeVk = (activeVariantByHandle[hh] || DEFAULT_VARIANT_KEY).trim()
     if (activeVk !== DEFAULT_VARIANT_KEY) return
 
+    const variantRow = variantsByHandle[hh]
+    if (variantRow) {
+      for (const [vk, vv] of Object.entries(variantRow)) {
+        if (vk !== DEFAULT_VARIANT_KEY && variantHasEstablishedGalleryOrder(vv)) return
+      }
+      const def = variantRow[DEFAULT_VARIANT_KEY]
+      if (def && variantHasEstablishedGalleryOrder(def)) return
+    }
+
     const z = board.zones[hh] ?? emptyZones()
     const empty =
       !z.primary && z.gallery.length === 0 && z.reference_only.length === 0 && z.lane_rejected.length === 0
@@ -1805,16 +2020,20 @@ export function LegacyMediaAssignmentBoardClient() {
       ...prev,
       [hh]: {
         ...(prev[hh] ?? {}),
-        [DEFAULT_VARIANT_KEY]: fromZoneState(nextZones, labelResolved.displayLabel, {
-          sourceLabel: labelResolved.sourceLabel,
-          labelStatus: labelResolved.labelStatus,
-          primaryAutoPicked: media.primaryAutoPicked,
-          primaryNeedsReview: media.primaryNeedsReview,
-          primaryManualOverride: false,
-        }),
+        [DEFAULT_VARIANT_KEY]: {
+          ...fromZoneState(nextZones, labelResolved.displayLabel, {
+            sourceLabel: labelResolved.sourceLabel,
+            labelStatus: labelResolved.labelStatus,
+            primaryAutoPicked: media.primaryAutoPicked,
+            primaryNeedsReview: media.primaryNeedsReview,
+            primaryManualOverride: false,
+          }),
+          galleryOrderSource: "seed",
+          galleryOrderLocked: false,
+        },
       },
     }))
-  }, [hydrated, selectedHandle, selectedProduct, invDoc, board.zones, activeVariantByHandle])
+  }, [hydrated, selectedHandle, selectedProduct, invDoc, board.zones, activeVariantByHandle, variantsByHandle])
 
   /** Mirror active variant lanes into product zones for drag/drop + legacy export compatibility. */
   useEffect(() => {
@@ -2070,8 +2289,7 @@ export function LegacyMediaAssignmentBoardClient() {
     size: "compact" | "normal" | "large" | "primary" | "gallery" = "compact"
   ) => {
     const inv = invById.get(id)
-    if (!inv) return null
-    const pv = clientPreviewUrl(inv)
+    const pv = boardThumbPreview(id, inv, seedMatchRowsForSelected)
     const vk = variantKeyForActions
     const vv = variantsForHandle[vk]
     const gi = zone === "gallery" ? (vv?.gallery.indexOf(id) ?? -1) : -1
@@ -2160,29 +2378,33 @@ export function LegacyMediaAssignmentBoardClient() {
         ) : null}
       </>
     )
+    const cardInv = inv ?? stubInvForBoardThumb(id, pv.reason || pv.caption || "missing inventory row")
+    const canDrag = Boolean(inv?.previewable ?? pv.useImg)
     return (
       <MediaImageCard
         inventoryId={id}
-        inv={inv}
+        inv={cardInv}
         productHandle={handle}
         dataZone={zone}
         previewUrl={pv.url}
         useImg={pv.useImg}
-        caption={pv.caption}
-        sourcePath={inv.repo_relative_path || inv.source_path}
-        sourceType={inv.source_type}
+        caption={pv.caption || pv.reason}
+        sourcePath={cardInv.repo_relative_path || cardInv.source_path}
+        sourceType={cardInv.source_type}
         confidenceLabel={candById.get(id)?.confidence || null}
-        previewable={inv.previewable}
+        previewable={canDrag}
         badges={[
           ...(selectedHandle?.toLowerCase() === handle.toLowerCase() && seedInvIdsMatchedFromStorefront.has(id) ? ["storefront seed"] : []),
+          ...(!inv ? ["missing inv map"] : []),
+          ...(pv.reason ? ["preview fallback"] : []),
           "Assigned",
           zone,
         ]}
         size={size}
-        draggable={inv.previewable}
+        draggable={canDrag}
         isDragging={draggingMediaId === id}
         onDragStart={
-          inv.previewable
+          canDrag
             ? (e) => {
                 e.stopPropagation()
                 setDiag((d) => ({ ...d, cardHandlerFired: true }))
@@ -2480,28 +2702,55 @@ export function LegacyMediaAssignmentBoardClient() {
           editedLegacyArticle: null,
           chosenArticleCandidateIndex: null,
         }
-        const labelResolved = resolveSuggestionDisplayLabel(s, enc, prefs, null, s.productSkuHint)
+        const existing = vByHandle[s.variantKey]
+        const existingMeta = variantMetaByHandle[h]?.[s.variantKey]
+        const labelResolved = resolveSuggestionDisplayLabel(s, enc, prefs, existing ?? null, s.productSkuHint)
         const candidateIds = [s.primaryCandidateId, ...s.galleryCandidateIds].filter(Boolean) as string[]
         const invMap = new Map((invDoc?.items ?? []).map((it) => [it.id, it]))
-        const media = buildVariantMediaFromCandidates(candidateIds, invMap, candidateIds, null)
-        variantUpdates[s.variantKey] = {
-          label: labelResolved,
-          sourceLabel: sourceLabelForVariantKey(s.variantKey),
-          labelEditedByUser: Boolean(prefs.displayLabelEdited),
-          labelStatus: prefs.displayLabelEdited
-            ? "user_edited"
-            : resolveVariantDisplayLabel({
-                variantKey: s.variantKey,
-                legacyColorName: enc?.legacy_color_name,
-                productSkuHint: s.productSkuHint,
-              }).labelStatus,
-          primary: media.primary,
-          gallery: media.gallery,
-          reference: [],
-          rejected: [],
-          primaryManualOverride: false,
-          primaryAutoPicked: media.primaryAutoPicked,
-          primaryNeedsReview: media.primaryNeedsReview,
+        if (existing && variantHasEstablishedGalleryOrder(existing, existingMeta?.status)) {
+          variantUpdates[s.variantKey] = {
+            ...existing,
+            label: labelResolved,
+            sourceLabel: existing.sourceLabel ?? sourceLabelForVariantKey(s.variantKey),
+            labelEditedByUser: Boolean(prefs.displayLabelEdited) || existing.labelEditedByUser,
+            labelStatus: prefs.displayLabelEdited
+              ? "user_edited"
+              : existing.labelStatus ??
+                resolveVariantDisplayLabel({
+                  variantKey: s.variantKey,
+                  legacyColorName: enc?.legacy_color_name,
+                  productSkuHint: s.productSkuHint,
+                }).labelStatus,
+          }
+        } else {
+          const media = buildVariantMediaFromCandidates(
+            candidateIds,
+            invMap,
+            candidateIds,
+            existing ?? null,
+            existingMeta?.status
+          )
+          variantUpdates[s.variantKey] = {
+            label: labelResolved,
+            sourceLabel: sourceLabelForVariantKey(s.variantKey),
+            labelEditedByUser: Boolean(prefs.displayLabelEdited),
+            labelStatus: prefs.displayLabelEdited
+              ? "user_edited"
+              : resolveVariantDisplayLabel({
+                  variantKey: s.variantKey,
+                  legacyColorName: enc?.legacy_color_name,
+                  productSkuHint: s.productSkuHint,
+                }).labelStatus,
+            primary: media.primary,
+            gallery: media.gallery,
+            reference: existing?.reference ?? [],
+            rejected: existing?.rejected ?? [],
+            primaryManualOverride: media.primaryManualOverride,
+            primaryAutoPicked: media.primaryAutoPicked,
+            primaryNeedsReview: media.primaryNeedsReview,
+            galleryOrderSource: media.galleryOrderSource,
+            galleryOrderLocked: media.galleryOrderLocked,
+          }
         }
         metaUpdates[s.variantKey] = variantMetaFromEnrichmentAndSuggestion({
           productSkuHint: s.productSkuHint,
@@ -3032,7 +3281,7 @@ export function LegacyMediaAssignmentBoardClient() {
                           activeVariantKey,
                           (prev) => ({
                             ...prev,
-                            gallery: Array.from(new Set([...prev.gallery, ...ids])),
+                            gallery: mergeGalleryPreservingOrder(prev.gallery, ids, prev.primary),
                           }),
                           "add all pending seeds to gallery",
                           ids[0],
@@ -3387,11 +3636,13 @@ export function LegacyMediaAssignmentBoardClient() {
                   preferLegacyColorName: prefs.useLegacyName,
                 }).labelStatus
                 const candidateIds = galleryPreview
+                const confirmedMeta = vmByHandle[s.variantKey]
                 const previewMedia = buildVariantMediaFromCandidates(
                   candidateIds,
                   invById,
                   candidateIds,
-                  confirmedVariant ?? null
+                  confirmedVariant ?? null,
+                  confirmedMeta?.status
                 )
                 const primaryPreviewId = confirmedVariant?.primary ?? previewMedia.primary
                 const galleryRest = (confirmedVariant ? confirmedVariant.gallery : previewMedia.gallery).filter(
@@ -3489,65 +3740,15 @@ export function LegacyMediaAssignmentBoardClient() {
                           data-suggestion-thumbs="true"
                           style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-start", minWidth: 0 }}
                         >
-                        {galleryPreviewOrdered.slice(0, 6).map((mid) => {
-                          const inv = invById.get(mid)
-                          const pv = inv ? clientPreviewUrl(inv) : null
-                          const previewUrl = pv?.url ?? null
-                          const isPrimary = mid === primaryPreviewId
-                          return (
-                            <div
-                              key={mid}
-                              data-suggestion-thumb={isPrimary ? "primary" : "gallery"}
-                              data-media-id={mid}
-                              style={{
-                                width: isPrimary ? 96 : 72,
-                                height: isPrimary ? 96 : 72,
-                                borderRadius: 8,
-                                border: isPrimary ? "2px solid #2563eb" : "1px solid #e2e8f0",
-                                background: "#f8fafc",
-                                overflow: "hidden",
-                                position: "relative",
-                                flex: "0 0 auto",
-                              }}
-                              title={inv?.filename || mid}
-                            >
-                              {previewUrl ? (
-                                /* eslint-disable-next-line @next/next/no-img-element */
-                                <img
-                                  src={previewUrl}
-                                  alt=""
-                                  width={isPrimary ? 96 : 72}
-                                  height={isPrimary ? 96 : 72}
-                                  draggable={false}
-                                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                                />
-                              ) : (
-                                <div style={{ fontSize: 9, color: "#94a3b8", padding: 4, lineHeight: 1.2, height: "100%", display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
-                                  {inv?.filename ? truncateMiddleClient(inv.filename, 24) : "no preview"}
-                                </div>
-                              )}
-                              {isPrimary ? (
-                                <span
-                                  style={{
-                                    position: "absolute",
-                                    top: 2,
-                                    left: 2,
-                                    fontSize: 9,
-                                    fontWeight: 700,
-                                    color: "#fff",
-                                    background: "#2563eb",
-                                    padding: "1px 5px",
-                                    borderRadius: 6,
-                                    letterSpacing: "0.04em",
-                                    textTransform: "uppercase",
-                                  }}
-                                >
-                                  Primary
-                                </span>
-                              ) : null}
-                            </div>
-                          )
-                        })}
+                        {galleryPreviewOrdered.slice(0, 6).map((mid) => (
+                          <SuggestionVariantThumb
+                            key={mid}
+                            mid={mid}
+                            isPrimary={mid === primaryPreviewId}
+                            inv={invById.get(mid)}
+                            seedRows={seedMatchRowsForSelected}
+                          />
+                        ))}
                         {galleryPreviewOrdered.length > 6 ? (
                           <div style={{ fontSize: 10, color: "#64748b", alignSelf: "center" }}>
                             +{galleryPreviewOrdered.length - 6}

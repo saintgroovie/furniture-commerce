@@ -127,7 +127,7 @@ export function dedupeAndSortVariantMedia(
   mediaIds: string[],
   invById: Map<string, InvItemDedupeFields>,
   candById: Map<string, CandidateEntry>,
-  opts?: { seedOrder?: string[] }
+  opts?: { seedOrder?: string[]; preserveGalleryOrder?: string[] }
 ): VariantMediaDedupeResult {
   const unique = Array.from(new Set(mediaIds.filter(Boolean)))
   if (unique.length === 0) {
@@ -226,23 +226,50 @@ export function dedupeAndSortVariantMedia(
     }
   }
 
-  visibleIds.sort((a, b) => {
-    const ia = invById.get(a)
-    const ib = invById.get(b)
-    const sa = ia ? galleryQualityScore(ia, unique.indexOf(a)) : 0
-    const sb = ib ? galleryQualityScore(ib, unique.indexOf(b)) : 0
-    return sb - sa
-  })
+  const preserve = opts?.preserveGalleryOrder?.filter(Boolean) ?? []
+  if (preserve.length > 0) {
+    const orderIndex = new Map(preserve.map((id, i) => [id, i]))
+    visibleIds.sort((a, b) => {
+      const ia = orderIndex.get(a)
+      const ib = orderIndex.get(b)
+      if (ia == null && ib == null) {
+        const sa = invById.get(a) ? galleryQualityScore(invById.get(a)!, unique.indexOf(a)) : 0
+        const sb = invById.get(b) ? galleryQualityScore(invById.get(b)!, unique.indexOf(b)) : 0
+        return sb - sa
+      }
+      if (ia == null) return 1
+      if (ib == null) return -1
+      return ia - ib
+    })
+  } else {
+    visibleIds.sort((a, b) => {
+      const ia = invById.get(a)
+      const ib = invById.get(b)
+      const sa = ia ? galleryQualityScore(ia, unique.indexOf(a)) : 0
+      const sb = ib ? galleryQualityScore(ib, unique.indexOf(b)) : 0
+      return sb - sa
+    })
+  }
 
   const pick = pickAutoPrimaryForCandidates(visibleIds, invById as Map<string, InvItem>, {
-    seedOrder: opts?.seedOrder,
+    seedOrder: preserve.length > 0 ? preserve : opts?.seedOrder,
   })
 
-  const gallerySorted = pick.galleryIds.sort((a, b) => {
-    const ia = invById.get(a)
-    const ib = invById.get(b)
-    return (ib ? galleryQualityScore(ib, 0) : 0) - (ia ? galleryQualityScore(ia, 0) : 0)
-  })
+  const gallerySorted =
+    preserve.length > 0
+      ? pick.galleryIds.sort((a, b) => {
+          const ia = preserve.indexOf(a)
+          const ib = preserve.indexOf(b)
+          if (ia === -1 && ib === -1) return 0
+          if (ia === -1) return 1
+          if (ib === -1) return -1
+          return ia - ib
+        })
+      : pick.galleryIds.sort((a, b) => {
+          const ia = invById.get(a)
+          const ib = invById.get(b)
+          return (ib ? galleryQualityScore(ib, 0) : 0) - (ia ? galleryQualityScore(ia, 0) : 0)
+        })
 
   return {
     visibleIds,
