@@ -141,6 +141,16 @@ export type SuggestedVariant = {
     canonicalMediaId: string
     memberIds: string[]
   }>
+  /** Filled visual roles for role strip (hero_front, front_anfas, …). */
+  roleStrip?: string[]
+  rolesByMediaId?: Record<string, string>
+  borrowedSameSku?: Array<{
+    mediaId: string
+    role: string
+    fromVariantKey: string
+    fromVariantLabel: string
+  }>
+  primaryNeedsReview?: boolean
 }
 
 /** Pointer-based drag session (QA board only; not persisted). */

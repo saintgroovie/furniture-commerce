@@ -6,11 +6,8 @@
 import type { CandidateEntry, InvItem } from "./legacy-media-board-types"
 import { explicitProductTokenFromMedia, normSku } from "./suggestion-product-guard"
 import { scorePrimaryCandidate } from "./legacy-variant-primary-heuristic"
-import {
-  compareIdsByVisualRole,
-  pickPrimaryAndGalleryByVisualRole,
-  sortIdsByVisualRole,
-} from "./legacy-media-visual-role-ranking"
+import { applyRoleRepresentativeSelection } from "./legacy-media-variant-gallery-build"
+import { compareIdsByVisualRole, pickPrimaryAndGalleryByVisualRole } from "./legacy-media-visual-role-ranking"
 
 export type InvItemDedupeFields = InvItem & {
   duplicate_group_key?: string | null
@@ -49,6 +46,10 @@ export type VariantMediaDedupeResult = {
   duplicateHiddenCount: number
   primaryCandidateId: string | null
   galleryCandidateIds: string[]
+  rolesById?: Record<string, string>
+  roleStrip?: string[]
+  borrowedSameSku?: Array<{ mediaId: string; role: string; fromVariantKey: string; fromVariantLabel: string }>
+  primaryNeedsReview?: boolean
 }
 
 const IMAGE_EXT_RE = /\.(jpe?g|png|webp|gif|avif)$/i
@@ -162,7 +163,7 @@ export function photoViewDedupeKey(
   return `pv:${sku}|${color}|${view}|${idx}`
 }
 
-function galleryQualityScore(inv: InvItemDedupeFields, orderIndex: number): number {
+export function galleryQualityScore(inv: InvItemDedupeFields, orderIndex: number): number {
   const hay = haystackFor(inv)
   let s = scorePrimaryCandidate(inv, orderIndex, null)
   if (isWhiteBgSourceHint(inv)) s += 80
@@ -347,41 +348,40 @@ export function dedupeAndSortVariantMedia(
   const visiblePreviewable = previewableVisible.length > 0 ? previewableVisible : visibleIds
 
   const preserve = opts?.preserveGalleryOrder?.filter(Boolean) ?? []
+  const clusterHiddenCount = hiddenDuplicates.length
+
   if (preserve.length > 0) {
     const orderIndex = new Map(preserve.map((id, i) => [id, i]))
     visiblePreviewable.sort((a, b) => {
       const ia = orderIndex.get(a)
       const ib = orderIndex.get(b)
-      if (ia == null && ib == null) {
-        return compareIdsByVisualRole(a, b, invById as Map<string, InvItem>)
-      }
+      if (ia == null && ib == null) return compareIdsByVisualRole(a, b, invById as Map<string, InvItem>)
       if (ia == null) return 1
       if (ib == null) return -1
       return ia - ib
     })
-  } else {
-    const { sorted: roleSorted } = sortIdsByVisualRole(visiblePreviewable, invById as Map<string, InvItem>)
-    visiblePreviewable.length = 0
-    visiblePreviewable.push(...roleSorted)
+    const pick = pickPrimaryAndGalleryByVisualRole(visiblePreviewable, invById as Map<string, InvItem>, {
+      seedOrder: preserve,
+    })
+    const gallerySorted = visiblePreviewable.filter((id) => id !== pick.primaryId)
+    const allHidden = hiddenDuplicates.filter((h, i, arr) => arr.findIndex((x) => x.mediaId === h.mediaId) === i)
+    return {
+      visibleIds: visiblePreviewable,
+      hiddenDuplicates: allHidden,
+      duplicateGroups,
+      duplicateHiddenCount: allHidden.length,
+      primaryCandidateId: pick.primaryId && visiblePreviewable.includes(pick.primaryId) ? pick.primaryId : visiblePreviewable[0] ?? null,
+      galleryCandidateIds: gallerySorted,
+      borrowedSameSku: [],
+      primaryNeedsReview: pick.needsReview,
+    }
   }
 
-  const pick = pickPrimaryAndGalleryByVisualRole(visiblePreviewable, invById as Map<string, InvItem>, {
-    seedOrder: preserve.length > 0 ? preserve : opts?.seedOrder,
+  const roleBuild = applyRoleRepresentativeSelection(visiblePreviewable, invById, candById, {
+    clusterHidden: hiddenDuplicates,
   })
 
-  let gallerySorted = pick.galleryIds.filter((id) => visiblePreviewable.includes(id))
-  if (preserve.length > 0) {
-    gallerySorted = gallerySorted.sort((a, b) => {
-      const ia = preserve.indexOf(a)
-      const ib = preserve.indexOf(b)
-      if (ia === -1 && ib === -1) return 0
-      if (ia === -1) return 1
-      if (ib === -1) return -1
-      return ia - ib
-    })
-  }
-
-  const allHidden = hiddenDuplicates.filter(
+  const allHidden = roleBuild.hiddenDuplicates.filter(
     (h, i, arr) => arr.findIndex((x) => x.mediaId === h.mediaId) === i
   )
 
@@ -389,8 +389,12 @@ export function dedupeAndSortVariantMedia(
     visibleIds: visiblePreviewable,
     hiddenDuplicates: allHidden,
     duplicateGroups,
-    duplicateHiddenCount: allHidden.length,
-    primaryCandidateId: pick.primaryId && visiblePreviewable.includes(pick.primaryId) ? pick.primaryId : visiblePreviewable[0] ?? null,
-    galleryCandidateIds: gallerySorted,
+    duplicateHiddenCount: Math.max(allHidden.length, clusterHiddenCount),
+    primaryCandidateId: roleBuild.primaryId,
+    galleryCandidateIds: roleBuild.galleryIds,
+    rolesById: Object.fromEntries(roleBuild.rolesById),
+    roleStrip: roleBuild.roleStrip,
+    borrowedSameSku: [],
+    primaryNeedsReview: roleBuild.primaryNeedsReview,
   }
 }

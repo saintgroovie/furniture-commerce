@@ -33,6 +33,12 @@ import {
 } from "./legacy-color-variant-labels"
 import { dedupeAndSortVariantMedia, type InvItemDedupeFields } from "./legacy-media-dedupe"
 import {
+  applySameSkuRoleBorrowing,
+  roleBadgeForMedia,
+  VISUAL_ROLE_STRIP_LABEL_RU,
+  type BorrowedSameSkuEntry,
+} from "./legacy-media-variant-gallery-build"
+import {
   mergeGalleryPreservingOrder,
   variantHasEstablishedGalleryOrder,
   withManualGalleryOrder,
@@ -45,6 +51,7 @@ import {
   primaryCandidateBadgeRu,
   VISUAL_ROLE_BADGE_RU,
   VISUAL_ROLE_RANKING_TOOLTIP_RU,
+  type VisualRole,
 } from "./legacy-media-visual-role-ranking"
 import { matchAllSeedUrls, orderedInventoryIdsFromSeedUrls, type SeedUrlMatchRow } from "./seed-inventory-match"
 import { classifyMediaProductIdentity, explicitProductTokenFromMedia, normHandle, normSku } from "./suggestion-product-guard"
@@ -377,11 +384,15 @@ function SuggestionVariantThumb({
   isPrimary,
   inv,
   seedRows,
+  roleBadge,
+  borrowedLabel,
 }: {
   mid: string
   isPrimary: boolean
   inv: InvItem | undefined
   seedRows: SeedUrlMatchRow[]
+  roleBadge?: string | null
+  borrowedLabel?: string | null
 }) {
   const [broken, setBroken] = useState(false)
   const thumbPv = boardThumbPreview(mid, inv, seedRows)
@@ -454,6 +465,26 @@ function SuggestionVariantThumb({
         >
           Главное
         </span>
+      ) : roleBadge ? (
+        <span
+          style={{
+            position: "absolute",
+            bottom: 2,
+            left: 2,
+            right: 2,
+            fontSize: 8,
+            fontWeight: 700,
+            color: "#fff",
+            background: borrowedLabel ? "rgba(180,83,9,0.92)" : "rgba(15,23,42,0.78)",
+            padding: "1px 4px",
+            borderRadius: 4,
+            textAlign: "center",
+            lineHeight: 1.15,
+          }}
+          title={borrowedLabel ?? roleBadge}
+        >
+          {roleBadge}
+        </span>
       ) : null}
     </div>
   )
@@ -505,6 +536,12 @@ function resolveSuggestionDisplayLabel(
   confirmed: VariantDecisionState | null | undefined,
   productSkuHint: string
 ): string {
+  if (confirmed?.labelEditedByUser && confirmed.label?.trim()) {
+    return confirmed.label.trim()
+  }
+  if (confirmed?.labelStatus === "user_edited" && confirmed.label?.trim()) {
+    return confirmed.label.trim()
+  }
   if (confirmed) {
     return withResolvedVariantLabel(suggestion.variantKey, confirmed, {
       legacyColorName: enrichment?.legacy_color_name,
@@ -1903,8 +1940,18 @@ export function LegacyMediaAssignmentBoardClient() {
       }
       groups.set(variantKey, current)
     }
-    const out: SuggestedVariant[] = []
+    type SliceAcc = {
+      variantKey: string
+      label: string
+      colorNameRaw: string
+      v: GroupAcc
+      deduped: ReturnType<typeof dedupeAndSortVariantMedia>
+      identityTier: "this_sku" | "needs_identity_review"
+      reasons: string[]
+    }
+    const slices: SliceAcc[] = []
     const invMap = new Map((invDedupeMap ?? []).map((row) => [row.id, row]))
+    const confirmedRow = variantsByHandle[h] ?? {}
     for (const [variantKey, v] of Array.from(groups.entries())) {
       const isReview = variantKey.endsWith("__review")
       const rawIds = isReview ? v.reviewIds : v.thisSkuIds
@@ -1919,31 +1966,84 @@ export function LegacyMediaAssignmentBoardClient() {
       const identityTier = isReview ? "needs_identity_review" : "this_sku"
       const reasons = Array.from(v.reasons)
       if (deduped.duplicateHiddenCount > 0) {
-        reasons.push(`dedupe: ${deduped.duplicateHiddenCount} duplicate(s) hidden from card`)
+        reasons.push(`dedupe: ${deduped.duplicateHiddenCount} похожих скрыто из полосы`)
+      }
+      const confirmed = confirmedRow[variantKey]
+      let label = v.label
+      if (confirmed?.labelEditedByUser && confirmed.label?.trim()) {
+        label = confirmed.label.trim()
+      } else if (confirmed?.labelStatus === "user_edited" && confirmed.label?.trim()) {
+        label = confirmed.label.trim()
+      }
+      slices.push({ variantKey, label, colorNameRaw, v, deduped, identityTier, reasons })
+    }
+
+    const gallerySlices = slices.map((s) => {
+      const rolesById = new Map<string, VisualRole>(
+        Object.entries(s.deduped.rolesById ?? {}).map(([id, role]) => [id, role as VisualRole])
+      )
+      return {
+        variantKey: s.variantKey,
+        label: s.label,
+        colorNameRaw: s.colorNameRaw,
+        identityTier: s.identityTier,
+        primaryCandidateId: s.deduped.primaryCandidateId,
+        galleryCandidateIds: s.deduped.galleryCandidateIds,
+        rolesById,
+        roleStrip: (s.deduped.roleStrip ?? []) as VisualRole[],
+      }
+    })
+
+    const out: SuggestedVariant[] = []
+    for (const s of slices) {
+      const baseSlice = gallerySlices.find((g) => g.variantKey === s.variantKey)!
+      let galleryCandidateIds = baseSlice.galleryCandidateIds
+      let rolesById = baseSlice.rolesById
+      let roleStrip = baseSlice.roleStrip
+      let borrowedSameSku: BorrowedSameSkuEntry[] = []
+      if (s.identityTier === "this_sku") {
+        const borrowed = applySameSkuRoleBorrowing(baseSlice, gallerySlices, invMap, candById, h, productSkuHint)
+        galleryCandidateIds = borrowed.galleryCandidateIds
+        rolesById = borrowed.rolesById
+        borrowedSameSku = borrowed.borrowed
+        if (borrowed.borrowed.length > 0) {
+          s.reasons.push(
+            ...borrowed.borrowed.map(
+              (b) => `borrow: ${b.role} из ${b.fromVariantLabel} (тот же SKU)`
+            )
+          )
+          for (const b of borrowed.borrowed) {
+            if (!roleStrip.includes(b.role)) roleStrip = [...roleStrip, b.role]
+          }
+        }
       }
       out.push({
-        variantKey,
-        label: v.label,
-        colorNameRaw,
+        variantKey: s.variantKey,
+        label: s.label,
+        colorNameRaw: s.colorNameRaw,
         productSkuHint,
-        filenameColorToken: colorNameRaw === "needs_review" ? "" : colorNameRaw,
-        candidateMapSku: v.candidateMapSku,
-        candidatePageUrls: Array.from(v.pageUrlCandidates.entries()).map(([url, source]) => ({ url, source })),
+        filenameColorToken: s.colorNameRaw === "needs_review" ? "" : s.colorNameRaw,
+        candidateMapSku: s.v.candidateMapSku,
+        candidatePageUrls: Array.from(s.v.pageUrlCandidates.entries()).map(([url, source]) => ({ url, source })),
         seedImageUrls,
-        sourceUrl: v.sourceUrl,
-        sourcePathHints: Array.from(v.sourcePathHints).slice(0, 3),
-        mediaIds: deduped.visibleIds,
-        primaryCandidateId: deduped.primaryCandidateId,
-        galleryCandidateIds: deduped.galleryCandidateIds,
-        confidence: identityTier === "this_sku" ? v.confidence : "low",
-        reasons,
-        identityTier,
-        identityNotes: Array.from(v.identityNotes).slice(0, 6),
-        foreignHandle: v.foreignHandle,
-        foreignSku: v.foreignSku,
-        hiddenDuplicateIds: deduped.hiddenDuplicates.map((d) => d.mediaId),
-        duplicateHiddenCount: deduped.duplicateHiddenCount,
-        duplicateGroups: deduped.duplicateGroups,
+        sourceUrl: s.v.sourceUrl,
+        sourcePathHints: Array.from(s.v.sourcePathHints).slice(0, 3),
+        mediaIds: s.deduped.visibleIds,
+        primaryCandidateId: s.deduped.primaryCandidateId,
+        galleryCandidateIds,
+        confidence: s.identityTier === "this_sku" ? s.v.confidence : "low",
+        reasons: s.reasons,
+        identityTier: s.identityTier,
+        identityNotes: Array.from(s.v.identityNotes).slice(0, 6),
+        foreignHandle: s.v.foreignHandle,
+        foreignSku: s.v.foreignSku,
+        hiddenDuplicateIds: s.deduped.hiddenDuplicates.map((d) => d.mediaId),
+        duplicateHiddenCount: s.deduped.duplicateHiddenCount,
+        duplicateGroups: s.deduped.duplicateGroups,
+        roleStrip,
+        rolesByMediaId: Object.fromEntries(rolesById),
+        borrowedSameSku,
+        primaryNeedsReview: s.deduped.primaryNeedsReview,
       })
     }
     return out.sort((a, b) => {
@@ -1960,7 +2060,7 @@ export function LegacyMediaAssignmentBoardClient() {
       return b.mediaIds.length - a.mediaIds.length
     })
     },
-    [rejectedSuggestedVariantsByHandle, invDoc, candById, productByHandle, selectedHandle]
+    [rejectedSuggestedVariantsByHandle, invDoc, candById, productByHandle, selectedHandle, variantsByHandle]
   )
 
   const suggestedVariantsForSelected = useMemo<SuggestedVariant[]>(() => {
@@ -2767,6 +2867,50 @@ export function LegacyMediaAssignmentBoardClient() {
     const activeVariantDisplay = activeResolved.label
     const activeLabelStatus = activeResolved.labelStatus
     const z = toZoneState(activeVariant)
+    const removeVariantFromProduct = (vk: string) => {
+      const vv = vByHandle[vk]
+      if (!vv) return
+      const hasMedia =
+        Boolean(vv.primary) || vv.gallery.length > 0 || vv.reference.length > 0 || vv.rejected.length > 0
+      if (hasMedia) {
+        const ok = window.confirm(
+          "У варианта есть назначенные медиа. Убрать вариант и вернуть медиа в неназначенные?"
+        )
+        if (!ok) return
+      }
+      setVariantsByHandle((prev) => {
+        const row = { ...(prev[h] ?? {}) }
+        delete row[vk]
+        if (Object.keys(row).length === 0) {
+          row[DEFAULT_VARIANT_KEY] = fromZoneState(emptyZones(), LABEL_NEEDS_REVIEW_RU, { sourceLabel: "default" })
+        }
+        return { ...prev, [h]: row }
+      })
+      setVariantMetaByHandle((prev) => {
+        const row = { ...(prev[h] ?? {}) }
+        delete row[vk]
+        return { ...prev, [h]: row }
+      })
+      if (activeVariantKey === vk) {
+        const remaining = Object.keys(vByHandle).filter((k) => k !== vk)
+        const nextVk = remaining[0] ?? DEFAULT_VARIANT_KEY
+        const nextVariant =
+          vByHandle[nextVk] ?? fromZoneState(emptyZones(), LABEL_NEEDS_REVIEW_RU, { sourceLabel: "default" })
+        setBoard((prev) => ({
+          ...prev,
+          zones: { ...prev.zones, [h]: toZoneState(nextVariant) },
+        }))
+        setActiveVariantByHandle((prev) => ({ ...prev, [h]: nextVk }))
+      }
+      setDiag((d) => ({
+        ...d,
+        buttonHandlerFired: true,
+        stateUpdateRequested: true,
+        stateActuallyChanged: true,
+        lastAction: `remove variant ${vk}`,
+        lastError: "",
+      }))
+    }
     const candCount = entryList.filter((e) => e.top_candidate?.medusa_product_handle.toLowerCase() === h).length
     const safeSuggestions = suggestedVariantsForSelected.filter((s) => s.identityTier === "this_sku")
     const reviewSuggestions = suggestedVariantsForSelected.filter((s) => s.identityTier === "needs_identity_review")
@@ -2799,7 +2943,10 @@ export function LegacyMediaAssignmentBoardClient() {
         }
         const existing = vByHandle[s.variantKey]
         const existingMeta = variantMetaByHandle[h]?.[s.variantKey]
-        const labelResolved = resolveSuggestionDisplayLabel(s, enc, prefs, existing ?? null, s.productSkuHint)
+        const labelResolved =
+          existing?.labelEditedByUser && existing.label?.trim()
+            ? existing.label.trim()
+            : resolveSuggestionDisplayLabel(s, enc, prefs, existing ?? null, s.productSkuHint)
         const candidateIds = [s.primaryCandidateId, ...s.galleryCandidateIds].filter(Boolean) as string[]
         const invMap = new Map((invDoc?.items ?? []).map((it) => [it.id, it]))
         if (existing && variantHasEstablishedGalleryOrder(existing, existingMeta?.status)) {
@@ -3085,6 +3232,7 @@ export function LegacyMediaAssignmentBoardClient() {
                       ...(prev[h]?.[activeVariantKey] ?? activeVariant),
                       label: next,
                       labelEditedByUser: true,
+                      labelStatus: "user_edited",
                       sourceLabel: activeVariant.sourceLabel ?? sourceLabelForVariantKey(activeVariantKey),
                     },
                   },
@@ -3101,6 +3249,19 @@ export function LegacyMediaAssignmentBoardClient() {
             >
               Переименовать
             </button>
+            {activeVariantKey !== DEFAULT_VARIANT_KEY ? (
+              <button
+                type="button"
+                data-action-button="variant-remove-active"
+                style={{ ...miniBtn, padding: "4px 10px", color: "#b91c1c", borderColor: "#fecaca" }}
+                onClick={() => removeVariantFromProduct(activeVariantKey)}
+              >
+                Удалить вариант
+              </button>
+            ) : null}
+            {activeVariant.labelEditedByUser ? (
+              <span style={{ ...pillSlate, background: "#f1f5f9", color: "#475569", fontSize: 10 }}>ручное имя</span>
+            ) : null}
             <div style={{ display: "flex", gap: 6, alignItems: "center", marginLeft: "auto" }}>
               <input
                 value={newVariantLabel}
@@ -3779,13 +3940,29 @@ export function LegacyMediaAssignmentBoardClient() {
                   seedImageUrls: s.seedImageUrls,
                 }).labelStatus
                 const confirmedMeta = vmByHandle[s.variantKey]
+                const rolesByIdMap = new Map<string, VisualRole>(
+                  Object.entries(s.rolesByMediaId ?? {}).map(([id, role]) => [id, role as VisualRole])
+                )
+                const borrowedById = new Map(
+                  (s.borrowedSameSku ?? []).map((b) => [
+                    b.mediaId,
+                    { ...b, role: b.role as VisualRole } satisfies BorrowedSameSkuEntry,
+                  ])
+                )
                 const primaryPreviewId = confirmedVariant?.primary ?? s.primaryCandidateId
                 const gallerySource = confirmedVariant ? confirmedVariant.gallery : s.galleryCandidateIds
                 const galleryRest = gallerySource.filter((id) => id && id !== primaryPreviewId && invById.get(id)?.previewable)
                 const primaryIsPreviewable = primaryPreviewId ? Boolean(invById.get(primaryPreviewId)?.previewable) : false
                 const galleryPreviewOrdered = (
-                  primaryPreviewId && primaryIsPreviewable ? [primaryPreviewId, ...galleryRest] : galleryRest
-                ).filter((id) => invById.get(id)?.previewable)
+                  confirmedVariant
+                    ? primaryPreviewId && primaryIsPreviewable
+                      ? [primaryPreviewId, ...galleryRest]
+                      : galleryRest
+                    : [s.primaryCandidateId, ...s.galleryCandidateIds]
+                ).filter((id): id is string => Boolean(id) && Boolean(invById.get(id)?.previewable))
+                const roleStripLabels = (s.roleStrip ?? [])
+                  .map((role) => VISUAL_ROLE_STRIP_LABEL_RU[role as VisualRole])
+                  .filter((l) => l && l !== "?")
                 const previewMedia = confirmedVariant
                   ? buildVariantMediaFromCandidates(
                       [primaryPreviewId, ...gallerySource].filter(Boolean) as string[],
@@ -3799,7 +3976,7 @@ export function LegacyMediaAssignmentBoardClient() {
                   : {
                       primary: s.primaryCandidateId,
                       primaryAutoPicked: true,
-                      primaryNeedsReview: false,
+                      primaryNeedsReview: s.primaryNeedsReview ?? false,
                     }
 
                 return (
@@ -3833,13 +4010,21 @@ export function LegacyMediaAssignmentBoardClient() {
                         {labelNeedsReviewStyle(suggestionLabelStatus) ? (
                           <span style={{ ...pillSlate, background: "#fef3c7", color: "#92400e" }}>уточните название</span>
                         ) : null}
+                        {confirmedVariant?.labelEditedByUser || prefs.displayLabelEdited ? (
+                          <span style={{ ...pillSlate, background: "#f1f5f9", color: "#475569", fontSize: 10 }}>ручное имя</span>
+                        ) : null}
                         {s.duplicateHiddenCount > 0 ? (
                           <span
                             data-suggestion-dedupe-badge="true"
                             style={{ ...pillSlate, background: "#f1f5f9", color: "#475569" }}
-                            title="Дубликаты скрыты из основной полосы — см. Details"
+                            title="Похожие дубликаты скрыты из полосы — см. Details"
                           >
-                            +{s.duplicateHiddenCount} duplicate{s.duplicateHiddenCount === 1 ? "" : "s"} hidden
+                            +{s.duplicateHiddenCount} похожих скрыто
+                          </span>
+                        ) : null}
+                        {(s.borrowedSameSku?.length ?? 0) > 0 ? (
+                          <span style={{ ...pillSlate, background: "#ffedd5", color: "#9a3412" }}>
+                            из этого SKU · другой цвет
                           </span>
                         ) : null}
                         <span style={pillIndigo}>{s.confidence}</span>
@@ -3877,6 +4062,14 @@ export function LegacyMediaAssignmentBoardClient() {
                     {/* BODY: Primary + Gallery preview for this color variant */}
                     {galleryPreviewOrdered.length > 0 ? (
                       <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
+                        {roleStripLabels.length > 0 ? (
+                          <div
+                            data-suggestion-role-strip="true"
+                            style={{ fontSize: 10, color: "#475569", fontWeight: 600 }}
+                          >
+                            {roleStripLabels.join(" · ")}
+                          </div>
+                        ) : null}
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
                           <span style={{ fontSize: 10, fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                             Primary photo · Gallery
@@ -3892,15 +4085,24 @@ export function LegacyMediaAssignmentBoardClient() {
                           data-suggestion-thumbs="true"
                           style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-start", minWidth: 0 }}
                         >
-                        {galleryPreviewOrdered.slice(0, 6).map((mid) => (
+                        {galleryPreviewOrdered.slice(0, 6).map((mid) => {
+                          const borrowed = borrowedById.get(mid)
+                          const roleBadge = roleBadgeForMedia(mid, rolesByIdMap, borrowedById)
+                          const borrowedLabel = borrowed
+                            ? `${VISUAL_ROLE_STRIP_LABEL_RU[borrowed.role]} из другого цвета этого SKU (${borrowed.fromVariantLabel})`
+                            : null
+                          return (
                           <SuggestionVariantThumb
                             key={mid}
                             mid={mid}
                             isPrimary={mid === primaryPreviewId}
                             inv={invById.get(mid)}
                             seedRows={seedMatchRowsForSelected}
+                            roleBadge={mid === primaryPreviewId ? null : roleBadge}
+                            borrowedLabel={borrowedLabel}
                           />
-                        ))}
+                          )
+                        })}
                         {galleryPreviewOrdered.length > 6 ? (
                           <div style={{ fontSize: 10, color: "#64748b", alignSelf: "center" }}>
                             +{galleryPreviewOrdered.length - 6}
@@ -4082,10 +4284,26 @@ export function LegacyMediaAssignmentBoardClient() {
                             <strong style={{ fontFamily: "ui-monospace, monospace", fontSize: 10, color: "#64748b" }}>
                               {s.colorNameRaw} · {sourceLabelForVariantKey(s.variantKey)}
                             </strong>
+                            {confirmedVariant?.labelEditedByUser && confirmedVariant.label !== suggestionDisplayLabel ? (
+                              <> · исходное: <strong>{sourceLabelForVariantKey(s.variantKey)}</strong></>
+                            ) : null}
                           </div>
+                          {(s.borrowedSameSku?.length ?? 0) > 0 ? (
+                            <div style={{ marginTop: 6 }} data-suggestion-borrowed="true">
+                              <strong>Заимствовано из этого SKU</strong>
+                              <ul style={{ margin: "4px 0 0", paddingLeft: 16, fontSize: 10, color: "#64748b" }}>
+                                {s.borrowedSameSku!.map((b) => (
+                                  <li key={`${b.mediaId}-${b.role}`}>
+                                    {VISUAL_ROLE_STRIP_LABEL_RU[b.role as VisualRole]} из «{b.fromVariantLabel}» ·{" "}
+                                    <code style={{ fontSize: 9 }}>{(invById.get(b.mediaId)?.filename || b.mediaId).slice(0, 40)}</code>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          ) : null}
                           {s.duplicateHiddenCount > 0 ? (
                             <div style={{ marginTop: 6 }} data-suggestion-hidden-duplicates="true">
-                              <strong>Duplicates hidden ({s.duplicateHiddenCount})</strong>
+                              <strong>Похожие скрыты ({s.duplicateHiddenCount})</strong>
                               <ul style={{ margin: "4px 0 0", paddingLeft: 16, fontSize: 10, color: "#64748b" }}>
                                 {s.duplicateGroups.slice(0, 6).map((g) => (
                                   <li key={g.matchKey} style={{ marginBottom: 4 }}>
@@ -4369,6 +4587,16 @@ export function LegacyMediaAssignmentBoardClient() {
                           >
                             Переименовать
                           </button>
+                          <button
+                            type="button"
+                            style={{ ...miniBtn, padding: "2px 8px", fontSize: 10, color: "#b91c1c", borderColor: "#fecaca" }}
+                            onClick={() => removeVariantFromProduct(vk)}
+                          >
+                            Удалить вариант
+                          </button>
+                          {vv.labelEditedByUser ? (
+                            <span style={{ ...pillSlate, fontSize: 9, background: "#f1f5f9", color: "#475569" }}>ручное имя</span>
+                          ) : null}
                           <span style={{ ...pillSlate, marginLeft: "auto", background: "#dcfce7", color: "#166534" }}>{readiness}</span>
                         </div>
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
