@@ -19,6 +19,7 @@ const TOKEN_TO_RU: Record<string, string> = {
   gray: "Серый",
   white: "Белый",
   cream: "Кремовый",
+  milk: "Молочный",
   beige: "Бежевый",
   olive: "Оливковый",
   green: "Зелёный",
@@ -72,6 +73,7 @@ export function inferColorTokenFromSeedUrls(seedUrls: string[]): string | null {
   for (const token of Object.keys(TOKEN_TO_RU)) {
     if (new RegExp(`(?:^|[_\\-.])${token}(?:[_\\-.]|\\.)`, "i").test(hay)) return token
   }
+  if (/milk|молоч/i.test(hay)) return "milk"
   if (/cream|крем/i.test(hay)) return "cream"
   if (/beige|беж/i.test(hay)) return "beige"
   return null

@@ -15,6 +15,8 @@ export type ProductIdentityVerdict = {
   foreignSku: string | null
 }
 
+const PRODUCT_TOKEN_RE = /^[a-z]{2,}(?:-[a-z0-9]+){1,4}$/i
+
 export function normHandle(s: string): string {
   return s.trim().toLowerCase().replace(/\s+/g, "").replace(/_/g, "-")
 }
@@ -31,9 +33,26 @@ export function extractProductTokens(hay: string): string[] {
   let m: RegExpExecArray | null
   while ((m = re.exec(lo))) {
     const t = normHandle(m[1])
-    if (t.length >= 5 && /\d/.test(t)) out.add(t)
+    if (t.length >= 5 && /\d/.test(t) && PRODUCT_TOKEN_RE.test(t)) out.add(t)
   }
   return Array.from(out)
+}
+
+function looksLikeProductToken(token: string): boolean {
+  return PRODUCT_TOKEN_RE.test(token) && token.length >= 5 && /\d/.test(token)
+}
+
+/**
+ * Strongest explicit product identity from inventory hints / filename (not candidate map).
+ */
+export function explicitProductTokenFromMedia(inv: InvItem): string | null {
+  const sku = inv.sku_hint ? normSku(inv.sku_hint) : ""
+  const handle = inv.handle_hint ? normHandle(inv.handle_hint) : ""
+  if (sku && looksLikeProductToken(sku)) return sku
+  if (handle && looksLikeProductToken(handle)) return handle
+  const filenameTokens = extractProductTokens(inv.filename)
+  if (filenameTokens.length === 0) return null
+  return filenameTokens.sort((a, b) => b.length - a.length)[0] ?? null
 }
 
 function pathContainsToken(hay: string, token: string): boolean {
@@ -43,6 +62,11 @@ function pathContainsToken(hay: string, token: string): boolean {
   const compact = token.replace(/-/g, "")
   if (compact.length >= 5 && lo.replace(/-/g, "").includes(compact)) return true
   return false
+}
+
+function tokensMatchSelected(token: string, selectedHandle: string, selectedSku: string): boolean {
+  const t = normHandle(token)
+  return t === selectedHandle || (Boolean(selectedSku) && t === selectedSku)
 }
 
 /**
@@ -68,25 +92,33 @@ export function classifyMediaProductIdentity(
 
   const pathHay = `${inv.filename} ${inv.source_path || ""} ${inv.repo_relative_path || ""}`
   const pathTokens = extractProductTokens(pathHay)
+  const explicitToken = explicitProductTokenFromMedia(inv)
 
-  const exactHandle =
-    invHandle === h ||
-    topHandle === h ||
-    pathTokens.includes(h) ||
-    pathContainsToken(pathHay, h)
+  if (explicitToken && !tokensMatchSelected(explicitToken, h, sku)) {
+    return {
+      tier: "excluded",
+      reasons: [
+        `excluded: explicit product token ${explicitToken} ≠ selected ${h || sku}`,
+        "filename/sku_hint overrides weak candidate-map top match",
+      ],
+      foreignHandle: explicitToken,
+      foreignSku: explicitToken,
+    }
+  }
 
-  const exactSku =
-    Boolean(sku) &&
-    (invSku === sku ||
-      topSku === sku ||
-      pathTokens.includes(sku) ||
-      pathContainsToken(pathHay, sku))
+  const pathNamesSelected =
+    pathContainsToken(pathHay, h) || (sku ? pathContainsToken(pathHay, sku) : false) || pathTokens.some((t) => tokensMatchSelected(t, h, sku))
+
+  const hintMatchesSelected =
+    (invHandle && invHandle === h) ||
+    (invSku && sku && invSku === sku) ||
+    (explicitToken && tokensMatchSelected(explicitToken, h, sku))
+
+  const topNamesSelected = topHandle === h || (sku && topSku === sku)
 
   const candidateExact = (ce?.candidates ?? []).some(
     (c) => normHandle(c.medusa_product_handle) === h || (sku && normSku(c.medusa_variant_sku) === sku)
   )
-
-  const topIsSelected = topHandle === h || (sku && topSku === sku)
 
   const foreignHandles = new Set<string>()
   const foreignSkus = new Set<string>()
@@ -95,40 +127,32 @@ export function classifyMediaProductIdentity(
   if (invHandle && invHandle !== h) foreignHandles.add(invHandle)
   if (invSku && sku && invSku !== sku) foreignSkus.add(invSku)
   for (const t of pathTokens) {
-    if (t !== h && t !== sku) {
-      if (t.includes("-") && /\d/.test(t)) foreignHandles.add(t)
-    }
+    if (!tokensMatchSelected(t, h, sku) && looksLikeProductToken(t)) foreignHandles.add(t)
   }
 
   const foreignHandle = foreignHandles.size ? Array.from(foreignHandles)[0] : null
   const foreignSku = foreignSkus.size ? Array.from(foreignSkus)[0] : null
 
-  if (exactHandle || exactSku) {
-    if (foreignHandle && foreignHandle !== h && !topIsSelected && invHandle !== h) {
+  const strongSelected = hintMatchesSelected || pathNamesSelected
+
+  if (strongSelected) {
+    if (foreignHandle && foreignHandle !== h && !hintMatchesSelected) {
       return {
         tier: "needs_identity_review",
         reasons: [
-          `path/hints mention ${foreignHandle}`,
+          `path mentions ${foreignHandle}`,
           `selected handle ${h}`,
-          "excluded: other handle in filename/path",
+          "weak: foreign token in path without hint match",
         ],
         foreignHandle,
         foreignSku,
       }
     }
-    if (foreignSku && foreignSku !== sku && !exactSku && invSku !== sku) {
-      return {
-        tier: "needs_identity_review",
-        reasons: [`sku hint ${foreignSku} ≠ selected ${sku}`, "excluded: other sku in hints"],
-        foreignHandle,
-        foreignSku,
-      }
-    }
-    if (topIsSelected) reasons.push("candidate map top handle/sku match")
+    if (topNamesSelected) reasons.push("candidate map top handle/sku match")
     if (invHandle === h) reasons.push("inventory handle_hint match")
     if (invSku === sku) reasons.push("inventory sku_hint match")
-    if (pathTokens.includes(h) || pathTokens.includes(sku)) reasons.push("filename/path token match")
-    if (candidateExact && !topIsSelected) {
+    if (pathNamesSelected) reasons.push("filename/path token match")
+    if (candidateExact && !topNamesSelected && !hintMatchesSelected) {
       return {
         tier: "needs_identity_review",
         reasons: [...reasons, "candidate list includes selected product (non-top)"],
@@ -137,6 +161,18 @@ export function classifyMediaProductIdentity(
       }
     }
     return { tier: "this_sku", reasons, foreignHandle: null, foreignSku: null }
+  }
+
+  if (topNamesSelected && !foreignHandle && !foreignSku) {
+    return {
+      tier: "needs_identity_review",
+      reasons: [
+        "candidate map top matches selected product but filename/sku hints are weak",
+        "confirm path/filename before bulk-confirm",
+      ],
+      foreignHandle: topHandle,
+      foreignSku: topSku,
+    }
   }
 
   if (candidateExact) {

@@ -40,7 +40,7 @@ import {
 } from "./legacy-variant-gallery-order"
 import { pickAutoPrimaryForCandidates } from "./legacy-variant-primary-heuristic"
 import { matchAllSeedUrls, orderedInventoryIdsFromSeedUrls, type SeedUrlMatchRow } from "./seed-inventory-match"
-import { classifyMediaProductIdentity } from "./suggestion-product-guard"
+import { classifyMediaProductIdentity, explicitProductTokenFromMedia, normHandle, normSku } from "./suggestion-product-guard"
 import { VariantZoneControls } from "./variant-zone-controls"
 import { StorefrontSeedMediaCard } from "./StorefrontSeedMediaCard"
 import type {
@@ -66,8 +66,8 @@ const UNKNOWN_COLLECTION = "__unknown__"
 const API_BASE = "/qa/legacy-media-assignment-board/api"
 const PREVIEW_ROUTE = "/qa/legacy-media-assignment-board/preview"
 const DND_JSON = "application/json"
-const DEV_SENTINEL = "Legacy Board source dedupe + clean suggestions"
-const DEV_SENTINEL_BUILD = "2026-05-16T23:30Z"
+const DEV_SENTINEL = "Legacy Board suggestion guard + visible dedupe fix"
+const DEV_SENTINEL_BUILD = "2026-05-17T12:30Z"
 
 async function fetchBoardJson(url: string): Promise<{ ok: true; data: Record<string, unknown> } | { ok: false; status: number; body: Record<string, unknown> }> {
   const res = await fetch(url)
@@ -262,8 +262,10 @@ function buildVariantMediaFromCandidates(
   candidateIds: string[],
   invById: Map<string, InvItem>,
   seedOrder: string[],
+  candById: Map<string, CandidateEntry>,
   existing?: VariantDecisionState | null,
-  metaStatus?: string | null
+  metaStatus?: string | null,
+  opts?: { selectedSku?: string; colorToken?: string }
 ): Pick<
   VariantDecisionState,
   | "primary"
@@ -276,12 +278,13 @@ function buildVariantMediaFromCandidates(
 > {
   const invDedupe = new Map<string, InvItemDedupeFields>()
   for (const [id, row] of Array.from(invById.entries())) invDedupe.set(id, row)
-  const candById = new Map<string, CandidateEntry>()
   const preserveOrder =
     existing && variantHasEstablishedGalleryOrder(existing, metaStatus) ? existing.gallery : undefined
   const deduped = dedupeAndSortVariantMedia(candidateIds, invDedupe, candById, {
     seedOrder,
     preserveGalleryOrder: preserveOrder,
+    selectedSku: opts?.selectedSku,
+    colorToken: opts?.colorToken,
   })
 
   if (existing?.primaryManualOverride && existing.primary) {
@@ -486,6 +489,7 @@ function resolveSuggestionDisplayLabel(
     persistedLabel: prefs.displayLabel ?? suggestion.label,
     legacyColorName: enrichment?.legacy_color_name,
     productSkuHint,
+    seedImageUrls: suggestion.seedImageUrls,
   }).displayLabel
 }
 
@@ -591,12 +595,42 @@ function canUseIndexedArticle(enc: LegacyColorEnrichmentWithIndex | null): boole
   )
 }
 
-function extractColorToken(inv: InvItem): string | null {
+function pathNamesSelectedProduct(hay: string, selectedHandle: string, selectedSku: string): boolean {
+  const h = normHandle(selectedHandle)
+  const sku = normSku(selectedSku)
+  if (hay.includes(h)) return true
+  if (sku && hay.replace(/-/g, "").includes(sku.replace(/-/g, ""))) return true
+  return false
+}
+
+function extractColorToken(inv: InvItem, selectedHandle: string, selectedSku: string): string | null {
   const hay = `${inv.filename} ${inv.source_path || ""} ${inv.repo_relative_path || ""}`.toLowerCase()
   const m = hay.match(/(?:color|colour)[_-]([a-z0-9-]+)/)
   if (m?.[1]) return m[1]
-  const m2 = hay.match(/(?:^|[-_])(blue|grey|gray|cream|olive|green|white|beige|black|brown|graphite)(?:[-_.]|$)/i)
+  const explicit = explicitProductTokenFromMedia(inv)
+  const h = normHandle(selectedHandle)
+  if (explicit && explicit !== h && explicit !== normSku(selectedSku)) return null
+  if (!pathNamesSelectedProduct(hay, selectedHandle, selectedSku)) return null
+  const m2 = hay.match(
+    /(?:^|[-_])(blue|grey|gray|cream|milk|olive|green|white|beige|black|brown|graphite|ivory)(?:[-_.]|$)/i
+  )
   return m2?.[1]?.toLowerCase() ?? null
+}
+
+/** Default / milk / cream variant — filename first; seed only for neutral gallery hints (never blue/grey). */
+function inferDefaultColorToken(seedUrls: string[], filenames: string[]): string | null {
+  const hay = filenames.join(" ").toLowerCase()
+  if (/milk|молоч/i.test(hay)) return "milk"
+  if (/cream|крем|ivory|молок/i.test(hay)) return "cream"
+  if (/_gallery_\d+/i.test(hay)) return "cream"
+  if (/[-_]iso[-_]?\d|hero|main/i.test(hay)) return "cream"
+  if (/[-_]i\d+$/i.test(hay)) return "milk"
+  const seedHay = seedUrls.join(" ").toLowerCase()
+  if (/milk|молоч/i.test(seedHay)) return "milk"
+  if (/cream|крем|ivory|молок/i.test(seedHay)) return "cream"
+  if (/_gallery_|\/gallery_/i.test(seedHay)) return "cream"
+  if (/white|бел/i.test(seedHay)) return "white"
+  return null
 }
 
 function moveInventoryToZone(
@@ -1787,10 +1821,21 @@ export function LegacyMediaAssignmentBoardClient() {
     const invDedupeMap = invDoc?.items as InvItemDedupeFields[] | undefined
     for (const it of invDedupeMap ?? []) {
       const ce = candById.get(it.id)
-      const rawToken = extractColorToken(it)
-      const token = rawToken || "needs_review"
       const identity = classifyMediaProductIdentity(it, ce, handle, productSkuHint)
       if (identity.tier === "excluded") continue
+      const hayName = `${it.filename} ${it.source_path || ""}`.toLowerCase()
+      const rawToken = extractColorToken(it, h, productSkuHint)
+      let token = rawToken
+      if (!token) {
+        if (/_gallery_\d+/i.test(hayName)) {
+          token = inferDefaultColorToken(seedImageUrls, [it.filename]) ?? "cream"
+        } else {
+          const inferred =
+            inferDefaultColorToken(seedImageUrls, [it.filename]) ??
+            (identity.tier === "this_sku" ? inferDefaultColorToken(seedImageUrls, []) : null)
+          token = inferred || "needs_review"
+        }
+      }
       const baseKey = token === "needs_review" ? "color_needs_review" : `color_${token}`
       const variantKey = identity.tier === "needs_identity_review" ? `${baseKey}__review` : baseKey
       if (rejected.has(variantKey) || rejected.has(baseKey)) continue
@@ -1835,9 +1880,13 @@ export function LegacyMediaAssignmentBoardClient() {
       const isReview = variantKey.endsWith("__review")
       const rawIds = isReview ? v.reviewIds : v.thisSkuIds
       if (rawIds.length === 0) continue
-      const deduped = dedupeAndSortVariantMedia(rawIds, invMap, candById, { seedOrder: rawIds })
+      const colorNameRaw = variantKey.replace(/^color_/, "").replace(/__review$/, "")
+      const deduped = dedupeAndSortVariantMedia(rawIds, invMap, candById, {
+        seedOrder: rawIds,
+        selectedSku: productSkuHint || h,
+        colorToken: colorNameRaw === "needs_review" ? "" : colorNameRaw,
+      })
       if (deduped.visibleIds.length === 0) continue
-      const colorNameRaw = variantKey.replace(/^color_/, "").replace(/__review$/, "").replace(/^needs_review$/, "needs_review")
       const identityTier = isReview ? "needs_identity_review" : "this_sku"
       const reasons = Array.from(v.reasons)
       if (deduped.duplicateHiddenCount > 0) {
@@ -1870,6 +1919,15 @@ export function LegacyMediaAssignmentBoardClient() {
     }
     return out.sort((a, b) => {
       if (a.identityTier !== b.identityTier) return a.identityTier === "this_sku" ? -1 : 1
+      const order = (vk: string) => {
+        if (vk.includes("cream") || vk.includes("milk") || vk.includes("white") || vk.includes("needs_review")) return 0
+        if (vk.includes("blue")) return 1
+        if (vk.includes("grey") || vk.includes("gray")) return 2
+        return 3
+      }
+      const oa = order(a.variantKey)
+      const ob = order(b.variantKey)
+      if (oa !== ob) return oa - ob
       return b.mediaIds.length - a.mediaIds.length
     })
     },
@@ -2000,7 +2058,10 @@ export function LegacyMediaAssignmentBoardClient() {
     if (ordered.length === 0) return
 
     const invMap = new Map(invDoc.items.map((it) => [it.id, it]))
-    const media = buildVariantMediaFromCandidates(ordered, invMap, ordered, null)
+    const media = buildVariantMediaFromCandidates(ordered, invMap, ordered, candById, null, undefined, {
+      selectedSku: (selectedProduct.sku || "").trim(),
+      colorToken: "",
+    })
     const labelResolved = resolveVariantDisplayLabel({
       variantKey: DEFAULT_VARIANT_KEY,
       seedImageUrls: selectedProduct.image_urls,
@@ -2524,7 +2585,7 @@ export function LegacyMediaAssignmentBoardClient() {
       const ce = candById.get(it.id)
       const identity = classifyMediaProductIdentity(it, ce, handle, sku)
       if (identity.tier !== "this_sku") continue
-      const token = extractColorToken(it)
+      const token = extractColorToken(it, handle, sku)
       if (!token) continue
       const key = `color_${token}`
       if (rejected.has(key)) continue
@@ -2723,12 +2784,15 @@ export function LegacyMediaAssignmentBoardClient() {
                 }).labelStatus,
           }
         } else {
+          const colorTok = s.colorNameRaw && s.colorNameRaw !== "needs_review" ? s.colorNameRaw : ""
           const media = buildVariantMediaFromCandidates(
             candidateIds,
             invMap,
             candidateIds,
+            candById,
             existing ?? null,
-            existingMeta?.status
+            existingMeta?.status,
+            { selectedSku: s.productSkuHint, colorToken: colorTok }
           )
           variantUpdates[s.variantKey] = {
             label: labelResolved,
@@ -2740,9 +2804,10 @@ export function LegacyMediaAssignmentBoardClient() {
                   variantKey: s.variantKey,
                   legacyColorName: enc?.legacy_color_name,
                   productSkuHint: s.productSkuHint,
+                  seedImageUrls: s.seedImageUrls,
                 }).labelStatus,
-            primary: media.primary,
-            gallery: media.gallery,
+            primary: media.primary ?? s.primaryCandidateId,
+            gallery: media.gallery.length ? media.gallery : [...s.galleryCandidateIds],
             reference: existing?.reference ?? [],
             rejected: existing?.rejected ?? [],
             primaryManualOverride: media.primaryManualOverride,
@@ -3634,21 +3699,31 @@ export function LegacyMediaAssignmentBoardClient() {
                   legacyColorName: enc?.legacy_color_name,
                   productSkuHint,
                   preferLegacyColorName: prefs.useLegacyName,
+                  seedImageUrls: s.seedImageUrls,
                 }).labelStatus
-                const candidateIds = galleryPreview
                 const confirmedMeta = vmByHandle[s.variantKey]
-                const previewMedia = buildVariantMediaFromCandidates(
-                  candidateIds,
-                  invById,
-                  candidateIds,
-                  confirmedVariant ?? null,
-                  confirmedMeta?.status
-                )
-                const primaryPreviewId = confirmedVariant?.primary ?? previewMedia.primary
-                const galleryRest = (confirmedVariant ? confirmedVariant.gallery : previewMedia.gallery).filter(
-                  (id) => id && id !== primaryPreviewId
-                )
-                const galleryPreviewOrdered = primaryPreviewId ? [primaryPreviewId, ...galleryRest] : galleryRest
+                const primaryPreviewId = confirmedVariant?.primary ?? s.primaryCandidateId
+                const gallerySource = confirmedVariant ? confirmedVariant.gallery : s.galleryCandidateIds
+                const galleryRest = gallerySource.filter((id) => id && id !== primaryPreviewId && invById.get(id)?.previewable)
+                const primaryIsPreviewable = primaryPreviewId ? Boolean(invById.get(primaryPreviewId)?.previewable) : false
+                const galleryPreviewOrdered = (
+                  primaryPreviewId && primaryIsPreviewable ? [primaryPreviewId, ...galleryRest] : galleryRest
+                ).filter((id) => invById.get(id)?.previewable)
+                const previewMedia = confirmedVariant
+                  ? buildVariantMediaFromCandidates(
+                      [primaryPreviewId, ...gallerySource].filter(Boolean) as string[],
+                      invById,
+                      gallerySource,
+                      candById,
+                      confirmedVariant,
+                      confirmedMeta?.status,
+                      { selectedSku: s.productSkuHint, colorToken: s.colorNameRaw }
+                    )
+                  : {
+                      primary: s.primaryCandidateId,
+                      primaryAutoPicked: true,
+                      primaryNeedsReview: false,
+                    }
 
                 return (
                   <article

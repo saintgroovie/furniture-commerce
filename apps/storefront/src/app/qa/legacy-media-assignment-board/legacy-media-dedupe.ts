@@ -4,6 +4,7 @@
  */
 
 import type { CandidateEntry, InvItem } from "./legacy-media-board-types"
+import { explicitProductTokenFromMedia, normSku } from "./suggestion-product-guard"
 import { pickAutoPrimaryForCandidates, scorePrimaryCandidate } from "./legacy-variant-primary-heuristic"
 
 export type InvItemDedupeFields = InvItem & {
@@ -14,7 +15,11 @@ export type InvItemDedupeFields = InvItem & {
   size_bytes?: number | null
 }
 
-export type DedupeHideReason = "exact_duplicate" | "near_duplicate" | "possible_duplicate"
+export type DedupeHideReason =
+  | "exact_duplicate"
+  | "near_duplicate"
+  | "possible_duplicate"
+  | "preview_unavailable"
 
 export type DedupeHiddenItem = {
   mediaId: string
@@ -61,6 +66,10 @@ function normPath(p: string | null | undefined): string {
   return p.replace(/\\/g, "/").toLowerCase().split("?")[0]!.replace(/\/+/g, "/")
 }
 
+function haystackFor(inv: InvItemDedupeFields): string {
+  return `${inv.filename} ${inv.source_path || ""} ${inv.repo_relative_path || ""}`.toLowerCase()
+}
+
 export function isWhiteBgSourceHint(inv: InvItemDedupeFields): boolean {
   const hay = `${inv.source_type} ${inv.source_path || ""} ${inv.repo_relative_path || ""}`.toLowerCase()
   return (
@@ -69,11 +78,92 @@ export function isWhiteBgSourceHint(inv: InvItemDedupeFields): boolean {
   )
 }
 
+type ViewClass = "front_closed" | "front" | "open" | "side" | "detail" | "gallery" | "lifestyle" | "unknown"
+
+function classifyPhotoView(hay: string): ViewClass {
+  if (/closed|закрыт/.test(hay) && /front|frontal|фасад|фронт/.test(hay)) return "front_closed"
+  if (/front|frontal|фасад|фронт|hero|main/.test(hay)) return "front"
+  if (/open|opened|открыт|interior|inside|внутр/.test(hay)) return "open"
+  if (/side|back|angle|бок|зад/.test(hay)) return "side"
+  if (/detail|closeup|крупн/.test(hay)) return "detail"
+  if (/gallery|gal[_-]/.test(hay)) return "gallery"
+  if (/room|lifestyle|scheme|schema|схем/.test(hay)) return "lifestyle"
+  return "unknown"
+}
+
+function normalizePhotoIndex(raw: string): string {
+  if (raw === "x") return "x"
+  const t = raw.toLowerCase()
+  if (t.startsWith("i")) {
+    const n = parseInt(t.slice(1), 10)
+    return Number.isFinite(n) ? String(n) : t
+  }
+  const n = parseInt(t, 10)
+  return Number.isFinite(n) ? String(n) : t
+}
+
+function basenameForIndex(filename: string): string {
+  return String(filename || "")
+    .replace(/\\/g, "/")
+    .split("/")
+    .pop()!
+    .toLowerCase()
+    .replace(IMAGE_EXT_RE, "")
+}
+
+/** Image index from basename only — never from SKU segments like co-02-1. */
+function extractPhotoIndex(filename: string): string {
+  const base = basenameForIndex(filename)
+  const iEnd = base.match(/[-_]i(\d+)$/i)
+  if (iEnd) return normalizePhotoIndex(`i${iEnd[1]}`)
+  const colorIdx = base.match(/color_[a-z]+_(\d{1,2})$/i)
+  if (colorIdx) return normalizePhotoIndex(colorIdx[1]!)
+  const gal = base.match(/gallery_(\d{1,2})$/i)
+  if (gal) return normalizePhotoIndex(gal[1]!)
+  const trailColor = base.match(/(?:blue|grey|gray|olive|cream|milk|white|beige)[-_](\d{1,2})$/i)
+  if (trailColor) return normalizePhotoIndex(trailColor[1]!)
+  return "x"
+}
+
+function isProductColorShotBasename(base: string): boolean {
+  return (
+    /[-_]i\d+$/i.test(base) ||
+    /color_[a-z]+_\d/i.test(base) ||
+    /gallery_\d/i.test(base) ||
+    /[-_](blue|grey|gray|olive|cream|milk|white|beige)(?:[-_]|$)/i.test(base)
+  )
+}
+
+function viewBucket(view: ViewClass, filename: string): string {
+  const base = basenameForIndex(filename)
+  if (view === "front_closed" || view === "front" || view === "unknown" || view === "gallery") {
+    if (isProductColorShotBasename(base)) return "front"
+  }
+  if (view === "front_closed" || view === "front") return "front"
+  if (view === "unknown" || view === "gallery") return "hero"
+  return view
+}
+
+/** Same SKU + color + view + index → likely same visible shot (different legacy aliases). */
+export function photoViewDedupeKey(
+  inv: InvItemDedupeFields,
+  opts?: { selectedSku?: string; colorToken?: string }
+): string {
+  const base = basenameForIndex(inv.filename)
+  const sku = normSku(opts?.selectedSku || explicitProductTokenFromMedia(inv) || "")
+  const color = (opts?.colorToken || "any").toLowerCase().replace(/^color_/, "")
+  const view = viewBucket(classifyPhotoView(base), inv.filename)
+  const idx = extractPhotoIndex(inv.filename)
+  return `pv:${sku}|${color}|${view}|${idx}`
+}
+
 function galleryQualityScore(inv: InvItemDedupeFields, orderIndex: number): number {
-  const hay = `${inv.filename} ${inv.source_path || ""} ${inv.repo_relative_path || ""}`.toLowerCase()
+  const hay = haystackFor(inv)
   let s = scorePrimaryCandidate(inv, orderIndex, null)
   if (isWhiteBgSourceHint(inv)) s += 80
-  if (inv.previewable) s += 25
+  if (inv.previewable) s += 120
+  else s -= 200
+  if (inv.exists_locally) s += 15
   if (/interior|inside|open|opened|detail|lifestyle|room|scheme|schema|схем/i.test(hay)) s -= 35
   if (/side|back|angle/i.test(hay)) s -= 20
   return s
@@ -84,18 +174,18 @@ function canonicalScore(inv: InvItemDedupeFields, ce: CandidateEntry | undefined
   if (ce?.confidence === "confirmed") s += 40
   else if (ce?.confidence === "probable") s += 20
   if (ce?.top_candidate?.score) s += Math.min(ce.top_candidate.score, 30)
-  if (inv.exists_locally) s += 10
   return s
 }
 
 type Fingerprints = {
   exact: string
   near: string
+  view: string
   dg: string | null
   hash: string | null
 }
 
-function fingerprintsFor(inv: InvItemDedupeFields): Fingerprints {
+function fingerprintsFor(inv: InvItemDedupeFields, opts?: { selectedSku?: string; colorToken?: string }): Fingerprints {
   const rr = normPath(inv.repo_relative_path || inv.source_path)
   const bn = normalizeBasenameForDedupe(inv.filename)
   const exact = rr ? `path:${rr}` : inv.duplicate_group_key ? `dg:${inv.duplicate_group_key}` : `bn:${bn}|${inv.size_bytes ?? 0}|${inv.width ?? 0}x${inv.height ?? 0}`
@@ -108,6 +198,7 @@ function fingerprintsFor(inv: InvItemDedupeFields): Fingerprints {
   return {
     exact,
     near,
+    view: photoViewDedupeKey(inv, opts),
     dg: inv.duplicate_group_key ?? null,
     hash: inv.content_quick_hash ?? null,
   }
@@ -116,6 +207,7 @@ function fingerprintsFor(inv: InvItemDedupeFields): Fingerprints {
 function hideReasonFor(a: Fingerprints, b: Fingerprints): DedupeHideReason {
   if (a.exact === b.exact || (a.dg && a.dg === b.dg)) return "exact_duplicate"
   if (a.hash && a.hash === b.hash) return "exact_duplicate"
+  if (a.view === b.view) return "near_duplicate"
   if (a.near === b.near) return "near_duplicate"
   return "possible_duplicate"
 }
@@ -127,7 +219,7 @@ export function dedupeAndSortVariantMedia(
   mediaIds: string[],
   invById: Map<string, InvItemDedupeFields>,
   candById: Map<string, CandidateEntry>,
-  opts?: { seedOrder?: string[]; preserveGalleryOrder?: string[] }
+  opts?: { seedOrder?: string[]; preserveGalleryOrder?: string[]; selectedSku?: string; colorToken?: string }
 ): VariantMediaDedupeResult {
   const unique = Array.from(new Set(mediaIds.filter(Boolean)))
   if (unique.length === 0) {
@@ -141,10 +233,11 @@ export function dedupeAndSortVariantMedia(
     }
   }
 
+  const fpOpts = { selectedSku: opts?.selectedSku, colorToken: opts?.colorToken }
   const fps = new Map<string, Fingerprints>()
   for (const id of unique) {
     const inv = invById.get(id)
-    if (inv) fps.set(id, fingerprintsFor(inv))
+    if (inv) fps.set(id, fingerprintsFor(inv, fpOpts))
   }
 
   const parent = new Map<string, string>()
@@ -171,10 +264,15 @@ export function dedupeAndSortVariantMedia(
         unite(unique[i]!, unique[j]!)
         continue
       }
+      if (fi.view === fj.view) {
+        unite(unique[i]!, unique[j]!)
+        continue
+      }
       if (fi.near === fj.near) unite(unique[i]!, unique[j]!)
-      else if (normalizeBasenameForDedupe(invById.get(unique[i]!)?.filename || "") === normalizeBasenameForDedupe(invById.get(unique[j]!)?.filename || "")) {
-        if (fi.hash && fj.hash && fi.hash === fj.hash) unite(unique[i]!, unique[j]!)
-        else if (!fi.hash && !fj.hash) unite(unique[i]!, unique[j]!)
+      else {
+        const bnA = normalizeBasenameForDedupe(invById.get(unique[i]!)?.filename || "")
+        const bnB = normalizeBasenameForDedupe(invById.get(unique[j]!)?.filename || "")
+        if (bnA && bnA === bnB) unite(unique[i]!, unique[j]!)
       }
     }
   }
@@ -203,11 +301,11 @@ export function dedupeAndSortVariantMedia(
     const canonicalId = ranked[0]!
     visibleIds.push(canonicalId)
     const fpCanon = fps.get(canonicalId)!
-    const matchKey = fpCanon.dg || fpCanon.near || fpCanon.exact
+    const matchKey = fpCanon.view || fpCanon.dg || fpCanon.near || fpCanon.exact
     if (memberIds.length > 1) {
       duplicateGroups.push({
         matchKey,
-        reason: "exact_duplicate",
+        reason: hideReasonFor(fpCanon, fpCanon),
         canonicalMediaId: canonicalId,
         memberIds: [...memberIds],
       })
@@ -226,10 +324,27 @@ export function dedupeAndSortVariantMedia(
     }
   }
 
+  const previewableVisible = visibleIds.filter((id) => invById.get(id)?.previewable)
+  for (const id of visibleIds) {
+    if (!invById.get(id)?.previewable) {
+      const fallbackCanon = previewableVisible[0] ?? id
+      hiddenDuplicates.push({
+        mediaId: id,
+        reason: "preview_unavailable",
+        canonicalMediaId: fallbackCanon,
+        matchKey: "preview_unavailable",
+        filename: invById.get(id)?.filename,
+        sourcePath: invById.get(id)?.source_path ?? null,
+      })
+    }
+  }
+
+  const visiblePreviewable = previewableVisible.length > 0 ? previewableVisible : visibleIds
+
   const preserve = opts?.preserveGalleryOrder?.filter(Boolean) ?? []
   if (preserve.length > 0) {
     const orderIndex = new Map(preserve.map((id, i) => [id, i]))
-    visibleIds.sort((a, b) => {
+    visiblePreviewable.sort((a, b) => {
       const ia = orderIndex.get(a)
       const ib = orderIndex.get(b)
       if (ia == null && ib == null) {
@@ -242,7 +357,7 @@ export function dedupeAndSortVariantMedia(
       return ia - ib
     })
   } else {
-    visibleIds.sort((a, b) => {
+    visiblePreviewable.sort((a, b) => {
       const ia = invById.get(a)
       const ib = invById.get(b)
       const sa = ia ? galleryQualityScore(ia, unique.indexOf(a)) : 0
@@ -251,32 +366,38 @@ export function dedupeAndSortVariantMedia(
     })
   }
 
-  const pick = pickAutoPrimaryForCandidates(visibleIds, invById as Map<string, InvItem>, {
+  const pick = pickAutoPrimaryForCandidates(visiblePreviewable, invById as Map<string, InvItem>, {
     seedOrder: preserve.length > 0 ? preserve : opts?.seedOrder,
   })
 
-  const gallerySorted =
-    preserve.length > 0
-      ? pick.galleryIds.sort((a, b) => {
-          const ia = preserve.indexOf(a)
-          const ib = preserve.indexOf(b)
-          if (ia === -1 && ib === -1) return 0
-          if (ia === -1) return 1
-          if (ib === -1) return -1
-          return ia - ib
-        })
-      : pick.galleryIds.sort((a, b) => {
-          const ia = invById.get(a)
-          const ib = invById.get(b)
-          return (ib ? galleryQualityScore(ib, 0) : 0) - (ia ? galleryQualityScore(ia, 0) : 0)
-        })
+  let gallerySorted = pick.galleryIds.filter((id) => visiblePreviewable.includes(id))
+  if (preserve.length > 0) {
+    gallerySorted = gallerySorted.sort((a, b) => {
+      const ia = preserve.indexOf(a)
+      const ib = preserve.indexOf(b)
+      if (ia === -1 && ib === -1) return 0
+      if (ia === -1) return 1
+      if (ib === -1) return -1
+      return ia - ib
+    })
+  } else {
+    gallerySorted = gallerySorted.sort((a, b) => {
+      const ia = invById.get(a)
+      const ib = invById.get(b)
+      return (ib ? galleryQualityScore(ib, 0) : 0) - (ia ? galleryQualityScore(ia, 0) : 0)
+    })
+  }
+
+  const allHidden = hiddenDuplicates.filter(
+    (h, i, arr) => arr.findIndex((x) => x.mediaId === h.mediaId) === i
+  )
 
   return {
-    visibleIds,
-    hiddenDuplicates,
+    visibleIds: visiblePreviewable,
+    hiddenDuplicates: allHidden,
     duplicateGroups,
-    duplicateHiddenCount: hiddenDuplicates.length,
-    primaryCandidateId: pick.primaryId,
+    duplicateHiddenCount: allHidden.length,
+    primaryCandidateId: pick.primaryId && visiblePreviewable.includes(pick.primaryId) ? pick.primaryId : visiblePreviewable[0] ?? null,
     galleryCandidateIds: gallerySorted,
   }
 }
