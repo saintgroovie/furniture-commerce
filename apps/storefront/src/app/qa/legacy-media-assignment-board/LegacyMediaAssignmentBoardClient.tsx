@@ -31,6 +31,7 @@ import {
   type VariantLabelFields,
   type VariantLabelStatus,
 } from "./legacy-color-variant-labels"
+import { dedupeAndSortVariantMedia, type InvItemDedupeFields } from "./legacy-media-dedupe"
 import { pickAutoPrimaryForCandidates } from "./legacy-variant-primary-heuristic"
 import { matchAllSeedUrls, orderedInventoryIdsFromSeedUrls, type SeedUrlMatchRow } from "./seed-inventory-match"
 import { classifyMediaProductIdentity } from "./suggestion-product-guard"
@@ -59,8 +60,8 @@ const UNKNOWN_COLLECTION = "__unknown__"
 const API_BASE = "/qa/legacy-media-assignment-board/api"
 const PREVIEW_ROUTE = "/qa/legacy-media-assignment-board/preview"
 const DND_JSON = "application/json"
-const DEV_SENTINEL = "Legacy Board Primary-first variant workspace layout"
-const DEV_SENTINEL_BUILD = "2026-05-16T22:00Z"
+const DEV_SENTINEL = "Legacy Board source dedupe + clean suggestions"
+const DEV_SENTINEL_BUILD = "2026-05-16T23:30Z"
 
 async function fetchBoardJson(url: string): Promise<{ ok: true; data: Record<string, unknown> } | { ok: false; status: number; body: Record<string, unknown> }> {
   const res = await fetch(url)
@@ -398,10 +399,12 @@ function canUseIndexedArticle(enc: LegacyColorEnrichmentWithIndex | null): boole
   )
 }
 
-function extractColorToken(inv: InvItem): string {
+function extractColorToken(inv: InvItem): string | null {
   const hay = `${inv.filename} ${inv.source_path || ""} ${inv.repo_relative_path || ""}`.toLowerCase()
   const m = hay.match(/(?:color|colour)[_-]([a-z0-9-]+)/)
-  return m?.[1] || ""
+  if (m?.[1]) return m[1]
+  const m2 = hay.match(/(?:^|[-_])(blue|grey|gray|cream|olive|green|white|beige|black|brown|graphite)(?:[-_.]|$)/i)
+  return m2?.[1]?.toLowerCase() ?? null
 }
 
 function moveInventoryToZone(
@@ -1575,16 +1578,20 @@ export function LegacyMediaAssignmentBoardClient() {
       foreignSku: string | null
     }
     const groups = new Map<string, GroupAcc>()
-    for (const it of invDoc?.items ?? []) {
+    const invDedupeMap = invDoc?.items as InvItemDedupeFields[] | undefined
+    for (const it of invDedupeMap ?? []) {
       const ce = candById.get(it.id)
-      const token = extractColorToken(it)
-      if (!token) continue
+      const rawToken = extractColorToken(it)
+      const token = rawToken || "needs_review"
       const identity = classifyMediaProductIdentity(it, ce, handle, productSkuHint)
       if (identity.tier === "excluded") continue
-      const baseKey = `color_${token}`
+      const baseKey = token === "needs_review" ? "color_needs_review" : `color_${token}`
       const variantKey = identity.tier === "needs_identity_review" ? `${baseKey}__review` : baseKey
       if (rejected.has(variantKey) || rejected.has(baseKey)) continue
-      const baseRu = displayLabelFromColorToken(token, { productSkuHint })
+      const baseRu =
+        token === "needs_review"
+          ? LABEL_NEEDS_REVIEW_RU
+          : displayLabelFromColorToken(token, { productSkuHint }) || LABEL_NEEDS_REVIEW_RU
       const current = groups.get(variantKey) ?? {
         label: identity.tier === "needs_identity_review" ? reviewSuffixRu(baseRu) : baseRu,
         sourceUrl: it.legacy_product_url || it.page_url || it.url || null,
@@ -1617,32 +1624,42 @@ export function LegacyMediaAssignmentBoardClient() {
       groups.set(variantKey, current)
     }
     const out: SuggestedVariant[] = []
+    const invMap = new Map((invDedupeMap ?? []).map((row) => [row.id, row]))
     for (const [variantKey, v] of Array.from(groups.entries())) {
       const isReview = variantKey.endsWith("__review")
-      const mediaIds = isReview ? v.reviewIds : v.thisSkuIds
-      if (mediaIds.length === 0) continue
-      const colorNameRaw = variantKey.replace(/^color_/, "").replace(/__review$/, "")
+      const rawIds = isReview ? v.reviewIds : v.thisSkuIds
+      if (rawIds.length === 0) continue
+      const deduped = dedupeAndSortVariantMedia(rawIds, invMap, candById, { seedOrder: rawIds })
+      if (deduped.visibleIds.length === 0) continue
+      const colorNameRaw = variantKey.replace(/^color_/, "").replace(/__review$/, "").replace(/^needs_review$/, "needs_review")
       const identityTier = isReview ? "needs_identity_review" : "this_sku"
+      const reasons = Array.from(v.reasons)
+      if (deduped.duplicateHiddenCount > 0) {
+        reasons.push(`dedupe: ${deduped.duplicateHiddenCount} duplicate(s) hidden from card`)
+      }
       out.push({
         variantKey,
         label: v.label,
         colorNameRaw,
         productSkuHint,
-        filenameColorToken: colorNameRaw,
+        filenameColorToken: colorNameRaw === "needs_review" ? "" : colorNameRaw,
         candidateMapSku: v.candidateMapSku,
         candidatePageUrls: Array.from(v.pageUrlCandidates.entries()).map(([url, source]) => ({ url, source })),
         seedImageUrls,
         sourceUrl: v.sourceUrl,
         sourcePathHints: Array.from(v.sourcePathHints).slice(0, 3),
-        mediaIds,
-        primaryCandidateId: mediaIds[0] || null,
-        galleryCandidateIds: mediaIds.slice(1),
+        mediaIds: deduped.visibleIds,
+        primaryCandidateId: deduped.primaryCandidateId,
+        galleryCandidateIds: deduped.galleryCandidateIds,
         confidence: identityTier === "this_sku" ? v.confidence : "low",
-        reasons: Array.from(v.reasons),
+        reasons,
         identityTier,
         identityNotes: Array.from(v.identityNotes).slice(0, 6),
         foreignHandle: v.foreignHandle,
         foreignSku: v.foreignSku,
+        hiddenDuplicateIds: deduped.hiddenDuplicates.map((d) => d.mediaId),
+        duplicateHiddenCount: deduped.duplicateHiddenCount,
+        duplicateGroups: deduped.duplicateGroups,
       })
     }
     return out.sort((a, b) => {
@@ -2537,6 +2554,7 @@ export function LegacyMediaAssignmentBoardClient() {
     const confirmAllVisible = () => confirmAllForSuggestions(suggestions.filter((s) => s.identityTier === "this_sku"))
     const confirmHighConfidence = () =>
       confirmAllForSuggestions(suggestions.filter((s) => s.identityTier === "this_sku" && s.confidence === "high"))
+    const totalDuplicatesHidden = suggestions.reduce((n, s) => n + (s.duplicateHiddenCount || 0), 0)
     const skipCurrentProduct = () => {
       goToNextProductWithSuggestions(h)
     }
@@ -3253,6 +3271,12 @@ export function LegacyMediaAssignmentBoardClient() {
                 >
                   <strong>{totalSuggestions}</strong> suggestion{totalSuggestions === 1 ? "" : "s"} · <strong>{confirmedSuggestionCount}</strong> confirmed ·{" "}
                   <strong>{leftSuggestionCount}</strong> left
+                  {totalDuplicatesHidden > 0 ? (
+                    <>
+                      {" "}
+                      · <strong data-dedupe-hidden-count="true">{totalDuplicatesHidden}</strong> duplicate{totalDuplicatesHidden === 1 ? "" : "s"} hidden
+                    </>
+                  ) : null}
                 </span>
               ) : (
                 <span style={{ fontSize: 11, color: "#94a3b8" }}>no suggestions</span>
@@ -3405,6 +3429,15 @@ export function LegacyMediaAssignmentBoardClient() {
                         </strong>
                         {labelNeedsReviewStyle(suggestionLabelStatus) ? (
                           <span style={{ ...pillSlate, background: "#fef3c7", color: "#92400e" }}>уточните название</span>
+                        ) : null}
+                        {s.duplicateHiddenCount > 0 ? (
+                          <span
+                            data-suggestion-dedupe-badge="true"
+                            style={{ ...pillSlate, background: "#f1f5f9", color: "#475569" }}
+                            title="Дубликаты скрыты из основной полосы — см. Details"
+                          >
+                            +{s.duplicateHiddenCount} duplicate{s.duplicateHiddenCount === 1 ? "" : "s"} hidden
+                          </span>
                         ) : null}
                         <span style={pillIndigo}>{s.confidence}</span>
                         <span
@@ -3697,6 +3730,20 @@ export function LegacyMediaAssignmentBoardClient() {
                               {s.colorNameRaw} · {sourceLabelForVariantKey(s.variantKey)}
                             </strong>
                           </div>
+                          {s.duplicateHiddenCount > 0 ? (
+                            <div style={{ marginTop: 6 }} data-suggestion-hidden-duplicates="true">
+                              <strong>Duplicates hidden ({s.duplicateHiddenCount})</strong>
+                              <ul style={{ margin: "4px 0 0", paddingLeft: 16, fontSize: 10, color: "#64748b" }}>
+                                {s.duplicateGroups.slice(0, 6).map((g) => (
+                                  <li key={g.matchKey} style={{ marginBottom: 4 }}>
+                                    <span style={{ color: "#94a3b8" }}>{g.reason}</span> · canonical{" "}
+                                    <code style={{ fontSize: 9 }}>{g.canonicalMediaId.slice(0, 12)}…</code>
+                                    {g.memberIds.length > 2 ? ` · ${g.memberIds.length} files` : null}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          ) : null}
                           <div style={{ marginTop: 2 }}>
                             Matched PDP:{" "}
                             {enc?.indexed_pdp_url ? (

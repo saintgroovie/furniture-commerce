@@ -20,6 +20,12 @@ export type InvItem = {
   url?: string | null
   page_url?: string | null
   legacy_product_url?: string | null
+  /** From legacy-media-inventory.json — exact duplicate grouping. */
+  duplicate_group_key?: string | null
+  content_quick_hash?: string | null
+  width?: number | null
+  height?: number | null
+  size_bytes?: number | null
 }
 
 export type CandidateEntry = {
@@ -126,6 +132,15 @@ export type SuggestedVariant = {
   identityNotes: string[]
   foreignHandle: string | null
   foreignSku: string | null
+  /** Deduped out of main card strip; shown in Details. */
+  hiddenDuplicateIds: string[]
+  duplicateHiddenCount: number
+  duplicateGroups: Array<{
+    matchKey: string
+    reason: string
+    canonicalMediaId: string
+    memberIds: string[]
+  }>
 }
 
 /** Pointer-based drag session (QA board only; not persisted). */

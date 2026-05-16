@@ -1,0 +1,392 @@
+{
+  "audit_meta": {
+    "pass_name": "legacy_media_source_dedupe_audit",
+    "pass_kind": "read_only_no_apply",
+    "generated_at": "2026-05-16T22:53:34.701Z",
+    "generated_by": "scripts/build-legacy-media-source-dedupe-audit.mjs",
+    "constraints": [
+      "No Medusa/seed/catalog-scope/production apply.",
+      "Yandex roots scanned read-only when mounted; no asset copy into repo.",
+      "Board suggestions use legacy-media-dedupe.ts client-side grouping."
+    ]
+  },
+  "source_availability": {
+    "legacy_inventory": true,
+    "legacy_inventory_items": 3439,
+    "candidate_map": true,
+    "candidate_map_rows": 3439,
+    "board_products_index": true,
+    "board_product_count": 194,
+    "seed_products": true,
+    "entity_mapping": true,
+    "product_workbook_map": true,
+    "parsed_workbook_sheets": true,
+    "retail_price_xlsx": true
+  },
+  "yandex_white_bg_roots": [
+    {
+      "path": "/WOODRIGHT/Контент /Фото на белом фоне",
+      "mounted": false,
+      "image_count_estimate": 0
+    },
+    {
+      "path": "/Users/leonidmbp/Yandex.Disk/WOODRIGHT/Контент /Фото на белом фоне",
+      "mounted": false,
+      "image_count_estimate": 0
+    },
+    {
+      "path": "/Users/leonidmbp/Yandex Disk/WOODRIGHT/Контент /Фото на белом фоне",
+      "mounted": false,
+      "image_count_estimate": 0
+    }
+  ],
+  "yandex_mounted_count": 0,
+  "yandex_image_estimate_total": 0,
+  "sku_match_summary": {
+    "board_skus": 194,
+    "price_list_skus": 145,
+    "inventory_skus": 678,
+    "matched_board_price_inventory": 4,
+    "inventory_skus_not_in_price_list": 659,
+    "price_list_skus_without_inventory_media": 126,
+    "board_skus_without_price_list_match": 108,
+    "sample_inventory_not_in_price": [
+      "co-02-1",
+      "co-05-1",
+      "co-08-1",
+      "co-14-2",
+      "co-15-2",
+      "co-61-1",
+      "co-62-1",
+      "co-62-2",
+      "co-62-3",
+      "co-65-1",
+      "co-65-2",
+      "co-66-1",
+      "co-69-1",
+      "gr-02-1",
+      "gr-02-2",
+      "gr-05-1",
+      "gr-08-1",
+      "gr-08-2",
+      "gr-09-1",
+      "gr-26-1"
+    ],
+    "sample_price_without_media": [
+      "ww-55-1",
+      "ww-84-2",
+      "ww-84-1",
+      "ww-57-2",
+      "ww-57-1",
+      "ww-09-1",
+      "ww-09-2",
+      "ww-86-1",
+      "ww-05-3",
+      "ww-05-4",
+      "ww-05-1",
+      "ww-05-2",
+      "ww-85-1",
+      "ww-95-1",
+      "ww-95-3",
+      "ww-15-1",
+      "ww-15-2",
+      "ww-14-1",
+      "ww-14-2",
+      "ww-13-1"
+    ],
+    "sample_board_without_price": [
+      "co-02-1",
+      "co-05-1",
+      "co-08-1",
+      "co-14-2",
+      "co-15-2",
+      "co-61-1",
+      "co-62-1",
+      "co-62-2",
+      "co-62-3",
+      "co-65-1",
+      "co-65-2",
+      "co-66-1",
+      "co-69-1",
+      "ol-00-1",
+      "ol-01-2",
+      "ol-02-1",
+      "ol-03-1",
+      "ol-05-1",
+      "ol-05-2",
+      "ol-05-3"
+    ]
+  },
+  "duplicate_summary": {
+    "duplicate_group_multi": 642,
+    "hash_basename_multi": 1069,
+    "basename_multi": 1070,
+    "inventory_items_total": 3439,
+    "top_duplicate_heavy_skus": [
+      {
+        "sku": "ol-23-1",
+        "inventory_items": 78,
+        "duplicate_groups_with_2plus": 26,
+        "example_filenames": [
+          "OL-23-1_color_leona_01.jpg",
+          "OL-23-1_color_leona_01.jpg",
+          "OL-23-1_color_leona_02.jpg",
+          "OL-23-1_color_leona_02.jpg",
+          "OL-23-1_color_leona_03.jpg",
+          "OL-23-1_color_leona_03.jpg"
+        ]
+      },
+      {
+        "sku": "gr-26-1",
+        "inventory_items": 75,
+        "duplicate_groups_with_2plus": 25,
+        "example_filenames": [
+          "GR-26-1_gallery_01.jpg",
+          "GR-26-1_gallery_01.jpg",
+          "GR-26-1_gallery_02.jpg",
+          "GR-26-1_gallery_02.jpg",
+          "GR-26-1_gallery_03.jpg",
+          "GR-26-1_gallery_03.jpg"
+        ]
+      },
+      {
+        "sku": "gr-02-1",
+        "inventory_items": 69,
+        "duplicate_groups_with_2plus": 23,
+        "example_filenames": [
+          "GR-02-1_gallery_01.jpg",
+          "GR-02-1_gallery_01.jpg",
+          "GR-02-1_gallery_02.jpg",
+          "GR-02-1_gallery_02.jpg",
+          "GR-02-1_gallery_03.jpg",
+          "GR-02-1_gallery_03.jpg"
+        ]
+      },
+      {
+        "sku": "gr-08-2",
+        "inventory_items": 66,
+        "duplicate_groups_with_2plus": 22,
+        "example_filenames": [
+          "GR-08-2_gallery_01.jpg",
+          "GR-08-2_gallery_01.jpg",
+          "GR-08-2_gallery_02.jpg",
+          "GR-08-2_gallery_02.jpg",
+          "GR-08-2_gallery_03.jpg",
+          "GR-08-2_gallery_03.jpg"
+        ]
+      },
+      {
+        "sku": "gr-08-1",
+        "inventory_items": 63,
+        "duplicate_groups_with_2plus": 21,
+        "example_filenames": [
+          "GR-08-1_gallery_01.jpg",
+          "GR-08-1_gallery_01.jpg",
+          "GR-08-1_gallery_02.jpg",
+          "GR-08-1_gallery_02.jpg",
+          "GR-08-1_gallery_03.jpg",
+          "GR-08-1_gallery_03.jpg"
+        ]
+      },
+      {
+        "sku": "gr-67-1",
+        "inventory_items": 63,
+        "duplicate_groups_with_2plus": 21,
+        "example_filenames": [
+          "GR-67-1_gallery_01.jpg",
+          "GR-67-1_gallery_01.jpg",
+          "GR-67-1_gallery_02.jpg",
+          "GR-67-1_gallery_02.jpg",
+          "GR-67-1_gallery_03.jpg",
+          "GR-67-1_gallery_03.jpg"
+        ]
+      },
+      {
+        "sku": "gr-02-2",
+        "inventory_items": 60,
+        "duplicate_groups_with_2plus": 20,
+        "example_filenames": [
+          "GR-02-2_gallery_01.jpg",
+          "GR-02-2_gallery_01.jpg",
+          "GR-02-2_gallery_02.jpg",
+          "GR-02-2_gallery_02.jpg",
+          "GR-02-2_gallery_03.jpg",
+          "GR-02-2_gallery_03.jpg"
+        ]
+      },
+      {
+        "sku": "gr-44-1",
+        "inventory_items": 60,
+        "duplicate_groups_with_2plus": 20,
+        "example_filenames": [
+          "GR-44-1_gallery_01.jpg",
+          "GR-44-1_gallery_01.jpg",
+          "GR-44-1_gallery_02.jpg",
+          "GR-44-1_gallery_02.jpg",
+          "GR-44-1_gallery_03.jpg",
+          "GR-44-1_gallery_03.jpg"
+        ]
+      },
+      {
+        "sku": "gr-05-1",
+        "inventory_items": 48,
+        "duplicate_groups_with_2plus": 16,
+        "example_filenames": [
+          "GR-05-1_gallery_01.jpg",
+          "GR-05-1_gallery_01.jpg",
+          "GR-05-1_gallery_02.jpg",
+          "GR-05-1_gallery_02.jpg",
+          "GR-05-1_gallery_03.jpg",
+          "GR-05-1_gallery_03.jpg"
+        ]
+      },
+      {
+        "sku": "co-62-1",
+        "inventory_items": 30,
+        "duplicate_groups_with_2plus": 10,
+        "example_filenames": [
+          "CO-62-1_color_blue_01.jpg",
+          "CO-62-1_color_blue_01.jpg",
+          "CO-62-1_color_blue_02.jpg",
+          "CO-62-1_color_blue_02.jpg",
+          "CO-62-1_color_grey_01.jpg",
+          "CO-62-1_color_grey_01.jpg"
+        ]
+      },
+      {
+        "sku": "co-65-1",
+        "inventory_items": 30,
+        "duplicate_groups_with_2plus": 10,
+        "example_filenames": [
+          "CO-65-1_color_blue_01.jpg",
+          "CO-65-1_color_blue_01.jpg",
+          "CO-65-1_color_blue_02.jpg",
+          "CO-65-1_color_blue_02.jpg",
+          "CO-65-1_color_grey_01.jpg",
+          "CO-65-1_color_grey_01.jpg"
+        ]
+      },
+      {
+        "sku": "co-02-1",
+        "inventory_items": 27,
+        "duplicate_groups_with_2plus": 9,
+        "example_filenames": [
+          "CO-02-1_color_blue_01.jpg",
+          "CO-02-1_color_blue_01.jpg",
+          "CO-02-1_color_blue_02.jpg",
+          "CO-02-1_color_blue_02.jpg",
+          "CO-02-1_color_grey_01.jpg",
+          "CO-02-1_color_grey_01.jpg"
+        ]
+      }
+    ],
+    "example_exact_duplicate_groups": [
+      {
+        "duplicate_group_key": "dg_489f55e2a2d1789e2f11",
+        "sku_hint": "co-02-1",
+        "filenames": [
+          "CO-02-1_color_blue_01.jpg",
+          "CO-02-1_color_blue_01.jpg"
+        ],
+        "paths": [
+          "apps/backend/static/products/country-london-paris/CO-02-1_color_blue_01.jpg",
+          "data/processed/storefront-assets/country-london-paris/CO-02-1_color_blue_01.jpg"
+        ]
+      },
+      {
+        "duplicate_group_key": "dg_bcb4ed76f17fcc7ff930",
+        "sku_hint": "co-02-1",
+        "filenames": [
+          "CO-02-1_color_blue_02.jpg",
+          "CO-02-1_color_blue_02.jpg"
+        ],
+        "paths": [
+          "apps/backend/static/products/country-london-paris/CO-02-1_color_blue_02.jpg",
+          "data/processed/storefront-assets/country-london-paris/CO-02-1_color_blue_02.jpg"
+        ]
+      },
+      {
+        "duplicate_group_key": "dg_8dac598d2387852fcbb1",
+        "sku_hint": "co-02-1",
+        "filenames": [
+          "CO-02-1_color_grey_01.jpg",
+          "CO-02-1_color_grey_01.jpg"
+        ],
+        "paths": [
+          "apps/backend/static/products/country-london-paris/CO-02-1_color_grey_01.jpg",
+          "data/processed/storefront-assets/country-london-paris/CO-02-1_color_grey_01.jpg"
+        ]
+      },
+      {
+        "duplicate_group_key": "dg_6c1795bbca124d401254",
+        "sku_hint": "co-02-1",
+        "filenames": [
+          "CO-02-1_color_grey_02.jpg",
+          "CO-02-1_color_grey_02.jpg"
+        ],
+        "paths": [
+          "apps/backend/static/products/country-london-paris/CO-02-1_color_grey_02.jpg",
+          "data/processed/storefront-assets/country-london-paris/CO-02-1_color_grey_02.jpg"
+        ]
+      },
+      {
+        "duplicate_group_key": "dg_5bf811703a50b6668dd3",
+        "sku_hint": "co-02-1",
+        "filenames": [
+          "CO-02-1_color_olive_01.jpg",
+          "CO-02-1_color_olive_01.jpg"
+        ],
+        "paths": [
+          "apps/backend/static/products/country-london-paris/CO-02-1_color_olive_01.jpg",
+          "data/processed/storefront-assets/country-london-paris/CO-02-1_color_olive_01.jpg"
+        ]
+      },
+      {
+        "duplicate_group_key": "dg_b085a8ba5fe3d0711fbb",
+        "sku_hint": "co-02-1",
+        "filenames": [
+          "CO-02-1_color_olive_02.jpg",
+          "CO-02-1_color_olive_02.jpg"
+        ],
+        "paths": [
+          "apps/backend/static/products/country-london-paris/CO-02-1_color_olive_02.jpg",
+          "data/processed/storefront-assets/country-london-paris/CO-02-1_color_olive_02.jpg"
+        ]
+      },
+      {
+        "duplicate_group_key": "dg_b727e7558e0bbe3385f5",
+        "sku_hint": "co-02-1",
+        "filenames": [
+          "CO-02-1_gallery_01.jpg",
+          "CO-02-1_gallery_01.jpg"
+        ],
+        "paths": [
+          "apps/backend/static/products/country-london-paris/CO-02-1_gallery_01.jpg",
+          "data/processed/storefront-assets/country-london-paris/CO-02-1_gallery_01.jpg"
+        ]
+      },
+      {
+        "duplicate_group_key": "dg_ded3cdabc1a17f17e61f",
+        "sku_hint": "co-02-1",
+        "filenames": [
+          "CO-02-1_gallery_02.jpg",
+          "CO-02-1_gallery_02.jpg"
+        ],
+        "paths": [
+          "apps/backend/static/products/country-london-paris/CO-02-1_gallery_02.jpg",
+          "data/processed/storefront-assets/country-london-paris/CO-02-1_gallery_02.jpg"
+        ]
+      }
+    ]
+  },
+  "board_suggestion_changes": {
+    "description": "Legacy Media Assignment Board groups suggestions per SKU+color, dedupes exact/near duplicates via duplicate_group_key/content_quick_hash/basename, picks canonical white-bg/previewable primary, hides duplicates from card strip (Details only).",
+    "confirm_all_uses_deduped_gallery": true,
+    "color_needs_review_bucket": "color_needs_review when filename has no color token"
+  },
+  "manual_followups": [
+    "SKUs in inventory but not in price list need workbook row or naming fix.",
+    "Mounted Yandex roots: verify white-bg files are linked in inventory on next inventory rebuild (out of scope here).",
+    "possible_duplicate near-matches still require human review in Details."
+  ]
+}
