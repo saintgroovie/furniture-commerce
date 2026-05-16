@@ -268,6 +268,16 @@ See `docs/storefront/legacy-media-product-candidate-map.md`.
 
 ---
 
+## Rules sync (QA preview / apply)
+
+Board-wide dry-run and optional apply for current rules (identity, visual roles, dedupe, same-SKU borrow, label/order protection). See [`legacy-media-board-sync-rules.md`](legacy-media-board-sync-rules.md).
+
+- UI: **Синхронизировать по правилам** on the review canvas.
+- Module: `legacy-board-sync-rules.ts`
+- Script: `node apps/storefront/scripts/legacy-board-sync-preview.mjs`
+
+---
+
 ## Next safe step (out of scope)
 
 A **separate gated executor** may consume approved export JSON — **not** part of this board and **not** invoked from this UI.

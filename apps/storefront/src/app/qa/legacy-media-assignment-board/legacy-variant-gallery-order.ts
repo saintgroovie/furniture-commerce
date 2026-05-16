@@ -2,7 +2,7 @@
  * QA-only: preserve user-defined gallery order for legacy media board variants.
  */
 
-export type GalleryOrderSource = "manual" | "seed" | "suggestion" | "auto" | "recommended"
+export type GalleryOrderSource = "manual" | "seed" | "suggestion" | "auto" | "recommended" | "rules"
 
 export type VariantGalleryOrderFields = {
   gallery: string[]

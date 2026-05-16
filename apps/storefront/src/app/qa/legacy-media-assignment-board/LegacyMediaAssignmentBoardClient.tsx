@@ -39,6 +39,12 @@ import {
   type BorrowedSameSkuEntry,
 } from "./legacy-media-variant-gallery-build"
 import {
+  applyProductSyncPlan,
+  buildBoardSyncPlan,
+  buildSuggestedVariantsForProductSync,
+  type BoardSyncPlan,
+} from "./legacy-board-sync-rules"
+import {
   mergeGalleryPreservingOrder,
   variantHasEstablishedGalleryOrder,
   withManualGalleryOrder,
@@ -995,6 +1001,8 @@ export function LegacyMediaAssignmentBoardClient() {
   const [variantMetaByHandle, setVariantMetaByHandle] = useState<VariantMetaByHandle>({})
   const [activeVariantByHandle, setActiveVariantByHandle] = useState<Record<string, string>>({})
   const [rejectedSuggestedVariantsByHandle, setRejectedSuggestedVariantsByHandle] = useState<Record<string, string[]>>({})
+  const [boardSyncPlan, setBoardSyncPlan] = useState<BoardSyncPlan | null>(null)
+  const [syncPanelOpen, setSyncPanelOpen] = useState(false)
   type EnrichmentCacheEntry = { loading: boolean; data: LegacyColorEnrichmentWithIndex | null; error: string | null }
   const [enrichmentByKey, setEnrichmentByKey] = useState<Record<string, EnrichmentCacheEntry>>({})
   type SuggestionPref = {
@@ -1424,6 +1432,90 @@ export function LegacyMediaAssignmentBoardClient() {
     }
     return list
   }, [products, sidebarCollection, search, productAdvanced, candDoc, board.zones])
+
+  const runBoardSyncPreview = useCallback(
+    (scope: "current" | "collection") => {
+      if (!invDoc?.items?.length) return
+      const handles =
+        scope === "current" && selectedHandle
+          ? [selectedHandle.toLowerCase()]
+          : productsFiltered.map((p) => p.handle.toLowerCase())
+      const plan = buildBoardSyncPlan({
+        products,
+        invItems: invDoc.items,
+        candById,
+        variantsByHandle,
+        variantMetaByHandle,
+        rejectedSuggestedVariantsByHandle,
+        productHandles: handles,
+      })
+      setBoardSyncPlan(plan)
+      setSyncPanelOpen(true)
+    },
+    [
+      invDoc,
+      products,
+      productsFiltered,
+      selectedHandle,
+      candById,
+      variantsByHandle,
+      variantMetaByHandle,
+      rejectedSuggestedVariantsByHandle,
+    ]
+  )
+
+  const applyBoardSync = useCallback(
+    (scope: "current" | "collection", safeOnly: boolean) => {
+      if (!boardSyncPlan) return
+      const handles =
+        scope === "current" && selectedHandle
+          ? [selectedHandle.toLowerCase()]
+          : boardSyncPlan.products.map((p) => p.handle)
+      const msg = safeOnly
+        ? `Применить только безопасные изменения (${handles.length} товаров)? Ручной порядок gallery и user labels не перезаписываются.`
+        : `Применить изменения по правилам sync (${handles.length} товаров)? Primary/gallery обновятся где не защищено вручную.`
+      if (!window.confirm(msg)) return
+
+      const zonesPatch: Record<string, ProductZoneState> = {}
+      setVariantsByHandle((prev) => {
+        const next = { ...prev }
+        for (const handle of handles) {
+          const productPlan = boardSyncPlan.products.find((p) => p.handle === handle)
+          if (!productPlan) continue
+          const activeKey = activeVariantByHandle[handle] ?? null
+          const result = applyProductSyncPlan({
+            plan: productPlan,
+            variants: next[handle] ?? {},
+            activeVariantKey: activeKey,
+            safeOnly,
+          })
+          next[handle] = result.variants as Record<string, VariantDecisionState>
+          if (result.activeZonesMirror && activeKey && result.variants[activeKey]) {
+            const prevZones = boardRef.current.zones[handle] ?? emptyZones()
+            zonesPatch[handle] = {
+              primary: result.activeZonesMirror.primary,
+              gallery: [...result.activeZonesMirror.gallery],
+              reference_only: [...prevZones.reference_only],
+              lane_rejected: [...prevZones.lane_rejected],
+            }
+          }
+        }
+        return next
+      })
+      if (Object.keys(zonesPatch).length > 0) {
+        setBoard((prev) => ({ ...prev, zones: { ...prev.zones, ...zonesPatch } }))
+      }
+      runBoardSyncPreview(scope)
+      setDiag((d) => ({
+        ...d,
+        stateUpdateRequested: true,
+        stateActuallyChanged: true,
+        lastAction: `sync apply ${safeOnly ? "safe" : "all"} · ${handles.length} product(s)`,
+        lastError: "",
+      }))
+    },
+    [boardSyncPlan, selectedHandle, activeVariantByHandle, runBoardSyncPreview]
+  )
 
   useEffect(() => {
     if (selectedHandle) return
@@ -1865,202 +1957,31 @@ export function LegacyMediaAssignmentBoardClient() {
 
   const buildSuggestedVariantsForProduct = useCallback(
     (handle: string): SuggestedVariant[] => {
-    const h = handle.toLowerCase()
-    const productSkuHint = (productByHandle.get(h)?.sku || "").trim()
-    const seedImageUrls = [...(productByHandle.get(h)?.image_urls ?? [])]
-    const rejected = new Set(rejectedSuggestedVariantsByHandle[h] ?? [])
-    type GroupAcc = {
-      label: string
-      sourceUrl: string | null
-      sourcePathHints: Set<string>
-      thisSkuIds: string[]
-      reviewIds: string[]
-      pageUrlCandidates: Map<string, string>
-      candidateMapSku: string | null
-      confidence: "high" | "medium" | "low"
-      reasons: Set<string>
-      identityNotes: Set<string>
-      foreignHandle: string | null
-      foreignSku: string | null
-    }
-    const groups = new Map<string, GroupAcc>()
-    const invDedupeMap = invDoc?.items as InvItemDedupeFields[] | undefined
-    for (const it of invDedupeMap ?? []) {
-      const ce = candById.get(it.id)
-      const identity = classifyMediaProductIdentity(it, ce, handle, productSkuHint)
-      if (identity.tier === "excluded") continue
-      const hayName = `${it.filename} ${it.source_path || ""}`.toLowerCase()
-      const rawToken = extractColorToken(it, h, productSkuHint)
-      let token = rawToken
-      if (!token) {
-        if (/_gallery_\d+/i.test(hayName)) {
-          token = inferDefaultColorToken(seedImageUrls, [it.filename]) ?? "cream"
-        } else {
-          const inferred =
-            inferDefaultColorToken(seedImageUrls, [it.filename]) ??
-            (identity.tier === "this_sku" ? inferDefaultColorToken(seedImageUrls, []) : null)
-          token = inferred || "needs_review"
-        }
-      }
-      const baseKey = token === "needs_review" ? "color_needs_review" : `color_${token}`
-      const variantKey = identity.tier === "needs_identity_review" ? `${baseKey}__review` : baseKey
-      if (rejected.has(variantKey) || rejected.has(baseKey)) continue
-      const baseRu =
-        token === "needs_review"
-          ? LABEL_NEEDS_REVIEW_RU
-          : displayLabelFromColorToken(token, { productSkuHint }) || LABEL_NEEDS_REVIEW_RU
-      const current = groups.get(variantKey) ?? {
-        label: identity.tier === "needs_identity_review" ? reviewSuffixRu(baseRu) : baseRu,
-        sourceUrl: it.legacy_product_url || it.page_url || it.url || null,
-        sourcePathHints: new Set<string>(),
-        thisSkuIds: [],
-        reviewIds: [],
-        pageUrlCandidates: new Map<string, string>(),
-        candidateMapSku: ce?.top_candidate?.medusa_variant_sku?.trim() || null,
-        confidence: ce?.confidence === "confirmed" ? "high" : ce?.confidence === "probable" ? "medium" : "low",
-        reasons: new Set<string>(),
-        identityNotes: new Set<string>(),
-        foreignHandle: identity.foreignHandle,
-        foreignSku: identity.foreignSku,
-      }
-      if (identity.tier === "this_sku") current.thisSkuIds.push(it.id)
-      else current.reviewIds.push(it.id)
-      for (const r of identity.reasons) current.identityNotes.add(r)
-      if (it.source_path) current.sourcePathHints.add(it.source_path)
-      if (it.repo_relative_path) current.sourcePathHints.add(it.repo_relative_path)
-      for (const u of [it.legacy_product_url, it.page_url, it.url]) {
-        if (u && String(u).trim()) current.pageUrlCandidates.set(String(u).trim(), "inventory")
-      }
-      current.reasons.add(`filename token color_${token}`)
-      if (identity.tier === "this_sku" && ce?.top_candidate?.medusa_product_handle.toLowerCase() === h) {
-        current.reasons.add("candidate map top handle match")
-      }
-      if (identity.tier === "needs_identity_review") {
-        current.reasons.add("needs identity review — not bulk-confirm safe")
-      }
-      groups.set(variantKey, current)
-    }
-    type SliceAcc = {
-      variantKey: string
-      label: string
-      colorNameRaw: string
-      v: GroupAcc
-      deduped: ReturnType<typeof dedupeAndSortVariantMedia>
-      identityTier: "this_sku" | "needs_identity_review"
-      reasons: string[]
-    }
-    const slices: SliceAcc[] = []
-    const invMap = new Map((invDedupeMap ?? []).map((row) => [row.id, row]))
-    const confirmedRow = variantsByHandle[h] ?? {}
-    for (const [variantKey, v] of Array.from(groups.entries())) {
-      const isReview = variantKey.endsWith("__review")
-      const rawIds = isReview ? v.reviewIds : v.thisSkuIds
-      if (rawIds.length === 0) continue
-      const colorNameRaw = variantKey.replace(/^color_/, "").replace(/__review$/, "")
-      const deduped = dedupeAndSortVariantMedia(rawIds, invMap, candById, {
-        seedOrder: rawIds,
-        selectedSku: productSkuHint || h,
-        colorToken: colorNameRaw === "needs_review" ? "" : colorNameRaw,
+      if (!invDoc?.items?.length) return []
+      const h = handle.toLowerCase()
+      const built = buildSuggestedVariantsForProductSync({
+        handle: h,
+        product: productByHandle.get(h) ?? null,
+        invItems: invDoc.items,
+        candById,
+        variantsByHandle: variantsByHandle[h],
+        rejectedVariantKeys: rejectedSuggestedVariantsByHandle[h],
       })
-      if (deduped.visibleIds.length === 0) continue
-      const identityTier = isReview ? "needs_identity_review" : "this_sku"
-      const reasons = Array.from(v.reasons)
-      if (deduped.duplicateHiddenCount > 0) {
-        reasons.push(`dedupe: ${deduped.duplicateHiddenCount} похожих скрыто из полосы`)
-      }
-      const confirmed = confirmedRow[variantKey]
-      let label = v.label
-      if (confirmed?.labelEditedByUser && confirmed.label?.trim()) {
-        label = confirmed.label.trim()
-      } else if (confirmed?.labelStatus === "user_edited" && confirmed.label?.trim()) {
-        label = confirmed.label.trim()
-      }
-      slices.push({ variantKey, label, colorNameRaw, v, deduped, identityTier, reasons })
-    }
-
-    const gallerySlices = slices.map((s) => {
-      const rolesById = new Map<string, VisualRole>(
-        Object.entries(s.deduped.rolesById ?? {}).map(([id, role]) => [id, role as VisualRole])
-      )
-      return {
-        variantKey: s.variantKey,
-        label: s.label,
-        colorNameRaw: s.colorNameRaw,
-        identityTier: s.identityTier,
-        primaryCandidateId: s.deduped.primaryCandidateId,
-        galleryCandidateIds: s.deduped.galleryCandidateIds,
-        rolesById,
-        roleStrip: (s.deduped.roleStrip ?? []) as VisualRole[],
-      }
-    })
-
-    const out: SuggestedVariant[] = []
-    for (const s of slices) {
-      const baseSlice = gallerySlices.find((g) => g.variantKey === s.variantKey)!
-      let galleryCandidateIds = baseSlice.galleryCandidateIds
-      let rolesById = baseSlice.rolesById
-      let roleStrip = baseSlice.roleStrip
-      let borrowedSameSku: BorrowedSameSkuEntry[] = []
-      if (s.identityTier === "this_sku") {
-        const borrowed = applySameSkuRoleBorrowing(baseSlice, gallerySlices, invMap, candById, h, productSkuHint)
-        galleryCandidateIds = borrowed.galleryCandidateIds
-        rolesById = borrowed.rolesById
-        borrowedSameSku = borrowed.borrowed
-        if (borrowed.borrowed.length > 0) {
-          s.reasons.push(
-            ...borrowed.borrowed.map(
-              (b) => `borrow: ${b.role} из ${b.fromVariantLabel} (тот же SKU)`
-            )
-          )
-          for (const b of borrowed.borrowed) {
-            if (!roleStrip.includes(b.role)) roleStrip = [...roleStrip, b.role]
-          }
+      return built.sort((a, b) => {
+        if (a.identityTier !== b.identityTier) return a.identityTier === "this_sku" ? -1 : 1
+        const order = (vk: string) => {
+          if (vk.includes("cream") || vk.includes("milk") || vk.includes("white") || vk.includes("needs_review")) return 0
+          if (vk.includes("blue")) return 1
+          if (vk.includes("grey") || vk.includes("gray")) return 2
+          return 3
         }
-      }
-      out.push({
-        variantKey: s.variantKey,
-        label: s.label,
-        colorNameRaw: s.colorNameRaw,
-        productSkuHint,
-        filenameColorToken: s.colorNameRaw === "needs_review" ? "" : s.colorNameRaw,
-        candidateMapSku: s.v.candidateMapSku,
-        candidatePageUrls: Array.from(s.v.pageUrlCandidates.entries()).map(([url, source]) => ({ url, source })),
-        seedImageUrls,
-        sourceUrl: s.v.sourceUrl,
-        sourcePathHints: Array.from(s.v.sourcePathHints).slice(0, 3),
-        mediaIds: s.deduped.visibleIds,
-        primaryCandidateId: s.deduped.primaryCandidateId,
-        galleryCandidateIds,
-        confidence: s.identityTier === "this_sku" ? s.v.confidence : "low",
-        reasons: s.reasons,
-        identityTier: s.identityTier,
-        identityNotes: Array.from(s.v.identityNotes).slice(0, 6),
-        foreignHandle: s.v.foreignHandle,
-        foreignSku: s.v.foreignSku,
-        hiddenDuplicateIds: s.deduped.hiddenDuplicates.map((d) => d.mediaId),
-        duplicateHiddenCount: s.deduped.duplicateHiddenCount,
-        duplicateGroups: s.deduped.duplicateGroups,
-        roleStrip,
-        rolesByMediaId: Object.fromEntries(rolesById),
-        borrowedSameSku,
-        primaryNeedsReview: s.deduped.primaryNeedsReview,
+        const oa = order(a.variantKey)
+        const ob = order(b.variantKey)
+        if (oa !== ob) return oa - ob
+        return b.mediaIds.length - a.mediaIds.length
       })
-    }
-    return out.sort((a, b) => {
-      if (a.identityTier !== b.identityTier) return a.identityTier === "this_sku" ? -1 : 1
-      const order = (vk: string) => {
-        if (vk.includes("cream") || vk.includes("milk") || vk.includes("white") || vk.includes("needs_review")) return 0
-        if (vk.includes("blue")) return 1
-        if (vk.includes("grey") || vk.includes("gray")) return 2
-        return 3
-      }
-      const oa = order(a.variantKey)
-      const ob = order(b.variantKey)
-      if (oa !== ob) return oa - ob
-      return b.mediaIds.length - a.mediaIds.length
-    })
     },
-    [rejectedSuggestedVariantsByHandle, invDoc, candById, productByHandle, selectedHandle, variantsByHandle]
+    [rejectedSuggestedVariantsByHandle, invDoc, candById, productByHandle, variantsByHandle]
   )
 
   const suggestedVariantsForSelected = useMemo<SuggestedVariant[]>(() => {
@@ -3062,6 +2983,8 @@ export function LegacyMediaAssignmentBoardClient() {
     const productIdx = productsFiltered.findIndex((p) => p.handle.toLowerCase() === h)
     const productOrdinal = productIdx >= 0 ? productIdx + 1 : 0
     const productTotal = productsFiltered.length
+    const currentProductSyncPlan = boardSyncPlan?.products.find((p) => p.handle === h) ?? null
+    const syncSummary = boardSyncPlan?.summary
 
     return (
       <section
@@ -3126,8 +3049,155 @@ export function LegacyMediaAssignmentBoardClient() {
             <button type="button" style={miniBtn} onClick={skipCurrentProduct} title="Пропустить товар">
               Skip
             </button>
+            <button
+              type="button"
+              data-action-button="board-sync-preview"
+              style={{ ...miniBtn, borderColor: "#93c5fd", color: "#1d4ed8" }}
+              title="Dry-run: identity + visual roles + dedupe + same-SKU borrow"
+              onClick={() => runBoardSyncPreview("current")}
+            >
+              Синхронизировать по правилам
+            </button>
           </div>
         </div>
+
+        {syncPanelOpen && boardSyncPlan && syncSummary ? (
+          <div
+            data-board-sync-panel="true"
+            style={{
+              border: "1px solid #bfdbfe",
+              borderRadius: 10,
+              background: "#eff6ff",
+              padding: 12,
+              display: "flex",
+              flexDirection: "column",
+              gap: 10,
+              minWidth: 0,
+            }}
+          >
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", justifyContent: "space-between" }}>
+              <strong style={{ fontSize: 13, color: "#1e3a8a" }}>Sync preview · {boardSyncPlan.ruleVersion}</strong>
+              <button type="button" style={{ ...miniBtn, padding: "2px 8px" }} onClick={() => setSyncPanelOpen(false)}>
+                Закрыть
+              </button>
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, fontSize: 11, color: "#1e40af" }}>
+              <span data-sync-count="products">{syncSummary.productsScanned} products</span>
+              <span>· {syncSummary.variantsScanned} variants</span>
+              <span>· {syncSummary.wouldChangeCount} would change</span>
+              <span>· {syncSummary.safeToApplyCount} safe</span>
+              <span>· {syncSummary.protectedManualOrders} protected order</span>
+              <span>· {syncSummary.duplicatesHidden} dupes hidden</span>
+              <span>· {syncSummary.borrowedSameSkuRoles} borrowed roles</span>
+              <span>· {syncSummary.needsIdentityReviewMedia} identity review</span>
+              <span>· {syncSummary.excludedOtherSku} excluded SKU</span>
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              <button type="button" style={miniBtn} onClick={() => runBoardSyncPreview("current")}>
+                Preview · текущий товар
+              </button>
+              <button type="button" style={miniBtn} onClick={() => runBoardSyncPreview("collection")}>
+                Preview · коллекция ({productsFiltered.length})
+              </button>
+              <button
+                type="button"
+                style={btnPrimaryMini}
+                disabled={!currentProductSyncPlan}
+                onClick={() => applyBoardSync("current", true)}
+              >
+                Apply safe · текущий
+              </button>
+              <button
+                type="button"
+                style={miniBtn}
+                disabled={!currentProductSyncPlan}
+                onClick={() => applyBoardSync("current", false)}
+              >
+                Apply all · текущий
+              </button>
+              <button type="button" style={miniBtn} onClick={() => applyBoardSync("collection", true)}>
+                Apply safe · коллекция
+              </button>
+            </div>
+            {currentProductSyncPlan ? (
+              <div data-sync-product-diff="true" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {currentProductSyncPlan.variantItems
+                  .filter((v) => v.wouldChange || v.hiddenDuplicates.length > 0 || v.borrowedSameSku.length > 0)
+                  .map((v) => (
+                    <details
+                      key={v.variantKey}
+                      data-sync-variant-key={v.variantKey}
+                      style={{ background: "#fff", border: "1px solid #dbeafe", borderRadius: 8, padding: 8 }}
+                    >
+                      <summary style={{ cursor: "pointer", fontSize: 12, fontWeight: 700, color: "#0f172a" }}>
+                        {v.displayLabel}{" "}
+                        <span style={{ fontWeight: 500, color: "#64748b" }}>
+                          {v.wouldChange ? "· изменится" : "· без изменений"}
+                          {v.protectedManualOrder ? " · protected order" : ""}
+                          {v.protectedLabel ? " · ручное имя" : ""}
+                        </span>
+                      </summary>
+                      <div style={{ marginTop: 8, fontSize: 11, color: "#475569", lineHeight: 1.5 }}>
+                        <div>
+                          Primary: <code>{v.currentPrimary?.slice(0, 10) ?? "—"}</code> →{" "}
+                          <code>{v.proposedPrimary?.slice(0, 10) ?? "—"}</code>
+                        </div>
+                        <div>
+                          Gallery ({v.currentGallery.length} → {v.proposedGallery.length}):{" "}
+                          {v.proposedGallery.slice(0, 6).map((id) => id.slice(0, 8)).join(", ")}
+                          {v.proposedGallery.length > 6 ? "…" : ""}
+                        </div>
+                        {v.hiddenDuplicates.length > 0 ? (
+                          <div>+{v.hiddenDuplicates.length} похожих скрыто</div>
+                        ) : null}
+                        {v.borrowedSameSku.length > 0 ? (
+                          <div>
+                            Borrowed: {v.borrowedSameSku.map((b) => `${b.role} из ${b.fromVariantLabel}`).join("; ")}
+                          </div>
+                        ) : null}
+                        <details style={{ marginTop: 4 }}>
+                          <summary style={{ cursor: "pointer", color: "#94a3b8" }}>reasons</summary>
+                          <ul style={{ margin: "4px 0 0", paddingLeft: 16 }}>
+                            {v.reasons.slice(0, 12).map((r, i) => (
+                              <li key={i}>{r}</li>
+                            ))}
+                          </ul>
+                        </details>
+                      </div>
+                    </details>
+                  ))}
+                {currentProductSyncPlan.excludedMediaIds.length > 0 ? (
+                  <div style={{ fontSize: 11, color: "#64748b" }}>
+                    Excluded other SKU: {currentProductSyncPlan.excludedMediaIds.length} media
+                  </div>
+                ) : null}
+                {currentProductSyncPlan.needsIdentityReviewMediaIds.length > 0 ? (
+                  <div style={{ fontSize: 11, color: "#92400e" }}>
+                    Needs identity review: {currentProductSyncPlan.needsIdentityReviewMediaIds.length} media (Oxford_full_p* / Monchelsea_p* / weak match)
+                  </div>
+                ) : null}
+              </div>
+            ) : (
+              <div style={{ fontSize: 11, color: "#64748b" }}>Нет плана для текущего товара в этом preview scope.</div>
+            )}
+            <details>
+              <summary style={{ cursor: "pointer", fontSize: 10, color: "#94a3b8" }}>Diagnostics JSON</summary>
+              <pre
+                style={{
+                  marginTop: 6,
+                  fontSize: 9,
+                  maxHeight: 160,
+                  overflow: "auto",
+                  background: "#fff",
+                  padding: 8,
+                  borderRadius: 6,
+                }}
+              >
+                {JSON.stringify(currentProductSyncPlan ?? syncSummary, null, 2)}
+              </pre>
+            </details>
+          </div>
+        ) : null}
 
         <header style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
           <div style={{ fontSize: 10, fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em" }}>Товар</div>
