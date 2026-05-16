@@ -1,0 +1,3691 @@
+{
+  "audit_meta": {
+    "pass_name": "legacy_media_board_products",
+    "pass_kind": "read_only_qa_index_no_seed_mutation",
+    "generated_at": "2026-05-16T19:49:57.177Z",
+    "generated_by": "scripts/build-legacy-media-board-products.mjs",
+    "sources": [
+      "data/normalized/seed-products.json",
+      "data/normalized/seed-products.oxford-pilot-four.json",
+      "data/normalized/entity-mapping.json (oxford/monchelsea only)",
+      "data/normalized/product-workbook-asset-map.json (oxford/monchelsea only)"
+    ],
+    "constraints": [
+      "Does not modify seed-products.json or Medusa DB.",
+      "Oxford/Monchelsea rows are QA review targets; paused rollout unchanged."
+    ]
+  },
+  "summary": {
+    "total_products": 194,
+    "by_collection": {
+      "country-london-paris": 13,
+      "monchelsea": 63,
+      "oliver": 66,
+      "oxford": 23,
+      "provence": 29
+    },
+    "oxford_count": 23,
+    "monchelsea_count": 63
+  },
+  "products": [
+    {
+      "handle": "co-02-1",
+      "sku": "CO-02-1",
+      "collection": "country-london-paris",
+      "title": "Шкаф для одежды 2-дв.",
+      "image_urls": [
+        "http://localhost:9000/static/products/country-london-paris/CO-02-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-02-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-02-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-02-1_gallery_02.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-02-1_gallery_03.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-02-1_color_blue_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-02-1_color_blue_02.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-02-1_color_grey_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-02-1_color_grey_02.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-02-1_color_olive_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-02-1_color_olive_02.jpg"
+      ],
+      "image_basenames": [
+        "co-02-1_gallery_01.jpg",
+        "co-02-1_gallery_01.jpg",
+        "co-02-1_gallery_01.jpg",
+        "co-02-1_gallery_02.jpg",
+        "co-02-1_gallery_03.jpg",
+        "co-02-1_color_blue_01.jpg",
+        "co-02-1_color_blue_02.jpg",
+        "co-02-1_color_grey_01.jpg",
+        "co-02-1_color_grey_02.jpg",
+        "co-02-1_color_olive_01.jpg",
+        "co-02-1_color_olive_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "co-05-1",
+      "sku": "CO-05-1",
+      "collection": "country-london-paris",
+      "title": "Комод",
+      "image_urls": [
+        "http://localhost:9000/static/products/country-london-paris/CO-05-1_main.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-05-1_main.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-05-1_main.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-05-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-05-1_color_blue_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-05-1_color_blue_02.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-05-1_color_grey_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-05-1_color_grey_02.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-05-1_color_olive_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-05-1_color_olive_02.jpg"
+      ],
+      "image_basenames": [
+        "co-05-1_main.jpg",
+        "co-05-1_main.jpg",
+        "co-05-1_main.jpg",
+        "co-05-1_gallery_01.jpg",
+        "co-05-1_color_blue_01.jpg",
+        "co-05-1_color_blue_02.jpg",
+        "co-05-1_color_grey_01.jpg",
+        "co-05-1_color_grey_02.jpg",
+        "co-05-1_color_olive_01.jpg",
+        "co-05-1_color_olive_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "co-08-1",
+      "sku": "CO-08-1",
+      "collection": "country-london-paris",
+      "title": "Тумбочка прикроватная",
+      "image_urls": [
+        "http://localhost:9000/static/products/country-london-paris/CO-08-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-08-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-08-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-08-1_gallery_02.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-08-1_color_blue_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-08-1_color_blue_02.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-08-1_color_grey_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-08-1_color_grey_02.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-08-1_color_olive_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-08-1_color_olive_02.jpg"
+      ],
+      "image_basenames": [
+        "co-08-1_gallery_01.jpg",
+        "co-08-1_gallery_01.jpg",
+        "co-08-1_gallery_01.jpg",
+        "co-08-1_gallery_02.jpg",
+        "co-08-1_color_blue_01.jpg",
+        "co-08-1_color_blue_02.jpg",
+        "co-08-1_color_grey_01.jpg",
+        "co-08-1_color_grey_02.jpg",
+        "co-08-1_color_olive_01.jpg",
+        "co-08-1_color_olive_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "co-14-2",
+      "sku": "CO-14-2",
+      "collection": "country-london-paris",
+      "title": "Кровать 1 сп. (90*190) с подъем мех",
+      "image_urls": [
+        "http://localhost:9000/static/products/country-london-paris/CO-14-2_gallery_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-14-2_gallery_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-14-2_gallery_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-14-2_color_torno_01.jpg"
+      ],
+      "image_basenames": [
+        "co-14-2_gallery_01.jpg",
+        "co-14-2_gallery_01.jpg",
+        "co-14-2_gallery_01.jpg",
+        "co-14-2_color_torno_01.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "co-15-2",
+      "sku": "CO-15-2",
+      "collection": "country-london-paris",
+      "title": "Кровать 1,5 сп. (120*190) с подъем мех",
+      "image_urls": [
+        "http://localhost:9000/static/products/country-london-paris/CO-15-2_main.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-15-2_main.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-15-2_main.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-15-2_gallery_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-15-2_gallery_02.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-15-2_gallery_03.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-15-2_gallery_04.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-15-2_gallery_05.jpg"
+      ],
+      "image_basenames": [
+        "co-15-2_main.jpg",
+        "co-15-2_main.jpg",
+        "co-15-2_main.jpg",
+        "co-15-2_gallery_01.jpg",
+        "co-15-2_gallery_02.jpg",
+        "co-15-2_gallery_03.jpg",
+        "co-15-2_gallery_04.jpg",
+        "co-15-2_gallery_05.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "co-61-1",
+      "sku": "CO-61-1",
+      "collection": "country-london-paris",
+      "title": "Шкаф книжный со стеклом",
+      "image_urls": [
+        "http://localhost:9000/static/products/country-london-paris/CO-61-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-61-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-61-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-61-1_gallery_02.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-61-1_gallery_03.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-61-1_color_blue_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-61-1_color_blue_02.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-61-1_color_grey_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-61-1_color_grey_02.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-61-1_color_olive_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-61-1_color_olive_02.jpg"
+      ],
+      "image_basenames": [
+        "co-61-1_gallery_01.jpg",
+        "co-61-1_gallery_01.jpg",
+        "co-61-1_gallery_01.jpg",
+        "co-61-1_gallery_02.jpg",
+        "co-61-1_gallery_03.jpg",
+        "co-61-1_color_blue_01.jpg",
+        "co-61-1_color_blue_02.jpg",
+        "co-61-1_color_grey_01.jpg",
+        "co-61-1_color_grey_02.jpg",
+        "co-61-1_color_olive_01.jpg",
+        "co-61-1_color_olive_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "co-62-1",
+      "sku": "CO-62-1",
+      "collection": "country-london-paris",
+      "title": "Стеллаж широкий",
+      "image_urls": [
+        "http://localhost:9000/static/products/country-london-paris/CO-62-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-62-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-62-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-62-1_gallery_02.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-62-1_gallery_03.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-62-1_gallery_04.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-62-1_gallery_05.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-62-1_color_blue_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-62-1_color_blue_02.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-62-1_color_grey_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-62-1_color_grey_02.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-62-1_color_olive_01.jpg"
+      ],
+      "image_basenames": [
+        "co-62-1_gallery_01.jpg",
+        "co-62-1_gallery_01.jpg",
+        "co-62-1_gallery_01.jpg",
+        "co-62-1_gallery_02.jpg",
+        "co-62-1_gallery_03.jpg",
+        "co-62-1_gallery_04.jpg",
+        "co-62-1_gallery_05.jpg",
+        "co-62-1_color_blue_01.jpg",
+        "co-62-1_color_blue_02.jpg",
+        "co-62-1_color_grey_01.jpg",
+        "co-62-1_color_grey_02.jpg",
+        "co-62-1_color_olive_01.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "co-62-2",
+      "sku": "CO-62-2",
+      "collection": "country-london-paris",
+      "title": "Стеллаж узкий с дверью",
+      "image_urls": [
+        "http://localhost:9000/static/products/country-london-paris/CO-62-2_gallery_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-62-2_gallery_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-62-2_gallery_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-62-2_gallery_02.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-62-2_gallery_03.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-62-2_gallery_04.jpg"
+      ],
+      "image_basenames": [
+        "co-62-2_gallery_01.jpg",
+        "co-62-2_gallery_01.jpg",
+        "co-62-2_gallery_01.jpg",
+        "co-62-2_gallery_02.jpg",
+        "co-62-2_gallery_03.jpg",
+        "co-62-2_gallery_04.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "co-62-3",
+      "sku": "CO-62-3",
+      "collection": "country-london-paris",
+      "title": "Стеллаж узкий с ящиком",
+      "image_urls": [
+        "http://localhost:9000/static/products/country-london-paris/CO-62-3_gallery_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-62-3_gallery_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-62-3_gallery_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-62-3_gallery_02.jpg"
+      ],
+      "image_basenames": [
+        "co-62-3_gallery_01.jpg",
+        "co-62-3_gallery_01.jpg",
+        "co-62-3_gallery_01.jpg",
+        "co-62-3_gallery_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "co-65-1",
+      "sku": "CO-65-1",
+      "collection": "country-london-paris",
+      "title": "Стол письменный 1-тумб. 0П",
+      "image_urls": [
+        "http://localhost:9000/static/products/country-london-paris/CO-65-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-65-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-65-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-65-1_gallery_02.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-65-1_color_blue_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-65-1_color_blue_02.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-65-1_color_grey_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-65-1_color_grey_02.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-65-1_color_olive_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-65-1_color_olive_02.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-65-1_color_white_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-65-1_color_white_02.jpg"
+      ],
+      "image_basenames": [
+        "co-65-1_gallery_01.jpg",
+        "co-65-1_gallery_01.jpg",
+        "co-65-1_gallery_01.jpg",
+        "co-65-1_gallery_02.jpg",
+        "co-65-1_color_blue_01.jpg",
+        "co-65-1_color_blue_02.jpg",
+        "co-65-1_color_grey_01.jpg",
+        "co-65-1_color_grey_02.jpg",
+        "co-65-1_color_olive_01.jpg",
+        "co-65-1_color_olive_02.jpg",
+        "co-65-1_color_white_01.jpg",
+        "co-65-1_color_white_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "co-65-2",
+      "sku": "CO-65-2",
+      "collection": "country-london-paris",
+      "title": "Стол письменный 1-тумб. П0",
+      "image_urls": [
+        "http://localhost:9000/static/products/country-london-paris/CO-65-2_gallery_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-65-2_gallery_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-65-2_gallery_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-65-2_gallery_02.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-65-2_color_blue_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-65-2_color_blue_02.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-65-2_color_grey_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-65-2_color_grey_02.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-65-2_color_olive_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-65-2_color_olive_02.jpg"
+      ],
+      "image_basenames": [
+        "co-65-2_gallery_01.jpg",
+        "co-65-2_gallery_01.jpg",
+        "co-65-2_gallery_01.jpg",
+        "co-65-2_gallery_02.jpg",
+        "co-65-2_color_blue_01.jpg",
+        "co-65-2_color_blue_02.jpg",
+        "co-65-2_color_grey_01.jpg",
+        "co-65-2_color_grey_02.jpg",
+        "co-65-2_color_olive_01.jpg",
+        "co-65-2_color_olive_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "co-66-1",
+      "sku": "CO-66-1",
+      "collection": "country-london-paris",
+      "title": "Стол письменный 2-тумб. ЯЯ",
+      "image_urls": [
+        "http://localhost:9000/static/products/country-london-paris/CO-66-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-66-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-66-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-66-1_gallery_02.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-66-1_color_blue_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-66-1_color_blue_02.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-66-1_color_grey_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-66-1_color_grey_02.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-66-1_color_olive_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-66-1_color_olive_02.jpg"
+      ],
+      "image_basenames": [
+        "co-66-1_gallery_01.jpg",
+        "co-66-1_gallery_01.jpg",
+        "co-66-1_gallery_01.jpg",
+        "co-66-1_gallery_02.jpg",
+        "co-66-1_color_blue_01.jpg",
+        "co-66-1_color_blue_02.jpg",
+        "co-66-1_color_grey_01.jpg",
+        "co-66-1_color_grey_02.jpg",
+        "co-66-1_color_olive_01.jpg",
+        "co-66-1_color_olive_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "co-69-1",
+      "sku": "CO-69-1",
+      "collection": "country-london-paris",
+      "title": "Полка книжная малая",
+      "image_urls": [
+        "http://localhost:9000/static/products/country-london-paris/CO-69-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-69-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-69-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-69-1_gallery_02.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-69-1_gallery_03.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-69-1_gallery_04.jpg",
+        "http://localhost:9000/static/products/country-london-paris/CO-69-1_gallery_05.jpg"
+      ],
+      "image_basenames": [
+        "co-69-1_gallery_01.jpg",
+        "co-69-1_gallery_01.jpg",
+        "co-69-1_gallery_01.jpg",
+        "co-69-1_gallery_02.jpg",
+        "co-69-1_gallery_03.jpg",
+        "co-69-1_gallery_04.jpg",
+        "co-69-1_gallery_05.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "mn-49-1",
+      "sku": "MN-49-1",
+      "collection": "monchelsea",
+      "title": "Обувница",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MN-49-1",
+      "monchelsea_join_key": "MN-49-1"
+    },
+    {
+      "handle": "mnm-00-1",
+      "sku": "MNM-00-1",
+      "collection": "monchelsea",
+      "title": "Шкаф для одежды угловой (модуль/ручка слева)",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-00-1",
+      "monchelsea_join_key": "MN-00-1"
+    },
+    {
+      "handle": "mnm-00-2",
+      "sku": "MNM-00-2",
+      "collection": "monchelsea",
+      "title": "Шкаф для одежды угловой (модуль/ручка справа)",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-00-2",
+      "monchelsea_join_key": "MN-00-2"
+    },
+    {
+      "handle": "mnm-00-3",
+      "sku": "MNM-00-3",
+      "collection": "monchelsea",
+      "title": "Шкаф книжный угловой ручка справа",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-00-3",
+      "monchelsea_join_key": "MN-00-3"
+    },
+    {
+      "handle": "mnm-00-4",
+      "sku": "MNM-00-4",
+      "collection": "monchelsea",
+      "title": "Шкаф книжный угловой ручка слева",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-00-4",
+      "monchelsea_join_key": "MN-00-4"
+    },
+    {
+      "handle": "mnm-01-1",
+      "sku": "MNM-01-1",
+      "collection": "monchelsea",
+      "title": "Шкаф для одежды 1-дв. (модуль/Ш/ручка слева)",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-01-1",
+      "monchelsea_join_key": "MN-01-1"
+    },
+    {
+      "handle": "mnm-01-2",
+      "sku": "MNM-01-2",
+      "collection": "monchelsea",
+      "title": "Шкаф для одежды 1-дв. (модуль/Ш/ручка справа)",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-01-2",
+      "monchelsea_join_key": "MN-01-2"
+    },
+    {
+      "handle": "mnm-01-3",
+      "sku": "MNM-01-3",
+      "collection": "monchelsea",
+      "title": "Шкаф для одежды 1-дв. (модуль/ЯШ/ручка слева)",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-01-3",
+      "monchelsea_join_key": "MN-01-3"
+    },
+    {
+      "handle": "mnm-01-4",
+      "sku": "MNM-01-4",
+      "collection": "monchelsea",
+      "title": "Шкаф для одежды 1-дв. (модуль/ЯШ/ручка справа)",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-01-4",
+      "monchelsea_join_key": "MN-01-4"
+    },
+    {
+      "handle": "mnm-01-5",
+      "sku": "MNM-01-5",
+      "collection": "monchelsea",
+      "title": "Шкаф для одежды 1-дв. (модуль/ЯП/ручка слева)",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-01-5",
+      "monchelsea_join_key": "MN-01-5"
+    },
+    {
+      "handle": "mnm-01-6",
+      "sku": "MNM-01-6",
+      "collection": "monchelsea",
+      "title": "Шкаф для одежды 1-дв. (модуль/ЯП/ручка справа)",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-01-6",
+      "monchelsea_join_key": "MN-01-6"
+    },
+    {
+      "handle": "mnm-02-1",
+      "sku": "MNM-02-1",
+      "collection": "monchelsea",
+      "title": "Шкаф для одежды 2-дв. (модуль/Ш)",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-02-1",
+      "monchelsea_join_key": "MN-02-1"
+    },
+    {
+      "handle": "mnm-02-2",
+      "sku": "MNM-02-2",
+      "collection": "monchelsea",
+      "title": "Шкаф для одежды 2-дв. (модуль/ЯШ)",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "fuzzy",
+      "workbook_row_key": "monchelsea:MNm-02-2",
+      "monchelsea_join_key": "MN-02-2"
+    },
+    {
+      "handle": "mnm-02-3",
+      "sku": "MNM-02-3",
+      "collection": "monchelsea",
+      "title": "Шкаф для одежды 2-дв. (модуль/ЯП)",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-02-3",
+      "monchelsea_join_key": "MN-02-3"
+    },
+    {
+      "handle": "mnm-03-1",
+      "sku": "MNM-03-1",
+      "collection": "monchelsea",
+      "title": "Шкаф для одежды 3-дв. (модуль/П+ЯШ+Ш)",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-03-1",
+      "monchelsea_join_key": "MN-03-1"
+    },
+    {
+      "handle": "mnm-03-2",
+      "sku": "MNM-03-2",
+      "collection": "monchelsea",
+      "title": "Шкаф для одежды 3-дв. (модуль/ЯШ+П+ЯШ)",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "fuzzy",
+      "workbook_row_key": "monchelsea:MNm-03-2",
+      "monchelsea_join_key": "MN-03-2"
+    },
+    {
+      "handle": "mnm-03-3",
+      "sku": "MNM-03-3",
+      "collection": "monchelsea",
+      "title": "Шкаф для одежды 3-дв. (модуль/Ш+ЯП+Ш)",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "fuzzy",
+      "workbook_row_key": "monchelsea:MNm-03-3",
+      "monchelsea_join_key": "MN-03-3"
+    },
+    {
+      "handle": "mnm-03-4",
+      "sku": "MNM-03-4",
+      "collection": "monchelsea",
+      "title": "Шкаф для одежды 3-дв. (модуль/2Ш+ЯП+Ш)",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-03-4",
+      "monchelsea_join_key": "MN-03-4"
+    },
+    {
+      "handle": "mnm-05-2",
+      "sku": "MNM-05-2",
+      "collection": "monchelsea",
+      "title": "Комод широкий",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-05-2",
+      "monchelsea_join_key": "MN-05-2"
+    },
+    {
+      "handle": "mnm-05-3",
+      "sku": "MNM-05-3",
+      "collection": "monchelsea",
+      "title": "Комод высокий",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-05-3",
+      "monchelsea_join_key": "MN-05-3"
+    },
+    {
+      "handle": "mnm-05-4",
+      "sku": "MNM-05-4",
+      "collection": "monchelsea",
+      "title": "Комод с зеркалом",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-05-4",
+      "monchelsea_join_key": "MN-05-4"
+    },
+    {
+      "handle": "mnm-06-1",
+      "sku": "MNM-06-1",
+      "collection": "monchelsea",
+      "title": "Столик  туалетный с зеркалом",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-06-1",
+      "monchelsea_join_key": "MN-06-1"
+    },
+    {
+      "handle": "mnm-06-2",
+      "sku": "MNM-06-2",
+      "collection": "monchelsea",
+      "title": "Столик туалетный без зеркала",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-06-2",
+      "monchelsea_join_key": "MN-06-2"
+    },
+    {
+      "handle": "mnm-08-1",
+      "sku": "MNM-08-1",
+      "collection": "monchelsea",
+      "title": "Тумбочка прикроватная",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-08-1",
+      "monchelsea_join_key": "MN-08-1"
+    },
+    {
+      "handle": "mnm-09-1",
+      "sku": "MNM-09-1",
+      "collection": "monchelsea",
+      "title": "Зеркало навесное",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-09-1",
+      "monchelsea_join_key": "MN-09-1"
+    },
+    {
+      "handle": "mnm-09-2",
+      "sku": "MNM-09-2",
+      "collection": "monchelsea",
+      "title": "Зеркало напольное",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-09-2",
+      "monchelsea_join_key": "MN-09-2"
+    },
+    {
+      "handle": "mnm-09-3",
+      "sku": "MNM-09-3",
+      "collection": "monchelsea",
+      "title": "Зеркало настольное",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-09-3",
+      "monchelsea_join_key": "MN-09-3"
+    },
+    {
+      "handle": "mnm-14-1",
+      "sku": "MNM-14-1",
+      "collection": "monchelsea",
+      "title": "Кровать 1-сп. (90*190)",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-14-1",
+      "monchelsea_join_key": "MN-14-1"
+    },
+    {
+      "handle": "mnm-14-2",
+      "sku": "MNM-14-2",
+      "collection": "monchelsea",
+      "title": "Кровать 1-сп. (90*190) без изножья",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-14-2",
+      "monchelsea_join_key": "MN-14-2"
+    },
+    {
+      "handle": "mnm-14-3",
+      "sku": "MNM-14-3",
+      "collection": "monchelsea",
+      "title": "Кровать 1-сп.(90*190)с подъем мех",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-14-3",
+      "monchelsea_join_key": "MN-14-3"
+    },
+    {
+      "handle": "mnm-15-1",
+      "sku": "MNM-15-1",
+      "collection": "monchelsea",
+      "title": "Кровать 1,5-сп. (120*190)",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-15-1",
+      "monchelsea_join_key": "MN-15-1"
+    },
+    {
+      "handle": "mnm-15-2",
+      "sku": "MNM-15-2",
+      "collection": "monchelsea",
+      "title": "Кровать 1,5-сп. (120*190) без изножья",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-15-2",
+      "monchelsea_join_key": "MN-15-2"
+    },
+    {
+      "handle": "mnm-15-3",
+      "sku": "MNM-15-3",
+      "collection": "monchelsea",
+      "title": "Кровать 1,5-сп. (120*190) с подъем мех",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-15-3",
+      "monchelsea_join_key": "MN-15-3"
+    },
+    {
+      "handle": "mnm-16-1",
+      "sku": "MNM-16-1",
+      "collection": "monchelsea",
+      "title": "Кровать 1,5-сп. (140*190)",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-16-1",
+      "monchelsea_join_key": "MN-16-1"
+    },
+    {
+      "handle": "mnm-16-2",
+      "sku": "MNM-16-2",
+      "collection": "monchelsea",
+      "title": "Кровать 1,5-сп. (140*190) без изножья",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-16-2",
+      "monchelsea_join_key": "MN-16-2"
+    },
+    {
+      "handle": "mnm-16-3",
+      "sku": "MNM-16-3",
+      "collection": "monchelsea",
+      "title": "Кровать 1,5-сп. (140*190) с подъем мех",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-16-3",
+      "monchelsea_join_key": "MN-16-3"
+    },
+    {
+      "handle": "mnm-17-1",
+      "sku": "MNM-17-1",
+      "collection": "monchelsea",
+      "title": "Кровать 2-сп. (160*200)",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-17-1",
+      "monchelsea_join_key": "MN-17-1"
+    },
+    {
+      "handle": "mnm-17-2",
+      "sku": "MNM-17-2",
+      "collection": "monchelsea",
+      "title": "Кровать 2-сп. (160*200) без изножья",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-17-2",
+      "monchelsea_join_key": "MN-17-2"
+    },
+    {
+      "handle": "mnm-17-3",
+      "sku": "MNM-17-3",
+      "collection": "monchelsea",
+      "title": "Кровать 2-сп. (160*200) с подъем мех",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-17-3",
+      "monchelsea_join_key": "MN-17-3"
+    },
+    {
+      "handle": "mnm-18-1",
+      "sku": "MNM-18-1",
+      "collection": "monchelsea",
+      "title": "Кровать 2-сп. (180*200)",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-18-1",
+      "monchelsea_join_key": "MN-18-1"
+    },
+    {
+      "handle": "mnm-18-2",
+      "sku": "MNM-18-2",
+      "collection": "monchelsea",
+      "title": "Кровать 2-сп. (180*200) без изножья",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-18-2",
+      "monchelsea_join_key": "MN-18-2"
+    },
+    {
+      "handle": "mnm-18-3",
+      "sku": "MNM-18-3",
+      "collection": "monchelsea",
+      "title": "Кровать 2-сп. (180*200) с подъем мех",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-18-3",
+      "monchelsea_join_key": "MN-18-3"
+    },
+    {
+      "handle": "mnm-23-1",
+      "sku": "MNM-23-1",
+      "collection": "monchelsea",
+      "title": "Стул",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "exact_match",
+      "workbook_row_key": "monchelsea:MNm-23-1",
+      "monchelsea_join_key": "MN-23-1"
+    },
+    {
+      "handle": "mnm-42-1",
+      "sku": "MNM-42-1",
+      "collection": "monchelsea",
+      "title": "Тумба для телевизора",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-42-1",
+      "monchelsea_join_key": "MN-42-1"
+    },
+    {
+      "handle": "mnm-42-2",
+      "sku": "MNM-42-2",
+      "collection": "monchelsea",
+      "title": "Тумба для телевизора (модуль)",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-42-2",
+      "monchelsea_join_key": "MN-42-2"
+    },
+    {
+      "handle": "mnm-55-1",
+      "sku": "MNM-55-1",
+      "collection": "monchelsea",
+      "title": "Банкетка малая",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "high_confidence",
+      "workbook_row_key": "monchelsea:MNm-55-1",
+      "monchelsea_join_key": "MN-55-1"
+    },
+    {
+      "handle": "mnm-57-3",
+      "sku": "MNM-57-3",
+      "collection": "monchelsea",
+      "title": "Диван с выкатной кроватью",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-57-3",
+      "monchelsea_join_key": "MN-57-3"
+    },
+    {
+      "handle": "mnm-61-1",
+      "sku": "MNM-61-1",
+      "collection": "monchelsea",
+      "title": "Шкаф книжный 2-дв. (модуль)",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-61-1",
+      "monchelsea_join_key": "MN-61-1"
+    },
+    {
+      "handle": "mnm-61-2",
+      "sku": "MNM-61-2",
+      "collection": "monchelsea",
+      "title": "Шкаф книжный 1-дв. (модуль/ручка слева)",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-61-2",
+      "monchelsea_join_key": "MN-61-2"
+    },
+    {
+      "handle": "mnm-61-3",
+      "sku": "MNM-61-3",
+      "collection": "monchelsea",
+      "title": "Шкаф книжный 1-дв. (модуль/ручка справа)",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-61-3",
+      "monchelsea_join_key": "MN-61-3"
+    },
+    {
+      "handle": "mnm-61-4",
+      "sku": "MNM-61-4",
+      "collection": "monchelsea",
+      "title": "Шкаф книжный 3-дв. (модуль)",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-61-4",
+      "monchelsea_join_key": "MN-61-4"
+    },
+    {
+      "handle": "mnm-62-1",
+      "sku": "MNM-62-1",
+      "collection": "monchelsea",
+      "title": "Секция угловая открытая (модуль)",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-62-1",
+      "monchelsea_join_key": "MN-62-1"
+    },
+    {
+      "handle": "mnm-65-1",
+      "sku": "MNM-65-1",
+      "collection": "monchelsea",
+      "title": "Стол письменный 1-тумб. 0П",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-65-1",
+      "monchelsea_join_key": "MN-65-1"
+    },
+    {
+      "handle": "mnm-65-2",
+      "sku": "MNM-65-2",
+      "collection": "monchelsea",
+      "title": "Стол письменный 1-тумб. П0",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-65-2",
+      "monchelsea_join_key": "MN-65-2"
+    },
+    {
+      "handle": "mnm-65-3",
+      "sku": "MNM-65-3",
+      "collection": "monchelsea",
+      "title": "Стол письменный 1-тумб. 0Я",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-65-3",
+      "monchelsea_join_key": "MN-65-3"
+    },
+    {
+      "handle": "mnm-65-4",
+      "sku": "MNM-65-4",
+      "collection": "monchelsea",
+      "title": "Стол письменный 1-тумб. Я0",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-65-4",
+      "monchelsea_join_key": "MN-65-4"
+    },
+    {
+      "handle": "mnm-66-1",
+      "sku": "MNM-66-1",
+      "collection": "monchelsea",
+      "title": "Стол письменный 2-тумб. ПП",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-66-1",
+      "monchelsea_join_key": "MN-66-1"
+    },
+    {
+      "handle": "mnm-66-2",
+      "sku": "MNM-66-2",
+      "collection": "monchelsea",
+      "title": "Стол письменный 2-тумб. ПЯ",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-66-2",
+      "monchelsea_join_key": "MN-66-2"
+    },
+    {
+      "handle": "mnm-66-3",
+      "sku": "MNM-66-3",
+      "collection": "monchelsea",
+      "title": "Стол письменный 2-тумб. ЯП",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "high_confidence",
+      "workbook_row_key": "monchelsea:MNm-66-3",
+      "monchelsea_join_key": "MN-66-3"
+    },
+    {
+      "handle": "mnm-66-4",
+      "sku": "MNM-66-4",
+      "collection": "monchelsea",
+      "title": "Стол письменный 2-тумб. ЯЯ",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-66-4",
+      "monchelsea_join_key": "MN-66-4"
+    },
+    {
+      "handle": "mnm-69-1",
+      "sku": "MNM-69-1",
+      "collection": "monchelsea",
+      "title": "Полка навесная (модуль)",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-69-1",
+      "monchelsea_join_key": "MN-69-1"
+    },
+    {
+      "handle": "mnm-69-2",
+      "sku": "MNM-69-2",
+      "collection": "monchelsea",
+      "title": "Полка навесная с дверкой (модуль)",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-69-2",
+      "monchelsea_join_key": "MN-69-2"
+    },
+    {
+      "handle": "mnm-69-3",
+      "sku": "MNM-69-3",
+      "collection": "monchelsea",
+      "title": "Полка книжная",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "blocked",
+      "workbook_row_key": "monchelsea:MNm-69-3",
+      "monchelsea_join_key": "MN-69-3"
+    },
+    {
+      "handle": "ol-00-1",
+      "sku": "OL-00-1",
+      "collection": "oliver",
+      "title": "Шкаф угловой  (руч.лев/пр)",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-00-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-00-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-00-1_main.jpg"
+      ],
+      "image_basenames": [
+        "ol-00-1_main.jpg",
+        "ol-00-1_main.jpg",
+        "ol-00-1_main.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-01-2",
+      "sku": "OL-01-2",
+      "collection": "oliver",
+      "title": "Шкаф для одежды 1-дв. с зеркалом  (руч.лев/пр)",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-01-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-01-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-01-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-01-2_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-01-2_gallery_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-01-2_gallery_03.jpg",
+        "http://localhost:9000/static/products/oliver/OL-01-2_gallery_04.jpg"
+      ],
+      "image_basenames": [
+        "ol-01-2_main.jpg",
+        "ol-01-2_main.jpg",
+        "ol-01-2_main.jpg",
+        "ol-01-2_gallery_01.jpg",
+        "ol-01-2_gallery_02.jpg",
+        "ol-01-2_gallery_03.jpg",
+        "ol-01-2_gallery_04.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-02-1",
+      "sku": "OL-02-1",
+      "collection": "oliver",
+      "title": "Шкаф для одежды 2-дв.",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-02-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-02-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-02-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-02-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-02-1_gallery_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-02-1_gallery_03.jpg"
+      ],
+      "image_basenames": [
+        "ol-02-1_main.jpg",
+        "ol-02-1_main.jpg",
+        "ol-02-1_main.jpg",
+        "ol-02-1_gallery_01.jpg",
+        "ol-02-1_gallery_02.jpg",
+        "ol-02-1_gallery_03.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-03-1",
+      "sku": "OL-03-1",
+      "collection": "oliver",
+      "title": "Шкаф для одежды 3-дв.",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-03-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-03-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-03-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-03-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-03-1_gallery_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-03-1_gallery_03.jpg",
+        "http://localhost:9000/static/products/oliver/OL-03-1_gallery_04.jpg",
+        "http://localhost:9000/static/products/oliver/OL-03-1_gallery_05.jpg",
+        "http://localhost:9000/static/products/oliver/OL-03-1_gallery_06.jpg"
+      ],
+      "image_basenames": [
+        "ol-03-1_main.jpg",
+        "ol-03-1_main.jpg",
+        "ol-03-1_main.jpg",
+        "ol-03-1_gallery_01.jpg",
+        "ol-03-1_gallery_02.jpg",
+        "ol-03-1_gallery_03.jpg",
+        "ol-03-1_gallery_04.jpg",
+        "ol-03-1_gallery_05.jpg",
+        "ol-03-1_gallery_06.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-05-1",
+      "sku": "OL-05-1",
+      "collection": "oliver",
+      "title": "Комод стандартный",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-05-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-05-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-05-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-05-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-05-1_gallery_02.jpg"
+      ],
+      "image_basenames": [
+        "ol-05-1_main.jpg",
+        "ol-05-1_main.jpg",
+        "ol-05-1_main.jpg",
+        "ol-05-1_gallery_01.jpg",
+        "ol-05-1_gallery_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-05-2",
+      "sku": "OL-05-2",
+      "collection": "oliver",
+      "title": "Комод широкий",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-05-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-05-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-05-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-05-2_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-05-2_gallery_02.jpg"
+      ],
+      "image_basenames": [
+        "ol-05-2_main.jpg",
+        "ol-05-2_main.jpg",
+        "ol-05-2_main.jpg",
+        "ol-05-2_gallery_01.jpg",
+        "ol-05-2_gallery_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-05-3",
+      "sku": "OL-05-3",
+      "collection": "oliver",
+      "title": "Комод высокий",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-05-3_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-05-3_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-05-3_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-05-3_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-05-3_gallery_02.jpg"
+      ],
+      "image_basenames": [
+        "ol-05-3_main.jpg",
+        "ol-05-3_main.jpg",
+        "ol-05-3_main.jpg",
+        "ol-05-3_gallery_01.jpg",
+        "ol-05-3_gallery_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-05-н",
+      "sku": "OL-05-Н",
+      "collection": "oliver",
+      "title": "Комод высокий (ниже на 1 ярус ящиков)",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-05-Н_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-05-Н_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-05-Н_main.jpg"
+      ],
+      "image_basenames": [
+        "ol-05-н_main.jpg",
+        "ol-05-н_main.jpg",
+        "ol-05-н_main.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-06-1",
+      "sku": "OL-06-1",
+      "collection": "oliver",
+      "title": "Столик  туалетный с зеркалом",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-06-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-06-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-06-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-06-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-06-1_gallery_02.jpg"
+      ],
+      "image_basenames": [
+        "ol-06-1_main.jpg",
+        "ol-06-1_main.jpg",
+        "ol-06-1_main.jpg",
+        "ol-06-1_gallery_01.jpg",
+        "ol-06-1_gallery_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-07-1",
+      "sku": "OL-07-1",
+      "collection": "oliver",
+      "title": "Сундук",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-07-1_color_leona_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-07-1_color_leona_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-07-1_color_lillian_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-07-1_color_linda_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-07-1_color_lorna_01.jpg"
+      ],
+      "image_basenames": [
+        "ol-07-1_color_leona_01.jpg",
+        "ol-07-1_color_leona_02.jpg",
+        "ol-07-1_color_lillian_01.jpg",
+        "ol-07-1_color_linda_01.jpg",
+        "ol-07-1_color_lorna_01.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-08-1",
+      "sku": "OL-08-1",
+      "collection": "oliver",
+      "title": "Зеркало навесное овальное",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-08-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-08-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-08-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-08-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-08-1_gallery_02.jpg"
+      ],
+      "image_basenames": [
+        "ol-08-1_main.jpg",
+        "ol-08-1_main.jpg",
+        "ol-08-1_main.jpg",
+        "ol-08-1_gallery_01.jpg",
+        "ol-08-1_gallery_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-08-2",
+      "sku": "OL-08-2",
+      "collection": "oliver",
+      "title": "Тумбочка прикроватная  с дверкой (руч.лев/пр)",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-08-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-08-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-08-2_main.jpg"
+      ],
+      "image_basenames": [
+        "ol-08-2_main.jpg",
+        "ol-08-2_main.jpg",
+        "ol-08-2_main.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-09-2",
+      "sku": "OL-09-2",
+      "collection": "oliver",
+      "title": "Зеркало напольное",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-09-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-09-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-09-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-09-2_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-09-2_gallery_02.jpg"
+      ],
+      "image_basenames": [
+        "ol-09-2_main.jpg",
+        "ol-09-2_main.jpg",
+        "ol-09-2_main.jpg",
+        "ol-09-2_gallery_01.jpg",
+        "ol-09-2_gallery_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-14-1",
+      "sku": "OL-14-1",
+      "collection": "oliver",
+      "title": "Кровать 1-сп. (90*190)",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-14-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-14-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-14-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-14-1_gallery_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-14-1_gallery_03.jpg",
+        "http://localhost:9000/static/products/oliver/OL-14-1_gallery_04.jpg",
+        "http://localhost:9000/static/products/oliver/OL-14-1_color_lillian_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-14-1_color_lillian_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-14-1_color_lillian_03.jpg",
+        "http://localhost:9000/static/products/oliver/OL-14-1_color_lillian_04.jpg",
+        "http://localhost:9000/static/products/oliver/OL-14-1_color_lillian_05.jpg"
+      ],
+      "image_basenames": [
+        "ol-14-1_gallery_01.jpg",
+        "ol-14-1_gallery_01.jpg",
+        "ol-14-1_gallery_01.jpg",
+        "ol-14-1_gallery_02.jpg",
+        "ol-14-1_gallery_03.jpg",
+        "ol-14-1_gallery_04.jpg",
+        "ol-14-1_color_lillian_01.jpg",
+        "ol-14-1_color_lillian_02.jpg",
+        "ol-14-1_color_lillian_03.jpg",
+        "ol-14-1_color_lillian_04.jpg",
+        "ol-14-1_color_lillian_05.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-14-2",
+      "sku": "OL-14-2",
+      "collection": "oliver",
+      "title": "Кровать 1-сп. (90*190) без изножья",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-14-2_color_lillian_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-14-2_color_lillian_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-14-2_color_lillian_03.jpg",
+        "http://localhost:9000/static/products/oliver/OL-14-2_color_lillian_04.jpg",
+        "http://localhost:9000/static/products/oliver/OL-14-2_color_lillian_05.jpg",
+        "http://localhost:9000/static/products/oliver/OL-14-2_color_lorna_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-14-2_color_lorna_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-14-2_color_lorna_03.jpg",
+        "http://localhost:9000/static/products/oliver/OL-14-2_color_lorna_04.jpg"
+      ],
+      "image_basenames": [
+        "ol-14-2_color_lillian_01.jpg",
+        "ol-14-2_color_lillian_02.jpg",
+        "ol-14-2_color_lillian_03.jpg",
+        "ol-14-2_color_lillian_04.jpg",
+        "ol-14-2_color_lillian_05.jpg",
+        "ol-14-2_color_lorna_01.jpg",
+        "ol-14-2_color_lorna_02.jpg",
+        "ol-14-2_color_lorna_03.jpg",
+        "ol-14-2_color_lorna_04.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-15-1",
+      "sku": "OL-15-1",
+      "collection": "oliver",
+      "title": "Кровать 1,5-сп. (120*190)",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-15-1_color_lorna_01.jpg"
+      ],
+      "image_basenames": [
+        "ol-15-1_color_lorna_01.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-15-2",
+      "sku": "OL-15-2",
+      "collection": "oliver",
+      "title": "Кровать 1,5-сп. (120*190) без изножья",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-15-2_color_lorna_01.jpg"
+      ],
+      "image_basenames": [
+        "ol-15-2_color_lorna_01.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-16-1",
+      "sku": "OL-16-1",
+      "collection": "oliver",
+      "title": "Кровать 1,5-сп. (140*190)",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-16-1_color_lillian_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-16-1_color_lillian_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-16-1_color_lillian_03.jpg",
+        "http://localhost:9000/static/products/oliver/OL-16-1_color_lillian_04.jpg",
+        "http://localhost:9000/static/products/oliver/OL-16-1_color_lillian_05.jpg",
+        "http://localhost:9000/static/products/oliver/OL-16-1_color_lorna_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-16-1_color_lorna_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-16-1_color_lorna_03.jpg",
+        "http://localhost:9000/static/products/oliver/OL-16-1_color_lorna_04.jpg"
+      ],
+      "image_basenames": [
+        "ol-16-1_color_lillian_01.jpg",
+        "ol-16-1_color_lillian_02.jpg",
+        "ol-16-1_color_lillian_03.jpg",
+        "ol-16-1_color_lillian_04.jpg",
+        "ol-16-1_color_lillian_05.jpg",
+        "ol-16-1_color_lorna_01.jpg",
+        "ol-16-1_color_lorna_02.jpg",
+        "ol-16-1_color_lorna_03.jpg",
+        "ol-16-1_color_lorna_04.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-16-2",
+      "sku": "OL-16-2",
+      "collection": "oliver",
+      "title": "Кровать 1,5-сп. (140*190) без изножья",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-16-2_color_lillian_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-16-2_color_lillian_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-16-2_color_lillian_03.jpg",
+        "http://localhost:9000/static/products/oliver/OL-16-2_color_lillian_04.jpg",
+        "http://localhost:9000/static/products/oliver/OL-16-2_color_lillian_05.jpg",
+        "http://localhost:9000/static/products/oliver/OL-16-2_color_lorna_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-16-2_color_lorna_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-16-2_color_lorna_03.jpg",
+        "http://localhost:9000/static/products/oliver/OL-16-2_color_lorna_04.jpg"
+      ],
+      "image_basenames": [
+        "ol-16-2_color_lillian_01.jpg",
+        "ol-16-2_color_lillian_02.jpg",
+        "ol-16-2_color_lillian_03.jpg",
+        "ol-16-2_color_lillian_04.jpg",
+        "ol-16-2_color_lillian_05.jpg",
+        "ol-16-2_color_lorna_01.jpg",
+        "ol-16-2_color_lorna_02.jpg",
+        "ol-16-2_color_lorna_03.jpg",
+        "ol-16-2_color_lorna_04.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-17-1",
+      "sku": "OL-17-1",
+      "collection": "oliver",
+      "title": "Кровать 2-сп. (160*200)",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-17-1_color_lillian_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-17-1_color_lillian_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-17-1_color_lillian_03.jpg",
+        "http://localhost:9000/static/products/oliver/OL-17-1_color_lillian_04.jpg",
+        "http://localhost:9000/static/products/oliver/OL-17-1_color_lillian_05.jpg",
+        "http://localhost:9000/static/products/oliver/OL-17-1_color_lorna_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-17-1_color_lorna_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-17-1_color_lorna_03.jpg",
+        "http://localhost:9000/static/products/oliver/OL-17-1_color_lorna_04.jpg"
+      ],
+      "image_basenames": [
+        "ol-17-1_color_lillian_01.jpg",
+        "ol-17-1_color_lillian_02.jpg",
+        "ol-17-1_color_lillian_03.jpg",
+        "ol-17-1_color_lillian_04.jpg",
+        "ol-17-1_color_lillian_05.jpg",
+        "ol-17-1_color_lorna_01.jpg",
+        "ol-17-1_color_lorna_02.jpg",
+        "ol-17-1_color_lorna_03.jpg",
+        "ol-17-1_color_lorna_04.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-17-2",
+      "sku": "OL-17-2",
+      "collection": "oliver",
+      "title": "Кровать 2-сп. (160*200) без изножья",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-17-2_color_lillian_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-17-2_color_lillian_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-17-2_color_lillian_03.jpg",
+        "http://localhost:9000/static/products/oliver/OL-17-2_color_lillian_04.jpg",
+        "http://localhost:9000/static/products/oliver/OL-17-2_color_lillian_05.jpg",
+        "http://localhost:9000/static/products/oliver/OL-17-2_color_lorna_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-17-2_color_lorna_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-17-2_color_lorna_03.jpg",
+        "http://localhost:9000/static/products/oliver/OL-17-2_color_lorna_04.jpg"
+      ],
+      "image_basenames": [
+        "ol-17-2_color_lillian_01.jpg",
+        "ol-17-2_color_lillian_02.jpg",
+        "ol-17-2_color_lillian_03.jpg",
+        "ol-17-2_color_lillian_04.jpg",
+        "ol-17-2_color_lillian_05.jpg",
+        "ol-17-2_color_lorna_01.jpg",
+        "ol-17-2_color_lorna_02.jpg",
+        "ol-17-2_color_lorna_03.jpg",
+        "ol-17-2_color_lorna_04.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-17-3",
+      "sku": "OL-17-3",
+      "collection": "oliver",
+      "title": "Кровать 2-сп. (160*200) с подъемн.мех-змом",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-17-3_color_lillian_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-17-3_color_lillian_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-17-3_color_lorna_01.jpg"
+      ],
+      "image_basenames": [
+        "ol-17-3_color_lillian_01.jpg",
+        "ol-17-3_color_lillian_02.jpg",
+        "ol-17-3_color_lorna_01.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-18-1",
+      "sku": "OL-18-1",
+      "collection": "oliver",
+      "title": "Кровать 2-сп. (180*200)",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-18-1_color_lillian_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-18-1_color_lillian_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-18-1_color_lillian_03.jpg",
+        "http://localhost:9000/static/products/oliver/OL-18-1_color_lillian_04.jpg",
+        "http://localhost:9000/static/products/oliver/OL-18-1_color_lillian_05.jpg",
+        "http://localhost:9000/static/products/oliver/OL-18-1_color_lorna_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-18-1_color_lorna_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-18-1_color_lorna_03.jpg"
+      ],
+      "image_basenames": [
+        "ol-18-1_color_lillian_01.jpg",
+        "ol-18-1_color_lillian_02.jpg",
+        "ol-18-1_color_lillian_03.jpg",
+        "ol-18-1_color_lillian_04.jpg",
+        "ol-18-1_color_lillian_05.jpg",
+        "ol-18-1_color_lorna_01.jpg",
+        "ol-18-1_color_lorna_02.jpg",
+        "ol-18-1_color_lorna_03.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-18-2",
+      "sku": "OL-18-2",
+      "collection": "oliver",
+      "title": "Кровать 2-сп. (180*200) без изножья",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-18-2_color_lillian_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-18-2_color_lillian_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-18-2_color_lillian_03.jpg",
+        "http://localhost:9000/static/products/oliver/OL-18-2_color_lillian_04.jpg",
+        "http://localhost:9000/static/products/oliver/OL-18-2_color_lillian_05.jpg",
+        "http://localhost:9000/static/products/oliver/OL-18-2_color_lorna_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-18-2_color_lorna_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-18-2_color_lorna_03.jpg",
+        "http://localhost:9000/static/products/oliver/OL-18-2_color_lorna_04.jpg"
+      ],
+      "image_basenames": [
+        "ol-18-2_color_lillian_01.jpg",
+        "ol-18-2_color_lillian_02.jpg",
+        "ol-18-2_color_lillian_03.jpg",
+        "ol-18-2_color_lillian_04.jpg",
+        "ol-18-2_color_lillian_05.jpg",
+        "ol-18-2_color_lorna_01.jpg",
+        "ol-18-2_color_lorna_02.jpg",
+        "ol-18-2_color_lorna_03.jpg",
+        "ol-18-2_color_lorna_04.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-21-1",
+      "sku": "OL-21-1",
+      "collection": "oliver",
+      "title": "Стол обеденный раздвижной",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-21-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-21-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-21-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-21-1_gallery_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-21-1_gallery_03.jpg",
+        "http://localhost:9000/static/products/oliver/OL-21-1_gallery_04.jpg"
+      ],
+      "image_basenames": [
+        "ol-21-1_gallery_01.jpg",
+        "ol-21-1_gallery_01.jpg",
+        "ol-21-1_gallery_01.jpg",
+        "ol-21-1_gallery_02.jpg",
+        "ol-21-1_gallery_03.jpg",
+        "ol-21-1_gallery_04.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-23-1",
+      "sku": "OL-23-1",
+      "collection": "oliver",
+      "title": "Стул",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-23-1_color_leona_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-23-1_color_leona_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-23-1_color_leona_03.jpg",
+        "http://localhost:9000/static/products/oliver/OL-23-1_color_lillian_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-23-1_color_lillian_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-23-1_color_lillian_03.jpg",
+        "http://localhost:9000/static/products/oliver/OL-23-1_color_lillian_04.jpg",
+        "http://localhost:9000/static/products/oliver/OL-23-1_color_lillian_05.jpg",
+        "http://localhost:9000/static/products/oliver/OL-23-1_color_lillian_06.jpg",
+        "http://localhost:9000/static/products/oliver/OL-23-1_color_linda_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-23-1_color_linda_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-23-1_color_linda_03.jpg",
+        "http://localhost:9000/static/products/oliver/OL-23-1_color_linda_04.jpg",
+        "http://localhost:9000/static/products/oliver/OL-23-1_color_linda_05.jpg",
+        "http://localhost:9000/static/products/oliver/OL-23-1_color_lorna_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-23-1_color_lorna_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-23-1_color_lorna_03.jpg",
+        "http://localhost:9000/static/products/oliver/OL-23-1_color_lorna_04.jpg",
+        "http://localhost:9000/static/products/oliver/OL-23-1_color_lorna_05.jpg",
+        "http://localhost:9000/static/products/oliver/OL-23-1_color_lorna_06.jpg",
+        "http://localhost:9000/static/products/oliver/OL-23-1_color_torno_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-23-1_color_torno_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-23-1_color_torno_03.jpg",
+        "http://localhost:9000/static/products/oliver/OL-23-1_color_torno_04.jpg",
+        "http://localhost:9000/static/products/oliver/OL-23-1_color_torno_05.jpg",
+        "http://localhost:9000/static/products/oliver/OL-23-1_color_torno_06.jpg"
+      ],
+      "image_basenames": [
+        "ol-23-1_color_leona_01.jpg",
+        "ol-23-1_color_leona_02.jpg",
+        "ol-23-1_color_leona_03.jpg",
+        "ol-23-1_color_lillian_01.jpg",
+        "ol-23-1_color_lillian_02.jpg",
+        "ol-23-1_color_lillian_03.jpg",
+        "ol-23-1_color_lillian_04.jpg",
+        "ol-23-1_color_lillian_05.jpg",
+        "ol-23-1_color_lillian_06.jpg",
+        "ol-23-1_color_linda_01.jpg",
+        "ol-23-1_color_linda_02.jpg",
+        "ol-23-1_color_linda_03.jpg",
+        "ol-23-1_color_linda_04.jpg",
+        "ol-23-1_color_linda_05.jpg",
+        "ol-23-1_color_lorna_01.jpg",
+        "ol-23-1_color_lorna_02.jpg",
+        "ol-23-1_color_lorna_03.jpg",
+        "ol-23-1_color_lorna_04.jpg",
+        "ol-23-1_color_lorna_05.jpg",
+        "ol-23-1_color_lorna_06.jpg",
+        "ol-23-1_color_torno_01.jpg",
+        "ol-23-1_color_torno_02.jpg",
+        "ol-23-1_color_torno_03.jpg",
+        "ol-23-1_color_torno_04.jpg",
+        "ol-23-1_color_torno_05.jpg",
+        "ol-23-1_color_torno_06.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-25-1",
+      "sku": "OL-25-1",
+      "collection": "oliver",
+      "title": "Комод столовый",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-25-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-25-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-25-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-25-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-25-1_gallery_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-25-1_gallery_03.jpg",
+        "http://localhost:9000/static/products/oliver/OL-25-1_gallery_04.jpg"
+      ],
+      "image_basenames": [
+        "ol-25-1_main.jpg",
+        "ol-25-1_main.jpg",
+        "ol-25-1_main.jpg",
+        "ol-25-1_gallery_01.jpg",
+        "ol-25-1_gallery_02.jpg",
+        "ol-25-1_gallery_03.jpg",
+        "ol-25-1_gallery_04.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-26-1",
+      "sku": "OL-26-1",
+      "collection": "oliver",
+      "title": "Шкаф буфетный со стеклом/филенгками.",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-26-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-26-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-26-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-26-1_gallery_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-26-1_gallery_03.jpg",
+        "http://localhost:9000/static/products/oliver/OL-26-1_gallery_04.jpg",
+        "http://localhost:9000/static/products/oliver/OL-26-1_gallery_05.jpg"
+      ],
+      "image_basenames": [
+        "ol-26-1_gallery_01.jpg",
+        "ol-26-1_gallery_01.jpg",
+        "ol-26-1_gallery_01.jpg",
+        "ol-26-1_gallery_02.jpg",
+        "ol-26-1_gallery_03.jpg",
+        "ol-26-1_gallery_04.jpg",
+        "ol-26-1_gallery_05.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-26-2",
+      "sku": "OL-26-2",
+      "collection": "oliver",
+      "title": "Шкаф-витрина",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-26-2_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-26-2_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-26-2_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-26-2_gallery_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-26-2_gallery_03.jpg",
+        "http://localhost:9000/static/products/oliver/OL-26-2_gallery_04.jpg",
+        "http://localhost:9000/static/products/oliver/OL-26-2_gallery_05.jpg"
+      ],
+      "image_basenames": [
+        "ol-26-2_gallery_01.jpg",
+        "ol-26-2_gallery_01.jpg",
+        "ol-26-2_gallery_01.jpg",
+        "ol-26-2_gallery_02.jpg",
+        "ol-26-2_gallery_03.jpg",
+        "ol-26-2_gallery_04.jpg",
+        "ol-26-2_gallery_05.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-30-1",
+      "sku": "OL-30-1",
+      "collection": "oliver",
+      "title": "Часы",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-30-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-30-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-30-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-30-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-30-1_gallery_02.jpg"
+      ],
+      "image_basenames": [
+        "ol-30-1_main.jpg",
+        "ol-30-1_main.jpg",
+        "ol-30-1_main.jpg",
+        "ol-30-1_gallery_01.jpg",
+        "ol-30-1_gallery_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-42-1",
+      "sku": "OL-42-1",
+      "collection": "oliver",
+      "title": "Тумба для телевизора",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-42-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-42-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-42-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-42-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-42-1_gallery_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-42-1_gallery_03.jpg"
+      ],
+      "image_basenames": [
+        "ol-42-1_main.jpg",
+        "ol-42-1_main.jpg",
+        "ol-42-1_main.jpg",
+        "ol-42-1_gallery_01.jpg",
+        "ol-42-1_gallery_02.jpg",
+        "ol-42-1_gallery_03.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-43-1",
+      "sku": "OL-43-1",
+      "collection": "oliver",
+      "title": "Столик чайный  круглый",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-43-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-43-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-43-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-43-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-43-1_gallery_02.jpg"
+      ],
+      "image_basenames": [
+        "ol-43-1_main.jpg",
+        "ol-43-1_main.jpg",
+        "ol-43-1_main.jpg",
+        "ol-43-1_gallery_01.jpg",
+        "ol-43-1_gallery_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-44-1",
+      "sku": "OL-44-1",
+      "collection": "oliver",
+      "title": "Консоль",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-44-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-44-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-44-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-44-1_gallery_01.jpg"
+      ],
+      "image_basenames": [
+        "ol-44-1_main.jpg",
+        "ol-44-1_main.jpg",
+        "ol-44-1_main.jpg",
+        "ol-44-1_gallery_01.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-44-2",
+      "sku": "OL-44-2",
+      "collection": "oliver",
+      "title": "Консоль с полками",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-44-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-44-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-44-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-44-2_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-44-2_gallery_02.jpg"
+      ],
+      "image_basenames": [
+        "ol-44-2_main.jpg",
+        "ol-44-2_main.jpg",
+        "ol-44-2_main.jpg",
+        "ol-44-2_gallery_01.jpg",
+        "ol-44-2_gallery_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-55-1",
+      "sku": "OL-55-1",
+      "collection": "oliver",
+      "title": "Банкетка малая",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-55-1_color_leona_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-55-1_color_lorna_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-55-1_color_lorna_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-55-1_color_torno_01.jpg"
+      ],
+      "image_basenames": [
+        "ol-55-1_color_leona_01.jpg",
+        "ol-55-1_color_lorna_01.jpg",
+        "ol-55-1_color_lorna_02.jpg",
+        "ol-55-1_color_torno_01.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-55-2",
+      "sku": "OL-55-2",
+      "collection": "oliver",
+      "title": "Банкетка большая",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-55-2_color_lorna_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-55-2_color_lorna_02.jpg"
+      ],
+      "image_basenames": [
+        "ol-55-2_color_lorna_01.jpg",
+        "ol-55-2_color_lorna_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-56-1",
+      "sku": "OL-56-1",
+      "collection": "oliver",
+      "title": "Кресло",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-56-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-56-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-56-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-56-1_color_lillian_01.jpg"
+      ],
+      "image_basenames": [
+        "ol-56-1_gallery_01.jpg",
+        "ol-56-1_gallery_01.jpg",
+        "ol-56-1_gallery_01.jpg",
+        "ol-56-1_color_lillian_01.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-57-1",
+      "sku": "OL-57-1",
+      "collection": "oliver",
+      "title": "Диван малый",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-57-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-57-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-57-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-57-1_color_lilian_01.jpg"
+      ],
+      "image_basenames": [
+        "ol-57-1_gallery_01.jpg",
+        "ol-57-1_gallery_01.jpg",
+        "ol-57-1_gallery_01.jpg",
+        "ol-57-1_color_lilian_01.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-57-2",
+      "sku": "OL-57-2",
+      "collection": "oliver",
+      "title": "Диван большой",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-57-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-57-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-57-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-57-2_color_lillian_01.jpg"
+      ],
+      "image_basenames": [
+        "ol-57-2_main.jpg",
+        "ol-57-2_main.jpg",
+        "ol-57-2_main.jpg",
+        "ol-57-2_color_lillian_01.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-57-3",
+      "sku": "OL-57-3",
+      "collection": "oliver",
+      "title": "Диван-кровать малый (140*190)",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-57-3_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-57-3_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-57-3_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-57-3_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-57-3_gallery_02.jpg"
+      ],
+      "image_basenames": [
+        "ol-57-3_main.jpg",
+        "ol-57-3_main.jpg",
+        "ol-57-3_main.jpg",
+        "ol-57-3_gallery_01.jpg",
+        "ol-57-3_gallery_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-61-1",
+      "sku": "OL-61-1",
+      "collection": "oliver",
+      "title": "Шкаф книжный со стеклом",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-61-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-61-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-61-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-61-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-61-1_gallery_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-61-1_gallery_03.jpg",
+        "http://localhost:9000/static/products/oliver/OL-61-1_gallery_04.jpg"
+      ],
+      "image_basenames": [
+        "ol-61-1_main.jpg",
+        "ol-61-1_main.jpg",
+        "ol-61-1_main.jpg",
+        "ol-61-1_gallery_01.jpg",
+        "ol-61-1_gallery_02.jpg",
+        "ol-61-1_gallery_03.jpg",
+        "ol-61-1_gallery_04.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-61-2",
+      "sku": "OL-61-2",
+      "collection": "oliver",
+      "title": "Шкаф кабинетный",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-61-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-61-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-61-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-61-2_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-61-2_gallery_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-61-2_gallery_03.jpg",
+        "http://localhost:9000/static/products/oliver/OL-61-2_gallery_04.jpg"
+      ],
+      "image_basenames": [
+        "ol-61-2_main.jpg",
+        "ol-61-2_main.jpg",
+        "ol-61-2_main.jpg",
+        "ol-61-2_gallery_01.jpg",
+        "ol-61-2_gallery_02.jpg",
+        "ol-61-2_gallery_03.jpg",
+        "ol-61-2_gallery_04.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-62-1",
+      "sku": "OL-62-1",
+      "collection": "oliver",
+      "title": "Стеллаж для книг",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-62-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-62-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-62-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-62-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-62-1_gallery_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-62-1_gallery_03.jpg"
+      ],
+      "image_basenames": [
+        "ol-62-1_main.jpg",
+        "ol-62-1_main.jpg",
+        "ol-62-1_main.jpg",
+        "ol-62-1_gallery_01.jpg",
+        "ol-62-1_gallery_02.jpg",
+        "ol-62-1_gallery_03.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-62-2",
+      "sku": "OL-62-2",
+      "collection": "oliver",
+      "title": "Стеллаж широкий",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-62-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-62-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-62-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-62-2_gallery_01.jpg"
+      ],
+      "image_basenames": [
+        "ol-62-2_main.jpg",
+        "ol-62-2_main.jpg",
+        "ol-62-2_main.jpg",
+        "ol-62-2_gallery_01.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-64-1",
+      "sku": "OL-64-1",
+      "collection": "oliver",
+      "title": "Стол-бюро",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-64-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-64-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-64-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-64-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-64-1_gallery_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-64-1_gallery_03.jpg"
+      ],
+      "image_basenames": [
+        "ol-64-1_main.jpg",
+        "ol-64-1_main.jpg",
+        "ol-64-1_main.jpg",
+        "ol-64-1_gallery_01.jpg",
+        "ol-64-1_gallery_02.jpg",
+        "ol-64-1_gallery_03.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-65-1",
+      "sku": "OL-65-1",
+      "collection": "oliver",
+      "title": "Стол письменный 1-тумб. 0П",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-65-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-65-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-65-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-65-1_gallery_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-65-1_gallery_03.jpg",
+        "http://localhost:9000/static/products/oliver/OL-65-1_gallery_04.jpg"
+      ],
+      "image_basenames": [
+        "ol-65-1_gallery_01.jpg",
+        "ol-65-1_gallery_01.jpg",
+        "ol-65-1_gallery_01.jpg",
+        "ol-65-1_gallery_02.jpg",
+        "ol-65-1_gallery_03.jpg",
+        "ol-65-1_gallery_04.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-65-2",
+      "sku": "OL-65-2",
+      "collection": "oliver",
+      "title": "Стол письменный 1-тумб. П0",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-65-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-65-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-65-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-65-2_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-65-2_gallery_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-65-2_gallery_03.jpg"
+      ],
+      "image_basenames": [
+        "ol-65-2_main.jpg",
+        "ol-65-2_main.jpg",
+        "ol-65-2_main.jpg",
+        "ol-65-2_gallery_01.jpg",
+        "ol-65-2_gallery_02.jpg",
+        "ol-65-2_gallery_03.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-66-1",
+      "sku": "OL-66-1",
+      "collection": "oliver",
+      "title": "Стол письменный 2-тумб. ПП",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-66-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-66-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-66-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-66-1_gallery_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-66-1_gallery_03.jpg",
+        "http://localhost:9000/static/products/oliver/OL-66-1_gallery_04.jpg",
+        "http://localhost:9000/static/products/oliver/OL-66-1_gallery_05.jpg"
+      ],
+      "image_basenames": [
+        "ol-66-1_gallery_01.jpg",
+        "ol-66-1_gallery_01.jpg",
+        "ol-66-1_gallery_01.jpg",
+        "ol-66-1_gallery_02.jpg",
+        "ol-66-1_gallery_03.jpg",
+        "ol-66-1_gallery_04.jpg",
+        "ol-66-1_gallery_05.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-66-4",
+      "sku": "OL-66-4",
+      "collection": "oliver",
+      "title": "Стол кабинетный письменный 2-тумб. ПП",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-66-4_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-66-4_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-66-4_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-66-4_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-66-4_gallery_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-66-4_gallery_03.jpg",
+        "http://localhost:9000/static/products/oliver/OL-66-4_gallery_04.jpg"
+      ],
+      "image_basenames": [
+        "ol-66-4_main.jpg",
+        "ol-66-4_main.jpg",
+        "ol-66-4_main.jpg",
+        "ol-66-4_gallery_01.jpg",
+        "ol-66-4_gallery_02.jpg",
+        "ol-66-4_gallery_03.jpg",
+        "ol-66-4_gallery_04.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-67-1",
+      "sku": "OL-67-1",
+      "collection": "oliver",
+      "title": "Стол рабочий",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-67-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-67-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-67-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-67-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-67-1_gallery_02.jpg"
+      ],
+      "image_basenames": [
+        "ol-67-1_main.jpg",
+        "ol-67-1_main.jpg",
+        "ol-67-1_main.jpg",
+        "ol-67-1_gallery_01.jpg",
+        "ol-67-1_gallery_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-68-1",
+      "sku": "OL-68-1",
+      "collection": "oliver",
+      "title": "Этажерка малая 3 полки",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-68-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-68-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-68-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-68-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-68-1_gallery_02.jpg"
+      ],
+      "image_basenames": [
+        "ol-68-1_main.jpg",
+        "ol-68-1_main.jpg",
+        "ol-68-1_main.jpg",
+        "ol-68-1_gallery_01.jpg",
+        "ol-68-1_gallery_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-68-2",
+      "sku": "OL-68-2",
+      "collection": "oliver",
+      "title": "Этажерка большая 6 полок",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-68-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-68-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-68-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-68-2_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-68-2_gallery_02.jpg"
+      ],
+      "image_basenames": [
+        "ol-68-2_main.jpg",
+        "ol-68-2_main.jpg",
+        "ol-68-2_main.jpg",
+        "ol-68-2_gallery_01.jpg",
+        "ol-68-2_gallery_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-69-1",
+      "sku": "OL-69-1",
+      "collection": "oliver",
+      "title": "Полка книжная 1-ярусная",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-69-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-69-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-69-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-69-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-69-1_gallery_02.jpg"
+      ],
+      "image_basenames": [
+        "ol-69-1_main.jpg",
+        "ol-69-1_main.jpg",
+        "ol-69-1_main.jpg",
+        "ol-69-1_gallery_01.jpg",
+        "ol-69-1_gallery_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-69-2",
+      "sku": "OL-69-2",
+      "collection": "oliver",
+      "title": "Полка книжная 2-ярусная",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-69-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-69-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-69-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-69-2_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-69-2_gallery_02.jpg"
+      ],
+      "image_basenames": [
+        "ol-69-2_main.jpg",
+        "ol-69-2_main.jpg",
+        "ol-69-2_main.jpg",
+        "ol-69-2_gallery_01.jpg",
+        "ol-69-2_gallery_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-69-3",
+      "sku": "OL-69-3",
+      "collection": "oliver",
+      "title": "Полка книжная 3-ярусная",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-69-3_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-69-3_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-69-3_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-69-3_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-69-3_gallery_02.jpg"
+      ],
+      "image_basenames": [
+        "ol-69-3_main.jpg",
+        "ol-69-3_main.jpg",
+        "ol-69-3_main.jpg",
+        "ol-69-3_gallery_01.jpg",
+        "ol-69-3_gallery_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-69-4",
+      "sku": "OL-69-4",
+      "collection": "oliver",
+      "title": "Полка книжная угловая",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-69-4_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-69-4_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-69-4_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-69-4_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-69-4_gallery_02.jpg"
+      ],
+      "image_basenames": [
+        "ol-69-4_main.jpg",
+        "ol-69-4_main.jpg",
+        "ol-69-4_main.jpg",
+        "ol-69-4_gallery_01.jpg",
+        "ol-69-4_gallery_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-81-1",
+      "sku": "OL-81-1",
+      "collection": "oliver",
+      "title": "Столик  детский",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-81-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-81-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-81-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-81-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-81-1_gallery_02.jpg"
+      ],
+      "image_basenames": [
+        "ol-81-1_main.jpg",
+        "ol-81-1_main.jpg",
+        "ol-81-1_main.jpg",
+        "ol-81-1_gallery_01.jpg",
+        "ol-81-1_gallery_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-82-1",
+      "sku": "OL-82-1",
+      "collection": "oliver",
+      "title": "Стульчик  детский",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-82-1_color_linda_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-82-1_color_linda_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-82-1_color_lorna_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-82-1_color_lorna_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-82-1_color_torno_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-82-1_color_torno_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-82-1_color_torno_03.jpg",
+        "http://localhost:9000/static/products/oliver/OL-82-1_color_torno_04.jpg"
+      ],
+      "image_basenames": [
+        "ol-82-1_color_linda_01.jpg",
+        "ol-82-1_color_linda_02.jpg",
+        "ol-82-1_color_lorna_01.jpg",
+        "ol-82-1_color_lorna_02.jpg",
+        "ol-82-1_color_torno_01.jpg",
+        "ol-82-1_color_torno_02.jpg",
+        "ol-82-1_color_torno_03.jpg",
+        "ol-82-1_color_torno_04.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-83-1",
+      "sku": "OL-83-1",
+      "collection": "oliver",
+      "title": "Столешница пеленальная съемная",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-83-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-83-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-83-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-83-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-83-1_gallery_02.jpg"
+      ],
+      "image_basenames": [
+        "ol-83-1_main.jpg",
+        "ol-83-1_main.jpg",
+        "ol-83-1_main.jpg",
+        "ol-83-1_gallery_01.jpg",
+        "ol-83-1_gallery_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-84-1",
+      "sku": "OL-84-1",
+      "collection": "oliver",
+      "title": "Бортик к кровати малый",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-84-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-84-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-84-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-84-1_gallery_01.jpg"
+      ],
+      "image_basenames": [
+        "ol-84-1_main.jpg",
+        "ol-84-1_main.jpg",
+        "ol-84-1_main.jpg",
+        "ol-84-1_gallery_01.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-84-2",
+      "sku": "OL-84-2",
+      "collection": "oliver",
+      "title": "Бортик к кровати большой",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-84-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-84-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-84-2_main.jpg"
+      ],
+      "image_basenames": [
+        "ol-84-2_main.jpg",
+        "ol-84-2_main.jpg",
+        "ol-84-2_main.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-85-1",
+      "sku": "OL-85-1",
+      "collection": "oliver",
+      "title": "Кроватка для новорожденного (60*120)",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-85-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-85-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-85-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-85-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-85-1_gallery_02.jpg"
+      ],
+      "image_basenames": [
+        "ol-85-1_main.jpg",
+        "ol-85-1_main.jpg",
+        "ol-85-1_main.jpg",
+        "ol-85-1_gallery_01.jpg",
+        "ol-85-1_gallery_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-85-2",
+      "sku": "OL-85-2",
+      "collection": "oliver",
+      "title": "Кроватка приставная + матрас",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-85-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-85-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-85-2_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-85-2_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-85-2_gallery_02.jpg"
+      ],
+      "image_basenames": [
+        "ol-85-2_main.jpg",
+        "ol-85-2_main.jpg",
+        "ol-85-2_main.jpg",
+        "ol-85-2_gallery_01.jpg",
+        "ol-85-2_gallery_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-86-1",
+      "sku": "OL-86-1",
+      "collection": "oliver",
+      "title": "Каркас для балдахина",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-86-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-86-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-86-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-86-1_gallery_01.jpg"
+      ],
+      "image_basenames": [
+        "ol-86-1_main.jpg",
+        "ol-86-1_main.jpg",
+        "ol-86-1_main.jpg",
+        "ol-86-1_gallery_01.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-95-1",
+      "sku": "OL-95-1",
+      "collection": "oliver",
+      "title": "Кровать - трансформер (80*150) с рисунком",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-95-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-95-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-95-1_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-95-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/oliver/OL-95-1_gallery_02.jpg",
+        "http://localhost:9000/static/products/oliver/OL-95-1_gallery_03.jpg"
+      ],
+      "image_basenames": [
+        "ol-95-1_main.jpg",
+        "ol-95-1_main.jpg",
+        "ol-95-1_main.jpg",
+        "ol-95-1_gallery_01.jpg",
+        "ol-95-1_gallery_02.jpg",
+        "ol-95-1_gallery_03.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "ol-95-3",
+      "sku": "OL-95-3",
+      "collection": "oliver",
+      "title": "Кровать - трансформер (80*150) с тканью",
+      "image_urls": [
+        "http://localhost:9000/static/products/oliver/OL-95-3_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-95-3_main.jpg",
+        "http://localhost:9000/static/products/oliver/OL-95-3_main.jpg"
+      ],
+      "image_basenames": [
+        "ol-95-3_main.jpg",
+        "ol-95-3_main.jpg",
+        "ol-95-3_main.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "mc-14-1",
+      "sku": "MC-14-1",
+      "collection": "oxford",
+      "title": "Комплекс Мой замок (кровать 90*190)",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "no_match",
+      "workbook_row_key": "oxford:MC-14-1",
+      "monchelsea_join_key": null
+    },
+    {
+      "handle": "mc-84-1",
+      "sku": "MC-84-1",
+      "collection": "oxford",
+      "title": "Бортик к кровати малый",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "no_match",
+      "workbook_row_key": "oxford:MC-84-1",
+      "monchelsea_join_key": null
+    },
+    {
+      "handle": "mc-84-2",
+      "sku": "MC-84-2",
+      "collection": "oxford",
+      "title": "Бортик к кровати большой",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "no_match",
+      "workbook_row_key": "oxford:MC-84-2",
+      "monchelsea_join_key": null
+    },
+    {
+      "handle": "mc-99-1",
+      "sku": "MC-99-1",
+      "collection": "oxford",
+      "title": "Комплекс Мой замок (без кровати)",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "no_match",
+      "workbook_row_key": "oxford:MC-99-1",
+      "monchelsea_join_key": null
+    },
+    {
+      "handle": "ox-08-1",
+      "sku": "OX-08-1",
+      "collection": "oxford",
+      "title": "Тумба прикроватная (для верхнего яруса)",
+      "image_urls": [
+        "http://localhost:9000/static/products/oxford/ox-08-1_interim_pdf_gallery_01.png",
+        "http://localhost:9000/static/products/oxford/Oxford_full_p7_i0_1320x949.png"
+      ],
+      "image_basenames": [
+        "ox-08-1_interim_pdf_gallery_01.png",
+        "oxford_full_p7_i0_1320x949.png"
+      ],
+      "qa_product_source": "entity-mapping.json",
+      "governance_status": null,
+      "alt_sources": [
+        "product-workbook-asset-map.json"
+      ]
+    },
+    {
+      "handle": "ox-1-1-n",
+      "sku": "OX-1-1-N",
+      "collection": "oxford",
+      "title": "Съемный чехол в стандартной ткани  1-2 категории на нижнюю кровать",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "no_match",
+      "workbook_row_key": "oxford:Ox-1-1-N",
+      "monchelsea_join_key": null
+    },
+    {
+      "handle": "ox-14-1",
+      "sku": "OX-14-1",
+      "collection": "oxford",
+      "title": "Комплекс Оксфорд-1 (нижняя кровать без матраса 90*185)",
+      "image_urls": [
+        "http://localhost:9000/static/products/oxford/ox-14-1_interim_pdf_gallery_01.png",
+        "http://localhost:9000/static/products/oxford/Oxford_full_p6_i0_887x614.png",
+        "http://localhost:9000/static/products/oxford/Oxford_full_p6_i1_887x621.png"
+      ],
+      "image_basenames": [
+        "ox-14-1_interim_pdf_gallery_01.png",
+        "oxford_full_p6_i0_887x614.png",
+        "oxford_full_p6_i1_887x621.png"
+      ],
+      "qa_product_source": "seed-products.oxford-pilot-four.json",
+      "governance_status": null,
+      "alt_sources": [
+        "entity-mapping.json",
+        "product-workbook-asset-map.json"
+      ]
+    },
+    {
+      "handle": "ox-14-11",
+      "sku": "OX-14-11",
+      "collection": "oxford",
+      "title": "Нижняя кровать без матраса увеличенная (120*185)",
+      "image_urls": [
+        "http://localhost:9000/static/products/oxford/ox-14-11_interim_pdf_gallery_01.png",
+        "http://localhost:9000/static/products/oxford/Oxford_full_p5_i0_947x949.png",
+        "http://localhost:9000/static/products/oxford/Oxford_full_p5_i1_480x1182.png",
+        "http://localhost:9000/static/products/oxford/Oxford_full_p5_i2_521x429.png",
+        "http://localhost:9000/static/products/oxford/Oxford_full_p5_i3_522x445.png"
+      ],
+      "image_basenames": [
+        "ox-14-11_interim_pdf_gallery_01.png",
+        "oxford_full_p5_i0_947x949.png",
+        "oxford_full_p5_i1_480x1182.png",
+        "oxford_full_p5_i2_521x429.png",
+        "oxford_full_p5_i3_522x445.png"
+      ],
+      "qa_product_source": "seed-products.oxford-pilot-four.json",
+      "governance_status": null,
+      "alt_sources": [
+        "entity-mapping.json",
+        "product-workbook-asset-map.json"
+      ]
+    },
+    {
+      "handle": "ox-14-2",
+      "sku": "OX-14-2",
+      "collection": "oxford",
+      "title": "Комплекс Оксфорд-2 (нижняя кровать 90*185 с матрасом в чехле, ткани в ассортименте)",
+      "image_urls": [
+        "http://localhost:9000/static/products/oxford/ox-14-2_interim_pdf_gallery_01.png",
+        "http://localhost:9000/static/products/oxford/Oxford_full_p7_i0_1320x949.png"
+      ],
+      "image_basenames": [
+        "ox-14-2_interim_pdf_gallery_01.png",
+        "oxford_full_p7_i0_1320x949.png"
+      ],
+      "qa_product_source": "entity-mapping.json",
+      "governance_status": null,
+      "alt_sources": [
+        "product-workbook-asset-map.json"
+      ]
+    },
+    {
+      "handle": "ox-84-1",
+      "sku": "OX-84-1",
+      "collection": "oxford",
+      "title": "Бортик к кровати малый",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "no_match",
+      "workbook_row_key": "oxford:OX-84-1",
+      "monchelsea_join_key": null
+    },
+    {
+      "handle": "ox-84-2",
+      "sku": "OX-84-2",
+      "collection": "oxford",
+      "title": "Бортик к кровати большой",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "no_match",
+      "workbook_row_key": "oxford:OX-84-2",
+      "monchelsea_join_key": null
+    },
+    {
+      "handle": "ox-90-1",
+      "sku": "OX-90-1",
+      "collection": "oxford",
+      "title": "Комплекс Оксфорд-1 с выдвижной столешницей без  нижней кровати",
+      "image_urls": [
+        "http://localhost:9000/static/products/oxford/ox-90-1_interim_pdf_gallery_01.png",
+        "http://localhost:9000/static/products/oxford/Oxford_full_p6_i0_887x614.png",
+        "http://localhost:9000/static/products/oxford/Oxford_full_p6_i1_887x621.png"
+      ],
+      "image_basenames": [
+        "ox-90-1_interim_pdf_gallery_01.png",
+        "oxford_full_p6_i0_887x614.png",
+        "oxford_full_p6_i1_887x621.png"
+      ],
+      "qa_product_source": "seed-products.oxford-pilot-four.json",
+      "governance_status": null,
+      "alt_sources": [
+        "entity-mapping.json",
+        "product-workbook-asset-map.json"
+      ]
+    },
+    {
+      "handle": "ox-90-2",
+      "sku": "OX-90-2",
+      "collection": "oxford",
+      "title": "Комплекс Оксфорд-2  без выдвижной столешницы с нижней кроватью и матрасом в чехле (ткани в ассортименте)",
+      "image_urls": [
+        "http://localhost:9000/static/products/oxford/ox-90-2_interim_pdf_gallery_01.png",
+        "http://localhost:9000/static/products/oxford/Oxford_full_p7_i0_1320x949.png"
+      ],
+      "image_basenames": [
+        "ox-90-2_interim_pdf_gallery_01.png",
+        "oxford_full_p7_i0_1320x949.png"
+      ],
+      "qa_product_source": "entity-mapping.json",
+      "governance_status": null,
+      "alt_sources": [
+        "product-workbook-asset-map.json"
+      ]
+    },
+    {
+      "handle": "ox-90-3",
+      "sku": "OX-90-3",
+      "collection": "oxford",
+      "title": "КомплексОксфорд-3 со шкафом и столом (без нижней кровати)",
+      "image_urls": [
+        "http://localhost:9000/static/products/oxford/ox-90-3_interim_pdf_gallery_01.png",
+        "http://localhost:9000/static/products/oxford/Oxford_full_p7_i0_1320x949.png"
+      ],
+      "image_basenames": [
+        "ox-90-3_interim_pdf_gallery_01.png",
+        "oxford_full_p7_i0_1320x949.png"
+      ],
+      "qa_product_source": "entity-mapping.json",
+      "governance_status": null,
+      "alt_sources": [
+        "product-workbook-asset-map.json"
+      ]
+    },
+    {
+      "handle": "ox-90-4",
+      "sku": "OX-90-4",
+      "collection": "oxford",
+      "title": "Комплекс Oxford-4 Кровать-чердак - без полок и ящиков внутри  (без нижней кровати)",
+      "image_urls": [
+        "http://localhost:9000/static/products/oxford/ox-90-4_interim_pdf_gallery_01.png",
+        "http://localhost:9000/static/products/oxford/Oxford_full_p7_i0_1320x949.png"
+      ],
+      "image_basenames": [
+        "ox-90-4_interim_pdf_gallery_01.png",
+        "oxford_full_p7_i0_1320x949.png"
+      ],
+      "qa_product_source": "entity-mapping.json",
+      "governance_status": null,
+      "alt_sources": [
+        "product-workbook-asset-map.json"
+      ]
+    },
+    {
+      "handle": "s-ox-02",
+      "sku": "S-OX-02",
+      "collection": "oxford",
+      "title": "Стеновая панель на всю длину ОКСФОРД",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "no_match",
+      "workbook_row_key": "oxford:S-OX-02",
+      "monchelsea_join_key": null
+    },
+    {
+      "handle": "s-ox-03",
+      "sku": "S-OX-03",
+      "collection": "oxford",
+      "title": "Полка навесная квадратная с 3-мя ящиками OXFORD",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "no_match",
+      "workbook_row_key": "oxford:S-OX-03",
+      "monchelsea_join_key": null
+    },
+    {
+      "handle": "s-ox-04",
+      "sku": "S-OX-04",
+      "collection": "oxford",
+      "title": "Полка навесная квадратная Оксфорд",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "no_match",
+      "workbook_row_key": "oxford:S-OX-04",
+      "monchelsea_join_key": null
+    },
+    {
+      "handle": "s-ox-05",
+      "sku": "S-OX-05",
+      "collection": "oxford",
+      "title": "Ступени с перилами и ящиками ОКСФОРД",
+      "image_urls": [
+        "http://localhost:9000/static/products/oxford/s-ox-05_interim_pdf_gallery_01.png",
+        "http://localhost:9000/static/products/oxford/Oxford_full_p4_i0_1306x951.png"
+      ],
+      "image_basenames": [
+        "s-ox-05_interim_pdf_gallery_01.png",
+        "oxford_full_p4_i0_1306x951.png"
+      ],
+      "qa_product_source": "seed-products.oxford-pilot-four.json",
+      "governance_status": null,
+      "alt_sources": [
+        "entity-mapping.json",
+        "product-workbook-asset-map.json"
+      ]
+    },
+    {
+      "handle": "sh-14-1",
+      "sku": "SH-14-1",
+      "collection": "oxford",
+      "title": "Комплекс Милый дом (кровать 90*190)",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "no_match",
+      "workbook_row_key": "oxford:SH-14-1",
+      "monchelsea_join_key": null
+    },
+    {
+      "handle": "sh-84-1",
+      "sku": "SH-84-1",
+      "collection": "oxford",
+      "title": "Бортик к кровати малый",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "no_match",
+      "workbook_row_key": "oxford:SH-84-1",
+      "monchelsea_join_key": null
+    },
+    {
+      "handle": "sh-84-2",
+      "sku": "SH-84-2",
+      "collection": "oxford",
+      "title": "Бортик к кровати большой",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "no_match",
+      "workbook_row_key": "oxford:SH-84-2",
+      "monchelsea_join_key": null
+    },
+    {
+      "handle": "sh-99-1",
+      "sku": "SH-99-1",
+      "collection": "oxford",
+      "title": "Комплекс Милый дом (без кровати)",
+      "image_urls": [],
+      "image_basenames": [],
+      "qa_product_source": "product-workbook-asset-map.json",
+      "governance_status": "no_match",
+      "workbook_row_key": "oxford:SH-99-1",
+      "monchelsea_join_key": null
+    },
+    {
+      "handle": "pv-02-1",
+      "sku": "PV-02-1",
+      "collection": "provence",
+      "title": "Шкаф для одежды 2-дв.",
+      "image_urls": [
+        "http://localhost:9000/static/products/provence/PV-02-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-02-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-02-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-02-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/provence/PV-02-1_gallery_02.jpg"
+      ],
+      "image_basenames": [
+        "pv-02-1_main.jpg",
+        "pv-02-1_main.jpg",
+        "pv-02-1_main.jpg",
+        "pv-02-1_gallery_01.jpg",
+        "pv-02-1_gallery_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "pv-03-1",
+      "sku": "PV-03-1",
+      "collection": "provence",
+      "title": "Шкаф для одежды 3-дв.",
+      "image_urls": [
+        "http://localhost:9000/static/products/provence/PV-03-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-03-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-03-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-03-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/provence/PV-03-1_gallery_02.jpg"
+      ],
+      "image_basenames": [
+        "pv-03-1_main.jpg",
+        "pv-03-1_main.jpg",
+        "pv-03-1_main.jpg",
+        "pv-03-1_gallery_01.jpg",
+        "pv-03-1_gallery_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "pv-05-2",
+      "sku": "PV-05-2",
+      "collection": "provence",
+      "title": "Комод стандартный",
+      "image_urls": [
+        "http://localhost:9000/static/products/provence/PV-05-2_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-05-2_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-05-2_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-05-2_gallery_01.jpg",
+        "http://localhost:9000/static/products/provence/PV-05-2_gallery_02.jpg",
+        "http://localhost:9000/static/products/provence/PV-05-2_gallery_03.jpg"
+      ],
+      "image_basenames": [
+        "pv-05-2_main.jpg",
+        "pv-05-2_main.jpg",
+        "pv-05-2_main.jpg",
+        "pv-05-2_gallery_01.jpg",
+        "pv-05-2_gallery_02.jpg",
+        "pv-05-2_gallery_03.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "pv-06-2",
+      "sku": "PV-06-2",
+      "collection": "provence",
+      "title": "Столик туалетный",
+      "image_urls": [
+        "http://localhost:9000/static/products/provence/PV-06-2_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-06-2_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-06-2_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-06-2_gallery_01.jpg",
+        "http://localhost:9000/static/products/provence/PV-06-2_gallery_02.jpg",
+        "http://localhost:9000/static/products/provence/PV-06-2_gallery_03.jpg",
+        "http://localhost:9000/static/products/provence/PV-06-2_gallery_04.jpg"
+      ],
+      "image_basenames": [
+        "pv-06-2_main.jpg",
+        "pv-06-2_main.jpg",
+        "pv-06-2_main.jpg",
+        "pv-06-2_gallery_01.jpg",
+        "pv-06-2_gallery_02.jpg",
+        "pv-06-2_gallery_03.jpg",
+        "pv-06-2_gallery_04.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "pv-08-2",
+      "sku": "PV-08-2",
+      "collection": "provence",
+      "title": "Тумбочка прикроватная",
+      "image_urls": [
+        "http://localhost:9000/static/products/provence/PV-08-2_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-08-2_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-08-2_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-08-2_gallery_01.jpg",
+        "http://localhost:9000/static/products/provence/PV-08-2_gallery_02.jpg",
+        "http://localhost:9000/static/products/provence/PV-08-2_gallery_03.jpg"
+      ],
+      "image_basenames": [
+        "pv-08-2_main.jpg",
+        "pv-08-2_main.jpg",
+        "pv-08-2_main.jpg",
+        "pv-08-2_gallery_01.jpg",
+        "pv-08-2_gallery_02.jpg",
+        "pv-08-2_gallery_03.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "pv-09-1",
+      "sku": "PV-09-1",
+      "collection": "provence",
+      "title": "Зеркало навесное",
+      "image_urls": [
+        "http://localhost:9000/static/products/provence/PV-09-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-09-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-09-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-09-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/provence/PV-09-1_gallery_02.jpg"
+      ],
+      "image_basenames": [
+        "pv-09-1_main.jpg",
+        "pv-09-1_main.jpg",
+        "pv-09-1_main.jpg",
+        "pv-09-1_gallery_01.jpg",
+        "pv-09-1_gallery_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "pv-09-2",
+      "sku": "PV-09-2",
+      "collection": "provence",
+      "title": "Зеркало напольное",
+      "image_urls": [
+        "http://localhost:9000/static/products/provence/PV-09-2_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-09-2_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-09-2_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-09-2_gallery_01.jpg"
+      ],
+      "image_basenames": [
+        "pv-09-2_main.jpg",
+        "pv-09-2_main.jpg",
+        "pv-09-2_main.jpg",
+        "pv-09-2_gallery_01.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "pv-14-1",
+      "sku": "PV-14-1",
+      "collection": "provence",
+      "title": "Кровать 1-сп. (90*190) без изножья",
+      "image_urls": [
+        "http://localhost:9000/static/products/provence/PV-14-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-14-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-14-1_main.jpg"
+      ],
+      "image_basenames": [
+        "pv-14-1_main.jpg",
+        "pv-14-1_main.jpg",
+        "pv-14-1_main.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "pv-15-1",
+      "sku": "PV-15-1",
+      "collection": "provence",
+      "title": "Кровать 1,5-сп. (120*190) без изножья",
+      "image_urls": [
+        "http://localhost:9000/static/products/provence/PV-15-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-15-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-15-1_main.jpg"
+      ],
+      "image_basenames": [
+        "pv-15-1_main.jpg",
+        "pv-15-1_main.jpg",
+        "pv-15-1_main.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "pv-15-2",
+      "sku": "PV-15-2",
+      "collection": "provence",
+      "title": "Кровать 1,5-сп. (120*190) с тканью без изножья",
+      "image_urls": [
+        "http://localhost:9000/static/products/provence/PV-15-2_gallery_01.jpg",
+        "http://localhost:9000/static/products/provence/PV-15-2_gallery_01.jpg",
+        "http://localhost:9000/static/products/provence/PV-15-2_gallery_01.jpg"
+      ],
+      "image_basenames": [
+        "pv-15-2_gallery_01.jpg",
+        "pv-15-2_gallery_01.jpg",
+        "pv-15-2_gallery_01.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "pv-16-1",
+      "sku": "PV-16-1",
+      "collection": "provence",
+      "title": "Кровать 1,5-сп. (140*190) без изножья",
+      "image_urls": [
+        "http://localhost:9000/static/products/provence/PV-16-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-16-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-16-1_main.jpg"
+      ],
+      "image_basenames": [
+        "pv-16-1_main.jpg",
+        "pv-16-1_main.jpg",
+        "pv-16-1_main.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "pv-17-1",
+      "sku": "PV-17-1",
+      "collection": "provence",
+      "title": "Кровать 2-сп. (160*200) без изножья",
+      "image_urls": [
+        "http://localhost:9000/static/products/provence/PV-17-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-17-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-17-1_main.jpg"
+      ],
+      "image_basenames": [
+        "pv-17-1_main.jpg",
+        "pv-17-1_main.jpg",
+        "pv-17-1_main.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "pv-18-1",
+      "sku": "PV-18-1",
+      "collection": "provence",
+      "title": "Кровать 2-сп. (180*200) без изножья",
+      "image_urls": [
+        "http://localhost:9000/static/products/provence/PV-18-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-18-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-18-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-18-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/provence/PV-18-1_gallery_02.jpg"
+      ],
+      "image_basenames": [
+        "pv-18-1_main.jpg",
+        "pv-18-1_main.jpg",
+        "pv-18-1_main.jpg",
+        "pv-18-1_gallery_01.jpg",
+        "pv-18-1_gallery_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "pv-23-1",
+      "sku": "PV-23-1",
+      "collection": "provence",
+      "title": "Стул",
+      "image_urls": [
+        "http://localhost:9000/static/products/provence/PV-23-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-23-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-23-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-23-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/provence/PV-23-1_gallery_02.jpg",
+        "http://localhost:9000/static/products/provence/PV-23-1_gallery_03.jpg"
+      ],
+      "image_basenames": [
+        "pv-23-1_main.jpg",
+        "pv-23-1_main.jpg",
+        "pv-23-1_main.jpg",
+        "pv-23-1_gallery_01.jpg",
+        "pv-23-1_gallery_02.jpg",
+        "pv-23-1_gallery_03.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "pv-42-2",
+      "sku": "PV-42-2",
+      "collection": "provence",
+      "title": "Тумба для телевизора",
+      "image_urls": [
+        "http://localhost:9000/static/products/provence/PV-42-2_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-42-2_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-42-2_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-42-2_gallery_01.jpg",
+        "http://localhost:9000/static/products/provence/PV-42-2_gallery_02.jpg"
+      ],
+      "image_basenames": [
+        "pv-42-2_main.jpg",
+        "pv-42-2_main.jpg",
+        "pv-42-2_main.jpg",
+        "pv-42-2_gallery_01.jpg",
+        "pv-42-2_gallery_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "pv-43-1",
+      "sku": "PV-43-1",
+      "collection": "provence",
+      "title": "Столик чайный",
+      "image_urls": [
+        "http://localhost:9000/static/products/provence/PV-43-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-43-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-43-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-43-1_gallery_01.jpg"
+      ],
+      "image_basenames": [
+        "pv-43-1_main.jpg",
+        "pv-43-1_main.jpg",
+        "pv-43-1_main.jpg",
+        "pv-43-1_gallery_01.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "pv-55-1",
+      "sku": "PV-55-1",
+      "collection": "provence",
+      "title": "Банкетка малая",
+      "image_urls": [
+        "http://localhost:9000/static/products/provence/PV-55-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-55-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-55-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-55-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/provence/PV-55-1_gallery_02.jpg",
+        "http://localhost:9000/static/products/provence/PV-55-1_gallery_03.jpg"
+      ],
+      "image_basenames": [
+        "pv-55-1_main.jpg",
+        "pv-55-1_main.jpg",
+        "pv-55-1_main.jpg",
+        "pv-55-1_gallery_01.jpg",
+        "pv-55-1_gallery_02.jpg",
+        "pv-55-1_gallery_03.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "pv-55-2",
+      "sku": "PV-55-2",
+      "collection": "provence",
+      "title": "Банкетка большая",
+      "image_urls": [
+        "http://localhost:9000/static/products/provence/PV-55-2_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-55-2_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-55-2_main.jpg"
+      ],
+      "image_basenames": [
+        "pv-55-2_main.jpg",
+        "pv-55-2_main.jpg",
+        "pv-55-2_main.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "pv-61-1",
+      "sku": "PV-61-1",
+      "collection": "provence",
+      "title": "Шкаф книжный",
+      "image_urls": [
+        "http://localhost:9000/static/products/provence/PV-61-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-61-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-61-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-61-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/provence/PV-61-1_gallery_02.jpg",
+        "http://localhost:9000/static/products/provence/PV-61-1_gallery_03.jpg"
+      ],
+      "image_basenames": [
+        "pv-61-1_main.jpg",
+        "pv-61-1_main.jpg",
+        "pv-61-1_main.jpg",
+        "pv-61-1_gallery_01.jpg",
+        "pv-61-1_gallery_02.jpg",
+        "pv-61-1_gallery_03.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "pv-62-1",
+      "sku": "PV-62-1",
+      "collection": "provence",
+      "title": "Стеллаж для книг",
+      "image_urls": [
+        "http://localhost:9000/static/products/provence/PV-62-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-62-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-62-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-62-1_gallery_01.jpg",
+        "http://localhost:9000/static/products/provence/PV-62-1_gallery_02.jpg",
+        "http://localhost:9000/static/products/provence/PV-62-1_gallery_03.jpg"
+      ],
+      "image_basenames": [
+        "pv-62-1_main.jpg",
+        "pv-62-1_main.jpg",
+        "pv-62-1_main.jpg",
+        "pv-62-1_gallery_01.jpg",
+        "pv-62-1_gallery_02.jpg",
+        "pv-62-1_gallery_03.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "pv-65-5",
+      "sku": "PV-65-5",
+      "collection": "provence",
+      "title": "Стол письменный 1-тумб. 0П",
+      "image_urls": [
+        "http://localhost:9000/static/products/provence/PV-65-5_gallery_01.jpg",
+        "http://localhost:9000/static/products/provence/PV-65-5_gallery_01.jpg",
+        "http://localhost:9000/static/products/provence/PV-65-5_gallery_01.jpg",
+        "http://localhost:9000/static/products/provence/PV-65-5_gallery_02.jpg"
+      ],
+      "image_basenames": [
+        "pv-65-5_gallery_01.jpg",
+        "pv-65-5_gallery_01.jpg",
+        "pv-65-5_gallery_01.jpg",
+        "pv-65-5_gallery_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "pv-65-6",
+      "sku": "PV-65-6",
+      "collection": "provence",
+      "title": "Стол письменный 1-тумб. П0",
+      "image_urls": [
+        "http://localhost:9000/static/products/provence/PV-65-6_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-65-6_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-65-6_main.jpg"
+      ],
+      "image_basenames": [
+        "pv-65-6_main.jpg",
+        "pv-65-6_main.jpg",
+        "pv-65-6_main.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "pv-65-7",
+      "sku": "PV-65-7",
+      "collection": "provence",
+      "title": "Стол письменный 1-тумб. 0Я",
+      "image_urls": [
+        "http://localhost:9000/static/products/provence/PV-65-7_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-65-7_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-65-7_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-65-7_gallery_01.jpg"
+      ],
+      "image_basenames": [
+        "pv-65-7_main.jpg",
+        "pv-65-7_main.jpg",
+        "pv-65-7_main.jpg",
+        "pv-65-7_gallery_01.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "pv-65-8",
+      "sku": "PV-65-8",
+      "collection": "provence",
+      "title": "Стол письменный 1-тумб. Я0",
+      "image_urls": [
+        "http://localhost:9000/static/products/provence/PV-65-8_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-65-8_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-65-8_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-65-8_gallery_01.jpg",
+        "http://localhost:9000/static/products/provence/PV-65-8_gallery_02.jpg"
+      ],
+      "image_basenames": [
+        "pv-65-8_main.jpg",
+        "pv-65-8_main.jpg",
+        "pv-65-8_main.jpg",
+        "pv-65-8_gallery_01.jpg",
+        "pv-65-8_gallery_02.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "pv-66-6",
+      "sku": "PV-66-6",
+      "collection": "provence",
+      "title": "Стол письменный 2-тумб. ПЯ",
+      "image_urls": [
+        "http://localhost:9000/static/products/provence/PV-66-6_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-66-6_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-66-6_main.jpg"
+      ],
+      "image_basenames": [
+        "pv-66-6_main.jpg",
+        "pv-66-6_main.jpg",
+        "pv-66-6_main.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "pv-66-7",
+      "sku": "PV-66-7",
+      "collection": "provence",
+      "title": "Стол письменный 2-тумб. ЯП",
+      "image_urls": [
+        "http://localhost:9000/static/products/provence/PV-66-7_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-66-7_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-66-7_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-66-7_gallery_01.jpg"
+      ],
+      "image_basenames": [
+        "pv-66-7_main.jpg",
+        "pv-66-7_main.jpg",
+        "pv-66-7_main.jpg",
+        "pv-66-7_gallery_01.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "pv-68-1",
+      "sku": "PV-68-1",
+      "collection": "provence",
+      "title": "Этажерка малая 3 полки",
+      "image_urls": [
+        "http://localhost:9000/static/products/provence/PV-68-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-68-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-68-1_main.jpg"
+      ],
+      "image_basenames": [
+        "pv-68-1_main.jpg",
+        "pv-68-1_main.jpg",
+        "pv-68-1_main.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "pv-68-2",
+      "sku": "PV-68-2",
+      "collection": "provence",
+      "title": "Этажерка большая 6 полок",
+      "image_urls": [
+        "http://localhost:9000/static/products/provence/PV-68-2_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-68-2_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-68-2_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-68-2_gallery_01.jpg"
+      ],
+      "image_basenames": [
+        "pv-68-2_main.jpg",
+        "pv-68-2_main.jpg",
+        "pv-68-2_main.jpg",
+        "pv-68-2_gallery_01.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    },
+    {
+      "handle": "pv-69-1",
+      "sku": "PV-69-1",
+      "collection": "provence",
+      "title": "Полка книжная",
+      "image_urls": [
+        "http://localhost:9000/static/products/provence/PV-69-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-69-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-69-1_main.jpg",
+        "http://localhost:9000/static/products/provence/PV-69-1_gallery_01.jpg"
+      ],
+      "image_basenames": [
+        "pv-69-1_main.jpg",
+        "pv-69-1_main.jpg",
+        "pv-69-1_main.jpg",
+        "pv-69-1_gallery_01.jpg"
+      ],
+      "qa_product_source": "seed-products.json",
+      "governance_status": null
+    }
+  ]
+}

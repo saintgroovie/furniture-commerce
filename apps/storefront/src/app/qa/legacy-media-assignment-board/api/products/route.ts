@@ -5,7 +5,8 @@ import { getFurnitureRepoDataResolution, legacyMediaQaRepoRootFailurePayload } f
 
 export const dynamic = "force-dynamic"
 
-const REL = "data/normalized/seed-products.json"
+const BOARD_REL = "data/normalized/legacy-media-board-products.json"
+const SEED_REL = "data/normalized/seed-products.json"
 
 function prodBlocked(): boolean {
   return process.env.NODE_ENV === "production" && process.env.LEGACY_MEDIA_QA_BOARD_ALLOW_PROD !== "1"
@@ -27,15 +28,20 @@ export async function GET(): Promise<Response> {
     return NextResponse.json(legacyMediaQaRepoRootFailurePayload(resolution), { status: 500 })
   }
 
-  const abs = path.join(repoRoot, REL)
+  const boardAbs = path.join(repoRoot, BOARD_REL)
+  const seedAbs = path.join(repoRoot, SEED_REL)
+  const useBoard = fs.existsSync(boardAbs)
+  const abs = useBoard ? boardAbs : seedAbs
+  const rel = useBoard ? BOARD_REL : SEED_REL
   if (!fs.existsSync(abs)) {
     return NextResponse.json(
       {
         error: "missing_file",
-        missing_file: REL,
+        missing_file: rel,
         resolved_repo_root: repoRoot,
         cwd,
         absolute_path_checked: abs,
+        hint: `Expected ${BOARD_REL} (run scripts/build-legacy-media-board-products.mjs) or ${SEED_REL}`,
       },
       { status: 500 }
     )
@@ -48,7 +54,7 @@ export async function GET(): Promise<Response> {
     return NextResponse.json(
       {
         error: "read_failed",
-        missing_file: REL,
+        missing_file: rel,
         resolved_repo_root: repoRoot,
         message: err instanceof Error ? err.message : String(err),
       },
@@ -56,28 +62,36 @@ export async function GET(): Promise<Response> {
     )
   }
 
-  let rows: unknown
+  let parsed: unknown
   try {
-    rows = JSON.parse(raw)
+    parsed = JSON.parse(raw)
   } catch (err) {
     return NextResponse.json(
       {
         error: "parse_error",
         parse_error: err instanceof Error ? err.message : String(err),
-        path: REL,
+        path: rel,
         resolved_repo_root: repoRoot,
       },
       { status: 500 }
     )
   }
 
-  if (!Array.isArray(rows)) {
+  const rows: unknown[] = useBoard
+    ? ((parsed as { products?: unknown[] }).products ?? [])
+    : Array.isArray(parsed)
+      ? parsed
+      : []
+
+  if (!Array.isArray(rows) || (!useBoard && rows.length === 0)) {
     return NextResponse.json(
       {
-        error: "invalid_seed_shape",
-        path: REL,
+        error: useBoard ? "invalid_board_products_shape" : "invalid_seed_shape",
+        path: rel,
         resolved_repo_root: repoRoot,
-        detail: "Expected JSON array of product rows",
+        detail: useBoard
+          ? "Expected { products: [...] } in legacy-media-board-products.json"
+          : "Expected JSON array of product rows",
       },
       { status: 500 }
     )
@@ -85,20 +99,29 @@ export async function GET(): Promise<Response> {
 
   const products = rows.map((r) => {
     const row = r as Record<string, unknown>
-    const handle = String(row.medusa_product_handle ?? "").trim().toLowerCase()
+    const handle = String(row.handle ?? row.medusa_product_handle ?? "").trim().toLowerCase()
     const urls: string[] = []
+    const existing = (row.image_urls as string[] | undefined) ?? []
+    for (const u of existing) urls.push(String(u))
     if (row.thumbnail_url) urls.push(String(row.thumbnail_url))
+    if (row.main_image_url) urls.push(String(row.main_image_url))
     const imgs = (row.images as { url?: string }[] | undefined) ?? []
     for (const im of imgs) {
       if (im?.url) urls.push(String(im.url))
     }
     return {
       handle,
-      sku: String(row.medusa_variant_sku ?? row.product_code_normalized ?? "").trim(),
-      collection: String(row.medusa_collection_handle ?? "").trim().toLowerCase(),
-      title: row.medusa_product_title != null ? String(row.medusa_product_title) : null,
+      sku: String(row.sku ?? row.medusa_variant_sku ?? row.product_code_normalized ?? "").trim(),
+      collection: String(row.collection ?? row.medusa_collection_handle ?? "").trim().toLowerCase(),
+      title:
+        row.title != null
+          ? String(row.title)
+          : row.medusa_product_title != null
+            ? String(row.medusa_product_title)
+            : null,
       image_urls: urls,
       image_basenames: urls.map((u) => basenameUrl(u).toLowerCase()).filter(Boolean),
+      qa_product_source: row.qa_product_source != null ? String(row.qa_product_source) : null,
     }
   })
   const body = JSON.stringify({ products })

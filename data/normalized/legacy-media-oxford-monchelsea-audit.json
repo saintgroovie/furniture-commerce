@@ -1,0 +1,590 @@
+{
+  "audit_meta": {
+    "pass_name": "legacy_media_oxford_monchelsea_audit",
+    "pass_kind": "read_only_qa_audit",
+    "generated_at": "2026-05-16T19:52:00.965Z",
+    "generated_by": "scripts/audit-legacy-media-oxford-monchelsea.mjs",
+    "sources_checked": [
+      "data/normalized/legacy-media-inventory.json",
+      "data/normalized/legacy-media-product-candidate-map.json",
+      "data/normalized/legacy-media-board-products.json",
+      "data/normalized/entity-mapping.json",
+      "data/normalized/product-workbook-asset-map.json",
+      "data/normalized/seed-products.oxford-pilot-four.json",
+      "data/normalized/oxford-local-mvp-sku-media-candidate-map.json",
+      "data/normalized/oxford-visual-candidate-map.json",
+      "data/normalized/monchelsea-manual-identity-closure-backlog.json",
+      "data/raw/legacy/cache/*.html (registry via legacy-color-article-index)"
+    ],
+    "not_production_readiness": true
+  },
+  "summary_table": [
+    {
+      "collection": "oxford",
+      "products_in_board_index": 23,
+      "media_rows": 37,
+      "previewable": 30,
+      "unpreviewable": 7,
+      "with_sku_or_handle_hint": 3,
+      "candidate_map_rows": 37,
+      "by_confidence": {
+        "confirmed": 9,
+        "ambiguous": 21,
+        "unpreviewable": 7
+      },
+      "by_identity_confidence": {
+        "confirmed": 9,
+        "ambiguous": 28
+      },
+      "top_candidate_same_collection": 37,
+      "top_candidate_other_collection": 0,
+      "qa_overlay_oxford_local_map": 6,
+      "examples": {
+        "safe_confirmed": [
+          {
+            "inventory_id": "leginv_8c0f5f41c2607dfc",
+            "filename": "Oxford_full_p4_i0_1306x951.png",
+            "top": {
+              "medusa_product_handle": "s-ox-05",
+              "medusa_variant_sku": "S-OX-05",
+              "medusa_collection_handle": "oxford",
+              "score": 95,
+              "basis": [
+                "collection_hint_match",
+                "basename_matches_existing_product_image"
+              ]
+            },
+            "basis": "collection_hint_match+basename_matches_existing_product_image"
+          },
+          {
+            "inventory_id": "leginv_a0ce8979b6c3d949",
+            "filename": "Oxford_full_p5_i0_947x949.png",
+            "top": {
+              "medusa_product_handle": "ox-14-11",
+              "medusa_variant_sku": "OX-14-11",
+              "medusa_collection_handle": "oxford",
+              "score": 95,
+              "basis": [
+                "collection_hint_match",
+                "basename_matches_existing_product_image"
+              ]
+            },
+            "basis": "collection_hint_match+basename_matches_existing_product_image"
+          },
+          {
+            "inventory_id": "leginv_36967b7820712a7c",
+            "filename": "Oxford_full_p5_i1_480x1182.png",
+            "top": {
+              "medusa_product_handle": "ox-14-11",
+              "medusa_variant_sku": "OX-14-11",
+              "medusa_collection_handle": "oxford",
+              "score": 95,
+              "basis": [
+                "collection_hint_match",
+                "basename_matches_existing_product_image"
+              ]
+            },
+            "basis": "collection_hint_match+basename_matches_existing_product_image"
+          },
+          {
+            "inventory_id": "leginv_4004febdbb83a2c4",
+            "filename": "Oxford_full_p5_i2_521x429.png",
+            "top": {
+              "medusa_product_handle": "ox-14-11",
+              "medusa_variant_sku": "OX-14-11",
+              "medusa_collection_handle": "oxford",
+              "score": 95,
+              "basis": [
+                "collection_hint_match",
+                "basename_matches_existing_product_image"
+              ]
+            },
+            "basis": "collection_hint_match+basename_matches_existing_product_image"
+          },
+          {
+            "inventory_id": "leginv_0d3884c819b081f9",
+            "filename": "Oxford_full_p5_i3_522x445.png",
+            "top": {
+              "medusa_product_handle": "ox-14-11",
+              "medusa_variant_sku": "OX-14-11",
+              "medusa_collection_handle": "oxford",
+              "score": 95,
+              "basis": [
+                "collection_hint_match",
+                "basename_matches_existing_product_image"
+              ]
+            },
+            "basis": "collection_hint_match+basename_matches_existing_product_image"
+          }
+        ],
+        "needs_identity_review": [
+          {
+            "inventory_id": "leginv_2db05d1129306fb4",
+            "filename": "Oxford_full_p6_i0_887x614.png",
+            "top": {
+              "medusa_product_handle": "ox-14-1",
+              "medusa_variant_sku": "OX-14-1",
+              "medusa_collection_handle": "oxford",
+              "score": 55,
+              "basis": [
+                "oxford_local_mvp_map:ambiguous_visual_review_needed"
+              ]
+            },
+            "basis": "oxford_local_mvp_map:ambiguous_visual_review_needed"
+          },
+          {
+            "inventory_id": "leginv_d7bf55d63c117f1c",
+            "filename": "Oxford_full_p6_i1_887x621.png",
+            "top": {
+              "medusa_product_handle": "ox-14-1",
+              "medusa_variant_sku": "OX-14-1",
+              "medusa_collection_handle": "oxford",
+              "score": 55,
+              "basis": [
+                "oxford_local_mvp_map:ambiguous_visual_review_needed"
+              ]
+            },
+            "basis": "oxford_local_mvp_map:ambiguous_visual_review_needed"
+          },
+          {
+            "inventory_id": "leginv_990393b7b175b5f0",
+            "filename": "Oxford_p2_i0_632x629.png",
+            "top": {
+              "medusa_product_handle": "mc-14-1",
+              "medusa_variant_sku": "MC-14-1",
+              "medusa_collection_handle": "oxford",
+              "score": 15,
+              "basis": [
+                "collection_hint_match"
+              ]
+            },
+            "basis": "multiple_close_scores"
+          },
+          {
+            "inventory_id": "leginv_e4fadd8f8a3b7a59",
+            "filename": "Oxford_p2_i1_475x472.png",
+            "top": {
+              "medusa_product_handle": "mc-14-1",
+              "medusa_variant_sku": "MC-14-1",
+              "medusa_collection_handle": "oxford",
+              "score": 15,
+              "basis": [
+                "collection_hint_match"
+              ]
+            },
+            "basis": "multiple_close_scores"
+          },
+          {
+            "inventory_id": "leginv_43bfded0a2d3c8b8",
+            "filename": "Oxford_p2_i2_474x472.png",
+            "top": {
+              "medusa_product_handle": "mc-14-1",
+              "medusa_variant_sku": "MC-14-1",
+              "medusa_collection_handle": "oxford",
+              "score": 15,
+              "basis": [
+                "collection_hint_match"
+              ]
+            },
+            "basis": "multiple_close_scores"
+          }
+        ],
+        "excluded_unmatched": []
+      },
+      "blockers": [
+        "Majority of Oxford_full_* PDF crops are page-level (no SKU in filename) → ambiguous until operator maps via pilot visual map or manual assignment.",
+        "Oxford collection paused in governance; board is QA-only.",
+        "Yandex white-background root not mounted (see oxford-visual-source-inventory.json)."
+      ]
+    },
+    {
+      "collection": "monchelsea",
+      "products_in_board_index": 63,
+      "media_rows": 88,
+      "previewable": 71,
+      "unpreviewable": 17,
+      "with_sku_or_handle_hint": 17,
+      "candidate_map_rows": 88,
+      "by_confidence": {
+        "ambiguous": 71,
+        "unpreviewable": 17
+      },
+      "by_identity_confidence": {
+        "ambiguous": 77,
+        "confirmed": 11
+      },
+      "top_candidate_same_collection": 88,
+      "top_candidate_other_collection": 0,
+      "qa_overlay_oxford_local_map": 0,
+      "examples": {
+        "safe_confirmed": [],
+        "needs_identity_review": [
+          {
+            "inventory_id": "leginv_5a360309d1eaa2d1",
+            "filename": "Monchelsea_p10_i0_678x415.png",
+            "top": {
+              "medusa_product_handle": "mn-49-1",
+              "medusa_variant_sku": "MN-49-1",
+              "medusa_collection_handle": "monchelsea",
+              "score": 15,
+              "basis": [
+                "collection_hint_match"
+              ]
+            },
+            "basis": "multiple_close_scores"
+          },
+          {
+            "inventory_id": "leginv_ea976b7f2589b73f",
+            "filename": "Monchelsea_p10_i5_767x310.png",
+            "top": {
+              "medusa_product_handle": "mn-49-1",
+              "medusa_variant_sku": "MN-49-1",
+              "medusa_collection_handle": "monchelsea",
+              "score": 15,
+              "basis": [
+                "collection_hint_match"
+              ]
+            },
+            "basis": "multiple_close_scores"
+          },
+          {
+            "inventory_id": "leginv_445170322c10db9a",
+            "filename": "Monchelsea_p10_i6_576x300.png",
+            "top": {
+              "medusa_product_handle": "mn-49-1",
+              "medusa_variant_sku": "MN-49-1",
+              "medusa_collection_handle": "monchelsea",
+              "score": 15,
+              "basis": [
+                "collection_hint_match"
+              ]
+            },
+            "basis": "multiple_close_scores"
+          },
+          {
+            "inventory_id": "leginv_1dfc5e67f4ca3143",
+            "filename": "Monchelsea_p10_i7_385x652.png",
+            "top": {
+              "medusa_product_handle": "mn-49-1",
+              "medusa_variant_sku": "MN-49-1",
+              "medusa_collection_handle": "monchelsea",
+              "score": 15,
+              "basis": [
+                "collection_hint_match"
+              ]
+            },
+            "basis": "multiple_close_scores"
+          },
+          {
+            "inventory_id": "leginv_f173ce1b594e1846",
+            "filename": "Monchelsea_p10_i8_384x652.png",
+            "top": {
+              "medusa_product_handle": "mn-49-1",
+              "medusa_variant_sku": "MN-49-1",
+              "medusa_collection_handle": "monchelsea",
+              "score": 15,
+              "basis": [
+                "collection_hint_match"
+              ]
+            },
+            "basis": "multiple_close_scores"
+          }
+        ],
+        "excluded_unmatched": []
+      },
+      "blockers": [
+        "Monchelsea_p* PDF crops lack per-SKU filename tokens → collection-level ambiguous scores across 63 workbook SKUs.",
+        "26 rows in monchelsea-manual-identity-closure-backlog.json require human identity sign-off.",
+        "Monchelsea not in seed-products.json; board uses legacy-media-board-products.json overlay only."
+      ]
+    }
+  ],
+  "oxford": {
+    "collection": "oxford",
+    "products_in_board_index": 23,
+    "media_rows": 37,
+    "previewable": 30,
+    "unpreviewable": 7,
+    "with_sku_or_handle_hint": 3,
+    "candidate_map_rows": 37,
+    "by_confidence": {
+      "confirmed": 9,
+      "ambiguous": 21,
+      "unpreviewable": 7
+    },
+    "by_identity_confidence": {
+      "confirmed": 9,
+      "ambiguous": 28
+    },
+    "top_candidate_same_collection": 37,
+    "top_candidate_other_collection": 0,
+    "qa_overlay_oxford_local_map": 6,
+    "examples": {
+      "safe_confirmed": [
+        {
+          "inventory_id": "leginv_8c0f5f41c2607dfc",
+          "filename": "Oxford_full_p4_i0_1306x951.png",
+          "top": {
+            "medusa_product_handle": "s-ox-05",
+            "medusa_variant_sku": "S-OX-05",
+            "medusa_collection_handle": "oxford",
+            "score": 95,
+            "basis": [
+              "collection_hint_match",
+              "basename_matches_existing_product_image"
+            ]
+          },
+          "basis": "collection_hint_match+basename_matches_existing_product_image"
+        },
+        {
+          "inventory_id": "leginv_a0ce8979b6c3d949",
+          "filename": "Oxford_full_p5_i0_947x949.png",
+          "top": {
+            "medusa_product_handle": "ox-14-11",
+            "medusa_variant_sku": "OX-14-11",
+            "medusa_collection_handle": "oxford",
+            "score": 95,
+            "basis": [
+              "collection_hint_match",
+              "basename_matches_existing_product_image"
+            ]
+          },
+          "basis": "collection_hint_match+basename_matches_existing_product_image"
+        },
+        {
+          "inventory_id": "leginv_36967b7820712a7c",
+          "filename": "Oxford_full_p5_i1_480x1182.png",
+          "top": {
+            "medusa_product_handle": "ox-14-11",
+            "medusa_variant_sku": "OX-14-11",
+            "medusa_collection_handle": "oxford",
+            "score": 95,
+            "basis": [
+              "collection_hint_match",
+              "basename_matches_existing_product_image"
+            ]
+          },
+          "basis": "collection_hint_match+basename_matches_existing_product_image"
+        },
+        {
+          "inventory_id": "leginv_4004febdbb83a2c4",
+          "filename": "Oxford_full_p5_i2_521x429.png",
+          "top": {
+            "medusa_product_handle": "ox-14-11",
+            "medusa_variant_sku": "OX-14-11",
+            "medusa_collection_handle": "oxford",
+            "score": 95,
+            "basis": [
+              "collection_hint_match",
+              "basename_matches_existing_product_image"
+            ]
+          },
+          "basis": "collection_hint_match+basename_matches_existing_product_image"
+        },
+        {
+          "inventory_id": "leginv_0d3884c819b081f9",
+          "filename": "Oxford_full_p5_i3_522x445.png",
+          "top": {
+            "medusa_product_handle": "ox-14-11",
+            "medusa_variant_sku": "OX-14-11",
+            "medusa_collection_handle": "oxford",
+            "score": 95,
+            "basis": [
+              "collection_hint_match",
+              "basename_matches_existing_product_image"
+            ]
+          },
+          "basis": "collection_hint_match+basename_matches_existing_product_image"
+        }
+      ],
+      "needs_identity_review": [
+        {
+          "inventory_id": "leginv_2db05d1129306fb4",
+          "filename": "Oxford_full_p6_i0_887x614.png",
+          "top": {
+            "medusa_product_handle": "ox-14-1",
+            "medusa_variant_sku": "OX-14-1",
+            "medusa_collection_handle": "oxford",
+            "score": 55,
+            "basis": [
+              "oxford_local_mvp_map:ambiguous_visual_review_needed"
+            ]
+          },
+          "basis": "oxford_local_mvp_map:ambiguous_visual_review_needed"
+        },
+        {
+          "inventory_id": "leginv_d7bf55d63c117f1c",
+          "filename": "Oxford_full_p6_i1_887x621.png",
+          "top": {
+            "medusa_product_handle": "ox-14-1",
+            "medusa_variant_sku": "OX-14-1",
+            "medusa_collection_handle": "oxford",
+            "score": 55,
+            "basis": [
+              "oxford_local_mvp_map:ambiguous_visual_review_needed"
+            ]
+          },
+          "basis": "oxford_local_mvp_map:ambiguous_visual_review_needed"
+        },
+        {
+          "inventory_id": "leginv_990393b7b175b5f0",
+          "filename": "Oxford_p2_i0_632x629.png",
+          "top": {
+            "medusa_product_handle": "mc-14-1",
+            "medusa_variant_sku": "MC-14-1",
+            "medusa_collection_handle": "oxford",
+            "score": 15,
+            "basis": [
+              "collection_hint_match"
+            ]
+          },
+          "basis": "multiple_close_scores"
+        },
+        {
+          "inventory_id": "leginv_e4fadd8f8a3b7a59",
+          "filename": "Oxford_p2_i1_475x472.png",
+          "top": {
+            "medusa_product_handle": "mc-14-1",
+            "medusa_variant_sku": "MC-14-1",
+            "medusa_collection_handle": "oxford",
+            "score": 15,
+            "basis": [
+              "collection_hint_match"
+            ]
+          },
+          "basis": "multiple_close_scores"
+        },
+        {
+          "inventory_id": "leginv_43bfded0a2d3c8b8",
+          "filename": "Oxford_p2_i2_474x472.png",
+          "top": {
+            "medusa_product_handle": "mc-14-1",
+            "medusa_variant_sku": "MC-14-1",
+            "medusa_collection_handle": "oxford",
+            "score": 15,
+            "basis": [
+              "collection_hint_match"
+            ]
+          },
+          "basis": "multiple_close_scores"
+        }
+      ],
+      "excluded_unmatched": []
+    },
+    "blockers": [
+      "Majority of Oxford_full_* PDF crops are page-level (no SKU in filename) → ambiguous until operator maps via pilot visual map or manual assignment.",
+      "Oxford collection paused in governance; board is QA-only.",
+      "Yandex white-background root not mounted (see oxford-visual-source-inventory.json)."
+    ]
+  },
+  "monchelsea": {
+    "collection": "monchelsea",
+    "products_in_board_index": 63,
+    "media_rows": 88,
+    "previewable": 71,
+    "unpreviewable": 17,
+    "with_sku_or_handle_hint": 17,
+    "candidate_map_rows": 88,
+    "by_confidence": {
+      "ambiguous": 71,
+      "unpreviewable": 17
+    },
+    "by_identity_confidence": {
+      "ambiguous": 77,
+      "confirmed": 11
+    },
+    "top_candidate_same_collection": 88,
+    "top_candidate_other_collection": 0,
+    "qa_overlay_oxford_local_map": 0,
+    "examples": {
+      "safe_confirmed": [],
+      "needs_identity_review": [
+        {
+          "inventory_id": "leginv_5a360309d1eaa2d1",
+          "filename": "Monchelsea_p10_i0_678x415.png",
+          "top": {
+            "medusa_product_handle": "mn-49-1",
+            "medusa_variant_sku": "MN-49-1",
+            "medusa_collection_handle": "monchelsea",
+            "score": 15,
+            "basis": [
+              "collection_hint_match"
+            ]
+          },
+          "basis": "multiple_close_scores"
+        },
+        {
+          "inventory_id": "leginv_ea976b7f2589b73f",
+          "filename": "Monchelsea_p10_i5_767x310.png",
+          "top": {
+            "medusa_product_handle": "mn-49-1",
+            "medusa_variant_sku": "MN-49-1",
+            "medusa_collection_handle": "monchelsea",
+            "score": 15,
+            "basis": [
+              "collection_hint_match"
+            ]
+          },
+          "basis": "multiple_close_scores"
+        },
+        {
+          "inventory_id": "leginv_445170322c10db9a",
+          "filename": "Monchelsea_p10_i6_576x300.png",
+          "top": {
+            "medusa_product_handle": "mn-49-1",
+            "medusa_variant_sku": "MN-49-1",
+            "medusa_collection_handle": "monchelsea",
+            "score": 15,
+            "basis": [
+              "collection_hint_match"
+            ]
+          },
+          "basis": "multiple_close_scores"
+        },
+        {
+          "inventory_id": "leginv_1dfc5e67f4ca3143",
+          "filename": "Monchelsea_p10_i7_385x652.png",
+          "top": {
+            "medusa_product_handle": "mn-49-1",
+            "medusa_variant_sku": "MN-49-1",
+            "medusa_collection_handle": "monchelsea",
+            "score": 15,
+            "basis": [
+              "collection_hint_match"
+            ]
+          },
+          "basis": "multiple_close_scores"
+        },
+        {
+          "inventory_id": "leginv_f173ce1b594e1846",
+          "filename": "Monchelsea_p10_i8_384x652.png",
+          "top": {
+            "medusa_product_handle": "mn-49-1",
+            "medusa_variant_sku": "MN-49-1",
+            "medusa_collection_handle": "monchelsea",
+            "score": 15,
+            "basis": [
+              "collection_hint_match"
+            ]
+          },
+          "basis": "multiple_close_scores"
+        }
+      ],
+      "excluded_unmatched": []
+    },
+    "blockers": [
+      "Monchelsea_p* PDF crops lack per-SKU filename tokens → collection-level ambiguous scores across 63 workbook SKUs.",
+      "26 rows in monchelsea-manual-identity-closure-backlog.json require human identity sign-off.",
+      "Monchelsea not in seed-products.json; board uses legacy-media-board-products.json overlay only."
+    ]
+  },
+  "board_visibility": {
+    "products_api_artifact": "data/normalized/legacy-media-board-products.json",
+    "oxford_products": 23,
+    "monchelsea_products": 63,
+    "sidebar_collection_filters": [
+      "oxford",
+      "monchelsea"
+    ]
+  }
+}

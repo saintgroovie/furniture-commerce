@@ -2,7 +2,7 @@
   "review_meta": {
     "scope": "legacy_media_assignment_board",
     "status": "manual_review_pending",
-    "created_at": "2026-05-04T01:25:04.503Z",
+    "created_at": "2026-05-16T19:49:57.463Z",
     "local_dev_only": true,
     "production_rollout": false,
     "notes": "Export from /qa/legacy-media-assignment-board overwrites-compatible shape: assignments + rejections. No backend apply in-repo."

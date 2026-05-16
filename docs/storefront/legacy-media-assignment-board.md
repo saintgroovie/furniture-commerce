@@ -2,8 +2,11 @@
 
 ## Purpose
 
-**Visual media assignment** for aligning legacy / front-manifest / repo-local images with **seed-derived** products (`data/normalized/seed-products.json`).  
+**Visual media assignment** for aligning legacy / front-manifest / repo-local images with **QA product index** rows.  
+Default index: `data/normalized/legacy-media-board-products.json` (merges `seed-products.json` + workbook **Oxford** / **Monchelsea** rows without mutating seed). Falls back to `seed-products.json` only if the board index is missing.  
 **Not** production rollout: **no Medusa apply**, no catalog-scope edits, no seed or evidence mutation from this UI. Export JSON is a **handoff artifact** only — the board does **not** run any executor and does **not** update production media.
+
+**Oxford / Monchelsea audit:** [`legacy-media-oxford-monchelsea-audit.md`](legacy-media-oxford-monchelsea-audit.md) · regen: `node scripts/build-legacy-media-board-products.mjs` then `build-legacy-media-product-candidate-map.mjs` · `audit-legacy-media-oxford-monchelsea.mjs`.
 
 ---
 

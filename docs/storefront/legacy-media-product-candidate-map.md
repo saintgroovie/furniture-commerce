@@ -1,6 +1,6 @@
 # Legacy media → product candidate map
 
-Generated **2026-05-04** by `scripts/build-legacy-media-product-candidate-map.mjs`.
+Generated **2026-05-16** by `scripts/build-legacy-media-product-candidate-map.mjs`.
 
 ## Semantics
 
@@ -14,20 +14,20 @@ Generated **2026-05-04** by `scripts/build-legacy-media-product-candidate-map.mj
 
 ## Source limitation
 
-Matching uses repo-normalized seed-products.json only; no live Store/Admin API. If seed is stale vs Medusa DB, re-export seed before relying on handles/SKUs.
+Matching uses legacy-media-board-products.json (seed + paused-collection workbook rows) when present; otherwise seed-products.json only. No live Store/Admin API.
 
 ## Summary counts
 
 | confidence (display) | count |
 |---------------------|------:|
-| confirmed | 1751 |
-| probable | 0 |
-| ambiguous | 140 |
-| unmatched | 832 |
+| confirmed | 1760 |
+| probable | 5 |
+| ambiguous | 235 |
+| unmatched | 723 |
 | unpreviewable | 716 |
 
 - Inventory rows: **3439**
-- Seed products indexed: **108**
+- Seed products indexed: **194**
 
 ## Artifacts
 

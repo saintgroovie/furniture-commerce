@@ -1,7 +1,10 @@
 /**
- * Read-only matcher: legacy-media-inventory → seed-products (no DB, no apply).
+ * Read-only matcher: legacy-media-inventory → board QA product index (no DB, no apply).
+ * Products: legacy-media-board-products.json (seed + Oxford/Monchelsea workbook rows).
+ * Optional Oxford visual overlay: oxford-local-mvp-sku-media-candidate-map.json.
  *
  * Usage (repo root):
+ *   node scripts/build-legacy-media-board-products.mjs   # if Oxford/Monchelsea products needed
  *   node scripts/build-legacy-media-product-candidate-map.mjs
  */
 
@@ -33,6 +36,31 @@ function basenameUrl(u) {
   }
 }
 
+function buildProductsFromBoard(boardPath) {
+  const doc = readJson(boardPath)
+  const rows = doc?.products ?? doc
+  if (!Array.isArray(rows)) return []
+  const out = []
+  for (const r of rows) {
+    const handle = String(r.handle ?? r.medusa_product_handle ?? "").trim().toLowerCase()
+    if (!handle) continue
+    const sku = normSku(r.sku ?? r.medusa_variant_sku ?? r.product_code_normalized)
+    const coll = String(r.collection ?? r.medusa_collection_handle ?? "").trim().toLowerCase()
+    const title = r.title != null ? String(r.title) : r.medusa_product_title != null ? String(r.medusa_product_title) : null
+    const imageBasenames = new Set(r.image_basenames ?? [])
+    const urls = r.image_urls ?? []
+    for (const u of urls) {
+      const b = basenameUrl(u).toLowerCase()
+      if (b) imageBasenames.add(b)
+    }
+    const skuAliases = new Set([sku])
+    if (r.monchelsea_join_key) skuAliases.add(normSku(r.monchelsea_join_key))
+    out.push({ handle, sku, skuAliases, collection: coll, title, imageBasenames })
+  }
+  return out
+}
+
+/** @deprecated kept for fallback */
 function buildProducts(seedPath) {
   const rows = readJson(seedPath)
   if (!Array.isArray(rows)) return []
@@ -55,9 +83,45 @@ function buildProducts(seedPath) {
       const b = basenameUrl(u).toLowerCase()
       if (b) imageBasenames.add(b)
     }
-    out.push({ handle, sku, collection: coll, title, imageBasenames })
+    out.push({ handle, sku, skuAliases: new Set([sku]), collection: coll, title, imageBasenames })
   }
   return out
+}
+
+function buildOxfordPathOverlay(repoRoot) {
+  const rel = "data/normalized/oxford-local-mvp-sku-media-candidate-map.json"
+  const abs = path.join(repoRoot, rel)
+  if (!fs.existsSync(abs)) return new Map()
+  const doc = readJson(abs)
+  const byPath = new Map()
+  for (const row of doc.rows ?? []) {
+    const handle = String(row.handle ?? "").trim().toLowerCase()
+    const sku = normSku(row.sku)
+    for (const c of row.candidates ?? []) {
+      const relPath = String(c.repo_relative_path ?? c.source_path_or_url ?? "").replace(/\\/g, "/")
+      const fn = String(c.filename ?? basenameUrl(relPath)).toLowerCase()
+      if (!relPath && !fn) continue
+      const tier = String(c.confidence ?? c.match_tier ?? "probable")
+      const payload = {
+        handle,
+        sku,
+        collection: "oxford",
+        title: row.title_or_canonical ?? null,
+        tier,
+        basis: `oxford_local_mvp_map:${c.match_tier ?? tier}`,
+        score: tier === "confirmed" ? 130 : tier === "probable" ? 85 : 55,
+      }
+      if (relPath) byPath.set(relPath.toLowerCase(), payload)
+      if (fn) byPath.set(`fn:${fn}`, payload)
+    }
+  }
+  return byPath
+}
+
+function lookupOxfordOverlay(overlay, inv) {
+  const rel = String(inv.repo_relative_path ?? inv.source_path ?? "").replace(/\\/g, "/").toLowerCase()
+  const fn = String(inv.filename ?? "").toLowerCase()
+  return overlay.get(rel) ?? overlay.get(`fn:${fn}`) ?? null
 }
 
 function scoreRow(inv, products) {
@@ -72,11 +136,17 @@ function scoreRow(inv, products) {
     let score = 0
     const basis = []
     const skuH = inv.sku_hint != null ? normSku(inv.sku_hint) : ""
-    if (skuH && skuH === p.sku) {
+    const aliases = p.skuAliases ?? new Set([p.sku])
+    if (skuH && [...aliases].some((a) => a && a === skuH)) {
       score += 120
       basis.push("exact_sku_hint")
     }
-    if (p.sku && (hay.includes(p.sku) || fnLower.includes(p.sku.toLowerCase().replace(/-/g, "")))) {
+    if (
+      p.sku &&
+      ([...aliases].some((a) => hay.includes(a) || fnLower.includes(a.toLowerCase().replace(/-/g, ""))) ||
+        hay.includes(p.sku) ||
+        fnLower.includes(p.sku.toLowerCase().replace(/-/g, "")))
+    ) {
       if (!basis.includes("exact_sku_hint")) {
         score += 95
         basis.push("sku_in_filename_or_path")
@@ -125,14 +195,63 @@ function identityConfidence(scored) {
   return { tier: "unmatched", basis: null, top: null, second: null }
 }
 
+function applyOverlayToEntry(entry, overlayHit, previewable) {
+  if (!overlayHit) return entry
+  const top = {
+    handle: overlayHit.handle,
+    sku: overlayHit.sku,
+    collection: overlayHit.collection,
+    title: overlayHit.title,
+    score: overlayHit.score,
+    basis: [overlayHit.basis],
+  }
+  const idc = identityConfidence([top])
+  let confidence = idc.tier
+  if (!previewable) confidence = "unpreviewable"
+  else if (overlayHit.tier === "confirmed") confidence = "confirmed"
+  else if (overlayHit.tier === "probable" && confidence === "unmatched") confidence = "probable"
+  else if (overlayHit.tier === "ambiguous") confidence = "ambiguous"
+
+  return {
+    ...entry,
+    confidence,
+    identity_confidence: overlayHit.tier === "confirmed" ? "confirmed" : overlayHit.tier === "ambiguous" ? "ambiguous" : idc.tier,
+    identity_match_basis: overlayHit.basis,
+    top_candidate: {
+      medusa_product_handle: overlayHit.handle,
+      medusa_variant_sku: overlayHit.sku,
+      medusa_collection_handle: overlayHit.collection,
+      score: overlayHit.score,
+      basis: [overlayHit.basis],
+    },
+    candidates: [
+      {
+        medusa_product_handle: overlayHit.handle,
+        medusa_variant_sku: overlayHit.sku,
+        medusa_collection_handle: overlayHit.collection,
+        product_title: overlayHit.title,
+        score: overlayHit.score,
+        basis: [overlayHit.basis],
+      },
+      ...(entry.candidates ?? []).filter((c) => c.medusa_product_handle !== overlayHit.handle).slice(0, 4),
+    ],
+    qa_overlay: "oxford_local_mvp_sku_media_candidate_map",
+  }
+}
+
 function main() {
   const generatedAt = new Date().toISOString()
   const invPath = path.join(REPO, "data/normalized/legacy-media-inventory.json")
+  const boardPath = path.join(REPO, "data/normalized/legacy-media-board-products.json")
   const seedPath = path.join(REPO, "data/normalized/seed-products.json")
 
   const invDoc = readJson(invPath)
   const items = invDoc.items ?? []
-  const products = buildProducts(seedPath)
+  const products = fs.existsSync(boardPath) ? buildProductsFromBoard(boardPath) : buildProducts(seedPath)
+  const productsSource = fs.existsSync(boardPath)
+    ? "data/normalized/legacy-media-board-products.json"
+    : "data/normalized/seed-products.json"
+  const oxfordOverlay = buildOxfordPathOverlay(REPO)
 
   const entries = []
   let cConfirmed = 0
@@ -143,23 +262,11 @@ function main() {
   let cMatchedPreviewable = 0
 
   for (const inv of items) {
+    const collHint = String(inv.collection_hint ?? "").trim().toLowerCase()
     const scored = scoreRow(inv, products).slice(0, 8)
     const idc = identityConfidence(scored)
     const hasRef = Boolean((inv.source_path && String(inv.source_path).length > 0) || (inv.url && String(inv.url).length > 0))
     const previewable = inv.previewable === true
-
-    let confidence = idc.tier
-    if (!previewable && hasRef) {
-      confidence = "unpreviewable"
-      cUnpreviewable++
-    } else {
-      if (idc.tier === "confirmed") cConfirmed++
-      else if (idc.tier === "probable") cProbable++
-      else if (idc.tier === "ambiguous") cAmbiguous++
-      else cUnmatched++
-    }
-
-    if (previewable && idc.tier !== "unmatched") cMatchedPreviewable++
 
     const topCandidates = scored.slice(0, 5).map((s) => ({
       medusa_product_handle: s.handle,
@@ -170,9 +277,9 @@ function main() {
       basis: s.basis,
     }))
 
-    entries.push({
+    let entry = {
       inventory_id: inv.id,
-      confidence,
+      confidence: idc.tier,
       identity_confidence: idc.tier,
       identity_match_basis: idc.basis,
       previewable,
@@ -190,7 +297,30 @@ function main() {
       source_type: inv.source_type,
       source_path: inv.source_path,
       repo_relative_path: inv.repo_relative_path,
-    })
+    }
+
+    const overlayHit = lookupOxfordOverlay(oxfordOverlay, inv)
+    const weakHeuristic =
+      idc.tier === "unmatched" ||
+      (idc.tier === "ambiguous" && collHint === "oxford") ||
+      (idc.top && idc.top.score <= 20)
+    if (overlayHit && (weakHeuristic || overlayHit.tier === "confirmed")) {
+      entry = applyOverlayToEntry(entry, overlayHit, previewable)
+    }
+
+    if (!previewable && hasRef) {
+      entry.confidence = "unpreviewable"
+      cUnpreviewable++
+    } else {
+      if (entry.confidence === "confirmed") cConfirmed++
+      else if (entry.confidence === "probable") cProbable++
+      else if (entry.confidence === "ambiguous") cAmbiguous++
+      else cUnmatched++
+    }
+
+    if (previewable && entry.identity_confidence !== "unmatched") cMatchedPreviewable++
+
+    entries.push(entry)
   }
 
   const summary = {
@@ -212,10 +342,11 @@ function main() {
       pass_kind: "read_only_matching_no_db",
       generated_at: generatedAt,
       generated_by: "scripts/build-legacy-media-product-candidate-map.mjs",
-      source_products_artifact: "data/normalized/seed-products.json",
+      source_products_artifact: productsSource,
       source_inventory_artifact: "data/normalized/legacy-media-inventory.json",
+      oxford_visual_overlay: oxfordOverlay.size ? "data/normalized/oxford-local-mvp-sku-media-candidate-map.json" : null,
       source_limitation:
-        "Matching uses repo-normalized seed-products.json only; no live Store/Admin API. If seed is stale vs Medusa DB, re-export seed before relying on handles/SKUs.",
+        "Matching uses legacy-media-board-products.json (seed + paused-collection workbook rows) when present; otherwise seed-products.json only. No live Store/Admin API.",
       constraints: [
         "No automatic confirmed media in production.",
         "Legacy paths are hints; unmatched/orphan rows are preserved.",

@@ -79,6 +79,32 @@ async function main() {
     )
   }
 
+  async function captureCollectionAudit(coll) {
+    const nav = page.locator("aside button").filter({ hasText: new RegExp(coll, "i") }).first()
+    if (!(await nav.isVisible().catch(() => false))) return
+    await nav.click()
+    await page.waitForTimeout(1500)
+    await page.screenshot({
+      path: path.join(outDir, `legacy-board-collection-${coll}-1440.png`),
+      fullPage: true,
+    })
+    const prod = page
+      .locator(`article[data-product-card="true"], button`)
+      .filter({ hasText: coll === "oxford" ? /ox-14-11/i : /mnm-05-4/i })
+      .first()
+    if (await prod.isVisible().catch(() => false)) {
+      await prod.click()
+      await page.waitForTimeout(2000)
+      await page.screenshot({
+        path: path.join(outDir, `legacy-board-${coll}-product-candidates-1440.png`),
+        fullPage: true,
+      })
+    }
+  }
+
+  await captureCollectionAudit("oxford")
+  await captureCollectionAudit("monchelsea")
+
   await browser.close()
   console.log("screenshots_written", outDir)
 }
