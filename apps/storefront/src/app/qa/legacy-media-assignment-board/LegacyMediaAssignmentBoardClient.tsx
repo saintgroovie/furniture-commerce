@@ -16,7 +16,18 @@ import {
   type PersistedV1,
   type PersistedV2,
   type ProductZoneState,
+  serializeVariantDecisionsForExport,
 } from "./legacy-media-board-export"
+import {
+  DEFAULT_VARIANT_KEY,
+  DEFAULT_VARIANT_LABEL_RU,
+  displayLabelFromColorToken,
+  migrateVariantLabelFields,
+  resolveVariantDisplayLabel,
+  reviewSuffixRu,
+  sourceLabelForVariantKey,
+  type VariantLabelFields,
+} from "./legacy-color-variant-labels"
 import { matchAllSeedUrls, orderedInventoryIdsFromSeedUrls, type SeedUrlMatchRow } from "./seed-inventory-match"
 import { classifyMediaProductIdentity } from "./suggestion-product-guard"
 import { StorefrontSeedMediaCard } from "./StorefrontSeedMediaCard"
@@ -40,12 +51,11 @@ const LS_VARIANTS_KEY = "furniture-legacy-media-assignment-variants-v1"
 const LS_ARTICLE_SCAN_KEY = "furniture-legacy-article-scan-v1"
 const POOL_LIMIT = 120
 const UNKNOWN_COLLECTION = "__unknown__"
-const DEFAULT_VARIANT_KEY = "__default__"
 const API_BASE = "/qa/legacy-media-assignment-board/api"
 const PREVIEW_ROUTE = "/qa/legacy-media-assignment-board/preview"
 const DND_JSON = "application/json"
-const DEV_SENTINEL = "Legacy Board review flow UX (single-product cockpit)"
-const DEV_SENTINEL_BUILD = "2026-05-15T21:00Z"
+const DEV_SENTINEL = "Legacy Board Russian color variant labels + rename"
+const DEV_SENTINEL_BUILD = "2026-05-15T23:30Z"
 
 async function fetchBoardJson(url: string): Promise<{ ok: true; data: Record<string, unknown> } | { ok: false; status: number; body: Record<string, unknown> }> {
   const res = await fetch(url)
@@ -99,8 +109,7 @@ type DevDiagnostics = {
   reorderFrom: string
   reorderTo: string
 }
-type VariantDecisionState = {
-  label: string
+type VariantDecisionState = VariantLabelFields & {
   primary: string | null
   gallery: string[]
   reference: string[]
@@ -166,16 +175,87 @@ function cloneZone(z: ProductZoneState | undefined): ProductZoneState {
   }
 }
 
-function emptyVariant(label = "Default"): VariantDecisionState {
-  return { label, primary: null, gallery: [], reference: [], rejected: [] }
+function emptyVariant(label = DEFAULT_VARIANT_LABEL_RU, extras?: Partial<VariantLabelFields>): VariantDecisionState {
+  return {
+    label,
+    sourceLabel: extras?.sourceLabel ?? null,
+    labelEditedByUser: extras?.labelEditedByUser ?? false,
+    primary: null,
+    gallery: [],
+    reference: [],
+    rejected: [],
+  }
+}
+
+function withResolvedVariantLabel(
+  variantKey: string,
+  variant: VariantDecisionState,
+  opts?: { legacyColorName?: string | null; productSkuHint?: string | null; preferLegacyColorName?: boolean }
+): VariantDecisionState {
+  const resolved = resolveVariantDisplayLabel({
+    variantKey,
+    persistedLabel: variant.label,
+    sourceLabel: variant.sourceLabel,
+    labelEditedByUser: variant.labelEditedByUser,
+    legacyColorName: opts?.legacyColorName,
+    preferLegacyColorName: opts?.preferLegacyColorName,
+    productSkuHint: opts?.productSkuHint,
+  })
+  return {
+    ...variant,
+    label: variant.labelEditedByUser ? variant.label : resolved.displayLabel,
+    sourceLabel: variant.sourceLabel ?? resolved.sourceLabel,
+  }
+}
+
+function promptVariantRename(currentLabel: string): string | null {
+  const next = window.prompt("Название варианта цвета", currentLabel)
+  if (next === null) return null
+  const t = next.trim()
+  return t.length > 0 ? t : null
+}
+
+type SuggestionPrefLite = {
+  useLegacyName: boolean
+  displayLabel?: string | null
+  displayLabelEdited?: boolean
+}
+
+function resolveSuggestionDisplayLabel(
+  suggestion: SuggestedVariant,
+  enrichment: LegacyColorEnrichmentWithIndex | null,
+  prefs: SuggestionPrefLite,
+  confirmed: VariantDecisionState | null | undefined,
+  productSkuHint: string
+): string {
+  if (confirmed) {
+    return withResolvedVariantLabel(suggestion.variantKey, confirmed, {
+      legacyColorName: enrichment?.legacy_color_name,
+      productSkuHint,
+    }).label
+  }
+  if (prefs.displayLabelEdited && prefs.displayLabel?.trim()) return prefs.displayLabel.trim()
+  if (prefs.useLegacyName && enrichment?.legacy_color_name?.trim()) return enrichment.legacy_color_name.trim()
+  return resolveVariantDisplayLabel({
+    variantKey: suggestion.variantKey,
+    persistedLabel: prefs.displayLabel ?? suggestion.label,
+    legacyColorName: enrichment?.legacy_color_name,
+    productSkuHint,
+  }).displayLabel
 }
 
 function toZoneState(v: VariantDecisionState): ProductZoneState {
   return { primary: v.primary, gallery: [...v.gallery], reference_only: [...v.reference], lane_rejected: [...v.rejected] }
 }
 
-function fromZoneState(z: ProductZoneState, label = "Default"): VariantDecisionState {
-  return { label, primary: z.primary, gallery: [...z.gallery], reference: [...z.reference_only], rejected: [...z.lane_rejected] }
+function fromZoneState(z: ProductZoneState, label = DEFAULT_VARIANT_LABEL_RU, extras?: Partial<VariantLabelFields>): VariantDecisionState {
+  return {
+    ...emptyVariant(label, extras),
+    primary: z.primary,
+    gallery: [...z.gallery],
+    reference: [...z.reference_only],
+    rejected: [...z.lane_rejected],
+  }
 }
 
 function variantDecisionEqual(a: VariantDecisionState, b: VariantDecisionState): boolean {
@@ -261,15 +341,6 @@ function canUseIndexedArticle(enc: LegacyColorEnrichmentWithIndex | null): boole
       enc.indexed_article_status !== "listing_only" &&
       enc.indexed_pdp_url
   )
-}
-
-function titleFromToken(token: string): string {
-  if (!token) return "Unknown"
-  return token
-    .split(/[_-]+/)
-    .filter(Boolean)
-    .map((x) => x[0]?.toUpperCase() + x.slice(1))
-    .join(" ")
 }
 
 function extractColorToken(inv: InvItem): string {
@@ -581,6 +652,8 @@ export function LegacyMediaAssignmentBoardClient() {
     useLegacyArticle: boolean
     editedLegacyArticle: string | null
     chosenArticleCandidateIndex: number | null
+    displayLabel?: string | null
+    displayLabelEdited?: boolean
   }
   const [suggestionRowPrefs, setSuggestionRowPrefs] = useState<Record<string, SuggestionPref>>({})
   const [articleScanProgress, setArticleScanProgress] = useState<ArticleScanProgress | null>(null)
@@ -709,7 +782,9 @@ export function LegacyMediaAssignmentBoardClient() {
         setBoard({ zones: v2.zonesByHandle, grej: v2.globalRejections })
         const seeded: VariantsByHandle = {}
         for (const [handle, z] of Object.entries(v2.zonesByHandle)) {
-          seeded[handle] = { [DEFAULT_VARIANT_KEY]: fromZoneState(z, "Default") }
+          seeded[handle] = {
+            [DEFAULT_VARIANT_KEY]: fromZoneState(z, DEFAULT_VARIANT_LABEL_RU, { sourceLabel: "default" }),
+          }
         }
         setVariantsByHandle(seeded)
       }
@@ -721,7 +796,26 @@ export function LegacyMediaAssignmentBoardClient() {
           activeVariantByHandle?: Record<string, string>
           rejectedSuggestedVariantsByHandle?: Record<string, string[]>
         }
-        if (parsed.variantsByHandle && typeof parsed.variantsByHandle === "object") setVariantsByHandle(parsed.variantsByHandle)
+        if (parsed.variantsByHandle && typeof parsed.variantsByHandle === "object") {
+          const skuFor = (handle: string) =>
+            products.find((p) => p.handle.toLowerCase() === handle.toLowerCase())?.sku?.trim() || ""
+          const migratedVariants: VariantsByHandle = {}
+          for (const [ph, row] of Object.entries(parsed.variantsByHandle)) {
+            migratedVariants[ph] = {}
+            const metaRow = parsed.variantMetaByHandle?.[ph] ?? {}
+            for (const [vk, cell] of Object.entries(row)) {
+              const meta = metaRow[vk]
+              migratedVariants[ph][vk] = {
+                ...cell,
+                ...migrateVariantLabelFields(vk, cell, {
+                  legacyColorName: meta?.legacyColorName,
+                  productSkuHint: skuFor(ph),
+                }),
+              }
+            }
+          }
+          setVariantsByHandle(migratedVariants)
+        }
         if (parsed.variantMetaByHandle && typeof parsed.variantMetaByHandle === "object") {
           const raw = parsed.variantMetaByHandle as Record<string, Record<string, unknown>>
           const skuFor = (handle: string) =>
@@ -1111,6 +1205,7 @@ export function LegacyMediaAssignmentBoardClient() {
             })()
 
       const changed = !boardStateEqual(prev, next)
+      const phSku = productByHandle.get(hh)?.sku?.trim() || ""
       setBoard(next)
       setVariantsByHandle((prevV) => {
         if (zone === "unassigned") {
@@ -1128,13 +1223,25 @@ export function LegacyMediaAssignmentBoardClient() {
         for (const [vk, vv] of Object.entries(prevH)) {
           hVariants[vk] = stripMediaIdFromVariantSlots(vv, inventoryId)
         }
-        const labelForChosen =
-          prevH[chosenVariantKey]?.label ?? (chosenVariantKey === DEFAULT_VARIANT_KEY ? "Default" : titleFromToken(chosenVariantKey.replace(/^color_/, "")))
-        hVariants[chosenVariantKey] = fromZoneState(next.zones[hh] ?? emptyZones(), labelForChosen)
+        const prevChosen = prevH[chosenVariantKey]
+        const metaChosen = variantMetaByHandle[hh]?.[chosenVariantKey]
+        const labelForChosen = prevChosen
+          ? withResolvedVariantLabel(chosenVariantKey, prevChosen, {
+              legacyColorName: metaChosen?.legacyColorName,
+              productSkuHint: phSku,
+            }).label
+          : resolveVariantDisplayLabel({
+              variantKey: chosenVariantKey,
+              legacyColorName: metaChosen?.legacyColorName,
+              productSkuHint: phSku,
+            }).displayLabel
+        hVariants[chosenVariantKey] = fromZoneState(next.zones[hh] ?? emptyZones(), labelForChosen, {
+          sourceLabel: prevChosen?.sourceLabel ?? sourceLabelForVariantKey(chosenVariantKey),
+          labelEditedByUser: prevChosen?.labelEditedByUser,
+        })
         return { ...prevV, [hh]: hVariants }
       })
       if (zone !== "unassigned") {
-        const phSku = productByHandle.get(hh)?.sku?.trim() || ""
         setVariantMetaByHandle((prevMeta) => ({
           ...prevMeta,
           [hh]: {
@@ -1189,8 +1296,14 @@ export function LegacyMediaAssignmentBoardClient() {
       let noop = false
       setVariantsByHandle((prev) => {
         const variants =
-          prev[hh] ?? { [DEFAULT_VARIANT_KEY]: fromZoneState(boardRef.current.zones[hh] ?? emptyZones(), "Default") }
-        const prevVariant = variants[variantKey] ?? emptyVariant(variantKey === DEFAULT_VARIANT_KEY ? "Default" : variantKey)
+          prev[hh] ?? {
+            [DEFAULT_VARIANT_KEY]: fromZoneState(boardRef.current.zones[hh] ?? emptyZones(), DEFAULT_VARIANT_LABEL_RU, {
+              sourceLabel: "default",
+            }),
+          }
+        const prevVariant =
+          variants[variantKey] ??
+          emptyVariant(variantKey === DEFAULT_VARIANT_KEY ? DEFAULT_VARIANT_LABEL_RU : variantKey)
         const nextVariant = updater(prevVariant)
         if (variantDecisionEqual(prevVariant, nextVariant)) {
           noop = true
@@ -1273,8 +1386,16 @@ export function LegacyMediaAssignmentBoardClient() {
       return {
         ...prevV,
         [hh]: {
-          ...(prevV[hh] ?? { [DEFAULT_VARIANT_KEY]: fromZoneState(board.zones[hh] ?? emptyZones(), "Default") }),
-          [vk]: { ...(prevV[hh]?.[vk] ?? emptyVariant(vk === DEFAULT_VARIANT_KEY ? "Default" : vk)), ...fromZoneState(base, prevV[hh]?.[vk]?.label || "Default") },
+          ...(prevV[hh] ?? {
+            [DEFAULT_VARIANT_KEY]: fromZoneState(board.zones[hh] ?? emptyZones(), DEFAULT_VARIANT_LABEL_RU, { sourceLabel: "default" }),
+          }),
+          [vk]: {
+            ...(prevV[hh]?.[vk] ?? emptyVariant(vk === DEFAULT_VARIANT_KEY ? DEFAULT_VARIANT_LABEL_RU : vk)),
+            ...fromZoneState(base, prevV[hh]?.[vk]?.label || DEFAULT_VARIANT_LABEL_RU, {
+              sourceLabel: prevV[hh]?.[vk]?.sourceLabel,
+              labelEditedByUser: prevV[hh]?.[vk]?.labelEditedByUser,
+            }),
+          },
         },
       }
     })
@@ -1314,7 +1435,7 @@ export function LegacyMediaAssignmentBoardClient() {
     })
     return {
       ...base,
-      variant_decisions: variantsByHandle,
+      variant_decisions: serializeVariantDecisionsForExport(variantsByHandle, sourceLabelForVariantKey),
       active_variant_by_handle: activeVariantByHandle,
       confirmed_variant_sources: serializeAllVariantMetaExport(variantMetaByHandle),
     }
@@ -1401,8 +1522,9 @@ export function LegacyMediaAssignmentBoardClient() {
       const baseKey = `color_${token}`
       const variantKey = identity.tier === "needs_identity_review" ? `${baseKey}__review` : baseKey
       if (rejected.has(variantKey) || rejected.has(baseKey)) continue
+      const baseRu = displayLabelFromColorToken(token, { productSkuHint })
       const current = groups.get(variantKey) ?? {
-        label: identity.tier === "needs_identity_review" ? `${titleFromToken(token)} · review` : titleFromToken(token),
+        label: identity.tier === "needs_identity_review" ? reviewSuffixRu(baseRu) : baseRu,
         sourceUrl: it.legacy_product_url || it.page_url || it.url || null,
         sourcePathHints: new Set<string>(),
         thisSkuIds: [],
@@ -1597,7 +1719,7 @@ export function LegacyMediaAssignmentBoardClient() {
       ...prev,
       [hh]: {
         ...(prev[hh] ?? {}),
-        [DEFAULT_VARIANT_KEY]: fromZoneState(nextZones, "Default"),
+        [DEFAULT_VARIANT_KEY]: fromZoneState(nextZones, DEFAULT_VARIANT_LABEL_RU, { sourceLabel: "default" }),
       },
     }))
   }, [hydrated, selectedHandle, selectedProduct, invDoc, board.zones, activeVariantByHandle])
@@ -2395,11 +2517,22 @@ export function LegacyMediaAssignmentBoardClient() {
       )
     }
     const h = selectedHandle.toLowerCase()
-    const vByHandle = variantsByHandle[h] ?? { [DEFAULT_VARIANT_KEY]: fromZoneState(board.zones[h] ?? emptyZones(), "Default") }
+    const vByHandle =
+      variantsByHandle[h] ??
+      {
+        [DEFAULT_VARIANT_KEY]: fromZoneState(board.zones[h] ?? emptyZones(), DEFAULT_VARIANT_LABEL_RU, { sourceLabel: "default" }),
+      }
     const vmByHandle = variantMetaByHandle[h] ?? {}
     const activeVariantKey = activeVariantByHandle[h] || Object.keys(vByHandle)[0] || DEFAULT_VARIANT_KEY
-    const activeVariant = vByHandle[activeVariantKey] ?? emptyVariant(activeVariantKey === DEFAULT_VARIANT_KEY ? "Default" : activeVariantKey)
+    const productSkuHint = (selectedProduct.sku || "").trim()
     const activeVariantMeta = vmByHandle[activeVariantKey] ?? null
+    const activeVariant =
+      vByHandle[activeVariantKey] ??
+      emptyVariant(activeVariantKey === DEFAULT_VARIANT_KEY ? DEFAULT_VARIANT_LABEL_RU : activeVariantKey)
+    const activeVariantDisplay = withResolvedVariantLabel(activeVariantKey, activeVariant, {
+      legacyColorName: activeVariantMeta?.legacyColorName,
+      productSkuHint,
+    }).label
     const z = toZoneState(activeVariant)
     const candCount = entryList.filter((e) => e.top_candidate?.medusa_product_handle.toLowerCase() === h).length
     const safeSuggestions = suggestedVariantsForSelected.filter((s) => s.identityTier === "this_sku")
@@ -2425,9 +2558,17 @@ export function LegacyMediaAssignmentBoardClient() {
       for (const s of arr) {
         const sk = suggestionEnrichmentKey(h, s.variantKey)
         const enc = enrichmentByKey[sk]?.data ?? null
-        const prefs = suggestionRowPrefs[sk] ?? { useLegacyName: false, useLegacyArticle: false, editedLegacyArticle: null }
+        const prefs = suggestionRowPrefs[sk] ?? {
+          useLegacyName: false,
+          useLegacyArticle: false,
+          editedLegacyArticle: null,
+          chosenArticleCandidateIndex: null,
+        }
+        const displayLabel = resolveSuggestionDisplayLabel(s, enc, prefs, null, s.productSkuHint)
         variantUpdates[s.variantKey] = {
-          label: prefs.useLegacyName && enc?.legacy_color_name ? enc.legacy_color_name : s.label,
+          label: displayLabel,
+          sourceLabel: sourceLabelForVariantKey(s.variantKey),
+          labelEditedByUser: Boolean(prefs.displayLabelEdited),
           primary: s.primaryCandidateId || null,
           gallery: [...s.galleryCandidateIds],
           reference: [],
@@ -2610,18 +2751,23 @@ export function LegacyMediaAssignmentBoardClient() {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
             <span style={{ fontSize: 10, fontWeight: 800, color: "#0f172a", textTransform: "uppercase", letterSpacing: "0.06em" }}>Active variant</span>
             <span style={{ fontSize: 11, color: "#475569" }}>
-              Active: <strong>{activeVariant.label}</strong>
+              Active: <strong>{activeVariantDisplay}</strong>
               {" · "}
               status: <strong>{activeVariantMeta?.status || (activeVariantKey === DEFAULT_VARIANT_KEY ? "confirmed" : "edited")}</strong>
             </span>
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", rowGap: 6 }}>
-            {Object.entries(vByHandle).map(([vk, vv]) => (
+            {Object.entries(vByHandle).map(([vk, vv]) => {
+              const chipLabel = withResolvedVariantLabel(vk, vv, {
+                legacyColorName: vmByHandle[vk]?.legacyColorName,
+                productSkuHint,
+              }).label
+              return (
               <button
                 key={vk}
                 type="button"
                 onClick={() => setActiveVariantByHandle((prev) => ({ ...prev, [h]: vk }))}
-                title={vv.label}
+                title={chipLabel}
                 style={{
                   ...miniBtn,
                   padding: "4px 10px",
@@ -2631,9 +2777,41 @@ export function LegacyMediaAssignmentBoardClient() {
                   maxWidth: 220,
                 }}
               >
-                {vv.label}
+                {chipLabel}
               </button>
-            ))}
+              )
+            })}
+            <button
+              type="button"
+              data-action-button="variant-rename-active"
+              style={{ ...miniBtn, padding: "4px 10px" }}
+              onClick={() => {
+                const next = promptVariantRename(activeVariantDisplay)
+                if (!next) return
+                setVariantsByHandle((prev) => ({
+                  ...prev,
+                  [h]: {
+                    ...(prev[h] ?? {}),
+                    [activeVariantKey]: {
+                      ...(prev[h]?.[activeVariantKey] ?? activeVariant),
+                      label: next,
+                      labelEditedByUser: true,
+                      sourceLabel: activeVariant.sourceLabel ?? sourceLabelForVariantKey(activeVariantKey),
+                    },
+                  },
+                }))
+                setDiag((d) => ({
+                  ...d,
+                  buttonHandlerFired: true,
+                  stateUpdateRequested: true,
+                  stateActuallyChanged: true,
+                  lastAction: "rename active variant label",
+                  lastError: "",
+                }))
+              }}
+            >
+              Переименовать
+            </button>
             <div style={{ display: "flex", gap: 6, alignItems: "center", marginLeft: "auto" }}>
               <input
                 value={newVariantLabel}
@@ -2647,12 +2825,21 @@ export function LegacyMediaAssignmentBoardClient() {
                 onClick={() => {
                   const label = newVariantLabel.trim()
                   if (!label) return
-                  const key = label.toLowerCase().replace(/\s+/g, "_")
+                  const key = `color_${label.toLowerCase().replace(/\s+/g, "_")}`
                   setVariantsByHandle((prev) => ({
                     ...prev,
                     [h]: {
-                      ...(prev[h] ?? { [DEFAULT_VARIANT_KEY]: fromZoneState(board.zones[h] ?? emptyZones(), "Default") }),
-                      [key]: prev[h]?.[key] ?? emptyVariant(label),
+                      ...(prev[h] ?? {
+                        [DEFAULT_VARIANT_KEY]: fromZoneState(board.zones[h] ?? emptyZones(), DEFAULT_VARIANT_LABEL_RU, {
+                          sourceLabel: "default",
+                        }),
+                      }),
+                      [key]:
+                        prev[h]?.[key] ??
+                        emptyVariant(label, {
+                          sourceLabel: label,
+                          labelEditedByUser: true,
+                        }),
                     },
                   }))
                   setVariantMetaByHandle((prev) => ({
@@ -2759,7 +2946,7 @@ export function LegacyMediaAssignmentBoardClient() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
             <span style={{ fontSize: 10, fontWeight: 800, color: "#0f172a", textTransform: "uppercase", letterSpacing: "0.06em" }}>1 · Current photos for this SKU</span>
             <span style={{ fontSize: 10, color: "#94a3b8" }}>
-              вариант <strong style={{ color: "#475569" }}>{activeVariant.label}</strong> · primary <strong>{z.primary ? 1 : 0}</strong> · gallery <strong>{z.gallery.length}</strong>
+              вариант <strong style={{ color: "#475569" }}>{activeVariantDisplay}</strong> · primary <strong>{z.primary ? 1 : 0}</strong> · gallery <strong>{z.gallery.length}</strong>
             </span>
           </div>
 
@@ -3155,7 +3342,18 @@ export function LegacyMediaAssignmentBoardClient() {
                 const needsArticleReview = enc?.indexed_article_status === "multiple_candidates"
                 const combinedReasons = enc?.reasons?.length ? [...s.reasons, ...enc.reasons] : s.reasons
                 const galleryPreview = [s.primaryCandidateId, ...s.galleryCandidateIds].filter(Boolean) as string[]
-                const cardStatus: "suggested" | "edited" = prefs.editedLegacyArticle || prefs.useLegacyArticle || prefs.useLegacyName ? "edited" : "suggested"
+                const cardStatus: "suggested" | "edited" =
+                  prefs.editedLegacyArticle || prefs.useLegacyArticle || prefs.useLegacyName || prefs.displayLabelEdited
+                    ? "edited"
+                    : "suggested"
+                const confirmedVariant = vByHandle[s.variantKey]
+                const suggestionDisplayLabel = resolveSuggestionDisplayLabel(
+                  s,
+                  enc,
+                  prefs,
+                  confirmedVariant,
+                  productSkuHint
+                )
 
                 return (
                   <article
@@ -3174,7 +3372,9 @@ export function LegacyMediaAssignmentBoardClient() {
                     }}
                   >
                     <header style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", minWidth: 0 }}>
-                        <strong style={{ fontSize: 15, color: "#0f172a", overflowWrap: "anywhere" }}>{s.label}</strong>
+                        <strong style={{ fontSize: 15, color: "#0f172a", overflowWrap: "anywhere" }} data-variant-display-label="true">
+                          {suggestionDisplayLabel}
+                        </strong>
                         <span style={pillIndigo}>{s.confidence}</span>
                         <span
                           style={{
@@ -3295,21 +3495,41 @@ export function LegacyMediaAssignmentBoardClient() {
                       </button>
                       <button
                         type="button"
-                        data-action-button="suggestion-edit-label"
+                        data-action-button="suggestion-rename-label"
                         style={miniBtn}
                         onClick={() => {
-                          const next = window.prompt("Edit variant label", s.label)
-                          if (!next?.trim()) return
-                          setVariantsByHandle((prev) => ({
-                            ...prev,
-                            [h]: {
-                              ...(prev[h] ?? {}),
-                              [s.variantKey]: { ...(prev[h]?.[s.variantKey] ?? emptyVariant(next.trim())), label: next.trim() },
-                            },
+                          const next = promptVariantRename(suggestionDisplayLabel)
+                          if (!next) return
+                          if (confirmedVariant) {
+                            setVariantsByHandle((prev) => ({
+                              ...prev,
+                              [h]: {
+                                ...(prev[h] ?? {}),
+                                [s.variantKey]: {
+                                  ...confirmedVariant,
+                                  label: next,
+                                  labelEditedByUser: true,
+                                  sourceLabel: confirmedVariant.sourceLabel ?? sourceLabelForVariantKey(s.variantKey),
+                                },
+                              },
+                            }))
+                          } else {
+                            setSuggestionRowPrefs((prev) => ({
+                              ...prev,
+                              [sk]: { ...prefs, displayLabel: next, displayLabelEdited: true },
+                            }))
+                          }
+                          setDiag((d) => ({
+                            ...d,
+                            buttonHandlerFired: true,
+                            stateUpdateRequested: true,
+                            stateActuallyChanged: true,
+                            lastAction: "rename suggestion variant label",
+                            lastError: "",
                           }))
                         }}
                       >
-                        Изменить
+                        Переименовать
                       </button>
                       <span data-hidden-advanced-actions="true" style={{ display: "none" }}><button
                         type="button"
@@ -3426,6 +3646,12 @@ export function LegacyMediaAssignmentBoardClient() {
                         </summary>
                         <div style={{ marginTop: 6, fontSize: 11, color: "#475569", overflowWrap: "anywhere", wordBreak: "break-word", lineHeight: 1.45 }}>
                           <div>Legacy color name: <strong>{enc?.legacy_color_name || "—"}</strong></div>
+                          <div style={{ marginTop: 2 }}>
+                            Исходный токен / source:{" "}
+                            <strong style={{ fontFamily: "ui-monospace, monospace", fontSize: 10, color: "#64748b" }}>
+                              {s.colorNameRaw} · {sourceLabelForVariantKey(s.variantKey)}
+                            </strong>
+                          </div>
                           <div style={{ marginTop: 2 }}>
                             Matched PDP:{" "}
                             {enc?.indexed_pdp_url ? (
@@ -3633,7 +3859,12 @@ export function LegacyMediaAssignmentBoardClient() {
               {Object.entries(vByHandle)
                 .filter(([vk]) => vk !== DEFAULT_VARIANT_KEY || galleryItemCount > 0)
                 .slice(0, 6)
-                .map(([, vv]) => vv.label)
+                .map(([vk, vv]) =>
+                  withResolvedVariantLabel(vk, vv, {
+                    legacyColorName: vmByHandle[vk]?.legacyColorName,
+                    productSkuHint,
+                  }).label
+                )
                 .join(", ")}
             </div>
           ) : null}
@@ -3657,7 +3888,9 @@ export function LegacyMediaAssignmentBoardClient() {
                   style={{ border: "1px solid #fcd34d", borderRadius: 8, padding: 10, background: "#fff", minWidth: 0 }}
                 >
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "baseline" }}>
-                    <strong style={{ fontSize: 13, color: "#0f172a" }}>{s.label}</strong>
+                    <strong style={{ fontSize: 13, color: "#0f172a" }}>
+                      {displayLabelFromColorToken(s.colorNameRaw, { productSkuHint: s.productSkuHint })}
+                    </strong>
                     <span style={{ ...pillSlate, background: "#fef3c7", color: "#92400e" }}>Проверить принадлежность</span>
                     {s.foreignHandle ? (
                       <span style={{ fontSize: 10, color: "#b45309" }}>other handle: {s.foreignHandle}</span>
@@ -4306,7 +4539,11 @@ export function LegacyMediaAssignmentBoardClient() {
                       style={{ ...inputStyle, fontSize: 12, padding: "6px 8px" }}
                     >
                       {selectedHandle
-                        ? Object.entries(variantsByHandle[selectedHandle.toLowerCase()] ?? { [DEFAULT_VARIANT_KEY]: emptyVariant("Default") }).map(([k, v]) => (
+                        ? Object.entries(
+                            variantsByHandle[selectedHandle.toLowerCase()] ?? {
+                              [DEFAULT_VARIANT_KEY]: emptyVariant(DEFAULT_VARIANT_LABEL_RU, { sourceLabel: "default" }),
+                            }
+                          ).map(([k, v]) => (
                             <option key={k} value={k}>
                               {v.label}
                             </option>

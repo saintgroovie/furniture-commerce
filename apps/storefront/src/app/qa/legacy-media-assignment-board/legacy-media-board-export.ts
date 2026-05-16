@@ -330,6 +330,55 @@ export function serializeVariantMetaForExport(meta: VariantMetaState): Record<st
   }
 }
 
+export type VariantDecisionExportSlice = {
+  label: string
+  display_label: string
+  source_label: string
+  label_edited_by_user: boolean
+  primary: string | null
+  gallery: string[]
+  reference: string[]
+  rejected: string[]
+}
+
+export function serializeVariantDecisionsForExport(
+  variantsByHandle: Record<
+    string,
+    Record<
+      string,
+      {
+        label: string
+        sourceLabel?: string | null
+        labelEditedByUser?: boolean
+        primary: string | null
+        gallery: string[]
+        reference: string[]
+        rejected: string[]
+      }
+    >
+  >,
+  sourceLabelForKey: (variantKey: string) => string
+): Record<string, Record<string, VariantDecisionExportSlice>> {
+  const out: Record<string, Record<string, VariantDecisionExportSlice>> = {}
+  for (const [handle, row] of Object.entries(variantsByHandle)) {
+    out[handle] = {}
+    for (const [variantKey, v] of Object.entries(row)) {
+      const source = v.sourceLabel?.trim() || sourceLabelForKey(variantKey)
+      out[handle][variantKey] = {
+        label: v.label,
+        display_label: v.label,
+        source_label: source,
+        label_edited_by_user: Boolean(v.labelEditedByUser),
+        primary: v.primary,
+        gallery: [...v.gallery],
+        reference: [...v.reference],
+        rejected: [...v.rejected],
+      }
+    }
+  }
+  return out
+}
+
 export function serializeAllVariantMetaExport(variantMetaByHandle: VariantMetaByHandle): Record<string, Record<string, Record<string, unknown>>> {
   const out: Record<string, Record<string, Record<string, unknown>>> = {}
   for (const [h, row] of Object.entries(variantMetaByHandle)) {
