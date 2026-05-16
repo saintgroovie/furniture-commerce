@@ -86,6 +86,37 @@ The selected-product workspace is organised as an operator **review cockpit**, n
 - **Right column** — **Media pool · N items**; pool cards use `MediaImageCard` `displayMode="pool"` (image-first, no inline paths). **Primary** / **Gallery** + **More** (Ref / Reject / Global). **Manual assignment** and **Debug / Diagnostics** are `<details>` collapsed by default.
 - Human-readable legacy article statuses in the UI (e.g. **Артикул найден**, **Старый сайт недоступен**). SKU hint, fetch status, swatch evidence, URLs, and reasons appear only under **Почему?** on suggestion cards.
 
+## Browser QA scripts (dev-only, optional)
+
+Scripts under `apps/storefront/scripts/` drive the board through **system Chrome** via **`playwright-core` installed outside the repo** (no new dependency in `apps/storefront/package.json`, no bundled Chromium download required).
+
+**One-time temp install:**
+
+```bash
+mkdir -p /tmp/legacy-board-shot && cd /tmp/legacy-board-shot
+npm init -y && npm install playwright-core@1.51.0
+```
+
+**Screenshots** (writes PNGs — **do not commit** them):
+
+```bash
+cd /tmp/legacy-board-shot
+export LEGACY_BOARD_URL=http://127.0.0.1:8000/qa/legacy-media-assignment-board
+# optional: LEGACY_BOARD_SCREENSHOT_DIR=/absolute/path (default: <repo>/tmp/qa-screenshots)
+# optional: PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH or CHROME_PATH
+export PLAYWRIGHT_CORE_NODE_MODULES=$PWD/node_modules
+node ../furniture-commerce/apps/storefront/scripts/legacy-board-screenshot.mjs
+```
+
+**Interaction smoke** (stdout JSON steps only; uses `localStorage` on the board — still dev-only):
+
+```bash
+export PLAYWRIGHT_CORE_NODE_MODULES=$PWD/node_modules
+node ../furniture-commerce/apps/storefront/scripts/legacy-board-interaction-smoke.mjs
+```
+
+Requires `yarn dev` in `apps/storefront` and repo `data/` + `docs/` markers (`FURNITURE_REPO_ROOT` in Docker). Scripts do not call Medusa or mutate seed/catalog/evidence.
+
 ## Assisted variants (dev-only)
 
 - Visible delivery sentinel in page chrome (updates with each pass): e.g. `Legacy Board review cockpit UX simplification`.
