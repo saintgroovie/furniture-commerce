@@ -47,6 +47,11 @@ import {
   type BoardSyncPlan,
 } from "./legacy-board-sync-rules"
 import {
+  appendMediaToAllVariantGalleries,
+  countBulkGalleryVariants,
+  formatAppendToAllGalleriesNote,
+} from "./legacy-board-variant-gallery-append"
+import {
   mergeGalleryPreservingOrder,
   variantHasEstablishedGalleryOrder,
   withManualGalleryOrder,
@@ -88,8 +93,8 @@ const UNKNOWN_COLLECTION = "__unknown__"
 const API_BASE = "/qa/legacy-media-assignment-board/api"
 const PREVIEW_ROUTE = "/qa/legacy-media-assignment-board/preview"
 const DND_JSON = "application/json"
-const DEV_SENTINEL = "Legacy Board role-based gallery composition"
-const DEV_SENTINEL_BUILD = "2026-05-17T18:00Z"
+const DEV_SENTINEL = "Legacy Board media pool two-column + add to all galleries"
+const DEV_SENTINEL_BUILD = "2026-05-17T20:00Z"
 
 async function fetchBoardJson(url: string): Promise<{ ok: true; data: Record<string, unknown> } | { ok: false; status: number; body: Record<string, unknown> }> {
   const res = await fetch(url)
@@ -106,7 +111,13 @@ async function fetchBoardJson(url: string): Promise<{ ok: true; data: Record<str
 
 type PoolTab = "suggested" | "unassigned" | "ambiguous" | "confirmed" | "unpreviewable" | "rejected"
 type ZoneDrop = "primary" | "gallery" | "reference" | "lane_reject" | "unassigned"
-type ActionSource = "button" | "assigned-button" | "manual" | "drag" | "selected-product-default"
+type ActionSource =
+  | "button"
+  | "assigned-button"
+  | "manual"
+  | "drag"
+  | "selected-product-default"
+  | "add-to-all-variant-galleries"
 
 type TargetSnapshot = {
   tagName: string
@@ -613,6 +624,22 @@ function findVariantKeyOwningMedia(variants: Record<string, VariantDecisionState
   return null
 }
 
+function mediaCanAppendToAllGalleries(
+  inv: InvItem | undefined,
+  ce: CandidateEntry | undefined,
+  handle: string,
+  sku: string,
+  colorVariantCount: number
+): { ok: boolean; hint: string } {
+  if (!handle) return { ok: false, hint: "Сначала выберите товар" }
+  if (colorVariantCount < 2) return { ok: false, hint: "Нет подтверждённых цветов для массового добавления" }
+  if (!inv?.previewable) return { ok: false, hint: "Фото без preview — действие недоступно" }
+  const identity = classifyMediaProductIdentity(inv, ce, handle, sku)
+  if (identity.tier === "excluded") return { ok: false, hint: "Чужой SKU — нельзя добавить во все галереи" }
+  if (identity.tier === "needs_identity_review") return { ok: false, hint: "Нужна проверка identity" }
+  return { ok: true, hint: "Добавить в конец галереи каждого цвета этого SKU" }
+}
+
 function mergeVariantMeta(
   prev: VariantMetaState | undefined,
   productSkuHint: string,
@@ -992,6 +1019,7 @@ export function LegacyMediaAssignmentBoardClient() {
   const skipNextPersist = useRef(false)
   const [focusMode, setFocusMode] = useState(false)
   const [inspectorId, setInspectorId] = useState<string | null>(null)
+  const [poolActionNote, setPoolActionNote] = useState<string>("")
   const [exportFeedback, setExportFeedback] = useState<"copy" | "download" | null>(null)
   const [dragHoverZoneKey, setDragHoverZoneKey] = useState<string | null>(null)
   const [draggingMediaId, setDraggingMediaId] = useState<string | null>(null)
@@ -1742,6 +1770,161 @@ export function LegacyMediaAssignmentBoardClient() {
     [board, selectedHandle, activeVariantByHandle, productByHandle]
   )
 
+  const appendMediaToAllVariantGalleriesForHandle = useCallback(
+    (mediaId: string) => {
+      const activeHandle = selectedHandle?.trim()
+      if (!activeHandle) {
+        const msg = "Select product first"
+        setPoolActionNote(msg)
+        setDiag((d) => ({
+          ...d,
+          buttonHandlerFired: true,
+          stateUpdateRequested: true,
+          stateActuallyChanged: false,
+          lastAction: "add-to-all-variant-galleries blocked",
+          lastError: msg,
+          source: "add-to-all-variant-galleries",
+          mediaId,
+          productHandle: "",
+          fromZone: "pool",
+          targetZone: "all_variant_galleries",
+        }))
+        return false
+      }
+      const hh = activeHandle.toLowerCase()
+      const inv = invById.get(mediaId)
+      const phSku = productByHandle.get(hh)?.sku?.trim() || ""
+      if (!inv) return false
+      if (!inv.previewable) {
+        const msg = "Фото без preview — массовое добавление недоступно"
+        setPoolActionNote(msg)
+        setDiag((d) => ({
+          ...d,
+          buttonHandlerFired: true,
+          stateUpdateRequested: true,
+          stateActuallyChanged: false,
+          lastAction: "add-to-all-variant-galleries blocked",
+          lastError: msg,
+          source: "add-to-all-variant-galleries",
+          mediaId,
+          productHandle: activeHandle,
+          fromZone: "pool",
+          targetZone: "all_variant_galleries",
+        }))
+        return false
+      }
+      const identity = classifyMediaProductIdentity(inv, candById.get(mediaId), activeHandle, phSku)
+      if (identity.tier === "excluded") {
+        const msg = "Чужой SKU — нельзя добавить во все галереи"
+        setPoolActionNote(msg)
+        setDiag((d) => ({
+          ...d,
+          buttonHandlerFired: true,
+          stateUpdateRequested: true,
+          stateActuallyChanged: false,
+          lastAction: "add-to-all-variant-galleries blocked",
+          lastError: msg,
+          source: "add-to-all-variant-galleries",
+          mediaId,
+          productHandle: activeHandle,
+          fromZone: "pool",
+          targetZone: "all_variant_galleries",
+        }))
+        return false
+      }
+      if (identity.tier === "needs_identity_review") {
+        const msg = "Нужна проверка identity перед массовым добавлением"
+        setPoolActionNote(msg)
+        setDiag((d) => ({
+          ...d,
+          buttonHandlerFired: true,
+          stateUpdateRequested: true,
+          stateActuallyChanged: false,
+          lastAction: "add-to-all-variant-galleries blocked",
+          lastError: msg,
+          source: "add-to-all-variant-galleries",
+          mediaId,
+          productHandle: activeHandle,
+          fromZone: "pool",
+          targetZone: "all_variant_galleries",
+        }))
+        return false
+      }
+
+      const current = variantsByHandle[hh] ?? {}
+      if (countBulkGalleryVariants(current) < 2) {
+        const msg = "Нет подтверждённых цветов для массового добавления (нужно ≥2)"
+        setPoolActionNote(msg)
+        setDiag((d) => ({
+          ...d,
+          buttonHandlerFired: true,
+          stateUpdateRequested: true,
+          stateActuallyChanged: false,
+          lastAction: "add-to-all-variant-galleries blocked",
+          lastError: msg,
+          source: "add-to-all-variant-galleries",
+          mediaId,
+          productHandle: activeHandle,
+          fromZone: "pool",
+          targetZone: "all_variant_galleries",
+        }))
+        return false
+      }
+
+      const result = appendMediaToAllVariantGalleries(current, mediaId)
+      setPoolActionNote(formatAppendToAllGalleriesNote(result))
+
+      if (!result.changed) {
+        setDiag((d) => ({
+          ...d,
+          buttonHandlerFired: true,
+          stateUpdateRequested: true,
+          stateActuallyChanged: false,
+          lastAction: "add-to-all-variant-galleries noop",
+          lastError: result.already.length ? "already present" : "no eligible variants",
+          source: "add-to-all-variant-galleries",
+          mediaId,
+          productHandle: activeHandle,
+          fromZone: "pool",
+          targetZone: "all_variant_galleries",
+          variantKey: result.already.map((r) => r.variantKey).join(","),
+        }))
+        return false
+      }
+
+      setVariantsByHandle((prev) => ({
+        ...prev,
+        [hh]: result.nextVariants as Record<string, VariantDecisionState>,
+      }))
+      setVariantMetaByHandle((prevMeta) => {
+        const row = { ...(prevMeta[hh] ?? {}) }
+        for (const added of result.added) {
+          row[added.variantKey] = mergeVariantMeta(row[added.variantKey], phSku, {
+            reasons: row[added.variantKey]?.reasons?.length ? row[added.variantKey]!.reasons : ["add to all variant galleries"],
+            status: "edited",
+          })
+        }
+        return { ...prevMeta, [hh]: row }
+      })
+      setDiag((d) => ({
+        ...d,
+        buttonHandlerFired: true,
+        stateUpdateRequested: true,
+        stateActuallyChanged: true,
+        lastAction: `add-to-all-variant-galleries +${result.added.length}`,
+        lastError: "",
+        source: "add-to-all-variant-galleries",
+        mediaId,
+        productHandle: activeHandle,
+        fromZone: "pool",
+        targetZone: "all_variant_galleries",
+        variantKey: result.added.map((a) => a.variantKey).join(","),
+      }))
+      return true
+    },
+    [selectedHandle, invById, candById, variantsByHandle, productByHandle]
+  )
+
   const updateVariantDecision = useCallback(
     (
       handle: string,
@@ -1950,6 +2133,11 @@ export function LegacyMediaAssignmentBoardClient() {
   }, [focusMode, selectedHandle, poolIdsForTab, candById])
 
   const poolShown = poolIdsForTabFocused.slice(0, POOL_LIMIT)
+  const bulkColorVariantCount = useMemo(
+    () => (selectedHandle ? countBulkGalleryVariants(variantsByHandle[selectedHandle.toLowerCase()]) : 0),
+    [selectedHandle, variantsByHandle]
+  )
+  const selectedProductSku = selectedHandle ? productByHandle.get(selectedHandle.toLowerCase())?.sku?.trim() || "" : ""
   const poolOverflow = poolIdsForTabFocused.length - poolShown.length
 
   const collectionLabel = useMemo(() => {
@@ -4378,6 +4566,18 @@ export function LegacyMediaAssignmentBoardClient() {
                               <> · исходное: <strong>{sourceLabelForVariantKey(s.variantKey)}</strong></>
                             ) : null}
                           </div>
+                          {(s.rejectedBorrowCandidates?.length ?? 0) > 0 ? (
+                            <div style={{ marginTop: 6 }} data-suggestion-rejected-borrow="true">
+                              <strong>Отклонено заимствование ({s.rejectedBorrowCandidates!.length})</strong>
+                              <ul style={{ margin: "4px 0 0", paddingLeft: 16, fontSize: 10, color: "#94a3b8" }}>
+                                {s.rejectedBorrowCandidates!.slice(0, 6).map((r) => (
+                                  <li key={`${r.mediaId}-${r.reason}`}>
+                                    {r.reason} · {(invById.get(r.mediaId)?.filename || r.filename || r.mediaId).slice(0, 36)}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          ) : null}
                           {(s.borrowedSameSku?.length ?? 0) > 0 ? (
                             <div style={{ marginTop: 6 }} data-suggestion-borrowed="true">
                               <strong>Заимствовано из этого SKU</strong>
@@ -5413,6 +5613,44 @@ export function LegacyMediaAssignmentBoardClient() {
                   ) : null}
                 </p>
               )}
+              {poolActionNote ? (
+                <p
+                  data-pool-action-note="true"
+                  style={{ margin: "8px 0 0", fontSize: 11, color: "#166534", fontWeight: 600, lineHeight: 1.4 }}
+                >
+                  {poolActionNote}
+                </p>
+              ) : null}
+              {inspectorId && selectedHandle ? (
+                <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+                  <button
+                    type="button"
+                    data-action-button="pool-bulk-add-to-all-galleries"
+                    style={{ ...miniBtn, fontWeight: 700 }}
+                    disabled={
+                      !mediaCanAppendToAllGalleries(
+                        invById.get(inspectorId),
+                        candById.get(inspectorId),
+                        selectedHandle,
+                        selectedProductSku,
+                        bulkColorVariantCount
+                      ).ok
+                    }
+                    title={
+                      mediaCanAppendToAllGalleries(
+                        invById.get(inspectorId),
+                        candById.get(inspectorId),
+                        selectedHandle,
+                        selectedProductSku,
+                        bulkColorVariantCount
+                      ).hint
+                    }
+                    onClick={() => appendMediaToAllVariantGalleriesForHandle(inspectorId)}
+                  >
+                    Добавить выбранное во все галереи
+                  </button>
+                </div>
+              ) : null}
               <details style={{ marginTop: 10, borderTop: "1px dashed #cbd5e1", paddingTop: 10 }}>
                 <summary style={{ cursor: "pointer", fontSize: 11, fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em" }}>
                   Manual assignment (by media id)
@@ -5516,18 +5754,7 @@ export function LegacyMediaAssignmentBoardClient() {
                 <div style={{ padding: 24, color: "#64748b", fontSize: 14, textAlign: "center" }}>{poolEmptyMessage}</div>
               ) : (
                 <>
-                  <div
-                    data-media-pool-grid="true"
-                    style={{
-                      display: "grid",
-                      width: "100%",
-                      maxWidth: "100%",
-                      boxSizing: "border-box",
-                      /** minmax(0,1fr) lets tracks shrink so fixed-width cards do not clip the aside */
-                      gridTemplateColumns: "1fr",
-                      gap: 10,
-                    }}
-                  >
+                  <div data-media-pool-grid="true">
                     {poolShown.map((id) => {
                       const inv = invById.get(id)
                       if (!inv) return null
@@ -5538,8 +5765,15 @@ export function LegacyMediaAssignmentBoardClient() {
                       if (inv.collection_hint || ce?.top_candidate?.medusa_collection_handle) {
                         poolBadges.push(String(inv.collection_hint || ce?.top_candidate?.medusa_collection_handle))
                       }
+                      const appendAll = mediaCanAppendToAllGalleries(
+                        inv,
+                        ce,
+                        selectedHandle || "",
+                        selectedProductSku,
+                        bulkColorVariantCount
+                      )
                       return (
-                        <div key={id} style={{ display: "flex", flexDirection: "column", gap: 8, minWidth: 0 }}>
+                        <div key={id} data-media-pool-card-wrap="true">
                           <MediaImageCard
                             inventoryId={id}
                             inv={inv}
@@ -5550,10 +5784,10 @@ export function LegacyMediaAssignmentBoardClient() {
                             displayMode="pool"
                             sourcePath={inv.repo_relative_path || inv.source_path}
                             sourceType={inv.source_type}
-                            confidenceLabel={ce?.confidence || null}
+                            confidenceLabel={null}
                             previewable={inv.previewable}
                             badges={poolBadges.slice(0, 1)}
-                            size={focusMode && selectedHandle ? "large" : "normal"}
+                            size="pool"
                             draggable={inv.previewable}
                             isDragging={draggingMediaId === id}
                             onDragStart={
@@ -5587,11 +5821,10 @@ export function LegacyMediaAssignmentBoardClient() {
                             onOpenDetail={() => setInspectorId(id)}
                             onCardPointerDownCapture={(e) => setDiag((d) => ({ ...d, lastPointerDown: describeTargetFromElement(e.target) }))}
                             onCardClickCapture={(e) => setDiag((d) => ({ ...d, lastClick: describeTargetFromElement(e.target) }))}
-                            filenameMaxLen={focusMode && selectedHandle ? 20 : 26}
                             detailTitle={inv.source_path || inv.repo_relative_path || inv.filename}
                           />
                           {elsewhere ? (
-                            <div style={{ fontSize: 11, color: "#b45309", lineHeight: 1.35 }}>This image is already assigned to {elsewhere}.</div>
+                            <div style={{ fontSize: 11, color: "#b45309", lineHeight: 1.35 }}>Assigned: {elsewhere}.</div>
                           ) : null}
                           <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
                             <button
@@ -5641,8 +5874,25 @@ export function LegacyMediaAssignmentBoardClient() {
                             >
                               Gallery
                             </button>
-                            <details style={{ width: "100%" }}>
-                              <summary style={{ cursor: "pointer", fontSize: 10, color: "#94a3b8", fontWeight: 700, padding: "4px 0" }}>More</summary>
+                            <button
+                              type="button"
+                              data-action-button="add-to-all-galleries"
+                              data-media-id={id}
+                              draggable={false}
+                              style={{ ...miniBtn, fontWeight: 700 }}
+                              disabled={!appendAll.ok}
+                              title={appendAll.hint}
+                              onMouseDown={(e) => e.stopPropagation()}
+                              onDragStart={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                              }}
+                              onClick={() => appendMediaToAllVariantGalleriesForHandle(id)}
+                            >
+                              Во все галереи
+                            </button>
+                            <details style={{ flex: "1 1 100%", minWidth: 0 }}>
+                              <summary style={{ cursor: "pointer", fontSize: 10, color: "#94a3b8", fontWeight: 700, padding: "2px 0" }}>More</summary>
                               <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 4 }}>
                             <button
                               type="button"

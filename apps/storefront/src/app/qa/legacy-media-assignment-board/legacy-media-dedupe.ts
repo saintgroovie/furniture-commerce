@@ -377,6 +377,8 @@ export function dedupeAndSortVariantMedia(
     const roleBuild = applyRoleRepresentativeSelection(visiblePreviewable, invById, candById, {
       clusterHidden: hiddenDuplicates,
       lockedPrimaryId: preservedPrimary,
+      colorToken: opts?.colorToken,
+      productSku: opts?.selectedSku,
     })
     const allHidden = roleBuild.hiddenDuplicates.filter(
       (h, i, arr) => arr.findIndex((x) => x.mediaId === h.mediaId) === i
@@ -408,6 +410,9 @@ export function dedupeAndSortVariantMedia(
 
   const roleBuild = applyRoleRepresentativeSelection(visiblePreviewable, invById, candById, {
     clusterHidden: hiddenDuplicates,
+    colorToken: opts?.colorToken,
+    productHandle: opts?.selectedSku,
+    productSku: opts?.selectedSku,
   })
 
   const allHidden = roleBuild.hiddenDuplicates.filter(

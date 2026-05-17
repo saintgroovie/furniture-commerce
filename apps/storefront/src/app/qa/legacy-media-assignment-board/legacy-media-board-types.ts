@@ -150,6 +150,14 @@ export type SuggestedVariant = {
     fromVariantKey: string
     fromVariantLabel: string
   }>
+  rejectedBorrowCandidates?: Array<{
+    mediaId: string
+    role: string
+    fromVariantKey: string
+    fromVariantLabel: string
+    filename?: string
+    reason: string
+  }>
   primaryNeedsReview?: boolean
   /** Dev/QA: human-readable role gallery composition (Details only). */
   roleCompositionSummary?: string

@@ -8,11 +8,15 @@ import type { DedupeHiddenItem, InvItemDedupeFields } from "./legacy-media-dedup
 import { galleryQualityScore } from "./legacy-media-dedupe"
 import {
   canBePrimaryRole,
+  canBorrowVisualRole,
   classifyVisualRole,
   compareIdsByVisualRole,
+  extractColorTokenFromMedia,
   FRONT_FAMILY_ROLES,
   GALLERY_ROLE_ORDER,
   isDistinctAlternateFront,
+  mediaMatchesColorToken,
+  NON_BORROWABLE_EXTERNAL_ROLES,
   pickPrimaryAndGalleryByVisualRole,
   primaryRoleStripLabel,
   type VisualRole,
@@ -27,6 +31,15 @@ export type BorrowedSameSkuEntry = {
   fromVariantLabel: string
 }
 
+export type RejectedBorrowCandidate = {
+  mediaId: string
+  role: VisualRole
+  fromVariantKey: string
+  fromVariantLabel: string
+  filename?: string
+  reason: string
+}
+
 export const VISUAL_ROLE_STRIP_LABEL_RU: Record<VisualRole, string> = {
   closed_front: "закрытый фронт",
   hero_front: "главное",
@@ -39,8 +52,8 @@ export const VISUAL_ROLE_STRIP_LABEL_RU: Record<VisualRole, string> = {
   unknown: "?",
 }
 
-const BORROWABLE_ROLES: VisualRole[] = ["interior", "detail", "lifestyle", "scheme"]
-const ALT_FRONT_ROLES: VisualRole[] = ["front_3_4", "front_anfas"]
+const BORROWABLE_ROLES: VisualRole[] = ["interior", "detail", "lifestyle"]
+const ALT_FRONT_ROLES: VisualRole[] = ["front_anfas", "front_3_4"]
 
 function scoreMediaId(id: string, invById: Map<string, InvItemDedupeFields>, candById: Map<string, CandidateEntry>, orderIndex: number): number {
   const inv = invById.get(id)
@@ -85,6 +98,7 @@ export type RoleGalleryBuildResult = {
   primaryNeedsReview: boolean
   primaryRole: VisualRole | null
   roleCompositionSummary: string
+  primarySelectionReason?: string
 }
 
 export type HiddenDuplicateRoleGroup = {
@@ -142,12 +156,29 @@ function buildRoleCompositionSummary(
   return parts.join(" · ")
 }
 
+function primarySelectionReasonFor(
+  primaryId: string | null,
+  rolesById: Map<string, VisualRole>,
+  colorToken?: string
+): string | undefined {
+  if (!primaryId) return undefined
+  const role = rolesById.get(primaryId) ?? "unknown"
+  const colorNote = colorToken ? `color=${colorToken}` : "color-specific pool"
+  return `best ${role} in ${colorNote}; anfas/closed front beats 3/4`
+}
+
 /** Role-aware Primary + Gallery; collapse redundant front aliases into hidden duplicates. */
 export function applyRoleRepresentativeSelection(
   visibleIds: string[],
   invById: Map<string, InvItemDedupeFields>,
   candById: Map<string, CandidateEntry>,
-  opts?: { clusterHidden?: DedupeHiddenItem[]; lockedPrimaryId?: string | null }
+  opts?: {
+    clusterHidden?: DedupeHiddenItem[]
+    lockedPrimaryId?: string | null
+    colorToken?: string
+    productHandle?: string
+    productSku?: string
+  }
 ): RoleGalleryBuildResult {
   const unique = Array.from(new Set(visibleIds.filter(Boolean)))
   const hidden: DedupeHiddenItem[] = [...(opts?.clusterHidden ?? [])]
@@ -165,13 +196,17 @@ export function applyRoleRepresentativeSelection(
     buckets.set(role, list)
   }
 
-  const pick = pickPrimaryAndGalleryByVisualRole(unique, invById as Map<string, InvItem>)
+  const pick = pickPrimaryAndGalleryByVisualRole(unique, invById as Map<string, InvItem>, {
+    colorToken: opts?.colorToken,
+    productHandle: opts?.productHandle,
+    productSku: opts?.productSku,
+  })
   let primaryId: string | null =
     opts?.lockedPrimaryId && unique.includes(opts.lockedPrimaryId) ? opts.lockedPrimaryId : pick.primaryId
 
   if (primaryId && !canBePrimaryRole(rolesById.get(primaryId) ?? "unknown")) {
     const closedSorted = sortBucket(
-      [...(buckets.get("closed_front") ?? []), ...(buckets.get("hero_front") ?? [])],
+      [...(buckets.get("closed_front") ?? []), ...(buckets.get("hero_front") ?? []), ...(buckets.get("front_anfas") ?? [])],
       invById,
       candById
     )
@@ -179,7 +214,7 @@ export function applyRoleRepresentativeSelection(
   }
   if (!primaryId) {
     const closedSorted = sortBucket(
-      [...(buckets.get("closed_front") ?? []), ...(buckets.get("hero_front") ?? []), ...(buckets.get("front_anfas") ?? [])],
+      [...(buckets.get("closed_front") ?? []), ...(buckets.get("front_anfas") ?? []), ...(buckets.get("hero_front") ?? [])],
       invById,
       candById
     )
@@ -261,6 +296,7 @@ export function applyRoleRepresentativeSelection(
     primaryNeedsReview,
     primaryRole,
     roleCompositionSummary: buildRoleCompositionSummary(primaryId, galleryIds, rolesById, duplicateHiddenCount),
+    primarySelectionReason: primarySelectionReasonFor(primaryId, rolesById, opts?.colorToken),
   }
 }
 
@@ -276,6 +312,24 @@ export type VariantGallerySlice = {
   mediaPoolIds?: string[]
 }
 
+function rejectBorrow(
+  rejected: RejectedBorrowCandidate[],
+  inv: InvItemDedupeFields,
+  mediaId: string,
+  mediaRole: VisualRole,
+  sib: VariantGallerySlice,
+  reason: string
+): void {
+  rejected.push({
+    mediaId,
+    role: mediaRole,
+    fromVariantKey: sib.variantKey,
+    fromVariantLabel: sib.label,
+    filename: inv.filename,
+    reason,
+  })
+}
+
 export function applySameSkuRoleBorrowing(
   target: VariantGallerySlice,
   siblings: VariantGallerySlice[],
@@ -283,9 +337,15 @@ export function applySameSkuRoleBorrowing(
   candById: Map<string, CandidateEntry>,
   productHandle: string,
   productSku: string
-): { borrowed: BorrowedSameSkuEntry[]; galleryCandidateIds: string[]; rolesById: Map<string, VisualRole> } {
+): {
+  borrowed: BorrowedSameSkuEntry[]
+  galleryCandidateIds: string[]
+  rolesById: Map<string, VisualRole>
+  rejectedBorrowCandidates: RejectedBorrowCandidate[]
+} {
   const borrowed: BorrowedSameSkuEntry[] = []
-  let galleryIds = [...target.galleryCandidateIds]
+  const rejectedBorrowCandidates: RejectedBorrowCandidate[] = []
+  const galleryIds = [...target.galleryCandidateIds]
   const rolesById = new Map(target.rolesById)
   const ownedIds = new Set<string>([
     ...(target.primaryCandidateId ? [target.primaryCandidateId] : []),
@@ -297,8 +357,10 @@ export function applySameSkuRoleBorrowing(
   for (const id of galleryIds) filledRoles.add(rolesById.get(id) ?? "unknown")
 
   if (target.identityTier !== "this_sku") {
-    return { borrowed, galleryCandidateIds: galleryIds, rolesById }
+    return { borrowed, galleryCandidateIds: galleryIds, rolesById, rejectedBorrowCandidates }
   }
+
+  const targetColor = target.colorNameRaw
 
   for (const role of BORROWABLE_ROLES) {
     if (filledRoles.has(role)) continue
@@ -319,10 +381,34 @@ export function applySameSkuRoleBorrowing(
         const inv = invById.get(id)
         if (!inv) continue
         const mediaRole = sib.rolesById.get(id) ?? classifyVisualRole(inv)
+
+        if (NON_BORROWABLE_EXTERNAL_ROLES.has(mediaRole) || FRONT_FAMILY_ROLES.has(mediaRole)) {
+          rejectBorrow(rejectedBorrowCandidates, inv, id, mediaRole, sib, "front role cannot be borrowed")
+          continue
+        }
+        if (!canBorrowVisualRole(mediaRole)) {
+          if (mediaRole !== role) {
+            rejectBorrow(rejectedBorrowCandidates, inv, id, mediaRole, sib, `role ${mediaRole} is not borrowable`)
+          }
+          continue
+        }
         if (mediaRole !== role) continue
 
         const identity = classifyMediaProductIdentity(inv, candById.get(id), productHandle, productSku)
-        if (identity.tier !== "this_sku") continue
+        if (identity.tier !== "this_sku") {
+          rejectBorrow(rejectedBorrowCandidates, inv, id, mediaRole, sib, `identity ${identity.tier}`)
+          continue
+        }
+
+        const sourceColor = extractColorTokenFromMedia(inv, productHandle, productSku)
+        if (sourceColor && sourceColor === targetColor) {
+          rejectBorrow(rejectedBorrowCandidates, inv, id, mediaRole, sib, "same color token as target variant")
+          continue
+        }
+        if (mediaMatchesColorToken(inv, targetColor, productHandle, productSku)) {
+          rejectBorrow(rejectedBorrowCandidates, inv, id, mediaRole, sib, "target color owns this media")
+          continue
+        }
 
         galleryIds.push(id)
         rolesById.set(id, role)
@@ -339,46 +425,26 @@ export function applySameSkuRoleBorrowing(
     }
   }
 
-  if (target.primaryCandidateId) {
-    const recomposed = applyRoleRepresentativeSelection(
-      Array.from(
-        new Set([target.primaryCandidateId, ...galleryIds, ...(target.mediaPoolIds ?? [])].filter(Boolean))
-      ).filter((id) => {
-        const inv = invById.get(id)
-        return inv?.previewable !== false
-      }),
-      invById,
-      candById,
-      { lockedPrimaryId: target.primaryCandidateId }
-    )
-    galleryIds = recomposed.galleryIds
-    for (const [id, role] of Array.from(recomposed.rolesById.entries())) {
-      rolesById.set(id, role)
-    }
-    for (const b of borrowed) {
-      if (!galleryIds.includes(b.mediaId) && b.mediaId !== target.primaryCandidateId) {
-        galleryIds.push(b.mediaId)
-      }
-    }
-    galleryIds = galleryIds.filter(
-      (id) =>
-        id !== target.primaryCandidateId &&
-        (borrowed.some((b) => b.mediaId === id) || recomposed.galleryIds.includes(id))
-    )
-    galleryIds.sort((a, b) => compareIdsByVisualRole(a, b, invById as Map<string, InvItem>, { rolesById }))
-  }
+  const sortedGallery = galleryIds
+    .filter((id) => id !== target.primaryCandidateId)
+    .sort((a, b) => compareIdsByVisualRole(a, b, invById as Map<string, InvItem>, { rolesById }))
 
   const roleStrip = [...target.roleStrip]
   for (const role of BORROWABLE_ROLES) {
     if (borrowed.some((b) => b.role === role) && !roleStrip.includes(role)) roleStrip.push(role)
   }
-  for (const id of galleryIds) {
+  for (const id of sortedGallery) {
     const r = rolesById.get(id)
-    if (r && !roleStrip.includes(r) && !FRONT_FAMILY_ROLES.has(r)) roleStrip.push(r)
+    if (r && !roleStrip.includes(r) && !FRONT_FAMILY_ROLES.has(r) && r !== "front_3_4") roleStrip.push(r)
   }
   roleStrip.sort((a, b) => VISUAL_ROLE_RANK[a] - VISUAL_ROLE_RANK[b])
 
-  return { borrowed, galleryCandidateIds: galleryIds, rolesById }
+  return {
+    borrowed,
+    galleryCandidateIds: sortedGallery,
+    rolesById,
+    rejectedBorrowCandidates,
+  }
 }
 
 export function roleBadgeForMedia(
@@ -386,7 +452,8 @@ export function roleBadgeForMedia(
   rolesById: Map<string, VisualRole>,
   borrowedById: Map<string, BorrowedSameSkuEntry>
 ): string {
-  if (borrowedById.has(mediaId)) return "из этого SKU · другой цвет"
+  const borrowed = borrowedById.get(mediaId)
+  if (borrowed && canBorrowVisualRole(borrowed.role)) return "из этого SKU · другой цвет"
   const role = rolesById.get(mediaId)
   return role ? VISUAL_ROLE_BADGE_RU[role] : "?"
 }

@@ -4,7 +4,7 @@
  */
 
 import type { InvItem } from "./legacy-media-board-types"
-import { explicitProductTokenFromMedia, normSku } from "./suggestion-product-guard"
+import { explicitProductTokenFromMedia, normHandle, normSku } from "./suggestion-product-guard"
 import { isWhiteBgSourceHint, type InvItemDedupeFields } from "./legacy-media-dedupe"
 
 export type VisualRole =
@@ -58,7 +58,7 @@ const INTERIOR_INDEX_RE = /[-_]i(?:3|[4-9])(?:\.|[-_]|$)|[-_]gallery[_\-.]?0?3(?
 const DETAIL_RE =
   /detail|close[\s_-]?up|крупн|(?:^|[^a-z])handle(?:[^a-z]|$)|(?:^|[^a-z])knob(?:[^a-z]|$)|(?:^|[^a-z])leg(?:[^a-z]|$)|texture|фурнит|hardware|material[\s_-]?sample|drawer[\s_-]?detail|hinge|фурнитур|(?:^|[^a-z])joint(?:[^a-z]|$)|enlarged|crop/i
 const PRODUCT_HERO_SHOT_RE =
-  /color_[a-z]+_01|[-_]i0?1(?:\.|[-_]|$)|[-_]iso[-_]?1(?:\.|[-_]|$)|[-_]gallery[_\-.]?01/i
+  /color_[a-z]+_01|[-_]i0?1(?:\.|[-_]|$)|[-_]gallery[_\-.]?01/i
 const PRODUCT_ALT_EXTERNAL_RE =
   /color_[a-z]+_02|[-_]i0?2(?:\.|[-_]|$)|[-_]iso[-_]?2(?:\.|[-_]|$)|[-_]gallery[_\-.]?02/i
 const LIFESTYLE_RE =
@@ -74,7 +74,19 @@ const FIRST_EXTERNAL_RE =
   /[_\-.]i0?1(?:[_\-.]|$)|[_\-.]01(?:[_\-.]|$)|gallery[_\-.]?01|[_\-.]color_[a-z]+[_\-.]1(?:[_\-.]|$)|color_[a-z]+_01|[-_]iso[-_]?1(?:\.|[-_]|$)/i
 const GALLERY_FIRST_RE = /gallery[_\-.]?01/i
 
-const NON_PRIMARY_ROLES = new Set<VisualRole>(["interior", "detail", "lifestyle", "scheme", "front_3_4"])
+const NON_PRIMARY_ROLES = new Set<VisualRole>(["interior", "detail", "lifestyle", "scheme"])
+
+export const BORROWABLE_VISUAL_ROLES = new Set<VisualRole>(["interior", "detail", "lifestyle"])
+
+export const NON_BORROWABLE_EXTERNAL_ROLES = new Set<VisualRole>([
+  "closed_front",
+  "hero_front",
+  "front_anfas",
+  "front_3_4",
+])
+
+const COLOR_TOKEN_IN_MEDIA_RE =
+  /(?:color|colour)[_-]([a-z0-9-]+)|[-_](blue|grey|gray|cream|milk|olive|green|white|beige|black|brown|graphite|ivory)(?:[-_.]|$)/i
 
 export function mediaHaystack(inv: InvItem, extraBasename?: string | null): string {
   return [
@@ -114,6 +126,45 @@ export function isThreeQuarterSourceHint(hay: string): boolean {
 
 export function canBePrimaryRole(role: VisualRole): boolean {
   return PRIMARY_ELIGIBLE_ROLES.has(role)
+}
+
+export function canBorrowVisualRole(role: VisualRole): boolean {
+  return BORROWABLE_VISUAL_ROLES.has(role)
+}
+
+/** Filename/path color token for same-SKU variant matching (not display label). */
+export function extractColorTokenFromMedia(
+  inv: InvItem,
+  productHandle?: string,
+  productSku?: string
+): string | null {
+  const hay = mediaHaystack(inv)
+  const m = hay.match(/(?:color|colour)[_-]([a-z0-9-]+)/)
+  if (m?.[1]) return m[1]!.toLowerCase()
+  const h = normHandle(productHandle || "")
+  const sku = normSku(productSku || "")
+  const explicit = explicitProductTokenFromMedia(inv)
+  if (explicit && h && explicit !== h && explicit !== sku) return null
+  const m2 = hay.match(
+    /(?:^|[-_])(blue|grey|gray|cream|milk|olive|green|white|beige|black|brown|graphite|ivory)(?:[-_.]|$)/i
+  )
+  return m2?.[1]?.toLowerCase() ?? null
+}
+
+export function mediaMatchesColorToken(
+  inv: InvItem,
+  colorToken: string,
+  productHandle?: string,
+  productSku?: string
+): boolean {
+  const want = colorToken.toLowerCase().replace(/^color_/, "")
+  if (!want || want === "needs_review") return false
+  const got = extractColorTokenFromMedia(inv, productHandle, productSku)
+  return got === want
+}
+
+export function isNeutralSharedProductShot(hay: string): boolean {
+  return /[-_]gallery[_\-.]?\d|[-_]iso[-_]?\d|[-_]i3(?:\.|[-_]|$)/i.test(hay) && !COLOR_TOKEN_IN_MEDIA_RE.test(hay)
 }
 
 /**
@@ -159,6 +210,11 @@ export function classifyVisualRole(
   const hasFront = FRONT_RE.test(hay)
   const hasClosed = CLOSED_RE.test(hay)
   const hasOpen = OPEN_RE.test(hay)
+
+  if (/[-_]i0?2(?:\.|[-_]|$)/i.test(hay) && !isInteriorSourceHint(hay)) return "front_3_4"
+  if (/[-_]i0?1(?:\.|[-_]|$)/i.test(hay) && !isInteriorSourceHint(hay) && !isThreeQuarterSourceHint(hay)) {
+    return hasClosed && !hasOpen ? "closed_front" : "front_anfas"
+  }
   const hasHero = HERO_RE.test(hay)
   const isSecond = SECOND_FRONT_RE.test(hay)
   const isFirstExternal = FIRST_EXTERNAL_RE.test(hay) && !INTERIOR_INDEX_RE.test(hay)
@@ -166,17 +222,19 @@ export function classifyVisualRole(
   const is34 = isThreeQuarterSourceHint(hay)
 
   if (is34) {
-    if (/[-_]iso[-_]?1/i.test(hay) || (isFirstExternal && !isSecond)) return "hero_front"
-    if (/[-_]iso[-_]?2/i.test(hay)) return "front_3_4"
-    if (/color_[a-z]+_02/i.test(hay) && is34) return "front_3_4"
+    if (/анфас|anfas|straight|front[\s_-]?facing|ровн/i.test(hay) && !/angle|angled|iso|3-4|3\/4/i.test(hay)) {
+      return "front_anfas"
+    }
     return "front_3_4"
   }
 
   if (PRODUCT_HERO_SHOT_RE.test(hay) && !isInteriorSourceHint(hay)) {
+    if (GALLERY_FIRST_RE.test(hay)) return "closed_front"
     return hasClosed && !hasOpen ? "closed_front" : "hero_front"
   }
   if (PRODUCT_ALT_EXTERNAL_RE.test(hay) && !isInteriorSourceHint(hay)) {
-    return isThreeQuarterSourceHint(hay) ? "front_3_4" : "front_anfas"
+    if (SECOND_FRONT_RE.test(hay) || isThreeQuarterSourceHint(hay)) return "front_3_4"
+    return "front_anfas"
   }
 
   if (hasFront) {
@@ -195,8 +253,10 @@ export function classifyVisualRole(
   }
 
   if (isGalleryFirst) {
-    if (hasClosed && !hasOpen) return "closed_front"
-    return "unknown"
+    return hasOpen && !hasClosed ? "interior" : "closed_front"
+  }
+  if (SECOND_FRONT_RE.test(hay) && !isInteriorSourceHint(hay)) {
+    return isThreeQuarterSourceHint(hay) ? "front_3_4" : "front_3_4"
   }
 
   if (whiteBg && !hasOpen && !isInteriorSourceHint(hay) && !DETAIL_RE.test(hay)) {
@@ -223,7 +283,7 @@ export function isDistinctAlternateFront(
 
   const candHay = mediaHaystack(candInv)
   const candRole = rolesById.get(candidateId) ?? classifyVisualRole(candInv)
-  if (candRole === "front_3_4" && isThreeQuarterSourceHint(candHay)) return true
+  if (candRole === "front_3_4") return true
 
   if (candRole !== "front_anfas" && candRole !== "hero_front" && candRole !== "closed_front") return false
 
@@ -274,10 +334,10 @@ export function sortIdsByVisualRole(
   return { sorted, rolesById }
 }
 
-/** Gallery order after primary — one representative per role bucket. */
+/** Gallery order after primary — anfas before 3/4, then interior/detail/lifestyle. */
 export const GALLERY_ROLE_ORDER: VisualRole[] = [
-  "front_3_4",
   "front_anfas",
+  "front_3_4",
   "interior",
   "detail",
   "lifestyle",
@@ -287,18 +347,21 @@ export const GALLERY_ROLE_ORDER: VisualRole[] = [
 
 function primaryScore(id: string, role: VisualRole, inv: InvItem | undefined, seedIndex: Map<string, number>): number {
   let s = 0
+  const hay = inv ? mediaHaystack(inv) : ""
   if (role === "closed_front") s += 1100
-  else if (role === "hero_front") s += 1000
-  else if (role === "front_anfas") s += 800
+  else if (role === "front_anfas") s += 1050
+  else if (role === "hero_front") s += isThreeQuarterSourceHint(hay) ? 720 : 1000
+  else if (role === "front_3_4") s += 680
   else if (role === "unknown" && inv && isWhiteBgSourceHint(inv as InvItemDedupeFields)) {
-    const hay = mediaHaystack(inv)
     if (isClosedExternalSourceHint(hay)) s += 400
     else s += 50
   } else return -9999
   if (NON_PRIMARY_ROLES.has(role)) return -9999
+  if (role === "front_3_4" && isThreeQuarterSourceHint(hay)) s -= 40
   if (inv?.previewable !== false) s += 80
-  const hay = inv ? mediaHaystack(inv) : ""
-  if (FIRST_EXTERNAL_RE.test(hay) && !INTERIOR_INDEX_RE.test(hay)) s += 40
+  if (/[-_]i0?1(?:\.|[-_]|$)|color_[a-z]+_01/i.test(hay)) s += 55
+  if (/[-_]i0?2(?:\.|[-_]|$)|color_[a-z]+_02/i.test(hay)) s -= 45
+  if (FIRST_EXTERNAL_RE.test(hay) && !INTERIOR_INDEX_RE.test(hay) && !isThreeQuarterSourceHint(hay)) s += 40
   if (isClosedExternalSourceHint(hay)) s += 30
   const si = seedIndex.get(id)
   if (si != null) s -= si
@@ -317,9 +380,23 @@ export type VisualRolePickResult = {
 export function pickPrimaryAndGalleryByVisualRole(
   candidateIds: string[],
   invById: Map<string, InvItem>,
+  opts?: {
+    seedOrder?: string[]
+    seedBasenames?: Map<string, string>
+    colorToken?: string
+    productHandle?: string
+    productSku?: string
+  }
+): VisualRolePickResult {
+  const pool = Array.from(new Set(candidateIds.filter(Boolean)))
+  return pickPrimaryAndGalleryFromPool(pool, invById, opts)
+}
+
+function pickPrimaryAndGalleryFromPool(
+  unique: string[],
+  invById: Map<string, InvItem>,
   opts?: { seedOrder?: string[]; seedBasenames?: Map<string, string> }
 ): VisualRolePickResult {
-  const unique = Array.from(new Set(candidateIds.filter(Boolean)))
   if (unique.length === 0) {
     return {
       primaryId: null,
@@ -346,6 +423,11 @@ export function pickPrimaryAndGalleryByVisualRole(
     return role === "unknown" && isClosedExternalSourceHint(mediaHaystack(inv))
   })
 
+  const hasStraightFront = unique.some((id) => {
+    const role = rolesById.get(id)!
+    return role === "closed_front" || role === "front_anfas" || (role === "hero_front" && !isThreeQuarterSourceHint(mediaHaystack(invById.get(id)!)))
+  })
+
   let primaryId: string | null = null
   let bestScore = -1
   for (const id of unique) {
@@ -354,6 +436,7 @@ export function pickPrimaryAndGalleryByVisualRole(
     if (hasClosedExternal && (NON_PRIMARY_ROLES.has(role) || (role === "unknown" && inv && !isClosedExternalSourceHint(mediaHaystack(inv))))) {
       continue
     }
+    if (hasStraightFront && role === "front_3_4") continue
     const sc = primaryScore(id, role, inv, seedIndex)
     if (sc > bestScore) {
       bestScore = sc
@@ -362,7 +445,7 @@ export function pickPrimaryAndGalleryByVisualRole(
   }
 
   if (!primaryId) {
-    for (const role of ["closed_front", "hero_front", "front_anfas"] as const) {
+    for (const role of ["closed_front", "front_anfas", "hero_front", "front_3_4"] as const) {
       for (const id of unique) {
         if (rolesById.get(id) === role) {
           primaryId = id

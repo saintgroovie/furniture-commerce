@@ -303,11 +303,13 @@ export function buildSuggestedVariantsForProductSync(input: {
     let rolesById = baseSlice.rolesById
     let roleStrip = baseSlice.roleStrip
     let borrowedSameSku: BorrowedSameSkuEntry[] = []
+    let rejectedBorrowCandidates: import("./legacy-media-variant-gallery-build").RejectedBorrowCandidate[] = []
     if (s.identityTier === "this_sku") {
       const borrowed = applySameSkuRoleBorrowing(baseSlice, gallerySlices, invMap, input.candById, h, productSkuHint)
       galleryCandidateIds = borrowed.galleryCandidateIds
       rolesById = borrowed.rolesById
       borrowedSameSku = borrowed.borrowed
+      rejectedBorrowCandidates = borrowed.rejectedBorrowCandidates
     }
     const colorNameRaw = s.variantKey.replace(/^color_/, "").replace(/__review$/, "")
     out.push({
@@ -336,6 +338,7 @@ export function buildSuggestedVariantsForProductSync(input: {
       roleStrip,
       rolesByMediaId: Object.fromEntries(rolesById),
       borrowedSameSku,
+      rejectedBorrowCandidates,
       primaryNeedsReview: s.deduped.primaryNeedsReview,
       roleCompositionSummary: s.deduped.roleCompositionSummary,
     })

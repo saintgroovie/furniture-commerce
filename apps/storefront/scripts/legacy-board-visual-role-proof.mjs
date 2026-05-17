@@ -46,11 +46,26 @@ async function main() {
 
   report.headlessEngine = await runCo02HeadlessProof()
 
-  const cream = report.headlessEngine.variants["Кремовый"]
-  if (cream?.primaryIsInterior) {
-    report.validationError = "Кремовый primary must not be interior"
-  } else if (cream?.primary?.role && !["hero_front", "front_anfas"].includes(cream.primary.role)) {
-    report.validationError = `Кремовый primary role unexpected: ${cream.primary.role}`
+  const OK_PRIMARY_ROLES = ["closed_front", "hero_front", "front_anfas"]
+  for (const label of ["Кремовый", "Синий", "Серый", "Оливковый"]) {
+    const row = report.headlessEngine.variants[label]
+    if (!row) continue
+    if (row.primaryIsInterior) {
+      report.validationError = `${label} primary must not be interior`
+      break
+    }
+    if (row.primary?.role && !OK_PRIMARY_ROLES.includes(row.primary.role)) {
+      report.validationError = `${label} primary role unexpected: ${row.primary.role}`
+      break
+    }
+    if (row.hasBorrowedFront) {
+      report.validationError = `${label} must not borrow front/anfas/3-4`
+      break
+    }
+    if (row.borrowedRolesOk === false) {
+      report.validationError = `${label} has non-borrowable borrowed role`
+      break
+    }
   }
 
   const playwright = await loadPlaywrightCore()
