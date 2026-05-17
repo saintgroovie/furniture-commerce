@@ -101,7 +101,8 @@ Pool tiles: **Primary** / **Gallery** / **More** (Ref, Reject, Global in More). 
 The selected-product workspace is organised as an operator **review cockpit**, not a debug console:
 
 - **`[data-review-cockpit="true"]`** — collection, product progress (`N / M` products), status pill (**Нужна проверка** / **Готово к экспорту**), **Prev** / **Next** / **Skip**. Technical workflow counters live under **Workflow debug** in the header strip.
-- **`[data-review-canvas="true"]`** — central stack only: **Текущие фото товара** (Primary + Gallery with compact `←` `→` `★ Главное` `✕` chips, badge **Главное фото** on the primary slot, and *More* → **Сделать главным**), **Предложения по цветам** (one primary CTA **Подтвердить вариант** per card; **Изменить** / **Отклонить** / **Почему?** for debug), **Подтверждено вариантов** summary when variants exist.
+- **`[data-review-canvas="true"]`** — central stack only: **Текущие фото товара** (Primary + Gallery with compact `←` `→` `★ Главное` `✕` chips, badge **Главное фото** on the primary slot, and *More* → **Сделать главным**), **Предложения по цветам** (editable drafts — see below), **Подтверждено вариантов** summary when variants exist.
+- **Editable suggestion drafts** — each **Предложенные цвета** card can open a draft (`Редактировать` or click the card). Drafts use `variantMeta.status === "suggested"` in `furniture-legacy-media-assignment-variants-v1`; the workspace banner shows **Черновик предложенного цвета: …**. Pool **Главное** / **В галерею** and gallery reorder apply to the active draft. **Подтвердить** writes the edited draft (`primaryManualOverride`, manual gallery order) — not a fresh auto rebuild. Readiness: badge **Готово к экспорту** or **Товар требует проверки**; next control **Следующий товар** vs **Пропустить и перейти дальше** (helper: *Можно пропустить и вернуться позже*).
 - **Right column** — **Media pool · N items**; pool cards use `MediaImageCard` `displayMode="pool"` (image-first, no inline paths). **Primary** / **Gallery** + **More** (Ref / Reject / Global). **Manual assignment** and **Debug / Diagnostics** are `<details>` collapsed by default.
 - Human-readable legacy article statuses in the UI (e.g. **Артикул найден**, **Старый сайт недоступен**). SKU hint, fetch status, swatch evidence, URLs, and reasons appear only under **Почему?** on suggestion cards.
 
@@ -132,6 +133,13 @@ node ../furniture-commerce/apps/storefront/scripts/legacy-board-screenshot.mjs
 ```bash
 export PLAYWRIGHT_CORE_NODE_MODULES=$PWD/node_modules
 node ../furniture-commerce/apps/storefront/scripts/legacy-board-interaction-smoke.mjs
+```
+
+**Editable suggestion drafts proof** (stdout JSON + PNG under `tmp/qa-screenshots/editable-suggestions-proof/`):
+
+```bash
+export PLAYWRIGHT_CORE_NODE_MODULES=$PWD/node_modules
+node ../furniture-commerce/apps/storefront/scripts/legacy-board-editable-suggestions-proof.mjs
 ```
 
 Requires `yarn dev` in `apps/storefront` and repo `data/` + `docs/` markers (`FURNITURE_REPO_ROOT` in Docker). Scripts do not call Medusa or mutate seed/catalog/evidence.

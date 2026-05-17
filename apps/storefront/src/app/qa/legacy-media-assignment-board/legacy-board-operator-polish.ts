@@ -68,7 +68,7 @@ export function computeSkuReviewProgress(input: {
 
   if (pendingCount > 0 || needsReviewColors > 0) {
     readiness = "needs_review"
-    readinessLabel = "Нужна проверка"
+    readinessLabel = "Товар требует проверки"
   } else if (primaryMissing > 0) {
     readiness = "no_primary"
     readinessLabel = "Нет главного фото"
@@ -108,8 +108,9 @@ export function variantChipStatus(
   variant: VariantRow,
   meta: MetaRow | undefined,
   isActive: boolean
-): "active" | "confirmed" | "edited" | "needs_review" {
+): "active" | "confirmed" | "edited" | "needs_review" | "draft" {
   if (isActive) return "active"
+  if (meta?.status === "suggested") return "draft"
   const labelStatus = (variant.labelStatus || "") as VariantLabelStatus
   if (labelStatus === "needs_review") return "needs_review"
   if (variant.labelEditedByUser || meta?.status === "edited") return "edited"
@@ -155,6 +156,7 @@ export const OPERATOR_LABELS = {
   refineLabel: "Уточнить название",
   checkPrimary: "Проверить главное фото",
   nextProduct: "Следующий товар",
-  nextProductWarn: "Следующий товар · есть замечания",
+  skipProduct: "Пропустить и перейти дальше",
+  skipProductHelper: "Можно пропустить и вернуться позже",
   hiddenSimilar: (n: number) => `+${n} похожих скрыто`,
 } as const

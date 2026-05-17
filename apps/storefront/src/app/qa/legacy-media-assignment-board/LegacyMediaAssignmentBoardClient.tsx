@@ -62,6 +62,15 @@ import {
   variantChipStatus,
 } from "./legacy-board-operator-polish"
 import {
+  buildDraftVariantFromSuggestion,
+  buildVariantMediaFromCandidates,
+  isSuggestionDraft,
+  isVariantConfirmed,
+  resolveSuggestionLabelForDraft,
+  suggestionDraftWasEdited,
+  warnDraftPrimaryRole,
+} from "./legacy-board-suggestion-draft"
+import {
   mergeGalleryPreservingOrder,
   variantHasEstablishedGalleryOrder,
   withManualGalleryOrder,
@@ -70,7 +79,6 @@ import {
 } from "./legacy-variant-gallery-order"
 import {
   classifyVisualRole,
-  pickPrimaryAndGalleryByVisualRole,
   primaryCandidateBadgeRu,
   VISUAL_ROLE_BADGE_RU,
   VISUAL_ROLE_RANKING_TOOLTIP_RU,
@@ -350,96 +358,6 @@ function galleryOrderTouched(prev: VariantDecisionState, next: VariantDecisionSt
   if (prev.primary !== next.primary) return true
   if (prev.gallery.length !== next.gallery.length) return true
   return prev.gallery.some((id, i) => id !== next.gallery[i])
-}
-
-function buildVariantMediaFromCandidates(
-  candidateIds: string[],
-  invById: Map<string, InvItem>,
-  seedOrder: string[],
-  candById: Map<string, CandidateEntry>,
-  existing?: VariantDecisionState | null,
-  metaStatus?: string | null,
-  opts?: { selectedSku?: string; colorToken?: string }
-): Pick<
-  VariantDecisionState,
-  | "primary"
-  | "gallery"
-  | "primaryManualOverride"
-  | "primaryAutoPicked"
-  | "primaryNeedsReview"
-  | "galleryOrderSource"
-  | "galleryOrderLocked"
-> {
-  const invDedupe = new Map<string, InvItemDedupeFields>()
-  for (const [id, row] of Array.from(invById.entries())) invDedupe.set(id, row)
-  const preserveOrder =
-    existing && variantHasEstablishedGalleryOrder(existing, metaStatus) ? existing.gallery : undefined
-  const deduped = dedupeAndSortVariantMedia(candidateIds, invDedupe, candById, {
-    seedOrder,
-    preserveGalleryOrder: preserveOrder,
-    selectedSku: opts?.selectedSku,
-    colorToken: opts?.colorToken,
-  })
-
-  if (existing?.primaryManualOverride && existing.primary) {
-    return {
-      primary: existing.primary,
-      gallery: mergeGalleryPreservingOrder(existing.gallery, deduped.galleryCandidateIds, existing.primary),
-      primaryManualOverride: true,
-      primaryAutoPicked: false,
-      primaryNeedsReview: false,
-      galleryOrderSource: existing.galleryOrderSource ?? "manual",
-      galleryOrderLocked: true,
-    }
-  }
-
-  if (existing && variantHasEstablishedGalleryOrder(existing, metaStatus)) {
-    const primary = existing.primary ?? deduped.primaryCandidateId
-    return {
-      primary,
-      gallery: mergeGalleryPreservingOrder(existing.gallery, deduped.galleryCandidateIds, primary),
-      primaryManualOverride: existing.primaryManualOverride ?? false,
-      primaryAutoPicked: existing.primary ? !existing.primaryManualOverride : deduped.primaryCandidateId === primary,
-      primaryNeedsReview: false,
-      galleryOrderSource: existing.galleryOrderSource ?? "manual",
-      galleryOrderLocked: true,
-    }
-  }
-
-  const pickMeta = pickPrimaryAndGalleryByVisualRole(deduped.visibleIds, invById, {
-    seedOrder: preserveOrder?.length ? preserveOrder : seedOrder,
-  })
-  const primary = deduped.primaryCandidateId ?? pickMeta.primaryId
-  let gallery =
-    deduped.galleryCandidateIds.length > 0
-      ? deduped.galleryCandidateIds
-      : pickMeta.galleryIds.filter((id) => id !== primary)
-  if (opts?.colorToken) {
-    const rolesById = new Map<string, VisualRole>(
-      Object.entries(deduped.rolesById ?? {}).map(([id, role]) => [id, role as VisualRole])
-    )
-    const sanitized = finalSanitizeVariantGalleryOutput({
-      primaryId: primary,
-      galleryIds: gallery.filter((id) => id !== primary),
-      rolesById,
-      borrowed: [],
-      targetColor: opts.colorToken,
-      invById: invDedupe,
-      productHandle: "",
-      productSku: opts.selectedSku ?? "",
-    })
-    gallery = [...sanitized.galleryIds]
-    if (primary && gallery.includes(primary)) gallery = gallery.filter((id) => id !== primary)
-  }
-  return {
-    primary,
-    gallery,
-    primaryManualOverride: false,
-    primaryAutoPicked: true,
-    primaryNeedsReview: pickMeta.needsReview,
-    galleryOrderSource: "suggestion",
-    galleryOrderLocked: false,
-  }
 }
 
 function applyRecommendedVisualOrderToVariant(
@@ -1314,7 +1232,12 @@ export function LegacyMediaAssignmentBoardClient() {
                   seedImageUrls: prod?.image_urls,
                 }),
               }
-              migratedVariants[ph][vk] = migrateVariantGalleryOrderOnLoad(labeled, meta?.status)
+              let loaded = migrateVariantGalleryOrderOnLoad(labeled, meta?.status)
+              if (invDoc?.items?.length) {
+                const invMap = new Map(invDoc.items.map((it) => [it.id, it]))
+                loaded = warnDraftPrimaryRole(loaded, invMap, meta?.status) as VariantDecisionState
+              }
+              migratedVariants[ph][vk] = loaded
             }
           }
           setVariantsByHandle(migratedVariants)
@@ -1844,7 +1767,7 @@ export function LegacyMediaAssignmentBoardClient() {
             ...(prevMeta[hh] ?? {}),
             [chosenVariantKey]: mergeVariantMeta(prevMeta[hh]?.[chosenVariantKey], phSku, {
               reasons: prevMeta[hh]?.[chosenVariantKey]?.reasons?.length ? prevMeta[hh]![chosenVariantKey]!.reasons : ["manual assignment"],
-              status: "edited",
+              status: isSuggestionDraft(prevMeta[hh]?.[chosenVariantKey]) ? "suggested" : "edited",
             }),
           },
         }))
@@ -2128,7 +2051,7 @@ export function LegacyMediaAssignmentBoardClient() {
             ...(prevMeta[hh] ?? {}),
             [variantKey]: mergeVariantMeta(prevMeta[hh]?.[variantKey], phSku, {
               reasons: prevMeta[hh]?.[variantKey]?.reasons?.length ? prevMeta[hh]![variantKey]!.reasons : ["manual order control"],
-              status: "edited",
+              status: isSuggestionDraft(prevMeta[hh]?.[variantKey]) ? "suggested" : "edited",
             }),
           },
         }))
@@ -2151,6 +2074,98 @@ export function LegacyMediaAssignmentBoardClient() {
       }))
     },
     [productByHandle, activeVariantByHandle]
+  )
+
+  const openSuggestionForEdit = useCallback(
+    (handle: string, suggestion: SuggestedVariant) => {
+      const hh = handle.toLowerCase()
+      const sk = suggestionEnrichmentKey(hh, suggestion.variantKey)
+      const enc = enrichmentByKey[sk]?.data ?? null
+      const prefs = suggestionRowPrefs[sk] ?? {
+        useLegacyName: false,
+        useLegacyArticle: false,
+        editedLegacyArticle: null,
+        chosenArticleCandidateIndex: null,
+      }
+      const existing = variantsByHandle[hh]?.[suggestion.variantKey] ?? null
+      const existingMeta = variantMetaByHandle[hh]?.[suggestion.variantKey]
+      const phSku = productByHandle.get(hh)?.sku?.trim() || suggestion.productSkuHint
+      const labelFields = resolveSuggestionLabelForDraft(suggestion, existing, {
+        legacyColorName: enc?.legacy_color_name,
+        productSkuHint: phSku,
+        displayLabel: prefs.displayLabel,
+        displayLabelEdited: prefs.displayLabelEdited,
+        useLegacyName: prefs.useLegacyName,
+      })
+      const invMap = new Map((invDoc?.items ?? []).map((it) => [it.id, it]))
+      let draft = buildDraftVariantFromSuggestion({
+        suggestion,
+        invById: invMap,
+        candById,
+        label: labelFields.label,
+        labelEditedByUser: labelFields.labelEditedByUser,
+        labelStatus: labelFields.labelStatus,
+        existing,
+        metaStatus: existingMeta?.status,
+      })
+      draft = warnDraftPrimaryRole(draft, invMap, "suggested")
+      const draftState: VariantDecisionState = {
+        label: draft.label,
+        sourceLabel: draft.sourceLabel ?? sourceLabelForVariantKey(suggestion.variantKey),
+        labelEditedByUser: draft.labelEditedByUser ?? false,
+        labelStatus: draft.labelStatus ?? labelFields.labelStatus,
+        primary: draft.primary ?? null,
+        gallery: draft.gallery ?? [],
+        reference: draft.reference ?? [],
+        rejected: draft.rejected ?? [],
+        primaryManualOverride: draft.primaryManualOverride,
+        primaryAutoPicked: draft.primaryAutoPicked,
+        primaryNeedsReview: draft.primaryNeedsReview,
+        galleryOrderSource: draft.galleryOrderSource,
+        galleryOrderLocked: draft.galleryOrderLocked,
+      }
+      setVariantsByHandle((prev) => ({
+        ...prev,
+        [hh]: { ...(prev[hh] ?? {}), [suggestion.variantKey]: draftState },
+      }))
+      setVariantMetaByHandle((prev) => ({
+        ...prev,
+        [hh]: {
+          ...(prev[hh] ?? {}),
+          [suggestion.variantKey]: variantMetaFromEnrichmentAndSuggestion({
+            productSkuHint: suggestion.productSkuHint,
+            filenameColorToken: suggestion.filenameColorToken,
+            candidateMapSku: suggestion.candidateMapSku,
+            suggestionReasons: suggestion.reasons,
+            suggestionConfidence: suggestion.confidence,
+            suggestionSourcePathHints: suggestion.sourcePathHints,
+            suggestionSourceUrl: suggestion.sourceUrl,
+            enrichment: enc,
+            useLegacyName: prefs.useLegacyName,
+            useLegacyArticle: enc?.legacy_color_article_status === "found" ? prefs.useLegacyArticle : false,
+            editedLegacyArticle: prefs.editedLegacyArticle,
+            status: "suggested",
+          }),
+        },
+      }))
+      setBoard((prev) => ({
+        ...prev,
+        zones: {
+          ...prev.zones,
+          [hh]: toZoneState(draftState),
+        },
+      }))
+      setActiveVariantByHandle((prev) => ({ ...prev, [hh]: suggestion.variantKey }))
+      setDiag((d) => ({
+        ...d,
+        buttonHandlerFired: true,
+        stateUpdateRequested: true,
+        stateActuallyChanged: true,
+        lastAction: `open suggestion draft ${suggestion.variantKey}`,
+        lastError: "",
+      }))
+    },
+    [variantsByHandle, variantMetaByHandle, suggestionRowPrefs, enrichmentByKey, invDoc, candById, productByHandle]
   )
 
   const dropZoneStable = (e: React.DragEvent, handle: string, zone: ZoneDrop) => {
@@ -3037,7 +3052,8 @@ export function LegacyMediaAssignmentBoardClient() {
       if (!token) continue
       const key = `color_${token}`
       if (rejected.has(key)) continue
-      if (variants[key]) continue
+      const meta = variantMetaByHandle[h]?.[key]
+      if (variants[key] && isVariantConfirmed(meta)) continue
       return true
     }
     return false
@@ -3228,9 +3244,9 @@ export function LegacyMediaAssignmentBoardClient() {
     const candCount = entryList.filter((e) => e.top_candidate?.medusa_product_handle.toLowerCase() === h).length
     const safeSuggestions = suggestedVariantsForSelected.filter((s) => s.identityTier === "this_sku")
     const reviewSuggestions = suggestedVariantsForSelected.filter((s) => s.identityTier === "needs_identity_review")
-    const suggestions = safeSuggestions.filter((s) => !vByHandle[s.variantKey])
+    const suggestions = safeSuggestions.filter((s) => !isVariantConfirmed(vmByHandle[s.variantKey]))
     const totalSuggestions = safeSuggestions.length
-    const confirmedSuggestionCount = safeSuggestions.filter((s) => Boolean(vByHandle[s.variantKey])).length
+    const confirmedSuggestionCount = safeSuggestions.filter((s) => isVariantConfirmed(vmByHandle[s.variantKey])).length
     const leftSuggestionCount = Math.max(0, totalSuggestions - confirmedSuggestionCount)
     const allSuggestionsReviewed = totalSuggestions > 0 && leftSuggestionCount === 0
     const galleryItemCount = (z.primary ? 1 : 0) + z.gallery.length
@@ -3256,14 +3272,19 @@ export function LegacyMediaAssignmentBoardClient() {
           chosenArticleCandidateIndex: null,
         }
         const existing = vByHandle[s.variantKey]
-        const existingMeta = variantMetaByHandle[h]?.[s.variantKey]
+        const existingMeta = vmByHandle[s.variantKey]
         const labelResolved =
           existing?.labelEditedByUser && existing.label?.trim()
             ? existing.label.trim()
             : resolveSuggestionDisplayLabel(s, enc, prefs, existing ?? null, s.productSkuHint)
         const candidateIds = [s.primaryCandidateId, ...s.galleryCandidateIds].filter(Boolean) as string[]
         const invMap = new Map((invDoc?.items ?? []).map((it) => [it.id, it]))
-        if (existing && variantHasEstablishedGalleryOrder(existing, existingMeta?.status)) {
+        const useEditedDraft =
+          existing &&
+          (isSuggestionDraft(existingMeta) ||
+            isVariantConfirmed(existingMeta) ||
+            variantHasEstablishedGalleryOrder(existing, existingMeta?.status))
+        if (useEditedDraft) {
           variantUpdates[s.variantKey] = {
             ...existing,
             label: labelResolved,
@@ -3277,6 +3298,14 @@ export function LegacyMediaAssignmentBoardClient() {
                   legacyColorName: enc?.legacy_color_name,
                   productSkuHint: s.productSkuHint,
                 }).labelStatus,
+            galleryOrderSource:
+              suggestionDraftWasEdited(existing) || existing.galleryOrderSource === "manual"
+                ? "manual"
+                : existing.galleryOrderSource,
+            galleryOrderLocked:
+              suggestionDraftWasEdited(existing) || existing.galleryOrderLocked
+                ? true
+                : existing.galleryOrderLocked,
           }
         } else {
           const colorTok = s.colorNameRaw && s.colorNameRaw !== "needs_review" ? s.colorNameRaw : ""
@@ -3369,12 +3398,12 @@ export function LegacyMediaAssignmentBoardClient() {
       variantMeta: vmByHandle,
       pendingSuggestions: suggestions,
     })
-    const nextProductLabel =
-      skuProgress.readiness === "ready" ? OPERATOR_LABELS.nextProduct : OPERATOR_LABELS.nextProductWarn
-    const activeSuggestionPending = safeSuggestions.find((s) => s.variantKey === activeVariantKey)
-    const skipCurrentProduct = () => {
-      goToNextProductWithSuggestions(h)
-    }
+    const productExportReady = skuProgress.readiness === "ready"
+    const nextProductLabel = productExportReady ? OPERATOR_LABELS.nextProduct : OPERATOR_LABELS.skipProduct
+    const activeSuggestionPending = safeSuggestions.find(
+      (s) => s.variantKey === activeVariantKey && !isVariantConfirmed(vmByHandle[s.variantKey])
+    )
+    const activeIsSuggestionDraft = isSuggestionDraft(activeVariantMeta)
     const variantLaneIds = new Set([...(z.primary ? [z.primary] : []), ...z.gallery])
     const seedRowsPendingAssign = seedMatchRowsForSelected.filter((r) => r.invId && !variantLaneIds.has(r.invId))
     const seedRowsOnlyNoInv = seedMatchRowsForSelected.filter((r) => !r.invId)
@@ -3584,15 +3613,22 @@ export function LegacyMediaAssignmentBoardClient() {
               <button type="button" style={miniBtn} onClick={() => goToPreviousProduct(h)} title="Предыдущий товар">
                 ← Назад
               </button>
-              <button type="button" style={btnPrimaryMini} onClick={() => goToNextProductWithSuggestions(h)} title={nextProductLabel}>
-                {nextProductLabel} →
-              </button>
-              <button type="button" style={miniBtn} onClick={skipCurrentProduct} title="Пропустить товар">
-                Пропустить
+              <button
+                type="button"
+                style={productExportReady ? btnPrimaryMini : miniBtn}
+                onClick={() => goToNextProductWithSuggestions(h)}
+                title={nextProductLabel}
+                data-next-product-button="true"
+                data-readiness={skuProgress.readiness}
+              >
+                {nextProductLabel}
+                {productExportReady ? " →" : null}
               </button>
             </div>
-            {skuProgress.readiness !== "ready" ? (
-              <span style={{ fontSize: 10, color: "#b45309", width: "100%" }}>Есть замечания — можно перейти к следующему товару.</span>
+            {!productExportReady ? (
+              <span style={{ fontSize: 10, color: "#b45309", width: "100%" }} data-skip-product-helper="true">
+                {OPERATOR_LABELS.skipProductHelper}
+              </span>
             ) : null}
           </div>
         </header>
@@ -3639,6 +3675,22 @@ export function LegacyMediaAssignmentBoardClient() {
           })}
         </div>
 
+        {activeIsSuggestionDraft ? (
+          <div
+            data-suggestion-draft-banner="true"
+            style={{
+              padding: "8px 12px",
+              borderRadius: 8,
+              background: "#eff6ff",
+              border: "1px solid #bfdbfe",
+              fontSize: 12,
+              fontWeight: 700,
+              color: "#1e40af",
+            }}
+          >
+            Черновик предложенного цвета: {activeVariantDisplay}
+          </div>
+        ) : null}
         <div data-active-color-banner="true">
           <span data-active-color-chip="true">Активный цвет: {activeVariantDisplay}</span>
           <button
@@ -4357,16 +4409,22 @@ export function LegacyMediaAssignmentBoardClient() {
                 const needsArticleReview = enc?.indexed_article_status === "multiple_candidates"
                 const combinedReasons = enc?.reasons?.length ? [...s.reasons, ...enc.reasons] : s.reasons
                 const galleryPreview = [s.primaryCandidateId, ...s.galleryCandidateIds].filter(Boolean) as string[]
-                const cardStatus: "suggested" | "edited" =
-                  prefs.editedLegacyArticle || prefs.useLegacyArticle || prefs.useLegacyName || prefs.displayLabelEdited
-                    ? "edited"
-                    : "suggested"
-                const confirmedVariant = vByHandle[s.variantKey]
+                const draftVariant = vByHandle[s.variantKey]
+                const isDraftCard = isSuggestionDraft(vmByHandle[s.variantKey])
+                const draftEdited = isDraftCard && suggestionDraftWasEdited(draftVariant)
+                const cardStatus: "suggested" | "edited" | "draft" = draftEdited
+                  ? "edited"
+                  : isDraftCard
+                    ? "draft"
+                    : prefs.editedLegacyArticle || prefs.useLegacyArticle || prefs.useLegacyName || prefs.displayLabelEdited
+                      ? "edited"
+                      : "suggested"
+                const cardVariant = isDraftCard ? draftVariant : null
                 const suggestionDisplayLabel = resolveSuggestionDisplayLabel(
                   s,
                   enc,
                   prefs,
-                  confirmedVariant,
+                  cardVariant,
                   productSkuHint
                 )
                 const suggestionLabelStatus = resolveVariantDisplayLabel({
@@ -4378,16 +4436,16 @@ export function LegacyMediaAssignmentBoardClient() {
                   preferLegacyColorName: prefs.useLegacyName,
                   seedImageUrls: s.seedImageUrls,
                 }).labelStatus
-                const confirmedMeta = vmByHandle[s.variantKey]
+                const cardMeta = vmByHandle[s.variantKey]
                 const rolesByIdMap = new Map<string, VisualRole>(
                   Object.entries(s.rolesByMediaId ?? {}).map(([id, role]) => [id, role as VisualRole])
                 )
-                const primaryPreviewId = confirmedVariant?.primary ?? s.primaryCandidateId
-                const gallerySource = confirmedVariant ? confirmedVariant.gallery : s.galleryCandidateIds
+                const primaryPreviewId = cardVariant?.primary ?? s.primaryCandidateId
+                const gallerySource = cardVariant ? cardVariant.gallery : s.galleryCandidateIds
                 const galleryRest = gallerySource.filter((id) => id && id !== primaryPreviewId && invById.get(id)?.previewable)
                 const primaryIsPreviewable = primaryPreviewId ? Boolean(invById.get(primaryPreviewId)?.previewable) : false
                 const galleryPreviewRaw = (
-                  confirmedVariant
+                  cardVariant
                     ? primaryPreviewId && primaryIsPreviewable
                       ? [primaryPreviewId, ...galleryRest]
                       : galleryRest
@@ -4440,14 +4498,14 @@ export function LegacyMediaAssignmentBoardClient() {
                   ),
                   rolesByIdMap
                 )
-                const previewMedia = confirmedVariant
+                const previewMedia = cardVariant
                   ? buildVariantMediaFromCandidates(
                       [primaryPreviewId, ...gallerySource].filter(Boolean) as string[],
                       invById,
                       gallerySource,
                       candById,
-                      confirmedVariant,
-                      confirmedMeta?.status,
+                      cardVariant,
+                      cardMeta?.status,
                       { selectedSku: s.productSkuHint, colorToken: s.colorNameRaw }
                     )
                   : {
@@ -4455,22 +4513,27 @@ export function LegacyMediaAssignmentBoardClient() {
                       primaryAutoPicked: true,
                       primaryNeedsReview: s.primaryNeedsReview ?? false,
                     }
+                const isActiveDraftCard = activeVariantKey === s.variantKey && isDraftCard
 
                 return (
                   <article
                     key={s.variantKey}
                     data-suggestion-card="true"
                     data-variant-key={s.variantKey}
+                    data-draft={isDraftCard ? "true" : "false"}
+                    data-active-draft={isActiveDraftCard ? "true" : "false"}
                     style={{
-                      border: "1px solid #e2e8f0",
+                      border: isActiveDraftCard ? "2px solid #2563eb" : "1px solid #e2e8f0",
                       borderRadius: 10,
-                      background: "#fff",
+                      background: isActiveDraftCard ? "#f8fafc" : "#fff",
                       padding: 10,
                       display: "flex",
                       flexDirection: "column",
                       gap: 8,
                       minWidth: 0,
+                      cursor: "pointer",
                     }}
+                    onClick={() => openSuggestionForEdit(selectedHandle!, s)}
                   >
                     <header style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", minWidth: 0 }}>
                         <strong
@@ -4487,7 +4550,11 @@ export function LegacyMediaAssignmentBoardClient() {
                         {labelNeedsReviewStyle(suggestionLabelStatus) ? (
                           <span style={{ ...pillSlate, background: "#fef3c7", color: "#92400e" }}>Нужно уточнить название</span>
                         ) : cardStatus === "edited" ? (
-                          <span style={{ ...pillSlate, background: "#f5f3ff", color: "#6d28d9" }}>Изменено</span>
+                          <span style={{ ...pillSlate, background: "#f5f3ff", color: "#6d28d9" }} data-suggestion-edited-badge="true">
+                            {draftEdited ? "Изменено вручную" : "Изменено"}
+                          </span>
+                        ) : cardStatus === "draft" ? (
+                          <span style={{ ...pillSlate, background: "#dbeafe", color: "#1e40af" }}>Черновик</span>
                         ) : (
                           <span style={{ ...pillSlate, background: "#f1f5f9", color: "#475569" }}>Предложено</span>
                         )}
@@ -4513,10 +4580,10 @@ export function LegacyMediaAssignmentBoardClient() {
                           <span style={{ fontSize: 10, fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                             Primary photo · Gallery
                           </span>
-                          {!confirmedVariant && previewMedia.primaryAutoPicked ? (
+                          {!cardVariant && previewMedia.primaryAutoPicked ? (
                             <span style={{ ...pillSlate, background: "#dbeafe", color: "#1e40af" }}>Primary выбран автоматически</span>
                           ) : null}
-                          {(confirmedVariant?.primaryNeedsReview || previewMedia.primaryNeedsReview) && !confirmedVariant?.primaryManualOverride ? (
+                          {(cardVariant?.primaryNeedsReview || previewMedia.primaryNeedsReview) && !cardVariant?.primaryManualOverride ? (
                             <span style={{ ...pillSlate, background: "#fee2e2", color: "#b91c1c" }}>Проверь primary</span>
                           ) : null}
                         </div>
@@ -4555,15 +4622,26 @@ export function LegacyMediaAssignmentBoardClient() {
                     )}
 
                     {/* FOOTER: Confirm all (primary) + secondary actions + collapsed Details */}
-                    <footer style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", rowGap: 6 }}>
+                    <footer
+                      style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", rowGap: 6 }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <button
+                        type="button"
+                        data-action-button="suggestion-edit"
+                        style={miniBtn}
+                        onClick={() => openSuggestionForEdit(selectedHandle!, s)}
+                      >
+                        Редактировать
+                      </button>
                       <button
                         type="button"
                         data-action-button="suggestion-confirm-all"
                         style={btnPrimaryMini}
-                        title="Confirm this variant + primary + gallery in current candidate order. Reorder later in Current main media."
+                        title="Подтвердить текущий черновик (primary, gallery, порядок)"
                         onClick={() => confirmAllForSuggestions([s])}
                       >
-                        Подтвердить вариант
+                        Подтвердить
                       </button>
                       <button
                         type="button"
@@ -4572,17 +4650,17 @@ export function LegacyMediaAssignmentBoardClient() {
                         onClick={() => {
                           const next = promptVariantRename(suggestionDisplayLabel)
                           if (!next) return
-                          if (confirmedVariant) {
+                          if (cardVariant) {
                             setVariantsByHandle((prev) => ({
                               ...prev,
                               [h]: {
                                 ...(prev[h] ?? {}),
                                 [s.variantKey]: {
-                                  ...confirmedVariant,
+                                  ...cardVariant,
                                   label: next,
                                   labelEditedByUser: true,
                                   labelStatus: "user_edited",
-                                  sourceLabel: confirmedVariant.sourceLabel ?? sourceLabelForVariantKey(s.variantKey),
+                                  sourceLabel: cardVariant.sourceLabel ?? sourceLabelForVariantKey(s.variantKey),
                                 },
                               },
                             }))
@@ -4724,7 +4802,7 @@ export function LegacyMediaAssignmentBoardClient() {
                             <strong style={{ fontFamily: "ui-monospace, monospace", fontSize: 10, color: "#64748b" }}>
                               {s.colorNameRaw} · {sourceLabelForVariantKey(s.variantKey)}
                             </strong>
-                            {confirmedVariant?.labelEditedByUser && confirmedVariant.label !== suggestionDisplayLabel ? (
+                            {cardVariant?.labelEditedByUser && cardVariant.label !== suggestionDisplayLabel ? (
                               <> · исходное: <strong>{sourceLabelForVariantKey(s.variantKey)}</strong></>
                             ) : null}
                           </div>
