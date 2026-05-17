@@ -1,0 +1,10 @@
+{
+  "audit_meta": {
+    "pass_name": "legacy_media_preview_recovery_map",
+    "generated_at": "2026-05-17T00:46:26.855Z",
+    "generated_by": "scripts/audit-legacy-media-unpreviewable-recovery.mjs",
+    "source_audit": "data/normalized/legacy-media-unpreviewable-recovery-audit.json",
+    "entry_count": 0
+  },
+  "entries": {}
+}

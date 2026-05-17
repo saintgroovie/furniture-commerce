@@ -52,7 +52,9 @@ Then restart Next. The board shows a **Retry** button and prints the JSON **Serv
 
 ### Read-only API error JSON (dev diagnostics)
 
-`/qa/legacy-media-assignment-board/api/{inventory,candidates,products,enrich-color-article}` return **200** with the same bodies as before on success (enrich: `GET` smoke JSON, `POST` enrichment body). On failure they return **500** with a machine-readable `error` code (never arbitrary path traversal):
+`/qa/legacy-media-assignment-board/api/{inventory,candidates,products,preview-recovery,enrich-color-article}` return **200** with the same bodies as before on success (enrich: `GET` smoke JSON, `POST` enrichment body). On failure they return **500** with a machine-readable `error` code (never arbitrary path traversal):
+
+**Preview recovery (QA only):** `node scripts/audit-legacy-media-unpreviewable-recovery.mjs` writes `data/normalized/legacy-media-preview-recovery-map.json` (read by `/api/preview-recovery` and `legacy-media-assignment-preview.ts`). Recovered tiles show a badge and image in the **Unpreviewable** pool but remain non-draggable — `inventory.previewable` and identity guards are unchanged.
 
 | `error` | Meaning |
 |---------|---------|

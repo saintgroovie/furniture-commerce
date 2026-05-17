@@ -1,5 +1,10 @@
 import * as fs from "fs"
 import * as path from "path"
+import {
+  loadLegacyMediaPreviewRecoveryMap,
+  recoveryBadgeLabel,
+  type LegacyMediaPreviewRecoveryEntry,
+} from "@/lib/qa/legacy-media-preview-recovery"
 
 /** GET preview handler — keep in sync with route.ts allowlist. */
 export const LEGACY_MEDIA_QA_PREVIEW_ALLOWED_REL_PREFIXES = [
@@ -64,6 +69,7 @@ function buildProxyUrl(relFromRepo: string): string {
 }
 
 export type LegacyMediaPreviewInput = {
+  media_id?: string | null
   source_path: string | null
   repo_relative_path: string | null
   filename: string
@@ -78,6 +84,54 @@ export type LegacyMediaPreviewResult = {
   preview_status: string
   preview_error_reason: string | null
   debug_source_path: string
+  /** QA recovery layer — preview visible; inventory.previewable may still be false. */
+  recovered_preview?: boolean
+  recovery_status?: string | null
+  recovery_badge?: string | null
+  recovery_found_path?: string | null
+}
+
+export { recoveryBadgeLabel, type LegacyMediaPreviewRecoveryEntry }
+export { loadLegacyMediaPreviewRecoveryMap } from "@/lib/qa/legacy-media-preview-recovery"
+
+function resolveRecoveredPreview(
+  repoRoot: string,
+  entry: LegacyMediaPreviewRecoveryEntry,
+  debug: string
+): LegacyMediaPreviewResult | null {
+  const rel = normalizePosix(entry.found_path)
+  if (!rel) return null
+
+  if (rel.startsWith("apps/backend/static/")) {
+    const suffix = rel.replace(/^apps\/backend\/static\//, "")
+    return {
+      preview_url: `${medusaStaticOrigin()}/static/${suffix}`,
+      use_img_tag: true,
+      preview_status: "recovered_backend_static",
+      preview_error_reason: null,
+      debug_source_path: debug,
+      recovered_preview: true,
+      recovery_status: entry.recovery_status,
+      recovery_badge: recoveryBadgeLabel(entry.recovery_status),
+      recovery_found_path: rel,
+    }
+  }
+
+  if (rel.startsWith("data/") && isAllowedDataRelForProxy(rel) && fileExistsUnderRepo(repoRoot, rel)) {
+    return {
+      preview_url: buildProxyUrl(rel),
+      use_img_tag: true,
+      preview_status: entry.recovery_status,
+      preview_error_reason: null,
+      debug_source_path: debug,
+      recovered_preview: true,
+      recovery_status: entry.recovery_status,
+      recovery_badge: recoveryBadgeLabel(entry.recovery_status),
+      recovery_found_path: rel,
+    }
+  }
+
+  return null
 }
 
 /**
@@ -160,6 +214,14 @@ export function resolveLegacyMediaBoardPreview(repoRoot: string | null, input: L
         debug_source_path: debug,
       }
     }
+    const mediaId = (input.media_id || "").trim()
+    if (mediaId && repoRoot) {
+      const recovery = loadLegacyMediaPreviewRecoveryMap(repoRoot).get(mediaId)
+      if (recovery) {
+        const recovered = resolveRecoveredPreview(repoRoot, recovery, debug)
+        if (recovered) return recovered
+      }
+    }
     return {
       preview_url: null,
       use_img_tag: false,
@@ -170,6 +232,14 @@ export function resolveLegacyMediaBoardPreview(repoRoot: string | null, input: L
   }
 
   if (primary.startsWith("/WOODRIGHT") || primary.startsWith("/Users") || primary.startsWith("/Volumes")) {
+    const mediaId = (input.media_id || "").trim()
+    if (mediaId && repoRoot) {
+      const recovery = loadLegacyMediaPreviewRecoveryMap(repoRoot).get(mediaId)
+      if (recovery) {
+        const recovered = resolveRecoveredPreview(repoRoot, recovery, debug)
+        if (recovered) return recovered
+      }
+    }
     return {
       preview_url: null,
       use_img_tag: false,
@@ -180,6 +250,14 @@ export function resolveLegacyMediaBoardPreview(repoRoot: string | null, input: L
   }
 
   if (input.previewable === false || input.exists_locally === false) {
+    const mediaId = (input.media_id || "").trim()
+    if (mediaId && repoRoot) {
+      const recovery = loadLegacyMediaPreviewRecoveryMap(repoRoot).get(mediaId)
+      if (recovery) {
+        const recovered = resolveRecoveredPreview(repoRoot, recovery, debug)
+        if (recovered) return recovered
+      }
+    }
     return {
       preview_url: null,
       use_img_tag: false,

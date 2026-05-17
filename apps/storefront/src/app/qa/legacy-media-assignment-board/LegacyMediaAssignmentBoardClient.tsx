@@ -124,8 +124,8 @@ function recoveryPreviewUrl(entry: PreviewRecoveryEntry): { url: string | null; 
   return { url: null, useImg: false }
 }
 const DND_JSON = "application/json"
-const DEV_SENTINEL = "Legacy Board media pool two-column + add to all galleries"
-const DEV_SENTINEL_BUILD = "2026-05-17T20:00Z"
+const DEV_SENTINEL = "Legacy Board operator polish UX"
+const DEV_SENTINEL_BUILD = "2026-05-17T22:30Z"
 
 async function fetchBoardJson(url: string): Promise<{ ok: true; data: Record<string, unknown> } | { ok: false; status: number; body: Record<string, unknown> }> {
   const res = await fetch(url)
@@ -221,7 +221,28 @@ function unpreviewableHumanReason(inv: InvItem): string {
   return inv.preview_reason || "Unpreviewable reference."
 }
 
-function clientPreviewUrl(inv: InvItem): { url: string | null; useImg: boolean; caption: string } {
+function clientPreviewUrl(
+  inv: InvItem,
+  recovery?: PreviewRecoveryEntry | null
+): {
+  url: string | null
+  useImg: boolean
+  caption: string
+  recoveredPreview?: boolean
+  recoveryBadge?: string | null
+} {
+  if (!inv.previewable && recovery?.found_path) {
+    const rp = recoveryPreviewUrl(recovery)
+    if (rp.url) {
+      return {
+        url: rp.url,
+        useImg: rp.useImg,
+        caption: "",
+        recoveredPreview: true,
+        recoveryBadge: recoveryBadgeLabel(recovery.recovery_status),
+      }
+    }
+  }
   if (!inv.previewable) {
     return { url: null, useImg: false, caption: inv.preview_reason || "Unpreviewable" }
   }
@@ -1055,6 +1076,7 @@ export function LegacyMediaAssignmentBoardClient() {
   const [focusMode, setFocusMode] = useState(false)
   const [inspectorId, setInspectorId] = useState<string | null>(null)
   const [poolActionNote, setPoolActionNote] = useState<string>("")
+  const [poolCardFeedbackById, setPoolCardFeedbackById] = useState<Record<string, { text: string; kind: "ok" | "neutral" }>>({})
   const [exportFeedback, setExportFeedback] = useState<"copy" | "download" | null>(null)
   const [dragHoverZoneKey, setDragHoverZoneKey] = useState<string | null>(null)
   const [draggingMediaId, setDraggingMediaId] = useState<string | null>(null)
@@ -1324,6 +1346,28 @@ export function LegacyMediaAssignmentBoardClient() {
     }
     persist(board.zones, board.grej)
   }, [invDoc, hydrated, board.zones, board.grej, persist])
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setInspectorId(null)
+        return
+      }
+      const tag = (e.target as HTMLElement | null)?.tagName?.toLowerCase()
+      if (tag === "input" || tag === "textarea" || tag === "select") return
+      if (e.key === "Enter" && selectedHandle) {
+        const hh = selectedHandle.toLowerCase()
+        const vk = activeVariantByHandle[hh] || DEFAULT_VARIANT_KEY
+        const sug = suggestedVariantsForSelected.find((s) => s.variantKey === vk && s.identityTier === "this_sku")
+        if (sug && !variantsByHandle[hh]?.[vk]) {
+          e.preventDefault()
+          /* confirm handled in review canvas via data-action-button */
+        }
+      }
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [selectedHandle, activeVariantByHandle, suggestedVariantsForSelected, variantsByHandle])
 
   useEffect(() => {
     if (!exportFeedback) return
@@ -1807,9 +1851,17 @@ export function LegacyMediaAssignmentBoardClient() {
         dragSource: source,
         variantKey: chosenVariantKey,
       }))
+      if ((source === "button" || source === "selected-product-default") && (zone === "primary" || zone === "gallery")) {
+        const cardText = changed ? "Добавлено" : "Уже было"
+        setPoolCardFeedbackById((prev) => ({
+          ...prev,
+          [inventoryId]: { text: cardText, kind: changed ? "ok" : "neutral" },
+        }))
+        setPoolActionNote(cardText)
+      }
       return changed
     },
-    [board, selectedHandle, activeVariantByHandle, productByHandle]
+    [board, selectedHandle, activeVariantByHandle, productByHandle, variantMetaByHandle]
   )
 
   const appendMediaToAllVariantGalleriesForHandle = useCallback(
@@ -1914,7 +1966,12 @@ export function LegacyMediaAssignmentBoardClient() {
       }
 
       const result = appendMediaToAllVariantGalleries(current, mediaId)
-      setPoolActionNote(formatAppendToAllGalleriesNote(result))
+      const note = formatAppendToAllGalleriesNote(result)
+      setPoolActionNote(note)
+      setPoolCardFeedbackById((prev) => ({
+        ...prev,
+        [mediaId]: { text: note, kind: result.added.length > 0 ? "ok" : "neutral" },
+      }))
 
       if (!result.changed) {
         setDiag((d) => ({
@@ -3206,6 +3263,14 @@ export function LegacyMediaAssignmentBoardClient() {
     const confirmHighConfidence = () =>
       confirmAllForSuggestions(suggestions.filter((s) => s.identityTier === "this_sku" && s.confidence === "high"))
     const totalDuplicatesHidden = suggestions.reduce((n, s) => n + (s.duplicateHiddenCount || 0), 0)
+    const skuProgress = computeSkuReviewProgress({
+      variants: vByHandle,
+      variantMeta: vmByHandle,
+      pendingSuggestions: suggestions,
+    })
+    const nextProductLabel =
+      skuProgress.readiness === "ready" ? OPERATOR_LABELS.nextProduct : OPERATOR_LABELS.nextProductWarn
+    const activeSuggestionPending = safeSuggestions.find((s) => s.variantKey === activeVariantKey)
     const skipCurrentProduct = () => {
       goToNextProductWithSuggestions(h)
     }
@@ -4438,6 +4503,7 @@ export function LegacyMediaAssignmentBoardClient() {
                             isPrimary={mid === primaryPreviewId}
                             inv={invById.get(mid)}
                             seedRows={seedMatchRowsForSelected}
+                            recovery={recoveryById.get(mid)}
                             roleBadge={mid === primaryPreviewId ? null : roleBadge}
                             borrowedLabel={borrowedLabel}
                           />
@@ -4983,7 +5049,7 @@ export function LegacyMediaAssignmentBoardClient() {
                           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                             {stripIds.slice(0, 5).map((mid) => {
                               const inv = invById.get(mid)
-                              const pv = inv ? clientPreviewUrl(inv) : null
+                              const pv = inv ? clientPreviewUrl(inv, recoveryById.get(mid)) : null
                               const isPrimary = mid === vv.primary
                               return (
                                 <div
@@ -5271,7 +5337,10 @@ export function LegacyMediaAssignmentBoardClient() {
             <span style={{ color: "#cbd5e1" }}>·</span>
             <span>unassigned media <strong>{toolbarCounts.unassigned}</strong></span>
             <span style={{ color: "#cbd5e1" }}>·</span>
-            <span style={{ color: "#94a3b8" }}>total {toolbarCounts.total} · previewable {toolbarCounts.previewable} · ambiguous {toolbarCounts.ambiguous} · rejected {toolbarCounts.rejected}</span>
+            <span style={{ color: "#94a3b8" }}>
+              total {toolbarCounts.total} · previewable {toolbarCounts.previewable} · recovered QA previews {recoveryById.size} · unpreviewable{" "}
+              {invSummary?.unpreviewable ?? 0} · ambiguous {toolbarCounts.ambiguous} · rejected {toolbarCounts.rejected}
+            </span>
             {exportFeedback === "copy" ? (
               <span style={successHint} role="status">Copied.</span>
             ) : exportFeedback === "download" ? (
@@ -5786,25 +5855,36 @@ export function LegacyMediaAssignmentBoardClient() {
                   {unpreviewableRows.length === 0 ? (
                     <div style={{ padding: 20, color: "#64748b", fontSize: 13 }}>{poolEmptyMessage}</div>
                   ) : (
-                    unpreviewableRows.slice(0, POOL_LIMIT).map((it) => (
-                      <div
-                        key={it.id}
-                        style={{
-                          fontSize: 12,
-                          padding: "8px 10px",
-                          borderBottom: "1px solid #f1f5f9",
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: 2,
-                          cursor: "pointer",
-                        }}
-                        title={it.source_path || it.repo_relative_path || ""}
-                        onClick={() => setInspectorId(it.id)}
-                      >
-                        <div style={{ fontWeight: 700, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.filename}</div>
-                        <div style={{ color: "#64748b" }}>{unpreviewableHumanReason(it)}</div>
-                      </div>
-                    ))
+                    <div data-media-pool-grid="true">
+                      {unpreviewableRows.slice(0, POOL_LIMIT).map((it) => {
+                        const pv = clientPreviewUrl(it, recoveryById.get(it.id))
+                        const ce = candById.get(it.id)
+                        const poolBadges = [ce?.confidence, it.source_type].filter(Boolean) as string[]
+                        if (pv.recoveryBadge) poolBadges.unshift(pv.recoveryBadge)
+                        poolBadges.push(unpreviewableHumanReason(it))
+                        return (
+                          <div key={it.id} data-media-pool-card-wrap="true">
+                            <MediaImageCard
+                              inventoryId={it.id}
+                              inv={it}
+                              productHandle={selectedHandle}
+                              previewUrl={pv.url}
+                              useImg={pv.useImg}
+                              caption={pv.caption || unpreviewableHumanReason(it)}
+                              displayMode="pool"
+                              sourcePath={it.repo_relative_path || it.source_path}
+                              sourceType={it.source_type}
+                              confidenceLabel={ce?.confidence || null}
+                              previewable={false}
+                              badges={poolBadges}
+                              size="pool"
+                              draggable={false}
+                              onOpenDetail={() => setInspectorId(it.id)}
+                            />
+                          </div>
+                        )
+                      })}
+                    </div>
                   )}
                   {unpreviewableRows.length > POOL_LIMIT ? (
                     <p style={{ fontSize: 12, color: "#64748b", padding: 10 }}>
@@ -6092,7 +6172,7 @@ export function LegacyMediaAssignmentBoardClient() {
               </div>
               <div style={{ borderRadius: 12, overflow: "hidden", background: "#fff", border: "1px solid #e2e8f0", marginBottom: 12 }}>
                 {(() => {
-                  const pv = clientPreviewUrl(inspectorInv)
+                  const pv = clientPreviewUrl(inspectorInv, recoveryById.get(inspectorInv.id))
                   return pv.useImg && pv.url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={pv.url} alt="" style={{ width: "100%", display: "block", maxHeight: 200, objectFit: "cover" }} />
