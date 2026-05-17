@@ -38,8 +38,8 @@ import {
   applySameSkuRoleBorrowing,
   finalSanitizeVariantGalleryOutput,
   sanitizeVariantGalleryCandidates,
+  primaryRoleBadgeForSuggestion,
   roleBadgeForMedia,
-  VISUAL_ROLE_STRIP_LABEL_RU,
   groupHiddenDuplicatesByRole,
   type BorrowedSameSkuEntry,
 } from "./legacy-media-variant-gallery-build"
@@ -79,6 +79,7 @@ import {
 } from "./legacy-variant-gallery-order"
 import {
   classifyVisualRole,
+  classifyVisualRoleDetailed,
   primaryCandidateBadgeRu,
   VISUAL_ROLE_BADGE_RU,
   VISUAL_ROLE_RANKING_TOOLTIP_RU,
@@ -4470,8 +4471,10 @@ export function LegacyMediaAssignmentBoardClient() {
                     role: r.role as VisualRole,
                   })),
                 })
+                const visibleBorrowed = (s.borrowedSameSku ?? []).filter((b) => !b.optional)
+                const optionalBorrowed = (s.borrowedSameSku ?? []).filter((b) => b.optional)
                 const borrowedById = new Map(
-                  sanitizedPreview.borrowed.map((b) => [
+                  visibleBorrowed.map((b) => [
                     b.mediaId,
                     { ...b, role: b.role as VisualRole } satisfies BorrowedSameSkuEntry,
                   ])
@@ -4480,9 +4483,6 @@ export function LegacyMediaAssignmentBoardClient() {
                   ...(primaryPreviewId && primaryIsPreviewable ? [primaryPreviewId] : []),
                   ...sanitizedPreview.galleryIds,
                 ].filter((id): id is string => Boolean(id) && Boolean(invById.get(id)?.previewable))
-                const roleStripLabels = (s.roleStrip ?? [])
-                  .map((role) => VISUAL_ROLE_STRIP_LABEL_RU[role as VisualRole])
-                  .filter((l) => l && l !== "?")
                 const hiddenRoleGroups = groupHiddenDuplicatesByRole(
                   (s.hiddenDuplicateIds ?? []).map((mediaId) => ({
                     mediaId,
@@ -4513,6 +4513,13 @@ export function LegacyMediaAssignmentBoardClient() {
                       primaryAutoPicked: true,
                       primaryNeedsReview: s.primaryNeedsReview ?? false,
                     }
+                const primaryRoleHeadline = primaryPreviewId
+                  ? primaryRoleBadgeForSuggestion(primaryPreviewId, rolesByIdMap, invById, {
+                      productHandle: h,
+                      productSku: s.productSkuHint,
+                      needsReview: Boolean(previewMedia.primaryNeedsReview),
+                    })
+                  : null
                 const isActiveDraftCard = activeVariantKey === s.variantKey && isDraftCard
 
                 return (
@@ -4568,12 +4575,12 @@ export function LegacyMediaAssignmentBoardClient() {
                     {/* BODY: Primary + Gallery preview for this color variant */}
                     {galleryPreviewOrdered.length > 0 ? (
                       <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
-                        {roleStripLabels.length > 0 ? (
+                        {primaryRoleHeadline ? (
                           <div
                             data-suggestion-role-strip="true"
                             style={{ fontSize: 10, color: "#475569", fontWeight: 600 }}
                           >
-                            {roleStripLabels.join(" · ")}
+                            Главная роль: {primaryRoleHeadline}
                           </div>
                         ) : null}
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
@@ -4592,10 +4599,17 @@ export function LegacyMediaAssignmentBoardClient() {
                           style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-start", minWidth: 0 }}
                         >
                         {galleryPreviewOrdered.slice(0, 6).map((mid) => {
-                          const borrowed = borrowedById.get(mid)
-                          const roleBadge = roleBadgeForMedia(mid, rolesByIdMap, borrowedById)
-                          const borrowedLabel = borrowed
-                            ? `${VISUAL_ROLE_STRIP_LABEL_RU[borrowed.role]} из другого цвета этого SKU (${borrowed.fromVariantLabel})`
+                          const invForBadge = invById.get(mid)
+                          const borrowedEntry = borrowedById.get(mid)
+                          const roleBadge = roleBadgeForMedia(mid, rolesByIdMap, borrowedById, {
+                            fromOverride: Boolean(
+                              invForBadge && classifyVisualRoleDetailed(invForBadge, { productHandle: h, productSku: s.productSkuHint }).fromOverride
+                            ),
+                          })
+                          const borrowedLabel = borrowedEntry
+                            ? borrowedEntry.optional
+                              ? `другой цвет · опционально (${borrowedEntry.fromVariantLabel})`
+                              : `другой цвет · опционально`
                             : null
                           return (
                           <SuggestionVariantThumb
@@ -4818,18 +4832,33 @@ export function LegacyMediaAssignmentBoardClient() {
                               </ul>
                             </div>
                           ) : null}
-                          {(s.borrowedSameSku?.length ?? 0) > 0 ? (
+                          {visibleBorrowed.length > 0 ? (
                             <div style={{ marginTop: 6 }} data-suggestion-borrowed="true">
-                              <strong>Заимствовано из этого SKU</strong>
+                              <strong>В галерее (заимствовано)</strong>
                               <ul style={{ margin: "4px 0 0", paddingLeft: 16, fontSize: 10, color: "#64748b" }}>
-                                {s.borrowedSameSku!.map((b) => (
+                                {visibleBorrowed.map((b) => (
                                   <li key={`${b.mediaId}-${b.role}`}>
-                                    {VISUAL_ROLE_STRIP_LABEL_RU[b.role as VisualRole]} из «{b.fromVariantLabel}» ·{" "}
+                                    {VISUAL_ROLE_BADGE_RU[b.role as VisualRole]} из «{b.fromVariantLabel}» ·{" "}
                                     <code style={{ fontSize: 9 }}>{(invById.get(b.mediaId)?.filename || b.mediaId).slice(0, 40)}</code>
                                   </li>
                                 ))}
                               </ul>
                             </div>
+                          ) : null}
+                          {optionalBorrowed.length > 0 ? (
+                            <details style={{ marginTop: 6 }} data-suggestion-optional-borrow="true">
+                              <summary style={{ cursor: "pointer", fontSize: 10, fontWeight: 700, color: "#64748b" }}>
+                                Можно добавить из другого цвета ({optionalBorrowed.length})
+                              </summary>
+                              <ul style={{ margin: "6px 0 0", paddingLeft: 16, fontSize: 10, color: "#94a3b8" }}>
+                                {optionalBorrowed.map((b) => (
+                                  <li key={`opt-${b.mediaId}`}>
+                                    {VISUAL_ROLE_BADGE_RU[b.role as VisualRole]} · {b.fromVariantLabel} ·{" "}
+                                    <code style={{ fontSize: 9 }}>{(invById.get(b.mediaId)?.filename || b.mediaId).slice(0, 40)}</code>
+                                  </li>
+                                ))}
+                              </ul>
+                            </details>
                           ) : null}
                           {s.roleCompositionSummary ? (
                             <div style={{ marginTop: 6 }} data-suggestion-role-composition="true">

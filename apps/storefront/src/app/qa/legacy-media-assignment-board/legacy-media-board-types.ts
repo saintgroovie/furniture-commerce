@@ -149,6 +149,7 @@ export type SuggestedVariant = {
     role: string
     fromVariantKey: string
     fromVariantLabel: string
+    optional?: boolean
   }>
   rejectedBorrowCandidates?: Array<{
     mediaId: string

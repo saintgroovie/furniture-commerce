@@ -251,6 +251,8 @@ export function buildSuggestedVariantsForProductSync(input: {
     const deduped = dedupeAndSortVariantMedia(rawIds, invMap, input.candById, {
       seedOrder: rawIds,
       selectedSku: productSkuHint || h,
+      productHandle: h,
+      productSku: productSkuHint,
       colorToken: colorNameRaw === "needs_review" ? "" : colorNameRaw,
     })
     if (deduped.visibleIds.length === 0) continue

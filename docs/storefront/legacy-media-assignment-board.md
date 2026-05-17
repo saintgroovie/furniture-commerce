@@ -142,6 +142,17 @@ export PLAYWRIGHT_CORE_NODE_MODULES=$PWD/node_modules
 node ../furniture-commerce/apps/storefront/scripts/legacy-board-editable-suggestions-proof.mjs
 ```
 
+**Visual role overrides (co-02-1 QA audit)** — static map in `legacy-media-visual-role-overrides.ts` applied before filename heuristics in `classifyVisualRoleDetailed`. Overrides are **not** persisted to Medusa/seed/export. Suggestion cards show a single headline role; technical `reasons` stay in **Details**. Same-SKU interior borrow from another color is **optional** (collapsed *Можно добавить из другого цвета*) when the target already has primary + a same-color front/3/4 shot.
+
+```bash
+npx tsx apps/storefront/scripts/legacy-board-co02-forensic-audit.ts
+npx tsx apps/storefront/scripts/legacy-board-co02-visual-role-override-proof.ts
+# writes tmp/qa-screenshots/co-02-1-visual-role-forensic-audit.json
+# writes tmp/qa-screenshots/co-02-1-visual-role-override-proof.json
+```
+
+**Next step (not implemented):** operator role correction `<select>` in card Details, saved to `localStorage` only (no export shape change).
+
 Requires `yarn dev` in `apps/storefront` and repo `data/` + `docs/` markers (`FURNITURE_REPO_ROOT` in Docker). Scripts do not call Medusa or mutate seed/catalog/evidence.
 
 ## Assisted variants (dev-only)

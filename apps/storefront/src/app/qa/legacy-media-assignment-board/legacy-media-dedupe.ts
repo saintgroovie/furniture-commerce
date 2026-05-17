@@ -7,6 +7,7 @@ import type { CandidateEntry, InvItem } from "./legacy-media-board-types"
 import { explicitProductTokenFromMedia, normSku } from "./suggestion-product-guard"
 import { scorePrimaryCandidate } from "./legacy-variant-primary-heuristic"
 import { applyRoleRepresentativeSelection } from "./legacy-media-variant-gallery-build"
+import { overrideCanonicalBoost } from "./legacy-media-visual-role-overrides"
 import {
   compareIdsByVisualRole,
   frontFamilyDedupeKey,
@@ -181,8 +182,13 @@ export function galleryQualityScore(inv: InvItemDedupeFields, orderIndex: number
   return s
 }
 
-function canonicalScore(inv: InvItemDedupeFields, ce: CandidateEntry | undefined): number {
+function canonicalScore(
+  inv: InvItemDedupeFields,
+  ce: CandidateEntry | undefined,
+  opts?: { productHandle?: string; productSku?: string }
+): number {
   let s = galleryQualityScore(inv, 0)
+  s += overrideCanonicalBoost(inv as InvItem, opts)
   if (ce?.confidence === "confirmed") s += 40
   else if (ce?.confidence === "probable") s += 20
   if (ce?.top_candidate?.score) s += Math.min(ce.top_candidate.score, 30)
@@ -233,7 +239,14 @@ export function dedupeAndSortVariantMedia(
   mediaIds: string[],
   invById: Map<string, InvItemDedupeFields>,
   candById: Map<string, CandidateEntry>,
-  opts?: { seedOrder?: string[]; preserveGalleryOrder?: string[]; selectedSku?: string; colorToken?: string }
+  opts?: {
+    seedOrder?: string[]
+    preserveGalleryOrder?: string[]
+    selectedSku?: string
+    productHandle?: string
+    productSku?: string
+    colorToken?: string
+  }
 ): VariantMediaDedupeResult {
   const unique = Array.from(new Set(mediaIds.filter(Boolean)))
   if (unique.length === 0) {
@@ -312,8 +325,8 @@ export function dedupeAndSortVariantMedia(
     const ranked = [...memberIds].sort((a, b) => {
       const ia = invById.get(a)
       const ib = invById.get(b)
-      const sa = ia ? canonicalScore(ia, candById.get(a)) : -1
-      const sb = ib ? canonicalScore(ib, candById.get(b)) : -1
+      const sa = ia ? canonicalScore(ia, candById.get(a), opts) : -1
+      const sb = ib ? canonicalScore(ib, candById.get(b), opts) : -1
       return sb - sa
     })
     const canonicalId = ranked[0]!
@@ -378,7 +391,8 @@ export function dedupeAndSortVariantMedia(
       clusterHidden: hiddenDuplicates,
       lockedPrimaryId: preservedPrimary,
       colorToken: opts?.colorToken,
-      productSku: opts?.selectedSku,
+      productHandle: opts?.productHandle,
+      productSku: opts?.productSku ?? opts?.selectedSku,
     })
     const allHidden = roleBuild.hiddenDuplicates.filter(
       (h, i, arr) => arr.findIndex((x) => x.mediaId === h.mediaId) === i
@@ -411,8 +425,8 @@ export function dedupeAndSortVariantMedia(
   const roleBuild = applyRoleRepresentativeSelection(visiblePreviewable, invById, candById, {
     clusterHidden: hiddenDuplicates,
     colorToken: opts?.colorToken,
-    productHandle: opts?.selectedSku,
-    productSku: opts?.selectedSku,
+    productHandle: opts?.productHandle,
+    productSku: opts?.productSku ?? opts?.selectedSku,
   })
 
   const allHidden = roleBuild.hiddenDuplicates.filter(

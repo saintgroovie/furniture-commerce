@@ -6,6 +6,13 @@
 import type { InvItem } from "./legacy-media-board-types"
 import { explicitProductTokenFromMedia, normHandle, normSku } from "./suggestion-product-guard"
 import { isWhiteBgSourceHint, type InvItemDedupeFields } from "./legacy-media-dedupe"
+import {
+  overrideBorrowable,
+  overrideColorSpecificExternal,
+  overridePrimaryEligible,
+  resolveVisualRoleOverride,
+  VISUAL_ROLE_OVERRIDE_REASON,
+} from "./legacy-media-visual-role-overrides"
 
 export type VisualRole =
   | "closed_front"
@@ -151,6 +158,47 @@ export function canBePrimaryRole(role: VisualRole): boolean {
   return PRIMARY_ELIGIBLE_ROLES.has(role)
 }
 
+export function canBePrimaryForMedia(
+  inv: InvItem,
+  role: VisualRole,
+  opts?: { productHandle?: string; productSku?: string }
+): boolean {
+  return overridePrimaryEligible(inv, role, opts)
+}
+
+export type VisualRoleClassification = {
+  role: VisualRole
+  reasons: string[]
+  fromOverride: boolean
+}
+
+export function classifyVisualRoleDetailed(
+  inv: InvItem,
+  opts?: { seedBasename?: string | null; orderIndex?: number; productHandle?: string; productSku?: string }
+): VisualRoleClassification {
+  const ov = resolveVisualRoleOverride(inv, {
+    productHandle: opts?.productHandle,
+    productSku: opts?.productSku,
+  })
+  if (ov) {
+    return {
+      role: ov.role,
+      reasons: [VISUAL_ROLE_OVERRIDE_REASON, ov.note],
+      fromOverride: true,
+    }
+  }
+  const role = classifyVisualRoleHeuristic(inv, opts)
+  return { role, reasons: [`heuristic:${role}`], fromOverride: false }
+}
+
+/** @deprecated internal — use classifyVisualRoleDetailed for audit */
+function classifyVisualRoleHeuristic(
+  inv: InvItem,
+  opts?: { seedBasename?: string | null; orderIndex?: number }
+): VisualRole {
+  return classifyVisualRoleInner(inv, opts)
+}
+
 export function canBorrowVisualRole(role: VisualRole): boolean {
   return BORROWABLE_VISUAL_ROLES.has(role)
 }
@@ -165,7 +213,13 @@ export function isExternalVisualRole(role: VisualRole): boolean {
 }
 
 /** Borrowable interior/detail/lifestyle — rejects gallery/iso/i1/i2 externals mis-tagged. */
-export function isClearlyBorrowableInteriorOrDetailOrLifestyle(inv: InvItem, role: VisualRole): boolean {
+export function isClearlyBorrowableInteriorOrDetailOrLifestyle(
+  inv: InvItem,
+  role: VisualRole,
+  opts?: { productHandle?: string; productSku?: string }
+): boolean {
+  const ovBorrow = overrideBorrowable(inv, role, opts)
+  if (ovBorrow) return true
   const hay = mediaHaystack(inv)
   if (role === "interior") {
     if (isExternalProductShotIndex(hay) && !isWardrobeOpenInteriorShot(inv)) return false
@@ -193,7 +247,9 @@ export function isExternalColorSpecificMedia(
   inv: InvItem,
   opts?: { role?: VisualRole; productHandle?: string; productSku?: string }
 ): boolean {
-  const role = opts?.role ?? classifyVisualRole(inv)
+  const ovExt = overrideColorSpecificExternal(inv, opts)
+  if (ovExt != null) return ovExt
+  const role = opts?.role ?? classifyVisualRole(inv, opts)
   if (role === "scheme") return false
   if (isClearlyBorrowableInteriorOrDetailOrLifestyle(inv, role)) return false
   if (isExternalVisualRole(role)) return true
@@ -304,6 +360,14 @@ export function frontFamilyDedupeKey(
 }
 
 export function classifyVisualRole(
+  inv: InvItem,
+  opts?: { seedBasename?: string | null; orderIndex?: number; productHandle?: string; productSku?: string }
+): VisualRole {
+  const detailed = classifyVisualRoleDetailed(inv, opts)
+  return detailed.role
+}
+
+function classifyVisualRoleInner(
   inv: InvItem,
   opts?: { seedBasename?: string | null; orderIndex?: number }
 ): VisualRole {
@@ -438,14 +502,23 @@ export function compareIdsByVisualRole(
 export function sortIdsByVisualRole(
   ids: string[],
   invById: Map<string, InvItem>,
-  opts?: { seedBasenames?: Map<string, string> }
+  opts?: { seedBasenames?: Map<string, string>; productHandle?: string; productSku?: string }
 ): { sorted: string[]; rolesById: Map<string, VisualRole> } {
   const rolesById = new Map<string, VisualRole>()
   const unique = Array.from(new Set(ids.filter(Boolean)))
   for (let i = 0; i < unique.length; i++) {
     const id = unique[i]!
     const inv = invById.get(id)
-    if (inv) rolesById.set(id, classifyVisualRole(inv, { seedBasename: opts?.seedBasenames?.get(id), orderIndex: i }))
+    if (inv)
+      rolesById.set(
+        id,
+        classifyVisualRole(inv, {
+          seedBasename: opts?.seedBasenames?.get(id),
+          orderIndex: i,
+          productHandle: opts?.productHandle,
+          productSku: opts?.productSku,
+        })
+      )
   }
   const sorted = [...unique].sort((a, b) => compareIdsByVisualRole(a, b, invById, { rolesById, seedBasenames: opts?.seedBasenames }))
   return { sorted, rolesById }
@@ -462,9 +535,17 @@ export const GALLERY_ROLE_ORDER: VisualRole[] = [
   "unknown",
 ]
 
-function primaryScore(id: string, role: VisualRole, inv: InvItem | undefined, seedIndex: Map<string, number>): number {
+function primaryScore(
+  id: string,
+  role: VisualRole,
+  inv: InvItem | undefined,
+  seedIndex: Map<string, number>,
+  opts?: { productHandle?: string; productSku?: string }
+): number {
   let s = 0
   const hay = inv ? mediaHaystack(inv) : ""
+  if (inv && !overridePrimaryEligible(inv, role, opts)) return -9999
+  if (inv && resolveVisualRoleOverride(inv, opts)?.primaryEligible === true && role === "closed_front") s += 120
   if (role === "closed_front") s += 1100
   else if (role === "front_anfas") s += 1050
   else if (role === "hero_front") s += isThreeQuarterSourceHint(hay) ? 720 : 1000
@@ -474,6 +555,7 @@ function primaryScore(id: string, role: VisualRole, inv: InvItem | undefined, se
     else s += 50
   } else return -9999
   if (NON_PRIMARY_ROLES.has(role)) return -9999
+  if (inv && !canBePrimaryForMedia(inv, role, opts)) return -9999
   if (role === "front_3_4" && isThreeQuarterSourceHint(hay)) s -= 40
   if (inv?.previewable !== false) s += 80
   if (/[-_]i0?1(?:\.|[-_]|$)|color_[a-z]+_01/i.test(hay)) s += 55
@@ -512,7 +594,7 @@ export function pickPrimaryAndGalleryByVisualRole(
 function pickPrimaryAndGalleryFromPool(
   unique: string[],
   invById: Map<string, InvItem>,
-  opts?: { seedOrder?: string[]; seedBasenames?: Map<string, string> }
+  opts?: { seedOrder?: string[]; seedBasenames?: Map<string, string>; productHandle?: string; productSku?: string }
 ): VisualRolePickResult {
   if (unique.length === 0) {
     return {
@@ -525,7 +607,11 @@ function pickPrimaryAndGalleryFromPool(
     }
   }
 
-  const { rolesById } = sortIdsByVisualRole(unique, invById, { seedBasenames: opts?.seedBasenames })
+  const { rolesById } = sortIdsByVisualRole(unique, invById, {
+    seedBasenames: opts?.seedBasenames,
+    productHandle: opts?.productHandle,
+    productSku: opts?.productSku,
+  })
   const seedIndex = new Map<string, number>()
   for (let i = 0; i < (opts?.seedOrder?.length ?? 0); i++) {
     const id = opts!.seedOrder![i]
@@ -554,7 +640,10 @@ function pickPrimaryAndGalleryFromPool(
       continue
     }
     if (hasStraightFront && role === "front_3_4") continue
-    const sc = primaryScore(id, role, inv, seedIndex)
+    const sc = primaryScore(id, role, inv, seedIndex, {
+      productHandle: opts?.productHandle,
+      productSku: opts?.productSku,
+    })
     if (sc > bestScore) {
       bestScore = sc
       primaryId = id

@@ -7,9 +7,11 @@ import { classifyMediaProductIdentity } from "./suggestion-product-guard"
 import type { DedupeHiddenItem, InvItemDedupeFields } from "./legacy-media-dedupe"
 import { galleryQualityScore } from "./legacy-media-dedupe"
 import {
+  canBePrimaryForMedia,
   canBePrimaryRole,
   canBorrowVisualRole,
   classifyVisualRole,
+  classifyVisualRoleDetailed,
   compareIdsByVisualRole,
   extractColorTokenFromMedia,
   externalMediaAllowedForColorVariant,
@@ -34,6 +36,8 @@ export type BorrowedSameSkuEntry = {
   role: VisualRole
   fromVariantKey: string
   fromVariantLabel: string
+  /** Not shown in visible gallery strip — Details / optional add only */
+  optional?: boolean
 }
 
 export type RejectedBorrowCandidate = {
@@ -194,7 +198,11 @@ export function applyRoleRepresentativeSelection(
     const id = unique[i]!
     const inv = invById.get(id)
     if (!inv) continue
-    const role = classifyVisualRole(inv, { orderIndex: i })
+    const role = classifyVisualRole(inv, {
+      orderIndex: i,
+      productHandle: opts?.productHandle,
+      productSku: opts?.productSku,
+    })
     rolesById.set(id, role)
     const list = buckets.get(role) ?? []
     list.push(id)
@@ -209,13 +217,36 @@ export function applyRoleRepresentativeSelection(
   let primaryId: string | null =
     opts?.lockedPrimaryId && unique.includes(opts.lockedPrimaryId) ? opts.lockedPrimaryId : pick.primaryId
 
-  if (primaryId && !canBePrimaryRole(rolesById.get(primaryId) ?? "unknown")) {
+  const rolePickOpts = { productHandle: opts?.productHandle, productSku: opts?.productSku }
+  const primaryPoolIds = Array.from(
+    new Set([...unique, ...(opts?.clusterHidden?.map((h) => h.mediaId) ?? [])])
+  )
+  if (
+    primaryId &&
+    invById.get(primaryId) &&
+    !canBePrimaryForMedia(invById.get(primaryId)!, rolesById.get(primaryId) ?? "unknown", rolePickOpts)
+  ) {
     const closedSorted = sortBucket(
       [...(buckets.get("closed_front") ?? []), ...(buckets.get("hero_front") ?? []), ...(buckets.get("front_anfas") ?? [])],
       invById,
       candById
     )
     primaryId = closedSorted[0] ?? pick.primaryId
+  }
+  if (
+    !primaryId ||
+    (primaryId &&
+      invById.get(primaryId) &&
+      !canBePrimaryForMedia(invById.get(primaryId)!, rolesById.get(primaryId) ?? "unknown", rolePickOpts))
+  ) {
+    const repick = pickPrimaryAndGalleryByVisualRole(primaryPoolIds, invById as Map<string, InvItem>, {
+      colorToken: opts?.colorToken,
+      productHandle: opts?.productHandle,
+      productSku: opts?.productSku,
+    })
+    if (repick.primaryId && canBePrimaryForMedia(invById.get(repick.primaryId)!, repick.primaryRole ?? "unknown", rolePickOpts)) {
+      primaryId = repick.primaryId
+    }
   }
   if (!primaryId) {
     const closedSorted = sortBucket(
@@ -377,7 +408,9 @@ export function sanitizeVariantGalleryCandidates(input: {
     if (!id || id === input.primaryId) continue
     const inv = input.invById.get(id)
     if (!inv) continue
-    const role = input.rolesById.get(id) ?? classifyVisualRole(inv)
+    const role =
+      input.rolesById.get(id) ??
+      classifyVisualRole(inv, { productHandle: input.productHandle, productSku: input.productSku })
     const borrowEntry = input.borrowed.find((b) => b.mediaId === id)
 
     if (borrowEntry) {
@@ -388,7 +421,12 @@ export function sanitizeVariantGalleryCandidates(input: {
         } as VariantGallerySlice, "front role cannot be borrowed")
         continue
       }
-      if (!isClearlyBorrowableInteriorOrDetailOrLifestyle(inv as InvItem, borrowEntry.role)) {
+      if (
+        !isClearlyBorrowableInteriorOrDetailOrLifestyle(inv as InvItem, borrowEntry.role, {
+          productHandle: input.productHandle,
+          productSku: input.productSku,
+        })
+      ) {
         rejectBorrow(rejected, inv, id, role, {
           variantKey: borrowEntry.fromVariantKey,
           label: borrowEntry.fromVariantLabel,
@@ -409,7 +447,7 @@ export function sanitizeVariantGalleryCandidates(input: {
         continue
       }
       borrowed.push(borrowEntry)
-      galleryIds.push(id)
+      if (!borrowEntry.optional) galleryIds.push(id)
       continue
     }
 
@@ -452,7 +490,32 @@ export function sanitizeVariantGalleryCandidates(input: {
 
 function isWhiteBgExternalGuess(inv: InvItemDedupeFields): boolean {
   const hay = `${inv.filename} ${inv.source_path || ""}`.toLowerCase()
-  return /white|белом|yandex/i.test(hay) && !isClearlyBorrowableInteriorOrDetailOrLifestyle(inv as InvItem, "interior")
+  return (
+    /white|белом|yandex/i.test(hay) &&
+    !isClearlyBorrowableInteriorOrDetailOrLifestyle(inv as InvItem, "interior", undefined)
+  )
+}
+
+/** Target already has primary + at least one same-color front/3/4 — defer optional interior borrow. */
+function targetHasMinimalSameColorCoverage(
+  target: VariantGallerySlice,
+  galleryIds: string[],
+  rolesById: Map<string, VisualRole>,
+  invById: Map<string, InvItemDedupeFields>,
+  productHandle: string,
+  productSku: string
+): boolean {
+  if (!target.primaryCandidateId) return false
+  const targetColor = target.colorNameRaw
+  const owned = new Set<string>([target.primaryCandidateId, ...galleryIds])
+  for (const id of Array.from(owned)) {
+    const inv = invById.get(id)
+    if (!inv) continue
+    const role = rolesById.get(id) ?? classifyVisualRole(inv, { productHandle, productSku })
+    if (role !== "front_3_4" && role !== "front_anfas" && role !== "closed_front" && role !== "hero_front") continue
+    if (mediaMatchesColorToken(inv, targetColor, productHandle, productSku)) return true
+  }
+  return galleryIds.length >= 1
 }
 
 export function applySameSkuRoleBorrowing(
@@ -505,7 +568,7 @@ export function applySameSkuRoleBorrowing(
         if (ownedIds.has(id)) continue
         const inv = invById.get(id)
         if (!inv) continue
-        const mediaRole = sib.rolesById.get(id) ?? classifyVisualRole(inv)
+        const mediaRole = sib.rolesById.get(id) ?? classifyVisualRole(inv, { productHandle, productSku })
 
         if (NON_BORROWABLE_EXTERNAL_ROLES.has(mediaRole) || FRONT_FAMILY_ROLES.has(mediaRole)) {
           rejectBorrow(rejectedBorrowCandidates, inv, id, mediaRole, sib, "front role cannot be borrowed")
@@ -519,7 +582,7 @@ export function applySameSkuRoleBorrowing(
         }
         if (mediaRole !== role) continue
 
-        if (!isClearlyBorrowableInteriorOrDetailOrLifestyle(inv as InvItem, mediaRole)) {
+        if (!isClearlyBorrowableInteriorOrDetailOrLifestyle(inv as InvItem, mediaRole, { productHandle, productSku })) {
           rejectBorrow(
             rejectedBorrowCandidates,
             inv,
@@ -564,7 +627,9 @@ export function applySameSkuRoleBorrowing(
           continue
         }
 
-        galleryIds.push(id)
+        const deferOptional =
+          (role === "interior" || role === "detail" || role === "lifestyle") &&
+          targetHasMinimalSameColorCoverage(target, galleryIds, rolesById, invById, productHandle, productSku)
         rolesById.set(id, role)
         ownedIds.add(id)
         borrowed.push({
@@ -572,7 +637,9 @@ export function applySameSkuRoleBorrowing(
           role,
           fromVariantKey: sib.variantKey,
           fromVariantLabel: sib.label,
+          optional: deferOptional,
         })
+        if (!deferOptional) galleryIds.push(id)
         filledRoles.add(role)
         break outer
       }
@@ -609,10 +676,30 @@ export function finalSanitizeVariantGalleryOutput(
 export function roleBadgeForMedia(
   mediaId: string,
   rolesById: Map<string, VisualRole>,
-  borrowedById: Map<string, BorrowedSameSkuEntry>
+  borrowedById: Map<string, BorrowedSameSkuEntry>,
+  opts?: { fromOverride?: boolean; needsReview?: boolean }
 ): string {
   const borrowed = borrowedById.get(mediaId)
-  if (borrowed && canBorrowVisualRole(borrowed.role)) return "из этого SKU · другой цвет"
+  if (borrowed?.optional) return "другой цвет · опционально"
+  if (borrowed && canBorrowVisualRole(borrowed.role)) return "другой цвет · опционально"
+  if (opts?.fromOverride) return "роль уточнена"
+  if (opts?.needsReview) return "проверь роль"
   const role = rolesById.get(mediaId)
   return role ? VISUAL_ROLE_BADGE_RU[role] : "?"
+}
+
+/** Single headline role for suggestion card strip (primary role only). */
+export function primaryRoleBadgeForSuggestion(
+  primaryId: string | null,
+  rolesById: Map<string, VisualRole>,
+  invById: Map<string, InvItem>,
+  opts?: { productHandle?: string; productSku?: string; needsReview?: boolean }
+): string | null {
+  if (!primaryId) return null
+  const inv = invById.get(primaryId)
+  const role = rolesById.get(primaryId) ?? (inv ? classifyVisualRole(inv, opts) : null)
+  if (!role) return null
+  if (inv && classifyVisualRoleDetailed(inv, opts).fromOverride) return "роль уточнена"
+  if (opts?.needsReview) return "проверь роль"
+  return VISUAL_ROLE_BADGE_RU[role]
 }
