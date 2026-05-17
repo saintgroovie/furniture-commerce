@@ -24,6 +24,7 @@ import {
   isExternalVisualRole,
   mediaMatchesColorToken,
   NON_BORROWABLE_EXTERNAL_ROLES,
+  operatorRoleLabelRu,
   pickPrimaryAndGalleryByVisualRole,
   primaryRoleStripLabel,
   type VisualRole,
@@ -485,6 +486,14 @@ export function sanitizeVariantGalleryCandidates(input: {
   }
 
   galleryIds.sort((a, b) => compareIdsByVisualRole(a, b, input.invById as Map<string, InvItem>, { rolesById: input.rolesById }))
+
+  // Optional same-SKU borrows are not in galleryIds — keep them for operator UI.
+  for (const entry of input.borrowed) {
+    if (!entry.optional) continue
+    if (borrowed.some((b) => b.mediaId === entry.mediaId)) continue
+    borrowed.push(entry)
+  }
+
   return { galleryIds, borrowed, rejectedBorrowCandidates: rejected }
 }
 
@@ -677,15 +686,14 @@ export function roleBadgeForMedia(
   mediaId: string,
   rolesById: Map<string, VisualRole>,
   borrowedById: Map<string, BorrowedSameSkuEntry>,
-  opts?: { fromOverride?: boolean; needsReview?: boolean }
+  opts?: { needsReview?: boolean }
 ): string {
   const borrowed = borrowedById.get(mediaId)
   if (borrowed?.optional) return "другой цвет · опционально"
   if (borrowed && canBorrowVisualRole(borrowed.role)) return "другой цвет · опционально"
-  if (opts?.fromOverride) return "роль уточнена"
   if (opts?.needsReview) return "проверь роль"
   const role = rolesById.get(mediaId)
-  return role ? VISUAL_ROLE_BADGE_RU[role] : "?"
+  return role ? operatorRoleLabelRu(role) : "?"
 }
 
 /** Single headline role for suggestion card strip (primary role only). */
@@ -699,7 +707,6 @@ export function primaryRoleBadgeForSuggestion(
   const inv = invById.get(primaryId)
   const role = rolesById.get(primaryId) ?? (inv ? classifyVisualRole(inv, opts) : null)
   if (!role) return null
-  if (inv && classifyVisualRoleDetailed(inv, opts).fromOverride) return "роль уточнена"
   if (opts?.needsReview) return "проверь роль"
-  return VISUAL_ROLE_BADGE_RU[role]
+  return operatorRoleLabelRu(role)
 }

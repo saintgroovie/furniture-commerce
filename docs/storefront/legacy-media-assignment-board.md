@@ -142,7 +142,7 @@ export PLAYWRIGHT_CORE_NODE_MODULES=$PWD/node_modules
 node ../furniture-commerce/apps/storefront/scripts/legacy-board-editable-suggestions-proof.mjs
 ```
 
-**Visual role overrides (co-02-1 QA audit)** — static map in `legacy-media-visual-role-overrides.ts` applied before filename heuristics in `classifyVisualRoleDetailed`. Overrides are **not** persisted to Medusa/seed/export. Suggestion cards show a single headline role; technical `reasons` stay in **Details**. Same-SKU interior borrow from another color is **optional** (collapsed *Можно добавить из другого цвета*) when the target already has primary + a same-color front/3/4 shot.
+**Visual role overrides (co-02-1 QA audit)** — static map in `legacy-media-visual-role-overrides.ts` applied before filename heuristics in `classifyVisualRoleDetailed`. Overrides are **not** persisted to Medusa/seed/export. Cards and thumbs use **operator role labels** (`фронт`, `анфас`, `3/4`, `внутри`, …) via `OPERATOR_ROLE_LABEL_RU`; technical override source (`override: co-02-1 visual audit`) appears only in **Details**, never as badge «роль уточнена». Same-SKU interior/detail from another color is **optional**: block *Можно добавить из этого SKU* under the active color gallery with **Добавить в галерею** / **Добавить все недостающие роли** (append to draft gallery, not in `galleryCandidateIds` until added).
 
 ```bash
 npx tsx apps/storefront/scripts/legacy-board-co02-forensic-audit.ts

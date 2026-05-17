@@ -49,6 +49,23 @@ export const VISUAL_ROLE_BADGE_RU: Record<VisualRole, string> = {
   unknown: "?",
 }
 
+/** Operator-facing role label on cards and thumbs (no debug override markers). */
+export const OPERATOR_ROLE_LABEL_RU: Record<VisualRole, string> = {
+  closed_front: "фронт",
+  hero_front: "фронт",
+  front_anfas: "анфас",
+  front_3_4: "3/4",
+  interior: "внутри",
+  detail: "деталь",
+  lifestyle: "интерьер",
+  scheme: "схема",
+  unknown: "?",
+}
+
+export function operatorRoleLabelRu(role: VisualRole): string {
+  return OPERATOR_ROLE_LABEL_RU[role] ?? VISUAL_ROLE_BADGE_RU[role] ?? "?"
+}
+
 export const VISUAL_ROLE_RANKING_TOOLTIP_RU =
   "Порядок: закрытый фронт → hero → 3/4 / анфас → внутрянка → детали → интерьер → схема"
 

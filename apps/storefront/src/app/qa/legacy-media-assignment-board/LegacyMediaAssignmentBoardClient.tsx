@@ -34,6 +34,10 @@ import {
 } from "./legacy-color-variant-labels"
 import { dedupeAndSortVariantMedia, type InvItemDedupeFields } from "./legacy-media-dedupe"
 import {
+  resolveVisualRoleOverride,
+  VISUAL_ROLE_OVERRIDE_REASON,
+} from "./legacy-media-visual-role-overrides"
+import {
   applyRoleRepresentativeSelection,
   applySameSkuRoleBorrowing,
   finalSanitizeVariantGalleryOutput,
@@ -85,6 +89,7 @@ import {
 import {
   classifyVisualRole,
   classifyVisualRoleDetailed,
+  operatorRoleLabelRu,
   primaryCandidateBadgeRu,
   VISUAL_ROLE_BADGE_RU,
   VISUAL_ROLE_RANKING_TOOLTIP_RU,
@@ -2898,8 +2903,8 @@ export function LegacyMediaAssignmentBoardClient() {
     )
     const cardInv = inv ?? stubInvForBoardThumb(id, pv.reason || pv.caption || "missing inventory row")
     const canDrag = Boolean(inv?.previewable ?? pv.useImg)
-    const visualRole = inv ? classifyVisualRole(inv) : null
-    const roleBadge = visualRole ? VISUAL_ROLE_BADGE_RU[visualRole] : null
+    const visualRole = inv ? classifyVisualRole(inv, { productHandle: handle.toLowerCase() }) : null
+    const roleBadge = visualRole ? operatorRoleLabelRu(visualRole) : null
     const card = (
       <MediaImageCard
         inventoryId={id}
@@ -3409,6 +3414,26 @@ export function LegacyMediaAssignmentBoardClient() {
     const activeSuggestionPending = safeSuggestions.find(
       (s) => s.variantKey === activeVariantKey && !isVariantConfirmed(vmByHandle[s.variantKey])
     )
+    const activeOptionalSameSku = (activeSuggestionPending?.borrowedSameSku ?? []).filter((b) => b.optional)
+    const activeVariantMediaIds = new Set(
+      [z.primary, ...z.gallery, activeVariant.primary, ...activeVariant.gallery].filter(Boolean) as string[]
+    )
+    const pendingOptionalSameSku = activeOptionalSameSku.filter((b) => !activeVariantMediaIds.has(b.mediaId))
+    const appendOptionalSameSkuToGallery = (mediaIds: string[]) => {
+      const toAdd = mediaIds.filter((id) => id && !activeVariantMediaIds.has(id) && id !== z.primary && id !== activeVariant.primary)
+      if (!toAdd.length) return
+      updateVariantDecision(
+        h,
+        activeVariantKey,
+        (prev) => ({
+          ...prev,
+          gallery: mergeGalleryPreservingOrder(prev.gallery, toAdd, prev.primary ?? z.primary),
+        }),
+        `append optional same-SKU media (${toAdd.length})`,
+        toAdd[0],
+        { source: "manual", fromZone: "suggestion_optional", targetZone: "gallery" }
+      )
+    }
     const activeIsSuggestionDraft = isSuggestionDraft(activeVariantMeta)
     const variantLaneIds = new Set([...(z.primary ? [z.primary] : []), ...z.gallery])
     const seedRowsPendingAssign = seedMatchRowsForSelected.filter((r) => r.invId && !variantLaneIds.has(r.invId))
@@ -4080,6 +4105,81 @@ export function LegacyMediaAssignmentBoardClient() {
               )
             )}
           </section>
+
+          {pendingOptionalSameSku.length > 0 ? (
+            <section
+              data-optional-same-sku-additions="true"
+              style={{
+                border: "1px dashed #cbd5e1",
+                borderRadius: 10,
+                padding: 12,
+                background: "#f8fafc",
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+                minWidth: 0,
+              }}
+            >
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", justifyContent: "space-between" }}>
+                <strong style={{ fontSize: 12, color: "#475569" }}>Можно добавить из этого SKU</strong>
+                <button
+                  type="button"
+                  data-action-button="optional-same-sku-add-all"
+                  style={miniBtn}
+                  onClick={() => appendOptionalSameSkuToGallery(pendingOptionalSameSku.map((b) => b.mediaId))}
+                >
+                  Добавить все недостающие роли
+                </button>
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "flex-start" }}>
+                {pendingOptionalSameSku.map((b) => {
+                  const invRow = invById.get(b.mediaId)
+                  const role = (b.role as VisualRole) || "unknown"
+                  return (
+                    <div
+                      key={`opt-sku-${b.mediaId}`}
+                      data-optional-same-sku-item="true"
+                      style={{
+                        border: "1px solid #e2e8f0",
+                        borderRadius: 8,
+                        padding: 8,
+                        background: "#fff",
+                        width: 168,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 6,
+                      }}
+                    >
+                      {invRow?.previewable ? (
+                        <SuggestionVariantThumb
+                          mid={b.mediaId}
+                          isPrimary={false}
+                          inv={invRow}
+                          seedRows={seedMatchRowsForSelected}
+                          recovery={recoveryById.get(b.mediaId)}
+                          roleBadge={operatorRoleLabelRu(role)}
+                          borrowedLabel="другой цвет · опционально"
+                        />
+                      ) : (
+                        <code style={{ fontSize: 9, color: "#94a3b8" }}>{(invRow?.filename || b.mediaId).slice(0, 36)}</code>
+                      )}
+                      <span style={{ fontSize: 10, color: "#64748b" }}>
+                        {operatorRoleLabelRu(role)} · {b.fromVariantLabel}
+                      </span>
+                      <button
+                        type="button"
+                        data-action-button="optional-same-sku-add-one"
+                        style={{ ...miniBtn, width: "100%" }}
+                        onClick={() => appendOptionalSameSkuToGallery([b.mediaId])}
+                      >
+                        Добавить в галерею
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            </section>
+          ) : null}
 
           {showCompactSeedBlock ? (
             <div
@@ -4831,17 +4931,28 @@ export function LegacyMediaAssignmentBoardClient() {
                           {optionalBorrowed.length > 0 ? (
                             <details style={{ marginTop: 6 }} data-suggestion-optional-borrow="true">
                               <summary style={{ cursor: "pointer", fontSize: 10, fontWeight: 700, color: "#64748b" }}>
-                                Можно добавить из другого цвета ({optionalBorrowed.length})
+                                Можно добавить из этого SKU ({optionalBorrowed.length})
                               </summary>
                               <ul style={{ margin: "6px 0 0", paddingLeft: 16, fontSize: 10, color: "#94a3b8" }}>
                                 {optionalBorrowed.map((b) => (
                                   <li key={`opt-${b.mediaId}`}>
-                                    {VISUAL_ROLE_BADGE_RU[b.role as VisualRole]} · {b.fromVariantLabel} ·{" "}
+                                    {operatorRoleLabelRu(b.role as VisualRole)} · {b.fromVariantLabel} ·{" "}
                                     <code style={{ fontSize: 9 }}>{(invById.get(b.mediaId)?.filename || b.mediaId).slice(0, 40)}</code>
                                   </li>
                                 ))}
                               </ul>
                             </details>
+                          ) : null}
+                          {[primaryPreviewId, ...galleryPreviewOrdered].filter(Boolean).some((mid) => {
+                            const row = invById.get(mid!)
+                            return row && resolveVisualRoleOverride(row, { productHandle: h, productSku: s.productSkuHint })
+                          }) ? (
+                            <div style={{ marginTop: 6 }} data-suggestion-role-override-source="true">
+                              <strong>Источник роли (Details)</strong>
+                              <div style={{ marginTop: 2, fontSize: 10, color: "#94a3b8" }}>
+                                visual override · {VISUAL_ROLE_OVERRIDE_REASON}
+                              </div>
+                            </div>
                           ) : null}
                           {s.roleCompositionSummary ? (
                             <div style={{ marginTop: 6 }} data-suggestion-role-composition="true">
