@@ -116,21 +116,27 @@ export function variantChipStatus(
   return "confirmed"
 }
 
-/** Export + products[] mirror: explicit active chip, else first color variant with media. */
+/** Export + products[] mirror: active color chip wins; ignore empty __default__ when colors exist. */
 export function resolveActiveVariantKeyForExport(
   handle: string,
   variants: Record<string, VariantRow> | undefined,
   activeVariantByHandle: Record<string, string>
 ): string {
   const h = handle.toLowerCase()
-  const explicit = activeVariantByHandle[h]
-  if (explicit && variants?.[explicit]) return explicit
   const row = variants ?? {}
   const colorKeys = Object.keys(row).filter(isColorVariantKey).sort()
-  if (colorKeys.length) {
-    const withMedia = colorKeys.find((k) => Boolean(row[k]?.primary) || (row[k]?.gallery?.length ?? 0) > 0)
-    return withMedia ?? colorKeys[0]!
+  const firstColorWithMedia = () =>
+    colorKeys.find((k) => Boolean(row[k]?.primary) || (row[k]?.gallery?.length ?? 0) > 0) ?? colorKeys[0]
+
+  const explicit = activeVariantByHandle[h]
+  if (explicit && row[explicit]) {
+    if (isColorVariantKey(explicit)) return explicit
+    if (explicit === DEFAULT_VARIANT_KEY && colorKeys.length > 0) {
+      return firstColorWithMedia() ?? explicit
+    }
+    return explicit
   }
+  if (colorKeys.length) return firstColorWithMedia() ?? colorKeys[0]!
   if (row[DEFAULT_VARIANT_KEY]) return DEFAULT_VARIANT_KEY
   return Object.keys(row)[0] ?? DEFAULT_VARIANT_KEY
 }
