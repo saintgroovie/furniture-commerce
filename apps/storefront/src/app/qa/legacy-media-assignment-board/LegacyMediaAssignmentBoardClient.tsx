@@ -5826,7 +5826,7 @@ export function LegacyMediaAssignmentBoardClient() {
                           {elsewhere ? (
                             <div style={{ fontSize: 11, color: "#b45309", lineHeight: 1.35 }}>Assigned: {elsewhere}.</div>
                           ) : null}
-                          <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                          <div data-media-pool-actions="true">
                             <button
                               type="button"
                               data-action-button="primary"

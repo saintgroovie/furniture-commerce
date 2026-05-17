@@ -52,10 +52,40 @@ main.container.page-section:has(.legacy-media-assignment-board-root) {
   max-width: 100%;
   min-width: 0;
   box-sizing: border-box;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  align-content: start;
+}
+
+@media (max-width: 380px) {
+  .legacy-media-assignment-board-root [data-media-pool-grid="true"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .legacy-media-assignment-board-root [data-media-pool-grid="true"] > * {
   min-width: 0;
+}
+
+.legacy-media-assignment-board-root [data-media-pool-card-wrap="true"] {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.legacy-media-assignment-board-root [data-media-pool-actions="true"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+.legacy-media-assignment-board-root [data-media-card="true"][data-display-mode="pool"] {
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .legacy-media-assignment-board-root [data-media-card="true"] {

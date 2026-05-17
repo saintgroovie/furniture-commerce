@@ -3,7 +3,7 @@
 import { useState } from "react"
 import type { InvItem } from "./legacy-media-board-types"
 
-type CardSize = "compact" | "normal" | "large" | "xlarge" | "primary" | "gallery"
+type CardSize = "compact" | "pool" | "normal" | "large" | "xlarge" | "primary" | "gallery"
 /** full = default QA card; pool = media drawer (image-first, minimal metadata). */
 type CardDisplayMode = "full" | "pool"
 
@@ -39,6 +39,7 @@ type Props = {
 
 const cardPx: Record<CardSize, number> = {
   compact: 88,
+  pool: 72,
   normal: 120,
   large: 160,
   xlarge: 196,
@@ -80,8 +81,9 @@ export function MediaImageCard({
   workspaceMinimal = false,
   children,
 }: Props) {
-  const w = cardPx[size]
+  const w = cardPx[size === "pool" ? "pool" : size]
   const poolMode = displayMode === "pool"
+  const poolCompact = poolMode && size === "pool"
   const minimal = workspaceMinimal || size === "primary" || size === "gallery"
   const [imgBroken, setImgBroken] = useState(false)
   const showImg = useImg && previewUrl && !imgBroken
@@ -94,6 +96,7 @@ export function MediaImageCard({
       data-inventory-id={inventoryId}
       data-media-card="true"
       data-media-id={inventoryId}
+      data-display-mode={displayMode}
       data-product-handle={productHandle || ""}
       data-zone={dataZone || ""}
       draggable={canDrag}
@@ -103,13 +106,13 @@ export function MediaImageCard({
       onClickCapture={onCardClickCapture}
       style={{
         width: minimal ? w + 20 : "100%",
-        maxWidth: minimal ? w + 20 : w + 16,
+        maxWidth: minimal ? w + 20 : poolCompact ? "100%" : w + 16,
         boxSizing: "border-box",
-        borderRadius: 12,
+        borderRadius: poolCompact ? 8 : 12,
         border: isDragging ? "2px solid #2563eb" : "1px solid #e2e8f0",
         background: isDragging ? "#eff6ff" : "#fff",
         boxShadow: isDragging ? "0 4px 14px rgba(37,99,235,0.2)" : "0 1px 2px rgba(15,23,42,0.06)",
-        padding: poolMode ? 6 : size === "xlarge" || size === "large" ? 10 : 8,
+        padding: poolCompact ? 4 : poolMode ? 6 : size === "xlarge" || size === "large" ? 10 : 8,
         cursor: canDrag ? "grab" : "default",
         userSelect: "none",
         opacity: isDragging ? 0.9 : 1,
@@ -249,7 +252,7 @@ export function MediaImageCard({
         </div>
       ) : null}
       {assignedControlsAboveDrag ? children : null}
-      {canDrag && !minimal ? (
+      {canDrag && !minimal && !poolCompact ? (
         <div
           aria-hidden
           title="Drag to assign"
