@@ -111,16 +111,40 @@ main.container.page-section:has(.legacy-media-assignment-board-root) {
 }
 
 /* Operator polish: hierarchy, progress, chips */
-.legacy-media-assignment-board-root [data-product-sticky-header="true"] {
-  position: sticky;
-  top: 0;
-  z-index: 12;
+.legacy-media-assignment-board-root [data-product-compact-summary="true"] {
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 10px;
   padding: 10px 12px;
   margin-bottom: 10px;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+.legacy-media-assignment-board-root [data-active-color-workspace="true"] {
+  min-width: 0;
+}
+
+.legacy-media-assignment-board-root [data-color-variants-row="true"] {
+  margin-bottom: 10px;
+}
+
+.legacy-media-assignment-board-root [data-color-variant-chip="true"][data-status="pending"] {
+  border-color: #93c5fd;
+  background: #f0f9ff;
+  border-style: dashed;
+}
+
+.legacy-media-assignment-board-root [data-primary-panel="true"],
+.legacy-media-assignment-board-root [data-gallery-panel="true"] {
+  min-width: 0;
+}
+
+.legacy-media-assignment-board-root [data-color-issue-checklist="true"] [data-severity="warn"] {
+  list-style: disc;
+  margin-left: 18px;
+}
+
+.legacy-media-assignment-board-root [data-suggestion-card][data-suggestion-compact="true"] {
+  background: #fafbfc;
 }
 
 .legacy-media-assignment-board-root [data-sku-progress="true"] {

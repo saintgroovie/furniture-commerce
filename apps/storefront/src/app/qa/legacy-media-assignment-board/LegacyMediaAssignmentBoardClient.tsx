@@ -62,6 +62,11 @@ import {
   variantChipStatus,
 } from "./legacy-board-operator-polish"
 import {
+  buildColorIssueChecklist,
+  buildUnifiedColorChips,
+  CHIP_STATUS_LABEL_RU,
+} from "./legacy-board-color-workspace"
+import {
   buildDraftVariantFromSuggestion,
   buildVariantMediaFromCandidates,
   isSuggestionDraft,
@@ -142,8 +147,8 @@ function recoveryPreviewUrl(entry: PreviewRecoveryEntry): { url: string | null; 
   return { url: null, useImg: false }
 }
 const DND_JSON = "application/json"
-const DEV_SENTINEL = "Legacy Board operator polish UX"
-const DEV_SENTINEL_BUILD = "2026-05-17T22:30Z"
+const DEV_SENTINEL = "Legacy Board color-variant workspace UX"
+const DEV_SENTINEL_BUILD = "2026-05-17T23:45Z"
 
 async function fetchBoardJson(url: string): Promise<{ ok: true; data: Record<string, unknown> } | { ok: false; status: number; body: Record<string, unknown> }> {
   const res = await fetch(url)
@@ -3411,6 +3416,48 @@ export function LegacyMediaAssignmentBoardClient() {
     const showCompactSeedBlock =
       selectedProduct.image_urls.length > 0 && (seedRowsPendingAssign.length > 0 || seedRowsOnlyNoInv.length > 0)
 
+    const unifiedChips = buildUnifiedColorChips({
+      variants: vByHandle,
+      variantMeta: vmByHandle,
+      safeSuggestions,
+      resolveLabel: (vk, vv, meta) =>
+        vv
+          ? withResolvedVariantLabel(vk, vv as VariantDecisionState, {
+              legacyColorName: meta?.legacyColorName,
+              productSkuHint,
+            }).label
+          : vk,
+      activeVariantKey,
+    })
+
+    const colorIssues = buildColorIssueChecklist({
+      labelStatus: activeLabelStatus,
+      primary: z.primary,
+      galleryCount: z.gallery.length,
+      primaryNeedsReview: activeVariant.primaryNeedsReview,
+      isSuggestionDraft: activeIsSuggestionDraft,
+      hasPendingSuggestion: Boolean(activeSuggestionPending),
+      duplicateHiddenCount: activeSuggestionPending?.duplicateHiddenCount,
+      productReadiness: skuProgress.readiness,
+    })
+
+    const activateColorVariant = (vk: string) => {
+      if (vk === activeVariantKey) return
+      const pendingSug = safeSuggestions.find((s) => s.variantKey === vk)
+      const existing = vByHandle[vk]
+      if (pendingSug && !existing && !isVariantConfirmed(vmByHandle[vk])) {
+        openSuggestionForEdit(h, pendingSug)
+        return
+      }
+      if (existing) {
+        setBoard((prev) => ({
+          ...prev,
+          zones: { ...prev.zones, [h]: toZoneState(existing) },
+        }))
+      }
+      setActiveVariantByHandle((prev) => ({ ...prev, [h]: vk }))
+    }
+
     const productIdx = productsFiltered.findIndex((p) => p.handle.toLowerCase() === h)
     const productOrdinal = productIdx >= 0 ? productIdx + 1 : 0
     const productTotal = productsFiltered.length
@@ -3572,7 +3619,7 @@ export function LegacyMediaAssignmentBoardClient() {
           </div>
         ) : null}
 
-        <header data-product-sticky-header="true" style={{ display: "flex", flexDirection: "column", gap: 8, minWidth: 0 }}>
+        <header data-product-compact-summary="true" style={{ display: "flex", flexDirection: "column", gap: 8, minWidth: 0 }}>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "flex-start", justifyContent: "space-between" }}>
             <div style={{ minWidth: 0, flex: "1 1 200px" }}>
               <h2
@@ -3634,110 +3681,49 @@ export function LegacyMediaAssignmentBoardClient() {
           </div>
         </header>
 
-        <div data-sku-progress="true">
-          <span>
-            Цвета: <strong>{skuProgress.totalColors}</strong> · подтверждено <strong>{skuProgress.confirmedColors}</strong> · проверка{" "}
-            <strong>{skuProgress.needsReviewColors + leftSuggestionCount}</strong>
-          </span>
-          <span>
-            Без главного: <strong>{skuProgress.primaryMissing}</strong>
-          </span>
-          <span>
-            Пустая галерея: <strong>{skuProgress.galleryEmpty}</strong>
-          </span>
-          {skuProgress.hiddenDuplicates + totalDuplicatesHidden > 0 ? (
-            <span data-hidden-dupes-hint="true">{OPERATOR_LABELS.hiddenSimilar(skuProgress.hiddenDuplicates + totalDuplicatesHidden)}</span>
-          ) : null}
-          {confirmedSuggestionCount > 0 ? (
-            <span style={{ color: "#64748b" }}>Подтверждено цветов: {confirmedSuggestionCount}</span>
-          ) : null}
-        </div>
-
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", rowGap: 6 }}>
-          {Object.entries(vByHandle).map(([vk, vv]) => {
-            const chipResolved = withResolvedVariantLabel(vk, vv, {
-              legacyColorName: vmByHandle[vk]?.legacyColorName,
-              productSkuHint,
-            })
-            const chipLabel = chipResolved.label
-            const chipStatus = variantChipStatus(vk, vv, vmByHandle[vk], vk === activeVariantKey)
-            return (
-              <button
-                key={vk}
-                type="button"
-                data-variant-chip="true"
-                data-status={chipStatus}
-                onClick={() => setActiveVariantByHandle((prev) => ({ ...prev, [h]: vk }))}
-                title={chipLabel}
-              >
-                {chipLabel}
-              </button>
-            )
-          })}
-        </div>
-
-        {activeIsSuggestionDraft ? (
-          <div
-            data-suggestion-draft-banner="true"
-            style={{
-              padding: "8px 12px",
-              borderRadius: 8,
-              background: "#eff6ff",
-              border: "1px solid #bfdbfe",
-              fontSize: 12,
-              fontWeight: 700,
-              color: "#1e40af",
-            }}
-          >
-            Черновик предложенного цвета: {activeVariantDisplay}
+        <details data-sku-progress-details="true" style={{ border: "1px solid #e2e8f0", borderRadius: 8, padding: "6px 10px", background: "#f8fafc" }}>
+          <summary style={{ cursor: "pointer", fontSize: 11, fontWeight: 700, color: "#64748b" }}>
+            Прогресс по SKU · {skuProgress.confirmedColors}/{skuProgress.totalColors} цветов
+          </summary>
+          <div data-sku-progress="true" style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: "8px 14px", fontSize: 12 }}>
+            <span>
+              Цвета: <strong>{skuProgress.totalColors}</strong> · подтверждено <strong>{skuProgress.confirmedColors}</strong> · проверка{" "}
+              <strong>{skuProgress.needsReviewColors + leftSuggestionCount}</strong>
+            </span>
+            <span>
+              Без главного: <strong>{skuProgress.primaryMissing}</strong>
+            </span>
+            <span>
+              Пустая галерея: <strong>{skuProgress.galleryEmpty}</strong>
+            </span>
+            {skuProgress.hiddenDuplicates + totalDuplicatesHidden > 0 ? (
+              <span data-hidden-dupes-hint="true">{OPERATOR_LABELS.hiddenSimilar(skuProgress.hiddenDuplicates + totalDuplicatesHidden)}</span>
+            ) : null}
+            {confirmedSuggestionCount > 0 ? (
+              <span style={{ color: "#64748b" }}>Подтверждено цветов: {confirmedSuggestionCount}</span>
+            ) : null}
           </div>
-        ) : null}
-        <div data-active-color-banner="true">
-          <span data-active-color-chip="true">Активный цвет: {activeVariantDisplay}</span>
-          <button
-            type="button"
-            data-action-button="variant-rename-active"
-            style={{ ...miniBtn, padding: "4px 10px" }}
-            onClick={() => {
-              const next = promptVariantRename(activeVariantDisplay)
-              if (!next) return
-              setVariantsByHandle((prev) => ({
-                ...prev,
-                [h]: {
-                  ...(prev[h] ?? {}),
-                  [activeVariantKey]: {
-                    ...(prev[h]?.[activeVariantKey] ?? activeVariant),
-                    label: next,
-                    labelEditedByUser: true,
-                    labelStatus: "user_edited",
-                    sourceLabel: activeVariant.sourceLabel ?? sourceLabelForVariantKey(activeVariantKey),
-                  },
-                },
-              }))
-            }}
-          >
-            {OPERATOR_LABELS.rename}
-          </button>
-          {activeSuggestionPending ? (
+        </details>
+
+        <div data-color-variants-row="true" style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", rowGap: 6 }}>
+          {unifiedChips.map((chip) => (
             <button
+              key={chip.variantKey}
               type="button"
-              data-action-button="confirm-active-color"
-              style={btnPrimaryMini}
-              onClick={() => confirmAllForSuggestions([activeSuggestionPending])}
+              data-color-variant-chip="true"
+              data-variant-chip="true"
+              data-status={chip.chipStatus}
+              data-variant-key={chip.variantKey}
+              onClick={() => activateColorVariant(chip.variantKey)}
+              title={`${chip.label} · ${CHIP_STATUS_LABEL_RU[chip.chipStatus] ?? chip.chipStatus}`}
             >
-              {OPERATOR_LABELS.confirmColor}
+              {chip.label}
+              {chip.labelEditedByUser ? <span data-chip-edited-indicator="true"> ✎</span> : null}
+              <span data-chip-status-label="true" style={{ fontSize: 10, opacity: 0.75, marginLeft: 4 }}>
+                {CHIP_STATUS_LABEL_RU[chip.chipStatus] ?? chip.chipStatus}
+              </span>
             </button>
-          ) : null}
-          {activeVariantKey !== DEFAULT_VARIANT_KEY ? (
-            <button
-              type="button"
-              data-action-button="variant-remove-active"
-              style={{ ...miniBtn, padding: "4px 10px", color: "#b91c1c", borderColor: "#fecaca" }}
-              onClick={() => removeVariantFromProduct(activeVariantKey)}
-            >
-              Удалить цвет
-            </button>
-          ) : null}
+          ))}
         </div>
 
         <details style={{ border: "1px solid #e2e8f0", borderRadius: 12, padding: 12, background: "#fff", minWidth: 0 }}>
@@ -3867,56 +3853,100 @@ export function LegacyMediaAssignmentBoardClient() {
           </div>
         </details>
 
-        {/* Current main media — actionable lanes */}
         <section
+          data-active-color-workspace="true"
           data-review-step="1"
           data-selected-product-main-media="true"
           data-product-handle={h}
           data-active-variant-key={activeVariantKey}
           style={{
-            border: "1px solid #e2e8f0",
+            border: "2px solid #2563eb",
             borderRadius: 12,
-            padding: 12,
-            background: "#fafbfc",
+            padding: 14,
+            background: "#f8fafc",
             display: "flex",
             flexDirection: "column",
             gap: 12,
             minWidth: 0,
+            boxShadow: "0 4px 16px rgba(37,99,235,0.08)",
           }}
         >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 11, fontWeight: 800, color: "#0f172a" }}>Рабочая область · {activeVariantDisplay}</span>
-            <span style={{ fontSize: 10, color: "#94a3b8", display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
-              {labelNeedsReviewStyle(activeLabelStatus) ? (
-                <span style={{ ...pillSlate, background: "#fef3c7", color: "#92400e" }}>Уточните название</span>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ minWidth: 0 }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: "#0f172a" }}>
+                Рабочая область · {activeVariantDisplay}
+              </h3>
+              <span data-active-color-chip="true" style={{ fontSize: 11, color: "#64748b" }}>
+                {activeIsSuggestionDraft ? "Черновик предложенного цвета" : CHIP_STATUS_LABEL_RU[variantChipStatus(activeVariantKey, activeVariant, activeVariantMeta, true)] ?? "цвет"}
+              </span>
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              <button
+                type="button"
+                data-action-button="variant-rename-active"
+                style={{ ...miniBtn, padding: "4px 10px" }}
+                onClick={() => {
+                  const next = promptVariantRename(activeVariantDisplay)
+                  if (!next) return
+                  setVariantsByHandle((prev) => ({
+                    ...prev,
+                    [h]: {
+                      ...(prev[h] ?? {}),
+                      [activeVariantKey]: {
+                        ...(prev[h]?.[activeVariantKey] ?? activeVariant),
+                        label: next,
+                        labelEditedByUser: true,
+                        labelStatus: "user_edited",
+                        sourceLabel: activeVariant.sourceLabel ?? sourceLabelForVariantKey(activeVariantKey),
+                      },
+                    },
+                  }))
+                }}
+              >
+                {OPERATOR_LABELS.rename}
+              </button>
+              {activeSuggestionPending ? (
+                <button
+                  type="button"
+                  data-action-button="confirm-active-color"
+                  style={btnPrimaryMini}
+                  onClick={() => confirmAllForSuggestions([activeSuggestionPending])}
+                >
+                  {OPERATOR_LABELS.confirmColor}
+                </button>
               ) : null}
-              {activeVariant.primaryAutoPicked ? (
-                <span style={{ ...pillSlate, background: "#dbeafe", color: "#1e40af" }}>Главное выбрано автоматически</span>
+              {activeVariantKey !== DEFAULT_VARIANT_KEY ? (
+                <button
+                  type="button"
+                  data-action-button="variant-remove-active"
+                  style={{ ...miniBtn, padding: "4px 10px", color: "#b91c1c", borderColor: "#fecaca" }}
+                  onClick={() => removeVariantFromProduct(activeVariantKey)}
+                >
+                  Удалить цвет
+                </button>
               ) : null}
-              {z.primary && invById.get(z.primary)
-                ? (() => {
-                    const pr = classifyVisualRole(invById.get(z.primary)!)
-                    const pill = primaryCandidateBadgeRu(pr, Boolean(activeVariant.primaryNeedsReview))
-                    return pill ? (
-                      <span
-                        style={{
-                          ...pillSlate,
-                          background: activeVariant.primaryNeedsReview ? "#fee2e2" : "#dcfce7",
-                          color: activeVariant.primaryNeedsReview ? "#b91c1c" : "#166534",
-                        }}
-                      >
-                        {pill}
-                      </span>
-                    ) : null
-                  })()
-                : null}
-              {activeVariant.primaryNeedsReview && !invById.get(z.primary || "") ? (
-                <span style={{ ...pillSlate, background: "#fef3c7", color: "#92400e" }}>Проверить главное фото</span>
-              ) : null}
-            </span>
+            </div>
           </div>
 
+          <ul data-color-issue-checklist="true" style={{ margin: 0, padding: "8px 12px", listStyle: "none", background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, display: "flex", flexDirection: "column", gap: 4 }}>
+            {colorIssues.map((issue) => (
+              <li
+                key={issue.id}
+                data-issue-id={issue.id}
+                data-severity={issue.severity}
+                style={{
+                  fontSize: 12,
+                  color: issue.severity === "warn" ? "#b45309" : "#475569",
+                  fontWeight: issue.severity === "warn" ? 600 : 500,
+                }}
+              >
+                {issue.label}
+              </li>
+            ))}
+          </ul>
+
           <section
+            data-primary-panel="true"
             data-variant-primary-slot="true"
             data-workspace-primary-slot="true"
             style={{
@@ -3928,7 +3958,7 @@ export function LegacyMediaAssignmentBoardClient() {
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, marginBottom: 10 }}>
-              <h3 style={{ margin: 0, fontSize: 14, fontWeight: 800, color: "#0f172a", letterSpacing: "0.02em" }}>Главное фото этого цвета</h3>
+              <h3 style={{ margin: 0, fontSize: 14, fontWeight: 800, color: "#0f172a", letterSpacing: "0.02em" }}>Главное фото</h3>
             </div>
             {zoneBox(
               "",
@@ -3968,6 +3998,7 @@ export function LegacyMediaAssignmentBoardClient() {
           </section>
 
           <section
+            data-gallery-panel="true"
             data-variant-gallery-strip="true"
             style={{
               border: "1px solid #e2e8f0",
@@ -3978,7 +4009,7 @@ export function LegacyMediaAssignmentBoardClient() {
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
-              <h3 style={{ margin: 0, fontSize: 13, fontWeight: 800, color: "#0f172a" }}>Галерея этого цвета</h3>
+              <h3 style={{ margin: 0, fontSize: 13, fontWeight: 800, color: "#0f172a" }}>Галерея цвета</h3>
               <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
                 <span style={{ fontSize: 11, color: "#64748b" }}>{z.gallery.length} фото</span>
                 <button
@@ -4148,7 +4179,6 @@ export function LegacyMediaAssignmentBoardClient() {
           {/* Reference + Rejected — collapsible secondary lanes, side-by-side at full width */}
           <div style={{ display: "grid", gridTemplateColumns: fullWidth ? "repeat(2, minmax(0, 1fr))" : "1fr", gap: 12 }}>
             <details
-              open={z.reference_only.length > 0}
               style={{ background: "#fff", borderRadius: 10, border: "1px solid #e2e8f0", padding: "8px 10px", minWidth: 0 }}
             >
               <summary
@@ -4176,7 +4206,6 @@ export function LegacyMediaAssignmentBoardClient() {
               </div>
             </details>
             <details
-              open={z.lane_rejected.length > 0}
               style={{ background: "#fff", borderRadius: 10, border: "1px solid #e2e8f0", padding: "8px 10px", minWidth: 0 }}
             >
               <summary
@@ -4298,16 +4327,19 @@ export function LegacyMediaAssignmentBoardClient() {
           )}
         </details>
 
-        {/* SECTION 2 — Suggested color variants — compact review flow */}
-        <div
+        <details
           data-review-step="2"
           data-suggested-variants-panel="true"
           data-product-handle={h}
+          open={leftSuggestionCount > 0}
           style={{ border: "1px solid #e2e8f0", borderRadius: 12, padding: 12, background: "#fff", minWidth: 0 }}
         >
+          <summary style={{ cursor: "pointer", fontSize: 12, fontWeight: 800, color: "#334155", marginBottom: leftSuggestionCount > 0 ? 8 : 0 }}>
+            Другие предложенные цвета · осталось {leftSuggestionCount}
+          </summary>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap", marginBottom: 8, rowGap: 6 }}>
             <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
-              <span style={{ fontSize: 10, fontWeight: 800, color: "#0f172a", textTransform: "uppercase", letterSpacing: "0.06em" }}>2 · Предложенные цвета</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: "#64748b" }}>
               {totalSuggestions > 0 ? (
                 <span
                   data-suggestions-counter="true"
@@ -4325,6 +4357,7 @@ export function LegacyMediaAssignmentBoardClient() {
               ) : (
                 <span style={{ fontSize: 11, color: "#94a3b8" }}>no suggestions</span>
               )}
+              </span>
               <span
                 data-product-review-status={allSuggestionsReviewed ? "ready" : "needs-review"}
                 style={{
@@ -4521,26 +4554,25 @@ export function LegacyMediaAssignmentBoardClient() {
                     })
                   : null
                 const isActiveDraftCard = activeVariantKey === s.variantKey && isDraftCard
+                if (s.variantKey === activeVariantKey) return null
 
                 return (
                   <article
                     key={s.variantKey}
                     data-suggestion-card="true"
+                    data-suggestion-compact="true"
                     data-variant-key={s.variantKey}
                     data-draft={isDraftCard ? "true" : "false"}
-                    data-active-draft={isActiveDraftCard ? "true" : "false"}
                     style={{
-                      border: isActiveDraftCard ? "2px solid #2563eb" : "1px solid #e2e8f0",
+                      border: "1px solid #e2e8f0",
                       borderRadius: 10,
-                      background: isActiveDraftCard ? "#f8fafc" : "#fff",
+                      background: "#fff",
                       padding: 10,
                       display: "flex",
                       flexDirection: "column",
                       gap: 8,
                       minWidth: 0,
-                      cursor: "pointer",
                     }}
-                    onClick={() => openSuggestionForEdit(selectedHandle!, s)}
                   >
                     <header style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", minWidth: 0 }}>
                         <strong
@@ -4572,74 +4604,25 @@ export function LegacyMediaAssignmentBoardClient() {
                         ) : null}
                     </header>
 
-                    {/* BODY: Primary + Gallery preview for this color variant */}
-                    {galleryPreviewOrdered.length > 0 ? (
-                      <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
-                        {primaryRoleHeadline ? (
-                          <div
-                            data-suggestion-role-strip="true"
-                            style={{ fontSize: 10, color: "#475569", fontWeight: 600 }}
-                          >
-                            Главная роль: {primaryRoleHeadline}
-                          </div>
-                        ) : null}
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
-                          <span style={{ fontSize: 10, fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                            Primary photo · Gallery
-                          </span>
-                          {!cardVariant && previewMedia.primaryAutoPicked ? (
-                            <span style={{ ...pillSlate, background: "#dbeafe", color: "#1e40af" }}>Primary выбран автоматически</span>
-                          ) : null}
-                          {(cardVariant?.primaryNeedsReview || previewMedia.primaryNeedsReview) && !cardVariant?.primaryManualOverride ? (
-                            <span style={{ ...pillSlate, background: "#fee2e2", color: "#b91c1c" }}>Проверь primary</span>
-                          ) : null}
-                        </div>
-                        <div
-                          data-suggestion-thumbs="true"
-                          style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-start", minWidth: 0 }}
-                        >
-                        {galleryPreviewOrdered.slice(0, 6).map((mid) => {
-                          const invForBadge = invById.get(mid)
-                          const borrowedEntry = borrowedById.get(mid)
-                          const roleBadge = roleBadgeForMedia(mid, rolesByIdMap, borrowedById, {
-                            fromOverride: Boolean(
-                              invForBadge && classifyVisualRoleDetailed(invForBadge, { productHandle: h, productSku: s.productSkuHint }).fromOverride
-                            ),
-                          })
-                          const borrowedLabel = borrowedEntry
-                            ? borrowedEntry.optional
-                              ? `другой цвет · опционально (${borrowedEntry.fromVariantLabel})`
-                              : `другой цвет · опционально`
-                            : null
-                          return (
-                          <SuggestionVariantThumb
-                            key={mid}
-                            mid={mid}
-                            isPrimary={mid === primaryPreviewId}
-                            inv={invById.get(mid)}
-                            seedRows={seedMatchRowsForSelected}
-                            recovery={recoveryById.get(mid)}
-                            roleBadge={mid === primaryPreviewId ? null : roleBadge}
-                            borrowedLabel={borrowedLabel}
-                          />
-                          )
-                        })}
-                        {galleryPreviewOrdered.length > 6 ? (
-                          <div style={{ fontSize: 10, color: "#64748b", alignSelf: "center" }}>
-                            +{galleryPreviewOrdered.length - 6}
-                          </div>
-                        ) : null}
-                      </div>
-                      </div>
-                    ) : (
-                      <div style={{ fontSize: 11, color: "#94a3b8" }}>No candidate images yet for this variant.</div>
-                    )}
-
+                    <p style={{ margin: 0, fontSize: 11, color: "#64748b", lineHeight: 1.45 }} data-suggestion-compact-summary="true">
+                      {galleryPreviewOrdered.length > 0
+                        ? `${galleryPreviewOrdered.length} фото в предложении — откройте в рабочей области через чип или «Выбрать».`
+                        : "Нет кандидатов — назначьте из media pool."}
+                      {primaryRoleHeadline ? ` Главная роль: ${primaryRoleHeadline}.` : ""}
+                    </p>
                     {/* FOOTER: Confirm all (primary) + secondary actions + collapsed Details */}
                     <footer
                       style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", rowGap: 6 }}
                       onClick={(e) => e.stopPropagation()}
                     >
+                      <button
+                        type="button"
+                        data-action-button="suggestion-select-color"
+                        style={btnPrimaryMini}
+                        onClick={() => activateColorVariant(s.variantKey)}
+                      >
+                        Выбрать
+                      </button>
                       <button
                         type="button"
                         data-action-button="suggestion-edit"
@@ -5081,26 +5064,24 @@ export function LegacyMediaAssignmentBoardClient() {
               Showing first 6 of {suggestions.length}. Confirm or skip these, then more will surface on the next pass.
             </p>
           ) : null}
-        </div>
+        </details>
 
-          {confirmedVariantCount > 0 ? (
-            <div
-              data-confirmed-variants-summary="true"
-              style={{
-                marginTop: 10,
-                padding: "10px 12px",
-                borderRadius: 10,
-                background: "#f0fdf4",
-                border: "1px solid #bbf7d0",
-                display: "flex",
-                flexDirection: "column",
-                gap: 8,
-                minWidth: 0,
-              }}
-            >
-              <span style={{ fontSize: 10, fontWeight: 800, color: "#166534", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                Подтверждённые цвета · {confirmedVariantCount}
-              </span>
+        {confirmedVariantCount > 0 ? (
+          <details
+            data-confirmed-variants-summary="true"
+            style={{
+              marginTop: 10,
+              padding: "10px 12px",
+              borderRadius: 10,
+              background: "#f0fdf4",
+              border: "1px solid #bbf7d0",
+              minWidth: 0,
+            }}
+          >
+            <summary style={{ cursor: "pointer", fontSize: 11, fontWeight: 800, color: "#166534" }}>
+              Подтверждённые цвета · {confirmedVariantCount} (краткий обзор)
+            </summary>
+            <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 8 }}>
               <div style={{ display: "grid", gap: 8 }}>
                 {Object.entries(vByHandle)
                   .filter(([vk, vv]) => vk !== DEFAULT_VARIANT_KEY || (vv.primary ? 1 : 0) + vv.gallery.length > 0)
@@ -5233,16 +5214,17 @@ export function LegacyMediaAssignmentBoardClient() {
                   })}
               </div>
             </div>
-          ) : null}
+          </details>
+        ) : null}
 
-                {reviewSuggestions.length > 0 ? (
-          <div
+        {reviewSuggestions.length > 0 ? (
+          <details
             data-needs-identity-review-panel="true"
             style={{ border: "1px solid #fde68a", borderRadius: 12, padding: 12, background: "#fffbeb", minWidth: 0 }}
           >
-            <span style={{ fontSize: 10, fontWeight: 800, color: "#92400e", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-              Needs identity review
-            </span>
+            <summary style={{ cursor: "pointer", fontSize: 11, fontWeight: 800, color: "#92400e" }}>
+              Проверка принадлежности (identity) · {reviewSuggestions.length}
+            </summary>
             <p style={{ margin: "6px 0 10px", fontSize: 11, color: "#78350f", lineHeight: 1.45 }}>
               Same color token but another SKU/handle may own these files. Not included in <strong>Confirm all</strong> — inspect in Details, then assign manually from the pool.
             </p>
@@ -5284,26 +5266,26 @@ export function LegacyMediaAssignmentBoardClient() {
                 </article>
               ))}
             </div>
-          </div>
+          </details>
         ) : null}
 
-        <div
+        <details
           data-review-step="3"
           data-export-status-panel="true"
           style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 12,
-            alignItems: "center",
-            padding: "10px 14px",
             borderRadius: 10,
             border: "1px solid #e2e8f0",
             background: "#f8fafc",
+            padding: "8px 12px",
             fontSize: 12,
             color: "#475569",
           }}
         >
-          <span style={{ fontSize: 10, fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em" }}>3 · Confirmed / export</span>
+          <summary style={{ cursor: "pointer", fontSize: 11, fontWeight: 700, color: "#64748b" }}>
+            Статус экспорта · {allSuggestionsReviewed ? "готово" : "нужна проверка"}
+          </summary>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", marginTop: 8 }}>
+          <span style={{ fontSize: 10, fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em" }}>Экспорт</span>
           <span>
             Variants <strong>{confirmedVariantCount}</strong>
           </span>
@@ -5325,7 +5307,8 @@ export function LegacyMediaAssignmentBoardClient() {
           >
             {allSuggestionsReviewed ? "Export ready" : "Needs review"}
           </span>
-        </div>
+          </div>
+        </details>
 
         {/* SECTION 5 — Full seed URL list (reference only; editable matched tiles live in Current main media) */}
         {selectedProduct.image_urls.length > 0 ? (
@@ -5460,18 +5443,22 @@ export function LegacyMediaAssignmentBoardClient() {
               </button>
             </div>
           </div>
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 10,
-              alignItems: "center",
-              fontSize: 11,
-              color: "#475569",
-              rowGap: 4,
-            }}
-          >
-            <span style={{ fontSize: 10, fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em" }}>Stats</span>
+          <details style={{ width: "100%" }}>
+            <summary style={{ cursor: "pointer", fontSize: 10, fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              Stats · reviewed {toolbarCounts.productsReviewed} · unassigned {toolbarCounts.unassigned}
+            </summary>
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 10,
+                alignItems: "center",
+                fontSize: 11,
+                color: "#475569",
+                rowGap: 4,
+                marginTop: 6,
+              }}
+            >
             <span>reviewed <strong>{toolbarCounts.productsReviewed}</strong></span>
             <span style={{ color: "#cbd5e1" }}>·</span>
             <span>with assignments <strong>{toolbarCounts.productsWithAssigned}</strong></span>
@@ -5482,6 +5469,9 @@ export function LegacyMediaAssignmentBoardClient() {
               total {toolbarCounts.total} · previewable {toolbarCounts.previewable} · recovered QA previews {recoveryById.size} · unpreviewable{" "}
               {invSummary?.unpreviewable ?? 0} · ambiguous {toolbarCounts.ambiguous} · rejected {toolbarCounts.rejected}
             </span>
+            </div>
+          </details>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", fontSize: 11, color: "#475569", rowGap: 4, width: "100%" }}>
             {exportFeedback === "copy" ? (
               <span style={successHint} role="status">Copied.</span>
             ) : exportFeedback === "download" ? (
