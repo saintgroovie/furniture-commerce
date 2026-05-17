@@ -33,6 +33,7 @@ import {
 } from "./legacy-color-variant-labels"
 import { dedupeAndSortVariantMedia, type InvItemDedupeFields } from "./legacy-media-dedupe"
 import {
+  applyRoleRepresentativeSelection,
   applySameSkuRoleBorrowing,
   roleBadgeForMedia,
   VISUAL_ROLE_STRIP_LABEL_RU,
@@ -353,18 +354,21 @@ function buildVariantMediaFromCandidates(
 
 function applyRecommendedVisualOrderToVariant(
   variant: VariantDecisionState,
-  invById: Map<string, InvItem>
+  invById: Map<string, InvItem>,
+  candById: Map<string, CandidateEntry>
 ): VariantDecisionState {
   const ids = [...(variant.primary ? [variant.primary] : []), ...variant.gallery.filter((id) => id !== variant.primary)]
   if (ids.length === 0) return variant
-  const pick = pickPrimaryAndGalleryByVisualRole(ids, invById)
+  const invDedupe = new Map<string, InvItemDedupeFields>()
+  for (const [id, row] of Array.from(invById.entries())) invDedupe.set(id, row)
+  const roleBuild = applyRoleRepresentativeSelection(ids, invDedupe, candById)
   return withRecommendedGalleryOrder({
     ...variant,
-    primary: pick.primaryId,
-    gallery: pick.galleryIds,
+    primary: roleBuild.primaryId,
+    gallery: roleBuild.galleryIds,
     primaryAutoPicked: false,
     primaryManualOverride: false,
-    primaryNeedsReview: pick.needsReview,
+    primaryNeedsReview: roleBuild.primaryNeedsReview,
   })
 }
 
@@ -3571,7 +3575,7 @@ export function LegacyMediaAssignmentBoardClient() {
                     updateVariantDecision(
                       h,
                       activeVariantKey,
-                      (prev) => applyRecommendedVisualOrderToVariant(prev, invById),
+                      (prev) => applyRecommendedVisualOrderToVariant(prev, invById, candById),
                       "apply recommended visual role order",
                       z.primary || z.gallery[0] || "",
                       { source: "manual", fromZone: "variant_workspace", targetZone: "gallery_reorder" }

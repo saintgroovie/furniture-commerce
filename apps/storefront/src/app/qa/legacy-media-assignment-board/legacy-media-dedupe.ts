@@ -87,6 +87,7 @@ export function isWhiteBgSourceHint(inv: InvItemDedupeFields): boolean {
 type ViewClass = "front_closed" | "front" | "open" | "side" | "detail" | "gallery" | "lifestyle" | "unknown"
 
 function classifyPhotoView(hay: string): ViewClass {
+  if (/[-_]i(?:3|[4-9])(?:\.|[-_]|$)/i.test(hay)) return "open"
   if (/closed|закрыт/.test(hay) && /front|frontal|фасад|фронт/.test(hay)) return "front_closed"
   if (/front|frontal|фасад|фронт|hero|main/.test(hay)) return "front"
   if (/open|opened|открыт|interior|inside|внутр/.test(hay)) return "open"

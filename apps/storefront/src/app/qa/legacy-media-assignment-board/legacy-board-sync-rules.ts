@@ -273,18 +273,28 @@ export function buildSuggestedVariantsForProductSync(input: {
     })
   }
 
-  const gallerySlices = slices.map((s) => ({
-    variantKey: s.variantKey,
-    label: s.label,
-    colorNameRaw: s.variantKey.replace(/^color_/, "").replace(/__review$/, ""),
-    identityTier: s.identityTier,
-    primaryCandidateId: s.deduped.primaryCandidateId,
-    galleryCandidateIds: s.deduped.galleryCandidateIds,
-    rolesById: new Map<string, VisualRole>(
-      Object.entries(s.deduped.rolesById ?? {}).map(([id, role]) => [id, role as VisualRole])
-    ),
-    roleStrip: (s.deduped.roleStrip ?? []) as VisualRole[],
-  }))
+  const gallerySlices = slices.map((s) => {
+    const poolIds = Array.from(
+      new Set([
+        ...s.deduped.visibleIds,
+        ...s.deduped.hiddenDuplicates.map((d) => d.mediaId),
+        ...(s.identityTier === "this_sku" ? s.v.thisSkuIds : s.v.reviewIds),
+      ])
+    )
+    return {
+      variantKey: s.variantKey,
+      label: s.label,
+      colorNameRaw: s.variantKey.replace(/^color_/, "").replace(/__review$/, ""),
+      identityTier: s.identityTier,
+      primaryCandidateId: s.deduped.primaryCandidateId,
+      galleryCandidateIds: s.deduped.galleryCandidateIds,
+      rolesById: new Map<string, VisualRole>(
+        Object.entries(s.deduped.rolesById ?? {}).map(([id, role]) => [id, role as VisualRole])
+      ),
+      roleStrip: (s.deduped.roleStrip ?? []) as VisualRole[],
+      mediaPoolIds: poolIds,
+    }
+  })
 
   const out: SuggestedVariant[] = []
   for (const s of slices) {
