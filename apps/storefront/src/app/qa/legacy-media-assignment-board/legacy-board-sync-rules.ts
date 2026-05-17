@@ -337,6 +337,7 @@ export function buildSuggestedVariantsForProductSync(input: {
       rolesByMediaId: Object.fromEntries(rolesById),
       borrowedSameSku,
       primaryNeedsReview: s.deduped.primaryNeedsReview,
+      roleCompositionSummary: s.deduped.roleCompositionSummary,
     })
   }
   return out

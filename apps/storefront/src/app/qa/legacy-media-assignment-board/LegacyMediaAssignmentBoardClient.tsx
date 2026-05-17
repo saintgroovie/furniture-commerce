@@ -37,6 +37,7 @@ import {
   applySameSkuRoleBorrowing,
   roleBadgeForMedia,
   VISUAL_ROLE_STRIP_LABEL_RU,
+  groupHiddenDuplicatesByRole,
   type BorrowedSameSkuEntry,
 } from "./legacy-media-variant-gallery-build"
 import {
@@ -87,8 +88,8 @@ const UNKNOWN_COLLECTION = "__unknown__"
 const API_BASE = "/qa/legacy-media-assignment-board/api"
 const PREVIEW_ROUTE = "/qa/legacy-media-assignment-board/preview"
 const DND_JSON = "application/json"
-const DEV_SENTINEL = "Legacy Board suggestion guard + visible dedupe fix"
-const DEV_SENTINEL_BUILD = "2026-05-17T12:30Z"
+const DEV_SENTINEL = "Legacy Board role-based gallery composition"
+const DEV_SENTINEL_BUILD = "2026-05-17T18:00Z"
 
 async function fetchBoardJson(url: string): Promise<{ ok: true; data: Record<string, unknown> } | { ok: false; status: number; body: Record<string, unknown> }> {
   const res = await fetch(url)
@@ -4037,6 +4038,21 @@ export function LegacyMediaAssignmentBoardClient() {
                 const roleStripLabels = (s.roleStrip ?? [])
                   .map((role) => VISUAL_ROLE_STRIP_LABEL_RU[role as VisualRole])
                   .filter((l) => l && l !== "?")
+                const hiddenRoleGroups = groupHiddenDuplicatesByRole(
+                  (s.hiddenDuplicateIds ?? []).map((mediaId) => ({
+                    mediaId,
+                    reason: "near_duplicate" as const,
+                    canonicalMediaId:
+                      s.duplicateGroups.find((g) => g.memberIds.includes(mediaId))?.canonicalMediaId ?? "",
+                    matchKey: s.duplicateGroups.find((g) => g.memberIds.includes(mediaId))?.matchKey ?? "",
+                    filename: invById.get(mediaId)?.filename,
+                    sourcePath: invById.get(mediaId)?.source_path ?? null,
+                  })),
+                  new Map(
+                    Array.from(invById.entries()).map(([id, row]) => [id, row as InvItemDedupeFields])
+                  ),
+                  rolesByIdMap
+                )
                 const previewMedia = confirmedVariant
                   ? buildVariantMediaFromCandidates(
                       [primaryPreviewId, ...gallerySource].filter(Boolean) as string[],
@@ -4375,9 +4391,29 @@ export function LegacyMediaAssignmentBoardClient() {
                               </ul>
                             </div>
                           ) : null}
+                          {s.roleCompositionSummary ? (
+                            <div style={{ marginTop: 6 }} data-suggestion-role-composition="true">
+                              <strong>Состав по ролям</strong>
+                              <div style={{ marginTop: 2, fontSize: 10, color: "#64748b" }}>{s.roleCompositionSummary}</div>
+                            </div>
+                          ) : null}
                           {s.duplicateHiddenCount > 0 ? (
                             <div style={{ marginTop: 6 }} data-suggestion-hidden-duplicates="true">
                               <strong>Похожие скрыты ({s.duplicateHiddenCount})</strong>
+                              {hiddenRoleGroups.length > 0 ? (
+                                <ul style={{ margin: "4px 0 0", paddingLeft: 16, fontSize: 10, color: "#64748b" }}>
+                                  {hiddenRoleGroups.slice(0, 8).map((g) => (
+                                    <li key={`${g.role}-${g.canonicalMediaId}`} style={{ marginBottom: 4 }}>
+                                      <strong>{g.roleLabel}</strong> · {g.count} шт. · canonical{" "}
+                                      <code style={{ fontSize: 9 }}>{g.canonicalMediaId.slice(0, 12)}…</code>
+                                      <div style={{ color: "#94a3b8", marginTop: 2 }}>
+                                        {g.filenames.slice(0, 3).join(" · ")}
+                                        {g.filenames.length > 3 ? ` · +${g.filenames.length - 3}` : null}
+                                      </div>
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
                               <ul style={{ margin: "4px 0 0", paddingLeft: 16, fontSize: 10, color: "#64748b" }}>
                                 {s.duplicateGroups.slice(0, 6).map((g) => (
                                   <li key={g.matchKey} style={{ marginBottom: 4 }}>
@@ -4387,6 +4423,7 @@ export function LegacyMediaAssignmentBoardClient() {
                                   </li>
                                 ))}
                               </ul>
+                              )}
                             </div>
                           ) : null}
                           <div style={{ marginTop: 2 }}>

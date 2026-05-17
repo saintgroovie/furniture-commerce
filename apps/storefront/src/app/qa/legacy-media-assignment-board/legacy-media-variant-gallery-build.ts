@@ -1,5 +1,5 @@
 /**
- * QA-only: one representative per visual role + same-SKU borrowing for missing roles.
+ * QA-only: role-based gallery composition (one representative per role + front-family collapse).
  */
 
 import type { CandidateEntry, InvItem } from "./legacy-media-board-types"
@@ -10,7 +10,11 @@ import {
   canBePrimaryRole,
   classifyVisualRole,
   compareIdsByVisualRole,
+  FRONT_FAMILY_ROLES,
+  GALLERY_ROLE_ORDER,
+  isDistinctAlternateFront,
   pickPrimaryAndGalleryByVisualRole,
+  primaryRoleStripLabel,
   type VisualRole,
   VISUAL_ROLE_BADGE_RU,
   VISUAL_ROLE_RANK,
@@ -24,8 +28,10 @@ export type BorrowedSameSkuEntry = {
 }
 
 export const VISUAL_ROLE_STRIP_LABEL_RU: Record<VisualRole, string> = {
+  closed_front: "закрытый фронт",
   hero_front: "главное",
   front_anfas: "анфас",
+  front_3_4: "3/4",
   interior: "внутрянка",
   detail: "детали",
   lifestyle: "интерьер",
@@ -34,7 +40,7 @@ export const VISUAL_ROLE_STRIP_LABEL_RU: Record<VisualRole, string> = {
 }
 
 const BORROWABLE_ROLES: VisualRole[] = ["interior", "detail", "lifestyle", "scheme"]
-const GALLERY_ROLE_ORDER: VisualRole[] = ["front_anfas", "interior", "detail", "lifestyle", "scheme", "unknown"]
+const ALT_FRONT_ROLES: VisualRole[] = ["front_3_4", "front_anfas"]
 
 function scoreMediaId(id: string, invById: Map<string, InvItemDedupeFields>, candById: Map<string, CandidateEntry>, orderIndex: number): number {
   const inv = invById.get(id)
@@ -55,14 +61,15 @@ function pushHidden(
   mediaId: string,
   canonicalMediaId: string,
   invById: Map<string, InvItemDedupeFields>,
-  reason: DedupeHiddenItem["reason"] = "near_duplicate"
+  reason: DedupeHiddenItem["reason"] = "near_duplicate",
+  matchKey?: string
 ): void {
   const inv = invById.get(mediaId)
   hidden.push({
     mediaId,
     reason,
     canonicalMediaId,
-    matchKey: `role_rep:${reason}`,
+    matchKey: matchKey ?? `role_rep:${reason}`,
     filename: inv?.filename,
     sourcePath: inv?.source_path ?? inv?.repo_relative_path ?? null,
   })
@@ -77,14 +84,70 @@ export type RoleGalleryBuildResult = {
   duplicateHiddenCount: number
   primaryNeedsReview: boolean
   primaryRole: VisualRole | null
+  roleCompositionSummary: string
 }
 
-/** One best media per visual role; collapse extra front/hero into hidden duplicates. */
+export type HiddenDuplicateRoleGroup = {
+  role: VisualRole
+  roleLabel: string
+  count: number
+  canonicalMediaId: string
+  hiddenIds: string[]
+  filenames: string[]
+}
+
+/** Group hidden duplicates by visual role for Details panel. */
+export function groupHiddenDuplicatesByRole(
+  hidden: DedupeHiddenItem[],
+  invById: Map<string, InvItemDedupeFields>,
+  rolesById: Map<string, VisualRole>
+): HiddenDuplicateRoleGroup[] {
+  const groups = new Map<string, HiddenDuplicateRoleGroup>()
+  for (const row of hidden) {
+    const inv = invById.get(row.mediaId)
+    const role = rolesById.get(row.mediaId) ?? (inv ? classifyVisualRole(inv) : "unknown")
+    const key = `${role}:${row.canonicalMediaId}`
+    const existing = groups.get(key) ?? {
+      role,
+      roleLabel: VISUAL_ROLE_BADGE_RU[role],
+      count: 0,
+      canonicalMediaId: row.canonicalMediaId,
+      hiddenIds: [],
+      filenames: [],
+    }
+    existing.count += 1
+    existing.hiddenIds.push(row.mediaId)
+    existing.filenames.push(inv?.filename ?? row.mediaId.slice(0, 16))
+    groups.set(key, existing)
+  }
+  return Array.from(groups.values()).sort((a, b) => VISUAL_ROLE_RANK[a.role] - VISUAL_ROLE_RANK[b.role])
+}
+
+function buildRoleCompositionSummary(
+  primaryId: string | null,
+  galleryIds: string[],
+  rolesById: Map<string, VisualRole>,
+  hiddenCount: number
+): string {
+  const parts: string[] = []
+  if (primaryId) {
+    const pr = rolesById.get(primaryId) ?? "unknown"
+    parts.push(`Primary: ${VISUAL_ROLE_BADGE_RU[pr]}`)
+  }
+  if (galleryIds.length > 0) {
+    const g = galleryIds.map((id) => VISUAL_ROLE_BADGE_RU[rolesById.get(id) ?? "unknown"]).join(" → ")
+    parts.push(`Gallery: ${g}`)
+  }
+  if (hiddenCount > 0) parts.push(`скрыто похожих: ${hiddenCount}`)
+  return parts.join(" · ")
+}
+
+/** Role-aware Primary + Gallery; collapse redundant front aliases into hidden duplicates. */
 export function applyRoleRepresentativeSelection(
   visibleIds: string[],
   invById: Map<string, InvItemDedupeFields>,
   candById: Map<string, CandidateEntry>,
-  opts?: { clusterHidden?: DedupeHiddenItem[] }
+  opts?: { clusterHidden?: DedupeHiddenItem[]; lockedPrimaryId?: string | null }
 ): RoleGalleryBuildResult {
   const unique = Array.from(new Set(visibleIds.filter(Boolean)))
   const hidden: DedupeHiddenItem[] = [...(opts?.clusterHidden ?? [])]
@@ -102,81 +165,91 @@ export function applyRoleRepresentativeSelection(
     buckets.set(role, list)
   }
 
-  const heroSorted = sortBucket(buckets.get("hero_front") ?? [], invById, candById)
-  const anfasSorted = sortBucket(buckets.get("front_anfas") ?? [], invById, candById)
-
   const pick = pickPrimaryAndGalleryByVisualRole(unique, invById as Map<string, InvItem>)
-  let primaryId: string | null = pick.primaryId
-  if (primaryId && !canBePrimaryRole(rolesById.get(primaryId) ?? "unknown")) {
-    primaryId = heroSorted[0] ?? anfasSorted[0] ?? pick.primaryId
-  }
-  if (!primaryId) primaryId = heroSorted[0] ?? anfasSorted[0] ?? null
+  let primaryId: string | null =
+    opts?.lockedPrimaryId && unique.includes(opts.lockedPrimaryId) ? opts.lockedPrimaryId : pick.primaryId
 
-  for (const hid of heroSorted.slice(1)) {
-    if (primaryId) pushHidden(hidden, hid, primaryId, invById)
+  if (primaryId && !canBePrimaryRole(rolesById.get(primaryId) ?? "unknown")) {
+    const closedSorted = sortBucket(
+      [...(buckets.get("closed_front") ?? []), ...(buckets.get("hero_front") ?? [])],
+      invById,
+      candById
+    )
+    primaryId = closedSorted[0] ?? pick.primaryId
+  }
+  if (!primaryId) {
+    const closedSorted = sortBucket(
+      [...(buckets.get("closed_front") ?? []), ...(buckets.get("hero_front") ?? []), ...(buckets.get("front_anfas") ?? [])],
+      invById,
+      candById
+    )
+    primaryId = closedSorted[0] ?? null
   }
 
   const galleryIds: string[] = []
   const roleStrip: VisualRole[] = []
+  let alternateFrontUsed = false
 
   if (primaryId) {
-    const pr = rolesById.get(primaryId) ?? "hero_front"
-    roleStrip.push(pr === "front_anfas" ? "front_anfas" : "hero_front")
+    roleStrip.push(primaryRoleStripLabel(rolesById.get(primaryId) ?? null))
   }
 
-  let anfasPick = anfasSorted.find((id) => id !== primaryId) ?? null
-  if (!anfasPick && heroSorted.length > 1 && primaryId === heroSorted[0]) {
-    const second = heroSorted[1]
-    const r2 = rolesById.get(second)
-    if (second && second !== primaryId && (r2 === "front_anfas" || r2 === "hero_front")) {
-      anfasPick = second
-      rolesById.set(second, "front_anfas")
+  for (const role of ["closed_front", "hero_front", "front_anfas"] as VisualRole[]) {
+    const bucket = sortBucket(buckets.get(role) ?? [], invById, candById)
+    for (const id of bucket) {
+      if (id === primaryId) continue
+      pushHidden(hidden, id, primaryId || id, invById, "near_duplicate", `front_family:${role}`)
     }
   }
-  if (anfasPick) {
-    galleryIds.push(anfasPick)
-    if (!roleStrip.includes("front_anfas")) roleStrip.push("front_anfas")
-  }
-  for (const hid of anfasSorted.filter((id) => id !== anfasPick && id !== primaryId)) {
-    pushHidden(hidden, hid, anfasPick || primaryId || hid, invById)
+
+  for (const role of ALT_FRONT_ROLES) {
+    const bucket = sortBucket(buckets.get(role) ?? [], invById, candById)
+    if (!primaryId || bucket.length === 0) continue
+    const pickAlt = bucket.find((id) => id !== primaryId && isDistinctAlternateFront(primaryId, id, invById as Map<string, InvItem>, rolesById))
+    for (const id of bucket) {
+      if (id === primaryId) continue
+      if (id === pickAlt && !alternateFrontUsed) {
+        galleryIds.push(id)
+        if (!roleStrip.includes(role)) roleStrip.push(role)
+        alternateFrontUsed = true
+        continue
+      }
+      pushHidden(hidden, id, pickAlt || primaryId, invById, "near_duplicate", `alt_front:${role}`)
+    }
   }
 
   for (const role of GALLERY_ROLE_ORDER) {
-    if (role === "front_anfas") continue
+    if (ALT_FRONT_ROLES.includes(role)) continue
     const bucket = sortBucket(buckets.get(role) ?? [], invById, candById)
     if (bucket.length === 0) continue
-    const pick = bucket.find((id) => id !== primaryId && !galleryIds.includes(id)) ?? null
-    if (!pick) {
+    const rep = bucket.find((id) => id !== primaryId && !galleryIds.includes(id)) ?? null
+    if (!rep) {
       for (const hid of bucket) {
         if (hid !== primaryId) pushHidden(hidden, hid, primaryId || hid, invById)
       }
       continue
     }
-    galleryIds.push(pick)
+    galleryIds.push(rep)
     if (!roleStrip.includes(role)) roleStrip.push(role)
     for (const hid of bucket) {
-      if (hid !== pick && hid !== primaryId) pushHidden(hidden, hid, pick, invById)
+      if (hid !== rep && hid !== primaryId) pushHidden(hidden, hid, rep, invById)
     }
   }
 
-  const orderedGallery = pick.primaryId === primaryId ? pick.galleryIds.filter((id) => galleryIds.includes(id)) : []
-  const mergedGallery = [...galleryIds]
-  for (const id of orderedGallery) {
-    if (!mergedGallery.includes(id)) mergedGallery.push(id)
-  }
-  mergedGallery.sort((a, b) => compareIdsByVisualRole(a, b, invById as Map<string, InvItem>, { rolesById }))
-  galleryIds.length = 0
-  galleryIds.push(...mergedGallery)
+  galleryIds.sort((a, b) => compareIdsByVisualRole(a, b, invById as Map<string, InvItem>, { rolesById }))
+  roleStrip.sort((a, b) => VISUAL_ROLE_RANK[a] - VISUAL_ROLE_RANK[b])
 
   const primaryRole = primaryId ? rolesById.get(primaryId) ?? null : null
   const primaryNeedsReview =
     !primaryId ||
     primaryRole === "scheme" ||
     primaryRole === "unknown" ||
-    (primaryRole !== "hero_front" && primaryRole !== "front_anfas")
+    (primaryRole != null && !canBePrimaryRole(primaryRole))
 
   const dedupedHidden = hidden.filter((h, i, arr) => arr.findIndex((x) => x.mediaId === h.mediaId) === i)
   const clusterCount = opts?.clusterHidden?.length ?? 0
+  const roleHiddenOnly = dedupedHidden.filter((h) => !opts?.clusterHidden?.some((c) => c.mediaId === h.mediaId))
+  const duplicateHiddenCount = Math.max(roleHiddenOnly.length, dedupedHidden.length - clusterCount)
 
   return {
     primaryId,
@@ -184,9 +257,10 @@ export function applyRoleRepresentativeSelection(
     rolesById,
     roleStrip,
     hiddenDuplicates: dedupedHidden,
-    duplicateHiddenCount: Math.max(0, dedupedHidden.length - clusterCount),
+    duplicateHiddenCount,
     primaryNeedsReview,
     primaryRole,
+    roleCompositionSummary: buildRoleCompositionSummary(primaryId, galleryIds, rolesById, duplicateHiddenCount),
   }
 }
 
@@ -199,7 +273,6 @@ export type VariantGallerySlice = {
   galleryCandidateIds: string[]
   rolesById: Map<string, VisualRole>
   roleStrip: VisualRole[]
-  /** All this-SKU media ids for variant (incl. hidden by dedupe) — used for same-SKU borrow pool. */
   mediaPoolIds?: string[]
 }
 
@@ -212,7 +285,7 @@ export function applySameSkuRoleBorrowing(
   productSku: string
 ): { borrowed: BorrowedSameSkuEntry[]; galleryCandidateIds: string[]; rolesById: Map<string, VisualRole> } {
   const borrowed: BorrowedSameSkuEntry[] = []
-  const galleryIds = [...target.galleryCandidateIds]
+  let galleryIds = [...target.galleryCandidateIds]
   const rolesById = new Map(target.rolesById)
   const ownedIds = new Set<string>([
     ...(target.primaryCandidateId ? [target.primaryCandidateId] : []),
@@ -266,10 +339,42 @@ export function applySameSkuRoleBorrowing(
     }
   }
 
-  galleryIds.sort((a, b) => compareIdsByVisualRole(a, b, invById as Map<string, InvItem>, { rolesById }))
+  if (target.primaryCandidateId) {
+    const recomposed = applyRoleRepresentativeSelection(
+      Array.from(
+        new Set([target.primaryCandidateId, ...galleryIds, ...(target.mediaPoolIds ?? [])].filter(Boolean))
+      ).filter((id) => {
+        const inv = invById.get(id)
+        return inv?.previewable !== false
+      }),
+      invById,
+      candById,
+      { lockedPrimaryId: target.primaryCandidateId }
+    )
+    galleryIds = recomposed.galleryIds
+    for (const [id, role] of Array.from(recomposed.rolesById.entries())) {
+      rolesById.set(id, role)
+    }
+    for (const b of borrowed) {
+      if (!galleryIds.includes(b.mediaId) && b.mediaId !== target.primaryCandidateId) {
+        galleryIds.push(b.mediaId)
+      }
+    }
+    galleryIds = galleryIds.filter(
+      (id) =>
+        id !== target.primaryCandidateId &&
+        (borrowed.some((b) => b.mediaId === id) || recomposed.galleryIds.includes(id))
+    )
+    galleryIds.sort((a, b) => compareIdsByVisualRole(a, b, invById as Map<string, InvItem>, { rolesById }))
+  }
+
   const roleStrip = [...target.roleStrip]
   for (const role of BORROWABLE_ROLES) {
     if (borrowed.some((b) => b.role === role) && !roleStrip.includes(role)) roleStrip.push(role)
+  }
+  for (const id of galleryIds) {
+    const r = rolesById.get(id)
+    if (r && !roleStrip.includes(r) && !FRONT_FAMILY_ROLES.has(r)) roleStrip.push(r)
   }
   roleStrip.sort((a, b) => VISUAL_ROLE_RANK[a] - VISUAL_ROLE_RANK[b])
 

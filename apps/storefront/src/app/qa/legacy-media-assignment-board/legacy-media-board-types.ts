@@ -151,6 +151,8 @@ export type SuggestedVariant = {
     fromVariantLabel: string
   }>
   primaryNeedsReview?: boolean
+  /** Dev/QA: human-readable role gallery composition (Details only). */
+  roleCompositionSummary?: string
 }
 
 /** Pointer-based drag session (QA board only; not persisted). */

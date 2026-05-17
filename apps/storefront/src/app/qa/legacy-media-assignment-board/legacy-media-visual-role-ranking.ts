@@ -4,11 +4,14 @@
  */
 
 import type { InvItem } from "./legacy-media-board-types"
+import { explicitProductTokenFromMedia, normSku } from "./suggestion-product-guard"
 import { isWhiteBgSourceHint, type InvItemDedupeFields } from "./legacy-media-dedupe"
 
 export type VisualRole =
+  | "closed_front"
   | "hero_front"
   | "front_anfas"
+  | "front_3_4"
   | "interior"
   | "detail"
   | "lifestyle"
@@ -16,8 +19,10 @@ export type VisualRole =
   | "unknown"
 
 export const VISUAL_ROLE_RANK: Record<VisualRole, number> = {
+  closed_front: 8,
   hero_front: 10,
-  front_anfas: 20,
+  front_3_4: 22,
+  front_anfas: 25,
   interior: 30,
   detail: 40,
   lifestyle: 50,
@@ -26,8 +31,10 @@ export const VISUAL_ROLE_RANK: Record<VisualRole, number> = {
 }
 
 export const VISUAL_ROLE_BADGE_RU: Record<VisualRole, string> = {
+  closed_front: "закрытый фронт",
   hero_front: "фронт",
   front_anfas: "анфас",
+  front_3_4: "3/4",
   interior: "внутри",
   detail: "деталь",
   lifestyle: "интерьер",
@@ -36,7 +43,12 @@ export const VISUAL_ROLE_BADGE_RU: Record<VisualRole, string> = {
 }
 
 export const VISUAL_ROLE_RANKING_TOOLTIP_RU =
-  "Порядок: главное закрытое фронтальное → анфас/3-4 → внутрянка → детали → интерьер → схема"
+  "Порядок: закрытый фронт → hero → 3/4 / анфас → внутрянка → детали → интерьер → схема"
+
+/** Roles that represent the same closed frontal product shot family (collapse to one primary). */
+export const FRONT_FAMILY_ROLES = new Set<VisualRole>(["closed_front", "hero_front", "front_anfas"])
+
+export const PRIMARY_ELIGIBLE_ROLES = new Set<VisualRole>(["closed_front", "hero_front", "front_anfas"])
 
 const SCHEME_RE =
   /схем|черт[её]ж|blueprint|schematic|dimension|technical[_\s-]?draw|line[\s-]?art|plan[_\s-]?view|spec[_\s-]?sheet|(?:^|[_\-.])draw(?:ing)?(?:[_\-.]|$)|pdf[_\s-]?crop|vector|wireframe/i
@@ -62,7 +74,7 @@ const FIRST_EXTERNAL_RE =
   /[_\-.]i0?1(?:[_\-.]|$)|[_\-.]01(?:[_\-.]|$)|gallery[_\-.]?01|[_\-.]color_[a-z]+[_\-.]1(?:[_\-.]|$)|color_[a-z]+_01|[-_]iso[-_]?1(?:\.|[-_]|$)/i
 const GALLERY_FIRST_RE = /gallery[_\-.]?01/i
 
-const NON_PRIMARY_ROLES = new Set<VisualRole>(["interior", "detail", "lifestyle", "scheme"])
+const NON_PRIMARY_ROLES = new Set<VisualRole>(["interior", "detail", "lifestyle", "scheme", "front_3_4"])
 
 export function mediaHaystack(inv: InvItem, extraBasename?: string | null): string {
   return [
@@ -84,7 +96,7 @@ export function isInteriorSourceHint(hay: string): boolean {
   return INTERIOR_RE.test(hay) || INTERIOR_INDEX_RE.test(hay) || (OPEN_RE.test(hay) && !CLOSED_RE.test(hay) && !FRONT_RE.test(hay))
 }
 
-function isClosedExternalSourceHintImpl(hay: string): boolean {
+export function isClosedExternalSourceHint(hay: string): boolean {
   if (isInteriorSourceHint(hay) || DETAIL_RE.test(hay) || SCHEME_RE.test(hay)) return false
   const hasClosed = CLOSED_RE.test(hay)
   const hasOpen = OPEN_RE.test(hay)
@@ -96,8 +108,39 @@ function isClosedExternalSourceHintImpl(hay: string): boolean {
   return false
 }
 
+export function isThreeQuarterSourceHint(hay: string): boolean {
+  return ANGLE_3_4_RE.test(hay) || /[-_]iso[-_]?\d/i.test(hay)
+}
+
 export function canBePrimaryRole(role: VisualRole): boolean {
-  return role === "hero_front" || role === "front_anfas"
+  return PRIMARY_ELIGIBLE_ROLES.has(role)
+}
+
+/**
+ * Collapse legacy alias indices (i1/i2, color_*_01/02) into one frontal family per SKU+color.
+ * Excludes true 3/4 / iso / interior shots.
+ */
+export function frontFamilyDedupeKey(
+  inv: InvItem,
+  opts?: { selectedSku?: string; colorToken?: string }
+): string | null {
+  const hay = mediaHaystack(inv)
+  if (SCHEME_RE.test(hay) || DETAIL_RE.test(hay) || isInteriorSourceHint(hay)) return null
+  if (isThreeQuarterSourceHint(hay)) return null
+  if (OPEN_RE.test(hay) && !CLOSED_RE.test(hay)) return null
+
+  const whiteBg = isWhiteBgSourceHint(inv as InvItemDedupeFields)
+  const productShot =
+    PRODUCT_HERO_SHOT_RE.test(hay) ||
+    PRODUCT_ALT_EXTERNAL_RE.test(hay) ||
+    /[-_]i[12](?:\.|[-_]|$)/i.test(hay) ||
+    /color_[a-z]+_0[12]/i.test(hay)
+
+  if (!whiteBg && !productShot && !isClosedExternalSourceHint(hay)) return null
+
+  const sku = normSku(opts?.selectedSku || explicitProductTokenFromMedia(inv) || "")
+  const color = (opts?.colorToken || "any").toLowerCase().replace(/^color_/, "")
+  return `ff:${sku}|${color}`
 }
 
 export function classifyVisualRole(
@@ -120,41 +163,80 @@ export function classifyVisualRole(
   const isSecond = SECOND_FRONT_RE.test(hay)
   const isFirstExternal = FIRST_EXTERNAL_RE.test(hay) && !INTERIOR_INDEX_RE.test(hay)
   const isGalleryFirst = GALLERY_FIRST_RE.test(hay)
+  const is34 = isThreeQuarterSourceHint(hay)
 
-  if (PRODUCT_HERO_SHOT_RE.test(hay) && !isInteriorSourceHint(hay)) return "hero_front"
-  if (PRODUCT_ALT_EXTERNAL_RE.test(hay) && !isInteriorSourceHint(hay)) return "front_anfas"
-
-  if (ANGLE_3_4_RE.test(hay)) {
+  if (is34) {
     if (/[-_]iso[-_]?1/i.test(hay) || (isFirstExternal && !isSecond)) return "hero_front"
-    return "front_anfas"
+    if (/[-_]iso[-_]?2/i.test(hay)) return "front_3_4"
+    if (/color_[a-z]+_02/i.test(hay) && is34) return "front_3_4"
+    return "front_3_4"
+  }
+
+  if (PRODUCT_HERO_SHOT_RE.test(hay) && !isInteriorSourceHint(hay)) {
+    return hasClosed && !hasOpen ? "closed_front" : "hero_front"
+  }
+  if (PRODUCT_ALT_EXTERNAL_RE.test(hay) && !isInteriorSourceHint(hay)) {
+    return isThreeQuarterSourceHint(hay) ? "front_3_4" : "front_anfas"
   }
 
   if (hasFront) {
-    if (hasClosed && !hasOpen) return "hero_front"
+    if (hasClosed && !hasOpen) return "closed_front"
     if (hasOpen && !hasClosed) return "interior"
     if (hasHero || (whiteBg && isFirstExternal && !isSecond)) return "hero_front"
-    if (isSecond || (hasOpen && hasClosed)) return "front_anfas"
+    if (isSecond) return "front_anfas"
     return "front_anfas"
   }
 
-  if (isSecond) return "front_anfas"
+  if (isSecond && !isThreeQuarterSourceHint(hay)) return "front_anfas"
 
   if (isFirstExternal && !isGalleryFirst) {
+    if (hasClosed && !hasOpen) return "closed_front"
     return whiteBg ? "hero_front" : "front_anfas"
   }
 
   if (isGalleryFirst) {
-    if (hasClosed && !hasOpen) return "hero_front"
+    if (hasClosed && !hasOpen) return "closed_front"
     return "unknown"
   }
 
   if (whiteBg && !hasOpen && !isInteriorSourceHint(hay) && !DETAIL_RE.test(hay)) {
     if (isSecond) return "front_anfas"
     if (INTERIOR_INDEX_RE.test(hay)) return "interior"
+    if (isClosedExternalSourceHint(hay)) return "closed_front"
     return "unknown"
   }
 
   return "unknown"
+}
+
+/** Second front in gallery only when angle/role differs from primary (not another alias index). */
+export function isDistinctAlternateFront(
+  primaryId: string,
+  candidateId: string,
+  invById: Map<string, InvItem>,
+  rolesById: Map<string, VisualRole>
+): boolean {
+  if (primaryId === candidateId) return false
+  const primaryInv = invById.get(primaryId)
+  const candInv = invById.get(candidateId)
+  if (!primaryInv || !candInv) return false
+
+  const candHay = mediaHaystack(candInv)
+  const candRole = rolesById.get(candidateId) ?? classifyVisualRole(candInv)
+  if (candRole === "front_3_4" && isThreeQuarterSourceHint(candHay)) return true
+
+  if (candRole !== "front_anfas" && candRole !== "hero_front" && candRole !== "closed_front") return false
+
+  const primHay = mediaHaystack(primaryInv)
+  const primRole = rolesById.get(primaryId) ?? classifyVisualRole(primaryInv)
+
+  if (FRONT_FAMILY_ROLES.has(candRole) && FRONT_FAMILY_ROLES.has(primRole)) {
+    if (isClosedExternalSourceHint(candHay) && isClosedExternalSourceHint(primHay)) return false
+    if (SECOND_FRONT_RE.test(candHay) && !isThreeQuarterSourceHint(candHay)) return false
+    return false
+  }
+
+  return candRole === "front_anfas" && !isClosedExternalSourceHint(candHay)
 }
 
 export function roleRank(role: VisualRole): number {
@@ -192,22 +274,32 @@ export function sortIdsByVisualRole(
   return { sorted, rolesById }
 }
 
-const GALLERY_AFTER_PRIMARY: VisualRole[] = ["front_anfas", "interior", "detail", "lifestyle", "scheme", "unknown"]
+/** Gallery order after primary — one representative per role bucket. */
+export const GALLERY_ROLE_ORDER: VisualRole[] = [
+  "front_3_4",
+  "front_anfas",
+  "interior",
+  "detail",
+  "lifestyle",
+  "scheme",
+  "unknown",
+]
 
 function primaryScore(id: string, role: VisualRole, inv: InvItem | undefined, seedIndex: Map<string, number>): number {
   let s = 0
-  if (role === "hero_front") s += 1000
+  if (role === "closed_front") s += 1100
+  else if (role === "hero_front") s += 1000
   else if (role === "front_anfas") s += 800
   else if (role === "unknown" && inv && isWhiteBgSourceHint(inv as InvItemDedupeFields)) {
     const hay = mediaHaystack(inv)
-    if (isClosedExternalSourceHintImpl(hay)) s += 400
+    if (isClosedExternalSourceHint(hay)) s += 400
     else s += 50
   } else return -9999
   if (NON_PRIMARY_ROLES.has(role)) return -9999
   if (inv?.previewable !== false) s += 80
   const hay = inv ? mediaHaystack(inv) : ""
   if (FIRST_EXTERNAL_RE.test(hay) && !INTERIOR_INDEX_RE.test(hay)) s += 40
-  if (isClosedExternalSourceHintImpl(hay)) s += 30
+  if (isClosedExternalSourceHint(hay)) s += 30
   const si = seedIndex.get(id)
   if (si != null) s -= si
   return s
@@ -251,7 +343,7 @@ export function pickPrimaryAndGalleryByVisualRole(
     if (!inv) return false
     const role = rolesById.get(id)!
     if (canBePrimaryRole(role)) return true
-    return role === "unknown" && isClosedExternalSourceHintImpl(mediaHaystack(inv))
+    return role === "unknown" && isClosedExternalSourceHint(mediaHaystack(inv))
   })
 
   let primaryId: string | null = null
@@ -259,7 +351,7 @@ export function pickPrimaryAndGalleryByVisualRole(
   for (const id of unique) {
     const role = rolesById.get(id)!
     const inv = invById.get(id)
-    if (hasClosedExternal && (NON_PRIMARY_ROLES.has(role) || (role === "unknown" && inv && !isClosedExternalSourceHintImpl(mediaHaystack(inv))))) {
+    if (hasClosedExternal && (NON_PRIMARY_ROLES.has(role) || (role === "unknown" && inv && !isClosedExternalSourceHint(mediaHaystack(inv))))) {
       continue
     }
     const sc = primaryScore(id, role, inv, seedIndex)
@@ -270,7 +362,7 @@ export function pickPrimaryAndGalleryByVisualRole(
   }
 
   if (!primaryId) {
-    for (const role of ["hero_front", "front_anfas"] as const) {
+    for (const role of ["closed_front", "hero_front", "front_anfas"] as const) {
       for (const id of unique) {
         if (rolesById.get(id) === role) {
           primaryId = id
@@ -285,7 +377,7 @@ export function pickPrimaryAndGalleryByVisualRole(
     const onlyScheme = unique.every((id) => rolesById.get(id) === "scheme")
     primaryId = unique.find((id) => rolesById.get(id) !== "scheme") ?? unique[0] ?? null
     const needsReview = onlyScheme || !primaryId || rolesById.get(primaryId) === "scheme"
-    const galleryIds = buildGalleryOrder(unique, primaryId, rolesById)
+    const galleryIds = buildGalleryOrder(unique, primaryId, rolesById, invById)
     return {
       primaryId,
       galleryIds,
@@ -297,11 +389,11 @@ export function pickPrimaryAndGalleryByVisualRole(
   }
 
   const primaryRole = rolesById.get(primaryId) ?? null
-  const galleryIds = buildGalleryOrder(unique, primaryId, rolesById)
+  const galleryIds = buildGalleryOrder(unique, primaryId, rolesById, invById)
   const needsReview =
     primaryRole === "scheme" ||
     primaryRole === "unknown" ||
-    (primaryRole !== "hero_front" && primaryRole !== "front_anfas" && !isWhiteBgSourceHint(invById.get(primaryId)! as InvItemDedupeFields))
+    (primaryRole != null && !canBePrimaryRole(primaryRole) && !isWhiteBgSourceHint(invById.get(primaryId)! as InvItemDedupeFields))
 
   return {
     primaryId,
@@ -316,7 +408,8 @@ export function pickPrimaryAndGalleryByVisualRole(
 function buildGalleryOrder(
   unique: string[],
   primaryId: string | null,
-  rolesById: Map<string, VisualRole>
+  rolesById: Map<string, VisualRole>,
+  invById: Map<string, InvItem>
 ): string[] {
   const byRole = new Map<VisualRole, string[]>()
   for (const id of unique) {
@@ -326,26 +419,47 @@ function buildGalleryOrder(
     list.push(id)
     byRole.set(role, list)
   }
+
   const galleryIds: string[] = []
-  for (const role of GALLERY_AFTER_PRIMARY) {
-    const bucket = byRole.get(role) ?? []
-    galleryIds.push(...bucket.sort((a, b) => a.localeCompare(b)))
-    byRole.delete(role)
+  let alternateFrontUsed = false
+
+  for (const role of GALLERY_ROLE_ORDER) {
+    const bucket = (byRole.get(role) ?? []).sort((a, b) => a.localeCompare(b))
+    if (bucket.length === 0) continue
+
+    if (role === "front_3_4" || role === "front_anfas") {
+      const pick = bucket.find(
+        (id) => primaryId && isDistinctAlternateFront(primaryId, id, invById, rolesById)
+      )
+      if (!pick) {
+        for (const hid of bucket) {
+          if (primaryId) byRole.set(role, [])
+        }
+        continue
+      }
+      if (!alternateFrontUsed) {
+        galleryIds.push(pick)
+        alternateFrontUsed = true
+      }
+      continue
+    }
+
+    galleryIds.push(bucket[0]!)
   }
-  for (const role of ["hero_front"] as VisualRole[]) {
-    const bucket = byRole.get(role) ?? []
-    galleryIds.push(...bucket.sort((a, b) => a.localeCompare(b)))
-    byRole.delete(role)
-  }
-  for (const rest of Array.from(byRole.values())) {
-    galleryIds.push(...rest.sort((a, b) => a.localeCompare(b)))
-  }
+
   return galleryIds
 }
 
 export function primaryCandidateBadgeRu(primaryRole: VisualRole | null, needsReview: boolean): string | null {
   if (needsReview) return "Проверь главное фото"
-  if (primaryRole === "hero_front") return "Primary candidate · frontal"
+  if (primaryRole === "closed_front" || primaryRole === "hero_front") return "Primary candidate · frontal"
   if (primaryRole === "front_anfas") return "Primary candidate · anfas"
   return null
+}
+
+export function primaryRoleStripLabel(role: VisualRole | null): VisualRole {
+  if (role === "closed_front" || role === "hero_front" || role === "front_anfas") {
+    return role === "front_anfas" ? "front_anfas" : role === "closed_front" ? "closed_front" : "hero_front"
+  }
+  return "hero_front"
 }

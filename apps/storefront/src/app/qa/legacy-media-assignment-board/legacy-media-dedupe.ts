@@ -7,7 +7,11 @@ import type { CandidateEntry, InvItem } from "./legacy-media-board-types"
 import { explicitProductTokenFromMedia, normSku } from "./suggestion-product-guard"
 import { scorePrimaryCandidate } from "./legacy-variant-primary-heuristic"
 import { applyRoleRepresentativeSelection } from "./legacy-media-variant-gallery-build"
-import { compareIdsByVisualRole, pickPrimaryAndGalleryByVisualRole } from "./legacy-media-visual-role-ranking"
+import {
+  compareIdsByVisualRole,
+  frontFamilyDedupeKey,
+  pickPrimaryAndGalleryByVisualRole,
+} from "./legacy-media-visual-role-ranking"
 
 export type InvItemDedupeFields = InvItem & {
   duplicate_group_key?: string | null
@@ -50,6 +54,7 @@ export type VariantMediaDedupeResult = {
   roleStrip?: string[]
   borrowedSameSku?: Array<{ mediaId: string; role: string; fromVariantKey: string; fromVariantLabel: string }>
   primaryNeedsReview?: boolean
+  roleCompositionSummary?: string
 }
 
 const IMAGE_EXT_RE = /\.(jpe?g|png|webp|gif|avif)$/i
@@ -188,6 +193,7 @@ type Fingerprints = {
   exact: string
   near: string
   view: string
+  frontFamily: string | null
   dg: string | null
   hash: string | null
 }
@@ -206,6 +212,7 @@ function fingerprintsFor(inv: InvItemDedupeFields, opts?: { selectedSku?: string
     exact,
     near,
     view: photoViewDedupeKey(inv, opts),
+    frontFamily: frontFamilyDedupeKey(inv, opts),
     dg: inv.duplicate_group_key ?? null,
     hash: inv.content_quick_hash ?? null,
   }
@@ -272,6 +279,10 @@ export function dedupeAndSortVariantMedia(
         continue
       }
       if (fi.view === fj.view) {
+        unite(unique[i]!, unique[j]!)
+        continue
+      }
+      if (fi.frontFamily && fi.frontFamily === fj.frontFamily) {
         unite(unique[i]!, unique[j]!)
         continue
       }
@@ -361,20 +372,37 @@ export function dedupeAndSortVariantMedia(
       if (ib == null) return -1
       return ia - ib
     })
-    const pick = pickPrimaryAndGalleryByVisualRole(visiblePreviewable, invById as Map<string, InvItem>, {
-      seedOrder: preserve,
+    const preservedPrimary =
+      preserve.find((id) => visiblePreviewable.includes(id)) ?? visiblePreviewable[0] ?? null
+    const roleBuild = applyRoleRepresentativeSelection(visiblePreviewable, invById, candById, {
+      clusterHidden: hiddenDuplicates,
+      lockedPrimaryId: preservedPrimary,
     })
-    const gallerySorted = visiblePreviewable.filter((id) => id !== pick.primaryId)
-    const allHidden = hiddenDuplicates.filter((h, i, arr) => arr.findIndex((x) => x.mediaId === h.mediaId) === i)
+    const allHidden = roleBuild.hiddenDuplicates.filter(
+      (h, i, arr) => arr.findIndex((x) => x.mediaId === h.mediaId) === i
+    )
+    const galleryFromPreserve = preserve.filter(
+      (id) => id !== roleBuild.primaryId && roleBuild.galleryIds.includes(id)
+    )
+    const galleryIds =
+      galleryFromPreserve.length > 0
+        ? [
+            ...galleryFromPreserve,
+            ...roleBuild.galleryIds.filter((id) => !galleryFromPreserve.includes(id)),
+          ]
+        : roleBuild.galleryIds
     return {
       visibleIds: visiblePreviewable,
       hiddenDuplicates: allHidden,
       duplicateGroups,
       duplicateHiddenCount: allHidden.length,
-      primaryCandidateId: pick.primaryId && visiblePreviewable.includes(pick.primaryId) ? pick.primaryId : visiblePreviewable[0] ?? null,
-      galleryCandidateIds: gallerySorted,
+      primaryCandidateId: roleBuild.primaryId,
+      galleryCandidateIds: galleryIds,
+      rolesById: Object.fromEntries(roleBuild.rolesById),
+      roleStrip: roleBuild.roleStrip,
       borrowedSameSku: [],
-      primaryNeedsReview: pick.needsReview,
+      primaryNeedsReview: roleBuild.primaryNeedsReview,
+      roleCompositionSummary: roleBuild.roleCompositionSummary,
     }
   }
 
@@ -397,5 +425,6 @@ export function dedupeAndSortVariantMedia(
     roleStrip: roleBuild.roleStrip,
     borrowedSameSku: [],
     primaryNeedsReview: roleBuild.primaryNeedsReview,
+    roleCompositionSummary: roleBuild.roleCompositionSummary,
   }
 }
