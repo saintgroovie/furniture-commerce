@@ -50,8 +50,9 @@ import {
 } from "./legacy-board-sync-rules"
 import {
   appendMediaToAllVariantGalleries,
-  countBulkGalleryVariants,
+  countColorVariantsForBulkAppend,
   formatAppendToAllGalleriesNote,
+  type BulkAppendSuggestion,
 } from "./legacy-board-variant-gallery-append"
 import {
   computeSkuReviewProgress,
@@ -707,23 +708,15 @@ function mediaCanAppendToAllGalleries(
   ce: CandidateEntry | undefined,
   handle: string,
   sku: string,
-  confirmedColorVariantCount: number
+  colorVariantCount: number
 ): { ok: boolean; hint: string; showButton: boolean; visibleHint: string | null } {
   if (!handle) return { ok: false, hint: "Сначала выберите товар", showButton: false, visibleHint: null }
-  if (confirmedColorVariantCount < 1) {
+  if (colorVariantCount < 1) {
     return {
       ok: false,
-      hint: "Сначала подтвердите цвета",
-      showButton: false,
-      visibleHint: null,
-    }
-  }
-  if (confirmedColorVariantCount < 2) {
-    return {
-      ok: false,
-      hint: "Сначала подтвердите цвета",
+      hint: "Нет цветов для добавления",
       showButton: true,
-      visibleHint: "Сначала подтвердите цвета",
+      visibleHint: "Нет цветов для добавления",
     }
   }
   if (!inv?.previewable) {
@@ -731,7 +724,7 @@ function mediaCanAppendToAllGalleries(
   }
   const identity = classifyMediaProductIdentity(inv, ce, handle, sku)
   if (identity.tier === "excluded") {
-    return { ok: false, hint: "Чужой SKU — нельзя добавить во все галереи", showButton: true, visibleHint: null }
+    return { ok: false, hint: "Чужой SKU — нельзя добавить во все цвета", showButton: true, visibleHint: null }
   }
   if (identity.tier === "needs_identity_review") {
     return { ok: false, hint: "Нужна проверка identity", showButton: true, visibleHint: null }
@@ -1118,6 +1111,7 @@ export function LegacyMediaAssignmentBoardClient() {
   const [board, setBoard] = useState<BoardState>({ zones: {}, grej: [] })
   const boardRef = useRef(board)
   boardRef.current = board
+  const bulkAppendSafeSuggestionsRef = useRef<BulkAppendSuggestion[]>([])
   const [selectedHandle, setSelectedHandle] = useState<string | null>(null)
   const [poolTab, setPoolTab] = useState<PoolTab>("suggested")
   const [hydrated, setHydrated] = useState(false)
@@ -1936,7 +1930,7 @@ export function LegacyMediaAssignmentBoardClient() {
       }
       const identity = classifyMediaProductIdentity(inv, candById.get(mediaId), activeHandle, phSku)
       if (identity.tier === "excluded") {
-        const msg = "Чужой SKU — нельзя добавить во все галереи"
+        const msg = "Чужой SKU — нельзя добавить во все цвета"
         setPoolActionNote(msg)
         setDiag((d) => ({
           ...d,
@@ -1973,9 +1967,15 @@ export function LegacyMediaAssignmentBoardClient() {
       }
 
       const current = variantsByHandle[hh] ?? {}
-      if (countBulkGalleryVariants(current) < 2) {
-        const msg = "Нет подтверждённых цветов для массового добавления (нужно ≥2)"
+      const safeForBulk = bulkAppendSafeSuggestionsRef.current
+
+      if (countColorVariantsForBulkAppend(current, safeForBulk) < 1) {
+        const msg = "Нет цветов для добавления"
         setPoolActionNote(msg)
+        setPoolCardFeedbackById((prev) => ({
+          ...prev,
+          [mediaId]: { text: msg, kind: "neutral" },
+        }))
         setDiag((d) => ({
           ...d,
           buttonHandlerFired: true,
@@ -1992,7 +1992,7 @@ export function LegacyMediaAssignmentBoardClient() {
         return false
       }
 
-      const result = appendMediaToAllVariantGalleries(current, mediaId)
+      const result = appendMediaToAllVariantGalleries(current, mediaId, safeForBulk)
       const note = formatAppendToAllGalleriesNote(result)
       setPoolActionNote(note)
       setPoolCardFeedbackById((prev) => ({
@@ -2022,6 +2022,17 @@ export function LegacyMediaAssignmentBoardClient() {
         ...prev,
         [hh]: result.nextVariants as Record<string, VariantDecisionState>,
       }))
+      const activeVk = activeVariantByHandle[hh] || DEFAULT_VARIANT_KEY
+      const activeAfter = result.nextVariants[activeVk]
+      if (activeAfter) {
+        setBoard((boardPrev) => ({
+          ...boardPrev,
+          zones: {
+            ...boardPrev.zones,
+            [hh]: toZoneState(activeAfter as VariantDecisionState),
+          },
+        }))
+      }
       setVariantMetaByHandle((prevMeta) => {
         const row = { ...(prevMeta[hh] ?? {}) }
         for (const added of result.added) {
@@ -2030,6 +2041,14 @@ export function LegacyMediaAssignmentBoardClient() {
             status: "edited",
           })
         }
+        for (const vk of result.targetVariantKeys) {
+          if (!row[vk] && result.nextVariants[vk]) {
+            row[vk] = mergeVariantMeta(undefined, phSku, {
+              reasons: ["materialized from safe suggestion for bulk gallery append"],
+              status: "suggested",
+            })
+          }
+        }
         return { ...prevMeta, [hh]: row }
       })
       setDiag((d) => ({
@@ -2037,7 +2056,7 @@ export function LegacyMediaAssignmentBoardClient() {
         buttonHandlerFired: true,
         stateUpdateRequested: true,
         stateActuallyChanged: true,
-        lastAction: `add-to-all-variant-galleries +${result.added.length}`,
+        lastAction: `add-to-all-variant-galleries +${result.added.length} targets=${result.targetVariantKeys.length}`,
         lastError: "",
         source: "add-to-all-variant-galleries",
         mediaId,
@@ -2048,7 +2067,7 @@ export function LegacyMediaAssignmentBoardClient() {
       }))
       return true
     },
-    [selectedHandle, invById, candById, variantsByHandle, productByHandle]
+    [selectedHandle, invById, candById, variantsByHandle, productByHandle, activeVariantByHandle]
   )
 
   const updateVariantDecision = useCallback(
@@ -2259,10 +2278,6 @@ export function LegacyMediaAssignmentBoardClient() {
   }, [focusMode, selectedHandle, poolIdsForTab, candById])
 
   const poolShown = poolIdsForTabFocused.slice(0, POOL_LIMIT)
-  const bulkColorVariantCount = useMemo(
-    () => (selectedHandle ? countBulkGalleryVariants(variantsByHandle[selectedHandle.toLowerCase()]) : 0),
-    [selectedHandle, variantsByHandle]
-  )
   const selectedProductSku = selectedHandle ? productByHandle.get(selectedHandle.toLowerCase())?.sku?.trim() || "" : ""
   const poolOverflow = poolIdsForTabFocused.length - poolShown.length
 
@@ -2307,6 +2322,23 @@ export function LegacyMediaAssignmentBoardClient() {
     if (!selectedHandle) return []
     return buildSuggestedVariantsForProduct(selectedHandle)
   }, [selectedHandle, buildSuggestedVariantsForProduct])
+
+  const bulkAppendSafeSuggestions = useMemo<BulkAppendSuggestion[]>(
+    () =>
+      suggestedVariantsForSelected
+        .filter((s) => s.identityTier === "this_sku")
+        .map((s) => ({ variantKey: s.variantKey, label: s.label, identityTier: s.identityTier })),
+    [suggestedVariantsForSelected]
+  )
+
+  const bulkColorVariantCount = useMemo(
+    () =>
+      selectedHandle
+        ? countColorVariantsForBulkAppend(variantsByHandle[selectedHandle.toLowerCase()], bulkAppendSafeSuggestions)
+        : 0,
+    [selectedHandle, variantsByHandle, bulkAppendSafeSuggestions]
+  )
+  bulkAppendSafeSuggestionsRef.current = bulkAppendSafeSuggestions
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -5759,7 +5791,7 @@ export function LegacyMediaAssignmentBoardClient() {
                     }
                     onClick={() => appendMediaToAllVariantGalleriesForHandle(inspectorId)}
                   >
-                    Добавить выбранное во все галереи
+                    Добавить выбранное во все цвета
                   </button>
                 </div>
               ) : null}
