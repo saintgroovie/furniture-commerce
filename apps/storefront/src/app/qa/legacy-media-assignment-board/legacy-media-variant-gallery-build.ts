@@ -12,9 +12,13 @@ import {
   classifyVisualRole,
   compareIdsByVisualRole,
   extractColorTokenFromMedia,
+  externalMediaAllowedForColorVariant,
   FRONT_FAMILY_ROLES,
   GALLERY_ROLE_ORDER,
+  isBorrowableRole,
+  isClearlyBorrowableInterior,
   isDistinctAlternateFront,
+  isExternalVisualRole,
   mediaMatchesColorToken,
   NON_BORROWABLE_EXTERNAL_ROLES,
   pickPrimaryAndGalleryByVisualRole,
@@ -271,6 +275,24 @@ export function applyRoleRepresentativeSelection(
     }
   }
 
+  if (opts?.colorToken) {
+    const filteredGallery: string[] = []
+    for (const id of galleryIds) {
+      const inv = invById.get(id)
+      const role = rolesById.get(id) ?? (inv ? classifyVisualRole(inv) : "unknown")
+      if (
+        inv &&
+        isExternalVisualRole(role) &&
+        !externalMediaAllowedForColorVariant(inv as InvItem, role, opts.colorToken, opts.productHandle, opts.productSku)
+      ) {
+        continue
+      }
+      filteredGallery.push(id)
+    }
+    galleryIds.length = 0
+    galleryIds.push(...filteredGallery)
+  }
+
   galleryIds.sort((a, b) => compareIdsByVisualRole(a, b, invById as Map<string, InvItem>, { rolesById }))
   roleStrip.sort((a, b) => VISUAL_ROLE_RANK[a] - VISUAL_ROLE_RANK[b])
 
@@ -328,6 +350,88 @@ function rejectBorrow(
     filename: inv.filename,
     reason,
   })
+}
+
+/** Final guard: strip illegal external/borrowed ids from gallery (post-borrow, post-recompose). */
+export function sanitizeVariantGalleryCandidates(input: {
+  primaryId: string | null
+  galleryIds: string[]
+  rolesById: Map<string, VisualRole>
+  borrowed: BorrowedSameSkuEntry[]
+  targetColor: string
+  invById: Map<string, InvItemDedupeFields>
+  productHandle: string
+  productSku: string
+  rejectedBorrowCandidates?: RejectedBorrowCandidate[]
+}): {
+  galleryIds: string[]
+  borrowed: BorrowedSameSkuEntry[]
+  rejectedBorrowCandidates: RejectedBorrowCandidate[]
+} {
+  const rejected = [...(input.rejectedBorrowCandidates ?? [])]
+  const borrowed: BorrowedSameSkuEntry[] = []
+  const galleryIds: string[] = []
+
+  for (const id of input.galleryIds) {
+    if (!id || id === input.primaryId) continue
+    const inv = input.invById.get(id)
+    if (!inv) continue
+    const role = input.rolesById.get(id) ?? classifyVisualRole(inv)
+    const borrowEntry = input.borrowed.find((b) => b.mediaId === id)
+
+    if (borrowEntry) {
+      if (!isBorrowableRole(borrowEntry.role) || !isBorrowableRole(role)) {
+        rejectBorrow(rejected, inv, id, role, {
+          variantKey: borrowEntry.fromVariantKey,
+          label: borrowEntry.fromVariantLabel,
+        } as VariantGallerySlice, "front role cannot be borrowed")
+        continue
+      }
+      if (!isClearlyBorrowableInterior(inv)) {
+        rejectBorrow(rejected, inv, id, role, {
+          variantKey: borrowEntry.fromVariantKey,
+          label: borrowEntry.fromVariantLabel,
+        } as VariantGallerySlice, "neutral external cannot be borrowed as interior")
+        continue
+      }
+      borrowed.push(borrowEntry)
+      galleryIds.push(id)
+      continue
+    }
+
+    if (isExternalVisualRole(role) && !externalMediaAllowedForColorVariant(inv, role, input.targetColor, input.productHandle, input.productSku)) {
+      rejectBorrow(
+        rejected,
+        inv,
+        id,
+        role,
+        { variantKey: `color_${input.targetColor}`, label: input.targetColor } as VariantGallerySlice,
+        "external photo belongs to another color"
+      )
+      continue
+    }
+    if (role === "unknown" && isWhiteBgExternalGuess(inv)) {
+      rejectBorrow(
+        rejected,
+        inv,
+        id,
+        role,
+        { variantKey: `color_${input.targetColor}`, label: input.targetColor } as VariantGallerySlice,
+        "unknown external cannot be borrowed"
+      )
+      continue
+    }
+
+    galleryIds.push(id)
+  }
+
+  galleryIds.sort((a, b) => compareIdsByVisualRole(a, b, input.invById as Map<string, InvItem>, { rolesById: input.rolesById }))
+  return { galleryIds, borrowed, rejectedBorrowCandidates: rejected }
+}
+
+function isWhiteBgExternalGuess(inv: InvItemDedupeFields): boolean {
+  const hay = `${inv.filename} ${inv.source_path || ""}`.toLowerCase()
+  return /white|белом|yandex/i.test(hay) && !isClearlyBorrowableInterior(inv as InvItem)
 }
 
 export function applySameSkuRoleBorrowing(
@@ -394,6 +498,18 @@ export function applySameSkuRoleBorrowing(
         }
         if (mediaRole !== role) continue
 
+        if (!isClearlyBorrowableInterior(inv as InvItem)) {
+          rejectBorrow(
+            rejectedBorrowCandidates,
+            inv,
+            id,
+            mediaRole,
+            sib,
+            "neutral external cannot be borrowed as interior"
+          )
+          continue
+        }
+
         const identity = classifyMediaProductIdentity(inv, candById.get(id), productHandle, productSku)
         if (identity.tier !== "this_sku") {
           rejectBorrow(rejectedBorrowCandidates, inv, id, mediaRole, sib, `identity ${identity.tier}`)
@@ -425,25 +541,23 @@ export function applySameSkuRoleBorrowing(
     }
   }
 
-  const sortedGallery = galleryIds
-    .filter((id) => id !== target.primaryCandidateId)
-    .sort((a, b) => compareIdsByVisualRole(a, b, invById as Map<string, InvItem>, { rolesById }))
-
-  const roleStrip = [...target.roleStrip]
-  for (const role of BORROWABLE_ROLES) {
-    if (borrowed.some((b) => b.role === role) && !roleStrip.includes(role)) roleStrip.push(role)
-  }
-  for (const id of sortedGallery) {
-    const r = rolesById.get(id)
-    if (r && !roleStrip.includes(r) && !FRONT_FAMILY_ROLES.has(r) && r !== "front_3_4") roleStrip.push(r)
-  }
-  roleStrip.sort((a, b) => VISUAL_ROLE_RANK[a] - VISUAL_ROLE_RANK[b])
+  const sanitized = sanitizeVariantGalleryCandidates({
+    primaryId: target.primaryCandidateId,
+    galleryIds: galleryIds.filter((id) => id !== target.primaryCandidateId),
+    rolesById,
+    borrowed,
+    targetColor,
+    invById,
+    productHandle,
+    productSku,
+    rejectedBorrowCandidates,
+  })
 
   return {
-    borrowed,
-    galleryCandidateIds: sortedGallery,
+    borrowed: sanitized.borrowed,
+    galleryCandidateIds: sanitized.galleryIds,
     rolesById,
-    rejectedBorrowCandidates,
+    rejectedBorrowCandidates: sanitized.rejectedBorrowCandidates,
   }
 }
 

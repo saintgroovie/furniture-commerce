@@ -13,6 +13,7 @@ import {
 import { dedupeAndSortVariantMedia, type InvItemDedupeFields } from "./legacy-media-dedupe"
 import {
   applySameSkuRoleBorrowing,
+  sanitizeVariantGalleryCandidates,
   type BorrowedSameSkuEntry,
 } from "./legacy-media-variant-gallery-build"
 import { variantHasEstablishedGalleryOrder, type GalleryOrderSource } from "./legacy-variant-gallery-order"
@@ -306,10 +307,22 @@ export function buildSuggestedVariantsForProductSync(input: {
     let rejectedBorrowCandidates: import("./legacy-media-variant-gallery-build").RejectedBorrowCandidate[] = []
     if (s.identityTier === "this_sku") {
       const borrowed = applySameSkuRoleBorrowing(baseSlice, gallerySlices, invMap, input.candById, h, productSkuHint)
-      galleryCandidateIds = borrowed.galleryCandidateIds
+      const colorNameRaw = s.variantKey.replace(/^color_/, "").replace(/__review$/, "")
+      const sanitized = sanitizeVariantGalleryCandidates({
+        primaryId: s.deduped.primaryCandidateId,
+        galleryIds: borrowed.galleryCandidateIds,
+        rolesById: borrowed.rolesById,
+        borrowed: borrowed.borrowed,
+        targetColor: colorNameRaw,
+        invById: invMap,
+        productHandle: h,
+        productSku: productSkuHint,
+        rejectedBorrowCandidates: borrowed.rejectedBorrowCandidates,
+      })
+      galleryCandidateIds = sanitized.galleryIds
       rolesById = borrowed.rolesById
-      borrowedSameSku = borrowed.borrowed
-      rejectedBorrowCandidates = borrowed.rejectedBorrowCandidates
+      borrowedSameSku = sanitized.borrowed
+      rejectedBorrowCandidates = sanitized.rejectedBorrowCandidates
     }
     const colorNameRaw = s.variantKey.replace(/^color_/, "").replace(/__review$/, "")
     out.push({

@@ -35,6 +35,7 @@ import { dedupeAndSortVariantMedia, type InvItemDedupeFields } from "./legacy-me
 import {
   applyRoleRepresentativeSelection,
   applySameSkuRoleBorrowing,
+  sanitizeVariantGalleryCandidates,
   roleBadgeForMedia,
   VISUAL_ROLE_STRIP_LABEL_RU,
   groupHiddenDuplicatesByRole,
@@ -92,6 +93,36 @@ const POOL_LIMIT = 120
 const UNKNOWN_COLLECTION = "__unknown__"
 const API_BASE = "/qa/legacy-media-assignment-board/api"
 const PREVIEW_ROUTE = "/qa/legacy-media-assignment-board/preview"
+
+type PreviewRecoveryEntry = {
+  found_path: string
+  recovery_status: string
+  confidence: string
+  reason: string
+}
+
+function recoveryBadgeLabel(status: string): string {
+  if (status === "recovered_exact" || status === "recovered_backend_static") return "recovered preview · exact"
+  if (status === "recovered_basename" || status === "recovered_case_insensitive" || status === "recovered_variant_basename") {
+    return "recovered preview · basename"
+  }
+  if (status === "recovered_pdf_extract") return "recovered preview · pdf"
+  if (status === "recovered_duplicate_group") return "recovered preview · duplicate"
+  return "recovered preview"
+}
+
+function recoveryPreviewUrl(entry: PreviewRecoveryEntry): { url: string | null; useImg: boolean } {
+  const rel = (entry.found_path || "").trim().replace(/\\/g, "/").replace(/^\//, "")
+  if (rel.startsWith("data/")) {
+    const q = new URLSearchParams({ rel }).toString()
+    return { url: `${PREVIEW_ROUTE}?${q}`, useImg: true }
+  }
+  if (rel.startsWith("apps/backend/static/")) {
+    const suffix = rel.replace(/^apps\/backend\/static\//, "")
+    return { url: `${medusaOrigin()}/static/${suffix}`, useImg: true }
+  }
+  return { url: null, useImg: false }
+}
 const DND_JSON = "application/json"
 const DEV_SENTINEL = "Legacy Board media pool two-column + add to all galleries"
 const DEV_SENTINEL_BUILD = "2026-05-17T20:00Z"
@@ -406,6 +437,7 @@ function SuggestionVariantThumb({
   isPrimary,
   inv,
   seedRows,
+  recovery,
   roleBadge,
   borrowedLabel,
 }: {
@@ -413,11 +445,12 @@ function SuggestionVariantThumb({
   isPrimary: boolean
   inv: InvItem | undefined
   seedRows: SeedUrlMatchRow[]
+  recovery?: PreviewRecoveryEntry | null
   roleBadge?: string | null
   borrowedLabel?: string | null
 }) {
   const [broken, setBroken] = useState(false)
-  const thumbPv = boardThumbPreview(mid, inv, seedRows)
+  const thumbPv = boardThumbPreview(mid, inv, seedRows, recovery)
   const showImg = Boolean(thumbPv.url && thumbPv.useImg && !broken)
   const box: CSSProperties = {
     width: isPrimary ? 96 : 72,
@@ -515,7 +548,8 @@ function SuggestionVariantThumb({
 function boardThumbPreview(
   mediaId: string,
   inv: InvItem | undefined,
-  seedRows: SeedUrlMatchRow[]
+  seedRows: SeedUrlMatchRow[],
+  recovery?: PreviewRecoveryEntry | null
 ): { url: string | null; useImg: boolean; caption: string; reason: string } {
   if (inv) {
     const pv = clientPreviewUrl(inv)
@@ -997,6 +1031,7 @@ export function LegacyMediaAssignmentBoardClient() {
   const [loadFailureDetail, setLoadFailureDetail] = useState<LegacyBoardLoadFailure | null>(null)
   const [retryNonce, setRetryNonce] = useState(0)
   const [invDoc, setInvDoc] = useState<{ items: InvItem[]; summary: Record<string, unknown> } | null>(null)
+  const [recoveryById, setRecoveryById] = useState<Map<string, PreviewRecoveryEntry>>(new Map())
   const [candDoc, setCandDoc] = useState<{ entries: CandidateEntry[]; summary: Record<string, unknown> } | null>(null)
   const [products, setProducts] = useState<ProductRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -1128,6 +1163,7 @@ export function LegacyMediaAssignmentBoardClient() {
         { label: "inventory", path: "/inventory" },
         { label: "candidates", path: "/candidates" },
         { label: "products", path: "/products" },
+        { label: "preview-recovery", path: "/preview-recovery" },
       ] as const
       try {
         const results: Record<string, unknown>[] = []
@@ -1147,10 +1183,16 @@ export function LegacyMediaAssignmentBoardClient() {
         const j1 = results[0] as { items: InvItem[]; summary: Record<string, unknown> }
         const j2 = results[1] as { entries: CandidateEntry[]; summary: Record<string, unknown> }
         const j3 = results[2] as { products: ProductRow[] }
+        const j4 = results[3] as { entries?: Record<string, PreviewRecoveryEntry> }
         if (cancelled) return
         setInvDoc(j1)
         setCandDoc(j2)
         setProducts(j3.products.filter((p) => p.handle))
+        const recMap = new Map<string, PreviewRecoveryEntry>()
+        for (const [id, entry] of Object.entries(j4.entries ?? {})) {
+          if (entry?.found_path) recMap.set(id, entry)
+        }
+        setRecoveryById(recMap)
       } catch (e) {
         if (!cancelled) setLoadError(e instanceof Error ? e.message : String(e))
       } finally {
@@ -2593,7 +2635,7 @@ export function LegacyMediaAssignmentBoardClient() {
     size: "compact" | "normal" | "large" | "primary" | "gallery" = "compact"
   ) => {
     const inv = invById.get(id)
-    const pv = boardThumbPreview(id, inv, seedMatchRowsForSelected)
+    const pv = boardThumbPreview(id, inv, seedMatchRowsForSelected, recoveryById.get(id))
     const vk = variantKeyForActions
     const vv = variantsForHandle[vk]
     const gi = zone === "gallery" ? (vv?.gallery.indexOf(id) ?? -1) : -1
@@ -4216,13 +4258,33 @@ export function LegacyMediaAssignmentBoardClient() {
                 const gallerySource = confirmedVariant ? confirmedVariant.gallery : s.galleryCandidateIds
                 const galleryRest = gallerySource.filter((id) => id && id !== primaryPreviewId && invById.get(id)?.previewable)
                 const primaryIsPreviewable = primaryPreviewId ? Boolean(invById.get(primaryPreviewId)?.previewable) : false
-                const galleryPreviewOrdered = (
+                const galleryPreviewRaw = (
                   confirmedVariant
                     ? primaryPreviewId && primaryIsPreviewable
                       ? [primaryPreviewId, ...galleryRest]
                       : galleryRest
                     : [s.primaryCandidateId, ...s.galleryCandidateIds]
                 ).filter((id): id is string => Boolean(id) && Boolean(invById.get(id)?.previewable))
+                const invDedupeForSanitize = new Map<string, InvItemDedupeFields>()
+                for (const [id, row] of Array.from(invById.entries())) invDedupeForSanitize.set(id, row)
+                const sanitizedPreview = sanitizeVariantGalleryCandidates({
+                  primaryId: primaryPreviewId,
+                  galleryIds: galleryPreviewRaw.filter((id) => id !== primaryPreviewId),
+                  rolesById: rolesByIdMap,
+                  borrowed: Array.from(borrowedById.values()),
+                  targetColor: s.colorNameRaw,
+                  invById: invDedupeForSanitize,
+                  productHandle: selectedHandle ?? "",
+                  productSku: s.productSkuHint,
+                  rejectedBorrowCandidates: (s.rejectedBorrowCandidates ?? []).map((r) => ({
+                    ...r,
+                    role: r.role as VisualRole,
+                  })),
+                })
+                const galleryPreviewOrdered = [
+                  ...(primaryPreviewId && primaryIsPreviewable ? [primaryPreviewId] : []),
+                  ...sanitizedPreview.galleryIds,
+                ].filter((id): id is string => Boolean(id) && Boolean(invById.get(id)?.previewable))
                 const roleStripLabels = (s.roleStrip ?? [])
                   .map((role) => VISUAL_ROLE_STRIP_LABEL_RU[role as VisualRole])
                   .filter((l) => l && l !== "?")
@@ -5759,9 +5821,10 @@ export function LegacyMediaAssignmentBoardClient() {
                       const inv = invById.get(id)
                       if (!inv) return null
                       const ce = candById.get(id)
-                      const pv = clientPreviewUrl(inv)
+                      const pv = clientPreviewUrl(inv, recoveryById.get(id))
                       const elsewhere = assignedElsewhere(id)
                       const poolBadges = [ce?.confidence, inv.source_type].filter(Boolean) as string[]
+                      if (pv.recoveryBadge) poolBadges.unshift(pv.recoveryBadge)
                       if (inv.collection_hint || ce?.top_candidate?.medusa_collection_handle) {
                         poolBadges.push(String(inv.collection_hint || ce?.top_candidate?.medusa_collection_handle))
                       }

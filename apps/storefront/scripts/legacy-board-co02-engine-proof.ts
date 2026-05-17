@@ -5,8 +5,9 @@ import { buildSuggestedVariantsForProductSync } from "../src/app/qa/legacy-media
 import {
   canBorrowVisualRole,
   FRONT_FAMILY_ROLES,
+  isExternalVisualRole,
+  type VisualRole,
 } from "../src/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
-import type { VisualRole } from "../src/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
 import fs from "fs"
 import path from "path"
 import { fileURLToPath } from "url"
@@ -33,9 +34,10 @@ const variants: Record<string, unknown> = {}
 for (const s of suggestions.filter(
   (x) => x.identityTier === "this_sku" && !x.variantKey.includes("__review")
 )) {
-  const roleOf = (id: string | null) => (id ? (s.rolesByMediaId?.[id] ?? null) : null)
+  const roleOf = (id: string | null) => (id ? s.rolesByMediaId?.[id] ?? null : null)
   const fileOf = (id: string | null) => (id ? (invById.get(id) as { filename?: string })?.filename ?? id : null)
   const primaryRole = roleOf(s.primaryCandidateId)
+  const borrowed = s.borrowedSameSku ?? []
   variants[s.label] = {
     variantKey: s.variantKey,
     colorToken: s.colorNameRaw,
@@ -47,30 +49,42 @@ for (const s of suggestions.filter(
       reason: s.roleCompositionSummary ?? "color-specific primary",
     },
     gallery: s.galleryCandidateIds.map((id) => {
-      const borrowed = (s.borrowedSameSku ?? []).find((b) => b.mediaId === id)
+      const b = borrowed.find((x) => x.mediaId === id)
       return {
         mediaId: id,
         filename: fileOf(id),
         role: roleOf(id),
-        borrowed: Boolean(borrowed),
-        borrowedFromVariant: borrowed?.fromVariantLabel ?? null,
-        reason: borrowed ? `borrowed ${borrowed.role} from ${borrowed.fromVariantLabel}` : "same-color gallery",
+        borrowed: Boolean(b),
+        borrowedFromVariant: b?.fromVariantLabel ?? null,
+        reason: b ? `borrowed ${b.role} from ${b.fromVariantLabel}` : "same-color gallery",
       }
     }),
-    borrowedSameSku: (s.borrowedSameSku ?? []).map((b) => ({
-      ...b,
-      filename: fileOf(b.mediaId),
-    })),
+    borrowedSameSku: borrowed.map((b) => ({ ...b, filename: fileOf(b.mediaId) })),
     rejectedBorrowCandidates: s.rejectedBorrowCandidates ?? [],
-    hiddenDuplicates: s.hiddenDuplicateIds ?? [],
     hiddenDuplicateCount: s.duplicateHiddenCount ?? 0,
     roleStrip: s.roleStrip ?? [],
     primaryIsInterior: primaryRole === "interior",
-    primaryIsBorrowed: false,
-    hasBorrowedFront: (s.borrowedSameSku ?? []).some((b) =>
-      FRONT_FAMILY_ROLES.has(b.role as VisualRole) || b.role === "front_3_4"
+    hasBorrowedFront: borrowed.some(
+      (b) => FRONT_FAMILY_ROLES.has(b.role as VisualRole) || b.role === "front_3_4"
     ),
-    borrowedRolesOk: (s.borrowedSameSku ?? []).every((b) => canBorrowVisualRole(b.role as VisualRole)),
+    hasBorrowed3Quarter: borrowed.some((b) => b.role === "front_3_4"),
+    hasBorrowedUnknown: borrowed.some((b) => b.role === "unknown"),
+    borrowedRolesOk: borrowed.every((b) => canBorrowVisualRole(b.role as VisualRole)),
+    borrowedRoles: borrowed.map((b) => b.role),
+    galleryHasForeignExternal: s.galleryCandidateIds.some((id) => {
+      const role = roleOf(id) as VisualRole
+      const it = invById.get(id)
+      if (!it || !role) return false
+      const hay = `${(it as { filename?: string }).filename || ""}`.toLowerCase()
+      const isBlue = /blue/i.test(hay)
+      const isGrey = /grey|gray/i.test(hay)
+      const isOlive = /olive/i.test(hay)
+      const isCream = /cream|gallery|iso/i.test(hay)
+      if (s.colorNameRaw === "blue" && (isGrey || isOlive || isCream) && isExternalVisualRole(role)) return true
+      if (s.colorNameRaw === "grey" && (isBlue || isOlive || isCream) && isExternalVisualRole(role)) return true
+      if (s.colorNameRaw === "blue" && isCream && role === "front_3_4") return true
+      return false
+    }),
   }
 }
 

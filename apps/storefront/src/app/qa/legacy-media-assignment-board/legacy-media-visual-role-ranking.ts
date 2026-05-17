@@ -54,7 +54,8 @@ const SCHEME_RE =
   /схем|черт[её]ж|blueprint|schematic|dimension|technical[_\s-]?draw|line[\s-]?art|plan[_\s-]?view|spec[_\s-]?sheet|(?:^|[_\-.])draw(?:ing)?(?:[_\-.]|$)|pdf[_\s-]?crop|vector|wireframe/i
 const INTERIOR_RE =
   /interior|inside|внутр|открыт|open(?:ed)?[\s_-]?(?:door|wardrobe)|doors?[\s_-]?open|shelf|shelves|полк|drawer[\s_-]?open|interior[_\s-]?view|visible[\s_-]?shelf|pole|стойк/i
-const INTERIOR_INDEX_RE = /[-_]i(?:3|[4-9])(?:\.|[-_]|$)|[-_]gallery[_\-.]?0?3(?:\.|[-_]|$)/i
+const INTERIOR_INDEX_RE = /[-_]i(?:3|[4-9])(?:\.|[-_]|$)/i
+const GALLERY_THIRD_RE = /[-_]gallery[_\-.]?0?3(?:\.|[-_]|$)/i
 const DETAIL_RE =
   /detail|close[\s_-]?up|крупн|(?:^|[^a-z])handle(?:[^a-z]|$)|(?:^|[^a-z])knob(?:[^a-z]|$)|(?:^|[^a-z])leg(?:[^a-z]|$)|texture|фурнит|hardware|material[\s_-]?sample|drawer[\s_-]?detail|hinge|фурнитур|(?:^|[^a-z])joint(?:[^a-z]|$)|enlarged|crop/i
 const PRODUCT_HERO_SHOT_RE =
@@ -132,6 +133,52 @@ export function canBorrowVisualRole(role: VisualRole): boolean {
   return BORROWABLE_VISUAL_ROLES.has(role)
 }
 
+/** @alias canBorrowVisualRole */
+export function isBorrowableRole(role: VisualRole): boolean {
+  return canBorrowVisualRole(role)
+}
+
+export function isExternalVisualRole(role: VisualRole): boolean {
+  return NON_BORROWABLE_EXTERNAL_ROLES.has(role) || FRONT_FAMILY_ROLES.has(role)
+}
+
+/** True interior (open/inside/i3+) — not neutral gallery/iso externals mis-tagged as interior. */
+export function isClearlyBorrowableInterior(inv: InvItem): boolean {
+  const hay = mediaHaystack(inv)
+  if (GALLERY_THIRD_RE.test(hay) && !INTERIOR_RE.test(hay)) return false
+  if (/[-_]gallery[_\-.]?0?[12](?:\.|[-_]|$)/i.test(hay) && !INTERIOR_RE.test(hay)) return false
+  if (/[-_]iso[-_]?\d/i.test(hay) && !INTERIOR_RE.test(hay) && !INTERIOR_INDEX_RE.test(hay)) return false
+  return isInteriorSourceHint(hay)
+}
+
+/** Neutral shared shots (gallery_*, iso-*) default to cream bucket on co-02-1 style products. */
+export function neutralExternalOwnerColor(inv: InvItem): string | null {
+  const explicit = extractColorTokenFromMedia(inv)
+  if (explicit) return explicit
+  const hay = mediaHaystack(inv)
+  if (GALLERY_THIRD_RE.test(hay) || /[-_]gallery[_\-.]?\d|[-_]iso[-_]?\d|[-_]i[12](?:\.|[-_]|$)/i.test(hay)) {
+    return "cream"
+  }
+  return null
+}
+
+export function externalMediaAllowedForColorVariant(
+  inv: InvItem,
+  role: VisualRole,
+  colorToken: string,
+  productHandle?: string,
+  productSku?: string
+): boolean {
+  if (!isExternalVisualRole(role)) return true
+  const want = colorToken.toLowerCase().replace(/^color_/, "")
+  if (mediaMatchesColorToken(inv, want, productHandle, productSku)) return true
+  const owner = neutralExternalOwnerColor(inv)
+  if (owner && owner !== want) return false
+  if (!owner && role === "unknown") return false
+  if (!owner) return false
+  return owner === want
+}
+
 /** Filename/path color token for same-SKU variant matching (not display label). */
 export function extractColorTokenFromMedia(
   inv: InvItem,
@@ -203,6 +250,7 @@ export function classifyVisualRole(
   const isPdfLike = /\.pdf/i.test(hay) || inv.source_type?.toLowerCase().includes("pdf")
 
   if (SCHEME_RE.test(hay) || isPdfLike) return "scheme"
+  if (GALLERY_THIRD_RE.test(hay) && !INTERIOR_RE.test(hay)) return "front_3_4"
   if (isInteriorSourceHint(hay)) return "interior"
   if (DETAIL_RE.test(hay)) return "detail"
   if (LIFESTYLE_RE.test(hay) && !whiteBg) return "lifestyle"
