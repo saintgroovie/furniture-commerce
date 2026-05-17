@@ -53,6 +53,11 @@ import {
   formatAppendToAllGalleriesNote,
 } from "./legacy-board-variant-gallery-append"
 import {
+  computeSkuReviewProgress,
+  OPERATOR_LABELS,
+  variantChipStatus,
+} from "./legacy-board-operator-polish"
+import {
   mergeGalleryPreservingOrder,
   variantHasEstablishedGalleryOrder,
   withManualGalleryOrder,
@@ -1348,28 +1353,6 @@ export function LegacyMediaAssignmentBoardClient() {
   }, [invDoc, hydrated, board.zones, board.grej, persist])
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setInspectorId(null)
-        return
-      }
-      const tag = (e.target as HTMLElement | null)?.tagName?.toLowerCase()
-      if (tag === "input" || tag === "textarea" || tag === "select") return
-      if (e.key === "Enter" && selectedHandle) {
-        const hh = selectedHandle.toLowerCase()
-        const vk = activeVariantByHandle[hh] || DEFAULT_VARIANT_KEY
-        const sug = suggestedVariantsForSelected.find((s) => s.variantKey === vk && s.identityTier === "this_sku")
-        if (sug && !variantsByHandle[hh]?.[vk]) {
-          e.preventDefault()
-          /* confirm handled in review canvas via data-action-button */
-        }
-      }
-    }
-    window.addEventListener("keydown", onKey)
-    return () => window.removeEventListener("keydown", onKey)
-  }, [selectedHandle, activeVariantByHandle, suggestedVariantsForSelected, variantsByHandle])
-
-  useEffect(() => {
     if (!exportFeedback) return
     const t = window.setTimeout(() => setExportFeedback(null), 2800)
     return () => window.clearTimeout(t)
@@ -2281,6 +2264,14 @@ export function LegacyMediaAssignmentBoardClient() {
     return buildSuggestedVariantsForProduct(selectedHandle)
   }, [selectedHandle, buildSuggestedVariantsForProduct])
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setInspectorId(null)
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [])
+
   const runArticleScan = useCallback(
     async (targetProducts: ProductRow[]) => {
       if (!invDoc || targetProducts.length === 0) return
@@ -2786,7 +2777,7 @@ export function LegacyMediaAssignmentBoardClient() {
     const canDrag = Boolean(inv?.previewable ?? pv.useImg)
     const visualRole = inv ? classifyVisualRole(inv) : null
     const roleBadge = visualRole ? VISUAL_ROLE_BADGE_RU[visualRole] : null
-    return (
+    const card = (
       <MediaImageCard
         inventoryId={id}
         inv={cardInv}
@@ -2805,8 +2796,7 @@ export function LegacyMediaAssignmentBoardClient() {
           ...(selectedHandle?.toLowerCase() === handle.toLowerCase() && seedInvIdsMatchedFromStorefront.has(id) ? ["storefront seed"] : []),
           ...(!inv ? ["missing inv map"] : []),
           ...(pv.reason ? ["preview fallback"] : []),
-          "Assigned",
-          ...(zone === "primary" ? [] : [zone]),
+          ...(zone === "primary" ? [] : zone === "gallery" ? [] : ["Assigned"]),
         ]}
         size={size}
         draggable={canDrag}
@@ -2850,6 +2840,15 @@ export function LegacyMediaAssignmentBoardClient() {
         {zoneActions}
       </MediaImageCard>
     )
+    if (zone === "gallery" && gi >= 0) {
+      return (
+        <div data-gallery-thumb-wrap="true">
+          <span data-gallery-order-badge="true">{gi + 1}</span>
+          {card}
+        </div>
+      )
+    }
+    return card
   }
 
   const sidebarStats = (coll: string) => {
@@ -3302,64 +3301,6 @@ export function LegacyMediaAssignmentBoardClient() {
           minWidth: 0,
         }}
       >
-        <div
-          data-review-cockpit="true"
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 10,
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "10px 12px",
-            borderRadius: 10,
-            background: "#f8fafc",
-            border: "1px solid #e2e8f0",
-          }}
-        >
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 10, fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em" }}>Review flow · step 4 next product</div>
-            <div style={{ fontSize: 13, color: "#475569", marginTop: 2 }}>
-              <strong style={{ color: "#0f172a" }}>{collectionLabel}</strong>
-              {" · "}
-              <span style={{ color: "#64748b" }}>
-                {productOrdinal} / {productTotal} товаров
-              </span>
-            </div>
-          </div>
-          <span
-            data-product-review-status={allSuggestionsReviewed ? "ready" : "needs-review"}
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              padding: "4px 10px",
-              borderRadius: 999,
-              background: allSuggestionsReviewed ? "#dcfce7" : totalSuggestions === 0 ? "#f1f5f9" : "#fef3c7",
-              color: allSuggestionsReviewed ? "#166534" : totalSuggestions === 0 ? "#64748b" : "#92400e",
-            }}
-          >
-            {totalSuggestions === 0 ? "Готово" : allSuggestionsReviewed ? "Готово к экспорту" : "Нужна проверка"}
-          </span>
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-            <button type="button" style={miniBtn} onClick={() => goToPreviousProduct(h)} title="Предыдущий товар">
-              ← Prev
-            </button>
-            <button type="button" style={btnPrimaryMini} onClick={() => goToNextProductWithSuggestions(h)} title="Следующий товар">
-              Next →
-            </button>
-            <button type="button" style={miniBtn} onClick={skipCurrentProduct} title="Пропустить товар">
-              Skip
-            </button>
-            <button
-              type="button"
-              data-action-button="board-sync-preview"
-              style={{ ...miniBtn, borderColor: "#93c5fd", color: "#1d4ed8" }}
-              title="Dry-run: identity + visual roles + dedupe + same-SKU borrow"
-              onClick={() => runBoardSyncPreview("current")}
-            >
-              Синхронизировать по правилам
-            </button>
-          </div>
-        </div>
 
         {syncPanelOpen && boardSyncPlan && syncSummary ? (
           <div
@@ -3499,144 +3440,161 @@ export function LegacyMediaAssignmentBoardClient() {
           </div>
         ) : null}
 
-        <header style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
-          <div style={{ fontSize: 10, fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em" }}>Товар</div>
-          <h2
-            title={selectedProduct.title || selectedProduct.handle}
-            style={{
-              margin: 0,
-              fontSize: 22,
-              fontWeight: 800,
-              letterSpacing: "-0.02em",
-              color: "#0f172a",
-              lineHeight: 1.2,
-              display: "-webkit-box",
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: "vertical",
-              overflow: "hidden",
-              overflowWrap: "anywhere",
-              wordBreak: "break-word",
-            }}
-          >
-            {selectedProduct.title || selectedProduct.handle}
-          </h2>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", fontSize: 13, color: "#475569", rowGap: 6 }}>
-            <code style={{ background: "#f1f5f9", padding: "2px 8px", borderRadius: 6, fontSize: 12 }}>{selectedProduct.handle}</code>
-            <span style={{ fontSize: 12 }}>SKU <strong>{selectedProduct.sku}</strong></span>
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                textTransform: "uppercase",
-                padding: "3px 10px",
-                borderRadius: 999,
-                background: "#eef2ff",
-                color: "#3730a3",
-              }}
-            >
-              {selectedProduct.collection || "— collection"}
+        <header data-product-sticky-header="true" style={{ display: "flex", flexDirection: "column", gap: 8, minWidth: 0 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "flex-start", justifyContent: "space-between" }}>
+            <div style={{ minWidth: 0, flex: "1 1 200px" }}>
+              <h2
+                title={selectedProduct.title || selectedProduct.handle}
+                style={{
+                  margin: 0,
+                  fontSize: 20,
+                  fontWeight: 800,
+                  letterSpacing: "-0.02em",
+                  color: "#0f172a",
+                  lineHeight: 1.2,
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                  overflowWrap: "anywhere",
+                  wordBreak: "break-word",
+                }}
+              >
+                {selectedProduct.title || selectedProduct.handle}
+              </h2>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", marginTop: 6, fontSize: 12, color: "#475569" }}>
+                <code style={{ background: "#f1f5f9", padding: "2px 8px", borderRadius: 6 }}>{selectedProduct.handle}</code>
+                <span>
+                  SKU <strong>{selectedProduct.sku}</strong>
+                </span>
+                <span style={{ fontSize: 11, fontWeight: 600, color: "#3730a3" }}>{collectionLabel}</span>
+              </div>
+            </div>
+            <span data-readiness-badge="true" data-kind={skuProgress.readiness} style={{ flexShrink: 0 }}>
+              {skuProgress.readinessLabel}
             </span>
-            <details style={{ marginLeft: "auto" }}><summary style={{ fontSize: 10, color: "#94a3b8", cursor: "pointer" }}>Тех. сводка</summary><span style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.4 }}>
-              Storefront seeds: <strong>{selectedProduct.image_urls.length}</strong> · matcher rows: <strong>{candCount}</strong> · assigned slots:{" "}
-              <strong>{(z.primary ? 1 : 0) + z.gallery.length + z.reference_only.length + z.lane_rejected.length}</strong>
-            </span></details>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", justifyContent: "space-between" }}>
+            <span style={{ fontSize: 11, color: "#64748b" }}>
+              {productOrdinal} / {productTotal} · {collectionLabel}
+            </span>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              <button type="button" style={miniBtn} onClick={() => goToPreviousProduct(h)} title="Предыдущий товар">
+                ← Назад
+              </button>
+              <button type="button" style={btnPrimaryMini} onClick={() => goToNextProductWithSuggestions(h)} title={nextProductLabel}>
+                {nextProductLabel} →
+              </button>
+              <button type="button" style={miniBtn} onClick={skipCurrentProduct} title="Пропустить товар">
+                Пропустить
+              </button>
+            </div>
+            {skuProgress.readiness !== "ready" ? (
+              <span style={{ fontSize: 10, color: "#b45309", width: "100%" }}>Есть замечания — можно перейти к следующему товару.</span>
+            ) : null}
           </div>
         </header>
 
-        <details
-          open={Object.keys(vByHandle).length > 1}
-          style={{ border: "1px solid #e2e8f0", borderRadius: 12, padding: 12, background: "#fff", minWidth: 0 }}
-        >
-          <summary style={{ cursor: "pointer", fontSize: 10, fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-            Color variants & legacy article (advanced)
-          </summary>
-          <div style={{ marginTop: 10 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
-            <span style={{ fontSize: 10, fontWeight: 800, color: "#0f172a", textTransform: "uppercase", letterSpacing: "0.06em" }}>Active variant</span>
-            <span style={{ fontSize: 11, color: "#475569" }}>
-              Active: <strong>{activeVariantDisplay}</strong>
-              {" · "}
-              status: <strong>{activeVariantMeta?.status || (activeVariantKey === DEFAULT_VARIANT_KEY ? "confirmed" : "edited")}</strong>
-            </span>
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", rowGap: 6 }}>
-            {Object.entries(vByHandle).map(([vk, vv]) => {
-              const chipResolved = withResolvedVariantLabel(vk, vv, {
-                legacyColorName: vmByHandle[vk]?.legacyColorName,
-                productSkuHint,
-              })
-              const chipLabel = chipResolved.label
-              const chipNeedsReview = labelNeedsReviewStyle(chipResolved.labelStatus)
-              return (
+        <div data-sku-progress="true">
+          <span>
+            Цвета: <strong>{skuProgress.totalColors}</strong> · подтверждено <strong>{skuProgress.confirmedColors}</strong> · проверка{" "}
+            <strong>{skuProgress.needsReviewColors + leftSuggestionCount}</strong>
+          </span>
+          <span>
+            Без главного: <strong>{skuProgress.primaryMissing}</strong>
+          </span>
+          <span>
+            Пустая галерея: <strong>{skuProgress.galleryEmpty}</strong>
+          </span>
+          {skuProgress.hiddenDuplicates + totalDuplicatesHidden > 0 ? (
+            <span data-hidden-dupes-hint="true">{OPERATOR_LABELS.hiddenSimilar(skuProgress.hiddenDuplicates + totalDuplicatesHidden)}</span>
+          ) : null}
+          {confirmedSuggestionCount > 0 ? (
+            <span style={{ color: "#64748b" }}>Подтверждено цветов: {confirmedSuggestionCount}</span>
+          ) : null}
+        </div>
+
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", rowGap: 6 }}>
+          {Object.entries(vByHandle).map(([vk, vv]) => {
+            const chipResolved = withResolvedVariantLabel(vk, vv, {
+              legacyColorName: vmByHandle[vk]?.legacyColorName,
+              productSkuHint,
+            })
+            const chipLabel = chipResolved.label
+            const chipStatus = variantChipStatus(vk, vv, vmByHandle[vk], vk === activeVariantKey)
+            return (
               <button
                 key={vk}
                 type="button"
+                data-variant-chip="true"
+                data-status={chipStatus}
                 onClick={() => setActiveVariantByHandle((prev) => ({ ...prev, [h]: vk }))}
                 title={chipLabel}
-                style={{
-                  ...miniBtn,
-                  padding: "4px 10px",
-                  background: vk === activeVariantKey ? "#0f172a" : chipNeedsReview ? "#fffbeb" : "#f8fafc",
-                  color: vk === activeVariantKey ? "#fff" : chipNeedsReview ? "#92400e" : "#334155",
-                  borderColor: vk === activeVariantKey ? "#0f172a" : chipNeedsReview ? "#fcd34d" : "#cbd5e1",
-                  maxWidth: 220,
-                  fontStyle: chipNeedsReview && vk !== activeVariantKey ? "italic" : "normal",
-                }}
               >
                 {chipLabel}
               </button>
-              )
-            })}
+            )
+          })}
+        </div>
+
+        <div data-active-color-banner="true">
+          <span data-active-color-chip="true">Активный цвет: {activeVariantDisplay}</span>
+          <button
+            type="button"
+            data-action-button="variant-rename-active"
+            style={{ ...miniBtn, padding: "4px 10px" }}
+            onClick={() => {
+              const next = promptVariantRename(activeVariantDisplay)
+              if (!next) return
+              setVariantsByHandle((prev) => ({
+                ...prev,
+                [h]: {
+                  ...(prev[h] ?? {}),
+                  [activeVariantKey]: {
+                    ...(prev[h]?.[activeVariantKey] ?? activeVariant),
+                    label: next,
+                    labelEditedByUser: true,
+                    labelStatus: "user_edited",
+                    sourceLabel: activeVariant.sourceLabel ?? sourceLabelForVariantKey(activeVariantKey),
+                  },
+                },
+              }))
+            }}
+          >
+            {OPERATOR_LABELS.rename}
+          </button>
+          {activeSuggestionPending ? (
             <button
               type="button"
-              data-action-button="variant-rename-active"
-              style={{ ...miniBtn, padding: "4px 10px" }}
-              onClick={() => {
-                const next = promptVariantRename(activeVariantDisplay)
-                if (!next) return
-                setVariantsByHandle((prev) => ({
-                  ...prev,
-                  [h]: {
-                    ...(prev[h] ?? {}),
-                    [activeVariantKey]: {
-                      ...(prev[h]?.[activeVariantKey] ?? activeVariant),
-                      label: next,
-                      labelEditedByUser: true,
-                      labelStatus: "user_edited",
-                      sourceLabel: activeVariant.sourceLabel ?? sourceLabelForVariantKey(activeVariantKey),
-                    },
-                  },
-                }))
-                setDiag((d) => ({
-                  ...d,
-                  buttonHandlerFired: true,
-                  stateUpdateRequested: true,
-                  stateActuallyChanged: true,
-                  lastAction: "rename active variant label",
-                  lastError: "",
-                }))
-              }}
+              data-action-button="confirm-active-color"
+              style={btnPrimaryMini}
+              onClick={() => confirmAllForSuggestions([activeSuggestionPending])}
             >
-              Переименовать
+              {OPERATOR_LABELS.confirmColor}
             </button>
-            {activeVariantKey !== DEFAULT_VARIANT_KEY ? (
-              <button
-                type="button"
-                data-action-button="variant-remove-active"
-                style={{ ...miniBtn, padding: "4px 10px", color: "#b91c1c", borderColor: "#fecaca" }}
-                onClick={() => removeVariantFromProduct(activeVariantKey)}
-              >
-                Удалить вариант
-              </button>
-            ) : null}
-            {activeVariant.labelEditedByUser ? (
-              <span style={{ ...pillSlate, background: "#f1f5f9", color: "#475569", fontSize: 10 }}>ручное имя</span>
-            ) : null}
-            <div style={{ display: "flex", gap: 6, alignItems: "center", marginLeft: "auto" }}>
+          ) : null}
+          {activeVariantKey !== DEFAULT_VARIANT_KEY ? (
+            <button
+              type="button"
+              data-action-button="variant-remove-active"
+              style={{ ...miniBtn, padding: "4px 10px", color: "#b91c1c", borderColor: "#fecaca" }}
+              onClick={() => removeVariantFromProduct(activeVariantKey)}
+            >
+              Удалить цвет
+            </button>
+          ) : null}
+        </div>
+
+        <details style={{ border: "1px solid #e2e8f0", borderRadius: 12, padding: 12, background: "#fff", minWidth: 0 }}>
+          <summary style={{ cursor: "pointer", fontSize: 11, fontWeight: 700, color: "#64748b" }}>
+            Подробнее: legacy-статья и добавление цвета
+          </summary>
+          <div style={{ marginTop: 10 }}>
+            <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap", marginBottom: 10 }}>
               <input
                 value={newVariantLabel}
                 onChange={(e) => setNewVariantLabel(e.target.value)}
-                placeholder="add variant label"
+                placeholder="Название нового цвета"
                 style={{ ...inputStyle, maxWidth: 180, fontSize: 12, padding: "4px 8px" }}
               />
               <button
@@ -3676,10 +3634,18 @@ export function LegacyMediaAssignmentBoardClient() {
                   setNewVariantLabel("")
                 }}
               >
-                Add variant
+                Добавить цвет
+              </button>
+              <button
+                type="button"
+                data-action-button="board-sync-preview"
+                style={{ ...miniBtn, borderColor: "#93c5fd", color: "#1d4ed8", marginLeft: "auto" }}
+                title="Предпросмотр синхронизации по правилам"
+                onClick={() => runBoardSyncPreview("current")}
+              >
+                Синхронизировать по правилам
               </button>
             </div>
-          </div>
           {activeVariantMeta ? (
             <div style={{ marginTop: 8, fontSize: 11, color: "#475569", lineHeight: 1.5, display: "flex", flexDirection: "column", gap: 4 }}>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "baseline", rowGap: 4 }}>
@@ -3764,15 +3730,13 @@ export function LegacyMediaAssignmentBoardClient() {
           }}
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 10, fontWeight: 800, color: "#0f172a", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-              1 · Цвет: {activeVariantDisplay}
-            </span>
+            <span style={{ fontSize: 11, fontWeight: 800, color: "#0f172a" }}>Рабочая область · {activeVariantDisplay}</span>
             <span style={{ fontSize: 10, color: "#94a3b8", display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
               {labelNeedsReviewStyle(activeLabelStatus) ? (
-                <span style={{ ...pillSlate, background: "#fef3c7", color: "#92400e" }}>уточните название</span>
+                <span style={{ ...pillSlate, background: "#fef3c7", color: "#92400e" }}>Уточните название</span>
               ) : null}
               {activeVariant.primaryAutoPicked ? (
-                <span style={{ ...pillSlate, background: "#dbeafe", color: "#1e40af" }}>Primary выбран автоматически</span>
+                <span style={{ ...pillSlate, background: "#dbeafe", color: "#1e40af" }}>Главное выбрано автоматически</span>
               ) : null}
               {z.primary && invById.get(z.primary)
                 ? (() => {
@@ -3792,13 +3756,14 @@ export function LegacyMediaAssignmentBoardClient() {
                   })()
                 : null}
               {activeVariant.primaryNeedsReview && !invById.get(z.primary || "") ? (
-                <span style={{ ...pillSlate, background: "#fee2e2", color: "#b91c1c" }}>Проверь primary</span>
+                <span style={{ ...pillSlate, background: "#fef3c7", color: "#92400e" }}>Проверить главное фото</span>
               ) : null}
             </span>
           </div>
 
           <section
             data-variant-primary-slot="true"
+            data-workspace-primary-slot="true"
             style={{
               border: "1px solid #e2e8f0",
               borderRadius: 12,
@@ -3808,8 +3773,7 @@ export function LegacyMediaAssignmentBoardClient() {
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, marginBottom: 10 }}>
-              <h3 style={{ margin: 0, fontSize: 13, fontWeight: 800, color: "#0f172a", letterSpacing: "0.02em" }}>Главное фото</h3>
-              <span style={{ fontSize: 10, color: "#94a3b8", fontWeight: 700, textTransform: "uppercase" }}>Primary</span>
+              <h3 style={{ margin: 0, fontSize: 14, fontWeight: 800, color: "#0f172a", letterSpacing: "0.02em" }}>Главное фото этого цвета</h3>
             </div>
             {zoneBox(
               "",
@@ -3859,7 +3823,7 @@ export function LegacyMediaAssignmentBoardClient() {
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
-              <h3 style={{ margin: 0, fontSize: 13, fontWeight: 800, color: "#0f172a" }}>Галерея</h3>
+              <h3 style={{ margin: 0, fontSize: 13, fontWeight: 800, color: "#0f172a" }}>Галерея этого цвета</h3>
               <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
                 <span style={{ fontSize: 11, color: "#64748b" }}>{z.gallery.length} фото</span>
                 <button
@@ -3894,7 +3858,9 @@ export function LegacyMediaAssignmentBoardClient() {
               selectedHandle,
               "gallery",
               z.gallery.length === 0 ? (
-                <span style={muted}>Галерея пуста — перетащите фото из media pool или нажмите Gallery.</span>
+                <div data-workspace-empty-gallery="true">
+                  Добавьте фото из Media pool или из предложенных цветов (suggestions).
+                </div>
               ) : (
                 <div
                   data-gallery-scroll-strip="true"
@@ -3908,7 +3874,7 @@ export function LegacyMediaAssignmentBoardClient() {
                     minWidth: 0,
                   }}
                 >
-                  {z.gallery.map((gid) => (
+                  {z.gallery.map((gid, galleryIdx) => (
                     <div
                       key={gid}
                       data-legacy-drop-target="true"
@@ -3918,6 +3884,7 @@ export function LegacyMediaAssignmentBoardClient() {
                       data-zone="gallery"
                       data-inventory-id={gid}
                       data-main-media-slot="gallery"
+                      data-gallery-order={galleryIdx + 1}
                       style={{ flex: "0 0 196px", width: 196, minWidth: 180, maxWidth: 196 }}
                     >
                       {renderZoneThumb(gid, selectedHandle, "gallery", activeVariantKey, vByHandle, "gallery")}
@@ -4185,18 +4152,18 @@ export function LegacyMediaAssignmentBoardClient() {
         >
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap", marginBottom: 8, rowGap: 6 }}>
             <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
-              <span style={{ fontSize: 10, fontWeight: 800, color: "#0f172a", textTransform: "uppercase", letterSpacing: "0.06em" }}>2 · Suggested variants for this SKU</span>
+              <span style={{ fontSize: 10, fontWeight: 800, color: "#0f172a", textTransform: "uppercase", letterSpacing: "0.06em" }}>2 · Предложенные цвета</span>
               {totalSuggestions > 0 ? (
                 <span
                   data-suggestions-counter="true"
                   style={{ fontSize: 11, color: "#64748b" }}
                 >
-                  <strong>{totalSuggestions}</strong> suggestion{totalSuggestions === 1 ? "" : "s"} · <strong>{confirmedSuggestionCount}</strong> confirmed ·{" "}
-                  <strong>{leftSuggestionCount}</strong> left
+                  <strong>{totalSuggestions}</strong> цветов · подтверждено <strong>{confirmedSuggestionCount}</strong> · осталось{" "}
+                  <strong>{leftSuggestionCount}</strong>
                   {totalDuplicatesHidden > 0 ? (
                     <>
                       {" "}
-                      · <strong data-dedupe-hidden-count="true">{totalDuplicatesHidden}</strong> duplicate{totalDuplicatesHidden === 1 ? "" : "s"} hidden
+                      · <span data-dedupe-hidden-count="true">{OPERATOR_LABELS.hiddenSimilar(totalDuplicatesHidden)}</span>
                     </>
                   ) : null}
                 </span>
@@ -4413,55 +4380,17 @@ export function LegacyMediaAssignmentBoardClient() {
                           {suggestionDisplayLabel}
                         </strong>
                         {labelNeedsReviewStyle(suggestionLabelStatus) ? (
-                          <span style={{ ...pillSlate, background: "#fef3c7", color: "#92400e" }}>уточните название</span>
-                        ) : null}
-                        {confirmedVariant?.labelEditedByUser || prefs.displayLabelEdited ? (
-                          <span style={{ ...pillSlate, background: "#f1f5f9", color: "#475569", fontSize: 10 }}>ручное имя</span>
-                        ) : null}
+                          <span style={{ ...pillSlate, background: "#fef3c7", color: "#92400e" }}>Нужно уточнить название</span>
+                        ) : cardStatus === "edited" ? (
+                          <span style={{ ...pillSlate, background: "#f5f3ff", color: "#6d28d9" }}>Изменено</span>
+                        ) : (
+                          <span style={{ ...pillSlate, background: "#f1f5f9", color: "#475569" }}>Предложено</span>
+                        )}
                         {s.duplicateHiddenCount > 0 ? (
-                          <span
-                            data-suggestion-dedupe-badge="true"
-                            style={{ ...pillSlate, background: "#f1f5f9", color: "#475569" }}
-                            title="Похожие дубликаты скрыты из полосы — см. Details"
-                          >
-                            +{s.duplicateHiddenCount} похожих скрыто
+                          <span data-suggestion-dedupe-badge="true" style={{ fontSize: 11, color: "#64748b" }}>
+                            {OPERATOR_LABELS.hiddenSimilar(s.duplicateHiddenCount)}
                           </span>
                         ) : null}
-                        {(s.borrowedSameSku?.length ?? 0) > 0 ? (
-                          <span style={{ ...pillSlate, background: "#ffedd5", color: "#9a3412" }}>
-                            из этого SKU · другой цвет
-                          </span>
-                        ) : null}
-                        <span style={pillIndigo}>{s.confidence}</span>
-                        <span
-                          style={{
-                            ...pillSlate,
-                            background:
-                              articleStatusRaw === "found"
-                                ? "#dcfce7"
-                                : articleStatusRaw === "pending"
-                                  ? "#dbeafe"
-                                  : articleStatusRaw === "legacy_fetch_unreachable"
-                                    ? "#fee2e2"
-                                    : "#fef3c7",
-                            color:
-                              articleStatusRaw === "found"
-                                ? "#166534"
-                                : articleStatusRaw === "pending"
-                                  ? "#1e40af"
-                                  : articleStatusRaw === "legacy_fetch_unreachable"
-                                    ? "#b91c1c"
-                                    : "#92400e",
-                          }}
-                        >
-                          {articleStatus}
-                        </span>
-                        {articleLine ? (
-                          <span style={{ fontSize: 12, fontWeight: 700, color: "#0f172a" }}>{articleLine}</span>
-                        ) : loading ? (
-                          <span style={{ fontSize: 11, color: "#64748b" }}>…</span>
-                        ) : null}
-                        <span style={{ ...pillSlate, marginLeft: "auto" }}>{cardStatus}</span>
                     </header>
 
                     {/* BODY: Primary + Gallery preview for this color variant */}
@@ -5358,7 +5287,12 @@ export function LegacyMediaAssignmentBoardClient() {
             </details>
           </div>
         </header>
-        {workflowSteps}
+        <details style={{ borderTop: "1px solid #e2e8f0" }}>
+          <summary style={{ cursor: "pointer", padding: "8px 20px", fontSize: 11, fontWeight: 700, color: "#64748b" }}>
+            Шаги проверки (workflow)
+          </summary>
+          {workflowSteps}
+        </details>
       </div>
 
       <div
@@ -6015,7 +5949,7 @@ export function LegacyMediaAssignmentBoardClient() {
                                 )
                               }
                             >
-                              Gallery
+                              {OPERATOR_LABELS.gallery}
                             </button>
                             <button
                               type="button"
@@ -6032,10 +5966,18 @@ export function LegacyMediaAssignmentBoardClient() {
                               }}
                               onClick={() => appendMediaToAllVariantGalleriesForHandle(id)}
                             >
-                              Во все галереи
+                              {OPERATOR_LABELS.allColors}
                             </button>
+                            {poolCardFeedbackById[id] ? (
+                              <span
+                                data-pool-inline-result="true"
+                                data-kind={poolCardFeedbackById[id].kind === "ok" ? "ok" : "neutral"}
+                              >
+                                {poolCardFeedbackById[id].text}
+                              </span>
+                            ) : null}
                             <details style={{ flex: "1 1 100%", minWidth: 0 }}>
-                              <summary style={{ cursor: "pointer", fontSize: 10, color: "#94a3b8", fontWeight: 700, padding: "2px 0" }}>More</summary>
+                              <summary style={{ cursor: "pointer", fontSize: 10, color: "#94a3b8", fontWeight: 700, padding: "2px 0" }}>{OPERATOR_LABELS.more}</summary>
                               <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 4 }}>
                             <button
                               type="button"
@@ -6165,9 +6107,9 @@ export function LegacyMediaAssignmentBoardClient() {
               }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: "#64748b", textTransform: "uppercase" }}>Inspector</div>
+                <div style={{ fontSize: 11, fontWeight: 800, color: "#64748b", textTransform: "uppercase" }}>Просмотр фото</div>
                 <button type="button" style={{ ...miniBtn, padding: "2px 8px" }} onClick={() => setInspectorId(null)}>
-                  Close
+                  Закрыть
                 </button>
               </div>
               <div style={{ borderRadius: 12, overflow: "hidden", background: "#fff", border: "1px solid #e2e8f0", marginBottom: 12 }}>
@@ -6247,7 +6189,7 @@ export function LegacyMediaAssignmentBoardClient() {
                     Сделать главным
                   </button>
                   <button type="button" data-action-button="inspector-gallery" style={miniBtn} onClick={() => applyAssignment("button", inspectorId, "gallery")}>
-                    Gallery
+                    {OPERATOR_LABELS.gallery}
                   </button>
                   <button type="button" data-action-button="inspector-reference" style={miniBtn} onClick={() => applyAssignment("button", inspectorId, "reference")}>
                     Ref
