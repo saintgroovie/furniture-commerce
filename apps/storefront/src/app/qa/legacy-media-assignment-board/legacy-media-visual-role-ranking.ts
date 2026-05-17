@@ -105,8 +105,30 @@ export function mediaHaystack(inv: InvItem, extraBasename?: string | null): stri
     .toLowerCase()
 }
 
+/** Open/inside text markers only — not bare `i3` index (wardrobe i3 handled separately). */
 export function isInteriorSourceHint(hay: string): boolean {
-  return INTERIOR_RE.test(hay) || INTERIOR_INDEX_RE.test(hay) || (OPEN_RE.test(hay) && !CLOSED_RE.test(hay) && !FRONT_RE.test(hay))
+  return INTERIOR_RE.test(hay) || (OPEN_RE.test(hay) && !CLOSED_RE.test(hay) && !FRONT_RE.test(hay))
+}
+
+const KNOWN_WARDROBE_INTERIOR_RE = /(?:^|[-_])co-02-1-i3(?:\.|[-_]|$)/i
+
+/** True open wardrobe interior (co-02-1-i3 or explicit inside/open markers on i3+). */
+export function isWardrobeOpenInteriorShot(inv: InvItem): boolean {
+  const hay = mediaHaystack(inv)
+  if (KNOWN_WARDROBE_INTERIOR_RE.test(hay)) return true
+  if (INTERIOR_INDEX_RE.test(hay) && INTERIOR_RE.test(hay)) return true
+  return false
+}
+
+function isExternalProductShotIndex(hay: string): boolean {
+  return (
+    GALLERY_THIRD_RE.test(hay) ||
+    /[-_]gallery[_\-.]?0?[12](?:\.|[-_]|$)/i.test(hay) ||
+    /[-_]iso[-_]?\d/i.test(hay) ||
+    /[-_]i0?1(?:\.|[-_]|$)/i.test(hay) ||
+    /[-_]i0?2(?:\.|[-_]|$)/i.test(hay) ||
+    /color_[a-z]+_0[12]/i.test(hay)
+  )
 }
 
 export function isClosedExternalSourceHint(hay: string): boolean {
@@ -142,13 +164,53 @@ export function isExternalVisualRole(role: VisualRole): boolean {
   return NON_BORROWABLE_EXTERNAL_ROLES.has(role) || FRONT_FAMILY_ROLES.has(role)
 }
 
-/** True interior (open/inside/i3+) — not neutral gallery/iso externals mis-tagged as interior. */
-export function isClearlyBorrowableInterior(inv: InvItem): boolean {
+/** Borrowable interior/detail/lifestyle — rejects gallery/iso/i1/i2 externals mis-tagged. */
+export function isClearlyBorrowableInteriorOrDetailOrLifestyle(inv: InvItem, role: VisualRole): boolean {
   const hay = mediaHaystack(inv)
-  if (GALLERY_THIRD_RE.test(hay) && !INTERIOR_RE.test(hay)) return false
-  if (/[-_]gallery[_\-.]?0?[12](?:\.|[-_]|$)/i.test(hay) && !INTERIOR_RE.test(hay)) return false
-  if (/[-_]iso[-_]?\d/i.test(hay) && !INTERIOR_RE.test(hay) && !INTERIOR_INDEX_RE.test(hay)) return false
-  return isInteriorSourceHint(hay)
+  if (role === "interior") {
+    if (isExternalProductShotIndex(hay) && !isWardrobeOpenInteriorShot(inv)) return false
+    return isWardrobeOpenInteriorShot(inv) || INTERIOR_RE.test(hay)
+  }
+  if (role === "detail") {
+    return DETAIL_RE.test(hay) && !isExternalProductShotIndex(hay)
+  }
+  if (role === "lifestyle") {
+    return LIFESTYLE_RE.test(hay) && !isWhiteBgSourceHint(inv as InvItemDedupeFields)
+  }
+  return false
+}
+
+/** @deprecated use isClearlyBorrowableInteriorOrDetailOrLifestyle */
+export function isClearlyBorrowableInterior(inv: InvItem): boolean {
+  return isClearlyBorrowableInteriorOrDetailOrLifestyle(inv, "interior")
+}
+
+/**
+ * Filename/path external product shot — independent of mis-labeled role.
+ * Blocks cross-color gallery even when role is interior/unknown.
+ */
+export function isExternalColorSpecificMedia(
+  inv: InvItem,
+  opts?: { role?: VisualRole; productHandle?: string; productSku?: string }
+): boolean {
+  const role = opts?.role ?? classifyVisualRole(inv)
+  if (role === "scheme") return false
+  if (isClearlyBorrowableInteriorOrDetailOrLifestyle(inv, role)) return false
+  if (isExternalVisualRole(role)) return true
+  const hay = mediaHaystack(inv)
+  if (isExternalProductShotIndex(hay)) {
+    if (isWardrobeOpenInteriorShot(inv)) return false
+    return true
+  }
+  if (
+    role === "unknown" &&
+    (isWhiteBgSourceHint(inv as InvItemDedupeFields) ||
+      isClosedExternalSourceHint(hay) ||
+      isThreeQuarterSourceHint(hay))
+  ) {
+    return true
+  }
+  return false
 }
 
 /** Neutral shared shots (gallery_*, iso-*) default to cream bucket on co-02-1 style products. */
@@ -169,7 +231,7 @@ export function externalMediaAllowedForColorVariant(
   productHandle?: string,
   productSku?: string
 ): boolean {
-  if (!isExternalVisualRole(role)) return true
+  if (!isExternalColorSpecificMedia(inv, { role, productHandle, productSku })) return true
   const want = colorToken.toLowerCase().replace(/^color_/, "")
   if (mediaMatchesColorToken(inv, want, productHandle, productSku)) return true
   const owner = neutralExternalOwnerColor(inv)
@@ -250,8 +312,10 @@ export function classifyVisualRole(
   const isPdfLike = /\.pdf/i.test(hay) || inv.source_type?.toLowerCase().includes("pdf")
 
   if (SCHEME_RE.test(hay) || isPdfLike) return "scheme"
-  if (GALLERY_THIRD_RE.test(hay) && !INTERIOR_RE.test(hay)) return "front_3_4"
-  if (isInteriorSourceHint(hay)) return "interior"
+  if (GALLERY_THIRD_RE.test(hay) && !isWardrobeOpenInteriorShot(inv)) return "front_3_4"
+  if (/[-_]iso[-_]?\d/i.test(hay) && !isWardrobeOpenInteriorShot(inv)) return "front_3_4"
+  if (isWardrobeOpenInteriorShot(inv)) return "interior"
+  if (isInteriorSourceHint(hay) && !isThreeQuarterSourceHint(hay)) return "interior"
   if (DETAIL_RE.test(hay)) return "detail"
   if (LIFESTYLE_RE.test(hay) && !whiteBg) return "lifestyle"
 
@@ -259,10 +323,14 @@ export function classifyVisualRole(
   const hasClosed = CLOSED_RE.test(hay)
   const hasOpen = OPEN_RE.test(hay)
 
-  if (/[-_]i0?2(?:\.|[-_]|$)/i.test(hay) && !isInteriorSourceHint(hay)) return "front_3_4"
-  if (/[-_]i0?1(?:\.|[-_]|$)/i.test(hay) && !isInteriorSourceHint(hay) && !isThreeQuarterSourceHint(hay)) {
+  if (/[-_]i0?2(?:\.|[-_]|$)/i.test(hay) && !isWardrobeOpenInteriorShot(inv)) return "front_3_4"
+  if (/[-_]i0?1(?:\.|[-_]|$)/i.test(hay) && !isWardrobeOpenInteriorShot(inv) && !isThreeQuarterSourceHint(hay)) {
     return hasClosed && !hasOpen ? "closed_front" : "front_anfas"
   }
+  if (/color_[a-z]+_01/i.test(hay) && !isWardrobeOpenInteriorShot(inv)) {
+    return hasClosed && !hasOpen ? "closed_front" : "front_anfas"
+  }
+  if (/color_[a-z]+_02/i.test(hay) && !isWardrobeOpenInteriorShot(inv)) return "front_3_4"
   const hasHero = HERO_RE.test(hay)
   const isSecond = SECOND_FRONT_RE.test(hay)
   const isFirstExternal = FIRST_EXTERNAL_RE.test(hay) && !INTERIOR_INDEX_RE.test(hay)
@@ -276,11 +344,12 @@ export function classifyVisualRole(
     return "front_3_4"
   }
 
-  if (PRODUCT_HERO_SHOT_RE.test(hay) && !isInteriorSourceHint(hay)) {
+  if (PRODUCT_HERO_SHOT_RE.test(hay) && !isWardrobeOpenInteriorShot(inv)) {
     if (GALLERY_FIRST_RE.test(hay)) return "closed_front"
+    if (/color_[a-z]+_01/i.test(hay)) return hasClosed && !hasOpen ? "closed_front" : "front_anfas"
     return hasClosed && !hasOpen ? "closed_front" : "hero_front"
   }
-  if (PRODUCT_ALT_EXTERNAL_RE.test(hay) && !isInteriorSourceHint(hay)) {
+  if (PRODUCT_ALT_EXTERNAL_RE.test(hay) && !isWardrobeOpenInteriorShot(inv)) {
     if (SECOND_FRONT_RE.test(hay) || isThreeQuarterSourceHint(hay)) return "front_3_4"
     return "front_anfas"
   }
@@ -309,7 +378,7 @@ export function classifyVisualRole(
 
   if (whiteBg && !hasOpen && !isInteriorSourceHint(hay) && !DETAIL_RE.test(hay)) {
     if (isSecond) return "front_anfas"
-    if (INTERIOR_INDEX_RE.test(hay)) return "interior"
+    if (isWardrobeOpenInteriorShot(inv)) return "interior"
     if (isClosedExternalSourceHint(hay)) return "closed_front"
     return "unknown"
   }

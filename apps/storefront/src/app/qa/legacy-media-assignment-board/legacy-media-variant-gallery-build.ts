@@ -16,8 +16,9 @@ import {
   FRONT_FAMILY_ROLES,
   GALLERY_ROLE_ORDER,
   isBorrowableRole,
-  isClearlyBorrowableInterior,
+  isClearlyBorrowableInteriorOrDetailOrLifestyle,
   isDistinctAlternateFront,
+  isExternalColorSpecificMedia,
   isExternalVisualRole,
   mediaMatchesColorToken,
   NON_BORROWABLE_EXTERNAL_ROLES,
@@ -387,11 +388,24 @@ export function sanitizeVariantGalleryCandidates(input: {
         } as VariantGallerySlice, "front role cannot be borrowed")
         continue
       }
-      if (!isClearlyBorrowableInterior(inv)) {
+      if (!isClearlyBorrowableInteriorOrDetailOrLifestyle(inv as InvItem, borrowEntry.role)) {
         rejectBorrow(rejected, inv, id, role, {
           variantKey: borrowEntry.fromVariantKey,
           label: borrowEntry.fromVariantLabel,
-        } as VariantGallerySlice, "neutral external cannot be borrowed as interior")
+        } as VariantGallerySlice, "not clearly borrowable interior/detail/lifestyle")
+        continue
+      }
+      if (
+        isExternalColorSpecificMedia(inv as InvItem, {
+          role,
+          productHandle: input.productHandle,
+          productSku: input.productSku,
+        })
+      ) {
+        rejectBorrow(rejected, inv, id, role, {
+          variantKey: borrowEntry.fromVariantKey,
+          label: borrowEntry.fromVariantLabel,
+        } as VariantGallerySlice, "external color-specific media cannot be borrowed")
         continue
       }
       borrowed.push(borrowEntry)
@@ -399,7 +413,14 @@ export function sanitizeVariantGalleryCandidates(input: {
       continue
     }
 
-    if (isExternalVisualRole(role) && !externalMediaAllowedForColorVariant(inv, role, input.targetColor, input.productHandle, input.productSku)) {
+    if (
+      isExternalColorSpecificMedia(inv as InvItem, {
+        role,
+        productHandle: input.productHandle,
+        productSku: input.productSku,
+      }) &&
+      !externalMediaAllowedForColorVariant(inv, role, input.targetColor, input.productHandle, input.productSku)
+    ) {
       rejectBorrow(
         rejected,
         inv,
@@ -431,7 +452,7 @@ export function sanitizeVariantGalleryCandidates(input: {
 
 function isWhiteBgExternalGuess(inv: InvItemDedupeFields): boolean {
   const hay = `${inv.filename} ${inv.source_path || ""}`.toLowerCase()
-  return /white|белом|yandex/i.test(hay) && !isClearlyBorrowableInterior(inv as InvItem)
+  return /white|белом|yandex/i.test(hay) && !isClearlyBorrowableInteriorOrDetailOrLifestyle(inv as InvItem, "interior")
 }
 
 export function applySameSkuRoleBorrowing(
@@ -498,14 +519,31 @@ export function applySameSkuRoleBorrowing(
         }
         if (mediaRole !== role) continue
 
-        if (!isClearlyBorrowableInterior(inv as InvItem)) {
+        if (!isClearlyBorrowableInteriorOrDetailOrLifestyle(inv as InvItem, mediaRole)) {
           rejectBorrow(
             rejectedBorrowCandidates,
             inv,
             id,
             mediaRole,
             sib,
-            "neutral external cannot be borrowed as interior"
+            "not clearly borrowable interior/detail/lifestyle"
+          )
+          continue
+        }
+        if (
+          isExternalColorSpecificMedia(inv as InvItem, {
+            role: mediaRole,
+            productHandle,
+            productSku,
+          })
+        ) {
+          rejectBorrow(
+            rejectedBorrowCandidates,
+            inv,
+            id,
+            mediaRole,
+            sib,
+            "external color-specific media cannot be borrowed"
           )
           continue
         }
@@ -559,6 +597,13 @@ export function applySameSkuRoleBorrowing(
     rolesById,
     rejectedBorrowCandidates: sanitized.rejectedBorrowCandidates,
   }
+}
+
+/** Final guard after borrow / recompose / confirm — same rules as sanitizeVariantGalleryCandidates. */
+export function finalSanitizeVariantGalleryOutput(
+  input: Parameters<typeof sanitizeVariantGalleryCandidates>[0]
+): ReturnType<typeof sanitizeVariantGalleryCandidates> {
+  return sanitizeVariantGalleryCandidates(input)
 }
 
 export function roleBadgeForMedia(

@@ -35,6 +35,7 @@ import { dedupeAndSortVariantMedia, type InvItemDedupeFields } from "./legacy-me
 import {
   applyRoleRepresentativeSelection,
   applySameSkuRoleBorrowing,
+  finalSanitizeVariantGalleryOutput,
   sanitizeVariantGalleryCandidates,
   roleBadgeForMedia,
   VISUAL_ROLE_STRIP_LABEL_RU,
@@ -406,10 +407,27 @@ function buildVariantMediaFromCandidates(
     seedOrder: preserveOrder?.length ? preserveOrder : seedOrder,
   })
   const primary = deduped.primaryCandidateId ?? pickMeta.primaryId
-  const gallery =
+  let gallery =
     deduped.galleryCandidateIds.length > 0
       ? deduped.galleryCandidateIds
       : pickMeta.galleryIds.filter((id) => id !== primary)
+  if (opts?.colorToken) {
+    const rolesById = new Map<string, VisualRole>(
+      Object.entries(deduped.rolesById ?? {}).map(([id, role]) => [id, role as VisualRole])
+    )
+    const sanitized = finalSanitizeVariantGalleryOutput({
+      primaryId: primary,
+      galleryIds: gallery.filter((id) => id !== primary),
+      rolesById,
+      borrowed: [],
+      targetColor: opts.colorToken,
+      invById: invDedupe,
+      productHandle: "",
+      productSku: opts.selectedSku ?? "",
+    })
+    gallery = [...sanitized.galleryIds]
+    if (primary && gallery.includes(primary)) gallery = gallery.filter((id) => id !== primary)
+  }
   return {
     primary,
     gallery,
@@ -689,15 +707,41 @@ function mediaCanAppendToAllGalleries(
   ce: CandidateEntry | undefined,
   handle: string,
   sku: string,
-  colorVariantCount: number
-): { ok: boolean; hint: string } {
-  if (!handle) return { ok: false, hint: "Сначала выберите товар" }
-  if (colorVariantCount < 2) return { ok: false, hint: "Нет подтверждённых цветов для массового добавления" }
-  if (!inv?.previewable) return { ok: false, hint: "Фото без preview — действие недоступно" }
+  confirmedColorVariantCount: number
+): { ok: boolean; hint: string; showButton: boolean; visibleHint: string | null } {
+  if (!handle) return { ok: false, hint: "Сначала выберите товар", showButton: false, visibleHint: null }
+  if (confirmedColorVariantCount < 1) {
+    return {
+      ok: false,
+      hint: "Сначала подтвердите цвета",
+      showButton: false,
+      visibleHint: null,
+    }
+  }
+  if (confirmedColorVariantCount < 2) {
+    return {
+      ok: false,
+      hint: "Сначала подтвердите цвета",
+      showButton: true,
+      visibleHint: "Сначала подтвердите цвета",
+    }
+  }
+  if (!inv?.previewable) {
+    return { ok: false, hint: "Фото без preview — действие недоступно", showButton: true, visibleHint: null }
+  }
   const identity = classifyMediaProductIdentity(inv, ce, handle, sku)
-  if (identity.tier === "excluded") return { ok: false, hint: "Чужой SKU — нельзя добавить во все галереи" }
-  if (identity.tier === "needs_identity_review") return { ok: false, hint: "Нужна проверка identity" }
-  return { ok: true, hint: "Добавить в конец галереи каждого цвета этого SKU" }
+  if (identity.tier === "excluded") {
+    return { ok: false, hint: "Чужой SKU — нельзя добавить во все галереи", showButton: true, visibleHint: null }
+  }
+  if (identity.tier === "needs_identity_review") {
+    return { ok: false, hint: "Нужна проверка identity", showButton: true, visibleHint: null }
+  }
+  return {
+    ok: true,
+    hint: "Добавить в конец галереи каждого цвета этого SKU",
+    showButton: true,
+    visibleHint: null,
+  }
 }
 
 function mergeVariantMeta(
@@ -4280,12 +4324,6 @@ export function LegacyMediaAssignmentBoardClient() {
                 const rolesByIdMap = new Map<string, VisualRole>(
                   Object.entries(s.rolesByMediaId ?? {}).map(([id, role]) => [id, role as VisualRole])
                 )
-                const borrowedById = new Map(
-                  (s.borrowedSameSku ?? []).map((b) => [
-                    b.mediaId,
-                    { ...b, role: b.role as VisualRole } satisfies BorrowedSameSkuEntry,
-                  ])
-                )
                 const primaryPreviewId = confirmedVariant?.primary ?? s.primaryCandidateId
                 const gallerySource = confirmedVariant ? confirmedVariant.gallery : s.galleryCandidateIds
                 const galleryRest = gallerySource.filter((id) => id && id !== primaryPreviewId && invById.get(id)?.previewable)
@@ -4303,7 +4341,10 @@ export function LegacyMediaAssignmentBoardClient() {
                   primaryId: primaryPreviewId,
                   galleryIds: galleryPreviewRaw.filter((id) => id !== primaryPreviewId),
                   rolesById: rolesByIdMap,
-                  borrowed: Array.from(borrowedById.values()),
+                  borrowed: (s.borrowedSameSku ?? []).map((b) => ({
+                    ...b,
+                    role: b.role as VisualRole,
+                  })),
                   targetColor: s.colorNameRaw,
                   invById: invDedupeForSanitize,
                   productHandle: selectedHandle ?? "",
@@ -4313,6 +4354,12 @@ export function LegacyMediaAssignmentBoardClient() {
                     role: r.role as VisualRole,
                   })),
                 })
+                const borrowedById = new Map(
+                  sanitizedPreview.borrowed.map((b) => [
+                    b.mediaId,
+                    { ...b, role: b.role as VisualRole } satisfies BorrowedSameSkuEntry,
+                  ])
+                )
                 const galleryPreviewOrdered = [
                   ...(primaryPreviewId && primaryIsPreviewable ? [primaryPreviewId] : []),
                   ...sanitizedPreview.galleryIds,
@@ -5951,23 +5998,35 @@ export function LegacyMediaAssignmentBoardClient() {
                             >
                               {OPERATOR_LABELS.gallery}
                             </button>
-                            <button
-                              type="button"
-                              data-action-button="add-to-all-galleries"
-                              data-media-id={id}
-                              draggable={false}
-                              style={{ ...miniBtn, fontWeight: 700 }}
-                              disabled={!appendAll.ok}
-                              title={appendAll.hint}
-                              onMouseDown={(e) => e.stopPropagation()}
-                              onDragStart={(e) => {
-                                e.preventDefault()
-                                e.stopPropagation()
-                              }}
-                              onClick={() => appendMediaToAllVariantGalleriesForHandle(id)}
-                            >
-                              {OPERATOR_LABELS.allColors}
-                            </button>
+                            {appendAll.showButton ? (
+                              <span style={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "stretch" }}>
+                                <button
+                                  type="button"
+                                  data-action-button="add-to-all-galleries"
+                                  data-media-id={id}
+                                  draggable={false}
+                                  style={{
+                                    ...miniBtn,
+                                    fontWeight: 700,
+                                    opacity: appendAll.ok ? 1 : 0.55,
+                                    cursor: appendAll.ok ? "pointer" : "not-allowed",
+                                  }}
+                                  disabled={!appendAll.ok}
+                                  title={appendAll.hint}
+                                  onMouseDown={(e) => e.stopPropagation()}
+                                  onDragStart={(e) => {
+                                    e.preventDefault()
+                                    e.stopPropagation()
+                                  }}
+                                  onClick={() => appendMediaToAllVariantGalleriesForHandle(id)}
+                                >
+                                  {OPERATOR_LABELS.allColors}
+                                </button>
+                                {appendAll.visibleHint ? (
+                                  <span style={{ fontSize: 9, color: "#94a3b8", lineHeight: 1.2 }}>{appendAll.visibleHint}</span>
+                                ) : null}
+                              </span>
+                            ) : null}
                             {poolCardFeedbackById[id] ? (
                               <span
                                 data-pool-inline-result="true"

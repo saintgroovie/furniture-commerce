@@ -5,6 +5,7 @@ import { buildSuggestedVariantsForProductSync } from "../src/app/qa/legacy-media
 import {
   canBorrowVisualRole,
   FRONT_FAMILY_ROLES,
+  isExternalColorSpecificMedia,
   isExternalVisualRole,
   type VisualRole,
 } from "../src/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
@@ -69,8 +70,30 @@ for (const s of suggestions.filter(
     ),
     hasBorrowed3Quarter: borrowed.some((b) => b.role === "front_3_4"),
     hasBorrowedUnknown: borrowed.some((b) => b.role === "unknown"),
+    hasBorrowedExternal: borrowed.some((b) => {
+      const it = invById.get(b.mediaId)
+      return it
+        ? isExternalColorSpecificMedia(it as Parameters<typeof isExternalColorSpecificMedia>[0], {
+            role: b.role as VisualRole,
+            productHandle: "co-02-1",
+            productSku: product?.sku,
+          })
+        : false
+    }),
+    hasBorrowedUnknownExternal: borrowed.some((b) => {
+      const it = invById.get(b.mediaId)
+      if (!it || b.role !== "unknown") return false
+      return isExternalColorSpecificMedia(it as Parameters<typeof isExternalColorSpecificMedia>[0], {
+        role: "unknown",
+        productHandle: "co-02-1",
+        productSku: product?.sku,
+      })
+    }),
     borrowedRolesOk: borrowed.every((b) => canBorrowVisualRole(b.role as VisualRole)),
     borrowedRoles: borrowed.map((b) => b.role),
+    rejectedExternalBorrow: (s.rejectedBorrowCandidates ?? []).filter((r) =>
+      /external|front role|3\/4|neutral external|color-specific/i.test(r.reason)
+    ),
     galleryHasForeignExternal: s.galleryCandidateIds.some((id) => {
       const role = roleOf(id) as VisualRole
       const it = invById.get(id)

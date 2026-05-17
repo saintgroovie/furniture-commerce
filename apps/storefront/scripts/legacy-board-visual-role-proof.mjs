@@ -58,8 +58,8 @@ async function main() {
       report.validationError = `${label} primary role unexpected: ${row.primary.role}`
       break
     }
-    if (row.hasBorrowedFront || row.hasBorrowed3Quarter) {
-      report.validationError = `${label} must not borrow front/anfas/3-4`
+    if (row.hasBorrowedFront || row.hasBorrowed3Quarter || row.hasBorrowedExternal) {
+      report.validationError = `${label} must not borrow front/anfas/3-4/external`
       break
     }
     if (row.galleryHasForeignExternal) {

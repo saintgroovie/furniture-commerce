@@ -29,9 +29,12 @@ export function isBulkGalleryVariantKey(variantKey: string): boolean {
   return variantKey.startsWith("color_")
 }
 
+/** Confirmed color variants with at least primary or one gallery image. */
 export function countBulkGalleryVariants(variants: Record<string, VariantDecisionSlots> | undefined): number {
   if (!variants) return 0
-  return Object.keys(variants).filter(isBulkGalleryVariantKey).length
+  return Object.entries(variants).filter(
+    ([vk, v]) => isBulkGalleryVariantKey(vk) && (Boolean(v.primary) || v.gallery.length > 0)
+  ).length
 }
 
 function slotsEqual(a: VariantDecisionSlots, b: VariantDecisionSlots): boolean {
