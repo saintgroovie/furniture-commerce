@@ -88,10 +88,14 @@ export function buildColorIssueChecklist(input: {
   primary: string | null
   galleryCount: number
   primaryNeedsReview?: boolean
+  primaryAutoPicked?: boolean
   isSuggestionDraft: boolean
   hasPendingSuggestion: boolean
   duplicateHiddenCount?: number
   productReadiness?: ReadinessKind
+  missingRoleSlotLabels?: string[]
+  hasBorrowedInGallery?: boolean
+  hasManualRoleOverride?: boolean
 }): ColorIssueItem[] {
   const items: ColorIssueItem[] = []
 
@@ -105,6 +109,17 @@ export function buildColorIssueChecklist(input: {
     items.push({ id: "primary", label: "Нет главного фото", severity: "warn" })
   } else if (input.primaryNeedsReview) {
     items.push({ id: "primary-review", label: "Проверьте главное фото", severity: "warn" })
+  } else if (input.primaryAutoPicked && !input.primaryNeedsReview) {
+    items.push({ id: "primary-auto", label: "Primary выбран автоматически", severity: "info" })
+  }
+  for (const label of input.missingRoleSlotLabels ?? []) {
+    items.push({ id: `slot-missing-${label}`, label: `Нет фото «${label}»`, severity: "warn" })
+  }
+  if (input.hasBorrowedInGallery) {
+    items.push({ id: "borrowed", label: "Есть фото из другого цвета", severity: "info" })
+  }
+  if (input.hasManualRoleOverride) {
+    items.push({ id: "manual-role", label: "Роль фото исправлена вручную", severity: "info" })
   }
   if (input.galleryCount === 0 && input.primary) {
     items.push({ id: "gallery", label: "Галерея пуста — добавьте фото из пула", severity: "info" })

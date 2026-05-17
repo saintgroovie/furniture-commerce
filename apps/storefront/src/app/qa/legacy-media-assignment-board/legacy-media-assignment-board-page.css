@@ -147,6 +147,18 @@ main.container.page-section:has(.legacy-media-assignment-board-root) {
   background: #fafbfc;
 }
 
+.legacy-media-assignment-board-root [data-gallery-role-slots="true"] [data-role-slot="true"] {
+  min-width: 0;
+}
+
+.legacy-media-assignment-board-root [data-manual-role-badge="true"] {
+  letter-spacing: 0.01em;
+}
+
+.legacy-media-assignment-board-root [data-borrowed-from-color="true"] {
+  max-width: 100%;
+}
+
 .legacy-media-assignment-board-root [data-sku-progress="true"] {
   display: flex;
   flex-wrap: wrap;

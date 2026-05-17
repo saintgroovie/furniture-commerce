@@ -70,6 +70,17 @@ import {
   buildUnifiedColorChips,
   CHIP_STATUS_LABEL_RU,
 } from "./legacy-board-color-workspace"
+import { LegacyBoardGalleryRoleSlots } from "./LegacyBoardGalleryRoleSlots"
+import {
+  buildGalleryRoleSlotAssignment,
+  OPERATOR_ROLE_MENU_CHOICES,
+  OPERATOR_ROLE_OVERRIDES_LS_FIELD,
+  parseOperatorRoleOverrides,
+  resolveEffectiveMediaRole,
+  sortGalleryByEffectiveRoles,
+  type OperatorMediaRoleChoice,
+  type OperatorRoleOverridesByMediaId,
+} from "@/lib/qa/legacy-board-operator-role-overrides"
 import {
   buildDraftVariantFromSuggestion,
   buildVariantMediaFromCandidates,
@@ -153,7 +164,7 @@ function recoveryPreviewUrl(entry: PreviewRecoveryEntry): { url: string | null; 
 }
 const DND_JSON = "application/json"
 const DEV_SENTINEL = "Legacy Board color-variant workspace UX"
-const DEV_SENTINEL_BUILD = "2026-05-17T23:45Z"
+const DEV_SENTINEL_BUILD = "2026-05-17T24:15Z · role slots"
 
 async function fetchBoardJson(url: string): Promise<{ ok: true; data: Record<string, unknown> } | { ok: false; status: number; body: Record<string, unknown> }> {
   const res = await fetch(url)
@@ -224,6 +235,8 @@ type VariantDecisionState = VariantLabelFields & {
   /** QA-only: how gallery order was established (not exported). */
   galleryOrderSource?: GalleryOrderSource | null
   galleryOrderLocked?: boolean
+  /** QA-only: same-SKU photo borrowed from another color variant. */
+  borrowedGalleryMeta?: Record<string, { fromVariantKey: string; fromVariantLabel: string }>
 }
 type VariantsByHandle = Record<string, Record<string, VariantDecisionState>>
 
@@ -374,20 +387,16 @@ function galleryOrderTouched(prev: VariantDecisionState, next: VariantDecisionSt
 function applyRecommendedVisualOrderToVariant(
   variant: VariantDecisionState,
   invById: Map<string, InvItem>,
-  candById: Map<string, CandidateEntry>
+  operatorOverrides: OperatorRoleOverridesByMediaId,
+  opts?: { productHandle?: string; productSku?: string }
 ): VariantDecisionState {
-  const ids = [...(variant.primary ? [variant.primary] : []), ...variant.gallery.filter((id) => id !== variant.primary)]
-  if (ids.length === 0) return variant
-  const invDedupe = new Map<string, InvItemDedupeFields>()
-  for (const [id, row] of Array.from(invById.entries())) invDedupe.set(id, row)
-  const roleBuild = applyRoleRepresentativeSelection(ids, invDedupe, candById)
+  if (variant.gallery.length === 0 && !variant.primary) return variant
+  const sortedGallery = sortGalleryByEffectiveRoles(variant.gallery, variant.primary, invById, operatorOverrides, opts)
   return withRecommendedGalleryOrder({
     ...variant,
-    primary: roleBuild.primaryId,
-    gallery: roleBuild.galleryIds,
-    primaryAutoPicked: false,
-    primaryManualOverride: false,
-    primaryNeedsReview: roleBuild.primaryNeedsReview,
+    gallery: sortedGallery,
+    galleryOrderSource: "recommended",
+    galleryOrderLocked: true,
   })
 }
 
@@ -1078,6 +1087,7 @@ export function LegacyMediaAssignmentBoardClient() {
     displayLabelEdited?: boolean
   }
   const [suggestionRowPrefs, setSuggestionRowPrefs] = useState<Record<string, SuggestionPref>>({})
+  const [operatorRoleOverridesByMediaId, setOperatorRoleOverridesByMediaId] = useState<OperatorRoleOverridesByMediaId>({})
   const [articleScanProgress, setArticleScanProgress] = useState<ArticleScanProgress | null>(null)
   const [articleScanRunning, setArticleScanRunning] = useState(false)
   const enrichInflight = useRef(new Set<string>())
@@ -1273,6 +1283,8 @@ export function LegacyMediaAssignmentBoardClient() {
         }
         const spr = (parsed as { suggestionRowPrefs?: Record<string, SuggestionPref> }).suggestionRowPrefs
         if (spr && typeof spr === "object") setSuggestionRowPrefs(spr)
+        const roleOv = (parsed as Record<string, unknown>)[OPERATOR_ROLE_OVERRIDES_LS_FIELD]
+        setOperatorRoleOverridesByMediaId(parseOperatorRoleOverrides(roleOv))
       }
       try {
         const scanRaw = localStorage.getItem(LS_ARTICLE_SCAN_KEY)
@@ -1301,12 +1313,21 @@ export function LegacyMediaAssignmentBoardClient() {
           activeVariantByHandle,
           rejectedSuggestedVariantsByHandle,
           suggestionRowPrefs,
+          [OPERATOR_ROLE_OVERRIDES_LS_FIELD]: operatorRoleOverridesByMediaId,
         })
       )
     } catch {
       /* ignore */
     }
-  }, [hydrated, variantsByHandle, variantMetaByHandle, activeVariantByHandle, rejectedSuggestedVariantsByHandle, suggestionRowPrefs])
+  }, [
+    hydrated,
+    variantsByHandle,
+    variantMetaByHandle,
+    activeVariantByHandle,
+    rejectedSuggestedVariantsByHandle,
+    suggestionRowPrefs,
+    operatorRoleOverridesByMediaId,
+  ])
 
   const persist = useCallback((zones: Record<string, ProductZoneState>, grej: GlobalRejection[]) => {
     const payload: PersistedV2 = { version: 2, zonesByHandle: zones, globalRejections: grej }
@@ -2085,6 +2106,49 @@ export function LegacyMediaAssignmentBoardClient() {
       }))
     },
     [productByHandle, activeVariantByHandle]
+  )
+
+  const setOperatorMediaRole = useCallback(
+    (
+      mediaId: string,
+      choice: OperatorMediaRoleChoice,
+      ctx: { handle: string; variantKey: string; productSku?: string }
+    ) => {
+      setOperatorRoleOverridesByMediaId((prev) => ({
+        ...prev,
+        [mediaId]: {
+          role: choice,
+          excludeFromSuggestions: choice === "exclude",
+          updatedAt: new Date().toISOString(),
+        },
+      }))
+      if (choice === "primary_front") {
+        updateVariantDecision(
+          ctx.handle,
+          ctx.variantKey,
+          (prev) => ({
+            ...prev,
+            primary: mediaId,
+            gallery: prev.gallery.filter((x) => x !== mediaId),
+            primaryManualOverride: true,
+            primaryAutoPicked: false,
+            primaryNeedsReview: false,
+          }),
+          "set primary from operator role menu",
+          mediaId,
+          { source: "manual", fromZone: "role_menu", targetZone: "primary" }
+        )
+      }
+      setDiag((d) => ({
+        ...d,
+        buttonHandlerFired: true,
+        stateUpdateRequested: true,
+        stateActuallyChanged: true,
+        lastAction: `operator role ${choice} · ${mediaId.slice(0, 8)}`,
+        lastError: "",
+      }))
+    },
+    [updateVariantDecision]
   )
 
   const openSuggestionForEdit = useCallback(
@@ -2903,8 +2967,51 @@ export function LegacyMediaAssignmentBoardClient() {
     )
     const cardInv = inv ?? stubInvForBoardThumb(id, pv.reason || pv.caption || "missing inventory row")
     const canDrag = Boolean(inv?.previewable ?? pv.useImg)
-    const visualRole = inv ? classifyVisualRole(inv, { productHandle: handle.toLowerCase() }) : null
-    const roleBadge = visualRole ? operatorRoleLabelRu(visualRole) : null
+    const phSku = productByHandle.get(handle.toLowerCase())?.sku?.trim() || ""
+    const effRole = resolveEffectiveMediaRole(id, inv, operatorRoleOverridesByMediaId, {
+      productHandle: handle.toLowerCase(),
+      productSku: phSku,
+    })
+    const roleBadge = effRole.labelRu
+    const roleMenu = (
+      <details style={{ marginTop: 4 }}>
+        <summary
+          data-change-media-role="true"
+          style={{ cursor: "pointer", fontSize: 10, fontWeight: 700, color: "#2563eb", listStyle: "none" }}
+        >
+          Изменить роль
+        </summary>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 6 }}>
+          {OPERATOR_ROLE_MENU_CHOICES.map((item) => (
+            <button
+              key={item.choice}
+              type="button"
+              data-change-media-role={item.choice}
+              style={{
+                ...miniBtn,
+                textAlign: "left",
+                fontSize: 10,
+                background: effRole.menuChoice === item.choice ? "#eff6ff" : "#fff",
+                borderColor: effRole.menuChoice === item.choice ? "#93c5fd" : "#e2e8f0",
+              }}
+              {...shieldBtn}
+              onClick={stopCardClick(() =>
+                setOperatorMediaRole(id, item.choice, { handle, variantKey: vk, productSku: phSku })
+              )}
+            >
+              {item.label}
+            </button>
+          ))}
+          <details>
+            <summary style={{ cursor: "pointer", fontSize: 9, color: "#94a3b8" }}>Технические детали</summary>
+            <div style={{ fontSize: 9, color: "#64748b", marginTop: 4, lineHeight: 1.4 }}>
+              auto: {inv ? classifyVisualRole(inv, { productHandle: handle.toLowerCase(), productSku: phSku }) : "—"} · effective:{" "}
+              {effRole.visualRole}
+            </div>
+          </details>
+        </div>
+      </details>
+    )
     const card = (
       <MediaImageCard
         inventoryId={id}
@@ -2920,6 +3027,8 @@ export function LegacyMediaAssignmentBoardClient() {
         previewable={canDrag}
         badges={[
           ...(roleBadge ? [roleBadge] : []),
+          ...(effRole.isManual && !effRole.isExcluded ? ["задано вручную"] : []),
+          ...(effRole.isExcluded ? ["не использовать"] : []),
           ...(zone === "primary" ? ["Главное фото"] : []),
           ...(selectedHandle?.toLowerCase() === handle.toLowerCase() && seedInvIdsMatchedFromStorefront.has(id) ? ["storefront seed"] : []),
           ...(!inv ? ["missing inv map"] : []),
@@ -2965,7 +3074,22 @@ export function LegacyMediaAssignmentBoardClient() {
         workspaceMinimal={size === "primary" || size === "gallery"}
         assignedControlsAboveDrag
       >
+        {effRole.isManual ? (
+          <span
+            data-manual-role-badge="true"
+            style={{
+              fontSize: 10,
+              fontWeight: 700,
+              color: effRole.isExcluded ? "#b91c1c" : "#6d28d9",
+              marginBottom: 4,
+              display: "inline-block",
+            }}
+          >
+            {effRole.isExcluded ? "не использовать" : "роль исправлена"}
+          </span>
+        ) : null}
         {zoneActions}
+        {roleMenu}
       </MediaImageCard>
     )
     if (zone === "gallery" && gi >= 0) {
@@ -3422,13 +3546,27 @@ export function LegacyMediaAssignmentBoardClient() {
     const appendOptionalSameSkuToGallery = (mediaIds: string[]) => {
       const toAdd = mediaIds.filter((id) => id && !activeVariantMediaIds.has(id) && id !== z.primary && id !== activeVariant.primary)
       if (!toAdd.length) return
+      const borrowById = new Map(pendingOptionalSameSku.map((b) => [b.mediaId, b]))
       updateVariantDecision(
         h,
         activeVariantKey,
-        (prev) => ({
-          ...prev,
-          gallery: mergeGalleryPreservingOrder(prev.gallery, toAdd, prev.primary ?? z.primary),
-        }),
+        (prev) => {
+          const borrowedGalleryMeta = { ...(prev.borrowedGalleryMeta ?? {}) }
+          for (const id of toAdd) {
+            const src = borrowById.get(id)
+            if (src) {
+              borrowedGalleryMeta[id] = {
+                fromVariantKey: src.fromVariantKey,
+                fromVariantLabel: src.fromVariantLabel,
+              }
+            }
+          }
+          return {
+            ...prev,
+            gallery: mergeGalleryPreservingOrder(prev.gallery, toAdd, prev.primary ?? z.primary),
+            borrowedGalleryMeta,
+          }
+        },
         `append optional same-SKU media (${toAdd.length})`,
         toAdd[0],
         { source: "manual", fromZone: "suggestion_optional", targetZone: "gallery" }
@@ -3455,16 +3593,70 @@ export function LegacyMediaAssignmentBoardClient() {
       activeVariantKey,
     })
 
+    const roleSlotAssignment = buildGalleryRoleSlotAssignment({
+      primaryId: z.primary,
+      galleryIds: z.gallery,
+      invById,
+      overrides: operatorRoleOverridesByMediaId,
+      borrowedMeta: activeVariant.borrowedGalleryMeta,
+      productHandle: h,
+      productSku: productSkuHint,
+    })
+
     const colorIssues = buildColorIssueChecklist({
       labelStatus: activeLabelStatus,
       primary: z.primary,
       galleryCount: z.gallery.length,
       primaryNeedsReview: activeVariant.primaryNeedsReview,
+      primaryAutoPicked: activeVariant.primaryAutoPicked,
       isSuggestionDraft: activeIsSuggestionDraft,
       hasPendingSuggestion: Boolean(activeSuggestionPending),
       duplicateHiddenCount: activeSuggestionPending?.duplicateHiddenCount,
       productReadiness: skuProgress.readiness,
+      missingRoleSlotLabels: roleSlotAssignment.missingSlotLabels,
+      hasBorrowedInGallery: roleSlotAssignment.hasBorrowedInGallery,
+      hasManualRoleOverride: roleSlotAssignment.hasManualOverride,
     })
+
+    const resolveBorrowedGalleryMeta = (): Record<string, { fromVariantKey: string; fromVariantLabel: string }> => {
+      const out = { ...(activeVariant.borrowedGalleryMeta ?? {}) }
+      for (const gid of z.gallery) {
+        if (out[gid]) continue
+        const ownerVk = findVariantKeyOwningMedia(vByHandle, gid)
+        if (!ownerVk || ownerVk === activeVariantKey) continue
+        const ownerVariant = vByHandle[ownerVk]
+        out[gid] = {
+          fromVariantKey: ownerVk,
+          fromVariantLabel: ownerVariant
+            ? withResolvedVariantLabel(ownerVk, ownerVariant, {
+                legacyColorName: vmByHandle[ownerVk]?.legacyColorName,
+                productSkuHint,
+              }).label
+            : ownerVk,
+        }
+      }
+      return out
+    }
+    const borrowedGalleryMetaResolved = resolveBorrowedGalleryMeta()
+
+    const removeBorrowedFromGallery = (mediaId: string) => {
+      updateVariantDecision(
+        h,
+        activeVariantKey,
+        (prev) => {
+          const borrowedGalleryMeta = { ...(prev.borrowedGalleryMeta ?? {}) }
+          delete borrowedGalleryMeta[mediaId]
+          return {
+            ...prev,
+            gallery: prev.gallery.filter((x) => x !== mediaId),
+            borrowedGalleryMeta,
+          }
+        },
+        "remove borrowed gallery media",
+        mediaId,
+        { source: "manual", fromZone: "gallery", targetZone: "unassigned" }
+      )
+    }
 
     const activateColorVariant = (vk: string) => {
       if (vk === activeVariantKey) return
@@ -4046,7 +4238,11 @@ export function LegacyMediaAssignmentBoardClient() {
                     updateVariantDecision(
                       h,
                       activeVariantKey,
-                      (prev) => applyRecommendedVisualOrderToVariant(prev, invById, candById),
+                      (prev) =>
+                        applyRecommendedVisualOrderToVariant(prev, invById, operatorRoleOverridesByMediaId, {
+                          productHandle: h,
+                          productSku: productSkuHint,
+                        }),
                       "apply recommended visual role order",
                       z.primary || z.gallery[0] || "",
                       { source: "manual", fromZone: "variant_workspace", targetZone: "gallery_reorder" }
@@ -4068,40 +4264,22 @@ export function LegacyMediaAssignmentBoardClient() {
               "Drop to Gallery",
               selectedHandle,
               "gallery",
-              z.gallery.length === 0 ? (
+              z.gallery.length === 0 && roleSlotAssignment.slots.every((s) => s.isEmpty) ? (
                 <div data-workspace-empty-gallery="true">
                   Добавьте фото из Media pool или из предложенных цветов (suggestions).
                 </div>
               ) : (
-                <div
-                  data-gallery-scroll-strip="true"
-                  style={{
-                    display: "flex",
-                    gap: 12,
-                    overflowX: "auto",
-                    overflowY: "hidden",
-                    paddingBottom: 6,
-                    width: "100%",
-                    minWidth: 0,
+                <LegacyBoardGalleryRoleSlots
+                  slots={roleSlotAssignment.slots}
+                  overflowMediaIds={roleSlotAssignment.overflowMediaIds}
+                  borrowedMeta={borrowedGalleryMetaResolved}
+                  onRemoveBorrowed={removeBorrowedFromGallery}
+                  onReplaceBorrowed={(mediaId) => {
+                    removeBorrowedFromGallery(mediaId)
+                    setPoolTab("suggested")
                   }}
-                >
-                  {z.gallery.map((gid, galleryIdx) => (
-                    <div
-                      key={gid}
-                      data-legacy-drop-target="true"
-                      data-drop-kind="product-zone"
-                      data-drop-zone="gallery"
-                      data-product-handle={h}
-                      data-zone="gallery"
-                      data-inventory-id={gid}
-                      data-main-media-slot="gallery"
-                      data-gallery-order={galleryIdx + 1}
-                      style={{ flex: "0 0 196px", width: 196, minWidth: 180, maxWidth: 196 }}
-                    >
-                      {renderZoneThumb(gid, selectedHandle, "gallery", activeVariantKey, vByHandle, "gallery")}
-                    </div>
-                  ))}
-                </div>
+                  renderThumb={(gid) => renderZoneThumb(gid, selectedHandle, "gallery", activeVariantKey, vByHandle, "gallery")}
+                />
               )
             )}
           </section>
