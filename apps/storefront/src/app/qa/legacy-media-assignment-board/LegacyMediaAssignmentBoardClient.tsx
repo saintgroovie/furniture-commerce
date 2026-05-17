@@ -16,6 +16,7 @@ import {
   type PersistedV1,
   type PersistedV2,
   type ProductZoneState,
+  flattenVariantDecisionsToV1Assignments,
   serializeVariantDecisionsForExport,
 } from "./legacy-media-board-export"
 import {
@@ -57,6 +58,7 @@ import {
 import {
   computeSkuReviewProgress,
   OPERATOR_LABELS,
+  resolveActiveVariantKeyForExport,
   variantChipStatus,
 } from "./legacy-board-operator-polish"
 import {
@@ -2022,7 +2024,17 @@ export function LegacyMediaAssignmentBoardClient() {
         ...prev,
         [hh]: result.nextVariants as Record<string, VariantDecisionState>,
       }))
-      const activeVk = activeVariantByHandle[hh] || DEFAULT_VARIANT_KEY
+      const firstAddedKey = result.added[0]?.variantKey
+      const priorActive = activeVariantByHandle[hh]
+      const activeVk =
+        priorActive && result.nextVariants[priorActive]
+          ? priorActive
+          : firstAddedKey && result.nextVariants[firstAddedKey]
+            ? firstAddedKey
+            : activeVariantByHandle[hh] || DEFAULT_VARIANT_KEY
+      if (firstAddedKey && activeVk === firstAddedKey && priorActive !== firstAddedKey) {
+        setActiveVariantByHandle((prev) => ({ ...prev, [hh]: firstAddedKey }))
+      }
       const activeAfter = result.nextVariants[activeVk]
       if (activeAfter) {
         setBoard((boardPrev) => ({
@@ -2222,18 +2234,32 @@ export function LegacyMediaAssignmentBoardClient() {
 
   const exportJson = useCallback(() => {
     const exportedAt = new Date().toISOString()
+    const variant_decisions = serializeVariantDecisionsForExport(variantsByHandle, sourceLabelForVariantKey)
+    const resolvedActiveByHandle: Record<string, string> = {}
+    const zonesForExport: Record<string, ProductZoneState> = { ...board.zones }
+    for (const p of products) {
+      const h = p.handle.toLowerCase()
+      const vk = resolveActiveVariantKeyForExport(h, variantsByHandle[h], activeVariantByHandle)
+      resolvedActiveByHandle[h] = vk
+      const vv = variantsByHandle[h]?.[vk]
+      if (vv) zonesForExport[h] = toZoneState(vv as VariantDecisionState)
+    }
     const base = buildExportDocument({
       exportedAt,
       products: products.map((p) => ({ handle: p.handle, sku: p.sku, collection: p.collection })),
-      zonesByHandle: board.zones,
+      zonesByHandle: zonesForExport,
       globalRejections: board.grej,
+      activeVariantByHandle: resolvedActiveByHandle,
       notes: null,
     })
+    const variantFlat = flattenVariantDecisionsToV1Assignments(variant_decisions)
     return {
       ...base,
-      variant_decisions: serializeVariantDecisionsForExport(variantsByHandle, sourceLabelForVariantKey),
-      active_variant_by_handle: activeVariantByHandle,
+      variant_decisions,
+      active_variant_by_handle: resolvedActiveByHandle,
       confirmed_variant_sources: serializeAllVariantMetaExport(variantMetaByHandle),
+      legacy_assignments_v1_flat:
+        variantFlat.length > 0 ? variantFlat : (base.legacy_assignments_v1_flat as typeof variantFlat),
     }
   }, [products, board.zones, board.grej, variantsByHandle, activeVariantByHandle, variantMetaByHandle])
 

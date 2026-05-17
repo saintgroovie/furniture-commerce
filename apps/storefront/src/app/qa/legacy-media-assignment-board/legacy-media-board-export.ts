@@ -20,6 +20,8 @@ export type PersistedV1Assignment = {
   target_handle: string
   role: "primary_candidate" | "gallery_candidate" | "reference_only" | "do_not_use"
   sort_order: number
+  /** Present when flattened from `variant_decisions` (per-color galleries). */
+  variant_key?: string
 }
 
 export type PersistedV1 = {
@@ -38,6 +40,8 @@ export type ProductExportRow = {
   handle: string
   sku: string
   collection: string
+  /** Mirrors `board.zones` for the active variant only; see `variant_decisions` for all colors. */
+  active_variant_key?: string | null
   primary_candidate: string | null
   gallery_candidates: string[]
   reference_only: string[]
@@ -146,16 +150,19 @@ export function buildExportDocument(params: {
   products: Array<{ handle: string; sku: string; collection: string }>
   zonesByHandle: Record<string, ProductZoneState>
   globalRejections: GlobalRejection[]
+  activeVariantByHandle?: Record<string, string>
   notes?: string | null
 }): Record<string, unknown> {
-  const { exportedAt, products, zonesByHandle, globalRejections, notes } = params
+  const { exportedAt, products, zonesByHandle, globalRejections, activeVariantByHandle, notes } = params
   const productsOut: ProductExportRow[] = products.map((p) => {
     const h = p.handle.toLowerCase()
     const z = zonesByHandle[h] ?? emptyZones()
+    const active_variant_key = activeVariantByHandle?.[h] ?? null
     return {
       handle: p.handle,
       sku: p.sku,
       collection: p.collection,
+      active_variant_key,
       primary_candidate: z.primary,
       gallery_candidates: [...z.gallery],
       reference_only: [...z.reference_only],
@@ -172,16 +179,18 @@ export function buildExportDocument(params: {
       production_rollout: false,
       compatible_filename: "data/normalized/legacy-media-assignment-decisions.json",
       schema: "legacy_media_assignment_v2",
+      canonical_per_variant_state: "variant_decisions",
+      products_row_reflects: "active_variant_only",
     },
     products: productsOut,
     global_rejections: globalRejections,
     notes: notes ?? null,
-    /** Backward-compatible flat view for scripts that still expect v1-style rows */
+    /** Backward-compatible flat view; prefer variant-aware flatten when caller supplies variant_decisions */
     legacy_assignments_v1_flat: flattenToV1Assignments(zonesByHandle),
   }
 }
 
-function flattenToV1Assignments(zonesByHandle: Record<string, ProductZoneState>): PersistedV1Assignment[] {
+export function flattenToV1Assignments(zonesByHandle: Record<string, ProductZoneState>): PersistedV1Assignment[] {
   const out: PersistedV1Assignment[] = []
   for (const [handle, z] of Object.entries(zonesByHandle)) {
     let order = 0
@@ -196,6 +205,55 @@ function flattenToV1Assignments(zonesByHandle: Record<string, ProductZoneState>)
     }
     for (const id of z.lane_rejected) {
       out.push({ inventory_id: id, target_handle: handle, role: "do_not_use", sort_order: order++ })
+    }
+  }
+  return out
+}
+
+/** Flatten per-variant export slice into v1 rows (includes optional `variant_key`). */
+export function flattenVariantDecisionsToV1Assignments(
+  variantDecisions: Record<string, Record<string, VariantDecisionExportSlice>>
+): PersistedV1Assignment[] {
+  const out: PersistedV1Assignment[] = []
+  for (const [handle, variants] of Object.entries(variantDecisions)) {
+    for (const [variantKey, v] of Object.entries(variants)) {
+      let order = 0
+      if (v.primary) {
+        out.push({
+          inventory_id: v.primary,
+          target_handle: handle,
+          role: "primary_candidate",
+          sort_order: order++,
+          variant_key: variantKey,
+        })
+      }
+      for (const id of v.gallery) {
+        out.push({
+          inventory_id: id,
+          target_handle: handle,
+          role: "gallery_candidate",
+          sort_order: order++,
+          variant_key: variantKey,
+        })
+      }
+      for (const id of v.reference) {
+        out.push({
+          inventory_id: id,
+          target_handle: handle,
+          role: "reference_only",
+          sort_order: order++,
+          variant_key: variantKey,
+        })
+      }
+      for (const id of v.rejected) {
+        out.push({
+          inventory_id: id,
+          target_handle: handle,
+          role: "do_not_use",
+          sort_order: order++,
+          variant_key: variantKey,
+        })
+      }
     }
   }
   return out
