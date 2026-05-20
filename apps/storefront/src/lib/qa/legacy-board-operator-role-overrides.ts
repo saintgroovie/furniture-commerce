@@ -44,7 +44,7 @@ export const GALLERY_ROLE_SLOT_DEFS: ReadonlyArray<{
   label: string
   placeholderTitle: string
 }> = [
-  { slotKey: "front_anfas", label: "Анфас", placeholderTitle: "«Анфас»" },
+  { slotKey: "front_anfas", label: "Анфас / фронт", placeholderTitle: "«Анфас / фронт»" },
   { slotKey: "front_3_4", label: "3/4", placeholderTitle: "«3/4»" },
   { slotKey: "interior", label: "Внутри", placeholderTitle: "«Внутри»" },
   { slotKey: "detail", label: "Деталь", placeholderTitle: "«Деталь»" },
@@ -52,12 +52,20 @@ export const GALLERY_ROLE_SLOT_DEFS: ReadonlyArray<{
   { slotKey: "scheme", label: "Схема", placeholderTitle: "«Схема»" },
 ] as const
 
+/**
+ * Canonical operator role choices. We intentionally collapse the previous
+ * "primary_front" + "front_anfas" pair into a single canonical "Анфас / фронт"
+ * choice so the board no longer surfaces two separate missing/role buckets
+ * for what operators treat as the same front-facing role.
+ *
+ * Legacy localStorage records that still carry "primary_front" are accepted
+ * by parseOperatorRoleOverrides and silently normalized to "front_anfas".
+ */
 export const OPERATOR_ROLE_MENU_CHOICES: ReadonlyArray<{
   choice: OperatorMediaRoleChoice
   label: string
 }> = [
-  { choice: "primary_front", label: "Главное / фронт" },
-  { choice: "front_anfas", label: "Анфас" },
+  { choice: "front_anfas", label: "Анфас / фронт" },
   { choice: "front_3_4", label: "3/4" },
   { choice: "interior", label: "Внутри" },
   { choice: "detail", label: "Деталь" },
@@ -68,10 +76,22 @@ export const OPERATOR_ROLE_MENU_CHOICES: ReadonlyArray<{
 
 const FRONT_SLOT_ROLES = new Set<VisualRole>(["closed_front", "hero_front", "front_anfas"])
 
+const LEGACY_CHOICE_ALIAS: Record<string, OperatorMediaRoleChoice> = {
+  primary_front: "front_anfas",
+}
+
+function normalizeOperatorChoice(raw: string): OperatorMediaRoleChoice | null {
+  if (LEGACY_CHOICE_ALIAS[raw]) return LEGACY_CHOICE_ALIAS[raw]
+  if (OPERATOR_ROLE_MENU_CHOICES.some((c) => c.choice === raw)) {
+    return raw as OperatorMediaRoleChoice
+  }
+  return null
+}
+
 export function operatorChoiceToVisualRole(choice: OperatorMediaRoleChoice): VisualRole | null {
   switch (choice) {
     case "primary_front":
-      return "hero_front"
+      return "front_anfas"
     case "front_anfas":
       return "front_anfas"
     case "front_3_4":
@@ -109,9 +129,18 @@ export function parseOperatorRoleOverrides(raw: unknown): OperatorRoleOverridesB
     const row = cell as Record<string, unknown>
     const role = row.role
     if (typeof role !== "string") continue
-    if (!OPERATOR_ROLE_MENU_CHOICES.some((c) => c.choice === role)) continue
+    if (role === "exclude") {
+      out[id] = {
+        role: "exclude",
+        excludeFromSuggestions: Boolean(row.excludeFromSuggestions),
+        updatedAt: typeof row.updatedAt === "string" ? row.updatedAt : new Date(0).toISOString(),
+      }
+      continue
+    }
+    const normalized = normalizeOperatorChoice(role)
+    if (!normalized) continue
     out[id] = {
-      role: role as OperatorMediaRoleChoice,
+      role: normalized,
       excludeFromSuggestions: Boolean(row.excludeFromSuggestions),
       updatedAt: typeof row.updatedAt === "string" ? row.updatedAt : new Date(0).toISOString(),
     }
@@ -125,6 +154,17 @@ export type EffectiveMediaRole = {
   isManual: boolean
   isExcluded: boolean
   menuChoice: OperatorMediaRoleChoice | null
+}
+
+/**
+ * Canonical Russian label for a visual role as shown to operators.
+ * All front-family roles (closed_front/hero_front/front_anfas) collapse to
+ * the same "Анфас / фронт" label so the UI never surfaces two parallel
+ * front buckets.
+ */
+export function canonicalRoleLabel(role: VisualRole): string {
+  if (FRONT_SLOT_ROLES.has(role)) return "Анфас / фронт"
+  return operatorRoleLabelRu(role)
 }
 
 export function resolveEffectiveMediaRole(
@@ -144,14 +184,16 @@ export function resolveEffectiveMediaRole(
     }
   }
   if (manual?.role) {
-    const mapped = operatorChoiceToVisualRole(manual.role)
+    const normalized = normalizeOperatorChoice(manual.role) ?? manual.role
+    const mapped = operatorChoiceToVisualRole(normalized)
     if (mapped) {
+      const menuEntry = OPERATOR_ROLE_MENU_CHOICES.find((c) => c.choice === normalized)
       return {
         visualRole: mapped,
-        labelRu: OPERATOR_ROLE_MENU_CHOICES.find((c) => c.choice === manual.role)?.label ?? operatorRoleLabelRu(mapped),
+        labelRu: menuEntry?.label ?? canonicalRoleLabel(mapped),
         isManual: true,
         isExcluded: false,
-        menuChoice: manual.role,
+        menuChoice: normalized,
       }
     }
   }
@@ -160,7 +202,7 @@ export function resolveEffectiveMediaRole(
     : "unknown"
   return {
     visualRole: auto,
-    labelRu: operatorRoleLabelRu(auto),
+    labelRu: canonicalRoleLabel(auto),
     isManual: false,
     isExcluded: false,
     menuChoice: null,

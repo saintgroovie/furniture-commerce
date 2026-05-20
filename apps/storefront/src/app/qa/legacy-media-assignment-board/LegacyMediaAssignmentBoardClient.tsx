@@ -72,6 +72,7 @@ import {
 } from "./legacy-board-color-workspace"
 import {
   buildGalleryRoleSlotAssignment,
+  canonicalRoleLabel,
   OPERATOR_ROLE_MENU_CHOICES,
   OPERATOR_ROLE_OVERRIDES_LS_FIELD,
   parseOperatorRoleOverrides,
@@ -483,7 +484,7 @@ function SuggestionVariantThumb({
         <div
           style={{
             fontSize: 9,
-            color: "#64748b",
+            color: "#94a3b8",
             padding: 4,
             lineHeight: 1.2,
             height: "100%",
@@ -494,9 +495,10 @@ function SuggestionVariantThumb({
             textAlign: "center",
             gap: 2,
           }}
+          aria-label="Нет превью для этого медиа"
         >
-          <span style={{ fontWeight: 700 }}>{truncateMiddleClient(filename, 22)}</span>
-          <span style={{ color: "#94a3b8" }}>{broken ? "preview failed" : thumbPv.caption || thumbPv.reason || "no preview"}</span>
+          <span style={{ fontWeight: 700, fontSize: 10, color: "#64748b" }}>{truncateMiddleClient(filename, 18)}</span>
+          <span>{broken ? "нет фото" : "нет превью"}</span>
         </div>
       )}
       {isPrimary ? (
@@ -542,6 +544,37 @@ function SuggestionVariantThumb({
   )
 }
 
+/**
+ * Normalize raw role labels coming from helpers that still use the
+ * pre-canonical mapping (e.g. roleBadgeForMedia returning "фронт" /
+ * "анфас" / "закрытый фронт"). The board collapses the front family
+ * into one operator bucket "Анфас / фронт", so any of these alias
+ * labels must be displayed under the canonical name.
+ */
+const FRONT_FAMILY_RAW_LABELS = new Set(["фронт", "анфас", "закрытый фронт"])
+function canonicalizeRawRoleLabel(label: string | null | undefined): string {
+  if (!label) return ""
+  const t = label.trim()
+  if (!t) return ""
+  return FRONT_FAMILY_RAW_LABELS.has(t.toLowerCase()) ? "Анфас / фронт" : t
+}
+
+/**
+ * Try to find a seed (storefront-served) URL that visually matches the
+ * given inventory item, even when the inventory id is not in the seed
+ * match table. Used for suggestion thumbnails: unpreviewable legacy
+ * inventory rows often share a filename with the storefront seed for
+ * the same product, so falling back by basename gives a usable thumb
+ * without changing core preview logic.
+ */
+function findSeedUrlByFilename(inv: InvItem | undefined, seedRows: SeedUrlMatchRow[]): string | null {
+  if (!inv) return null
+  const fn = (inv.filename || "").toLowerCase()
+  if (!fn) return null
+  const row = seedRows.find((r) => r.basename && r.basename.toLowerCase() === fn)
+  return row?.seedUrl ?? null
+}
+
 function boardThumbPreview(
   mediaId: string,
   inv: InvItem | undefined,
@@ -549,17 +582,34 @@ function boardThumbPreview(
   recovery?: PreviewRecoveryEntry | null
 ): { url: string | null; useImg: boolean; caption: string; reason: string } {
   if (inv) {
-    const pv = clientPreviewUrl(inv)
-    if (pv.url) return { ...pv, reason: "" }
-    const seedRow = seedRows.find((r) => r.invId === mediaId)
-    if (seedRow?.seedUrl) {
-      return { url: seedRow.seedUrl, useImg: true, caption: "", reason: "seed storefront URL (inventory preview unavailable)" }
+    // Prefer a known-working storefront seed URL when one matches by inv id
+    // or by filename. clientPreviewUrl can return URLs that point at
+    // data/processed/... paths that don't exist on disk (legacy snapshots),
+    // which then 404 in the browser. Storefront-seed URLs are served by
+    // Medusa /static and are known to work.
+    const seedRowById = seedRows.find((r) => r.invId === mediaId)
+    if (seedRowById?.seedUrl) {
+      return { url: seedRowById.seedUrl, useImg: true, caption: "", reason: "" }
     }
+    const seedByName = findSeedUrlByFilename(inv, seedRows)
+    if (seedByName) {
+      return { url: seedByName, useImg: true, caption: "", reason: "seed storefront URL (filename match)" }
+    }
+    // Pass recovery through so unpreviewable inventory rows that have a
+    // recovered local path still resolve to a thumbnail URL.
+    const pv = clientPreviewUrl(inv, recovery ?? null)
+    if (pv.url) return { ...pv, reason: "" }
     return { url: null, useImg: false, caption: pv.caption, reason: unpreviewableHumanReason(inv) }
   }
   const seedRow = seedRows.find((r) => r.invId === mediaId)
   if (seedRow?.seedUrl) {
     return { url: seedRow.seedUrl, useImg: true, caption: "", reason: "seed storefront URL (id not in inventory map)" }
+  }
+  if (recovery?.found_path) {
+    const rp = recoveryPreviewUrl(recovery)
+    if (rp.url) {
+      return { url: rp.url, useImg: rp.useImg, caption: "", reason: "recovered preview (id not in inventory map)" }
+    }
   }
   return {
     url: null,
@@ -2828,13 +2878,19 @@ export function LegacyMediaAssignmentBoardClient() {
     const zk = `${hlc}|${zone}`
     const hot = dragHoverZoneKey === zk
     const dataZoneAttr = zone === "lane_reject" ? "rejected" : zone
+    // For unlabeled drop containers (gallery, primary), keep the highlight
+    // subtle — operators expect the precise drop chip / card to be the main
+    // signal. Labeled drop placeholders still show full visible feedback.
+    const subtleHot = hot && !label
     return (
       <div
         data-legacy-drop-target="true"
         data-drop-kind="product-zone"
         data-drop-zone={zone}
+        data-drop-target={zone}
         data-product-handle={hlc}
         data-zone={dataZoneAttr}
+        data-hot={hot ? "true" : "false"}
         onDragEnter={(e) => {
           e.preventDefault()
           e.stopPropagation()
@@ -2852,10 +2908,16 @@ export function LegacyMediaAssignmentBoardClient() {
         onDrop={(e) => dropZoneStable(e, handle, zone)}
         style={{
           minHeight: label ? 132 : 0,
-          borderRadius: 14,
-          border: hot ? "2px solid #2563eb" : label ? "1px dashed #cbd5e1" : "none",
-          background: hot ? "#eff6ff" : label ? "#f8fafc" : "transparent",
-          padding: label || hot ? 14 : 0,
+          borderRadius: subtleHot ? 8 : 14,
+          border: subtleHot
+            ? "1px dashed #93c5fd"
+            : hot
+              ? "2px solid #2563eb"
+              : label
+                ? "1px dashed #cbd5e1"
+                : "none",
+          background: subtleHot ? "rgba(219, 234, 254, 0.35)" : hot ? "#eff6ff" : label ? "#f8fafc" : "transparent",
+          padding: label || hot ? (subtleHot ? 4 : 14) : 0,
           transition: "border 0.12s ease, background 0.12s ease",
         }}
       >
@@ -4245,7 +4307,7 @@ export function LegacyMediaAssignmentBoardClient() {
                 )
               })() : null}
               {/* Status / issues */}
-              {colorIssues.length > 0 || missingRolesLine ? (
+              {colorIssues.length > 0 ? (
                 <ul data-color-issue-checklist="true" style={{ margin: 0, padding: "4px 6px", listStyle: "none", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 5, display: "flex", flexDirection: "column", gap: 2 }}>
                   {colorIssues.map((issue) => (
                     <li
@@ -4262,13 +4324,94 @@ export function LegacyMediaAssignmentBoardClient() {
                       {issue.label}
                     </li>
                   ))}
-                  {missingRolesLine ? (
-                    <li data-issue-id="roles-missing-line" data-severity="warn" style={{ fontSize: 10, color: "#b45309", fontWeight: 600, lineHeight: 1.3 }}>
-                      Не хватает: {missingRolesLine}
-                    </li>
-                  ) : null}
                 </ul>
               ) : null}
+              {/* Missing role drop chips — operator drops media to assign + set role */}
+              {(() => {
+                const emptySlots = roleSlotAssignment.slots.filter((s) => s.isEmpty)
+                if (emptySlots.length === 0) return null
+                return (
+                  <div
+                    data-missing-roles-row="true"
+                    role="group"
+                    aria-label="Недостающие роли"
+                    style={{ display: "flex", flexWrap: "wrap", gap: 4, alignItems: "center" }}
+                  >
+                    <span style={{ fontSize: 10, fontWeight: 700, color: "#b45309", letterSpacing: "0.02em" }}>
+                      Не хватает:
+                    </span>
+                    {emptySlots.map((slot) => {
+                      const chipKey = `role_chip|${selectedHandle}|${activeVariantKey}|${slot.slotKey}`
+                      const hot = dragHoverZoneKey === chipKey
+                      const choice = slot.slotKey as OperatorMediaRoleChoice
+                      return (
+                        <div
+                          key={slot.slotKey}
+                          data-missing-role-chip="true"
+                          data-role-slot={slot.slotKey}
+                          data-drop-target="role-chip"
+                          data-hot={hot ? "true" : "false"}
+                          title={`Перетащите фото сюда, чтобы добавить в галерею с ролью «${slot.label}»`}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 4,
+                            padding: "3px 8px",
+                            minHeight: 28,
+                            borderRadius: 999,
+                            border: hot ? "2px dashed #2563eb" : "1px dashed #cbd5e1",
+                            background: hot ? "#eff6ff" : "#fff",
+                            color: hot ? "#1d4ed8" : "#92400e",
+                            fontSize: 10,
+                            fontWeight: 700,
+                            cursor: "default",
+                            transition: "background 0.12s ease, border-color 0.12s ease",
+                          }}
+                          onDragEnter={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            setDragHoverZoneKey(chipKey)
+                          }}
+                          onDragOver={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            if (e.dataTransfer) e.dataTransfer.dropEffect = "copy"
+                            setDragHoverZoneKey(chipKey)
+                          }}
+                          onDragLeave={(e) => {
+                            if (!(e.currentTarget as Node).contains(e.relatedTarget as Node)) {
+                              setDragHoverZoneKey((k) => (k === chipKey ? null : k))
+                            }
+                          }}
+                          onDrop={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            setDragHoverZoneKey(null)
+                            const payload = readLegacyDragData(e)
+                            if (!payload?.mediaId || !selectedHandle) return
+                            applyAssignment(
+                              "drag",
+                              payload.mediaId,
+                              "gallery",
+                              selectedHandle,
+                              activeVariantKey,
+                              `missing_role_chip:${slot.slotKey}`
+                            )
+                            setOperatorMediaRole(payload.mediaId, choice, {
+                              handle: selectedHandle,
+                              variantKey: activeVariantKey,
+                              productSku: productSkuHint,
+                            })
+                          }}
+                        >
+                          <span aria-hidden style={{ opacity: 0.7 }}>+</span>
+                          {slot.label}
+                        </div>
+                      )
+                    })}
+                  </div>
+                )
+              })()}
             </div>
           </section>
 
@@ -4401,7 +4544,7 @@ export function LegacyMediaAssignmentBoardClient() {
                     style={miniBtn}
                     onClick={() => appendOptionalSameSkuToGallery([b.mediaId])}
                   >
-                    {operatorRoleLabelRu((b.role as VisualRole) || "unknown")}
+                    {canonicalRoleLabel((b.role as VisualRole) || "unknown")}
                   </button>
                 ))}
               </div>
@@ -4420,7 +4563,14 @@ export function LegacyMediaAssignmentBoardClient() {
               }}
             >
               <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 6, alignItems: "center" }}>
-                <span style={{ fontSize: 10, fontWeight: 700, color: "#1e3a8a" }}>Default photos</span>
+                <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: "#1e3a8a" }}>
+                    Default photos · {seedRowsPendingAssign.length} доступно
+                  </span>
+                  <span style={{ fontSize: 9, color: "#64748b" }}>
+                    Перетащите фото в галерею или используйте кнопки на карточке
+                  </span>
+                </div>
                 {seedRowsPendingAssign.length > 0 ? (
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                     <button
@@ -4441,6 +4591,7 @@ export function LegacyMediaAssignmentBoardClient() {
                           { source: "selected-product-default", fromZone: "storefront_seed_strip", targetZone: "gallery" }
                         )
                       }}
+                      title="Добавить все default-фото этого SKU в активную галерею"
                     >
                       Добавить все в галерею
                     </button>
@@ -4466,20 +4617,162 @@ export function LegacyMediaAssignmentBoardClient() {
                           { source: "selected-product-default", fromZone: "storefront_seed_strip", targetZone: "primary" }
                         )
                       }}
+                      title="Сделать главным первое default-фото"
                     >
-                      Выбрать главное
+                      Главное = первое
                     </button>
                   </div>
                 ) : null}
               </div>
               {seedRowsPendingAssign.length > 0 ? (
-                <div style={{ display: "flex", gap: 6, marginTop: 8, overflowX: "auto", paddingBottom: 4 }}>
-                  {seedRowsPendingAssign.map((r) => (
-                    <div key={r.seedUrl} style={{ flex: "0 0 60px", width: 60 }} title={r.basename}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={r.seedUrl} alt="" width={60} height={60} style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 6, border: "1px solid #bfdbfe" }} />
-                    </div>
-                  ))}
+                <div
+                  data-default-storefront-seed-strip="true"
+                  style={{ display: "flex", gap: 8, marginTop: 8, overflowX: "auto", paddingBottom: 4 }}
+                >
+                  {seedRowsPendingAssign.map((r) => {
+                    const invId = r.invId
+                    if (!invId) return null
+                    const stopAndRun = (fn: () => void) => (e: React.MouseEvent) => {
+                      e.stopPropagation()
+                      e.preventDefault()
+                      fn()
+                    }
+                    const addOneToGallery = () =>
+                      updateVariantDecision(
+                        h,
+                        activeVariantKey,
+                        (prev) => ({
+                          ...prev,
+                          gallery: mergeGalleryPreservingOrder(prev.gallery, [invId], prev.primary),
+                        }),
+                        "add one default photo to gallery",
+                        invId,
+                        { source: "selected-product-default", fromZone: "storefront_seed_strip", targetZone: "gallery" }
+                      )
+                    const setAsPrimary = () =>
+                      updateVariantDecision(
+                        h,
+                        activeVariantKey,
+                        (prev) => ({
+                          ...prev,
+                          primary: invId,
+                          gallery: prev.gallery.filter((x) => x !== invId),
+                          primaryManualOverride: true,
+                          primaryAutoPicked: false,
+                          primaryNeedsReview: false,
+                        }),
+                        "set primary from default photo",
+                        invId,
+                        { source: "selected-product-default", fromZone: "storefront_seed_strip", targetZone: "primary" }
+                      )
+                    return (
+                      <div
+                        key={r.seedUrl}
+                        data-default-seed-card="true"
+                        data-media-id={invId}
+                        draggable
+                        onDragStart={(e) => {
+                          e.stopPropagation()
+                          setDiag((d) => ({ ...d, cardHandlerFired: true }))
+                          setDragStart("yes")
+                          const ok = writeLegacyDragData(e, {
+                            type: "legacy_media",
+                            mediaId: invId,
+                            source: "pool",
+                            fromProductHandle: h,
+                            fromZone: "pool",
+                            fromIndex: null,
+                            fromVariantKey: activeVariantKey,
+                          })
+                          setPayloadWritten(ok ? "yes" : "no")
+                          setDraggingMediaId(invId)
+                          if (!ok) setDragError("failed to write payload (default seed card)")
+                          else setDragError("")
+                        }}
+                        onDragEnd={() => {
+                          setDragStart("no")
+                          setPayloadWritten("n/a")
+                          setDraggingMediaId(null)
+                          setDragHoverZoneKey(null)
+                        }}
+                        style={{
+                          flex: "0 0 84px",
+                          width: 84,
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 4,
+                          padding: 4,
+                          borderRadius: 8,
+                          border: draggingMediaId === invId ? "2px solid #2563eb" : "1px solid #bfdbfe",
+                          background: "#fff",
+                          cursor: "grab",
+                          userSelect: "none",
+                        }}
+                        title={`${r.basename} — перетащите в галерею или используйте кнопки ниже`}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={r.seedUrl}
+                          alt=""
+                          width={76}
+                          height={76}
+                          draggable={false}
+                          style={{ width: 76, height: 76, objectFit: "cover", borderRadius: 6, display: "block" }}
+                        />
+                        <div style={{ display: "flex", gap: 3 }}>
+                          <button
+                            type="button"
+                            data-action-button="default-seed-add-one"
+                            data-media-id={invId}
+                            draggable={false}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onDragStart={(e) => { e.preventDefault(); e.stopPropagation() }}
+                            onClick={stopAndRun(addOneToGallery)}
+                            style={{
+                              flex: 1,
+                              fontSize: 9,
+                              fontWeight: 700,
+                              padding: "3px 4px",
+                              borderRadius: 4,
+                              border: "1px solid #1d4ed8",
+                              background: "#2563eb",
+                              color: "#fff",
+                              cursor: "pointer",
+                              lineHeight: 1.1,
+                            }}
+                            title="Добавить это фото в активную галерею"
+                          >
+                            + В галерею
+                          </button>
+                          <button
+                            type="button"
+                            data-action-button="default-seed-set-primary"
+                            data-media-id={invId}
+                            draggable={false}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onDragStart={(e) => { e.preventDefault(); e.stopPropagation() }}
+                            onClick={stopAndRun(setAsPrimary)}
+                            style={{
+                              flex: "0 0 auto",
+                              fontSize: 11,
+                              fontWeight: 700,
+                              padding: "3px 6px",
+                              borderRadius: 4,
+                              border: "1px solid #cbd5e1",
+                              background: "#fff",
+                              color: "#0f172a",
+                              cursor: "pointer",
+                              lineHeight: 1.1,
+                            }}
+                            title="Сделать это фото главным"
+                            aria-label="Сделать главным"
+                          >
+                            ★
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               ) : null}
               {seedRowsOnlyNoInv.length > 0 ? (
@@ -4610,12 +4903,27 @@ export function LegacyMediaAssignmentBoardClient() {
             marginBottom: 0,
           }}
         >
-          <summary style={{ cursor: "pointer", fontSize: 10, fontWeight: 800, color: "#1e3a8a", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-            Legacy article index scan (optional)
+          <summary
+            style={{ cursor: "pointer", fontSize: 10, fontWeight: 800, color: "#475569", letterSpacing: "0.04em" }}
+            title="Дополнительный инструмент для обогащения предложенных цветов артикулами и названиями из локального PDP-кеша"
+          >
+            Доп. поиск legacy-артикулов цветов (опционально)
           </summary>
+          <div data-article-scan-help="true" style={{ marginTop: 8, fontSize: 11, color: "#475569", lineHeight: 1.45, display: "flex", flexDirection: "column", gap: 4 }}>
+            <p style={{ margin: 0 }}>
+              Что делает: ищет артикулы и названия цветов в локальном кеше legacy PDP-страниц, чтобы лучше сопоставить
+              предложенные цвета с реальными артикулами.
+            </p>
+            <p style={{ margin: 0 }}>
+              Когда использовать: если у предложенных цветов нет артикула или название выглядит неполным.
+            </p>
+            <p style={{ margin: 0, color: "#15803d", fontWeight: 600 }}>
+              Безопасность: только локальный кеш, ничего не пишет в Medusa и не меняет каталог.
+            </p>
+          </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", justifyContent: "space-between", marginBottom: 8, marginTop: 10 }}>
             <span style={{ fontSize: 10, fontWeight: 700, color: "#475569" }}>
-              Batch scan PDP cache for swatch articles
+              Сканировать legacy-кеш и обогатить варианты
             </span>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               <button
@@ -4624,8 +4932,9 @@ export function LegacyMediaAssignmentBoardClient() {
                 style={miniBtn}
                 disabled={articleScanRunning || productsFiltered.length === 0}
                 onClick={() => void runArticleScan(productsFiltered.slice(0, 48))}
+                title="Сканировать первые 48 товаров текущего фильтра"
               >
-                {articleScanRunning ? "Scanning…" : "Scan visible products"}
+                {articleScanRunning ? "Сканирую…" : "Видимые товары"}
               </button>
               <button
                 type="button"
@@ -4633,22 +4942,26 @@ export function LegacyMediaAssignmentBoardClient() {
                 style={miniBtn}
                 disabled={articleScanRunning || productsFiltered.length === 0}
                 onClick={() => void runArticleScan(productsFiltered)}
+                title="Сканировать все товары текущего фильтра / коллекции"
               >
-                Scan current collection
+                Всю коллекцию
               </button>
             </div>
           </div>
           {articleScanProgress ? (
             <div style={{ fontSize: 11, color: "#475569", lineHeight: 1.55 }} data-article-scan-progress="true">
-              PDP scanned: <strong>{articleScanProgress.pdp_pages_scanned}</strong> · swatches:{" "}
-              <strong>{articleScanProgress.swatches_found}</strong> · matched: <strong>{articleScanProgress.articles_matched}</strong> ·
-              enriched: <strong>{articleScanProgress.suggestions_enriched}</strong> · review:{" "}
-              <strong>{articleScanProgress.needs_review}</strong> · missing cache:{" "}
-              <strong>{articleScanProgress.missing_pdp_cache}</strong> · listing only:{" "}
+              Просканировано PDP: <strong>{articleScanProgress.pdp_pages_scanned}</strong> · swatch&apos;ей:{" "}
+              <strong>{articleScanProgress.swatches_found}</strong> · артикулов сопоставлено:{" "}
+              <strong>{articleScanProgress.articles_matched}</strong> · обогащено предложений:{" "}
+              <strong>{articleScanProgress.suggestions_enriched}</strong> · нужен ручной обзор:{" "}
+              <strong>{articleScanProgress.needs_review}</strong> · нет кеша PDP:{" "}
+              <strong>{articleScanProgress.missing_pdp_cache}</strong> · только листинг:{" "}
               <strong>{articleScanProgress.listing_only_skipped}</strong>
             </div>
           ) : (
-            <div style={{ fontSize: 11, color: "#94a3b8" }}>Run scan to index swatch articles from repo PDP cache (read-only).</div>
+            <div style={{ fontSize: 11, color: "#94a3b8" }}>
+              Запустите сканирование, чтобы построить индекс артикулов цветов из локального PDP-кеша (read-only).
+            </div>
           )}
         </details>
 
@@ -4883,11 +5196,13 @@ export function LegacyMediaAssignmentBoardClient() {
                       primaryNeedsReview: s.primaryNeedsReview ?? false,
                     }
                 const primaryRoleHeadline = primaryPreviewId
-                  ? primaryRoleBadgeForSuggestion(primaryPreviewId, rolesByIdMap, invById, {
-                      productHandle: h,
-                      productSku: s.productSkuHint,
-                      needsReview: Boolean(previewMedia.primaryNeedsReview),
-                    })
+                  ? canonicalizeRawRoleLabel(
+                      primaryRoleBadgeForSuggestion(primaryPreviewId, rolesByIdMap, invById, {
+                        productHandle: h,
+                        productSku: s.productSkuHint,
+                        needsReview: Boolean(previewMedia.primaryNeedsReview),
+                      })
+                    )
                   : null
                 const isActiveDraftCard = activeVariantKey === s.variantKey && isDraftCard
                 if (s.variantKey === activeVariantKey) return null
@@ -4952,7 +5267,9 @@ export function LegacyMediaAssignmentBoardClient() {
                         style={{ display: "flex", flexWrap: "nowrap", gap: 4, alignItems: "flex-start", overflowX: "auto" }}
                       >
                         {galleryPreviewOrdered.slice(0, 4).map((mid, idx) => {
-                          const roleBadge = roleBadgeForMedia(mid, rolesByIdMap, borrowedById)
+                          const roleBadge = canonicalizeRawRoleLabel(
+                            roleBadgeForMedia(mid, rolesByIdMap, borrowedById)
+                          )
                           return (
                             <SuggestionVariantThumb
                               key={`${s.variantKey}-thumb-${mid}`}
@@ -5182,7 +5499,7 @@ export function LegacyMediaAssignmentBoardClient() {
                               <ul style={{ margin: "4px 0 0", paddingLeft: 16, fontSize: 10, color: "#64748b" }}>
                                 {visibleBorrowed.map((b) => (
                                   <li key={`${b.mediaId}-${b.role}`}>
-                                    {VISUAL_ROLE_BADGE_RU[b.role as VisualRole]} из «{b.fromVariantLabel}» ·{" "}
+                                    {canonicalRoleLabel(b.role as VisualRole)} из «{b.fromVariantLabel}» ·{" "}
                                     <code style={{ fontSize: 9 }}>{(invById.get(b.mediaId)?.filename || b.mediaId).slice(0, 40)}</code>
                                   </li>
                                 ))}
@@ -5197,7 +5514,7 @@ export function LegacyMediaAssignmentBoardClient() {
                               <ul style={{ margin: "6px 0 0", paddingLeft: 16, fontSize: 10, color: "#94a3b8" }}>
                                 {optionalBorrowed.map((b) => (
                                   <li key={`opt-${b.mediaId}`}>
-                                    {operatorRoleLabelRu(b.role as VisualRole)} · {b.fromVariantLabel} ·{" "}
+                                    {canonicalRoleLabel(b.role as VisualRole)} · {b.fromVariantLabel} ·{" "}
                                     <code style={{ fontSize: 9 }}>{(invById.get(b.mediaId)?.filename || b.mediaId).slice(0, 40)}</code>
                                   </li>
                                 ))}
