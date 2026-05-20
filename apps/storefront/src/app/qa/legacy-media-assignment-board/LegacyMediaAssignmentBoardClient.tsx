@@ -70,7 +70,6 @@ import {
   buildUnifiedColorChips,
   CHIP_STATUS_LABEL_RU,
 } from "./legacy-board-color-workspace"
-import { LegacyBoardGalleryRoleSlots } from "./LegacyBoardGalleryRoleSlots"
 import {
   buildGalleryRoleSlotAssignment,
   OPERATOR_ROLE_MENU_CHOICES,
@@ -164,7 +163,7 @@ function recoveryPreviewUrl(entry: PreviewRecoveryEntry): { url: string | null; 
 }
 const DND_JSON = "application/json"
 const DEV_SENTINEL = "Legacy Board color-variant workspace UX"
-const DEV_SENTINEL_BUILD = "2026-05-17T24:15Z · role slots"
+const DEV_SENTINEL_BUILD = "2026-05-20T04:59Z · compact recovery"
 
 async function fetchBoardJson(url: string): Promise<{ ok: true; data: Record<string, unknown> } | { ok: false; status: number; body: Record<string, unknown> }> {
   const res = await fetch(url)
@@ -382,6 +381,19 @@ function galleryOrderTouched(prev: VariantDecisionState, next: VariantDecisionSt
   if (prev.primary !== next.primary) return true
   if (prev.gallery.length !== next.gallery.length) return true
   return prev.gallery.some((id, i) => id !== next.gallery[i])
+}
+
+function formatMissingRoleLine(labels: string[]): string | null {
+  if (!labels.length) return null
+  const map: Record<string, string> = {
+    Анфас: "анфас",
+    "3/4": "3/4",
+    Внутри: "внутри",
+    Деталь: "Деталь",
+    Lifestyle: "Lifestyle",
+    Схема: "Схема",
+  }
+  return labels.map((label) => map[label] ?? label).join(", ")
 }
 
 function applyRecommendedVisualOrderToVariant(
@@ -2977,7 +2989,7 @@ export function LegacyMediaAssignmentBoardClient() {
       <details style={{ marginTop: 4 }}>
         <summary
           data-change-media-role="true"
-          style={{ cursor: "pointer", fontSize: 10, fontWeight: 700, color: "#2563eb", listStyle: "none" }}
+          style={{ cursor: "pointer", fontSize: 10, fontWeight: 600, color: "#475569", listStyle: "none" }}
         >
           Изменить роль
         </summary>
@@ -3544,7 +3556,14 @@ export function LegacyMediaAssignmentBoardClient() {
     )
     const pendingOptionalSameSku = activeOptionalSameSku.filter((b) => !activeVariantMediaIds.has(b.mediaId))
     const appendOptionalSameSkuToGallery = (mediaIds: string[]) => {
-      const toAdd = mediaIds.filter((id) => id && !activeVariantMediaIds.has(id) && id !== z.primary && id !== activeVariant.primary)
+      const toAdd = mediaIds.filter(
+        (id) =>
+          id &&
+          !activeVariantMediaIds.has(id) &&
+          id !== z.primary &&
+          id !== activeVariant.primary &&
+          Boolean(invById.get(id)?.previewable)
+      )
       if (!toAdd.length) return
       const borrowById = new Map(pendingOptionalSameSku.map((b) => [b.mediaId, b]))
       updateVariantDecision(
@@ -3613,10 +3632,11 @@ export function LegacyMediaAssignmentBoardClient() {
       hasPendingSuggestion: Boolean(activeSuggestionPending),
       duplicateHiddenCount: activeSuggestionPending?.duplicateHiddenCount,
       productReadiness: skuProgress.readiness,
-      missingRoleSlotLabels: roleSlotAssignment.missingSlotLabels,
-      hasBorrowedInGallery: roleSlotAssignment.hasBorrowedInGallery,
-      hasManualRoleOverride: roleSlotAssignment.hasManualOverride,
+      missingRoleSlotLabels: [],
+      hasBorrowedInGallery: false,
+      hasManualRoleOverride: false,
     })
+    const missingRolesLine = formatMissingRoleLine(roleSlotAssignment.missingSlotLabels)
 
     const resolveBorrowedGalleryMeta = (): Record<string, { fromVariantKey: string; fromVariantLabel: string }> => {
       const out = { ...(activeVariant.borrowedGalleryMeta ?? {}) }
@@ -3638,25 +3658,6 @@ export function LegacyMediaAssignmentBoardClient() {
       return out
     }
     const borrowedGalleryMetaResolved = resolveBorrowedGalleryMeta()
-
-    const removeBorrowedFromGallery = (mediaId: string) => {
-      updateVariantDecision(
-        h,
-        activeVariantKey,
-        (prev) => {
-          const borrowedGalleryMeta = { ...(prev.borrowedGalleryMeta ?? {}) }
-          delete borrowedGalleryMeta[mediaId]
-          return {
-            ...prev,
-            gallery: prev.gallery.filter((x) => x !== mediaId),
-            borrowedGalleryMeta,
-          }
-        },
-        "remove borrowed gallery media",
-        mediaId,
-        { source: "manual", fromZone: "gallery", targetZone: "unassigned" }
-      )
-    }
 
     const activateColorVariant = (vk: string) => {
       if (vk === activeVariantKey) return
@@ -4160,6 +4161,11 @@ export function LegacyMediaAssignmentBoardClient() {
                 {issue.label}
               </li>
             ))}
+            {missingRolesLine ? (
+              <li data-issue-id="roles-missing-line" data-severity="warn" style={{ fontSize: 12, color: "#b45309", fontWeight: 600 }}>
+                Не хватает: {missingRolesLine}
+              </li>
+            ) : null}
           </ul>
 
           <section
@@ -4264,99 +4270,90 @@ export function LegacyMediaAssignmentBoardClient() {
               "Drop to Gallery",
               selectedHandle,
               "gallery",
-              z.gallery.length === 0 && roleSlotAssignment.slots.every((s) => s.isEmpty) ? (
+              z.gallery.length === 0 ? (
                 <div data-workspace-empty-gallery="true">
                   Добавьте фото из Media pool или из предложенных цветов (suggestions).
                 </div>
               ) : (
-                <LegacyBoardGalleryRoleSlots
-                  slots={roleSlotAssignment.slots}
-                  overflowMediaIds={roleSlotAssignment.overflowMediaIds}
-                  borrowedMeta={borrowedGalleryMetaResolved}
-                  onRemoveBorrowed={removeBorrowedFromGallery}
-                  onReplaceBorrowed={(mediaId) => {
-                    removeBorrowedFromGallery(mediaId)
-                    setPoolTab("suggested")
+                <div
+                  data-gallery-scroll-strip="true"
+                  style={{
+                    display: "flex",
+                    gap: 12,
+                    overflowX: "auto",
+                    overflowY: "hidden",
+                    paddingBottom: 6,
+                    width: "100%",
+                    minWidth: 0,
                   }}
-                  renderThumb={(gid) => renderZoneThumb(gid, selectedHandle, "gallery", activeVariantKey, vByHandle, "gallery")}
-                />
+                >
+                  {z.gallery.map((gid, galleryIdx) => {
+                    const borrowed = borrowedGalleryMetaResolved[gid]
+                    return (
+                      <div
+                        key={gid}
+                        data-legacy-drop-target="true"
+                        data-drop-kind="product-zone"
+                        data-drop-zone="gallery"
+                        data-product-handle={h}
+                        data-zone="gallery"
+                        data-inventory-id={gid}
+                        data-main-media-slot="gallery"
+                        data-gallery-order={galleryIdx + 1}
+                        style={{ flex: "0 0 196px", width: 196, minWidth: 180, maxWidth: 196, display: "flex", flexDirection: "column", gap: 6 }}
+                      >
+                        {borrowed ? (
+                          <div
+                            data-borrowed-from-color="true"
+                            style={{
+                              fontSize: 11,
+                              color: "#9a3412",
+                              background: "#fff7ed",
+                              border: "1px solid #fdba74",
+                              borderRadius: 8,
+                              padding: "6px 8px",
+                              lineHeight: 1.35,
+                            }}
+                          >
+                            из цвета: {borrowed.fromVariantLabel}
+                          </div>
+                        ) : null}
+                        {renderZoneThumb(gid, selectedHandle, "gallery", activeVariantKey, vByHandle, "gallery")}
+                      </div>
+                    )
+                  })}
+                </div>
               )
             )}
           </section>
 
           {pendingOptionalSameSku.length > 0 ? (
-            <section
-              data-optional-same-sku-additions="true"
-              style={{
-                border: "1px dashed #cbd5e1",
-                borderRadius: 10,
-                padding: 12,
-                background: "#f8fafc",
-                display: "flex",
-                flexDirection: "column",
-                gap: 8,
-                minWidth: 0,
-              }}
-            >
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", justifyContent: "space-between" }}>
-                <strong style={{ fontSize: 12, color: "#475569" }}>Можно добавить из этого SKU</strong>
+            <details data-optional-same-sku-additions="true" style={{ border: "1px dashed #cbd5e1", borderRadius: 10, padding: 10, background: "#f8fafc" }}>
+              <summary style={{ cursor: "pointer", fontSize: 12, fontWeight: 700, color: "#475569" }}>
+                Можно добавить из этого SKU ({pendingOptionalSameSku.length})
+              </summary>
+              <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 8 }}>
                 <button
                   type="button"
                   data-action-button="optional-same-sku-add-all"
                   style={miniBtn}
                   onClick={() => appendOptionalSameSkuToGallery(pendingOptionalSameSku.map((b) => b.mediaId))}
                 >
-                  Добавить все недостающие роли
+                  Добавить все
                 </button>
+                {pendingOptionalSameSku.slice(0, 6).map((b) => (
+                  <button
+                    key={`opt-sku-${b.mediaId}`}
+                    type="button"
+                    data-action-button="optional-same-sku-add-one"
+                    style={miniBtn}
+                    onClick={() => appendOptionalSameSkuToGallery([b.mediaId])}
+                  >
+                    {operatorRoleLabelRu((b.role as VisualRole) || "unknown")}
+                  </button>
+                ))}
               </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "flex-start" }}>
-                {pendingOptionalSameSku.map((b) => {
-                  const invRow = invById.get(b.mediaId)
-                  const role = (b.role as VisualRole) || "unknown"
-                  return (
-                    <div
-                      key={`opt-sku-${b.mediaId}`}
-                      data-optional-same-sku-item="true"
-                      style={{
-                        border: "1px solid #e2e8f0",
-                        borderRadius: 8,
-                        padding: 8,
-                        background: "#fff",
-                        width: 168,
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 6,
-                      }}
-                    >
-                      {invRow?.previewable ? (
-                        <SuggestionVariantThumb
-                          mid={b.mediaId}
-                          isPrimary={false}
-                          inv={invRow}
-                          seedRows={seedMatchRowsForSelected}
-                          recovery={recoveryById.get(b.mediaId)}
-                          roleBadge={operatorRoleLabelRu(role)}
-                          borrowedLabel="другой цвет · опционально"
-                        />
-                      ) : (
-                        <code style={{ fontSize: 9, color: "#94a3b8" }}>{(invRow?.filename || b.mediaId).slice(0, 36)}</code>
-                      )}
-                      <span style={{ fontSize: 10, color: "#64748b" }}>
-                        {operatorRoleLabelRu(role)} · {b.fromVariantLabel}
-                      </span>
-                      <button
-                        type="button"
-                        data-action-button="optional-same-sku-add-one"
-                        style={{ ...miniBtn, width: "100%" }}
-                        onClick={() => appendOptionalSameSkuToGallery([b.mediaId])}
-                      >
-                        Добавить в галерею
-                      </button>
-                    </div>
-                  )
-                })}
-              </div>
-            </section>
+            </details>
           ) : null}
 
           {showCompactSeedBlock ? (
@@ -4888,6 +4885,31 @@ export function LegacyMediaAssignmentBoardClient() {
                         : "Нет кандидатов — назначьте из media pool."}
                       {primaryRoleHeadline ? ` Главная роль: ${primaryRoleHeadline}.` : ""}
                     </p>
+                    {galleryPreviewOrdered.length > 0 ? (
+                      <div
+                        data-suggestion-preview-strip="true"
+                        style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "flex-start" }}
+                      >
+                        {galleryPreviewOrdered.slice(0, 4).map((mid, idx) => {
+                          const roleBadge = roleBadgeForMedia(mid, rolesByIdMap, borrowedById)
+                          return (
+                            <SuggestionVariantThumb
+                              key={`${s.variantKey}-thumb-${mid}`}
+                              mid={mid}
+                              isPrimary={idx === 0 && Boolean(primaryPreviewId)}
+                              inv={invById.get(mid)}
+                              seedRows={seedMatchRowsForSelected}
+                              recovery={recoveryById.get(mid)}
+                              roleBadge={roleBadge}
+                              borrowedLabel={borrowedById.get(mid)?.fromVariantLabel ? `из цвета: ${borrowedById.get(mid)!.fromVariantLabel}` : null}
+                            />
+                          )
+                        })}
+                        {galleryPreviewOrdered.length > 4 ? (
+                          <span data-hidden-dupes-hint="true">+{galleryPreviewOrdered.length - 4}</span>
+                        ) : null}
+                      </div>
+                    ) : null}
                     {/* FOOTER: Confirm all (primary) + secondary actions + collapsed Details */}
                     <footer
                       style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", rowGap: 6 }}
