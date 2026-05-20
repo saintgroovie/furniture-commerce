@@ -3315,7 +3315,7 @@ export function LegacyMediaAssignmentBoardClient() {
         >
           <div style={{ fontSize: 18, fontWeight: 800, color: "#0f172a", marginBottom: 10 }}>Select a product to start assigning images.</div>
           <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, maxWidth: 520, marginLeft: "auto", marginRight: "auto" }}>
-            Choose a product from the list (or switch to <strong>Focus mode</strong> after you pick one). Then drag a previewable card (or its <strong>Drag</strong> bar) from the pool, or use quick actions on each tile.
+            Choose a product from the list (or switch to <strong>Focus mode</strong> after you pick one). Then use quick actions on each tile; drag and drop remains available as a secondary option.
           </p>
           <p style={{ margin: "12px 0 0", fontSize: 12, color: "#b45309" }}>
             <strong>Select a product first</strong> to assign images into Primary / Gallery — or use quick actions in the pool after selecting a SKU.
@@ -4751,15 +4751,21 @@ export function LegacyMediaAssignmentBoardClient() {
                 )
                 const primaryPreviewId = cardVariant?.primary ?? s.primaryCandidateId
                 const gallerySource = cardVariant ? cardVariant.gallery : s.galleryCandidateIds
-                const galleryRest = gallerySource.filter((id) => id && id !== primaryPreviewId && invById.get(id)?.previewable)
-                const primaryIsPreviewable = primaryPreviewId ? Boolean(invById.get(primaryPreviewId)?.previewable) : false
-                const galleryPreviewRaw = (
-                  cardVariant
-                    ? primaryPreviewId && primaryIsPreviewable
-                      ? [primaryPreviewId, ...galleryRest]
-                      : galleryRest
-                    : [s.primaryCandidateId, ...s.galleryCandidateIds]
-                ).filter((id): id is string => Boolean(id) && Boolean(invById.get(id)?.previewable))
+                const galleryRest = gallerySource.filter((id) => id && id !== primaryPreviewId)
+                const primaryIsPreviewable = primaryPreviewId
+                  ? Boolean(invById.get(primaryPreviewId)?.previewable || recoveryById.get(primaryPreviewId))
+                  : false
+                const previewCandidatesBase = cardVariant
+                  ? primaryPreviewId
+                    ? [primaryPreviewId, ...galleryRest]
+                    : galleryRest
+                  : [s.primaryCandidateId, ...s.galleryCandidateIds]
+                const galleryPreviewRaw = previewCandidatesBase.filter((id): id is string => {
+                  if (!id) return false
+                  const row = invById.get(id)
+                  if (!row) return true
+                  return Boolean(row.previewable || recoveryById.get(id))
+                })
                 const invDedupeForSanitize = new Map<string, InvItemDedupeFields>()
                 for (const [id, row] of Array.from(invById.entries())) invDedupeForSanitize.set(id, row)
                 const sanitizedPreview = sanitizeVariantGalleryCandidates({
@@ -4790,7 +4796,12 @@ export function LegacyMediaAssignmentBoardClient() {
                 const galleryPreviewOrdered = [
                   ...(primaryPreviewId && primaryIsPreviewable ? [primaryPreviewId] : []),
                   ...sanitizedPreview.galleryIds,
-                ].filter((id): id is string => Boolean(id) && Boolean(invById.get(id)?.previewable))
+                ].filter((id): id is string => {
+                  if (!id) return false
+                  const row = invById.get(id)
+                  if (!row) return true
+                  return Boolean(row.previewable || recoveryById.get(id))
+                })
                 const hiddenRoleGroups = groupHiddenDuplicatesByRole(
                   (s.hiddenDuplicateIds ?? []).map((mediaId) => ({
                     mediaId,
@@ -6181,8 +6192,7 @@ export function LegacyMediaAssignmentBoardClient() {
                 </p>
               ) : (
                 <p style={{ margin: "10px 0 0", fontSize: 12, color: "#64748b" }}>
-                  Drag any previewable tile card (or its <strong>⋮⋮ Drag</strong> bar). Quick actions apply to{" "}
-                  <strong>{selectedHandle}</strong> — use buttons if dragging is inconvenient.
+                  Quick actions apply to <strong>{selectedHandle}</strong>; drag any previewable tile card (or its <strong>⋮⋮ Drag</strong> bar) only when needed.
                   {focusMode ? (
                     <>
                       {" "}

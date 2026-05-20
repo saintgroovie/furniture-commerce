@@ -137,24 +137,28 @@ export function VariantZoneControls(p: Props) {
   }
 
   if (zone === "gallery") {
+    const moveLeft = () =>
+      onUpdateGallery((prev) => {
+        const idx = prev.gallery.indexOf(id)
+        if (idx <= 0) return prev
+        const next = [...prev.gallery]
+        ;[next[idx - 1], next[idx]] = [next[idx], next[idx - 1]]
+        return { ...prev, gallery: next }
+      })
+    const moveRight = () =>
+      onUpdateGallery((prev) => {
+        const idx = prev.gallery.indexOf(id)
+        if (idx < 0 || idx >= prev.gallery.length - 1) return prev
+        const next = [...prev.gallery]
+        ;[next[idx + 1], next[idx]] = [next[idx], next[idx + 1]]
+        return { ...prev, gallery: next }
+      })
     return (
       <div style={compactCtrlRow} data-variant-zone-controls="gallery">
-        <button type="button" data-action-button="gallery-move-left" style={chipBtn} title="Move left" {...shieldBtn} onClick={stopCardClick(() => onUpdateGallery((prev) => {
-          const idx = prev.gallery.indexOf(id)
-          if (idx <= 0) return prev
-          const next = [...prev.gallery]
-          ;[next[idx - 1], next[idx]] = [next[idx], next[idx - 1]]
-          return { ...prev, gallery: next }
-        }))}>
+        <button type="button" data-action-button="gallery-move-left" style={chipBtn} title="Move left" {...shieldBtn} onClick={stopCardClick(moveLeft)}>
           ←
         </button>
-        <button type="button" data-action-button="gallery-move-right" style={chipBtn} title="Move right" {...shieldBtn} onClick={stopCardClick(() => onUpdateGallery((prev) => {
-          const idx = prev.gallery.indexOf(id)
-          if (idx < 0 || idx >= prev.gallery.length - 1) return prev
-          const next = [...prev.gallery]
-          ;[next[idx + 1], next[idx]] = [next[idx], next[idx + 1]]
-          return { ...prev, gallery: next }
-        }))}>
+        <button type="button" data-action-button="gallery-move-right" style={chipBtn} title="Move right" {...shieldBtn} onClick={stopCardClick(moveRight)}>
           →
         </button>
         {!isCurrentPrimary ? setPrimaryFromGalleryBtn(true) : null}
@@ -162,6 +166,12 @@ export function VariantZoneControls(p: Props) {
           ✕
         </button>
         <MoreMenu>
+          <button type="button" style={miniBtn} title="Move left" {...shieldBtn} onClick={stopCardClick(moveLeft)}>
+            Move left
+          </button>
+          <button type="button" style={miniBtn} title="Move right" {...shieldBtn} onClick={stopCardClick(moveRight)}>
+            Move right
+          </button>
           {!isCurrentPrimary ? setPrimaryFromGalleryBtn(false) : null}
           <button type="button" style={miniBtn} title="Move first" {...shieldBtn} onClick={stopCardClick(() => onUpdateGallery((prev) => ({ ...prev, gallery: [id, ...prev.gallery.filter((x) => x !== id)] })))}>
             Move first
