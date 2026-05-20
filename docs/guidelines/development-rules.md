@@ -209,3 +209,9 @@ Legacy labels из таблицы в `naming-system.md` не использов�
 3. Не расширять архитектуру
 
 ---
+
+# Cursor (Woodright)
+
+Постоянные правила для AI в Cursor: `.cursor/rules/woodright-response-format.mdc` (`alwaysApply: true`) — язык RU, UX-oriented отчёты (verdict + «по-человечески»), отчёты только в чат + copy-ready handoff; git/scope guardrails — в этом документе и `docs/architecture/architecture-guardrails.md`.
+
+---

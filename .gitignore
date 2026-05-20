@@ -3,7 +3,9 @@ node_modules/
 .env
 .env.local
 *.log
-.cursor/
+.cursor/*
+!.cursor/rules/
+!.cursor/rules/**
 .medusa/
 .yarn/
 *.tsbuildinfo

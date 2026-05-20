@@ -47,6 +47,7 @@
 
 | Файл | Назначение |
 |------|-----------|
+| `woodright-response-format.mdc` | Формат отчётов Woodright: RU, UX-audience, verdict, handoff в чат |
 | `language-preference.mdc` | Пиши по-русски, код на английском |
 | `kids-content-separation.mdc` | Kids = navigation/content layer, не purchase axis. Source of truth — `lib/kids.ts` |
 | `github-access.mdc` | `gh` в `~/bin/gh`. После каждого пуша обновлять/создавать PR |
