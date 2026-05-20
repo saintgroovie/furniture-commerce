@@ -132,13 +132,13 @@ alwaysApply: true
 
 Не пиши просто "проверено" или "passed", если не указано, чем доказано.
 
-## Git
+## Git / GitHub push
 
 Укажи:
 - branch;
 - HEAD;
 - commit hash, если был commit;
-- push: done / not done;
+- **GitHub push** — по §13 (обязательная формулировка);
 - dirty tree summary;
 - что вошло в commit;
 - что осталось вне commit.
@@ -216,10 +216,13 @@ Git:
 
 ## 9. Что запрещено в ответах
 
+- Workflow, который **ждёт клика** «Run in the background» или любого background-confirmation (§12).
+- Обещания «сделаю в фоне позже» вместо фактов текущей сессии.
 - Финальные отчёты только в canvas, side panel, отдельных markdown-файлах или artifacts — без Part A + packet в чате (кроме явной просьбы пользователя).
 - Несколько отдельных copy-ready fences, если достаточно одного `# Woodright report packet`.
-- Report packet как YAML / text dump по умолчанию — вместо markdown-секций (§11); исключение только по явной просьбе machine-readable packet.
+- Report packet как YAML / text dump по умолчанию — вместо markdown-секций (§11); исключение только по явной просьбе machine-readable / YAML / JSON / raw handoff.
 - Второй отдельный handoff fence после `# Woodright report packet`.
+- Отдельный «summary» / handoff **после** packet — всё только внутри одного fence.
 - «Проверено» / «passed» без command и результата в `Evidence`.
 - Выдавать `needs follow-up` за подтверждённый pass.
 - Backend-only forensic dump без блока «по-человечески».
@@ -229,11 +232,22 @@ Git:
 
 ## 10. Главный принцип
 
-Сначала — смысл для человека (UX/UI-дизайнер, оператор, админ). Потом — точные технические факты с доказательствами. В конце — ровно один `# Woodright report packet` для one-click copy в ChatGPT.
+Сначала — смысл для человека (UX/UI-дизайнер, оператор, админ). Потом — точные технические факты с доказательствами. Работа — в текущей сессии Cursor (§12). В конце — **ровно один** `# Woodright report packet` (§11) для one-click copy в ChatGPT. Статус GitHub push — в Human report (§13).
 
-## 11. One-click copy (report packet)
+## 11. One-click copy (report packet) — model-proof
 
-В **самом конце** каждого финального отчёта — **ровно один** fenced **markdown** block. Язык fence в чате: **`md`** (не `yaml`, не `text`, не пустой fence).
+**Обязательно для всех моделей и режимов:** Claude Sonnet, Claude Opus, Auto, Composer, fast models, GPT — без исключений.
+
+Если формат сомнителен — **по умолчанию** один fenced markdown packet (этот §11), не YAML/text dump и не свободный prose-handoff.
+
+**MUST (жёстко):**
+
+- Final response **MUST** end with **exactly one** fenced markdown block (`md`).
+- Первая строка внутри fence: `# Woodright report packet`
+- Внутри fence **обязательно** две секции верхнего уровня: `## Human report` и `## Handoff summary` (или `## Handoff summary для ChatGPT` — эквивалент).
+- **No** second handoff / summary fence после packet.
+- **No** YAML-like dump, JSON handoff, plain text dump — unless user **explicitly** asked for machine-readable / YAML / JSON / raw handoff format.
+- **No** huge raw logs; **no** secrets, tokens, passwords, full env values, API keys (§5–§6).
 
 ### По умолчанию: markdown-секции (обязательно)
 
@@ -251,19 +265,20 @@ Git:
 
 1. `## Human report`
    - `### Verdict`
-   - `### Что это значит по-человечески`
-   - `### Статус`
-   - `### Что изменилось`
-   - `### Что осталось`
+   - `### Что изменилось` (или `### What changed` — смысл на русском)
+   - `### Почему это важно` (UX/UI/product)
+   - `### GitHub push` (§13 — обязательно)
+   - `### Статус` / `### Что осталось` — по необходимости
 2. `---` (разделитель)
-3. `## Handoff summary для ChatGPT`
+3. `## Handoff summary` (допустимо: `## Handoff summary для ChatGPT`)
    - компактные метки (одна строка на поле): `Repo:`, `Branch:`, `HEAD:`, `Verdict:` — это **не** YAML dump, а короткий префикс под handoff-секцией
    - `### Scope`
    - `### Changed files`
    - `### Commits`
    - `### Evidence`
+   - `### Validation`
    - `### What was not touched`
-   - `### Follow-up`
+   - `### Blockers / follow-ups`
    - `### Можно ли закрыть чат`
 
 **Запрещено в Part B (по умолчанию):**
@@ -287,7 +302,9 @@ Git:
 1. Part A — human-readable отчёт (§4).
 2. Part B — один `md` packet (шаблон ниже). Больше copy-fences нет.
 
-Шаблон (заполни реальными значениями; в чате отдавай как fence `md`):
+### Mini-template (канонический пример для Sonnet и др.)
+
+В чате отдавай **только** этот вид (fence `md`), заполненный фактами задачи:
 
 ~~~md
 # Woodright report packet
@@ -297,13 +314,16 @@ Git:
 ### Verdict
 done | partial | blocked | failed | read-only
 
-### Что это значит по-человечески
-...
+### Что изменилось
+Коротко человеческим языком.
+
+### Почему это важно
+Коротко для UX/UI/product.
+
+### GitHub push
+Do not push | Ready to push after approval | Pushed: remote/branch | Not applicable (no commit).
 
 ### Статус
-...
-
-### Что изменилось
 ...
 
 ### Что осталось
@@ -311,7 +331,7 @@ done | partial | blocked | failed | read-only
 
 ---
 
-## Handoff summary для ChatGPT
+## Handoff summary
 
 Repo:
 Branch:
@@ -321,7 +341,7 @@ Verdict:
 ### Scope
 ...
 
-### Changed files
+### Files changed
 ...
 
 ### Commits
@@ -330,10 +350,13 @@ Verdict:
 ### Evidence
 ...
 
+### Validation
+...
+
 ### What was not touched
 ...
 
-### Follow-up
+### Blockers / follow-ups
 ...
 
 ### Можно ли закрыть чат
@@ -341,3 +364,39 @@ Yes/No + условие.
 ~~~
 
 В rule-файле шаблон использует `~~~md` чтобы не обрывать `.mdc` на вложенном ```md fence.
+
+## 12. Cursor session — запрет background-confirmation blocking
+
+Агент **не должен** входить в workflow, где задача **фактически стоит**, пока пользователь не нажмёт **Run in the background** или другое background-confirmation.
+
+**Запрещённое поведение:**
+
+- Ждать клика «Run in the background» / background run approval.
+- Оставлять задачу idle за prompt’ом подтверждения фона.
+- Запускать long-running background workflows без явной просьбы пользователя.
+- Выбирать режим Cursor, который **требует** от пользователя нажать background, если можно выполнить работу в текущей сессии.
+
+**Обязательное поведение:**
+
+- Выполнять работу в **текущей** Cursor-сессии.
+- Long-running команды — в **foreground**, когда это практично (без лишнего background gate).
+- Dev servers — только при необходимости для QA, с явной стратегией PID/port/log; не «на потом в фоне».
+- Если **нельзя** продолжить без клика пользователя / approval — **немедленно остановиться** и в отчёте указать **blocker** (что именно ждёт клика).
+- Финальный отчёт описывает только **завершённую** работу этой сессии; не обещать «доделаю в background».
+
+Это запрет **поведения** (зависание на UI Cursor), а не только слов «run in background» в тексте ответа.
+
+## 13. GitHub push status
+
+В **каждом** финальном Woodright-отчёте (в `### GitHub push` внутри packet и при необходимости в Part A) укажи статус push.
+
+**По умолчанию:** **не** делать `git push`, пока пользователь **явно** не попросил push.
+
+| Ситуация | Формулировка (пример) |
+|----------|------------------------|
+| Commit есть, push не делался | `GitHub push: not done; ready only after user approval.` |
+| Commit не создавался | `GitHub push: not applicable; no commit was created.` |
+| Push выполнен по явной просьбе | `GitHub push: pushed to <remote>/<branch>.` |
+| Push небезопен | `GitHub push: blocked — <причина>.` |
+
+Не пушить в GitHub без отдельного явного подтверждения пользователя.
