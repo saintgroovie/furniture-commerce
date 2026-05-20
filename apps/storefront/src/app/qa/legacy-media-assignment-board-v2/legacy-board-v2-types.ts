@@ -45,3 +45,14 @@ export type V2DataCounts = {
   inventoryItems: number
   candidateEntries: number
 }
+
+/** Role filter tabs in Media pool panel. */
+export type V2RoleFilter =
+  | "all"
+  | "front"
+  | "3_4"
+  | "interior"
+  | "detail"
+  | "lifestyle"
+  | "scheme"
+  | "no_preview"
