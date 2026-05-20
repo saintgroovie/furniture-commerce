@@ -83,7 +83,7 @@ alwaysApply: true
 
 Опционально в Part A: Scope — если помогает контексту.
 
-**Часть B — один fenced block в самом конце** — `# Woodright report packet` (шаблон в §11). Дублирует факты из Part A в структурированном виде для ChatGPT; не разбивай на несколько copy-блоков.
+**Часть B — один fenced `md` block в самом конце** — `# Woodright report packet` (канонические секции и шаблон в §11). Markdown-секции обязательны; YAML/text dump — только если пользователь явно просит machine-readable packet. Без второго handoff fence после packet.
 
 Для развёрнутых задач в Part A можно также использовать:
 
@@ -164,7 +164,7 @@ alwaysApply: true
 
 Не выдавай неподтверждённое за pass.
 
-Handoff для ChatGPT — только внутри единого report packet (§11), не отдельным вторым fence.
+Handoff для ChatGPT — только внутри единого report packet (§11). **Не** добавляй второй отдельный handoff fence после packet.
 
 ## 5. Логи и терминальный вывод
 
@@ -218,6 +218,8 @@ Git:
 
 - Финальные отчёты только в canvas, side panel, отдельных markdown-файлах или artifacts — без Part A + packet в чате (кроме явной просьбы пользователя).
 - Несколько отдельных copy-ready fences, если достаточно одного `# Woodright report packet`.
+- Report packet как YAML / text dump по умолчанию — вместо markdown-секций (§11); исключение только по явной просьбе machine-readable packet.
+- Второй отдельный handoff fence после `# Woodright report packet`.
 - «Проверено» / «passed» без command и результата в `Evidence`.
 - Выдавать `needs follow-up` за подтверждённый pass.
 - Backend-only forensic dump без блока «по-человечески».
@@ -231,22 +233,61 @@ Git:
 
 ## 11. One-click copy (report packet)
 
-В **самом конце** каждого финального отчёта — **ровно один** fenced markdown block (язык fence: `md`).
+В **самом конце** каждого финального отчёта — **ровно один** fenced **markdown** block. Язык fence в чате: **`md`** (не `yaml`, не `text`, не пустой fence).
 
-**Требования к block:**
+### По умолчанию: markdown-секции (обязательно)
+
+Для обычных Woodright-отчётов Part B — **markdown report с секциями** (`#` / `##` / `###`), а не YAML-like dump и не plain text dump.
+
+Внутри fence — **только** иерархия заголовков и списков по каноническому шаблону ниже. Каждый блок фактов — под своим заголовком (`### Verdict`, `### Evidence`, …), не «полотном» `key: value` без секций.
+
+**Исключение:** YAML-like / text / machine-readable packet — **только** если пользователь **явно** просит machine-readable packet. Иначе всегда markdown-секции.
+
+### Каноническая структура packet
+
+Первая строка внутри fence: `# Woodright report packet`
+
+Далее — **в этом порядке**, без пропусков обязательных секций (содержимое заполни фактами задачи):
+
+1. `## Human report`
+   - `### Verdict`
+   - `### Что это значит по-человечески`
+   - `### Статус`
+   - `### Что изменилось`
+   - `### Что осталось`
+2. `---` (разделитель)
+3. `## Handoff summary для ChatGPT`
+   - компактные метки (одна строка на поле): `Repo:`, `Branch:`, `HEAD:`, `Verdict:` — это **не** YAML dump, а короткий префикс под handoff-секцией
+   - `### Scope`
+   - `### Changed files`
+   - `### Commits`
+   - `### Evidence`
+   - `### What was not touched`
+   - `### Follow-up`
+   - `### Можно ли закрыть чат`
+
+**Запрещено в Part B (по умолчанию):**
+
+- Весь packet как YAML frontmatter или сплошной `key: value` text dump без `##` / `###`
+- Fences `yaml`, `text` или без языка вместо `md`
+- Второй/третий copy-ready fence (в т.ч. отдельный handoff fence **после** packet)
+- Огромные raw logs (§5); секреты и полные credential values (§6)
+
+### Требования к block
+
 - **Самодостаточный** — целиком копируется одной кнопкой Copy и сразу вставляется в ChatGPT без доработки.
-- Внутри — и **Human report**, и **Handoff summary** (technical handoff); не требуй открыть файл, canvas или side panel.
-- **Не** добавляй второй/третий copy-block, если всё помещается в один packet.
-- **Не** вставляй огромные raw log dumps в packet; допустим только короткий excerpt (3–10 строк) + путь к полному логу, если он есть.
-- **Не** печатай секреты, пароли, tokens, API keys и полные значения credentials (см. §6) — ни в Part A, ни в packet.
+- Внутри одного packet — и **Human report**, и **Handoff summary**; не требуй файл, canvas или side panel.
+- Handoff **только** внутри этого packet — **не** добавляй второй handoff fence после packet.
+- Raw logs: только короткий excerpt (3–10 строк) + file path к полному логу (§5).
+- Секреты, пароли, tokens, API keys — не в Part A, не в packet (§6).
 
-Содержимое packet — полный дубликат ключевых фактов из Part A + handoff-поля для ChatGPT.
+Содержимое packet дублирует ключевые факты из Part A + handoff для ChatGPT **в каноническом markdown-шаблоне**.
 
 **Порядок финального ответа в чате:**
-1. Part A — короткий human-readable отчёт (§4, пункты 1–7).
-2. Part B — один packet ниже (этот шаблон).
+1. Part A — human-readable отчёт (§4).
+2. Part B — один `md` packet (шаблон ниже). Больше copy-fences нет.
 
-Шаблон (заполни реальными значениями задачи):
+Шаблон (заполни реальными значениями; в чате отдавай как fence `md`):
 
 ~~~md
 # Woodright report packet
