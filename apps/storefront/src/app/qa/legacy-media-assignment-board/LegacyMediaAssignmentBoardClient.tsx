@@ -450,9 +450,9 @@ function SuggestionVariantThumb({
   const thumbPv = boardThumbPreview(mid, inv, seedRows, recovery)
   const showImg = Boolean(thumbPv.url && thumbPv.useImg && !broken)
   const box: CSSProperties = {
-    width: isPrimary ? 96 : 72,
-    height: isPrimary ? 96 : 72,
-    borderRadius: 8,
+    width: isPrimary ? 72 : 56,
+    height: isPrimary ? 72 : 56,
+    borderRadius: 6,
     border: isPrimary ? "2px solid #2563eb" : "1px solid #e2e8f0",
     background: "#f8fafc",
     overflow: "hidden",
@@ -473,8 +473,8 @@ function SuggestionVariantThumb({
         <img
           src={thumbPv.url!}
           alt=""
-          width={isPrimary ? 96 : 72}
-          height={isPrimary ? 96 : 72}
+          width={isPrimary ? 72 : 56}
+          height={isPrimary ? 72 : 56}
           draggable={false}
           onError={() => setBroken(true)}
           style={{ width: "100%", height: "100%", objectFit: "cover" }}
@@ -2884,7 +2884,8 @@ export function LegacyMediaAssignmentBoardClient() {
     zone: LegacyMediaDragZone,
     variantKeyForActions: string,
     variantsForHandle: Record<string, VariantDecisionState>,
-    size: "compact" | "normal" | "large" | "primary" | "gallery" = "compact"
+    size: "compact" | "normal" | "large" | "primary" | "gallery" = "compact",
+    hideControls?: boolean
   ) => {
     const inv = invById.get(id)
     const pv = boardThumbPreview(id, inv, seedMatchRowsForSelected, recoveryById.get(id))
@@ -3083,10 +3084,10 @@ export function LegacyMediaAssignmentBoardClient() {
         onCardPointerDownCapture={(e) => setDiag((d) => ({ ...d, lastPointerDown: describeTargetFromElement(e.target) }))}
         onCardClickCapture={(e) => setDiag((d) => ({ ...d, lastClick: describeTargetFromElement(e.target) }))}
         filenameMaxLen={22}
-        workspaceMinimal={size === "primary" || size === "gallery"}
+        workspaceMinimal={size === "primary" || size === "gallery" || size === "normal" || size === "compact"}
         assignedControlsAboveDrag
       >
-        {effRole.isManual ? (
+        {!hideControls && effRole.isManual ? (
           <span
             data-manual-role-badge="true"
             style={{
@@ -3100,8 +3101,8 @@ export function LegacyMediaAssignmentBoardClient() {
             {effRole.isExcluded ? "не использовать" : "роль исправлена"}
           </span>
         ) : null}
-        {zoneActions}
-        {roleMenu}
+        {hideControls ? null : zoneActions}
+        {hideControls ? null : roleMenu}
       </MediaImageCard>
     )
     if (zone === "gallery" && gi >= 0) {
@@ -3687,14 +3688,14 @@ export function LegacyMediaAssignmentBoardClient() {
         data-review-canvas="true"
         style={{
           background: "#fff",
-          borderRadius: 14,
-          border: "2px solid #2563eb",
-          boxShadow: "0 8px 28px rgba(37,99,235,0.12)",
-          padding: 18,
-          marginBottom: 16,
+          borderRadius: 10,
+          border: "1px solid #e2e8f0",
+          boxShadow: "0 1px 4px rgba(15,23,42,0.04)",
+          padding: 10,
+          marginBottom: 10,
           display: "flex",
           flexDirection: "column",
-          gap: 14,
+          gap: 8,
           minWidth: 0,
         }}
       >
@@ -3837,20 +3838,20 @@ export function LegacyMediaAssignmentBoardClient() {
           </div>
         ) : null}
 
-        <header data-product-compact-summary="true" style={{ display: "flex", flexDirection: "column", gap: 8, minWidth: 0 }}>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "flex-start", justifyContent: "space-between" }}>
+        <header data-product-compact-summary="true" style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "flex-start", justifyContent: "space-between" }}>
             <div style={{ minWidth: 0, flex: "1 1 200px" }}>
               <h2
                 title={selectedProduct.title || selectedProduct.handle}
                 style={{
                   margin: 0,
-                  fontSize: 20,
+                  fontSize: 16,
                   fontWeight: 800,
                   letterSpacing: "-0.02em",
                   color: "#0f172a",
                   lineHeight: 1.2,
                   display: "-webkit-box",
-                  WebkitLineClamp: 2,
+                  WebkitLineClamp: 1,
                   WebkitBoxOrient: "vertical",
                   overflow: "hidden",
                   overflowWrap: "anywhere",
@@ -3859,29 +3860,29 @@ export function LegacyMediaAssignmentBoardClient() {
               >
                 {selectedProduct.title || selectedProduct.handle}
               </h2>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", marginTop: 6, fontSize: 12, color: "#475569" }}>
-                <code style={{ background: "#f1f5f9", padding: "2px 8px", borderRadius: 6 }}>{selectedProduct.handle}</code>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", marginTop: 4, fontSize: 11, color: "#475569" }}>
+                <code style={{ background: "#f1f5f9", padding: "2px 6px", borderRadius: 4, fontSize: 10 }}>{selectedProduct.handle}</code>
                 <span>
                   SKU <strong>{selectedProduct.sku}</strong>
                 </span>
-                <span style={{ fontSize: 11, fontWeight: 600, color: "#3730a3" }}>{collectionLabel}</span>
+                <span style={{ fontSize: 10, fontWeight: 600, color: "#3730a3" }}>{collectionLabel}</span>
               </div>
             </div>
             <span data-readiness-badge="true" data-kind={skuProgress.readiness} style={{ flexShrink: 0 }}>
               {skuProgress.readinessLabel}
             </span>
           </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", justifyContent: "space-between" }}>
-            <span style={{ fontSize: 11, color: "#64748b" }}>
-              {productOrdinal} / {productTotal} · {collectionLabel}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 4, alignItems: "center", justifyContent: "space-between" }}>
+            <span style={{ fontSize: 10, color: "#94a3b8" }}>
+              {productOrdinal} / {productTotal}
             </span>
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              <button type="button" style={miniBtn} onClick={() => goToPreviousProduct(h)} title="Предыдущий товар">
+            <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+              <button type="button" style={{ ...miniBtn, padding: "3px 7px", fontSize: 10 }} onClick={() => goToPreviousProduct(h)} title="Предыдущий товар">
                 ← Назад
               </button>
               <button
                 type="button"
-                style={productExportReady ? btnPrimaryMini : miniBtn}
+                style={productExportReady ? { ...btnPrimaryMini, padding: "3px 7px", fontSize: 10 } : { ...miniBtn, padding: "3px 7px", fontSize: 10 }}
                 onClick={() => goToNextProductWithSuggestions(h)}
                 title={nextProductLabel}
                 data-next-product-button="true"
@@ -3891,17 +3892,12 @@ export function LegacyMediaAssignmentBoardClient() {
                 {productExportReady ? " →" : null}
               </button>
             </div>
-            {!productExportReady ? (
-              <span style={{ fontSize: 10, color: "#b45309", width: "100%" }} data-skip-product-helper="true">
-                {OPERATOR_LABELS.skipProductHelper}
-              </span>
-            ) : null}
           </div>
         </header>
 
-        <details data-sku-progress-details="true" style={{ border: "1px solid #e2e8f0", borderRadius: 8, padding: "6px 10px", background: "#f8fafc" }}>
-          <summary style={{ cursor: "pointer", fontSize: 11, fontWeight: 700, color: "#64748b" }}>
-            Прогресс по SKU · {skuProgress.confirmedColors}/{skuProgress.totalColors} цветов
+        <details data-sku-progress-details="true" style={{ border: "1px solid #e2e8f0", borderRadius: 6, padding: "4px 8px", background: "#f8fafc" }}>
+          <summary style={{ cursor: "pointer", fontSize: 10, fontWeight: 700, color: "#64748b" }}>
+            Прогресс · {skuProgress.confirmedColors}/{skuProgress.totalColors} цветов
           </summary>
           <div data-sku-progress="true" style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: "8px 14px", fontSize: 12 }}>
             <span>
@@ -3923,7 +3919,7 @@ export function LegacyMediaAssignmentBoardClient() {
           </div>
         </details>
 
-        <div data-color-variants-row="true" style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", rowGap: 6 }}>
+        <div data-color-variants-row="true" style={{ display: "flex", flexWrap: "wrap", gap: 4, alignItems: "center", rowGap: 4 }}>
           {unifiedChips.map((chip) => (
             <button
               key={chip.variantKey}
@@ -3944,9 +3940,9 @@ export function LegacyMediaAssignmentBoardClient() {
           ))}
         </div>
 
-        <details style={{ border: "1px solid #e2e8f0", borderRadius: 12, padding: 12, background: "#fff", minWidth: 0 }}>
-          <summary style={{ cursor: "pointer", fontSize: 11, fontWeight: 700, color: "#64748b" }}>
-            Подробнее: legacy-статья и добавление цвета
+        <details style={{ border: "1px solid #e2e8f0", borderRadius: 6, padding: "4px 8px", background: "#fff", minWidth: 0 }}>
+          <summary style={{ cursor: "pointer", fontSize: 10, fontWeight: 700, color: "#94a3b8" }}>
+            Legacy-статья · добавление цвета
           </summary>
           <div style={{ marginTop: 10 }}>
             <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap", marginBottom: 10 }}>
@@ -4078,24 +4074,23 @@ export function LegacyMediaAssignmentBoardClient() {
           data-product-handle={h}
           data-active-variant-key={activeVariantKey}
           style={{
-            border: "2px solid #2563eb",
-            borderRadius: 12,
-            padding: 14,
+            border: "1px solid #e2e8f0",
+            borderRadius: 8,
+            padding: 8,
             background: "#f8fafc",
             display: "flex",
             flexDirection: "column",
-            gap: 12,
+            gap: 8,
             minWidth: 0,
-            boxShadow: "0 4px 16px rgba(37,99,235,0.08)",
           }}
         >
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ minWidth: 0 }}>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: "#0f172a" }}>
-                Рабочая область · {activeVariantDisplay}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ minWidth: 0, display: "flex", gap: 6, alignItems: "baseline", flexWrap: "wrap" }}>
+              <h3 style={{ margin: 0, fontSize: 14, fontWeight: 800, color: "#0f172a" }}>
+                {activeVariantDisplay}
               </h3>
               <span data-active-color-chip="true" style={{ fontSize: 11, color: "#64748b" }}>
-                {activeIsSuggestionDraft ? "Черновик предложенного цвета" : CHIP_STATUS_LABEL_RU[variantChipStatus(activeVariantKey, activeVariant, activeVariantMeta, true)] ?? "цвет"}
+                {activeIsSuggestionDraft ? "черновик" : CHIP_STATUS_LABEL_RU[variantChipStatus(activeVariantKey, activeVariant, activeVariantMeta, true)] ?? "цвет"}
               </span>
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
@@ -4146,78 +4141,135 @@ export function LegacyMediaAssignmentBoardClient() {
             </div>
           </div>
 
-          <ul data-color-issue-checklist="true" style={{ margin: 0, padding: "8px 12px", listStyle: "none", background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, display: "flex", flexDirection: "column", gap: 4 }}>
-            {colorIssues.map((issue) => (
-              <li
-                key={issue.id}
-                data-issue-id={issue.id}
-                data-severity={issue.severity}
-                style={{
-                  fontSize: 12,
-                  color: issue.severity === "warn" ? "#b45309" : "#475569",
-                  fontWeight: issue.severity === "warn" ? 600 : 500,
-                }}
-              >
-                {issue.label}
-              </li>
-            ))}
-            {missingRolesLine ? (
-              <li data-issue-id="roles-missing-line" data-severity="warn" style={{ fontSize: 12, color: "#b45309", fontWeight: 600 }}>
-                Не хватает: {missingRolesLine}
-              </li>
-            ) : null}
-          </ul>
-
           <section
             data-primary-panel="true"
             data-variant-primary-slot="true"
             data-workspace-primary-slot="true"
             style={{
               border: "1px solid #e2e8f0",
-              borderRadius: 12,
-              padding: 14,
+              borderRadius: 8,
+              padding: "8px 10px",
               background: "#fff",
               minWidth: 0,
+              display: "flex",
+              gap: 10,
+              alignItems: "flex-start",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, marginBottom: 10 }}>
-              <h3 style={{ margin: 0, fontSize: 14, fontWeight: 800, color: "#0f172a", letterSpacing: "0.02em" }}>Главное фото</h3>
+            {/* Left: compact primary photo drop zone — controls are in the right column */}
+            <div style={{ flex: "0 0 auto" }}>
+              {zoneBox(
+                "",
+                "Drop to Primary",
+                selectedHandle,
+                "primary",
+                z.primary ? (
+                  <div data-main-media-slot="primary" style={{ width: 108, maxWidth: 108, flex: "0 0 auto" }}>
+                    {renderZoneThumb(z.primary, selectedHandle, "primary", activeVariantKey, vByHandle, "compact", true)}
+                  </div>
+                ) : (
+                  <div
+                    data-primary-empty-state="true"
+                    style={{
+                      width: 108,
+                      minHeight: 70,
+                      borderRadius: 6,
+                      border: "2px dashed #cbd5e1",
+                      background: "#f8fafc",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: "8px 6px",
+                      textAlign: "center",
+                      gap: 3,
+                    }}
+                  >
+                    <strong style={{ fontSize: 11, color: "#334155" }}>Главное не выбрано</strong>
+                    <span style={{ fontSize: 10, color: "#64748b", lineHeight: 1.3 }}>
+                      ★ из галереи или pool
+                    </span>
+                  </div>
+                )
+              )}
             </div>
-            {zoneBox(
-              "",
-              "Drop to Primary",
-              selectedHandle,
-              "primary",
-              z.primary ? (
-                <div data-main-media-slot="primary" style={{ width: 200, maxWidth: "100%", flex: "0 0 auto" }}>
-                  {renderZoneThumb(z.primary, selectedHandle, "primary", activeVariantKey, vByHandle, "primary")}
-                </div>
-              ) : (
-                <div
-                  data-primary-empty-state="true"
-                  style={{
-                    width: "100%",
-                    maxWidth: 420,
-                    minHeight: 160,
-                    borderRadius: 12,
-                    border: "2px dashed #cbd5e1",
-                    background: "#f8fafc",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    padding: 20,
-                    textAlign: "center",
-                    gap: 6,
-                  }}
-                >
-                  <strong style={{ fontSize: 14, color: "#334155" }}>Главное фото не выбрано</strong>
-                  <span style={{ fontSize: 12, color: "#64748b", lineHeight: 1.45 }}>
-                    Нажмите <strong>★ Главное</strong> на фото из галереи или выберите <strong>Главное</strong> в media pool.
+            {/* Right: header + quick actions + status/issues */}
+            <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 5 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <h3 style={{ margin: 0, fontSize: 12, fontWeight: 800, color: "#0f172a", letterSpacing: "0.01em" }}>Главное фото</h3>
+                {z.primary ? (
+                  <span data-primary-status-ok style={{ fontSize: 10, fontWeight: 700, color: "#15803d", background: "#dcfce7", border: "1px solid #86efac", borderRadius: 5, padding: "1px 6px" }}>
+                    выбрано
                   </span>
-                </div>
-              )
-            )}
+                ) : (
+                  <span style={{ fontSize: 10, fontWeight: 700, color: "#b45309", background: "#fef9c3", border: "1px solid #fde68a", borderRadius: 5, padding: "1px 6px" }}>
+                    не выбрано
+                  </span>
+                )}
+              </div>
+              {/* Quick actions for the current primary photo */}
+              {z.primary ? (() => {
+                const pid = z.primary!
+                const pvk = activeVariantKey
+                const pAssignSrc: ActionSource =
+                  selectedHandle?.toLowerCase() === selectedHandle?.toLowerCase() && seedInvIdsMatchedFromStorefront.has(pid)
+                    ? "selected-product-default"
+                    : "assigned-button"
+                const pShield = {
+                  draggable: false as const,
+                  onMouseDown: (e: React.MouseEvent) => e.stopPropagation(),
+                  onDragStart: (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation() },
+                }
+                const pStop = (fn: () => void) => (e: React.MouseEvent) => { e.stopPropagation(); fn() }
+                return (
+                  <div style={{ display: "flex", gap: 4, flexWrap: "wrap", alignItems: "center" }}>
+                    <VariantZoneControls
+                      zone="primary"
+                      id={pid}
+                      handle={selectedHandle ?? ""}
+                      vk={pvk}
+                      gi={-1}
+                      assignSrc={pAssignSrc}
+                      isCurrentPrimary
+                      shieldBtn={pShield}
+                      stopCardClick={pStop}
+                      chipBtn={chipBtn}
+                      miniBtn={miniBtn}
+                      btnDangerChip={btnDangerChip}
+                      onInspect={() => setInspectorId(pid)}
+                      onApply={(src, target, from) => applyAssignment(src, pid, target, selectedHandle ?? "", pvk, from)}
+                      onUpdateGallery={(_mut) => {}}
+                      onSetPrimaryFromGallery={() => {}}
+                    />
+                  </div>
+                )
+              })() : null}
+              {/* Status / issues */}
+              {colorIssues.length > 0 || missingRolesLine ? (
+                <ul data-color-issue-checklist="true" style={{ margin: 0, padding: "4px 6px", listStyle: "none", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 5, display: "flex", flexDirection: "column", gap: 2 }}>
+                  {colorIssues.map((issue) => (
+                    <li
+                      key={issue.id}
+                      data-issue-id={issue.id}
+                      data-severity={issue.severity}
+                      style={{
+                        fontSize: 10,
+                        color: issue.severity === "warn" ? "#b45309" : "#475569",
+                        fontWeight: issue.severity === "warn" ? 600 : 500,
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      {issue.label}
+                    </li>
+                  ))}
+                  {missingRolesLine ? (
+                    <li data-issue-id="roles-missing-line" data-severity="warn" style={{ fontSize: 10, color: "#b45309", fontWeight: 600, lineHeight: 1.3 }}>
+                      Не хватает: {missingRolesLine}
+                    </li>
+                  ) : null}
+                </ul>
+              ) : null}
+            </div>
           </section>
 
           <section
@@ -4225,14 +4277,14 @@ export function LegacyMediaAssignmentBoardClient() {
             data-variant-gallery-strip="true"
             style={{
               border: "1px solid #e2e8f0",
-              borderRadius: 12,
-              padding: 14,
+              borderRadius: 8,
+              padding: 10,
               background: "#fff",
               minWidth: 0,
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
-              <h3 style={{ margin: 0, fontSize: 13, fontWeight: 800, color: "#0f172a" }}>Галерея цвета</h3>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 6, marginBottom: 8, flexWrap: "wrap" }}>
+              <h3 style={{ margin: 0, fontSize: 12, fontWeight: 800, color: "#0f172a" }}>Галерея цвета</h3>
               <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
                 <span style={{ fontSize: 11, color: "#64748b" }}>{z.gallery.length} фото</span>
                 <button
@@ -4279,10 +4331,10 @@ export function LegacyMediaAssignmentBoardClient() {
                   data-gallery-scroll-strip="true"
                   style={{
                     display: "flex",
-                    gap: 12,
+                    gap: 8,
                     overflowX: "auto",
                     overflowY: "hidden",
-                    paddingBottom: 6,
+                    paddingBottom: 4,
                     width: "100%",
                     minWidth: 0,
                   }}
@@ -4300,7 +4352,7 @@ export function LegacyMediaAssignmentBoardClient() {
                         data-inventory-id={gid}
                         data-main-media-slot="gallery"
                         data-gallery-order={galleryIdx + 1}
-                        style={{ flex: "0 0 196px", width: 196, minWidth: 180, maxWidth: 196, display: "flex", flexDirection: "column", gap: 6 }}
+                        style={{ flex: "0 0 120px", width: 120, minWidth: 100, maxWidth: 120, display: "flex", flexDirection: "column", gap: 4 }}
                       >
                         {borrowed ? (
                           <div
@@ -4318,7 +4370,7 @@ export function LegacyMediaAssignmentBoardClient() {
                             из цвета: {borrowed.fromVariantLabel}
                           </div>
                         ) : null}
-                        {renderZoneThumb(gid, selectedHandle, "gallery", activeVariantKey, vByHandle, "gallery")}
+                        {renderZoneThumb(gid, selectedHandle, "gallery", activeVariantKey, vByHandle, "compact")}
                       </div>
                     )
                   })}
@@ -4328,11 +4380,11 @@ export function LegacyMediaAssignmentBoardClient() {
           </section>
 
           {pendingOptionalSameSku.length > 0 ? (
-            <details data-optional-same-sku-additions="true" style={{ border: "1px dashed #cbd5e1", borderRadius: 10, padding: 10, background: "#f8fafc" }}>
-              <summary style={{ cursor: "pointer", fontSize: 12, fontWeight: 700, color: "#475569" }}>
-                Можно добавить из этого SKU ({pendingOptionalSameSku.length})
+            <details data-optional-same-sku-additions="true" style={{ border: "1px dashed #cbd5e1", borderRadius: 8, padding: "6px 8px", background: "#f8fafc" }}>
+              <summary style={{ cursor: "pointer", fontSize: 11, fontWeight: 700, color: "#475569" }}>
+                Из этого SKU ({pendingOptionalSameSku.length})
               </summary>
-              <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 8 }}>
+              <div style={{ marginTop: 6, display: "flex", flexWrap: "wrap", gap: 6 }}>
                 <button
                   type="button"
                   data-action-button="optional-same-sku-add-all"
@@ -4360,15 +4412,15 @@ export function LegacyMediaAssignmentBoardClient() {
             <div
               data-default-storefront-seed-compact="true"
               style={{
-                padding: "10px 12px",
-                borderRadius: 10,
+                padding: "8px 10px",
+                borderRadius: 8,
                 border: "1px solid #bfdbfe",
                 background: "#f8fafc",
                 minWidth: 0,
               }}
             >
-              <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 8, alignItems: "center" }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: "#1e3a8a" }}>Default photos available</span>
+              <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 6, alignItems: "center" }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: "#1e3a8a" }}>Default photos</span>
                 {seedRowsPendingAssign.length > 0 ? (
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                     <button
@@ -4421,11 +4473,11 @@ export function LegacyMediaAssignmentBoardClient() {
                 ) : null}
               </div>
               {seedRowsPendingAssign.length > 0 ? (
-                <div style={{ display: "flex", gap: 8, marginTop: 10, overflowX: "auto", paddingBottom: 4 }}>
+                <div style={{ display: "flex", gap: 6, marginTop: 8, overflowX: "auto", paddingBottom: 4 }}>
                   {seedRowsPendingAssign.map((r) => (
-                    <div key={r.seedUrl} style={{ flex: "0 0 72px", width: 72 }} title={r.basename}>
+                    <div key={r.seedUrl} style={{ flex: "0 0 60px", width: 60 }} title={r.basename}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={r.seedUrl} alt="" width={72} height={72} style={{ width: 72, height: 72, objectFit: "cover", borderRadius: 8, border: "1px solid #bfdbfe" }} />
+                      <img src={r.seedUrl} alt="" width={60} height={60} style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 6, border: "1px solid #bfdbfe" }} />
                     </div>
                   ))}
                 </div>
@@ -4452,7 +4504,7 @@ export function LegacyMediaAssignmentBoardClient() {
           ) : null}
 
           {/* Reference + Rejected — collapsible secondary lanes, side-by-side at full width */}
-          <div style={{ display: "grid", gridTemplateColumns: fullWidth ? "repeat(2, minmax(0, 1fr))" : "1fr", gap: 12 }}>
+          <div style={{ display: "grid", gridTemplateColumns: fullWidth ? "repeat(2, minmax(0, 1fr))" : "1fr", gap: 8 }}>
             <details
               style={{ background: "#fff", borderRadius: 10, border: "1px solid #e2e8f0", padding: "8px 10px", minWidth: 0 }}
             >
@@ -4530,21 +4582,19 @@ export function LegacyMediaAssignmentBoardClient() {
             }}
             onDrop={(e) => dropZoneStable(e, selectedHandle, "unassigned")}
             style={{
-              padding: "10px 12px",
-              borderRadius: 10,
-              background: dragHoverZoneKey === `return|${h}` ? "#eff6ff" : "#f8fafc",
-              border: dragHoverZoneKey === `return|${h}` ? "2px dashed #2563eb" : "1px dashed #cbd5e1",
-              fontSize: 12,
-              color: dragHoverZoneKey === `return|${h}` ? "#1e40af" : "#64748b",
+              padding: "6px 10px",
+              borderRadius: 6,
+              background: dragHoverZoneKey === `return|${h}` ? "#eff6ff" : "transparent",
+              border: dragHoverZoneKey === `return|${h}` ? "2px dashed #2563eb" : "1px dashed #e2e8f0",
+              fontSize: 10,
+              color: dragHoverZoneKey === `return|${h}` ? "#1e40af" : "#cbd5e1",
               transition: "border 0.12s ease, background 0.12s ease",
             }}
           >
             {dragHoverZoneKey === `return|${h}` ? (
               <strong>Drop to remove from lanes</strong>
             ) : (
-              <>
-                Drop assigned tiles here to return them to the <strong>unassigned</strong> pool. Each lane card also exposes a <strong>Return to Unassigned</strong> button.
-              </>
+              <span>↩ Drop to return to pool</span>
             )}
           </div>
         </section>
@@ -4552,9 +4602,9 @@ export function LegacyMediaAssignmentBoardClient() {
         <details
           data-article-scan-panel="true"
           style={{
-            border: "1px solid #dbeafe",
-            borderRadius: 12,
-            padding: 12,
+            border: "1px solid #e2e8f0",
+            borderRadius: 6,
+            padding: "4px 8px",
             background: "#f8fafc",
             minWidth: 0,
             marginBottom: 0,
@@ -4607,12 +4657,12 @@ export function LegacyMediaAssignmentBoardClient() {
           data-suggested-variants-panel="true"
           data-product-handle={h}
           open={leftSuggestionCount > 0}
-          style={{ border: "1px solid #e2e8f0", borderRadius: 12, padding: 12, background: "#fff", minWidth: 0 }}
+          style={{ border: "1px solid #e2e8f0", borderRadius: 8, padding: 10, background: "#fff", minWidth: 0 }}
         >
-          <summary style={{ cursor: "pointer", fontSize: 12, fontWeight: 800, color: "#334155", marginBottom: leftSuggestionCount > 0 ? 8 : 0 }}>
-            Другие предложенные цвета · осталось {leftSuggestionCount}
+          <summary style={{ cursor: "pointer", fontSize: 11, fontWeight: 800, color: "#334155", marginBottom: leftSuggestionCount > 0 ? 6 : 0 }}>
+            Предложенные цвета · осталось {leftSuggestionCount}
           </summary>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap", marginBottom: 8, rowGap: 6 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6, flexWrap: "wrap", marginBottom: 6, rowGap: 4 }}>
             <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
               <span style={{ fontSize: 10, fontWeight: 700, color: "#64748b" }}>
               {totalSuggestions > 0 ? (
@@ -4851,19 +4901,19 @@ export function LegacyMediaAssignmentBoardClient() {
                     data-draft={isDraftCard ? "true" : "false"}
                     style={{
                       border: "1px solid #e2e8f0",
-                      borderRadius: 10,
+                      borderRadius: 8,
                       background: "#fff",
-                      padding: 10,
+                      padding: 8,
                       display: "flex",
                       flexDirection: "column",
-                      gap: 8,
+                      gap: 6,
                       minWidth: 0,
                     }}
                   >
-                    <header style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", minWidth: 0 }}>
+                    <header style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", minWidth: 0 }}>
                         <strong
                           style={{
-                            fontSize: 15,
+                            fontSize: 13,
                             color: labelNeedsReviewStyle(suggestionLabelStatus) ? "#b45309" : "#0f172a",
                             overflowWrap: "anywhere",
                             fontStyle: labelNeedsReviewStyle(suggestionLabelStatus) ? "italic" : "normal",
@@ -4890,16 +4940,16 @@ export function LegacyMediaAssignmentBoardClient() {
                         ) : null}
                     </header>
 
-                    <p style={{ margin: 0, fontSize: 11, color: "#64748b", lineHeight: 1.45 }} data-suggestion-compact-summary="true">
+                    <p style={{ margin: 0, fontSize: 10, color: "#64748b", lineHeight: 1.35 }} data-suggestion-compact-summary="true">
                       {galleryPreviewOrdered.length > 0
-                        ? `${galleryPreviewOrdered.length} фото в предложении — откройте в рабочей области через чип или «Выбрать».`
-                        : "Нет кандидатов — назначьте из media pool."}
-                      {primaryRoleHeadline ? ` Главная роль: ${primaryRoleHeadline}.` : ""}
+                        ? `${galleryPreviewOrdered.length} фото`
+                        : "Нет кандидатов"}
+                      {primaryRoleHeadline ? ` · роль: ${primaryRoleHeadline}` : ""}
                     </p>
                     {galleryPreviewOrdered.length > 0 ? (
                       <div
                         data-suggestion-preview-strip="true"
-                        style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "flex-start" }}
+                        style={{ display: "flex", flexWrap: "nowrap", gap: 4, alignItems: "flex-start", overflowX: "auto" }}
                       >
                         {galleryPreviewOrdered.slice(0, 4).map((mid, idx) => {
                           const roleBadge = roleBadgeForMedia(mid, rolesByIdMap, borrowedById)
@@ -4923,7 +4973,7 @@ export function LegacyMediaAssignmentBoardClient() {
                     ) : null}
                     {/* FOOTER: Confirm all (primary) + secondary actions + collapsed Details */}
                     <footer
-                      style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", rowGap: 6 }}
+                      style={{ display: "flex", flexWrap: "wrap", gap: 4, alignItems: "center", rowGap: 4 }}
                       onClick={(e) => e.stopPropagation()}
                     >
                       <button
@@ -5716,10 +5766,10 @@ export function LegacyMediaAssignmentBoardClient() {
           </span>
           <span style={{ fontSize: 10, fontWeight: 700, color: "#9a3412", flexShrink: 0 }}>QA dev-only</span>
         </div>
-        <header style={{ padding: "8px 16px 6px", display: "flex", flexDirection: "column", gap: 6 }}>
+        <header style={{ padding: "6px 14px 4px", display: "flex", flexDirection: "column", gap: 4 }}>
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10, justifyContent: "space-between", rowGap: 6 }}>
             <div style={{ display: "flex", alignItems: "baseline", gap: 10, minWidth: 0, flexWrap: "wrap" }}>
-              <h1 style={{ margin: 0, fontSize: 17, fontWeight: 800, letterSpacing: "-0.02em", color: "#0f172a" }}>Legacy media assignment</h1>
+              <h1 style={{ margin: 0, fontSize: 15, fontWeight: 800, letterSpacing: "-0.02em", color: "#0f172a" }}>Legacy media assignment</h1>
               <span style={{ fontSize: 11, color: "#94a3b8" }}>local-only · never writes Medusa</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
@@ -5829,10 +5879,10 @@ export function LegacyMediaAssignmentBoardClient() {
           boxSizing: "border-box",
           display: "grid",
           gridTemplateColumns: focusMode
-            ? "minmax(820px, 1fr) minmax(420px, 520px)"
-            : "minmax(220px, 260px) minmax(720px, 1fr) minmax(380px, 460px)",
-          gap: 16,
-          padding: "0 16px 16px",
+            ? "minmax(820px, 1fr) minmax(360px, 460px)"
+            : "minmax(200px, 240px) minmax(680px, 1fr) minmax(340px, 420px)",
+          gap: 12,
+          padding: "0 12px 12px",
           gridTemplateRows: "minmax(0, 1fr)",
           alignItems: "stretch",
           overflow: "hidden",
@@ -5843,7 +5893,7 @@ export function LegacyMediaAssignmentBoardClient() {
             width: "100%",
             borderRight: "1px solid #e2e8f0",
             background: "#fff",
-            padding: 16,
+            padding: "10px 12px",
             minHeight: 0,
             overflowY: "auto",
             overflowX: "hidden",
@@ -5919,7 +5969,7 @@ export function LegacyMediaAssignmentBoardClient() {
           </div>
         </aside>
 
-        <main style={{ minWidth: 0, minHeight: 0, padding: 16, overflowY: "auto", overflowX: "hidden" }}>
+        <main style={{ minWidth: 0, minHeight: 0, padding: "12px 14px", overflowY: "auto", overflowX: "hidden" }}>
           {sidebarCollection === "" && !selectedHandle ? (
             <p style={{ margin: "0 0 14px", padding: "12px 14px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 10, color: "#475569", fontSize: 13 }}>
               <strong>Select a collection to start.</strong> Pick one in the sidebar or stay on <em>All collections</em> to see every product — then choose a product row to load the workspace.
@@ -6159,9 +6209,9 @@ export function LegacyMediaAssignmentBoardClient() {
               minWidth: 0,
             }}
           >
-            <div style={{ flexShrink: 0, padding: "12px 14px", borderBottom: "1px solid #e2e8f0" }}>
-              <div style={{ fontSize: 11, fontWeight: 800, color: "#0f172a", marginBottom: 8 }}>Media pool · <span style={{ color: "#64748b" }}>{poolIdsForTabFocused.length} items</span></div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, maxHeight: 120, overflowY: "auto" }}>
+            <div style={{ flexShrink: 0, padding: "8px 10px", borderBottom: "1px solid #e2e8f0" }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: "#0f172a", marginBottom: 6 }}>Media pool · <span style={{ color: "#64748b" }}>{poolIdsForTabFocused.length}</span></div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 4, maxHeight: 80, overflowY: "auto" }}>
                 {(
                   [
                     ["suggested", "Suggested"],
@@ -6187,18 +6237,12 @@ export function LegacyMediaAssignmentBoardClient() {
                 ))}
               </div>
               {!selectedHandle ? (
-                <p style={{ margin: "10px 0 0", fontSize: 12, color: "#b45309", lineHeight: 1.4 }}>
-                  Quick actions stay disabled until a product is selected. <strong>Select a product first.</strong>
+                <p style={{ margin: "6px 0 0", fontSize: 10, color: "#b45309", lineHeight: 1.3 }}>
+                  <strong>Выберите товар.</strong>
                 </p>
               ) : (
-                <p style={{ margin: "10px 0 0", fontSize: 12, color: "#64748b" }}>
-                  Quick actions apply to <strong>{selectedHandle}</strong>; drag any previewable tile card (or its <strong>⋮⋮ Drag</strong> bar) only when needed.
-                  {focusMode ? (
-                    <>
-                      {" "}
-                      <em>Focus mode</em> limits the pool to media whose matcher candidates include this handle.
-                    </>
-                  ) : null}
+                <p style={{ margin: "6px 0 0", fontSize: 10, color: "#64748b" }}>
+                  → <strong>{selectedHandle}</strong>{focusMode ? " · Focus" : ""}
                 </p>
               )}
               {poolActionNote ? (
@@ -6306,7 +6350,7 @@ export function LegacyMediaAssignmentBoardClient() {
                 </div>
               </details>
             </div>
-            <div data-media-pool-scroll="true" style={{ flex: 1, minHeight: 0, overflowY: "auto", overflowX: "hidden", padding: 12 }}>
+            <div data-media-pool-scroll="true" style={{ flex: 1, minHeight: 0, overflowY: "auto", overflowX: "hidden", padding: 8 }}>
               {poolTab === "unpreviewable" ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
                   {unpreviewableRows.length === 0 ? (
@@ -6633,10 +6677,10 @@ export function LegacyMediaAssignmentBoardClient() {
                 flexShrink: 0,
                 borderTop: "1px solid #e2e8f0",
                 background: "#f8fafc",
-                padding: 14,
+                padding: "10px 12px",
                 overflowY: "auto",
                 overflowX: "hidden",
-                maxHeight: 320,
+                maxHeight: 280,
                 overflowWrap: "anywhere",
                 wordBreak: "break-word",
               }}
@@ -6647,14 +6691,14 @@ export function LegacyMediaAssignmentBoardClient() {
                   Закрыть
                 </button>
               </div>
-              <div style={{ borderRadius: 12, overflow: "hidden", background: "#fff", border: "1px solid #e2e8f0", marginBottom: 12 }}>
+              <div style={{ borderRadius: 8, overflow: "hidden", background: "#fff", border: "1px solid #e2e8f0", marginBottom: 8 }}>
                 {(() => {
                   const pv = clientPreviewUrl(inspectorInv, recoveryById.get(inspectorInv.id))
                   return pv.useImg && pv.url ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={pv.url} alt="" style={{ width: "100%", display: "block", maxHeight: 200, objectFit: "cover" }} />
+                    <img src={pv.url} alt="" style={{ width: "100%", display: "block", maxHeight: 140, objectFit: "cover" }} />
                   ) : (
-                    <div style={{ padding: 20, fontSize: 13, color: "#64748b" }}>{pv.caption || inspectorInv.preview_reason || "No preview"}</div>
+                    <div style={{ padding: 12, fontSize: 12, color: "#64748b" }}>{pv.caption || inspectorInv.preview_reason || "No preview"}</div>
                   )
                 })()}
               </div>
@@ -6788,7 +6832,7 @@ const navBadge: React.CSSProperties = {
   color: "#475569",
 }
 const muted: React.CSSProperties = { fontSize: 11, color: "#94a3b8", padding: 8 }
-const tabBtn: React.CSSProperties = { fontSize: 11, fontWeight: 600, padding: "6px 10px", borderRadius: 999, border: "none", cursor: "pointer" }
+const tabBtn: React.CSSProperties = { fontSize: 10, fontWeight: 600, padding: "4px 8px", borderRadius: 999, border: "none", cursor: "pointer" }
 const chipBtn: React.CSSProperties = {
   fontSize: 11,
   fontWeight: 700,
