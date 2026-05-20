@@ -152,14 +152,26 @@ async function ensureAdminSession(page, baseUrl, email, password) {
   }
 }
 
+function isUploadsPathname(pathname) {
+  return pathname.startsWith("/uploads/")
+}
+
+function uploadsPathnameFromUrl(url) {
+  try {
+    return new URL(url).pathname
+  } catch {
+    return url.includes("/uploads/") ? url : ""
+  }
+}
+
+function isBlockingUploadsResponse(row) {
+  const pathname = uploadsPathnameFromUrl(row.url)
+  if (!isUploadsPathname(pathname)) return false
+  return !row.ok || row.status >= 400
+}
+
 function summarizeNetworkArray(arr) {
-  const uploads = arr.filter((r) => {
-    try {
-      return new URL(r.url).pathname.startsWith("/uploads/")
-    } catch {
-      return r.url.includes("/uploads/")
-    }
-  })
+  const uploads = arr.filter((r) => isUploadsPathname(uploadsPathnameFromUrl(r.url)))
   const statics = arr.filter((r) => {
     try {
       return new URL(r.url).pathname.startsWith("/static/")
@@ -167,19 +179,84 @@ function summarizeNetworkArray(arr) {
       return r.url.includes("/static/")
     }
   })
-  const bad = arr.filter((r) => !r.ok || r.status === 404)
+  const badUploads = uploads.filter(isBlockingUploadsResponse)
+  const bad = arr.filter((r) => !r.ok || r.status >= 400)
   return {
     uploads: {
       total: uploads.length,
-      ok: uploads.filter((r) => r.ok && r.status !== 404).length,
+      ok: uploads.filter((r) => r.ok && r.status < 400).length,
       entries: uploads.slice(0, 40),
     },
     static: {
       total: statics.length,
-      ok: statics.filter((r) => r.ok && r.status !== 404).length,
+      ok: statics.filter((r) => r.ok && r.status < 400).length,
       entries: statics.slice(0, 40),
     },
     nonOk: bad.slice(0, 20).map((r) => ({ url: r.url, status: r.status, ok: r.ok })),
+    nonOkUploads: badUploads.slice(0, 40).map((r) => ({
+      url: r.url,
+      pathname: uploadsPathnameFromUrl(r.url),
+      status: r.status,
+      ok: r.ok,
+    })),
+    uploads404: badUploads
+      .filter((r) => r.status === 404)
+      .slice(0, 40)
+      .map((r) => ({
+        url: r.url,
+        pathname: uploadsPathnameFromUrl(r.url),
+        status: r.status,
+      })),
+  }
+}
+
+/** Merge network /uploads failures into DOM imageAudit (network is authoritative for HTTP status). */
+function enrichImageAuditWithNetworkFailures(imageAudit, networkMediaAudit) {
+  const detail = imageAudit?.productDetail
+  const phase = networkMediaAudit?.productDetailPhase
+  if (!detail?.uploads || !phase?.nonOkUploads?.length) return
+
+  const failed = [...(detail.uploads.failed || [])]
+  const seen = new Set(failed.map((f) => f.pathname || uploadsPathnameFromUrl(f.url)))
+
+  for (const row of phase.nonOkUploads) {
+    const pathname = row.pathname || uploadsPathnameFromUrl(row.url)
+    if (!pathname || seen.has(pathname)) continue
+    seen.add(pathname)
+    failed.push({
+      kind: "network",
+      pathname,
+      url: row.url,
+      status: row.status,
+      ok: row.ok,
+    })
+  }
+
+  detail.uploads.failed = failed.slice(0, 40)
+  detail.uploads.failedCount = failed.length
+  detail.uploads.networkNonOkCount = phase.nonOkUploads.length
+}
+
+/**
+ * Strict product media QA when ADMIN_QA_PRODUCT_ID is set and detail phase ran.
+ * @returns {{ ok: boolean, reason?: string, uploads404?: object[], nonOkUploads?: object[] }}
+ */
+function evaluateProductMediaQa(productsProbe, productId, networkMediaAudit) {
+  if (productsProbe?.skipped || !productId) {
+    return { ok: true, strict: false }
+  }
+  const phase = networkMediaAudit?.productDetailPhase
+  const nonOkUploads = phase?.nonOkUploads || []
+  if (nonOkUploads.length === 0) {
+    return { ok: true, strict: true }
+  }
+  return {
+    ok: false,
+    strict: true,
+    reason: "product_detail_uploads_non_ok",
+    uploads404: phase.uploads404 || [],
+    nonOkUploads,
+    nonOkCount: nonOkUploads.length,
   }
 }
 
@@ -471,34 +548,62 @@ async function main() {
     productDetailPhase: summarizeNetworkArray(networkByPhase.productDetail),
   }
 
+  enrichImageAuditWithNetworkFailures(imageAudit, networkMediaAudit)
+  const productMediaQa = evaluateProductMediaQa(productsProbe, productId, networkMediaAudit)
+
+  const blockingConsole = consoleMessages.filter((m) => {
+    if (m.type !== "error") return false
+    if (m.text.includes("401")) return false
+    if (productMediaQa.strict && /404\s*\(Not Found\)/i.test(m.text)) return false
+    return true
+  })
+
+  const blockingFailedRequests = failedRequests.filter((r) => {
+    const u = r.url
+    return (
+      u.includes("/app/") &&
+      (u.endsWith(".js") || u.endsWith(".css") || u.endsWith(".jsx") || u.includes("/@vite/"))
+    )
+  })
+
+  const smokeOnly = productsProbe?.skipped
+  const qaOk =
+    !pageErrors.length &&
+    !blockingConsole.length &&
+    productMediaQa.ok &&
+    (smokeOnly || productsProbe?.loginMode)
+
   const report = {
+    ok: qaOk,
     baseUrl,
     capturedAt: new Date().toISOString(),
     titles: { app: titleApp, login: titleLogin },
     bodyPreview: { app: bodyApp, login: bodyLogin },
     consoleErrorsAndWarnings: consoleMessages,
     pageErrors,
-    failedRequests: failedRequests.filter((r) => {
-      const u = r.url
-      return (
-        u.includes("/app/") &&
-        (u.endsWith(".js") || u.endsWith(".css") || u.endsWith(".jsx") || u.includes("/@vite/"))
-      )
-    }),
+    failedRequests: blockingFailedRequests,
     allFailedRequestsSample: failedRequests.slice(0, 40),
     screenshotsDir: outDir,
     productsProbe,
-    imageAudit,
-    networkMediaAudit,
+    imageAudit: smokeOnly ? null : imageAudit,
+    networkMediaAudit: smokeOnly ? null : networkMediaAudit,
+    productMediaQa: smokeOnly ? { ok: true, strict: false, skipped: true } : productMediaQa,
   }
 
   fs.writeFileSync(path.join(outDir, "report.json"), JSON.stringify(report, null, 2), "utf8")
 
   await browser.close()
 
-  console.log(JSON.stringify({ ok: true, reportPath: path.join(outDir, "report.json"), screenshotsDir: outDir }, null, 2))
-  const blockingConsole = consoleMessages.filter((m) => m.type === "error" && !m.text.includes("401"))
-  if (pageErrors.length || blockingConsole.length) {
+  const summary = {
+    ok: qaOk,
+    reportPath: path.join(outDir, "report.json"),
+    screenshotsDir: outDir,
+    productsProbeSkipped: smokeOnly,
+    productMediaQa,
+  }
+  console.log(JSON.stringify(summary, null, 2))
+
+  if (!qaOk) {
     process.exitCode = 2
   }
 }
