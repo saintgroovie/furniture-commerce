@@ -485,16 +485,20 @@ function SuggestionVariantThumb({
           style={{
             fontSize: 9,
             color: "#94a3b8",
+            padding: 4,
+            lineHeight: 1.2,
             height: "100%",
             display: "flex",
+            flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
             textAlign: "center",
-            background: "repeating-linear-gradient(45deg, #f1f5f9 0 6px, #e2e8f0 6px 12px)",
+            gap: 2,
           }}
           aria-label="Нет превью для этого медиа"
         >
-          <span style={{ fontWeight: 700, fontSize: 9, color: "#64748b", background: "#fff", padding: "1px 4px", borderRadius: 3, border: "1px solid #e2e8f0" }}>{broken ? "нет фото" : "нет превью"}</span>
+          <span style={{ fontWeight: 700, fontSize: 10, color: "#64748b" }}>{truncateMiddleClient(filename, 18)}</span>
+          <span>{broken ? "нет фото" : "нет превью"}</span>
         </div>
       )}
       {isPrimary ? (
@@ -4750,13 +4754,13 @@ export function LegacyMediaAssignmentBoardClient() {
                             onClick={stopAndRun(setAsPrimary)}
                             style={{
                               flex: "0 0 auto",
-                              fontSize: 12,
-                              fontWeight: 800,
-                              padding: "3px 7px",
+                              fontSize: 11,
+                              fontWeight: 700,
+                              padding: "3px 6px",
                               borderRadius: 4,
-                              border: "1px solid #b45309",
-                              background: "#fbbf24",
-                              color: "#78350f",
+                              border: "1px solid #cbd5e1",
+                              background: "#fff",
+                              color: "#0f172a",
                               cursor: "pointer",
                               lineHeight: 1.1,
                             }}
@@ -6034,9 +6038,11 @@ export function LegacyMediaAssignmentBoardClient() {
       style={{
         width: "100%",
         boxSizing: "border-box",
-        minHeight: "100vh",
+        height: "100vh",
+        maxHeight: "100vh",
         display: "flex",
         flexDirection: "column",
+        overflow: "hidden",
         background: "#eef2f6",
         color: "#0f172a",
         fontFamily: 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
@@ -6183,6 +6189,8 @@ export function LegacyMediaAssignmentBoardClient() {
       <div
         data-legacy-board-grid="true"
         style={{
+          flex: 1,
+          minHeight: 0,
           minWidth: 0,
           width: "100%",
           boxSizing: "border-box",
@@ -6192,7 +6200,9 @@ export function LegacyMediaAssignmentBoardClient() {
             : "minmax(200px, 240px) minmax(680px, 1fr) minmax(340px, 420px)",
           gap: 12,
           padding: "0 12px 12px",
-          alignItems: "start",
+          gridTemplateRows: "minmax(0, 1fr)",
+          alignItems: "stretch",
+          overflow: "hidden",
         }}
       >
         <aside
@@ -6201,14 +6211,10 @@ export function LegacyMediaAssignmentBoardClient() {
             borderRight: "1px solid #e2e8f0",
             background: "#fff",
             padding: "10px 12px",
-            position: "sticky",
-            top: 0,
-            alignSelf: "start",
-            height: "100vh",
+            minHeight: 0,
             overflowY: "auto",
             overflowX: "hidden",
             display: focusMode ? "none" : "block",
-            zIndex: 5,
           }}
         >
           <div style={{ fontSize: 11, fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>Collections</div>
@@ -6280,7 +6286,7 @@ export function LegacyMediaAssignmentBoardClient() {
           </div>
         </aside>
 
-        <main style={{ minWidth: 0, padding: "12px 14px" }}>
+        <main style={{ minWidth: 0, minHeight: 0, padding: "12px 14px", overflowY: "auto", overflowX: "hidden" }}>
           {sidebarCollection === "" && !selectedHandle ? (
             <p style={{ margin: "0 0 14px", padding: "12px 14px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 10, color: "#475569", fontSize: 13 }}>
               <strong>Select a collection to start.</strong> Pick one in the sidebar or stay on <em>All collections</em> to see every product — then choose a product row to load the workspace.
@@ -6503,15 +6509,11 @@ export function LegacyMediaAssignmentBoardClient() {
             background: "#fff",
             display: "flex",
             flexDirection: "column",
+            minHeight: 0,
             minWidth: 0,
             maxWidth: "100%",
             boxSizing: "border-box",
-            position: "sticky",
-            top: 0,
-            alignSelf: "start",
-            height: "100vh",
             overflow: "hidden",
-            zIndex: 5,
           }}
         >
           <div
