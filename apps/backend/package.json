@@ -7,6 +7,11 @@
   "scripts": {
     "build": "medusa build",
     "dev": "medusa develop",
+    "dev:admin-local": "PORT=9001 ADMIN_VITE_PORT=5174 ADMIN_CORS=http://localhost:5174,http://127.0.0.1:5174,http://localhost:9001,http://127.0.0.1:9001 AUTH_CORS=http://localhost:5174,http://127.0.0.1:5174,http://localhost:8000,http://127.0.0.1:8000,http://localhost:9001,http://127.0.0.1:9001 MEDUSA_BACKEND_URL=http://localhost:9001 medusa develop",
+    "dev:admin-local:daemon": "bash scripts/dev-admin-local-daemon.sh",
+    "dev:admin-local:stop": "bash scripts/dev-admin-local-stop.sh",
+    "dev:admin-local:cleanup": "bash scripts/dev-admin-local-cleanup.sh",
+    "admin-qa:browser": "node ../../scripts/admin-browser-qa.mjs",
     "start": "medusa start",
     "db:generate": "medusa db:generate",
     "db:migrate": "medusa db:migrate",
@@ -15,6 +20,7 @@
     "refresh-greenwich": "medusa exec ./src/scripts/refresh-greenwich.ts",
     "refresh-oliver": "medusa exec ./src/scripts/refresh-oliver.ts",
     "refresh-oliver-media": "medusa exec ./src/scripts/refresh-oliver-media.ts",
+    "refresh-co05-country-london-paris-media": "medusa exec ./src/scripts/refresh-co05-country-london-paris-media.ts",
     "refresh-oliver-thumbnails": "medusa exec ./src/scripts/refresh-oliver-thumbnails.ts",
     "sync-oliver-primary-images": "medusa exec ./src/scripts/sync-oliver-primary-images.ts",
     "apply-oliver-kids-manifest": "medusa exec ./src/scripts/apply-oliver-kids-manifest.ts",
@@ -28,12 +34,14 @@
     "oxford-local-mvp-media:apply": "medusa exec ./src/scripts/oxford-local-mvp-media-apply.ts"
   },
   "dependencies": {
+    "@medusajs/admin-sdk": "^2.14.2",
     "@medusajs/framework": "^2.0.0",
     "@medusajs/medusa": "^2.0.0"
   },
   "devDependencies": {
     "@medusajs/cli": "^2.0.0",
     "@types/node": "^20.0.0",
+    "playwright": "1.50.0",
     "ts-node": "^10.9.0",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.0.0"
