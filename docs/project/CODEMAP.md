@@ -113,6 +113,7 @@
 | **legacy-media-inventory-report.md** (`docs/storefront/`) | Human summary for legacy media inventory pass; QA/triage only, not production apply. |
 | **legacy-media-product-candidate-map.md** (`docs/storefront/`) | Matcher summary and confidence semantics. |
 | **legacy-media-assignment-board.md** (`docs/storefront/`) | Dev QA page for draggable triage: routes, allowlist, export, next gated executor note. |
+| **legacy-media-assignment-board-v2-design.md** (`docs/storefront/`) | Design-only spec for planned `/qa/legacy-media-assignment-board-v2`: UX, preview waterfall, export, 4-commit plan; no runtime until implemented. |
 | **product-card-photo-ux-audit.md** (`docs/storefront/`) | Scoped storefront UX audit + visual triage baseline; **lessons learned** (thumbnail-only hero, UI-only extras e.g. `display_group_extra_image_urls`, no representative `thumbnail`/`images` mutation), **Collection media rollout checklist** (API + UI + browser gates + classification + commit policy), **Mistakes to avoid** — pipeline input for new collections (separate from Oxford/Monchelsea/WW/Oliver Kids governance). |
 | **`data/normalized/storefront-product-card-photo-ux-backlog.json`** | Machine-readable UX backlog + `visual_assignment_triage`: collection-aware counters, Oxford-4 interim classification, and follow-up routing (`asset_pipeline` / `ai_visual` / reviewer sign-off). |
 | **collection-asset-intake-refresh-runbook.md** (`docs/project/`) | Operational refresh guide for regular governance passes before matrix/status interpretation. |
