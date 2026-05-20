@@ -1,21 +1,88 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
-import type { InvItem, CandidateEntry, ProductRow, V2LoadStatus } from "./legacy-board-v2-types"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import type {
+  InvItem,
+  CandidateEntry,
+  ProductRow,
+  V2LoadStatus,
+  V2ProductState,
+  V2ColorVariant,
+  V2RoleFilter,
+  V2RoleSlot,
+} from "./legacy-board-v2-types"
+import { extractColorTokenFromMedia } from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
 import { MediaPoolPanel } from "./MediaPoolPanel"
+import { ProductWorkspace } from "./ProductWorkspace"
 
 const V1_API_BASE = "/qa/legacy-media-assignment-board/api"
 
+// Russian color token labels (subset; fallback to raw token)
+const TOKEN_TO_RU: Record<string, string> = {
+  blue: "Синий",
+  grey: "Серый",
+  gray: "Серый",
+  white: "Белый",
+  cream: "Кремовый",
+  milk: "Молочный",
+  beige: "Бежевый",
+  olive: "Оливковый",
+  green: "Зелёный",
+  black: "Чёрный",
+  brown: "Коричневый",
+  graphite: "Графит",
+  ivory: "Слоновая кость",
+  walnut: "Орех",
+  natural: "Натуральный",
+  oak: "Дуб",
+  wenge: "Венге",
+}
+
+const SLOT_TO_FILTER: Record<V2RoleSlot, V2RoleFilter> = {
+  main: "front",
+  front_anfas: "front",
+  front_3_4: "3_4",
+  interior: "interior",
+  detail: "detail",
+  lifestyle: "lifestyle",
+  scheme: "scheme",
+}
+
+function makeEmptyProductState(handle: string, variantKey: string): V2ProductState {
+  return {
+    handle,
+    activeVariantKey: variantKey,
+    rolesByVariant: {},
+    galleriesByVariant: {},
+    rejectedIds: [],
+  }
+}
+
 export function LegacyMediaBoardV2Client() {
+  // --- Data loading state ---
   const [status, setStatus] = useState<V2LoadStatus>("idle")
   const [error, setError] = useState<string | null>(null)
   const [products, setProducts] = useState<ProductRow[]>([])
   const [invById, setInvById] = useState<Map<string, InvItem>>(new Map())
   const [candidatesByHandle, setCandidatesByHandle] = useState<Map<string, string[]>>(new Map())
   const [entryByInventoryId, setEntryByInventoryId] = useState<Map<string, CandidateEntry>>(new Map())
+
+  // --- UI selection state ---
   const [selectedHandle, setSelectedHandle] = useState<string | null>(null)
   const [search, setSearch] = useState("")
 
+  // --- Assignment state (Commit 3, in-memory only) ---
+  const [productStates, setProductStates] = useState<Record<string, V2ProductState>>({})
+
+  // --- Lifted pool filter state (Commit 3) ---
+  const [poolFilter, setPoolFilter] = useState<V2RoleFilter>("all")
+
+  // Reset filter when selected handle changes
+  useEffect(() => {
+    setPoolFilter("all")
+  }, [selectedHandle])
+
+  // --- Data loading ---
   useEffect(() => {
     let cancelled = false
     setStatus("loading")
@@ -43,7 +110,6 @@ export function LegacyMediaBoardV2Client() {
         const entries = candidatesJson.entries ?? []
         const prods = productsJson.products ?? []
 
-        // Build lookup maps
         const byId = new Map<string, InvItem>()
         for (const item of items) byId.set(item.id, item)
 
@@ -72,11 +138,147 @@ export function LegacyMediaBoardV2Client() {
     }
 
     void load()
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [])
 
+  // --- Derived: color variants for selected product ---
+  const colorVariants = useMemo<V2ColorVariant[]>(() => {
+    if (!selectedHandle) return []
+    const ids = candidatesByHandle.get(selectedHandle) ?? []
+    const byToken = new Map<string, string[]>()
+
+    for (const id of ids) {
+      const inv = invById.get(id)
+      if (!inv) continue
+      const token = extractColorTokenFromMedia(inv, selectedHandle) ?? "__none__"
+      const list = byToken.get(token) ?? []
+      list.push(id)
+      byToken.set(token, list)
+    }
+
+    const result: V2ColorVariant[] = []
+    for (const [token, itemIds] of Array.from(byToken.entries())) {
+      if (token === "__none__") continue
+      result.push({
+        variantKey: token,
+        label: TOKEN_TO_RU[token] ?? token,
+        itemIds,
+      })
+    }
+    result.sort((a, b) => b.itemIds.length - a.itemIds.length)
+
+    const hasColorless = byToken.has("__none__")
+    if (result.length === 0 || hasColorless) {
+      const allIds = ids.filter((id) => invById.has(id))
+      result.unshift({ variantKey: "__all__", label: "Все", itemIds: allIds })
+    }
+
+    return result
+  }, [selectedHandle, candidatesByHandle, invById])
+
+  // --- Derived: active variant key ---
+  const activeVariantKey = useMemo<string>(() => {
+    if (!selectedHandle || colorVariants.length === 0) return "__all__"
+    return productStates[selectedHandle]?.activeVariantKey ?? colorVariants[0]!.variantKey
+  }, [selectedHandle, colorVariants, productStates])
+
+  // --- Derived: current product assignment state ---
+  const currentProductState = useMemo<V2ProductState | null>(() => {
+    return selectedHandle ? (productStates[selectedHandle] ?? null) : null
+  }, [selectedHandle, productStates])
+
+  // --- Assignment state helpers ---
+  const updateProductState = useCallback(
+    (handle: string, variantKey: string, updater: (s: V2ProductState) => V2ProductState) => {
+      setProductStates((prev) => {
+        const existing = prev[handle] ?? makeEmptyProductState(handle, variantKey)
+        return { ...prev, [handle]: updater(existing) }
+      })
+    },
+    []
+  )
+
+  const handleSetVariant = useCallback(
+    (variantKey: string) => {
+      if (!selectedHandle) return
+      updateProductState(selectedHandle, variantKey, (s) => ({ ...s, activeVariantKey: variantKey }))
+    },
+    [selectedHandle, updateProductState]
+  )
+
+  const handleSetMain = useCallback(
+    (mediaId: string) => {
+      if (!selectedHandle) return
+      updateProductState(selectedHandle, activeVariantKey, (s) => ({
+        ...s,
+        rolesByVariant: {
+          ...s.rolesByVariant,
+          [activeVariantKey]: {
+            ...s.rolesByVariant[activeVariantKey],
+            main: mediaId,
+          },
+        },
+      }))
+    },
+    [selectedHandle, activeVariantKey, updateProductState]
+  )
+
+  const handleRemoveMain = useCallback(() => {
+    if (!selectedHandle) return
+    updateProductState(selectedHandle, activeVariantKey, (s) => ({
+      ...s,
+      rolesByVariant: {
+        ...s.rolesByVariant,
+        [activeVariantKey]: {
+          ...s.rolesByVariant[activeVariantKey],
+          main: null,
+        },
+      },
+    }))
+  }, [selectedHandle, activeVariantKey, updateProductState])
+
+  const handleAddToGallery = useCallback(
+    (mediaId: string) => {
+      if (!selectedHandle) return
+      updateProductState(selectedHandle, activeVariantKey, (s) => {
+        const existing = s.galleriesByVariant[activeVariantKey] ?? []
+        if (existing.includes(mediaId)) return s
+        return {
+          ...s,
+          galleriesByVariant: {
+            ...s.galleriesByVariant,
+            [activeVariantKey]: [...existing, mediaId],
+          },
+        }
+      })
+    },
+    [selectedHandle, activeVariantKey, updateProductState]
+  )
+
+  const handleRemoveFromGallery = useCallback(
+    (mediaId: string) => {
+      if (!selectedHandle) return
+      updateProductState(selectedHandle, activeVariantKey, (s) => ({
+        ...s,
+        galleriesByVariant: {
+          ...s.galleriesByVariant,
+          [activeVariantKey]: (s.galleriesByVariant[activeVariantKey] ?? []).filter(
+            (id) => id !== mediaId
+          ),
+        },
+      }))
+    },
+    [selectedHandle, activeVariantKey, updateProductState]
+  )
+
+  const handleFocusRole = useCallback(
+    (slot: V2RoleSlot) => {
+      setPoolFilter(SLOT_TO_FILTER[slot])
+    },
+    []
+  )
+
+  // --- Filtered product list ---
   const filteredProducts = useMemo(() => {
     if (!search.trim()) return products
     const q = search.toLowerCase()
@@ -170,9 +372,7 @@ export function LegacyMediaBoardV2Client() {
                   )
                 })}
                 {filteredProducts.length === 0 && (
-                  <div style={styles.emptySearch}>
-                    Нет результатов по «{search}»
-                  </div>
+                  <div style={styles.emptySearch}>Нет результатов по «{search}»</div>
                 )}
               </div>
             </>
@@ -181,23 +381,19 @@ export function LegacyMediaBoardV2Client() {
           )}
         </aside>
 
-        {/* Center: Workspace placeholder */}
-        <main style={styles.colCenter}>
-          <div style={styles.colHeader}>Рабочая область продукта</div>
-          <div style={styles.placeholderBody}>
-            {selectedHandle ? (
-              <>
-                Продукт: <strong>{selectedHandle}</strong> — workspace в Commit 3
-              </>
-            ) : (
-              "Выберите продукт из левой панели."
-            )}
-            <br />
-            <em style={{ color: "#bbb", fontSize: "11px" }}>
-              Чеклист ролей · цветовые варианты · gallery strip — Commit 3
-            </em>
-          </div>
-        </main>
+        {/* Center: Product workspace */}
+        <ProductWorkspace
+          selectedHandle={selectedHandle}
+          products={products}
+          colorVariants={colorVariants}
+          activeVariantKey={activeVariantKey}
+          productState={currentProductState}
+          invById={invById}
+          onSetVariant={handleSetVariant}
+          onRemoveMain={handleRemoveMain}
+          onRemoveFromGallery={handleRemoveFromGallery}
+          onFocusRole={handleFocusRole}
+        />
 
         {/* Right: Media pool */}
         <MediaPoolPanel
@@ -205,6 +401,10 @@ export function LegacyMediaBoardV2Client() {
           invById={invById}
           candidatesByHandle={candidatesByHandle}
           entryByInventoryId={entryByInventoryId}
+          activeFilter={poolFilter}
+          onSetFilter={setPoolFilter}
+          onSetMain={handleSetMain}
+          onAddToGallery={handleAddToGallery}
         />
       </div>
     </div>
@@ -291,7 +491,7 @@ const styles = {
   },
   grid: {
     display: "grid",
-    gridTemplateColumns: "280px 1fr 380px",
+    gridTemplateColumns: "260px 1fr 380px",
     flex: 1,
     overflow: "hidden",
   },
@@ -299,12 +499,6 @@ const styles = {
     borderRight: "1px solid #ddd",
     overflowY: "auto" as const,
     background: "#fff",
-    display: "flex",
-    flexDirection: "column" as const,
-  },
-  colCenter: {
-    overflowY: "auto" as const,
-    background: "#fafafa",
     display: "flex",
     flexDirection: "column" as const,
   },
@@ -376,7 +570,7 @@ const styles = {
   productHandle: {
     fontWeight: 600,
     flex: "0 0 auto",
-    maxWidth: "160px",
+    maxWidth: "150px",
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap" as const,

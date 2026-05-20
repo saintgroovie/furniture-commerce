@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo } from "react"
 import type { InvItem, CandidateEntry, V2RoleFilter } from "./legacy-board-v2-types"
 import { classifyVisualRole } from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
 import type { VisualRole } from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
@@ -32,10 +32,22 @@ type Props = {
   invById: Map<string, InvItem>
   candidatesByHandle: Map<string, string[]>
   entryByInventoryId: Map<string, CandidateEntry>
+  activeFilter: V2RoleFilter
+  onSetFilter: (f: V2RoleFilter) => void
+  onSetMain: (mediaId: string) => void
+  onAddToGallery: (mediaId: string) => void
 }
 
-export function MediaPoolPanel({ selectedHandle, invById, candidatesByHandle, entryByInventoryId }: Props) {
-  const [activeFilter, setActiveFilter] = useState<V2RoleFilter>("all")
+export function MediaPoolPanel({
+  selectedHandle,
+  invById,
+  candidatesByHandle,
+  entryByInventoryId,
+  activeFilter,
+  onSetFilter,
+  onSetMain,
+  onAddToGallery,
+}: Props) {
 
   // Build pool items for selected handle with roles and preview status
   const poolItems = useMemo<PoolItem[]>(() => {
@@ -102,7 +114,7 @@ export function MediaPoolPanel({ selectedHandle, invById, candidatesByHandle, en
       <RoleFilterTabs
         activeFilter={activeFilter}
         counts={filterCounts}
-        onFilter={(f) => setActiveFilter(f)}
+        onFilter={onSetFilter}
       />
 
       <div style={styles.countBar}>
@@ -124,6 +136,8 @@ export function MediaPoolPanel({ selectedHandle, invById, candidatesByHandle, en
             confidence={item.confidence}
             identityConfidence={item.identityConfidence}
             selectedHandle={selectedHandle}
+            onSetMain={onSetMain}
+            onAddToGallery={onAddToGallery}
           />
         ))}
       </div>

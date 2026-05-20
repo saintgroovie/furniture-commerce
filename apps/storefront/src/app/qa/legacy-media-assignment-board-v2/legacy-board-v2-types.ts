@@ -1,7 +1,6 @@
 /**
  * Types for Legacy Media Assignment Board v2.
- * Commit 1: route skeleton + data loading.
- * No assignment logic, export, localStorage, or drag/drop in this file.
+ * Commit 3: workspace + role assignment state.
  */
 
 // Re-export stable v1 types so v2 components import from one place.
@@ -56,3 +55,21 @@ export type V2RoleFilter =
   | "lifestyle"
   | "scheme"
   | "no_preview"
+
+/**
+ * One detected color variant for a product, derived from pool media filenames.
+ * variantKey is the raw color token (e.g. "blue", "grey") or "__all__" for uncolored products.
+ */
+export type V2ColorVariant = {
+  variantKey: string
+  label: string
+  itemIds: string[]
+}
+
+/** One row in the role checklist — computed from productState + gallery classification. */
+export type V2RoleRow = {
+  slot: V2RoleSlot
+  label: string
+  mediaId: string | null
+  isCovered: boolean
+}

@@ -137,9 +137,11 @@ type Props = {
   confidence?: string
   identityConfidence?: string
   selectedHandle: string | null
+  onSetMain?: (mediaId: string) => void
+  onAddToGallery?: (mediaId: string) => void
 }
 
-export function MediaCardV2({ inv, role, confidence, selectedHandle }: Props) {
+export function MediaCardV2({ inv, role, confidence, selectedHandle, onSetMain, onAddToGallery }: Props) {
   const [imgFailed, setImgFailed] = useState(false)
 
   const preview = clientPreview(inv)
@@ -148,12 +150,23 @@ export function MediaCardV2({ inv, role, confidence, selectedHandle }: Props) {
   const shortname = inv.filename.length > 36 ? inv.filename.slice(0, 33) + "…" : inv.filename
   const confColor = confidence ? (CONFIDENCE_COLOR[confidence] ?? "#666") : "#999"
 
-  // Effective status to show in the no-preview block
   const effectiveStatus = imgFailed ? "file_missing" : preview.status
   const effectiveReason = imgFailed ? "Файл не найден на диске (proxy 404)." : preview.reason
 
-  function noop(label: string) {
-    return () => console.log(`[v2 board] ${label}`, { id: inv.id, handle: selectedHandle, role })
+  function handleSetMain() {
+    if (onSetMain) {
+      onSetMain(inv.id)
+    } else {
+      console.log("[v2 board] Главное (no-op)", { id: inv.id, handle: selectedHandle, role })
+    }
+  }
+
+  function handleAddToGallery() {
+    if (onAddToGallery) {
+      onAddToGallery(inv.id)
+    } else {
+      console.log("[v2 board] В галерею (no-op)", { id: inv.id, handle: selectedHandle, role })
+    }
   }
 
   return (
@@ -193,10 +206,10 @@ export function MediaCardV2({ inv, role, confidence, selectedHandle }: Props) {
 
       {/* Actions */}
       <div style={styles.actions}>
-        <button style={styles.actionBtn} onClick={noop("Главное")}>Главное</button>
-        <button style={styles.actionBtn} onClick={noop("В галерею")}>В галерею</button>
-        <button style={styles.actionBtn} onClick={noop("Роль")}>Роль ▾</button>
-        <button style={styles.actionBtn} onClick={noop("Инспектор")}>Инспектор</button>
+        <button style={{ ...styles.actionBtn, ...styles.mainBtn }} onClick={handleSetMain}>Главное</button>
+        <button style={styles.actionBtn} onClick={handleAddToGallery}>В галерею</button>
+        <button style={styles.actionBtn} onClick={() => console.log("[v2 board] Роль ▾", { id: inv.id, role })}>Роль ▾</button>
+        <button style={styles.actionBtn} onClick={() => console.log("[v2 board] Инспектор", { id: inv.id })}>Инспектор</button>
       </div>
     </div>
   )
@@ -306,5 +319,11 @@ const styles = {
     cursor: "pointer",
     color: "#333",
     lineHeight: 1.4,
+  },
+  mainBtn: {
+    background: "#e8f0ff",
+    borderColor: "#aacaff",
+    color: "#1a3a6e",
+    fontWeight: 600,
   },
 } as const
