@@ -21,14 +21,12 @@ main.container.page-section:has(.legacy-media-assignment-board-root) {
 .legacy-media-assignment-board-root [data-legacy-board-grid="true"] {
   width: 100%;
   min-width: 0;
-  overflow: hidden;
 }
 
 .legacy-media-assignment-board-root [data-legacy-board-grid="true"] > aside,
 .legacy-media-assignment-board-root [data-legacy-board-grid="true"] > main,
 .legacy-media-assignment-board-root [data-legacy-board-grid="true"] > [data-media-pool-aside="true"] {
   min-width: 0;
-  min-height: 0;
 }
 
 .legacy-media-assignment-board-root [data-media-pool-aside="true"] {
