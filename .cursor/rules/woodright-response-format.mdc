@@ -66,26 +66,32 @@ alwaysApply: true
 
 Исключение: пользователь явно попросил создать отдельный файл/документ.
 
-Главная цель: отчёт удобен для чтения в чате; в конце — **один** цельный copy-ready block для вставки в ChatGPT одной кнопкой (см. §11).
+Главная цель: **разделить** copy-ready packet, короткие логи и итог — см. **FORMAT A** (§11). Не смешивать всё в одном markdown-потоке.
 
-## 4. Общий формат финального ответа
+## 4. Финальный ответ — FORMAT A или FORMAT B
 
-Финальный ответ — **две части** (см. также §11):
+Выбери **ровно один** формат (§11 — контракт и hard bans).
 
-**Часть A — human-readable в чате** (обычный markdown, без обязательного fence):
-1. `Verdict: done | partial | blocked | failed | read-only`
-2. Что это значит по-человечески
-3. Статус
-4. Изменённые файлы
-5. Проверки / Evidence
-6. Git
-7. Что осталось / Follow-up
+### FORMAT A — repo / audit / fix / evidence (по умолчанию)
 
-Опционально в Part A: Scope — если помогает контексту.
+Финальный ответ в чате — **три визуально разделённых блока**, строго в порядке:
 
-**Часть B — один fenced `md` block в самом конце** — `# Woodright report packet` (канонические секции и шаблон в §11). Markdown-секции обязательны; YAML/text dump — только если пользователь явно просит machine-readable packet. Без второго handoff fence после packet.
+1. **Подводка** — одна строка, максимум:
+   `Готово. Ниже copy-ready Woodright report packet.`
+2. **Один fenced `md` block** — полный `# Woodright report packet` (самодостаточный для ChatGPT/handoff). Основной copy flow — кнопка Copy на **этом** fence, не глобальный three-dot copy по всему ответу.
+3. **После fence** — только две короткие секции (обычный markdown, **вне** fence):
+   - `## Логи / проверки` — команды + PASS/FAIL, без простыней; длинный лог → path или 3–10 строк excerpt.
+   - `## Итог` — максимум 3–5 bullets; **не** дублировать packet.
 
-Для развёрнутых задач в Part A можно также использовать:
+**Запрещено в FORMAT A:** полный human report / summary **до** или **после** fence вне этих трёх блоков; смешивать packet и logs в одном потоке без fence; второй «Краткий итог» с теми же bullets, что в packet.
+
+### FORMAT B — только короткий ответ / только prompt
+
+Если пользователь **явно** просит только короткий ответ или только prompt — дай **только** это. Prompt — один copy-ready code block. **Не** добавляй report packet без причины.
+
+---
+
+Содержимое секций packet и справочные блоки для заполнения (используй **внутри** fenced packet, не как отдельный Part A перед fence):
 
 ## Что это значит по-человечески
 
@@ -164,7 +170,7 @@ alwaysApply: true
 
 Не выдавай неподтверждённое за pass.
 
-Handoff для ChatGPT — только внутри единого report packet (§11). **Не** добавляй второй отдельный handoff fence после packet.
+Handoff для ChatGPT — только **внутри** fenced report packet (§11). Логи и итог — **после** fence, в `## Логи / проверки` и `## Итог`.
 
 ## 5. Логи и терминальный вывод
 
@@ -218,11 +224,15 @@ Git:
 
 - Workflow, который **ждёт клика** «Run in the background» или любого background-confirmation (§12).
 - Обещания «сделаю в фоне позже» вместо фактов текущей сессии.
-- Финальные отчёты только в canvas, side panel, отдельных markdown-файлах или artifacts — без Part A + packet в чате (кроме явной просьбы пользователя).
-- Несколько отдельных copy-ready fences, если достаточно одного `# Woodright report packet`.
-- Report packet как YAML / text dump по умолчанию — вместо markdown-секций (§11); исключение только по явной просьбе machine-readable / YAML / JSON / raw handoff.
-- Второй отдельный handoff fence после `# Woodright report packet`.
-- Отдельный «summary» / handoff **после** packet — всё только внутри одного fence.
+- Финальные отчёты только в canvas/side panel/artifacts без FORMAT A (кроме явной просьбы).
+- Короткий summary **вместо** copy-ready fenced packet (FORMAT A).
+- Дублировать summary **после** fenced packet.
+- Смешивать report packet и logs в одном markdown-потоке **без** отдельного fenced `md` block.
+- Заканчивать ответ prose-абзацем («Visual rescue pass выполнен…») **после** полного packet.
+- Полагаться на глобальный three-dot copy как основной handoff flow.
+- Несколько copy-ready fences, если достаточно одного packet.
+- Report packet как YAML/text dump по умолчанию (§11).
+- Второй handoff fence или «Краткий итог» с теми же bullets, что в packet.
 - «Проверено» / «passed» без command и результата в `Evidence`.
 - Выдавать `needs follow-up` за подтверждённый pass.
 - Backend-only forensic dump без блока «по-человечески».
@@ -232,138 +242,102 @@ Git:
 
 ## 10. Главный принцип
 
-Сначала — смысл для человека (UX/UI-дизайнер, оператор, админ). Потом — точные технические факты с доказательствами. Работа — в текущей сессии Cursor (§12). В конце — **ровно один** `# Woodright report packet` (§11) для one-click copy в ChatGPT. Статус GitHub push — в Human report (§13).
+Сначала — смысл для человека внутри packet. Логи — после fence. Итог — 3–5 bullets без дубля. Работа — в текущей сессии (§12). **FORMAT A** по умолчанию (§11).
 
-## 11. One-click copy (report packet) — model-proof
+## 11. One-click-copy final response contract
 
-**Обязательно для всех моделей и режимов:** Claude Sonnet, Claude Opus, Auto, Composer, fast models, GPT — без исключений.
+**Обязательно для всех моделей:** Claude Sonnet, Opus, Auto, Composer, fast models, GPT.
 
-Если формат сомнителен — **по умолчанию** один fenced markdown packet (этот §11), не YAML/text dump и не свободный prose-handoff.
+Если сомневаешься — **FORMAT A**, fenced `md` packet; не YAML/text dump.
 
-**MUST (жёстко):**
+### Hard bans
 
-- Final response **MUST** end with **exactly one** fenced markdown block (`md`).
-- Первая строка внутри fence: `# Woodright report packet`
-- Внутри fence **обязательно** две секции верхнего уровня: `## Human report` и `## Handoff summary` (или `## Handoff summary для ChatGPT` — эквивалент).
-- **No** second handoff / summary fence после packet.
-- **No** YAML-like dump, JSON handoff, plain text dump — unless user **explicitly** asked for machine-readable / YAML / JSON / raw handoff format.
-- **No** huge raw logs; **no** secrets, tokens, passwords, full env values, API keys (§5–§6).
+- **НЕ** выводить короткий summary **вместо** copy-ready fenced packet (когда нужен FORMAT A).
+- **НЕ** дублировать summary **после** fenced packet (ни prose, ни второй «Краткий итог»).
+- **НЕ** смешивать report packet и terminal/logs в одном обычном markdown-потоке **без** отдельного fenced `md` block.
+- **НЕ** заканчивать ответ абзацем вида «Visual rescue pass выполнен…» **после** полного packet.
+- **НЕ** полагаться на глобальный three-dot copy как основной copy flow — основной flow: **Copy на fenced `md` block**.
+- **НЕ** вставлять огромные raw terminal logs в packet; **НЕ** секреты (§6).
+- Если нужен report packet — он **всегда** внутри **одного** fenced `md` block.
+- **НЕ** добавлять второй финальный summary / handoff fence после packet.
+- YAML/JSON/raw handoff dump — **только** по явной просьбе machine-readable формата.
 
-### По умолчанию: markdown-секции (обязательно)
+### FORMAT A — структура ответа в чате (model-proof)
 
-Для обычных Woodright-отчётов Part B — **markdown report с секциями** (`#` / `##` / `###`), а не YAML-like dump и не plain text dump.
+1. `[1 строка подводки]`
+2. fenced `md` → `# Woodright report packet` … (весь handoff внутри)
+3. `## Логи / проверки` → `- команда — PASS/FAIL`
+4. `## Итог` → до 5 bullets
 
-Внутри fence — **только** иерархия заголовков и списков по каноническому шаблону ниже. Каждый блок фактов — под своим заголовком (`### Verdict`, `### Evidence`, …), не «полотном» `key: value` без секций.
+**Требования к fenced block:**
 
-**Исключение:** YAML-like / text / machine-readable packet — **только** если пользователь **явно** просит machine-readable packet. Иначе всегда markdown-секции.
+- Первая строка внутри: `# Woodright report packet`
+- Полный, самодостаточный для ChatGPT/handoff
+- Краткие evidence-сводки внутри packet — OK
+- Огромные raw logs — **нет** (§5)
+- Второго финального summary внутри fence — **нет**
+- Последняя секция packet логически завершает отчёт: `## Что осталось` или `## Next steps` (или эквивалент)
 
-### Каноническая структура packet
+**После fence** — **только** `## Логи / проверки` и `## Итог` (см. §4). Больше ничего.
 
-Первая строка внутри fence: `# Woodright report packet`
+### FORMAT B
 
-Далее — **в этом порядке**, без пропусков обязательных секций (содержимое заполни фактами задачи):
+См. §4 — без packet, если пользователь явно просил только короткий ответ / prompt.
 
-1. `## Human report`
-   - `### Verdict`
-   - `### Что изменилось` (или `### What changed` — смысл на русском)
-   - `### Почему это важно` (UX/UI/product)
-   - `### GitHub push` (§13 — обязательно)
-   - `### Статус` / `### Что осталось` — по необходимости
-2. `---` (разделитель)
-3. `## Handoff summary` (допустимо: `## Handoff summary для ChatGPT`)
-   - компактные метки (одна строка на поле): `Repo:`, `Branch:`, `HEAD:`, `Verdict:` — это **не** YAML dump, а короткий префикс под handoff-секцией
-   - `### Scope`
-   - `### Changed files`
-   - `### Commits`
-   - `### Evidence`
-   - `### Validation`
-   - `### What was not touched`
-   - `### Blockers / follow-ups`
-   - `### Можно ли закрыть чат`
+### Содержимое packet (markdown-секции)
 
-**Запрещено в Part B (по умолчанию):**
+Внутри fence — `##` / `###`, не YAML-like dump. Обязательные секции — по mini-template.
 
-- Весь packet как YAML frontmatter или сплошной `key: value` text dump без `##` / `###`
-- Fences `yaml`, `text` или без языка вместо `md`
-- Второй/третий copy-ready fence (в т.ч. отдельный handoff fence **после** packet)
-- Огромные raw logs (§5); секреты и полные credential values (§6)
+`### GitHub push` или блок в `## Git status` — по §13.
 
-### Требования к block
+### Mini-template (пример FORMAT A в чате)
 
-- **Самодостаточный** — целиком копируется одной кнопкой Copy и сразу вставляется в ChatGPT без доработки.
-- Внутри одного packet — и **Human report**, и **Handoff summary**; не требуй файл, canvas или side panel.
-- Handoff **только** внутри этого packet — **не** добавляй второй handoff fence после packet.
-- Raw logs: только короткий excerpt (3–10 строк) + file path к полному логу (§5).
-- Секреты, пароли, tokens, API keys — не в Part A, не в packet (§6).
+Подводка (вне fence):
 
-Содержимое packet дублирует ключевые факты из Part A + handoff для ChatGPT **в каноническом markdown-шаблоне**.
+`Готово. Ниже copy-ready Woodright report packet.`
 
-**Порядок финального ответа в чате:**
-1. Part A — human-readable отчёт (§4).
-2. Part B — один `md` packet (шаблон ниже). Больше copy-fences нет.
-
-### Mini-template (канонический пример для Sonnet и др.)
-
-В чате отдавай **только** этот вид (fence `md`), заполненный фактами задачи:
+Fenced block (`md`):
 
 ~~~md
 # Woodright report packet
 
-## Human report
+## Human summary
 
 ### Verdict
 done | partial | blocked | failed | read-only
 
-### Что изменилось
-Коротко человеческим языком.
-
-### Почему это важно
-Коротко для UX/UI/product.
+Коротко: что сделано и зачем (UX/UI/product).
 
 ### GitHub push
-Do not push | Ready to push after approval | Pushed: remote/branch | Not applicable (no commit).
+GitHub push: not done; ready only after user approval. | not applicable; no commit was created. | pushed to remote/branch.
 
-### Статус
-...
+## Changed files
 
-### Что осталось
-...
+- path — зачем
 
----
+## Validation
 
-## Handoff summary
+- что проверено, результат
 
-Repo:
-Branch:
-HEAD:
-Verdict:
+## Evidence
 
-### Scope
-...
+- краткие факты / excerpt; без простыней
 
-### Files changed
-...
+## Git status
 
-### Commits
-...
+- Branch:
+- HEAD:
+- Commit:
+- Dirty tree: кратко
 
-### Evidence
-...
+## Что осталось
 
-### Validation
-...
-
-### What was not touched
-...
-
-### Blockers / follow-ups
-...
-
-### Можно ли закрыть чат
-Yes/No + условие.
+- follow-up или «нет»
 ~~~
 
-В rule-файле шаблон использует `~~~md` чтобы не обрывать `.mdc` на вложенном ```md fence.
+После fence (обычный markdown, **не** внутри `md` fence): `## Логи / проверки`, затем `## Итог`.
+
+В rule-файле packet-пример использует `~~~md` чтобы не ломать `.mdc`.
 
 ## 12. Cursor session — запрет background-confirmation blocking
 
@@ -388,7 +362,7 @@ Yes/No + условие.
 
 ## 13. GitHub push status
 
-В **каждом** финальном Woodright-отчёте (в `### GitHub push` внутри packet и при необходимости в Part A) укажи статус push.
+В **каждом** финальном Woodright-отчёте (в `### GitHub push` или `## Git status` внутри fenced packet) укажи статус push.
 
 **По умолчанию:** **не** делать `git push`, пока пользователь **явно** не попросил push.
 
