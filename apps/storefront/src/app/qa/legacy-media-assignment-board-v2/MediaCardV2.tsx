@@ -113,7 +113,7 @@ const STATUS_ICON: Record<string, string> = {
 
 const STATUS_LABEL_RU: Record<string, string> = {
   file_missing: "Файл не найден",
-  unpreviewable_external_ref: "Yandex/внешний путь",
+  unpreviewable_external_ref: "Внешний путь",
   repo_unresolved: "Корень репо не определён",
   no_source: "Нет пути",
   unpreviewable: "Не previewable",
@@ -139,95 +139,107 @@ type Props = {
   selectedHandle: string | null
   onSetMain?: (mediaId: string) => void
   onAddToGallery?: (mediaId: string) => void
+  /** Compact list-row layout for non-previewable items (spans full grid width) */
+  compact?: boolean
 }
 
-export function MediaCardV2({ inv, role, confidence, selectedHandle, onSetMain, onAddToGallery }: Props) {
+export function MediaCardV2({
+  inv,
+  role,
+  confidence,
+  selectedHandle: _selectedHandle,
+  onSetMain,
+  onAddToGallery,
+  compact,
+}: Props) {
   const [imgFailed, setImgFailed] = useState(false)
 
   const preview = clientPreview(inv)
   const showImg = preview.url !== null && !imgFailed
   const roleLabel = VISUAL_ROLE_BADGE_RU[role] ?? "?"
-  const shortname = inv.filename.length > 28 ? inv.filename.slice(0, 25) + "…" : inv.filename
-  const confColor = confidence ? (CONFIDENCE_COLOR[confidence] ?? "#666") : "#999"
-
+  const shortname = inv.filename.length > 30 ? inv.filename.slice(0, 27) + "…" : inv.filename
   const effectiveStatus = imgFailed ? "file_missing" : preview.status
   const effectiveReason = imgFailed ? "Файл не найден на диске (proxy 404)." : preview.reason
 
   function handleSetMain() {
     if (onSetMain) onSetMain(inv.id)
-    else console.log("[v2 board] Главное (no-op)", { id: inv.id, handle: selectedHandle, role })
   }
 
   function handleAddToGallery() {
     if (onAddToGallery) onAddToGallery(inv.id)
-    else console.log("[v2 board] В галерею (no-op)", { id: inv.id, handle: selectedHandle, role })
   }
 
+  // -------------------------------------------------------------------------
+  // Compact list-row — for non-previewable items
+  // spans full grid width so photo cards always align above in a clean 2-col grid
+  // -------------------------------------------------------------------------
+  if (compact) {
+    return (
+      <div style={styles.compactCard}>
+        <span style={styles.compactIcon}>{STATUS_ICON[effectiveStatus] ?? "–"}</span>
+        <div style={styles.compactText}>
+          <span style={styles.compactFilename} title={inv.filename}>{shortname}</span>
+          <span style={styles.compactMeta}>
+            {STATUS_LABEL_RU[effectiveStatus] ?? effectiveStatus}
+            {" · "}
+            <span style={styles.compactRoleLabel}>{roleLabel}</span>
+          </span>
+        </div>
+        <button style={styles.compactBtnMain} onClick={handleSetMain} title="★ Главное">★</button>
+        <button style={styles.compactBtnGallery} onClick={handleAddToGallery} title="+ Галерея">+</button>
+      </div>
+    )
+  }
+
+  // -------------------------------------------------------------------------
+  // Full photo card — fixed image height eliminates the CSS Grid percentage
+  // padding circular-dependency bug that collapsed cards to 32px.
+  // Root cause: paddingBottom: "100%" inside a grid item resolves to 0 during
+  // grid's intrinsic-size calculation pass, making the row height = footer only.
+  // Fix: explicit height: 160px — no percentage, no circular dependency.
+  // -------------------------------------------------------------------------
   return (
     <div style={styles.card}>
-      {/*
-        Preview area — padding-bottom: 100% trick guarantees a 1:1 square
-        regardless of child content (absolute children don't influence height).
-        This is more reliable than aspect-ratio on block/flex elements in all
-        Chromium layout contexts.
-      */}
-      <div style={styles.previewSizer}>
-        <div style={styles.previewArea}>
-          {showImg ? (
-            <img
-              src={preview.url!}
-              alt={inv.filename}
-              style={styles.img}
-              loading="lazy"
-              onError={() => setImgFailed(true)}
-            />
-          ) : (
-            <div style={styles.noPreview}>
-              <span style={styles.statusIcon}>{STATUS_ICON[effectiveStatus] ?? "?"}</span>
-              <span style={styles.statusText}>{STATUS_LABEL_RU[effectiveStatus] ?? effectiveStatus}</span>
-              {effectiveReason && (
-                <span style={styles.noPreviewReason}>{effectiveReason}</span>
-              )}
-            </div>
-          )}
-          {/* Role badge overlaid on image */}
-          <span style={styles.roleBadgeOverlay}>{roleLabel}</span>
-          {confidence && (
-            <span
-              style={{
-                ...styles.confBadgeOverlay,
-                background:
-                  confidence === "confirmed" || confidence === "high"
-                    ? "#2d7a2d"
-                    : confidence === "medium"
-                      ? "#8a6200"
-                      : "#a33",
-              }}
-            >
-              {confidence}
-            </span>
-          )}
-        </div>
+      {/* Image wrap — fixed 160px height, reliable in any grid/flex context */}
+      <div style={styles.imageWrap}>
+        {showImg ? (
+          <img
+            src={preview.url!}
+            alt={inv.filename}
+            style={styles.img}
+            loading="lazy"
+            onError={() => setImgFailed(true)}
+          />
+        ) : (
+          <div style={styles.noPreview}>
+            <span style={styles.statusIcon}>{STATUS_ICON[effectiveStatus] ?? "?"}</span>
+            <span style={styles.statusText}>{STATUS_LABEL_RU[effectiveStatus] ?? effectiveStatus}</span>
+            {effectiveReason && (
+              <span style={styles.noPreviewReason}>{effectiveReason}</span>
+            )}
+          </div>
+        )}
+        {/* Role badge — bottom-left overlay */}
+        <span style={styles.roleBadgeOverlay}>{roleLabel}</span>
+        {/* Confidence badge — top-right overlay, compact (icon only for confirmed) */}
+        {confidence && (
+          <span
+            style={{
+              ...styles.confBadgeOverlay,
+              background: CONFIDENCE_COLOR[confidence] ?? "#888",
+            }}
+          >
+            {confidence === "confirmed" ? "✓" : confidence}
+          </span>
+        )}
       </div>
 
-      {/* Compact footer */}
+      {/* Footer: filename + primary actions */}
       <div style={styles.footer}>
         <div style={styles.filename} title={inv.filename}>{shortname}</div>
-
-        {/* Primary actions */}
         <div style={styles.primaryActions}>
           <button style={styles.btnMain} onClick={handleSetMain}>★ Главное</button>
           <button style={styles.btnGallery} onClick={handleAddToGallery}>+ Галерея</button>
-        </div>
-
-        {/* Secondary actions — disabled, planned for next commit */}
-        <div style={styles.secondaryActions}>
-          <span
-            style={styles.btnDisabled}
-            title="Смена роли — следующий шаг"
-          >
-            Роль ▾
-          </span>
         </div>
       </div>
     </div>
@@ -235,6 +247,9 @@ export function MediaCardV2({ inv, role, confidence, selectedHandle, onSetMain, 
 }
 
 const styles = {
+  // ---------------------------------------------------------------------------
+  // Full photo card
+  // ---------------------------------------------------------------------------
   card: {
     display: "flex",
     flexDirection: "column" as const,
@@ -244,25 +259,16 @@ const styles = {
     overflow: "hidden",
     fontSize: "12px",
   },
-  previewSizer: {
-    // padding-bottom: 100% creates a guaranteed 1:1 square regardless of
-    // whether children are in-flow or absolutely positioned. More reliable
-    // than aspect-ratio on a flex/block element with only absolute children.
+  imageWrap: {
+    // Fixed pixel height — avoids the CSS Grid intrinsic-size calculation issue
+    // where paddingBottom: "100%" resolves to 0 during row-height pass, collapsing
+    // the card to footer-only height and clipping the image behind overflow:hidden.
     position: "relative" as const,
     width: "100%",
-    paddingBottom: "100%",
+    height: "160px",
     background: "#f0f0f0",
     overflow: "hidden",
     flexShrink: 0,
-  },
-  previewArea: {
-    // Fills the sizer absolutely — all media children anchor to this.
-    position: "absolute" as const,
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    overflow: "hidden",
   },
   img: {
     position: "absolute" as const,
@@ -283,22 +289,22 @@ const styles = {
     flexDirection: "column" as const,
     alignItems: "center",
     justifyContent: "center",
-    gap: "3px",
+    gap: "4px",
     padding: "10px",
     textAlign: "center" as const,
   },
   statusIcon: {
-    fontSize: "18px",
+    fontSize: "20px",
     lineHeight: 1,
-    color: "#ccc",
+    color: "#d0d0d0",
   },
   statusText: {
-    fontSize: "9px",
-    color: "#bbb",
+    fontSize: "10px",
+    color: "#c0c0c0",
     fontWeight: 500,
   },
   noPreviewReason: {
-    fontSize: "8px",
+    fontSize: "9px",
     color: "#ccc",
     lineHeight: 1.3,
   },
@@ -306,7 +312,7 @@ const styles = {
     position: "absolute" as const,
     bottom: "5px",
     left: "5px",
-    background: "rgba(26,58,110,0.85)",
+    background: "rgba(26,58,110,0.82)",
     color: "#fff",
     borderRadius: "3px",
     padding: "1px 5px",
@@ -321,20 +327,21 @@ const styles = {
     right: "5px",
     color: "#fff",
     borderRadius: "3px",
-    padding: "1px 5px",
+    padding: "2px 5px",
     fontSize: "9px",
     fontWeight: 700,
   },
   footer: {
-    padding: "5px 6px 6px",
+    padding: "5px 7px 7px",
     display: "flex",
     flexDirection: "column" as const,
-    gap: "4px",
+    gap: "5px",
     background: "#fff",
+    flexShrink: 0,
   },
   filename: {
     fontSize: "10px",
-    color: "#555",
+    color: "#666",
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap" as const,
@@ -342,49 +349,101 @@ const styles = {
   },
   primaryActions: {
     display: "flex",
-    gap: "3px",
+    gap: "4px",
   },
   btnMain: {
     flex: 1,
-    padding: "4px 0",
-    fontSize: "10px",
+    padding: "5px 0",
+    fontSize: "11px",
     border: "1px solid #aacaff",
-    borderRadius: "3px",
+    borderRadius: "4px",
     background: "#e8f0ff",
     color: "#1a3a6e",
     cursor: "pointer",
     fontWeight: 700,
     textAlign: "center" as const,
-    lineHeight: 1.3,
+    lineHeight: 1.2,
   },
   btnGallery: {
     flex: 1,
-    padding: "4px 0",
-    fontSize: "10px",
+    padding: "5px 0",
+    fontSize: "11px",
     border: "1px solid #c8e6c9",
-    borderRadius: "3px",
+    borderRadius: "4px",
     background: "#f0fff0",
     color: "#1b5e20",
     cursor: "pointer",
     fontWeight: 600,
     textAlign: "center" as const,
-    lineHeight: 1.3,
+    lineHeight: 1.2,
   },
-  secondaryActions: {
+
+  // ---------------------------------------------------------------------------
+  // Compact list-row for non-previewable items
+  // gridColumn: "1 / -1" makes this span both columns in the 2-col photo grid
+  // ---------------------------------------------------------------------------
+  compactCard: {
     display: "flex",
-    gap: "3px",
-  },
-  btnDisabled: {
-    flex: 1,
-    padding: "2px 0",
-    fontSize: "9px",
+    alignItems: "center",
+    gap: "8px",
+    padding: "6px 10px",
     border: "1px solid #f0f0f0",
-    borderRadius: "3px",
+    borderRadius: "4px",
     background: "#fafafa",
-    color: "#ccc",
-    cursor: "default",
+    gridColumn: "1 / -1" as const,
+    minHeight: "36px",
+  },
+  compactIcon: {
+    fontSize: "14px",
+    color: "#d0d0d0",
+    flexShrink: 0,
+    width: "18px",
     textAlign: "center" as const,
+  },
+  compactText: {
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: "1px",
+    flex: 1,
+    overflow: "hidden",
+    minWidth: 0,
+  },
+  compactFilename: {
+    fontSize: "11px",
+    color: "#999",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap" as const,
     lineHeight: 1.3,
-    userSelect: "none" as const,
+  },
+  compactMeta: {
+    fontSize: "9px",
+    color: "#ccc",
+    lineHeight: 1.2,
+  },
+  compactRoleLabel: {
+    color: "#bbb",
+  },
+  compactBtnMain: {
+    padding: "3px 8px",
+    fontSize: "13px",
+    border: "1px solid #ddd",
+    borderRadius: "3px",
+    background: "#f5f5f5",
+    color: "#aaa",
+    cursor: "pointer",
+    flexShrink: 0,
+    lineHeight: 1,
+  },
+  compactBtnGallery: {
+    padding: "3px 8px",
+    fontSize: "13px",
+    border: "1px solid #ddd",
+    borderRadius: "3px",
+    background: "#f5f5f5",
+    color: "#aaa",
+    cursor: "pointer",
+    flexShrink: 0,
+    lineHeight: 1,
   },
 } as const

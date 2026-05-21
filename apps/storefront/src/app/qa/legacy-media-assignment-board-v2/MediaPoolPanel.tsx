@@ -180,6 +180,7 @@ export function MediaPoolPanel({
                 selectedHandle={selectedHandle}
                 onSetMain={onSetMain}
                 onAddToGallery={onAddToGallery}
+                compact={!item.previewOk}
               />
             </React.Fragment>
           )
@@ -272,9 +273,9 @@ const styles = {
   grid: {
     display: "grid",
     gridTemplateColumns: "repeat(2, 1fr)",
-    gap: "8px",
-    padding: "10px",
-    overflowY: "auto" as const,
+    gap: "6px",
+    padding: "8px",
+    // No overflowY here — let the parent aside scroll (double scroll-container bug)
   },
   separator: {
     gridColumn: "1 / -1",
