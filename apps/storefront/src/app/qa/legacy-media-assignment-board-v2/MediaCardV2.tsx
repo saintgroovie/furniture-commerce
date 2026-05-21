@@ -147,31 +147,25 @@ export function MediaCardV2({ inv, role, confidence, selectedHandle, onSetMain, 
   const preview = clientPreview(inv)
   const showImg = preview.url !== null && !imgFailed
   const roleLabel = VISUAL_ROLE_BADGE_RU[role] ?? "?"
-  const shortname = inv.filename.length > 36 ? inv.filename.slice(0, 33) + "…" : inv.filename
+  const shortname = inv.filename.length > 28 ? inv.filename.slice(0, 25) + "…" : inv.filename
   const confColor = confidence ? (CONFIDENCE_COLOR[confidence] ?? "#666") : "#999"
 
   const effectiveStatus = imgFailed ? "file_missing" : preview.status
   const effectiveReason = imgFailed ? "Файл не найден на диске (proxy 404)." : preview.reason
 
   function handleSetMain() {
-    if (onSetMain) {
-      onSetMain(inv.id)
-    } else {
-      console.log("[v2 board] Главное (no-op)", { id: inv.id, handle: selectedHandle, role })
-    }
+    if (onSetMain) onSetMain(inv.id)
+    else console.log("[v2 board] Главное (no-op)", { id: inv.id, handle: selectedHandle, role })
   }
 
   function handleAddToGallery() {
-    if (onAddToGallery) {
-      onAddToGallery(inv.id)
-    } else {
-      console.log("[v2 board] В галерею (no-op)", { id: inv.id, handle: selectedHandle, role })
-    }
+    if (onAddToGallery) onAddToGallery(inv.id)
+    else console.log("[v2 board] В галерею (no-op)", { id: inv.id, handle: selectedHandle, role })
   }
 
   return (
     <div style={styles.card}>
-      {/* Preview area */}
+      {/* Preview — image dominant */}
       <div style={styles.previewArea}>
         {showImg ? (
           <img
@@ -185,31 +179,55 @@ export function MediaCardV2({ inv, role, confidence, selectedHandle, onSetMain, 
           <div style={styles.noPreview}>
             <span style={styles.statusIcon}>{STATUS_ICON[effectiveStatus] ?? "?"}</span>
             <span style={styles.statusText}>{STATUS_LABEL_RU[effectiveStatus] ?? effectiveStatus}</span>
+            {effectiveReason && (
+              <span style={styles.noPreviewReason}>{effectiveReason}</span>
+            )}
           </div>
         )}
-      </div>
-
-      {/* Info */}
-      <div style={styles.info}>
-        <div style={styles.filename} title={inv.filename}>{shortname}</div>
-        <div style={styles.metaRow}>
-          <span style={styles.roleBadge}>{roleLabel}</span>
-          {confidence && (
-            <span style={{ ...styles.confBadge, color: confColor }}>{confidence}</span>
-          )}
-        </div>
-        <div style={styles.sourceType}>{inv.source_type}</div>
-        {!showImg && effectiveReason && (
-          <div style={styles.previewReason}>{effectiveReason}</div>
+        {/* Role badge overlaid on image */}
+        <span style={styles.roleBadgeOverlay}>{roleLabel}</span>
+        {confidence && (
+          <span
+            style={{
+              ...styles.confBadgeOverlay,
+              background:
+                confidence === "confirmed" || confidence === "high"
+                  ? "#2d7a2d"
+                  : confidence === "medium"
+                    ? "#8a6200"
+                    : "#a33",
+            }}
+          >
+            {confidence}
+          </span>
         )}
       </div>
 
-      {/* Actions */}
-      <div style={styles.actions}>
-        <button style={{ ...styles.actionBtn, ...styles.mainBtn }} onClick={handleSetMain}>Главное</button>
-        <button style={styles.actionBtn} onClick={handleAddToGallery}>В галерею</button>
-        <button style={styles.actionBtn} onClick={() => console.log("[v2 board] Роль ▾", { id: inv.id, role })}>Роль ▾</button>
-        <button style={styles.actionBtn} onClick={() => console.log("[v2 board] Инспектор", { id: inv.id })}>Инспектор</button>
+      {/* Compact footer */}
+      <div style={styles.footer}>
+        <div style={styles.filename} title={inv.filename}>{shortname}</div>
+
+        {/* Primary actions */}
+        <div style={styles.primaryActions}>
+          <button style={styles.btnMain} onClick={handleSetMain}>★ Главное</button>
+          <button style={styles.btnGallery} onClick={handleAddToGallery}>+ Галерея</button>
+        </div>
+
+        {/* Secondary actions */}
+        <div style={styles.secondaryActions}>
+          <button
+            style={styles.btnSecondary}
+            onClick={() => console.log("[v2 board] Роль ▾", { id: inv.id, role })}
+          >
+            Роль ▾
+          </button>
+          <button
+            style={styles.btnSecondary}
+            onClick={() => console.log("[v2 board] Инспектор", { id: inv.id })}
+          >
+            ···
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -228,7 +246,7 @@ const styles = {
   previewArea: {
     width: "100%",
     aspectRatio: "1",
-    background: "#f5f5f5",
+    background: "#f0f0f0",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -242,88 +260,113 @@ const styles = {
     display: "block",
   },
   noPreview: {
+    display: "flex",
     flexDirection: "column" as const,
     alignItems: "center",
     justifyContent: "center",
-    gap: "4px",
-    padding: "8px",
+    gap: "3px",
+    padding: "10px",
     textAlign: "center" as const,
-    color: "#888",
     width: "100%",
     height: "100%",
   },
   statusIcon: {
-    fontSize: "20px",
+    fontSize: "18px",
     lineHeight: 1,
+    color: "#ccc",
   },
   statusText: {
-    fontSize: "10px",
-    color: "#999",
+    fontSize: "9px",
+    color: "#bbb",
+    fontWeight: 500,
   },
-  info: {
-    padding: "6px 8px",
-    flex: 1,
+  noPreviewReason: {
+    fontSize: "8px",
+    color: "#ccc",
+    lineHeight: 1.3,
+  },
+  roleBadgeOverlay: {
+    position: "absolute" as const,
+    bottom: "5px",
+    left: "5px",
+    background: "rgba(26,58,110,0.85)",
+    color: "#fff",
+    borderRadius: "3px",
+    padding: "1px 5px",
+    fontSize: "9px",
+    fontWeight: 700,
+    letterSpacing: "0.02em",
+    backdropFilter: "blur(2px)",
+  },
+  confBadgeOverlay: {
+    position: "absolute" as const,
+    top: "5px",
+    right: "5px",
+    color: "#fff",
+    borderRadius: "3px",
+    padding: "1px 5px",
+    fontSize: "9px",
+    fontWeight: 700,
+  },
+  footer: {
+    padding: "5px 6px 6px",
     display: "flex",
     flexDirection: "column" as const,
-    gap: "3px",
+    gap: "4px",
+    background: "#fff",
   },
   filename: {
-    fontWeight: 500,
-    color: "#222",
+    fontSize: "10px",
+    color: "#555",
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap" as const,
-    fontSize: "11px",
+    lineHeight: 1.3,
   },
-  metaRow: {
+  primaryActions: {
     display: "flex",
-    gap: "4px",
-    flexWrap: "wrap" as const,
-    alignItems: "center",
-  },
-  roleBadge: {
-    background: "#e8f0ff",
-    color: "#1a3a6e",
-    borderRadius: "3px",
-    padding: "1px 5px",
-    fontSize: "10px",
-    fontWeight: 600,
-  },
-  confBadge: {
-    fontSize: "10px",
-    fontWeight: 500,
-  },
-  sourceType: {
-    color: "#aaa",
-    fontSize: "10px",
-  },
-  previewReason: {
-    color: "#a33",
-    fontSize: "10px",
-    marginTop: "2px",
-  },
-  actions: {
-    display: "flex",
-    flexWrap: "wrap" as const,
     gap: "3px",
-    padding: "5px 6px",
-    borderTop: "1px solid #f0f0f0",
-    background: "#fafafa",
   },
-  actionBtn: {
+  btnMain: {
+    flex: 1,
+    padding: "4px 0",
     fontSize: "10px",
-    padding: "2px 6px",
-    border: "1px solid #ddd",
+    border: "1px solid #aacaff",
     borderRadius: "3px",
-    background: "#fff",
-    cursor: "pointer",
-    color: "#333",
-    lineHeight: 1.4,
-  },
-  mainBtn: {
     background: "#e8f0ff",
-    borderColor: "#aacaff",
     color: "#1a3a6e",
+    cursor: "pointer",
+    fontWeight: 700,
+    textAlign: "center" as const,
+    lineHeight: 1.3,
+  },
+  btnGallery: {
+    flex: 1,
+    padding: "4px 0",
+    fontSize: "10px",
+    border: "1px solid #c8e6c9",
+    borderRadius: "3px",
+    background: "#f0fff0",
+    color: "#1b5e20",
+    cursor: "pointer",
     fontWeight: 600,
+    textAlign: "center" as const,
+    lineHeight: 1.3,
+  },
+  secondaryActions: {
+    display: "flex",
+    gap: "3px",
+  },
+  btnSecondary: {
+    flex: 1,
+    padding: "2px 0",
+    fontSize: "9px",
+    border: "1px solid #eee",
+    borderRadius: "3px",
+    background: "#fafafa",
+    color: "#aaa",
+    cursor: "pointer",
+    textAlign: "center" as const,
+    lineHeight: 1.3,
   },
 } as const

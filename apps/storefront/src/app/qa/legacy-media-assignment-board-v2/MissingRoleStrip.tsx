@@ -18,60 +18,106 @@ type Props = {
 }
 
 export function MissingRoleStrip({ missingSlots, onFocusRole }: Props) {
+  if (missingSlots.length === 0) {
+    return (
+      <div style={styles.stripDone}>
+        <span style={styles.doneIcon}>✓</span>
+        <span style={styles.doneText}>Все роли заполнены — продукт готов к экспорту</span>
+      </div>
+    )
+  }
+
   return (
     <div style={styles.strip}>
-      {missingSlots.length === 0 ? (
-        <span style={styles.allDone}>✓ Все роли заполнены</span>
-      ) : (
-        <>
-          <span style={styles.prefix}>⚠ Не заполнены:</span>
-          {missingSlots.map((slot) => (
-            <button
-              key={slot}
-              style={styles.chip}
-              onClick={() => onFocusRole(slot)}
-              title={`Фильтровать пул по «${SLOT_LABEL[slot]}»`}
-            >
-              {SLOT_LABEL[slot]}
-            </button>
-          ))}
-        </>
-      )}
+      <div style={styles.headerRow}>
+        <span style={styles.warningIcon}>⚠</span>
+        <span style={styles.label}>Нужно заполнить:</span>
+      </div>
+      <div style={styles.chipRow}>
+        {missingSlots.map((slot) => (
+          <button
+            key={slot}
+            style={styles.chip}
+            onClick={() => onFocusRole(slot)}
+            title={`Показать «${SLOT_LABEL[slot]}» в пуле`}
+          >
+            {SLOT_LABEL[slot]}
+            <span style={styles.chipArrow}>→</span>
+          </button>
+        ))}
+      </div>
     </div>
   )
 }
 
 const styles = {
   strip: {
+    padding: "8px 14px 10px",
+    background: "#fffbf0",
+    borderTop: "1px solid #ffd54f",
+    borderBottom: "1px solid #ffd54f",
+    flexShrink: 0,
+  },
+  stripDone: {
     display: "flex",
-    flexWrap: "wrap" as const,
     alignItems: "center",
-    gap: "5px",
-    padding: "7px 14px",
-    background: "#fff8f0",
-    borderTop: "1px solid #ffe0b2",
-    flexShrink: 0,
-    minHeight: "36px",
-  },
-  prefix: {
-    fontSize: "11px",
-    color: "#a06000",
-    fontWeight: 600,
+    gap: "8px",
+    padding: "8px 14px",
+    background: "#f0fff4",
+    borderTop: "1px solid #c8e6c9",
+    borderBottom: "1px solid #c8e6c9",
     flexShrink: 0,
   },
-  chip: {
-    padding: "2px 8px",
-    fontSize: "11px",
-    border: "1px solid #e09000",
-    borderRadius: "10px",
-    background: "#fff3d6",
-    color: "#7a4800",
-    cursor: "pointer",
-    fontWeight: 500,
+  doneIcon: {
+    fontSize: "16px",
+    color: "#2d7a2d",
+    fontWeight: 700,
   },
-  allDone: {
-    fontSize: "11px",
+  doneText: {
+    fontSize: "12px",
     color: "#2d7a2d",
     fontWeight: 600,
+  },
+  headerRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    marginBottom: "6px",
+  },
+  warningIcon: {
+    fontSize: "14px",
+    color: "#e07800",
+  },
+  label: {
+    fontSize: "11px",
+    color: "#7a4800",
+    fontWeight: 700,
+    textTransform: "uppercase" as const,
+    letterSpacing: "0.04em",
+  },
+  chipRow: {
+    display: "flex",
+    flexWrap: "wrap" as const,
+    gap: "5px",
+  },
+  chip: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "4px",
+    padding: "4px 10px",
+    fontSize: "11px",
+    border: "1px solid #f0a000",
+    borderRadius: "12px",
+    background: "#fff",
+    color: "#7a3800",
+    cursor: "pointer",
+    fontWeight: 600,
+    lineHeight: 1.3,
+    transition: "background 0.1s",
+  },
+  chipArrow: {
+    fontSize: "10px",
+    color: "#e07800",
+    fontWeight: 700,
   },
 } as const

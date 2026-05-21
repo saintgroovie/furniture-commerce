@@ -381,7 +381,7 @@ export function LegacyMediaBoardV2Client() {
           )}
         </aside>
 
-        {/* Center: Product workspace */}
+        {/* Center: Assignment canvas */}
         <ProductWorkspace
           selectedHandle={selectedHandle}
           products={products}
@@ -491,7 +491,7 @@ const styles = {
   },
   grid: {
     display: "grid",
-    gridTemplateColumns: "260px 1fr 380px",
+    gridTemplateColumns: "240px 1fr 420px",
     flex: 1,
     overflow: "hidden",
   },

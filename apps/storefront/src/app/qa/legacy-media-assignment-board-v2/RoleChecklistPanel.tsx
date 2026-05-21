@@ -6,17 +6,17 @@ import { classifyVisualRole } from "@/app/qa/legacy-media-assignment-board/legac
 import type { VisualRole } from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
 import { clientPreview } from "./MediaCardV2"
 
-const ROLE_DEFS: ReadonlyArray<{ slot: V2RoleSlot; label: string; filter: V2RoleFilter }> = [
-  { slot: "main", label: "Главное", filter: "front" },
-  { slot: "front_anfas", label: "Анфас", filter: "front" },
-  { slot: "front_3_4", label: "3/4", filter: "3_4" },
-  { slot: "interior", label: "Внутри", filter: "interior" },
-  { slot: "detail", label: "Деталь", filter: "detail" },
-  { slot: "lifestyle", label: "Lifestyle", filter: "lifestyle" },
-  { slot: "scheme", label: "Схема", filter: "scheme" },
+const ROLE_DEFS: ReadonlyArray<{ slot: V2RoleSlot; label: string; filter: V2RoleFilter; hint: string }> = [
+  { slot: "main", label: "Главное", filter: "front", hint: "Главная карточка товара" },
+  { slot: "front_anfas", label: "Анфас", filter: "front", hint: "Вид спереди" },
+  { slot: "front_3_4", label: "3/4", filter: "3_4", hint: "Вид под углом" },
+  { slot: "interior", label: "Внутри", filter: "interior", hint: "Интерьерное фото" },
+  { slot: "detail", label: "Деталь", filter: "detail", hint: "Крупный план" },
+  { slot: "lifestyle", label: "Lifestyle", filter: "lifestyle", hint: "Lifestyle фото" },
+  { slot: "scheme", label: "Схема", filter: "scheme", hint: "Габаритная схема" },
 ]
 
-function visualRoleToSlot(vr: VisualRole): V2RoleSlot | null {
+export function visualRoleToSlot(vr: VisualRole): V2RoleSlot | null {
   if (vr === "closed_front" || vr === "hero_front" || vr === "front_anfas") return "front_anfas"
   if (vr === "front_3_4") return "front_3_4"
   if (vr === "interior") return "interior"
@@ -26,7 +26,7 @@ function visualRoleToSlot(vr: VisualRole): V2RoleSlot | null {
   return null
 }
 
-function computeRoleRows(
+export function computeRoleRows(
   productState: V2ProductState | null,
   variantKey: string,
   invById: Map<string, InvItem>
@@ -34,7 +34,6 @@ function computeRoleRows(
   const roles = productState?.rolesByVariant[variantKey] ?? {}
   const gallery = productState?.galleriesByVariant[variantKey] ?? []
 
-  // Pre-classify gallery items → first mediaId per slot
   const galleryBySlot = new Map<V2RoleSlot, string>()
   for (const mediaId of gallery) {
     const inv = invById.get(mediaId)
@@ -57,9 +56,18 @@ type Props = {
   activeVariantKey: string
   invById: Map<string, InvItem>
   onFocusRole: (slot: V2RoleSlot) => void
+  onRemoveMain?: () => void
+  onRemoveFromGallery?: (mediaId: string) => void
 }
 
-export function RoleChecklistPanel({ productState, activeVariantKey, invById, onFocusRole }: Props) {
+export function RoleChecklistPanel({
+  productState,
+  activeVariantKey,
+  invById,
+  onFocusRole,
+  onRemoveMain,
+  onRemoveFromGallery,
+}: Props) {
   const rows = useMemo(
     () => computeRoleRows(productState, activeVariantKey, invById),
     [productState, activeVariantKey, invById]
@@ -67,95 +75,223 @@ export function RoleChecklistPanel({ productState, activeVariantKey, invById, on
 
   return (
     <div style={styles.panel}>
-      <div style={styles.sectionLabel}>Чеклист ролей</div>
-      {rows.map((row) => {
-        const inv = row.mediaId ? invById.get(row.mediaId) : null
-        const preview = inv ? clientPreview(inv) : null
-        const thumbUrl = preview?.url ?? null
-        return (
-          <div key={row.slot} style={styles.row}>
-            <span style={{ ...styles.statusDot, color: row.isCovered ? "#2d7a2d" : "#ccc" }}>
-              {row.isCovered ? "✓" : "○"}
-            </span>
-            {thumbUrl ? (
-              <img
-                src={thumbUrl}
-                alt={row.label}
-                style={styles.thumb}
-                loading="lazy"
-                onError={(e) => { e.currentTarget.style.display = "none" }}
-              />
-            ) : (
-              <div style={{ ...styles.thumb, background: "#f0f0f0", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ fontSize: "10px", color: "#ccc" }}>–</span>
-              </div>
-            )}
-            <span style={{ ...styles.roleLabel, color: row.isCovered ? "#222" : "#999" }}>
-              {row.label}
-            </span>
-            <button
-              style={styles.addBtn}
-              onClick={() => onFocusRole(row.slot)}
-              title={`Фильтровать пул по роли «${row.label}»`}
+      <div style={styles.sectionLabel}>Слоты ролей</div>
+      <div style={styles.grid}>
+        {rows.map((row) => {
+          const inv = row.mediaId ? invById.get(row.mediaId) : null
+          const preview = inv ? clientPreview(inv) : null
+          const thumbUrl = preview?.url ?? null
+          const isMain = row.slot === "main"
+          const def = ROLE_DEFS.find((d) => d.slot === row.slot)
+
+          function handleRemove() {
+            if (isMain) onRemoveMain?.()
+            else if (row.mediaId) onRemoveFromGallery?.(row.mediaId)
+          }
+
+          return (
+            <div
+              key={row.slot}
+              style={{
+                ...styles.slot,
+                ...(row.isCovered ? styles.slotFilled : styles.slotEmpty),
+                ...(isMain ? styles.slotMain : {}),
+              }}
             >
-              {row.isCovered ? "↺" : "+ Add"}
-            </button>
-          </div>
-        )
-      })}
+              {/* Thumbnail area — the visual focal point */}
+              <div
+                style={{
+                  ...styles.thumbArea,
+                  ...(isMain ? styles.thumbAreaMain : {}),
+                }}
+              >
+                {thumbUrl ? (
+                  <img
+                    src={thumbUrl}
+                    alt={row.label}
+                    style={styles.thumbImg}
+                    loading="lazy"
+                    onError={(e) => { e.currentTarget.style.display = "none" }}
+                  />
+                ) : (
+                  <div style={styles.emptyThumb}>
+                    <span style={styles.emptyPlusIcon}>+</span>
+                  </div>
+                )}
+
+                {/* Remove button for filled slots */}
+                {row.isCovered && (onRemoveMain || onRemoveFromGallery) && (
+                  <button
+                    style={styles.removeBtn}
+                    onClick={handleRemove}
+                    title="Убрать назначение"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+
+              {/* Label row */}
+              <div style={styles.slotBottom}>
+                <span
+                  style={{
+                    ...styles.slotLabel,
+                    color: row.isCovered ? "#1a3a6e" : "#aaa",
+                    fontWeight: isMain ? 700 : 600,
+                  }}
+                >
+                  {row.label}
+                </span>
+                <button
+                  style={{
+                    ...styles.addBtn,
+                    ...(row.isCovered ? styles.addBtnFilled : styles.addBtnEmpty),
+                  }}
+                  onClick={() => onFocusRole(row.slot)}
+                  title={def?.hint}
+                >
+                  {row.isCovered ? "↺" : "+"}
+                </button>
+              </div>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }
-
-export { computeRoleRows, visualRoleToSlot }
 
 const styles = {
   panel: {
     borderBottom: "1px solid #eee",
     flexShrink: 0,
+    background: "#fff",
   },
   sectionLabel: {
-    padding: "6px 14px 4px",
+    padding: "8px 14px 4px",
     fontSize: "10px",
     fontWeight: 700,
     textTransform: "uppercase" as const,
     letterSpacing: "0.06em",
     color: "#888",
   },
-  row: {
-    display: "flex",
-    alignItems: "center",
+  grid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))",
     gap: "8px",
-    padding: "5px 14px",
-    borderTop: "1px solid #f5f5f5",
+    padding: "4px 14px 12px",
   },
-  statusDot: {
-    fontSize: "14px",
-    width: "16px",
-    textAlign: "center" as const,
-    flexShrink: 0,
+  slot: {
+    display: "flex",
+    flexDirection: "column" as const,
+    borderRadius: "6px",
+    overflow: "hidden",
+    border: "2px solid",
+    position: "relative" as const,
   },
-  thumb: {
-    width: "32px",
-    height: "32px",
-    objectFit: "contain" as const,
-    borderRadius: "3px",
-    border: "1px solid #eee",
-    flexShrink: 0,
+  slotEmpty: {
+    borderColor: "#e0e0e0",
+    borderStyle: "dashed" as const,
     background: "#fafafa",
   },
-  roleLabel: {
+  slotFilled: {
+    borderColor: "#aacaff",
+    borderStyle: "solid" as const,
+    background: "#fff",
+  },
+  slotMain: {
+    borderColor: "#1a3a6e",
+  },
+  thumbArea: {
+    position: "relative" as const,
+    width: "100%",
+    aspectRatio: "1",
+    background: "#f5f5f5",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  thumbAreaMain: {
+    background: "#eef3ff",
+  },
+  thumbImg: {
+    width: "100%",
+    height: "100%",
+    objectFit: "contain" as const,
+    display: "block",
+  },
+  emptyThumb: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    height: "100%",
+  },
+  emptyPlusIcon: {
+    fontSize: "22px",
+    color: "#ddd",
+    lineHeight: 1,
+  },
+  removeBtn: {
+    position: "absolute" as const,
+    top: "4px",
+    right: "4px",
+    width: "20px",
+    height: "20px",
+    borderRadius: "50%",
+    border: "1px solid rgba(0,0,0,0.15)",
+    background: "rgba(255,255,255,0.9)",
+    fontSize: "14px",
+    cursor: "pointer",
+    color: "#a33",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 0,
+    lineHeight: 1,
+    fontWeight: 700,
+  },
+  slotBottom: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: "4px 6px 5px",
+    gap: "4px",
+    minHeight: "28px",
+  },
+  slotLabel: {
+    fontSize: "10px",
+    letterSpacing: "0.01em",
+    lineHeight: 1.2,
     flex: 1,
-    fontSize: "12px",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap" as const,
   },
   addBtn: {
-    fontSize: "10px",
-    padding: "2px 7px",
-    border: "1px solid #ccc",
+    width: "20px",
+    height: "20px",
     borderRadius: "3px",
-    background: "#fff",
+    border: "1px solid",
     cursor: "pointer",
-    color: "#555",
+    fontSize: "11px",
+    fontWeight: 700,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 0,
     flexShrink: 0,
+    lineHeight: 1,
+  },
+  addBtnEmpty: {
+    borderColor: "#ddd",
+    background: "#fff",
+    color: "#bbb",
+  },
+  addBtnFilled: {
+    borderColor: "#aacaff",
+    background: "#e8f0ff",
+    color: "#1a3a6e",
   },
 } as const
