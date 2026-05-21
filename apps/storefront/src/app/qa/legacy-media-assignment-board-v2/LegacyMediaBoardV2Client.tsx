@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type {
   InvItem,
   CandidateEntry,
@@ -14,6 +14,11 @@ import type {
 import { extractColorTokenFromMedia } from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
 import { MediaPoolPanel } from "./MediaPoolPanel"
 import { ProductWorkspace } from "./ProductWorkspace"
+import { ExportToolbar } from "./ExportToolbar"
+import {
+  loadV2PersistedState,
+  saveV2PersistedState,
+} from "./legacy-board-v2-persistence"
 
 const V1_API_BASE = "/qa/legacy-media-assignment-board/api"
 
@@ -71,8 +76,12 @@ export function LegacyMediaBoardV2Client() {
   const [selectedHandle, setSelectedHandle] = useState<string | null>(null)
   const [search, setSearch] = useState("")
 
-  // --- Assignment state (Commit 3, in-memory only) ---
+  // --- Assignment state (persisted via localStorage Commit 4) ---
   const [productStates, setProductStates] = useState<Record<string, V2ProductState>>({})
+
+  // --- Persistence state ---
+  const [savedAt, setSavedAt] = useState<string | null>(null)
+  const hasSavedOnceRef = useRef(false)
 
   // --- Lifted pool filter state (Commit 3) ---
   const [poolFilter, setPoolFilter] = useState<V2RoleFilter>("all")
@@ -81,6 +90,26 @@ export function LegacyMediaBoardV2Client() {
   useEffect(() => {
     setPoolFilter("all")
   }, [selectedHandle])
+
+  // --- Hydrate from localStorage on mount ---
+  useEffect(() => {
+    const persisted = loadV2PersistedState()
+    if (persisted) {
+      setProductStates(persisted.productStates)
+      if (persisted.selectedHandle) setSelectedHandle(persisted.selectedHandle)
+      setSavedAt(persisted.savedAt)
+    }
+  }, [])
+
+  // --- Auto-save whenever assignments change (skip initial mount render) ---
+  useEffect(() => {
+    if (!hasSavedOnceRef.current) {
+      hasSavedOnceRef.current = true
+      return
+    }
+    saveV2PersistedState(productStates, selectedHandle)
+    setSavedAt(new Date().toISOString())
+  }, [productStates, selectedHandle])
 
   // --- Data loading ---
   useEffect(() => {
@@ -278,6 +307,14 @@ export function LegacyMediaBoardV2Client() {
     []
   )
 
+  // --- Reset: clear v2board LS + reset in-memory state ---
+  const handleReset = useCallback(() => {
+    setProductStates({})
+    setSelectedHandle(null)
+    setSavedAt(null)
+    hasSavedOnceRef.current = false
+  }, [])
+
   // --- Filtered product list ---
   const filteredProducts = useMemo(() => {
     if (!search.trim()) return products
@@ -324,6 +361,15 @@ export function LegacyMediaBoardV2Client() {
       {status === "loaded" && (
         <div style={{ ...styles.statusBar, ...styles.successBar }}>{statusLine}</div>
       )}
+
+      {/* Export / persistence toolbar */}
+      <ExportToolbar
+        productStates={productStates}
+        invById={invById}
+        products={products}
+        savedAt={savedAt}
+        onReset={handleReset}
+      />
 
       {/* 3-column grid */}
       <div style={styles.grid}>
@@ -564,8 +610,8 @@ const styles = {
   },
   productRowActive: {
     background: "#e8f0ff",
-    borderLeft: "3px solid #1a3a6e",
-    paddingLeft: "9px",
+    boxShadow: "inset 3px 0 0 #1a3a6e",
+    padding: "7px 12px 7px 9px",
   },
   productHandle: {
     fontWeight: 600,
