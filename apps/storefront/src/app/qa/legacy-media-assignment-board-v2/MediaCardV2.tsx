@@ -165,42 +165,49 @@ export function MediaCardV2({ inv, role, confidence, selectedHandle, onSetMain, 
 
   return (
     <div style={styles.card}>
-      {/* Preview — image dominant */}
-      <div style={styles.previewArea}>
-        {showImg ? (
-          <img
-            src={preview.url!}
-            alt={inv.filename}
-            style={styles.img}
-            loading="lazy"
-            onError={() => setImgFailed(true)}
-          />
-        ) : (
-          <div style={styles.noPreview}>
-            <span style={styles.statusIcon}>{STATUS_ICON[effectiveStatus] ?? "?"}</span>
-            <span style={styles.statusText}>{STATUS_LABEL_RU[effectiveStatus] ?? effectiveStatus}</span>
-            {effectiveReason && (
-              <span style={styles.noPreviewReason}>{effectiveReason}</span>
-            )}
-          </div>
-        )}
-        {/* Role badge overlaid on image */}
-        <span style={styles.roleBadgeOverlay}>{roleLabel}</span>
-        {confidence && (
-          <span
-            style={{
-              ...styles.confBadgeOverlay,
-              background:
-                confidence === "confirmed" || confidence === "high"
-                  ? "#2d7a2d"
-                  : confidence === "medium"
-                    ? "#8a6200"
-                    : "#a33",
-            }}
-          >
-            {confidence}
-          </span>
-        )}
+      {/*
+        Preview area — padding-bottom: 100% trick guarantees a 1:1 square
+        regardless of child content (absolute children don't influence height).
+        This is more reliable than aspect-ratio on block/flex elements in all
+        Chromium layout contexts.
+      */}
+      <div style={styles.previewSizer}>
+        <div style={styles.previewArea}>
+          {showImg ? (
+            <img
+              src={preview.url!}
+              alt={inv.filename}
+              style={styles.img}
+              loading="lazy"
+              onError={() => setImgFailed(true)}
+            />
+          ) : (
+            <div style={styles.noPreview}>
+              <span style={styles.statusIcon}>{STATUS_ICON[effectiveStatus] ?? "?"}</span>
+              <span style={styles.statusText}>{STATUS_LABEL_RU[effectiveStatus] ?? effectiveStatus}</span>
+              {effectiveReason && (
+                <span style={styles.noPreviewReason}>{effectiveReason}</span>
+              )}
+            </div>
+          )}
+          {/* Role badge overlaid on image */}
+          <span style={styles.roleBadgeOverlay}>{roleLabel}</span>
+          {confidence && (
+            <span
+              style={{
+                ...styles.confBadgeOverlay,
+                background:
+                  confidence === "confirmed" || confidence === "high"
+                    ? "#2d7a2d"
+                    : confidence === "medium"
+                      ? "#8a6200"
+                      : "#a33",
+              }}
+            >
+              {confidence}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Compact footer */}
@@ -237,23 +244,41 @@ const styles = {
     overflow: "hidden",
     fontSize: "12px",
   },
-  previewArea: {
-    width: "100%",
-    aspectRatio: "1",
-    background: "#f0f0f0",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
+  previewSizer: {
+    // padding-bottom: 100% creates a guaranteed 1:1 square regardless of
+    // whether children are in-flow or absolutely positioned. More reliable
+    // than aspect-ratio on a flex/block element with only absolute children.
     position: "relative" as const,
+    width: "100%",
+    paddingBottom: "100%",
+    background: "#f0f0f0",
+    overflow: "hidden",
+    flexShrink: 0,
+  },
+  previewArea: {
+    // Fills the sizer absolutely — all media children anchor to this.
+    position: "absolute" as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    overflow: "hidden",
   },
   img: {
+    position: "absolute" as const,
+    top: 0,
+    left: 0,
     width: "100%",
     height: "100%",
     objectFit: "contain" as const,
     display: "block",
   },
   noPreview: {
+    position: "absolute" as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     display: "flex",
     flexDirection: "column" as const,
     alignItems: "center",
@@ -261,8 +286,6 @@ const styles = {
     gap: "3px",
     padding: "10px",
     textAlign: "center" as const,
-    width: "100%",
-    height: "100%",
   },
   statusIcon: {
     fontSize: "18px",
