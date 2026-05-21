@@ -213,20 +213,14 @@ export function MediaCardV2({ inv, role, confidence, selectedHandle, onSetMain, 
           <button style={styles.btnGallery} onClick={handleAddToGallery}>+ Галерея</button>
         </div>
 
-        {/* Secondary actions */}
+        {/* Secondary actions — disabled, planned for next commit */}
         <div style={styles.secondaryActions}>
-          <button
-            style={styles.btnSecondary}
-            onClick={() => console.log("[v2 board] Роль ▾", { id: inv.id, role })}
+          <span
+            style={styles.btnDisabled}
+            title="Смена роли — следующий шаг"
           >
             Роль ▾
-          </button>
-          <button
-            style={styles.btnSecondary}
-            onClick={() => console.log("[v2 board] Инспектор", { id: inv.id })}
-          >
-            ···
-          </button>
+          </span>
         </div>
       </div>
     </div>
@@ -357,16 +351,17 @@ const styles = {
     display: "flex",
     gap: "3px",
   },
-  btnSecondary: {
+  btnDisabled: {
     flex: 1,
     padding: "2px 0",
     fontSize: "9px",
-    border: "1px solid #eee",
+    border: "1px solid #f0f0f0",
     borderRadius: "3px",
     background: "#fafafa",
-    color: "#aaa",
-    cursor: "pointer",
+    color: "#ccc",
+    cursor: "default",
     textAlign: "center" as const,
     lineHeight: 1.3,
+    userSelect: "none" as const,
   },
 } as const

@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import React, { useMemo } from "react"
 import type { InvItem, CandidateEntry, V2RoleFilter } from "./legacy-board-v2-types"
 import { classifyVisualRole } from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
 import type { VisualRole } from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
@@ -38,6 +38,17 @@ type Props = {
   onAddToGallery: (mediaId: string) => void
 }
 
+/** Role label used in empty-filter message */
+const FILTER_LABEL_RU: Partial<Record<V2RoleFilter, string>> = {
+  front: "Фронт",
+  "3_4": "3/4",
+  interior: "Внутри",
+  detail: "Деталь",
+  lifestyle: "Lifestyle",
+  scheme: "Схема",
+  no_preview: "Без превью",
+}
+
 export function MediaPoolPanel({
   selectedHandle,
   invById,
@@ -49,47 +60,55 @@ export function MediaPoolPanel({
   onAddToGallery,
 }: Props) {
 
-  // Build pool items for selected handle with roles and preview status
+  // Build pool items — previewable sorted first in "all" view
   const poolItems = useMemo<PoolItem[]>(() => {
     if (!selectedHandle) return []
     const ids = candidatesByHandle.get(selectedHandle) ?? []
-    const items: PoolItem[] = []
+    const withPreview: PoolItem[] = []
+    const noPreview: PoolItem[] = []
     for (const id of ids) {
       const inv = invById.get(id)
       if (!inv) continue
       const entry = entryByInventoryId.get(id)
       const role = classifyVisualRole(inv, { productHandle: selectedHandle })
       const preview = clientPreview(inv)
-      items.push({
+      const item: PoolItem = {
         inv,
         role,
         confidence: entry?.confidence,
         identityConfidence: entry?.identity_confidence,
         previewOk: preview.url !== null,
-      })
+      }
+      if (item.previewOk) withPreview.push(item)
+      else noPreview.push(item)
     }
-    return items
+    // Previewable first, non-previewable after separator
+    return [...withPreview, ...noPreview]
   }, [selectedHandle, invById, candidatesByHandle, entryByInventoryId])
+
+  const previewableCount = useMemo(() => poolItems.filter((i) => i.previewOk).length, [poolItems])
+  const noPreviewCount = useMemo(() => poolItems.filter((i) => !i.previewOk).length, [poolItems])
 
   // Count per filter (for tab badges)
   const filterCounts = useMemo<Partial<Record<V2RoleFilter, number>>>(() => {
     const counts: Partial<Record<V2RoleFilter, number>> = { all: poolItems.length }
-    let noPreviewCount = 0
     for (const item of poolItems) {
       const f = visualRoleToFilter(item.role)
       if (f !== "all") counts[f] = (counts[f] ?? 0) + 1
-      if (!item.previewOk) noPreviewCount++
     }
     if (noPreviewCount > 0) counts["no_preview"] = noPreviewCount
     return counts
-  }, [poolItems])
+  }, [poolItems, noPreviewCount])
 
-  // Apply active filter
+  // Apply active filter — in "all" mode items are already sorted previewable-first
   const filteredItems = useMemo<PoolItem[]>(() => {
     if (activeFilter === "all") return poolItems
     if (activeFilter === "no_preview") return poolItems.filter((i) => !i.previewOk)
     return poolItems.filter((i) => visualRoleToFilter(i.role) === activeFilter)
   }, [poolItems, activeFilter])
+
+  // Index at which non-previewable starts (only relevant in "all" mode)
+  const separatorIdx = activeFilter === "all" ? previewableCount : -1
 
   const displayed = filteredItems.slice(0, POOL_LIMIT)
   const total = filteredItems.length
@@ -104,6 +123,15 @@ export function MediaPoolPanel({
     )
   }
 
+  // Rich count bar text
+  const countBarText = (() => {
+    if (totalAll === 0) return "Нет кандидатов для этого продукта."
+    if (activeFilter === "all") {
+      return `${totalAll} фото · ${previewableCount} с превью · ${noPreviewCount} без превью`
+    }
+    return `Показано ${displayed.length} из ${total} (всего ${totalAll})`
+  })()
+
   return (
     <aside style={styles.panel}>
       <div style={styles.panelHeader}>
@@ -117,29 +145,45 @@ export function MediaPoolPanel({
         onFilter={onSetFilter}
       />
 
-      <div style={styles.countBar}>
-        {totalAll === 0
-          ? "Нет кандидатов для этого продукта."
-          : `Показано ${displayed.length} из ${total}${activeFilter !== "all" ? ` (всего ${totalAll})` : ""}`}
-      </div>
+      <div style={styles.countBar}>{countBarText}</div>
 
+      {/* Empty filter — helpful message + reset */}
       {displayed.length === 0 && totalAll > 0 && (
-        <div style={styles.empty}>Нет карточек по фильтру «{activeFilter}».</div>
+        <div style={styles.emptyFilter}>
+          <div style={styles.emptyFilterTitle}>
+            Для роли «{FILTER_LABEL_RU[activeFilter] ?? activeFilter}» кандидатов не найдено.
+          </div>
+          <div style={styles.emptyFilterHint}>
+            Попробуйте «Все» или назначьте роль вручную позже.
+          </div>
+          <button style={styles.resetBtn} onClick={() => onSetFilter("all")}>
+            ← Сбросить фильтр
+          </button>
+        </div>
       )}
 
       <div style={styles.grid}>
-        {displayed.map((item) => (
-          <MediaCardV2
-            key={item.inv.id}
-            inv={item.inv}
-            role={item.role}
-            confidence={item.confidence}
-            identityConfidence={item.identityConfidence}
-            selectedHandle={selectedHandle}
-            onSetMain={onSetMain}
-            onAddToGallery={onAddToGallery}
-          />
-        ))}
+        {displayed.map((item, idx) => {
+          const showSeparator = idx === separatorIdx && separatorIdx > 0 && noPreviewCount > 0
+          return (
+            <React.Fragment key={item.inv.id}>
+              {showSeparator && (
+                <div style={styles.separator}>
+                  <span style={styles.separatorLabel}>Без превью · {noPreviewCount}</span>
+                </div>
+              )}
+              <MediaCardV2
+                inv={item.inv}
+                role={item.role}
+                confidence={item.confidence}
+                identityConfidence={item.identityConfidence}
+                selectedHandle={selectedHandle}
+                onSetMain={onSetMain}
+                onAddToGallery={onAddToGallery}
+              />
+            </React.Fragment>
+          )
+        })}
       </div>
 
       {total > POOL_LIMIT && (
@@ -186,14 +230,44 @@ const styles = {
   countBar: {
     padding: "5px 12px",
     fontSize: "11px",
-    color: "#888",
+    color: "#666",
     borderBottom: "1px solid #f0f0f0",
     flexShrink: 0,
+    fontVariantNumeric: "tabular-nums" as const,
   },
   empty: {
     padding: "20px 14px",
     color: "#aaa",
     fontSize: "13px",
+  },
+  emptyFilter: {
+    padding: "16px 16px 18px",
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: "6px",
+    borderBottom: "1px solid #f0f0f0",
+    background: "#fafafa",
+  },
+  emptyFilterTitle: {
+    fontSize: "13px",
+    color: "#555",
+    fontWeight: 500,
+  },
+  emptyFilterHint: {
+    fontSize: "12px",
+    color: "#aaa",
+  },
+  resetBtn: {
+    alignSelf: "flex-start" as const,
+    marginTop: "4px",
+    padding: "5px 12px",
+    fontSize: "12px",
+    border: "1px solid #ddd",
+    borderRadius: "4px",
+    background: "#fff",
+    color: "#1a3a6e",
+    cursor: "pointer",
+    fontWeight: 600,
   },
   grid: {
     display: "grid",
@@ -201,6 +275,24 @@ const styles = {
     gap: "8px",
     padding: "10px",
     overflowY: "auto" as const,
+  },
+  separator: {
+    gridColumn: "1 / -1",
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    padding: "6px 0 2px",
+  },
+  separatorLabel: {
+    fontSize: "10px",
+    color: "#bbb",
+    fontWeight: 600,
+    textTransform: "uppercase" as const,
+    letterSpacing: "0.04em",
+    padding: "2px 8px",
+    background: "#f5f5f5",
+    borderRadius: "10px",
+    border: "1px solid #e8e8e8",
   },
   capNote: {
     padding: "8px 12px",

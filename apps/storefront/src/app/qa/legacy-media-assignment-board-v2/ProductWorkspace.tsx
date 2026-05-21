@@ -78,6 +78,9 @@ export function ProductWorkspace({
         onFocusRole={onFocusRole}
       />
 
+      {/* Onboarding hint — shown only before any assignment */}
+      <OnboardingHint productState={productState} activeVariantKey={activeVariantKey} />
+
       {/* Role slots grid — the assignment canvas */}
       <RoleChecklistPanel
         productState={productState}
@@ -97,6 +100,65 @@ export function ProductWorkspace({
     </main>
   )
 }
+
+// ---------------------------------------------------------------------------
+// Onboarding hint — only before any role is assigned
+// ---------------------------------------------------------------------------
+
+function OnboardingHint({
+  productState,
+  activeVariantKey,
+}: {
+  productState: V2ProductState | null
+  activeVariantKey: string
+}) {
+  const hasAnyAssignment = useMemo(() => {
+    if (!productState) return false
+    const hasMain = !!(productState.rolesByVariant[activeVariantKey]?.main)
+    const galleryCount = productState.galleriesByVariant[activeVariantKey]?.length ?? 0
+    return hasMain || galleryCount > 0
+  }, [productState, activeVariantKey])
+
+  if (hasAnyAssignment) return null
+
+  return (
+    <div style={hintStyles.box}>
+      <span style={hintStyles.step}>Шаг 1</span>
+      <span style={hintStyles.text}>
+        Найдите главное фото в правом пуле и нажмите <strong>★ Главное</strong>.
+        Затем заполните недостающие роли, нажимая на чипы выше.
+      </span>
+    </div>
+  )
+}
+
+const hintStyles = {
+  box: {
+    display: "flex",
+    gap: "10px",
+    alignItems: "flex-start",
+    padding: "8px 14px 9px",
+    background: "#f0f6ff",
+    borderBottom: "1px solid #d0e4ff",
+    flexShrink: 0,
+  },
+  step: {
+    fontSize: "10px",
+    fontWeight: 700,
+    color: "#1a3a6e",
+    background: "#d0e4ff",
+    borderRadius: "10px",
+    padding: "2px 7px",
+    whiteSpace: "nowrap" as const,
+    flexShrink: 0,
+    marginTop: "1px",
+  },
+  text: {
+    fontSize: "11px",
+    color: "#3a5a8e",
+    lineHeight: 1.5,
+  },
+} as const
 
 // ---------------------------------------------------------------------------
 // Derived missing strip
