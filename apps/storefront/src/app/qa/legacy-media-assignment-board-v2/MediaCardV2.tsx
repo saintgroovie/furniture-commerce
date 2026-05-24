@@ -311,6 +311,7 @@ export function MediaCardV2({
             style={styles.img}
             loading="lazy"
             onError={() => setImgFailed(true)}
+            draggable={false}
           />
         ) : (
           <div style={styles.noPreview}>

@@ -20,6 +20,7 @@ import {
   loadV2PersistedState,
   saveV2PersistedState,
 } from "./legacy-board-v2-persistence"
+import { reorderGalleryIds } from "./legacy-board-v2-gallery-order"
 
 const V1_API_BASE = "/qa/legacy-media-assignment-board/api"
 
@@ -387,16 +388,16 @@ export function LegacyMediaBoardV2Client() {
   // Reorder the gallery array for the active variant
   const handleReorderGallery = useCallback(
     (fromIdx: number, toIdx: number) => {
-      if (!selectedHandle || fromIdx === toIdx) return
+      if (!selectedHandle) return
       updateProductState(selectedHandle, activeVariantKey, (s) => {
-        const gallery = [...(s.galleriesByVariant[activeVariantKey] ?? [])]
-        const [item] = gallery.splice(fromIdx, 1)
-        gallery.splice(toIdx, 0, item)
+        const gallery = s.galleriesByVariant[activeVariantKey] ?? []
+        const reordered = reorderGalleryIds(gallery, fromIdx, toIdx)
+        if (!reordered) return s
         return {
           ...s,
           galleriesByVariant: {
             ...s.galleriesByVariant,
-            [activeVariantKey]: gallery,
+            [activeVariantKey]: reordered,
           },
         }
       })

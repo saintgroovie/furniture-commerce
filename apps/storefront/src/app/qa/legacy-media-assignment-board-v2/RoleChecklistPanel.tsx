@@ -170,6 +170,7 @@ export function RoleChecklistPanel({
                     style={styles.thumbImg}
                     loading="lazy"
                     onError={(e) => { e.currentTarget.style.display = "none" }}
+                    draggable={false}
                   />
                 ) : (
                   <div style={styles.emptyThumb}>
@@ -287,7 +288,9 @@ const styles = {
     flexDirection: "column" as const,
     borderRadius: "6px",
     overflow: "hidden",
-    border: "2px solid",
+    borderWidth: "2px",
+    borderStyle: "solid" as const,
+    borderColor: "transparent",
     position: "relative" as const,
     transition: "transform 0.08s, box-shadow 0.08s",
   },
@@ -427,7 +430,9 @@ const styles = {
     width: "20px",
     height: "20px",
     borderRadius: "3px",
-    border: "1px solid",
+    borderWidth: "1px",
+    borderStyle: "solid" as const,
+    borderColor: "transparent",
     cursor: "pointer",
     fontSize: "11px",
     fontWeight: 700,

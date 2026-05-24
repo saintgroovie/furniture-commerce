@@ -92,8 +92,16 @@ export function buildV2ExportJSON(
     const meta = productMeta.get(handle)
     const variants: Record<string, V2ExportVariant> = {}
 
-    for (const [variantKey, roles] of Object.entries(state.rolesByVariant)) {
-      const mainId = roles.main ?? null
+    // Collect all variant keys that have any data (roles OR gallery-only).
+    // Iterating only rolesByVariant would miss gallery-only assignments.
+    const allVariantKeys = new Set([
+      ...Object.keys(state.rolesByVariant),
+      ...Object.keys(state.galleriesByVariant),
+    ])
+
+    for (const variantKey of allVariantKeys) {
+      const roles = state.rolesByVariant[variantKey] ?? {}
+      const mainId = (roles.main as string | null | undefined) ?? null
       const galleryIds = state.galleriesByVariant[variantKey] ?? []
 
       if (!mainId && galleryIds.length === 0) continue

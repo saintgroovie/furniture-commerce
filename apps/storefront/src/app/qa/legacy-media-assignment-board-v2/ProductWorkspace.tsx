@@ -11,7 +11,7 @@ import type {
 import { ColorVariantTabs } from "./ColorVariantTabs"
 import { RoleChecklistPanel, computeRoleRows } from "./RoleChecklistPanel"
 import { MissingRoleStrip } from "./MissingRoleStrip"
-import { GalleryStrip, GALLERY_DRAG_TYPE } from "./GalleryStrip"
+import { GalleryStrip, GALLERY_DRAG_TYPE, GALLERY_CARD_W } from "./GalleryStrip"
 import { clientPreview } from "./MediaCardV2"
 
 type Props = {
@@ -225,7 +225,7 @@ function MissingRoleStripDerived({
 // ---------------------------------------------------------------------------
 
 const GALLERY_SLOT_COUNT = 5
-const THUMB_SIZE = 80
+const THUMB_SIZE = GALLERY_CARD_W
 
 function FinalMediaOrderBlock({
   mainMediaId,
@@ -264,10 +264,7 @@ function FinalMediaOrderBlock({
   }
 
   function handleSlotDragOver(e: React.DragEvent, idx: number) {
-    // Accept all text/plain drags (gallery items AND pool cards both set this).
-    // Avoid checking for GALLERY_DRAG_TYPE — unreliable in Safari during dragover.
-    const types = Array.from(e.dataTransfer.types)
-    if (!types.includes("text/plain")) return
+    // Always accept dragover — never gate on e.dataTransfer.types (Safari/WebKit omits them).
     e.preventDefault()
     e.dataTransfer.dropEffect = applyDragSrcRef.current !== null ? "move" : "copy"
     setApplyDragOver(idx)
@@ -369,7 +366,7 @@ function FinalMediaOrderBlock({
             <div style={fmoStyles.slotNum}>Гл.</div>
             <div style={{ ...fmoStyles.thumb, ...fmoStyles.thumbMain, width: `${THUMB_SIZE}px`, height: `${THUMB_SIZE}px` }}>
               {thumbPreview?.url ? (
-                <img src={thumbPreview.url} alt="thumbnail" style={fmoStyles.thumbImg} loading="lazy" />
+                <img src={thumbPreview.url} alt="thumbnail" style={fmoStyles.thumbImg} loading="lazy" draggable={false} />
               ) : (
                 <span style={fmoStyles.thumbEmpty}>
                   {mainMediaId ? "?" : "–"}
@@ -391,29 +388,34 @@ function FinalMediaOrderBlock({
             const idx = pos - 1
             const isDragSrc = applyDragFrom === idx
             const isDragTarget = applyDragOver === idx && applyDragFrom !== idx
+            const canMoveLeft = !!mediaId && idx > 0
+            const canMoveRight = !!mediaId && idx < galleryIds.length - 1
             return (
               <div
                 key={pos}
                 style={{ ...fmoStyles.slot, width: `${THUMB_SIZE}px` }}
-                draggable={!!mediaId}
-                onDragStart={mediaId ? (e) => handleSlotDragStart(e, idx) : undefined}
+                data-v2-final-order-slot={idx}
                 onDragOver={(e) => handleSlotDragOver(e, idx)}
                 onDragLeave={(e) => handleSlotDragLeave(e, idx)}
                 onDrop={(e) => handleSlotDrop(e, idx)}
-                onDragEnd={handleSlotDragEnd}
               >
                 <div style={fmoStyles.slotNum}>{pos}</div>
-                <div style={{
-                  ...fmoStyles.thumb,
-                  width: `${THUMB_SIZE}px`,
-                  height: `${THUMB_SIZE}px`,
-                  ...(mediaId ? {} : fmoStyles.thumbEmptySlot),
-                  ...(isDragSrc ? fmoStyles.thumbDragSrc : {}),
-                  ...(isDragTarget ? fmoStyles.thumbDragTarget : {}),
-                  ...(mediaId ? { cursor: "grab" } : { cursor: "copy" }),
-                }}>
+                <div
+                  draggable={!!mediaId}
+                  onDragStart={mediaId ? (e) => handleSlotDragStart(e, idx) : undefined}
+                  onDragEnd={handleSlotDragEnd}
+                  style={{
+                    ...fmoStyles.thumb,
+                    width: `${THUMB_SIZE}px`,
+                    height: `${THUMB_SIZE}px`,
+                    ...(mediaId ? {} : fmoStyles.thumbEmptySlot),
+                    ...(isDragSrc ? fmoStyles.thumbDragSrc : {}),
+                    ...(isDragTarget ? fmoStyles.thumbDragTarget : {}),
+                    ...(mediaId ? { cursor: "grab" } : { cursor: "copy" }),
+                  }}
+                >
                   {preview?.url ? (
-                    <img src={preview.url} alt={`gallery ${pos}`} style={fmoStyles.thumbImg} loading="lazy" />
+                    <img src={preview.url} alt={inv?.filename ?? `gallery ${pos}`} style={fmoStyles.thumbImg} loading="lazy" draggable={false} />
                   ) : (
                     <span style={fmoStyles.thumbEmpty}>
                       {mediaId ? "?" : isDragTarget ? "⊕" : "↓"}
@@ -422,9 +424,35 @@ function FinalMediaOrderBlock({
                 </div>
                 <div style={{ ...fmoStyles.slotLabel, width: `${THUMB_SIZE}px` }}>
                   {inv
-                    ? (inv.filename.length > 16 ? inv.filename.slice(0, 13) + "…" : inv.filename)
+                    ? (inv.filename.length > 18 ? inv.filename.slice(0, 15) + "…" : inv.filename)
                     : <span style={fmoStyles.emptyLabel}>{isDragTarget ? "Отпустите" : "Перетащите сюда"}</span>}
                 </div>
+                {mediaId && onReorderGallery && (
+                  <div style={fmoStyles.moveRow}>
+                    <button
+                      type="button"
+                      style={{ ...fmoStyles.moveBtn, ...(canMoveLeft ? {} : fmoStyles.moveBtnDisabled) }}
+                      disabled={!canMoveLeft}
+                      onClick={() => canMoveLeft && onReorderGallery(idx, idx - 1)}
+                      title="Сдвинуть влево"
+                      aria-label={`Сдвинуть слот ${pos} влево`}
+                      data-v2-final-order-move="left"
+                    >
+                      ←
+                    </button>
+                    <button
+                      type="button"
+                      style={{ ...fmoStyles.moveBtn, ...(canMoveRight ? {} : fmoStyles.moveBtnDisabled) }}
+                      disabled={!canMoveRight}
+                      onClick={() => canMoveRight && onReorderGallery(idx, idx + 1)}
+                      title="Сдвинуть вправо"
+                      aria-label={`Сдвинуть слот ${pos} вправо`}
+                      data-v2-final-order-move="right"
+                    >
+                      →
+                    </button>
+                  </div>
+                )}
               </div>
             )
           })}
@@ -542,13 +570,40 @@ const fmoStyles = {
     lineHeight: 1,
   },
   slotLabel: {
-    fontSize: "9px",
+    fontSize: "10px",
     color: "#555",
     textAlign: "center" as const,
     lineHeight: 1.2,
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap" as const,
+    fontWeight: 500,
+  },
+  moveRow: {
+    display: "flex",
+    gap: "4px",
+    justifyContent: "center",
+    width: "100%",
+  },
+  moveBtn: {
+    width: "30px",
+    height: "22px",
+    border: "1px solid #aacaff",
+    borderRadius: "4px",
+    background: "#e8f0ff",
+    color: "#1a3a6e",
+    fontSize: "12px",
+    cursor: "pointer",
+    fontWeight: 700,
+    padding: 0,
+    lineHeight: 1,
+  },
+  moveBtnDisabled: {
+    opacity: 0.25,
+    cursor: "default",
+    background: "#f8f8f8",
+    borderColor: "#e0e0e0",
+    color: "#999",
   },
   emptyLabel: {
     color: "#bbb",
