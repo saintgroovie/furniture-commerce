@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useMemo, useState } from "react"
-import type { InvItem, CandidateEntry, V2RoleFilter } from "./legacy-board-v2-types"
+import type { InvItem, CandidateEntry, V2RoleFilter, V2RoleSlot } from "./legacy-board-v2-types"
 import { classifyVisualRole } from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
 import type { VisualRole } from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
 import { RoleFilterTabs } from "./RoleFilterTabs"
@@ -19,12 +19,25 @@ function visualRoleToFilter(role: VisualRole): V2RoleFilter {
   return "all"
 }
 
+/** Map an operator role override slot to the pool filter tab it belongs to */
+function roleSlotToFilter(slot: V2RoleSlot): V2RoleFilter {
+  if (slot === "front_anfas" || slot === "main") return "front"
+  if (slot === "front_3_4") return "3_4"
+  if (slot === "interior") return "interior"
+  if (slot === "detail") return "detail"
+  if (slot === "lifestyle") return "lifestyle"
+  if (slot === "scheme") return "scheme"
+  return "all"
+}
+
 type PoolItem = {
   inv: InvItem
   role: VisualRole
   confidence: string | undefined
   identityConfidence: string | undefined
   previewOk: boolean
+  /** Effective pool filter: uses operator role override if set, else auto-detected role */
+  effectiveFilter: V2RoleFilter
 }
 
 type Props = {
@@ -40,6 +53,10 @@ type Props = {
   currentMainId?: string | null
   /** IDs already in the gallery for the active variant */
   currentGalleryIds?: string[]
+  /** Operator role overrides keyed by media ID */
+  roleOverrides?: Record<string, V2RoleSlot>
+  /** Called when operator changes a media item's role override */
+  onSetRoleOverride?: (mediaId: string, role: V2RoleSlot | null) => void
 }
 
 /** Role label used in empty-filter message */
@@ -66,6 +83,8 @@ export function MediaPoolPanel({
   onAddToGallery,
   currentMainId,
   currentGalleryIds,
+  roleOverrides,
+  onSetRoleOverride,
 }: Props) {
   const [hideNoPreview, setHideNoPreview] = useState(false)
 
@@ -73,6 +92,7 @@ export function MediaPoolPanel({
   const poolItems = useMemo<PoolItem[]>(() => {
     if (!selectedHandle) return []
     const ids = candidatesByHandle.get(selectedHandle) ?? []
+    const overrides = roleOverrides ?? {}
     const withPreview: PoolItem[] = []
     const noPreview: PoolItem[] = []
     for (const id of ids) {
@@ -81,19 +101,22 @@ export function MediaPoolPanel({
       const entry = entryByInventoryId.get(id)
       const role = classifyVisualRole(inv, { productHandle: selectedHandle })
       const preview = clientPreview(inv)
+      // Compute effective filter: operator override takes priority over auto role
+      const override = overrides[id]
+      const effectiveFilter: V2RoleFilter = override ? roleSlotToFilter(override) : visualRoleToFilter(role)
       const item: PoolItem = {
         inv,
         role,
         confidence: entry?.confidence,
         identityConfidence: entry?.identity_confidence,
         previewOk: preview.url !== null,
+        effectiveFilter,
       }
       if (item.previewOk) withPreview.push(item)
       else noPreview.push(item)
     }
-    // Previewable first, non-previewable after separator
     return [...withPreview, ...noPreview]
-  }, [selectedHandle, invById, candidatesByHandle, entryByInventoryId])
+  }, [selectedHandle, invById, candidatesByHandle, entryByInventoryId, roleOverrides])
 
   const previewableCount = useMemo(() => poolItems.filter((i) => i.previewOk).length, [poolItems])
   const noPreviewCount = useMemo(() => poolItems.filter((i) => !i.previewOk).length, [poolItems])
@@ -105,7 +128,7 @@ export function MediaPoolPanel({
   const filterCounts = useMemo<Partial<Record<V2RoleFilter, number>>>(() => {
     const counts: Partial<Record<V2RoleFilter, number>> = { all: poolItems.length }
     for (const item of poolItems) {
-      const f = visualRoleToFilter(item.role)
+      const f = item.effectiveFilter
       if (f !== "all") counts[f] = (counts[f] ?? 0) + 1
     }
     if (noPreviewCount > 0) counts["no_preview"] = noPreviewCount
@@ -135,7 +158,7 @@ export function MediaPoolPanel({
     if (activeFilter === "selected") {
       return items.filter((i) => i.inv.id === (currentMainId ?? null) || gallerySet.has(i.inv.id))
     }
-    return items.filter((i) => visualRoleToFilter(i.role) === activeFilter)
+    return items.filter((i) => i.effectiveFilter === activeFilter)
   }, [poolItems, activeFilter, hideNoPreview, currentMainId, gallerySet])
 
   // Index at which non-previewable starts (only relevant in "all" mode without hideNoPreview)
@@ -242,6 +265,8 @@ export function MediaPoolPanel({
                   isMain={isMain}
                   isInGallery={isInGallery}
                   isDimmed={activeFilter === "all" && (isMain || isInGallery)}
+                  roleOverride={(roleOverrides ?? {})[item.inv.id] ?? null}
+                  onSetRoleOverride={onSetRoleOverride}
                 />
               </React.Fragment>
             )

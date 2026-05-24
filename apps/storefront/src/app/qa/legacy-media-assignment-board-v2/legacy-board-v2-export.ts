@@ -23,6 +23,8 @@ export type V2ExportMediaRef = {
 export type V2ExportVariant = {
   main: V2ExportMediaRef | null
   gallery: V2ExportMediaRef[]
+  /** Explicit operator slot assignments beyond main (optional, informational only — not used by apply) */
+  role_assignments?: Record<string, V2ExportMediaRef>
 }
 
 export type V2ExportProduct = {
@@ -30,6 +32,8 @@ export type V2ExportProduct = {
   title: string | null
   collection: string | null
   variants: Record<string, V2ExportVariant>
+  /** Operator role overrides: mediaId → role label (optional, informational only) */
+  operator_role_overrides?: Record<string, string>
 }
 
 export type V2ExportJSON = {
@@ -97,19 +101,36 @@ export function buildV2ExportJSON(
       if (mainId) totalMain++
       totalGallery += galleryIds.length
 
-      variants[variantKey] = {
+      // Collect non-main explicit role assignments
+      const roleAssignments: Record<string, V2ExportMediaRef> = {}
+      for (const [slot, mediaId] of Object.entries(roles)) {
+        if (slot === "main" || !mediaId) continue
+        roleAssignments[slot] = makeMediaRef(mediaId as string, invById)
+      }
+
+      const variant: V2ExportVariant = {
         main: mainId ? makeMediaRef(mainId, invById) : null,
         gallery: galleryIds.map((id) => makeMediaRef(id, invById)),
       }
+      if (Object.keys(roleAssignments).length > 0) {
+        variant.role_assignments = roleAssignments
+      }
+      variants[variantKey] = variant
     }
 
     if (Object.keys(variants).length > 0) {
-      assignments[handle] = {
+      const productEntry: V2ExportProduct = {
         handle,
         title: meta?.title ?? null,
         collection: meta?.collection ?? null,
         variants,
       }
+      // Include operator role overrides if any
+      const overrides = state.roleOverrides
+      if (overrides && Object.keys(overrides).length > 0) {
+        productEntry.operator_role_overrides = overrides
+      }
+      assignments[handle] = productEntry
     }
   }
 

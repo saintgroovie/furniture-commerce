@@ -26,6 +26,12 @@ export type V2ProductState = {
   rolesByVariant: Record<string, V2VariantRoleAssignment>
   galleriesByVariant: Record<string, string[]>
   rejectedIds: string[]
+  /**
+   * Operator-assigned visual role overrides keyed by inventory media ID.
+   * Overrides the auto-detected role for pool filtering and role slot suggestions.
+   * Optional for backward-compatibility with persisted state that predates this field.
+   */
+  roleOverrides?: Record<string, V2RoleSlot>
 }
 
 /** Top-level v2 board state (partial — extended in later commits). */
@@ -76,4 +82,6 @@ export type V2RoleRow = {
   label: string
   mediaId: string | null
   isCovered: boolean
+  /** Origin of coverage: explicit operator slot assignment, gallery-inferred, or empty. */
+  source: "explicit" | "gallery" | "none"
 }

@@ -70,6 +70,7 @@ function makeEmptyProductState(handle: string, variantKey: string): V2ProductSta
     rolesByVariant: {},
     galleriesByVariant: {},
     rejectedIds: [],
+    roleOverrides: {},
   }
 }
 
@@ -236,6 +237,11 @@ export function LegacyMediaBoardV2Client() {
     [currentProductState, activeVariantKey]
   )
 
+  const currentRoleOverrides = useMemo<Record<string, V2RoleSlot>>(
+    () => currentProductState?.roleOverrides ?? {},
+    [currentProductState]
+  )
+
   // --- Assignment state helpers ---
   const updateProductState = useCallback(
     (handle: string, variantKey: string, updater: (s: V2ProductState) => V2ProductState) => {
@@ -325,6 +331,59 @@ export function LegacyMediaBoardV2Client() {
       setPoolFilter(SLOT_TO_FILTER[slot])
     },
     []
+  )
+
+  // Explicit role-slot assignment (drag & drop or picker)
+  const handleSetRole = useCallback(
+    (mediaId: string, slot: V2RoleSlot) => {
+      if (!selectedHandle) return
+      updateProductState(selectedHandle, activeVariantKey, (s) => ({
+        ...s,
+        rolesByVariant: {
+          ...s.rolesByVariant,
+          [activeVariantKey]: {
+            ...s.rolesByVariant[activeVariantKey],
+            [slot]: mediaId,
+          },
+        },
+      }))
+    },
+    [selectedHandle, activeVariantKey, updateProductState]
+  )
+
+  // Clear an explicit role-slot assignment
+  const handleClearRole = useCallback(
+    (slot: V2RoleSlot) => {
+      if (!selectedHandle) return
+      updateProductState(selectedHandle, activeVariantKey, (s) => ({
+        ...s,
+        rolesByVariant: {
+          ...s.rolesByVariant,
+          [activeVariantKey]: {
+            ...s.rolesByVariant[activeVariantKey],
+            [slot]: null,
+          },
+        },
+      }))
+    },
+    [selectedHandle, activeVariantKey, updateProductState]
+  )
+
+  // Operator visual-role override for a specific media item
+  const handleSetRoleOverride = useCallback(
+    (mediaId: string, role: V2RoleSlot | null) => {
+      if (!selectedHandle) return
+      updateProductState(selectedHandle, activeVariantKey, (s) => {
+        const overrides = { ...(s.roleOverrides ?? {}) }
+        if (role === null) {
+          delete overrides[mediaId]
+        } else {
+          overrides[mediaId] = role
+        }
+        return { ...s, roleOverrides: overrides }
+      })
+    },
+    [selectedHandle, activeVariantKey, updateProductState]
   )
 
   // --- Reset: clear v2board LS + reset in-memory state ---
@@ -466,6 +525,9 @@ export function LegacyMediaBoardV2Client() {
           onRemoveMain={handleRemoveMain}
           onRemoveFromGallery={handleRemoveFromGallery}
           onFocusRole={handleFocusRole}
+          onSetRole={handleSetRole}
+          onClearRole={handleClearRole}
+          roleOverrides={currentRoleOverrides}
         />
 
         {/* Right: Media pool */}
@@ -480,6 +542,8 @@ export function LegacyMediaBoardV2Client() {
           onAddToGallery={handleAddToGallery}
           currentMainId={currentMainId}
           currentGalleryIds={currentGalleryIds}
+          roleOverrides={currentRoleOverrides}
+          onSetRoleOverride={handleSetRoleOverride}
         />
       </div>
     </div>

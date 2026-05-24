@@ -1,9 +1,19 @@
 "use client"
 
 import { useState } from "react"
-import type { InvItem } from "./legacy-board-v2-types"
+import type { InvItem, V2RoleSlot } from "./legacy-board-v2-types"
 import type { VisualRole } from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
 import { VISUAL_ROLE_BADGE_RU } from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
+
+// Role slot labels for the operator override dropdown (excludes "main" — set via ★)
+const ROLE_SLOT_LABELS: Partial<Record<V2RoleSlot, string>> = {
+  front_anfas: "Анфас",
+  front_3_4: "3/4",
+  interior: "Внутри",
+  detail: "Деталь",
+  lifestyle: "Lifestyle",
+  scheme: "Схема",
+}
 
 // ---------------------------------------------------------------------------
 // Client-safe preview URL builder (no fs — uses InvItem fields only)
@@ -151,6 +161,10 @@ type Props = {
    * making the free pool easier to scan. Does NOT affect "Выбранные" view.
    */
   isDimmed?: boolean
+  /** Operator-assigned role override (overrides auto-detected role for display + filtering) */
+  roleOverride?: V2RoleSlot | null
+  /** Called when operator changes the role override via dropdown */
+  onSetRoleOverride?: (mediaId: string, role: V2RoleSlot | null) => void
 }
 
 export function MediaCardV2({
@@ -164,6 +178,8 @@ export function MediaCardV2({
   isMain,
   isInGallery,
   isDimmed,
+  roleOverride,
+  onSetRoleOverride,
 }: Props) {
   const [imgFailed, setImgFailed] = useState(false)
 
@@ -173,6 +189,7 @@ export function MediaCardV2({
   const shortname = inv.filename.length > 30 ? inv.filename.slice(0, 27) + "…" : inv.filename
   const effectiveStatus = imgFailed ? "file_missing" : preview.status
   const effectiveReason = imgFailed ? "Файл не найден на диске (proxy 404)." : preview.reason
+  const overrideLabel = roleOverride ? (ROLE_SLOT_LABELS[roleOverride] ?? roleOverride) : null
 
   function handleSetMain() {
     if (!isMain && onSetMain) onSetMain(inv.id)
@@ -182,6 +199,46 @@ export function MediaCardV2({
     if (!isInGallery && onAddToGallery) onAddToGallery(inv.id)
   }
 
+  function handleDragStart(e: React.DragEvent) {
+    e.dataTransfer.setData("text/plain", inv.id)
+    e.dataTransfer.effectAllowed = "copy"
+  }
+
+  function handleRoleOverrideChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const v = e.target.value
+    onSetRoleOverride?.(inv.id, v ? (v as V2RoleSlot) : null)
+  }
+
+  // Role override select element — shared between full and compact cards
+  const roleControl = onSetRoleOverride ? (
+    <div style={styles.roleRow}>
+      <span
+        style={{
+          ...styles.roleChip,
+          ...(overrideLabel ? styles.roleChipOverride : {}),
+        }}
+        title={overrideLabel ? `Ручная роль: ${overrideLabel}` : `Авто: ${roleLabel}`}
+      >
+        {overrideLabel ?? roleLabel}
+      </span>
+      <select
+        style={{
+          ...styles.roleSelect,
+          ...(overrideLabel ? styles.roleSelectOverride : {}),
+        }}
+        value={roleOverride ?? ""}
+        onChange={handleRoleOverrideChange}
+        title="Переопределить роль для фильтрации в пуле"
+      >
+        <option value="">авто</option>
+        {Object.entries(ROLE_SLOT_LABELS).map(([k, v]) => (
+          <option key={k} value={k}>{v}</option>
+        ))}
+      </select>
+      {overrideLabel && <span style={styles.manualBadge}>ручн.</span>}
+    </div>
+  ) : null
+
   // -------------------------------------------------------------------------
   // Compact list-row — for non-previewable items
   // spans full grid width so photo cards always align above in a clean 2-col grid
@@ -189,6 +246,8 @@ export function MediaCardV2({
   if (compact) {
     return (
       <div
+        draggable
+        onDragStart={handleDragStart}
         style={{
           ...styles.compactCard,
           ...(isMain ? styles.compactCardMain : isInGallery ? styles.compactCardInGallery : {}),
@@ -235,6 +294,8 @@ export function MediaCardV2({
   // -------------------------------------------------------------------------
   return (
     <div
+      draggable
+      onDragStart={handleDragStart}
       style={{
         ...styles.card,
         ...(isMain ? styles.cardMain : isInGallery ? styles.cardInGallery : {}),
@@ -270,7 +331,9 @@ export function MediaCardV2({
         )}
 
         {/* Role badge — bottom-left overlay */}
-        <span style={styles.roleBadgeOverlay}>{roleLabel}</span>
+        <span style={styles.roleBadgeOverlay}>
+          {overrideLabel ?? roleLabel}
+        </span>
 
         {/* Confidence badge — top-right overlay */}
         {confidence && (
@@ -285,7 +348,7 @@ export function MediaCardV2({
         )}
       </div>
 
-      {/* Footer: filename + primary actions */}
+      {/* Footer: filename + primary actions + role override */}
       <div style={styles.footer}>
         <div style={styles.filename} title={inv.filename}>{shortname}</div>
         <div style={styles.primaryActions}>
@@ -304,6 +367,7 @@ export function MediaCardV2({
             {isInGallery ? "✓ Галерея" : "+ Галерея"}
           </button>
         </div>
+        {roleControl}
       </div>
     </div>
   )
@@ -321,6 +385,7 @@ const styles = {
     background: "#fff",
     overflow: "hidden",
     fontSize: "12px",
+    cursor: "grab",
   },
   cardMain: {
     border: "2px solid #b88a00",
@@ -602,5 +667,62 @@ const styles = {
     opacity: 0.65,
     filter: "saturate(0.6)",
     transition: "opacity 0.1s, filter 0.1s",
+  },
+
+  // ---------------------------------------------------------------------------
+  // Role override control (shown in card footer when onSetRoleOverride is provided)
+  // ---------------------------------------------------------------------------
+  roleRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: "4px",
+    paddingTop: "3px",
+    borderTop: "1px solid #f0f0f0",
+    marginTop: "2px",
+  },
+  roleChip: {
+    fontSize: "9px",
+    background: "#e8eeff",
+    color: "#1a3a6e",
+    borderRadius: "3px",
+    padding: "1px 5px",
+    fontWeight: 600,
+    flex: 1,
+    overflow: "hidden",
+    textOverflow: "ellipsis" as const,
+    whiteSpace: "nowrap" as const,
+    minWidth: 0,
+  },
+  roleChipOverride: {
+    background: "#fff0e0",
+    color: "#7a4800",
+    border: "1px solid #f0a000",
+  },
+  roleSelect: {
+    fontSize: "10px",
+    border: "1px solid #e0e0e0",
+    borderRadius: "3px",
+    background: "#fafafa",
+    color: "#555",
+    padding: "1px 2px",
+    cursor: "pointer",
+    maxWidth: "60px",
+    flexShrink: 0,
+    lineHeight: 1.2,
+  },
+  roleSelectOverride: {
+    background: "#fff8f0",
+    borderColor: "#f0a000",
+    color: "#7a4800",
+  },
+  manualBadge: {
+    fontSize: "9px",
+    background: "#f0a000",
+    color: "#fff",
+    borderRadius: "3px",
+    padding: "1px 4px",
+    fontWeight: 700,
+    flexShrink: 0,
+    whiteSpace: "nowrap" as const,
   },
 } as const

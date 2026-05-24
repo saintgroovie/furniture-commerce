@@ -25,6 +25,9 @@ type Props = {
   onRemoveMain: () => void
   onRemoveFromGallery: (mediaId: string) => void
   onFocusRole: (slot: V2RoleSlot) => void
+  onSetRole?: (mediaId: string, slot: V2RoleSlot) => void
+  onClearRole?: (slot: V2RoleSlot) => void
+  roleOverrides?: Record<string, V2RoleSlot>
 }
 
 export function ProductWorkspace({
@@ -38,6 +41,9 @@ export function ProductWorkspace({
   onRemoveMain,
   onRemoveFromGallery,
   onFocusRole,
+  onSetRole,
+  onClearRole,
+  roleOverrides,
 }: Props) {
   if (!selectedHandle) {
     return (
@@ -79,6 +85,7 @@ export function ProductWorkspace({
           activeVariantKey={activeVariantKey}
           invById={invById}
           onFocusRole={onFocusRole}
+          roleOverrides={roleOverrides}
         />
 
         {/* Onboarding hint — shown only before any assignment */}
@@ -94,6 +101,9 @@ export function ProductWorkspace({
           onFocusRole={onFocusRole}
           onRemoveMain={onRemoveMain}
           onRemoveFromGallery={onRemoveFromGallery}
+          onSetRole={onSetRole}
+          onClearRole={onClearRole}
+          roleOverrides={roleOverrides}
         />
 
         <GalleryStrip
@@ -181,16 +191,18 @@ function MissingRoleStripDerived({
   activeVariantKey,
   invById,
   onFocusRole,
+  roleOverrides,
 }: {
   productState: V2ProductState | null
   activeVariantKey: string
   invById: Map<string, InvItem>
   onFocusRole: (slot: V2RoleSlot) => void
+  roleOverrides?: Record<string, V2RoleSlot>
 }) {
   const missingSlots = useMemo(() => {
-    const rows = computeRoleRows(productState, activeVariantKey, invById)
+    const rows = computeRoleRows(productState, activeVariantKey, invById, roleOverrides)
     return rows.filter((r) => !r.isCovered).map((r) => r.slot)
-  }, [productState, activeVariantKey, invById])
+  }, [productState, activeVariantKey, invById, roleOverrides])
 
   return <MissingRoleStrip missingSlots={missingSlots} onFocusRole={onFocusRole} />
 }
