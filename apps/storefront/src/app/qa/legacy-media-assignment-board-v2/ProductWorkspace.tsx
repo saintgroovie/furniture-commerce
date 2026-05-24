@@ -11,7 +11,7 @@ import type {
 import { ColorVariantTabs } from "./ColorVariantTabs"
 import { RoleChecklistPanel, computeRoleRows } from "./RoleChecklistPanel"
 import { MissingRoleStrip } from "./MissingRoleStrip"
-import { GalleryStrip } from "./GalleryStrip"
+import { GalleryStrip, GALLERY_DRAG_TYPE } from "./GalleryStrip"
 import { clientPreview } from "./MediaCardV2"
 
 type Props = {
@@ -28,6 +28,8 @@ type Props = {
   onSetRole?: (mediaId: string, slot: V2RoleSlot) => void
   onClearRole?: (slot: V2RoleSlot) => void
   roleOverrides?: Record<string, V2RoleSlot>
+  /** Reorder the gallery array: move item at fromIdx to toIdx */
+  onReorderGallery?: (fromIdx: number, toIdx: number) => void
 }
 
 export function ProductWorkspace({
@@ -44,6 +46,7 @@ export function ProductWorkspace({
   onSetRole,
   onClearRole,
   roleOverrides,
+  onReorderGallery,
 }: Props) {
   if (!selectedHandle) {
     return (
@@ -110,6 +113,7 @@ export function ProductWorkspace({
           galleryIds={productState?.galleriesByVariant[activeVariantKey] ?? []}
           invById={invById}
           onRemove={onRemoveFromGallery}
+          onReorderGallery={onReorderGallery}
         />
       </div>
 
@@ -118,6 +122,7 @@ export function ProductWorkspace({
         mainMediaId={(productState?.rolesByVariant[activeVariantKey]?.main as string | null | undefined) ?? null}
         galleryIds={productState?.galleriesByVariant[activeVariantKey] ?? []}
         invById={invById}
+        onReorderGallery={onReorderGallery}
       />
     </main>
   )
@@ -218,12 +223,56 @@ function FinalMediaOrderBlock({
   mainMediaId,
   galleryIds,
   invById,
+  onReorderGallery,
 }: {
   mainMediaId: string | null
   galleryIds: string[]
   invById: Map<string, InvItem>
+  /** Reorder gallery: move item at fromIdx to toIdx */
+  onReorderGallery?: (fromIdx: number, toIdx: number) => void
 }) {
   const [collapsed, setCollapsed] = useState(false)
+  const [applyDragFrom, setApplyDragFrom] = useState<number | null>(null)
+  const [applyDragOver, setApplyDragOver] = useState<number | null>(null)
+
+  function handleSlotDragStart(e: React.DragEvent, idx: number) {
+    const mediaId = galleryIds[idx]
+    if (!mediaId) return
+    e.dataTransfer.setData("text/plain", mediaId)
+    e.dataTransfer.setData(GALLERY_DRAG_TYPE, String(idx))
+    e.dataTransfer.effectAllowed = "move"
+    setApplyDragFrom(idx)
+  }
+
+  function handleSlotDragOver(e: React.DragEvent, idx: number) {
+    if (!Array.from(e.dataTransfer.types).includes(GALLERY_DRAG_TYPE)) return
+    e.preventDefault()
+    e.dataTransfer.dropEffect = "move"
+    setApplyDragOver(idx)
+  }
+
+  function handleSlotDragLeave(e: React.DragEvent, idx: number) {
+    if (applyDragOver === idx && !e.currentTarget.contains(e.relatedTarget as Node)) {
+      setApplyDragOver(null)
+    }
+  }
+
+  function handleSlotDrop(e: React.DragEvent, toIdx: number) {
+    e.preventDefault()
+    const fromStr = e.dataTransfer.getData(GALLERY_DRAG_TYPE)
+    setApplyDragOver(null)
+    setApplyDragFrom(null)
+    if (!fromStr) return
+    const fromIdx = parseInt(fromStr, 10)
+    if (!isNaN(fromIdx) && fromIdx !== toIdx) {
+      onReorderGallery?.(fromIdx, toIdx)
+    }
+  }
+
+  function handleSlotDragEnd() {
+    setApplyDragFrom(null)
+    setApplyDragOver(null)
+  }
 
   const hasContent = mainMediaId || galleryIds.length > 0
   if (!hasContent) return null
@@ -287,30 +336,47 @@ function FinalMediaOrderBlock({
           <div style={{ ...fmoStyles.divider, height: `${THUMB_SIZE}px` }} />
 
           {/* Gallery slots 1–N */}
-          {slots.map(({ mediaId, inv, preview, pos }) => (
-            <div key={pos} style={{ ...fmoStyles.slot, width: `${THUMB_SIZE}px` }}>
-              <div style={fmoStyles.slotNum}>{pos}</div>
-              <div style={{
-                ...fmoStyles.thumb,
-                width: `${THUMB_SIZE}px`,
-                height: `${THUMB_SIZE}px`,
-                ...(mediaId ? {} : fmoStyles.thumbEmptySlot),
-              }}>
-                {preview?.url ? (
-                  <img src={preview.url} alt={`gallery ${pos}`} style={fmoStyles.thumbImg} loading="lazy" />
-                ) : (
-                  <span style={fmoStyles.thumbEmpty}>
-                    {mediaId ? "?" : "–"}
-                  </span>
-                )}
+          {slots.map(({ mediaId, inv, preview, pos }) => {
+            const idx = pos - 1
+            const isDragSrc = applyDragFrom === idx
+            const isDragTarget = applyDragOver === idx && applyDragFrom !== idx
+            return (
+              <div
+                key={pos}
+                style={{ ...fmoStyles.slot, width: `${THUMB_SIZE}px` }}
+                draggable={!!mediaId}
+                onDragStart={mediaId ? (e) => handleSlotDragStart(e, idx) : undefined}
+                onDragOver={(e) => handleSlotDragOver(e, idx)}
+                onDragLeave={(e) => handleSlotDragLeave(e, idx)}
+                onDrop={(e) => handleSlotDrop(e, idx)}
+                onDragEnd={handleSlotDragEnd}
+              >
+                <div style={fmoStyles.slotNum}>{pos}</div>
+                <div style={{
+                  ...fmoStyles.thumb,
+                  width: `${THUMB_SIZE}px`,
+                  height: `${THUMB_SIZE}px`,
+                  ...(mediaId ? {} : fmoStyles.thumbEmptySlot),
+                  ...(isDragSrc ? fmoStyles.thumbDragSrc : {}),
+                  ...(isDragTarget ? fmoStyles.thumbDragTarget : {}),
+                  ...(mediaId ? { cursor: "grab" } : {}),
+                }}>
+                  {preview?.url ? (
+                    <img src={preview.url} alt={`gallery ${pos}`} style={fmoStyles.thumbImg} loading="lazy" />
+                  ) : (
+                    <span style={fmoStyles.thumbEmpty}>
+                      {mediaId ? "?" : isDragTarget ? "⊕" : "–"}
+                    </span>
+                  )}
+                </div>
+                <div style={{ ...fmoStyles.slotLabel, width: `${THUMB_SIZE}px` }}>
+                  {inv
+                    ? (inv.filename.length > 16 ? inv.filename.slice(0, 13) + "…" : inv.filename)
+                    : <span style={fmoStyles.emptyLabel}>{isDragTarget ? "сюда" : "пусто"}</span>}
+                </div>
               </div>
-              <div style={{ ...fmoStyles.slotLabel, width: `${THUMB_SIZE}px` }}>
-                {inv
-                  ? (inv.filename.length > 16 ? inv.filename.slice(0, 13) + "…" : inv.filename)
-                  : <span style={fmoStyles.emptyLabel}>пусто</span>}
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>
@@ -396,6 +462,15 @@ const fmoStyles = {
   thumbEmptySlot: {
     background: "#f0f0f0",
     border: "1px dashed #ccc",
+  },
+  thumbDragSrc: {
+    opacity: 0.35,
+    transform: "scale(0.93)",
+  },
+  thumbDragTarget: {
+    border: "2px solid #1a3a6e",
+    background: "#e0ecff",
+    boxShadow: "0 0 0 2px rgba(26,58,110,0.2)",
   },
   thumbImg: {
     width: "100%",

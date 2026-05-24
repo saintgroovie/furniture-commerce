@@ -334,8 +334,7 @@ export function LegacyMediaBoardV2Client() {
   )
 
   // Explicit role-slot assignment (drag & drop or picker)
-  const handleSetRole = useCallback(
-    (mediaId: string, slot: V2RoleSlot) => {
+  const handleSetRole = useCallback(    (mediaId: string, slot: V2RoleSlot) => {
       if (!selectedHandle) return
       updateProductState(selectedHandle, activeVariantKey, (s) => ({
         ...s,
@@ -370,8 +369,7 @@ export function LegacyMediaBoardV2Client() {
   )
 
   // Operator visual-role override for a specific media item
-  const handleSetRoleOverride = useCallback(
-    (mediaId: string, role: V2RoleSlot | null) => {
+  const handleSetRoleOverride = useCallback(    (mediaId: string, role: V2RoleSlot | null) => {
       if (!selectedHandle) return
       updateProductState(selectedHandle, activeVariantKey, (s) => {
         const overrides = { ...(s.roleOverrides ?? {}) }
@@ -381,6 +379,26 @@ export function LegacyMediaBoardV2Client() {
           overrides[mediaId] = role
         }
         return { ...s, roleOverrides: overrides }
+      })
+    },
+    [selectedHandle, activeVariantKey, updateProductState]
+  )
+
+  // Reorder the gallery array for the active variant
+  const handleReorderGallery = useCallback(
+    (fromIdx: number, toIdx: number) => {
+      if (!selectedHandle || fromIdx === toIdx) return
+      updateProductState(selectedHandle, activeVariantKey, (s) => {
+        const gallery = [...(s.galleriesByVariant[activeVariantKey] ?? [])]
+        const [item] = gallery.splice(fromIdx, 1)
+        gallery.splice(toIdx, 0, item)
+        return {
+          ...s,
+          galleriesByVariant: {
+            ...s.galleriesByVariant,
+            [activeVariantKey]: gallery,
+          },
+        }
       })
     },
     [selectedHandle, activeVariantKey, updateProductState]
@@ -528,6 +546,7 @@ export function LegacyMediaBoardV2Client() {
           onSetRole={handleSetRole}
           onClearRole={handleClearRole}
           roleOverrides={currentRoleOverrides}
+          onReorderGallery={handleReorderGallery}
         />
 
         {/* Right: Media pool */}
