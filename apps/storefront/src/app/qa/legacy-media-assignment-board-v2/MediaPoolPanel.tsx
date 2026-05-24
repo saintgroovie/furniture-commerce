@@ -236,6 +236,7 @@ export function MediaPoolPanel({
                 compact={!item.previewOk}
                 isMain={isMain}
                 isInGallery={isInGallery}
+                isDimmed={activeFilter === "all" && (isMain || isInGallery)}
               />
             </React.Fragment>
           )

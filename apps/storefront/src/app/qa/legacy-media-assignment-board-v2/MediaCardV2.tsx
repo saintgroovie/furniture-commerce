@@ -145,6 +145,12 @@ type Props = {
   isMain?: boolean
   /** True when this item is already in the gallery for the current variant */
   isInGallery?: boolean
+  /**
+   * Visually de-emphasise this card so unassigned items stand out.
+   * Applied in "Все" pool view when the card is already assigned (main or gallery),
+   * making the free pool easier to scan. Does NOT affect "Выбранные" view.
+   */
+  isDimmed?: boolean
 }
 
 export function MediaCardV2({
@@ -157,6 +163,7 @@ export function MediaCardV2({
   compact,
   isMain,
   isInGallery,
+  isDimmed,
 }: Props) {
   const [imgFailed, setImgFailed] = useState(false)
 
@@ -185,6 +192,7 @@ export function MediaCardV2({
         style={{
           ...styles.compactCard,
           ...(isMain ? styles.compactCardMain : isInGallery ? styles.compactCardInGallery : {}),
+          ...(isDimmed ? styles.dimmed : {}),
         }}
       >
         <span style={styles.compactIcon}>{STATUS_ICON[effectiveStatus] ?? "–"}</span>
@@ -230,6 +238,7 @@ export function MediaCardV2({
       style={{
         ...styles.card,
         ...(isMain ? styles.cardMain : isInGallery ? styles.cardInGallery : {}),
+        ...(isDimmed ? styles.dimmed : {}),
       }}
     >
       {/* Image wrap — fixed 160px height, reliable in any grid/flex context */}
@@ -585,5 +594,11 @@ const styles = {
     color: "#ccc",
     cursor: "default",
     border: "1px solid #e0e0e0",
+  },
+  /** Applied in "Все" pool view to already-assigned cards so free items stand out */
+  dimmed: {
+    opacity: 0.55,
+    filter: "saturate(0.5)",
+    transition: "opacity 0.1s, filter 0.1s",
   },
 } as const

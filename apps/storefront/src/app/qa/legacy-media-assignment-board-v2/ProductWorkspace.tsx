@@ -196,6 +196,7 @@ function MissingRoleStripDerived({
 // ---------------------------------------------------------------------------
 
 const GALLERY_SLOT_COUNT = 5
+const THUMB_SIZE = 80
 
 function FinalMediaOrderBlock({
   mainMediaId,
@@ -213,6 +214,11 @@ function FinalMediaOrderBlock({
 
   const thumbInv = mainMediaId ? invById.get(mainMediaId) : null
   const thumbPreview = thumbInv ? clientPreview(thumbInv) : null
+  const galleryFilledCount = Math.min(galleryIds.length, GALLERY_SLOT_COUNT)
+  const galleryComplete = galleryFilledCount === GALLERY_SLOT_COUNT
+
+  const countColor = galleryComplete ? "#1a5e20" : galleryFilledCount > 0 ? "#7a4800" : "#888"
+  const countBg = galleryComplete ? "#e8f5e9" : galleryFilledCount > 0 ? "#fff8e1" : "#f5f5f5"
 
   const slots = Array.from({ length: GALLERY_SLOT_COUNT }, (_, i) => {
     const mediaId = galleryIds[i] ?? null
@@ -224,23 +230,28 @@ function FinalMediaOrderBlock({
   return (
     <div style={fmoStyles.block}>
       <div style={fmoStyles.header}>
-        <span style={fmoStyles.headerLabel}>Порядок экспорта</span>
-        <span style={fmoStyles.headerSub}>thumbnail + gallery[1–{GALLERY_SLOT_COUNT}]</span>
+        <span style={fmoStyles.headerLabel}>Apply order</span>
+        {!collapsed && (
+          <span style={{ ...fmoStyles.countPill, color: countColor, background: countBg }}>
+            TH + {galleryFilledCount}/{GALLERY_SLOT_COUNT} gallery
+          </span>
+        )}
+        <span style={fmoStyles.headerSub} />
         <button
           style={fmoStyles.collapseBtn}
           onClick={() => setCollapsed((c) => !c)}
-          title={collapsed ? "Развернуть" : "Свернуть"}
+          title={collapsed ? "Развернуть apply order" : "Свернуть"}
         >
-          {collapsed ? "▸" : "▾"}
+          {collapsed ? "▸ Apply order" : "▾"}
         </button>
       </div>
 
       {!collapsed && (
         <div style={fmoStyles.strip}>
           {/* Slot 0: thumbnail */}
-          <div style={fmoStyles.slot}>
+          <div style={{ ...fmoStyles.slot, width: `${THUMB_SIZE}px` }}>
             <div style={fmoStyles.slotNum}>TH</div>
-            <div style={{ ...fmoStyles.thumb, ...fmoStyles.thumbMain }}>
+            <div style={{ ...fmoStyles.thumb, ...fmoStyles.thumbMain, width: `${THUMB_SIZE}px`, height: `${THUMB_SIZE}px` }}>
               {thumbPreview?.url ? (
                 <img src={thumbPreview.url} alt="thumbnail" style={fmoStyles.thumbImg} loading="lazy" />
               ) : (
@@ -249,21 +260,26 @@ function FinalMediaOrderBlock({
                 </span>
               )}
             </div>
-            <div style={fmoStyles.slotLabel}>
+            <div style={{ ...fmoStyles.slotLabel, width: `${THUMB_SIZE}px` }}>
               {thumbInv
-                ? (thumbInv.filename.length > 14 ? thumbInv.filename.slice(0, 11) + "…" : thumbInv.filename)
+                ? (thumbInv.filename.length > 16 ? thumbInv.filename.slice(0, 13) + "…" : thumbInv.filename)
                 : <span style={fmoStyles.emptyLabel}>не задано</span>}
             </div>
           </div>
 
           {/* Divider */}
-          <div style={fmoStyles.divider} />
+          <div style={{ ...fmoStyles.divider, height: `${THUMB_SIZE}px` }} />
 
           {/* Gallery slots 1–N */}
           {slots.map(({ mediaId, inv, preview, pos }) => (
-            <div key={pos} style={fmoStyles.slot}>
+            <div key={pos} style={{ ...fmoStyles.slot, width: `${THUMB_SIZE}px` }}>
               <div style={fmoStyles.slotNum}>{pos}</div>
-              <div style={fmoStyles.thumb}>
+              <div style={{
+                ...fmoStyles.thumb,
+                width: `${THUMB_SIZE}px`,
+                height: `${THUMB_SIZE}px`,
+                ...(mediaId ? {} : fmoStyles.thumbEmptySlot),
+              }}>
                 {preview?.url ? (
                   <img src={preview.url} alt={`gallery ${pos}`} style={fmoStyles.thumbImg} loading="lazy" />
                 ) : (
@@ -272,9 +288,9 @@ function FinalMediaOrderBlock({
                   </span>
                 )}
               </div>
-              <div style={fmoStyles.slotLabel}>
+              <div style={{ ...fmoStyles.slotLabel, width: `${THUMB_SIZE}px` }}>
                 {inv
-                  ? (inv.filename.length > 14 ? inv.filename.slice(0, 11) + "…" : inv.filename)
+                  ? (inv.filename.length > 16 ? inv.filename.slice(0, 13) + "…" : inv.filename)
                   : <span style={fmoStyles.emptyLabel}>пусто</span>}
               </div>
             </div>
@@ -287,65 +303,69 @@ function FinalMediaOrderBlock({
 
 const fmoStyles = {
   block: {
-    borderTop: "2px solid #e8f0ff",
-    background: "#f8faff",
+    borderTop: "3px solid #1a3a6e",
+    background: "#f0f4ff",
     flexShrink: 0,
   },
   header: {
     display: "flex",
     alignItems: "center",
     gap: "8px",
-    padding: "6px 14px 5px",
+    padding: "7px 14px 6px",
+    borderBottom: "1px solid #dde4f5",
   },
   headerLabel: {
     fontSize: "10px",
     fontWeight: 700,
     textTransform: "uppercase" as const,
-    letterSpacing: "0.06em",
+    letterSpacing: "0.07em",
     color: "#1a3a6e",
   },
+  countPill: {
+    fontSize: "11px",
+    fontWeight: 700,
+    borderRadius: "8px",
+    padding: "1px 8px",
+    letterSpacing: "0.01em",
+  },
   headerSub: {
-    fontSize: "10px",
-    color: "#aaa",
     flex: 1,
   },
   collapseBtn: {
     background: "none",
     border: "none",
     cursor: "pointer",
-    fontSize: "12px",
-    color: "#aaa",
+    fontSize: "11px",
+    color: "#1a3a6e",
     padding: "0 2px",
     lineHeight: 1,
     flexShrink: 0,
+    fontWeight: 600,
   },
   strip: {
     display: "flex",
     alignItems: "flex-start",
-    gap: "4px",
-    padding: "4px 14px 10px",
+    gap: "6px",
+    padding: "8px 14px 12px",
     overflowX: "auto" as const,
   },
   slot: {
     display: "flex",
     flexDirection: "column" as const,
     alignItems: "center",
-    gap: "3px",
+    gap: "4px",
     flexShrink: 0,
-    width: "62px",
   },
   slotNum: {
-    fontSize: "9px",
+    fontSize: "10px",
     fontWeight: 700,
-    color: "#999",
+    color: "#1a3a6e",
     letterSpacing: "0.04em",
   },
   thumb: {
-    width: "62px",
-    height: "62px",
-    border: "1px solid #e0e0e0",
-    borderRadius: "4px",
-    background: "#f0f0f0",
+    border: "1px solid #c8d5f0",
+    borderRadius: "5px",
+    background: "#e8eeff",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -354,7 +374,11 @@ const fmoStyles = {
   },
   thumbMain: {
     border: "2px solid #1a3a6e",
-    background: "#eef3ff",
+    background: "#dce8ff",
+  },
+  thumbEmptySlot: {
+    background: "#f0f0f0",
+    border: "1px dashed #ccc",
   },
   thumbImg: {
     width: "100%",
@@ -363,29 +387,27 @@ const fmoStyles = {
     display: "block",
   },
   thumbEmpty: {
-    fontSize: "16px",
+    fontSize: "18px",
     color: "#ccc",
     lineHeight: 1,
   },
   slotLabel: {
     fontSize: "9px",
-    color: "#888",
+    color: "#555",
     textAlign: "center" as const,
     lineHeight: 1.2,
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap" as const,
-    width: "100%",
   },
   emptyLabel: {
-    color: "#ccc",
+    color: "#bbb",
     fontStyle: "italic" as const,
   },
   divider: {
     width: "1px",
-    height: "62px",
-    background: "#dde4f5",
-    marginTop: "16px",
+    background: "#c8d5f0",
+    marginTop: "18px",
     flexShrink: 0,
     alignSelf: "flex-start" as const,
   },
