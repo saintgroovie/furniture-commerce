@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import type {
   InvItem,
   ProductRow,
@@ -246,38 +246,56 @@ function FinalMediaOrderBlock({
   const [applyDragFrom, setApplyDragFrom] = useState<number | null>(null)
   const [applyDragOver, setApplyDragOver] = useState<number | null>(null)
 
+  /**
+   * Ref to track internal drag source index reliably.
+   * Like GalleryStrip, we avoid checking e.dataTransfer.types for custom
+   * MIME types during dragover — they are unreliable in Safari/WebKit.
+   */
+  const applyDragSrcRef = useRef<number | null>(null)
+
   function handleSlotDragStart(e: React.DragEvent, idx: number) {
     const mediaId = galleryIds[idx]
     if (!mediaId) return
     e.dataTransfer.setData("text/plain", mediaId)
     e.dataTransfer.setData(GALLERY_DRAG_TYPE, String(idx))
     e.dataTransfer.effectAllowed = "move"
+    applyDragSrcRef.current = idx
     setApplyDragFrom(idx)
   }
 
   function handleSlotDragOver(e: React.DragEvent, idx: number) {
+    // Accept all text/plain drags (gallery items AND pool cards both set this).
+    // Avoid checking for GALLERY_DRAG_TYPE — unreliable in Safari during dragover.
     const types = Array.from(e.dataTransfer.types)
-    const hasGalleryType = types.includes(GALLERY_DRAG_TYPE)
-    const hasTextPlain = types.includes("text/plain")
-    // Accept both gallery-item reorders and media-pool card drops
-    if (!hasGalleryType && !hasTextPlain) return
+    if (!types.includes("text/plain")) return
     e.preventDefault()
-    e.dataTransfer.dropEffect = hasGalleryType ? "move" : "copy"
+    e.dataTransfer.dropEffect = applyDragSrcRef.current !== null ? "move" : "copy"
     setApplyDragOver(idx)
   }
 
   function handleSlotDragLeave(e: React.DragEvent, idx: number) {
-    if (applyDragOver === idx && !e.currentTarget.contains(e.relatedTarget as Node)) {
-      setApplyDragOver(null)
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setApplyDragOver((prev) => (prev === idx ? null : prev))
     }
   }
 
   function handleSlotDrop(e: React.DragEvent, toIdx: number) {
     e.preventDefault()
     setApplyDragOver(null)
+
+    // Priority 1: internal apply-order reorder (ref is reliable)
+    const internalSrc = applyDragSrcRef.current
+    applyDragSrcRef.current = null
     setApplyDragFrom(null)
 
-    // Gallery-item reorder takes priority (it also sets text/plain)
+    if (internalSrc !== null) {
+      if (internalSrc !== toIdx) {
+        onReorderGallery?.(internalSrc, toIdx)
+      }
+      return
+    }
+
+    // Priority 2: gallery-strip drag (getData is reliable in drop handler)
     const fromStr = e.dataTransfer.getData(GALLERY_DRAG_TYPE)
     if (fromStr) {
       const fromIdx = parseInt(fromStr, 10)
@@ -287,7 +305,7 @@ function FinalMediaOrderBlock({
       return
     }
 
-    // Pool-card drop → insert/move media into gallery at this position
+    // Priority 3: pool-card drop → insert/move media into gallery at this position
     const mediaId = e.dataTransfer.getData("text/plain")
     if (mediaId) {
       onInsertIntoGallery?.(mediaId, toIdx)
@@ -295,6 +313,7 @@ function FinalMediaOrderBlock({
   }
 
   function handleSlotDragEnd() {
+    applyDragSrcRef.current = null
     setApplyDragFrom(null)
     setApplyDragOver(null)
   }
