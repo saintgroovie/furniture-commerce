@@ -116,6 +116,7 @@ export function RoleChecklistPanel({
                 ) : (
                   <div style={styles.emptyThumb}>
                     <span style={styles.emptyPlusIcon}>+</span>
+                    <span style={styles.emptySlotHint}>{def?.hint ?? row.label}</span>
                   </div>
                 )}
 
@@ -229,9 +230,20 @@ const styles = {
     height: "100%",
   },
   emptyPlusIcon: {
-    fontSize: "22px",
+    fontSize: "18px",
     color: "#ddd",
     lineHeight: 1,
+  },
+  emptySlotHint: {
+    fontSize: "9px",
+    color: "#ccc",
+    textAlign: "center" as const,
+    lineHeight: 1.3,
+    padding: "0 4px",
+    overflow: "hidden",
+    display: "-webkit-box" as const,
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: "vertical" as const,
   },
   removeBtn: {
     position: "absolute" as const,

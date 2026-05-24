@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useMemo } from "react"
+import React, { useMemo, useState } from "react"
 import type { InvItem, CandidateEntry, V2RoleFilter } from "./legacy-board-v2-types"
 import { classifyVisualRole } from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
 import type { VisualRole } from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
@@ -36,6 +36,10 @@ type Props = {
   onSetFilter: (f: V2RoleFilter) => void
   onSetMain: (mediaId: string) => void
   onAddToGallery: (mediaId: string) => void
+  /** ID of the current main/thumbnail for the active variant */
+  currentMainId?: string | null
+  /** IDs already in the gallery for the active variant */
+  currentGalleryIds?: string[]
 }
 
 /** Role label used in empty-filter message */
@@ -47,6 +51,8 @@ const FILTER_LABEL_RU: Partial<Record<V2RoleFilter, string>> = {
   lifestyle: "Lifestyle",
   scheme: "Схема",
   no_preview: "Без превью",
+  unused: "Свободные",
+  selected: "Выбранные",
 }
 
 export function MediaPoolPanel({
@@ -58,7 +64,10 @@ export function MediaPoolPanel({
   onSetFilter,
   onSetMain,
   onAddToGallery,
+  currentMainId,
+  currentGalleryIds,
 }: Props) {
+  const [hideNoPreview, setHideNoPreview] = useState(false)
 
   // Build pool items — previewable sorted first in "all" view
   const poolItems = useMemo<PoolItem[]>(() => {
@@ -89,6 +98,9 @@ export function MediaPoolPanel({
   const previewableCount = useMemo(() => poolItems.filter((i) => i.previewOk).length, [poolItems])
   const noPreviewCount = useMemo(() => poolItems.filter((i) => !i.previewOk).length, [poolItems])
 
+  // Sets for fast membership checks
+  const gallerySet = useMemo(() => new Set(currentGalleryIds ?? []), [currentGalleryIds])
+
   // Count per filter (for tab badges)
   const filterCounts = useMemo<Partial<Record<V2RoleFilter, number>>>(() => {
     const counts: Partial<Record<V2RoleFilter, number>> = { all: poolItems.length }
@@ -97,18 +109,38 @@ export function MediaPoolPanel({
       if (f !== "all") counts[f] = (counts[f] ?? 0) + 1
     }
     if (noPreviewCount > 0) counts["no_preview"] = noPreviewCount
+
+    // Usage-state counts
+    const selectedCount = poolItems.filter(
+      (i) => i.inv.id === (currentMainId ?? null) || gallerySet.has(i.inv.id)
+    ).length
+    counts["selected"] = selectedCount
+    counts["unused"] = poolItems.length - selectedCount
+
     return counts
-  }, [poolItems, noPreviewCount])
+  }, [poolItems, noPreviewCount, currentMainId, gallerySet])
 
   // Apply active filter — in "all" mode items are already sorted previewable-first
   const filteredItems = useMemo<PoolItem[]>(() => {
-    if (activeFilter === "all") return poolItems
-    if (activeFilter === "no_preview") return poolItems.filter((i) => !i.previewOk)
-    return poolItems.filter((i) => visualRoleToFilter(i.role) === activeFilter)
-  }, [poolItems, activeFilter])
+    let items = poolItems
 
-  // Index at which non-previewable starts (only relevant in "all" mode)
-  const separatorIdx = activeFilter === "all" ? previewableCount : -1
+    // hideNoPreview toggle applies across all role filters
+    if (hideNoPreview) items = items.filter((i) => i.previewOk)
+
+    if (activeFilter === "all") return items
+    if (activeFilter === "no_preview") return items.filter((i) => !i.previewOk)
+    if (activeFilter === "unused") {
+      return items.filter((i) => i.inv.id !== (currentMainId ?? null) && !gallerySet.has(i.inv.id))
+    }
+    if (activeFilter === "selected") {
+      return items.filter((i) => i.inv.id === (currentMainId ?? null) || gallerySet.has(i.inv.id))
+    }
+    return items.filter((i) => visualRoleToFilter(i.role) === activeFilter)
+  }, [poolItems, activeFilter, hideNoPreview, currentMainId, gallerySet])
+
+  // Index at which non-previewable starts (only relevant in "all" mode without hideNoPreview)
+  const separatorIdx =
+    activeFilter === "all" && !hideNoPreview ? previewableCount : -1
 
   const displayed = filteredItems.slice(0, POOL_LIMIT)
   const total = filteredItems.length
@@ -145,13 +177,31 @@ export function MediaPoolPanel({
         onFilter={onSetFilter}
       />
 
+      {/* Hide-no-preview toggle */}
+      <label style={styles.toggleRow}>
+        <input
+          type="checkbox"
+          checked={hideNoPreview}
+          onChange={(e) => setHideNoPreview(e.target.checked)}
+          style={styles.toggleCheck}
+        />
+        <span style={styles.toggleLabel}>Скрыть без превью</span>
+        {noPreviewCount > 0 && (
+          <span style={styles.toggleCount}>{noPreviewCount}</span>
+        )}
+      </label>
+
       <div style={styles.countBar}>{countBarText}</div>
 
       {/* Empty filter — helpful message + reset */}
       {displayed.length === 0 && totalAll > 0 && (
         <div style={styles.emptyFilter}>
           <div style={styles.emptyFilterTitle}>
-            Для роли «{FILTER_LABEL_RU[activeFilter] ?? activeFilter}» кандидатов не найдено.
+            {activeFilter === "selected"
+              ? "Ни одного элемента не назначено — сначала выберите главное или добавьте в галерею."
+              : activeFilter === "unused"
+              ? "Все элементы уже назначены."
+              : `Для роли «${FILTER_LABEL_RU[activeFilter] ?? activeFilter}» кандидатов не найдено.`}
           </div>
           <div style={styles.emptyFilterHint}>
             Попробуйте «Все» или назначьте роль вручную позже.
@@ -164,7 +214,10 @@ export function MediaPoolPanel({
 
       <div style={styles.grid}>
         {displayed.map((item, idx) => {
-          const showSeparator = idx === separatorIdx && separatorIdx > 0 && noPreviewCount > 0
+          const showSeparator =
+            idx === separatorIdx && separatorIdx > 0 && noPreviewCount > 0
+          const isMain = item.inv.id === (currentMainId ?? null)
+          const isInGallery = gallerySet.has(item.inv.id)
           return (
             <React.Fragment key={item.inv.id}>
               {showSeparator && (
@@ -181,6 +234,8 @@ export function MediaPoolPanel({
                 onSetMain={onSetMain}
                 onAddToGallery={onAddToGallery}
                 compact={!item.previewOk}
+                isMain={isMain}
+                isInGallery={isInGallery}
               />
             </React.Fragment>
           )
@@ -227,6 +282,33 @@ const styles = {
     fontWeight: 600,
     textTransform: "none" as const,
     letterSpacing: 0,
+  },
+  toggleRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    padding: "5px 12px",
+    borderBottom: "1px solid #f0f0f0",
+    cursor: "pointer",
+    flexShrink: 0,
+    userSelect: "none" as const,
+  },
+  toggleCheck: {
+    cursor: "pointer",
+    flexShrink: 0,
+  },
+  toggleLabel: {
+    fontSize: "11px",
+    color: "#555",
+    flex: 1,
+  },
+  toggleCount: {
+    fontSize: "10px",
+    background: "#e8e8e8",
+    color: "#666",
+    borderRadius: "8px",
+    padding: "0 5px",
+    fontWeight: 600,
   },
   countBar: {
     padding: "5px 12px",

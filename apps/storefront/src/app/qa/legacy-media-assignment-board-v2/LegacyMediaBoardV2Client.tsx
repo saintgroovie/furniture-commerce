@@ -7,6 +7,7 @@ import type {
   ProductRow,
   V2LoadStatus,
   V2ProductState,
+  V2VariantRoleAssignment,
   V2ColorVariant,
   V2RoleFilter,
   V2RoleSlot,
@@ -21,6 +22,15 @@ import {
 } from "./legacy-board-v2-persistence"
 
 const V1_API_BASE = "/qa/legacy-media-assignment-board/api"
+
+function productReadiness(state: V2ProductState | undefined): "ready" | "partial" | "empty" {
+  if (!state) return "empty"
+  const hasMain = Object.values(state.rolesByVariant).some((v) => !!(v as V2VariantRoleAssignment).main)
+  const hasGallery = Object.values(state.galleriesByVariant).some((g) => g.length > 0)
+  if (hasMain && hasGallery) return "ready"
+  if (hasMain || hasGallery) return "partial"
+  return "empty"
+}
 
 // Russian color token labels (subset; fallback to raw token)
 const TOKEN_TO_RU: Record<string, string> = {
@@ -216,6 +226,16 @@ export function LegacyMediaBoardV2Client() {
     return selectedHandle ? (productStates[selectedHandle] ?? null) : null
   }, [selectedHandle, productStates])
 
+  // --- Derived: pool state for active variant (passed to MediaPoolPanel) ---
+  const currentMainId = useMemo<string | null>(
+    () => (currentProductState?.rolesByVariant[activeVariantKey]?.main as string | null | undefined) ?? null,
+    [currentProductState, activeVariantKey]
+  )
+  const currentGalleryIds = useMemo<string[]>(
+    () => currentProductState?.galleriesByVariant[activeVariantKey] ?? [],
+    [currentProductState, activeVariantKey]
+  )
+
   // --- Assignment state helpers ---
   const updateProductState = useCallback(
     (handle: string, variantKey: string, updater: (s: V2ProductState) => V2ProductState) => {
@@ -402,6 +422,7 @@ export function LegacyMediaBoardV2Client() {
                 {filteredProducts.map((p) => {
                   const count = candidatesByHandle.get(p.handle)?.length ?? 0
                   const isSelected = selectedHandle === p.handle
+                  const readiness = productReadiness(productStates[p.handle])
                   return (
                     <button
                       key={p.handle}
@@ -413,6 +434,12 @@ export function LegacyMediaBoardV2Client() {
                     >
                       <span style={styles.productHandle}>{p.handle}</span>
                       <span style={styles.productCollection}>{p.collection}</span>
+                      {readiness === "ready" && (
+                        <span style={styles.readyBadge} title="Главное + галерея назначены">◉</span>
+                      )}
+                      {readiness === "partial" && (
+                        <span style={styles.partialBadge} title="Назначение неполное">◑</span>
+                      )}
                       {count > 0 && <span style={styles.mediaBadge}>{count}</span>}
                     </button>
                   )
@@ -451,6 +478,8 @@ export function LegacyMediaBoardV2Client() {
           onSetFilter={setPoolFilter}
           onSetMain={handleSetMain}
           onAddToGallery={handleAddToGallery}
+          currentMainId={currentMainId}
+          currentGalleryIds={currentGalleryIds}
         />
       </div>
     </div>
@@ -637,6 +666,18 @@ const styles = {
     padding: "1px 6px",
     fontWeight: 600,
     flexShrink: 0,
+  },
+  readyBadge: {
+    fontSize: "11px",
+    color: "#2d7a2d",
+    flexShrink: 0,
+    lineHeight: 1,
+  },
+  partialBadge: {
+    fontSize: "11px",
+    color: "#b88a00",
+    flexShrink: 0,
+    lineHeight: 1,
   },
   emptySearch: {
     padding: "16px 12px",

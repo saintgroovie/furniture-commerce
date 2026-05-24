@@ -55,6 +55,10 @@ export type V2RoleFilter =
   | "lifestyle"
   | "scheme"
   | "no_preview"
+  /** Items not yet set as main or added to gallery for the active variant */
+  | "unused"
+  /** Items already set as main or in gallery for the active variant */
+  | "selected"
 
 /**
  * One detected color variant for a product, derived from pool media filenames.
