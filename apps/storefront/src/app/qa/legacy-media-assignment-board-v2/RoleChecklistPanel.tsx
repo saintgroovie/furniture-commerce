@@ -68,6 +68,8 @@ type Props = {
   onClearRole?: (slot: V2RoleSlot) => void
   /** Operator role overrides to use when computing gallery fallback */
   roleOverrides?: Record<string, V2RoleSlot>
+  /** Add a media item to the gallery (used for "+ в гал." action on explicit role slots) */
+  onAddToGallery?: (mediaId: string) => void
 }
 
 export function RoleChecklistPanel({
@@ -80,6 +82,7 @@ export function RoleChecklistPanel({
   onSetRole,
   onClearRole,
   roleOverrides,
+  onAddToGallery,
 }: Props) {
   const [dragOverSlot, setDragOverSlot] = useState<V2RoleSlot | null>(null)
 
@@ -94,7 +97,9 @@ export function RoleChecklistPanel({
       <div style={styles.helpBanner}>
         <span style={styles.helpIcon}>↕</span>
         <span style={styles.helpText}>
-          Перетащите фото из пула в слот роли или нажмите «+» для фокуса в пуле
+          <strong>Роли</strong> классифицируют фото.{" "}
+          <strong>Галерея</strong> (блок ниже) задаёт порядок фото на витрине.{" "}
+          Перетащите фото из пула в слот роли или нажмите «+» для фильтрации в пуле.
         </span>
       </div>
 
@@ -175,10 +180,13 @@ export function RoleChecklistPanel({
                   </div>
                 )}
 
-                {/* Source badge — explicit vs gallery-inferred */}
-                {row.isCovered && (
-                  <span style={row.source === "explicit" ? styles.sourceBadgeExplicit : styles.sourceBadgeGallery}>
-                    {row.source === "explicit" ? "✱" : "◇"}
+                {/* Source badge — explicit vs gallery-inferred (text, not icons) */}
+                {row.isCovered && row.source !== "none" && (
+                  <span
+                    style={row.source === "explicit" ? styles.sourceBadgeExplicit : styles.sourceBadgeGallery}
+                    title={row.source === "explicit" ? "Роль назначена вручную" : "Роль определена из галереи"}
+                  >
+                    {row.source === "explicit" ? "ручн." : "из гал."}
                   </span>
                 )}
 
@@ -205,6 +213,16 @@ export function RoleChecklistPanel({
                 >
                   {row.label}
                 </span>
+                {/* "+ в гал." — only on explicit non-main filled slots */}
+                {row.source === "explicit" && !isMain && row.mediaId && onAddToGallery && (
+                  <button
+                    style={styles.toGalleryBtn}
+                    onClick={() => onAddToGallery(row.mediaId!)}
+                    title="Добавить это фото в галерею"
+                  >
+                    + гал.
+                  </button>
+                )}
                 <button
                   style={{
                     ...styles.addBtn,
@@ -344,27 +362,29 @@ const styles = {
     position: "absolute" as const,
     bottom: "4px",
     right: "4px",
-    fontSize: "9px",
+    fontSize: "8px",
     color: "#fff",
     background: "rgba(26,58,110,0.8)",
     borderRadius: "2px",
-    padding: "1px 3px",
+    padding: "1px 4px",
     fontWeight: 700,
-    lineHeight: 1,
+    lineHeight: 1.3,
     zIndex: 2,
+    whiteSpace: "nowrap" as const,
   },
   sourceBadgeGallery: {
     position: "absolute" as const,
     bottom: "4px",
     right: "4px",
-    fontSize: "9px",
+    fontSize: "8px",
     color: "#fff",
     background: "rgba(45,122,45,0.75)",
     borderRadius: "2px",
-    padding: "1px 3px",
+    padding: "1px 4px",
     fontWeight: 700,
-    lineHeight: 1,
+    lineHeight: 1.3,
     zIndex: 2,
+    whiteSpace: "nowrap" as const,
   },
   removeBtn: {
     position: "absolute" as const,
@@ -427,5 +447,18 @@ const styles = {
     borderColor: "#aacaff",
     background: "#e8f0ff",
     color: "#1a3a6e",
+  },
+  toGalleryBtn: {
+    padding: "1px 4px",
+    fontSize: "9px",
+    border: "1px solid #c8e6c9",
+    borderRadius: "3px",
+    background: "#f0fff0",
+    color: "#1b5e20",
+    cursor: "pointer",
+    fontWeight: 600,
+    lineHeight: 1.3,
+    flexShrink: 0,
+    whiteSpace: "nowrap" as const,
   },
 } as const

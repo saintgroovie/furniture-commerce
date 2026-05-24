@@ -404,6 +404,32 @@ export function LegacyMediaBoardV2Client() {
     [selectedHandle, activeVariantKey, updateProductState]
   )
 
+  // Insert/move a media item into gallery at a specific position
+  // Used when a pool card is dropped onto a final-order gallery slot.
+  // If the media is already in gallery → move it to the target position.
+  // If not → insert at the target position, shifting existing items right.
+  const handleInsertIntoGallery = useCallback(
+    (mediaId: string, atIdx: number) => {
+      if (!selectedHandle) return
+      updateProductState(selectedHandle, activeVariantKey, (s) => {
+        const gallery = [...(s.galleriesByVariant[activeVariantKey] ?? [])]
+        const existingIdx = gallery.indexOf(mediaId)
+        if (existingIdx !== -1) {
+          gallery.splice(existingIdx, 1)
+        }
+        gallery.splice(atIdx, 0, mediaId)
+        return {
+          ...s,
+          galleriesByVariant: {
+            ...s.galleriesByVariant,
+            [activeVariantKey]: gallery,
+          },
+        }
+      })
+    },
+    [selectedHandle, activeVariantKey, updateProductState]
+  )
+
   // --- Reset: clear v2board LS + reset in-memory state ---
   const handleReset = useCallback(() => {
     setProductStates({})
@@ -547,6 +573,8 @@ export function LegacyMediaBoardV2Client() {
           onClearRole={handleClearRole}
           roleOverrides={currentRoleOverrides}
           onReorderGallery={handleReorderGallery}
+          onAddToGallery={handleAddToGallery}
+          onInsertIntoGallery={handleInsertIntoGallery}
         />
 
         {/* Right: Media pool */}
