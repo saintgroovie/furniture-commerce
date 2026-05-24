@@ -211,6 +211,7 @@ Handoff для ChatGPT — только **внутри** fenced report packet (�
 - `docs/guidelines/development-rules.md`
 - `docs/architecture/architecture-guardrails.md`
 - `docs/project/CODEMAP.md`
+- `.cursor/rules/foreground-only-execution.mdc` (foreground-only, no background gate)
 
 Не трогай без явной задачи:
 - seed data, runtime data, ingestion scripts;
@@ -222,8 +223,10 @@ Git:
 
 ## 9. Что запрещено в ответах
 
-- Workflow, который **ждёт клика** «Run in the background» или любого background-confirmation (§12).
-- Обещания «сделаю в фоне позже» вместо фактов текущей сессии.
+- Workflow, который **ждёт клика** «Run in the background» или любого background-confirmation (§12, `foreground-only-execution.mdc`).
+- Обещания «сделаю в фоне позже» / «I'll continue in the background» / «Waiting for background process» вместо фактов текущей сессии.
+- **Verdict: done**, если обязательная проверка заблокировалась на background gate (§12).
+- Автозапуск dev server / watch-mode без явного user approval (§12).
 - Финальные отчёты только в canvas/side panel/artifacts без FORMAT A (кроме явной просьбы).
 - Короткий summary **вместо** copy-ready fenced packet (FORMAT A).
 - Дублировать summary **после** fenced packet.
@@ -242,7 +245,7 @@ Git:
 
 ## 10. Главный принцип
 
-Сначала — смысл для человека внутри packet. Логи — после fence. Итог — 3–5 bullets без дубля. Работа — в текущей сессии (§12). **FORMAT A** по умолчанию (§11).
+Сначала — смысл для человека внутри packet. Логи — после fence. Итог — 3–5 bullets без дубля. Работа — **foreground-only** в текущей сессии (§12, `foreground-only-execution.mdc`). **FORMAT A** по умолчанию (§11).
 
 ## 11. One-click-copy final response contract
 
@@ -308,6 +311,25 @@ done | partial | blocked | failed | read-only
 
 Коротко: что сделано и зачем (UX/UI/product).
 
+**Не `done`**, если обязательная проверка заблокировалась на background gate (§12).
+
+## Execution status
+
+*(Включай только если blocked / partial из-за foreground gate.)*
+
+### Verdict
+blocked | partial
+
+### Reason
+Foreground check could not complete because ...
+
+### What I did instead
+- ...
+
+### Next manual command
+
+`yarn dev` (пример — подставь exact command для задачи)
+
 ### GitHub push
 GitHub push: not done; ready only after user approval. | not applicable; no commit was created. | pushed to remote/branch.
 
@@ -339,26 +361,20 @@ GitHub push: not done; ready only after user approval. | not applicable; no comm
 
 В rule-файле packet-пример использует `~~~md` чтобы не ломать `.mdc`.
 
-## 12. Cursor session — запрет background-confirmation blocking
+## 12. Foreground-only execution (background gate)
 
-Агент **не должен** входить в workflow, где задача **фактически стоит**, пока пользователь не нажмёт **Run in the background** или другое background-confirmation.
+Полный контракт: **`.cursor/rules/foreground-only-execution.mdc`** — секция **`## Foreground-only execution contract`**.
 
-**Запрещённое поведение:**
+Кратко (hard rules):
 
-- Ждать клика «Run in the background» / background run approval.
-- Оставлять задачу idle за prompt’ом подтверждения фона.
-- Запускать long-running background workflows без явной просьбы пользователя.
-- Выбирать режим Cursor, который **требует** от пользователя нажать background, если можно выполнить работу в текущей сессии.
+- **Не** ждать «Run in the background» / background-confirmation; **не** зависать на long-running / watch / dev-server командах.
+- **Не** запускать `yarn dev`, `pnpm dev`, `next dev`, `medusa develop`, `* --watch`, `vitest --ui`, интерактивные shell, unbounded server-start без явного user approval.
+- Dev server: сначала `curl --max-time 3`; reuse if running; if not — **не** автостарт; дать exact start command + bounded fallback.
+- Проверки: `curl --max-time`, scoped one-shot commands, `block_until_ms` в Shell tool; no watch; no interactive prompts.
+- Если background gate уже появился — **stop**, bounded fallback, иначе **Verdict: blocked | partial** (не `done`).
+- Hard bans: «continue in background», «waiting for background process», silent blocking, `done` при незавершённой обязательной foreground-проверке.
 
-**Обязательное поведение:**
-
-- Выполнять работу в **текущей** Cursor-сессии.
-- Long-running команды — в **foreground**, когда это практично (без лишнего background gate).
-- Dev servers — только при необходимости для QA, с явной стратегией PID/port/log; не «на потом в фоне».
-- Если **нельзя** продолжить без клика пользователя / approval — **немедленно остановиться** и в отчёте указать **blocker** (что именно ждёт клика).
-- Финальный отчёт описывает только **завершённую** работу этой сессии; не обещать «доделаю в background».
-
-Это запрет **поведения** (зависание на UI Cursor), а не только слов «run in background» в тексте ответа.
+Blocked/partial execution — template **`## Execution status`** в `foreground-only-execution.mdc`.
 
 ## 13. GitHub push status
 

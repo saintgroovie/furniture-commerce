@@ -1,0 +1,132 @@
+---
+description: Woodright — foreground-only execution; запрет блокировки на Run in the background
+alwaysApply: true
+---
+
+# Woodright — foreground-only execution
+
+Это постоянное правило для всех задач по проекту Woodright. Дополняет `.cursor/rules/woodright-response-format.mdc` (§12, FORMAT A blocked/partial verdict).
+
+## Foreground-only execution contract
+
+Агент **никогда** не должен блокировать задачу на Cursor / Composer prompt **Run in the background** или любом background-confirmation gate.
+
+Работа выполняется **только foreground** в текущей сессии: bounded commands, read-only checks, scoped validation. Persistent servers и watch-mode — только по **явной** просьбе пользователя отдельным шагом.
+
+---
+
+### 1. Запрещённые команды (не запускать)
+
+Агент **не запускает** команды, которые могут зависнуть, уйти в watch-mode или вызвать background-confirmation:
+
+- `yarn dev` / `npm run dev` / `pnpm dev`
+- `next dev`
+- `medusa develop`
+- `tsc --watch` / `tsc -w`
+- `jest --watch` / `vitest --watch` / `vitest --ui`
+- любые `* --watch` / `* --ui` / watch-mode команды
+- любые интерактивные shell-команды (prompt, pager, `git rebase -i`, `less`, `vim`, и т.п.)
+- долгие server-start команды без явного `block_until_ms` timeout в Shell tool
+
+**Предпочитай:** `yarn build`, `yarn test` (без watch), `tsc --noEmit`, scoped `curl --max-time`, `lsof`, `ps`, one-shot scripts. Для Shell tool — всегда задавай `block_until_ms`.
+
+---
+
+### 2. Dev server — reuse, не автозапуск
+
+Если для проверки нужен dev server:
+
+1. **Сначала проверь**, уже ли он запущен:
+   - `curl --max-time 5 -s -o /dev/null -w '%{http_code}' http://localhost:<port>/...`
+   - `lsof -i :<port>` или `ps` по известному процессу
+2. **Если запущен** — reuse existing server; не стартуй второй экземпляр.
+3. **Если не запущен** — **не** запускай dev server как часть обычной задачи без явного разрешения пользователя.
+4. **Вместо автозапуска** — сообщи `server not running`, дай **точную** команду запуска и bounded fallback (build, typecheck, unit test, static analysis).
+
+Dev server startup — **отдельный user-approved шаг**, не скрытый внутри implementation/QA task.
+
+---
+
+### 3. Bounded foreground commands
+
+Для всех проверок используй команды с **явным верхним пределом времени**:
+
+- `timeout 30s <cmd>` или `gtimeout 30s <cmd>` (macOS Homebrew coreutils), где доступно
+- `curl --max-time 5` (или меньше для health checks)
+- scoped checks (один файл, один route, один script)
+- **no watch mode**
+- **no interactive prompts** — non-interactive flags (`--yes`, `-y`, `CI=1`, и т.п.)
+
+Если команда не завершилась в разумный foreground window — **прерви**, не жди background approval.
+
+---
+
+### 4. Если Cursor показывает «Run in the background»
+
+Агент **обязан**:
+
+- **НЕ** нажимать / **НЕ** ждать / **НЕ** зависать на prompt
+- **остановить** текущую long-running / blocking команду
+- **перейти** на bounded fallback (build, typecheck, scoped curl, read-only file check)
+- если fallback невозможен — **честно** отчитаться **partial** / **blocked** с причиной
+
+**Verdict `done` запрещён**, если обязательная проверка заблокировалась на background gate и не была заменена foreground fallback с доказательством.
+
+Используй blocked-execution template из `woodright-response-format.mdc` (§11).
+
+---
+
+### 5. Hard bans (текст и поведение)
+
+Запрещено:
+
+- «I'll continue in the background»
+- «Run in the background to finish»
+- «Waiting for background process»
+- «Сделаю в фоне позже» / «дождусь background process»
+- silent blocking на server / watch / test command без отчёта
+- финальный отчёт с **Verdict: done**, если обязательная проверка не завершилась foreground
+
+---
+
+### 6. Командный стиль
+
+- prefer **read-only**, **scoped**, **fast** checks
+- split heavy checks на smaller foreground steps
+- **never** start persistent servers, unless task **explicitly** asks for server startup
+- if server startup required — отдельный user-approved step, не внутри текущей задачи
+- не используй `find /Users/...` без path scope и timeout на больших деревьях
+
+---
+
+### 7. Woodright QA (browser / Playwright)
+
+- browser / Playwright checks — **only against already-running dev server** when available
+- if server not available — report **`server not running`**, provide exact start command; **do not** auto-start long-running dev server
+- prefer static/build/typecheck evidence, если live server недоступен без user approval
+
+---
+
+## Execution status (blocked / partial template)
+
+Если foreground check не завершился — включи в `# Woodright report packet` (FORMAT A):
+
+~~~md
+## Execution status
+
+### Verdict
+blocked | partial
+
+### Reason
+Foreground check could not complete because ...
+
+### What I did instead
+- ...
+
+### Next manual command
+```bash
+...
+```
+~~~
+
+Verdict в Human summary: **`blocked`** или **`partial`**, не **`done`**.
