@@ -191,9 +191,9 @@ const styles = {
     position: "relative" as const,
   },
   slotEmpty: {
-    borderColor: "#e0e0e0",
+    borderColor: "#cecece",
     borderStyle: "dashed" as const,
-    background: "#fafafa",
+    background: "#f7f7f7",
   },
   slotFilled: {
     borderColor: "#aacaff",
@@ -202,6 +202,7 @@ const styles = {
   },
   slotMain: {
     borderColor: "#1a3a6e",
+    boxShadow: "0 0 0 1px rgba(26,58,110,0.12)",
   },
   thumbArea: {
     position: "relative" as const,
@@ -224,26 +225,27 @@ const styles = {
   },
   emptyThumb: {
     display: "flex",
+    flexDirection: "column" as const,
     alignItems: "center",
     justifyContent: "center",
+    gap: "5px",
     width: "100%",
     height: "100%",
+    padding: "6px",
+    boxSizing: "border-box" as const,
   },
   emptyPlusIcon: {
-    fontSize: "18px",
-    color: "#ddd",
+    fontSize: "16px",
+    color: "#d8d8d8",
     lineHeight: 1,
   },
   emptySlotHint: {
     fontSize: "9px",
-    color: "#ccc",
+    color: "#bbb",
     textAlign: "center" as const,
-    lineHeight: 1.3,
+    lineHeight: 1.35,
     padding: "0 4px",
-    overflow: "hidden",
-    display: "-webkit-box" as const,
-    WebkitLineClamp: 2,
-    WebkitBoxOrient: "vertical" as const,
+    wordBreak: "break-word" as const,
   },
   removeBtn: {
     position: "absolute" as const,

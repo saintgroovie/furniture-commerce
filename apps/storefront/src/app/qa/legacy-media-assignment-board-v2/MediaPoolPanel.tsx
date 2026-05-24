@@ -166,88 +166,94 @@ export function MediaPoolPanel({
 
   return (
     <aside style={styles.panel}>
-      <div style={styles.panelHeader}>
-        <span>Media pool</span>
-        <span style={styles.handleChip}>{selectedHandle}</span>
-      </div>
+      {/* ── Sticky top: header + filters + toggles ── */}
+      <div style={styles.poolStickyTop}>
+        <div style={styles.panelHeader}>
+          <span>Media pool</span>
+          <span style={styles.handleChip}>{selectedHandle}</span>
+        </div>
 
-      <RoleFilterTabs
-        activeFilter={activeFilter}
-        counts={filterCounts}
-        onFilter={onSetFilter}
-      />
-
-      {/* Hide-no-preview toggle */}
-      <label style={styles.toggleRow}>
-        <input
-          type="checkbox"
-          checked={hideNoPreview}
-          onChange={(e) => setHideNoPreview(e.target.checked)}
-          style={styles.toggleCheck}
+        <RoleFilterTabs
+          activeFilter={activeFilter}
+          counts={filterCounts}
+          onFilter={onSetFilter}
         />
-        <span style={styles.toggleLabel}>Скрыть без превью</span>
-        {noPreviewCount > 0 && (
-          <span style={styles.toggleCount}>{noPreviewCount}</span>
-        )}
-      </label>
 
-      <div style={styles.countBar}>{countBarText}</div>
+        {/* Hide-no-preview toggle */}
+        <label style={styles.toggleRow}>
+          <input
+            type="checkbox"
+            checked={hideNoPreview}
+            onChange={(e) => setHideNoPreview(e.target.checked)}
+            style={styles.toggleCheck}
+          />
+          <span style={styles.toggleLabel}>Скрыть без превью</span>
+          {noPreviewCount > 0 && (
+            <span style={styles.toggleCount}>{noPreviewCount}</span>
+          )}
+        </label>
 
-      {/* Empty filter — helpful message + reset */}
-      {displayed.length === 0 && totalAll > 0 && (
-        <div style={styles.emptyFilter}>
-          <div style={styles.emptyFilterTitle}>
-            {activeFilter === "selected"
-              ? "Ни одного элемента не назначено — сначала выберите главное или добавьте в галерею."
-              : activeFilter === "unused"
-              ? "Все элементы уже назначены."
-              : `Для роли «${FILTER_LABEL_RU[activeFilter] ?? activeFilter}» кандидатов не найдено.`}
-          </div>
-          <div style={styles.emptyFilterHint}>
-            Попробуйте «Все» или назначьте роль вручную позже.
-          </div>
-          <button style={styles.resetBtn} onClick={() => onSetFilter("all")}>
-            ← Сбросить фильтр
-          </button>
-        </div>
-      )}
-
-      <div style={styles.grid}>
-        {displayed.map((item, idx) => {
-          const showSeparator =
-            idx === separatorIdx && separatorIdx > 0 && noPreviewCount > 0
-          const isMain = item.inv.id === (currentMainId ?? null)
-          const isInGallery = gallerySet.has(item.inv.id)
-          return (
-            <React.Fragment key={item.inv.id}>
-              {showSeparator && (
-                <div style={styles.separator}>
-                  <span style={styles.separatorLabel}>Без превью · {noPreviewCount}</span>
-                </div>
-              )}
-              <MediaCardV2
-                inv={item.inv}
-                role={item.role}
-                confidence={item.confidence}
-                identityConfidence={item.identityConfidence}
-                selectedHandle={selectedHandle}
-                onSetMain={onSetMain}
-                onAddToGallery={onAddToGallery}
-                compact={!item.previewOk}
-                isMain={isMain}
-                isInGallery={isInGallery}
-                isDimmed={activeFilter === "all" && (isMain || isInGallery)}
-              />
-            </React.Fragment>
-          )
-        })}
+        <div style={styles.countBar}>{countBarText}</div>
       </div>
 
-      {total > POOL_LIMIT && (
-        <div style={styles.capNote}>
-          Показаны первые {POOL_LIMIT} из {total}. Используйте фильтры для сужения выборки.
+      {/* ── Scrollable pool body ── */}
+      <div style={styles.poolScroll}>
+        {/* Empty filter — helpful message + reset */}
+        {displayed.length === 0 && totalAll > 0 && (
+          <div style={styles.emptyFilter}>
+            <div style={styles.emptyFilterTitle}>
+              {activeFilter === "selected"
+                ? "Ни одного элемента не назначено — сначала выберите главное или добавьте в галерею."
+                : activeFilter === "unused"
+                ? "Все элементы уже назначены."
+                : `Для роли «${FILTER_LABEL_RU[activeFilter] ?? activeFilter}» кандидатов не найдено.`}
+            </div>
+            <div style={styles.emptyFilterHint}>
+              Попробуйте «Все» или назначьте роль вручную позже.
+            </div>
+            <button style={styles.resetBtn} onClick={() => onSetFilter("all")}>
+              ← Сбросить фильтр
+            </button>
+          </div>
+        )}
+
+        <div style={styles.grid}>
+          {displayed.map((item, idx) => {
+            const showSeparator =
+              idx === separatorIdx && separatorIdx > 0 && noPreviewCount > 0
+            const isMain = item.inv.id === (currentMainId ?? null)
+            const isInGallery = gallerySet.has(item.inv.id)
+            return (
+              <React.Fragment key={item.inv.id}>
+                {showSeparator && (
+                  <div style={styles.separator}>
+                    <span style={styles.separatorLabel}>Без превью · {noPreviewCount}</span>
+                  </div>
+                )}
+                <MediaCardV2
+                  inv={item.inv}
+                  role={item.role}
+                  confidence={item.confidence}
+                  identityConfidence={item.identityConfidence}
+                  selectedHandle={selectedHandle}
+                  onSetMain={onSetMain}
+                  onAddToGallery={onAddToGallery}
+                  compact={!item.previewOk}
+                  isMain={isMain}
+                  isInGallery={isInGallery}
+                  isDimmed={activeFilter === "all" && (isMain || isInGallery)}
+                />
+              </React.Fragment>
+            )
+          })}
         </div>
-      )}
+
+        {total > POOL_LIMIT && (
+          <div style={styles.capNote}>
+            Показаны первые {POOL_LIMIT} из {total}. Используйте фильтры для сужения выборки.
+          </div>
+        )}
+      </div>
     </aside>
   )
 }
@@ -255,10 +261,18 @@ export function MediaPoolPanel({
 const styles = {
   panel: {
     borderLeft: "1px solid #ddd",
-    overflowY: "auto" as const,
+    overflow: "hidden" as const,
     background: "#fff",
     display: "flex",
     flexDirection: "column" as const,
+  },
+  poolStickyTop: {
+    flexShrink: 0,
+  },
+  poolScroll: {
+    flex: 1,
+    overflowY: "auto" as const,
+    minHeight: 0,
   },
   panelHeader: {
     display: "flex",

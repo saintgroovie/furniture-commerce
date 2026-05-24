@@ -56,50 +56,54 @@ export function ProductWorkspace({
 
   return (
     <main style={styles.root}>
-      {/* Compact product header */}
-      <div style={styles.productHeader}>
-        <span style={styles.handleChip}>{selectedHandle}</span>
-        {product?.title && <span style={styles.productTitle}>{product.title}</span>}
-        {product?.collection && <span style={styles.collectionChip}>{product.collection}</span>}
+      {/* ── Sticky top section: context + navigation ── */}
+      <div style={styles.topSection}>
+        {/* Compact product header */}
+        <div style={styles.productHeader}>
+          <span style={styles.handleChip}>{selectedHandle}</span>
+          {product?.title && <span style={styles.productTitle}>{product.title}</span>}
+          {product?.collection && <span style={styles.collectionChip}>{product.collection}</span>}
+        </div>
+
+        {/* Color variant tabs */}
+        <ColorVariantTabs
+          variants={colorVariants}
+          activeVariantKey={activeVariantKey}
+          productState={productState}
+          onSelect={onSetVariant}
+        />
+
+        {/* Missing roles — always visible task bar */}
+        <MissingRoleStripDerived
+          productState={productState}
+          activeVariantKey={activeVariantKey}
+          invById={invById}
+          onFocusRole={onFocusRole}
+        />
+
+        {/* Onboarding hint — shown only before any assignment */}
+        <OnboardingHint productState={productState} activeVariantKey={activeVariantKey} />
       </div>
 
-      {/* Color variant tabs */}
-      <ColorVariantTabs
-        variants={colorVariants}
-        activeVariantKey={activeVariantKey}
-        productState={productState}
-        onSelect={onSetVariant}
-      />
+      {/* ── Scrollable body: role slots + gallery ── */}
+      <div style={styles.scrollBody}>
+        <RoleChecklistPanel
+          productState={productState}
+          activeVariantKey={activeVariantKey}
+          invById={invById}
+          onFocusRole={onFocusRole}
+          onRemoveMain={onRemoveMain}
+          onRemoveFromGallery={onRemoveFromGallery}
+        />
 
-      {/* Missing roles — always visible task bar, near top */}
-      <MissingRoleStripDerived
-        productState={productState}
-        activeVariantKey={activeVariantKey}
-        invById={invById}
-        onFocusRole={onFocusRole}
-      />
+        <GalleryStrip
+          galleryIds={productState?.galleriesByVariant[activeVariantKey] ?? []}
+          invById={invById}
+          onRemove={onRemoveFromGallery}
+        />
+      </div>
 
-      {/* Onboarding hint — shown only before any assignment */}
-      <OnboardingHint productState={productState} activeVariantKey={activeVariantKey} />
-
-      {/* Role slots grid — the assignment canvas */}
-      <RoleChecklistPanel
-        productState={productState}
-        activeVariantKey={activeVariantKey}
-        invById={invById}
-        onFocusRole={onFocusRole}
-        onRemoveMain={onRemoveMain}
-        onRemoveFromGallery={onRemoveFromGallery}
-      />
-
-      {/* Gallery — all assigned items, horizontal scroll */}
-      <GalleryStrip
-        galleryIds={productState?.galleriesByVariant[activeVariantKey] ?? []}
-        invById={invById}
-        onRemove={onRemoveFromGallery}
-      />
-
-      {/* Final apply-order preview */}
+      {/* ── Apply order — pinned at bottom, always visible ── */}
       <FinalMediaOrderBlock
         mainMediaId={(productState?.rolesByVariant[activeVariantKey]?.main as string | null | undefined) ?? null}
         galleryIds={productState?.galleriesByVariant[activeVariantKey] ?? []}
@@ -304,18 +308,19 @@ function FinalMediaOrderBlock({
 const fmoStyles = {
   block: {
     borderTop: "3px solid #1a3a6e",
-    background: "#f0f4ff",
+    background: "#eef3ff",
     flexShrink: 0,
+    boxShadow: "0 -2px 8px rgba(26,58,110,0.08)",
   },
   header: {
     display: "flex",
     alignItems: "center",
     gap: "8px",
     padding: "7px 14px 6px",
-    borderBottom: "1px solid #dde4f5",
+    borderBottom: "1px solid #d4dff5",
   },
   headerLabel: {
-    fontSize: "10px",
+    fontSize: "11px",
     fontWeight: 700,
     textTransform: "uppercase" as const,
     letterSpacing: "0.07em",
@@ -419,8 +424,19 @@ const fmoStyles = {
 
 const styles = {
   root: {
-    overflowY: "auto" as const,
+    overflow: "hidden" as const,
     background: "#fafafa",
+    display: "flex",
+    flexDirection: "column" as const,
+    minHeight: 0,
+  },
+  topSection: {
+    flexShrink: 0,
+  },
+  scrollBody: {
+    flex: 1,
+    overflowY: "auto" as const,
+    minHeight: "80px",
     display: "flex",
     flexDirection: "column" as const,
   },

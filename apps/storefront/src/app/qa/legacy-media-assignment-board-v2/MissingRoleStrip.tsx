@@ -21,7 +21,7 @@ export function MissingRoleStrip({ missingSlots, onFocusRole }: Props) {
   if (missingSlots.length === 0) {
     return (
       <div style={styles.stripDone}>
-        <span style={styles.doneIcon}>✓</span>
+        <span style={styles.doneIcon}>◉</span>
         <span style={styles.doneText}>Все роли заполнены — продукт готов к экспорту</span>
       </div>
     )

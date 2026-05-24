@@ -572,7 +572,7 @@ const styles = {
   },
   colLeft: {
     borderRight: "1px solid #ddd",
-    overflowY: "auto" as const,
+    overflow: "hidden" as const,
     background: "#fff",
     display: "flex",
     flexDirection: "column" as const,
@@ -621,6 +621,7 @@ const styles = {
     overflowY: "auto" as const,
     display: "flex",
     flexDirection: "column" as const,
+    minHeight: 0,
   },
   productRow: {
     display: "flex",
