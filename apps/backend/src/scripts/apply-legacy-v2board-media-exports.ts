@@ -1,20 +1,19 @@
 /**
- * Legacy Media Assignment Board v2 — dry-run planner (Commit A).
+ * Legacy Media Assignment Board v2 — dry-run planner + gated apply.
  *
  * Reads one v2board export JSON (--export <path>), validates all 10 input
  * gates, resolves the product in Medusa by handle, converts source_path refs
  * to localhost static URLs, HEAD-checks each media URL, and prints a dry-run
- * plan.
- *
- * Default: dry-run only — no writes to Medusa, no DB mutations, no apply path.
- * Apply path will be added in Commit B after human review of dry-run output.
+ * plan or applies thumbnail + images after explicit confirmation.
  *
  * From apps/backend:
  *   yarn legacy-v2board-media:dry-run -- --export tmp/qa-screenshots/manual-triage-export-co-08-1-fixed.json
+ *   LEGACY_V2BOARD_APPLY_CONFIRM=1 yarn legacy-v2board-media:dry-run -- \
+ *     --apply --export tmp/qa-screenshots/manual-triage-export-co-08-1-fixed.json
  *
  * Exit codes:
- *   0 — dry-run plan built, all validation gates passed (warnings may exist)
- *   1 — one or more BLOCK gates failed, product ambiguous, or --apply used
+ *   0 — dry-run plan built or apply completed with verification passed
+ *   1 — validation BLOCK, apply refused, product ambiguous, or verification failed
  */
 
 import { ExecArgs } from "@medusajs/framework/types"
@@ -90,7 +89,56 @@ type DryRunProductPlan = {
   blocked_reasons: string[]
 }
 
+type ApplyBeforeState = {
+  product_id: string
+  handle: string
+  thumbnail: string | null
+  images: string[]
+}
+
+type ApplyVerification = {
+  thumbnail_match: boolean
+  images_match: boolean
+  after_thumbnail: string | null
+  after_images: string[]
+  expected_thumbnail: string
+  expected_images: string[]
+}
+
+type ApplyProductResult = {
+  mode: "apply"
+  export_path: string
+  handle: string
+  product_id: string
+  before: ApplyBeforeState
+  planned_thumbnail: MediaItemPlan
+  planned_gallery: MediaItemPlan[]
+  verification: ApplyVerification
+  skipped_duplicates: string[]
+  warnings: string[]
+  blocked_reasons: string[]
+}
+
+type ProductModule = {
+  listProducts: (
+    filters: Record<string, unknown>,
+    config?: { take?: number; relations?: string[] }
+  ) => Promise<ProductRow[]>
+  updateProducts: (
+    id: string,
+    data: { thumbnail?: string | null; images?: Array<{ url: string }> }
+  ) => Promise<unknown>
+}
+
 // ── CLI helpers ────────────────────────────────────────────────────────────
+
+function wantsApply(): boolean {
+  return process.argv.includes("--apply")
+}
+
+function applyConfirmOk(): boolean {
+  return process.env.LEGACY_V2BOARD_APPLY_CONFIRM === "1"
+}
 
 function getExportArg(): string | null {
   const args = process.argv
@@ -293,143 +341,51 @@ async function buildMediaItemPlan(ref: MediaRef, warnings: string[]): Promise<Me
   }
 }
 
-// ── Main executor ──────────────────────────────────────────────────────────
+function collectApplyBlocks(
+  plan: Pick<
+    DryRunProductPlan,
+    "product_id" | "planned_thumbnail" | "planned_gallery" | "blocked_reasons"
+  >
+): string[] {
+  const blocks = [...plan.blocked_reasons]
 
-export default async function applyLegacyV2boardMediaExports({ container }: ExecArgs) {
-  const logger = container.resolve("logger") as {
-    info: (s: string) => void
-    warn: (s: string) => void
-    error: (s: string) => void
+  if (plan.product_id === "NOT_FOUND") {
+    blocks.push(`apply_product_not_found: no product resolved for apply`)
   }
 
-  // Apply path not implemented in Commit A — block explicitly
-  if (process.argv.includes("--apply")) {
-    logger.error(
-      "Legacy v2board executor: --apply is not implemented in this version (Commit A — dry-run only). " +
-        "The gated apply path will be added in Commit B after human review of the dry-run output."
+  if (!plan.planned_thumbnail.url) {
+    blocks.push(
+      `apply_thumbnail_unmapped: planned thumbnail "${plan.planned_thumbnail.filename}" has no URL`
     )
-    process.exit(1)
-  }
-
-  // Require --export <path>
-  const exportArg = getExportArg()
-  if (!exportArg) {
-    logger.error(
-      "Usage: yarn legacy-v2board-media:dry-run -- --export <path>\n" +
-        "  <path> is relative to repo root or absolute.\n" +
-        "  Example: --export tmp/qa-screenshots/manual-triage-export-co-08-1-fixed.json\n" +
-        "  No --apply flag: this executor is dry-run only (Commit A)."
+  } else if (!plan.planned_thumbnail.url_ok) {
+    blocks.push(
+      `apply_thumbnail_unreachable: planned thumbnail URL not reachable (${plan.planned_thumbnail.url})`
     )
-    process.exit(1)
   }
 
-  const exportPath = resolveExportPath(exportArg)
-  if (!fs.existsSync(exportPath)) {
-    logger.error(
-      `Export file not found: ${exportPath}\n` +
-        `  Tried: ${path.resolve(process.cwd(), exportArg)}\n` +
-        `  Tried: ${path.resolve(process.cwd(), "../../", exportArg)}`
-    )
-    process.exit(1)
-  }
-
-  logger.info(`[v2board dry-run] Reading export: ${exportPath}`)
-
-  // Parse JSON
-  let exportData: V2BoardExport
-  try {
-    exportData = JSON.parse(fs.readFileSync(exportPath, "utf-8")) as V2BoardExport
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : String(e)
-    logger.error(`[v2board dry-run] Failed to parse export JSON: ${msg}`)
-    process.exit(1)
-  }
-
-  // Run all 10 input validation gates — collect all blocks before exiting
-  const validationBlocks = validateV2BoardExport(exportData)
-  if (validationBlocks.length > 0) {
-    logger.error("[v2board dry-run] Input validation BLOCKED:")
-    for (const b of validationBlocks) {
-      logger.error(`  BLOCK: ${b}`)
-    }
-    process.exit(1)
-  }
-
-  logger.info("[v2board dry-run] All 10 input validation gates passed.")
-
-  // Extract the single product assignment
-  const assignmentKey = Object.keys(exportData.assignments)[0] as string
-  const productAssignment = exportData.assignments[assignmentKey] as ProductAssignment
-  const handle = productAssignment.handle
-  const variantAll = productAssignment.variants.__all__
-  const mainRef = variantAll.main
-  const galleryRefs = variantAll.gallery
-
-  logger.info(`[v2board dry-run] Processing product: ${handle}`)
-
-  // Resolve product by handle (read-only listProducts)
-  const productModule = container.resolve(Modules.PRODUCT) as {
-    listProducts: (
-      filters: Record<string, unknown>,
-      config?: { take?: number; relations?: string[] }
-    ) => Promise<ProductRow[]>
-  }
-
-  const listed = await productModule.listProducts(
-    { handle: [handle] },
-    { take: 5, relations: ["images"] }
-  )
-  const products = listed ?? []
-
-  const warnings: string[] = []
-  const blockedReasons: string[] = []
-  let productId = "NOT_FOUND"
-  let currentThumbnail: string | null = null
-  let currentImages: string[] = []
-
-  if (products.length === 0) {
-    warnings.push(`product_not_found: no product with handle "${handle}" in Medusa`)
-    logger.warn(`[v2board dry-run] Product not found for handle: ${handle}`)
-  } else if (products.length > 1) {
-    blockedReasons.push(
-      `product_ambiguous: handle "${handle}" matched ${products.length} products — manual disambiguation required in export`
-    )
-    logger.error(
-      `[v2board dry-run] Ambiguous handle "${handle}": ${products.length} products found`
-    )
-  } else {
-    const product = products[0] as ProductRow
-    productId = product.id
-    currentThumbnail = product.thumbnail ?? null
-    currentImages = (product.images ?? [])
-      .map((i) => i.url ?? null)
-      .filter((u): u is string => u !== null)
-    logger.info(`[v2board dry-run] Product resolved: ${handle} → ${productId}`)
-  }
-
-  // Build media item plan for main
-  const plannedThumbnail = await buildMediaItemPlan(mainRef, warnings)
-
-  // Deduplicate gallery (belt-and-suspenders after gate 8)
-  const skippedDuplicates: string[] = []
-  const seenGalleryIds = new Set<string>([mainRef.id])
-  const deduplicatedGallery: MediaRef[] = []
-  for (const item of galleryRefs) {
-    if (seenGalleryIds.has(item.id)) {
-      skippedDuplicates.push(item.id)
-    } else {
-      seenGalleryIds.add(item.id)
-      deduplicatedGallery.push(item)
+  for (const item of plan.planned_gallery) {
+    if (!item.url) {
+      blocks.push(`apply_gallery_unmapped: gallery item "${item.filename}" has no URL`)
+    } else if (!item.url_ok) {
+      blocks.push(`apply_gallery_unreachable: gallery item "${item.filename}" URL not reachable (${item.url})`)
     }
   }
 
-  const plannedGallery: MediaItemPlan[] = []
-  for (const ref of deduplicatedGallery) {
-    plannedGallery.push(await buildMediaItemPlan(ref, warnings))
-  }
+  return blocks
+}
 
-  const plan: DryRunProductPlan = {
-    mode: "dry-run",
+function urlStatusLabel(item: MediaItemPlan): string {
+  if (item.url_ok) return "200 OK"
+  if (!item.url) return "unmapped"
+  if (item.url_error) return `ERR: ${item.url_error.slice(0, 80)}`
+  return `HTTP ${String(item.url_status)}`
+}
+
+function printDryRunSummary(
+  logger: { info: (s: string) => void },
+  plan: DryRunProductPlan
+): void {
+  const {
     export_path: exportPath,
     handle,
     product_id: productId,
@@ -440,16 +396,7 @@ export default async function applyLegacyV2boardMediaExports({ container }: Exec
     skipped_duplicates: skippedDuplicates,
     warnings,
     blocked_reasons: blockedReasons,
-  }
-
-  // ── Human-readable summary ─────────────────────────────────────────────
-
-  function urlStatusLabel(item: MediaItemPlan): string {
-    if (item.url_ok) return "200 OK"
-    if (!item.url) return "unmapped"
-    if (item.url_error) return `ERR: ${item.url_error.slice(0, 80)}`
-    return `HTTP ${String(item.url_status)}`
-  }
+  } = plan
 
   logger.info("")
   logger.info("══════════════════════════════════════════════════════════════")
@@ -492,21 +439,312 @@ export default async function applyLegacyV2boardMediaExports({ container }: Exec
   }
   logger.info("══════════════════════════════════════════════════════════════")
   logger.info("")
+}
 
-  // ── JSON plan ─────────────────────────────────────────────────────────
+async function verifyAfterApply(
+  productModule: ProductModule,
+  productId: string,
+  expectedThumbnail: string,
+  expectedImages: string[]
+): Promise<ApplyVerification> {
+  const listed = await productModule.listProducts({ id: [productId] }, { take: 1, relations: ["images"] })
+  const after = (listed ?? [])[0] as ProductRow | undefined
+  const afterThumbnail = after?.thumbnail ?? null
+  const afterImages = (after?.images ?? [])
+    .map((i) => i.url ?? null)
+    .filter((u): u is string => u !== null)
 
-  logger.info("[v2board dry-run] JSON plan:")
-  logger.info(JSON.stringify(plan, null, 2))
+  return {
+    thumbnail_match: afterThumbnail === expectedThumbnail,
+    images_match: JSON.stringify(afterImages) === JSON.stringify(expectedImages),
+    after_thumbnail: afterThumbnail,
+    after_images: afterImages,
+    expected_thumbnail: expectedThumbnail,
+    expected_images: expectedImages,
+  }
+}
 
-  if (blockedReasons.length > 0) {
+async function applyProductPlan(
+  productModule: ProductModule,
+  plan: DryRunProductPlan,
+  product: ProductRow,
+  logger: { info: (s: string) => void; error: (s: string) => void }
+): Promise<ApplyProductResult> {
+  const expectedThumbnail = plan.planned_thumbnail.url as string
+  const expectedImages = plan.planned_gallery.map((g) => g.url as string)
+
+  const before: ApplyBeforeState = {
+    product_id: product.id,
+    handle: plan.handle,
+    thumbnail: plan.current_thumbnail,
+    images: plan.current_images,
+  }
+
+  logger.info("[v2board apply] BEFORE-STATE backup:")
+  logger.info(JSON.stringify(before, null, 2))
+
+  logger.info(
+    `[v2board apply] Updating product ${product.id} (${plan.handle}): thumbnail + ${expectedImages.length} gallery image(s)`
+  )
+
+  await productModule.updateProducts(product.id, {
+    thumbnail: expectedThumbnail,
+    images: expectedImages.map((url) => ({ url })),
+  })
+
+  logger.info("[v2board apply] updateProducts completed — re-fetching for verification")
+
+  const verification = await verifyAfterApply(
+    productModule,
+    product.id,
+    expectedThumbnail,
+    expectedImages
+  )
+
+  return {
+    mode: "apply",
+    export_path: plan.export_path,
+    handle: plan.handle,
+    product_id: product.id,
+    before,
+    planned_thumbnail: plan.planned_thumbnail,
+    planned_gallery: plan.planned_gallery,
+    verification,
+    skipped_duplicates: plan.skipped_duplicates,
+    warnings: plan.warnings,
+    blocked_reasons: plan.blocked_reasons,
+  }
+}
+
+function printApplySummary(
+  logger: { info: (s: string) => void; error: (s: string) => void },
+  result: ApplyProductResult
+): void {
+  const { verification: v } = result
+
+  logger.info("")
+  logger.info("══════════════════════════════════════════════════════════════")
+  logger.info("  V2BOARD APPLY RESULT")
+  logger.info("══════════════════════════════════════════════════════════════")
+  logger.info(`  Handle:            ${result.handle}`)
+  logger.info(`  Product ID:        ${result.product_id}`)
+  logger.info(`  Before thumbnail:  ${result.before.thumbnail ?? "(none)"}`)
+  logger.info(`  After thumbnail:   ${v.after_thumbnail ?? "(none)"}`)
+  logger.info(`  Thumbnail match:   ${v.thumbnail_match ? "YES" : "NO"}`)
+  logger.info(`  Before images:     ${result.before.images.length} item(s)`)
+  logger.info(`  After images:      ${v.after_images.length} item(s)`)
+  logger.info(`  Images match:      ${v.images_match ? "YES" : "NO"}`)
+  logger.info("══════════════════════════════════════════════════════════════")
+  logger.info("")
+}
+
+// ── Main executor ──────────────────────────────────────────────────────────
+
+export default async function applyLegacyV2boardMediaExports({ container }: ExecArgs) {
+  const logger = container.resolve("logger") as {
+    info: (s: string) => void
+    warn: (s: string) => void
+    error: (s: string) => void
+  }
+
+  const apply = wantsApply()
+  if (apply && !applyConfirmOk()) {
     logger.error(
-      `[v2board dry-run] BLOCKED: ${blockedReasons.length} reason(s). See blocked_reasons in plan above.`
+      "Legacy v2board executor: refusing --apply without LEGACY_V2BOARD_APPLY_CONFIRM=1.\n" +
+        "  Example: LEGACY_V2BOARD_APPLY_CONFIRM=1 yarn legacy-v2board-media:dry-run -- \\\n" +
+        "    --apply --export tmp/qa-screenshots/manual-triage-export-co-08-1-fixed.json"
     )
     process.exit(1)
   }
 
+  const modeLabel = apply ? "apply" : "dry-run"
+
+  // Require --export <path>
+  const exportArg = getExportArg()
+  if (!exportArg) {
+    logger.error(
+      "Usage: yarn legacy-v2board-media:dry-run -- --export <path> [--apply]\n" +
+        "  <path> is relative to repo root or absolute.\n" +
+        "  Example: --export tmp/qa-screenshots/manual-triage-export-co-08-1-fixed.json\n" +
+        "  Apply: LEGACY_V2BOARD_APPLY_CONFIRM=1 ... -- --apply --export <path>"
+    )
+    process.exit(1)
+  }
+
+  const exportPath = resolveExportPath(exportArg)
+  if (!fs.existsSync(exportPath)) {
+    logger.error(
+      `Export file not found: ${exportPath}\n` +
+        `  Tried: ${path.resolve(process.cwd(), exportArg)}\n` +
+        `  Tried: ${path.resolve(process.cwd(), "../../", exportArg)}`
+    )
+    process.exit(1)
+  }
+
+  logger.info(`[v2board ${modeLabel}] Reading export: ${exportPath}`)
+
+  // Parse JSON
+  let exportData: V2BoardExport
+  try {
+    exportData = JSON.parse(fs.readFileSync(exportPath, "utf-8")) as V2BoardExport
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e)
+    logger.error(`[v2board ${modeLabel}] Failed to parse export JSON: ${msg}`)
+    process.exit(1)
+  }
+
+  // Run all 10 input validation gates — collect all blocks before exiting
+  const validationBlocks = validateV2BoardExport(exportData)
+  if (validationBlocks.length > 0) {
+    logger.error(`[v2board ${modeLabel}] Input validation BLOCKED:`)
+    for (const b of validationBlocks) {
+      logger.error(`  BLOCK: ${b}`)
+    }
+    process.exit(1)
+  }
+
+  logger.info(`[v2board ${modeLabel}] All 10 input validation gates passed.`)
+
+  // Extract the single product assignment
+  const assignmentKey = Object.keys(exportData.assignments)[0] as string
+  const productAssignment = exportData.assignments[assignmentKey] as ProductAssignment
+  const handle = productAssignment.handle
+  const variantAll = productAssignment.variants.__all__
+  const mainRef = variantAll.main
+  const galleryRefs = variantAll.gallery
+
+  logger.info(`[v2board ${modeLabel}] Processing product: ${handle}`)
+
+  // Resolve product by handle
+  const productModule = container.resolve(Modules.PRODUCT) as ProductModule
+
+  const listed = await productModule.listProducts(
+    { handle: [handle] },
+    { take: 5, relations: ["images"] }
+  )
+  const products = listed ?? []
+
+  const warnings: string[] = []
+  const blockedReasons: string[] = []
+  let productId = "NOT_FOUND"
+  let currentThumbnail: string | null = null
+  let currentImages: string[] = []
+  let resolvedProduct: ProductRow | undefined
+
+  if (products.length === 0) {
+    warnings.push(`product_not_found: no product with handle "${handle}" in Medusa`)
+    logger.warn(`[v2board ${modeLabel}] Product not found for handle: ${handle}`)
+  } else if (products.length > 1) {
+    blockedReasons.push(
+      `product_ambiguous: handle "${handle}" matched ${products.length} products — manual disambiguation required in export`
+    )
+    logger.error(
+      `[v2board ${modeLabel}] Ambiguous handle "${handle}": ${products.length} products found`
+    )
+  } else {
+    resolvedProduct = products[0] as ProductRow
+    productId = resolvedProduct.id
+    currentThumbnail = resolvedProduct.thumbnail ?? null
+    currentImages = (resolvedProduct.images ?? [])
+      .map((i) => i.url ?? null)
+      .filter((u): u is string => u !== null)
+    logger.info(`[v2board ${modeLabel}] Product resolved: ${handle} → ${productId}`)
+  }
+
+  // Build media item plan for main
+  const plannedThumbnail = await buildMediaItemPlan(mainRef, warnings)
+
+  // Deduplicate gallery (belt-and-suspenders after gate 8)
+  const skippedDuplicates: string[] = []
+  const seenGalleryIds = new Set<string>([mainRef.id])
+  const deduplicatedGallery: MediaRef[] = []
+  for (const item of galleryRefs) {
+    if (seenGalleryIds.has(item.id)) {
+      skippedDuplicates.push(item.id)
+    } else {
+      seenGalleryIds.add(item.id)
+      deduplicatedGallery.push(item)
+    }
+  }
+
+  const plannedGallery: MediaItemPlan[] = []
+  for (const ref of deduplicatedGallery) {
+    plannedGallery.push(await buildMediaItemPlan(ref, warnings))
+  }
+
+  const plan: DryRunProductPlan = {
+    mode: "dry-run",
+    export_path: exportPath,
+    handle,
+    product_id: productId,
+    current_thumbnail: currentThumbnail,
+    current_images: currentImages,
+    planned_thumbnail: plannedThumbnail,
+    planned_gallery: plannedGallery,
+    skipped_duplicates: skippedDuplicates,
+    warnings,
+    blocked_reasons: blockedReasons,
+  }
+
+  printDryRunSummary(logger, plan)
+
+  logger.info(`[v2board ${modeLabel}] JSON plan:`)
+  logger.info(JSON.stringify(plan, null, 2))
+
+  if (blockedReasons.length > 0) {
+    logger.error(
+      `[v2board ${modeLabel}] BLOCKED: ${blockedReasons.length} reason(s). See blocked_reasons in plan above.`
+    )
+    process.exit(1)
+  }
+
+  if (!apply) {
+    logger.info(
+      `[v2board dry-run] Done. No writes to Medusa. Warnings: ${warnings.length}. ` +
+        `To apply: LEGACY_V2BOARD_APPLY_CONFIRM=1 yarn legacy-v2board-media:dry-run -- --apply --export <path>`
+    )
+    return
+  }
+
+  const applyBlocks = collectApplyBlocks(plan)
+  if (applyBlocks.length > 0) {
+    logger.error("[v2board apply] Apply BLOCKED:")
+    for (const b of applyBlocks) {
+      logger.error(`  BLOCK: ${b}`)
+    }
+    process.exit(1)
+  }
+
+  if (!resolvedProduct) {
+    logger.error("[v2board apply] Internal error: product resolved during planning but missing for apply.")
+    process.exit(1)
+  }
+
+  const applyResult = await applyProductPlan(productModule, plan, resolvedProduct, logger)
+
+  printApplySummary(logger, applyResult)
+
+  logger.info("[v2board apply] JSON result:")
+  logger.info(JSON.stringify(applyResult, null, 2))
+
+  const { verification } = applyResult
+  if (!verification.thumbnail_match || !verification.images_match) {
+    logger.error(
+      "[v2board apply] VERIFICATION FAILED: post-apply re-fetch does not match planned media."
+    )
+    if (!verification.thumbnail_match) {
+      logger.error(
+        `  thumbnail: expected "${verification.expected_thumbnail}", got "${verification.after_thumbnail ?? "(none)"}"`
+      )
+    }
+    if (!verification.images_match) {
+      logger.error(`  images expected: ${JSON.stringify(verification.expected_images)}`)
+      logger.error(`  images got:      ${JSON.stringify(verification.after_images)}`)
+    }
+    process.exit(1)
+  }
+
   logger.info(
-    `[v2board dry-run] Done. No writes to Medusa. Warnings: ${warnings.length}. ` +
-      `To apply: implement Commit B with --apply + LEGACY_V2BOARD_APPLY_CONFIRM=1 after human review.`
+    `[v2board apply] Done. Product ${applyResult.product_id} (${applyResult.handle}) updated and verified. Warnings: ${warnings.length}.`
   )
 }

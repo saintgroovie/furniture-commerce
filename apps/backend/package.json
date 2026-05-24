@@ -26,7 +26,7 @@
     "oxford-pilot-four:sync-ingested-evidence": "node ./scripts/oxford-pilot-four-sync-ingested-evidence.mjs",
     "oxford-local-mvp-media:build": "node ../../scripts/build-oxford-local-mvp-media-artifacts.mjs",
     "oxford-local-mvp-media:apply": "medusa exec ./src/scripts/oxford-local-mvp-media-apply.ts",
-    "legacy-v2board-media:dry-run": "medusa exec ./src/scripts/apply-legacy-v2board-media-exports.ts"
+    "legacy-v2board-media:dry-run": "node ./scripts/run-legacy-v2board-media-exports.mjs"
   },
   "dependencies": {
     "@medusajs/framework": "^2.0.0",
