@@ -39,6 +39,23 @@ function getMedusaOrigin(): string {
   return "http://localhost:9000"
 }
 
+const TRUSTED_PREVIEW_STATUSES = new Set([
+  "backend_static_mapped",
+  "backend_static_url",
+  "remote_http",
+])
+
+/** True only when the card should show a real image (not placeholder / proxy 404). */
+export function isStaticallyPreviewable(inv: InvItem): boolean {
+  const preview = clientPreview(inv)
+  if (!preview.url) return false
+  if (TRUSTED_PREVIEW_STATUSES.has(preview.status)) return true
+  if (preview.status === "local_proxy") {
+    return inv.previewable === true && inv.exists_locally === true
+  }
+  return false
+}
+
 export function clientPreview(inv: InvItem): ClientPreview {
   // Direct URL field (http/https)
   if (inv.url && (inv.url.startsWith("http://") || inv.url.startsWith("https://"))) {
@@ -154,6 +171,10 @@ type Props = {
   onAddToGallery?: (mediaId: string) => void
   /** Compact list-row layout for non-previewable items (spans full grid width) */
   compact?: boolean
+  /** Pool: parent decides preview tier (filter/sort/DOM); overrides compact */
+  showsAsPreview?: boolean
+  /** Pool: proxy 404 / load failure — parent removes from preview tier */
+  onPreviewLoadFailed?: (mediaId: string) => void
   /** True when this item is the active main/thumbnail for the current variant */
   isMain?: boolean
   /** True when this item is already in the gallery for the current variant */
@@ -174,6 +195,10 @@ type Props = {
   roleOverride?: V2RoleSlot | null
   /** Called when operator changes the role override via dropdown */
   onSetRoleOverride?: (mediaId: string, role: V2RoleSlot | null) => void
+  /** Parent-owned effective preview — drives filter, sort, and DOM proof attributes */
+  effectivePreviewOk?: boolean
+  /** Notify parent when image load fails (proxy 404, broken remote URL) */
+  onPreviewLoadFailure?: (mediaId: string) => void
 }
 
 export function MediaCardV2({
@@ -185,6 +210,8 @@ export function MediaCardV2({
   onSetMain,
   onAddToGallery,
   compact,
+  showsAsPreview,
+  onPreviewLoadFailed,
   isMain,
   isInGallery,
   isDimmed,
@@ -193,6 +220,8 @@ export function MediaCardV2({
   poolActionsDisabled,
   roleOverride,
   onSetRoleOverride,
+  effectivePreviewOk,
+  onPreviewLoadFailure,
 }: Props) {
   const isOtherColor = !!poolMuted
   const actionsDisabled = !!poolActionsDisabled || isOtherColor
@@ -200,7 +229,14 @@ export function MediaCardV2({
   const [imgFailed, setImgFailed] = useState(false)
 
   const preview = clientPreview(inv)
-  const showImg = preview.url !== null && !imgFailed
+  const staticPreviewOk = isStaticallyPreviewable(inv)
+  const useCompact =
+    showsAsPreview !== undefined ? !showsAsPreview : !!compact
+  const domPreviewOk =
+    showsAsPreview !== undefined
+      ? showsAsPreview && !imgFailed
+      : (effectivePreviewOk ?? (staticPreviewOk && !imgFailed))
+  const showImg = !useCompact && staticPreviewOk && !imgFailed
   const roleLabel = VISUAL_ROLE_BADGE_RU[role] ?? "?"
   const shortname = inv.filename.length > 30 ? inv.filename.slice(0, 27) + "…" : inv.filename
   const effectiveStatus = imgFailed ? "file_missing" : preview.status
@@ -226,6 +262,12 @@ export function MediaCardV2({
   function handleRoleOverrideChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const v = e.target.value
     onSetRoleOverride?.(inv.id, v ? (v as V2RoleSlot) : null)
+  }
+
+  function handleImgError() {
+    setImgFailed(true)
+    onPreviewLoadFailure?.(inv.id)
+    onPreviewLoadFailed?.(inv.id)
   }
 
   // Role override select element — shared between full and compact cards
@@ -262,7 +304,7 @@ export function MediaCardV2({
   // Compact list-row — for non-previewable items
   // spans full grid width so photo cards always align above in a clean 2-col grid
   // -------------------------------------------------------------------------
-  if (compact) {
+  if (useCompact) {
     return (
       <div
         data-v2-pool-card="true"
@@ -331,7 +373,7 @@ export function MediaCardV2({
   return (
     <div
       data-v2-pool-card="true"
-      data-v2-pool-preview-ok="true"
+      data-v2-pool-preview-ok={domPreviewOk ? "true" : "false"}
       draggable
       onDragStart={handleDragStart}
       style={{
@@ -363,7 +405,7 @@ export function MediaCardV2({
             style={styles.img}
             data-v2-pool-preview-img
             loading="lazy"
-            onError={() => setImgFailed(true)}
+            onError={handleImgError}
             draggable={false}
           />
         ) : (
@@ -625,8 +667,7 @@ const styles = {
   },
 
   // ---------------------------------------------------------------------------
-  // Compact list-row for non-previewable items
-  // gridColumn: "1 / -1" makes this span both columns in the 2-col photo grid
+  // Compact list-row for non-previewable items — single grid cell (2-col row-major)
   // ---------------------------------------------------------------------------
   compactCard: {
     display: "flex",
@@ -636,7 +677,6 @@ const styles = {
     border: "1px solid #f0f0f0",
     borderRadius: "4px",
     background: "#fafafa",
-    gridColumn: "1 / -1" as const,
     minHeight: "36px",
   },
   compactCardMain: {

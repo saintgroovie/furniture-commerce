@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useMemo, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useState } from "react"
 import type { InvItem, CandidateEntry, V2RoleFilter, V2RoleSlot } from "./legacy-board-v2-types"
 import type { VisualRole } from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
 import {
@@ -8,7 +8,11 @@ import {
   inferV2VisualRole,
 } from "./legacy-board-v2-role-inference"
 import { RoleFilterTabs } from "./RoleFilterTabs"
-import { MediaCardV2, clientPreview } from "./MediaCardV2"
+import { MediaCardV2 } from "./MediaCardV2"
+import {
+  isEffectivePreviewable,
+  isStaticEffectivePreviewable,
+} from "./legacy-board-v2-pool-preview"
 import {
   classifyMediaVariantScope,
   mediaMatchesVariantKey,
@@ -33,17 +37,25 @@ function isPoolItemAssigned(
   return item.inv.id === (currentMainId ?? null) || gallerySet.has(item.inv.id)
 }
 
+function itemShowsAsPreview(item: PoolItem, runtimeFailedIds: ReadonlySet<string>): boolean {
+  return isEffectivePreviewable(item.inv, runtimeFailedIds)
+}
+
 /** Preview-first: all previewable cards, then no-preview; scope only within each tier. */
 export function sortPoolPreviewFirst(
   items: PoolItem[],
   productHandle: string | null,
   variantKey: string,
   currentMainId?: string | null,
-  gallerySet?: Set<string>
+  gallerySet?: Set<string>,
+  runtimeFailedIds?: ReadonlySet<string>
 ): PoolItem[] {
   const gs = gallerySet ?? new Set<string>()
+  const failed = runtimeFailedIds ?? new Set<string>()
   return [...items].sort((a, b) => {
-    if (a.previewOk !== b.previewOk) return a.previewOk ? -1 : 1
+    const aPreview = itemShowsAsPreview(a, failed)
+    const bPreview = itemShowsAsPreview(b, failed)
+    if (aPreview !== bPreview) return aPreview ? -1 : 1
     const aAssigned = isPoolItemAssigned(a, currentMainId, gs)
     const bAssigned = isPoolItemAssigned(b, currentMainId, gs)
     if (aAssigned !== bAssigned) return aAssigned ? -1 : 1
@@ -63,7 +75,8 @@ type PoolItem = {
   roleConfidence: "high" | "low" | "ambiguous"
   confidence: string | undefined
   identityConfidence: string | undefined
-  previewOk: boolean
+  /** Static effective preview (see legacy-board-v2-pool-preview.ts) */
+  staticEffectivePreview: boolean
   /** Effective pool filter: override → v2 inference */
   effectiveFilter: V2RoleFilter
 }
@@ -121,8 +134,24 @@ export function MediaPoolPanel({
   variantRoles = {},
 }: Props) {
   const [hideNoPreview, setHideNoPreview] = useState(false)
+  const [runtimeFailedIds, setRuntimeFailedIds] = useState<Set<string>>(() => new Set())
 
-  // Build pool items — previewable sorted first in "all" view
+  useEffect(() => {
+    setRuntimeFailedIds(new Set())
+  }, [selectedHandle, activeVariantKey])
+
+  const handlePreviewLoadFailed = useCallback((mediaId: string) => {
+    setRuntimeFailedIds((prev) => {
+      if (prev.has(mediaId)) return prev
+      const next = new Set(prev)
+      next.add(mediaId)
+      return next
+    })
+  }, [])
+
+  const hideNoPreviewContradiction = hideNoPreview && activeFilter === "no_preview"
+
+  // Build pool items — static preview tier, then preview-first sort at render
   const poolItems = useMemo<PoolItem[]>(() => {
     if (!selectedHandle) return []
     const ids = candidatesByHandle.get(selectedHandle) ?? []
@@ -134,25 +163,31 @@ export function MediaPoolPanel({
       if (!inv) continue
       const entry = entryByInventoryId.get(id)
       const inferred = inferV2VisualRole(inv, { productHandle: selectedHandle })
-      const preview = clientPreview(inv)
       const effectiveFilter = effectiveV2Filter(inv, overrides, { productHandle: selectedHandle })
+      const staticEffectivePreview = isStaticEffectivePreviewable(inv)
       const item: PoolItem = {
         inv,
         role: inferred.role,
         roleConfidence: inferred.confidence,
         confidence: entry?.confidence,
         identityConfidence: entry?.identity_confidence,
-        previewOk: preview.url !== null,
+        staticEffectivePreview,
         effectiveFilter,
       }
-      if (item.previewOk) withPreview.push(item)
+      if (staticEffectivePreview) withPreview.push(item)
       else noPreview.push(item)
     }
     return [...withPreview, ...noPreview]
   }, [selectedHandle, invById, candidatesByHandle, entryByInventoryId, roleOverrides])
 
-  const previewableCount = useMemo(() => poolItems.filter((i) => i.previewOk).length, [poolItems])
-  const noPreviewCount = useMemo(() => poolItems.filter((i) => !i.previewOk).length, [poolItems])
+  const effectivePreviewableCount = useMemo(
+    () => poolItems.filter((i) => itemShowsAsPreview(i, runtimeFailedIds)).length,
+    [poolItems, runtimeFailedIds]
+  )
+  const effectiveNoPreviewCount = useMemo(
+    () => poolItems.length - effectivePreviewableCount,
+    [poolItems, effectivePreviewableCount]
+  )
 
   // Sets for fast membership checks
   const gallerySet = useMemo(() => new Set(currentGalleryIds ?? []), [currentGalleryIds])
@@ -164,7 +199,7 @@ export function MediaPoolPanel({
       const f = item.effectiveFilter
       if (f !== "all") counts[f] = (counts[f] ?? 0) + 1
     }
-    if (noPreviewCount > 0) counts["no_preview"] = noPreviewCount
+    if (effectiveNoPreviewCount > 0) counts["no_preview"] = effectiveNoPreviewCount
 
     // Usage-state counts
     const selectedCount = poolItems.filter((i) => {
@@ -177,16 +212,20 @@ export function MediaPoolPanel({
     counts["unused"] = poolItems.length - selectedCount
 
     return counts
-  }, [poolItems, noPreviewCount, currentMainId, gallerySet, selectedHandle, activeVariantKey])
+  }, [poolItems, effectiveNoPreviewCount, currentMainId, gallerySet, selectedHandle, activeVariantKey])
 
   // Apply filter, then preview-first sort (scope is secondary inside preview tier only)
   const filteredItems = useMemo<PoolItem[]>(() => {
+    if (hideNoPreviewContradiction) return []
+
     let items = poolItems
 
-    if (hideNoPreview) items = items.filter((i) => i.previewOk)
+    if (hideNoPreview) {
+      items = items.filter((i) => itemShowsAsPreview(i, runtimeFailedIds))
+    }
 
     if (activeFilter === "no_preview") {
-      items = items.filter((i) => !i.previewOk)
+      items = items.filter((i) => !itemShowsAsPreview(i, runtimeFailedIds))
     } else if (activeFilter === "unused") {
       items = items.filter(
         (i) => i.inv.id !== (currentMainId ?? null) && !gallerySet.has(i.inv.id)
@@ -204,30 +243,37 @@ export function MediaPoolPanel({
       selectedHandle,
       activeVariantKey,
       currentMainId,
-      gallerySet
+      gallerySet,
+      runtimeFailedIds
     )
   }, [
     poolItems,
     activeFilter,
     hideNoPreview,
+    hideNoPreviewContradiction,
     currentMainId,
     gallerySet,
     selectedHandle,
     activeVariantKey,
+    runtimeFailedIds,
   ])
 
   const noPreviewSeparatorIdx = useMemo(() => {
     if (hideNoPreview || activeFilter === "no_preview") return -1
-    const idx = filteredItems.findIndex((i) => !i.previewOk)
-    return idx > 0 ? idx : -1
-  }, [filteredItems, hideNoPreview, activeFilter])
+    const idx = filteredItems.findIndex((i) => !itemShowsAsPreview(i, runtimeFailedIds))
+    return idx >= 0 ? idx : -1
+  }, [filteredItems, hideNoPreview, activeFilter, runtimeFailedIds])
 
   const filteredNoPreviewCount = useMemo(
-    () => filteredItems.filter((i) => !i.previewOk).length,
+    () => filteredItems.filter((i) => !itemShowsAsPreview(i, runtimeFailedIds)).length,
+    [filteredItems, runtimeFailedIds]
+  )
+
+  const renderedItems = useMemo(
+    () => filteredItems.slice(0, POOL_LIMIT),
     [filteredItems]
   )
 
-  const displayed = filteredItems.slice(0, POOL_LIMIT)
   const total = filteredItems.length
   const totalAll = poolItems.length
 
@@ -243,10 +289,19 @@ export function MediaPoolPanel({
   // Rich count bar text
   const countBarText = (() => {
     if (totalAll === 0) return "Нет кандидатов для этого продукта."
-    if (activeFilter === "all") {
-      return `${totalAll} фото · ${previewableCount} с превью · ${noPreviewCount} без превью`
+    if (hideNoPreviewContradiction) {
+      return "«Скрыть без превью» включено — фильтр «Без превью» недоступен."
     }
-    return `Показано ${displayed.length} из ${total} (всего ${totalAll})`
+    if (activeFilter === "all") {
+      if (hideNoPreview) {
+        return `${totalAll} фото · ${effectivePreviewableCount} с превью · 0 без превью (скрыто ${effectiveNoPreviewCount})`
+      }
+      return `${totalAll} фото · ${effectivePreviewableCount} с превью · ${effectiveNoPreviewCount} без превью`
+    }
+    if (hideNoPreview) {
+      return `Показано ${renderedItems.length} из ${total} · только с превью (скрыто ${effectiveNoPreviewCount})`
+    }
+    return `Показано ${renderedItems.length} из ${total} (всего ${totalAll})`
   })()
 
   return (
@@ -265,16 +320,20 @@ export function MediaPoolPanel({
         />
 
         {/* Hide-no-preview toggle */}
-        <label style={styles.toggleRow}>
+        <label
+          style={styles.toggleRow}
+          data-v2-pool-hide-no-preview={hideNoPreview ? "true" : "false"}
+        >
           <input
             type="checkbox"
             checked={hideNoPreview}
             onChange={(e) => setHideNoPreview(e.target.checked)}
             style={styles.toggleCheck}
+            data-v2-pool-hide-no-preview-input
           />
           <span style={styles.toggleLabel}>Скрыть без превью</span>
-          {noPreviewCount > 0 && (
-            <span style={styles.toggleCount}>{noPreviewCount}</span>
+          {effectiveNoPreviewCount > 0 && (
+            <span style={styles.toggleCount}>{effectiveNoPreviewCount}</span>
           )}
         </label>
 
@@ -284,10 +343,12 @@ export function MediaPoolPanel({
       {/* ── Scrollable pool body ── */}
       <div style={styles.poolScroll}>
         {/* Empty filter — helpful message + reset */}
-        {displayed.length === 0 && totalAll > 0 && (
+        {renderedItems.length === 0 && totalAll > 0 && (
           <div style={styles.emptyFilter}>
             <div style={styles.emptyFilterTitle}>
-              {activeFilter === "selected"
+              {hideNoPreviewContradiction
+                ? "«Скрыть без превью» и фильтр «Без превью» несовместимы — снимите галочку или переключитесь на «Все»."
+                : activeFilter === "selected"
                 ? "Ни одного элемента не назначено — сначала выберите главное или добавьте в галерею."
                 : activeFilter === "unused"
                 ? "Все элементы уже назначены."
@@ -303,7 +364,8 @@ export function MediaPoolPanel({
         )}
 
         <div style={styles.grid} data-v2-pool-grid>
-          {displayed.map((item, idx) => {
+          {renderedItems.map((item, idx) => {
+            const showsAsPreview = itemShowsAsPreview(item, runtimeFailedIds)
             const showNoPreviewSeparator =
               idx === noPreviewSeparatorIdx && filteredNoPreviewCount > 0
             const scope =
@@ -316,6 +378,10 @@ export function MediaPoolPanel({
               currentGalleryIds ?? [],
               scope
             )
+            const usageLine =
+              !showsAsPreview && usage.statusLine
+                ? usage.statusLine
+                : usage.statusLine || (!showsAsPreview ? "без превью" : undefined)
             return (
               <React.Fragment key={item.inv.id}>
                 {showNoPreviewSeparator && (
@@ -337,10 +403,12 @@ export function MediaPoolPanel({
                   selectedHandle={selectedHandle}
                   onSetMain={onSetMain}
                   onAddToGallery={onAddToGallery}
-                  compact={!item.previewOk}
+                  showsAsPreview={showsAsPreview}
+                  onPreviewLoadFailed={handlePreviewLoadFailed}
+                  onPreviewLoadFailure={handlePreviewLoadFailed}
                   isMain={usage.isMain}
                   isInGallery={usage.isInGallery}
-                  poolUsageLine={usage.statusLine || undefined}
+                  poolUsageLine={usageLine}
                   poolMuted={usage.poolMuted}
                   isDimmed={false}
                   roleOverride={(roleOverrides ?? {})[item.inv.id] ?? null}
