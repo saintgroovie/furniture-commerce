@@ -19,7 +19,6 @@ type Props = {
   products: ProductRow[]
   colorVariants: V2ColorVariant[]
   activeVariantKey: string
-  primaryVariantKey?: string | null
   productState: V2ProductState | null
   invById: Map<string, InvItem>
   onSetVariant: (variantKey: string) => void
@@ -47,7 +46,6 @@ export function ProductWorkspace({
   products,
   colorVariants,
   activeVariantKey,
-  primaryVariantKey = null,
   productState,
   invById,
   onSetVariant,
@@ -97,7 +95,6 @@ export function ProductWorkspace({
         <ColorVariantTabs
           variants={colorVariants}
           activeVariantKey={activeVariantKey}
-          primaryVariantKey={primaryVariantKey}
           productState={productState}
           onSelect={onSetVariant}
           onSetVariantLabel={onSetVariantLabel}

@@ -331,7 +331,7 @@ function GalleryEmptySlotsRow({
           key={i}
           style={{
             ...styles.emptySlot,
-            ...(dragOverSlot === i ? styles.emptySlotDragOver : {}),
+            ...(dragOverSlot === i ? styles.emptySlotActive : {}),
           }}
           data-v2-gallery-empty-slot={i}
           onDragOver={(e) => handleSlotDragOver(e, i)}

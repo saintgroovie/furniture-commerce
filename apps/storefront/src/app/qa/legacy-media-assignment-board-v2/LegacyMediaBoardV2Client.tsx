@@ -15,10 +15,6 @@ import type {
 import { MediaPoolPanel } from "./MediaPoolPanel"
 import {
   buildMergedColorVariants,
-  findMilkVariantKey,
-  isPseudoColorVariantKey,
-  LEGACY_ALL_VARIANT_KEY,
-  NEEDS_COLOR_VARIANT_KEY,
   pickDefaultVariantKey,
   planAddVariant,
   applyAddVariantToState,
@@ -56,7 +52,7 @@ function productReadiness(
   if (!state || !handle) return "empty"
   const ids = candidatesByHandle.get(handle) ?? []
   const variants = buildMergedColorVariants(handle, ids, invById, state)
-  const keys = variants.filter((v) => !isPseudoColorVariantKey(v.variantKey)).map((v) => v.variantKey)
+  const keys = variants.filter((v) => v.variantKey !== "__all__").map((v) => v.variantKey)
   return productReadinessForVariants(state, keys)
 }
 
@@ -205,23 +201,12 @@ export function LegacyMediaBoardV2Client() {
     [selectedHandle, productStates]
   )
 
-  const primaryVariantKey = useMemo(
-    () => findMilkVariantKey(colorVariants),
-    [colorVariants]
-  )
-
   // --- Derived: active variant key ---
   const activeVariantKey = useMemo<string>(() => {
-    if (!selectedHandle || colorVariants.length === 0) return NEEDS_COLOR_VARIANT_KEY
+    if (!selectedHandle || colorVariants.length === 0) return "__all__"
     const state = productStates[selectedHandle]
     const saved = state?.activeVariantKey
-    if (
-      saved &&
-      saved !== LEGACY_ALL_VARIANT_KEY &&
-      colorVariants.some((v) => v.variantKey === saved)
-    ) {
-      return saved
-    }
+    if (saved && colorVariants.some((v) => v.variantKey === saved)) return saved
     return pickDefaultVariantKey(colorVariants, state ?? null)
   }, [selectedHandle, colorVariants, productStates])
 
@@ -230,10 +215,7 @@ export function LegacyMediaBoardV2Client() {
     if (!selectedHandle || colorVariants.length === 0) return
     const state = productStates[selectedHandle]
     const saved = state?.activeVariantKey
-    const visible =
-      saved &&
-      saved !== LEGACY_ALL_VARIANT_KEY &&
-      colorVariants.some((v) => v.variantKey === saved)
+    const visible = saved && colorVariants.some((v) => v.variantKey === saved)
     if (visible) return
     const next = pickDefaultVariantKey(colorVariants, state ?? null)
     if (saved === next) return
@@ -600,7 +582,6 @@ export function LegacyMediaBoardV2Client() {
           products={products}
           colorVariants={colorVariants}
           activeVariantKey={activeVariantKey}
-          primaryVariantKey={primaryVariantKey}
           productState={currentProductState}
           invById={invById}
           onSetVariant={handleSetVariant}
