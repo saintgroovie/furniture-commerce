@@ -21,6 +21,7 @@ import {
   saveV2PersistedState,
 } from "./legacy-board-v2-persistence"
 import { reorderGalleryIds } from "./legacy-board-v2-gallery-order"
+import { V2_BOARD_BUILD, V2_BOARD_BUILD_LABEL } from "./legacy-board-v2-build"
 
 const V1_API_BASE = "/qa/legacy-media-assignment-board/api"
 
@@ -463,6 +464,9 @@ export function LegacyMediaBoardV2Client() {
       {/* Top bar */}
       <header style={styles.header}>
         <h1 style={styles.title}>Legacy Media Assignment Board v2</h1>
+        <span style={styles.buildBadge} data-v2-board-build-visible title={V2_BOARD_BUILD}>
+          {V2_BOARD_BUILD_LABEL}
+        </span>
         <span style={styles.badge}>dev · QA only · no Medusa writes</span>
         {selectedHandle && <span style={styles.activeHandle}>{selectedHandle}</span>}
       </header>
@@ -623,6 +627,17 @@ const styles = {
     fontSize: "15px",
     fontWeight: 600,
     color: "#111",
+  },
+  buildBadge: {
+    fontSize: "11px",
+    fontWeight: 700,
+    background: "#1a3a6e",
+    border: "1px solid #0f2847",
+    borderRadius: "4px",
+    padding: "3px 8px",
+    color: "#fff",
+    letterSpacing: "0.02em",
+    flexShrink: 0,
   },
   badge: {
     fontSize: "11px",

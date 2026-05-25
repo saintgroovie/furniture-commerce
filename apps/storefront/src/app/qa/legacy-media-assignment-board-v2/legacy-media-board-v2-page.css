@@ -36,3 +36,13 @@ body:has(.legacy-media-board-v2-root) main.container.page-section {
   overflow: hidden;
   box-sizing: border-box;
 }
+
+/* Gallery cards — enforced minimum so operator sees large tiles at 1440×900 */
+body:has(.legacy-media-board-v2-root) [data-v2-gallery-item] {
+  min-width: 170px;
+}
+
+body:has(.legacy-media-board-v2-root) [data-v2-gallery-drag-handle] {
+  -webkit-user-drag: element;
+  touch-action: none;
+}

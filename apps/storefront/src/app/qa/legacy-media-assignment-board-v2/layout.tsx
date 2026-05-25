@@ -7,6 +7,7 @@
  * workspace.  Does not affect any other route.
  */
 import "./legacy-media-board-v2-page.css"
+import { V2_BOARD_BUILD } from "./legacy-board-v2-build"
 
 export default function LegacyMediaBoardV2Layout({
   children,
@@ -14,7 +15,7 @@ export default function LegacyMediaBoardV2Layout({
   children: React.ReactNode
 }) {
   return (
-    <div className="legacy-media-board-v2-root">
+    <div className="legacy-media-board-v2-root" data-v2-board-build={V2_BOARD_BUILD}>
       {children}
     </div>
   )

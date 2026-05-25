@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import type { InvItem } from "./legacy-board-v2-types"
 import { classifyVisualRole, VISUAL_ROLE_BADGE_RU } from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
 import { clientPreview } from "./MediaCardV2"
@@ -11,8 +11,8 @@ import { clientPreview } from "./MediaCardV2"
 export const GALLERY_DRAG_TYPE = "application/x-gallery-item"
 
 /** Gallery card dimensions — visible at 1440×900 with horizontal scroll */
-export const GALLERY_CARD_W = 160
-export const GALLERY_THUMB_H = 148
+export const GALLERY_CARD_W = 172
+export const GALLERY_THUMB_H = 150
 
 // ---------------------------------------------------------------------------
 // GalleryItem
@@ -34,6 +34,7 @@ type GalleryItemProps = {
   onDragEnd: () => void
   onMoveLeft?: () => void
   onMoveRight?: () => void
+  onPointerHandleDown?: (e: React.PointerEvent, idx: number) => void
 }
 
 function GalleryItem({
@@ -52,6 +53,7 @@ function GalleryItem({
   onDragEnd,
   onMoveLeft,
   onMoveRight,
+  onPointerHandleDown,
 }: GalleryItemProps) {
   const [imgFailed, setImgFailed] = useState(false)
   const preview = clientPreview(inv)
@@ -120,6 +122,10 @@ function GalleryItem({
           e.stopPropagation()
           onDragEnd()
         }}
+        onPointerDown={(e) => {
+          if (e.button !== 0) return
+          onPointerHandleDown?.(e, index)
+        }}
         style={styles.dragHandle}
         title="Перетащите для смены порядка в галерее"
         aria-label={`Перетащить «${inv.filename}»`}
@@ -175,13 +181,72 @@ type Props = {
   onReorderGallery?: (fromIdx: number, toIdx: number) => void
 }
 
+function resolveGalleryDropIndex(clientX: number, clientY: number): number | null {
+  const el = document.elementFromPoint(clientX, clientY)
+  const item = el?.closest("[data-v2-gallery-item]")
+  if (!item) return null
+  const raw = item.getAttribute("data-v2-gallery-item")
+  if (raw === null) return null
+  const idx = parseInt(raw, 10)
+  return Number.isNaN(idx) ? null : idx
+}
+
 export function GalleryStrip({ galleryIds, invById, onRemove, onReorderGallery }: Props) {
+  const stripRef = useRef<HTMLDivElement>(null)
   const [dragFromIdx, setDragFromIdx] = useState<number | null>(null)
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null)
   const dragSrcRef = useRef<number | null>(null)
+  const pointerFromRef = useRef<number | null>(null)
+  const pointerOverRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    if (galleryIds.length > 0) {
+      stripRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" })
+    }
+  }, [galleryIds.length])
+
+  function clearPointerDrag() {
+    pointerFromRef.current = null
+    pointerOverRef.current = null
+    setDragFromIdx(null)
+    setDragOverIdx(null)
+  }
+
+  function handlePointerHandleDown(e: React.PointerEvent, fromIdx: number) {
+    if (!onReorderGallery) return
+    e.preventDefault()
+    e.stopPropagation()
+    pointerFromRef.current = fromIdx
+    pointerOverRef.current = fromIdx
+    setDragFromIdx(fromIdx)
+    setDragOverIdx(fromIdx)
+
+    function onWindowPointerMove(ev: PointerEvent) {
+      const over = resolveGalleryDropIndex(ev.clientX, ev.clientY)
+      if (over === null) return
+      pointerOverRef.current = over
+      setDragOverIdx(over)
+    }
+
+    function endPointerDrag(ev: PointerEvent) {
+      window.removeEventListener("pointermove", onWindowPointerMove)
+      window.removeEventListener("pointerup", endPointerDrag)
+      window.removeEventListener("pointercancel", endPointerDrag)
+      const toIdx = resolveGalleryDropIndex(ev.clientX, ev.clientY) ?? pointerOverRef.current ?? fromIdx
+      const src = pointerFromRef.current
+      clearPointerDrag()
+      if (src !== null && src !== toIdx) {
+        onReorderGallery(src, toIdx)
+      }
+    }
+
+    window.addEventListener("pointermove", onWindowPointerMove)
+    window.addEventListener("pointerup", endPointerDrag)
+    window.addEventListener("pointercancel", endPointerDrag)
+  }
 
   function isInternalDrag(): boolean {
-    return dragSrcRef.current !== null
+    return dragSrcRef.current !== null || pointerFromRef.current !== null
   }
 
   function handleDragStart(e: React.DragEvent, mediaId: string, idx: number) {
@@ -246,9 +311,9 @@ export function GalleryStrip({ galleryIds, invById, onRemove, onReorderGallery }
   if (galleryIds.length === 0) return null
 
   return (
-    <div style={styles.strip} data-v2-gallery-strip>
+    <div ref={stripRef} style={styles.strip} data-v2-gallery-strip>
       <div style={styles.header}>
-        <span style={styles.label}>Галерея</span>
+        <span style={styles.label} data-v2-gallery-section-label>ГАЛЕРЕЯ</span>
         <span style={styles.count}>{galleryIds.length} фото</span>
         {onReorderGallery && (
           <span style={styles.reorderHint}>
@@ -294,6 +359,7 @@ export function GalleryStrip({ galleryIds, invById, onRemove, onReorderGallery }
               onDragEnd={handleDragEnd}
               onMoveLeft={onReorderGallery ? () => onReorderGallery(idx, idx - 1) : undefined}
               onMoveRight={onReorderGallery ? () => onReorderGallery(idx, idx + 1) : undefined}
+              onPointerHandleDown={onReorderGallery ? handlePointerHandleDown : undefined}
             />
           )
         })}
@@ -304,9 +370,10 @@ export function GalleryStrip({ galleryIds, invById, onRemove, onReorderGallery }
 
 const styles = {
   strip: {
-    borderBottom: "1px solid #eee",
+    borderBottom: "2px solid #c8d5f0",
     flexShrink: 0,
-    background: "#fff",
+    background: "#f8faff",
+    boxShadow: "inset 0 2px 0 #1a3a6e",
   },
   header: {
     display: "flex",
@@ -316,11 +383,11 @@ const styles = {
     flexWrap: "wrap" as const,
   },
   label: {
-    fontSize: "11px",
-    fontWeight: 700,
+    fontSize: "12px",
+    fontWeight: 800,
     textTransform: "uppercase" as const,
-    letterSpacing: "0.06em",
-    color: "#555",
+    letterSpacing: "0.08em",
+    color: "#1a3a6e",
   },
   count: {
     fontSize: "11px",
@@ -502,13 +569,13 @@ const styles = {
   },
   moveBtn: {
     flex: 1,
-    minWidth: "44px",
-    height: "32px",
+    minWidth: "48px",
+    height: "36px",
     border: "2px solid #aacaff",
     borderRadius: "5px",
     background: "#e8f0ff",
     color: "#1a3a6e",
-    fontSize: "16px",
+    fontSize: "18px",
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
