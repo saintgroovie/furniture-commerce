@@ -142,7 +142,8 @@ export function ProductWorkspace({
           galleryIds={productState?.galleriesByVariant[activeVariantKey] ?? []}
           variantRoles={productState?.rolesByVariant[activeVariantKey] ?? {}}
           invById={invById}
-          onRemove={onRemoveFromGallery}
+          onRemoveFromGallery={onRemoveFromGallery}
+          onRemoveMain={onRemoveMain}
           onReorderGallery={onReorderGallery}
           onInsertIntoGallery={onInsertIntoGallery}
         />

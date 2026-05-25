@@ -21,7 +21,8 @@ type HubProps = {
   galleryIds: string[]
   variantRoles: V2VariantRoleAssignment
   invById: Map<string, InvItem>
-  onRemove: (mediaId: string) => void
+  onRemoveFromGallery: (mediaId: string) => void
+  onRemoveMain?: () => void
   onReorderGallery?: (fromIdx: number, toIdx: number) => void
   onInsertIntoGallery?: (mediaId: string, atIdx: number) => void
 }
@@ -31,7 +32,8 @@ export function StorefrontGallerySection({
   galleryIds,
   variantRoles,
   invById,
-  onRemove,
+  onRemoveFromGallery,
+  onRemoveMain,
   onReorderGallery,
   onInsertIntoGallery,
 }: HubProps) {
@@ -42,7 +44,8 @@ export function StorefrontGallerySection({
         galleryIds={galleryIds}
         variantRoles={variantRoles}
         invById={invById}
-        onRemove={onRemove}
+        onRemoveFromGallery={onRemoveFromGallery}
+        onRemoveMain={onRemoveMain}
         onReorderGallery={onReorderGallery}
         onInsertIntoGallery={onInsertIntoGallery}
       />
@@ -218,8 +221,129 @@ function GalleryItem({
 }
 
 // ---------------------------------------------------------------------------
+// VitrineMainCard — TH preview (export main, not in gallery[])
+// ---------------------------------------------------------------------------
+
+function VitrineMainCard({
+  mediaId,
+  inv,
+  onRemoveMain,
+}: {
+  mediaId: string
+  inv: InvItem
+  onRemoveMain?: () => void
+}) {
+  const [imgFailed, setImgFailed] = useState(false)
+  const preview = clientPreview(inv)
+  const showImg = preview.url !== null && !imgFailed
+
+  return (
+    <div
+      style={styles.mainItem}
+      data-v2-vitrine-main-card="true"
+      data-v2-vitrine-main-media-id={mediaId}
+      data-v2-vitrine-main-filename={inv.filename}
+    >
+      <div style={styles.mainThumb}>
+        {showImg ? (
+          <img
+            src={preview.url!}
+            alt={inv.filename}
+            style={styles.img}
+            loading="lazy"
+            onError={() => setImgFailed(true)}
+            draggable={false}
+          />
+        ) : (
+          <div style={styles.noImg}>
+            <span style={{ fontSize: "28px", color: "#ddd" }}>–</span>
+          </div>
+        )}
+        <span style={styles.mainPositionBadge}>TH</span>
+        {onRemoveMain && (
+          <button
+            type="button"
+            style={styles.removeBtn}
+            onClick={(e) => {
+              e.stopPropagation()
+              onRemoveMain()
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
+            title="Убрать главное (TH)"
+            aria-label="Убрать главное"
+          >
+            ×
+          </button>
+        )}
+      </div>
+      <div style={styles.meta}>
+        <span style={styles.mainSourceBadge} title="из слота: Главное">
+          из слота: Главное
+        </span>
+        <span style={styles.mainTitle}>Главное</span>
+        <span style={styles.fname} title={inv.filename}>
+          {inv.filename}
+        </span>
+        <span style={styles.mainFixedHint}>Первый кадр витрины · не в gallery export</span>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Empty state + drop gaps
 // ---------------------------------------------------------------------------
+
+function VitrineEmptyState() {
+  return (
+    <div style={styles.emptyWrap} data-v2-vitrine-empty>
+      <p style={styles.emptyLine}>
+        Назначьте Главное и роли — витрина появится здесь
+      </p>
+    </div>
+  )
+}
+
+function GalleryEmptySlotsRow({
+  onInsertIntoGallery,
+}: {
+  onInsertIntoGallery?: (mediaId: string, atIdx: number) => void
+}) {
+  const [dragOverSlot, setDragOverSlot] = useState<number | null>(null)
+
+  function handleSlotDragOver(e: React.DragEvent, idx: number) {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = "copy"
+    setDragOverSlot(idx)
+  }
+
+  function handleSlotDrop(e: React.DragEvent, idx: number) {
+    e.preventDefault()
+    setDragOverSlot(null)
+    const mediaId = e.dataTransfer.getData("text/plain")
+    if (mediaId) onInsertIntoGallery?.(mediaId, idx)
+  }
+
+  return (
+    <div style={styles.emptySlotsRow} data-v2-gallery-empty-slots>
+      {Array.from({ length: GALLERY_SLOT_COUNT }, (_, i) => (
+        <div
+          key={i}
+          style={{
+            ...styles.emptySlot,
+            ...(dragOverSlot === i ? styles.emptySlotDragOver : {}),
+          }}
+          data-v2-gallery-empty-slot={i}
+          onDragOver={(e) => handleSlotDragOver(e, i)}
+          onDragLeave={() => setDragOverSlot((p) => (p === i ? null : p))}
+          onDrop={(e) => handleSlotDrop(e, i)}
+        >
+          #{i + 1}
+        </div>
+      ))}
+    </div>
+  )
+}
 
 function GalleryEmptyState({
   onInsertIntoGallery,
@@ -306,7 +430,8 @@ type StripProps = {
   galleryIds: string[]
   variantRoles: V2VariantRoleAssignment
   invById: Map<string, InvItem>
-  onRemove: (mediaId: string) => void
+  onRemoveFromGallery: (mediaId: string) => void
+  onRemoveMain?: () => void
   onReorderGallery?: (fromIdx: number, toIdx: number) => void
   onInsertIntoGallery?: (mediaId: string, atIdx: number) => void
 }
@@ -316,7 +441,8 @@ export function GalleryStrip({
   galleryIds,
   variantRoles,
   invById,
-  onRemove,
+  onRemoveFromGallery,
+  onRemoveMain,
   onReorderGallery,
   onInsertIntoGallery,
 }: StripProps) {
@@ -427,21 +553,25 @@ export function GalleryStrip({
     e.dataTransfer.dropEffect = "move"
   }
 
+  const hasMain = !!mainMediaId
   const hasGallery = galleryIds.length > 0
+  const hasVitrine = hasMain || hasGallery
   const filledCount = Math.min(galleryIds.length, GALLERY_SLOT_COUNT)
+  const mainInv = mainMediaId ? invById.get(mainMediaId) : null
 
   return (
     <div ref={stripRef} style={styles.strip} data-v2-gallery-strip>
       <div style={styles.header}>
         <div style={styles.headerMain}>
           <span style={styles.label} data-v2-gallery-section-label>
-            Витрина
+            ВИТРИНА: главное + галерея
           </span>
           <span style={styles.headerLead} data-v2-gallery-header-lead>
-            Витрина собирается из заполненных ролей · {filledCount}/{GALLERY_SLOT_COUNT}
+            Главное фото показывается первым. Ниже — порядок gallery export ·{" "}
+            {hasMain ? "TH" : "—"} + {filledCount}/{GALLERY_SLOT_COUNT}
           </span>
           <span style={styles.headerHint}>
-            На карточках — из какой роли пришло фото.
+            Карточки #1…#5 — только gallery[]; TH не дублируется в export.
           </span>
         </div>
         <GalleryHeaderRail
@@ -452,11 +582,12 @@ export function GalleryStrip({
         />
       </div>
 
-      {!hasGallery ? (
-        <GalleryEmptyState onInsertIntoGallery={onInsertIntoGallery} />
+      {!hasVitrine ? (
+        <VitrineEmptyState />
       ) : (
         <div
           style={styles.scroll}
+          data-v2-vitrine-scroll
           data-v2-gallery-scroll
           onDragOver={handleScrollDragOver}
           onDrop={(e) => {
@@ -469,6 +600,20 @@ export function GalleryStrip({
             if (fromIdx !== toIdx) onReorderGallery?.(fromIdx, toIdx)
           }}
         >
+          {hasMain && mainInv && mainMediaId && (
+            <span style={styles.cardWithGap} data-v2-vitrine-main-wrap>
+              <VitrineMainCard
+                mediaId={mainMediaId}
+                inv={mainInv}
+                onRemoveMain={onRemoveMain}
+              />
+            </span>
+          )}
+
+          {hasMain && !hasGallery && (
+            <GalleryEmptySlotsRow onInsertIntoGallery={onInsertIntoGallery} />
+          )}
+
           {galleryIds.map((mediaId, idx) => {
             const inv = invById.get(mediaId)
             if (!inv) return null
@@ -505,7 +650,7 @@ export function GalleryStrip({
                   isDragOver={dragOverIdx === idx && dragFromIdx !== idx}
                   isHovered={hoveredIdx === idx}
                   canReorder={!!onReorderGallery}
-                  onRemove={onRemove}
+                  onRemove={onRemoveFromGallery}
                   onDragStart={handleDragStart}
                   onDragEnter={handleDragEnter}
                   onDragOver={handleDragOver}
@@ -772,6 +917,68 @@ const styles = {
   dropGapActive: {
     width: "10px",
     background: "#1a3a6e",
+  },
+  mainItem: {
+    display: "flex",
+    flexDirection: "column" as const,
+    alignItems: "stretch",
+    gap: "4px",
+    flexShrink: 0,
+    width: `${GALLERY_CARD_W}px`,
+    borderRadius: "7px",
+    border: "2px solid #1a3a6e",
+    padding: "5px",
+    background: "#f0f6ff",
+    boxSizing: "border-box" as const,
+    boxShadow: "0 1px 4px rgba(26,58,110,0.1)",
+  },
+  mainThumb: {
+    width: "100%",
+    height: `${GALLERY_THUMB_H}px`,
+    border: "2px solid #1a3a6e",
+    borderRadius: "5px",
+    overflow: "hidden",
+    background: "#e8f0ff",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative" as const,
+  },
+  mainPositionBadge: {
+    position: "absolute" as const,
+    top: "4px",
+    left: "4px",
+    fontSize: "11px",
+    fontWeight: 800,
+    background: "#1a3a6e",
+    color: "#fff",
+    borderRadius: "4px",
+    padding: "2px 6px",
+    lineHeight: 1.2,
+    zIndex: 2,
+  },
+  mainSourceBadge: {
+    fontSize: "10px",
+    background: "#dce8ff",
+    color: "#1a3a6e",
+    border: "1px solid #a8c0f0",
+    borderRadius: "4px",
+    padding: "3px 6px",
+    fontWeight: 700,
+    alignSelf: "stretch",
+    textAlign: "center" as const,
+    lineHeight: 1.25,
+  },
+  mainTitle: {
+    fontSize: "11px",
+    fontWeight: 800,
+    color: "#1a3a6e",
+    lineHeight: 1.2,
+  },
+  mainFixedHint: {
+    fontSize: "9px",
+    color: "#6a7a9e",
+    lineHeight: 1.25,
   },
   item: {
     display: "flex",

@@ -82,7 +82,7 @@ export function resolvePoolUsageStatus(
 
   let statusLine = ""
   if (isMain) {
-    statusLine = "★ Главное"
+    statusLine = "★ Главное · TH"
   } else if (roleSlot && roleSlot !== "main" && isInGallery) {
     statusLine = `✓ В витрине · ${ROLE_SLOT_LABEL_RU[roleSlot]}`
   } else if (roleSlot && roleSlot !== "main") {
