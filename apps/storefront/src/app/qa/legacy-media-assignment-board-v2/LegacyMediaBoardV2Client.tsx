@@ -12,8 +12,16 @@ import type {
   V2RoleFilter,
   V2RoleSlot,
 } from "./legacy-board-v2-types"
-import { extractColorTokenFromMedia } from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
 import { MediaPoolPanel } from "./MediaPoolPanel"
+import {
+  buildMergedColorVariants,
+  pickDefaultVariantKey,
+  planAddVariant,
+  applyAddVariantToState,
+  applyRemoveVariantToState,
+  applyRestoreVariantToState,
+  productReadinessForVariants,
+} from "./legacy-board-v2-color-variants"
 import { ProductWorkspace } from "./ProductWorkspace"
 import { ExportToolbar } from "./ExportToolbar"
 import {
@@ -25,34 +33,17 @@ import { V2_BOARD_BUILD, V2_BOARD_BUILD_LABEL } from "./legacy-board-v2-build"
 
 const V1_API_BASE = "/qa/legacy-media-assignment-board/api"
 
-function productReadiness(state: V2ProductState | undefined): "ready" | "partial" | "empty" {
-  if (!state) return "empty"
-  const hasMain = Object.values(state.rolesByVariant).some((v) => !!(v as V2VariantRoleAssignment).main)
-  const hasGallery = Object.values(state.galleriesByVariant).some((g) => g.length > 0)
-  if (hasMain && hasGallery) return "ready"
-  if (hasMain || hasGallery) return "partial"
-  return "empty"
-}
-
-// Russian color token labels (subset; fallback to raw token)
-const TOKEN_TO_RU: Record<string, string> = {
-  blue: "Синий",
-  grey: "Серый",
-  gray: "Серый",
-  white: "Белый",
-  cream: "Кремовый",
-  milk: "Молочный",
-  beige: "Бежевый",
-  olive: "Оливковый",
-  green: "Зелёный",
-  black: "Чёрный",
-  brown: "Коричневый",
-  graphite: "Графит",
-  ivory: "Слоновая кость",
-  walnut: "Орех",
-  natural: "Натуральный",
-  oak: "Дуб",
-  wenge: "Венге",
+function productReadiness(
+  state: V2ProductState | undefined,
+  handle: string | null,
+  candidatesByHandle: Map<string, string[]>,
+  invById: Map<string, InvItem>
+): "ready" | "partial" | "empty" {
+  if (!state || !handle) return "empty"
+  const ids = candidatesByHandle.get(handle) ?? []
+  const variants = buildMergedColorVariants(handle, ids, invById, state)
+  const keys = variants.filter((v) => v.variantKey !== "__all__").map((v) => v.variantKey)
+  return productReadinessForVariants(state, keys)
 }
 
 const SLOT_TO_FILTER: Record<V2RoleSlot, V2RoleFilter> = {
@@ -183,45 +174,49 @@ export function LegacyMediaBoardV2Client() {
     return () => { cancelled = true }
   }, [])
 
-  // --- Derived: color variants for selected product ---
+  // --- Derived: color variants (detected + operator − hidden, milk first) ---
   const colorVariants = useMemo<V2ColorVariant[]>(() => {
     if (!selectedHandle) return []
     const ids = candidatesByHandle.get(selectedHandle) ?? []
-    const byToken = new Map<string, string[]>()
+    return buildMergedColorVariants(
+      selectedHandle,
+      ids,
+      invById,
+      productStates[selectedHandle] ?? null
+    )
+  }, [selectedHandle, candidatesByHandle, invById, productStates])
 
-    for (const id of ids) {
-      const inv = invById.get(id)
-      if (!inv) continue
-      const token = extractColorTokenFromMedia(inv, selectedHandle) ?? "__none__"
-      const list = byToken.get(token) ?? []
-      list.push(id)
-      byToken.set(token, list)
-    }
-
-    const result: V2ColorVariant[] = []
-    for (const [token, itemIds] of Array.from(byToken.entries())) {
-      if (token === "__none__") continue
-      result.push({
-        variantKey: token,
-        label: TOKEN_TO_RU[token] ?? token,
-        itemIds,
-      })
-    }
-    result.sort((a, b) => b.itemIds.length - a.itemIds.length)
-
-    const hasColorless = byToken.has("__none__")
-    if (result.length === 0 || hasColorless) {
-      const allIds = ids.filter((id) => invById.has(id))
-      result.unshift({ variantKey: "__all__", label: "Все", itemIds: allIds })
-    }
-
-    return result
-  }, [selectedHandle, candidatesByHandle, invById])
+  const removedVariants = useMemo(
+    () => productStates[selectedHandle ?? ""]?.operatorVariantEdits?.removed ?? [],
+    [selectedHandle, productStates]
+  )
 
   // --- Derived: active variant key ---
   const activeVariantKey = useMemo<string>(() => {
     if (!selectedHandle || colorVariants.length === 0) return "__all__"
-    return productStates[selectedHandle]?.activeVariantKey ?? colorVariants[0]!.variantKey
+    const state = productStates[selectedHandle]
+    const saved = state?.activeVariantKey
+    if (saved && colorVariants.some((v) => v.variantKey === saved)) return saved
+    return pickDefaultVariantKey(colorVariants, state ?? null)
+  }, [selectedHandle, colorVariants, productStates])
+
+  // When product or visible tabs change, ensure active tab is visible (milk default)
+  useEffect(() => {
+    if (!selectedHandle || colorVariants.length === 0) return
+    const state = productStates[selectedHandle]
+    const saved = state?.activeVariantKey
+    const visible = saved && colorVariants.some((v) => v.variantKey === saved)
+    if (visible) return
+    const next = pickDefaultVariantKey(colorVariants, state ?? null)
+    if (saved === next) return
+    setProductStates((prev) => {
+      const existing = prev[selectedHandle] ?? makeEmptyProductState(selectedHandle, next)
+      if (existing.activeVariantKey === next) return prev
+      return {
+        ...prev,
+        [selectedHandle]: { ...existing, activeVariantKey: next },
+      }
+    })
   }, [selectedHandle, colorVariants, productStates])
 
   // --- Derived: current product assignment state ---
@@ -398,6 +393,55 @@ export function LegacyMediaBoardV2Client() {
     [selectedHandle, activeVariantKey, updateProductState]
   )
 
+  const handleAddVariant = useCallback(
+    (label: string): { ok: boolean; key?: string; message?: string } => {
+      if (!selectedHandle) return { ok: false, message: "Продукт не выбран." }
+      const ids = candidatesByHandle.get(selectedHandle) ?? []
+      const state = productStates[selectedHandle] ?? null
+      const plan = planAddVariant(label, selectedHandle, ids, invById, state)
+      if (!plan.ok) {
+        if (plan.reason === "duplicate") {
+          return {
+            ok: false,
+            key: plan.key,
+            message: `Цвет «${plan.label}» уже есть (ключ ${plan.key}).`,
+          }
+        }
+        return { ok: false, message: "Введите название цвета." }
+      }
+      updateProductState(selectedHandle, plan.key, (s) =>
+        applyAddVariantToState(s, plan.key, label.trim())
+      )
+      return { ok: true, key: plan.key }
+    },
+    [selectedHandle, candidatesByHandle, invById, productStates, updateProductState]
+  )
+
+  const handleRemoveVariant = useCallback(
+    (variantKey: string, label: string) => {
+      if (!selectedHandle) return
+      const ids = candidatesByHandle.get(selectedHandle) ?? []
+      const variants = buildMergedColorVariants(
+        selectedHandle,
+        ids,
+        invById,
+        productStates[selectedHandle] ?? null
+      )
+      updateProductState(selectedHandle, activeVariantKey, (s) =>
+        applyRemoveVariantToState(s, variantKey, label, variants)
+      )
+    },
+    [selectedHandle, activeVariantKey, candidatesByHandle, invById, productStates, updateProductState]
+  )
+
+  const handleRestoreVariant = useCallback(
+    (variantKey: string) => {
+      if (!selectedHandle) return
+      updateProductState(selectedHandle, variantKey, (s) => applyRestoreVariantToState(s, variantKey))
+    },
+    [selectedHandle, updateProductState]
+  )
+
   const handleSetRoleOverride = useCallback(    (mediaId: string, role: V2RoleSlot | null) => {
       if (!selectedHandle) return
       updateProductState(selectedHandle, activeVariantKey, (s) => {
@@ -557,7 +601,12 @@ export function LegacyMediaBoardV2Client() {
                 {filteredProducts.map((p) => {
                   const count = candidatesByHandle.get(p.handle)?.length ?? 0
                   const isSelected = selectedHandle === p.handle
-                  const readiness = productReadiness(productStates[p.handle])
+                  const readiness = productReadiness(
+                    productStates[p.handle],
+                    p.handle,
+                    candidatesByHandle,
+                    invById
+                  )
                   return (
                     <button
                       key={p.handle}
@@ -608,6 +657,10 @@ export function LegacyMediaBoardV2Client() {
           onAddToGallery={handleAddToGallery}
           onInsertIntoGallery={handleInsertIntoGallery}
           onSetVariantLabel={handleSetVariantLabel}
+          onAddVariant={handleAddVariant}
+          onRemoveVariant={handleRemoveVariant}
+          onRestoreVariant={handleRestoreVariant}
+          removedVariants={removedVariants}
         />
 
         {/* Right: Media pool */}

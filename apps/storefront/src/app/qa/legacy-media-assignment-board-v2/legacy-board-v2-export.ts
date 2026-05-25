@@ -5,9 +5,14 @@
  * Never writes to Medusa or catalog.
  */
 
-import type { V2ProductState } from "./legacy-board-v2-types"
+import type { V2ProductState, V2OperatorVariantEdits } from "./legacy-board-v2-types"
 import type { InvItem, ProductRow } from "./legacy-board-v2-types"
 import { clientPreview } from "./MediaCardV2"
+import {
+  buildOperatorVariantEditsExport,
+  getExportableVariantKeys,
+  isVariantHidden,
+} from "./legacy-board-v2-color-variants"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -36,6 +41,8 @@ export type V2ExportProduct = {
   variants: Record<string, V2ExportVariant>
   /** Operator role overrides: mediaId → role label (optional, informational only) */
   operator_role_overrides?: Record<string, string>
+  /** Operator add/remove/hide color tabs (optional — apply may ignore) */
+  operator_variant_edits?: V2OperatorVariantEdits
 }
 
 export type V2ExportJSON = {
@@ -96,12 +103,10 @@ export function buildV2ExportJSON(
 
     // Collect all variant keys that have any data (roles OR gallery-only).
     // Iterating only rolesByVariant would miss gallery-only assignments.
-    const allVariantKeys = new Set([
-      ...Object.keys(state.rolesByVariant),
-      ...Object.keys(state.galleriesByVariant),
-    ])
+    const allVariantKeys = getExportableVariantKeys(state)
 
     for (const variantKey of allVariantKeys) {
+      if (isVariantHidden(state, variantKey)) continue
       const roles = state.rolesByVariant[variantKey] ?? {}
       const mainId = (roles.main as string | null | undefined) ?? null
       const galleryIds = state.galleriesByVariant[variantKey] ?? []
@@ -143,6 +148,10 @@ export function buildV2ExportJSON(
       const overrides = state.roleOverrides
       if (overrides && Object.keys(overrides).length > 0) {
         productEntry.operator_role_overrides = overrides
+      }
+      const variantEdits = buildOperatorVariantEditsExport(state)
+      if (variantEdits) {
+        productEntry.operator_variant_edits = variantEdits
       }
       assignments[handle] = productEntry
     }

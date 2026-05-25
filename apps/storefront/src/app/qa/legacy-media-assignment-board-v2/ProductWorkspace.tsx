@@ -5,6 +5,7 @@ import type {
   InvItem,
   ProductRow,
   V2ColorVariant,
+  V2OperatorRemovedVariant,
   V2ProductState,
   V2RoleSlot,
 } from "./legacy-board-v2-types"
@@ -34,6 +35,10 @@ type Props = {
   /** Insert/move media into gallery at a specific position (from final-order slot drop) */
   onInsertIntoGallery?: (mediaId: string, atIdx: number) => void
   onSetVariantLabel?: (variantKey: string, label: string | null) => void
+  onAddVariant?: (label: string) => { ok: boolean; key?: string; message?: string }
+  onRemoveVariant?: (variantKey: string, label: string) => void
+  onRestoreVariant?: (variantKey: string) => void
+  removedVariants?: V2OperatorRemovedVariant[]
 }
 
 export function ProductWorkspace({
@@ -54,6 +59,10 @@ export function ProductWorkspace({
   onAddToGallery,
   onInsertIntoGallery,
   onSetVariantLabel,
+  onAddVariant,
+  onRemoveVariant,
+  onRestoreVariant,
+  removedVariants,
 }: Props) {
   const galleryIds = productState?.galleriesByVariant[activeVariantKey] ?? []
   if (!selectedHandle) {
@@ -89,6 +98,10 @@ export function ProductWorkspace({
           productState={productState}
           onSelect={onSetVariant}
           onSetVariantLabel={onSetVariantLabel}
+          onAddVariant={onAddVariant}
+          onRemoveVariant={onRemoveVariant}
+          onRestoreVariant={onRestoreVariant}
+          removedVariants={removedVariants}
         />
 
         {/* Missing roles — always visible task bar */}

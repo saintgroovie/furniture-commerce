@@ -37,6 +37,36 @@ export type V2ProductState = {
    * Optional metadata only — apply script may ignore.
    */
   variantLabelOverrides?: Record<string, string>
+  /**
+   * Operator add/remove/hide color tabs for this product (QA-only, persisted in v2 LS).
+   */
+  operatorVariantEdits?: V2OperatorVariantEdits
+}
+
+/** Operator-added color tab (no catalog mutation). */
+export type V2OperatorAddedVariant = {
+  key: string
+  label: string
+  source: "operator"
+}
+
+/** Hidden color with assignment audit counts (still in rolesByVariant for restore). */
+export type V2OperatorRemovedVariant = {
+  key: string
+  label: string
+  hiddenAt: string
+  assignment_counts: {
+    main: number
+    gallery: number
+    roles: number
+  }
+}
+
+export type V2OperatorVariantEdits = {
+  added: V2OperatorAddedVariant[]
+  removed: V2OperatorRemovedVariant[]
+  /** Hint for export — milk default when detected */
+  default_variant_key?: string
 }
 
 /** Top-level v2 board state (partial — extended in later commits). */
@@ -79,6 +109,8 @@ export type V2ColorVariant = {
   variantKey: string
   label: string
   itemIds: string[]
+  /** detected from filenames vs operator-added tab */
+  source?: "detected" | "operator"
 }
 
 /** One row in the role checklist — computed from productState + gallery classification. */
