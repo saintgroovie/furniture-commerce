@@ -7,9 +7,9 @@ import { clientPreview } from "./MediaCardV2"
 
 export const GALLERY_DRAG_TYPE = "application/x-gallery-item"
 
-/** Prominent gallery cards — operator reorder at a glance */
-export const GALLERY_CARD_W = 240
-export const GALLERY_THUMB_H = 200
+/** Balanced dock — readable cards without billboard height */
+export const GALLERY_CARD_W = 180
+export const GALLERY_THUMB_H = 140
 export const GALLERY_SLOT_COUNT = 5
 
 // ---------------------------------------------------------------------------
@@ -404,9 +404,10 @@ export function GalleryStrip({
           <span style={styles.label} data-v2-gallery-section-label>
             ГАЛЕРЕЯ / порядок на витрине
           </span>
-          <span style={styles.headerLead}>Порядок фото в gallery export</span>
+          <span style={styles.headerLead}>
+            gallery export · {filledCount}/{GALLERY_SLOT_COUNT}
+          </span>
         </div>
-        <span style={styles.countPill}>{filledCount}/{GALLERY_SLOT_COUNT}</span>
         <GalleryHeaderRail
           mainMediaId={mainMediaId}
           galleryIds={galleryIds}
@@ -688,7 +689,7 @@ const styles = {
     alignItems: "flex-start",
     justifyContent: "flex-start",
     gap: "0",
-    padding: "8px 12px 10px",
+    padding: "6px 12px 8px",
     overflowX: "auto" as const,
     overflowY: "hidden" as const,
   },
@@ -699,7 +700,7 @@ const styles = {
   },
   dropGap: {
     width: "6px",
-    minHeight: `${GALLERY_THUMB_H + 72}px`,
+    minHeight: `${GALLERY_THUMB_H + 52}px`,
     borderRadius: "3px",
     flexShrink: 0,
     alignSelf: "stretch",
@@ -713,12 +714,12 @@ const styles = {
     display: "flex",
     flexDirection: "column" as const,
     alignItems: "stretch",
-    gap: "5px",
+    gap: "4px",
     flexShrink: 0,
     width: `${GALLERY_CARD_W}px`,
     borderRadius: "7px",
     border: "1px solid #c8d5f0",
-    padding: "6px",
+    padding: "5px",
     background: "#fff",
     boxSizing: "border-box" as const,
     transition: "opacity 0.1s, box-shadow 0.1s, border-color 0.1s",

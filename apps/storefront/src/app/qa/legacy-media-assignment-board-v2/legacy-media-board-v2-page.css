@@ -29,8 +29,8 @@ body:has(.legacy-media-board-v2-root) main.container.page-section {
 }
 
 body:has(.legacy-media-board-v2-root) [data-v2-gallery-item] {
-  min-width: 220px;
-  max-width: 260px;
+  min-width: 168px;
+  max-width: 196px;
 }
 
 body:has(.legacy-media-board-v2-root) [data-v2-gallery-card-draggable] {
