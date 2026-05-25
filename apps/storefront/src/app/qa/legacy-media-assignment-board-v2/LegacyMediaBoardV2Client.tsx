@@ -504,6 +504,7 @@ export function LegacyMediaBoardV2Client() {
         invById={invById}
         products={products}
         savedAt={savedAt}
+        selectedHandle={selectedHandle}
         onReset={handleReset}
       />
 

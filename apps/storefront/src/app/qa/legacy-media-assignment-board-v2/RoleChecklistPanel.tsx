@@ -96,7 +96,7 @@ export function RoleChecklistPanel({
         </p>
       </header>
 
-      <div style={styles.grid}>
+      <div style={styles.grid} data-v2-role-grid>
         {rows.map((row) => {
           const inv = row.mediaId ? invById.get(row.mediaId) : null
           const preview = inv ? clientPreview(inv) : null
@@ -207,68 +207,50 @@ export function RoleChecklistPanel({
                     </span>
                   </div>
                 )}
-
                 {isDraggableFilled && (
-                  <span style={styles.dragAffordance}>перетащить</span>
-                )}
-
-                {row.isCovered && (onRemoveMain || onRemoveFromGallery || onClearRole) && (
-                  <button
-                    type="button"
-                    style={styles.removeBtn}
-                    onClick={handleRemove}
-                    title={row.source === "explicit" ? "Убрать назначение" : "Убрать из галереи"}
-                  >
-                    ×
-                  </button>
-                )}
-
-                {row.isCovered && row.source !== "none" && (
-                  <div style={styles.badgeStrip}>
-                    <span style={styles.badgeStripLeft}>
-                      {row.source === "explicit" && autoHint && !hasManualOverride && (
-                        <span
-                          style={
-                            autoHint.confidence === "ambiguous" || autoHint.confidence === "low"
-                              ? styles.autoLowBadge
-                              : styles.autoBadge
-                          }
-                        >
-                          {autoHint.confidence === "ambiguous" || autoHint.confidence === "low"
-                            ? "auto?"
-                            : "auto"}
-                        </span>
-                      )}
-                      {row.source === "explicit" && hasManualOverride && (
-                        <span style={styles.manualBadge}>ручн.</span>
-                      )}
-                      {row.source === "gallery" && (
-                        <span style={styles.sourceBadgeGallery}>из гал.</span>
-                      )}
-                      {row.source === "explicit" && !hasManualOverride && (
-                        <span style={styles.sourceBadgeExplicit}>слот</span>
-                      )}
-                    </span>
-                  </div>
+                  <span style={styles.dragCorner} aria-hidden>
+                    ⋮⋮
+                  </span>
                 )}
               </div>
 
-              <div style={styles.slotFooter}>
-                {row.source === "explicit" && row.mediaId && !isMain && (
-                  inGallery ? (
-                    <span style={styles.inGalleryPill}>
-                      ✓ В витрине · {ROLE_SLOT_LABEL_RU[row.slot]}
-                    </span>
-                  ) : onAddToGallery ? (
-                    <button
-                      type="button"
-                      style={styles.toGalleryBtn}
-                      onClick={() => onAddToGallery(row.mediaId!)}
-                      title="Добавить в витрину вручную (роль уже назначена)"
+              {row.isCovered && row.source === "explicit" && (
+                <div style={styles.statusRow}>
+                  {autoHint && !hasManualOverride && (
+                    <span
+                      style={
+                        autoHint.confidence === "ambiguous" || autoHint.confidence === "low"
+                          ? styles.autoLowBadge
+                          : styles.autoBadge
+                      }
                     >
-                      в витрину
-                    </button>
-                  ) : null
+                      {autoHint.confidence === "ambiguous" || autoHint.confidence === "low"
+                        ? "auto?"
+                        : "auto"}
+                    </span>
+                  )}
+                  {hasManualOverride && <span style={styles.manualBadge}>ручн.</span>}
+                  {!isMain &&
+                    (inGallery ? (
+                      <span style={styles.inGalleryPill}>
+                        ✓ В витрине · {ROLE_SLOT_LABEL_RU[row.slot]}
+                      </span>
+                    ) : (
+                      <span style={styles.notInGalleryPill}>не в витрине</span>
+                    ))}
+                </div>
+              )}
+
+              <div style={styles.actionsRow}>
+                {row.isCovered && (onRemoveMain || onRemoveFromGallery || onClearRole) && (
+                  <button
+                    type="button"
+                    style={styles.removeTextBtn}
+                    onClick={handleRemove}
+                    title={row.source === "explicit" ? "Убрать назначение" : "Убрать из галереи"}
+                  >
+                    × убрать
+                  </button>
                 )}
                 <button
                   type="button"
@@ -290,7 +272,7 @@ export function RoleChecklistPanel({
   )
 }
 
-const THUMB_H = 128
+const THUMB_H = 120
 
 const styles = {
   roleBoard: {
@@ -325,14 +307,15 @@ const styles = {
   },
   grid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
-    gap: "12px",
+    gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+    gap: "10px",
     alignItems: "stretch",
   },
   slot: {
     display: "flex",
     flexDirection: "column" as const,
-    minHeight: "190px",
+    minHeight: "200px",
+    maxWidth: "100%",
     borderRadius: "8px",
     overflow: "hidden",
     borderWidth: "2px",
@@ -424,111 +407,82 @@ const styles = {
     padding: "0 8px",
     fontWeight: 500,
   },
-  badgeStrip: {
-    position: "absolute" as const,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "4px 6px",
-    background: "linear-gradient(transparent, rgba(0,0,0,0.45))",
-    pointerEvents: "none" as const,
-  },
-  badgeStripLeft: {
-    display: "flex",
-    gap: "4px",
-    flexWrap: "wrap" as const,
-  },
-  sourceBadgeExplicit: {
-    fontSize: "9px",
-    color: "#fff",
-    background: "rgba(26,58,110,0.9)",
-    borderRadius: "3px",
-    padding: "2px 5px",
-    fontWeight: 700,
-    lineHeight: 1.2,
-  },
-  sourceBadgeGallery: {
-    fontSize: "9px",
-    color: "#fff",
-    background: "rgba(45,122,45,0.9)",
-    borderRadius: "3px",
-    padding: "2px 5px",
-    fontWeight: 700,
-    lineHeight: 1.2,
-  },
   manualBadge: {
     fontSize: "9px",
-    color: "#fff",
-    background: "rgba(180,100,0,0.95)",
+    color: "#7a4a00",
+    background: "#fff3e0",
+    border: "1px solid #f0d090",
     borderRadius: "3px",
     padding: "2px 5px",
     fontWeight: 700,
   },
   autoBadge: {
     fontSize: "9px",
-    color: "#fff",
-    background: "rgba(70,70,70,0.85)",
+    color: "#555",
+    background: "#eee",
     borderRadius: "3px",
     padding: "2px 5px",
     fontWeight: 600,
   },
   autoLowBadge: {
     fontSize: "9px",
-    color: "#fff",
-    background: "rgba(180,100,0,0.9)",
+    color: "#7a4a00",
+    background: "#fff3e0",
+    border: "1px solid #f0d090",
     borderRadius: "3px",
     padding: "2px 5px",
     fontWeight: 700,
   },
-  removeBtn: {
+  dragCorner: {
     position: "absolute" as const,
-    top: "28px",
-    right: "6px",
-    width: "24px",
-    height: "24px",
-    borderRadius: "50%",
-    border: "1px solid rgba(0,0,0,0.12)",
-    background: "rgba(255,255,255,0.95)",
-    fontSize: "15px",
-    cursor: "pointer",
-    color: "#a33",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 0,
+    top: "4px",
+    left: "4px",
+    fontSize: "10px",
+    color: "rgba(26,58,110,0.55)",
+    fontWeight: 700,
     lineHeight: 1,
-    fontWeight: 700,
-    zIndex: 3,
-    boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
-  },
-  dragAffordance: {
-    position: "absolute" as const,
-    top: "28px",
-    left: "6px",
-    fontSize: "9px",
-    color: "#fff",
-    background: "rgba(26,58,110,0.88)",
-    borderRadius: "4px",
-    padding: "3px 6px",
-    fontWeight: 700,
-    zIndex: 2,
-    lineHeight: 1.2,
     pointerEvents: "none" as const,
+    background: "rgba(255,255,255,0.75)",
+    borderRadius: "3px",
+    padding: "2px 4px",
   },
-  slotFooter: {
+  statusRow: {
     display: "flex",
-    alignItems: "center",
-    justifyContent: "flex-end",
     flexWrap: "wrap" as const,
-    gap: "6px",
-    padding: "8px 8px 9px",
-    flexShrink: 0,
+    alignItems: "center",
+    gap: "4px",
+    padding: "6px 8px",
+    minHeight: "28px",
     background: "#f8fafc",
     borderTop: "1px solid #eef1f6",
-    minHeight: "36px",
+    flexShrink: 0,
+  },
+  notInGalleryPill: {
+    fontSize: "10px",
+    color: "#8a5a00",
+    fontWeight: 600,
+  },
+  actionsRow: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "6px",
+    padding: "6px 8px 8px",
+    flexShrink: 0,
+    background: "#fff",
+    borderTop: "1px solid #eef1f6",
+  },
+  removeTextBtn: {
+    padding: "3px 6px",
+    fontSize: "11px",
+    border: "1px solid #e8c4c4",
+    borderRadius: "4px",
+    background: "#fff5f5",
+    color: "#a33",
+    cursor: "pointer",
+    fontWeight: 600,
+    lineHeight: 1.2,
+    flexShrink: 0,
   },
   addBtn: {
     padding: "4px 8px",
@@ -564,14 +518,14 @@ const styles = {
     flexShrink: 0,
   },
   inGalleryPill: {
-    padding: "4px 8px",
-    fontSize: "11px",
+    padding: "2px 6px",
+    fontSize: "10px",
     border: "1px solid #2d7a2d",
     borderRadius: "4px",
     background: "#e8f5e9",
     color: "#1b5e20",
     fontWeight: 700,
-    lineHeight: 1.2,
+    lineHeight: 1.25,
     flexShrink: 0,
   },
 } as const

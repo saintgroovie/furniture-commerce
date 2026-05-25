@@ -9,7 +9,7 @@ import {
 } from "./legacy-board-v2-role-inference"
 import { RoleFilterTabs } from "./RoleFilterTabs"
 import { MediaCardV2, clientPreview } from "./MediaCardV2"
-import { mediaMatchesVariantKey } from "./legacy-board-v2-color-variants"
+import { classifyMediaVariantScope, mediaMatchesVariantKey } from "./legacy-board-v2-color-variants"
 import { resolvePoolUsageStatus } from "./legacy-board-v2-gallery-source"
 import type { V2VariantRoleAssignment } from "./legacy-board-v2-types"
 
@@ -238,14 +238,15 @@ export function MediaPoolPanel({
           {displayed.map((item, idx) => {
             const showSeparator =
               idx === separatorIdx && separatorIdx > 0 && noPreviewCount > 0
-            const belongs =
-              !!selectedHandle &&
-              mediaMatchesVariantKey(item.inv, selectedHandle, activeVariantKey)
+            const scope =
+              selectedHandle
+                ? classifyMediaVariantScope(item.inv, selectedHandle, activeVariantKey)
+                : "active"
             const usage = resolvePoolUsageStatus(
               item.inv.id,
               variantRoles,
               currentGalleryIds ?? [],
-              belongs
+              scope
             )
             return (
               <React.Fragment key={item.inv.id}>
@@ -267,10 +268,10 @@ export function MediaPoolPanel({
                   isMain={usage.isMain}
                   isInGallery={usage.isInGallery}
                   poolUsageLine={usage.statusLine || undefined}
-                  poolMuted={!belongs}
+                  poolMuted={usage.poolMuted}
                   isDimmed={
                     activeFilter === "all" &&
-                    belongs &&
+                    !usage.poolMuted &&
                     (usage.isMain || usage.isInGallery)
                   }
                   roleOverride={(roleOverrides ?? {})[item.inv.id] ?? null}

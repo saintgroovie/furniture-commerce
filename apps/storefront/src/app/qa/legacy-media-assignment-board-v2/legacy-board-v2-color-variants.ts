@@ -152,16 +152,41 @@ export function displayLabelForVariant(
   return state?.variantLabelOverrides?.[variantKey] ?? defaultLabel
 }
 
+/** Shared product shots (gallery_*, iso) without explicit color_* token. */
+const NEUTRAL_MEDIA_RE =
+  /(?:^|[-_])gallery[_\-.]?\d|[-_]iso[-_]?\d|[-_]i3(?:\.|[-_]|$)/i
+
+export function isNeutralSharedMedia(inv: InvItem, productHandle: string): boolean {
+  const hay = `${inv.filename} ${inv.source_path ?? ""}`.toLowerCase()
+  if (!NEUTRAL_MEDIA_RE.test(hay)) return false
+  const token = extractColorTokenFromMedia(inv, productHandle)
+  return !token
+}
+
+export type MediaVariantScope = "active" | "other_color" | "neutral"
+
+/** Pool / UI scope: active color tab, another color, or neutral shared frame. */
+export function classifyMediaVariantScope(
+  inv: InvItem,
+  productHandle: string,
+  activeVariantKey: string
+): MediaVariantScope {
+  if (activeVariantKey === "__all__") return "active"
+  if (isNeutralSharedMedia(inv, productHandle)) return "neutral"
+  const token = extractColorTokenFromMedia(inv, productHandle)
+  if (!token) return "neutral"
+  if (token === activeVariantKey) return "active"
+  return "other_color"
+}
+
 /** Whether inventory media belongs to the active color tab (not another variant). */
 export function mediaMatchesVariantKey(
   inv: InvItem,
   productHandle: string,
   variantKey: string
 ): boolean {
-  if (variantKey === "__all__") return true
-  const token = extractColorTokenFromMedia(inv, productHandle)
-  if (!token) return false
-  return token === variantKey
+  const scope = classifyMediaVariantScope(inv, productHandle, variantKey)
+  return scope === "active" || scope === "neutral"
 }
 
 export function buildDetectedColorVariants(

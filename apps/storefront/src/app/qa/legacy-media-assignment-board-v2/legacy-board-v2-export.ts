@@ -80,6 +80,31 @@ function makeMediaRef(id: string, invById: Map<string, InvItem>): V2ExportMediaR
   }
 }
 
+/** True when at least one product has exportable role or gallery data. */
+export function hasAnyV2Assignments(productStates: Record<string, V2ProductState>): boolean {
+  for (const state of Object.values(productStates)) {
+    const hasRoles = Object.values(state.rolesByVariant).some((roles) =>
+      Object.values(roles).some((v) => !!v)
+    )
+    if (hasRoles) return true
+    const hasGallery = Object.values(state.galleriesByVariant).some((g) => g.length > 0)
+    if (hasGallery) return true
+  }
+  return false
+}
+
+export function getV2ExportDisabledReason(
+  productStates: Record<string, V2ProductState>,
+  selectedHandle: string | null
+): string | null {
+  if (hasAnyV2Assignments(productStates)) return null
+  if (!selectedHandle) return "Выберите продукт и назначьте роли или галерею"
+  if (!productStates[selectedHandle]) {
+    return "Нет сохранённых назначений для этого продукта"
+  }
+  return "Нет назначений для экспорта — заполните главное или слоты ролей"
+}
+
 export function buildV2ExportJSON(
   productStates: Record<string, V2ProductState>,
   invById: Map<string, InvItem>,

@@ -2,6 +2,7 @@
  * Derive gallery ↔ role transparency from rolesByVariant (no extra persisted state).
  */
 
+import type { MediaVariantScope } from "./legacy-board-v2-color-variants"
 import { NON_MAIN_ROLE_SLOTS } from "./legacy-board-v2-state-sync"
 import type { V2RoleSlot, V2VariantRoleAssignment } from "./legacy-board-v2-types"
 
@@ -61,7 +62,8 @@ export type PoolUsageStatus = {
   isMain: boolean
   isInGallery: boolean
   roleSlot: V2RoleSlot | null
-  belongsToActiveVariant: boolean
+  scope: MediaVariantScope
+  poolMuted: boolean
   /** Single status line for operator scan */
   statusLine: string
 }
@@ -70,17 +72,16 @@ export function resolvePoolUsageStatus(
   mediaId: string,
   roles: V2VariantRoleAssignment,
   galleryIds: string[],
-  belongsToActiveVariant: boolean
+  scope: MediaVariantScope
 ): PoolUsageStatus {
   const mainId = getVariantMainId(roles)
   const isMain = mainId === mediaId
   const isInGallery = galleryIds.includes(mediaId)
   const roleSlot = isMain ? ("main" as const) : findNonMainRoleSlotForMedia(roles, mediaId)
+  const poolMuted = scope === "other_color"
 
   let statusLine = ""
-  if (!belongsToActiveVariant) {
-    statusLine = "другой цвет"
-  } else if (isMain) {
+  if (isMain) {
     statusLine = "★ Главное"
   } else if (roleSlot && roleSlot !== "main" && isInGallery) {
     statusLine = `✓ В витрине · ${ROLE_SLOT_LABEL_RU[roleSlot]}`
@@ -88,7 +89,11 @@ export function resolvePoolUsageStatus(
     statusLine = ROLE_SLOT_LABEL_RU[roleSlot]
   } else if (isInGallery) {
     statusLine = "✓ В витрине · ручн."
+  } else if (scope === "other_color") {
+    statusLine = "другой цвет"
+  } else if (scope === "neutral") {
+    statusLine = "общий кадр"
   }
 
-  return { isMain, isInGallery, roleSlot, belongsToActiveVariant, statusLine }
+  return { isMain, isInGallery, roleSlot, scope, poolMuted, statusLine }
 }

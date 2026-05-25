@@ -1,11 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import type { V2ProductState, InvItem, ProductRow } from "./legacy-board-v2-types"
 import {
   copyV2ExportToClipboard,
   downloadV2ExportJSON,
-  buildV2ExportJSON,
+  getV2ExportDisabledReason,
+  hasAnyV2Assignments,
 } from "./legacy-board-v2-export"
 import { clearV2PersistedState, formatSavedAt } from "./legacy-board-v2-persistence"
 
@@ -14,12 +15,26 @@ type Props = {
   invById: Map<string, InvItem>
   products: ProductRow[]
   savedAt: string | null
+  selectedHandle: string | null
   onReset: () => void
 }
 
-export function ExportToolbar({ productStates, invById, products, savedAt, onReset }: Props) {
+export function ExportToolbar({
+  productStates,
+  invById,
+  products,
+  savedAt,
+  selectedHandle,
+  onReset,
+}: Props) {
   const [copyStatus, setCopyStatus] = useState<"idle" | "ok" | "err">("idle")
   const [confirmReset, setConfirmReset] = useState(false)
+
+  const exportEnabled = useMemo(() => hasAnyV2Assignments(productStates), [productStates])
+  const exportBlockedReason = useMemo(
+    () => getV2ExportDisabledReason(productStates, selectedHandle),
+    [productStates, selectedHandle]
+  )
 
   const assignedCount = Object.values(productStates).filter((s) =>
     Object.values(s.rolesByVariant).some((r) => Object.values(r).some((v) => !!v)) ||
@@ -30,18 +45,15 @@ export function ExportToolbar({ productStates, invById, products, savedAt, onRes
     return acc + Object.values(s.rolesByVariant).filter((r) => !!r.main).length
   }, 0)
 
-  const snapshotEmpty = (() => {
-    const json = buildV2ExportJSON(productStates, invById, products)
-    return json.summary.products_with_assignments === 0
-  })()
-
   async function handleCopy() {
+    if (!exportEnabled) return
     const ok = await copyV2ExportToClipboard(productStates, invById, products)
     setCopyStatus(ok ? "ok" : "err")
     setTimeout(() => setCopyStatus("idle"), 2200)
   }
 
   function handleDownload() {
+    if (!exportEnabled) return
     downloadV2ExportJSON(productStates, invById, products)
   }
 
@@ -64,7 +76,6 @@ export function ExportToolbar({ productStates, invById, products, savedAt, onRes
 
   return (
     <div style={styles.toolbar}>
-      {/* Save status */}
       <span style={{ ...styles.saveStatus, color: saveLabelColor }}>
         {savedAt ? "💾" : "○"} {saveLabel}
         {assignedCount > 0 && (
@@ -72,36 +83,45 @@ export function ExportToolbar({ productStates, invById, products, savedAt, onRes
         )}
       </span>
 
+      {exportBlockedReason && (
+        <span style={styles.exportHint} data-v2-export-blocked-reason>
+          {exportBlockedReason}
+        </span>
+      )}
+
       <div style={styles.actions}>
-        {/* Copy JSON */}
         <button
           style={{
             ...styles.btn,
             ...(copyStatus === "ok" ? styles.btnOk : copyStatus === "err" ? styles.btnErr : {}),
-            ...(snapshotEmpty ? styles.btnDisabled : {}),
+            ...(!exportEnabled ? styles.btnDisabled : {}),
           }}
-          disabled={snapshotEmpty}
+          disabled={!exportEnabled}
           onClick={handleCopy}
-          title={snapshotEmpty ? "Нет назначений для копирования" : "Скопировать JSON в буфер обмена"}
+          title={
+            exportEnabled
+              ? "Скопировать JSON в буфер обмена"
+              : exportBlockedReason ?? "Нет назначений"
+          }
+          data-v2-copy-json-enabled={exportEnabled ? "true" : "false"}
         >
           {copyStatus === "ok" ? "✓ Скопировано" : copyStatus === "err" ? "✗ Ошибка" : "Copy JSON"}
         </button>
 
-        {/* Download JSON */}
         <button
           style={{
             ...styles.btn,
             ...styles.btnDownload,
-            ...(snapshotEmpty ? styles.btnDisabled : {}),
+            ...(!exportEnabled ? styles.btnDisabled : {}),
           }}
-          disabled={snapshotEmpty}
+          disabled={!exportEnabled}
           onClick={handleDownload}
-          title={snapshotEmpty ? "Нет назначений для экспорта" : "Скачать JSON файл"}
+          title={exportEnabled ? "Скачать JSON файл" : exportBlockedReason ?? "Нет назначений"}
+          data-v2-download-json-enabled={exportEnabled ? "true" : "false"}
         >
           ↓ Download
         </button>
 
-        {/* Reset v2 */}
         <button
           style={{
             ...styles.btn,
@@ -122,7 +142,7 @@ const styles = {
   toolbar: {
     display: "flex",
     alignItems: "center",
-    gap: "12px",
+    gap: "10px",
     padding: "5px 14px",
     background: "#f5f5f5",
     borderBottom: "1px solid #e8e8e8",
@@ -136,11 +156,18 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: "6px",
-    flex: 1,
+    flexShrink: 0,
+  },
+  exportHint: {
+    fontSize: "10px",
+    color: "#8a5a00",
+    background: "#fff8e8",
+    border: "1px solid #f0d8a0",
+    borderRadius: "4px",
+    padding: "2px 8px",
+    flex: "1 1 200px",
     minWidth: 0,
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap" as const,
+    lineHeight: 1.35,
   },
   countChip: {
     fontSize: "10px",
@@ -155,6 +182,7 @@ const styles = {
     display: "flex",
     gap: "5px",
     flexShrink: 0,
+    marginLeft: "auto",
   },
   btn: {
     padding: "3px 10px",
@@ -195,7 +223,7 @@ const styles = {
     fontWeight: 700,
   },
   btnDisabled: {
-    opacity: 0.4,
+    opacity: 0.45,
     cursor: "not-allowed",
   },
 } as const

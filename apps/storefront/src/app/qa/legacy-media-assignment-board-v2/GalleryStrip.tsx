@@ -7,9 +7,9 @@ import { clientPreview } from "./MediaCardV2"
 
 export const GALLERY_DRAG_TYPE = "application/x-gallery-item"
 
-/** Balanced dock — readable cards without billboard height */
-export const GALLERY_CARD_W = 180
-export const GALLERY_THUMB_H = 140
+/** Compact preview strip — smaller than role slots */
+export const GALLERY_CARD_W = 132
+export const GALLERY_THUMB_H = 96
 export const GALLERY_SLOT_COUNT = 5
 
 // ---------------------------------------------------------------------------
@@ -53,12 +53,12 @@ export function StorefrontGallerySection({
 const hubStyles = {
   root: {
     flexShrink: 0,
-    margin: "14px 14px 0",
-    border: "1px solid #c8d4e8",
-    borderRadius: "8px",
-    background: "#f4f7fc",
+    margin: "10px 14px 0",
+    border: "1px solid #d8e0ec",
+    borderRadius: "6px",
+    background: "#f8fafc",
     overflow: "hidden",
-    boxShadow: "0 1px 0 rgba(26, 58, 110, 0.04)",
+    boxShadow: "none",
   },
 } as const
 
@@ -435,14 +435,13 @@ export function GalleryStrip({
       <div style={styles.header}>
         <div style={styles.headerMain}>
           <span style={styles.label} data-v2-gallery-section-label>
-            ГАЛЕРЕЯ / порядок на витрине
+            Витрина
           </span>
-          <span style={styles.headerLead}>
-            Заполните роли — витрина обновится автоматически. · {filledCount}/
-            {GALLERY_SLOT_COUNT}
+          <span style={styles.headerLead} data-v2-gallery-header-lead>
+            Витрина собирается из заполненных ролей · {filledCount}/{GALLERY_SLOT_COUNT}
           </span>
           <span style={styles.headerHint}>
-            В карточках витрины показано, из какой роли пришло фото.
+            На карточках — из какой роли пришло фото.
           </span>
         </div>
         <GalleryHeaderRail
