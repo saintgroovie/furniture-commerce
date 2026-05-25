@@ -163,7 +163,7 @@ export function RoleChecklistPanel({
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
             >
-              <div style={styles.slotHeader}>
+              <div style={styles.slotHeader} data-v2-role-slot-header>
                 <span
                   style={{
                     ...styles.slotLabel,
@@ -173,6 +173,52 @@ export function RoleChecklistPanel({
                 >
                   {row.label}
                 </span>
+                <div style={styles.headerActions} data-v2-role-slot-header-actions>
+                  {row.isCovered &&
+                    (onRemoveMain || onRemoveFromGallery || onClearRole) && (
+                      <button
+                        type="button"
+                        style={{ ...styles.iconBtn, ...styles.iconBtnRemove }}
+                        onClick={handleRemove}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        title={
+                          row.source === "explicit"
+                            ? "Убрать назначение"
+                            : "Убрать из галереи"
+                        }
+                        aria-label={
+                          row.source === "explicit"
+                            ? "Убрать назначение"
+                            : "Убрать из галереи"
+                        }
+                        data-v2-role-slot-action-remove
+                      >
+                        ×
+                      </button>
+                    )}
+                  <button
+                    type="button"
+                    style={{
+                      ...styles.iconBtn,
+                      ...(row.isCovered ? styles.iconBtnPool : styles.iconBtnPoolEmpty),
+                    }}
+                    onClick={() => onFocusRole(row.slot)}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    title={
+                      row.isCovered
+                        ? `Сменить «${def?.label}» (фильтр в пуле)`
+                        : def?.hint
+                    }
+                    aria-label={
+                      row.isCovered
+                        ? `Сменить «${def?.label}» — открыть пул`
+                        : `Открыть пул для «${def?.label}»`
+                    }
+                    data-v2-role-slot-action-pool
+                  >
+                    {row.isCovered ? "↺" : "+"}
+                  </button>
+                </div>
               </div>
 
               <div
@@ -214,7 +260,7 @@ export function RoleChecklistPanel({
               </div>
 
               {row.isCovered && row.source === "explicit" && (
-                <div style={styles.statusRow}>
+                <div style={styles.statusRow} data-v2-role-slot-status>
                   {autoHint && !hasManualOverride && (
                     <span
                       style={
@@ -239,30 +285,6 @@ export function RoleChecklistPanel({
                     ))}
                 </div>
               )}
-
-              <div style={styles.actionsRow}>
-                {row.isCovered && (onRemoveMain || onRemoveFromGallery || onClearRole) && (
-                  <button
-                    type="button"
-                    style={styles.removeTextBtn}
-                    onClick={handleRemove}
-                    title={row.source === "explicit" ? "Убрать назначение" : "Убрать из галереи"}
-                  >
-                    × убрать
-                  </button>
-                )}
-                <button
-                  type="button"
-                  style={{
-                    ...styles.addBtn,
-                    ...(row.isCovered ? styles.addBtnFilled : styles.addBtnEmpty),
-                  }}
-                  onClick={() => onFocusRole(row.slot)}
-                  title={row.isCovered ? `Сменить «${def?.label}» (фильтр в пуле)` : def?.hint}
-                >
-                  {row.isCovered ? "↺ пул" : "+ пул"}
-                </button>
-              </div>
             </div>
           )
         })}
@@ -271,7 +293,7 @@ export function RoleChecklistPanel({
   )
 }
 
-const THUMB_H = 100
+const THUMB_MIN_H = 124
 
 const styles = {
   roleBoard: {
@@ -313,7 +335,7 @@ const styles = {
   slot: {
     display: "flex",
     flexDirection: "column" as const,
-    minHeight: "172px",
+    minHeight: "168px",
     maxWidth: "100%",
     borderRadius: "8px",
     overflow: "hidden",
@@ -344,23 +366,69 @@ const styles = {
     boxShadow: "0 0 0 3px rgba(26, 58, 110, 0.18)",
   },
   slotHeader: {
-    padding: "8px 10px 6px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "6px",
+    padding: "5px 8px 4px",
     flexShrink: 0,
     borderBottom: "1px solid #eef1f6",
-    background: "rgba(255,255,255,0.85)",
+    background: "rgba(255,255,255,0.92)",
   },
   slotLabel: {
     fontSize: "12px",
     letterSpacing: "0.02em",
     lineHeight: 1.25,
+    flex: "1 1 auto",
+    minWidth: 0,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap" as const,
+  },
+  headerActions: {
+    display: "flex",
+    alignItems: "center",
+    gap: "4px",
+    flexShrink: 0,
+  },
+  iconBtn: {
+    width: "22px",
+    height: "22px",
+    borderRadius: "4px",
+    borderWidth: "1px",
+    borderStyle: "solid" as const,
+    cursor: "pointer",
+    fontSize: "13px",
+    fontWeight: 700,
+    lineHeight: 1,
+    padding: 0,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  iconBtnRemove: {
+    borderColor: "#e8c4c4",
+    background: "#fff5f5",
+    color: "#a33",
+  },
+  iconBtnPool: {
+    borderColor: "#aacaff",
+    background: "#eef4ff",
+    color: "#1a3a6e",
+  },
+  iconBtnPoolEmpty: {
+    borderColor: "#c5ced8",
+    background: "#fff",
+    color: "#6a7a90",
+    fontWeight: 600,
   },
   thumbArea: {
     position: "relative" as const,
     width: "100%",
-    height: `${THUMB_H}px`,
-    minHeight: `${THUMB_H}px`,
-    flex: "1 1 auto",
-    background: "#eef1f6",
+    minHeight: `${THUMB_MIN_H}px`,
+    flex: "1 1 0",
+    background: "#f2f4f8",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -449,9 +517,9 @@ const styles = {
     display: "flex",
     flexWrap: "wrap" as const,
     alignItems: "center",
-    gap: "4px",
-    padding: "6px 8px",
-    minHeight: "28px",
+    gap: "3px",
+    padding: "4px 6px",
+    minHeight: "22px",
     background: "#f8fafc",
     borderTop: "1px solid #eef1f6",
     flexShrink: 0,
@@ -460,49 +528,6 @@ const styles = {
     fontSize: "10px",
     color: "#8a5a00",
     fontWeight: 600,
-  },
-  actionsRow: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: "6px",
-    padding: "6px 8px 8px",
-    flexShrink: 0,
-    background: "#fff",
-    borderTop: "1px solid #eef1f6",
-  },
-  removeTextBtn: {
-    padding: "3px 6px",
-    fontSize: "11px",
-    border: "1px solid #e8c4c4",
-    borderRadius: "4px",
-    background: "#fff5f5",
-    color: "#a33",
-    cursor: "pointer",
-    fontWeight: 600,
-    lineHeight: 1.2,
-    flexShrink: 0,
-  },
-  addBtn: {
-    padding: "4px 8px",
-    borderRadius: "4px",
-    borderWidth: "1px",
-    borderStyle: "solid" as const,
-    cursor: "pointer",
-    fontSize: "11px",
-    fontWeight: 600,
-    lineHeight: 1.2,
-    flexShrink: 0,
-  },
-  addBtnEmpty: {
-    borderColor: "#c5ced8",
-    background: "#fff",
-    color: "#6a7a90",
-  },
-  addBtnFilled: {
-    borderColor: "#aacaff",
-    background: "#eef4ff",
-    color: "#1a3a6e",
   },
   toGalleryBtn: {
     padding: "4px 8px",
