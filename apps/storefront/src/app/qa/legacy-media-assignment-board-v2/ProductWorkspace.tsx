@@ -104,20 +104,23 @@ export function ProductWorkspace({
           removedVariants={removedVariants}
         />
 
-        {/* Missing roles — always visible task bar */}
-        <MissingRoleStripDerived
-          productState={productState}
-          activeVariantKey={activeVariantKey}
-          invById={invById}
-          onFocusRole={onFocusRole}
-          roleOverrides={roleOverrides}
-        />
-
-        {/* Onboarding hint — shown only before any assignment */}
-        <OnboardingHint productState={productState} activeVariantKey={activeVariantKey} />
+        {/* Readiness: missing roles + one compact instruction card */}
+        <div style={styles.readinessBlock}>
+          <MissingRoleStripDerived
+            productState={productState}
+            activeVariantKey={activeVariantKey}
+            invById={invById}
+            onFocusRole={onFocusRole}
+            roleOverrides={roleOverrides}
+          />
+          <WorkspaceInstructionCard
+            productState={productState}
+            activeVariantKey={activeVariantKey}
+          />
+        </div>
       </div>
 
-      {/* ── Scrollable body: role slots then gallery (inline flow, no bottom pin) ── */}
+      {/* ── Scrollable body: role board (primary) then gallery dock ── */}
       <div style={styles.scrollBody}>
         <RoleChecklistPanel
           productState={productState}
@@ -151,7 +154,7 @@ export function ProductWorkspace({
 // Onboarding hint — only before any role is assigned
 // ---------------------------------------------------------------------------
 
-function OnboardingHint({
+function WorkspaceInstructionCard({
   productState,
   activeVariantKey,
 }: {
@@ -168,39 +171,28 @@ function OnboardingHint({
   if (hasAnyAssignment) return null
 
   return (
-    <div style={hintStyles.box}>
-      <span style={hintStyles.step}>Шаг 1</span>
-      <span style={hintStyles.text}>
-        Найдите главное фото в правом пуле и нажмите <strong>★ Главное</strong>.
-        Затем заполните недостающие роли, нажимая на чипы выше.
-      </span>
+    <div style={hintStyles.card} data-v2-workspace-instruction>
+      <p style={hintStyles.text}>
+        <strong>Шаг 1.</strong> В правом пуле назначьте <strong>★ Главное</strong>, затем
+        перетащите фото в крупные <strong>слоты ролей</strong> ниже или откройте роль через «+
+        пул». Порядок на витрине — в блоке галереи под слотами.
+      </p>
     </div>
   )
 }
 
 const hintStyles = {
-  box: {
-    display: "flex",
-    gap: "10px",
-    alignItems: "flex-start",
-    padding: "8px 14px 9px",
+  card: {
+    margin: "0 14px 10px",
+    padding: "10px 12px",
     background: "#f0f6ff",
-    borderBottom: "1px solid #d0e4ff",
+    border: "1px solid #d0e4ff",
+    borderRadius: "8px",
     flexShrink: 0,
-  },
-  step: {
-    fontSize: "10px",
-    fontWeight: 700,
-    color: "#1a3a6e",
-    background: "#d0e4ff",
-    borderRadius: "10px",
-    padding: "2px 7px",
-    whiteSpace: "nowrap" as const,
-    flexShrink: 0,
-    marginTop: "1px",
   },
   text: {
-    fontSize: "11px",
+    margin: 0,
+    fontSize: "12px",
     color: "#3a5a8e",
     lineHeight: 1.5,
   },
@@ -245,6 +237,13 @@ const styles = {
   },
   topSection: {
     flexShrink: 0,
+    background: "#f8f9fb",
+    borderBottom: "1px solid #e4e8ee",
+  },
+  readinessBlock: {
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: "0",
   },
   scrollBody: {
     flex: 1,
@@ -254,6 +253,7 @@ const styles = {
     flexDirection: "column" as const,
     alignItems: "stretch",
     justifyContent: "flex-start",
+    paddingBottom: "16px",
   },
   colHeader: {
     padding: "9px 14px",

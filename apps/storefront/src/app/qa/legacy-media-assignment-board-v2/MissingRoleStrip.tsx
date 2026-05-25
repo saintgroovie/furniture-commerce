@@ -53,19 +53,17 @@ export function MissingRoleStrip({ missingSlots, onFocusRole }: Props) {
 const styles = {
   strip: {
     padding: "8px 14px 10px",
-    background: "#fffbf0",
-    borderTop: "1px solid #ffd54f",
-    borderBottom: "1px solid #ffd54f",
+    background: "#fffbf5",
+    borderBottom: "1px solid #f0e6d0",
     flexShrink: 0,
   },
   stripDone: {
     display: "flex",
     alignItems: "center",
     gap: "8px",
-    padding: "8px 14px",
-    background: "#f0fff4",
-    borderTop: "1px solid #c8e6c9",
-    borderBottom: "1px solid #c8e6c9",
+    padding: "8px 14px 10px",
+    background: "#f5fbf6",
+    borderBottom: "1px solid #e8f0e8",
     flexShrink: 0,
   },
   doneIcon: {

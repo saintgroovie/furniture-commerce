@@ -50,8 +50,11 @@ export function StorefrontGallerySection({
 const hubStyles = {
   root: {
     flexShrink: 0,
-    borderTop: "1px solid #d0d8e8",
+    margin: "12px 14px 0",
+    border: "1px solid #d0d8e8",
+    borderRadius: "8px",
     background: "#f4f7fc",
+    overflow: "hidden",
   },
 } as const
 
