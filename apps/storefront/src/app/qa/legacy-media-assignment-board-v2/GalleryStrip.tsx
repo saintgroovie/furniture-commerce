@@ -56,7 +56,7 @@ export function StorefrontGallerySection({
 const hubStyles = {
   root: {
     flexShrink: 0,
-    margin: "6px 12px 0",
+    margin: "4px 12px 6px",
     border: "1px solid #d8e0ec",
     borderRadius: "6px",
     background: "#f8fafc",
@@ -833,7 +833,7 @@ const styles = {
     alignItems: "center",
     justifyContent: "space-between",
     gap: "10px",
-    padding: "6px 12px",
+    padding: "5px 10px",
     flexWrap: "wrap" as const,
     borderBottom: "1px solid #e0e6f0",
     minHeight: 0,

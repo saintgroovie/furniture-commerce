@@ -140,6 +140,7 @@ export function RoleChecklistPanel({
           const hasManualOverride =
             row.mediaId && !!(roleOverrides ?? {})[row.mediaId]
           const isDraggableFilled = row.isCovered && row.mediaId && row.source === "explicit"
+          const isFilledExplicit = row.isCovered && row.source === "explicit"
 
           function handleFilledDragStart(e: React.DragEvent) {
             if (!row.mediaId) return
@@ -155,6 +156,7 @@ export function RoleChecklistPanel({
               data-v2-role-slot-media-id={row.mediaId ?? undefined}
               style={{
                 ...styles.slot,
+                ...(isFilledExplicit ? styles.slotSizeFilled : styles.slotSizeEmpty),
                 ...(row.isCovered ? styles.slotFilled : styles.slotEmpty),
                 ...(isMain ? styles.slotMain : {}),
                 ...(isDragTarget ? styles.slotDragOver : {}),
@@ -228,6 +230,9 @@ export function RoleChecklistPanel({
                 onDragStart={isDraggableFilled ? handleFilledDragStart : undefined}
                 style={{
                   ...styles.thumbArea,
+                  ...(thumbUrl && isFilledExplicit
+                    ? styles.thumbAreaFilled
+                    : styles.thumbAreaEmpty),
                   ...(isMain ? styles.thumbAreaMain : {}),
                   ...(isDragTarget ? styles.thumbAreaDragOver : {}),
                   ...(isDraggableFilled ? styles.thumbAreaDraggable : {}),
@@ -294,23 +299,23 @@ export function RoleChecklistPanel({
   )
 }
 
-/** Filled slot image area target ~160–190px at 1440×900 */
-const THUMB_MIN_H = 178
+/** Balanced sizes — role board + vitrine visible together at 1440×900 */
+const THUMB_FILLED_H = 148
+const THUMB_EMPTY_H = 112
 
 const styles = {
   roleBoard: {
-    flex: "1 0 auto",
     flexShrink: 0,
-    margin: "6px 12px 0",
-    padding: "8px 12px 10px",
+    margin: "4px 12px 0",
+    padding: "6px 10px 8px",
     background: "#fff",
     border: "1px solid #d4dce8",
     borderRadius: "10px",
     boxShadow: "0 1px 4px rgba(26, 58, 110, 0.07)",
   },
   boardHeader: {
-    marginBottom: "6px",
-    paddingBottom: "5px",
+    marginBottom: "4px",
+    paddingBottom: "4px",
     borderBottom: "1px solid #e8eef6",
   },
   boardTitle: {
@@ -332,8 +337,8 @@ const styles = {
   slot: {
     display: "flex",
     flexDirection: "column" as const,
-    minHeight: "248px",
     maxWidth: "100%",
+    boxSizing: "border-box" as const,
     borderRadius: "8px",
     overflow: "hidden",
     borderWidth: "2px",
@@ -341,6 +346,14 @@ const styles = {
     borderColor: "transparent",
     background: "#fafbfc",
     transition: "box-shadow 0.12s, border-color 0.12s",
+  },
+  slotSizeFilled: {
+    height: "204px",
+    maxHeight: "215px",
+  },
+  slotSizeEmpty: {
+    height: "168px",
+    maxHeight: "180px",
   },
   slotEmpty: {
     borderColor: "#c5ced8",
@@ -423,13 +436,22 @@ const styles = {
   thumbArea: {
     position: "relative" as const,
     width: "100%",
-    minHeight: `${THUMB_MIN_H}px`,
-    flex: "1 1 auto",
+    flex: "0 0 auto",
     background: "#eceff4",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
+  },
+  thumbAreaFilled: {
+    height: `${THUMB_FILLED_H}px`,
+    minHeight: `${THUMB_FILLED_H}px`,
+    maxHeight: `${THUMB_FILLED_H}px`,
+  },
+  thumbAreaEmpty: {
+    height: `${THUMB_EMPTY_H}px`,
+    minHeight: `${THUMB_EMPTY_H}px`,
+    maxHeight: `${THUMB_EMPTY_H}px`,
   },
   thumbAreaMain: {
     background: "#e8f0ff",
