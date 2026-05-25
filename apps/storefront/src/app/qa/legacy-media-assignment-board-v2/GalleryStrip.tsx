@@ -5,14 +5,56 @@ import type { InvItem } from "./legacy-board-v2-types"
 import { classifyVisualRole, VISUAL_ROLE_BADGE_RU } from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
 import { clientPreview } from "./MediaCardV2"
 
-/**
- * Custom drag MIME type for drop-time getData (not for dragover checks).
- */
 export const GALLERY_DRAG_TYPE = "application/x-gallery-item"
 
-/** Gallery card dimensions — visible at 1440×900 with horizontal scroll */
-export const GALLERY_CARD_W = 172
-export const GALLERY_THUMB_H = 150
+/** Prominent gallery cards — operator reorder at a glance */
+export const GALLERY_CARD_W = 240
+export const GALLERY_THUMB_H = 200
+export const GALLERY_SLOT_COUNT = 5
+
+// ---------------------------------------------------------------------------
+// StorefrontGallerySection — unified hub (main strip + apply summary)
+// ---------------------------------------------------------------------------
+
+type HubProps = {
+  mainMediaId: string | null
+  galleryIds: string[]
+  invById: Map<string, InvItem>
+  onRemove: (mediaId: string) => void
+  onReorderGallery?: (fromIdx: number, toIdx: number) => void
+  onInsertIntoGallery?: (mediaId: string, atIdx: number) => void
+}
+
+export function StorefrontGallerySection({
+  mainMediaId,
+  galleryIds,
+  invById,
+  onRemove,
+  onReorderGallery,
+  onInsertIntoGallery,
+}: HubProps) {
+  return (
+    <div style={hubStyles.root} data-v2-gallery-hub>
+      <GalleryStrip
+        mainMediaId={mainMediaId}
+        galleryIds={galleryIds}
+        invById={invById}
+        onRemove={onRemove}
+        onReorderGallery={onReorderGallery}
+        onInsertIntoGallery={onInsertIntoGallery}
+      />
+    </div>
+  )
+}
+
+const hubStyles = {
+  root: {
+    flexShrink: 0,
+    borderTop: "2px solid #1a3a6e",
+    background: "#f4f7fc",
+    boxShadow: "0 -1px 4px rgba(26,58,110,0.06)",
+  },
+} as const
 
 // ---------------------------------------------------------------------------
 // GalleryItem
@@ -25,6 +67,8 @@ type GalleryItemProps = {
   total: number
   isDragging: boolean
   isDragOver: boolean
+  isHovered: boolean
+  canReorder: boolean
   onRemove: (mediaId: string) => void
   onDragStart: (e: React.DragEvent, mediaId: string, idx: number) => void
   onDragEnter: (e: React.DragEvent, idx: number) => void
@@ -32,9 +76,9 @@ type GalleryItemProps = {
   onDragLeave: (e: React.DragEvent, idx: number) => void
   onDrop: (e: React.DragEvent, toIdx: number) => void
   onDragEnd: () => void
-  onMoveLeft?: () => void
-  onMoveRight?: () => void
-  onPointerHandleDown?: (e: React.PointerEvent, idx: number) => void
+  onMoveEarlier?: () => void
+  onMoveLater?: () => void
+  onHover: (idx: number | null) => void
 }
 
 function GalleryItem({
@@ -44,6 +88,8 @@ function GalleryItem({
   total,
   isDragging,
   isDragOver,
+  isHovered,
+  canReorder,
   onRemove,
   onDragStart,
   onDragEnter,
@@ -51,34 +97,39 @@ function GalleryItem({
   onDragLeave,
   onDrop,
   onDragEnd,
-  onMoveLeft,
-  onMoveRight,
-  onPointerHandleDown,
+  onMoveEarlier,
+  onMoveLater,
+  onHover,
 }: GalleryItemProps) {
   const [imgFailed, setImgFailed] = useState(false)
   const preview = clientPreview(inv)
   const role = classifyVisualRole(inv)
   const roleLabel = VISUAL_ROLE_BADGE_RU[role] ?? "?"
   const showImg = preview.url !== null && !imgFailed
-  const shortname = inv.filename.length > 26 ? inv.filename.slice(0, 23) + "…" : inv.filename
-  const canMoveLeft = index > 0
-  const canMoveRight = index < total - 1
+  const canMoveEarlier = index > 0
+  const canMoveLater = index < total - 1
 
   return (
     <div
       data-v2-gallery-item={index}
       data-v2-gallery-filename={inv.filename}
+      data-v2-gallery-card-draggable={canReorder ? "true" : undefined}
+      draggable={canReorder}
+      onDragStart={canReorder ? (e) => onDragStart(e, mediaId, index) : undefined}
+      onDragEnd={canReorder ? onDragEnd : undefined}
       onDragEnter={(e) => onDragEnter(e, index)}
       onDragOver={(e) => onDragOver(e, index)}
       onDragLeave={(e) => onDragLeave(e, index)}
       onDrop={(e) => onDrop(e, index)}
+      onMouseEnter={() => onHover(index)}
+      onMouseLeave={() => onHover(null)}
       style={{
         ...styles.item,
         ...(isDragging ? styles.itemDragging : {}),
         ...(isDragOver ? styles.itemDragOver : {}),
+        ...(isHovered && canReorder ? styles.itemHover : {}),
       }}
     >
-      {/* Thumbnail — not draggable; use handle below */}
       <div style={{ ...styles.thumb, ...(isDragOver ? styles.thumbDragOver : {}) }}>
         {showImg ? (
           <img
@@ -91,7 +142,7 @@ function GalleryItem({
           />
         ) : (
           <div style={styles.noImg}>
-            <span style={{ fontSize: "32px", color: "#ddd" }}>–</span>
+            <span style={{ fontSize: "28px", color: "#ddd" }}>–</span>
           </div>
         )}
 
@@ -106,63 +157,44 @@ function GalleryItem({
           ×
         </button>
 
-        <span style={styles.positionBadge}>{index + 1}</span>
+        <span style={styles.positionBadge}>#{index + 1}</span>
+
         {isDragOver && <div style={styles.insertIndicator} title="Вставить сюда" />}
+
+        {isHovered && canReorder && !isDragging && (
+          <div style={styles.hoverHint}>↕ тащите</div>
+        )}
       </div>
 
-      {/* Visible drag handle — only this element starts HTML5 drag */}
-      <div
-        draggable
-        data-v2-gallery-drag-handle
-        onDragStart={(e) => {
-          e.stopPropagation()
-          onDragStart(e, mediaId, index)
-        }}
-        onDragEnd={(e) => {
-          e.stopPropagation()
-          onDragEnd()
-        }}
-        onPointerDown={(e) => {
-          if (e.button !== 0) return
-          onPointerHandleDown?.(e, index)
-        }}
-        style={styles.dragHandle}
-        title="Перетащите для смены порядка в галерее"
-        aria-label={`Перетащить «${inv.filename}»`}
-      >
-        <span style={styles.dragHandleIcon}>↕</span>
-        <span style={styles.dragHandleText}>Перетащить</span>
-      </div>
-
-      <div style={styles.meta}>
+      <div style={styles.meta} data-v2-gallery-drag-handle>
         <span style={styles.roleBadge}>{roleLabel}</span>
-        <span style={styles.fname} title={inv.filename}>{shortname}</span>
+        <span style={styles.fname} title={inv.filename}>{inv.filename}</span>
 
         <div style={styles.moveRow} data-v2-gallery-move-row>
           <button
             type="button"
-            style={{ ...styles.moveBtn, ...(canMoveLeft ? {} : styles.moveBtnDisabled) }}
-            disabled={!canMoveLeft}
+            style={{ ...styles.moveBtn, ...(canMoveEarlier ? {} : styles.moveBtnDisabled) }}
+            disabled={!canMoveEarlier}
             onMouseDown={(e) => e.stopPropagation()}
-            onClick={(e) => { e.stopPropagation(); canMoveLeft && onMoveLeft?.() }}
-            title="Сдвинуть влево"
-            aria-label={`Сдвинуть «${inv.filename}» влево`}
+            onClick={(e) => { e.stopPropagation(); canMoveEarlier && onMoveEarlier?.() }}
+            title="Сдвинуть раньше в галерее"
+            aria-label={`Сдвинуть «${inv.filename}» раньше`}
             data-v2-gallery-move="left"
           >
-            ←
+            раньше
           </button>
           <span style={styles.posLabel}>{index + 1} / {total}</span>
           <button
             type="button"
-            style={{ ...styles.moveBtn, ...(canMoveRight ? {} : styles.moveBtnDisabled) }}
-            disabled={!canMoveRight}
+            style={{ ...styles.moveBtn, ...(canMoveLater ? {} : styles.moveBtnDisabled) }}
+            disabled={!canMoveLater}
             onMouseDown={(e) => e.stopPropagation()}
-            onClick={(e) => { e.stopPropagation(); canMoveRight && onMoveRight?.() }}
-            title="Сдвинуть вправо"
-            aria-label={`Сдвинуть «${inv.filename}» вправо`}
+            onClick={(e) => { e.stopPropagation(); canMoveLater && onMoveLater?.() }}
+            title="Сдвинуть позже в галерее"
+            aria-label={`Сдвинуть «${inv.filename}» позже`}
             data-v2-gallery-move="right"
           >
-            →
+            позже
           </button>
         </div>
       </div>
@@ -171,33 +203,112 @@ function GalleryItem({
 }
 
 // ---------------------------------------------------------------------------
+// Empty state + drop gaps
+// ---------------------------------------------------------------------------
+
+function GalleryEmptyState({
+  onInsertIntoGallery,
+}: {
+  onInsertIntoGallery?: (mediaId: string, atIdx: number) => void
+}) {
+  const [dragOverSlot, setDragOverSlot] = useState<number | null>(null)
+
+  function handleSlotDragOver(e: React.DragEvent, idx: number) {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = "copy"
+    setDragOverSlot(idx)
+  }
+
+  function handleSlotDrop(e: React.DragEvent, idx: number) {
+    e.preventDefault()
+    setDragOverSlot(null)
+    const mediaId = e.dataTransfer.getData("text/plain")
+    if (mediaId) onInsertIntoGallery?.(mediaId, idx)
+  }
+
+  return (
+    <div style={styles.emptyWrap} data-v2-gallery-empty>
+      <p style={styles.emptyLine}>
+        Галерея пустая — добавьте фото кнопкой «+ Галерея»
+      </p>
+      <div style={styles.emptySlotsRow}>
+        {Array.from({ length: GALLERY_SLOT_COUNT }, (_, i) => (
+          <div
+            key={i}
+            style={{
+              ...styles.emptySlot,
+              ...(dragOverSlot === i ? styles.emptySlotActive : {}),
+            }}
+            data-v2-gallery-empty-slot={i + 1}
+            onDragEnter={(e) => handleSlotDragOver(e, i)}
+            onDragOver={(e) => handleSlotDragOver(e, i)}
+            onDragLeave={() => setDragOverSlot((p) => (p === i ? null : p))}
+            onDrop={(e) => handleSlotDrop(e, i)}
+          >
+            <span style={styles.emptySlotNum}>{i + 1}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function GalleryDropGap({
+  insertBefore,
+  isActive,
+  onDragEnter,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+}: {
+  insertBefore: number
+  isActive: boolean
+  onDragEnter: (e: React.DragEvent) => void
+  onDragOver: (e: React.DragEvent) => void
+  onDragLeave: (e: React.DragEvent) => void
+  onDrop: (e: React.DragEvent) => void
+}) {
+  return (
+    <div
+      data-v2-gallery-drop-gap
+      data-insert-before={insertBefore}
+      data-active={isActive ? "true" : "false"}
+      style={{ ...styles.dropGap, ...(isActive ? styles.dropGapActive : {}) }}
+      onDragEnter={onDragEnter}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+    />
+  )
+}
+
+// ---------------------------------------------------------------------------
 // GalleryStrip
 // ---------------------------------------------------------------------------
 
-type Props = {
+type StripProps = {
+  mainMediaId: string | null
   galleryIds: string[]
   invById: Map<string, InvItem>
   onRemove: (mediaId: string) => void
   onReorderGallery?: (fromIdx: number, toIdx: number) => void
+  onInsertIntoGallery?: (mediaId: string, atIdx: number) => void
 }
 
-function resolveGalleryDropIndex(clientX: number, clientY: number): number | null {
-  const el = document.elementFromPoint(clientX, clientY)
-  const item = el?.closest("[data-v2-gallery-item]")
-  if (!item) return null
-  const raw = item.getAttribute("data-v2-gallery-item")
-  if (raw === null) return null
-  const idx = parseInt(raw, 10)
-  return Number.isNaN(idx) ? null : idx
-}
-
-export function GalleryStrip({ galleryIds, invById, onRemove, onReorderGallery }: Props) {
+export function GalleryStrip({
+  mainMediaId,
+  galleryIds,
+  invById,
+  onRemove,
+  onReorderGallery,
+  onInsertIntoGallery,
+}: StripProps) {
   const stripRef = useRef<HTMLDivElement>(null)
   const [dragFromIdx, setDragFromIdx] = useState<number | null>(null)
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null)
+  const [insertBefore, setInsertBefore] = useState<number | null>(null)
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
   const dragSrcRef = useRef<number | null>(null)
-  const pointerFromRef = useRef<number | null>(null)
-  const pointerOverRef = useRef<number | null>(null)
 
   useEffect(() => {
     if (galleryIds.length > 0) {
@@ -205,55 +316,21 @@ export function GalleryStrip({ galleryIds, invById, onRemove, onReorderGallery }
     }
   }, [galleryIds.length])
 
-  function clearPointerDrag() {
-    pointerFromRef.current = null
-    pointerOverRef.current = null
+  function isInternalDrag(): boolean {
+    return dragSrcRef.current !== null
+  }
+
+  function clearDrag() {
+    dragSrcRef.current = null
     setDragFromIdx(null)
     setDragOverIdx(null)
-  }
-
-  function handlePointerHandleDown(e: React.PointerEvent, fromIdx: number) {
-    if (!onReorderGallery) return
-    e.preventDefault()
-    e.stopPropagation()
-    pointerFromRef.current = fromIdx
-    pointerOverRef.current = fromIdx
-    setDragFromIdx(fromIdx)
-    setDragOverIdx(fromIdx)
-
-    function onWindowPointerMove(ev: PointerEvent) {
-      const over = resolveGalleryDropIndex(ev.clientX, ev.clientY)
-      if (over === null) return
-      pointerOverRef.current = over
-      setDragOverIdx(over)
-    }
-
-    function endPointerDrag(ev: PointerEvent) {
-      window.removeEventListener("pointermove", onWindowPointerMove)
-      window.removeEventListener("pointerup", endPointerDrag)
-      window.removeEventListener("pointercancel", endPointerDrag)
-      const toIdx = resolveGalleryDropIndex(ev.clientX, ev.clientY) ?? pointerOverRef.current ?? fromIdx
-      const src = pointerFromRef.current
-      clearPointerDrag()
-      if (src !== null && src !== toIdx) {
-        onReorderGallery(src, toIdx)
-      }
-    }
-
-    window.addEventListener("pointermove", onWindowPointerMove)
-    window.addEventListener("pointerup", endPointerDrag)
-    window.addEventListener("pointercancel", endPointerDrag)
-  }
-
-  function isInternalDrag(): boolean {
-    return dragSrcRef.current !== null || pointerFromRef.current !== null
+    setInsertBefore(null)
   }
 
   function handleDragStart(e: React.DragEvent, mediaId: string, idx: number) {
     e.dataTransfer.setData("text/plain", mediaId)
     e.dataTransfer.setData(GALLERY_DRAG_TYPE, String(idx))
     e.dataTransfer.effectAllowed = "move"
-    // Transparent 1×1 drag image avoids browser blocking drag on custom divs (Safari)
     try {
       const img = new Image()
       img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
@@ -269,6 +346,7 @@ export function GalleryStrip({ galleryIds, invById, onRemove, onReorderGallery }
     if (!isInternalDrag()) return
     e.preventDefault()
     setDragOverIdx(idx)
+    setInsertBefore(null)
   }
 
   function handleDragOver(e: React.DragEvent, idx: number) {
@@ -276,6 +354,7 @@ export function GalleryStrip({ galleryIds, invById, onRemove, onReorderGallery }
     e.preventDefault()
     e.dataTransfer.dropEffect = "move"
     setDragOverIdx(idx)
+    setInsertBefore(null)
   }
 
   function handleDragLeave(e: React.DragEvent, idx: number) {
@@ -288,18 +367,25 @@ export function GalleryStrip({ galleryIds, invById, onRemove, onReorderGallery }
     e.preventDefault()
     e.stopPropagation()
     const fromIdx = dragSrcRef.current
-    dragSrcRef.current = null
-    setDragOverIdx(null)
-    setDragFromIdx(null)
+    clearDrag()
     if (fromIdx !== null && fromIdx !== toIdx) {
       onReorderGallery?.(fromIdx, toIdx)
     }
   }
 
+  function handleGapDrop(e: React.DragEvent, beforeIdx: number) {
+    e.preventDefault()
+    e.stopPropagation()
+    const fromIdx = dragSrcRef.current
+    clearDrag()
+    if (fromIdx === null) return
+    let toIdx = beforeIdx
+    if (fromIdx < beforeIdx) toIdx = beforeIdx - 1
+    if (fromIdx !== toIdx) onReorderGallery?.(fromIdx, toIdx)
+  }
+
   function handleDragEnd() {
-    dragSrcRef.current = null
-    setDragFromIdx(null)
-    setDragOverIdx(null)
+    clearDrag()
   }
 
   function handleScrollDragOver(e: React.DragEvent) {
@@ -308,59 +394,173 @@ export function GalleryStrip({ galleryIds, invById, onRemove, onReorderGallery }
     e.dataTransfer.dropEffect = "move"
   }
 
-  if (galleryIds.length === 0) return null
+  const hasGallery = galleryIds.length > 0
+  const filledCount = Math.min(galleryIds.length, GALLERY_SLOT_COUNT)
 
   return (
     <div ref={stripRef} style={styles.strip} data-v2-gallery-strip>
       <div style={styles.header}>
-        <span style={styles.label} data-v2-gallery-section-label>ГАЛЕРЕЯ</span>
-        <span style={styles.count}>{galleryIds.length} фото</span>
-        {onReorderGallery && (
-          <span style={styles.reorderHint}>
-            ↕ «Перетащить» на карточке или кнопки ← →
+        <div style={styles.headerMain}>
+          <span style={styles.label} data-v2-gallery-section-label>
+            ГАЛЕРЕЯ / порядок на витрине
           </span>
-        )}
+          <span style={styles.headerLead}>Порядок фото в gallery export</span>
+        </div>
+        <span style={styles.countPill}>{filledCount}/{GALLERY_SLOT_COUNT}</span>
+        <GalleryHeaderRail
+          mainMediaId={mainMediaId}
+          galleryIds={galleryIds}
+          invById={invById}
+        />
       </div>
-      <div
-        style={styles.scroll}
-        data-v2-gallery-scroll
-        onDragOver={handleScrollDragOver}
-        onDrop={(e) => {
-          // Drop on scroll gutter → move to last position
-          if (!isInternalDrag()) return
-          e.preventDefault()
-          const fromIdx = dragSrcRef.current
-          if (fromIdx === null) return
-          const toIdx = galleryIds.length - 1
-          dragSrcRef.current = null
-          setDragFromIdx(null)
-          setDragOverIdx(null)
-          if (fromIdx !== toIdx) onReorderGallery?.(fromIdx, toIdx)
-        }}
-      >
-        {galleryIds.map((mediaId, idx) => {
-          const inv = invById.get(mediaId)
-          if (!inv) return null
+
+      {!hasGallery ? (
+        <GalleryEmptyState onInsertIntoGallery={onInsertIntoGallery} />
+      ) : (
+        <div
+          style={styles.scroll}
+          data-v2-gallery-scroll
+          onDragOver={handleScrollDragOver}
+          onDrop={(e) => {
+            if (!isInternalDrag()) return
+            e.preventDefault()
+            const fromIdx = dragSrcRef.current
+            if (fromIdx === null) return
+            const toIdx = galleryIds.length - 1
+            clearDrag()
+            if (fromIdx !== toIdx) onReorderGallery?.(fromIdx, toIdx)
+          }}
+        >
+          {galleryIds.map((mediaId, idx) => {
+            const inv = invById.get(mediaId)
+            if (!inv) return null
+            return (
+              <span key={mediaId} style={styles.cardWithGap}>
+                <GalleryDropGap
+                  insertBefore={idx}
+                  isActive={insertBefore === idx && dragFromIdx !== null}
+                  onDragEnter={(e) => {
+                    if (!isInternalDrag()) return
+                    e.preventDefault()
+                    setInsertBefore(idx)
+                    setDragOverIdx(null)
+                  }}
+                  onDragOver={(e) => {
+                    if (!isInternalDrag()) return
+                    e.preventDefault()
+                    e.dataTransfer.dropEffect = "move"
+                    setInsertBefore(idx)
+                  }}
+                  onDragLeave={(e) => {
+                    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                      setInsertBefore((p) => (p === idx ? null : p))
+                    }
+                  }}
+                  onDrop={(e) => handleGapDrop(e, idx)}
+                />
+                <GalleryItem
+                  mediaId={mediaId}
+                  inv={inv}
+                  index={idx}
+                  total={galleryIds.length}
+                  isDragging={dragFromIdx === idx}
+                  isDragOver={dragOverIdx === idx && dragFromIdx !== idx}
+                  isHovered={hoveredIdx === idx}
+                  canReorder={!!onReorderGallery}
+                  onRemove={onRemove}
+                  onDragStart={handleDragStart}
+                  onDragEnter={handleDragEnter}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  onDragEnd={handleDragEnd}
+                  onMoveEarlier={onReorderGallery ? () => onReorderGallery(idx, idx - 1) : undefined}
+                  onMoveLater={onReorderGallery ? () => onReorderGallery(idx, idx + 1) : undefined}
+                  onHover={setHoveredIdx}
+                />
+              </span>
+            )
+          })}
+          <GalleryDropGap
+            insertBefore={galleryIds.length}
+            isActive={insertBefore === galleryIds.length && dragFromIdx !== null}
+            onDragEnter={(e) => {
+              if (!isInternalDrag()) return
+              e.preventDefault()
+              setInsertBefore(galleryIds.length)
+              setDragOverIdx(null)
+            }}
+            onDragOver={(e) => {
+              if (!isInternalDrag()) return
+              e.preventDefault()
+              e.dataTransfer.dropEffect = "move"
+              setInsertBefore(galleryIds.length)
+            }}
+            onDragLeave={(e) => {
+              if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                setInsertBefore((p) => (p === galleryIds.length ? null : p))
+              }
+            }}
+            onDrop={(e) => handleGapDrop(e, galleryIds.length)}
+          />
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// GalleryHeaderRail — mini apply-order proof in header (not a second panel)
+// ---------------------------------------------------------------------------
+
+function GalleryHeaderRail({
+  mainMediaId,
+  galleryIds,
+  invById,
+}: {
+  mainMediaId: string | null
+  galleryIds: string[]
+  invById: Map<string, InvItem>
+}) {
+  const filled = Math.min(galleryIds.length, GALLERY_SLOT_COUNT)
+  const thumbInv = mainMediaId ? invById.get(mainMediaId) : null
+  const thumbPreview = thumbInv ? clientPreview(thumbInv) : null
+
+  return (
+    <div style={railStyles.wrap} data-v2-apply-order-summary title="Итоговый порядок применения">
+      <span style={railStyles.label}>Итог: TH + {filled}/{GALLERY_SLOT_COUNT}</span>
+      <div style={railStyles.row}>
+        <div style={railStyles.chip} data-v2-final-order-slot="thumb">
+          <span style={railStyles.chipNum}>TH</span>
+          <div style={railStyles.chipThumb}>
+            {thumbPreview?.url ? (
+              <img src={thumbPreview.url} alt="TH" style={railStyles.chipImg} draggable={false} />
+            ) : (
+              <span style={railStyles.chipEmpty}>–</span>
+            )}
+          </div>
+        </div>
+        {Array.from({ length: GALLERY_SLOT_COUNT }, (_, i) => {
+          const mediaId = galleryIds[i] ?? null
+          const inv = mediaId ? invById.get(mediaId) : null
+          const preview = inv ? clientPreview(inv) : null
+          const filename = inv?.filename ?? ""
           return (
-            <GalleryItem
-              key={mediaId}
-              mediaId={mediaId}
-              inv={inv}
-              index={idx}
-              total={galleryIds.length}
-              isDragging={dragFromIdx === idx}
-              isDragOver={dragOverIdx === idx && dragFromIdx !== idx}
-              onRemove={onRemove}
-              onDragStart={handleDragStart}
-              onDragEnter={handleDragEnter}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              onDragEnd={handleDragEnd}
-              onMoveLeft={onReorderGallery ? () => onReorderGallery(idx, idx - 1) : undefined}
-              onMoveRight={onReorderGallery ? () => onReorderGallery(idx, idx + 1) : undefined}
-              onPointerHandleDown={onReorderGallery ? handlePointerHandleDown : undefined}
-            />
+            <div
+              key={i}
+              style={railStyles.chip}
+              data-v2-final-order-slot={i}
+              data-v2-final-order-filename={filename}
+            >
+              <span style={railStyles.chipNum}>{i + 1}</span>
+              <div style={{ ...railStyles.chipThumb, ...(mediaId ? {} : railStyles.chipThumbEmpty) }}>
+                {preview?.url ? (
+                  <img src={preview.url} alt={`#${i + 1}`} style={railStyles.chipImg} draggable={false} />
+                ) : (
+                  <span style={railStyles.chipEmpty}>·</span>
+                )}
+              </div>
+            </div>
           )
         })}
       </div>
@@ -368,80 +568,182 @@ export function GalleryStrip({ galleryIds, invById, onRemove, onReorderGallery }
   )
 }
 
+const railStyles = {
+  wrap: {
+    display: "flex",
+    flexDirection: "row" as const,
+    alignItems: "center",
+    gap: "8px",
+    flexShrink: 1,
+    minWidth: 0,
+    overflow: "hidden" as const,
+  },
+  label: {
+    fontSize: "10px",
+    fontWeight: 700,
+    color: "#5a6a8e",
+    letterSpacing: "0.03em",
+    whiteSpace: "nowrap" as const,
+    flexShrink: 0,
+  },
+  row: {
+    display: "flex",
+    alignItems: "center",
+    gap: "5px",
+    height: "44px",
+    overflowX: "auto" as const,
+    flexShrink: 1,
+    minWidth: 0,
+  },
+  chip: {
+    display: "flex",
+    flexDirection: "column" as const,
+    alignItems: "center",
+    gap: "2px",
+    flexShrink: 0,
+  },
+  chipNum: {
+    fontSize: "9px",
+    fontWeight: 800,
+    color: "#1a3a6e",
+    lineHeight: 1,
+  },
+  chipThumb: {
+    width: "36px",
+    height: "36px",
+    borderRadius: "4px",
+    border: "1.5px solid #1a3a6e",
+    background: "#fff",
+    overflow: "hidden",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  chipThumbEmpty: {
+    border: "1px dashed #ccc",
+    background: "#fafafa",
+  },
+  chipImg: {
+    width: "100%",
+    height: "100%",
+    objectFit: "contain" as const,
+    display: "block",
+  },
+  chipEmpty: {
+    fontSize: "12px",
+    color: "#ccc",
+  },
+} as const
+
 const styles = {
   strip: {
-    borderBottom: "2px solid #c8d5f0",
     flexShrink: 0,
     background: "#f8faff",
-    boxShadow: "inset 0 2px 0 #1a3a6e",
   },
   header: {
     display: "flex",
     alignItems: "center",
+    justifyContent: "flex-start",
     gap: "8px",
-    padding: "6px 14px 4px",
-    flexWrap: "wrap" as const,
+    padding: "6px 12px",
+    flexWrap: "nowrap" as const,
+    borderBottom: "1px solid #e0e6f0",
+    minHeight: 0,
+    overflow: "hidden" as const,
+  },
+  headerMain: {
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: "1px",
+    flex: "0 1 auto",
+    minWidth: "140px",
+    maxWidth: "280px",
   },
   label: {
     fontSize: "12px",
     fontWeight: 800,
     textTransform: "uppercase" as const,
-    letterSpacing: "0.08em",
+    letterSpacing: "0.05em",
     color: "#1a3a6e",
+    lineHeight: 1.2,
   },
-  count: {
-    fontSize: "11px",
-    background: "#e0eecc",
-    color: "#335500",
-    borderRadius: "8px",
-    padding: "2px 8px",
-    fontWeight: 600,
-  },
-  reorderHint: {
+  headerLead: {
     fontSize: "10px",
-    color: "#666",
-    marginLeft: "auto",
-    letterSpacing: "0.01em",
-    fontStyle: "italic" as const,
+    fontWeight: 500,
+    color: "#6a7a9e",
+    lineHeight: 1.3,
+  },
+  countPill: {
+    fontSize: "11px",
+    background: "#e8f0ff",
+    color: "#1a3a6e",
+    borderRadius: "6px",
+    padding: "3px 8px",
+    fontWeight: 800,
+    border: "1px solid #c8d5f0",
+    flexShrink: 0,
   },
   scroll: {
     display: "flex",
-    gap: "12px",
-    padding: "8px 14px 14px",
-    overflowX: "auto" as const,
     alignItems: "flex-start",
+    justifyContent: "flex-start",
+    gap: "0",
+    padding: "8px 12px 10px",
+    overflowX: "auto" as const,
+    overflowY: "hidden" as const,
+  },
+  cardWithGap: {
+    display: "inline-flex",
+    alignItems: "flex-start",
+    flexShrink: 0,
+  },
+  dropGap: {
+    width: "6px",
+    minHeight: `${GALLERY_THUMB_H + 72}px`,
+    borderRadius: "3px",
+    flexShrink: 0,
+    alignSelf: "stretch",
+    transition: "background 0.1s, width 0.1s",
+  },
+  dropGapActive: {
+    width: "10px",
+    background: "#1a3a6e",
   },
   item: {
     display: "flex",
     flexDirection: "column" as const,
     alignItems: "stretch",
-    gap: "6px",
+    gap: "5px",
     flexShrink: 0,
     width: `${GALLERY_CARD_W}px`,
-    borderRadius: "8px",
-    border: "1px solid #e8e8e8",
+    borderRadius: "7px",
+    border: "1px solid #c8d5f0",
     padding: "6px",
-    background: "#fafafa",
+    background: "#fff",
     boxSizing: "border-box" as const,
-    transition: "opacity 0.12s, box-shadow 0.12s",
+    transition: "opacity 0.1s, box-shadow 0.1s, border-color 0.1s",
     userSelect: "none" as const,
+  },
+  itemHover: {
+    borderColor: "#1a3a6e",
+    boxShadow: "0 2px 10px rgba(26,58,110,0.12)",
   },
   itemDragging: {
     opacity: 0.45,
     boxShadow: "0 4px 12px rgba(26,58,110,0.15)",
   },
   itemDragOver: {
-    outline: "3px solid #1a3a6e",
+    outline: "2px solid #1a3a6e",
     outlineOffset: "2px",
     background: "#eef3ff",
   },
   thumb: {
     width: "100%",
     height: `${GALLERY_THUMB_H}px`,
-    border: "1px solid #d8d8d8",
-    borderRadius: "6px",
+    border: "1px solid #d0d8e8",
+    borderRadius: "5px",
     overflow: "hidden",
-    background: "#f0f0f0",
+    background: "#f0f4fa",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -465,40 +767,29 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
   },
-  dragHandle: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "6px",
-    width: "100%",
-    padding: "6px 8px",
-    border: "1px dashed #aacaff",
-    borderRadius: "5px",
-    background: "#e8f0ff",
-    color: "#1a3a6e",
-    cursor: "grab",
-    fontSize: "11px",
+  hoverHint: {
+    position: "absolute" as const,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    padding: "4px",
+    background: "rgba(26,58,110,0.82)",
+    color: "#fff",
+    fontSize: "9px",
     fontWeight: 700,
-    lineHeight: 1.2,
-    boxSizing: "border-box" as const,
-  },
-  dragHandleIcon: {
-    fontSize: "14px",
-    lineHeight: 1,
-  },
-  dragHandleText: {
-    letterSpacing: "0.02em",
+    textAlign: "center" as const,
+    zIndex: 4,
   },
   removeBtn: {
     position: "absolute" as const,
-    top: "6px",
-    right: "6px",
-    width: "24px",
-    height: "24px",
+    top: "4px",
+    right: "4px",
+    width: "22px",
+    height: "22px",
     borderRadius: "50%",
-    border: "1px solid rgba(0,0,0,0.15)",
+    border: "1px solid rgba(0,0,0,0.1)",
     background: "rgba(255,255,255,0.95)",
-    fontSize: "15px",
+    fontSize: "14px",
     cursor: "pointer",
     color: "#a33",
     fontWeight: 700,
@@ -507,20 +798,20 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     lineHeight: 1,
-    zIndex: 2,
+    zIndex: 5,
   },
   positionBadge: {
     position: "absolute" as const,
-    top: "6px",
-    left: "6px",
-    fontSize: "11px",
-    fontWeight: 700,
-    background: "rgba(26,58,110,0.85)",
+    top: "4px",
+    left: "4px",
+    fontSize: "14px",
+    fontWeight: 800,
+    background: "#1a3a6e",
     color: "#fff",
     borderRadius: "4px",
     padding: "2px 7px",
-    lineHeight: 1.3,
-    zIndex: 2,
+    lineHeight: 1.2,
+    zIndex: 5,
   },
   insertIndicator: {
     position: "absolute" as const,
@@ -529,9 +820,7 @@ const styles = {
     bottom: 0,
     width: "4px",
     background: "#1a3a6e",
-    borderRadius: "2px 0 0 2px",
-    zIndex: 3,
-    boxShadow: "0 0 6px rgba(26,58,110,0.5)",
+    zIndex: 6,
   },
   meta: {
     display: "flex",
@@ -541,48 +830,51 @@ const styles = {
     width: "100%",
   },
   roleBadge: {
-    fontSize: "11px",
+    fontSize: "9px",
     background: "#e8f0ff",
     color: "#1a3a6e",
-    borderRadius: "4px",
-    padding: "2px 8px",
+    borderRadius: "3px",
+    padding: "2px 6px",
     fontWeight: 700,
     alignSelf: "center",
   },
   fname: {
-    fontSize: "11px",
+    fontSize: "9px",
     color: "#444",
     textAlign: "center" as const,
     overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap" as const,
+    display: "-webkit-box",
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: "vertical" as const,
+    lineHeight: 1.2,
+    maxHeight: "2.4em",
     width: "100%",
     fontWeight: 500,
+    wordBreak: "break-all" as const,
   },
   moveRow: {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: "6px",
+    gap: "4px",
     width: "100%",
-    marginTop: "2px",
   },
   moveBtn: {
     flex: 1,
-    minWidth: "48px",
-    height: "36px",
-    border: "2px solid #aacaff",
-    borderRadius: "5px",
+    minWidth: "0",
+    height: "24px",
+    border: "1px solid #aacaff",
+    borderRadius: "4px",
     background: "#e8f0ff",
     color: "#1a3a6e",
-    fontSize: "18px",
+    fontSize: "10px",
+    fontWeight: 700,
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    padding: 0,
-    lineHeight: 1,
-    fontWeight: 700,
+    padding: "0 4px",
+    lineHeight: 1.1,
   },
   moveBtnDisabled: {
     opacity: 0.3,
@@ -592,11 +884,50 @@ const styles = {
     color: "#aaa",
   },
   posLabel: {
-    fontSize: "11px",
+    fontSize: "9px",
     color: "#666",
     flexShrink: 0,
-    textAlign: "center" as const,
     fontWeight: 600,
-    minWidth: "36px",
+    minWidth: "28px",
+    textAlign: "center" as const,
+  },
+  emptyWrap: {
+    padding: "10px 12px 12px",
+    maxHeight: "150px",
+  },
+  emptyLine: {
+    margin: "0 0 8px",
+    fontSize: "12px",
+    fontWeight: 600,
+    color: "#4a5a7a",
+    lineHeight: 1.35,
+  },
+  emptySlotsRow: {
+    display: "flex",
+    justifyContent: "flex-start",
+    gap: "8px",
+    flexWrap: "nowrap" as const,
+    overflowX: "auto" as const,
+  },
+  emptySlot: {
+    width: "56px",
+    height: "64px",
+    border: "1px dashed #aacaff",
+    borderRadius: "6px",
+    background: "#fff",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+    transition: "border-color 0.1s, background 0.1s",
+  },
+  emptySlotActive: {
+    borderColor: "#1a3a6e",
+    background: "#eef3ff",
+  },
+  emptySlotNum: {
+    fontSize: "13px",
+    fontWeight: 800,
+    color: "#1a3a6e",
   },
 } as const

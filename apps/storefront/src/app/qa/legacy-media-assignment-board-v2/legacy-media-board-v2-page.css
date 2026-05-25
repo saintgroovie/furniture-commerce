@@ -1,15 +1,8 @@
 /*
  * Operator-only fullscreen layout for Legacy Media Assignment Board v2.
- *
- * All rules are scoped via body:has(.legacy-media-board-v2-root) so they
- * fire only on this QA route and have zero effect on any other page,
- * including the v1 board and the regular storefront.
- *
- * Pattern mirrors v1 board's legacy-media-assignment-board-page.css for
- * main-breakout, and extends it to also remove the header/footer chrome.
+ * Scoped via body:has(.legacy-media-board-v2-root).
  */
 
-/* 1. Hide storefront chrome — header, footer, mobile nav */
 body:has(.legacy-media-board-v2-root) .site-header,
 body:has(.legacy-media-board-v2-root) .site-footer,
 body:has(.legacy-media-board-v2-root) .mobile-nav-checkbox,
@@ -18,7 +11,6 @@ body:has(.legacy-media-board-v2-root) .mobile-nav-overlay {
   display: none !important;
 }
 
-/* 2. Break <main> out of .container max-width / padding and fill viewport */
 body:has(.legacy-media-board-v2-root) main.container.page-section {
   max-width: none;
   width: 100%;
@@ -29,7 +21,6 @@ body:has(.legacy-media-board-v2-root) main.container.page-section {
   box-sizing: border-box;
 }
 
-/* 3. Wrapper div fills available space so the board root can use height:100% */
 .legacy-media-board-v2-root {
   width: 100%;
   height: 100dvh;
@@ -37,12 +28,20 @@ body:has(.legacy-media-board-v2-root) main.container.page-section {
   box-sizing: border-box;
 }
 
-/* Gallery cards — enforced minimum so operator sees large tiles at 1440×900 */
 body:has(.legacy-media-board-v2-root) [data-v2-gallery-item] {
-  min-width: 170px;
+  min-width: 220px;
+  max-width: 260px;
 }
 
-body:has(.legacy-media-board-v2-root) [data-v2-gallery-drag-handle] {
+body:has(.legacy-media-board-v2-root) [data-v2-gallery-card-draggable] {
+  cursor: grab;
   -webkit-user-drag: element;
-  touch-action: none;
+}
+
+body:has(.legacy-media-board-v2-root) [data-v2-gallery-card-draggable]:active {
+  cursor: grabbing;
+}
+
+body:has(.legacy-media-board-v2-root) [data-v2-gallery-drop-gap][data-active="true"] {
+  background: #1a3a6e;
 }

@@ -98,7 +98,7 @@ export function RoleChecklistPanel({
         <span style={styles.helpIcon}>↕</span>
         <span style={styles.helpText}>
           <strong>Роли</strong> классифицируют фото.{" "}
-          <strong>Галерея</strong> (блок ниже) задаёт порядок фото на витрине.{" "}
+          <strong>Галерея / порядок на витрине</strong> (крупный блок ниже) задаёт порядок фото.{" "}
           Перетащите фото из пула в слот роли или нажмите «+» для фильтрации в пуле.
         </span>
       </div>
