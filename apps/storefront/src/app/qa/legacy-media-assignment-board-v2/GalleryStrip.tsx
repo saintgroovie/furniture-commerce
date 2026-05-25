@@ -34,7 +34,7 @@ export function StorefrontGallerySection({
   onInsertIntoGallery,
 }: HubProps) {
   return (
-    <div style={hubStyles.root} data-v2-gallery-hub>
+    <div style={hubStyles.root} data-v2-gallery-hub data-v2-gallery-variant-scoped="true">
       <GalleryStrip
         mainMediaId={mainMediaId}
         galleryIds={galleryIds}

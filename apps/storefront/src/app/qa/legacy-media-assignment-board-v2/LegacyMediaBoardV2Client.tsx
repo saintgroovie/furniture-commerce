@@ -28,12 +28,17 @@ import {
   loadV2PersistedState,
   saveV2PersistedState,
 } from "./legacy-board-v2-persistence"
-import { reorderGalleryIds } from "./legacy-board-v2-gallery-order"
 import {
-  removeGalleryIfOrphan,
-  stripFromGallery,
-  upsertGalleryByRole,
-} from "./legacy-board-v2-gallery-sync"
+  addToGallery as syncAddToGallery,
+  assignMain as syncAssignMain,
+  assignRole as syncAssignRole,
+  clearMain as syncClearMain,
+  clearRole as syncClearRole,
+  healVariantState,
+  insertIntoGallery as syncInsertIntoGallery,
+  removeFromGallery as syncRemoveFromGallery,
+  reorderGallery as syncReorderGallery,
+} from "./legacy-board-v2-state-sync"
 import { V2_BOARD_BUILD, V2_BOARD_BUILD_LABEL } from "./legacy-board-v2-build"
 
 const V1_API_BASE = "/qa/legacy-media-assignment-board/api"
@@ -258,7 +263,10 @@ export function LegacyMediaBoardV2Client() {
   const handleSetVariant = useCallback(
     (variantKey: string) => {
       if (!selectedHandle) return
-      updateProductState(selectedHandle, variantKey, (s) => ({ ...s, activeVariantKey: variantKey }))
+      updateProductState(selectedHandle, variantKey, (s) => {
+        const healed = healVariantState(s, variantKey)
+        return { ...healed, activeVariantKey: variantKey }
+      })
     },
     [selectedHandle, updateProductState]
   )
@@ -266,54 +274,26 @@ export function LegacyMediaBoardV2Client() {
   const handleSetMain = useCallback(
     (mediaId: string) => {
       if (!selectedHandle) return
-      updateProductState(selectedHandle, activeVariantKey, (s) => {
-        const roles = { ...(s.rolesByVariant[activeVariantKey] ?? {}) }
-        for (const key of Object.keys(roles) as V2RoleSlot[]) {
-          if (roles[key] === mediaId && key !== "main") roles[key] = null
-        }
-        roles.main = mediaId
-        const overrides = { ...(s.roleOverrides ?? {}) }
-        delete overrides[mediaId]
-        const gallery = stripFromGallery(s.galleriesByVariant[activeVariantKey] ?? [], mediaId)
-        return {
-          ...s,
-          rolesByVariant: { ...s.rolesByVariant, [activeVariantKey]: roles },
-          roleOverrides: overrides,
-          galleriesByVariant: { ...s.galleriesByVariant, [activeVariantKey]: gallery },
-        }
-      })
+      updateProductState(selectedHandle, activeVariantKey, (s) =>
+        syncAssignMain(s, activeVariantKey, mediaId)
+      )
     },
     [selectedHandle, activeVariantKey, updateProductState]
   )
 
   const handleRemoveMain = useCallback(() => {
     if (!selectedHandle) return
-    updateProductState(selectedHandle, activeVariantKey, (s) => ({
-      ...s,
-      rolesByVariant: {
-        ...s.rolesByVariant,
-        [activeVariantKey]: {
-          ...s.rolesByVariant[activeVariantKey],
-          main: null,
-        },
-      },
-    }))
+    updateProductState(selectedHandle, activeVariantKey, (s) =>
+      syncClearMain(s, activeVariantKey)
+    )
   }, [selectedHandle, activeVariantKey, updateProductState])
 
   const handleAddToGallery = useCallback(
     (mediaId: string) => {
       if (!selectedHandle) return
-      updateProductState(selectedHandle, activeVariantKey, (s) => {
-        const existing = s.galleriesByVariant[activeVariantKey] ?? []
-        if (existing.includes(mediaId)) return s
-        return {
-          ...s,
-          galleriesByVariant: {
-            ...s.galleriesByVariant,
-            [activeVariantKey]: [...existing, mediaId],
-          },
-        }
-      })
+      updateProductState(selectedHandle, activeVariantKey, (s) =>
+        syncAddToGallery(s, activeVariantKey, mediaId)
+      )
     },
     [selectedHandle, activeVariantKey, updateProductState]
   )
@@ -321,15 +301,9 @@ export function LegacyMediaBoardV2Client() {
   const handleRemoveFromGallery = useCallback(
     (mediaId: string) => {
       if (!selectedHandle) return
-      updateProductState(selectedHandle, activeVariantKey, (s) => ({
-        ...s,
-        galleriesByVariant: {
-          ...s.galleriesByVariant,
-          [activeVariantKey]: (s.galleriesByVariant[activeVariantKey] ?? []).filter(
-            (id) => id !== mediaId
-          ),
-        },
-      }))
+      updateProductState(selectedHandle, activeVariantKey, (s) =>
+        syncRemoveFromGallery(s, activeVariantKey, mediaId)
+      )
     },
     [selectedHandle, activeVariantKey, updateProductState]
   )
@@ -345,59 +319,19 @@ export function LegacyMediaBoardV2Client() {
   const handleSetRole = useCallback(
     (mediaId: string, slot: V2RoleSlot) => {
       if (!selectedHandle) return
-      updateProductState(selectedHandle, activeVariantKey, (s) => {
-        const roles = { ...(s.rolesByVariant[activeVariantKey] ?? {}) }
-        for (const key of Object.keys(roles) as V2RoleSlot[]) {
-          if (roles[key] === mediaId && key !== slot) roles[key] = null
-        }
-        roles[slot] = mediaId
-
-        const overrides = { ...(s.roleOverrides ?? {}) }
-        if (slot === "main") {
-          delete overrides[mediaId]
-        } else {
-          overrides[mediaId] = slot
-        }
-
-        let gallery = s.galleriesByVariant[activeVariantKey] ?? []
-        if (slot === "main") {
-          gallery = stripFromGallery(gallery, mediaId)
-        } else {
-          gallery = upsertGalleryByRole(gallery, mediaId, slot, roles)
-        }
-
-        return {
-          ...s,
-          rolesByVariant: { ...s.rolesByVariant, [activeVariantKey]: roles },
-          roleOverrides: overrides,
-          galleriesByVariant: { ...s.galleriesByVariant, [activeVariantKey]: gallery },
-        }
-      })
+      updateProductState(selectedHandle, activeVariantKey, (s) =>
+        syncAssignRole(s, activeVariantKey, slot, mediaId)
+      )
     },
     [selectedHandle, activeVariantKey, updateProductState]
   )
 
-  // Clear an explicit role-slot assignment
   const handleClearRole = useCallback(
     (slot: V2RoleSlot) => {
       if (!selectedHandle) return
-      updateProductState(selectedHandle, activeVariantKey, (s) => {
-        const roles = { ...(s.rolesByVariant[activeVariantKey] ?? {}) }
-        const clearedId = (roles[slot] as string | null | undefined) ?? null
-        roles[slot] = null
-        const overrides = { ...(s.roleOverrides ?? {}) }
-        if (clearedId) delete overrides[clearedId]
-        let gallery = s.galleriesByVariant[activeVariantKey] ?? []
-        if (clearedId && slot !== "main") {
-          gallery = removeGalleryIfOrphan(gallery, clearedId, roles)
-        }
-        return {
-          ...s,
-          rolesByVariant: { ...s.rolesByVariant, [activeVariantKey]: roles },
-          roleOverrides: overrides,
-          galleriesByVariant: { ...s.galleriesByVariant, [activeVariantKey]: gallery },
-        }
-      })
+      updateProductState(selectedHandle, activeVariantKey, (s) =>
+        syncClearRole(s, activeVariantKey, slot)
+      )
     },
     [selectedHandle, activeVariantKey, updateProductState]
   )
@@ -484,44 +418,19 @@ export function LegacyMediaBoardV2Client() {
   const handleReorderGallery = useCallback(
     (fromIdx: number, toIdx: number) => {
       if (!selectedHandle) return
-      updateProductState(selectedHandle, activeVariantKey, (s) => {
-        const gallery = s.galleriesByVariant[activeVariantKey] ?? []
-        const reordered = reorderGalleryIds(gallery, fromIdx, toIdx)
-        if (!reordered) return s
-        return {
-          ...s,
-          galleriesByVariant: {
-            ...s.galleriesByVariant,
-            [activeVariantKey]: reordered,
-          },
-        }
-      })
+      updateProductState(selectedHandle, activeVariantKey, (s) =>
+        syncReorderGallery(s, activeVariantKey, fromIdx, toIdx)
+      )
     },
     [selectedHandle, activeVariantKey, updateProductState]
   )
 
-  // Insert/move a media item into gallery at a specific position
-  // Used when a pool card is dropped onto a final-order gallery slot.
-  // If the media is already in gallery → move it to the target position.
-  // If not → insert at the target position, shifting existing items right.
   const handleInsertIntoGallery = useCallback(
     (mediaId: string, atIdx: number) => {
       if (!selectedHandle) return
-      updateProductState(selectedHandle, activeVariantKey, (s) => {
-        const gallery = [...(s.galleriesByVariant[activeVariantKey] ?? [])]
-        const existingIdx = gallery.indexOf(mediaId)
-        if (existingIdx !== -1) {
-          gallery.splice(existingIdx, 1)
-        }
-        gallery.splice(atIdx, 0, mediaId)
-        return {
-          ...s,
-          galleriesByVariant: {
-            ...s.galleriesByVariant,
-            [activeVariantKey]: gallery,
-          },
-        }
-      })
+      updateProductState(selectedHandle, activeVariantKey, (s) =>
+        syncInsertIntoGallery(s, activeVariantKey, mediaId, atIdx)
+      )
     },
     [selectedHandle, activeVariantKey, updateProductState]
   )

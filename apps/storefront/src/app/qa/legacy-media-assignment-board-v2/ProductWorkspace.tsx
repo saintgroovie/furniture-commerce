@@ -121,7 +121,7 @@ export function ProductWorkspace({
       </div>
 
       {/* ── Scrollable body: role board (primary) then gallery dock ── */}
-      <div style={styles.scrollBody}>
+      <div style={styles.scrollBody} data-v2-workspace-variant={activeVariantKey}>
         <RoleChecklistPanel
           productState={productState}
           activeVariantKey={activeVariantKey}

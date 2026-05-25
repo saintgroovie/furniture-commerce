@@ -4,10 +4,7 @@ import { useMemo, useState } from "react"
 import type { InvItem, V2ProductState, V2RoleSlot, V2RoleRow, V2RoleFilter } from "./legacy-board-v2-types"
 import type { VisualRole } from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
 import { clientPreview } from "./MediaCardV2"
-import {
-  effectiveV2RoleSlot,
-  inferV2VisualRole,
-} from "./legacy-board-v2-role-inference"
+import { inferV2VisualRole } from "./legacy-board-v2-role-inference"
 
 const ROLE_DEFS: ReadonlyArray<{ slot: V2RoleSlot; label: string; filter: V2RoleFilter; hint: string }> = [
   { slot: "main", label: "Главное", filter: "front", hint: "Главная карточка товара" },
@@ -37,21 +34,12 @@ export function computeRoleRows(
 ): V2RoleRow[] {
   const overrides = roleOverrides ?? {}
   const roles = productState?.rolesByVariant[variantKey] ?? {}
-  const gallery = productState?.galleriesByVariant[variantKey] ?? []
-
-  const galleryBySlot = new Map<V2RoleSlot, string>()
-  for (const mediaId of gallery) {
-    const inv = invById.get(mediaId)
-    if (!inv) continue
-    const slot = effectiveV2RoleSlot(inv, overrides)
-    if (slot && !galleryBySlot.has(slot)) galleryBySlot.set(slot, mediaId)
-  }
 
   return ROLE_DEFS.map(({ slot, label }) => {
     const explicit = (roles[slot] as string | null | undefined) ?? null
-    if (explicit) return { slot, label, mediaId: explicit, isCovered: true, source: "explicit" as const }
-    const fromGallery = galleryBySlot.get(slot) ?? null
-    if (fromGallery) return { slot, label, mediaId: fromGallery, isCovered: true, source: "gallery" as const }
+    if (explicit) {
+      return { slot, label, mediaId: explicit, isCovered: true, source: "explicit" as const }
+    }
     return { slot, label, mediaId: null, isCovered: false, source: "none" as const }
   })
 }
@@ -94,7 +82,11 @@ export function RoleChecklistPanel({
   )
 
   return (
-    <section style={styles.roleBoard} data-v2-role-board>
+    <section
+      style={styles.roleBoard}
+      data-v2-role-board
+      data-v2-active-variant-key={activeVariantKey}
+    >
       <header style={styles.boardHeader}>
         <h2 style={styles.boardTitle}>СЛОТЫ РОЛЕЙ</h2>
         <p style={styles.boardSubtitle}>
@@ -490,7 +482,7 @@ const styles = {
   },
   removeBtn: {
     position: "absolute" as const,
-    top: "6px",
+    top: "28px",
     right: "6px",
     width: "24px",
     height: "24px",
@@ -511,7 +503,7 @@ const styles = {
   },
   dragAffordance: {
     position: "absolute" as const,
-    top: "6px",
+    top: "28px",
     left: "6px",
     fontSize: "9px",
     color: "#fff",
