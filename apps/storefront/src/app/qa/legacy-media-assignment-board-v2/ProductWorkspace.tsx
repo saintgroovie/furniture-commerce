@@ -100,7 +100,7 @@ export function ProductWorkspace({
         <OnboardingHint productState={productState} activeVariantKey={activeVariantKey} />
       </div>
 
-      {/* ── Scrollable body: role slots + gallery ── */}
+      {/* ── Scrollable body: role slots then gallery (inline flow, no bottom pin) ── */}
       <div style={styles.scrollBody}>
         <RoleChecklistPanel
           productState={productState}
@@ -115,16 +115,15 @@ export function ProductWorkspace({
           onAddToGallery={onAddToGallery}
         />
 
+        <StorefrontGallerySection
+          mainMediaId={(productState?.rolesByVariant[activeVariantKey]?.main as string | null | undefined) ?? null}
+          galleryIds={productState?.galleriesByVariant[activeVariantKey] ?? []}
+          invById={invById}
+          onRemove={onRemoveFromGallery}
+          onReorderGallery={onReorderGallery}
+          onInsertIntoGallery={onInsertIntoGallery}
+        />
       </div>
-
-      <StorefrontGallerySection
-        mainMediaId={(productState?.rolesByVariant[activeVariantKey]?.main as string | null | undefined) ?? null}
-        galleryIds={productState?.galleriesByVariant[activeVariantKey] ?? []}
-        invById={invById}
-        onRemove={onRemoveFromGallery}
-        onReorderGallery={onReorderGallery}
-        onInsertIntoGallery={onInsertIntoGallery}
-      />
     </main>
   )
 }
@@ -231,9 +230,11 @@ const styles = {
   scrollBody: {
     flex: 1,
     overflowY: "auto" as const,
-    minHeight: "80px",
+    minHeight: 0,
     display: "flex",
     flexDirection: "column" as const,
+    alignItems: "stretch",
+    justifyContent: "flex-start",
   },
   colHeader: {
     padding: "9px 14px",

@@ -50,9 +50,8 @@ export function StorefrontGallerySection({
 const hubStyles = {
   root: {
     flexShrink: 0,
-    borderTop: "2px solid #1a3a6e",
+    borderTop: "1px solid #d0d8e8",
     background: "#f4f7fc",
-    boxShadow: "0 -1px 4px rgba(26,58,110,0.06)",
   },
 } as const
 
@@ -311,7 +310,7 @@ export function GalleryStrip({
   const dragSrcRef = useRef<number | null>(null)
 
   useEffect(() => {
-    if (galleryIds.length > 0) {
+    if (galleryIds.length === 1) {
       stripRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" })
     }
   }, [galleryIds.length])
