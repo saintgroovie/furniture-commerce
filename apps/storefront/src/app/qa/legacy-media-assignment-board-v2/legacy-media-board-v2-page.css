@@ -45,3 +45,23 @@ body:has(.legacy-media-board-v2-root) [data-v2-gallery-card-draggable]:active {
 body:has(.legacy-media-board-v2-root) [data-v2-gallery-drop-gap][data-active="true"] {
   background: #1a3a6e;
 }
+
+/* Role slots — primary work surface: 3 columns on desktop center column */
+body:has(.legacy-media-board-v2-root) [data-v2-role-grid] {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(260px, 1fr));
+  gap: 10px;
+  align-items: stretch;
+}
+
+@media (max-width: 1100px) {
+  body:has(.legacy-media-board-v2-root) [data-v2-role-grid] {
+    grid-template-columns: repeat(2, minmax(200px, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  body:has(.legacy-media-board-v2-root) [data-v2-role-grid] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

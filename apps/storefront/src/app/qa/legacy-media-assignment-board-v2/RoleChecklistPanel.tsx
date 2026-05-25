@@ -95,7 +95,7 @@ export function RoleChecklistPanel({
         </p>
       </header>
 
-      <div style={styles.grid} data-v2-role-grid>
+      <div data-v2-role-grid>
         {rows.map((row) => {
           const inv = row.mediaId ? invById.get(row.mediaId) : null
           const preview = inv ? clientPreview(inv) : null
@@ -222,6 +222,7 @@ export function RoleChecklistPanel({
               </div>
 
               <div
+                data-v2-role-slot-thumb
                 data-v2-role-slot-card-draggable={isDraggableFilled ? "true" : undefined}
                 draggable={isDraggableFilled}
                 onDragStart={isDraggableFilled ? handleFilledDragStart : undefined}
@@ -293,21 +294,23 @@ export function RoleChecklistPanel({
   )
 }
 
-const THUMB_MIN_H = 124
+/** Filled slot image area target ~160–190px at 1440×900 */
+const THUMB_MIN_H = 178
 
 const styles = {
   roleBoard: {
+    flex: "1 0 auto",
     flexShrink: 0,
     margin: "6px 12px 0",
-    padding: "10px 12px 12px",
+    padding: "8px 12px 10px",
     background: "#fff",
     border: "1px solid #d4dce8",
     borderRadius: "10px",
     boxShadow: "0 1px 4px rgba(26, 58, 110, 0.07)",
   },
   boardHeader: {
-    marginBottom: "8px",
-    paddingBottom: "6px",
+    marginBottom: "6px",
+    paddingBottom: "5px",
     borderBottom: "1px solid #e8eef6",
   },
   boardTitle: {
@@ -320,22 +323,16 @@ const styles = {
     lineHeight: 1.3,
   },
   boardSubtitle: {
-    margin: "3px 0 0",
-    fontSize: "11px",
+    margin: "2px 0 0",
+    fontSize: "10px",
     color: "#5a6a8e",
     lineHeight: 1.3,
     maxWidth: "52em",
   },
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-    gap: "8px",
-    alignItems: "stretch",
-  },
   slot: {
     display: "flex",
     flexDirection: "column" as const,
-    minHeight: "168px",
+    minHeight: "248px",
     maxWidth: "100%",
     borderRadius: "8px",
     overflow: "hidden",
@@ -427,8 +424,8 @@ const styles = {
     position: "relative" as const,
     width: "100%",
     minHeight: `${THUMB_MIN_H}px`,
-    flex: "1 1 0",
-    background: "#f2f4f8",
+    flex: "1 1 auto",
+    background: "#eceff4",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -446,6 +443,8 @@ const styles = {
   thumbImg: {
     width: "100%",
     height: "100%",
+    maxWidth: "100%",
+    maxHeight: "100%",
     objectFit: "contain" as const,
     display: "block",
   },
@@ -461,7 +460,7 @@ const styles = {
     boxSizing: "border-box" as const,
   },
   emptyDropIcon: {
-    fontSize: "28px",
+    fontSize: "32px",
     color: "#a8b8cc",
     lineHeight: 1,
     fontWeight: 300,
