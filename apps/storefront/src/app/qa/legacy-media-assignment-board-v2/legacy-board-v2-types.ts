@@ -32,6 +32,11 @@ export type V2ProductState = {
    * Optional for backward-compatibility with persisted state that predates this field.
    */
   roleOverrides?: Record<string, V2RoleSlot>
+  /**
+   * Operator display labels per color variant key (e.g. blue → «Синий матовый»).
+   * Optional metadata only — apply script may ignore.
+   */
+  variantLabelOverrides?: Record<string, string>
 }
 
 /** Top-level v2 board state (partial — extended in later commits). */

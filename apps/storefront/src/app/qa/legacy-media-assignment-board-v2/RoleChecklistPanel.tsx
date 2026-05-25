@@ -2,9 +2,12 @@
 
 import { useMemo, useState } from "react"
 import type { InvItem, V2ProductState, V2RoleSlot, V2RoleRow, V2RoleFilter } from "./legacy-board-v2-types"
-import { classifyVisualRole } from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
 import type { VisualRole } from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
 import { clientPreview } from "./MediaCardV2"
+import {
+  effectiveV2RoleSlot,
+  inferV2VisualRole,
+} from "./legacy-board-v2-role-inference"
 
 const ROLE_DEFS: ReadonlyArray<{ slot: V2RoleSlot; label: string; filter: V2RoleFilter; hint: string }> = [
   { slot: "main", label: "Главное", filter: "front", hint: "Главная карточка товара" },
@@ -40,9 +43,7 @@ export function computeRoleRows(
   for (const mediaId of gallery) {
     const inv = invById.get(mediaId)
     if (!inv) continue
-    // Prefer operator role override over auto-classification
-    const override = overrides[mediaId]
-    const slot = override ?? visualRoleToSlot(classifyVisualRole(inv))
+    const slot = effectiveV2RoleSlot(inv, overrides)
     if (slot && !galleryBySlot.has(slot)) galleryBySlot.set(slot, mediaId)
   }
 
@@ -70,6 +71,9 @@ type Props = {
   roleOverrides?: Record<string, V2RoleSlot>
   /** Add a media item to the gallery (used for "+ в гал." action on explicit role slots) */
   onAddToGallery?: (mediaId: string) => void
+  /** Current gallery order — for «✓ В галерее» and duplicate guard */
+  galleryIds?: string[]
+  productHandle?: string | null
 }
 
 export function RoleChecklistPanel({
@@ -83,8 +87,11 @@ export function RoleChecklistPanel({
   onClearRole,
   roleOverrides,
   onAddToGallery,
+  galleryIds = [],
+  productHandle,
 }: Props) {
   const [dragOverSlot, setDragOverSlot] = useState<V2RoleSlot | null>(null)
+  const gallerySet = useMemo(() => new Set(galleryIds), [galleryIds])
 
   const rows = useMemo(
     () => computeRoleRows(productState, activeVariantKey, invById, roleOverrides),
@@ -142,6 +149,21 @@ export function RoleChecklistPanel({
             if (mediaId) onSetRole?.(mediaId, row.slot)
           }
 
+          const inGallery = row.mediaId ? gallerySet.has(row.mediaId) : false
+          const autoHint =
+            row.mediaId && inv
+              ? inferV2VisualRole(inv, { productHandle: productHandle ?? undefined })
+              : null
+          const hasManualOverride =
+            row.mediaId && !!(roleOverrides ?? {})[row.mediaId]
+          const isDraggableFilled = row.isCovered && row.mediaId && row.source === "explicit"
+
+          function handleFilledDragStart(e: React.DragEvent) {
+            if (!row.mediaId) return
+            e.dataTransfer.setData("text/plain", row.mediaId)
+            e.dataTransfer.effectAllowed = "copy"
+          }
+
           return (
             <div
               key={row.slot}
@@ -155,13 +177,18 @@ export function RoleChecklistPanel({
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
             >
-              {/* Thumbnail area */}
+              {/* Thumbnail area — draggable when explicitly assigned */}
               <div
+                data-v2-role-slot-card-draggable={isDraggableFilled ? "true" : undefined}
+                draggable={isDraggableFilled}
+                onDragStart={isDraggableFilled ? handleFilledDragStart : undefined}
                 style={{
                   ...styles.thumbArea,
                   ...(isMain ? styles.thumbAreaMain : {}),
                   ...(isDragTarget ? styles.thumbAreaDragOver : {}),
+                  ...(isDraggableFilled ? styles.thumbAreaDraggable : {}),
                 }}
+                title={isDraggableFilled ? "Перетащите в другой слот или в галерею" : undefined}
               >
                 {thumbUrl ? (
                   <img
@@ -181,13 +208,36 @@ export function RoleChecklistPanel({
                   </div>
                 )}
 
-                {/* Source badge — explicit vs gallery-inferred (text, not icons) */}
+                {isDraggableFilled && (
+                  <span style={styles.dragAffordance} title="Перетащить в другой слот или галерею">
+                    перетащить
+                  </span>
+                )}
+
+                {/* Source badge — explicit vs gallery-inferred */}
                 {row.isCovered && row.source !== "none" && (
                   <span
                     style={row.source === "explicit" ? styles.sourceBadgeExplicit : styles.sourceBadgeGallery}
                     title={row.source === "explicit" ? "Роль назначена вручную" : "Роль определена из галереи"}
                   >
-                    {row.source === "explicit" ? "ручн." : "из гал."}
+                    {row.source === "explicit"
+                      ? hasManualOverride
+                        ? "ручн."
+                        : "слот"
+                      : "из гал."}
+                  </span>
+                )}
+
+                {row.isCovered && row.source === "explicit" && autoHint && !hasManualOverride && (
+                  <span
+                    style={
+                      autoHint.confidence === "ambiguous" || autoHint.confidence === "low"
+                        ? styles.autoLowBadge
+                        : styles.autoBadge
+                    }
+                    title={autoHint.hint ?? `Авто: ${autoHint.role}`}
+                  >
+                    {autoHint.confidence === "ambiguous" || autoHint.confidence === "low" ? "auto?" : "auto"}
                   </span>
                 )}
 
@@ -214,15 +264,21 @@ export function RoleChecklistPanel({
                 >
                   {row.label}
                 </span>
-                {/* "+ в гал." — only on explicit non-main filled slots */}
-                {row.source === "explicit" && !isMain && row.mediaId && onAddToGallery && (
-                  <button
-                    style={styles.toGalleryBtn}
-                    onClick={() => onAddToGallery(row.mediaId!)}
-                    title="Добавить это фото в галерею"
-                  >
-                    + гал.
-                  </button>
+                {/* Gallery action — explicit filled slots (incl. main could use gallery separately) */}
+                {row.source === "explicit" && row.mediaId && onAddToGallery && (
+                  inGallery ? (
+                    <span style={styles.inGalleryPill} title="Уже в порядке галереи">
+                      ✓ В галерее
+                    </span>
+                  ) : (
+                    <button
+                      style={styles.toGalleryBtn}
+                      onClick={() => onAddToGallery(row.mediaId!)}
+                      title="Добавить это фото в галерею"
+                    >
+                      + гал.
+                    </button>
+                  )
                 )}
                 <button
                   style={{
@@ -465,5 +521,58 @@ const styles = {
     lineHeight: 1.3,
     flexShrink: 0,
     whiteSpace: "nowrap" as const,
+  },
+  inGalleryPill: {
+    padding: "1px 4px",
+    fontSize: "9px",
+    border: "1px solid #2d7a2d",
+    borderRadius: "3px",
+    background: "#e8f5e9",
+    color: "#1b5e20",
+    fontWeight: 700,
+    lineHeight: 1.3,
+    flexShrink: 0,
+    whiteSpace: "nowrap" as const,
+  },
+  thumbAreaDraggable: {
+    cursor: "grab",
+  },
+  dragAffordance: {
+    position: "absolute" as const,
+    top: "4px",
+    left: "4px",
+    fontSize: "8px",
+    color: "#fff",
+    background: "rgba(26,58,110,0.75)",
+    borderRadius: "2px",
+    padding: "1px 4px",
+    fontWeight: 700,
+    zIndex: 2,
+    lineHeight: 1.3,
+    pointerEvents: "none" as const,
+  },
+  autoBadge: {
+    position: "absolute" as const,
+    bottom: "4px",
+    left: "4px",
+    fontSize: "8px",
+    color: "#fff",
+    background: "rgba(90,90,90,0.75)",
+    borderRadius: "2px",
+    padding: "1px 4px",
+    fontWeight: 600,
+    zIndex: 2,
+  },
+  autoLowBadge: {
+    position: "absolute" as const,
+    bottom: "4px",
+    left: "4px",
+    fontSize: "8px",
+    color: "#fff",
+    background: "rgba(180,100,0,0.85)",
+    borderRadius: "2px",
+    padding: "1px 4px",
+    fontWeight: 700,
+    zIndex: 2,
   },
 } as const

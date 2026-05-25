@@ -2,41 +2,24 @@
 
 import React, { useMemo, useState } from "react"
 import type { InvItem, CandidateEntry, V2RoleFilter, V2RoleSlot } from "./legacy-board-v2-types"
-import { classifyVisualRole } from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
 import type { VisualRole } from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
+import {
+  effectiveV2Filter,
+  inferV2VisualRole,
+} from "./legacy-board-v2-role-inference"
 import { RoleFilterTabs } from "./RoleFilterTabs"
 import { MediaCardV2, clientPreview } from "./MediaCardV2"
 
 const POOL_LIMIT = 120
 
-function visualRoleToFilter(role: VisualRole): V2RoleFilter {
-  if (role === "closed_front" || role === "hero_front" || role === "front_anfas") return "front"
-  if (role === "front_3_4") return "3_4"
-  if (role === "interior") return "interior"
-  if (role === "detail") return "detail"
-  if (role === "lifestyle") return "lifestyle"
-  if (role === "scheme") return "scheme"
-  return "all"
-}
-
-/** Map an operator role override slot to the pool filter tab it belongs to */
-function roleSlotToFilter(slot: V2RoleSlot): V2RoleFilter {
-  if (slot === "front_anfas" || slot === "main") return "front"
-  if (slot === "front_3_4") return "3_4"
-  if (slot === "interior") return "interior"
-  if (slot === "detail") return "detail"
-  if (slot === "lifestyle") return "lifestyle"
-  if (slot === "scheme") return "scheme"
-  return "all"
-}
-
 type PoolItem = {
   inv: InvItem
   role: VisualRole
+  roleConfidence: "high" | "low" | "ambiguous"
   confidence: string | undefined
   identityConfidence: string | undefined
   previewOk: boolean
-  /** Effective pool filter: uses operator role override if set, else auto-detected role */
+  /** Effective pool filter: override → v2 inference */
   effectiveFilter: V2RoleFilter
 }
 
@@ -99,14 +82,13 @@ export function MediaPoolPanel({
       const inv = invById.get(id)
       if (!inv) continue
       const entry = entryByInventoryId.get(id)
-      const role = classifyVisualRole(inv, { productHandle: selectedHandle })
+      const inferred = inferV2VisualRole(inv, { productHandle: selectedHandle })
       const preview = clientPreview(inv)
-      // Compute effective filter: operator override takes priority over auto role
-      const override = overrides[id]
-      const effectiveFilter: V2RoleFilter = override ? roleSlotToFilter(override) : visualRoleToFilter(role)
+      const effectiveFilter = effectiveV2Filter(inv, overrides, { productHandle: selectedHandle })
       const item: PoolItem = {
         inv,
-        role,
+        role: inferred.role,
+        roleConfidence: inferred.confidence,
         confidence: entry?.confidence,
         identityConfidence: entry?.identity_confidence,
         previewOk: preview.url !== null,
@@ -256,6 +238,7 @@ export function MediaPoolPanel({
                 <MediaCardV2
                   inv={item.inv}
                   role={item.role}
+                  roleConfidence={item.roleConfidence}
                   confidence={item.confidence}
                   identityConfidence={item.identityConfidence}
                   selectedHandle={selectedHandle}

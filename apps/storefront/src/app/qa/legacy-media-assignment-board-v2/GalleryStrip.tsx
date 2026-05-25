@@ -342,16 +342,13 @@ export function GalleryStrip({
   }
 
   function handleDragEnter(e: React.DragEvent, idx: number) {
-    if (!isInternalDrag()) return
     e.preventDefault()
     setDragOverIdx(idx)
     setInsertBefore(null)
   }
 
   function handleDragOver(e: React.DragEvent, idx: number) {
-    if (!isInternalDrag()) return
-    e.preventDefault()
-    e.dataTransfer.dropEffect = "move"
+    handleExternalDragOver(e)
     setDragOverIdx(idx)
     setInsertBefore(null)
   }
@@ -362,12 +359,22 @@ export function GalleryStrip({
     }
   }
 
+  function handleExternalDrop(e: React.DragEvent, atIdx: number) {
+    const mediaId = e.dataTransfer.getData("text/plain")
+    if (mediaId) onInsertIntoGallery?.(mediaId, atIdx)
+  }
+
   function handleDrop(e: React.DragEvent, toIdx: number) {
     e.preventDefault()
     e.stopPropagation()
     const fromIdx = dragSrcRef.current
+    if (fromIdx === null) {
+      clearDrag()
+      handleExternalDrop(e, toIdx)
+      return
+    }
     clearDrag()
-    if (fromIdx !== null && fromIdx !== toIdx) {
+    if (fromIdx !== toIdx) {
       onReorderGallery?.(fromIdx, toIdx)
     }
   }
@@ -376,11 +383,20 @@ export function GalleryStrip({
     e.preventDefault()
     e.stopPropagation()
     const fromIdx = dragSrcRef.current
+    if (fromIdx === null) {
+      clearDrag()
+      handleExternalDrop(e, beforeIdx)
+      return
+    }
     clearDrag()
-    if (fromIdx === null) return
     let toIdx = beforeIdx
     if (fromIdx < beforeIdx) toIdx = beforeIdx - 1
     if (fromIdx !== toIdx) onReorderGallery?.(fromIdx, toIdx)
+  }
+
+  function handleExternalDragOver(e: React.DragEvent) {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = isInternalDrag() ? "move" : "copy"
   }
 
   function handleDragEnd() {
@@ -438,17 +454,14 @@ export function GalleryStrip({
               <span key={mediaId} style={styles.cardWithGap}>
                 <GalleryDropGap
                   insertBefore={idx}
-                  isActive={insertBefore === idx && dragFromIdx !== null}
+                  isActive={insertBefore === idx}
                   onDragEnter={(e) => {
-                    if (!isInternalDrag()) return
                     e.preventDefault()
                     setInsertBefore(idx)
                     setDragOverIdx(null)
                   }}
                   onDragOver={(e) => {
-                    if (!isInternalDrag()) return
-                    e.preventDefault()
-                    e.dataTransfer.dropEffect = "move"
+                    handleExternalDragOver(e)
                     setInsertBefore(idx)
                   }}
                   onDragLeave={(e) => {
@@ -483,17 +496,14 @@ export function GalleryStrip({
           })}
           <GalleryDropGap
             insertBefore={galleryIds.length}
-            isActive={insertBefore === galleryIds.length && dragFromIdx !== null}
+            isActive={insertBefore === galleryIds.length}
             onDragEnter={(e) => {
-              if (!isInternalDrag()) return
               e.preventDefault()
               setInsertBefore(galleryIds.length)
               setDragOverIdx(null)
             }}
             onDragOver={(e) => {
-              if (!isInternalDrag()) return
-              e.preventDefault()
-              e.dataTransfer.dropEffect = "move"
+              handleExternalDragOver(e)
               setInsertBefore(galleryIds.length)
             }}
             onDragLeave={(e) => {

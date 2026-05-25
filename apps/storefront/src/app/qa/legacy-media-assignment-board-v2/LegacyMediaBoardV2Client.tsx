@@ -371,6 +371,19 @@ export function LegacyMediaBoardV2Client() {
   )
 
   // Operator visual-role override for a specific media item
+  const handleSetVariantLabel = useCallback(
+    (variantKey: string, label: string | null) => {
+      if (!selectedHandle) return
+      updateProductState(selectedHandle, activeVariantKey, (s) => {
+        const overrides = { ...(s.variantLabelOverrides ?? {}) }
+        if (label === null) delete overrides[variantKey]
+        else overrides[variantKey] = label
+        return { ...s, variantLabelOverrides: overrides }
+      })
+    },
+    [selectedHandle, activeVariantKey, updateProductState]
+  )
+
   const handleSetRoleOverride = useCallback(    (mediaId: string, role: V2RoleSlot | null) => {
       if (!selectedHandle) return
       updateProductState(selectedHandle, activeVariantKey, (s) => {
@@ -580,6 +593,7 @@ export function LegacyMediaBoardV2Client() {
           onReorderGallery={handleReorderGallery}
           onAddToGallery={handleAddToGallery}
           onInsertIntoGallery={handleInsertIntoGallery}
+          onSetVariantLabel={handleSetVariantLabel}
         />
 
         {/* Right: Media pool */}

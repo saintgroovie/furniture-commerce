@@ -25,6 +25,8 @@ export type V2ExportVariant = {
   gallery: V2ExportMediaRef[]
   /** Explicit operator slot assignments beyond main (optional, informational only — not used by apply) */
   role_assignments?: Record<string, V2ExportMediaRef>
+  /** Operator display label for this color variant (optional — apply may ignore) */
+  operator_variant_label?: string
 }
 
 export type V2ExportProduct = {
@@ -122,6 +124,10 @@ export function buildV2ExportJSON(
       }
       if (Object.keys(roleAssignments).length > 0) {
         variant.role_assignments = roleAssignments
+      }
+      const operatorLabel = state.variantLabelOverrides?.[variantKey]
+      if (operatorLabel) {
+        variant.operator_variant_label = operatorLabel
       }
       variants[variantKey] = variant
     }

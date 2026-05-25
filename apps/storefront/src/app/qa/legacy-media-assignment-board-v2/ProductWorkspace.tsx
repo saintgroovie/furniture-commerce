@@ -33,6 +33,7 @@ type Props = {
   onAddToGallery?: (mediaId: string) => void
   /** Insert/move media into gallery at a specific position (from final-order slot drop) */
   onInsertIntoGallery?: (mediaId: string, atIdx: number) => void
+  onSetVariantLabel?: (variantKey: string, label: string | null) => void
 }
 
 export function ProductWorkspace({
@@ -52,7 +53,9 @@ export function ProductWorkspace({
   onReorderGallery,
   onAddToGallery,
   onInsertIntoGallery,
+  onSetVariantLabel,
 }: Props) {
+  const galleryIds = productState?.galleriesByVariant[activeVariantKey] ?? []
   if (!selectedHandle) {
     return (
       <main style={styles.root}>
@@ -85,6 +88,7 @@ export function ProductWorkspace({
           activeVariantKey={activeVariantKey}
           productState={productState}
           onSelect={onSetVariant}
+          onSetVariantLabel={onSetVariantLabel}
         />
 
         {/* Missing roles — always visible task bar */}
@@ -113,6 +117,8 @@ export function ProductWorkspace({
           onClearRole={onClearRole}
           roleOverrides={roleOverrides}
           onAddToGallery={onAddToGallery}
+          galleryIds={galleryIds}
+          productHandle={selectedHandle}
         />
 
         <StorefrontGallerySection

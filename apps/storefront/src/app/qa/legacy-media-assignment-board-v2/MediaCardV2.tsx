@@ -4,6 +4,7 @@ import { useState } from "react"
 import type { InvItem, V2RoleSlot } from "./legacy-board-v2-types"
 import type { VisualRole } from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
 import { VISUAL_ROLE_BADGE_RU } from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
+import type { V2RoleConfidence } from "./legacy-board-v2-role-inference"
 
 // Role slot labels for the operator override dropdown (excludes "main" — set via ★)
 const ROLE_SLOT_LABELS: Partial<Record<V2RoleSlot, string>> = {
@@ -144,6 +145,8 @@ const CONFIDENCE_COLOR: Record<string, string> = {
 type Props = {
   inv: InvItem
   role: VisualRole
+  /** v2 inference confidence — shows auto? when low/ambiguous */
+  roleConfidence?: V2RoleConfidence
   confidence?: string
   identityConfidence?: string
   selectedHandle: string | null
@@ -170,6 +173,7 @@ type Props = {
 export function MediaCardV2({
   inv,
   role,
+  roleConfidence,
   confidence,
   selectedHandle: _selectedHandle,
   onSetMain,
@@ -190,6 +194,9 @@ export function MediaCardV2({
   const effectiveStatus = imgFailed ? "file_missing" : preview.status
   const effectiveReason = imgFailed ? "Файл не найден на диске (proxy 404)." : preview.reason
   const overrideLabel = roleOverride ? (ROLE_SLOT_LABELS[roleOverride] ?? roleOverride) : null
+  const autoLow =
+    !overrideLabel && (roleConfidence === "ambiguous" || roleConfidence === "low")
+  const displayRoleLabel = overrideLabel ?? roleLabel
 
   function handleSetMain() {
     if (!isMain && onSetMain) onSetMain(inv.id)
@@ -217,9 +224,9 @@ export function MediaCardV2({
           ...styles.roleChip,
           ...(overrideLabel ? styles.roleChipOverride : {}),
         }}
-        title={overrideLabel ? `Ручная роль: ${overrideLabel}` : `Авто: ${roleLabel}`}
+        title={overrideLabel ? `Ручная роль: ${overrideLabel}` : `Авто: ${roleLabel}${autoLow ? " (низкая уверенность)" : ""}`}
       >
-        {overrideLabel ?? roleLabel}
+        {autoLow ? `${displayRoleLabel}?` : displayRoleLabel}
       </span>
       <select
         style={{
@@ -333,7 +340,7 @@ export function MediaCardV2({
 
         {/* Role badge — bottom-left overlay */}
         <span style={styles.roleBadgeOverlay}>
-          {overrideLabel ?? roleLabel}
+          {autoLow ? `${displayRoleLabel}?` : displayRoleLabel}
         </span>
 
         {/* Confidence badge — top-right overlay */}
