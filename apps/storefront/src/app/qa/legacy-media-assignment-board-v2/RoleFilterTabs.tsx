@@ -3,7 +3,7 @@
 import type { V2RoleFilter } from "./legacy-board-v2-types"
 
 const ROLE_FILTERS: ReadonlyArray<{ key: V2RoleFilter; label: string }> = [
-  { key: "all", label: "Все" },
+  { key: "all", label: "Все медиа" },
   { key: "front", label: "Фронт" },
   { key: "3_4", label: "3/4" },
   { key: "interior", label: "Внутри" },
