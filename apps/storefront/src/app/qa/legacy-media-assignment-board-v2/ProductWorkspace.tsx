@@ -173,9 +173,9 @@ function WorkspaceInstructionCard({
   return (
     <div style={hintStyles.card} data-v2-workspace-instruction>
       <p style={hintStyles.text}>
-        <strong>Шаг 1.</strong> В правом пуле назначьте <strong>★ Главное</strong>, затем
-        перетащите фото в крупные <strong>слоты ролей</strong> ниже или откройте роль через «+
-        пул». Порядок на витрине — в блоке галереи под слотами.
+        <strong>Шаг 1.</strong> Назначьте <strong>★ Главное</strong> в пуле, затем заполните{" "}
+        <strong>слоты ролей</strong> — витрина обновится автоматически. Перетащите карточки в
+        галерее ниже, если нужно поменять порядок.
       </p>
     </div>
   )
@@ -183,7 +183,7 @@ function WorkspaceInstructionCard({
 
 const hintStyles = {
   card: {
-    margin: "0 14px 10px",
+    margin: "8px 14px 0",
     padding: "10px 12px",
     background: "#f0f6ff",
     border: "1px solid #d0e4ff",
@@ -244,6 +244,7 @@ const styles = {
     display: "flex",
     flexDirection: "column" as const,
     gap: "0",
+    paddingBottom: "10px",
   },
   scrollBody: {
     flex: 1,
@@ -253,6 +254,8 @@ const styles = {
     flexDirection: "column" as const,
     alignItems: "stretch",
     justifyContent: "flex-start",
+    gap: "0",
+    paddingTop: "2px",
     paddingBottom: "16px",
   },
   colHeader: {

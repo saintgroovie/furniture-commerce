@@ -50,11 +50,12 @@ export function StorefrontGallerySection({
 const hubStyles = {
   root: {
     flexShrink: 0,
-    margin: "12px 14px 0",
-    border: "1px solid #d0d8e8",
+    margin: "14px 14px 0",
+    border: "1px solid #c8d4e8",
     borderRadius: "8px",
     background: "#f4f7fc",
     overflow: "hidden",
+    boxShadow: "0 1px 0 rgba(26, 58, 110, 0.04)",
   },
 } as const
 
@@ -423,7 +424,8 @@ export function GalleryStrip({
             ГАЛЕРЕЯ / порядок на витрине
           </span>
           <span style={styles.headerLead}>
-            gallery export · {filledCount}/{GALLERY_SLOT_COUNT}
+            Заполните роли — витрина обновится автоматически. Перетащите карточки здесь, если
+            нужно поменять порядок · {filledCount}/{GALLERY_SLOT_COUNT}
           </span>
         </div>
         <GalleryHeaderRail

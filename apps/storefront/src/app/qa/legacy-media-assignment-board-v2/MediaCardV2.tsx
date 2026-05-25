@@ -253,6 +253,7 @@ export function MediaCardV2({
   if (compact) {
     return (
       <div
+        data-v2-pool-card="true"
         draggable
         onDragStart={handleDragStart}
         style={{
@@ -301,6 +302,7 @@ export function MediaCardV2({
   // -------------------------------------------------------------------------
   return (
     <div
+      data-v2-pool-card="true"
       draggable
       onDragStart={handleDragStart}
       style={{

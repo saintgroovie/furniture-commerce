@@ -29,6 +29,11 @@ import {
   saveV2PersistedState,
 } from "./legacy-board-v2-persistence"
 import { reorderGalleryIds } from "./legacy-board-v2-gallery-order"
+import {
+  removeGalleryIfOrphan,
+  stripFromGallery,
+  upsertGalleryByRole,
+} from "./legacy-board-v2-gallery-sync"
 import { V2_BOARD_BUILD, V2_BOARD_BUILD_LABEL } from "./legacy-board-v2-build"
 
 const V1_API_BASE = "/qa/legacy-media-assignment-board/api"
@@ -267,9 +272,14 @@ export function LegacyMediaBoardV2Client() {
           if (roles[key] === mediaId && key !== "main") roles[key] = null
         }
         roles.main = mediaId
+        const overrides = { ...(s.roleOverrides ?? {}) }
+        delete overrides[mediaId]
+        const gallery = stripFromGallery(s.galleriesByVariant[activeVariantKey] ?? [], mediaId)
         return {
           ...s,
           rolesByVariant: { ...s.rolesByVariant, [activeVariantKey]: roles },
+          roleOverrides: overrides,
+          galleriesByVariant: { ...s.galleriesByVariant, [activeVariantKey]: gallery },
         }
       })
     },
@@ -349,10 +359,18 @@ export function LegacyMediaBoardV2Client() {
           overrides[mediaId] = slot
         }
 
+        let gallery = s.galleriesByVariant[activeVariantKey] ?? []
+        if (slot === "main") {
+          gallery = stripFromGallery(gallery, mediaId)
+        } else {
+          gallery = upsertGalleryByRole(gallery, mediaId, slot, roles)
+        }
+
         return {
           ...s,
           rolesByVariant: { ...s.rolesByVariant, [activeVariantKey]: roles },
           roleOverrides: overrides,
+          galleriesByVariant: { ...s.galleriesByVariant, [activeVariantKey]: gallery },
         }
       })
     },
@@ -369,10 +387,15 @@ export function LegacyMediaBoardV2Client() {
         roles[slot] = null
         const overrides = { ...(s.roleOverrides ?? {}) }
         if (clearedId) delete overrides[clearedId]
+        let gallery = s.galleriesByVariant[activeVariantKey] ?? []
+        if (clearedId && slot !== "main") {
+          gallery = removeGalleryIfOrphan(gallery, clearedId, roles)
+        }
         return {
           ...s,
           rolesByVariant: { ...s.rolesByVariant, [activeVariantKey]: roles },
           roleOverrides: overrides,
+          galleriesByVariant: { ...s.galleriesByVariant, [activeVariantKey]: gallery },
         }
       })
     },

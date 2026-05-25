@@ -98,7 +98,8 @@ export function RoleChecklistPanel({
       <header style={styles.boardHeader}>
         <h2 style={styles.boardTitle}>СЛОТЫ РОЛЕЙ</h2>
         <p style={styles.boardSubtitle}>
-          Перетащите фото в роль или используйте «+» для фильтрации пула
+          Заполните роли — витрина обновится автоматически. «+ пул» открывает фильтр в правой
+          колонке.
         </p>
       </header>
 
@@ -260,18 +261,19 @@ export function RoleChecklistPanel({
               </div>
 
               <div style={styles.slotFooter}>
-                {row.source === "explicit" && row.mediaId && onAddToGallery && (
+                {row.source === "explicit" && row.mediaId && !isMain && (
                   inGallery ? (
-                    <span style={styles.inGalleryPill}>✓ В галерее</span>
-                  ) : (
+                    <span style={styles.inGalleryPill}>✓ В витрине</span>
+                  ) : onAddToGallery ? (
                     <button
                       type="button"
                       style={styles.toGalleryBtn}
                       onClick={() => onAddToGallery(row.mediaId!)}
+                      title="Добавить в витрину вручную (роль уже назначена)"
                     >
-                      + гал.
+                      в витрину
                     </button>
-                  )
+                  ) : null
                 )}
                 <button
                   type="button"
@@ -298,7 +300,7 @@ const THUMB_H = 128
 const styles = {
   roleBoard: {
     flexShrink: 0,
-    margin: "12px 14px 0",
+    margin: "10px 14px 0",
     padding: "14px 16px 18px",
     background: "#fff",
     border: "1px solid #d4dce8",
