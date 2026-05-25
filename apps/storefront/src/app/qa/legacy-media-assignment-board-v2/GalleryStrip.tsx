@@ -9,7 +9,7 @@ export const GALLERY_DRAG_TYPE = "application/x-gallery-item"
 
 /** Compact preview strip — smaller than role slots */
 export const GALLERY_CARD_W = 132
-export const GALLERY_THUMB_H = 96
+export const GALLERY_THUMB_H = 84
 export const GALLERY_SLOT_COUNT = 5
 
 // ---------------------------------------------------------------------------
@@ -56,7 +56,7 @@ export function StorefrontGallerySection({
 const hubStyles = {
   root: {
     flexShrink: 0,
-    margin: "10px 14px 0",
+    margin: "6px 12px 0",
     border: "1px solid #d8e0ec",
     borderRadius: "6px",
     background: "#f8fafc",
@@ -897,10 +897,10 @@ const styles = {
     alignItems: "flex-start",
     justifyContent: "flex-start",
     gap: "8px",
-    padding: "8px 12px 10px",
+    padding: "6px 10px 8px",
     overflowX: "auto" as const,
     overflowY: "hidden" as const,
-    minHeight: `${GALLERY_THUMB_H + 72}px`,
+    minHeight: `${GALLERY_THUMB_H + 52}px`,
   },
   cardWithGap: {
     display: "inline-flex",

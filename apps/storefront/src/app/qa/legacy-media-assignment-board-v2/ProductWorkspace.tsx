@@ -246,7 +246,7 @@ const styles = {
     display: "flex",
     flexDirection: "column" as const,
     gap: "0",
-    paddingBottom: "10px",
+    paddingBottom: "2px",
   },
   scrollBody: {
     flex: 1,
@@ -257,8 +257,8 @@ const styles = {
     alignItems: "stretch",
     justifyContent: "flex-start",
     gap: "0",
-    paddingTop: "2px",
-    paddingBottom: "16px",
+    paddingTop: "0",
+    paddingBottom: "8px",
   },
   colHeader: {
     padding: "9px 14px",
@@ -288,7 +288,7 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: "8px",
-    padding: "10px 14px",
+    padding: "6px 12px",
     background: "#fff",
     borderBottom: "1px solid #eee",
     flexWrap: "wrap" as const,

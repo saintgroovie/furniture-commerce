@@ -28,11 +28,9 @@ export function MissingRoleStrip({ missingSlots, onFocusRole }: Props) {
   }
 
   return (
-    <div style={styles.strip}>
-      <div style={styles.headerRow}>
-        <span style={styles.warningIcon}>⚠</span>
-        <span style={styles.label}>Нужно заполнить:</span>
-      </div>
+    <div style={styles.strip} data-v2-missing-role-strip>
+      <span style={styles.warningIcon}>⚠</span>
+      <span style={styles.label}>Нужно:</span>
       <div style={styles.chipRow}>
         {missingSlots.map((slot) => (
           <button
@@ -52,7 +50,14 @@ export function MissingRoleStrip({ missingSlots, onFocusRole }: Props) {
 
 const styles = {
   strip: {
-    padding: "8px 14px 10px",
+    display: "flex",
+    alignItems: "center",
+    flexWrap: "wrap" as const,
+    gap: "4px 6px",
+    padding: "4px 12px 5px",
+    minHeight: "32px",
+    maxHeight: "52px",
+    overflow: "hidden" as const,
     background: "#fffbf5",
     borderBottom: "1px solid #f0e6d0",
     flexShrink: 0,
@@ -60,8 +65,9 @@ const styles = {
   stripDone: {
     display: "flex",
     alignItems: "center",
-    gap: "8px",
-    padding: "8px 14px 10px",
+    gap: "6px",
+    padding: "4px 12px 5px",
+    minHeight: "28px",
     background: "#f5fbf6",
     borderBottom: "1px solid #e8f0e8",
     flexShrink: 0,
@@ -76,42 +82,42 @@ const styles = {
     color: "#2d7a2d",
     fontWeight: 600,
   },
-  headerRow: {
-    display: "flex",
-    alignItems: "center",
-    gap: "6px",
-    marginBottom: "6px",
-  },
   warningIcon: {
-    fontSize: "14px",
+    fontSize: "12px",
     color: "#e07800",
+    flexShrink: 0,
+    lineHeight: 1,
   },
   label: {
-    fontSize: "11px",
+    fontSize: "10px",
     color: "#7a4800",
     fontWeight: 700,
     textTransform: "uppercase" as const,
-    letterSpacing: "0.04em",
+    letterSpacing: "0.03em",
+    flexShrink: 0,
+    whiteSpace: "nowrap" as const,
   },
   chipRow: {
     display: "flex",
     flexWrap: "wrap" as const,
-    gap: "5px",
+    alignItems: "center",
+    gap: "4px",
+    flex: "1 1 auto",
+    minWidth: 0,
   },
   chip: {
     display: "inline-flex",
     alignItems: "center",
-    gap: "4px",
-    padding: "4px 10px",
+    gap: "3px",
+    padding: "3px 7px",
     fontSize: "11px",
-    border: "1px solid #f0a000",
-    borderRadius: "12px",
+    border: "1px solid #e8c878",
+    borderRadius: "4px",
     background: "#fff",
     color: "#7a3800",
     cursor: "pointer",
     fontWeight: 600,
-    lineHeight: 1.3,
-    transition: "background 0.1s",
+    lineHeight: 1.2,
   },
   chipArrow: {
     fontSize: "10px",

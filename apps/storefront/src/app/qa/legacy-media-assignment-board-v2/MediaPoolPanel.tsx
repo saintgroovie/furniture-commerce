@@ -324,11 +324,7 @@ export function MediaPoolPanel({
                   isInGallery={usage.isInGallery}
                   poolUsageLine={usage.statusLine || undefined}
                   poolMuted={usage.poolMuted}
-                  isDimmed={
-                    activeFilter === "all" &&
-                    !usage.poolMuted &&
-                    (usage.isMain || usage.isInGallery)
-                  }
+                  isDimmed={false}
                   roleOverride={(roleOverrides ?? {})[item.inv.id] ?? null}
                   onSetRoleOverride={onSetRoleOverride}
                 />
@@ -458,26 +454,30 @@ const styles = {
   },
   grid: {
     display: "grid",
-    gridTemplateColumns: "repeat(2, 1fr)",
-    gap: "6px",
-    padding: "8px",
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    gap: "5px",
+    padding: "6px",
+    alignItems: "start",
     // No overflowY here — let the parent aside scroll (double scroll-container bug)
   },
   scopeSeparator: {
     gridColumn: "1 / -1",
     display: "flex",
     alignItems: "center",
-    gap: "8px",
-    padding: "8px 0 2px",
-    marginTop: "2px",
+    minHeight: "18px",
+    maxHeight: "22px",
+    padding: "2px 2px 0",
+    margin: 0,
+    borderTop: "1px solid #eceef2",
   },
   scopeSeparatorLabel: {
-    fontSize: "10px",
+    fontSize: "9px",
     fontWeight: 700,
-    color: "#6a7488",
+    color: "#7a8494",
     textTransform: "uppercase" as const,
-    letterSpacing: "0.04em",
+    letterSpacing: "0.05em",
     whiteSpace: "nowrap" as const,
+    lineHeight: 1.2,
   },
   separator: {
     gridColumn: "1 / -1",

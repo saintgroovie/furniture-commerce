@@ -91,8 +91,7 @@ export function RoleChecklistPanel({
       <header style={styles.boardHeader}>
         <h2 style={styles.boardTitle}>СЛОТЫ РОЛЕЙ</h2>
         <p style={styles.boardSubtitle}>
-          Заполните роли — витрина обновится автоматически. «+ пул» открывает фильтр в правой
-          колонке.
+          Роли → витрина автоматически · «+ пул» — фильтр справа
         </p>
       </header>
 
@@ -272,21 +271,21 @@ export function RoleChecklistPanel({
   )
 }
 
-const THUMB_H = 120
+const THUMB_H = 100
 
 const styles = {
   roleBoard: {
     flexShrink: 0,
-    margin: "10px 14px 0",
-    padding: "14px 16px 18px",
+    margin: "6px 12px 0",
+    padding: "10px 12px 12px",
     background: "#fff",
     border: "1px solid #d4dce8",
     borderRadius: "10px",
     boxShadow: "0 1px 4px rgba(26, 58, 110, 0.07)",
   },
   boardHeader: {
-    marginBottom: "12px",
-    paddingBottom: "10px",
+    marginBottom: "8px",
+    paddingBottom: "6px",
     borderBottom: "1px solid #e8eef6",
   },
   boardTitle: {
@@ -299,22 +298,22 @@ const styles = {
     lineHeight: 1.3,
   },
   boardSubtitle: {
-    margin: "6px 0 0",
-    fontSize: "12px",
+    margin: "3px 0 0",
+    fontSize: "11px",
     color: "#5a6a8e",
-    lineHeight: 1.45,
+    lineHeight: 1.3,
     maxWidth: "52em",
   },
   grid: {
     display: "grid",
     gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-    gap: "10px",
+    gap: "8px",
     alignItems: "stretch",
   },
   slot: {
     display: "flex",
     flexDirection: "column" as const,
-    minHeight: "200px",
+    minHeight: "172px",
     maxWidth: "100%",
     borderRadius: "8px",
     overflow: "hidden",

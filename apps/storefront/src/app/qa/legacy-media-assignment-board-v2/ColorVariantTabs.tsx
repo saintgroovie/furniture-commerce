@@ -294,7 +294,7 @@ const styles = {
     flexWrap: "wrap" as const,
     alignItems: "center",
     gap: "4px",
-    padding: "8px 14px 6px",
+    padding: "5px 12px 4px",
   },
   tabWrap: {
     display: "inline-flex",

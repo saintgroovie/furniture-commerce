@@ -271,7 +271,6 @@ export function MediaCardV2({
         style={{
           ...styles.compactCard,
           ...(isMain ? styles.compactCardMain : isInGallery ? styles.compactCardInGallery : {}),
-          ...(isDimmed ? styles.dimmed : {}),
           ...(isOtherColor ? styles.poolOtherColorChrome : {}),
         }}
       >
@@ -336,10 +335,10 @@ export function MediaCardV2({
       style={{
         ...styles.card,
         ...(isMain ? styles.cardMain : isInGallery ? styles.cardInGallery : {}),
-        ...(isDimmed ? styles.dimmed : {}),
         ...(isOtherColor ? styles.poolOtherColorChrome : {}),
       }}
       data-v2-pool-other-color={isOtherColor ? "true" : undefined}
+      data-v2-pool-dimmed={isDimmed ? "footer" : undefined}
     >
       {poolUsageLine && (
         <div
@@ -353,13 +352,14 @@ export function MediaCardV2({
           {poolUsageLine}
         </div>
       )}
-      {/* Image wrap — fixed 160px height, reliable in any grid/flex context */}
-      <div style={styles.imageWrap}>
+      {/* Image wrap — always full opacity; dimming only on footer if assigned */}
+      <div style={styles.imageWrap} data-v2-pool-preview-wrap>
         {showImg ? (
           <img
             src={preview.url!}
             alt={inv.filename}
             style={styles.img}
+            data-v2-pool-preview-img
             loading="lazy"
             onError={() => setImgFailed(true)}
             draggable={false}
@@ -401,7 +401,7 @@ export function MediaCardV2({
       </div>
 
       {/* Footer: filename + primary actions + role override */}
-      <div style={styles.footer}>
+      <div style={{ ...styles.footer, ...(isDimmed ? styles.footerDimmed : {}) }}>
         <div style={styles.filename} title={inv.filename}>{shortname}</div>
         <div style={styles.primaryActions}>
           <button
@@ -476,6 +476,8 @@ const styles = {
     height: "100%",
     objectFit: "contain" as const,
     display: "block",
+    opacity: 1,
+    filter: "none",
   },
   noPreview: {
     position: "absolute" as const,
@@ -724,16 +726,16 @@ const styles = {
     cursor: "default",
     border: "1px solid #e0e0e0",
   },
-  /** Applied in "Все" pool view to already-assigned cards so free items stand out */
-  dimmed: {
-    opacity: 0.65,
-    filter: "saturate(0.6)",
-    transition: "opacity 0.1s, filter 0.1s",
+  footerDimmed: {
+    background: "#f4f5f7",
+    opacity: 1,
   },
   poolOtherColorChrome: {
     border: "1px dashed #b8c0cc",
-    background: "#f6f7f9",
+    background: "#fafbfc",
     boxShadow: "none",
+    opacity: 1,
+    filter: "none",
   },
   poolUsageBanner: {
     fontSize: "10px",
