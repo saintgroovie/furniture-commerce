@@ -266,16 +266,17 @@ export function LegacyMediaBoardV2Client() {
   const handleSetMain = useCallback(
     (mediaId: string) => {
       if (!selectedHandle) return
-      updateProductState(selectedHandle, activeVariantKey, (s) => ({
-        ...s,
-        rolesByVariant: {
-          ...s.rolesByVariant,
-          [activeVariantKey]: {
-            ...s.rolesByVariant[activeVariantKey],
-            main: mediaId,
-          },
-        },
-      }))
+      updateProductState(selectedHandle, activeVariantKey, (s) => {
+        const roles = { ...(s.rolesByVariant[activeVariantKey] ?? {}) }
+        for (const key of Object.keys(roles) as V2RoleSlot[]) {
+          if (roles[key] === mediaId && key !== "main") roles[key] = null
+        }
+        roles.main = mediaId
+        return {
+          ...s,
+          rolesByVariant: { ...s.rolesByVariant, [activeVariantKey]: roles },
+        }
+      })
     },
     [selectedHandle, activeVariantKey, updateProductState]
   )
@@ -336,18 +337,29 @@ export function LegacyMediaBoardV2Client() {
   )
 
   // Explicit role-slot assignment (drag & drop or picker)
-  const handleSetRole = useCallback(    (mediaId: string, slot: V2RoleSlot) => {
+  const handleSetRole = useCallback(
+    (mediaId: string, slot: V2RoleSlot) => {
       if (!selectedHandle) return
-      updateProductState(selectedHandle, activeVariantKey, (s) => ({
-        ...s,
-        rolesByVariant: {
-          ...s.rolesByVariant,
-          [activeVariantKey]: {
-            ...s.rolesByVariant[activeVariantKey],
-            [slot]: mediaId,
-          },
-        },
-      }))
+      updateProductState(selectedHandle, activeVariantKey, (s) => {
+        const roles = { ...(s.rolesByVariant[activeVariantKey] ?? {}) }
+        for (const key of Object.keys(roles) as V2RoleSlot[]) {
+          if (roles[key] === mediaId && key !== slot) roles[key] = null
+        }
+        roles[slot] = mediaId
+
+        const overrides = { ...(s.roleOverrides ?? {}) }
+        if (slot === "main") {
+          delete overrides[mediaId]
+        } else {
+          overrides[mediaId] = slot
+        }
+
+        return {
+          ...s,
+          rolesByVariant: { ...s.rolesByVariant, [activeVariantKey]: roles },
+          roleOverrides: overrides,
+        }
+      })
     },
     [selectedHandle, activeVariantKey, updateProductState]
   )
@@ -356,16 +368,18 @@ export function LegacyMediaBoardV2Client() {
   const handleClearRole = useCallback(
     (slot: V2RoleSlot) => {
       if (!selectedHandle) return
-      updateProductState(selectedHandle, activeVariantKey, (s) => ({
-        ...s,
-        rolesByVariant: {
-          ...s.rolesByVariant,
-          [activeVariantKey]: {
-            ...s.rolesByVariant[activeVariantKey],
-            [slot]: null,
-          },
-        },
-      }))
+      updateProductState(selectedHandle, activeVariantKey, (s) => {
+        const roles = { ...(s.rolesByVariant[activeVariantKey] ?? {}) }
+        const clearedId = (roles[slot] as string | null | undefined) ?? null
+        roles[slot] = null
+        const overrides = { ...(s.roleOverrides ?? {}) }
+        if (clearedId) delete overrides[clearedId]
+        return {
+          ...s,
+          rolesByVariant: { ...s.rolesByVariant, [activeVariantKey]: roles },
+          roleOverrides: overrides,
+        }
+      })
     },
     [selectedHandle, activeVariantKey, updateProductState]
   )

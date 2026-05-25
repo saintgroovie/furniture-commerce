@@ -167,6 +167,9 @@ export function RoleChecklistPanel({
           return (
             <div
               key={row.slot}
+              data-v2-role-slot={row.slot}
+              data-v2-role-slot-filled={row.isCovered && row.source === "explicit" ? "true" : "false"}
+              data-v2-role-slot-media-id={row.mediaId ?? undefined}
               style={{
                 ...styles.slot,
                 ...(row.isCovered ? styles.slotFilled : styles.slotEmpty),
