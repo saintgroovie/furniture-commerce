@@ -140,6 +140,7 @@ export function ProductWorkspace({
         <StorefrontGallerySection
           mainMediaId={(productState?.rolesByVariant[activeVariantKey]?.main as string | null | undefined) ?? null}
           galleryIds={productState?.galleriesByVariant[activeVariantKey] ?? []}
+          variantRoles={productState?.rolesByVariant[activeVariantKey] ?? {}}
           invById={invById}
           onRemove={onRemoveFromGallery}
           onReorderGallery={onReorderGallery}

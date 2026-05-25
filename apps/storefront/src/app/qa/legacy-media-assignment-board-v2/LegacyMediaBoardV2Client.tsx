@@ -249,6 +249,11 @@ export function LegacyMediaBoardV2Client() {
     [currentProductState]
   )
 
+  const currentVariantRoles = useMemo(
+    () => currentProductState?.rolesByVariant[activeVariantKey] ?? {},
+    [currentProductState, activeVariantKey]
+  )
+
   // --- Assignment state helpers ---
   const updateProductState = useCallback(
     (handle: string, variantKey: string, updater: (s: V2ProductState) => V2ProductState) => {
@@ -609,6 +614,8 @@ export function LegacyMediaBoardV2Client() {
           currentGalleryIds={currentGalleryIds}
           roleOverrides={currentRoleOverrides}
           onSetRoleOverride={handleSetRoleOverride}
+          activeVariantKey={activeVariantKey}
+          variantRoles={currentVariantRoles}
         />
       </div>
     </div>

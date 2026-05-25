@@ -5,6 +5,7 @@ import type { InvItem, V2ProductState, V2RoleSlot, V2RoleRow, V2RoleFilter } fro
 import type { VisualRole } from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
 import { clientPreview } from "./MediaCardV2"
 import { inferV2VisualRole } from "./legacy-board-v2-role-inference"
+import { ROLE_SLOT_LABEL_RU } from "./legacy-board-v2-gallery-source"
 
 const ROLE_DEFS: ReadonlyArray<{ slot: V2RoleSlot; label: string; filter: V2RoleFilter; hint: string }> = [
   { slot: "main", label: "Главное", filter: "front", hint: "Главная карточка товара" },
@@ -255,7 +256,9 @@ export function RoleChecklistPanel({
               <div style={styles.slotFooter}>
                 {row.source === "explicit" && row.mediaId && !isMain && (
                   inGallery ? (
-                    <span style={styles.inGalleryPill}>✓ В витрине</span>
+                    <span style={styles.inGalleryPill}>
+                      ✓ В витрине · {ROLE_SLOT_LABEL_RU[row.slot]}
+                    </span>
                   ) : onAddToGallery ? (
                     <button
                       type="button"

@@ -9,6 +9,9 @@ import {
 } from "./legacy-board-v2-role-inference"
 import { RoleFilterTabs } from "./RoleFilterTabs"
 import { MediaCardV2, clientPreview } from "./MediaCardV2"
+import { mediaMatchesVariantKey } from "./legacy-board-v2-color-variants"
+import { resolvePoolUsageStatus } from "./legacy-board-v2-gallery-source"
+import type { V2VariantRoleAssignment } from "./legacy-board-v2-types"
 
 const POOL_LIMIT = 120
 
@@ -40,6 +43,10 @@ type Props = {
   roleOverrides?: Record<string, V2RoleSlot>
   /** Called when operator changes a media item's role override */
   onSetRoleOverride?: (mediaId: string, role: V2RoleSlot | null) => void
+  /** Active color tab — pool badges use only this variant's assignments */
+  activeVariantKey?: string
+  /** Role slots for active variant (for transparent pool status) */
+  variantRoles?: V2VariantRoleAssignment
 }
 
 /** Role label used in empty-filter message */
@@ -68,6 +75,8 @@ export function MediaPoolPanel({
   currentGalleryIds,
   roleOverrides,
   onSetRoleOverride,
+  activeVariantKey = "__all__",
+  variantRoles = {},
 }: Props) {
   const [hideNoPreview, setHideNoPreview] = useState(false)
 
@@ -116,14 +125,17 @@ export function MediaPoolPanel({
     if (noPreviewCount > 0) counts["no_preview"] = noPreviewCount
 
     // Usage-state counts
-    const selectedCount = poolItems.filter(
-      (i) => i.inv.id === (currentMainId ?? null) || gallerySet.has(i.inv.id)
-    ).length
+    const selectedCount = poolItems.filter((i) => {
+      if (!selectedHandle || !mediaMatchesVariantKey(i.inv, selectedHandle, activeVariantKey)) {
+        return false
+      }
+      return i.inv.id === (currentMainId ?? null) || gallerySet.has(i.inv.id)
+    }).length
     counts["selected"] = selectedCount
     counts["unused"] = poolItems.length - selectedCount
 
     return counts
-  }, [poolItems, noPreviewCount, currentMainId, gallerySet])
+  }, [poolItems, noPreviewCount, currentMainId, gallerySet, selectedHandle, activeVariantKey])
 
   // Apply active filter — in "all" mode items are already sorted previewable-first
   const filteredItems = useMemo<PoolItem[]>(() => {
@@ -226,8 +238,15 @@ export function MediaPoolPanel({
           {displayed.map((item, idx) => {
             const showSeparator =
               idx === separatorIdx && separatorIdx > 0 && noPreviewCount > 0
-            const isMain = item.inv.id === (currentMainId ?? null)
-            const isInGallery = gallerySet.has(item.inv.id)
+            const belongs =
+              !!selectedHandle &&
+              mediaMatchesVariantKey(item.inv, selectedHandle, activeVariantKey)
+            const usage = resolvePoolUsageStatus(
+              item.inv.id,
+              variantRoles,
+              currentGalleryIds ?? [],
+              belongs
+            )
             return (
               <React.Fragment key={item.inv.id}>
                 {showSeparator && (
@@ -245,9 +264,15 @@ export function MediaPoolPanel({
                   onSetMain={onSetMain}
                   onAddToGallery={onAddToGallery}
                   compact={!item.previewOk}
-                  isMain={isMain}
-                  isInGallery={isInGallery}
-                  isDimmed={activeFilter === "all" && (isMain || isInGallery)}
+                  isMain={usage.isMain}
+                  isInGallery={usage.isInGallery}
+                  poolUsageLine={usage.statusLine || undefined}
+                  poolMuted={!belongs}
+                  isDimmed={
+                    activeFilter === "all" &&
+                    belongs &&
+                    (usage.isMain || usage.isInGallery)
+                  }
                   roleOverride={(roleOverrides ?? {})[item.inv.id] ?? null}
                   onSetRoleOverride={onSetRoleOverride}
                 />

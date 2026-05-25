@@ -152,6 +152,18 @@ export function displayLabelForVariant(
   return state?.variantLabelOverrides?.[variantKey] ?? defaultLabel
 }
 
+/** Whether inventory media belongs to the active color tab (not another variant). */
+export function mediaMatchesVariantKey(
+  inv: InvItem,
+  productHandle: string,
+  variantKey: string
+): boolean {
+  if (variantKey === "__all__") return true
+  const token = extractColorTokenFromMedia(inv, productHandle)
+  if (!token) return false
+  return token === variantKey
+}
+
 export function buildDetectedColorVariants(
   handle: string,
   candidateIds: string[],

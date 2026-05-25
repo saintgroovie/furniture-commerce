@@ -164,6 +164,10 @@ type Props = {
    * making the free pool easier to scan. Does NOT affect "Выбранные" view.
    */
   isDimmed?: boolean
+  /** Active-variant usage line (e.g. «✓ В витрине · 3/4» or «другой цвет») */
+  poolUsageLine?: string
+  /** De-emphasise items from another color variant in the pool */
+  poolMuted?: boolean
   /** Operator-assigned role override (overrides auto-detected role for display + filtering) */
   roleOverride?: V2RoleSlot | null
   /** Called when operator changes the role override via dropdown */
@@ -182,6 +186,8 @@ export function MediaCardV2({
   isMain,
   isInGallery,
   isDimmed,
+  poolUsageLine,
+  poolMuted,
   roleOverride,
   onSetRoleOverride,
 }: Props) {
@@ -260,6 +266,7 @@ export function MediaCardV2({
           ...styles.compactCard,
           ...(isMain ? styles.compactCardMain : isInGallery ? styles.compactCardInGallery : {}),
           ...(isDimmed ? styles.dimmed : {}),
+          ...(poolMuted ? styles.poolMuted : {}),
         }}
       >
         <span style={styles.compactIcon}>{STATUS_ICON[effectiveStatus] ?? "–"}</span>
@@ -271,8 +278,23 @@ export function MediaCardV2({
             <span style={styles.compactRoleLabel}>{roleLabel}</span>
           </span>
         </div>
-        {isMain && <span style={styles.usagePillMain}>★ Главное</span>}
-        {isInGallery && !isMain && <span style={styles.usagePillGallery}>В галерее</span>}
+        {poolUsageLine ? (
+          <span
+            style={{
+              ...styles.usagePillMain,
+              ...(poolUsageLine.startsWith("✓") ? styles.usagePillGallery : {}),
+              ...(poolMuted ? styles.usagePillOtherVariant : {}),
+            }}
+            data-v2-pool-usage-line={poolUsageLine}
+          >
+            {poolUsageLine}
+          </span>
+        ) : (
+          <>
+            {isMain && <span style={styles.usagePillMain}>★ Главное</span>}
+            {isInGallery && !isMain && <span style={styles.usagePillGallery}>В галерее</span>}
+          </>
+        )}
         <button
           style={{ ...styles.compactBtnMain, ...(isMain ? styles.compactBtnUsed : {}) }}
           onClick={handleSetMain}
@@ -309,8 +331,14 @@ export function MediaCardV2({
         ...styles.card,
         ...(isMain ? styles.cardMain : isInGallery ? styles.cardInGallery : {}),
         ...(isDimmed ? styles.dimmed : {}),
+        ...(poolMuted ? styles.poolMuted : {}),
       }}
     >
+      {poolUsageLine && (
+        <div style={styles.poolUsageBanner} data-v2-pool-usage-line={poolUsageLine}>
+          {poolUsageLine}
+        </div>
+      )}
       {/* Image wrap — fixed 160px height, reliable in any grid/flex context */}
       <div style={styles.imageWrap}>
         {showImg ? (
@@ -677,6 +705,25 @@ const styles = {
     opacity: 0.65,
     filter: "saturate(0.6)",
     transition: "opacity 0.1s, filter 0.1s",
+  },
+  poolMuted: {
+    opacity: 0.42,
+    filter: "saturate(0.35)",
+  },
+  poolUsageBanner: {
+    fontSize: "10px",
+    fontWeight: 700,
+    textAlign: "center" as const,
+    padding: "4px 6px",
+    background: "#eef4ff",
+    color: "#1a3a6e",
+    borderBottom: "1px solid #d0e0f8",
+    lineHeight: 1.25,
+  },
+  usagePillOtherVariant: {
+    background: "#f0f0f0",
+    color: "#888",
+    border: "1px solid #ddd",
   },
 
   // ---------------------------------------------------------------------------

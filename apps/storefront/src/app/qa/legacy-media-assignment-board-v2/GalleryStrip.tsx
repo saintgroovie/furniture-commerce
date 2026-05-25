@@ -1,8 +1,8 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import type { InvItem } from "./legacy-board-v2-types"
-import { classifyVisualRole, VISUAL_ROLE_BADGE_RU } from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
+import type { InvItem, V2VariantRoleAssignment } from "./legacy-board-v2-types"
+import { resolveGallerySource } from "./legacy-board-v2-gallery-source"
 import { clientPreview } from "./MediaCardV2"
 
 export const GALLERY_DRAG_TYPE = "application/x-gallery-item"
@@ -19,6 +19,7 @@ export const GALLERY_SLOT_COUNT = 5
 type HubProps = {
   mainMediaId: string | null
   galleryIds: string[]
+  variantRoles: V2VariantRoleAssignment
   invById: Map<string, InvItem>
   onRemove: (mediaId: string) => void
   onReorderGallery?: (fromIdx: number, toIdx: number) => void
@@ -28,6 +29,7 @@ type HubProps = {
 export function StorefrontGallerySection({
   mainMediaId,
   galleryIds,
+  variantRoles,
   invById,
   onRemove,
   onReorderGallery,
@@ -38,6 +40,7 @@ export function StorefrontGallerySection({
       <GalleryStrip
         mainMediaId={mainMediaId}
         galleryIds={galleryIds}
+        variantRoles={variantRoles}
         invById={invById}
         onRemove={onRemove}
         onReorderGallery={onReorderGallery}
@@ -82,6 +85,8 @@ type GalleryItemProps = {
   onMoveEarlier?: () => void
   onMoveLater?: () => void
   onHover: (idx: number | null) => void
+  sourceLabel: string
+  sourceShort: string
 }
 
 function GalleryItem({
@@ -93,6 +98,8 @@ function GalleryItem({
   isDragOver,
   isHovered,
   canReorder,
+  sourceLabel,
+  sourceShort,
   onRemove,
   onDragStart,
   onDragEnter,
@@ -106,8 +113,6 @@ function GalleryItem({
 }: GalleryItemProps) {
   const [imgFailed, setImgFailed] = useState(false)
   const preview = clientPreview(inv)
-  const role = classifyVisualRole(inv)
-  const roleLabel = VISUAL_ROLE_BADGE_RU[role] ?? "?"
   const showImg = preview.url !== null && !imgFailed
   const canMoveEarlier = index > 0
   const canMoveLater = index < total - 1
@@ -116,6 +121,8 @@ function GalleryItem({
     <div
       data-v2-gallery-item={index}
       data-v2-gallery-filename={inv.filename}
+      data-v2-gallery-source-label={sourceLabel}
+      data-v2-gallery-media-id={mediaId}
       data-v2-gallery-card-draggable={canReorder ? "true" : undefined}
       draggable={canReorder}
       onDragStart={canReorder ? (e) => onDragStart(e, mediaId, index) : undefined}
@@ -170,8 +177,13 @@ function GalleryItem({
       </div>
 
       <div style={styles.meta} data-v2-gallery-drag-handle>
-        <span style={styles.roleBadge}>{roleLabel}</span>
-        <span style={styles.fname} title={inv.filename}>{inv.filename}</span>
+        <span style={styles.sourceBadge} title={sourceLabel}>
+          {sourceLabel}
+        </span>
+        <span style={styles.fname} title={inv.filename}>
+          {inv.filename}
+          <span style={styles.fnameMeta}> · {sourceShort}</span>
+        </span>
 
         <div style={styles.moveRow} data-v2-gallery-move-row>
           <button
@@ -292,6 +304,7 @@ function GalleryDropGap({
 type StripProps = {
   mainMediaId: string | null
   galleryIds: string[]
+  variantRoles: V2VariantRoleAssignment
   invById: Map<string, InvItem>
   onRemove: (mediaId: string) => void
   onReorderGallery?: (fromIdx: number, toIdx: number) => void
@@ -301,6 +314,7 @@ type StripProps = {
 export function GalleryStrip({
   mainMediaId,
   galleryIds,
+  variantRoles,
   invById,
   onRemove,
   onReorderGallery,
@@ -424,13 +438,17 @@ export function GalleryStrip({
             ГАЛЕРЕЯ / порядок на витрине
           </span>
           <span style={styles.headerLead}>
-            Заполните роли — витрина обновится автоматически. Перетащите карточки здесь, если
-            нужно поменять порядок · {filledCount}/{GALLERY_SLOT_COUNT}
+            Заполните роли — витрина обновится автоматически. · {filledCount}/
+            {GALLERY_SLOT_COUNT}
+          </span>
+          <span style={styles.headerHint}>
+            В карточках витрины показано, из какой роли пришло фото.
           </span>
         </div>
         <GalleryHeaderRail
           mainMediaId={mainMediaId}
           galleryIds={galleryIds}
+          variantRoles={variantRoles}
           invById={invById}
         />
       </div>
@@ -455,6 +473,7 @@ export function GalleryStrip({
           {galleryIds.map((mediaId, idx) => {
             const inv = invById.get(mediaId)
             if (!inv) return null
+            const source = resolveGallerySource(variantRoles, mediaId)
             return (
               <span key={mediaId} style={styles.cardWithGap}>
                 <GalleryDropGap
@@ -481,6 +500,8 @@ export function GalleryStrip({
                   inv={inv}
                   index={idx}
                   total={galleryIds.length}
+                  sourceLabel={source.label}
+                  sourceShort={source.short}
                   isDragging={dragFromIdx === idx}
                   isDragOver={dragOverIdx === idx && dragFromIdx !== idx}
                   isHovered={hoveredIdx === idx}
@@ -531,10 +552,12 @@ export function GalleryStrip({
 function GalleryHeaderRail({
   mainMediaId,
   galleryIds,
+  variantRoles,
   invById,
 }: {
   mainMediaId: string | null
   galleryIds: string[]
+  variantRoles: V2VariantRoleAssignment
   invById: Map<string, InvItem>
 }) {
   const filled = Math.min(galleryIds.length, GALLERY_SLOT_COUNT)
@@ -560,14 +583,19 @@ function GalleryHeaderRail({
           const inv = mediaId ? invById.get(mediaId) : null
           const preview = inv ? clientPreview(inv) : null
           const filename = inv?.filename ?? ""
+          const source = mediaId ? resolveGallerySource(variantRoles, mediaId) : null
           return (
             <div
               key={i}
               style={railStyles.chip}
               data-v2-final-order-slot={i}
               data-v2-final-order-filename={filename}
+              data-v2-final-order-source={source?.short ?? ""}
             >
-              <span style={railStyles.chipNum}>{i + 1}</span>
+              <span style={railStyles.chipNum} title={source?.label ?? ""}>
+                {i + 1}
+                {source ? ` · ${source.short}` : ""}
+              </span>
               <div style={{ ...railStyles.chipThumb, ...(mediaId ? {} : railStyles.chipThumbEmpty) }}>
                 {preview?.url ? (
                   <img src={preview.url} alt={`#${i + 1}`} style={railStyles.chipImg} draggable={false} />
@@ -687,6 +715,28 @@ const styles = {
     fontWeight: 500,
     color: "#6a7a9e",
     lineHeight: 1.3,
+  },
+  headerHint: {
+    fontSize: "10px",
+    fontWeight: 500,
+    color: "#7a8aa8",
+    lineHeight: 1.3,
+  },
+  sourceBadge: {
+    fontSize: "10px",
+    background: "#e8f4ff",
+    color: "#1a3a6e",
+    border: "1px solid #c5d8f5",
+    borderRadius: "4px",
+    padding: "3px 6px",
+    fontWeight: 700,
+    alignSelf: "stretch",
+    textAlign: "center" as const,
+    lineHeight: 1.25,
+  },
+  fnameMeta: {
+    color: "#6a7a9e",
+    fontWeight: 600,
   },
   countPill: {
     fontSize: "11px",
