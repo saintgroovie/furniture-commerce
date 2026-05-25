@@ -6,15 +6,13 @@ import { classifyVisualRole, VISUAL_ROLE_BADGE_RU } from "@/app/qa/legacy-media-
 import { clientPreview } from "./MediaCardV2"
 
 /**
- * Custom drag MIME type used in `setData`/`getData` at drop-time.
- * NOTE: This type is NOT checked during `dragover` — browsers (especially
- * Safari/WebKit on macOS) may not expose custom application/* types in
- * e.dataTransfer.types during dragover. We use a useRef flag instead.
+ * Custom drag MIME type for drop-time getData (not for dragover checks).
  */
 export const GALLERY_DRAG_TYPE = "application/x-gallery-item"
 
-export const GALLERY_CARD_W = 132
-export const GALLERY_THUMB_H = 132
+/** Gallery card dimensions — visible at 1440×900 with horizontal scroll */
+export const GALLERY_CARD_W = 160
+export const GALLERY_THUMB_H = 148
 
 // ---------------------------------------------------------------------------
 // GalleryItem
@@ -29,6 +27,7 @@ type GalleryItemProps = {
   isDragOver: boolean
   onRemove: (mediaId: string) => void
   onDragStart: (e: React.DragEvent, mediaId: string, idx: number) => void
+  onDragEnter: (e: React.DragEvent, idx: number) => void
   onDragOver: (e: React.DragEvent, idx: number) => void
   onDragLeave: (e: React.DragEvent, idx: number) => void
   onDrop: (e: React.DragEvent, toIdx: number) => void
@@ -46,6 +45,7 @@ function GalleryItem({
   isDragOver,
   onRemove,
   onDragStart,
+  onDragEnter,
   onDragOver,
   onDragLeave,
   onDrop,
@@ -58,7 +58,7 @@ function GalleryItem({
   const role = classifyVisualRole(inv)
   const roleLabel = VISUAL_ROLE_BADGE_RU[role] ?? "?"
   const showImg = preview.url !== null && !imgFailed
-  const shortname = inv.filename.length > 24 ? inv.filename.slice(0, 21) + "…" : inv.filename
+  const shortname = inv.filename.length > 26 ? inv.filename.slice(0, 23) + "…" : inv.filename
   const canMoveLeft = index > 0
   const canMoveRight = index < total - 1
 
@@ -66,6 +66,7 @@ function GalleryItem({
     <div
       data-v2-gallery-item={index}
       data-v2-gallery-filename={inv.filename}
+      onDragEnter={(e) => onDragEnter(e, index)}
       onDragOver={(e) => onDragOver(e, index)}
       onDragLeave={(e) => onDragLeave(e, index)}
       onDrop={(e) => onDrop(e, index)}
@@ -75,16 +76,8 @@ function GalleryItem({
         ...(isDragOver ? styles.itemDragOver : {}),
       }}
     >
-      {/* Thumbnail — draggable handle (keeps ←/→ buttons clickable) */}
-      <div
-        draggable
-        onDragStart={(e) => onDragStart(e, mediaId, index)}
-        onDragEnd={onDragEnd}
-        style={{
-          ...styles.thumb,
-          ...(isDragOver ? styles.thumbDragOver : {}),
-        }}
-      >
+      {/* Thumbnail — not draggable; use handle below */}
+      <div style={{ ...styles.thumb, ...(isDragOver ? styles.thumbDragOver : {}) }}>
         {showImg ? (
           <img
             src={preview.url!}
@@ -96,11 +89,12 @@ function GalleryItem({
           />
         ) : (
           <div style={styles.noImg}>
-            <span style={{ fontSize: "28px", color: "#ddd" }}>–</span>
+            <span style={{ fontSize: "32px", color: "#ddd" }}>–</span>
           </div>
         )}
 
         <button
+          type="button"
           style={styles.removeBtn}
           onClick={(e) => { e.stopPropagation(); onRemove(mediaId) }}
           onMouseDown={(e) => e.stopPropagation()}
@@ -111,7 +105,27 @@ function GalleryItem({
         </button>
 
         <span style={styles.positionBadge}>{index + 1}</span>
-        {isDragOver && <div style={styles.insertIndicator} />}
+        {isDragOver && <div style={styles.insertIndicator} title="Вставить сюда" />}
+      </div>
+
+      {/* Visible drag handle — only this element starts HTML5 drag */}
+      <div
+        draggable
+        data-v2-gallery-drag-handle
+        onDragStart={(e) => {
+          e.stopPropagation()
+          onDragStart(e, mediaId, index)
+        }}
+        onDragEnd={(e) => {
+          e.stopPropagation()
+          onDragEnd()
+        }}
+        style={styles.dragHandle}
+        title="Перетащите для смены порядка в галерее"
+        aria-label={`Перетащить «${inv.filename}»`}
+      >
+        <span style={styles.dragHandleIcon}>↕</span>
+        <span style={styles.dragHandleText}>Перетащить</span>
       </div>
 
       <div style={styles.meta}>
@@ -125,21 +139,21 @@ function GalleryItem({
             disabled={!canMoveLeft}
             onMouseDown={(e) => e.stopPropagation()}
             onClick={(e) => { e.stopPropagation(); canMoveLeft && onMoveLeft?.() }}
-            title="Сдвинуть влево в галерее"
-            aria-label={`Сдвинуть «${inv.filename}» влево в галерее`}
+            title="Сдвинуть влево"
+            aria-label={`Сдвинуть «${inv.filename}» влево`}
             data-v2-gallery-move="left"
           >
             ←
           </button>
-          <span style={styles.posLabel}>{index + 1}/{total}</span>
+          <span style={styles.posLabel}>{index + 1} / {total}</span>
           <button
             type="button"
             style={{ ...styles.moveBtn, ...(canMoveRight ? {} : styles.moveBtnDisabled) }}
             disabled={!canMoveRight}
             onMouseDown={(e) => e.stopPropagation()}
             onClick={(e) => { e.stopPropagation(); canMoveRight && onMoveRight?.() }}
-            title="Сдвинуть вправо в галерее"
-            aria-label={`Сдвинуть «${inv.filename}» вправо в галерее`}
+            title="Сдвинуть вправо"
+            aria-label={`Сдвинуть «${inv.filename}» вправо`}
             data-v2-gallery-move="right"
           >
             →
@@ -166,16 +180,34 @@ export function GalleryStrip({ galleryIds, invById, onRemove, onReorderGallery }
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null)
   const dragSrcRef = useRef<number | null>(null)
 
+  function isInternalDrag(): boolean {
+    return dragSrcRef.current !== null
+  }
+
   function handleDragStart(e: React.DragEvent, mediaId: string, idx: number) {
     e.dataTransfer.setData("text/plain", mediaId)
     e.dataTransfer.setData(GALLERY_DRAG_TYPE, String(idx))
     e.dataTransfer.effectAllowed = "move"
+    // Transparent 1×1 drag image avoids browser blocking drag on custom divs (Safari)
+    try {
+      const img = new Image()
+      img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+      e.dataTransfer.setDragImage(img, 0, 0)
+    } catch {
+      // ignore
+    }
     dragSrcRef.current = idx
     setDragFromIdx(idx)
   }
 
+  function handleDragEnter(e: React.DragEvent, idx: number) {
+    if (!isInternalDrag()) return
+    e.preventDefault()
+    setDragOverIdx(idx)
+  }
+
   function handleDragOver(e: React.DragEvent, idx: number) {
-    if (dragSrcRef.current === null) return
+    if (!isInternalDrag()) return
     e.preventDefault()
     e.dataTransfer.dropEffect = "move"
     setDragOverIdx(idx)
@@ -189,6 +221,7 @@ export function GalleryStrip({ galleryIds, invById, onRemove, onReorderGallery }
 
   function handleDrop(e: React.DragEvent, toIdx: number) {
     e.preventDefault()
+    e.stopPropagation()
     const fromIdx = dragSrcRef.current
     dragSrcRef.current = null
     setDragOverIdx(null)
@@ -204,6 +237,12 @@ export function GalleryStrip({ galleryIds, invById, onRemove, onReorderGallery }
     setDragOverIdx(null)
   }
 
+  function handleScrollDragOver(e: React.DragEvent) {
+    if (!isInternalDrag()) return
+    e.preventDefault()
+    e.dataTransfer.dropEffect = "move"
+  }
+
   if (galleryIds.length === 0) return null
 
   return (
@@ -212,10 +251,28 @@ export function GalleryStrip({ galleryIds, invById, onRemove, onReorderGallery }
         <span style={styles.label}>Галерея</span>
         <span style={styles.count}>{galleryIds.length} фото</span>
         {onReorderGallery && (
-          <span style={styles.reorderHint}>↕ перетащите фото или ← →</span>
+          <span style={styles.reorderHint}>
+            ↕ «Перетащить» на карточке или кнопки ← →
+          </span>
         )}
       </div>
-      <div style={styles.scroll}>
+      <div
+        style={styles.scroll}
+        data-v2-gallery-scroll
+        onDragOver={handleScrollDragOver}
+        onDrop={(e) => {
+          // Drop on scroll gutter → move to last position
+          if (!isInternalDrag()) return
+          e.preventDefault()
+          const fromIdx = dragSrcRef.current
+          if (fromIdx === null) return
+          const toIdx = galleryIds.length - 1
+          dragSrcRef.current = null
+          setDragFromIdx(null)
+          setDragOverIdx(null)
+          if (fromIdx !== toIdx) onReorderGallery?.(fromIdx, toIdx)
+        }}
+      >
         {galleryIds.map((mediaId, idx) => {
           const inv = invById.get(mediaId)
           if (!inv) return null
@@ -230,6 +287,7 @@ export function GalleryStrip({ galleryIds, invById, onRemove, onReorderGallery }
               isDragOver={dragOverIdx === idx && dragFromIdx !== idx}
               onRemove={onRemove}
               onDragStart={handleDragStart}
+              onDragEnter={handleDragEnter}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
@@ -255,72 +313,76 @@ const styles = {
     alignItems: "center",
     gap: "8px",
     padding: "6px 14px 4px",
+    flexWrap: "wrap" as const,
   },
   label: {
-    fontSize: "10px",
+    fontSize: "11px",
     fontWeight: 700,
     textTransform: "uppercase" as const,
     letterSpacing: "0.06em",
-    color: "#888",
+    color: "#555",
   },
   count: {
-    fontSize: "10px",
+    fontSize: "11px",
     background: "#e0eecc",
     color: "#335500",
     borderRadius: "8px",
-    padding: "1px 6px",
+    padding: "2px 8px",
     fontWeight: 600,
   },
   reorderHint: {
-    fontSize: "9px",
-    color: "#aaa",
+    fontSize: "10px",
+    color: "#666",
     marginLeft: "auto",
     letterSpacing: "0.01em",
     fontStyle: "italic" as const,
   },
   scroll: {
     display: "flex",
-    gap: "10px",
-    padding: "6px 14px 12px",
+    gap: "12px",
+    padding: "8px 14px 14px",
     overflowX: "auto" as const,
+    alignItems: "flex-start",
   },
   item: {
     display: "flex",
     flexDirection: "column" as const,
-    alignItems: "center",
-    gap: "5px",
+    alignItems: "stretch",
+    gap: "6px",
     flexShrink: 0,
     width: `${GALLERY_CARD_W}px`,
-    borderRadius: "6px",
-    transition: "opacity 0.1s, transform 0.1s",
+    borderRadius: "8px",
+    border: "1px solid #e8e8e8",
+    padding: "6px",
+    background: "#fafafa",
+    boxSizing: "border-box" as const,
+    transition: "opacity 0.12s, box-shadow 0.12s",
     userSelect: "none" as const,
   },
   itemDragging: {
-    opacity: 0.35,
-    transform: "scale(0.94)",
+    opacity: 0.45,
+    boxShadow: "0 4px 12px rgba(26,58,110,0.15)",
   },
   itemDragOver: {
-    outline: "2px solid #1a3a6e",
-    outlineOffset: "3px",
-    borderRadius: "6px",
+    outline: "3px solid #1a3a6e",
+    outlineOffset: "2px",
+    background: "#eef3ff",
   },
   thumb: {
-    width: `${GALLERY_CARD_W}px`,
+    width: "100%",
     height: `${GALLERY_THUMB_H}px`,
-    border: "1px solid #e0e0e0",
+    border: "1px solid #d8d8d8",
     borderRadius: "6px",
     overflow: "hidden",
-    background: "#f5f5f5",
+    background: "#f0f0f0",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     position: "relative" as const,
-    transition: "border-color 0.1s, background 0.1s",
-    cursor: "grab",
   },
   thumbDragOver: {
     borderColor: "#1a3a6e",
-    background: "#e8f0ff",
+    background: "#e0ecff",
   },
   img: {
     width: "100%",
@@ -336,16 +398,40 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
   },
+  dragHandle: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "6px",
+    width: "100%",
+    padding: "6px 8px",
+    border: "1px dashed #aacaff",
+    borderRadius: "5px",
+    background: "#e8f0ff",
+    color: "#1a3a6e",
+    cursor: "grab",
+    fontSize: "11px",
+    fontWeight: 700,
+    lineHeight: 1.2,
+    boxSizing: "border-box" as const,
+  },
+  dragHandleIcon: {
+    fontSize: "14px",
+    lineHeight: 1,
+  },
+  dragHandleText: {
+    letterSpacing: "0.02em",
+  },
   removeBtn: {
     position: "absolute" as const,
-    top: "4px",
-    right: "4px",
-    width: "22px",
-    height: "22px",
+    top: "6px",
+    right: "6px",
+    width: "24px",
+    height: "24px",
     borderRadius: "50%",
     border: "1px solid rgba(0,0,0,0.15)",
-    background: "rgba(255,255,255,0.9)",
-    fontSize: "14px",
+    background: "rgba(255,255,255,0.95)",
+    fontSize: "15px",
     cursor: "pointer",
     color: "#a33",
     fontWeight: 700,
@@ -358,15 +444,15 @@ const styles = {
   },
   positionBadge: {
     position: "absolute" as const,
-    top: "4px",
-    left: "4px",
-    fontSize: "10px",
+    top: "6px",
+    left: "6px",
+    fontSize: "11px",
     fontWeight: 700,
-    background: "rgba(26,58,110,0.75)",
+    background: "rgba(26,58,110,0.85)",
     color: "#fff",
-    borderRadius: "3px",
-    padding: "1px 6px",
-    lineHeight: 1.4,
+    borderRadius: "4px",
+    padding: "2px 7px",
+    lineHeight: 1.3,
     zIndex: 2,
   },
   insertIndicator: {
@@ -374,29 +460,31 @@ const styles = {
     left: 0,
     top: 0,
     bottom: 0,
-    width: "3px",
+    width: "4px",
     background: "#1a3a6e",
     borderRadius: "2px 0 0 2px",
     zIndex: 3,
+    boxShadow: "0 0 6px rgba(26,58,110,0.5)",
   },
   meta: {
     display: "flex",
     flexDirection: "column" as const,
-    alignItems: "center",
-    gap: "3px",
+    alignItems: "stretch",
+    gap: "4px",
     width: "100%",
   },
   roleBadge: {
-    fontSize: "10px",
+    fontSize: "11px",
     background: "#e8f0ff",
     color: "#1a3a6e",
-    borderRadius: "3px",
-    padding: "1px 6px",
+    borderRadius: "4px",
+    padding: "2px 8px",
     fontWeight: 700,
+    alignSelf: "center",
   },
   fname: {
-    fontSize: "10px",
-    color: "#666",
+    fontSize: "11px",
+    color: "#444",
     textAlign: "center" as const,
     overflow: "hidden",
     textOverflow: "ellipsis",
@@ -408,40 +496,40 @@ const styles = {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: "4px",
+    gap: "6px",
     width: "100%",
     marginTop: "2px",
   },
   moveBtn: {
-    width: "32px",
-    height: "24px",
-    border: "1px solid #aacaff",
-    borderRadius: "4px",
+    flex: 1,
+    minWidth: "44px",
+    height: "32px",
+    border: "2px solid #aacaff",
+    borderRadius: "5px",
     background: "#e8f0ff",
     color: "#1a3a6e",
-    fontSize: "13px",
+    fontSize: "16px",
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     padding: 0,
     lineHeight: 1,
-    flexShrink: 0,
     fontWeight: 700,
   },
   moveBtnDisabled: {
-    opacity: 0.25,
+    opacity: 0.3,
     cursor: "default",
-    background: "#f8f8f8",
+    background: "#f5f5f5",
     borderColor: "#e0e0e0",
-    color: "#999",
+    color: "#aaa",
   },
   posLabel: {
-    fontSize: "10px",
-    color: "#888",
-    flex: 1,
+    fontSize: "11px",
+    color: "#666",
+    flexShrink: 0,
     textAlign: "center" as const,
-    lineHeight: 1,
     fontWeight: 600,
+    minWidth: "36px",
   },
 } as const

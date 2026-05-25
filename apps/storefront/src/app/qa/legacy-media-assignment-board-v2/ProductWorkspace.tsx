@@ -259,12 +259,24 @@ function FinalMediaOrderBlock({
     e.dataTransfer.setData("text/plain", mediaId)
     e.dataTransfer.setData(GALLERY_DRAG_TYPE, String(idx))
     e.dataTransfer.effectAllowed = "move"
+    try {
+      const img = new Image()
+      img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+      e.dataTransfer.setDragImage(img, 0, 0)
+    } catch {
+      // ignore
+    }
     applyDragSrcRef.current = idx
     setApplyDragFrom(idx)
   }
 
+  function handleSlotDragEnter(e: React.DragEvent, idx: number) {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = applyDragSrcRef.current !== null ? "move" : "copy"
+    setApplyDragOver(idx)
+  }
+
   function handleSlotDragOver(e: React.DragEvent, idx: number) {
-    // Always accept dragover — never gate on e.dataTransfer.types (Safari/WebKit omits them).
     e.preventDefault()
     e.dataTransfer.dropEffect = applyDragSrcRef.current !== null ? "move" : "copy"
     setApplyDragOver(idx)
@@ -395,6 +407,8 @@ function FinalMediaOrderBlock({
                 key={pos}
                 style={{ ...fmoStyles.slot, width: `${THUMB_SIZE}px` }}
                 data-v2-final-order-slot={idx}
+                data-v2-final-order-filename={inv?.filename ?? ""}
+                onDragEnter={(e) => handleSlotDragEnter(e, idx)}
                 onDragOver={(e) => handleSlotDragOver(e, idx)}
                 onDragLeave={(e) => handleSlotDragLeave(e, idx)}
                 onDrop={(e) => handleSlotDrop(e, idx)}
@@ -586,13 +600,14 @@ const fmoStyles = {
     width: "100%",
   },
   moveBtn: {
-    width: "30px",
-    height: "22px",
-    border: "1px solid #aacaff",
-    borderRadius: "4px",
+    flex: 1,
+    minWidth: "40px",
+    height: "28px",
+    border: "2px solid #aacaff",
+    borderRadius: "5px",
     background: "#e8f0ff",
     color: "#1a3a6e",
-    fontSize: "12px",
+    fontSize: "14px",
     cursor: "pointer",
     fontWeight: 700,
     padding: 0,
