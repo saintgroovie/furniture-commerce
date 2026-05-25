@@ -9,11 +9,42 @@ import {
 } from "./legacy-board-v2-role-inference"
 import { RoleFilterTabs } from "./RoleFilterTabs"
 import { MediaCardV2, clientPreview } from "./MediaCardV2"
-import { classifyMediaVariantScope, mediaMatchesVariantKey } from "./legacy-board-v2-color-variants"
+import {
+  classifyMediaVariantScope,
+  mediaMatchesVariantKey,
+  type MediaVariantScope,
+} from "./legacy-board-v2-color-variants"
 import { resolvePoolUsageStatus } from "./legacy-board-v2-gallery-source"
 import type { V2VariantRoleAssignment } from "./legacy-board-v2-types"
 
 const POOL_LIMIT = 120
+
+const SCOPE_SORT_ORDER: Record<MediaVariantScope, number> = {
+  active: 0,
+  neutral: 1,
+  other_color: 2,
+}
+
+const SCOPE_GROUP_LABEL: Partial<Record<MediaVariantScope, string>> = {
+  neutral: "Общие кадры",
+  other_color: "Другие цвета",
+}
+
+function sortPoolByVariantScope(
+  items: PoolItem[],
+  productHandle: string,
+  variantKey: string
+): PoolItem[] {
+  if (variantKey === "__all__") return items
+  return [...items].sort((a, b) => {
+    const sa = classifyMediaVariantScope(a.inv, productHandle, variantKey)
+    const sb = classifyMediaVariantScope(b.inv, productHandle, variantKey)
+    const scopeDiff = SCOPE_SORT_ORDER[sa] - SCOPE_SORT_ORDER[sb]
+    if (scopeDiff !== 0) return scopeDiff
+    if (a.previewOk !== b.previewOk) return a.previewOk ? -1 : 1
+    return 0
+  })
+}
 
 type PoolItem = {
   inv: InvItem
@@ -144,7 +175,11 @@ export function MediaPoolPanel({
     // hideNoPreview toggle applies across all role filters
     if (hideNoPreview) items = items.filter((i) => i.previewOk)
 
-    if (activeFilter === "all") return items
+    if (activeFilter === "all") {
+      return selectedHandle
+        ? sortPoolByVariantScope(items, selectedHandle, activeVariantKey)
+        : items
+    }
     if (activeFilter === "no_preview") return items.filter((i) => !i.previewOk)
     if (activeFilter === "unused") {
       return items.filter((i) => i.inv.id !== (currentMainId ?? null) && !gallerySet.has(i.inv.id))
@@ -153,7 +188,7 @@ export function MediaPoolPanel({
       return items.filter((i) => i.inv.id === (currentMainId ?? null) || gallerySet.has(i.inv.id))
     }
     return items.filter((i) => i.effectiveFilter === activeFilter)
-  }, [poolItems, activeFilter, hideNoPreview, currentMainId, gallerySet])
+  }, [poolItems, activeFilter, hideNoPreview, currentMainId, gallerySet, selectedHandle, activeVariantKey])
 
   // Index at which non-previewable starts (only relevant in "all" mode without hideNoPreview)
   const separatorIdx =
@@ -236,12 +271,27 @@ export function MediaPoolPanel({
 
         <div style={styles.grid}>
           {displayed.map((item, idx) => {
-            const showSeparator =
+            const showNoPreviewSeparator =
               idx === separatorIdx && separatorIdx > 0 && noPreviewCount > 0
             const scope =
               selectedHandle
                 ? classifyMediaVariantScope(item.inv, selectedHandle, activeVariantKey)
                 : "active"
+            const prevScope =
+              idx > 0 && selectedHandle && activeVariantKey !== "__all__" && activeFilter === "all"
+                ? classifyMediaVariantScope(
+                    displayed[idx - 1].inv,
+                    selectedHandle,
+                    activeVariantKey
+                  )
+                : null
+            const scopeGroupLabel =
+              activeFilter === "all" &&
+              activeVariantKey !== "__all__" &&
+              prevScope !== null &&
+              prevScope !== scope
+                ? SCOPE_GROUP_LABEL[scope]
+                : null
             const usage = resolvePoolUsageStatus(
               item.inv.id,
               variantRoles,
@@ -250,7 +300,12 @@ export function MediaPoolPanel({
             )
             return (
               <React.Fragment key={item.inv.id}>
-                {showSeparator && (
+                {scopeGroupLabel && (
+                  <div style={styles.scopeSeparator} data-v2-pool-scope-group={scope}>
+                    <span style={styles.scopeSeparatorLabel}>{scopeGroupLabel}</span>
+                  </div>
+                )}
+                {showNoPreviewSeparator && (
                   <div style={styles.separator}>
                     <span style={styles.separatorLabel}>Без превью · {noPreviewCount}</span>
                   </div>
@@ -407,6 +462,22 @@ const styles = {
     gap: "6px",
     padding: "8px",
     // No overflowY here — let the parent aside scroll (double scroll-container bug)
+  },
+  scopeSeparator: {
+    gridColumn: "1 / -1",
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    padding: "8px 0 2px",
+    marginTop: "2px",
+  },
+  scopeSeparatorLabel: {
+    fontSize: "10px",
+    fontWeight: 700,
+    color: "#6a7488",
+    textTransform: "uppercase" as const,
+    letterSpacing: "0.04em",
+    whiteSpace: "nowrap" as const,
   },
   separator: {
     gridColumn: "1 / -1",

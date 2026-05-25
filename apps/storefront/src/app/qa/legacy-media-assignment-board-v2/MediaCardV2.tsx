@@ -166,8 +166,10 @@ type Props = {
   isDimmed?: boolean
   /** Active-variant usage line (e.g. «✓ В витрине · 3/4» or «другой цвет») */
   poolUsageLine?: string
-  /** De-emphasise items from another color variant in the pool */
+  /** Another color variant — muted chrome + label, image stays full opacity */
   poolMuted?: boolean
+  /** Disable assign buttons (e.g. other color on active tab) */
+  poolActionsDisabled?: boolean
   /** Operator-assigned role override (overrides auto-detected role for display + filtering) */
   roleOverride?: V2RoleSlot | null
   /** Called when operator changes the role override via dropdown */
@@ -188,9 +190,13 @@ export function MediaCardV2({
   isDimmed,
   poolUsageLine,
   poolMuted,
+  poolActionsDisabled,
   roleOverride,
   onSetRoleOverride,
 }: Props) {
+  const isOtherColor = !!poolMuted
+  const actionsDisabled = !!poolActionsDisabled || isOtherColor
+  const otherColorTitle = "Другой цвет — переключите вкладку цвета или перетащите в слот"
   const [imgFailed, setImgFailed] = useState(false)
 
   const preview = clientPreview(inv)
@@ -266,7 +272,7 @@ export function MediaCardV2({
           ...styles.compactCard,
           ...(isMain ? styles.compactCardMain : isInGallery ? styles.compactCardInGallery : {}),
           ...(isDimmed ? styles.dimmed : {}),
-          ...(poolMuted ? styles.poolMuted : {}),
+          ...(isOtherColor ? styles.poolOtherColorChrome : {}),
         }}
       >
         <span style={styles.compactIcon}>{STATUS_ICON[effectiveStatus] ?? "–"}</span>
@@ -283,7 +289,7 @@ export function MediaCardV2({
             style={{
               ...styles.usagePillMain,
               ...(poolUsageLine.startsWith("✓") ? styles.usagePillGallery : {}),
-              ...(poolMuted ? styles.usagePillOtherVariant : {}),
+              ...(isOtherColor ? styles.usagePillOtherVariant : {}),
             }}
             data-v2-pool-usage-line={poolUsageLine}
           >
@@ -298,16 +304,16 @@ export function MediaCardV2({
         <button
           style={{ ...styles.compactBtnMain, ...(isMain ? styles.compactBtnUsed : {}) }}
           onClick={handleSetMain}
-          disabled={!!isMain}
-          title={isMain ? "Уже назначено главным" : "★ Главное"}
+          disabled={!!isMain || actionsDisabled}
+          title={actionsDisabled ? otherColorTitle : isMain ? "Уже назначено главным" : "★ Главное"}
         >
           ★
         </button>
         <button
           style={{ ...styles.compactBtnGallery, ...(isInGallery ? styles.compactBtnUsed : {}) }}
           onClick={handleAddToGallery}
-          disabled={!!isInGallery}
-          title={isInGallery ? "Уже в галерее" : "+ Галерея"}
+          disabled={!!isInGallery || actionsDisabled}
+          title={actionsDisabled ? otherColorTitle : isInGallery ? "Уже в галерее" : "+ Галерея"}
         >
           {isInGallery ? "✓" : "+"}
         </button>
@@ -331,11 +337,19 @@ export function MediaCardV2({
         ...styles.card,
         ...(isMain ? styles.cardMain : isInGallery ? styles.cardInGallery : {}),
         ...(isDimmed ? styles.dimmed : {}),
-        ...(poolMuted ? styles.poolMuted : {}),
+        ...(isOtherColor ? styles.poolOtherColorChrome : {}),
       }}
+      data-v2-pool-other-color={isOtherColor ? "true" : undefined}
     >
       {poolUsageLine && (
-        <div style={styles.poolUsageBanner} data-v2-pool-usage-line={poolUsageLine}>
+        <div
+          style={{
+            ...styles.poolUsageBanner,
+            ...(isOtherColor ? styles.poolUsageBannerOther : {}),
+            ...(poolUsageLine === "общий кадр" ? styles.poolUsageBannerNeutral : {}),
+          }}
+          data-v2-pool-usage-line={poolUsageLine}
+        >
           {poolUsageLine}
         </div>
       )}
@@ -391,16 +405,26 @@ export function MediaCardV2({
         <div style={styles.filename} title={inv.filename}>{shortname}</div>
         <div style={styles.primaryActions}>
           <button
-            style={{ ...styles.btnMain, ...(isMain ? styles.btnMainActive : {}) }}
+            style={{
+              ...styles.btnMain,
+              ...(isMain ? styles.btnMainActive : {}),
+              ...(actionsDisabled ? styles.btnDisabled : {}),
+            }}
             onClick={handleSetMain}
-            disabled={!!isMain}
+            disabled={!!isMain || actionsDisabled}
+            title={actionsDisabled ? otherColorTitle : undefined}
           >
             {isMain ? "★ Назначено" : "★ Главное"}
           </button>
           <button
-            style={{ ...styles.btnGallery, ...(isInGallery ? styles.btnGalleryActive : {}) }}
+            style={{
+              ...styles.btnGallery,
+              ...(isInGallery ? styles.btnGalleryActive : {}),
+              ...(actionsDisabled ? styles.btnDisabled : {}),
+            }}
             onClick={handleAddToGallery}
-            disabled={!!isInGallery}
+            disabled={!!isInGallery || actionsDisabled}
+            title={actionsDisabled ? otherColorTitle : undefined}
           >
             {isInGallery ? "✓ Галерея" : "+ Галерея"}
           </button>
@@ -706,9 +730,10 @@ const styles = {
     filter: "saturate(0.6)",
     transition: "opacity 0.1s, filter 0.1s",
   },
-  poolMuted: {
-    opacity: 0.42,
-    filter: "saturate(0.35)",
+  poolOtherColorChrome: {
+    border: "1px dashed #b8c0cc",
+    background: "#f6f7f9",
+    boxShadow: "none",
   },
   poolUsageBanner: {
     fontSize: "10px",
@@ -720,10 +745,24 @@ const styles = {
     borderBottom: "1px solid #d0e0f8",
     lineHeight: 1.25,
   },
+  poolUsageBannerOther: {
+    background: "#f3f4f6",
+    color: "#5a6478",
+    borderBottom: "1px solid #d8dce4",
+  },
+  poolUsageBannerNeutral: {
+    background: "#f0faf0",
+    color: "#2d5a2d",
+    borderBottom: "1px solid #c8e6c9",
+  },
   usagePillOtherVariant: {
-    background: "#f0f0f0",
-    color: "#888",
-    border: "1px solid #ddd",
+    background: "#f3f4f6",
+    color: "#5a6478",
+    border: "1px solid #d0d4dc",
+  },
+  btnDisabled: {
+    opacity: 0.55,
+    cursor: "not-allowed",
   },
 
   // ---------------------------------------------------------------------------
