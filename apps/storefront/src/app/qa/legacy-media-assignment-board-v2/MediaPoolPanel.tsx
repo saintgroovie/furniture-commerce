@@ -25,23 +25,34 @@ const SCOPE_SORT_ORDER: Record<MediaVariantScope, number> = {
   other_color: 2,
 }
 
-const SCOPE_GROUP_LABEL: Partial<Record<MediaVariantScope, string>> = {
-  neutral: "Общие кадры",
-  other_color: "Другие цвета",
+function isPoolItemAssigned(
+  item: PoolItem,
+  currentMainId: string | null | undefined,
+  gallerySet: Set<string>
+): boolean {
+  return item.inv.id === (currentMainId ?? null) || gallerySet.has(item.inv.id)
 }
 
-function sortPoolByVariantScope(
+/** Preview-first: all previewable cards, then no-preview; scope only within each tier. */
+export function sortPoolPreviewFirst(
   items: PoolItem[],
-  productHandle: string,
-  variantKey: string
+  productHandle: string | null,
+  variantKey: string,
+  currentMainId?: string | null,
+  gallerySet?: Set<string>
 ): PoolItem[] {
-  if (variantKey === "__all__") return items
+  const gs = gallerySet ?? new Set<string>()
   return [...items].sort((a, b) => {
-    const sa = classifyMediaVariantScope(a.inv, productHandle, variantKey)
-    const sb = classifyMediaVariantScope(b.inv, productHandle, variantKey)
-    const scopeDiff = SCOPE_SORT_ORDER[sa] - SCOPE_SORT_ORDER[sb]
-    if (scopeDiff !== 0) return scopeDiff
     if (a.previewOk !== b.previewOk) return a.previewOk ? -1 : 1
+    const aAssigned = isPoolItemAssigned(a, currentMainId, gs)
+    const bAssigned = isPoolItemAssigned(b, currentMainId, gs)
+    if (aAssigned !== bAssigned) return aAssigned ? -1 : 1
+    if (productHandle && variantKey !== "__all__") {
+      const sa = classifyMediaVariantScope(a.inv, productHandle, variantKey)
+      const sb = classifyMediaVariantScope(b.inv, productHandle, variantKey)
+      const scopeDiff = SCOPE_SORT_ORDER[sa] - SCOPE_SORT_ORDER[sb]
+      if (scopeDiff !== 0) return scopeDiff
+    }
     return 0
   })
 }
@@ -168,31 +179,53 @@ export function MediaPoolPanel({
     return counts
   }, [poolItems, noPreviewCount, currentMainId, gallerySet, selectedHandle, activeVariantKey])
 
-  // Apply active filter — in "all" mode items are already sorted previewable-first
+  // Apply filter, then preview-first sort (scope is secondary inside preview tier only)
   const filteredItems = useMemo<PoolItem[]>(() => {
     let items = poolItems
 
-    // hideNoPreview toggle applies across all role filters
     if (hideNoPreview) items = items.filter((i) => i.previewOk)
 
-    if (activeFilter === "all") {
-      return selectedHandle
-        ? sortPoolByVariantScope(items, selectedHandle, activeVariantKey)
-        : items
+    if (activeFilter === "no_preview") {
+      items = items.filter((i) => !i.previewOk)
+    } else if (activeFilter === "unused") {
+      items = items.filter(
+        (i) => i.inv.id !== (currentMainId ?? null) && !gallerySet.has(i.inv.id)
+      )
+    } else if (activeFilter === "selected") {
+      items = items.filter(
+        (i) => i.inv.id === (currentMainId ?? null) || gallerySet.has(i.inv.id)
+      )
+    } else if (activeFilter !== "all") {
+      items = items.filter((i) => i.effectiveFilter === activeFilter)
     }
-    if (activeFilter === "no_preview") return items.filter((i) => !i.previewOk)
-    if (activeFilter === "unused") {
-      return items.filter((i) => i.inv.id !== (currentMainId ?? null) && !gallerySet.has(i.inv.id))
-    }
-    if (activeFilter === "selected") {
-      return items.filter((i) => i.inv.id === (currentMainId ?? null) || gallerySet.has(i.inv.id))
-    }
-    return items.filter((i) => i.effectiveFilter === activeFilter)
-  }, [poolItems, activeFilter, hideNoPreview, currentMainId, gallerySet, selectedHandle, activeVariantKey])
 
-  // Index at which non-previewable starts (only relevant in "all" mode without hideNoPreview)
-  const separatorIdx =
-    activeFilter === "all" && !hideNoPreview ? previewableCount : -1
+    return sortPoolPreviewFirst(
+      items,
+      selectedHandle,
+      activeVariantKey,
+      currentMainId,
+      gallerySet
+    )
+  }, [
+    poolItems,
+    activeFilter,
+    hideNoPreview,
+    currentMainId,
+    gallerySet,
+    selectedHandle,
+    activeVariantKey,
+  ])
+
+  const noPreviewSeparatorIdx = useMemo(() => {
+    if (hideNoPreview || activeFilter === "no_preview") return -1
+    const idx = filteredItems.findIndex((i) => !i.previewOk)
+    return idx > 0 ? idx : -1
+  }, [filteredItems, hideNoPreview, activeFilter])
+
+  const filteredNoPreviewCount = useMemo(
+    () => filteredItems.filter((i) => !i.previewOk).length,
+    [filteredItems]
+  )
 
   const displayed = filteredItems.slice(0, POOL_LIMIT)
   const total = filteredItems.length
@@ -269,29 +302,14 @@ export function MediaPoolPanel({
           </div>
         )}
 
-        <div style={styles.grid}>
+        <div style={styles.grid} data-v2-pool-grid>
           {displayed.map((item, idx) => {
             const showNoPreviewSeparator =
-              idx === separatorIdx && separatorIdx > 0 && noPreviewCount > 0
+              idx === noPreviewSeparatorIdx && filteredNoPreviewCount > 0
             const scope =
               selectedHandle
                 ? classifyMediaVariantScope(item.inv, selectedHandle, activeVariantKey)
                 : "active"
-            const prevScope =
-              idx > 0 && selectedHandle && activeVariantKey !== "__all__" && activeFilter === "all"
-                ? classifyMediaVariantScope(
-                    displayed[idx - 1].inv,
-                    selectedHandle,
-                    activeVariantKey
-                  )
-                : null
-            const scopeGroupLabel =
-              activeFilter === "all" &&
-              activeVariantKey !== "__all__" &&
-              prevScope !== null &&
-              prevScope !== scope
-                ? SCOPE_GROUP_LABEL[scope]
-                : null
             const usage = resolvePoolUsageStatus(
               item.inv.id,
               variantRoles,
@@ -300,14 +318,14 @@ export function MediaPoolPanel({
             )
             return (
               <React.Fragment key={item.inv.id}>
-                {scopeGroupLabel && (
-                  <div style={styles.scopeSeparator} data-v2-pool-scope-group={scope}>
-                    <span style={styles.scopeSeparatorLabel}>{scopeGroupLabel}</span>
-                  </div>
-                )}
                 {showNoPreviewSeparator && (
-                  <div style={styles.separator}>
-                    <span style={styles.separatorLabel}>Без превью · {noPreviewCount}</span>
+                  <div
+                    style={styles.separator}
+                    data-v2-pool-no-preview-separator
+                  >
+                    <span style={styles.separatorLabel}>
+                      Без превью · {filteredNoPreviewCount}
+                    </span>
                   </div>
                 )}
                 <MediaCardV2
@@ -459,25 +477,6 @@ const styles = {
     padding: "6px",
     alignItems: "start",
     // No overflowY here — let the parent aside scroll (double scroll-container bug)
-  },
-  scopeSeparator: {
-    gridColumn: "1 / -1",
-    display: "flex",
-    alignItems: "center",
-    minHeight: "18px",
-    maxHeight: "22px",
-    padding: "2px 2px 0",
-    margin: 0,
-    borderTop: "1px solid #eceef2",
-  },
-  scopeSeparatorLabel: {
-    fontSize: "9px",
-    fontWeight: 700,
-    color: "#7a8494",
-    textTransform: "uppercase" as const,
-    letterSpacing: "0.05em",
-    whiteSpace: "nowrap" as const,
-    lineHeight: 1.2,
   },
   separator: {
     gridColumn: "1 / -1",

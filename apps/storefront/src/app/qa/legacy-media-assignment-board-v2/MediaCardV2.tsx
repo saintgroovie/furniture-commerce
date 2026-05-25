@@ -266,6 +266,7 @@ export function MediaCardV2({
     return (
       <div
         data-v2-pool-card="true"
+        data-v2-pool-preview-ok="false"
         draggable
         onDragStart={handleDragStart}
         style={{
@@ -330,6 +331,7 @@ export function MediaCardV2({
   return (
     <div
       data-v2-pool-card="true"
+      data-v2-pool-preview-ok="true"
       draggable
       onDragStart={handleDragStart}
       style={{
