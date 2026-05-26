@@ -1,6 +1,7 @@
 import * as fs from "fs"
 import * as path from "path"
 import { NextRequest, NextResponse } from "next/server"
+import { getDataRepoRoot } from "../_lib/data-repo-root"
 import { approvalPackDir, getEmergencyFixRepoResolution } from "../_lib/emergency-fix-repo-root"
 
 export const dynamic = "force-dynamic"
@@ -20,6 +21,7 @@ export async function GET(req: NextRequest) {
   }
 
   const rel = req.nextUrl.searchParams.get("path")?.trim()
+  const repoRel = req.nextUrl.searchParams.get("repoRel")?.trim()
   const remote = req.nextUrl.searchParams.get("url")?.trim()
 
   if (remote && /^https:\/\/woodright\.ru\//i.test(remote)) {
@@ -39,6 +41,23 @@ export async function GET(req: NextRequest) {
       })
     } catch {
       return new NextResponse(null, { status: 502 })
+    }
+  }
+
+  if (repoRel && !repoRel.includes("..")) {
+    const dataRoot = getDataRepoRoot().dataRepoRoot
+    if (dataRoot) {
+      const absRepo = path.resolve(dataRoot, repoRel)
+      if (absRepo.startsWith(dataRoot + path.sep) && fs.existsSync(absRepo)) {
+        const ext = path.extname(absRepo).toLowerCase()
+        const buf = fs.readFileSync(absRepo)
+        return new NextResponse(buf, {
+          headers: {
+            "Content-Type": MIME[ext] || "application/octet-stream",
+            "Cache-Control": "private, max-age=86400",
+          },
+        })
+      }
     }
   }
 

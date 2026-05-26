@@ -1,5 +1,16 @@
 export type DesignerDecision = "approve" | "reject" | "needs_review" | "pending"
 
+export type OperatorRole =
+  | "front"
+  | "front_3_4"
+  | "side"
+  | "detail"
+  | "interior"
+  | "scheme"
+  | "unknown"
+
+export type DuplicateStatus = "unchecked" | "not_duplicate" | "possible_duplicate" | "duplicate_reject"
+
 export type ChecklistItem = {
   candidate_id: string
   handle: string
@@ -16,6 +27,9 @@ export type ChecklistItem = {
   do_not_auto_apply?: boolean
   local_preview?: string | null
   download_status?: string
+  operator_role?: OperatorRole | null
+  operator_duplicate_status?: DuplicateStatus | null
+  operator_duplicate_note?: string
 }
 
 export type ChecklistPayload = {
@@ -35,8 +49,35 @@ export type ChecklistPayload = {
 
 export type DecisionFilter = "all" | DesignerDecision
 
+export type PoolMediaRef = {
+  id: string
+  kind: "inventory" | "seed" | "candidate_top"
+  label: string
+  filename: string | null
+  preview_repo_rel: string | null
+  preview_url: string | null
+  source_type: string | null
+}
+
+export type SkuPoolContext = {
+  handle: string
+  sku: string | null
+  collection: string | null
+  product_title: string | null
+  existing_media: PoolMediaRef[]
+  has_reference_media: boolean
+}
+
+export type PersistedItemState = {
+  designer_decision: DesignerDecision
+  notes: string
+  operator_role?: OperatorRole | null
+  operator_duplicate_status?: DuplicateStatus | null
+  operator_duplicate_note?: string
+}
+
 export type BoardPersistedState = {
-  version: 1
+  version: 2
   savedAt: string
-  decisions: Record<string, { designer_decision: DesignerDecision; notes: string }>
+  decisions: Record<string, PersistedItemState>
 }

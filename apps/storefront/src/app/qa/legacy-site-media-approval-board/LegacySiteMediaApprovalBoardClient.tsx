@@ -1,33 +1,40 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-import type {
-  ChecklistItem,
-  ChecklistPayload,
-  DecisionFilter,
-  DesignerDecision,
-} from "./approval-board-types"
+import {
+  autoRoleLabel,
+  DUPLICATE_OPTIONS,
+  OPERATOR_ROLES,
+  WORKFLOW_FILTERS,
+  type WorkflowFilter,
+} from "./approval-board-constants"
 import {
   buildExportPayload,
   copyExportToClipboard,
   downloadExportJson,
 } from "./approval-board-export"
+import { candidatePreviewSrc, poolMediaPreviewSrc } from "./approval-board-preview"
 import {
   clearBoardState,
   formatSavedAt,
   isDecision,
+  isDuplicateStatus,
+  isOperatorRole,
   loadBoardState,
   saveBoardState,
 } from "./approval-board-persistence"
+import type {
+  ChecklistItem,
+  ChecklistPayload,
+  DecisionFilter,
+  DesignerDecision,
+  DuplicateStatus,
+  OperatorRole,
+  PersistedItemState,
+  SkuPoolContext,
+} from "./approval-board-types"
 
 const API_BASE = "/qa/legacy-site-media-approval-board/api"
-
-function previewSrc(item: ChecklistItem): string {
-  if (item.local_preview) {
-    return `${API_BASE}/preview?path=${encodeURIComponent(item.local_preview)}`
-  }
-  return `${API_BASE}/preview?url=${encodeURIComponent(item.url)}`
-}
 
 function countByDecision(items: ChecklistItem[]) {
   const c = { approve: 0, reject: 0, needs_review: 0, pending: 0 }
@@ -37,51 +44,284 @@ function countByDecision(items: ChecklistItem[]) {
   return c
 }
 
+function normalizeFn(name: string) {
+  return name.toLowerCase().split("?")[0]
+}
+
+function mergePersisted(list: ChecklistItem[]): ChecklistItem[] {
+  const persisted = loadBoardState()
+  if (!persisted) {
+    return list.map((i) => ({
+      ...i,
+      operator_role: i.operator_role ?? null,
+      operator_duplicate_status: i.operator_duplicate_status ?? "unchecked",
+      operator_duplicate_note: i.operator_duplicate_note ?? "",
+    }))
+  }
+  return list.map((item) => {
+    const p = persisted.decisions[item.candidate_id]
+    if (!p) {
+      return {
+        ...item,
+        operator_role: item.operator_role ?? null,
+        operator_duplicate_status: item.operator_duplicate_status ?? "unchecked",
+        operator_duplicate_note: item.operator_duplicate_note ?? "",
+      }
+    }
+    return {
+      ...item,
+      designer_decision: isDecision(p.designer_decision) ? p.designer_decision : item.designer_decision,
+      notes: p.notes ?? item.notes,
+      operator_role: isOperatorRole(p.operator_role) ? p.operator_role : item.operator_role ?? null,
+      operator_duplicate_status: isDuplicateStatus(p.operator_duplicate_status)
+        ? p.operator_duplicate_status
+        : item.operator_duplicate_status ?? "unchecked",
+      operator_duplicate_note: p.operator_duplicate_note ?? "",
+    }
+  })
+}
+
+function toPersistMap(items: ChecklistItem[]): Record<string, PersistedItemState> {
+  const m: Record<string, PersistedItemState> = {}
+  for (const i of items) {
+    m[i.candidate_id] = {
+      designer_decision: i.designer_decision,
+      notes: i.notes ?? "",
+      operator_role: i.operator_role ?? null,
+      operator_duplicate_status: i.operator_duplicate_status ?? "unchecked",
+      operator_duplicate_note: i.operator_duplicate_note ?? "",
+    }
+  }
+  return m
+}
+
+function matchesWorkflow(item: ChecklistItem, wf: WorkflowFilter): boolean {
+  if (wf === "all") return true
+  if (wf === "approved_without_role") {
+    return item.designer_decision === "approve" && !item.operator_role
+  }
+  if (wf === "needs_duplicate_check") {
+    return (
+      !item.operator_duplicate_status ||
+      item.operator_duplicate_status === "unchecked" ||
+      item.operator_duplicate_status === "possible_duplicate"
+    )
+  }
+  if (wf === "needs_role") {
+    return item.designer_decision !== "reject" && !item.operator_role
+  }
+  return true
+}
+
+function PoolStrip({ ctx }: { ctx: SkuPoolContext | undefined }) {
+  if (!ctx) return null
+  if (!ctx.has_reference_media) {
+    return (
+      <div className="ab-pool-warn">
+        Нет текущего пула для сравнения — дубль проверить нельзя, approve только по уверенности в товаре.
+      </div>
+    )
+  }
+  return (
+    <div className="ab-pool-strip">
+      <div className="ab-pool-label">Текущий пул / existing media</div>
+      <div className="ab-pool-scroll">
+        {ctx.existing_media.map((ref) => {
+          const src = poolMediaPreviewSrc(ref)
+          return (
+            <div key={ref.id} className="ab-pool-thumb" title={ref.filename || ref.label}>
+              {src ? (
+                <img src={src} alt={ref.filename || ref.label} loading="lazy" />
+              ) : (
+                <div className="ab-pool-placeholder">{ref.filename?.slice(0, 12) || "—"}</div>
+              )}
+              <span className="ab-pool-cap">{ref.label}</span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function CandidateCard({
+  item,
+  ctx,
+  onPatch,
+  onCompare,
+}: {
+  item: ChecklistItem
+  ctx: SkuPoolContext | undefined
+  onPatch: (id: string, patch: Partial<ChecklistItem>) => void
+  onCompare: (item: ChecklistItem) => void
+}) {
+  const dup = item.operator_duplicate_status || "unchecked"
+  const filenameDup =
+    ctx?.existing_media?.some((m) => m.filename && normalizeFn(m.filename) === normalizeFn(item.filename)) ??
+    false
+
+  return (
+    <article className="ab-card" data-decision={item.designer_decision} data-dup={dup}>
+      <button type="button" className="ab-card-img-btn" onClick={() => onCompare(item)}>
+        <img className="ab-card-img" src={candidatePreviewSrc(item)} alt={item.filename} loading="lazy" />
+      </button>
+      <div className="ab-card-body">
+        <div className="ab-filename">{item.filename}</div>
+        <div className="ab-meta">
+          <div>
+            <b>{item.handle}</b>
+            {ctx?.product_title ? ` · ${ctx.product_title}` : ""}
+          </div>
+          <div>{item.collection || ctx?.collection || "—"}</div>
+          <div className="ab-auto-role">авто-роль: {autoRoleLabel(item.role_guess)}</div>
+          {filenameDup ? <div className="ab-dup-hint">⚠ имя файла совпадает с existing</div> : null}
+          {item.designer_decision === "approve" && !item.operator_role ? (
+            <div className="ab-warn">Роль не назначена — supplement будет менее полезен.</div>
+          ) : null}
+        </div>
+
+        <div className="ab-section-label">Роль (оператор)</div>
+        <div className="ab-chips">
+          {OPERATOR_ROLES.map((r) => (
+            <button
+              key={r.id}
+              type="button"
+              className="ab-chip"
+              data-active={item.operator_role === r.id}
+              onClick={() => onPatch(item.candidate_id, { operator_role: r.id })}
+            >
+              {r.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="ab-section-label">Дубль</div>
+        <div className="ab-chips ab-chips-dup">
+          {DUPLICATE_OPTIONS.map((d) => (
+            <button
+              key={d.id}
+              type="button"
+              className="ab-chip"
+              data-active={dup === d.id}
+              onClick={() => {
+                const patch: Partial<ChecklistItem> = { operator_duplicate_status: d.id }
+                if (d.id === "duplicate_reject" && item.designer_decision === "pending") {
+                  patch.designer_decision = "reject"
+                }
+                if (d.id === "possible_duplicate" && item.designer_decision === "pending") {
+                  patch.designer_decision = "needs_review"
+                }
+                if (d.id === "not_duplicate" && item.designer_decision === "pending") {
+                  /* no auto approve */
+                }
+                onPatch(item.candidate_id, patch)
+              }}
+            >
+              {d.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="ab-section-label">Решение supplement</div>
+        <div className="ab-actions">
+          <button
+            type="button"
+            className="approve"
+            data-active={item.designer_decision === "approve"}
+            onClick={() => onPatch(item.candidate_id, { designer_decision: "approve" })}
+          >
+            Approve
+          </button>
+          <button
+            type="button"
+            className="reject"
+            data-active={item.designer_decision === "reject"}
+            onClick={() => onPatch(item.candidate_id, { designer_decision: "reject" })}
+          >
+            Reject
+          </button>
+          <button
+            type="button"
+            className="review"
+            data-active={item.designer_decision === "needs_review"}
+            onClick={() => onPatch(item.candidate_id, { designer_decision: "needs_review" })}
+          >
+            Needs review
+          </button>
+          <button
+            type="button"
+            data-active={item.designer_decision === "pending"}
+            onClick={() => onPatch(item.candidate_id, { designer_decision: "pending" })}
+          >
+            Pending
+          </button>
+        </div>
+        <textarea
+          className="ab-notes"
+          placeholder="Заметки (optional)"
+          value={item.notes}
+          onChange={(e) => onPatch(item.candidate_id, { notes: e.target.value })}
+        />
+      </div>
+    </article>
+  )
+}
+
 export function LegacySiteMediaApprovalBoardClient() {
   const [base, setBase] = useState<ChecklistPayload | null>(null)
   const [items, setItems] = useState<ChecklistItem[]>([])
+  const [contexts, setContexts] = useState<Record<string, SkuPoolContext>>({})
   const [loadError, setLoadError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [savedAt, setSavedAt] = useState<string | null>(null)
   const [decisionFilter, setDecisionFilter] = useState<DecisionFilter>("all")
-  const [collectionFilter, setCollectionFilter] = useState<string>("all")
-  const [roleFilter, setRoleFilter] = useState<string>("all")
-  const [colorFilter, setColorFilter] = useState<string>("all")
-  const [handleFilter, setHandleFilter] = useState<string>("all")
+  const [workflowFilter, setWorkflowFilter] = useState<WorkflowFilter>("all")
+  const [collectionFilter, setCollectionFilter] = useState("all")
   const [search, setSearch] = useState("")
   const [copyStatus, setCopyStatus] = useState<"idle" | "ok" | "err">("idle")
   const [confirmReset, setConfirmReset] = useState(false)
+  const [compareItem, setCompareItem] = useState<ChecklistItem | null>(null)
 
-  const applyPersisted = useCallback((list: ChecklistItem[]) => {
-    const persisted = loadBoardState()
-    if (!persisted) return list
-    setSavedAt(persisted.savedAt)
-    return list.map((item) => {
-      const p = persisted.decisions[item.candidate_id]
-      if (!p) return item
-      return {
-        ...item,
-        designer_decision: isDecision(p.designer_decision) ? p.designer_decision : item.designer_decision,
-        notes: p.notes ?? item.notes,
-      }
-    })
+  const persistAll = useCallback((next: ChecklistItem[]) => {
+    const at = saveBoardState(toPersistMap(next))
+    setSavedAt(at)
   }, [])
+
+  const patchItem = useCallback(
+    (id: string, patch: Partial<ChecklistItem>) => {
+      setItems((prev) => {
+        const next = prev.map((i) => (i.candidate_id === id ? { ...i, ...patch } : i))
+        persistAll(next)
+        return next
+      })
+    },
+    [persistAll]
+  )
 
   useEffect(() => {
     let cancelled = false
     ;(async () => {
       setLoading(true)
       try {
-        const res = await fetch(`${API_BASE}/checklist`)
-        const data = (await res.json()) as ChecklistPayload & { error?: string; hint?: string }
-        if (!res.ok) {
-          setLoadError(data.hint || data.error || `HTTP ${res.status}`)
+        const [clRes, ctxRes] = await Promise.all([
+          fetch(`${API_BASE}/checklist`),
+          fetch(`${API_BASE}/sku-context`),
+        ])
+        const data = (await clRes.json()) as ChecklistPayload & { error?: string; hint?: string }
+        if (!clRes.ok) {
+          setLoadError(data.hint || data.error || `HTTP ${clRes.status}`)
           return
         }
+        const ctxData = ctxRes.ok
+          ? ((await ctxRes.json()) as { contexts: Record<string, SkuPoolContext> })
+          : { contexts: {} }
         if (cancelled) return
-        const merged = applyPersisted(data.items || [])
+        const merged = mergePersisted(data.items || [])
         setBase(data)
         setItems(merged)
+        setContexts(ctxData.contexts || {})
+        const p = loadBoardState()
+        if (p) setSavedAt(p.savedAt)
         setLoadError(null)
       } catch (e) {
         setLoadError(String(e))
@@ -92,81 +332,37 @@ export function LegacySiteMediaApprovalBoardClient() {
     return () => {
       cancelled = true
     }
-  }, [applyPersisted])
-
-  const persist = useCallback((next: ChecklistItem[]) => {
-    const decisions: Record<string, { designer_decision: DesignerDecision; notes: string }> = {}
-    for (const i of next) {
-      decisions[i.candidate_id] = {
-        designer_decision: i.designer_decision,
-        notes: i.notes ?? "",
-      }
-    }
-    const at = saveBoardState(decisions)
-    setSavedAt(at)
   }, [])
 
-  const setDecision = useCallback(
-    (id: string, decision: DesignerDecision) => {
-      setItems((prev) => {
-        const next = prev.map((i) =>
-          i.candidate_id === id ? { ...i, designer_decision: decision } : i
-        )
-        persist(next)
-        return next
-      })
-    },
-    [persist]
-  )
-
-  const setNotes = useCallback(
-    (id: string, notes: string) => {
-      setItems((prev) => {
-        const next = prev.map((i) => (i.candidate_id === id ? { ...i, notes } : i))
-        persist(next)
-        return next
-      })
-    },
-    [persist]
-  )
-
   const counts = useMemo(() => countByDecision(items), [items])
-
-  const collections = useMemo(
-    () => Array.from(new Set(items.map((i) => i.collection).filter(Boolean))).sort(),
-    [items]
-  )
-  const handles = useMemo(
-    () => Array.from(new Set(items.map((i) => i.handle).filter(Boolean))).sort(),
-    [items]
-  )
-  const roles = useMemo(
-    () => Array.from(new Set(items.map((i) => i.role_guess).filter(Boolean))).sort(),
-    [items]
-  )
-  const colors = useMemo(
-    () => Array.from(new Set(items.map((i) => i.color_guess).filter(Boolean))).sort(),
-    [items]
-  )
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
     return items.filter((i) => {
       if (decisionFilter !== "all" && i.designer_decision !== decisionFilter) return false
+      if (!matchesWorkflow(i, workflowFilter)) return false
       if (collectionFilter !== "all" && i.collection !== collectionFilter) return false
-      if (handleFilter !== "all" && i.handle !== handleFilter) return false
-      if (roleFilter !== "all" && i.role_guess !== roleFilter) return false
-      if (colorFilter !== "all" && i.color_guess !== colorFilter) return false
       if (!q) return true
-      const hay = `${i.filename} ${i.handle} ${i.source_page} ${i.candidate_id}`.toLowerCase()
-      return hay.includes(q)
+      return `${i.filename} ${i.handle} ${i.source_page}`.toLowerCase().includes(q)
     })
-  }, [items, decisionFilter, collectionFilter, handleFilter, roleFilter, colorFilter, search])
+  }, [items, decisionFilter, workflowFilter, collectionFilter, search])
 
-  const exportInput = useMemo(
-    () => (base ? { base, items } : null),
-    [base, items]
+  const groups = useMemo(() => {
+    const map = new Map<string, ChecklistItem[]>()
+    for (const item of filtered) {
+      const h = item.handle || "_unknown"
+      if (!map.has(h)) map.set(h, [])
+      map.get(h)!.push(item)
+    }
+    return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]))
+  }, [filtered])
+
+  const collections = useMemo(
+    () => Array.from(new Set(items.map((i) => i.collection).filter(Boolean))).sort(),
+    [items]
   )
+
+  const exportInput = useMemo(() => (base ? { base, items } : null), [base, items])
 
   async function handleCopy() {
     if (!exportInput) return
@@ -190,38 +386,47 @@ export function LegacySiteMediaApprovalBoardClient() {
     setSavedAt(null)
     setConfirmReset(false)
     if (base) {
-      const reset = (base.items || []).map((i) => ({
-        ...i,
-        designer_decision: "pending" as const,
-        notes: "",
-      }))
-      setItems(reset)
+      setItems(
+        (base.items || []).map((i) => ({
+          ...i,
+          designer_decision: "pending",
+          notes: "",
+          operator_role: null,
+          operator_duplicate_status: "unchecked",
+          operator_duplicate_note: "",
+        }))
+      )
     }
   }
 
-  if (loading) {
-    return <div className="ab-empty">Загрузка approval pack…</div>
-  }
+  if (loading) return <div className="ab-empty">Загрузка supplement triage board…</div>
 
   if (loadError || !base) {
     return (
       <div className="ab-empty">
         <h2>Approval pack not found</h2>
-        <p>{loadError || "Build it first from tmp/legacy-site-media-approval-pack."}</p>
-        <p style={{ fontSize: 11, marginTop: 12 }}>
-          Ожидается: <code>tmp/legacy-site-media-approval-pack/designer-approval-checklist.json</code>
-        </p>
+        <p>{loadError || "Build pack under tmp/legacy-site-media-approval-pack."}</p>
       </div>
     )
   }
 
+  const compareCtx = compareItem ? contexts[compareItem.handle] : undefined
+
   return (
     <div className="ab-shell">
       <aside className="ab-sidebar">
-        <h2 style={{ margin: "0 0 12px", fontSize: 16 }}>Legacy site media</h2>
-        <p style={{ margin: "0 0 12px", color: "var(--ab-muted)", fontSize: 11 }}>
-          {items.length} candidates · dev-only
+        <h1 className="ab-title">Разбор legacy-site кандидатов</h1>
+        <p className="ab-subtitle">
+          Supplement triage · не просто approve/reject
+          <br />
+          <b>проверить дубль → назначить роль → approve</b>
+          <br />
+          Reject — неверный SKU / дубль / мусор. Сомнения → Needs review.
         </p>
+        <div className="ab-stat">
+          <span>Всего</span>
+          <strong>{items.length}</strong>
+        </div>
         <div className="ab-stat">
           <span>Approved</span>
           <strong style={{ color: "var(--ab-approve)" }}>{counts.approve}</strong>
@@ -238,8 +443,21 @@ export function LegacySiteMediaApprovalBoardClient() {
           <span>Pending</span>
           <strong>{counts.pending}</strong>
         </div>
-        <hr style={{ margin: "12px 0", border: "none", borderTop: "1px solid var(--ab-border)" }} />
-        <div style={{ fontWeight: 600, marginBottom: 6 }}>Decision filter</div>
+        <hr className="ab-hr" />
+        <div className="ab-side-label">Workflow</div>
+        {WORKFLOW_FILTERS.map((f) => (
+          <button
+            key={f.id}
+            type="button"
+            className="ab-filter-btn"
+            data-active={workflowFilter === f.id}
+            onClick={() => setWorkflowFilter(f.id)}
+          >
+            {f.label}
+          </button>
+        ))}
+        <hr className="ab-hr" />
+        <div className="ab-side-label">Решение</div>
         {(["all", "pending", "approve", "reject", "needs_review"] as const).map((f) => (
           <button
             key={f}
@@ -248,16 +466,11 @@ export function LegacySiteMediaApprovalBoardClient() {
             data-active={decisionFilter === f}
             onClick={() => setDecisionFilter(f)}
           >
-            {f} {f !== "all" ? `(${counts[f as keyof typeof counts] ?? 0})` : ""}
+            {f}
           </button>
         ))}
-        <hr style={{ margin: "12px 0", border: "none", borderTop: "1px solid var(--ab-border)" }} />
-        <label style={{ display: "block", fontSize: 11, marginBottom: 4 }}>Collection</label>
-        <select
-          value={collectionFilter}
-          onChange={(e) => setCollectionFilter(e.target.value)}
-          style={{ width: "100%", marginBottom: 8 }}
-        >
+        <label className="ab-side-label">Collection</label>
+        <select value={collectionFilter} onChange={(e) => setCollectionFilter(e.target.value)} className="ab-select">
           <option value="all">All</option>
           {collections.map((c) => (
             <option key={c} value={c}>
@@ -265,63 +478,17 @@ export function LegacySiteMediaApprovalBoardClient() {
             </option>
           ))}
         </select>
-        <label style={{ display: "block", fontSize: 11, marginBottom: 4 }}>Handle / SKU</label>
-        <select
-          value={handleFilter}
-          onChange={(e) => setHandleFilter(e.target.value)}
-          style={{ width: "100%", marginBottom: 8 }}
-        >
-          <option value="all">All</option>
-          {handles.map((h) => (
-            <option key={h} value={h}>
-              {h}
-            </option>
-          ))}
-        </select>
-        <label style={{ display: "block", fontSize: 11, marginBottom: 4 }}>Role</label>
-        <select
-          value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
-          style={{ width: "100%", marginBottom: 8 }}
-        >
-          <option value="all">All</option>
-          {roles.map((r) => (
-            <option key={r} value={r}>
-              {r}
-            </option>
-          ))}
-        </select>
-        <label style={{ display: "block", fontSize: 11, marginBottom: 4 }}>Color</label>
-        <select
-          value={colorFilter}
-          onChange={(e) => setColorFilter(e.target.value)}
-          style={{ width: "100%", marginBottom: 8 }}
-        >
-          <option value="all">All</option>
-          {colors.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-        <label style={{ display: "block", fontSize: 11, marginBottom: 4 }}>Search</label>
-        <input
-          type="search"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="filename, handle, URL…"
-          style={{ width: "100%" }}
-        />
+        <label className="ab-side-label">Search</label>
+        <input className="ab-search" value={search} onChange={(e) => setSearch(e.target.value)} />
       </aside>
 
       <div className="ab-main">
         <div className="ab-toolbar">
           <span style={{ color: savedAt ? "var(--ab-approve)" : "var(--ab-muted)" }}>
-            {savedAt ? `💾 ${formatSavedAt(savedAt)}` : "○ Не сохранено в localStorage"}
+            {savedAt ? `💾 ${formatSavedAt(savedAt)}` : "○ localStorage"}
           </span>
-          <span style={{ flex: 1 }} />
-          <span style={{ color: "var(--ab-muted)" }}>
-            Showing {filtered.length} / {items.length}
+          <span className="ab-toolbar-meta">
+            {groups.length} SKU · {filtered.length} cards
           </span>
           <button type="button" className="primary" onClick={handleCopy}>
             {copyStatus === "ok" ? "Copied!" : copyStatus === "err" ? "Copy failed" : "Copy JSON"}
@@ -330,89 +497,79 @@ export function LegacySiteMediaApprovalBoardClient() {
             Download JSON
           </button>
           <button type="button" className="danger" onClick={handleReset}>
-            {confirmReset ? "Confirm reset?" : "Reset board state"}
+            {confirmReset ? "Confirm reset?" : "Reset board"}
           </button>
         </div>
 
-        <div className="ab-grid-wrap">
-          {filtered.length === 0 ? (
-            <div className="ab-empty">Нет кандидатов по текущим фильтрам.</div>
-          ) : (
-            <div className="ab-grid">
-              {filtered.map((item) => (
-                <article
-                  key={item.candidate_id}
-                  className="ab-card"
-                  data-decision={item.designer_decision}
-                >
-                  <img
-                    className="ab-card-img"
-                    src={previewSrc(item)}
-                    alt={item.filename}
-                    loading="lazy"
-                  />
-                  <div className="ab-card-body">
-                    <div className="ab-filename">{item.filename}</div>
-                    <div className="ab-meta">
-                      <div>
-                        <b>{item.handle}</b> · {item.collection}
-                      </div>
-                      <div>
-                        role: {item.role_guess} · color: {item.color_guess} · conf: {item.confidence}
-                      </div>
-                      <div>
-                        <a href={item.source_page} target="_blank" rel="noreferrer">
-                          PDP
-                        </a>{" "}
-                        · <span style={{ wordBreak: "break-all" }}>{item.candidate_id}</span>
-                      </div>
+        <div className="ab-groups-wrap">
+          {groups.map(([handle, groupItems]) => {
+            const ctx = contexts[handle]
+            const gc = countByDecision(groupItems)
+            const roles = groupItems.filter((i) => i.operator_role).length
+            return (
+              <section key={handle} className="ab-product-group" data-handle={handle}>
+                <header className="ab-group-header">
+                  <div>
+                    <h2>{handle}</h2>
+                    <div className="ab-group-sub">
+                      {ctx?.sku || handle.toUpperCase()}
+                      {ctx?.collection || groupItems[0]?.collection
+                        ? ` · ${ctx?.collection || groupItems[0]?.collection}`
+                        : ""}
+                      {ctx?.product_title ? ` · ${ctx.product_title}` : ""}
                     </div>
-                    <div className="ab-actions">
-                      <button
-                        type="button"
-                        className="approve"
-                        data-active={item.designer_decision === "approve"}
-                        onClick={() => setDecision(item.candidate_id, "approve")}
-                      >
-                        Approve
-                      </button>
-                      <button
-                        type="button"
-                        className="reject"
-                        data-active={item.designer_decision === "reject"}
-                        onClick={() => setDecision(item.candidate_id, "reject")}
-                      >
-                        Reject
-                      </button>
-                      <button
-                        type="button"
-                        className="review"
-                        data-active={item.designer_decision === "needs_review"}
-                        onClick={() => setDecision(item.candidate_id, "needs_review")}
-                      >
-                        Review
-                      </button>
-                      <button
-                        type="button"
-                        data-active={item.designer_decision === "pending"}
-                        onClick={() => setDecision(item.candidate_id, "pending")}
-                      >
-                        Pending
-                      </button>
-                    </div>
-                    <textarea
-                      className="ab-notes"
-                      placeholder="Notes (optional)"
-                      value={item.notes}
-                      onChange={(e) => setNotes(item.candidate_id, e.target.value)}
-                    />
                   </div>
-                </article>
-              ))}
-            </div>
-          )}
+                  <div className="ab-group-stats">
+                    <span>{groupItems.length} кандидатов</span>
+                    <span>
+                      ✓{gc.approve} ✗{gc.reject} ?{gc.needs_review} ○{gc.pending}
+                    </span>
+                    <span>ролей: {roles}</span>
+                  </div>
+                </header>
+                <PoolStrip ctx={ctx} />
+                <div className="ab-grid">
+                  {groupItems.map((item) => (
+                    <CandidateCard
+                      key={item.candidate_id}
+                      item={item}
+                      ctx={ctx}
+                      onPatch={patchItem}
+                      onCompare={setCompareItem}
+                    />
+                  ))}
+                </div>
+              </section>
+            )
+          })}
         </div>
       </div>
+
+      {compareItem ? (
+        <div className="ab-modal" role="dialog" aria-modal="true">
+          <div className="ab-modal-inner">
+            <button type="button" className="ab-modal-close" onClick={() => setCompareItem(null)}>
+              ✕
+            </button>
+            <h3>Сравнение · {compareItem.handle}</h3>
+            <div className="ab-compare-row">
+              <div>
+                <div className="ab-compare-label">Кандидат (new)</div>
+                <img
+                  className="ab-compare-img"
+                  src={candidatePreviewSrc(compareItem)}
+                  alt={compareItem.filename}
+                />
+                <div>{compareItem.filename}</div>
+              </div>
+              <div className="ab-compare-pool">
+                <div className="ab-compare-label">Existing pool</div>
+                <PoolStrip ctx={compareCtx} />
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }
