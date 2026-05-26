@@ -30,14 +30,6 @@ const SCOPE_SORT_ORDER: Record<MediaVariantScope, number> = {
   other_color: 2,
 }
 
-function isPoolItemAssigned(
-  item: PoolItem,
-  currentMainId: string | null | undefined,
-  gallerySet: Set<string>
-): boolean {
-  return item.inv.id === (currentMainId ?? null) || gallerySet.has(item.inv.id)
-}
-
 function itemShowsAsPreview(
   item: PoolItem,
   runtimeFailedIds: ReadonlySet<string>,
@@ -46,32 +38,28 @@ function itemShowsAsPreview(
   return isEffectivePreviewable(item.inv, runtimeFailedIds, recoveryById)
 }
 
-/** Preview-first: all previewable cards, then no-preview; scope only within each tier. */
+/** Preview-first: previewable cards, then no-preview; scope only within each tier (not assignment). */
 export function sortPoolPreviewFirst(
   items: PoolItem[],
   productHandle: string | null,
   variantKey: string,
-  currentMainId?: string | null,
-  gallerySet?: Set<string>,
+  _currentMainId?: string | null,
+  _gallerySet?: Set<string>,
   runtimeFailedIds?: ReadonlySet<string>,
   recoveryById?: ReadonlyMap<string, LegacyMediaPreviewRecoveryEntry>
 ): PoolItem[] {
-  const gs = gallerySet ?? new Set<string>()
   const failed = runtimeFailedIds ?? new Set<string>()
   return [...items].sort((a, b) => {
     const aPreview = itemShowsAsPreview(a, failed, recoveryById)
     const bPreview = itemShowsAsPreview(b, failed, recoveryById)
     if (aPreview !== bPreview) return aPreview ? -1 : 1
-    const aAssigned = isPoolItemAssigned(a, currentMainId, gs)
-    const bAssigned = isPoolItemAssigned(b, currentMainId, gs)
-    if (aAssigned !== bAssigned) return aAssigned ? -1 : 1
     if (productHandle && variantKey !== "__all__") {
       const sa = classifyMediaVariantScope(a.inv, productHandle, variantKey)
       const sb = classifyMediaVariantScope(b.inv, productHandle, variantKey)
       const scopeDiff = SCOPE_SORT_ORDER[sa] - SCOPE_SORT_ORDER[sb]
       if (scopeDiff !== 0) return scopeDiff
     }
-    return 0
+    return a.inv.filename.localeCompare(b.inv.filename, "ru")
   })
 }
 
@@ -570,18 +558,21 @@ const styles = {
     gridColumn: "1 / -1",
     display: "flex",
     alignItems: "center",
-    gap: "8px",
-    padding: "6px 0 2px",
+    justifyContent: "center",
+    minHeight: "20px",
+    maxHeight: "24px",
+    padding: "2px 0",
+    margin: "2px 0 0",
   },
   separatorLabel: {
     fontSize: "10px",
-    color: "#bbb",
+    lineHeight: "16px",
+    color: "#999",
     fontWeight: 600,
-    textTransform: "uppercase" as const,
-    letterSpacing: "0.04em",
-    padding: "2px 8px",
+    letterSpacing: "0.03em",
+    padding: "0 8px",
     background: "#f5f5f5",
-    borderRadius: "10px",
+    borderRadius: "8px",
     border: "1px solid #e8e8e8",
   },
   capNote: {
