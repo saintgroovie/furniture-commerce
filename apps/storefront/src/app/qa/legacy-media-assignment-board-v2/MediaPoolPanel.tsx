@@ -27,11 +27,7 @@ import type { V2VariantRoleAssignment } from "./legacy-board-v2-types"
 
 const POOL_LIMIT = 120
 
-const SCOPE_SORT_ORDER: Record<MediaVariantScope, number> = {
-  active: 0,
-  neutral: 1,
-  other_color: 2,
-}
+import { sortPoolExactSkuPriority } from "./legacy-board-v2-pool-sort"
 
 function itemShowsAsPreview(
   item: PoolItem,
@@ -41,30 +37,7 @@ function itemShowsAsPreview(
   return isEffectivePreviewable(item.inv, runtimeFailedIds, recoveryById)
 }
 
-/** Preview-first: previewable cards, then no-preview; scope only within each tier (not assignment). */
-export function sortPoolPreviewFirst(
-  items: PoolItem[],
-  productHandle: string | null,
-  variantKey: string,
-  _currentMainId?: string | null,
-  _gallerySet?: Set<string>,
-  runtimeFailedIds?: ReadonlySet<string>,
-  recoveryById?: ReadonlyMap<string, LegacyMediaPreviewRecoveryEntry>
-): PoolItem[] {
-  const failed = runtimeFailedIds ?? new Set<string>()
-  return [...items].sort((a, b) => {
-    const aPreview = itemShowsAsPreview(a, failed, recoveryById)
-    const bPreview = itemShowsAsPreview(b, failed, recoveryById)
-    if (aPreview !== bPreview) return aPreview ? -1 : 1
-    if (productHandle && variantKey !== "__all__") {
-      const sa = classifyMediaVariantScope(a.inv, productHandle, variantKey)
-      const sb = classifyMediaVariantScope(b.inv, productHandle, variantKey)
-      const scopeDiff = SCOPE_SORT_ORDER[sa] - SCOPE_SORT_ORDER[sb]
-      if (scopeDiff !== 0) return scopeDiff
-    }
-    return a.inv.filename.localeCompare(b.inv.filename, "ru")
-  })
-}
+export { sortPoolPreviewFirst } from "./legacy-board-v2-pool-sort"
 
 type PoolItem = {
   inv: InvItem
@@ -295,10 +268,11 @@ export function MediaPoolPanel({
       items = items.filter((i) => i.effectiveFilter === activeFilter)
     }
 
-    return sortPoolPreviewFirst(
+    return sortPoolExactSkuPriority(
       items,
       selectedHandle,
       activeVariantKey,
+      activeFilter,
       currentMainId,
       gallerySet,
       runtimeFailedIds,
