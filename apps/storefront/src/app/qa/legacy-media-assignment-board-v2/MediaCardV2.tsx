@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react"
 import type { InvItem, V2RoleSlot } from "./legacy-board-v2-types"
-import type { VisualRole } from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
-import { VISUAL_ROLE_BADGE_RU } from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
+import type { VisualRole } from "./legacy-board-v2-visual-role-ranking"
+import { VISUAL_ROLE_BADGE_RU } from "./legacy-board-v2-visual-role-ranking"
 import type { V2RoleConfidence } from "./legacy-board-v2-role-inference"
 
 // Role slot labels for the operator override dropdown (excludes "main" — set via ★)
@@ -16,13 +16,13 @@ const ROLE_SLOT_LABELS: Partial<Record<V2RoleSlot, string>> = {
   scheme: "Схема",
 }
 
-import type { LegacyMediaPreviewRecoveryEntry } from "@/lib/qa/legacy-media-preview-recovery-types"
+import type { LegacyMediaPreviewRecoveryEntry } from "./legacy-board-v2-preview-recovery-types"
 import type { DuplicateSourceMeta } from "./legacy-board-v2-pool-duplicate-collapse"
 import {
   isLegacyBoardClientPreviewable,
   resolveLegacyBoardClientPreview,
   type LegacyBoardClientPreview,
-} from "@/lib/qa/legacy-media-board-client-preview"
+} from "./legacy-board-v2-client-preview"
 
 export type ClientPreview = LegacyBoardClientPreview
 

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react"
 import type { InvItem, V2ProductState, V2RoleSlot, V2RoleRow, V2RoleFilter } from "./legacy-board-v2-types"
-import type { VisualRole } from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
+import type { VisualRole } from "./legacy-board-v2-visual-role-ranking"
 import { clientPreview } from "./MediaCardV2"
 import { ROLE_SLOT_LABEL_RU } from "./legacy-board-v2-gallery-source"
 

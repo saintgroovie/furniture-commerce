@@ -12,7 +12,7 @@ import type {
   V2RoleFilter,
   V2RoleSlot,
 } from "./legacy-board-v2-types"
-import type { LegacyMediaPreviewRecoveryEntry } from "@/lib/qa/legacy-media-preview-recovery-types"
+import type { LegacyMediaPreviewRecoveryEntry } from "./legacy-board-v2-preview-recovery-types"
 import { MediaPoolPanel } from "./MediaPoolPanel"
 import {
   buildMergedColorVariants,

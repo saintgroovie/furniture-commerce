@@ -2,14 +2,14 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react"
 import type { InvItem, CandidateEntry, V2RoleFilter, V2RoleSlot } from "./legacy-board-v2-types"
-import type { VisualRole } from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
+import type { VisualRole } from "./legacy-board-v2-visual-role-ranking"
 import {
   effectiveV2Filter,
   inferV2VisualRole,
 } from "./legacy-board-v2-role-inference"
 import { RoleFilterTabs } from "./RoleFilterTabs"
 import { MediaCardV2 } from "./MediaCardV2"
-import type { LegacyMediaPreviewRecoveryEntry } from "@/lib/qa/legacy-media-preview-recovery-types"
+import type { LegacyMediaPreviewRecoveryEntry } from "./legacy-board-v2-preview-recovery-types"
 import {
   isEffectivePreviewable,
   isStaticEffectivePreviewable,

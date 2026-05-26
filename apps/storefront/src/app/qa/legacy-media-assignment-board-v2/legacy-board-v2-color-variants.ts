@@ -14,7 +14,7 @@ import type {
 import {
   extractColorTokenFromMedia,
   neutralExternalOwnerColor,
-} from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
+} from "./legacy-board-v2-visual-role-ranking"
 
 /** Default RU labels for detected tokens (shared with client). */
 export const DEFAULT_TOKEN_TO_RU: Record<string, string> = {

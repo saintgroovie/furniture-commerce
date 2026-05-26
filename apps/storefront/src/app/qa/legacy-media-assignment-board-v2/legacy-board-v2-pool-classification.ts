@@ -3,7 +3,7 @@
  * Does not change candidate scope (still top_candidate ids only).
  */
 
-import { extractColorTokenFromMedia } from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
+import { extractColorTokenFromMedia } from "./legacy-board-v2-visual-role-ranking"
 import type { InvItem } from "./legacy-board-v2-types"
 import {
   NEEDS_COLOR_VARIANT_KEY,

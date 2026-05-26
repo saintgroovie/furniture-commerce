@@ -3,7 +3,7 @@
  * before cross-SKU fallbacks. Does not change candidate scope.
  */
 
-import type { LegacyMediaPreviewRecoveryEntry } from "@/lib/qa/legacy-media-preview-recovery-types"
+import type { LegacyMediaPreviewRecoveryEntry } from "./legacy-board-v2-preview-recovery-types"
 import { isEffectivePreviewable } from "./legacy-board-v2-pool-preview"
 import {
   classifyMediaVariantScope,

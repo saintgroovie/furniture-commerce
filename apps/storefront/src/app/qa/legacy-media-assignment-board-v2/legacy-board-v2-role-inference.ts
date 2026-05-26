@@ -8,7 +8,7 @@ import type { V2RoleFilter, V2RoleSlot } from "./legacy-board-v2-types"
 import {
   classifyVisualRole,
   type VisualRole,
-} from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
+} from "./legacy-board-v2-visual-role-ranking"
 
 export type V2RoleConfidence = "high" | "low" | "ambiguous"
 

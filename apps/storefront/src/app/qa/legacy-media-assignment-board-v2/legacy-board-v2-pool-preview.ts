@@ -3,11 +3,11 @@
  */
 
 import type { InvItem } from "./legacy-board-v2-types"
-import type { LegacyMediaPreviewRecoveryEntry } from "@/lib/qa/legacy-media-preview-recovery-types"
+import type { LegacyMediaPreviewRecoveryEntry } from "./legacy-board-v2-preview-recovery-types"
 import {
   isLegacyBoardClientPreviewable,
   resolveLegacyBoardClientPreview,
-} from "@/lib/qa/legacy-media-board-client-preview"
+} from "./legacy-board-v2-client-preview"
 
 export function isStaticEffectivePreviewable(
   inv: InvItem,

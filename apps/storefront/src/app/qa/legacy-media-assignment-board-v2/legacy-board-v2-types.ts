@@ -3,8 +3,59 @@
  * Commit 3: workspace + role assignment state.
  */
 
-// Re-export stable v1 types so v2 components import from one place.
-export type { InvItem, CandidateEntry, ProductRow } from "../legacy-media-assignment-board/legacy-media-board-types"
+export type InvItem = {
+  id: string
+  source_type: string
+  source_path: string | null
+  repo_relative_path: string | null
+  filename: string
+  collection_hint: string | null
+  sku_hint: string | null
+  handle_hint: string | null
+  exists_locally: boolean
+  previewable: boolean
+  preview_reason: string | null
+  url?: string | null
+  page_url?: string | null
+  legacy_product_url?: string | null
+  duplicate_group_key?: string | null
+  content_quick_hash?: string | null
+  width?: number | null
+  height?: number | null
+  size_bytes?: number | null
+}
+
+export type CandidateEntry = {
+  inventory_id: string
+  confidence: string
+  identity_confidence: string
+  filename: string
+  source_type: string
+  previewable: boolean
+  top_candidate: {
+    medusa_product_handle: string
+    medusa_variant_sku: string
+    medusa_collection_handle: string
+    score: number
+    basis: string[]
+  } | null
+  candidates: Array<{
+    medusa_product_handle: string
+    medusa_variant_sku: string
+    medusa_collection_handle: string
+    score: number
+    basis: string[]
+  }>
+}
+
+export type ProductRow = {
+  handle: string
+  sku: string
+  collection: string
+  title: string | null
+  image_urls: string[]
+  image_basenames?: string[]
+}
 
 /** Visual role slot — one of six gallery roles tracked per color variant. */
 export type V2RoleSlot =

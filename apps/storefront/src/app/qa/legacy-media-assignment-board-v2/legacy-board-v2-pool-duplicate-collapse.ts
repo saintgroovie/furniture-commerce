@@ -3,8 +3,8 @@
  * Does not change inventory or candidate scope.
  */
 
-import type { LegacyMediaPreviewRecoveryEntry } from "@/lib/qa/legacy-media-preview-recovery-types"
-import { normalizeBasenameForDedupe } from "@/app/qa/legacy-media-assignment-board/legacy-media-dedupe"
+import type { LegacyMediaPreviewRecoveryEntry } from "./legacy-board-v2-preview-recovery-types"
+import { normalizeBasenameForDedupe } from "./legacy-board-v2-dedupe"
 import { isEffectivePreviewable } from "./legacy-board-v2-pool-preview"
 import {
   classifyMediaVariantScope,
