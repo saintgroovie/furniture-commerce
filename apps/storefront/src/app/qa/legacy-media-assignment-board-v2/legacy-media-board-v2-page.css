@@ -3,6 +3,7 @@
  * Scoped via body:has(.legacy-media-board-v2-root).
  */
 
+body:has(.legacy-media-board-v2-root) > header,
 body:has(.legacy-media-board-v2-root) .site-header,
 body:has(.legacy-media-board-v2-root) .site-footer,
 body:has(.legacy-media-board-v2-root) .mobile-nav-checkbox,
@@ -11,10 +12,11 @@ body:has(.legacy-media-board-v2-root) .mobile-nav-overlay {
   display: none !important;
 }
 
+body:has(.legacy-media-board-v2-root) > main,
 body:has(.legacy-media-board-v2-root) main.container.page-section {
   max-width: none;
   width: 100%;
-  padding: 0;
+  padding: 0 !important;
   margin: 0;
   height: 100dvh;
   overflow: hidden;
