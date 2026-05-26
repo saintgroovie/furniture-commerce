@@ -68,7 +68,12 @@ function medusaStaticUrlFromRel(staticRel: string): string {
   return `${medusaStaticOrigin()}/static/${suffix}`
 }
 
-function previewFromRepoRel(rel: string, recovered?: boolean, recoveryStatus?: string): LegacyBoardClientPreview | null {
+function previewFromRepoRel(
+  rel: string,
+  inv?: LegacyBoardClientPreviewInput,
+  recovered?: boolean,
+  recoveryStatus?: string
+): LegacyBoardClientPreview | null {
   const primary = normPath(rel)
   if (!primary) return null
 
@@ -87,6 +92,16 @@ function previewFromRepoRel(rel: string, recovered?: boolean, recoveryStatus?: s
       url: `${medusaStaticOrigin()}/${primary}`,
       status: "backend_static_url",
       reason: null,
+      recoveredPreview: recovered,
+      recoveryBadge: recoveryStatus ? recoveryBadgeLabel(recoveryStatus) : null,
+    }
+  }
+
+  if (primary.startsWith("data/") && inv?.previewable !== false && inv?.exists_locally !== false) {
+    return {
+      url: `${LEGACY_MEDIA_QA_PREVIEW_ROUTE}?rel=${encodeURIComponent(primary)}`,
+      status: "local_proxy",
+      reason: "Local repo proxy (inventory marks file on disk).",
       recoveredPreview: recovered,
       recoveryBadge: recoveryStatus ? recoveryBadgeLabel(recoveryStatus) : null,
     }
@@ -121,7 +136,7 @@ function previewFromRepoRel(rel: string, recovered?: boolean, recoveryStatus?: s
 function resolveRecoveryPreview(recovery: LegacyMediaPreviewRecoveryEntry): LegacyBoardClientPreview | null {
   const rel = normPath(recovery.found_path)
   if (!rel) return null
-  const fromRel = previewFromRepoRel(rel, true, recovery.recovery_status)
+  const fromRel = previewFromRepoRel(rel, undefined, true, recovery.recovery_status)
   if (fromRel?.url) return fromRel
   return null
 }
@@ -172,28 +187,14 @@ export function resolveLegacyBoardClientPreview(
   }
 
   if (relHub) {
-    const fromHub = previewFromRepoRel(relHub, false)
-    if (fromHub?.url) {
-      if (fromHub.status === "qa_medusa_static_fallback" || fromHub.status === "backend_static_mapped") {
-        return fromHub
+    const fromHub = previewFromRepoRel(relHub, inv, false)
+    if (fromHub?.url) return fromHub
+    if (relHub.startsWith("data/") && inv.previewable === false) {
+      return {
+        url: null,
+        status: "file_missing",
+        reason: inv.preview_reason || "Allowlisted data/ path missing on disk (proxy 404).",
       }
-      if (fromHub.status === "local_proxy") {
-        const medusaAlt = qaMedusaProductsStaticRel(relHub)
-        if (medusaAlt) {
-          return {
-            url: `${medusaStaticOrigin()}/static/${medusaAlt}`,
-            status: "qa_medusa_static_fallback",
-            reason: "QA fallback: prefer Medusa static over missing local data/ file.",
-          }
-        }
-        if (inv.previewable !== false) return fromHub
-        return {
-          url: null,
-          status: "file_missing",
-          reason: inv.preview_reason || "Allowlisted data/ path missing on disk (proxy 404).",
-        }
-      }
-      return fromHub
     }
   }
 
