@@ -1,0 +1,83 @@
+/*
+ * Operator-only fullscreen layout for Legacy Media Assignment Board v2.
+ * Scoped via body:has(.legacy-media-board-v2-root).
+ */
+
+body:has(.legacy-media-board-v2-root) > header,
+body:has(.legacy-media-board-v2-root) .site-header,
+body:has(.legacy-media-board-v2-root) .site-footer,
+body:has(.legacy-media-board-v2-root) .mobile-nav-checkbox,
+body:has(.legacy-media-board-v2-root) .mobile-nav-btn,
+body:has(.legacy-media-board-v2-root) .mobile-nav-overlay {
+  display: none !important;
+}
+
+body:has(.legacy-media-board-v2-root) > main,
+body:has(.legacy-media-board-v2-root) main.container.page-section {
+  max-width: none;
+  width: 100%;
+  padding: 0 !important;
+  margin: 0;
+  height: 100dvh;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.legacy-media-board-v2-root {
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+body:has(.legacy-media-board-v2-root) [data-v2-gallery-item] {
+  min-width: 168px;
+  max-width: 196px;
+}
+
+body:has(.legacy-media-board-v2-root) [data-v2-gallery-card-draggable] {
+  cursor: grab;
+  -webkit-user-drag: element;
+}
+
+body:has(.legacy-media-board-v2-root) [data-v2-gallery-card-draggable]:active {
+  cursor: grabbing;
+}
+
+body:has(.legacy-media-board-v2-root) [data-v2-gallery-drop-gap][data-active="true"] {
+  background: #1a3a6e;
+}
+
+/* Role slots — primary work surface: 3 columns on desktop center column */
+body:has(.legacy-media-board-v2-root) [data-v2-role-grid] {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(240px, 1fr));
+  gap: 6px;
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  body:has(.legacy-media-board-v2-root) [data-v2-role-grid] {
+    grid-template-columns: repeat(2, minmax(200px, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  body:has(.legacy-media-board-v2-root) [data-v2-role-grid] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Media Pool cards — role select must not clip label baseline */
+body:has(.legacy-media-board-v2-root) [data-v2-pool-card-footer] {
+  min-height: 96px;
+  padding-bottom: 14px;
+}
+
+body:has(.legacy-media-board-v2-root) [data-v2-pool-role-select] {
+  min-height: 36px;
+  padding: 8px 10px;
+  font-size: 12px;
+  line-height: 1.35;
+  box-sizing: border-box;
+}
