@@ -80,7 +80,7 @@ const CONFIDENCE_COLOR: Record<string, string> = {
 type Props = {
   inv: InvItem
   role: VisualRole
-  /** v2 inference confidence — shows auto? when low/ambiguous */
+  /** v2 inference confidence — low/ambiguous surfaced via tooltip only, not «auto?» chip */
   roleConfidence?: V2RoleConfidence
   confidence?: string
   identityConfidence?: string
@@ -180,6 +180,11 @@ export function MediaCardV2({
   const autoLow =
     !overrideLabel && (roleConfidence === "ambiguous" || roleConfidence === "low")
   const displayRoleLabel = overrideLabel ?? roleLabel
+  const roleControlTitle = overrideLabel
+    ? `Роль изменена вручную: ${overrideLabel}`
+    : autoLow
+      ? `Роль распознана автоматически (${displayRoleLabel}). Низкая уверенность — проверьте при необходимости.`
+      : `Роль: ${displayRoleLabel}`
 
   function handleSetMain() {
     if (!isMain && onSetMain) onSetMain(inv.id)
@@ -208,15 +213,6 @@ export function MediaCardV2({
   // Role override select element — shared between full and compact cards
   const roleControl = onSetRoleOverride ? (
     <div style={styles.roleRow}>
-      <span
-        style={{
-          ...styles.roleChip,
-          ...(overrideLabel ? styles.roleChipOverride : {}),
-        }}
-        title={overrideLabel ? `Ручная роль: ${overrideLabel}` : `Авто: ${roleLabel}${autoLow ? " (низкая уверенность)" : ""}`}
-      >
-        {autoLow ? `${displayRoleLabel}?` : displayRoleLabel}
-      </span>
       <select
         style={{
           ...styles.roleSelect,
@@ -224,14 +220,14 @@ export function MediaCardV2({
         }}
         value={roleOverride ?? ""}
         onChange={handleRoleOverrideChange}
-        title="Переопределить роль для фильтрации в пуле"
+        title={roleControlTitle}
+        aria-label={`Роль: ${displayRoleLabel}`}
       >
-        <option value="">авто</option>
+        <option value="">{displayRoleLabel}</option>
         {Object.entries(ROLE_SLOT_LABELS).map(([k, v]) => (
           <option key={k} value={k}>{v}</option>
         ))}
       </select>
-      {overrideLabel && <span style={styles.manualBadge}>ручн.</span>}
     </div>
   ) : null
 
@@ -361,10 +357,12 @@ export function MediaCardV2({
           <span style={styles.usageBadgeGallery}>В ГАЛ.</span>
         )}
 
-        {/* Role badge — bottom-left overlay */}
-        <span style={styles.roleBadgeOverlay}>
-          {autoLow ? `${displayRoleLabel}?` : displayRoleLabel}
-        </span>
+        {/* Role badge — bottom-left overlay (hidden when footer has role dropdown) */}
+        {!onSetRoleOverride && (
+          <span style={styles.roleBadgeOverlay} title={roleControlTitle}>
+            {displayRoleLabel}
+          </span>
+        )}
 
         {/* Confidence badge — top-right overlay */}
         {confidence && (
@@ -541,12 +539,13 @@ const styles = {
     fontWeight: 700,
   },
   footer: {
-    padding: "5px 7px 7px",
+    padding: "6px 7px 8px",
     display: "flex",
     flexDirection: "column" as const,
     gap: "5px",
     background: "inherit",
     flexShrink: 0,
+    minHeight: 0,
   },
   filename: {
     fontSize: "10px",
@@ -558,7 +557,9 @@ const styles = {
   },
   primaryActions: {
     display: "flex",
+    flexWrap: "wrap" as const,
     gap: "4px",
+    width: "100%",
   },
   btnMain: {
     flex: 1,
@@ -722,7 +723,9 @@ const styles = {
     background: "#eef4ff",
     color: "#1a3a6e",
     borderBottom: "1px solid #d0e0f8",
-    lineHeight: 1.25,
+    lineHeight: 1.3,
+    wordBreak: "break-word" as const,
+    whiteSpace: "normal" as const,
   },
   poolUsageBannerOther: {
     background: "#f3f4f6",
@@ -749,55 +752,31 @@ const styles = {
   // ---------------------------------------------------------------------------
   roleRow: {
     display: "flex",
-    alignItems: "center",
+    alignItems: "stretch",
     gap: "4px",
-    paddingTop: "3px",
+    paddingTop: "4px",
     borderTop: "1px solid #f0f0f0",
-    marginTop: "2px",
-  },
-  roleChip: {
-    fontSize: "9px",
-    background: "#e8eeff",
-    color: "#1a3a6e",
-    borderRadius: "3px",
-    padding: "1px 5px",
-    fontWeight: 600,
-    flex: 1,
-    overflow: "hidden",
-    textOverflow: "ellipsis" as const,
-    whiteSpace: "nowrap" as const,
-    minWidth: 0,
-  },
-  roleChipOverride: {
-    background: "#fff0e0",
-    color: "#7a4800",
-    border: "1px solid #f0a000",
+    marginTop: "1px",
+    width: "100%",
+    flexWrap: "wrap" as const,
   },
   roleSelect: {
+    flex: 1,
+    minWidth: 0,
+    width: "100%",
     fontSize: "10px",
     border: "1px solid #e0e0e0",
     borderRadius: "3px",
     background: "#fafafa",
-    color: "#555",
-    padding: "1px 2px",
+    color: "#333",
+    padding: "3px 4px",
     cursor: "pointer",
-    maxWidth: "60px",
-    flexShrink: 0,
-    lineHeight: 1.2,
+    lineHeight: 1.3,
   },
   roleSelectOverride: {
     background: "#fff8f0",
-    borderColor: "#f0a000",
-    color: "#7a4800",
-  },
-  manualBadge: {
-    fontSize: "9px",
-    background: "#f0a000",
-    color: "#fff",
-    borderRadius: "3px",
-    padding: "1px 4px",
-    fontWeight: 700,
-    flexShrink: 0,
-    whiteSpace: "nowrap" as const,
+    borderColor: "#d09000",
+    color: "#5a3800",
+    fontWeight: 600,
   },
 } as const

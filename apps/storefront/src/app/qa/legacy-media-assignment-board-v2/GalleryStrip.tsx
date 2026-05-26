@@ -185,7 +185,7 @@ function GalleryItem({
         </span>
         <span style={styles.fname} title={inv.filename}>
           {inv.filename}
-          <span style={styles.fnameMeta}> · {sourceShort}</span>
+          {sourceShort ? <span style={styles.fnameMeta}> · {sourceShort}</span> : null}
         </span>
 
         <div style={styles.moveRow} data-v2-gallery-move-row>
@@ -738,7 +738,7 @@ function GalleryHeaderRail({
             >
               <span style={railStyles.chipNum} title={source?.label ?? ""}>
                 {i + 1}
-                {source ? ` · ${source.short}` : ""}
+                {source?.short ? ` · ${source.short}` : ""}
               </span>
               <div style={{ ...railStyles.chipThumb, ...(mediaId ? {} : railStyles.chipThumbEmpty) }}>
                 {preview?.url ? (

@@ -102,6 +102,12 @@ export const LEGACY_ALL_VARIANT_KEY = "__all__"
 /** Unresolved color bucket when filename/metadata cannot infer a variant. */
 export const NEEDS_COLOR_VARIANT_KEY = "__needs_color__"
 
+/** Unresolved color bucket — not a confirmed variant. */
+export const NEEDS_COLOR_VARIANT_LABEL_RU = "Без привязки к цвету"
+
+export const NEEDS_COLOR_VARIANT_TITLE_RU =
+  "Фото без уверенной цветовой привязки. Назначайте цвет только если он очевиден по кадру."
+
 export const PSEUDO_COLOR_VARIANT_KEYS = new Set([LEGACY_ALL_VARIANT_KEY, NEEDS_COLOR_VARIANT_KEY])
 
 export function isPseudoColorVariantKey(variantKey: string): boolean {
@@ -278,7 +284,7 @@ export function buildDetectedColorVariants(
   if (unresolvedIds.length > 0) {
     result.push({
       variantKey: NEEDS_COLOR_VARIANT_KEY,
-      label: "Без цвета · нужно выбрать",
+      label: NEEDS_COLOR_VARIANT_LABEL_RU,
       itemIds: unresolvedIds,
       source: "detected",
     })

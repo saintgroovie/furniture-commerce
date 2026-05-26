@@ -4,7 +4,6 @@ import { useMemo, useState } from "react"
 import type { InvItem, V2ProductState, V2RoleSlot, V2RoleRow, V2RoleFilter } from "./legacy-board-v2-types"
 import type { VisualRole } from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
 import { clientPreview } from "./MediaCardV2"
-import { inferV2VisualRole } from "./legacy-board-v2-role-inference"
 import { ROLE_SLOT_LABEL_RU } from "./legacy-board-v2-gallery-source"
 
 const ROLE_DEFS: ReadonlyArray<{ slot: V2RoleSlot; label: string; filter: V2RoleFilter; hint: string }> = [
@@ -133,10 +132,6 @@ export function RoleChecklistPanel({
           }
 
           const inGallery = row.mediaId ? gallerySet.has(row.mediaId) : false
-          const autoHint =
-            row.mediaId && inv
-              ? inferV2VisualRole(inv, { productHandle: productHandle ?? undefined })
-              : null
           const hasManualOverride =
             row.mediaId && !!(roleOverrides ?? {})[row.mediaId]
           const isDraggableFilled = row.isCovered && row.mediaId && row.source === "explicit"
@@ -244,7 +239,13 @@ export function RoleChecklistPanel({
                   ...(isDragTarget ? styles.thumbAreaDragOver : {}),
                   ...(isDraggableFilled ? styles.thumbAreaDraggable : {}),
                 }}
-                title={isDraggableFilled ? "Перетащите в другой слот или в галерею" : undefined}
+                title={
+                  isDraggableFilled
+                    ? hasManualOverride
+                      ? "Роль изменена вручную. Перетащите в другой слот или в галерею"
+                      : "Перетащите в другой слот или в галерею"
+                    : undefined
+                }
               >
                 {thumbUrl ? (
                   <img
@@ -274,20 +275,6 @@ export function RoleChecklistPanel({
 
               {row.isCovered && row.source === "explicit" && (
                 <div style={styles.statusRow} data-v2-role-slot-status>
-                  {autoHint && !hasManualOverride && (
-                    <span
-                      style={
-                        autoHint.confidence === "ambiguous" || autoHint.confidence === "low"
-                          ? styles.autoLowBadge
-                          : styles.autoBadge
-                      }
-                    >
-                      {autoHint.confidence === "ambiguous" || autoHint.confidence === "low"
-                        ? "auto?"
-                        : "auto"}
-                    </span>
-                  )}
-                  {hasManualOverride && <span style={styles.manualBadge}>ручн.</span>}
                   {!isMain &&
                     (inGallery ? (
                       <span style={styles.inGalleryPill}>

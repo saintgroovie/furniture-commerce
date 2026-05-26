@@ -55,7 +55,7 @@ export function resolveGallerySource(
     const short = ROLE_SLOT_LABEL_RU[slot]
     return { kind: "role", role: slot, label: `из роли: ${short}`, short }
   }
-  return { kind: "manual", label: "ручная витрина", short: "ручн." }
+  return { kind: "manual", label: "добавлено в галерею", short: "" }
 }
 
 export type PoolUsageStatus = {
@@ -88,7 +88,7 @@ export function resolvePoolUsageStatus(
   } else if (roleSlot && roleSlot !== "main") {
     statusLine = ROLE_SLOT_LABEL_RU[roleSlot]
   } else if (isInGallery) {
-    statusLine = "✓ В витрине · ручн."
+    statusLine = "✓ В витрине"
   } else if (scope === "other_color") {
     statusLine = "другой цвет"
   } else if (scope === "neutral") {
