@@ -6,7 +6,7 @@ import type {
   V2OperatorRemovedVariant,
   V2ProductState,
 } from "./legacy-board-v2-types"
-import { labelToVariantKey } from "./legacy-board-v2-color-variants"
+import { labelToVariantKey, isPseudoColorVariantKey } from "./legacy-board-v2-color-variants"
 
 type VariantStatus = "empty" | "partial" | "filled"
 
@@ -32,6 +32,8 @@ type Props = {
   variants: V2ColorVariant[]
   activeVariantKey: string
   productState: V2ProductState | null
+  /** Primary/default color tab (milk-like) — shows «основной» badge */
+  primaryVariantKey?: string | null
   onSelect: (variantKey: string) => void
   onSetVariantLabel?: (variantKey: string, label: string | null) => void
   onAddVariant?: (label: string) => { ok: boolean; key?: string; message?: string }
@@ -44,6 +46,7 @@ export function ColorVariantTabs({
   variants,
   activeVariantKey,
   productState,
+  primaryVariantKey = null,
   onSelect,
   onSetVariantLabel,
   onAddVariant,
@@ -127,14 +130,21 @@ export function ColorVariantTabs({
           const dot = STATUS_DOT[status]
           const label = displayLabel(variantKey, defaultLabel)
           const isEditing = editingKey === variantKey
-          const canEdit = variantKey !== "__all__" && !!onSetVariantLabel
-          const canRemove = variantKey !== "__all__" && !!onRemoveVariant
+          const isPseudo = isPseudoColorVariantKey(variantKey)
+          const canEdit = !isPseudo && !!onSetVariantLabel
+          const canRemove = !isPseudo && !!onRemoveVariant
+          const isPrimary = primaryVariantKey === variantKey && !isPseudo
 
           return (
             <div
               key={variantKey}
-              style={{ ...styles.tabWrap, ...(isActive ? styles.tabWrapActive : {}) }}
+              style={{
+                ...styles.tabWrap,
+                ...(isActive ? styles.tabWrapActive : {}),
+                ...(variantKey === "__needs_color__" ? styles.tabWrapUnresolved : {}),
+              }}
               data-v2-color-tab={variantKey}
+              data-v2-color-primary={isPrimary ? "true" : undefined}
             >
               {isEditing ? (
                 <input
@@ -154,10 +164,15 @@ export function ColorVariantTabs({
                   type="button"
                   onClick={() => onSelect(variantKey)}
                   style={{ ...styles.tab, ...(isActive ? styles.tabActive : {}) }}
-                  title={`${label} — ${status}${source === "operator" ? " · добавлен" : ""}`}
+                  title={`${label}${isPrimary ? " · основной" : ""} — ${status}${source === "operator" ? " · добавлен" : ""}`}
                 >
                   <span style={{ color: dot.color, fontSize: "13px", lineHeight: 1 }}>{dot.label}</span>
                   <span>{label}</span>
+                  {isPrimary && (
+                    <span style={{ ...styles.primaryBadge, ...(isActive ? styles.primaryBadgeActive : {}) }}>
+                      основной
+                    </span>
+                  )}
                   {source === "operator" && <span style={styles.opBadge}>+</span>}
                 </button>
               )}
@@ -301,12 +316,20 @@ const styles = {
     alignItems: "center",
     gap: "2px",
     borderRadius: "12px",
-    border: "1px solid #ddd",
+    borderWidth: "1px",
+    borderStyle: "solid" as const,
+    borderColor: "#ddd",
     background: "#fff",
   },
   tabWrapActive: {
+    borderStyle: "solid" as const,
     borderColor: "#1a3a6e",
     background: "#1a3a6e",
+  },
+  tabWrapUnresolved: {
+    borderStyle: "dashed" as const,
+    borderColor: "#c9a227",
+    background: "#fffbf0",
   },
   tab: {
     display: "inline-flex",
@@ -328,6 +351,19 @@ const styles = {
     fontSize: "9px",
     fontWeight: 700,
     opacity: 0.85,
+  },
+  primaryBadge: {
+    fontSize: "9px",
+    fontWeight: 600,
+    padding: "1px 5px",
+    borderRadius: "6px",
+    background: "#e8f0ff",
+    color: "#1a3a6e",
+    lineHeight: 1.2,
+  },
+  primaryBadgeActive: {
+    background: "rgba(255,255,255,0.22)",
+    color: "#fff",
   },
   editBtn: {
     padding: "2px 4px 2px 0",

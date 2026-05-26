@@ -11,7 +11,10 @@ import type {
   V2ProductState,
   V2VariantRoleAssignment,
 } from "./legacy-board-v2-types"
-import { extractColorTokenFromMedia } from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
+import {
+  extractColorTokenFromMedia,
+  neutralExternalOwnerColor,
+} from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
 
 /** Default RU labels for detected tokens (shared with client). */
 export const DEFAULT_TOKEN_TO_RU: Record<string, string> = {
@@ -93,9 +96,43 @@ const CYRILLIC_TO_LATIN: Record<string, string> = {
   я: "ya",
 }
 
+/** Legacy aggregate tab — no longer shown in v2 color strip (kept for persisted state migration). */
+export const LEGACY_ALL_VARIANT_KEY = "__all__"
+
+/** Unresolved color bucket when filename/metadata cannot infer a variant. */
+export const NEEDS_COLOR_VARIANT_KEY = "__needs_color__"
+
+export const PSEUDO_COLOR_VARIANT_KEYS = new Set([LEGACY_ALL_VARIANT_KEY, NEEDS_COLOR_VARIANT_KEY])
+
+export function isPseudoColorVariantKey(variantKey: string): boolean {
+  return PSEUDO_COLOR_VARIANT_KEYS.has(variantKey)
+}
+
+/** RU label for gallery/iso neutral shots inferred as cream (v1 sync rules). */
+export const INFERRED_NEUTRAL_MILK_LABEL_RU = "Молочный"
+
+/**
+ * Deterministic color token: explicit filename token → neutral gallery owner (v1) → unresolved.
+ * No pixel / image inference.
+ */
+export function resolveMediaColorToken(inv: InvItem, productHandle: string): string {
+  const explicit = extractColorTokenFromMedia(inv, productHandle)
+  if (explicit) return explicit
+  const neutralOwner = neutralExternalOwnerColor(inv)
+  if (neutralOwner) return neutralOwner
+  return "__none__"
+}
+
+function labelForDetectedVariant(token: string, hasNeutralGalleryItems: boolean): string {
+  if (hasNeutralGalleryItems && (token === "cream" || token === "milk")) {
+    return INFERRED_NEUTRAL_MILK_LABEL_RU
+  }
+  return DEFAULT_TOKEN_TO_RU[token] ?? token
+}
+
 /** Milk-like variant — first tab / default when present. */
 export function isMilkLikeVariant(variantKey: string, label: string): boolean {
-  if (variantKey === "__all__") return false
+  if (isPseudoColorVariantKey(variantKey)) return false
   const key = variantKey.toLowerCase()
   const hay = `${key} ${label}`.toLowerCase()
   if (["milk", "cream", "ivory", "molochny", "molochnyi", "milky"].includes(key)) return true
@@ -195,11 +232,25 @@ export function buildDetectedColorVariants(
   invById: Map<string, InvItem>
 ): V2ColorVariant[] {
   const byToken = new Map<string, string[]>()
+  /** Tokens that received at least one neutral gallery/iso shot without explicit color_* token. */
+  const tokenHasNeutralGallery = new Set<string>()
 
   for (const id of candidateIds) {
     const inv = invById.get(id)
     if (!inv) continue
-    const token = extractColorTokenFromMedia(inv, handle) ?? "__none__"
+    const explicit = extractColorTokenFromMedia(inv, handle)
+    let token: string
+    if (explicit) {
+      token = explicit
+    } else {
+      const neutralOwner = neutralExternalOwnerColor(inv)
+      if (neutralOwner) {
+        token = neutralOwner
+        tokenHasNeutralGallery.add(neutralOwner)
+      } else {
+        token = "__none__"
+      }
+    }
     const list = byToken.get(token) ?? []
     list.push(id)
     byToken.set(token, list)
@@ -210,19 +261,18 @@ export function buildDetectedColorVariants(
     if (token === "__none__") continue
     result.push({
       variantKey: token,
-      label: DEFAULT_TOKEN_TO_RU[token] ?? token,
+      label: labelForDetectedVariant(token, tokenHasNeutralGallery.has(token)),
       itemIds,
       source: "detected",
     })
   }
 
-  const hasColorless = byToken.has("__none__")
-  if (result.length === 0 || hasColorless) {
-    const allIds = candidateIds.filter((id) => invById.has(id))
-    result.unshift({
-      variantKey: "__all__",
-      label: "Все",
-      itemIds: allIds,
+  const unresolvedIds = byToken.get("__none__") ?? []
+  if (unresolvedIds.length > 0) {
+    result.push({
+      variantKey: NEEDS_COLOR_VARIANT_KEY,
+      label: "Без цвета · нужно выбрать",
+      itemIds: unresolvedIds,
       source: "detected",
     })
   }
@@ -253,8 +303,12 @@ function mergeAddedVariants(
 }
 
 export function sortColorVariantsWithMilkFirst(variants: V2ColorVariant[]): V2ColorVariant[] {
-  const all = variants.find((v) => v.variantKey === "__all__")
-  const rest = variants.filter((v) => v.variantKey !== "__all__")
+  const trailing = variants.filter(
+    (v) => v.variantKey === LEGACY_ALL_VARIANT_KEY || v.variantKey === NEEDS_COLOR_VARIANT_KEY
+  )
+  const rest = variants.filter(
+    (v) => v.variantKey !== LEGACY_ALL_VARIANT_KEY && v.variantKey !== NEEDS_COLOR_VARIANT_KEY
+  )
 
   rest.sort((a, b) => {
     const aMilk = isMilkLikeVariant(a.variantKey, a.label)
@@ -265,7 +319,7 @@ export function sortColorVariantsWithMilkFirst(variants: V2ColorVariant[]): V2Co
     return a.label.localeCompare(b.label, "ru")
   })
 
-  return all ? [all, ...rest] : rest
+  return [...rest, ...trailing]
 }
 
 export function filterVisibleColorVariants(
@@ -273,7 +327,11 @@ export function filterVisibleColorVariants(
   state: V2ProductState | null | undefined
 ): V2ColorVariant[] {
   const hidden = getHiddenVariantKeys(state)
-  return variants.filter((v) => v.variantKey === "__all__" || !hidden.has(v.variantKey))
+  return variants.filter(
+    (v) =>
+      isPseudoColorVariantKey(v.variantKey) ||
+      (v.variantKey !== LEGACY_ALL_VARIANT_KEY && !hidden.has(v.variantKey))
+  )
 }
 
 export function buildMergedColorVariants(
@@ -284,23 +342,25 @@ export function buildMergedColorVariants(
 ): V2ColorVariant[] {
   const detected = buildDetectedColorVariants(handle, candidateIds, invById)
   const merged = mergeAddedVariants(detected, state)
-  const visible = filterVisibleColorVariants(merged, state)
+  const visible = filterVisibleColorVariants(merged, state).filter(
+    (v) => v.variantKey !== LEGACY_ALL_VARIANT_KEY
+  )
   return sortColorVariantsWithMilkFirst(visible)
 }
 
 export function findMilkVariantKey(variants: V2ColorVariant[]): string | null {
   const milk = variants.find(
-    (v) => v.variantKey !== "__all__" && isMilkLikeVariant(v.variantKey, v.label)
+    (v) => !isPseudoColorVariantKey(v.variantKey) && isMilkLikeVariant(v.variantKey, v.label)
   )
   return milk?.variantKey ?? null
 }
 
-/** Default active tab: milk first if present, else first color, else __all__. */
+/** Default active tab: milk/default first, else first real color, else unresolved pseudo tab. */
 export function pickDefaultVariantKey(
   variants: V2ColorVariant[],
   state: V2ProductState | null | undefined
 ): string {
-  if (variants.length === 0) return "__all__"
+  if (variants.length === 0) return NEEDS_COLOR_VARIANT_KEY
 
   const milkKey = findMilkVariantKey(variants)
   if (milkKey) return milkKey
@@ -309,10 +369,19 @@ export function pickDefaultVariantKey(
   if (explicit && variants.some((v) => v.variantKey === explicit)) return explicit
 
   const saved = state?.activeVariantKey
-  if (saved && variants.some((v) => v.variantKey === saved)) return saved
+  if (
+    saved &&
+    saved !== LEGACY_ALL_VARIANT_KEY &&
+    variants.some((v) => v.variantKey === saved)
+  ) {
+    return saved
+  }
 
-  const firstColor = variants.find((v) => v.variantKey !== "__all__")
-  return firstColor?.variantKey ?? variants[0]!.variantKey
+  const firstColor = variants.find((v) => !isPseudoColorVariantKey(v.variantKey))
+  if (firstColor) return firstColor.variantKey
+
+  const unresolved = variants.find((v) => v.variantKey === NEEDS_COLOR_VARIANT_KEY)
+  return unresolved?.variantKey ?? variants[0]!.variantKey
 }
 
 export function countVariantAssignments(
