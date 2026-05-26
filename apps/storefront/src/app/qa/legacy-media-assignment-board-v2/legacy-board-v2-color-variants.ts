@@ -208,10 +208,17 @@ export function classifyMediaVariantScope(
   productHandle: string,
   activeVariantKey: string
 ): MediaVariantScope {
-  if (activeVariantKey === "__all__") return "active"
-  if (isNeutralSharedMedia(inv, productHandle)) return "neutral"
+  if (activeVariantKey === LEGACY_ALL_VARIANT_KEY) return "active"
+  const neutralOwner = neutralExternalOwnerColor(inv)
+  if (isNeutralSharedMedia(inv, productHandle)) {
+    if (neutralOwner && neutralOwner === activeVariantKey) return "active"
+    return "neutral"
+  }
   const token = extractColorTokenFromMedia(inv, productHandle)
-  if (!token) return "neutral"
+  if (!token) {
+    if (neutralOwner && neutralOwner === activeVariantKey) return "active"
+    return "neutral"
+  }
   if (token === activeVariantKey) return "active"
   return "other_color"
 }
