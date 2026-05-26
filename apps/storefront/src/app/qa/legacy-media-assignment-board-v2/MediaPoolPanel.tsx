@@ -28,6 +28,10 @@ import type { V2VariantRoleAssignment } from "./legacy-board-v2-types"
 const POOL_LIMIT = 120
 
 import { sortPoolExactSkuPriority } from "./legacy-board-v2-pool-sort"
+import {
+  collapseExactDuplicatePoolItems,
+  poolDuplicateStats,
+} from "./legacy-board-v2-pool-duplicate-collapse"
 
 function itemShowsAsPreview(
   item: PoolItem,
@@ -306,26 +310,70 @@ export function MediaPoolPanel({
     recoveryById,
   ])
 
-  const noPreviewSeparatorIdx = useMemo(() => {
-    if (hideNoPreview || activeFilter === "no_preview") return -1
-    const idx = filteredItems.findIndex((i) => !itemShowsAsPreview(i, runtimeFailedIds, recoveryById))
-    return idx >= 0 ? idx : -1
-  }, [filteredItems, hideNoPreview, activeFilter, runtimeFailedIds, recoveryById])
-
   const filteredNoPreviewCount = useMemo(
     () => filteredItems.filter((i) => !itemShowsAsPreview(i, runtimeFailedIds, recoveryById)).length,
     [filteredItems, runtimeFailedIds, recoveryById]
   )
 
-  const renderedItems = useMemo(() => {
-    let items = filteredItems
+  const collapseCtx = useMemo(
+    () => ({
+      productHandle: selectedHandle,
+      variantKey: activeVariantKey,
+      currentMainId,
+      gallerySet,
+      runtimeFailedIds,
+      recoveryById,
+    }),
+    [
+      selectedHandle,
+      activeVariantKey,
+      currentMainId,
+      gallerySet,
+      runtimeFailedIds,
+      recoveryById,
+    ]
+  )
+
+  const collapsedFiltered = useMemo(
+    () => collapseExactDuplicatePoolItems(filteredItems, collapseCtx),
+    [filteredItems, collapseCtx]
+  )
+
+  const collapsedAll = useMemo(
+    () => collapseExactDuplicatePoolItems(poolItems, collapseCtx),
+    [poolItems, collapseCtx]
+  )
+
+  const filterDupStats = useMemo(
+    () => poolDuplicateStats(filteredItems.length, collapsedFiltered.length),
+    [filteredItems.length, collapsedFiltered.length]
+  )
+
+  const allDupStats = useMemo(
+    () => poolDuplicateStats(poolItems.length, collapsedAll.length),
+    [poolItems.length, collapsedAll.length]
+  )
+
+  const renderedRows = useMemo(() => {
+    let rows = collapsedFiltered
     if (hideNoPreview) {
-      items = items.filter((i) => itemShowsAsPreview(i, runtimeFailedIds, recoveryById))
+      rows = rows.filter((row) =>
+        itemShowsAsPreview(row.representative, runtimeFailedIds, recoveryById)
+      )
     }
-    return items.slice(0, POOL_LIMIT)
-  }, [filteredItems, hideNoPreview, runtimeFailedIds, recoveryById])
+    return rows.slice(0, POOL_LIMIT)
+  }, [collapsedFiltered, hideNoPreview, runtimeFailedIds, recoveryById])
+
+  const noPreviewSeparatorIdx = useMemo(() => {
+    if (hideNoPreview || activeFilter === "no_preview") return -1
+    const idx = collapsedFiltered.findIndex(
+      (row) => !itemShowsAsPreview(row.representative, runtimeFailedIds, recoveryById)
+    )
+    return idx >= 0 ? idx : -1
+  }, [collapsedFiltered, hideNoPreview, activeFilter, runtimeFailedIds, recoveryById])
 
   const total = filteredItems.length
+  const totalUnique = collapsedFiltered.length
   const totalAll = poolItems.length
 
   if (!selectedHandle) {
@@ -337,6 +385,11 @@ export function MediaPoolPanel({
     )
   }
 
+  const dupSuffix = (stats: { uniqueCount: number; hiddenDuplicateCount: number }) =>
+    stats.hiddenDuplicateCount > 0
+      ? ` · ${stats.uniqueCount} уникальных · ${stats.hiddenDuplicateCount} дублей`
+      : ""
+
   // Rich count bar text
   const countBarText = (() => {
     if (totalAll === 0) return "Нет кандидатов для этого продукта."
@@ -345,14 +398,14 @@ export function MediaPoolPanel({
     }
     if (activeFilter === "all") {
       if (hideNoPreview) {
-        return `${totalAll} фото · ${effectivePreviewableCount} с превью · 0 без превью (скрыто ${effectiveNoPreviewCount})`
+        return `${totalAll} фото${dupSuffix(allDupStats)} · ${effectivePreviewableCount} с превью · 0 без превью (скрыто ${effectiveNoPreviewCount})`
       }
-      return `${totalAll} фото · ${effectivePreviewableCount} с превью · ${effectiveNoPreviewCount} без превью`
+      return `${totalAll} фото${dupSuffix(allDupStats)} · ${effectivePreviewableCount} с превью · ${effectiveNoPreviewCount} без превью`
     }
     if (hideNoPreview) {
-      return `Показано ${renderedItems.length} из ${total} · только с превью (скрыто ${effectiveNoPreviewCount})`
+      return `Показано ${renderedRows.length} уникальных из ${totalUnique}${dupSuffix(filterDupStats)} · только с превью (скрыто ${effectiveNoPreviewCount})`
     }
-    return `Показано ${renderedItems.length} из ${total} (всего ${totalAll})`
+    return `Показано ${renderedRows.length} уникальных из ${totalUnique}${dupSuffix(filterDupStats)} (всего ${totalAll} в источнике)`
   })()
 
   return (
@@ -400,13 +453,15 @@ export function MediaPoolPanel({
           )}
         </label>
 
-        <div style={styles.countBar}>{countBarText}</div>
+        <div style={styles.countBar} data-v2-pool-count-bar>
+          {countBarText}
+        </div>
       </div>
 
       {/* ── Scrollable pool body ── */}
       <div style={styles.poolScroll}>
         {/* Empty filter — helpful message + reset */}
-        {renderedItems.length === 0 && totalAll > 0 && (
+        {renderedRows.length === 0 && totalAll > 0 && (
           <div style={styles.emptyFilter}>
             <div style={styles.emptyFilterTitle}>
               {hideNoPreviewContradiction
@@ -429,7 +484,8 @@ export function MediaPoolPanel({
         )}
 
         <div style={styles.grid} data-v2-pool-grid>
-          {renderedItems.map((item, idx) => {
+          {renderedRows.map((row, idx) => {
+            const item = row.representative
             const showsAsPreview = itemShowsAsPreview(item, runtimeFailedIds, recoveryById)
             if (hideNoPreview && !showsAsPreview) return null
             const showNoPreviewSeparator =
@@ -445,8 +501,15 @@ export function MediaPoolPanel({
               !showsAsPreview && usage.statusLine
                 ? usage.statusLine
                 : usage.statusLine || (!showsAsPreview ? "без превью" : undefined)
+            const dupCount = row.sourceCount
+            const dupTitle =
+              dupCount > 1
+                ? row.sources
+                    .map((s) => `${s.filename} · ${s.idShort} · ${s.sourceLabel}`)
+                    .join("\n")
+                : undefined
             return (
-              <React.Fragment key={item.inv.id}>
+              <React.Fragment key={`${item.inv.id}-collapsed`}>
                 {showNoPreviewSeparator && (
                   <div
                     style={styles.separator}
@@ -480,15 +543,19 @@ export function MediaPoolPanel({
                   mainActionDisabled={sharedColorlessMode}
                   mainActionDisabledTitle={mainActionDisabledTitle}
                   galleryButtonLabel={sharedGalleryButtonLabel}
+                  duplicateSourceCount={dupCount > 1 ? dupCount : undefined}
+                  duplicateSources={dupCount > 1 ? row.sources : undefined}
+                  duplicateSourcesTitle={dupTitle}
                 />
               </React.Fragment>
             )
           })}
         </div>
 
-        {total > POOL_LIMIT && (
+        {totalUnique > POOL_LIMIT && (
           <div style={styles.capNote}>
-            Показаны первые {POOL_LIMIT} из {total}. Используйте фильтры для сужения выборки.
+            Показаны первые {POOL_LIMIT} из {totalUnique} уникальных ({total} в фильтре с дублями).
+            Используйте фильтры для сужения выборки.
           </div>
         )}
       </div>

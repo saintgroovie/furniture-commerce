@@ -17,6 +17,7 @@ const ROLE_SLOT_LABELS: Partial<Record<V2RoleSlot, string>> = {
 }
 
 import type { LegacyMediaPreviewRecoveryEntry } from "@/lib/qa/legacy-media-preview-recovery-types"
+import type { DuplicateSourceMeta } from "./legacy-board-v2-pool-duplicate-collapse"
 import {
   isLegacyBoardClientPreviewable,
   resolveLegacyBoardClientPreview,
@@ -123,6 +124,20 @@ type Props = {
   onPreviewLoadFailure?: (mediaId: string) => void
   /** QA preview-recovery map entry (same as v1 board) */
   previewRecovery?: LegacyMediaPreviewRecoveryEntry | null
+  /** Exact duplicate collapse — count of inventory rows behind this card */
+  duplicateSourceCount?: number
+  duplicateSources?: DuplicateSourceMeta[]
+  /** Tooltip listing hidden duplicate filenames / ids */
+  duplicateSourcesTitle?: string
+}
+
+function duplicateSourcesLabelRu(count: number): string {
+  const n = Math.abs(Math.floor(count))
+  const mod10 = n % 10
+  const mod100 = n % 100
+  if (mod10 === 1 && mod100 !== 11) return `${n} источник`
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return `${n} источника`
+  return `${n} источников`
 }
 
 export function MediaCardV2({
@@ -150,6 +165,9 @@ export function MediaCardV2({
   effectivePreviewOk,
   onPreviewLoadFailure,
   previewRecovery,
+  duplicateSourceCount,
+  duplicateSources,
+  duplicateSourcesTitle,
 }: Props) {
   const isOtherColor = !!poolMuted
   const otherColorTitle = "Другой цвет — переключите вкладку цвета или перетащите в слот"
@@ -164,6 +182,9 @@ export function MediaCardV2({
         ? "Уже назначено главным"
         : undefined
   const [imgFailed, setImgFailed] = useState(false)
+  const [sourcesOpen, setSourcesOpen] = useState(false)
+  const showDuplicateBadge =
+    duplicateSourceCount !== undefined && duplicateSourceCount > 1
 
   const preview = clientPreview(inv, previewRecovery)
   const staticPreviewOk = isStaticallyPreviewable(inv, previewRecovery)
@@ -342,6 +363,9 @@ export function MediaCardV2({
       }}
       data-v2-pool-other-color={isOtherColor ? "true" : undefined}
       data-v2-pool-dimmed={isDimmed ? "footer" : undefined}
+      data-v2-pool-duplicate-count={
+        showDuplicateBadge ? String(duplicateSourceCount) : undefined
+      }
     >
       {/* Image wrap — status chips moved to footer to avoid top crowding */}
       <div style={styles.imageWrap} data-v2-pool-preview-wrap>
@@ -391,6 +415,19 @@ export function MediaCardV2({
             {confidence === "confirmed" ? "●" : confidence}
           </span>
         )}
+
+        {showDuplicateBadge && (
+          <span
+            style={{
+              ...styles.dupBadgeOverlay,
+              top: confidence ? 22 : 4,
+            }}
+            title={duplicateSourcesTitle}
+            data-v2-pool-duplicate-count={duplicateSourceCount}
+          >
+            {duplicateSourcesLabelRu(duplicateSourceCount!)}
+          </span>
+        )}
       </div>
 
       {/* Footer: filename + status + actions + role */}
@@ -399,6 +436,31 @@ export function MediaCardV2({
         data-v2-pool-card-footer
       >
         <div style={styles.filename} title={inv.filename}>{shortname}</div>
+        {showDuplicateBadge && duplicateSources && duplicateSources.length > 1 && (
+          <div style={styles.dupSourcesRow} data-v2-pool-duplicate-sources>
+            <button
+              type="button"
+              style={styles.dupSourcesToggle}
+              onClick={() => setSourcesOpen((v) => !v)}
+              title={duplicateSourcesTitle}
+              data-v2-pool-duplicate-toggle
+            >
+              источники {sourcesOpen ? "▴" : "▾"}
+            </button>
+            {sourcesOpen && (
+              <ul style={styles.dupSourcesList}>
+                {duplicateSources.map((s) => (
+                  <li key={s.id} style={styles.dupSourcesItem} title={s.repoPath}>
+                    <span style={styles.dupSourcesFn}>{s.filename}</span>
+                    <span style={styles.dupSourcesMeta}>
+                      {s.idShort} · {s.sourceLabel}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
         {poolUsageLine ? (
           <div
             style={{
@@ -572,6 +634,65 @@ const styles = {
     padding: "2px 5px",
     fontSize: "9px",
     fontWeight: 700,
+  },
+  dupBadgeOverlay: {
+    position: "absolute" as const,
+    right: "5px",
+    background: "rgba(80, 80, 80, 0.92)",
+    color: "#fff",
+    borderRadius: "3px",
+    padding: "2px 6px",
+    fontSize: "9px",
+    fontWeight: 600,
+    zIndex: 2,
+    maxWidth: "calc(100% - 10px)",
+    whiteSpace: "nowrap" as const,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  },
+  dupSourcesRow: {
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: "4px",
+    marginTop: "-2px",
+  },
+  dupSourcesToggle: {
+    alignSelf: "flex-start",
+    border: "none",
+    background: "#eef2f8",
+    color: "#1a3a6e",
+    borderRadius: "3px",
+    padding: "2px 6px",
+    fontSize: "9px",
+    fontWeight: 600,
+    cursor: "pointer",
+  },
+  dupSourcesList: {
+    margin: 0,
+    padding: "4px 6px",
+    listStyle: "none",
+    background: "#f8f8f8",
+    borderRadius: "4px",
+    border: "1px solid #e8e8e8",
+    maxHeight: "72px",
+    overflowY: "auto" as const,
+  },
+  dupSourcesItem: {
+    fontSize: "9px",
+    lineHeight: 1.35,
+    padding: "2px 0",
+    borderBottom: "1px solid #eee",
+  },
+  dupSourcesFn: {
+    display: "block",
+    fontWeight: 600,
+    color: "#333",
+  },
+  dupSourcesMeta: {
+    display: "block",
+    color: "#777",
+    fontFamily: "monospace",
+    fontSize: "8px",
   },
   footer: {
     padding: "8px 10px 14px",
