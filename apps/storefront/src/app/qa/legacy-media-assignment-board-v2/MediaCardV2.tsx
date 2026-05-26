@@ -129,6 +129,10 @@ type Props = {
   duplicateSources?: DuplicateSourceMeta[]
   /** Tooltip listing hidden duplicate filenames / ids */
   duplicateSourcesTitle?: string
+  /** Dev/QA: pool inclusion classification (hidden from operator UI) */
+  poolClassification?: string
+  /** Dev/QA: active | other_color | neutral scope for tab */
+  poolMediaScope?: string
 }
 
 function duplicateSourcesLabelRu(count: number): string {
@@ -168,6 +172,8 @@ export function MediaCardV2({
   duplicateSourceCount,
   duplicateSources,
   duplicateSourcesTitle,
+  poolClassification,
+  poolMediaScope,
 }: Props) {
   const isOtherColor = !!poolMuted
   const otherColorTitle = "Другой цвет — переключите вкладку цвета или перетащите в слот"
@@ -366,6 +372,9 @@ export function MediaCardV2({
       data-v2-pool-duplicate-count={
         showDuplicateBadge ? String(duplicateSourceCount) : undefined
       }
+      data-v2-pool-classification={poolClassification}
+      data-v2-media-filename={inv.filename || inv.id}
+      data-v2-media-scope={poolMediaScope}
     >
       {/* Image wrap — status chips moved to footer to avoid top crowding */}
       <div style={styles.imageWrap} data-v2-pool-preview-wrap>

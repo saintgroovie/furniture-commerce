@@ -22,6 +22,12 @@ import {
   SHARED_COLORLESS_POOL_HINT_RU,
   type MediaVariantScope,
 } from "./legacy-board-v2-color-variants"
+import {
+  classifyForRealColorTab,
+  classifyForSharedTriageTab,
+  poolClassificationLabel,
+  shouldIncludeInMediaPool,
+} from "./legacy-board-v2-pool-classification"
 import { resolvePoolUsageStatus } from "./legacy-board-v2-gallery-source"
 import type { V2VariantRoleAssignment } from "./legacy-board-v2-types"
 
@@ -196,9 +202,8 @@ export function MediaPoolPanel({
       const inv = invById.get(id)
       if (!inv) continue
       if (
-        sharedColorlessMode &&
         selectedHandle &&
-        !mediaMatchesVariantKey(inv, selectedHandle, NEEDS_COLOR_VARIANT_KEY)
+        !shouldIncludeInMediaPool(inv, selectedHandle, activeVariantKey, realColorVariantKeys)
       ) {
         continue
       }
@@ -227,6 +232,8 @@ export function MediaPoolPanel({
     roleOverrides,
     recoveryById,
     sharedColorlessMode,
+    activeVariantKey,
+    realColorVariantKeys,
   ])
 
   const effectivePreviewableCount = useMemo(
@@ -508,6 +515,28 @@ export function MediaPoolPanel({
                     .map((s) => `${s.filename} · ${s.idShort} · ${s.sourceLabel}`)
                     .join("\n")
                 : undefined
+            const poolClassification = selectedHandle
+              ? sharedColorlessMode
+                ? poolClassificationLabel(
+                    activeVariantKey,
+                    classifyForSharedTriageTab(
+                      item.inv,
+                      selectedHandle,
+                      realColorVariantKeys,
+                      showsAsPreview,
+                      dupCount
+                    )
+                  )
+                : poolClassificationLabel(
+                    activeVariantKey,
+                    classifyForRealColorTab(
+                      item.inv,
+                      selectedHandle,
+                      activeVariantKey,
+                      showsAsPreview
+                    )
+                  )
+              : undefined
             return (
               <React.Fragment key={`${item.inv.id}-collapsed`}>
                 {showNoPreviewSeparator && (
@@ -527,6 +556,8 @@ export function MediaPoolPanel({
                   confidence={item.confidence}
                   identityConfidence={item.identityConfidence}
                   selectedHandle={selectedHandle}
+                  poolClassification={poolClassification}
+                  poolMediaScope={scope}
                   onSetMain={onSetMain}
                   onAddToGallery={handleGalleryAdd}
                   showsAsPreview={showsAsPreview}

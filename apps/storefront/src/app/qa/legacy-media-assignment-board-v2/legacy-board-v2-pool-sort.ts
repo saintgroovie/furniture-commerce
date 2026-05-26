@@ -7,8 +7,10 @@ import type { LegacyMediaPreviewRecoveryEntry } from "@/lib/qa/legacy-media-prev
 import { isEffectivePreviewable } from "./legacy-board-v2-pool-preview"
 import {
   classifyMediaVariantScope,
+  NEEDS_COLOR_VARIANT_KEY,
   type MediaVariantScope,
 } from "./legacy-board-v2-color-variants"
+import { sharedTriageSortRank } from "./legacy-board-v2-pool-classification"
 import type { InvItem, V2RoleFilter } from "./legacy-board-v2-types"
 
 export type PoolSortItem = {
@@ -117,7 +119,13 @@ export function sortPoolExactSkuPriority(
     const bCross = isCrossSkuFilename(b.inv, productHandle) ? 1 : 0
     if (aCross !== bCross) return aCross - bCross
 
-    if (productHandle && variantKey !== "__all__") {
+    if (productHandle && variantKey === NEEDS_COLOR_VARIANT_KEY) {
+      const aShared = sharedTriageSortRank(a.inv, productHandle)
+      const bShared = sharedTriageSortRank(b.inv, productHandle)
+      if (aShared !== bShared) return aShared - bShared
+    }
+
+    if (productHandle && variantKey !== "__all__" && variantKey !== NEEDS_COLOR_VARIANT_KEY) {
       const sa = classifyMediaVariantScope(a.inv, productHandle, variantKey)
       const sb = classifyMediaVariantScope(b.inv, productHandle, variantKey)
       const scopeDiff = SCOPE_SORT_ORDER[sa] - SCOPE_SORT_ORDER[sb]
