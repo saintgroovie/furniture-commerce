@@ -9,6 +9,7 @@ import {
 } from "./legacy-board-v2-role-inference"
 import { RoleFilterTabs } from "./RoleFilterTabs"
 import { MediaCardV2 } from "./MediaCardV2"
+import type { LegacyMediaPreviewRecoveryEntry } from "@/lib/qa/legacy-media-preview-recovery-types"
 import {
   isEffectivePreviewable,
   isStaticEffectivePreviewable,
@@ -37,8 +38,12 @@ function isPoolItemAssigned(
   return item.inv.id === (currentMainId ?? null) || gallerySet.has(item.inv.id)
 }
 
-function itemShowsAsPreview(item: PoolItem, runtimeFailedIds: ReadonlySet<string>): boolean {
-  return isEffectivePreviewable(item.inv, runtimeFailedIds)
+function itemShowsAsPreview(
+  item: PoolItem,
+  runtimeFailedIds: ReadonlySet<string>,
+  recoveryById?: ReadonlyMap<string, LegacyMediaPreviewRecoveryEntry>
+): boolean {
+  return isEffectivePreviewable(item.inv, runtimeFailedIds, recoveryById)
 }
 
 /** Preview-first: all previewable cards, then no-preview; scope only within each tier. */
@@ -48,13 +53,14 @@ export function sortPoolPreviewFirst(
   variantKey: string,
   currentMainId?: string | null,
   gallerySet?: Set<string>,
-  runtimeFailedIds?: ReadonlySet<string>
+  runtimeFailedIds?: ReadonlySet<string>,
+  recoveryById?: ReadonlyMap<string, LegacyMediaPreviewRecoveryEntry>
 ): PoolItem[] {
   const gs = gallerySet ?? new Set<string>()
   const failed = runtimeFailedIds ?? new Set<string>()
   return [...items].sort((a, b) => {
-    const aPreview = itemShowsAsPreview(a, failed)
-    const bPreview = itemShowsAsPreview(b, failed)
+    const aPreview = itemShowsAsPreview(a, failed, recoveryById)
+    const bPreview = itemShowsAsPreview(b, failed, recoveryById)
     if (aPreview !== bPreview) return aPreview ? -1 : 1
     const aAssigned = isPoolItemAssigned(a, currentMainId, gs)
     const bAssigned = isPoolItemAssigned(b, currentMainId, gs)
@@ -102,6 +108,8 @@ type Props = {
   activeVariantKey?: string
   /** Role slots for active variant (for transparent pool status) */
   variantRoles?: V2VariantRoleAssignment
+  /** QA preview-recovery entries (v1 API) keyed by inventory id */
+  recoveryById?: ReadonlyMap<string, LegacyMediaPreviewRecoveryEntry>
 }
 
 /** Role label used in empty-filter message */
@@ -132,6 +140,7 @@ export function MediaPoolPanel({
   onSetRoleOverride,
   activeVariantKey = "__all__",
   variantRoles = {},
+  recoveryById,
 }: Props) {
   const [hideNoPreview, setHideNoPreview] = useState(false)
   const [runtimeFailedIds, setRuntimeFailedIds] = useState<Set<string>>(() => new Set())
@@ -164,7 +173,7 @@ export function MediaPoolPanel({
       const entry = entryByInventoryId.get(id)
       const inferred = inferV2VisualRole(inv, { productHandle: selectedHandle })
       const effectiveFilter = effectiveV2Filter(inv, overrides, { productHandle: selectedHandle })
-      const staticEffectivePreview = isStaticEffectivePreviewable(inv)
+      const staticEffectivePreview = isStaticEffectivePreviewable(inv, recoveryById)
       const item: PoolItem = {
         inv,
         role: inferred.role,
@@ -178,11 +187,11 @@ export function MediaPoolPanel({
       else noPreview.push(item)
     }
     return [...withPreview, ...noPreview]
-  }, [selectedHandle, invById, candidatesByHandle, entryByInventoryId, roleOverrides])
+  }, [selectedHandle, invById, candidatesByHandle, entryByInventoryId, roleOverrides, recoveryById])
 
   const effectivePreviewableCount = useMemo(
-    () => poolItems.filter((i) => itemShowsAsPreview(i, runtimeFailedIds)).length,
-    [poolItems, runtimeFailedIds]
+    () => poolItems.filter((i) => itemShowsAsPreview(i, runtimeFailedIds, recoveryById)).length,
+    [poolItems, runtimeFailedIds, recoveryById]
   )
   const effectiveNoPreviewCount = useMemo(
     () => poolItems.length - effectivePreviewableCount,
@@ -221,11 +230,11 @@ export function MediaPoolPanel({
     let items = poolItems
 
     if (hideNoPreview) {
-      items = items.filter((i) => itemShowsAsPreview(i, runtimeFailedIds))
+      items = items.filter((i) => itemShowsAsPreview(i, runtimeFailedIds, recoveryById))
     }
 
     if (activeFilter === "no_preview") {
-      items = items.filter((i) => !itemShowsAsPreview(i, runtimeFailedIds))
+      items = items.filter((i) => !itemShowsAsPreview(i, runtimeFailedIds, recoveryById))
     } else if (activeFilter === "unused") {
       items = items.filter(
         (i) => i.inv.id !== (currentMainId ?? null) && !gallerySet.has(i.inv.id)
@@ -244,7 +253,8 @@ export function MediaPoolPanel({
       activeVariantKey,
       currentMainId,
       gallerySet,
-      runtimeFailedIds
+      runtimeFailedIds,
+      recoveryById
     )
   }, [
     poolItems,
@@ -256,26 +266,27 @@ export function MediaPoolPanel({
     selectedHandle,
     activeVariantKey,
     runtimeFailedIds,
+    recoveryById,
   ])
 
   const noPreviewSeparatorIdx = useMemo(() => {
     if (hideNoPreview || activeFilter === "no_preview") return -1
-    const idx = filteredItems.findIndex((i) => !itemShowsAsPreview(i, runtimeFailedIds))
+    const idx = filteredItems.findIndex((i) => !itemShowsAsPreview(i, runtimeFailedIds, recoveryById))
     return idx >= 0 ? idx : -1
-  }, [filteredItems, hideNoPreview, activeFilter, runtimeFailedIds])
+  }, [filteredItems, hideNoPreview, activeFilter, runtimeFailedIds, recoveryById])
 
   const filteredNoPreviewCount = useMemo(
-    () => filteredItems.filter((i) => !itemShowsAsPreview(i, runtimeFailedIds)).length,
-    [filteredItems, runtimeFailedIds]
+    () => filteredItems.filter((i) => !itemShowsAsPreview(i, runtimeFailedIds, recoveryById)).length,
+    [filteredItems, runtimeFailedIds, recoveryById]
   )
 
   const renderedItems = useMemo(() => {
     let items = filteredItems
     if (hideNoPreview) {
-      items = items.filter((i) => itemShowsAsPreview(i, runtimeFailedIds))
+      items = items.filter((i) => itemShowsAsPreview(i, runtimeFailedIds, recoveryById))
     }
     return items.slice(0, POOL_LIMIT)
-  }, [filteredItems, hideNoPreview, runtimeFailedIds])
+  }, [filteredItems, hideNoPreview, runtimeFailedIds, recoveryById])
 
   const total = filteredItems.length
   const totalAll = poolItems.length
@@ -370,7 +381,7 @@ export function MediaPoolPanel({
 
         <div style={styles.grid} data-v2-pool-grid>
           {renderedItems.map((item, idx) => {
-            const showsAsPreview = itemShowsAsPreview(item, runtimeFailedIds)
+            const showsAsPreview = itemShowsAsPreview(item, runtimeFailedIds, recoveryById)
             if (hideNoPreview && !showsAsPreview) return null
             const showNoPreviewSeparator =
               !hideNoPreview &&
@@ -421,6 +432,7 @@ export function MediaPoolPanel({
                   isDimmed={false}
                   roleOverride={(roleOverrides ?? {})[item.inv.id] ?? null}
                   onSetRoleOverride={onSetRoleOverride}
+                  previewRecovery={recoveryById?.get(item.inv.id) ?? null}
                 />
               </React.Fragment>
             )

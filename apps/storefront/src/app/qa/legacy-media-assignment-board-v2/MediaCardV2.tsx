@@ -16,111 +16,28 @@ const ROLE_SLOT_LABELS: Partial<Record<V2RoleSlot, string>> = {
   scheme: "Схема",
 }
 
-// ---------------------------------------------------------------------------
-// Client-safe preview URL builder (no fs — uses InvItem fields only)
-// ---------------------------------------------------------------------------
+import type { LegacyMediaPreviewRecoveryEntry } from "@/lib/qa/legacy-media-preview-recovery-types"
+import {
+  isLegacyBoardClientPreviewable,
+  resolveLegacyBoardClientPreview,
+  type LegacyBoardClientPreview,
+} from "@/lib/qa/legacy-media-board-client-preview"
 
-const PREVIEW_PROXY = "/qa/legacy-media-assignment-board/preview"
+export type ClientPreview = LegacyBoardClientPreview
 
-type ClientPreview = {
-  url: string | null
-  status: string
-  reason: string | null
+/** True when the card should attempt a real image (shared v1/v2 resolver). */
+export function isStaticallyPreviewable(
+  inv: InvItem,
+  recovery?: LegacyMediaPreviewRecoveryEntry | null
+): boolean {
+  return isLegacyBoardClientPreviewable(inv, recovery ?? null)
 }
 
-function normPath(s: string): string {
-  return s.trim().replace(/\\/g, "/").replace(/^\//, "")
-}
-
-function getMedusaOrigin(): string {
-  if (typeof process !== "undefined" && process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL) {
-    return process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL.replace(/\/$/, "")
-  }
-  return "http://localhost:9000"
-}
-
-const TRUSTED_PREVIEW_STATUSES = new Set([
-  "backend_static_mapped",
-  "backend_static_url",
-  "remote_http",
-])
-
-/** True only when the card should show a real image (not placeholder / proxy 404). */
-export function isStaticallyPreviewable(inv: InvItem): boolean {
-  const preview = clientPreview(inv)
-  if (!preview.url) return false
-  if (TRUSTED_PREVIEW_STATUSES.has(preview.status)) return true
-  if (preview.status === "local_proxy") {
-    return inv.previewable === true && inv.exists_locally === true
-  }
-  return false
-}
-
-export function clientPreview(inv: InvItem): ClientPreview {
-  // Direct URL field (http/https)
-  if (inv.url && (inv.url.startsWith("http://") || inv.url.startsWith("https://"))) {
-    return { url: inv.url, status: "remote_http", reason: null }
-  }
-
-  const rr = normPath(inv.repo_relative_path || "")
-  const sp = normPath(inv.source_path || "")
-  const primary = rr || sp
-
-  if (!primary) {
-    return { url: null, status: "no_source", reason: "Нет пути в inventory." }
-  }
-
-  if (primary.startsWith("http://") || primary.startsWith("https://")) {
-    return { url: primary, status: "remote_http", reason: null }
-  }
-
-  const origin = getMedusaOrigin()
-
-  // Backend static path — served by Medusa
-  if (primary.startsWith("apps/backend/static/")) {
-    const suffix = primary.slice("apps/backend/static/".length)
-    return { url: `${origin}/static/${suffix}`, status: "backend_static_mapped", reason: null }
-  }
-
-  if (primary.startsWith("static/")) {
-    return { url: `${origin}/${primary}`, status: "backend_static_url", reason: null }
-  }
-
-  // data/ paths — use proxy if file exists locally
-  if (primary.startsWith("data/")) {
-    if (inv.previewable) {
-      return {
-        url: `${PREVIEW_PROXY}?rel=${encodeURIComponent(primary)}`,
-        status: "local_proxy",
-        reason: null,
-      }
-    }
-    if (inv.exists_locally === false) {
-      return { url: null, status: "file_missing", reason: inv.preview_reason || "Файл не найден на диске." }
-    }
-    return { url: null, status: "unpreviewable", reason: inv.preview_reason || "Не previewable." }
-  }
-
-  // Yandex / external machine paths
-  const rawSp = inv.source_path || ""
-  if (
-    rawSp.startsWith("/WOODRIGHT") ||
-    rawSp.startsWith("/Users") ||
-    rawSp.startsWith("/Volumes") ||
-    rawSp.startsWith("/Yandex")
-  ) {
-    return {
-      url: null,
-      status: "unpreviewable_external_ref",
-      reason: "Yandex/внешний путь — локального бинаря нет в репо.",
-    }
-  }
-
-  if (!inv.previewable) {
-    return { url: null, status: "unpreviewable", reason: inv.preview_reason || "Не previewable." }
-  }
-
-  return { url: null, status: "unsupported", reason: "Нет подходящего правила превью." }
+export function clientPreview(
+  inv: InvItem,
+  recovery?: LegacyMediaPreviewRecoveryEntry | null
+): ClientPreview {
+  return resolveLegacyBoardClientPreview(inv, recovery ?? null)
 }
 
 // ---------------------------------------------------------------------------
@@ -130,6 +47,7 @@ export function clientPreview(inv: InvItem): ClientPreview {
 const STATUS_ICON: Record<string, string> = {
   backend_static_mapped: "◉",
   backend_static_url: "◉",
+  qa_medusa_static_fallback: "◉",
   local_proxy: "◉",
   remote_http: "◉",
   file_missing: "⚠",
@@ -199,6 +117,8 @@ type Props = {
   effectivePreviewOk?: boolean
   /** Notify parent when image load fails (proxy 404, broken remote URL) */
   onPreviewLoadFailure?: (mediaId: string) => void
+  /** QA preview-recovery map entry (same as v1 board) */
+  previewRecovery?: LegacyMediaPreviewRecoveryEntry | null
 }
 
 export function MediaCardV2({
@@ -222,14 +142,15 @@ export function MediaCardV2({
   onSetRoleOverride,
   effectivePreviewOk,
   onPreviewLoadFailure,
+  previewRecovery,
 }: Props) {
   const isOtherColor = !!poolMuted
   const actionsDisabled = !!poolActionsDisabled || isOtherColor
   const otherColorTitle = "Другой цвет — переключите вкладку цвета или перетащите в слот"
   const [imgFailed, setImgFailed] = useState(false)
 
-  const preview = clientPreview(inv)
-  const staticPreviewOk = isStaticallyPreviewable(inv)
+  const preview = clientPreview(inv, previewRecovery)
+  const staticPreviewOk = isStaticallyPreviewable(inv, previewRecovery)
   const useCompact =
     showsAsPreview !== undefined ? !showsAsPreview : !!compact
   const domPreviewOk =
@@ -248,7 +169,13 @@ export function MediaCardV2({
   const roleLabel = VISUAL_ROLE_BADGE_RU[role] ?? "?"
   const shortname = inv.filename.length > 30 ? inv.filename.slice(0, 27) + "…" : inv.filename
   const effectiveStatus = imgFailed ? "file_missing" : preview.status
-  const effectiveReason = imgFailed ? "Файл не найден на диске (proxy 404)." : preview.reason
+  const effectiveReason = imgFailed
+    ? preview.status === "qa_medusa_static_fallback" || preview.status === "backend_static_mapped"
+      ? "Medusa static 404 — файл отсутствует в backend static."
+      : preview.status === "local_proxy"
+        ? "Локальный proxy 404 — data/ файл не на диске."
+        : "Превью недоступно (HTTP ошибка загрузки)."
+    : preview.reason
   const overrideLabel = roleOverride ? (ROLE_SLOT_LABELS[roleOverride] ?? roleOverride) : null
   const autoLow =
     !overrideLabel && (roleConfidence === "ambiguous" || roleConfidence === "low")

@@ -1,10 +1,11 @@
 import * as fs from "fs"
 import * as path from "path"
+import { loadLegacyMediaPreviewRecoveryMap } from "@/lib/qa/legacy-media-preview-recovery"
 import {
-  loadLegacyMediaPreviewRecoveryMap,
   recoveryBadgeLabel,
   type LegacyMediaPreviewRecoveryEntry,
-} from "@/lib/qa/legacy-media-preview-recovery"
+} from "@/lib/qa/legacy-media-preview-recovery-types"
+import { qaMedusaProductsStaticRel } from "@/lib/qa/legacy-media-board-client-preview"
 
 /** GET preview handler — keep in sync with route.ts allowlist. */
 export const LEGACY_MEDIA_QA_PREVIEW_ALLOWED_REL_PREFIXES = [
@@ -16,17 +17,17 @@ export const LEGACY_MEDIA_QA_PREVIEW_ALLOWED_REL_PREFIXES = [
   "data/raw/assets/",
 ] as const
 
-export const LEGACY_MEDIA_QA_PREVIEW_ROUTE = "/qa/legacy-media-assignment-board/preview"
+import {
+  LEGACY_MEDIA_QA_PREVIEW_ROUTE,
+  medusaStaticOrigin,
+} from "@/lib/qa/legacy-media-board-preview-constants"
+
+export { LEGACY_MEDIA_QA_PREVIEW_ROUTE, medusaStaticOrigin } from "@/lib/qa/legacy-media-board-preview-constants"
 
 const IMAGE_EXT = new Set([".png", ".jpg", ".jpeg", ".webp", ".gif", ".avif"])
 
 function normalizePosix(s: string): string {
   return s.trim().replace(/\\/g, "/").replace(/^\//, "")
-}
-
-export function medusaStaticOrigin(): string {
-  const u = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
-  return u.replace(/\/$/, "")
 }
 
 function stripDockerAppDataPrefix(p: string): string {
@@ -210,6 +211,16 @@ export function resolveLegacyMediaBoardPreview(repoRoot: string | null, input: L
         preview_url: buildProxyUrl(relHub),
         use_img_tag: true,
         preview_status: "local_proxy",
+        preview_error_reason: null,
+        debug_source_path: debug,
+      }
+    }
+    const medusaProducts = qaMedusaProductsStaticRel(relHub)
+    if (medusaProducts) {
+      return {
+        preview_url: `${origin}/static/${medusaProducts}`,
+        use_img_tag: true,
+        preview_status: "qa_medusa_static_fallback",
         preview_error_reason: null,
         debug_source_path: debug,
       }

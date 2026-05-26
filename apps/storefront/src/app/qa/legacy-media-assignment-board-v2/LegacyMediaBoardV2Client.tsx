@@ -12,6 +12,7 @@ import type {
   V2RoleFilter,
   V2RoleSlot,
 } from "./legacy-board-v2-types"
+import type { LegacyMediaPreviewRecoveryEntry } from "@/lib/qa/legacy-media-preview-recovery-types"
 import { MediaPoolPanel } from "./MediaPoolPanel"
 import {
   buildMergedColorVariants,
@@ -89,6 +90,7 @@ export function LegacyMediaBoardV2Client() {
   const [invById, setInvById] = useState<Map<string, InvItem>>(new Map())
   const [candidatesByHandle, setCandidatesByHandle] = useState<Map<string, string[]>>(new Map())
   const [entryByInventoryId, setEntryByInventoryId] = useState<Map<string, CandidateEntry>>(new Map())
+  const [recoveryById, setRecoveryById] = useState<Map<string, LegacyMediaPreviewRecoveryEntry>>(new Map())
 
   // --- UI selection state ---
   const [selectedHandle, setSelectedHandle] = useState<string | null>(null)
@@ -137,19 +139,22 @@ export function LegacyMediaBoardV2Client() {
 
     async function load() {
       try {
-        const [invRes, candidatesRes, productsRes] = await Promise.all([
+        const [invRes, candidatesRes, productsRes, recoveryRes] = await Promise.all([
           fetch(`${V1_API_BASE}/inventory`),
           fetch(`${V1_API_BASE}/candidates`),
           fetch(`${V1_API_BASE}/products`),
+          fetch(`${V1_API_BASE}/preview-recovery`),
         ])
 
         if (!invRes.ok) throw new Error(`inventory: ${invRes.status} ${invRes.statusText}`)
         if (!candidatesRes.ok) throw new Error(`candidates: ${candidatesRes.status} ${candidatesRes.statusText}`)
         if (!productsRes.ok) throw new Error(`products: ${productsRes.status} ${productsRes.statusText}`)
+        if (!recoveryRes.ok) throw new Error(`preview-recovery: ${recoveryRes.status} ${recoveryRes.statusText}`)
 
         const invJson = (await invRes.json()) as { items?: InvItem[] }
         const candidatesJson = (await candidatesRes.json()) as { entries?: CandidateEntry[] }
         const productsJson = (await productsRes.json()) as { products?: ProductRow[] }
+        const recoveryJson = (await recoveryRes.json()) as { entries?: Record<string, LegacyMediaPreviewRecoveryEntry> }
 
         if (cancelled) return
 
@@ -172,10 +177,16 @@ export function LegacyMediaBoardV2Client() {
           }
         }
 
+        const recMap = new Map<string, LegacyMediaPreviewRecoveryEntry>()
+        for (const [id, entry] of Object.entries(recoveryJson.entries ?? {})) {
+          if (entry?.found_path) recMap.set(id, entry)
+        }
+
         setProducts(prods)
         setInvById(byId)
         setCandidatesByHandle(byHandle)
         setEntryByInventoryId(entryById)
+        setRecoveryById(recMap)
         setStatus("loaded")
       } catch (err) {
         if (cancelled) return
@@ -636,6 +647,7 @@ export function LegacyMediaBoardV2Client() {
           onSetRoleOverride={handleSetRoleOverride}
           activeVariantKey={activeVariantKey}
           variantRoles={currentVariantRoles}
+          recoveryById={recoveryById}
         />
       </div>
     </div>
