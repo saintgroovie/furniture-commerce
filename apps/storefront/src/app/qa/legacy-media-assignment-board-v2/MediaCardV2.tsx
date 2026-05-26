@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import type { InvItem, V2RoleSlot } from "./legacy-board-v2-types"
 import type { VisualRole } from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
 import { VISUAL_ROLE_BADGE_RU } from "@/app/qa/legacy-media-assignment-board/legacy-media-visual-role-ranking"
@@ -234,9 +234,17 @@ export function MediaCardV2({
     showsAsPreview !== undefined ? !showsAsPreview : !!compact
   const domPreviewOk =
     showsAsPreview !== undefined
-      ? showsAsPreview && !imgFailed
+      ? showsAsPreview && staticPreviewOk && !imgFailed
       : (effectivePreviewOk ?? (staticPreviewOk && !imgFailed))
   const showImg = !useCompact && staticPreviewOk && !imgFailed
+
+  const reportPreviewFailure = onPreviewLoadFailed ?? onPreviewLoadFailure
+  useEffect(() => {
+    if (showsAsPreview === false || !reportPreviewFailure) return
+    if (!staticPreviewOk || imgFailed) {
+      reportPreviewFailure(inv.id)
+    }
+  }, [showsAsPreview, staticPreviewOk, imgFailed, inv.id, reportPreviewFailure])
   const roleLabel = VISUAL_ROLE_BADGE_RU[role] ?? "?"
   const shortname = inv.filename.length > 30 ? inv.filename.slice(0, 27) + "…" : inv.filename
   const effectiveStatus = imgFailed ? "file_missing" : preview.status

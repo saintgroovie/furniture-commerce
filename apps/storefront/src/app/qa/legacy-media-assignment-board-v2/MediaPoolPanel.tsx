@@ -269,10 +269,13 @@ export function MediaPoolPanel({
     [filteredItems, runtimeFailedIds]
   )
 
-  const renderedItems = useMemo(
-    () => filteredItems.slice(0, POOL_LIMIT),
-    [filteredItems]
-  )
+  const renderedItems = useMemo(() => {
+    let items = filteredItems
+    if (hideNoPreview) {
+      items = items.filter((i) => itemShowsAsPreview(i, runtimeFailedIds))
+    }
+    return items.slice(0, POOL_LIMIT)
+  }, [filteredItems, hideNoPreview, runtimeFailedIds])
 
   const total = filteredItems.length
   const totalAll = poolItems.length
@@ -347,7 +350,9 @@ export function MediaPoolPanel({
           <div style={styles.emptyFilter}>
             <div style={styles.emptyFilterTitle}>
               {hideNoPreviewContradiction
-                ? "«Скрыть без превью» и фильтр «Без превью» несовместимы — снимите галочку или переключитесь на «Все»."
+                ? "Скрыть без превью включён — карточки без превью скрыты. Снимите галочку или переключитесь на «Все»."
+                : hideNoPreview && activeFilter === "no_preview"
+                ? "Скрыть без превью включён — карточки без превью скрыты."
                 : activeFilter === "selected"
                 ? "Ни одного элемента не назначено — сначала выберите главное или добавьте в галерею."
                 : activeFilter === "unused"
@@ -366,8 +371,11 @@ export function MediaPoolPanel({
         <div style={styles.grid} data-v2-pool-grid>
           {renderedItems.map((item, idx) => {
             const showsAsPreview = itemShowsAsPreview(item, runtimeFailedIds)
+            if (hideNoPreview && !showsAsPreview) return null
             const showNoPreviewSeparator =
-              idx === noPreviewSeparatorIdx && filteredNoPreviewCount > 0
+              !hideNoPreview &&
+              idx === noPreviewSeparatorIdx &&
+              filteredNoPreviewCount > 0
             const scope =
               selectedHandle
                 ? classifyMediaVariantScope(item.inv, selectedHandle, activeVariantKey)
