@@ -99,18 +99,26 @@ const CYRILLIC_TO_LATIN: Record<string, string> = {
 /** Legacy aggregate tab — no longer shown in v2 color strip (kept for persisted state migration). */
 export const LEGACY_ALL_VARIANT_KEY = "__all__"
 
-/** Unresolved color bucket when filename/metadata cannot infer a variant. */
+/** Shared/common media bucket — not a real color tab (internal key unchanged). */
 export const NEEDS_COLOR_VARIANT_KEY = "__needs_color__"
 
-/** Unresolved color bucket — not a confirmed variant. */
-export const NEEDS_COLOR_VARIANT_LABEL_RU = "Без привязки к цвету"
+/** Operator tab label — shared media mode, not a confirmed color. */
+export const NEEDS_COLOR_VARIANT_LABEL_RU = "Общие кадры"
 
+/** Tab tooltip — technical meaning (no hard color binding). */
 export const NEEDS_COLOR_VARIANT_TITLE_RU =
-  "Общие кадры без цветовой привязки. Назначение в галерею добавит фото в конец галерей всех цветов."
+  "Кадры без жёсткой привязки к цвету: нейтральные, общие или с неоднозначной цветовой меткой."
 
-/** Visible helper when colorless tab is active — shown in Media Pool, not only center column. */
+/** Center-column helper when shared tab is active. */
+export const SHARED_COLORLESS_WORKSPACE_HINT_RU =
+  "Кадры без жёсткой привязки к цвету. + Во все галереи добавит фото в конец галерей всех цветов."
+
+export const SHARED_COLORLESS_WORKSPACE_HINT_SUB_RU =
+  "Главное назначается только на конкретном цвете."
+
+/** Visible helper in Media Pool when shared tab is active. */
 export const SHARED_COLORLESS_POOL_HINT_RU =
-  "Общие кадры: + Галерея добавит фото в конец галерей всех цветов. Главное назначается только на конкретном цвете."
+  "Общие кадры: + Во все галереи добавит фото в конец галерей всех цветов."
 
 /** Real color tabs only — excludes pseudo/unresolved buckets. */
 export function listRealColorVariantKeys(variants: V2ColorVariant[]): string[] {

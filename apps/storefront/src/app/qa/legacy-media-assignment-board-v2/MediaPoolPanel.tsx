@@ -191,6 +191,13 @@ export function MediaPoolPanel({
     for (const id of ids) {
       const inv = invById.get(id)
       if (!inv) continue
+      if (
+        sharedColorlessMode &&
+        selectedHandle &&
+        !mediaMatchesVariantKey(inv, selectedHandle, NEEDS_COLOR_VARIANT_KEY)
+      ) {
+        continue
+      }
       const entry = entryByInventoryId.get(id)
       const inferred = inferV2VisualRole(inv, { productHandle: selectedHandle })
       const effectiveFilter = effectiveV2Filter(inv, overrides, { productHandle: selectedHandle })
@@ -208,7 +215,15 @@ export function MediaPoolPanel({
       else noPreview.push(item)
     }
     return [...withPreview, ...noPreview]
-  }, [selectedHandle, invById, candidatesByHandle, entryByInventoryId, roleOverrides, recoveryById])
+  }, [
+    selectedHandle,
+    invById,
+    candidatesByHandle,
+    entryByInventoryId,
+    roleOverrides,
+    recoveryById,
+    sharedColorlessMode,
+  ])
 
   const effectivePreviewableCount = useMemo(
     () => poolItems.filter((i) => itemShowsAsPreview(i, runtimeFailedIds, recoveryById)).length,

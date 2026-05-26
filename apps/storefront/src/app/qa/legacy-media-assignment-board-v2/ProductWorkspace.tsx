@@ -10,7 +10,11 @@ import type {
   V2RoleSlot,
 } from "./legacy-board-v2-types"
 import { ColorVariantTabs } from "./ColorVariantTabs"
-import { NEEDS_COLOR_VARIANT_KEY, SHARED_COLORLESS_POOL_HINT_RU } from "./legacy-board-v2-color-variants"
+import {
+  NEEDS_COLOR_VARIANT_KEY,
+  SHARED_COLORLESS_WORKSPACE_HINT_RU,
+  SHARED_COLORLESS_WORKSPACE_HINT_SUB_RU,
+} from "./legacy-board-v2-color-variants"
 import { RoleChecklistPanel, computeRoleRows } from "./RoleChecklistPanel"
 import { MissingRoleStrip } from "./MissingRoleStrip"
 import { StorefrontGallerySection } from "./GalleryStrip"
@@ -164,7 +168,8 @@ export function ProductWorkspace({
 function SharedColorlessHint() {
   return (
     <div style={sharedHintStyles.card} data-v2-shared-colorless-hint>
-      <p style={sharedHintStyles.text}>{SHARED_COLORLESS_POOL_HINT_RU}</p>
+      <p style={sharedHintStyles.text}>{SHARED_COLORLESS_WORKSPACE_HINT_RU}</p>
+      <p style={sharedHintStyles.sub}>{SHARED_COLORLESS_WORKSPACE_HINT_SUB_RU}</p>
     </div>
   )
 }
