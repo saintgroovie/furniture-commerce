@@ -8,8 +8,12 @@
  * - Manual reorder / insert preserved until next normalize heals main/duplicates.
  */
 
-import type { V2ProductState, V2RoleSlot, V2VariantRoleAssignment } from "./legacy-board-v2-types"
+import type { V2ProductState, V2RoleSlot, V2VariantRoleAssignment, InvItem } from "./legacy-board-v2-types"
 import { reorderGalleryIds } from "./legacy-board-v2-gallery-order"
+import {
+  buildCanonicalRepresentativeMap,
+  remapMediaIdThroughCanonicalMap,
+} from "./legacy-board-v2-pool-duplicate-collapse"
 
 export const NON_MAIN_ROLE_SLOTS: readonly V2RoleSlot[] = [
   "front_anfas",
@@ -319,4 +323,56 @@ export function assertV2VariantInvariants(
   }
 
   return errors
+}
+
+/** Remap role/gallery ids to canonical representatives — prevents duplicate export rows. */
+export function canonicalizeProductAssignmentIds(
+  state: V2ProductState,
+  candidateIds: readonly string[],
+  invById: ReadonlyMap<string, InvItem>
+): V2ProductState {
+  const items = candidateIds
+    .map((id) => invById.get(id))
+    .filter((inv): inv is InvItem => !!inv)
+  const canonicalMap = buildCanonicalRepresentativeMap(items)
+  if (canonicalMap.size === 0) return state
+
+  const remap = (id: string | null | undefined): string | null => {
+    if (!id) return null
+    return remapMediaIdThroughCanonicalMap(id, canonicalMap)
+  }
+
+  const rolesByVariant: V2ProductState["rolesByVariant"] = {}
+  for (const [variantKey, roles] of Object.entries(state.rolesByVariant)) {
+    const next: V2VariantRoleAssignment = {}
+    for (const [slot, mediaId] of Object.entries(roles ?? {})) {
+      next[slot as V2RoleSlot] = remap(mediaId as string | null)
+    }
+    rolesByVariant[variantKey] = next
+  }
+
+  const galleriesByVariant: V2ProductState["galleriesByVariant"] = {}
+  for (const [variantKey, gallery] of Object.entries(state.galleriesByVariant)) {
+    const seen = new Set<string>()
+    const next: string[] = []
+    for (const id of gallery ?? []) {
+      const canonical = remap(id)
+      if (!canonical || seen.has(canonical)) continue
+      seen.add(canonical)
+      next.push(canonical)
+    }
+    galleriesByVariant[variantKey] = next
+  }
+
+  const roleOverrides: Record<string, V2RoleSlot> = {}
+  for (const [mediaId, slot] of Object.entries(state.roleOverrides ?? {})) {
+    roleOverrides[remapMediaIdThroughCanonicalMap(mediaId, canonicalMap)] = slot
+  }
+
+  return {
+    ...state,
+    rolesByVariant,
+    galleriesByVariant,
+    roleOverrides,
+  }
 }

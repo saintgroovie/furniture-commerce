@@ -62,6 +62,40 @@ export function loadV2PersistedState(): V2PersistedState | null {
  * Persist the current v2board state to localStorage.
  * Silently swallows storage quota or security errors.
  */
+/** Merge hydrated LS state with in-memory edits — operator overrides win per variant key. */
+export function mergeV2ProductStates(
+  persisted: Record<string, V2ProductState>,
+  current: Record<string, V2ProductState>
+): Record<string, V2ProductState> {
+  const handles = new Set([...Object.keys(persisted), ...Object.keys(current)])
+  const merged: Record<string, V2ProductState> = {}
+  for (const handle of handles) {
+    const fromDisk = persisted[handle]
+    const fromMemory = current[handle]
+    if (!fromDisk) {
+      if (fromMemory) merged[handle] = fromMemory
+      continue
+    }
+    if (!fromMemory) {
+      merged[handle] = fromDisk
+      continue
+    }
+    merged[handle] = {
+      ...fromDisk,
+      ...fromMemory,
+      variantLabelOverrides: {
+        ...(fromDisk.variantLabelOverrides ?? {}),
+        ...(fromMemory.variantLabelOverrides ?? {}),
+      },
+      rolesByVariant: { ...fromDisk.rolesByVariant, ...fromMemory.rolesByVariant },
+      galleriesByVariant: { ...fromDisk.galleriesByVariant, ...fromMemory.galleriesByVariant },
+      roleOverrides: { ...(fromDisk.roleOverrides ?? {}), ...(fromMemory.roleOverrides ?? {}) },
+      operatorVariantEdits: fromMemory.operatorVariantEdits ?? fromDisk.operatorVariantEdits,
+    }
+  }
+  return merged
+}
+
 export function saveV2PersistedState(
   productStates: Record<string, V2ProductState>,
   selectedHandle: string | null

@@ -129,6 +129,8 @@ type Props = {
   duplicateSources?: DuplicateSourceMeta[]
   /** Tooltip listing hidden duplicate filenames / ids */
   duplicateSourcesTitle?: string
+  /** Dev/QA forensic: canonical duplicate collapse key */
+  poolCanonicalKey?: string
   /** Dev/QA: pool inclusion classification (hidden from operator UI) */
   poolClassification?: string
   /** Dev/QA: active | other_color | neutral scope for tab */
@@ -172,6 +174,7 @@ export function MediaCardV2({
   duplicateSourceCount,
   duplicateSources,
   duplicateSourcesTitle,
+  poolCanonicalKey,
   poolClassification,
   poolMediaScope,
 }: Props) {
@@ -373,6 +376,7 @@ export function MediaCardV2({
         showDuplicateBadge ? String(duplicateSourceCount) : undefined
       }
       data-v2-pool-classification={poolClassification}
+      data-v2-pool-canonical-key={poolCanonicalKey}
       data-v2-media-filename={inv.filename || inv.id}
       data-v2-media-scope={poolMediaScope}
     >

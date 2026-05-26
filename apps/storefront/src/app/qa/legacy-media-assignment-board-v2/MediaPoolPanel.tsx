@@ -36,6 +36,7 @@ const POOL_LIMIT = 120
 import { sortPoolExactSkuPriority } from "./legacy-board-v2-pool-sort"
 import {
   collapseExactDuplicatePoolItems,
+  canonicalVisualKey,
   poolDuplicateStats,
 } from "./legacy-board-v2-pool-duplicate-collapse"
 
@@ -522,6 +523,7 @@ export function MediaPoolPanel({
                 ? usage.statusLine
                 : usage.statusLine || (!showsAsPreview ? "без превью" : undefined)
             const dupCount = row.sourceCount
+            const canonicalKey = canonicalVisualKey(item.inv)
             const dupTitle =
               dupCount > 1
                 ? row.sources
@@ -590,6 +592,7 @@ export function MediaPoolPanel({
                   duplicateSourceCount={dupCount > 1 ? dupCount : undefined}
                   duplicateSources={dupCount > 1 ? row.sources : undefined}
                   duplicateSourcesTitle={dupTitle}
+                  poolCanonicalKey={canonicalKey}
                 />
               </React.Fragment>
             )

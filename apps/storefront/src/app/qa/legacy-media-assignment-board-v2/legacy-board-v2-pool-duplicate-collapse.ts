@@ -49,7 +49,13 @@ function normPath(p: string | null | undefined): string {
 export function canonicalVisualKey(inv: InvItem): string {
   const bn = normalizeBasenameForDedupe(inv.filename || "")
   const hash = inv.content_quick_hash?.trim()
-  if (hash && bn) return `exact:hash:${hash}|${bn}`
+  if (hash) return bn ? `exact:hash:${hash}|${bn}` : `exact:hash:${hash}`
+
+  const dg = inv.duplicate_group_key?.trim()
+  if (dg) return `exact:dg:${dg}`
+
+  const rr = normPath(inv.repo_relative_path || inv.source_path || "")
+  if (rr) return `exact:path:${rr}`
 
   const w = inv.width ?? 0
   const h = inv.height ?? 0
@@ -58,8 +64,56 @@ export function canonicalVisualKey(inv: InvItem): string {
     return `exact:dim:${bn}|${w}x${h}|${sz}`
   }
 
-  // Proven static/processed mirror: same basename, no hash — still singleton unless hash/dim match
+  if (bn) return `exact:basename:${bn}`
+
   return `exact:singleton:${inv.id}`
+}
+
+function stableRepresentativeId(members: InvItem[]): string {
+  if (members.length === 1) return members[0]!.id
+  const sorted = [...members].sort((a, b) => {
+    const aLegacy = a.id.includes("legacy") ? 1 : 0
+    const bLegacy = b.id.includes("legacy") ? 1 : 0
+    if (aLegacy !== bLegacy) return aLegacy - bLegacy
+
+    const aPath = normPath(a.repo_relative_path || a.source_path || "")
+    const bPath = normPath(b.repo_relative_path || b.source_path || "")
+    const aStatic = aPath.startsWith("apps/backend/static") ? 0 : 1
+    const bStatic = bPath.startsWith("apps/backend/static") ? 0 : 1
+    if (aStatic !== bStatic) return aStatic - bStatic
+
+    const aFn = (a.filename || a.id).toLowerCase()
+    const bFn = (b.filename || b.id).toLowerCase()
+    if (aFn !== bFn) return aFn.localeCompare(bFn)
+    return a.id.localeCompare(b.id)
+  })
+  return sorted[0]!.id
+}
+
+/** Map every inventory id to the stable representative for its canonical visual group. */
+export function buildCanonicalRepresentativeMap(items: readonly InvItem[]): Map<string, string> {
+  const groups = new Map<string, InvItem[]>()
+  for (const inv of items) {
+    const key = canonicalVisualKey(inv)
+    const list = groups.get(key) ?? []
+    list.push(inv)
+    groups.set(key, list)
+  }
+  const map = new Map<string, string>()
+  for (const members of groups.values()) {
+    const rep = stableRepresentativeId(members)
+    for (const member of members) {
+      map.set(member.id, rep)
+    }
+  }
+  return map
+}
+
+export function remapMediaIdThroughCanonicalMap(
+  mediaId: string,
+  canonicalMap: ReadonlyMap<string, string>
+): string {
+  return canonicalMap.get(mediaId) ?? mediaId
 }
 
 export function sourceTypeLabel(inv: InvItem): string {

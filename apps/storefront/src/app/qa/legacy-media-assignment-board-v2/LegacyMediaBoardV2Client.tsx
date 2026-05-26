@@ -16,6 +16,7 @@ import type { LegacyMediaPreviewRecoveryEntry } from "@/lib/qa/legacy-media-prev
 import { MediaPoolPanel } from "./MediaPoolPanel"
 import {
   buildMergedColorVariants,
+  displayLabelForVariant,
   findMilkVariantKey,
   isPseudoColorVariantKey,
   listRealColorVariantKeys,
@@ -32,6 +33,7 @@ import { ProductWorkspace } from "./ProductWorkspace"
 import { ExportToolbar } from "./ExportToolbar"
 import {
   loadV2PersistedState,
+  mergeV2ProductStates,
   saveV2PersistedState,
 } from "./legacy-board-v2-persistence"
 import {
@@ -40,6 +42,7 @@ import {
   assignMain as syncAssignMain,
   assignRole as syncAssignRole,
   assignRoleAllRealVariants as syncAssignRoleAllRealVariants,
+  canonicalizeProductAssignmentIds,
   clearMain as syncClearMain,
   clearRole as syncClearRole,
   healVariantState,
@@ -105,6 +108,7 @@ export function LegacyMediaBoardV2Client() {
   // --- Persistence state ---
   const [savedAt, setSavedAt] = useState<string | null>(null)
   const hasSavedOnceRef = useRef(false)
+  const hasHydratedRef = useRef(false)
 
   // --- Lifted pool filter state (Commit 3) ---
   const [poolFilter, setPoolFilter] = useState<V2RoleFilter>("all")
@@ -114,14 +118,15 @@ export function LegacyMediaBoardV2Client() {
     setPoolFilter("all")
   }, [selectedHandle])
 
-  // --- Hydrate from localStorage on mount ---
+  // --- Late hydrate: merge disk state without clobbering in-memory operator edits ---
   useEffect(() => {
+    if (hasHydratedRef.current) return
+    hasHydratedRef.current = true
     const persisted = loadV2PersistedState()
-    if (persisted) {
-      setProductStates(persisted.productStates)
-      if (persisted.selectedHandle) setSelectedHandle(persisted.selectedHandle)
-      setSavedAt(persisted.savedAt)
-    }
+    if (!persisted) return
+    setProductStates((prev) => mergeV2ProductStates(persisted.productStates, prev))
+    setSelectedHandle((prev) => prev ?? persisted.selectedHandle)
+    setSavedAt((prev) => prev ?? persisted.savedAt)
   }, [])
 
   // --- Auto-save whenever assignments change (skip initial mount render) ---
@@ -230,11 +235,13 @@ export function LegacyMediaBoardV2Client() {
   )
 
   const realColorVariantLabels = useMemo(
-    () =>
-      colorVariants
+    () => {
+      const state = selectedHandle ? productStates[selectedHandle] ?? null : null
+      return colorVariants
         .filter((v) => !isPseudoColorVariantKey(v.variantKey))
-        .map((v) => v.label),
-    [colorVariants]
+        .map((v) => displayLabelForVariant(v.variantKey, v.label, state))
+    },
+    [colorVariants, selectedHandle, productStates]
   )
 
   const activeVariantKey = useMemo<string>(() => {
@@ -305,10 +312,16 @@ export function LegacyMediaBoardV2Client() {
     (handle: string, variantKey: string, updater: (s: V2ProductState) => V2ProductState) => {
       setProductStates((prev) => {
         const existing = prev[handle] ?? makeEmptyProductState(handle, variantKey)
-        return { ...prev, [handle]: updater(existing) }
+        const candidateIds = candidatesByHandle.get(handle) ?? []
+        const updated = canonicalizeProductAssignmentIds(
+          updater(existing),
+          candidateIds,
+          invById
+        )
+        return { ...prev, [handle]: updated }
       })
     },
-    []
+    [candidatesByHandle, invById]
   )
 
   const handleSetVariant = useCallback(
@@ -395,14 +408,21 @@ export function LegacyMediaBoardV2Client() {
   const handleSetVariantLabel = useCallback(
     (variantKey: string, label: string | null) => {
       if (!selectedHandle) return
-      updateProductState(selectedHandle, activeVariantKey, (s) => {
-        const overrides = { ...(s.variantLabelOverrides ?? {}) }
+      setProductStates((prev) => {
+        const existing = prev[selectedHandle] ?? makeEmptyProductState(selectedHandle, variantKey)
+        const overrides = { ...(existing.variantLabelOverrides ?? {}) }
         if (label === null) delete overrides[variantKey]
         else overrides[variantKey] = label
-        return { ...s, variantLabelOverrides: overrides }
+        const next = {
+          ...prev,
+          [selectedHandle]: { ...existing, variantLabelOverrides: overrides },
+        }
+        saveV2PersistedState(next, selectedHandle)
+        setSavedAt(new Date().toISOString())
+        return next
       })
     },
-    [selectedHandle, activeVariantKey, updateProductState]
+    [selectedHandle]
   )
 
   const handleAddVariant = useCallback(
@@ -496,6 +516,7 @@ export function LegacyMediaBoardV2Client() {
     setSelectedHandle(null)
     setSavedAt(null)
     hasSavedOnceRef.current = false
+    hasHydratedRef.current = false
   }, [])
 
   // --- Filtered product list ---
