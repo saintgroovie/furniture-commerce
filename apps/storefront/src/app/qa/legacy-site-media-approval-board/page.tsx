@@ -2,9 +2,9 @@ import type { Metadata } from "next"
 import { LegacySiteMediaApprovalBoardClient } from "./LegacySiteMediaApprovalBoardClient"
 
 export const metadata: Metadata = {
-  title: "Legacy Site Media Approval Board (QA)",
+  title: "Legacy Site Media Supplement Triage (QA)",
   description:
-    "Dev-only visual board for legacy-site supplement candidate approval. localStorage + JSON export. No normalized writes.",
+    "Dev-only supplement triage: duplicate context, role assignment, export for normalized supplement pipeline.",
 }
 
 export default function LegacySiteMediaApprovalBoardPage() {

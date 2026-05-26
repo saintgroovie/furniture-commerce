@@ -12,13 +12,16 @@ export function buildExportPayload(input: ExportInput): ChecklistPayload {
     candidate_count: input.items.length,
     default_decision: input.base.default_decision ?? "pending",
     reviewed_at: now,
-    review_tool: "legacy-site-media-approval-board",
+    review_tool: "legacy-site-media-supplement-triage-board",
     source_pack_path: "tmp/legacy-site-media-approval-pack",
     items: input.items.map((item) => ({
       ...item,
       designer_decision: item.designer_decision as DesignerDecision,
       notes: item.notes ?? "",
       do_not_auto_apply: item.do_not_auto_apply ?? true,
+      operator_role: item.operator_role ?? null,
+      operator_duplicate_status: item.operator_duplicate_status ?? "unchecked",
+      operator_duplicate_note: item.operator_duplicate_note ?? "",
     })),
   }
 }
@@ -41,7 +44,7 @@ export function downloadExportJson(input: ExportInput): void {
   const url = URL.createObjectURL(blob)
   const a = document.createElement("a")
   a.href = url
-  a.download = `legacy-site-media-approval-checklist-${new Date().toISOString().slice(0, 10)}.json`
+  a.download = `legacy-site-media-triage-${new Date().toISOString().slice(0, 10)}.json`
   a.click()
   URL.revokeObjectURL(url)
 }
