@@ -19,6 +19,7 @@ import {
   isMediaInAllRealVariantGalleries,
   mediaMatchesVariantKey,
   NEEDS_COLOR_VARIANT_KEY,
+  SHARED_COLORLESS_POOL_HINT_RU,
   type MediaVariantScope,
 } from "./legacy-board-v2-color-variants"
 import { resolvePoolUsageStatus } from "./legacy-board-v2-gallery-source"
@@ -98,6 +99,8 @@ type Props = {
   activeVariantKey?: string
   /** Real color variant keys (for shared colorless gallery replication UI) */
   realColorVariantKeys?: string[]
+  /** Human labels for real color variants (for visible confirmation) */
+  realColorVariantLabels?: string[]
   /** Full product galleries map — needed for shared colorless usage state */
   galleriesByVariant?: Record<string, string[]>
   /** Role slots for active variant (for transparent pool status) */
@@ -134,12 +137,18 @@ export function MediaPoolPanel({
   onSetRoleOverride,
   activeVariantKey = "__all__",
   realColorVariantKeys = [],
+  realColorVariantLabels = [],
   galleriesByVariant = {},
   variantRoles = {},
   recoveryById,
 }: Props) {
   const [hideNoPreview, setHideNoPreview] = useState(false)
   const [runtimeFailedIds, setRuntimeFailedIds] = useState<Set<string>>(() => new Set())
+  const [sharedAddNotice, setSharedAddNotice] = useState<string | null>(null)
+
+  useEffect(() => {
+    setSharedAddNotice(null)
+  }, [selectedHandle, activeVariantKey])
 
   useEffect(() => {
     setRuntimeFailedIds(new Set())
@@ -169,7 +178,7 @@ export function MediaPoolPanel({
       const usage = resolvePoolUsageStatus(mediaId, variantRoles, [], scope)
       let statusLine = usage.statusLine
       if (inAllGalleries) {
-        statusLine = "✓ Общая галерея · все цвета"
+        statusLine = "✓ Во всех галереях"
       } else if (scope === "neutral" || scope === "active") {
         statusLine = statusLine || "общий кадр"
       }
@@ -189,7 +198,17 @@ export function MediaPoolPanel({
     )
   }
 
-  // Build pool items — static preview tier, then preview-first sort at render
+  const handleGalleryAdd = useCallback(
+    (mediaId: string) => {
+      onAddToGallery(mediaId)
+      if (sharedColorlessMode && realColorVariantLabels.length > 0) {
+        setSharedAddNotice(`Добавлено в конец галерей: ${realColorVariantLabels.join(", ")}`)
+      }
+    },
+    [onAddToGallery, sharedColorlessMode, realColorVariantLabels]
+  )
+
+  const sharedGalleryButtonLabel = sharedColorlessMode ? "+ Во все галереи" : undefined
   const poolItems = useMemo<PoolItem[]>(() => {
     if (!selectedHandle) return []
     const ids = candidatesByHandle.get(selectedHandle) ?? []
@@ -362,6 +381,18 @@ export function MediaPoolPanel({
           onFilter={onSetFilter}
         />
 
+        {sharedColorlessMode && (
+          <div style={styles.sharedPoolHint} data-v2-pool-shared-hint>
+            {SHARED_COLORLESS_POOL_HINT_RU}
+          </div>
+        )}
+
+        {sharedAddNotice && (
+          <div style={styles.sharedAddNotice} data-v2-pool-shared-notice role="status">
+            {sharedAddNotice}
+          </div>
+        )}
+
         {/* Hide-no-preview toggle */}
         <label
           style={styles.toggleRow}
@@ -445,7 +476,7 @@ export function MediaPoolPanel({
                   identityConfidence={item.identityConfidence}
                   selectedHandle={selectedHandle}
                   onSetMain={onSetMain}
-                  onAddToGallery={onAddToGallery}
+                  onAddToGallery={handleGalleryAdd}
                   showsAsPreview={showsAsPreview}
                   onPreviewLoadFailed={handlePreviewLoadFailed}
                   onPreviewLoadFailure={handlePreviewLoadFailed}
@@ -459,6 +490,7 @@ export function MediaPoolPanel({
                   previewRecovery={recoveryById?.get(item.inv.id) ?? null}
                   mainActionDisabled={sharedColorlessMode}
                   mainActionDisabledTitle={mainActionDisabledTitle}
+                  galleryButtonLabel={sharedGalleryButtonLabel}
                 />
               </React.Fragment>
             )
@@ -549,6 +581,26 @@ const styles = {
     borderBottom: "1px solid #f0f0f0",
     flexShrink: 0,
     fontVariantNumeric: "tabular-nums" as const,
+  },
+  sharedPoolHint: {
+    margin: "0",
+    padding: "8px 12px",
+    fontSize: "11px",
+    lineHeight: 1.45,
+    color: "#2a4468",
+    background: "#eef3fb",
+    borderBottom: "1px solid #d4e0f4",
+    fontWeight: 500,
+  },
+  sharedAddNotice: {
+    margin: "0",
+    padding: "8px 12px",
+    fontSize: "11px",
+    lineHeight: 1.4,
+    color: "#1b5e20",
+    background: "#e8f5e9",
+    borderBottom: "1px solid #a5d6a7",
+    fontWeight: 600,
   },
   empty: {
     padding: "20px 14px",

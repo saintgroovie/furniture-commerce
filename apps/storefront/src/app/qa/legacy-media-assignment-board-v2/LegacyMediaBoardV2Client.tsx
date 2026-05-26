@@ -229,6 +229,14 @@ export function LegacyMediaBoardV2Client() {
     [colorVariants]
   )
 
+  const realColorVariantLabels = useMemo(
+    () =>
+      colorVariants
+        .filter((v) => !isPseudoColorVariantKey(v.variantKey))
+        .map((v) => v.label),
+    [colorVariants]
+  )
+
   const activeVariantKey = useMemo<string>(() => {
     if (!selectedHandle || colorVariants.length === 0) return NEEDS_COLOR_VARIANT_KEY
     const state = productStates[selectedHandle]
@@ -662,6 +670,7 @@ export function LegacyMediaBoardV2Client() {
           variantRoles={currentVariantRoles}
           recoveryById={recoveryById}
           realColorVariantKeys={realColorVariantKeys}
+          realColorVariantLabels={realColorVariantLabels}
           galleriesByVariant={currentProductState?.galleriesByVariant ?? {}}
         />
       </div>

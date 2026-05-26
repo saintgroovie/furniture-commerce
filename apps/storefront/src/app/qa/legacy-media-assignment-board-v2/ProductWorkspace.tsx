@@ -10,7 +10,7 @@ import type {
   V2RoleSlot,
 } from "./legacy-board-v2-types"
 import { ColorVariantTabs } from "./ColorVariantTabs"
-import { NEEDS_COLOR_VARIANT_KEY, NEEDS_COLOR_VARIANT_TITLE_RU } from "./legacy-board-v2-color-variants"
+import { NEEDS_COLOR_VARIANT_KEY, SHARED_COLORLESS_POOL_HINT_RU } from "./legacy-board-v2-color-variants"
 import { RoleChecklistPanel, computeRoleRows } from "./RoleChecklistPanel"
 import { MissingRoleStrip } from "./MissingRoleStrip"
 import { StorefrontGallerySection } from "./GalleryStrip"
@@ -164,11 +164,7 @@ export function ProductWorkspace({
 function SharedColorlessHint() {
   return (
     <div style={sharedHintStyles.card} data-v2-shared-colorless-hint>
-      <p style={sharedHintStyles.text}>{NEEDS_COLOR_VARIANT_TITLE_RU}</p>
-      <p style={sharedHintStyles.sub}>
-        Используйте <strong>+ Галерея</strong> — кадр добавится в конец галереи каждого цвета.{" "}
-        <strong>★ Главное</strong> назначайте на конкретном цвете.
-      </p>
+      <p style={sharedHintStyles.text}>{SHARED_COLORLESS_POOL_HINT_RU}</p>
     </div>
   )
 }

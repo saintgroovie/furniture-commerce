@@ -65,3 +65,17 @@ body:has(.legacy-media-board-v2-root) [data-v2-role-grid] {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Media Pool cards — role select must not clip label baseline */
+body:has(.legacy-media-board-v2-root) [data-v2-pool-card-footer] {
+  min-height: 96px;
+  padding-bottom: 14px;
+}
+
+body:has(.legacy-media-board-v2-root) [data-v2-pool-role-select] {
+  min-height: 36px;
+  padding: 8px 10px;
+  font-size: 12px;
+  line-height: 1.35;
+  box-sizing: border-box;
+}

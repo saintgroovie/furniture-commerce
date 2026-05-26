@@ -113,6 +113,8 @@ type Props = {
   mainActionDisabled?: boolean
   /** Tooltip when ★ Главное is disabled */
   mainActionDisabledTitle?: string
+  /** Override gallery button label (e.g. «+ Во все галереи») */
+  galleryButtonLabel?: string
   /** Called when operator changes the role override via dropdown */
   onSetRoleOverride?: (mediaId: string, role: V2RoleSlot | null) => void
   /** Parent-owned effective preview — drives filter, sort, and DOM proof attributes */
@@ -142,6 +144,7 @@ export function MediaCardV2({
   poolActionsDisabled,
   mainActionDisabled,
   mainActionDisabledTitle,
+  galleryButtonLabel,
   roleOverride,
   onSetRoleOverride,
   effectivePreviewOk,
@@ -224,9 +227,19 @@ export function MediaCardV2({
     onPreviewLoadFailed?.(inv.id)
   }
 
-  // Role override select element — shared between full and compact cards
+  const galleryBtnLabel = isInGallery
+    ? (galleryButtonLabel ? "✓ Во всех галереях" : "✓ Галерея")
+    : (galleryButtonLabel ?? "+ Галерея")
+
+  // Role override select — full-width row with visible label (not cramped native chip)
   const roleControl = onSetRoleOverride ? (
-    <div style={styles.roleRow}>
+    <div style={styles.roleBlock} data-v2-pool-role-block>
+      <div style={styles.roleBlockHeader}>
+        <span style={styles.roleBlockLabel}>Роль</span>
+        <span style={styles.roleBlockValue} title={roleControlTitle}>
+          {displayRoleLabel}
+        </span>
+      </div>
       <select
         style={{
           ...styles.roleSelect,
@@ -236,6 +249,7 @@ export function MediaCardV2({
         onChange={handleRoleOverrideChange}
         title={roleControlTitle}
         aria-label={`Роль: ${displayRoleLabel}`}
+        data-v2-pool-role-select
       >
         <option value="">{displayRoleLabel}</option>
         {Object.entries(ROLE_SLOT_LABELS).map(([k, v]) => (
@@ -329,19 +343,7 @@ export function MediaCardV2({
       data-v2-pool-other-color={isOtherColor ? "true" : undefined}
       data-v2-pool-dimmed={isDimmed ? "footer" : undefined}
     >
-      {poolUsageLine && (
-        <div
-          style={{
-            ...styles.poolUsageBanner,
-            ...(isOtherColor ? styles.poolUsageBannerOther : {}),
-            ...(poolUsageLine === "общий кадр" ? styles.poolUsageBannerNeutral : {}),
-          }}
-          data-v2-pool-usage-line={poolUsageLine}
-        >
-          {poolUsageLine}
-        </div>
-      )}
-      {/* Image wrap — always full opacity; dimming only on footer if assigned */}
+      {/* Image wrap — status chips moved to footer to avoid top crowding */}
       <div style={styles.imageWrap} data-v2-pool-preview-wrap>
         {showImg ? (
           <img
@@ -391,15 +393,34 @@ export function MediaCardV2({
         )}
       </div>
 
-      {/* Footer: filename + primary actions + role override */}
-      <div style={{ ...styles.footer, ...(isDimmed ? styles.footerDimmed : {}) }}>
+      {/* Footer: filename + status + actions + role */}
+      <div
+        style={{ ...styles.footer, ...(isDimmed ? styles.footerDimmed : {}) }}
+        data-v2-pool-card-footer
+      >
         <div style={styles.filename} title={inv.filename}>{shortname}</div>
+        {poolUsageLine ? (
+          <div
+            style={{
+              ...styles.footerStatusChip,
+              ...(isOtherColor ? styles.footerStatusChipOther : {}),
+              ...(poolUsageLine === "общий кадр" ? styles.footerStatusChipNeutral : {}),
+              ...(poolUsageLine.includes("Во всех") || poolUsageLine.includes("Общая")
+                ? styles.footerStatusChipShared
+                : {}),
+            }}
+            data-v2-pool-usage-line={poolUsageLine}
+          >
+            {poolUsageLine}
+          </div>
+        ) : null}
         <div style={styles.primaryActions}>
           <button
             style={{
               ...styles.btnMain,
               ...(isMain ? styles.btnMainActive : {}),
-              ...(actionsDisabled ? styles.btnDisabled : {}),
+              ...(mainDisabled ? styles.btnMainDisabled : {}),
+              ...(actionsDisabled && !mainDisabled ? styles.btnDisabled : {}),
             }}
           onClick={handleSetMain}
           disabled={mainBtnDisabled}
@@ -417,7 +438,7 @@ export function MediaCardV2({
             disabled={!!isInGallery || actionsDisabled}
             title={actionsDisabled ? otherColorTitle : undefined}
           >
-            {isInGallery ? "✓ Галерея" : "+ Галерея"}
+            {galleryBtnLabel}
           </button>
         </div>
         {roleControl}
@@ -452,7 +473,7 @@ const styles = {
   imageWrap: {
     position: "relative" as const,
     width: "100%",
-    height: "160px",
+    height: "148px",
     background: "#f0f0f0",
     overflow: "hidden",
     flexShrink: 0,
@@ -553,7 +574,7 @@ const styles = {
     fontWeight: 700,
   },
   footer: {
-    padding: "8px 8px 10px",
+    padding: "8px 10px 14px",
     display: "flex",
     flexDirection: "column" as const,
     gap: "6px",
@@ -562,6 +583,35 @@ const styles = {
     overflow: "visible",
     borderBottomLeftRadius: "5px",
     borderBottomRightRadius: "5px",
+    minHeight: "96px",
+    boxSizing: "border-box" as const,
+  },
+  footerStatusChip: {
+    fontSize: "10px",
+    fontWeight: 700,
+    lineHeight: 1.35,
+    padding: "3px 6px",
+    borderRadius: "4px",
+    background: "#eef4ff",
+    color: "#1a3a6e",
+    border: "1px solid #d0e0f8",
+    wordBreak: "break-word" as const,
+    whiteSpace: "normal" as const,
+  },
+  footerStatusChipOther: {
+    background: "#f3f4f6",
+    color: "#5a6478",
+    border: "1px solid #d8dce4",
+  },
+  footerStatusChipNeutral: {
+    background: "#f0faf0",
+    color: "#2d5a2d",
+    border: "1px solid #c8e6c9",
+  },
+  footerStatusChipShared: {
+    background: "#e8f5e9",
+    color: "#1b5e20",
+    border: "1px solid #81c784",
   },
   filename: {
     fontSize: "10px",
@@ -596,6 +646,13 @@ const styles = {
     color: "#7a5a00",
     cursor: "default",
     opacity: 0.85,
+  },
+  btnMainDisabled: {
+    border: "1px solid #ddd",
+    background: "#f0f0f0",
+    color: "#999",
+    cursor: "not-allowed",
+    opacity: 1,
   },
   btnGallery: {
     flex: 1,
@@ -766,31 +823,53 @@ const styles = {
   // ---------------------------------------------------------------------------
   // Role override control (shown in card footer when onSetRoleOverride is provided)
   // ---------------------------------------------------------------------------
-  roleRow: {
+  roleBlock: {
     display: "flex",
-    alignItems: "stretch",
+    flexDirection: "column" as const,
     gap: "4px",
-    paddingTop: "5px",
-    borderTop: "1px solid #f0f0f0",
+    paddingTop: "6px",
     marginTop: "2px",
+    borderTop: "1px solid #ececec",
     width: "100%",
-    flexWrap: "wrap" as const,
-    overflow: "visible",
+  },
+  roleBlockHeader: {
+    display: "flex",
+    alignItems: "baseline",
+    justifyContent: "space-between",
+    gap: "6px",
+    lineHeight: 1.3,
+  },
+  roleBlockLabel: {
+    fontSize: "10px",
+    fontWeight: 700,
+    color: "#888",
+    textTransform: "uppercase" as const,
+    letterSpacing: "0.04em",
+    flexShrink: 0,
+  },
+  roleBlockValue: {
+    fontSize: "11px",
+    fontWeight: 600,
+    color: "#333",
+    textAlign: "right" as const,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap" as const,
+    minWidth: 0,
   },
   roleSelect: {
-    flex: 1,
-    minWidth: 0,
     width: "100%",
-    fontSize: "11px",
-    border: "1px solid #e0e0e0",
-    borderRadius: "4px",
-    background: "#fafafa",
-    color: "#333",
-    padding: "5px 6px",
-    minHeight: "28px",
+    fontSize: "12px",
+    border: "1px solid #ccc",
+    borderRadius: "5px",
+    background: "#fff",
+    color: "#222",
+    padding: "8px 10px",
+    minHeight: "36px",
     lineHeight: "18px",
     boxSizing: "border-box" as const,
     cursor: "pointer",
+    marginBottom: "2px",
   },
   roleSelectOverride: {
     background: "#fff8f0",

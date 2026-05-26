@@ -108,6 +108,10 @@ export const NEEDS_COLOR_VARIANT_LABEL_RU = "Без привязки к цвет
 export const NEEDS_COLOR_VARIANT_TITLE_RU =
   "Общие кадры без цветовой привязки. Назначение в галерею добавит фото в конец галерей всех цветов."
 
+/** Visible helper when colorless tab is active — shown in Media Pool, not only center column. */
+export const SHARED_COLORLESS_POOL_HINT_RU =
+  "Общие кадры: + Галерея добавит фото в конец галерей всех цветов. Главное назначается только на конкретном цвете."
+
 /** Real color tabs only — excludes pseudo/unresolved buckets. */
 export function listRealColorVariantKeys(variants: V2ColorVariant[]): string[] {
   return variants
