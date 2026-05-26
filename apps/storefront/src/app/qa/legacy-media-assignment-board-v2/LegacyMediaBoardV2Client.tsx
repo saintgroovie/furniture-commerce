@@ -52,7 +52,7 @@ import {
 } from "./legacy-board-v2-state-sync"
 import { V2_BOARD_BUILD, V2_BOARD_BUILD_LABEL } from "./legacy-board-v2-build"
 
-const V1_API_BASE = "/qa/legacy-media-assignment-board/api"
+const V2_API_BASE = "/qa/legacy-media-assignment-board-v2/api"
 
 function productReadiness(
   state: V2ProductState | undefined,
@@ -148,10 +148,10 @@ export function LegacyMediaBoardV2Client() {
     async function load() {
       try {
         const [invRes, candidatesRes, productsRes, recoveryRes] = await Promise.all([
-          fetch(`${V1_API_BASE}/inventory`),
-          fetch(`${V1_API_BASE}/candidates`),
-          fetch(`${V1_API_BASE}/products`),
-          fetch(`${V1_API_BASE}/preview-recovery`),
+          fetch(`${V2_API_BASE}/inventory`),
+          fetch(`${V2_API_BASE}/candidates`),
+          fetch(`${V2_API_BASE}/products`),
+          fetch(`${V2_API_BASE}/preview-recovery`),
         ])
 
         if (!invRes.ok) throw new Error(`inventory: ${invRes.status} ${invRes.statusText}`)
@@ -561,7 +561,7 @@ export function LegacyMediaBoardV2Client() {
         <div style={{ ...styles.statusBar, ...styles.errorBar }}>
           <strong>Fetch failed:</strong> {error}
           <div style={styles.errorHint}>
-            Убедитесь, что dev server запущен и v1 QA API доступен по <code>{V1_API_BASE}</code>
+            Убедитесь, что dev server запущен и v2 QA API доступен по <code>{V2_API_BASE}</code>
           </div>
         </div>
       )}
