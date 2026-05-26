@@ -50,7 +50,7 @@ body:has(.legacy-media-board-v2-root) [data-v2-gallery-drop-gap][data-active="tr
 body:has(.legacy-media-board-v2-root) [data-v2-role-grid] {
   display: grid;
   grid-template-columns: repeat(3, minmax(240px, 1fr));
-  gap: 8px;
+  gap: 6px;
   align-items: start;
 }
 

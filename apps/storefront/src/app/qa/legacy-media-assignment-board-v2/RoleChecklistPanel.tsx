@@ -153,6 +153,7 @@ export function RoleChecklistPanel({
               key={row.slot}
               data-v2-role-slot={row.slot}
               data-v2-role-slot-filled={row.isCovered && row.source === "explicit" ? "true" : "false"}
+              data-v2-role-slot-empty={isFilledExplicit ? undefined : "true"}
               data-v2-role-slot-media-id={row.mediaId ?? undefined}
               style={{
                 ...styles.slot,
@@ -165,7 +166,13 @@ export function RoleChecklistPanel({
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
             >
-              <div style={styles.slotHeader} data-v2-role-slot-header>
+              <div
+                style={{
+                  ...styles.slotHeader,
+                  ...(isFilledExplicit ? {} : styles.slotHeaderEmpty),
+                }}
+                data-v2-role-slot-header
+              >
                 <span
                   style={{
                     ...styles.slotLabel,
@@ -254,7 +261,7 @@ export function RoleChecklistPanel({
                   <div style={styles.emptyThumb}>
                     <span style={styles.emptyDropIcon}>{isDragTarget ? "⊕" : "+"}</span>
                     <span style={styles.emptySlotHint}>
-                      {isDragTarget ? "Отпустите здесь" : "Перетащите фото сюда"}
+                      {isDragTarget ? "Отпустите" : "Перетащите сюда"}
                     </span>
                   </div>
                 )}
@@ -299,15 +306,15 @@ export function RoleChecklistPanel({
   )
 }
 
-/** Balanced sizes — role board + vitrine visible together at 1440×900 */
-const THUMB_FILLED_H = 148
-const THUMB_EMPTY_H = 112
+/** Filled = medium content cards; empty = compact drop targets */
+const THUMB_FILLED_H = 142
+const THUMB_EMPTY_H = 74
 
 const styles = {
   roleBoard: {
     flexShrink: 0,
-    margin: "4px 12px 0",
-    padding: "6px 10px 8px",
+    margin: "3px 12px 0",
+    padding: "5px 10px 6px",
     background: "#fff",
     border: "1px solid #d4dce8",
     borderRadius: "10px",
@@ -348,12 +355,12 @@ const styles = {
     transition: "box-shadow 0.12s, border-color 0.12s",
   },
   slotSizeFilled: {
-    height: "204px",
-    maxHeight: "215px",
+    height: "198px",
+    maxHeight: "210px",
   },
   slotSizeEmpty: {
-    height: "168px",
-    maxHeight: "180px",
+    height: "128px",
+    maxHeight: "138px",
   },
   slotEmpty: {
     borderColor: "#c5ced8",
@@ -384,6 +391,9 @@ const styles = {
     flexShrink: 0,
     borderBottom: "1px solid #eef1f6",
     background: "rgba(255,255,255,0.92)",
+  },
+  slotHeaderEmpty: {
+    padding: "4px 8px 3px",
   },
   slotLabel: {
     fontSize: "12px",
@@ -452,6 +462,7 @@ const styles = {
     height: `${THUMB_EMPTY_H}px`,
     minHeight: `${THUMB_EMPTY_H}px`,
     maxHeight: `${THUMB_EMPTY_H}px`,
+    background: "#f0f2f6",
   },
   thumbAreaMain: {
     background: "#e8f0ff",
@@ -475,24 +486,24 @@ const styles = {
     flexDirection: "column" as const,
     alignItems: "center",
     justifyContent: "center",
-    gap: "8px",
+    gap: "3px",
     width: "100%",
     height: "100%",
-    padding: "12px",
+    padding: "4px 6px",
     boxSizing: "border-box" as const,
   },
   emptyDropIcon: {
-    fontSize: "32px",
-    color: "#a8b8cc",
+    fontSize: "24px",
+    color: "#b0bcc8",
     lineHeight: 1,
     fontWeight: 300,
   },
   emptySlotHint: {
-    fontSize: "11px",
-    color: "#7a8aa0",
+    fontSize: "10px",
+    color: "#8a96a8",
     textAlign: "center" as const,
-    lineHeight: 1.4,
-    padding: "0 8px",
+    lineHeight: 1.25,
+    padding: "0 4px",
     fontWeight: 500,
   },
   manualBadge: {
