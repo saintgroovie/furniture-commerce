@@ -36,16 +36,48 @@ export type PoolTabClassification = RealColorPoolClassification | SharedTriagePo
 
 const ROLE_SHARED_TABS = new Set(["interior", "detail", "lifestyle", "scheme"])
 
+function filenameImpliesColorToken(fn: string, colorKey: string): boolean {
+  const lower = fn.toLowerCase()
+  const key = colorKey.toLowerCase()
+  if (lower.includes(`color_${key}`)) return true
+  if (new RegExp(`[-_]${key}[-_.]`, "i").test(lower)) return true
+  if (key === "cream" && /[-_](milk|cream|molochny)[-_.]/i.test(lower)) return true
+  return false
+}
+
+/** Exact-SKU media confidently owned by one real color tab (not neutral gallery/iso). */
+export function isConfidentColorOwnedMedia(
+  inv: InvItem,
+  productHandle: string,
+  realColorVariantKeys: readonly string[]
+): boolean {
+  if (!isExactSkuMedia(inv, productHandle)) return false
+  if (isNeutralSharedMedia(inv, productHandle)) return false
+
+  const fn = inv.filename || ""
+  const token = extractColorTokenFromMedia(inv, productHandle)
+
+  for (const key of realColorVariantKeys) {
+    if (classifyMediaVariantScope(inv, productHandle, key) !== "active") continue
+    if (token === key) return true
+    if (!token && filenameImpliesColorToken(fn, key)) return true
+  }
+  return false
+}
+
 function hasConfidentRealColorToken(
   inv: InvItem,
   productHandle: string,
   realColorVariantKeys: readonly string[]
 ): string | null {
+  if (!isConfidentColorOwnedMedia(inv, productHandle, realColorVariantKeys)) return null
   const token = extractColorTokenFromMedia(inv, productHandle)
-  if (!token) return null
-  if (!realColorVariantKeys.includes(token)) return null
-  if (!isExactSkuMedia(inv, productHandle)) return null
-  return token
+  if (token && realColorVariantKeys.includes(token)) return token
+  const fn = inv.filename || ""
+  for (const key of realColorVariantKeys) {
+    if (filenameImpliesColorToken(fn, key)) return key
+  }
+  return null
 }
 
 /**
@@ -73,27 +105,30 @@ export function legacySharedPoolPredicate(
 }
 
 /**
- * Общие кадры — full top_candidate pool (same ids as color tabs).
- * Sort ranks cross-SKU / neutral / ambiguous above confident single-color shots.
+ * Общие кадры — broad triage pool: everything in top_candidate except confident
+ * single-color exact-SKU shots (those belong on real color tabs).
  */
 export function shouldIncludeInSharedTriagePool(
-  _inv: InvItem,
-  _productHandle: string,
-  _realColorVariantKeys: readonly string[]
+  inv: InvItem,
+  productHandle: string,
+  realColorVariantKeys: readonly string[]
 ): boolean {
+  if (isConfidentColorOwnedMedia(inv, productHandle, realColorVariantKeys)) {
+    return false
+  }
   return true
 }
 
-/** Sort tier for shared triage tab — lower appears first (after preview tier). */
+/** Sort tier for shared triage tab — lower appears first (within preview tier). */
 export function sharedTriageSortRank(inv: InvItem, productHandle: string): number {
   if (isCrossSkuFilename(inv, productHandle)) return 0
   if (!isExactSkuMedia(inv, productHandle)) return 1
-  if (isNeutralSharedMedia(inv, productHandle)) return 2
   const role = inferV2VisualRole(inv, { productHandle }).role
-  if (ROLE_SHARED_TABS.has(role)) return 3
+  if (ROLE_SHARED_TABS.has(role)) return 2
   const token = extractColorTokenFromMedia(inv, productHandle)
-  if (!token) return 4
-  return 10
+  if (!token) return 3
+  if (isNeutralSharedMedia(inv, productHandle)) return 5
+  return 4
 }
 
 export function classifyForRealColorTab(
@@ -119,8 +154,8 @@ export function classifyForSharedTriageTab(
 ): SharedTriagePoolClassification {
   if (!staticPreviewable) return "other_shared_candidate"
 
-  const confidentColor = hasConfidentRealColorToken(inv, productHandle, realColorVariantKeys)
-  if (confidentColor) return "other_shared_candidate"
+  const confidentColor = isConfidentColorOwnedMedia(inv, productHandle, realColorVariantKeys)
+  if (confidentColor) return "excluded_confident_color_specific"
 
   if (duplicateSourceCount && duplicateSourceCount > 1) return "duplicate_cluster"
 

@@ -111,6 +111,12 @@ export function sortPoolExactSkuPriority(
     const bPreview = itemShowsAsPreview(b, failed, recoveryById)
     if (aPreview !== bPreview) return aPreview ? -1 : 1
 
+    if (productHandle && variantKey === NEEDS_COLOR_VARIANT_KEY) {
+      const aShared = sharedTriageSortRank(a.inv, productHandle)
+      const bShared = sharedTriageSortRank(b.inv, productHandle)
+      if (aShared !== bShared) return aShared - bShared
+    }
+
     const aExact = isExactSkuMedia(a.inv, productHandle) ? 0 : 1
     const bExact = isExactSkuMedia(b.inv, productHandle) ? 0 : 1
     if (aExact !== bExact) return aExact - bExact
@@ -118,12 +124,6 @@ export function sortPoolExactSkuPriority(
     const aCross = isCrossSkuFilename(a.inv, productHandle) ? 1 : 0
     const bCross = isCrossSkuFilename(b.inv, productHandle) ? 1 : 0
     if (aCross !== bCross) return aCross - bCross
-
-    if (productHandle && variantKey === NEEDS_COLOR_VARIANT_KEY) {
-      const aShared = sharedTriageSortRank(a.inv, productHandle)
-      const bShared = sharedTriageSortRank(b.inv, productHandle)
-      if (aShared !== bShared) return aShared - bShared
-    }
 
     if (productHandle && variantKey !== "__all__" && variantKey !== NEEDS_COLOR_VARIANT_KEY) {
       const sa = classifyMediaVariantScope(a.inv, productHandle, variantKey)

@@ -133,6 +133,13 @@ export function MediaPoolPanel({
     setSharedAddNotice(null)
   }, [selectedHandle, activeVariantKey])
 
+  /** Broad triage tab: show no-preview candidates by default (cross-SKU, schemes, etc.). */
+  useEffect(() => {
+    if (activeVariantKey === NEEDS_COLOR_VARIANT_KEY) {
+      setHideNoPreview(false)
+    }
+  }, [activeVariantKey, selectedHandle])
+
   useEffect(() => {
     setRuntimeFailedIds(new Set())
   }, [selectedHandle, activeVariantKey])
@@ -404,6 +411,12 @@ export function MediaPoolPanel({
       return "«Скрыть без превью» включено — фильтр «Без превью» недоступен."
     }
     if (activeFilter === "all") {
+      if (sharedColorlessMode) {
+        const triageNote = hideNoPreview
+          ? ` · triage ${totalAll} (скрыто ${effectiveNoPreviewCount} без превью)`
+          : ` · triage ${totalAll} · ${effectivePreviewableCount} с превью · ${effectiveNoPreviewCount} без превью`
+        return `${totalAll} кандидатов triage${dupSuffix(allDupStats)}${triageNote}`
+      }
       if (hideNoPreview) {
         return `${totalAll} фото${dupSuffix(allDupStats)} · ${effectivePreviewableCount} с превью · 0 без превью (скрыто ${effectiveNoPreviewCount})`
       }
