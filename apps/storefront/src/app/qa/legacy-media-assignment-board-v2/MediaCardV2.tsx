@@ -109,8 +109,10 @@ type Props = {
   poolMuted?: boolean
   /** Disable assign buttons (e.g. other color on active tab) */
   poolActionsDisabled?: boolean
-  /** Operator-assigned role override (overrides auto-detected role for display + filtering) */
-  roleOverride?: V2RoleSlot | null
+  /** Disable ★ Главное (e.g. shared colorless tab) */
+  mainActionDisabled?: boolean
+  /** Tooltip when ★ Главное is disabled */
+  mainActionDisabledTitle?: string
   /** Called when operator changes the role override via dropdown */
   onSetRoleOverride?: (mediaId: string, role: V2RoleSlot | null) => void
   /** Parent-owned effective preview — drives filter, sort, and DOM proof attributes */
@@ -138,6 +140,8 @@ export function MediaCardV2({
   poolUsageLine,
   poolMuted,
   poolActionsDisabled,
+  mainActionDisabled,
+  mainActionDisabledTitle,
   roleOverride,
   onSetRoleOverride,
   effectivePreviewOk,
@@ -145,8 +149,17 @@ export function MediaCardV2({
   previewRecovery,
 }: Props) {
   const isOtherColor = !!poolMuted
-  const actionsDisabled = !!poolActionsDisabled || isOtherColor
   const otherColorTitle = "Другой цвет — переключите вкладку цвета или перетащите в слот"
+  const mainDisabled = !!mainActionDisabled
+  const actionsDisabled = !!poolActionsDisabled || isOtherColor
+  const mainBtnDisabled = !!isMain || actionsDisabled || mainDisabled
+  const mainBtnTitle = mainDisabled
+    ? (mainActionDisabledTitle ?? "Главное назначается на конкретном цвете")
+    : actionsDisabled
+      ? otherColorTitle
+      : isMain
+        ? "Уже назначено главным"
+        : undefined
   const [imgFailed, setImgFailed] = useState(false)
 
   const preview = clientPreview(inv, previewRecovery)
@@ -187,7 +200,8 @@ export function MediaCardV2({
       : `Роль: ${displayRoleLabel}`
 
   function handleSetMain() {
-    if (!isMain && onSetMain) onSetMain(inv.id)
+    if (mainBtnDisabled || !onSetMain) return
+    onSetMain(inv.id)
   }
 
   function handleAddToGallery() {
@@ -275,10 +289,10 @@ export function MediaCardV2({
           </>
         )}
         <button
-          style={{ ...styles.compactBtnMain, ...(isMain ? styles.compactBtnUsed : {}) }}
+          style={{ ...styles.compactBtnMain, ...(isMain ? styles.compactBtnUsed : {}), ...(mainBtnDisabled ? styles.btnDisabled : {}) }}
           onClick={handleSetMain}
-          disabled={!!isMain || actionsDisabled}
-          title={actionsDisabled ? otherColorTitle : isMain ? "Уже назначено главным" : "★ Главное"}
+          disabled={mainBtnDisabled}
+          title={mainBtnTitle ?? (isMain ? "Уже назначено главным" : "★ Главное")}
         >
           ★
         </button>
@@ -387,9 +401,9 @@ export function MediaCardV2({
               ...(isMain ? styles.btnMainActive : {}),
               ...(actionsDisabled ? styles.btnDisabled : {}),
             }}
-            onClick={handleSetMain}
-            disabled={!!isMain || actionsDisabled}
-            title={actionsDisabled ? otherColorTitle : undefined}
+          onClick={handleSetMain}
+          disabled={mainBtnDisabled}
+          title={mainBtnTitle}
           >
             {isMain ? "★ Назначено" : "★ Главное"}
           </button>
@@ -422,9 +436,10 @@ const styles = {
     border: "1px solid #e0e0e0",
     borderRadius: "6px",
     background: "#fff",
-    overflow: "hidden",
+    overflow: "visible",
     fontSize: "12px",
     cursor: "grab",
+    boxSizing: "border-box" as const,
   },
   cardMain: {
     border: "2px solid #b88a00",
@@ -435,15 +450,14 @@ const styles = {
     background: "#f5fff5",
   },
   imageWrap: {
-    // Fixed pixel height — avoids the CSS Grid intrinsic-size calculation issue
-    // where paddingBottom: "100%" resolves to 0 during row-height pass, collapsing
-    // the card to footer-only height and clipping the image behind overflow:hidden.
     position: "relative" as const,
     width: "100%",
     height: "160px",
     background: "#f0f0f0",
     overflow: "hidden",
     flexShrink: 0,
+    borderTopLeftRadius: "5px",
+    borderTopRightRadius: "5px",
   },
   img: {
     position: "absolute" as const,
@@ -539,13 +553,15 @@ const styles = {
     fontWeight: 700,
   },
   footer: {
-    padding: "6px 7px 8px",
+    padding: "8px 8px 10px",
     display: "flex",
     flexDirection: "column" as const,
-    gap: "5px",
+    gap: "6px",
     background: "inherit",
     flexShrink: 0,
-    minHeight: 0,
+    overflow: "visible",
+    borderBottomLeftRadius: "5px",
+    borderBottomRightRadius: "5px",
   },
   filename: {
     fontSize: "10px",
@@ -754,24 +770,27 @@ const styles = {
     display: "flex",
     alignItems: "stretch",
     gap: "4px",
-    paddingTop: "4px",
+    paddingTop: "5px",
     borderTop: "1px solid #f0f0f0",
-    marginTop: "1px",
+    marginTop: "2px",
     width: "100%",
     flexWrap: "wrap" as const,
+    overflow: "visible",
   },
   roleSelect: {
     flex: 1,
     minWidth: 0,
     width: "100%",
-    fontSize: "10px",
+    fontSize: "11px",
     border: "1px solid #e0e0e0",
-    borderRadius: "3px",
+    borderRadius: "4px",
     background: "#fafafa",
     color: "#333",
-    padding: "3px 4px",
+    padding: "5px 6px",
+    minHeight: "28px",
+    lineHeight: "18px",
+    boxSizing: "border-box" as const,
     cursor: "pointer",
-    lineHeight: 1.3,
   },
   roleSelectOverride: {
     background: "#fff8f0",

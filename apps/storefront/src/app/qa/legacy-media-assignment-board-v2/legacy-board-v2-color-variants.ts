@@ -106,7 +106,24 @@ export const NEEDS_COLOR_VARIANT_KEY = "__needs_color__"
 export const NEEDS_COLOR_VARIANT_LABEL_RU = "Без привязки к цвету"
 
 export const NEEDS_COLOR_VARIANT_TITLE_RU =
-  "Фото без уверенной цветовой привязки. Назначайте цвет только если он очевиден по кадру."
+  "Общие кадры без цветовой привязки. Назначение в галерею добавит фото в конец галерей всех цветов."
+
+/** Real color tabs only — excludes pseudo/unresolved buckets. */
+export function listRealColorVariantKeys(variants: V2ColorVariant[]): string[] {
+  return variants
+    .filter((v) => !isPseudoColorVariantKey(v.variantKey))
+    .map((v) => v.variantKey)
+}
+
+/** True when media id is appended to every real variant gallery. */
+export function isMediaInAllRealVariantGalleries(
+  galleriesByVariant: Record<string, string[]>,
+  mediaId: string,
+  realVariantKeys: readonly string[]
+): boolean {
+  if (realVariantKeys.length === 0) return false
+  return realVariantKeys.every((key) => (galleriesByVariant[key] ?? []).includes(mediaId))
+}
 
 export const PSEUDO_COLOR_VARIANT_KEYS = new Set([LEGACY_ALL_VARIANT_KEY, NEEDS_COLOR_VARIANT_KEY])
 

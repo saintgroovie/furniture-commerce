@@ -204,6 +204,34 @@ export function addToGallery(
   return patchVariant(state, variantKey, roles, [...gallery, mediaId])
 }
 
+/** Append media to gallery[] of each real color variant (skip duplicates per variant). */
+export function addToGalleryAllRealVariants(
+  state: V2ProductState,
+  variantKeys: readonly string[],
+  mediaId: string
+): V2ProductState {
+  let next = state
+  for (const key of variantKeys) {
+    next = addToGallery(next, key, mediaId)
+  }
+  return next
+}
+
+/** Assign non-main role on every real color variant (gallery sync per variant). */
+export function assignRoleAllRealVariants(
+  state: V2ProductState,
+  variantKeys: readonly string[],
+  slot: V2RoleSlot,
+  mediaId: string
+): V2ProductState {
+  if (slot === "main") return state
+  let next = state
+  for (const key of variantKeys) {
+    next = assignRole(next, key, slot, mediaId)
+  }
+  return next
+}
+
 export function removeFromGallery(
   state: V2ProductState,
   variantKey: string,

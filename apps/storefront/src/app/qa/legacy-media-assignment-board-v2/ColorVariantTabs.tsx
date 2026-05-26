@@ -338,17 +338,17 @@ const styles = {
   },
   tabWrapUnresolved: {
     borderStyle: "dashed" as const,
-    borderColor: "#c9a227",
-    background: "#fffbf0",
+    borderColor: "#b0b8c8",
+    background: "#f5f7fa",
   },
   tabWrapUnresolvedActive: {
     borderStyle: "dashed" as const,
-    borderColor: "#a07818",
-    background: "#fff3d0",
-    boxShadow: "inset 0 0 0 1px #e8c860",
+    borderColor: "#7888a8",
+    background: "#eef1f7",
+    boxShadow: "inset 0 0 0 1px #c8d0e0",
   },
   tabActiveUnresolved: {
-    color: "#5a4800",
+    color: "#3a4460",
     fontWeight: 600,
   },
   tab: {

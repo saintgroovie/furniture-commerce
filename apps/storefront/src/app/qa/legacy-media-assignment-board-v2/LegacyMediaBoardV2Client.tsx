@@ -18,6 +18,7 @@ import {
   buildMergedColorVariants,
   findMilkVariantKey,
   isPseudoColorVariantKey,
+  listRealColorVariantKeys,
   LEGACY_ALL_VARIANT_KEY,
   NEEDS_COLOR_VARIANT_KEY,
   pickDefaultVariantKey,
@@ -35,8 +36,10 @@ import {
 } from "./legacy-board-v2-persistence"
 import {
   addToGallery as syncAddToGallery,
+  addToGalleryAllRealVariants as syncAddToGalleryAllRealVariants,
   assignMain as syncAssignMain,
   assignRole as syncAssignRole,
+  assignRoleAllRealVariants as syncAssignRoleAllRealVariants,
   clearMain as syncClearMain,
   clearRole as syncClearRole,
   healVariantState,
@@ -221,7 +224,11 @@ export function LegacyMediaBoardV2Client() {
     [colorVariants]
   )
 
-  // --- Derived: active variant key ---
+  const realColorVariantKeys = useMemo(
+    () => listRealColorVariantKeys(colorVariants),
+    [colorVariants]
+  )
+
   const activeVariantKey = useMemo<string>(() => {
     if (!selectedHandle || colorVariants.length === 0) return NEEDS_COLOR_VARIANT_KEY
     const state = productStates[selectedHandle]
@@ -235,6 +242,8 @@ export function LegacyMediaBoardV2Client() {
     }
     return pickDefaultVariantKey(colorVariants, state ?? null)
   }, [selectedHandle, colorVariants, productStates])
+
+  const isSharedColorlessTab = activeVariantKey === NEEDS_COLOR_VARIANT_KEY
 
   // When product or visible tabs change, ensure active tab is visible (milk default)
   useEffect(() => {
@@ -307,12 +316,12 @@ export function LegacyMediaBoardV2Client() {
 
   const handleSetMain = useCallback(
     (mediaId: string) => {
-      if (!selectedHandle) return
+      if (!selectedHandle || isSharedColorlessTab) return
       updateProductState(selectedHandle, activeVariantKey, (s) =>
         syncAssignMain(s, activeVariantKey, mediaId)
       )
     },
-    [selectedHandle, activeVariantKey, updateProductState]
+    [selectedHandle, activeVariantKey, isSharedColorlessTab, updateProductState]
   )
 
   const handleRemoveMain = useCallback(() => {
@@ -326,10 +335,12 @@ export function LegacyMediaBoardV2Client() {
     (mediaId: string) => {
       if (!selectedHandle) return
       updateProductState(selectedHandle, activeVariantKey, (s) =>
-        syncAddToGallery(s, activeVariantKey, mediaId)
+        isSharedColorlessTab && realColorVariantKeys.length > 0
+          ? syncAddToGalleryAllRealVariants(s, realColorVariantKeys, mediaId)
+          : syncAddToGallery(s, activeVariantKey, mediaId)
       )
     },
-    [selectedHandle, activeVariantKey, updateProductState]
+    [selectedHandle, activeVariantKey, isSharedColorlessTab, realColorVariantKeys, updateProductState]
   )
 
   const handleRemoveFromGallery = useCallback(
@@ -354,10 +365,12 @@ export function LegacyMediaBoardV2Client() {
     (mediaId: string, slot: V2RoleSlot) => {
       if (!selectedHandle) return
       updateProductState(selectedHandle, activeVariantKey, (s) =>
-        syncAssignRole(s, activeVariantKey, slot, mediaId)
+        isSharedColorlessTab && realColorVariantKeys.length > 0 && slot !== "main"
+          ? syncAssignRoleAllRealVariants(s, realColorVariantKeys, slot, mediaId)
+          : syncAssignRole(s, activeVariantKey, slot, mediaId)
       )
     },
-    [selectedHandle, activeVariantKey, updateProductState]
+    [selectedHandle, activeVariantKey, isSharedColorlessTab, realColorVariantKeys, updateProductState]
   )
 
   const handleClearRole = useCallback(
@@ -648,6 +661,8 @@ export function LegacyMediaBoardV2Client() {
           activeVariantKey={activeVariantKey}
           variantRoles={currentVariantRoles}
           recoveryById={recoveryById}
+          realColorVariantKeys={realColorVariantKeys}
+          galleriesByVariant={currentProductState?.galleriesByVariant ?? {}}
         />
       </div>
     </div>

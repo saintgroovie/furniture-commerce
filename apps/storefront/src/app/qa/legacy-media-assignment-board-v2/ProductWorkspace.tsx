@@ -10,6 +10,7 @@ import type {
   V2RoleSlot,
 } from "./legacy-board-v2-types"
 import { ColorVariantTabs } from "./ColorVariantTabs"
+import { NEEDS_COLOR_VARIANT_KEY, NEEDS_COLOR_VARIANT_TITLE_RU } from "./legacy-board-v2-color-variants"
 import { RoleChecklistPanel, computeRoleRows } from "./RoleChecklistPanel"
 import { MissingRoleStrip } from "./MissingRoleStrip"
 import { StorefrontGallerySection } from "./GalleryStrip"
@@ -109,6 +110,7 @@ export function ProductWorkspace({
 
         {/* Readiness: missing roles + one compact instruction card */}
         <div style={styles.readinessBlock}>
+          {activeVariantKey === NEEDS_COLOR_VARIANT_KEY && <SharedColorlessHint />}
           <MissingRoleStripDerived
             productState={productState}
             activeVariantKey={activeVariantKey}
@@ -158,6 +160,42 @@ export function ProductWorkspace({
 // ---------------------------------------------------------------------------
 // Onboarding hint — only before any role is assigned
 // ---------------------------------------------------------------------------
+
+function SharedColorlessHint() {
+  return (
+    <div style={sharedHintStyles.card} data-v2-shared-colorless-hint>
+      <p style={sharedHintStyles.text}>{NEEDS_COLOR_VARIANT_TITLE_RU}</p>
+      <p style={sharedHintStyles.sub}>
+        Используйте <strong>+ Галерея</strong> — кадр добавится в конец галереи каждого цвета.{" "}
+        <strong>★ Главное</strong> назначайте на конкретном цвете.
+      </p>
+    </div>
+  )
+}
+
+const sharedHintStyles = {
+  card: {
+    margin: "8px 14px 0",
+    padding: "10px 12px",
+    background: "#f5f7fb",
+    border: "1px dashed #b8c4d8",
+    borderRadius: "8px",
+    flexShrink: 0,
+  },
+  text: {
+    margin: "0 0 4px",
+    fontSize: "12px",
+    color: "#3a4460",
+    lineHeight: 1.45,
+    fontWeight: 500,
+  },
+  sub: {
+    margin: 0,
+    fontSize: "11px",
+    color: "#5a6478",
+    lineHeight: 1.45,
+  },
+} as const
 
 function WorkspaceInstructionCard({
   productState,

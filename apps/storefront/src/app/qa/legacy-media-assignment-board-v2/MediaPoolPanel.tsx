@@ -16,7 +16,9 @@ import {
 } from "./legacy-board-v2-pool-preview"
 import {
   classifyMediaVariantScope,
+  isMediaInAllRealVariantGalleries,
   mediaMatchesVariantKey,
+  NEEDS_COLOR_VARIANT_KEY,
   type MediaVariantScope,
 } from "./legacy-board-v2-color-variants"
 import { resolvePoolUsageStatus } from "./legacy-board-v2-gallery-source"
@@ -94,6 +96,10 @@ type Props = {
   onSetRoleOverride?: (mediaId: string, role: V2RoleSlot | null) => void
   /** Active color tab — pool badges use only this variant's assignments */
   activeVariantKey?: string
+  /** Real color variant keys (for shared colorless gallery replication UI) */
+  realColorVariantKeys?: string[]
+  /** Full product galleries map — needed for shared colorless usage state */
+  galleriesByVariant?: Record<string, string[]>
   /** Role slots for active variant (for transparent pool status) */
   variantRoles?: V2VariantRoleAssignment
   /** QA preview-recovery entries (v1 API) keyed by inventory id */
@@ -127,6 +133,8 @@ export function MediaPoolPanel({
   roleOverrides,
   onSetRoleOverride,
   activeVariantKey = "__all__",
+  realColorVariantKeys = [],
+  galleriesByVariant = {},
   variantRoles = {},
   recoveryById,
 }: Props) {
@@ -146,7 +154,40 @@ export function MediaPoolPanel({
     })
   }, [])
 
+  const sharedColorlessMode = activeVariantKey === NEEDS_COLOR_VARIANT_KEY
+  const mainActionDisabledTitle = "Главное назначается на конкретном цвете"
   const hideNoPreviewContradiction = hideNoPreview && activeFilter === "no_preview"
+
+  function resolveCardUsage(item: PoolItem, scope: MediaVariantScope) {
+    const mediaId = item.inv.id
+    if (sharedColorlessMode && realColorVariantKeys.length > 0) {
+      const inAllGalleries = isMediaInAllRealVariantGalleries(
+        galleriesByVariant,
+        mediaId,
+        realColorVariantKeys
+      )
+      const usage = resolvePoolUsageStatus(mediaId, variantRoles, [], scope)
+      let statusLine = usage.statusLine
+      if (inAllGalleries) {
+        statusLine = "✓ Общая галерея · все цвета"
+      } else if (scope === "neutral" || scope === "active") {
+        statusLine = statusLine || "общий кадр"
+      }
+      return {
+        ...usage,
+        isMain: false,
+        isInGallery: inAllGalleries,
+        poolMuted: false,
+        statusLine,
+      }
+    }
+    return resolvePoolUsageStatus(
+      mediaId,
+      variantRoles,
+      currentGalleryIds ?? [],
+      scope
+    )
+  }
 
   // Build pool items — static preview tier, then preview-first sort at render
   const poolItems = useMemo<PoolItem[]>(() => {
@@ -379,12 +420,7 @@ export function MediaPoolPanel({
               selectedHandle
                 ? classifyMediaVariantScope(item.inv, selectedHandle, activeVariantKey)
                 : "active"
-            const usage = resolvePoolUsageStatus(
-              item.inv.id,
-              variantRoles,
-              currentGalleryIds ?? [],
-              scope
-            )
+            const usage = resolveCardUsage(item, scope)
             const usageLine =
               !showsAsPreview && usage.statusLine
                 ? usage.statusLine
@@ -421,6 +457,8 @@ export function MediaPoolPanel({
                   roleOverride={(roleOverrides ?? {})[item.inv.id] ?? null}
                   onSetRoleOverride={onSetRoleOverride}
                   previewRecovery={recoveryById?.get(item.inv.id) ?? null}
+                  mainActionDisabled={sharedColorlessMode}
+                  mainActionDisabledTitle={mainActionDisabledTitle}
                 />
               </React.Fragment>
             )
