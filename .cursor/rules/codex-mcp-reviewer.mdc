@@ -1,0 +1,48 @@
+---
+description: Woodright — Codex MCP только как reviewer/auditor (не executor)
+alwaysApply: true
+---
+
+# Codex MCP reviewer (Woodright)
+
+## Роли
+
+- **Cursor** — primary executor (правки кода только по задаче и guardrails Woodright).
+- **Codex MCP** `codex-woodright-reviewer` — reviewer/auditor only (второе мнение, diff/status, governance).
+
+## Config scope
+
+- Разрешён только **global/local** `~/.cursor/mcp.json` на машине оператора.
+- **Запрещён** project-level `.cursor/mcp.json` в repo (не создавать, не коммитить).
+
+## Разрешено
+
+- MCP tools `codex` / `codex-reply` только для read-only review/audit prompts.
+- Параметры вызова: `sandbox: read-only`, `approval-policy: on-request`.
+- Каждый Codex MCP tool call — **manual Approve** в Cursor (без auto-run).
+
+## Запрещено через Codex MCP
+
+- patch / apply / file writes
+- seed, ingestion, apply scripts, QA board v1/v2
+- dev servers, runtime QA, DB mutations
+- добавление `codex` в MCP allowlist
+- auto-run для MCP tools (в т.ч. `codex`, `codex-reply`)
+
+## Go / no-go
+
+- **go** только если последний smoke-test показал `needsApproval` и `user-approval-requested`, и **нет** строки `ALLOWED (auto-run...)` для tool `codex` в `workbench.mcp.allowlist.log`.
+- Любой `ALLOWED (auto-run, no team block)` для `codex` → **no-go** до исправления Cursor MCP/Agent settings и повторного smoke-test.
+
+## Обязательный smoke-test
+
+После **любого** изменения Cursor MCP/Agent settings:
+
+1. Auto-run **OFF**; `codex` **не** в allowlist.
+2. Reload Window.
+3. Один read-only MCP call tool `codex`: только `git status` summary + `git diff --shortstat` summary.
+4. Pass: manual approve в UI; allowlist без `(auto-run)`; `git diff --shortstat` до = после.
+
+## Local-only (не в repo)
+
+Не коммитить и не цитировать в отчётах: `~/.cursor/mcp.json`, `~/.codex/auth.json`, secrets в `.env` / `.env.*`.
