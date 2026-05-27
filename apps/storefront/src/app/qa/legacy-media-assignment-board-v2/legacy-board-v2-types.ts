@@ -89,9 +89,23 @@ export type V2ProductState = {
    */
   variantLabelOverrides?: Record<string, string>
   /**
+   * Durable color identity + operator label metadata (keyed by stable variantKey).
+   */
+  variantColorMeta?: Record<string, V2VariantColorMeta>
+  /**
    * Operator add/remove/hide color tabs for this product (QA-only, persisted in v2 LS).
    */
   operatorVariantEdits?: V2OperatorVariantEdits
+}
+
+/** Durable color label metadata (stable variantKey as map key). */
+export type V2VariantColorMeta = {
+  label: string
+  sourceLabel?: string
+  isCustom?: boolean
+  createdByOperator?: boolean
+  labelEditedByOperator?: boolean
+  updatedAt?: string
 }
 
 /** Operator-added color tab (no catalog mutation). */

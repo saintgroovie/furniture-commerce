@@ -15,6 +15,14 @@ import {
   extractColorTokenFromMedia,
   neutralExternalOwnerColor,
 } from "./legacy-board-v2-visual-role-ranking"
+import {
+  allocateCustomVariantKey,
+  applyPersistedLabelsToVariants,
+  applyOperatorColorLabelChange,
+  collectTakenVariantKeys,
+  isOperatorCustomVariantKey,
+  resolveOperatorVisibleLabel,
+} from "./legacy-board-v2-color-label-persistence"
 
 /** Default RU labels for detected tokens (shared with client). */
 export const DEFAULT_TOKEN_TO_RU: Record<string, string> = {
@@ -221,7 +229,7 @@ export function displayLabelForVariant(
   defaultLabel: string,
   state: V2ProductState | null | undefined
 ): string {
-  return state?.variantLabelOverrides?.[variantKey] ?? defaultLabel
+  return resolveOperatorVisibleLabel(variantKey, defaultLabel, state)
 }
 
 /** Shared product shots (gallery_*, iso) without explicit color_* token. */
@@ -327,16 +335,24 @@ function mergeAddedVariants(
   state: V2ProductState | null | undefined
 ): V2ColorVariant[] {
   const hidden = getHiddenVariantKeys(state)
-  const byKey = new Map(detected.map((v) => [v.variantKey, v]))
+  const byKey = new Map(detected.map((v) => [v.variantKey, { ...v }]))
 
   for (const added of state?.operatorVariantEdits?.added ?? []) {
     if (hidden.has(added.key)) continue
+    const sourceDefault = added.label
+    const label = resolveOperatorVisibleLabel(added.key, sourceDefault, state)
     if (!byKey.has(added.key)) {
       byKey.set(added.key, {
         variantKey: added.key,
-        label: added.label,
+        label,
         itemIds: [],
         source: "operator",
+      })
+    } else {
+      const existing = byKey.get(added.key)!
+      byKey.set(added.key, {
+        ...existing,
+        label: resolveOperatorVisibleLabel(added.key, existing.label, state),
       })
     }
   }
@@ -387,7 +403,8 @@ export function buildMergedColorVariants(
   const visible = filterVisibleColorVariants(merged, state).filter(
     (v) => v.variantKey !== LEGACY_ALL_VARIANT_KEY
   )
-  return sortColorVariantsWithMilkFirst(visible)
+  const sorted = sortColorVariantsWithMilkFirst(visible)
+  return applyPersistedLabelsToVariants(sorted, state)
 }
 
 export function findMilkVariantKey(variants: V2ColorVariant[]): string | null {
@@ -472,7 +489,7 @@ export function buildOperatorVariantEditsExport(
   const activeKeys = getExportableVariantKeys(state)
   const pseudoVariants: V2ColorVariant[] = activeKeys.map((key) => ({
     variantKey: key,
-    label: state.variantLabelOverrides?.[key] ?? DEFAULT_TOKEN_TO_RU[key] ?? key,
+    label: resolveOperatorVisibleLabel(key, DEFAULT_TOKEN_TO_RU[key] ?? key, state),
     itemIds: [],
   }))
   const milkKey = findMilkVariantKey(pseudoVariants)
@@ -515,12 +532,20 @@ export function planAddVariant(
   const trimmed = label.trim()
   if (!trimmed) return { ok: false, reason: "empty", key: "", label: trimmed }
 
-  const key = labelToVariantKey(trimmed)
-  if (!key) return { ok: false, reason: "empty", key: "", label: trimmed }
+  const taken = collectTakenVariantKeys(
+    handle,
+    candidateIds,
+    invById,
+    state,
+    buildDetectedColorVariants
+  )
+  const aliasKey = labelToVariantKey(trimmed)
+  if (aliasKey && taken.has(aliasKey) && !isOperatorCustomVariantKey(aliasKey)) {
+    return { ok: false, reason: "duplicate", key: aliasKey, label: trimmed }
+  }
 
-  const merged = buildMergedColorVariants(handle, candidateIds, invById, state)
-  const exists = merged.some((v) => v.variantKey === key)
-  if (exists) return { ok: false, reason: "duplicate", key, label: trimmed }
+  const key = allocateCustomVariantKey(trimmed, taken)
+  if (taken.has(key)) return { ok: false, reason: "duplicate", key, label: trimmed }
 
   return { ok: true, key, created: true }
 }
@@ -538,15 +563,27 @@ export function applyAddVariantToState(
   if (!edits.added.some((a) => a.key === key)) {
     edits.added = [...edits.added, { key, label, source: "operator" }]
   }
-  const overrides = { ...(state.variantLabelOverrides ?? {}) }
-  overrides[key] = label
+  const now = new Date().toISOString()
+  const meta = { ...(state.variantColorMeta ?? {}) }
+  meta[key] = {
+    label,
+    sourceLabel: label,
+    isCustom: true,
+    createdByOperator: true,
+    labelEditedByOperator: false,
+    updatedAt: now,
+  }
+  const overrides = { ...(state.variantLabelOverrides ?? {}), [key]: label }
   return {
     ...state,
     operatorVariantEdits: edits,
     variantLabelOverrides: overrides,
+    variantColorMeta: meta,
     activeVariantKey: key,
   }
 }
+
+export { applyOperatorColorLabelChange }
 
 export function applyRemoveVariantToState(
   state: V2ProductState,
