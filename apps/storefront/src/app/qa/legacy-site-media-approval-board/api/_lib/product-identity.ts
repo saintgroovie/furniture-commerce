@@ -11,6 +11,7 @@ import {
   type DecorSource,
   type ProductDecor,
 } from "./product-decor"
+import { normalizeTopLevelCollection } from "../../approval-board-ww-taxonomy"
 
 export type { DecorConfidence, DecorSource, ProductDecor }
 
@@ -58,7 +59,6 @@ const COLLECTION_LABELS: Record<string, string> = {
   provence: "Provence",
   "princess-rose": "Princess Rose",
   greenwich: "Greenwich",
-  molly: "Molly",
 }
 
 type SeedRow = {
@@ -260,11 +260,10 @@ export function buildProductIdentities(
     }
 
     const picked = pickTitle(h, seed, board, invNameByHandle.get(h) || null, legacyTitle, legacyUrl)
-    const collection =
-      seed?.medusa_collection_handle ||
-      board?.collection ||
-      collectionByHandle[h] ||
-      null
+    const collection = normalizeTopLevelCollection(
+      h,
+      seed?.medusa_collection_handle || board?.collection || collectionByHandle[h] || null
+    )
     const collectionLabel =
       seed?.medusa_collection_title ||
       (collection ? COLLECTION_LABELS[collection] || collection : null)

@@ -1,4 +1,5 @@
 import { buildCandidateMotifView } from "./approval-board-operator-motif"
+import { isWillieWinkieTaxonomy } from "./approval-board-ww-taxonomy"
 import type { ChecklistItem, SkuPoolContext } from "./approval-board-types"
 
 export type WwApproveGuard = {
@@ -8,7 +9,7 @@ export type WwApproveGuard = {
 }
 
 export function isWillieWinkieItem(item: ChecklistItem, ctx?: SkuPoolContext): boolean {
-  return Boolean(ctx?.is_willie_winkie || item.collection === "willie-winkie")
+  return isWillieWinkieTaxonomy(item.handle, item.collection, ctx)
 }
 
 export function wwApproveGuard(item: ChecklistItem, ctx?: SkuPoolContext): WwApproveGuard {

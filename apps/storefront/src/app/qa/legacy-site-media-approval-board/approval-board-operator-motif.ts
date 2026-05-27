@@ -14,6 +14,7 @@ const KNOWN_MOTIF_NAMES = [
   "Ballet",
   "Pastoral",
   "Infanta",
+  "Molly",
   "Tommy",
 ] as const
 
