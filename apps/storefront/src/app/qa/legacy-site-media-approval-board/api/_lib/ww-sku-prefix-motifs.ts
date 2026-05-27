@@ -8,6 +8,7 @@ export const WW_SKU_PREFIX_MOTIFS: Record<string, string> = {
   fa: "Fairies",
   fk: "Fantasy Kingdom",
   in: "Infanta",
+  mo: "Molly",
   pa: "Pastoral",
   rl: "Royal Lilies",
   rs: "Rural Scenery",

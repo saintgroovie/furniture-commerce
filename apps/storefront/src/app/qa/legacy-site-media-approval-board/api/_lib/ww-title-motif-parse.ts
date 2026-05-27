@@ -12,6 +12,7 @@ const KNOWN_TITLE_MOTIFS: string[] = [
   "Ballet",
   "Pastoral",
   "Infanta",
+  "Molly",
   "Tommy",
 ]
 

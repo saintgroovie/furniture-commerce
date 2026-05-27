@@ -1,6 +1,7 @@
 import { motifSourceLabel, titleSourceLabel } from "./approval-board-constants"
 import { buildCandidateMotifView } from "./approval-board-operator-motif"
 import type { ChecklistItem, SkuPoolContext } from "./approval-board-types"
+import { isWillieWinkieTaxonomy } from "./approval-board-ww-taxonomy"
 import { decorFromColorGuess, decorFromFilename } from "./approval-board-ww-decor-client"
 
 type Props = {
@@ -99,7 +100,7 @@ function WillieWinkieIdentity({ ctx, handle, item, compact }: Props) {
 }
 
 export function ProductIdentityBlock({ ctx, handle, item, compact }: Props) {
-  const isWw = Boolean(ctx?.is_willie_winkie || item?.collection === "willie-winkie")
+  const isWw = isWillieWinkieTaxonomy(handle, item?.collection, ctx)
 
   if (isWw) {
     return <WillieWinkieIdentity ctx={ctx} handle={handle} item={item} compact={compact} />

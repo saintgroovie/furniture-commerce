@@ -1,11 +1,12 @@
 import { buildCandidateMotifView } from "./approval-board-operator-motif"
+import { isWillieWinkieTaxonomy } from "./approval-board-ww-taxonomy"
 import type { ChecklistItem, SkuPoolContext } from "./approval-board-types"
 
 export function enrichItemMotifFields(
   item: ChecklistItem,
   ctx: SkuPoolContext | undefined
 ): Partial<ChecklistItem> {
-  if (!ctx?.is_willie_winkie && item.collection !== "willie-winkie") {
+  if (!isWillieWinkieTaxonomy(item.handle, item.collection, ctx)) {
     return {
       product_identity_source: ctx?.product_identity_source ?? item.product_identity_source ?? null,
       motif_source: ctx?.motif_source ?? item.motif_source ?? null,

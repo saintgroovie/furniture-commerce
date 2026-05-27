@@ -10,6 +10,10 @@ import {
 } from "./approval-board-constants"
 import { autoguessLabel, guessOperatorRole } from "./approval-board-role-autoguess"
 import {
+  normalizeTopLevelCollection,
+  resolvedMotifLabel,
+} from "./approval-board-ww-taxonomy"
+import {
   buildExportPayload,
   copyExportToClipboard,
   downloadExportJson,
@@ -311,6 +315,7 @@ export function LegacySiteMediaApprovalBoardClient() {
   const [decisionFilter, setDecisionFilter] = useState<DecisionFilter>("all")
   const [workflowFilter, setWorkflowFilter] = useState<WorkflowFilter>("all")
   const [collectionFilter, setCollectionFilter] = useState("all")
+  const [motifFilter, setMotifFilter] = useState("all")
   const [search, setSearch] = useState("")
   const [copyStatus, setCopyStatus] = useState<"idle" | "ok" | "err">("idle")
   const [confirmReset, setConfirmReset] = useState(false)
@@ -378,16 +383,38 @@ export function LegacySiteMediaApprovalBoardClient() {
 
   const counts = useMemo(() => countByDecision(items), [items])
 
+  const topLevelCollection = useCallback(
+    (item: ChecklistItem) =>
+      contexts[item.handle]?.collection ??
+      normalizeTopLevelCollection(item.handle, item.collection),
+    [contexts]
+  )
+
+  const motifLabel = useCallback(
+    (item: ChecklistItem) => resolvedMotifLabel(item.handle, contexts[item.handle]),
+    [contexts]
+  )
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
     return items.filter((i) => {
       if (decisionFilter !== "all" && i.designer_decision !== decisionFilter) return false
       if (!matchesWorkflow(i, workflowFilter)) return false
-      if (collectionFilter !== "all" && i.collection !== collectionFilter) return false
+      if (collectionFilter !== "all" && topLevelCollection(i) !== collectionFilter) return false
+      if (motifFilter !== "all" && motifLabel(i) !== motifFilter) return false
       if (!q) return true
       return `${i.filename} ${i.handle} ${i.source_page}`.toLowerCase().includes(q)
     })
-  }, [items, decisionFilter, workflowFilter, collectionFilter, search])
+  }, [
+    items,
+    decisionFilter,
+    workflowFilter,
+    collectionFilter,
+    motifFilter,
+    search,
+    topLevelCollection,
+    motifLabel,
+  ])
 
   const groups = useMemo(() => {
     const map = new Map<string, ChecklistItem[]>()
@@ -399,10 +426,23 @@ export function LegacySiteMediaApprovalBoardClient() {
     return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]))
   }, [filtered])
 
-  const collections = useMemo(
-    () => Array.from(new Set(items.map((i) => i.collection).filter(Boolean))).sort(),
-    [items]
-  )
+  const collections = useMemo(() => {
+    const set = new Set<string>()
+    for (const item of items) {
+      const c = topLevelCollection(item)
+      if (c) set.add(c)
+    }
+    return [...set].sort()
+  }, [items, topLevelCollection])
+
+  const motifs = useMemo(() => {
+    const set = new Set<string>()
+    for (const item of items) {
+      const m = motifLabel(item)
+      if (m) set.add(m)
+    }
+    return [...set].sort()
+  }, [items, motifLabel])
 
   const exportInput = useMemo(
     () => (base ? { base, items, contexts } : null),
@@ -469,8 +509,8 @@ export function LegacySiteMediaApprovalBoardClient() {
           Reject — неверный SKU / дубль / мусор. Сомнения → Needs review.
         </p>
         <div className="ab-ww-guide">
-          <b>Willie Winkie:</b> коллекция одна; <b>Ant&apos;s Village</b>, <b>Ballet</b> и др. — это{" "}
-          <b>роспись / мотив (подколлекция)</b>, не отдельная коллекция. Строка 1: SKU + тип (комод, стол…).
+          <b>Willie Winkie:</b> коллекция одна; <b>Molly</b>, <b>Ant&apos;s Village</b>, <b>Ballet</b> —{" "}
+          <b>роспись / мотив</b>, не отдельная коллекция (в т.ч. <code>mo-*</code> → Molly). Строка 1: SKU + тип.
           Строка 2: Willie Winkie + роспись + гл. Approve только если тип и мотив совпадают с SKU и фото;
           расхождение мотива при той же форме → Needs review / Reject.
         </div>
@@ -520,12 +560,21 @@ export function LegacySiteMediaApprovalBoardClient() {
             {f}
           </button>
         ))}
-        <label className="ab-side-label">Collection</label>
+        <label className="ab-side-label">Collection (top-level)</label>
         <select value={collectionFilter} onChange={(e) => setCollectionFilter(e.target.value)} className="ab-select">
           <option value="all">All</option>
           {collections.map((c) => (
             <option key={c} value={c}>
               {c}
+            </option>
+          ))}
+        </select>
+        <label className="ab-side-label">Роспись / мотив</label>
+        <select value={motifFilter} onChange={(e) => setMotifFilter(e.target.value)} className="ab-select">
+          <option value="all">All</option>
+          {motifs.map((m) => (
+            <option key={m} value={m}>
+              {m}
             </option>
           ))}
         </select>
