@@ -1,8 +1,10 @@
-import type { ChecklistItem, ChecklistPayload, DesignerDecision } from "./approval-board-types"
+import { enrichItemMotifFields } from "./approval-board-motif-export"
+import type { ChecklistItem, ChecklistPayload, DesignerDecision, SkuPoolContext } from "./approval-board-types"
 
 export type ExportInput = {
   base: ChecklistPayload
   items: ChecklistItem[]
+  contexts?: Record<string, SkuPoolContext>
 }
 
 export function buildExportPayload(input: ExportInput): ChecklistPayload {
@@ -14,17 +16,19 @@ export function buildExportPayload(input: ExportInput): ChecklistPayload {
     reviewed_at: now,
     review_tool: "legacy-site-media-supplement-triage-board",
     source_pack_path: "tmp/legacy-site-media-approval-pack",
-    items: input.items.map((item) => ({
-      ...item,
-      designer_decision: item.designer_decision as DesignerDecision,
-      notes: item.notes ?? "",
-      do_not_auto_apply: item.do_not_auto_apply ?? true,
-      operator_role: item.operator_role ?? null,
-      operator_duplicate_status: item.operator_duplicate_status ?? "unchecked",
-      operator_duplicate_note: item.operator_duplicate_note ?? "",
-      product_identity_source: item.product_identity_source ?? item.product_title_source ?? null,
-      motif_source: item.motif_source ?? null,
-    })),
+    items: input.items.map((item) => {
+      const ctx = input.contexts?.[item.handle]
+      return {
+        ...item,
+        designer_decision: item.designer_decision as DesignerDecision,
+        notes: item.notes ?? "",
+        do_not_auto_apply: item.do_not_auto_apply ?? true,
+        operator_role: item.operator_role ?? null,
+        operator_duplicate_status: item.operator_duplicate_status ?? "unchecked",
+        operator_duplicate_note: item.operator_duplicate_note ?? "",
+        ...enrichItemMotifFields(item, ctx),
+      }
+    }),
   }
 }
 

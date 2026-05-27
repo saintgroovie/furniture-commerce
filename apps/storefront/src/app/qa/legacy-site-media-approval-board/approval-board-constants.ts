@@ -63,6 +63,7 @@ export function decorSourceLabel(
     normalized: "normalized",
     title_parse: "title_parse",
     handle_prefix: "handle_prefix",
+    operator_note: "operator_note",
     filename_guess: "filename_guess",
     checklist_color: "checklist_color",
     unknown: "unknown",

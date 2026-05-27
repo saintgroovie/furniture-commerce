@@ -1,11 +1,26 @@
 /** Willie Winkie decor/motif resolution (read-only). */
 
+import { resolveWwMotifIdentity } from "./ww-motif-resolution"
+import {
+  expectedMotifFromSkuPrefix,
+  isKnownWwSkuPrefix,
+  wwHandlePrefix,
+  WW_SKU_PREFIX_MOTIFS,
+} from "./ww-sku-prefix-motifs"
+import {
+  decorFromColorGuess,
+  decorFromFilename,
+  extractMotifFromTitle,
+  findMotifInTitle,
+} from "./ww-title-motif-parse"
+
 export type DecorSource =
   | "price_list"
   | "seed_products"
   | "normalized"
   | "title_parse"
   | "handle_prefix"
+  | "operator_note"
   | "filename_guess"
   | "checklist_color"
   | "unknown"
@@ -20,6 +35,10 @@ export type WwTitleParts = {
 
 export type ProductDecor = {
   is_willie_winkie: boolean
+  expected_motif_from_sku_prefix: string | null
+  legacy_page_motif: string | null
+  resolved_motif: string | null
+  legacy_metadata_mismatch: boolean
   motif_subcollection: string | null
   motif_subcollection_expected: string | null
   motif_subcollection_observed: string | null
@@ -27,7 +46,6 @@ export type ProductDecor = {
   motif_source: DecorSource
   motif_confidence: DecorConfidence
   motif_mismatch: boolean
-  /** @deprecated use motif_subcollection */
   decor_motif: string | null
   decor_motif_expected: string | null
   decor_motif_observed: string | null
@@ -36,60 +54,10 @@ export type ProductDecor = {
   decor_mismatch: boolean
 }
 
-/** WW SKU prefix → canonical painting/motif name (price-list line families). */
-export const WW_HANDLE_PREFIX_MOTIFS: Record<string, string> = {
-  av: "Ant's Village",
-  ba: "Ballet",
-  fa: "Fairies",
-  fk: "Fantasy Kingdom",
-  in: "Infanta",
-  pa: "Pastoral",
-  rl: "Royal Lilies",
-  rs: "Rural Scenery",
-  sh: "Sweet Home",
-  tb: "Teddy Bear",
-  te: "Templars",
-  to: "Tommy",
-  tw: "Tiggy-Winkle",
-}
-
-const KNOWN_TITLE_MOTIFS: string[] = [
-  "Fantasy Kingdom",
-  "Royal Lilies",
-  "Rural Scenery",
-  "Teddy Bear",
-  "Tiggy-Winkle",
-  "Ant's Village",
-  "Ant`s Village",
-  "Sweet Home",
-  "Templars",
-  "Fairies",
-  "Ballet",
-  "Pastoral",
-  "Infanta",
-  "Tommy",
-]
-
-const FILENAME_COLOR_HINTS: Record<string, string> = {
-  blue: "синяя роспись (файл)",
-  grey: "серая роспись (файл)",
-  gray: "серая роспись (файл)",
-  olive: "оливковая роспись (файл)",
-  shared: "общий файл (цвет не различён)",
-}
-
-function normalizeMotif(s: string | null | undefined): string {
-  return (s || "")
-    .toLowerCase()
-    .replace(/['`]/g, "'")
-    .replace(/\s+/g, " ")
-    .trim()
-}
-
-export function wwHandlePrefix(handle: string): string | null {
-  const m = handle.toLowerCase().match(/^([a-z]{2})-\d{2}-\d/)
-  return m?.[1] || null
-}
+/** @deprecated use WW_SKU_PREFIX_MOTIFS */
+export const WW_HANDLE_PREFIX_MOTIFS = WW_SKU_PREFIX_MOTIFS
+export { WW_SKU_PREFIX_MOTIFS, expectedMotifFromSkuPrefix, isKnownWwSkuPrefix, wwHandlePrefix }
+export { extractMotifFromTitle, findMotifInTitle, decorFromColorGuess, decorFromFilename }
 
 export function isWillieWinkieCollection(collection: string | null | undefined): boolean {
   return (collection || "").toLowerCase() === "willie-winkie"
@@ -98,13 +66,11 @@ export function isWillieWinkieCollection(collection: string | null | undefined):
 export function isWillieWinkieSku(handle: string, collection: string | null | undefined): boolean {
   if (isWillieWinkieCollection(collection)) return true
   const prefix = wwHandlePrefix(handle)
-  return Boolean(prefix && WW_HANDLE_PREFIX_MOTIFS[prefix])
+  return Boolean(prefix && isKnownWwSkuPrefix(prefix))
 }
 
 export function motifFromHandlePrefix(handle: string): string | null {
-  const prefix = wwHandlePrefix(handle)
-  if (!prefix) return null
-  return WW_HANDLE_PREFIX_MOTIFS[prefix] || null
+  return expectedMotifFromSkuPrefix(handle)
 }
 
 export function extractCatalogCodeFromTitle(title: string | null | undefined): string | null {
@@ -116,17 +82,6 @@ export function extractCatalogCodeFromTitle(title: string | null | undefined): s
 function motifVariants(motif: string): string[] {
   const base = motif.replace(/[`']/g, "'").trim()
   return [...new Set([motif, base, base.replace(/'/g, "`"), base.replace(/'/g, "'")])]
-}
-
-function findMotifInTitle(title: string, expectedMotif?: string | null): string | null {
-  const fromTitle = extractMotifFromTitle(title)
-  if (fromTitle) return fromTitle
-  if (!expectedMotif) return null
-  const norm = title.toLowerCase().replace(/[`']/g, "'")
-  for (const v of motifVariants(expectedMotif)) {
-    if (norm.includes(v.toLowerCase().replace(/[`']/g, "'"))) return expectedMotif
-  }
-  return null
 }
 
 /** Split legacy h1 into product type, motif subcollection, price-list code. */
@@ -157,39 +112,6 @@ export function parseWwLegacyTitle(
   }
 }
 
-export function extractMotifFromTitle(title: string | null | undefined): string | null {
-  if (!title?.trim()) return null
-  const t = title.replace(/\s+/g, " ")
-  for (const motif of KNOWN_TITLE_MOTIFS.sort((a, b) => b.length - a.length)) {
-    if (t.toLowerCase().includes(motif.toLowerCase().replace(/`/g, "'"))) {
-      return motif.replace(/`/g, "'")
-    }
-  }
-  const latin = t.match(
-    /(?:комод|стол|стеллаж|кровать|туалетный|рабочий|детский|стандарт|высокий|для книг)[^A-Za-z]*([A-Z][A-Za-z''\-\s]+?)(?:\s*\(гл\.|$)/i
-  )?.[1]
-  if (latin && latin.length > 2 && latin.length < 40) {
-    return latin.trim().replace(/\s+/g, " ")
-  }
-  return null
-}
-
-export function decorFromFilename(filename: string | null | undefined): string | null {
-  if (!filename) return null
-  const fn = filename.toLowerCase()
-  for (const [key, label] of Object.entries(FILENAME_COLOR_HINTS)) {
-    if (fn.includes(`_${key}_`) || fn.includes(`-${key}-`) || fn.includes(`color_${key}`)) {
-      return label
-    }
-  }
-  return null
-}
-
-export function decorFromColorGuess(colorGuess: string | null | undefined): string | null {
-  if (!colorGuess || colorGuess === "unknown") return null
-  return FILENAME_COLOR_HINTS[colorGuess.toLowerCase()] || `цвет: ${colorGuess}`
-}
-
 export function motifSourceLabel(source: DecorSource): string {
   return decorSourceLabel(source)
 }
@@ -201,6 +123,7 @@ export function decorSourceLabel(source: DecorSource): string {
     normalized: "normalized",
     title_parse: "title_parse",
     handle_prefix: "handle_prefix",
+    operator_note: "operator_note",
     filename_guess: "filename_guess",
     checklist_color: "checklist_color",
     unknown: "unknown",
@@ -221,68 +144,55 @@ type PickDecorInput = {
 
 export function pickProductDecor(input: PickDecorInput): ProductDecor {
   const isWw = isWillieWinkieSku(input.handle, input.collection)
-  const expected = isWw ? motifFromHandlePrefix(input.handle) : null
-  const fromFile = decorFromFilename(input.filename)
-  const fromColor = decorFromColorGuess(input.colorGuess)
 
-  const titleObserved = findMotifInTitle(input.productTitle || "", expected)
-  let source: DecorSource = "unknown"
-  let confidence: DecorConfidence = "unknown"
-
-  if (input.seedDecor) {
-    source = input.titleSource === "price_list" ? "price_list" : "seed_products"
-    confidence = "high"
-  } else if (input.invDecorHint) {
-    source = "normalized"
-    confidence = "high"
-  } else if (titleObserved && expected && normalizeMotif(titleObserved) === normalizeMotif(expected)) {
-    source = "title_parse"
-    confidence = "high"
-  } else if (expected) {
-    source = "handle_prefix"
-    confidence = "high"
-  } else if (titleObserved && !expected) {
-    source = "title_parse"
-    confidence = "high"
-  } else if (fromColor) {
-    source = "checklist_color"
-    confidence = "low"
-  } else if (fromFile) {
-    source = "filename_guess"
-    confidence = "low"
+  if (isWw) {
+    const r = resolveWwMotifIdentity({
+      handle: input.handle,
+      productTitleRaw: input.productTitle,
+      filename: input.filename,
+      colorGuess: input.colorGuess,
+    })
+    return {
+      is_willie_winkie: true,
+      expected_motif_from_sku_prefix: r.expected_motif_from_sku_prefix,
+      legacy_page_motif: r.legacy_page_motif,
+      resolved_motif: r.resolved_motif,
+      legacy_metadata_mismatch: r.legacy_metadata_mismatch,
+      motif_subcollection: r.resolved_motif,
+      motif_subcollection_expected: r.expected_motif_from_sku_prefix,
+      motif_subcollection_observed: r.legacy_page_motif,
+      catalog_code_label: extractCatalogCodeFromTitle(input.productTitle),
+      motif_source: r.motif_source,
+      motif_confidence: r.motif_confidence,
+      motif_mismatch: r.legacy_metadata_mismatch,
+      decor_motif: r.resolved_motif,
+      decor_motif_expected: r.expected_motif_from_sku_prefix,
+      decor_motif_observed: r.legacy_page_motif,
+      decor_source: r.motif_source,
+      decor_confidence: r.motif_confidence,
+      decor_mismatch: r.legacy_metadata_mismatch,
+    }
   }
 
-  const mismatch =
-    isWw &&
-    Boolean(expected && titleObserved) &&
-    normalizeMotif(expected) !== normalizeMotif(titleObserved)
-
-  let motifSubcollection: string | null = null
-  if (mismatch) {
-    source = "title_parse"
-    confidence = "high"
-  } else if (expected) {
-    motifSubcollection = expected
-  } else if (titleObserved) {
-    motifSubcollection = titleObserved
-  } else if (fromColor || fromFile) {
-    motifSubcollection = fromColor || fromFile
-  }
-
+  const titleObserved = extractMotifFromTitle(input.productTitle || "")
   return {
-    is_willie_winkie: isWw,
-    motif_subcollection: motifSubcollection,
-    motif_subcollection_expected: expected,
+    is_willie_winkie: false,
+    expected_motif_from_sku_prefix: null,
+    legacy_page_motif: titleObserved,
+    resolved_motif: titleObserved,
+    legacy_metadata_mismatch: false,
+    motif_subcollection: titleObserved,
+    motif_subcollection_expected: null,
     motif_subcollection_observed: titleObserved,
-    catalog_code_label: isWw ? extractCatalogCodeFromTitle(input.productTitle) : null,
-    motif_source: isWw && !motifSubcollection && !expected ? "unknown" : source,
-    motif_confidence: isWw && !motifSubcollection && !expected ? "unknown" : confidence,
-    motif_mismatch: mismatch,
-    decor_motif: motifSubcollection,
-    decor_motif_expected: expected,
+    catalog_code_label: null,
+    motif_source: "unknown",
+    motif_confidence: "unknown",
+    motif_mismatch: false,
+    decor_motif: titleObserved,
+    decor_motif_expected: null,
     decor_motif_observed: titleObserved,
-    decor_source: isWw && !motifSubcollection && !expected ? "unknown" : source,
-    decor_confidence: isWw && !motifSubcollection && !expected ? "unknown" : confidence,
-    decor_mismatch: mismatch,
+    decor_source: "unknown",
+    decor_confidence: "unknown",
+    decor_mismatch: false,
   }
 }

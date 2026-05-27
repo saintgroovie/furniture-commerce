@@ -30,6 +30,10 @@ export type ProductIdentity = {
   category: string | null
   dimensions_label: string | null
   is_willie_winkie: boolean
+  expected_motif_from_sku_prefix: string | null
+  legacy_page_motif: string | null
+  resolved_motif: string | null
+  legacy_metadata_mismatch: boolean
   motif_subcollection: string | null
   motif_subcollection_expected: string | null
   motif_subcollection_observed: string | null
@@ -273,7 +277,7 @@ export function buildProductIdentities(
     })
 
     const wwParts = decor.is_willie_winkie
-      ? parseWwLegacyTitle(picked.title, decor.motif_subcollection_expected)
+      ? parseWwLegacyTitle(picked.title, decor.expected_motif_from_sku_prefix)
       : null
     const productTypeTitle = decor.is_willie_winkie
       ? wwParts?.product_type_title ||
@@ -306,6 +310,10 @@ export function buildProductIdentities(
       category: seed?.medusa_category_title || seed?.medusa_category_handle || null,
       dimensions_label: formatDimensions(seed?.dimensions_normalized),
       is_willie_winkie: decor.is_willie_winkie,
+      expected_motif_from_sku_prefix: decor.expected_motif_from_sku_prefix,
+      legacy_page_motif: decor.legacy_page_motif,
+      resolved_motif: decor.resolved_motif,
+      legacy_metadata_mismatch: decor.legacy_metadata_mismatch,
       motif_subcollection: decor.motif_subcollection,
       motif_subcollection_expected: decor.motif_subcollection_expected,
       motif_subcollection_observed: decor.motif_subcollection_observed,

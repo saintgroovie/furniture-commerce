@@ -1,4 +1,5 @@
 import { motifSourceLabel, titleSourceLabel } from "./approval-board-constants"
+import { buildCandidateMotifView } from "./approval-board-operator-motif"
 import type { ChecklistItem, SkuPoolContext } from "./approval-board-types"
 import { decorFromColorGuess, decorFromFilename } from "./approval-board-ww-decor-client"
 
@@ -18,14 +19,13 @@ function candidateMotifHint(item?: ChecklistItem): string | null {
 }
 
 function WillieWinkieIdentity({ ctx, handle, item, compact }: Props) {
+  const view = buildCandidateMotifView(ctx, item)
   const productType = ctx?.product_type_title || ctx?.product_title || "—"
-  const motif = ctx?.motif_subcollection
-  const motifExpected = ctx?.motif_subcollection_expected
-  const motifObserved = ctx?.motif_subcollection_observed
   const catalog = ctx?.catalog_code_label
-  const motifLow = ctx?.motif_confidence === "low"
-  const motifUnknown = !motif || ctx?.motif_confidence === "unknown"
+  const motifLow = view.motif_confidence === "low"
+  const motifUnknown = !view.resolved_motif || view.motif_confidence === "unknown"
   const cardHint = candidateMotifHint(item)
+  const displayMotif = view.resolved_motif || view.expected_motif_from_sku_prefix
 
   return (
     <div className={`ab-identity ab-identity-ww ${compact ? "ab-identity-compact" : ""}`}>
@@ -36,11 +36,11 @@ function WillieWinkieIdentity({ ctx, handle, item, compact }: Props) {
       </div>
       <div className="ab-identity-line ab-identity-line-collection">
         <span className="ab-identity-collection-main">Willie Winkie</span>
-        {motif && !ctx?.motif_mismatch ? (
+        {displayMotif && !view.legacy_metadata_mismatch ? (
           <>
             <span className="ab-identity-sep">·</span>
             <span className="ab-identity-motif">
-              роспись / мотив: <strong>{motif}</strong>
+              роспись / мотив: <strong>{displayMotif}</strong>
             </span>
           </>
         ) : null}
@@ -52,13 +52,32 @@ function WillieWinkieIdentity({ ctx, handle, item, compact }: Props) {
         ) : null}
       </div>
 
-      {motifUnknown ? <div className="ab-identity-warn ab-ww-warn">{WW_MOTIF_MISSING}</div> : null}
-
-      {ctx?.motif_mismatch ? (
-        <div className="ab-identity-warn ab-ww-warn">
-          ⚠ Подколлекция росписи: SKU ожидает <b>{motifExpected}</b>, legacy-страница — <b>{motifObserved}</b>.
-          Одна форма, разная роспись — не approve только по силуэту; Needs review или Reject.
+      {view.legacy_metadata_mismatch ? (
+        <div className="ab-identity-mismatch-detail">
+          <div>
+            <span className="ab-mismatch-label">SKU ожидает:</span>{" "}
+            <strong>{view.expected_motif_from_sku_prefix || "—"}</strong>
+          </div>
+          <div>
+            <span className="ab-mismatch-label">legacy-страница:</span>{" "}
+            <strong className="ab-decor-mismatch">{view.legacy_page_motif || "—"}</strong>
+          </div>
+          {view.operator_note_motif ? (
+            <div>
+              <span className="ab-mismatch-label">оператор подтвердил:</span>{" "}
+              <strong className="ab-operator-confirmed">{view.operator_note_motif}</strong>
+            </div>
+          ) : null}
+          <div className="ab-identity-warn ab-ww-warn ab-mismatch-action">
+            {view.operator_confirmed_motif
+              ? "Legacy metadata mismatch сохраняется, но мотив подтверждён в заметке — можно approve после сверки фото."
+              : "Можно approve только после ручного подтверждения мотива (заметка, напр. «это Templars»)."}
+          </div>
         </div>
+      ) : null}
+
+      {motifUnknown && !view.legacy_metadata_mismatch ? (
+        <div className="ab-identity-warn ab-ww-warn">{WW_MOTIF_MISSING}</div>
       ) : null}
 
       {cardHint && motifLow ? (
@@ -66,13 +85,13 @@ function WillieWinkieIdentity({ ctx, handle, item, compact }: Props) {
       ) : null}
 
       <div className="ab-identity-meta ab-identity-sources">
-        <span>тип товара: {titleSourceLabel(ctx?.product_identity_source || "unknown")}</span>
-        <span> · мотив: {motifSourceLabel(ctx?.motif_source || "unknown")}</span>
-        {motifLow ? <span className="ab-source-low"> · низкая уверенность мотива</span> : null}
+        <span>тип: {titleSourceLabel(ctx?.product_identity_source || "unknown")}</span>
+        <span> · мотив: {motifSourceLabel(view.motif_source)}</span>
+        {view.legacy_metadata_mismatch ? <span> · legacy_metadata_mismatch</span> : null}
       </div>
       {ctx?.product_title_raw && ctx.product_title_raw !== productType ? (
         <div className="ab-identity-raw" title="Полный legacy h1">
-          legacy: {ctx.product_title_raw}
+          legacy h1: {ctx.product_title_raw}
         </div>
       ) : null}
     </div>
