@@ -3,6 +3,9 @@ import * as fs from "fs"
 import * as path from "path"
 import { getDataRepoRoot, readJsonFile } from "./data-repo-root"
 import { getEmergencyFixRepoResolution } from "./emergency-fix-repo-root"
+import { pickProductDecor, type DecorConfidence, type DecorSource, type ProductDecor } from "./product-decor"
+
+export type { DecorConfidence, DecorSource, ProductDecor }
 
 export type TitleSource = "price_list" | "seed_products" | "normalized" | "filename_guess" | "unknown"
 
@@ -16,6 +19,13 @@ export type ProductIdentity = {
   collection_label: string | null
   category: string | null
   dimensions_label: string | null
+  is_willie_winkie: boolean
+  decor_motif: string | null
+  decor_motif_expected: string | null
+  decor_motif_observed: string | null
+  decor_source: DecorSource
+  decor_confidence: DecorConfidence
+  decor_mismatch: boolean
 }
 
 const COLLECTION_LABELS: Record<string, string> = {
@@ -169,7 +179,8 @@ function pickTitle(
 
 export function buildProductIdentities(
   handles: string[],
-  sourcePagesByHandle: Record<string, string[]>
+  sourcePagesByHandle: Record<string, string[]>,
+  collectionByHandle: Record<string, string> = {}
 ): Record<string, ProductIdentity> {
   const { dataRepoRoot } = getDataRepoRoot()
   const emergency = getEmergencyFixRepoResolution()
@@ -229,10 +240,20 @@ export function buildProductIdentities(
 
     const picked = pickTitle(h, seed, board, invNameByHandle.get(h) || null, legacyTitle, legacyUrl)
     const collection =
-      seed?.medusa_collection_handle || board?.collection || null
+      seed?.medusa_collection_handle ||
+      board?.collection ||
+      collectionByHandle[h] ||
+      null
     const collectionLabel =
       seed?.medusa_collection_title ||
       (collection ? COLLECTION_LABELS[collection] || collection : null)
+
+    const decor = pickProductDecor({
+      handle: h,
+      collection,
+      productTitle: picked.title,
+      titleSource: picked.source,
+    })
 
     out[h] = {
       handle: h,
@@ -244,6 +265,13 @@ export function buildProductIdentities(
       collection_label: collectionLabel,
       category: seed?.medusa_category_title || seed?.medusa_category_handle || null,
       dimensions_label: formatDimensions(seed?.dimensions_normalized),
+      is_willie_winkie: decor.is_willie_winkie,
+      decor_motif: decor.decor_motif,
+      decor_motif_expected: decor.decor_motif_expected,
+      decor_motif_observed: decor.decor_motif_observed,
+      decor_source: decor.decor_source,
+      decor_confidence: decor.decor_confidence,
+      decor_mismatch: decor.decor_mismatch,
     }
   }
 

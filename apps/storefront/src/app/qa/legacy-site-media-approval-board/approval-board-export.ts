@@ -23,6 +23,7 @@ export function buildExportPayload(input: ExportInput): ChecklistPayload {
       operator_duplicate_status: item.operator_duplicate_status ?? "unchecked",
       operator_duplicate_note: item.operator_duplicate_note ?? "",
       product_title_source: item.product_title_source ?? null,
+      decor_source: item.decor_source ?? null,
     })),
   }
 }

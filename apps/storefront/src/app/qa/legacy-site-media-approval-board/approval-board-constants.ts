@@ -30,6 +30,31 @@ export const WORKFLOW_FILTERS: { id: WorkflowFilter; label: string }[] = [
   { id: "approved_without_role", label: "Approve без роли" },
 ]
 
+export function decorSourceLabel(
+  source:
+    | "price_list"
+    | "seed_products"
+    | "normalized"
+    | "title_parse"
+    | "handle_prefix"
+    | "filename_guess"
+    | "checklist_color"
+    | "unknown"
+    | string
+): string {
+  const map: Record<string, string> = {
+    price_list: "price_list",
+    seed_products: "seed",
+    normalized: "normalized",
+    title_parse: "title_parse",
+    handle_prefix: "handle_prefix",
+    filename_guess: "filename_guess",
+    checklist_color: "checklist_color",
+    unknown: "unknown",
+  }
+  return map[source] || source
+}
+
 export function titleSourceLabel(
   source: "price_list" | "seed_products" | "normalized" | "filename_guess" | "unknown" | string
 ): string {

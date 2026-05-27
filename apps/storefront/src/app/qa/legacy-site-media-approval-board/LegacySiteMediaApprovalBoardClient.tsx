@@ -14,6 +14,7 @@ import {
   downloadExportJson,
 } from "./approval-board-export"
 import { ProductIdentityBlock } from "./approval-board-identity-ui"
+import { wwApproveGuard } from "./approval-board-ww-triage"
 import { candidatePreviewSrc, poolMediaPreviewSrc } from "./approval-board-preview"
 import {
   clearBoardState,
@@ -167,7 +168,7 @@ function CandidateCard({
         <img className="ab-card-img" src={candidatePreviewSrc(item)} alt={item.filename} loading="lazy" />
       </button>
       <div className="ab-card-body">
-        <ProductIdentityBlock ctx={ctx} handle={item.handle} compact />
+        <ProductIdentityBlock ctx={ctx} handle={item.handle} item={item} compact />
         <div className="ab-filename">{item.filename}</div>
         <div className="ab-meta">
           <div className="ab-auto-role">авто-роль: {autoRoleLabel(item.role_guess)}</div>
@@ -175,6 +176,12 @@ function CandidateCard({
           {item.designer_decision === "approve" && !item.operator_role ? (
             <div className="ab-warn">Роль не назначена — supplement будет менее полезен.</div>
           ) : null}
+          {(() => {
+            const g = wwApproveGuard(item, ctx)
+            return !g.ok && item.designer_decision === "approve" ? (
+              <div className="ab-warn ab-ww-warn">{g.reason}</div>
+            ) : null
+          })()}
         </div>
 
         <div className="ab-section-label">Роль (оператор)</div>
@@ -225,7 +232,18 @@ function CandidateCard({
             type="button"
             className="approve"
             data-active={item.designer_decision === "approve"}
-            onClick={() => onPatch(item.candidate_id, { designer_decision: "approve" })}
+            onClick={() => {
+              const guard = wwApproveGuard(item, ctx)
+              if (!guard.ok) {
+                const note = guard.reason ? `[WW] ${guard.reason}` : "[WW] Needs review"
+                onPatch(item.candidate_id, {
+                  designer_decision: "needs_review",
+                  notes: item.notes?.includes("[WW]") ? item.notes : [item.notes, note].filter(Boolean).join("\n"),
+                })
+                return
+              }
+              onPatch(item.candidate_id, { designer_decision: "approve" })
+            }}
           >
             Approve
           </button>
@@ -318,6 +336,7 @@ export function LegacySiteMediaApprovalBoardClient() {
           return {
             ...item,
             product_title_source: ctx?.product_title_source ?? item.product_title_source ?? null,
+            decor_source: ctx?.decor_source ?? item.decor_source ?? null,
           }
         })
         setBase(data)
@@ -426,6 +445,11 @@ export function LegacySiteMediaApprovalBoardClient() {
           <br />
           Reject — неверный SKU / дубль / мусор. Сомнения → Needs review.
         </p>
+        <div className="ab-ww-guide">
+          <b>Willie Winkie:</b> одна форма — разные росписи. Не approve только по силуэту.
+          Сверьте мотив (SKU-префикс vs фото vs legacy-страница). При расхождении или неясной
+          росписи — <b>Needs review</b>; Approve только при совпадении типа и мотива.
+        </div>
         <div className="ab-stat">
           <span>Всего</span>
           <strong>{items.length}</strong>
@@ -548,7 +572,7 @@ export function LegacySiteMediaApprovalBoardClient() {
               ✕
             </button>
             <h3>Сравнение · {compareItem.handle}</h3>
-            <ProductIdentityBlock ctx={compareCtx} handle={compareItem.handle} />
+            <ProductIdentityBlock ctx={compareCtx} handle={compareItem.handle} item={compareItem} />
             <div className="ab-compare-row">
               <div>
                 <div className="ab-compare-label">Кандидат (new)</div>

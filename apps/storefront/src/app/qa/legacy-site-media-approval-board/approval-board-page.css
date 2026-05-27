@@ -168,6 +168,37 @@ body:has(.legacy-site-approval-board-root) main {
   font-style: italic;
 }
 
+.ab-identity-decor {
+  margin-top: 6px;
+  font-size: 12px;
+}
+
+.ab-decor-label {
+  font-weight: 600;
+  color: #2c4a6e;
+}
+
+.ab-decor-mismatch {
+  color: #a33;
+  font-weight: 600;
+}
+
+.ab-ww-warn {
+  background: #fde8e8;
+  border-color: #e8a0a0;
+  color: #6a2020;
+}
+
+.ab-ww-guide {
+  margin: 12px 0;
+  padding: 10px 12px;
+  background: #eef4fc;
+  border: 1px solid #b8cfe8;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .ab-group-stats {
   display: flex;
   flex-direction: column;
