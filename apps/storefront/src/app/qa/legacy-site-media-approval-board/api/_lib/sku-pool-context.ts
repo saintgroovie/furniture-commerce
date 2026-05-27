@@ -26,6 +26,13 @@ export type SkuPoolContext = {
   collection_label: string | null
   category: string | null
   dimensions_label: string | null
+  is_willie_winkie: boolean
+  decor_motif: string | null
+  decor_motif_expected: string | null
+  decor_motif_observed: string | null
+  decor_source: import("./product-decor").DecorSource
+  decor_confidence: import("./product-decor").DecorConfidence
+  decor_mismatch: boolean
   existing_media: PoolMediaRef[]
   has_reference_media: boolean
 }
@@ -77,7 +84,8 @@ function invToRef(repoRoot: string, item: InvItem): PoolMediaRef {
 
 export function buildSkuPoolContext(
   handles: string[],
-  sourcePagesByHandle: Record<string, string[]> = {}
+  sourcePagesByHandle: Record<string, string[]> = {},
+  collectionByHandle: Record<string, string> = {}
 ): {
   contexts: Record<string, SkuPoolContext>
   data_repo_root: string | null
@@ -86,7 +94,7 @@ export function buildSkuPoolContext(
   const emergency = getEmergencyFixRepoResolution()
   const repoRoot = dataRepoRoot || emergency.repoRoot
 
-  const identitiesEarly = buildProductIdentities(handles, sourcePagesByHandle)
+  const identitiesEarly = buildProductIdentities(handles, sourcePagesByHandle, collectionByHandle)
   if (!repoRoot) {
     const empty: Record<string, SkuPoolContext> = {}
     for (const h of handles) {
@@ -101,6 +109,13 @@ export function buildSkuPoolContext(
         collection_label: id?.collection_label || null,
         category: id?.category || null,
         dimensions_label: id?.dimensions_label || null,
+        is_willie_winkie: id?.is_willie_winkie || false,
+        decor_motif: id?.decor_motif || null,
+        decor_motif_expected: id?.decor_motif_expected || null,
+        decor_motif_observed: id?.decor_motif_observed || null,
+        decor_source: id?.decor_source || "unknown",
+        decor_confidence: id?.decor_confidence || "unknown",
+        decor_mismatch: id?.decor_mismatch || false,
         existing_media: [],
         has_reference_media: false,
       }
@@ -129,7 +144,7 @@ export function buildSkuPoolContext(
     if (h) seedByHandle.set(h, s)
   }
 
-  const identities = buildProductIdentities(handles, sourcePagesByHandle)
+  const identities = buildProductIdentities(handles, sourcePagesByHandle, collectionByHandle)
   const contexts: Record<string, SkuPoolContext> = {}
 
   for (const handle of handles) {
@@ -186,6 +201,13 @@ export function buildSkuPoolContext(
       collection_label: id?.collection_label || null,
       category: id?.category || null,
       dimensions_label: id?.dimensions_label || null,
+      is_willie_winkie: id?.is_willie_winkie || false,
+      decor_motif: id?.decor_motif || null,
+      decor_motif_expected: id?.decor_motif_expected || null,
+      decor_motif_observed: id?.decor_motif_observed || null,
+      decor_source: id?.decor_source || "unknown",
+      decor_confidence: id?.decor_confidence || "unknown",
+      decor_mismatch: id?.decor_mismatch || false,
       existing_media: refs,
       has_reference_media: withPreview.length > 0,
     }

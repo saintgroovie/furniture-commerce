@@ -31,6 +31,7 @@ export type ChecklistItem = {
   operator_duplicate_status?: DuplicateStatus | null
   operator_duplicate_note?: string
   product_title_source?: TitleSource | null
+  decor_source?: DecorSource | null
 }
 
 export type ChecklistPayload = {
@@ -62,6 +63,18 @@ export type PoolMediaRef = {
 
 export type TitleSource = "price_list" | "seed_products" | "normalized" | "filename_guess" | "unknown"
 
+export type DecorSource =
+  | "price_list"
+  | "seed_products"
+  | "normalized"
+  | "title_parse"
+  | "handle_prefix"
+  | "filename_guess"
+  | "checklist_color"
+  | "unknown"
+
+export type DecorConfidence = "high" | "low" | "unknown"
+
 export type SkuPoolContext = {
   handle: string
   sku: string | null
@@ -72,6 +85,13 @@ export type SkuPoolContext = {
   collection_label: string | null
   category: string | null
   dimensions_label: string | null
+  is_willie_winkie: boolean
+  decor_motif: string | null
+  decor_motif_expected: string | null
+  decor_motif_observed: string | null
+  decor_source: DecorSource
+  decor_confidence: DecorConfidence
+  decor_mismatch: boolean
   existing_media: PoolMediaRef[]
   has_reference_media: boolean
 }
