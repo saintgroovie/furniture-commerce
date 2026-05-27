@@ -30,6 +30,7 @@ export type ChecklistItem = {
   operator_role?: OperatorRole | null
   operator_duplicate_status?: DuplicateStatus | null
   operator_duplicate_note?: string
+  product_title_source?: TitleSource | null
 }
 
 export type ChecklistPayload = {
@@ -59,11 +60,18 @@ export type PoolMediaRef = {
   source_type: string | null
 }
 
+export type TitleSource = "price_list" | "seed_products" | "normalized" | "filename_guess" | "unknown"
+
 export type SkuPoolContext = {
   handle: string
   sku: string | null
   collection: string | null
   product_title: string | null
+  product_title_source: TitleSource
+  title_confidence: "high" | "low"
+  collection_label: string | null
+  category: string | null
+  dimensions_label: string | null
   existing_media: PoolMediaRef[]
   has_reference_media: boolean
 }

@@ -12,14 +12,22 @@ export async function GET() {
   }
 
   const checklist = JSON.parse(fs.readFileSync(emergency.approvalPackPath, "utf8")) as {
-    items: { handle: string }[]
+    items: { handle: string; source_page?: string }[]
   }
   if (!checklist?.items?.length) {
     return NextResponse.json({ error: "checklist_empty" }, { status: 404 })
   }
 
   const handles = [...new Set(checklist.items.map((i) => i.handle).filter(Boolean))]
-  const { contexts, data_repo_root } = buildSkuPoolContext(handles)
+  const sourcePagesByHandle: Record<string, string[]> = {}
+  for (const item of checklist.items) {
+    const h = item.handle.toLowerCase()
+    if (!sourcePagesByHandle[h]) sourcePagesByHandle[h] = []
+    if (item.source_page && !sourcePagesByHandle[h].includes(item.source_page)) {
+      sourcePagesByHandle[h].push(item.source_page)
+    }
+  }
+  const { contexts, data_repo_root } = buildSkuPoolContext(handles, sourcePagesByHandle)
 
   return NextResponse.json({
     generated_at: new Date().toISOString(),

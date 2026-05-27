@@ -30,6 +30,19 @@ export const WORKFLOW_FILTERS: { id: WorkflowFilter; label: string }[] = [
   { id: "approved_without_role", label: "Approve без роли" },
 ]
 
+export function titleSourceLabel(
+  source: "price_list" | "seed_products" | "normalized" | "filename_guess" | "unknown" | string
+): string {
+  const map: Record<string, string> = {
+    price_list: "price_list",
+    seed_products: "seed",
+    normalized: "normalized",
+    filename_guess: "filename_guess",
+    unknown: "unknown",
+  }
+  return map[source] || source
+}
+
 export function autoRoleLabel(roleGuess: string | undefined): string {
   if (!roleGuess || roleGuess === "unknown") return "не ясно"
   if (roleGuess === "3/4") return "3/4"
