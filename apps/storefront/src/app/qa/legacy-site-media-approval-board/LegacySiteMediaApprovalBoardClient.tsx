@@ -8,6 +8,7 @@ import {
   WORKFLOW_FILTERS,
   type WorkflowFilter,
 } from "./approval-board-constants"
+import { autoguessLabel, guessOperatorRole } from "./approval-board-role-autoguess"
 import {
   buildExportPayload,
   copyExportToClipboard,
@@ -161,6 +162,8 @@ function CandidateCard({
   const filenameDup =
     ctx?.existing_media?.some((m) => m.filename && normalizeFn(m.filename) === normalizeFn(item.filename)) ??
     false
+  const roleGuess = guessOperatorRole(item)
+  const hasOperatorRole = Boolean(item.operator_role)
 
   return (
     <article className="ab-card" data-decision={item.designer_decision} data-dup={dup}>
@@ -172,6 +175,17 @@ function CandidateCard({
         <div className="ab-filename">{item.filename}</div>
         <div className="ab-meta">
           <div className="ab-auto-role">авто-роль: {autoRoleLabel(item.role_guess)}</div>
+          <div className="ab-role-autoguess">
+            авто-догадка: {autoRoleLabel(roleGuess.auto_role_guess)} · {autoguessLabel(roleGuess.auto_role_confidence)}{" "}
+            <span className="ab-role-reason" title={roleGuess.auto_role_reason}>
+              ({roleGuess.auto_role_reason})
+            </span>
+          </div>
+          {!hasOperatorRole ? (
+            <div className="ab-role-hint">Автодогадка не заменяет выбор оператора.</div>
+          ) : item.operator_role !== roleGuess.auto_role_guess ? (
+            <div className="ab-role-hint ab-role-override">оператор переопределил автодогадку</div>
+          ) : null}
           {filenameDup ? <div className="ab-dup-hint">⚠ имя файла совпадает с existing</div> : null}
           {item.designer_decision === "approve" && !item.operator_role ? (
             <div className="ab-warn">Роль не назначена — supplement будет менее полезен.</div>
@@ -196,6 +210,7 @@ function CandidateCard({
               type="button"
               className="ab-chip"
               data-active={item.operator_role === r.id}
+              data-suggested={!hasOperatorRole && roleGuess.auto_role_guess === r.id}
               onClick={() => onPatch(item.candidate_id, { operator_role: r.id })}
             >
               {r.label}

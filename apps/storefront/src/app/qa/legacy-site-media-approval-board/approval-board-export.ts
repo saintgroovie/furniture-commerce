@@ -1,4 +1,5 @@
 import { enrichItemMotifFields } from "./approval-board-motif-export"
+import { guessOperatorRole } from "./approval-board-role-autoguess"
 import type { ChecklistItem, ChecklistPayload, DesignerDecision, SkuPoolContext } from "./approval-board-types"
 
 export type ExportInput = {
@@ -27,6 +28,14 @@ export function buildExportPayload(input: ExportInput): ChecklistPayload {
         operator_duplicate_status: item.operator_duplicate_status ?? "unchecked",
         operator_duplicate_note: item.operator_duplicate_note ?? "",
         ...enrichItemMotifFields(item, ctx),
+        ...(() => {
+          const g = guessOperatorRole(item)
+          return {
+            auto_role_guess: g.auto_role_guess,
+            auto_role_confidence: g.auto_role_confidence,
+            auto_role_reason: g.auto_role_reason,
+          }
+        })(),
       }
     }),
   }

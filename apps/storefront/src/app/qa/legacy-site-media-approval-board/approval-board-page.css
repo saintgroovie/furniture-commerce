@@ -414,6 +414,30 @@ body:has(.legacy-site-approval-board-root) main {
   font-style: italic;
 }
 
+.ab-role-autoguess {
+  font-size: 11px;
+  margin-top: 4px;
+  color: #2c4a6e;
+}
+
+.ab-role-reason {
+  color: var(--ab-muted);
+  font-size: 10px;
+}
+
+.ab-role-hint {
+  font-size: 10px;
+  color: var(--ab-muted);
+  margin-top: 4px;
+  font-style: italic;
+}
+
+.ab-role-override {
+  color: #1a5c3a;
+  font-style: normal;
+  font-weight: 500;
+}
+
 .ab-dup-hint,
 .ab-warn {
   color: #8a6a1a;
@@ -447,6 +471,12 @@ body:has(.legacy-site-approval-board-root) main {
   background: #2c4a6e;
   color: #fff;
   border-color: #2c4a6e;
+}
+
+.ab-chip[data-suggested="true"]:not([data-active="true"]) {
+  outline: 2px dashed #4a90d9;
+  outline-offset: 1px;
+  background: #eef6ff;
 }
 
 .ab-actions {

@@ -56,6 +56,9 @@ export type ChecklistItem = {
   resolved_motif?: string | null
   legacy_metadata_mismatch?: boolean
   operator_confirmed_motif?: boolean
+  auto_role_guess?: OperatorRole | null
+  auto_role_confidence?: "high" | "medium" | "low" | null
+  auto_role_reason?: string | null
 }
 
 export type ChecklistPayload = {
