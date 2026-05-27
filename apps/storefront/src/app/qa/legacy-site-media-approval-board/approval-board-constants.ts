@@ -30,6 +30,21 @@ export const WORKFLOW_FILTERS: { id: WorkflowFilter; label: string }[] = [
   { id: "approved_without_role", label: "Approve без роли" },
 ]
 
+export function motifSourceLabel(
+  source:
+    | "price_list"
+    | "seed_products"
+    | "normalized"
+    | "title_parse"
+    | "handle_prefix"
+    | "filename_guess"
+    | "checklist_color"
+    | "unknown"
+    | string
+): string {
+  return decorSourceLabel(source)
+}
+
 export function decorSourceLabel(
   source:
     | "price_list"

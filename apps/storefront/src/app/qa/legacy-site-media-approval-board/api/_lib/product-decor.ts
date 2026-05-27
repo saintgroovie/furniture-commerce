@@ -12,8 +12,22 @@ export type DecorSource =
 
 export type DecorConfidence = "high" | "low" | "unknown"
 
+export type WwTitleParts = {
+  product_type_title: string | null
+  motif_observed: string | null
+  catalog_code_label: string | null
+}
+
 export type ProductDecor = {
   is_willie_winkie: boolean
+  motif_subcollection: string | null
+  motif_subcollection_expected: string | null
+  motif_subcollection_observed: string | null
+  catalog_code_label: string | null
+  motif_source: DecorSource
+  motif_confidence: DecorConfidence
+  motif_mismatch: boolean
+  /** @deprecated use motif_subcollection */
   decor_motif: string | null
   decor_motif_expected: string | null
   decor_motif_observed: string | null
@@ -93,6 +107,56 @@ export function motifFromHandlePrefix(handle: string): string | null {
   return WW_HANDLE_PREFIX_MOTIFS[prefix] || null
 }
 
+export function extractCatalogCodeFromTitle(title: string | null | undefined): string | null {
+  if (!title) return null
+  const m = title.match(/\(\s*гл\.?\s*(\d+)\s*\)/i)
+  return m ? `гл.${m[1]}` : null
+}
+
+function motifVariants(motif: string): string[] {
+  const base = motif.replace(/[`']/g, "'").trim()
+  return [...new Set([motif, base, base.replace(/'/g, "`"), base.replace(/'/g, "'")])]
+}
+
+function findMotifInTitle(title: string, expectedMotif?: string | null): string | null {
+  const fromTitle = extractMotifFromTitle(title)
+  if (fromTitle) return fromTitle
+  if (!expectedMotif) return null
+  const norm = title.toLowerCase().replace(/[`']/g, "'")
+  for (const v of motifVariants(expectedMotif)) {
+    if (norm.includes(v.toLowerCase().replace(/[`']/g, "'"))) return expectedMotif
+  }
+  return null
+}
+
+/** Split legacy h1 into product type, motif subcollection, price-list code. */
+export function parseWwLegacyTitle(
+  title: string | null | undefined,
+  expectedMotif?: string | null
+): WwTitleParts {
+  if (!title?.trim()) {
+    return { product_type_title: null, motif_observed: null, catalog_code_label: null }
+  }
+  const catalog_code_label = extractCatalogCodeFromTitle(title)
+  const motif_observed = findMotifInTitle(title, expectedMotif)
+  let product_type_title = title.replace(/\s+/g, " ").trim()
+  const catalogParen = title.match(/\(\s*гл\.?\s*\d+\s*\)/i)?.[0]
+  if (catalogParen) product_type_title = product_type_title.replace(catalogParen, "").trim()
+  const stripMotif = motif_observed || expectedMotif
+  if (stripMotif) {
+    for (const v of motifVariants(stripMotif)) {
+      const escaped = v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+      product_type_title = product_type_title.replace(new RegExp(escaped, "i"), "").trim()
+    }
+  }
+  product_type_title = product_type_title.replace(/[,\s·-]+$/g, "").trim()
+  return {
+    product_type_title: product_type_title || null,
+    motif_observed,
+    catalog_code_label,
+  }
+}
+
 export function extractMotifFromTitle(title: string | null | undefined): string | null {
   if (!title?.trim()) return null
   const t = title.replace(/\s+/g, " ")
@@ -126,6 +190,10 @@ export function decorFromColorGuess(colorGuess: string | null | undefined): stri
   return FILENAME_COLOR_HINTS[colorGuess.toLowerCase()] || `цвет: ${colorGuess}`
 }
 
+export function motifSourceLabel(source: DecorSource): string {
+  return decorSourceLabel(source)
+}
+
 export function decorSourceLabel(source: DecorSource): string {
   const map: Record<DecorSource, string> = {
     price_list: "price_list",
@@ -154,11 +222,10 @@ type PickDecorInput = {
 export function pickProductDecor(input: PickDecorInput): ProductDecor {
   const isWw = isWillieWinkieSku(input.handle, input.collection)
   const expected = isWw ? motifFromHandlePrefix(input.handle) : null
-  const fromTitle = extractMotifFromTitle(input.productTitle)
   const fromFile = decorFromFilename(input.filename)
   const fromColor = decorFromColorGuess(input.colorGuess)
 
-  const titleObserved = fromTitle
+  const titleObserved = findMotifInTitle(input.productTitle || "", expected)
   let source: DecorSource = "unknown"
   let confidence: DecorConfidence = "unknown"
 
@@ -174,7 +241,7 @@ export function pickProductDecor(input: PickDecorInput): ProductDecor {
   } else if (expected) {
     source = "handle_prefix"
     confidence = "high"
-  } else if (titleObserved) {
+  } else if (titleObserved && !expected) {
     source = "title_parse"
     confidence = "high"
   } else if (fromColor) {
@@ -190,26 +257,32 @@ export function pickProductDecor(input: PickDecorInput): ProductDecor {
     Boolean(expected && titleObserved) &&
     normalizeMotif(expected) !== normalizeMotif(titleObserved)
 
-  let primary: string | null = null
+  let motifSubcollection: string | null = null
   if (mismatch) {
-    primary = `${expected} → страница: ${titleObserved}`
     source = "title_parse"
     confidence = "high"
   } else if (expected) {
-    primary = expected
+    motifSubcollection = expected
   } else if (titleObserved) {
-    primary = titleObserved
+    motifSubcollection = titleObserved
   } else if (fromColor || fromFile) {
-    primary = fromColor || fromFile
+    motifSubcollection = fromColor || fromFile
   }
 
   return {
     is_willie_winkie: isWw,
-    decor_motif: primary,
+    motif_subcollection: motifSubcollection,
+    motif_subcollection_expected: expected,
+    motif_subcollection_observed: titleObserved,
+    catalog_code_label: isWw ? extractCatalogCodeFromTitle(input.productTitle) : null,
+    motif_source: isWw && !motifSubcollection && !expected ? "unknown" : source,
+    motif_confidence: isWw && !motifSubcollection && !expected ? "unknown" : confidence,
+    motif_mismatch: mismatch,
+    decor_motif: motifSubcollection,
     decor_motif_expected: expected,
     decor_motif_observed: titleObserved,
-    decor_source: isWw && !primary ? "unknown" : source,
-    decor_confidence: isWw && !primary ? "unknown" : confidence,
+    decor_source: isWw && !motifSubcollection && !expected ? "unknown" : source,
+    decor_confidence: isWw && !motifSubcollection && !expected ? "unknown" : confidence,
     decor_mismatch: mismatch,
   }
 }

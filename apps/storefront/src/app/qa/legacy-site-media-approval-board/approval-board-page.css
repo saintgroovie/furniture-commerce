@@ -116,6 +116,51 @@ body:has(.legacy-site-approval-board-root) main {
   margin-bottom: 8px;
 }
 
+.ab-identity-line {
+  line-height: 1.4;
+}
+
+.ab-identity-line-primary {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.ab-identity-line-collection {
+  font-size: 12px;
+  margin-top: 4px;
+  color: #2c4a6e;
+}
+
+.ab-identity-collection-main {
+  font-weight: 700;
+  color: #1a3a5c;
+}
+
+.ab-identity-type {
+  color: var(--ab-text);
+}
+
+.ab-identity-motif strong {
+  font-weight: 600;
+}
+
+.ab-identity-catalog {
+  color: var(--ab-muted);
+  font-size: 11px;
+}
+
+.ab-identity-raw {
+  font-size: 10px;
+  color: #888;
+  margin-top: 4px;
+  font-style: italic;
+}
+
+.ab-identity-sources {
+  margin-top: 4px;
+  font-size: 10px;
+}
+
 .ab-identity-headline {
   font-size: 14px;
   font-weight: 600;

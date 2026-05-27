@@ -12,32 +12,32 @@ export function isWillieWinkieItem(item: ChecklistItem, ctx?: SkuPoolContext): b
 export function wwApproveGuard(item: ChecklistItem, ctx?: SkuPoolContext): WwApproveGuard {
   if (!isWillieWinkieItem(item, ctx)) return { ok: true, reason: null }
 
-  if (ctx?.decor_mismatch) {
+  if (!ctx?.product_type_title?.trim()) {
+    return {
+      ok: false,
+      reason: "Тип товара не определён — для Willie Winkie нужен Needs review.",
+    }
+  }
+
+  if (ctx.motif_mismatch || ctx.decor_mismatch) {
     return {
       ok: false,
       reason:
-        "SKU-префикс и роспись на legacy-странице не совпадают — нельзя approve только по форме.",
+        "Разные подколлекции росписи (SKU vs legacy) при той же форме — не approve; Needs review или Reject.",
     }
   }
 
-  if (!ctx?.decor_motif || ctx.decor_confidence === "unknown") {
+  if (!ctx.motif_subcollection || ctx.motif_confidence === "unknown") {
     return {
       ok: false,
-      reason: "Роспись/декор не определены — для Willie Winkie нужен Needs review или явная проверка фото.",
+      reason: "Роспись / мотив не определены — для Willie Winkie только Needs review или проверка по фото.",
     }
   }
 
-  if (ctx.decor_confidence === "low" && !item.operator_role) {
+  if (ctx.motif_confidence === "low") {
     return {
       ok: false,
-      reason: "Роспись с низкой уверенностью — назначьте роль и сверьте мотив на фото перед Approve.",
-    }
-  }
-
-  if (ctx.decor_confidence === "low") {
-    return {
-      ok: false,
-      reason: "Роспись/декор только по эвристике файла — Approve только после визуальной проверки (или Needs review).",
+      reason: "Роспись / мотив с низкой уверенностью — Approve только после визуальной сверки мотива на фото.",
     }
   }
 

@@ -1,4 +1,4 @@
-import { decorSourceLabel, titleSourceLabel } from "./approval-board-constants"
+import { motifSourceLabel, titleSourceLabel } from "./approval-board-constants"
 import type { ChecklistItem, SkuPoolContext } from "./approval-board-types"
 import { decorFromColorGuess, decorFromFilename } from "./approval-board-ww-decor-client"
 
@@ -9,22 +9,85 @@ type Props = {
   compact?: boolean
 }
 
-const WW_DECOR_MISSING =
-  "Роспись/декор не определены — у Willie Winkie нельзя подтверждать только по форме."
+const WW_MOTIF_MISSING =
+  "Роспись / мотив не определены — у Willie Winkie нельзя подтверждать только по форме (подколлекция росписи обязательна)."
 
-function candidateDecorHint(item?: ChecklistItem): string | null {
+function candidateMotifHint(item?: ChecklistItem): string | null {
   if (!item) return null
   return decorFromColorGuess(item.color_guess) || decorFromFilename(item.filename)
 }
 
+function WillieWinkieIdentity({ ctx, handle, item, compact }: Props) {
+  const productType = ctx?.product_type_title || ctx?.product_title || "—"
+  const motif = ctx?.motif_subcollection
+  const motifExpected = ctx?.motif_subcollection_expected
+  const motifObserved = ctx?.motif_subcollection_observed
+  const catalog = ctx?.catalog_code_label
+  const motifLow = ctx?.motif_confidence === "low"
+  const motifUnknown = !motif || ctx?.motif_confidence === "unknown"
+  const cardHint = candidateMotifHint(item)
+
+  return (
+    <div className={`ab-identity ab-identity-ww ${compact ? "ab-identity-compact" : ""}`}>
+      <div className="ab-identity-line ab-identity-line-primary">
+        <span className="ab-identity-handle">{handle}</span>
+        <span className="ab-identity-sep">·</span>
+        <span className="ab-identity-type">{productType}</span>
+      </div>
+      <div className="ab-identity-line ab-identity-line-collection">
+        <span className="ab-identity-collection-main">Willie Winkie</span>
+        {motif && !ctx?.motif_mismatch ? (
+          <>
+            <span className="ab-identity-sep">·</span>
+            <span className="ab-identity-motif">
+              роспись / мотив: <strong>{motif}</strong>
+            </span>
+          </>
+        ) : null}
+        {catalog ? (
+          <>
+            <span className="ab-identity-sep">·</span>
+            <span className="ab-identity-catalog">{catalog}</span>
+          </>
+        ) : null}
+      </div>
+
+      {motifUnknown ? <div className="ab-identity-warn ab-ww-warn">{WW_MOTIF_MISSING}</div> : null}
+
+      {ctx?.motif_mismatch ? (
+        <div className="ab-identity-warn ab-ww-warn">
+          ⚠ Подколлекция росписи: SKU ожидает <b>{motifExpected}</b>, legacy-страница — <b>{motifObserved}</b>.
+          Одна форма, разная роспись — не approve только по силуэту; Needs review или Reject.
+        </div>
+      ) : null}
+
+      {cardHint && motifLow ? (
+        <div className="ab-identity-meta ab-source-low">файл/чеклист (низкая уверенность): {cardHint}</div>
+      ) : null}
+
+      <div className="ab-identity-meta ab-identity-sources">
+        <span>тип товара: {titleSourceLabel(ctx?.product_identity_source || "unknown")}</span>
+        <span> · мотив: {motifSourceLabel(ctx?.motif_source || "unknown")}</span>
+        {motifLow ? <span className="ab-source-low"> · низкая уверенность мотива</span> : null}
+      </div>
+      {ctx?.product_title_raw && ctx.product_title_raw !== productType ? (
+        <div className="ab-identity-raw" title="Полный legacy h1">
+          legacy: {ctx.product_title_raw}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 export function ProductIdentityBlock({ ctx, handle, item, compact }: Props) {
-  const title = ctx?.product_title
-  const hasTitle = Boolean(title && title.trim())
   const isWw = Boolean(ctx?.is_willie_winkie || item?.collection === "willie-winkie")
-  const cardDecorHint = candidateDecorHint(item)
-  const hasDecor = Boolean(ctx?.decor_motif && ctx.decor_motif.trim())
-  const decorLow = ctx?.decor_confidence === "low"
-  const decorUnknown = !hasDecor || ctx?.decor_confidence === "unknown"
+
+  if (isWw) {
+    return <WillieWinkieIdentity ctx={ctx} handle={handle} item={item} compact={compact} />
+  }
+
+  const title = ctx?.product_type_title || ctx?.product_title
+  const hasTitle = Boolean(title && title.trim())
 
   if (!hasTitle) {
     return (
@@ -33,11 +96,10 @@ export function ProductIdentityBlock({ ctx, handle, item, compact }: Props) {
         <div className="ab-identity-warn">
           Название товара не найдено — подтверждать можно только по фото и SKU.
         </div>
-        {isWw && decorUnknown ? <div className="ab-identity-warn ab-ww-warn">{WW_DECOR_MISSING}</div> : null}
         {ctx?.collection_label || ctx?.collection ? (
           <div className="ab-identity-meta">коллекция: {ctx.collection_label || ctx.collection}</div>
         ) : null}
-        <div className="ab-identity-source">title source: unknown</div>
+        <div className="ab-identity-source">product identity source: unknown</div>
       </div>
     )
   }
@@ -45,11 +107,11 @@ export function ProductIdentityBlock({ ctx, handle, item, compact }: Props) {
   const sourceClass = ctx?.title_confidence === "low" ? "ab-source-low" : ""
 
   return (
-    <div className={`ab-identity ${compact ? "ab-identity-compact" : ""}`} data-ww={isWw ? "1" : "0"}>
-      <div className="ab-identity-headline">
+    <div className={`ab-identity ${compact ? "ab-identity-compact" : ""}`}>
+      <div className="ab-identity-line ab-identity-line-primary">
         <span className="ab-identity-handle">{handle}</span>
         <span className="ab-identity-sep">·</span>
-        <span className="ab-identity-title">{title}</span>
+        <span className="ab-identity-type">{title}</span>
         {ctx?.collection_label || ctx?.collection ? (
           <>
             <span className="ab-identity-sep">·</span>
@@ -60,55 +122,10 @@ export function ProductIdentityBlock({ ctx, handle, item, compact }: Props) {
       <div className={`ab-identity-meta ${sourceClass}`}>
         {ctx?.category ? <span>тип: {ctx.category}</span> : null}
         {ctx?.dimensions_label ? <span> · размер: {ctx.dimensions_label}</span> : null}
-        <span>
-          {" "}
-          · title: {titleSourceLabel(ctx?.product_title_source || "unknown")}
-          {ctx?.title_confidence === "low" ? " (низкая)" : ""}
-        </span>
       </div>
-
-      {isWw ? (
-        <div className="ab-identity-decor">
-          {hasDecor ? (
-            <>
-              <span className="ab-decor-label">роспись/мотив:</span>{" "}
-              <span className={ctx?.decor_mismatch ? "ab-decor-mismatch" : ""}>{ctx?.decor_motif}</span>
-              {ctx?.decor_motif_expected && ctx?.decor_motif_observed && !ctx.decor_mismatch ? (
-                <span className="ab-identity-meta">
-                  {" "}
-                  (SKU: {ctx.decor_motif_expected}
-                  {ctx.decor_motif_observed !== ctx.decor_motif_expected
-                    ? ` · страница: ${ctx.decor_motif_observed}`
-                    : ""}
-                  )
-                </span>
-              ) : null}
-            </>
-          ) : (
-            <div className="ab-identity-warn ab-ww-warn">{WW_DECOR_MISSING}</div>
-          )}
-          {ctx?.decor_mismatch ? (
-            <div className="ab-identity-warn ab-ww-warn">
-              ⚠ SKU-префикс ({ctx.decor_motif_expected}) и legacy-страница ({ctx.decor_motif_observed}) — разные
-              мотивы. Не approve только по форме; Needs review.
-            </div>
-          ) : null}
-          {cardDecorHint && decorLow ? (
-            <div className="ab-identity-meta ab-source-low">файл/чеклист: {cardDecorHint}</div>
-          ) : null}
-          <div className={`ab-identity-source ${decorLow ? "ab-source-low" : ""}`}>
-            decor source: {decorSourceLabel(ctx?.decor_source || "unknown")}
-            {decorLow ? " · низкая уверенность" : ""}
-            {ctx?.decor_confidence === "high" ? " · высокая уверенность" : ""}
-          </div>
-        </div>
-      ) : hasDecor ? (
-        <div className="ab-identity-meta">
-          декор: {ctx?.decor_motif} · {decorSourceLabel(ctx?.decor_source || "unknown")}
-        </div>
-      ) : null}
-
-      <div className="ab-identity-source">title source: {titleSourceLabel(ctx?.product_title_source || "unknown")}</div>
+      <div className="ab-identity-source">
+        product identity source: {titleSourceLabel(ctx?.product_identity_source || "unknown")}
+      </div>
     </div>
   )
 }

@@ -11,6 +11,22 @@ export type OperatorRole =
 
 export type DuplicateStatus = "unchecked" | "not_duplicate" | "possible_duplicate" | "duplicate_reject"
 
+export type TitleSource = "price_list" | "seed_products" | "normalized" | "filename_guess" | "unknown"
+
+export type MotifSource =
+  | "price_list"
+  | "seed_products"
+  | "normalized"
+  | "title_parse"
+  | "handle_prefix"
+  | "filename_guess"
+  | "checklist_color"
+  | "unknown"
+
+export type DecorSource = MotifSource
+
+export type DecorConfidence = "high" | "low" | "unknown"
+
 export type ChecklistItem = {
   candidate_id: string
   handle: string
@@ -31,7 +47,8 @@ export type ChecklistItem = {
   operator_duplicate_status?: DuplicateStatus | null
   operator_duplicate_note?: string
   product_title_source?: TitleSource | null
-  decor_source?: DecorSource | null
+  product_identity_source?: TitleSource | null
+  motif_source?: MotifSource | null
 }
 
 export type ChecklistPayload = {
@@ -61,31 +78,27 @@ export type PoolMediaRef = {
   source_type: string | null
 }
 
-export type TitleSource = "price_list" | "seed_products" | "normalized" | "filename_guess" | "unknown"
-
-export type DecorSource =
-  | "price_list"
-  | "seed_products"
-  | "normalized"
-  | "title_parse"
-  | "handle_prefix"
-  | "filename_guess"
-  | "checklist_color"
-  | "unknown"
-
-export type DecorConfidence = "high" | "low" | "unknown"
-
 export type SkuPoolContext = {
   handle: string
   sku: string | null
   collection: string | null
   product_title: string | null
+  product_title_raw: string | null
+  product_type_title: string | null
   product_title_source: TitleSource
+  product_identity_source: TitleSource
   title_confidence: "high" | "low"
   collection_label: string | null
   category: string | null
   dimensions_label: string | null
   is_willie_winkie: boolean
+  motif_subcollection: string | null
+  motif_subcollection_expected: string | null
+  motif_subcollection_observed: string | null
+  catalog_code_label: string | null
+  motif_source: MotifSource
+  motif_confidence: DecorConfidence
+  motif_mismatch: boolean
   decor_motif: string | null
   decor_motif_expected: string | null
   decor_motif_observed: string | null
