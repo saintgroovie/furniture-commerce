@@ -2,6 +2,9 @@ import * as fs from "fs"
 import * as path from "path"
 import { getDataRepoRoot, readJsonFile } from "./data-repo-root"
 import { getEmergencyFixRepoResolution } from "./emergency-fix-repo-root"
+import { buildProductIdentities, type ProductIdentity, type TitleSource } from "./product-identity"
+
+export type { ProductIdentity, TitleSource }
 
 export type PoolMediaRef = {
   id: string
@@ -18,6 +21,11 @@ export type SkuPoolContext = {
   sku: string | null
   collection: string | null
   product_title: string | null
+  product_title_source: TitleSource
+  title_confidence: "high" | "low"
+  collection_label: string | null
+  category: string | null
+  dimensions_label: string | null
   existing_media: PoolMediaRef[]
   has_reference_media: boolean
 }
@@ -67,7 +75,10 @@ function invToRef(repoRoot: string, item: InvItem): PoolMediaRef {
   }
 }
 
-export function buildSkuPoolContext(handles: string[]): {
+export function buildSkuPoolContext(
+  handles: string[],
+  sourcePagesByHandle: Record<string, string[]> = {}
+): {
   contexts: Record<string, SkuPoolContext>
   data_repo_root: string | null
 } {
@@ -75,14 +86,21 @@ export function buildSkuPoolContext(handles: string[]): {
   const emergency = getEmergencyFixRepoResolution()
   const repoRoot = dataRepoRoot || emergency.repoRoot
 
+  const identitiesEarly = buildProductIdentities(handles, sourcePagesByHandle)
   if (!repoRoot) {
     const empty: Record<string, SkuPoolContext> = {}
     for (const h of handles) {
+      const id = identitiesEarly[h]
       empty[h] = {
         handle: h,
-        sku: h.toUpperCase(),
-        collection: null,
-        product_title: null,
+        sku: id?.sku || h.toUpperCase(),
+        collection: id?.collection || null,
+        product_title: id?.product_title || null,
+        product_title_source: id?.product_title_source || "unknown",
+        title_confidence: id?.title_confidence || "low",
+        collection_label: id?.collection_label || null,
+        category: id?.category || null,
+        dimensions_label: id?.dimensions_label || null,
         existing_media: [],
         has_reference_media: false,
       }
@@ -111,6 +129,7 @@ export function buildSkuPoolContext(handles: string[]): {
     if (h) seedByHandle.set(h, s)
   }
 
+  const identities = buildProductIdentities(handles, sourcePagesByHandle)
   const contexts: Record<string, SkuPoolContext> = {}
 
   for (const handle of handles) {
@@ -156,11 +175,17 @@ export function buildSkuPoolContext(handles: string[]): {
     }
 
     const withPreview = refs.filter((r) => r.preview_repo_rel || r.preview_url)
+    const id = identities[h]
     contexts[h] = {
       handle: h,
-      sku: seed?.product_code_normalized || h.toUpperCase(),
-      collection: seed?.medusa_collection_handle || invItems[0]?.collection_hint || null,
-      product_title: seed?.medusa_product_title || null,
+      sku: id?.sku || seed?.product_code_normalized || h.toUpperCase(),
+      collection: id?.collection || seed?.medusa_collection_handle || invItems[0]?.collection_hint || null,
+      product_title: id?.product_title || seed?.medusa_product_title || null,
+      product_title_source: id?.product_title_source || "unknown",
+      title_confidence: id?.title_confidence || "low",
+      collection_label: id?.collection_label || null,
+      category: id?.category || null,
+      dimensions_label: id?.dimensions_label || null,
       existing_media: refs,
       has_reference_media: withPreview.length > 0,
     }

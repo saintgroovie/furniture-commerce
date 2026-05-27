@@ -13,6 +13,7 @@ import {
   copyExportToClipboard,
   downloadExportJson,
 } from "./approval-board-export"
+import { ProductIdentityBlock } from "./approval-board-identity-ui"
 import { candidatePreviewSrc, poolMediaPreviewSrc } from "./approval-board-preview"
 import {
   clearBoardState,
@@ -166,13 +167,9 @@ function CandidateCard({
         <img className="ab-card-img" src={candidatePreviewSrc(item)} alt={item.filename} loading="lazy" />
       </button>
       <div className="ab-card-body">
+        <ProductIdentityBlock ctx={ctx} handle={item.handle} compact />
         <div className="ab-filename">{item.filename}</div>
         <div className="ab-meta">
-          <div>
-            <b>{item.handle}</b>
-            {ctx?.product_title ? ` · ${ctx.product_title}` : ""}
-          </div>
-          <div>{item.collection || ctx?.collection || "—"}</div>
           <div className="ab-auto-role">авто-роль: {autoRoleLabel(item.role_guess)}</div>
           {filenameDup ? <div className="ab-dup-hint">⚠ имя файла совпадает с existing</div> : null}
           {item.designer_decision === "approve" && !item.operator_role ? (
@@ -316,7 +313,13 @@ export function LegacySiteMediaApprovalBoardClient() {
           ? ((await ctxRes.json()) as { contexts: Record<string, SkuPoolContext> })
           : { contexts: {} }
         if (cancelled) return
-        const merged = mergePersisted(data.items || [])
+        const merged = mergePersisted(data.items || []).map((item) => {
+          const ctx = ctxData.contexts?.[item.handle]
+          return {
+            ...item,
+            product_title_source: ctx?.product_title_source ?? item.product_title_source ?? null,
+          }
+        })
         setBase(data)
         setItems(merged)
         setContexts(ctxData.contexts || {})
@@ -509,15 +512,8 @@ export function LegacySiteMediaApprovalBoardClient() {
             return (
               <section key={handle} className="ab-product-group" data-handle={handle}>
                 <header className="ab-group-header">
-                  <div>
-                    <h2>{handle}</h2>
-                    <div className="ab-group-sub">
-                      {ctx?.sku || handle.toUpperCase()}
-                      {ctx?.collection || groupItems[0]?.collection
-                        ? ` · ${ctx?.collection || groupItems[0]?.collection}`
-                        : ""}
-                      {ctx?.product_title ? ` · ${ctx.product_title}` : ""}
-                    </div>
+                  <div className="ab-group-header-main">
+                    <ProductIdentityBlock ctx={ctx} handle={handle} />
                   </div>
                   <div className="ab-group-stats">
                     <span>{groupItems.length} кандидатов</span>
@@ -552,6 +548,7 @@ export function LegacySiteMediaApprovalBoardClient() {
               ✕
             </button>
             <h3>Сравнение · {compareItem.handle}</h3>
+            <ProductIdentityBlock ctx={compareCtx} handle={compareItem.handle} />
             <div className="ab-compare-row">
               <div>
                 <div className="ab-compare-label">Кандидат (new)</div>
