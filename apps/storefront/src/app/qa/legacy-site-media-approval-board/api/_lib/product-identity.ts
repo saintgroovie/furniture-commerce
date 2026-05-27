@@ -3,7 +3,14 @@ import * as fs from "fs"
 import * as path from "path"
 import { getDataRepoRoot, readJsonFile } from "./data-repo-root"
 import { getEmergencyFixRepoResolution } from "./emergency-fix-repo-root"
-import { pickProductDecor, type DecorConfidence, type DecorSource, type ProductDecor } from "./product-decor"
+import {
+  extractMotifFromTitle,
+  parseWwLegacyTitle,
+  pickProductDecor,
+  type DecorConfidence,
+  type DecorSource,
+  type ProductDecor,
+} from "./product-decor"
 
 export type { DecorConfidence, DecorSource, ProductDecor }
 
@@ -13,13 +20,23 @@ export type ProductIdentity = {
   handle: string
   sku: string | null
   product_title: string | null
+  product_title_raw: string | null
+  product_type_title: string | null
   product_title_source: TitleSource
+  product_identity_source: TitleSource
   title_confidence: "high" | "low"
   collection: string | null
   collection_label: string | null
   category: string | null
   dimensions_label: string | null
   is_willie_winkie: boolean
+  motif_subcollection: string | null
+  motif_subcollection_expected: string | null
+  motif_subcollection_observed: string | null
+  catalog_code_label: string | null
+  motif_source: DecorSource
+  motif_confidence: DecorConfidence
+  motif_mismatch: boolean
   decor_motif: string | null
   decor_motif_expected: string | null
   decor_motif_observed: string | null
@@ -255,17 +272,47 @@ export function buildProductIdentities(
       titleSource: picked.source,
     })
 
+    const wwParts = decor.is_willie_winkie
+      ? parseWwLegacyTitle(picked.title, decor.motif_subcollection_expected)
+      : null
+    const productTypeTitle = decor.is_willie_winkie
+      ? wwParts?.product_type_title ||
+        seed?.canonical_name ||
+        (seed?.medusa_product_title && !extractMotifFromTitle(seed.medusa_product_title)
+          ? seed.medusa_product_title
+          : null) ||
+        board?.title ||
+        null
+      : picked.title
+
+    const wwCollection =
+      collection === "willie-winkie" || decor.is_willie_winkie ? "willie-winkie" : collection
+    const wwCollectionLabel =
+      wwCollection === "willie-winkie"
+        ? COLLECTION_LABELS["willie-winkie"]
+        : collectionLabel
+
     out[h] = {
       handle: h,
       sku: seed?.product_code_normalized || board?.sku || h.toUpperCase(),
-      product_title: picked.title,
+      product_title: productTypeTitle || picked.title,
+      product_title_raw: picked.title,
+      product_type_title: productTypeTitle,
       product_title_source: picked.source,
+      product_identity_source: picked.source,
       title_confidence: picked.confidence,
-      collection,
-      collection_label: collectionLabel,
+      collection: wwCollection,
+      collection_label: wwCollectionLabel,
       category: seed?.medusa_category_title || seed?.medusa_category_handle || null,
       dimensions_label: formatDimensions(seed?.dimensions_normalized),
       is_willie_winkie: decor.is_willie_winkie,
+      motif_subcollection: decor.motif_subcollection,
+      motif_subcollection_expected: decor.motif_subcollection_expected,
+      motif_subcollection_observed: decor.motif_subcollection_observed,
+      catalog_code_label: decor.catalog_code_label || wwParts?.catalog_code_label || null,
+      motif_source: decor.motif_source,
+      motif_confidence: decor.motif_confidence,
+      motif_mismatch: decor.motif_mismatch,
       decor_motif: decor.decor_motif,
       decor_motif_expected: decor.decor_motif_expected,
       decor_motif_observed: decor.decor_motif_observed,

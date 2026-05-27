@@ -21,12 +21,22 @@ export type SkuPoolContext = {
   sku: string | null
   collection: string | null
   product_title: string | null
+  product_title_raw: string | null
+  product_type_title: string | null
   product_title_source: TitleSource
+  product_identity_source: TitleSource
   title_confidence: "high" | "low"
   collection_label: string | null
   category: string | null
   dimensions_label: string | null
   is_willie_winkie: boolean
+  motif_subcollection: string | null
+  motif_subcollection_expected: string | null
+  motif_subcollection_observed: string | null
+  catalog_code_label: string | null
+  motif_source: import("./product-decor").DecorSource
+  motif_confidence: import("./product-decor").DecorConfidence
+  motif_mismatch: boolean
   decor_motif: string | null
   decor_motif_expected: string | null
   decor_motif_observed: string | null
@@ -35,6 +45,37 @@ export type SkuPoolContext = {
   decor_mismatch: boolean
   existing_media: PoolMediaRef[]
   has_reference_media: boolean
+}
+
+function identityToSkuFields(id: ProductIdentity | undefined, handle: string): Omit<SkuPoolContext, "existing_media" | "has_reference_media"> {
+  return {
+    handle,
+    sku: id?.sku || handle.toUpperCase(),
+    collection: id?.collection || null,
+    product_title: id?.product_title || null,
+    product_title_raw: id?.product_title_raw || null,
+    product_type_title: id?.product_type_title || null,
+    product_title_source: id?.product_title_source || "unknown",
+    product_identity_source: id?.product_identity_source || id?.product_title_source || "unknown",
+    title_confidence: id?.title_confidence || "low",
+    collection_label: id?.collection_label || null,
+    category: id?.category || null,
+    dimensions_label: id?.dimensions_label || null,
+    is_willie_winkie: id?.is_willie_winkie || false,
+    motif_subcollection: id?.motif_subcollection || null,
+    motif_subcollection_expected: id?.motif_subcollection_expected || null,
+    motif_subcollection_observed: id?.motif_subcollection_observed || null,
+    catalog_code_label: id?.catalog_code_label || null,
+    motif_source: id?.motif_source || "unknown",
+    motif_confidence: id?.motif_confidence || "unknown",
+    motif_mismatch: id?.motif_mismatch || false,
+    decor_motif: id?.decor_motif || null,
+    decor_motif_expected: id?.decor_motif_expected || null,
+    decor_motif_observed: id?.decor_motif_observed || null,
+    decor_source: id?.decor_source || "unknown",
+    decor_confidence: id?.decor_confidence || "unknown",
+    decor_mismatch: id?.decor_mismatch || false,
+  }
 }
 
 type InvItem = {
@@ -98,24 +139,8 @@ export function buildSkuPoolContext(
   if (!repoRoot) {
     const empty: Record<string, SkuPoolContext> = {}
     for (const h of handles) {
-      const id = identitiesEarly[h]
       empty[h] = {
-        handle: h,
-        sku: id?.sku || h.toUpperCase(),
-        collection: id?.collection || null,
-        product_title: id?.product_title || null,
-        product_title_source: id?.product_title_source || "unknown",
-        title_confidence: id?.title_confidence || "low",
-        collection_label: id?.collection_label || null,
-        category: id?.category || null,
-        dimensions_label: id?.dimensions_label || null,
-        is_willie_winkie: id?.is_willie_winkie || false,
-        decor_motif: id?.decor_motif || null,
-        decor_motif_expected: id?.decor_motif_expected || null,
-        decor_motif_observed: id?.decor_motif_observed || null,
-        decor_source: id?.decor_source || "unknown",
-        decor_confidence: id?.decor_confidence || "unknown",
-        decor_mismatch: id?.decor_mismatch || false,
+        ...identityToSkuFields(identitiesEarly[h], h),
         existing_media: [],
         has_reference_media: false,
       }
@@ -192,22 +217,11 @@ export function buildSkuPoolContext(
     const withPreview = refs.filter((r) => r.preview_repo_rel || r.preview_url)
     const id = identities[h]
     contexts[h] = {
-      handle: h,
+      ...identityToSkuFields(id, h),
       sku: id?.sku || seed?.product_code_normalized || h.toUpperCase(),
-      collection: id?.collection || seed?.medusa_collection_handle || invItems[0]?.collection_hint || null,
+      collection:
+        id?.collection || seed?.medusa_collection_handle || invItems[0]?.collection_hint || null,
       product_title: id?.product_title || seed?.medusa_product_title || null,
-      product_title_source: id?.product_title_source || "unknown",
-      title_confidence: id?.title_confidence || "low",
-      collection_label: id?.collection_label || null,
-      category: id?.category || null,
-      dimensions_label: id?.dimensions_label || null,
-      is_willie_winkie: id?.is_willie_winkie || false,
-      decor_motif: id?.decor_motif || null,
-      decor_motif_expected: id?.decor_motif_expected || null,
-      decor_motif_observed: id?.decor_motif_observed || null,
-      decor_source: id?.decor_source || "unknown",
-      decor_confidence: id?.decor_confidence || "unknown",
-      decor_mismatch: id?.decor_mismatch || false,
       existing_media: refs,
       has_reference_media: withPreview.length > 0,
     }

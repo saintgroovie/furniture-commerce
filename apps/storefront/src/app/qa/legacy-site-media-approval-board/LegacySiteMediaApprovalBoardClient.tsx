@@ -335,8 +335,9 @@ export function LegacySiteMediaApprovalBoardClient() {
           const ctx = ctxData.contexts?.[item.handle]
           return {
             ...item,
-            product_title_source: ctx?.product_title_source ?? item.product_title_source ?? null,
-            decor_source: ctx?.decor_source ?? item.decor_source ?? null,
+            product_title_source: ctx?.product_identity_source ?? item.product_title_source ?? null,
+            product_identity_source: ctx?.product_identity_source ?? item.product_identity_source ?? null,
+            motif_source: ctx?.motif_source ?? item.motif_source ?? null,
           }
         })
         setBase(data)
@@ -446,9 +447,10 @@ export function LegacySiteMediaApprovalBoardClient() {
           Reject — неверный SKU / дубль / мусор. Сомнения → Needs review.
         </p>
         <div className="ab-ww-guide">
-          <b>Willie Winkie:</b> одна форма — разные росписи. Не approve только по силуэту.
-          Сверьте мотив (SKU-префикс vs фото vs legacy-страница). При расхождении или неясной
-          росписи — <b>Needs review</b>; Approve только при совпадении типа и мотива.
+          <b>Willie Winkie:</b> коллекция одна; <b>Ant&apos;s Village</b>, <b>Ballet</b> и др. — это{" "}
+          <b>роспись / мотив (подколлекция)</b>, не отдельная коллекция. Строка 1: SKU + тип (комод, стол…).
+          Строка 2: Willie Winkie + роспись + гл. Approve только если тип и мотив совпадают с SKU и фото;
+          расхождение мотива при той же форме → Needs review / Reject.
         </div>
         <div className="ab-stat">
           <span>Всего</span>
