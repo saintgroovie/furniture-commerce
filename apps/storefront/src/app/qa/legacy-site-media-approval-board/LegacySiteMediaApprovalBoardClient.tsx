@@ -178,9 +178,13 @@ function CandidateCard({
           ) : null}
           {(() => {
             const g = wwApproveGuard(item, ctx)
-            return !g.ok && item.designer_decision === "approve" ? (
-              <div className="ab-warn ab-ww-warn">{g.reason}</div>
-            ) : null
+            if (g.warning && item.designer_decision === "approve") {
+              return <div className="ab-warn ab-ww-warn ab-ww-info">{g.warning}</div>
+            }
+            if (!g.ok && item.designer_decision === "approve") {
+              return <div className="ab-warn ab-ww-warn">{g.reason}</div>
+            }
+            return null
           })()}
         </div>
 
@@ -385,7 +389,10 @@ export function LegacySiteMediaApprovalBoardClient() {
     [items]
   )
 
-  const exportInput = useMemo(() => (base ? { base, items } : null), [base, items])
+  const exportInput = useMemo(
+    () => (base ? { base, items, contexts } : null),
+    [base, items, contexts]
+  )
 
   async function handleCopy() {
     if (!exportInput) return

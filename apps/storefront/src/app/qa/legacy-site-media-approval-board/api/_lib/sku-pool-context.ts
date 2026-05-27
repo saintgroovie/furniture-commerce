@@ -30,6 +30,10 @@ export type SkuPoolContext = {
   category: string | null
   dimensions_label: string | null
   is_willie_winkie: boolean
+  expected_motif_from_sku_prefix: string | null
+  legacy_page_motif: string | null
+  resolved_motif: string | null
+  legacy_metadata_mismatch: boolean
   motif_subcollection: string | null
   motif_subcollection_expected: string | null
   motif_subcollection_observed: string | null
@@ -62,6 +66,10 @@ function identityToSkuFields(id: ProductIdentity | undefined, handle: string): O
     category: id?.category || null,
     dimensions_label: id?.dimensions_label || null,
     is_willie_winkie: id?.is_willie_winkie || false,
+    expected_motif_from_sku_prefix: id?.expected_motif_from_sku_prefix || null,
+    legacy_page_motif: id?.legacy_page_motif || null,
+    resolved_motif: id?.resolved_motif || null,
+    legacy_metadata_mismatch: id?.legacy_metadata_mismatch || false,
     motif_subcollection: id?.motif_subcollection || null,
     motif_subcollection_expected: id?.motif_subcollection_expected || null,
     motif_subcollection_observed: id?.motif_subcollection_observed || null,

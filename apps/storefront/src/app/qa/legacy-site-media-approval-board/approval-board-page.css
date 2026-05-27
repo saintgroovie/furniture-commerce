@@ -234,6 +234,35 @@ body:has(.legacy-site-approval-board-root) main {
   color: #6a2020;
 }
 
+.ab-ww-info {
+  background: #fff8e6;
+  border-color: #e6c200;
+  color: #6a5a20;
+}
+
+.ab-identity-mismatch-detail {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: #f8f4fc;
+  border: 1px solid #d4c4e8;
+  border-radius: 4px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.ab-mismatch-label {
+  color: var(--ab-muted);
+}
+
+.ab-operator-confirmed {
+  color: #1a5c3a;
+}
+
+.ab-mismatch-action {
+  margin-top: 6px;
+  margin-bottom: 0;
+}
+
 .ab-ww-guide {
   margin: 12px 0;
   padding: 10px 12px;

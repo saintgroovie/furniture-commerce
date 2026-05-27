@@ -19,6 +19,7 @@ export type MotifSource =
   | "normalized"
   | "title_parse"
   | "handle_prefix"
+  | "operator_note"
   | "filename_guess"
   | "checklist_color"
   | "unknown"
@@ -49,6 +50,12 @@ export type ChecklistItem = {
   product_title_source?: TitleSource | null
   product_identity_source?: TitleSource | null
   motif_source?: MotifSource | null
+  expected_motif_from_sku_prefix?: string | null
+  legacy_page_motif?: string | null
+  operator_note_motif?: string | null
+  resolved_motif?: string | null
+  legacy_metadata_mismatch?: boolean
+  operator_confirmed_motif?: boolean
 }
 
 export type ChecklistPayload = {
@@ -92,6 +99,10 @@ export type SkuPoolContext = {
   category: string | null
   dimensions_label: string | null
   is_willie_winkie: boolean
+  expected_motif_from_sku_prefix: string | null
+  legacy_page_motif: string | null
+  resolved_motif: string | null
+  legacy_metadata_mismatch: boolean
   motif_subcollection: string | null
   motif_subcollection_expected: string | null
   motif_subcollection_observed: string | null
