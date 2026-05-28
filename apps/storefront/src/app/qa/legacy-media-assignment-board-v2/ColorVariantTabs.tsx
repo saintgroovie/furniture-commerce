@@ -35,7 +35,7 @@ type Props = {
   /** Primary/default color tab (milk-like) — shows «основной» badge */
   primaryVariantKey?: string | null
   onSelect: (variantKey: string) => void
-  onSetVariantLabel?: (variantKey: string, label: string | null) => void
+  onSetVariantLabel?: (variantKey: string, label: string) => void
   onAddVariant?: (label: string) => { ok: boolean; key?: string; message?: string }
   onRemoveVariant?: (variantKey: string, label: string) => void
   onRestoreVariant?: (variantKey: string) => void
@@ -73,7 +73,16 @@ export function ColorVariantTabs({
   }
 
   function displayLabel(variantKey: string, defaultLabel: string): string {
+    const meta = productState?.variantColorMeta?.[variantKey]
+    if (meta?.labelEditedByOperator || meta?.createdByOperator) return meta.label
     return productState?.variantLabelOverrides?.[variantKey] ?? defaultLabel
+  }
+
+  function sourceDefaultLabel(variantKey: string, detectedLabel: string): string {
+    return (
+      productState?.variantColorMeta?.[variantKey]?.sourceLabel ??
+      detectedLabel
+    )
   }
 
   function startEdit(variantKey: string, current: string) {
@@ -81,17 +90,17 @@ export function ColorVariantTabs({
     setDraft(current)
   }
 
-  function commitEdit(variantKey: string, defaultLabel: string) {
+  function commitEdit(variantKey: string, detectedLabel: string) {
     const trimmed = draft.trim()
     if (!onSetVariantLabel) {
       setEditingKey(null)
       return
     }
-    if (!trimmed || trimmed === defaultLabel) {
-      onSetVariantLabel(variantKey, null)
-    } else {
-      onSetVariantLabel(variantKey, trimmed)
+    if (!trimmed) {
+      setEditingKey(null)
+      return
     }
+    onSetVariantLabel(variantKey, trimmed)
     setEditingKey(null)
   }
 
@@ -124,7 +133,8 @@ export function ColorVariantTabs({
   return (
     <div style={styles.wrap}>
       <div style={styles.strip}>
-        {variants.map(({ variantKey, label: defaultLabel, source }) => {
+        {variants.map(({ variantKey, label: detectedLabel, source }) => {
+          const defaultLabel = sourceDefaultLabel(variantKey, detectedLabel)
           const isActive = activeVariantKey === variantKey
           const status = getVariantStatus(variantKey, productState)
           const dot = STATUS_DOT[status]
