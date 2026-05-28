@@ -15,8 +15,11 @@ import type {
 import type { LegacyMediaPreviewRecoveryEntry } from "./legacy-board-v2-preview-recovery-types"
 import { MediaPoolPanel } from "./MediaPoolPanel"
 import {
+  buildDetectedColorVariants,
   buildMergedColorVariants,
+  applyOperatorColorLabelChange,
   displayLabelForVariant,
+  DEFAULT_TOKEN_TO_RU,
   findMilkVariantKey,
   isPseudoColorVariantKey,
   listRealColorVariantKeys,
@@ -406,23 +409,28 @@ export function LegacyMediaBoardV2Client() {
 
   // Operator visual-role override for a specific media item
   const handleSetVariantLabel = useCallback(
-    (variantKey: string, label: string | null) => {
+    (variantKey: string, label: string) => {
       if (!selectedHandle) return
+      const ids = candidatesByHandle.get(selectedHandle) ?? []
+      const detected = buildDetectedColorVariants(selectedHandle, ids, invById)
+      const found = detected.find((v) => v.variantKey === variantKey)
+      const sourceDefault =
+        found?.label ?? DEFAULT_TOKEN_TO_RU[variantKey] ?? variantKey
       setProductStates((prev) => {
         const existing = prev[selectedHandle] ?? makeEmptyProductState(selectedHandle, variantKey)
-        const overrides = { ...(existing.variantLabelOverrides ?? {}) }
-        if (label === null) delete overrides[variantKey]
-        else overrides[variantKey] = label
-        const next = {
-          ...prev,
-          [selectedHandle]: { ...existing, variantLabelOverrides: overrides },
-        }
+        const nextState = applyOperatorColorLabelChange(
+          existing,
+          variantKey,
+          label,
+          sourceDefault
+        )
+        const next = { ...prev, [selectedHandle]: nextState }
         saveV2PersistedState(next, selectedHandle)
         setSavedAt(new Date().toISOString())
         return next
       })
     },
-    [selectedHandle]
+    [selectedHandle, candidatesByHandle, invById]
   )
 
   const handleAddVariant = useCallback(

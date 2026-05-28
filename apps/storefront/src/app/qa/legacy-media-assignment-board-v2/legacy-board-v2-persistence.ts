@@ -7,13 +7,20 @@
  */
 
 import type { V2ProductState } from "./legacy-board-v2-types"
+import {
+  mergeOperatorVariantEdits,
+  mergeVariantColorMeta,
+  migratePersistedProductStates,
+  syncVariantLabelOverridesFromMeta,
+} from "./legacy-board-v2-color-label-persistence"
 
 // ---------------------------------------------------------------------------
 // Key — v2-exclusive namespace
 // ---------------------------------------------------------------------------
 
 export const V2_LS_KEY = "furniture-legacy-media-assignment-v2board-state"
-export const V2_LS_VERSION = "1" as const
+export const V2_LS_VERSION = "2" as const
+export const V2_LS_VERSION_LEGACY = "1" as const
 
 // ---------------------------------------------------------------------------
 // Persisted shape
@@ -41,14 +48,22 @@ export function loadV2PersistedState(): V2PersistedState | null {
     const raw = window.localStorage.getItem(V2_LS_KEY)
     if (!raw) return null
     const parsed = JSON.parse(raw) as unknown
-    if (
-      typeof parsed !== "object" ||
-      parsed === null ||
-      (parsed as V2PersistedState).version !== V2_LS_VERSION
-    ) {
-      return null
+    if (typeof parsed !== "object" || parsed === null) return null
+    const version = (parsed as { version?: string }).version
+    if (version !== V2_LS_VERSION && version !== V2_LS_VERSION_LEGACY) return null
+
+    const stored = parsed as V2PersistedState
+    const productStates =
+      version === V2_LS_VERSION_LEGACY
+        ? migratePersistedProductStates(stored.productStates ?? {})
+        : stored.productStates ?? {}
+
+    return {
+      version: V2_LS_VERSION,
+      savedAt: stored.savedAt,
+      productStates,
+      selectedHandle: stored.selectedHandle ?? null,
     }
-    return parsed as V2PersistedState
   } catch {
     return null
   }
@@ -80,18 +95,25 @@ export function mergeV2ProductStates(
       merged[handle] = fromDisk
       continue
     }
-    merged[handle] = {
+    const mergedState: V2ProductState = {
       ...fromDisk,
       ...fromMemory,
       variantLabelOverrides: {
         ...(fromDisk.variantLabelOverrides ?? {}),
         ...(fromMemory.variantLabelOverrides ?? {}),
       },
+      variantColorMeta: mergeVariantColorMeta(fromDisk.variantColorMeta, fromMemory.variantColorMeta),
       rolesByVariant: { ...fromDisk.rolesByVariant, ...fromMemory.rolesByVariant },
       galleriesByVariant: { ...fromDisk.galleriesByVariant, ...fromMemory.galleriesByVariant },
       roleOverrides: { ...(fromDisk.roleOverrides ?? {}), ...(fromMemory.roleOverrides ?? {}) },
-      operatorVariantEdits: fromMemory.operatorVariantEdits ?? fromDisk.operatorVariantEdits,
+      operatorVariantEdits: mergeOperatorVariantEdits(
+        fromDisk.operatorVariantEdits,
+        fromMemory.operatorVariantEdits
+      ),
     }
+    const synced = syncVariantLabelOverridesFromMeta(mergedState)
+    if (synced) mergedState.variantLabelOverrides = synced
+    merged[handle] = mergedState
   }
   return merged
 }

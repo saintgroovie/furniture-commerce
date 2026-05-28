@@ -12,7 +12,9 @@ import {
   buildOperatorVariantEditsExport,
   getExportableVariantKeys,
   isVariantHidden,
+  DEFAULT_TOKEN_TO_RU,
 } from "./legacy-board-v2-color-variants"
+import { resolveOperatorVisibleLabel } from "./legacy-board-v2-color-label-persistence"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -155,8 +157,13 @@ export function buildV2ExportJSON(
       if (Object.keys(roleAssignments).length > 0) {
         variant.role_assignments = roleAssignments
       }
-      const operatorLabel = state.variantLabelOverrides?.[variantKey]
-      if (operatorLabel) {
+      const operatorLabel = resolveOperatorVisibleLabel(
+        variantKey,
+        DEFAULT_TOKEN_TO_RU[variantKey] ?? variantKey,
+        state
+      )
+      const sourceDefault = DEFAULT_TOKEN_TO_RU[variantKey] ?? variantKey
+      if (operatorLabel !== sourceDefault || state.variantColorMeta?.[variantKey]?.labelEditedByOperator) {
         variant.operator_variant_label = operatorLabel
       }
       variants[variantKey] = variant

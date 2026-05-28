@@ -40,7 +40,7 @@ type Props = {
   onAddToGallery?: (mediaId: string) => void
   /** Insert/move media into gallery at a specific position (from final-order slot drop) */
   onInsertIntoGallery?: (mediaId: string, atIdx: number) => void
-  onSetVariantLabel?: (variantKey: string, label: string | null) => void
+  onSetVariantLabel?: (variantKey: string, label: string) => void
   onAddVariant?: (label: string) => { ok: boolean; key?: string; message?: string }
   onRemoveVariant?: (variantKey: string, label: string) => void
   onRestoreVariant?: (variantKey: string) => void
