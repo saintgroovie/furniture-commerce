@@ -53,7 +53,9 @@ export function ProductCard({
   product: Product
   displayGroup?: DisplayGroup
 }) {
-  const type = product.product_classification?.product_type
+  const type =
+    product.product_classification?.product_type ??
+    (product as { custom_product_type?: { product_type?: string } }).custom_product_type?.product_type
   const badgeLabel = type ? BADGE_LABELS[type] : undefined
 
   const price = displayGroup?.minPrice ?? getPrice(product)

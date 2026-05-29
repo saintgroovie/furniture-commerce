@@ -3,9 +3,17 @@
 import Link from "next/link"
 import { useState } from "react"
 import { ensureCart } from "@/lib/cart/session"
-import { createCart, addLineItem } from "@/lib/api/cart"
+import { addLineItem } from "@/lib/api/cart"
+import { userFacingError } from "@/lib/user-facing-error"
 
 type Props = { roomSet: Record<string, unknown> }
+
+function getProductType(product: Record<string, unknown>): string | undefined {
+  return (
+    (product.product_classification as { product_type?: string } | undefined)?.product_type ??
+    (product.custom_product_type as { product_type?: string } | undefined)?.product_type
+  )
+}
 
 export function RoomSetCta({ roomSet }: Props) {
   const [adding, setAdding] = useState(false)
@@ -16,7 +24,7 @@ export function RoomSetCta({ roomSet }: Props) {
   const items = (roomSet.items as Array<Record<string, unknown>>) ?? []
   const bespokeCount = items.filter((item) => {
     const product = item.product as Record<string, unknown> | undefined
-    return (product?.productType as Record<string, string> | undefined)?.product_type === "BESPOKE"
+    return product != null && getProductType(product) === "BESPOKE"
   }).length
 
   function getCartEligibleItems(): Array<{ variantId: string; quantity: number }> {
@@ -24,8 +32,7 @@ export function RoomSetCta({ roomSet }: Props) {
     for (const item of items) {
       const product = item.product as Record<string, unknown> | undefined
       if (!product) continue
-      const productType = (product.productType as Record<string, string> | undefined)?.product_type
-      if (productType === "BESPOKE") continue
+      if (getProductType(product) === "BESPOKE") continue
       const variants = (product.variants as unknown[]) ?? []
       const firstVariant = Array.isArray(variants) ? variants[0] : undefined
       const variantId = firstVariant && typeof firstVariant === "object" && "id" in firstVariant
@@ -50,39 +57,42 @@ export function RoomSetCta({ roomSet }: Props) {
       return
     }
     try {
-      const cartId = await ensureCart(createCart)
+      const cartId = await ensureCart()
       for (const { variantId, quantity } of eligible) {
         await addLineItem(cartId, { variant_id: variantId, quantity })
       }
       setSuccess(true)
-      setTimeout(() => setSuccess(false), 2000)
     } catch (e) {
-      setError("Не все товары удалось добавить. Проверьте корзину и повторите попытку.")
+      setError(userFacingError(e, "Не все товары удалось добавить. Проверьте корзину и повторите попытку."))
     } finally {
       setAdding(false)
     }
   }
 
   return (
-    <p>
-      <button type="button" onClick={handleBuySet} disabled={adding}>
-        {adding ? "Добавление…" : "Купить комплект"}
-      </button>
-      <Link href={id ? `/bespoke?room_set_id=${id}` : "/bespoke"} style={{ marginLeft: "0.5rem" }}>
-        Адаптировать под мою комнату
-      </Link>
+    <div>
+      <div className="cta-group">
+        <button type="button" onClick={handleBuySet} disabled={adding} className="btn btn-primary">
+          {adding ? "Добавление…" : "Купить комплект"}
+        </button>
+        <Link href={id ? `/bespoke/request?room_set_id=${encodeURIComponent(id)}` : "/bespoke"} className="btn btn-secondary">
+          Адаптировать под мою комнату
+        </Link>
+      </div>
       {bespokeCount > 0 && (
-        <span style={{ display: "block", marginTop: "0.5rem", fontSize: "0.9rem" }}>
-          Часть товаров доступна только по запросу.
-        </span>
+        <p className="note">Часть товаров доступна только по запросу.</p>
       )}
       {success && (
-        <>
-          <span style={{ color: "green", marginLeft: "0.5rem" }}>Добавлено в корзину</span>
-          <Link href="/cart" style={{ marginLeft: "0.5rem" }}>В корзину</Link>
-        </>
+        <div className="feedback">
+          <span className="feedback-success">Добавлено в корзину</span>
+          <Link href="/cart">В корзину →</Link>
+        </div>
       )}
-      {error && <span style={{ color: "red", marginLeft: "0.5rem" }}>{error}</span>}
-    </p>
+      {error && (
+        <div className="feedback">
+          <span className="feedback-error">{error}</span>
+        </div>
+      )}
+    </div>
   )
 }
