@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { formatRub } from "@/lib/format"
 
 type RoomSet = {
   id: string
@@ -13,36 +14,28 @@ type RoomSet = {
 
 export function RoomSetCard({ roomSet }: { roomSet: RoomSet }) {
   return (
-    <div className="card">
-      {roomSet.hero_image && (
+    <Link href={`/rooms/${roomSet.slug}`} className="card card-link room-set-card">
+      {roomSet.hero_image ? (
         <img
           src={roomSet.hero_image}
           alt={roomSet.title}
           className="card-img"
+          loading="lazy"
         />
+      ) : (
+        <div className="card-img card-img-placeholder" aria-hidden="true" />
       )}
       <div className="card-body">
-        <h3>
-          <Link href={`/rooms/${roomSet.slug}`}>{roomSet.title}</Link>
-        </h3>
+        <h3>{roomSet.title}</h3>
         {(roomSet.room_type || roomSet.style) && (
-          <div style={{ fontSize: "0.8rem", color: "var(--color-fg-muted)", marginTop: "0.25rem" }}>
+          <span className="room-set-card-meta">
             {[roomSet.room_type, roomSet.style].filter(Boolean).join(" · ")}
-          </div>
-        )}
-        {roomSet.description && (
-          <p className="info-text" style={{ marginTop: "0.5rem" }}>
-            {roomSet.description.length > 100
-              ? roomSet.description.slice(0, 100).trim() + "…"
-              : roomSet.description}
-          </p>
+          </span>
         )}
         {roomSet.price_from != null && (
-          <p className="price" style={{ marginTop: "0.5rem" }}>
-            от {roomSet.price_from.toLocaleString("ru-RU")} ₽
-          </p>
+          <p className="price">от {formatRub(roomSet.price_from)}</p>
         )}
       </div>
-    </div>
+    </Link>
   )
 }
