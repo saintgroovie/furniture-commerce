@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import Link from "next/link"
 
 export const metadata: Metadata = {
   title: "Главная",
@@ -12,11 +13,14 @@ export const metadata: Metadata = {
 
 export default function HomePage() {
   return (
-    <div>
-      <h1>Главная</h1>
-      <p>
-        <a href="/catalog">Каталог</a> · <a href="/rooms">Комнаты</a> · <a href="/bespoke">Заявка на расчёт</a> · <a href="/cart">Корзина</a>
-      </p>
+    <div className="hero">
+      <h1>Мебель на заказ</h1>
+      <p>Каталог готовой мебели, комплекты по комнатам и индивидуальные проекты по вашим размерам.</p>
+      <div className="hero-actions">
+        <Link href="/catalog" className="btn btn-primary">Каталог</Link>
+        <Link href="/rooms" className="btn btn-secondary">Комнаты</Link>
+        <Link href="/bespoke" className="btn btn-secondary">По проекту</Link>
+      </div>
     </div>
   )
 }

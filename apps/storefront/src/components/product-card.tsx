@@ -1,10 +1,20 @@
 import Link from "next/link"
-
-type Variant = {
-  id?: string
-  calculated_price?: { calculated_amount?: number }
-  prices?: Array<{ amount?: number }>
-}
+import { formatRub, getPrice } from "@/lib/format"
+import type { DisplayGroup } from "@/lib/display-group"
+import { formatGroupHint } from "@/lib/display-group"
+import {
+  getCollectionLabel,
+  getSubcollectionLabel,
+  getArticle,
+  getDimensions,
+  formatDimensionsCompact,
+} from "@/lib/product-metadata"
+import { OliverCardMediaSwitcher } from "@/components/oliver-card-media-switcher"
+import { ProductCardMediaSwitcher } from "@/components/product-card-media-switcher"
+import {
+  collectExtraProductImageUrls,
+  mergeUniqueExtraUrls,
+} from "@/lib/product-images"
 
 type Product = {
   id: string
@@ -12,51 +22,102 @@ type Product = {
   description?: string
   handle?: string
   thumbnail?: string
-  variants?: Variant[]
-  custom_product_type?: { product_type?: string }
+  images?: unknown[]
+  metadata?: Record<string, unknown>
+  variants?: Array<{
+    id?: string
+    sku?: string
+    calculated_price?: { calculated_amount?: number }
+    prices?: Array<{ amount?: number }>
+  }>
+  product_classification?: { product_type?: string }
+  /** UI-only: merged gallery URLs from display_group members (listing). */
+  display_group_extra_image_urls?: string[]
 }
 
-function getPrice(product: Product): number | null {
-  const v = product.variants?.[0]
-  if (!v) return null
-  if (v.calculated_price?.calculated_amount != null) return v.calculated_price.calculated_amount
-  if (v.prices?.length && v.prices[0].amount != null) return v.prices[0].amount
-  return null
+const BADGE_LABELS: Record<string, string> = {
+  BESPOKE: "На заказ",
 }
 
-function formatRub(amount: number): string {
-  return amount.toLocaleString("ru-RU") + " ₽"
+function cardThumbnailSrc(product: Product): string | null {
+  const t = product.thumbnail
+  if (typeof t !== "string") return null
+  const s = t.trim()
+  return s.length > 0 ? s : null
 }
 
-export function ProductCard({ product }: { product: Product }) {
-  const type = product.custom_product_type?.product_type
-  const price = getPrice(product)
+export function ProductCard({
+  product,
+  displayGroup,
+}: {
+  product: Product
+  displayGroup?: DisplayGroup
+}) {
+  const type = product.product_classification?.product_type
+  const badgeLabel = type ? BADGE_LABELS[type] : undefined
+
+  const price = displayGroup?.minPrice ?? getPrice(product)
+  const pricePrefix = displayGroup ? "от " : ""
+
+  const collectionLabel = getCollectionLabel(product as Record<string, unknown>)
+  const subcollectionLabel = getSubcollectionLabel(product as Record<string, unknown>)
+  const article = getArticle(product as Record<string, unknown>)
+  const dim = getDimensions(product as Record<string, unknown>)
+
+  const contextParts = [collectionLabel, subcollectionLabel, article].filter(Boolean)
+  const contextLine = contextParts.length > 0 ? contextParts.join(" · ") : null
+
+  const handle = product.handle ?? ""
+  const isOliver = handle.startsWith("ol-")
+  const productHref = `/product/${product.id}`
+  const thumbSrc = cardThumbnailSrc(product)
+  const mainSrcForCard = thumbSrc ?? ""
+  const groupExtras = Array.isArray(product.display_group_extra_image_urls)
+    ? product.display_group_extra_image_urls
+    : []
+  const extraSrcs = mergeUniqueExtraUrls(mainSrcForCard, [
+    collectExtraProductImageUrls(
+      product as Record<string, unknown>,
+      mainSrcForCard
+    ),
+    groupExtras,
+  ])
+
+  const mediaBlock = isOliver ? (
+    <OliverCardMediaSwitcher
+      mainSrc={mainSrcForCard}
+      extraSrcs={extraSrcs}
+      href={productHref}
+      title={product.title}
+    />
+  ) : (
+    <ProductCardMediaSwitcher
+      mainSrc={mainSrcForCard}
+      extraSrcs={extraSrcs}
+      href={productHref}
+      alt={product.title}
+    />
+  )
 
   return (
-    <div className="card">
-      {product.thumbnail && (
-        <img
-          src={product.thumbnail}
-          alt={product.title}
-          className="card-img"
-        />
-      )}
-      <div className="card-body">
-        <h3>
-          <Link href={`/product/${product.id}`}>{product.title}</Link>
-        </h3>
-        {type && <span className="badge">{type}</span>}
+    <div className="card product-card">
+      {mediaBlock}
+      <Link href={productHref} className="card-body card-link">
+        {contextLine && (
+          <span className="card-context">{contextLine}</span>
+        )}
+        <h3>{product.title}</h3>
+        {dim != null && (
+          <span className="card-dimensions">{formatDimensionsCompact(dim)}</span>
+        )}
         {price != null && (
-          <p className="price" style={{ marginTop: "0.5rem" }}>{formatRub(price)}</p>
+          <p className="price">{pricePrefix}{formatRub(price)}</p>
         )}
-        {product.description && (
-          <p className="info-text" style={{ marginTop: "0.5rem" }}>
-            {product.description.length > 100
-              ? product.description.slice(0, 100).trim() + "…"
-              : product.description}
-          </p>
+        {displayGroup && displayGroup.count > 1 && (
+          <span className="variant-hint">{formatGroupHint(displayGroup.count)}</span>
         )}
-      </div>
+        {badgeLabel && <span className="badge">{badgeLabel}</span>}
+      </Link>
     </div>
   )
 }
