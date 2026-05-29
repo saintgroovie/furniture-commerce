@@ -1,11 +1,25 @@
 import { getBaseUrl, medusaFetch } from "./base"
 
+async function defaultCartCreateBody(): Promise<Record<string, unknown>> {
+  const base = getBaseUrl()
+  try {
+    const res = await medusaFetch(`${base}/store/regions`)
+    if (!res.ok) return {}
+    const data = (await res.json()) as { regions?: Array<{ id?: string }> }
+    const regionId = data.regions?.[0]?.id
+    return regionId ? { region_id: regionId } : {}
+  } catch {
+    return {}
+  }
+}
+
 export async function createCart() {
   const base = getBaseUrl()
+  const body = await defaultCartCreateBody()
   const res = await medusaFetch(`${base}/store/carts`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({}),
+    body: JSON.stringify(body),
   })
   if (!res.ok) throw new Error(await res.text())
   return res.json()
