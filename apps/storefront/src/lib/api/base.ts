@@ -9,3 +9,17 @@ export function getBaseUrl(): string {
 export function getSiteUrl(): string {
   return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:8000"
 }
+
+function getPublishableKey(): string {
+  return process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ""
+}
+
+/** Fetch wrapper that adds the publishable API key header. */
+export function medusaFetch(url: string, init?: RequestInit): Promise<Response> {
+  const key = getPublishableKey()
+  const headers = new Headers(init?.headers)
+  if (key) {
+    headers.set("x-publishable-api-key", key)
+  }
+  return fetch(url, { ...init, headers })
+}
