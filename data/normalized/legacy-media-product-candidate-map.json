@@ -14,14 +14,14 @@
     ]
   },
   "summary": {
-    "inventory_items": 3439,
+    "inventory_items": 3490,
     "products_indexed": 194,
     "by_confidence": {
       "confirmed": 1760,
       "probable": 5,
       "ambiguous": 235,
       "unmatched": 723,
-      "unpreviewable": 716
+      "unpreviewable": 767
     },
     "note": "confidence uses unpreviewable when previewable=false but a path/url ref exists; identity_confidence holds the SKU/handle heuristic tier."
   },
@@ -178327,6 +178327,1944 @@
       "source_type": "legacy_front",
       "source_path": "/WOODRIGHT/Контент /Размеры /Шкафы Внутреннее наполнение.JPG",
       "repo_relative_path": null
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_f3bc16062cb3",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "te-02-2",
+        "medusa_variant_sku": "TE-02-2",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "te-02-2",
+          "medusa_variant_sku": "TE-02-2",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "te-02-2-iso-1_nmmg-rz.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_360c25fe0f1f",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "mo-02-1",
+        "medusa_variant_sku": "MO-02-1",
+        "medusa_collection_handle": "molly",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "mo-02-1",
+          "medusa_variant_sku": "MO-02-1",
+          "medusa_collection_handle": "molly",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "mo-02-1-iso_e3ce-to.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_576c5539e2d8",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "mo-02-1",
+        "medusa_variant_sku": "MO-02-1",
+        "medusa_collection_handle": "molly",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "mo-02-1",
+          "medusa_variant_sku": "MO-02-1",
+          "medusa_collection_handle": "molly",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "mo-02-1-iso-1.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_de0444bcfc67",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "tb-05-3",
+        "medusa_variant_sku": "TB-05-3",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "tb-05-3",
+          "medusa_variant_sku": "TB-05-3",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "tb-05-3-iso_bjma-8x.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_ba482577f084",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "tb-05-3",
+        "medusa_variant_sku": "TB-05-3",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "tb-05-3",
+          "medusa_variant_sku": "TB-05-3",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "tb-05-3-iso-1_sqfh-8k.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_ad9fdff6ca38",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "te-05-3",
+        "medusa_variant_sku": "TE-05-3",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "te-05-3",
+          "medusa_variant_sku": "TE-05-3",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "te-05-3-iso-1_pi5l-lp.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_4be888691c55",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "te-05-3",
+        "medusa_variant_sku": "TE-05-3",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "te-05-3",
+          "medusa_variant_sku": "TE-05-3",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "te-05-3-iso-2_5ekt-r9.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_c05fa77ba8af",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "tw-05-3",
+        "medusa_variant_sku": "TW-05-3",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "tw-05-3",
+          "medusa_variant_sku": "TW-05-3",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "tw-05-3-i1.png",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_b3dc65b3a21a",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "tw-05-3",
+        "medusa_variant_sku": "TW-05-3",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "tw-05-3",
+          "medusa_variant_sku": "TW-05-3",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "tw-05-3-i2.png",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_d5bcf33c482e",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "rl-05-3",
+        "medusa_variant_sku": "RL-05-3",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "rl-05-3",
+          "medusa_variant_sku": "RL-05-3",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "rl-05-3-i1.png",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_a147dfbf75f3",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "rl-05-3",
+        "medusa_variant_sku": "RL-05-3",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "rl-05-3",
+          "medusa_variant_sku": "RL-05-3",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "rl-05-3-iso.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_eb0d9f7f25a6",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "fa-05-3",
+        "medusa_variant_sku": "FA-05-3",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "fa-05-3",
+          "medusa_variant_sku": "FA-05-3",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "fa-05-3-iso.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_8bd3b9f77741",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "fa-05-3",
+        "medusa_variant_sku": "FA-05-3",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "fa-05-3",
+          "medusa_variant_sku": "FA-05-3",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "fa-05-3-iso-1.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_5e5517173b31",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "ba-05-3",
+        "medusa_variant_sku": "BA-05-3",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "ba-05-3",
+          "medusa_variant_sku": "BA-05-3",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "ba-05-3-i1.png",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_c20db460246c",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "ba-05-3",
+        "medusa_variant_sku": "BA-05-3",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "ba-05-3",
+          "medusa_variant_sku": "BA-05-3",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "ba-05-3-i2.png",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_0551e617aff7",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "fk-05-3",
+        "medusa_variant_sku": "FK-05-3",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "fk-05-3",
+          "medusa_variant_sku": "FK-05-3",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "fk-05-3-i1.png",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_bf0f60da5508",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "fk-05-3",
+        "medusa_variant_sku": "FK-05-3",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "fk-05-3",
+          "medusa_variant_sku": "FK-05-3",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "fk-05-3-i2.png",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_8e5548ad5ddb",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "rs-05-3",
+        "medusa_variant_sku": "RS-05-3",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "rs-05-3",
+          "medusa_variant_sku": "RS-05-3",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "rs-05-3-iso.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_5d9481d071b7",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "rs-05-3",
+        "medusa_variant_sku": "RS-05-3",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "rs-05-3",
+          "medusa_variant_sku": "RS-05-3",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "rs-05-3-iso-1.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_c982a41c6f42",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "pa-05-1",
+        "medusa_variant_sku": "PA-05-1",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "pa-05-1",
+          "medusa_variant_sku": "PA-05-1",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "pa-05-1-iso_1ifx-yg.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_089eb7deabf5",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "pa-05-1",
+        "medusa_variant_sku": "PA-05-1",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "pa-05-1",
+          "medusa_variant_sku": "PA-05-1",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "pa-05-1-iso-1_cj7c-0k.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_4162fb9c9145",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "te-05-1",
+        "medusa_variant_sku": "TE-05-1",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "te-05-1",
+          "medusa_variant_sku": "TE-05-1",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "te-05-1-iso-2_sijy-ah.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_278697330558",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "te-05-1",
+        "medusa_variant_sku": "TE-05-1",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "te-05-1",
+          "medusa_variant_sku": "TE-05-1",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "te-05-1-iso-1_kfck-07.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_39a06072ac80",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "pa-05-3",
+        "medusa_variant_sku": "PA-05-3",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "pa-05-3",
+          "medusa_variant_sku": "PA-05-3",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "pa-05-3-iso_xjox-o6.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_2b9ca401b92d",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "pa-05-3",
+        "medusa_variant_sku": "PA-05-3",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "pa-05-3",
+          "medusa_variant_sku": "PA-05-3",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "pa-05-3-iso-1_gg8c-6t.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_025216d8e68f",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "av-05-1",
+        "medusa_variant_sku": "AV-05-1",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "av-05-1",
+          "medusa_variant_sku": "AV-05-1",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "av-05-1-iso_hvyo-8t.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_c12bb4d6e323",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "av-05-1",
+        "medusa_variant_sku": "AV-05-1",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "av-05-1",
+          "medusa_variant_sku": "AV-05-1",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "av-05-1-iso-1_il9e-v6.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_4a7f96cb1989",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "fk-05-1",
+        "medusa_variant_sku": "FK-05-1",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "fk-05-1",
+          "medusa_variant_sku": "FK-05-1",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "fk-05-1-iso.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_9e997ce9952a",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "fk-05-1",
+        "medusa_variant_sku": "FK-05-1",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "fk-05-1",
+          "medusa_variant_sku": "FK-05-1",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "fk-05-1-iso-1.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_8ab4c5f2dffe",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "sh-81-1",
+        "medusa_variant_sku": "SH-81-1",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "sh-81-1",
+          "medusa_variant_sku": "SH-81-1",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "sh-81-1-iso.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_f426f71312bf",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "sh-81-1",
+        "medusa_variant_sku": "SH-81-1",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "sh-81-1",
+          "medusa_variant_sku": "SH-81-1",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "sh-81-1-iso-1_s30u-ab.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_be30645f3845",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "tb-67-1",
+        "medusa_variant_sku": "TB-67-1",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "tb-67-1",
+          "medusa_variant_sku": "TB-67-1",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "tb-67-1-iso.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_4797434d2d4c",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "tb-67-1",
+        "medusa_variant_sku": "TB-67-1",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "tb-67-1",
+          "medusa_variant_sku": "TB-67-1",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "tb-67-1-iso-1.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_b5f098f015f3",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "fa-06-1",
+        "medusa_variant_sku": "FA-06-1",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "fa-06-1",
+          "medusa_variant_sku": "FA-06-1",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "fa-06-1-iso.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_981d120c96c9",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "fa-06-1",
+        "medusa_variant_sku": "FA-06-1",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "fa-06-1",
+          "medusa_variant_sku": "FA-06-1",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "fa-06-1-iso-1.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_c04c38da9a44",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "rl-67-1",
+        "medusa_variant_sku": "RL-67-1",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "rl-67-1",
+          "medusa_variant_sku": "RL-67-1",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "rl-67-1-iso.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_df8394f9fe58",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "fa-67-1",
+        "medusa_variant_sku": "FA-67-1",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "fa-67-1",
+          "medusa_variant_sku": "FA-67-1",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "fa-67-1-iso__1_.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_77ea3014779b",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "fa-67-1",
+        "medusa_variant_sku": "FA-67-1",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "fa-67-1",
+          "medusa_variant_sku": "FA-67-1",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "fa-67-1-iso-1__1_.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_dd914fda48d5",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "in-67-1",
+        "medusa_variant_sku": "IN-67-1",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "in-67-1",
+          "medusa_variant_sku": "IN-67-1",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "in-67-1-iso.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_b0e1974ff950",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "mo-81-1",
+        "medusa_variant_sku": "MO-81-1",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "mo-81-1",
+          "medusa_variant_sku": "MO-81-1",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "mo-81-1-iso.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_5c932575effe",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "tb-62-1",
+        "medusa_variant_sku": "TB-62-1",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "tb-62-1",
+          "medusa_variant_sku": "TB-62-1",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "tb-62-1-iso-1_msto-04.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_30c1fee27f74",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "tb-62-1",
+        "medusa_variant_sku": "TB-62-1",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "tb-62-1",
+          "medusa_variant_sku": "TB-62-1",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "tb-62-1-iso_v4k0-q0.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_a629f916dcd6",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "te-62-1",
+        "medusa_variant_sku": "TE-62-1",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "te-62-1",
+          "medusa_variant_sku": "TE-62-1",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "te-62-1-iso-1_l6g2-ba.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_0c7ea0e866dc",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "te-62-1",
+        "medusa_variant_sku": "TE-62-1",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "te-62-1",
+          "medusa_variant_sku": "TE-62-1",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "te-62-1-iso-2-600x600_uyqi-s2.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_76d064fecdcb",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "rs-62-1",
+        "medusa_variant_sku": "RS-62-1",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "rs-62-1",
+          "medusa_variant_sku": "RS-62-1",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "rs-62-1-iso_y7lu-80.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_bd22832078db",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "rs-62-1",
+        "medusa_variant_sku": "RS-62-1",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "rs-62-1",
+          "medusa_variant_sku": "RS-62-1",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "rs-62-1-iso-1_b5hy-if.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_3b065ebb1f31",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "ba-62-1",
+        "medusa_variant_sku": "BA-62-1",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "ba-62-1",
+          "medusa_variant_sku": "BA-62-1",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "ba-62-1-iso-1_p1mn-c5.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_8edf0a31138d",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "ba-62-1",
+        "medusa_variant_sku": "BA-62-1",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "ba-62-1",
+          "medusa_variant_sku": "BA-62-1",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "ba-62-1-iso_8w7a-9q.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_01447a76583d",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "to-62-1",
+        "medusa_variant_sku": "TO-62-1",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "to-62-1",
+          "medusa_variant_sku": "TO-62-1",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "to-62-1-iso_bqjd-7l.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_abbd562679f0",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "pa-62-1",
+        "medusa_variant_sku": "PA-62-1",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "pa-62-1",
+          "medusa_variant_sku": "PA-62-1",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "pa-62-1-iso_0nob-rr.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
+    },
+    {
+      "inventory_id": "leginv_legacy_site_approved_7ee33d6f8384",
+      "confidence": "probable",
+      "identity_confidence": "confirmed",
+      "identity_match_basis": "designer_approved_legacy_site_supplement",
+      "previewable": false,
+      "top_candidate": {
+        "medusa_product_handle": "pa-62-1",
+        "medusa_variant_sku": "PA-62-1",
+        "medusa_collection_handle": "willie-winkie",
+        "score": 400,
+        "basis": [
+          "designer_approved_legacy_site_supplement"
+        ]
+      },
+      "candidates": [
+        {
+          "medusa_product_handle": "pa-62-1",
+          "medusa_variant_sku": "PA-62-1",
+          "medusa_collection_handle": "willie-winkie",
+          "product_title": null,
+          "score": 400,
+          "basis": [
+            "designer_approved_legacy_site_supplement"
+          ]
+        }
+      ],
+      "filename": "pa-62-1-iso-1_r5pg-zg.jpg",
+      "source_type": "legacy_site_public",
+      "source_path": null,
+      "repo_relative_path": null,
+      "recommended_placement": "focus_only",
+      "do_not_auto_apply": true,
+      "requires_normalized_review": true,
+      "designer_approved_legacy_site_supplement": true,
+      "supplement_reason": "designer_approved_legacy_site_supplement",
+      "supplement_risk": "medium"
     }
   ]
 }
