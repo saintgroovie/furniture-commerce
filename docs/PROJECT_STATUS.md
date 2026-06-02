@@ -32,6 +32,8 @@ v0.1-backend-foundation
 
 **Phase 1.** Status: functional + polished.
 
+**Accepted baseline (2026-05-29):** `main` @ `30c2ce6` — PR #12 (polished UI + legacy cart grouping) on top of PR #11 (`0070eef`, cart/backend workaround). Details: **docs/storefront/polished-storefront-baseline.md**.
+
 Implemented:
 
 - Catalog page
@@ -80,4 +82,4 @@ Architecture constraints preserved:
 
 ## Next step
 
-Полировка storefront Phase 1 (UI, фильтры каталога, отображение цен) или переход к Phase 2 (админка).
+Polished storefront baseline merged (`30c2ce6`). Follow-up: catalog filters/price display polish, or Phase 2 admin — per product priorities. See **docs/storefront/polished-storefront-baseline.md**.
