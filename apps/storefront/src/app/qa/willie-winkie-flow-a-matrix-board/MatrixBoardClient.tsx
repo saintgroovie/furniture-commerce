@@ -1,26 +1,160 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
+import { candidateToRowPatch, sourceFieldsFromCandidate } from "./matrix-candidate-patch"
+import { computeRowWorkflowState, ROW_STATE_LABELS } from "./matrix-row-state"
 import { computeReadiness, validateRow } from "./matrix-board-validation"
 import type {
+  CandidatesPayload,
   DecisionFilter,
+  FieldSource,
+  HandleCandidates,
   MatrixBootstrap,
   MatrixRow,
+  RowFieldSources,
   RowValidation,
+  WorkbookCandidate,
 } from "./matrix-board-types"
 
 const API = "/qa/willie-winkie-flow-a-matrix-board/api"
-
 const TODO = "TODO_OPERATOR"
+
+const FIELD_LABELS: Partial<Record<keyof MatrixRow, string>> = {
+  workbook_row_key: "Ключ строки workbook",
+  workbook_product_code: "Код продукта workbook",
+  painting_name: "Название росписи",
+  medusa_product_type: "Тип продукта Medusa",
+  variant_strategy: "Стратегия вариантов",
+  price_rub: "Цена, ₽",
+  status_draft_or_published: "Статус публикации",
+  operator_decision: "Решение оператора",
+  operator_notes: "Заметки оператора",
+  compare_at_price_rub: "Старая цена, ₽",
+}
 
 function isFilled(value: string | undefined | null): boolean {
   const v = (value ?? "").trim()
   return v.length > 0 && v !== TODO
 }
 
-function decisionLabel(d: string): string {
-  if (d === "approve" || d === "hold" || d === "reject") return d
-  return "—"
+function confidenceLabel(c: string): string {
+  if (c === "exact") return "точное"
+  if (c === "likely") return "вероятное"
+  return "слабое"
+}
+
+function FieldLabel({
+  field,
+  required,
+  source,
+}: {
+  field: keyof MatrixRow
+  required?: boolean
+  source?: FieldSource
+}) {
+  return (
+    <label>
+      {FIELD_LABELS[field] || field}
+      {required && <span className="req"> *</span>}
+      {source === "source" && <span className="wwmx-src-badge">из workbook</span>}
+      {source === "manual" && <span className="wwmx-src-badge manual">вручную</span>}
+    </label>
+  )
+}
+
+function CandidatePanel({
+  handleCandidates,
+  onUse,
+  onNoSource,
+}: {
+  handleCandidates: HandleCandidates | null
+  onUse: (c: WorkbookCandidate) => void
+  onNoSource: () => void
+}) {
+  if (!handleCandidates) {
+    return <div className="wwmx-candidate-empty">Загрузка кандидатов workbook…</div>
+  }
+
+  if (!handleCandidates.has_workbook_source || handleCandidates.candidates.length === 0) {
+    return (
+      <fieldset className="wwmx-fieldset wwmw-candidates">
+        <legend>Источник / workbook candidates</legend>
+        <div className="wwmx-candidate-empty">
+          <strong>No workbook candidate — keep HOLD</strong>
+          <p>Для этого handle нет строки в parsed workbook. Оставьте hold и заполните вручную позже.</p>
+          <button type="button" className="wwmx-cand-btn secondary" onClick={onNoSource}>
+            Mark as no source / hold
+          </button>
+        </div>
+      </fieldset>
+    )
+  }
+
+  return (
+    <fieldset className="wwmx-fieldset wwmw-candidates">
+      <legend>Источник / workbook candidates</legend>
+      <p className="wwmx-candidate-hint">
+        Сначала выбери workbook candidate. Потом проверь тип/цену/статус. Потом ставь approve или hold.
+      </p>
+      <div className="wwmx-candidate-list">
+        {handleCandidates.candidates.map((c) => (
+          <div key={c.candidate_id} className={`wwmx-candidate-card conf-${c.confidence}`}>
+            <div className="wwmx-candidate-head">
+              <span className={`wwmx-badge conf-${c.confidence}`}>{confidenceLabel(c.confidence)}</span>
+              <strong>{c.workbook_product_code}</strong>
+            </div>
+            <div className="wwmx-candidate-title">{c.candidate_title}</div>
+            <dl className="wwmx-candidate-meta">
+              <div>
+                <dt>Лист</dt>
+                <dd>{c.source_sheet}</dd>
+              </div>
+              <div>
+                <dt>Row key</dt>
+                <dd>{c.workbook_row_key}</dd>
+              </div>
+              {c.painting_name && (
+                <div>
+                  <dt>Роспись</dt>
+                  <dd>{c.painting_name}</dd>
+                </div>
+              )}
+              {c.category && (
+                <div>
+                  <dt>Категория</dt>
+                  <dd>
+                    {c.category_raw || c.category}
+                  </dd>
+                </div>
+              )}
+              {c.price != null && (
+                <div>
+                  <dt>Цена</dt>
+                  <dd>
+                    {c.price.toLocaleString("ru-RU")} {c.currency || "rub"}
+                  </dd>
+                </div>
+              )}
+            </dl>
+            <div className="wwmx-why-matched">
+              <strong>Почему совпало:</strong>
+              <ul>
+                {c.why_matched.map((w) => (
+                  <li key={w}>{w}</li>
+                ))}
+              </ul>
+            </div>
+            <button type="button" className="wwmx-cand-btn primary" onClick={() => onUse(c)}>
+              Use this candidate
+            </button>
+          </div>
+        ))}
+      </div>
+      <button type="button" className="wwmx-cand-btn secondary" onClick={onNoSource}>
+        Mark as no source / hold
+      </button>
+    </fieldset>
+  )
 }
 
 function RowChecklist({ row, validation }: { row: MatrixRow; validation: RowValidation }) {
@@ -29,34 +163,13 @@ function RowChecklist({ row, validation }: { row: MatrixRow; validation: RowVali
       label: "Workbook mapping",
       ok: isFilled(row.workbook_row_key) && isFilled(row.workbook_product_code),
     },
-    {
-      label: "Painting name",
-      ok: isFilled(row.painting_name),
-    },
-    {
-      label: "Product type",
-      ok: isFilled(row.medusa_product_type),
-    },
-    {
-      label: "Variant strategy",
-      ok: isFilled(row.variant_strategy),
-    },
-    {
-      label: "Price (RUB)",
-      ok: isFilled(row.price_rub),
-    },
-    {
-      label: "Status",
-      ok: isFilled(row.status_draft_or_published),
-    },
-    {
-      label: "Operator decision",
-      ok: isFilled(row.operator_decision),
-    },
-    {
-      label: "Row ready for approve",
-      ok: validation.is_complete_for_approve,
-    },
+    { label: "Painting name", ok: isFilled(row.painting_name) },
+    { label: "Product type", ok: isFilled(row.medusa_product_type) },
+    { label: "Variant strategy", ok: isFilled(row.variant_strategy) },
+    { label: "Price (RUB)", ok: isFilled(row.price_rub) },
+    { label: "Status", ok: isFilled(row.status_draft_or_published) },
+    { label: "Operator decision", ok: isFilled(row.operator_decision) },
+    { label: "Row ready for approve", ok: validation.is_complete_for_approve },
   ]
 
   return (
@@ -80,7 +193,7 @@ function RowChecklist({ row, validation }: { row: MatrixRow; validation: RowVali
           {validation.missing_fields.length > 0 && (
             <ul>
               {validation.missing_fields.map((f) => (
-                <li key={f}>нет: {f}</li>
+                <li key={f}>нет: {FIELD_LABELS[f as keyof MatrixRow] || f}</li>
               ))}
             </ul>
           )}
@@ -100,18 +213,45 @@ function RowChecklist({ row, validation }: { row: MatrixRow; validation: RowVali
 function RowEditor({
   row,
   validation,
+  fieldSources,
+  handleCandidates,
   onChange,
+  onFieldManual,
+  onUseCandidate,
+  onNoSource,
 }: {
   row: MatrixRow
   validation: RowValidation
+  fieldSources: RowFieldSources
+  handleCandidates: HandleCandidates | null
   onChange: (patch: Partial<MatrixRow>) => void
+  onFieldManual: (field: keyof MatrixRow) => void
+  onUseCandidate: (c: WorkbookCandidate) => void
+  onNoSource: () => void
 }) {
   const missing = new Set(validation.missing_fields)
   const fieldClass = (name: string) => (missing.has(name) ? "wwmx-field invalid" : "wwmx-field")
+  const workflowState = computeRowWorkflowState(row, validation)
+
+  const manual = (field: keyof MatrixRow, patch: Partial<MatrixRow>) => {
+    onFieldManual(field)
+    onChange(patch)
+  }
 
   return (
     <div className="wwmx-card">
-      <h2>{row.handle}</h2>
+      <div className="wwmx-editor-head">
+        <h2>{row.handle}</h2>
+        <span className={`wwmx-state-badge state-${workflowState}`}>
+          {ROW_STATE_LABELS[workflowState]}
+        </span>
+      </div>
+
+      <CandidatePanel
+        handleCandidates={handleCandidates}
+        onUse={onUseCandidate}
+        onNoSource={onNoSource}
+      />
 
       <fieldset className="wwmx-fieldset">
         <legend>Идентичность (только чтение)</legend>
@@ -169,146 +309,133 @@ function RowEditor({
                     />
                   </a>
                 ) : (
-                  <div
-                    style={{
-                      width: 120,
-                      height: 120,
-                      background: "#1a222c",
-                      borderRadius: 6,
-                      border: "1px solid #3a4a5a",
-                    }}
-                  />
+                  <div className="wwmx-media-placeholder" />
                 )}
                 <div className="fname">{fname}</div>
               </div>
             )
           })}
           {(row.media_filenames || []).length === 0 && (
-            <span style={{ color: "#8a9aaa" }}>Нет файлов Flow A</span>
+            <span className="wwmx-muted">Нет файлов Flow A</span>
           )}
         </div>
       </fieldset>
 
       <fieldset className="wwmx-fieldset">
-        <legend>Обязательные бизнес-поля</legend>
+        <legend>Бизнес-поля (можно править после выбора candidate)</legend>
         <div className="wwmx-form-grid">
           <div className={fieldClass("workbook_row_key")}>
-            <label>
-              workbook_row_key <span className="req">*</span>
-            </label>
+            <FieldLabel field="workbook_row_key" required source={fieldSources.workbook_row_key} />
             <input
-              value={row.workbook_row_key}
-              onChange={(e) => onChange({ workbook_row_key: e.target.value })}
+              placeholder="Нужно выбрать workbook row"
+              value={row.workbook_row_key === TODO ? "" : row.workbook_row_key}
+              onChange={(e) => manual("workbook_row_key", { workbook_row_key: e.target.value })}
             />
           </div>
           <div className={fieldClass("workbook_product_code")}>
-            <label>
-              workbook_product_code <span className="req">*</span>
-            </label>
+            <FieldLabel
+              field="workbook_product_code"
+              required
+              source={fieldSources.workbook_product_code}
+            />
             <input
-              value={row.workbook_product_code}
-              onChange={(e) => onChange({ workbook_product_code: e.target.value })}
+              placeholder="Нужно выбрать workbook row"
+              value={row.workbook_product_code === TODO ? "" : row.workbook_product_code}
+              onChange={(e) =>
+                manual("workbook_product_code", { workbook_product_code: e.target.value })
+              }
             />
           </div>
           <div className={fieldClass("painting_name")}>
-            <label>
-              painting_name <span className="req">*</span>
-            </label>
+            <FieldLabel field="painting_name" required source={fieldSources.painting_name} />
             <input
-              value={row.painting_name}
-              onChange={(e) => onChange({ painting_name: e.target.value })}
+              placeholder="Из prefix / workbook candidate"
+              value={row.painting_name === TODO ? "" : row.painting_name}
+              onChange={(e) => manual("painting_name", { painting_name: e.target.value })}
             />
           </div>
           <div className={fieldClass("medusa_product_type")}>
-            <label>
-              medusa_product_type <span className="req">*</span>
-            </label>
+            <FieldLabel field="medusa_product_type" required source={fieldSources.medusa_product_type} />
             <select
               value={row.medusa_product_type || ""}
               onChange={(e) =>
-                onChange({
+                manual("medusa_product_type", {
                   medusa_product_type: e.target.value as MatrixRow["medusa_product_type"],
                 })
               }
             >
-              <option value="">— выберите —</option>
-              <option value={TODO}>{TODO}</option>
+              <option value="">Выбери STANDARD / CONFIGURABLE / BESPOKE</option>
               <option value="STANDARD">STANDARD</option>
               <option value="CONFIGURABLE">CONFIGURABLE</option>
               <option value="BESPOKE">BESPOKE</option>
             </select>
           </div>
           <div className={fieldClass("variant_strategy")}>
-            <label>
-              variant_strategy <span className="req">*</span>
-            </label>
+            <FieldLabel field="variant_strategy" required source={fieldSources.variant_strategy} />
             <select
               value={row.variant_strategy || ""}
               onChange={(e) =>
-                onChange({
+                manual("variant_strategy", {
                   variant_strategy: e.target.value as MatrixRow["variant_strategy"],
                 })
               }
             >
-              <option value="">— выберите —</option>
-              <option value={TODO}>{TODO}</option>
+              <option value="">Выбери стратегию вариантов</option>
               <option value="single_default">single_default</option>
               <option value="configurable_tiers">configurable_tiers</option>
             </select>
           </div>
           <div className={fieldClass("price_rub")}>
-            <label>
-              price_rub <span className="req">*</span>
-            </label>
+            <FieldLabel field="price_rub" required source={fieldSources.price_rub} />
             <input
-              value={row.price_rub}
-              onChange={(e) => onChange({ price_rub: e.target.value })}
+              placeholder="Цена в рублях"
+              value={row.price_rub === TODO ? "" : row.price_rub}
+              onChange={(e) => manual("price_rub", { price_rub: e.target.value })}
               inputMode="decimal"
             />
           </div>
           <div className={fieldClass("status_draft_or_published")}>
-            <label>
-              status_draft_or_published <span className="req">*</span>
-            </label>
+            <FieldLabel
+              field="status_draft_or_published"
+              required
+              source={fieldSources.status_draft_or_published}
+            />
             <select
               value={row.status_draft_or_published || ""}
               onChange={(e) =>
-                onChange({
+                manual("status_draft_or_published", {
                   status_draft_or_published: e.target
                     .value as MatrixRow["status_draft_or_published"],
                 })
               }
             >
-              <option value="">— выберите —</option>
-              <option value={TODO}>{TODO}</option>
+              <option value="">draft или published</option>
               <option value="draft">draft</option>
               <option value="published">published</option>
             </select>
           </div>
           <div className={fieldClass("operator_decision")}>
-            <label>
-              operator_decision <span className="req">*</span>
-            </label>
+            <FieldLabel field="operator_decision" required source={fieldSources.operator_decision} />
             <select
               value={row.operator_decision || ""}
               onChange={(e) =>
-                onChange({
+                manual("operator_decision", {
                   operator_decision: e.target.value as MatrixRow["operator_decision"],
                 })
               }
             >
-              <option value="">— выберите —</option>
-              <option value={TODO}>{TODO}</option>
+              <option value="">hold пока не заполнено</option>
               <option value="hold">hold</option>
               <option value="approve">approve</option>
               <option value="reject">reject</option>
             </select>
           </div>
           <div className="wwmx-field">
-            <label>operator_notes</label>
+            <FieldLabel field="operator_notes" source={fieldSources.operator_notes} />
             <textarea
+              placeholder="Причина hold/reject или уточнения"
               value={row.operator_notes}
-              onChange={(e) => onChange({ operator_notes: e.target.value })}
+              onChange={(e) => manual("operator_notes", { operator_notes: e.target.value })}
             />
           </div>
         </div>
@@ -318,10 +445,13 @@ function RowEditor({
         <legend>Опционально</legend>
         <div className="wwmx-form-grid">
           <div className="wwmx-field">
-            <label>compare_at_price_rub</label>
+            <FieldLabel field="compare_at_price_rub" source={fieldSources.compare_at_price_rub} />
             <input
+              placeholder="Старая цена, если есть"
               value={row.compare_at_price_rub}
-              onChange={(e) => onChange({ compare_at_price_rub: e.target.value })}
+              onChange={(e) =>
+                manual("compare_at_price_rub", { compare_at_price_rub: e.target.value })
+              }
               inputMode="decimal"
             />
           </div>
@@ -336,6 +466,12 @@ function RowEditor({
 export function MatrixBoardClient() {
   const [rows, setRows] = useState<MatrixRow[]>([])
   const [meta, setMeta] = useState<MatrixBootstrap | null>(null)
+  const [candidatesByHandle, setCandidatesByHandle] = useState<Map<string, HandleCandidates>>(
+    new Map()
+  )
+  const [fieldSourcesByHandle, setFieldSourcesByHandle] = useState<Map<string, RowFieldSources>>(
+    new Map()
+  )
   const [error, setError] = useState<string | null>(null)
   const [msg, setMsg] = useState("")
   const [filter, setFilter] = useState<DecisionFilter>("all")
@@ -349,14 +485,20 @@ export function MatrixBoardClient() {
   const [bulkVariant, setBulkVariant] = useState("single_default")
 
   const load = useCallback(() => {
-    fetch(`${API}/bootstrap`, { signal: AbortSignal.timeout(60000) })
-      .then(async (res) => {
+    Promise.all([
+      fetch(`${API}/bootstrap`, { signal: AbortSignal.timeout(60000) }).then(async (res) => {
         if (!res.ok) throw new Error(await res.text())
         return res.json() as Promise<MatrixBootstrap>
-      })
-      .then((data) => {
+      }),
+      fetch(`${API}/candidates`, { signal: AbortSignal.timeout(60000) }).then(async (res) => {
+        if (!res.ok) throw new Error(`candidates: ${await res.text()}`)
+        return res.json() as Promise<CandidatesPayload>
+      }),
+    ])
+      .then(([data, candidates]) => {
         setMeta(data)
         setRows(data.rows)
+        setCandidatesByHandle(new Map(candidates.by_handle.map((h) => [h.handle, h])))
         setError(null)
         if (data.rows.length > 0) {
           setActiveHandle((prev) => prev ?? data.rows[0].handle)
@@ -417,11 +559,54 @@ export function MatrixBoardClient() {
     [rows, activeHandle]
   )
   const activeValidation = activeRow ? validations.get(activeRow.handle) : null
+  const activeCandidates = activeHandle ? candidatesByHandle.get(activeHandle) ?? null : null
+  const activeFieldSources = activeHandle
+    ? fieldSourcesByHandle.get(activeHandle) ?? {}
+    : {}
 
   const updateRow = (handle: string, patch: Partial<MatrixRow>) => {
     setRows((prev) =>
       prev.map((r) => (r.handle === handle ? { ...r, ...patch, ingestion_allowed: "no" } : r))
     )
+  }
+
+  const markFieldManual = (handle: string, field: keyof MatrixRow) => {
+    setFieldSourcesByHandle((prev) => {
+      const next = new Map(prev)
+      const cur = { ...(next.get(handle) || {}) }
+      cur[field] = "manual"
+      next.set(handle, cur)
+      return next
+    })
+  }
+
+  const useCandidate = (handle: string, candidate: WorkbookCandidate) => {
+    const patch = candidateToRowPatch(candidate)
+    const sources = sourceFieldsFromCandidate(candidate)
+    setFieldSourcesByHandle((prev) => {
+      const next = new Map(prev)
+      const cur: RowFieldSources = { ...(next.get(handle) || {}) }
+      for (const f of sources) cur[f] = "source"
+      next.set(handle, cur)
+      return next
+    })
+    updateRow(handle, {
+      ...patch,
+      operator_decision: "hold",
+      operator_notes: rowNoteForCandidate(candidate),
+    })
+    setMsg(`Candidate применён для ${handle} — decision=hold, проверьте тип/статус`)
+  }
+
+  const rowNoteForCandidate = (c: WorkbookCandidate) =>
+    `source: ${c.source_sheet}:${c.workbook_row_key} ${c.workbook_product_code}`
+
+  const markNoSource = (handle: string) => {
+    updateRow(handle, {
+      operator_decision: "hold",
+      operator_notes: "no workbook candidate — operator hold",
+    })
+    setMsg(`${handle}: hold — нет подходящего workbook source`)
   }
 
   const toggleSelect = (handle: string, e: React.MouseEvent) => {
@@ -485,6 +670,11 @@ export function MatrixBoardClient() {
     setMsg(`Выбрано готовых строк: ${ready.length} — approve не ставится автоматически`)
   }
 
+  const handlesWithCandidates = useMemo(
+    () => Array.from(candidatesByHandle.values()).filter((h) => h.candidates.length > 0).length,
+    [candidatesByHandle]
+  )
+
   if (error) {
     return (
       <div className="wwmx-err">
@@ -497,7 +687,7 @@ export function MatrixBoardClient() {
     )
   }
 
-  if (!meta) return <div className="wwmx-msg">Загрузка 28 строк…</div>
+  if (!meta) return <div className="wwmx-msg">Загрузка 28 строк и workbook candidates…</div>
 
   return (
     <>
@@ -506,9 +696,9 @@ export function MatrixBoardClient() {
       </div>
 
       <div className="wwmx-instructions">
-        <strong>Как работать:</strong> 1. Выбери товар слева. 2. Заполни поля справа. 3. Если
-        данных нет — ставь hold. 4. Approve только когда есть workbook mapping, цена, тип, статус и
-        стратегия. 5. Save filled CSV. Seed/import отдельно, не здесь.
+        <strong>Как работать:</strong> 1. Выбери товар слева. 2. Выбери workbook candidate справа.
+        3. Проверь тип, variant, статус. 4. Approve только когда всё заполнено. 5. Save filled CSV.
+        Seed/import отдельно.
       </div>
 
       <header className="wwmx-header">
@@ -516,6 +706,9 @@ export function MatrixBoardClient() {
         <div className="wwmx-stats">
           <span className="wwmx-stat">
             Строк: <strong>{rows.length}</strong>
+          </span>
+          <span className="wwmx-stat">
+            С candidates: <strong>{handlesWithCandidates}</strong>
           </span>
           <span className="wwmx-stat">
             Готово: <strong>{readiness.rows_ready_for_approve}</strong>
@@ -530,10 +723,8 @@ export function MatrixBoardClient() {
             reject: <strong>{readiness.reject_count}</strong>
           </span>
           <span className="wwmx-stat">
-            Пропусков: <strong>{readiness.mandatory_total_cells - readiness.mandatory_filled_cells}</strong>
-          </span>
-          <span className="wwmx-stat">
-            blocked: <strong>{readiness.rows_blocked}</strong>
+            Пропусков:{" "}
+            <strong>{readiness.mandatory_total_cells - readiness.mandatory_filled_cells}</strong>
           </span>
         </div>
       </header>
@@ -579,7 +770,7 @@ export function MatrixBoardClient() {
       </div>
 
       <div className="wwmx-bulk">
-        <span>Batch для отмеченных ({selected.size}):</span>
+        <span>Batch для отмеченных ({selected.size}) — без approve/price/mapping:</span>
         <select value={bulkType} onChange={(e) => setBulkType(e.target.value)}>
           <option value="STANDARD">STANDARD</option>
           <option value="CONFIGURABLE">CONFIGURABLE</option>
@@ -629,21 +820,18 @@ export function MatrixBoardClient() {
           {filtered.map((row) => {
             const v = validations.get(row.handle)!
             const isActive = row.handle === activeHandle
-            const decision = decisionLabel(row.operator_decision)
+            const workflowState = computeRowWorkflowState(row, v)
+            const topCand = candidatesByHandle.get(row.handle)?.candidates[0]
             return (
               <button
                 key={row.handle}
                 type="button"
-                className={[
-                  "wwmx-list-item",
-                  isActive ? "active" : "",
-                  v.is_complete_for_approve ? "ready" : "",
-                ]
+                className={["wwmx-list-item", isActive ? "active" : "", workflowState === "ready_to_approve" || workflowState === "approved" ? "ready" : ""]
                   .filter(Boolean)
                   .join(" ")}
                 onClick={() => setActiveHandle(row.handle)}
               >
-                <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                <div className="wwmx-list-row">
                   <input
                     type="checkbox"
                     checked={selected.has(row.handle)}
@@ -651,32 +839,26 @@ export function MatrixBoardClient() {
                     onChange={() => {}}
                     aria-label={`Select ${row.handle}`}
                   />
-                  <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="wwmx-list-body">
                     <div className="wwmx-list-handle">{row.handle}</div>
                     <div className="wwmx-list-title">{row.legacy_title}</div>
                     <div className="wwmx-list-meta">
                       <span>{row.painting_prefix}</span>
                       <span>·</span>
-                      <span>{row.proposed_medusa_collection}</span>
-                      <span>·</span>
                       <span>{row.proposed_category}</span>
                       <span>·</span>
                       <span>media: {(row.media_filenames || []).length}</span>
                     </div>
-                    <div className="wwmx-list-meta" style={{ marginTop: 6 }}>
-                      {v.missing_fields.length > 0 && (
-                        <span className="wwmx-badge missing">пропусков: {v.missing_fields.length}</span>
-                      )}
-                      {v.is_complete_for_approve && (
-                        <span className="wwmx-badge ready">готово</span>
-                      )}
-                      {decision !== "—" && (
-                        <span className={`wwmx-badge decision-${decision}`}>{decision}</span>
+                    <div className="wwmx-list-meta wwmw-list-badges">
+                      <span className={`wwmx-state-badge state-${workflowState}`}>
+                        {ROW_STATE_LABELS[workflowState]}
+                      </span>
+                      {topCand && (
+                        <span className={`wwmx-badge conf-${topCand.confidence}`}>
+                          {topCand.workbook_product_code}
+                        </span>
                       )}
                       {isFilled(row.price_rub) && <span>₽{row.price_rub}</span>}
-                      {isFilled(row.status_draft_or_published) && (
-                        <span>{row.status_draft_or_published}</span>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -693,7 +875,12 @@ export function MatrixBoardClient() {
             <RowEditor
               row={activeRow}
               validation={activeValidation}
+              fieldSources={activeFieldSources}
+              handleCandidates={activeCandidates}
               onChange={(patch) => updateRow(activeRow.handle, patch)}
+              onFieldManual={(field) => markFieldManual(activeRow.handle, field)}
+              onUseCandidate={(c) => useCandidate(activeRow.handle, c)}
+              onNoSource={() => markNoSource(activeRow.handle)}
             />
           ) : (
             <div className="wwmx-editor-empty">Выберите товар слева</div>
@@ -703,7 +890,7 @@ export function MatrixBoardClient() {
 
       <div className="wwmx-save-bar">
         {msg && <div className="wwmx-msg">{msg}</div>}
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <div className="wwmx-save-actions">
           <button type="button" className="primary" onClick={save}>
             Save filled CSV
           </button>

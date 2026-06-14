@@ -500,6 +500,232 @@ body:has(.wwmx-operator-root) main.container.page-section {
   padding: 20px;
 }
 
+.wwmx-muted {
+  color: #8a9aaa;
+}
+
+.wwmx-editor-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.wwmx-editor-head h2 {
+  margin: 0;
+}
+
+.wwmx-state-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.wwmx-state-badge.state-needs_source_match {
+  background: #3a2820;
+  color: #ffc080;
+}
+
+.wwmx-state-badge.state-needs_price {
+  background: #3a3020;
+  color: #ffe090;
+}
+
+.wwmx-state-badge.state-needs_type_policy {
+  background: #2a3040;
+  color: #9ac0ff;
+}
+
+.wwmx-state-badge.state-ready_to_approve {
+  background: #1a3020;
+  color: #7ddf9a;
+}
+
+.wwmx-state-badge.state-approved {
+  background: #143828;
+  color: #7ddf9a;
+}
+
+.wwmx-state-badge.state-hold {
+  background: #3a3020;
+  color: #ffd080;
+}
+
+.wwmx-state-badge.state-rejected {
+  background: #3a2028;
+  color: #ff9ab0;
+}
+
+.wwmx-src-badge {
+  margin-left: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #1a3a28;
+  color: #7ddf9a;
+  text-transform: uppercase;
+}
+
+.wwmx-src-badge.manual {
+  background: #2a3040;
+  color: #9ab0c4;
+}
+
+.wwmx-candidate-hint {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #b8c8d8;
+}
+
+.wwmx-candidate-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.wwmx-candidate-card {
+  border: 1px solid #3a4a5a;
+  border-radius: 8px;
+  padding: 14px;
+  background: #101820;
+}
+
+.wwmx-candidate-card.conf-exact {
+  border-color: #2a6a3a;
+}
+
+.wwmx-candidate-card.conf-likely {
+  border-color: #4a6a3a;
+}
+
+.wwmx-candidate-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.wwmx-candidate-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.wwmx-candidate-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 16px;
+  margin: 0 0 10px;
+  font-size: 12px;
+}
+
+.wwmx-candidate-meta dt {
+  margin: 0;
+  color: #8a9aaa;
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.wwmx-candidate-meta dd {
+  margin: 0;
+}
+
+.wwmx-why-matched {
+  font-size: 12px;
+  color: #9ab0c4;
+  margin-bottom: 12px;
+}
+
+.wwmx-why-matched ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.wwmx-candidate-empty {
+  color: #9ab0c4;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.wwmx-cand-btn {
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: 1px solid #3a4a5a;
+  background: #243040;
+  color: #e8ecf0;
+  cursor: pointer;
+  margin-right: 8px;
+  margin-top: 4px;
+}
+
+.wwmx-cand-btn.primary {
+  background: #1a5a3a;
+  border-color: #2a7a4a;
+}
+
+.wwmx-cand-btn.secondary {
+  background: #3a3020;
+  border-color: #6a5030;
+}
+
+.wwmx-badge.conf-exact {
+  background: #1a3a28;
+  color: #7ddf9a;
+}
+
+.wwmx-badge.conf-likely {
+  background: #2a3a20;
+  color: #c0e080;
+}
+
+.wwmx-badge.conf-weak {
+  background: #2a2820;
+  color: #c0b080;
+}
+
+.wwmx-list-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.wwmx-list-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.wwmx-list-badges {
+  margin-top: 6px;
+}
+
+.wwmx-media-placeholder {
+  width: 120px;
+  height: 120px;
+  background: #1a222c;
+  border-radius: 6px;
+  border: 1px solid #3a4a5a;
+}
+
+.wwmx-save-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.wwmx-card {
+  max-width: 800px;
+}
+
+.wwmx-card h2 {
+  margin: 0;
+}
+
 @media (max-width: 900px) {
   .wwmx-body {
     flex-direction: column;

@@ -68,3 +68,39 @@ export type MatrixReadiness = {
 }
 
 export type DecisionFilter = "all" | "approve" | "hold" | "reject" | "missing" | "ready"
+
+export type WorkbookConfidence = "exact" | "likely" | "weak"
+
+export type WorkbookCandidate = {
+  candidate_id: string
+  source_sheet: string
+  workbook_row_key: string
+  workbook_product_code: string
+  candidate_title: string
+  painting_name: string | null
+  category: string | null
+  category_raw: string | null
+  price: number | null
+  currency: string | null
+  confidence: WorkbookConfidence
+  why_matched: string[]
+  raw_row_excerpt: Record<string, unknown>
+}
+
+export type HandleCandidates = {
+  handle: string
+  candidates: WorkbookCandidate[]
+  has_workbook_source: boolean
+  best_confidence: WorkbookConfidence | null
+}
+
+export type CandidatesPayload = {
+  generated_at: string
+  parsed_sheets_path: string
+  workbook_rows: number
+  by_handle: HandleCandidates[]
+}
+
+export type FieldSource = "source" | "manual"
+
+export type RowFieldSources = Partial<Record<keyof MatrixRow, FieldSource>>
