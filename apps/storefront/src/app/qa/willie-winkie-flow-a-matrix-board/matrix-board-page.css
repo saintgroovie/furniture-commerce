@@ -1,0 +1,206 @@
+/* Willie Winkie Flow A matrix board — dev-only QA */
+
+.wwmx-root {
+  min-height: 100vh;
+  background: #0f1419;
+  color: #e8ecf0;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+}
+
+.wwmx-banner {
+  background: #3d2a00;
+  border-bottom: 1px solid #8a6a00;
+  color: #ffe9a8;
+  padding: 10px 16px;
+  font-weight: 600;
+}
+
+.wwmx-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #2a3540;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.wwmx-header h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.wwmx-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.wwmx-stat {
+  background: #1a222c;
+  border: 1px solid #2a3540;
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+
+.wwmx-stat strong {
+  color: #7ec8ff;
+}
+
+.wwmx-toolbar {
+  padding: 12px 20px;
+  border-bottom: 1px solid #2a3540;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.wwmx-toolbar input,
+.wwmx-toolbar select,
+.wwmx-toolbar button {
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid #3a4a5a;
+  background: #1a222c;
+  color: #e8ecf0;
+}
+
+.wwmx-toolbar button {
+  cursor: pointer;
+  background: #243040;
+}
+
+.wwmx-toolbar button:hover {
+  background: #2e4054;
+}
+
+.wwmx-toolbar button.primary {
+  background: #1a4a6e;
+  border-color: #2a6a9e;
+}
+
+.wwmx-readiness {
+  margin: 0 20px 12px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  border: 1px solid #2a3540;
+  background: #141c24;
+}
+
+.wwmx-readiness.ok {
+  border-color: #2a6a3a;
+  background: #0f2418;
+}
+
+.wwmx-table-wrap {
+  overflow: auto;
+  max-height: calc(100vh - 280px);
+  margin: 0 20px 20px;
+  border: 1px solid #2a3540;
+  border-radius: 8px;
+}
+
+.wwmx-table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: collapse;
+}
+
+.wwmx-table th,
+.wwmx-table td {
+  border-bottom: 1px solid #2a3540;
+  padding: 8px 10px;
+  vertical-align: top;
+  text-align: left;
+}
+
+.wwmx-table th {
+  position: sticky;
+  top: 0;
+  background: #1a222c;
+  z-index: 2;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #9ab0c4;
+}
+
+.wwmx-table th.sticky-col,
+.wwmx-table td.sticky-col {
+  position: sticky;
+  left: 0;
+  background: #141c24;
+  z-index: 1;
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.3);
+}
+
+.wwmx-table tr.selected td {
+  background: #1a2838;
+}
+
+.wwmx-table tr.row-error td.sticky-col {
+  background: #2a1818;
+}
+
+.wwmx-table tr.row-ready td.sticky-col {
+  background: #142818;
+}
+
+.wwmx-table input,
+.wwmx-table select,
+.wwmx-table textarea {
+  width: 100%;
+  min-width: 90px;
+  font-size: 12px;
+  padding: 4px 6px;
+  border: 1px solid #3a4a5a;
+  border-radius: 3px;
+  background: #0f1419;
+  color: #e8ecf0;
+}
+
+.wwmx-table textarea {
+  min-height: 48px;
+  min-width: 140px;
+}
+
+.wwmx-media-strip {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  max-width: 160px;
+}
+
+.wwmx-media-strip img {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid #3a4a5a;
+  background: #1a222c;
+}
+
+.wwmx-media-fname {
+  font-size: 10px;
+  color: #7a8a9a;
+  word-break: break-all;
+}
+
+.wwmx-msg {
+  padding: 8px 20px;
+  color: #7ec8ff;
+}
+
+.wwmx-err {
+  color: #ff8a8a;
+  padding: 20px;
+}
+
+.wwmx-readonly {
+  color: #9ab0c4;
+  font-size: 11px;
+}
