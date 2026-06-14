@@ -5,5 +5,5 @@ export default function WillieWinkieFlowAMatrixBoardLayout({
 }: {
   children: React.ReactNode
 }) {
-  return <div className="wwmx-root">{children}</div>
+  return <div className="wwmx-operator-root">{children}</div>
 }
