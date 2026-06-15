@@ -782,7 +782,8 @@ export function MatrixBoardClient() {
   return (
     <>
       <div className="wwmx-banner">
-        Это business/catalog matrix. Не seed, не import, не media apply.
+        Канонический operator route для Willie Winkie Flow A matrix (workbook candidates + bulk fill).
+        Не seed, не import, не media apply.
       </div>
 
       <div className="wwmx-instructions">

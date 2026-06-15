@@ -1,6 +1,9 @@
+import * as path from "path"
+
 const MATRIX_PREVIEW_API = "/qa/willie-winkie-flow-a-matrix-board/api/preview"
 
 const STATIC_PRODUCTS_PREFIX = "/static/products/"
+const BACKEND_STATIC_REL = path.join("apps", "backend", "static")
 
 function stripTrailingSlash(url: string): string {
   return url.replace(/\/$/, "")
@@ -43,11 +46,29 @@ export function staticProductPath(collection: string, filename: string): string 
   return `${STATIC_PRODUCTS_PREFIX}${safeCollection}/${safeFilename}`
 }
 
-export function isAllowedStaticProductPath(path: string): boolean {
-  if (!path.startsWith(STATIC_PRODUCTS_PREFIX)) return false
-  if (path.includes("..")) return false
-  if (path.includes("://")) return false
+export function isAllowedStaticProductPath(staticPath: string): boolean {
+  if (!staticPath.startsWith(STATIC_PRODUCTS_PREFIX)) return false
+  if (staticPath.includes("..")) return false
+  if (staticPath.includes("://")) return false
+  const rest = staticPath.slice(STATIC_PRODUCTS_PREFIX.length)
+  if (!rest || rest.startsWith("/")) return false
   return true
+}
+
+/** Map `/static/products/...` to repo-relative disk path under `apps/backend/static/products/...`. */
+export function staticPathToDiskRelative(staticPath: string): string | null {
+  if (!isAllowedStaticProductPath(staticPath)) return null
+  const underProducts = staticPath.slice(STATIC_PRODUCTS_PREFIX.length)
+  return path.join(BACKEND_STATIC_REL, "products", ...underProducts.split("/"))
+}
+
+export function contentTypeForStaticPath(staticPath: string): string {
+  const ext = path.extname(staticPath).toLowerCase()
+  if (ext === ".jpg" || ext === ".jpeg") return "image/jpeg"
+  if (ext === ".png") return "image/png"
+  if (ext === ".webp") return "image/webp"
+  if (ext === ".gif") return "image/gif"
+  return "application/octet-stream"
 }
 
 /** Same-origin QA proxy URL — safe for `<img>` and “open in tab”. */
@@ -77,17 +98,23 @@ export function buildMediaPreviewUrls(collection: string, filenames: string[]): 
   return { media_static_paths, media_preview_urls, media_open_urls }
 }
 
-/** Client-side guard for any legacy API payload still containing docker host. */
+/** Client-side guard: rewrite docker host or bare `/static/products/...` to QA proxy. */
 export function sanitizeMediaUrlForBrowser(url: string): string {
   if (!url) return url
-  if (!/medusa(?::|\/)/i.test(url)) return url
+  if (url.startsWith(STATIC_PRODUCTS_PREFIX) && isAllowedStaticProductPath(url)) {
+    return toQaPreviewProxyUrl(url)
+  }
+  if (!/medusa(?::|\/)/i.test(url) && !url.includes("://")) return url
   try {
-    const u = new URL(url)
+    const u = new URL(url, "http://localhost")
     if (isAllowedStaticProductPath(u.pathname)) {
       return toQaPreviewProxyUrl(u.pathname)
     }
-    u.hostname = "localhost"
-    return u.toString()
+    if (/medusa/i.test(u.hostname)) {
+      u.hostname = "localhost"
+      return u.toString()
+    }
+    return url
   } catch {
     return url
   }

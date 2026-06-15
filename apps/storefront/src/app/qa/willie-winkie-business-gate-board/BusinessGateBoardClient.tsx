@@ -279,6 +279,12 @@ export function BusinessGateBoardClient() {
 
   return (
     <>
+      <div className="wbg-superseded">
+        <strong>Не основной инструмент.</strong> Текущий matrix board с workbook candidates и bulk fill:{" "}
+        <a href="/qa/willie-winkie-flow-a-matrix-board">/qa/willie-winkie-flow-a-matrix-board</a>
+        {" "}(локально: <code>http://localhost:3004/qa/willie-winkie-flow-a-matrix-board</code>).
+        На Docker <code>:8000</code> media preview здесь часто недоступен — используйте matrix board.
+      </div>
       <div className="wbg-banner">
         Catalog / business gate only — does not write DB, seed, or product media.
       </div>
