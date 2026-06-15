@@ -1,0 +1,42 @@
+{
+  "generated_at": "2026-06-15T17:11:01.955Z",
+  "pilot": "willie-winkie-molly-flow-a-28",
+  "operator_matrix_approved": true,
+  "launch_mode": "request_quote",
+  "handle_count": 28,
+  "handles": [
+    "av-05-1",
+    "ba-05-3",
+    "ba-62-1",
+    "fa-05-3",
+    "fa-06-1",
+    "fa-67-1",
+    "fk-05-1",
+    "fk-05-3",
+    "in-67-1",
+    "mo-02-1",
+    "mo-81-1",
+    "pa-05-1",
+    "pa-05-3",
+    "pa-62-1",
+    "rl-05-3",
+    "rl-67-1",
+    "rs-05-3",
+    "rs-62-1",
+    "sh-81-1",
+    "tb-05-3",
+    "tb-62-1",
+    "tb-67-1",
+    "te-02-2",
+    "te-05-1",
+    "te-05-3",
+    "te-62-1",
+    "to-62-1",
+    "tw-05-3"
+  ],
+  "excluded_handles": [
+    "co-02-1",
+    "am-02-1"
+  ],
+  "workbook_keys_allowed_prefix": "ВВ:"
+}

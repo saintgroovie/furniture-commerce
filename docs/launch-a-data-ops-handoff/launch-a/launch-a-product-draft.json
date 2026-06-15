@@ -1,0 +1,1650 @@
+{
+  "generated_at": "2026-06-15T17:04:53.281Z",
+  "launch_option": "A",
+  "launch_mode": "request_quote",
+  "pilot": "willie-winkie-molly-flow-a-28",
+  "product_count": 28,
+  "operator_matrix_approved": true,
+  "production_seed_file": false,
+  "import_executed": false,
+  "price_display_policy": "from_price_or_request",
+  "online_payment_required": false,
+  "material_tier_model": "metadata_labels_only_until_post_launch",
+  "validation": {
+    "rows": 28,
+    "approved": 28,
+    "configurable": 28,
+    "configurable_tiers": 28,
+    "draft": 28,
+    "workbook_mapping_filled": 28,
+    "price_rub_present": 28,
+    "tier_prices_todo_launch_a_ok": 28,
+    "excluded_absent": true
+  },
+  "products": [
+    {
+      "handle": "av-05-1",
+      "title": "Комод стандартный Ant`s Village (гл.440)",
+      "collection": "willie-winkie",
+      "legacy_collection_hint": "willie-winkie",
+      "category": "komody",
+      "painting_prefix": "AV",
+      "painting_name": "Ant's Village",
+      "medusa_product_type": "CONFIGURABLE",
+      "variant_strategy": "configurable_tiers",
+      "launch_mode": "request_quote",
+      "status": "draft",
+      "workbook_row_key": "ВВ:21",
+      "workbook_product_code": "WW-05-1",
+      "source_price_rub": 83820,
+      "reference_price_rub": 83820,
+      "currency": "rub",
+      "price_display_policy": "from_price_or_request",
+      "price_display_note_ru": "Цена от 83 820 ₽ — справочная из workbook; итог подтверждает менеджер.",
+      "online_payment": {
+        "required": false,
+        "checkout_capture": false,
+        "policy": "launch_a_request_only"
+      },
+      "material_tiers": {
+        "solid_full": {
+          "key": "solid_full",
+          "label_ru": "Полностью массив",
+          "price_rub": null,
+          "price_known": false
+        },
+        "solid_front_ldsp_body": {
+          "key": "solid_front_ldsp_body",
+          "label_ru": "Фронты массив + боковины/задники ЛДСП",
+          "price_rub": null,
+          "price_known": false
+        }
+      },
+      "tier_price_policy": {
+        "no_invented_prices": true,
+        "no_fake_cheaper_tier": true,
+        "workbook_reference_only_unless_explicit": true,
+        "tier_split_in_workbook": false,
+        "manager_confirms_final_price": true
+      },
+      "flow_a_media_count": 2,
+      "legacy_cs_cart_product_id": "1066",
+      "legacy_page_url": "https://woodright.ru/kollekcii/willie-winkie/komod-willie-winkie/",
+      "legacy_main_image_url": "https://woodright.ru/images/detailed/10/av-05-1-iso.jpg",
+      "operator_decision": "approve",
+      "operator_notes": "smoke_test_note; source: ВВ:ВВ:21 WW-05-1",
+      "provenance": {
+        "matrix_csv": "tmp/willie-winkie-flow-a-matrix-template/vv-painting-sku-matrix-filled.csv",
+        "operator_approval": "tmp/willie-winkie-flow-a-matrix-template/operator-approval-summary.json",
+        "workbook_sheet_key": "ВВ:21",
+        "workbook_product_code": "WW-05-1"
+      }
+    },
+    {
+      "handle": "ba-05-3",
+      "title": "Комод высокий Ballet (гл.440)",
+      "collection": "willie-winkie",
+      "legacy_collection_hint": "willie-winkie",
+      "category": "komody",
+      "painting_prefix": "BA",
+      "painting_name": "Ballet",
+      "medusa_product_type": "CONFIGURABLE",
+      "variant_strategy": "configurable_tiers",
+      "launch_mode": "request_quote",
+      "status": "draft",
+      "workbook_row_key": "ВВ:19",
+      "workbook_product_code": "WW-05-3",
+      "source_price_rub": 113080,
+      "reference_price_rub": 113080,
+      "currency": "rub",
+      "price_display_policy": "from_price_or_request",
+      "price_display_note_ru": "Цена от 113 080 ₽ — справочная из workbook; итог подтверждает менеджер.",
+      "online_payment": {
+        "required": false,
+        "checkout_capture": false,
+        "policy": "launch_a_request_only"
+      },
+      "material_tiers": {
+        "solid_full": {
+          "key": "solid_full",
+          "label_ru": "Полностью массив",
+          "price_rub": null,
+          "price_known": false
+        },
+        "solid_front_ldsp_body": {
+          "key": "solid_front_ldsp_body",
+          "label_ru": "Фронты массив + боковины/задники ЛДСП",
+          "price_rub": null,
+          "price_known": false
+        }
+      },
+      "tier_price_policy": {
+        "no_invented_prices": true,
+        "no_fake_cheaper_tier": true,
+        "workbook_reference_only_unless_explicit": true,
+        "tier_split_in_workbook": false,
+        "manager_confirms_final_price": true
+      },
+      "flow_a_media_count": 2,
+      "legacy_cs_cart_product_id": "1174",
+      "legacy_page_url": "https://woodright.ru/kollekcii/willie-winkie/komod-vysokiy-willie-winkie-ru/",
+      "legacy_main_image_url": "https://woodright.ru/images/detailed/10/ba-05-3-i1.png",
+      "operator_decision": "approve",
+      "operator_notes": "source: ВВ:ВВ:19 WW-05-3",
+      "provenance": {
+        "matrix_csv": "tmp/willie-winkie-flow-a-matrix-template/vv-painting-sku-matrix-filled.csv",
+        "operator_approval": "tmp/willie-winkie-flow-a-matrix-template/operator-approval-summary.json",
+        "workbook_sheet_key": "ВВ:19",
+        "workbook_product_code": "WW-05-3"
+      }
+    },
+    {
+      "handle": "ba-62-1",
+      "title": "Стеллаж для книг Ballet (гл. 440)",
+      "collection": "willie-winkie",
+      "legacy_collection_hint": "willie-winkie",
+      "category": "stellazhi",
+      "painting_prefix": "BA",
+      "painting_name": "Ballet",
+      "medusa_product_type": "CONFIGURABLE",
+      "variant_strategy": "configurable_tiers",
+      "launch_mode": "request_quote",
+      "status": "draft",
+      "workbook_row_key": "ВВ:33",
+      "workbook_product_code": "WW-62-1",
+      "source_price_rub": 99390,
+      "reference_price_rub": 99390,
+      "currency": "rub",
+      "price_display_policy": "from_price_or_request",
+      "price_display_note_ru": "Цена от 99 390 ₽ — справочная из workbook; итог подтверждает менеджер.",
+      "online_payment": {
+        "required": false,
+        "checkout_capture": false,
+        "policy": "launch_a_request_only"
+      },
+      "material_tiers": {
+        "solid_full": {
+          "key": "solid_full",
+          "label_ru": "Полностью массив",
+          "price_rub": null,
+          "price_known": false
+        },
+        "solid_front_ldsp_body": {
+          "key": "solid_front_ldsp_body",
+          "label_ru": "Фронты массив + боковины/задники ЛДСП",
+          "price_rub": null,
+          "price_known": false
+        }
+      },
+      "tier_price_policy": {
+        "no_invented_prices": true,
+        "no_fake_cheaper_tier": true,
+        "workbook_reference_only_unless_explicit": true,
+        "tier_split_in_workbook": false,
+        "manager_confirms_final_price": true
+      },
+      "flow_a_media_count": 2,
+      "legacy_cs_cart_product_id": "933",
+      "legacy_page_url": "https://woodright.ru/kollekcii/willie-winkie/stellazh-dlya-knig-willie-winkie-ru/",
+      "legacy_main_image_url": "https://woodright.ru/images/detailed/10/ba-62-1-iso-1_s879-6p.jpg",
+      "operator_decision": "approve",
+      "operator_notes": "source: ВВ:ВВ:33 WW-62-1",
+      "provenance": {
+        "matrix_csv": "tmp/willie-winkie-flow-a-matrix-template/vv-painting-sku-matrix-filled.csv",
+        "operator_approval": "tmp/willie-winkie-flow-a-matrix-template/operator-approval-summary.json",
+        "workbook_sheet_key": "ВВ:33",
+        "workbook_product_code": "WW-62-1"
+      }
+    },
+    {
+      "handle": "fa-05-3",
+      "title": "Комод высокий Fairies (гл.560)",
+      "collection": "willie-winkie",
+      "legacy_collection_hint": "willie-winkie",
+      "category": "komody",
+      "painting_prefix": "FA",
+      "painting_name": "Fairies",
+      "medusa_product_type": "CONFIGURABLE",
+      "variant_strategy": "configurable_tiers",
+      "launch_mode": "request_quote",
+      "status": "draft",
+      "workbook_row_key": "ВВ:19",
+      "workbook_product_code": "WW-05-3",
+      "source_price_rub": 113080,
+      "reference_price_rub": 113080,
+      "currency": "rub",
+      "price_display_policy": "from_price_or_request",
+      "price_display_note_ru": "Цена от 113 080 ₽ — справочная из workbook; итог подтверждает менеджер.",
+      "online_payment": {
+        "required": false,
+        "checkout_capture": false,
+        "policy": "launch_a_request_only"
+      },
+      "material_tiers": {
+        "solid_full": {
+          "key": "solid_full",
+          "label_ru": "Полностью массив",
+          "price_rub": null,
+          "price_known": false
+        },
+        "solid_front_ldsp_body": {
+          "key": "solid_front_ldsp_body",
+          "label_ru": "Фронты массив + боковины/задники ЛДСП",
+          "price_rub": null,
+          "price_known": false
+        }
+      },
+      "tier_price_policy": {
+        "no_invented_prices": true,
+        "no_fake_cheaper_tier": true,
+        "workbook_reference_only_unless_explicit": true,
+        "tier_split_in_workbook": false,
+        "manager_confirms_final_price": true
+      },
+      "flow_a_media_count": 2,
+      "legacy_cs_cart_product_id": "1203",
+      "legacy_page_url": "https://woodright.ru/kollekcii/willie-winkie/komod-vysokiy-willie-winkie-ru-10/",
+      "legacy_main_image_url": "https://woodright.ru/images/detailed/10/fa-05-3-iso_qmc6-u8.jpg",
+      "operator_decision": "approve",
+      "operator_notes": "source: ВВ:ВВ:19 WW-05-3",
+      "provenance": {
+        "matrix_csv": "tmp/willie-winkie-flow-a-matrix-template/vv-painting-sku-matrix-filled.csv",
+        "operator_approval": "tmp/willie-winkie-flow-a-matrix-template/operator-approval-summary.json",
+        "workbook_sheet_key": "ВВ:19",
+        "workbook_product_code": "WW-05-3"
+      }
+    },
+    {
+      "handle": "fa-06-1",
+      "title": "Столик туалетный с зеркалом Fairies",
+      "collection": "willie-winkie",
+      "legacy_collection_hint": "willie-winkie",
+      "category": "stoly-i-stoliki",
+      "painting_prefix": "FA",
+      "painting_name": "Fairies",
+      "medusa_product_type": "CONFIGURABLE",
+      "variant_strategy": "configurable_tiers",
+      "launch_mode": "request_quote",
+      "status": "draft",
+      "workbook_row_key": "ВВ:48",
+      "workbook_product_code": "WW-06-1",
+      "source_price_rub": 59730,
+      "reference_price_rub": 59730,
+      "currency": "rub",
+      "price_display_policy": "from_price_or_request",
+      "price_display_note_ru": "Цена от 59 730 ₽ — справочная из workbook; итог подтверждает менеджер.",
+      "online_payment": {
+        "required": false,
+        "checkout_capture": false,
+        "policy": "launch_a_request_only"
+      },
+      "material_tiers": {
+        "solid_full": {
+          "key": "solid_full",
+          "label_ru": "Полностью массив",
+          "price_rub": null,
+          "price_known": false
+        },
+        "solid_front_ldsp_body": {
+          "key": "solid_front_ldsp_body",
+          "label_ru": "Фронты массив + боковины/задники ЛДСП",
+          "price_rub": null,
+          "price_known": false
+        }
+      },
+      "tier_price_policy": {
+        "no_invented_prices": true,
+        "no_fake_cheaper_tier": true,
+        "workbook_reference_only_unless_explicit": true,
+        "tier_split_in_workbook": false,
+        "manager_confirms_final_price": true
+      },
+      "flow_a_media_count": 2,
+      "legacy_cs_cart_product_id": "1016",
+      "legacy_page_url": "https://woodright.ru/kollekcii/willie-winkie/stolik-tualetnyy-s-zerkalom-willie-winkie-ru-3/",
+      "legacy_main_image_url": "https://woodright.ru/images/detailed/10/fa-06-1-iso.jpg",
+      "operator_decision": "approve",
+      "operator_notes": "source: ВВ:ВВ:48 WW-06-1",
+      "provenance": {
+        "matrix_csv": "tmp/willie-winkie-flow-a-matrix-template/vv-painting-sku-matrix-filled.csv",
+        "operator_approval": "tmp/willie-winkie-flow-a-matrix-template/operator-approval-summary.json",
+        "workbook_sheet_key": "ВВ:48",
+        "workbook_product_code": "WW-06-1"
+      }
+    },
+    {
+      "handle": "fa-67-1",
+      "title": "Стол рабочий Fairies",
+      "collection": "willie-winkie",
+      "legacy_collection_hint": "willie-winkie",
+      "category": "stoly-i-stoliki",
+      "painting_prefix": "FA",
+      "painting_name": "Fairies",
+      "medusa_product_type": "CONFIGURABLE",
+      "variant_strategy": "configurable_tiers",
+      "launch_mode": "request_quote",
+      "status": "draft",
+      "workbook_row_key": "ВВ:44",
+      "workbook_product_code": "WW-67-1",
+      "source_price_rub": 85250,
+      "reference_price_rub": 85250,
+      "currency": "rub",
+      "price_display_policy": "from_price_or_request",
+      "price_display_note_ru": "Цена от 85 250 ₽ — справочная из workbook; итог подтверждает менеджер.",
+      "online_payment": {
+        "required": false,
+        "checkout_capture": false,
+        "policy": "launch_a_request_only"
+      },
+      "material_tiers": {
+        "solid_full": {
+          "key": "solid_full",
+          "label_ru": "Полностью массив",
+          "price_rub": null,
+          "price_known": false
+        },
+        "solid_front_ldsp_body": {
+          "key": "solid_front_ldsp_body",
+          "label_ru": "Фронты массив + боковины/задники ЛДСП",
+          "price_rub": null,
+          "price_known": false
+        }
+      },
+      "tier_price_policy": {
+        "no_invented_prices": true,
+        "no_fake_cheaper_tier": true,
+        "workbook_reference_only_unless_explicit": true,
+        "tier_split_in_workbook": false,
+        "manager_confirms_final_price": true
+      },
+      "flow_a_media_count": 2,
+      "legacy_cs_cart_product_id": "759",
+      "legacy_page_url": "https://woodright.ru/kollekcii/willie-winkie/stol-rabochiy-willie-winkie-ru-13/",
+      "legacy_main_image_url": "https://woodright.ru/images/detailed/10/fa-67-1-iso__1_.jpg",
+      "operator_decision": "approve",
+      "operator_notes": "source: ВВ:ВВ:44 WW-67-1",
+      "provenance": {
+        "matrix_csv": "tmp/willie-winkie-flow-a-matrix-template/vv-painting-sku-matrix-filled.csv",
+        "operator_approval": "tmp/willie-winkie-flow-a-matrix-template/operator-approval-summary.json",
+        "workbook_sheet_key": "ВВ:44",
+        "workbook_product_code": "WW-67-1"
+      }
+    },
+    {
+      "handle": "fk-05-1",
+      "title": "Комод стандартный Fantasy Kingdom (гл.440)",
+      "collection": "willie-winkie",
+      "legacy_collection_hint": "willie-winkie",
+      "category": "komody",
+      "painting_prefix": "FK",
+      "painting_name": "Fantasy Kingdom",
+      "medusa_product_type": "CONFIGURABLE",
+      "variant_strategy": "configurable_tiers",
+      "launch_mode": "request_quote",
+      "status": "draft",
+      "workbook_row_key": "ВВ:21",
+      "workbook_product_code": "WW-05-1",
+      "source_price_rub": 83820,
+      "reference_price_rub": 83820,
+      "currency": "rub",
+      "price_display_policy": "from_price_or_request",
+      "price_display_note_ru": "Цена от 83 820 ₽ — справочная из workbook; итог подтверждает менеджер.",
+      "online_payment": {
+        "required": false,
+        "checkout_capture": false,
+        "policy": "launch_a_request_only"
+      },
+      "material_tiers": {
+        "solid_full": {
+          "key": "solid_full",
+          "label_ru": "Полностью массив",
+          "price_rub": null,
+          "price_known": false
+        },
+        "solid_front_ldsp_body": {
+          "key": "solid_front_ldsp_body",
+          "label_ru": "Фронты массив + боковины/задники ЛДСП",
+          "price_rub": null,
+          "price_known": false
+        }
+      },
+      "tier_price_policy": {
+        "no_invented_prices": true,
+        "no_fake_cheaper_tier": true,
+        "workbook_reference_only_unless_explicit": true,
+        "tier_split_in_workbook": false,
+        "manager_confirms_final_price": true
+      },
+      "flow_a_media_count": 2,
+      "legacy_cs_cart_product_id": "1070",
+      "legacy_page_url": "https://woodright.ru/kollekcii/willie-winkie/komod-willie-winkie-ru-10/",
+      "legacy_main_image_url": "https://woodright.ru/images/detailed/10/fk-05-1-iso.jpg",
+      "operator_decision": "approve",
+      "operator_notes": "source: ВВ:ВВ:21 WW-05-1",
+      "provenance": {
+        "matrix_csv": "tmp/willie-winkie-flow-a-matrix-template/vv-painting-sku-matrix-filled.csv",
+        "operator_approval": "tmp/willie-winkie-flow-a-matrix-template/operator-approval-summary.json",
+        "workbook_sheet_key": "ВВ:21",
+        "workbook_product_code": "WW-05-1"
+      }
+    },
+    {
+      "handle": "fk-05-3",
+      "title": "Комод высокий Fantasy Kingdom (гл.560)",
+      "collection": "willie-winkie",
+      "legacy_collection_hint": "willie-winkie",
+      "category": "komody",
+      "painting_prefix": "FK",
+      "painting_name": "Fantasy Kingdom",
+      "medusa_product_type": "CONFIGURABLE",
+      "variant_strategy": "configurable_tiers",
+      "launch_mode": "request_quote",
+      "status": "draft",
+      "workbook_row_key": "ВВ:19",
+      "workbook_product_code": "WW-05-3",
+      "source_price_rub": 113080,
+      "reference_price_rub": 113080,
+      "currency": "rub",
+      "price_display_policy": "from_price_or_request",
+      "price_display_note_ru": "Цена от 113 080 ₽ — справочная из workbook; итог подтверждает менеджер.",
+      "online_payment": {
+        "required": false,
+        "checkout_capture": false,
+        "policy": "launch_a_request_only"
+      },
+      "material_tiers": {
+        "solid_full": {
+          "key": "solid_full",
+          "label_ru": "Полностью массив",
+          "price_rub": null,
+          "price_known": false
+        },
+        "solid_front_ldsp_body": {
+          "key": "solid_front_ldsp_body",
+          "label_ru": "Фронты массив + боковины/задники ЛДСП",
+          "price_rub": null,
+          "price_known": false
+        }
+      },
+      "tier_price_policy": {
+        "no_invented_prices": true,
+        "no_fake_cheaper_tier": true,
+        "workbook_reference_only_unless_explicit": true,
+        "tier_split_in_workbook": false,
+        "manager_confirms_final_price": true
+      },
+      "flow_a_media_count": 2,
+      "legacy_cs_cart_product_id": "1204",
+      "legacy_page_url": "https://woodright.ru/kollekcii/willie-winkie/komod-vysokiy-willie-winkie-ru-12/",
+      "legacy_main_image_url": "https://woodright.ru/images/detailed/10/fk-05-3-i1_heqg-hj.png",
+      "operator_decision": "approve",
+      "operator_notes": "source: ВВ:ВВ:19 WW-05-3",
+      "provenance": {
+        "matrix_csv": "tmp/willie-winkie-flow-a-matrix-template/vv-painting-sku-matrix-filled.csv",
+        "operator_approval": "tmp/willie-winkie-flow-a-matrix-template/operator-approval-summary.json",
+        "workbook_sheet_key": "ВВ:19",
+        "workbook_product_code": "WW-05-3"
+      }
+    },
+    {
+      "handle": "in-67-1",
+      "title": "Стол рабочий Infanta",
+      "collection": "willie-winkie",
+      "legacy_collection_hint": "willie-winkie",
+      "category": "stoly-i-stoliki",
+      "painting_prefix": "IN",
+      "painting_name": "Infanta",
+      "medusa_product_type": "CONFIGURABLE",
+      "variant_strategy": "configurable_tiers",
+      "launch_mode": "request_quote",
+      "status": "draft",
+      "workbook_row_key": "ВВ:44",
+      "workbook_product_code": "WW-67-1",
+      "source_price_rub": 85250,
+      "reference_price_rub": 85250,
+      "currency": "rub",
+      "price_display_policy": "from_price_or_request",
+      "price_display_note_ru": "Цена от 85 250 ₽ — справочная из workbook; итог подтверждает менеджер.",
+      "online_payment": {
+        "required": false,
+        "checkout_capture": false,
+        "policy": "launch_a_request_only"
+      },
+      "material_tiers": {
+        "solid_full": {
+          "key": "solid_full",
+          "label_ru": "Полностью массив",
+          "price_rub": null,
+          "price_known": false
+        },
+        "solid_front_ldsp_body": {
+          "key": "solid_front_ldsp_body",
+          "label_ru": "Фронты массив + боковины/задники ЛДСП",
+          "price_rub": null,
+          "price_known": false
+        }
+      },
+      "tier_price_policy": {
+        "no_invented_prices": true,
+        "no_fake_cheaper_tier": true,
+        "workbook_reference_only_unless_explicit": true,
+        "tier_split_in_workbook": false,
+        "manager_confirms_final_price": true
+      },
+      "flow_a_media_count": 1,
+      "legacy_cs_cart_product_id": "751",
+      "legacy_page_url": "https://woodright.ru/kollekcii/willie-winkie/stol-rabochiy-willie-winkie-ru-5/",
+      "legacy_main_image_url": "https://woodright.ru/images/detailed/10/in-67-1-iso.jpg",
+      "operator_decision": "approve",
+      "operator_notes": "source: ВВ:ВВ:44 WW-67-1",
+      "provenance": {
+        "matrix_csv": "tmp/willie-winkie-flow-a-matrix-template/vv-painting-sku-matrix-filled.csv",
+        "operator_approval": "tmp/willie-winkie-flow-a-matrix-template/operator-approval-summary.json",
+        "workbook_sheet_key": "ВВ:44",
+        "workbook_product_code": "WW-67-1"
+      }
+    },
+    {
+      "handle": "mo-02-1",
+      "title": "Шкаф для одежды 2-дв. Molly, высокий",
+      "collection": "molly",
+      "legacy_collection_hint": "molly-ru",
+      "category": "shkafy",
+      "painting_prefix": "MO",
+      "painting_name": "Molly",
+      "medusa_product_type": "CONFIGURABLE",
+      "variant_strategy": "configurable_tiers",
+      "launch_mode": "request_quote",
+      "status": "draft",
+      "workbook_row_key": "ВВ:57",
+      "workbook_product_code": "WW-02-1",
+      "source_price_rub": 148280,
+      "reference_price_rub": 148280,
+      "currency": "rub",
+      "price_display_policy": "from_price_or_request",
+      "price_display_note_ru": "Цена от 148 280 ₽ — справочная из workbook; итог подтверждает менеджер.",
+      "online_payment": {
+        "required": false,
+        "checkout_capture": false,
+        "policy": "launch_a_request_only"
+      },
+      "material_tiers": {
+        "solid_full": {
+          "key": "solid_full",
+          "label_ru": "Полностью массив",
+          "price_rub": null,
+          "price_known": false
+        },
+        "solid_front_ldsp_body": {
+          "key": "solid_front_ldsp_body",
+          "label_ru": "Фронты массив + боковины/задники ЛДСП",
+          "price_rub": null,
+          "price_known": false
+        }
+      },
+      "tier_price_policy": {
+        "no_invented_prices": true,
+        "no_fake_cheaper_tier": true,
+        "workbook_reference_only_unless_explicit": true,
+        "tier_split_in_workbook": false,
+        "manager_confirms_final_price": true
+      },
+      "flow_a_media_count": 2,
+      "legacy_cs_cart_product_id": "2048",
+      "legacy_page_url": "https://woodright.ru/kollekcii/molly-ru/shkaf-dlya-odezhdy-2-dv.-molly-vysokiy/",
+      "legacy_main_image_url": "https://woodright.ru/images/detailed/13/mo-02-1-iso-1.jpg",
+      "operator_decision": "approve",
+      "operator_notes": "source: ВВ:ВВ:57 WW-02-1",
+      "provenance": {
+        "matrix_csv": "tmp/willie-winkie-flow-a-matrix-template/vv-painting-sku-matrix-filled.csv",
+        "operator_approval": "tmp/willie-winkie-flow-a-matrix-template/operator-approval-summary.json",
+        "workbook_sheet_key": "ВВ:57",
+        "workbook_product_code": "WW-02-1"
+      }
+    },
+    {
+      "handle": "mo-81-1",
+      "title": "Столик детский Molly",
+      "collection": "willie-winkie",
+      "legacy_collection_hint": "willie-winkie",
+      "category": "stoly-i-stoliki",
+      "painting_prefix": "MO",
+      "painting_name": "Molly",
+      "medusa_product_type": "CONFIGURABLE",
+      "variant_strategy": "configurable_tiers",
+      "launch_mode": "request_quote",
+      "status": "draft",
+      "workbook_row_key": "ВВ:47",
+      "workbook_product_code": "WW-81-1",
+      "source_price_rub": 22660,
+      "reference_price_rub": 22660,
+      "currency": "rub",
+      "price_display_policy": "from_price_or_request",
+      "price_display_note_ru": "Цена от 22 660 ₽ — справочная из workbook; итог подтверждает менеджер.",
+      "online_payment": {
+        "required": false,
+        "checkout_capture": false,
+        "policy": "launch_a_request_only"
+      },
+      "material_tiers": {
+        "solid_full": {
+          "key": "solid_full",
+          "label_ru": "Полностью массив",
+          "price_rub": null,
+          "price_known": false
+        },
+        "solid_front_ldsp_body": {
+          "key": "solid_front_ldsp_body",
+          "label_ru": "Фронты массив + боковины/задники ЛДСП",
+          "price_rub": null,
+          "price_known": false
+        }
+      },
+      "tier_price_policy": {
+        "no_invented_prices": true,
+        "no_fake_cheaper_tier": true,
+        "workbook_reference_only_unless_explicit": true,
+        "tier_split_in_workbook": false,
+        "manager_confirms_final_price": true
+      },
+      "flow_a_media_count": 1,
+      "legacy_cs_cart_product_id": "1244",
+      "legacy_page_url": "https://woodright.ru/kollekcii/willie-winkie/stolik-detskiy-willie-winkie-ru-8/",
+      "legacy_main_image_url": "https://woodright.ru/images/detailed/10/mo-81-1-iso.jpg",
+      "operator_decision": "approve",
+      "operator_notes": "source: ВВ:ВВ:47 WW-81-1",
+      "provenance": {
+        "matrix_csv": "tmp/willie-winkie-flow-a-matrix-template/vv-painting-sku-matrix-filled.csv",
+        "operator_approval": "tmp/willie-winkie-flow-a-matrix-template/operator-approval-summary.json",
+        "workbook_sheet_key": "ВВ:47",
+        "workbook_product_code": "WW-81-1"
+      }
+    },
+    {
+      "handle": "pa-05-1",
+      "title": "Комод стандартный Pastoral (гл.440)",
+      "collection": "willie-winkie",
+      "legacy_collection_hint": "willie-winkie",
+      "category": "komody",
+      "painting_prefix": "PA",
+      "painting_name": "Pastoral",
+      "medusa_product_type": "CONFIGURABLE",
+      "variant_strategy": "configurable_tiers",
+      "launch_mode": "request_quote",
+      "status": "draft",
+      "workbook_row_key": "ВВ:21",
+      "workbook_product_code": "WW-05-1",
+      "source_price_rub": 83820,
+      "reference_price_rub": 83820,
+      "currency": "rub",
+      "price_display_policy": "from_price_or_request",
+      "price_display_note_ru": "Цена от 83 820 ₽ — справочная из workbook; итог подтверждает менеджер.",
+      "online_payment": {
+        "required": false,
+        "checkout_capture": false,
+        "policy": "launch_a_request_only"
+      },
+      "material_tiers": {
+        "solid_full": {
+          "key": "solid_full",
+          "label_ru": "Полностью массив",
+          "price_rub": null,
+          "price_known": false
+        },
+        "solid_front_ldsp_body": {
+          "key": "solid_front_ldsp_body",
+          "label_ru": "Фронты массив + боковины/задники ЛДСП",
+          "price_rub": null,
+          "price_known": false
+        }
+      },
+      "tier_price_policy": {
+        "no_invented_prices": true,
+        "no_fake_cheaper_tier": true,
+        "workbook_reference_only_unless_explicit": true,
+        "tier_split_in_workbook": false,
+        "manager_confirms_final_price": true
+      },
+      "flow_a_media_count": 2,
+      "legacy_cs_cart_product_id": "1057",
+      "legacy_page_url": "https://woodright.ru/kollekcii/willie-winkie/komod-willie-winkie-ru-16/",
+      "legacy_main_image_url": "https://woodright.ru/images/detailed/10/pa-05-1-iso.jpg",
+      "operator_decision": "approve",
+      "operator_notes": "source: ВВ:ВВ:21 WW-05-1",
+      "provenance": {
+        "matrix_csv": "tmp/willie-winkie-flow-a-matrix-template/vv-painting-sku-matrix-filled.csv",
+        "operator_approval": "tmp/willie-winkie-flow-a-matrix-template/operator-approval-summary.json",
+        "workbook_sheet_key": "ВВ:21",
+        "workbook_product_code": "WW-05-1"
+      }
+    },
+    {
+      "handle": "pa-05-3",
+      "title": "Комод высокий Pastoral (гл.560)",
+      "collection": "willie-winkie",
+      "legacy_collection_hint": "willie-winkie",
+      "category": "komody",
+      "painting_prefix": "PA",
+      "painting_name": "Pastoral",
+      "medusa_product_type": "CONFIGURABLE",
+      "variant_strategy": "configurable_tiers",
+      "launch_mode": "request_quote",
+      "status": "draft",
+      "workbook_row_key": "ВВ:19",
+      "workbook_product_code": "WW-05-3",
+      "source_price_rub": 113080,
+      "reference_price_rub": 113080,
+      "currency": "rub",
+      "price_display_policy": "from_price_or_request",
+      "price_display_note_ru": "Цена от 113 080 ₽ — справочная из workbook; итог подтверждает менеджер.",
+      "online_payment": {
+        "required": false,
+        "checkout_capture": false,
+        "policy": "launch_a_request_only"
+      },
+      "material_tiers": {
+        "solid_full": {
+          "key": "solid_full",
+          "label_ru": "Полностью массив",
+          "price_rub": null,
+          "price_known": false
+        },
+        "solid_front_ldsp_body": {
+          "key": "solid_front_ldsp_body",
+          "label_ru": "Фронты массив + боковины/задники ЛДСП",
+          "price_rub": null,
+          "price_known": false
+        }
+      },
+      "tier_price_policy": {
+        "no_invented_prices": true,
+        "no_fake_cheaper_tier": true,
+        "workbook_reference_only_unless_explicit": true,
+        "tier_split_in_workbook": false,
+        "manager_confirms_final_price": true
+      },
+      "flow_a_media_count": 2,
+      "legacy_cs_cart_product_id": "1192",
+      "legacy_page_url": "https://woodright.ru/kollekcii/willie-winkie/komod-vysokiy-willie-winkie-ru-18/",
+      "legacy_main_image_url": "https://woodright.ru/images/detailed/10/pa-05-3-iso_xjox-o6.jpg",
+      "operator_decision": "approve",
+      "operator_notes": "source: ВВ:ВВ:19 WW-05-3",
+      "provenance": {
+        "matrix_csv": "tmp/willie-winkie-flow-a-matrix-template/vv-painting-sku-matrix-filled.csv",
+        "operator_approval": "tmp/willie-winkie-flow-a-matrix-template/operator-approval-summary.json",
+        "workbook_sheet_key": "ВВ:19",
+        "workbook_product_code": "WW-05-3"
+      }
+    },
+    {
+      "handle": "pa-62-1",
+      "title": "Стеллаж для книг Pastoral (гл. 560)",
+      "collection": "willie-winkie",
+      "legacy_collection_hint": "willie-winkie",
+      "category": "stellazhi",
+      "painting_prefix": "PA",
+      "painting_name": "Pastoral",
+      "medusa_product_type": "CONFIGURABLE",
+      "variant_strategy": "configurable_tiers",
+      "launch_mode": "request_quote",
+      "status": "draft",
+      "workbook_row_key": "ВВ:33",
+      "workbook_product_code": "WW-62-1",
+      "source_price_rub": 99390,
+      "reference_price_rub": 99390,
+      "currency": "rub",
+      "price_display_policy": "from_price_or_request",
+      "price_display_note_ru": "Цена от 99 390 ₽ — справочная из workbook; итог подтверждает менеджер.",
+      "online_payment": {
+        "required": false,
+        "checkout_capture": false,
+        "policy": "launch_a_request_only"
+      },
+      "material_tiers": {
+        "solid_full": {
+          "key": "solid_full",
+          "label_ru": "Полностью массив",
+          "price_rub": null,
+          "price_known": false
+        },
+        "solid_front_ldsp_body": {
+          "key": "solid_front_ldsp_body",
+          "label_ru": "Фронты массив + боковины/задники ЛДСП",
+          "price_rub": null,
+          "price_known": false
+        }
+      },
+      "tier_price_policy": {
+        "no_invented_prices": true,
+        "no_fake_cheaper_tier": true,
+        "workbook_reference_only_unless_explicit": true,
+        "tier_split_in_workbook": false,
+        "manager_confirms_final_price": true
+      },
+      "flow_a_media_count": 2,
+      "legacy_cs_cart_product_id": "952",
+      "legacy_page_url": "https://woodright.ru/kollekcii/willie-winkie/stellazh-dlya-knig-willie-winkie-ru-35/",
+      "legacy_main_image_url": "https://woodright.ru/images/detailed/10/pa-62-1-iso-1_r5pg-zg.jpg",
+      "operator_decision": "approve",
+      "operator_notes": "source: ВВ:ВВ:33 WW-62-1",
+      "provenance": {
+        "matrix_csv": "tmp/willie-winkie-flow-a-matrix-template/vv-painting-sku-matrix-filled.csv",
+        "operator_approval": "tmp/willie-winkie-flow-a-matrix-template/operator-approval-summary.json",
+        "workbook_sheet_key": "ВВ:33",
+        "workbook_product_code": "WW-62-1"
+      }
+    },
+    {
+      "handle": "rl-05-3",
+      "title": "Комод высокий Royal Lilies (гл.440)",
+      "collection": "willie-winkie",
+      "legacy_collection_hint": "willie-winkie",
+      "category": "komody",
+      "painting_prefix": "RL",
+      "painting_name": "Royal Lilies",
+      "medusa_product_type": "CONFIGURABLE",
+      "variant_strategy": "configurable_tiers",
+      "launch_mode": "request_quote",
+      "status": "draft",
+      "workbook_row_key": "ВВ:19",
+      "workbook_product_code": "WW-05-3",
+      "source_price_rub": 113080,
+      "reference_price_rub": 113080,
+      "currency": "rub",
+      "price_display_policy": "from_price_or_request",
+      "price_display_note_ru": "Цена от 113 080 ₽ — справочная из workbook; итог подтверждает менеджер.",
+      "online_payment": {
+        "required": false,
+        "checkout_capture": false,
+        "policy": "launch_a_request_only"
+      },
+      "material_tiers": {
+        "solid_full": {
+          "key": "solid_full",
+          "label_ru": "Полностью массив",
+          "price_rub": null,
+          "price_known": false
+        },
+        "solid_front_ldsp_body": {
+          "key": "solid_front_ldsp_body",
+          "label_ru": "Фронты массив + боковины/задники ЛДСП",
+          "price_rub": null,
+          "price_known": false
+        }
+      },
+      "tier_price_policy": {
+        "no_invented_prices": true,
+        "no_fake_cheaper_tier": true,
+        "workbook_reference_only_unless_explicit": true,
+        "tier_split_in_workbook": false,
+        "manager_confirms_final_price": true
+      },
+      "flow_a_media_count": 2,
+      "legacy_cs_cart_product_id": "1180",
+      "legacy_page_url": "https://woodright.ru/kollekcii/willie-winkie/komod-vysokiy-willie-winkie-ru-19/",
+      "legacy_main_image_url": "https://woodright.ru/images/detailed/10/rl-05-3-i1.png",
+      "operator_decision": "approve",
+      "operator_notes": "source: ВВ:ВВ:19 WW-05-3",
+      "provenance": {
+        "matrix_csv": "tmp/willie-winkie-flow-a-matrix-template/vv-painting-sku-matrix-filled.csv",
+        "operator_approval": "tmp/willie-winkie-flow-a-matrix-template/operator-approval-summary.json",
+        "workbook_sheet_key": "ВВ:19",
+        "workbook_product_code": "WW-05-3"
+      }
+    },
+    {
+      "handle": "rl-67-1",
+      "title": "Стол рабочий Royal Lilies",
+      "collection": "willie-winkie",
+      "legacy_collection_hint": "willie-winkie",
+      "category": "stoly-i-stoliki",
+      "painting_prefix": "RL",
+      "painting_name": "Royal Lilies",
+      "medusa_product_type": "CONFIGURABLE",
+      "variant_strategy": "configurable_tiers",
+      "launch_mode": "request_quote",
+      "status": "draft",
+      "workbook_row_key": "ВВ:44",
+      "workbook_product_code": "WW-67-1",
+      "source_price_rub": 85250,
+      "reference_price_rub": 85250,
+      "currency": "rub",
+      "price_display_policy": "from_price_or_request",
+      "price_display_note_ru": "Цена от 85 250 ₽ — справочная из workbook; итог подтверждает менеджер.",
+      "online_payment": {
+        "required": false,
+        "checkout_capture": false,
+        "policy": "launch_a_request_only"
+      },
+      "material_tiers": {
+        "solid_full": {
+          "key": "solid_full",
+          "label_ru": "Полностью массив",
+          "price_rub": null,
+          "price_known": false
+        },
+        "solid_front_ldsp_body": {
+          "key": "solid_front_ldsp_body",
+          "label_ru": "Фронты массив + боковины/задники ЛДСП",
+          "price_rub": null,
+          "price_known": false
+        }
+      },
+      "tier_price_policy": {
+        "no_invented_prices": true,
+        "no_fake_cheaper_tier": true,
+        "workbook_reference_only_unless_explicit": true,
+        "tier_split_in_workbook": false,
+        "manager_confirms_final_price": true
+      },
+      "flow_a_media_count": 1,
+      "legacy_cs_cart_product_id": "753",
+      "legacy_page_url": "https://woodright.ru/kollekcii/willie-winkie/stol-rabochiy-willie-winkie-ru-7/",
+      "legacy_main_image_url": "https://woodright.ru/images/detailed/10/rl-67-1-iso.jpg",
+      "operator_decision": "approve",
+      "operator_notes": "source: ВВ:ВВ:44 WW-67-1",
+      "provenance": {
+        "matrix_csv": "tmp/willie-winkie-flow-a-matrix-template/vv-painting-sku-matrix-filled.csv",
+        "operator_approval": "tmp/willie-winkie-flow-a-matrix-template/operator-approval-summary.json",
+        "workbook_sheet_key": "ВВ:44",
+        "workbook_product_code": "WW-67-1"
+      }
+    },
+    {
+      "handle": "rs-05-3",
+      "title": "Комод высокий Rural Scenery (гл.560)",
+      "collection": "willie-winkie",
+      "legacy_collection_hint": "willie-winkie",
+      "category": "komody",
+      "painting_prefix": "RS",
+      "painting_name": "Rural Scenery",
+      "medusa_product_type": "CONFIGURABLE",
+      "variant_strategy": "configurable_tiers",
+      "launch_mode": "request_quote",
+      "status": "draft",
+      "workbook_row_key": "ВВ:19",
+      "workbook_product_code": "WW-05-3",
+      "source_price_rub": 113080,
+      "reference_price_rub": 113080,
+      "currency": "rub",
+      "price_display_policy": "from_price_or_request",
+      "price_display_note_ru": "Цена от 113 080 ₽ — справочная из workbook; итог подтверждает менеджер.",
+      "online_payment": {
+        "required": false,
+        "checkout_capture": false,
+        "policy": "launch_a_request_only"
+      },
+      "material_tiers": {
+        "solid_full": {
+          "key": "solid_full",
+          "label_ru": "Полностью массив",
+          "price_rub": null,
+          "price_known": false
+        },
+        "solid_front_ldsp_body": {
+          "key": "solid_front_ldsp_body",
+          "label_ru": "Фронты массив + боковины/задники ЛДСП",
+          "price_rub": null,
+          "price_known": false
+        }
+      },
+      "tier_price_policy": {
+        "no_invented_prices": true,
+        "no_fake_cheaper_tier": true,
+        "workbook_reference_only_unless_explicit": true,
+        "tier_split_in_workbook": false,
+        "manager_confirms_final_price": true
+      },
+      "flow_a_media_count": 2,
+      "legacy_cs_cart_product_id": "1193",
+      "legacy_page_url": "https://woodright.ru/kollekcii/willie-winkie/komod-vysokiy-willie-winkie-ru-22/",
+      "legacy_main_image_url": "https://woodright.ru/images/detailed/10/rs-05-3-iso_2h9y-rp.jpg",
+      "operator_decision": "approve",
+      "operator_notes": "source: ВВ:ВВ:19 WW-05-3",
+      "provenance": {
+        "matrix_csv": "tmp/willie-winkie-flow-a-matrix-template/vv-painting-sku-matrix-filled.csv",
+        "operator_approval": "tmp/willie-winkie-flow-a-matrix-template/operator-approval-summary.json",
+        "workbook_sheet_key": "ВВ:19",
+        "workbook_product_code": "WW-05-3"
+      }
+    },
+    {
+      "handle": "rs-62-1",
+      "title": "Стеллаж для книг Rural Scenery высокий",
+      "collection": "willie-winkie",
+      "legacy_collection_hint": "willie-winkie",
+      "category": "stellazhi",
+      "painting_prefix": "RS",
+      "painting_name": "Rural Scenery",
+      "medusa_product_type": "CONFIGURABLE",
+      "variant_strategy": "configurable_tiers",
+      "launch_mode": "request_quote",
+      "status": "draft",
+      "workbook_row_key": "ВВ:33",
+      "workbook_product_code": "WW-62-1",
+      "source_price_rub": 99390,
+      "reference_price_rub": 99390,
+      "currency": "rub",
+      "price_display_policy": "from_price_or_request",
+      "price_display_note_ru": "Цена от 99 390 ₽ — справочная из workbook; итог подтверждает менеджер.",
+      "online_payment": {
+        "required": false,
+        "checkout_capture": false,
+        "policy": "launch_a_request_only"
+      },
+      "material_tiers": {
+        "solid_full": {
+          "key": "solid_full",
+          "label_ru": "Полностью массив",
+          "price_rub": null,
+          "price_known": false
+        },
+        "solid_front_ldsp_body": {
+          "key": "solid_front_ldsp_body",
+          "label_ru": "Фронты массив + боковины/задники ЛДСП",
+          "price_rub": null,
+          "price_known": false
+        }
+      },
+      "tier_price_policy": {
+        "no_invented_prices": true,
+        "no_fake_cheaper_tier": true,
+        "workbook_reference_only_unless_explicit": true,
+        "tier_split_in_workbook": false,
+        "manager_confirms_final_price": true
+      },
+      "flow_a_media_count": 2,
+      "legacy_cs_cart_product_id": "971",
+      "legacy_page_url": "https://woodright.ru/kollekcii/willie-winkie/stellazh-dlya-knig-willie-winkie-ru-42/",
+      "legacy_main_image_url": "https://woodright.ru/images/detailed/10/rs-62-1-iso_y7lu-80.jpg",
+      "operator_decision": "approve",
+      "operator_notes": "source: ВВ:ВВ:33 WW-62-1",
+      "provenance": {
+        "matrix_csv": "tmp/willie-winkie-flow-a-matrix-template/vv-painting-sku-matrix-filled.csv",
+        "operator_approval": "tmp/willie-winkie-flow-a-matrix-template/operator-approval-summary.json",
+        "workbook_sheet_key": "ВВ:33",
+        "workbook_product_code": "WW-62-1"
+      }
+    },
+    {
+      "handle": "sh-81-1",
+      "title": "Столик детский Sweet Home",
+      "collection": "willie-winkie",
+      "legacy_collection_hint": "willie-winkie",
+      "category": "stoly-i-stoliki",
+      "painting_prefix": "SH",
+      "painting_name": "Sweet Home",
+      "medusa_product_type": "CONFIGURABLE",
+      "variant_strategy": "configurable_tiers",
+      "launch_mode": "request_quote",
+      "status": "draft",
+      "workbook_row_key": "ВВ:47",
+      "workbook_product_code": "WW-81-1",
+      "source_price_rub": 22660,
+      "reference_price_rub": 22660,
+      "currency": "rub",
+      "price_display_policy": "from_price_or_request",
+      "price_display_note_ru": "Цена от 22 660 ₽ — справочная из workbook; итог подтверждает менеджер.",
+      "online_payment": {
+        "required": false,
+        "checkout_capture": false,
+        "policy": "launch_a_request_only"
+      },
+      "material_tiers": {
+        "solid_full": {
+          "key": "solid_full",
+          "label_ru": "Полностью массив",
+          "price_rub": null,
+          "price_known": false
+        },
+        "solid_front_ldsp_body": {
+          "key": "solid_front_ldsp_body",
+          "label_ru": "Фронты массив + боковины/задники ЛДСП",
+          "price_rub": null,
+          "price_known": false
+        }
+      },
+      "tier_price_policy": {
+        "no_invented_prices": true,
+        "no_fake_cheaper_tier": true,
+        "workbook_reference_only_unless_explicit": true,
+        "tier_split_in_workbook": false,
+        "manager_confirms_final_price": true
+      },
+      "flow_a_media_count": 2,
+      "legacy_cs_cart_product_id": "1248",
+      "legacy_page_url": "https://woodright.ru/kollekcii/willie-winkie/stolik-detskiy-willie-winkie-ru-17/",
+      "legacy_main_image_url": "https://woodright.ru/images/detailed/10/sh-81-1-iso.jpg",
+      "operator_decision": "approve",
+      "operator_notes": "source: ВВ:ВВ:47 WW-81-1",
+      "provenance": {
+        "matrix_csv": "tmp/willie-winkie-flow-a-matrix-template/vv-painting-sku-matrix-filled.csv",
+        "operator_approval": "tmp/willie-winkie-flow-a-matrix-template/operator-approval-summary.json",
+        "workbook_sheet_key": "ВВ:47",
+        "workbook_product_code": "WW-81-1"
+      }
+    },
+    {
+      "handle": "tb-05-3",
+      "title": "Комод высокий Teddy Bear  (гл.560)",
+      "collection": "willie-winkie",
+      "legacy_collection_hint": "willie-winkie",
+      "category": "komody",
+      "painting_prefix": "TB",
+      "painting_name": "Teddy Bear",
+      "medusa_product_type": "CONFIGURABLE",
+      "variant_strategy": "configurable_tiers",
+      "launch_mode": "request_quote",
+      "status": "draft",
+      "workbook_row_key": "ВВ:19",
+      "workbook_product_code": "WW-05-3",
+      "source_price_rub": 113080,
+      "reference_price_rub": 113080,
+      "currency": "rub",
+      "price_display_policy": "from_price_or_request",
+      "price_display_note_ru": "Цена от 113 080 ₽ — справочная из workbook; итог подтверждает менеджер.",
+      "online_payment": {
+        "required": false,
+        "checkout_capture": false,
+        "policy": "launch_a_request_only"
+      },
+      "material_tiers": {
+        "solid_full": {
+          "key": "solid_full",
+          "label_ru": "Полностью массив",
+          "price_rub": null,
+          "price_known": false
+        },
+        "solid_front_ldsp_body": {
+          "key": "solid_front_ldsp_body",
+          "label_ru": "Фронты массив + боковины/задники ЛДСП",
+          "price_rub": null,
+          "price_known": false
+        }
+      },
+      "tier_price_policy": {
+        "no_invented_prices": true,
+        "no_fake_cheaper_tier": true,
+        "workbook_reference_only_unless_explicit": true,
+        "tier_split_in_workbook": false,
+        "manager_confirms_final_price": true
+      },
+      "flow_a_media_count": 2,
+      "legacy_cs_cart_product_id": "1198",
+      "legacy_page_url": "https://woodright.ru/kollekcii/willie-winkie/komod-vysokiy-willie-winkie-ru-23/",
+      "legacy_main_image_url": "https://woodright.ru/images/detailed/10/tb-05-3-iso.jpg",
+      "operator_decision": "approve",
+      "operator_notes": "source: ВВ:ВВ:19 WW-05-3",
+      "provenance": {
+        "matrix_csv": "tmp/willie-winkie-flow-a-matrix-template/vv-painting-sku-matrix-filled.csv",
+        "operator_approval": "tmp/willie-winkie-flow-a-matrix-template/operator-approval-summary.json",
+        "workbook_sheet_key": "ВВ:19",
+        "workbook_product_code": "WW-05-3"
+      }
+    },
+    {
+      "handle": "tb-62-1",
+      "title": "Стеллаж для книг высокий Teddy Bear",
+      "collection": "willie-winkie",
+      "legacy_collection_hint": "willie-winkie",
+      "category": "stellazhi",
+      "painting_prefix": "TB",
+      "painting_name": "Teddy Bear",
+      "medusa_product_type": "CONFIGURABLE",
+      "variant_strategy": "configurable_tiers",
+      "launch_mode": "request_quote",
+      "status": "draft",
+      "workbook_row_key": "ВВ:33",
+      "workbook_product_code": "WW-62-1",
+      "source_price_rub": 99390,
+      "reference_price_rub": 99390,
+      "currency": "rub",
+      "price_display_policy": "from_price_or_request",
+      "price_display_note_ru": "Цена от 99 390 ₽ — справочная из workbook; итог подтверждает менеджер.",
+      "online_payment": {
+        "required": false,
+        "checkout_capture": false,
+        "policy": "launch_a_request_only"
+      },
+      "material_tiers": {
+        "solid_full": {
+          "key": "solid_full",
+          "label_ru": "Полностью массив",
+          "price_rub": null,
+          "price_known": false
+        },
+        "solid_front_ldsp_body": {
+          "key": "solid_front_ldsp_body",
+          "label_ru": "Фронты массив + боковины/задники ЛДСП",
+          "price_rub": null,
+          "price_known": false
+        }
+      },
+      "tier_price_policy": {
+        "no_invented_prices": true,
+        "no_fake_cheaper_tier": true,
+        "workbook_reference_only_unless_explicit": true,
+        "tier_split_in_workbook": false,
+        "manager_confirms_final_price": true
+      },
+      "flow_a_media_count": 2,
+      "legacy_cs_cart_product_id": "1809",
+      "legacy_page_url": "https://woodright.ru/teddy-bear/stellazh-dlya-knig-vysokiy-teddy-bear/",
+      "legacy_main_image_url": "https://woodright.ru/images/detailed/12/tb-62-1-iso_2nww-4v.jpg",
+      "operator_decision": "approve",
+      "operator_notes": "source: ВВ:ВВ:33 WW-62-1",
+      "provenance": {
+        "matrix_csv": "tmp/willie-winkie-flow-a-matrix-template/vv-painting-sku-matrix-filled.csv",
+        "operator_approval": "tmp/willie-winkie-flow-a-matrix-template/operator-approval-summary.json",
+        "workbook_sheet_key": "ВВ:33",
+        "workbook_product_code": "WW-62-1"
+      }
+    },
+    {
+      "handle": "tb-67-1",
+      "title": "Стол рабочий Teddy Bear",
+      "collection": "willie-winkie",
+      "legacy_collection_hint": "willie-winkie",
+      "category": "stoly-i-stoliki",
+      "painting_prefix": "TB",
+      "painting_name": "Teddy Bear",
+      "medusa_product_type": "CONFIGURABLE",
+      "variant_strategy": "configurable_tiers",
+      "launch_mode": "request_quote",
+      "status": "draft",
+      "workbook_row_key": "ВВ:44",
+      "workbook_product_code": "WW-67-1",
+      "source_price_rub": 85250,
+      "reference_price_rub": 85250,
+      "currency": "rub",
+      "price_display_policy": "from_price_or_request",
+      "price_display_note_ru": "Цена от 85 250 ₽ — справочная из workbook; итог подтверждает менеджер.",
+      "online_payment": {
+        "required": false,
+        "checkout_capture": false,
+        "policy": "launch_a_request_only"
+      },
+      "material_tiers": {
+        "solid_full": {
+          "key": "solid_full",
+          "label_ru": "Полностью массив",
+          "price_rub": null,
+          "price_known": false
+        },
+        "solid_front_ldsp_body": {
+          "key": "solid_front_ldsp_body",
+          "label_ru": "Фронты массив + боковины/задники ЛДСП",
+          "price_rub": null,
+          "price_known": false
+        }
+      },
+      "tier_price_policy": {
+        "no_invented_prices": true,
+        "no_fake_cheaper_tier": true,
+        "workbook_reference_only_unless_explicit": true,
+        "tier_split_in_workbook": false,
+        "manager_confirms_final_price": true
+      },
+      "flow_a_media_count": 2,
+      "legacy_cs_cart_product_id": "754",
+      "legacy_page_url": "https://woodright.ru/kollekcii/willie-winkie/stol-rabochiy-willie-winkie-ru-8/",
+      "legacy_main_image_url": "https://woodright.ru/images/detailed/10/tb-67-1-iso.jpg",
+      "operator_decision": "approve",
+      "operator_notes": "source: ВВ:ВВ:44 WW-67-1",
+      "provenance": {
+        "matrix_csv": "tmp/willie-winkie-flow-a-matrix-template/vv-painting-sku-matrix-filled.csv",
+        "operator_approval": "tmp/willie-winkie-flow-a-matrix-template/operator-approval-summary.json",
+        "workbook_sheet_key": "ВВ:44",
+        "workbook_product_code": "WW-67-1"
+      }
+    },
+    {
+      "handle": "te-02-2",
+      "title": "Шкаф для одежды 2-дв. Templars высокий",
+      "collection": "willie-winkie",
+      "legacy_collection_hint": "willie-winkie",
+      "category": "shkafy",
+      "painting_prefix": "TE",
+      "painting_name": "Templars",
+      "medusa_product_type": "CONFIGURABLE",
+      "variant_strategy": "configurable_tiers",
+      "launch_mode": "request_quote",
+      "status": "draft",
+      "workbook_row_key": "ВВ:58",
+      "workbook_product_code": "WW-02-2",
+      "source_price_rub": 163450,
+      "reference_price_rub": 163450,
+      "currency": "rub",
+      "price_display_policy": "from_price_or_request",
+      "price_display_note_ru": "Цена от 163 450 ₽ — справочная из workbook; итог подтверждает менеджер.",
+      "online_payment": {
+        "required": false,
+        "checkout_capture": false,
+        "policy": "launch_a_request_only"
+      },
+      "material_tiers": {
+        "solid_full": {
+          "key": "solid_full",
+          "label_ru": "Полностью массив",
+          "price_rub": null,
+          "price_known": false
+        },
+        "solid_front_ldsp_body": {
+          "key": "solid_front_ldsp_body",
+          "label_ru": "Фронты массив + боковины/задники ЛДСП",
+          "price_rub": null,
+          "price_known": false
+        }
+      },
+      "tier_price_policy": {
+        "no_invented_prices": true,
+        "no_fake_cheaper_tier": true,
+        "workbook_reference_only_unless_explicit": true,
+        "tier_split_in_workbook": false,
+        "manager_confirms_final_price": true
+      },
+      "flow_a_media_count": 1,
+      "legacy_cs_cart_product_id": "1872",
+      "legacy_page_url": "https://woodright.ru/templars/shkaf-dlya-odezhdy-2-dv.-templars-vysokiy/",
+      "legacy_main_image_url": "https://woodright.ru/images/detailed/12/te-02-2-iso-1.jpg",
+      "operator_decision": "approve",
+      "operator_notes": "source: ВВ:ВВ:58 WW-02-2",
+      "provenance": {
+        "matrix_csv": "tmp/willie-winkie-flow-a-matrix-template/vv-painting-sku-matrix-filled.csv",
+        "operator_approval": "tmp/willie-winkie-flow-a-matrix-template/operator-approval-summary.json",
+        "workbook_sheet_key": "ВВ:58",
+        "workbook_product_code": "WW-02-2"
+      }
+    },
+    {
+      "handle": "te-05-1",
+      "title": "Комод стандартный Templars (гл.560)",
+      "collection": "willie-winkie",
+      "legacy_collection_hint": "willie-winkie",
+      "category": "komody",
+      "painting_prefix": "TE",
+      "painting_name": "Templars",
+      "medusa_product_type": "CONFIGURABLE",
+      "variant_strategy": "configurable_tiers",
+      "launch_mode": "request_quote",
+      "status": "draft",
+      "workbook_row_key": "ВВ:21",
+      "workbook_product_code": "WW-05-1",
+      "source_price_rub": 83820,
+      "reference_price_rub": 83820,
+      "currency": "rub",
+      "price_display_policy": "from_price_or_request",
+      "price_display_note_ru": "Цена от 83 820 ₽ — справочная из workbook; итог подтверждает менеджер.",
+      "online_payment": {
+        "required": false,
+        "checkout_capture": false,
+        "policy": "launch_a_request_only"
+      },
+      "material_tiers": {
+        "solid_full": {
+          "key": "solid_full",
+          "label_ru": "Полностью массив",
+          "price_rub": null,
+          "price_known": false
+        },
+        "solid_front_ldsp_body": {
+          "key": "solid_front_ldsp_body",
+          "label_ru": "Фронты массив + боковины/задники ЛДСП",
+          "price_rub": null,
+          "price_known": false
+        }
+      },
+      "tier_price_policy": {
+        "no_invented_prices": true,
+        "no_fake_cheaper_tier": true,
+        "workbook_reference_only_unless_explicit": true,
+        "tier_split_in_workbook": false,
+        "manager_confirms_final_price": true
+      },
+      "flow_a_media_count": 2,
+      "legacy_cs_cart_product_id": "1076",
+      "legacy_page_url": "https://woodright.ru/kollekcii/willie-winkie/komod-willie-winkie-ru-26/",
+      "legacy_main_image_url": "https://woodright.ru/images/detailed/10/te-05-1-iso-2.jpg",
+      "operator_decision": "approve",
+      "operator_notes": "source: ВВ:ВВ:21 WW-05-1",
+      "provenance": {
+        "matrix_csv": "tmp/willie-winkie-flow-a-matrix-template/vv-painting-sku-matrix-filled.csv",
+        "operator_approval": "tmp/willie-winkie-flow-a-matrix-template/operator-approval-summary.json",
+        "workbook_sheet_key": "ВВ:21",
+        "workbook_product_code": "WW-05-1"
+      }
+    },
+    {
+      "handle": "te-05-3",
+      "title": "Комод высокий Templars (гл.440)",
+      "collection": "willie-winkie",
+      "legacy_collection_hint": "willie-winkie",
+      "category": "komody",
+      "painting_prefix": "TE",
+      "painting_name": "Templars",
+      "medusa_product_type": "CONFIGURABLE",
+      "variant_strategy": "configurable_tiers",
+      "launch_mode": "request_quote",
+      "status": "draft",
+      "workbook_row_key": "ВВ:19",
+      "workbook_product_code": "WW-05-3",
+      "source_price_rub": 113080,
+      "reference_price_rub": 113080,
+      "currency": "rub",
+      "price_display_policy": "from_price_or_request",
+      "price_display_note_ru": "Цена от 113 080 ₽ — справочная из workbook; итог подтверждает менеджер.",
+      "online_payment": {
+        "required": false,
+        "checkout_capture": false,
+        "policy": "launch_a_request_only"
+      },
+      "material_tiers": {
+        "solid_full": {
+          "key": "solid_full",
+          "label_ru": "Полностью массив",
+          "price_rub": null,
+          "price_known": false
+        },
+        "solid_front_ldsp_body": {
+          "key": "solid_front_ldsp_body",
+          "label_ru": "Фронты массив + боковины/задники ЛДСП",
+          "price_rub": null,
+          "price_known": false
+        }
+      },
+      "tier_price_policy": {
+        "no_invented_prices": true,
+        "no_fake_cheaper_tier": true,
+        "workbook_reference_only_unless_explicit": true,
+        "tier_split_in_workbook": false,
+        "manager_confirms_final_price": true
+      },
+      "flow_a_media_count": 2,
+      "legacy_cs_cart_product_id": "1864",
+      "legacy_page_url": "https://woodright.ru/templars/komod-vysokiy-templars-gl.440/",
+      "legacy_main_image_url": "https://woodright.ru/images/detailed/12/te-05-3-iso-2.jpg",
+      "operator_decision": "approve",
+      "operator_notes": "source: ВВ:ВВ:19 WW-05-3",
+      "provenance": {
+        "matrix_csv": "tmp/willie-winkie-flow-a-matrix-template/vv-painting-sku-matrix-filled.csv",
+        "operator_approval": "tmp/willie-winkie-flow-a-matrix-template/operator-approval-summary.json",
+        "workbook_sheet_key": "ВВ:19",
+        "workbook_product_code": "WW-05-3"
+      }
+    },
+    {
+      "handle": "te-62-1",
+      "title": "Стеллаж для книг Templars высокий",
+      "collection": "willie-winkie",
+      "legacy_collection_hint": "willie-winkie",
+      "category": "stellazhi",
+      "painting_prefix": "TE",
+      "painting_name": "Templars",
+      "medusa_product_type": "CONFIGURABLE",
+      "variant_strategy": "configurable_tiers",
+      "launch_mode": "request_quote",
+      "status": "draft",
+      "workbook_row_key": "ВВ:33",
+      "workbook_product_code": "WW-62-1",
+      "source_price_rub": 99390,
+      "reference_price_rub": 99390,
+      "currency": "rub",
+      "price_display_policy": "from_price_or_request",
+      "price_display_note_ru": "Цена от 99 390 ₽ — справочная из workbook; итог подтверждает менеджер.",
+      "online_payment": {
+        "required": false,
+        "checkout_capture": false,
+        "policy": "launch_a_request_only"
+      },
+      "material_tiers": {
+        "solid_full": {
+          "key": "solid_full",
+          "label_ru": "Полностью массив",
+          "price_rub": null,
+          "price_known": false
+        },
+        "solid_front_ldsp_body": {
+          "key": "solid_front_ldsp_body",
+          "label_ru": "Фронты массив + боковины/задники ЛДСП",
+          "price_rub": null,
+          "price_known": false
+        }
+      },
+      "tier_price_policy": {
+        "no_invented_prices": true,
+        "no_fake_cheaper_tier": true,
+        "workbook_reference_only_unless_explicit": true,
+        "tier_split_in_workbook": false,
+        "manager_confirms_final_price": true
+      },
+      "flow_a_media_count": 2,
+      "legacy_cs_cart_product_id": "951",
+      "legacy_page_url": "https://woodright.ru/kollekcii/willie-winkie/stellazh-dlya-knig-willie-winkie-ru-49/",
+      "legacy_main_image_url": "https://woodright.ru/images/detailed/10/te-62-1-iso-1_l6g2-ba.jpg",
+      "operator_decision": "approve",
+      "operator_notes": "source: ВВ:ВВ:33 WW-62-1",
+      "provenance": {
+        "matrix_csv": "tmp/willie-winkie-flow-a-matrix-template/vv-painting-sku-matrix-filled.csv",
+        "operator_approval": "tmp/willie-winkie-flow-a-matrix-template/operator-approval-summary.json",
+        "workbook_sheet_key": "ВВ:33",
+        "workbook_product_code": "WW-62-1"
+      }
+    },
+    {
+      "handle": "to-62-1",
+      "title": "Стеллаж для  книг Tommy высокий",
+      "collection": "willie-winkie",
+      "legacy_collection_hint": "willie-winkie",
+      "category": "stellazhi",
+      "painting_prefix": "TO",
+      "painting_name": "Tommy",
+      "medusa_product_type": "CONFIGURABLE",
+      "variant_strategy": "configurable_tiers",
+      "launch_mode": "request_quote",
+      "status": "draft",
+      "workbook_row_key": "ВВ:33",
+      "workbook_product_code": "WW-62-1",
+      "source_price_rub": 99390,
+      "reference_price_rub": 99390,
+      "currency": "rub",
+      "price_display_policy": "from_price_or_request",
+      "price_display_note_ru": "Цена от 99 390 ₽ — справочная из workbook; итог подтверждает менеджер.",
+      "online_payment": {
+        "required": false,
+        "checkout_capture": false,
+        "policy": "launch_a_request_only"
+      },
+      "material_tiers": {
+        "solid_full": {
+          "key": "solid_full",
+          "label_ru": "Полностью массив",
+          "price_rub": null,
+          "price_known": false
+        },
+        "solid_front_ldsp_body": {
+          "key": "solid_front_ldsp_body",
+          "label_ru": "Фронты массив + боковины/задники ЛДСП",
+          "price_rub": null,
+          "price_known": false
+        }
+      },
+      "tier_price_policy": {
+        "no_invented_prices": true,
+        "no_fake_cheaper_tier": true,
+        "workbook_reference_only_unless_explicit": true,
+        "tier_split_in_workbook": false,
+        "manager_confirms_final_price": true
+      },
+      "flow_a_media_count": 1,
+      "legacy_cs_cart_product_id": "2029",
+      "legacy_page_url": "https://woodright.ru/tommy/stellazh-dlya-knig-tommy-vysokiy/",
+      "legacy_main_image_url": "https://woodright.ru/images/detailed/13/to-62-1-iso.jpg",
+      "operator_decision": "approve",
+      "operator_notes": "source: ВВ:ВВ:33 WW-62-1",
+      "provenance": {
+        "matrix_csv": "tmp/willie-winkie-flow-a-matrix-template/vv-painting-sku-matrix-filled.csv",
+        "operator_approval": "tmp/willie-winkie-flow-a-matrix-template/operator-approval-summary.json",
+        "workbook_sheet_key": "ВВ:33",
+        "workbook_product_code": "WW-62-1"
+      }
+    },
+    {
+      "handle": "tw-05-3",
+      "title": "Комод высокий Tiggy-Winkle (гл.560)",
+      "collection": "willie-winkie",
+      "legacy_collection_hint": "willie-winkie",
+      "category": "komody",
+      "painting_prefix": "TW",
+      "painting_name": "Tiggy-Winkle",
+      "medusa_product_type": "CONFIGURABLE",
+      "variant_strategy": "configurable_tiers",
+      "launch_mode": "request_quote",
+      "status": "draft",
+      "workbook_row_key": "ВВ:19",
+      "workbook_product_code": "WW-05-3",
+      "source_price_rub": 113080,
+      "reference_price_rub": 113080,
+      "currency": "rub",
+      "price_display_policy": "from_price_or_request",
+      "price_display_note_ru": "Цена от 113 080 ₽ — справочная из workbook; итог подтверждает менеджер.",
+      "online_payment": {
+        "required": false,
+        "checkout_capture": false,
+        "policy": "launch_a_request_only"
+      },
+      "material_tiers": {
+        "solid_full": {
+          "key": "solid_full",
+          "label_ru": "Полностью массив",
+          "price_rub": null,
+          "price_known": false
+        },
+        "solid_front_ldsp_body": {
+          "key": "solid_front_ldsp_body",
+          "label_ru": "Фронты массив + боковины/задники ЛДСП",
+          "price_rub": null,
+          "price_known": false
+        }
+      },
+      "tier_price_policy": {
+        "no_invented_prices": true,
+        "no_fake_cheaper_tier": true,
+        "workbook_reference_only_unless_explicit": true,
+        "tier_split_in_workbook": false,
+        "manager_confirms_final_price": true
+      },
+      "flow_a_media_count": 2,
+      "legacy_cs_cart_product_id": "1199",
+      "legacy_page_url": "https://woodright.ru/kollekcii/willie-winkie/komod-vysokiy-willie-winkie-ru-28/",
+      "legacy_main_image_url": "https://woodright.ru/images/detailed/10/tw-05-3-i1_h2re-fr.png",
+      "operator_decision": "approve",
+      "operator_notes": "source: ВВ:ВВ:19 WW-05-3",
+      "provenance": {
+        "matrix_csv": "tmp/willie-winkie-flow-a-matrix-template/vv-painting-sku-matrix-filled.csv",
+        "operator_approval": "tmp/willie-winkie-flow-a-matrix-template/operator-approval-summary.json",
+        "workbook_sheet_key": "ВВ:19",
+        "workbook_product_code": "WW-05-3"
+      }
+    }
+  ]
+}

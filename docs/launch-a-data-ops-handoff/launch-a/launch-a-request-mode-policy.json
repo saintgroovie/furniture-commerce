@@ -1,0 +1,70 @@
+{
+  "generated_at": "2026-06-15T17:04:53.281Z",
+  "launch_option": "A",
+  "name": "Willie Winkie Flow A — Launch A request mode",
+  "operator_data_approval": "done",
+  "goals": [
+    "Fast catalog/order request launch",
+    "No online payment blocker",
+    "No fake material tier prices",
+    "Preserve tier intent in metadata for post-launch modeling"
+  ],
+  "product_model": {
+    "medusa_product_type": "CONFIGURABLE",
+    "variant_strategy": "configurable_tiers",
+    "launch_mode": "request_quote",
+    "status": "draft"
+  },
+  "pricing": {
+    "reference_field": "source_price_rub / reference_price_rub from workbook price_rub",
+    "display_policy": "from_price_or_request",
+    "display_ru": "Цена от … ₽ (справочно) + подтверждение менеджером",
+    "tier_prices_required_for_checkout": false,
+    "tier_prices_required_for_launch_a": false,
+    "no_invented_tier_prices": true,
+    "no_formula_cheaper_tier": true,
+    "manager_confirms_final_price": true
+  },
+  "payment": {
+    "online_payment_required": false,
+    "checkout_payment_capture": false,
+    "order_flow": "request → manager confirmation → offline/invoice settlement"
+  },
+  "material_tiers": {
+    "keys": [
+      "solid_full",
+      "solid_front_ldsp_body"
+    ],
+    "labels_ru": {
+      "solid_full": "Полностью массив",
+      "solid_front_ldsp_body": "Фронты массив + боковины/задники ЛДСП"
+    },
+    "representation_launch_a": "labels + metadata; prices unknown unless explicit in source",
+    "post_launch": "full Medusa variants with tier prices when operator provides them"
+  },
+  "blockers_vs_post_launch": {
+    "launch_blockers": [
+      "UI request flow must exist (PDP CTA + form/checkout-as-request)",
+      "Products must exist in catalog (separate seed/import gate)",
+      "Product-media apply (separate gate after products)"
+    ],
+    "not_launch_blockers_option_a": [
+      "Full material tier variant seed model",
+      "Exact tier prices in matrix (TODO_OPERATOR accepted)",
+      "Online payment / checkout capture",
+      "Perfect variant pricing at PDP"
+    ],
+    "post_launch_p1": [
+      "Material tier variants with explicit prices",
+      "Online payment if business switches to Option B",
+      "Automated price display per selected tier"
+    ]
+  },
+  "forbidden_this_task": [
+    "seed",
+    "ingestion",
+    "db_mutation",
+    "product_media_apply",
+    "data/normalized writes"
+  ]
+}

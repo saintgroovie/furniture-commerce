@@ -1,0 +1,205 @@
+{
+  "generated_at": "2026-06-15T17:11:01.955Z",
+  "gate": "launch-a-flow-a-scoped-ingest",
+  "launch_option": "A",
+  "launch_mode": "request_quote",
+  "verdict": "needs_review",
+  "verdict_notes": [
+    "Draft core fields pass; operator review required for mo-02-1 collection=molly vs catalog-scope ACTIVE keys, and for explicit Kids storefront routing before apply.",
+    "No DB duplicate handles among 28 pilot handles.",
+    "Import script not yet committed — plan references Oxford-4 isolated exec pattern."
+  ],
+  "repo": "/Users/leonidmbp/Documents/projects/furniture-commerce",
+  "branch": "qa/willie-winkie-flow-a-matrix-board",
+  "head": "9a0574e",
+  "operator_matrix_approved": true,
+  "draft_validation": {
+    "product_count": 28,
+    "unique_handles": 28,
+    "issues": [],
+    "excluded_absent": true,
+    "configurable": 28,
+    "draft_status": 28,
+    "request_quote": 28,
+    "reference_price_present": 28,
+    "tier_prices_unknown": 28
+  },
+  "kids_classification": {
+    "business_rule": "Willie Winkie pilot = Kids / Детская / Woodright Kids",
+    "explicit_in_draft_json": false,
+    "implicit_via_collection": true,
+    "import_metadata_required": {
+      "storefront_section": "kids",
+      "room_type": "детская",
+      "cart_group": "Woodright Kids",
+      "catalog_brand_line": "Willie Winkie / Molly Flow A"
+    },
+    "storefront_gap": "resolveKidsProducts() currently includes room-set kids + oliver-kids only; WW/molly metadata.collection will not auto-appear on /kids/catalog until storefront follow-up or room-set links.",
+    "mo_02_1_collection": "molly",
+    "mo_02_1_catalog_scope_note": "metadata.collection=molly is not in ACTIVE_COLLECTION_KEYS (catalog-scope.ts); ingest must use willie-winkie with painting_name=Molly OR extend ACTIVE keys — operator decision required."
+  },
+  "db_audit": {
+    "audited_at": "2026-06-15T17:11:01.783Z",
+    "total_products": 143,
+    "draft_handles_present": 0,
+    "draft_handles_missing": 28,
+    "duplicate_risk": "create_only",
+    "oxford_products": [
+      {
+        "handle": "ox-14-1",
+        "status": "published"
+      },
+      {
+        "handle": "ox-14-11",
+        "status": "published"
+      },
+      {
+        "handle": "ox-90-1",
+        "status": "published"
+      },
+      {
+        "handle": "s-ox-05",
+        "status": "published"
+      }
+    ],
+    "collections_in_db": [
+      {
+        "collection_handle": "oliver",
+        "n": 67
+      },
+      {
+        "collection_handle": "(none)",
+        "n": 30
+      },
+      {
+        "collection_handle": "provence",
+        "n": 29
+      },
+      {
+        "collection_handle": "country-london-paris",
+        "n": 13
+      },
+      {
+        "collection_handle": "oxford",
+        "n": 4
+      }
+    ],
+    "pilot_collections_exist": [
+      {
+        "id": "pcol_01KQCSHTQ4JE5TQ6A74D8C8MY8",
+        "handle": "oxford",
+        "title": "Oxford"
+      }
+    ],
+    "required_categories_in_db": [
+      {
+        "handle": "komody",
+        "name": "комоды"
+      },
+      {
+        "handle": "shkafy",
+        "name": "шкафы"
+      },
+      {
+        "handle": "stellazhi",
+        "name": "Стеллажи"
+      }
+    ],
+    "categories_needed": [
+      "komody",
+      "shkafy",
+      "stellazhi",
+      "stoly-i-stoliki"
+    ],
+    "categories_missing_before_import": [
+      "stoly-i-stoliki"
+    ],
+    "collections_needed": [
+      "molly",
+      "willie-winkie"
+    ],
+    "collections_missing_before_import": [
+      "molly",
+      "willie-winkie"
+    ]
+  },
+  "whitelist": {
+    "handle_count": 28,
+    "handles": [
+      "av-05-1",
+      "ba-05-3",
+      "ba-62-1",
+      "fa-05-3",
+      "fa-06-1",
+      "fa-67-1",
+      "fk-05-1",
+      "fk-05-3",
+      "in-67-1",
+      "mo-02-1",
+      "mo-81-1",
+      "pa-05-1",
+      "pa-05-3",
+      "pa-62-1",
+      "rl-05-3",
+      "rl-67-1",
+      "rs-05-3",
+      "rs-62-1",
+      "sh-81-1",
+      "tb-05-3",
+      "tb-62-1",
+      "tb-67-1",
+      "te-02-2",
+      "te-05-1",
+      "te-05-3",
+      "te-62-1",
+      "to-62-1",
+      "tw-05-3"
+    ]
+  },
+  "allowed_db_mutations_next_step": [
+    "create product_collection willie-winkie (and molly if operator confirms separate collection)",
+    "create product_category stoly-i-stoliki if missing",
+    "create up to 28 products (skip existing handles idempotently)",
+    "link products to categories",
+    "create product_classification CONFIGURABLE + link",
+    "create default variant with reference price (manager-confirmed display only)",
+    "set product.status=draft",
+    "set metadata launch_mode=request_quote and kids routing fields",
+    "ensure RUB region + inventory levels for pilot SKUs (Oxford pattern)"
+  ],
+  "explicitly_not_touched": [
+    "data/normalized/**",
+    "yarn seed / seed-real-data.ts / full seed-products.json",
+    "product-media apply",
+    "ingestion pipeline",
+    "CO-02-1",
+    "orphan P0",
+    "matrix CSV / operator approval artifacts",
+    "143 existing non-pilot products"
+  ],
+  "refusal_conditions": [
+    "WW_FLOW_A_PILOT_CONFIRM != 1",
+    "whitelist handle count != 28",
+    "any excluded handle co-02-1 or am-02-1 in payload",
+    "any material tier price_known=true with numeric price",
+    "operator_matrix_approved != true",
+    "attempt to run without prior pg_dump backup",
+    "attempt to publish (status must remain draft for Launch A)"
+  ],
+  "import_pattern": {
+    "reference": "apps/backend/dist/src/scripts/seed-oxford-pilot-four.js",
+    "proposed_script": "apps/backend/src/scripts/seed-willie-winkie-flow-a-pilot-28.ts (to be created next step)",
+    "seed_json_input": "tmp/launch-a-ingest-gate/flow-a-request-mode-product-draft.json",
+    "confirm_env": "WW_FLOW_A_PILOT_CONFIRM=1",
+    "dry_run_env": "WW_FLOW_A_PILOT_DRY_RUN=1",
+    "idempotency": "skip create when handle already exists; never update non-pilot products"
+  },
+  "artifacts": {
+    "ready_scope_summary_json": "tmp/launch-a-ingest-gate/ready-scope-summary.json",
+    "ingest_whitelist_json": "tmp/launch-a-ingest-gate/flow-a-ingest-whitelist.json",
+    "request_mode_draft_json": "tmp/launch-a-ingest-gate/flow-a-request-mode-product-draft.json",
+    "dry_run_plan_md": "tmp/launch-a-ingest-gate/flow-a-ingest-dry-run-plan.md",
+    "command_md": "tmp/launch-a-ingest-gate/flow-a-ingest-command.md",
+    "post_media_plan_md": "tmp/launch-a-ingest-gate/post-ingest-media-plan.md"
+  }
+}
