@@ -28,7 +28,12 @@ export type MatrixRow = {
   operator_decision: OperatorDecision
   operator_notes: string
   media_filenames?: string[]
+  /** Same-origin QA proxy URLs for thumbnails */
   media_preview_urls?: string[]
+  /** Raw backend static paths, e.g. /static/products/willie-winkie/file.jpg */
+  media_static_paths?: string[]
+  /** Browser-direct localhost URLs for “open image” */
+  media_open_urls?: string[]
 }
 
 export type RowValidation = {

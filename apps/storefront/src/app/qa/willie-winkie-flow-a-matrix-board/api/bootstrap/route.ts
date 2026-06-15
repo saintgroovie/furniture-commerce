@@ -10,6 +10,7 @@ import {
 } from "../_lib/matrix-repo-root"
 import { parseCsv } from "../_lib/matrix-csv"
 import { matrixBoardProdBlocked, matrixBoardProdBlockedResponse } from "../_lib/prod-guard"
+import { buildMediaPreviewUrls } from "../../matrix-media-urls"
 import type { MatrixBootstrap, MatrixRow } from "../../matrix-board-types"
 
 export const dynamic = "force-dynamic"
@@ -29,15 +30,18 @@ function enrichMedia(repoRoot: string, rows: MatrixRow[]): MatrixRow[] {
     }
   }
   const byHandle = new Map((handlesFile.handles || []).map((h) => [h.handle, h.filenames || []]))
-  const backendBase = (process.env.MEDUSA_BACKEND_URL || "http://localhost:9000").replace(/\/$/, "")
 
   return rows.map((row) => {
     const filenames = byHandle.get(row.handle) || []
     const collection = staticCollectionForHandle(row.handle)
-    const media_preview_urls = filenames.map(
-      (f) => `${backendBase}/static/products/${collection}/${f}`
-    )
-    return { ...row, media_filenames: filenames, media_preview_urls }
+    const media = buildMediaPreviewUrls(collection, filenames)
+    return {
+      ...row,
+      media_filenames: filenames,
+      media_static_paths: media.media_static_paths,
+      media_preview_urls: media.media_preview_urls,
+      media_open_urls: media.media_open_urls,
+    }
   })
 }
 

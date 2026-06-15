@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { candidateToRowPatch, sourceFieldsFromCandidate } from "./matrix-candidate-patch"
+import { sanitizeMediaUrlForBrowser } from "./matrix-media-urls"
 import { computeRowWorkflowState, ROW_STATE_LABELS } from "./matrix-row-state"
 import { computeReadiness, validateRow } from "./matrix-board-validation"
 import type {
@@ -41,6 +42,47 @@ function confidenceLabel(c: string): string {
   if (c === "exact") return "точное"
   if (c === "likely") return "вероятное"
   return "слабое"
+}
+
+function MediaPreviewItem({
+  fname,
+  previewUrl,
+  openUrl,
+}: {
+  fname: string
+  previewUrl?: string
+  openUrl?: string
+}) {
+  const [imgFailed, setImgFailed] = useState(false)
+  const thumbSrc = previewUrl ? sanitizeMediaUrlForBrowser(previewUrl) : null
+  const linkHref = openUrl
+    ? sanitizeMediaUrlForBrowser(openUrl)
+    : thumbSrc
+
+  return (
+    <div className="wwmx-media-card">
+      {thumbSrc && !imgFailed ? (
+        <img
+          src={thumbSrc}
+          alt={fname}
+          onError={() => setImgFailed(true)}
+        />
+      ) : (
+        <div className="wwmx-media-placeholder" />
+      )}
+      <div className="fname">{fname}</div>
+      {linkHref && (
+        <a className="wwmx-media-open" href={linkHref} target="_blank" rel="noreferrer">
+          Open image
+        </a>
+      )}
+      {imgFailed && (
+        <p className="wwmx-media-down-note">
+          Backend static server not running; file exists locally but preview unavailable.
+        </p>
+      )}
+    </div>
+  )
 }
 
 function FieldLabel({
@@ -294,27 +336,14 @@ function RowEditor({
       <fieldset className="wwmx-fieldset">
         <legend>Media preview (Flow A)</legend>
         <div className="wwmx-media-grid">
-          {(row.media_filenames || []).map((fname, i) => {
-            const url = row.media_preview_urls?.[i]
-            return (
-              <div key={fname} className="wwmx-media-card">
-                {url ? (
-                  <a href={url} target="_blank" rel="noreferrer">
-                    <img
-                      src={url}
-                      alt={fname}
-                      onError={(e) => {
-                        ;(e.target as HTMLImageElement).style.display = "none"
-                      }}
-                    />
-                  </a>
-                ) : (
-                  <div className="wwmx-media-placeholder" />
-                )}
-                <div className="fname">{fname}</div>
-              </div>
-            )
-          })}
+          {(row.media_filenames || []).map((fname, i) => (
+            <MediaPreviewItem
+              key={fname}
+              fname={fname}
+              previewUrl={row.media_preview_urls?.[i]}
+              openUrl={row.media_open_urls?.[i]}
+            />
+          ))}
           {(row.media_filenames || []).length === 0 && (
             <span className="wwmx-muted">Нет файлов Flow A</span>
           )}
