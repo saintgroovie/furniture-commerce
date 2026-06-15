@@ -1,6 +1,12 @@
 import { TODO_OPERATOR, type MatrixReadiness, type MatrixRow, type RowValidation } from "./matrix-board-types"
+import {
+  isBlankTierValue,
+  isConfigurableRow,
+  parsePositivePrice,
+  TIER_FIELD_KEYS,
+} from "./matrix-tier-policy"
 
-const MANDATORY = [
+const BASE_MANDATORY = [
   "workbook_row_key",
   "workbook_product_code",
   "painting_name",
@@ -20,19 +26,43 @@ function isBlank(v: string | undefined): boolean {
   return !v || v.trim() === "" || v === TODO_OPERATOR
 }
 
+export function mandatoryFieldsForRow(row: MatrixRow): string[] {
+  const fields: string[] = [...BASE_MANDATORY]
+  if (isConfigurableRow(row)) {
+    fields.push(...TIER_FIELD_KEYS)
+  }
+  return fields
+}
+
+function validateConfigurableTiersForApprove(row: MatrixRow, errors: string[]): void {
+  if (row.variant_strategy !== "configurable_tiers") {
+    errors.push("CONFIGURABLE approve requires variant_strategy=configurable_tiers")
+  }
+  const full = parsePositivePrice(row.solid_full_price_rub)
+  const ldsp = parsePositivePrice(row.solid_front_ldsp_body_price_rub)
+  if (full == null) {
+    errors.push("solid_full_price_rub must be a positive number for approve")
+  }
+  if (ldsp == null) {
+    errors.push("solid_front_ldsp_body_price_rub must be a positive number for approve")
+  }
+  if (full != null && ldsp != null && full <= ldsp) {
+    errors.push("solid_full_price_rub must be greater than solid_front_ldsp_body_price_rub")
+  }
+}
+
 export function validateRow(row: MatrixRow): RowValidation {
   const missing: string[] = []
   const errors: string[] = []
   const warnings: string[] = []
 
-  for (const f of MANDATORY) {
-    if (isBlank(row[f])) missing.push(f)
+  for (const f of mandatoryFieldsForRow(row)) {
+    if (isBlank(row[f as keyof MatrixRow] as string)) missing.push(f)
   }
 
   const decision = row.operator_decision
   const isApprove = decision === "approve"
   const isReject = decision === "reject"
-  const isHold = decision === "hold"
 
   if (!isBlank(decision) && !DECISIONS.has(decision)) {
     errors.push(`operator_decision must be approve|reject|hold`)
@@ -51,12 +81,15 @@ export function validateRow(row: MatrixRow): RowValidation {
     if (!isBlank(row.variant_strategy) && !VARIANTS.has(row.variant_strategy)) {
       errors.push("invalid variant_strategy")
     }
-    const price = Number(row.price_rub)
-    if (!Number.isFinite(price) || price <= 0) {
-      errors.push("price_rub must be a positive number for approve")
+    const refPrice = Number(row.price_rub)
+    if (!Number.isFinite(refPrice) || refPrice <= 0) {
+      errors.push("price_rub reference must be a positive number for approve")
     }
     if (row.currency && !/^rub$/i.test(row.currency)) {
       errors.push("currency must be rub")
+    }
+    if (isConfigurableRow(row)) {
+      validateConfigurableTiersForApprove(row, errors)
     }
   }
 
@@ -64,11 +97,14 @@ export function validateRow(row: MatrixRow): RowValidation {
     warnings.push("reject should include operator_notes")
   }
 
-  if (isHold && missing.length > 0) {
-    /* hold allows missing */
-  }
+  const blockingPriceErrors = errors.some(
+    (e) =>
+      e.includes("price_rub") ||
+      e.includes("solid_full_price_rub") ||
+      e.includes("solid_front_ldsp_body_price_rub")
+  )
 
-  const is_complete_for_approve = missing.length === 0 && !errors.some((e) => e.includes("price_rub"))
+  const is_complete_for_approve = missing.length === 0 && !blockingPriceErrors
   const is_valid_approve = isApprove && is_complete_for_approve && errors.length === 0
 
   return {
@@ -92,10 +128,12 @@ export function computeReadiness(rows: MatrixRow[]): MatrixReadiness {
   const rows_blocked = validations.filter((v) => !v.is_complete_for_approve).length
 
   let mandatoryFilled = 0
-  const mandatoryTotal = rows.length * MANDATORY.length
+  let mandatoryTotal = 0
   for (const row of rows) {
-    for (const f of MANDATORY) {
-      if (!isBlank(row[f])) mandatoryFilled++
+    const fields = mandatoryFieldsForRow(row)
+    mandatoryTotal += fields.length
+    for (const f of fields) {
+      if (!isBlank(row[f as keyof MatrixRow] as string)) mandatoryFilled++
     }
   }
 
@@ -122,4 +160,4 @@ export function computeReadiness(rows: MatrixRow[]): MatrixReadiness {
   }
 }
 
-export const MANDATORY_FIELDS = MANDATORY
+export const MANDATORY_FIELDS = BASE_MANDATORY

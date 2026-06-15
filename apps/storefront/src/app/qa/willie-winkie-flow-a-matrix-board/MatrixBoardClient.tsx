@@ -8,6 +8,7 @@ import {
   planBulkCandidateApply,
   type BulkCandidateMode,
 } from "./matrix-bulk-candidates"
+import { TIER_LABELS } from "./matrix-tier-policy"
 import { sanitizeMediaUrlForBrowser } from "./matrix-media-urls"
 import { computeRowWorkflowState, ROW_STATE_LABELS } from "./matrix-row-state"
 import { computeReadiness, validateRow } from "./matrix-board-validation"
@@ -32,7 +33,12 @@ const FIELD_LABELS: Partial<Record<keyof MatrixRow, string>> = {
   painting_name: "Название росписи",
   medusa_product_type: "Тип продукта Medusa",
   variant_strategy: "Стратегия вариантов",
-  price_rub: "Цена, ₽",
+  price_rub: "Workbook base price (справочно)",
+  solid_full_price_rub: "Tier: полностью массив",
+  solid_front_ldsp_body_price_rub: "Tier: фронты массив + ЛДСП",
+  solid_full_sku_suffix: "SKU suffix (solid_full)",
+  solid_front_ldsp_body_sku_suffix: "SKU suffix (LDSP tier)",
+  tier_notes: "Заметки по tier",
   status_draft_or_published: "Статус публикации",
   operator_decision: "Решение оператора",
   operator_notes: "Заметки оператора",
@@ -175,6 +181,36 @@ function CandidatePanel({
                   </dd>
                 </div>
               )}
+              {c.workbook_base_price_rub != null && (
+                <div>
+                  <dt>Workbook base price</dt>
+                  <dd>{c.workbook_base_price_rub.toLocaleString("ru-RU")} rub</dd>
+                </div>
+              )}
+              {c.tier_source_note && (
+                <div>
+                  <dt>Tier source</dt>
+                  <dd>{c.tier_source_note}</dd>
+                </div>
+              )}
+              {c.tier_split_in_source && c.tier_source_prices && (
+                <>
+                  <div>
+                    <dt>Tier solid_full (source)</dt>
+                    <dd>
+                      {c.tier_source_prices.solid_full_price_rub?.toLocaleString("ru-RU") ?? "—"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Tier LDSP (source)</dt>
+                    <dd>
+                      {c.tier_source_prices.solid_front_ldsp_body_price_rub?.toLocaleString(
+                        "ru-RU"
+                      ) ?? "—"}
+                    </dd>
+                  </div>
+                </>
+              )}
               {c.price != null && (
                 <div>
                   <dt>Цена</dt>
@@ -206,6 +242,7 @@ function CandidatePanel({
 }
 
 function RowChecklist({ row, validation }: { row: MatrixRow; validation: RowValidation }) {
+  const isConfigurable = row.medusa_product_type === "CONFIGURABLE"
   const checks = [
     {
       label: "Workbook mapping",
@@ -213,8 +250,20 @@ function RowChecklist({ row, validation }: { row: MatrixRow; validation: RowVali
     },
     { label: "Painting name", ok: isFilled(row.painting_name) },
     { label: "Product type", ok: isFilled(row.medusa_product_type) },
-    { label: "Variant strategy", ok: isFilled(row.variant_strategy) },
-    { label: "Price (RUB)", ok: isFilled(row.price_rub) },
+    {
+      label: "Variant strategy (configurable_tiers)",
+      ok: isFilled(row.variant_strategy) && (!isConfigurable || row.variant_strategy === "configurable_tiers"),
+    },
+    ...(isConfigurable
+      ? [
+          { label: TIER_LABELS.solid_full, ok: isFilled(row.solid_full_price_rub) },
+          {
+            label: TIER_LABELS.solid_front_ldsp_body,
+            ok: isFilled(row.solid_front_ldsp_body_price_rub),
+          },
+        ]
+      : [{ label: "Price (RUB)", ok: isFilled(row.price_rub) }]),
+    { label: "Workbook reference price", ok: isFilled(row.price_rub) },
     { label: "Status", ok: isFilled(row.status_draft_or_published) },
     { label: "Operator decision", ok: isFilled(row.operator_decision) },
     { label: "Row ready for approve", ok: validation.is_complete_for_approve },
@@ -238,6 +287,12 @@ function RowChecklist({ row, validation }: { row: MatrixRow; validation: RowVali
       ) : (
         <div className="wwmx-approve-verdict cannot">
           Нельзя approve
+          {isConfigurable && (
+            <p className="wwmx-tier-warn">
+              Для CONFIGURABLE нужны обе tier-цены (полностью массив &gt; фронты массив + ЛДСП) и
+              variant_strategy=configurable_tiers. Workbook price_rub — только справочник.
+            </p>
+          )}
           {validation.missing_fields.length > 0 && (
             <ul>
               {validation.missing_fields.map((f) => (
@@ -405,30 +460,107 @@ function RowEditor({
               <option value="BESPOKE">BESPOKE</option>
             </select>
           </div>
-          <div className={fieldClass("variant_strategy")}>
-            <FieldLabel field="variant_strategy" required source={fieldSources.variant_strategy} />
-            <select
-              value={row.variant_strategy || ""}
-              onChange={(e) =>
-                manual("variant_strategy", {
-                  variant_strategy: e.target.value as MatrixRow["variant_strategy"],
-                })
-              }
-            >
-              <option value="">Выбери стратегию вариантов</option>
-              <option value="single_default">single_default</option>
-              <option value="configurable_tiers">configurable_tiers</option>
-            </select>
-          </div>
-          <div className={fieldClass("price_rub")}>
-            <FieldLabel field="price_rub" required source={fieldSources.price_rub} />
-            <input
-              placeholder="Цена в рублях"
-              value={row.price_rub === TODO ? "" : row.price_rub}
-              onChange={(e) => manual("price_rub", { price_rub: e.target.value })}
-              inputMode="decimal"
-            />
-          </div>
+          <fieldset className="wwmx-fieldset wwmx-tier-block">
+            <legend>Варианты исполнения / цены</legend>
+            <p className="wwmx-tier-hint">
+              Это цена из workbook/source; нужно подтвердить, к какому tier она относится, или
+              заполнить обе tier-цены вручную. Approve нельзя, пока обе tier-цены не заполнены.
+            </p>
+            <div className={fieldClass("variant_strategy")}>
+              <FieldLabel field="variant_strategy" required source={fieldSources.variant_strategy} />
+              <select
+                value={row.variant_strategy || ""}
+                onChange={(e) =>
+                  manual("variant_strategy", {
+                    variant_strategy: e.target.value as MatrixRow["variant_strategy"],
+                  })
+                }
+              >
+                <option value="">Выбери стратегию</option>
+                <option value="configurable_tiers">configurable_tiers (Willie Winkie)</option>
+                <option value="single_default">single_default (не рекомендуется для WW)</option>
+              </select>
+            </div>
+            <div className={fieldClass("price_rub")}>
+              <FieldLabel field="price_rub" required source={fieldSources.price_rub} />
+              <input
+                placeholder="Из workbook candidate (справочно)"
+                value={row.price_rub === TODO ? "" : row.price_rub}
+                onChange={(e) => manual("price_rub", { price_rub: e.target.value })}
+                inputMode="decimal"
+              />
+              <span className="wwmx-field-note">workbook_base_price_rub — справочно, не tier price</span>
+            </div>
+            <div className={fieldClass("solid_full_price_rub")}>
+              <FieldLabel
+                field="solid_full_price_rub"
+                required
+                source={fieldSources.solid_full_price_rub}
+              />
+              <input
+                placeholder={TIER_LABELS.solid_full}
+                value={row.solid_full_price_rub === TODO ? "" : row.solid_full_price_rub}
+                onChange={(e) =>
+                  manual("solid_full_price_rub", { solid_full_price_rub: e.target.value })
+                }
+                inputMode="decimal"
+              />
+            </div>
+            <div className={fieldClass("solid_front_ldsp_body_price_rub")}>
+              <FieldLabel
+                field="solid_front_ldsp_body_price_rub"
+                required
+                source={fieldSources.solid_front_ldsp_body_price_rub}
+              />
+              <input
+                placeholder={TIER_LABELS.solid_front_ldsp_body}
+                value={
+                  row.solid_front_ldsp_body_price_rub === TODO
+                    ? ""
+                    : row.solid_front_ldsp_body_price_rub
+                }
+                onChange={(e) =>
+                  manual("solid_front_ldsp_body_price_rub", {
+                    solid_front_ldsp_body_price_rub: e.target.value,
+                  })
+                }
+                inputMode="decimal"
+              />
+            </div>
+            <div className="wwmx-field">
+              <FieldLabel field="solid_full_sku_suffix" source={fieldSources.solid_full_sku_suffix} />
+              <input
+                placeholder="опционально, напр. _solid_full"
+                value={row.solid_full_sku_suffix || ""}
+                onChange={(e) =>
+                  manual("solid_full_sku_suffix", { solid_full_sku_suffix: e.target.value })
+                }
+              />
+            </div>
+            <div className="wwmx-field">
+              <FieldLabel
+                field="solid_front_ldsp_body_sku_suffix"
+                source={fieldSources.solid_front_ldsp_body_sku_suffix}
+              />
+              <input
+                placeholder="опционально, напр. _ldsp_body"
+                value={row.solid_front_ldsp_body_sku_suffix || ""}
+                onChange={(e) =>
+                  manual("solid_front_ldsp_body_sku_suffix", {
+                    solid_front_ldsp_body_sku_suffix: e.target.value,
+                  })
+                }
+              />
+            </div>
+            <div className="wwmx-field">
+              <FieldLabel field="tier_notes" source={fieldSources.tier_notes} />
+              <textarea
+                placeholder="Tier policy / operator notes"
+                value={row.tier_notes || ""}
+                onChange={(e) => manual("tier_notes", { tier_notes: e.target.value })}
+              />
+            </div>
+          </fieldset>
           <div className={fieldClass("status_draft_or_published")}>
             <FieldLabel
               field="status_draft_or_published"
@@ -517,7 +649,7 @@ export function MatrixBoardClient() {
   const [activeHandle, setActiveHandle] = useState<string | null>(null)
   const [bulkType, setBulkType] = useState("CONFIGURABLE")
   const [bulkStatus, setBulkStatus] = useState("draft")
-  const [bulkVariant, setBulkVariant] = useState("single_default")
+  const [bulkVariant, setBulkVariant] = useState("configurable_tiers")
   const [bulkSummary, setBulkSummary] = useState<string | null>(null)
 
   const load = useCallback(() => {

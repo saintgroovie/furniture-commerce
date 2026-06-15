@@ -1,11 +1,16 @@
 import * as fs from "fs"
 import * as path from "path"
 import { assertWritePath, matrixFile } from "./matrix-repo-root"
-import type { MatrixRow } from "../../matrix-board-types"
+import type { HandleCandidates, MatrixRow, WorkbookCandidate, WorkbookConfidence } from "../../matrix-board-types"
 
 export const PARSED_SHEETS_REL = path.join("data", "raw", "workbook", "parsed-sheets.json")
 
-export type WorkbookConfidence = "exact" | "likely" | "weak"
+type PriceVariant = {
+  label: string
+  price_raw: number | null
+  price_normalized: number | null
+  price_type?: string
+}
 
 export type ParsedWorkbookRow = {
   source_sheet: string
@@ -22,31 +27,56 @@ export type ParsedWorkbookRow = {
   price_raw: number | null
   price_normalized: number | null
   price_type: string
+  price_variants?: PriceVariant[]
   notes_raw: string | null
   is_ambiguous: boolean
 }
 
-export type WorkbookCandidate = {
-  candidate_id: string
-  source_sheet: string
-  workbook_row_key: string
-  workbook_product_code: string
-  candidate_title: string
-  painting_name: string | null
-  category: string | null
-  category_raw: string | null
-  price: number | null
-  currency: string | null
-  confidence: WorkbookConfidence
-  why_matched: string[]
-  raw_row_excerpt: Record<string, unknown>
-}
+function extractMaterialTierHints(wb: ParsedWorkbookRow): {
+  workbook_base_price_rub: number | null
+  tier_split_in_source: boolean
+  tier_source_note: string
+  tier_source_prices: {
+    solid_full_price_rub: number | null
+    solid_front_ldsp_body_price_rub: number | null
+  }
+} {
+  const base =
+    typeof wb.price_normalized === "number" && Number.isFinite(wb.price_normalized)
+      ? wb.price_normalized
+      : null
+  const variants = wb.price_variants || []
 
-export type HandleCandidates = {
-  handle: string
-  candidates: WorkbookCandidate[]
-  has_workbook_source: boolean
-  best_confidence: WorkbookConfidence | null
+  let solidFull: number | null = null
+  let ldsp: number | null = null
+
+  for (const v of variants) {
+    const label = (v.label || "").toLowerCase()
+    const p =
+      typeof v.price_normalized === "number"
+        ? v.price_normalized
+        : typeof v.price_raw === "number"
+          ? v.price_raw
+          : null
+    if (p == null || p <= 0) continue
+    if (label.includes("лдсп")) ldsp = p
+    if (label.includes("массив") && !label.includes("лдсп")) solidFull = p
+  }
+
+  const tier_split =
+    solidFull != null && ldsp != null && solidFull > ldsp
+
+  return {
+    workbook_base_price_rub: base,
+    tier_split_in_source: tier_split,
+    tier_source_note: tier_split
+      ? "Workbook price_variants contain distinct solid_full and LDSP tier prices"
+      : "Tier split not present in source",
+    tier_source_prices: {
+      solid_full_price_rub: tier_split ? solidFull : null,
+      solid_front_ldsp_body_price_rub: tier_split ? ldsp : null,
+    },
+  }
 }
 
 export type WorkbookSourceAudit = {
@@ -183,6 +213,7 @@ function buildCandidate(
     typeof wb.price_normalized === "number" && Number.isFinite(wb.price_normalized)
       ? wb.price_normalized
       : null
+  const tierHints = extractMaterialTierHints(wb)
 
   return {
     candidate_id: `${matrixRow.handle}::${wb.source_sheet}:${wb.row_index}`,
@@ -195,6 +226,10 @@ function buildCandidate(
     category_raw: wb.category_raw,
     price,
     currency: price != null ? "rub" : null,
+    workbook_base_price_rub: tierHints.workbook_base_price_rub,
+    tier_split_in_source: tierHints.tier_split_in_source,
+    tier_source_note: tierHints.tier_source_note,
+    tier_source_prices: tierHints.tier_source_prices,
     confidence,
     why_matched: why,
     raw_row_excerpt: {
@@ -206,6 +241,7 @@ function buildCandidate(
       dimensions_raw: wb.dimensions_raw,
       price_raw: wb.price_raw,
       price_normalized: wb.price_normalized,
+      price_variants: wb.price_variants,
       is_ambiguous: wb.is_ambiguous,
     },
   }

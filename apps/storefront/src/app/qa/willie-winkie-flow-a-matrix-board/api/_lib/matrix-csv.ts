@@ -1,4 +1,13 @@
 import type { MatrixRow } from "../../matrix-board-types"
+import { TODO_OPERATOR } from "../../matrix-board-types"
+
+const TIER_DEFAULTS: Record<string, string> = {
+  solid_full_price_rub: TODO_OPERATOR,
+  solid_front_ldsp_body_price_rub: TODO_OPERATOR,
+  solid_full_sku_suffix: "",
+  solid_front_ldsp_body_sku_suffix: "",
+  tier_notes: "",
+}
 
 export const MATRIX_COLUMNS = [
   "handle",
@@ -15,6 +24,11 @@ export const MATRIX_COLUMNS = [
   "medusa_product_type",
   "variant_strategy",
   "price_rub",
+  "solid_full_price_rub",
+  "solid_front_ldsp_body_price_rub",
+  "solid_full_sku_suffix",
+  "solid_front_ldsp_body_sku_suffix",
+  "tier_notes",
   "compare_at_price_rub",
   "currency",
   "status_draft_or_published",
@@ -37,7 +51,10 @@ export function parseCsv(text: string): MatrixRow[] {
     headers.forEach((h, idx) => {
       row[h] = vals[idx] ?? ""
     })
-    rows.push(row as MatrixRow)
+    for (const [k, v] of Object.entries(TIER_DEFAULTS)) {
+      if (row[k] === undefined || row[k] === "") row[k] = v
+    }
+    rows.push(row as unknown as MatrixRow)
   }
   return rows
 }

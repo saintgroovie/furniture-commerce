@@ -20,6 +20,11 @@ const WRITABLE_FIELDS = new Set([
   "medusa_product_type",
   "variant_strategy",
   "price_rub",
+  "solid_full_price_rub",
+  "solid_front_ldsp_body_price_rub",
+  "solid_full_sku_suffix",
+  "solid_front_ldsp_body_sku_suffix",
+  "tier_notes",
   "compare_at_price_rub",
   "status_draft_or_published",
   "operator_decision",
@@ -63,7 +68,7 @@ export async function POST(req: Request) {
       ok: true,
       saved_path: filledPath,
       readiness,
-      writable_fields_whitelist: [...WRITABLE_FIELDS],
+      writable_fields_whitelist: Array.from(WRITABLE_FIELDS),
     })
   } catch (e) {
     return NextResponse.json({ error: "save_failed", message: String(e) }, { status: 500 })

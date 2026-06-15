@@ -20,6 +20,11 @@ export type MatrixRow = {
   medusa_product_type: MedusaProductType
   variant_strategy: VariantStrategy
   price_rub: string
+  solid_full_price_rub: string
+  solid_front_ldsp_body_price_rub: string
+  solid_full_sku_suffix: string
+  solid_front_ldsp_body_sku_suffix: string
+  tier_notes: string
   compare_at_price_rub: string
   currency: string
   status_draft_or_published: PublishStatus
@@ -87,6 +92,13 @@ export type WorkbookCandidate = {
   category_raw: string | null
   price: number | null
   currency: string | null
+  workbook_base_price_rub: number | null
+  tier_split_in_source: boolean
+  tier_source_note: string | null
+  tier_source_prices: {
+    solid_full_price_rub: number | null
+    solid_front_ldsp_body_price_rub: number | null
+  } | null
   confidence: WorkbookConfidence
   why_matched: string[]
   raw_row_excerpt: Record<string, unknown>
