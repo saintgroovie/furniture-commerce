@@ -148,6 +148,27 @@ body:has(.wwmx-operator-root) main.container.page-section {
   flex-shrink: 0;
 }
 
+.wwmx-bulk button {
+  font-size: 12px;
+  padding: 5px 8px;
+  border-radius: 4px;
+  border: 1px solid #3a4a5a;
+  background: #1a222c;
+  color: #e8ecf0;
+  cursor: pointer;
+}
+
+.wwmx-bulk-summary {
+  margin: 0 20px 10px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  border: 1px solid #2a4a6a;
+  background: #141c28;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #9ab0c4;
+}
+
 .wwmx-bulk select,
 .wwmx-bulk button {
   font-size: 12px;

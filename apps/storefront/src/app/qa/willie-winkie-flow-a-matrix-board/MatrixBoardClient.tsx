@@ -2,6 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { candidateToRowPatch, sourceFieldsFromCandidate } from "./matrix-candidate-patch"
+import {
+  countStillMissingMandatoryCells,
+  formatBulkSummary,
+  planBulkCandidateApply,
+  type BulkCandidateMode,
+} from "./matrix-bulk-candidates"
 import { sanitizeMediaUrlForBrowser } from "./matrix-media-urls"
 import { computeRowWorkflowState, ROW_STATE_LABELS } from "./matrix-row-state"
 import { computeReadiness, validateRow } from "./matrix-board-validation"
@@ -512,6 +518,7 @@ export function MatrixBoardClient() {
   const [bulkType, setBulkType] = useState("CONFIGURABLE")
   const [bulkStatus, setBulkStatus] = useState("draft")
   const [bulkVariant, setBulkVariant] = useState("single_default")
+  const [bulkSummary, setBulkSummary] = useState<string | null>(null)
 
   const load = useCallback(() => {
     Promise.all([
@@ -646,6 +653,60 @@ export function MatrixBoardClient() {
       else next.add(handle)
       return next
     })
+  }
+
+  const applyBulkCandidates = (mode: BulkCandidateMode, scope: "selected" | "all") => {
+    const targetHandles =
+      scope === "all" ? rows.map((r) => r.handle) : Array.from(selected)
+
+    if (targetHandles.length === 0) {
+      setMsg("Сначала отметьте строки чекбоксом слева")
+      return
+    }
+
+    let overwriteManual = false
+    if (mode === "likely") {
+      const ok = window.confirm(
+        `Применить likely-кандидатов к ${targetHandles.length} строкам? Approve не будет поставлен.`
+      )
+      if (!ok) return
+      overwriteManual = window.confirm(
+        "Перезаписать поля, которые уже заполнены вручную? (Отмена = пропустить такие поля)"
+      )
+    }
+
+    const rowsByHandle = new Map(rows.map((r) => [r.handle, r]))
+    const plan = planBulkCandidateApply({
+      targetHandles,
+      rowsByHandle,
+      candidatesByHandle,
+      fieldSourcesByHandle,
+      mode,
+      overwriteManual,
+    })
+
+    const nextRows = rows.map((row) => {
+      const item = plan.rows.find((p) => p.handle === row.handle && p.kind === "apply")
+      if (!item || item.kind !== "apply") return row
+      return { ...row, ...item.patch }
+    })
+
+    setFieldSourcesByHandle((prev) => {
+      const next = new Map(prev)
+      for (const item of plan.rows) {
+        if (item.kind !== "apply") continue
+        const cur: RowFieldSources = { ...(next.get(item.handle) || {}) }
+        for (const f of item.sourceFields) cur[f] = "source"
+        next.set(item.handle, cur)
+      }
+      return next
+    })
+
+    setRows(nextRows)
+    const stillMissing = countStillMissingMandatoryCells(nextRows)
+    const summary = formatBulkSummary(plan, stillMissing)
+    setBulkSummary(summary)
+    setMsg(summary)
   }
 
   const applyToSelected = (patch: Partial<MatrixRow>) => {
@@ -797,6 +858,21 @@ export function MatrixBoardClient() {
           Выбрать готовые
         </button>
       </div>
+
+      <div className="wwmx-bulk">
+        <span>Workbook candidates (без approve):</span>
+        <button type="button" onClick={() => applyBulkCandidates("exact", "selected")}>
+          Use exact candidates for selected
+        </button>
+        <button type="button" onClick={() => applyBulkCandidates("exact", "all")}>
+          Use exact candidates for all
+        </button>
+        <button type="button" onClick={() => applyBulkCandidates("likely", "selected")}>
+          Use likely candidates for selected
+        </button>
+      </div>
+
+      {bulkSummary && <div className="wwmx-bulk-summary">{bulkSummary}</div>}
 
       <div className="wwmx-bulk">
         <span>Batch для отмеченных ({selected.size}) — без approve/price/mapping:</span>
