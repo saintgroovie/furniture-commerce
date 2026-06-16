@@ -184,6 +184,13 @@ export function SourceMediaOrphanReviewClient() {
         <a href="/qa/legacy-site-media-approval-board">/qa/legacy-site-media-approval-board</a>.
       </div>
 
+      <div className="sor-banner sor-banner-warn">
+        <strong>Не решайте дубликат вручную без системного evidence.</strong>
+        Кнопка «Send to assignment» — triage-маршрут, не финальный map. Роль и галерея — только в{" "}
+        <a href="/qa/legacy-media-assignment-board-v2">assignment board v2</a>. Экспорт решений из
+        этого UI сейчас не использовать для apply.
+      </div>
+
       <header className="sor-header">
         <h1>Source media orphan review (QA)</h1>
         <p>
@@ -326,15 +333,68 @@ export function SourceMediaOrphanReviewClient() {
                 {row.source_url || row.source_path}
               </p>
               <p className="sor-why">{row.why_not_safe}</p>
+              <p className="sor-precheck">{row.enrichment.precheck_summary}</p>
+
+              {row.enrichment.duplicate_evidence.has_evidence ? (
+                <div className="sor-evidence sor-evidence-dup">
+                  <strong>Duplicate evidence (system)</strong>
+                  <ul>
+                    {row.enrichment.duplicate_evidence.matches.map((m) => (
+                      <li key={m.inventory_id}>
+                        {m.match_kind}: {m.filename}{" "}
+                        <span className="sor-meta">({m.inventory_id})</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
+                <p className="sor-evidence sor-evidence-none">No duplicate evidence computed.</p>
+              )}
+
+              <div className="sor-evidence">
+                <strong>Existing SKU context</strong>
+                <p className="sor-meta">
+                  Pool candidates: {row.enrichment.sku_context.candidate_pool_count}
+                  {row.enrichment.sku_context.in_assignment_board
+                    ? " · in assignment board v2"
+                    : row.enrichment.sku_context.handle
+                      ? " · not in assignment board v2 pilot"
+                      : ""}
+                </p>
+                {row.enrichment.sku_context.existing_media.length > 0 ? (
+                  <div className="sor-existing-strip">
+                    {row.enrichment.sku_context.existing_media.map((m) => (
+                      <a
+                        key={`${m.source}-${m.url}`}
+                        href={m.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        title={`${m.basename} (${m.source})`}
+                      >
+                        <img src={m.url} alt="" loading="lazy" />
+                      </a>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="sor-meta">No existing normalized media previews for guessed SKU.</p>
+                )}
+                {row.enrichment.sku_context.assignment_board_url ? (
+                  <p className="sor-meta">
+                    <a href={row.enrichment.sku_context.assignment_board_url}>
+                      Open assignment board v2 for {row.enrichment.sku_context.handle}
+                    </a>
+                  </p>
+                ) : null}
+              </div>
             </div>
             <div className="sor-actions">
               {(
                 [
-                  ["map_candidate", "Map"],
-                  ["reject_noise", "Noise"],
-                  ["needs_more_context", "More ctx"],
+                  ["map_candidate", "Send to assignment"],
+                  ["reject_noise", "Reject noise"],
+                  ["needs_more_context", "Needs eng. context"],
                   ["blocked_cross_sku", "Blk X-SKU"],
-                  ["content_request", "Content req"],
+                  ["content_request", "Needs source"],
                 ] as const
               ).map(([dec, label]) => (
                 <button

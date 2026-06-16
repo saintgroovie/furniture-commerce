@@ -8,6 +8,35 @@ export type OrphanDecision =
 
 export type PriorityTier = "P0_review_first" | "P1_white_bg_sku" | "P2_possible_product" | "P3_low_noise_or_ambiguous"
 
+export type OrphanDuplicateMatch = {
+  inventory_id: string
+  filename: string
+  match_kind: "exact_basename" | "normalized_basename"
+}
+
+export type OrphanExistingMediaPreview = {
+  url: string
+  basename: string
+  source: "board_product" | "candidate_pool"
+}
+
+export type OrphanEnrichment = {
+  duplicate_evidence: {
+    has_evidence: boolean
+    matches: OrphanDuplicateMatch[]
+  }
+  sku_context: {
+    handle: string | null
+    title: string | null
+    collection: string | null
+    in_assignment_board: boolean
+    assignment_board_url: string | null
+    candidate_pool_count: number
+    existing_media: OrphanExistingMediaPreview[]
+  }
+  precheck_summary: string
+}
+
 export type ReviewRow = {
   source_id: string
   source_kind: "yandex_public" | "legacy_site" | string
@@ -30,6 +59,7 @@ export type ReviewRow = {
   cross_sku_risk: boolean
   why_not_safe: string
   preview_url: string | null
+  enrichment: OrphanEnrichment
   operator_decision: OrphanDecision
   operator_notes: string
 }

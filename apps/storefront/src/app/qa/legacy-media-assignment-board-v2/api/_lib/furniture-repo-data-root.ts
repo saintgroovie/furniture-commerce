@@ -9,6 +9,9 @@ import { fileURLToPath } from "url"
 const MARKER_CODEMAP = path.join("docs", "project", "CODEMAP.md")
 const MARKER_DATA_NORMALIZED = path.join("data", "normalized")
 
+export const ORPHAN_P0_OVERLAY_DATA_REL =
+  "tmp/orphan-p0-refresh-2026-06-11/operator-decisions-top-50/assignment-board-candidate-pack/v2-overlay/orphan-p0-v2-overlay-data.json"
+
 export const FURNITURE_REPO_MARKERS_DESC = "docs/project/CODEMAP.md and data/normalized/"
 
 export const FURNITURE_REPO_EXPECTED_MARKER_RELPATHS = [MARKER_CODEMAP, MARKER_DATA_NORMALIZED] as const
@@ -32,6 +35,33 @@ export function legacyMediaQaRepoRootFailurePayload(resolution: FurnitureRepoDat
 
 function dirHasRepoMarkers(absDir: string): boolean {
   return fs.existsSync(path.join(absDir, MARKER_CODEMAP)) && fs.existsSync(path.join(absDir, MARKER_DATA_NORMALIZED))
+}
+
+/** emergency-fix and similar checkouts may have normalized data without CODEMAP */
+function dirHasNormalizedData(absDir: string): boolean {
+  return fs.existsSync(path.join(absDir, MARKER_DATA_NORMALIZED))
+}
+
+function isUsableQaRepoRoot(absDir: string): boolean {
+  return dirHasRepoMarkers(absDir) || dirHasNormalizedData(absDir)
+}
+
+export function hasOrphanP0OverlayArtifact(absDir: string): boolean {
+  return fs.existsSync(path.join(absDir, ORPHAN_P0_OVERLAY_DATA_REL))
+}
+
+function resolveEnvRepoRoot(seedsTried: string[], cwd: string): FurnitureRepoDataResolution | null {
+  const envRoot = (process.env.FURNITURE_REPO_ROOT || process.env.FURNITURE_COMMERCE_ROOT || "").trim()
+  if (!envRoot) return null
+
+  const abs = path.resolve(envRoot)
+  seedsTried.push(abs)
+
+  if (isUsableQaRepoRoot(abs) || hasOrphanP0OverlayArtifact(abs)) {
+    return { repoRoot: abs, seedsTried, cwd }
+  }
+
+  return null
 }
 
 function walkUpForRoot(startAbs: string, maxDepth: number): string | null {
@@ -67,6 +97,9 @@ function computeResolution(): FurnitureRepoDataResolution {
   const seedsTried: string[] = []
   const seeds: string[] = []
 
+  const envResolved = resolveEnvRepoRoot(seedsTried, cwd)
+  if (envResolved) return envResolved
+
   const push = (abs: string) => {
     const r = path.resolve(abs)
     if (!seeds.includes(r)) {
@@ -74,9 +107,6 @@ function computeResolution(): FurnitureRepoDataResolution {
       seedsTried.push(r)
     }
   }
-
-  const envRoot = (process.env.FURNITURE_REPO_ROOT || process.env.FURNITURE_COMMERCE_ROOT || "").trim()
-  if (envRoot) push(envRoot)
 
   const initCwd = (process.env.INIT_CWD || "").trim()
   if (initCwd) push(initCwd)
@@ -86,8 +116,9 @@ function computeResolution(): FurnitureRepoDataResolution {
   push(path.resolve(cwd, "..", ".."))
   push(path.resolve(cwd, "..", "..", ".."))
 
-  // Dev: emergency-fix checkout often lacks data/normalized; sibling furniture-commerce may have it.
-  if (cwd.includes("furniture-commerce-emergency-fix")) {
+  const envRoot = (process.env.FURNITURE_REPO_ROOT || process.env.FURNITURE_COMMERCE_ROOT || "").trim()
+  // Sibling clone fallback only when env root is not set — avoid reading primary clone tmp.
+  if (!envRoot && cwd.includes("furniture-commerce-emergency-fix")) {
     push(path.resolve(cwd, "../../../furniture-commerce"))
     push(path.resolve(cwd, "../../furniture-commerce"))
   }
@@ -101,6 +132,9 @@ function computeResolution(): FurnitureRepoDataResolution {
   for (const seed of seeds) {
     const found = walkUpForRoot(seed, 28)
     if (found) return { repoRoot: found, seedsTried, cwd }
+    if (isUsableQaRepoRoot(seed) || hasOrphanP0OverlayArtifact(seed)) {
+      return { repoRoot: path.resolve(seed), seedsTried, cwd }
+    }
   }
 
   return { repoRoot: null, seedsTried, cwd }
