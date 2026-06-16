@@ -54,8 +54,21 @@ import {
   reorderGallery as syncReorderGallery,
 } from "./legacy-board-v2-state-sync"
 import { V2_BOARD_BUILD, V2_BOARD_BUILD_LABEL } from "./legacy-board-v2-build"
+import type { OrphanP0OverlayCandidate, OrphanP0OverlayData } from "./orphan-p0-overlay-types"
+import {
+  loadOrphanP0OverlayState,
+  makeEmptyOrphanP0OverlayState,
+  saveOrphanP0OverlayState,
+} from "./orphan-p0-overlay-persistence"
+import { OrphanP0OverlayPanel, downloadOrphanP0OverlayExport } from "./OrphanP0OverlayPanel"
+import { OrphanP0OverlayMissingPanel } from "./OrphanP0OverlayMissingPanel"
+import {
+  isOrphanP0OverlayMissingArtifact,
+  type OrphanP0OverlayMissingArtifact,
+} from "./orphan-p0-overlay-missing-types"
 
 const V2_API_BASE = "/qa/legacy-media-assignment-board-v2/api"
+const ORPHAN_P0_OVERLAY_ID = "orphan-p0-top50"
 
 function productReadiness(
   state: V2ProductState | undefined,
@@ -91,7 +104,14 @@ function makeEmptyProductState(handle: string, variantKey: string): V2ProductSta
   }
 }
 
-export function LegacyMediaBoardV2Client() {
+export function LegacyMediaBoardV2Client({
+  initialHandle = null,
+  overlayMode = null,
+}: {
+  initialHandle?: string | null
+  overlayMode?: string | null
+}) {
+  const isOrphanP0Overlay = overlayMode === ORPHAN_P0_OVERLAY_ID
   // --- Data loading state ---
   const [status, setStatus] = useState<V2LoadStatus>("idle")
   const [error, setError] = useState<string | null>(null)
@@ -113,6 +133,18 @@ export function LegacyMediaBoardV2Client() {
   const hasSavedOnceRef = useRef(false)
   const hasHydratedRef = useRef(false)
 
+  // --- Orphan P0 overlay (read-only routing; isolated localStorage) ---
+  const [overlayData, setOverlayData] = useState<OrphanP0OverlayData | null>(null)
+  const [overlayLoadStatus, setOverlayLoadStatus] = useState<
+    "idle" | "loading" | "loaded" | "missing" | "error"
+  >("idle")
+  const [overlayError, setOverlayError] = useState<string | null>(null)
+  const [overlayMissing, setOverlayMissing] = useState<OrphanP0OverlayMissingArtifact | null>(null)
+  const [overlayState, setOverlayState] = useState(makeEmptyOrphanP0OverlayState)
+  const [overlayFilter, setOverlayFilter] = useState("")
+  const [focusedOverlayPackIndex, setFocusedOverlayPackIndex] = useState<number | null>(null)
+  const overlayHydratedRef = useRef(false)
+
   // --- Lifted pool filter state (Commit 3) ---
   const [poolFilter, setPoolFilter] = useState<V2RoleFilter>("all")
 
@@ -123,24 +155,78 @@ export function LegacyMediaBoardV2Client() {
 
   // --- Late hydrate: merge disk state without clobbering in-memory operator edits ---
   useEffect(() => {
-    if (hasHydratedRef.current) return
+    if (hasHydratedRef.current || isOrphanP0Overlay) return
     hasHydratedRef.current = true
     const persisted = loadV2PersistedState()
     if (!persisted) return
     setProductStates((prev) => mergeV2ProductStates(persisted.productStates, prev))
     setSelectedHandle((prev) => prev ?? persisted.selectedHandle)
     setSavedAt((prev) => prev ?? persisted.savedAt)
-  }, [])
+  }, [isOrphanP0Overlay])
+
+  useEffect(() => {
+    if (!isOrphanP0Overlay || overlayHydratedRef.current) return
+    overlayHydratedRef.current = true
+    const persisted = loadOrphanP0OverlayState()
+    if (!persisted) return
+    setOverlayState(persisted)
+    setFocusedOverlayPackIndex(persisted.focusedPackIndex)
+    if (persisted.focusedCatalogHandle) {
+      setSelectedHandle(persisted.focusedCatalogHandle)
+    }
+  }, [isOrphanP0Overlay])
+
+  useEffect(() => {
+    if (!isOrphanP0Overlay) return
+    let cancelled = false
+    setOverlayLoadStatus("loading")
+    setOverlayError(null)
+    setOverlayMissing(null)
+    void (async () => {
+      try {
+        const res = await fetch(`${V2_API_BASE}/orphan-p0-overlay`)
+        const json: unknown = await res.json()
+        if (cancelled) return
+        if (isOrphanP0OverlayMissingArtifact(json)) {
+          setOverlayMissing(json)
+          setOverlayData(null)
+          setOverlayLoadStatus("missing")
+          return
+        }
+        if (!res.ok) throw new Error(`orphan-p0-overlay: ${res.status} ${res.statusText}`)
+        setOverlayData(json as OrphanP0OverlayData)
+        setOverlayLoadStatus("loaded")
+      } catch (err) {
+        if (cancelled) return
+        setOverlayError(err instanceof Error ? err.message : String(err))
+        setOverlayLoadStatus("error")
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [isOrphanP0Overlay])
+
+  useEffect(() => {
+    if (!isOrphanP0Overlay) return
+    saveOrphanP0OverlayState({
+      ...overlayState,
+      savedAt: new Date().toISOString(),
+      focusedPackIndex: focusedOverlayPackIndex,
+      focusedCatalogHandle: selectedHandle,
+    })
+  }, [isOrphanP0Overlay, overlayState, focusedOverlayPackIndex, selectedHandle])
 
   // --- Auto-save whenever assignments change (skip initial mount render) ---
   useEffect(() => {
+    if (isOrphanP0Overlay) return
     if (!hasSavedOnceRef.current) {
       hasSavedOnceRef.current = true
       return
     }
     saveV2PersistedState(productStates, selectedHandle)
     setSavedAt(new Date().toISOString())
-  }, [productStates, selectedHandle])
+  }, [productStates, selectedHandle, isOrphanP0Overlay])
 
   // --- Data loading ---
   useEffect(() => {
@@ -198,6 +284,10 @@ export function LegacyMediaBoardV2Client() {
         setCandidatesByHandle(byHandle)
         setEntryByInventoryId(entryById)
         setRecoveryById(recMap)
+        if (initialHandle) {
+          const exists = prods.some((p) => p.handle === initialHandle)
+          if (exists) setSelectedHandle(initialHandle)
+        }
         setStatus("loaded")
       } catch (err) {
         if (cancelled) return
@@ -208,7 +298,7 @@ export function LegacyMediaBoardV2Client() {
 
     void load()
     return () => { cancelled = true }
-  }, [])
+  }, [initialHandle])
 
   // --- Derived: color variants (detected + operator − hidden, milk first) ---
   const colorVariants = useMemo<V2ColorVariant[]>(() => {
@@ -527,24 +617,73 @@ export function LegacyMediaBoardV2Client() {
     hasHydratedRef.current = false
   }, [])
 
+  const overlayCatalogHandles = useMemo(() => {
+    if (!overlayData) return new Set<string>()
+    return new Set(
+      overlayData.resolved_candidates
+        .map((c) => c.catalog_handle)
+        .filter((h): h is string => Boolean(h))
+    )
+  }, [overlayData])
+
+  const handleFocusOverlayCandidate = useCallback((candidate: OrphanP0OverlayCandidate) => {
+    if (!candidate.routable || !candidate.catalog_handle) return
+    setFocusedOverlayPackIndex(candidate.pack_index)
+    setSelectedHandle(candidate.catalog_handle)
+    setOverlayState((prev) => ({
+      ...prev,
+      focusedPackIndex: candidate.pack_index,
+      focusedCatalogHandle: candidate.catalog_handle,
+    }))
+  }, [])
+
+  const handleOverlayRoutingNoteChange = useCallback((packIndex: number, note: string) => {
+    setOverlayState((prev) => ({
+      ...prev,
+      routingNotes: { ...prev.routingNotes, [String(packIndex)]: note },
+    }))
+  }, [])
+
+  const handleOverlayExport = useCallback(() => {
+    if (!overlayData) return
+    downloadOrphanP0OverlayExport(overlayData, {
+      ...overlayState,
+      focusedPackIndex: focusedOverlayPackIndex,
+      focusedCatalogHandle: selectedHandle,
+    })
+  }, [overlayData, overlayState, focusedOverlayPackIndex, selectedHandle])
+
   // --- Filtered product list ---
   const filteredProducts = useMemo(() => {
-    if (!search.trim()) return products
+    let list = products
+    if (isOrphanP0Overlay && overlayCatalogHandles.size > 0) {
+      list = list.filter((p) => overlayCatalogHandles.has(p.handle))
+    }
+    if (!search.trim()) return list
     const q = search.toLowerCase()
-    return products.filter(
+    return list.filter(
       (p) =>
         p.handle.toLowerCase().includes(q) ||
         (p.title && p.title.toLowerCase().includes(q)) ||
         p.collection.toLowerCase().includes(q)
     )
-  }, [products, search])
+  }, [products, search, isOrphanP0Overlay, overlayCatalogHandles])
 
   const statusLine = (() => {
     if (status === "loading") return "Загрузка inventory, candidates, products…"
-    if (status === "loaded")
-      return `Загружено: ${products.length} продуктов · ${invById.size} inventory items · ${entryByInventoryId.size} candidate entries`
+    if (status === "loaded") {
+      const base = `Загружено: ${products.length} продуктов · ${invById.size} inventory items · ${entryByInventoryId.size} candidate entries`
+      if (isOrphanP0Overlay && overlayData) {
+        return `${base} · Orphan P0 overlay: ${overlayData.validation.resolved_candidates} resolved / ${overlayData.validation.pending_unresolved} pending`
+      }
+      return base
+    }
     return null
   })()
+
+  const gridStyle = isOrphanP0Overlay
+    ? { ...styles.grid, gridTemplateColumns: "360px 200px 1fr 420px" as const }
+    : styles.grid
 
   return (
     <div style={styles.root}>
@@ -555,6 +694,21 @@ export function LegacyMediaBoardV2Client() {
           {V2_BOARD_BUILD_LABEL}
         </span>
         <span style={styles.badge}>dev · QA only · no Medusa writes</span>
+        {isOrphanP0Overlay && (
+          <span
+            style={{
+              fontSize: "11px",
+              fontWeight: 700,
+              background: "#fff3cd",
+              border: "1px solid #e6c200",
+              borderRadius: "4px",
+              padding: "2px 8px",
+              color: "#5a4200",
+            }}
+          >
+            Orphan P0 overlay · do_not_auto_apply
+          </span>
+        )}
         {selectedHandle && <span style={styles.activeHandle}>{selectedHandle}</span>}
       </header>
 
@@ -576,42 +730,79 @@ export function LegacyMediaBoardV2Client() {
       {status === "loaded" && (
         <div style={{ ...styles.statusBar, ...styles.successBar }}>{statusLine}</div>
       )}
+      {isOrphanP0Overlay && overlayLoadStatus === "missing" && (
+        <div style={{ ...styles.statusBar, ...styles.errorBar }}>
+          <strong>Orphan P0 overlay artifact missing.</strong> Run the build step below. No routing is
+          available.
+        </div>
+      )}
+      {isOrphanP0Overlay && overlayLoadStatus === "error" && (
+        <div style={{ ...styles.statusBar, ...styles.errorBar }}>
+          <strong>Orphan P0 overlay failed:</strong> {overlayError}
+        </div>
+      )}
 
       {/* Export / persistence toolbar */}
-      <ExportToolbar
-        productStates={productStates}
-        invById={invById}
-        products={products}
-        savedAt={savedAt}
-        selectedHandle={selectedHandle}
-        onReset={handleReset}
-      />
+      {!isOrphanP0Overlay && (
+        <ExportToolbar
+          productStates={productStates}
+          invById={invById}
+          products={products}
+          savedAt={savedAt}
+          selectedHandle={selectedHandle}
+          onReset={handleReset}
+        />
+      )}
 
       {/* 3-column grid */}
-      <div style={styles.grid}>
+      <div style={gridStyle}>
+        {isOrphanP0Overlay && overlayMissing && overlayLoadStatus === "missing" && (
+          <OrphanP0OverlayMissingPanel missing={overlayMissing} />
+        )}
+        {isOrphanP0Overlay && overlayData && overlayLoadStatus === "loaded" && (
+          <OrphanP0OverlayPanel
+            data={overlayData}
+            overlayState={overlayState}
+            focusedPackIndex={focusedOverlayPackIndex}
+            filter={overlayFilter}
+            onFilterChange={setOverlayFilter}
+            onFocusCandidate={handleFocusOverlayCandidate}
+            onRoutingNoteChange={handleOverlayRoutingNoteChange}
+            onExport={handleOverlayExport}
+          />
+        )}
+        {isOrphanP0Overlay && overlayLoadStatus === "loading" && (
+          <aside style={styles.colLeft}>
+            <div style={styles.placeholderBody}>Загрузка Orphan P0 overlay…</div>
+          </aside>
+        )}
         {/* Left: Product selector */}
         <aside style={styles.colLeft}>
-          <div style={styles.colHeader}>Выбор продукта</div>
+          <div style={styles.colHeader}>
+            {isOrphanP0Overlay ? "Overlay catalog handles" : "Выбор продукта"}
+          </div>
 
           {status === "loaded" ? (
             <>
               <div style={styles.searchWrap}>
                 <input
                   type="text"
-                  placeholder="Поиск handle / коллекции…"
+                  placeholder={isOrphanP0Overlay ? "Поиск overlay handle…" : "Поиск handle / коллекции…"}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   style={styles.searchInput}
                 />
-                <button
-                  style={styles.quickBtn}
-                  onClick={() => {
-                    setSearch("")
-                    setSelectedHandle("co-02-1")
-                  }}
-                >
-                  ↗ Быстро: co-02-1
-                </button>
+                {!isOrphanP0Overlay && (
+                  <button
+                    style={styles.quickBtn}
+                    onClick={() => {
+                      setSearch("")
+                      setSelectedHandle("co-02-1")
+                    }}
+                  >
+                    ↗ Быстро: co-02-1
+                  </button>
+                )}
               </div>
 
               <div style={styles.productList}>

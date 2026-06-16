@@ -1,6 +1,11 @@
 import * as fs from "fs"
 import { NextResponse } from "next/server"
+import { getFurnitureRepoDataResolution } from "../../../legacy-media-assignment-board-v2/api/_lib/furniture-repo-data-root"
 import { auditFile, getAuditRepoResolution } from "../_lib/audit-repo-root"
+import {
+  buildEnrichmentIndexes,
+  enrichOrphanRow,
+} from "../_lib/source-orphan-review-enrichment"
 import type { BootstrapPayload, DashboardStats, ReviewRow } from "../../source-orphan-review-types"
 
 export const dynamic = "force-dynamic"
@@ -110,6 +115,9 @@ export async function GET() {
       manifestById.set(item.source_id, item)
     }
 
+    const dataRepoRoot = getFurnitureRepoDataResolution().repoRoot ?? resolution.repoRoot
+    const enrichmentIndexes = buildEnrichmentIndexes(dataRepoRoot)
+
     const items: ReviewRow[] = (queue.full_queue || []).map((q) => {
       const m = manifestById.get(q.source_id)
       const merged: ManifestRow = {
@@ -131,6 +139,25 @@ export async function GET() {
         classification_reason: m?.classification_reason ?? null,
         suggested_next_action: m?.suggested_next_action ?? null,
       }
+      const handleGuess = merged.handle_guess ?? null
+      const enrichment =
+        enrichmentIndexes != null
+          ? enrichOrphanRow(q.basename, handleGuess, enrichmentIndexes)
+          : {
+              duplicate_evidence: { has_evidence: false, matches: [] },
+              sku_context: {
+                handle: handleGuess?.toLowerCase() ?? null,
+                title: null,
+                collection: merged.collection_guess ?? null,
+                in_assignment_board: false,
+                assignment_board_url: null,
+                candidate_pool_count: 0,
+                existing_media: [],
+              },
+              precheck_summary:
+                "Normalized inventory indexes unavailable — engineering precheck required before any map decision.",
+            }
+
       return {
         source_id: q.source_id,
         source_kind: q.source_kind,
@@ -153,6 +180,7 @@ export async function GET() {
         cross_sku_risk: crossSkuRisk(q, merged),
         why_not_safe: whyNotSafe(merged, q),
         preview_url: previewUrl(merged),
+        enrichment,
         operator_decision: "pending",
         operator_notes: "",
       }
