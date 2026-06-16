@@ -1,5 +1,9 @@
 import Link from "next/link"
 import { formatRub, getPrice } from "@/lib/format"
+import {
+  formatRequestQuotePriceLabel,
+  isRequestQuoteProduct,
+} from "@/lib/request-quote"
 import type { DisplayGroup } from "@/lib/display-group"
 import { formatGroupHint } from "@/lib/display-group"
 import {
@@ -60,6 +64,9 @@ export function ProductCard({
 
   const price = displayGroup?.minPrice ?? getPrice(product)
   const pricePrefix = displayGroup ? "от " : ""
+  const requestQuotePrice = isRequestQuoteProduct(product as Record<string, unknown>)
+    ? formatRequestQuotePriceLabel(product as Record<string, unknown>)
+    : null
 
   const collectionLabel = getCollectionLabel(product as Record<string, unknown>)
   const subcollectionLabel = getSubcollectionLabel(product as Record<string, unknown>)
@@ -112,9 +119,11 @@ export function ProductCard({
         {dim != null && (
           <span className="card-dimensions">{formatDimensionsCompact(dim)}</span>
         )}
-        {price != null && (
+        {requestQuotePrice != null ? (
+          <p className="price">{requestQuotePrice}</p>
+        ) : price != null ? (
           <p className="price">{pricePrefix}{formatRub(price)}</p>
-        )}
+        ) : null}
         {displayGroup && displayGroup.count > 1 && (
           <span className="variant-hint">{formatGroupHint(displayGroup.count)}</span>
         )}
