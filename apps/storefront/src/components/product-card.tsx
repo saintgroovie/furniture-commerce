@@ -16,8 +16,16 @@ import {
 import { OliverCardMediaSwitcher } from "@/components/oliver-card-media-switcher"
 import { ProductCardMediaSwitcher } from "@/components/product-card-media-switcher"
 import {
+  buildIntraProductExecutionSelectors,
+  finishLabelForProduct,
+  isUpholsteredProduct,
+  type CardColorVariant,
+  type CardExecutionSelectors,
+} from "@/lib/card-color-media"
+import {
   collectExtraProductImageUrls,
   mergeUniqueExtraUrls,
+  normalizeImageEntryUrl,
 } from "@/lib/product-images"
 
 type Product = {
@@ -35,8 +43,8 @@ type Product = {
     prices?: Array<{ amount?: number }>
   }>
   product_classification?: { product_type?: string }
-  /** UI-only: merged gallery URLs from display_group members (listing). */
-  display_group_extra_image_urls?: string[]
+  /** UI-only: per-member color variants from display_group (listing). */
+  display_group_color_variants?: CardColorVariant[]
 }
 
 const BADGE_LABELS: Record<string, string> = {
@@ -45,9 +53,16 @@ const BADGE_LABELS: Record<string, string> = {
 
 function cardThumbnailSrc(product: Product): string | null {
   const t = product.thumbnail
-  if (typeof t !== "string") return null
-  const s = t.trim()
-  return s.length > 0 ? s : null
+  if (typeof t === "string") {
+    const s = t.trim()
+    if (s.length > 0) return s
+  }
+  const images = product.images
+  if (Array.isArray(images) && images.length > 0) {
+    const u = normalizeImageEntryUrl(images[0])
+    if (u) return u
+  }
+  return null
 }
 
 export function ProductCard({
@@ -81,28 +96,84 @@ export function ProductCard({
   const productHref = `/product/${product.id}`
   const thumbSrc = cardThumbnailSrc(product)
   const mainSrcForCard = thumbSrc ?? ""
-  const groupExtras = Array.isArray(product.display_group_extra_image_urls)
-    ? product.display_group_extra_image_urls
-    : []
-  const extraSrcs = mergeUniqueExtraUrls(mainSrcForCard, [
-    collectExtraProductImageUrls(
-      product as Record<string, unknown>,
-      mainSrcForCard
-    ),
-    groupExtras,
-  ])
+
+  const displayGroupVariants = Array.isArray(product.display_group_color_variants)
+    ? product.display_group_color_variants
+    : undefined
+
+  const executionSelectors: CardExecutionSelectors =
+    displayGroupVariants && displayGroupVariants.length > 0
+      ? isUpholsteredProduct(product as Record<string, unknown>)
+        ? {
+            upholstery: displayGroupVariants,
+            confidence: "heuristic",
+          }
+        : {
+            finish: displayGroupVariants,
+            finishLabel: finishLabelForProduct(
+              product as Record<string, unknown>
+            ),
+            confidence: "heuristic",
+          }
+      : buildIntraProductExecutionSelectors(
+          product as Record<string, unknown>,
+          mainSrcForCard
+        )
+
+  const headboardVariants = executionSelectors.headboard
+  const upholsteryVariants = executionSelectors.upholstery
+  const woodVariants = executionSelectors.wood
+  const finishVariants = executionSelectors.finish
+  const finishLabel = executionSelectors.finishLabel ?? "Цвет"
+
+  const activeHeadboard = headboardVariants?.[0]
+  const activeUpholstery = upholsteryVariants?.[0]
+  const activeWood = woodVariants?.[0]
+  const activeFinish = finishVariants?.[0]
+
+  const mainSrc =
+    activeHeadboard?.mainSrc ??
+    activeUpholstery?.mainSrc ??
+    activeWood?.mainSrc ??
+    activeFinish?.mainSrc ??
+    mainSrcForCard
+  const extraSrcs =
+    activeHeadboard != null
+      ? activeHeadboard.extraSrcs
+      : activeUpholstery != null
+        ? activeUpholstery.extraSrcs
+        : activeWood != null
+          ? activeWood.extraSrcs
+          : activeFinish != null
+            ? activeFinish.extraSrcs
+            : mergeUniqueExtraUrls(mainSrcForCard, [
+                collectExtraProductImageUrls(
+                  product as Record<string, unknown>,
+                  mainSrcForCard
+                ),
+              ])
 
   const mediaBlock = isOliver ? (
     <OliverCardMediaSwitcher
-      mainSrc={mainSrcForCard}
+      mainSrc={mainSrc}
       extraSrcs={extraSrcs}
+      headboardVariants={headboardVariants}
+      upholsteryVariants={upholsteryVariants}
+      woodVariants={woodVariants}
+      finishVariants={finishVariants}
+      finishLabel={finishLabel}
       href={productHref}
       title={product.title}
     />
   ) : (
     <ProductCardMediaSwitcher
-      mainSrc={mainSrcForCard}
+      mainSrc={mainSrc}
       extraSrcs={extraSrcs}
+      headboardVariants={headboardVariants}
+      upholsteryVariants={upholsteryVariants}
+      woodVariants={woodVariants}
+      finishVariants={finishVariants}
+      finishLabel={finishLabel}
       href={productHref}
       alt={product.title}
     />

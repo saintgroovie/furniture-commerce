@@ -1,8 +1,9 @@
 "use client"
 
 import type { MouseEvent } from "react"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useVerifiedStripExtras } from "@/components/use-verified-strip-extras"
+import { buildGalleryStripUrls } from "@/lib/product-images"
 
 type Props = {
   mainSrc: string
@@ -18,26 +19,36 @@ function OliverPdpHeroAbsent({ className }: { className: string }) {
   )
 }
 
-/** Oliver PDP: hero from `mainSrc` only; extras optional, preload before swap. */
+/** Oliver PDP: hero from `mainSrc`; strip includes main + extras, preload before swap. */
 export function OliverPdpMediaSwitcher({ mainSrc, extraSrcs, title }: Props) {
   const mainTrimmed = mainSrc.trim()
   const [displayHeroSrc, setDisplayHeroSrc] = useState(mainTrimmed)
   const [heroFailed, setHeroFailed] = useState(false)
-  const [activeExtraUrl, setActiveExtraUrl] = useState<string | null>(null)
+  const [activeGalleryUrl, setActiveGalleryUrl] = useState<string | null>(null)
   const [failedExtras, setFailedExtras] = useState<Set<string>>(() => new Set())
   const [pendingPreloadUrl, setPendingPreloadUrl] = useState<string | null>(null)
   const pendingRef = useRef<string | null>(null)
 
+  const galleryStripCandidates = useMemo(
+    () => buildGalleryStripUrls(mainTrimmed, extraSrcs),
+    [mainTrimmed, extraSrcs]
+  )
+
+  const stripKey = useMemo(
+    () => galleryStripCandidates.join("\u0000"),
+    [galleryStripCandidates]
+  )
+
   useEffect(() => {
     setDisplayHeroSrc(mainTrimmed)
     setHeroFailed(false)
-    setActiveExtraUrl(null)
+    setActiveGalleryUrl(null)
     setFailedExtras(new Set())
     pendingRef.current = null
     setPendingPreloadUrl(null)
-  }, [mainTrimmed])
+  }, [mainTrimmed, stripKey])
 
-  const visibleStrip = useVerifiedStripExtras(extraSrcs, failedExtras)
+  const visibleStrip = useVerifiedStripExtras(galleryStripCandidates, failedExtras)
 
   const showThumbRow = visibleStrip.length > 0
 
@@ -47,19 +58,23 @@ export function OliverPdpMediaSwitcher({ mainSrc, extraSrcs, title }: Props) {
       return
     }
     setDisplayHeroSrc(mainTrimmed)
-    setActiveExtraUrl(null)
+    setActiveGalleryUrl(null)
+    setHeroFailed(false)
   }, [displayHeroSrc, mainTrimmed])
 
   const onThumbPick = useCallback(
-    (url: string) => (e: MouseEvent<HTMLButtonElement>) => {
+    (url: string, isMain: boolean) => (e: MouseEvent<HTMLButtonElement>) => {
       e.preventDefault()
       e.stopPropagation()
-      if (url === displayHeroSrc && activeExtraUrl === url) return
+      if (isMain && activeGalleryUrl === null && displayHeroSrc === mainTrimmed) {
+        return
+      }
+      if (!isMain && activeGalleryUrl === url) return
       if (pendingRef.current === url) return
       pendingRef.current = url
       setPendingPreloadUrl(url)
     },
-    [displayHeroSrc, activeExtraUrl]
+    [activeGalleryUrl, displayHeroSrc, mainTrimmed]
   )
 
   const onPreloadLoad = useCallback(() => {
@@ -67,10 +82,10 @@ export function OliverPdpMediaSwitcher({ mainSrc, extraSrcs, title }: Props) {
     if (!u) return
     setDisplayHeroSrc(u)
     setHeroFailed(false)
-    setActiveExtraUrl(u)
+    setActiveGalleryUrl(u === mainTrimmed ? null : u)
     pendingRef.current = null
     setPendingPreloadUrl(null)
-  }, [])
+  }, [mainTrimmed])
 
   const onPreloadError = useCallback(() => {
     const u = pendingRef.current
@@ -109,9 +124,12 @@ export function OliverPdpMediaSwitcher({ mainSrc, extraSrcs, title }: Props) {
         />
       )}
       {showThumbRow && (
-        <div className="product-pdp-media-thumbs" role="toolbar" aria-label="Дополнительные фото">
+        <div className="product-pdp-media-thumbs" role="toolbar" aria-label="Фото товара">
           {visibleStrip.map((url) => {
-            const isActive = activeExtraUrl === url
+            const isMain = url === mainTrimmed
+            const isActive = isMain
+              ? activeGalleryUrl === null && displayHeroSrc === mainTrimmed
+              : activeGalleryUrl === url
             const isBusy = pendingPreloadUrl === url
             return (
               <button
@@ -121,8 +139,8 @@ export function OliverPdpMediaSwitcher({ mainSrc, extraSrcs, title }: Props) {
                 aria-pressed={isActive}
                 aria-busy={isBusy}
                 disabled={isBusy}
-                onClick={onThumbPick(url)}
-                title="Показать фото"
+                onClick={onThumbPick(url, isMain)}
+                title={isMain ? "Основное фото" : "Показать фото"}
               >
                 <img
                   src={url}

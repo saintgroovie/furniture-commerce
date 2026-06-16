@@ -1,8 +1,8 @@
 import { MedusaService } from "@medusajs/framework/utils"
-import { ProductType } from "./models/product-type"
+import { ProductClassification } from "./models/product-type"
 
 class ProductExtensionModuleService extends MedusaService({
-  ProductType,
+  ProductClassification,
 }) {}
 
 export default ProductExtensionModuleService

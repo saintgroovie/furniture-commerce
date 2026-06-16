@@ -4,7 +4,7 @@
  *
  * Catalog cards: hero uses `product.thumbnail` only; extras use
  * {@link collectExtraProductImageUrls}, {@link collectDisplayGroupExtraImageUrls}, and
- * {@link mergeUniqueExtraUrls} (listing attaches `display_group_extra_image_urls` in `display-group.ts`).
+ * {@link mergeUniqueExtraUrls} (listing attaches `display_group_color_variants` in `display-group.ts`).
  */
 
 /**
@@ -111,6 +111,23 @@ export function mergeUniqueExtraUrls(mainSrc: string, segments: string[][]): str
       if (mainNorm.length > 0 && s === mainNorm) continue
       if (!out.includes(s)) out.push(s)
     }
+  }
+  return out
+}
+
+/**
+ * Gallery thumb strip: `mainSrc` first, then extras; trims and dedupes.
+ * Used by catalog cards and PDP so hero is always a selectable thumb.
+ */
+export function buildGalleryStripUrls(mainSrc: string, extraSrcs: string[]): string[] {
+  const mainNorm = typeof mainSrc === "string" ? mainSrc.trim() : ""
+  const out: string[] = []
+  if (mainNorm) out.push(mainNorm)
+  for (const u of extraSrcs) {
+    if (typeof u !== "string") continue
+    const s = u.trim()
+    if (!s || s === mainNorm || out.includes(s)) continue
+    out.push(s)
   }
   return out
 }

@@ -1,7 +1,7 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 
 /**
- * Детали продукта по id. Возвращает продукт с вариантами, изображениями и productType для storefront.
+ * Детали продукта по id. Возвращает продукт с вариантами, изображениями и product_classification для storefront.
  */
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const id = req.params.id as string
@@ -14,7 +14,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   }
   const { data } = await query.graph({
     entity: "product",
-    fields: ["*", "variants.*", "images.*", "productType.*"],
+    fields: ["*", "variants.*", "variants.price_set.prices.*", "images.*", "product_classification.*"],
     filters: { id },
   })
   const product = Array.isArray(data) ? data[0] : undefined
@@ -22,5 +22,16 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     res.status(404).json({ message: "Product not found" })
     return
   }
-  res.json({ product })
+  const raw = product as Record<string, unknown> & {
+    variants?: Array<Record<string, unknown> & { price_set?: { prices?: unknown[] } }>
+  }
+  if (Array.isArray(raw.variants)) {
+    raw.variants = raw.variants.map((variant) => {
+      if (!variant.prices && variant.price_set?.prices) {
+        return { ...variant, prices: variant.price_set.prices }
+      }
+      return variant
+    })
+  }
+  res.json({ product: raw })
 }

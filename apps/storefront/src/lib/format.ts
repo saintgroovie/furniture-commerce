@@ -8,7 +8,9 @@ export function getPrice(product: Record<string, unknown>): number | null {
   if (!v) return null
   const cp = v.calculated_price as Record<string, unknown> | undefined
   if (cp?.calculated_amount != null) return Number(cp.calculated_amount) / 100
-  const prices = v.prices as Array<Record<string, unknown>> | undefined
+  const prices =
+    (v.prices as Array<Record<string, unknown>> | undefined) ??
+    (v.price_set as { prices?: Array<Record<string, unknown>> } | undefined)?.prices
   if (prices?.length && prices[0].amount != null) return Number(prices[0].amount) / 100
   return null
 }
