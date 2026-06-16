@@ -3,6 +3,10 @@ import type { Metadata } from "next"
 import { getSiteUrl } from "@/lib/api/base"
 import { getProduct, getProducts, NOT_FOUND } from "@/lib/api/products"
 import { formatRub, getPrice } from "@/lib/format"
+import {
+  formatRequestQuotePriceLabel,
+  isRequestQuoteProduct,
+} from "@/lib/request-quote"
 import { ProductCta } from "@/components/product-cta"
 import { OliverPdpMediaSwitcher } from "@/components/oliver-pdp-media-switcher"
 import { ProductPdpMediaSwitcher } from "@/components/product-pdp-media-switcher"
@@ -104,6 +108,9 @@ export default async function ProductPage({ params }: { params: { id: string } }
   const handle = String(product.handle ?? "")
   const isOliver = handle.startsWith("ol-")
   const price = getPrice(product)
+  const requestQuotePrice = isRequestQuoteProduct(product)
+    ? formatRequestQuotePriceLabel(product)
+    : null
   const productType = (product.product_classification as Record<string, string> | undefined)?.product_type
   const badgeLabel = productType ? BADGE_LABELS[productType] : undefined
 
@@ -192,7 +199,11 @@ export default async function ProductPage({ params }: { params: { id: string } }
               </>
             )
           })()}
-          {price != null && <p className="price product-detail-price">{formatRub(price)}</p>}
+          {requestQuotePrice != null ? (
+            <p className="price product-detail-price">{requestQuotePrice}</p>
+          ) : price != null ? (
+            <p className="price product-detail-price">{formatRub(price)}</p>
+          ) : null}
           <ProductCta product={product} />
           {displayGroupMembers.length > 0 && (
             <section className="pdp-related-sizes" aria-labelledby="pdp-sizes-heading">

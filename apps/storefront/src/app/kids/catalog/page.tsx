@@ -1,6 +1,7 @@
 import Link from "next/link"
 import type { Metadata } from "next"
 import { ProductCard } from "@/components/product-card"
+import { getProducts } from "@/lib/api/products"
 import { resolveKidsProducts } from "@/lib/kids"
 import { groupProductsForDisplay } from "@/lib/display-group"
 import { isProductInActiveCatalogScope } from "@/lib/catalog-scope"
@@ -20,7 +21,9 @@ export default async function KidsCatalogPage() {
   let products: Array<Record<string, unknown>> = []
 
   try {
-    const kidsData = await resolveKidsProducts()
+    const storeData = await getProducts()
+    const storeProducts = (storeData.products ?? []) as Array<Record<string, unknown>>
+    const kidsData = await resolveKidsProducts({ storeProducts })
     products = kidsData.products.filter((p) =>
       isProductInActiveCatalogScope(p)
     )

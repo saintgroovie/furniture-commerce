@@ -1,6 +1,11 @@
 export function getBaseUrl(): string {
   if (typeof window === "undefined" && process.env.MEDUSA_BACKEND_URL) {
-    return process.env.MEDUSA_BACKEND_URL
+    const serverUrl = process.env.MEDUSA_BACKEND_URL
+    // Docker SSR: compose sets medusa:9000 but backend may run on host (host.docker.internal).
+    if (serverUrl.includes("://medusa:")) {
+      return "http://host.docker.internal:9000"
+    }
+    return serverUrl
   }
   return process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? ""
 }
@@ -21,5 +26,5 @@ export function medusaFetch(url: string, init?: RequestInit): Promise<Response> 
   if (key) {
     headers.set("x-publishable-api-key", key)
   }
-  return fetch(url, { ...init, headers })
+  return fetch(url, { ...init, headers, cache: "no-store" })
 }

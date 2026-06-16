@@ -5,6 +5,10 @@ import { useState } from "react"
 import { ensureCart } from "@/lib/cart/session"
 import { addLineItem } from "@/lib/api/cart"
 import { userFacingError } from "@/lib/user-facing-error"
+import {
+  isRequestQuoteProduct,
+  REQUEST_QUOTE_MANAGER_NOTE,
+} from "@/lib/request-quote"
 
 type Props = { product: Record<string, unknown> }
 
@@ -50,6 +54,24 @@ export function ProductCta({ product }: Props) {
         <Link href={productId ? `/bespoke/request?product_id=${productId}` : "/bespoke/request"} className="btn btn-primary">
           Получить расчёт
         </Link>
+      </div>
+    )
+  }
+
+  if (isRequestQuoteProduct(product)) {
+    return (
+      <div>
+        <div className="cta-group">
+          <Link
+            href={productId ? `/bespoke/request?product_id=${productId}` : "/bespoke/request"}
+            className="btn btn-primary"
+          >
+            Оставить заявку
+          </Link>
+        </div>
+        <p className="info-text" style={{ marginTop: "0.75rem" }}>
+          {REQUEST_QUOTE_MANAGER_NOTE}
+        </p>
       </div>
     )
   }
