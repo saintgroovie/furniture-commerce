@@ -61,6 +61,11 @@ import {
   saveOrphanP0OverlayState,
 } from "./orphan-p0-overlay-persistence"
 import { OrphanP0OverlayPanel, downloadOrphanP0OverlayExport } from "./OrphanP0OverlayPanel"
+import { OrphanP0OverlayMissingPanel } from "./OrphanP0OverlayMissingPanel"
+import {
+  isOrphanP0OverlayMissingArtifact,
+  type OrphanP0OverlayMissingArtifact,
+} from "./orphan-p0-overlay-missing-types"
 
 const V2_API_BASE = "/qa/legacy-media-assignment-board-v2/api"
 const ORPHAN_P0_OVERLAY_ID = "orphan-p0-top50"
@@ -130,8 +135,11 @@ export function LegacyMediaBoardV2Client({
 
   // --- Orphan P0 overlay (read-only routing; isolated localStorage) ---
   const [overlayData, setOverlayData] = useState<OrphanP0OverlayData | null>(null)
-  const [overlayLoadStatus, setOverlayLoadStatus] = useState<"idle" | "loading" | "loaded" | "error">("idle")
+  const [overlayLoadStatus, setOverlayLoadStatus] = useState<
+    "idle" | "loading" | "loaded" | "missing" | "error"
+  >("idle")
   const [overlayError, setOverlayError] = useState<string | null>(null)
+  const [overlayMissing, setOverlayMissing] = useState<OrphanP0OverlayMissingArtifact | null>(null)
   const [overlayState, setOverlayState] = useState(makeEmptyOrphanP0OverlayState)
   const [overlayFilter, setOverlayFilter] = useState("")
   const [focusedOverlayPackIndex, setFocusedOverlayPackIndex] = useState<number | null>(null)
@@ -173,13 +181,20 @@ export function LegacyMediaBoardV2Client({
     let cancelled = false
     setOverlayLoadStatus("loading")
     setOverlayError(null)
+    setOverlayMissing(null)
     void (async () => {
       try {
         const res = await fetch(`${V2_API_BASE}/orphan-p0-overlay`)
-        if (!res.ok) throw new Error(`orphan-p0-overlay: ${res.status} ${res.statusText}`)
-        const json = (await res.json()) as OrphanP0OverlayData
+        const json: unknown = await res.json()
         if (cancelled) return
-        setOverlayData(json)
+        if (isOrphanP0OverlayMissingArtifact(json)) {
+          setOverlayMissing(json)
+          setOverlayData(null)
+          setOverlayLoadStatus("missing")
+          return
+        }
+        if (!res.ok) throw new Error(`orphan-p0-overlay: ${res.status} ${res.statusText}`)
+        setOverlayData(json as OrphanP0OverlayData)
         setOverlayLoadStatus("loaded")
       } catch (err) {
         if (cancelled) return
@@ -715,6 +730,12 @@ export function LegacyMediaBoardV2Client({
       {status === "loaded" && (
         <div style={{ ...styles.statusBar, ...styles.successBar }}>{statusLine}</div>
       )}
+      {isOrphanP0Overlay && overlayLoadStatus === "missing" && (
+        <div style={{ ...styles.statusBar, ...styles.errorBar }}>
+          <strong>Orphan P0 overlay artifact missing.</strong> Run the build step below. No routing is
+          available.
+        </div>
+      )}
       {isOrphanP0Overlay && overlayLoadStatus === "error" && (
         <div style={{ ...styles.statusBar, ...styles.errorBar }}>
           <strong>Orphan P0 overlay failed:</strong> {overlayError}
@@ -735,6 +756,9 @@ export function LegacyMediaBoardV2Client({
 
       {/* 3-column grid */}
       <div style={gridStyle}>
+        {isOrphanP0Overlay && overlayMissing && overlayLoadStatus === "missing" && (
+          <OrphanP0OverlayMissingPanel missing={overlayMissing} />
+        )}
         {isOrphanP0Overlay && overlayData && overlayLoadStatus === "loaded" && (
           <OrphanP0OverlayPanel
             data={overlayData}

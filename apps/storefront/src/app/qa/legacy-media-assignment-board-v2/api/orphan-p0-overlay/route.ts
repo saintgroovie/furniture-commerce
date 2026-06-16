@@ -7,6 +7,29 @@ import {
   ORPHAN_P0_OVERLAY_DATA_REL,
 } from "../_lib/furniture-repo-data-root"
 
+const REBUILD_COMMAND =
+  "node tmp/orphan-p0-refresh-2026-06-11/operator-decisions-top-50/assignment-board-candidate-pack/v2-overlay/build-orphan-p0-v2-overlay-data.mjs"
+
+const SOURCE_CHAIN = [
+  "tmp/orphan-p0-refresh-2026-06-11/operator-decisions-top-50/assignment-board-candidate-pack/catalog-handle-mapping/sku-to-catalog-handle-mapping.json",
+  "tmp/orphan-p0-refresh-2026-06-11/operator-decisions-top-50/assignment-board-candidate-pack/catalog-handle-mapping/unresolved-enrichment/unresolved-catalog-handle-enrichment.json",
+]
+
+function missingArtifactPayload(repoRoot: string) {
+  return {
+    available: false as const,
+    error: "missing_overlay_artifact" as const,
+    repo_root: repoRoot,
+    overlay_data_path: ORPHAN_P0_OVERLAY_DATA_REL,
+    expected_path: path.join(repoRoot, ORPHAN_P0_OVERLAY_DATA_REL),
+    do_not_auto_apply: true as const,
+    rebuild_instructions: REBUILD_COMMAND,
+    source_chain: SOURCE_CHAIN,
+    message:
+      "Run the Orphan P0 overlay build step. No routing is available until the artifact exists.",
+  }
+}
+
 export function GET() {
   const resolution = getFurnitureRepoDataResolution()
   const { repoRoot } = resolution
@@ -16,16 +39,7 @@ export function GET() {
 
   const abs = path.join(repoRoot, ORPHAN_P0_OVERLAY_DATA_REL)
   if (!fs.existsSync(abs)) {
-    return NextResponse.json(
-      {
-        error: "missing_overlay_file",
-        missing_file: ORPHAN_P0_OVERLAY_DATA_REL,
-        repo_root: repoRoot,
-        overlay_data_path: ORPHAN_P0_OVERLAY_DATA_REL,
-        hint: "Run build-orphan-p0-v2-overlay-data.mjs in tmp first.",
-      },
-      { status: 500 }
-    )
+    return NextResponse.json(missingArtifactPayload(repoRoot), { status: 404 })
   }
 
   let raw: string
@@ -61,6 +75,7 @@ export function GET() {
   return NextResponse.json(
     {
       ...data,
+      available: true,
       repo_root: repoRoot,
       overlay_data_path: ORPHAN_P0_OVERLAY_DATA_REL,
     },
