@@ -1,0 +1,72 @@
+{
+  "generated_at": "2026-06-18T20:47:17.241Z",
+  "source": "data/raw/front/front-manifest.json",
+  "collection": "oxford",
+  "status": "needs_manual_attribution",
+  "count": 7,
+  "items": [
+    {
+      "asset_id": "5a6b0b91dd03",
+      "filename": "Oxford 1.jpg",
+      "source_ref": "/WOODRIGHT/Контент /Коллекции /Oxford /Oxford 1.jpg",
+      "source_type": "collection_photos",
+      "likely_asset_kind": "unclassified",
+      "operator_action": "map_photo_to_workbook_sku",
+      "suggested_workbook_lookup": "oxford rows in parsed-sheets.json"
+    },
+    {
+      "asset_id": "0a77fd2d00cd",
+      "filename": "Oxford 2.jpg",
+      "source_ref": "/WOODRIGHT/Контент /Коллекции /Oxford /Oxford 2.jpg",
+      "source_type": "collection_photos",
+      "likely_asset_kind": "unclassified",
+      "operator_action": "map_photo_to_workbook_sku",
+      "suggested_workbook_lookup": "oxford rows in parsed-sheets.json"
+    },
+    {
+      "asset_id": "80de05c6189a",
+      "filename": "Oxford 3.jpg",
+      "source_ref": "/WOODRIGHT/Контент /Коллекции /Oxford /Oxford 3.jpg",
+      "source_type": "collection_photos",
+      "likely_asset_kind": "unclassified",
+      "operator_action": "map_photo_to_workbook_sku",
+      "suggested_workbook_lookup": "oxford rows in parsed-sheets.json"
+    },
+    {
+      "asset_id": "4eca26d85046",
+      "filename": "Oxford 4.jpg",
+      "source_ref": "/WOODRIGHT/Контент /Коллекции /Oxford /Oxford 4.jpg",
+      "source_type": "collection_photos",
+      "likely_asset_kind": "unclassified",
+      "operator_action": "map_photo_to_workbook_sku",
+      "suggested_workbook_lookup": "oxford rows in parsed-sheets.json"
+    },
+    {
+      "asset_id": "e20cdc49b3a8",
+      "filename": "Oxford 5.jpg",
+      "source_ref": "/WOODRIGHT/Контент /Коллекции /Oxford /Oxford 5.jpg",
+      "source_type": "collection_photos",
+      "likely_asset_kind": "unclassified",
+      "operator_action": "map_photo_to_workbook_sku",
+      "suggested_workbook_lookup": "oxford rows in parsed-sheets.json"
+    },
+    {
+      "asset_id": "de5b9af17634",
+      "filename": "Oxford 6.jpg",
+      "source_ref": "/WOODRIGHT/Контент /Коллекции /Oxford /Oxford 6.jpg",
+      "source_type": "collection_photos",
+      "likely_asset_kind": "unclassified",
+      "operator_action": "map_photo_to_workbook_sku",
+      "suggested_workbook_lookup": "oxford rows in parsed-sheets.json"
+    },
+    {
+      "asset_id": "f42844324ef7",
+      "filename": "Oxford 7.jpg",
+      "source_ref": "/WOODRIGHT/Контент /Коллекции /Oxford /Oxford 7.jpg",
+      "source_type": "collection_photos",
+      "likely_asset_kind": "unclassified",
+      "operator_action": "map_photo_to_workbook_sku",
+      "suggested_workbook_lookup": "oxford rows in parsed-sheets.json"
+    }
+  ]
+}

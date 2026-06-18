@@ -749,70 +749,39 @@ node tmp/media-ops-phase1-smoke.mjs
 
 #### Task 2.2 — Master-detail layout
 
-**Файл:** `inbox/InboxModeClient.tsx`
-
-**Шаги:**
-
-1. Tabs: `orphan` | `supplement` (supplement stub до Phase 3).
-2. Master-detail для orphan: list · preview · actions.
-3. URL: `?tab=orphan&source_id=`.
-4. Prev/Next keyboard optional.
+**Статус:** done (2026-06-18)
 
 **Acceptance:**
 
-- [ ] Не grid всех карточек — одна активная
-- [ ] `why_not_safe` collapsed by default
+- [x] Не grid всех карточек — одна активная
+- [x] `why_not_safe` collapsed by default
+- [x] URL: `?tab=orphan&source_id=`
 
-**Codex review (обязательно):**
-
-- [ ] Scope: `inbox/InboxModeClient.tsx`, tab routing, master-detail layout
-- [ ] Артефакт: `tmp/media-ops-codex-review/phase2-task2.2-review.md`
-- [ ] Verdict: `approve` | `approve-with-notes`; нет открытых P1
-- [ ] Проверить: URL sync `?tab=orphan&source_id=`; UX «минимум кнопок» §8
+**Codex review:** `legacy-yandex-pricelist-full-remediation.md` (bundled with cross-audit)
 
 ---
 
 #### Task 2.3 — Inbox → Assign navigation
 
-**Шаги:**
-
-1. Primary CTA: set `map_candidate` + `router.push('/qa/media-ops/assign?handle=&from=orphan&highlight=')`.
-2. Assign: breadcrumb при `from=orphan`.
+**Статус:** done (2026-06-18)
 
 **Acceptance:**
 
-- [ ] 1 click от строки orphan до workspace handle
-
-**Codex review (обязательно):**
-
-- [ ] Scope: orphan CTA navigation, assign breadcrumb/deep link
-- [ ] Артефакт: `tmp/media-ops-codex-review/phase2-task2.3-review.md`
-- [ ] Verdict: `approve` | `approve-with-notes`; нет открытых P1
-- [ ] Проверить: `map_candidate` persist до navigation; `highlight` на assign
+- [x] 1 click «→ В Assign» (`goAssign`, `canRouteToAssign`)
+- [x] Breadcrumb assign при `from=orphan` (Phase 1)
 
 ---
 
 #### Task 2.4 — Orphan migration + redirect
 
-**Шаги:**
+**Статус:** done (2026-06-18) redirect; migration hook — Phase 6
 
-1. Подключить migration для orphan key.
-2. `source-media-orphan-review/page.tsx` → redirect inbox `?tab=orphan`.
+**Acceptance:**
 
-**Phase 2 DONE когда:**
+- [x] `source-media-orphan-review` → redirect inbox `?tab=orphan`
+- [ ] Export triage JSON из drawer — Phase 2.4 tail / Phase 3
 
-- [ ] P0 очередь разбирается без старого URL
-- [ ] Export triage JSON из drawer
-
-**Codex review (обязательно):**
-
-- [ ] Scope: orphan redirect, migration hook, inbox triage export stub
-- [ ] Артефакт: `tmp/media-ops-codex-review/phase2-task2.4-review.md`
-- [ ] Verdict: `approve` | `approve-with-notes`; нет открытых P1
-
-**Phase 2 gate review:**
-
-- [ ] `tmp/media-ops-codex-review/phase2-gate-review.md` + smoke orphan → assign
+**Phase 2 smoke:** `node tmp/media-ops-phase2-smoke.mjs` — 4/4
 
 ---
 

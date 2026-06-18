@@ -66,6 +66,7 @@ import {
   isOrphanP0OverlayMissingArtifact,
   type OrphanP0OverlayMissingArtifact,
 } from "./orphan-p0-overlay-missing-types"
+import type { V2ShellBridgeSnapshot } from "./legacy-board-v2-shell-bridge"
 
 const V2_API_BASE = "/qa/legacy-media-assignment-board-v2/api"
 const ORPHAN_P0_OVERLAY_ID = "orphan-p0-top50"
@@ -107,9 +108,21 @@ function makeEmptyProductState(handle: string, variantKey: string): V2ProductSta
 export function LegacyMediaBoardV2Client({
   initialHandle = null,
   overlayMode = null,
+  embeddedInShell = false,
+  highlightInventoryId = null,
+  navFrom = null,
+  legacyQuery = null,
+  onShellBridgeSnapshot = null,
 }: {
   initialHandle?: string | null
   overlayMode?: string | null
+  /** Media Ops shell: hide duplicate title/badge; fit parent flex column. */
+  embeddedInShell?: boolean
+  highlightInventoryId?: string | null
+  navFrom?: string | null
+  legacyQuery?: string | null
+  /** Called when embedded; media-ops adapter builds export bridge externally. */
+  onShellBridgeSnapshot?: ((snapshot: V2ShellBridgeSnapshot | null) => void) | null
 }) {
   const isOrphanP0Overlay = overlayMode === ORPHAN_P0_OVERLAY_ID
   // --- Data loading state ---
@@ -617,6 +630,52 @@ export function LegacyMediaBoardV2Client({
     hasHydratedRef.current = false
   }, [])
 
+  const shellBridgeSnapshot = useMemo((): V2ShellBridgeSnapshot | null => {
+    if (!embeddedInShell || !onShellBridgeSnapshot) return null
+    return {
+      boardStatus: status === "error" ? "error" : status,
+      savedAt,
+      productStates,
+      invById,
+      products,
+      selectedHandle,
+      onReset: handleReset,
+    }
+  }, [
+    embeddedInShell,
+    onShellBridgeSnapshot,
+    status,
+    savedAt,
+    productStates,
+    invById,
+    products,
+    selectedHandle,
+    handleReset,
+  ])
+
+  useEffect(() => {
+    if (!embeddedInShell || !onShellBridgeSnapshot) return
+    onShellBridgeSnapshot(shellBridgeSnapshot)
+    return () => {
+      onShellBridgeSnapshot(null)
+    }
+  }, [embeddedInShell, onShellBridgeSnapshot, shellBridgeSnapshot])
+
+  useEffect(() => {
+    if (!highlightInventoryId || status !== "loaded") return
+    const id = highlightInventoryId
+    const timer = window.setTimeout(() => {
+      const escaped =
+        typeof CSS !== "undefined" && "escape" in CSS ? CSS.escape(id) : id.replace(/"/g, '\\"')
+      const el = document.querySelector(`[data-v2-pool-inventory-id="${escaped}"]`)
+      if (!el) return
+      el.scrollIntoView({ block: "center", behavior: "smooth" })
+      el.setAttribute("data-v2-highlight-pulse", "true")
+      window.setTimeout(() => el.removeAttribute("data-v2-highlight-pulse"), 2000)
+    }, 300)
+    return () => window.clearTimeout(timer)
+  }, [highlightInventoryId, status, selectedHandle])
+
   const overlayCatalogHandles = useMemo(() => {
     if (!overlayData) return new Set<string>()
     return new Set(
@@ -685,32 +744,40 @@ export function LegacyMediaBoardV2Client({
     ? { ...styles.grid, gridTemplateColumns: "360px 200px 1fr 420px" as const }
     : styles.grid
 
+  const rootStyle = embeddedInShell
+    ? { ...styles.root, ...styles.rootEmbedded }
+    : styles.root
+
   return (
-    <div style={styles.root}>
-      {/* Top bar */}
-      <header style={styles.header}>
-        <h1 style={styles.title}>Legacy Media Assignment Board v2</h1>
-        <span style={styles.buildBadge} data-v2-board-build-visible title={V2_BOARD_BUILD}>
-          {V2_BOARD_BUILD_LABEL}
-        </span>
-        <span style={styles.badge}>dev · QA only · no Medusa writes</span>
-        {isOrphanP0Overlay && (
-          <span
-            style={{
-              fontSize: "11px",
-              fontWeight: 700,
-              background: "#fff3cd",
-              border: "1px solid #e6c200",
-              borderRadius: "4px",
-              padding: "2px 8px",
-              color: "#5a4200",
-            }}
-          >
-            Orphan P0 overlay · do_not_auto_apply
+    <div
+      style={rootStyle}
+      data-v2-embedded-in-shell={embeddedInShell ? "true" : "false"}
+      data-v2-highlight-inventory-id={highlightInventoryId || undefined}
+    >
+      {embeddedInShell && navFrom === "orphan" ? (
+        <div style={styles.breadcrumb} data-media-ops-assign-breadcrumb>
+          <a href="/qa/media-ops/inbox?tab=orphan" style={styles.breadcrumbLink}>
+            Inbox
+          </a>
+          <span style={styles.breadcrumbSep}>›</span>
+          <span>{selectedHandle || initialHandle || "Assign"}</span>
+        </div>
+      ) : null}
+
+      {/* Top bar — standalone route only (shell provides product header) */}
+      {!embeddedInShell ? (
+        <header style={styles.header}>
+          <h1 style={styles.title}>Legacy Media Assignment Board v2</h1>
+          <span style={styles.buildBadge} data-v2-board-build-visible title={V2_BOARD_BUILD}>
+            {V2_BOARD_BUILD_LABEL}
           </span>
-        )}
-        {selectedHandle && <span style={styles.activeHandle}>{selectedHandle}</span>}
-      </header>
+          <span style={styles.badge}>dev · QA only · no Medusa writes</span>
+          {isOrphanP0Overlay && (
+            <span style={styles.overlayBadge}>Orphan P0 overlay · do_not_auto_apply</span>
+          )}
+          {selectedHandle && <span style={styles.activeHandle}>{selectedHandle}</span>}
+        </header>
+      ) : null}
 
       {/* Status bar */}
       {status === "loading" && (
@@ -728,7 +795,23 @@ export function LegacyMediaBoardV2Client({
         </div>
       )}
       {status === "loaded" && (
-        <div style={{ ...styles.statusBar, ...styles.successBar }}>{statusLine}</div>
+        <div style={{ ...styles.statusBar, ...styles.successBar }} data-v2-status-loaded>
+          {embeddedInShell ? (
+            <span style={styles.buildBadgeCompact} data-v2-board-build-visible title={V2_BOARD_BUILD}>
+              {V2_BOARD_BUILD_LABEL}
+            </span>
+          ) : null}
+          {embeddedInShell && legacyQuery === "v1-deprecated" ? (
+            <span style={styles.legacyNote}>v1 board deprecated — use Media Ops Assign</span>
+          ) : null}
+          {embeddedInShell && isOrphanP0Overlay ? (
+            <span style={styles.overlayBadge}>Orphan P0 overlay · do_not_auto_apply</span>
+          ) : null}
+          {embeddedInShell && selectedHandle ? (
+            <span style={styles.activeHandle}>{selectedHandle}</span>
+          ) : null}
+          <span style={{ flex: 1 }}>{statusLine}</span>
+        </div>
       )}
       {isOrphanP0Overlay && overlayLoadStatus === "missing" && (
         <div style={{ ...styles.statusBar, ...styles.errorBar }}>
@@ -743,7 +826,7 @@ export function LegacyMediaBoardV2Client({
       )}
 
       {/* Export / persistence toolbar */}
-      {!isOrphanP0Overlay && (
+      {!isOrphanP0Overlay && !embeddedInShell && (
         <ExportToolbar
           productStates={productStates}
           invById={invById}
@@ -751,6 +834,7 @@ export function LegacyMediaBoardV2Client({
           savedAt={savedAt}
           selectedHandle={selectedHandle}
           onReset={handleReset}
+          embeddedInShell={embeddedInShell}
         />
       )}
 
@@ -908,6 +992,57 @@ const styles = {
     color: "#1a1a1a",
     background: "#f8f8f8",
     overflow: "hidden",
+  },
+  rootEmbedded: {
+    height: "100%",
+    minHeight: 0,
+    flex: 1,
+  },
+  breadcrumb: {
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    padding: "6px 16px",
+    fontSize: "12px",
+    color: "#555",
+    background: "#fff",
+    borderBottom: "1px solid #e8e8e8",
+    flexShrink: 0,
+  },
+  breadcrumbLink: {
+    color: "#1a3a6e",
+    textDecoration: "none",
+    fontWeight: 600,
+  },
+  breadcrumbSep: {
+    color: "#aaa",
+  },
+  buildBadgeCompact: {
+    fontSize: "10px",
+    fontWeight: 700,
+    background: "#1a3a6e",
+    borderRadius: "4px",
+    padding: "2px 6px",
+    color: "#fff",
+    flexShrink: 0,
+  },
+  legacyNote: {
+    fontSize: "11px",
+    color: "#7a5a00",
+    background: "#fff8e6",
+    padding: "2px 8px",
+    borderRadius: "4px",
+    flexShrink: 0,
+  },
+  overlayBadge: {
+    fontSize: "11px",
+    fontWeight: 700,
+    background: "#fff3cd",
+    border: "1px solid #e6c200",
+    borderRadius: "4px",
+    padding: "2px 8px",
+    color: "#5a4200",
+    flexShrink: 0,
   },
   header: {
     display: "flex",

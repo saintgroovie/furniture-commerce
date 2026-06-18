@@ -297,6 +297,7 @@ export function MediaCardV2({
     return (
       <div
         data-v2-pool-card="true"
+        data-v2-pool-inventory-id={inv.id}
         data-v2-pool-preview-ok="false"
         draggable
         onDragStart={handleDragStart}
@@ -362,6 +363,7 @@ export function MediaCardV2({
   return (
     <div
       data-v2-pool-card="true"
+      data-v2-pool-inventory-id={inv.id}
       data-v2-pool-preview-ok={domPreviewOk ? "true" : "false"}
       draggable
       onDragStart={handleDragStart}

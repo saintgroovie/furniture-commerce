@@ -1,0 +1,307 @@
+{
+  "generated_at": "2026-05-27T00:19:18.056Z",
+  "legacy_urls_old_468": 468,
+  "legacy_urls_full_cache": 1285,
+  "reconciled_with_prior_reconciliation": 1285,
+  "delta_full_minus_stale": 817,
+  "newly_included_legacy_urls_count": 817,
+  "newly_included_provenance": {
+    "parent_cache": 817
+  },
+  "newly_included_classification_summary": {
+    "unmapped_orphan": 209,
+    "approved_existing_or_known": 81,
+    "needs_manual_mapping": 299,
+    "duplicate_near": 228
+  },
+  "newly_included_product_media_likely_count": 373,
+  "newly_included_sample": [
+    {
+      "url": "https://woodright.ru/images/detailed/12/WhatsApp_Image_2023-01-29_at_14.57.36__3_.jpeg",
+      "filename": "whatsapp_image_2023-01-29_at_14.57.36__3_.jpeg",
+      "sku_guess": null,
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "unmapped_orphan"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/8/rl-13-2-i1.jpg",
+      "filename": "rl-13-2-i1.jpg",
+      "sku_guess": "RL-13-2",
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "approved_existing_or_known"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/12/av-14-1-iso.jpg",
+      "filename": "av-14-1-iso.jpg",
+      "sku_guess": "AV-14-1",
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "needs_manual_mapping"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/12/Кровать-трансформер__LILY_060_01_vbdf-ev.JPG",
+      "filename": "кровать-трансформер__lily_060_01_vbdf-ev.jpg",
+      "sku_guess": null,
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "unmapped_orphan"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/12/brb-15-1-iso.jpg",
+      "filename": "brb-15-1-iso.jpg",
+      "sku_guess": null,
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "unmapped_orphan"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/12/av-15-1-iso.jpg",
+      "filename": "av-15-1-iso.jpg",
+      "sku_guess": "AV-15-1",
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "needs_manual_mapping"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/12/ol-84-2-i1_8fd3-al.jpg",
+      "filename": "ol-84-2-i1_8fd3-al.jpg",
+      "sku_guess": "OL-84-2",
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "duplicate_near"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/13/RO_WOODRIGHT_RL-14-1_2285591964247_1_1bim-p9.jpg",
+      "filename": "ro_woodright_rl-14-1_2285591964247_1_1bim-p9.jpg",
+      "sku_guess": null,
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "unmapped_orphan"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/13/rl-15-1-i1.jpg",
+      "filename": "rl-15-1-i1.jpg",
+      "sku_guess": "RL-15-1",
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "approved_existing_or_known"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/12/Кровать_детская.jpg",
+      "filename": "кровать_детская.jpg",
+      "sku_guess": null,
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "unmapped_orphan"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/13/rl-15-2-i1.jpg",
+      "filename": "rl-15-2-i1.jpg",
+      "sku_guess": "RL-15-2",
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "approved_existing_or_known"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/12/WhatsApp_Image_2024-03-03_at_11.54.09__2_.jpeg",
+      "filename": "whatsapp_image_2024-03-03_at_11.54.09__2_.jpeg",
+      "sku_guess": null,
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "unmapped_orphan"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/12/34r8eg61ltfq9vapcvf3dtmk19ayd31z.jpg",
+      "filename": "34r8eg61ltfq9vapcvf3dtmk19ayd31z.jpg",
+      "sku_guess": null,
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "unmapped_orphan"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/12/te-65-1-i1_ine8-7x.jpg",
+      "filename": "te-65-1-i1_ine8-7x.jpg",
+      "sku_guess": "TE-65-1",
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "needs_manual_mapping"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/13/1_2ado-87.jpg",
+      "filename": "1_2ado-87.jpg",
+      "sku_guess": null,
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "duplicate_near"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/13/rl-65-4-i2.jpg",
+      "filename": "rl-65-4-i2.jpg",
+      "sku_guess": "RL-65-4",
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "approved_existing_or_known"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/12/te-66-1-i1.jpg",
+      "filename": "te-66-1-i1.jpg",
+      "sku_guess": "TE-66-1",
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "approved_existing_or_known"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/13/rl-06-1-iso.jpg",
+      "filename": "rl-06-1-iso.jpg",
+      "sku_guess": "RL-06-1",
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "needs_manual_mapping"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/12/av-61-1-i1_h58h-bt_lzrk-9o.png",
+      "filename": "av-61-1-i1_h58h-bt_lzrk-9o.png",
+      "sku_guess": "AV-61-1",
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "needs_manual_mapping"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/12/b96ed4844428040cfe7f7de3429ad295.jpg",
+      "filename": "b96ed4844428040cfe7f7de3429ad295.jpg",
+      "sku_guess": null,
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "unmapped_orphan"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/12/av-61-1-i2_jcxt-wl.png",
+      "filename": "av-61-1-i2_jcxt-wl.png",
+      "sku_guess": "AV-61-1",
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "needs_manual_mapping"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/12/tw-62-1-i1.tif_7f2l-s0.png",
+      "filename": "tw-62-1-i1.tif_7f2l-s0.png",
+      "sku_guess": "TW-62-1",
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "needs_manual_mapping"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/12/pa-62-1-iso-1.jpg",
+      "filename": "pa-62-1-iso-1.jpg",
+      "sku_guess": "PA-62-1",
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "needs_manual_mapping"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/10/av-62-1-iso.jpg",
+      "filename": "av-62-1-iso.jpg",
+      "sku_guess": "AV-62-1",
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "needs_manual_mapping"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/10/fa-62-1-iso_2k2x-k8.jpg",
+      "filename": "fa-62-1-iso_2k2x-k8.jpg",
+      "sku_guess": "FA-62-1",
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "needs_manual_mapping"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/9/rs-40-1-iso-1_s1hs-6i.jpg",
+      "filename": "rs-40-1-iso-1_s1hs-6i.jpg",
+      "sku_guess": "RS-40-1",
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "needs_manual_mapping"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/9/in-40-1-iso.jpg",
+      "filename": "in-40-1-iso.jpg",
+      "sku_guess": "IN-40-1",
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "needs_manual_mapping"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/9/brb-40-2-iso-1.jpg",
+      "filename": "brb-40-2-iso-1.jpg",
+      "sku_guess": null,
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "unmapped_orphan"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/9/bri-40-1-iso_j12s-so.jpg",
+      "filename": "bri-40-1-iso_j12s-so.jpg",
+      "sku_guess": null,
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "unmapped_orphan"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/9/av-40-1-iso_5o5c-4v.jpg",
+      "filename": "av-40-1-iso_5o5c-4v.jpg",
+      "sku_guess": "AV-40-1",
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "needs_manual_mapping"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/9/R0_WOODRIGHT_FA-40-1_2285591960393_2.jpg",
+      "filename": "r0_woodright_fa-40-1_2285591960393_2.jpg",
+      "sku_guess": null,
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "unmapped_orphan"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/8/pv-61-1-i1.jpg",
+      "filename": "pv-61-1-i1.jpg",
+      "sku_guess": "PV-61-1",
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "approved_existing_or_known"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/9/mo-40-1-iso_oqpx-4q.jpg",
+      "filename": "mo-40-1-iso_oqpx-4q.jpg",
+      "sku_guess": "MO-40-1",
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "needs_manual_mapping"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/9/in-40-1-iso-1_s7yy-ul.jpg",
+      "filename": "in-40-1-iso-1_s7yy-ul.jpg",
+      "sku_guess": "IN-40-1",
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "needs_manual_mapping"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/9/tw-40-1-iso-1.jpg",
+      "filename": "tw-40-1-iso-1.jpg",
+      "sku_guess": "TW-40-1",
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "needs_manual_mapping"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/9/tw-40-1-iso_he38-nf.jpg",
+      "filename": "tw-40-1-iso_he38-nf.jpg",
+      "sku_guess": "TW-40-1",
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "needs_manual_mapping"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/9/rl-40-2-i2.jpg",
+      "filename": "rl-40-2-i2.jpg",
+      "sku_guess": "RL-40-2",
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "needs_manual_mapping"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/9/tb-40-1-iso.jpg",
+      "filename": "tb-40-1-iso.jpg",
+      "sku_guess": "TB-40-1",
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "needs_manual_mapping"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/8/mn-02-1-i1.jpg",
+      "filename": "mn-02-1-i1.jpg",
+      "sku_guess": "MN-02-1",
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "duplicate_near"
+    },
+    {
+      "url": "https://woodright.ru/images/detailed/11/bi-02-1-i1.jpg",
+      "filename": "bi-02-1-i1.jpg",
+      "sku_guess": "BI-02-1",
+      "legacy_cache_provenance": "parent_cache",
+      "classification_status": "duplicate_near"
+    }
+  ],
+  "safe_candidate_comparison": {
+    "prior_supplement_safe_count": 58,
+    "still_safe_candidate_in_full_audit": 58,
+    "safe_urls_missing_from_full_cache": [],
+    "new_safe_candidate_beyond_prior_58": 0,
+    "new_safe_sample": []
+  }
+}

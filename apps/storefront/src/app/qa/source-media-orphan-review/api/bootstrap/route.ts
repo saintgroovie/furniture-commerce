@@ -1,4 +1,5 @@
 import * as fs from "fs"
+import * as path from "path"
 import { NextResponse } from "next/server"
 import { getFurnitureRepoDataResolution } from "../../../legacy-media-assignment-board-v2/api/_lib/furniture-repo-data-root"
 import { auditFile, getAuditRepoResolution } from "../_lib/audit-repo-root"
@@ -6,6 +7,10 @@ import {
   buildEnrichmentIndexes,
   enrichOrphanRow,
 } from "../_lib/source-orphan-review-enrichment"
+import {
+  buildSeedCodeToHandleIndex,
+  resolveHandleFromSkuGuess,
+} from "../../../_lib/media-source-join"
 import type { BootstrapPayload, DashboardStats, ReviewRow } from "../../source-orphan-review-types"
 
 export const dynamic = "force-dynamic"
@@ -31,6 +36,7 @@ type ManifestRow = {
   source_url?: string | null
   source_path?: string | null
   source_page_url?: string | null
+  local_cache_path?: string | null
   legacy_cache_provenance?: string | null
   legacy_newly_included_vs_stale_468_crawl?: boolean | null
   sku_guess?: string | null
@@ -117,6 +123,10 @@ export async function GET() {
 
     const dataRepoRoot = getFurnitureRepoDataResolution().repoRoot ?? resolution.repoRoot
     const enrichmentIndexes = buildEnrichmentIndexes(dataRepoRoot)
+    const seedRaw = JSON.parse(
+      fs.readFileSync(path.join(dataRepoRoot, "data/normalized/seed-products.json"), "utf8")
+    ) as { products?: Array<{ product_code_normalized?: string; medusa_product_handle?: string }> }
+    const seedCodeIndex = buildSeedCodeToHandleIndex(seedRaw.products ?? [])
 
     const items: ReviewRow[] = (queue.full_queue || []).map((q) => {
       const m = manifestById.get(q.source_id)
@@ -127,6 +137,7 @@ export async function GET() {
         source_url: m?.source_url ?? q.source_url ?? null,
         source_path: m?.source_path ?? null,
         source_page_url: m?.source_page_url ?? null,
+        local_cache_path: m?.local_cache_path ?? null,
         legacy_cache_provenance: m?.legacy_cache_provenance ?? q.legacy_cache_provenance ?? null,
         legacy_newly_included_vs_stale_468_crawl:
           m?.legacy_newly_included_vs_stale_468_crawl ?? q.legacy_newly_included ?? null,
@@ -139,7 +150,10 @@ export async function GET() {
         classification_reason: m?.classification_reason ?? null,
         suggested_next_action: m?.suggested_next_action ?? null,
       }
-      const handleGuess = merged.handle_guess ?? null
+      const handleGuess =
+        merged.handle_guess ??
+        resolveHandleFromSkuGuess(merged.sku_guess, seedCodeIndex) ??
+        null
       const enrichment =
         enrichmentIndexes != null
           ? enrichOrphanRow(q.basename, handleGuess, enrichmentIndexes)
@@ -165,10 +179,11 @@ export async function GET() {
         source_url: merged.source_url,
         source_path: merged.source_path,
         source_page_url: merged.source_page_url,
+        local_cache_path: merged.local_cache_path ?? null,
         legacy_cache_provenance: merged.legacy_cache_provenance,
         legacy_newly_included: Boolean(merged.legacy_newly_included_vs_stale_468_crawl),
         sku_guess: merged.sku_guess,
-        handle_guess: merged.handle_guess,
+        handle_guess: handleGuess,
         collection_guess: merged.collection_guess,
         role_guess: merged.role_guess,
         color_guess: merged.color_guess,

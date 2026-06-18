@@ -17,6 +17,8 @@ type Props = {
   savedAt: string | null
   selectedHandle: string | null
   onReset: () => void
+  /** Media Ops shell owns Copy/Download/Reset in export drawer. */
+  embeddedInShell?: boolean
 }
 
 export function ExportToolbar({
@@ -26,6 +28,7 @@ export function ExportToolbar({
   savedAt,
   selectedHandle,
   onReset,
+  embeddedInShell = false,
 }: Props) {
   const [copyStatus, setCopyStatus] = useState<"idle" | "ok" | "err">("idle")
   const [confirmReset, setConfirmReset] = useState(false)
@@ -73,6 +76,10 @@ export function ExportToolbar({
     : "Не сохранено"
 
   const saveLabelColor = savedAt ? "#1a6a1a" : "#888"
+
+  if (embeddedInShell) {
+    return null
+  }
 
   return (
     <div style={styles.toolbar}>
@@ -139,6 +146,15 @@ export function ExportToolbar({
 }
 
 const styles = {
+  toolbarEmbedded: {
+    display: "flex",
+    alignItems: "center",
+    padding: "4px 14px",
+    background: "#fffbf0",
+    borderBottom: "1px solid #f0e6c8",
+    flexShrink: 0,
+    minHeight: "28px",
+  },
   toolbar: {
     display: "flex",
     alignItems: "center",
