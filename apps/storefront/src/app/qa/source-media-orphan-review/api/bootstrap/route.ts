@@ -125,8 +125,11 @@ export async function GET() {
     const enrichmentIndexes = buildEnrichmentIndexes(dataRepoRoot)
     const seedRaw = JSON.parse(
       fs.readFileSync(path.join(dataRepoRoot, "data/normalized/seed-products.json"), "utf8")
-    ) as { products?: Array<{ product_code_normalized?: string; medusa_product_handle?: string }> }
-    const seedCodeIndex = buildSeedCodeToHandleIndex(seedRaw.products ?? [])
+    ) as
+      | Array<{ product_code_normalized?: string; medusa_product_handle?: string }>
+      | { products?: Array<{ product_code_normalized?: string; medusa_product_handle?: string }> }
+    const seedProducts = Array.isArray(seedRaw) ? seedRaw : seedRaw.products ?? []
+    const seedCodeIndex = buildSeedCodeToHandleIndex(seedProducts)
 
     const items: ReviewRow[] = (queue.full_queue || []).map((q) => {
       const m = manifestById.get(q.source_id)

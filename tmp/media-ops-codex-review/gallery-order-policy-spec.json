@@ -1,0 +1,102 @@
+{
+  "version": "gallery-order-policy/v1",
+  "generated_at": "2026-06-18T21:49:55.773Z",
+  "grouping": [
+    "collection",
+    "sku",
+    "color_variant"
+  ],
+  "color_variant_rules": {
+    "real_color_variants_only_for_color_tabs": true,
+    "unresolved_shared_bucket_key": "__needs_color__",
+    "unresolved_shared_bucket_label_ru": "Общие кадры",
+    "lifestyle_room_interior_shared_across_colors": true,
+    "shared_tail_roles": [
+      "lifestyle"
+    ],
+    "borrowable_roles": [
+      "interior",
+      "detail",
+      "lifestyle"
+    ],
+    "non_borrowable_external_roles": [
+      "front_3_4",
+      "closed_front",
+      "hero_front",
+      "front_anfas"
+    ]
+  },
+  "white_background": {
+    "first": true,
+    "source_hint_fields": [
+      "source_type",
+      "source_path",
+      "repo_relative_path"
+    ],
+    "positive_patterns": [
+      "white_bg",
+      "disk_white",
+      "белом фоне",
+      "фото на белом",
+      "yandex disk"
+    ],
+    "note": "Current code uses source/path hints only, not pixel background detection."
+  },
+  "role_order": [
+    {
+      "role": "front_3_4",
+      "rank": 10,
+      "label_ru": "3/4"
+    },
+    {
+      "role": "closed_front",
+      "rank": 20,
+      "label_ru": "фронт"
+    },
+    {
+      "role": "hero_front",
+      "rank": 21,
+      "label_ru": "фронт"
+    },
+    {
+      "role": "front_anfas",
+      "rank": 22,
+      "label_ru": "анфас"
+    },
+    {
+      "role": "interior",
+      "rank": 30,
+      "label_ru": "внутри / открытые двери"
+    },
+    {
+      "role": "detail",
+      "rank": 40,
+      "label_ru": "деталь"
+    },
+    {
+      "role": "scheme",
+      "rank": 50,
+      "label_ru": "схема"
+    },
+    {
+      "role": "unknown",
+      "rank": 80,
+      "label_ru": "неизвестно"
+    },
+    {
+      "role": "lifestyle",
+      "rank": 90,
+      "label_ru": "интерьер / lifestyle, общий хвост"
+    }
+  ],
+  "export_metadata": {
+    "operator_role_mapping": {
+      "front_3_4": "front_3_4",
+      "closed_front": "front",
+      "hero_front": "front",
+      "front_anfas": "front",
+      "lifestyle": "interior"
+    },
+    "warning": "Mapping lifestyle to operator_role=interior in Medusa image metadata loses the open-doors vs room-interior distinction unless is_shared is also preserved."
+  }
+}

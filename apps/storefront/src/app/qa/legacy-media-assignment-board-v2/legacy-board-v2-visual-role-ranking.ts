@@ -61,15 +61,15 @@ export type VisualRole =
   | "unknown"
 
 export const VISUAL_ROLE_RANK: Record<VisualRole, number> = {
-  closed_front: 8,
-  hero_front: 10,
-  front_3_4: 22,
-  front_anfas: 25,
+  front_3_4: 10,
+  closed_front: 20,
+  hero_front: 21,
+  front_anfas: 22,
   interior: 30,
   detail: 40,
-  lifestyle: 50,
-  scheme: 60,
-  unknown: 70,
+  scheme: 50,
+  lifestyle: 90,
+  unknown: 80,
 }
 
 export const VISUAL_ROLE_BADGE_RU: Record<VisualRole, string> = {
@@ -102,7 +102,7 @@ export function operatorRoleLabelRu(role: VisualRole): string {
 }
 
 export const VISUAL_ROLE_RANKING_TOOLTIP_RU =
-  "Порядок: закрытый фронт → hero → 3/4 / анфас → внутрянка → детали → интерьер → схема"
+  "Порядок: 3/4 → фронт/анфас → внутрянка (открытые двери) → детали → схема → интерьер (общий хвост)"
 
 /** Roles that represent the same closed frontal product shot family (collapse to one primary). */
 export const FRONT_FAMILY_ROLES = new Set<VisualRole>(["closed_front", "hero_front", "front_anfas"])
