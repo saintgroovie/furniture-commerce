@@ -1,0 +1,288 @@
+{
+  "handle": "greenwich-gr-26-1",
+  "workbook_row_key": "greenwich:GR-26-1",
+  "canonical_name": "Шкаф-витрина Cristal",
+  "source_url": "https://woodright.ru/kollekcii/greenwich/shkaf-vitrina-cristal/",
+  "finish_color_labels": {
+    "white": "Белый G503",
+    "graphite": "Графит S499",
+    "green": "Изумруд М442",
+    "cacao": "Какао L481",
+    "olive": "Олива K447",
+    "powder": "Пудра Н469",
+    "grey-blue": "Серо-голубой K500",
+    "grey": "Серый J499",
+    "darkblue": "Син-серый N436",
+    "cream": "Сливочный F398",
+    "terracote": "Терракота M476",
+    "capuchino": "Капучино"
+  },
+  "finish_color_executions": [
+    {
+      "key": "white",
+      "label": "Белый G503",
+      "urls": [
+        "/static/products/greenwich/GR-26-1_greenwich_white19_wm0l-xh.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_white20_hz76-ek.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_white21_qqi2-mk.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_dark_white_19_6flc-be.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_dark_white_20_51bu-d2.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_dark_white_21_bnjh-vu.jpg",
+        "/static/products/greenwich/GR-26-1_2022-02-11_12-08-53__1__6zk2-uo.jpeg",
+        "/static/products/greenwich/GR-26-1_022.jpg",
+        "/static/products/greenwich/GR-26-1_025.jpg",
+        "/static/products/greenwich/GR-26-1_021.jpg",
+        "/static/products/greenwich/GR-26-1_023.jpg",
+        "/static/products/greenwich/GR-26-1_024.jpg"
+      ]
+    },
+    {
+      "key": "graphite",
+      "label": "Графит S499",
+      "urls": [
+        "/static/products/greenwich/GR-26-1_greenwich_graphite19_effa-c7.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_graphite20_biii-lx.jpg",
+        "/static/products/greenwich/GR-26-1_noliver_View19_afqd-bq.jpg",
+        "/static/products/greenwich/GR-26-1_noliver_View20_a62y-9m.jpg",
+        "/static/products/greenwich/GR-26-1_noliver_View21_v1mn-q4.jpg",
+        "/static/products/greenwich/GR-26-1_2022-02-11_12-08-53__1__6zk2-uo.jpeg",
+        "/static/products/greenwich/GR-26-1_022.jpg",
+        "/static/products/greenwich/GR-26-1_025.jpg",
+        "/static/products/greenwich/GR-26-1_021.jpg",
+        "/static/products/greenwich/GR-26-1_023.jpg",
+        "/static/products/greenwich/GR-26-1_024.jpg"
+      ]
+    },
+    {
+      "key": "green",
+      "label": "Изумруд М442",
+      "urls": [
+        "/static/products/greenwich/GR-26-1_greenwich_green19_n3cg-c5.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_green20_idmx-3v.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_green21_vjq8-1o.jpg",
+        "/static/products/greenwich/GR-26-1_2022-02-11_12-08-53__1__6zk2-uo.jpeg",
+        "/static/products/greenwich/GR-26-1_022.jpg",
+        "/static/products/greenwich/GR-26-1_025.jpg",
+        "/static/products/greenwich/GR-26-1_021.jpg",
+        "/static/products/greenwich/GR-26-1_023.jpg",
+        "/static/products/greenwich/GR-26-1_024.jpg"
+      ]
+    },
+    {
+      "key": "cacao",
+      "label": "Какао L481",
+      "urls": [
+        "/static/products/greenwich/GR-26-1_greenwich_cacao19_wobb-2d.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_cacao20_jp99-rh.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_cacao21_5hou-sh.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_dark_cacao19_1om2-0g.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_dark_cacao20_uq4s-yf.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_dark_cacao21_rk12-da.jpg",
+        "/static/products/greenwich/GR-26-1_2022-02-11_12-08-53__1__6zk2-uo.jpeg",
+        "/static/products/greenwich/GR-26-1_022.jpg",
+        "/static/products/greenwich/GR-26-1_025.jpg",
+        "/static/products/greenwich/GR-26-1_021.jpg",
+        "/static/products/greenwich/GR-26-1_023.jpg",
+        "/static/products/greenwich/GR-26-1_024.jpg"
+      ]
+    },
+    {
+      "key": "olive",
+      "label": "Олива K447",
+      "urls": [
+        "/static/products/greenwich/GR-26-1_greenwich_olive19_aojz-ns.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_olive20_en3m-td.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_olive21_kuyw-8k.jpg",
+        "/static/products/greenwich/GR-26-1_2022-02-11_12-08-53__1__6zk2-uo.jpeg",
+        "/static/products/greenwich/GR-26-1_022.jpg",
+        "/static/products/greenwich/GR-26-1_025.jpg",
+        "/static/products/greenwich/GR-26-1_021.jpg",
+        "/static/products/greenwich/GR-26-1_023.jpg",
+        "/static/products/greenwich/GR-26-1_024.jpg"
+      ]
+    },
+    {
+      "key": "powder",
+      "label": "Пудра Н469",
+      "urls": [
+        "/static/products/greenwich/GR-26-1_greenwich_powder19_iobx-hr.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_powder20_yd37-oh.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_powder21_0tcv-bl.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_dark_powder19_agyt-o0.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_dark_powder20_8f2w-k0.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_dark_powder21_52pc-ew.jpg",
+        "/static/products/greenwich/GR-26-1_2022-02-11_12-08-53__1__6zk2-uo.jpeg",
+        "/static/products/greenwich/GR-26-1_022.jpg",
+        "/static/products/greenwich/GR-26-1_025.jpg",
+        "/static/products/greenwich/GR-26-1_021.jpg",
+        "/static/products/greenwich/GR-26-1_023.jpg",
+        "/static/products/greenwich/GR-26-1_024.jpg"
+      ]
+    },
+    {
+      "key": "grey-blue",
+      "label": "Серо-голубой K500",
+      "urls": [
+        "/static/products/greenwich/GR-26-1_greenwich_grey-blue19_eytj-kh.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_grey-blue20_psnw-6d.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_grey-blue21_8mj7-tw.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_dark_grey-blue19_g0mp-1q.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_dark_grey-blue20_b9rv-3b.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_dark_grey-blue21_0zey-8y.jpg",
+        "/static/products/greenwich/GR-26-1_2022-02-11_12-08-53__1__6zk2-uo.jpeg",
+        "/static/products/greenwich/GR-26-1_022.jpg",
+        "/static/products/greenwich/GR-26-1_025.jpg",
+        "/static/products/greenwich/GR-26-1_021.jpg",
+        "/static/products/greenwich/GR-26-1_023.jpg",
+        "/static/products/greenwich/GR-26-1_024.jpg"
+      ]
+    },
+    {
+      "key": "grey",
+      "label": "Серый J499",
+      "urls": [
+        "/static/products/greenwich/GR-26-1_greenwich_grey19_0tjg-36.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_grey20_r4cg-g2.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_grey21_fzxv-2v.jpg",
+        "/static/products/greenwich/GR-26-1_2022-02-11_12-08-53__1__6zk2-uo.jpeg",
+        "/static/products/greenwich/GR-26-1_022.jpg",
+        "/static/products/greenwich/GR-26-1_025.jpg",
+        "/static/products/greenwich/GR-26-1_021.jpg",
+        "/static/products/greenwich/GR-26-1_023.jpg",
+        "/static/products/greenwich/GR-26-1_024.jpg"
+      ]
+    },
+    {
+      "key": "darkblue",
+      "label": "Син-серый N436",
+      "urls": [
+        "/static/products/greenwich/GR-26-1_greenwich_darkblue19_a1fi-rc.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_darkblue20_fk0h-yp.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_darkblue21_25s5-6h.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_dark_darkblue19_nkbk-06.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_dark_darkblue20_0z85-sc.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_dark_darkblue21_hikc-ks.jpg",
+        "/static/products/greenwich/GR-26-1_2022-02-11_12-08-53__1__6zk2-uo.jpeg",
+        "/static/products/greenwich/GR-26-1_022.jpg",
+        "/static/products/greenwich/GR-26-1_025.jpg",
+        "/static/products/greenwich/GR-26-1_021.jpg",
+        "/static/products/greenwich/GR-26-1_023.jpg",
+        "/static/products/greenwich/GR-26-1_024.jpg"
+      ]
+    },
+    {
+      "key": "cream",
+      "label": "Сливочный F398",
+      "urls": [
+        "/static/products/greenwich/GR-26-1_greenwich_cream19_nyw2-xb.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_cream20_ap3v-q0.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_cream21_ujy6-0j.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_dark_cream_19_vclf-af.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_dark_cream_20_i4id-gx.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_dark_cream_21_oamu-xi.jpg",
+        "/static/products/greenwich/GR-26-1_2022-02-11_12-08-53__1__6zk2-uo.jpeg",
+        "/static/products/greenwich/GR-26-1_022.jpg",
+        "/static/products/greenwich/GR-26-1_025.jpg",
+        "/static/products/greenwich/GR-26-1_021.jpg",
+        "/static/products/greenwich/GR-26-1_023.jpg",
+        "/static/products/greenwich/GR-26-1_024.jpg"
+      ]
+    },
+    {
+      "key": "terracote",
+      "label": "Терракота M476",
+      "urls": [
+        "/static/products/greenwich/GR-26-1_greenwich_terracote19.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_terracote20_283t-lm.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_terracote21_tasq-xz.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_dark_terracote19_peqs-6y.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_dark_terracote20_1d1s-q7.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_dark_terracote21_18t1-7l.jpg",
+        "/static/products/greenwich/GR-26-1_2022-02-11_12-08-53__1__6zk2-uo.jpeg",
+        "/static/products/greenwich/GR-26-1_022.jpg",
+        "/static/products/greenwich/GR-26-1_025.jpg",
+        "/static/products/greenwich/GR-26-1_021.jpg",
+        "/static/products/greenwich/GR-26-1_023.jpg",
+        "/static/products/greenwich/GR-26-1_024.jpg"
+      ]
+    },
+    {
+      "key": "capuchino",
+      "label": "Капучино",
+      "urls": [
+        "/static/products/greenwich/GR-26-1_greenwich_capuchino19.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_capuchino20.jpg",
+        "/static/products/greenwich/GR-26-1_greenwich_capuchino21.jpg"
+      ]
+    }
+  ],
+  "thumbnail_url": "/static/products/greenwich/GR-26-1_greenwich_green19_n3cg-c5.jpg",
+  "gallery_urls": [
+    "/static/products/greenwich/GR-26-1_greenwich_white19_wm0l-xh.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_white20_hz76-ek.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_white21_qqi2-mk.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_dark_white_19_6flc-be.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_dark_white_20_51bu-d2.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_dark_white_21_bnjh-vu.jpg",
+    "/static/products/greenwich/GR-26-1_2022-02-11_12-08-53__1__6zk2-uo.jpeg",
+    "/static/products/greenwich/GR-26-1_022.jpg",
+    "/static/products/greenwich/GR-26-1_025.jpg",
+    "/static/products/greenwich/GR-26-1_021.jpg",
+    "/static/products/greenwich/GR-26-1_023.jpg",
+    "/static/products/greenwich/GR-26-1_024.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_graphite19_effa-c7.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_graphite20_biii-lx.jpg",
+    "/static/products/greenwich/GR-26-1_noliver_View19_afqd-bq.jpg",
+    "/static/products/greenwich/GR-26-1_noliver_View20_a62y-9m.jpg",
+    "/static/products/greenwich/GR-26-1_noliver_View21_v1mn-q4.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_green19_n3cg-c5.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_green20_idmx-3v.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_green21_vjq8-1o.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_cacao19_wobb-2d.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_cacao20_jp99-rh.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_cacao21_5hou-sh.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_dark_cacao19_1om2-0g.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_dark_cacao20_uq4s-yf.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_dark_cacao21_rk12-da.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_olive19_aojz-ns.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_olive20_en3m-td.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_olive21_kuyw-8k.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_powder19_iobx-hr.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_powder20_yd37-oh.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_powder21_0tcv-bl.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_dark_powder19_agyt-o0.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_dark_powder20_8f2w-k0.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_dark_powder21_52pc-ew.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_grey-blue19_eytj-kh.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_grey-blue20_psnw-6d.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_grey-blue21_8mj7-tw.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_dark_grey-blue19_g0mp-1q.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_dark_grey-blue20_b9rv-3b.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_dark_grey-blue21_0zey-8y.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_grey19_0tjg-36.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_grey20_r4cg-g2.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_grey21_fzxv-2v.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_darkblue19_a1fi-rc.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_darkblue20_fk0h-yp.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_darkblue21_25s5-6h.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_dark_darkblue19_nkbk-06.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_dark_darkblue20_0z85-sc.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_dark_darkblue21_hikc-ks.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_cream19_nyw2-xb.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_cream20_ap3v-q0.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_cream21_ujy6-0j.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_dark_cream_19_vclf-af.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_dark_cream_20_i4id-gx.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_dark_cream_21_oamu-xi.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_terracote19.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_terracote20_283t-lm.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_terracote21_tasq-xz.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_dark_terracote19_peqs-6y.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_dark_terracote20_1d1s-q7.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_dark_terracote21_18t1-7l.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_capuchino19.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_capuchino20.jpg",
+    "/static/products/greenwich/GR-26-1_greenwich_capuchino21.jpg"
+  ],
+  "imported_at": "2026-06-18T19:55:41.424Z"
+}

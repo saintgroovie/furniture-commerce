@@ -1,0 +1,17 @@
+[
+  {
+    "legacy_key": "frame",
+    "label": "Frame",
+    "source_url": "https://woodright.ru/kollekcii/greenwich/krovat-frame/"
+  },
+  {
+    "legacy_key": "cloud",
+    "label": "Cloud",
+    "source_url": "https://woodright.ru/kollekcii/greenwich/krovat-cloud/"
+  },
+  {
+    "legacy_key": "plane",
+    "label": "Plane",
+    "source_url": "https://woodright.ru/kollekcii/greenwich/krovat-plane/"
+  }
+]

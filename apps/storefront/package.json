@@ -5,6 +5,11 @@
   "packageManager": "yarn@4.6.0",
   "scripts": {
     "dev": "next dev --port 8000",
+    "dev:ww-matrix-board": "next dev --port 3004",
+    "dev:ww-matrix-board:daemon": "bash scripts/dev-ww-matrix-board-daemon.sh",
+    "dev:ww-matrix-board:stop": "bash scripts/dev-ww-matrix-board-stop.sh",
+    "dev:ww-matrix-board:status": "bash scripts/dev-ww-matrix-board-status.sh",
+    "dev:ww-matrix-board:open": "bash scripts/dev-ww-matrix-board-open-terminal.sh",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"

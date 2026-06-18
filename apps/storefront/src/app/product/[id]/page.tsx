@@ -19,6 +19,7 @@ import {
   getArticle,
   getDimensions,
   formatDimensionsLabeled,
+  getPdpHeroObjectPosition,
 } from "@/lib/product-metadata"
 
 function pdpHeroThumbnail(product: Record<string, unknown>): string | undefined {
@@ -128,6 +129,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
 
   const mainImage = pdpHeroThumbnail(product)
   const mainNorm = mainImage ?? ""
+  const heroObjectPosition = getPdpHeroObjectPosition(product)
   const pdpExtraSrcs = collectDisplayGroupExtraImageUrls(
     [product, ...displayGroupMembers],
     mainNorm
@@ -167,6 +169,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
               mainSrc={mainNorm}
               extraSrcs={pdpExtraSrcs}
               alt={titleStr}
+              heroObjectPosition={heroObjectPosition}
             />
           )}
         </div>

@@ -1,0 +1,93 @@
+{
+  "display_group": "greenwich-bed",
+  "handles": [
+    "greenwich-gr-09-1-bed-90",
+    "greenwich-gr-12-1",
+    "greenwich-gr-14-1",
+    "greenwich-gr-16-1",
+    "greenwich-gr-18-1"
+  ],
+  "headboard_model_executions": [
+    {
+      "key": "frame",
+      "label": "Frame",
+      "urls": [
+        "/static/products/greenwich/beds-shared/GR-BED-POOL_frame_greenwich_frame_natural_beige.jpg",
+        "/static/products/greenwich/beds-shared/GR-BED-POOL_frame_greenwich_frame_dark_beige.jpg",
+        "/static/products/greenwich/beds-shared/GR-BED-POOL_frame_greenwich_fame_natural_darkblue.jpg",
+        "/static/products/greenwich/beds-shared/GR-BED-POOL_frame_greenwich_fame_dark_darkblue.jpg",
+        "/static/products/greenwich/beds-shared/GR-BED-POOL_frame_noliver_var2_View03.jpg",
+        "/static/products/greenwich/beds-shared/GR-BED-POOL_frame_noliver_var2_View02.jpg",
+        "/static/products/greenwich/beds-shared/GR-BED-POOL_frame_noliver_var2_View01.jpg"
+      ]
+    },
+    {
+      "key": "cloud",
+      "label": "Cloud",
+      "urls": [
+        "/static/products/greenwich/beds-shared/GR-BED-POOL_cloud_greenwich_cloud_natural_beige.jpg",
+        "/static/products/greenwich/beds-shared/GR-BED-POOL_cloud_greenwich_cloud_dark_beige.jpg",
+        "/static/products/greenwich/beds-shared/GR-BED-POOL_cloud_greenwich_cloud_dark_darkblue.jpg",
+        "/static/products/greenwich/beds-shared/GR-BED-POOL_cloud_bedroom2_int_View01.jpg",
+        "/static/products/greenwich/beds-shared/GR-BED-POOL_cloud_bedroom2_int_View04.jpg"
+      ]
+    },
+    {
+      "key": "plane",
+      "label": "Plane",
+      "urls": [
+        "/static/products/greenwich/beds-shared/GR-BED-POOL_plane_greenwich_plane_natural_beige.jpg",
+        "/static/products/greenwich/beds-shared/GR-BED-POOL_plane_greenwich_plane_dark_beige.jpg",
+        "/static/products/greenwich/beds-shared/GR-BED-POOL_plane_greenwich_plane_natural_darkblue.jpg",
+        "/static/products/greenwich/beds-shared/GR-BED-POOL_plane_greenwich_plane_dark_darkblue.jpg",
+        "/static/products/greenwich/beds-shared/GR-BED-POOL_plane_greenwich_wideheader_View02_7nwd-jk.jpg",
+        "/static/products/greenwich/beds-shared/GR-BED-POOL_plane_greenwich_wideheader_View01_0f24-bk.jpg"
+      ]
+    }
+  ],
+  "gallery_urls": [
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_frame_greenwich_frame_natural_beige.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_frame_greenwich_frame_dark_beige.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_frame_greenwich_fame_natural_darkblue.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_frame_greenwich_fame_dark_darkblue.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_frame_noliver_var2_View03.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_frame_noliver_var2_View02.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_frame_noliver_var2_View01.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_cloud_greenwich_cloud_natural_beige.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_cloud_greenwich_cloud_dark_beige.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_cloud_greenwich_cloud_dark_darkblue.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_cloud_bedroom2_int_View01.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_cloud_bedroom2_int_View04.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_plane_greenwich_plane_natural_beige.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_plane_greenwich_plane_dark_beige.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_plane_greenwich_plane_natural_darkblue.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_plane_greenwich_plane_dark_darkblue.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_plane_greenwich_wideheader_View02_7nwd-jk.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_plane_greenwich_wideheader_View01_0f24-bk.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_cloud_09.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_cloud_10.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_cloud_11.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_cloud_12.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_cloud_13.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_cloud_14.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_cloud_15.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_cloud_16.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_frame_01.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_frame_02.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_frame_03.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_frame_04.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_frame_05.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_frame_06.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_frame_07.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_frame_08.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_plane_17.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_plane_18.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_plane_19.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_plane_20.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_plane_21.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_plane_22.jpg",
+    "/static/products/greenwich/beds-shared/GR-BED-POOL_plane_23.jpg"
+  ],
+  "thumbnail_url": "/static/products/greenwich/beds-shared/GR-BED-POOL_frame_01.jpg",
+  "imported_at": "2026-06-18T20:09:21.225Z"
+}

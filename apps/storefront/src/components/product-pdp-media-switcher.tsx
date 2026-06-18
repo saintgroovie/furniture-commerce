@@ -9,9 +9,15 @@ type Props = {
   mainSrc: string
   extraSrcs: string[]
   alt: string
+  heroObjectPosition?: string
 }
 
-export function ProductPdpMediaSwitcher({ mainSrc, extraSrcs, alt }: Props) {
+export function ProductPdpMediaSwitcher({
+  mainSrc,
+  extraSrcs,
+  alt,
+  heroObjectPosition,
+}: Props) {
   const mainTrimmed = mainSrc.trim()
   const [displayHeroSrc, setDisplayHeroSrc] = useState(mainTrimmed)
   const [activeGalleryUrl, setActiveGalleryUrl] = useState<string | null>(null)
@@ -90,6 +96,11 @@ export function ProductPdpMediaSwitcher({ mainSrc, extraSrcs, alt }: Props) {
             src={displayHeroSrc}
             alt={alt}
             className="product-detail-img"
+            style={
+              heroObjectPosition
+                ? { objectPosition: heroObjectPosition }
+                : undefined
+            }
             loading="eager"
             onError={onHeroError}
           />

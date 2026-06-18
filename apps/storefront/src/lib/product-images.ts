@@ -1,11 +1,45 @@
 /**
  * Storefront helpers for listing/API-shaped product media URLs.
- * Used by diagnostics and optional call sites — does not rewrite URLs.
  *
  * Catalog cards: hero uses `product.thumbnail` only; extras use
  * {@link collectExtraProductImageUrls}, {@link collectDisplayGroupExtraImageUrls}, and
  * {@link mergeUniqueExtraUrls} (listing attaches `display_group_color_variants` in `display-group.ts`).
  */
+
+function medusaBackendBaseForImages(): string {
+  const raw =
+    (typeof process !== "undefined" &&
+      (process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ||
+        process.env.MEDUSA_BACKEND_URL)) ||
+    "http://localhost:9000"
+  return String(raw).replace(/\/$/, "")
+}
+
+/**
+ * Browser-safe product image URL: `/static/...` and `/uploads/...` are served by Medusa, not Next.
+ * Rewrites docker `medusa` hostnames to `localhost` for local QA.
+ */
+export function resolveMedusaBackendImageUrl(url: string): string {
+  const t = typeof url === "string" ? url.trim() : ""
+  if (!t) return t
+  if (t.startsWith("data:")) return t
+  if (t.startsWith("http://") || t.startsWith("https://")) {
+    try {
+      const u = new URL(t)
+      if (u.hostname === "medusa" || u.hostname.endsWith(".medusa")) {
+        u.hostname = "localhost"
+        return u.toString()
+      }
+    } catch {
+      /* ignore */
+    }
+    return t
+  }
+  if (t.startsWith("/static/") || t.startsWith("/uploads/")) {
+    return `${medusaBackendBaseForImages()}${t}`
+  }
+  return t
+}
 
 /**
  * Drops obvious non-image garbage before UI / collect paths.

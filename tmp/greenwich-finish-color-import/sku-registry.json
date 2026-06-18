@@ -1,0 +1,66 @@
+[
+  {
+    "handle": "greenwich-gr-42-1",
+    "sku": "GR-42-1",
+    "workbook_row_key": "greenwich:GR-42-1",
+    "canonical_name": "Тумба ТВ Wide",
+    "source_url": "https://woodright.ru/komnaty/gostinye/tumba-tv-wide/",
+    "notes": "Legacy path is komnaty/gostinye, not kolekcii/greenwich — found via full catalog ?items_per_page=128"
+  },
+  {
+    "handle": "greenwich-gr-05-1",
+    "sku": "GR-05-1",
+    "workbook_row_key": "greenwich:GR-05-1",
+    "canonical_name": "Комод Scale",
+    "source_url": "https://woodright.ru/kollekcii/greenwich/komod-scale-ru-16/"
+  },
+  {
+    "handle": "greenwich-gr-08-1",
+    "sku": "GR-08-1",
+    "workbook_row_key": "greenwich:GR-08-1",
+    "canonical_name": "Прикроватная тумба Hole",
+    "source_url": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-hole/"
+  },
+  {
+    "handle": "greenwich-gr-08-2",
+    "sku": "GR-08-2",
+    "workbook_row_key": "greenwich:GR-08-2",
+    "canonical_name": "Прикроватная тумба Stone",
+    "source_url": "https://woodright.ru/kollekcii/greenwich/prikrovatnaya-tumba-stone/"
+  },
+  {
+    "handle": "greenwich-gr-26-1",
+    "sku": "GR-26-1",
+    "workbook_row_key": "greenwich:GR-26-1",
+    "canonical_name": "Шкаф-витрина Cristal",
+    "source_url": "https://woodright.ru/kollekcii/greenwich/shkaf-vitrina-cristal/"
+  },
+  {
+    "handle": "greenwich-gr-44-1",
+    "sku": "GR-44-1",
+    "workbook_row_key": "greenwich:GR-44-1",
+    "canonical_name": "Консоль Step",
+    "source_url": "https://woodright.ru/kollekcii/greenwich/konsol-step/"
+  },
+  {
+    "handle": "greenwich-gr-67-1",
+    "sku": "GR-67-1",
+    "workbook_row_key": "greenwich:GR-67-1",
+    "canonical_name": "Рабочий стол Base",
+    "source_url": "https://woodright.ru/kollekcii/greenwich/rabochiy-stol-base/"
+  },
+  {
+    "handle": "greenwich-gr-02-1",
+    "sku": "GR-02-1",
+    "workbook_row_key": "greenwich:GR-02-1",
+    "canonical_name": "Гардероб Level",
+    "source_url": "https://woodright.ru/kollekcii/greenwich/garderob-level/"
+  },
+  {
+    "handle": "greenwich-gr-02-2",
+    "sku": "GR-02-2",
+    "workbook_row_key": "greenwich:GR-02-2",
+    "canonical_name": "Гардероб Total",
+    "source_url": "https://woodright.ru/kollekcii/greenwich/garderob-total/"
+  }
+]

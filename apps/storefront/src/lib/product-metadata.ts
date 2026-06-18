@@ -142,3 +142,20 @@ export function formatDimensionsLabeled(dim: Dimensions): string {
   if (dim.height_mm) parts.push(`В. ${dim.height_mm}`)
   return parts.join(" × ") + " мм"
 }
+
+/** PDP hero crop focal point (`object-position`). Metadata overrides handle map. */
+const PDP_HERO_OBJECT_POSITION_BY_HANDLE: Record<string, string> = {
+  "greenwich-gr-09-1-mirror": "left center",
+}
+
+export function getPdpHeroObjectPosition(product: ProductLike): string | undefined {
+  const fromMeta = meta(product).pdp_hero_object_position
+  if (typeof fromMeta === "string" && fromMeta.trim()) {
+    return fromMeta.trim()
+  }
+  const handle = product.handle
+  if (typeof handle === "string") {
+    return PDP_HERO_OBJECT_POSITION_BY_HANDLE[handle]
+  }
+  return undefined
+}

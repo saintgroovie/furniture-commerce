@@ -2,6 +2,7 @@ import {
   collectExtraProductImageUrls,
   collectProductImageUrls,
   normalizeImageEntryUrl,
+  resolveMedusaBackendImageUrl,
 } from "./product-images"
 
 export type CardColorVariant = {
@@ -70,6 +71,12 @@ const EXECUTION_LABELS: Record<string, string> = {
   graphite: "Графит",
   ivory: "Слоновая кость",
   dark: "Тёмный",
+  cacao: "Какао",
+  capuchino: "Капучино",
+  powder: "Пудра",
+  terracote: "Терракота",
+  darkblue: "Син-серый",
+  "grey-blue": "Серо-голубой",
   frame: "Каркас",
   cloud: "Cloud",
   plane: "Plane",
@@ -112,7 +119,22 @@ export function extractMaterialTokenFromUrl(url: string): string | null {
 
 /** Paint color or material/finish token for execution grouping. */
 export function extractExecutionTokenFromUrl(url: string): string | null {
-  return extractColorTokenFromUrl(url) ?? extractMaterialTokenFromUrl(url)
+  return (
+    extractGreenwichFinishTokenFromUrl(url) ??
+    extractColorTokenFromUrl(url) ??
+    extractMaterialTokenFromUrl(url)
+  )
+}
+
+/** Greenwich legacy filenames: greenwich_{finish}07_*.jpg */
+export function extractGreenwichFinishTokenFromUrl(url: string): string | null {
+  const hay = (url.split("/").pop() ?? url).toLowerCase()
+  const m = hay.match(/greenwich[_-]([a-z0-9-]+?)07(?:[_-]|\.)/i)
+  if (!m?.[1]) return null
+  const raw = m[1].toLowerCase()
+  if (raw === "dark" && hay.includes("dark_white")) return "white"
+  if (raw === "dark" && hay.includes("darkblue")) return "darkblue"
+  return raw
 }
 
 export function isHeadboardModelToken(
@@ -163,7 +185,8 @@ function bucketProductImages(product: Record<string, unknown>): {
   const upholstered = isUpholsteredProduct(product)
 
   for (const url of urls) {
-    const colorToken = extractColorTokenFromUrl(url)
+    const colorToken =
+      extractGreenwichFinishTokenFromUrl(url) ?? extractColorTokenFromUrl(url)
     const materialToken = extractMaterialTokenFromUrl(url)
     const headboardTag = extractHeadboardTagFromUrl(url)
 
@@ -227,6 +250,12 @@ export function executionLabelForToken(
   token: string | null | undefined,
   product?: Record<string, unknown>
 ): string {
+  if (product && token) {
+    const labels = (product.metadata as Record<string, unknown> | undefined)
+      ?.finish_color_labels as Record<string, string> | undefined
+    const fromMap = labels?.[token]
+    if (typeof fromMap === "string" && fromMap.trim()) return fromMap.trim()
+  }
   if (product) {
     const meta = product.metadata as Record<string, unknown> | undefined
     for (const key of META_EXECUTION_KEYS) {
@@ -386,10 +415,84 @@ export function finishLabelForProduct(
   return "Цвет"
 }
 
+function finishExecutionsFromMetadata(
+  product: Record<string, unknown>
+): CardColorVariant[] | undefined {
+  const raw = (product.metadata as Record<string, unknown> | undefined)
+    ?.finish_color_executions
+  if (!Array.isArray(raw) || raw.length < 2) return undefined
+  const variants: CardColorVariant[] = []
+  for (const entry of raw) {
+    if (!entry || typeof entry !== "object") continue
+    const o = entry as Record<string, unknown>
+    const key = typeof o.key === "string" ? o.key : null
+    const label = typeof o.label === "string" ? o.label.trim() : ""
+    const urls = Array.isArray(o.urls)
+      ? o.urls.filter((u): u is string => typeof u === "string" && u.trim().length > 0)
+      : []
+    if (!key || !label || urls.length === 0) continue
+    const resolvedUrls = urls.map((u) => resolveMedusaBackendImageUrl(u))
+    const main = resolvedUrls[0]!
+    variants.push({
+      key,
+      label,
+      mainSrc: main,
+      extraSrcs: resolvedUrls.slice(1),
+      swatchToken: key,
+    })
+  }
+  return variants.length > 1 ? variants : undefined
+}
+
+function headboardExecutionsFromMetadata(
+  product: Record<string, unknown>
+): CardModelVariant[] | undefined {
+  const raw = (product.metadata as Record<string, unknown> | undefined)
+    ?.headboard_model_executions
+  if (!Array.isArray(raw) || raw.length < 2) return undefined
+  const variants: CardModelVariant[] = []
+  for (const entry of raw) {
+    if (!entry || typeof entry !== "object") continue
+    const o = entry as Record<string, unknown>
+    const key = typeof o.key === "string" ? o.key : null
+    const label = typeof o.label === "string" ? o.label.trim() : ""
+    const urls = Array.isArray(o.urls)
+      ? o.urls.filter((u): u is string => typeof u === "string" && u.trim().length > 0)
+      : []
+    if (!key || !label || urls.length === 0) continue
+    const resolved = urls.map((u) => resolveMedusaBackendImageUrl(u))
+    variants.push({
+      key,
+      label,
+      mainSrc: resolved[0]!,
+      extraSrcs: resolved.slice(1),
+      modelToken: key,
+    })
+  }
+  return variants.length > 1 ? variants : undefined
+}
+
 export function buildIntraProductExecutionSelectors(
   product: Record<string, unknown>,
   mainSrc: string
 ): CardExecutionSelectors {
+  const metadataHeadboard = headboardExecutionsFromMetadata(product)
+  if (metadataHeadboard) {
+    return {
+      headboard: metadataHeadboard,
+      confidence: "canonical",
+    }
+  }
+
+  const metadataFinish = finishExecutionsFromMetadata(product)
+  if (metadataFinish) {
+    return {
+      finish: metadataFinish,
+      finishLabel: finishLabelForProduct(product),
+      confidence: "canonical",
+    }
+  }
+
   const mainNorm = mainSrc.trim()
   const { upholsteryBuckets, woodBuckets, modelBuckets } =
     bucketProductImages(product)
