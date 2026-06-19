@@ -4,6 +4,13 @@ import {
   normalizeImageEntryUrl,
   resolveMedusaBackendImageUrl,
 } from "./product-images"
+import {
+  greenwichBedMatrixFromProduct,
+  isGreenwichBedProduct,
+  resolveGreenwichBedMedia,
+  defaultGreenwichBedSelection,
+  type GreenwichBedMatrixEntry,
+} from "./greenwich-bed-media"
 
 export type CardColorVariant = {
   key: string
@@ -12,6 +19,10 @@ export type CardColorVariant = {
   extraSrcs: string[]
   /** CSS chip token for rounded-square swatch fill fallback */
   swatchToken?: string | null
+  /** Canvas sample region when mainSrc is set (bed wood vs upholstery). */
+  swatchSampleRegion?: "default" | "upholstery" | "frame_wood"
+  /** Authoritative swatch fill from product metadata (overrides canvas pipette). */
+  swatchHex?: string | null
 }
 
 export type CardModelVariant = {
@@ -49,15 +60,27 @@ export type CardExecutionSelectors = {
   upholstery?: CardColorVariant[]
   wood?: CardColorVariant[]
   finish?: CardColorVariant[]
-  finishLabel?: "Цвет" | "Отделка"
+  finishLabel?: "Цвет" | "Отделка" | "Материал" | "Конструкция"
   confidence: CardExecutionConfidence
+  /** Greenwich bed: headboard × wood × fabric matrix (scoped galleries). */
+  greenwichBedMatrix?: GreenwichBedMatrixEntry[]
 }
 
 export type CardExecutionControls = CardExecutionSelectors
 
+/** True when PDP/catalog should render execution swatch rows. */
+export function hasPdpExecutionControls(sel: CardExecutionSelectors): boolean {
+  return (
+    (sel.headboard?.length ?? 0) > 1 ||
+    (sel.upholstery?.length ?? 0) > 1 ||
+    (sel.wood?.length ?? 0) > 1 ||
+    (sel.finish?.length ?? 0) > 1
+  )
+}
+
 const EXECUTION_LABELS: Record<string, string> = {
   [NEUTRAL_KEY]: "Основной",
-  blue: "Синий",
+  blue: "Голубой",
   grey: "Серый",
   gray: "Серый",
   cream: "Кремовый",
@@ -126,15 +149,48 @@ export function extractExecutionTokenFromUrl(url: string): string | null {
   )
 }
 
-/** Greenwich legacy filenames: greenwich_{finish}07_*.jpg */
+/** Greenwich legacy filenames: greenwich_{finish}07…, greenwich_dark_{finish}…, grey-blue04, etc. */
 export function extractGreenwichFinishTokenFromUrl(url: string): string | null {
   const hay = (url.split("/").pop() ?? url).toLowerCase()
-  const m = hay.match(/greenwich[_-]([a-z0-9-]+?)07(?:[_-]|\.)/i)
-  if (!m?.[1]) return null
-  const raw = m[1].toLowerCase()
-  if (raw === "dark" && hay.includes("dark_white")) return "white"
-  if (raw === "dark" && hay.includes("darkblue")) return "darkblue"
-  return raw
+  if (!/greenwich|gr-\d{2}-\d/i.test(hay)) return null
+
+  const darkCompound = hay.match(
+    /greenwich[_-]dark[_-](grey-blue|darkblue|white|cacao|powder|cream|terracote|graphite|green|olive|capuchino|grey)(?:\d{2}|[_\-.])/i
+  )
+  if (darkCompound?.[1]) return darkCompound[1].toLowerCase()
+
+  const numbered = hay.match(
+    /greenwich[_-](grey-blue|darkblue|white|cacao|powder|cream|terracote|graphite|green|olive|capuchino|grey)(?:\d{2}|07|08|09|04|05|06|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27)(?:[_\-.]|$)/i
+  )
+  if (numbered?.[1]) return numbered[1].toLowerCase()
+
+  const legacy07 = hay.match(/greenwich[_-]([a-z0-9-]+?)07(?:[_-]|\.)/i)
+  if (legacy07?.[1]) {
+    const raw = legacy07[1].toLowerCase()
+    if (raw === "dark" && hay.includes("dark_white")) return "white"
+    if (raw === "dark" && hay.includes("darkblue")) return "darkblue"
+    if (raw.startsWith("dark_")) return raw.slice(5)
+    return raw
+  }
+
+  const skuDark = hay.match(
+    /[_-]dark[_-](grey-brown|cacao|powder|cream|terracote|graphite|green|olive|capuchino|grey|white)/i
+  )
+  if (skuDark?.[1]) {
+    const t = skuDark[1].toLowerCase()
+    return t === "grey-brown" ? "cacao" : t
+  }
+
+  return null
+}
+
+/** Non-finish detail/size assets that must not lead a color swatch bucket. */
+export function isGreenwichNeutralDetailAsset(url: string): boolean {
+  const hay = (url.split("/").pop() ?? url).toLowerCase()
+  if (/\d{4}-\d{2}-\d{2}/.test(hay)) return true
+  if (/sizes\d|габарит|наполнение|noliver_var|bedroom|wideheader|view0/i.test(hay)) return true
+  if (!extractGreenwichFinishTokenFromUrl(url)) return true
+  return false
 }
 
 export function isHeadboardModelToken(
@@ -251,10 +307,16 @@ export function executionLabelForToken(
   product?: Record<string, unknown>
 ): string {
   if (product && token) {
-    const labels = (product.metadata as Record<string, unknown> | undefined)
-      ?.finish_color_labels as Record<string, string> | undefined
-    const fromMap = labels?.[token]
-    if (typeof fromMap === "string" && fromMap.trim()) return fromMap.trim()
+    const labelMaps = [
+      labelsFromMetadata(product, "paint_finish_labels", "finish_color_labels"),
+      labelsFromMetadata(product, "fabric_upholstery_labels", "upholstery_color_labels"),
+      labelsFromMetadata(product, "frame_material_labels"),
+      labelsFromMetadata(product, "construction_tier_labels", "material_tier_labels"),
+    ]
+    for (const labels of labelMaps) {
+      const fromMap = labels?.[token]
+      if (typeof fromMap === "string" && fromMap.trim()) return fromMap.trim()
+    }
   }
   if (product) {
     const meta = product.metadata as Record<string, unknown> | undefined
@@ -415,11 +477,9 @@ export function finishLabelForProduct(
   return "Цвет"
 }
 
-function finishExecutionsFromMetadata(
-  product: Record<string, unknown>
+function colorExecutionsFromMetadataArray(
+  raw: unknown
 ): CardColorVariant[] | undefined {
-  const raw = (product.metadata as Record<string, unknown> | undefined)
-    ?.finish_color_executions
   if (!Array.isArray(raw) || raw.length < 2) return undefined
   const variants: CardColorVariant[] = []
   for (const entry of raw) {
@@ -430,7 +490,22 @@ function finishExecutionsFromMetadata(
     const urls = Array.isArray(o.urls)
       ? o.urls.filter((u): u is string => typeof u === "string" && u.trim().length > 0)
       : []
-    if (!key || !label || urls.length === 0) continue
+    const swatchHex =
+      typeof o.swatch_hex === "string" && o.swatch_hex.trim().length > 0
+        ? o.swatch_hex.trim()
+        : null
+    if (!key || !label || urls.length === 0) {
+      if (!key || !label || !swatchHex) continue
+      variants.push({
+        key,
+        label,
+        mainSrc: "",
+        extraSrcs: [],
+        swatchToken: key,
+        swatchHex,
+      })
+      continue
+    }
     const resolvedUrls = urls.map((u) => resolveMedusaBackendImageUrl(u))
     const main = resolvedUrls[0]!
     variants.push({
@@ -439,9 +514,91 @@ function finishExecutionsFromMetadata(
       mainSrc: main,
       extraSrcs: resolvedUrls.slice(1),
       swatchToken: key,
+      swatchHex,
     })
   }
   return variants.length > 1 ? variants : undefined
+}
+
+function metadataExecutionsRaw(
+  product: Record<string, unknown>,
+  ...keys: string[]
+): unknown {
+  const meta = product.metadata as Record<string, unknown> | undefined
+  if (!meta) return undefined
+  for (const key of keys) {
+    const v = meta[key]
+    if (Array.isArray(v) && v.length > 0) return v
+  }
+  return undefined
+}
+
+function labelsFromMetadata(
+  product: Record<string, unknown>,
+  ...keys: string[]
+): Record<string, string> | undefined {
+  const meta = product.metadata as Record<string, unknown> | undefined
+  if (!meta) return undefined
+  for (const key of keys) {
+    const v = meta[key]
+    if (v && typeof v === "object" && !Array.isArray(v)) {
+      return v as Record<string, string>
+    }
+  }
+  return undefined
+}
+
+function finishExecutionsFromMetadata(
+  product: Record<string, unknown>
+): CardColorVariant[] | undefined {
+  const raw = metadataExecutionsRaw(
+    product,
+    "paint_finish_executions",
+    "finish_color_executions"
+  )
+  return colorExecutionsFromMetadataArray(raw)
+}
+
+function fabricUpholsteryExecutionsFromMetadata(
+  product: Record<string, unknown>
+): CardColorVariant[] | undefined {
+  const raw = metadataExecutionsRaw(
+    product,
+    "fabric_upholstery_executions",
+    "upholstery_color_executions"
+  )
+  return colorExecutionsFromMetadataArray(raw)
+}
+
+function frameMaterialExecutionsFromMetadata(
+  product: Record<string, unknown>
+): CardColorVariant[] | undefined {
+  const raw = metadataExecutionsRaw(product, "frame_material_executions")
+  return colorExecutionsFromMetadataArray(raw)
+}
+
+function constructionTierExecutionsFromMetadata(
+  product: Record<string, unknown>
+): CardColorVariant[] | undefined {
+  const raw = metadataExecutionsRaw(
+    product,
+    "construction_tier_executions",
+    "material_tier_executions"
+  )
+  return colorExecutionsFromMetadataArray(raw)
+}
+
+/** @deprecated use fabricUpholsteryExecutionsFromMetadata */
+function upholsteryExecutionsFromMetadata(
+  product: Record<string, unknown>
+): CardColorVariant[] | undefined {
+  return fabricUpholsteryExecutionsFromMetadata(product)
+}
+
+function materialTierExecutionsFromMetadata(
+  product: Record<string, unknown>
+): CardColorVariant[] | undefined {
+  return constructionTierExecutionsFromMetadata(product)
 }
 
 function headboardExecutionsFromMetadata(
@@ -472,23 +629,170 @@ function headboardExecutionsFromMetadata(
   return variants.length > 1 ? variants : undefined
 }
 
+function dimensionOnlyColorVariants(
+  raw: unknown,
+  swatchKey: (key: string) => string | null,
+  sampleRegion: "upholstery" | "frame_wood"
+): CardColorVariant[] | undefined {
+  if (!Array.isArray(raw) || raw.length < 2) return undefined
+  const variants: CardColorVariant[] = []
+  for (const entry of raw) {
+    if (!entry || typeof entry !== "object") continue
+    const o = entry as Record<string, unknown>
+    const key = typeof o.key === "string" ? o.key : null
+    const label = typeof o.label === "string" ? o.label.trim() : ""
+    if (!key || !label) continue
+    const swatchHex =
+      typeof o.swatch_hex === "string" && o.swatch_hex.trim().length > 0
+        ? o.swatch_hex.trim()
+        : null
+    variants.push({
+      key,
+      label,
+      mainSrc: "",
+      extraSrcs: [],
+      swatchToken: swatchKey(key),
+      swatchSampleRegion: sampleRegion,
+      swatchHex,
+    })
+  }
+  return variants.length > 1 ? variants : undefined
+}
+
+function greenwichBedSelectorsFromMetadata(
+  product: Record<string, unknown>
+): CardExecutionSelectors | null {
+  if (!isGreenwichBedProduct(product)) return null
+  const matrix = greenwichBedMatrixFromProduct(product)
+  if (matrix.length < 4) return null
+
+  const headboard = headboardExecutionsFromMetadata(product)
+  if (!headboard) return null
+
+  const meta = product.metadata as Record<string, unknown> | undefined
+  const wood = dimensionOnlyColorVariants(
+    meta?.frame_material_executions,
+    (k) => (k === "dark" ? "graphite" : "beige"),
+    "frame_wood"
+  )
+  const upholstery = dimensionOnlyColorVariants(
+    meta?.fabric_upholstery_executions,
+    (k) => (k === "darkblue" ? "darkblue" : "beige"),
+    "upholstery"
+  )
+  if (!wood || !upholstery) return null
+
+  const defaults = defaultGreenwichBedSelection(matrix)
+  const media = resolveGreenwichBedMedia(
+    matrix,
+    defaults.headboard,
+    defaults.frameMaterial,
+    defaults.fabric
+  )
+
+  return {
+    headboard,
+    wood,
+    upholstery,
+    greenwichBedMatrix: matrix,
+    confidence: "canonical",
+    ...(media && {
+      /* default hero hint for cardThumbnail — callers use matrix in gallery core */
+    }),
+  }
+}
+
+function executionKeysMatch(
+  a: CardColorVariant[],
+  b: CardColorVariant[]
+): boolean {
+  if (a.length !== b.length || a.length < 2) return false
+  const keysA = a.map((v) => v.key).sort().join("\u0000")
+  const keysB = b.map((v) => v.key).sort().join("\u0000")
+  return keysA === keysB
+}
+
 export function buildIntraProductExecutionSelectors(
   product: Record<string, unknown>,
   mainSrc: string
 ): CardExecutionSelectors {
+  const greenwichBed = greenwichBedSelectorsFromMetadata(product)
+  if (greenwichBed) return greenwichBed
+
   const metadataHeadboard = headboardExecutionsFromMetadata(product)
+  const metadataFabric = fabricUpholsteryExecutionsFromMetadata(product)
+  const metadataPaint = finishExecutionsFromMetadata(product)
+  const metadataFrame = frameMaterialExecutionsFromMetadata(product)
+  const metadataConstruction = constructionTierExecutionsFromMetadata(product)
+
   if (metadataHeadboard) {
-    return {
+    const out: CardExecutionSelectors = {
       headboard: metadataHeadboard,
+      confidence: "canonical",
+    }
+    if (metadataFabric) out.upholstery = metadataFabric
+    if (metadataPaint) {
+      out.finish = metadataPaint
+      out.finishLabel = finishLabelForProduct(product)
+    }
+    return out
+  }
+
+  if (metadataConstruction) {
+    return {
+      finish: metadataConstruction,
+      finishLabel: "Конструкция",
       confidence: "canonical",
     }
   }
 
-  const metadataFinish = finishExecutionsFromMetadata(product)
-  if (metadataFinish) {
+  if (metadataPaint && metadataFabric) {
+    if (executionKeysMatch(metadataPaint, metadataFabric)) {
+      return {
+        upholstery: metadataFabric,
+        wood: metadataFrame,
+        confidence: "canonical",
+      }
+    }
     return {
-      finish: metadataFinish,
+      finish: metadataPaint,
       finishLabel: finishLabelForProduct(product),
+      upholstery: metadataFabric,
+      wood: metadataFrame,
+      confidence: "canonical",
+    }
+  }
+
+  if (metadataPaint) {
+    const out: CardExecutionSelectors = {
+      finish: metadataPaint,
+      finishLabel: finishLabelForProduct(product),
+      confidence: "canonical",
+    }
+    if (metadataFrame) out.wood = metadataFrame
+    return out
+  }
+
+  if (metadataFabric) {
+    return {
+      upholstery: metadataFabric,
+      wood: metadataFrame,
+      confidence: "canonical",
+    }
+  }
+
+  if (metadataFrame) {
+    return {
+      wood: metadataFrame,
+      confidence: "canonical",
+    }
+  }
+
+  const metadataMaterialTier = materialTierExecutionsFromMetadata(product)
+  if (metadataMaterialTier) {
+    return {
+      finish: metadataMaterialTier,
+      finishLabel: "Конструкция",
       confidence: "canonical",
     }
   }

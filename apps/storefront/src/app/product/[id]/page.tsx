@@ -9,13 +9,31 @@ import {
 } from "@/lib/request-quote"
 import { ProductCta } from "@/components/product-cta"
 import { OliverPdpMediaSwitcher } from "@/components/oliver-pdp-media-switcher"
+import { GreenwichBedPdpMediaSwitcher } from "@/components/greenwich-bed-pdp-media-switcher"
+import { ProductPdpExecutionMediaSwitcher } from "@/components/product-pdp-execution-media-switcher"
 import { ProductPdpMediaSwitcher } from "@/components/product-pdp-media-switcher"
+import {
+  buildIntraProductExecutionSelectors,
+  cardThumbnailSrcFromProduct,
+  finishLabelForProduct,
+  hasPdpExecutionControls,
+} from "@/lib/card-color-media"
+import {
+  defaultGreenwichBedSelection,
+  isGreenwichBedProduct,
+  resolveGreenwichBedMedia,
+} from "@/lib/greenwich-bed-media"
 import { getDisplayGroupMembers } from "@/lib/display-group"
-import { collectDisplayGroupExtraImageUrls } from "@/lib/product-images"
+import {
+  collectDisplayGroupExtraImageUrls,
+  collectExtraProductImageUrls,
+  mergeUniqueExtraUrls,
+} from "@/lib/product-images"
 import {
   getCollectionLabel,
   getSubcollectionLabel,
   getCanonicalName,
+  getBuyerFacingProductTitle,
   getArticle,
   getDimensions,
   formatDimensionsLabeled,
@@ -49,7 +67,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     const res = await getProduct(params.id)
     const product = res.product as Record<string, unknown> | undefined
     if (!product) return { title: "Товар", alternates: { canonical: `${base}/product/${params.id}` } }
-    const title = String(product.title ?? "Товар")
+    const title = getBuyerFacingProductTitle(product)
     const desc = product.description ? truncate(String(product.description), 160) : "Товар из каталога Woodright."
     const imageUrl = primaryImageForMeta(product)
     return {
@@ -108,6 +126,58 @@ export default async function ProductPage({ params }: { params: { id: string } }
   const base = getSiteUrl()
   const handle = String(product.handle ?? "")
   const isOliver = handle.startsWith("ol-")
+  const isGreenwichBed = isGreenwichBedProduct(product)
+  const thumbSrc = cardThumbnailSrcFromProduct(product)
+  const executionSelectors = buildIntraProductExecutionSelectors(product, thumbSrc)
+  const greenwichBedMatrix = executionSelectors.greenwichBedMatrix
+  const bedDefaults =
+    greenwichBedMatrix && greenwichBedMatrix.length > 0
+      ? defaultGreenwichBedSelection(greenwichBedMatrix)
+      : null
+  const bedMatrixMedia =
+    bedDefaults && greenwichBedMatrix
+      ? resolveGreenwichBedMedia(
+          greenwichBedMatrix,
+          bedDefaults.headboard,
+          bedDefaults.frameMaterial,
+          bedDefaults.fabric
+        )
+      : null
+
+  const executionPdpMedia = (() => {
+    if (bedMatrixMedia) return bedMatrixMedia
+    if (!hasPdpExecutionControls(executionSelectors)) return null
+    const headboardVariants = executionSelectors.headboard
+    const upholsteryVariants = executionSelectors.upholstery
+    const woodVariants = executionSelectors.wood
+    const finishVariants = executionSelectors.finish
+    const activeHeadboard = headboardVariants?.[0]
+    const activeUpholstery = upholsteryVariants?.[0]
+    const activeWood = woodVariants?.[0]
+    const activeFinish = finishVariants?.[0]
+    const mainSrc =
+      activeHeadboard?.mainSrc ??
+      activeUpholstery?.mainSrc ??
+      activeWood?.mainSrc ??
+      activeFinish?.mainSrc ??
+      thumbSrc
+    const extraSrcs =
+      activeHeadboard != null
+        ? activeHeadboard.extraSrcs
+        : activeUpholstery != null
+          ? activeUpholstery.extraSrcs
+          : activeWood != null
+            ? activeWood.extraSrcs
+            : activeFinish != null
+              ? activeFinish.extraSrcs
+              : mergeUniqueExtraUrls(thumbSrc, [
+                  collectExtraProductImageUrls(product, thumbSrc),
+                ])
+    return { mainSrc, extraSrcs }
+  })()
+
+  const useExecutionPdp =
+    isGreenwichBed || hasPdpExecutionControls(executionSelectors)
   const price = getPrice(product)
   const requestQuotePrice = isRequestQuoteProduct(product)
     ? formatRequestQuotePriceLabel(product)
@@ -127,15 +197,19 @@ export default async function ProductPage({ params }: { params: { id: string } }
     }
   }
 
-  const mainImage = pdpHeroThumbnail(product)
+  const mainImage =
+    executionPdpMedia?.mainSrc ??
+    bedMatrixMedia?.mainSrc ??
+    pdpHeroThumbnail(product)
   const mainNorm = mainImage ?? ""
   const heroObjectPosition = getPdpHeroObjectPosition(product)
-  const pdpExtraSrcs = collectDisplayGroupExtraImageUrls(
-    [product, ...displayGroupMembers],
-    mainNorm
-  )
+  const pdpExtraSrcs = executionPdpMedia
+    ? executionPdpMedia.extraSrcs
+    : bedMatrixMedia
+      ? bedMatrixMedia.extraSrcs
+      : collectDisplayGroupExtraImageUrls([product, ...displayGroupMembers], mainNorm)
 
-  const titleStr = String(product.title ?? "Товар")
+  const titleStr = getBuyerFacingProductTitle(product)
   const canonicalName = getCanonicalName(product)
   const showCanonicalLine =
     canonicalName != null &&
@@ -158,7 +232,34 @@ export default async function ProductPage({ params }: { params: { id: string } }
       />
       <div className="product-detail">
         <div className="product-detail-media-col">
-          {isOliver ? (
+          {isGreenwichBed ? (
+            <GreenwichBedPdpMediaSwitcher
+              mainSrc={mainNorm}
+              extraSrcs={pdpExtraSrcs}
+              headboardVariants={executionSelectors.headboard}
+              upholsteryVariants={executionSelectors.upholstery}
+              woodVariants={executionSelectors.wood}
+              greenwichBedMatrix={greenwichBedMatrix}
+              title={titleStr}
+              heroObjectPosition={heroObjectPosition}
+            />
+          ) : useExecutionPdp ? (
+            <ProductPdpExecutionMediaSwitcher
+              mainSrc={mainNorm}
+              extraSrcs={pdpExtraSrcs}
+              headboardVariants={executionSelectors.headboard}
+              upholsteryVariants={executionSelectors.upholstery}
+              woodVariants={executionSelectors.wood}
+              finishVariants={executionSelectors.finish}
+              finishLabel={
+                executionSelectors.finishLabel ??
+                finishLabelForProduct(product)
+              }
+              title={titleStr}
+              oliverMode={isOliver}
+              heroObjectPosition={heroObjectPosition}
+            />
+          ) : isOliver ? (
             <OliverPdpMediaSwitcher
               mainSrc={mainNorm}
               extraSrcs={pdpExtraSrcs}

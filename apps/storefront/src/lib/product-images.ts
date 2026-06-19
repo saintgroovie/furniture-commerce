@@ -78,6 +78,26 @@ export function normalizeImageEntryUrl(entry: unknown): string | null {
   return null
 }
 
+/** Case-insensitive basename key for carousel dedupe (OL-26-1 vs ol-26-1 paths). */
+export function galleryImageBasenameKey(url: string): string {
+  const base = url.split("/").pop() ?? url
+  return base.toLowerCase()
+}
+
+function mainSrcMatchesUrl(mainNorm: string, url: string): boolean {
+  if (!mainNorm) return false
+  if (url === mainNorm) return true
+  return galleryImageBasenameKey(url) === galleryImageBasenameKey(mainNorm)
+}
+
+function pushUniqueGalleryUrl(out: string[], url: string, mainNorm: string): void {
+  const v = filterObviousGarbageImageUrl(url)
+  if (!v) return
+  if (mainSrcMatchesUrl(mainNorm, v)) return
+  if (out.some((u) => u === v || galleryImageBasenameKey(u) === galleryImageBasenameKey(v))) return
+  out.push(v)
+}
+
 /**
  * URLs from `product.images` only, for catalog card extras (not hero).
  * Omits empty/invalid entries, trims, dedupes, excludes `mainSrc` (canonical thumbnail).
@@ -92,10 +112,7 @@ export function collectExtraProductImageUrls(
   const list: unknown[] = Array.isArray(raw) ? raw : []
   for (const entry of list) {
     const u = normalizeImageEntryUrl(entry)
-    const v = u ? filterObviousGarbageImageUrl(u) : null
-    if (!v) continue
-    if (mainNorm.length > 0 && v === mainNorm) continue
-    if (!out.includes(v)) out.push(v)
+    if (u) pushUniqueGalleryUrl(out, u, mainNorm)
   }
   return out
 }
@@ -116,19 +133,10 @@ export function collectDisplayGroupExtraImageUrls(
     const list: unknown[] = Array.isArray(raw) ? raw : []
     for (const entry of list) {
       const u = normalizeImageEntryUrl(entry)
-      const v = u ? filterObviousGarbageImageUrl(u) : null
-      if (!v) continue
-      if (mainNorm.length > 0 && v === mainNorm) continue
-      if (!out.includes(v)) out.push(v)
+      if (u) pushUniqueGalleryUrl(out, u, mainNorm)
     }
     const thumb = m.thumbnail
-    if (typeof thumb === "string") {
-      const s0 = thumb.trim()
-      const s = filterObviousGarbageImageUrl(s0)
-      if (!s) continue
-      if (mainNorm.length > 0 && s === mainNorm) continue
-      if (!out.includes(s)) out.push(s)
-    }
+    if (typeof thumb === "string") pushUniqueGalleryUrl(out, thumb.trim(), mainNorm)
   }
   return out
 }
@@ -159,25 +167,24 @@ export function buildGalleryStripUrls(mainSrc: string, extraSrcs: string[]): str
   if (mainNorm) out.push(mainNorm)
   for (const u of extraSrcs) {
     if (typeof u !== "string") continue
-    const s = u.trim()
-    if (!s || s === mainNorm || out.includes(s)) continue
-    out.push(s)
+    pushUniqueGalleryUrl(out, u.trim(), mainNorm)
   }
   return out
 }
 
 /** Thumbnail first, then `images[].url`, deduped (raw API strings). */
 export function collectProductImageUrls(product: Record<string, unknown>): string[] {
-  const urls: string[] = []
+  const out: string[] = []
   const thumb = product.thumbnail
-  if (typeof thumb === "string" && thumb.trim()) urls.push(thumb.trim())
+  if (typeof thumb === "string" && thumb.trim()) out.push(thumb.trim())
   const raw = product.images
   const list: unknown[] = Array.isArray(raw) ? raw : []
   for (const entry of list) {
     const u = normalizeImageEntryUrl(entry)
-    if (u && !urls.includes(u)) urls.push(u)
+    if (!u) continue
+    pushUniqueGalleryUrl(out, u, "")
   }
-  return urls
+  return out
 }
 
 /** Alias for diagnostics (same as {@link collectProductImageUrls} after rollback). */

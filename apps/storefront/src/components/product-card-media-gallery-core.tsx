@@ -4,6 +4,15 @@ import Link from "next/link"
 import type { MouseEvent } from "react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { CardColorVariant, CardModelVariant } from "@/lib/card-color-media"
+import {
+  defaultGreenwichBedSelection,
+  resolveGreenwichBedMedia,
+  coerceGreenwichBedSelection,
+  availableWoodKeysForHeadboard,
+  availableFabricKeysForHeadboard,
+  buildGreenwichBedSwatchVariants,
+  type GreenwichBedMatrixEntry,
+} from "@/lib/greenwich-bed-media"
 import { buildGalleryStripUrls } from "@/lib/product-images"
 import { useVerifiedStripExtras } from "@/components/use-verified-strip-extras"
 import { useSwatchColors } from "@/lib/use-swatch-colors"
@@ -16,10 +25,14 @@ type Props = {
   upholsteryVariants?: CardColorVariant[]
   woodVariants?: CardColorVariant[]
   finishVariants?: CardColorVariant[]
-  finishLabel?: "Цвет" | "Отделка"
+  finishLabel?: "Цвет" | "Отделка" | "Материал" | "Конструкция"
   href: string
   alt: string
   oliverMode?: boolean
+  /** Greenwich bed matrix — scoped hero + gallery per headboard/wood/fabric. */
+  greenwichBedMatrix?: GreenwichBedMatrixEntry[]
+  layout?: "card" | "pdp"
+  heroObjectPosition?: string
 }
 
 function resolveCombinedMedia(
@@ -208,7 +221,19 @@ export function ProductCardMediaGalleryCore({
   href,
   alt,
   oliverMode = false,
+  greenwichBedMatrix,
+  layout = "card",
+  heroObjectPosition,
 }: Props) {
+  const isGreenwichBed = Boolean(greenwichBedMatrix && greenwichBedMatrix.length > 0)
+  const bedDefaults = useMemo(
+    () =>
+      isGreenwichBed && greenwichBedMatrix
+        ? defaultGreenwichBedSelection(greenwichBedMatrix)
+        : null,
+    [greenwichBedMatrix, isGreenwichBed]
+  )
+
   const hasHeadboard = Boolean(headboardVariants && headboardVariants.length > 1)
   const hasUpholstery = Boolean(
     upholsteryVariants && upholsteryVariants.length > 1
@@ -216,26 +241,14 @@ export function ProductCardMediaGalleryCore({
   const hasWood = Boolean(woodVariants && woodVariants.length > 1)
   const hasFinish = Boolean(finishVariants && finishVariants.length > 1)
 
-  const allSwatchVariants = useMemo(
-    () => [
-      ...(upholsteryVariants ?? []),
-      ...(woodVariants ?? []),
-      ...(finishVariants ?? []),
-    ],
-    [upholsteryVariants, woodVariants, finishVariants]
-  )
-  const swatchSamples = useSwatchColors(
-    allSwatchVariants.length > 1 ? allSwatchVariants : undefined
-  )
-
   const [activeHeadboardKey, setActiveHeadboardKey] = useState<string | null>(
-    () => headboardVariants?.[0]?.key ?? null
+    () => bedDefaults?.headboard ?? headboardVariants?.[0]?.key ?? null
   )
   const [activeUpholsteryKey, setActiveUpholsteryKey] = useState<string | null>(
-    () => upholsteryVariants?.[0]?.key ?? null
+    () => bedDefaults?.fabric ?? upholsteryVariants?.[0]?.key ?? null
   )
   const [activeWoodKey, setActiveWoodKey] = useState<string | null>(
-    () => woodVariants?.[0]?.key ?? null
+    () => bedDefaults?.frameMaterial ?? woodVariants?.[0]?.key ?? null
   )
   const [activeFinishKey, setActiveFinishKey] = useState<string | null>(
     () => finishVariants?.[0]?.key ?? null
@@ -275,14 +288,43 @@ export function ProductCardMediaGalleryCore({
     )
   }, [activeFinishKey, finishVariants, hasFinish])
 
-  const resolved = resolveCombinedMedia(
+  const resolved = useMemo(() => {
+    if (
+      isGreenwichBed &&
+      greenwichBedMatrix &&
+      activeHeadboardKey &&
+      activeWoodKey &&
+      activeUpholsteryKey
+    ) {
+      const fromMatrix = resolveGreenwichBedMedia(
+        greenwichBedMatrix,
+        activeHeadboardKey,
+        activeWoodKey,
+        activeUpholsteryKey
+      )
+      if (fromMatrix) return fromMatrix
+    }
+    return resolveCombinedMedia(
+      mainSrc,
+      extraSrcs,
+      activeHeadboard,
+      activeUpholstery,
+      activeWood,
+      activeFinish
+    )
+  }, [
+    isGreenwichBed,
+    greenwichBedMatrix,
+    activeHeadboardKey,
+    activeWoodKey,
+    activeUpholsteryKey,
     mainSrc,
     extraSrcs,
     activeHeadboard,
     activeUpholstery,
     activeWood,
-    activeFinish
-  )
+    activeFinish,
+  ])
   const variantMain = resolved.mainSrc
   const variantExtras = resolved.extraSrcs
 
@@ -320,6 +362,7 @@ export function ProductCardMediaGalleryCore({
               `${v.key}\u0001${v.mainSrc}\u0001${v.extraSrcs.join("\u0002")}`
           )
           .join("\u0007") ?? "",
+        greenwichBedMatrix?.length ?? 0,
       ].join("\u0006"),
     [
       mainSrc,
@@ -328,23 +371,36 @@ export function ProductCardMediaGalleryCore({
       upholsteryVariants,
       woodVariants,
       finishVariants,
+      greenwichBedMatrix,
     ]
   )
 
   useEffect(() => {
-    setActiveHeadboardKey(headboardVariants?.[0]?.key ?? null)
-    setActiveUpholsteryKey(upholsteryVariants?.[0]?.key ?? null)
-    setActiveWoodKey(woodVariants?.[0]?.key ?? null)
+    const defaults =
+      greenwichBedMatrix && greenwichBedMatrix.length > 0
+        ? defaultGreenwichBedSelection(greenwichBedMatrix)
+        : null
+    setActiveHeadboardKey(defaults?.headboard ?? headboardVariants?.[0]?.key ?? null)
+    setActiveUpholsteryKey(defaults?.fabric ?? upholsteryVariants?.[0]?.key ?? null)
+    setActiveWoodKey(defaults?.frameMaterial ?? woodVariants?.[0]?.key ?? null)
     setActiveFinishKey(finishVariants?.[0]?.key ?? null)
-    const initial = resolveCombinedMedia(
-      mainSrc,
-      extraSrcs,
-      headboardVariants?.[0],
-      upholsteryVariants?.[0],
-      woodVariants?.[0],
-      finishVariants?.[0]
-    )
-    setDisplayHeroSrc(initial.mainSrc)
+    const initial =
+      defaults && greenwichBedMatrix
+        ? resolveGreenwichBedMedia(
+            greenwichBedMatrix,
+            defaults.headboard,
+            defaults.frameMaterial,
+            defaults.fabric
+          )
+        : resolveCombinedMedia(
+            mainSrc,
+            extraSrcs,
+            headboardVariants?.[0],
+            upholsteryVariants?.[0],
+            woodVariants?.[0],
+            finishVariants?.[0]
+          )
+    setDisplayHeroSrc(initial?.mainSrc?.trim() ?? mainSrc.trim())
     setHeroFailed(false)
     setActiveGalleryUrl(null)
     setFailedExtras(new Set())
@@ -356,9 +412,18 @@ export function ProductCardMediaGalleryCore({
     upholsteryVariants,
     woodVariants,
     finishVariants,
+    greenwichBedMatrix,
     mainSrc,
     extraSrcs,
   ])
+
+  const resolveMatrixMain = useCallback(
+    (hb: string, wood: string, fabric: string) => {
+      if (!greenwichBedMatrix) return null
+      return resolveGreenwichBedMedia(greenwichBedMatrix, hb, wood, fabric)
+    },
+    [greenwichBedMatrix]
+  )
 
   const visibleStrip = useVerifiedStripExtras(
     galleryStripCandidates,
@@ -368,9 +433,118 @@ export function ProductCardMediaGalleryCore({
   const showHeadboard = hasHeadboard && headboardVariants != null
   const showUpholstery = hasUpholstery && upholsteryVariants != null
   const showWood = hasWood && woodVariants != null
+  const visibleWoodVariants = useMemo(() => {
+    if (!isGreenwichBed || !greenwichBedMatrix || !activeHeadboardKey || !woodVariants) {
+      return woodVariants
+    }
+    const allowed = new Set(
+      availableWoodKeysForHeadboard(greenwichBedMatrix, activeHeadboardKey)
+    )
+    return woodVariants.filter((v) => allowed.has(v.key))
+  }, [isGreenwichBed, greenwichBedMatrix, activeHeadboardKey, woodVariants])
+  const visibleUpholsteryVariants = useMemo(() => {
+    if (
+      !isGreenwichBed ||
+      !greenwichBedMatrix ||
+      !activeHeadboardKey ||
+      !activeWoodKey ||
+      !upholsteryVariants
+    ) {
+      return upholsteryVariants
+    }
+    const allowed = new Set(
+      availableFabricKeysForHeadboard(
+        greenwichBedMatrix,
+        activeHeadboardKey,
+        activeWoodKey
+      )
+    )
+    return upholsteryVariants.filter((v) => allowed.has(v.key))
+  }, [
+    isGreenwichBed,
+    greenwichBedMatrix,
+    activeHeadboardKey,
+    activeWoodKey,
+    upholsteryVariants,
+  ])
+  const showVisibleUpholstery =
+    Boolean(visibleUpholsteryVariants && visibleUpholsteryVariants.length > 1)
+  const showVisibleWood = Boolean(visibleWoodVariants && visibleWoodVariants.length > 1)
+
+  const headboardFabricsForSampling = useMemo(() => {
+    if (
+      !isGreenwichBed ||
+      !greenwichBedMatrix ||
+      !activeHeadboardKey ||
+      !upholsteryVariants
+    ) {
+      return upholsteryVariants
+    }
+    const allowed = new Set<string>()
+    for (const wood of availableWoodKeysForHeadboard(
+      greenwichBedMatrix,
+      activeHeadboardKey
+    )) {
+      for (const fabric of availableFabricKeysForHeadboard(
+        greenwichBedMatrix,
+        activeHeadboardKey,
+        wood
+      )) {
+        allowed.add(fabric)
+      }
+    }
+    return upholsteryVariants.filter((v) => allowed.has(v.key))
+  }, [
+    isGreenwichBed,
+    greenwichBedMatrix,
+    activeHeadboardKey,
+    upholsteryVariants,
+  ])
+
+  const swatchSamplingVariants = useMemo(() => {
+    if (isGreenwichBed && greenwichBedMatrix && activeHeadboardKey) {
+      return buildGreenwichBedSwatchVariants(
+        greenwichBedMatrix,
+        activeHeadboardKey,
+        visibleWoodVariants ?? [],
+        headboardFabricsForSampling ?? [],
+        finishVariants
+      )
+    }
+    return [
+      ...(upholsteryVariants ?? []),
+      ...(woodVariants ?? []),
+      ...(finishVariants ?? []),
+    ]
+  }, [
+    isGreenwichBed,
+    greenwichBedMatrix,
+    activeHeadboardKey,
+    visibleWoodVariants,
+    headboardFabricsForSampling,
+    upholsteryVariants,
+    woodVariants,
+    finishVariants,
+  ])
+
+  const swatchSamplingKey = useMemo(
+    () =>
+      swatchSamplingVariants
+        .filter((v) => v.mainSrc?.trim())
+        .map((v) => `${v.key}:${v.mainSrc}`)
+        .join("|"),
+    [swatchSamplingVariants]
+  )
+
+  const swatchSamples = useSwatchColors(
+    swatchSamplingKey.split("|").filter(Boolean).length > 1
+      ? swatchSamplingVariants
+      : undefined
+  )
+
   const showFinish = hasFinish && finishVariants != null
   const showExecutionControls =
-    showHeadboard || showUpholstery || showWood || showFinish
+    showHeadboard || showVisibleUpholstery || showVisibleWood || showFinish
   const showThumbRow = visibleStrip.length > 0
 
   const applyMediaSelection = useCallback(
@@ -434,9 +608,36 @@ export function ProductCardMediaGalleryCore({
       e.stopPropagation()
       if (variant.key === activeHeadboardKey) return
       setActiveHeadboardKey(variant.key)
+      if (isGreenwichBed && greenwichBedMatrix && activeWoodKey && activeUpholsteryKey) {
+        const coerced = coerceGreenwichBedSelection(
+          greenwichBedMatrix,
+          variant.key,
+          activeWoodKey,
+          activeUpholsteryKey
+        )
+        setActiveWoodKey(coerced.frameMaterial)
+        setActiveUpholsteryKey(coerced.fabric)
+        const media = resolveGreenwichBedMedia(
+          greenwichBedMatrix,
+          coerced.headboard,
+          coerced.frameMaterial,
+          coerced.fabric
+        )
+        if (media) {
+          applyMediaSelection(media.mainSrc)
+          return
+        }
+      }
       applyMediaSelection(variant.mainSrc.trim())
     },
-    [activeHeadboardKey, applyMediaSelection]
+    [
+      activeHeadboardKey,
+      activeWoodKey,
+      activeUpholsteryKey,
+      isGreenwichBed,
+      greenwichBedMatrix,
+      applyMediaSelection,
+    ]
   )
 
   const onUpholsteryPick = useCallback(
@@ -445,6 +646,26 @@ export function ProductCardMediaGalleryCore({
       e.stopPropagation()
       if (variant.key === activeUpholsteryKey) return
       setActiveUpholsteryKey(variant.key)
+      if (isGreenwichBed && greenwichBedMatrix && activeHeadboardKey && activeWoodKey) {
+        const coerced = coerceGreenwichBedSelection(
+          greenwichBedMatrix,
+          activeHeadboardKey,
+          activeWoodKey,
+          variant.key
+        )
+        setActiveWoodKey(coerced.frameMaterial)
+        setActiveUpholsteryKey(coerced.fabric)
+        const media = resolveGreenwichBedMedia(
+          greenwichBedMatrix,
+          coerced.headboard,
+          coerced.frameMaterial,
+          coerced.fabric
+        )
+        if (media) {
+          applyMediaSelection(media.mainSrc)
+          return
+        }
+      }
       const media = resolveCombinedMedia(
         mainSrc,
         extraSrcs,
@@ -457,6 +678,10 @@ export function ProductCardMediaGalleryCore({
     },
     [
       activeUpholsteryKey,
+      activeHeadboardKey,
+      activeWoodKey,
+      isGreenwichBed,
+      greenwichBedMatrix,
       activeHeadboard,
       activeWood,
       activeFinish,
@@ -472,6 +697,26 @@ export function ProductCardMediaGalleryCore({
       e.stopPropagation()
       if (variant.key === activeWoodKey) return
       setActiveWoodKey(variant.key)
+      if (isGreenwichBed && greenwichBedMatrix && activeHeadboardKey) {
+        const coerced = coerceGreenwichBedSelection(
+          greenwichBedMatrix,
+          activeHeadboardKey,
+          variant.key,
+          activeUpholsteryKey
+        )
+        setActiveWoodKey(coerced.frameMaterial)
+        setActiveUpholsteryKey(coerced.fabric)
+        const media = resolveGreenwichBedMedia(
+          greenwichBedMatrix,
+          coerced.headboard,
+          coerced.frameMaterial,
+          coerced.fabric
+        )
+        if (media) {
+          applyMediaSelection(media.mainSrc)
+          return
+        }
+      }
       const media = resolveCombinedMedia(
         mainSrc,
         extraSrcs,
@@ -484,6 +729,10 @@ export function ProductCardMediaGalleryCore({
     },
     [
       activeWoodKey,
+      activeHeadboardKey,
+      activeUpholsteryKey,
+      isGreenwichBed,
+      resolveMatrixMain,
       activeHeadboard,
       activeUpholstery,
       activeFinish,
@@ -540,14 +789,19 @@ export function ProductCardMediaGalleryCore({
           const token = variant.swatchToken
           const sampled = swatchSamples.get(variant.key)
           const fillColor =
-            sampled?.color || fallbackHexForToken(token ?? "neutral")
+            sampled?.color ||
+            variant.swatchHex ||
+            fallbackHexForToken(token ?? "neutral")
           return (
             <button
               key={variant.key}
               type="button"
               className={`product-card-execution-swatch${isActive ? " is-active" : ""}`}
               data-swatch-token={token ?? "neutral"}
-              data-swatch-source={sampled?.source ?? "fallback_token"}
+              data-swatch-source={
+                sampled?.source ??
+                (variant.swatchHex ? "metadata" : "fallback_token")
+              }
               aria-pressed={isActive}
               aria-label={variant.label}
               title={variant.label}
@@ -566,26 +820,42 @@ export function ProductCardMediaGalleryCore({
   )
 
   const heroEmpty = oliverMode && (!displayHeroSrc || heroFailed)
+  const isPdp = layout === "pdp"
+
+  const heroImage =
+    heroEmpty ? (
+      <OliverHeroAbsent />
+    ) : !displayHeroSrc ? (
+      <div
+        className={isPdp ? "product-detail-img skeleton" : "card-img card-img-placeholder"}
+        aria-hidden="true"
+      />
+    ) : (
+      <img
+        src={displayHeroSrc}
+        alt={alt}
+        className={isPdp ? "product-detail-img" : "card-img"}
+        loading="lazy"
+        style={
+          isPdp && heroObjectPosition
+            ? { objectPosition: heroObjectPosition }
+            : undefined
+        }
+        onError={onHeroError}
+      />
+    )
 
   return (
     <div
-      className={`product-card-media-switcher${oliverMode ? " oliver-card-media-switcher" : ""}`}
+      className={`product-card-media-switcher${oliverMode ? " oliver-card-media-switcher" : ""}${isPdp ? " product-detail-media-switcher" : ""}`}
     >
-      <Link href={href} className="product-card-media-link card-link" aria-label={alt}>
-        {heroEmpty ? (
-          <OliverHeroAbsent />
-        ) : !displayHeroSrc ? (
-          <div className="card-img card-img-placeholder" aria-hidden="true" />
-        ) : (
-          <img
-            src={displayHeroSrc}
-            alt={alt}
-            className="card-img"
-            loading="lazy"
-            onError={onHeroError}
-          />
-        )}
-      </Link>
+      {isPdp ? (
+        heroImage
+      ) : (
+        <Link href={href} className="product-card-media-link card-link" aria-label={alt}>
+          {heroImage}
+        </Link>
+      )}
       {pendingPreloadUrl && (
         <img
           key={pendingPreloadUrl}
@@ -625,19 +895,19 @@ export function ProductCardMediaGalleryCore({
               </div>
             </div>
           )}
-          {showUpholstery &&
+          {showVisibleUpholstery &&
             renderSwatchRow(
               "Обивка",
               "Обивка",
-              upholsteryVariants!,
+              visibleUpholsteryVariants!,
               activeUpholsteryKey,
               onUpholsteryPick
             )}
-          {showWood &&
+          {showVisibleWood &&
             renderSwatchRow(
               "Дерево",
               "Дерево",
-              woodVariants!,
+              visibleWoodVariants!,
               activeWoodKey,
               onWoodPick
             )}

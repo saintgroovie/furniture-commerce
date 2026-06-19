@@ -23,6 +23,10 @@ import {
   type CardExecutionSelectors,
 } from "@/lib/card-color-media"
 import {
+  defaultGreenwichBedSelection,
+  resolveGreenwichBedMedia,
+} from "@/lib/greenwich-bed-media"
+import {
   collectExtraProductImageUrls,
   mergeUniqueExtraUrls,
   normalizeImageEntryUrl,
@@ -125,20 +129,37 @@ export function ProductCard({
   const woodVariants = executionSelectors.wood
   const finishVariants = executionSelectors.finish
   const finishLabel = executionSelectors.finishLabel ?? "Цвет"
+  const greenwichBedMatrix = executionSelectors.greenwichBedMatrix
+
+  const defaults =
+    greenwichBedMatrix && greenwichBedMatrix.length > 0
+      ? defaultGreenwichBedSelection(greenwichBedMatrix)
+      : null
+  const matrixMedia =
+    defaults && greenwichBedMatrix
+      ? resolveGreenwichBedMedia(
+          greenwichBedMatrix,
+          defaults.headboard,
+          defaults.frameMaterial,
+          defaults.fabric
+        )
+      : null
 
   const activeHeadboard = headboardVariants?.[0]
   const activeUpholstery = upholsteryVariants?.[0]
   const activeWood = woodVariants?.[0]
   const activeFinish = finishVariants?.[0]
 
-  const mainSrc =
-    activeHeadboard?.mainSrc ??
-    activeUpholstery?.mainSrc ??
-    activeWood?.mainSrc ??
-    activeFinish?.mainSrc ??
-    mainSrcForCard
-  const extraSrcs =
-    activeHeadboard != null
+  const mainSrc = matrixMedia?.mainSrc
+    ? matrixMedia.mainSrc
+    : activeHeadboard?.mainSrc ??
+      activeUpholstery?.mainSrc ??
+      activeWood?.mainSrc ??
+      activeFinish?.mainSrc ??
+      mainSrcForCard
+  const extraSrcs = matrixMedia
+    ? matrixMedia.extraSrcs
+    : activeHeadboard != null
       ? activeHeadboard.extraSrcs
       : activeUpholstery != null
         ? activeUpholstery.extraSrcs
@@ -174,6 +195,7 @@ export function ProductCard({
       woodVariants={woodVariants}
       finishVariants={finishVariants}
       finishLabel={finishLabel}
+      greenwichBedMatrix={greenwichBedMatrix}
       href={productHref}
       alt={product.title}
     />

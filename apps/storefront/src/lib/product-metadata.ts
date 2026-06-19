@@ -107,6 +107,20 @@ export function getCanonicalName(product: ProductLike): string | null {
   return typeof name === "string" && name.trim() ? name.trim() : null
 }
 
+/** Buyer-facing H1 — fixes known workbook typos without mutating Medusa in SSR. */
+export function getBuyerFacingProductTitle(product: ProductLike): string {
+  const raw =
+    getCanonicalName(product) ??
+    (typeof product.title === "string" && product.title.trim()
+      ? product.title.trim()
+      : "Товар")
+  return raw
+    .replace(/филенгками/gi, "филенками")
+    .replace(/\/\s*филен/gi, " и филен")
+    .replace(/\.\s*$/g, "")
+    .trim()
+}
+
 export function getSubcollectionLabel(product: ProductLike): string | null {
   const label = meta(product).subcollection_label
   return typeof label === "string" && label.trim() ? label.trim() : null

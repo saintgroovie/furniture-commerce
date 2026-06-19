@@ -2,6 +2,7 @@
 
 import { ProductCardMediaGalleryCore } from "@/components/product-card-media-gallery-core"
 import type { CardColorVariant, CardModelVariant } from "@/lib/card-color-media"
+import type { GreenwichBedMatrixEntry } from "@/lib/greenwich-bed-media"
 
 type Props = {
   mainSrc: string
@@ -11,15 +12,14 @@ type Props = {
   woodVariants?: CardColorVariant[]
   finishVariants?: CardColorVariant[]
   finishLabel?: "Цвет" | "Отделка" | "Материал" | "Конструкция"
-  href: string
+  greenwichBedMatrix?: GreenwichBedMatrixEntry[]
   title: string
+  oliverMode?: boolean
+  heroObjectPosition?: string
 }
 
-/**
- * Oliver catalog card: same hero contract as {@link OliverCardMedia} (`mainSrc` only),
- * optional execution selectors + gallery strip when media is available.
- */
-export function OliverCardMediaSwitcher({
+/** PDP with execution swatches — same gallery core as catalog cards. */
+export function ProductPdpExecutionMediaSwitcher({
   mainSrc,
   extraSrcs,
   headboardVariants,
@@ -27,8 +27,10 @@ export function OliverCardMediaSwitcher({
   woodVariants,
   finishVariants,
   finishLabel,
-  href,
+  greenwichBedMatrix,
   title,
+  oliverMode = false,
+  heroObjectPosition,
 }: Props) {
   return (
     <ProductCardMediaGalleryCore
@@ -39,9 +41,12 @@ export function OliverCardMediaSwitcher({
       woodVariants={woodVariants}
       finishVariants={finishVariants}
       finishLabel={finishLabel}
-      href={href}
+      greenwichBedMatrix={greenwichBedMatrix}
+      href="#"
       alt={title}
-      oliverMode={true}
+      layout="pdp"
+      oliverMode={oliverMode}
+      heroObjectPosition={heroObjectPosition}
     />
   )
 }

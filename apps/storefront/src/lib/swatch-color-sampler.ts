@@ -8,6 +8,9 @@ export type SampledSwatch = {
   confidence?: "high" | "medium" | "low"
 }
 
+/** Where to read color from product execution photos (beds, upholstery). */
+export type SwatchSampleRegion = "default" | "upholstery" | "frame_wood"
+
 function rgbToHex(r: number, g: number, b: number): string {
   return `#${[r, g, b].map((x) => x.toString(16).padStart(2, "0")).join("")}`
 }
@@ -31,13 +34,43 @@ function loadImage(url: string): Promise<HTMLImageElement> {
   })
 }
 
+function sampleCropForRegion(
+  region: SwatchSampleRegion,
+  imgW: number,
+  imgH: number
+): { sx: number; sy: number; sw: number; sh: number } {
+  if (region === "upholstery") {
+    return {
+      sx: imgW * 0.22,
+      sy: imgH * 0.08,
+      sw: imgW * 0.56,
+      sh: imgH * 0.38,
+    }
+  }
+  if (region === "frame_wood") {
+    return {
+      sx: imgW * 0.1,
+      sy: imgH * 0.62,
+      sw: imgW * 0.8,
+      sh: imgH * 0.28,
+    }
+  }
+  return {
+    sx: imgW * 0.12,
+    sy: imgH * 0.12,
+    sw: imgW * 0.76,
+    sh: imgH * 0.76,
+  }
+}
+
 /**
  * Dominant product/finish color from representative execution image.
  * Uses same-origin `/product-static` rewrite for canvas readback.
  */
 export async function sampleDominantColorFromImageUrl(
   imageUrl: string,
-  fallbackToken?: string | null
+  fallbackToken?: string | null,
+  region: SwatchSampleRegion = "default"
 ): Promise<SampledSwatch> {
   const sampleUrl = toSameOriginSampleUrl(imageUrl)
   try {
@@ -49,10 +82,7 @@ export async function sampleDominantColorFromImageUrl(
     const ctx = canvas.getContext("2d", { willReadFrequently: true })
     if (!ctx) throw new Error("no canvas context")
 
-    const sx = img.width * 0.12
-    const sy = img.height * 0.12
-    const sw = img.width * 0.76
-    const sh = img.height * 0.76
+    const { sx, sy, sw, sh } = sampleCropForRegion(region, img.width, img.height)
     ctx.drawImage(img, sx, sy, sw, sh, 0, 0, size, size)
 
     const data = ctx.getImageData(0, 0, size, size).data
