@@ -115,6 +115,11 @@ export function LegacyMediaBoardV2Client({
   // --- Data loading state ---
   const [status, setStatus] = useState<V2LoadStatus>("idle")
   const [error, setError] = useState<string | null>(null)
+  const [catalogDegraded, setCatalogDegraded] = useState<{
+    missing_file?: string
+    catalog_source?: string
+    fallback_handles_source?: string
+  } | null>(null)
   const [products, setProducts] = useState<ProductRow[]>([])
   const [invById, setInvById] = useState<Map<string, InvItem>>(new Map())
   const [candidatesByHandle, setCandidatesByHandle] = useState<Map<string, string[]>>(new Map())
@@ -250,7 +255,13 @@ export function LegacyMediaBoardV2Client({
 
         const invJson = (await invRes.json()) as { items?: InvItem[] }
         const candidatesJson = (await candidatesRes.json()) as { entries?: CandidateEntry[] }
-        const productsJson = (await productsRes.json()) as { products?: ProductRow[] }
+        const productsJson = (await productsRes.json()) as {
+          products?: ProductRow[]
+          degraded?: boolean
+          missing_file?: string
+          catalog_source?: string
+          fallback_handles_source?: string
+        }
         const recoveryJson = (await recoveryRes.json()) as { entries?: Record<string, LegacyMediaPreviewRecoveryEntry> }
 
         if (cancelled) return
@@ -280,6 +291,15 @@ export function LegacyMediaBoardV2Client({
         }
 
         setProducts(prods)
+        setCatalogDegraded(
+          productsJson.degraded
+            ? {
+                missing_file: productsJson.missing_file,
+                catalog_source: productsJson.catalog_source,
+                fallback_handles_source: productsJson.fallback_handles_source,
+              }
+            : null
+        )
         setInvById(byId)
         setCandidatesByHandle(byHandle)
         setEntryByInventoryId(entryById)
@@ -673,10 +693,11 @@ export function LegacyMediaBoardV2Client({
     if (status === "loading") return "Загрузка inventory, candidates, products…"
     if (status === "loaded") {
       const base = `Загружено: ${products.length} продуктов · ${invById.size} inventory items · ${entryByInventoryId.size} candidate entries`
+      const degradedNote = catalogDegraded ? " · QA fallback catalog" : ""
       if (isOrphanP0Overlay && overlayData) {
-        return `${base} · Orphan P0 overlay: ${overlayData.validation.resolved_candidates} resolved / ${overlayData.validation.pending_unresolved} pending`
+        return `${base}${degradedNote} · Orphan P0 overlay: ${overlayData.validation.resolved_candidates} resolved / ${overlayData.validation.pending_unresolved} pending`
       }
-      return base
+      return `${base}${degradedNote}`
     }
     return null
   })()
@@ -729,6 +750,19 @@ export function LegacyMediaBoardV2Client({
       )}
       {status === "loaded" && (
         <div style={{ ...styles.statusBar, ...styles.successBar }}>{statusLine}</div>
+      )}
+      {catalogDegraded && status === "loaded" && (
+        <div style={{ ...styles.statusBar, ...styles.warningBar }}>
+          <strong>QA fallback catalog loaded;</strong>{" "}
+          <code>{catalogDegraded.missing_file ?? "data/normalized/seed-products.json"}</code> missing.
+          Not production Medusa catalog · do_not_auto_apply.
+          {catalogDegraded.fallback_handles_source && (
+            <span style={styles.warningMeta}>
+              {" "}
+              handles from: {catalogDegraded.fallback_handles_source}
+            </span>
+          )}
+        </div>
       )}
       {isOrphanP0Overlay && overlayLoadStatus === "missing" && (
         <div style={{ ...styles.statusBar, ...styles.errorBar }}>
@@ -973,6 +1007,16 @@ const styles = {
     color: "#7a0000",
     flexDirection: "column" as const,
     alignItems: "flex-start",
+  },
+  warningBar: {
+    background: "#fff8e6",
+    borderBottom: "1px solid #e6c200",
+    color: "#5a4200",
+    flexWrap: "wrap" as const,
+  },
+  warningMeta: {
+    fontSize: "12px",
+    color: "#7a5a00",
   },
   errorHint: {
     fontSize: "12px",
