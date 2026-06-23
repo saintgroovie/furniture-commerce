@@ -108,8 +108,9 @@ export function enrichExecutionRows(raw: unknown): {
       urls,
       swatch_hex: o.swatch_hex,
     })
+    const row = { ...o, ...enriched }
     if (o.swatch_hex !== enriched.swatch_hex) changed = true
-    out.push(enriched)
+    out.push(row as SwatchExecution)
   }
   return { rows: out, changed }
 }

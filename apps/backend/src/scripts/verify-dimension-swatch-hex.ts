@@ -99,4 +99,8 @@ export default async function verifyDimensionSwatchHex({ container }: ExecArgs):
   if (gaps.length > 30) {
     logger.warn(`... and ${gaps.length - 30} more`)
   }
+
+  if (gaps.length > 0) {
+    throw new Error(`swatch_hex verify failed: ${gaps.length} product(s) with gaps`)
+  }
 }
