@@ -1,0 +1,175 @@
+{
+  "checked_at": "2026-06-23T09:30:53.908Z",
+  "storefront_url": "http://localhost:3002",
+  "pages": {
+    "catalog": {
+      "status": 200,
+      "ok": true
+    },
+    "kids_catalog": {
+      "status": 200,
+      "ok": true
+    },
+    "media_ops_assign": {
+      "status": 200,
+      "ok": true
+    }
+  },
+  "catalog_country": {
+    "handles_checked": 13,
+    "found_in_catalog": 13,
+    "missing": [],
+    "details": [
+      {
+        "handle": "co-02-1",
+        "product_id": "prod_01KNTBXADAKWN6BXHSYFRX0R2F",
+        "in_catalog": true
+      },
+      {
+        "handle": "co-05-1",
+        "product_id": "prod_01KNTBXADA9TM4A89YEGTRVFDR",
+        "in_catalog": true
+      },
+      {
+        "handle": "co-08-1",
+        "product_id": "prod_01KNTBXADAV2SBRCDYKZDNJJDB",
+        "in_catalog": true
+      },
+      {
+        "handle": "co-14-2",
+        "product_id": "prod_01KNTBXADASA751ZC9C33QCE9M",
+        "in_catalog": true
+      },
+      {
+        "handle": "co-15-2",
+        "product_id": "prod_01KNTBXADAMWN4PD2KMWP2E4MH",
+        "in_catalog": true
+      },
+      {
+        "handle": "co-61-1",
+        "product_id": "prod_01KNTBXADAPWAQGMQG48P00R3M",
+        "in_catalog": true
+      },
+      {
+        "handle": "co-62-1",
+        "product_id": "prod_01KNTBXADB4V43P4P0KDTHVDQR",
+        "in_catalog": true
+      },
+      {
+        "handle": "co-62-2",
+        "product_id": "prod_01KNTBXADB2M4E381QSZ5X850S",
+        "in_catalog": true
+      },
+      {
+        "handle": "co-62-3",
+        "product_id": "prod_01KNTBXADBFHZ2C5MH2M4PVVT8",
+        "in_catalog": true
+      },
+      {
+        "handle": "co-65-1",
+        "product_id": "prod_01KNTBXADB5BFDKMSAB35J8Z0V",
+        "in_catalog": true
+      },
+      {
+        "handle": "co-65-2",
+        "product_id": "prod_01KNTBXADBCCE0GHPB33PVQXS2",
+        "in_catalog": true
+      },
+      {
+        "handle": "co-66-1",
+        "product_id": "prod_01KNTBXADCVEHH7HVB0ZGDS1KV",
+        "in_catalog": true
+      },
+      {
+        "handle": "co-69-1",
+        "product_id": "prod_01KNTBXADCDTMNKGW1C9XPD1YT",
+        "in_catalog": true
+      }
+    ]
+  },
+  "pdp": {
+    "co-02-1": {
+      "handle": "co-02-1",
+      "product_id": "prod_01KNTBXADAKWN6BXHSYFRX0R2F",
+      "page_ok": true,
+      "main_visible": true,
+      "thumb_count": 0,
+      "execution_swatch_count": 3,
+      "media_404": [],
+      "hero_src": "http://localhost:9000/static/products/country-london-paris/CO-02-1_color_blue_02.jpg",
+      "status": 200
+    },
+    "co-05-1": {
+      "handle": "co-05-1",
+      "product_id": "prod_01KNTBXADA9TM4A89YEGTRVFDR",
+      "page_ok": true,
+      "main_visible": true,
+      "thumb_count": 0,
+      "execution_swatch_count": 3,
+      "media_404": [],
+      "hero_src": "http://localhost:9000/static/products/country-london-paris/CO-05-1_color_blue_02.jpg",
+      "status": 200
+    },
+    "co-15-2": {
+      "handle": "co-15-2",
+      "product_id": "prod_01KNTBXADAMWN4PD2KMWP2E4MH",
+      "page_ok": true,
+      "main_visible": true,
+      "thumb_count": 0,
+      "execution_swatch_count": 3,
+      "media_404": [],
+      "hero_src": "http://localhost:9000/static/products/country-london-paris/co-15-2-blue.jpg",
+      "status": 200
+    },
+    "co-62-1": {
+      "handle": "co-62-1",
+      "product_id": "prod_01KNTBXADB4V43P4P0KDTHVDQR",
+      "page_ok": true,
+      "main_visible": true,
+      "thumb_count": 0,
+      "execution_swatch_count": 3,
+      "media_404": [],
+      "hero_src": "http://localhost:9000/static/products/country-london-paris/CO-62-1_color_blue_02.jpg",
+      "status": 200
+    },
+    "co-65-1": {
+      "handle": "co-65-1",
+      "product_id": "prod_01KNTBXADB5BFDKMSAB35J8Z0V",
+      "page_ok": true,
+      "main_visible": true,
+      "thumb_count": 0,
+      "execution_swatch_count": 4,
+      "media_404": [],
+      "hero_src": "http://localhost:9000/static/products/country-london-paris/CO-65-1_color_blue_02.jpg",
+      "status": 200
+    },
+    "co-69-1": {
+      "handle": "co-69-1",
+      "product_id": "prod_01KNTBXADCDTMNKGW1C9XPD1YT",
+      "page_ok": true,
+      "main_visible": true,
+      "thumb_count": 0,
+      "execution_swatch_count": 4,
+      "media_404": [],
+      "hero_src": "http://localhost:9000/static/products/country-london-paris/co-69-1-blue.jpg",
+      "status": 200
+    }
+  },
+  "media_ops_assign": {
+    "has_assign_shell": true,
+    "has_export_control": true,
+    "collection_review_artifact_only": true,
+    "note": "reviewed_done lives in tmp/country-assignment-v2-2026-06-23/collection-review-status.json only"
+  },
+  "console_errors": [],
+  "network_failures": [],
+  "pass": true,
+  "console_errors_unrelated_ignored": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "network_failures_unrelated_ignored": []
+}

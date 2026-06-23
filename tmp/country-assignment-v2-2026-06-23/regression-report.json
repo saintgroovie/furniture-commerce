@@ -1,0 +1,97 @@
+{
+  "checked_at": "2026-06-23T09:19:14.335Z",
+  "backend_health": {
+    "ok": true,
+    "status": 200,
+    "body": "OK"
+  },
+  "catalog": {
+    "url": "http://localhost:3002/catalog",
+    "status": 200,
+    "ok": true
+  },
+  "kids_catalog": {
+    "url": "http://localhost:3002/kids/catalog",
+    "status": 200,
+    "ok": true
+  },
+  "pdp": [
+    {
+      "handle": "co-02-1",
+      "ok": true,
+      "title": "Шкаф для одежды 2-дв.",
+      "thumbnail": "http://localhost:9000/static/products/country-london-paris/CO-02-1_gallery_02.jpg",
+      "image_count": 3,
+      "finish_variant_count": 4,
+      "has_main": true,
+      "has_gallery": true,
+      "media_404": [],
+      "applied_marker": "2026-06-23T09:18:38.194Z"
+    },
+    {
+      "handle": "co-05-1",
+      "ok": true,
+      "title": "Комод",
+      "thumbnail": "http://localhost:9000/static/products/country-london-paris/co-05-1-iso-2.jpg",
+      "image_count": 2,
+      "finish_variant_count": 4,
+      "has_main": true,
+      "has_gallery": true,
+      "media_404": [],
+      "applied_marker": "2026-06-23T09:18:38.372Z"
+    },
+    {
+      "handle": "co-15-2",
+      "ok": true,
+      "title": "Кровать 1,5 сп. (120*190) с подъем мех",
+      "thumbnail": "http://localhost:9000/static/products/country-london-paris/co-15-2-iso-2.jpg",
+      "image_count": 3,
+      "finish_variant_count": 4,
+      "has_main": true,
+      "has_gallery": true,
+      "media_404": [],
+      "applied_marker": "2026-06-23T09:18:38.768Z"
+    },
+    {
+      "handle": "co-62-1",
+      "ok": true,
+      "title": "Стеллаж широкий",
+      "thumbnail": "http://localhost:9000/static/products/country-london-paris/CO-62-1_gallery_02.jpg",
+      "image_count": 3,
+      "finish_variant_count": 3,
+      "has_main": true,
+      "has_gallery": true,
+      "media_404": [],
+      "applied_marker": "2026-06-23T09:18:39.041Z"
+    },
+    {
+      "handle": "co-65-1",
+      "ok": true,
+      "title": "Стол письменный 1-тумб. 0П",
+      "thumbnail": "http://localhost:9000/static/products/country-london-paris/CO-65-1_gallery_02.jpg",
+      "image_count": 2,
+      "finish_variant_count": 5,
+      "has_main": true,
+      "has_gallery": true,
+      "media_404": [],
+      "applied_marker": "2026-06-23T09:18:39.411Z"
+    },
+    {
+      "handle": "co-69-1",
+      "ok": true,
+      "title": "Полка книжная малая",
+      "thumbnail": "http://localhost:9000/static/products/country-london-paris/co-69-1.jpg",
+      "image_count": 1,
+      "finish_variant_count": 5,
+      "has_main": true,
+      "has_gallery": true,
+      "media_404": [],
+      "applied_marker": "2026-06-23T09:18:39.742Z"
+    }
+  ],
+  "media_ops_board": {
+    "url": "http://localhost:3002/qa/media-ops/assign",
+    "status": 200,
+    "ok": true
+  }
+}

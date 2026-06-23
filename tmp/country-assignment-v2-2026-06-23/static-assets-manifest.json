@@ -1,0 +1,1738 @@
+{
+  "generated_at": "2026-06-23T09:25:11.553Z",
+  "static_dir": "apps/backend/static/products/country-london-paris/",
+  "whitelist_handle_count": 13,
+  "required_asset_count": 89,
+  "required_assets": [
+    {
+      "filename": "CO-02-1_color_blue_02.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-02-1_color_blue_02.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-02-1_color_blue_02.jpg",
+      "used_by_handles": [
+        "co-02-1"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-02-1:blue"
+      ],
+      "file_exists": true,
+      "size_bytes": 35267
+    },
+    {
+      "filename": "CO-02-1_color_grey_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-02-1_color_grey_01.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-02-1_color_grey_01.jpg",
+      "used_by_handles": [
+        "co-02-1"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-02-1:grey"
+      ],
+      "file_exists": true,
+      "size_bytes": 35474
+    },
+    {
+      "filename": "CO-02-1_color_grey_02.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-02-1_color_grey_02.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-02-1_color_grey_02.jpg",
+      "used_by_handles": [
+        "co-02-1"
+      ],
+      "used_as": [
+        "gallery",
+        "role:front_3_4"
+      ],
+      "variant_refs": [
+        "co-02-1:grey"
+      ],
+      "file_exists": true,
+      "size_bytes": 33695
+    },
+    {
+      "filename": "CO-02-1_color_olive_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-02-1_color_olive_01.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-02-1_color_olive_01.jpg",
+      "used_by_handles": [
+        "co-02-1"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-02-1:olive"
+      ],
+      "file_exists": true,
+      "size_bytes": 34936
+    },
+    {
+      "filename": "CO-02-1_color_olive_02.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-02-1_color_olive_02.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-02-1_color_olive_02.jpg",
+      "used_by_handles": [
+        "co-02-1"
+      ],
+      "used_as": [
+        "gallery",
+        "role:front_anfas"
+      ],
+      "variant_refs": [
+        "co-02-1:olive"
+      ],
+      "file_exists": true,
+      "size_bytes": 37440
+    },
+    {
+      "filename": "CO-02-1_gallery_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-02-1_gallery_01.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-02-1_gallery_01.jpg",
+      "used_by_handles": [
+        "co-02-1"
+      ],
+      "used_as": [
+        "gallery",
+        "role:interior"
+      ],
+      "variant_refs": [
+        "co-02-1:blue",
+        "co-02-1:cream",
+        "co-02-1:grey",
+        "co-02-1:olive"
+      ],
+      "file_exists": true,
+      "size_bytes": 29442
+    },
+    {
+      "filename": "CO-02-1_gallery_02.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-02-1_gallery_02.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-02-1_gallery_02.jpg",
+      "used_by_handles": [
+        "co-02-1"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-02-1:cream"
+      ],
+      "file_exists": true,
+      "size_bytes": 31946
+    },
+    {
+      "filename": "CO-02-1_gallery_03.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-02-1_gallery_03.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-02-1_gallery_03.jpg",
+      "used_by_handles": [
+        "co-02-1"
+      ],
+      "used_as": [
+        "gallery",
+        "role:front_anfas"
+      ],
+      "variant_refs": [
+        "co-02-1:cream"
+      ],
+      "file_exists": true,
+      "size_bytes": 34916
+    },
+    {
+      "filename": "co-02-1-blue-i1.jpg",
+      "path": "apps/backend/static/products/country-london-paris/co-02-1-blue-i1.jpg",
+      "source_original_path": "data/raw/downloaded-assets/country-london-paris/co-02-1-blue-i1.jpg",
+      "used_by_handles": [
+        "co-02-1"
+      ],
+      "used_as": [
+        "gallery",
+        "role:front_anfas"
+      ],
+      "variant_refs": [
+        "co-02-1:blue"
+      ],
+      "file_exists": true,
+      "size_bytes": 295243
+    },
+    {
+      "filename": "CO-05-1_color_grey_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-05-1_color_grey_01.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-05-1_color_grey_01.jpg",
+      "used_by_handles": [
+        "co-05-1"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-05-1:grey"
+      ],
+      "file_exists": true,
+      "size_bytes": 48048
+    },
+    {
+      "filename": "CO-05-1_color_grey_02.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-05-1_color_grey_02.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-05-1_color_grey_02.jpg",
+      "used_by_handles": [
+        "co-05-1"
+      ],
+      "used_as": [
+        "gallery",
+        "role:front_anfas"
+      ],
+      "variant_refs": [
+        "co-05-1:grey"
+      ],
+      "file_exists": true,
+      "size_bytes": 42104
+    },
+    {
+      "filename": "CO-05-1_color_olive_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-05-1_color_olive_01.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-05-1_color_olive_01.jpg",
+      "used_by_handles": [
+        "co-05-1"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-05-1:olive"
+      ],
+      "file_exists": true,
+      "size_bytes": 44046
+    },
+    {
+      "filename": "CO-05-1_color_olive_02.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-05-1_color_olive_02.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-05-1_color_olive_02.jpg",
+      "used_by_handles": [
+        "co-05-1"
+      ],
+      "used_as": [
+        "gallery",
+        "role:front_anfas"
+      ],
+      "variant_refs": [
+        "co-05-1:olive"
+      ],
+      "file_exists": true,
+      "size_bytes": 40977
+    },
+    {
+      "filename": "CO-05-1_gallery_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-05-1_gallery_01.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-05-1_gallery_01.jpg",
+      "used_by_handles": [
+        "co-05-1"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-05-1:cream"
+      ],
+      "file_exists": true,
+      "size_bytes": 41668
+    },
+    {
+      "filename": "co-05-1-blue-i1.jpg",
+      "path": "apps/backend/static/products/country-london-paris/co-05-1-blue-i1.jpg",
+      "source_original_path": "data/raw/downloaded-assets/country-london-paris/co-05-1-blue-i1.jpg",
+      "used_by_handles": [
+        "co-05-1"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-05-1:blue"
+      ],
+      "file_exists": true,
+      "size_bytes": 445366
+    },
+    {
+      "filename": "co-05-1-blue-i2.jpg",
+      "path": "apps/backend/static/products/country-london-paris/co-05-1-blue-i2.jpg",
+      "source_original_path": "data/raw/downloaded-assets/country-london-paris/co-05-1-blue-i2.jpg",
+      "used_by_handles": [
+        "co-05-1"
+      ],
+      "used_as": [
+        "gallery",
+        "role:front_anfas"
+      ],
+      "variant_refs": [
+        "co-05-1:blue"
+      ],
+      "file_exists": true,
+      "size_bytes": 432236
+    },
+    {
+      "filename": "co-05-1-iso-2.jpg",
+      "path": "apps/backend/static/products/country-london-paris/co-05-1-iso-2.jpg",
+      "source_original_path": "data/raw/downloaded-assets/country-london-paris/co-05-1-iso-2.jpg",
+      "used_by_handles": [
+        "co-05-1"
+      ],
+      "used_as": [
+        "gallery",
+        "role:front_anfas"
+      ],
+      "variant_refs": [
+        "co-05-1:cream"
+      ],
+      "file_exists": true,
+      "size_bytes": 449955
+    },
+    {
+      "filename": "CO-08-1_color_blue_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-08-1_color_blue_01.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-08-1_color_blue_01.jpg",
+      "used_by_handles": [
+        "co-08-1"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-08-1:blue"
+      ],
+      "file_exists": true,
+      "size_bytes": 38309
+    },
+    {
+      "filename": "CO-08-1_color_blue_02.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-08-1_color_blue_02.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-08-1_color_blue_02.jpg",
+      "used_by_handles": [
+        "co-08-1"
+      ],
+      "used_as": [
+        "gallery",
+        "role:front_anfas"
+      ],
+      "variant_refs": [
+        "co-08-1:blue"
+      ],
+      "file_exists": true,
+      "size_bytes": 34065
+    },
+    {
+      "filename": "CO-08-1_color_grey_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-08-1_color_grey_01.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-08-1_color_grey_01.jpg",
+      "used_by_handles": [
+        "co-08-1"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-08-1:grey"
+      ],
+      "file_exists": true,
+      "size_bytes": 40854
+    },
+    {
+      "filename": "CO-08-1_color_grey_02.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-08-1_color_grey_02.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-08-1_color_grey_02.jpg",
+      "used_by_handles": [
+        "co-08-1"
+      ],
+      "used_as": [
+        "gallery",
+        "role:front_anfas"
+      ],
+      "variant_refs": [
+        "co-08-1:grey"
+      ],
+      "file_exists": true,
+      "size_bytes": 35421
+    },
+    {
+      "filename": "CO-08-1_color_olive_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-08-1_color_olive_01.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-08-1_color_olive_01.jpg",
+      "used_by_handles": [
+        "co-08-1"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-08-1:olive"
+      ],
+      "file_exists": true,
+      "size_bytes": 38975
+    },
+    {
+      "filename": "CO-08-1_color_olive_02.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-08-1_color_olive_02.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-08-1_color_olive_02.jpg",
+      "used_by_handles": [
+        "co-08-1"
+      ],
+      "used_as": [
+        "gallery",
+        "role:front_anfas"
+      ],
+      "variant_refs": [
+        "co-08-1:olive"
+      ],
+      "file_exists": true,
+      "size_bytes": 35512
+    },
+    {
+      "filename": "CO-08-1_gallery_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-08-1_gallery_01.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-08-1_gallery_01.jpg",
+      "used_by_handles": [
+        "co-08-1"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-08-1:cream"
+      ],
+      "file_exists": true,
+      "size_bytes": 37023
+    },
+    {
+      "filename": "CO-08-1_gallery_02.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-08-1_gallery_02.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-08-1_gallery_02.jpg",
+      "used_by_handles": [
+        "co-08-1"
+      ],
+      "used_as": [
+        "gallery",
+        "role:front_anfas"
+      ],
+      "variant_refs": [
+        "co-08-1:cream"
+      ],
+      "file_exists": true,
+      "size_bytes": 34396
+    },
+    {
+      "filename": "co-14-2-iso-1.jpg",
+      "path": "apps/backend/static/products/country-london-paris/co-14-2-iso-1.jpg",
+      "source_original_path": "data/raw/downloaded-assets/country-london-paris/co-14-2-iso-1.jpg",
+      "used_by_handles": [
+        "co-14-2"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-14-2:torno"
+      ],
+      "file_exists": true,
+      "size_bytes": 419042
+    },
+    {
+      "filename": "co-14-2-torno-020.jpg",
+      "path": "apps/backend/static/products/country-london-paris/co-14-2-torno-020.jpg",
+      "source_original_path": "data/raw/downloaded-assets/country-london-paris/co-14-2-torno-020.jpg",
+      "used_by_handles": [
+        "co-14-2"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-14-2:cream"
+      ],
+      "file_exists": true,
+      "size_bytes": 258653
+    },
+    {
+      "filename": "CO-15-2_gallery_03.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-15-2_gallery_03.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-15-2_gallery_03.jpg",
+      "used_by_handles": [
+        "co-15-2"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-15-2:cream"
+      ],
+      "file_exists": true,
+      "size_bytes": 27667
+    },
+    {
+      "filename": "CO-15-2_gallery_04.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-15-2_gallery_04.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-15-2_gallery_04.jpg",
+      "used_by_handles": [
+        "co-15-2"
+      ],
+      "used_as": [
+        "gallery",
+        "role:front_anfas"
+      ],
+      "variant_refs": [
+        "co-15-2:blue",
+        "co-15-2:cream",
+        "co-15-2:grey",
+        "co-15-2:olive"
+      ],
+      "file_exists": true,
+      "size_bytes": 42334
+    },
+    {
+      "filename": "co-15-2-blue.jpg",
+      "path": "apps/backend/static/products/country-london-paris/co-15-2-blue.jpg",
+      "source_original_path": "data/raw/downloaded-assets/country-london-paris/co-15-2-blue.jpg",
+      "used_by_handles": [
+        "co-15-2"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-15-2:blue"
+      ],
+      "file_exists": true,
+      "size_bytes": 300775
+    },
+    {
+      "filename": "co-15-2-grey.jpg",
+      "path": "apps/backend/static/products/country-london-paris/co-15-2-grey.jpg",
+      "source_original_path": "data/raw/downloaded-assets/country-london-paris/co-15-2-grey.jpg",
+      "used_by_handles": [
+        "co-15-2"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-15-2:grey"
+      ],
+      "file_exists": true,
+      "size_bytes": 314688
+    },
+    {
+      "filename": "co-15-2-iso-2.jpg",
+      "path": "apps/backend/static/products/country-london-paris/co-15-2-iso-2.jpg",
+      "source_original_path": "data/raw/downloaded-assets/country-london-paris/co-15-2-iso-2.jpg",
+      "used_by_handles": [
+        "co-15-2"
+      ],
+      "used_as": [
+        "gallery",
+        "role:interior"
+      ],
+      "variant_refs": [
+        "co-15-2:blue",
+        "co-15-2:cream",
+        "co-15-2:grey",
+        "co-15-2:olive"
+      ],
+      "file_exists": true,
+      "size_bytes": 662428
+    },
+    {
+      "filename": "co-15-2-olive.jpg",
+      "path": "apps/backend/static/products/country-london-paris/co-15-2-olive.jpg",
+      "source_original_path": "data/raw/downloaded-assets/country-london-paris/co-15-2-olive.jpg",
+      "used_by_handles": [
+        "co-15-2"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-15-2:olive"
+      ],
+      "file_exists": true,
+      "size_bytes": 287471
+    },
+    {
+      "filename": "CO-61-1_color_blue_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-61-1_color_blue_01.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-61-1_color_blue_01.jpg",
+      "used_by_handles": [
+        "co-61-1"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-61-1:blue"
+      ],
+      "file_exists": true,
+      "size_bytes": 39573
+    },
+    {
+      "filename": "CO-61-1_color_blue_02.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-61-1_color_blue_02.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-61-1_color_blue_02.jpg",
+      "used_by_handles": [
+        "co-61-1"
+      ],
+      "used_as": [
+        "gallery",
+        "role:front_anfas"
+      ],
+      "variant_refs": [
+        "co-61-1:blue"
+      ],
+      "file_exists": true,
+      "size_bytes": 39372
+    },
+    {
+      "filename": "CO-61-1_color_grey_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-61-1_color_grey_01.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-61-1_color_grey_01.jpg",
+      "used_by_handles": [
+        "co-61-1"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-61-1:grey"
+      ],
+      "file_exists": true,
+      "size_bytes": 40359
+    },
+    {
+      "filename": "CO-61-1_color_grey_02.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-61-1_color_grey_02.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-61-1_color_grey_02.jpg",
+      "used_by_handles": [
+        "co-61-1"
+      ],
+      "used_as": [
+        "gallery",
+        "role:front_anfas"
+      ],
+      "variant_refs": [
+        "co-61-1:grey"
+      ],
+      "file_exists": true,
+      "size_bytes": 37546
+    },
+    {
+      "filename": "CO-61-1_color_olive_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-61-1_color_olive_01.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-61-1_color_olive_01.jpg",
+      "used_by_handles": [
+        "co-61-1"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-61-1:olive"
+      ],
+      "file_exists": true,
+      "size_bytes": 42416
+    },
+    {
+      "filename": "CO-61-1_color_olive_02.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-61-1_color_olive_02.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-61-1_color_olive_02.jpg",
+      "used_by_handles": [
+        "co-61-1"
+      ],
+      "used_as": [
+        "gallery",
+        "role:front_anfas"
+      ],
+      "variant_refs": [
+        "co-61-1:olive"
+      ],
+      "file_exists": true,
+      "size_bytes": 40801
+    },
+    {
+      "filename": "CO-61-1_gallery_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-61-1_gallery_01.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-61-1_gallery_01.jpg",
+      "used_by_handles": [
+        "co-61-1"
+      ],
+      "used_as": [
+        "gallery",
+        "role:interior"
+      ],
+      "variant_refs": [
+        "co-61-1:blue",
+        "co-61-1:cream",
+        "co-61-1:grey",
+        "co-61-1:olive"
+      ],
+      "file_exists": true,
+      "size_bytes": 30475
+    },
+    {
+      "filename": "CO-61-1_gallery_02.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-61-1_gallery_02.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-61-1_gallery_02.jpg",
+      "used_by_handles": [
+        "co-61-1"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-61-1:cream"
+      ],
+      "file_exists": true,
+      "size_bytes": 39668
+    },
+    {
+      "filename": "CO-61-1_gallery_03.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-61-1_gallery_03.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-61-1_gallery_03.jpg",
+      "used_by_handles": [
+        "co-61-1"
+      ],
+      "used_as": [
+        "gallery",
+        "role:front_anfas"
+      ],
+      "variant_refs": [
+        "co-61-1:cream"
+      ],
+      "file_exists": true,
+      "size_bytes": 37540
+    },
+    {
+      "filename": "CO-62-1_color_blue_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-62-1_color_blue_01.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-62-1_color_blue_01.jpg",
+      "used_by_handles": [
+        "co-62-1"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-62-1:blue"
+      ],
+      "file_exists": true,
+      "size_bytes": 38747
+    },
+    {
+      "filename": "CO-62-1_color_blue_02.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-62-1_color_blue_02.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-62-1_color_blue_02.jpg",
+      "used_by_handles": [
+        "co-62-1"
+      ],
+      "used_as": [
+        "gallery",
+        "role:front_anfas"
+      ],
+      "variant_refs": [
+        "co-62-1:blue"
+      ],
+      "file_exists": true,
+      "size_bytes": 36661
+    },
+    {
+      "filename": "CO-62-1_gallery_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-62-1_gallery_01.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-62-1_gallery_01.jpg",
+      "used_by_handles": [
+        "co-62-1"
+      ],
+      "used_as": [
+        "gallery",
+        "role:interior"
+      ],
+      "variant_refs": [
+        "co-62-1:blue",
+        "co-62-1:cream"
+      ],
+      "file_exists": true,
+      "size_bytes": 31213
+    },
+    {
+      "filename": "CO-62-1_gallery_02.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-62-1_gallery_02.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-62-1_gallery_02.jpg",
+      "used_by_handles": [
+        "co-62-1"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-62-1:cream"
+      ],
+      "file_exists": true,
+      "size_bytes": 31662
+    },
+    {
+      "filename": "CO-62-1_gallery_03.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-62-1_gallery_03.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-62-1_gallery_03.jpg",
+      "used_by_handles": [
+        "co-62-1"
+      ],
+      "used_as": [
+        "gallery",
+        "role:front_anfas"
+      ],
+      "variant_refs": [
+        "co-62-1:cream"
+      ],
+      "file_exists": true,
+      "size_bytes": 36320
+    },
+    {
+      "filename": "co-62-1-grey-i1.jpg",
+      "path": "apps/backend/static/products/country-london-paris/co-62-1-grey-i1.jpg",
+      "source_original_path": "data/raw/downloaded-assets/country-london-paris/co-62-1-grey-i1.jpg",
+      "used_by_handles": [
+        "co-62-1"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-62-1:grey"
+      ],
+      "file_exists": true,
+      "size_bytes": 279479
+    },
+    {
+      "filename": "co-62-1-grey-i2.jpg",
+      "path": "apps/backend/static/products/country-london-paris/co-62-1-grey-i2.jpg",
+      "source_original_path": "data/raw/downloaded-assets/country-london-paris/co-62-1-grey-i2.jpg",
+      "used_by_handles": [
+        "co-62-1"
+      ],
+      "used_as": [
+        "gallery",
+        "role:front_anfas"
+      ],
+      "variant_refs": [
+        "co-62-1:grey"
+      ],
+      "file_exists": true,
+      "size_bytes": 270143
+    },
+    {
+      "filename": "co-62-1-i3.jpg",
+      "path": "apps/backend/static/products/country-london-paris/co-62-1-i3.jpg",
+      "source_original_path": "data/raw/downloaded-assets/country-london-paris/co-62-1-i3.jpg",
+      "used_by_handles": [
+        "co-62-1"
+      ],
+      "used_as": [
+        "gallery",
+        "role:interior"
+      ],
+      "variant_refs": [
+        "co-62-1:grey"
+      ],
+      "file_exists": true,
+      "size_bytes": 98814
+    },
+    {
+      "filename": "CO-62-2_gallery_03.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-62-2_gallery_03.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-62-2_gallery_03.jpg",
+      "used_by_handles": [
+        "co-62-2"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-62-2:cream"
+      ],
+      "file_exists": true,
+      "size_bytes": 22900
+    },
+    {
+      "filename": "co-62-2-blue.jpg",
+      "path": "apps/backend/static/products/country-london-paris/co-62-2-blue.jpg",
+      "source_original_path": "data/raw/downloaded-assets/country-london-paris/co-62-2-blue.jpg",
+      "used_by_handles": [
+        "co-62-2"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-62-2:blue"
+      ],
+      "file_exists": true,
+      "size_bytes": 247929
+    },
+    {
+      "filename": "co-62-2-grey.jpg",
+      "path": "apps/backend/static/products/country-london-paris/co-62-2-grey.jpg",
+      "source_original_path": "data/raw/downloaded-assets/country-london-paris/co-62-2-grey.jpg",
+      "used_by_handles": [
+        "co-62-2"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-62-2:grey"
+      ],
+      "file_exists": true,
+      "size_bytes": 123563
+    },
+    {
+      "filename": "co-62-2-olive.jpg",
+      "path": "apps/backend/static/products/country-london-paris/co-62-2-olive.jpg",
+      "source_original_path": "data/raw/downloaded-assets/country-london-paris/co-62-2-olive.jpg",
+      "used_by_handles": [
+        "co-62-2"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-62-2:olive"
+      ],
+      "file_exists": true,
+      "size_bytes": 238199
+    },
+    {
+      "filename": "CO-62-3_gallery_02.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-62-3_gallery_02.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-62-3_gallery_02.jpg",
+      "used_by_handles": [
+        "co-62-3"
+      ],
+      "used_as": [
+        "gallery",
+        "role:front_anfas"
+      ],
+      "variant_refs": [
+        "co-62-3:cream"
+      ],
+      "file_exists": true,
+      "size_bytes": 21867
+    },
+    {
+      "filename": "co-62-3-iso-1.jpg",
+      "path": "apps/backend/static/products/country-london-paris/co-62-3-iso-1.jpg",
+      "source_original_path": "data/raw/downloaded-assets/country-london-paris/co-62-3-iso-1.jpg",
+      "used_by_handles": [
+        "co-62-3"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-62-3:cream"
+      ],
+      "file_exists": true,
+      "size_bytes": 185169
+    },
+    {
+      "filename": "CO-65-1_color_blue_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-65-1_color_blue_01.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-65-1_color_blue_01.jpg",
+      "used_by_handles": [
+        "co-65-1"
+      ],
+      "used_as": [
+        "gallery",
+        "role:front_anfas"
+      ],
+      "variant_refs": [
+        "co-65-1:blue"
+      ],
+      "file_exists": true,
+      "size_bytes": 37138
+    },
+    {
+      "filename": "CO-65-1_color_grey_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-65-1_color_grey_01.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-65-1_color_grey_01.jpg",
+      "used_by_handles": [
+        "co-65-1"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-65-1:grey"
+      ],
+      "file_exists": true,
+      "size_bytes": 36612
+    },
+    {
+      "filename": "CO-65-1_color_grey_02.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-65-1_color_grey_02.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-65-1_color_grey_02.jpg",
+      "used_by_handles": [
+        "co-65-1"
+      ],
+      "used_as": [
+        "gallery",
+        "role:front_anfas"
+      ],
+      "variant_refs": [
+        "co-65-1:grey"
+      ],
+      "file_exists": true,
+      "size_bytes": 35610
+    },
+    {
+      "filename": "CO-65-1_color_olive_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-65-1_color_olive_01.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-65-1_color_olive_01.jpg",
+      "used_by_handles": [
+        "co-65-1"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-65-1:olive"
+      ],
+      "file_exists": true,
+      "size_bytes": 34562
+    },
+    {
+      "filename": "CO-65-1_color_olive_02.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-65-1_color_olive_02.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-65-1_color_olive_02.jpg",
+      "used_by_handles": [
+        "co-65-1"
+      ],
+      "used_as": [
+        "gallery",
+        "role:front_anfas"
+      ],
+      "variant_refs": [
+        "co-65-1:olive"
+      ],
+      "file_exists": true,
+      "size_bytes": 36043
+    },
+    {
+      "filename": "CO-65-1_color_white_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-65-1_color_white_01.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-65-1_color_white_01.jpg",
+      "used_by_handles": [
+        "co-65-1"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-65-1:white"
+      ],
+      "file_exists": true,
+      "size_bytes": 28668
+    },
+    {
+      "filename": "CO-65-1_color_white_02.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-65-1_color_white_02.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-65-1_color_white_02.jpg",
+      "used_by_handles": [
+        "co-65-1"
+      ],
+      "used_as": [
+        "gallery",
+        "role:front_anfas"
+      ],
+      "variant_refs": [
+        "co-65-1:white"
+      ],
+      "file_exists": true,
+      "size_bytes": 27968
+    },
+    {
+      "filename": "CO-65-1_gallery_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-65-1_gallery_01.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-65-1_gallery_01.jpg",
+      "used_by_handles": [
+        "co-65-1"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-65-1:cream"
+      ],
+      "file_exists": true,
+      "size_bytes": 33352
+    },
+    {
+      "filename": "CO-65-1_gallery_02.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-65-1_gallery_02.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-65-1_gallery_02.jpg",
+      "used_by_handles": [
+        "co-65-1"
+      ],
+      "used_as": [
+        "gallery",
+        "role:front_anfas"
+      ],
+      "variant_refs": [
+        "co-65-1:cream"
+      ],
+      "file_exists": true,
+      "size_bytes": 34302
+    },
+    {
+      "filename": "co-65-1-blue-i1.jpg",
+      "path": "apps/backend/static/products/country-london-paris/co-65-1-blue-i1.jpg",
+      "source_original_path": "data/raw/downloaded-assets/country-london-paris/co-65-1-blue-i1.jpg",
+      "used_by_handles": [
+        "co-65-1"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-65-1:blue"
+      ],
+      "file_exists": true,
+      "size_bytes": 382725
+    },
+    {
+      "filename": "CO-65-2_color_blue_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-65-2_color_blue_01.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-65-2_color_blue_01.jpg",
+      "used_by_handles": [
+        "co-65-2"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-65-2:blue"
+      ],
+      "file_exists": true,
+      "size_bytes": 38596
+    },
+    {
+      "filename": "CO-65-2_color_blue_02.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-65-2_color_blue_02.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-65-2_color_blue_02.jpg",
+      "used_by_handles": [
+        "co-65-2"
+      ],
+      "used_as": [
+        "gallery",
+        "role:front_anfas"
+      ],
+      "variant_refs": [
+        "co-65-2:blue"
+      ],
+      "file_exists": true,
+      "size_bytes": 36116
+    },
+    {
+      "filename": "CO-65-2_color_grey_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-65-2_color_grey_01.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-65-2_color_grey_01.jpg",
+      "used_by_handles": [
+        "co-65-2"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-65-2:grey"
+      ],
+      "file_exists": true,
+      "size_bytes": 38864
+    },
+    {
+      "filename": "CO-65-2_color_grey_02.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-65-2_color_grey_02.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-65-2_color_grey_02.jpg",
+      "used_by_handles": [
+        "co-65-2"
+      ],
+      "used_as": [
+        "gallery",
+        "role:front_anfas"
+      ],
+      "variant_refs": [
+        "co-65-2:grey"
+      ],
+      "file_exists": true,
+      "size_bytes": 34582
+    },
+    {
+      "filename": "CO-65-2_color_olive_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-65-2_color_olive_01.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-65-2_color_olive_01.jpg",
+      "used_by_handles": [
+        "co-65-2"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-65-2:olive"
+      ],
+      "file_exists": true,
+      "size_bytes": 35179
+    },
+    {
+      "filename": "CO-65-2_color_olive_02.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-65-2_color_olive_02.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-65-2_color_olive_02.jpg",
+      "used_by_handles": [
+        "co-65-2"
+      ],
+      "used_as": [
+        "gallery",
+        "role:front_anfas"
+      ],
+      "variant_refs": [
+        "co-65-2:olive"
+      ],
+      "file_exists": true,
+      "size_bytes": 34717
+    },
+    {
+      "filename": "CO-65-2_gallery_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-65-2_gallery_01.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-65-2_gallery_01.jpg",
+      "used_by_handles": [
+        "co-65-2"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-65-2:cream"
+      ],
+      "file_exists": true,
+      "size_bytes": 35845
+    },
+    {
+      "filename": "CO-65-2_gallery_02.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-65-2_gallery_02.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-65-2_gallery_02.jpg",
+      "used_by_handles": [
+        "co-65-2"
+      ],
+      "used_as": [
+        "gallery",
+        "role:front_anfas"
+      ],
+      "variant_refs": [
+        "co-65-2:cream"
+      ],
+      "file_exists": true,
+      "size_bytes": 34399
+    },
+    {
+      "filename": "CO-66-1_color_blue_02.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-66-1_color_blue_02.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-66-1_color_blue_02.jpg",
+      "used_by_handles": [
+        "co-66-1"
+      ],
+      "used_as": [
+        "gallery",
+        "role:front_anfas"
+      ],
+      "variant_refs": [
+        "co-66-1:blue"
+      ],
+      "file_exists": true,
+      "size_bytes": 30023
+    },
+    {
+      "filename": "CO-66-1_color_grey_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-66-1_color_grey_01.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-66-1_color_grey_01.jpg",
+      "used_by_handles": [
+        "co-66-1"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-66-1:grey"
+      ],
+      "file_exists": true,
+      "size_bytes": 33127
+    },
+    {
+      "filename": "CO-66-1_color_grey_02.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-66-1_color_grey_02.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-66-1_color_grey_02.jpg",
+      "used_by_handles": [
+        "co-66-1"
+      ],
+      "used_as": [
+        "gallery",
+        "role:front_anfas"
+      ],
+      "variant_refs": [
+        "co-66-1:grey"
+      ],
+      "file_exists": true,
+      "size_bytes": 31041
+    },
+    {
+      "filename": "CO-66-1_color_olive_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-66-1_color_olive_01.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-66-1_color_olive_01.jpg",
+      "used_by_handles": [
+        "co-66-1"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-66-1:olive"
+      ],
+      "file_exists": true,
+      "size_bytes": 33590
+    },
+    {
+      "filename": "CO-66-1_color_olive_02.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-66-1_color_olive_02.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-66-1_color_olive_02.jpg",
+      "used_by_handles": [
+        "co-66-1"
+      ],
+      "used_as": [
+        "gallery",
+        "role:front_anfas"
+      ],
+      "variant_refs": [
+        "co-66-1:olive"
+      ],
+      "file_exists": true,
+      "size_bytes": 32877
+    },
+    {
+      "filename": "CO-66-1_gallery_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-66-1_gallery_01.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-66-1_gallery_01.jpg",
+      "used_by_handles": [
+        "co-66-1"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-66-1:cream"
+      ],
+      "file_exists": true,
+      "size_bytes": 31586
+    },
+    {
+      "filename": "CO-66-1_gallery_02.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-66-1_gallery_02.jpg",
+      "source_original_path": "apps/backend/static/products/country-london-paris/CO-66-1_gallery_02.jpg",
+      "used_by_handles": [
+        "co-66-1"
+      ],
+      "used_as": [
+        "gallery",
+        "role:front_anfas"
+      ],
+      "variant_refs": [
+        "co-66-1:cream"
+      ],
+      "file_exists": true,
+      "size_bytes": 31571
+    },
+    {
+      "filename": "co-66-1-blue-i1.jpg",
+      "path": "apps/backend/static/products/country-london-paris/co-66-1-blue-i1.jpg",
+      "source_original_path": "data/raw/downloaded-assets/country-london-paris/co-66-1-blue-i1.jpg",
+      "used_by_handles": [
+        "co-66-1"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-66-1:blue"
+      ],
+      "file_exists": true,
+      "size_bytes": 354757
+    },
+    {
+      "filename": "co-69-1-blue.jpg",
+      "path": "apps/backend/static/products/country-london-paris/co-69-1-blue.jpg",
+      "source_original_path": "data/raw/downloaded-assets/country-london-paris/co-69-1-blue.jpg",
+      "used_by_handles": [
+        "co-69-1"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-69-1:blue"
+      ],
+      "file_exists": true,
+      "size_bytes": 191084
+    },
+    {
+      "filename": "co-69-1-grey.jpg",
+      "path": "apps/backend/static/products/country-london-paris/co-69-1-grey.jpg",
+      "source_original_path": "data/raw/downloaded-assets/country-london-paris/co-69-1-grey.jpg",
+      "used_by_handles": [
+        "co-69-1"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-69-1:grey"
+      ],
+      "file_exists": true,
+      "size_bytes": 188914
+    },
+    {
+      "filename": "co-69-1-olive.jpg",
+      "path": "apps/backend/static/products/country-london-paris/co-69-1-olive.jpg",
+      "source_original_path": "data/raw/downloaded-assets/country-london-paris/co-69-1-olive.jpg",
+      "used_by_handles": [
+        "co-69-1"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-69-1:olive"
+      ],
+      "file_exists": true,
+      "size_bytes": 187420
+    },
+    {
+      "filename": "co-69-1-white-hd-iso-1.jpg",
+      "path": "apps/backend/static/products/country-london-paris/co-69-1-white-hd-iso-1.jpg",
+      "source_original_path": "data/raw/downloaded-assets/country-london-paris/co-69-1-white-hd-iso-1.jpg",
+      "used_by_handles": [
+        "co-69-1"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-69-1:white"
+      ],
+      "file_exists": true,
+      "size_bytes": 48228
+    },
+    {
+      "filename": "co-69-1.jpg",
+      "path": "apps/backend/static/products/country-london-paris/co-69-1.jpg",
+      "source_original_path": "data/raw/downloaded-assets/country-london-paris/co-69-1.jpg",
+      "used_by_handles": [
+        "co-69-1"
+      ],
+      "used_as": [
+        "main"
+      ],
+      "variant_refs": [
+        "co-69-1:cream"
+      ],
+      "file_exists": true,
+      "size_bytes": 151456
+    },
+    {
+      "filename": "Country_p2_i0_1305x975.png",
+      "path": "apps/backend/static/products/country-london-paris/Country_p2_i0_1305x975.png",
+      "source_original_path": "data/raw/pdf-assets/extracted/Country/Country_p2_i0_1305x975.png",
+      "used_by_handles": [
+        "co-02-1"
+      ],
+      "used_as": [
+        "gallery",
+        "role:lifestyle"
+      ],
+      "variant_refs": [
+        "co-02-1:blue"
+      ],
+      "file_exists": true,
+      "size_bytes": 2799781
+    },
+    {
+      "filename": "Country_p3_i0_1306x975.png",
+      "path": "apps/backend/static/products/country-london-paris/Country_p3_i0_1306x975.png",
+      "source_original_path": "data/raw/pdf-assets/extracted/Country/Country_p3_i0_1306x975.png",
+      "used_by_handles": [
+        "co-02-1"
+      ],
+      "used_as": [
+        "gallery",
+        "role:lifestyle"
+      ],
+      "variant_refs": [
+        "co-02-1:blue",
+        "co-02-1:grey"
+      ],
+      "file_exists": true,
+      "size_bytes": 2645004
+    }
+  ],
+  "missing_required": [],
+  "excluded_on_disk_count": 29,
+  "excluded_on_disk_sample": [
+    {
+      "filename": "CO-02-1_color_blue_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-02-1_color_blue_01.jpg",
+      "reason": "not referenced by assignment_v2 whitelist export"
+    },
+    {
+      "filename": "CO-05-1_color_blue_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-05-1_color_blue_01.jpg",
+      "reason": "not referenced by assignment_v2 whitelist export"
+    },
+    {
+      "filename": "CO-05-1_color_blue_02.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-05-1_color_blue_02.jpg",
+      "reason": "not referenced by assignment_v2 whitelist export"
+    },
+    {
+      "filename": "CO-05-1_main.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-05-1_main.jpg",
+      "reason": "not referenced by assignment_v2 whitelist export"
+    },
+    {
+      "filename": "CO-14-2_color_torno_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-14-2_color_torno_01.jpg",
+      "reason": "not referenced by assignment_v2 whitelist export"
+    },
+    {
+      "filename": "CO-14-2_gallery_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-14-2_gallery_01.jpg",
+      "reason": "not referenced by assignment_v2 whitelist export"
+    },
+    {
+      "filename": "CO-15-2_gallery_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-15-2_gallery_01.jpg",
+      "reason": "not referenced by assignment_v2 whitelist export"
+    },
+    {
+      "filename": "CO-15-2_gallery_02.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-15-2_gallery_02.jpg",
+      "reason": "not referenced by assignment_v2 whitelist export"
+    },
+    {
+      "filename": "CO-15-2_gallery_05.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-15-2_gallery_05.jpg",
+      "reason": "not referenced by assignment_v2 whitelist export"
+    },
+    {
+      "filename": "CO-15-2_main.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-15-2_main.jpg",
+      "reason": "not referenced by assignment_v2 whitelist export"
+    },
+    {
+      "filename": "CO-62-1_color_grey_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-62-1_color_grey_01.jpg",
+      "reason": "not referenced by assignment_v2 whitelist export"
+    },
+    {
+      "filename": "CO-62-1_color_grey_02.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-62-1_color_grey_02.jpg",
+      "reason": "not referenced by assignment_v2 whitelist export"
+    },
+    {
+      "filename": "CO-62-1_color_olive_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-62-1_color_olive_01.jpg",
+      "reason": "not referenced by assignment_v2 whitelist export"
+    },
+    {
+      "filename": "CO-62-1_gallery_04.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-62-1_gallery_04.jpg",
+      "reason": "not referenced by assignment_v2 whitelist export"
+    },
+    {
+      "filename": "CO-62-1_gallery_05.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-62-1_gallery_05.jpg",
+      "reason": "not referenced by assignment_v2 whitelist export"
+    },
+    {
+      "filename": "CO-62-2_gallery_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-62-2_gallery_01.jpg",
+      "reason": "not referenced by assignment_v2 whitelist export"
+    },
+    {
+      "filename": "CO-62-2_gallery_02.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-62-2_gallery_02.jpg",
+      "reason": "not referenced by assignment_v2 whitelist export"
+    },
+    {
+      "filename": "CO-62-2_gallery_04.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-62-2_gallery_04.jpg",
+      "reason": "not referenced by assignment_v2 whitelist export"
+    },
+    {
+      "filename": "CO-62-3_gallery_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-62-3_gallery_01.jpg",
+      "reason": "not referenced by assignment_v2 whitelist export"
+    },
+    {
+      "filename": "CO-65-1_color_blue_02.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-65-1_color_blue_02.jpg",
+      "reason": "not referenced by assignment_v2 whitelist export"
+    },
+    {
+      "filename": "CO-66-1_color_blue_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-66-1_color_blue_01.jpg",
+      "reason": "not referenced by assignment_v2 whitelist export"
+    },
+    {
+      "filename": "CO-69-1_gallery_01.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-69-1_gallery_01.jpg",
+      "reason": "not referenced by assignment_v2 whitelist export"
+    },
+    {
+      "filename": "CO-69-1_gallery_02.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-69-1_gallery_02.jpg",
+      "reason": "not referenced by assignment_v2 whitelist export"
+    },
+    {
+      "filename": "CO-69-1_gallery_03.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-69-1_gallery_03.jpg",
+      "reason": "not referenced by assignment_v2 whitelist export"
+    },
+    {
+      "filename": "CO-69-1_gallery_04.jpg",
+      "path": "apps/backend/static/products/country-london-paris/CO-69-1_gallery_04.jpg",
+      "reason": "not referenced by assignment_v2 whitelist export"
+    }
+  ],
+  "static_assets_to_commit": [
+    "apps/backend/static/products/country-london-paris/CO-02-1_color_blue_02.jpg",
+    "apps/backend/static/products/country-london-paris/CO-02-1_color_grey_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-02-1_color_grey_02.jpg",
+    "apps/backend/static/products/country-london-paris/CO-02-1_color_olive_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-02-1_color_olive_02.jpg",
+    "apps/backend/static/products/country-london-paris/CO-02-1_gallery_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-02-1_gallery_02.jpg",
+    "apps/backend/static/products/country-london-paris/CO-02-1_gallery_03.jpg",
+    "apps/backend/static/products/country-london-paris/co-02-1-blue-i1.jpg",
+    "apps/backend/static/products/country-london-paris/CO-05-1_color_grey_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-05-1_color_grey_02.jpg",
+    "apps/backend/static/products/country-london-paris/CO-05-1_color_olive_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-05-1_color_olive_02.jpg",
+    "apps/backend/static/products/country-london-paris/CO-05-1_gallery_01.jpg",
+    "apps/backend/static/products/country-london-paris/co-05-1-blue-i1.jpg",
+    "apps/backend/static/products/country-london-paris/co-05-1-blue-i2.jpg",
+    "apps/backend/static/products/country-london-paris/co-05-1-iso-2.jpg",
+    "apps/backend/static/products/country-london-paris/CO-08-1_color_blue_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-08-1_color_blue_02.jpg",
+    "apps/backend/static/products/country-london-paris/CO-08-1_color_grey_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-08-1_color_grey_02.jpg",
+    "apps/backend/static/products/country-london-paris/CO-08-1_color_olive_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-08-1_color_olive_02.jpg",
+    "apps/backend/static/products/country-london-paris/CO-08-1_gallery_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-08-1_gallery_02.jpg",
+    "apps/backend/static/products/country-london-paris/co-14-2-iso-1.jpg",
+    "apps/backend/static/products/country-london-paris/co-14-2-torno-020.jpg",
+    "apps/backend/static/products/country-london-paris/CO-15-2_gallery_03.jpg",
+    "apps/backend/static/products/country-london-paris/CO-15-2_gallery_04.jpg",
+    "apps/backend/static/products/country-london-paris/co-15-2-blue.jpg",
+    "apps/backend/static/products/country-london-paris/co-15-2-grey.jpg",
+    "apps/backend/static/products/country-london-paris/co-15-2-iso-2.jpg",
+    "apps/backend/static/products/country-london-paris/co-15-2-olive.jpg",
+    "apps/backend/static/products/country-london-paris/CO-61-1_color_blue_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-61-1_color_blue_02.jpg",
+    "apps/backend/static/products/country-london-paris/CO-61-1_color_grey_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-61-1_color_grey_02.jpg",
+    "apps/backend/static/products/country-london-paris/CO-61-1_color_olive_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-61-1_color_olive_02.jpg",
+    "apps/backend/static/products/country-london-paris/CO-61-1_gallery_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-61-1_gallery_02.jpg",
+    "apps/backend/static/products/country-london-paris/CO-61-1_gallery_03.jpg",
+    "apps/backend/static/products/country-london-paris/CO-62-1_color_blue_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-62-1_color_blue_02.jpg",
+    "apps/backend/static/products/country-london-paris/CO-62-1_gallery_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-62-1_gallery_02.jpg",
+    "apps/backend/static/products/country-london-paris/CO-62-1_gallery_03.jpg",
+    "apps/backend/static/products/country-london-paris/co-62-1-grey-i1.jpg",
+    "apps/backend/static/products/country-london-paris/co-62-1-grey-i2.jpg",
+    "apps/backend/static/products/country-london-paris/co-62-1-i3.jpg",
+    "apps/backend/static/products/country-london-paris/CO-62-2_gallery_03.jpg",
+    "apps/backend/static/products/country-london-paris/co-62-2-blue.jpg",
+    "apps/backend/static/products/country-london-paris/co-62-2-grey.jpg",
+    "apps/backend/static/products/country-london-paris/co-62-2-olive.jpg",
+    "apps/backend/static/products/country-london-paris/CO-62-3_gallery_02.jpg",
+    "apps/backend/static/products/country-london-paris/co-62-3-iso-1.jpg",
+    "apps/backend/static/products/country-london-paris/CO-65-1_color_blue_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-65-1_color_grey_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-65-1_color_grey_02.jpg",
+    "apps/backend/static/products/country-london-paris/CO-65-1_color_olive_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-65-1_color_olive_02.jpg",
+    "apps/backend/static/products/country-london-paris/CO-65-1_color_white_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-65-1_color_white_02.jpg",
+    "apps/backend/static/products/country-london-paris/CO-65-1_gallery_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-65-1_gallery_02.jpg",
+    "apps/backend/static/products/country-london-paris/co-65-1-blue-i1.jpg",
+    "apps/backend/static/products/country-london-paris/CO-65-2_color_blue_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-65-2_color_blue_02.jpg",
+    "apps/backend/static/products/country-london-paris/CO-65-2_color_grey_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-65-2_color_grey_02.jpg",
+    "apps/backend/static/products/country-london-paris/CO-65-2_color_olive_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-65-2_color_olive_02.jpg",
+    "apps/backend/static/products/country-london-paris/CO-65-2_gallery_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-65-2_gallery_02.jpg",
+    "apps/backend/static/products/country-london-paris/CO-66-1_color_blue_02.jpg",
+    "apps/backend/static/products/country-london-paris/CO-66-1_color_grey_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-66-1_color_grey_02.jpg",
+    "apps/backend/static/products/country-london-paris/CO-66-1_color_olive_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-66-1_color_olive_02.jpg",
+    "apps/backend/static/products/country-london-paris/CO-66-1_gallery_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-66-1_gallery_02.jpg",
+    "apps/backend/static/products/country-london-paris/co-66-1-blue-i1.jpg",
+    "apps/backend/static/products/country-london-paris/co-69-1-blue.jpg",
+    "apps/backend/static/products/country-london-paris/co-69-1-grey.jpg",
+    "apps/backend/static/products/country-london-paris/co-69-1-olive.jpg",
+    "apps/backend/static/products/country-london-paris/co-69-1-white-hd-iso-1.jpg",
+    "apps/backend/static/products/country-london-paris/co-69-1.jpg",
+    "apps/backend/static/products/country-london-paris/Country_p2_i0_1305x975.png",
+    "apps/backend/static/products/country-london-paris/Country_p3_i0_1306x975.png"
+  ],
+  "static_assets_excluded": [
+    "apps/backend/static/products/country-london-paris/CO-02-1_color_blue_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-05-1_color_blue_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-05-1_color_blue_02.jpg",
+    "apps/backend/static/products/country-london-paris/CO-05-1_main.jpg",
+    "apps/backend/static/products/country-london-paris/CO-14-2_color_torno_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-14-2_gallery_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-15-2_gallery_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-15-2_gallery_02.jpg",
+    "apps/backend/static/products/country-london-paris/CO-15-2_gallery_05.jpg",
+    "apps/backend/static/products/country-london-paris/CO-15-2_main.jpg",
+    "apps/backend/static/products/country-london-paris/CO-62-1_color_grey_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-62-1_color_grey_02.jpg",
+    "apps/backend/static/products/country-london-paris/CO-62-1_color_olive_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-62-1_gallery_04.jpg",
+    "apps/backend/static/products/country-london-paris/CO-62-1_gallery_05.jpg",
+    "apps/backend/static/products/country-london-paris/CO-62-2_gallery_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-62-2_gallery_02.jpg",
+    "apps/backend/static/products/country-london-paris/CO-62-2_gallery_04.jpg",
+    "apps/backend/static/products/country-london-paris/CO-62-3_gallery_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-65-1_color_blue_02.jpg",
+    "apps/backend/static/products/country-london-paris/CO-66-1_color_blue_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-69-1_gallery_01.jpg",
+    "apps/backend/static/products/country-london-paris/CO-69-1_gallery_02.jpg",
+    "apps/backend/static/products/country-london-paris/CO-69-1_gallery_03.jpg",
+    "apps/backend/static/products/country-london-paris/CO-69-1_gallery_04.jpg",
+    "apps/backend/static/products/country-london-paris/CO-69-1_gallery_05.jpg",
+    "apps/backend/static/products/country-london-paris/co-02-1-i3.jpg",
+    "apps/backend/static/products/country-london-paris/co-61-1-i3.jpg",
+    "apps/backend/static/products/country-london-paris/co-62-3-iso-2.jpg"
+  ]
+}

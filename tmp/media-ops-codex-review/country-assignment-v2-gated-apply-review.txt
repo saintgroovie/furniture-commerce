@@ -1,0 +1,18 @@
+Country assignment_v2 gated apply — Codex CLI reviewer
+Date: 2026-06-23
+Command: MCP user-codex-woodright-reviewer codex (read-only)
+
+Verdict: needs_fix
+
+Findings:
+- Export scoped correctly: assignment_v2, do_not_auto_apply:true, 13 handles, country-london-paris only.
+- Apply gated by COUNTRY_ASSIGN_V2_CONFIRM=1; whitelist hardcoded 13 handles.
+- Mutation limited to Medusa thumbnail/images/metadata + static staging under country-london-paris.
+- apply-report.json: updated 13, skipped 0, missing_file_refs 0.
+- regression-report.json: backend/catalog/kids/PDP/media-ops board OK; no media_404 on sampled PDPs.
+- Backup exists for all 13 handles.
+
+Residual (needs_fix reason):
+- Repo has unrelated dirty WIP outside this task. Commit must stage only gated script + tmp/country-assignment-v2-2026-06-23 + any new static assets intentionally required.
+
+Operator note: needs_fix is about commit hygiene, not apply safety. Gated apply itself completed successfully.
