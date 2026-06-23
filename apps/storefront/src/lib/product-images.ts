@@ -1,6 +1,9 @@
 /**
  * Storefront helpers for listing/API-shaped product media URLs.
  *
+ * **Client-safe:** no imports from `apps/backend` (no fs/crypto). Oliver MD5 repair lives in
+ * `pdp-buyer-gallery.server.ts` (server components / scripts only).
+ *
  * Catalog cards: hero uses `product.thumbnail` only; extras use
  * {@link collectExtraProductImageUrls}, {@link collectDisplayGroupExtraImageUrls}, and
  * {@link mergeUniqueExtraUrls} (listing attaches `display_group_color_variants` in `display-group.ts`).
@@ -39,6 +42,68 @@ export function resolveMedusaBackendImageUrl(url: string): string {
     return `${medusaBackendBaseForImages()}${t}`
   }
   return t
+}
+
+function isMedusaBackendHost(hostname: string): boolean {
+  const h = hostname.toLowerCase()
+  if (h === "medusa" || h.endsWith(".medusa")) return true
+  if (h === "localhost" || h === "127.0.0.1" || h === "host.docker.internal") return true
+  const configured = medusaBackendBaseForImages()
+  try {
+    const backendHost = new URL(configured).hostname.toLowerCase()
+    return h === backendHost
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Same-origin PDP URL via Next rewrite `/product-static/…` → Medusa `/static/…`.
+ * Cross-origin `:9000` URLs fail client thumb verification on `:3002`.
+ */
+export function resolvePdpMediaSrc(url: string): string {
+  const s = typeof url === "string" ? url.trim() : ""
+  if (!s) return s
+  if (s.startsWith("/product-static/")) return s
+  if (s.startsWith("/static/")) {
+    return `/product-static${s.slice("/static".length)}`
+  }
+  if (s.startsWith("/uploads/")) {
+    return `${medusaBackendBaseForImages()}${s}`
+  }
+  if (s.startsWith("http://") || s.startsWith("https://")) {
+    try {
+      const u = new URL(s)
+      if (isMedusaBackendHost(u.hostname)) {
+        if (u.pathname.startsWith("/static/")) {
+          return `/product-static${u.pathname.slice("/static".length)}`
+        }
+        if (u.pathname.startsWith("/uploads/")) {
+          return `${medusaBackendBaseForImages()}${u.pathname}`
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+    return s
+  }
+  return resolveMedusaBackendImageUrl(s)
+}
+
+/** Storefront `<img src>` for Medusa product media (catalog, PDP, swatches). */
+export const resolveStorefrontProductImageSrc = resolvePdpMediaSrc
+
+export function resolvePdpMediaBundle(mainSrc: string, extraSrcs: string[]): {
+  mainSrc: string
+  extraSrcs: string[]
+} {
+  const main = resolvePdpMediaSrc(mainSrc)
+  const extras: string[] = []
+  for (const raw of extraSrcs) {
+    const resolved = resolvePdpMediaSrc(raw)
+    if (resolved) extras.push(resolved)
+  }
+  return { mainSrc: main, extraSrcs: extras }
 }
 
 /**
@@ -158,8 +223,21 @@ export function mergeUniqueExtraUrls(mainSrc: string, segments: string[][]): str
 }
 
 /**
+ * PDP thumb row: extras only — hero already shows `mainSrc` (no duplicate main thumb).
+ */
+export function buildPdpThumbStripUrls(mainSrc: string, extraSrcs: string[]): string[] {
+  const mainNorm = typeof mainSrc === "string" ? mainSrc.trim() : ""
+  const out: string[] = []
+  for (const u of extraSrcs) {
+    if (typeof u !== "string") continue
+    pushUniqueGalleryUrl(out, u.trim(), mainNorm)
+  }
+  return out
+}
+
+/**
  * Gallery thumb strip: `mainSrc` first, then extras; trims and dedupes.
- * Used by catalog cards and PDP so hero is always a selectable thumb.
+ * Catalog cards: hero is always a selectable thumb. PDP Oliver uses {@link buildPdpThumbStripUrls}.
  */
 export function buildGalleryStripUrls(mainSrc: string, extraSrcs: string[]): string[] {
   const mainNorm = typeof mainSrc === "string" ? mainSrc.trim() : ""
@@ -172,20 +250,10 @@ export function buildGalleryStripUrls(mainSrc: string, extraSrcs: string[]): str
   return out
 }
 
+import { collectProductImageUrls } from "./oliver-buyer-gallery"
+
 /** Thumbnail first, then `images[].url`, deduped (raw API strings). */
-export function collectProductImageUrls(product: Record<string, unknown>): string[] {
-  const out: string[] = []
-  const thumb = product.thumbnail
-  if (typeof thumb === "string" && thumb.trim()) out.push(thumb.trim())
-  const raw = product.images
-  const list: unknown[] = Array.isArray(raw) ? raw : []
-  for (const entry of list) {
-    const u = normalizeImageEntryUrl(entry)
-    if (!u) continue
-    pushUniqueGalleryUrl(out, u, "")
-  }
-  return out
-}
+export { collectProductImageUrls } from "./oliver-buyer-gallery"
 
 /** Alias for diagnostics (same as {@link collectProductImageUrls} after rollback). */
 export function gatherRawProductImageUrls(product: Record<string, unknown>): string[] {

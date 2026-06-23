@@ -2,8 +2,14 @@ import {
   collectExtraProductImageUrls,
   collectProductImageUrls,
   normalizeImageEntryUrl,
-  resolveMedusaBackendImageUrl,
+  resolveStorefrontProductImageSrc,
 } from "./product-images"
+import {
+  isOliverFalseFinishColorSplit,
+  repairOliverFalseFinishColorExecutions,
+  detectOliverGalleryColorHeroPair,
+  shouldSuppressOliverFinishWhenFabricCanonical,
+} from "../../../backend/src/lib/oliver-finish-execution-guard"
 import {
   greenwichBedMatrixFromProduct,
   isGreenwichBedProduct,
@@ -350,12 +356,12 @@ export function cardThumbnailSrcFromProduct(
   const t = product.thumbnail
   if (typeof t === "string") {
     const s = t.trim()
-    if (s.length > 0) return s
+    if (s.length > 0) return resolveStorefrontProductImageSrc(s)
   }
   const images = product.images
   if (Array.isArray(images) && images.length > 0) {
     const u = normalizeImageEntryUrl(images[0])
-    if (u) return u
+    if (u) return resolveStorefrontProductImageSrc(u)
   }
   return ""
 }
@@ -506,7 +512,7 @@ function colorExecutionsFromMetadataArray(
       })
       continue
     }
-    const resolvedUrls = urls.map((u) => resolveMedusaBackendImageUrl(u))
+    const resolvedUrls = urls.map((u) => resolveStorefrontProductImageSrc(u))
     const main = resolvedUrls[0]!
     variants.push({
       key,
@@ -551,12 +557,40 @@ function labelsFromMetadata(
 function finishExecutionsFromMetadata(
   product: Record<string, unknown>
 ): CardColorVariant[] | undefined {
+  const handle = typeof product.handle === "string" ? product.handle : undefined
+  const meta = product.metadata as Record<string, unknown> | undefined
+  if (shouldSuppressOliverFinishWhenFabricCanonical(handle, meta)) {
+    return undefined
+  }
   const raw = metadataExecutionsRaw(
     product,
-    "paint_finish_executions",
-    "finish_color_executions"
+    "finish_color_executions",
+    "paint_finish_executions"
   )
-  return colorExecutionsFromMetadataArray(raw)
+  const urls = collectProductImageUrls(product)
+  if (Array.isArray(raw) && isOliverFalseFinishColorSplit(urls, raw as Array<{ key: string; label: string; urls: string[] }>, handle)) {
+    return undefined
+  }
+  const repaired = repairOliverFalseFinishColorExecutions(
+    raw as Array<{ key: string; label: string; urls: string[] }> | undefined,
+    urls,
+    handle
+  )
+  if (repaired.changed && (repaired.executions?.length ?? 0) < 2) {
+    return undefined
+  }
+  const source = repaired.changed ? repaired.executions : raw
+  const variants = colorExecutionsFromMetadataArray(source)
+  if (!variants || variants.length < 2) return variants
+  const h = handle?.toLowerCase() ?? ""
+  if (!h.startsWith("co-")) return variants
+  return [...variants].sort((a, b) => {
+    const aMilk = /^(cream|milk|molochny|ivory)$/.test(a.key) || /молоч/i.test(a.label)
+    const bMilk = /^(cream|milk|molochny|ivory)$/.test(b.key) || /молоч/i.test(b.label)
+    if (aMilk && !bMilk) return -1
+    if (!aMilk && bMilk) return 1
+    return 0
+  })
 }
 
 function fabricUpholsteryExecutionsFromMetadata(
@@ -617,7 +651,7 @@ function headboardExecutionsFromMetadata(
       ? o.urls.filter((u): u is string => typeof u === "string" && u.trim().length > 0)
       : []
     if (!key || !label || urls.length === 0) continue
-    const resolved = urls.map((u) => resolveMedusaBackendImageUrl(u))
+    const resolved = urls.map((u) => resolveStorefrontProductImageSrc(u))
     variants.push({
       key,
       label,
@@ -747,7 +781,13 @@ export function buildIntraProductExecutionSelectors(
   }
 
   if (metadataPaint && metadataFabric) {
-    if (executionKeysMatch(metadataPaint, metadataFabric)) {
+    if (
+      executionKeysMatch(metadataPaint, metadataFabric) ||
+      shouldSuppressOliverFinishWhenFabricCanonical(
+        typeof product.handle === "string" ? product.handle : undefined,
+        product.metadata as Record<string, unknown> | undefined
+      )
+    ) {
       return {
         upholstery: metadataFabric,
         wood: metadataFrame,
@@ -798,6 +838,12 @@ export function buildIntraProductExecutionSelectors(
   }
 
   const mainNorm = mainSrc.trim()
+  const productUrls = collectProductImageUrls(product)
+  const handle = typeof product.handle === "string" ? product.handle.toLowerCase() : ""
+  if (detectOliverGalleryColorHeroPair(productUrls) && handle.startsWith("ol-")) {
+    return { confidence: "metadata_blocked" }
+  }
+
   const { upholsteryBuckets, woodBuckets, modelBuckets } =
     bucketProductImages(product)
 

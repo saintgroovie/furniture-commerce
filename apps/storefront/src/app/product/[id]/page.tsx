@@ -28,7 +28,9 @@ import {
   collectDisplayGroupExtraImageUrls,
   collectExtraProductImageUrls,
   mergeUniqueExtraUrls,
+  resolvePdpMediaBundle,
 } from "@/lib/product-images"
+import { buildPdpBuyerFacingGallery } from "@/lib/pdp-buyer-gallery.server"
 import {
   getCollectionLabel,
   getSubcollectionLabel,
@@ -197,17 +199,30 @@ export default async function ProductPage({ params }: { params: { id: string } }
     }
   }
 
+  const oliverBuyerGallery =
+    isOliver && !useExecutionPdp && !bedMatrixMedia
+      ? buildPdpBuyerFacingGallery(product)
+      : null
+
   const mainImage =
-    executionPdpMedia?.mainSrc ??
-    bedMatrixMedia?.mainSrc ??
+    (oliverBuyerGallery?.mainSrc ??
+      executionPdpMedia?.mainSrc ??
+      bedMatrixMedia?.mainSrc) ||
     pdpHeroThumbnail(product)
   const mainNorm = mainImage ?? ""
   const heroObjectPosition = getPdpHeroObjectPosition(product)
-  const pdpExtraSrcs = executionPdpMedia
-    ? executionPdpMedia.extraSrcs
-    : bedMatrixMedia
-      ? bedMatrixMedia.extraSrcs
-      : collectDisplayGroupExtraImageUrls([product, ...displayGroupMembers], mainNorm)
+  const pdpExtraSrcs = oliverBuyerGallery
+    ? oliverBuyerGallery.extraSrcs
+    : executionPdpMedia
+      ? executionPdpMedia.extraSrcs
+      : bedMatrixMedia
+        ? bedMatrixMedia.extraSrcs
+        : collectDisplayGroupExtraImageUrls([product, ...displayGroupMembers], mainNorm)
+
+  const { mainSrc: pdpMainSrc, extraSrcs: pdpResolvedExtras } = resolvePdpMediaBundle(
+    mainNorm,
+    pdpExtraSrcs
+  )
 
   const titleStr = getBuyerFacingProductTitle(product)
   const canonicalName = getCanonicalName(product)
@@ -234,8 +249,8 @@ export default async function ProductPage({ params }: { params: { id: string } }
         <div className="product-detail-media-col">
           {isGreenwichBed ? (
             <GreenwichBedPdpMediaSwitcher
-              mainSrc={mainNorm}
-              extraSrcs={pdpExtraSrcs}
+              mainSrc={pdpMainSrc}
+              extraSrcs={pdpResolvedExtras}
               headboardVariants={executionSelectors.headboard}
               upholsteryVariants={executionSelectors.upholstery}
               woodVariants={executionSelectors.wood}
@@ -245,8 +260,8 @@ export default async function ProductPage({ params }: { params: { id: string } }
             />
           ) : useExecutionPdp ? (
             <ProductPdpExecutionMediaSwitcher
-              mainSrc={mainNorm}
-              extraSrcs={pdpExtraSrcs}
+              mainSrc={pdpMainSrc}
+              extraSrcs={pdpResolvedExtras}
               headboardVariants={executionSelectors.headboard}
               upholsteryVariants={executionSelectors.upholstery}
               woodVariants={executionSelectors.wood}
@@ -261,14 +276,14 @@ export default async function ProductPage({ params }: { params: { id: string } }
             />
           ) : isOliver ? (
             <OliverPdpMediaSwitcher
-              mainSrc={mainNorm}
-              extraSrcs={pdpExtraSrcs}
+              mainSrc={pdpMainSrc}
+              extraSrcs={pdpResolvedExtras}
               title={titleStr}
             />
           ) : (
             <ProductPdpMediaSwitcher
-              mainSrc={mainNorm}
-              extraSrcs={pdpExtraSrcs}
+              mainSrc={pdpMainSrc}
+              extraSrcs={pdpResolvedExtras}
               alt={titleStr}
               heroObjectPosition={heroObjectPosition}
             />

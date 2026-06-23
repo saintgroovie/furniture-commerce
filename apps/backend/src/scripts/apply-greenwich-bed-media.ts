@@ -13,17 +13,65 @@ import type { ExecArgs } from "@medusajs/framework/types"
 import { Modules } from "@medusajs/framework/utils"
 import * as fs from "fs"
 import * as path from "path"
+import {
+  pickBuyerThumbnail,
+  sortUrlsByBuyerPolicy,
+  toMedusaImages,
+} from "../lib/gallery-buyer-sort"
+import { buildGreenwichBedDimensionBundle } from "../lib/greenwich-bed-dimension-metadata"
+import { DIMENSION_METADATA_VERSION } from "../lib/gallery-dimension-metadata"
 
 const MANIFEST_REL = "tmp/greenwich-bed-headboard-import/manifests/greenwich-bed-pool.json"
 
 type HeadboardExecution = { key: string; label: string; urls: string[] }
 
+type ColorExecution = { key: string; label: string; urls: string[] }
+
 type Manifest = {
   display_group?: string
   handles: string[]
   headboard_model_executions: HeadboardExecution[]
+  upholstery_color_labels?: Record<string, string>
+  upholstery_color_executions?: ColorExecution[]
   thumbnail_url: string
   gallery_urls: string[]
+}
+
+const BED_UPHOLSTERY_LABELS: Record<string, string> = {
+  natural_beige: "Natural / Beige",
+  dark_beige: "Dark / Beige",
+  natural_darkblue: "Natural / Dark blue",
+  dark_darkblue: "Dark / Dark blue",
+}
+
+function extractBedUpholsteryToken(filename: string): string | null {
+  const m = filename.match(/(natural_beige|dark_beige|natural_darkblue|dark_darkblue)/i)
+  return m ? m[1].toLowerCase() : null
+}
+
+function buildUpholsteryExecutionsFromGallery(
+  galleryUrls: string[]
+): { labels: Record<string, string>; executions: ColorExecution[] } {
+  const byToken = new Map<string, string[]>()
+  for (const rel of galleryUrls) {
+    const base = rel.split("/").pop() ?? rel
+    const token = extractBedUpholsteryToken(base)
+    if (!token) continue
+    const arr = byToken.get(token) ?? []
+    arr.push(rel)
+    byToken.set(token, arr)
+  }
+  const order = ["natural_beige", "dark_beige", "natural_darkblue", "dark_darkblue"]
+  const executions: ColorExecution[] = []
+  const labels: Record<string, string> = {}
+  for (const token of order) {
+    const urls = byToken.get(token)
+    if (!urls?.length) continue
+    const label = BED_UPHOLSTERY_LABELS[token] ?? token
+    labels[token] = label
+    executions.push({ key: token, label, urls: [urls[0]!] })
+  }
+  return { labels, executions }
 }
 
 function repoRoot(): string {
@@ -116,11 +164,10 @@ export default async function applyGreenwichBedMedia({ container }: ExecArgs): P
   const { manifestPath, manifest } = loadAndValidateManifest(root)
 
   const base = backendBaseUrl(root)
-  const thumbnailUrl = absUrl(base, manifest.thumbnail_url)
-  const galleryUrls = manifest.gallery_urls.map((u) => absUrl(base, u))
-  const headboardLabels = Object.fromEntries(
-    manifest.headboard_model_executions.map((e) => [e.key, e.label])
-  )
+  const galleryRelSorted = sortUrlsByBuyerPolicy(manifest.gallery_urls, { handle: "greenwich-bed" })
+  const bundle = buildGreenwichBedDimensionBundle(galleryRelSorted)
+  const thumbnailUrl = absUrl(base, bundle.thumbnail_url)
+  const galleryUrls = bundle.gallery_urls.map((u) => absUrl(base, u))
 
   const productModule = container.resolve(Modules.PRODUCT)
   const planned: string[] = []
@@ -141,20 +188,40 @@ export default async function applyGreenwichBedMedia({ container }: ExecArgs): P
 
     const meta = { ...(product.metadata ?? {}) } as Record<string, unknown>
     meta.display_group = manifest.display_group ?? "greenwich-bed"
-    meta.headboard_model_labels = headboardLabels
-    meta.headboard_model_executions = manifest.headboard_model_executions
+    meta.headboard_model_labels = bundle.headboard_model_labels
+    meta.headboard_model_executions = bundle.headboard_model_executions
+    meta.frame_material_labels = bundle.frame_material_labels
+    meta.frame_material_executions = bundle.frame_material_executions
+    meta.fabric_upholstery_labels = bundle.fabric_upholstery_labels
+    meta.fabric_upholstery_executions = bundle.fabric_upholstery_executions
+    meta.upholstery_color_labels = bundle.fabric_upholstery_labels
+    meta.upholstery_color_executions = bundle.fabric_upholstery_executions
+    meta.bed_execution_matrix = bundle.bed_execution_matrix
+    if (bundle.shared_scene_media.length > 0) {
+      meta.shared_scene_media = bundle.shared_scene_media
+    }
+    meta.dimension_metadata_version = DIMENSION_METADATA_VERSION
+    meta.execution_dimension_contract =
+      "headboard_model|frame_material|fabric_upholstery|bed_execution_matrix|shared_scene"
+    meta.greenwich_bed_metadata_source = "gr-bed-pool-v2"
+    delete meta.finish_color_executions
+    delete meta.finish_color_labels
+    delete meta.paint_finish_executions
+    delete meta.paint_finish_labels
 
     await productModule.updateProducts(product.id, {
       thumbnail: thumbnailUrl,
-      images: galleryUrls.map((url) => ({ url })),
+      images: toMedusaImages(galleryUrls, handle),
       metadata: meta,
     })
-    logger.info(`Updated ${handle}: ${galleryUrls.length} pool images, 3 headboard models`)
+    logger.info(
+      `Updated ${handle}: matrix=${bundle.bed_execution_matrix.length} cells, thumb=${bundle.thumbnail_url.split("/").pop()}`
+    )
   }
 
   if (dryRun) {
     logger.info(
-      `[DRY-RUN] Would update ${planned.length} bed SKU(s) from ${manifestPath}: ${galleryUrls.length} images, ${manifest.headboard_model_executions.length} headboard models — ${planned.join(", ")}`
+      `[DRY-RUN] Would update ${planned.length} bed SKU(s) from ${manifestPath}: matrix=${bundle.bed_execution_matrix.length}, gallery=${galleryUrls.length} — ${planned.join(", ")}`
     )
     return
   }

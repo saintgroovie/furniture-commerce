@@ -2,7 +2,7 @@
  * Greenwich bed matrix resolution for card / PDP media.
  */
 import type { CardColorVariant } from "./card-color-media"
-import { resolveMedusaBackendImageUrl } from "./product-images"
+import { resolveStorefrontProductImageSrc } from "./product-images"
 
 export type GreenwichBedMatrixEntry = {
   headboard_model: string
@@ -69,7 +69,7 @@ export function resolveGreenwichBedMedia(
         m.combo_key === `${frameMaterial}_${fabric}`
     )
   if (!entry || entry.urls.length === 0) return null
-  const resolved = entry.urls.map((u) => resolveMedusaBackendImageUrl(u))
+  const resolved = entry.urls.map((u) => resolveStorefrontProductImageSrc(u))
   return {
     mainSrc: resolved[0]!,
     extraSrcs: resolved.slice(1),

@@ -30,6 +30,8 @@ import {
   collectExtraProductImageUrls,
   mergeUniqueExtraUrls,
   normalizeImageEntryUrl,
+  resolvePdpMediaBundle,
+  resolveStorefrontProductImageSrc,
 } from "@/lib/product-images"
 
 type Product = {
@@ -59,12 +61,12 @@ function cardThumbnailSrc(product: Product): string | null {
   const t = product.thumbnail
   if (typeof t === "string") {
     const s = t.trim()
-    if (s.length > 0) return s
+    if (s.length > 0) return resolveStorefrontProductImageSrc(s)
   }
   const images = product.images
   if (Array.isArray(images) && images.length > 0) {
     const u = normalizeImageEntryUrl(images[0])
-    if (u) return u
+    if (u) return resolveStorefrontProductImageSrc(u)
   }
   return null
 }
@@ -174,10 +176,15 @@ export function ProductCard({
                 ),
               ])
 
+  const { mainSrc: cardMainSrc, extraSrcs: cardExtraSrcs } = resolvePdpMediaBundle(
+    mainSrc,
+    extraSrcs
+  )
+
   const mediaBlock = isOliver ? (
     <OliverCardMediaSwitcher
-      mainSrc={mainSrc}
-      extraSrcs={extraSrcs}
+      mainSrc={cardMainSrc}
+      extraSrcs={cardExtraSrcs}
       headboardVariants={headboardVariants}
       upholsteryVariants={upholsteryVariants}
       woodVariants={woodVariants}
@@ -188,8 +195,8 @@ export function ProductCard({
     />
   ) : (
     <ProductCardMediaSwitcher
-      mainSrc={mainSrc}
-      extraSrcs={extraSrcs}
+      mainSrc={cardMainSrc}
+      extraSrcs={cardExtraSrcs}
       headboardVariants={headboardVariants}
       upholsteryVariants={upholsteryVariants}
       woodVariants={woodVariants}
