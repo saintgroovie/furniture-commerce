@@ -1,0 +1,23 @@
+Codex review — Country Молочный / paint_finish shadow fix
+Date: 2026-06-23
+Scope: stale paint_finish_executions shadowing finish_color_executions
+
+Initial verdict: approve-with-notes
+
+Findings addressed in session:
+- P2: countryFinishLabel now forces milk-like Country keys to «Молочный» before operator label fallback
+- P2: patch-country-finish-labels treats «Кремовый» on cream as needing patch
+- P3: validate-country-finish-metadata checks cream.label contains «Молочный» text
+
+Core fix (approved):
+- Storefront prefers finish_color_executions over paint_finish_executions
+- Apply + patch sync paint_finish_* with finish_color_*
+- Board export always emits operator_variant_label for Country cream/milk
+- Post-apply validate-country-finish-metadata.mjs guard
+
+Runtime evidence:
+- patch: 12/13 SKUs paint_sync=true
+- PDP co-05-1: swatches cream/Молочный, blue, grey, olive (4 total)
+- validate-country-finish-metadata.json: pass true
+
+Final verdict: approve-with-notes (P2/P3 remediated in same session)

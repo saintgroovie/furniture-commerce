@@ -23,6 +23,7 @@ import {
   sortUrlsByBuyerPolicy,
   toMedusaImages,
 } from "../lib/gallery-buyer-sort"
+import { countryFinishLabel, sortCountryFinishExecutionsMilkFirst, syncCountryPaintFinishMetadata } from "../lib/country-finish-labels"
 
 const WHITELIST = new Set([
   "co-05-1",
@@ -350,7 +351,8 @@ export default async function applyCountryAssignmentV2Gated({ container }: ExecA
     let finishExecutions = exportableVariantKeys(state)
       .filter((vk) => collectVariantMediaIds(state, vk).length > 0)
       .map((vk) => {
-        const label = state.variantLabelOverrides?.[vk] ?? vk
+        const operatorLabel = state.variantLabelOverrides?.[vk]
+        const label = countryFinishLabel(handle, vk, operatorLabel)
         labels[vk] = label
         const urls: string[] = []
         for (const id of collectVariantMediaIds(state, vk)) {
@@ -366,6 +368,7 @@ export default async function applyCountryAssignmentV2Gated({ container }: ExecA
 
     if (finishExecutions.length >= 2) {
       finishExecutions = sortFinishExecutions(finishExecutions, handle).executions
+      finishExecutions = sortCountryFinishExecutionsMilkFirst(finishExecutions)
     } else {
       finishExecutions = []
     }
@@ -380,6 +383,11 @@ export default async function applyCountryAssignmentV2Gated({ container }: ExecA
       meta.finish_color_labels = labels
       meta.finish_color_executions = finishExecutions
       meta.finish_metadata_source = "country_assignment_v2_gated"
+      meta.default_finish_key = activeKey
+      syncCountryPaintFinishMetadata(meta)
+    } else {
+      meta.paint_finish_executions = null
+      meta.paint_finish_labels = null
     }
 
     if (dryRun) {
