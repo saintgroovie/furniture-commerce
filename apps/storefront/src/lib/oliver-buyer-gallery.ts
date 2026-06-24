@@ -10,7 +10,7 @@ import {
 } from "../../../backend/src/lib/gallery-buyer-sort"
 import {
   isOliverFalseFinishColorSplit,
-} from "../../../backend/src/lib/oliver-finish-execution-guard"
+} from "./oliver-finish-execution-guard"
 
 function basenameKey(url: string): string {
   return (url.split("/").pop() ?? url).toLowerCase()

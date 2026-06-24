@@ -9,7 +9,7 @@ import {
   repairOliverFalseFinishColorExecutions,
   detectOliverGalleryColorHeroPair,
   shouldSuppressOliverFinishWhenFabricCanonical,
-} from "../../../backend/src/lib/oliver-finish-execution-guard"
+} from "./oliver-finish-execution-guard"
 import {
   greenwichBedMatrixFromProduct,
   isGreenwichBedProduct,
@@ -17,6 +17,14 @@ import {
   defaultGreenwichBedSelection,
   type GreenwichBedMatrixEntry,
 } from "./greenwich-bed-media"
+import {
+  availableFrameKeysForPaint,
+  availablePaintKeys,
+  buildGreenwichPaintFinishVariants,
+  buildGreenwichPaintWoodVariants,
+  greenwichPaintMatrixFromProduct,
+  isGreenwichPaintProduct,
+} from "./greenwich-paint-media"
 
 export type CardColorVariant = {
   key: string
@@ -70,6 +78,8 @@ export type CardExecutionSelectors = {
   confidence: CardExecutionConfidence
   /** Greenwich bed: headboard × wood × fabric matrix (scoped galleries). */
   greenwichBedMatrix?: GreenwichBedMatrixEntry[]
+  /** Greenwich paint: wood × paint color matrix. */
+  greenwichPaintMatrix?: import("./greenwich-paint-media").GreenwichPaintMatrixEntry[]
 }
 
 export type CardExecutionControls = CardExecutionSelectors
@@ -746,12 +756,51 @@ function executionKeysMatch(
   return keysA === keysB
 }
 
+function greenwichPaintSelectorsFromMetadata(
+  product: Record<string, unknown>
+): CardExecutionSelectors | null {
+  if (!isGreenwichPaintProduct(product)) return null
+  const matrix = greenwichPaintMatrixFromProduct(product)
+  if (matrix.length === 0) return null
+
+  const meta = product.metadata as Record<string, unknown> | undefined
+  const finish = buildGreenwichPaintFinishVariants(
+    matrix,
+    (meta?.paint_finish_executions ?? meta?.finish_color_executions) as Array<{
+      key: string
+      label: string
+      swatch_hex?: string
+    }>
+  )
+  if (!finish || finish.length < 2) return null
+
+  const wood = buildGreenwichPaintWoodVariants(
+    matrix,
+    meta?.frame_material_executions as Array<{ key: string; label: string; swatch_hex?: string }>
+  )
+  const hasDualWoodForSomeColor = availablePaintKeys(matrix).some(
+    (paint) => availableFrameKeysForPaint(matrix, paint).length > 1
+  )
+  if (!wood && !hasDualWoodForSomeColor) return null
+
+  return {
+    wood: wood ?? [],
+    finish,
+    finishLabel: "Цвет",
+    greenwichPaintMatrix: matrix,
+    confidence: "canonical",
+  }
+}
+
 export function buildIntraProductExecutionSelectors(
   product: Record<string, unknown>,
   mainSrc: string
 ): CardExecutionSelectors {
   const greenwichBed = greenwichBedSelectorsFromMetadata(product)
   if (greenwichBed) return greenwichBed
+
+  const greenwichPaint = greenwichPaintSelectorsFromMetadata(product)
+  if (greenwichPaint) return greenwichPaint
 
   const metadataHeadboard = headboardExecutionsFromMetadata(product)
   const metadataFabric = fabricUpholsteryExecutionsFromMetadata(product)
