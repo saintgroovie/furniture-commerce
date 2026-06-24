@@ -25,6 +25,8 @@ import {
   greenwichPaintMatrixFromProduct,
   isGreenwichPaintProduct,
 } from "./greenwich-paint-media"
+import { canonicalizeMilkCarouselUrls } from "../../../backend/src/lib/country-operator-gallery-order"
+import { isMilkLikeFinishKey } from "../../../backend/src/lib/country-finish-labels"
 
 export type CardColorVariant = {
   key: string
@@ -494,7 +496,8 @@ export function finishLabelForProduct(
 }
 
 function colorExecutionsFromMetadataArray(
-  raw: unknown
+  raw: unknown,
+  opts?: { handle?: string }
 ): CardColorVariant[] | undefined {
   if (!Array.isArray(raw) || raw.length < 2) return undefined
   const variants: CardColorVariant[] = []
@@ -523,12 +526,17 @@ function colorExecutionsFromMetadataArray(
       continue
     }
     const resolvedUrls = urls.map((u) => resolveStorefrontProductImageSrc(u))
-    const main = resolvedUrls[0]!
+    const handle = opts?.handle?.toLowerCase() ?? ""
+    const orderedUrls =
+      handle.startsWith("co-") && isMilkLikeFinishKey(key, label)
+        ? canonicalizeMilkCarouselUrls(resolvedUrls)
+        : resolvedUrls
+    const main = orderedUrls[0]!
     variants.push({
       key,
       label,
       mainSrc: main,
-      extraSrcs: resolvedUrls.slice(1),
+      extraSrcs: orderedUrls.slice(1),
       swatchToken: key,
       swatchHex,
     })
@@ -590,7 +598,7 @@ function finishExecutionsFromMetadata(
     return undefined
   }
   const source = repaired.changed ? repaired.executions : raw
-  const variants = colorExecutionsFromMetadataArray(source)
+  const variants = colorExecutionsFromMetadataArray(source, { handle })
   if (!variants || variants.length < 2) return variants
   const h = handle?.toLowerCase() ?? ""
   if (!h.startsWith("co-")) return variants
