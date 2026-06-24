@@ -250,10 +250,10 @@ export function buildGalleryStripUrls(mainSrc: string, extraSrcs: string[]): str
   return out
 }
 
-import { collectProductImageUrls } from "./oliver-buyer-gallery"
+import { collectProductImageUrls } from "./collect-product-image-urls"
 
 /** Thumbnail first, then `images[].url`, deduped (raw API strings). */
-export { collectProductImageUrls } from "./oliver-buyer-gallery"
+export { collectProductImageUrls } from "./collect-product-image-urls"
 
 /** Alias for diagnostics (same as {@link collectProductImageUrls} after rollback). */
 export function gatherRawProductImageUrls(product: Record<string, unknown>): string[] {

@@ -3,6 +3,7 @@
  * MD5 workbook repair: apps/backend/src/lib/gallery-content-dedupe.ts (apply scripts only).
  * PDP render repair: apps/storefront/src/lib/pdp-buyer-gallery.server.ts (server-only).
  */
+import { collectProductImageUrls } from "./collect-product-image-urls"
 import {
   collapseBuyerGalleryUrls,
   sortUrlsByBuyerPolicy,
@@ -152,26 +153,7 @@ function prepBase(urls: string[], product: Record<string, unknown>): {
   return { urls: deduped, roleByUrl }
 }
 
-/** Thumbnail first, then `images[].url`, deduped (raw API strings). */
-export function collectProductImageUrls(product: Record<string, unknown>): string[] {
-  const out: string[] = []
-  const seen = new Set<string>()
-  const push = (u: string) => {
-    const key = basenameKey(u)
-    if (seen.has(key)) return
-    seen.add(key)
-    out.push(u)
-  }
-  const thumb = product.thumbnail
-  if (typeof thumb === "string" && thumb.trim()) push(thumb.trim())
-  const raw = product.images
-  const list: unknown[] = Array.isArray(raw) ? raw : []
-  for (const entry of list) {
-    const u = normalizeImageEntryUrl(entry)
-    if (u) push(u)
-  }
-  return out
-}
+export { collectProductImageUrls } from "./collect-product-image-urls"
 
 export function prepareOliverBuyerGalleryLite(
   product: Record<string, unknown>,

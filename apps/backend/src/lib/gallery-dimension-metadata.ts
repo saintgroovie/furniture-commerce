@@ -187,6 +187,20 @@ export function buildBedExecutionMatrix(
   )
 }
 
+/** Pathname-only key so `/static/…` and `http://host/static/…` match in assigned sets. */
+function normalizeMetadataUrlKey(url: string): string {
+  const t = url.trim()
+  if (!t) return t
+  if (t.startsWith("http://") || t.startsWith("https://")) {
+    try {
+      return new URL(t).pathname
+    } catch {
+      return t
+    }
+  }
+  return t
+}
+
 function classifySharedScene(url: string): SharedSceneEntry["scene_type"] {
   const hay = (url.split("/").pop() ?? url).toLowerCase()
   if (/scheme|схем|drawing|blueprint/i.test(hay)) return "scheme"
@@ -200,7 +214,7 @@ export function buildSharedSceneMedia(
   allUrls: string[],
   assigned: Set<string>
 ): SharedSceneEntry[] {
-  const orphans = allUrls.filter((u) => !assigned.has(u.trim()))
+  const orphans = allUrls.filter((u) => !assigned.has(normalizeMetadataUrlKey(u)))
   if (orphans.length === 0) return []
   const byType = new Map<SharedSceneEntry["scene_type"], string[]>()
   for (const url of orphans) {
@@ -299,11 +313,16 @@ export function migrateProductDimensionMetadata(
 
   const assigned = new Set<string>()
   for (const g of [...paint, ...fabricMerged, ...headboard, ...construction, ...frameRaw]) {
-    for (const u of g.urls) assigned.add(u.trim())
+    for (const u of g.urls) assigned.add(normalizeMetadataUrlKey(u))
   }
 
   const shared = buildSharedSceneMedia(allUrls, assigned)
-  if (shared.length > 0) meta.shared_scene_media = shared
+  if (shared.length > 0) {
+    meta.shared_scene_media = shared
+  } else {
+    // Medusa metadata merge ignores `delete`; null clears the key.
+    meta.shared_scene_media = null
+  }
 
   meta.dimension_metadata_version = DIMENSION_METADATA_VERSION
   meta.execution_dimension_contract =
