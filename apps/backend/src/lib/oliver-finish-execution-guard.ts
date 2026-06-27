@@ -137,6 +137,154 @@ export function reconcileOliverFalseFinishMetadata(
   return changed
 }
 
+/**
+ * Oliver 3-frame workbook: g01 = closed front, g02 = open doors (interior), g03 = scheme drawing.
+ * Filename `gallery_02` is NOT 3/4 — lesson #21 i2→g02 restore must not apply.
+ */
+export const OLIVER_GALLERY_02_AS_INTERIOR_HANDLES = new Set(["ol-42-1"])
+
+/**
+ * Oliver 2-frame workbook: g01 = closed front, g02 = unfolded / functional interior (sofa-bed).
+ * Differs from minimal detail workbook (g02 = macro detail) and 3-frame interior (g03 scheme).
+ */
+export const OLIVER_GALLERY_02_AS_INTERIOR_TWO_FRAME_HANDLES = new Set(["ol-57-3"])
+
+export function isOliverTwoFrameGalleryWorkbook(
+  urls: string[],
+  handle?: string
+): boolean {
+  const h = handle?.toLowerCase()
+  if (!h?.startsWith("ol-")) return false
+  const keys = urls.map((u) => basenameKey(u))
+  const hasG01 = keys.some((k) => /gallery[_\-.]?01(?:\.|[-_]|$)/i.test(k))
+  const hasG02 = keys.some((k) => /gallery[_\-.]?02(?:\.|[-_]|$)/i.test(k))
+  const hasG03Plus = keys.some((k) => /gallery[_\-.]?0[3-9](?:\.|[-_]|$)/i.test(k))
+  const hasI1 = keys.some((k) => /[-_]i0?1(?:\.|[-_]|$)/i.test(k))
+  const hasI2 = keys.some((k) => /[-_]i0?2(?:\.|[-_]|$)/i.test(k))
+  const onlyG01G02 = keys.every((k) => /gallery[_\-.]?0[12](?:\.|[-_]|$)/i.test(k))
+  return (
+    hasG01 &&
+    hasG02 &&
+    !hasG03Plus &&
+    !hasI1 &&
+    !hasI2 &&
+    onlyG01G02 &&
+    keys.length === 2
+  )
+}
+
+export function isOliverGallery02TwoFrameInteriorWorkbook(
+  urls: string[],
+  handle?: string
+): boolean {
+  const h = handle?.toLowerCase()
+  if (!h?.startsWith("ol-") || !OLIVER_GALLERY_02_AS_INTERIOR_TWO_FRAME_HANDLES.has(h)) {
+    return false
+  }
+  return isOliverTwoFrameGalleryWorkbook(urls, handle)
+}
+
+export function isOliverGallery02InteriorWorkbook(
+  urls: string[],
+  handle?: string
+): boolean {
+  const h = handle?.toLowerCase()
+  if (!h?.startsWith("ol-") || !OLIVER_GALLERY_02_AS_INTERIOR_HANDLES.has(h)) return false
+  const keys = urls.map((u) => basenameKey(u))
+  const hasG01 = keys.some((k) => /gallery[_\-.]?01(?:\.|[-_]|$)/i.test(k))
+  const hasG02 = keys.some((k) => /gallery[_\-.]?02(?:\.|[-_]|$)/i.test(k))
+  const hasG03 = keys.some((k) => /gallery[_\-.]?03(?:\.|[-_]|$)/i.test(k))
+  return hasG01 && hasG02 && hasG03
+}
+
+/**
+ * Oliver 3-frame detail workbook (lesson #28): g01=front, g02=detail, g03=interior.
+ * Regex `gallery_02` alone is NOT 3/4 for these handles (cf. ol-64-1 where g02 = 3/4).
+ */
+export const OLIVER_THREE_FRAME_DETAIL_HANDLES = new Set(["ol-65-2"])
+
+/**
+ * Oliver 3-frame detail workbook: only gallery_01 + gallery_02 + gallery_03 (no i*, no g04+).
+ * g01 = front на белом, g02 = detail (macro), g03 = interior. Regex `gallery_02` ≠ 3/4.
+ */
+export function isOliverThreeFrameDetailWorkbook(
+  urls: string[],
+  handle?: string
+): boolean {
+  const h = handle?.toLowerCase()
+  if (!h?.startsWith("ol-") || !OLIVER_THREE_FRAME_DETAIL_HANDLES.has(h)) return false
+  if (OLIVER_GALLERY_02_AS_INTERIOR_HANDLES.has(h)) return false
+  if (OLIVER_GALLERY_02_AS_INTERIOR_TWO_FRAME_HANDLES.has(h)) return false
+
+  const keys = urls.map((u) => basenameKey(u))
+  const hasG01 = keys.some((k) => /gallery[_\-.]?01(?:\.|[-_]|$)/i.test(k))
+  const hasG02 = keys.some((k) => /gallery[_\-.]?02(?:\.|[-_]|$)/i.test(k))
+  const hasG03 = keys.some((k) => /gallery[_\-.]?03(?:\.|[-_]|$)/i.test(k))
+  const hasG04Plus = keys.some((k) => /gallery[_\-.]?0[4-9](?:\.|[-_]|$)/i.test(k))
+  const hasLegacyI = keys.some((k) => /[-_]i0?\d(?:\.|[-_]|$)/i.test(k))
+  if (!hasG01 || !hasG02 || !hasG03 || hasG04Plus || hasLegacyI) return false
+
+  const galleryOnly = keys.filter((k) => /gallery[_\-.]?0[123](?:\.|[-_]|$)/i.test(k))
+  if (galleryOnly.length !== 3) return false
+
+  const withoutMain = urls.filter((u) => !/_main\.jpg$/i.test(basenameKey(u)))
+  if (isOliverTwoFrameGalleryWorkbook(withoutMain, handle)) return false
+
+  return true
+}
+
+export function oliverThreeFrameDetailWorkbookRoleOverrides(
+  urls: string[],
+  handle?: string
+): Map<string, string> {
+  const roleByUrl = new Map<string, string>()
+  if (!isOliverThreeFrameDetailWorkbook(urls, handle)) return roleByUrl
+  for (const url of urls) {
+    const hay = basenameKey(url)
+    if (/_main\.jpg$/i.test(hay)) roleByUrl.set(url, "front")
+    else if (/gallery[_\-.]?01(?:\.|[-_]|$)/i.test(hay)) roleByUrl.set(url, "front")
+    else if (/gallery[_\-.]?02(?:\.|[-_]|$)/i.test(hay)) roleByUrl.set(url, "detail")
+    else if (/gallery[_\-.]?03(?:\.|[-_]|$)/i.test(hay)) roleByUrl.set(url, "interior")
+  }
+  return roleByUrl
+}
+
+/** Skip lesson #21 g02 injection when workbook is g01+g03 interior class (g02 may be absent). */
+export function shouldSkipOliverGallery02Restore(
+  urls: string[],
+  handle?: string
+): boolean {
+  const h = handle?.toLowerCase()
+  if (!h?.startsWith("ol-") || !OLIVER_GALLERY_02_AS_INTERIOR_HANDLES.has(h)) return false
+  const keys = urls.map((u) => basenameKey(u))
+  const hasG01 = keys.some((k) => /gallery[_\-.]?01(?:\.|[-_]|$)/i.test(k))
+  const hasG03 = keys.some((k) => /gallery[_\-.]?03(?:\.|[-_]|$)/i.test(k))
+  return hasG01 && hasG03
+}
+
+export function oliverGallery02InteriorWorkbookRoleOverrides(
+  urls: string[],
+  handle?: string
+): Map<string, string> {
+  const roleByUrl = new Map<string, string>()
+  if (isOliverGallery02InteriorWorkbook(urls, handle)) {
+    for (const url of urls) {
+      const hay = basenameKey(url)
+      if (/gallery[_\-.]?01(?:\.|[-_]|$)/i.test(hay)) roleByUrl.set(url, "front")
+      else if (/gallery[_\-.]?02(?:\.|[-_]|$)/i.test(hay)) roleByUrl.set(url, "interior")
+      else if (/gallery[_\-.]?03(?:\.|[-_]|$)/i.test(hay)) roleByUrl.set(url, "scheme")
+    }
+    return roleByUrl
+  }
+  if (!isOliverGallery02TwoFrameInteriorWorkbook(urls, handle)) return roleByUrl
+  for (const url of urls) {
+    const hay = basenameKey(url)
+    if (/gallery[_\-.]?01(?:\.|[-_]|$)/i.test(hay)) roleByUrl.set(url, "front")
+    else if (/gallery[_\-.]?02(?:\.|[-_]|$)/i.test(hay)) roleByUrl.set(url, "interior")
+  }
+  return roleByUrl
+}
+
 /** Role overrides: color hero = front, gallery_01 = detail (same SKU). */
 export function oliverGalleryColorHeroRoleOverrides(
   urls: string[],

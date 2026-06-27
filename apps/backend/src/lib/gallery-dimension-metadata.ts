@@ -7,6 +7,7 @@ import {
   withSwatchHexArray,
 } from "./dimension-swatch-hex"
 import { reconcileOliverFabricFinishMetadata } from "./oliver-finish-execution-guard"
+import { hasProvencePaintWoodFinishMetadata, isProvenceFalsePaintWoodSplitMetadata, hasProvencePaintWoodDualFinishEvidence } from "./provence-paint-wood-finish-metadata"
 
 export type ExecutionGroup = { key: string; label: string; urls: string[]; swatch_hex?: string }
 
@@ -188,17 +189,18 @@ export function buildBedExecutionMatrix(
 }
 
 /** Pathname-only key so `/static/…` and `http://host/static/…` match in assigned sets. */
-function normalizeMetadataUrlKey(url: string): string {
+export function normalizeMetadataUrlKey(url: string): string {
   const t = url.trim()
   if (!t) return t
+  let path = t
   if (t.startsWith("http://") || t.startsWith("https://")) {
     try {
-      return new URL(t).pathname
+      path = new URL(t).pathname
     } catch {
-      return t
+      path = t
     }
   }
-  return t
+  return path.toLowerCase()
 }
 
 function classifySharedScene(url: string): SharedSceneEntry["scene_type"] {
@@ -258,6 +260,32 @@ export function migrateProductDimensionMetadata(
     unknown
   >
   const before = JSON.stringify(meta)
+
+  const handleLower =
+    typeof product.handle === "string" ? product.handle.toLowerCase() : ""
+  const provencePaintWoodLocked =
+    handleLower.startsWith("pv-") &&
+    (meta.finish_metadata_source === "provence_paint_wood_split" ||
+      hasProvencePaintWoodFinishMetadata(meta)) &&
+    hasProvencePaintWoodDualFinishEvidence(allUrls, handleLower) &&
+    !isProvenceFalsePaintWoodSplitMetadata(meta, allUrls, handleLower)
+  if (provencePaintWoodLocked) {
+    const paintLocked = asExecutions(meta.finish_color_executions)
+    if (paintLocked.length >= 2) {
+      const paintWithHex = withSwatchHexArray(paintLocked)
+      meta.paint_finish_executions = paintWithHex
+      meta.paint_finish_labels = Object.fromEntries(paintWithHex.map((e) => [e.key, e.label]))
+      meta.finish_color_executions = paintWithHex
+      meta.finish_color_labels = meta.paint_finish_labels
+    }
+    meta.shared_scene_media = null
+    meta.dimension_metadata_version = DIMENSION_METADATA_VERSION
+    meta.execution_dimension_contract =
+      "paint_finish|finish_color_executions|provence_paint_wood_split"
+    return { meta, changed: JSON.stringify(meta) !== before }
+  }
+
+  const beforeMigrate = JSON.stringify(meta)
 
   const paintRaw = asExecutions(meta.paint_finish_executions ?? meta.finish_color_executions)
   const fabricRaw = asExecutions(
@@ -333,7 +361,7 @@ export function migrateProductDimensionMetadata(
     return { meta, changed: true }
   }
 
-  return { meta, changed: JSON.stringify(meta) !== before }
+  return { meta, changed: JSON.stringify(meta) !== beforeMigrate }
 }
 
 export function extractFrameMaterialFromUrls(urls: string[]): ExecutionGroup[] {

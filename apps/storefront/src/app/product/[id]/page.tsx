@@ -23,6 +23,10 @@ import {
   isGreenwichBedProduct,
   resolveGreenwichBedMedia,
 } from "@/lib/greenwich-bed-media"
+import {
+  defaultGreenwichPaintSelection,
+  resolveGreenwichPaintMedia,
+} from "@/lib/greenwich-paint-media"
 import { getDisplayGroupMembers } from "@/lib/display-group"
 import {
   collectDisplayGroupExtraImageUrls,
@@ -132,9 +136,14 @@ export default async function ProductPage({ params }: { params: { id: string } }
   const thumbSrc = cardThumbnailSrcFromProduct(product)
   const executionSelectors = buildIntraProductExecutionSelectors(product, thumbSrc)
   const greenwichBedMatrix = executionSelectors.greenwichBedMatrix
+  const greenwichPaintMatrix = executionSelectors.greenwichPaintMatrix
   const bedDefaults =
     greenwichBedMatrix && greenwichBedMatrix.length > 0
       ? defaultGreenwichBedSelection(greenwichBedMatrix)
+      : null
+  const paintDefaults =
+    greenwichPaintMatrix && greenwichPaintMatrix.length > 0
+      ? defaultGreenwichPaintSelection(greenwichPaintMatrix)
       : null
   const bedMatrixMedia =
     bedDefaults && greenwichBedMatrix
@@ -145,9 +154,18 @@ export default async function ProductPage({ params }: { params: { id: string } }
           bedDefaults.fabric
         )
       : null
+  const paintMatrixMedia =
+    paintDefaults && greenwichPaintMatrix
+      ? resolveGreenwichPaintMedia(
+          greenwichPaintMatrix,
+          paintDefaults.frameMaterial,
+          paintDefaults.paintFinish
+        )
+      : null
 
   const executionPdpMedia = (() => {
     if (bedMatrixMedia) return bedMatrixMedia
+    if (paintMatrixMedia) return paintMatrixMedia
     if (!hasPdpExecutionControls(executionSelectors)) return null
     const headboardVariants = executionSelectors.headboard
     const upholsteryVariants = executionSelectors.upholstery
@@ -157,24 +175,28 @@ export default async function ProductPage({ params }: { params: { id: string } }
     const activeUpholstery = upholsteryVariants?.[0]
     const activeWood = woodVariants?.[0]
     const activeFinish = finishVariants?.[0]
-    const mainSrc =
-      activeHeadboard?.mainSrc ??
-      activeUpholstery?.mainSrc ??
-      activeWood?.mainSrc ??
-      activeFinish?.mainSrc ??
-      thumbSrc
+    const provencePaintWood = executionSelectors.provencePaintWood === true
+    const mainSrc = provencePaintWood
+      ? (activeFinish?.mainSrc ?? activeWood?.mainSrc ?? thumbSrc)
+      : (activeHeadboard?.mainSrc ??
+        activeUpholstery?.mainSrc ??
+        activeWood?.mainSrc ??
+        activeFinish?.mainSrc ??
+        thumbSrc)
     const extraSrcs =
       activeHeadboard != null
         ? activeHeadboard.extraSrcs
-        : activeUpholstery != null
-          ? activeUpholstery.extraSrcs
-          : activeWood != null
-            ? activeWood.extraSrcs
-            : activeFinish != null
-              ? activeFinish.extraSrcs
-              : mergeUniqueExtraUrls(thumbSrc, [
-                  collectExtraProductImageUrls(product, thumbSrc),
-                ])
+        : provencePaintWood && activeFinish != null
+          ? activeFinish.extraSrcs
+          : activeUpholstery != null
+            ? activeUpholstery.extraSrcs
+            : activeWood != null
+              ? activeWood.extraSrcs
+              : activeFinish != null
+                ? activeFinish.extraSrcs
+                : mergeUniqueExtraUrls(thumbSrc, [
+                    collectExtraProductImageUrls(product, thumbSrc),
+                  ])
     return { mainSrc, extraSrcs }
   })()
 
@@ -200,14 +222,15 @@ export default async function ProductPage({ params }: { params: { id: string } }
   }
 
   const oliverBuyerGallery =
-    isOliver && !useExecutionPdp && !bedMatrixMedia
+    isOliver && !useExecutionPdp && !bedMatrixMedia && !paintMatrixMedia
       ? buildPdpBuyerFacingGallery(product)
       : null
 
   const mainImage =
     (oliverBuyerGallery?.mainSrc ??
       executionPdpMedia?.mainSrc ??
-      bedMatrixMedia?.mainSrc) ||
+      bedMatrixMedia?.mainSrc ??
+      paintMatrixMedia?.mainSrc) ||
     pdpHeroThumbnail(product)
   const mainNorm = mainImage ?? ""
   const heroObjectPosition = getPdpHeroObjectPosition(product)
@@ -217,7 +240,9 @@ export default async function ProductPage({ params }: { params: { id: string } }
       ? executionPdpMedia.extraSrcs
       : bedMatrixMedia
         ? bedMatrixMedia.extraSrcs
-        : collectDisplayGroupExtraImageUrls([product, ...displayGroupMembers], mainNorm)
+        : paintMatrixMedia
+          ? paintMatrixMedia.extraSrcs
+          : collectDisplayGroupExtraImageUrls([product, ...displayGroupMembers], mainNorm)
 
   const { mainSrc: pdpMainSrc, extraSrcs: pdpResolvedExtras } = resolvePdpMediaBundle(
     mainNorm,
@@ -270,6 +295,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
                 executionSelectors.finishLabel ??
                 finishLabelForProduct(product)
               }
+              greenwichPaintMatrix={greenwichPaintMatrix}
               title={titleStr}
               oliverMode={isOliver}
               heroObjectPosition={heroObjectPosition}

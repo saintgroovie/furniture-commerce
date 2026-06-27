@@ -1,5 +1,20 @@
 import { createHash } from "crypto"
-import { oliverGalleryColorHeroRoleOverrides } from "./oliver-finish-execution-guard"
+import {
+  isOliverGallery02InteriorWorkbook,
+  isOliverGallery02TwoFrameInteriorWorkbook,
+  isOliverThreeFrameDetailWorkbook,
+  isOliverTwoFrameGalleryWorkbook,
+  OLIVER_THREE_FRAME_DETAIL_HANDLES,
+  oliverGallery02InteriorWorkbookRoleOverrides,
+  oliverGalleryColorHeroRoleOverrides,
+  oliverThreeFrameDetailWorkbookRoleOverrides,
+  shouldSkipOliverGallery02Restore,
+} from "./oliver-finish-execution-guard"
+import {
+  oliverCanonicalMainBasename,
+  oliverCanonicalMainStaticRel,
+} from "./oliver-pdf-catalog-contamination"
+import { pickBuyerThumbnail } from "./gallery-buyer-sort"
 import { existsSync, readdirSync, readFileSync } from "fs"
 import path from "path"
 
@@ -58,18 +73,96 @@ export function dedupeUrlsByContentHash(urls: string[]): string[] {
   return out
 }
 
-function findGallerySlot(urls: string[], slot: "03" | "04" | "05"): string | undefined {
+function findGallerySlot(
+  urls: string[],
+  slot: "01" | "02" | "03" | "04" | "05"
+): string | undefined {
   const re = new RegExp(`gallery[_\\-.]?${slot}(?:\\.|[-_]|$)`, "i")
   return urls.find((u) => re.test(basenameKey(u)))
 }
 
-function inferSiblingGallerySlotUrl(url: string, slot: "02" | "05" | "06"): string | null {
+function isCompactSchemeGallery03(url: string): boolean {
+  const d = readLocalImageDimensions(url)
+  return d ? isCompactSchemeThumbnailSize(d.width, d.height) : false
+}
+
+/**
+ * Pattern D (`ol-25-1`): poisoned ingest — `gallery_02` byte-identical to `gallery_04` on disk
+ * (wrong cross-product asset, e.g. tall hutch with open doors) while `gallery_03` is compact scheme.
+ */
+export function detectPoisonedGallery02DupOfGallery04(
+  urls: string[],
+  handle?: string
+): { g02Url: string; g04Url: string } | null {
+  if (!handle?.toLowerCase().startsWith("ol-")) return null
+  const g01 = findGallerySlot(urls, "01")
+  const g03 = findGallerySlot(urls, "03")
+  if (!g01 || !g03 || !isCompactSchemeGallery03(g03)) return null
+
+  const d01 = readLocalImageDimensions(g01)
+  if (!d01 || !isCompactProductPhotoSize(d01.width, d01.height)) return null
+
+  const g02 =
+    findGallerySlot(urls, "02") ?? inferSiblingGallerySlotUrl(g01, "02")
+  const g04 = findGallerySlot(urls, "04") ?? inferSiblingGallerySlotUrl(g03, "04")
+  if (!g02 || !g04) return null
+  if (!resolveOliverStaticPath(g02) || !resolveOliverStaticPath(g04)) return null
+
+  const h02 = contentHashForGalleryUrl(g02)
+  const h04 = contentHashForGalleryUrl(g04)
+  if (!h02 || !h04 || h02 !== h04) return null
+  return { g02Url: g02, g04Url: g04 }
+}
+
+export function dropPoisonedGallery02CompactWorkbook(
+  urls: string[],
+  handle?: string
+): { urls: string[]; poisoned: boolean; roleByUrl: Map<string, string> } {
+  const hit = detectPoisonedGallery02DupOfGallery04(urls, handle)
+  if (!hit) return { urls, poisoned: false, roleByUrl: new Map() }
+
+  const drop = new Set<string>()
+  for (const u of urls) {
+    const base = basenameKey(u)
+    if (/gallery[_\-.]?02(?:\.|[-_]|$)/i.test(base) || /gallery[_\-.]?04(?:\.|[-_]|$)/i.test(base)) {
+      drop.add(u)
+    }
+  }
+  const roleByUrl = new Map<string, string>()
+  const g03 = findGallerySlot(urls, "03")
+  if (g03) roleByUrl.set(g03, "scheme")
+  return {
+    urls: urls.filter((u) => !drop.has(u)),
+    poisoned: true,
+    roleByUrl,
+  }
+}
+
+/** Pattern D / compact Pattern C: legacy `ol-*-i2` is the real 3/4 when poisoned `gallery_02` is dropped. */
+function restoreLegacyI2WhenGallery02Absent(urls: string[], handle: string): string[] {
+  if (!handle.toLowerCase().startsWith("ol-")) return urls
+  if (hasCanonicalGallerySlot(urls, "02")) return urls
+  if (hasLegacyWorkbookHdImport(urls)) return urls
+
+  const prefix = oliverStaticPrefixFromUrls(urls)
+  const candidate = `${prefix}${handle.toLowerCase()}-i2.jpg`
+  if (!resolveOliverStaticPath(candidate)) return urls
+  if (urls.some((u) => basenameKey(u) === basenameKey(candidate))) return urls
+  return [...urls, candidate]
+}
+
+function inferSiblingGallerySlotUrl(
+  url: string,
+  slot: "02" | "04" | "05" | "06"
+): string | null {
   const base = url.split("/").pop()
   if (!base) return null
   const sibling =
     slot === "02"
       ? base.replace(/gallery[_\-.]?01/i, "gallery_02")
-      : base.replace(/gallery[_\-.]?03/i, `gallery_${slot}`)
+      : slot === "04"
+        ? base.replace(/gallery[_\-.]?03/i, "gallery_04")
+        : base.replace(/gallery[_\-.]?03/i, `gallery_${slot}`)
   if (sibling === base) return null
   const prefix = url.slice(0, url.length - base.length)
   return `${prefix}${sibling}`
@@ -101,6 +194,29 @@ function hasCanonicalGallerySlot(urls: string[], slot: "01" | "02" | "03" | "04"
   return urls.some((u) => re.test(basenameKey(u)))
 }
 
+/** Re-attach canonical `OL-*_main.jpg` when workbook galleries exist but hero main was dropped from Medusa. */
+export function attachOliverMainIfMissing(urls: string[], handle?: string): string[] {
+  const h = handle?.toLowerCase()
+  if (!h?.startsWith("ol-")) return urls
+  if (isOliverTwoFrameGalleryWorkbook(urls, handle)) return urls
+  const mainBase = oliverCanonicalMainBasename(h)
+  const staticRel = oliverCanonicalMainStaticRel(h)
+  if (!mainBase || !staticRel) return urls
+  if (urls.some((u) => basenameKey(u) === mainBase.toLowerCase())) return urls
+  const hasG01 = hasCanonicalGallerySlot(urls, "01")
+  const hasG02 = hasCanonicalGallerySlot(urls, "02")
+  const hasG03 = hasCanonicalGallerySlot(urls, "03")
+  const allowAttach =
+    (OLIVER_THREE_FRAME_DETAIL_HANDLES.has(h) &&
+      isOliverThreeFrameDetailWorkbook(urls, h)) ||
+    (hasG01 && hasG02 && hasG03)
+  if (!allowAttach) return urls
+  const prefix = oliverStaticPrefixFromUrls(urls)
+  const mainUrl = `${prefix}${mainBase}`
+  if (!resolveOliverStaticPath(mainUrl)) return urls
+  return [mainUrl, ...urls]
+}
+
 /**
  * Legacy assign injected `ol-*-i2` without `gallery_02` while canonical workbook file exists on disk.
  * Re-attach gallery_02 so apply can drop legacy hd and restore buyer order (3/4 → front → interior).
@@ -110,11 +226,41 @@ export function restoreOliverCanonicalWorkbookUrls(
   handle?: string
 ): string[] {
   if (!handle?.toLowerCase().startsWith("ol-")) return urls
+  if (shouldSkipOliverGallery02Restore(urls, handle)) return urls
+  if (detectPoisonedGallery02DupOfGallery04(urls, handle)) return urls
   if (!hasLegacyWorkbookHdImport(urls)) return urls
   if (!hasCanonicalGallerySlot(urls, "01") && !hasCanonicalGallerySlot(urls, "03")) return urls
   if (hasCanonicalGallerySlot(urls, "02")) return urls
   // Compact Pattern C (ol-01-2): legacy i2 is the real 3/4; do not inject gallery_02.
   if (buildOliverWorkbookTailRepair(urls).pattern === "C") return urls
+
+  const g01 = urls.find((u) => /gallery[_\-.]?01/i.test(basenameKey(u)))
+  const inferred = g01 ? inferSiblingGallerySlotUrl(g01, "02") : null
+  const code = oliverWorkbookCodeFromHandle(handle)
+  const prefix = oliverStaticPrefixFromUrls(urls)
+  const candidates = [
+    inferred,
+    code ? `${prefix}${code}_gallery_02.jpg` : null,
+    code ? `${prefix}${code.toLowerCase()}_gallery_02.jpg` : null,
+  ].filter((u): u is string => Boolean(u))
+
+  for (const url of candidates) {
+    if (!resolveOliverStaticPath(url)) continue
+    if (detectPoisonedGallery02DupOfGallery04([...urls, url], handle)) continue
+    if (urls.some((u) => basenameKey(u) === basenameKey(url))) return urls
+    return [...urls, url]
+  }
+  return urls
+}
+
+/** Interior workbook: attach on-disk `gallery_02` (open doors) without lesson #21 3/4 restore. */
+export function attachOliverInteriorGallery02IfMissing(
+  urls: string[],
+  handle?: string
+): string[] {
+  if (!handle?.toLowerCase().startsWith("ol-")) return urls
+  if (!shouldSkipOliverGallery02Restore(urls, handle)) return urls
+  if (hasCanonicalGallerySlot(urls, "02")) return urls
 
   const g01 = urls.find((u) => /gallery[_\-.]?01/i.test(basenameKey(u)))
   const inferred = g01 ? inferSiblingGallerySlotUrl(g01, "02") : null
@@ -221,7 +367,7 @@ function applyCompactSchemeTailRoles(
   return false
 }
 
-export type OliverWorkbookTailPattern = "A" | "B" | "C" | null
+export type OliverWorkbookTailPattern = "A" | "B" | "C" | "D" | null
 
 /**
  * Workbook tail repair for poisoned Oliver ingests.
@@ -322,7 +468,10 @@ function applyWorkbookTailRepair(urls: string[], urlsOriginal: string[]): {
 }
 
 /** Drop legacy i1/i2 when gallery_01/02 exist; keeps color_* variant frames. */
-export function dropLegacyWorkbookSemanticPairDuplicates(urls: string[]): string[] {
+export function dropLegacyWorkbookSemanticPairDuplicates(
+  urls: string[],
+  handle?: string
+): string[] {
   let out = urls
   const base = (url: string) => basenameKey(url)
 
@@ -334,7 +483,12 @@ export function dropLegacyWorkbookSemanticPairDuplicates(urls: string[]): string
     out = out.filter((u) => u !== victim)
   }
 
-  dropPair(/[-_]i0?2(?:\.|[-_]|$)/i, /gallery[_\-.]?02/i, false)
+  const g02Interior = Boolean(
+    handle &&
+      (isOliverGallery02InteriorWorkbook(urls, handle) ||
+        isOliverGallery02TwoFrameInteriorWorkbook(urls, handle))
+  )
+  dropPair(/[-_]i0?2(?:\.|[-_]|$)/i, /gallery[_\-.]?02/i, g02Interior)
   dropPair(/[-_]i0?1(?:\.|[-_]|$)/i, /gallery[_\-.]?01/i, true)
   return out
 }
@@ -347,17 +501,72 @@ export function prepareOliverBuyerGallery(
     opts?: { handle?: string; roleByUrl?: Map<string, string> }
   ) => string[]
 ): string[] {
+  const withMain = attachOliverMainIfMissing(urls, handle)
+  const poisonDrop = dropPoisonedGallery02CompactWorkbook(withMain, handle)
+  const baseUrls = poisonDrop.poisoned
+    ? restoreLegacyI2WhenGallery02Absent(poisonDrop.urls, handle)
+    : poisonDrop.urls
   const expanded = restoreOliverWorkbookTailUrls(
-    restoreOliverCanonicalWorkbookUrls(urls, handle)
+    attachOliverInteriorGallery02IfMissing(
+      restoreOliverCanonicalWorkbookUrls(baseUrls, handle),
+      handle
+    )
   )
   const deduped = dedupeUrlsByContentHash(expanded)
   const withoutLegacyHd = dropLegacyWorkbookImportWhenCanonicalGallery(deduped)
-  const pairs = dropLegacyWorkbookSemanticPairDuplicates(withoutLegacyHd)
-  const { urls: repaired, roleByUrl } = applyWorkbookTailRepair(pairs, expanded)
+  const pairs = dropLegacyWorkbookSemanticPairDuplicates(withoutLegacyHd, handle)
+  const { urls: repaired, roleByUrl, pattern } = applyWorkbookTailRepair(pairs, expanded)
+  if (poisonDrop.poisoned) {
+    for (const [url, role] of poisonDrop.roleByUrl) {
+      roleByUrl.set(url, role)
+    }
+  }
   for (const [url, role] of oliverGalleryColorHeroRoleOverrides(repaired, handle)) {
     roleByUrl.set(url, role)
   }
+  for (const [url, role] of oliverGallery02InteriorWorkbookRoleOverrides(repaired, handle)) {
+    roleByUrl.set(url, role)
+  }
+  for (const [url, role] of oliverThreeFrameDetailWorkbookRoleOverrides(repaired, handle)) {
+    roleByUrl.set(url, role)
+  }
+  void pattern
   return collapse(repaired, { handle, roleByUrl })
+}
+
+/** Role map for Medusa `operator_role` metadata after buyer-gallery pipeline. */
+export function collectOliverBuyerGalleryRoleByUrl(
+  sourceUrls: string[],
+  plannedUrls: string[],
+  handle: string
+): Map<string, string> {
+  const withMain = attachOliverMainIfMissing(sourceUrls, handle)
+  const poisonDrop = dropPoisonedGallery02CompactWorkbook(withMain, handle)
+  const baseUrls = poisonDrop.poisoned
+    ? restoreLegacyI2WhenGallery02Absent(poisonDrop.urls, handle)
+    : poisonDrop.urls
+  const expanded = restoreOliverWorkbookTailUrls(
+    attachOliverInteriorGallery02IfMissing(
+      restoreOliverCanonicalWorkbookUrls(baseUrls, handle),
+      handle
+    )
+  )
+  const { roleByUrl } = applyWorkbookTailRepair(plannedUrls, expanded)
+  if (poisonDrop.poisoned) {
+    for (const [url, role] of poisonDrop.roleByUrl) {
+      roleByUrl.set(url, role)
+    }
+  }
+  for (const [url, role] of oliverGalleryColorHeroRoleOverrides(plannedUrls, handle)) {
+    roleByUrl.set(url, role)
+  }
+  for (const [url, role] of oliverGallery02InteriorWorkbookRoleOverrides(plannedUrls, handle)) {
+    roleByUrl.set(url, role)
+  }
+  for (const [url, role] of oliverThreeFrameDetailWorkbookRoleOverrides(plannedUrls, handle)) {
+    roleByUrl.set(url, role)
+  }
+  return roleByUrl
 }
 
 /** Multi-color Oliver: hash-dedupe + legacy pair drop + sort — keep per-color fronts. */
@@ -369,15 +578,46 @@ export function prepareOliverBuyerGalleryHashOnly(
     opts?: { handle?: string; roleByUrl?: Map<string, string> }
   ) => string[]
 ): string[] {
+  const withMain = attachOliverMainIfMissing(urls, handle)
+  const poisonDrop = dropPoisonedGallery02CompactWorkbook(withMain, handle)
+  const baseUrls = poisonDrop.poisoned
+    ? restoreLegacyI2WhenGallery02Absent(poisonDrop.urls, handle)
+    : poisonDrop.urls
   const expanded = restoreOliverWorkbookTailUrls(
-    restoreOliverCanonicalWorkbookUrls(urls, handle)
+    attachOliverInteriorGallery02IfMissing(
+      restoreOliverCanonicalWorkbookUrls(baseUrls, handle),
+      handle
+    )
   )
   const deduped = dedupeUrlsByContentHash(expanded)
   const withoutLegacyHd = dropLegacyWorkbookImportWhenCanonicalGallery(deduped)
-  const pairs = dropLegacyWorkbookSemanticPairDuplicates(withoutLegacyHd)
+  const pairs = dropLegacyWorkbookSemanticPairDuplicates(withoutLegacyHd, handle)
   const { urls: repaired, roleByUrl } = applyWorkbookTailRepair(pairs, expanded)
+  if (poisonDrop.poisoned) {
+    for (const [url, role] of poisonDrop.roleByUrl) {
+      roleByUrl.set(url, role)
+    }
+  }
   for (const [url, role] of oliverGalleryColorHeroRoleOverrides(repaired, handle)) {
     roleByUrl.set(url, role)
   }
+  for (const [url, role] of oliverGallery02InteriorWorkbookRoleOverrides(repaired, handle)) {
+    roleByUrl.set(url, role)
+  }
+  for (const [url, role] of oliverThreeFrameDetailWorkbookRoleOverrides(repaired, handle)) {
+    roleByUrl.set(url, role)
+  }
   return sort(repaired, { handle, roleByUrl })
+}
+
+/** Shared Medusa write shape: hero thumbnail + strip (main may sit outside collapsed strip). */
+export function finalizeOliverMedusaGallery(
+  beforeUrls: string[],
+  galleryUrls: string[],
+  handle: string
+): { thumbnail: string; galleryFinal: string[] } {
+  const thumbCandidates = attachOliverMainIfMissing(beforeUrls, handle)
+  const thumbnail = pickBuyerThumbnail(thumbCandidates, handle) || galleryUrls[0]!
+  const galleryFinal = [thumbnail, ...galleryUrls.filter((u) => u !== thumbnail)]
+  return { thumbnail, galleryFinal }
 }

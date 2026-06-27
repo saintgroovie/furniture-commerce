@@ -8,7 +8,7 @@ import { BESPOKE_PRODUCT_TYPE } from "@/lib/bespoke"
 import { groupProductsForDisplay } from "@/lib/display-group"
 import {
   isMedusaCanonicalSeedDemoProduct,
-  isProductInActiveCatalogScope,
+  isProductInMainCatalogScope,
 } from "@/lib/catalog-scope"
 
 export const metadata: Metadata = {
@@ -64,7 +64,7 @@ export default async function CatalogPage({
     (p: any) =>
       !kidsIds.has(p.id) &&
       p.product_classification?.product_type !== BESPOKE_PRODUCT_TYPE &&
-      isProductInActiveCatalogScope(p as Record<string, unknown>) &&
+      isProductInMainCatalogScope(p as Record<string, unknown>) &&
       !isMedusaCanonicalSeedDemoProduct(p as Record<string, unknown>)
   )
 

@@ -3,6 +3,7 @@
 import { ProductCardMediaGalleryCore } from "@/components/product-card-media-gallery-core"
 import type { CardColorVariant, CardModelVariant } from "@/lib/card-color-media"
 import type { GreenwichBedMatrixEntry } from "@/lib/greenwich-bed-media"
+import type { GreenwichPaintMatrixEntry } from "@/lib/greenwich-paint-media"
 
 type Props = {
   mainSrc: string
@@ -13,6 +14,7 @@ type Props = {
   finishVariants?: CardColorVariant[]
   finishLabel?: "Цвет" | "Отделка" | "Материал" | "Конструкция"
   greenwichBedMatrix?: GreenwichBedMatrixEntry[]
+  greenwichPaintMatrix?: GreenwichPaintMatrixEntry[]
   href: string
   alt: string
 }
@@ -26,6 +28,7 @@ export function ProductCardMediaSwitcher({
   finishVariants,
   finishLabel,
   greenwichBedMatrix,
+  greenwichPaintMatrix,
   href,
   alt,
 }: Props) {
@@ -39,6 +42,7 @@ export function ProductCardMediaSwitcher({
       finishVariants={finishVariants}
       finishLabel={finishLabel}
       greenwichBedMatrix={greenwichBedMatrix}
+      greenwichPaintMatrix={greenwichPaintMatrix}
       href={href}
       alt={alt}
     />

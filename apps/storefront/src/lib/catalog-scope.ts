@@ -7,6 +7,12 @@
  * включается: kids-ассортимент задаётся в `resolveKidsProducts()` (room sets +
  * `metadata.collection === oliver-kids`), где демо-SKU из seed отфильтровываются отдельно.
  */
+import {
+  isOliverKidsCollectionProduct,
+  OLIVER_KIDS_COLLECTION_KEY,
+} from "@/lib/oliver-kids-scope"
+
+export { isOliverKidsCollectionProduct, OLIVER_KIDS_COLLECTION_KEY }
 
 /**
  * В синхроне с `PRODUCTS[].sku` в `apps/backend/src/scripts/seed.ts` (`handle` при создании = sku).
@@ -52,16 +58,6 @@ const ACTIVE_COLLECTION_KEYS = new Set([
   "monchelsea",
 ])
 
-/** Stable ingestion key for Oliver детская линейка (`metadata.collection`). */
-export const OLIVER_KIDS_COLLECTION_KEY = "oliver-kids" as const
-
-export function isOliverKidsCollectionProduct(
-  product: Record<string, unknown>
-): boolean {
-  const meta = product.metadata as Record<string, unknown> | undefined
-  return meta?.collection === OLIVER_KIDS_COLLECTION_KEY
-}
-
 export function isProductInActiveCatalogScope(product: Record<string, unknown>): boolean {
   const meta = product.metadata as Record<string, unknown> | undefined
   const key = meta?.collection
@@ -70,4 +66,10 @@ export function isProductInActiveCatalogScope(product: Record<string, unknown>):
   if (PAUSED_COLLECTION_KEYS.has(key)) return false
   if (ACTIVE_COLLECTION_KEYS.has(key)) return true
   return false
+}
+
+/** Main `/catalog` eligibility — excludes Oliver kids line even if metadata is stale. */
+export function isProductInMainCatalogScope(product: Record<string, unknown>): boolean {
+  if (isOliverKidsCollectionProduct(product)) return false
+  return isProductInActiveCatalogScope(product)
 }

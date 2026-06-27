@@ -10,6 +10,7 @@ import {
   detectOliverGalleryColorHeroPair,
   shouldSuppressOliverFinishWhenFabricCanonical,
 } from "./oliver-finish-execution-guard"
+import { hasProvencePaintWoodDualFinishEvidence } from "./provence-finish-execution-guard"
 import {
   greenwichBedMatrixFromProduct,
   isGreenwichBedProduct,
@@ -25,7 +26,6 @@ import {
   greenwichPaintMatrixFromProduct,
   isGreenwichPaintProduct,
 } from "./greenwich-paint-media"
-import { canonicalizeMilkCarouselUrls } from "../../../backend/src/lib/country-operator-gallery-order"
 import { isMilkLikeFinishKey } from "../../../backend/src/lib/country-finish-labels"
 
 export type CardColorVariant = {
@@ -82,12 +82,15 @@ export type CardExecutionSelectors = {
   greenwichBedMatrix?: GreenwichBedMatrixEntry[]
   /** Greenwich paint: wood × paint color matrix. */
   greenwichPaintMatrix?: import("./greenwich-paint-media").GreenwichPaintMatrixEntry[]
+  /** Provence pv-* paint (cream) × lacquered wood split — separate Цвет/Дерево rows. */
+  provencePaintWood?: boolean
 }
 
 export type CardExecutionControls = CardExecutionSelectors
 
 /** True when PDP/catalog should render execution swatch rows. */
 export function hasPdpExecutionControls(sel: CardExecutionSelectors): boolean {
+  if (sel.provencePaintWood) return true
   return (
     (sel.headboard?.length ?? 0) > 1 ||
     (sel.upholstery?.length ?? 0) > 1 ||
@@ -526,17 +529,12 @@ function colorExecutionsFromMetadataArray(
       continue
     }
     const resolvedUrls = urls.map((u) => resolveStorefrontProductImageSrc(u))
-    const handle = opts?.handle?.toLowerCase() ?? ""
-    const orderedUrls =
-      handle.startsWith("co-") && isMilkLikeFinishKey(key, label)
-        ? canonicalizeMilkCarouselUrls(resolvedUrls)
-        : resolvedUrls
-    const main = orderedUrls[0]!
+    const main = resolvedUrls[0]!
     variants.push({
       key,
       label,
       mainSrc: main,
-      extraSrcs: orderedUrls.slice(1),
+      extraSrcs: resolvedUrls.slice(1),
       swatchToken: key,
       swatchHex,
     })
@@ -601,6 +599,10 @@ function finishExecutionsFromMetadata(
   const variants = colorExecutionsFromMetadataArray(source, { handle })
   if (!variants || variants.length < 2) return variants
   const h = handle?.toLowerCase() ?? ""
+  if (h.startsWith("pv-")) {
+    if (meta?.finish_metadata_source !== "provence_paint_wood_split") return undefined
+    if (!hasProvencePaintWoodDualFinishEvidence(urls, handle)) return undefined
+  }
   if (!h.startsWith("co-")) return variants
   return [...variants].sort((a, b) => {
     const aMilk = /^(cream|milk|molochny|ivory)$/.test(a.key) || /молоч/i.test(a.label)
@@ -800,6 +802,41 @@ function greenwichPaintSelectorsFromMetadata(
   }
 }
 
+function isProvencePaintWoodSplitMeta(
+  meta: Record<string, unknown> | undefined,
+  handle: string
+): boolean {
+  const h = handle.toLowerCase()
+  if (!h.startsWith("pv-")) return false
+  return meta?.finish_metadata_source === "provence_paint_wood_split"
+}
+
+function provencePaintWoodSelectorsFromMetadata(
+  product: Record<string, unknown>
+): CardExecutionSelectors | null {
+  const handle = typeof product.handle === "string" ? product.handle : ""
+  const meta = product.metadata as Record<string, unknown> | undefined
+  if (!isProvencePaintWoodSplitMeta(meta, handle)) return null
+  const urls = collectProductImageUrls(product)
+  if (!hasProvencePaintWoodDualFinishEvidence(urls, handle)) return null
+
+  const variants = colorExecutionsFromMetadataArray(meta?.finish_color_executions, {
+    handle,
+  })
+  if (!variants || variants.length < 2) return null
+  const cream = variants.find((v) => v.key === "cream")
+  const wood = variants.find((v) => v.key === "wood")
+  if (!cream || !wood) return null
+
+  return {
+    finish: [cream],
+    finishLabel: "Цвет",
+    wood: [wood],
+    provencePaintWood: true,
+    confidence: "canonical",
+  }
+}
+
 export function buildIntraProductExecutionSelectors(
   product: Record<string, unknown>,
   mainSrc: string
@@ -809,6 +846,9 @@ export function buildIntraProductExecutionSelectors(
 
   const greenwichPaint = greenwichPaintSelectorsFromMetadata(product)
   if (greenwichPaint) return greenwichPaint
+
+  const provencePaintWood = provencePaintWoodSelectorsFromMetadata(product)
+  if (provencePaintWood) return provencePaintWood
 
   const metadataHeadboard = headboardExecutionsFromMetadata(product)
   const metadataFabric = fabricUpholsteryExecutionsFromMetadata(product)

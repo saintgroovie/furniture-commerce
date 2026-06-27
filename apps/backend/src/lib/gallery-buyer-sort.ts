@@ -7,7 +7,14 @@
  * 3. Lifestyle / room interior last — shared across color variants
  */
 
-import { detectOliverGalleryColorHeroPair } from "./oliver-finish-execution-guard"
+import {
+  detectOliverGalleryColorHeroPair,
+  isOliverGallery02InteriorWorkbook,
+  isOliverGallery02TwoFrameInteriorWorkbook,
+  isOliverThreeFrameDetailWorkbook,
+  isOliverTwoFrameGalleryWorkbook,
+  OLIVER_GALLERY_02_AS_INTERIOR_TWO_FRAME_HANDLES,
+} from "./oliver-finish-execution-guard"
 
 export type BuyerVisualRole =
   | "front_3_4"
@@ -59,17 +66,39 @@ function haystack(url: string): string {
   return (url.split("/").pop() ?? url).toLowerCase()
 }
 
+function oliverGallery02InteriorRoleForUrl(
+  url: string,
+  allUrls: string[],
+  handle?: string
+): BuyerVisualRole | null {
+  if (isOliverGallery02TwoFrameInteriorWorkbook(allUrls, handle)) {
+    const hay = haystack(url)
+    if (/gallery[_\-.]?01(?:\.|[-_]|$)/i.test(hay)) return "front_anfas"
+    if (/gallery[_\-.]?02(?:\.|[-_]|$)/i.test(hay)) return "interior"
+    return null
+  }
+  if (!isOliverGallery02InteriorWorkbook(allUrls, handle)) return null
+  const hay = haystack(url)
+  if (/gallery[_\-.]?01(?:\.|[-_]|$)/i.test(hay)) return "front_anfas"
+  if (/gallery[_\-.]?02(?:\.|[-_]|$)/i.test(hay)) return "interior"
+  if (/gallery[_\-.]?03(?:\.|[-_]|$)/i.test(hay)) return "scheme"
+  return null
+}
+
 function basenameKey(url: string): string {
   return haystack(url)
 }
 
 /**
- * Oliver short workbook: only gallery_01 + gallery_02 in Medusa (no i1/i2, no gallery_03+).
- * Slot convention for confirmed handles: g01 = white-bg front, g02 = detail — not 3/4.
+ * Oliver short workbook: only gallery_01 + gallery_02 (no i1/i2, no gallery_03+).
+ * Default slot convention: g01 = white-bg front, g02 = detail — not 3/4.
  *
- * ol-08-1-mirror also has 2 frames but different semantics (g02 = front, not detail) — excluded.
+ * Excluded: `ol-08-1-mirror` (g02 = front angle, not detail).
  */
-export const OLIVER_GALLERY_02_AS_DETAIL_HANDLES = new Set(["ol-69-4"])
+export const OLIVER_MINIMAL_DETAIL_WORKBOOK_EXCLUDED_HANDLES = new Set(["ol-08-1-mirror"])
+
+/** @deprecated use structural detection + OLIVER_MINIMAL_DETAIL_WORKBOOK_EXCLUDED_HANDLES */
+export const OLIVER_GALLERY_02_AS_DETAIL_HANDLES = new Set(["ol-69-4", "ol-30-1"])
 
 export function isOliverMinimalTwoFrameWorkbook(
   urls: string[],
@@ -77,25 +106,9 @@ export function isOliverMinimalTwoFrameWorkbook(
 ): boolean {
   const h = handle?.toLowerCase()
   if (!h?.startsWith("ol-")) return false
-  if (!OLIVER_GALLERY_02_AS_DETAIL_HANDLES.has(h)) return false
-  const keys = urls.map(basenameKey)
-  const hasG01 = keys.some((k) => /gallery[_\-.]?01(?:\.|[-_]|$)/i.test(k))
-  const hasG02 = keys.some((k) => /gallery[_\-.]?02(?:\.|[-_]|$)/i.test(k))
-  const hasG03Plus = keys.some((k) => /gallery[_\-.]?0[3-9](?:\.|[-_]|$)/i.test(k))
-  const hasI1 = keys.some((k) => /[-_]i0?1(?:\.|[-_]|$)/i.test(k))
-  const hasI2 = keys.some((k) => /[-_]i0?2(?:\.|[-_]|$)/i.test(k))
-  const galleryWorkbookCount = keys.filter((k) =>
-    /gallery[_\-.]?0[12](?:\.|[-_]|$)/i.test(k)
-  ).length
-  return (
-    hasG01 &&
-    hasG02 &&
-    !hasG03Plus &&
-    !hasI1 &&
-    !hasI2 &&
-    galleryWorkbookCount === 2 &&
-    keys.length === 2
-  )
+  if (OLIVER_MINIMAL_DETAIL_WORKBOOK_EXCLUDED_HANDLES.has(h)) return false
+  if (OLIVER_GALLERY_02_AS_INTERIOR_TWO_FRAME_HANDLES.has(h)) return false
+  return isOliverTwoFrameGalleryWorkbook(urls, handle)
 }
 
 function minimalWorkbookRoleForUrl(
@@ -107,6 +120,20 @@ function minimalWorkbookRoleForUrl(
   const hay = haystack(url)
   if (/gallery[_\-.]?02(?:\.|[-_]|$)/i.test(hay)) return "detail"
   if (/gallery[_\-.]?01(?:\.|[-_]|$)/i.test(hay)) return "front_anfas"
+  return null
+}
+
+function threeFrameDetailWorkbookRoleForUrl(
+  url: string,
+  allUrls: string[],
+  handle?: string
+): BuyerVisualRole | null {
+  if (!isOliverThreeFrameDetailWorkbook(allUrls, handle)) return null
+  const hay = haystack(url)
+  if (/_main\.jpg$/i.test(hay)) return "hero_front"
+  if (/gallery[_\-.]?01(?:\.|[-_]|$)/i.test(hay)) return "front_anfas"
+  if (/gallery[_\-.]?02(?:\.|[-_]|$)/i.test(hay)) return "detail"
+  if (/gallery[_\-.]?03(?:\.|[-_]|$)/i.test(hay)) return "interior"
   return null
 }
 
@@ -156,8 +183,12 @@ export function classifyBuyerRole(
 ): BuyerVisualRole {
   const allUrls = opts?.allUrls
   if (allUrls?.length) {
+    const g02Interior = oliverGallery02InteriorRoleForUrl(url, allUrls, opts?.handle)
+    if (g02Interior) return g02Interior
     const minimal = minimalWorkbookRoleForUrl(url, allUrls, opts?.handle)
     if (minimal) return minimal
+    const threeFrame = threeFrameDetailWorkbookRoleForUrl(url, allUrls, opts?.handle)
+    if (threeFrame) return threeFrame
     const colorHero = oliverColorHeroPairRoleForUrl(url, allUrls, opts?.handle)
     if (colorHero) return colorHero
   }
@@ -393,7 +424,10 @@ export function pickBuyerThumbnail(urls: string[], handle?: string): string {
     const role = classifyBuyerRole(url, { handle, allUrls: urls })
     return { url, index, role, rank: buyerRank(role) }
   })
-  if (!isOliverMinimalTwoFrameWorkbook(urls, handle)) {
+  if (
+    !isOliverMinimalTwoFrameWorkbook(urls, handle) &&
+    !isOliverThreeFrameDetailWorkbook(urls, handle)
+  ) {
     const prefer34 = ranked.find((r) => r.role === "front_3_4")
     if (prefer34) return prefer34.url
   }

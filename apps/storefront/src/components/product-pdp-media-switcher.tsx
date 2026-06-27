@@ -3,7 +3,7 @@
 import type { MouseEvent } from "react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useVerifiedStripExtras } from "@/components/use-verified-strip-extras"
-import { buildGalleryStripUrls } from "@/lib/product-images"
+import { buildPdpThumbStripUrls } from "@/lib/product-images"
 
 type Props = {
   mainSrc: string
@@ -26,7 +26,7 @@ export function ProductPdpMediaSwitcher({
   const pendingRef = useRef<string | null>(null)
 
   const galleryStripCandidates = useMemo(
-    () => buildGalleryStripUrls(mainTrimmed, extraSrcs),
+    () => buildPdpThumbStripUrls(mainTrimmed, extraSrcs),
     [mainTrimmed, extraSrcs]
   )
 
@@ -59,7 +59,11 @@ export function ProductPdpMediaSwitcher({
       if (isMain && activeGalleryUrl === null && displayHeroSrc === mainTrimmed) {
         return
       }
-      if (!isMain && activeGalleryUrl === url) return
+      if (!isMain && activeGalleryUrl === url) {
+        setDisplayHeroSrc(mainTrimmed)
+        setActiveGalleryUrl(null)
+        return
+      }
       if (pendingRef.current === url) return
       pendingRef.current = url
       setPendingPreloadUrl(url)

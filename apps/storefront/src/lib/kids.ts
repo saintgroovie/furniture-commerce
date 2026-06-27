@@ -2,8 +2,8 @@ import { getRoomSets, getRoomSetBySlug } from "@/lib/api/room-sets"
 import { getProducts } from "@/lib/api/products"
 import { BESPOKE_PRODUCT_TYPE } from "@/lib/bespoke"
 import {
-  isMedusaCanonicalSeedDemoProduct,
   isOliverKidsCollectionProduct,
+  isMedusaCanonicalSeedDemoProduct,
   isProductInActiveCatalogScope,
 } from "@/lib/catalog-scope"
 
