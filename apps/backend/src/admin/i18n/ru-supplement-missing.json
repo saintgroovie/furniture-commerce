@@ -1,0 +1,530 @@
+{
+  "general": {
+    "fullList": "All",
+    "original": "Original",
+    "selectAll": "Select all",
+    "unselectAll": "Unselect all",
+    "remaining": "Left",
+    "areYouSureDescription": "You are about to delete the {{entity}} {{title}}. This action cannot be undone.",
+    "noRecordsMessageFiltered": "There are no records to show matching the filters"
+  },
+  "actions": {
+    "saveChanges": "Save changes",
+    "saveAndClose": "Save and close",
+    "editVariantImages": "Edit variant images",
+    "editImages": "Edit images"
+  },
+  "filters": {
+    "collapse": {
+      "all": "Collapse all"
+    }
+  },
+  "addresses": {
+    "title": "Addresses"
+  },
+  "products": {
+    "media": {
+      "manageImageVariants": "Manage associated variants",
+      "fileTooLarge": "One or more files exceed the maximum file size of {{size}}: {{name}}",
+      "variantImages": "Variant images",
+      "showAvailableImages": "Show available images",
+      "availableImages": "Select images",
+      "selectToAdd": "Add product images to the variant. To add new images, add them to the product first.",
+      "removeSelected": "Remove Selected"
+    },
+    "variantMedia": {
+      "label": "Variant Media",
+      "manageVariants": "Manage variants",
+      "addToMultipleVariants": "Add to multiple variants",
+      "manageVariantsDescription": "Manage associated variants for the image",
+      "successToast": "Image variants successfully updated.",
+      "emptyState": {
+        "header": "No media yet",
+        "description": "Add media to the variant to showcase it in your storefront.",
+        "action": "Add media"
+      }
+    },
+    "columns": {
+      "product_display": "Product",
+      "variants_count": "Variants",
+      "sales_channels_display": "Sales Channels",
+      "collection": "Collection",
+      "status": "Status",
+      "thumbnail": "Thumbnail",
+      "title": "Title",
+      "handle": "Handle",
+      "created_at": "Created",
+      "updated_at": "Updated"
+    },
+    "fields": {
+      "shipping_profile": {
+        "label": "Shipping profile",
+        "hint": "Connect the product to a shipping profile"
+      }
+    },
+    "shippingProfile": {
+      "header": "Shipping configuration",
+      "edit": {
+        "header": "Shipping Configuration",
+        "toasts": {
+          "success": "Successfully updated the shipping profile for {{title}}."
+        }
+      },
+      "create": {
+        "errors": {
+          "required": "Shipping profile is required"
+        }
+      }
+    }
+  },
+  "inventory": {
+    "manageLocationQuantity": "Manage location quantity",
+    "quantityAcrossLocations": "{{quantity}} across {{locations}} locations",
+    "levelDeleted": "Inventory level deleted successfully."
+  },
+  "customers": {
+    "addresses": {
+      "title": "Addresses",
+      "fields": {
+        "addressName": "Address name",
+        "address1": "Address 1",
+        "address2": "Address 2",
+        "city": "City",
+        "province": "Province",
+        "postalCode": "Postal code",
+        "country": "Country",
+        "phone": "Phone",
+        "company": "Company",
+        "countryCode": "Country code",
+        "provinceCode": "Province code"
+      },
+      "create": {
+        "header": "Create Address",
+        "hint": "Create a new address for the customer.",
+        "successToast": "Address was successfully created."
+      }
+    }
+  },
+  "orders": {
+    "giftCardsStoreCreditLines": "Gift cards & credit lines",
+    "creditLines": {
+      "title": "Credit lines",
+      "total": "Sum of all credit lines",
+      "creditOrDebit": "Credit / Debit",
+      "createCreditLine": "Create credit line",
+      "createCreditLineSuccess": "Credit line created successfully",
+      "createCreditLineError": "Error creating credit line",
+      "createCreditLineDescription": "Create a credit line for amount {{amount}}",
+      "operation": "Operation",
+      "credit": "Credit",
+      "creditDescription": "Adds a positive sum to the order",
+      "debit": "Debit",
+      "debitDescription": "Subtracts a negative sum from the order"
+    },
+    "balanceSettlement": {
+      "title": "Balance settlement",
+      "settlementType": "Settlement type",
+      "settlementTypes": {
+        "paymentMethod": "Payment method",
+        "paymentMethodDescription": "Refund amount to the payment method",
+        "creditLine": "Store credit",
+        "creditLineDescription": "Refund amount as store credit"
+      }
+    },
+    "export": {
+      "header": "Export Order List",
+      "description": "Export the order list to a CSV file.",
+      "success": {
+        "title": "Export started",
+        "description": "You will be notified when the export is ready."
+      },
+      "filters": {
+        "title": "Filters",
+        "description": "The following filters will be applied to the export."
+      }
+    },
+    "summary": {
+      "totalAfterDiscount": "Total After Discount"
+    },
+    "payment": {
+      "totalStoreCreditRefunds": "Total store credit refunds"
+    },
+    "returns": {
+      "estDifference": "Estimated difference"
+    },
+    "claims": {
+      "carryOverPromotion": "Carry over promotions",
+      "carryOverPromotionHint": "Apply the order's promotions to the claim items",
+      "carryOverPromotionTooltip": "Only fixed type promotions with EACH allocation and percentage type promotions with EACH or ACROSS allocation can be carried over to outbound claim items."
+    },
+    "exchanges": {
+      "carryOverPromotion": "Carry over promotions",
+      "carryOverPromotionHint": "Apply the order's promotions to the exchange items",
+      "carryOverPromotionTooltip": "Only fixed type promotions with EACH allocation and percentage type promotions with EACH or ACROSS allocation can be carried over to outbound exchange items."
+    },
+    "allocateItems": {
+      "toast": {
+        "error": "Failed to allocate following items: {{items}}"
+      }
+    },
+    "shipment": {
+      "trackingUrl": "Tracking URL",
+      "labelUrl": "Label URL"
+    },
+    "fulfillment": {
+      "differentOptionSelected": "The selected shipping option is different from the one selected by the customer.",
+      "disabledItemTooltip": "The shipping option you have selected don’t allow fulfillment of this item",
+      "markAsPickedUp": "Mark as picked up",
+      "error": {
+        "noShippingOption": "Shipping option is required",
+        "noLocation": "Location is required"
+      },
+      "status": {
+        "awaitingPickup": "Awaiting pickup",
+        "awaitingShipping": "Awaiting shipping",
+        "awaitingDelivery": "Awaiting delivery"
+      },
+      "toast": {
+        "fulfillmentPickedUp": "Fulfillment marked as picked up successfully"
+      }
+    }
+  },
+  "draftOrders": {
+    "list": {
+      "noRecordsMessage": "No draft orders found",
+      "description": "Create a new draft order to get started.",
+      "filtered": {
+        "heading": "No results found",
+        "description": "No draft orders match your filter criteria."
+      }
+    }
+  },
+  "stockLocations": {
+    "list": {
+      "noRecordsMessage": "No records",
+      "noRecordsMessageEmpty": "No locations found",
+      "noRecordsMessageFiltered": "No locations found matching the filters"
+    },
+    "delete": {
+      "successToast": "Location \"{{name}}\" was successfully deleted."
+    },
+    "sidebar": {
+      "shippingOptionTypes": {
+        "label": "Shipping Option Types",
+        "description": "Group shipping options by types"
+      }
+    },
+    "salesChannels": {
+      "hint": "Manage the sales channels that are connected to this location."
+    },
+    "pickupOptions": {
+      "edit": {
+        "header": "Edit Pickup Option"
+      }
+    },
+    "shippingOptions": {
+      "create": {
+        "pickup": {
+          "header": "Create Pickup Option for {{zone}}",
+          "hint": "Create a new pickup option to define how products are picked up from this location.",
+          "label": "Pickup options",
+          "successToast": "Pickup option {{name}} was successfully created."
+        }
+      },
+      "fields": {
+        "count": {
+          "pickup_one": "{{count}} pickup option",
+          "pickup_other": "{{count}} pickup options"
+        },
+        "type": "Shipping option type"
+      }
+    }
+  },
+  "taxRegions": {
+    "create": {
+      "errors": {
+        "missingProvider": "Provider is required when creating a tax region.",
+        "missingCountry": "Country is required when creating a tax region."
+      }
+    },
+    "edit": {
+      "header": "Edit Tax Region",
+      "hint": "Edit the tax region details.",
+      "successToast": "The tax region was successfully updated."
+    },
+    "provider": {
+      "header": "Tax Provider"
+    },
+    "fields": {
+      "taxProvider": "Tax provider",
+      "targets": {
+        "options": {
+          "shippingOption": "Shipping options"
+        },
+        "placeholders": {
+          "shippingOption": "Search for shipping options"
+        },
+        "tags": {
+          "shippingOption": "Shipping option"
+        }
+      }
+    }
+  },
+  "promotions": {
+    "fields": {
+      "allocationTooltip": "Each enforces the quantity limit per item, while Once enforces the quantity limit across the entire cart",
+      "taxInclusive": "Tax Inclusive",
+      "usageLimit": "Usage Limit",
+      "usage": "Usage",
+      "conditions": {
+        "target-rules": {
+          "order": {
+            "title": "What items will the promotion be applied to?",
+            "description": "The promotion will be applied to items that match the following conditions."
+          },
+          "shipping_methods": {
+            "title": "What shipping methods will the promotion be applied to?",
+            "description": "The promotion will be applied to shipping methods that match the following conditions."
+          },
+          "items": {
+            "title": "What items will the promotion be applied to?",
+            "description": "The promotion will be applied to items that match the following conditions."
+          }
+        }
+      }
+    },
+    "form": {
+      "taxInclusive": {
+        "title": "Does promotion include taxes?",
+        "description": "Enable this field to apply the promotion after taxes"
+      },
+      "allocation": {
+        "once": {
+          "title": "Once",
+          "description": "Applies value to a limited number of items"
+        }
+      },
+      "value": {
+        "invalid": "Invalid promotion value"
+      },
+      "limit": {
+        "title": "Usage Limit",
+        "description": "Maximum number of times this promotion can be used across all orders. Leave empty for unlimited usage."
+      }
+    },
+    "templates": {
+      "amount_off_products": {
+        "title": "Amount off products",
+        "description": "Discount specific products or collection of products"
+      },
+      "amount_off_order": {
+        "title": "Amount off order",
+        "description": "Discounts the total order amount"
+      },
+      "percentage_off_product": {
+        "title": "Percentage off product",
+        "description": "Discounts a percentage off selected products"
+      },
+      "percentage_off_order": {
+        "title": "Percentage off order",
+        "description": "Discounts a percentage of the total order amount"
+      },
+      "buy_get": {
+        "title": "Buy X Get Y",
+        "description": "Buy X product(s), get Y product(s)"
+      },
+      "shipping_discount": {
+        "title": "Free shipping",
+        "description": "Applies a 100% discount to shipping fees"
+      }
+    }
+  },
+  "campaigns": {
+    "fields": {
+      "totalUsedByAttribute": "Total used"
+    },
+    "budget": {
+      "attribute": {
+        "customer_id": "customer",
+        "customer_email": "email"
+      },
+      "fields": {
+        "budgetAttribute": "Limit usage per",
+        "budgetAttributeTooltip": "Define how many times the promotion can be used by each customer or email.",
+        "totalUsedByAttribute": "Budget limit per: {{attribute}}",
+        "totalUsedByAttributeCustomerId": "Budget limit per customer",
+        "totalUsedByAttributeEmail": "Budget limit per email"
+      },
+      "type": {
+        "useByAttribute": {
+          "title": "Usage by attribute (customer id, email, etc.)",
+          "titleCustomerId": "Usage per customer",
+          "titleEmail": "Usage per email",
+          "description": "Set a limit on how many times the promotion can be used by a specific attribute value."
+        }
+      }
+    }
+  },
+  "translations": {
+    "domain": "Translations",
+    "settings": {
+      "header": "Manage translatable entities",
+      "successToast": "Settings updated successfully"
+    },
+    "actions": {
+      "manage": "Manage translations",
+      "manageEntities": "Manage entities",
+      "manageLocales": "Manage locales"
+    },
+    "subtitle": "Manage translations of your data in Medusa",
+    "list": {
+      "metrics": "{{translated}} of {{total}} translations"
+    },
+    "edit": {
+      "successToast": "Translations updated successfully",
+      "unsavedChanges": {
+        "title": "Unsaved translations",
+        "description": "Don't lose your work. You have changes that haven't been saved yet"
+      }
+    },
+    "bulk": {
+      "header": "Translations Bulk Editor",
+      "mainColumn": "Locale"
+    },
+    "activeLocales": {
+      "heading": "Languages",
+      "subtitle": "Activated translations",
+      "noLocalesTip": "Configure at least one language to start translating your data",
+      "noLocalesTipConfigureAction": "Configure"
+    },
+    "completion": {
+      "heading": "Translated fields",
+      "translated": "Translated",
+      "toTranslate": "Missing",
+      "footer": "Languages"
+    }
+  },
+  "store": {
+    "defaultLocale": "Default locale",
+    "defaultSalesChannel": "Default sales channel",
+    "defaultLocation": "Default location",
+    "locales": "Locales",
+    "removeLocaleWarning_one": "You are about to remove {{count}} locale from your store. Any translation using this locale will be removed.",
+    "removeLocaleWarning_other": "You are about to remove {{count}} locales from your store. Any translation using these locales will be removed.",
+    "localeAlreadyAdded": "The locale has already been added to your store.",
+    "toast": {
+      "localesUpdated": "Locales updated successfully",
+      "localesRemoved": "Removed locales from the store successfully"
+    }
+  },
+  "salesChannels": {
+    "list": {
+      "empty": {
+        "heading": "No sales channels found",
+        "description": "Once a sales channel has been created, it will appear here."
+      },
+      "filtered": {
+        "heading": "No results",
+        "description": "No sales channels match the current filter criteria."
+      }
+    }
+  },
+  "refundReasons": {
+    "domain": "Refund Reasons",
+    "subtitle": "Manage reasons for issuing refunds.",
+    "calloutHint": "Manage the reasons to categorize refunds.",
+    "editReason": "Edit Refund Reason",
+    "create": {
+      "header": "Add Refund Reason",
+      "subtitle": "Specify the most common reasons for refunds.",
+      "hint": "Create a new refund reason to categorize refunds.",
+      "successToast": "Refund reason {{label}} was successfully created."
+    },
+    "edit": {
+      "header": "Edit Refund Reason",
+      "subtitle": "Edit the value of the refund reason.",
+      "successToast": "Refund reason {{label}} was successfully updated."
+    },
+    "delete": {
+      "confirmation": "You are about to delete the refund reason \"{{label}}\". This action cannot be undone.",
+      "successToast": "Refund reason was successfully deleted."
+    },
+    "fields": {
+      "label": {
+        "label": "Label",
+        "placeholder": "Gesture of goodwill"
+      },
+      "code": {
+        "label": "Code",
+        "placeholder": "gesture_of_goodwill"
+      },
+      "description": {
+        "label": "Description",
+        "placeholder": "Customer had a bad shopping experience"
+      }
+    }
+  },
+  "shippingOptionTypes": {
+    "domain": "Shipping Option Types",
+    "subtitle": "Organize your shipping options into types.",
+    "create": {
+      "header": "Create Shipping Option Type",
+      "hint": "Create a new shipping option type to categorize your shipping options.",
+      "successToast": "Shipping option type {{label}} was successfully created."
+    },
+    "edit": {
+      "header": "Edit Shipping Option Type",
+      "successToast": "Shipping option type {{label}} was successfully updated."
+    },
+    "delete": {
+      "confirmation": "You are about to delete the shipping option type \"{{label}}\". This action cannot be undone.",
+      "successToast": "Shipping option type \"{{label}}\" was successfully deleted."
+    },
+    "fields": {
+      "label": "Label",
+      "code": "Code",
+      "description": "Description"
+    }
+  },
+  "labels": {
+    "beaware": "Be aware",
+    "loading": "Loading",
+    "selectValue": "Select Value",
+    "selectValues": "Select Values"
+  },
+  "fields": {
+    "reference": "Reference",
+    "reference_id": "Reference ID",
+    "enabledInStore": "Enabled in store",
+    "isReturn": "Is return",
+    "promotionCode": "Promotion code",
+    "serviceZone": "Service Zone",
+    "creditTotal": "Credit Lines Total"
+  },
+  "views": {
+    "save": "Save",
+    "saveAsNew": "Save as new view",
+    "updateDefaultForEveryone": "Update default for everyone",
+    "updateViewName": "Update view",
+    "prompts": {
+      "updateDefault": {
+        "title": "Update default view",
+        "description": "This will update the default view for all users. Are you sure?",
+        "confirmText": "Update for everyone",
+        "cancelText": "Cancel"
+      },
+      "updateView": {
+        "title": "Update view",
+        "description": "Are you sure you want to update \"{{name}}\"?",
+        "confirmText": "Update",
+        "cancelText": "Cancel"
+      }
+    }
+  },
+  "auth": {
+    "login": {
+      "authenticationFailed": "Authentication failed",
+      "cloud": "Log in with Medusa Cloud"
+    }
+  }
+}
