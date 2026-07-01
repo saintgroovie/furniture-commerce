@@ -1,0 +1,296 @@
+import type { DisplayEntry } from "./display-group"
+import { getPrice } from "./format"
+import { getCollectionLabel } from "./product-metadata"
+
+export type CatalogFilterState = {
+  q?: string
+  type?: "STANDARD" | "CONFIGURABLE"
+  category: string[]
+  collection: string[]
+  priceMin?: number
+  priceMax?: number
+  sort?: "price_asc" | "price_desc"
+}
+
+export const PRODUCT_TYPE_FILTER_LABELS: Record<string, string> = {
+  STANDARD: "Готовые",
+  CONFIGURABLE: "С выбором исполнения",
+}
+
+export const CATEGORY_FILTER_LABELS: Record<string, string> = {
+  krovati: "Кровати",
+  shkafy: "Шкафы",
+  komody: "Комоды",
+  tumby: "Тумбы",
+  stoly: "Столы",
+  zerkala: "Зеркала",
+  stellazhi: "Стеллажи",
+  polki: "Полки",
+  stulya: "Стулья",
+  sunduki: "Сундуки",
+  chasy: "Часы",
+  konsoli: "Консоли",
+  skameyki: "Скамейки",
+  kresla: "Кресла",
+  divany: "Диваны",
+  bortiki: "Бортики",
+  baldahiny: "Балдахины",
+}
+
+function humanizeFilterKey(key: string): string {
+  return key
+    .trim()
+    .split(/[-_]/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toLocaleUpperCase("ru-RU") + word.slice(1))
+    .join(" ")
+}
+
+const COLLECTION_FILTER_LABELS: Record<string, string> = {
+  greenwich: "Greenwich",
+  oliver: "Oliver",
+  "oliver-kids": "Oliver Kids",
+  "willie-winkie": "Willie Winkie",
+  monchelsea: "Monchelsea",
+  country: "Кантри",
+  "country-london-paris": "Кантри",
+}
+
+export type CatalogFacetOption = {
+  value: string
+  label: string
+  count: number
+}
+
+export type CatalogFacets = {
+  types: CatalogFacetOption[]
+  categories: CatalogFacetOption[]
+  collections: CatalogFacetOption[]
+  priceRange: { min: number; max: number } | null
+}
+
+function meta(product: Record<string, unknown>): Record<string, unknown> {
+  return (product.metadata as Record<string, unknown> | undefined) ?? {}
+}
+
+export function getProductCategoryKey(product: Record<string, unknown>): string | null {
+  const handle = meta(product).category_handle
+  if (typeof handle === "string" && handle.trim()) {
+    return handle.trim().toLowerCase()
+  }
+  return null
+}
+
+export function getCategoryFilterLabel(key: string): string {
+  return CATEGORY_FILTER_LABELS[key] ?? humanizeFilterKey(key)
+}
+
+export function getCollectionFilterKey(product: Record<string, unknown>): string | null {
+  const collection = meta(product).collection
+  if (typeof collection === "string" && collection.trim()) {
+    return collection.trim().toLowerCase()
+  }
+  return null
+}
+
+export function getCollectionFilterLabel(key: string): string {
+  if (COLLECTION_FILTER_LABELS[key]) return COLLECTION_FILTER_LABELS[key]!
+  const sample = { metadata: { collection: key } }
+  return getCollectionLabel(sample) ?? key
+}
+
+function productSearchText(product: Record<string, unknown>): string {
+  const m = meta(product)
+  const parts = [
+    product.title,
+    m.canonical_name,
+    product.handle,
+    getCollectionLabel(product),
+    m.collection_label,
+    getCategoryFilterLabel(getProductCategoryKey(product) ?? ""),
+  ]
+  return parts
+    .filter((p) => typeof p === "string" && p.trim())
+    .join(" ")
+    .toLowerCase()
+}
+
+function matchesText(product: Record<string, unknown>, q: string): boolean {
+  const needle = q.trim().toLowerCase()
+  if (!needle) return true
+  return productSearchText(product).includes(needle)
+}
+
+function matchesType(
+  product: Record<string, unknown>,
+  type: CatalogFilterState["type"]
+): boolean {
+  if (!type) return true
+  const pt = (product.product_classification as { product_type?: string } | undefined)
+    ?.product_type
+  return pt === type
+}
+
+function matchesCategory(product: Record<string, unknown>, categories: string[]): boolean {
+  if (!categories.length) return true
+  const key = getProductCategoryKey(product)
+  return key != null && categories.includes(key)
+}
+
+function matchesCollection(product: Record<string, unknown>, collections: string[]): boolean {
+  if (!collections.length) return true
+  const key = getCollectionFilterKey(product)
+  return key != null && collections.includes(key)
+}
+
+function matchesPrice(
+  product: Record<string, unknown>,
+  priceMin?: number,
+  priceMax?: number
+): boolean {
+  if (priceMin == null && priceMax == null) return true
+  const price = getPrice(product)
+  if (price == null) return false
+  if (priceMin != null && price < priceMin) return false
+  if (priceMax != null && price > priceMax) return false
+  return true
+}
+
+/** AND across groups; OR inside multi-select groups. */
+export function applyCatalogFilters(
+  products: Record<string, unknown>[],
+  state: CatalogFilterState
+): Record<string, unknown>[] {
+  return products.filter(
+    (p) =>
+      matchesText(p, state.q ?? "") &&
+      matchesType(p, state.type) &&
+      matchesCategory(p, state.category) &&
+      matchesCollection(p, state.collection) &&
+      matchesPrice(p, state.priceMin, state.priceMax)
+  )
+}
+
+function countByKey(
+  products: Record<string, unknown>[],
+  getKey: (p: Record<string, unknown>) => string | null
+): Map<string, number> {
+  const counts = new Map<string, number>()
+  for (const p of products) {
+    const key = getKey(p)
+    if (!key) continue
+    counts.set(key, (counts.get(key) ?? 0) + 1)
+  }
+  return counts
+}
+
+function mapToFacetOptions(
+  counts: Map<string, number>,
+  labelFn: (key: string) => string
+): CatalogFacetOption[] {
+  return [...counts.entries()]
+    .map(([value, count]) => ({
+      value,
+      label: labelFn(value),
+      count,
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label, "ru"))
+}
+
+/**
+ * Facets from products matching all filters except `excludeGroup`
+ * (avoids dead options when possible).
+ */
+export function buildCatalogFacets(
+  products: Record<string, unknown>[],
+  state: CatalogFilterState,
+  excludeGroup?: "type" | "category" | "collection" | "price"
+): CatalogFacets {
+  const partial: CatalogFilterState = { ...state }
+  if (excludeGroup === "type") partial.type = undefined
+  if (excludeGroup === "category") partial.category = []
+  if (excludeGroup === "collection") partial.collection = []
+  if (excludeGroup === "price") {
+    partial.priceMin = undefined
+    partial.priceMax = undefined
+  }
+
+  const pool = applyCatalogFilters(products, partial)
+
+  const typeCounts = new Map<string, number>()
+  for (const p of pool) {
+    const pt = (p.product_classification as { product_type?: string } | undefined)
+      ?.product_type
+    if (pt === "STANDARD" || pt === "CONFIGURABLE") {
+      typeCounts.set(pt, (typeCounts.get(pt) ?? 0) + 1)
+    }
+  }
+
+  const categoryCounts = countByKey(pool, getProductCategoryKey)
+  const collectionCounts = countByKey(pool, getCollectionFilterKey)
+
+  const prices = pool
+    .map((p) => getPrice(p))
+    .filter((v): v is number => v != null)
+  const priceRange =
+    prices.length > 0
+      ? { min: Math.min(...prices), max: Math.max(...prices) }
+      : null
+
+  return {
+    types: [...typeCounts.entries()].map(([value, count]) => ({
+      value,
+      label: PRODUCT_TYPE_FILTER_LABELS[value] ?? value,
+      count,
+    })),
+    categories: mapToFacetOptions(categoryCounts, getCategoryFilterLabel),
+    collections: mapToFacetOptions(collectionCounts, getCollectionFilterLabel),
+    priceRange,
+  }
+}
+
+export function sortDisplayEntries(
+  entries: DisplayEntry[],
+  sort: CatalogFilterState["sort"]
+): DisplayEntry[] {
+  if (!sort) return entries
+  const copy = [...entries]
+  const entryPrice = (e: DisplayEntry): number | null => {
+    const fromGroup = e.displayGroup?.minPrice
+    if (fromGroup != null) return fromGroup
+    const p = getPrice(e.product)
+    return p ?? null
+  }
+  const comparePrice = (a: DisplayEntry, b: DisplayEntry): number => {
+    const priceA = entryPrice(a)
+    const priceB = entryPrice(b)
+    if (priceA == null && priceB == null) return 0
+    if (priceA == null) return 1
+    if (priceB == null) return -1
+    return sort === "price_asc" ? priceA - priceB : priceB - priceA
+  }
+  if (sort === "price_asc") {
+    copy.sort(comparePrice)
+  } else if (sort === "price_desc") {
+    copy.sort(comparePrice)
+  }
+  return copy
+}
+
+export function hasActiveCatalogFilters(state: CatalogFilterState): boolean {
+  return Boolean(
+    state.q ||
+      state.type ||
+      state.category.length ||
+      state.collection.length ||
+      state.priceMin != null ||
+      state.priceMax != null
+  )
+}
+
+export function clearCatalogFilterState(): CatalogFilterState {
+  return {
+    category: [],
+    collection: [],
+  }
+}
