@@ -13,12 +13,6 @@ import type { ExecArgs } from "@medusajs/framework/types"
 import { Modules } from "@medusajs/framework/utils"
 import * as fs from "fs"
 import * as path from "path"
-import {
-  buildBuyerGallery,
-  pickBuyerThumbnail,
-  sortUrlsByBuyerPolicy,
-  toMedusaImages,
-} from "../lib/gallery-buyer-sort"
 
 const EXCLUDED = new Set(["co-02-1", "am-02-1"])
 const MEDIA_SOURCE = "tmp/flow-a-product-media-assignment-preflight-2026-06-12-1232/flow-a-media-rows.json"
@@ -102,28 +96,18 @@ function buildHandlePlans(rows: MediaRow[], whitelist: Set<string>, base: string
         throw new Error(`Missing static file: ${row.repo_relative_path} (${handle})`)
       }
     }
-    const front34 = handleRows.find((r) => r.operator_role === "front_3_4")
     const front = handleRows.find((r) => r.operator_role === "front")
-    const thumbRow = front34 ?? front ?? handleRows[0]
-    const roleByUrl = new Map<string, string>()
-    for (const row of handleRows) {
-      roleByUrl.set(absUrl(base, row.public_url), row.operator_role)
-    }
-    const galleryUrls = sortUrlsByBuyerPolicy(
-      normalizeUrls(handleRows.map((r) => absUrl(base, r.public_url))),
-      { handle, roleByUrl }
+    const front34 = handleRows.find((r) => r.operator_role === "front_3_4")
+    const thumbRow = front ?? front34 ?? handleRows[0]
+    const galleryUrls = normalizeUrls(
+      handleRows.map((r) => absUrl(base, r.public_url))
     )
-    const thumbnailUrl = pickBuyerThumbnail(galleryUrls, handle) || absUrl(base, thumbRow.public_url)
-    const galleryOrdered = buildBuyerGallery(
-      galleryUrls.filter((u) => u !== thumbnailUrl),
-      [],
-      { handle, roleByUrl }
-    )
-    const galleryFinal = [thumbnailUrl, ...galleryOrdered.filter((u) => u !== thumbnailUrl)]
+    const thumbnailUrl = absUrl(base, thumbRow.public_url)
+    const galleryOrdered = [thumbnailUrl, ...galleryUrls.filter((u) => u !== thumbnailUrl)]
     plans.push({
       handle,
       thumbnail_url: thumbnailUrl,
-      gallery_urls: galleryFinal,
+      gallery_urls: galleryOrdered,
       rows: handleRows,
       thumbnail_role: thumbRow.operator_role,
     })
@@ -244,7 +228,7 @@ export default async function applyWillieWinkieFlowAProductMedia({ container }: 
       mutationAttempted = true
       await productModule.updateProducts(item.productId, {
         thumbnail: item.plan.thumbnail_url,
-        images: toMedusaImages(item.plan.gallery_urls, item.plan.handle),
+        images: item.plan.gallery_urls.map((url) => ({ url })),
       })
       updatedAttempts.push({
         handle: item.plan.handle,

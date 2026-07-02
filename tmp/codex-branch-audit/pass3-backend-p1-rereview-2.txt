@@ -1,8 +1,0 @@
-needs_fix
-
-P3 — `tmp/codex-branch-audit/p1-willie-media-apply-gate-fix-report.md`
-
-- Lines 39-44 show `mutationAttempted = true` before the loop, but the actual script now correctly flips it only inside the loop immediately before `updateProducts`.
-- Lines 76-77 say the blocked dry-run wrote `media-apply-dry-run-result.json`, but current code uses `mode === "blocked"` first, so that scenario writes `media-apply-blocked-result.json`.
-
-Code gate itself looks fixed: blockers are collected before mutation, `updateProducts` is only inside `mutationAllowed`, dry-run cannot mutate, confirm is required for apply, and no-op apply leaves `mutation_attempted=false`.
