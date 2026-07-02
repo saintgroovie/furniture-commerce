@@ -1,4 +1,7 @@
-import type { CatalogFilterState } from "./catalog-filters"
+import {
+  normalizeCollectionFilterKey,
+  type CatalogFilterState,
+} from "./catalog-filters"
 
 export type CatalogSearchParams = Record<string, string | string[] | undefined>
 
@@ -7,12 +10,16 @@ function firstString(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value
 }
 
-function parseMulti(value: string | string[] | undefined): string[] {
+function parseMulti(
+  value: string | string[] | undefined,
+  normalize: (value: string) => string = (value) => value.toLowerCase()
+): string[] {
   if (value == null) return []
   const raw = Array.isArray(value) ? value.join(",") : value
   return raw
     .split(",")
     .map((s) => s.trim().toLowerCase())
+    .map(normalize)
     .filter(Boolean)
 }
 
@@ -41,7 +48,7 @@ export function parseCatalogFilterState(
     q,
     type,
     category: parseMulti(searchParams.category),
-    collection: parseMulti(searchParams.collection),
+    collection: parseMulti(searchParams.collection, normalizeCollectionFilterKey),
     priceMin: parsePositiveInt(firstString(searchParams.price_min)),
     priceMax: parsePositiveInt(firstString(searchParams.price_max)),
     sort,

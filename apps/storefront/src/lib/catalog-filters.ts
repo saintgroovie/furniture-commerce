@@ -52,6 +52,7 @@ const COLLECTION_FILTER_LABELS: Record<string, string> = {
   "oliver-kids": "Oliver Kids",
   "willie-winkie": "Willie Winkie",
   monchelsea: "Monchelsea",
+  provence: "Provence",
   country: "Кантри",
   "country-london-paris": "Кантри",
 }
@@ -88,8 +89,12 @@ export function getCategoryFilterLabel(key: string): string {
 export function getCollectionFilterKey(product: Record<string, unknown>): string | null {
   const collection = meta(product).collection
   if (typeof collection === "string" && collection.trim()) {
-    return collection.trim().toLowerCase()
+    return normalizeCollectionFilterKey(collection)
   }
+  const label = meta(product).collection_label
+  if (typeof label === "string" && label.trim()) return normalizeCollectionFilterKey(label)
+  const buyerLabel = getCollectionLabel(product)
+  if (buyerLabel) return normalizeCollectionFilterKey(buyerLabel)
   return null
 }
 
@@ -113,6 +118,17 @@ function productSearchText(product: Record<string, unknown>): string {
     .filter((p) => typeof p === "string" && p.trim())
     .join(" ")
     .toLowerCase()
+}
+
+export function normalizeCollectionFilterKey(raw: string): string {
+  const key = raw.trim().toLowerCase().replace(/[_\s]+/g, "-")
+  if (!key) return key
+  if (key.startsWith("country")) return "country"
+  if (key === "кантри") return "country"
+  if (key === "molly") return "willie-winkie"
+  if (key === "willie-winkie" || key === "willie-winkie-kids") return "willie-winkie"
+  if (key === "willie") return "willie-winkie"
+  return key
 }
 
 function matchesText(product: Record<string, unknown>, q: string): boolean {
@@ -186,13 +202,14 @@ function countByKey(
 
 function mapToFacetOptions(
   counts: Map<string, number>,
-  labelFn: (key: string) => string
+  labelFn: (key: string) => string,
+  currentCounts?: Map<string, number>
 ): CatalogFacetOption[] {
   return [...counts.entries()]
     .map(([value, count]) => ({
       value,
       label: labelFn(value),
-      count,
+      count: currentCounts ? currentCounts.get(value) ?? 0 : count,
     }))
     .sort((a, b) => a.label.localeCompare(b.label, "ru"))
 }
@@ -218,16 +235,26 @@ export function buildCatalogFacets(
   const pool = applyCatalogFilters(products, partial)
 
   const typeCounts = new Map<string, number>()
-  for (const p of pool) {
+  const currentTypeCounts = new Map<string, number>()
+  for (const p of products) {
     const pt = (p.product_classification as { product_type?: string } | undefined)
       ?.product_type
     if (pt === "STANDARD" || pt === "CONFIGURABLE") {
       typeCounts.set(pt, (typeCounts.get(pt) ?? 0) + 1)
     }
   }
+  for (const p of pool) {
+    const pt = (p.product_classification as { product_type?: string } | undefined)
+      ?.product_type
+    if (pt === "STANDARD" || pt === "CONFIGURABLE") {
+      currentTypeCounts.set(pt, (currentTypeCounts.get(pt) ?? 0) + 1)
+    }
+  }
 
-  const categoryCounts = countByKey(pool, getProductCategoryKey)
-  const collectionCounts = countByKey(pool, getCollectionFilterKey)
+  const categoryCounts = countByKey(products, getProductCategoryKey)
+  const currentCategoryCounts = countByKey(pool, getProductCategoryKey)
+  const collectionCounts = countByKey(products, getCollectionFilterKey)
+  const currentCollectionCounts = countByKey(pool, getCollectionFilterKey)
 
   const prices = pool
     .map((p) => getPrice(p))
@@ -241,10 +268,10 @@ export function buildCatalogFacets(
     types: [...typeCounts.entries()].map(([value, count]) => ({
       value,
       label: PRODUCT_TYPE_FILTER_LABELS[value] ?? value,
-      count,
+      count: currentTypeCounts.get(value) ?? 0,
     })),
-    categories: mapToFacetOptions(categoryCounts, getCategoryFilterLabel),
-    collections: mapToFacetOptions(collectionCounts, getCollectionFilterLabel),
+    categories: mapToFacetOptions(categoryCounts, getCategoryFilterLabel, currentCategoryCounts),
+    collections: mapToFacetOptions(collectionCounts, getCollectionFilterLabel, currentCollectionCounts),
     priceRange,
   }
 }
