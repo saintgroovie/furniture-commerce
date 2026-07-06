@@ -3,3 +3,17 @@ node_modules/
 .env
 .env.local
 *.log
+
+# Legacy private export safety: никогда не коммитить дампы, архивы, credentials
+*.sql
+*.sql.gz
+*.dump
+*.tar
+*.tar.gz
+*.zip
+*.7z
+.env*
+!.env.example
+*credentials*
+woodright-legacy-private-export/
+legacy-private-export/
