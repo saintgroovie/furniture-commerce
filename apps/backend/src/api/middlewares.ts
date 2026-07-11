@@ -55,7 +55,7 @@ async function ensureNotBespokeForCart(
     }
     const result = await query.graph({
       entity: "product",
-      fields: ["*", "productType.*"],
+      fields: ["*", "product_classification.*"],
       filters: { id: productId },
     })
     products = result?.data ?? []
@@ -67,8 +67,10 @@ async function ensureNotBespokeForCart(
     return
   }
 
-  const product = products?.[0] as { productType?: { product_type?: string } } | undefined
-  const productType = product?.productType?.product_type
+  const product = products?.[0] as
+    | { product_classification?: { product_type?: string } }
+    | undefined
+  const productType = product?.product_classification?.product_type
 
   if (productType === BESPOKE) {
     res.status(400).json({

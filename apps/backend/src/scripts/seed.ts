@@ -105,7 +105,7 @@ export default async function seed({ container }: ExecArgs) {
   }
 
   if (createdProducts.length === 0) {
-    logger.info("No products created. Skipping product_type links and room set item links.")
+    logger.info("No products created. Skipping product_classification links and room set item links.")
     return
   }
 
@@ -122,17 +122,23 @@ export default async function seed({ container }: ExecArgs) {
     }
   }
 
-  const productExtensionService = container.resolve(PRODUCT_EXTENSION_MODULE)
-  logger.info("Linking product_type to products...")
+  const productExtensionService = container.resolve(PRODUCT_EXTENSION_MODULE) as {
+    createProductClassifications: (input: {
+      product_type: string
+    }) => Promise<{ id: string } | Array<{ id: string }>>
+  }
+  logger.info("Linking product_classification to products...")
   for (let i = 0; i < createdProducts.length; i++) {
     const product = createdProducts[i]
-    const productTypeRow = await productExtensionService.createProductTypes({
+    const classificationRow = await productExtensionService.createProductClassifications({
       product_type: PRODUCTS[i].product_type,
     })
-    const productType = Array.isArray(productTypeRow) ? productTypeRow[0] : productTypeRow
+    const classification = Array.isArray(classificationRow)
+      ? classificationRow[0]
+      : classificationRow
     await link.create({
       [Modules.PRODUCT]: { product_id: product.id },
-      [PRODUCT_EXTENSION_MODULE]: { product_type_id: productType.id },
+      [PRODUCT_EXTENSION_MODULE]: { product_classification_id: classification.id },
     })
   }
 

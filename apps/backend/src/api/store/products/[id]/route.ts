@@ -1,7 +1,7 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 
 /**
- * Детали продукта по id. Возвращает продукт с вариантами, изображениями и productType для storefront.
+ * Детали продукта по id. Возвращает продукт с вариантами, изображениями и ProductClassification.
  */
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const id = req.params.id as string
@@ -14,7 +14,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   }
   const { data } = await query.graph({
     entity: "product",
-    fields: ["*", "variants.*", "images.*", "productType.*"],
+    fields: ["*", "variants.*", "images.*", "product_classification.*"],
     filters: { id },
   })
   const product = Array.isArray(data) ? data[0] : undefined

@@ -82,7 +82,6 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         "product.id",
         "product.title",
         "product.product_classification.product_type",
-        "product.productType.product_type",
         "product.variants.id",
       ],
       filters: { room_set_id: roomSet.id },
@@ -105,9 +104,6 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         const classification = product.product_classification as
           | { product_type?: unknown }
           | undefined
-        const legacyType = product.productType as
-          | { product_type?: unknown }
-          | undefined
         return {
           id: row.id,
           quantity: row.quantity,
@@ -118,10 +114,6 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
             product_classification:
               classification && typeof classification.product_type === "string"
                 ? { product_type: classification.product_type }
-                : undefined,
-            productType:
-              legacyType && typeof legacyType.product_type === "string"
-                ? { product_type: legacyType.product_type }
                 : undefined,
             variants,
           },
@@ -136,10 +128,15 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     return
   }
 
-  // Default detail: main graph projection (product / productType / variants).
+  // Default detail: product + Woodright classification + variants.
   const { data: itemsWithProduct } = await query.graph({
     entity: "room_set_item",
-    fields: ["*", "product.*", "product.productType.*", "product.variants.*"],
+    fields: [
+      "*",
+      "product.*",
+      "product.product_classification.*",
+      "product.variants.*",
+    ],
     filters: { room_set_id: roomSet.id },
   })
   const items = (itemsWithProduct ?? []) as Array<
