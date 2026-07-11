@@ -78,7 +78,8 @@ export function CheckoutForm() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (!cartId || state !== "ready") return
+    if (!cartId) return
+    if (state !== "ready" && state !== "validation_error" && state !== "server_error") return
     if (submittingRef.current) return
     const form = e.currentTarget
     const name = (form.elements.namedItem("name") as HTMLInputElement)?.value?.trim() ?? ""
@@ -154,7 +155,11 @@ export function CheckoutForm() {
         <p className="bespoke-request-card-title">{copy.emptyCartTitle}</p>
         <p className="page-caption bespoke-request-card-caption">{copy.emptyCartBody}</p>
         <p className="nav-links">
-          <Link href="/catalog">В каталог</Link>, <Link href="/rooms">в комнаты</Link> или <Link href="/cart">в корзину</Link>.
+          <Link href="/catalog">В каталог</Link>
+          {" · "}
+          <Link href="/rooms">В комнаты</Link>
+          {" · "}
+          <Link href="/cart">В корзину</Link>
         </p>
       </>
     )
@@ -252,6 +257,8 @@ export function CheckoutForm() {
             <label htmlFor="checkout-country">{copy.fields.country}</label>
             <input id="checkout-country" name="country_code" type="text" defaultValue="ru" disabled={submitting} />
           </div>
+
+          <p className="checkout-payment-clarity">{copy.paymentClarity}</p>
 
           <button type="submit" className="btn btn-primary bespoke-submit-btn" disabled={submitting}>
             {submitting ? copy.submitting : copy.submit}

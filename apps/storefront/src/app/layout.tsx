@@ -4,8 +4,9 @@ import Link from "next/link"
 import { getSiteUrl } from "@/lib/api/base"
 import { HeaderCartLink } from "@/components/header-cart-link"
 import { HeaderLogo } from "@/components/header-logo"
+import { MobileNav } from "@/components/mobile-nav"
 import { NavDropdown } from "@/components/nav-dropdown"
-import { footer as footerCopy, nav as navCopy, seo } from "@/lib/woodright-copy"
+import { a11yCopy, footer as footerCopy, nav as navCopy, seo } from "@/lib/woodright-copy"
 import "./globals.css"
 
 const inter = Inter({
@@ -57,6 +58,9 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
+        <a href="#main-content" className="skip-link">
+          {a11yCopy.skipToContent}
+        </a>
         <header className="site-header">
           {/* Top bar */}
           <div className="header-top">
@@ -129,23 +133,11 @@ export default function RootLayout({
             </div>
           </div>
 
-          {/* Mobile nav toggle (checkbox hack, no JS) */}
-          <input type="checkbox" id="mobile-nav-toggle" className="mobile-nav-checkbox" aria-hidden="true" />
-          <label htmlFor="mobile-nav-toggle" className="mobile-nav-btn" aria-label="Меню">
-            <span className="mobile-nav-icon" />
-          </label>
-          <div className="mobile-nav-overlay">
-            <nav className="mobile-nav" aria-label="Мобильная навигация">
-              <Link href="/catalog">{navCopy.catalog}</Link>
-              <Link href="/kids" className="mobile-nav-kids">{navCopy.kids}</Link>
-              <Link href="/rooms">{navCopy.rooms}</Link>
-              <Link href="/bespoke">{navCopy.bespoke}</Link>
-              <Link href="/cart">{navCopy.cart}</Link>
-              <Link href="/contacts">{navCopy.contacts}</Link>
-            </nav>
-          </div>
+          <MobileNav />
         </header>
-        <main className="container page-section">{children}</main>
+        <main id="main-content" className="container page-section" tabIndex={-1}>
+          {children}
+        </main>
         <footer className="site-footer">
           <div className="container footer-inner">
             <div className="footer-columns">

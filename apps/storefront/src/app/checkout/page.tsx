@@ -18,6 +18,9 @@ export default function CheckoutPage() {
           <br />
           {checkoutCopy.lead[1]}
         </p>
+        <p className="checkout-payment-clarity checkout-payment-clarity-page">
+          {checkoutCopy.paymentClarity}
+        </p>
       </div>
 
       <CheckoutForm />
