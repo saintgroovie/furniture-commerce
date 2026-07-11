@@ -1,0 +1,3 @@
+# Read-only DB snapshots stay local (no DB dumps in repo).
+# Regenerate: node docs/product-copy/scripts/export-products-readonly.mjs
+export/
