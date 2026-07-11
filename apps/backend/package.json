@@ -25,12 +25,15 @@
     "postinstall": "node scripts/patch-skip-cart-promotions.mjs && node scripts/patch-medusa-develop-watch.mjs --warn-only && node scripts/finalize-admin-vite-cache.mjs"
   },
   "dependencies": {
-    "@medusajs/framework": "^2.0.0",
-    "@medusajs/medusa": "^2.0.0"
+    "@medusajs/admin-sdk": "2.17.2",
+    "@medusajs/framework": "^2.17.2",
+    "@medusajs/medusa": "^2.17.2"
   },
   "devDependencies": {
-    "@medusajs/cli": "^2.0.0",
+    "@medusajs/cli": "^2.17.2",
     "@types/node": "^20.0.0",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.23.0",
     "typescript": "^5.0.0"
   },
   "engines": {
