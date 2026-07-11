@@ -1,6 +1,10 @@
 import Link from "next/link"
 import type { Metadata } from "next"
+import { redirect } from "next/navigation"
 import { ProductCard } from "@/components/product-card"
+import {
+  CatalogFilterControls,
+} from "@/components/catalog-filter-controls"
 import { getSiteUrl } from "@/lib/api/base"
 import { getProducts } from "@/lib/api/products"
 import { resolveKidsProducts } from "@/lib/kids"
@@ -8,30 +12,39 @@ import { BESPOKE_PRODUCT_TYPE } from "@/lib/bespoke"
 import { groupProductsForDisplay } from "@/lib/display-group"
 import {
   isMedusaCanonicalSeedDemoProduct,
-  isProductInActiveCatalogScope,
+  isProductInMainCatalogScope,
 } from "@/lib/catalog-scope"
+import {
+  catalogLegacyTypeRedirectQuery,
+  parseCatalogFilterState,
+} from "@/lib/catalog-filter-params"
+import {
+  applyCatalogFilters,
+  buildCatalogFacets,
+  sortDisplayEntries,
+} from "@/lib/catalog-filters"
+import { actions, catalogCopy, seo } from "@/lib/woodright-copy"
 
 export const metadata: Metadata = {
-  title: "Каталог",
-  description: "Каталог мебели Woodright. Готовые товары и товары с вариациями.",
+  title: seo.catalog.title,
+  description: seo.catalog.description,
   openGraph: {
-    title: "Каталог мебели | Woodright",
-    description: "Каталог мебели Woodright. Готовые товары и товары с вариациями.",
+    title: seo.catalog.title,
+    description: seo.catalog.description,
     url: "/catalog",
   },
-}
-
-const PRODUCT_TYPE_LABELS: Record<string, string> = {
-  STANDARD: "Готовые",
-  CONFIGURABLE: "С выбором исполнения",
 }
 
 export default async function CatalogPage({
   searchParams,
 }: {
-  searchParams: { product_type?: string }
+  searchParams: Record<string, string | string[] | undefined>
 }) {
-  const activeType = searchParams.product_type ?? null
+  const legacyQs = catalogLegacyTypeRedirectQuery(searchParams)
+  if (legacyQs) redirect(`/catalog?${legacyQs}`)
+
+  const filterState = parseCatalogFilterState(searchParams)
+  const bespokeOnly = filterState.type === BESPOKE_PRODUCT_TYPE
 
   let data: { products?: unknown[] } = {}
   try {
@@ -39,10 +52,12 @@ export default async function CatalogPage({
   } catch {
     return (
       <div data-state="error">
-        <h1>Каталог</h1>
-        <p className="info-text" style={{ marginTop: "0.5rem" }}>Не удалось загрузить каталог.</p>
+        <div className="catalog-hero">
+          <h1>{catalogCopy.h1}</h1>
+          <p className="info-text" style={{ marginTop: "0.5rem" }}>{catalogCopy.loadError}</p>
+        </div>
         <div className="nav-links" style={{ marginTop: "1rem" }}>
-          <Link href="/">На главную</Link>
+          <Link href="/">{actions.toHome}</Link>
         </div>
       </div>
     )
@@ -60,19 +75,32 @@ export default async function CatalogPage({
   } catch {
     kidsIds = new Set()
   }
-  const all = allRaw.filter(
-    (p: any) =>
-      !kidsIds.has(p.id) &&
-      p.product_classification?.product_type !== BESPOKE_PRODUCT_TYPE &&
-      isProductInActiveCatalogScope(p as Record<string, unknown>) &&
-      !isMedusaCanonicalSeedDemoProduct(p as Record<string, unknown>)
+  const scoped = allRaw.filter((p: Record<string, unknown>) => {
+    if (kidsIds.has(p.id as string)) return false
+    if (!isProductInMainCatalogScope(p)) return false
+    if (isMedusaCanonicalSeedDemoProduct(p)) return false
+    const classification = (
+      p.product_classification as { product_type?: string } | undefined
+    )?.product_type
+    if (bespokeOnly) {
+      // Fail-closed: known BESPOKE filter never falls back to STANDARD/CONFIGURABLE pool.
+      return classification === BESPOKE_PRODUCT_TYPE
+    }
+    return classification !== BESPOKE_PRODUCT_TYPE
+  }) as Record<string, unknown>[]
+
+  const filtered = applyCatalogFilters(scoped, filterState)
+  const facets = {
+    types: buildCatalogFacets(scoped, filterState, "type").types,
+    categories: buildCatalogFacets(scoped, filterState, "category").categories,
+    collections: buildCatalogFacets(scoped, filterState, "collection").collections,
+    priceRange: buildCatalogFacets(scoped, filterState, "price").priceRange,
+  }
+
+  const displayEntries = sortDisplayEntries(
+    groupProductsForDisplay(filtered),
+    filterState.sort
   )
-
-  const filtered = activeType
-    ? all.filter((p: any) => p.product_classification?.product_type === activeType)
-    : all
-
-  const displayEntries = groupProductsForDisplay(filtered as Record<string, unknown>[])
 
   const base = getSiteUrl()
   const itemListJsonLd = displayEntries.length > 0 ? {
@@ -82,8 +110,8 @@ export default async function CatalogPage({
     itemListElement: displayEntries.map((entry, i: number) => ({
       "@type": "ListItem",
       position: i + 1,
-      url: `${base}/product/${(entry.product as any).id}`,
-      name: ((entry.product as any).title as string) ?? undefined,
+      url: `${base}/product/${(entry.product as Record<string, unknown>).id}`,
+      name: ((entry.product as Record<string, unknown>).title as string) ?? undefined,
     })),
   } : null
 
@@ -96,52 +124,45 @@ export default async function CatalogPage({
         />
       )}
 
-      <h1>Каталог</h1>
-
-      <div className="catalog-controls" style={{ marginTop: "1rem" }}>
-        <nav className="filter-tabs" aria-label="Фильтр по типу">
-          <Link
-            href="/catalog"
-            className={activeType === null ? "filter-tab filter-tab-active" : "filter-tab"}
-          >
-            Все
+      <div className="catalog-hero">
+        <h1>{catalogCopy.h1}</h1>
+        <p className="info-text">
+          {catalogCopy.lead}{" "}
+          <Link href="/kids/catalog" className="catalog-hero-kids-link">
+            {catalogCopy.kidsLead} <span aria-hidden="true">→</span>
           </Link>
-          {Object.entries(PRODUCT_TYPE_LABELS).map(([key, label]) => (
-            <Link
-              key={key}
-              href={`/catalog?product_type=${key}`}
-              className={activeType === key ? "filter-tab filter-tab-active" : "filter-tab"}
-            >
-              {label}
-            </Link>
-          ))}
-        </nav>
-        <Link href="/bespoke" className="catalog-cta">
-          По проекту →
-        </Link>
+        </p>
       </div>
 
-      {displayEntries.length === 0 ? (
-        <div className="status-message">
-          <p>Товары не найдены.</p>
-          {activeType && (
+      <CatalogFilterControls
+        basePath="/catalog"
+        state={filterState}
+        facets={facets}
+        resultCount={displayEntries.length}
+        showBespokeCta
+      >
+        {displayEntries.length === 0 ? (
+          <div className="status-message catalog-empty-state">
+            <p style={{ fontWeight: 500 }}>{catalogCopy.emptyFilteredTitle}</p>
+            <p>{catalogCopy.emptyFilteredBody}</p>
             <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
-              <Link href="/catalog">Показать все</Link>
+              <Link href="/catalog">{actions.resetFilters}</Link>
+              <Link href="/bespoke/request">{actions.discussProject}</Link>
             </div>
-          )}
-        </div>
-      ) : (
-        <ul className="product-grid">
-          {displayEntries.map((entry) => (
-            <li key={(entry.product as any).id}>
-              <ProductCard
-                product={entry.product as any}
-                displayGroup={entry.displayGroup}
-              />
-            </li>
-          ))}
-        </ul>
-      )}
+          </div>
+        ) : (
+          <ul className="product-grid catalog-product-grid">
+            {displayEntries.map((entry) => (
+              <li key={(entry.product as Record<string, unknown>).id as string}>
+                <ProductCard
+                  product={entry.product as any}
+                  displayGroup={entry.displayGroup}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
+      </CatalogFilterControls>
     </div>
   )
 }

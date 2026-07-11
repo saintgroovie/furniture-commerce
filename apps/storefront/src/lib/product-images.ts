@@ -1,11 +1,110 @@
 /**
  * Storefront helpers for listing/API-shaped product media URLs.
- * Used by diagnostics and optional call sites — does not rewrite URLs.
+ *
+ * **Client-safe:** no imports from `apps/backend` (no fs/crypto). Oliver MD5 repair lives in
+ * `pdp-buyer-gallery.server.ts` (server components / scripts only).
  *
  * Catalog cards: hero uses `product.thumbnail` only; extras use
  * {@link collectExtraProductImageUrls}, {@link collectDisplayGroupExtraImageUrls}, and
- * {@link mergeUniqueExtraUrls} (listing attaches `display_group_extra_image_urls` in `display-group.ts`).
+ * {@link mergeUniqueExtraUrls} (listing attaches `display_group_color_variants` in `display-group.ts`).
  */
+
+function medusaBackendBaseForImages(): string {
+  const raw =
+    (typeof process !== "undefined" &&
+      (process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ||
+        process.env.MEDUSA_BACKEND_URL)) ||
+    "http://localhost:9000"
+  return String(raw).replace(/\/$/, "")
+}
+
+/**
+ * Browser-safe product image URL: `/static/...` and `/uploads/...` are served by Medusa, not Next.
+ * Rewrites docker `medusa` hostnames to `localhost` for local QA.
+ */
+export function resolveMedusaBackendImageUrl(url: string): string {
+  const t = typeof url === "string" ? url.trim() : ""
+  if (!t) return t
+  if (t.startsWith("data:")) return t
+  if (t.startsWith("http://") || t.startsWith("https://")) {
+    try {
+      const u = new URL(t)
+      if (u.hostname === "medusa" || u.hostname.endsWith(".medusa")) {
+        u.hostname = "localhost"
+        return u.toString()
+      }
+    } catch {
+      /* ignore */
+    }
+    return t
+  }
+  if (t.startsWith("/static/") || t.startsWith("/uploads/")) {
+    return `${medusaBackendBaseForImages()}${t}`
+  }
+  return t
+}
+
+function isMedusaBackendHost(hostname: string): boolean {
+  const h = hostname.toLowerCase()
+  if (h === "medusa" || h.endsWith(".medusa")) return true
+  if (h === "localhost" || h === "127.0.0.1" || h === "host.docker.internal") return true
+  const configured = medusaBackendBaseForImages()
+  try {
+    const backendHost = new URL(configured).hostname.toLowerCase()
+    return h === backendHost
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Same-origin PDP URL via Next rewrite `/product-static/…` → Medusa `/static/…`.
+ * Cross-origin `:9000` URLs fail client thumb verification on `:3002`.
+ */
+export function resolvePdpMediaSrc(url: string): string {
+  const s = typeof url === "string" ? url.trim() : ""
+  if (!s) return s
+  if (s.startsWith("/product-static/")) return s
+  if (s.startsWith("/static/")) {
+    return `/product-static${s.slice("/static".length)}`
+  }
+  if (s.startsWith("/uploads/")) {
+    return `${medusaBackendBaseForImages()}${s}`
+  }
+  if (s.startsWith("http://") || s.startsWith("https://")) {
+    try {
+      const u = new URL(s)
+      if (isMedusaBackendHost(u.hostname)) {
+        if (u.pathname.startsWith("/static/")) {
+          return `/product-static${u.pathname.slice("/static".length)}`
+        }
+        if (u.pathname.startsWith("/uploads/")) {
+          return `${medusaBackendBaseForImages()}${u.pathname}`
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+    return s
+  }
+  return resolveMedusaBackendImageUrl(s)
+}
+
+/** Storefront `<img src>` for Medusa product media (catalog, PDP, swatches). */
+export const resolveStorefrontProductImageSrc = resolvePdpMediaSrc
+
+export function resolvePdpMediaBundle(mainSrc: string, extraSrcs: string[]): {
+  mainSrc: string
+  extraSrcs: string[]
+} {
+  const main = resolvePdpMediaSrc(mainSrc)
+  const extras: string[] = []
+  for (const raw of extraSrcs) {
+    const resolved = resolvePdpMediaSrc(raw)
+    if (resolved) extras.push(resolved)
+  }
+  return { mainSrc: main, extraSrcs: extras }
+}
 
 /**
  * Drops obvious non-image garbage before UI / collect paths.
@@ -17,6 +116,14 @@ export function filterObviousGarbageImageUrl(s: string): string | null {
   const lower = t.toLowerCase()
   if (lower === "undefined" || lower === "null" || lower === "[object object]") return null
   if (/^\s*(javascript|vbscript|data:text\/html):/i.test(t)) return null
+  const base = (t.split("/").pop() ?? t).toLowerCase()
+  if (
+    base === "pv-14-1_legacy_main.png" ||
+    base === "pv-14-1_main.jpg" ||
+    /^screenshot_101_.*\.png$/i.test(base)
+  ) {
+    return null
+  }
   const ok =
     t.startsWith("http://") ||
     t.startsWith("https://") ||
@@ -44,6 +151,26 @@ export function normalizeImageEntryUrl(entry: unknown): string | null {
   return null
 }
 
+/** Case-insensitive basename key for carousel dedupe (OL-26-1 vs ol-26-1 paths). */
+export function galleryImageBasenameKey(url: string): string {
+  const base = url.split("/").pop() ?? url
+  return base.toLowerCase()
+}
+
+function mainSrcMatchesUrl(mainNorm: string, url: string): boolean {
+  if (!mainNorm) return false
+  if (url === mainNorm) return true
+  return galleryImageBasenameKey(url) === galleryImageBasenameKey(mainNorm)
+}
+
+function pushUniqueGalleryUrl(out: string[], url: string, mainNorm: string): void {
+  const v = filterObviousGarbageImageUrl(url)
+  if (!v) return
+  if (mainSrcMatchesUrl(mainNorm, v)) return
+  if (out.some((u) => u === v || galleryImageBasenameKey(u) === galleryImageBasenameKey(v))) return
+  out.push(v)
+}
+
 /**
  * URLs from `product.images` only, for catalog card extras (not hero).
  * Omits empty/invalid entries, trims, dedupes, excludes `mainSrc` (canonical thumbnail).
@@ -58,10 +185,7 @@ export function collectExtraProductImageUrls(
   const list: unknown[] = Array.isArray(raw) ? raw : []
   for (const entry of list) {
     const u = normalizeImageEntryUrl(entry)
-    const v = u ? filterObviousGarbageImageUrl(u) : null
-    if (!v) continue
-    if (mainNorm.length > 0 && v === mainNorm) continue
-    if (!out.includes(v)) out.push(v)
+    if (u) pushUniqueGalleryUrl(out, u, mainNorm)
   }
   return out
 }
@@ -82,19 +206,10 @@ export function collectDisplayGroupExtraImageUrls(
     const list: unknown[] = Array.isArray(raw) ? raw : []
     for (const entry of list) {
       const u = normalizeImageEntryUrl(entry)
-      const v = u ? filterObviousGarbageImageUrl(u) : null
-      if (!v) continue
-      if (mainNorm.length > 0 && v === mainNorm) continue
-      if (!out.includes(v)) out.push(v)
+      if (u) pushUniqueGalleryUrl(out, u, mainNorm)
     }
     const thumb = m.thumbnail
-    if (typeof thumb === "string") {
-      const s0 = thumb.trim()
-      const s = filterObviousGarbageImageUrl(s0)
-      if (!s) continue
-      if (mainNorm.length > 0 && s === mainNorm) continue
-      if (!out.includes(s)) out.push(s)
-    }
+    if (typeof thumb === "string") pushUniqueGalleryUrl(out, thumb.trim(), mainNorm)
   }
   return out
 }
@@ -115,19 +230,38 @@ export function mergeUniqueExtraUrls(mainSrc: string, segments: string[][]): str
   return out
 }
 
-/** Thumbnail first, then `images[].url`, deduped (raw API strings). */
-export function collectProductImageUrls(product: Record<string, unknown>): string[] {
-  const urls: string[] = []
-  const thumb = product.thumbnail
-  if (typeof thumb === "string" && thumb.trim()) urls.push(thumb.trim())
-  const raw = product.images
-  const list: unknown[] = Array.isArray(raw) ? raw : []
-  for (const entry of list) {
-    const u = normalizeImageEntryUrl(entry)
-    if (u && !urls.includes(u)) urls.push(u)
+/**
+ * PDP thumb row: extras only — hero already shows `mainSrc` (no duplicate main thumb).
+ */
+export function buildPdpThumbStripUrls(mainSrc: string, extraSrcs: string[]): string[] {
+  const mainNorm = typeof mainSrc === "string" ? mainSrc.trim() : ""
+  const out: string[] = []
+  for (const u of extraSrcs) {
+    if (typeof u !== "string") continue
+    pushUniqueGalleryUrl(out, u.trim(), mainNorm)
   }
-  return urls
+  return out
 }
+
+/**
+ * Gallery thumb strip: `mainSrc` first, then extras; trims and dedupes.
+ * Catalog cards: hero is always a selectable thumb. PDP Oliver uses {@link buildPdpThumbStripUrls}.
+ */
+export function buildGalleryStripUrls(mainSrc: string, extraSrcs: string[]): string[] {
+  const mainNorm = typeof mainSrc === "string" ? mainSrc.trim() : ""
+  const out: string[] = []
+  if (mainNorm) out.push(mainNorm)
+  for (const u of extraSrcs) {
+    if (typeof u !== "string") continue
+    pushUniqueGalleryUrl(out, u.trim(), mainNorm)
+  }
+  return out
+}
+
+import { collectProductImageUrls } from "./collect-product-image-urls"
+
+/** Thumbnail first, then `images[].url`, deduped (raw API strings). */
+export { collectProductImageUrls } from "./collect-product-image-urls"
 
 /** Alias for diagnostics (same as {@link collectProductImageUrls} after rollback). */
 export function gatherRawProductImageUrls(product: Record<string, unknown>): string[] {

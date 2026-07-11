@@ -4,7 +4,7 @@ import Link from "next/link"
 export const metadata: Metadata = {
   title: { default: "По проекту", template: "%s | По проекту | Woodright" },
   description:
-    "Мебель на заказ. Кухни, гардеробные, шкафы — индивидуальные проекты по вашим размерам.",
+    "Мебель по проекту Woodright: подбор мебели, отделок и состава комнаты под интерьер или индивидуальную задачу.",
 }
 
 export default function BespokeLayout({

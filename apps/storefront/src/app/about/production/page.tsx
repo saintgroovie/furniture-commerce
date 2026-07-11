@@ -1,11 +1,12 @@
 import Link from "next/link"
 import type { Metadata } from "next"
+import { aboutProductionCopy, seo } from "@/lib/woodright-copy"
 
 export const metadata: Metadata = {
-  title: "Производство",
-  description: "Производство мебели Woodright.",
+  title: seo.aboutProduction.title,
+  description: seo.aboutProduction.description,
   openGraph: {
-    title: "Производство | Woodright",
+    title: seo.aboutProduction.title,
     url: "/about/production",
   },
 }
@@ -13,12 +14,11 @@ export const metadata: Metadata = {
 export default function ProductionPage() {
   return (
     <div className="service-page">
-      <h1>Производство</h1>
-      <p className="info-text">
-        Раздел о производстве готовится. Здесь появятся подробности о процессе изготовления мебели Woodright.
-      </p>
+      <h1>{aboutProductionCopy.h1}</h1>
+      <p className="info-text">{aboutProductionCopy.lead}</p>
+      <p className="info-text">{aboutProductionCopy.body}</p>
       <div className="nav-links">
-        <Link href="/about" className="btn btn-secondary">О компании</Link>
+        <Link href="/about" className="btn btn-secondary">О бренде</Link>
         <Link href="/catalog" className="btn btn-secondary">Каталог</Link>
       </div>
     </div>

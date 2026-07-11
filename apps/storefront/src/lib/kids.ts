@@ -2,12 +2,27 @@ import { getRoomSets, getRoomSetBySlug } from "@/lib/api/room-sets"
 import { getProducts } from "@/lib/api/products"
 import { BESPOKE_PRODUCT_TYPE } from "@/lib/bespoke"
 import {
-  isMedusaCanonicalSeedDemoProduct,
   isOliverKidsCollectionProduct,
+  isMedusaCanonicalSeedDemoProduct,
   isProductInActiveCatalogScope,
 } from "@/lib/catalog-scope"
 
 export const KIDS_ROOM_TYPE = "детская"
+
+export const WILLIE_WINKIE_COLLECTION_KEY = "willie-winkie" as const
+
+/** Kids storefront metadata union (Willie Winkie Flow A + generic kids section). */
+export function isKidsMetadataStorefrontProduct(
+  product: Record<string, unknown>
+): boolean {
+  const meta = (product.metadata as Record<string, unknown> | undefined) ?? {}
+  if (meta.storefront_section === "kids") return true
+  const collection = meta.collection
+  if (typeof collection === "string" && collection === WILLIE_WINKIE_COLLECTION_KEY) {
+    return true
+  }
+  return false
+}
 
 type RoomSetDetail = { room_set?: Record<string, unknown> } | null
 
@@ -23,6 +38,10 @@ type RoomSetDetail = { room_set?: Record<string, unknown> } | null
  *    `metadata.collection === OLIVER_KIDS_COLLECTION_KEY`, in active catalog
  *    scope, not BESPOKE, and not present in any non-kids room set (same
  *    cross-section rule as (1)).
+ *
+ * 3. **Kids metadata storefront line** — published store products with
+ *    `metadata.storefront_section === "kids"` or
+ *    `metadata.collection === "willie-winkie"`, same guards as (2).
  *
  * Used for:
  *   - `/kids/catalog`
@@ -120,7 +139,7 @@ export async function resolveKidsProducts(
   }
 
   for (const p of storeProducts) {
-    if (!isOliverKidsCollectionProduct(p)) continue
+    if (!isOliverKidsCollectionProduct(p) && !isKidsMetadataStorefrontProduct(p)) continue
     if (!isProductInActiveCatalogScope(p)) continue
     const classification = p.product_classification as
       | { product_type?: string }
