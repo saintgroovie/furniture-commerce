@@ -3,14 +3,14 @@ import type { Metadata } from "next"
 import { RoomSetCard } from "@/components/room-set-card"
 import { getRoomSets } from "@/lib/api/room-sets"
 import { KIDS_ROOM_TYPE } from "@/lib/kids"
+import { kidsRoomsCopy, seo } from "@/lib/woodright-copy"
 
 export const metadata: Metadata = {
-  title: "Комнаты",
-  description:
-    "Готовые комплекты детской мебели Woodright. Комнаты для малышей и школьников.",
+  title: seo.kidsRooms.title,
+  description: seo.kidsRooms.description,
   openGraph: {
-    title: "Детские комнаты | Woodright",
-    description: "Готовые комплекты мебели для детских комнат.",
+    title: seo.kidsRooms.title,
+    description: seo.kidsRooms.description,
     url: "/kids/rooms",
   },
 }
@@ -22,9 +22,9 @@ export default async function KidsRoomsPage() {
   } catch {
     return (
       <div data-state="error">
-        <h1>Детские комнаты</h1>
+        <h1>{kidsRoomsCopy.h1}</h1>
         <p className="info-text" style={{ marginTop: "0.5rem" }}>
-          Не удалось загрузить комнаты.
+          {kidsRoomsCopy.loadError}
         </p>
         <div className="nav-links" style={{ marginTop: "1rem" }}>
           <Link href="/kids">В детскую секцию</Link>
@@ -42,14 +42,14 @@ export default async function KidsRoomsPage() {
   if (list.length === 0) {
     return (
       <div data-state="empty">
-        <h1>Детские комнаты</h1>
+        <h1>{kidsRoomsCopy.h1}</h1>
         <div className="status-message">
-          <p>Комплекты для детских комнат пока не добавлены.</p>
+          <p>{kidsRoomsCopy.emptyBody}</p>
           <div
             className="nav-links nav-links-center"
             style={{ marginTop: "1rem" }}
           >
-            <Link href="/kids">В детскую секцию</Link>
+            <Link href="/kids/catalog">Каталог детской мебели</Link>
             <Link href="/rooms">Все комнаты</Link>
           </div>
         </div>
@@ -59,9 +59,9 @@ export default async function KidsRoomsPage() {
 
   return (
     <div data-state="success">
-      <h1>Детские комнаты</h1>
+      <h1>{kidsRoomsCopy.h1}</h1>
       <p className="info-text" style={{ marginTop: "0.5rem" }}>
-        Готовые комплекты мебели для детских комнат — от первых лет до школы.
+        {kidsRoomsCopy.lead}
       </p>
       <ul className="product-grid" style={{ marginTop: "1.5rem" }}>
         {list.map((rs: { id?: string }) => (

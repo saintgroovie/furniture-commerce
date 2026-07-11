@@ -4,12 +4,23 @@
  * Checkout Phase 1: только вызов API и отображение состояний. Без бизнес-логики.
  * Данные корзины и завершение заказа — только через Medusa store API.
  * Mutation: action → pending → API → success (clear session, show success) | error (feedback).
+ *
+ * Визуально форма переиспользует те же классы, что "Заявка на расчёт"
+ * (bespoke-request-*, form-stack/form-field, bespoke-submit-btn) — это
+ * намеренно, чтобы оформление заказа выглядело как часть той же дизайн-системы.
+ * Как и там, карточка формы и аside всегда показаны рядом (аside — во всех
+ * состояниях, "Состав заказа" — только когда есть загруженная корзина).
  */
+import type { ReactNode } from "react"
 import { useEffect, useState, useRef } from "react"
 import Link from "next/link"
 import { getCartIdFromSession, clearCartIdFromSession } from "@/lib/cart/session"
+import { emitCartUpdated } from "@/lib/cart/cart-events"
 import { getCart, updateCart, CART_NOT_FOUND } from "@/lib/api/cart"
-import { completeCart } from "@/lib/api/checkout"
+import { completeCart, prepareCheckoutForCompletion } from "@/lib/api/checkout"
+import { formatRub, getOrderDisplayNumber } from "@/lib/format"
+import { PackageIcon, ChecklistIcon } from "@/components/bespoke-help-icons"
+import { checkoutCopy as copy } from "@/lib/woodright-copy"
 
 type CheckoutState =
   | "empty_cart"
@@ -25,8 +36,10 @@ export function CheckoutForm() {
   const [state, setState] = useState<CheckoutState>("loading")
   const [cart, setCart] = useState<Record<string, unknown> | null>(null)
   const [errorMessage, setErrorMessage] = useState<string>("")
-  const [orderId, setOrderId] = useState<string>("")
+  const [orderNumber, setOrderNumber] = useState<string>("")
   const [cartId, setCartId] = useState<string | null>(null)
+  const [nameError, setNameError] = useState("")
+  const [phoneError, setPhoneError] = useState("")
   const submittingRef = useRef(false)
 
   useEffect(() => {
@@ -55,10 +68,10 @@ export function CheckoutForm() {
           clearCartIdFromSession()
           setCartId(null)
           setState("invalid_cart_state")
-          setErrorMessage("Корзина недоступна.")
+          setErrorMessage(copy.invalidState)
         } else {
           setState("server_error")
-          setErrorMessage("Не удалось загрузить корзину.")
+          setErrorMessage(copy.loadError)
         }
       })
   }, [])
@@ -67,137 +80,234 @@ export function CheckoutForm() {
     e.preventDefault()
     if (!cartId || state !== "ready") return
     if (submittingRef.current) return
-    submittingRef.current = true
     const form = e.currentTarget
+    const name = (form.elements.namedItem("name") as HTMLInputElement)?.value?.trim() ?? ""
+    const phone = (form.elements.namedItem("phone") as HTMLInputElement)?.value?.trim() ?? ""
     const email = (form.elements.namedItem("email") as HTMLInputElement)?.value?.trim()
-    const first_name = (form.elements.namedItem("first_name") as HTMLInputElement)?.value?.trim()
-    const last_name = (form.elements.namedItem("last_name") as HTMLInputElement)?.value?.trim()
     const address_1 = (form.elements.namedItem("address_1") as HTMLInputElement)?.value?.trim()
     const city = (form.elements.namedItem("city") as HTMLInputElement)?.value?.trim()
-    const postal_code = (form.elements.namedItem("postal_code") as HTMLInputElement)?.value?.trim()
     const country_code = (form.elements.namedItem("country_code") as HTMLInputElement)?.value?.trim() || "ru"
 
-    if (!email || !first_name || !last_name || !address_1 || !city || !postal_code) {
+    // Такие же обязательные поля, как в «Рассчитать проект»: имя и телефон.
+    // Остальное (email, адрес, город) — необязательно, менеджер уточнит при звонке.
+    const nextNameError = name ? "" : copy.nameRequired
+    const nextPhoneError = phone ? "" : copy.phoneRequired
+    setNameError(nextNameError)
+    setPhoneError(nextPhoneError)
+    if (nextNameError || nextPhoneError) {
       setState("validation_error")
-      setErrorMessage("Заполните обязательные поля.")
+      setErrorMessage(copy.validationError)
       return
     }
+
+    submittingRef.current = true
+    // Medusa's shipping_address wants first/last name separately — split on
+    // the first space so the single «Имя» field (same as the bespoke form)
+    // still fills both without asking the customer to type it twice.
+    const [first_name, ...rest] = name.split(/\s+/)
+    const last_name = rest.join(" ") || first_name
 
     setState("submitting")
     setErrorMessage("")
     try {
       await updateCart(cartId, {
-        email,
+        email: email || undefined,
         shipping_address: {
           first_name,
           last_name,
-          address_1,
-          city,
-          postal_code,
+          phone,
+          address_1: address_1 || undefined,
+          city: city || undefined,
           country_code,
         },
       })
+      await prepareCheckoutForCompletion(cartId)
       const data = await completeCart(cartId)
       const result = data as { type?: string; order?: { id?: string }; error?: string }
       if (result.type === "order" && result.order) {
-        setOrderId(result.order.id ?? "")
+        setOrderNumber(getOrderDisplayNumber(result.order as Record<string, unknown>))
         clearCartIdFromSession()
+        emitCartUpdated({ count: 0 })
         setState("success")
       } else {
         setState("server_error")
-        setErrorMessage(result.error ?? "Ошибка оформления заказа.")
+        setErrorMessage(result.error ?? copy.serverError)
       }
     } catch (err) {
       setState("server_error")
-      setErrorMessage(err instanceof Error ? err.message : "Ошибка оформления заказа.")
+      setErrorMessage(err instanceof Error ? err.message : copy.serverError)
     } finally {
       submittingRef.current = false
     }
   }
 
+  const items = (cart?.items as Array<Record<string, unknown>>) ?? []
+  const total = cart?.total != null ? Number(cart.total) : null
+  const submitting = state === "submitting"
+
+  let cardContent: ReactNode
+  let cardState: string = state
+
   if (state === "empty_cart") {
-    return (
-      <div data-state="empty_cart">
-        <p>Корзина пуста. Оформление заказа недоступно.</p>
-        <p>
+    cardContent = (
+      <>
+        <p className="bespoke-request-card-title">{copy.emptyCartTitle}</p>
+        <p className="page-caption bespoke-request-card-caption">{copy.emptyCartBody}</p>
+        <p className="nav-links">
           <Link href="/catalog">В каталог</Link>, <Link href="/rooms">в комнаты</Link> или <Link href="/cart">в корзину</Link>.
         </p>
-      </div>
+      </>
     )
-  }
-
-  if (state === "loading") {
-    return (
-      <div data-state="loading">
-        <div style={{ height: "2rem", backgroundColor: "#f5f5f5", marginBottom: "0.5rem" }} aria-hidden />
-        <div style={{ height: "4rem", backgroundColor: "#f5f5f5", marginBottom: "0.5rem" }} aria-hidden />
-        <div style={{ height: "3rem", backgroundColor: "#f5f5f5" }} aria-hidden />
-      </div>
-    )
-  }
-
-  if (state === "invalid_cart_state") {
-    return (
-      <div data-state="invalid_cart_state">
-        <p>Корзина повреждена или недоступна.</p>
-        <p><Link href="/catalog">В каталог</Link> или <Link href="/cart">В корзину</Link>.</p>
-      </div>
-    )
-  }
-
-  if (state === "success") {
-    return (
-      <div data-state="success">
-        <p style={{ fontWeight: "bold" }}>Заказ оформлен.</p>
-        {orderId && <p>Номер заказа: {orderId}</p>}
-        <p>Оплата по ссылке: менеджер отправит вам ссылку на оплату отдельно.</p>
-        <p>
-          <Link href="/catalog">В каталог</Link>
+  } else if (state === "loading") {
+    cardContent = <p className="info-text">Загружаем корзину…</p>
+  } else if (state === "invalid_cart_state") {
+    cardContent = (
+      <>
+        <p className="bespoke-request-card-title">{copy.invalidState}</p>
+        <p className="nav-links">
+          <Link href="/catalog">В каталог</Link> или <Link href="/cart">в корзину</Link>.
         </p>
+      </>
+    )
+  } else if (state === "success") {
+    cardContent = (
+      <div className="request-success">
+        <p className="request-success-title">{copy.successTitle}</p>
+        {orderNumber && (
+          <p className="request-success-text">
+            {copy.orderNumberLabel}: <strong className="checkout-order-number">{orderNumber}</strong>
+          </p>
+        )}
+        {orderNumber && (
+          <p className="checkout-order-note" role="alert">{copy.orderNumberNote}</p>
+        )}
+        <p className="request-success-text">{copy.paymentNote}</p>
+        <Link href="/catalog" className="btn btn-primary">{copy.successCta}</Link>
       </div>
+    )
+  } else {
+    cardState = state === "validation_error" ? "error_validation" : state === "server_error" ? "error_server" : state
+    cardContent = (
+      <>
+        <h2 className="bespoke-request-card-title">{copy.formTitle}</h2>
+        <p className="page-caption bespoke-request-card-caption">{copy.formCaption}</p>
+
+        <form onSubmit={handleSubmit} data-state={cardState} className="form-stack bespoke-form">
+          <div className="form-field">
+            <label htmlFor="checkout-name">
+              {copy.fields.name}
+              <span className="form-required-mark" aria-hidden="true"> *</span>
+            </label>
+            <input
+              id="checkout-name"
+              name="name"
+              type="text"
+              placeholder={copy.placeholders.name}
+              disabled={submitting}
+              aria-required="true"
+              aria-invalid={nameError ? true : undefined}
+              aria-describedby={nameError ? "checkout-name-error" : undefined}
+            />
+            {nameError && (
+              <span id="checkout-name-error" className="feedback-error" role="alert">{nameError}</span>
+            )}
+          </div>
+
+          <div className="form-field">
+            <label htmlFor="checkout-phone">
+              {copy.fields.phone}
+              <span className="form-required-mark" aria-hidden="true"> *</span>
+            </label>
+            <input
+              id="checkout-phone"
+              name="phone"
+              type="tel"
+              placeholder={copy.placeholders.phone}
+              disabled={submitting}
+              aria-required="true"
+              aria-invalid={phoneError ? true : undefined}
+              aria-describedby={phoneError ? "checkout-phone-error" : undefined}
+            />
+            {phoneError && (
+              <span id="checkout-phone-error" className="feedback-error" role="alert">{phoneError}</span>
+            )}
+          </div>
+
+          <div className="form-field">
+            <label htmlFor="checkout-email">{copy.fields.email}</label>
+            <input id="checkout-email" name="email" type="email" placeholder={copy.placeholders.email} disabled={submitting} />
+          </div>
+
+          <div className="form-field">
+            <label htmlFor="checkout-address">{copy.fields.address}</label>
+            <input id="checkout-address" name="address_1" type="text" placeholder={copy.placeholders.address} disabled={submitting} />
+          </div>
+
+          <div className="form-field">
+            <label htmlFor="checkout-city">{copy.fields.city}</label>
+            <input id="checkout-city" name="city" type="text" placeholder={copy.placeholders.city} disabled={submitting} />
+          </div>
+
+          <div className="form-field">
+            <label htmlFor="checkout-country">{copy.fields.country}</label>
+            <input id="checkout-country" name="country_code" type="text" defaultValue="ru" disabled={submitting} />
+          </div>
+
+          <button type="submit" className="btn btn-primary bespoke-submit-btn" disabled={submitting}>
+            {submitting ? copy.submitting : copy.submit}
+          </button>
+
+          {(state === "validation_error" || state === "server_error") && errorMessage && (
+            <div className="form-alert-error" role="alert">{errorMessage}</div>
+          )}
+        </form>
+      </>
     )
   }
 
-  if (state === "ready" || state === "submitting" || state === "validation_error" || state === "server_error") {
-    const items = (cart?.items as Array<Record<string, unknown>>) ?? []
-    const total = cart?.total != null ? Number(cart.total) : null
-    const dataState = state === "submitting" ? "submitting" : state === "validation_error" ? "error_validation" : state === "server_error" ? "error_server" : "ready"
+  return (
+    <div className="bespoke-request-layout">
+      <div className="bespoke-request-card" data-state={cardState}>{cardContent}</div>
 
-    return (
-      <div data-state={dataState}>
+      <aside className="bespoke-request-help">
         {items.length > 0 && (
-          <section style={{ marginBottom: "1.5rem" }} aria-label="Состав заказа">
-            <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "0.5rem" }}>Состав заказа</h2>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-              {items.map((item: Record<string, unknown>) => (
-                <li key={String(item.id)} style={{ marginBottom: "0.25rem" }}>
-                  {(item.title as string) ?? "—"} × {Number((item as { quantity?: number }).quantity ?? 1)}
+          <div className="bespoke-request-help-section">
+            <div className="bespoke-request-help-section-header">
+              <span className="bespoke-request-help-icon">
+                <PackageIcon />
+              </span>
+              <h2>{copy.compositionTitle}</h2>
+            </div>
+            <ul className="checkout-composition-list">
+              {items.map((item) => (
+                <li key={String(item.id)} className="checkout-composition-item">
+                  <span>{(item.title as string) ?? "—"}</span>
+                  <span>× {Number((item as { quantity?: number }).quantity ?? 1)}</span>
                 </li>
               ))}
             </ul>
             {total != null && !Number.isNaN(total) && (
-              <p style={{ marginTop: "0.5rem", fontWeight: 600 }}>Итого: {total} ₽</p>
+              <p className="checkout-composition-total">Итого: {formatRub(total)}</p>
             )}
-          </section>
+          </div>
         )}
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxWidth: "400px" }}>
-          <label>Email * <input name="email" type="email" required disabled={state === "submitting"} /></label>
-          <label>Имя * <input name="first_name" type="text" required disabled={state === "submitting"} /></label>
-          <label>Фамилия * <input name="last_name" type="text" required disabled={state === "submitting"} /></label>
-          <label>Адрес * <input name="address_1" type="text" required disabled={state === "submitting"} /></label>
-          <label>Город * <input name="city" type="text" required disabled={state === "submitting"} /></label>
-          <label>Индекс * <input name="postal_code" type="text" required disabled={state === "submitting"} /></label>
-          <label>Страна <input name="country_code" type="text" defaultValue="ru" disabled={state === "submitting"} /></label>
-          <button type="submit" disabled={state === "submitting"}>
-            {state === "submitting" ? "Оформление…" : "Оформить заказ"}
-          </button>
-          {(state === "validation_error" || state === "server_error") && errorMessage && (
-            <p style={{ color: "red" }} role="alert">{errorMessage}</p>
-          )}
-        </form>
-      </div>
-    )
-  }
 
-  return null
+        <div className="bespoke-request-help-section">
+          <div className="bespoke-request-help-section-header">
+            <span className="bespoke-request-help-icon">
+              <ChecklistIcon />
+            </span>
+            <h2>{copy.nextStepsTitle}</h2>
+          </div>
+          <ul className="bespoke-request-help-list">
+            {copy.nextStepsBullets.map((bullet) => (
+              <li key={bullet}>{bullet}</li>
+            ))}
+          </ul>
+        </div>
+
+        <p className="page-caption">{copy.asideCaption}</p>
+      </aside>
+    </div>
+  )
 }

@@ -7,9 +7,10 @@ type Props = {
   label: string
   href: string
   items: Array<{ label: string; href: string }>
+  className?: string
 }
 
-export function NavDropdown({ label, href, items }: Props) {
+export function NavDropdown({ label, href, items, className }: Props) {
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const menuId = `menu-${href.replace(/\W/g, "")}`
@@ -45,7 +46,7 @@ export function NavDropdown({ label, href, items }: Props) {
 
   return (
     <div
-      className="nav-dropdown"
+      className={className ? `nav-dropdown ${className}` : "nav-dropdown"}
       ref={containerRef}
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}

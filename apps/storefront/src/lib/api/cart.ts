@@ -52,7 +52,10 @@ export async function updateCart(
   return res.json()
 }
 
-export async function addLineItem(cartId: string, body: { variant_id: string; quantity?: number }) {
+export async function addLineItem(
+  cartId: string,
+  body: { variant_id: string; quantity?: number; metadata?: Record<string, unknown> }
+) {
   const base = getBaseUrl()
   const res = await medusaFetch(`${base}/store/carts/${cartId}/line-items`, {
     method: "POST",

@@ -1,4 +1,4 @@
-import { getBaseUrl } from "./base"
+import { getBaseUrl, medusaFetch } from "./base"
 
 export async function createBespokeRequest(body: {
   lead_id: string
@@ -10,7 +10,7 @@ export async function createBespokeRequest(body: {
   comment?: string | null
 }) {
   const base = getBaseUrl()
-  const res = await fetch(`${base}/store/bespoke-requests`, {
+  const res = await medusaFetch(`${base}/store/bespoke-requests`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),

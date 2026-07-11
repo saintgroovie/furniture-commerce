@@ -3,19 +3,50 @@ import type { Metadata } from "next"
 import { getSiteUrl } from "@/lib/api/base"
 import { getProduct, getProducts, NOT_FOUND } from "@/lib/api/products"
 import { formatRub, getPrice } from "@/lib/format"
+import {
+  formatRequestQuotePriceLabel,
+  isRequestQuoteProduct,
+} from "@/lib/request-quote"
 import { ProductCta } from "@/components/product-cta"
 import { OliverPdpMediaSwitcher } from "@/components/oliver-pdp-media-switcher"
+import { GreenwichBedPdpMediaSwitcher } from "@/components/greenwich-bed-pdp-media-switcher"
+import { ProductPdpExecutionMediaSwitcher } from "@/components/product-pdp-execution-media-switcher"
 import { ProductPdpMediaSwitcher } from "@/components/product-pdp-media-switcher"
+import {
+  buildIntraProductExecutionSelectors,
+  cardThumbnailSrcFromProduct,
+  finishLabelForProduct,
+  hasPdpExecutionControls,
+} from "@/lib/card-color-media"
+import {
+  defaultGreenwichBedSelection,
+  isGreenwichBedProduct,
+  resolveGreenwichBedMedia,
+} from "@/lib/greenwich-bed-media"
+import {
+  defaultGreenwichPaintSelection,
+  resolveGreenwichPaintMedia,
+} from "@/lib/greenwich-paint-media"
 import { getDisplayGroupMembers } from "@/lib/display-group"
-import { collectDisplayGroupExtraImageUrls } from "@/lib/product-images"
+import {
+  collectDisplayGroupExtraImageUrls,
+  collectExtraProductImageUrls,
+  mergeUniqueExtraUrls,
+  resolvePdpMediaBundle,
+} from "@/lib/product-images"
+import { filterProvenceSceneOnlyPdpExtras } from "@/lib/provence-scene-only-pdp"
+import { buildPdpBuyerFacingGallery } from "@/lib/pdp-buyer-gallery.server"
 import {
   getCollectionLabel,
   getSubcollectionLabel,
   getCanonicalName,
+  getBuyerFacingProductTitle,
   getArticle,
   getDimensions,
   formatDimensionsLabeled,
+  getPdpHeroObjectPosition,
 } from "@/lib/product-metadata"
+import { labels, pdpCopy, productTypeBadgeLabels } from "@/lib/woodright-copy"
 
 function pdpHeroThumbnail(product: Record<string, unknown>): string | undefined {
   const t = product.thumbnail
@@ -34,9 +65,7 @@ function truncate(str: string, max: number): string {
   return str.slice(0, max - 3).trim() + "..."
 }
 
-const BADGE_LABELS: Record<string, string> = {
-  BESPOKE: "На заказ",
-}
+const BADGE_LABELS = productTypeBadgeLabels
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const base = getSiteUrl()
@@ -44,7 +73,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     const res = await getProduct(params.id)
     const product = res.product as Record<string, unknown> | undefined
     if (!product) return { title: "Товар", alternates: { canonical: `${base}/product/${params.id}` } }
-    const title = String(product.title ?? "Товар")
+    const title = getBuyerFacingProductTitle(product)
     const desc = product.description ? truncate(String(product.description), 160) : "Товар из каталога Woodright."
     const imageUrl = primaryImageForMeta(product)
     return {
@@ -72,7 +101,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
     if (e instanceof Error && e.message === NOT_FOUND) {
       return (
         <div data-state="not_found" className="status-message">
-          <h1>Товар не найден</h1>
+          <h1>{pdpCopy.notFoundTitle}</h1>
           <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
             <Link href="/catalog">В каталог</Link>
           </div>
@@ -81,8 +110,8 @@ export default async function ProductPage({ params }: { params: { id: string } }
     }
     return (
       <div data-state="error" className="status-message">
-        <h1>Ошибка</h1>
-        <p>Не удалось загрузить товар.</p>
+        <h1>{pdpCopy.errorTitle}</h1>
+        <p>{pdpCopy.errorBody}</p>
         <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
           <Link href="/catalog">В каталог</Link>
         </div>
@@ -92,7 +121,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
   if (!product) {
     return (
       <div data-state="not_found" className="status-message">
-        <h1>Товар не найден</h1>
+        <h1>{pdpCopy.notFoundTitle}</h1>
         <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
           <Link href="/catalog">В каталог</Link>
         </div>
@@ -103,7 +132,85 @@ export default async function ProductPage({ params }: { params: { id: string } }
   const base = getSiteUrl()
   const handle = String(product.handle ?? "")
   const isOliver = handle.startsWith("ol-")
+  const isGreenwichBed = isGreenwichBedProduct(product)
+  const thumbSrc = cardThumbnailSrcFromProduct(product)
+  const executionSelectors = buildIntraProductExecutionSelectors(product, thumbSrc)
+  const greenwichBedMatrix = executionSelectors.greenwichBedMatrix
+  const greenwichPaintMatrix = executionSelectors.greenwichPaintMatrix
+  const bedDefaults =
+    greenwichBedMatrix && greenwichBedMatrix.length > 0
+      ? defaultGreenwichBedSelection(greenwichBedMatrix)
+      : null
+  const paintDefaults =
+    greenwichPaintMatrix && greenwichPaintMatrix.length > 0
+      ? defaultGreenwichPaintSelection(greenwichPaintMatrix)
+      : null
+  const bedMatrixMedia =
+    bedDefaults && greenwichBedMatrix
+      ? resolveGreenwichBedMedia(
+          greenwichBedMatrix,
+          bedDefaults.headboard,
+          bedDefaults.frameMaterial,
+          bedDefaults.fabric
+        )
+      : null
+  const paintMatrixMedia =
+    paintDefaults && greenwichPaintMatrix
+      ? resolveGreenwichPaintMedia(
+          greenwichPaintMatrix,
+          paintDefaults.frameMaterial,
+          paintDefaults.paintFinish
+        )
+      : null
+
+  const executionPdpMedia = (() => {
+    if (bedMatrixMedia) return bedMatrixMedia
+    if (paintMatrixMedia) return paintMatrixMedia
+    if (!hasPdpExecutionControls(executionSelectors)) return null
+    const headboardVariants = executionSelectors.headboard
+    const upholsteryVariants = executionSelectors.upholstery
+    const woodVariants = executionSelectors.wood
+    const finishVariants = executionSelectors.finish
+    const separateFabricRows = executionSelectors.separateFabricRows
+    const activeSeparateFabric = separateFabricRows?.[0]
+    const activeHeadboard = headboardVariants?.[0]
+    const activeUpholstery = upholsteryVariants?.[0]
+    const activeWood = woodVariants?.[0]
+    const activeFinish = finishVariants?.[0]
+    const provencePaintWood = executionSelectors.provencePaintWood === true
+    const mainSrc = provencePaintWood
+      ? (activeFinish?.mainSrc ?? activeWood?.mainSrc ?? thumbSrc)
+      : (activeHeadboard?.mainSrc ??
+        activeSeparateFabric?.mainSrc ??
+        activeUpholstery?.mainSrc ??
+        activeWood?.mainSrc ??
+        activeFinish?.mainSrc ??
+        thumbSrc)
+    const extraSrcs =
+      activeHeadboard != null
+        ? activeHeadboard.extraSrcs
+        : provencePaintWood && activeFinish != null
+          ? activeFinish.extraSrcs
+          : activeSeparateFabric != null
+            ? activeSeparateFabric.extraSrcs
+            : activeUpholstery != null
+            ? activeUpholstery.extraSrcs
+            : activeWood != null
+              ? activeWood.extraSrcs
+              : activeFinish != null
+                ? activeFinish.extraSrcs
+                : mergeUniqueExtraUrls(thumbSrc, [
+                    collectExtraProductImageUrls(product, thumbSrc),
+                  ])
+    return { mainSrc, extraSrcs }
+  })()
+
+  const useExecutionPdp =
+    isGreenwichBed || hasPdpExecutionControls(executionSelectors)
   const price = getPrice(product)
+  const requestQuotePrice = isRequestQuoteProduct(product)
+    ? formatRequestQuotePriceLabel(product)
+    : null
   const productType = (product.product_classification as Record<string, string> | undefined)?.product_type
   const badgeLabel = productType ? BADGE_LABELS[productType] : undefined
 
@@ -119,14 +226,35 @@ export default async function ProductPage({ params }: { params: { id: string } }
     }
   }
 
-  const mainImage = pdpHeroThumbnail(product)
+  const oliverBuyerGallery =
+    isOliver && !useExecutionPdp && !bedMatrixMedia && !paintMatrixMedia
+      ? buildPdpBuyerFacingGallery(product)
+      : null
+
+  const mainImage =
+    (oliverBuyerGallery?.mainSrc ??
+      executionPdpMedia?.mainSrc ??
+      bedMatrixMedia?.mainSrc ??
+      paintMatrixMedia?.mainSrc) ||
+    pdpHeroThumbnail(product)
   const mainNorm = mainImage ?? ""
-  const pdpExtraSrcs = collectDisplayGroupExtraImageUrls(
-    [product, ...displayGroupMembers],
-    mainNorm
+  const heroObjectPosition = getPdpHeroObjectPosition(product)
+  const pdpExtraSrcs = oliverBuyerGallery
+    ? oliverBuyerGallery.extraSrcs
+    : executionPdpMedia
+      ? executionPdpMedia.extraSrcs
+      : bedMatrixMedia
+        ? bedMatrixMedia.extraSrcs
+        : paintMatrixMedia
+          ? paintMatrixMedia.extraSrcs
+          : collectDisplayGroupExtraImageUrls([product, ...displayGroupMembers], mainNorm)
+
+  const { mainSrc: pdpMainSrc, extraSrcs: pdpResolvedExtras } = resolvePdpMediaBundle(
+    mainNorm,
+    filterProvenceSceneOnlyPdpExtras(product, mainNorm, pdpExtraSrcs)
   )
 
-  const titleStr = String(product.title ?? "Товар")
+  const titleStr = getBuyerFacingProductTitle(product)
   const canonicalName = getCanonicalName(product)
   const showCanonicalLine =
     canonicalName != null &&
@@ -149,17 +277,47 @@ export default async function ProductPage({ params }: { params: { id: string } }
       />
       <div className="product-detail">
         <div className="product-detail-media-col">
-          {isOliver ? (
+          {isGreenwichBed ? (
+            <GreenwichBedPdpMediaSwitcher
+              mainSrc={pdpMainSrc}
+              extraSrcs={pdpResolvedExtras}
+              headboardVariants={executionSelectors.headboard}
+              upholsteryVariants={executionSelectors.upholstery}
+              woodVariants={executionSelectors.wood}
+              greenwichBedMatrix={greenwichBedMatrix}
+              title={titleStr}
+              heroObjectPosition={heroObjectPosition}
+            />
+          ) : useExecutionPdp ? (
+            <ProductPdpExecutionMediaSwitcher
+              mainSrc={pdpMainSrc}
+              extraSrcs={pdpResolvedExtras}
+              headboardVariants={executionSelectors.headboard}
+              upholsteryVariants={executionSelectors.upholstery}
+              woodVariants={executionSelectors.wood}
+              finishVariants={executionSelectors.finish}
+              finishLabel={
+                executionSelectors.finishLabel ??
+                finishLabelForProduct(product)
+              }
+              greenwichPaintMatrix={greenwichPaintMatrix}
+              title={titleStr}
+              oliverMode={isOliver}
+              separateFabricRows={executionSelectors.separateFabricRows}
+              heroObjectPosition={heroObjectPosition}
+            />
+          ) : isOliver ? (
             <OliverPdpMediaSwitcher
-              mainSrc={mainNorm}
-              extraSrcs={pdpExtraSrcs}
+              mainSrc={pdpMainSrc}
+              extraSrcs={pdpResolvedExtras}
               title={titleStr}
             />
           ) : (
             <ProductPdpMediaSwitcher
-              mainSrc={mainNorm}
-              extraSrcs={pdpExtraSrcs}
+              mainSrc={pdpMainSrc}
+              extraSrcs={pdpResolvedExtras}
               alt={titleStr}
+              heroObjectPosition={heroObjectPosition}
             />
           )}
         </div>
@@ -184,7 +342,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
                   <span className="pdp-canonical-name">{canonicalName}</span>
                 )}
                 {article && (
-                  <span className="pdp-article">Арт. {article}</span>
+                  <span className="pdp-article">{pdpCopy.articleLabel} {article}</span>
                 )}
                 {dim && (
                   <span className="pdp-dimensions">{formatDimensionsLabeled(dim)}</span>
@@ -192,32 +350,80 @@ export default async function ProductPage({ params }: { params: { id: string } }
               </>
             )
           })()}
-          {price != null && <p className="price product-detail-price">{formatRub(price)}</p>}
-          <ProductCta product={product} />
-          {displayGroupMembers.length > 0 && (
-            <section className="pdp-related-sizes" aria-labelledby="pdp-sizes-heading">
-              <h2 id="pdp-sizes-heading" className="pdp-related-sizes-title">
-                Другие размеры
-              </h2>
-              <ul className="pdp-related-sizes-list">
-                {displayGroupMembers.map((m) => {
-                  const mid = m.id as string
-                  const mt = String(m.title ?? "Вариант")
-                  const mp = getPrice(m)
-                  return (
-                    <li key={mid}>
-                      <Link href={`/product/${mid}`} className="pdp-related-sizes-link">
-                        <span>{mt}</span>
-                        {mp != null && (
-                          <span className="pdp-related-sizes-price">{formatRub(mp)}</span>
-                        )}
-                      </Link>
-                    </li>
-                  )
-                })}
-              </ul>
-            </section>
+          {requestQuotePrice != null ? (
+            <p className="price product-detail-price">{requestQuotePrice}</p>
+          ) : price != null ? (
+            <p className="price product-detail-price">{formatRub(price)}</p>
+          ) : isRequestQuoteProduct(product) ? (
+            <p className="price product-detail-price">{labels.requestQuotePrice}</p>
+          ) : null}
+          {product.description != null && String(product.description).trim().length > 0 && (
+            <p className="pdp-description">{String(product.description)}</p>
           )}
+          {displayGroupMembers.length > 0 &&
+            (() => {
+              const currentSort =
+                (meta?.display_group_sort as number | undefined) ?? 99
+              const sizeChips = [
+                {
+                  id: product.id as string,
+                  label: titleStr,
+                  priceLabel:
+                    requestQuotePrice ?? (price != null ? formatRub(price) : null),
+                  sort: currentSort,
+                  isCurrent: true,
+                },
+                ...displayGroupMembers.map((m) => {
+                  const mp = getPrice(m)
+                  const mMeta = m.metadata as Record<string, unknown> | undefined
+                  return {
+                    id: m.id as string,
+                    label: String(m.title ?? "Вариант"),
+                    priceLabel: mp != null ? formatRub(mp) : null,
+                    sort: (mMeta?.display_group_sort as number | undefined) ?? 99,
+                    isCurrent: false,
+                  }
+                }),
+              ].sort((a, b) => a.sort - b.sort)
+              return (
+                <div className="pdp-size-selector" role="group" aria-label={pdpCopy.sizeSelectorLabel}>
+                  <span className="pdp-size-selector-label">{pdpCopy.sizeSelectorLabel}</span>
+                  <div className="pdp-size-chip-row">
+                    {sizeChips.map((chip) =>
+                      chip.isCurrent ? (
+                        <span
+                          key={chip.id}
+                          className="pdp-size-chip is-active"
+                          aria-current="true"
+                        >
+                          <span className="pdp-size-chip-label">{chip.label}</span>
+                          {chip.priceLabel != null && (
+                            <span className="pdp-size-chip-price">{chip.priceLabel}</span>
+                          )}
+                        </span>
+                      ) : (
+                        <Link
+                          key={chip.id}
+                          href={`/product/${chip.id}`}
+                          className="pdp-size-chip"
+                        >
+                          <span className="pdp-size-chip-label">{chip.label}</span>
+                          {chip.priceLabel != null && (
+                            <span className="pdp-size-chip-price">{chip.priceLabel}</span>
+                          )}
+                        </Link>
+                      )
+                    )}
+                  </div>
+                </div>
+              )
+            })()}
+          <ProductCta product={product} />
+          {/* Portal target for execution swatches (Дерево/Обивка/Цвет) — rendered
+              below the CTA buttons regardless of product family. Always mounted
+              (even when this product has no swatches) so the media gallery core
+              never renders into a missing node; CSS collapses it when empty. */}
+          <div id="pdp-color-options-slot" className="pdp-color-options-slot" />
         </div>
       </div>
     </div>

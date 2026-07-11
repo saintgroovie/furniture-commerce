@@ -1,4 +1,4 @@
-import { getBaseUrl } from "./base"
+import { getBaseUrl, medusaFetch } from "./base"
 
 export async function createLead(body: {
   source?: string
@@ -9,7 +9,7 @@ export async function createLead(body: {
   payload?: Record<string, unknown> | null
 }) {
   const base = getBaseUrl()
-  const res = await fetch(`${base}/store/leads`, {
+  const res = await medusaFetch(`${base}/store/leads`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
