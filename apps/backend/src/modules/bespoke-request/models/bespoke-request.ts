@@ -32,6 +32,4 @@ export const BespokeRequest = model.define("bespoke_request", {
     .default("new"),
   internal_notes: model.text().nullable(),
   quoted_at: model.dateTime().nullable(),
-  created_at: model.dateTime().default(() => new Date()),
-  updated_at: model.dateTime().default(() => new Date()), // Поддерживается сервисным слоем / update flow; для кастомной модели auto-update в Medusa не гарантируется.
 })
