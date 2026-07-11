@@ -116,6 +116,14 @@ export function filterObviousGarbageImageUrl(s: string): string | null {
   const lower = t.toLowerCase()
   if (lower === "undefined" || lower === "null" || lower === "[object object]") return null
   if (/^\s*(javascript|vbscript|data:text\/html):/i.test(t)) return null
+  const base = (t.split("/").pop() ?? t).toLowerCase()
+  if (
+    base === "pv-14-1_legacy_main.png" ||
+    base === "pv-14-1_main.jpg" ||
+    /^screenshot_101_.*\.png$/i.test(base)
+  ) {
+    return null
+  }
   const ok =
     t.startsWith("http://") ||
     t.startsWith("https://") ||

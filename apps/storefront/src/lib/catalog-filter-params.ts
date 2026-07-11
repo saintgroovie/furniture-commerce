@@ -1,4 +1,5 @@
 import {
+  isCatalogProductClassification,
   normalizeCollectionFilterKey,
   type CatalogFilterState,
 } from "./catalog-filters"
@@ -30,13 +31,18 @@ function parsePositiveInt(value: string | undefined): number | undefined {
   return n
 }
 
+/**
+ * Canonical classification query key is `type` (ProductClassification).
+ * Legacy alias: `product_type` (redirected to `type` by catalog page).
+ * Unknown values are ignored (no active filter) — never treated as “show all”
+ * while pretending a known classification is active.
+ */
 export function parseCatalogFilterState(
   searchParams: CatalogSearchParams
 ): CatalogFilterState {
   const typeRaw =
     firstString(searchParams.type) ?? firstString(searchParams.product_type)
-  const type =
-    typeRaw === "STANDARD" || typeRaw === "CONFIGURABLE" ? typeRaw : undefined
+  const type = isCatalogProductClassification(typeRaw) ? typeRaw : undefined
 
   const sortRaw = firstString(searchParams.sort)
   const sort: CatalogFilterState["sort"] =

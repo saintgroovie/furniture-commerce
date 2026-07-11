@@ -129,9 +129,17 @@ export function hasProvencePaintWoodDualFinishEvidence(
     return hasG03 && (hasI3 || hasI4) && paint.length >= 2 && wood.length >= 1
   }
 
-  if (!hasG02) return false
-  if (hasG01 && hasG02 && hasI1 && hasI2) return true
-  if (hasG02 && hasI2) return true
+  if (profile === "standard") {
+    if (!hasG02) return false
+    if (paint.length === 0 || wood.length === 0) return false
+    if (hasG01 && hasG02 && hasI1 && hasI2) return true
+    if (hasG02 && hasI2) return true
+    if (hasG01 && hasG02 && hasI1 && !hasI2) {
+      const hasWoodMain = names.some((b) => /[-_]main(?:\.|[-_]|$)/i.test(b))
+      if (hasI3 || hasI4 || hasWoodMain) return true
+    }
+    return false
+  }
 
   return false
 }

@@ -2,8 +2,10 @@
 
 import type { MouseEvent } from "react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useVerifiedStripExtras } from "@/components/use-verified-strip-extras"
-import { buildGalleryStripUrls } from "@/lib/product-images"
+import { ProductThumbCarousel } from "@/components/product-thumb-carousel"
+import { PdpImageLightbox } from "@/components/pdp-image-lightbox"
+import { buildOliverPdpThumbStripUrls } from "@/lib/oliver-pdp-thumb-strip"
+import { states } from "@/lib/woodright-copy"
 
 type Props = {
   mainSrc: string
@@ -13,8 +15,8 @@ type Props = {
 
 function OliverPdpHeroAbsent({ className }: { className: string }) {
   return (
-    <div className={`${className} oliver-media-absent`} aria-label="Нет изображения">
-      <span className="oliver-media-absent-label">Нет фото</span>
+    <div className={`${className} oliver-media-absent`} aria-label="Фото скоро появится">
+      <span className="oliver-media-absent-label">{states.noPhoto}</span>
     </div>
   )
 }
@@ -28,9 +30,10 @@ export function OliverPdpMediaSwitcher({ mainSrc, extraSrcs, title }: Props) {
   const [failedExtras, setFailedExtras] = useState<Set<string>>(() => new Set())
   const [pendingPreloadUrl, setPendingPreloadUrl] = useState<string | null>(null)
   const pendingRef = useRef<string | null>(null)
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
 
   const galleryStripCandidates = useMemo(
-    () => buildGalleryStripUrls(mainTrimmed, extraSrcs),
+    () => buildOliverPdpThumbStripUrls(mainTrimmed, extraSrcs),
     [mainTrimmed, extraSrcs]
   )
 
@@ -48,7 +51,18 @@ export function OliverPdpMediaSwitcher({ mainSrc, extraSrcs, title }: Props) {
     setPendingPreloadUrl(null)
   }, [mainTrimmed, stripKey])
 
-  const visibleStrip = useVerifiedStripExtras(galleryStripCandidates, failedExtras)
+  const rawVisibleStrip = useMemo(
+    () => galleryStripCandidates.filter((u) => !failedExtras.has(u)),
+    [galleryStripCandidates, failedExtras]
+  )
+  // Defense in depth: the main photo is a legitimate candidate in Oliver's strip
+  // (main + extras) — never let a stale failedExtras entry hide it, since its
+  // validity is already proven by the hero render.
+  const visibleStrip = useMemo(() => {
+    if (!galleryStripCandidates.includes(mainTrimmed)) return rawVisibleStrip
+    if (rawVisibleStrip.includes(mainTrimmed)) return rawVisibleStrip
+    return [mainTrimmed, ...rawVisibleStrip.filter((u) => u !== mainTrimmed)]
+  }, [rawVisibleStrip, galleryStripCandidates, mainTrimmed])
 
   const showThumbRow = visibleStrip.length > 0
 
@@ -66,10 +80,25 @@ export function OliverPdpMediaSwitcher({ mainSrc, extraSrcs, title }: Props) {
     (url: string, isMain: boolean) => (e: MouseEvent<HTMLButtonElement>) => {
       e.preventDefault()
       e.stopPropagation()
-      if (isMain && activeGalleryUrl === null && displayHeroSrc === mainTrimmed) {
+      if (isMain) {
+        // The main photo is already known-good — swap to it directly instead of
+        // routing through the fallible preload-then-swap path. Without this, a
+        // transient reload hiccup on the way back to main would permanently hide
+        // the main thumbnail (Oliver's strip includes main).
+        if (activeGalleryUrl === null && displayHeroSrc === mainTrimmed) return
+        setDisplayHeroSrc(mainTrimmed)
+        setActiveGalleryUrl(null)
+        setHeroFailed(false)
+        pendingRef.current = null
+        setPendingPreloadUrl(null)
         return
       }
-      if (!isMain && activeGalleryUrl === url) return
+      if (activeGalleryUrl === url) {
+        setDisplayHeroSrc(mainTrimmed)
+        setActiveGalleryUrl(null)
+        setHeroFailed(false)
+        return
+      }
       if (pendingRef.current === url) return
       pendingRef.current = url
       setPendingPreloadUrl(url)
@@ -89,13 +118,22 @@ export function OliverPdpMediaSwitcher({ mainSrc, extraSrcs, title }: Props) {
 
   const onPreloadError = useCallback(() => {
     const u = pendingRef.current
-    if (!u) return
-    setFailedExtras((prev) => new Set(prev).add(u))
     pendingRef.current = null
     setPendingPreloadUrl(null)
-  }, [])
+    if (!u) return
+    if (u === mainTrimmed) return
+    setFailedExtras((prev) => new Set(prev).add(u))
+  }, [mainTrimmed])
 
   const heroEmpty = !displayHeroSrc || heroFailed
+
+  const lightboxImages = visibleStrip.length > 0 ? visibleStrip : [displayHeroSrc]
+
+  const openLightbox = useCallback(() => {
+    if (heroEmpty) return
+    const idx = lightboxImages.indexOf(displayHeroSrc)
+    setLightboxIndex(idx >= 0 ? idx : 0)
+  }, [heroEmpty, lightboxImages, displayHeroSrc])
 
   return (
     <div className="product-pdp-media-switcher oliver-pdp-media-switcher">
@@ -106,12 +144,22 @@ export function OliverPdpMediaSwitcher({ mainSrc, extraSrcs, title }: Props) {
           <img
             src={displayHeroSrc}
             alt={title}
-            className="product-detail-img"
+            className="product-detail-img is-zoomable"
             loading="eager"
             onError={onHeroError}
+            onClick={openLightbox}
           />
         )}
       </div>
+      {lightboxIndex !== null && (
+        <PdpImageLightbox
+          images={lightboxImages}
+          activeIndex={lightboxIndex}
+          alt={title}
+          onClose={() => setLightboxIndex(null)}
+          onNavigate={setLightboxIndex}
+        />
+      )}
       {pendingPreloadUrl && (
         <img
           key={pendingPreloadUrl}
@@ -124,41 +172,22 @@ export function OliverPdpMediaSwitcher({ mainSrc, extraSrcs, title }: Props) {
         />
       )}
       {showThumbRow && (
-        <div className="product-pdp-media-thumbs" role="toolbar" aria-label="Фото товара">
-          {visibleStrip.map((url) => {
-            const isMain = url === mainTrimmed
-            const isActive = isMain
-              ? activeGalleryUrl === null && displayHeroSrc === mainTrimmed
-              : activeGalleryUrl === url
-            const isBusy = pendingPreloadUrl === url
-            return (
-              <button
-                key={url}
-                type="button"
-                className={`product-pdp-media-thumb${isActive ? " is-active" : ""}`}
-                aria-pressed={isActive}
-                aria-busy={isBusy}
-                disabled={isBusy}
-                onClick={onThumbPick(url, isMain)}
-                title={isMain ? "Основное фото" : "Показать фото"}
-              >
-                <img
-                  src={url}
-                  alt=""
-                  loading="lazy"
-                  className="product-pdp-media-thumb-img"
-                  onError={() =>
-                    setFailedExtras((prev) => {
-                      const next = new Set(prev)
-                      next.add(url)
-                      return next
-                    })
-                  }
-                />
-              </button>
-            )
-          })}
-        </div>
+        <ProductThumbCarousel
+          variantMain={mainTrimmed}
+          visibleStrip={visibleStrip}
+          activeGalleryUrl={activeGalleryUrl}
+          displayHeroSrc={displayHeroSrc}
+          pendingPreloadUrl={pendingPreloadUrl}
+          onThumbPick={onThumbPick}
+          onThumbError={(url) => {
+            if (url === mainTrimmed) return
+            setFailedExtras((prev) => {
+              const next = new Set(prev)
+              next.add(url)
+              return next
+            })
+          }}
+        />
       )}
     </div>
   )

@@ -2,9 +2,6 @@ import { formatRub, getPrice } from "@/lib/format"
 
 export const REQUEST_QUOTE_LAUNCH_MODE = "request_quote" as const
 
-export const REQUEST_QUOTE_MANAGER_NOTE =
-  "Финальную стоимость подтвердит менеджер"
-
 export function isRequestQuoteProduct(product: Record<string, unknown>): boolean {
   const meta = (product.metadata as Record<string, unknown> | undefined) ?? {}
   return meta.launch_mode === REQUEST_QUOTE_LAUNCH_MODE

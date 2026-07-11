@@ -1,8 +1,12 @@
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Inter } from "next/font/google"
 import Link from "next/link"
 import { getSiteUrl } from "@/lib/api/base"
+import { HeaderCartLink } from "@/components/header-cart-link"
+import { HeaderLogo } from "@/components/header-logo"
+import { MobileNav } from "@/components/mobile-nav"
 import { NavDropdown } from "@/components/nav-dropdown"
+import { a11yCopy, footer as footerCopy, nav as navCopy, seo } from "@/lib/woodright-copy"
 import "./globals.css"
 
 const inter = Inter({
@@ -14,11 +18,25 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: { default: "Woodright", template: "%s | Woodright" },
-  description: "Мебель на заказ. Каталог, готовые комплекты по комнатам, заявки на расчёт.",
+  description: seo.home.description,
   openGraph: {
     siteName: "Woodright",
     locale: "ru_RU",
   },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
+}
+
+export const viewport: Viewport = {
+  themeColor: "#faf8f5",
 }
 
 const organizationJsonLd = {
@@ -40,23 +58,26 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
+        <a href="#main-content" className="skip-link">
+          {a11yCopy.skipToContent}
+        </a>
         <header className="site-header">
           {/* Top bar */}
           <div className="header-top">
             <div className="container header-top-inner">
-              <span className="header-top-left">Шоурум: Москва</span>
-              <Link href="/" className="logo">WOODRIGHT</Link>
+              <span className="header-top-left">{navCopy.showroom}</span>
+              <HeaderLogo />
               <div className="header-top-right">
                 <NavDropdown
                   href="/designers/terms"
-                  label="Дизайнерам"
+                  label={navCopy.designers}
                   items={[
                     { label: "Условия сотрудничества", href: "/designers/terms" },
                     { label: "Материалы", href: "/designers/materials" },
                     { label: "Оставить заявку", href: "/designers/request" },
                   ]}
                 />
-                <Link href="/contacts">Контакты</Link>
+                <Link href="/contacts">{navCopy.contacts}</Link>
               </div>
             </div>
           </div>
@@ -67,7 +88,7 @@ export default function RootLayout({
               <nav className="header-nav" aria-label="Основная навигация">
                 <NavDropdown
                   href="/catalog"
-                  label="Каталог"
+                  label={navCopy.catalog}
                   items={[
                     { label: "Все", href: "/catalog" },
                     { label: "Готовые", href: "/catalog?product_type=STANDARD" },
@@ -75,11 +96,10 @@ export default function RootLayout({
                   ]}
                 />
 
-                <Link href="/rooms" className="header-nav-link">Комнаты</Link>
-
                 <NavDropdown
                   href="/kids"
-                  label="Детская"
+                  label={navCopy.kids}
+                  className="header-nav-kids"
                   items={[
                     { label: "Каталог", href: "/kids/catalog" },
                     { label: "Комнаты", href: "/kids/rooms" },
@@ -87,19 +107,21 @@ export default function RootLayout({
                   ]}
                 />
 
+                <Link href="/rooms" className="header-nav-link">{navCopy.rooms}</Link>
+
                 <NavDropdown
                   href="/bespoke"
-                  label="По проекту"
+                  label={navCopy.bespoke}
                   items={[
-                    { label: "Как это работает", href: "/bespoke" },
-                    { label: "Направления", href: "/bespoke/catalog" },
                     { label: "Оставить заявку", href: "/bespoke/request" },
+                    { label: "Направления", href: "/bespoke/catalog" },
+                    { label: "Как это работает", href: "/bespoke" },
                   ]}
                 />
 
                 <NavDropdown
                   href="/about"
-                  label="О бренде"
+                  label={navCopy.about}
                   items={[
                     { label: "О компании", href: "/about" },
                     { label: "Производство", href: "/about/production" },
@@ -107,29 +129,39 @@ export default function RootLayout({
                   ]}
                 />
               </nav>
-              <Link href="/cart" className="header-cart-link" aria-label="Корзина">Корзина</Link>
+              <HeaderCartLink />
             </div>
           </div>
 
-          {/* Mobile nav toggle (checkbox hack, no JS) */}
-          <input type="checkbox" id="mobile-nav-toggle" className="mobile-nav-checkbox" aria-hidden="true" />
-          <label htmlFor="mobile-nav-toggle" className="mobile-nav-btn" aria-label="Меню">
-            <span className="mobile-nav-icon" />
-          </label>
-          <div className="mobile-nav-overlay">
-            <nav className="mobile-nav" aria-label="Мобильная навигация">
-              <Link href="/catalog">Каталог</Link>
-              <Link href="/rooms">Комнаты</Link>
-              <Link href="/kids">Детская</Link>
-              <Link href="/bespoke">По проекту</Link>
-              <Link href="/cart">Корзина</Link>
-              <Link href="/contacts">Контакты</Link>
-            </nav>
-          </div>
+          <MobileNav />
         </header>
-        <main className="container page-section">{children}</main>
+        <main id="main-content" className="container page-section" tabIndex={-1}>
+          {children}
+        </main>
         <footer className="site-footer">
-          <div className="container">© Woodright</div>
+          <div className="container footer-inner">
+            <div className="footer-columns">
+              <div className="footer-brand">
+                <Link href="/" className="footer-brand-logo">Woodright</Link>
+                <p className="footer-brand-text">{footerCopy.brandText}</p>
+              </div>
+              {footerCopy.columns.map((column) => (
+                <div className="footer-column" key={column.title}>
+                  <h3 className="footer-column-title">{column.title}</h3>
+                  <ul className="footer-column-links">
+                    {column.links.map((link) => (
+                      <li key={link.href}>
+                        <Link href={link.href}>{link.label}</Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+            <div className="footer-bottom">
+              <span>{footerCopy.copyright(new Date().getFullYear())}</span>
+            </div>
+          </div>
         </footer>
       </body>
     </html>

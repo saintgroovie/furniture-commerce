@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { getSiteUrl } from "@/lib/api/base"
 import { getRoomSetBySlug, NOT_FOUND } from "@/lib/api/room-sets"
 import { RoomSetCta } from "@/components/room-set-cta"
+import { roomSetDetail } from "@/lib/woodright-copy"
 
 function truncate(str: string, max: number): string {
   if (str.length <= max) return str
@@ -40,14 +41,14 @@ export default async function RoomSetPage({ params }: { params: { slug: string }
     if (e instanceof Error && e.message === NOT_FOUND) {
       return (
         <div data-state="not_found">
-          <p>Комплект не найден.</p>
+          <p>{roomSetDetail.notFound}</p>
           <p><Link href="/rooms">К списку комнат</Link></p>
         </div>
       )
     }
     return (
       <div data-state="error">
-        <p>Не удалось загрузить комплект.</p>
+        <p>{roomSetDetail.loadError}</p>
         <p><Link href="/rooms">К списку комнат</Link></p>
       </div>
     )
@@ -56,7 +57,7 @@ export default async function RoomSetPage({ params }: { params: { slug: string }
   if (!roomSet) {
     return (
       <div data-state="not_found">
-        <p>Комплект не найден.</p>
+        <p>{roomSetDetail.notFound}</p>
         <p><Link href="/rooms">К списку комнат</Link></p>
       </div>
     )
@@ -66,11 +67,14 @@ export default async function RoomSetPage({ params }: { params: { slug: string }
     <div data-state="success">
       <h1>{(roomSet.title as string) ?? "Комната"}</h1>
       <p>{String(roomSet.description ?? "")}</p>
-      <p>Цена от: {roomSet.price_from != null ? String(roomSet.price_from) : "—"}</p>
+      <p className="price">
+        {roomSetDetail.priceFromLabel}: {roomSet.price_from != null ? String(roomSet.price_from) : roomSetDetail.priceUnknown}
+      </p>
+      <h2 style={{ marginTop: "1.5rem" }}>{roomSetDetail.compositionTitle}</h2>
       <ul>
         {items.map((item: Record<string, unknown>, i: number) => (
           <li key={i}>
-            {(item.product as Record<string, unknown>)?.title ?? "—"} × {Number((item as { quantity?: number }).quantity ?? 1)}
+            {String((item.product as Record<string, unknown>)?.title ?? "—")} × {Number((item as { quantity?: number }).quantity ?? 1)}
           </li>
         ))}
       </ul>

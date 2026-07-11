@@ -2,9 +2,12 @@ import type { DisplayEntry } from "./display-group"
 import { getPrice } from "./format"
 import { getCollectionLabel } from "./product-metadata"
 
+export type CatalogProductClassification = "STANDARD" | "CONFIGURABLE" | "BESPOKE"
+
 export type CatalogFilterState = {
   q?: string
-  type?: "STANDARD" | "CONFIGURABLE"
+  /** ProductClassification filter (`type` query param). Not product category. */
+  type?: CatalogProductClassification
   category: string[]
   collection: string[]
   priceMin?: number
@@ -15,6 +18,21 @@ export type CatalogFilterState = {
 export const PRODUCT_TYPE_FILTER_LABELS: Record<string, string> = {
   STANDARD: "Готовые",
   CONFIGURABLE: "С выбором исполнения",
+  BESPOKE: "По проекту",
+}
+
+export const CATALOG_CLASSIFICATION_VALUES = [
+  "STANDARD",
+  "CONFIGURABLE",
+  "BESPOKE",
+] as const
+
+export function isCatalogProductClassification(
+  value: string | undefined | null
+): value is CatalogProductClassification {
+  return (
+    value === "STANDARD" || value === "CONFIGURABLE" || value === "BESPOKE"
+  )
 }
 
 export const CATEGORY_FILTER_LABELS: Record<string, string> = {
@@ -164,13 +182,20 @@ function matchesCollection(product: Record<string, unknown>, collections: string
   return key != null && collections.includes(key)
 }
 
+/** getPrice() may return NaN on malformed backend price fields — treat any
+    non-finite value as "no price" so it can't slip through range checks. */
+function finiteProductPrice(product: Record<string, unknown>): number | null {
+  const price = getPrice(product)
+  return price != null && Number.isFinite(price) ? price : null
+}
+
 function matchesPrice(
   product: Record<string, unknown>,
   priceMin?: number,
   priceMax?: number
 ): boolean {
   if (priceMin == null && priceMax == null) return true
-  const price = getPrice(product)
+  const price = finiteProductPrice(product)
   if (price == null) return false
   if (priceMin != null && price < priceMin) return false
   if (priceMax != null && price > priceMax) return false
@@ -210,7 +235,7 @@ function mapToFacetOptions(
   labelFn: (key: string) => string,
   currentCounts?: Map<string, number>
 ): CatalogFacetOption[] {
-  return [...counts.entries()]
+  return Array.from(counts.entries())
     .map(([value, count]) => ({
       value,
       label: labelFn(value),
@@ -244,17 +269,28 @@ export function buildCatalogFacets(
   for (const p of products) {
     const pt = (p.product_classification as { product_type?: string } | undefined)
       ?.product_type
-    if (pt === "STANDARD" || pt === "CONFIGURABLE") {
+    if (pt === "STANDARD" || pt === "CONFIGURABLE" || pt === "BESPOKE") {
       typeCounts.set(pt, (typeCounts.get(pt) ?? 0) + 1)
     }
   }
   for (const p of pool) {
     const pt = (p.product_classification as { product_type?: string } | undefined)
       ?.product_type
-    if (pt === "STANDARD" || pt === "CONFIGURABLE") {
+    if (pt === "STANDARD" || pt === "CONFIGURABLE" || pt === "BESPOKE") {
       currentTypeCounts.set(pt, (currentTypeCounts.get(pt) ?? 0) + 1)
     }
   }
+
+  // Segmented tabs stay STANDARD/CONFIGURABLE only; BESPOKE is the separate CTA.
+  // Still count BESPOKE for fidelity when that filter is active.
+  const tabTypes = ["STANDARD", "CONFIGURABLE"] as const
+  const types = tabTypes
+    .filter((value) => typeCounts.has(value) || state.type === value)
+    .map((value) => ({
+      value,
+      label: PRODUCT_TYPE_FILTER_LABELS[value] ?? value,
+      count: currentTypeCounts.get(value) ?? 0,
+    }))
 
   const categoryCounts = countByKey(products, getProductCategoryKey)
   const currentCategoryCounts = countByKey(pool, getProductCategoryKey)
@@ -262,7 +298,7 @@ export function buildCatalogFacets(
   const currentCollectionCounts = countByKey(pool, getCollectionFilterKey)
 
   const prices = pool
-    .map((p) => getPrice(p))
+    .map((p) => finiteProductPrice(p))
     .filter((v): v is number => v != null)
   const priceRange =
     prices.length > 0
@@ -270,11 +306,7 @@ export function buildCatalogFacets(
       : null
 
   return {
-    types: [...typeCounts.entries()].map(([value, count]) => ({
-      value,
-      label: PRODUCT_TYPE_FILTER_LABELS[value] ?? value,
-      count: currentTypeCounts.get(value) ?? 0,
-    })),
+    types,
     categories: mapToFacetOptions(categoryCounts, getCategoryFilterLabel, currentCategoryCounts),
     collections: mapToFacetOptions(collectionCounts, getCollectionFilterLabel, currentCollectionCounts),
     priceRange,

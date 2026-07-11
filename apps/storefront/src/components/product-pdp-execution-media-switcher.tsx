@@ -13,6 +13,7 @@ type Props = {
   woodVariants?: CardColorVariant[]
   finishVariants?: CardColorVariant[]
   finishLabel?: "Цвет" | "Отделка" | "Материал" | "Конструкция"
+  separateFabricRows?: CardColorVariant[]
   greenwichBedMatrix?: GreenwichBedMatrixEntry[]
   greenwichPaintMatrix?: GreenwichPaintMatrixEntry[]
   title: string
@@ -29,6 +30,7 @@ export function ProductPdpExecutionMediaSwitcher({
   woodVariants,
   finishVariants,
   finishLabel,
+  separateFabricRows,
   greenwichBedMatrix,
   greenwichPaintMatrix,
   title,
@@ -44,6 +46,7 @@ export function ProductPdpExecutionMediaSwitcher({
       woodVariants={woodVariants}
       finishVariants={finishVariants}
       finishLabel={finishLabel}
+      separateFabricRows={separateFabricRows}
       greenwichBedMatrix={greenwichBedMatrix}
       greenwichPaintMatrix={greenwichPaintMatrix}
       href="#"

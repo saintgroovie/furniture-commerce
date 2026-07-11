@@ -9,9 +9,12 @@ function basenameKey(url: string): string {
 }
 
 function normalizeUrlKey(url: string): string {
-  const s = url.trim()
-  const m = s.match(/(\/static\/products\/[^\s?#]+)/i)
-  return (m?.[1] ?? s).toLowerCase()
+  const trimmed = url.trim()
+  const idx = trimmed.search(/\/static\/products\//i)
+  if (idx < 0) return trimmed.toLowerCase()
+  const tail = trimmed.slice(idx)
+  const q = tail.search(/[?#]/)
+  return (q >= 0 ? tail.slice(0, q) : tail).toLowerCase()
 }
 
 export function extractOliverColorTokenFromUrl(url: string): string | null {
@@ -97,5 +100,23 @@ export function shouldSuppressOliverFinishWhenFabricCanonical(
   const finishRaw = meta.finish_color_executions ?? meta.paint_finish_executions
   const fabric = Array.isArray(fabricRaw) && fabricRaw.length > 0 ? fabricRaw : null
   const finish = Array.isArray(finishRaw) && finishRaw.length > 0 ? finishRaw : null
-  return Boolean(fabric && fabric.length >= 2 && finish && finish.length >= 2)
+  if (!fabric || fabric.length < 2 || !finish || finish.length === 0) return false
+  if (finish.length >= 2) return true
+  const fabricKeys = new Set(
+    fabric
+      .map((e) =>
+        e && typeof e === "object" && typeof (e as { key?: string }).key === "string"
+          ? (e as { key: string }).key === "lilian"
+            ? "lillian"
+            : (e as { key: string }).key.toLowerCase()
+          : null
+      )
+      .filter(Boolean)
+  )
+  return finish.some((e) => {
+    if (!e || typeof e !== "object") return false
+    const k = String((e as { key?: string }).key ?? "").toLowerCase()
+    const nk = k === "lilian" ? "lillian" : k
+    return fabricKeys.has(nk)
+  })
 }

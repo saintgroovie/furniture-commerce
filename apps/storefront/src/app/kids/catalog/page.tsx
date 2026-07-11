@@ -12,14 +12,14 @@ import {
   buildCatalogFacets,
   sortDisplayEntries,
 } from "@/lib/catalog-filters"
+import { actions, kidsCatalogCopy, seo } from "@/lib/woodright-copy"
 
 export const metadata: Metadata = {
-  title: "Каталог",
-  description:
-    "Мебель для детских комнат Woodright. Товары из готовых детских комплектов.",
+  title: seo.kidsCatalog.title,
+  description: seo.kidsCatalog.description,
   openGraph: {
-    title: "Каталог детской мебели | Woodright",
-    description: "Мебель для детских комнат из готовых комплектов.",
+    title: seo.kidsCatalog.title,
+    description: seo.kidsCatalog.description,
     url: "/kids/catalog",
   },
 }
@@ -41,10 +41,10 @@ export default async function KidsCatalogPage({
   } catch {
     return (
       <div data-state="error">
-        <h1>Мебель для детской</h1>
-        <p className="info-text" style={{ marginTop: "0.5rem" }}>
-          Не удалось загрузить каталог.
-        </p>
+        <div className="catalog-hero">
+          <h1>{kidsCatalogCopy.h1}</h1>
+          <p className="info-text">{kidsCatalogCopy.loadError}</p>
+        </div>
         <div className="nav-links" style={{ marginTop: "1rem" }}>
           <Link href="/kids">В детскую секцию</Link>
         </div>
@@ -55,15 +55,18 @@ export default async function KidsCatalogPage({
   if (scoped.length === 0) {
     return (
       <div data-state="empty">
-        <h1>Мебель для детской</h1>
+        <div className="catalog-hero">
+          <h1>{kidsCatalogCopy.h1}</h1>
+        </div>
         <div className="status-message">
-          <p>Товары пока не добавлены.</p>
+          <p style={{ fontWeight: 500 }}>{kidsCatalogCopy.emptyTitle}</p>
+          <p>{kidsCatalogCopy.emptyBody}</p>
           <div
             className="nav-links nav-links-center"
             style={{ marginTop: "1rem" }}
           >
             <Link href="/kids/rooms">Готовые комнаты</Link>
-            <Link href="/kids">В детскую секцию</Link>
+            <Link href="/bespoke/request">{actions.discussProject}</Link>
           </div>
         </div>
       </div>
@@ -85,22 +88,24 @@ export default async function KidsCatalogPage({
 
   return (
     <div data-state={displayEntries.length === 0 ? "empty" : "success"}>
-      <h1>Мебель для детской</h1>
-      <p className="info-text" style={{ marginTop: "0.5rem" }}>
-        Подборка мебели из наших готовых комплектов для детских комнат.
-      </p>
+      <div className="catalog-hero">
+        <h1>{kidsCatalogCopy.h1}</h1>
+        <p className="info-text">{kidsCatalogCopy.lead}</p>
+      </div>
 
       <CatalogFilterControls
         basePath="/kids/catalog"
         state={filterState}
         facets={facets}
         resultCount={displayEntries.length}
+        showBespokeCta
       >
         {displayEntries.length === 0 ? (
           <div className="status-message catalog-empty-state">
-            <p>Ничего не найдено. Попробуйте сбросить часть фильтров.</p>
+            <p style={{ fontWeight: 500 }}>{kidsCatalogCopy.emptyTitle}</p>
+            <p>{kidsCatalogCopy.emptyBody}</p>
             <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
-              <Link href="/kids/catalog">Показать все</Link>
+              <Link href="/kids/catalog">{actions.resetFilters}</Link>
             </div>
           </div>
         ) : (

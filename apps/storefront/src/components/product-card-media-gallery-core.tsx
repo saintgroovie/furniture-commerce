@@ -3,6 +3,9 @@
 import Link from "next/link"
 import type { MouseEvent, ReactNode } from "react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { createPortal } from "react-dom"
+import { ProductThumbCarousel } from "@/components/product-thumb-carousel"
+import { PdpImageLightbox } from "@/components/pdp-image-lightbox"
 import type { CardColorVariant, CardModelVariant } from "@/lib/card-color-media"
 import {
   defaultGreenwichBedSelection,
@@ -24,6 +27,12 @@ import { buildGalleryStripUrls, buildPdpThumbStripUrls } from "@/lib/product-ima
 import { useVerifiedStripExtras } from "@/components/use-verified-strip-extras"
 import { useSwatchColors } from "@/lib/use-swatch-colors"
 import { fallbackHexForToken } from "@/lib/swatch-fallback-colors"
+import {
+  clearPdpExecutionSelection,
+  publishPdpExecutionSelection,
+  type PdpExecutionSpec,
+} from "@/lib/cart/pdp-selection"
+import { states } from "@/lib/woodright-copy"
 
 type Props = {
   mainSrc: string
@@ -36,6 +45,8 @@ type Props = {
   href: string
   alt: string
   oliverMode?: boolean
+  /** Oliver standalone bed: one labeled row per fabric variant. */
+  separateFabricRows?: CardColorVariant[]
   /** Greenwich bed matrix — scoped hero + gallery per headboard/wood/fabric. */
   greenwichBedMatrix?: GreenwichBedMatrixEntry[]
   /** Greenwich paint matrix — scoped hero + gallery per wood/paint. */
@@ -92,129 +103,8 @@ function resolveCombinedMedia(
 
 function OliverHeroAbsent() {
   return (
-    <div className="card-img oliver-media-absent" aria-label="Нет изображения">
-      <span className="oliver-media-absent-label">Нет фото</span>
-    </div>
-  )
-}
-
-type ThumbCarouselProps = {
-  variantMain: string
-  visibleStrip: string[]
-  activeGalleryUrl: string | null
-  displayHeroSrc: string
-  pendingPreloadUrl: string | null
-  onThumbPick: (url: string, isMain: boolean) => (e: MouseEvent<HTMLButtonElement>) => void
-  onThumbError: (url: string) => void
-}
-
-function ProductCardThumbCarousel({
-  variantMain,
-  visibleStrip,
-  activeGalleryUrl,
-  displayHeroSrc,
-  pendingPreloadUrl,
-  onThumbPick,
-  onThumbError,
-}: ThumbCarouselProps) {
-  const trackRef = useRef<HTMLDivElement>(null)
-  const [canScrollLeft, setCanScrollLeft] = useState(false)
-  const [canScrollRight, setCanScrollRight] = useState(false)
-  const stripKey = visibleStrip.join("\u0000")
-
-  const updateScrollArrows = useCallback(() => {
-    const el = trackRef.current
-    if (!el) return
-    const maxScroll = el.scrollWidth - el.clientWidth
-    setCanScrollLeft(el.scrollLeft > 2)
-    setCanScrollRight(maxScroll > 2 && el.scrollLeft < maxScroll - 2)
-  }, [])
-
-  useEffect(() => {
-    updateScrollArrows()
-    const el = trackRef.current
-    if (!el) return
-    const onScroll = () => updateScrollArrows()
-    el.addEventListener("scroll", onScroll, { passive: true })
-    const ro = new ResizeObserver(updateScrollArrows)
-    ro.observe(el)
-    return () => {
-      el.removeEventListener("scroll", onScroll)
-      ro.disconnect()
-    }
-  }, [stripKey, updateScrollArrows])
-
-  const scrollThumbs = useCallback((direction: -1 | 1) => {
-    trackRef.current?.scrollBy({ left: direction * 132, behavior: "smooth" })
-  }, [])
-
-  return (
-    <div
-      className="product-card-media-thumbs-carousel"
-      onClick={(e) => e.stopPropagation()}
-    >
-      {canScrollLeft && (
-        <button
-          type="button"
-          className="product-card-media-thumbs-arrow product-card-media-thumbs-arrow--prev"
-          aria-label="Прокрутить миниатюры назад"
-          onClick={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            scrollThumbs(-1)
-          }}
-        >
-          ‹
-        </button>
-      )}
-      <div
-        ref={trackRef}
-        className="product-card-media-thumbs-track"
-        role="toolbar"
-        aria-label="Фото товара"
-      >
-        {visibleStrip.map((url) => {
-          const isMain = url === variantMain
-          const isActive = isMain
-            ? activeGalleryUrl === null && displayHeroSrc === variantMain
-            : activeGalleryUrl === url
-          const isBusy = pendingPreloadUrl === url
-          return (
-            <button
-              key={url}
-              type="button"
-              className={`product-card-media-thumb${isActive ? " is-active" : ""}`}
-              aria-pressed={isActive}
-              aria-busy={isBusy}
-              disabled={isBusy}
-              onClick={onThumbPick(url, isMain)}
-              title={isMain ? "Основное фото" : "Показать фото"}
-            >
-              <img
-                src={url}
-                alt=""
-                loading="lazy"
-                className="product-card-media-thumb-img"
-                onError={() => onThumbError(url)}
-              />
-            </button>
-          )
-        })}
-      </div>
-      {canScrollRight && (
-        <button
-          type="button"
-          className="product-card-media-thumbs-arrow product-card-media-thumbs-arrow--next"
-          aria-label="Прокрутить миниатюры вперёд"
-          onClick={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            scrollThumbs(1)
-          }}
-        >
-          ›
-        </button>
-      )}
+    <div className="card-img oliver-media-absent" aria-label="Фото скоро появится">
+      <span className="oliver-media-absent-label">{states.noPhoto}</span>
     </div>
   )
 }
@@ -314,6 +204,7 @@ export function ProductCardMediaGalleryCore({
   finishLabel = "Цвет",
   href,
   alt,
+  separateFabricRows,
   oliverMode = false,
   greenwichBedMatrix,
   greenwichPaintMatrix,
@@ -342,6 +233,22 @@ export function ProductCardMediaGalleryCore({
         : null,
     [greenwichPaintMatrix, isGreenwichPaint]
   )
+
+  const hasSeparateFabricRows = Boolean(
+    separateFabricRows && separateFabricRows.length >= 2
+  )
+
+  const [activeSeparateFabricKey, setActiveSeparateFabricKey] = useState<string | null>(
+    () => separateFabricRows?.[0]?.key ?? null
+  )
+
+  const activeSeparateFabric = useMemo(() => {
+    if (!hasSeparateFabricRows || !separateFabricRows) return null
+    return (
+      separateFabricRows.find((v) => v.key === activeSeparateFabricKey) ??
+      separateFabricRows[0]
+    )
+  }, [activeSeparateFabricKey, separateFabricRows, hasSeparateFabricRows])
 
   const hasHeadboard = Boolean(headboardVariants && headboardVariants.length > 1)
   const hasUpholstery = Boolean(
@@ -378,6 +285,14 @@ export function ProductCardMediaGalleryCore({
   const [failedExtras, setFailedExtras] = useState<Set<string>>(() => new Set())
   const [pendingPreloadUrl, setPendingPreloadUrl] = useState<string | null>(null)
   const pendingRef = useRef<string | null>(null)
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
+  // PDP-only: color/wood/upholstery swatches render below the CTA buttons in
+  // .product-detail-info (not stacked under the hero photo) — the swatch UI
+  // itself never moves in the DOM, it's teleported via portal into a slot
+  // rendered by the PDP page below <ProductCta>. SSR-safe: the slot only
+  // exists once mounted in the browser, so this stays null during the
+  // server-rendered/hydration pass and the portal appears after mount.
+  const [pdpSwatchSlot, setPdpSwatchSlot] = useState<HTMLElement | null>(null)
 
   const activeHeadboard = useMemo(() => {
     if (!hasHeadboard || !headboardVariants) return null
@@ -443,7 +358,7 @@ export function ProductCardMediaGalleryCore({
       mainSrc,
       extraSrcs,
       activeHeadboard,
-      activeUpholstery,
+      hasSeparateFabricRows ? activeSeparateFabric : activeUpholstery,
       activeWood,
       activeFinish
     )
@@ -463,6 +378,8 @@ export function ProductCardMediaGalleryCore({
     activeHeadboard,
     activeUpholstery,
     activeWood,
+    activeSeparateFabric,
+    hasSeparateFabricRows,
     activeFinish,
   ])
   const variantMain = resolved.mainSrc
@@ -592,10 +509,24 @@ export function ProductCardMediaGalleryCore({
     [greenwichBedMatrix]
   )
 
-  const visibleStrip = useVerifiedStripExtras(
+  useEffect(() => {
+    if (layout !== "pdp") return
+    setPdpSwatchSlot(document.getElementById("pdp-color-options-slot"))
+  }, [layout])
+
+  const rawVisibleStrip = useVerifiedStripExtras(
     galleryStripCandidates,
     failedExtras
   )
+  // Defense in depth: if the main photo was ever a legitimate strip candidate
+  // (catalog "card" layout), guarantee it stays visible no matter what the async
+  // load-verification probe or failedExtras bookkeeping decided — its validity is
+  // already proven by the hero render, so it must never "disappear" from the strip.
+  const visibleStrip = useMemo(() => {
+    if (!galleryStripCandidates.includes(variantMain)) return rawVisibleStrip
+    if (rawVisibleStrip.includes(variantMain)) return rawVisibleStrip
+    return [variantMain, ...rawVisibleStrip.filter((u) => u !== variantMain)]
+  }, [rawVisibleStrip, galleryStripCandidates, variantMain])
 
   const showHeadboard = hasHeadboard && headboardVariants != null
   const showUpholstery = hasUpholstery && upholsteryVariants != null
@@ -706,6 +637,7 @@ export function ProductCardMediaGalleryCore({
       )
     }
     return [
+      ...(separateFabricRows ?? []),
       ...(upholsteryVariants ?? []),
       ...(woodVariants ?? []),
       ...(finishVariants ?? []),
@@ -716,6 +648,7 @@ export function ProductCardMediaGalleryCore({
     activeHeadboardKey,
     visibleWoodVariants,
     headboardFabricsForSampling,
+    separateFabricRows,
     upholsteryVariants,
     woodVariants,
     finishVariants,
@@ -740,8 +673,13 @@ export function ProductCardMediaGalleryCore({
     isGreenwichPaint || isProvencePaintWood
       ? showVisibleFinish
       : Boolean(visibleFinishVariants && visibleFinishVariants.length > 1)
+  const showSeparateFabricRows = hasSeparateFabricRows
   const showExecutionControls =
-    showHeadboard || showVisibleUpholstery || showVisibleWood || showFinish
+    showHeadboard ||
+    showSeparateFabricRows ||
+    showVisibleUpholstery ||
+    showVisibleWood ||
+    showFinish
   const showThumbRow = visibleStrip.length > 0
 
   const applyMediaSelection = useCallback(
@@ -770,10 +708,19 @@ export function ProductCardMediaGalleryCore({
     (url: string, isMain: boolean) => (e: MouseEvent<HTMLButtonElement>) => {
       e.preventDefault()
       e.stopPropagation()
-      if (isMain && activeGalleryUrl === null && displayHeroSrc === variantMain) {
+      if (isMain) {
+        // The main photo is already known-good (it's what the gallery boots with) —
+        // swap to it directly instead of routing through the fallible preload-then-swap
+        // path. A transient reload hiccup must never be able to hide the main photo.
+        if (activeGalleryUrl === null && displayHeroSrc === variantMain) return
+        setDisplayHeroSrc(variantMain)
+        setActiveGalleryUrl(null)
+        setHeroFailed(false)
+        pendingRef.current = null
+        setPendingPreloadUrl(null)
         return
       }
-      if (!isMain && activeGalleryUrl === url) {
+      if (activeGalleryUrl === url) {
         if (layout === "pdp") {
           setDisplayHeroSrc(variantMain)
           setActiveGalleryUrl(null)
@@ -800,11 +747,14 @@ export function ProductCardMediaGalleryCore({
 
   const onPreloadError = useCallback(() => {
     const u = pendingRef.current
-    if (!u) return
-    setFailedExtras((prev) => new Set(prev).add(u))
     pendingRef.current = null
     setPendingPreloadUrl(null)
-  }, [])
+    if (!u) return
+    // Defense in depth: never blacklist the main photo via the preload-retry path,
+    // even if something else ever sets it as the pending URL.
+    if (u === variantMain) return
+    setFailedExtras((prev) => new Set(prev).add(u))
+  }, [variantMain])
 
   const onHeadboardPick = useCallback(
     (variant: CardModelVariant) => (e: MouseEvent<HTMLButtonElement>) => {
@@ -842,6 +792,16 @@ export function ProductCardMediaGalleryCore({
       greenwichBedMatrix,
       applyMediaSelection,
     ]
+  )
+
+  const onSeparateFabricPick = useCallback(
+    (variant: CardColorVariant) => (e: MouseEvent<HTMLButtonElement>) => {
+      e.preventDefault()
+      e.stopPropagation()
+      setActiveSeparateFabricKey(variant.key)
+      applyMediaSelection(variant.mainSrc.trim())
+    },
+    [applyMediaSelection]
   )
 
   const onUpholsteryPick = useCallback(
@@ -1037,9 +997,11 @@ export function ProductCardMediaGalleryCore({
     ariaLabel: string,
     variants: CardColorVariant[],
     activeKey: string | null,
-    onPick: (v: CardColorVariant) => (e: MouseEvent<HTMLButtonElement>) => void
+    onPick: (v: CardColorVariant) => (e: MouseEvent<HTMLButtonElement>) => void,
+    options: { imageSwatches?: boolean; rowKey?: string } = {}
   ) => (
     <div
+      key={options.rowKey}
       className="product-card-selector-section"
       role="toolbar"
       aria-label={ariaLabel}
@@ -1054,6 +1016,8 @@ export function ProductCardMediaGalleryCore({
           const isActive = variant.key === activeKey
           const token = variant.swatchToken
           const sampled = swatchSamples.get(variant.key)
+          const imageSrc = (variant.mainSrc?.trim() || sampled?.imageUrl?.trim()) ?? ""
+          const useImageSwatch = Boolean(options.imageSwatches && imageSrc)
           const fillColor =
             sampled?.color ||
             variant.swatchHex ||
@@ -1065,19 +1029,30 @@ export function ProductCardMediaGalleryCore({
               className={`product-card-execution-swatch${isActive ? " is-active" : ""}`}
               data-swatch-token={token ?? "neutral"}
               data-swatch-source={
-                sampled?.source ??
-                (variant.swatchHex ? "metadata" : "fallback_token")
+                useImageSwatch
+                  ? "fabric_image"
+                  : sampled?.source ??
+                    (variant.swatchHex ? "metadata" : "fallback_token")
               }
               aria-pressed={isActive}
               aria-label={variant.label}
               title={variant.label}
               onClick={onPick(variant)}
             >
-              <span
-                className="product-card-execution-swatch-fill"
-                aria-hidden="true"
-                style={{ backgroundColor: fillColor }}
-              />
+              {useImageSwatch ? (
+                <img
+                  src={imageSrc}
+                  alt=""
+                  aria-hidden="true"
+                  className="product-card-execution-swatch-img"
+                />
+              ) : (
+                <span
+                  className="product-card-execution-swatch-fill"
+                  aria-hidden="true"
+                  style={{ backgroundColor: fillColor }}
+                />
+              )}
             </button>
           )
         })}
@@ -1087,6 +1062,71 @@ export function ProductCardMediaGalleryCore({
 
   const heroEmpty = oliverMode && (!displayHeroSrc || heroFailed)
   const isPdp = layout === "pdp"
+
+  /* PDP: publish the current execution choice (photo + shown selector values)
+     for ProductCta's add-to-cart — the cart page renders the thumbnail and
+     spec lines from this. Only user-visible selectors are published, so a
+     product without swatches contributes no noise. */
+  useEffect(() => {
+    if (!isPdp) return
+    const specs: PdpExecutionSpec[] = []
+    if (showHeadboard && activeHeadboard) {
+      specs.push({ label: "Изголовье", value: activeHeadboard.label })
+    }
+    if (showSeparateFabricRows && activeSeparateFabric) {
+      specs.push({ label: "Обивка", value: activeSeparateFabric.label })
+    } else if (showVisibleUpholstery && activeUpholstery) {
+      specs.push({ label: "Обивка", value: activeUpholstery.label })
+    }
+    if (isProvencePaintWood) {
+      const provenceActive =
+        activeProvenceMediaKey === "wood" ? woodVariants?.[0] : finishVariants?.[0]
+      if (provenceActive) {
+        specs.push({
+          label: activeProvenceMediaKey === "wood" ? "Дерево" : finishLabel,
+          value: provenceActive.label,
+        })
+      }
+    } else {
+      if (showVisibleWood && activeWood) {
+        specs.push({ label: "Дерево", value: activeWood.label })
+      }
+      if (showFinish && activeFinish) {
+        specs.push({ label: finishLabel, value: activeFinish.label })
+      }
+    }
+    publishPdpExecutionSelection({ imageSrc: variantMain || undefined, specs })
+  }, [
+    isPdp,
+    variantMain,
+    showHeadboard,
+    activeHeadboard,
+    showSeparateFabricRows,
+    activeSeparateFabric,
+    showVisibleUpholstery,
+    activeUpholstery,
+    showVisibleWood,
+    activeWood,
+    showFinish,
+    activeFinish,
+    finishLabel,
+    isProvencePaintWood,
+    activeProvenceMediaKey,
+    woodVariants,
+    finishVariants,
+  ])
+
+  useEffect(() => {
+    if (!isPdp) return
+    return () => clearPdpExecutionSelection()
+  }, [isPdp])
+
+  const pdpLightboxImages = visibleStrip.length > 0 ? visibleStrip : [displayHeroSrc]
+  const openLightbox = useCallback(() => {
+    if (!isPdp || heroEmpty || !displayHeroSrc) return
+    const idx = pdpLightboxImages.indexOf(displayHeroSrc)
+    setLightboxIndex(idx >= 0 ? idx : 0)
+  }, [isPdp, heroEmpty, displayHeroSrc, pdpLightboxImages])
 
   const heroImage =
     heroEmpty ? (
@@ -1100,7 +1140,7 @@ export function ProductCardMediaGalleryCore({
       <img
         src={displayHeroSrc}
         alt={alt}
-        className={isPdp ? "product-detail-img" : "card-img"}
+        className={`${isPdp ? "product-detail-img" : "card-img"}${isPdp ? " is-zoomable" : ""}`}
         loading="lazy"
         style={
           isPdp && heroObjectPosition
@@ -1108,32 +1148,11 @@ export function ProductCardMediaGalleryCore({
             : undefined
         }
         onError={onHeroError}
+        onClick={isPdp ? openLightbox : undefined}
       />
     )
 
-  return (
-    <div
-      className={`product-card-media-switcher${oliverMode ? " oliver-card-media-switcher" : ""}${isPdp ? " product-detail-media-switcher" : ""}`}
-    >
-      {isPdp ? (
-        heroImage
-      ) : (
-        <Link href={href} className="product-card-media-link card-link" aria-label={alt}>
-          {heroImage}
-        </Link>
-      )}
-      {pendingPreloadUrl && (
-        <img
-          key={pendingPreloadUrl}
-          src={pendingPreloadUrl}
-          alt=""
-          className="product-card-media-preload"
-          aria-hidden={true}
-          onLoad={onPreloadLoad}
-          onError={onPreloadError}
-        />
-      )}
-      {showExecutionControls && (
+  const executionControlsMarkup = showExecutionControls ? (
         <div className="product-card-execution-controls">
           {showHeadboard && (
             <div
@@ -1161,13 +1180,25 @@ export function ProductCardMediaGalleryCore({
               </div>
             </div>
           )}
+          {showSeparateFabricRows &&
+            separateFabricRows!.map((variant) =>
+              renderSwatchRow(
+                variant.label,
+                variant.label,
+                [variant],
+                activeSeparateFabricKey,
+                onSeparateFabricPick,
+                { imageSwatches: true, rowKey: variant.key }
+              )
+            )}
           {showVisibleUpholstery &&
             renderSwatchRow(
               "Обивка",
               "Обивка",
               visibleUpholsteryVariants!,
               activeUpholsteryKey,
-              onUpholsteryPick
+              onUpholsteryPick,
+              { imageSwatches: true }
             )}
           {isGreenwichPaint || isProvencePaintWood ? (
             <>
@@ -1217,22 +1248,72 @@ export function ProductCardMediaGalleryCore({
             </>
           )}
         </div>
+  ) : null
+
+  const thumbRowMarkup = showThumbRow ? (
+    <ProductThumbCarousel
+      variantMain={variantMain}
+      visibleStrip={visibleStrip}
+      activeGalleryUrl={activeGalleryUrl}
+      displayHeroSrc={displayHeroSrc}
+      pendingPreloadUrl={pendingPreloadUrl}
+      onThumbPick={onThumbPick}
+      onThumbError={(url) => {
+        if (url === variantMain) return
+        setFailedExtras((prev) => {
+          const next = new Set(prev)
+          next.add(url)
+          return next
+        })
+      }}
+    />
+  ) : null
+
+  return (
+    <div
+      className={`product-card-media-switcher${oliverMode ? " oliver-card-media-switcher" : ""}${isPdp ? " product-detail-media-switcher" : ""}`}
+    >
+      {isPdp ? (
+        heroImage
+      ) : (
+        <Link href={href} className="product-card-media-link card-link" aria-label={alt}>
+          {heroImage}
+        </Link>
       )}
-      {showThumbRow && (
-        <ProductCardThumbCarousel
-          variantMain={variantMain}
-          visibleStrip={visibleStrip}
-          activeGalleryUrl={activeGalleryUrl}
-          displayHeroSrc={displayHeroSrc}
-          pendingPreloadUrl={pendingPreloadUrl}
-          onThumbPick={onThumbPick}
-          onThumbError={(url) =>
-            setFailedExtras((prev) => {
-              const next = new Set(prev)
-              next.add(url)
-              return next
-            })
-          }
+      {pendingPreloadUrl && (
+        <img
+          key={pendingPreloadUrl}
+          src={pendingPreloadUrl}
+          alt=""
+          className="product-card-media-preload"
+          aria-hidden={true}
+          onLoad={onPreloadLoad}
+          onError={onPreloadError}
+        />
+      )}
+      {isPdp ? (
+        <>
+          {executionControlsMarkup && pdpSwatchSlot
+            ? createPortal(executionControlsMarkup, pdpSwatchSlot)
+            : null}
+          {thumbRowMarkup}
+        </>
+      ) : (
+        /* Always-rendered rail band: in the catalog subgrid layout this zone
+           gets a shared row track, so cards without swatches/thumbs still
+           reserve the same height as their neighbours. */
+        <div className="product-card-rails">
+          {executionControlsMarkup}
+          {thumbRowMarkup}
+        </div>
+      )}
+      {isPdp && lightboxIndex !== null && (
+        <PdpImageLightbox
+          images={pdpLightboxImages}
+          activeIndex={lightboxIndex}
+          alt={alt}
+          onClose={() => setLightboxIndex(null)}
+          onNavigate={setLightboxIndex}
         />
       )}
     </div>

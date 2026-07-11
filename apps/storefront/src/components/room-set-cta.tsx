@@ -1,10 +1,13 @@
 "use client"
 
 import Link from "next/link"
+import type { MouseEvent } from "react"
 import { useState } from "react"
 import { ensureCart } from "@/lib/cart/session"
+import { countCartItems, emitCartUpdated } from "@/lib/cart/cart-events"
 import { addLineItem } from "@/lib/api/cart"
 import { userFacingError } from "@/lib/user-facing-error"
+import { actions } from "@/lib/woodright-copy"
 
 type Props = { roomSet: Record<string, unknown> }
 
@@ -44,7 +47,8 @@ export function RoomSetCta({ roomSet }: Props) {
     return eligible
   }
 
-  async function handleBuySet() {
+  async function handleBuySet(e: MouseEvent<HTMLButtonElement>) {
+    const rect = e.currentTarget.getBoundingClientRect()
     setError(null)
     setSuccess(false)
     setAdding(true)
@@ -58,10 +62,16 @@ export function RoomSetCta({ roomSet }: Props) {
     }
     try {
       const cartId = await ensureCart()
+      let lastResponse: unknown
       for (const { variantId, quantity } of eligible) {
-        await addLineItem(cartId, { variant_id: variantId, quantity })
+        lastResponse = await addLineItem(cartId, { variant_id: variantId, quantity })
       }
       setSuccess(true)
+      emitCartUpdated({
+        count: countCartItems((lastResponse as { cart?: unknown } | undefined)?.cart),
+        delta: eligible.reduce((sum, item) => sum + item.quantity, 0),
+        from: { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 },
+      })
     } catch (e) {
       setError(userFacingError(e, "Не все товары удалось добавить. Проверьте корзину и повторите попытку."))
     } finally {
@@ -85,7 +95,7 @@ export function RoomSetCta({ roomSet }: Props) {
       {success && (
         <div className="feedback">
           <span className="feedback-success">Добавлено в корзину</span>
-          <Link href="/cart">В корзину →</Link>
+          <Link href="/cart">{actions.toCart} →</Link>
         </div>
       )}
       {error && (

@@ -1,14 +1,15 @@
 "use client"
 
 import Link from "next/link"
+import type { MouseEvent } from "react"
 import { useState } from "react"
 import { ensureCart } from "@/lib/cart/session"
+import { countCartItems, emitCartUpdated } from "@/lib/cart/cart-events"
+import { readPdpExecutionSelection } from "@/lib/cart/pdp-selection"
 import { addLineItem } from "@/lib/api/cart"
 import { userFacingError } from "@/lib/user-facing-error"
-import {
-  isRequestQuoteProduct,
-  REQUEST_QUOTE_MANAGER_NOTE,
-} from "@/lib/request-quote"
+import { isRequestQuoteProduct } from "@/lib/request-quote"
+import { actions, productCta as copy } from "@/lib/woodright-copy"
 
 type Props = { product: Record<string, unknown> }
 
@@ -32,17 +33,39 @@ export function ProductCta({ product }: Props) {
     : undefined
   const productId = product.id as string | undefined
 
-  async function handleAddToCart() {
+  async function handleAddToCart(e: MouseEvent<HTMLButtonElement>) {
     if (!variantId) return
+    /* Captured before the awaits: the flight dot launches from the CTA's
+       center, and currentTarget is only valid synchronously. */
+    const rect = e.currentTarget.getBoundingClientRect()
     setError(null)
     setSuccess(false)
     setAdding(true)
     try {
       const cartId = await ensureCart()
-      await addLineItem(cartId, { variant_id: variantId, quantity: 1 })
+      /* Выбранное на PDP исполнение (цвет/отделка) — не Medusa-вариант, поэтому
+         едет в line item metadata: корзина рендерит из него миниатюру и спеку. */
+      const selection = readPdpExecutionSelection()
+      const metadata =
+        selection && (selection.imageSrc || selection.specs.length > 0)
+          ? {
+              ...(selection.imageSrc ? { execution_image: selection.imageSrc } : {}),
+              ...(selection.specs.length > 0 ? { execution_specs: selection.specs } : {}),
+            }
+          : undefined
+      const data = await addLineItem(cartId, {
+        variant_id: variantId,
+        quantity: 1,
+        ...(metadata ? { metadata } : {}),
+      })
       setSuccess(true)
+      emitCartUpdated({
+        count: countCartItems((data as { cart?: unknown }).cart),
+        delta: 1,
+        from: { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 },
+      })
     } catch (e) {
-      setError(userFacingError(e, "Не удалось добавить в корзину."))
+      setError(userFacingError(e, copy.addToCartFailed))
     } finally {
       setAdding(false)
     }
@@ -52,7 +75,7 @@ export function ProductCta({ product }: Props) {
     return (
       <div className="cta-group">
         <Link href={productId ? `/bespoke/request?product_id=${productId}` : "/bespoke/request"} className="btn btn-primary">
-          Получить расчёт
+          {copy.bespokeCtaLabel}
         </Link>
       </div>
     )
@@ -66,11 +89,11 @@ export function ProductCta({ product }: Props) {
             href={productId ? `/bespoke/request?product_id=${productId}` : "/bespoke/request"}
             className="btn btn-primary"
           >
-            Оставить заявку
+            {copy.requestQuoteCtaLabel}
           </Link>
         </div>
         <p className="info-text" style={{ marginTop: "0.75rem" }}>
-          {REQUEST_QUOTE_MANAGER_NOTE}
+          {copy.requestQuoteManagerNote}
         </p>
       </div>
     )
@@ -82,19 +105,19 @@ export function ProductCta({ product }: Props) {
         <div className="cta-group">
           {variantId ? (
             <button type="button" onClick={handleAddToCart} disabled={adding} className="btn btn-primary">
-              {adding ? "Добавление…" : "Добавить в корзину"}
+              {adding ? copy.addingInProgress : actions.addToCart}
             </button>
           ) : (
-            <span className="info-text">Нет варианта для заказа.</span>
+            <span className="info-text">{copy.noVariant}</span>
           )}
           <Link href={productId ? `/bespoke/request?product_id=${productId}` : "/bespoke/request"} className="btn btn-secondary">
-            Сделать по моим размерам
+            {copy.configureBespoke}
           </Link>
         </div>
         {success && (
           <div className="feedback">
-            <span className="feedback-success">Добавлено</span>
-            <Link href="/cart">В корзину →</Link>
+            <span className="feedback-success">{copy.addedTitle}</span>
+            <Link href="/cart">{actions.toCart} →</Link>
           </div>
         )}
         {error && (
@@ -111,16 +134,16 @@ export function ProductCta({ product }: Props) {
       <div className="cta-group">
         {variantId ? (
           <button type="button" onClick={handleAddToCart} disabled={adding} className="btn btn-primary">
-            {adding ? "Добавление…" : "Добавить в корзину"}
+            {adding ? copy.addingInProgress : actions.addToCart}
           </button>
         ) : (
-          <span className="info-text">Нет варианта для заказа.</span>
+          <span className="info-text">{copy.noVariant}</span>
         )}
       </div>
       {success && (
         <div className="feedback">
-          <span className="feedback-success">Добавлено</span>
-          <Link href="/cart">В корзину →</Link>
+          <span className="feedback-success">{copy.addedTitle}</span>
+          <Link href="/cart">{actions.toCart} →</Link>
         </div>
       )}
       {error && (

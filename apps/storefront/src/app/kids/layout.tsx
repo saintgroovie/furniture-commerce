@@ -1,5 +1,4 @@
 import type { Metadata } from "next"
-import Link from "next/link"
 
 export const metadata: Metadata = {
   title: { default: "Детская", template: "%s | Детская | Woodright" },
@@ -7,24 +6,13 @@ export const metadata: Metadata = {
     "Мебель для детских комнат. Готовые комплекты, безопасные материалы, индивидуальные размеры.",
 }
 
+// The section subnav bar was removed: the main header's "Детская" dropdown
+// already covers the same links (Каталог / Комнаты / О разделе), so it was
+// a redundant duplicate row on every /kids/* page.
 export default function KidsLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  return (
-    <div className="kids-theme">
-      <nav className="kids-nav" aria-label="Детская">
-        <Link href="/kids" className="kids-nav-title">
-          Детская
-        </Link>
-        <div className="kids-nav-links">
-          <Link href="/kids/catalog">Каталог</Link>
-          <Link href="/kids/rooms">Комнаты</Link>
-          <Link href="/bespoke/request">Расчёт</Link>
-        </div>
-      </nav>
-      {children}
-    </div>
-  )
+  return <div className="kids-theme">{children}</div>
 }

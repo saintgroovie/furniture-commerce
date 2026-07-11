@@ -23,13 +23,14 @@ import {
   buildCatalogFacets,
   sortDisplayEntries,
 } from "@/lib/catalog-filters"
+import { actions, catalogCopy, seo } from "@/lib/woodright-copy"
 
 export const metadata: Metadata = {
-  title: "Каталог",
-  description: "Каталог мебели Woodright. Готовые товары и товары с вариациями.",
+  title: seo.catalog.title,
+  description: seo.catalog.description,
   openGraph: {
-    title: "Каталог мебели | Woodright",
-    description: "Каталог мебели Woodright. Готовые товары и товары с вариациями.",
+    title: seo.catalog.title,
+    description: seo.catalog.description,
     url: "/catalog",
   },
 }
@@ -43,6 +44,7 @@ export default async function CatalogPage({
   if (legacyQs) redirect(`/catalog?${legacyQs}`)
 
   const filterState = parseCatalogFilterState(searchParams)
+  const bespokeOnly = filterState.type === BESPOKE_PRODUCT_TYPE
 
   let data: { products?: unknown[] } = {}
   try {
@@ -50,10 +52,12 @@ export default async function CatalogPage({
   } catch {
     return (
       <div data-state="error">
-        <h1>Каталог</h1>
-        <p className="info-text" style={{ marginTop: "0.5rem" }}>Не удалось загрузить каталог.</p>
+        <div className="catalog-hero">
+          <h1>{catalogCopy.h1}</h1>
+          <p className="info-text" style={{ marginTop: "0.5rem" }}>{catalogCopy.loadError}</p>
+        </div>
         <div className="nav-links" style={{ marginTop: "1rem" }}>
-          <Link href="/">На главную</Link>
+          <Link href="/">{actions.toHome}</Link>
         </div>
       </div>
     )
@@ -71,14 +75,19 @@ export default async function CatalogPage({
   } catch {
     kidsIds = new Set()
   }
-  const scoped = allRaw.filter(
-    (p: Record<string, unknown>) =>
-      !kidsIds.has(p.id as string) &&
-      (p.product_classification as { product_type?: string } | undefined)
-        ?.product_type !== BESPOKE_PRODUCT_TYPE &&
-      isProductInMainCatalogScope(p) &&
-      !isMedusaCanonicalSeedDemoProduct(p)
-  ) as Record<string, unknown>[]
+  const scoped = allRaw.filter((p: Record<string, unknown>) => {
+    if (kidsIds.has(p.id as string)) return false
+    if (!isProductInMainCatalogScope(p)) return false
+    if (isMedusaCanonicalSeedDemoProduct(p)) return false
+    const classification = (
+      p.product_classification as { product_type?: string } | undefined
+    )?.product_type
+    if (bespokeOnly) {
+      // Fail-closed: known BESPOKE filter never falls back to STANDARD/CONFIGURABLE pool.
+      return classification === BESPOKE_PRODUCT_TYPE
+    }
+    return classification !== BESPOKE_PRODUCT_TYPE
+  }) as Record<string, unknown>[]
 
   const filtered = applyCatalogFilters(scoped, filterState)
   const facets = {
@@ -115,7 +124,15 @@ export default async function CatalogPage({
         />
       )}
 
-      <h1>Каталог</h1>
+      <div className="catalog-hero">
+        <h1>{catalogCopy.h1}</h1>
+        <p className="info-text">
+          {catalogCopy.lead}{" "}
+          <Link href="/kids/catalog" className="catalog-hero-kids-link">
+            {catalogCopy.kidsLead} <span aria-hidden="true">→</span>
+          </Link>
+        </p>
+      </div>
 
       <CatalogFilterControls
         basePath="/catalog"
@@ -126,9 +143,11 @@ export default async function CatalogPage({
       >
         {displayEntries.length === 0 ? (
           <div className="status-message catalog-empty-state">
-            <p>Ничего не найдено. Попробуйте сбросить часть фильтров.</p>
+            <p style={{ fontWeight: 500 }}>{catalogCopy.emptyFilteredTitle}</p>
+            <p>{catalogCopy.emptyFilteredBody}</p>
             <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
-              <Link href="/catalog">Показать все</Link>
+              <Link href="/catalog">{actions.resetFilters}</Link>
+              <Link href="/bespoke/request">{actions.discussProject}</Link>
             </div>
           </div>
         ) : (

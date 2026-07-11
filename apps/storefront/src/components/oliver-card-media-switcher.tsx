@@ -11,6 +11,7 @@ type Props = {
   woodVariants?: CardColorVariant[]
   finishVariants?: CardColorVariant[]
   finishLabel?: "Цвет" | "Отделка" | "Материал" | "Конструкция"
+  separateFabricRows?: CardColorVariant[]
   href: string
   title: string
 }
@@ -27,6 +28,7 @@ export function OliverCardMediaSwitcher({
   woodVariants,
   finishVariants,
   finishLabel,
+  separateFabricRows,
   href,
   title,
 }: Props) {
@@ -39,6 +41,7 @@ export function OliverCardMediaSwitcher({
       woodVariants={woodVariants}
       finishVariants={finishVariants}
       finishLabel={finishLabel}
+      separateFabricRows={separateFabricRows}
       href={href}
       alt={title}
       oliverMode={true}

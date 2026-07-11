@@ -4,20 +4,21 @@
   "private": true,
   "packageManager": "yarn@4.6.0",
   "scripts": {
-    "dev": "next dev --port 8000",
-    "dev:ww-matrix-board": "next dev --port 3004",
+    "dev": "NEXT_DIST_DIR=.next-dev next dev --port 3002",
+    "dev:ww-matrix-board": "NEXT_DIST_DIR=.next-matrix next dev --port 3004",
     "dev:ww-matrix-board:daemon": "bash scripts/dev-ww-matrix-board-daemon.sh",
     "dev:ww-matrix-board:stop": "bash scripts/dev-ww-matrix-board-stop.sh",
     "dev:ww-matrix-board:status": "bash scripts/dev-ww-matrix-board-status.sh",
     "dev:ww-matrix-board:open": "bash scripts/dev-ww-matrix-board-open-terminal.sh",
-    "build": "next build",
-    "start": "next start",
+    "build": "NEXT_DIST_DIR=.next-build next build",
+    "start": "NEXT_DIST_DIR=.next-build next start",
     "lint": "next lint"
   },
   "dependencies": {
     "next": "^14.2.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

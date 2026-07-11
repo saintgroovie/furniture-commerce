@@ -84,6 +84,8 @@ export type CardExecutionSelectors = {
   greenwichPaintMatrix?: import("./greenwich-paint-media").GreenwichPaintMatrixEntry[]
   /** Provence pv-* paint (cream) × lacquered wood split — separate Цвет/Дерево rows. */
   provencePaintWood?: boolean
+  /** Oliver standalone bed: one selector row per fabric (Lilian, Lorna), not one grouped rail. */
+  separateFabricRows?: CardColorVariant[]
 }
 
 export type CardExecutionControls = CardExecutionSelectors
@@ -95,7 +97,8 @@ export function hasPdpExecutionControls(sel: CardExecutionSelectors): boolean {
     (sel.headboard?.length ?? 0) > 1 ||
     (sel.upholstery?.length ?? 0) > 1 ||
     (sel.wood?.length ?? 0) > 1 ||
-    (sel.finish?.length ?? 0) > 1
+    (sel.finish?.length ?? 0) > 1 ||
+    (sel.separateFabricRows?.length ?? 0) >= 2
   )
 }
 
@@ -837,6 +840,34 @@ function provencePaintWoodSelectorsFromMetadata(
   }
 }
 
+function isOliverStandaloneMultiFabricProduct(
+  product: Record<string, unknown>,
+  metadataFabric: CardColorVariant[] | undefined,
+  metadataHeadboard: CardModelVariant[] | undefined
+): boolean {
+  const handle = ((product.handle as string | undefined) ?? "").toLowerCase()
+  if (!handle.startsWith("ol-") || metadataHeadboard) return false
+  const meta = product.metadata as Record<string, unknown> | undefined
+  if (Array.isArray(meta?.bed_execution_matrix) && meta.bed_execution_matrix.length > 0) {
+    return false
+  }
+  if (Array.isArray(meta?.headboard_model_executions) && meta.headboard_model_executions.length > 0) {
+    return false
+  }
+  return Boolean(metadataFabric && metadataFabric.length >= 2)
+}
+
+function oliverSeparateFabricRowSelectors(
+  metadataFabric: CardColorVariant[],
+  metadataFrame: CardColorVariant[] | undefined
+): CardExecutionSelectors {
+  return {
+    separateFabricRows: metadataFabric,
+    wood: metadataFrame,
+    confidence: "canonical",
+  }
+}
+
 export function buildIntraProductExecutionSelectors(
   product: Record<string, unknown>,
   mainSrc: string
@@ -849,6 +880,15 @@ export function buildIntraProductExecutionSelectors(
 
   const provencePaintWood = provencePaintWoodSelectorsFromMetadata(product)
   if (provencePaintWood) return provencePaintWood
+
+  const handleEarly =
+    typeof product.handle === "string" ? product.handle.toLowerCase() : ""
+  if (handleEarly.startsWith("pv-")) {
+    const urls = collectProductImageUrls(product)
+    if (!hasProvencePaintWoodDualFinishEvidence(urls, handleEarly)) {
+      return { confidence: "metadata_blocked" }
+    }
+  }
 
   const metadataHeadboard = headboardExecutionsFromMetadata(product)
   const metadataFabric = fabricUpholsteryExecutionsFromMetadata(product)
@@ -885,6 +925,9 @@ export function buildIntraProductExecutionSelectors(
         product.metadata as Record<string, unknown> | undefined
       )
     ) {
+      if (isOliverStandaloneMultiFabricProduct(product, metadataFabric, metadataHeadboard)) {
+        return oliverSeparateFabricRowSelectors(metadataFabric, metadataFrame)
+      }
       return {
         upholstery: metadataFabric,
         wood: metadataFrame,
@@ -911,6 +954,9 @@ export function buildIntraProductExecutionSelectors(
   }
 
   if (metadataFabric) {
+    if (isOliverStandaloneMultiFabricProduct(product, metadataFabric, metadataHeadboard)) {
+      return oliverSeparateFabricRowSelectors(metadataFabric, metadataFrame)
+    }
     return {
       upholstery: metadataFabric,
       wood: metadataFrame,

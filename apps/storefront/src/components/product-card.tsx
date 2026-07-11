@@ -27,12 +27,17 @@ import {
   resolveGreenwichBedMedia,
 } from "@/lib/greenwich-bed-media"
 import {
+  defaultGreenwichPaintSelection,
+  resolveGreenwichPaintMedia,
+} from "@/lib/greenwich-paint-media"
+import {
   collectExtraProductImageUrls,
   mergeUniqueExtraUrls,
   normalizeImageEntryUrl,
   resolvePdpMediaBundle,
   resolveStorefrontProductImageSrc,
 } from "@/lib/product-images"
+import { productTypeBadgeLabels } from "@/lib/woodright-copy"
 
 type Product = {
   id: string
@@ -53,9 +58,7 @@ type Product = {
   display_group_color_variants?: CardColorVariant[]
 }
 
-const BADGE_LABELS: Record<string, string> = {
-  BESPOKE: "На заказ",
-}
+const BADGE_LABELS = productTypeBadgeLabels
 
 function cardThumbnailSrc(product: Product): string | null {
   const t = product.thumbnail
@@ -132,49 +135,70 @@ export function ProductCard({
   const finishVariants = executionSelectors.finish
   const finishLabel = executionSelectors.finishLabel ?? "Цвет"
   const greenwichBedMatrix = executionSelectors.greenwichBedMatrix
+  const greenwichPaintMatrix = executionSelectors.greenwichPaintMatrix
 
-  const defaults =
+  const bedDefaults =
     greenwichBedMatrix && greenwichBedMatrix.length > 0
       ? defaultGreenwichBedSelection(greenwichBedMatrix)
       : null
+  const paintDefaults =
+    greenwichPaintMatrix && greenwichPaintMatrix.length > 0
+      ? defaultGreenwichPaintSelection(greenwichPaintMatrix)
+      : null
   const matrixMedia =
-    defaults && greenwichBedMatrix
+    bedDefaults && greenwichBedMatrix
       ? resolveGreenwichBedMedia(
           greenwichBedMatrix,
-          defaults.headboard,
-          defaults.frameMaterial,
-          defaults.fabric
+          bedDefaults.headboard,
+          bedDefaults.frameMaterial,
+          bedDefaults.fabric
         )
-      : null
+      : paintDefaults && greenwichPaintMatrix
+        ? resolveGreenwichPaintMedia(
+            greenwichPaintMatrix,
+            paintDefaults.frameMaterial,
+            paintDefaults.paintFinish
+          )
+        : null
 
+  const separateFabricRows = executionSelectors.separateFabricRows
+  const activeSeparateFabric = separateFabricRows?.[0]
   const activeHeadboard = headboardVariants?.[0]
   const activeUpholstery = upholsteryVariants?.[0]
   const activeWood = woodVariants?.[0]
   const activeFinish = finishVariants?.[0]
+  const isProvencePaintWood = executionSelectors.provencePaintWood === true
 
   const mainSrc = matrixMedia?.mainSrc
     ? matrixMedia.mainSrc
-    : activeHeadboard?.mainSrc ??
-      activeUpholstery?.mainSrc ??
-      activeWood?.mainSrc ??
-      activeFinish?.mainSrc ??
-      mainSrcForCard
+    : isProvencePaintWood
+      ? mainSrcForCard
+      : activeHeadboard?.mainSrc ??
+        activeSeparateFabric?.mainSrc ??
+        activeUpholstery?.mainSrc ??
+        activeWood?.mainSrc ??
+        activeFinish?.mainSrc ??
+        mainSrcForCard
   const extraSrcs = matrixMedia
     ? matrixMedia.extraSrcs
-    : activeHeadboard != null
-      ? activeHeadboard.extraSrcs
-      : activeUpholstery != null
-        ? activeUpholstery.extraSrcs
-        : activeWood != null
-          ? activeWood.extraSrcs
-          : activeFinish != null
-            ? activeFinish.extraSrcs
-            : mergeUniqueExtraUrls(mainSrcForCard, [
-                collectExtraProductImageUrls(
-                  product as Record<string, unknown>,
-                  mainSrcForCard
-                ),
-              ])
+    : isProvencePaintWood && activeFinish != null
+      ? activeFinish.extraSrcs
+      : activeHeadboard != null
+        ? activeHeadboard.extraSrcs
+        : activeSeparateFabric != null
+          ? activeSeparateFabric.extraSrcs
+          : activeUpholstery != null
+          ? activeUpholstery.extraSrcs
+          : activeWood != null
+            ? activeWood.extraSrcs
+            : activeFinish != null
+              ? activeFinish.extraSrcs
+              : mergeUniqueExtraUrls(mainSrcForCard, [
+                  collectExtraProductImageUrls(
+                    product as Record<string, unknown>,
+                    mainSrcForCard
+                  ),
+                ])
 
   const { mainSrc: cardMainSrc, extraSrcs: cardExtraSrcs } = resolvePdpMediaBundle(
     mainSrc,
@@ -190,6 +214,7 @@ export function ProductCard({
       woodVariants={woodVariants}
       finishVariants={finishVariants}
       finishLabel={finishLabel}
+      separateFabricRows={separateFabricRows}
       href={productHref}
       title={product.title}
     />
@@ -203,6 +228,7 @@ export function ProductCard({
       finishVariants={finishVariants}
       finishLabel={finishLabel}
       greenwichBedMatrix={greenwichBedMatrix}
+      greenwichPaintMatrix={greenwichPaintMatrix}
       href={productHref}
       alt={product.title}
     />
@@ -219,15 +245,19 @@ export function ProductCard({
         {dim != null && (
           <span className="card-dimensions">{formatDimensionsCompact(dim)}</span>
         )}
-        {requestQuotePrice != null ? (
-          <p className="price">{requestQuotePrice}</p>
-        ) : price != null ? (
-          <p className="price">{pricePrefix}{formatRub(price)}</p>
-        ) : null}
-        {displayGroup && displayGroup.count > 1 && (
-          <span className="variant-hint">{formatGroupHint(displayGroup.count)}</span>
-        )}
-        {badgeLabel && <span className="badge">{badgeLabel}</span>}
+        {/* Always rendered so the price zone keeps its row track (bottom
+            alignment) even when a card has no price/badge to show. */}
+        <div className="card-price-row">
+          {requestQuotePrice != null ? (
+            <p className="price">{requestQuotePrice}</p>
+          ) : price != null ? (
+            <p className="price">{pricePrefix}{formatRub(price)}</p>
+          ) : null}
+          {displayGroup && displayGroup.count > 1 && (
+            <span className="variant-hint">{formatGroupHint(displayGroup.count)}</span>
+          )}
+          {badgeLabel && <span className="badge">{badgeLabel}</span>}
+        </div>
       </Link>
     </div>
   )

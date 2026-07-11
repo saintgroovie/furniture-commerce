@@ -6,11 +6,33 @@
   padding: 0;
 }
 
+/* Without this, some browsers (notably Safari/WebKit) draw their own native
+   button "chrome" — a rounded, padded frame — behind/around whatever
+   background/border a button's own class sets, showing up as an odd light
+   halo/gap around the visible button (e.g. «Найти», «Применить», tabs).
+   appearance:none strips that native frame so our own CSS is the only
+   thing that renders. */
+button {
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
 :root {
   --color-fg: #2c2420;
   --color-fg-secondary: #635a54;
   --color-fg-muted: #6f6862;
   --color-accent: #7c6a5b;
+  /* Operator swatch base #4e4744; +saturation for less dusty filled controls. */
+  --color-logo-ink: #281c17;
+  --color-brand: #3c2f29;
+  --color-brand-hover: #281f1a;
+  --color-action: var(--color-brand);
+  --color-action-hover: var(--color-brand-hover);
   --color-success: #3d7a56;
   --color-error: #b34a42;
   --color-border: #e5dfda;
@@ -115,7 +137,7 @@ img {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 40px;
+  height: 48px;
 }
 
 .header-top-left {
@@ -126,14 +148,85 @@ img {
 }
 
 .logo {
-  font-size: 1.1rem;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--color-fg);
+  display: inline-flex;
+  align-items: center;
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
+}
+
+.logo-image {
+  display: block;
+  height: 20px;
+  width: auto;
+}
+
+/* «KIDS» pill next to the wordmark, shown only inside the kids section.
+   It's always in the DOM: on the main site it's collapsed to zero width
+   and fully transparent, in /kids it unfolds. Animating max-width (not
+   display) is what makes the switch feel deliberate: .logo is centered
+   with translateX(-50%), so as the pill grows the wordmark glides left a
+   few pixels to re-center — one calm, premium movement instead of a snap.
+   Same sage green as .kids-theme's --color-accent (that variable itself
+   isn't available up here in the header, which sits outside .kids-theme). */
+/* Two layers so the pill visibly *slides out* from behind the wordmark
+   (and slides back under it on the way out) instead of just growing in
+   place, which read as almost no animation at this size:
+   - .logo-kids-slot  — the clipping window; its max-width animates so the
+     wordmark glides while re-centering (.logo is translateX(-50%)-centered);
+   - .logo-kids-badge — the finished pill at its natural size, translated
+     fully left (hidden behind the wordmark's edge inside the clipped slot)
+     and sliding right into place. The pill never changes size, so the
+     border/rounding never squish mid-flight — it's the whole finished
+     badge that emerges, like a drawer opening. */
+.logo-kids-slot {
+  display: inline-flex;
+  align-items: center;
+  max-width: 0;
+  margin-left: 0;
+  overflow: hidden;
+  transition:
+    max-width 1s cubic-bezier(0.22, 1, 0.36, 1),
+    margin-left 1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.logo-kids-slot.is-visible {
+  max-width: 5rem;
+  margin-left: 4px;
+}
+
+.logo-kids-badge {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  padding: 0.1rem 0.55rem;
+  border: 1px solid color-mix(in srgb, #628c6a 55%, transparent);
+  border-radius: 999px;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-indent: 0.22em; /* balances letter-spacing's trailing gap */
+  text-transform: uppercase;
+  line-height: 1;
+  white-space: nowrap;
+  color: #628c6a;
+  opacity: 0;
+  transform: translateX(-110%);
+  transition:
+    transform 1s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.7s ease 0.05s;
+}
+
+.logo-kids-slot.is-visible .logo-kids-badge {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-kids-slot,
+  .logo-kids-badge {
+    transition: none;
+  }
 }
 
 .header-top-inner {
@@ -141,7 +234,6 @@ img {
 }
 
 .logo:hover {
-  color: var(--color-fg);
   text-decoration: none;
 }
 
@@ -155,7 +247,7 @@ img {
 
 .header-top-right > a {
   font-size: 0.82rem;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--color-fg-secondary);
   transition: color 0.15s;
 }
@@ -175,18 +267,58 @@ img {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 48px;
+  height: 40px;
 }
 
+/* The nav row is sized so the LAST LETTER of the last item («О бренде»)
+   lands exactly on the left edge of the middle catalog card; only that
+   item's chevron hangs past the line (see the :last-child rule below).
+   The width formulas mirror the catalog grid's geometry (100% = the same
+   .container content width the grid lives in):
+   - 769–1550px: sidebar sits in flow (24 + 176 + 24 = 224px before the
+     grid), 3 cols with 24px gaps -> line at 248px + (100% - 272px)/3;
+   - >1550px: sidebar bleeds into the gutter, grid starts at the container
+     edge -> line at 24px + (100% - 48px)/3;
+   - <=1180px: grid drops to 2 cols -> 248px + (100% - 248px)/2.
+   justify-content distributes the leftover evenly, gap is the minimum. */
 .header-nav {
   display: flex;
   align-items: center;
-  gap: var(--space-lg);
+  justify-content: space-between;
+  gap: 12px;
+  width: calc(248px + (100% - 272px) / 3);
 }
 
+@media (max-width: 1180px) and (min-width: 769px) {
+  .header-nav {
+    width: calc(248px + (100% - 248px) / 2);
+  }
+}
+
+.header-nav > * {
+  flex-shrink: 0;
+}
+
+/* «Комнаты» is the only plain link (no dropdown): reserve some of the
+   space a chevron occupies elsewhere (8px vs the 16px arrow block), so the
+   row keeps its rhythm without an obviously oversized hole after it. */
+.header-nav > .header-nav-link {
+  padding-right: 8px;
+}
+
+/* The last item's chevron (4px margin + 12px arrow box) hangs past the
+   powerline: pull it out of the flex math so the label's last letter, not
+   the arrow, sits on the line. */
+.header-nav > .nav-dropdown:last-child {
+  margin-right: -16px;
+}
+
+/* Main nav: 0.9rem at regular (400) weight, in the logo's dark ink
+   (--color-fg) so the row reads a step darker than the muted top bar;
+   hover lightens to secondary. */
 .header-nav-link {
-  font-size: 0.88rem;
-  font-weight: 500;
+  font-size: 0.9rem;
+  font-weight: 400;
   color: var(--color-fg);
   text-decoration: none;
   transition: color 0.15s;
@@ -199,8 +331,10 @@ img {
 }
 
 .header-cart-link {
-  font-size: 0.88rem;
-  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.9rem;
+  font-weight: 400;
   color: var(--color-fg);
   text-decoration: none;
   transition: color 0.15s;
@@ -209,6 +343,85 @@ img {
 .header-cart-link:hover {
   color: var(--color-fg-secondary);
   text-decoration: none;
+}
+
+/* Item counter pill: hidden (scaled away, zero footprint) at 0 items so
+   «Корзина» reads exactly as before; springs into view on the first add.
+   The bump animation replays on every add — the badge span is remounted
+   (React key) so back-to-back adds each get their own pop. */
+.header-cart-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--color-action);
+  color: var(--color-surface);
+  font-size: 0.66rem;
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  transform: scale(0);
+  /* No `gap` on the parent — this margin IS the spacing to «Корзина», so
+     it can collapse fully to zero. At 0 the badge contributes nothing at
+     all to the link's width, and «Корзина» sits flush at the container's
+     right edge, same as «Контакты» in the top bar right above it. */
+  margin-left: 0;
+  margin-right: -18px; /* collapses its own min-width when hidden */
+  opacity: 0;
+  transition:
+    transform 0.35s cubic-bezier(0.34, 1.4, 0.64, 1),
+    opacity 0.25s ease,
+    margin-left 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    margin-right 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.header-cart-count.is-visible {
+  transform: scale(1);
+  margin-left: 6px;
+  margin-right: 0;
+  opacity: 1;
+}
+
+.header-cart-count.is-visible.is-bumped {
+  animation: cart-count-bump 0.5s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+@keyframes cart-count-bump {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.35);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* The dot that flies from the «В корзину» CTA into the counter. Created
+   imperatively (header-cart-link.tsx) and animated with WAAPI along a
+   gentle arc; this only styles it. */
+.cart-fly-dot {
+  position: fixed;
+  z-index: 300;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-action);
+  box-shadow: 0 4px 14px rgba(44, 36, 32, 0.28);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header-cart-count,
+  .header-cart-count.is-visible.is-bumped {
+    transition: none;
+    animation: none;
+  }
 }
 
 /* -- Dropdown -- */
@@ -228,6 +441,55 @@ img {
   padding: 0.3rem 0;
 }
 
+/* Main nav copies of the dropdown link match .header-nav-link (0.9rem /
+   400 / fg); the top-bar copies keep their own 0.82rem muted style. */
+.header-nav .nav-dropdown-link {
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--color-fg);
+}
+
+.header-nav .nav-dropdown-link:hover {
+  color: var(--color-fg-secondary);
+}
+
+/* "Детская" is the one section entry point in the main nav that gets a
+   colour cue instead of staying neutral — mixed with the row's own dark
+   ink (not the bright kids-theme accent) so it reads as a deep, muted
+   green in tone with the labels next to it, rather than a bright chip.
+   Darkened with black, not with the brown text colour: mixing toward
+   brown shifts the hue and reads as grey/near-black, mixing toward black
+   only drops lightness. Kept short of matching the row's ink lightness
+   exactly — at very low lightness the green hue itself stops being
+   legible at this text size, so the mix stays weighted enough toward the
+   accent to read as unmistakably green, just clearly darker than the
+   theme's default. */
+.header-nav-kids .nav-dropdown-link,
+.header-nav-kids .nav-dropdown-toggle {
+  color: color-mix(in srgb, #598060 65%, black 35%);
+}
+
+.header-nav-kids .nav-dropdown-link:hover,
+.header-nav-kids .nav-dropdown-toggle:hover {
+  color: color-mix(in srgb, #598060 85%, black 15%);
+}
+
+/* Dropdown panel under "Детская": same green family as the trigger —
+   tinted border instead of the neutral grey other menus use, green item
+   labels, and a soft green hover fill instead of the plain --color-bg. */
+.header-nav-kids .nav-dropdown-menu {
+  border-color: color-mix(in srgb, #598060 50%, var(--color-border) 50%);
+}
+
+.header-nav-kids .nav-dropdown-menu a {
+  color: color-mix(in srgb, #598060 65%, black 35%);
+}
+
+.header-nav-kids .nav-dropdown-menu a:hover {
+  background: color-mix(in srgb, #598060 14%, var(--color-surface) 86%);
+  color: color-mix(in srgb, #598060 85%, black 15%);
+}
+
 .nav-dropdown-link:hover {
   color: var(--color-fg-secondary);
   text-decoration: none;
@@ -236,13 +498,18 @@ img {
 .nav-dropdown-toggle {
   background: none;
   border: none;
-  padding: 0.3rem 0.3rem;
-  margin-left: 0.1rem;
+  box-sizing: border-box;
+  width: 12px;
+  /* padding-right shrinks the arrow's own content box, shifting the glyph
+     right as the value drops — the toggle's outer 12px box (and thus every
+     spacing/line-alignment measurement) doesn't move. */
+  padding: 0.3rem 2px 0.3rem 0;
+  margin-left: 4px;
   cursor: pointer;
   color: inherit;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   opacity: 0.45;
   transition: opacity 0.15s;
 }
@@ -266,6 +533,28 @@ img {
   transform: rotate(180deg);
 }
 
+/* Wide screens: in bleed mode the line sits only ~392px from the container
+   edge — the 0.9rem labels only fit if the chevrons tuck in against the
+   labels and «Комнаты»'s phantom shrinks. Typography stays uniform. */
+@media (min-width: 1551px) {
+  .header-nav {
+    gap: 4px;
+    width: calc(24px + (100% - 48px) / 3);
+  }
+
+  .header-nav .nav-dropdown-toggle {
+    margin-left: 0;
+  }
+
+  .header-nav > .header-nav-link {
+    padding-right: 4px;
+  }
+
+  .header-nav > .nav-dropdown:last-child {
+    margin-right: -12px;
+  }
+}
+
 .nav-dropdown-menu {
   display: flex;
   flex-direction: column;
@@ -273,7 +562,12 @@ img {
   top: 100%;
   left: 0;
   min-width: 180px;
-  padding: var(--space-sm) 0;
+  /* No vertical padding: the box should hug the items exactly (as many
+     rows as links, nothing more), and item hover — see below — fills edge
+     to edge with no bare strip above/below it. overflow: hidden clips the
+     top/bottom items' hover fill to the container's own rounded corners. */
+  padding: 0;
+  overflow: hidden;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
@@ -299,6 +593,7 @@ img {
 /* Top bar dropdown */
 .header-top-right .nav-dropdown-link {
   font-size: 0.82rem;
+  font-weight: 400;
   color: var(--color-fg-secondary);
 }
 
@@ -312,10 +607,6 @@ img {
 
 /* -- Mobile nav -- */
 
-.mobile-nav-checkbox {
-  display: none;
-}
-
 .mobile-nav-btn {
   display: none;
 }
@@ -324,9 +615,18 @@ img {
   display: none;
 }
 
+body.mobile-nav-open {
+  overflow: hidden;
+  touch-action: none;
+}
+
+html.mobile-nav-open {
+  overflow: hidden;
+}
+
 @media (max-width: 768px) {
   .header-top-inner {
-    height: 44px;
+    height: 52px;
   }
 
   .header-top-left {
@@ -352,15 +652,21 @@ img {
     align-items: center;
     justify-content: center;
     position: absolute;
-    top: 10px;
+    top: 6px;
     right: var(--space-lg);
-    width: 32px;
-    height: 32px;
+    width: 44px;
+    height: 44px;
     cursor: pointer;
     z-index: 52;
     border: none;
     background: none;
     padding: 0;
+  }
+
+  .mobile-nav-btn:focus-visible {
+    outline: 2px solid var(--color-action);
+    outline-offset: 3px;
+    border-radius: var(--radius-sm);
   }
 
   .mobile-nav-icon,
@@ -369,7 +675,7 @@ img {
     display: block;
     width: 20px;
     height: 2px;
-    background: var(--color-fg);
+    background: var(--color-action);
     border-radius: 1px;
     transition: transform 0.2s, opacity 0.2s;
   }
@@ -393,44 +699,58 @@ img {
     top: 6px;
   }
 
-  .mobile-nav-checkbox:checked ~ .mobile-nav-btn .mobile-nav-icon {
+  .mobile-nav-icon.is-open {
     background: transparent;
   }
 
-  .mobile-nav-checkbox:checked ~ .mobile-nav-btn .mobile-nav-icon::before {
+  .mobile-nav-icon.is-open::before {
     top: 0;
     transform: rotate(45deg);
   }
 
-  .mobile-nav-checkbox:checked ~ .mobile-nav-btn .mobile-nav-icon::after {
+  .mobile-nav-icon.is-open::after {
     top: 0;
     transform: rotate(-45deg);
   }
 
-  .mobile-nav-checkbox:checked ~ .mobile-nav-overlay {
+  .mobile-nav-overlay.is-open {
     display: block;
   }
 
   .mobile-nav-overlay {
     position: fixed;
-    top: 44px;
+    top: 52px;
     left: 0;
     right: 0;
     bottom: 0;
     background: var(--color-surface);
     z-index: 51;
     overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .mobile-nav {
     display: flex;
     flex-direction: column;
     padding: var(--space-lg);
+    gap: var(--space-lg);
+  }
+
+  .mobile-nav-group {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mobile-nav-group-cart {
+    margin-top: var(--space-sm);
+    padding-top: var(--space-sm);
+    border-top: 1px solid var(--color-border);
   }
 
   .mobile-nav a {
     display: block;
-    padding: 0.75rem 0;
+    padding: 0.875rem 0;
+    min-height: 44px;
     font-size: 1rem;
     font-weight: 500;
     color: var(--color-fg);
@@ -441,17 +761,202 @@ img {
     text-decoration: none;
     color: var(--color-fg-secondary);
   }
+
+  .mobile-nav a:focus-visible {
+    outline: 2px solid var(--color-action);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  .mobile-nav a.mobile-nav-kids {
+    color: color-mix(in srgb, #598060 65%, black 35%);
+  }
+
+  .mobile-nav a.mobile-nav-kids:hover {
+    color: color-mix(in srgb, #598060 85%, black 15%);
+  }
+}
+
+/* ---- Skip link + global focus-visible (buyer chrome) ---- */
+
+.skip-link {
+  position: absolute;
+  left: var(--space-md);
+  top: 0;
+  z-index: 100;
+  padding: 0.5rem 0.875rem;
+  background: var(--color-action);
+  color: #fff;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transform: translateY(-120%);
+  transition: transform 0.15s ease;
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+  transform: translateY(0);
+  outline: 2px solid var(--color-action);
+  outline-offset: 3px;
+}
+
+#main-content:focus {
+  outline: none;
+}
+
+a:focus-visible,
+.btn:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 2px;
+}
+
+.btn-primary:focus-visible {
+  outline-color: var(--color-action);
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--color-action);
+  outline: none;
+}
+
+/* ---- System states (404 / error / loading) ---- */
+
+.system-state {
+  max-width: 36rem;
+  margin: var(--space-2xl) auto;
+  text-align: center;
+  padding-block: var(--space-xl);
+}
+
+.system-state-label {
+  font-size: 0.8125rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-fg-muted);
+  margin-bottom: var(--space-sm);
+}
+
+.system-state-title {
+  font-size: 1.75rem;
+  font-weight: 500;
+  color: var(--color-fg);
+  margin-bottom: var(--space-md);
+}
+
+.system-state-text {
+  color: var(--color-fg-secondary);
+  line-height: 1.6;
+  margin-bottom: var(--space-xl);
+}
+
+.system-state-actions {
+  justify-content: center;
+}
+
+.system-state-loading {
+  padding-block: var(--space-3xl);
+}
+
+.system-state-loading-text {
+  color: var(--color-fg-secondary);
+  font-size: 1rem;
+}
+
+.checkout-payment-clarity {
+  margin: 0 0 var(--space-md);
+  padding: var(--space-md);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-fg-secondary);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.checkout-payment-clarity-page {
+  margin-top: var(--space-md);
+  max-width: 40rem;
+  text-align: left;
 }
 
 /* ---- Site Footer ---- */
 
 .site-footer {
   border-top: 1px solid var(--color-border);
-  padding-block: var(--space-lg);
+  padding-block: var(--space-2xl) var(--space-lg);
   margin-top: 3rem;
+  color: var(--color-fg-secondary);
+  font-size: 0.9rem;
+}
+
+.footer-columns {
+  display: grid;
+  grid-template-columns: 1.4fr repeat(4, 1fr);
+  gap: var(--space-xl);
+}
+
+.footer-brand-logo {
+  font-size: 1.15rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--color-fg);
+}
+
+.footer-brand-text {
+  margin-top: var(--space-sm);
+  max-width: 32ch;
+  line-height: 1.6;
   color: var(--color-fg-muted);
+}
+
+.footer-column-title {
   font-size: 0.85rem;
-  text-align: center;
+  font-weight: 500;
+  color: var(--color-fg);
+  margin-bottom: var(--space-sm);
+}
+
+.footer-column-links {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.footer-column-links a {
+  color: var(--color-fg-muted);
+}
+
+.footer-column-links a:hover {
+  color: var(--color-fg);
+}
+
+.footer-bottom {
+  margin-top: var(--space-xl);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-fg-muted);
+  font-size: 0.8rem;
+}
+
+@media (max-width: 900px) {
+  .footer-columns {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-lg);
+  }
+
+  .footer-brand {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 520px) {
+  .footer-columns {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ---- Buttons ---- */
@@ -481,12 +986,12 @@ button:disabled,
 }
 
 .btn-primary {
-  background: var(--color-fg);
+  background: var(--color-action);
   color: #fff;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #3d3530;
+  background: var(--color-action-hover);
 }
 
 .btn-secondary {
@@ -521,9 +1026,15 @@ button:disabled,
   transition: box-shadow 0.15s;
 }
 
-/* Product catalog cards: thumb strip lives below hero — avoid clipping the strip */
+/* Product catalog cards: thumb strip lives below hero — avoid clipping the strip.
+   Full-height flex column so every card fills its grid cell and the meta block
+   (price line) can anchor to the bottom edge — cards in a row read as one
+   calm, even rhythm regardless of how many swatch/thumb rows each one has. */
 .card.product-card {
   overflow: visible;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .card:hover {
@@ -737,7 +1248,7 @@ button:disabled,
 }
 
 .product-card-media-thumb.is-active {
-  border-color: var(--color-accent);
+  border-color: var(--color-action);
 }
 
 .product-card-media-thumb-img {
@@ -755,7 +1266,7 @@ button:disabled,
   text-transform: none;
 }
 
-.product-card-execution-swatches,
+.product-card-execution-swatches:not(.product-card-swatch-scroll-rail__track),
 .product-card-color-swatches {
   display: flex;
   flex-wrap: nowrap;
@@ -777,10 +1288,10 @@ button:disabled,
 .product-card-execution-swatch,
 .product-card-color-swatch {
   flex: 0 0 auto;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   padding: 0;
-  border: 1px solid rgba(44, 40, 36, 0.12);
+  border: 1px solid rgba(44, 40, 36, 0.14);
   border-radius: 4px;
   overflow: hidden;
   cursor: pointer;
@@ -789,6 +1300,12 @@ button:disabled,
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.product-card-execution-swatch:hover,
+.product-card-color-swatch:hover {
+  border-color: var(--color-fg-muted);
 }
 
 .product-card-execution-swatch-fill {
@@ -799,11 +1316,19 @@ button:disabled,
   background: var(--swatch-neutral, #e8e4df);
 }
 
+.product-card-execution-swatch-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 3px;
+}
+
 .product-card-execution-controls {
   display: flex;
   flex-direction: column;
-  gap: 0;
-  padding: 1px 0 0;
+  gap: 0.25rem;
+  padding: 0.5rem 0 0.25rem;
   background: var(--color-bg);
   position: relative;
   z-index: 1;
@@ -813,9 +1338,9 @@ button:disabled,
   display: grid;
   grid-template-columns: 3.25rem minmax(0, 1fr);
   align-items: center;
-  gap: 2px 5px;
+  gap: 0 10px;
   padding: 0 var(--space-sm, 0.5rem);
-  min-height: 22px;
+  min-height: unset;
   box-sizing: border-box;
   background: var(--color-bg);
   position: relative;
@@ -824,8 +1349,8 @@ button:disabled,
 }
 
 .product-card-selector-label {
-  font-size: 0.5625rem;
-  color: color-mix(in srgb, var(--color-fg-muted) 82%, transparent);
+  font-size: 0.625rem;
+  color: color-mix(in srgb, var(--color-fg-muted) 90%, transparent);
   flex: 0 0 auto;
   line-height: 1.1;
   white-space: nowrap;
@@ -842,11 +1367,193 @@ button:disabled,
 .product-card-execution-swatches--inline {
   display: flex;
   flex-wrap: nowrap;
-  gap: 4px;
+  gap: 5px;
   padding: 0;
-  min-height: 22px;
+  min-height: 32px;
   overflow-x: auto;
   min-width: 0;
+}
+
+/* Swatch row: hide native scrollbar (overlaps chips on mobile); use arrow rail */
+.product-card-swatch-scroll-rail {
+  position: relative;
+  min-width: 0;
+  /* Keep chip row clear of any overlay scrollbar gutter */
+  padding-bottom: 2px;
+}
+
+.product-card-swatch-scroll-rail .product-card-swatch-scroll-rail__track {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 5px;
+  align-items: center;
+  /* Small inline padding so the active-swatch ring is not clipped by the
+     scroll container at the row edges. */
+  padding: 0 4px;
+  /* Tall enough for the 28px scroll arrows and the active-swatch ring
+     (24px swatch + 3px ring each side) without vertical clipping. */
+  min-height: 32px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  min-width: 0;
+  max-width: 100%;
+  background: transparent;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+.product-card-swatch-scroll-rail .product-card-swatch-scroll-rail__track::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+  background: transparent;
+}
+
+.product-card-swatch-scroll-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-surface) 94%, transparent);
+  color: var(--color-fg-secondary);
+  font-size: 0.875rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(44, 36, 32, 0.1);
+}
+
+.product-card-swatch-scroll-arrow:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.product-card-swatch-scroll-arrow:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
+  outline-offset: 1px;
+}
+
+.product-card-swatch-scroll-arrow--prev {
+  left: 0;
+}
+
+.product-card-swatch-scroll-arrow--next {
+  right: 0;
+}
+
+.product-card-swatch-scroll-rail:has(.product-card-swatch-scroll-arrow--prev)
+  .product-card-swatch-scroll-rail__track {
+  padding-left: 30px;
+}
+
+.product-card-swatch-scroll-rail:has(.product-card-swatch-scroll-arrow--next)
+  .product-card-swatch-scroll-rail__track {
+  padding-right: 30px;
+}
+
+/* Execution swatches (Дерево/Обивка/Цвет) are portalled out of
+   .product-detail-media-switcher into #pdp-color-options-slot, below the CTA
+   buttons in .product-detail-info — see ProductCardMediaGalleryCore. Styled
+   here so the row/label/swatch sizing matches the PDP context (bigger than
+   the compact catalog-card strip) wherever the portal lands them. */
+.pdp-color-options-slot {
+  margin-top: var(--space-md);
+}
+
+.pdp-color-options-slot:empty {
+  display: none;
+}
+
+.pdp-color-options-slot .product-card-execution-controls {
+  margin-top: 0;
+  padding-top: var(--space-md);
+  padding-bottom: 0;
+  gap: 0.6rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.pdp-color-options-slot .product-card-selector-section {
+  grid-template-columns: 5rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0 12px;
+  padding: 0;
+  min-height: unset;
+}
+
+.pdp-color-options-slot .product-card-selector-label {
+  line-height: 1.2;
+  padding-top: 0;
+  margin: 0;
+  font-size: 0.75rem;
+}
+
+.pdp-color-options-slot .product-card-swatch-scroll-rail {
+  padding-bottom: 0;
+}
+
+.pdp-color-options-slot .product-card-execution-swatch {
+  width: 30px;
+  height: 30px;
+}
+
+/* Text chips (e.g. Изголовье: Frame/Cloud/Plane) keep their natural width on
+   the PDP — only color/material swatches are square. */
+.pdp-color-options-slot .product-card-model-chip {
+  font-size: 0.8125rem;
+  line-height: 1.2;
+  padding: 0.4rem 0.8rem;
+  border-radius: var(--radius-sm);
+}
+
+.pdp-color-options-slot .product-card-execution-swatches--inline {
+  min-height: 38px;
+}
+
+.pdp-color-options-slot .product-card-swatch-scroll-rail .product-card-swatch-scroll-rail__track {
+  min-height: 38px;
+}
+
+/* PDP thumb rail — same scroll-rail engine as the catalog card, scaled up
+   for the larger hero image (all 4 PDP gallery paths render inside
+   .product-detail-media-col, including the two without execution swatches). */
+.product-detail-media-col .product-card-media-thumbs-carousel {
+  margin-top: var(--space-sm);
+}
+
+.product-detail-media-col .product-card-media-thumbs-track {
+  min-height: 68px;
+  gap: 8px;
+  padding: 8px var(--space-sm);
+}
+
+.product-detail-media-col .product-card-media-thumb {
+  width: 60px;
+  height: 60px;
+  border-radius: 7px;
+}
+
+.product-detail-media-col .product-card-media-thumbs-arrow {
+  width: 30px;
+  height: 30px;
+}
+
+.product-detail-media-col .product-card-media-thumbs-carousel:has(.product-card-media-thumbs-arrow--prev)
+  .product-card-media-thumbs-track {
+  padding-left: 34px;
+}
+
+.product-detail-media-col .product-card-media-thumbs-carousel:has(.product-card-media-thumbs-arrow--next)
+  .product-card-media-thumbs-track {
+  padding-right: 34px;
 }
 
 .product-card-model-selectors {
@@ -872,20 +1579,26 @@ button:disabled,
 
 .product-card-model-chip {
   flex: 0 0 auto;
-  font-size: 0.5625rem;
-  line-height: 1.1;
-  padding: 2px 6px;
+  font-size: 0.6875rem;
+  line-height: 1.2;
+  padding: 3px 8px;
   border: 1px solid rgba(44, 40, 36, 0.12);
   border-radius: 3px;
   background: var(--color-surface);
   color: color-mix(in srgb, var(--color-fg-muted) 88%, transparent);
   cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.product-card-model-chip:hover {
+  border-color: var(--color-fg-muted);
+  color: var(--color-fg);
 }
 
 .product-card-model-chip.is-active {
-  border-color: color-mix(in srgb, var(--color-fg) 22%, transparent);
+  border-color: color-mix(in srgb, var(--color-action) 22%, transparent);
   color: var(--color-fg);
-  background: color-mix(in srgb, var(--color-fg) 3%, var(--color-bg));
+  background: color-mix(in srgb, var(--color-action) 3%, var(--color-bg));
 }
 
 .product-card-model-chip:focus-visible {
@@ -959,10 +1672,13 @@ button:disabled,
   background: #3d2b24;
 }
 
+/* Selected swatch: surface gap + calm dark ring — unambiguous but quiet */
 .product-card-execution-swatch.is-active,
 .product-card-color-swatch.is-active {
-  border: 1px solid color-mix(in srgb, var(--color-fg) 24%, transparent);
-  box-shadow: none;
+  border: 1px solid transparent;
+  box-shadow:
+    0 0 0 1.5px var(--color-surface),
+    0 0 0 3px color-mix(in srgb, var(--color-action) 62%, transparent);
 }
 
 .product-card-execution-swatch:focus-visible,
@@ -983,6 +1699,34 @@ button:disabled,
   border-bottom-left-radius: var(--radius);
   border-bottom-right-radius: var(--radius);
   background: var(--color-surface);
+  flex: 1 1 auto;
+}
+
+/* Uniform title area: clamp to two lines and reserve their height so titles,
+   dimensions and prices sit on the same lines across a card row. */
+.product-card .card-body h3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.5em;
+}
+
+/* Price row is the strongest anchor of the card — pin it (price, variant hint,
+   badge together) to the bottom so the row baseline stays even. */
+.product-card .card-body .card-price-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-xs, 0.25rem);
+  margin-top: auto;
+  padding-top: var(--space-xs);
+}
+
+/* Rail band wrapper (swatches + thumb strip). Outside the catalog subgrid it
+   must be layout-transparent so home/bespoke/QA grids stay untouched. */
+.product-card-rails {
+  display: contents;
 }
 
 .card-context {
@@ -1021,9 +1765,16 @@ button:disabled,
 
 .product-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  /* minmax(0, 1fr) — plain 1fr resolves to minmax(auto, 1fr), and a card's
+     auto minimum (wide thumb strips / swatch rails) can blow the track wider
+     than the viewport on small screens. */
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-lg);
   list-style: none;
+}
+
+.product-grid > li {
+  min-width: 0;
 }
 
 @media (min-width: 640px) {
@@ -1043,7 +1794,7 @@ button:disabled,
 .form-stack {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: var(--space-lg);
   max-width: 440px;
 }
 
@@ -1054,22 +1805,30 @@ button:disabled,
 }
 
 .form-field label {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 500;
-  color: var(--color-fg-secondary);
+  line-height: 1.25;
+  color: var(--color-fg);
 }
 
 .form-field input,
 .form-field textarea,
 .form-field select {
-  padding: 0.55rem 0.75rem;
+  min-height: 50px;
+  padding: 0.6rem 0.9rem;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-lg);
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: var(--color-fg);
   background: var(--color-surface);
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  width: 100%;
+}
+
+.form-field input::placeholder,
+.form-field textarea::placeholder {
+  color: var(--color-fg-muted);
 }
 
 .form-field input:focus,
@@ -1077,18 +1836,27 @@ button:disabled,
 .form-field select:focus {
   outline: none;
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 2px rgba(124, 106, 91, 0.2);
+  box-shadow: 0 0 0 3px rgba(124, 106, 91, 0.15);
 }
 
 .form-field input:disabled,
-.form-field textarea:disabled {
+.form-field textarea:disabled,
+.form-field select:disabled {
   background: var(--color-bg);
   opacity: 0.7;
 }
 
+.form-field select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23635A54' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.9rem center;
+  padding-right: 2.25rem;
+}
+
 .form-field textarea {
   resize: vertical;
-  min-height: 80px;
+  min-height: 116px;
 }
 
 .form-section-title {
@@ -1096,6 +1864,52 @@ button:disabled,
   font-weight: 500;
   color: var(--color-fg-secondary);
   padding-top: var(--space-sm);
+}
+
+/* Catalog / kids-catalog hero: the shared .page-section rule (used site-wide
+   on <main>) adds 2.5rem of top padding before any content, which reads as
+   a dead gap above a fairly small heading here — pull the block up and use
+   a more modest heading size locally instead of touching the shared
+   h1/.page-section rules used across the rest of the site. */
+/* -16px against .page-section's 40px top padding = 24px header -> text,
+   matching the 24px between the text block and the controls below. */
+.catalog-hero {
+  margin-top: -16px;
+  margin-bottom: 0;
+}
+
+
+.catalog-hero h1 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 500;
+}
+
+/* Proximity: the lead sits one 4px-grid step (8px) under the heading,
+   while the 24px before the controls (.catalog-filter-shell margin) keeps
+   the two blocks apart. */
+.catalog-hero .info-text {
+  margin-top: 8px;
+  font-size: 0.9375rem;
+  /* Slightly tighter word gaps: at this size the default spaces read airy. */
+  word-spacing: -1px;
+}
+
+/* Same green as .kids-theme's --color-accent: the kids entry point reads
+   as part of the lead sentence, but signals the section switch by colour.
+   One size step below the lead (16px vs 15px): its 500 weight + colour
+   already carry emphasis, so equal size would make it outweigh the lead. */
+.catalog-hero-kids-link {
+  color: #628c6a;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.catalog-hero-kids-link:hover {
+  color: #4e7355;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 /* ---- Catalog Controls ---- */
@@ -1115,10 +1929,45 @@ button:disabled,
 .catalog-controls {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   flex-wrap: wrap;
-  gap: var(--space-md);
-  margin-top: var(--space-md);
+  gap: var(--space-sm) var(--space-md);
+}
+
+/* Standalone dark pill next to the segmented tabs: «По проекту» is a separate
+   scenario (bespoke section), not another filter value, so it reads as its own
+   button while staying in the same control row. The size that actually reads
+   as "the selector" to the eye is the dark active tab inside .filter-tabs
+   (not the lighter outer track), so this copies that tab's exact box model
+   (same min-height, vertical padding, border width, font) instead of matching
+   the track — that's what makes the two dark pills genuinely equal, not just
+   the same overall row height. */
+.catalog-bespoke-cta {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 16px;
+  border: 1px solid var(--color-action);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: var(--color-action);
+  color: var(--color-surface);
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.catalog-bespoke-cta:hover {
+  background: var(--color-action-hover);
+  border-color: var(--color-action-hover);
+  color: var(--color-surface);
+  text-decoration: none;
+}
+
+.catalog-bespoke-cta:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
+  outline-offset: 2px;
 }
 
 .catalog-cta {
@@ -1140,25 +1989,68 @@ button:disabled,
 .filter-tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
-  padding: 0.25rem;
+  align-items: center;
+  position: relative;
+  height: 44px;
+  gap: 4px;
+  padding: 4px;
   border: 1px solid var(--color-border);
   border-radius: 999px;
   background: color-mix(in srgb, var(--color-surface) 86%, var(--color-bg));
 }
 
+/* The sliding dark pill behind the active tab. Positioned from JS
+   measurements (offsetLeft/offsetWidth of .filter-tab-active), glides
+   between tabs on change instead of the background snapping. Its first
+   mount paints in place (transition only animates subsequent moves).
+   The move itself is a transform (translate3d), not left/top: transform
+   animates on the compositor thread, so the glide stays smooth even
+   while the main thread is busy re-rendering the product grid after the
+   route change. Only width/height (which do need layout) remain as
+   transitioned box properties — the element is absolutely positioned
+   with no children, so that layout is contained and cheap. */
+.filter-tabs-indicator {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 0;
+  border-radius: 999px;
+  background: var(--color-action);
+  box-shadow: 0 4px 14px rgba(44, 36, 32, 0.12);
+  pointer-events: none;
+  will-change: transform;
+  transition:
+    transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .filter-tabs-indicator,
+  .filter-tab {
+    transition: none;
+  }
+}
+
 .filter-tab {
   display: inline-flex;
   align-items: center;
-  min-height: 2rem;
-  padding: 0.35rem 0.8rem;
+  position: relative;
+  z-index: 1; /* label above the sliding indicator */
+  height: 32px;
+  padding: 0 12px;
   border: 1px solid transparent;
   border-radius: 999px;
   font-size: 0.8rem;
   font-weight: 500;
   color: var(--color-fg-secondary);
   text-decoration: none;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  /* Label recolor rides the same 0.45s curve as the pill's glide, so the
+     text finishes going light exactly when the pill settles under it. */
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .filter-tab:hover {
@@ -1168,29 +2060,66 @@ button:disabled,
   text-decoration: none;
 }
 
+/* Static dark pill: the SSR / no-JS fallback, and also what paints before
+   the sliding indicator has measured itself. Once the slider is mounted
+   (nav[data-slider]) the pill itself goes transparent — the indicator
+   underneath IS the dark background, and it's the thing that moves. */
 .filter-tab-active {
-  background: var(--color-fg);
+  background: var(--color-action);
   color: var(--color-surface);
-  border-color: var(--color-fg);
+  border-color: var(--color-action);
   box-shadow: 0 4px 14px rgba(44, 36, 32, 0.12);
 }
 
 .filter-tab-active:hover {
-  background: #3d3530;
-  border-color: #3d3530;
+  background: var(--color-action-hover);
+  border-color: var(--color-action-hover);
   color: var(--color-surface);
+}
+
+.filter-tabs[data-slider] .filter-tab-active,
+.filter-tabs[data-slider] .filter-tab-active:hover {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
 }
 
 /* ---- Catalog filters ---- */
 
+/* Every row (tabs, search toolbar, filter rail + grid) sits on the same two
+   vertical lines as the header content — Шоурум on the left, Корзина on the
+   right — so the whole catalog reads as one deliberate system anchored to
+   the site's own grid, not a wider block that "does its own thing". */
+/* Gaps *inside* the catalog header stack — tabs row → search toolbar →
+   filters/grid row — are half of --space-lg (12px instead of 24px): tighter
+   than the product grid's own gap on purpose, so the controls read as one
+   compact block sitting just above the grid, not another full grid row. */
+/* --catalog-card0-offset = how far card0's left edge sits in from this
+   shell's own left edge — needed to line the toolbar's search/sort
+   controls up with the product grid's column edges below. In bleed mode
+   (>1550px) .catalog-filter-sidebar is absolutely positioned into the
+   left gutter (see .catalog-filter-sidebar below), so it takes NO space
+   in the flex row and card0 actually starts flush at 0, regardless of
+   the sidebar's visual width in the gutter. The 769–1550px breakpoint
+   overrides this to that range's fixed 24px inset + 176px sidebar + 24px
+   gap footprint (the grid's own margin-left) instead. */
 .catalog-filter-shell {
-  --catalog-shell-width: min(1540px, calc(100vw - (2 * var(--space-lg))));
+  --catalog-card0-offset: 0px;
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
-  margin-top: var(--space-md);
-  width: var(--catalog-shell-width);
-  margin-inline: calc((100% - var(--catalog-shell-width)) / 2);
+  gap: calc(var(--space-lg) / 2);
+  margin-top: 20px;
+  width: min(100%, calc(var(--max-width) - 2 * var(--space-lg)));
+  margin-inline: auto;
+}
+
+@media (max-width: 1550px) and (min-width: 769px) {
+  /* Matches the grid's margin-left in this range: 24px inset before the
+     fixed 176px sidebar + 24px gap to card0 — flat regardless of viewport
+     width here (24 + 176 + 24 = 224). */
+  .catalog-filter-shell {
+    --catalog-card0-offset: 224px;
+  }
 }
 
 .catalog-filter-shell[data-pending="true"] {
@@ -1198,68 +2127,242 @@ button:disabled,
   pointer-events: none;
 }
 
+/* --catalog-toolbar-inset = this card's own padding (5px) + border (1px):
+   the search bubble's *content* starts that far in from the card's outer
+   (border-box) edge — the same edge the product grid's columns are
+   measured from below. Every calc() here has to subtract it back out once
+   to convert "distance from the card's outer edge" into "distance from
+   the search form's own content box", which is what `width` below sizes. */
 .catalog-filter-toolbar {
+  /* 8px padding + 1px border = 9px measured gap to the bubble/actions. */
+  --catalog-toolbar-inset: 9px;
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
   gap: var(--space-lg);
-  justify-content: space-between;
-  padding: 0.65rem;
+  padding: 8px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-surface);
   box-shadow: 0 8px 24px rgba(44, 36, 32, 0.04);
 }
 
+/* One continuous search "bubble" — a single bordered pill containing the
+   input, the quiet «Найдено N» count and the «Найти» button — instead of
+   three separately-floating pieces. Deliberately NO overflow:hidden here:
+   that clip cuts children off at the padding box (the *inside* edge of the
+   border), which made it impossible for the «Найти» button to ever paint
+   over the bubble's border — its negative margins were simply clipped
+   away, leaving the light border ring visible around the dark button. The
+   button owns its rounded right corners itself instead (see
+   .catalog-search-btn). */
 .catalog-search {
   display: flex;
   flex: 1 1 auto;
-  gap: 0;
+  align-items: center;
+  min-width: 0;
+  height: 28px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  transition: border-color 0.15s;
+}
+
+.catalog-search:focus-within {
+  border-color: var(--color-fg-muted);
+}
+
+/* >1180px only: 3-column grid exists, so "middle card" / "third card" are
+   well-defined and the search bubble can be pinned to their edges. Below
+   that the grid drops to 2 columns and this geometry has no target to
+   match, so .catalog-search keeps its flex-grow default (see the
+   max-width: 1180px override further down). Must come AFTER the base
+   .catalog-search rule above — same specificity, so source order is what
+   makes flex: 0 0 auto actually win over the base rule's flex: 1 1 auto.
+   Chained custom properties instead of one calc(), each mirroring one
+   step of how .catalog-product-grid actually lays out:
+   --catalog-outer-w  = this card's own OUTER (border-box) width, recovered
+                         from inside its padded content box (100% here);
+   --catalog-card-w   = one grid column's width: (outer width − sidebar
+                         footprint − the 2 gaps between 3 cards) / 3;
+   --catalog-search-w = card0's start + 2 columns + 1 gap = the middle
+                         card's right edge, converted from "distance from
+                         the card's outer edge" to "…from its content box"
+                         by subtracting the inset once. */
+@media (min-width: 1181px) {
+  .catalog-filter-toolbar {
+    justify-content: flex-start;
+  }
+
+  .catalog-search {
+    --catalog-outer-w: calc(100% + 2 * var(--catalog-toolbar-inset));
+    --catalog-card-w: calc(
+      (var(--catalog-outer-w) - var(--catalog-card0-offset) - 2 * var(--space-lg)) / 3
+    );
+    --catalog-search-w: calc(
+      var(--catalog-card0-offset) + 2 * var(--catalog-card-w) + var(--space-lg) -
+        var(--catalog-toolbar-inset)
+    );
+    flex: 0 0 auto;
+    width: var(--catalog-search-w);
+  }
+}
+
+/* Wraps just the input so the custom clear button (below) can be
+   positioned relative to it, without affecting the count/«Найти» siblings
+   in the outer .catalog-search flex row. */
+.catalog-search-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
   min-width: 0;
 }
 
+/* No vertical padding: the bubble itself is a fixed 28px — one 4px-grid
+   step below the 32px «По проекту» pill, same as the sort trigger — and
+   the input just fills it, text centering itself in the fixed box. */
 .catalog-search input[type="search"] {
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
-  padding: 0.65rem 0.85rem;
-  border: 1px solid var(--color-border);
-  border-right: 0;
-  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
-  font-size: 0.9rem;
-  background: var(--color-bg);
+  height: 100%;
+  padding: 0 32px 0 12px;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 400;
   color: var(--color-fg);
 }
 
+.catalog-search input[type="search"]:focus {
+  outline: none;
+}
+
+/* The native OS clear icon (blue X in WebKit/Chrome) doesn't match the
+   site's palette and can't be recoloured — hide it everywhere and use our
+   own thin cross instead (.catalog-search-clear below). */
+.catalog-search input[type="search"]::-webkit-search-cancel-button,
+.catalog-search input[type="search"]::-webkit-search-decoration {
+  display: none;
+  -webkit-appearance: none;
+}
+
+.catalog-search input[type="search"] {
+  appearance: none;
+  -moz-appearance: textfield;
+}
+
+.catalog-search-clear {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: none;
+  color: var(--color-fg-muted);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+.catalog-search-clear:hover {
+  color: var(--color-fg);
+  background: color-mix(in srgb, var(--color-border) 60%, transparent);
+}
+
+.catalog-search-clear:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
+  outline-offset: 1px;
+}
+
+/* «Найдено N» sits inside the search bubble itself, left of «Найти» — quiet
+   secondary text separated by a hairline, not a floating label outside it. */
+.catalog-search .catalog-result-count {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0 12px;
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--color-fg-muted);
+  white-space: nowrap;
+  border-left: 1px solid var(--color-border);
+}
+
+/* align-self: stretch overrides the generic `button` rule's center-aligned
+   (shorter-than-parent) box. The parent bubble no longer clips (see
+   .catalog-search) — the button paints over the bubble's 1px border on
+   top/right/bottom via -1px margins, so its outer edge lands exactly on
+   the bubble's outer contour: same height as the whole pill, border ring
+   fully covered. Its own right-corner radius matches the bubble's, so the
+   curve is one continuous shape. Left margin stays 0 — the hairline there
+   is deliberate (separates button from the count text). */
 .catalog-search-btn {
-  padding: 0.65rem 1rem;
-  border: 1px solid var(--color-border);
+  flex: 0 0 auto;
+  align-self: stretch;
+  margin: -1px -1px -1px 0;
+  padding: 0 24px;
+  border: none;
+  border-left: 1px solid var(--color-action);
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 500;
-  background: var(--color-fg);
+  background: var(--color-action);
   color: var(--color-surface);
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .catalog-search-btn:hover {
-  border-color: #3d3530;
-  background: #3d3530;
+  background: var(--color-action-hover);
+  border-left-color: var(--color-action-hover);
+}
+
+/* Inset, not offset: the button's edge is the bubble's edge, so an outward
+   outline would float outside the pill and read as yet another stray gap. */
+.catalog-search-btn:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-surface) 70%, transparent);
+  outline-offset: -3px;
 }
 
 .catalog-filter-toolbar-actions {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  flex-shrink: 0;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
+/* flex: 1 1 auto so the «По умолчанию» pill isn't just sized to its own
+   text — it stretches to actually fill the rest of the toolbar row, right
+   up against the card's inner edge, the same way the search bubble hugs
+   the left edge (.wr-select below already grows to fill *this*, and its
+   trigger is width: 100%, so the pill itself is what visibly stretches). */
 .catalog-sort {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  font-size: 0.78rem;
+  gap: 8px;
+  flex: 1 1 auto;
+  font-size: 0.8rem;
+  font-weight: 400;
   color: var(--color-fg-muted);
   white-space: nowrap;
+  min-width: 0;
+}
+
+/* Scoped, not on the shared .wr-select-trigger base rule — that class is
+   reused by the bespoke request form's field selects, which keep their own
+   larger font. Same size as «По проекту», but deliberately lighter weight:
+   search/count/sort read as calm secondary controls, not CTAs. */
+.catalog-sort .wr-select-trigger {
+  font-size: 0.8rem;
+  font-weight: 400;
 }
 
 .catalog-sort select {
@@ -1273,7 +2376,8 @@ button:disabled,
 
 .catalog-filter-mobile-toggle {
   display: none;
-  padding: 0.58rem 0.9rem;
+  height: 28px;
+  padding: 0 16px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   font-size: 0.8rem;
@@ -1283,12 +2387,107 @@ button:disabled,
   cursor: pointer;
 }
 
-.catalog-filter-meta {
-  display: flex;
+/* ---- Custom dropdown (catalog sort) ---- */
+
+.wr-select {
+  position: relative;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.wr-select-trigger {
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-md);
-  flex-wrap: wrap;
-  min-height: 1.5rem;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-width: 12.5rem;
+  height: 28px;
+  padding: 0 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 400;
+  line-height: 1.2;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+
+.wr-select-trigger:hover {
+  border-color: color-mix(in srgb, var(--color-action) 35%, var(--color-border));
+}
+
+.wr-select-trigger.is-open {
+  border-color: color-mix(in srgb, var(--color-action) 55%, var(--color-border));
+  background: var(--color-surface);
+}
+
+.wr-select-trigger:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
+  outline-offset: 1px;
+}
+
+.wr-select-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.wr-select-chevron {
+  flex: 0 0 auto;
+  width: 0;
+  height: 0;
+  border-left: 3.5px solid transparent;
+  border-right: 3.5px solid transparent;
+  border-top: 4px solid currentColor;
+  opacity: 0.55;
+  transition: transform 0.15s;
+}
+
+.wr-select-trigger.is-open .wr-select-chevron {
+  transform: rotate(180deg);
+}
+
+.wr-select-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 100%;
+  padding: var(--space-xs) 0;
+  margin: 0;
+  list-style: none;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 6px 20px rgba(44, 36, 32, 0.1);
+  z-index: 70;
+}
+
+.wr-select-option {
+  padding: 0.5rem var(--space-md);
+  font-size: 0.85rem;
+  color: var(--color-fg);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.wr-select-option.is-active {
+  background: color-mix(in srgb, var(--color-action) 8%, var(--color-bg));
+  color: var(--color-fg);
+}
+
+.wr-select-option.is-selected {
+  font-weight: 500;
+}
+
+.wr-select-option.is-selected::after {
+  content: "✓";
+  margin-left: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--color-action);
 }
 
 .catalog-result-count {
@@ -1297,29 +2496,24 @@ button:disabled,
   color: var(--color-fg-secondary);
 }
 
-.catalog-clear-filters {
-  padding: 0;
-  border: none;
-  background: none;
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--color-accent);
-  cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
+/* Active filters now live inside the filter card itself (right under the
+   «Фильтры» head + its single reset link), not as a separate loud row above
+   the whole page — so this is a compact, quiet wrap of chips, not a banner. */
+/* No negative top margin here: as the first child of the overflow-y
+   container (.catalog-filter-scroll) it would be pulled above the scroll
+   box's content edge, and anything past that edge is unreachable — the
+   chips rendered with their tops sliced off.
+   The negative bottom margin instead trims .catalog-filter-scroll's own
+   1.1rem inter-block gap down to the same ~6px the chips use between
+   themselves — the chips are a summary of the fieldset right below them,
+   not a separate block, so they read tighter than the gap between the
+   two fieldsets further down. */
 .catalog-active-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-sm);
+  gap: 0.4rem;
   align-items: center;
-  min-height: 2rem;
-}
-
-.catalog-active-chips-label {
-  font-size: 0.78rem;
-  color: var(--color-fg-muted);
+  margin-bottom: -0.35rem;
 }
 
 .catalog-active-empty {
@@ -1330,81 +2524,169 @@ button:disabled,
 .catalog-active-chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.25rem 0.55rem;
+  gap: 0.25rem;
+  max-width: 100%;
+  padding: 0.12rem 0.45rem;
   border: 1px solid var(--color-border);
   border-radius: 999px;
-  font-size: 0.75rem;
-  color: var(--color-fg);
-  background: var(--color-surface);
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--color-fg-secondary);
+  background: var(--color-bg);
 }
 
 .catalog-active-chip a {
+  flex: 0 0 auto;
   border: none;
   background: none;
   padding: 0;
   line-height: 1;
-  font-size: 1rem;
+  font-size: 0.95rem;
   color: var(--color-fg-muted);
   text-decoration: none;
   cursor: pointer;
 }
 
-.catalog-active-chip button {
-  border: none;
-  background: none;
-  padding: 0;
-  line-height: 1;
-  font-size: 1rem;
-  color: var(--color-fg-muted);
-  cursor: pointer;
+.catalog-active-chip a:hover {
+  color: var(--color-fg);
 }
 
+/* The filter card lives in the page's own left gutter — its right edge
+   sits flush 24px *before* the same vertical line as «Шоурум» / «Каталог»
+   in the header, so the grid can start exactly on that line and run all
+   the way to the line's mirror on the right, owning the full Шоурум→
+   Корзина content width. --catalog-gutter mirrors how .container computes
+   that line (max-width 1200 + 24px padding). The card's own outer size
+   (width + both margins) must net to zero, otherwise it eats into the
+   flex:1 grid's width instead of just occupying gutter space — margin-left
+   pushes the card gap-px further left than a flush fit would, margin-right
+   pulls it back by the same gap, and the two cancel out. That's why
+   margin-left carries *both* the width and the gap, not just the width.
+   The card's width tracks whatever gutter remains once width+gap together
+   are accounted for (0 at ≤1200px, up to 200px once the gutter is wide
+   enough). */
 .catalog-filter-layout {
-  display: grid;
-  grid-template-columns: clamp(240px, 18vw, 280px) minmax(0, 1fr);
-  gap: clamp(1.75rem, 2.2vw, 2.25rem);
+  --catalog-sidebar-gap: var(--space-lg);
+  --catalog-gutter: max(var(--space-lg), calc((100vw - var(--max-width)) / 2 + var(--space-lg)));
+  --catalog-sidebar-w: clamp(0px, calc(var(--catalog-gutter) - var(--catalog-sidebar-gap)), 200px);
+  position: relative;
+  display: flex;
   align-items: start;
-  margin-top: 0.35rem;
+  gap: 0;
 }
 
+/* The sidebar is an absolutely positioned column pinned to the layout's
+   full height (top/bottom: 0), i.e. exactly the product grid's height,
+   hanging left of the content into the gutter. Two things fall out of
+   that for free:
+   - it takes no flex space (replaces the old negative-margin trick), so
+     card0 still starts flush at the layout's left edge in bleed mode;
+   - the sticky filter card inside is contained by this column, so it can
+     never travel below the last product card row, and with few products
+     it is capped to the grid's height (the list scrolls internally). */
 .catalog-filter-sidebar {
-  position: sticky;
-  top: 112px;
-  display: block;
-  max-height: calc(100vh - 128px);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--color-surface) 92%, var(--color-bg));
-  scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--color-fg-muted) 36%, transparent) transparent;
-}
-
-.catalog-filter-sidebar::-webkit-scrollbar {
-  width: 6px;
-}
-
-.catalog-filter-sidebar::-webkit-scrollbar-thumb {
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--color-fg-muted) 34%, transparent);
+  position: absolute;
+  top: 0;
+  /* The grid's own height ends one --space-lg *below* the last card row
+     (subgrid mode moves inter-row spacing into li margin-bottom, and the
+     last row's margin still counts toward the grid's height). Trimming
+     the rail by that margin makes its bottom — and so the lowest point
+     the filter card can ever reach — the last card's real bottom edge. */
+  bottom: var(--space-lg);
+  left: calc(-1 * var(--catalog-sidebar-w) - var(--catalog-sidebar-gap));
+  width: var(--catalog-sidebar-w);
+  display: flex;
+  flex-direction: column;
 }
 
 .catalog-filter-panel {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  flex: 1 1 auto;
+  min-height: 0;
+  gap: 1.1rem;
 }
 
+/* Desktop: the panel itself is the visible sticky card (the sidebar
+   column above is an invisible height rail). Its bottom must keep a
+   constant --catalog-sidebar-gap (24px) to the viewport edge — the same
+   interval as the side gap to the grid — at *every* scroll position, not
+   only once stuck at top:112. Before sticking the panel sits lower (under
+   the search toolbar), so the available height depends on the current
+   scroll offset; pure CSS can't express that, so CatalogFilterControls
+   keeps --catalog-filter-fit updated on scroll/resize (viewport height −
+   panel's current top − 24). The calc() fallback is the stuck-state value
+   (136 = 112 + 24) for the first paint before JS runs.
+   The 100% cap is the containing column's height (= grid height), which
+   keeps the card from outgrowing the product list. The card itself never
+   scrolls as a whole — see .catalog-filter-scroll — so the price block +
+   «Применить» can't be clipped by these caps. */
+@media (min-width: 769px) {
+  .catalog-filter-panel {
+    position: sticky;
+    top: 112px;
+    flex: 0 1 auto;
+    max-height: min(var(--catalog-filter-fit, calc(100vh - 136px)), 100%);
+    overflow: hidden;
+    padding: 1.1rem 1rem 1.2rem;
+    border: 1px solid var(--color-border);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--color-surface) 55%, var(--color-bg));
+  }
+}
+
+/* Only the collections/type list scrolls internally. The head above and
+   the price block below (§ .catalog-filter-group-price) are outside this
+   wrapper, so they always stay fully visible — «Применить» is never
+   pushed off the bottom of the card by a long filter list.
+   The negative top margin (safe here, unlike on .catalog-active-chips:
+   it moves *this whole box* relative to the head above, not an internal
+   child relative to its own scrolling edge) trims the panel's 1.1rem
+   head→scroll gap down to match the chips' 12px margin-bottom below, so
+   an active chip sits vertically centered between the head divider and
+   the fieldset legend under it. */
+.catalog-filter-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-top: -0.35rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-fg-muted) 36%, transparent) transparent;
+}
+
+.catalog-filter-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.catalog-filter-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-fg-muted) 34%, transparent);
+}
+
+/* Anchored footer: a quiet top hairline reads as "this is a separate,
+   always-visible block", not just another item that happened to scroll
+   out of the list above it. */
+.catalog-filter-group-price {
+  flex-shrink: 0;
+  padding-top: 1rem;
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 65%, transparent);
+}
+
+/* baseline, not center: «Сбросить» is a smaller size than the «Фильтры»
+   h2, and centering different type sizes leaves the small link visually
+   floating above the title's baseline. */
 .catalog-filter-panel-head {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
   gap: var(--space-sm);
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 65%, transparent);
 }
 
 .catalog-filter-panel-head h2 {
@@ -1414,7 +2696,7 @@ button:disabled,
 }
 
 .catalog-filter-panel-reset {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: var(--color-accent);
   text-decoration: none;
 }
@@ -1425,13 +2707,101 @@ button:disabled,
 }
 
 .catalog-product-area {
+  flex: 1 1 auto;
   min-width: 0;
 }
 
 .catalog-product-grid {
-  grid-template-columns: repeat(3, minmax(300px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   list-style: none;
   margin-top: 0;
+}
+
+/* Equal-height catalog cards via subgrid: every card spans six shared row
+   tracks (media / rails / collection / title / dimensions / price), so the
+   tallest cell in a row sizes the track for the whole row. Cards missing
+   swatches or meta lines keep an empty band of the neighbours' height, and
+   the price row lands on one baseline. Rows where nobody has rails collapse
+   the band to zero (no phantom gaps in the single-column mobile layout).
+   Older browsers keep the flex-column fallback above. */
+@supports (grid-template-rows: subgrid) {
+  .catalog-product-grid {
+    row-gap: 0;
+  }
+
+  /* Inter-row spacing: with row-gap 0 the gap between card rows comes from
+     the li margin, which only inflates the last (price) track uniformly.
+     Every nested grid/flex item below gets an implicit min-width:auto
+     (content-based) unless overridden — exactly like flex items. Products
+     with many colour swatches (real catalog data goes well beyond the 2-3
+     swatches used in dev fixtures) have a wide intrinsic scroll-rail width;
+     without min-width:0 at each level that width propagates up and blows
+     the card past its 1fr track instead of triggering the rail's own
+     overflow-x:auto. min-width:0 on every level is what makes the reserved
+     rail actually clip/scroll instead of stretching the whole row. */
+  .catalog-product-grid > li {
+    display: grid;
+    grid-row: span 6;
+    grid-template-rows: subgrid;
+    margin-bottom: var(--space-lg);
+    min-width: 0;
+  }
+
+  .catalog-product-grid .card.product-card {
+    display: grid;
+    grid-row: span 6;
+    grid-template-rows: subgrid;
+    height: auto;
+    min-width: 0;
+  }
+
+  .catalog-product-grid .product-card-media-switcher {
+    display: grid;
+    grid-row: span 2;
+    grid-template-rows: subgrid;
+    min-width: 0;
+  }
+
+  .catalog-product-grid .product-card-media-link {
+    grid-row: 1;
+    min-width: 0;
+  }
+
+  .catalog-product-grid .product-card-rails {
+    display: flex;
+    flex-direction: column;
+    grid-row: 2;
+    min-width: 0;
+  }
+
+  .catalog-product-grid .product-card .card-body {
+    display: grid;
+    grid-row: span 4;
+    grid-template-rows: subgrid;
+    row-gap: var(--space-xs, 0.25rem);
+    justify-items: start;
+    min-width: 0;
+  }
+
+  /* Explicit tracks: a missing line (no collection / no dimensions) leaves an
+     empty track instead of shifting the elements below it. */
+  .catalog-product-grid .product-card .card-body .card-context {
+    grid-row: 1;
+  }
+
+  .catalog-product-grid .product-card .card-body h3 {
+    grid-row: 2;
+  }
+
+  .catalog-product-grid .product-card .card-body .card-dimensions {
+    grid-row: 3;
+  }
+
+  .catalog-product-grid .product-card .card-body .card-price-row {
+    grid-row: 4;
+    margin-top: 0;
+    align-self: start;
+  }
 }
 
 .catalog-filter-group {
@@ -1442,31 +2812,47 @@ button:disabled,
 }
 
 .catalog-filter-group legend {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--color-fg-muted);
+  letter-spacing: 0.09em;
+  color: var(--color-fg);
   margin-bottom: var(--space-sm);
 }
 
 .catalog-filter-checks {
   display: flex;
   flex-direction: column;
-  gap: 0.18rem;
+  gap: 0.12rem;
+  min-width: 0;
 }
 
+/* Compact row: the count sits right next to the label (quiet, secondary)
+   instead of being pushed to the far edge by space-between. The negative
+   inline margin exactly matches the sidebar card's own horizontal padding
+   (1rem) so the hover/active pill bleeds flush to the card's inner edge —
+   never past it, which is what created the internal horizontal scrollbar. */
 .catalog-filter-option {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-sm);
-  padding: 0.42rem 0.5rem;
+  align-items: baseline;
+  justify-content: flex-start;
+  gap: 0.55rem;
+  /* 0.2rem vertical (was 0.4): together with the list's 0.12rem gap the
+     baseline-to-baseline pitch tightens ~1.6x — the list reads as one
+     tight group instead of loosely stacked rows. */
+  padding: 0.2rem 1rem;
+  margin-inline: -1rem;
+  min-width: 0;
   border-radius: var(--radius-sm);
-  font-size: 0.83rem;
+  font-size: 0.86rem;
   color: var(--color-fg-secondary);
   text-decoration: none;
   transition: background 0.15s, color 0.15s;
+}
+
+.catalog-filter-option span:first-child {
+  min-width: 0;
+  overflow-wrap: break-word;
 }
 
 .catalog-filter-option:hover {
@@ -1476,10 +2862,9 @@ button:disabled,
 }
 
 .catalog-filter-option-active {
-  background: var(--color-surface);
+  background: color-mix(in srgb, var(--color-surface) 80%, var(--color-bg));
   color: var(--color-fg);
   font-weight: 600;
-  box-shadow: inset 0 0 0 1px var(--color-border);
 }
 
 .catalog-filter-check {
@@ -1497,62 +2882,107 @@ button:disabled,
 }
 
 .catalog-filter-count {
+  flex: 0 0 auto;
   color: var(--color-fg-muted);
-  margin-left: auto;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 400;
 }
 
-.catalog-filter-price {
+.catalog-filter-price-block {
   display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Explicit three-column grid (input / dash / input) instead of flex: a flex
+   row lets long placeholder/number content push both inputs past the card's
+   width before wrapping kicks in. Grid columns are pinned to minmax(0, 1fr),
+   so each input is forced to share the row evenly and can never exceed it. */
+.catalog-filter-price {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.4rem;
+  width: 100%;
+  min-width: 0;
 }
 
 .catalog-filter-price label {
   display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  flex: 1;
-  font-size: 0.72rem;
+  min-width: 0;
+  width: 100%;
+}
+
+.catalog-filter-price-dash {
   color: var(--color-fg-muted);
+  font-size: 0.8rem;
 }
 
 .catalog-filter-price input {
   width: 100%;
   min-width: 0;
-  padding: 0.48rem 0.55rem;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 0.5rem 0.6rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  font-size: 0.8rem;
-  background: var(--color-surface);
+  font-size: 0.82rem;
+  font-family: inherit;
+  background: var(--color-bg);
   color: var(--color-fg);
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.catalog-filter-price input:focus-visible {
+  outline: none;
+  border-color: var(--color-fg-muted);
+}
+
+.catalog-filter-price input::-webkit-outer-spin-button,
+.catalog-filter-price input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .catalog-filter-price-hint {
-  margin-top: 0.45rem;
-  font-size: 0.72rem;
+  margin: 0;
+  padding-left: 0.3rem;
+  font-size: 0.74rem;
   color: var(--color-fg-muted);
 }
 
-.catalog-filter-sidebar-clear {
-  display: inline-flex;
-  justify-content: center;
+.catalog-filter-price-actions {
+  display: flex;
   width: 100%;
-  padding: 0.55rem 0.75rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  color: var(--color-fg-secondary);
-  font-size: 0.82rem;
-  font-weight: 500;
-  text-decoration: none;
-  background: var(--color-surface);
+  min-width: 0;
 }
 
-.catalog-filter-sidebar-clear:hover {
-  border-color: var(--color-fg-muted);
-  color: var(--color-fg);
-  text-decoration: none;
+/* Solid, confident action — same dark-fill treatment as the other primary
+   controls on the page (search button, active tab), not a faint outline
+   that reads as disabled or secondary. Single button, so it takes the
+   full width of the price section instead of floating at some arbitrary
+   size. */
+.catalog-filter-price-apply {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-action);
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 500;
+  font-family: inherit;
+  background: var(--color-action);
+  color: var(--color-surface);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.catalog-filter-price-apply:hover {
+  background: var(--color-action-hover);
+  border-color: var(--color-action-hover);
 }
 
 .catalog-filter-apply-mobile {
@@ -1565,19 +2995,48 @@ button:disabled,
 }
 
 @media (max-width: 1180px) {
-  .catalog-filter-layout {
-    grid-template-columns: 230px minmax(0, 1fr);
-    gap: 1.25rem;
-  }
-
   .catalog-product-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* No "middle"/"third" card in a 2-column grid — nothing for the search
+     bubble to line up with, so it goes back to growing to fill the row. */
+  .catalog-filter-toolbar {
+    justify-content: space-between;
+  }
+
+  .catalog-search {
+    flex: 1 1 auto;
+    width: auto;
+  }
+}
+
+/* Below ~1550px the left gutter isn't wide enough to hold a legible filter
+   card (confirmed live: at 1280px the pure gutter width is 48px and labels
+   like «Greenwich» wrap one letter per line; at 1366px it's 91px and words
+   still break mid-word). Below that width the card falls back to sitting
+   just inside the Шоурум/Каталог line, offset by the same left margin used
+   in bleed mode — a fixed legible width, no overlap with the grid — instead
+   of bleeding outside it. From ~1550px up the gutter itself is wide enough
+   (≥180px) to hold the card comfortably, so it bleeds fully into it and
+   keeps scaling with the viewport. */
+@media (max-width: 1550px) and (min-width: 769px) {
+  /* The sidebar column is absolutely positioned (takes no flex space), so
+     here — where it sits inside the content area rather than in the
+     gutter — the grid itself steps aside: 224px = 24px inset + 176px card
+     + 24px gap, matching --catalog-card0-offset for this range. */
+  .catalog-filter-sidebar {
+    left: var(--space-lg);
+    width: 176px;
+  }
+
+  .catalog-product-area {
+    margin-left: calc(176px + 2 * var(--space-lg));
   }
 }
 
 @media (max-width: 768px) {
   .catalog-filter-shell {
-    --catalog-shell-width: 100%;
     width: 100%;
     margin-inline: 0;
   }
@@ -1588,24 +3047,77 @@ button:disabled,
     padding: var(--space-sm);
   }
 
+  /* Search input takes the full first line; «Найдено» + «Найти» share a
+     second line (count left, button right) — still one search row, just
+     wrapped for narrow screens instead of a separate meta block. The
+     desktop rule's fixed 32px is for the single-line case only; here the
+     bubble is two 32px rows, so the bubble itself sizes naturally. */
   .catalog-search {
     flex-basis: 100%;
+    flex-wrap: wrap;
+    height: auto;
     order: 1;
+  }
+
+  .catalog-search-input-wrap {
+    flex-basis: 100%;
+    height: 28px;
+  }
+
+  /* The bubble wraps to two rows here (input, then count + button) — a
+     top hairline replaces the left one so the wrapped row still reads as
+     part of the same bordered pill instead of a floating fragment. */
+  .catalog-search .catalog-result-count {
+    display: flex;
+    align-items: center;
+    flex: 1 1 auto;
+    height: 28px;
+    border-top: 1px solid var(--color-border);
+  }
+
+  /* The base rule's -2px top margin is for line 1, where the button
+     touches the bubble's own top border. Wrapped here, the button is on
+     line 2 — its "top" neighbour is the input row above, not the bubble's
+     border — so pulling it up would overlap that row instead of covering
+     anything. Only right/bottom still sit on the bubble's real edge. */
+  .catalog-search-btn {
+    margin-top: 0;
+    border-top: 1px solid var(--color-action);
+    border-radius: 0 0 var(--radius-sm) 0;
+  }
+
+  /* .filter-tabs has a fixed height for the one-row desktop case; once the
+     tabs wrap onto two lines on narrow screens a fixed height clips the
+     second line, so let it grow naturally here instead. */
+  .filter-tabs {
+    height: auto;
   }
 
   .catalog-filter-toolbar-actions {
     order: 0;
     width: 100%;
+    min-width: 0;
     justify-content: space-between;
+    flex-wrap: wrap;
   }
 
   .catalog-sort {
-    flex: 1;
+    flex: 1 1 0;
+    min-width: 0;
   }
 
   .catalog-sort select {
     flex: 1;
     min-width: 0;
+    width: 100%;
+  }
+
+  .catalog-sort .wr-select-trigger {
+    min-width: 0;
+  }
+
+  .catalog-filter-mobile-toggle {
+    flex-shrink: 0;
   }
 
   .catalog-filter-mobile-toggle {
@@ -1617,14 +3129,31 @@ button:disabled,
   }
 
   .catalog-product-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
+  /* Same "bounded card, only the middle list scrolls" pattern as desktop
+     (.catalog-filter-panel there), just anchored under the mobile sticky
+     header (53px) instead of the desktop toolbar (112px): capped to
+     100vh minus that header and a bottom gap equal to the page's own side
+     gutter (--space-lg, 24px) — so «Применить»/«Показать» and that gap
+     are always visible together, and only «Коллекции»/«Тип изделия»
+     scroll internally instead of growing the drawer past one screen.
+     --catalog-filter-fit (set from CatalogFilterControls on scroll) keeps
+     that bottom gap exact even before the drawer sticks, when it sits
+     lower than 53px in the flow; calc() is the stuck-state fallback. */
   .catalog-filter-sidebar {
-    position: static;
+    position: sticky;
+    top: 53px;
+    z-index: 40;
     display: none;
-    max-height: none;
-    overflow: visible;
+    flex-direction: column;
+    gap: var(--space-sm);
+    width: auto;
+    margin-left: 0;
+    margin-right: 0;
+    max-height: var(--catalog-filter-fit, calc(100vh - 53px - var(--space-lg)));
+    overflow: hidden;
     margin-bottom: var(--space-md);
     padding: var(--space-md);
     border: 1px solid var(--color-border);
@@ -1633,16 +3162,17 @@ button:disabled,
   }
 
   .catalog-filter-sidebar-open {
-    display: block;
+    display: flex;
   }
 
   .catalog-filter-apply-mobile {
     display: block;
+    flex-shrink: 0;
     width: 100%;
     padding: 0.55rem;
     border: none;
     border-radius: var(--radius-sm);
-    background: var(--color-fg);
+    background: var(--color-action);
     color: #fff;
     font-size: 0.85rem;
     font-weight: 500;
@@ -1772,6 +3302,7 @@ button:disabled,
 
 .hero-actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   gap: var(--space-md);
   margin-top: var(--space-lg);
@@ -1815,45 +3346,9 @@ button:disabled,
   border: 0;
 }
 
-.product-pdp-media-thumbs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: var(--space-sm);
-  padding: var(--space-sm) 0 0;
-  min-height: 52px;
-  box-sizing: border-box;
-  align-items: center;
-  border-top: 1px solid var(--color-border);
-}
-
-.product-pdp-media-thumb {
-  flex: 0 0 auto;
-  width: 52px;
-  height: 52px;
-  padding: 0;
-  border: 2px solid transparent;
-  border-radius: 6px;
-  overflow: hidden;
-  cursor: pointer;
-  background: var(--color-bg);
-}
-
-.product-pdp-media-thumb:disabled {
-  cursor: wait;
-  opacity: 0.7;
-}
-
-.product-pdp-media-thumb.is-active {
-  border-color: var(--color-accent);
-}
-
-.product-pdp-media-thumb-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
+/* PDP thumb rail now reuses the shared .product-card-media-thumbs-carousel
+   (same scroll rail + arrows as the catalog card) — see ProductThumbCarousel
+   and the .product-detail-media-switcher sizing overrides below. */
 
 /* QA: /qa/catalog-media-debug */
 .catalog-media-debug-table {
@@ -1893,10 +3388,34 @@ button:disabled,
   object-fit: cover;
 }
 
+/* Hero photo opens the full-size lightbox on click — cropped to 4/5 here,
+   shown uncropped (object-fit: contain) in .pdp-lightbox-img. */
+.product-detail-img.is-zoomable {
+  cursor: zoom-in;
+}
+
 .product-detail-info {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
+}
+
+/* Desktop: keep the buy column in view while the tall gallery scrolls */
+@media (min-width: 769px) {
+  .product-detail-info {
+    position: sticky;
+    top: 104px;
+  }
+}
+
+.product-detail-info .cta-group {
+  margin-top: 0;
+}
+
+.product-detail-info .cta-group .btn-primary {
+  min-height: 2.5rem;
+  padding: 0.6875rem 1.3125rem;
+  font-size: 0.96875rem;
 }
 
 .pdp-collection-label {
@@ -1924,6 +3443,12 @@ button:disabled,
   margin-top: calc(-1 * var(--space-sm));
 }
 
+.pdp-description {
+  color: var(--color-fg-secondary);
+  line-height: 1.6;
+  max-width: 52ch;
+}
+
 .product-detail-header {
   display: flex;
   flex-direction: column;
@@ -1935,42 +3460,60 @@ button:disabled,
   font-size: 1.35rem;
 }
 
-.pdp-related-sizes {
-  margin-top: var(--space-lg);
-  padding-top: var(--space-md);
-  border-top: 1px solid var(--color-border);
-}
-
-.pdp-related-sizes-title {
-  font-size: 0.95rem;
-  font-weight: 600;
-  margin: 0 0 var(--space-sm);
-}
-
-.pdp-related-sizes-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+/* PDP "Размер" option group — sibling sizes (separate products via
+   display_group) rendered as a labeled chip row, current size shown active. */
+.pdp-size-selector {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  gap: var(--space-sm);
+  margin-top: var(--space-xs);
 }
 
-.pdp-related-sizes-link {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: var(--space-md);
-  font-size: 0.9rem;
+.pdp-size-selector-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
   color: var(--color-fg);
+}
+
+.pdp-size-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pdp-size-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 7px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-fg);
+  font-size: 0.875rem;
+  line-height: 1.2;
+  text-decoration: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+a.pdp-size-chip:hover {
+  border-color: var(--color-fg-muted);
   text-decoration: none;
 }
 
-.pdp-related-sizes-link:hover {
-  text-decoration: underline;
+.pdp-size-chip.is-active {
+  border-color: color-mix(in srgb, var(--color-action) 35%, transparent);
+  background: color-mix(in srgb, var(--color-action) 4%, var(--color-bg));
+  cursor: default;
 }
 
-.pdp-related-sizes-price {
+.pdp-size-chip-label {
+  font-weight: 500;
+}
+
+.pdp-size-chip-price {
+  font-size: 0.75rem;
   color: var(--color-fg-muted);
   white-space: nowrap;
 }
@@ -2196,6 +3739,115 @@ button:disabled,
   margin-top: var(--space-md);
 }
 
+/* ---- Cart inside the bespoke-style card ---- */
+
+/* Same 12px rhythm as the bespoke form's field stack, so the card reads with
+   the same vertical density as «Оформление заказа». */
+.cart-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.cart-lines {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* One order line: thumb in the chosen execution, title + spec, remove.
+   Bubble styling mirrors the form inputs on /checkout (same border,
+   radius family and surface), so the two pages read as one system. */
+.cart-line {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem 0.5rem 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-bg);
+}
+
+.cart-line-thumb {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.cart-line-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.cart-line-thumb-empty {
+  display: block;
+}
+
+.cart-line-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.cart-line-title {
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--color-fg);
+  text-decoration: none;
+}
+
+.cart-line-title:hover {
+  text-decoration: underline;
+}
+
+/* Chosen execution («Цвет: Молочный · Дерево: Дуб · Арт. GR-09-1») —
+   secondary line, may wrap on narrow cards. */
+.cart-line-specs {
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--color-fg-secondary);
+}
+
+.cart-line-qty-price {
+  font-size: 0.8rem;
+  color: var(--color-fg-muted);
+}
+
+.cart-line .btn-remove {
+  align-self: flex-start;
+  margin-top: 0.1rem;
+}
+
+/* Total row: hairline on top (same as the checkout aside's «Итого»),
+   heavier type for the amount. */
+.cart-card-body .cart-total {
+  margin-top: 0.25rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border);
+  font-size: 1rem;
+}
+
+@media (max-width: 520px) {
+  .cart-line {
+    align-items: flex-start;
+  }
+
+  .cart-line-thumb {
+    width: 48px;
+    height: 48px;
+  }
+}
+
 .cart-section-title {
   font-size: 0.78rem;
   font-weight: 600;
@@ -2246,48 +3898,28 @@ button:disabled,
   margin-top: var(--space-sm);
 }
 
+/* Supporting caption под лидом: короткая строка, легче основного текста. */
+.page-caption {
+  font-size: 0.85rem;
+  color: var(--color-fg-muted);
+  line-height: 1.5;
+  margin-top: var(--space-xs);
+  max-width: 60ch;
+}
+
+/* На service-page лид и caption в общем flex-gap — слегка притягиваем caption к лиду. */
+.service-page .page-caption {
+  margin-top: calc(-1 * var(--space-sm));
+}
+
 /* ---- Kids Section ---- */
 
 .kids-theme {
-  --color-accent: #628c6a;
+  --color-accent: #507356;
+  --color-action: #507356;
+  --color-action-hover: #446249;
   --color-bg: #f5f7f5;
   --color-border: #d5dfd7;
-}
-
-.kids-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: var(--space-sm);
-  margin-bottom: var(--space-lg);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.kids-nav-title {
-  font-weight: 600;
-  font-size: 0.95rem;
-  color: var(--color-accent);
-}
-
-.kids-nav-title:hover {
-  text-decoration: none;
-}
-
-.kids-nav-links {
-  display: flex;
-  gap: var(--space-lg);
-}
-
-.kids-nav-links a {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--color-fg-secondary);
-  transition: color 0.15s;
-}
-
-.kids-nav-links a:hover {
-  color: var(--color-fg);
-  text-decoration: none;
 }
 
 /* ---- Bespoke Section ---- */
@@ -2305,6 +3937,14 @@ button:disabled,
   padding-bottom: var(--space-sm);
   margin-bottom: var(--space-lg);
   border-bottom: 1px solid var(--color-border);
+}
+
+/* /bespoke/request reads faster without the section subnav (title + rule):
+   the page's own compact intro is the entry point there. Scoped via :has()
+   so /bespoke and /bespoke/catalog keep the subnav unchanged — the shared
+   bespoke/layout.tsx itself isn't touched. */
+.bespoke-theme:has(.bespoke-request-page) .bespoke-nav {
+  display: none;
 }
 
 .bespoke-nav-title {
@@ -2407,7 +4047,9 @@ button:disabled,
 
 /* Kids variant */
 .cross-entry-kids {
-  --color-accent: #628c6a;
+  --color-accent: #507356;
+  --color-action: #507356;
+  --color-action-hover: #446249;
   --color-bg: #f5f7f5;
   --color-border: #d5dfd7;
 }
@@ -2422,13 +4064,13 @@ button:disabled,
 }
 
 .cross-entry-kids .cross-entry-btn {
-  background: #628c6a;
+  background: var(--color-action);
   color: #fff;
   border: none;
 }
 
 .cross-entry-kids .cross-entry-btn:hover {
-  background: #567b5d;
+  background: var(--color-action-hover);
 }
 
 @media (max-width: 640px) {
@@ -2445,4 +4087,729 @@ button:disabled,
     text-align: left;
     padding: var(--space-md);
   }
+}
+
+/* ---- PDP photo lightbox — full-size, uncropped photo on hero click ---- */
+
+.pdp-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(20, 17, 14, 0.9);
+  padding: var(--space-lg);
+  box-sizing: border-box;
+  cursor: zoom-out;
+}
+
+.pdp-lightbox-img {
+  max-width: 92vw;
+  max-height: 88vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  cursor: default;
+  background: #fff;
+}
+
+.pdp-lightbox-close {
+  position: absolute;
+  top: var(--space-md);
+  right: var(--space-md);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 1.5rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.pdp-lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.pdp-lightbox-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 1.75rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.pdp-lightbox-nav:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.pdp-lightbox-nav--prev {
+  left: var(--space-md);
+}
+
+.pdp-lightbox-nav--next {
+  right: var(--space-md);
+}
+
+.pdp-lightbox-counter {
+  position: absolute;
+  bottom: var(--space-md);
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff;
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+  background: rgba(255, 255, 255, 0.12);
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+}
+
+@media (max-width: 640px) {
+  .pdp-lightbox {
+    padding: var(--space-md);
+  }
+
+  .pdp-lightbox-nav {
+    width: 40px;
+    height: 40px;
+    font-size: 1.4rem;
+  }
+
+  .pdp-lightbox-close {
+    width: 36px;
+    height: 36px;
+    font-size: 1.3rem;
+  }
+}
+
+/* ---- Home page ---- */
+
+.hero-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+
+.hero-chip {
+  font-size: 0.78rem;
+  color: var(--color-fg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 0.3rem 0.85rem;
+}
+
+/* Короткая brand-строка под hero: тише основного текста, по центру.
+   Селектор специфичнее `.hero p`, иначе размер/цвет перебьются базовым hero. */
+.hero .hero-note {
+  margin-top: var(--space-lg);
+  font-size: 0.85rem;
+  color: var(--color-fg-muted);
+  text-align: center;
+}
+
+.home-section {
+  padding-block: var(--space-2xl);
+  border-top: 1px solid var(--color-border);
+}
+
+.home-section-title {
+  font-size: 1.5rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  margin-bottom: var(--space-lg);
+}
+
+.home-quick-entries {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-lg);
+}
+
+.home-quick-entry {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.home-quick-entry h3 {
+  font-size: 1.05rem;
+}
+
+.home-quick-entry p {
+  color: var(--color-fg-secondary);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  flex-grow: 1;
+}
+
+.home-quick-entry-link {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.home-text-block {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2xl);
+  align-items: start;
+}
+
+.home-text-block-title {
+  font-size: 1.5rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  margin-bottom: var(--space-md);
+}
+
+.home-text-block-text {
+  color: var(--color-fg-secondary);
+  line-height: 1.65;
+}
+
+.home-text-block-bullets {
+  margin-top: var(--space-md);
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  color: var(--color-fg-secondary);
+}
+
+.home-text-block-bullets li {
+  padding-left: 1.1rem;
+  position: relative;
+}
+
+.home-text-block-bullets li::before {
+  content: "—";
+  position: absolute;
+  left: 0;
+  color: var(--color-fg-muted);
+}
+
+.home-text-block-cta {
+  margin-top: var(--space-lg);
+}
+
+.home-kids-block {
+  background: #f4efe8;
+  border-radius: var(--radius-lg);
+  padding: var(--space-2xl);
+}
+
+.home-final-cta {
+  text-align: center;
+  padding-block: var(--space-2xl) var(--space-3xl);
+}
+
+.home-final-cta .home-text-block-title {
+  margin-bottom: var(--space-sm);
+}
+
+.home-final-cta p {
+  color: var(--color-fg-secondary);
+  max-width: 560px;
+  margin-inline: auto;
+  line-height: 1.6;
+}
+
+.home-final-cta .btn {
+  margin-top: var(--space-lg);
+}
+
+@media (max-width: 900px) {
+  .home-quick-entries {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .home-text-block {
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+  }
+}
+
+@media (max-width: 560px) {
+  .home-quick-entries {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- Bespoke landing lists ---- */
+
+.bespoke-info-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+.bespoke-info-list li {
+  color: var(--color-fg-secondary);
+  line-height: 1.6;
+}
+
+.bespoke-info-list strong {
+  color: var(--color-fg);
+}
+
+.bespoke-process-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  margin-top: var(--space-md);
+}
+
+.bespoke-process-list li {
+  display: flex;
+  gap: var(--space-md);
+  align-items: flex-start;
+}
+
+.bespoke-process-step-index {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  color: var(--color-fg-secondary);
+}
+
+.bespoke-process-list p {
+  color: var(--color-fg-secondary);
+  margin-top: 0.15rem;
+}
+
+/* ---- Eyebrow ---- */
+
+.eyebrow {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+/* ---- Bespoke request page ----
+   Compact intro (no eyebrow, no section subnav — see .bespoke-nav:has()
+   override above), then a two-column desktop composition where the form
+   card is the primary object (left, compact, starts right under the intro)
+   and a visualized two-card "help" aside sits to the right, lighter and
+   narrower than the form. Below the 880px breakpoint everything stacks
+   into one column in this order: intro -> form card -> help. */
+
+.bespoke-request-page {
+  display: flex;
+  flex-direction: column;
+  /* Proximity: the h1+lead pair is tight (0.5rem), the break between the
+     intro group and the form/aside group is visibly larger (1.25rem). */
+  gap: 1.25rem;
+  /* Full container width (no own max-width): the 50% form column below must
+     resolve against the site container so the card's right edge lands
+     exactly on the site's central axis. */
+  /* This page's <main> is `.page-section`, which carries a sitewide
+     var(--space-xl) (40px) top padding — too much for this compact page.
+     A negative margin cancels it directly (no :has() dependency, so it
+     is not at the mercy of :has() browser support), then padding-top
+     below re-adds only the small gap this page actually wants. */
+  margin-top: calc(-1 * var(--space-xl));
+  /* Top padding mirrors the flex gap below the intro block (1.25rem), so the
+     header sits at equal distance from the site header above and the form
+     card below. */
+  padding-block: 1.25rem var(--space-xl);
+}
+
+.bespoke-request-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.bespoke-request-header h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.bespoke-request-lead {
+  font-size: 0.9375rem;
+  color: var(--color-fg-secondary);
+  line-height: 1.5;
+  /* Force each of the two <br>-separated sentences onto its own single
+     line on desktop (no extra word-wrap into a 3rd line); the explicit
+     <br> still breaks between them regardless of nowrap. */
+  white-space: nowrap;
+}
+
+@media (max-width: 780px) {
+  .bespoke-request-lead {
+    white-space: normal;
+  }
+}
+
+.bespoke-request-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-lg);
+  align-items: start;
+}
+
+.bespoke-request-card {
+  /* Width comes from the grid column (50% of the container on desktop, so
+     the right edge sits on the site's central axis); left edge stays on the
+     same line as the h1/lead above. */
+  width: 100%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  /* Vertical padding: 20px top (tighter above the card title), 16px bottom
+     under the consent note; 24px sides. */
+  padding: 1.25rem 1.5rem 1rem;
+  box-shadow: 0 1px 3px rgba(44, 36, 32, 0.04);
+}
+
+.bespoke-request-card-title {
+  margin: 0 0 0.25rem;
+  font-size: 1.125rem;
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.bespoke-request-card-caption {
+  line-height: 1.5;
+  /* Same 12px rhythm as between the fields below (form-stack gap), so the
+     caption -> first label distance equals every bubble -> next label one. */
+  margin-bottom: 0.75rem;
+}
+
+.bespoke-request-card .form-stack {
+  max-width: none;
+  gap: 0.75rem;
+}
+
+/* Compact field metrics (scoped to this form only) so the whole card fits a
+   typical laptop viewport without scrolling: lower bubbles, smaller
+   placeholder/input type, shorter textarea. */
+.bespoke-form .form-field input,
+.bespoke-form .form-field textarea,
+.bespoke-form .wr-select--field .wr-select-trigger {
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+}
+
+.bespoke-form .form-field textarea {
+  min-height: 88px;
+}
+
+.form-required-mark {
+  color: var(--color-accent);
+}
+
+/* Field labels (and the validation message) get a slight inset — half the
+   input's inner text offset — so they don't hang over the bubble's curved
+   corner but stay visually anchored to the field's left edge. */
+.bespoke-form .form-field > label,
+.bespoke-form .form-field > .feedback-error {
+  padding-left: 0.5rem;
+}
+
+.bespoke-form .form-field {
+  gap: 0.5rem;
+}
+
+/* Aside: two visualized mini-cards (soft bg, thin border, icon badge + thin
+   accent divider under each heading, dot markers on list items) so it reads
+   as a designed helper block, not a grey column of small text. */
+.bespoke-request-help {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  /* Width comes from the grid column (25% of the container = half the form
+     card's width). */
+}
+
+.bespoke-request-help-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  /* Tighter than the form card: these mini-cards are half its width and
+     should stay roughly a quarter of its height. */
+  padding: 1rem;
+}
+
+.bespoke-request-help-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-accent) 22%, var(--color-border));
+}
+
+.bespoke-request-help-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  color: var(--color-accent);
+}
+
+.bespoke-request-help-section h2 {
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--color-fg);
+}
+
+.bespoke-request-help-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.bespoke-request-help-list li {
+  position: relative;
+  padding-left: 1rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--color-fg-secondary);
+}
+
+.bespoke-request-help-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-accent);
+}
+
+/* Checkout aside: "Состав заказа" rows (item title + qty) and the total —
+   data rows, not tips, so no bullet dots; same 14px/secondary-color rhythm
+   as .bespoke-request-help-list for visual parity between the two asides. */
+.checkout-composition-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.checkout-composition-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--color-fg-secondary);
+}
+
+.checkout-composition-item span:last-child {
+  flex: none;
+  color: var(--color-fg-muted);
+}
+
+.checkout-composition-total {
+  margin-top: 0.15rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-fg);
+}
+
+/* Caption under the aside cards: same inline inset as the cards' padding so
+   its text sits on the same left line as the card headings above it. */
+.bespoke-request-help > .page-caption {
+  margin-top: 0;
+  padding-inline: 1rem;
+}
+
+/* One shared "small text" size (14px) across the page: card caption, aside
+   caption and aside list items — instead of three slightly different sizes. */
+.bespoke-request-card-caption,
+.bespoke-request-help > .page-caption {
+  font-size: 0.875rem;
+}
+
+@media (min-width: 880px) {
+  .bespoke-request-layout {
+    /* Form column = exactly half the container, so the card's right edge
+       sits on the site's central axis; help column = a quarter of the
+       container = half the card's width. The 24px gap sits between them. */
+    grid-template-columns: 50% 25%;
+    column-gap: var(--space-lg);
+  }
+}
+
+@media (max-width: 520px) {
+  .bespoke-request-card {
+    padding: 1rem 1.25rem 1rem;
+  }
+}
+
+.bespoke-submit-btn {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 14px;
+  font-size: 1rem;
+  margin-top: var(--space-xs);
+}
+
+.bespoke-submit-btn:disabled {
+  opacity: 0.7;
+}
+
+/* Sits 12px below the button (form-stack gap) and 12px above the card's
+   trimmed bottom edge — vertically centered between the two. */
+.form-consent-note {
+  font-size: 0.75rem;
+  color: var(--color-fg-muted);
+  line-height: 1.5;
+  margin-top: 0;
+}
+
+.form-alert-error {
+  background: rgba(179, 74, 66, 0.08);
+  border: 1px solid rgba(179, 74, 66, 0.25);
+  border-radius: var(--radius);
+  padding: var(--space-sm) var(--space-md);
+  color: var(--color-error);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.request-success {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-sm);
+}
+
+.request-success-title {
+  font-size: 1.2rem;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--color-success);
+}
+
+.checkout-order-number {
+  font-size: 1.15rem;
+  letter-spacing: 0.02em;
+  color: var(--color-fg);
+}
+
+/* Soft accent highlight (not an alarm) — the order number is important to
+   keep, but this isn't an error state, so it stays in the brand palette. */
+.checkout-order-note {
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 28%, transparent);
+  border-radius: var(--radius);
+  padding: var(--space-sm) var(--space-md);
+  color: var(--color-fg);
+  font-weight: 500;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.request-success-text {
+  color: var(--color-fg-secondary);
+  line-height: 1.55;
+  max-width: 46ch;
+  margin-bottom: var(--space-xs);
+}
+
+/* Full-width form variant of the wr-select combobox (base rules live near
+   .catalog-sort): closed state matches the height/radius of text inputs,
+   the menu spans the full field width instead of hugging the trigger. */
+.wr-select--field {
+  width: 100%;
+  flex: none;
+}
+
+.wr-select--field .wr-select-trigger {
+  min-width: 0;
+  height: auto;
+  min-height: 50px;
+  padding: 0.6rem 0.9rem;
+  border-radius: var(--radius-lg);
+  font-size: 0.95rem;
+  background: var(--color-surface);
+  white-space: normal;
+}
+
+.wr-select--field .wr-select-value {
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.wr-select--field .wr-select-value.is-placeholder {
+  color: var(--color-fg-muted);
+}
+
+.wr-select--field .wr-select-menu {
+  left: 0;
+  right: 0;
+  width: auto;
+  border-radius: 14px;
+  box-shadow: 0 10px 28px rgba(44, 36, 32, 0.1);
+}
+
+.wr-select--field .wr-select-option {
+  white-space: normal;
+  padding: 0.7rem 1rem;
+  font-size: 0.95rem;
+}
+
+.feedback-success-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  max-width: 480px;
+}
+
+.feedback-success-block p:first-child {
+  color: var(--color-success);
 }
