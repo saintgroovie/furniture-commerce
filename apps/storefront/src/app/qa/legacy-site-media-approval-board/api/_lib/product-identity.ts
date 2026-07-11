@@ -53,12 +53,12 @@ export type ProductIdentity = {
 const COLLECTION_LABELS: Record<string, string> = {
   "country-london-paris": "Country London Paris",
   "willie-winkie": "Willie Winkie",
-  oliver: "Oliver",
+  oliver: "Оливер",
   oxford: "Oxford",
-  monchelsea: "Monchelsea",
-  provence: "Provence",
+  monchelsea: "Мончелси",
+  provence: "Прованс",
   "princess-rose": "Princess Rose",
-  greenwich: "Greenwich",
+  greenwich: "Гринвич",
 }
 
 type SeedRow = {

@@ -10,16 +10,41 @@ function meta(product: ProductLike): Record<string, unknown> {
   return (product.metadata as Record<string, unknown>) ?? {}
 }
 
+/** Buyer-facing collection titles (handles/slugs stay English). */
 const COLLECTION_SLUG_LABELS: Record<string, string> = {
   country: "Кантри",
   "country-london-paris": "Кантри",
-  greenwich: "Greenwich",
-  oliver: "Oliver",
-  provence: "Provence",
+  greenwich: "Гринвич",
+  oliver: "Оливер",
+  monchelsea: "Мончелси",
+  provence: "Прованс",
+}
+
+/** Map English (or already-RU) display titles back to the Russian buyer label. */
+const COLLECTION_TITLE_ALIASES: Record<string, string> = {
+  greenwich: "Гринвич",
+  гринвич: "Гринвич",
+  oliver: "Оливер",
+  оливер: "Оливер",
+  monchelsea: "Мончелси",
+  мончелси: "Мончелси",
+  provence: "Прованс",
+  прованс: "Прованс",
+  country: "Кантри",
+  кантри: "Кантри",
 }
 
 /** Buyer-facing primary collection on catalog/PDP cards (Russian UI). */
 const COUNTRY_CARD_LABEL = "Кантри"
+
+function localizeKnownCollectionLabel(label: string): string {
+  const trimmed = label.trim()
+  if (!trimmed) return trimmed
+  const key = trimmed.toLowerCase().replace(/[_\s]+/g, "-")
+  if (COLLECTION_SLUG_LABELS[key]) return COLLECTION_SLUG_LABELS[key]!
+  if (COLLECTION_TITLE_ALIASES[key]) return COLLECTION_TITLE_ALIASES[key]!
+  return trimmed
+}
 
 function isCountryProduct(product: ProductLike, m: Record<string, unknown>): boolean {
   const handle = product.handle
@@ -64,9 +89,10 @@ function humanizeCollectionSlug(slug: string): string {
 function collectionFromHandle(handle: string): string | null {
   const h = handle.toLowerCase()
   if (h.startsWith("co-")) return COUNTRY_CARD_LABEL
-  if (h.startsWith("ol-")) return "Oliver"
-  if (h.startsWith("pv-")) return "Provence"
-  if (h.startsWith("greenwich-") || h.startsWith("gr-")) return "Greenwich"
+  if (h.startsWith("ol-")) return COLLECTION_SLUG_LABELS.oliver!
+  if (h.startsWith("pv-")) return COLLECTION_SLUG_LABELS.provence!
+  if (h.startsWith("greenwich-") || h.startsWith("gr-")) return COLLECTION_SLUG_LABELS.greenwich!
+  if (h.startsWith("mn-") || h.startsWith("monchelsea-")) return COLLECTION_SLUG_LABELS.monchelsea!
   return null
 }
 
@@ -81,7 +107,9 @@ export function getCollectionLabel(product: ProductLike): string | null {
   }
 
   const label = m.collection_label
-  if (typeof label === "string" && label.trim()) return label.trim()
+  if (typeof label === "string" && label.trim()) {
+    return localizeKnownCollectionLabel(label)
+  }
 
   const collection = m.collection
   if (typeof collection === "string" && collection.trim()) {

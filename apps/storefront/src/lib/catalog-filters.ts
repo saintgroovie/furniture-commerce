@@ -47,12 +47,12 @@ function humanizeFilterKey(key: string): string {
 }
 
 const COLLECTION_FILTER_LABELS: Record<string, string> = {
-  greenwich: "Greenwich",
-  oliver: "Oliver",
+  greenwich: "Гринвич",
+  oliver: "Оливер",
   "oliver-kids": "Oliver Kids",
   "willie-winkie": "Willie Winkie",
-  monchelsea: "Monchelsea",
-  provence: "Provence",
+  monchelsea: "Мончелси",
+  provence: "Прованс",
   country: "Кантри",
   "country-london-paris": "Кантри",
 }
@@ -125,6 +125,11 @@ export function normalizeCollectionFilterKey(raw: string): string {
   if (!key) return key
   if (key.startsWith("country")) return "country"
   if (key === "кантри") return "country"
+  if (key === "оливер" || key === "oliver") return "oliver"
+  if (key === "оливер-kids" || key === "oliver-kids") return "oliver-kids"
+  if (key === "гринвич" || key === "greenwich") return "greenwich"
+  if (key === "мончелси" || key === "monchelsea") return "monchelsea"
+  if (key === "прованс" || key === "provence") return "provence"
   if (key === "molly") return "willie-winkie"
   if (key === "willie-winkie" || key === "willie-winkie-kids") return "willie-winkie"
   if (key === "willie") return "willie-winkie"
