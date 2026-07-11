@@ -2,7 +2,9 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import Link from "next/link"
 import { getSiteUrl } from "@/lib/api/base"
+import { MobileNav } from "@/components/mobile-nav"
 import { NavDropdown } from "@/components/nav-dropdown"
+import { a1A11y } from "@/lib/package-a1-copy"
 import "./globals.css"
 
 const inter = Inter({
@@ -40,6 +42,9 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
+        <a href="#main-content" className="skip-link">
+          {a1A11y.skipToContent}
+        </a>
         <header className="site-header">
           {/* Top bar */}
           <div className="header-top">
@@ -111,23 +116,11 @@ export default function RootLayout({
             </div>
           </div>
 
-          {/* Mobile nav toggle (checkbox hack, no JS) */}
-          <input type="checkbox" id="mobile-nav-toggle" className="mobile-nav-checkbox" aria-hidden="true" />
-          <label htmlFor="mobile-nav-toggle" className="mobile-nav-btn" aria-label="Меню">
-            <span className="mobile-nav-icon" />
-          </label>
-          <div className="mobile-nav-overlay">
-            <nav className="mobile-nav" aria-label="Мобильная навигация">
-              <Link href="/catalog">Каталог</Link>
-              <Link href="/rooms">Комнаты</Link>
-              <Link href="/kids">Детская</Link>
-              <Link href="/bespoke">По проекту</Link>
-              <Link href="/cart">Корзина</Link>
-              <Link href="/contacts">Контакты</Link>
-            </nav>
-          </div>
+          <MobileNav />
         </header>
-        <main className="container page-section">{children}</main>
+        <main id="main-content" className="container page-section" tabIndex={-1}>
+          {children}
+        </main>
         <footer className="site-footer">
           <div className="container">© Woodright</div>
         </footer>

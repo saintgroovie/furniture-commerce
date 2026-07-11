@@ -10,6 +10,7 @@ import Link from "next/link"
 import { getCartIdFromSession, clearCartIdFromSession } from "@/lib/cart/session"
 import { getCart, updateCart, CART_NOT_FOUND } from "@/lib/api/cart"
 import { completeCart } from "@/lib/api/checkout"
+import { a1Checkout } from "@/lib/package-a1-copy"
 
 type CheckoutState =
   | "empty_cart"
@@ -65,9 +66,15 @@ export function CheckoutForm() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (!cartId || state !== "ready") return
+    if (!cartId) return
+    if (
+      state !== "ready" &&
+      state !== "validation_error" &&
+      state !== "server_error"
+    ) {
+      return
+    }
     if (submittingRef.current) return
-    submittingRef.current = true
     const form = e.currentTarget
     const email = (form.elements.namedItem("email") as HTMLInputElement)?.value?.trim()
     const first_name = (form.elements.namedItem("first_name") as HTMLInputElement)?.value?.trim()
@@ -83,6 +90,7 @@ export function CheckoutForm() {
       return
     }
 
+    submittingRef.current = true
     setState("submitting")
     setErrorMessage("")
     try {
@@ -120,7 +128,11 @@ export function CheckoutForm() {
       <div data-state="empty_cart">
         <p>Корзина пуста. Оформление заказа недоступно.</p>
         <p>
-          <Link href="/catalog">В каталог</Link>, <Link href="/rooms">в комнаты</Link> или <Link href="/cart">в корзину</Link>.
+          <Link href="/catalog">В каталог</Link>
+          {" · "}
+          <Link href="/rooms">В комнаты</Link>
+          {" · "}
+          <Link href="/cart">В корзину</Link>
         </p>
       </div>
     )
@@ -148,9 +160,9 @@ export function CheckoutForm() {
   if (state === "success") {
     return (
       <div data-state="success">
-        <p style={{ fontWeight: "bold" }}>Заказ оформлен.</p>
+        <p style={{ fontWeight: "bold" }}>{a1Checkout.successTitle}</p>
         {orderId && <p>Номер заказа: {orderId}</p>}
-        <p>Оплата по ссылке: менеджер отправит вам ссылку на оплату отдельно.</p>
+        <p>{a1Checkout.successBody}</p>
         <p>
           <Link href="/catalog">В каталог</Link>
         </p>
@@ -189,7 +201,7 @@ export function CheckoutForm() {
           <label>Индекс * <input name="postal_code" type="text" required disabled={state === "submitting"} /></label>
           <label>Страна <input name="country_code" type="text" defaultValue="ru" disabled={state === "submitting"} /></label>
           <button type="submit" disabled={state === "submitting"}>
-            {state === "submitting" ? "Оформление…" : "Оформить заказ"}
+            {state === "submitting" ? a1Checkout.submitting : a1Checkout.submit}
           </button>
           {(state === "validation_error" || state === "server_error") && errorMessage && (
             <p style={{ color: "red" }} role="alert">{errorMessage}</p>
