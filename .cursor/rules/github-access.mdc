@@ -1,0 +1,41 @@
+---
+description: Woodright GitHub / git write safety + push/PR reporting (alwaysApply)
+alwaysApply: true
+---
+
+# GitHub / git write safety (alwaysApply)
+
+**Git hard bans + dirty-file patch rule:** also in `woodright-core.mdc` (do not weaken).  
+**Codex when required:** only `woodright-core.mdc` decision table.  
+**Packet FORMAT:** `woodright-response-format.mdc`.
+
+Repo: `saintgroovie/furniture-commerce`. CLI: `gh` at `~/bin/gh` (`export PATH="$HOME/bin:$PATH"`).
+
+## Permission (no explicit user ask → do not)
+
+Do **not**: stage, commit, push, force push, amend, create/update PR, or merge.
+
+Informational / UI work without a git request is **not** a git workflow — do not invent stage/commit/push.
+
+## Dirty-index safety (before any commit)
+
+1. Inspect index: `git diff --cached --name-only` / `--stat` / scoped staged diff.
+2. Never `git add -A` or `git add .`.
+3. Stage only exact pathspecs for the approved scope.
+4. Dirty/pre-dirty files → **patch/hunk staging only**; never stage whole file with unrelated hunks.
+5. Refuse commit if staged set mixes unrelated workstreams or includes secrets/tmp/runtime dumps.
+
+## Push safety (before any push)
+
+1. Explicit user approval required.
+2. Check ahead/behind vs upstream.
+3. List **all** commits that would go out; do not publish unapproved older local commits.
+4. Force push forbidden unless separately and explicitly approved.
+
+## PR policy + reporting
+
+- PR required for **feature-branch review/merge flow** after approved push (`gh pr create` / `gh pr edit` with Summary + Test plan).
+- Not required for every incidental/experimental push — then report `GitHub PR: not created — <reason>`.
+- Always report separately: `GitHub push: …` and `GitHub PR: created|updated|not created — reason`.
+- Never claim a PR exists without verifying (`gh pr view` / create output).
+- If no push: `GitHub push: not performed` (or `not applicable; no commit was created`).

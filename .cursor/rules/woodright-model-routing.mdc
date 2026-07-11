@@ -1,0 +1,34 @@
+---
+description: Model routing for Woodright legacy export / media census / migration — Codex policy is ONLY in woodright-core.mdc
+alwaysApply: false
+globs:
+  - "**/legacy-media*/**"
+  - "**/media-ops*/**"
+  - "**/woodright-legacy*/**"
+  - "tools/**"
+  - "scripts/**/*legacy*"
+  - "scripts/**/*census*"
+---
+
+# Woodright model routing (task-specific)
+
+**Codex when required / recommended / not required:** single table in `woodright-core.mdc` — do not maintain a competing list here.
+
+## Roles
+
+- **Executor (Cursor):** Fable 5 primary for local FE/census scripts against operator-exported files only. Fallback: Sonnet 4 / 4.5.
+- **Architect / planning:** GPT-5.5 Thinking (often via ChatGPT prompt-writer).
+- **Reviewer:** Codex CLI (independent). Not primary implementer.
+- **Composer 2.5:** tiny local edits only — forbidden for legacy export, media census, DB parsing, scope-sensitive migration.
+
+## Executor hard bans
+
+- No real credentials; no login to legacy admin; no prod/legacy DB writes
+- No mutate legacy sites/DNS/Cloudflare/CMS/mail/payment/analytics/sales
+- Only local files already downloaded by operator under  
+  `/Users/leonidmbp/Documents/woodright-legacy-private-export/YYYY-MM-DD/`
+- Missing/empty export dir → blocked on operator input (not a reason to hit live systems)
+
+## After executor work
+
+If core Codex table says required → run Codex → remediate P1/local P2 → then FORMAT A with `## Codex CLI reviewer`.

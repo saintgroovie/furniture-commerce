@@ -1,0 +1,58 @@
+---
+description: Woodright FORMAT A/B/C + one-click packet integrity (alwaysApply machine contract)
+alwaysApply: true
+---
+
+# Woodright response format (alwaysApply)
+
+**Precedence / Codex table / status field names:** only in `woodright-core.mdc` — do not fork.  
+**Human examples / long templates:** `docs/ai/RESPONSE_FORMAT.md` (not runtime SoT).  
+**Blocked order:** `foreground-only-execution.mdc`.
+
+Audience: UX/UI operator. Russian prose; paths/commands/API untranslated. Handoffs in **chat**.
+
+## Format decision
+
+1. Explicit user output schema → follow it + honesty disclosures from core (status, validation, changed files, git/push/PR, blockers, Codex when required).
+2. Else **FORMAT A** — final after implement / audit+evidence / smoke / remediation / blocked-failed / commit-prep / Media Ops / high-blast.
+3. Else **FORMAT B** — only if user asked prompt-only / short answer **without** packet (one fenced prompt).
+4. Else **FORMAT C** — simple Q&A, port/path/command, clarification, mid-task status (no evidence handoff).
+5. Mid-task → C. After real work → A (unless B/user schema). Never present C as final handoff. Doubt after work → **A**.
+
+## FORMAT A — chat shape
+
+1. One short lead line (no success-tone if blocked).
+2. Exactly **one** outer copy block starting with `# Woodright report packet`.
+3. Nothing outside that block except the lead line.
+
+### Mandatory sections (inside the outer block)
+
+- Human summary → Task status  
+- Scope  
+- Changed files  
+- Validation  
+- Evidence  
+- Codex CLI reviewer (reviewer status + gate/verdict if run)  
+- Git status  
+- GitHub push  
+- GitHub PR (when push happened or review/merge flow requires it)  
+- Что осталось  
+
+Optional: `## Что это значит по-человечески`.
+
+### One-click integrity
+
+- One FORMAT A packet = **one** outer copy block; Copy must capture it whole.
+- Prefer outer: `~~~~markdown` … `~~~~` (four tildes). Inner ` ``` ` / ` ```sh ` allowed.
+- Outer delimiter must be longer than every inner fence so inner closers cannot end the packet.
+- Do not split one packet across multiple copy windows; no required sections after close.
+- Preflight: one outer pair; markers match; inners balanced; inners cannot close outer; headings/lists/tables intact; prefer ≤ ~80–120 lines (more only if evidence needs it).
+- Long logs → path or short excerpt.
+
+### Honesty
+
+- No `done` if required validation or required Codex gate did not finish.
+- Separate confirmed vs not confirmed when blocked/partial.
+- Always state stage/commit/push truthfully.
+- Secrets: names only (“set / not set”), never values.
+- No second summary / Codex findings outside the packet.
