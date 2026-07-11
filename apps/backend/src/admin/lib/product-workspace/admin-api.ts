@@ -11,7 +11,8 @@ const PRODUCT_FIELDS = [
   "*collection",
   "*images",
   "*variants",
-  "*productType",
+  // Medusa 2.13 Admin REST expects snake_case for custom link populate.
+  "*product_classification",
   "+metadata",
 ].join(",")
 

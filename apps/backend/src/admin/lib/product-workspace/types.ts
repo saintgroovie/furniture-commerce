@@ -7,7 +7,7 @@ export type ClassificationView = {
   code: WoodrightProductTypeCode | null
   label: string
   warning: string | null
-  source: "productType.product_type" | "missing"
+  source: "productClassification.product_type" | "missing"
 }
 
 export type PriceAmount = {
@@ -69,6 +69,9 @@ export type AdminProductPayload = {
   collection?: { id?: string; title?: string | null } | null
   images?: Array<{ id?: string; url?: string | null }> | null
   variants?: Array<{ id?: string; sku?: string | null; title?: string | null }> | null
+  productClassification?: { product_type?: string | null } | null
+  product_classification?: { product_type?: string | null } | null
+  /** @deprecated legacy joiner name before product_classification rename */
   productType?: { product_type?: string | null } | null
   product_type?: { product_type?: string | null } | null
   metadata?: Record<string, unknown> | null

@@ -7,14 +7,19 @@ const LABELS: Record<string, string> = {
 }
 
 /**
- * Source of truth: linked ProductType via Admin field `*productType`
- * → `product.productType.product_type`.
+ * Source of truth: linked ProductClassification via Admin field `*productClassification`
+ * → `product.productClassification.product_type` (snake: product_classification).
  * Never infer from title, images, or variant count.
  */
 export function buildClassificationView(
-  product: Pick<AdminProductPayload, "productType" | "product_type">
+  product: Pick<
+    AdminProductPayload,
+    "productClassification" | "product_classification" | "productType" | "product_type"
+  >
 ): ClassificationView {
   const raw =
+    product.productClassification?.product_type ??
+    product.product_classification?.product_type ??
     product.productType?.product_type ??
     product.product_type?.product_type ??
     null
@@ -24,7 +29,7 @@ export function buildClassificationView(
       code: raw,
       label: LABELS[raw],
       warning: null,
-      source: "productType.product_type",
+      source: "productClassification.product_type",
     }
   }
 

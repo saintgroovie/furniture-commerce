@@ -2,9 +2,12 @@
 
 ## Classification SoT
 
-Admin field `*productType` → `product.productType.product_type`
+Admin field `*product_classification` → `product.product_classification.product_type`
+(also accepts camelCase `productClassification` when present)
 Values: `STANDARD` | `CONFIGURABLE` | `BESPOKE`
 Missing → UI «Тип не указан» (no auto-write).
+
+Package B.5 renamed entity `product_type` → `product_classification` to fix Medusa 2.13 joiner alias collision.
 
 ## Preview URL
 

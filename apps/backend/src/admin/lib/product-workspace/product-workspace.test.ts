@@ -13,17 +13,23 @@ import {
 import { isWoodrightAdminUxV1Enabled } from "../feature-flags/woodright-admin-flags.ts"
 
 describe("classification", () => {
-  it("maps STANDARD/CONFIGURABLE/BESPOKE from productType", () => {
+  it("maps STANDARD/CONFIGURABLE/BESPOKE from productClassification", () => {
     assert.equal(
-      buildClassificationView({ productType: { product_type: "STANDARD" } }).label,
+      buildClassificationView({
+        productClassification: { product_type: "STANDARD" },
+      }).label,
       "Готовый"
     )
     assert.equal(
-      buildClassificationView({ productType: { product_type: "CONFIGURABLE" } }).code,
+      buildClassificationView({
+        product_classification: { product_type: "CONFIGURABLE" },
+      }).code,
       "CONFIGURABLE"
     )
     assert.equal(
-      buildClassificationView({ productType: { product_type: "BESPOKE" } }).label,
+      buildClassificationView({
+        productClassification: { product_type: "BESPOKE" },
+      }).label,
       "На заказ"
     )
   })
