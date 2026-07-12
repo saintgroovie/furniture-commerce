@@ -176,6 +176,10 @@ watch_patch_status() {
 
 write_state() {
   local pid="$1" mode="$2" root_pid="${3:-$1}"
+  case "$mode" in
+    develop|qa) ;;
+    *) die "refusing to write invalid mode into state: $mode" ;;
+  esac
   local lstart root_lstart
   lstart="$(pid_lstart "$pid")"
   root_lstart="$(pid_lstart "$root_pid")"
@@ -239,7 +243,8 @@ fingerprint_admin() {
 }
 
 cmd_status() {
-  local pids code mode_guess="unknown" state_mode state_pid
+  local pids code mode_guess="unknown" state_mode state_pid root_pid
+  local identity="none" root_alive=0 owned_listen=0
   pids="$(listeners_on_port || true)"
   code="$(health_code)"
   log "repo:    $REPO_ROOT"
@@ -250,6 +255,7 @@ cmd_status() {
     for p in $pids; do
       ps -p "$p" -o pid=,etime=,command= 2>/dev/null || true
       if is_our_medusa_pid "$p"; then
+        owned_listen=1
         mode_guess="$(detect_mode_from_pid "$p")"
       fi
     done
@@ -258,24 +264,50 @@ cmd_status() {
   fi
   if [[ -f "$STATE_FILE" ]]; then
     state_pid="$(read_state_field pid || true)"
+    root_pid="$(read_state_field root_pid || true)"
     state_mode="$(read_state_field mode || true)"
     log "state:   file $STATE_FILE"
-    log "         pid=$state_pid root=$(read_state_field root_pid || true) mode=$state_mode repo=$(read_state_field repo || true)"
+    log "         pid=$state_pid root=$root_pid mode=$state_mode repo=$(read_state_field repo || true)"
     if [[ -n "${state_pid:-}" ]] && state_matches_pid "$state_pid"; then
+      identity="ok"
       log "         identity: ok"
-      mode_guess="$state_mode"
+      mode_guess="${state_mode:-$mode_guess}"
     else
+      identity="stale_or_mismatch"
       log "         identity: stale_or_mismatch"
+    fi
+    if [[ -n "${root_pid:-}" ]] && kill -0 "$root_pid" 2>/dev/null && is_our_medusa_pid "$root_pid"; then
+      root_alive=1
     fi
   else
     log "state:   (none)"
   fi
+  case "${mode_guess:-}" in
+    develop|qa) ;;
+    *)
+      if [[ -n "${state_mode:-}" ]]; then
+        case "$state_mode" in
+          develop|qa) mode_guess="$state_mode" ;;
+          *) mode_guess="unknown" ;;
+        esac
+      else
+        mode_guess="unknown"
+      fi
+      ;;
+  esac
   log "mode:    $mode_guess"
   log "watch:   $(watch_patch_status)"
   log "admin:   $(fingerprint_admin)  (http://localhost:${PORT}/app/login)"
-  if [[ "$code" == "200" ]]; then
-    log "status:  ok"
+
+  # ready = owned LISTEN + /health 200. launchctl/supervisor alive alone is NOT buyer-ready.
+  if [[ "$code" == "200" && "$owned_listen" -eq 1 ]]; then
+    log "status:  ready"
     return 0
+  fi
+  if [[ "$root_alive" -eq 1 || "$identity" == "ok" ]]; then
+    log "status:  starting"
+    log "note:    supervisor/state alive but buyer not ready (no healthy owned :$PORT) - wait or run doctor; see $ERR_LOG"
+    return 1
   fi
   log "status:  down"
   return 1
@@ -500,14 +532,30 @@ require_qa_build() {
   local marker="$BACKEND_DIR/.medusa/server/package.json"
   local server_js="$BACKEND_DIR/.medusa/server/public/admin/index.html"
   local linked_admin="$BACKEND_DIR/public/admin/index.html"
-  [[ -f "$marker" ]] || die "qa mode needs prior build (missing $marker). From apps/backend: yarn medusa build (or yarn build), then retry start qa"
-  # Soft freshness: warn if medusa-config newer than build marker
+  [[ -f "$marker" ]] || return 1
   if [[ -f "$BACKEND_DIR/medusa-config.ts" && "$BACKEND_DIR/medusa-config.ts" -nt "$marker" ]]; then
-    log "warn: medusa-config.ts is newer than .medusa/server build - consider rebuild before qa"
+    printf 'warn: medusa-config.ts is newer than .medusa/server build - consider rebuild before qa\n' >&2
   fi
   if [[ ! -f "$server_js" && ! -f "$linked_admin" ]]; then
-    log "warn: admin index.html not found under .medusa/server/public/admin or public/admin - /app may be Cannot GET in qa"
+    printf 'warn: admin index.html not found under .medusa/server/public/admin or public/admin - /app may be Cannot GET in qa\n' >&2
   fi
+  return 0
+}
+
+resolve_start_mode() {
+  local mode="$1"
+  if [[ "$mode" == "qa" ]]; then
+    if require_qa_build; then
+      printf '%s' qa
+      return 0
+    fi
+    # Must not print to stdout - callers capture this function via $()
+    printf 'warn: qa build missing (.medusa/server) - falling back to develop so catalog/Admin stay up\n' >&2
+    printf 'warn: to use qa later: cd apps/backend && yarn medusa build && %s restart qa\n' "$0" >&2
+    printf '%s' develop
+    return 0
+  fi
+  printf '%s' "$mode"
 }
 
 ensure_watch_patch_for_develop() {
@@ -552,11 +600,12 @@ resolve_root_pid() {
 }
 
 cmd_start() {
-  local mode
-  mode="$(normalize_mode "${1:-develop}")"
+  local mode requested
+  requested="$(normalize_mode "${1:-develop}")"
   shift || true
   reject_extra_args "$@"
   require_backend_dir
+  mode="$(resolve_start_mode "$requested")"
 
   local existing p running_mode code root
   existing="$(listeners_on_port || true)"
@@ -575,6 +624,10 @@ cmd_start() {
       p="$(read_state_field pid || true)"
       if [[ -n "${p:-}" ]] && state_matches_pid "$p" && is_our_medusa_pid "$p"; then
         running_mode="$(read_state_field mode || true)"
+        case "$running_mode" in
+          develop|qa) ;;
+          *) running_mode="unknown" ;;
+        esac
       fi
     fi
     if [[ "$running_mode" == "unknown" || -z "$running_mode" ]]; then
@@ -582,14 +635,13 @@ cmd_start() {
       running_mode="$(detect_mode_from_pid "$p")"
     fi
     if [[ "$running_mode" != "$mode" ]]; then
-      die "port $PORT already running mode=$running_mode (requested=$mode). Use: $0 restart $mode"
+      die "port $PORT already running mode=$running_mode (requested=$requested -> $mode). Use: $0 restart $mode"
     fi
     if [[ "$mode" == "develop" ]]; then
       ensure_watch_patch_for_develop
     fi
     p="$(printf '%s\n' $existing | awk 'NR==1{print;exit}')"
     root="$(resolve_root_pid "$p")"
-    # Prefer existing state root only if identity + tree still match this listener
     if [[ -f "$STATE_FILE" ]]; then
       local prev_root
       prev_root="$(read_state_field root_pid || true)"
@@ -607,9 +659,6 @@ cmd_start() {
   fi
 
   # Fresh start path
-  if [[ "$mode" == "qa" ]]; then
-    require_qa_build
-  fi
   if [[ "$mode" == "develop" ]]; then
     ensure_watch_patch_for_develop
   fi
@@ -617,32 +666,49 @@ cmd_start() {
   : >"$OUT_LOG"
   : >"$ERR_LOG"
 
-  (
-    cd "$BACKEND_DIR"
-    if [[ -f .env ]]; then
-      set -a
-      # shellcheck disable=SC1091
-      source .env
-      set +a
-    fi
-    export MEDUSA_LOCAL_HTTP="${MEDUSA_LOCAL_HTTP:-1}"
-    export PORT
-    export ADMIN_VITE_HMR="${ADMIN_VITE_HMR:-0}"
+  # Do not `source .env` here: Medusa loadEnv in medusa-config.ts already loads it.
+  # Sourcing fails under Cursor agent sandbox (".env: Operation not permitted").
 
+  export MEDUSA_LOCAL_HTTP="${MEDUSA_LOCAL_HTTP:-1}"
+  export PORT
+  export ADMIN_VITE_HMR="${ADMIN_VITE_HMR:-0}"
+
+  # LaunchAgent / explicit foreground: exec Medusa so KeepAlive watches the real server.
+  # (Python setsid daemonize fails under launchd with PermissionError on execvp.)
+  if [[ "${WOODRIGHT_START_FOREGROUND:-0}" == "1" || "${XPC_SERVICE_NAME:-}" == "com.woodright.medusa-backend" ]]; then
+    write_state "$$" "$mode" "$$"
+    log "foreground start pid=$$ mode=$mode (requested=$requested) logs=$OUT_LOG"
+    release_lock
+    trap - EXIT
+    cd "$BACKEND_DIR" || die "backend dir missing: $BACKEND_DIR"
+    exec >>"$OUT_LOG" 2>>"$ERR_LOG"
     if [[ "$mode" == "qa" ]]; then
+      exec node node_modules/@medusajs/cli/cli.js start --no-types
+    fi
+    exec node node_modules/@medusajs/cli/cli.js develop --no-types
+  fi
+
+  # Interactive / agent: background + disown (uptime path is LaunchAgent + foreground).
+  nohup bash -c '
+    set -euo pipefail
+    cd "$1" || exit 1
+    export MEDUSA_LOCAL_HTTP="${MEDUSA_LOCAL_HTTP:-1}"
+    export PORT="$2"
+    export ADMIN_VITE_HMR="${ADMIN_VITE_HMR:-0}"
+    if [[ "$3" == "qa" ]]; then
       exec node node_modules/@medusajs/cli/cli.js start --no-types
     else
       exec node node_modules/@medusajs/cli/cli.js develop --no-types
     fi
-  ) >>"$OUT_LOG" 2>>"$ERR_LOG" &
+  ' bash "$BACKEND_DIR" "$PORT" "$mode" >>"$OUT_LOG" 2>>"$ERR_LOG" &
   local pid=$!
+  disown "$pid" 2>/dev/null || true
   write_state "$pid" "$mode" "$pid"
-  log "started pid=$pid mode=$mode logs=$OUT_LOG"
+  log "started pid=$pid mode=$mode (requested=$requested) logs=$OUT_LOG"
   wait_health_owned "$pid"
   local listener
   listener="$(listeners_on_port | awk 'NR==1{print;exit}')"
   if [[ -n "${listener:-}" ]] && is_our_medusa_pid "$listener"; then
-    # Keep launcher/supervisor as root_pid; listener may be child start
     write_state "$listener" "$mode" "$pid"
   fi
   cmd_status || true

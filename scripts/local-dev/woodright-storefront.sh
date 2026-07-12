@@ -270,18 +270,20 @@ cmd_start() {
 
   : >"$OUT_LOG"
   : >"$ERR_LOG"
-  (
-    cd "$STORE_DIR"
+  nohup bash -c '
+    set -euo pipefail
+    cd "$1" || exit 1
     if [[ -d .next ]]; then
-      corrupt="$(find .next -maxdepth 2 -name '* 2' -print -quit 2>/dev/null || true)"
+      corrupt="$(find .next -maxdepth 2 -name "* 2" -print -quit 2>/dev/null || true)"
       if [[ -n "${corrupt}" ]]; then
-        rm -rf .next
+        rm -rf .next 2>/dev/null || true
       fi
     fi
     export NEXT_DIST_DIR="${NEXT_DIST_DIR:-.next}"
-    exec node node_modules/next/dist/bin/next dev --port "$PORT"
-  ) >>"$OUT_LOG" 2>>"$ERR_LOG" &
+    exec node node_modules/next/dist/bin/next dev --port "$2"
+  ' bash "$STORE_DIR" "$PORT" >>"$OUT_LOG" 2>>"$ERR_LOG" &
   local pid=$!
+  disown "$pid" 2>/dev/null || true
   write_state "$pid"
   log "started pid=$pid logs=$OUT_LOG"
   local i

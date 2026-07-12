@@ -6,10 +6,10 @@ Single-instance control for Woodright Medusa on `:9000` and storefront on `:3002
 
 | Profile | Command | When |
 |--------|---------|------|
-| **qa** (catalog/photos smoke) | `./woodright-backend.sh start qa` | After `medusa build`; no watcher |
-| **develop** | `./woodright-backend.sh start develop` | Admin UI + backend edits |
+| **develop** | `./woodright-backend.sh start develop` | Backend/Admin edits; default when no build |
+| **qa** (buyer-uptime) | after `yarn medusa build`: `./woodright-backend.sh restart qa` | Catalog/cart/photos smoke without watcher flaps; if build missing → fallback to develop |
 
-Finder wrappers default to **qa**. Override: `WOODRIGHT_BACKEND_MODE=develop ./run-backend.sh`.
+`status` labels: `ready` | `starting` | `down` (`starting` = supervisor alive, buyer not ready).
 
 ## Commands
 
@@ -20,23 +20,29 @@ Finder wrappers default to **qa**. Override: `WOODRIGHT_BACKEND_MODE=develop ./r
 ./woodright-backend-scenarios.sh
 ```
 
-Gates: catalog → `--backend-only`; Admin → `--admin-only`.
+Gates: catalog → `--backend-only`; Admin → `--admin-only`. Never claim catalog OK from `launchctl running` alone.
 
 ## Watch patch durability
 
 - `apps/backend/scripts/patch-medusa-develop-watch.mjs` via postinstall
-- Entrypoint also runs patch before `start develop` (prefers backend scripts copy)
+- Entrypoint also runs patch before `start develop`
+- Ignores include `scripts/`, `package.json`, `yarn.lock` (changes there need explicit restart)
 - `status` shows `watch:`; `WOODRIGHT_WATCH_PATCH_REQUIRED=1` fails closed
 
 ## Storefront copy
 
 Buyer loadError is neutral (no `:9000`). Ops diagnosis stays in doctor/logs.
 
-## Install
+## Install / LaunchAgents
 
 ```bash
 ./install-qa-dev-servers-wrappers.sh
+cp ./com.woodright.medusa-backend.plist ~/Library/LaunchAgents/
+cp ./com.woodright.storefront-qa.plist ~/Library/LaunchAgents/
+# bootout old labels, then bootstrap (see docs/operator/local-dev-stability.md)
 ```
+
+KeepAlive for both: `{ SuccessfulExit = false }` on long-running `exec` runners.
 
 ## Runbook
 

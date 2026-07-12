@@ -179,6 +179,13 @@ if [[ "$code" == "200" ]]; then
   pass "GET :$PORT/health -> $code"
 else
   fail "GET :$PORT/health -> $code (need 200)"
+  state_file="${WOODRIGHT_QA_DIR:-$HOME/.woodright/qa-dev-servers}/backend-${PORT}.state"
+  if [[ -f "$state_file" ]]; then
+    root_pid="$(awk -F= '$1=="root_pid"{print $2; exit}' "$state_file" 2>/dev/null || true)"
+    if [[ -n "${root_pid:-}" ]] && kill -0 "$root_pid" 2>/dev/null; then
+      info "supervisor/root_pid=$root_pid still alive - likely mid-boot/restart (status: starting); wait or check backend-${PORT}.err.log"
+    fi
+  fi
 fi
 
 # 2) single listener

@@ -75,16 +75,21 @@ code="$(curl -s --max-time 5 -o /dev/null -w '%{http_code}' http://127.0.0.1:900
 if [[ "$code" == "200" ]]; then
   mode_line="$(bash "$BACKEND" status 2>/dev/null | awk '/^mode:/{print $2; exit}' || true)"
   if [[ "$mode_line" == "develop" ]]; then
-    set +e
-    bash "$BACKEND" start qa >/tmp/wr-scenario-qa.txt 2>&1
-    qa_rc=$?
-    set -e
-    if [[ "$qa_rc" -eq 0 ]]; then
-      fail "start qa should conflict while develop is up"
-    elif grep -q 'already running mode=develop' /tmp/wr-scenario-qa.txt; then
-      pass "mode conflict develop vs qa"
+    marker="${WOODRIGHT_REPO_ROOT:-/Users/leonidmbp/Documents/projects/furniture-commerce}/apps/backend/.medusa/server/package.json"
+    if [[ ! -f "$marker" ]]; then
+      pass "skip mode conflict (qa build missing → fallback develop, no qa/develop clash)"
     else
-      fail "unexpected qa error: $(sed -n '1,2p' /tmp/wr-scenario-qa.txt)"
+      set +e
+      bash "$BACKEND" start qa >/tmp/wr-scenario-qa.txt 2>&1
+      qa_rc=$?
+      set -e
+      if [[ "$qa_rc" -eq 0 ]]; then
+        fail "start qa should conflict while develop is up"
+      elif grep -qE 'already running mode=develop|requested=qa' /tmp/wr-scenario-qa.txt; then
+        pass "mode conflict develop vs qa"
+      else
+        fail "unexpected qa error: $(sed -n '1,2p' /tmp/wr-scenario-qa.txt)"
+      fi
     fi
   else
     pass "skip mode conflict (mode=${mode_line:-unknown} not develop)"
@@ -103,6 +108,37 @@ else
   fail "mkdir lock exclusivity"
 fi
 rm -rf "$A" "$B"
+
+echo "=== scenario: develop watch ignore list (non-destructive) ==="
+DEV_JS="${WOODRIGHT_REPO_ROOT:-/Users/leonidmbp/Documents/projects/furniture-commerce}/apps/backend/node_modules/@medusajs/medusa/dist/commands/develop.js"
+if [[ -f "$DEV_JS" ]]; then
+  missing_ignores=""
+  for entry in package.json yarn.lock scripts src/scripts static; do
+    if ! grep -Fq "\"$entry\"" "$DEV_JS"; then
+      missing_ignores="$missing_ignores $entry"
+    fi
+  done
+  if [[ -z "$missing_ignores" ]] && grep -Fq "Woodright: develop watch ignores" "$DEV_JS"; then
+    pass "develop.js contains widened Woodright watch ignores"
+  else
+    fail "develop.js missing ignores:$missing_ignores (run patch-medusa-develop-watch.mjs)"
+  fi
+else
+  fail "develop.js missing at $DEV_JS"
+fi
+
+echo "=== scenario: status readiness labels (live, non-destructive) ==="
+status_out="$(bash "$BACKEND" status 2>&1 || true)"
+if echo "$status_out" | grep -qE '^status:  (ready|starting|down)$'; then
+  pass "status emits ready|starting|down"
+else
+  fail "status missing readiness label"
+fi
+if echo "$status_out" | grep -q '^status:  ok$'; then
+  fail "status still emits legacy ok label"
+else
+  pass "status no longer emits legacy ok"
+fi
 
 if [[ "${WOODRIGHT_SCENARIO_ALLOW_STOP:-0}" == "1" ]]; then
   echo "==== optional restart smoke ===="

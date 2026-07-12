@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 /**
- * Extends chokidar ignore-list in `medusa develop` (static/tmp/uploads/…).
+ * Extends chokidar ignore-list in `medusa develop` (static/tmp/uploads/…
+ * plus package.json, yarn.lock, top-level scripts/).
  * Idempotent. Used from postinstall and scripts/local-dev entrypoint.
+ *
+ * Note: ignored `scripts/` means changes under apps/backend/scripts require an
+ * explicit restart to take effect while develop is running.
  */
 import fs from "node:fs"
 import path from "node:path"
@@ -20,6 +24,9 @@ const EXTRA_IGNORES = [
   "static",
   "test-results",
   "src/scripts",
+  "scripts",
+  "package.json",
+  "yarn.lock",
   ".run",
   "data",
   ".cursor",
@@ -35,6 +42,9 @@ const LEGACY_REPLACEMENT = `"src/admin",
                     "static",
                     "test-results",
                     "src/scripts",
+                    "scripts",
+                    "package.json",
+                    "yarn.lock",
                 ], // ${MARKER}`
 
 function patchDevelopWatch(source) {
@@ -65,6 +75,29 @@ function patchDevelopWatch(source) {
   return { source: patched, status: "patched" }
 }
 
+function upgradeMarkedSource(source) {
+  const ignoredBlock =
+    /(ignored:\s*\[[\s\S]*?)(\],\s*\/\/\s*Woodright: develop watch ignores)/
+  const match = source.match(ignoredBlock)
+  if (!match) {
+    return { source, status: "already", missing: [] }
+  }
+  const block = match[1]
+  const missing = EXTRA_IGNORES.filter((entry) => !block.includes(`"${entry}"`))
+  if (missing.length === 0) {
+    return { source, status: "already", missing: [] }
+  }
+  const injection = missing.map((entry) => `\n                    "${entry}",`).join("")
+  const patchedBlock = block.includes('"src/scripts",')
+    ? block.replace(/"src\/scripts",/, `"src/scripts",${injection}`)
+    : block.replace(/"\.medusa",/, `".medusa",${injection}`)
+  return {
+    source: source.replace(ignoredBlock, `${patchedBlock}${match[2]}`),
+    status: "upgraded",
+    missing,
+  }
+}
+
 if (!fs.existsSync(developPath)) {
   console.warn(`skip: missing ${developPath}`)
   process.exit(0)
@@ -74,26 +107,13 @@ const original = fs.readFileSync(developPath, "utf8")
 const result = patchDevelopWatch(original)
 
 if (result.status === "already") {
-  let source = fs.readFileSync(developPath, "utf8")
-  const ignoredBlock =
-    /(ignored:\s*\[[\s\S]*?)(\],\s*\/\/\s*Woodright: develop watch ignores)/
-  const match = source.match(ignoredBlock)
-  if (!match) {
+  const upgraded = upgradeMarkedSource(fs.readFileSync(developPath, "utf8"))
+  if (upgraded.status === "already") {
     console.log("already patched medusa develop watch")
     process.exit(0)
   }
-  const block = match[1]
-  const missing = EXTRA_IGNORES.filter((entry) => !block.includes(`"${entry}"`))
-  if (missing.length === 0) {
-    console.log("already patched medusa develop watch")
-    process.exit(0)
-  }
-  const injection = missing.map((entry) => `\n                    "${entry}",`).join("")
-  const patchedBlock = block.includes('"src/scripts",')
-    ? block.replace(/"src\/scripts",/, `"src/scripts",${injection}`)
-    : block.replace(/"\.medusa",/, `".medusa",${injection}`)
-  fs.writeFileSync(developPath, source.replace(ignoredBlock, `${patchedBlock}${match[2]}`))
-  console.log(`patched medusa develop watch (added: ${missing.join(", ")})`)
+  fs.writeFileSync(developPath, upgraded.source)
+  console.log(`patched medusa develop watch (added: ${upgraded.missing.join(", ")})`)
   process.exit(0)
 }
 

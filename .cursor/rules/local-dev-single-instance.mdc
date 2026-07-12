@@ -17,8 +17,10 @@ Complements `foreground-only-execution.mdc` (no autostart unless operator asks t
   - Healthy (`/health` → 200) → **reuse**, do not spawn another process.
   - Unhealthy listener / `EADDRINUSE` zombies → `scripts/local-dev/woodright-backend.sh stop` then `start` (only when the operator asked to fix/start).
 - Prefer the entrypoint scripts under `scripts/local-dev/` (and synced copies in `~/.woodright/qa-dev-servers/`) over ad-hoc `nohup medusa develop`.
-- **QA / smoke / catalog-photos:** prefer `woodright-backend.sh start qa` (`medusa start --no-types` after build; no watcher).
-- **Admin UI / backend code edits:** `start develop` (Vite admin; `ADMIN_VITE_HMR=0` by default), still one instance only.
+- **Buyer-uptime / catalog-photos smoke:** after `yarn medusa build`, prefer `restart qa` + `woodright-doctor.sh --backend-only`
+- **QA without build:** entrypoint falls back to **develop** (do not leave `:9000` empty)
+- **Default local uptime / Admin UI / backend edits:** `start develop` (Finder wrappers default here too)
+- `status` labels: `ready` | `starting` | `down` - do **not** claim catalog OK from `launchctl running` alone
 - Never `killall node` / `pkill node`. Only PIDs listening on `:9000` or the recorded pidfile.
 
 ## Operator commands
