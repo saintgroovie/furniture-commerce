@@ -64,26 +64,30 @@ await page.waitForTimeout(3000)
 const productBody = (await page.locator("body").innerText()).trim()
 await assert(/B5 STANDARD|Published|Опубликован/i.test(productBody), "stock product page did not render")
 
-// Flag off
+// Flag off → redirect to stock product (no developer stub)
 await page.evaluate(() => {
   window.localStorage.setItem("WOODRIGHT_ADMIN_UX_V1", "0")
 })
-await page.goto(`${BASE}/app/woodright/products/${STD}`, { waitUntil: "networkidle", timeout: 120000 })
+await page.goto(`${BASE}/app/woodright/products/${STD}`, { waitUntil: "domcontentloaded", timeout: 120000 })
 await page.waitForTimeout(2500)
-const flagOff = (await page.locator("body").innerText()).trim()
-await assert(/Рабочее пространство Woodright/i.test(flagOff), "workspace heading missing (flag off)")
-await assert(/Функция выключена/i.test(flagOff), "flag-off disabled copy missing")
+await assert(
+  page.url().includes(`/app/products/${STD}`),
+  `flag-off did not redirect to stock product, url=${page.url()}`
+)
+await assert(!/Функция выключена/i.test(await page.locator("body").innerText()), "flag-off stub still shown")
 
 // Flag on
 await page.evaluate(() => {
   window.localStorage.setItem("WOODRIGHT_ADMIN_UX_V1", "1")
 })
-await page.goto(`${BASE}/app/woodright/products/${STD}`, { waitUntil: "networkidle", timeout: 120000 })
+await page.goto(`${BASE}/app/woodright/products/${STD}`, { waitUntil: "domcontentloaded", timeout: 120000 })
 await page.waitForTimeout(4000)
 const flagOn = (await page.locator("body").innerText()).trim()
 await assert(!/Функция выключена/i.test(flagOn), "workspace still disabled with flag on")
 await assert(/B5 STANDARD/i.test(flagOn), "workspace product title missing")
 await assert(/Сохранить|Save/i.test(flagOn), "workspace save control missing")
+await assert(/Акции товара/i.test(flagOn), "product promotions tab missing")
+await assert(!/\bскоро\b/i.test(flagOn), "stub «скоро» badge still present")
 
 // 404 normalized
 await page.goto(`${BASE}/app/woodright/products/prod_DOES_NOT_EXIST`, {

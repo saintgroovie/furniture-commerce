@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import { Link, useSearchParams } from "react-router-dom"
+import { Link, Navigate, useSearchParams } from "react-router-dom"
 import { Badge, Button, Container, Heading, Input, Text } from "@medusajs/ui"
 import { defineRouteConfig } from "@medusajs/admin-sdk"
 import { readWoodrightAdminUxFlagFromBrowser } from "../../lib/woodright/browser-flag"
@@ -218,18 +218,8 @@ const WoodrightDashboardPage = () => {
   )
 
   if (!flagOn) {
-    return (
-      <Container className="p-6">
-        <Heading level="h1">{UI_COPY.dashboardTitle}</Heading>
-        <Text className="mt-2 text-ui-fg-subtle">
-          Функция выключена. Включите флаг WOODRIGHT_ADMIN_UX_V1 (localStorage или env) и
-          обновите страницу
-        </Text>
-        <Button className="mt-4" variant="secondary" asChild>
-          <Link to={stockAdminHomePath()}>{STOCK_ADMIN_LABEL}</Link>
-        </Button>
-      </Container>
-    )
+    // Flag-off: send operators to stock Admin — no developer stub as primary UI.
+    return <Navigate to={stockAdminHomePath()} replace />
   }
 
   return (

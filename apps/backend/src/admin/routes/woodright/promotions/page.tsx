@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
-import { Link, useSearchParams } from "react-router-dom"
+import { Link, Navigate, useSearchParams } from "react-router-dom"
 import { Badge, Button, Container, Heading, Input, Text } from "@medusajs/ui"
-import { defineRouteConfig } from "@medusajs/admin-sdk"
 import { readWoodrightAdminUxFlagFromBrowser } from "../../../lib/woodright/browser-flag"
 import { STOCK_ADMIN_LABEL } from "../../../lib/woodright/stock-admin"
 import { normalizeAdminError } from "../../../lib/errors/normalize-admin-error"
@@ -140,18 +139,7 @@ const PromotionsListPage = () => {
   }, [rows, filter])
 
   if (!flagOn) {
-    return (
-      <Container className="p-6">
-        <Heading level="h1">Акции Woodright</Heading>
-        <Text className="mt-2 text-ui-fg-subtle">
-          Функция выключена. Включите флаг WOODRIGHT_ADMIN_UX_V1 (localStorage или env) и
-          обновите страницу. Штатный раздел акций Medusa остаётся доступным.
-        </Text>
-        <Button className="mt-4" variant="secondary" asChild>
-          <Link to={stockAdminPromotionsPath()}>{STOCK_ADMIN_LABEL}</Link>
-        </Button>
-      </Container>
-    )
+    return <Navigate to={stockAdminPromotionsPath()} replace />
   }
 
   const renderRow = (row: (typeof rows)[number]) => {
@@ -299,13 +287,34 @@ const PromotionsListPage = () => {
         </Container>
       ) : !rows.length ? (
         <Container className="p-6">
-          <Text weight="plus">Акций пока нет</Text>
-          <Text size="small" className="mt-1 text-ui-fg-subtle">
-            Создайте первую акцию - по коду или автоматическую
-          </Text>
-          <Button className="mt-3" asChild>
-            <Link to={woodrightPromotionNewPath()}>Создать акцию</Link>
-          </Button>
+          {query.trim() ? (
+            <>
+              <Text weight="plus">Нет акций по этому поиску</Text>
+              <Text size="small" className="mt-1 text-ui-fg-subtle">
+                Измените запрос или сбросьте поиск
+              </Text>
+              <Button
+                className="mt-3"
+                variant="secondary"
+                onClick={() => {
+                  setQuery("")
+                  setOffset(0)
+                }}
+              >
+                Сбросить поиск
+              </Button>
+            </>
+          ) : (
+            <>
+              <Text weight="plus">Акций пока нет</Text>
+              <Text size="small" className="mt-1 text-ui-fg-subtle">
+                Создайте первую акцию - по коду или автоматическую
+              </Text>
+              <Button className="mt-3" asChild>
+                <Link to={woodrightPromotionNewPath()}>Создать акцию</Link>
+              </Button>
+            </>
+          )}
         </Container>
       ) : filter === "campaigns" ? (
         <div className="flex flex-col gap-4">
@@ -336,9 +345,26 @@ const PromotionsListPage = () => {
           </table>
           {!visibleRows.length ? (
             <div className="px-3 py-6">
-              <Text size="small" className="text-ui-fg-subtle">
-                Под этот фильтр не попала ни одна акция с текущей страницы списка
+              <Text weight="plus">На этой странице нет совпадений</Text>
+              <Text size="small" className="mt-1 text-ui-fg-subtle">
+                Фильтр «{FILTERS.find((f) => f.id === filter)?.label ?? filter}» считается только
+                по загруженной странице списка ({rows.length} из {count}). Это не значит, что во
+                всём магазине нет таких акций.
               </Text>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button size="small" variant="secondary" onClick={() => selectFilter("all")}>
+                  Показать все на странице
+                </Button>
+                {offset + PAGE_SIZE < count ? (
+                  <Button
+                    size="small"
+                    variant="secondary"
+                    onClick={() => setOffset(offset + PAGE_SIZE)}
+                  >
+                    Следующая страница
+                  </Button>
+                ) : null}
+              </div>
             </div>
           ) : null}
         </Container>
@@ -374,8 +400,6 @@ const PromotionsListPage = () => {
   )
 }
 
-export const config = defineRouteConfig({
-  label: "Акции",
-})
-
+// No defineRouteConfig: keep a single Woodright sidebar entry (dashboard).
+// Promotions remain reachable from the dashboard, stock widget, and deep links.
 export default PromotionsListPage

@@ -39,9 +39,7 @@ export type ProductWorkspaceTabId =
   | "overview"
   | "variants"
   | "gallery"
-  | "inventory"
   | "promotions"
-  | "seo"
   | "technical"
 
 export type SaveStatus =

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom"
 import { Badge, Button, Container, Text } from "@medusajs/ui"
 import { normalizeAdminError } from "../errors/normalize-admin-error"
 import { buildAdminErrorViewModel } from "../../components/woodright/admin-error-view-model"
+import { STOCK_ADMIN_LABEL } from "../woodright/stock-admin"
 import {
   fetchAdminPromotions,
   stockAdminPromotionsPath,
@@ -15,7 +16,7 @@ import { matchPromotionsForProduct } from "./product-match"
 import type { AdminPromotionDto } from "./types"
 
 /**
- * Package E — «Продвижение» tab of the Product Workspace.
+ * Package E — «Акции товара» tab of the Product Workspace.
  * MVP: loads the promotions list (page by page, bounded) and filters
  * client-side for rules that mention this product id (direct) or its
  * collection id (indirect). Never enumerates the whole catalog; when the
@@ -111,7 +112,7 @@ export const ProductPromotionsPanel = ({ productId, collectionId }: Props) => {
           {vm.primary.explanation} {vm.primary.action}
         </Text>
         <Button className="mt-3" size="small" variant="secondary" asChild>
-          <Link to={stockAdminPromotionsPath()}>Акции в стандартной админке</Link>
+          <Link to={stockAdminPromotionsPath()}>{STOCK_ADMIN_LABEL}</Link>
         </Button>
       </Container>
     )
@@ -120,10 +121,10 @@ export const ProductPromotionsPanel = ({ productId, collectionId }: Props) => {
   return (
     <Container className="flex flex-col gap-3 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <Text weight="plus">Акции этого товара</Text>
+        <Text weight="plus">Акции с условиями на этот товар</Text>
         <div className="flex gap-2">
           <Button size="small" variant="secondary" asChild>
-            <Link to={stockAdminPromotionsPath()}>Стандартная админка</Link>
+            <Link to={stockAdminPromotionsPath()}>{STOCK_ADMIN_LABEL}</Link>
           </Button>
           <Button size="small" asChild>
             <Link to={woodrightPromotionNewPath({ product_id: productId })}>
@@ -136,18 +137,15 @@ export const ProductPromotionsPanel = ({ productId, collectionId }: Props) => {
       {truncated ? (
         <Text size="xsmall" className="text-ui-fg-subtle">
           Акций больше, чем удалось загрузить ({promotions.length}) - список может быть
-          неполным. Полный список в стандартной админке
+          неполным. Смотрите полный список в стандартной админке Medusa (кнопка выше).
         </Text>
       ) : null}
 
       {!matches.length ? (
         <div>
           <Text size="small" className="text-ui-fg-subtle">
-            Этот товар не упомянут в условиях загруженных акций
-          </Text>
-          <Text size="xsmall" className="mt-1 text-ui-fg-subtle">
-            Акции на весь заказ и на весь каталог здесь не показываются - они действуют на все
-            товары сразу
+            Нет акций, где этот товар или его коллекция выбраны явно. Общие акции магазина
+            (на весь заказ / весь каталог) здесь не учитываются.
           </Text>
         </div>
       ) : (

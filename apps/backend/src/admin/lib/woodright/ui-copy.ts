@@ -23,6 +23,7 @@ export const UI_COPY = {
   open: "Открыть",
   search: "Поиск",
   soonBadge: "скоро",
+  productPromotionsTab: "Акции товара",
   technicalDetails: "Технические сведения",
   dashboardTitle: "Рабочий стол Woodright",
 } as const

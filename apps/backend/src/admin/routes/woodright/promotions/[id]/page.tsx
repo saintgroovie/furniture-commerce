@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import { Link, useParams } from "react-router-dom"
+import { Link, Navigate, useParams } from "react-router-dom"
 import { Badge, Button, Container, Heading, Input, Text, toast } from "@medusajs/ui"
 import { readWoodrightAdminUxFlagFromBrowser } from "../../../../lib/woodright/browser-flag"
 import { STOCK_ADMIN_LABEL } from "../../../../lib/woodright/stock-admin"
@@ -367,19 +367,7 @@ const PromotionDetailPage = () => {
   }
 
   if (!flagOn) {
-    return (
-      <Container className="p-6">
-        <Heading level="h1">Акция Woodright</Heading>
-        <Text className="mt-2 text-ui-fg-subtle">
-          Функция выключена. Включите флаг WOODRIGHT_ADMIN_UX_V1 и обновите страницу.
-        </Text>
-        {id ? (
-          <Button className="mt-4" variant="secondary" asChild>
-            <Link to={stockAdminPromotionPath(id)}>{STOCK_ADMIN_LABEL}</Link>
-          </Button>
-        ) : null}
-      </Container>
-    )
+    return <Navigate to={id ? stockAdminPromotionPath(id) : stockAdminPromotionsPath()} replace />
   }
 
   if (loading) {

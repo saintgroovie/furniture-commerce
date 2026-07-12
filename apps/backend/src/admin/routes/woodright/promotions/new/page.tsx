@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import { Link, useNavigate, useSearchParams } from "react-router-dom"
+import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom"
 import { Badge, Button, Container, Heading, Input, Text, toast } from "@medusajs/ui"
 import { readWoodrightAdminUxFlagFromBrowser } from "../../../../lib/woodright/browser-flag"
 import {
@@ -370,17 +370,7 @@ const PromotionWizardPage = () => {
   }
 
   if (!flagOn) {
-    return (
-      <Container className="p-6">
-        <Heading level="h1">Новая акция</Heading>
-        <Text className="mt-2 text-ui-fg-subtle">
-          Функция выключена. Включите флаг WOODRIGHT_ADMIN_UX_V1 и обновите страницу.
-        </Text>
-        <Button className="mt-4" variant="secondary" asChild>
-          <Link to={stockAdminPromotionsPath()}>Создать в стандартной админке</Link>
-        </Button>
-      </Container>
-    )
+    return <Navigate to={stockAdminPromotionsPath()} replace />
   }
 
   const stepIndex = STEPS.findIndex((s) => s.id === step)

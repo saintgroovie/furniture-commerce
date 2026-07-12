@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useReducer, useState } from "react"
-import { useParams, Link, useBlocker, useSearchParams } from "react-router-dom"
+import { useParams, Link, Navigate, useBlocker, useSearchParams } from "react-router-dom"
 import {
   Badge,
   Button,
@@ -44,15 +44,12 @@ import type {
   ProductWorkspaceTabId,
 } from "../../../../lib/product-workspace/types"
 
-// F-03: inventory and SEO are stubs until their packages land — mark them
-// «скоро» so the tabs do not look equally functional.
-const TABS: Array<{ id: ProductWorkspaceTabId; label: string; stub?: boolean }> = [
+// v1 tabs only — inventory/SEO deferred; operators use stock Medusa for those.
+const TABS: Array<{ id: ProductWorkspaceTabId; label: string }> = [
   { id: "overview", label: "Обзор" },
   { id: "variants", label: "Варианты и цены" },
   { id: "gallery", label: "Галерея" },
-  { id: "inventory", label: "Наличие", stub: true },
-  { id: "promotions", label: "Продвижение" },
-  { id: "seo", label: "SEO", stub: true },
+  { id: "promotions", label: "Акции товара" },
   { id: "technical", label: "Служебное" },
 ]
 
@@ -83,6 +80,23 @@ const ProductWorkspacePage = () => {
     const fromUrl = searchParams.get("tab")
     return isTabId(fromUrl) ? fromUrl : "overview"
   })
+
+  // Unknown / deferred tab ids (e.g. legacy ?tab=inventory) → overview.
+  useEffect(() => {
+    const fromUrl = searchParams.get("tab")
+    if (fromUrl == null) return
+    if (!isTabId(fromUrl)) {
+      setTab("overview")
+      setSearchParams(
+        (prev) => {
+          const params = new URLSearchParams(prev)
+          params.delete("tab")
+          return params
+        },
+        { replace: true }
+      )
+    }
+  }, [searchParams, setSearchParams])
 
   const selectTab = (next: ProductWorkspaceTabId) => {
     setTab(next)
@@ -249,22 +263,7 @@ const ProductWorkspacePage = () => {
   }
 
   if (!flagOn) {
-    return (
-      <Container className="p-6">
-        <Heading level="h1">Рабочее пространство Woodright</Heading>
-        <Text className="mt-2 text-ui-fg-subtle">
-          Функция выключена. Включите флаг WOODRIGHT_ADMIN_UX_V1 (localStorage или env) и
-          обновите страницу. Штатная карточка Medusa остаётся доступной.
-        </Text>
-        {id ? (
-          <Button className="mt-4" variant="secondary" asChild>
-            <Link to={stockAdminProductPath(id)} onClick={(e) => !confirmLeave() && e.preventDefault()}>
-              {STOCK_ADMIN_LABEL}
-            </Link>
-          </Button>
-        ) : null}
-      </Container>
-    )
+    return <Navigate to={id ? stockAdminProductPath(id) : "/app/products"} replace />
   }
 
   if (loading) {
@@ -430,14 +429,16 @@ const ProductWorkspacePage = () => {
             onClick={() => selectTab(t.id)}
           >
             {t.label}
-            {t.stub ? (
-              <Badge size="2xsmall" className="ml-1">
-                скоро
-              </Badge>
-            ) : null}
           </Button>
         ))}
       </div>
+
+      <Text size="xsmall" className="text-ui-fg-subtle">
+        Наличие и SEO редактируются в{" "}
+        <Link to={stockAdminProductPath(product.id)} className="underline">
+          {STOCK_ADMIN_LABEL}
+        </Link>
+      </Text>
 
       {tab === "overview" ? (
         <Container className="flex flex-col gap-4 p-4">
@@ -544,30 +545,11 @@ const ProductWorkspacePage = () => {
         />
       ) : null}
 
-      {tab === "inventory" ? (
-        <Container className="p-4">
-          <Text>Будет добавлено в следующем пакете.</Text>
-          <Button className="mt-3" variant="secondary" asChild>
-            <Link to={stockAdminProductPath(product.id)}>{STOCK_ADMIN_LABEL}</Link>
-          </Button>
-        </Container>
-      ) : null}
-
       {tab === "promotions" ? (
         <ProductPromotionsPanel
           productId={product.id}
           collectionId={product.collection?.id ?? null}
         />
-      ) : null}
-
-      {tab === "seo" ? (
-        <Container className="p-4">
-          <Text>Handle: {product.handle || "—"}</Text>
-          <Text size="small" className="mt-2 text-ui-fg-subtle">
-            Расширенное SEO-редактирование — в следующих пакетах. Сейчас доступно в стандартной
-            админке.
-          </Text>
-        </Container>
       ) : null}
 
       {tab === "technical" ? (

@@ -2,8 +2,7 @@ import { Button, Container, Text } from "@medusajs/ui"
 import { Link } from "react-router-dom"
 import { defineWidgetConfig } from "@medusajs/admin-sdk"
 import { readWoodrightAdminUxFlagFromBrowser } from "../lib/woodright/browser-flag"
-import { woodrightDashboardPath } from "../lib/woodright/dashboard-api"
-import { woodrightPromotionsPath } from "../lib/promotions/api"
+import { woodrightPromotionNewPath, woodrightPromotionsPath } from "../lib/promotions/api"
 
 const PromotionsWoodrightEntry = () => {
   if (!readWoodrightAdminUxFlagFromBrowser()) {
@@ -12,20 +11,23 @@ const PromotionsWoodrightEntry = () => {
 
   return (
     <Container className="p-4">
-      <Text weight="plus">Woodright</Text>
+      <Text weight="plus">Мастер акций Woodright</Text>
       <Text size="small" className="mt-1 text-ui-fg-subtle">
-        Акции в операторском виде: человеческие статусы, мастер создания, проверка кода в
-        корзине. Штатный раздел Medusa остаётся доступным.
+        Подсказки при создании акции и проверка кода в корзине. Штатный список Medusa остаётся
+        основным списком акций.
       </Text>
-      <div className="mt-3 flex flex-wrap gap-2">
+      <div className="mt-3 flex flex-wrap items-center gap-3">
         <Button variant="secondary" asChild>
-          <Link to={woodrightPromotionsPath()} aria-label="Открыть акции Woodright">
-            Открыть акции Woodright
+          <Link to={woodrightPromotionNewPath()} aria-label="Создать акцию в мастере Woodright">
+            Создать акцию
           </Link>
         </Button>
-        <Button variant="transparent" asChild>
-          <Link to={woodrightDashboardPath()}>Рабочий стол Woodright</Link>
-        </Button>
+        <Link
+          to={`${woodrightPromotionsPath()}?filter=attention`}
+          className="text-ui-fg-subtle text-sm underline"
+        >
+          Проблемные акции (по текущей странице)
+        </Link>
       </div>
     </Container>
   )
