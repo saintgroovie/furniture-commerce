@@ -6395,3 +6395,198 @@ body {
     gap: var(--space-sm);
   }
 }
+
+/* ---- «По проекту» landing (/bespoke) ----------------------------------- */
+
+.hp--bespoke {
+  --hp-bespoke-accent: #7c6a5b;
+  --hp-bespoke-bg: #f8f5f2;
+}
+
+/* Hero: single panelled-interior photo, no slideshow. */
+.hp-bhero-plate {
+  min-height: clamp(460px, 68vh, 700px);
+}
+
+/* Single static hero photo: without this the base .hp-hero-img slideshow
+   keyframes would fade the only slide out mid-cycle. */
+.hp--bespoke .hp-hero-img {
+  object-position: 50% 62%;
+  animation: none;
+  transform: none;
+}
+
+.hp-bhero-note {
+  margin-top: var(--space-md);
+  font-size: 0.875rem;
+  color: var(--color-fg-secondary);
+  line-height: 1.5;
+}
+
+/* «Когда подходит»: indexed editorial text cards. */
+.hp-bwhen-grid {
+  list-style: none;
+  margin: var(--space-lg) 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-md);
+}
+
+.hp-bwhen-grid li {
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.hp-bwhen-grid h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 500;
+}
+
+.hp-bwhen-grid p {
+  margin: 0;
+  color: var(--color-fg-secondary);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* «Как это проходит»: photo steps on a warm tonal band. */
+.hp-bprocess {
+  background: var(--hp-bespoke-bg);
+}
+
+.hp-bprocess-inner {
+  padding-block: clamp(2.5rem, 6vw, 4.5rem);
+}
+
+.hp-bprocess-grid {
+  list-style: none;
+  margin: var(--space-xl) 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-md);
+  counter-reset: none;
+}
+
+.hp-bprocess-grid li {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.hp-bprocess-media {
+  display: block;
+  aspect-ratio: 4 / 5;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.hp-bprocess-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hp-bprocess-grid li:hover .hp-bprocess-media img {
+  transform: scale(1.04);
+}
+
+.hp-bprocess-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.hp-bprocess-body h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 500;
+}
+
+.hp-bprocess-body p {
+  margin: 0;
+  color: var(--color-fg-secondary);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* Final CTA over the hallway photo. */
+.hp-bfinal {
+  position: relative;
+  min-height: clamp(360px, 52vh, 560px);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.hp-bfinal-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 55%;
+}
+
+.hp-bfinal-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(24, 22, 19, 0.25) 0%, rgba(24, 22, 19, 0.55) 100%);
+}
+
+.hp-bfinal-body {
+  position: relative;
+  text-align: center;
+  color: #f4efe9;
+  padding: clamp(2.5rem, 6vw, 4rem) var(--space-lg);
+  max-width: 36rem;
+}
+
+.hp-bfinal-body h2 {
+  margin: 0;
+  font-size: clamp(1.5rem, 2.8vw, 2.1rem);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.hp-bfinal-text {
+  margin-top: var(--space-sm);
+  color: rgba(244, 239, 233, 0.85);
+  line-height: 1.55;
+}
+
+.hp-bfinal-btn {
+  margin-top: var(--space-lg);
+  background: #f4efe9;
+  color: #3d3126;
+}
+
+.hp-bfinal-btn:hover {
+  background: #fff;
+  color: #2b2118;
+}
+
+@media (max-width: 1024px) {
+  .hp-bwhen-grid,
+  .hp-bprocess-grid {
+    grid-template-columns: repeat(2, 1fr);
+    row-gap: var(--space-lg);
+  }
+}
+
+@media (max-width: 480px) {
+  .hp-bwhen-grid,
+  .hp-bprocess-grid {
+    grid-template-columns: 1fr;
+  }
+}
