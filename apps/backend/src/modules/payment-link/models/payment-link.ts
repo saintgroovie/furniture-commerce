@@ -12,6 +12,4 @@ export const PaymentLink = model.define("payment_link", {
     .enum(["created", "sent", "paid", "expired"])
     .default("created"),
   expires_at: model.dateTime().nullable(),
-  created_at: model.dateTime().default(() => new Date()),
-  updated_at: model.dateTime().default(() => new Date()),
 })

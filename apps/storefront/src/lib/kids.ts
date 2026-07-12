@@ -52,9 +52,7 @@ export function isKidsCartLineItem(item: Record<string, unknown>): boolean {
   const classification = product.product_classification as
     | { product_type?: string }
     | undefined
-  const legacyType = product.productType as { product_type?: string } | undefined
-  const productType = classification?.product_type ?? legacyType?.product_type
-  if (productType === BESPOKE_PRODUCT_TYPE) return false
+  if (classification?.product_type === BESPOKE_PRODUCT_TYPE) return false
 
   if (lineMeta.storefront_section === "kids" || lineMeta.cart_group === "kids") {
     return true

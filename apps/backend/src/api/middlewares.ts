@@ -5,29 +5,42 @@ import {
   MedusaResponse,
 } from "@medusajs/framework/http"
 import { Modules } from "@medusajs/framework/utils"
-
-const BESPOKE = "BESPOKE"
+import {
+  BESPOKE,
+  collectVariantIdsFromCartBody,
+  decideCartClassification,
+} from "./store/cart-classification-gate"
 
 /**
- * Блокирует добавление BESPOKE в корзину: проверка до вызова стандартного add-to-cart flow Medusa, без его дублирования.
+ * Blocks BESPOKE (and unclassified) products from cart before Medusa add-to-cart.
+ * Fail-closed on missing/malformed product_classification.
  */
 async function ensureNotBespokeForCart(
   req: MedusaRequest,
   res: MedusaResponse,
   next: MedusaNextFunction
 ) {
-  const variantId =
-    req.body?.variant_id ?? req.body?.items?.[0]?.variant_id
-
-  if (!variantId) {
+  const variantIds = collectVariantIdsFromCartBody(req.body)
+  if (variantIds.length === 0) {
     return next()
   }
 
-  let variant
-  let products: unknown[] = []
+  let productModule: {
+    retrieveProductVariant: (
+      id: string
+    ) => Promise<{ product_id?: string | null }>
+  }
+  let query: {
+    graph: (args: {
+      entity: string
+      fields: string[]
+      filters?: Record<string, unknown>
+    }) => Promise<{ data: unknown[] }>
+  }
+
   try {
-    const productModule = req.scope.resolve(Modules.PRODUCT)
-    variant = await productModule.retrieveProductVariant(variantId)
+    productModule = req.scope.resolve(Modules.PRODUCT) as typeof productModule
+    query = req.scope.resolve("query") as typeof query
   } catch {
     res.status(500).json({
       message: "Unable to validate product type for cart operation.",
@@ -36,46 +49,67 @@ async function ensureNotBespokeForCart(
     return
   }
 
-  const productId = variant?.product_id
-  if (!productId) {
-    res.status(500).json({
-      message: "Unable to validate product type for cart operation.",
-      code: "PRODUCT_TYPE_VALIDATION_FAILED",
-    })
-    return
-  }
-
-  try {
-    const query = req.scope.resolve("query") as {
-      graph: (args: {
-        entity: string
-        fields: string[]
-        filters?: Record<string, unknown>
-      }) => Promise<{ data: unknown[] }>
+  for (const variantId of variantIds) {
+    let variant: { product_id?: string | null }
+    try {
+      variant = await productModule.retrieveProductVariant(variantId)
+    } catch {
+      res.status(500).json({
+        message: "Unable to validate product type for cart operation.",
+        code: "PRODUCT_TYPE_VALIDATION_FAILED",
+      })
+      return
     }
-    const result = await query.graph({
-      entity: "product",
-      fields: ["*", "productType.*"],
-      filters: { id: productId },
-    })
-    products = result?.data ?? []
-  } catch {
-    res.status(500).json({
-      message: "Unable to validate product type for cart operation.",
-      code: "PRODUCT_TYPE_VALIDATION_FAILED",
-    })
-    return
-  }
 
-  const product = products?.[0] as { productType?: { product_type?: string } } | undefined
-  const productType = product?.productType?.product_type
+    const productId = variant?.product_id
+    if (!productId) {
+      res.status(500).json({
+        message: "Unable to validate product type for cart operation.",
+        code: "PRODUCT_TYPE_VALIDATION_FAILED",
+      })
+      return
+    }
 
-  if (productType === BESPOKE) {
-    res.status(400).json({
-      message: "BESPOKE products cannot be added to cart. Use the quote request form instead.",
-      code: "BESPOKE_NOT_ALLOWED_IN_CART",
+    let products: unknown[] = []
+    try {
+      const result = await query.graph({
+        entity: "product",
+        fields: ["id", "product_classification.product_type"],
+        filters: { id: productId },
+      })
+      products = result?.data ?? []
+    } catch {
+      res.status(500).json({
+        message: "Unable to validate product type for cart operation.",
+        code: "PRODUCT_TYPE_VALIDATION_FAILED",
+      })
+      return
+    }
+
+    const product = products?.[0] as
+      | { product_classification?: { product_type?: string } }
+      | undefined
+    const decision = decideCartClassification({
+      productFound: Boolean(product),
+      product_type: product?.product_classification?.product_type,
     })
-    return
+
+    if (decision.kind === "block_bespoke") {
+      res.status(400).json({
+        message:
+          "BESPOKE products cannot be added to cart. Use the quote request form instead.",
+        code: "BESPOKE_NOT_ALLOWED_IN_CART",
+      })
+      return
+    }
+
+    if (decision.kind === "reject") {
+      res.status(decision.httpStatus).json({
+        message: decision.message,
+        code: decision.code,
+      })
+      return
+    }
   }
 
   next()
@@ -90,3 +124,6 @@ export default defineMiddlewares({
     },
   ],
 })
+
+// Re-export for tests / clarity
+export { BESPOKE, ensureNotBespokeForCart }

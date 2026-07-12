@@ -10,7 +10,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     comment?: string
     payload?: Record<string, unknown>
   }
-  const leadService = req.scope.resolve(LEAD_MODULE)
+  const leadService = req.scope.resolve(LEAD_MODULE) as any
   const [lead] = await leadService.createLeads({
     source: (body.source as "bespoke" | "room_adapt" | "contact") || "contact",
     name: body.name ?? null,

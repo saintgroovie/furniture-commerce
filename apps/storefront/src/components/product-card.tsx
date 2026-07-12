@@ -89,9 +89,7 @@ export function ProductCard({
   /** PERF-08: first above-fold card in the grid. */
   priorityHero?: boolean
 }) {
-  const type =
-    product.product_classification?.product_type ??
-    (product as { custom_product_type?: { product_type?: string } }).custom_product_type?.product_type
+  const type = product.product_classification?.product_type
   const badgeLabel = type ? BADGE_LABELS[type] : undefined
 
   const price = displayGroup?.minPrice ?? getPrice(product)

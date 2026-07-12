@@ -1,0 +1,43 @@
+{
+  "ru": {
+    "translation": {
+      "login": {
+        "title": "Добро пожаловать в Woodright",
+        "hint": "Войдите, чтобы открыть админку оператора"
+      },
+      "invite": {
+        "title": "Добро пожаловать в Woodright",
+        "hint": "Создайте аккаунт ниже",
+        "successHint": "Можно открывать админку Woodright.",
+        "successAction": "Открыть админку Woodright"
+      },
+      "auth": {
+        "login": {
+          "cloud": "Войти через облако"
+        }
+      },
+      "translations": {
+        "subtitle": "Управляйте переводами данных каталога Woodright"
+      }
+    }
+  },
+  "en": {
+    "translation": {
+      "login": {
+        "title": "Welcome to Woodright",
+        "hint": "Sign in to the operator admin"
+      },
+      "invite": {
+        "title": "Welcome to Woodright",
+        "hint": "Create your account below",
+        "successHint": "You can open the Woodright admin now.",
+        "successAction": "Open Woodright admin"
+      },
+      "auth": {
+        "login": {
+          "cloud": "Sign in with cloud"
+        }
+      }
+    }
+  }
+}

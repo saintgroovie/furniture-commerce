@@ -15,7 +15,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     res.status(400).json({ message: "lead_id is required" })
     return
   }
-  const bespokeService = req.scope.resolve(BESPOKE_REQUEST_MODULE)
+  const bespokeService = req.scope.resolve(BESPOKE_REQUEST_MODULE) as any
   const [request] = await bespokeService.createBespokeRequests({
     lead_id: body.lead_id,
     product_id: body.product_id ?? null,

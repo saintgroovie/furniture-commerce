@@ -29,3 +29,4 @@ dist/
 
 # Stray npm lockfile (project uses Yarn; yarn.lock is the tracked lockfile)
 package-lock.json
+tmp/

@@ -3,7 +3,7 @@ import { PAYMENT_LINK_MODULE } from "../../../../modules/payment-link"
 
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const id = req.params.id as string
-  const paymentLinkService = req.scope.resolve(PAYMENT_LINK_MODULE)
+  const paymentLinkService = req.scope.resolve(PAYMENT_LINK_MODULE) as any
   const paymentLink = await paymentLinkService.retrievePaymentLink(id)
   if (!paymentLink) {
     res.status(404).json({ message: "Payment link not found" })
@@ -15,7 +15,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 export async function PATCH(req: MedusaRequest, res: MedusaResponse) {
   const id = req.params.id as string
   const body = req.body as { status?: string; url?: string }
-  const paymentLinkService = req.scope.resolve(PAYMENT_LINK_MODULE)
+  const paymentLinkService = req.scope.resolve(PAYMENT_LINK_MODULE) as any
   const hasUpdates = body.status != null || body.url !== undefined
   const updated = await paymentLinkService.updatePaymentLinks({
     id,
