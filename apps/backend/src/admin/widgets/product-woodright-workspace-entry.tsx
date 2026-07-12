@@ -1,7 +1,7 @@
 import type { DetailWidgetProps, AdminProduct } from "@medusajs/types"
 import { Button, Container, Text } from "@medusajs/ui"
 import { Link } from "react-router-dom"
-import { defineWidgetConfig } from "../lib/medusa-admin-sdk"
+import { defineWidgetConfig } from "@medusajs/admin-sdk"
 import { isWoodrightAdminUxV1Enabled } from "../lib/feature-flags/woodright-admin-flags"
 import { woodrightWorkspacePath } from "../lib/product-workspace/admin-api"
 

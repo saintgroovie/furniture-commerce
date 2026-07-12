@@ -10,7 +10,7 @@ import {
   Textarea,
   toast,
 } from "@medusajs/ui"
-import { defineRouteConfig } from "../../../../lib/medusa-admin-sdk"
+import { defineRouteConfig } from "@medusajs/admin-sdk"
 import { isWoodrightAdminUxV1Enabled } from "../../../../lib/feature-flags/woodright-admin-flags"
 import {
   formatAdminErrorPrimary,
