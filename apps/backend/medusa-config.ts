@@ -20,6 +20,16 @@ export default defineConfig({
       jwtSecret: process.env.JWT_SECRET ?? "supersecret-min-32-chars-required",
       cookieSecret: process.env.COOKIE_SECRET ?? "supersecret-cookie-min-32",
     },
+    // Medusa defaults Secure+SameSite=None cookies when NODE_ENV=production.
+    // Local HTTP `medusa start` QA cannot store those cookies — opt out explicitly.
+    ...(process.env.COOKIE_SECURE === "0"
+      ? {
+          cookieOptions: {
+            secure: false,
+            sameSite: "lax" as const,
+          },
+        }
+      : {}),
   },
   admin: {
     vite: (config) => {
