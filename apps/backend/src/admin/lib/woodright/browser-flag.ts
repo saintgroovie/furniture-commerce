@@ -44,10 +44,11 @@ export function readWoodrightAdminUxFlagFromBrowser(): boolean {
     /* storage unavailable */
   }
   try {
-    // Vite may inject at build time; empty string counts as absent.
-    const meta = import.meta as unknown as { env?: Record<string, string> }
-    if (meta.env?.WOODRIGHT_ADMIN_UX_V1) {
-      envValue = meta.env.WOODRIGHT_ADMIN_UX_V1
+    // Vite only statically replaces *direct* property access. Assigning
+    // `import.meta` to a temp variable leaves env values undefined in the bundle.
+    const raw = import.meta.env.WOODRIGHT_ADMIN_UX_V1
+    if (raw != null && String(raw) !== "") {
+      envValue = String(raw)
     }
   } catch {
     /* no import.meta.env */

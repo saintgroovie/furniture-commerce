@@ -39,8 +39,27 @@ export default defineConfig({
           ? config.server.hmr
           : {}
 
+      // Admin UI reads WOODRIGHT_ADMIN_UX_V1 via import.meta.env (not process.env).
+      // Vite only auto-exposes VITE_* — bridge the existing flag name for browser runtime.
+      const woodrightAdminUxFlag = process.env.WOODRIGHT_ADMIN_UX_V1 ?? ""
+
+      // Expose WOODRIGHT_* to Admin Vite (default prefix is VITE_ only).
+        // Vite allows envPrefix to be string | string[] — normalize before merge.
+        const existingPrefix = config.envPrefix
+        const prefixList = Array.isArray(existingPrefix)
+          ? existingPrefix
+          : existingPrefix
+            ? [existingPrefix]
+            : ["VITE_"]
+        const envPrefix = Array.from(new Set([...prefixList, "VITE_", "WOODRIGHT_"]))
+
       return {
         ...config,
+        envPrefix,
+        define: {
+          ...(config.define ?? {}),
+          "import.meta.env.WOODRIGHT_ADMIN_UX_V1": JSON.stringify(woodrightAdminUxFlag),
+        },
         plugins: [
           ...(config.plugins ?? []),
           ...(adminHmrEnabled ? [] : [woodrightDisableAdminHmrPlugin()]),
