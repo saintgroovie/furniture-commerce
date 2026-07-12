@@ -125,7 +125,7 @@ describe("buildCreatePromotionPayload", () => {
     )
     assert.equal(out.ok, false)
     if (!out.ok) {
-      assert.match(out.errors.join(" "), /стандартной админке/i)
+      assert.match(out.errors.join(" "), /Кампании/i)
     }
   })
 

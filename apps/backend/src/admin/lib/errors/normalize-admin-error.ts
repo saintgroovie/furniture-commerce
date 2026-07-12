@@ -217,8 +217,10 @@ const CATALOG: Record<AdminErrorCode, CatalogEntry> = {
   },
   publishable_key_missing: {
     title: "Нет ключа магазина для проверки",
-    explanation: "Проверка в корзине требует publishable API key витрины.",
-    action: "Укажите ключ в поле проверки и повторите.",
+    explanation:
+      "Проверка в корзине требует publishable API key витрины в конфигурации стенда.",
+    action:
+      "Попросите поддержку задать WOODRIGHT_STORE_PUBLISHABLE_KEY (или MEDUSA_PUBLISHABLE_KEY) на сервере Admin и перезапустить стенд. Ключ в интерфейс вводить не нужно.",
   },
   cart_verification_failed: {
     title: "Проверка в корзине не прошла",

@@ -38,6 +38,13 @@ export function resolvePublishableKey(explicit?: string | null): string | null {
   } catch {
     /* storage unavailable */
   }
+  try {
+    const raw = (import.meta as unknown as { env?: { WOODRIGHT_STORE_PUBLISHABLE_KEY?: string } })
+      .env?.WOODRIGHT_STORE_PUBLISHABLE_KEY
+    if (typeof raw === "string" && raw.trim()) return raw.trim()
+  } catch {
+    /* import.meta unavailable */
+  }
   return null
 }
 

@@ -113,7 +113,7 @@ export function buildCreatePromotionPayload(
       currency = null
     }
   } else {
-    errors.push("Этот вид скидки пока настраивается только в стандартной админке")
+    errors.push("Этот вид скидки пока настраивается в общем разделе акций")
   }
 
   const productIds = dedupe(values.product_ids)
@@ -141,7 +141,7 @@ export function buildCreatePromotionPayload(
   }
   if (values.campaign) {
     errors.push(
-      "Создание кампании вместе с акцией пока недоступно — создайте кампанию в стандартной админке и выберите её"
+      "Создание кампании вместе с акцией пока недоступно — создайте кампанию в разделе «Кампании» и выберите её"
     )
   }
 

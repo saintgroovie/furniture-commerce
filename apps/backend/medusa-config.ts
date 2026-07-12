@@ -42,6 +42,10 @@ export default defineConfig({
       // Admin UI reads WOODRIGHT_ADMIN_UX_V1 via import.meta.env (not process.env).
       // Vite only auto-exposes VITE_* — bridge the existing flag name for browser runtime.
       const woodrightAdminUxFlag = process.env.WOODRIGHT_ADMIN_UX_V1 ?? ""
+      const woodrightStorePublishableKey =
+        process.env.WOODRIGHT_STORE_PUBLISHABLE_KEY ??
+        process.env.MEDUSA_PUBLISHABLE_KEY ??
+        ""
 
       // Expose WOODRIGHT_* to Admin Vite (default prefix is VITE_ only).
         // Vite allows envPrefix to be string | string[] — normalize before merge.
@@ -59,6 +63,9 @@ export default defineConfig({
         define: {
           ...(config.define ?? {}),
           "import.meta.env.WOODRIGHT_ADMIN_UX_V1": JSON.stringify(woodrightAdminUxFlag),
+          "import.meta.env.WOODRIGHT_STORE_PUBLISHABLE_KEY": JSON.stringify(
+            woodrightStorePublishableKey
+          ),
         },
         plugins: [
           ...(config.plugins ?? []),

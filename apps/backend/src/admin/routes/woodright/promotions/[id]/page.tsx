@@ -29,6 +29,10 @@ import {
   createStoreCart,
   resolvePublishableKey,
 } from "../../../../lib/promotions/store-cart-api"
+import {
+  VerifyVariantPicker,
+  type VerifyVariantChoice,
+} from "../../../../lib/promotions/VerifyVariantPicker"
 import { attributeCartAdjustments } from "../../../../lib/promotions/cart-result"
 import {
   summarizeOperationSteps,
@@ -60,8 +64,7 @@ const PromotionDetailPage = () => {
   const [editBusy, setEditBusy] = useState(false)
 
   const [verifyOpen, setVerifyOpen] = useState(false)
-  const [verifyVariantId, setVerifyVariantId] = useState("")
-  const [verifyKey, setVerifyKey] = useState("")
+  const [verifyVariant, setVerifyVariant] = useState<VerifyVariantChoice | null>(null)
   const [verify, setVerify] = useState<VerifyState>({
     running: false,
     lines: [],
@@ -110,10 +113,6 @@ const PromotionDetailPage = () => {
     return () => ac.abort()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [flagOn, id])
-
-  useEffect(() => {
-    setVerifyKey(resolvePublishableKey() ?? "")
-  }, [])
 
   const status = useMemo(
     () => (promotion ? buildPromotionStatusVM({ promotion }) : null),
@@ -220,6 +219,7 @@ const PromotionDetailPage = () => {
 
   const onVerify = async () => {
     if (!promotion) return
+    const previousStatus = (promotion.status ?? "draft").trim().toLowerCase() || "draft"
     const code = (promotion.code ?? "").trim()
     if (!code) {
       setVerify({
@@ -230,7 +230,7 @@ const PromotionDetailPage = () => {
       })
       return
     }
-    const key = resolvePublishableKey(verifyKey)
+    const key = resolvePublishableKey()
     if (!key) {
       const err = normalizeAdminError({ codeHint: "publishable_key_missing" })
       setVerify({
@@ -241,12 +241,12 @@ const PromotionDetailPage = () => {
       })
       return
     }
-    const variantId = verifyVariantId.trim()
+    const variantId = verifyVariant?.variantId?.trim() ?? ""
     if (!variantId) {
       setVerify({
         running: false,
         lines: [],
-        verdict: "Укажите ID варианта товара",
+        verdict: "Выберите товар и вариант",
         honest_note: "Для тестовой корзины нужен вариант, на который акция должна действовать",
       })
       return
@@ -256,77 +256,159 @@ const PromotionDetailPage = () => {
     const steps: OperationStepResult[] = []
     let cartId: string | null = null
     let finalCart: Parameters<typeof attributeCartAdjustments>[0]["cart"] | null = null
+    let activatedForVerify = false
+    let thrownError: unknown = null
+    let activateFailedMessage: string | null = null
 
-    const created = await createStoreCart({ publishableKey: key })
-    if ("cart" in created) {
-      cartId = created.cart.id ?? null
-      steps.push({ step: "create_cart", label: "Создание тестовой корзины", status: "ok" })
-    } else {
-      const err = normalizeAdminError({
-        httpStatus: created.status,
-        endpoint: "/store/carts",
-        body: created.body,
-        codeHint: created.status === 0 ? "publishable_key_missing" : "cart_verification_failed",
-      })
+    const restoreAfterVerify = async () => {
+      if (!activatedForVerify) return
+      const restoreStatus = previousStatus === "inactive" ? "inactive" : "draft"
+      try {
+        const restored = await updateAdminPromotion(promotion.id, { status: restoreStatus })
+        if ("promotion" in restored) {
+          setPromotion(restored.promotion)
+          setFingerprint(buildPromotionFingerprint(restored.promotion))
+          steps.push({
+            step: "restore_status",
+            label: "Возврат статуса после проверки",
+            status: "ok",
+          })
+        } else {
+          steps.push({
+            step: "restore_status",
+            label: "Возврат статуса после проверки",
+            status: "failed",
+            error: "Не удалось вернуть черновик — проверьте статус акции вручную",
+          })
+        }
+      } catch {
+        steps.push({
+          step: "restore_status",
+          label: "Возврат статуса после проверки",
+          status: "failed",
+          error: "Не удалось вернуть черновик — проверьте статус акции вручную",
+        })
+      }
+    }
+
+    try {
+      // Store API applies only active promotions. Temporarily activate draft/inactive,
+      // then always restore in finally.
+      if (previousStatus !== "active") {
+        const act = await updateAdminPromotion(promotion.id, { status: "active" })
+        if ("status" in act) {
+          const err = normalizeAdminError({
+            httpStatus: act.status,
+            endpoint: `/admin/promotions/${promotion.id}`,
+            body: act.body,
+          })
+          activateFailedMessage = formatAdminErrorPrimary(err)
+        } else {
+          activatedForVerify = true
+          setPromotion(act.promotion)
+          steps.push({
+            step: "temp_activate",
+            label: "Временное включение для проверки",
+            status: "ok",
+          })
+        }
+      }
+
+      if (!activateFailedMessage) {
+        const created = await createStoreCart({ publishableKey: key })
+        if ("cart" in created) {
+          cartId = created.cart.id ?? null
+          steps.push({ step: "create_cart", label: "Создание тестовой корзины", status: "ok" })
+        } else {
+          const err = normalizeAdminError({
+            httpStatus: created.status,
+            endpoint: "/store/carts",
+            body: created.body,
+            codeHint: created.status === 0 ? "publishable_key_missing" : "cart_verification_failed",
+          })
+          steps.push({
+            step: "create_cart",
+            label: "Создание тестовой корзины",
+            status: "failed",
+            error: err.title,
+          })
+        }
+
+        if (cartId) {
+          const added = await addStoreCartLineItem(cartId, {
+            variant_id: variantId,
+            quantity: 1,
+            publishableKey: key,
+          })
+          if ("cart" in added) {
+            steps.push({ step: "add_item", label: "Добавление товара", status: "ok" })
+          } else {
+            const err = normalizeAdminError({
+              httpStatus: added.status,
+              endpoint: `/store/carts/${cartId}/line-items`,
+              body: added.body,
+              codeHint: "cart_verification_failed",
+            })
+            steps.push({
+              step: "add_item",
+              label: "Добавление товара",
+              status: "failed",
+              error: err.title,
+            })
+            cartId = null
+          }
+        } else {
+          steps.push({ step: "add_item", label: "Добавление товара", status: "skipped" })
+        }
+
+        if (cartId) {
+          const applied = await applyStoreCartPromoCodes(cartId, {
+            promo_codes: [code],
+            publishableKey: key,
+          })
+          if ("cart" in applied) {
+            steps.push({ step: "apply_code", label: `Применение кода ${code}`, status: "ok" })
+            finalCart = applied.cart
+          } else {
+            const err = normalizeAdminError({
+              httpStatus: applied.status,
+              endpoint: `/store/carts/${cartId}/promotions`,
+              body: applied.body,
+              codeHint: "cart_verification_failed",
+            })
+            steps.push({
+              step: "apply_code",
+              label: `Применение кода ${code}`,
+              status: "failed",
+              error: err.title,
+            })
+          }
+        } else {
+          steps.push({ step: "apply_code", label: "Применение кода", status: "skipped" })
+        }
+      }
+    } catch (e) {
+      thrownError = e
       steps.push({
-        step: "create_cart",
-        label: "Создание тестовой корзины",
+        step: "verify_exception",
+        label: "Проверка прервана ошибкой сети",
         status: "failed",
-        error: err.title,
+        error: formatAdminErrorPrimary(
+          normalizeAdminError({ error: e, codeHint: "network_error" })
+        ),
       })
+    } finally {
+      await restoreAfterVerify()
     }
 
-    if (cartId) {
-      const added = await addStoreCartLineItem(cartId, {
-        variant_id: variantId,
-        quantity: 1,
-        publishableKey: key,
+    if (activateFailedMessage) {
+      setVerify({
+        running: false,
+        lines: [],
+        verdict: "Не удалось временно включить акцию для проверки",
+        honest_note: activateFailedMessage,
       })
-      if ("cart" in added) {
-        steps.push({ step: "add_item", label: "Добавление товара", status: "ok" })
-      } else {
-        const err = normalizeAdminError({
-          httpStatus: added.status,
-          endpoint: `/store/carts/${cartId}/line-items`,
-          body: added.body,
-          codeHint: "cart_verification_failed",
-        })
-        steps.push({
-          step: "add_item",
-          label: "Добавление товара",
-          status: "failed",
-          error: err.title,
-        })
-        cartId = null
-      }
-    } else {
-      steps.push({ step: "add_item", label: "Добавление товара", status: "skipped" })
-    }
-
-    if (cartId) {
-      const applied = await applyStoreCartPromoCodes(cartId, {
-        promo_codes: [code],
-        publishableKey: key,
-      })
-      if ("cart" in applied) {
-        steps.push({ step: "apply_code", label: `Применение кода ${code}`, status: "ok" })
-        finalCart = applied.cart
-      } else {
-        const err = normalizeAdminError({
-          httpStatus: applied.status,
-          endpoint: `/store/carts/${cartId}/promotions`,
-          body: applied.body,
-          codeHint: "cart_verification_failed",
-        })
-        steps.push({
-          step: "apply_code",
-          label: `Применение кода ${code}`,
-          status: "failed",
-          error: err.title,
-        })
-      }
-    } else {
-      steps.push({ step: "apply_code", label: "Применение кода", status: "skipped" })
+      return
     }
 
     const opSummary = summarizeOperationSteps(steps, {
@@ -334,7 +416,7 @@ const PromotionDetailPage = () => {
         "Тестовая корзина осталась в изолированной базе - на покупателей это не влияет",
     })
 
-    if (!finalCart) {
+    if (thrownError || !finalCart) {
       setVerify({
         running: false,
         lines: opSummary.lines,
@@ -355,12 +437,23 @@ const PromotionDetailPage = () => {
         : attribution.verdict === "none_applied"
           ? "Код принят, но скидка в корзине не появилась"
           : "Результат неоднозначный - скидки нельзя однозначно связать с кодом"
+    const restoreFailed = steps.some((s) => s.step === "restore_status" && s.status === "failed")
     setVerify({
       running: false,
       lines: [...opSummary.lines, attribution.explanation],
       verdict,
-      honest_note:
-        "Проверка через Store API в изолированной базе. Создание/обновление корзины не обновляет акции автоматически (патч #14149). Явный POST /promotions применяет указанный код и может также вычислить другие активные автоматические акции — смотрите attribution ниже",
+      honest_note: [
+        activatedForVerify
+          ? "Акцию временно включали только на время проверки и вернули в черновик/выключенную."
+          : "Акция уже была активна — статус не меняли.",
+        restoreFailed
+          ? "Внимание: не удалось вернуть прежний статус — проверьте кнопку «Выключить»."
+          : attribution.verdict === "all_applied"
+            ? "Дальше можно нажать «Включить», если проверка устраивает."
+            : "Создание/обновление корзины не обновляет акции автоматически (патч #14149).",
+      ]
+        .filter(Boolean)
+        .join(" "),
     })
   }
 
@@ -623,20 +716,14 @@ const PromotionDetailPage = () => {
         {verifyOpen ? (
           <div className="mt-2 flex flex-col gap-2">
             <Text size="small" className="text-ui-fg-subtle">
-              Соберём тестовую корзину через Store API и применим код акции. Работает только в
-              изолированной базе и не трогает покупателей
+              Соберём тестовую корзину и применим код акции. Черновик временно включается только на
+              время проверки, затем возвращается. Ключ витрины берётся из конфигурации сервера —
+              вводить его не нужно.
             </Text>
-            <Input
-              value={verifyVariantId}
-              onChange={(e) => setVerifyVariantId(e.target.value)}
-              placeholder="ID варианта товара (variant_...)"
-              aria-label="ID варианта товара для проверки"
-            />
-            <Input
-              value={verifyKey}
-              onChange={(e) => setVerifyKey(e.target.value)}
-              placeholder="Publishable API key витрины (pk_...)"
-              aria-label="Publishable API key"
+            <VerifyVariantPicker
+              value={verifyVariant}
+              onChange={setVerifyVariant}
+              disabled={verify.running}
             />
             <div>
               <Button
