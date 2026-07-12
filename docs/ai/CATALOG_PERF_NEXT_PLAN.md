@@ -5,7 +5,7 @@
 **Репозиторий:** `/Users/leonidmbp/Documents/projects/furniture-commerce`  
 **Основание:** Codex perf advisory + wave-2 handoff + Codex roadmap (2026-07-12)  
 **Предыдущий план:** `docs/ai/CATALOG_LOAD_OPTIMIZATION_PLAN.md` (фазы 0–F/E закрыты; D skipped)  
-**PR:** https://github.com/saintgroovie/furniture-commerce/pull/15 (смешан с Willie - hygiene: later split)
+**PR:** https://github.com/saintgroovie/furniture-commerce/pull/15 (смешан с Willie - split proposed, wait operator approval)
 
 ## 1. Цель
 
@@ -27,18 +27,17 @@ DONE  H2 first-card LCP priority
 DONE  G2 allowlist browse DTO (~640KB → ~399KB)
 DONE  H4 Sharp card WebP + env-gate (local; CDN later)
 DONE  W3a–W3d evidence + commit `c8eaccc`
---- wave 3 Next (Codex chose) --- NOW
-W3g  Initial media DOM reduction (hero-only until IO/hover) ← measured; img reqs flat; DOM extras deferred
---- After W3g ---
-W3e  Compact typed browse view model   OR
-W3f  Progressive card activation
-W3h  CDN for derivatives (after local levers + deploy path)
+--- wave 3 Next ---
+DONE  W3g Initial media DOM reduction
+DEFER W3e / W3f / W3h until Prod H4 + PR split + new bottleneck evidence (Codex 2026-07-12)
+--- Prod H4 (operator) --- NOW
+H4-prod  generate → deploy derivatives → h4-coverage-gate --http → then bake flag=1
 --- Later / measured ---
 J    Cache + publish invalidation
 G3   Batch RoomSet (N>0)
 ```
 
-**Прогресс:** Wave 3 Now `c8eaccc`. W3g measured (`tmp/catalog-perf/w3g-media-dom-comparison.md`): img requests flat; below-fold extras deferred. Prod H4 flag still off until deploy+coverage. Push/PR on operator ask.
+**Прогресс:** Codex DEFER levers. Prod H4 runbook ready; local HTTP gate green. PR split onto main **blocked** (cherry-pick conflicts) - see `docs/ai/CATALOG_PERF_NEXT_ACTIONS.md`. Prod flag still off.
 
 ## 3. Wave 3 - Now (обязательный порядок)
 
