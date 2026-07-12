@@ -51,4 +51,4 @@ Screenshots/report: under `tmp/admin-ux-loop4/` (local, not committed).
 
 ## Parity
 
-Operator guide (`docs/admin-ux-recovery/operator-guide.md`) describes the same four journeys and the stock-shell boundary. Classification migration P0 remains deferred for merge.
+Operator guide (`docs/admin-ux-recovery/operator-guide.md`) describes the same four journeys and the stock-shell boundary. Classification SoT is `product_classification` (see `classification-p0-revised.md`); cart middleware fails closed when classification is missing.
