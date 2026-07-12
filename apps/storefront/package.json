@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "NEXT_DIST_DIR=.next-dev next dev --port 3002",
     "build": "NEXT_DIST_DIR=.next-build next build",
+    "build:qa": "bash scripts/qa-rebuild.sh",
+    "sync:qa-build-marker": "node scripts/sync-qa-build-marker.mjs",
     "start": "NEXT_DIST_DIR=.next-build next start",
+    "check:landing-css": "node scripts/check-landing-css-assets.mjs",
+    "check:landing-css:heal": "node scripts/check-landing-css-assets.mjs --heal",
     "lint": "next lint"
   },
   "dependencies": {
