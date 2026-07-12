@@ -26,7 +26,7 @@ import { GalleryPanel } from "../../../../lib/product-workspace/GalleryPanel"
 import { ProductPromotionsPanel } from "../../../../lib/promotions/ProductPromotionsPanel"
 import { buildClassificationView } from "../../../../lib/product-workspace/classification"
 import { buildMediaSummary } from "../../../../lib/product-workspace/media-summary"
-import { buildPriceSummary } from "../../../../lib/product-workspace/price-summary"
+import { buildPriceSummary, formatMoney } from "../../../../lib/product-workspace/price-summary"
 import { buildProductReadiness } from "../../../../lib/product-workspace/readiness"
 import { buildStorefrontEligibility } from "../../../../lib/product-workspace/storefront-eligibility"
 import { ProductReadinessChecklist } from "../../../../lib/product-workspace/ProductReadinessChecklist"
@@ -220,6 +220,12 @@ const ProductWorkspacePage = () => {
   )
   const readiness = useMemo(() => {
     if (!classification || !media) return null
+    const firstPrices = priceRows[0] ?? []
+    const first = firstPrices[0]
+    const firstVariantBuyerPriceLabel =
+      first && typeof first.amount === "number"
+        ? formatMoney(first.amount, first.currency_code)
+        : null
     return buildProductReadiness({
       title: saveState.draft.title,
       description: saveState.draft.description,
@@ -228,10 +234,12 @@ const ProductWorkspacePage = () => {
       variantsTruncated,
       prices,
       media,
+      firstVariantBuyerPriceLabel,
     })
   }, [
     classification,
     media,
+    priceRows,
     prices,
     product?.variants?.length,
     saveState.draft.description,

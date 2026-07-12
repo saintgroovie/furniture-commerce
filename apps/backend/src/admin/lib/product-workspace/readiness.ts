@@ -25,6 +25,8 @@ export type ProductReadinessVM = {
   should_open: number
   verification: "ready" | "needs_fixes" | "unverified"
   summary_label: string
+  /** Storefront-facing price hint (first variant), not the admin range. */
+  buyer_price_note: string | null
 }
 
 export type BuildProductReadinessInput = {
@@ -35,6 +37,8 @@ export type BuildProductReadinessInput = {
   variantsTruncated: boolean
   prices: Pick<PriceSummaryView, "variants_without_price" | "label">
   media: Pick<MediaSummaryView, "has_thumbnail" | "image_count">
+  /** First price on first variant (storefront getPrice fallback: prices[0]). */
+  firstVariantBuyerPriceLabel?: string | null
 }
 
 /**
@@ -43,16 +47,18 @@ export type BuildProductReadinessInput = {
  * `buildStorefrontEligibility`.
  */
 export function buildProductReadiness(input: BuildProductReadinessInput): ProductReadinessVM {
+  const isBespoke = input.classification.code === "BESPOKE"
   const titleOk = Boolean(input.title.trim())
   const descriptionOk = Boolean(input.description.trim())
   const classificationOk = Boolean(input.classification.code)
   const hasVariant = input.variantCount > 0
-  const pricesUnverifiable = input.variantsTruncated
-  const pricesOk =
-    !pricesUnverifiable &&
+  const pricesUnverifiable = input.variantsTruncated && !isBespoke
+  const pricesComplete =
+    !input.variantsTruncated &&
     hasVariant &&
     input.prices.variants_without_price === 0 &&
-    input.prices.label !== "Цена не задана"
+    input.prices.label !== "Цена не задана" &&
+    input.prices.label !== "Нет вариантов"
   const thumbOk = input.media.has_thumbnail
   const galleryOk = input.media.image_count > 0
 
@@ -77,36 +83,42 @@ export function buildProductReadiness(input: BuildProductReadinessInput): Produc
     },
     {
       id: "variants",
-      severity: "must",
+      severity: isBespoke ? "should" : "must",
       ok: hasVariant,
       label: "Варианты",
       detail: hasVariant
         ? `Вариантов: ${input.variantCount}`
-        : "Нужен хотя бы один вариант с ценой",
+        : isBespoke
+          ? "Для запроса «на заказ» вариант желателен, но покупка в корзину не требуется"
+          : "Нужен хотя бы один вариант с ценой",
       cta: hasVariant
         ? { kind: "none" }
         : { kind: "stock", label: "Добавить вариант на полной карточке" },
     },
     {
       id: "prices",
-      severity: "must",
-      ok: pricesOk,
+      severity: isBespoke ? "should" : "must",
+      ok: isBespoke ? true : pricesComplete,
       unverifiable: pricesUnverifiable,
       label: "Цены",
-      detail: pricesUnverifiable
-        ? "Список вариантов загружен не полностью — цены не проверяем"
-        : !hasVariant
-          ? "Сначала нужны варианты"
-          : pricesOk
-            ? input.prices.label
-            : input.prices.variants_without_price > 0
-              ? `Вариантов без цены: ${input.prices.variants_without_price}`
-              : "У вариантов нет цены",
-      cta: pricesUnverifiable
-        ? { kind: "tab", tab: "variants", label: "Открыть варианты и цены" }
-        : pricesOk
-          ? { kind: "none" }
-          : { kind: "tab", tab: "variants", label: "Исправить цены" },
+      detail: isBespoke
+        ? "На заказ — на витрине сценарий запроса, цена в корзине не обязательна"
+        : pricesUnverifiable
+          ? "Список вариантов загружен не полностью — цены не проверяем"
+          : !hasVariant
+            ? "Сначала нужны варианты"
+            : pricesComplete
+              ? input.prices.label
+              : input.prices.variants_without_price > 0
+                ? `Вариантов без цены: ${input.prices.variants_without_price}`
+                : "У вариантов нет цены",
+      cta: isBespoke
+        ? { kind: "none" }
+        : pricesUnverifiable
+          ? { kind: "tab", tab: "variants", label: "Открыть варианты и цены" }
+          : pricesComplete
+            ? { kind: "none" }
+            : { kind: "tab", tab: "variants", label: "Исправить цены" },
     },
     {
       id: "thumbnail",
@@ -123,7 +135,11 @@ export function buildProductReadiness(input: BuildProductReadinessInput): Produc
       severity: "should",
       ok: descriptionOk,
       label: "Описание",
-      detail: descriptionOk ? undefined : "Желательно заполнить для витрины",
+      detail: descriptionOk
+        ? undefined
+        : isBespoke
+          ? "Для запроса «на заказ» описание желательно"
+          : "Желательно заполнить для витрины",
       cta: { kind: "field", field: "description", label: "Добавить описание" },
     },
     {
@@ -157,11 +173,26 @@ export function buildProductReadiness(input: BuildProductReadinessInput): Produc
     summary_label = "Карточка заполнена"
   }
 
+  let buyer_price_note: string | null = null
+  if (isBespoke) {
+    buyer_price_note = "На витрине — запрос «на заказ», не цена корзины."
+  } else if (input.firstVariantBuyerPriceLabel) {
+    const range = input.prices.label
+    buyer_price_note =
+      range && range !== input.firstVariantBuyerPriceLabel
+        ? `На витрине обычно цена первого варианта: ${input.firstVariantBuyerPriceLabel}. В админке диапазон: ${range}.`
+        : `На витрине обычно цена первого варианта: ${input.firstVariantBuyerPriceLabel}.`
+  } else if (hasVariant && !pricesUnverifiable) {
+    buyer_price_note =
+      "На витрине показывается цена первого варианта (calculated_price / prices[0]), не обязательно весь диапазон."
+  }
+
   return {
     items,
     must_open: mustOpen,
     should_open: shouldOpen,
     verification,
     summary_label,
+    buyer_price_note,
   }
 }

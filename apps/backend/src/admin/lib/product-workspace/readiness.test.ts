@@ -55,4 +55,27 @@ describe("buildProductReadiness", () => {
     assert.equal(vm.verification, "needs_fixes")
     assert.ok(vm.items.find((i) => i.id === "variants" && !i.ok))
   })
+
+  it("does not require prices for BESPOKE quote products", () => {
+    const vm = buildProductReadiness({
+      ...base,
+      classification: { code: "BESPOKE", label: "На заказ" },
+      prices: { variants_without_price: 2, label: "Цена не задана" },
+      firstVariantBuyerPriceLabel: null,
+    })
+    assert.equal(vm.verification, "ready")
+    const prices = vm.items.find((i) => i.id === "prices")
+    assert.equal(prices?.ok, true)
+    assert.equal(prices?.severity, "should")
+    assert.match(vm.buyer_price_note ?? "", /на заказ/i)
+  })
+
+  it("notes first-variant buyer price separately from admin range", () => {
+    const vm = buildProductReadiness({
+      ...base,
+      prices: { variants_without_price: 0, label: "10 000 ₽ – 20 000 ₽" },
+      firstVariantBuyerPriceLabel: "10 000 ₽",
+    })
+    assert.match(vm.buyer_price_note ?? "", /первого варианта/)
+  })
 })

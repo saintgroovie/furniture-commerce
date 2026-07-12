@@ -115,6 +115,11 @@ export function ProductReadinessChecklist({
         Это про поля товара, а не про попадание в каталог на сайте. Цены и галерея сохраняются во
         вкладках.
       </Text>
+      {readiness.buyer_price_note ? (
+        <Text size="xsmall" className="mt-1 text-ui-fg-subtle">
+          {readiness.buyer_price_note}
+        </Text>
+      ) : null}
       <div className="mt-2">
         {readiness.items.map((item) => (
           <ItemRow
