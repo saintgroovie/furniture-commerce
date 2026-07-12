@@ -2,6 +2,7 @@ import Link from "next/link"
 import { homeCopy } from "@/lib/woodright-copy"
 import { CopyLines } from "@/components/copy-lines"
 import type { HomeProduct } from "./home-data"
+import { HomeDeferredCardLayers } from "./home-deferred-card-layers"
 
 /** Kids scene: existing kids block copy + real Woodright Kids pieces. */
 export function HomeKids({ products }: { products: HomeProduct[] }) {
@@ -37,17 +38,7 @@ export function HomeKids({ products }: { products: HomeProduct[] }) {
                     decoding="async"
                     draggable={false}
                   />
-                  {p.hoverImg && (
-                    <img
-                      src={p.hoverImg}
-                      alt=""
-                      aria-hidden="true"
-                      className="hp-hover-img"
-                      loading="lazy"
-                      decoding="async"
-                      draggable={false}
-                    />
-                  )}
+                  <HomeDeferredCardLayers hoverImg={p.hoverImg} />
                 </span>
                 <span className="hp-kids-object-title">{p.title}</span>
                 {p.priceLabel && (

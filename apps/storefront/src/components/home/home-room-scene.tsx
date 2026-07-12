@@ -24,31 +24,68 @@ export type HomeScene = {
  * Interactive room scene: numbered scene switcher + product hotspots.
  * Hotspots are real buttons that open a small card linking to the PDP —
  * never decorative dots. Keyboard: Enter/Space toggles, Escape closes.
+ *
+ * Auto-rotation pauses when the section is offscreen, the tab is hidden,
+ * or the user is hovering / focusing / has a hotspot open. Only the active
+ * (and next) scene image are mounted so the second room shot stays off the
+ * critical path.
  */
 export function HomeRoomScene({ scenes }: { scenes: HomeScene[] }) {
   const [active, setActive] = useState(0)
   const [openSpot, setOpenSpot] = useState<number | null>(null)
+  const [mounted, setMounted] = useState<Set<number>>(() => new Set([0]))
   const pausedRef = useRef(false)
+  const visibleRef = useRef(false)
+  const rootRef = useRef<HTMLDivElement>(null)
 
   const switchScene = useCallback((index: number) => {
     setActive(index)
     setOpenSpot(null)
+    setMounted((prev) => {
+      if (prev.has(index)) return prev
+      const next = new Set(prev)
+      next.add(index)
+      return next
+    })
   }, [])
 
   const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
     if (event.key === "Escape") setOpenSpot(null)
   }, [])
 
-  // Gentle auto-rotation; pauses on hover/focus/open hotspot, off with
-  // reduced motion.
+  useEffect(() => {
+    const el = rootRef.current
+    if (!el || !("IntersectionObserver" in window)) return
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        visibleRef.current = entry.isIntersecting
+      },
+      { threshold: 0.15 }
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+
   useEffect(() => {
     if (scenes.length < 2) return
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+
     const id = window.setInterval(() => {
       if (pausedRef.current) return
+      if (!visibleRef.current) return
+      if (document.hidden) return
       setOpenSpot((spot) => {
         if (spot == null) {
-          setActive((i) => (i + 1) % scenes.length)
+          setActive((i) => {
+            const next = (i + 1) % scenes.length
+            setMounted((prev) => {
+              if (prev.has(next)) return prev
+              const copy = new Set(prev)
+              copy.add(next)
+              return copy
+            })
+            return next
+          })
         }
         return spot
       })
@@ -56,11 +93,29 @@ export function HomeRoomScene({ scenes }: { scenes: HomeScene[] }) {
     return () => window.clearInterval(id)
   }, [scenes.length])
 
+  // Warm the next scene a few seconds into the hold while onscreen.
+  useEffect(() => {
+    if (scenes.length < 2) return
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+    const next = (active + 1) % scenes.length
+    const timer = window.setTimeout(() => {
+      if (!visibleRef.current || document.hidden) return
+      setMounted((prev) => {
+        if (prev.has(next)) return prev
+        const copy = new Set(prev)
+        copy.add(next)
+        return copy
+      })
+    }, 2500)
+    return () => window.clearTimeout(timer)
+  }, [active, scenes.length])
+
   if (scenes.length === 0) return null
   const scene = scenes[active]
 
   return (
     <div
+      ref={rootRef}
       className="hp-scene"
       onKeyDown={handleKeyDown}
       onPointerEnter={() => {
@@ -77,19 +132,21 @@ export function HomeRoomScene({ scenes }: { scenes: HomeScene[] }) {
       }}
     >
       <div className="hp-scene-stage">
-        {scenes.map((s, i) => (
-          <img
-            key={s.id}
-            src={s.img}
-            alt={i === active ? s.alt : ""}
-            aria-hidden={i === active ? undefined : true}
-            className="hp-scene-img"
-            data-active={i === active ? "true" : "false"}
-            loading="lazy"
-            decoding="async"
-            draggable={false}
-          />
-        ))}
+        {scenes.map((s, i) =>
+          mounted.has(i) ? (
+            <img
+              key={s.id}
+              src={s.img}
+              alt={i === active ? s.alt : ""}
+              aria-hidden={i === active ? undefined : true}
+              className="hp-scene-img"
+              data-active={i === active ? "true" : "false"}
+              loading="lazy"
+              decoding="async"
+              draggable={false}
+            />
+          ) : null
+        )}
 
         {scene.spots.map((spot, i) => {
           const open = openSpot === i
@@ -119,7 +176,9 @@ export function HomeRoomScene({ scenes }: { scenes: HomeScene[] }) {
                   {spot.price && (
                     <span className="hp-scene-card-price">{spot.price}</span>
                   )}
-                  <span className="hp-scene-card-arrow" aria-hidden="true">→</span>
+                  <span className="hp-scene-card-arrow" aria-hidden="true">
+                    →
+                  </span>
                 </Link>
               )}
             </div>

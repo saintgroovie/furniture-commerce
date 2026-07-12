@@ -13,7 +13,6 @@ import { KidsStrip } from "@/components/home/kids-strip"
 import { KidsFinal } from "@/components/home/kids-final"
 import { HomeRevealObserver } from "@/components/home/home-reveal-observer"
 import { pickByHandles, toHomeProduct, type HomeProduct } from "@/components/home/home-data"
-import { loadHoverImages } from "@/components/home/home-hover-images"
 import { kidsMedia } from "@/components/home/kids-media"
 
 export const metadata: Metadata = {
@@ -79,10 +78,8 @@ async function loadKidsShowcase(): Promise<{
     }
   }
 
-  const hoverImages = await loadHoverImages(strip.map((p) => p.id))
+  // Variant JPGs mount after idle on the client; no second Medusa hover fetch.
   for (const p of strip) {
-    const hover = hoverImages.get(p.id)
-    if (hover && hover !== p.img) p.hoverImg = hover
     const variants = p.handle ? kidsMedia.stripVariants[p.handle] : undefined
     if (variants?.length) p.variantImgs = variants
   }

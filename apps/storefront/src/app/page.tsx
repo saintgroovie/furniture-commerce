@@ -18,7 +18,6 @@ import { HomeFinal } from "@/components/home/home-final"
 import { HomeRevealObserver } from "@/components/home/home-reveal-observer"
 import { HomeRoomScene, type HomeScene } from "@/components/home/home-room-scene"
 import { pickByHandles, toHomeProduct, type HomeProduct } from "@/components/home/home-data"
-import { loadHoverImages } from "@/components/home/home-hover-images"
 import { homeMedia } from "@/components/home/home-media"
 
 export const metadata: Metadata = {
@@ -142,15 +141,11 @@ async function loadHomeShowcase(): Promise<{
     if (hp) sceneProducts.set(handle, hp)
   }
 
-  const hoverImages = await loadHoverImages(
-    [...featured, ...kids].map((p) => p.id)
-  )
-  for (const p of [...featured, ...kids]) {
-    const hover = hoverImages.get(p.id)
-    if (hover && hover !== p.img) p.hoverImg = hover
-  }
-
   // Curated finish variants: the featured cards slowly cycle colors.
+  // Variant JPGs are mounted client-side after idle (HomeDeferredCardLayers)
+  // so they stay off the SSR/LCP critical path. No second Medusa round-trip
+  // for hover shots - catalog projection is hero-only and the primary image
+  // is enough for first paint.
   for (const p of featured) {
     const variants = p.handle ? homeMedia.featuredVariants[p.handle] : undefined
     if (variants?.length) p.variantImgs = variants

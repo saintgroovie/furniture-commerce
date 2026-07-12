@@ -2,6 +2,7 @@ import Link from "next/link"
 import { homeCopy } from "@/lib/woodright-copy"
 import { formatRuInline } from "@/lib/format-ru-copy"
 import type { HomeProduct } from "./home-data"
+import { HomeDeferredCardLayers } from "./home-deferred-card-layers"
 
 export function FeaturedCard({
   product,
@@ -29,30 +30,10 @@ export function FeaturedCard({
           decoding="async"
           draggable={false}
         />
-        {product.variantImgs.slice(0, 2).map((src, vi) => (
-          <img
-            key={src}
-            src={src}
-            alt=""
-            aria-hidden="true"
-            className="hp-cycle-img"
-            data-cycle={vi + 1}
-            loading="lazy"
-            decoding="async"
-            draggable={false}
-          />
-        ))}
-        {product.hoverImg && (
-          <img
-            src={product.hoverImg}
-            alt=""
-            aria-hidden="true"
-            className="hp-hover-img"
-            loading="lazy"
-            decoding="async"
-            draggable={false}
-          />
-        )}
+        <HomeDeferredCardLayers
+          variants={product.variantImgs}
+          hoverImg={product.hoverImg}
+        />
         {product.article && (
           <span className="hp-featured-article" aria-hidden="true">
             {product.article}

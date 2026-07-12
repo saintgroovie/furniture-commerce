@@ -5096,9 +5096,9 @@ body {
    Reduced motion keeps only the first slide, static. */
 @media (prefers-reduced-motion: no-preference) {
   .hp-hero-img {
-    animation:
-      hp-hero-cycle 21s linear infinite,
-      hp-hero-drift 21s ease-in-out infinite;
+    /* Cross-fade only - continuous Ken Burns scale was a sustained GPU cost
+       across three full-bleed layers and is not needed for still-lifes. */
+    animation: hp-hero-cycle 21s linear infinite;
     transform-origin: 58% 55%;
   }
 
@@ -5130,18 +5130,6 @@ body {
     }
     100% {
       opacity: 0;
-    }
-  }
-
-  @keyframes hp-hero-drift {
-    0% {
-      transform: scale(1.07);
-    }
-    38.33% {
-      transform: scale(1);
-    }
-    100% {
-      transform: scale(1);
     }
   }
 }
@@ -5741,34 +5729,10 @@ body {
 
 /* Continuous slow breathing on the material crops. */
 @media (prefers-reduced-motion: no-preference) {
-  .hp-craft-media img {
-    animation: hp-craft-breathe 14s ease-in-out infinite alternate;
+  .hp-craft-item:hover .hp-craft-media img,
+  .hp-craft-item:focus-within .hp-craft-media img {
+    transform: scale(calc(var(--craft-zoom, 1.6) + 0.08));
   }
-
-  .hp-craft-item:nth-child(2) .hp-craft-media img {
-    animation-delay: -4s;
-  }
-
-  .hp-craft-item:nth-child(3) .hp-craft-media img {
-    animation-delay: -8s;
-  }
-
-  .hp-craft-item:nth-child(4) .hp-craft-media img {
-    animation-delay: -12s;
-  }
-
-  @keyframes hp-craft-breathe {
-    from {
-      transform: scale(var(--craft-zoom, 1.6));
-    }
-    to {
-      transform: scale(calc(var(--craft-zoom, 1.6) + 0.07));
-    }
-  }
-}
-
-.hp-craft-item:hover .hp-craft-media img {
-  transform: scale(calc(var(--craft-zoom, 1.6) + 0.08));
 }
 
 .hp-craft-caption {
@@ -6290,29 +6254,9 @@ body {
 
 /* The same slow breathing as the craft crops on the main page. */
 @media (prefers-reduced-motion: no-preference) {
-  .hp-paint-media img {
-    animation: hp-paint-breathe 14s ease-in-out infinite alternate;
-  }
-
-  .hp-paint-grid li:nth-child(2) .hp-paint-media img {
-    animation-delay: -4s;
-  }
-
-  .hp-paint-grid li:nth-child(3) .hp-paint-media img {
-    animation-delay: -8s;
-  }
-
-  .hp-paint-grid li:nth-child(4) .hp-paint-media img {
-    animation-delay: -12s;
-  }
-
-  @keyframes hp-paint-breathe {
-    from {
-      transform: scale(var(--paint-zoom, 1.8));
-    }
-    to {
-      transform: scale(calc(var(--paint-zoom, 1.8) + 0.07));
-    }
+  .hp-paint-item:hover .hp-paint-media img,
+  .hp-paint-item:focus-visible .hp-paint-media img {
+    transform: scale(calc(var(--paint-zoom, 1.8) + 0.07));
   }
 }
 
