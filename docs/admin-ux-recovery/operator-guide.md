@@ -84,3 +84,14 @@ Woodright включается флагом `WOODRIGHT_ADMIN_UX_V1` (env и/ил
 ## Изолированная проверка (QA)
 
 Отдельная БД и порт Admin (`:9001`), флаг `WOODRIGHT_ADMIN_UX_V1`. Не путать с общим стендом `:9000`.
+
+Старт: `./scripts/start-woodright-admin-ux-b5.sh start`
+
+Консолидированный smoke четырёх операторских сценариев (Loop 4):
+
+```sh
+cd apps/backend
+NODE_PATH=/tmp/b5-playwright-qa/node_modules node src/admin/__tests__/woodright-loop4-operator-journeys.smoke.mjs
+```
+
+Для проверки акции в корзине на стенде задайте `WOODRIGHT_STORE_PUBLISHABLE_KEY` (или `MEDUSA_PUBLISHABLE_KEY`) в env Admin и перезапустите — ключ в UI вводить не нужно.
