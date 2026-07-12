@@ -159,6 +159,8 @@ img {
   display: block;
   height: 20px;
   width: auto;
+  aspect-ratio: 16489 / 2114;
+  color: var(--color-logo-ink);
 }
 
 /* «KIDS» pill next to the wordmark, shown only inside the kids section.
@@ -858,11 +860,170 @@ select:focus-visible {
 
 .system-state-loading {
   padding-block: var(--space-3xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-lg);
+  /* Delayed fade-in so the loader never flashes on near-instant
+     navigations. Kept short: the section cross-fade (loading.tsx flips
+     data-section at 550ms) must start only after this has finished,
+     otherwise the "from" color is never actually seen. */
+  opacity: 0;
+  animation: loading-appear 0.35s ease 0.15s forwards;
+}
+
+/* Brown ↔ kids-green recolor = cross-fade of two fully-painted variants
+   stacked in one grid cell. Opacity is compositor-only, so the recolor
+   stays fluid while the main thread streams the destination page (a
+   custom-property color tween runs on the main thread and would freeze
+   exactly then). The flip is driven by loading.tsx: mounts showing the
+   section being left, flips data-section a frame later. */
+.loading-stack {
+  display: grid;
+}
+
+.loading-visual {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-lg);
+  will-change: opacity;
+  /* Same tween as the header edge wash (--logo-kids-duration/ease live on
+     .site-header, so the values are repeated here). */
+  transition: opacity 0.72s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.loading-visual-adult {
+  --loading-base: var(--color-border);
+  --loading-ink: var(--color-logo-ink);
+  --loading-bar-a: var(--color-accent);
+  --loading-bar-b: var(--color-brand);
+}
+
+/* Kids palette = the interface greens themselves (kids accent/action +
+   the nav's sage), not darkened mixes — deep-green ink read too heavy. */
+.loading-visual-kids {
+  --loading-base: #d5dfd7;
+  --loading-ink: #507356;
+  --loading-bar-a: #598060;
+  --loading-bar-b: #507356;
+  opacity: 0;
+}
+
+.system-state-loading[data-section="kids"] .loading-visual-adult {
+  opacity: 0;
+}
+
+.system-state-loading[data-section="kids"] .loading-visual-kids {
+  opacity: 1;
+}
+
+.loading-mark {
+  position: relative;
+  width: min(14rem, 56vw);
+  /* The sheen animates mask-position (paint, not compositor); contain
+     keeps that repaint clipped to the wordmark box. */
+  contain: layout paint;
+}
+
+.loading-mark-base,
+.loading-mark-sheen {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.loading-mark-base {
+  color: var(--loading-base);
+}
+
+.loading-mark-sheen {
+  position: absolute;
+  inset: 0;
+  color: var(--loading-ink);
+  -webkit-mask-image: linear-gradient(105deg, transparent 25%, #000 45%, #000 55%, transparent 75%);
+  mask-image: linear-gradient(105deg, transparent 25%, #000 45%, #000 55%, transparent 75%);
+  -webkit-mask-size: 250% 100%;
+  mask-size: 250% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  animation: loading-sheen 2.4s cubic-bezier(0.45, 0.05, 0.35, 0.95) infinite;
+}
+
+.loading-track {
+  width: min(14rem, 56vw);
+  height: 2px;
+  border-radius: 999px;
+  background: var(--loading-base);
+  overflow: hidden;
+}
+
+.loading-track-bar {
+  display: block;
+  width: 34%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--loading-bar-a), var(--loading-bar-b));
+  /* transform-only glide stays on the compositor */
+  animation: loading-glide 1.6s cubic-bezier(0.55, 0.1, 0.45, 0.9) infinite;
+  will-change: transform;
 }
 
 .system-state-loading-text {
-  color: var(--color-fg-secondary);
-  font-size: 1rem;
+  color: var(--color-fg-muted);
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@keyframes loading-appear {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes loading-sheen {
+  0% {
+    -webkit-mask-position: 100% 0;
+    mask-position: 100% 0;
+  }
+  100% {
+    -webkit-mask-position: 0% 0;
+    mask-position: 0% 0;
+  }
+}
+
+@keyframes loading-glide {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(420%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .system-state-loading {
+    opacity: 1;
+    animation: none;
+  }
+
+  .loading-visual {
+    transition: none;
+  }
+
+  .loading-mark-sheen {
+    animation: none;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .loading-track-bar {
+    animation: none;
+    width: 100%;
+    transform: none;
+  }
 }
 
 .checkout-payment-clarity {
@@ -1987,48 +2148,114 @@ button:disabled,
 /* ---- Filter Tabs ---- */
 
 .filter-tabs {
+  /* Nested capsule math: outer R = pill R + pad + border, so the gap
+     between the active fill and the track stroke stays even all the way
+     around the tip (not pinched at the apex). Height hugs the 32px tab
+     with no leftover flex slack — leftover vertical space was making the
+     side gap 4px and the top/bottom gap 5px, which broke concentricity. */
+  --filter-tab-h: 32px;
+  --filter-tabs-pad: 4px;
+  --filter-tabs-border-w: 1px;
+  --filter-tabs-radius: calc(
+    var(--filter-tab-h) / 2 + var(--filter-tabs-pad) + var(--filter-tabs-border-w)
+  );
+
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   position: relative;
-  height: 44px;
+  height: calc(
+    var(--filter-tab-h) + 2 * var(--filter-tabs-pad) + 2 * var(--filter-tabs-border-w)
+  );
   gap: 4px;
-  padding: 4px;
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
+  padding: var(--filter-tabs-pad);
+  border: var(--filter-tabs-border-w) solid var(--color-border);
+  border-radius: var(--filter-tabs-radius);
   background: color-mix(in srgb, var(--color-surface) 86%, var(--color-bg));
+  /* Clip sliding pills to the capsule. translateZ(0) makes a containing
+     layer so transformed children respect overflow+radius in WebKit/Blink
+     — without the elliptical radial-gradient mask, which soft-clipped the
+     tips and made the stroke gap look uneven at the apex. */
+  overflow: hidden;
+  isolation: isolate;
+  transform: translateZ(0);
 }
 
-/* The sliding dark pill behind the active tab. Positioned from JS
-   measurements (offsetLeft/offsetWidth of .filter-tab-active), glides
-   between tabs on change instead of the background snapping. Its first
-   mount paints in place (transition only animates subsequent moves).
-   The move itself is a transform (translate3d), not left/top: transform
-   animates on the compositor thread, so the glide stays smooth even
-   while the main thread is busy re-rendering the product grid after the
-   route change. Only width/height (which do need layout) remain as
-   transitioned box properties — the element is absolutely positioned
-   with no children, so that layout is contained and cheap. */
-.filter-tabs-indicator {
+/* Sliding pills: single rounded rects. Outer track R = pill R + pad +
+   border (see --filter-tabs-radius), so the gap to the stroke stays even
+   around the tip. */
+.filter-tabs-indicator,
+.filter-tabs-hover-ghost {
   position: absolute;
   left: 0;
   top: 0;
   z-index: 0;
-  border-radius: 999px;
-  background: var(--color-action);
-  box-shadow: 0 4px 14px rgba(44, 36, 32, 0.12);
   pointer-events: none;
-  will-change: transform;
+  border-radius: calc(var(--filter-tab-h) / 2);
+  will-change: transform, width;
+}
+
+.filter-tabs-indicator {
+  /* Short + decisive: settles before the eye registers lag. */
+  --pill-speed: 0.26s;
+  --pill-ease: cubic-bezier(0.2, 0.9, 0.2, 1);
+  background: var(--color-action);
   transition:
-    transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-    width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-    height 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    transform var(--pill-speed) var(--pill-ease),
+    width var(--pill-speed) var(--pill-ease),
+    height var(--pill-speed) var(--pill-ease),
+    background-color 0.12s ease;
+}
+
+/* Hovering the already-active tab: the flat dark pill answers with the
+   same hover color as the no-slider fallback (ghost is hidden on active). */
+.filter-tabs[data-slider]:has(.filter-tab-active:hover) .filter-tabs-indicator {
+  background: var(--color-action-hover);
+}
+
+/* Accent wash (brown / kids sage via --color-accent). Faster than the
+   indicator — cursor shadow, not a second selector. */
+.filter-tabs-hover-ghost {
+  --pill-speed: 0.16s;
+  --pill-ease: cubic-bezier(0.2, 0.9, 0.2, 1);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-accent) 8%, var(--color-surface)) 0%,
+    color-mix(in srgb, var(--color-accent) 18%, var(--color-surface)) 100%
+  );
+  opacity: 0;
+  will-change: transform, opacity, width;
+  transition:
+    transform var(--pill-speed) var(--pill-ease),
+    width var(--pill-speed) var(--pill-ease),
+    height var(--pill-speed) var(--pill-ease),
+    opacity 0.1s ease;
+}
+
+.filter-tabs-hover-ghost[data-shown] {
+  opacity: 1;
+}
+
+/* Re-appearing ghost snaps into place (JS sets data-instant around the
+   reposition), then only fades — no glide from a stale position. */
+.filter-tabs-hover-ghost[data-instant] {
+  transition: none;
+}
+
+/* Touch: there is no real hover, and pointerleave may never fire — the
+   ghost would stick to the last tapped tab. */
+@media (hover: none) {
+  .filter-tabs-hover-ghost {
+    display: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .filter-tabs-indicator,
+  .filter-tabs-hover-ghost,
   .filter-tab {
     transition: none;
+    animation: none;
   }
 }
 
@@ -2037,20 +2264,19 @@ button:disabled,
   align-items: center;
   position: relative;
   z-index: 1; /* label above the sliding indicator */
-  height: 32px;
+  height: var(--filter-tab-h);
   padding: 0 12px;
   border: 1px solid transparent;
-  border-radius: 999px;
+  border-radius: calc(var(--filter-tab-h) / 2);
   font-size: 0.8rem;
   font-weight: 500;
   color: var(--color-fg-secondary);
   text-decoration: none;
-  /* Label recolor rides the same 0.45s curve as the pill's glide, so the
-     text finishes going light exactly when the pill settles under it. */
+  /* Label recolor rides the same curve/duration as the pill's glide. */
   transition:
     background 0.15s,
     border-color 0.15s,
-    color 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    color 0.26s cubic-bezier(0.2, 0.9, 0.2, 1);
 }
 
 .filter-tab:hover {
@@ -2058,6 +2284,20 @@ button:disabled,
   border-color: var(--color-border);
   color: var(--color-fg);
   text-decoration: none;
+}
+
+/* Once the sliding layers are mounted, the gliding ghost owns the hover
+   fill — per-tab backgrounds would double it up and snap while the ghost
+   glides. The label deepens toward the section accent over the accent
+   wash: brown-tinted ink in the adult catalog, green in kids. */
+.filter-tabs[data-slider] .filter-tab:hover {
+  background: transparent;
+  border-color: transparent;
+  color: color-mix(in srgb, var(--color-accent) 55%, var(--color-fg));
+}
+
+.filter-tabs[data-slider] .filter-tab-active:hover {
+  color: var(--color-surface);
 }
 
 /* Static dark pill: the SSR / no-JS fallback, and also what paints before
@@ -2068,7 +2308,6 @@ button:disabled,
   background: var(--color-action);
   color: var(--color-surface);
   border-color: var(--color-action);
-  box-shadow: 0 4px 14px rgba(44, 36, 32, 0.12);
 }
 
 .filter-tab-active:hover {
@@ -2513,7 +2752,7 @@ button:disabled,
   flex-wrap: wrap;
   gap: 0.4rem;
   align-items: center;
-  margin-bottom: -0.35rem;
+  margin-bottom: -0.1rem;
 }
 
 .catalog-active-empty {
