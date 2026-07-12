@@ -38,6 +38,25 @@ function toggleMulti(values: string[], value: string): string[] {
   return values.includes(v) ? values.filter((x) => x !== v) : [...values, v]
 }
 
+type PillBox = { left: number; top: number; width: number; height: number }
+
+function tabBox(tab: HTMLElement): PillBox {
+  return {
+    left: Math.round(tab.offsetLeft),
+    top: Math.round(tab.offsetTop),
+    width: Math.round(tab.offsetWidth),
+    height: Math.round(tab.offsetHeight),
+  }
+}
+
+/* Active indicator + hover ghost: single rounded rects. Whole-pixel
+   geometry avoids subpixel double-edge AA at the tip. */
+function layoutPillBox(el: HTMLElement, box: PillBox) {
+  el.style.transform = `translate3d(${box.left}px, ${box.top}px, 0)`
+  el.style.width = `${box.width}px`
+  el.style.height = `${box.height}px`
+}
+
 /* Pre-hydration bootstrap for --catalog-filter-fit (see the sidebar effect
    below for what the value means). Served inline inside the sidebar's SSR
    HTML, so the browser runs it while parsing — the filter card gets its
@@ -106,12 +125,44 @@ export function CatalogFilterControls({
       setTabIndicator(null)
       return
     }
-    setTabIndicator({
-      left: activeTab.offsetLeft,
-      top: activeTab.offsetTop,
-      width: activeTab.offsetWidth,
-      height: activeTab.offsetHeight,
-    })
+    setTabIndicator(tabBox(activeTab))
+  }, [])
+
+  /* Hover ghost: single rounded element, styles written imperatively —
+     zero React re-renders on hover. On leave it fades out in place; on
+     re-enter it snaps under the cursor (data-instant) then fades in. */
+  const ghostRef = useRef<HTMLSpanElement>(null)
+
+  const onTabsPointerOver = useCallback((e: { target: EventTarget }) => {
+    const nav = tabsRef.current
+    const ghost = ghostRef.current
+    if (!nav || !ghost || !(e.target instanceof Element)) return
+    const tab = e.target.closest<HTMLElement>(".filter-tab")
+    if (!tab || !nav.contains(tab)) return
+    if (tab.classList.contains("filter-tab-active")) {
+      delete ghost.dataset.shown
+      return
+    }
+    const box = tabBox(tab)
+    if (ghost.dataset.shown !== "true") {
+      ghost.dataset.instant = "true"
+      layoutPillBox(ghost, box)
+      void ghost.offsetWidth
+      delete ghost.dataset.instant
+      ghost.dataset.shown = "true"
+    } else {
+      layoutPillBox(ghost, box)
+    }
+  }, [])
+
+  const onTabsPointerLeave = useCallback(() => {
+    const ghost = ghostRef.current
+    if (ghost) delete ghost.dataset.shown
+  }, [])
+
+  const onTabsPointerDown = useCallback(() => {
+    const ghost = ghostRef.current
+    if (ghost) delete ghost.dataset.shown
   }, [])
 
   /* Optimistic active tab: the pill + label colors switch on click, not when
@@ -404,15 +455,20 @@ export function CatalogFilterControls({
           aria-label="Тип товара"
           ref={tabsRef}
           data-slider={tabIndicator ? "true" : undefined}
+          onPointerOver={onTabsPointerOver}
+          onPointerLeave={onTabsPointerLeave}
+          onPointerDown={onTabsPointerDown}
         >
+          <span
+            ref={ghostRef}
+            className="filter-tabs-hover-ghost"
+            aria-hidden="true"
+          />
           {tabIndicator && (
             <span
               className="filter-tabs-indicator"
               aria-hidden="true"
               style={{
-                /* transform, не left/top: движение уходит на compositor
-                   thread и не дёргается, пока main thread занят перерисовкой
-                   грида после смены фильтра. */
                 transform: `translate3d(${tabIndicator.left}px, ${tabIndicator.top}px, 0)`,
                 width: tabIndicator.width,
                 height: tabIndicator.height,
