@@ -24,6 +24,8 @@ import {
   sortDisplayEntries,
 } from "@/lib/catalog-filters"
 import { actions, catalogCopy, seo } from "@/lib/woodright-copy"
+import { CopyLines } from "@/components/copy-lines"
+import { formatRuInline } from "@/lib/format-ru-copy"
 
 export const metadata: Metadata = {
   title: seo.catalog.title,
@@ -54,7 +56,7 @@ export default async function CatalogPage({
       <div data-state="error">
         <div className="catalog-hero">
           <h1>{catalogCopy.h1}</h1>
-          <p className="info-text" style={{ marginTop: "0.5rem" }}>{catalogCopy.loadError}</p>
+          <CopyLines className="info-text" style={{ marginTop: "0.5rem" }} lines={catalogCopy.loadError} />
         </div>
         <div className="nav-links" style={{ marginTop: "1rem" }}>
           <Link href="/">{actions.toHome}</Link>
@@ -127,9 +129,9 @@ export default async function CatalogPage({
       <div className="catalog-hero">
         <h1>{catalogCopy.h1}</h1>
         <p className="info-text">
-          {catalogCopy.lead}{" "}
+          {formatRuInline(catalogCopy.lead)}{" "}
           <Link href="/kids/catalog" className="catalog-hero-kids-link">
-            {catalogCopy.kidsLead} <span aria-hidden="true">→</span>
+            {formatRuInline(catalogCopy.kidsLead)} <span aria-hidden="true">→</span>
           </Link>
         </p>
       </div>
@@ -144,7 +146,7 @@ export default async function CatalogPage({
         {displayEntries.length === 0 ? (
           <div className="status-message catalog-empty-state">
             <p style={{ fontWeight: 500 }}>{catalogCopy.emptyFilteredTitle}</p>
-            <p>{catalogCopy.emptyFilteredBody}</p>
+            <CopyLines lines={catalogCopy.emptyFilteredBody} />
             <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
               <Link href="/catalog">{actions.resetFilters}</Link>
               <Link href="/bespoke/request">{actions.discussProject}</Link>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { kidsHome, seo } from "@/lib/woodright-copy"
+import { CopyLines } from "@/components/copy-lines"
 
 export const metadata: Metadata = {
   title: seo.kids.title,
@@ -16,8 +17,8 @@ export default function KidsPage() {
   return (
     <div className="hero">
       <h1>{kidsHome.h1}</h1>
-      <p>{kidsHome.lead}</p>
-      <p className="hero-note">{kidsHome.supporting}</p>
+      <CopyLines lines={kidsHome.lead} />
+      <CopyLines className="hero-note" lines={kidsHome.supporting} />
       <div className="hero-actions">
         <Link href="/kids/catalog" className="btn btn-primary">
           {kidsHome.ctaCatalog}

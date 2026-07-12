@@ -1,6 +1,7 @@
 import Link from "next/link"
 import type { Metadata } from "next"
 import { ProductCard } from "@/components/product-card"
+import { CopyLines } from "@/components/copy-lines"
 import { resolveBespokeProducts } from "@/lib/bespoke"
 import { groupProductsForDisplay } from "@/lib/display-group"
 import { bespokeCatalogCopy, seo } from "@/lib/woodright-copy"
@@ -25,9 +26,11 @@ export default async function BespokeCatalogPage() {
     return (
       <div data-state="error">
         <h1>{bespokeCatalogCopy.h1}</h1>
-        <p className="info-text" style={{ marginTop: "0.5rem" }}>
-          {bespokeCatalogCopy.loadError}
-        </p>
+        <CopyLines
+          className="info-text"
+          style={{ marginTop: "0.5rem" }}
+          lines={bespokeCatalogCopy.loadError}
+        />
         <div className="nav-links" style={{ marginTop: "1rem" }}>
           <Link href="/bespoke">В раздел «По проекту»</Link>
         </div>
@@ -42,7 +45,7 @@ export default async function BespokeCatalogPage() {
       <div data-state="empty">
         <h1>{bespokeCatalogCopy.h1}</h1>
         <div className="status-message">
-          <p>{bespokeCatalogCopy.emptyBody}</p>
+          <CopyLines lines={bespokeCatalogCopy.emptyBody} />
           <div
             className="nav-links nav-links-center"
             style={{ marginTop: "1rem" }}
@@ -58,9 +61,11 @@ export default async function BespokeCatalogPage() {
   return (
     <div data-state="success">
       <h1>{bespokeCatalogCopy.h1}</h1>
-      <p className="info-text" style={{ marginTop: "0.5rem" }}>
-        {bespokeCatalogCopy.lead}
-      </p>
+      <CopyLines
+        className="info-text"
+        style={{ marginTop: "0.5rem" }}
+        lines={bespokeCatalogCopy.lead}
+      />
       <ul className="product-grid" style={{ marginTop: "1.5rem" }}>
         {displayEntries.map((entry) => (
           <li key={(entry.product as { id?: string }).id as string}>

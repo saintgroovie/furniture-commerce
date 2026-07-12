@@ -3,6 +3,7 @@
 /**
  * Cart UI: grouped Woodright / Woodright Kids rows, totals, checkout CTA.
  * Data: client-only via getCartIdFromSession + getCart / removeLineItem.
+ * Kids grouping: `isKidsCartLineItem` on the cart payload (no catalog fan-out).
  *
  * Визуально страница переиспользует классы «Оформления заказа» / «Заявки на
  * расчёт» (bespoke-request-*): карточка слева со строками товаров (миниатюра
@@ -17,9 +18,11 @@ import { countCartItems, emitCartUpdated } from "@/lib/cart/cart-events"
 import { getCart, removeLineItem, CART_NOT_FOUND } from "@/lib/api/cart"
 import { formatRub } from "@/lib/format"
 import { resolveStorefrontProductImageSrc } from "@/lib/product-images"
-import { resolveKidsProducts } from "@/lib/kids"
+import { isKidsCartLineItem } from "@/lib/kids"
 import { ChecklistIcon } from "@/components/bespoke-help-icons"
 import { actions, cartCopy } from "@/lib/woodright-copy"
+import { CopyLines } from "@/components/copy-lines"
+import { flatCopy } from "@/lib/format-ru-copy"
 
 type CartViewState = "loading" | "empty" | "ready" | "mutating" | "error" | "invalid_state"
 
@@ -76,7 +79,6 @@ export function CartSummary() {
   const [viewState, setViewState] = useState<CartViewState>("loading")
   const [mutating, setMutating] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [kidsIds, setKidsIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     const cartId = getCartIdFromSession()
@@ -86,13 +88,10 @@ export function CartSummary() {
       return
     }
 
-    const kidsPromise = resolveKidsProducts()
-      .then((data) => data.ids)
-      .catch(() => new Set<string>())
-
+    let cancelled = false
     getCart(cartId)
-      .then(async (data: { cart?: Record<string, unknown> }) => {
-        setKidsIds(await kidsPromise)
+      .then((data: { cart?: Record<string, unknown> }) => {
+        if (cancelled) return
         const c = data.cart ?? null
         const items = (c?.items as unknown[]) ?? []
         if (!c || !Array.isArray(items) || items.length === 0) {
@@ -104,15 +103,19 @@ export function CartSummary() {
         }
       })
       .catch((e: unknown) => {
+        if (cancelled) return
         if (e instanceof Error && e.message === CART_NOT_FOUND) {
           clearCartIdFromSession()
           setCart(null)
           setViewState("invalid_state")
         } else {
-          setError(cartCopy.loadError)
+          setError(flatCopy(cartCopy.loadError))
           setViewState("error")
         }
       })
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   async function handleRemove(cartId: string, lineId: string) {
@@ -120,6 +123,7 @@ export function CartSummary() {
     setError(null)
     try {
       await removeLineItem(cartId, lineId)
+      /* DELETE parent omits product.metadata; one lean getCart keeps Kids grouping. */
       const data = await getCart(cartId)
       const c = data.cart ?? null
       setCart(c)
@@ -129,7 +133,7 @@ export function CartSummary() {
         setViewState("empty")
       }
     } catch {
-      setError(cartCopy.removeError)
+      setError(flatCopy(cartCopy.removeError))
     } finally {
       setMutating(false)
     }
@@ -150,7 +154,7 @@ export function CartSummary() {
           ))}
         </ul>
       </div>
-      <p className="page-caption">{cartCopy.asideCaption}</p>
+      <CopyLines className="page-caption" lines={cartCopy.asideCaption} />
     </aside>
   )
 
@@ -188,7 +192,7 @@ export function CartSummary() {
     return cardShell(
       "invalid_state",
       <>
-        <p className="bespoke-request-card-title">{cartCopy.invalidState}</p>
+        <CopyLines className="bespoke-request-card-title" lines={cartCopy.invalidState} />
         <p className="nav-links" style={{ marginTop: "0.5rem" }}>
           <Link href="/catalog">{actions.viewCatalog}</Link>
           <Link href="/rooms">{actions.toRooms}</Link>
@@ -204,7 +208,7 @@ export function CartSummary() {
       "empty",
       <>
         <p className="bespoke-request-card-title">{cartCopy.emptyTitle}</p>
-        <p className="page-caption bespoke-request-card-caption">{cartCopy.emptyBody}</p>
+        <CopyLines className="page-caption bespoke-request-card-caption" lines={cartCopy.emptyBody} />
         <p className="nav-links">
           <Link href="/catalog">{actions.viewCatalog}</Link>
           <Link href="/bespoke/request">{actions.discussProject}</Link>
@@ -222,12 +226,8 @@ export function CartSummary() {
           return line != null ? sum + line : sum
         }, 0)
 
-  const adultItems = items.filter(
-    (item) => !kidsIds.has((item as { product_id?: string }).product_id ?? "")
-  )
-  const kidsItems = items.filter((item) =>
-    kidsIds.has((item as { product_id?: string }).product_id ?? "")
-  )
+  const adultItems = items.filter((item) => !isKidsCartLineItem(item))
+  const kidsItems = items.filter((item) => isKidsCartLineItem(item))
 
   function renderItem(item: Record<string, unknown>) {
     const lineId = String(item.id)
@@ -290,7 +290,7 @@ export function CartSummary() {
     mutating ? "mutating" : "ready",
     <>
       <h2 className="bespoke-request-card-title">{cartCopy.formTitle}</h2>
-      <p className="page-caption bespoke-request-card-caption">{cartCopy.formCaption}</p>
+      <CopyLines className="page-caption bespoke-request-card-caption" lines={cartCopy.formCaption} />
 
       <div className="cart-card-body">
         {adultItems.length > 0 && (
@@ -302,7 +302,7 @@ export function CartSummary() {
 
         {kidsItems.length > 0 && (
           <div className="cart-group">
-            <h3 className="cart-section-title cart-section-title-kids">Woodright Kids</h3>
+            <h3 className="cart-section-title cart-section-title-kids">Детская</h3>
             <ul className="cart-lines">{kidsItems.map(renderItem)}</ul>
           </div>
         )}

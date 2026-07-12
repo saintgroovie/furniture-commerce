@@ -8,6 +8,7 @@ import {
   isRequestQuoteProduct,
 } from "@/lib/request-quote"
 import { ProductCta } from "@/components/product-cta"
+import { CopyLines } from "@/components/copy-lines"
 import { OliverPdpMediaSwitcher } from "@/components/oliver-pdp-media-switcher"
 import { GreenwichBedPdpMediaSwitcher } from "@/components/greenwich-bed-pdp-media-switcher"
 import { ProductPdpExecutionMediaSwitcher } from "@/components/product-pdp-execution-media-switcher"
@@ -111,7 +112,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
     return (
       <div data-state="error" className="status-message">
         <h1>{pdpCopy.errorTitle}</h1>
-        <p>{pdpCopy.errorBody}</p>
+        <CopyLines lines={pdpCopy.errorBody} />
         <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
           <Link href="/catalog">В каталог</Link>
         </div>

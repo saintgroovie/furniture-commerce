@@ -5,13 +5,14 @@ alwaysApply: true
 
 # Woodright core (machine contract)
 
-**Canonical repo:** `/Users/leonidmbp/Documents/projects/furniture-commerce`  
+**Canonical repo:** `/Users/leonidmbp/Documents/projects/furniture-commerce`
 **Thin mirror:** `/Users/leonidmbp/furniture-commerce` — not a second source of truth. Edit rules only in canonical; sync mirror separately; compare SHA-256; on mismatch canonical wins. Prefer opening Cursor on canonical root.
 
-**Human canon (not independent SoT):** `docs/ai/WOODRIGHT_MASTER_RULES.md`  
-**Human FORMAT examples:** `docs/ai/RESPONSE_FORMAT.md`  
-**AlwaysApply companions:** `woodright-response-format.mdc`, `github-access.mdc`, `foreground-only-execution.mdc`, `language-preference.mdc`, `operator-location.mdc`  
+**Human canon (not independent SoT):** `docs/ai/WOODRIGHT_MASTER_RULES.md`
+**Human FORMAT examples:** `docs/ai/RESPONSE_FORMAT.md`
+**AlwaysApply companions:** `woodright-response-format.mdc`, `github-access.mdc`, `foreground-only-execution.mdc`, `language-preference.mdc`, `operator-location.mdc`, `dash-typography.mdc`, `ux-copywriting.mdc`
 **Task-specific (globs):** `woodright-model-routing.mdc`, `kids-content-separation.mdc`
+**Project skills:** `.cursor/skills/` - agent playbooks (read on match). RU UX/UI copy: `ru-ux-ui-copywriting`
 
 Do not store branch/HEAD/PID/dirty tree here.
 

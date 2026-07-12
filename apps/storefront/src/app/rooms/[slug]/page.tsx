@@ -4,6 +4,7 @@ import { getSiteUrl } from "@/lib/api/base"
 import { getRoomSetBySlug, NOT_FOUND } from "@/lib/api/room-sets"
 import { RoomSetCta } from "@/components/room-set-cta"
 import { roomSetDetail } from "@/lib/woodright-copy"
+import { CopyLines } from "@/components/copy-lines"
 
 function truncate(str: string, max: number): string {
   if (str.length <= max) return str
@@ -48,7 +49,7 @@ export default async function RoomSetPage({ params }: { params: { slug: string }
     }
     return (
       <div data-state="error">
-        <p>{roomSetDetail.loadError}</p>
+        <CopyLines lines={roomSetDetail.loadError} />
         <p><Link href="/rooms">К списку комнат</Link></p>
       </div>
     )

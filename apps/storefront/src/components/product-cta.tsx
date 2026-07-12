@@ -9,7 +9,10 @@ import { readPdpExecutionSelection } from "@/lib/cart/pdp-selection"
 import { addLineItem } from "@/lib/api/cart"
 import { userFacingError } from "@/lib/user-facing-error"
 import { isRequestQuoteProduct } from "@/lib/request-quote"
+import { isKidsMetadataStorefrontProduct } from "@/lib/kids"
+import { isOliverKidsCollectionProduct } from "@/lib/catalog-scope"
 import { actions, productCta as copy } from "@/lib/woodright-copy"
+import { flatCopy } from "@/lib/format-ru-copy"
 
 type Props = { product: Record<string, unknown> }
 
@@ -46,17 +49,20 @@ export function ProductCta({ product }: Props) {
       /* Выбранное на PDP исполнение (цвет/отделка) — не Medusa-вариант, поэтому
          едет в line item metadata: корзина рендерит из него миниатюру и спеку. */
       const selection = readPdpExecutionSelection()
-      const metadata =
-        selection && (selection.imageSrc || selection.specs.length > 0)
-          ? {
-              ...(selection.imageSrc ? { execution_image: selection.imageSrc } : {}),
-              ...(selection.specs.length > 0 ? { execution_specs: selection.specs } : {}),
-            }
-          : undefined
+      const isKids =
+        isKidsMetadataStorefrontProduct(product) ||
+        isOliverKidsCollectionProduct(product)
+      const metadata: Record<string, unknown> = {
+        ...(selection?.imageSrc ? { execution_image: selection.imageSrc } : {}),
+        ...(selection && selection.specs.length > 0
+          ? { execution_specs: selection.specs }
+          : {}),
+        ...(isKids ? { storefront_section: "kids" } : {}),
+      }
       const data = await addLineItem(cartId, {
         variant_id: variantId,
         quantity: 1,
-        ...(metadata ? { metadata } : {}),
+        ...(Object.keys(metadata).length > 0 ? { metadata } : {}),
       })
       setSuccess(true)
       emitCartUpdated({
@@ -65,7 +71,7 @@ export function ProductCta({ product }: Props) {
         from: { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 },
       })
     } catch (e) {
-      setError(userFacingError(e, copy.addToCartFailed))
+      setError(userFacingError(e, flatCopy(copy.addToCartFailed)))
     } finally {
       setAdding(false)
     }

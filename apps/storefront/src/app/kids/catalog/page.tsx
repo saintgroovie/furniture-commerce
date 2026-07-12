@@ -13,6 +13,7 @@ import {
   sortDisplayEntries,
 } from "@/lib/catalog-filters"
 import { actions, kidsCatalogCopy, seo } from "@/lib/woodright-copy"
+import { CopyLines } from "@/components/copy-lines"
 
 export const metadata: Metadata = {
   title: seo.kidsCatalog.title,
@@ -43,7 +44,7 @@ export default async function KidsCatalogPage({
       <div data-state="error">
         <div className="catalog-hero">
           <h1>{kidsCatalogCopy.h1}</h1>
-          <p className="info-text">{kidsCatalogCopy.loadError}</p>
+          <CopyLines className="info-text" lines={kidsCatalogCopy.loadError} />
         </div>
         <div className="nav-links" style={{ marginTop: "1rem" }}>
           <Link href="/kids">В детскую секцию</Link>
@@ -60,7 +61,7 @@ export default async function KidsCatalogPage({
         </div>
         <div className="status-message">
           <p style={{ fontWeight: 500 }}>{kidsCatalogCopy.emptyTitle}</p>
-          <p>{kidsCatalogCopy.emptyBody}</p>
+          <CopyLines lines={kidsCatalogCopy.emptyBody} />
           <div
             className="nav-links nav-links-center"
             style={{ marginTop: "1rem" }}
@@ -90,7 +91,7 @@ export default async function KidsCatalogPage({
     <div data-state={displayEntries.length === 0 ? "empty" : "success"}>
       <div className="catalog-hero">
         <h1>{kidsCatalogCopy.h1}</h1>
-        <p className="info-text">{kidsCatalogCopy.lead}</p>
+        <CopyLines className="info-text" lines={kidsCatalogCopy.lead} />
       </div>
 
       <CatalogFilterControls
@@ -103,7 +104,7 @@ export default async function KidsCatalogPage({
         {displayEntries.length === 0 ? (
           <div className="status-message catalog-empty-state">
             <p style={{ fontWeight: 500 }}>{kidsCatalogCopy.emptyTitle}</p>
-            <p>{kidsCatalogCopy.emptyBody}</p>
+            <CopyLines lines={kidsCatalogCopy.emptyBody} />
             <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
               <Link href="/kids/catalog">{actions.resetFilters}</Link>
             </div>

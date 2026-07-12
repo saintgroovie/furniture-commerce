@@ -1,6 +1,7 @@
 import Link from "next/link"
 import type { Metadata } from "next"
 import { designersLandingCopy, seo } from "@/lib/woodright-copy"
+import { CopyLines } from "@/components/copy-lines"
 
 export const metadata: Metadata = {
   title: seo.designersLanding.title,
@@ -17,7 +18,7 @@ export default function DesignersPage() {
     <div className="service-page">
       <p className="page-caption">{designersLandingCopy.eyebrow}</p>
       <h1>{designersLandingCopy.h1}</h1>
-      <p className="info-text">{designersLandingCopy.lead}</p>
+      <CopyLines className="info-text" lines={designersLandingCopy.lead} />
       <div className="nav-links cta-group">
         <Link href="/designers/request" className="btn btn-primary">
           {designersLandingCopy.ctaPrimary}

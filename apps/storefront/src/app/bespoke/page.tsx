@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { bespokeLanding, seo } from "@/lib/woodright-copy"
+import { CopyLines } from "@/components/copy-lines"
 
 export const metadata: Metadata = {
   title: seo.bespoke.title,
@@ -16,8 +17,8 @@ export default function BespokePage() {
   return (
     <div className="service-page">
       <h1>{bespokeLanding.h1}</h1>
-      <p className="info-text">{bespokeLanding.lead}</p>
-      <p className="page-caption">{bespokeLanding.supporting}</p>
+      <CopyLines className="info-text" lines={bespokeLanding.lead} />
+      <CopyLines className="page-caption" lines={bespokeLanding.supporting} />
       <div className="cta-group">
         <Link href="/bespoke/request" className="btn btn-primary">{bespokeLanding.ctaPrimary}</Link>
         <Link href="/bespoke/catalog" className="btn btn-secondary">{bespokeLanding.ctaSecondary}</Link>
@@ -28,7 +29,7 @@ export default function BespokePage() {
         <ul className="bespoke-info-list">
           {bespokeLanding.whenItems.map((item) => (
             <li key={item.title}>
-              <strong>{item.title}</strong> — {item.text}
+              <strong>{item.title}</strong> - {item.text}
             </li>
           ))}
         </ul>
@@ -42,7 +43,7 @@ export default function BespokePage() {
               <span className="bespoke-process-step-index">{i + 1}</span>
               <div>
                 <strong>{step.title}</strong>
-                <p>{step.text}</p>
+                <CopyLines lines={step.text} />
               </div>
             </li>
           ))}

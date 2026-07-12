@@ -1,6 +1,8 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { homeCopy, seo } from "@/lib/woodright-copy"
+import { CopyLines } from "@/components/copy-lines"
+import { formatRuInline } from "@/lib/format-ru-copy"
 
 export const metadata: Metadata = {
   title: seo.home.title,
@@ -17,7 +19,7 @@ export default function HomePage() {
     <div>
       <div className="hero">
         <h1>{homeCopy.hero.h1}</h1>
-        <p>{homeCopy.hero.lead}</p>
+        <CopyLines lines={homeCopy.hero.lead} />
         <div className="hero-actions">
           <Link href="/catalog" className="btn btn-primary">{homeCopy.hero.ctaPrimary}</Link>
           <Link href="/rooms" className="btn btn-secondary">{homeCopy.hero.ctaSecondary}</Link>
@@ -27,7 +29,7 @@ export default function HomePage() {
             <span className="hero-chip" key={chip}>{chip}</span>
           ))}
         </div>
-        <p className="hero-note">{homeCopy.hero.note}</p>
+        <CopyLines className="hero-note" lines={homeCopy.hero.note} />
       </div>
 
       <section className="home-section">
@@ -36,7 +38,7 @@ export default function HomePage() {
           {homeCopy.quickEntries.cards.map((card) => (
             <div className="home-quick-entry" key={card.href}>
               <h3>{card.title}</h3>
-              <p>{card.text}</p>
+              <CopyLines lines={card.text} />
               <Link href={card.href} className="home-quick-entry-link">{card.cta} →</Link>
             </div>
           ))}
@@ -47,11 +49,11 @@ export default function HomePage() {
         <div className="home-text-block">
           <div>
             <h2 className="home-text-block-title">{homeCopy.woodBlock.title}</h2>
-            <p className="home-text-block-text">{homeCopy.woodBlock.text}</p>
+            <CopyLines className="home-text-block-text" lines={homeCopy.woodBlock.text} />
           </div>
           <ul className="home-text-block-bullets">
             {homeCopy.woodBlock.bullets.map((bullet) => (
-              <li key={bullet}>{bullet}</li>
+              <li key={bullet}>{formatRuInline(bullet)}</li>
             ))}
           </ul>
         </div>
@@ -60,7 +62,7 @@ export default function HomePage() {
       <section className="home-section">
         <div className="home-kids-block">
           <h2 className="home-text-block-title">{homeCopy.kidsBlock.title}</h2>
-          <p className="home-text-block-text">{homeCopy.kidsBlock.text}</p>
+          <CopyLines className="home-text-block-text" lines={homeCopy.kidsBlock.text} />
           <div className="home-text-block-cta">
             <Link href="/kids" className="btn btn-primary">{homeCopy.kidsBlock.cta}</Link>
           </div>
@@ -69,7 +71,7 @@ export default function HomePage() {
 
       <section className="home-section">
         <h2 className="home-text-block-title">{homeCopy.projectBlock.title}</h2>
-        <p className="home-text-block-text">{homeCopy.projectBlock.text}</p>
+        <CopyLines className="home-text-block-text" lines={homeCopy.projectBlock.text} />
         <div className="home-text-block-cta cta-group">
           <Link href="/bespoke/request" className="btn btn-primary">{homeCopy.projectBlock.ctaPrimary}</Link>
           <Link href="/bespoke/catalog" className="btn btn-secondary">{homeCopy.projectBlock.ctaSecondary}</Link>
@@ -78,7 +80,7 @@ export default function HomePage() {
 
       <section className="home-final-cta">
         <h2 className="home-text-block-title">{homeCopy.finalCta.title}</h2>
-        <p>{homeCopy.finalCta.text}</p>
+        <CopyLines lines={homeCopy.finalCta.text} />
         <Link href="/bespoke/request" className="btn btn-primary">{homeCopy.finalCta.button}</Link>
       </section>
     </div>

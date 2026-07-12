@@ -15,6 +15,8 @@ const TARGET_TITLES: Record<string, string> = {
   greenwich: "Гринвич",
   monchelsea: "Мончелси",
   provence: "Прованс",
+  "oliver-kids": "Оливер · детская",
+  "willie-winkie": "Вилли Винки",
 }
 
 export default async function applyCollectionTitleRussification({

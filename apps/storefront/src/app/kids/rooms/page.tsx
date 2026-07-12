@@ -4,6 +4,7 @@ import { RoomSetCard } from "@/components/room-set-card"
 import { getRoomSets } from "@/lib/api/room-sets"
 import { KIDS_ROOM_TYPE } from "@/lib/kids"
 import { kidsRoomsCopy, seo } from "@/lib/woodright-copy"
+import { CopyLines } from "@/components/copy-lines"
 
 export const metadata: Metadata = {
   title: seo.kidsRooms.title,
@@ -23,9 +24,7 @@ export default async function KidsRoomsPage() {
     return (
       <div data-state="error">
         <h1>{kidsRoomsCopy.h1}</h1>
-        <p className="info-text" style={{ marginTop: "0.5rem" }}>
-          {kidsRoomsCopy.loadError}
-        </p>
+        <CopyLines className="info-text" style={{ marginTop: "0.5rem" }} lines={kidsRoomsCopy.loadError} />
         <div className="nav-links" style={{ marginTop: "1rem" }}>
           <Link href="/kids">В детскую секцию</Link>
         </div>
@@ -44,7 +43,7 @@ export default async function KidsRoomsPage() {
       <div data-state="empty">
         <h1>{kidsRoomsCopy.h1}</h1>
         <div className="status-message">
-          <p>{kidsRoomsCopy.emptyBody}</p>
+          <CopyLines lines={kidsRoomsCopy.emptyBody} />
           <div
             className="nav-links nav-links-center"
             style={{ marginTop: "1rem" }}
@@ -60,9 +59,7 @@ export default async function KidsRoomsPage() {
   return (
     <div data-state="success">
       <h1>{kidsRoomsCopy.h1}</h1>
-      <p className="info-text" style={{ marginTop: "0.5rem" }}>
-        {kidsRoomsCopy.lead}
-      </p>
+      <CopyLines className="info-text" style={{ marginTop: "0.5rem" }} lines={kidsRoomsCopy.lead} />
       <ul className="product-grid" style={{ marginTop: "1.5rem" }}>
         {list.map((rs: { id?: string }) => (
           <li key={rs.id}>

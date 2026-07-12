@@ -27,8 +27,16 @@
 - `foreground-only-execution.mdc` — foreground / blocked packet order
 - `language-preference.mdc` — RU responses
 - `operator-location.mdc` — RU / Europe/Moscow
+- `dash-typography.mdc` — RU тире только ` - `
+- `ux-copywriting.mdc` — точки, отбивки, висячие предлоги (+ pointer на skill)
 
 ### task-specific (globs)
 
 - `woodright-model-routing.mdc` — legacy/media executor routing (Codex policy → core)
 - `kids-content-separation.mdc` — kids catalog/cart globs
+
+### project skills (`.cursor/skills/`)
+
+Agent playbooks - читать по description/trigger. Не дублируют alwaysApply; углубляют.
+
+- `ru-ux-ui-copywriting/` - полный русский UX/UI копирайтинг (Контур / Ozon / UPROCK + Woodright overlays). Триггер: RU storefront/admin copy, `woodright-copy.ts`, CTA, empty/error, микрокопирайт.

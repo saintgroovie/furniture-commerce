@@ -7,7 +7,9 @@ import { ensureCart } from "@/lib/cart/session"
 import { countCartItems, emitCartUpdated } from "@/lib/cart/cart-events"
 import { addLineItem } from "@/lib/api/cart"
 import { userFacingError } from "@/lib/user-facing-error"
+import { KIDS_ROOM_TYPE } from "@/lib/kids"
 import { actions } from "@/lib/woodright-copy"
+import { flatCopy } from "@/lib/format-ru-copy"
 
 type Props = { roomSet: Record<string, unknown> }
 
@@ -56,15 +58,23 @@ export function RoomSetCta({ roomSet }: Props) {
     if (eligible.length === 0) {
       setAdding(false)
       setError(items.length === 0
-        ? "В комплекте пока нет товаров."
-        : "Все товары комплекта доступны только по запросу.")
+        ? "В комплекте пока нет товаров"
+        : "Все товары комплекта доступны только по запросу")
       return
     }
     try {
       const cartId = await ensureCart()
+      const kidsMeta =
+        roomSet.room_type === KIDS_ROOM_TYPE
+          ? { storefront_section: "kids" as const }
+          : undefined
       let lastResponse: unknown
       for (const { variantId, quantity } of eligible) {
-        lastResponse = await addLineItem(cartId, { variant_id: variantId, quantity })
+        lastResponse = await addLineItem(cartId, {
+          variant_id: variantId,
+          quantity,
+          ...(kidsMeta ? { metadata: kidsMeta } : {}),
+        })
       }
       setSuccess(true)
       emitCartUpdated({
@@ -73,7 +83,15 @@ export function RoomSetCta({ roomSet }: Props) {
         from: { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 },
       })
     } catch (e) {
-      setError(userFacingError(e, "Не все товары удалось добавить. Проверьте корзину и повторите попытку."))
+      setError(
+        userFacingError(
+          e,
+          flatCopy([
+            "Не все товары удалось добавить",
+            "Проверьте корзину и повторите попытку",
+          ])
+        )
+      )
     } finally {
       setAdding(false)
     }
@@ -90,7 +108,7 @@ export function RoomSetCta({ roomSet }: Props) {
         </Link>
       </div>
       {bespokeCount > 0 && (
-        <p className="note">Часть товаров доступна только по запросу.</p>
+        <p className="note">Часть товаров доступна только по запросу</p>
       )}
       {success && (
         <div className="feedback">

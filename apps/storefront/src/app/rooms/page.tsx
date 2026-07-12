@@ -4,6 +4,7 @@ import { RoomSetCard } from "@/components/room-set-card"
 import { getRoomSets } from "@/lib/api/room-sets"
 import { KIDS_ROOM_TYPE } from "@/lib/kids"
 import { actions, roomsCopy, seo } from "@/lib/woodright-copy"
+import { CopyLines } from "@/components/copy-lines"
 
 export const metadata: Metadata = {
   title: seo.rooms.title,
@@ -23,7 +24,7 @@ export default async function RoomsPage() {
     return (
       <div data-state="error">
         <h1>{roomsCopy.h1}</h1>
-        <p className="info-text" style={{ marginTop: "0.5rem" }}>{roomsCopy.loadError}</p>
+        <CopyLines className="info-text" style={{ marginTop: "0.5rem" }} lines={roomsCopy.loadError} />
         <div className="nav-links" style={{ marginTop: "1rem" }}>
           <Link href="/">{actions.toHome}</Link>
         </div>
@@ -38,9 +39,7 @@ export default async function RoomsPage() {
     <section className="cross-entry-block cross-entry-kids">
       <div className="cross-entry-header">
         <h2 className="cross-entry-heading">{roomsCopy.kidsEntryTitle}</h2>
-        <p className="cross-entry-text">
-          {roomsCopy.kidsEntryText}
-        </p>
+        <CopyLines className="cross-entry-text" lines={roomsCopy.kidsEntryText} />
       </div>
       <div className="cross-entry-tiles">
         <div className="cross-entry-tile">
@@ -65,7 +64,7 @@ export default async function RoomsPage() {
       <div data-state="empty">
         <h1>{roomsCopy.h1}</h1>
         <div className="status-message">
-          <p>{roomsCopy.emptyBody}</p>
+          <CopyLines lines={roomsCopy.emptyBody} />
           <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
             <Link href="/">{actions.toHome}</Link>
           </div>
@@ -78,8 +77,8 @@ export default async function RoomsPage() {
   return (
     <div data-state="success">
       <h1>{roomsCopy.h1}</h1>
-      <p className="info-text" style={{ marginTop: "0.5rem" }}>{roomsCopy.lead}</p>
-      <p className="page-caption">{roomsCopy.supporting}</p>
+      <CopyLines className="info-text" style={{ marginTop: "0.5rem" }} lines={roomsCopy.lead} />
+      <CopyLines className="page-caption" lines={roomsCopy.supporting} />
       <ul className="product-grid" style={{ marginTop: "1.5rem" }}>
         {list.map((rs: { id?: string }) => (
           <li key={rs.id}>

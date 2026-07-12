@@ -24,6 +24,36 @@ export function isKidsMetadataStorefrontProduct(
   return false
 }
 
+/**
+ * Fast kids check for a cart line item — no room-set / catalog fan-out.
+ * Uses (in order): line metadata stamp from add-to-cart, expanded
+ * `item.product.metadata` from getCart fields, then `product_handle` for Oliver.
+ * Room-set-only exclusivity from `resolveKidsProducts` is intentionally skipped
+ * here; kids room-set CTA stamps `storefront_section: "kids"` on add.
+ */
+export function isKidsCartLineItem(item: Record<string, unknown>): boolean {
+  const lineMeta = (item.metadata as Record<string, unknown> | undefined) ?? {}
+  if (lineMeta.storefront_section === "kids" || lineMeta.cart_group === "kids") {
+    return true
+  }
+
+  const productRaw = (item.product as Record<string, unknown> | undefined) ?? {}
+  const handleFromLine =
+    typeof item.product_handle === "string" ? item.product_handle : undefined
+  const product: Record<string, unknown> = {
+    ...productRaw,
+    handle:
+      (typeof productRaw.handle === "string" && productRaw.handle) ||
+      handleFromLine,
+    metadata: (productRaw.metadata as Record<string, unknown> | undefined) ?? {},
+  }
+
+  return (
+    isKidsMetadataStorefrontProduct(product) ||
+    isOliverKidsCollectionProduct(product)
+  )
+}
+
 type RoomSetDetail = { room_set?: Record<string, unknown> } | null
 
 /**
@@ -46,7 +76,8 @@ type RoomSetDetail = { room_set?: Record<string, unknown> } | null
  * Used for:
  *   - `/kids/catalog`
  *   - exclusion from `/catalog` (with main catalog’s own demo/collection rules)
- *   - cart grouping ("Woodright Kids" vs "Woodright")
+ *
+ * Cart grouping uses `isKidsCartLineItem` instead — do not call this on `/cart`.
  */
 export type ResolveKidsProductsOptions = {
   /** When set (e.g. `/catalog` already fetched `/store/products`), avoids a second identical request. */

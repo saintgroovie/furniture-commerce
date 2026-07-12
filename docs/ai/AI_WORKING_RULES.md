@@ -42,10 +42,13 @@
 
 ## Связанные документы
 
-- [`README.md`](README.md) — оглавление AI
+- [`README.md`](README.md) - оглавление AI
 - [`RESPONSE_FORMAT.md`](RESPONSE_FORMAT.md)
 - [`MASTER_PROMPT.md`](MASTER_PROMPT.md)
 - [`SYSTEM_BOUNDARIES.md`](SYSTEM_BOUNDARIES.md)
 - [`../project/CODEMAP.md`](../project/CODEMAP.md)
 - [`../guidelines/development-rules.md`](../guidelines/development-rules.md)
 - [`../operator/local-dev-hybrid.md`](../operator/local-dev-hybrid.md)
+- `.cursor/rules/dash-typography.mdc` - RU тире только ` - ` (без `—` / `–`)
+- `.cursor/rules/ux-copywriting.mdc` - точки, отбивки, висячие предлоги
+- `.cursor/skills/ru-ux-ui-copywriting/` - полный RU UX/UI copy playbook (skill)

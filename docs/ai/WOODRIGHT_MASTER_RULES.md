@@ -1,9 +1,9 @@
 # WOODRIGHT — MASTER RULES, GUARDRAILS AND WORKFLOW
 
-**Версия:** 2026-07-11  
-**Аудитория:** ChatGPT (писатель промптов / советчик) + оператор (UX/UI) + Cursor-агенты  
-**Код репозитория:** `/Users/leonidmbp/Documents/projects/furniture-commerce`  
-**Machine short rule:** `.cursor/rules/woodright-core.mdc`  
+**Версия:** 2026-07-11
+**Аудитория:** ChatGPT (писатель промптов / советчик) + оператор (UX/UI) + Cursor-агенты
+**Код репозитория:** `/Users/leonidmbp/Documents/projects/furniture-commerce`
+**Machine short rule:** `.cursor/rules/woodright-core.mdc`
 **Формат ответов Cursor:** `.cursor/rules/woodright-response-format.mdc` → `docs/ai/RESPONSE_FORMAT.md`
 
 ---
@@ -34,7 +34,7 @@ Explicit user schema **переопределяет** FORMAT A/B/C, но **не 
 | **A. Жёсткие инварианты** | Архитектура, домен, git/data safety, BESPOKE/cart, RoomSet | Только явным UX/arch решениемнием + update docs |
 | **B. Default policy** | Workflow агентов, validation gate, model routing, prompts | Редко; улучшать без смены продукта |
 | **C. Task-specific** | Media Ops stages, Flow A / WW / Molly, Codex commit gate | По типу задачи |
-| **D. Current UX directives** | Nav order, catalog/PDP UI, цвета kids, powerlines | По UX-решению; сверять с кодом |
+| **D. Current UX directives** | Nav order, catalog/PDP UI, цвета kids, powerlines, RU тире ` - ` (без `—`) | По UX-решению; сверять с кодом |
 | **E. Temporary runtime** | branch, HEAD, PID, dirty tree, ports up/down | **Не хранить здесь** — только в session packet |
 
 ### 0.2. Роли ИИ (default, не абсолютный запрет)
@@ -45,8 +45,8 @@ Explicit user schema **переопределяет** FORMAT A/B/C, но **не 
 | **Cursor Agent** | Cursor | **local executor**: audit → implement в репо → validate → FORMAT A packet |
 | **Codex CLI** | CLI / MCP | **independent reviewer**; не основной implementer |
 
-Default: правки файлов репозитория делает Cursor Agent.  
-ChatGPT **не запрещён** для анализа, планирования remediation, UX review и работы с отчётами/артефактами.  
+Default: правки файлов репозитория делает Cursor Agent.
+ChatGPT **не запрещён** для анализа, планирования remediation, UX review и работы с отчётами/артефактами.
 Прямой edit репо через ChatGPT — не default workflow (нет локального worktree), если оператор не выбрал иной канал явно.
 
 ### 0.3. Dual-root (canonical vs mirror)
@@ -103,7 +103,7 @@ ChatGPT **не запрещён** для анализа, планировани�
 | `CONFIGURABLE` | С выбором исполнения | да, после выбора варианта |
 | `BESPOKE` | По проекту / `request_quote` | **никогда**; middleware → ошибка, не silent add |
 
-Frontend **не придумывает** доступные конфигурации.  
+Frontend **не придумывает** доступные конфигурации.
 Не превращать BESPOKE в обычный товар ради UI.
 
 Kids:
@@ -116,15 +116,15 @@ Kids:
 
 Без явного approval запрещено: seed, ingest, product-media apply, DB writes, publish, commit, push, auto-apply, legacy login, live prod DB.
 
-Default для assignment packs: `do_not_auto_apply: true`.  
-Не печатать secrets в git / md / tmp / logs / prompts / screenshots.  
+Default для assignment packs: `do_not_auto_apply: true`.
+Не печатать secrets в git / md / tmp / logs / prompts / screenshots.
 `CO-02-1` не использовать в auto-assignment без отдельного решения (цель review: `CO-02-1 = 0`).
 
 ## A5. Git safety
 
 Без явного approval запрещено: `git add -A` / `git add .`, commit, push, force push, amend, reset, stash всего дерева, clean, checkout чужих файлов, «почистить» dirty primary clone.
 
-Всегда заново проверить branch / HEAD / staged / unstaged / untracked.  
+Всегда заново проверить branch / HEAD / staged / unstaged / untracked.
 Stage только нужные hunks, если файл был dirty до задачи.
 
 ## A6. Процессы
@@ -141,16 +141,16 @@ Stage только нужные hunks, если файл был dirty до за�
 
 Средняя/большая задача:
 
-1. rules + CODEMAP  
-2. fresh git status  
-3. найти компоненты / data flow  
-4. read-only audit  
-5. файлы-кандидаты + план  
-6. маленький vertical slice  
-7. validate  
-8. FORMAT A packet (Cursor)  
+1. rules + CODEMAP
+2. fresh git status
+3. найти компоненты / data flow
+4. read-only audit
+5. файлы-кандидаты + план
+6. маленький vertical slice
+7. validate
+8. FORMAT A packet (Cursor)
 
-Не «исправь весь сайт» одним diff.  
+Не «исправь весь сайт» одним diff.
 Не начинать массовую правку по одному скриншоту без карты компонентов.
 
 ## B2. UX общие принципы (default)
@@ -164,16 +164,16 @@ Stage только нужные hunks, если файл был dirty до за�
 
 ## B3. Validation (default gate)
 
-Маршруты: `/`, `/catalog`, `/kids/catalog`, adult+kids PDP, variants PDP, cart, STANDARD/CONFIGURABLE add, BESPOKE request_quote.  
-Viewports: 360, 390, 1280, 1440 (+1600 layout-sensitive).  
-Проверять действие (click/keyboard/URL), не только DOM.  
-Typecheck/build/lint если уместно; pre-existing errors отделять от новых.  
+Маршруты: `/`, `/catalog`, `/kids/catalog`, adult+kids PDP, variants PDP, cart, STANDARD/CONFIGURABLE add, BESPOKE request_quote.
+Viewports: 360, 390, 1280, 1440 (+1600 layout-sensitive).
+Проверять действие (click/keyboard/URL), не только DOM.
+Typecheck/build/lint если уместно; pre-existing errors отделять от новых.
 Не создавать lint-конфиг «заодно».
 
 ## B4. Отчёт Cursor (канон)
 
-Исполнитель в Cursor → **FORMAT A** (`docs/ai/RESPONSE_FORMAT.md`):  
-одна подводка + один fenced `# Woodright report packet`.  
+Исполнитель в Cursor → **FORMAT A** (`docs/ai/RESPONSE_FORMAT.md`):
+одна подводка + один fenced `# Woodright report packet`.
 Packet целиком в **одном** one-click Copy окне: внешний fence предпочтительно `~~~~markdown` … `~~~~` (внутри допустимы обычные ` ``` `); детали — `woodright-response-format.mdc`.
 
 ChatGPT-советчик → **не** обязан FORMAT A; он отдаёт: модель + copy-ready prompt (+ опционально Codex prompt).
@@ -237,7 +237,7 @@ do_not_auto_apply: true пока оператор не сказал иначе
 
 ## C7. Codex CLI — когда обязателен
 
-**Canonical machine table:** `.cursor/rules/woodright-core.mdc` (Codex decision table).  
+**Canonical machine table:** `.cursor/rules/woodright-core.mdc` (Codex decision table).
 Human mirror below; on conflict **core wins**.
 
 ```
@@ -314,16 +314,36 @@ Commit gate / review-only → Codex; fields: Codex commit gate + Codex reviewer 
 
 > Менять только отдельным UX-решением. Сверять с `layout.tsx` / `globals.css`.
 
+## E0. Тире и UX-копирайт
+
+**Тире:** запрещены `—` / `–`; только ` - ` с пробелами.
+Machine: `.cursor/rules/dash-typography.mdc`
+
+**Точки / отбивки / висячие предлоги / collocations:**
+- одно предложение в UI - без конечной точки
+- две мысли - две строки (`string[]` + `CopyLines`) или `lead` + `supporting`
+- точка только между двумя предложениями на одной строке
+- короткие предлоги не висят в конце строки (`formatRuInline` / `CopyLines`)
+- устойчивые фразы не рвать: `мебель под проект`, `по проекту`, `под ключ` (nbsp + не резать `string[]`)
+- союз `и` не начинает следующую строку (`взрослых и детских`, не `взрослых` / `и детских`)
+- узкие колонки: явная смысловая отбивка (`string[]`), не только CSS wrap
+
+Machine: `.cursor/rules/ux-copywriting.mdc`
+Helper: `apps/storefront/src/lib/format-ru-copy.ts`
+Skill (полный свод): `.cursor/skills/ru-ux-ui-copywriting/` (`SKILL.md`, `reference.md`, `checklist.md`)
+Buyer SoT: `apps/storefront/src/lib/woodright-copy.ts`
+Render: `apps/storefront/src/components/copy-lines.tsx`
+
 ## E1. Навигация
 
-**Top (accepted):** Дизайнерам | Контакты  
+**Top (accepted):** Дизайнерам | Контакты
 
-**Main — accepted product navigation (канон):**  
-`Каталог → Комнаты → Детская → По проекту → О бренде` | Корзина  
+**Main — accepted product navigation (канон):**
+`Каталог → Комнаты → Детская → По проекту → О бренде` | Корзина
 
 Bespoke dropdown (accepted): Оставить заявку → Направления → Как это работает.
 
-**Current implementation state** (`apps/storefront/src/app/layout.tsx`, на момент фиксации):  
+**Current implementation state** (`apps/storefront/src/app/layout.tsx`, на момент фиксации):
 `Каталог → Детская → Комнаты → По проекту → О бренде` — **known divergence** от канона выше.
 
 Правила:
@@ -337,14 +357,14 @@ Bespoke dropdown (accepted): Оставить заявку → Направле�
 ## E2. Цвета (актуально в CSS tokens)
 
 - Adult brand/action: `#3c2f29` / hover `#281f1a`
-- Kids action tokens: `#507356` / hover `#446249`  
+- Kids action tokens: `#507356` / hover `#446249`
   (в CSS ещё встречаются литералы `#628c6a` — не раздувать drift без задачи на унификацию)
 
 ## E3. Композиция и powerlines
 
-Опираться на вертикали header: линия `Шоурум`, линия `Корзина`.  
-Controls каталога — в том же container, что header.  
-Сетка товаров — между powerlines. Фильтр согласован с левой линией.  
+Опираться на вертикали header: линия `Шоурум`, линия `Корзина`.
+Controls каталога — в том же container, что header.
+Сетка товаров — между powerlines. Фильтр согласован с левой линией.
 Не прижимать каталог к краю viewport; фильтр не съедает ширину карточек.
 
 ## E4. Верх каталога
@@ -415,9 +435,9 @@ Desktop sticky / internal vertical scroll ok; не пересекать header; 
 
 # F. MEDIA OPS (task-specific)
 
-Stages: census → audit → triage → candidate → assignment → review → **apply** → publish.  
+Stages: census → audit → triage → candidate → assignment → review → **apply** → publish.
 
-QA ≠ apply. Default read-only до approval.  
+QA ≠ apply. Default read-only до approval.
 Детали Living docs: `docs/operator/README.md`.
 
 ---
@@ -426,10 +446,10 @@ QA ≠ apply. Default read-only до approval.
 
 ## G1. Как отвечает ChatGPT оператору
 
-1. Назвать лучшего исполнителя (+ fallback).  
-2. 1–3 коротких абзаца «почему».  
-3. **Один** цельный fenced Markdown prompt для Cursor.  
-4. При необходимости — второй fence: Codex review prompt.  
+1. Назвать лучшего исполнителя (+ fallback).
+2. 1–3 коротких абзаца «почему».
+3. **Один** цельный fenced Markdown prompt для Cursor.
+4. При необходимости — второй fence: Codex review prompt.
 5. Ожидаемый результат в 2–4 bullets.
 
 Внутри Cursor-prompt обязательны: repo path, модель, цель, проблемы, изменения, scope, запреты, candidate files, audit-first, acceptance, validation, **FORMAT A report**, commit/push policy, блок:
@@ -555,7 +575,7 @@ Mode: review only
 
 # I. ПРИОРИТЕТЫ ПРОЕКТА
 
-**Высокий:** buyer storefront, catalog, kids catalog, PDP, media quality, selectors, цены/CTA, Room Sets, media ops tools, data quality.  
+**Высокий:** buyer storefront, catalog, kids catalog, PDP, media quality, selectors, цены/CTA, Room Sets, media ops tools, data quality.
 
 **Низкий (не уводить без запроса):** payments, mail, sales automation, вторичный backoffice.
 
@@ -588,10 +608,10 @@ Mode: review only
 
 ### Найденные противоречия (не «улучшения вкуса»)
 
-1. **Nav order** — accepted product vs implementation divergence (канон не менять под код).  
-2. **Kids green** — документ `#628c6a` vs kids tokens `#507356`.  
-3. **Формат отчёта** — §24 vs FORMAT A.  
-4. **Codex verdict names** — commit-gate vs packet.  
+1. **Nav order** — accepted product vs implementation divergence (канон не менять под код).
+2. **Kids green** — документ `#628c6a` vs kids tokens `#507356`.
+3. **Формат отчёта** — §24 vs FORMAT A.
+4. **Codex verdict names** — commit-gate vs packet.
 5. **Codex scope** — расширен §C7 (не только media).
 
 Жёсткие продуктовые решения (BESPOKE/cart, RoomSet, thin client, no BFF, media read-only default, git bans) — **не ослаблялись**.

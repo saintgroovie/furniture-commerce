@@ -1,3 +1,5 @@
+import { isOliverKidsHandle } from "@/lib/oliver-kids-scope"
+
 type Dimensions = {
   width_mm?: number
   depth_mm?: number
@@ -16,6 +18,8 @@ const COLLECTION_SLUG_LABELS: Record<string, string> = {
   "country-london-paris": "Кантри",
   greenwich: "Гринвич",
   oliver: "Оливер",
+  "oliver-kids": "Оливер · детская",
+  "willie-winkie": "Вилли Винки",
   monchelsea: "Мончелси",
   provence: "Прованс",
 }
@@ -26,6 +30,13 @@ const COLLECTION_TITLE_ALIASES: Record<string, string> = {
   гринвич: "Гринвич",
   oliver: "Оливер",
   оливер: "Оливер",
+  "oliver-kids": "Оливер · детская",
+  "oliver-kids-line": "Оливер · детская",
+  "оливер-детская": "Оливер · детская",
+  "оливер-·-детская": "Оливер · детская",
+  "willie-winkie": "Вилли Винки",
+  "вилли-винки": "Вилли Винки",
+  "willie-winkie-kids": "Вилли Винки",
   monchelsea: "Мончелси",
   мончелси: "Мончелси",
   provence: "Прованс",
@@ -37,10 +48,19 @@ const COLLECTION_TITLE_ALIASES: Record<string, string> = {
 /** Buyer-facing primary collection on catalog/PDP cards (Russian UI). */
 const COUNTRY_CARD_LABEL = "Кантри"
 
+function normalizeCollectionLabelKey(label: string): string {
+  return label
+    .trim()
+    .toLowerCase()
+    .replace(/[·•]/g, " ")
+    .replace(/[_\s]+/g, "-")
+    .replace(/-+/g, "-")
+}
+
 function localizeKnownCollectionLabel(label: string): string {
   const trimmed = label.trim()
   if (!trimmed) return trimmed
-  const key = trimmed.toLowerCase().replace(/[_\s]+/g, "-")
+  const key = normalizeCollectionLabelKey(trimmed)
   if (COLLECTION_SLUG_LABELS[key]) return COLLECTION_SLUG_LABELS[key]!
   if (COLLECTION_TITLE_ALIASES[key]) return COLLECTION_TITLE_ALIASES[key]!
   return trimmed
@@ -89,7 +109,10 @@ function humanizeCollectionSlug(slug: string): string {
 function collectionFromHandle(handle: string): string | null {
   const h = handle.toLowerCase()
   if (h.startsWith("co-")) return COUNTRY_CARD_LABEL
-  if (h.startsWith("ol-")) return COLLECTION_SLUG_LABELS.oliver!
+  if (h.startsWith("ol-")) {
+    if (isOliverKidsHandle(h)) return COLLECTION_SLUG_LABELS["oliver-kids"]!
+    return COLLECTION_SLUG_LABELS.oliver!
+  }
   if (h.startsWith("pv-")) return COLLECTION_SLUG_LABELS.provence!
   if (h.startsWith("greenwich-") || h.startsWith("gr-")) return COLLECTION_SLUG_LABELS.greenwich!
   if (h.startsWith("mn-") || h.startsWith("monchelsea-")) return COLLECTION_SLUG_LABELS.monchelsea!
