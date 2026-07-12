@@ -882,80 +882,177 @@ select:focus-visible {
   text-align: left;
 }
 
-/* ---- Site Footer ---- */
+/* ---- Site Footer ----
+   Brand masthead (slightly larger type, set apart) | nav block of 4
+   content-sized columns with one equal gutter. Shared header slot and
+   fixed body-row pitch keep baselines aligned across all five. */
 
 .site-footer {
   border-top: 1px solid var(--color-border);
-  padding-block: var(--space-2xl) var(--space-lg);
-  margin-top: 3rem;
+  padding-block: var(--space-xl) var(--space-lg);
+  margin-top: 2.5rem;
   color: var(--color-fg-secondary);
   font-size: 0.9rem;
 }
 
-.footer-columns {
-  display: grid;
-  grid-template-columns: 1.4fr repeat(4, 1fr);
+.footer-inner {
+  display: flex;
+  flex-direction: column;
   gap: var(--space-xl);
 }
 
-.footer-brand-logo {
-  font-size: 1.15rem;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  color: var(--color-fg);
+.footer-columns {
+  --footer-head-h: 1.35rem;
+  --footer-head-gap: 1rem;
+  --footer-row-h: 1.75rem;
+  display: grid;
+  /* Brand | nav fills to the container right edge (= Contacts / Cart line) */
+  grid-template-columns: max-content minmax(0, 1fr);
+  column-gap: 5.5rem;
+  row-gap: var(--space-xl);
+  align-items: start;
 }
 
-.footer-brand-text {
-  margin-top: var(--space-sm);
-  max-width: 32ch;
-  line-height: 1.6;
-  color: var(--color-fg-muted);
+/* Content-sized columns, stretched across the nav track: first starts
+   after the brand gap, last column's right edge lands on the same
+   vertical power line as header «Контакты» / «Корзина». Free space is
+   split evenly between the three gutters. */
+.footer-nav {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  width: 100%;
+  min-width: 0;
 }
 
+.footer-nav .footer-column {
+  flex: 0 0 auto;
+  width: max-content;
+}
+
+.footer-column {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* Shared header slot: wordmark and caps labels share height + bottom gap */
 .footer-column-title {
-  font-size: 0.85rem;
+  display: flex;
+  align-items: flex-end;
+  box-sizing: border-box;
+  height: var(--footer-head-h);
+  margin: 0 0 var(--footer-head-gap);
+  padding: 0;
+  font-size: 0.75rem;
   font-weight: 500;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  line-height: 1;
   color: var(--color-fg);
-  margin-bottom: var(--space-sm);
 }
 
-.footer-column-links {
+.footer-brand-logo {
+  color: var(--color-fg);
+  text-decoration: none;
+}
+
+.footer-brand-logo:hover {
+  color: var(--color-fg);
+  text-decoration: none;
+}
+
+.footer-brand-wordmark {
+  display: block;
+  height: 18px;
+  width: auto;
+  aspect-ratio: 16489 / 2114;
+}
+
+/* Shared body: every row is the same fixed height, no extra gap */
+.footer-column-body {
+  margin: 0;
+  padding: 0;
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
 }
 
-.footer-column-links a {
+.footer-brand-lead {
+  font-size: 1rem;
+}
+
+.footer-row {
+  display: block;
+  box-sizing: border-box;
+  height: var(--footer-row-h);
+  margin: 0;
+  padding: 0;
+  line-height: var(--footer-row-h);
+  white-space: nowrap;
+  color: var(--color-fg-secondary);
+}
+
+.footer-column-links .footer-row {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.footer-column-links .footer-row a {
+  display: block;
+  height: 100%;
   color: var(--color-fg-muted);
 }
 
-.footer-column-links a:hover {
+.footer-column-links .footer-row a:hover {
   color: var(--color-fg);
 }
 
 .footer-bottom {
-  margin-top: var(--space-xl);
-  padding-top: var(--space-lg);
+  margin: 0;
+  padding-top: var(--space-md);
   border-top: 1px solid var(--color-border);
   color: var(--color-fg-muted);
   font-size: 0.8rem;
 }
 
+@media (max-width: 1100px) {
+  .footer-columns {
+    column-gap: 3.5rem;
+  }
+}
+
 @media (max-width: 900px) {
   .footer-columns {
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-lg);
+    grid-template-columns: 1fr;
+    column-gap: 0;
+    row-gap: var(--space-xl);
   }
 
-  .footer-brand {
-    grid-column: 1 / -1;
+  .footer-nav {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: var(--space-xl);
   }
 }
 
 @media (max-width: 520px) {
-  .footer-columns {
-    grid-template-columns: 1fr;
+  .footer-nav {
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+
+  .footer-brand-wordmark {
+    height: 16px;
+  }
+
+  .footer-brand-lead {
+    font-size: 0.95rem;
   }
 }
 
@@ -3930,50 +4027,6 @@ a.pdp-size-chip:hover {
   --color-border: #e0d8d0;
 }
 
-.bespoke-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: var(--space-sm);
-  margin-bottom: var(--space-lg);
-  border-bottom: 1px solid var(--color-border);
-}
-
-/* /bespoke/request reads faster without the section subnav (title + rule):
-   the page's own compact intro is the entry point there. Scoped via :has()
-   so /bespoke and /bespoke/catalog keep the subnav unchanged — the shared
-   bespoke/layout.tsx itself isn't touched. */
-.bespoke-theme:has(.bespoke-request-page) .bespoke-nav {
-  display: none;
-}
-
-.bespoke-nav-title {
-  font-weight: 600;
-  font-size: 0.95rem;
-  color: var(--color-accent);
-}
-
-.bespoke-nav-title:hover {
-  text-decoration: none;
-}
-
-.bespoke-nav-links {
-  display: flex;
-  gap: var(--space-lg);
-}
-
-.bespoke-nav-links a {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--color-fg-secondary);
-  transition: color 0.15s;
-}
-
-.bespoke-nav-links a:hover {
-  color: var(--color-fg);
-  text-decoration: none;
-}
-
 /* ---- Cross-Entry Block ---- */
 
 .cross-entry-block {
@@ -4356,55 +4409,161 @@ a.pdp-size-chip:hover {
   }
 }
 
-/* ---- Bespoke landing lists ---- */
+/* ---- Bespoke landing ----
+   Compact composition: no section subnav, pulled up against main padding,
+   tighter section rhythm so hero + when + process fit without long scroll. */
 
-.bespoke-info-list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
+.bespoke-landing {
+  /* Cancel .page-section's 2.5rem top padding - land right under site header */
+  margin-top: calc(-1 * var(--space-xl));
+}
+
+.bespoke-landing .hero {
+  padding: var(--space-lg) 0 var(--space-xl);
+}
+
+.bespoke-landing .hero h1 {
+  font-size: 2rem;
+  margin-bottom: var(--space-sm);
+}
+
+.bespoke-landing .hero p {
+  max-width: 42rem;
+}
+
+.bespoke-landing .hero-actions {
   margin-top: var(--space-md);
 }
 
-.bespoke-info-list li {
-  color: var(--color-fg-secondary);
-  line-height: 1.6;
-}
-
-.bespoke-info-list strong {
-  color: var(--color-fg);
-}
-
-.bespoke-process-list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-lg);
+.bespoke-landing .hero-note {
   margin-top: var(--space-md);
 }
 
-.bespoke-process-list li {
-  display: flex;
+.bespoke-section {
+  padding-block: var(--space-xl);
+  border-top: 1px solid var(--color-border);
+}
+
+.bespoke-section-title {
+  font-size: 1.25rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  margin-bottom: var(--space-md);
+}
+
+.bespoke-when-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-md);
+}
+
+.bespoke-when-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md) var(--space-md) var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.bespoke-when-card h3 {
+  font-size: 1rem;
+  margin: 0;
+}
+
+.bespoke-when-card p {
+  color: var(--color-fg-secondary);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Process - four steps in a row, quiet ordinals instead of bubbles */
+.bespoke-process-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: var(--space-md);
+  row-gap: var(--space-lg);
+}
+
+.bespoke-process-step {
+  display: flex;
+  flex-direction: column;
   align-items: flex-start;
+  gap: 0.35rem;
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--color-border);
 }
 
 .bespoke-process-step-index {
-  flex-shrink: 0;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
-  border: 1px solid var(--color-border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.85rem;
-  color: var(--color-fg-secondary);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-accent);
 }
 
-.bespoke-process-list p {
+.bespoke-process-step h3 {
+  font-size: 1rem;
+  margin: 0;
+}
+
+.bespoke-process-step p {
   color: var(--color-fg-secondary);
-  margin-top: 0.15rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.bespoke-final-cta {
+  text-align: center;
+  padding-block: var(--space-xl) var(--space-2xl);
+  border-top: 1px solid var(--color-border);
+}
+
+.bespoke-final-cta .bespoke-section-title {
+  margin-bottom: var(--space-xs);
+}
+
+.bespoke-final-cta p {
+  color: var(--color-fg-secondary);
+  max-width: 560px;
+  margin-inline: auto;
+  line-height: 1.55;
+  font-size: 0.95rem;
+}
+
+.bespoke-final-cta .btn {
+  margin-top: var(--space-md);
+}
+
+@media (max-width: 900px) {
+  .bespoke-when-grid,
+  .bespoke-process-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .bespoke-landing .hero h1 {
+    font-size: 1.65rem;
+  }
+
+  .bespoke-when-grid,
+  .bespoke-process-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bespoke-process-grid {
+    row-gap: var(--space-md);
+  }
 }
 
 /* ---- Eyebrow ---- */
@@ -4419,12 +4578,12 @@ a.pdp-size-chip:hover {
 }
 
 /* ---- Bespoke request page ----
-   Compact intro (no eyebrow, no section subnav — see .bespoke-nav:has()
-   override above), then a two-column desktop composition where the form
-   card is the primary object (left, compact, starts right under the intro)
-   and a visualized two-card "help" aside sits to the right, lighter and
-   narrower than the form. Below the 880px breakpoint everything stacks
-   into one column in this order: intro -> form card -> help. */
+   Compact intro (no eyebrow, no section subnav), then a two-column desktop
+   composition where the form card is the primary object (left, compact,
+   starts right under the intro) and a visualized two-card "help" aside sits
+   to the right, lighter and narrower than the form. Below the 880px
+   breakpoint everything stacks into one column in this order:
+   intro -> form card -> help. */
 
 .bespoke-request-page {
   display: flex;
