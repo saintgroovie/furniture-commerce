@@ -2061,6 +2061,8 @@ button:disabled,
    One size step below the lead (16px vs 15px): its 500 weight + colour
    already carry emphasis, so equal size would make it outweigh the lead. */
 .catalog-hero-kids-link {
+  /* Slight air after the room list before the Kids entry point. */
+  margin-inline-start: 0.25rem;
   color: #628c6a;
   font-size: 0.875rem;
   font-weight: 500;
