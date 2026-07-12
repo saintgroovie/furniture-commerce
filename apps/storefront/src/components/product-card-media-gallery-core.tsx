@@ -101,10 +101,11 @@ function resolveCombinedMedia(
   return { mainSrc: mainSrc.trim(), extraSrcs }
 }
 
-function OliverHeroAbsent() {
+function OliverHeroAbsent({ reason }: { reason: "missing" | "failed" }) {
+  const label = reason === "failed" ? states.mediaLoadFailed : states.mediaMissing
   return (
-    <div className="card-img oliver-media-absent" aria-label="Фото скоро появится">
-      <span className="oliver-media-absent-label">{states.noPhoto}</span>
+    <div className="card-img oliver-media-absent" aria-label={label}>
+      <span className="oliver-media-absent-label">{label}</span>
     </div>
   )
 }
@@ -1130,7 +1131,7 @@ export function ProductCardMediaGalleryCore({
 
   const heroImage =
     heroEmpty ? (
-      <OliverHeroAbsent />
+      <OliverHeroAbsent reason={heroFailed ? "failed" : "missing"} />
     ) : !displayHeroSrc ? (
       <div
         className={isPdp ? "product-detail-img skeleton" : "card-img card-img-placeholder"}
