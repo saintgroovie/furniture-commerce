@@ -14,6 +14,7 @@ type Props = {
   separateFabricRows?: CardColorVariant[]
   href: string
   title: string
+  priorityHero?: boolean
 }
 
 /**
@@ -31,6 +32,7 @@ export function OliverCardMediaSwitcher({
   separateFabricRows,
   href,
   title,
+  priorityHero = false,
 }: Props) {
   return (
     <ProductCardMediaGalleryCore
@@ -45,6 +47,7 @@ export function OliverCardMediaSwitcher({
       href={href}
       alt={title}
       oliverMode={true}
+      priorityHero={priorityHero}
     />
   )
 }

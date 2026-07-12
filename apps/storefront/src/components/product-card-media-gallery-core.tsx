@@ -25,6 +25,7 @@ import {
 } from "@/lib/greenwich-paint-media"
 import { buildGalleryStripUrls, buildPdpThumbStripUrls } from "@/lib/product-images"
 import { useVerifiedStripExtras } from "@/components/use-verified-strip-extras"
+import { CARD_STRIP_IMAGE_PROBE_LIMIT } from "@/lib/client/extra-image-url-verify"
 import { useSwatchColors } from "@/lib/use-swatch-colors"
 import { fallbackHexForToken } from "@/lib/swatch-fallback-colors"
 import {
@@ -53,6 +54,8 @@ type Props = {
   greenwichPaintMatrix?: GreenwichPaintMatrixEntry[]
   layout?: "card" | "pdp"
   heroObjectPosition?: string
+  /** PERF-08: first above-fold card hero — high fetch priority, not lazy. */
+  priorityHero?: boolean
 }
 
 function resolveCombinedMedia(
@@ -211,6 +214,7 @@ export function ProductCardMediaGalleryCore({
   greenwichPaintMatrix,
   layout = "card",
   heroObjectPosition,
+  priorityHero = false,
 }: Props) {
   const isGreenwichBed = Boolean(greenwichBedMatrix && greenwichBedMatrix.length > 0)
   const isGreenwichPaint = Boolean(greenwichPaintMatrix && greenwichPaintMatrix.length > 0)
@@ -515,9 +519,71 @@ export function ProductCardMediaGalleryCore({
     setPdpSwatchSlot(document.getElementById("pdp-color-options-slot"))
   }, [layout])
 
+  // Phase F: catalog cards defer Image() probes until near-viewport or pointer enter.
+  // PDP keeps immediate full-budget probes (not in this PR's card-only scope).
+  const isPdpLayout = layout === "pdp"
+  const mediaRootRef = useRef<HTMLDivElement | null>(null)
+  const [cardStripProbeEnabled, setCardStripProbeEnabled] = useState(isPdpLayout)
+  /** After hydration, catalog may unmount swatch/thumb DOM until IO/hover (W3g). */
+  const [catalogExtrasDeferred, setCatalogExtrasDeferred] = useState(false)
+
+  useEffect(() => {
+    if (isPdpLayout) {
+      setCardStripProbeEnabled(true)
+      return
+    }
+    const el = mediaRootRef.current
+    if (!el) return
+    // Enable deferral only in the browser after mount so SSR / no-JS keep extras.
+    setCatalogExtrasDeferred(true)
+    if (typeof IntersectionObserver === "undefined") {
+      setCardStripProbeEnabled(true)
+      return
+    }
+    let disconnected = false
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setCardStripProbeEnabled(true)
+          if (!disconnected) {
+            disconnected = true
+            io.disconnect()
+          }
+        }
+      },
+      { root: null, rootMargin: "200px 0px", threshold: 0.01 }
+    )
+    io.observe(el)
+    // Sync above-fold: avoid a flash of empty rails on first paint.
+    const rect = el.getBoundingClientRect()
+    const margin = 200
+    if (rect.bottom >= -margin && rect.top <= window.innerHeight + margin) {
+      setCardStripProbeEnabled(true)
+      disconnected = true
+      io.disconnect()
+    }
+    return () => {
+      disconnected = true
+      io.disconnect()
+    }
+  }, [isPdpLayout])
+
+  const enableCardStripProbes = useCallback(() => {
+    if (!isPdpLayout) setCardStripProbeEnabled(true)
+  }, [isPdpLayout])
+
+  const showCatalogMediaExtras =
+    isPdpLayout || !catalogExtrasDeferred || cardStripProbeEnabled
+
   const rawVisibleStrip = useVerifiedStripExtras(
     galleryStripCandidates,
-    failedExtras
+    failedExtras,
+    isPdpLayout
+      ? undefined
+      : {
+          maxProbes: CARD_STRIP_IMAGE_PROBE_LIMIT,
+          enabled: cardStripProbeEnabled,
+        }
   )
   // Defense in depth: if the main photo was ever a legitimate strip candidate
   // (catalog "card" layout), guarantee it stays visible no matter what the async
@@ -667,7 +733,8 @@ export function ProductCardMediaGalleryCore({
   const swatchSamples = useSwatchColors(
     swatchSamplingKey.split("|").filter(Boolean).length > 1
       ? swatchSamplingVariants
-      : undefined
+      : undefined,
+    isPdpLayout ? undefined : { enabled: cardStripProbeEnabled }
   )
 
   const showFinish =
@@ -1142,7 +1209,8 @@ export function ProductCardMediaGalleryCore({
         src={displayHeroSrc}
         alt={alt}
         className={`${isPdp ? "product-detail-img" : "card-img"}${isPdp ? " is-zoomable" : ""}`}
-        loading="lazy"
+        loading={priorityHero && !isPdp ? "eager" : "lazy"}
+        fetchPriority={priorityHero && !isPdp ? "high" : undefined}
         style={
           isPdp && heroObjectPosition
             ? { objectPosition: heroObjectPosition }
@@ -1272,7 +1340,9 @@ export function ProductCardMediaGalleryCore({
 
   return (
     <div
+      ref={mediaRootRef}
       className={`product-card-media-switcher${oliverMode ? " oliver-card-media-switcher" : ""}${isPdp ? " product-detail-media-switcher" : ""}`}
+      onPointerEnter={isPdp ? undefined : enableCardStripProbes}
     >
       {isPdp ? (
         heroImage
@@ -1300,12 +1370,16 @@ export function ProductCardMediaGalleryCore({
           {thumbRowMarkup}
         </>
       ) : (
-        /* Always-rendered rail band: in the catalog subgrid layout this zone
-           gets a shared row track, so cards without swatches/thumbs still
-           reserve the same height as their neighbours. */
+        /* Always-rendered rail band: shared catalog row track for height.
+           W3g: mount swatches/thumbs only after near-viewport / pointer enter
+           so below-fold extras can unmount after hydration; SSR/no-JS keep them. */
         <div className="product-card-rails">
-          {executionControlsMarkup}
-          {thumbRowMarkup}
+          {showCatalogMediaExtras ? (
+            <>
+              {executionControlsMarkup}
+              {thumbRowMarkup}
+            </>
+          ) : null}
         </div>
       )}
       {isPdp && lightboxIndex !== null && (

@@ -32,9 +32,45 @@ function buildVariantKey(colorVariants: CardColorVariant[]): string {
     .join("\u0002")
 }
 
-export function useSwatchColors(
-  colorVariants: CardColorVariant[] | undefined
+function metadataOnlySamples(
+  colorVariants: CardColorVariant[]
 ): Map<string, SampledSwatch> {
+  const out = new Map<string, SampledSwatch>()
+  for (const variant of colorVariants) {
+    const metadataHex = variant.swatchHex?.trim()
+    if (!metadataHex) continue
+    const src = variant.mainSrc?.trim()
+    out.set(variant.key, {
+      source: "metadata",
+      color: metadataHex,
+      imageUrl: src ? normalizeSampleUrl(src) : undefined,
+      confidence: "high",
+    })
+  }
+  return out
+}
+
+/** Exported for fidelity tests (PERF-04 gate: metadata without image sampling). */
+export function buildMetadataOnlySwatchSamples(
+  colorVariants: CardColorVariant[]
+): Map<string, SampledSwatch> {
+  return metadataOnlySamples(colorVariants)
+}
+
+export type UseSwatchColorsOptions = {
+  /**
+   * When false, only metadata `swatchHex` is applied (no image/canvas sampling).
+   * Catalog cards gate this with IntersectionObserver / pointerenter (PERF-04).
+   * Omit or true for PDP (immediate sampling).
+   */
+  enabled?: boolean
+}
+
+export function useSwatchColors(
+  colorVariants: CardColorVariant[] | undefined,
+  options?: UseSwatchColorsOptions
+): Map<string, SampledSwatch> {
+  const enabled = options?.enabled !== false
   const [samples, setSamples] = useState<Map<string, SampledSwatch>>(
     () => new Map()
   )
@@ -46,9 +82,15 @@ export function useSwatchColors(
       ? buildVariantKey(colorVariants)
       : ""
 
+  // Fast path: metadata hexes are free; apply even when image sampling is gated off.
   useEffect(() => {
     const colorVariants = variantsRef.current
     if (!colorVariants || colorVariants.length <= 1 || !variantKey) {
+      setSamples(new Map())
+      return
+    }
+    if (!enabled) {
+      setSamples(metadataOnlySamples(colorVariants))
       return
     }
 
@@ -125,13 +167,7 @@ export function useSwatchColors(
     return () => {
       cancelled = true
     }
-  }, [variantKey])
-
-  useEffect(() => {
-    if (!variantKey) {
-      setSamples(new Map())
-    }
-  }, [variantKey])
+  }, [variantKey, enabled])
 
   return samples
 }
