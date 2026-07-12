@@ -173,7 +173,12 @@ export default async function seedPackageB5Fixture({ container }: ExecArgs) {
       url: `https://placehold.co/120x120/png?text=g${i}`,
     }))
 
-    const variant: Record<string, unknown> = {
+    const variant: {
+      title: string
+      sku: string
+      options: Record<string, string>
+      prices?: Array<{ amount: number; currency_code: string }>
+    } = {
       title: "Default",
       sku: fixture.sku,
       options: { Default: "Default" },

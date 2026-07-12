@@ -77,8 +77,12 @@ export default async function seed({ container }: ExecArgs) {
   logger.info("Seeding categories...")
   const createdCategories: Array<{ id: string; handle: string }> = []
   for (const c of CATEGORIES) {
-    const [created] = await productModule.createProductCategories({ name: c.name, handle: c.handle })
-    createdCategories.push({ id: created.id, handle: c.handle })
+    const created = await productModule.createProductCategories({
+      name: c.name,
+      handle: c.handle,
+    })
+    const row = Array.isArray(created) ? created[0] : created
+    createdCategories.push({ id: row.id, handle: c.handle })
   }
   const categoryIdByHandle = Object.fromEntries(createdCategories.map((c) => [c.handle, c.id]))
 
@@ -95,7 +99,7 @@ export default async function seed({ container }: ExecArgs) {
         })),
       },
     })
-    createdProducts = (result ?? []).map((pr: { id: string; title: string; variants?: Array<{ sku: string }> }) => ({
+    createdProducts = (result ?? []).map((pr) => ({
       id: pr.id,
       title: pr.title,
       sku: pr.variants?.[0]?.sku ?? "",
@@ -142,7 +146,10 @@ export default async function seed({ container }: ExecArgs) {
     })
   }
 
-  const roomSetService = container.resolve(ROOM_SET_MODULE)
+  const roomSetService = container.resolve(ROOM_SET_MODULE) as {
+    createRoomSets: (data: unknown) => Promise<Array<{ id: string }>>
+    createRoomSetItems: (data: unknown) => Promise<Array<{ id: string }>>
+  }
   logger.info("Seeding room sets...")
   const createdRoomSets: Array<{ id: string; slug: string }> = []
   for (const rs of ROOM_SETS) {

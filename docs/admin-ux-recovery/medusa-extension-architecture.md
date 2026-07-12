@@ -24,7 +24,7 @@
 - A. Stay on lockfile **2.13.3** and add `@medusajs/admin-sdk@2.13.3`  
 - B. Upgrade backend Medusa family to **2.17.2** (matches recent local runtime) then add admin-sdk  
 
-**Recommendation for Package B start:** **B**, as a dedicated commit after Codex review of lockfile blast radius — Admin Vite extensions and types align with runtime. Package A docs/foundation must compile without requiring the upgrade first (pure TS libs + docs).
+**Recommendation (executed 2026-07-13):** **B** — backend Medusa family pinned to **2.17.2** (`@medusajs/medusa`, `framework`, `admin-sdk`, `cli`, `types`) with Yarn 4 lockfile; isolated `medusa-admin-ux-b5` migrated; shared `:9000` untouched.
 
 ### Porting from dirty runtime tree
 

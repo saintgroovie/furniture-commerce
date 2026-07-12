@@ -411,19 +411,21 @@ const ProductWorkspacePage = () => {
               {saveStatusLabel(saveState.status)}
             </Text>
             {readiness ? (
-              <Text
-                size="small"
-                className={
-                  readiness.verification === "ready"
-                    ? "mt-1 text-ui-fg-subtle"
-                    : "mt-1 font-medium"
-                }
-              >
-                Контент: {readiness.summary_label}
-              </Text>
-              <Text size="small" className="mt-1 text-ui-fg-subtle">
-                Витрина: {eligibility.summary_label}
-              </Text>
+              <>
+                <Text
+                  size="small"
+                  className={
+                    readiness.verification === "ready"
+                      ? "mt-1 text-ui-fg-subtle"
+                      : "mt-1 font-medium"
+                  }
+                >
+                  Контент: {readiness.summary_label}
+                </Text>
+                <Text size="small" className="mt-1 text-ui-fg-subtle">
+                  Витрина: {eligibility.summary_label}
+                </Text>
+              </>
             ) : null}
           </div>
         </div>

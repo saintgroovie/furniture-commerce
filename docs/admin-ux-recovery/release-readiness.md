@@ -7,7 +7,7 @@
 
 ## Scope delivered
 
-Packages A–F on Medusa **2.13.3** / `@medusajs/admin-sdk@2.13.3`, flag `WOODRIGHT_ADMIN_UX_V1`.
+Packages A–F + honesty/branding on Medusa **2.17.2** (pinned family: medusa/framework/admin-sdk/cli/types), flag `WOODRIGHT_ADMIN_UX_V1`.
 
 ## Environment
 
@@ -20,15 +20,18 @@ Packages A–F on Medusa **2.13.3** / `@medusajs/admin-sdk@2.13.3`, flag `WOODRI
 
 ## Dependencies / migrations
 
-- No Medusa upgrade
-- No schema migrations in Admin UX recovery packages
-- No storefront changes in F
+- Medusa family upgraded **2.13.3 → 2.17.2** (exact pins; Yarn 4 lockfile)
+- Isolated QA only: `medusa-admin-ux-b5` migrated; shared `:9000` / `medusa-store` untouched
+- Pre-upgrade dump: `tmp/admin-ux-recovery-codex/medusa-admin-ux-b5-pre-2.17.2-*.sql.gz` (local, not committed)
+- `patch-skip-cart-promotions.mjs` still applies on 2.17.2 (`#14149` workaround retained)
+- No storefront package upgrade in this change
 
 ## Rollback
 
-1. Set flag off → entry content stubs / widgets hide  
+1. Set flag off → Woodright content stubs / widgets hide  
 2. Stock Admin remains source of truth for products, prices, media, promotions  
-3. No data migration required to roll back Workspace UI  
+3. Code rollback: restore pre-upgrade `package.json` + `yarn.lock`, `yarn install`, restart `:9001`  
+4. DB rollback: restore `medusa-admin-ux-b5` from pre-2.17.2 dump (do not run 2.13.3 against upgraded schema)  
 
 ## Known limitations (stock Admin)
 
