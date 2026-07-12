@@ -38,8 +38,9 @@ export type BuildProductReadinessInput = {
 }
 
 /**
- * Loop 2 — publish readiness from already-loaded workspace data.
- * Derived indicator only; does not save or imply publication.
+ * Content completeness from already-loaded workspace data.
+ * Does **not** mean the product is listed on the storefront — see
+ * `buildStorefrontEligibility`.
  */
 export function buildProductReadiness(input: BuildProductReadinessInput): ProductReadinessVM {
   const titleOk = Boolean(input.title.trim())
@@ -153,7 +154,7 @@ export function buildProductReadiness(input: BuildProductReadinessInput): Produc
     summary_label = `Нужно исправить: ${mustOpen}`
   } else {
     verification = "ready"
-    summary_label = "Готов к публикации"
+    summary_label = "Карточка заполнена"
   }
 
   return {

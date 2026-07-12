@@ -16,7 +16,7 @@ describe("buildProductReadiness", () => {
   it("marks ready when all must checks pass", () => {
     const vm = buildProductReadiness(base)
     assert.equal(vm.verification, "ready")
-    assert.equal(vm.summary_label, "Готов к публикации")
+    assert.equal(vm.summary_label, "Карточка заполнена")
     assert.equal(vm.must_open, 0)
   })
 

@@ -83,8 +83,10 @@ try {
   })
   await page.waitForTimeout(2500)
   text = await page.locator("body").innerText()
-  assert(/Готовность/i.test(text), "readiness missing")
+  assert(/Заполненность|Контент:/i.test(text), "readiness missing")
+  assert(/На витрине|Витрина:/i.test(text), "eligibility missing")
   assert(/Сохраняет только название, описание и статус/i.test(text), "save honesty missing")
+  assert(!/Готов к публикации/i.test(text), "publish overclaim still present")
   const galleryCta = page.getByRole("button", { name: /Добавить главное фото|Открыть галерею|Исправить цены/i })
   if ((await galleryCta.count()) > 0) {
     await galleryCta.first().click()

@@ -1,8 +1,10 @@
 import { Badge, Button, Container, Text } from "@medusajs/ui"
 import type { ProductReadinessVM, ReadinessItem } from "./readiness"
+import type { StorefrontEligibilityVM } from "./storefront-eligibility"
 
 type Props = {
   readiness: ProductReadinessVM
+  eligibility: StorefrontEligibilityVM
   onField: (field: "title" | "description") => void
   onTab: (tab: "variants" | "gallery") => void
   onStock: () => void
@@ -83,11 +85,20 @@ function ItemRow(props: {
   )
 }
 
-export function ProductReadinessChecklist({ readiness, onField, onTab, onStock }: Props) {
+export function ProductReadinessChecklist({
+  readiness,
+  eligibility,
+  onField,
+  onTab,
+  onStock,
+}: Props) {
+  const eligibilityTone =
+    eligibility.listed_in_main_catalog || eligibility.listed_in_kids_catalog ? "green" : "orange"
+
   return (
     <Container className="p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <Text weight="plus">Готовность карточки</Text>
+        <Text weight="plus">Заполненность карточки</Text>
         <Badge
           color={
             readiness.verification === "ready"
@@ -101,7 +112,7 @@ export function ProductReadinessChecklist({ readiness, onField, onTab, onStock }
         </Badge>
       </div>
       <Text size="xsmall" className="mt-1 text-ui-fg-subtle">
-        Это проверка по данным товара, а не кнопка сохранения. Цены и галерея сохраняются во
+        Это про поля товара, а не про попадание в каталог на сайте. Цены и галерея сохраняются во
         вкладках.
       </Text>
       <div className="mt-2">
@@ -114,6 +125,16 @@ export function ProductReadinessChecklist({ readiness, onField, onTab, onStock }
             onStock={onStock}
           />
         ))}
+      </div>
+
+      <div className="mt-4 border-t border-ui-border-base pt-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <Text weight="plus">На витрине</Text>
+          <Badge color={eligibilityTone}>{eligibility.summary_label}</Badge>
+        </div>
+        <Text size="xsmall" className="mt-1 text-ui-fg-subtle">
+          {eligibility.detail}
+        </Text>
       </div>
     </Container>
   )

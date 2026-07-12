@@ -28,6 +28,7 @@ import { buildClassificationView } from "../../../../lib/product-workspace/class
 import { buildMediaSummary } from "../../../../lib/product-workspace/media-summary"
 import { buildPriceSummary } from "../../../../lib/product-workspace/price-summary"
 import { buildProductReadiness } from "../../../../lib/product-workspace/readiness"
+import { buildStorefrontEligibility } from "../../../../lib/product-workspace/storefront-eligibility"
 import { ProductReadinessChecklist } from "../../../../lib/product-workspace/ProductReadinessChecklist"
 import {
   buildStorefrontPreviewUrl,
@@ -237,16 +238,33 @@ const ProductWorkspacePage = () => {
     saveState.draft.title,
     variantsTruncated,
   ])
+  const eligibility = useMemo(
+    () =>
+      buildStorefrontEligibility({
+        status: saveState.draft.status || product?.status,
+        metadata: (product?.metadata as Record<string, unknown> | null) ?? null,
+        handle: product?.handle,
+        classificationCode: classification?.code ?? null,
+      }),
+    [
+      classification?.code,
+      product?.handle,
+      product?.metadata,
+      product?.status,
+      saveState.draft.status,
+    ]
+  )
   const preview = useMemo(
     () =>
       buildStorefrontPreviewUrl({
         productId: id,
-        status: product?.status,
+        status: saveState.draft.status || product?.status,
         storefrontOrigin: resolveStorefrontOrigin(
           (import.meta as unknown as { env?: Record<string, string> }).env ?? {}
         ),
+        kidsVisible: eligibility.listed_in_kids_catalog,
       }),
-    [id, product?.status]
+    [eligibility.listed_in_kids_catalog, id, product?.status, saveState.draft.status]
   )
 
   const confirmLeave = () => {
@@ -393,7 +411,10 @@ const ProductWorkspacePage = () => {
                     : "mt-1 font-medium"
                 }
               >
-                Готовность: {readiness.summary_label}
+                Контент: {readiness.summary_label}
+              </Text>
+              <Text size="small" className="mt-1 text-ui-fg-subtle">
+                Витрина: {eligibility.summary_label}
               </Text>
             ) : null}
           </div>
@@ -478,6 +499,7 @@ const ProductWorkspacePage = () => {
           {readiness ? (
             <ProductReadinessChecklist
               readiness={readiness}
+              eligibility={eligibility}
               onField={(field) => {
                 selectTab("overview")
                 requestAnimationFrame(() => {

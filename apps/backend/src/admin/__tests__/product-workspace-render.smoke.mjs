@@ -92,12 +92,14 @@ await assert(/B5 STANDARD/i.test(flagOn), "workspace product title missing")
 await assert(/Сохранить|Save/i.test(flagOn), "workspace save control missing")
 await assert(/Акции товара/i.test(flagOn), "product promotions tab missing")
 await assert(!/\bскоро\b/i.test(flagOn), "stub «скоро» badge still present")
-await assert(/Готовность карточки|Готовность:/i.test(flagOn), "readiness summary missing")
+await assert(/Заполненность карточки|Контент:/i.test(flagOn), "readiness summary missing")
+await assert(/На витрине|Витрина:/i.test(flagOn), "storefront eligibility missing")
 await assert(
   /Сохраняет только название, описание и статус/i.test(flagOn),
   "honest Save scope caption missing"
 )
 await assert(!/Флаг WOODRIGHT_ADMIN_UX_V1/i.test(flagOn), "flag jargon in workspace UI")
+await assert(!/Готов к публикации/i.test(flagOn), "overclaim publish-ready label still present")
 
 // 404 normalized
 await page.goto(`${BASE}/app/woodright/products/prod_DOES_NOT_EXIST`, {

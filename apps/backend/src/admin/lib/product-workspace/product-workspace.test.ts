@@ -113,7 +113,7 @@ describe("preview url", () => {
 
   it("warns for draft", () => {
     const v = buildStorefrontPreviewUrl({ productId: "prod_1", status: "draft" })
-    assert.match(v.note ?? "", /не опубликован/i)
+    assert.match(v.note ?? "", /не «Опубликован»|каталог/i)
   })
 
   it("resolves origin from env", () => {
