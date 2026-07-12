@@ -26,22 +26,19 @@ DONE  H1 swatch/probe IO-gate
 DONE  H2 first-card LCP priority
 DONE  G2 allowlist browse DTO (~640KB → ~399KB)
 DONE  H4 Sharp card WebP + env-gate (local; CDN later)
---- wave 3 (Codex Now) --- NOW
-W3a  Production-build baseline flag 0/1          ← DONE (comparison md)
-W3b  H4 coverage manifest + deploy gate         ← DONE disk+HTTP 157/157
-W3c  Projected Medusa query (browse fields)     ← DONE live ~401KB / n=157
-W3d  Card-hero derivative coverage (thumbnails) ← DONE via W3b (SSR hero=thumbnail)
---- wave 3 Next (после W3a evidence) ---
+DONE  W3a–W3d evidence + commit `c8eaccc`
+--- wave 3 Next (Codex chose) --- NOW
+W3g  Initial media DOM reduction (hero-only until IO/hover) ← measured; img reqs flat; DOM extras deferred
+--- After W3g ---
 W3e  Compact typed browse view model   OR
-W3f  Progressive card activation       OR
-W3g  Initial media DOM reduction
-W3h  CDN for derivatives
+W3f  Progressive card activation
+W3h  CDN for derivatives (after local levers + deploy path)
 --- Later / measured ---
 J    Cache + publish invalidation
 G3   Batch RoomSet (N>0)
 ```
 
-**Прогресс:** Wave 3 Now evidence complete locally (W3a/W3b/W3c/W3d). Next: pick W3e/W3f/W3g after reading `tmp/catalog-perf/w3a-prod-baseline-comparison.md`. Commit/push only on operator ask.
+**Прогресс:** Wave 3 Now `c8eaccc`. W3g measured (`tmp/catalog-perf/w3g-media-dom-comparison.md`): img requests flat; below-fold extras deferred. Prod H4 flag still off until deploy+coverage. Push/PR on operator ask.
 
 ## 3. Wave 3 - Now (обязательный порядок)
 
@@ -88,15 +85,19 @@ G3   Batch RoomSet (N>0)
 **DoD:** coverage report; no silent miss for thumbnail→card path  
 **Codex:** recommended  
 
-## 4. Wave 3 - Next (выбрать один фронт-пилот по W3a)
+## 4. Wave 3 - Next
 
-| Если доминирует | Пилот |
-|-----------------|--------|
-| RSC / HTML bytes | Compact typed browse view model |
-| Hydration long tasks | Progressive card activation |
-| Image waterfall | Media DOM reduction + leftover coverage |
+**Codex choice (2026-07-12):** **W3g** - Initial media DOM reduction.
 
-Затем CDN для derivatives.
+Why: LCP transfer already won; remaining cost looks like media-request contention, not HTML size.
+
+**First step:** catalog cards mount only hero `<img>` initially; swatches/thumbs wait for near-viewport IO or pointer enter (reuse `cardStripProbeEnabled`).
+
+**Stop if:** below-fold DOM extras are **not** deferred after hydration; kids/card fidelity/no-JS regress; or first-card LCP candidate URL leaves the W3a flag1 derivative hero (see `tmp/catalog-perf/w3a-prod-baseline-flag-1.md` / `w3g-lcp-after.md`).
+
+**Measured (flag1):** settled image requests flat (55→55) - strip probes already limited thumbs; client execution controls ≈ above-fold only (5 on /catalog) while SSR keeps ~48 for no-JS.
+
+Then optionally W3e / W3f; then **W3h CDN** after deploy+coverage for H4 flag.
 
 ## 5. Later / only if measured
 

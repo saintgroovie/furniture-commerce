@@ -523,6 +523,8 @@ export function ProductCardMediaGalleryCore({
   const isPdpLayout = layout === "pdp"
   const mediaRootRef = useRef<HTMLDivElement | null>(null)
   const [cardStripProbeEnabled, setCardStripProbeEnabled] = useState(isPdpLayout)
+  /** After hydration, catalog may unmount swatch/thumb DOM until IO/hover (W3g). */
+  const [catalogExtrasDeferred, setCatalogExtrasDeferred] = useState(false)
 
   useEffect(() => {
     if (isPdpLayout) {
@@ -531,26 +533,46 @@ export function ProductCardMediaGalleryCore({
     }
     const el = mediaRootRef.current
     if (!el) return
+    // Enable deferral only in the browser after mount so SSR / no-JS keep extras.
+    setCatalogExtrasDeferred(true)
     if (typeof IntersectionObserver === "undefined") {
       setCardStripProbeEnabled(true)
       return
     }
+    let disconnected = false
     const io = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) {
           setCardStripProbeEnabled(true)
-          io.disconnect()
+          if (!disconnected) {
+            disconnected = true
+            io.disconnect()
+          }
         }
       },
       { root: null, rootMargin: "200px 0px", threshold: 0.01 }
     )
     io.observe(el)
-    return () => io.disconnect()
+    // Sync above-fold: avoid a flash of empty rails on first paint.
+    const rect = el.getBoundingClientRect()
+    const margin = 200
+    if (rect.bottom >= -margin && rect.top <= window.innerHeight + margin) {
+      setCardStripProbeEnabled(true)
+      disconnected = true
+      io.disconnect()
+    }
+    return () => {
+      disconnected = true
+      io.disconnect()
+    }
   }, [isPdpLayout])
 
   const enableCardStripProbes = useCallback(() => {
     if (!isPdpLayout) setCardStripProbeEnabled(true)
   }, [isPdpLayout])
+
+  const showCatalogMediaExtras =
+    isPdpLayout || !catalogExtrasDeferred || cardStripProbeEnabled
 
   const rawVisibleStrip = useVerifiedStripExtras(
     galleryStripCandidates,
@@ -1347,12 +1369,16 @@ export function ProductCardMediaGalleryCore({
           {thumbRowMarkup}
         </>
       ) : (
-        /* Always-rendered rail band: in the catalog subgrid layout this zone
-           gets a shared row track, so cards without swatches/thumbs still
-           reserve the same height as their neighbours. */
+        /* Always-rendered rail band: shared catalog row track for height.
+           W3g: mount swatches/thumbs only after near-viewport / pointer enter
+           so below-fold extras can unmount after hydration; SSR/no-JS keep them. */
         <div className="product-card-rails">
-          {executionControlsMarkup}
-          {thumbRowMarkup}
+          {showCatalogMediaExtras ? (
+            <>
+              {executionControlsMarkup}
+              {thumbRowMarkup}
+            </>
+          ) : null}
         </div>
       )}
       {isPdp && lightboxIndex !== null && (
