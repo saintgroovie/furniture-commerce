@@ -671,6 +671,8 @@ export const homeCopy = {
     ctaPrimary: "Обсудить проект",
     ctaSecondary: "Мебель по проекту",
   },
+  /** Assistive label for the room-scene switcher on the homepage. */
+  sceneNav: "Сцены",
   finalCta: {
     title: "Расскажите, какую комнату собираете",
     text: [

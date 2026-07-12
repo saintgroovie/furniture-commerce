@@ -4945,3 +4945,1453 @@ a.pdp-size-chip:hover {
 .feedback-success-block p:first-child {
   color: var(--color-success);
 }
+
+/* ==========================================================================
+   Home v2 — premium editorial homepage (hp-*)
+   Photographic hero plate, editorial entries, real products, interactive
+   room scene, dark craft section, kids scene, project collage, final CTA.
+   All motion is CSS + IntersectionObserver; reduced-motion turns it off.
+   ========================================================================== */
+
+/* Full-bleed: the homepage breaks out of main.container and manages its own
+   inner gutters via .hp-wrap. body overflow-x is clipped to swallow the
+   scrollbar-width rounding of the 100vw breakout. Kept global (not scoped
+   to :has(.hp)): the PDP full-bleed hero relies on the same clip. */
+body {
+  overflow-x: clip;
+}
+
+/* Reduced motion: silence every homepage animation and transition in one
+   place - hover zooms, CTA arrow slides, scene fades, hero/card cycles,
+   craft/paint breathing. Static opacity/transform states still apply, so
+   nothing disappears. */
+@media (prefers-reduced-motion: reduce) {
+  .hp *,
+  .hp *::before,
+  .hp *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+.hp {
+  --hp-radius: 18px;
+  --hp-dark: #241c17;
+  --hp-dark-fg: #f3ede7;
+  --hp-dark-muted: #b8aca2;
+  --hp-kids-bg: #eef2ec;
+  --hp-kids-accent: #507356;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  /* Cancel .page-section top padding so the hero starts at the header. */
+  margin-top: calc(-1 * var(--space-xl));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xl);
+  padding-bottom: var(--space-2xl);
+}
+
+.hp-wrap {
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+  padding-inline: clamp(1rem, 4vw, 3.5rem);
+}
+
+.hp-section-title {
+  margin: 0;
+  font-size: clamp(1.5rem, 2.6vw, 2.1rem);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.hp-section-lead {
+  margin: var(--space-md) 0 0;
+  color: var(--color-fg-secondary);
+  font-size: 1rem;
+  line-height: 1.6;
+  max-width: 34rem;
+}
+
+/* Editorial index marker (01, 02, …) — the shared graphic system. */
+.hp-index {
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+  color: var(--color-fg-muted);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 2px;
+  margin-right: 0.6rem;
+  translate: 0 -0.15em;
+  display: inline-block;
+}
+
+/* ---- Scroll reveal -------------------------------------------------- */
+/* The hidden state (`will-reveal`) is applied by JS only to sections below
+   the fold, so content is always visible without JS, with reduced motion,
+   or if hydration is late. `is-revealed` plays the transition. */
+@media (prefers-reduced-motion: no-preference) {
+  .hp [data-reveal] {
+    transition:
+      opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .hp [data-reveal].will-reveal {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  .hp [data-reveal].will-reveal.is-revealed {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Stagger children that carry --reveal-i inside a hidden section. */
+  .hp [data-reveal] [style*="--reveal-i"] {
+    transition:
+      opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: calc(0.08s + var(--reveal-i, 0) * 0.07s);
+  }
+
+  .hp [data-reveal].will-reveal:not(.is-revealed) [style*="--reveal-i"] {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+/* ---- Hero ------------------------------------------------------------ */
+
+.hp-hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.hp-hero-plate {
+  position: relative;
+  overflow: hidden;
+  min-height: clamp(480px, 78vh, 820px);
+  background: #3a2f28;
+  isolation: isolate;
+}
+
+.hp-hero-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 62% 48%;
+  opacity: 0;
+}
+
+.hp-hero-img[data-slide="0"] {
+  opacity: 1;
+}
+
+/* Slideshow: three interiors, ~7s per slide, 1s cross-fade + slow drift.
+   Reduced motion keeps only the first slide, static. */
+@media (prefers-reduced-motion: no-preference) {
+  .hp-hero-img {
+    animation:
+      hp-hero-cycle 21s linear infinite,
+      hp-hero-drift 21s ease-in-out infinite;
+    transform-origin: 58% 55%;
+  }
+
+  /* Negative delay: slide 0 is already fully visible at load. */
+  .hp-hero-img[data-slide="0"] {
+    animation-delay: -1.05s;
+  }
+
+  .hp-hero-img[data-slide="1"] {
+    animation-delay: 5.95s;
+  }
+
+  .hp-hero-img[data-slide="2"] {
+    animation-delay: 12.95s;
+  }
+
+  @keyframes hp-hero-cycle {
+    0% {
+      opacity: 0;
+    }
+    5% {
+      opacity: 1;
+    }
+    33.33% {
+      opacity: 1;
+    }
+    38.33% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes hp-hero-drift {
+    0% {
+      transform: scale(1.07);
+    }
+    38.33% {
+      transform: scale(1);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+}
+
+/* Readability under the text panel without dimming the whole photo. */
+.hp-hero-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(30, 22, 17, 0.42) 0%,
+    rgba(30, 22, 17, 0.08) 38%,
+    transparent 60%
+  );
+  pointer-events: none;
+}
+
+.hp-hero-panel {
+  position: absolute;
+  /* Align with the .hp-wrap content edge on very wide screens. */
+  left: max(clamp(1rem, 4vw, 3.5rem), calc((100% - 1440px) / 2 + 3.5rem));
+  bottom: clamp(1.25rem, 4vw, 3rem);
+  max-width: 34rem;
+  padding: clamp(1.25rem, 2.6vw, 2rem);
+  background: rgba(250, 248, 245, 0.94);
+  border-radius: 14px;
+  backdrop-filter: blur(6px);
+}
+
+.hp-hero-panel h1 {
+  margin: 0;
+  font-size: clamp(1.75rem, 3.4vw, 2.6rem);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.14;
+}
+
+.hp-hero-lead {
+  margin: var(--space-md) 0 0;
+  color: var(--color-fg-secondary);
+  font-size: clamp(0.9375rem, 1.4vw, 1.0625rem);
+  line-height: 1.55;
+}
+
+.hp-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+
+/* Chips → indexed editorial markers under the plate. */
+.hp-hero-markers {
+  list-style: none;
+  margin: 0;
+  padding-block: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-xl);
+  font-size: 0.875rem;
+  color: var(--color-fg-secondary);
+}
+
+.hp-hero-markers li {
+  white-space: nowrap;
+}
+
+/* ---- «С чего начать» — photo entries --------------------------------- */
+
+.hp-entries-grid {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: var(--space-md);
+  margin-top: var(--space-lg);
+}
+
+.hp-entry {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--hp-radius);
+  overflow: hidden;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  text-decoration: none;
+  color: inherit;
+  min-height: 240px;
+}
+
+.hp-entry[data-entry="catalog"] {
+  grid-row: 1 / 3;
+  min-height: 0;
+}
+
+/* «По проекту» closes the second row as a wide horizontal card. */
+.hp-entry[data-entry="bespoke"] {
+  grid-column: 2 / 4;
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.hp-entry[data-entry="bespoke"] .hp-entry-media {
+  flex: 0 0 46%;
+  min-height: 0;
+}
+
+.hp-entry[data-entry="bespoke"] .hp-entry-body {
+  justify-content: center;
+}
+
+.hp-entry-media {
+  display: block;
+  flex: 1;
+  min-height: 160px;
+  overflow: hidden;
+  background: #f1ece6;
+}
+
+.hp-entry-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hp-entry[data-entry="kids"] .hp-entry-media img {
+  object-fit: contain;
+  padding: 8%;
+  background: var(--hp-kids-bg);
+}
+
+.hp-entry:hover .hp-entry-media img,
+.hp-entry:focus-visible .hp-entry-media img {
+  transform: scale(1.035);
+}
+
+.hp-entry-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-md) var(--space-lg) var(--space-lg);
+}
+
+.hp-entry-heading {
+  display: flex;
+  align-items: baseline;
+}
+
+.hp-entry-title {
+  font-size: 1.125rem;
+  font-weight: 500;
+}
+
+.hp-entry-text {
+  margin: 0;
+  color: var(--color-fg-secondary);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.hp-entry-cta {
+  margin-top: var(--space-xs);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-accent);
+}
+
+.hp-entry-cta span {
+  display: inline-block;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hp-entry:hover .hp-entry-cta span,
+.hp-entry:focus-visible .hp-entry-cta span {
+  transform: translateX(4px);
+}
+
+.hp-entry:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* ---- «Классика» + featured products ---------------------------------- */
+
+.hp-classics-head {
+  max-width: 44rem;
+}
+
+.hp-featured {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: var(--space-md);
+  margin-top: var(--space-xl);
+}
+
+.hp-featured-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+
+.hp-featured-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--hp-radius);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+}
+
+.hp-featured-card:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.hp-featured-media {
+  position: relative;
+  display: block;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: #fff;
+}
+
+.hp-featured-card-large .hp-featured-media {
+  aspect-ratio: auto;
+  flex: 1;
+  min-height: 320px;
+}
+
+.hp-featured-media img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 6%;
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hp-featured-card:hover .hp-featured-media img,
+.hp-featured-card:focus-visible .hp-featured-media img {
+  transform: scale(1.03);
+}
+
+/* Timed finish-variant rotation on featured cards (colors change over time).
+   Each card is staggered via --cycle-delay so they don't switch in sync. */
+.hp-cycle-img {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hp-cycle-img[data-cycle="1"] {
+    animation: hp-cycle-a 18s linear infinite;
+    animation-delay: var(--cycle-delay, 0s);
+  }
+
+  .hp-cycle-img[data-cycle="2"] {
+    animation: hp-cycle-b 18s linear infinite;
+    animation-delay: var(--cycle-delay, 0s);
+  }
+
+  @keyframes hp-cycle-a {
+    0%,
+    33% {
+      opacity: 0;
+    }
+    39%,
+    61% {
+      opacity: 1;
+    }
+    67%,
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes hp-cycle-b {
+    0%,
+    61% {
+      opacity: 0;
+    }
+    67%,
+    94% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+}
+
+/* Hover cross-fade to the second product shot (featured + kids cards). */
+.hp-hover-img {
+  opacity: 0;
+  transition:
+    opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hp-featured-card:hover .hp-hover-img,
+.hp-featured-card:focus-visible .hp-hover-img,
+.hp-kids-object:hover .hp-hover-img,
+.hp-kids-object:focus-visible .hp-hover-img {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hp-hover-img {
+    transition: none;
+  }
+}
+
+/* Drafting-style model number tag. */
+.hp-featured-article {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-fg-muted);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 0.2rem 0.45rem;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.hp-featured-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: var(--space-md) var(--space-lg) var(--space-lg);
+  border-top: 1px solid var(--color-border);
+}
+
+.hp-featured-collection {
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  color: var(--color-fg-muted);
+}
+
+.hp-featured-title {
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+.hp-featured-price {
+  font-size: 0.9375rem;
+  color: var(--color-fg-secondary);
+}
+
+/* ---- Room scene ------------------------------------------------------- */
+
+.hp-rooms-caption {
+  margin: 0 0 var(--space-md);
+  color: var(--color-fg-secondary);
+  font-size: 1rem;
+  max-width: 36rem;
+  line-height: 1.6;
+}
+
+.hp-scene {
+  position: relative;
+}
+
+.hp-scene-stage {
+  position: relative;
+  border-radius: var(--hp-radius);
+  overflow: hidden;
+  aspect-ratio: 3 / 1.7;
+  background: #35302c;
+}
+
+@media (max-width: 768px) {
+  .hp-scene-stage {
+    aspect-ratio: 4 / 3;
+  }
+}
+
+.hp-scene-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.hp-scene-img[data-active="true"] {
+  opacity: 1;
+}
+
+.hp-scene-spot {
+  position: absolute;
+  translate: -50% -50%;
+}
+
+.hp-scene-dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  background: rgba(250, 248, 245, 0.92);
+  box-shadow: 0 2px 10px rgba(20, 14, 10, 0.35);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hp-scene-dot span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-brand);
+  transition: background 0.2s;
+}
+
+.hp-scene-dot:hover,
+.hp-scene-dot[aria-expanded="true"] {
+  transform: scale(1.12);
+}
+
+.hp-scene-dot:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.hp-scene-card {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 0;
+  min-width: 200px;
+  max-width: 250px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.7rem 0.9rem;
+  background: rgba(250, 248, 245, 0.97);
+  border-radius: 10px;
+  box-shadow: 0 10px 28px rgba(20, 14, 10, 0.3);
+  text-decoration: none;
+  color: inherit;
+  z-index: 2;
+}
+
+.hp-scene-card[data-flip="true"] {
+  left: auto;
+  right: 0;
+}
+
+.hp-scene-card-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.hp-scene-card-price {
+  font-size: 0.8125rem;
+  color: var(--color-fg-secondary);
+}
+
+.hp-scene-card-arrow {
+  position: absolute;
+  right: 0.8rem;
+  top: 0.65rem;
+  color: var(--color-accent);
+}
+
+.hp-scene-card:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.hp-scene-nav {
+  position: absolute;
+  right: var(--space-md);
+  bottom: var(--space-md);
+  display: flex;
+  gap: 6px;
+}
+
+.hp-scene-nav-btn {
+  min-width: 40px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+  color: var(--color-fg-secondary);
+  background: rgba(250, 248, 245, 0.85);
+  transition: background 0.2s, color 0.2s;
+}
+
+.hp-scene-nav-btn[aria-pressed="true"] {
+  background: var(--color-brand);
+  color: #fff;
+}
+
+.hp-scene-nav-btn:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+/* ---- Craft (dark production section) ---------------------------------- */
+
+.hp-craft {
+  background: var(--hp-dark);
+  color: var(--hp-dark-fg);
+  /* Discreet drafting grid. */
+  background-image: repeating-linear-gradient(
+      to right,
+      rgba(243, 237, 231, 0.045) 0,
+      rgba(243, 237, 231, 0.045) 1px,
+      transparent 1px,
+      transparent 160px
+    );
+}
+
+.hp-craft-inner {
+  padding-block: clamp(2.5rem, 6vw, 5rem);
+}
+
+.hp-craft-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  max-width: 40rem;
+}
+
+/* Measure line with end ticks under the heading. */
+.hp-craft-rule {
+  position: relative;
+  display: block;
+  width: min(280px, 60%);
+  height: 1px;
+  background: rgba(243, 237, 231, 0.35);
+}
+
+.hp-craft-rule::before,
+.hp-craft-rule::after {
+  content: "";
+  position: absolute;
+  top: -4px;
+  width: 1px;
+  height: 9px;
+  background: rgba(243, 237, 231, 0.35);
+}
+
+.hp-craft-rule::before {
+  left: 0;
+}
+
+.hp-craft-rule::after {
+  right: 0;
+}
+
+.hp-craft-grid {
+  list-style: none;
+  margin: var(--space-xl) 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-md);
+}
+
+.hp-craft-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.hp-craft-media {
+  display: block;
+  border-radius: 12px;
+  overflow: hidden;
+  aspect-ratio: 4 / 5;
+  background: #1b1511;
+}
+
+.hp-craft-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transform: scale(var(--craft-zoom, 1.6));
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Continuous slow breathing on the material crops. */
+@media (prefers-reduced-motion: no-preference) {
+  .hp-craft-media img {
+    animation: hp-craft-breathe 14s ease-in-out infinite alternate;
+  }
+
+  .hp-craft-item:nth-child(2) .hp-craft-media img {
+    animation-delay: -4s;
+  }
+
+  .hp-craft-item:nth-child(3) .hp-craft-media img {
+    animation-delay: -8s;
+  }
+
+  .hp-craft-item:nth-child(4) .hp-craft-media img {
+    animation-delay: -12s;
+  }
+
+  @keyframes hp-craft-breathe {
+    from {
+      transform: scale(var(--craft-zoom, 1.6));
+    }
+    to {
+      transform: scale(calc(var(--craft-zoom, 1.6) + 0.07));
+    }
+  }
+}
+
+.hp-craft-item:hover .hp-craft-media img {
+  transform: scale(calc(var(--craft-zoom, 1.6) + 0.08));
+}
+
+.hp-craft-caption {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--hp-dark-muted);
+}
+
+.hp-craft-caption .hp-index {
+  color: rgba(243, 237, 231, 0.55);
+  border-bottom-color: rgba(243, 237, 231, 0.25);
+}
+
+/* ---- Kids scene -------------------------------------------------------- */
+
+.hp-kids {
+  background: var(--hp-kids-bg);
+}
+
+.hp-kids-inner {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) 1.5fr;
+  gap: clamp(1.5rem, 4vw, 3rem);
+  align-items: center;
+  padding-block: clamp(2.5rem, 6vw, 4.5rem);
+}
+
+.hp-kids .hp-section-lead {
+  color: #4c554c;
+}
+
+.hp-kids-cta {
+  margin-top: var(--space-lg);
+}
+
+.hp-kids-cta .btn-primary {
+  background: var(--hp-kids-accent);
+}
+
+.hp-kids-cta .btn-primary:hover {
+  background: #3f5c44;
+}
+
+.hp-kids-objects {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-md);
+  align-items: start;
+}
+
+.hp-kids-object {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.hp-kids-object-media {
+  display: block;
+  aspect-ratio: 4 / 5;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.hp-kids-object-media {
+  position: relative;
+}
+
+.hp-kids-object-media img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 8%;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hp-kids-object:hover .hp-kids-object-media img,
+.hp-kids-object:focus-visible .hp-kids-object-media img {
+  transform: scale(1.04);
+}
+
+.hp-kids-object-title {
+  margin-top: var(--space-xs);
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  font-weight: 500;
+}
+
+.hp-kids-object-price {
+  font-size: 0.8125rem;
+  color: #4c554c;
+}
+
+.hp-kids-object:focus-visible {
+  outline: 2px solid var(--hp-kids-accent);
+  outline-offset: 2px;
+  border-radius: 12px;
+}
+
+/* ---- «По проекту» collage ---------------------------------------------- */
+
+.hp-project-inner {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: clamp(1.5rem, 4vw, 3rem);
+  align-items: center;
+}
+
+.hp-project-collage {
+  position: relative;
+  aspect-ratio: 4 / 3;
+}
+
+/* Coordinate lines behind the collage. */
+.hp-project-lines {
+  position: absolute;
+  inset: 6% 4%;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background-image:
+    linear-gradient(to right, var(--color-border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-border) 1px, transparent 1px);
+  background-size: 25% 25%;
+  opacity: 0.55;
+}
+
+.hp-project-shot {
+  position: absolute;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 14px 34px rgba(44, 36, 32, 0.12);
+}
+
+.hp-project-shot img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 6%;
+  display: block;
+}
+
+.hp-project-shot-a {
+  left: 2%;
+  top: 4%;
+  width: 44%;
+  aspect-ratio: 1 / 1;
+}
+
+.hp-project-shot-b {
+  left: 34%;
+  bottom: 0;
+  width: 40%;
+  aspect-ratio: 1 / 1;
+}
+
+.hp-project-shot-c {
+  right: 0;
+  top: 10%;
+  width: 32%;
+  aspect-ratio: 4 / 5;
+}
+
+/* Fabric / finish swatch dots. */
+.hp-project-swatches {
+  position: absolute;
+  left: 8%;
+  bottom: 6%;
+  display: flex;
+  gap: 8px;
+}
+
+.hp-project-swatches i {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid rgba(44, 36, 32, 0.18);
+}
+
+.hp-project-swatches i:nth-child(1) {
+  background: #4a4440;
+}
+
+.hp-project-swatches i:nth-child(2) {
+  background: #f4f0ea;
+}
+
+.hp-project-swatches i:nth-child(3) {
+  background: #b9c3c9;
+}
+
+.hp-project-swatches i:nth-child(4) {
+  background: #8a6f58;
+}
+
+.hp-project-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+
+/* ---- Final CTA ---------------------------------------------------------- */
+
+.hp-final {
+  position: relative;
+  overflow: hidden;
+  min-height: clamp(380px, 52vh, 520px);
+  display: grid;
+  place-items: center;
+  isolation: isolate;
+  background: #3a2f28;
+}
+
+.hp-final-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 40%;
+  z-index: -2;
+}
+
+.hp-final-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(28, 20, 15, 0.58);
+  z-index: -1;
+}
+
+.hp-final-body {
+  text-align: center;
+  color: #f6f1ea;
+  padding: clamp(2.5rem, 6vw, 4rem) var(--space-lg);
+  max-width: 36rem;
+}
+
+.hp-final-body h2 {
+  margin: 0;
+  font-size: clamp(1.5rem, 2.8vw, 2.1rem);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+.hp-final-text {
+  margin: var(--space-md) 0 0;
+  color: rgba(246, 241, 234, 0.82);
+  line-height: 1.6;
+}
+
+.hp-final-btn {
+  margin-top: var(--space-lg);
+  background: #f6f1ea;
+  color: var(--color-brand);
+}
+
+.hp-final-btn:hover {
+  background: #fff;
+  color: var(--color-brand-hover);
+}
+
+/* ---- Responsive --------------------------------------------------------- */
+
+@media (max-width: 1024px) {
+  .hp-entries-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .hp-entry[data-entry="catalog"] {
+    grid-row: auto;
+    min-height: 240px;
+  }
+
+  .hp-entry[data-entry="bespoke"] {
+    grid-column: 1 / -1;
+  }
+
+  /* Equalize entry media height once the tall catalog column is gone. */
+  .hp-entry:not([data-entry="bespoke"]) .hp-entry-media {
+    flex: none;
+    aspect-ratio: 16 / 10;
+    min-height: 0;
+  }
+
+  .hp-featured {
+    grid-template-columns: 1fr;
+  }
+
+  .hp-featured-card-large .hp-featured-media {
+    aspect-ratio: 16 / 10;
+    min-height: 0;
+  }
+
+  .hp-craft-grid {
+    grid-template-columns: repeat(2, 1fr);
+    row-gap: var(--space-lg);
+  }
+
+  .hp-kids-inner {
+    grid-template-columns: 1fr;
+  }
+
+  .hp-project-inner {
+    grid-template-columns: 1fr;
+  }
+
+  .hp-project-collage {
+    max-width: 560px;
+  }
+}
+
+@media (max-width: 768px) {
+  .hp {
+    gap: var(--space-2xl);
+  }
+
+  .hp-hero-plate {
+    min-height: clamp(440px, 72vh, 620px);
+  }
+
+  .hp-hero-panel {
+    left: var(--space-sm);
+    right: var(--space-sm);
+    bottom: var(--space-sm);
+    max-width: none;
+  }
+
+  .hp-hero-markers {
+    gap: var(--space-xs) var(--space-lg);
+    font-size: 0.8125rem;
+  }
+
+  .hp-entries-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hp-entry {
+    min-height: 0;
+  }
+
+  .hp-entry[data-entry="bespoke"] {
+    grid-column: auto;
+    flex-direction: column;
+  }
+
+  .hp-entry-media {
+    min-height: 0;
+    aspect-ratio: 16 / 9;
+    flex: none;
+  }
+
+  /* Featured products become a horizontal rail. */
+  .hp-featured {
+    display: block;
+  }
+
+  .hp-featured-grid {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 72%;
+    grid-template-columns: none;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: var(--space-sm);
+    margin-top: var(--space-md);
+  }
+
+  .hp-featured-grid .hp-featured-card {
+    scroll-snap-align: start;
+  }
+
+  .hp-featured-card-large .hp-featured-media {
+    aspect-ratio: 4 / 3;
+  }
+
+  .hp-kids-objects {
+    grid-template-columns: repeat(3, minmax(120px, 1fr));
+    gap: var(--space-sm);
+  }
+
+  .hp-final {
+    min-height: 320px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hp-craft-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-sm);
+  }
+
+  .hp-craft-caption {
+    font-size: 0.8125rem;
+  }
+
+  .hp-kids-objects {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .hp-kids-objects .hp-kids-object:nth-child(3) {
+    display: none;
+  }
+}
+
+/* ---- Woodright Kids landing (/kids) ------------------------------------ */
+
+/* Olive accent overrides on top of the shared hp system. */
+.hp--kids {
+  --hp-radius: 18px;
+}
+
+/* Hero: still-lifes shown whole on a soft olive field (no interior photos
+   in the kids media library yet), panel and slideshow reused from hp-hero. */
+.hp-khero-plate {
+  background:
+    radial-gradient(120% 90% at 78% 30%, #ffffff 0%, transparent 55%),
+    linear-gradient(160deg, #f3f6f1 0%, #e6ecdf 58%, #dbe4d3 100%);
+  min-height: clamp(460px, 70vh, 720px);
+}
+
+.hp--kids .hp-hero-img {
+  object-fit: contain;
+  object-position: 72% 62%;
+  padding: clamp(1rem, 4vw, 3rem);
+  /* Still-lifes are shot on white: multiply melts the white box into the
+     olive field so the piece sits directly on the background. */
+  mix-blend-mode: multiply;
+}
+
+.hp--kids .hp-hero-scrim {
+  display: none;
+}
+
+.hp--kids .hp-hero-panel {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+/* Kids hero slides cross-fade only: the Ken Burns drift is dropped here.
+   Animating scale on a full-viewport image that is also multiply-blended
+   forces a full re-composite every frame (visible jank + banding stripes
+   on the gradient), and the still-lifes don't need the drift anyway. */
+@media (prefers-reduced-motion: no-preference) {
+  .hp--kids .hp-hero-img {
+    /* Only the name is overridden so the per-slide stagger delays from the
+       base hero rules keep applying. */
+    animation-name: hp-hero-cycle;
+  }
+}
+
+/* Entries: three even columns (no tall catalog card on the kids landing). */
+.hp-kentries-grid {
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: auto;
+}
+
+.hp-kentries-grid .hp-entry-media {
+  flex: none;
+  aspect-ratio: 4 / 3;
+  min-height: 0;
+  background: #f2f5ef;
+}
+
+.hp-kentries-grid .hp-entry-media img {
+  object-fit: contain;
+  padding: 7%;
+}
+
+/* Paint gallery band */
+.hp-paint {
+  background: var(--hp-kids-bg);
+}
+
+.hp-paint-inner {
+  padding-block: clamp(2.5rem, 6vw, 4.5rem);
+}
+
+.hp-paint-head {
+  max-width: 44rem;
+}
+
+.hp-paint-grid {
+  list-style: none;
+  margin: var(--space-xl) 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-md);
+}
+
+.hp-paint-item {
+  position: relative;
+  display: block;
+  text-decoration: none;
+}
+
+.hp-paint-media {
+  display: block;
+  aspect-ratio: 4 / 5;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.hp-paint-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transform: scale(var(--paint-zoom, 1.8));
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* The same slow breathing as the craft crops on the main page. */
+@media (prefers-reduced-motion: no-preference) {
+  .hp-paint-media img {
+    animation: hp-paint-breathe 14s ease-in-out infinite alternate;
+  }
+
+  .hp-paint-grid li:nth-child(2) .hp-paint-media img {
+    animation-delay: -4s;
+  }
+
+  .hp-paint-grid li:nth-child(3) .hp-paint-media img {
+    animation-delay: -8s;
+  }
+
+  .hp-paint-grid li:nth-child(4) .hp-paint-media img {
+    animation-delay: -12s;
+  }
+
+  @keyframes hp-paint-breathe {
+    from {
+      transform: scale(var(--paint-zoom, 1.8));
+    }
+    to {
+      transform: scale(calc(var(--paint-zoom, 1.8) + 0.07));
+    }
+  }
+}
+
+.hp-paint-index {
+  position: absolute;
+  left: 0.75rem;
+  bottom: 0.75rem;
+  color: #fff;
+  background: rgba(60, 84, 64, 0.72);
+  border-radius: 4px;
+  padding: 0.15rem 0.4rem;
+  border-bottom: none;
+}
+
+.hp-paint-item:focus-visible {
+  outline: 2px solid var(--hp-kids-accent);
+  outline-offset: 2px;
+  border-radius: 12px;
+}
+
+/* Kids strip CTA under the featured grid */
+.hp-kstrip-cta {
+  margin-top: var(--space-xl);
+}
+
+/* Final CTA band: deep olive, echoes the main page's dark final plate. */
+.hp-kfinal {
+  background:
+    radial-gradient(90% 120% at 82% 10%, rgba(255, 255, 255, 0.08) 0%, transparent 60%),
+    linear-gradient(150deg, #4a6a50 0%, #3c5642 100%);
+  min-height: clamp(300px, 40vh, 420px);
+  display: grid;
+  place-items: center;
+}
+
+.hp-kfinal-body {
+  text-align: center;
+  color: #f2f6ef;
+  padding: clamp(2.5rem, 6vw, 4rem) var(--space-lg);
+  max-width: 38rem;
+}
+
+.hp-kfinal-body h2 {
+  margin: 0;
+  font-size: clamp(1.4rem, 2.6vw, 2rem);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+}
+
+.hp-kfinal-btn {
+  margin-top: var(--space-lg);
+  background: #f2f6ef;
+  color: #3c5642;
+}
+
+.hp-kfinal-btn:hover {
+  background: #fff;
+  color: #2f4534;
+}
+
+@media (max-width: 1024px) {
+  .hp-paint-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .hp--kids .hp-hero-img {
+    object-position: 50% 78%;
+  }
+
+  .hp-kentries-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .hp-paint-grid {
+    gap: var(--space-sm);
+  }
+}
