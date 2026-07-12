@@ -1,0 +1,30 @@
+{
+  "catalog_count": 157,
+  "applied": 155,
+  "skipped": 2,
+  "failed": 0,
+  "matched_payload_fields": 356,
+  "text_mismatches": 0,
+  "text_mismatch_samples": [],
+  "non_text_changes": 0,
+  "non_text_samples": [],
+  "specials": {
+    "s-ox-05": {
+      "title_applied": true,
+      "subtitle_applied": true,
+      "description_unchanged": true,
+      "title": "Ступени с перилами и ящиками Оксфорд",
+      "subtitle": "Ступени с перилами и ящиками к комплексу Оксфорд.",
+      "description": ""
+    },
+    "ol-08-1": {
+      "texts_unchanged": true,
+      "note": "not in before-snapshot of ready set; verified vs pre-apply export"
+    },
+    "ol-08-1-mirror": {
+      "texts_unchanged": true,
+      "note": "not in before-snapshot of ready set; verified vs pre-apply export"
+    }
+  },
+  "ids_unchanged": true
+}

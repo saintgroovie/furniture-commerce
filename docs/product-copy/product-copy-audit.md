@@ -1,0 +1,121 @@
+# Woodright — аудит продуктовых текстов (editorial pass, 2026-07-12)
+
+Read-only аудит каталога + полный редакторский проход. Изменения подготовлены как **dry-run artifact** и **не применены** ни к какой базе.
+
+## 1. Source of truth
+
+Продуктовые тексты живут **только в Medusa (Postgres, локальный dev-инстанс `:9000`)** — полей `title`, `subtitle`, `description` у product records. Проверены альтернативные источники:
+
+- `apps/backend/src/scripts/seed.ts` — содержит только 15 демо-товаров (`stul-loft`, …) с заглушками описаний; **эти демо-товары в текущей базе отсутствуют** (в экспорте их нет), а боевой каталог создавался ingestion-скриптами медиа-опс потоков, не через seed.
+- `apps/backend/src/scripts/seed-willie-winkie-flow-a-pilot-28.ts` — сидировал 28 Willie Winkie товаров; описания не задаёт.
+- Storefront (`apps/storefront/src`) — продуктовых текстов не хранит: PDP берёт `product.description` из API (`.pdp-description`), meta description строится из первых 160 знаков описания. Второй источник правды не создавался.
+- Fixtures/CSV/legacy-экспорты — содержат медиа и识别 данные (media census), но не покупательские тексты.
+
+**Вывод:** канонические тексты — в Medusa DB ⇒ по правилам задачи сделан read-only экспорт, редактура выполнена офлайн, подготовлен dry-run import artifact без применения.
+
+### Карта полей
+
+| Поле | Источник | Заполнено | Пусто | Можно менять |
+| --- | --- | ---: | ---: | --- |
+| Название (`title`) | Medusa product | 157 | 0 | ограниченно (нормализация) |
+| Краткое описание (`subtitle`) | Medusa product | 0 | 157 | да |
+| Полное описание (`description`) | Medusa product | 15 | 142 | да |
+| SEO title | нет отдельного поля; storefront строит из `title` | — | — | через title |
+| SEO description | нет отдельного поля; первые ~160 знаков `description` | — | — | через description |
+| Материалы | `metadata.material_tier_labels` (только Willie Winkie, 28 шт.) | 28 | 129 | только по фактам — **не менялись** |
+| Исполнение (цвета/ткани/изголовья) | `metadata.finish_color_labels`, `fabric_upholstery_labels`, `headboard_model_labels` | 62/13/5 | остальные | только по фактам — **не менялись** |
+
+## 2. Объём каталога
+
+- Всего товаров: **157**, все published.
+- Классификация: **19 STANDARD, 138 CONFIGURABLE, 0 BESPOKE** (BESPOKE-товаров в базе нет — раздел «По проекту» работает через заявку, а не через товары).
+- Коллекции: Oliver 67 (из них Oliver Kids 10), Provence 30, Willie Winkie 28 (детская, включая Molly), Greenwich 15, Country London Paris 13, Oxford 4.
+- Willie Winkie / Molly identity: мотив закреплён в `metadata.motif` / `painting_name` — **не менялся**.
+
+## 3. Типовые проблемы «до»
+
+1. **142 товара (90%) вообще без описания** — PDP показывала пустоту, meta description падала в заглушку «Товар из каталога Woodright».
+2. **15 описаний-заглушек** вида `Greenwich — Комод` (дословно «коллекция — название»), нулевая информационная ценность.
+3. **`subtitle` пуст у всех 157** товаров.
+4. **Технический мусор в названиях:** двойные пробелы («Столик  туалетный»), `*` вместо `×` в размерах, обрубки («с подъем мех», «подъемн.мех-змом», «руч.лев/пр»), CAPS («ОКСФОРД»), backtick вместо апострофа («Ant`s Village»), «Кровать - трансформер» с висячим дефисом.
+5. **Несогласованные сокращения:** «1 сп.» / «1-сп.» / «1,5 сп.» в разных коллекциях.
+6. **Identity-конфликт в metadata:** у `ol-08-1` (Тумбочка прикроватная) `canonical_name` = «Зеркало навесное овальное», а у `ol-08-1-mirror` (зеркало) — габариты и категория тумбочки. Продублированные данные двух разных товаров.
+
+## 4. Что сделано
+
+- Написаны **subtitle для всех 157 товаров** и **description для 156** (`safe_to_rewrite` ×154 + `identity_conflict` ×2; у `s-ox-05` description намеренно пустой).
+- **47 названий нормализовано** (типографика/опечатки/регистр/расшифровка обрубков) — без единого переименования модели, коллекции или мотива. Полный список — в `product-copy-change-register.csv` (field=title).
+- **1 товар оставлен без описания** (`s-ox-05`, `needs_product_data`) — данных нет, водой не заполнялся; у него есть нормализованный title и безопасный subtitle из названия.
+- Агрегация change-register (без дублей / без `old==new` / без чужих полей):
+
+```text
+field,count
+title,47
+subtitle,157
+description,156
+other,0
+total,360
+```
+
+  Прежнее «47+156+156=359 при total 360» было ошибкой отчёта: subtitle считали как 156 (по числу description), хотя subtitle есть у всех 157, включая `s-ox-05`.
+- Каждый текст опирается на реестр фактов (`source_facts` в change-register): габариты из `metadata.dimensions`, конфигурация из названия, варианты исполнения из `finish_color_labels` / `fabric_upholstery_labels` / `headboard_model_labels` / `material_tier_labels`, мотивы из `motif`, «стоимость по заявке» из `launch_mode: request_quote`.
+
+### Распределение по статусам
+
+| Статус | Кол-во |
+| --- | ---: |
+| safe_to_rewrite | 154 |
+| identity_conflict | 2 |
+| needs_product_data | 1 |
+| possible_duplicate | 0 |
+
+## 5. Примеры «до / после»
+
+**greenwich-gr-05-1 (Комод, STANDARD)**
+До: `Greenwich — Комод`
+После: `Scale — самый горизонтальный предмет в спальне Greenwich: 124 см в ширину при высоте 63 см… Палитра модели повторяет палитру коллекции: двенадцать отделок…`
+
+**ol-17-3 (кровать с подъёмным механизмом, CONFIGURABLE)**
+До: описания не было; title «Кровать 2-сп. (160*200) с подъемн.мех-змом»
+После: title «Кровать 2-сп. (160×200) с подъёмным механизмом»; описание объясняет короб хранения размером со спальное место и выбор обивки Lorna/Lillian.
+
+**av-05-1 (Willie Winkie, детская)**
+До: описания не было; title «Комод стандартный Ant`s Village (гл.440)»
+После: title «Комод стандартный Ant's Village (гл. 440)»; текст для взрослого покупателя: уменьшенная глубина 44 см, выбор исполнения корпуса (полностью массив / фронты массив + ЛДСП), расчёт стоимости по заявке.
+
+Остальные примеры — в `product-copy-change-register.csv` (360 строк = 47 title + 157 subtitle + 156 description).
+
+## 6. Проверки качества
+
+- Полное покрытие: 157/157, ни один товар не потерян (скрипт падает при расхождении).
+- Запрещённые штампы: автоскан по списку стайлгайда — **0 вхождений** (включая «премиальный», «уникальный», «натуральные материалы» и «ручная работа» — формулировки про роспись оставлены без неподтверждённого «ручная»).
+- Анти-шаблонность: попарная близость описаний по 4-словным шинглам — **максимум < 0.25 Jaccard** (ни одной пары даже умеренного сходства).
+- Kids-тексты (38 шт.): обращены к взрослому, без уменьшительных, без обещаний безопасности/ортопедии, без гендера.
+- Классификация, цены, SKU, handles, варианты, медиа, публикация — не затрагивались; dry-run payload содержит только `title`/`subtitle`/`description` (guard в `build-register.mjs`).
+- Независимый Codex CLI review — 4 раунда: после раундов 1–3 сняты неподтверждённые функциональные утверждения (внутреннее устройство хранения, «во всё спальное место», «ручная роспись», возрастные и гендерные допущения в Kids) и убраны dev-креденшалы из скриптов (теперь только env vars). Итоговый вердикт раунда 4 — `safe_to_commit`.
+
+## 7. Риски и ограничения
+
+- Oxford (4 шт.) описан по interim-данным пилота (пометка в `mapping_notes`) — тексты сознательно осторожные; при финализации коллекции их стоит перепроверить.
+- `ol-08-1` / `ol-08-1-mirror` — конфликт metadata требует ручной проверки (см. unresolved); при local apply обе записи **пропущены**.
+- Названия тканей Oliver (leona/linda/lorna/torno/lillian) в данных встречаются в разнобое регистров и написаний (lilian/lillian) — в текстах использовано единое написание с заглавной; **сами значения данных не менялись**, унификация значений — отдельная дата-задача.
+
+## 8. Storefront smoke
+
+До apply: Playwright `scripts/smoke-current-rendering.mjs` (текущие/пустые тексты).
+
+После local apply: `scripts/smoke-postapply-rendering.mjs` - 16 PDP (STANDARD ×3, CONFIGURABLE ×3, Kids ×3, Country, Oxford, short/long desc, normalized title, `s-ox-05`, обе conflict Oliver) × desktop 1440 + mobile 390 = **32 inspections, 0 failed checks**. Новые description видны в `.pdp-description` и в `meta[name=description]`. `subtitle` в API есть, на storefront не рендерится (вне scope).
+
+## 9. Поля, которые нельзя было безопасно изменить
+
+- `metadata.canonical_name` - конфликтные значения (ol-08-*) не правились: это данные, а не витринный текст.
+- Названия цветов/тканей в `finish_color_labels` и родственных полях - значения данных, влияют на свотчи и корзину.
+- `s-ox-05` - полное description не написано: нет габаритов, состава и совместимости (см. unresolved). При apply записаны только title + subtitle.
+
+## 10. Local apply (2026-07-12)
+
+- Endpoint: `http://127.0.0.1:9000` only (guarded script).
+- Applied: **155** products; skipped: **2** (`ol-08-*`); failed: **0**.
+- Fields written: title **47**, subtitle **155**, description **154** (только эти ключи).
+- Post-apply: catalog still **157**; non-text fields unchanged; payload text match for applied fields.
+- Artifacts: `docs/product-copy/scripts/apply-product-copy-local.mjs`, `docs/product-copy/apply/*`, reports under `apply/reports/`. Snapshots/journals gitignored.
