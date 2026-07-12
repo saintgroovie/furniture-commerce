@@ -886,44 +886,110 @@ select:focus-visible {
 
 .site-footer {
   border-top: 1px solid var(--color-border);
-  padding-block: var(--space-2xl) var(--space-lg);
-  margin-top: 3rem;
+  padding-block: var(--space-lg) var(--space-md);
+  margin-top: 2.5rem;
   color: var(--color-fg-secondary);
   font-size: 0.9rem;
 }
 
+.footer-inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* Brand masthead | nav block. Brand column = content width (no empty track). */
 .footer-columns {
   display: grid;
-  grid-template-columns: 1.4fr repeat(4, 1fr);
-  gap: var(--space-xl);
+  grid-template-columns: max-content minmax(0, 1fr);
+  column-gap: var(--space-md);
+  row-gap: var(--space-lg);
+  align-items: start;
+}
+
+.footer-nav {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: var(--space-md);
+  row-gap: var(--space-lg);
+  align-items: start;
+  min-width: 0;
+}
+
+.footer-column {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+/* Nav column titles */
+.footer-column-title {
+  display: block;
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  color: var(--color-fg);
+}
+
+/* Brand masthead - larger wordmark + tagline vs nav links */
+.footer-brand {
+  min-width: 0;
+  max-width: 22rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.55rem;
 }
 
 .footer-brand-logo {
-  font-size: 1.15rem;
+  display: block;
+  margin: 0;
+  font-size: 1.5rem;
   font-weight: 500;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: var(--color-fg);
+  text-decoration: none;
+}
+
+.footer-brand-logo:hover {
   color: var(--color-fg);
 }
 
-.footer-brand-text {
-  margin-top: var(--space-sm);
-  max-width: 32ch;
-  line-height: 1.6;
-  color: var(--color-fg-muted);
+.footer-brand-lead {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  font-size: 0.95rem;
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: -0.015em;
+  color: var(--color-fg-secondary);
 }
 
-.footer-column-title {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--color-fg);
-  margin-bottom: var(--space-sm);
+.footer-brand-lead-line {
+  display: block;
+  text-wrap: pretty;
 }
 
 .footer-column-links {
   list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.4rem;
+  font-size: 0.95rem;
+}
+
+.footer-column-links li {
+  margin: 0;
+  line-height: 1.4;
 }
 
 .footer-column-links a {
@@ -935,27 +1001,62 @@ select:focus-visible {
 }
 
 .footer-bottom {
-  margin-top: var(--space-xl);
-  padding-top: var(--space-lg);
+  margin: 0;
+  padding-top: var(--space-md);
   border-top: 1px solid var(--color-border);
   color: var(--color-fg-muted);
   font-size: 0.8rem;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
   .footer-columns {
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-lg);
+    column-gap: var(--space-md);
+  }
+
+  .footer-nav {
+    column-gap: var(--space-sm);
   }
 
   .footer-brand {
-    grid-column: 1 / -1;
+    max-width: 20rem;
+  }
+
+  .footer-brand-lead {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .footer-columns {
+    grid-template-columns: 1fr;
+    row-gap: var(--space-lg);
+  }
+
+  .footer-nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--space-lg);
+  }
+
+  .footer-brand {
+    max-width: 32rem;
+  }
+
+  .footer-brand-lead {
+    font-size: 0.95rem;
   }
 }
 
 @media (max-width: 520px) {
-  .footer-columns {
+  .footer-nav {
     grid-template-columns: 1fr;
+  }
+
+  .footer-brand-logo {
+    font-size: 1.35rem;
+  }
+
+  .footer-brand-lead {
+    font-size: 0.9rem;
   }
 }
 

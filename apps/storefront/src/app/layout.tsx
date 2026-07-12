@@ -7,6 +7,7 @@ import { HeaderLogo } from "@/components/header-logo"
 import { MobileNav } from "@/components/mobile-nav"
 import { NavDropdown } from "@/components/nav-dropdown"
 import { a11yCopy, footer as footerCopy, nav as navCopy, seo } from "@/lib/woodright-copy"
+import { formatRuInline } from "@/lib/format-ru-copy"
 import "./globals.css"
 
 const inter = Inter({
@@ -142,21 +143,31 @@ export default function RootLayout({
           <div className="container footer-inner">
             <div className="footer-columns">
               <div className="footer-brand">
-                <Link href="/" className="footer-brand-logo">Woodright</Link>
-                <p className="footer-brand-text">{footerCopy.brandText}</p>
+                <Link href="/" className="footer-brand-logo">
+                  Woodright
+                </Link>
+                <p className="footer-brand-lead">
+                  {footerCopy.brandText.map((line) => (
+                    <span className="footer-brand-lead-line" key={line}>
+                      {formatRuInline(line)}
+                    </span>
+                  ))}
+                </p>
               </div>
-              {footerCopy.columns.map((column) => (
-                <div className="footer-column" key={column.title}>
-                  <h3 className="footer-column-title">{column.title}</h3>
-                  <ul className="footer-column-links">
-                    {column.links.map((link) => (
-                      <li key={link.href}>
-                        <Link href={link.href}>{link.label}</Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
+              <nav className="footer-nav" aria-label="Разделы сайта">
+                {footerCopy.columns.map((column) => (
+                  <div className="footer-column" key={column.title}>
+                    <h3 className="footer-column-title">{column.title}</h3>
+                    <ul className="footer-column-links">
+                      {column.links.map((link) => (
+                        <li key={link.href}>
+                          <Link href={link.href}>{link.label}</Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </nav>
             </div>
             <div className="footer-bottom">
               <span>{footerCopy.copyright(new Date().getFullYear())}</span>
