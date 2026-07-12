@@ -524,8 +524,12 @@ export function ProductCardMediaGalleryCore({
   const isPdpLayout = layout === "pdp"
   const mediaRootRef = useRef<HTMLDivElement | null>(null)
   const [cardStripProbeEnabled, setCardStripProbeEnabled] = useState(isPdpLayout)
-  /** After hydration, catalog may unmount swatch/thumb DOM until IO/hover (W3g). */
-  const [catalogExtrasDeferred, setCatalogExtrasDeferred] = useState(false)
+  /**
+   * W3g→W3f: catalog SSR is hero-only (no swatch/thumb `<img>` in HTML).
+   * After hydrate, near-viewport / pointer enter mounts extras. PDP unchanged.
+   * No-JS catalog keeps hero + link; execution rails stay empty until JS.
+   */
+  const [catalogExtrasDeferred] = useState(!isPdpLayout)
 
   useEffect(() => {
     if (isPdpLayout) {
@@ -534,8 +538,6 @@ export function ProductCardMediaGalleryCore({
     }
     const el = mediaRootRef.current
     if (!el) return
-    // Enable deferral only in the browser after mount so SSR / no-JS keep extras.
-    setCatalogExtrasDeferred(true)
     if (typeof IntersectionObserver === "undefined") {
       setCardStripProbeEnabled(true)
       return
@@ -1371,8 +1373,7 @@ export function ProductCardMediaGalleryCore({
         </>
       ) : (
         /* Always-rendered rail band: shared catalog row track for height.
-           W3g: mount swatches/thumbs only after near-viewport / pointer enter
-           so below-fold extras can unmount after hydration; SSR/no-JS keep them. */
+           SSR/hydration start: hero only. Near-viewport / hover mounts rails. */
         <div className="product-card-rails">
           {showCatalogMediaExtras ? (
             <>
