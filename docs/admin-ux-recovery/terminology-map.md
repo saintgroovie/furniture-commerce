@@ -29,8 +29,8 @@
 | Служебные данные | metadata / IDs | Collapsed |
 | Главное фото (= главное изображение) | `product.thumbnail` | Single term in UI: «Главное фото» |
 | Параметры варианта | Variant options (`variant.options`) | Combination must be unique |
-| Продвижение | Product workspace tab (promotions affecting this product) | Tab «Продвижение» in the product workspace |
-| Акции (раздел) | Woodright promotions list `/app/woodright/promotions` | Sidebar item; same entity as «Акция» |
+| Акции товара | Product workspace tab (promotions with explicit product/collection rules) | Tab «Акции товара» |
+| Акции (раздел) | Woodright promotions list `/app/woodright/promotions` | Dashboard / widget / deep link (not a second sidebar peer) |
 | Рабочий стол Woodright | Dashboard `/app/woodright` | Package F landing |
 | Стандартная админка Medusa | Stock Medusa Admin `/app` | The only approved label for stock links (F-01) |
 
