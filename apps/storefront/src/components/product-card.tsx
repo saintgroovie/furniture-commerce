@@ -238,25 +238,25 @@ export function ProductCard({
     <div className="card product-card">
       {mediaBlock}
       <Link href={productHref} className="card-body card-link">
-        {contextLine && (
-          <span className="card-context">{contextLine}</span>
-        )}
-        <h3>{product.title}</h3>
-        {dim != null && (
-          <span className="card-dimensions">{formatDimensionsCompact(dim)}</span>
-        )}
-        {/* Always rendered so the price zone keeps its row track (bottom
-            alignment) even when a card has no price/badge to show. */}
-        <div className="card-price-row">
-          {requestQuotePrice != null ? (
-            <p className="price">{requestQuotePrice}</p>
-          ) : price != null ? (
-            <p className="price">{pricePrefix}{formatRub(price)}</p>
-          ) : null}
-          {displayGroup && displayGroup.count > 1 && (
-            <span className="variant-hint">{formatGroupHint(displayGroup.count)}</span>
+        <div className="card-text-stack">
+          {contextLine && (
+            <span className="card-context">{contextLine}</span>
           )}
-          {badgeLabel && <span className="badge">{badgeLabel}</span>}
+          <h3>{product.title}</h3>
+          {dim != null && (
+            <span className="card-dimensions">{formatDimensionsCompact(dim)}</span>
+          )}
+          <div className="card-price-row">
+            {requestQuotePrice != null ? (
+              <p className="price">{requestQuotePrice}</p>
+            ) : price != null ? (
+              <p className="price">{pricePrefix}{formatRub(price)}</p>
+            ) : null}
+            {displayGroup && displayGroup.count > 1 && (
+              <span className="variant-hint">{formatGroupHint(displayGroup.count)}</span>
+            )}
+            {badgeLabel && <span className="badge">{badgeLabel}</span>}
+          </div>
         </div>
       </Link>
     </div>

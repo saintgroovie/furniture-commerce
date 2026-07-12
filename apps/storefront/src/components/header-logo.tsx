@@ -18,7 +18,7 @@ export function HeaderLogo() {
     <Link
       href="/"
       className="logo"
-      aria-label={isKids ? "Woodright Kids — на главную" : "Woodright — на главную"}
+      aria-label={isKids ? "Woodright Kids - на главную" : "Woodright - на главную"}
     >
       <img
         src="/brand/woodright-logo-transparent.png"

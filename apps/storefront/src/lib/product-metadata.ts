@@ -197,7 +197,8 @@ export function formatDimensionsCompact(dim: Dimensions): string {
   if (dim.width_mm) parts.push(String(dim.width_mm))
   if (dim.depth_mm) parts.push(String(dim.depth_mm))
   if (dim.height_mm) parts.push(String(dim.height_mm))
-  return parts.join(" × ")
+  // Compact card meta: no space around × (650×30×1000).
+  return parts.join("×")
 }
 
 export function formatDimensionsLabeled(dim: Dimensions): string {
