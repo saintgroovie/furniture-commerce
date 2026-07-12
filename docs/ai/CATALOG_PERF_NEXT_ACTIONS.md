@@ -9,12 +9,20 @@
 | # | Action | Owner | Status |
 |---|--------|-------|--------|
 | 1 | Commit H4 runbook + plan pointer + `.env.example` warning (scoped) | Agent | NOW |
-| 2 | Split catalog-perf onto `main` via cherry-pick | Agent | **BLOCKED** - conflicts on first commit (`route.ts`, catalog pages, `kids.ts`); needs dedicated resolve pass |
-| 3 | Open new PR / comment on #15 | Agent | blocked by #2 |
+| 2 | Split catalog-perf onto `main` via cherry-pick | Agent | **DONE** - `feat/catalog-perf-load` |
+| 3 | Open new PR / comment on #15 | Agent | NOW |
 | 4 | Prod H4 on production Medusa | Operator | WAIT (needs prod host) |
 | 5 | W3e / W3f / W3h | - | DEFER |
 
-## Split blocker (2026-07-12)
+## Split result (2026-07-12)
+
+Branch `feat/catalog-perf-load` from `origin/main` with resolved cherry-picks.
+Also brought `copy-lines.tsx` + `format-ru-copy.ts` (needed by catalog pages; not on main).
+`package.json`: kept main scripts; added `generate:catalog-card-derivatives` + `sharp` only.
+
+## Split blocker (resolved)
+
+Was:
 
 Cherry-pick `3defdf9` onto `origin/main` (`4d12dda`) conflicted in:
 
