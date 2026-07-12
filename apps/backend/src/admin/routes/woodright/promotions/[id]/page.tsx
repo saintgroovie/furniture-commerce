@@ -144,8 +144,8 @@ const PromotionDetailPage = () => {
     if (!promotion) return
     const question =
       nextStatus === "inactive"
-        ? "Выключить акцию? Покупатели перестанут получать эту скидку. Акция останется в списке, её можно включить снова."
-        : "Включить акцию? Скидка начнёт действовать для покупателей."
+        ? "Выключить акцию? Правило перестанет применяться в Store API. На текущей витрине отдельной доставки промокода покупателю всё равно нет. Акция останется в списке."
+        : "Включить акцию? Правило станет активным в системе скидок Medusa. Это не добавляет поле промокода на витрину и не включает автоприменение в корзине покупателя."
     if (!window.confirm(question)) return
     setStatusBusy(true)
     const res = await updateAdminPromotion(promotion.id, { status: nextStatus })
@@ -433,14 +433,18 @@ const PromotionDetailPage = () => {
     const perCode = attribution.per_code[0]
     const verdict =
       attribution.verdict === "all_applied"
-        ? `Код сработал: скидка ${perCode?.total_amount ?? "неизвестной суммы"} в тестовой корзине`
+        ? `Расчёт Store API: скидка ${perCode?.total_amount ?? "неизвестной суммы"} в тестовой корзине`
         : attribution.verdict === "none_applied"
-          ? "Код принят, но скидка в корзине не появилась"
-          : "Результат неоднозначный - скидки нельзя однозначно связать с кодом"
+          ? "Код принят API, но скидка в тестовой корзине не появилась"
+          : "Результат неоднозначный — скидки нельзя однозначно связать с кодом"
     const restoreFailed = steps.some((s) => s.step === "restore_status" && s.status === "failed")
     setVerify({
       running: false,
-      lines: [...opSummary.lines, attribution.explanation],
+      lines: [
+        ...opSummary.lines,
+        attribution.explanation,
+        "Доставка на витрину: нет — на сайте нет поля промокода и автоприменение корзины отключено (#14149).",
+      ],
       verdict,
       honest_note: [
         activatedForVerify
@@ -449,7 +453,7 @@ const PromotionDetailPage = () => {
         restoreFailed
           ? "Внимание: не удалось вернуть прежний статус — проверьте кнопку «Выключить»."
           : attribution.verdict === "all_applied"
-            ? "Дальше можно нажать «Включить», если проверка устраивает."
+            ? "Можно включить правило в системе. Это не означает, что покупатель увидит скидку на витрине."
             : "Создание/обновление корзины не обновляет акции автоматически (патч #14149).",
       ]
         .filter(Boolean)
@@ -708,17 +712,17 @@ const PromotionDetailPage = () => {
 
       <Container className="p-4">
         <div className="flex items-center justify-between">
-          <Text weight="plus">Проверка в корзине</Text>
+          <Text weight="plus">Проверка расчёта (Store API)</Text>
           <Button size="small" variant="secondary" onClick={() => setVerifyOpen(!verifyOpen)}>
-            {verifyOpen ? "Свернуть" : "Проверить"}
+            {verifyOpen ? "Свернуть" : "Проверить расчёт"}
           </Button>
         </div>
         {verifyOpen ? (
           <div className="mt-2 flex flex-col gap-2">
             <Text size="small" className="text-ui-fg-subtle">
-              Соберём тестовую корзину и применим код акции. Черновик временно включается только на
-              время проверки, затем возвращается. Ключ витрины берётся из конфигурации сервера —
-              вводить его не нужно.
+              Собираем тестовую корзину через Store API и применяем код. Это проверка расчёта скидки,
+              не доставка покупателю: на витрине нет поля промокода, автоприменение корзины отключено
+              (#14149). Черновик временно включается только на время проверки.
             </Text>
             <VerifyVariantPicker
               value={verifyVariant}
@@ -732,7 +736,7 @@ const PromotionDetailPage = () => {
                 disabled={verify.running}
                 isLoading={verify.running}
               >
-                Запустить проверку
+                Запустить проверку расчёта
               </Button>
             </div>
             {verify.verdict ? (

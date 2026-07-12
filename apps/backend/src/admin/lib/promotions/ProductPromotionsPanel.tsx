@@ -157,7 +157,7 @@ export const ProductPromotionsPanel = ({ productId, collectionId }: Props) => {
                 ? "Товар указан явно"
                 : match === "indirect"
                   ? "Через коллекцию"
-                  : "Требуется проверка на корзине"
+                  : "Требуется проверка расчёта (Store API)"
             return (
               <div
                 key={promotion.id}
@@ -202,7 +202,7 @@ export const ProductPromotionsPanel = ({ productId, collectionId }: Props) => {
                   </div>
                 </div>
                 <Button size="small" variant="secondary" asChild>
-                  <Link to={woodrightPromotionPath(promotion.id)}>Проверить</Link>
+                  <Link to={woodrightPromotionPath(promotion.id)}>Проверить расчёт</Link>
                 </Button>
               </div>
             )

@@ -24,7 +24,7 @@ export function buildImpactEstimate(promotion: AdminPromotionDto): ImpactEstimat
   const methodType = (method?.type ?? "").trim().toLowerCase()
   if (methodType === "fixed") {
     notes.push(
-      "Фиксированная скидка не меняет базовые цены в каталоге - сумма вычитается только в корзине"
+      "Фиксированная скидка не меняет базовые цены в каталоге — сумма вычитается только при применении в корзине Store API"
     )
   }
   notes.push("Оценка предварительная: итог зависит от состава корзины и других акций")

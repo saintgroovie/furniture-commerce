@@ -240,8 +240,8 @@ const PromotionWizardPage = () => {
       if (!code.trim()) {
         setStepError(
           trigger === "automatic"
-            ? "Код нужен даже автоматической акции - он служит служебным идентификатором"
-            : "Укажите код, который покупатель введёт в корзине"
+            ? "Код нужен даже автоматической акции — это служебный идентификатор в системе"
+            : "Укажите код акции (служебный идентификатор). На текущей витрине поля для ввода промокода нет"
         )
         return
       }
@@ -291,7 +291,7 @@ const PromotionWizardPage = () => {
       toast.error(err.title, { description: err.action })
       return
     }
-    toast.success("Черновик акции создан — проверьте в корзине, затем включите")
+    toast.success("Черновик акции создан — проверьте расчёт в Store API, затем включите")
     navigate(woodrightPromotionPath(res.promotion.id))
   }
 
@@ -378,7 +378,7 @@ const PromotionWizardPage = () => {
                   </Text>
                 </div>
                 <Text size="xsmall" className="text-ui-fg-subtle">
-                  Базовые цены товаров не изменятся - сумма вычитается в корзине
+                  Базовые цены товаров не изменятся — скидка считается в корзине Store API
                 </Text>
               </div>
             ) : null}
@@ -388,7 +388,11 @@ const PromotionWizardPage = () => {
 
       {step === "trigger" ? (
         <Container className="flex flex-col gap-3 p-4">
-          <Text weight="plus">Как акция срабатывает</Text>
+          <Text weight="plus">Как акция срабатывает в системе</Text>
+          <Text size="xsmall" className="text-ui-fg-subtle">
+            На текущей витрине нет поля промокода и нет автоприменения скидок в корзине покупателя.
+            Мастер настраивает правила в Medusa; доставка скидки покупателю — отдельная задача.
+          </Text>
           <label className="flex items-center gap-2">
             <input
               type="radio"
@@ -396,7 +400,7 @@ const PromotionWizardPage = () => {
               checked={trigger === "code"}
               onChange={() => setTrigger("code")}
             />
-            <Text size="small">По коду - покупатель вводит его в корзине</Text>
+            <Text size="small">По коду — применяется через Store API (на витрине поля ввода нет)</Text>
           </label>
           <label className="flex items-center gap-2">
             <input
@@ -405,7 +409,9 @@ const PromotionWizardPage = () => {
               checked={trigger === "automatic"}
               onChange={() => setTrigger("automatic")}
             />
-            <Text size="small">Автоматически - без кода со стороны покупателя</Text>
+            <Text size="small">
+              Автоматическая в системе — автообновление корзины отключено (патч #14149)
+            </Text>
           </label>
           <div>
             <Text size="small" weight="plus">
@@ -419,9 +425,8 @@ const PromotionWizardPage = () => {
               aria-label="Код акции"
             />
             <Text size="xsmall" className="mt-1 text-ui-fg-subtle">
-              Латинские буквы, цифры, дефис и подчёркивание. Регистр сохраняется как ввели.
-              Код обязателен даже для автоматических акций - там он служит служебным
-              идентификатором
+              Латинские буквы, цифры, дефис и подчёркивание. Регистр сохраняется как ввели. Код
+              обязателен даже для автоматических акций — там он служебный идентификатор.
             </Text>
           </div>
         </Container>
@@ -526,8 +531,10 @@ const PromotionWizardPage = () => {
             </li>
             <li>
               <Text size="small">
-                Срабатывание:{" "}
-                {trigger === "automatic" ? "автоматически" : `по коду ${code.trim()}`}
+                Срабатывание в системе:{" "}
+                {trigger === "automatic"
+                  ? "автоматическая (на витрине автоприменение сейчас недоступно)"
+                  : `по коду ${code.trim()} (на витрине поля ввода промокода нет)`}
               </Text>
             </li>
             <li>
@@ -554,7 +561,10 @@ const PromotionWizardPage = () => {
               <Text size="small">Статус после создания: черновик (выключена)</Text>
             </li>
             <li>
-              <Text size="small">Дальше: проверить в корзине → включить на карточке акции</Text>
+              <Text size="small">
+                Дальше: проверить расчёт в Store API → включить правило. Это не проверка доставки
+                скидки на витрине.
+              </Text>
             </li>
           </ul>
           {createErrors.map((e) => (

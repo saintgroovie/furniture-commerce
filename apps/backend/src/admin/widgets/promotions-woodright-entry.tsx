@@ -13,8 +13,8 @@ const PromotionsWoodrightEntry = () => {
     <Container className="p-4">
       <Text weight="plus">Простая акция</Text>
       <Text size="small" className="mt-1 text-ui-fg-subtle">
-        Список ниже — полный каталог акций. Мастер помогает создать простую скидку (% или рубли) с
-        проверкой в корзине.
+        Список ниже — полный каталог акций. Мастер помогает создать простую скидку (% или рубли) и
+        проверить расчёт в Store API. На текущей витрине поля промокода нет.
       </Text>
       <div className="mt-3">
         <Button variant="secondary" asChild>

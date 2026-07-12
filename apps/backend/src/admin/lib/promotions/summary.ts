@@ -128,7 +128,9 @@ export function buildPromotionSummary(promotion: AdminPromotionDto): PromotionSu
     resultPart = `Скидка ${formatPercent(value)}`
   } else if (methodType === "fixed" && value != null) {
     resultPart = `Скидка ${formatFixedAmount(value, method?.currency_code)}`
-    notes.push("Фиксированная скидка не меняет базовые цены товаров - она вычитается в корзине")
+    notes.push(
+      "Фиксированная скидка не меняет базовые цены товаров — она вычитается при применении в Store API"
+    )
   } else {
     return {
       text: "Не удалось прочитать размер скидки - откройте акцию в стандартной админке",

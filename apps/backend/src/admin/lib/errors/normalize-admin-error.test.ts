@@ -134,7 +134,7 @@ describe("normalizeAdminError", () => {
 
   it("keeps honest wording for cart verification hints", () => {
     const failed = normalizeAdminError({ codeHint: "cart_verification_failed" })
-    assert.match(failed.action, /не подтверждён/i)
+    assert.match(failed.action, /не проверка доставки|витрин/i)
     const notApplied = normalizeAdminError({ codeHint: "promo_code_not_applied" })
     assert.match(notApplied.title, /не дал скидку/i)
   })

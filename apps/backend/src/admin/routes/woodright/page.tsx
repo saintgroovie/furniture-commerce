@@ -292,7 +292,8 @@ const WoodrightDashboardPage = () => {
                   Акции
                 </Text>
                 <Text size="small" className="text-ui-fg-subtle">
-                  Полный список — в разделе «Акции». Здесь — мастер простой скидки.
+                  Полный список — в разделе «Акции». Здесь — мастер правил скидки (не доставка на
+                  витрину).
                 </Text>
               </div>
               <div className="flex flex-wrap gap-2">
