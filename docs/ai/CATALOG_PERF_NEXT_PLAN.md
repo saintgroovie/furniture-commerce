@@ -31,10 +31,10 @@ G3  PERF-10 Batch RoomSet ids              → когда N>0 измерен
 ```
 
 **Прогресс (2026-07-12):**
-- Package G0→H2 committed: `3defdf9`
-- G2: allowlist browse DTO (fixes G1 drop of `finish_metadata_source` for Provence)
-- H4: card derivative URL helper + image baseline script (no broken fallback to missing webp yet)
-- Storefront `:3002` up (catalog 107 cards when Medusa up)
+- Package G0→H2 committed + pushed: `3defdf9` (PR #15)
+- G2 committed + pushed: `866f537`
+- H4: Sharp generate script + env-gate card hero wiring (`NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES=1`)
+- CDN: still later (local Medusa `/static` + Next rewrite for now)
 
 ## 3. Фазы
 

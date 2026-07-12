@@ -8,6 +8,7 @@
     "build": "medusa build",
     "dev": "medusa develop",
     "start": "medusa start",
+    "generate:catalog-card-derivatives": "tsx scripts/generate-catalog-card-derivatives.ts",
     "db:generate": "medusa db:generate",
     "db:migrate": "medusa db:migrate",
     "db:sync-links": "medusa db:sync-links",
@@ -16,7 +17,8 @@
   },
   "dependencies": {
     "@medusajs/framework": "^2.0.0",
-    "@medusajs/medusa": "^2.0.0"
+    "@medusajs/medusa": "^2.0.0",
+    "sharp": "^0.35.3"
   },
   "devDependencies": {
     "@medusajs/cli": "^2.0.0",

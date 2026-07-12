@@ -37,6 +37,7 @@ import {
   resolvePdpMediaBundle,
   resolveStorefrontProductImageSrc,
 } from "@/lib/product-images"
+import { resolveCatalogCardHeroSrc } from "@/lib/catalog-card-image"
 import { productTypeBadgeLabels } from "@/lib/woodright-copy"
 
 type Product = {
@@ -64,12 +65,16 @@ function cardThumbnailSrc(product: Product): string | null {
   const t = product.thumbnail
   if (typeof t === "string") {
     const s = t.trim()
-    if (s.length > 0) return resolveStorefrontProductImageSrc(s)
+    if (s.length > 0) {
+      return resolveCatalogCardHeroSrc(s, resolveStorefrontProductImageSrc)
+    }
   }
   const images = product.images
   if (Array.isArray(images) && images.length > 0) {
     const u = normalizeImageEntryUrl(images[0])
-    if (u) return resolveStorefrontProductImageSrc(u)
+    if (u) {
+      return resolveCatalogCardHeroSrc(u, resolveStorefrontProductImageSrc)
+    }
   }
   return null
 }

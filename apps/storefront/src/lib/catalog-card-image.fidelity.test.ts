@@ -5,6 +5,8 @@
  */
 import assert from "node:assert/strict"
 import {
+  catalogCardDerivativesEnabled,
+  resolveCatalogCardHeroSrc,
   resolveCatalogCardImageSrc,
   toCatalogCardDerivativePath,
 } from "./catalog-card-image"
@@ -20,27 +22,41 @@ assert.equal(
   "/product-static/products/greenwich/derivatives/card/GR-09-1_main_01.webp"
 )
 assert.equal(toCatalogCardDerivativePath("/uploads/x.png"), null)
+
+// Default preferDerivative is off
 assert.equal(
   resolveCatalogCardImageSrc("/static/products/oliver/ol-01-1.png"),
-  "/static/products/oliver/derivatives/card/ol-01-1.webp"
-)
-assert.equal(
-  resolveCatalogCardImageSrc(
-    "/product-static/products/greenwich/GR-09-1_main_01.png"
-  ),
-  "/product-static/products/greenwich/derivatives/card/GR-09-1_main_01.webp"
-)
-assert.equal(
-  resolveCatalogCardImageSrc("/static/products/oliver/ol-01-1.png", {
-    preferDerivative: false,
-  }),
   "/static/products/oliver/ol-01-1.png"
 )
 assert.equal(
-  resolveCatalogCardImageSrc(
-    "http://localhost:9000/static/products/oliver/ol-01-1.jpg"
-  ),
+  resolveCatalogCardImageSrc("/static/products/oliver/ol-01-1.png", {
+    preferDerivative: true,
+  }),
   "/static/products/oliver/derivatives/card/ol-01-1.webp"
 )
+
+const identity = (u: string) => u
+const prev = process.env.NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES
+delete process.env.NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES
+assert.equal(catalogCardDerivativesEnabled(), false)
+assert.equal(
+  resolveCatalogCardHeroSrc("/static/products/oliver/ol-01-1.png", identity),
+  "/static/products/oliver/ol-01-1.png"
+)
+process.env.NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES = "1"
+assert.equal(catalogCardDerivativesEnabled(), true)
+assert.equal(
+  resolveCatalogCardHeroSrc("/static/products/oliver/ol-01-1.png", identity),
+  "/static/products/oliver/derivatives/card/ol-01-1.webp"
+)
+assert.equal(
+  resolveCatalogCardHeroSrc(
+    "/product-static/products/greenwich/GR-09-1_main_01.png",
+    identity
+  ),
+  "/product-static/products/greenwich/derivatives/card/GR-09-1_main_01.webp"
+)
+if (prev === undefined) delete process.env.NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES
+else process.env.NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES = prev
 
 console.log("catalog-card-image.fidelity.test.ts: ok")
