@@ -87,7 +87,7 @@ describe("variant matrix", () => {
         code: "STANDARD",
         label: "Готовый",
         warning: null,
-        source: "productClassification.product_type",
+        source: "product_classification.product_type",
       },
       options: [{ id: "opt1", title: "Default", values: [{ value: "Default" }] }],
       variants: [
@@ -114,7 +114,7 @@ describe("variant matrix", () => {
         code: "CONFIGURABLE",
         label: "Конфигурируемый",
         warning: null,
-        source: "productClassification.product_type",
+        source: "product_classification.product_type",
       },
       options: [
         { id: "opt_color", title: "Цвет", values: [{ value: "Дуб" }, { value: "Орех" }] },
@@ -156,7 +156,7 @@ describe("variant matrix", () => {
         code: "BESPOKE",
         label: "По запросу",
         warning: "x",
-        source: "productClassification.product_type",
+        source: "product_classification.product_type",
       },
       options: [],
       variants: [{ id: "v", title: "Default", sku: null, prices: [] }],

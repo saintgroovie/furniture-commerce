@@ -3819,6 +3819,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@posthog/core@npm:^1.40.2":
+  version: 1.40.2
+  resolution: "@posthog/core@npm:1.40.2"
+  dependencies:
+    "@posthog/types": "npm:^1.393.0"
+  checksum: 10c0/d3e71f5a99c77c2e894a181530623a62d67e795296fc25bbe3304c46f3b10b88d3ca68f5d4ea678db5e39532c3303d28b977f7d2a7da939c039790b30a4e1597
+  languageName: node
+  linkType: hard
+
+"@posthog/types@npm:^1.393.0":
+  version: 1.393.0
+  resolution: "@posthog/types@npm:1.393.0"
+  checksum: 10c0/d4958afaa91ea20aecca31478dd3151ec65de09af74b036d0fe17e798925d1fd8556324dfd11d4c05bd1f32581269764ccefac31074fedc1238b2acadafbd217
+  languageName: node
+  linkType: hard
+
 "@protobufjs/aspromise@npm:^1.1.1, @protobufjs/aspromise@npm:^1.1.2":
   version: 1.1.2
   resolution: "@protobufjs/aspromise@npm:1.1.2"
@@ -10209,6 +10225,9 @@ __metadata:
     "@medusajs/medusa": "npm:2.17.2"
     "@medusajs/types": "npm:2.17.2"
     "@types/node": "npm:^20.0.0"
+    posthog-node: "npm:^5.11.0"
+    react: "npm:18.3.1"
+    react-dom: "npm:18.3.1"
     sharp: "npm:0.35.3"
     ts-node: "npm:10.9.2"
     tsconfig-paths: "npm:4.2.0"
@@ -12439,6 +12458,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"posthog-node@npm:^5.11.0":
+  version: 5.41.0
+  resolution: "posthog-node@npm:5.41.0"
+  dependencies:
+    "@posthog/core": "npm:^1.40.2"
+  peerDependencies:
+    rxjs: ^7.0.0
+  peerDependenciesMeta:
+    rxjs:
+      optional: true
+  checksum: 10c0/19b374c123618175919ccdb84279605a84e154e1b04c154f8c0a8ef1c815a06b94c215b50a25b382210490fc6b3b2616d0879c324207102824285117c697bdf0
+  languageName: node
+  linkType: hard
+
 "prism-react-renderer@npm:^2.0.6":
   version: 2.4.1
   resolution: "prism-react-renderer@npm:2.4.1"
@@ -12722,7 +12755,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-dom@npm:^18.3.1":
+"react-dom@npm:18.3.1, react-dom@npm:^18.3.1":
   version: 18.3.1
   resolution: "react-dom@npm:18.3.1"
   dependencies:
@@ -12932,7 +12965,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react@npm:^18.3.1":
+"react@npm:18.3.1, react@npm:^18.3.1":
   version: 18.3.1
   resolution: "react@npm:18.3.1"
   dependencies:
