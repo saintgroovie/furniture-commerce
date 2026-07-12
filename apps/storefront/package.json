@@ -10,8 +10,11 @@
     "dev:ww-matrix-board:stop": "bash scripts/dev-ww-matrix-board-stop.sh",
     "dev:ww-matrix-board:status": "bash scripts/dev-ww-matrix-board-status.sh",
     "dev:ww-matrix-board:open": "bash scripts/dev-ww-matrix-board-open-terminal.sh",
-    "build": "NEXT_DIST_DIR=.next-build next build",
+    "build": "NEXT_DIST_DIR=.next-build next build && node scripts/sync-qa-build-marker.mjs",
+    "build:qa": "bash scripts/qa-rebuild.sh",
     "start": "NEXT_DIST_DIR=.next-build next start",
+    "check:landing-css": "node scripts/check-landing-css-assets.mjs",
+    "check:landing-css:heal": "node scripts/check-landing-css-assets.mjs --heal",
     "lint": "next lint"
   },
   "dependencies": {

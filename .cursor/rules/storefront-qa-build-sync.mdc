@@ -1,0 +1,25 @@
+---
+description: After storefront yarn build, keep QA :3002 CSS in sync with .next-build
+alwaysApply: true
+---
+
+# Storefront QA build sync (:3002)
+
+**Problem:** `next start` (LaunchAgent `com.woodright.storefront-qa`, mode `qa`) caches asset manifests. A bare `yarn build` rewrites `.next-build` CSS hashes → HTML 200 + CSS **400** → unstyled page (purple logo, vertical link list).
+
+**Durable fix:**
+1. `yarn build` runs `sync-qa-build-marker.mjs` → writes `~/.woodright/qa-dev-servers/storefront-3002.build-id`
+2. `run-storefront-qa.sh` (LaunchAgent) watches that marker and exits so KeepAlive reloads
+3. Prefer `yarn build:qa` when browsing `:3002` (adds kickstart backup + CSS verify)
+4. `yarn check:landing-css` / `:heal` for diagnosis
+
+Launchd often cannot read files under Documents/ (TCC). Do not teach the watcher to poll `.next-build/BUILD_ID` directly.
+
+## Agent contract
+
+1. Prefer **`yarn build:qa`** in `apps/storefront` when the operator uses `:3002`.
+2. After editing `scripts/run-storefront-qa.sh`, redeploy (TCC blocks Documents/ exec). Confirm plist `WOODRIGHT_REPO_ROOT` points at the canonical repo, then:
+   `cp apps/storefront/scripts/run-storefront-qa.sh ~/.woodright/qa-dev-servers/run-storefront.sh && chmod +x ~/.woodright/qa-dev-servers/run-storefront.sh && launchctl kickstart -k gui/$(id -u)/com.woodright.storefront-qa`
+3. After any bare `yarn build`, confirm marker sync ran; run **`yarn check:landing-css`** (or `:heal`). Do not claim visual QA if CSS check fails.
+4. Do **not** invent a second preview port (3012…) for this failure mode - heal `:3002` instead.
+5. Foreground-only: bounded waits; no `yarn dev` autostart (see `foreground-only-execution.mdc`).
