@@ -1,5 +1,8 @@
-import { getRoomSets, getRoomSetBySlug } from "@/lib/api/room-sets"
-import { getProducts } from "@/lib/api/products"
+import {
+  getRoomSets,
+  getRoomSetProductIdsBySlug,
+} from "@/lib/api/room-sets"
+import { getCatalogProducts } from "@/lib/api/products"
 import { BESPOKE_PRODUCT_TYPE } from "@/lib/bespoke"
 import {
   isOliverKidsCollectionProduct,
@@ -24,33 +27,197 @@ export function isKidsMetadataStorefrontProduct(
   return false
 }
 
-type RoomSetDetail = { room_set?: Record<string, unknown> } | null
+/**
+ * Fast kids check for a cart line item — no room-set / catalog fan-out.
+ * Uses (in order): line metadata stamp from add-to-cart, expanded
+ * `item.product.metadata` from getCart fields, then `product_handle` for Oliver.
+ * Room-set-only exclusivity from `resolveKidsProducts` is intentionally skipped
+ * here; kids room-set CTA stamps `storefront_section: "kids"` on add.
+ */
+export function isKidsCartLineItem(item: Record<string, unknown>): boolean {
+  const lineMeta = (item.metadata as Record<string, unknown> | undefined) ?? {}
+  if (lineMeta.storefront_section === "kids" || lineMeta.cart_group === "kids") {
+    return true
+  }
+
+  const productRaw = (item.product as Record<string, unknown> | undefined) ?? {}
+  const handleFromLine =
+    typeof item.product_handle === "string" ? item.product_handle : undefined
+  const product: Record<string, unknown> = {
+    ...productRaw,
+    handle:
+      (typeof productRaw.handle === "string" && productRaw.handle) ||
+      handleFromLine,
+    metadata: (productRaw.metadata as Record<string, unknown> | undefined) ?? {},
+  }
+
+  return (
+    isKidsMetadataStorefrontProduct(product) ||
+    isOliverKidsCollectionProduct(product)
+  )
+}
+
+type RoomSetIdsDetail = {
+  room_set?: { items?: Array<{ product?: { id?: string } }> }
+}
+
+/** Thrown when RoomSet membership cannot be trusted (fail-closed for /catalog). */
+export class KidsMembershipError extends Error {
+  readonly code = "KIDS_MEMBERSHIP_UNAVAILABLE" as const
+  readonly cause?: unknown
+  constructor(message: string, options?: { cause?: unknown }) {
+    super(message)
+    this.name = "KidsMembershipError"
+    this.cause = options?.cause
+  }
+}
+
+export type KidsRoomSetMembership = {
+  kidsRoomSetProductIds: Set<string>
+  nonKidsRoomSetProductIds: Set<string>
+}
+
+export type RoomSetMembershipClients = {
+  getRoomSets: typeof getRoomSets
+  /** Lean detail: product ids only (`?view=product_ids`). */
+  getRoomSetProductIdsBySlug: typeof getRoomSetProductIdsBySlug
+}
+
+/**
+ * Independent RoomSet membership fetch (list + lean id details).
+ * Empty active room-sets list is a valid success (membership sets empty).
+ * Any list failure or any lean detail failure → KidsMembershipError (no partial sets).
+ * Demo-SKU filtering happens at rehydrate time against store products (lean has ids only).
+ */
+export async function fetchKidsRoomSetMembership(
+  clients: RoomSetMembershipClients = {
+    getRoomSets,
+    getRoomSetProductIdsBySlug,
+  }
+): Promise<KidsRoomSetMembership> {
+  let data: { room_sets?: Array<{ slug?: string; room_type?: string }> }
+  try {
+    data = await clients.getRoomSets()
+  } catch (cause) {
+    throw new KidsMembershipError("Failed to load room sets for kids membership", {
+      cause,
+    })
+  }
+
+  if (!Array.isArray(data.room_sets)) {
+    throw new KidsMembershipError(
+      "Invalid room sets list for kids membership (room_sets missing or not an array)"
+    )
+  }
+
+  const roomSets = data.room_sets
+  const kidsSlugs: string[] = []
+  const nonKidsSlugs: string[] = []
+
+  for (const rs of roomSets) {
+    if (rs == null || typeof rs !== "object") {
+      throw new KidsMembershipError(
+        "Invalid room set entry for kids membership (null or non-object)"
+      )
+    }
+    if (typeof rs.slug !== "string" || !rs.slug) {
+      throw new KidsMembershipError(
+        "Invalid room set entry for kids membership (missing slug)"
+      )
+    }
+    if (rs.room_type === KIDS_ROOM_TYPE) kidsSlugs.push(rs.slug)
+    else nonKidsSlugs.push(rs.slug)
+  }
+
+  const fetchLean = async (slug: string): Promise<RoomSetIdsDetail> => {
+    let detail: unknown
+    try {
+      detail = await clients.getRoomSetProductIdsBySlug(slug)
+    } catch (cause) {
+      throw new KidsMembershipError(
+        `Failed to load room set detail for kids membership: ${slug}`,
+        { cause }
+      )
+    }
+    if (detail == null || typeof detail !== "object") {
+      throw new KidsMembershipError(
+        `Invalid lean room set detail for kids membership (${slug}: null or non-object)`
+      )
+    }
+    return detail as RoomSetIdsDetail
+  }
+
+  const [kidsDetails, nonKidsDetails] = await Promise.all([
+    Promise.all(kidsSlugs.map(fetchLean)),
+    Promise.all(nonKidsSlugs.map(fetchLean)),
+  ])
+
+  const extractProductIds = (
+    details: RoomSetIdsDetail[],
+    label: string
+  ): Set<string> => {
+    const out = new Set<string>()
+    for (const d of details) {
+      if (d == null || typeof d !== "object") {
+        throw new KidsMembershipError(
+          `Invalid lean room set detail for kids membership (${label}: null detail)`
+        )
+      }
+      const items = d.room_set?.items
+      if (!d.room_set || !Array.isArray(items)) {
+        throw new KidsMembershipError(
+          `Invalid lean room set detail for kids membership (${label})`
+        )
+      }
+      for (const item of items) {
+        if (item == null || typeof item !== "object") {
+          throw new KidsMembershipError(
+            `Lean room set item null/non-object for kids membership (${label})`
+          )
+        }
+        const pid = item.product?.id
+        if (typeof pid !== "string" || !pid) {
+          throw new KidsMembershipError(
+            `Lean room set item missing product.id for kids membership (${label})`
+          )
+        }
+        out.add(pid)
+      }
+    }
+    return out
+  }
+
+  const nonKidsRoomSetProductIds = extractProductIds(nonKidsDetails, "non-kids")
+  const kidsRoomSetProductIds = new Set<string>()
+  for (const pid of extractProductIds(kidsDetails, "kids")) {
+    if (!nonKidsRoomSetProductIds.has(pid)) {
+      kidsRoomSetProductIds.add(pid)
+    }
+  }
+
+  return {
+    kidsRoomSetProductIds,
+    nonKidsRoomSetProductIds,
+  }
+}
 
 /**
  * Resolves kids storefront assortment — union of:
  *
  * 1. **Room-set kids-only** — products in at least one kids room set
- *    (`room_type` «детская») and in **no** non-kids room sets.
- *    Canonical Medusa seed demo SKUs (`isMedusaCanonicalSeedDemoProduct`) are
- *    dropped here so `/kids/catalog` is not driven by placeholder inventory.
+ *    (`room_type` «детская») and in **no** non-kids room sets; rehydrated
+ *    from published store products by id (lean RoomSet payload is not SoT).
+ * 2. **Oliver kids line** — metadata.collection Oliver kids, active scope, not BESPOKE.
+ * 3. **Kids metadata storefront line** — storefront_section kids / willie-winkie.
  *
- * 2. **Oliver kids line** — published store products with
- *    `metadata.collection === OLIVER_KIDS_COLLECTION_KEY`, in active catalog
- *    scope, not BESPOKE, and not present in any non-kids room set (same
- *    cross-section rule as (1)).
- *
- * 3. **Kids metadata storefront line** — published store products with
- *    `metadata.storefront_section === "kids"` or
- *    `metadata.collection === "willie-winkie"`, same guards as (2).
- *
- * Used for:
- *   - `/kids/catalog`
- *   - exclusion from `/catalog` (with main catalog’s own demo/collection rules)
- *   - cart grouping ("Woodright Kids" vs "Woodright")
+ * Membership (RoomSet) and store products are fetched in parallel when not supplied.
+ * RoomSet membership failures throw KidsMembershipError - callers must fail-closed
+ * (never treat as empty kids set on /catalog).
  */
 export type ResolveKidsProductsOptions = {
-  /** When set (e.g. `/catalog` already fetched `/store/products`), avoids a second identical request. */
   storeProducts?: Array<Record<string, unknown>>
+  /** Sync membership or Promise (for tests / parallel handoff). */
+  membership?: KidsRoomSetMembership | Promise<KidsRoomSetMembership>
 }
 
 export async function resolveKidsProducts(
@@ -59,87 +226,58 @@ export async function resolveKidsProducts(
   ids: Set<string>
   products: Array<Record<string, unknown>>
 }> {
-  const data = await getRoomSets()
-  const roomSets = (data.room_sets ?? []) as Array<{
-    slug?: string
-    room_type?: string
-  }>
+  const membershipPromise =
+    options?.membership !== undefined
+      ? Promise.resolve(options.membership)
+      : fetchKidsRoomSetMembership()
 
-  const kidsSlugs: string[] = []
-  const nonKidsSlugs: string[] = []
+  const storePromise =
+    options?.storeProducts !== undefined
+      ? Promise.resolve(options.storeProducts)
+      : getCatalogProducts().then(
+          (storeData) =>
+            (storeData.products ?? []) as Array<Record<string, unknown>>
+        )
 
-  for (const rs of roomSets) {
-    if (!rs.slug) continue
-    if (rs.room_type === KIDS_ROOM_TYPE) kidsSlugs.push(rs.slug)
-    else nonKidsSlugs.push(rs.slug)
-  }
-
-  const fetchDetail = async (slug: string): Promise<RoomSetDetail> => {
-    try {
-      return await getRoomSetBySlug(slug)
-    } catch {
-      return null
-    }
-  }
-
-  const [kidsDetails, nonKidsDetails] = await Promise.all([
-    Promise.all(kidsSlugs.map(fetchDetail)),
-    Promise.all(nonKidsSlugs.map(fetchDetail)),
+  const [membership, storeProducts] = await Promise.all([
+    membershipPromise,
+    storePromise,
   ])
 
-  const extractProductIds = (details: RoomSetDetail[]): Set<string> => {
-    const out = new Set<string>()
-    for (const d of details) {
-      if (!d) continue
-      const items = ((d.room_set as Record<string, unknown>)?.items ??
-        []) as Array<{ product?: Record<string, unknown> }>
-      for (const item of items) {
-        const pid = item.product?.id as string | undefined
-        if (pid) out.add(pid)
-      }
-    }
-    return out
+  const { kidsRoomSetProductIds, nonKidsRoomSetProductIds } = membership
+  const storeById = new Map<string, Record<string, unknown>>()
+  for (const p of storeProducts) {
+    const pid = p.id as string | undefined
+    if (pid) storeById.set(pid, p)
   }
-
-  const nonKidsProductIds = extractProductIds(nonKidsDetails)
 
   const ids = new Set<string>()
   const products: Array<Record<string, unknown>> = []
 
-  for (const d of kidsDetails) {
-    if (!d) continue
-    const items = ((d.room_set as Record<string, unknown>)?.items ??
-      []) as Array<{ product?: Record<string, unknown> }>
-    for (const item of items) {
-      const product = item.product
-      const pid = product?.id as string | undefined
-      if (
-        product &&
-        pid &&
-        !ids.has(pid) &&
-        !nonKidsProductIds.has(pid) &&
-        !isMedusaCanonicalSeedDemoProduct(product)
-      ) {
-        ids.add(pid)
-        products.push(product)
-      }
+  for (const pid of kidsRoomSetProductIds) {
+    if (ids.has(pid) || nonKidsRoomSetProductIds.has(pid)) continue
+    const fromStore = storeById.get(pid)
+    if (fromStore) {
+      if (isMedusaCanonicalSeedDemoProduct(fromStore)) continue
+      if (!isProductInActiveCatalogScope(fromStore)) continue
+      const classification = fromStore.product_classification as
+        | { product_type?: string }
+        | undefined
+      // BESPOKE is not kids-nav assortment; main catalog excludes it via
+      // classification scope, not via kids membership.
+      if (classification?.product_type === BESPOKE_PRODUCT_TYPE) continue
+      ids.add(pid)
+      products.push(fromStore)
+      continue
     }
-  }
-
-  let storeProducts: Array<Record<string, unknown>> = []
-  if (options?.storeProducts) {
-    storeProducts = options.storeProducts
-  } else {
-    try {
-      const storeData = await getProducts()
-      storeProducts = (storeData.products ?? []) as Array<Record<string, unknown>>
-    } catch {
-      storeProducts = []
-    }
+    // Not in published store list: still exclude from /catalog.
+    ids.add(pid)
   }
 
   for (const p of storeProducts) {
-    if (!isOliverKidsCollectionProduct(p) && !isKidsMetadataStorefrontProduct(p)) continue
+    if (!isOliverKidsCollectionProduct(p) && !isKidsMetadataStorefrontProduct(p)) {
+      continue
+    }
     if (!isProductInActiveCatalogScope(p)) continue
     const classification = p.product_classification as
       | { product_type?: string }
@@ -147,7 +285,7 @@ export async function resolveKidsProducts(
     if (classification?.product_type === BESPOKE_PRODUCT_TYPE) continue
 
     const pid = p.id as string | undefined
-    if (!pid || ids.has(pid) || nonKidsProductIds.has(pid)) continue
+    if (!pid || ids.has(pid) || nonKidsRoomSetProductIds.has(pid)) continue
     ids.add(pid)
     products.push(p)
   }

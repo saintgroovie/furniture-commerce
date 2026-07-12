@@ -242,6 +242,10 @@ function mapToFacetOptions(
 /**
  * Facets from products matching all filters except `excludeGroup`
  * (avoids dead options when possible).
+ *
+ * Prefer `buildAllCatalogFacets` on catalog pages (one coordinated pass).
+ * This helper keeps legacy semantics: all facet fields are derived from the
+ * single self-excluding pool for `excludeGroup`.
  */
 export function buildCatalogFacets(
   products: Record<string, unknown>[],
@@ -258,7 +262,26 @@ export function buildCatalogFacets(
   }
 
   const pool = applyCatalogFilters(products, partial)
+  return facetsFromPools(products, state, {
+    type: pool,
+    category: pool,
+    collection: pool,
+    price: pool,
+  })
+}
 
+type FacetPools = {
+  type: Record<string, unknown>[]
+  category: Record<string, unknown>[]
+  collection: Record<string, unknown>[]
+  price: Record<string, unknown>[]
+}
+
+function facetsFromPools(
+  products: Record<string, unknown>[],
+  state: CatalogFilterState,
+  pools: FacetPools
+): CatalogFacets {
   const typeCounts = new Map<string, number>()
   const currentTypeCounts = new Map<string, number>()
   for (const p of products) {
@@ -268,7 +291,7 @@ export function buildCatalogFacets(
       typeCounts.set(pt, (typeCounts.get(pt) ?? 0) + 1)
     }
   }
-  for (const p of pool) {
+  for (const p of pools.type) {
     const pt = (p.product_classification as { product_type?: string } | undefined)
       ?.product_type
     if (pt === "STANDARD" || pt === "CONFIGURABLE" || pt === "BESPOKE") {
@@ -276,8 +299,6 @@ export function buildCatalogFacets(
     }
   }
 
-  // Segmented tabs stay STANDARD/CONFIGURABLE only; BESPOKE is the separate CTA.
-  // Still count BESPOKE for fidelity when that filter is active.
   const tabTypes = ["STANDARD", "CONFIGURABLE"] as const
   const types = tabTypes
     .filter((value) => typeCounts.has(value) || state.type === value)
@@ -288,11 +309,14 @@ export function buildCatalogFacets(
     }))
 
   const categoryCounts = countByKey(products, getProductCategoryKey)
-  const currentCategoryCounts = countByKey(pool, getProductCategoryKey)
+  const currentCategoryCounts = countByKey(pools.category, getProductCategoryKey)
   const collectionCounts = countByKey(products, getCollectionFilterKey)
-  const currentCollectionCounts = countByKey(pool, getCollectionFilterKey)
+  const currentCollectionCounts = countByKey(
+    pools.collection,
+    getCollectionFilterKey
+  )
 
-  const prices = pool
+  const prices = pools.price
     .map((p) => finiteProductPrice(p))
     .filter((v): v is number => v != null)
   const priceRange =
@@ -302,10 +326,87 @@ export function buildCatalogFacets(
 
   return {
     types,
-    categories: mapToFacetOptions(categoryCounts, getCategoryFilterLabel, currentCategoryCounts),
-    collections: mapToFacetOptions(collectionCounts, getCollectionFilterLabel, currentCollectionCounts),
+    categories: mapToFacetOptions(
+      categoryCounts,
+      getCategoryFilterLabel,
+      currentCategoryCounts
+    ),
+    collections: mapToFacetOptions(
+      collectionCounts,
+      getCollectionFilterLabel,
+      currentCollectionCounts
+    ),
     priceRange,
   }
+}
+
+/**
+ * Self-excluding facets in one coordinated pass.
+ * For facet group G, pool = all filters except G (never the fully filtered set alone).
+ * Matcher flags are computed once per product and reused across pools.
+ */
+export function buildAllCatalogFacets(
+  products: Record<string, unknown>[],
+  state: CatalogFilterState
+): CatalogFacets {
+  const q = state.q ?? ""
+  const matchQ = products.map((p) => matchesText(p, q))
+  const matchType = products.map((p) => matchesType(p, state.type))
+  const matchCategory = products.map((p) =>
+    matchesCategory(p, state.category)
+  )
+  const matchCollection = products.map((p) =>
+    matchesCollection(p, state.collection)
+  )
+  const matchPrice = products.map((p) =>
+    matchesPrice(p, state.priceMin, state.priceMax)
+  )
+
+  const pick = (
+    flags: boolean[]
+  ): Record<string, unknown>[] => {
+    const out: Record<string, unknown>[] = []
+    for (let i = 0; i < products.length; i++) {
+      if (flags[i]) out.push(products[i]!)
+    }
+    return out
+  }
+
+  const and = (...parts: boolean[][]): boolean[] => {
+    const out = new Array<boolean>(products.length)
+    for (let i = 0; i < products.length; i++) {
+      let ok = true
+      for (const part of parts) {
+        if (!part[i]) {
+          ok = false
+          break
+        }
+      }
+      out[i] = ok
+    }
+    return out
+  }
+
+  // Self-excluding pools: omit the group's own matcher.
+  const poolType = pick(
+    and(matchQ, matchCategory, matchCollection, matchPrice)
+  )
+  const poolCategory = pick(
+    and(matchQ, matchType, matchCollection, matchPrice)
+  )
+  const poolCollection = pick(
+    and(matchQ, matchType, matchCategory, matchPrice)
+  )
+  const poolPrice = pick(
+    and(matchQ, matchType, matchCategory, matchCollection)
+  )
+
+  return facetsFromPools(products, state, {
+    type: poolType,
+    category: poolCategory,
+    collection: poolCollection,
+    price: poolPrice,
+  })
 }
 
 export function sortDisplayEntries(
