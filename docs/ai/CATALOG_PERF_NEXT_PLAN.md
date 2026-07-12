@@ -19,26 +19,22 @@ Medusa SoT. Thin storefront. Нет BFF. Cart `no-store`. Lean RoomSet толь�
 ## 2. Порядок работ (Codex gate на каждой фазе)
 
 ```text
-G0  Measure post-package baseline          → Codex
-G1  PERF-02 Fixed catalog listing DTO      → Codex (обязателен, Store API)
-H1  PERF-04 + PERF-06 Swatch IO-gate +
-    card photo budget (card-only)          → Codex
-H2  PERF-08 LCP hero priority (если не
-    вошло в H1)                            → Codex recommended
---- stop / operator decide ---
-G2  PERF-03 Slim browse DTO for client     → later
-H4  PERF-07 Derivatives + CDN              → infra, later
+G0  Measure post-package baseline          → done
+G1  PERF-02 catalog listing path           → done (commit 3defdf9)
+H1  PERF-04 + PERF-06 Swatch IO-gate       → done
+H2  PERF-08 LCP hero priority              → done
+--- wave 2 (operator) ---
+G2  PERF-03 Slim browse DTO                → in progress
+H4  PERF-07 Derivatives + CDN              → baseline + URL contract
 J   PERF-11 Cache TTL                      → только после invalidation
 G3  PERF-10 Batch RoomSet ids              → когда N>0 измерен
 ```
 
-**Этот прогон:** `G0 → G1 → H1` (+ H2 если маленький diff).
-
 **Прогресс (2026-07-12):**
-- G0: done + Codex `safe_to_proceed_G1`
-- G1: `/store/catalog-products` live OK (−~107KB / −17%); smoke 107/38; Codex `safe_to_adopt_G1`
-- H1 + H2: swatch IO-gate + `priorityHero` first card; Codex `safe_to_proceed_next` / package `safe_to_adopt`
-- Stop line reached - next only by operator decide (G2 / H4 / J / G3)
+- Package G0→H2 committed: `3defdf9`
+- G2: allowlist browse DTO (fixes G1 drop of `finish_metadata_source` for Provence)
+- H4: card derivative URL helper + image baseline script (no broken fallback to missing webp yet)
+- Storefront `:3002` up (catalog 107 cards when Medusa up)
 
 ## 3. Фазы
 
