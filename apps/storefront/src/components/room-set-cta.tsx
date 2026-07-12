@@ -14,6 +14,7 @@ type Props = { roomSet: Record<string, unknown> }
 function getProductType(product: Record<string, unknown>): string | undefined {
   return (
     (product.product_classification as { product_type?: string } | undefined)?.product_type ??
+    (product.productType as { product_type?: string } | undefined)?.product_type ??
     (product.custom_product_type as { product_type?: string } | undefined)?.product_type
   )
 }

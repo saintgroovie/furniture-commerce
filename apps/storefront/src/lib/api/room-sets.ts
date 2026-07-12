@@ -40,3 +40,20 @@ export async function getRoomSetProductIdsBySlug(slug: string) {
     }
   }>
 }
+
+/**
+ * Storefront room detail (`?view=storefront`): title / type / first variant id.
+ * Default full detail remains available via `getRoomSetBySlug`.
+ */
+export async function getRoomSetStorefrontBySlug(slug: string) {
+  const base = getBaseUrl()
+  const res = await medusaFetch(
+    `${base}/store/room-sets/${encodeURIComponent(slug)}?view=storefront`
+  )
+  if (res.status === 404) throw new Error(NOT_FOUND)
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error((data as { message?: string }).message ?? await res.text())
+  }
+  return res.json()
+}
