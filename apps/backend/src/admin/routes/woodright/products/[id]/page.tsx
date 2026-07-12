@@ -19,10 +19,12 @@ import {
 import { buildAdminErrorViewModel } from "../../../../components/woodright/admin-error-view-model"
 import {
   fetchAdminProduct,
+  fetchProductWorkspaceBundle,
   fetchVariantPrices,
   stockAdminProductPath,
   updateAdminProduct,
 } from "../../../../lib/product-workspace/admin-api"
+import { VariantsPricesPanel } from "../../../../lib/product-workspace/VariantsPricesPanel"
 import { buildClassificationView } from "../../../../lib/product-workspace/classification"
 import { buildMediaSummary } from "../../../../lib/product-workspace/media-summary"
 import { buildPriceSummary } from "../../../../lib/product-workspace/price-summary"
@@ -102,6 +104,8 @@ const ProductWorkspacePage = () => {
   const [loading, setLoading] = useState(true)
   const [product, setProduct] = useState<AdminProductPayload | null>(null)
   const [priceRows, setPriceRows] = useState<Array<Array<{ amount: number; currency_code: string }>>>([])
+  const [variantsTruncated, setVariantsTruncated] = useState(false)
+  const [variantsDirty, setVariantsDirty] = useState(false)
   const [loadError, setLoadError] = useState<ReturnType<typeof normalizeAdminError> | null>(null)
   const [saveState, dispatchSave] = useReducer(
     reduceSaveState,
@@ -110,41 +114,37 @@ const ProductWorkspacePage = () => {
 
   useEffect(() => {
     if (!flagOn || !id) return
-    let cancelled = false
+    const ac = new AbortController()
     setLoading(true)
     setLoadError(null)
 
     ;(async () => {
       try {
-        const prodRes = await fetchAdminProduct(id)
-        if ("status" in prodRes) {
-          if (cancelled) return
+        const bundle = await fetchProductWorkspaceBundle(id, { signal: ac.signal })
+        if (ac.signal.aborted) return
+        if ("status" in bundle) {
           setLoadError(
             normalizeAdminError({
-              httpStatus: prodRes.status,
+              httpStatus: bundle.status,
               endpoint: `/admin/products/${id}`,
-              body: prodRes.body,
-              codeHint: prodRes.status === 404 ? "deleted_entity" : undefined,
+              body: bundle.body,
+              codeHint: bundle.status === 404 ? "deleted_entity" : undefined,
             })
           )
           setProduct(null)
           return
         }
-        const pricesRes = await fetchVariantPrices(id)
-        if (cancelled) return
-        setProduct(prodRes.product)
+        setProduct(bundle.product)
+        setVariantsTruncated(bundle.truncated)
+        setPriceRows((bundle.product.variants ?? []).map((v) => v.prices ?? []))
         dispatchSave({
           type: "hydrate",
-          fields: toEditable(prodRes.product),
-          savedAt: prodRes.product.updated_at ?? null,
+          fields: toEditable(bundle.product),
+          savedAt: bundle.product.updated_at ?? null,
         })
-        if ("variants" in pricesRes) {
-          setPriceRows(pricesRes.variants.map((v) => v.prices ?? []))
-        } else {
-          setPriceRows([])
-        }
+        setVariantsDirty(false)
       } catch (e) {
-        if (cancelled) return
+        if (ac.signal.aborted) return
         setLoadError(
           normalizeAdminError({
             error: e,
@@ -153,27 +153,26 @@ const ProductWorkspacePage = () => {
           })
         )
       } finally {
-        if (!cancelled) setLoading(false)
+        if (!ac.signal.aborted) setLoading(false)
       }
     })()
 
     return () => {
-      cancelled = true
+      ac.abort()
     }
   }, [flagOn, id])
 
   useEffect(() => {
-    const dirty = isDirty(saveState)
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (!dirty) return
+      if (!(isDirty(saveState) || variantsDirty)) return
       e.preventDefault()
       e.returnValue = ""
     }
     window.addEventListener("beforeunload", onBeforeUnload)
     return () => window.removeEventListener("beforeunload", onBeforeUnload)
-  }, [saveState])
+  }, [saveState, variantsDirty])
 
-  const dirty = isDirty(saveState)
+  const dirty = isDirty(saveState) || variantsDirty
   const blocker = useBlocker(dirty)
   useEffect(() => {
     if (blocker.state !== "blocked") return
@@ -521,17 +520,15 @@ const ProductWorkspacePage = () => {
       ) : null}
 
       {tab === "variants" ? (
-        <Container className="p-4">
-          <Text>
-            Вариантов: {product.variants?.length ?? 0}. Цены: {prices.label}.
-          </Text>
-          <Text size="small" className="mt-2 text-ui-fg-subtle">
-            Полноценная матрица вариантов будет добавлена в следующем пакете (Package C).
-          </Text>
-          <Button className="mt-3" variant="secondary" asChild>
-            <Link to={stockAdminProductPath(product.id)}>Открыть в стандартной админке</Link>
-          </Button>
-        </Container>
+        <VariantsPricesPanel
+          product={product}
+          truncated={variantsTruncated}
+          onDirtyChange={setVariantsDirty}
+          onProductUpdated={(next) => {
+            setProduct(next)
+            setPriceRows((next.variants ?? []).map((v) => v.prices ?? []))
+          }}
+        />
       ) : null}
 
       {tab === "gallery" ? (

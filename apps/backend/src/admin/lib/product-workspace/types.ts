@@ -68,7 +68,31 @@ export type AdminProductPayload = {
   updated_at?: string | null
   collection?: { id?: string; title?: string | null } | null
   images?: Array<{ id?: string; url?: string | null }> | null
-  variants?: Array<{ id?: string; sku?: string | null; title?: string | null }> | null
+  options?: Array<{
+    id: string
+    title?: string | null
+    values?: Array<{ id?: string; value?: string | null }> | null
+  }> | null
+  variants?: Array<{
+    id?: string
+    sku?: string | null
+    title?: string | null
+    manage_inventory?: boolean | null
+    options?: Array<{
+      id?: string
+      value?: string | null
+      option_id?: string | null
+      option?: { id?: string; title?: string | null } | null
+    }> | null
+    prices?: Array<{
+      id: string
+      amount: number
+      currency_code: string
+      min_quantity?: number | null
+      max_quantity?: number | null
+      rules?: Record<string, unknown> | null
+    }> | null
+  }> | null
   productClassification?: { product_type?: string | null } | null
   product_classification?: { product_type?: string | null } | null
   /** @deprecated legacy joiner name before product_classification rename */

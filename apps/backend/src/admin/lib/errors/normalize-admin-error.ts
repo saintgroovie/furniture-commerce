@@ -4,6 +4,12 @@ export type AdminErrorCode =
   | "duplicate_sku"
   | "duplicate_option_combo"
   | "missing_price"
+  | "invalid_price"
+  | "negative_amount"
+  | "missing_price_set"
+  | "price_not_found"
+  | "rule_based_price_unsupported"
+  | "partial_bulk_failure"
   | "invalid_currency"
   | "missing_inventory"
   | "forbidden"
@@ -69,6 +75,36 @@ const CATALOG: Record<AdminErrorCode, CatalogEntry> = {
     title: "Нет цены",
     explanation: "У варианта нет цены в нужной валюте.",
     action: "Добавьте цену в рублях и сохраните.",
+  },
+  invalid_price: {
+    title: "Некорректная цена",
+    explanation: "Сумма не подходит для сохранения.",
+    action: "Введите целое число ≥ 0 без скрытых копеек и повторите.",
+  },
+  negative_amount: {
+    title: "Отрицательная сумма",
+    explanation: "Цена не может быть меньше нуля.",
+    action: "Введите 0 или положительную сумму.",
+  },
+  missing_price_set: {
+    title: "Нет набора цен",
+    explanation: "У варианта нет связанного price set.",
+    action: "Откройте варианты в стандартной админке и проверьте цены.",
+  },
+  price_not_found: {
+    title: "Цена не найдена",
+    explanation: "Выбранная цена больше не существует.",
+    action: "Обновите страницу и выберите актуальную цену.",
+  },
+  rule_based_price_unsupported: {
+    title: "Сложная цена",
+    explanation: "У цены есть правила, прайс-лист или лимиты количества.",
+    action: "Измените её в стандартной админке, чтобы не затереть правила.",
+  },
+  partial_bulk_failure: {
+    title: "Часть изменений не применилась",
+    explanation: "Массовая операция завершилась с ошибками по отдельным вариантам.",
+    action: "Посмотрите отчёт и повторите только неудавшиеся строки.",
   },
   invalid_currency: {
     title: "Неверная валюта",
@@ -225,6 +261,14 @@ function mapFromServerCode(code?: string): AdminErrorCode | null {
     return "duplicate_option_combo"
   }
   if (c.includes("price") && c.includes("missing")) return "missing_price"
+  if (c.includes("price_set") && (c.includes("missing") || c.includes("not_found"))) {
+    return "missing_price_set"
+  }
+  if (c.includes("price") && c.includes("not_found")) return "price_not_found"
+  if (c.includes("negative")) return "negative_amount"
+  if (c.includes("rule") && c.includes("price")) return "rule_based_price_unsupported"
+  if (c.includes("partial") && c.includes("bulk")) return "partial_bulk_failure"
+  if (c.includes("invalid") && c.includes("price")) return "invalid_price"
   if (c.includes("currency")) return "invalid_currency"
   if (c.includes("inventory")) return "missing_inventory"
   if (c.includes("promotion") || c.includes("promo")) return "promotion_rule_error"
@@ -244,7 +288,16 @@ function mapFromRawMessage(raw?: string): AdminErrorCode | null {
     return "duplicate_sku"
   }
   if (m.includes("required")) return "required"
-  if (m.includes("price")) return "missing_price"
+  if (m.includes("negative") || m.includes("must be greater") || m.includes(">= 0")) {
+    return "negative_amount"
+  }
+  if (m.includes("price list") || m.includes("price_list") || m.includes("min_quantity") || m.includes("rules")) {
+    return "rule_based_price_unsupported"
+  }
+  if (m.includes("price set") || m.includes("price_set")) return "missing_price_set"
+  if (m.includes("invalid") && m.includes("price")) return "invalid_price"
+  if (m.includes("price") && m.includes("not found")) return "price_not_found"
+  if (m.includes("price") && m.includes("missing")) return "missing_price"
   return null
 }
 
