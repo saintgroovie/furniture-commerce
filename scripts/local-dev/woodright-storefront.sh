@@ -4,13 +4,18 @@
 # Usage:
 #   scripts/local-dev/woodright-storefront.sh status
 #   scripts/local-dev/woodright-storefront.sh stop
-#   scripts/local-dev/woodright-storefront.sh start
-#   scripts/local-dev/woodright-storefront.sh restart
+#   scripts/local-dev/woodright-storefront.sh start [qa|develop]
+#   scripts/local-dev/woodright-storefront.sh restart [qa|develop]
+#
+# Modes:
+#   develop - next dev (.next-dev) — HMR; first hits compile ~15–30s
+#   qa      - next start (.next-build) — buyer-uptime; needs yarn build first
 #
 # Env:
 #   WOODRIGHT_REPO_ROOT
 #   WOODRIGHT_QA_DIR
 #   WOODRIGHT_STOREFRONT_PORT  default 3002
+#   WOODRIGHT_STOREFRONT_MODE  default develop (LaunchAgent plist may set qa)
 set -euo pipefail
 
 export PATH="/usr/local/opt/node@22/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin${PATH:+:$PATH}"
@@ -25,6 +30,7 @@ LOCK_DIR="$QA_DIR/storefront-${PORT}.lock"
 OUT_LOG="$QA_DIR/storefront-${PORT}.log"
 ERR_LOG="$QA_DIR/storefront-${PORT}.err.log"
 HEALTH_URL="http://127.0.0.1:${PORT}/"
+BUILD_MARKER="$STORE_DIR/.next-build/BUILD_ID"
 
 mkdir -p "$QA_DIR"
 
@@ -105,10 +111,93 @@ is_our_storefront_pid() {
   [[ -n "$cwd" && ( "$cwd" == "$STORE_DIR" || "$cwd" == "$STORE_DIR"/* ) ]]
 }
 
+normalize_mode() {
+  case "${1:-}" in
+    qa|QA) printf 'qa' ;;
+    develop|dev|development|"") printf 'develop' ;;
+    *) die "unknown storefront mode: $1 (use qa|develop)" ;;
+  esac
+}
+
+require_qa_build() {
+  [[ -f "$BUILD_MARKER" ]] || return 1
+  return 0
+}
+
+resolve_start_mode() {
+  local requested
+  requested="$(normalize_mode "${1:-${WOODRIGHT_STOREFRONT_MODE:-develop}}")"
+  if [[ "$requested" == "qa" ]]; then
+    if require_qa_build; then
+      printf '%s' qa
+      return 0
+    fi
+    printf 'warn: qa build missing (need apps/storefront yarn build → .next-build/BUILD_ID) - falling back to develop\n' >&2
+    printf 'warn: to use qa later: cd apps/storefront && yarn build && %s restart qa\n' "$0" >&2
+    printf '%s' develop
+    return 0
+  fi
+  printf '%s' develop
+}
+
+detect_mode_from_pid() {
+  local p="$1" cmd cur pp i
+  cur="$p"
+  for i in 1 2 3 4 5 6 7 8; do
+    cmd="$(pid_command "$cur")"
+    if [[ "$cmd" == *" next start"* || "$cmd" == *"/next start"* || "$cmd" == *"next start --port"* ]]; then
+      printf 'qa'
+      return 0
+    fi
+    if [[ "$cmd" == *" next dev"* || "$cmd" == *"/next dev"* || "$cmd" == *"next dev --port"* ]]; then
+      printf 'develop'
+      return 0
+    fi
+    if [[ "$cmd" == *".next-build"* ]]; then
+      printf 'qa'
+      return 0
+    fi
+    if [[ "$cmd" == *".next-dev"* ]]; then
+      printf 'develop'
+      return 0
+    fi
+    # next-server child: infer from open dist dir
+    if /usr/sbin/lsof -a -p "$cur" -d cwd -Fn 2>/dev/null | grep -Fq '.next-build'; then
+      printf 'qa'
+      return 0
+    fi
+    if /usr/sbin/lsof -p "$cur" 2>/dev/null | grep -E -q '/\.next-build(/|$)'; then
+      printf 'qa'
+      return 0
+    fi
+    if /usr/sbin/lsof -p "$cur" 2>/dev/null | grep -E -q '/\.next-dev(/|$)'; then
+      printf 'develop'
+      return 0
+    fi
+    pp="$(ps -o ppid= -p "$cur" 2>/dev/null | tr -d ' ' || true)"
+    [[ -z "$pp" || "$pp" == "0" || "$pp" == "1" ]] && break
+    cur="$pp"
+  done
+  # LaunchAgent env is authoritative when process tree is opaque
+  if [[ -f "$HOME/Library/LaunchAgents/com.woodright.storefront-qa.plist" ]]; then
+    local la_mode
+    la_mode="$(plutil -extract EnvironmentVariables.WOODRIGHT_STOREFRONT_MODE raw "$HOME/Library/LaunchAgents/com.woodright.storefront-qa.plist" 2>/dev/null || true)"
+    case "$la_mode" in
+      qa|develop) printf '%s' "$la_mode"; return 0 ;;
+    esac
+  fi
+  printf 'unknown'
+}
+
 write_state() {
-  local pid="$1"
+  local pid="$1" mode="${2:-unknown}"
+  case "$mode" in
+    develop|qa|unknown) ;;
+    *) mode=unknown ;;
+  esac
   cat >"$STATE_FILE" <<EOF
 pid=$pid
+mode=$mode
 repo=$REPO_ROOT
 port=$PORT
 lstart=$(pid_lstart "$pid")
@@ -145,6 +234,7 @@ confirm_target_pid() {
 
 cmd_status() {
   local pids code identity="none" state_pid="" listen_pid="" owned=0
+  local mode_guess="unknown" state_mode=""
   pids="$(listeners_on_port || true)"
   code="$(http_code "$HEALTH_URL")"
   log "repo:    $REPO_ROOT"
@@ -157,6 +247,7 @@ cmd_status() {
       if is_our_storefront_pid "$p"; then
         owned=1
         [[ -z "$listen_pid" ]] && listen_pid="$p"
+        mode_guess="$(detect_mode_from_pid "$p")"
       fi
     done
   else
@@ -164,20 +255,39 @@ cmd_status() {
   fi
   if [[ -f "$STATE_FILE" ]]; then
     state_pid="$(read_state_field pid || true)"
+    state_mode="$(read_state_field mode || true)"
     if [[ -n "${state_pid:-}" ]] && state_matches_pid "$state_pid"; then
       identity="ok"
+      # Prefer live detection; state mode only fills gaps.
+      if [[ "$mode_guess" == "unknown" ]]; then
+        case "$state_mode" in develop|qa) mode_guess="$state_mode" ;; esac
+      fi
     else
       identity="stale"
     fi
-    log "state:   pid=$state_pid identity=$identity"
+    log "state:   pid=$state_pid mode=${state_mode:-?} identity=$identity"
   else
     log "state:   (none)"
   fi
+  if [[ "$mode_guess" == "unknown" ]]; then
+    case "${state_mode:-}" in
+      develop|qa) mode_guess="$state_mode" ;;
+    esac
+  fi
+  log "mode:    $mode_guess"
+  if [[ "$mode_guess" == "qa" ]]; then
+    log "compile: n/a (qa = next start; no mid-route compile)"
+  elif [[ "$mode_guess" == "develop" ]]; then
+    log "compile: on-demand (next dev; first route hits may take 15–30s)"
+  fi
   if [[ "$code" != "000" && "$code" != "000000" ]]; then
-    # LaunchAgent may leave state on an old parent PID; heal when buyer HTTP is up.
-    if [[ "$owned" -eq 1 && "$identity" != "ok" && -n "$listen_pid" ]]; then
-      write_state "$listen_pid"
-      log "state:   identity healed -> pid=$listen_pid"
+    if [[ "$owned" -eq 1 && -n "$listen_pid" ]]; then
+      case "$mode_guess" in develop|qa) ;; *) mode_guess="$(detect_mode_from_pid "$listen_pid")" ;; esac
+      state_mode="$(read_state_field mode 2>/dev/null || true)"
+      if [[ "$identity" != "ok" || ( "$mode_guess" == "develop" || "$mode_guess" == "qa" ) && "$state_mode" != "$mode_guess" ]]; then
+        write_state "$listen_pid" "$mode_guess"
+        log "state:   healed -> pid=$listen_pid mode=$mode_guess"
+      fi
     fi
     log "status:  ok"
     return 0
@@ -263,10 +373,15 @@ EOF
 }
 
 cmd_start() {
+  local mode
+  mode="$(resolve_start_mode "${1:-${WOODRIGHT_STOREFRONT_MODE:-develop}}")"
+  shift || true
+  [[ $# -eq 0 ]] || die "unexpected args: $*"
+
   [[ -d "$STORE_DIR" ]] || die "storefront missing: $STORE_DIR"
   [[ -f "$STORE_DIR/node_modules/next/dist/bin/next" ]] || die "Next missing under $STORE_DIR (yarn install?)"
 
-  local existing p code
+  local existing p code running_mode
   existing="$(listeners_on_port || true)"
   if [[ -n "${existing:-}" ]]; then
     code="$(http_code "$HEALTH_URL")"
@@ -277,30 +392,31 @@ cmd_start() {
       is_our_storefront_pid "$p" || die "healthy :$PORT listener pid=$p is not Woodright storefront for $REPO_ROOT"
     done
     p="$(printf '%s\n' $existing | awk 'NR==1{print;exit}')"
-    log "reuse healthy storefront on :$PORT (pids: $existing)"
-    write_state "$p"
+    running_mode="$(detect_mode_from_pid "$p")"
+    if [[ "$running_mode" != "unknown" && "$running_mode" != "$mode" ]]; then
+      die "mode conflict: :$PORT is $running_mode, requested $mode - run: $0 restart $mode"
+    fi
+    log "reuse healthy storefront on :$PORT mode=${running_mode:-?} (pids: $existing)"
+    write_state "$p" "${running_mode:-$mode}"
     cmd_status || true
     return 0
   fi
 
   : >"$OUT_LOG"
   : >"$ERR_LOG"
-  nohup bash -c '
-    set -euo pipefail
-    cd "$1" || exit 1
-    if [[ -d .next ]]; then
-      corrupt="$(find .next -maxdepth 2 -name "* 2" -print -quit 2>/dev/null || true)"
-      if [[ -n "${corrupt}" ]]; then
-        rm -rf .next 2>/dev/null || true
-      fi
-    fi
-    export NEXT_DIST_DIR="${NEXT_DIST_DIR:-.next}"
-    exec node node_modules/next/dist/bin/next dev --port "$2"
-  ' bash "$STORE_DIR" "$PORT" >>"$OUT_LOG" 2>>"$ERR_LOG" &
+  local runner="$QA_DIR/run-storefront.sh"
+  if [[ ! -f "$runner" ]]; then
+    runner="$(cd "$(dirname "$0")" && pwd)/run-storefront.sh"
+  fi
+  [[ -f "$runner" ]] || die "missing run-storefront.sh (install wrappers or keep scripts/local-dev/run-storefront.sh)"
+  nohup env WOODRIGHT_STOREFRONT_MODE="$mode" \
+    WOODRIGHT_REPO_ROOT="$REPO_ROOT" \
+    WOODRIGHT_STOREFRONT_PORT="$PORT" \
+    bash "$runner" >>"$OUT_LOG" 2>>"$ERR_LOG" &
   local pid=$!
   disown "$pid" 2>/dev/null || true
-  write_state "$pid"
-  log "started pid=$pid logs=$OUT_LOG"
+  write_state "$pid" "$mode"
+  log "started pid=$pid mode=$mode logs=$OUT_LOG"
   local i
   for i in $(seq 1 60); do
     code="$(http_code "$HEALTH_URL")"
@@ -308,8 +424,8 @@ cmd_start() {
       local listener
       listener="$(listeners_on_port | awk 'NR==1{print;exit}')"
       if [[ -n "${listener:-}" ]] && is_our_storefront_pid "$listener"; then
-        write_state "$listener"
-        log "ready http=$code"
+        write_state "$listener" "$mode"
+        log "ready http=$code mode=$mode"
         cmd_status || true
         return 0
       fi
@@ -323,13 +439,16 @@ cmd_start() {
 }
 
 cmd_restart() {
+  local mode_arg="${1:-${WOODRIGHT_STOREFRONT_MODE:-develop}}"
   cmd_stop
-  cmd_start
+  cmd_start "$mode_arg"
 }
 
 usage() {
   cat <<EOF
-Usage: $0 status|stop|start|restart
+Usage: $0 status|stop|start [qa|develop]|restart [qa|develop]
+  qa      - next start (.next-build) after: cd apps/storefront && yarn build
+  develop - next dev (.next-dev); default
 EOF
 }
 
@@ -339,8 +458,8 @@ main() {
   case "$cmd" in
     status) cmd_status ;;
     stop) with_lock cmd_stop ;;
-    start) with_lock cmd_start ;;
-    restart) with_lock cmd_restart ;;
+    start) with_lock cmd_start "$@" ;;
+    restart) with_lock cmd_restart "$@" ;;
     -h|--help|help) usage ;;
     *) usage; die "unknown command: $cmd" ;;
   esac

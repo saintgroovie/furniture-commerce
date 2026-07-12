@@ -29,6 +29,9 @@
     <string>/usr/local/opt/node@22/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
     <key>WOODRIGHT_REPO_ROOT</key>
     <string>/Users/leonidmbp/Documents/projects/furniture-commerce</string>
+    <!-- Buyer-uptime: next start from .next-build. For HMR edits set develop + rebuild not required. -->
+    <key>WOODRIGHT_STOREFRONT_MODE</key>
+    <string>qa</string>
   </dict>
 </dict>
 </plist>

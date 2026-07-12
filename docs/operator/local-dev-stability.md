@@ -70,14 +70,24 @@ Bare `KeepAlive=true` on oneshot `start` caused a relaunch storm - do not restor
 
 ### Storefront (`com.woodright.storefront-qa`)
 
+Buyer-uptime default is **`WOODRIGHT_STOREFRONT_MODE=qa`** (`next start` from `.next-build`) so catalog routes do not mid-compile for 15–30s after LaunchAgent restart.
+
 ```bash
+cd /Users/leonidmbp/Documents/projects/furniture-commerce/apps/storefront
+yarn build
+# marker:
+test -f .next-build/BUILD_ID
+cd ../../
 cp scripts/local-dev/com.woodright.storefront-qa.plist ~/Library/LaunchAgents/
 # installer also copies run-storefront.sh
 launchctl bootout gui/$(id -u)/com.woodright.storefront-qa 2>/dev/null || true
 rm -f ~/.woodright/qa-dev-servers/storefront-3002.pause
 launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.woodright.storefront-qa.plist
 launchctl print gui/$(id -u)/com.woodright.storefront-qa | head
+scripts/local-dev/woodright-storefront.sh status
 ```
+
+If `.next-build/BUILD_ID` is missing, entrypoint **falls back to develop** (`next dev`). For HMR edits: `WOODRIGHT_STOREFRONT_MODE=develop` or `./woodright-storefront.sh restart develop`.
 
 KeepAlive = `{ SuccessfulExit = false }` (crash restarts; intentional exit stays down).
 
