@@ -2,31 +2,12 @@ import type { DetailWidgetProps, AdminProduct } from "@medusajs/types"
 import { Button, Container, Text } from "@medusajs/ui"
 import { Link } from "react-router-dom"
 import { defineWidgetConfig } from "@medusajs/admin-sdk"
-import { isWoodrightAdminUxV1Enabled } from "../lib/feature-flags/woodright-admin-flags"
+import { readWoodrightAdminUxFlagFromBrowser } from "../lib/woodright/browser-flag"
+import { woodrightDashboardPath } from "../lib/woodright/dashboard-api"
 import { woodrightWorkspacePath } from "../lib/product-workspace/admin-api"
 
-function readFlagFromBrowser(): boolean {
-  try {
-    const ls = window.localStorage.getItem("WOODRIGHT_ADMIN_UX_V1")
-    if (ls != null) {
-      return isWoodrightAdminUxV1Enabled({ WOODRIGHT_ADMIN_UX_V1: ls })
-    }
-  } catch {
-    /* ignore */
-  }
-  try {
-    const meta = import.meta as unknown as { env?: Record<string, string> }
-    if (meta.env?.WOODRIGHT_ADMIN_UX_V1) {
-      return isWoodrightAdminUxV1Enabled(meta.env)
-    }
-  } catch {
-    /* ignore */
-  }
-  return false
-}
-
 const ProductWoodrightWorkspaceEntry = ({ data }: DetailWidgetProps<AdminProduct>) => {
-  if (!readFlagFromBrowser()) {
+  if (!readWoodrightAdminUxFlagFromBrowser()) {
     return null
   }
 
@@ -39,12 +20,15 @@ const ProductWoodrightWorkspaceEntry = ({ data }: DetailWidgetProps<AdminProduct
         Откройте операторское рабочее пространство: тип товара, сводка цен и галереи, сохранение
         названия и статуса. Штатная страница Medusa остаётся доступной.
       </Text>
-      <div className="mt-3">
-        <Link to={href}>
-          <Button variant="secondary" aria-label="Открыть рабочее пространство Woodright">
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Button variant="secondary" asChild>
+          <Link to={href} aria-label="Открыть рабочее пространство Woodright">
             Открыть рабочее пространство Woodright
-          </Button>
-        </Link>
+          </Link>
+        </Button>
+        <Button variant="transparent" asChild>
+          <Link to={woodrightDashboardPath()}>Рабочий стол Woodright</Link>
+        </Button>
       </div>
     </Container>
   )

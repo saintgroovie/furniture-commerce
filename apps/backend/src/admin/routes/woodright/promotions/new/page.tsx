@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { Link, useNavigate, useSearchParams } from "react-router-dom"
 import { Badge, Button, Container, Heading, Input, Text, toast } from "@medusajs/ui"
-import { isWoodrightAdminUxV1Enabled } from "../../../../lib/feature-flags/woodright-admin-flags"
+import { readWoodrightAdminUxFlagFromBrowser } from "../../../../lib/woodright/browser-flag"
 import {
   formatAdminErrorPrimary,
   normalizeAdminError,
@@ -27,36 +27,6 @@ import {
 } from "../../../../lib/promotions/amount"
 import { checkCampaignCompatibility, describeCampaign } from "../../../../lib/promotions/campaign"
 import type { AdminCampaignDto } from "../../../../lib/promotions/types"
-
-function readFlagFromBrowser(): boolean {
-  try {
-    const w = window as unknown as { __WOODRIGHT_ADMIN_UX_V1__?: string }
-    if (w.__WOODRIGHT_ADMIN_UX_V1__ != null) {
-      return isWoodrightAdminUxV1Enabled({
-        WOODRIGHT_ADMIN_UX_V1: String(w.__WOODRIGHT_ADMIN_UX_V1__),
-      })
-    }
-  } catch {
-    /* ignore */
-  }
-  try {
-    const ls = window.localStorage.getItem("WOODRIGHT_ADMIN_UX_V1")
-    if (ls != null) {
-      return isWoodrightAdminUxV1Enabled({ WOODRIGHT_ADMIN_UX_V1: ls })
-    }
-  } catch {
-    /* ignore */
-  }
-  try {
-    const meta = import.meta as unknown as { env?: Record<string, string> }
-    if (meta.env?.WOODRIGHT_ADMIN_UX_V1) {
-      return isWoodrightAdminUxV1Enabled(meta.env)
-    }
-  } catch {
-    /* ignore */
-  }
-  return false
-}
 
 type StepId = "result" | "trigger" | "scope" | "conditions" | "campaign" | "summary"
 
@@ -193,7 +163,7 @@ const RuleValuePicker = ({ ruleAttributeId, placeholder, picked, onChange }: Pic
 }
 
 const PromotionWizardPage = () => {
-  const flagOn = readFlagFromBrowser()
+  const flagOn = readWoodrightAdminUxFlagFromBrowser()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const preselectedProductId = searchParams.get("product_id")

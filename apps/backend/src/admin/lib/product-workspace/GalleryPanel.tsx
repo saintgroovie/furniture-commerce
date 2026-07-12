@@ -5,6 +5,7 @@ import {
   formatAdminErrorPrimary,
   normalizeAdminError,
 } from "../errors/normalize-admin-error"
+import { toastAdminError } from "../woodright/toast-admin-error"
 import {
   fetchProductWorkspaceBundle,
   stockAdminProductPath,
@@ -121,7 +122,7 @@ export const GalleryPanel = ({
         endpoint: `/admin/products/${product.id}`,
         body: bundle.body,
       })
-      toast.error(formatAdminErrorPrimary(err))
+      toastAdminError(err)
       return null
     }
     onProductUpdated(bundle.product)
@@ -165,15 +166,11 @@ export const GalleryPanel = ({
       }
       const res = await updateAdminProduct(product.id, { images: built.images })
       if ("status" in res) {
-        toast.error(
-          formatAdminErrorPrimary(
-            normalizeAdminError({
-              httpStatus: res.status,
-              endpoint: `/admin/products/${product.id}`,
-              body: res.body,
-            })
-          )
-        )
+        toastAdminError({
+          httpStatus: res.status,
+          endpoint: `/admin/products/${product.id}`,
+          body: res.body,
+        })
         return
       }
       const after = await reloadAuthoritative()
@@ -187,15 +184,11 @@ export const GalleryPanel = ({
       markDirty(false)
       toast.success("Порядок галереи сохранён")
     } catch (e) {
-      toast.error(
-        formatAdminErrorPrimary(
-          normalizeAdminError({
-            error: e,
-            endpoint: `/admin/products/${product.id}`,
-            codeHint: "network_error",
-          })
-        )
-      )
+      toastAdminError({
+        error: e,
+        endpoint: `/admin/products/${product.id}`,
+        codeHint: "network_error",
+      })
     } finally {
       setSaving(false)
     }
@@ -206,16 +199,12 @@ export const GalleryPanel = ({
     try {
       const res = await updateAdminProduct(product.id, { thumbnail: url })
       if ("status" in res) {
-        toast.error(
-          formatAdminErrorPrimary(
-            normalizeAdminError({
-              httpStatus: res.status,
-              endpoint: `/admin/products/${product.id}`,
-              body: res.body,
-              codeHint: "validation",
-            })
-          )
-        )
+        toastAdminError({
+          httpStatus: res.status,
+          endpoint: `/admin/products/${product.id}`,
+          body: res.body,
+          codeHint: "validation",
+        })
         return
       }
       const after = await reloadAuthoritative()
@@ -273,15 +262,11 @@ export const GalleryPanel = ({
 
       const res = await updateAdminProduct(product.id, payload)
       if ("status" in res) {
-        toast.error(
-          formatAdminErrorPrimary(
-            normalizeAdminError({
-              httpStatus: res.status,
-              endpoint: `/admin/products/${product.id}`,
-              body: res.body,
-            })
-          )
-        )
+        toastAdminError({
+          httpStatus: res.status,
+          endpoint: `/admin/products/${product.id}`,
+          body: res.body,
+        })
         return
       }
       const after = await reloadAuthoritative()
@@ -429,15 +414,11 @@ export const GalleryPanel = ({
           }
         }
         setUploads([...nextRows])
-        toast.error(
-          formatAdminErrorPrimary(
-            normalizeAdminError({
-              httpStatus: res.status,
-              endpoint: `/admin/products/${product.id}`,
-              body: res.body,
-            })
-          )
-        )
+        toastAdminError({
+          httpStatus: res.status,
+          endpoint: `/admin/products/${product.id}`,
+          body: res.body,
+        })
         return
       }
       await reloadAuthoritative()

@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, useSearchParams } from "react-router-dom"
 import { Badge, Button, Container, Heading, Input, Text } from "@medusajs/ui"
 import { defineRouteConfig } from "@medusajs/admin-sdk"
-import { isWoodrightAdminUxV1Enabled } from "../../../lib/feature-flags/woodright-admin-flags"
+import { readWoodrightAdminUxFlagFromBrowser } from "../../../lib/woodright/browser-flag"
+import { STOCK_ADMIN_LABEL } from "../../../lib/woodright/stock-admin"
 import { normalizeAdminError } from "../../../lib/errors/normalize-admin-error"
 import { buildAdminErrorViewModel } from "../../../components/woodright/admin-error-view-model"
 import {
@@ -29,41 +30,36 @@ const FILTERS: Array<{ id: ListFilter; label: string }> = [
 
 const PAGE_SIZE = 50
 
-function readFlagFromBrowser(): boolean {
-  try {
-    const w = window as unknown as { __WOODRIGHT_ADMIN_UX_V1__?: string }
-    if (w.__WOODRIGHT_ADMIN_UX_V1__ != null) {
-      return isWoodrightAdminUxV1Enabled({
-        WOODRIGHT_ADMIN_UX_V1: String(w.__WOODRIGHT_ADMIN_UX_V1__),
-      })
-    }
-  } catch {
-    /* ignore */
-  }
-  try {
-    const ls = window.localStorage.getItem("WOODRIGHT_ADMIN_UX_V1")
-    if (ls != null) {
-      return isWoodrightAdminUxV1Enabled({ WOODRIGHT_ADMIN_UX_V1: ls })
-    }
-  } catch {
-    /* ignore */
-  }
-  try {
-    const meta = import.meta as unknown as { env?: Record<string, string> }
-    if (meta.env?.WOODRIGHT_ADMIN_UX_V1) {
-      return isWoodrightAdminUxV1Enabled(meta.env)
-    }
-  } catch {
-    /* ignore */
-  }
-  return false
+const FILTER_IDS = new Set(FILTERS.map((f) => f.id))
+
+function isListFilter(value: string | null): value is ListFilter {
+  return value != null && FILTER_IDS.has(value as ListFilter)
 }
 
 const PromotionsListPage = () => {
-  const flagOn = readFlagFromBrowser()
-  const [filter, setFilter] = useState<ListFilter>("all")
+  const flagOn = readWoodrightAdminUxFlagFromBrowser()
+  // F: the filter lives in ?filter= so the dashboard can deep-link
+  // e.g. /app/woodright/promotions?filter=attention.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [filter, setFilter] = useState<ListFilter>(() => {
+    const fromUrl = searchParams.get("filter")
+    return isListFilter(fromUrl) ? fromUrl : "all"
+  })
   const [query, setQuery] = useState("")
   const [offset, setOffset] = useState(0)
+
+  const selectFilter = (next: ListFilter) => {
+    setFilter(next)
+    setSearchParams(
+      (prev) => {
+        const params = new URLSearchParams(prev)
+        if (next === "all") params.delete("filter")
+        else params.set("filter", next)
+        return params
+      },
+      { replace: true }
+    )
+  }
   const [loading, setLoading] = useState(true)
   const [promotions, setPromotions] = useState<AdminPromotionDto[]>([])
   const [count, setCount] = useState(0)
@@ -152,7 +148,7 @@ const PromotionsListPage = () => {
           обновите страницу. Штатный раздел акций Medusa остаётся доступным.
         </Text>
         <Button className="mt-4" variant="secondary" asChild>
-          <Link to={stockAdminPromotionsPath()}>Открыть акции в стандартной админке</Link>
+          <Link to={stockAdminPromotionsPath()}>{STOCK_ADMIN_LABEL}</Link>
         </Button>
       </Container>
     )
@@ -235,7 +231,7 @@ const PromotionsListPage = () => {
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="secondary" asChild>
-            <Link to={stockAdminPromotionsPath()}>Стандартная админка</Link>
+            <Link to={stockAdminPromotionsPath()}>{STOCK_ADMIN_LABEL}</Link>
           </Button>
           <Button asChild>
             <Link to={woodrightPromotionNewPath()}>Создать акцию</Link>
@@ -252,7 +248,7 @@ const PromotionsListPage = () => {
               aria-selected={filter === f.id}
               size="small"
               variant={filter === f.id ? "primary" : "secondary"}
-              onClick={() => setFilter(f.id)}
+              onClick={() => selectFilter(f.id)}
             >
               {f.label}
             </Button>

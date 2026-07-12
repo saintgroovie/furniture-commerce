@@ -1,4 +1,5 @@
 import type { EditableProductFields, SaveStatus } from "./types"
+import { saveStateLabel } from "../woodright/save-state-labels.ts"
 
 export type SaveState = {
   status: SaveStatus
@@ -36,22 +37,8 @@ export function isDirty(state: SaveState): boolean {
 }
 
 export function saveStatusLabel(status: SaveStatus): string {
-  switch (status) {
-    case "clean":
-      return "Все изменения сохранены"
-    case "dirty":
-      return "Есть несохранённые изменения"
-    case "saving":
-      return "Сохраняем…"
-    case "saved":
-      return "Изменения сохранены"
-    case "error":
-      return "Не удалось сохранить"
-    case "conflict":
-      return "Товар был изменён в другой вкладке"
-    default:
-      return "Все изменения сохранены"
-  }
+  // Package F: labels moved to the shared woodright/save-state-labels module.
+  return saveStateLabel(status)
 }
 
 export function reduceSaveState(state: SaveState, action: SaveAction): SaveState {

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useReducer, useState } from "react"
-import { useParams, Link, useBlocker } from "react-router-dom"
+import { useParams, Link, useBlocker, useSearchParams } from "react-router-dom"
 import {
   Badge,
   Button,
@@ -10,17 +10,15 @@ import {
   Textarea,
   toast,
 } from "@medusajs/ui"
-import { defineRouteConfig } from "@medusajs/admin-sdk"
-import { isWoodrightAdminUxV1Enabled } from "../../../../lib/feature-flags/woodright-admin-flags"
+import { readWoodrightAdminUxFlagFromBrowser } from "../../../../lib/woodright/browser-flag"
+import { STOCK_ADMIN_LABEL } from "../../../../lib/woodright/stock-admin"
 import {
   formatAdminErrorPrimary,
   normalizeAdminError,
 } from "../../../../lib/errors/normalize-admin-error"
 import { buildAdminErrorViewModel } from "../../../../components/woodright/admin-error-view-model"
 import {
-  fetchAdminProduct,
   fetchProductWorkspaceBundle,
-  fetchVariantPrices,
   stockAdminProductPath,
   updateAdminProduct,
 } from "../../../../lib/product-workspace/admin-api"
@@ -46,45 +44,22 @@ import type {
   ProductWorkspaceTabId,
 } from "../../../../lib/product-workspace/types"
 
-const TABS: Array<{ id: ProductWorkspaceTabId; label: string }> = [
+// F-03: inventory and SEO are stubs until their packages land — mark them
+// «скоро» so the tabs do not look equally functional.
+const TABS: Array<{ id: ProductWorkspaceTabId; label: string; stub?: boolean }> = [
   { id: "overview", label: "Обзор" },
   { id: "variants", label: "Варианты и цены" },
   { id: "gallery", label: "Галерея" },
-  { id: "inventory", label: "Наличие" },
+  { id: "inventory", label: "Наличие", stub: true },
   { id: "promotions", label: "Продвижение" },
-  { id: "seo", label: "SEO" },
+  { id: "seo", label: "SEO", stub: true },
   { id: "technical", label: "Служебное" },
 ]
 
-function readFlagFromBrowser(): boolean {
-  try {
-    const w = window as unknown as { __WOODRIGHT_ADMIN_UX_V1__?: string }
-    if (w.__WOODRIGHT_ADMIN_UX_V1__ != null) {
-      return isWoodrightAdminUxV1Enabled({
-        WOODRIGHT_ADMIN_UX_V1: String(w.__WOODRIGHT_ADMIN_UX_V1__),
-      })
-    }
-  } catch {
-    /* ignore */
-  }
-  try {
-    const ls = window.localStorage.getItem("WOODRIGHT_ADMIN_UX_V1")
-    if (ls != null) {
-      return isWoodrightAdminUxV1Enabled({ WOODRIGHT_ADMIN_UX_V1: ls })
-    }
-  } catch {
-    /* ignore */
-  }
-  // Vite may inject at build time
-  try {
-    const meta = import.meta as unknown as { env?: Record<string, string> }
-    if (meta.env?.WOODRIGHT_ADMIN_UX_V1) {
-      return isWoodrightAdminUxV1Enabled(meta.env)
-    }
-  } catch {
-    /* ignore */
-  }
-  return false
+const TAB_IDS = new Set(TABS.map((t) => t.id))
+
+function isTabId(value: string | null): value is ProductWorkspaceTabId {
+  return value != null && TAB_IDS.has(value as ProductWorkspaceTabId)
 }
 
 function toEditable(p: AdminProductPayload): EditableProductFields {
@@ -101,8 +76,26 @@ function toEditable(p: AdminProductPayload): EditableProductFields {
 
 const ProductWorkspacePage = () => {
   const { id = "" } = useParams()
-  const flagOn = readFlagFromBrowser()
-  const [tab, setTab] = useState<ProductWorkspaceTabId>("overview")
+  const flagOn = readWoodrightAdminUxFlagFromBrowser()
+  // F-13: the active tab lives in ?tab= so sections can be deep-linked.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [tab, setTab] = useState<ProductWorkspaceTabId>(() => {
+    const fromUrl = searchParams.get("tab")
+    return isTabId(fromUrl) ? fromUrl : "overview"
+  })
+
+  const selectTab = (next: ProductWorkspaceTabId) => {
+    setTab(next)
+    setSearchParams(
+      (prev) => {
+        const params = new URLSearchParams(prev)
+        if (next === "overview") params.delete("tab")
+        else params.set("tab", next)
+        return params
+      },
+      { replace: true }
+    )
+  }
   const [loading, setLoading] = useState(true)
   const [product, setProduct] = useState<AdminProductPayload | null>(null)
   const [priceRows, setPriceRows] = useState<Array<Array<{ amount: number; currency_code: string }>>>([])
@@ -266,7 +259,7 @@ const ProductWorkspacePage = () => {
         {id ? (
           <Button className="mt-4" variant="secondary" asChild>
             <Link to={stockAdminProductPath(id)} onClick={(e) => !confirmLeave() && e.preventDefault()}>
-              Открыть в стандартной админке
+              {STOCK_ADMIN_LABEL}
             </Link>
           </Button>
         ) : null}
@@ -306,7 +299,7 @@ const ProductWorkspacePage = () => {
         </details>
         {id ? (
           <Button className="mt-4" variant="secondary" asChild>
-            <Link to={stockAdminProductPath(id)}>Открыть в стандартной админке</Link>
+            <Link to={stockAdminProductPath(id)}>{STOCK_ADMIN_LABEL}</Link>
           </Button>
         ) : null}
       </Container>
@@ -388,7 +381,7 @@ const ProductWorkspacePage = () => {
                 if (!confirmLeave()) e.preventDefault()
               }}
             >
-              Открыть в стандартной админке
+              {STOCK_ADMIN_LABEL}
             </Link>
           </Button>
           <Button
@@ -434,9 +427,14 @@ const ProductWorkspacePage = () => {
             aria-selected={tab === t.id}
             variant={tab === t.id ? "primary" : "secondary"}
             size="small"
-            onClick={() => setTab(t.id)}
+            onClick={() => selectTab(t.id)}
           >
             {t.label}
+            {t.stub ? (
+              <Badge size="2xsmall" className="ml-1">
+                скоро
+              </Badge>
+            ) : null}
           </Button>
         ))}
       </div>
@@ -550,7 +548,7 @@ const ProductWorkspacePage = () => {
         <Container className="p-4">
           <Text>Будет добавлено в следующем пакете.</Text>
           <Button className="mt-3" variant="secondary" asChild>
-            <Link to={stockAdminProductPath(product.id)}>Открыть в стандартной админке</Link>
+            <Link to={stockAdminProductPath(product.id)}>{STOCK_ADMIN_LABEL}</Link>
           </Button>
         </Container>
       ) : null}
@@ -592,10 +590,7 @@ const ProductWorkspacePage = () => {
   )
 }
 
-export const config = defineRouteConfig({
-  label: "Woodright товар",
-  nested: "/products",
-  rank: 1,
-})
-
+// F-04: no defineRouteConfig on purpose — a nested sidebar item without a
+// product id was useless. Entry points: the Woodright dashboard, the product
+// widget in the stock Admin, and direct deep links.
 export default ProductWorkspacePage

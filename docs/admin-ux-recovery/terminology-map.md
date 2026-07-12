@@ -27,6 +27,30 @@
 | Промокод | Promotion code rule | |
 | Витрина | Storefront | Preview link |
 | Служебные данные | metadata / IDs | Collapsed |
+| Главное фото (= главное изображение) | `product.thumbnail` | Single term in UI: «Главное фото» |
+| Параметры варианта | Variant options (`variant.options`) | Combination must be unique |
+| Продвижение | Product workspace tab (promotions affecting this product) | Tab «Продвижение» in the product workspace |
+| Акции (раздел) | Woodright promotions list `/app/woodright/promotions` | Sidebar item; same entity as «Акция» |
+| Рабочий стол Woodright | Dashboard `/app/woodright` | Package F landing |
+| Стандартная админка Medusa | Stock Medusa Admin `/app` | The only approved label for stock links (F-01) |
+
+## Promotion statuses (Package E, operator labels)
+
+Raw field is `status: draft | active | inactive`; campaign dates/budget refine it.
+
+| UI | Kind (code) | Source |
+|----|-------------|--------|
+| Черновик | `draft` | `promotion.status = draft` |
+| Выключена | `inactive` | `promotion.status = inactive` |
+| Действует | `active` | `status = active`, campaign window open |
+| Запланирована | `scheduled` | `status = active`, campaign starts in the future |
+| Завершена | `expired` | `status = active`, campaign ended |
+| Бюджет исчерпан | `budget_exhausted` | campaign spend budget used up |
+| Лимит применений исчерпан | `usage_exhausted` | campaign usage budget used up |
+| Ошибка настройки | `invalid` | e.g. campaign ends before it starts |
+| Статус не определён | `unknown` | unexpected raw status |
+
+«Требуют внимания» in the promotions list = `invalid`, `unknown`, `budget_exhausted`, `usage_exhausted` (plus unsupported promotion shapes). There is **no server-side global counter** for these statuses - the list filter counts only the loaded page.
 
 ## Forbidden in primary UI copy
 

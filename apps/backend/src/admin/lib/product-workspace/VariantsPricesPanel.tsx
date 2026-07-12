@@ -5,6 +5,7 @@ import {
   formatAdminErrorPrimary,
   normalizeAdminError,
 } from "../errors/normalize-admin-error"
+import { toastAdminError } from "../woodright/toast-admin-error"
 import { updateAdminProductVariant, fetchProductWorkspaceBundle, stockAdminProductPath } from "./admin-api.ts"
 import { buildBulkPricePreview, type BulkPriceOp } from "./bulk-price.ts"
 import { buildClassificationView } from "./classification.ts"
@@ -102,7 +103,7 @@ export const VariantsPricesPanel = ({
         endpoint: `/admin/products/${product.id}`,
         body: bundle.body,
       })
-      toast.error(formatAdminErrorPrimary(err))
+      toastAdminError(err)
       return null
     }
     onProductUpdated(bundle.product)
@@ -122,7 +123,7 @@ export const VariantsPricesPanel = ({
           endpoint: `/admin/products/${product.id}/variants/${row.variant_id}`,
           body: res.body,
         })
-        toast.error(formatAdminErrorPrimary(err))
+        toastAdminError(err)
         return
       }
       const fresh = await reloadAuthoritative()
@@ -141,7 +142,7 @@ export const VariantsPricesPanel = ({
         endpoint: `/admin/products/${product.id}/variants/${row.variant_id}`,
         codeHint: "network_error",
       })
-      toast.error(formatAdminErrorPrimary(err))
+      toastAdminError(err)
     } finally {
       setSaving(false)
     }
@@ -203,7 +204,7 @@ export const VariantsPricesPanel = ({
           endpoint: `/admin/products/${product.id}/variants/${row.variant_id}`,
           body: res.body,
         })
-        toast.error(formatAdminErrorPrimary(err))
+        toastAdminError(err)
         return
       }
       const fresh = await reloadAuthoritative()
@@ -222,7 +223,7 @@ export const VariantsPricesPanel = ({
         endpoint: `/admin/products/${product.id}/variants/${row.variant_id}`,
         codeHint: "network_error",
       })
-      toast.error(formatAdminErrorPrimary(err))
+      toastAdminError(err)
     } finally {
       setSaving(false)
     }
@@ -380,7 +381,7 @@ export const VariantsPricesPanel = ({
         codeHint: "network_error",
       })
       setBulkReport(formatAdminErrorPrimary(err))
-      toast.error(formatAdminErrorPrimary(err))
+      toastAdminError(err)
     } finally {
       setSaving(false)
     }
