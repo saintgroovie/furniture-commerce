@@ -47,7 +47,10 @@ async function assert(cond, message) {
 await page.goto(`${BASE}/app/login`, { waitUntil: "networkidle", timeout: 120000 })
 await page.waitForSelector('input[name="email"], input[type="email"]', { timeout: 60000 })
 const bodyLogin = (await page.locator("body").innerText()).trim()
-await assert(/Welcome to Medusa|Sign in/i.test(bodyLogin), "login page missing expected copy")
+await assert(
+  /Welcome to Woodright|Добро пожаловать в Woodright|Sign in|Войдите/i.test(bodyLogin),
+  "login page missing expected copy"
+)
 await assert(
   (await page.locator("#medusa").innerHTML()).length > 50,
   "login #medusa shell empty"
@@ -59,8 +62,12 @@ await page.locator('button[type="submit"]').click()
 await page.waitForTimeout(5000)
 
 const afterLogin = (await page.locator("body").innerText()).trim()
-await assert(!/Welcome to Medusa/i.test(afterLogin), "still on login after submit")
-await assert(/Orders|Products|Medusa Store/i.test(afterLogin), "dashboard landmarks missing")
+await assert(
+  !/Welcome to (Medusa|Woodright)|Добро пожаловать в Woodright/i.test(afterLogin),
+  "still on login after submit"
+)
+await assert(/Orders|Products|Заказы|Товары/i.test(afterLogin), "dashboard landmarks missing")
+await assert(/Woodright/i.test(afterLogin), "Woodright brand missing after login")
 
 // Stock product page
 await page.goto(`${BASE}/app/products/${STD}`, { waitUntil: "networkidle", timeout: 120000 })

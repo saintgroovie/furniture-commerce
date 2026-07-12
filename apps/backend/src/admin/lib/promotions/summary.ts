@@ -58,7 +58,7 @@ function scopePhrase(promotion: AdminPromotionDto): {
   const failed = described.find((d) => d.kind === "fail_closed")
   if (failed && failed.kind === "fail_closed") {
     return {
-      phrase: "с условиями, которые нужно смотреть в стандартной админке",
+      phrase: "с условиями, которые нужно смотреть в разделе акций",
       supported: false,
       reason: failed.reason,
     }
@@ -93,16 +93,16 @@ export function buildPromotionSummary(promotion: AdminPromotionDto): PromotionSu
 
   if (type === "buyget") {
     return {
-      text: "Акция «купи - получи» - настраивается в стандартной админке",
+      text: "Акция «купи - получи» - настраивается в разделе акций",
       supported: false,
       fallback_reason:
-        "Акции «купи X - получи Y» пока управляются только в стандартной админке",
+        "Акции «купи X - получи Y» пока управляются только в разделе акций",
       notes,
     }
   }
   if (type && type !== "standard") {
     return {
-      text: "Акция нераспознанного типа - откройте её в стандартной админке",
+      text: "Акция нераспознанного типа - откройте её в разделе акций",
       supported: false,
       fallback_reason: `Тип «${type}» не входит в проверенный набор`,
       notes,
@@ -118,10 +118,10 @@ export function buildPromotionSummary(promotion: AdminPromotionDto): PromotionSu
     const targetType = (method?.target_type ?? "").trim().toLowerCase()
     if (value === 100 && targetType === "shipping_methods") {
       return {
-        text: "Бесплатная доставка - настраивается в стандартной админке",
+        text: "Бесплатная доставка - настраивается в разделе акций",
         supported: false,
         fallback_reason:
-          "Бесплатная доставка пока не проверена в Woodright - управляйте ей в стандартной админке",
+          "Бесплатная доставка пока не проверена в Woodright - управляйте ей в разделе акций",
         notes,
       }
     }
@@ -129,11 +129,11 @@ export function buildPromotionSummary(promotion: AdminPromotionDto): PromotionSu
   } else if (methodType === "fixed" && value != null) {
     resultPart = `Скидка ${formatFixedAmount(value, method?.currency_code)}`
     notes.push(
-      "Фиксированная скидка не меняет базовые цены товаров — она вычитается при применении в Store API"
+      "Фиксированная скидка не меняет базовые цены товаров — она вычитается при применении в тестовой корзине"
     )
   } else {
     return {
-      text: "Не удалось прочитать размер скидки - откройте акцию в стандартной админке",
+      text: "Не удалось прочитать размер скидки - откройте акцию в разделе акций",
       supported: false,
       fallback_reason: "Способ расчёта скидки не распознан",
       notes,

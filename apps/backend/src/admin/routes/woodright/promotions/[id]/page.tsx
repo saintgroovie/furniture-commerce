@@ -144,8 +144,8 @@ const PromotionDetailPage = () => {
     if (!promotion) return
     const question =
       nextStatus === "inactive"
-        ? "Выключить акцию? Правило перестанет применяться в Store API. На текущей витрине отдельной доставки промокода покупателю всё равно нет. Акция останется в списке."
-        : "Включить акцию? Правило станет активным в системе скидок Medusa. Это не добавляет поле промокода на витрину и не включает автоприменение в корзине покупателя."
+        ? "Выключить акцию? Правило перестанет применяться в системе скидок. На текущей витрине отдельной доставки промокода покупателю всё равно нет. Акция останется в списке."
+        : "Включить акцию? Правило станет активным в системе скидок. Это не добавляет поле промокода на витрину и не включает автоприменение в корзине покупателя."
     if (!window.confirm(question)) return
     setStatusBusy(true)
     const res = await updateAdminPromotion(promotion.id, { status: nextStatus })
@@ -226,7 +226,7 @@ const PromotionDetailPage = () => {
         running: false,
         lines: [],
         verdict: "Проверка невозможна",
-        honest_note: "У акции нет кода - проверить её через Store API нельзя",
+        honest_note: "У акции нет кода - проверить её через тестовую корзину нельзя",
       })
       return
     }
@@ -433,7 +433,7 @@ const PromotionDetailPage = () => {
     const perCode = attribution.per_code[0]
     const verdict =
       attribution.verdict === "all_applied"
-        ? `Расчёт Store API: скидка ${perCode?.total_amount ?? "неизвестной суммы"} в тестовой корзине`
+        ? `Расчёт скидки: ${perCode?.total_amount ?? "неизвестной суммы"} в тестовой корзине`
         : attribution.verdict === "none_applied"
           ? "Код принят API, но скидка в тестовой корзине не появилась"
           : "Результат неоднозначный — скидки нельзя однозначно связать с кодом"
@@ -712,7 +712,7 @@ const PromotionDetailPage = () => {
 
       <Container className="p-4">
         <div className="flex items-center justify-between">
-          <Text weight="plus">Проверка расчёта (Store API)</Text>
+          <Text weight="plus">Проверка расчёта</Text>
           <Button size="small" variant="secondary" onClick={() => setVerifyOpen(!verifyOpen)}>
             {verifyOpen ? "Свернуть" : "Проверить расчёт"}
           </Button>
@@ -720,7 +720,7 @@ const PromotionDetailPage = () => {
         {verifyOpen ? (
           <div className="mt-2 flex flex-col gap-2">
             <Text size="small" className="text-ui-fg-subtle">
-              Собираем тестовую корзину через Store API и применяем код. Это проверка расчёта скидки,
+              Собираем тестовую корзину и применяем код. Это проверка расчёта скидки,
               не доставка покупателю: на витрине нет поля промокода, автоприменение корзины отключено
               (#14149). Черновик временно включается только на время проверки.
             </Text>

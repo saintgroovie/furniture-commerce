@@ -100,7 +100,7 @@ describe("normalizeAdminError", () => {
       },
     })
     assert.equal(out.code, "invalid_promotion_type")
-    assert.match(out.action, /стандартной админке/)
+    assert.match(out.action, /(полной карточке|разделе акций|разделе кампаний)/)
   })
 
   it("maps campaign budget currency conflicts", () => {
@@ -141,7 +141,7 @@ describe("normalizeAdminError", () => {
 
   it("routes unsupported promotion kinds to stock Admin", () => {
     const out = normalizeAdminError({ codeHint: "promotion_unsupported" })
-    assert.match(out.action, /стандартной админке/)
+    assert.match(out.action, /(полной карточке|разделе акций|разделе кампаний)/)
   })
 
   it("maps stale promotion edits via codeHint", () => {

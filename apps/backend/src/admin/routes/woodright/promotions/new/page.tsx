@@ -291,7 +291,7 @@ const PromotionWizardPage = () => {
       toast.error(err.title, { description: err.action })
       return
     }
-    toast.success("Черновик акции создан — проверьте расчёт в Store API, затем включите")
+    toast.success("Черновик акции создан — проверьте расчёт в тестовой корзине, затем включите")
     navigate(woodrightPromotionPath(res.promotion.id))
   }
 
@@ -378,7 +378,7 @@ const PromotionWizardPage = () => {
                   </Text>
                 </div>
                 <Text size="xsmall" className="text-ui-fg-subtle">
-                  Базовые цены товаров не изменятся — скидка считается в корзине Store API
+                  Базовые цены товаров не изменятся — скидка считается в тестовой корзине
                 </Text>
               </div>
             ) : null}
@@ -391,7 +391,7 @@ const PromotionWizardPage = () => {
           <Text weight="plus">Как акция срабатывает в системе</Text>
           <Text size="xsmall" className="text-ui-fg-subtle">
             На текущей витрине нет поля промокода и нет автоприменения скидок в корзине покупателя.
-            Мастер настраивает правила в Medusa; доставка скидки покупателю — отдельная задача.
+            Мастер настраивает правила скидок; доставка скидки покупателю — отдельная задача.
           </Text>
           <label className="flex items-center gap-2">
             <input
@@ -400,7 +400,7 @@ const PromotionWizardPage = () => {
               checked={trigger === "code"}
               onChange={() => setTrigger("code")}
             />
-            <Text size="small">По коду — применяется через Store API (на витрине поля ввода нет)</Text>
+            <Text size="small">По коду — применяется в системе скидок (на витрине поля ввода нет)</Text>
           </label>
           <label className="flex items-center gap-2">
             <input
@@ -562,7 +562,7 @@ const PromotionWizardPage = () => {
             </li>
             <li>
               <Text size="small">
-                Дальше: проверить расчёт в Store API → включить правило. Это не проверка доставки
+                Дальше: проверить расчёт в тестовой корзине → включить правило. Это не проверка доставки
                 скидки на витрине.
               </Text>
             </li>

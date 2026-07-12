@@ -157,7 +157,7 @@ export const ProductPromotionsPanel = ({ productId, collectionId }: Props) => {
                 ? "Товар указан явно"
                 : match === "indirect"
                   ? "Через коллекцию"
-                  : "Требуется проверка расчёта (Store API)"
+                  : "Требуется проверка расчёта"
             return (
               <div
                 key={promotion.id}

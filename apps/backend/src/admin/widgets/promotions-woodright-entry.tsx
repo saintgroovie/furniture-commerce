@@ -14,7 +14,7 @@ const PromotionsWoodrightEntry = () => {
       <Text weight="plus">Простая акция</Text>
       <Text size="small" className="mt-1 text-ui-fg-subtle">
         Список ниже — полный каталог акций. Мастер помогает создать простую скидку (% или рубли) и
-        проверить расчёт в Store API. На текущей витрине поля промокода нет.
+        проверить расчёт в тестовой корзине. На текущей витрине поля промокода нет.
       </Text>
       <div className="mt-3">
         <Button variant="secondary" asChild>

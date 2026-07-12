@@ -26,14 +26,14 @@ export function classifyCurrencyPrices(
   if (list.length > 1) {
     return {
       kind: "ambiguous",
-      reason: `Несколько цен в валюте ${code.toUpperCase()} — редактируйте в стандартной админке.`,
+      reason: `Несколько цен в валюте ${code.toUpperCase()} — редактируйте в полной карточке.`,
     }
   }
   const price = list[0]
   if (!isSimpleCurrencyPrice(price)) {
     return {
       kind: "complex",
-      reason: "Сложная цена (правила или порог количества). Откройте стандартную админку.",
+      reason: "Сложная цена (правила или порог количества). Откройте полную карточку.",
       price,
     }
   }
@@ -51,7 +51,7 @@ export function variantPriceMutationGate(prices: VariantPriceRow[] | null | unde
     if (!isSimpleCurrencyPrice(p)) {
       return {
         allowed: false,
-        reason: "У варианта есть сложная цена — изменение цен только в стандартной админке.",
+        reason: "У варианта есть сложная цена — изменение цен только в полной карточке.",
         editable_currencies: [],
       }
     }

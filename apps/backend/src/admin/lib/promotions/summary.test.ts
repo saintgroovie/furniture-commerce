@@ -89,7 +89,7 @@ describe("buildPromotionSummary", () => {
   it("routes buyget to stock Admin fallback", () => {
     const vm = buildPromotionSummary({ id: "promo_5", type: "buyget", code: "BG" })
     assert.equal(vm.supported, false)
-    assert.match(vm.text, /стандартной админке/)
+    assert.match(vm.text, /разделе акций/)
     assert.ok(vm.fallback_reason)
   })
 
@@ -118,7 +118,7 @@ describe("buildPromotionSummary", () => {
       application_method: { type: "tiered", value: 10 },
     })
     assert.equal(vm.supported, false)
-    assert.match(vm.text, /стандартной админке/)
+    assert.match(vm.text, /разделе акций/)
   })
 
   it("fails closed on unsupported target rules", () => {

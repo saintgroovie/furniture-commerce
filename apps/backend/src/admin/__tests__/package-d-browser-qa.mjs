@@ -56,7 +56,8 @@ for (const w of [1440, 1280, 1024]) {
   scenarios.push({
     viewport: w,
     ok:
-      /Галерея|Главное|Загрузка|стандартной админке/i.test(body) &&
+      /Галерея/i.test(body) &&
+      /полной карточке/i.test(body) &&
       !/будет добавлено в Package D/i.test(body),
     sample: body.replace(/\s+/g, " ").slice(0, 350),
   })
@@ -86,7 +87,8 @@ const variants = await page.locator("body").innerText()
 const result = {
   scenarios,
   largeOk: /96|Изображений:\s*96/i.test(largeBody),
-  variantsOk: /Основной вариант|SKU|Цена/i.test(variants),
+  variantsOk:
+    /Артикул/i.test(variants) && /полной карточке/i.test(variants),
   pageErrors,
   consoleErrors: consoleErrors.slice(0, 25),
   failed: failed.slice(0, 25),

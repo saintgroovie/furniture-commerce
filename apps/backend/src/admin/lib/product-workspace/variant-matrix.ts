@@ -65,15 +65,15 @@ function buildRowIssues(args: {
       level: "attention",
       code: "missing_sku",
       field: "sku",
-      message: "Нет артикула (SKU).",
-      action: "Укажите SKU или оставьте пустым осознанно.",
+      message: "Нет артикула.",
+      action: "Укажите артикул или оставьте пустым осознанно.",
     })
   } else if ((args.skuCounts.get(sku.toLowerCase()) ?? 0) > 1) {
     issues.push({
       level: "error",
       code: "duplicate_sku",
       field: "sku",
-      message: "Этот SKU повторяется у другого варианта этого товара.",
+      message: "Этот артикул повторяется у другого варианта этого товара.",
       action: "Сделайте артикул уникальным внутри товара.",
     })
   }
@@ -93,7 +93,7 @@ function buildRowIssues(args: {
       code: "complex_price",
       field: "price",
       message: args.row.price_status_label,
-      action: "Откройте варианты в стандартной админке.",
+      action: "Откройте варианты в полной карточке.",
     })
   }
 
@@ -108,7 +108,7 @@ function buildRowIssues(args: {
         code: "incomplete_options",
         field: "options",
         message: "Неполная комбинация опций.",
-        action: "Проверьте значения опций в стандартной админке.",
+        action: "Проверьте значения опций в полной карточке.",
       })
     }
     const key = combinationKey(args.row.option_values, args.columns)
@@ -118,7 +118,7 @@ function buildRowIssues(args: {
         code: "duplicate_option_combo",
         field: "options",
         message: "Такая комбинация опций повторяется.",
-        action: "Исправьте дубликат в стандартной админке.",
+        action: "Исправьте дубликат в полной карточке.",
       })
     }
   }

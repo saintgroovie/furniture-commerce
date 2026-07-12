@@ -73,7 +73,7 @@ const CATALOG: Record<AdminErrorCode, CatalogEntry> = {
   duplicate_sku: {
     title: "Такой артикул уже есть",
     explanation: "Артикул должен быть уникальным.",
-    action: "Измените SKU и сохраните.",
+    action: "Измените артикул и сохраните.",
   },
   duplicate_option_combo: {
     title: "Такой вариант уже существует",
@@ -98,7 +98,7 @@ const CATALOG: Record<AdminErrorCode, CatalogEntry> = {
   missing_price_set: {
     title: "Нет набора цен",
     explanation: "У варианта нет связанного price set.",
-    action: "Откройте варианты в стандартной админке и проверьте цены.",
+    action: "Откройте варианты в полной карточке и проверьте цены.",
   },
   price_not_found: {
     title: "Цена не найдена",
@@ -108,7 +108,7 @@ const CATALOG: Record<AdminErrorCode, CatalogEntry> = {
   rule_based_price_unsupported: {
     title: "Сложная цена",
     explanation: "У цены есть правила, прайс-лист или лимиты количества.",
-    action: "Измените её в стандартной админке, чтобы не затереть правила.",
+    action: "Измените её в полной карточке, чтобы не затереть правила.",
   },
   partial_bulk_failure: {
     title: "Часть изменений не применилась",
@@ -198,7 +198,7 @@ const CATALOG: Record<AdminErrorCode, CatalogEntry> = {
   invalid_promotion_type: {
     title: "Такой вид акции не поддерживается",
     explanation: "Сочетание типа скидки и области действия не принято системой.",
-    action: "Настройте эту акцию в стандартной админке.",
+    action: "Настройте эту акцию в разделе акций.",
   },
   invalid_promotion_value: {
     title: "Некорректный размер скидки",
@@ -208,23 +208,23 @@ const CATALOG: Record<AdminErrorCode, CatalogEntry> = {
   promotion_unsupported: {
     title: "Акция сложного типа",
     explanation: "Woodright не управляет этим видом акций, чтобы ничего не сломать.",
-    action: "Откройте акцию в стандартной админке.",
+    action: "Откройте акцию в разделе акций.",
   },
   campaign_budget_conflict: {
     title: "Конфликт с бюджетом кампании",
     explanation: "Валюта или тип бюджета кампании не подходит этой акции.",
-    action: "Выберите другую кампанию или измените бюджет в стандартной админке.",
+    action: "Выберите другую кампанию или измените бюджет в разделе кампаний.",
   },
   publishable_key_missing: {
     title: "Нет ключа магазина для проверки расчёта",
     explanation:
-      "Проверка расчёта через Store API требует publishable API key витрины в конфигурации стенда.",
+      "Проверка расчёта в тестовой корзине требует publishable API key витрины в конфигурации стенда.",
     action:
       "Попросите поддержку задать WOODRIGHT_STORE_PUBLISHABLE_KEY (или MEDUSA_PUBLISHABLE_KEY) на сервере Admin и перезапустить стенд. Ключ в интерфейс вводить не нужно.",
   },
   cart_verification_failed: {
-    title: "Проверка расчёта Store API не прошла",
-    explanation: "Не удалось собрать тестовую корзину или применить код через Store API.",
+    title: "Проверка расчёта не прошла",
+    explanation: "Не удалось собрать тестовую корзину или применить код акции.",
     action: "Проверьте товар и код, затем повторите. Это не проверка доставки скидки на витрину.",
   },
   promo_code_not_applied: {

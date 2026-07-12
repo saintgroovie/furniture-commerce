@@ -135,7 +135,7 @@ export const VariantsPricesPanel = ({
       }
       setEditingSkuId(null)
       markDirty(Boolean(editingPriceId))
-      toast.success("SKU сохранён")
+      toast.success("Артикул сохранён")
     } catch (e) {
       const err = normalizeAdminError({
         error: e,
@@ -416,8 +416,8 @@ export const VariantsPricesPanel = ({
             className="mt-1"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            aria-label="Поиск по SKU, названию и опциям"
-            placeholder="SKU, опция…"
+            aria-label="Поиск по артикулу, названию и опциям"
+            placeholder="Артикул, опция…"
           />
         </div>
         <div>
@@ -432,7 +432,7 @@ export const VariantsPricesPanel = ({
           >
             <option value="all">Все</option>
             <option value="no_price">Без цены</option>
-            <option value="no_sku">Без SKU</option>
+            <option value="no_sku">Без артикула</option>
             <option value="problems">Проблемы в данных</option>
           </select>
         </div>
@@ -447,7 +447,7 @@ export const VariantsPricesPanel = ({
             onChange={(e) => setSort(e.target.value as VariantSortId)}
           >
             <option value="original">Исходный порядок</option>
-            <option value="sku">SKU</option>
+            <option value="sku">Артикул</option>
             <option value="price">Цена</option>
             <option value="problems">Проблемы</option>
             <option value="options">Опции</option>
@@ -500,7 +500,7 @@ export const VariantsPricesPanel = ({
                     {c.title}
                   </th>
                 ))}
-                <th className="p-2">SKU</th>
+                <th className="p-2">Артикул</th>
                 <th className="p-2">Цена</th>
                 <th className="p-2">Статус цены</th>
                 <th className="p-2">Полнота</th>
@@ -539,7 +539,7 @@ export const VariantsPricesPanel = ({
                         <Input
                           value={skuDraft}
                           onChange={(e) => setSkuDraft(e.target.value)}
-                          aria-label={`SKU ${row.display_title}`}
+                          aria-label={`Артикул ${row.display_title}`}
                         />
                         <div className="flex gap-1">
                           <Button size="small" disabled={saving} onClick={() => saveSku(row)}>
@@ -637,7 +637,7 @@ export const VariantsPricesPanel = ({
                   <td className="p-2">
                     <div className="flex flex-col gap-1">
                       <Button size="small" variant="secondary" onClick={() => beginSkuEdit(row)}>
-                        SKU
+                        Артикул
                       </Button>
                       {row.price_edit_blocked_reason ? (
                         <Text size="small" className="text-ui-fg-subtle">

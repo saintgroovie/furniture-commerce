@@ -1,4 +1,6 @@
 import { loadEnv, defineConfig } from "@medusajs/framework/utils"
+import { woodrightAdminDefaultLocalePlugin } from "./src/admin/vite/default-locale-plugin"
+import { woodrightAdminFaviconPlugin } from "./src/admin/vite/favicon-plugin"
 import { woodrightDisableAdminHmrPlugin } from "./src/admin/vite/disable-hmr-plugin"
 
 loadEnv(process.env.NODE_ENV || "development", process.cwd())
@@ -69,6 +71,8 @@ export default defineConfig({
         },
         plugins: [
           ...(config.plugins ?? []),
+          woodrightAdminDefaultLocalePlugin(),
+          woodrightAdminFaviconPlugin(),
           ...(adminHmrEnabled ? [] : [woodrightDisableAdminHmrPlugin()]),
         ],
         server: {

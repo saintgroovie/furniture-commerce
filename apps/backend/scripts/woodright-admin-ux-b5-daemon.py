@@ -218,6 +218,32 @@ def http_ok(path: str = "/app") -> bool:
         return False
 
 
+def ensure_store_branding() -> None:
+    brand_script = BACKEND / "scripts" / "ensure-woodright-store-branding.py"
+    if not brand_script.is_file():
+        return
+    brand_env = os.environ.copy()
+    brand_env["PORT"] = str(PORT)
+    try:
+        result = subprocess.run(
+            [sys.executable, str(brand_script)],
+            cwd=str(BACKEND),
+            env=brand_env,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+        print((result.stdout or "").strip() or "store_branding: no output")
+        if result.returncode != 0:
+            print(
+                f"WARN: store branding failed rc={result.returncode}: {(result.stderr or '').strip()}",
+                file=sys.stderr,
+            )
+    except Exception as exc:  # noqa: BLE001 — branding is best-effort after boot
+        print(f"WARN: store branding skipped: {exc}", file=sys.stderr)
+
+
 def start() -> int:
     dotenv = load_dotenv(BACKEND / ".env")
     database_url = os.environ.get("DATABASE_URL") or dotenv.get("DATABASE_URL") or ""
@@ -235,6 +261,7 @@ def start() -> int:
     if existing and http_ok("/app") and not under_cursor(existing):
         PIDFILE.write_text(str(read_pidfile() or existing) + "\n")
         print(f"already_running_detached listener={existing} url=http://localhost:{PORT}/app/woodright")
+        ensure_store_branding()
         return 0
     if existing:
         print(f"stopping existing :{PORT} listener pid={existing} under_cursor={under_cursor(existing)}")
@@ -306,6 +333,7 @@ def start() -> int:
     print(f"ready url=http://localhost:{PORT}/app/woodright")
     print(f"pidfile={PIDFILE}")
     print("detached: Cursor shell abort must not kill this process")
+    ensure_store_branding()
     return 0
 
 

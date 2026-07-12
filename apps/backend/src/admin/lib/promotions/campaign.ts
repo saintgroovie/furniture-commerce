@@ -44,7 +44,7 @@ export function checkCampaignCompatibility(
     const promoCurrency = (input.promotion_currency_code ?? "").trim().toLowerCase()
     if (!budgetCurrency) {
       errors.push(
-        "У кампании денежный бюджет без валюты - проверьте кампанию в стандартной админке"
+        "У кампании денежный бюджет без валюты - проверьте кампанию в разделе кампаний"
       )
     } else if (promoCurrency && promoCurrency !== budgetCurrency) {
       errors.push(
@@ -59,7 +59,7 @@ export function checkCampaignCompatibility(
     budgetType !== "usage"
   ) {
     warnings.push(
-      "У кампании нестандартный тип бюджета - поведение лимитов проверяйте в стандартной админке"
+      "У кампании нестандартный тип бюджета - поведение лимитов проверяйте в разделе кампаний"
     )
   }
   if (budget && typeof budget.limit === "number" && typeof budget.used === "number") {

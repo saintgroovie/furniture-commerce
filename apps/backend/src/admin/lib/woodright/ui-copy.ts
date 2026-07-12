@@ -8,7 +8,7 @@ export const UI_COPY = {
   products: "Товары",
   variant: "Вариант",
   variants: "Варианты",
-  sku: "Артикул (SKU)",
+  sku: "Артикул",
   price: "Цена",
   gallery: "Галерея",
   thumbnail: "Главное фото",
@@ -26,6 +26,13 @@ export const UI_COPY = {
   productPromotionsTab: "Акции товара",
   technicalDetails: "Для поддержки",
   dashboardTitle: "Рабочий стол Woodright",
+  /** Stock Medusa product/variant surfaces (not a second admin). */
+  stockProductSurface: "полной карточке",
+  stockPromotionSurface: "разделе акций",
+  stockCampaignSurface: "разделе кампаний",
+  /** Operator-facing name for Store API cart verify (avoid raw API jargon). */
+  calcCheck: "проверка расчёта",
+  calcCheckCart: "тестовая корзина",
 } as const
 
 export type UiCopyKey = keyof typeof UI_COPY

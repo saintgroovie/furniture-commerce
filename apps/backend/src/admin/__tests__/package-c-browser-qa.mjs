@@ -45,7 +45,10 @@ await page.locator('input[name="password"], input[type="password"]').first().fil
 await page.locator('button[type="submit"]').click()
 await page.waitForTimeout(5000)
 // Fallback: API session + common localStorage keys if UI stayed on login
-const stillLogin = /Welcome to Medusa/i.test(await page.locator("body").innerText())
+const stillLogin =
+  /Welcome to (Medusa|Woodright)|Добро пожаловать в Woodright/i.test(
+    await page.locator("body").innerText()
+  )
 if (stillLogin) {
   const ok = await page.evaluate(async () => {
     const res = await fetch("/auth/user/emailpass", {
@@ -96,9 +99,11 @@ for (const w of [1440, 1280, 1024]) {
   scenarios.push({
     viewport: w,
     ok:
-      /Основной вариант|SKU|Цена/i.test(body) &&
+      /Основной вариант/i.test(body) &&
+      /Артикул/i.test(body) &&
+      /Цена/i.test(body) &&
+      /полной карточке/i.test(body) &&
       !/Полноценная матрица вариантов будет добавлена/i.test(body),
-    hasFallback: /стандартн/i.test(body),
     sample: body.replace(/\s+/g, " ").slice(0, 350),
   })
 }

@@ -75,8 +75,8 @@ export const KNOWN_TARGET_ATTRIBUTES: KnownRuleAttribute[] = [
   {
     attribute: "items.product.type_id",
     context: ["target-rules", "buy-rules"],
-    label: "Тип товара (Medusa)",
-    scope_phrase: "товары выбранных типов Medusa",
+    label: "Тип товара",
+    scope_phrase: "товары выбранных типов",
   },
   {
     attribute: "items.product.tags.id",
@@ -106,7 +106,7 @@ export function classifyRuleAttribute(
   if (!attr) {
     return {
       kind: "fail_closed",
-      reason: "Условие без атрибута - управляйте этой акцией в стандартной админке",
+      reason: "Условие без атрибута - управляйте этой акцией в разделе акций",
     }
   }
   if (/variant/i.test(attr)) {
@@ -121,7 +121,7 @@ export function classifyRuleAttribute(
   if (!meta) {
     return {
       kind: "fail_closed",
-      reason: `Условие «${attr}» не входит в проверенный набор - управляйте им в стандартной админке`,
+      reason: `Условие «${attr}» не входит в проверенный набор - управляйте им в разделе акций`,
     }
   }
   return { kind: "supported", meta }
@@ -167,7 +167,7 @@ export function describeRule(
     return {
       kind: "fail_closed",
       attribute: rule.attribute ?? null,
-      reason: `Оператор «${rule.operator ?? "не задан"}» не входит в проверенный набор - управляйте условием в стандартной админке`,
+      reason: `Оператор «${rule.operator ?? "не задан"}» не входит в проверенный набор - управляйте условием в разделе акций`,
     }
   }
   const values = ruleValueLabels(rule)
