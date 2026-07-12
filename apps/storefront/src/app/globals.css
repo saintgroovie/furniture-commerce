@@ -917,9 +917,8 @@ select:focus-visible {
   justify-content: start;
 }
 
-/* Content-sized columns + one fixed gap. Column width follows the caps
-   title (not the longest link) so title-to-title gutters stay equal;
-   links share that width and ellipsize if needed. */
+/* Content-sized columns + one fixed gap = same box gutter between every
+   nav pair. (Sizing by title alone clipped link labels — keep max-content.) */
 .footer-nav {
   display: flex;
   flex-wrap: nowrap;
@@ -930,13 +929,7 @@ select:focus-visible {
 
 .footer-nav .footer-column {
   flex: 0 0 auto;
-  width: fit-content;
-}
-
-/* Shrink-wrap the column to the title; body fills that width. */
-.footer-nav .footer-column-links {
-  width: 0;
-  min-width: 100%;
+  width: max-content;
 }
 
 .footer-column {
