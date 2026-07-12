@@ -25,6 +25,7 @@ import {
   updateAdminProduct,
 } from "../../../../lib/product-workspace/admin-api"
 import { VariantsPricesPanel } from "../../../../lib/product-workspace/VariantsPricesPanel"
+import { GalleryPanel } from "../../../../lib/product-workspace/GalleryPanel"
 import { buildClassificationView } from "../../../../lib/product-workspace/classification"
 import { buildMediaSummary } from "../../../../lib/product-workspace/media-summary"
 import { buildPriceSummary } from "../../../../lib/product-workspace/price-summary"
@@ -106,6 +107,7 @@ const ProductWorkspacePage = () => {
   const [priceRows, setPriceRows] = useState<Array<Array<{ amount: number; currency_code: string }>>>([])
   const [variantsTruncated, setVariantsTruncated] = useState(false)
   const [variantsDirty, setVariantsDirty] = useState(false)
+  const [galleryDirty, setGalleryDirty] = useState(false)
   const [loadError, setLoadError] = useState<ReturnType<typeof normalizeAdminError> | null>(null)
   const [saveState, dispatchSave] = useReducer(
     reduceSaveState,
@@ -143,6 +145,7 @@ const ProductWorkspacePage = () => {
           savedAt: bundle.product.updated_at ?? null,
         })
         setVariantsDirty(false)
+        setGalleryDirty(false)
       } catch (e) {
         if (ac.signal.aborted) return
         setLoadError(
@@ -164,15 +167,15 @@ const ProductWorkspacePage = () => {
 
   useEffect(() => {
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (!(isDirty(saveState) || variantsDirty)) return
+      if (!(isDirty(saveState) || variantsDirty || galleryDirty)) return
       e.preventDefault()
       e.returnValue = ""
     }
     window.addEventListener("beforeunload", onBeforeUnload)
     return () => window.removeEventListener("beforeunload", onBeforeUnload)
-  }, [saveState, variantsDirty])
+  }, [saveState, variantsDirty, galleryDirty])
 
-  const dirty = isDirty(saveState) || variantsDirty
+  const dirty = isDirty(saveState) || variantsDirty || galleryDirty
   const blocker = useBlocker(dirty)
   useEffect(() => {
     if (blocker.state !== "blocked") return
@@ -532,15 +535,14 @@ const ProductWorkspacePage = () => {
       ) : null}
 
       {tab === "gallery" ? (
-        <Container className="p-4">
-          <Text>
-            Показано превью {media?.preview_urls.length ?? 0} из {media?.image_count ?? 0}{" "}
-            изображений (SoT: thumbnail + product.images).
-          </Text>
-          <Text size="small" className="mt-2 text-ui-fg-subtle">
-            Управление галереей будет добавлено в Package D.
-          </Text>
-        </Container>
+        <GalleryPanel
+          product={product}
+          onDirtyChange={setGalleryDirty}
+          onProductUpdated={(next) => {
+            setProduct(next)
+            setPriceRows((next.variants ?? []).map((v) => v.prices ?? []))
+          }}
+        />
       ) : null}
 
       {tab === "inventory" || tab === "promotions" ? (

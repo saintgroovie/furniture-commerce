@@ -106,7 +106,13 @@ export async function fetchVariantPrices(
 
 export async function updateAdminProduct(
   productId: string,
-  payload: { title?: string; description?: string; status?: string },
+  payload: {
+    title?: string
+    description?: string
+    status?: string
+    thumbnail?: string | null
+    images?: Array<{ id?: string; url: string }>
+  },
   init?: RequestInit
 ): Promise<{ product: AdminProductPayload } | { status: number; body: unknown }> {
   const res = await fetch(`/admin/products/${encodeURIComponent(productId)}`, {
@@ -123,6 +129,32 @@ export async function updateAdminProduct(
   const body = await res.json().catch(() => ({}))
   if (!res.ok) return { status: res.status, body }
   return { product: (body as { product: AdminProductPayload }).product }
+}
+
+export async function uploadAdminFiles(
+  files: File[],
+  init?: RequestInit
+): Promise<
+  | { files: Array<{ id?: string; url: string }> }
+  | { status: number; body: unknown }
+> {
+  const form = new FormData()
+  for (const f of files) form.append("files", f)
+  const res = await fetch("/admin/uploads", {
+    method: "POST",
+    credentials: "include",
+    ...init,
+    body: form,
+    headers: {
+      Accept: "application/json",
+      ...(init?.headers ?? {}),
+    },
+  })
+  const body = await res.json().catch(() => ({}))
+  if (!res.ok) return { status: res.status, body }
+  const list =
+    (body as { files?: Array<{ id?: string; url: string }> }).files ?? []
+  return { files: list }
 }
 
 export async function updateAdminProductVariant(
