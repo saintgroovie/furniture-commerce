@@ -25,6 +25,15 @@ export type AdminErrorCode =
   | "promotion_rule_error"
   | "invalid_date_range"
   | "campaign_constraint"
+  // Package E (promotions workspace)
+  | "duplicate_promo_code"
+  | "invalid_promotion_type"
+  | "invalid_promotion_value"
+  | "promotion_unsupported"
+  | "campaign_budget_conflict"
+  | "publishable_key_missing"
+  | "cart_verification_failed"
+  | "promo_code_not_applied"
   | "unknown"
 
 export type AdminErrorTechnical = {
@@ -181,6 +190,46 @@ const CATALOG: Record<AdminErrorCode, CatalogEntry> = {
     explanation: "Акция не совместима с правилами кампании.",
     action: "Измените лимиты или кампанию.",
   },
+  duplicate_promo_code: {
+    title: "Такой код акции уже есть",
+    explanation: "Код должен быть уникальным среди всех акций.",
+    action: "Придумайте другой код и сохраните.",
+  },
+  invalid_promotion_type: {
+    title: "Такой вид акции не поддерживается",
+    explanation: "Сочетание типа скидки и области действия не принято системой.",
+    action: "Настройте эту акцию в стандартной админке.",
+  },
+  invalid_promotion_value: {
+    title: "Некорректный размер скидки",
+    explanation: "Процент должен быть от 0 до 100, сумма - больше нуля.",
+    action: "Исправьте значение и сохраните.",
+  },
+  promotion_unsupported: {
+    title: "Акция сложного типа",
+    explanation: "Woodright не управляет этим видом акций, чтобы ничего не сломать.",
+    action: "Откройте акцию в стандартной админке.",
+  },
+  campaign_budget_conflict: {
+    title: "Конфликт с бюджетом кампании",
+    explanation: "Валюта или тип бюджета кампании не подходит этой акции.",
+    action: "Выберите другую кампанию или измените бюджет в стандартной админке.",
+  },
+  publishable_key_missing: {
+    title: "Нет ключа магазина для проверки",
+    explanation: "Проверка в корзине требует publishable API key витрины.",
+    action: "Укажите ключ в поле проверки и повторите.",
+  },
+  cart_verification_failed: {
+    title: "Проверка в корзине не прошла",
+    explanation: "Не удалось собрать тестовую корзину или применить код.",
+    action: "Проверьте товар и код, затем повторите. Результат не подтверждён.",
+  },
+  promo_code_not_applied: {
+    title: "Код не дал скидку",
+    explanation: "Корзина собрана, но скидка по коду не появилась.",
+    action: "Проверьте статус акции, её условия и состав тестовой корзины.",
+  },
   unknown: {
     title: "Что-то пошло не так",
     explanation: "Мы не смогли выполнить действие.",
@@ -269,8 +318,26 @@ function mapFromServerCode(code?: string): AdminErrorCode | null {
   if (c.includes("rule") && c.includes("price")) return "rule_based_price_unsupported"
   if (c.includes("partial") && c.includes("bulk")) return "partial_bulk_failure"
   if (c.includes("invalid") && c.includes("price")) return "invalid_price"
+  if (c.includes("publishable")) return "publishable_key_missing"
+  if (
+    (c.includes("promo") || c.includes("code")) &&
+    (c.includes("duplicate") || c.includes("exists") || c.includes("unique"))
+  ) {
+    return "duplicate_promo_code"
+  }
+  if (c.includes("campaign") && (c.includes("budget") || c.includes("currency"))) {
+    return "campaign_budget_conflict"
+  }
   if (c.includes("currency")) return "invalid_currency"
   if (c.includes("inventory")) return "missing_inventory"
+  if (
+    c.includes("allocation") ||
+    c.includes("target_type") ||
+    c.includes("application_method_type") ||
+    c.includes("buyget")
+  ) {
+    return "invalid_promotion_type"
+  }
   if (c.includes("promotion") || c.includes("promo")) return "promotion_rule_error"
   if (c.includes("date")) return "invalid_date_range"
   if (c.includes("campaign")) return "campaign_constraint"
@@ -286,6 +353,34 @@ function mapFromRawMessage(raw?: string): AdminErrorCode | null {
   if (m.includes("timeout") || m.includes("timed out")) return "timeout"
   if (m.includes("sku") && (m.includes("exist") || m.includes("unique") || m.includes("duplicate"))) {
     return "duplicate_sku"
+  }
+  if (m.includes("publishable")) return "publishable_key_missing"
+  // Medusa 2.13.3: "Promotion with code: X, already exists."
+  if (
+    m.includes("promotion") &&
+    m.includes("code") &&
+    (m.includes("already exists") || m.includes("duplicate") || m.includes("unique"))
+  ) {
+    return "duplicate_promo_code"
+  }
+  if (
+    m.includes("promotion") &&
+    (m.includes("allocation") ||
+      m.includes("max_quantity") ||
+      m.includes("apply_to_quantity") ||
+      m.includes("target_type"))
+  ) {
+    return "invalid_promotion_type"
+  }
+  if (
+    m.includes("value") &&
+    m.includes("percentage") &&
+    (m.includes("100") || m.includes("between"))
+  ) {
+    return "invalid_promotion_value"
+  }
+  if (m.includes("campaign") && (m.includes("budget") || m.includes("currency"))) {
+    return "campaign_budget_conflict"
   }
   if (m.includes("required")) return "required"
   if (m.includes("negative") || m.includes("must be greater") || m.includes(">= 0")) {

@@ -26,6 +26,7 @@ import {
 } from "../../../../lib/product-workspace/admin-api"
 import { VariantsPricesPanel } from "../../../../lib/product-workspace/VariantsPricesPanel"
 import { GalleryPanel } from "../../../../lib/product-workspace/GalleryPanel"
+import { ProductPromotionsPanel } from "../../../../lib/promotions/ProductPromotionsPanel"
 import { buildClassificationView } from "../../../../lib/product-workspace/classification"
 import { buildMediaSummary } from "../../../../lib/product-workspace/media-summary"
 import { buildPriceSummary } from "../../../../lib/product-workspace/price-summary"
@@ -545,13 +546,20 @@ const ProductWorkspacePage = () => {
         />
       ) : null}
 
-      {tab === "inventory" || tab === "promotions" ? (
+      {tab === "inventory" ? (
         <Container className="p-4">
           <Text>Будет добавлено в следующем пакете.</Text>
           <Button className="mt-3" variant="secondary" asChild>
             <Link to={stockAdminProductPath(product.id)}>Открыть в стандартной админке</Link>
           </Button>
         </Container>
+      ) : null}
+
+      {tab === "promotions" ? (
+        <ProductPromotionsPanel
+          productId={product.id}
+          collectionId={product.collection?.id ?? null}
+        />
       ) : null}
 
       {tab === "seo" ? (
