@@ -7,7 +7,7 @@ Single-instance control for Woodright Medusa on `:9000` and storefront on `:3002
 | Profile | Command | When |
 |--------|---------|------|
 | **develop** | `./woodright-backend.sh start develop` | Backend/Admin edits; default when no build |
-| **qa** (buyer-uptime) | after `yarn medusa build`: `./woodright-backend.sh restart qa` | Catalog/cart/photos smoke without watcher flaps; if build missing → fallback to develop |
+| **qa** (buyer-uptime) | after `yarn build`: `./woodright-backend.sh restart qa` | Catalog/cart/photos smoke without watcher flaps; needs `dist/package.json` (Medusa v2); if build missing → fallback to develop |
 
 `status` labels: `ready` | `starting` | `down` (`starting` = supervisor alive, buyer not ready).
 

@@ -301,6 +301,26 @@ cmd_status() {
 
   # ready = owned LISTEN + /health 200. launchctl/supervisor alive alone is NOT buyer-ready.
   if [[ "$code" == "200" && "$owned_listen" -eq 1 ]]; then
+    # LaunchAgent / medusa start may leave state pointing at a parent that exited;
+    # heal when buyer is ready so stop/restart keep a live identity.
+    if [[ "$identity" != "ok" ]]; then
+      case "$mode_guess" in
+        develop|qa)
+          local listen_pid="" heal_root=""
+          for p in $pids; do
+            if is_our_medusa_pid "$p"; then
+              listen_pid="$p"
+              break
+            fi
+          done
+          if [[ -n "$listen_pid" ]]; then
+            heal_root="$(resolve_root_pid "$listen_pid")"
+            write_state "$listen_pid" "$mode_guess" "$heal_root"
+            log "         identity: healed -> pid=$listen_pid root=$heal_root mode=$mode_guess"
+          fi
+          ;;
+      esac
+    fi
     log "status:  ready"
     return 0
   fi
@@ -529,15 +549,25 @@ reject_extra_args() {
 }
 
 require_qa_build() {
-  local marker="$BACKEND_DIR/.medusa/server/package.json"
-  local server_js="$BACKEND_DIR/.medusa/server/public/admin/index.html"
-  local linked_admin="$BACKEND_DIR/public/admin/index.html"
-  [[ -f "$marker" ]] || return 1
-  if [[ -f "$BACKEND_DIR/medusa-config.ts" && "$BACKEND_DIR/medusa-config.ts" -nt "$marker" ]]; then
-    printf 'warn: medusa-config.ts is newer than .medusa/server build - consider rebuild before qa\n' >&2
+  # Medusa v2 emits backend under dist/. Admin may live under dist/public/admin
+  # and/or public/admin (link-admin-build on trees that ship that script).
+  # Older layouts used .medusa/server/ - accept either marker.
+  local marker=""
+  if [[ -f "$BACKEND_DIR/dist/package.json" ]]; then
+    marker="$BACKEND_DIR/dist/package.json"
+  elif [[ -f "$BACKEND_DIR/.medusa/server/package.json" ]]; then
+    marker="$BACKEND_DIR/.medusa/server/package.json"
+  else
+    return 1
   fi
-  if [[ ! -f "$server_js" && ! -f "$linked_admin" ]]; then
-    printf 'warn: admin index.html not found under .medusa/server/public/admin or public/admin - /app may be Cannot GET in qa\n' >&2
+  local server_js="$BACKEND_DIR/.medusa/server/public/admin/index.html"
+  local dist_admin="$BACKEND_DIR/dist/public/admin/index.html"
+  local linked_admin="$BACKEND_DIR/public/admin/index.html"
+  if [[ -f "$BACKEND_DIR/medusa-config.ts" && "$BACKEND_DIR/medusa-config.ts" -nt "$marker" ]]; then
+    printf 'warn: medusa-config.ts is newer than qa build marker (%s) - consider rebuild before qa\n' "$marker" >&2
+  fi
+  if [[ ! -f "$server_js" && ! -f "$dist_admin" && ! -f "$linked_admin" ]]; then
+    printf 'warn: admin index.html not found under dist/public/admin, public/admin, or .medusa/server/public/admin - /app may be Cannot GET in qa\n' >&2
   fi
   return 0
 }
@@ -550,8 +580,8 @@ resolve_start_mode() {
       return 0
     fi
     # Must not print to stdout - callers capture this function via $()
-    printf 'warn: qa build missing (.medusa/server) - falling back to develop so catalog/Admin stay up\n' >&2
-    printf 'warn: to use qa later: cd apps/backend && yarn medusa build && %s restart qa\n' "$0" >&2
+    printf 'warn: qa build missing (need dist/package.json from yarn build, or legacy .medusa/server) - falling back to develop so catalog/Admin stay up\n' >&2
+    printf 'warn: to use qa later: cd apps/backend && yarn build && %s restart qa\n' "$0" >&2
     printf '%s' develop
     return 0
   fi

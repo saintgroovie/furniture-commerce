@@ -64,7 +64,7 @@ export PATH="/usr/local/opt/node@22/bin:/usr/local/bin:/usr/bin:/bin"
 cd "$(dirname "$0")"
 echo "Woodright Medusa (default develop; qa only if build exists) -> http://127.0.0.1:9000/health"
 # Default develop: catalog/Admin stay up without medusa build.
-# Force qa: WOODRIGHT_BACKEND_MODE=qa ./woodright-backend.sh start qa (needs yarn medusa build)
+# Force qa: WOODRIGHT_BACKEND_MODE=qa ./woodright-backend.sh start qa (needs yarn build → dist/package.json)
 exec /bin/bash ./woodright-backend.sh start develop
 EOF
 chmod +x "$tmp_start"

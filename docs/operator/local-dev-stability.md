@@ -26,15 +26,19 @@ Open Admin as **`http://localhost:9000/app/login`** (prefer `localhost` over `12
 
 ```bash
 cd /Users/leonidmbp/Documents/projects/furniture-commerce/apps/backend
-yarn medusa build
-# marker must exist:
-test -f .medusa/server/package.json
+yarn build
+# Medusa v2 marker:
+test -f dist/package.json
+# Admin assets for medusa start (either path is OK):
+test -f public/admin/index.html || test -f dist/public/admin/index.html
 cd ../../
 scripts/local-dev/woodright-backend.sh restart qa
 scripts/local-dev/woodright-doctor.sh --backend-only
 ```
 
-If `.medusa/server` is missing, entrypoint **falls back to develop** (keeps `:9000` from staying empty). Incomplete/stale qa build may leave Admin as `Cannot GET /app` while catalog API still works - do not claim Admin OK without `--admin-only`.
+If `dist/package.json` is missing, entrypoint **falls back to develop** (keeps `:9000` from staying empty). Incomplete/stale qa build may leave Admin as `Cannot GET /app` while catalog API still works - do not claim Admin OK without `--admin-only`.
+
+Note: Prefer `yarn build` from `apps/backend` (not bare `yarn medusa build`). Buyer-uptime marker is `dist/package.json`. Admin for `medusa start` should exist under `public/admin` and/or `dist/public/admin` (on trees that ship `scripts/link-admin-build.mjs`, `yarn build` may also link Admin there). Backend `tsconfig.json` excludes `src/scripts/**` and `**/*.test.ts` so operator/seed scripts do not block the server compile.
 
 ### develop notes
 
@@ -51,6 +55,7 @@ Scripts prefer LaunchAgent uptime. Interactive `start` backgrounds for convenien
 Correct shape:
 - `run-backend.sh` → `WOODRIGHT_START_FOREGROUND=1` → exec Medusa
 - KeepAlive = `{ SuccessfulExit = false }`
+- Default mode: `develop`. For buyer-uptime without watcher, set LaunchAgent env `WOODRIGHT_BACKEND_MODE=qa` after `yarn build`, then bootstrap.
 - Intentional stop: `backend-9000.pause` + `stop` + `launchctl bootout`
 
 ```bash
