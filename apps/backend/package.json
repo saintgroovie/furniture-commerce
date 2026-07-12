@@ -8,7 +8,7 @@
     "build": "medusa build && node scripts/link-admin-build.mjs",
     "dev": "node scripts/ensure-admin-dev-stable.mjs && MEDUSA_RUNTIME_COMMAND=develop node scripts/ensure-admin-runtime-ready.mjs && MEDUSA_RUNTIME_COMMAND=develop medusa develop --types",
     "dev:reset": "bash scripts/clean-admin-vite.sh && node scripts/ensure-admin-dev-stable.mjs && MEDUSA_RUNTIME_COMMAND=develop node scripts/ensure-admin-runtime-ready.mjs && MEDUSA_RUNTIME_COMMAND=develop medusa develop --types",
-    "test:admin-vite": "node --test src/admin/vite/finalize-vite-cache.test.mjs scripts/link-admin-build.test.mjs",
+    "test:admin-vite": "node --test src/admin/vite/finalize-vite-cache.test.mjs scripts/link-admin-build.test.mjs && node --experimental-strip-types --test src/admin/vite/normalize-admin-host-plugin.test.ts",
     "clean:admin-vite": "bash scripts/clean-admin-vite.sh",
     "dev:admin-local": "bash scripts/dev-admin-local.sh",
     "dev:admin-local:daemon": "bash scripts/dev-admin-local-daemon.sh",
@@ -18,6 +18,7 @@
     "ensure-checkout-ready": "medusa exec ./src/scripts/ensure-checkout-ready.ts",
     "normalize-price-amounts": "medusa exec ./src/scripts/normalize-medusa-price-amounts.ts",
     "start": "node scripts/ensure-admin-runtime-ready.mjs && MEDUSA_RUNTIME_COMMAND=start medusa start",
+    "generate:catalog-card-derivatives": "tsx scripts/generate-catalog-card-derivatives.ts",
     "db:generate": "medusa db:generate",
     "db:migrate": "medusa db:migrate",
     "db:sync-links": "medusa db:sync-links",
@@ -27,7 +28,8 @@
   "dependencies": {
     "@medusajs/admin-sdk": "2.17.2",
     "@medusajs/framework": "^2.17.2",
-    "@medusajs/medusa": "^2.17.2"
+    "@medusajs/medusa": "^2.17.2",
+    "sharp": "^0.35.3"
   },
   "devDependencies": {
     "@medusajs/cli": "^2.17.2",

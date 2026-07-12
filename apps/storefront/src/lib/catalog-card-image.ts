@@ -1,14 +1,17 @@
 /**
  * Resolve a catalog-card sized image URL (PERF-07 / H4).
  *
- * Prefer a sibling derivative when present:
+ * Prefer a sibling derivative when env-enabled:
  *   /static/products/col/hero.png
  *   /product-static/products/col/hero.png   (storefront rewrite of Medusa static)
  *     → …/derivatives/card/hero.webp  (w≈720, webp)
- * Fallback: original URL (PDP / missing derivative).
  *
- * Generation + CDN are separate ops steps; this helper is the storefront
- * contract so cards can switch without rewriting every component later.
+ * Missing derivatives are not auto-detected (no HEAD). Generate before enabling
+ * the flag; card hero `onError` remains the UI safety net.
+ *
+ * Enable with `NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES=1` via
+ * {@link resolveCatalogCardHeroSrc}. Generation: backend
+ * `yarn generate:catalog-card-derivatives`.
  */
 
 const DERIVATIVE_MARKER = "/derivatives/card/"
@@ -26,6 +29,10 @@ function matchProductStaticPrefix(
     if (path.startsWith(prefix)) return prefix
   }
   return null
+}
+
+export function catalogCardDerivativesEnabled(): boolean {
+  return process.env.NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES === "1"
 }
 
 export function toCatalogCardDerivativePath(staticPath: string): string | null {
@@ -46,14 +53,12 @@ export function toCatalogCardDerivativePath(staticPath: string): string | null {
 /**
  * Pick card hero URL: derivative path when `preferDerivative` and path is
  * under `/static/products/` or `/product-static/products/`; otherwise original.
- * Absolute Medusa URLs are rewritten to relative product-static paths when
- * possible for derivative mapping.
  */
 export function resolveCatalogCardImageSrc(
   src: string,
   options?: { preferDerivative?: boolean }
 ): string {
-  const prefer = options?.preferDerivative !== false
+  const prefer = options?.preferDerivative === true
   const t = typeof src === "string" ? src.trim() : ""
   if (!t || !prefer) return t
 
@@ -71,4 +76,17 @@ export function resolveCatalogCardImageSrc(
 
   const derivative = toCatalogCardDerivativePath(path)
   return derivative ?? t
+}
+
+/**
+ * Catalog-card hero resolver: storefront rewrite first, then optional card WebP.
+ * PDP must keep using resolveStorefrontProductImageSrc unchanged.
+ */
+export function resolveCatalogCardHeroSrc(
+  src: string,
+  resolveStorefront: (url: string) => string
+): string {
+  const storefront = resolveStorefront(src)
+  if (!catalogCardDerivativesEnabled()) return storefront
+  return resolveCatalogCardImageSrc(storefront, { preferDerivative: true })
 }
