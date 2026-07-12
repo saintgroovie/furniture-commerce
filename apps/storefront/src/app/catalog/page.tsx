@@ -6,6 +6,7 @@ import { CatalogBrowseClient } from "@/components/catalog-browse-client"
 import { CatalogFilterControls } from "@/components/catalog-filter-controls"
 import { getSiteUrl } from "@/lib/api/base"
 import { getCatalogProducts } from "@/lib/api/products"
+import { toCatalogBrowseClientProducts } from "@/lib/catalog-browse-client-product"
 import {
   fetchKidsRoomSetMembership,
   resolveKidsProducts,
@@ -177,7 +178,7 @@ export default async function CatalogPage({
       <CatalogBrowseClient
         basePath="/catalog"
         initialState={filterState}
-        products={scopedMain}
+        products={toCatalogBrowseClientProducts(scopedMain)}
         showBespokeCta
         siteUrl={getSiteUrl()}
         emptyCopy={{

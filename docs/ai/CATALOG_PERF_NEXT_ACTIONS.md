@@ -2,41 +2,25 @@
 
 **Date:** 2026-07-12  
 **Repo:** `/Users/leonidmbp/Documents/projects/furniture-commerce`  
-**Codex after W3g:** DEFER W3e/W3f/W3h until Prod H4 + PR hygiene + new bottleneck evidence
+**Operator mandate:** full catalog + key page load optimization - no parking on DEFER
 
-## Order (do in sequence)
+## Order
 
-| # | Action | Owner | Status |
-|---|--------|-------|--------|
-| 1 | Commit H4 runbook + plan pointer + `.env.example` warning | Agent | DONE |
-| 2 | Split catalog-perf onto `main` | Agent | DONE - `feat/catalog-perf-load` |
-| 3 | Open PR #24 + comment on #15 | Agent | DONE |
-| 3b | Codex merge gate on #24 + P1 fixes | Agent | DONE - `safe_to_merge` (`d26e346`, reconfirmed `768cd7d`) |
-| 4 | Merge PR #24 | Agent | DONE - `6192f49` on `main` |
-| 5 | Prod H4 on production Medusa | Operator | WAIT (needs prod host) |
-| 6 | W3e / W3f / W3h | - | DEFER |
+| # | Action | Status |
+|---|--------|--------|
+| 1–4 | Split + PR #24 merge + docs | DONE (`6192f49`) |
+| 5 | W3e compact browse VM (API + RSC props) | IN PR `feat/catalog-w3e-browse-model` |
+| 6 | Prod H4 bake flag | WAIT (needs prod host) - does **not** block local levers |
+| 7 | W3f / rooms / home / API latency | NEXT after W3e lands |
+| 8 | W3h CDN | after prod H4 coverage |
 
-## Split result
+## W3e evidence
 
-PR: https://github.com/saintgroovie/furniture-commerce/pull/24 (**MERGED**)
-
-Invariants kept through main sync + merge:
-- default `/store/products` full projection; lean = browse / `catalog-products` only
-- RoomSet default detail = main contract; lean only `view=product_ids`
-- BESPOKE checked before kids cart stamps
-- `postinstall`: skip-cart-promotions + medusa-develop-watch `--warn-only`
-- `generate:catalog-card-derivatives` + `sharp` retained
-
-## Prod H4 (local green, prod pending)
-
-- Local `h4-coverage-gate --http` (canonical static / Medusa `:9000`): **157/157 OK**
-- Runbook: `docs/operator/catalog-card-derivatives-release.md`
-- Do **not** bake `NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES=1` in prod until generate → deploy → prod HTTP gate
-- Agent resume file (one line, host only, no secrets): `tmp/catalog-perf/PROD_MEDUSA_URL`
+- Live `catalog-products` JSON: 401KB → 232KB (−42%) via image+execution URL caps
+- Target: `/catalog` HTML ≥30% reduction after storefront picks up mapper
 
 ## Do not
 
-- Force-push / rewrite #15 history casually
-- Bake prod H4 flag without step 5
-- Start W3e/W3f/W3h without new evidence
+- Bake prod `NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES=1` without prod coverage
+- Strip execution keys entirely for metrics
 - `git add -A`

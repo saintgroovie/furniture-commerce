@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { CatalogBrowseClient } from "@/components/catalog-browse-client"
 import { getSiteUrl } from "@/lib/api/base"
 import { getCatalogProducts } from "@/lib/api/products"
+import { toCatalogBrowseClientProducts } from "@/lib/catalog-browse-client-product"
 import {
   fetchKidsRoomSetMembership,
   resolveKidsProducts,
@@ -86,7 +87,7 @@ export default async function KidsCatalogPage({
       <CatalogBrowseClient
         basePath="/kids/catalog"
         initialState={filterState}
-        products={scoped}
+        products={toCatalogBrowseClientProducts(scoped)}
         showBespokeCta
         siteUrl={getSiteUrl()}
         emptyCopy={{
