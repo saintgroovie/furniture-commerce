@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useReducer, useState } from "react"
-import { useParams, Link, Navigate, useBlocker, useSearchParams } from "react-router-dom"
+import { useEffect, useMemo, useReducer, useRef, useState } from "react"
+import { useParams, Link, Navigate, useBlocker, useNavigate, useSearchParams } from "react-router-dom"
 import {
   Badge,
   Button,
@@ -27,6 +27,8 @@ import { ProductPromotionsPanel } from "../../../../lib/promotions/ProductPromot
 import { buildClassificationView } from "../../../../lib/product-workspace/classification"
 import { buildMediaSummary } from "../../../../lib/product-workspace/media-summary"
 import { buildPriceSummary } from "../../../../lib/product-workspace/price-summary"
+import { buildProductReadiness } from "../../../../lib/product-workspace/readiness"
+import { ProductReadinessChecklist } from "../../../../lib/product-workspace/ProductReadinessChecklist"
 import {
   buildStorefrontPreviewUrl,
   resolveStorefrontOrigin,
@@ -72,6 +74,7 @@ function toEditable(p: AdminProductPayload): EditableProductFields {
 
 const ProductWorkspacePage = () => {
   const { id = "" } = useParams()
+  const navigate = useNavigate()
   const flagOn = readWoodrightAdminUxFlagFromBrowser()
   // F-13: the active tab lives in ?tab= so sections can be deep-linked.
   const [searchParams, setSearchParams] = useSearchParams()
@@ -120,6 +123,9 @@ const ProductWorkspacePage = () => {
     reduceSaveState,
     createSaveState({ title: "", description: "", status: "draft" })
   )
+
+  const titleInputRef = useRef<HTMLInputElement | null>(null)
+  const descriptionInputRef = useRef<HTMLTextAreaElement | null>(null)
 
   useEffect(() => {
     if (!flagOn || !id) return
@@ -211,6 +217,26 @@ const ProductWorkspacePage = () => {
     () => buildPriceSummary(product?.variants?.length ?? 0, priceRows),
     [product, priceRows]
   )
+  const readiness = useMemo(() => {
+    if (!classification || !media) return null
+    return buildProductReadiness({
+      title: saveState.draft.title,
+      description: saveState.draft.description,
+      classification,
+      variantCount: product?.variants?.length ?? 0,
+      variantsTruncated,
+      prices,
+      media,
+    })
+  }, [
+    classification,
+    media,
+    prices,
+    product?.variants?.length,
+    saveState.draft.description,
+    saveState.draft.title,
+    variantsTruncated,
+  ])
   const preview = useMemo(
     () =>
       buildStorefrontPreviewUrl({
@@ -224,7 +250,7 @@ const ProductWorkspacePage = () => {
   )
 
   const confirmLeave = () => {
-    if (!isDirty(saveState)) return true
+    if (!(isDirty(saveState) || variantsDirty || galleryDirty)) return true
     return window.confirm(
       "У вас есть несохранённые изменения. Покинуть страницу и потерять их?"
     )
@@ -358,9 +384,22 @@ const ProductWorkspacePage = () => {
             <Text size="small" className="mt-1 font-medium">
               {saveStatusLabel(saveState.status)}
             </Text>
+            {readiness ? (
+              <Text
+                size="small"
+                className={
+                  readiness.verification === "ready"
+                    ? "mt-1 text-ui-fg-subtle"
+                    : "mt-1 font-medium"
+                }
+              >
+                Готовность: {readiness.summary_label}
+              </Text>
+            ) : null}
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col items-end gap-1">
+          <div className="flex flex-wrap gap-2">
           {preview.url ? (
             <Button variant="secondary" asChild>
               <a
@@ -390,19 +429,13 @@ const ProductWorkspacePage = () => {
           >
             Сохранить
           </Button>
+          </div>
+          <Text size="xsmall" className="max-w-xs text-right text-ui-fg-subtle">
+            Сохраняет только название, описание и статус. Цены и галерея — во вкладках.
+          </Text>
         </div>
       </div>
 
-      {classification?.warning ? (
-        <Container className="p-3">
-          <Text size="small">{classification.warning}</Text>
-        </Container>
-      ) : null}
-      {prices.warning ? (
-        <Container className="p-3">
-          <Text size="small">{prices.warning}</Text>
-        </Container>
-      ) : null}
       {preview.note ? (
         <Text size="small" className="text-ui-fg-subtle">
           {preview.note}
@@ -441,10 +474,29 @@ const ProductWorkspacePage = () => {
       </Text>
 
       {tab === "overview" ? (
+        <>
+          {readiness ? (
+            <ProductReadinessChecklist
+              readiness={readiness}
+              onField={(field) => {
+                selectTab("overview")
+                requestAnimationFrame(() => {
+                  if (field === "title") titleInputRef.current?.focus()
+                  else descriptionInputRef.current?.focus()
+                })
+              }}
+              onTab={(next) => selectTab(next)}
+              onStock={() => {
+                if (!confirmLeave()) return
+                navigate(stockAdminProductPath(product.id))
+              }}
+            />
+          ) : null}
         <Container className="flex flex-col gap-4 p-4">
           <div>
             <Text weight="plus">Название</Text>
             <Input
+              ref={titleInputRef}
               className="mt-1"
               value={saveState.draft.title}
               onChange={(e) =>
@@ -456,6 +508,7 @@ const ProductWorkspacePage = () => {
           <div>
             <Text weight="plus">Описание</Text>
             <Textarea
+              ref={descriptionInputRef}
               className="mt-1"
               rows={5}
               value={saveState.draft.description}
@@ -491,15 +544,15 @@ const ProductWorkspacePage = () => {
             </select>
             {saveState.draft.status === "proposed" || saveState.draft.status === "rejected" ? (
               <Text size="small" className="mt-1 text-ui-fg-subtle">
-                Служебный статус Medusa: {statusLabel}. Выберите «Черновик» или «Опубликован», чтобы
-                изменить его через Workspace.
+                Служебный статус: {statusLabel}. Выберите «Черновик» или «Опубликован», чтобы
+                изменить его здесь.
               </Text>
             ) : null}
           </div>
           <div>
             <Text weight="plus">Сводка медиа</Text>
             <Text size="small" className="mt-1 text-ui-fg-subtle">
-              Thumbnail: {media?.has_thumbnail ? "есть" : "нет"} · Кадров в галерее:{" "}
+              Главное фото: {media?.has_thumbnail ? "есть" : "нет"} · Кадров в галерее:{" "}
               {media?.image_count}
             </Text>
             {(media?.warnings ?? []).map((w) => (
@@ -520,6 +573,7 @@ const ProductWorkspacePage = () => {
             </div>
           </div>
         </Container>
+        </>
       ) : null}
 
       {tab === "variants" ? (

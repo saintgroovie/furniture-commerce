@@ -1,0 +1,120 @@
+import { Badge, Button, Container, Text } from "@medusajs/ui"
+import type { ProductReadinessVM, ReadinessItem } from "./readiness"
+
+type Props = {
+  readiness: ProductReadinessVM
+  onField: (field: "title" | "description") => void
+  onTab: (tab: "variants" | "gallery") => void
+  onStock: () => void
+}
+
+function ItemActions({
+  item,
+  onField,
+  onTab,
+  onStock,
+}: {
+  item: ReadinessItem
+  onField: Props["onField"]
+  onTab: Props["onTab"]
+  onStock: Props["onStock"]
+}) {
+  if (item.ok && !item.unverifiable) return null
+  const { cta } = item
+  if (cta.kind === "field") {
+    return (
+      <Button size="small" variant="secondary" onClick={() => onField(cta.field)}>
+        {cta.label}
+      </Button>
+    )
+  }
+  if (cta.kind === "tab") {
+    return (
+      <Button size="small" variant="secondary" onClick={() => onTab(cta.tab)}>
+        {cta.label}
+      </Button>
+    )
+  }
+  if (cta.kind === "stock") {
+    return (
+      <Button size="small" variant="secondary" onClick={onStock}>
+        {cta.label}
+      </Button>
+    )
+  }
+  return null
+}
+
+function ItemRow(props: {
+  item: ReadinessItem
+  onField: Props["onField"]
+  onTab: Props["onTab"]
+  onStock: Props["onStock"]
+}) {
+  const { item } = props
+  const tone = item.unverifiable
+    ? "orange"
+    : item.ok
+      ? "green"
+      : item.severity === "must"
+        ? "red"
+        : "orange"
+  const status = item.unverifiable ? "не проверено" : item.ok ? "ок" : "нужно"
+
+  return (
+    <div className="flex flex-wrap items-start justify-between gap-2 border-b border-ui-border-base py-2 last:border-b-0">
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <Text size="small" weight="plus">
+            {item.label}
+          </Text>
+          <Badge color={tone} size="small">
+            {item.severity === "must" ? "обязательно" : "желательно"} · {status}
+          </Badge>
+        </div>
+        {item.detail ? (
+          <Text size="xsmall" className="mt-1 text-ui-fg-subtle">
+            {item.detail}
+          </Text>
+        ) : null}
+      </div>
+      <ItemActions {...props} />
+    </div>
+  )
+}
+
+export function ProductReadinessChecklist({ readiness, onField, onTab, onStock }: Props) {
+  return (
+    <Container className="p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <Text weight="plus">Готовность карточки</Text>
+        <Badge
+          color={
+            readiness.verification === "ready"
+              ? "green"
+              : readiness.verification === "unverified"
+                ? "orange"
+                : "red"
+          }
+        >
+          {readiness.summary_label}
+        </Badge>
+      </div>
+      <Text size="xsmall" className="mt-1 text-ui-fg-subtle">
+        Это проверка по данным товара, а не кнопка сохранения. Цены и галерея сохраняются во
+        вкладках.
+      </Text>
+      <div className="mt-2">
+        {readiness.items.map((item) => (
+          <ItemRow
+            key={item.id}
+            item={item}
+            onField={onField}
+            onTab={onTab}
+            onStock={onStock}
+          />
+        ))}
+      </div>
+    </Container>
+  )
+}
