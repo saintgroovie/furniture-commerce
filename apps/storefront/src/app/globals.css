@@ -884,8 +884,8 @@ select:focus-visible {
 
 /* ---- Site Footer ----
    Brand masthead (slightly larger type, set apart) | nav block of 4
-   content-sized columns with one equal gutter. Shared header slot and
-   fixed body-row pitch keep baselines aligned across all five. */
+   content-sized columns with one fixed equal gutter. Shared header slot
+   and fixed body-row pitch keep baselines aligned across all five. */
 
 .site-footer {
   border-top: 1px solid var(--color-border);
@@ -905,30 +905,38 @@ select:focus-visible {
   --footer-head-h: 1.35rem;
   --footer-head-gap: 1rem;
   --footer-row-h: 1.75rem;
+  /* Equal visual gutter between the four nav columns (content-sized). */
+  --footer-nav-gap: 2.75rem;
   display: grid;
-  /* Brand | nav fills to the container right edge (= Contacts / Cart line) */
-  grid-template-columns: max-content minmax(0, 1fr);
+  /* Brand | nav as two content-sized tracks — nav must NOT be 1fr +
+     space-between (that stretched gutters and made title gaps look uneven). */
+  grid-template-columns: max-content max-content;
   column-gap: 5.5rem;
   row-gap: var(--space-xl);
   align-items: start;
+  justify-content: start;
 }
 
-/* Content-sized columns, stretched across the nav track: first starts
-   after the brand gap, last column's right edge lands on the same
-   vertical power line as header «Контакты» / «Корзина». Free space is
-   split evenly between the three gutters. */
+/* Content-sized columns + one fixed gap. Column width follows the caps
+   title (not the longest link) so title-to-title gutters stay equal;
+   links share that width and ellipsize if needed. */
 .footer-nav {
   display: flex;
   flex-wrap: nowrap;
   align-items: flex-start;
-  justify-content: space-between;
-  width: 100%;
+  gap: var(--footer-nav-gap);
   min-width: 0;
 }
 
 .footer-nav .footer-column {
   flex: 0 0 auto;
-  width: max-content;
+  width: fit-content;
+}
+
+/* Shrink-wrap the column to the title; body fills that width. */
+.footer-nav .footer-column-links {
+  width: 0;
+  min-width: 100%;
 }
 
 .footer-column {
@@ -969,6 +977,9 @@ select:focus-visible {
   height: 18px;
   width: auto;
   aspect-ratio: 16489 / 2114;
+  /* SVG viewBox pads below the caps ink; nudge down so the wordmark
+     optical center matches the nav caps labels in the shared head slot. */
+  transform: translateY(2px);
 }
 
 /* Shared body: every row is the same fixed height, no extra gap */
@@ -1036,7 +1047,6 @@ select:focus-visible {
 
   .footer-nav {
     flex-wrap: wrap;
-    justify-content: flex-start;
     gap: var(--space-xl);
   }
 }
