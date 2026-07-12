@@ -16,8 +16,11 @@ async function ensureNotBespokeForCart(
   res: MedusaResponse,
   next: MedusaNextFunction
 ) {
-  const variantId =
-    req.body?.variant_id ?? req.body?.items?.[0]?.variant_id
+  const body = req.body as {
+    variant_id?: string
+    items?: Array<{ variant_id?: string }>
+  }
+  const variantId = body?.variant_id ?? body?.items?.[0]?.variant_id
 
   if (!variantId) {
     return next()
