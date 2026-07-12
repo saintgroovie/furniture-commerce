@@ -1,7 +1,8 @@
 import Link from "next/link"
 import type { Metadata } from "next"
+import { cache } from "react"
 import { getSiteUrl } from "@/lib/api/base"
-import { getRoomSetBySlug, NOT_FOUND } from "@/lib/api/room-sets"
+import { getRoomSetStorefrontBySlug, NOT_FOUND } from "@/lib/api/room-sets"
 import { RoomSetCta } from "@/components/room-set-cta"
 import { roomSetDetail } from "@/lib/woodright-copy"
 
@@ -10,10 +11,12 @@ function truncate(str: string, max: number): string {
   return str.slice(0, max - 3).trim() + "..."
 }
 
+const loadRoomSet = cache(async (slug: string) => getRoomSetStorefrontBySlug(slug))
+
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const base = getSiteUrl()
   try {
-    const data = await getRoomSetBySlug(params.slug)
+    const data = await loadRoomSet(params.slug)
     const roomSet = data.room_set
     if (!roomSet) return { title: "Комплект", alternates: { canonical: `${base}/rooms/${params.slug}` } }
     const title = String(roomSet.title ?? "Комплект")
@@ -36,7 +39,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 export default async function RoomSetPage({ params }: { params: { slug: string } }) {
   let data: { room_set?: Record<string, unknown> } = {}
   try {
-    data = await getRoomSetBySlug(params.slug)
+    data = await loadRoomSet(params.slug)
   } catch (e) {
     if (e instanceof Error && e.message === NOT_FOUND) {
       return (

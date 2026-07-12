@@ -5,6 +5,12 @@ import RoomSetModuleService from "../../../../modules/room-set/service"
 /** Opt-in lean projection for catalog kids membership (product ids only). */
 const PRODUCT_IDS_VIEW = "product_ids"
 
+/**
+ * Opt-in storefront room detail: title + type + first-variant ids for CTA.
+ * Default detail (`product.*` / `variants.*`) stays for other consumers.
+ */
+const STOREFRONT_VIEW = "storefront"
+
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const slug = req.params.slug as string
   const viewRaw = req.query?.view
@@ -61,6 +67,70 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     }
     items.sort(
       (a, b) => ((a.sort_order as number) ?? 0) - ((b.sort_order as number) ?? 0)
+    )
+    res.json({ room_set: { ...roomSet, items } })
+    return
+  }
+
+  if (view === STOREFRONT_VIEW) {
+    const { data: itemsStorefront } = await query.graph({
+      entity: "room_set_item",
+      fields: [
+        "id",
+        "quantity",
+        "sort_order",
+        "product.id",
+        "product.title",
+        "product.product_classification.product_type",
+        "product.productType.product_type",
+        "product.variants.id",
+      ],
+      filters: { room_set_id: roomSet.id },
+    })
+    const items = ((itemsStorefront ?? []) as Array<Record<string, unknown>>).map(
+      (row) => {
+        const product = row.product as Record<string, unknown> | undefined
+        if (!product || typeof product !== "object") return row
+        const variantsRaw = product.variants
+        const variants = Array.isArray(variantsRaw)
+          ? variantsRaw
+              .map((v) => {
+                if (!v || typeof v !== "object") return null
+                const id = (v as { id?: unknown }).id
+                return typeof id === "string" ? { id } : null
+              })
+              .filter((v): v is { id: string } => v != null)
+              .slice(0, 1)
+          : []
+        const classification = product.product_classification as
+          | { product_type?: unknown }
+          | undefined
+        const legacyType = product.productType as
+          | { product_type?: unknown }
+          | undefined
+        return {
+          id: row.id,
+          quantity: row.quantity,
+          sort_order: row.sort_order,
+          product: {
+            id: product.id,
+            title: product.title,
+            product_classification:
+              classification && typeof classification.product_type === "string"
+                ? { product_type: classification.product_type }
+                : undefined,
+            productType:
+              legacyType && typeof legacyType.product_type === "string"
+                ? { product_type: legacyType.product_type }
+                : undefined,
+            variants,
+          },
+        }
+      }
+    )
+    items.sort(
+      (a, b) =>
+        ((a.sort_order as number) ?? 0) - ((b.sort_order as number) ?? 0)
     )
     res.json({ room_set: { ...roomSet, items } })
     return
