@@ -24,7 +24,7 @@ export const UI_COPY = {
   search: "Поиск",
   soonBadge: "скоро",
   productPromotionsTab: "Акции товара",
-  technicalDetails: "Технические сведения",
+  technicalDetails: "Для поддержки",
   dashboardTitle: "Рабочий стол Woodright",
 } as const
 

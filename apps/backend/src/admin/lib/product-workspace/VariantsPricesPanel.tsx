@@ -190,7 +190,7 @@ export const VariantsPricesPanel = ({
       mode: existing ? "update" : "add",
     })
     if (!payload.ok) {
-      toast.error("Нельзя безопасно изменить цену. Откройте стандартную админку.")
+      toast.error("Нельзя безопасно изменить цену. Откройте полную карточку товара.")
       return
     }
     setSaving(true)
@@ -658,7 +658,7 @@ export const VariantsPricesPanel = ({
       )}
 
       <Button variant="secondary" asChild>
-        <Link to={matrix.stock_admin_path}>Открыть варианты в стандартной админке</Link>
+        <Link to={matrix.stock_admin_path}>Открыть варианты на полной карточке</Link>
       </Button>
 
       {bulkOpen ? (

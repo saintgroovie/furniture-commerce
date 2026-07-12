@@ -239,9 +239,9 @@ export const GalleryPanel = ({
       if (!built.ok) {
         toast.error(
           built.code === "last_image"
-            ? "Нельзя убрать последнее изображение здесь. Откройте стандартную админку."
+            ? "Нельзя убрать последнее изображение здесь. Откройте полную карточку товара."
             : built.code === "snapshot_invalid"
-              ? "В галерее есть кадры без ID или URL — откройте стандартную админку."
+              ? "В галерее есть кадры без ID или URL — откройте полную карточку товара."
               : "Изображение не найдено."
         )
         return
@@ -279,7 +279,7 @@ export const GalleryPanel = ({
       const afterIds = (after.images ?? []).map((i) => i.id).filter(Boolean) as string[]
       const expectedIds = built.images.map((i) => i.id).filter(Boolean) as string[]
       if (afterIds.join(",") !== expectedIds.join(",")) {
-        toast.error("После сохранения галерея не совпала с ожидаемой. Проверьте стандартную админку.")
+        toast.error("После сохранения галерея не совпала с ожидаемой. Проверьте полную карточку товара.")
         return
       }
       if (thumbHit) {
@@ -476,8 +476,7 @@ export const GalleryPanel = ({
         <div>
           <Text weight="plus">Галерея</Text>
           <Text size="small" className="text-ui-fg-subtle">
-            SoT: thumbnail + product.images. Показано {visible.length} из{" "}
-            {gallery.image_count}.
+            Обложка и фото товара. Показано {visible.length} из {gallery.image_count}.
           </Text>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -491,7 +490,7 @@ export const GalleryPanel = ({
           </Button>
           <Button size="small" variant="secondary" asChild>
             <Link to={gallery.stock_admin_path}>
-              Открыть галерею в стандартной админке
+              Открыть галерею на полной карточке
             </Link>
           </Button>
         </div>

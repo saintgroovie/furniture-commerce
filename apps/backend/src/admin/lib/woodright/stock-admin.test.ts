@@ -13,7 +13,7 @@ import {
 
 describe("stock admin paths and label", () => {
   it("uses the single approved Russian label", () => {
-    assert.equal(STOCK_ADMIN_LABEL, "Стандартная админка Medusa")
+    assert.equal(STOCK_ADMIN_LABEL, "Открыть полный раздел")
   })
 
   it("builds stable stock admin paths", () => {

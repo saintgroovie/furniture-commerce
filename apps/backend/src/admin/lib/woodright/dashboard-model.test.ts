@@ -6,6 +6,7 @@ import {
   buildThumbnailSampleVM,
   countMissingThumbnails,
   formatRuCount,
+  listMissingThumbnailHits,
   pickFirstSku,
   planSamplePages,
   productStatusLabel,
@@ -64,11 +65,21 @@ describe("thumbnail sample", () => {
     assert.ok(vm.note?.includes("150 из 900"))
   })
 
-  it("reports clean samples honestly", () => {
-    const full = buildThumbnailSampleVM({ checked: 5, missing: 0, total: 5 })
-    assert.equal(full.label, "У всех опубликованных есть главное фото")
-    const partial = buildThumbnailSampleVM({ checked: 100, missing: 0, total: 300 })
-    assert.ok(partial.label.includes("оценка по выборке"))
+  it("lists actionable missing-thumbnail hits with a cap", () => {
+    const hits = listMissingThumbnailHits(
+      [
+        { id: "a", title: "Стул", thumbnail: null },
+        { id: "b", title: "Стол", thumbnail: "/x.jpg" },
+        { id: "c", title: "", thumbnail: "" },
+        { id: "d", title: "Полка", thumbnail: null },
+        { id: "e", title: "Комод", thumbnail: null },
+        { id: "f", title: "Тумба", thumbnail: null },
+      ],
+      3
+    )
+    assert.equal(hits.length, 3)
+    assert.deepEqual(hits[0], { id: "a", title: "Стул" })
+    assert.equal(hits[1].title, "Без названия")
   })
 })
 

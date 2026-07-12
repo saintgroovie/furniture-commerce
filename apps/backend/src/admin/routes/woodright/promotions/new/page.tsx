@@ -12,7 +12,6 @@ import {
   fetchRuleValueOptions,
   stockAdminPromotionsPath,
   woodrightPromotionPath,
-  woodrightPromotionsPath,
 } from "../../../../lib/promotions/api"
 import {
   buildCreatePromotionPayload,
@@ -385,7 +384,7 @@ const PromotionWizardPage = () => {
           </Text>
         </div>
         <Button variant="secondary" asChild>
-          <Link to={woodrightPromotionsPath()}>К списку акций</Link>
+          <Link to={stockAdminPromotionsPath()}>К списку акций</Link>
         </Button>
       </div>
 
@@ -474,13 +473,14 @@ const PromotionWizardPage = () => {
           {kind === "buyget" || kind === "free_shipping" ? (
             <Container className="border border-ui-border-strong p-3">
               <Text size="small" weight="plus">
-                Этот вид акции пока настраивается в стандартной админке
+                Этот вид акции пока настраивается в общем разделе акций
               </Text>
               <Text size="xsmall" className="mt-1 text-ui-fg-subtle">
-                Woodright добавит его после проверки на реальной корзине
+                Мастер простой скидки его ещё не поддерживает — сначала нужна проверка на
+                реальной корзине
               </Text>
               <Button className="mt-2" size="small" variant="secondary" asChild>
-                <Link to={stockAdminPromotionsPath()}>Открыть стандартную админку</Link>
+                <Link to={stockAdminPromotionsPath()}>Открыть все акции</Link>
               </Button>
             </Container>
           ) : null}
@@ -559,7 +559,7 @@ const PromotionWizardPage = () => {
               />
               <Text size="xsmall" className="mt-1 text-ui-fg-subtle">
                 Скидка действует на товар целиком. Отдельные варианты (цвет, размер) выбрать
-                нельзя - это ограничение Medusa
+                нельзя — так устроена система скидок
               </Text>
             </div>
           ) : null}
@@ -671,12 +671,12 @@ const PromotionWizardPage = () => {
               Новая кампания
             </Text>
             <Text size="xsmall" className="mt-1 text-ui-fg-subtle">
-              Создание кампании вместе с акцией в Woodright пока отключено — сначала создайте
-              кампанию в стандартной админке, затем выберите её здесь. Так мы не оставляем
-              частичное состояние «кампания есть, акции нет».
+              Создание кампании вместе с акцией пока отключено — сначала создайте кампанию в
+              разделе «Кампании», затем выберите её здесь. Так не остаётся частичного состояния
+              «кампания есть, акции нет».
             </Text>
             <Button className="mt-2" size="small" variant="secondary" asChild>
-              <Link to="/app/campaigns">Открыть кампании в стандартной админке</Link>
+              <Link to="/app/campaigns">Открыть кампании</Link>
             </Button>
           </div>
         </Container>

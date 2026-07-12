@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react"
 import { Link, Navigate, useParams } from "react-router-dom"
 import { Badge, Button, Container, Heading, Input, Text, toast } from "@medusajs/ui"
 import { readWoodrightAdminUxFlagFromBrowser } from "../../../../lib/woodright/browser-flag"
-import { STOCK_ADMIN_LABEL } from "../../../../lib/woodright/stock-admin"
 import {
   formatAdminErrorPrimary,
   normalizeAdminError,
@@ -13,7 +12,6 @@ import {
   stockAdminPromotionPath,
   stockAdminPromotionsPath,
   updateAdminPromotion,
-  woodrightPromotionsPath,
 } from "../../../../lib/promotions/api"
 import { buildPromotionStatusVM } from "../../../../lib/promotions/status"
 import { buildPromotionSummary } from "../../../../lib/promotions/summary"
@@ -402,11 +400,11 @@ const PromotionDetailPage = () => {
         </details>
         <div className="mt-4 flex gap-2">
           <Button variant="secondary" asChild>
-            <Link to={woodrightPromotionsPath()}>К списку акций</Link>
+            <Link to={stockAdminPromotionsPath()}>К списку акций</Link>
           </Button>
           {id ? (
             <Button variant="secondary" asChild>
-              <Link to={stockAdminPromotionPath(id)}>В стандартной админке</Link>
+              <Link to={stockAdminPromotionPath(id)}>Открыть полную карточку акции</Link>
             </Button>
           ) : null}
         </div>
@@ -419,7 +417,7 @@ const PromotionDetailPage = () => {
       <Container className="p-6">
         <Heading level="h1">Акция не найдена</Heading>
         <Button className="mt-4" variant="secondary" asChild>
-          <Link to={woodrightPromotionsPath()}>К списку акций</Link>
+          <Link to={stockAdminPromotionsPath()}>К списку акций</Link>
         </Button>
       </Container>
     )
@@ -467,10 +465,10 @@ const PromotionDetailPage = () => {
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="secondary" asChild>
-            <Link to={woodrightPromotionsPath()}>К списку</Link>
+            <Link to={stockAdminPromotionsPath()}>К списку акций</Link>
           </Button>
           <Button variant="secondary" asChild>
-            <Link to={stockAdminPromotionPath(promotion.id)}>{STOCK_ADMIN_LABEL}</Link>
+            <Link to={stockAdminPromotionPath(promotion.id)}>Полная карточка акции</Link>
           </Button>
           {rawStatus === "active" ? (
             <Button
@@ -490,12 +488,12 @@ const PromotionDetailPage = () => {
 
       {!summary.supported ? (
         <Container className="border border-ui-border-strong p-3">
-          <Text weight="plus">Эта акция управляется в стандартной админке</Text>
+          <Text weight="plus">Эту акцию здесь не редактируем</Text>
           <Text size="small" className="mt-1 text-ui-fg-subtle">
             {summary.fallback_reason}
           </Text>
           <Button className="mt-2" size="small" variant="secondary" asChild>
-            <Link to={stockAdminPromotionPath(promotion.id)}>Открыть в стандартной админке</Link>
+            <Link to={stockAdminPromotionPath(promotion.id)}>Открыть полную карточку акции</Link>
           </Button>
         </Container>
       ) : null}
@@ -610,7 +608,7 @@ const PromotionDetailPage = () => {
             </Text>
           ) : null}
           <Text size="xsmall" className="mt-2 text-ui-fg-subtle">
-            Остальные параметры (условия, код, кампания) меняются в стандартной админке
+            Остальные параметры (условия, код, кампания) — на полной карточке акции
           </Text>
         </Container>
       ) : null}
@@ -701,7 +699,7 @@ const PromotionDetailPage = () => {
 
       <div>
         <Button variant="secondary" asChild>
-          <Link to={stockAdminPromotionsPath()}>Все акции в стандартной админке</Link>
+          <Link to={stockAdminPromotionsPath()}>Все акции</Link>
         </Button>
       </div>
     </div>

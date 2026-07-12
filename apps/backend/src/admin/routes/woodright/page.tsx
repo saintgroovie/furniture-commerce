@@ -4,11 +4,10 @@ import { Badge, Button, Container, Heading, Input, Text } from "@medusajs/ui"
 import { defineRouteConfig } from "@medusajs/admin-sdk"
 import { readWoodrightAdminUxFlagFromBrowser } from "../../lib/woodright/browser-flag"
 import {
-  STOCK_ADMIN_LABEL,
-  stockAdminCampaignsPath,
   stockAdminHomePath,
   stockAdminProductCreatePath,
   stockAdminProductsPath,
+  stockAdminPromotionsPath,
 } from "../../lib/woodright/stock-admin"
 import {
   fetchDraftProductCount,
@@ -24,10 +23,12 @@ import {
   buildPaginationVM,
   buildThumbnailSampleVM,
   countMissingThumbnails,
+  listMissingThumbnailHits,
   pickFirstSku,
   planSamplePages,
   productStatusLabel,
   type DraftCounterVM,
+  type MissingThumbnailHit,
   type ThumbnailSampleVM,
 } from "../../lib/woodright/dashboard-model"
 import { UI_COPY } from "../../lib/woodright/ui-copy"
@@ -35,7 +36,6 @@ import { woodrightWorkspacePath } from "../../lib/product-workspace/admin-api"
 import {
   woodrightPromotionNewPath,
   woodrightPromotionPath,
-  woodrightPromotionsPath,
 } from "../../lib/promotions/api"
 
 const SEARCH_PAGE_SIZE = 20
@@ -52,6 +52,7 @@ const WoodrightDashboardPage = () => {
   // «Требуют внимания»
   const [draftVM, setDraftVM] = useState<DraftCounterVM | null>(null)
   const [thumbVM, setThumbVM] = useState<ThumbnailSampleVM | null>(null)
+  const [missingThumbs, setMissingThumbs] = useState<MissingThumbnailHit[]>([])
   const [attentionLoading, setAttentionLoading] = useState(true)
 
   // «Недавние» — hidden entirely when the API rejects order=-updated_at
@@ -60,7 +61,7 @@ const WoodrightDashboardPage = () => {
     null
   )
 
-  // «Система»
+  // Support-only diagnostics (collapsed)
   const [lastFetchAt, setLastFetchAt] = useState<string | null>(null)
   const [techIssues, setTechIssues] = useState<TechIssue[]>([])
 
@@ -128,6 +129,7 @@ const WoodrightDashboardPage = () => {
               total: first.count,
             })
           )
+          setMissingThumbs(listMissingThumbnailHits(sampled, 5))
         }
       } catch {
         /* network failure — the block shows a dash */
@@ -224,65 +226,88 @@ const WoodrightDashboardPage = () => {
 
   return (
     <div className="flex flex-col gap-4 p-4 md:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <Heading level="h1">{UI_COPY.dashboardTitle}</Heading>
-          <Text size="small" className="text-ui-fg-subtle">
-            Стартовая точка оператора: что требует внимания и быстрые действия
-          </Text>
-        </div>
-        <Button variant="secondary" asChild>
-          <Link to={stockAdminHomePath()}>{STOCK_ADMIN_LABEL}</Link>
-        </Button>
+      <div>
+        <Heading level="h1">{UI_COPY.dashboardTitle}</Heading>
+        <Text size="small" className="mt-1 text-ui-fg-subtle">
+          Очередь задач: найти товар, довести карточку, создать простую акцию. Полные списки
+          товаров и акций — в разделах слева.
+        </Text>
       </div>
 
-      {/* Требуют внимания */}
       <Container className="p-4">
-        <Text weight="plus">Требуют внимания</Text>
+        <Text weight="plus">Очередь</Text>
         {attentionLoading ? (
           <Text size="small" className="mt-2 text-ui-fg-subtle">
             Считаем…
           </Text>
         ) : (
-          <div className="mt-2 flex flex-col gap-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <Text size="small">
-                Товары в черновике: {draftVM ? draftVM.label : "не удалось посчитать"}
-              </Text>
-              {draftVM?.has_drafts ? (
-                <Button size="small" variant="secondary" asChild>
-                  <Link to={stockAdminProductsPath({ status: "draft" })}>
-                    Открыть черновики
-                  </Link>
-                </Button>
-              ) : null}
+          <div className="mt-3 flex flex-col gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <Text size="small" weight="plus">
+                  Черновики товаров
+                </Text>
+                <Text size="small" className="text-ui-fg-subtle">
+                  {draftVM ? draftVM.label : "не удалось посчитать"}
+                </Text>
+              </div>
+              <Button size="small" variant="secondary" asChild>
+                <Link to={stockAdminProductsPath({ status: "draft" })}>
+                  Открыть черновики
+                </Link>
+              </Button>
             </div>
-            <div className="flex flex-col">
-              <Text size="small">
-                Главное фото: {thumbVM ? thumbVM.label : "не удалось проверить"}
+
+            <div>
+              <Text size="small" weight="plus">
+                Без главного фото
+              </Text>
+              <Text size="small" className="text-ui-fg-subtle">
+                {thumbVM ? thumbVM.label : "не удалось проверить"}
               </Text>
               {thumbVM?.note ? (
                 <Text size="xsmall" className="text-ui-fg-subtle">
                   {thumbVM.note}
                 </Text>
               ) : null}
+              {missingThumbs.length ? (
+                <ul className="mt-2 flex flex-col gap-1">
+                  {missingThumbs.map((p) => (
+                    <li key={p.id}>
+                      <Link
+                        to={`${woodrightWorkspacePath(p.id)}?tab=gallery`}
+                        className="text-sm underline"
+                      >
+                        Добавить фото: {p.title}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Text size="small">
-                Акции со статусами «требует внимания» смотрите в списке акций - общий
-                счётчик система не отдаёт
-              </Text>
-              <Button size="small" variant="secondary" asChild>
-                <Link to={`${woodrightPromotionsPath()}?filter=attention`}>
-                  Открыть фильтр
-                </Link>
-              </Button>
+
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <Text size="small" weight="plus">
+                  Акции
+                </Text>
+                <Text size="small" className="text-ui-fg-subtle">
+                  Полный список — в разделе «Акции». Здесь — мастер простой скидки.
+                </Text>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button size="small" variant="secondary" asChild>
+                  <Link to={stockAdminPromotionsPath()}>Все акции</Link>
+                </Button>
+                <Button size="small" asChild>
+                  <Link to={woodrightPromotionNewPath()}>Создать простую акцию</Link>
+                </Button>
+              </div>
             </div>
           </div>
         )}
       </Container>
 
-      {/* Быстрые действия */}
       <Container className="p-4">
         <Text weight="plus">Быстрые действия</Text>
         <div className="mt-2 flex flex-wrap gap-2">
@@ -294,30 +319,20 @@ const WoodrightDashboardPage = () => {
             Найти товар
           </Button>
           <Button size="small" variant="secondary" asChild>
-            <Link to={stockAdminProductsPath()}>Товары (стандартная админка)</Link>
-          </Button>
-          <Button size="small" variant="secondary" asChild>
             <Link to={stockAdminProductCreatePath()}>Создать товар</Link>
           </Button>
-          <Button size="small" variant="secondary" asChild>
-            <Link to={woodrightPromotionNewPath()}>Создать акцию</Link>
-          </Button>
-          <Button size="small" variant="secondary" asChild>
-            <Link to={woodrightPromotionsPath()}>{UI_COPY.promotions}</Link>
-          </Button>
-          <Button size="small" variant="secondary" asChild>
-            <Link to={stockAdminCampaignsPath()}>{UI_COPY.campaigns}</Link>
+          <Button size="small" asChild>
+            <Link to={woodrightPromotionNewPath()}>Создать простую акцию</Link>
           </Button>
         </div>
       </Container>
 
-      {/* Поиск */}
       <Container className="p-4">
-        <Text weight="plus">Поиск товара</Text>
+        <Text weight="plus">Найти товар и довести карточку</Text>
         <Input
           ref={searchInputRef}
           className="mt-2 max-w-md"
-          placeholder="Название, handle или артикул"
+          placeholder="Название или артикул"
           aria-label="Поиск товара"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -360,8 +375,9 @@ const WoodrightDashboardPage = () => {
                       {p.title || "Без названия"}
                     </Text>
                     <Text size="xsmall" className="truncate text-ui-fg-subtle">
-                      {p.handle || "—"}
-                      {pickFirstSku(p.variants) ? ` · ${pickFirstSku(p.variants)}` : ""}
+                      {pickFirstSku(p.variants)
+                        ? `Артикул: ${pickFirstSku(p.variants)}`
+                        : "Артикул не указан"}
                     </Text>
                   </div>
                   <Badge size="small">{productStatusLabel(p.status)}</Badge>
@@ -397,15 +413,14 @@ const WoodrightDashboardPage = () => {
         ) : null}
       </Container>
 
-      {/* Недавние */}
       {recentProducts || recentPromotions ? (
         <Container className="p-4">
-          <Text weight="plus">Недавние изменения</Text>
+          <Text weight="plus">Недавние</Text>
           <div className="mt-2 grid gap-4 md:grid-cols-2">
             {recentProducts ? (
               <div>
                 <Text size="small" className="text-ui-fg-subtle">
-                  {UI_COPY.products}
+                  Товары - открыть доработку
                 </Text>
                 {!recentProducts.length ? (
                   <Text size="small" className="mt-1 text-ui-fg-subtle">
@@ -419,7 +434,7 @@ const WoodrightDashboardPage = () => {
                       className="flex items-center justify-between gap-2 border-b border-ui-border-base py-1.5 hover:bg-ui-bg-subtle"
                     >
                       <Text size="small" className="truncate">
-                        {p.title || p.handle || p.id}
+                        {p.title || "Без названия"}
                       </Text>
                       <Text size="xsmall" className="shrink-0 text-ui-fg-subtle">
                         {p.updated_at
@@ -434,7 +449,7 @@ const WoodrightDashboardPage = () => {
             {recentPromotions ? (
               <div>
                 <Text size="small" className="text-ui-fg-subtle">
-                  {UI_COPY.promotions}
+                  Акции - карточка акции
                 </Text>
                 {!recentPromotions.length ? (
                   <Text size="small" className="mt-1 text-ui-fg-subtle">
@@ -448,7 +463,7 @@ const WoodrightDashboardPage = () => {
                       className="flex items-center justify-between gap-2 border-b border-ui-border-base py-1.5 hover:bg-ui-bg-subtle"
                     >
                       <Text size="small" className="truncate">
-                        {p.code || (p.is_automatic ? "Автоматическая акция" : p.id)}
+                        {p.code || (p.is_automatic ? "Автоматическая акция" : "Акция без кода")}
                       </Text>
                       <Text size="xsmall" className="shrink-0 text-ui-fg-subtle">
                         {p.updated_at
@@ -464,31 +479,32 @@ const WoodrightDashboardPage = () => {
         </Container>
       ) : null}
 
-      {/* Система */}
-      <Container className="p-4">
-        <Text weight="plus">Система</Text>
-        <Text size="small" className="mt-1 text-ui-fg-subtle">
-          Флаг WOODRIGHT_ADMIN_UX_V1: включён
-        </Text>
-        <Text size="small" className="text-ui-fg-subtle">
+      <details className="rounded-md border border-ui-border-base p-3">
+        <summary className="cursor-pointer text-sm text-ui-fg-subtle">
+          {UI_COPY.technicalDetails}
+        </summary>
+        <Text size="xsmall" className="mt-2 text-ui-fg-subtle">
           Данные обновлены:{" "}
           {lastFetchAt ? new Date(lastFetchAt).toLocaleString("ru-RU") : "ещё загружаются"}
         </Text>
+        <Text size="xsmall" className="mt-1 text-ui-fg-subtle">
+          Каталог и заказы:{" "}
+          <Link to={stockAdminHomePath()} className="underline">
+            на главную админки
+          </Link>
+        </Text>
         {techIssues.length ? (
-          <details className="mt-2">
-            <summary>{UI_COPY.technicalDetails}</summary>
-            <ul className="mt-2 list-disc pl-5 text-ui-fg-subtle">
-              {techIssues.map((issue, i) => (
-                <li key={`${issue.source}-${i}`}>
-                  <Text size="xsmall">
-                    {issue.source}: {issue.detail}
-                  </Text>
-                </li>
-              ))}
-            </ul>
-          </details>
+          <ul className="mt-2 list-disc pl-5 text-ui-fg-subtle">
+            {techIssues.map((issue, i) => (
+              <li key={`${issue.source}-${i}`}>
+                <Text size="xsmall">
+                  {issue.source}: {issue.detail}
+                </Text>
+              </li>
+            ))}
+          </ul>
         ) : null}
-      </Container>
+      </details>
     </div>
   )
 }

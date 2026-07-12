@@ -14,15 +14,15 @@ const ProductWoodrightWorkspaceEntry = ({ data }: DetailWidgetProps<AdminProduct
 
   return (
     <Container className="p-4">
-      <Text weight="plus">Инструменты Woodright</Text>
+      <Text weight="plus">Довести карточку</Text>
       <Text size="small" className="mt-1 text-ui-fg-subtle">
-        Расширенное редактирование этого товара: варианты и цены, галерея, акции товара. Штатная
-        карточка Medusa остаётся основным местом для наличия и SEO.
+        Проверить готовность, поправить цены и галерею, посмотреть акции этого товара. Наличие и
+        SEO правятся на этой же карточке выше.
       </Text>
       <div className="mt-3">
         <Button variant="secondary" asChild>
-          <Link to={href} aria-label="Открыть расширенное редактирование Woodright">
-            Цены, галерея и акции
+          <Link to={href} aria-label="Довести карточку: цены и галерея">
+            Цены и галерея
           </Link>
         </Button>
       </div>

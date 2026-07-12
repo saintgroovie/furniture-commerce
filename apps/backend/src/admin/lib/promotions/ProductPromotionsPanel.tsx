@@ -3,7 +3,6 @@ import { Link } from "react-router-dom"
 import { Badge, Button, Container, Text } from "@medusajs/ui"
 import { normalizeAdminError } from "../errors/normalize-admin-error"
 import { buildAdminErrorViewModel } from "../../components/woodright/admin-error-view-model"
-import { STOCK_ADMIN_LABEL } from "../woodright/stock-admin"
 import {
   fetchAdminPromotions,
   stockAdminPromotionsPath,
@@ -112,7 +111,7 @@ export const ProductPromotionsPanel = ({ productId, collectionId }: Props) => {
           {vm.primary.explanation} {vm.primary.action}
         </Text>
         <Button className="mt-3" size="small" variant="secondary" asChild>
-          <Link to={stockAdminPromotionsPath()}>{STOCK_ADMIN_LABEL}</Link>
+          <Link to={stockAdminPromotionsPath()}>Все акции</Link>
         </Button>
       </Container>
     )
@@ -124,7 +123,7 @@ export const ProductPromotionsPanel = ({ productId, collectionId }: Props) => {
         <Text weight="plus">Акции с условиями на этот товар</Text>
         <div className="flex gap-2">
           <Button size="small" variant="secondary" asChild>
-            <Link to={stockAdminPromotionsPath()}>{STOCK_ADMIN_LABEL}</Link>
+            <Link to={stockAdminPromotionsPath()}>Все акции</Link>
           </Button>
           <Button size="small" asChild>
             <Link to={woodrightPromotionNewPath({ product_id: productId })}>
@@ -137,7 +136,7 @@ export const ProductPromotionsPanel = ({ productId, collectionId }: Props) => {
       {truncated ? (
         <Text size="xsmall" className="text-ui-fg-subtle">
           Акций больше, чем удалось загрузить ({promotions.length}) - список может быть
-          неполным. Смотрите полный список в стандартной админке Medusa (кнопка выше).
+          неполным. Смотрите полный список в разделе «Акции» (кнопка выше).
         </Text>
       ) : null}
 

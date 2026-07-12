@@ -40,6 +40,25 @@ export function countMissingThumbnails(
   return products.filter((p) => !(p.thumbnail ?? "").trim()).length
 }
 
+export type MissingThumbnailHit = {
+  id: string
+  title: string
+}
+
+/** Up to `limit` published products from the sample that lack a thumbnail. */
+export function listMissingThumbnailHits(
+  products: Array<{ id: string; title?: string | null; thumbnail?: string | null }>,
+  limit = 5
+): MissingThumbnailHit[] {
+  const hits: MissingThumbnailHit[] = []
+  for (const p of products) {
+    if ((p.thumbnail ?? "").trim()) continue
+    hits.push({ id: p.id, title: (p.title ?? "").trim() || "Без названия" })
+    if (hits.length >= limit) break
+  }
+  return hits
+}
+
 export type ThumbnailSampleVM = {
   checked: number
   missing: number

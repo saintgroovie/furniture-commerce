@@ -11,7 +11,6 @@ import {
   toast,
 } from "@medusajs/ui"
 import { readWoodrightAdminUxFlagFromBrowser } from "../../../../lib/woodright/browser-flag"
-import { STOCK_ADMIN_LABEL } from "../../../../lib/woodright/stock-admin"
 import {
   formatAdminErrorPrimary,
   normalizeAdminError,
@@ -298,7 +297,7 @@ const ProductWorkspacePage = () => {
         </details>
         {id ? (
           <Button className="mt-4" variant="secondary" asChild>
-            <Link to={stockAdminProductPath(id)}>{STOCK_ADMIN_LABEL}</Link>
+            <Link to={stockAdminProductPath(id)}>К полной карточке товара</Link>
           </Button>
         ) : null}
       </Container>
@@ -347,8 +346,9 @@ const ProductWorkspacePage = () => {
               ) : null}
             </div>
             <Text size="small" className="mt-2 text-ui-fg-subtle">
-              Handle: {product.handle || "—"} · Вариантов: {product.variants?.length ?? 0} ·
-              Цены: {prices.label} · Изображений: {media?.image_count ?? 0}
+              Адрес на витрине: {product.handle || "не задан"} · Вариантов:{" "}
+              {product.variants?.length ?? 0} · Цены: {prices.label} · Фото:{" "}
+              {media?.image_count ?? 0}
               {saveState.lastSavedAt
                 ? ` · Обновлён: ${new Date(saveState.lastSavedAt).toLocaleString("ru-RU")}`
                 : product.updated_at
@@ -380,7 +380,7 @@ const ProductWorkspacePage = () => {
                 if (!confirmLeave()) e.preventDefault()
               }}
             >
-              {STOCK_ADMIN_LABEL}
+              К полной карточке товара
             </Link>
           </Button>
           <Button
@@ -434,9 +434,9 @@ const ProductWorkspacePage = () => {
       </div>
 
       <Text size="xsmall" className="text-ui-fg-subtle">
-        Наличие и SEO редактируются в{" "}
+        Наличие и SEO:{" "}
         <Link to={stockAdminProductPath(product.id)} className="underline">
-          {STOCK_ADMIN_LABEL}
+          открыть полную карточку товара
         </Link>
       </Text>
 
@@ -555,15 +555,16 @@ const ProductWorkspacePage = () => {
       {tab === "technical" ? (
         <Container className="p-4">
           <details>
-            <summary>Технические сведения</summary>
+            <summary>Для поддержки</summary>
             <Text size="small" className="mt-2 break-all text-ui-fg-subtle">
-              Product ID: {product.id}
+              ID товара: {product.id}
             </Text>
             <Text size="small" className="mt-1 text-ui-fg-subtle">
-              Classification source: {classification?.source}
+              Источник типа: {classification?.source ?? "—"}
             </Text>
             <Text size="small" className="mt-1 text-ui-fg-subtle">
-              Metadata keys: {Object.keys(product.metadata ?? {}).join(", ") || "—"}
+              Ключи метаданных:{" "}
+              {Object.keys(product.metadata ?? {}).join(", ") || "нет"}
             </Text>
           </details>
         </Container>

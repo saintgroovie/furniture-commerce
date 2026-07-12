@@ -69,11 +69,11 @@ export async function fetchPublishedProductsPage(
   search.set("status[]", "published")
   search.set("limit", String(params.limit))
   search.set("offset", String(params.offset))
-  search.set("fields", "id,thumbnail,status")
+  search.set("fields", "id,title,thumbnail,status")
   const res = await getJson(`/admin/products?${search.toString()}`, init)
   if ("status" in res) return res
   const body = res.body as {
-    products?: Array<{ id: string; thumbnail?: string | null }>
+    products?: Array<{ id: string; title?: string | null; thumbnail?: string | null }>
     count?: number
   }
   return { products: body.products ?? [], count: body.count ?? 0 }

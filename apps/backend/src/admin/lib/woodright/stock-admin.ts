@@ -1,10 +1,10 @@
 /**
- * Package F (F-01) — canonical paths into the stock Medusa Admin plus the
- * single Russian label for "escape hatch" buttons. New code must import from
- * here instead of hard-coding `/app/...` strings or inventing new wordings.
+ * Canonical paths into stock Admin entity screens, plus a generic escape-hatch
+ * label for cases without a more specific CTA. Prefer context-specific copy
+ * ("Все акции", "Полная карточка товара") in primary UI.
  */
 
-export const STOCK_ADMIN_LABEL = "Стандартная админка Medusa"
+export const STOCK_ADMIN_LABEL = "Открыть полный раздел"
 
 export function stockAdminHomePath(): string {
   return "/app"
