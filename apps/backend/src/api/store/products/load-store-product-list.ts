@@ -7,20 +7,17 @@ import type { MedusaRequest } from "@medusajs/framework/http"
 export type StoreProductListMode = "default" | "browse"
 
 /**
- * Default unfiltered `/store/products` lean fields (unchanged vs pre-W3c).
- * Do not add browse-only fields here (e.g. variants.sku).
+ * Default `/store/products` field set - full projection matching main contract
+ * (PDP handle fallback and other consumers). Lean fields are browse-only.
  */
-const DEFAULT_LEAN_PRODUCT_FIELDS = [
-  "id",
-  "handle",
-  "title",
-  "status",
-  "thumbnail",
-  "metadata",
-  "variants.id",
+const DEFAULT_PRODUCT_FIELDS = [
+  "*",
+  "variants.*",
   "variants.price_set.prices.amount",
-  "images.url",
-  "product_classification.product_type",
+  "images.*",
+  "productType.*",
+  "product_categories.*",
+  "product_classification.*",
 ] as const
 
 /** Fixed browse field set - no `*` / no unused relations (W3c). */
@@ -80,18 +77,8 @@ export async function loadStoreProductList(
       productType || categoryId
         ? [...BROWSE_FILTERED_PRODUCT_FIELDS]
         : [...BROWSE_PRODUCT_FIELDS]
-  } else if (productType || categoryId) {
-    // Legacy default list path (unchanged contract for filtered admin/tools).
-    fields = [
-      "*",
-      "variants.*",
-      "variants.price_set.prices.amount",
-      "images.*",
-      "product_categories.*",
-      "product_classification.*",
-    ]
   } else {
-    fields = [...DEFAULT_LEAN_PRODUCT_FIELDS]
+    fields = [...DEFAULT_PRODUCT_FIELDS]
   }
 
   const { data: products } = await query.graph({
@@ -130,11 +117,15 @@ export async function loadStoreProductList(
     })
   }
   if (productType) {
-    result = result.filter(
-      (p) =>
-        (p.product_classification as Record<string, string> | undefined)
-          ?.product_type === productType
-    )
+    result = result.filter((p) => {
+      const fromClassification = (
+        p.product_classification as Record<string, string> | undefined
+      )?.product_type
+      const fromProductType = (
+        p.productType as Record<string, string> | undefined
+      )?.product_type
+      return fromClassification === productType || fromProductType === productType
+    })
   }
   return result
 }

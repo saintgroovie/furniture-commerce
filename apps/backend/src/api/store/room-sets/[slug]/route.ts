@@ -16,10 +16,13 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         : ""
 
   const roomSetService = req.scope.resolve(ROOM_SET_MODULE) as RoomSetModuleService
-  const list = await roomSetService.listRoomSets(
-    { slug, is_active: true },
-    { take: 1 }
-  )
+
+  // Default detail contract matches main: slug only (no is_active filter).
+  // Lean membership may optionally prefer active sets.
+  const listFilter =
+    view === PRODUCT_IDS_VIEW ? { slug, is_active: true } : { slug }
+
+  const list = await roomSetService.listRoomSets(listFilter, { take: 1 })
   const roomSet = list[0]
   if (!roomSet) {
     res.status(404).json({ message: "Room set not found" })
@@ -56,31 +59,22 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       const { products: _products, ...rest } = item
       items.push({ ...rest, product: { id: productId } })
     }
-    items.sort((a, b) => ((a.sort_order as number) ?? 0) - ((b.sort_order as number) ?? 0))
+    items.sort(
+      (a, b) => ((a.sort_order as number) ?? 0) - ((b.sort_order as number) ?? 0)
+    )
     res.json({ room_set: { ...roomSet, items } })
     return
   }
 
+  // Default detail: main graph projection (product / productType / variants).
   const { data: itemsWithProduct } = await query.graph({
     entity: "room_set_item",
-    fields: [
-      "*",
-      "products.*",
-      "products.variants.*",
-      "products.product_classification.product_type",
-    ],
+    fields: ["*", "product.*", "product.productType.*", "product.variants.*"],
     filters: { room_set_id: roomSet.id },
   })
-  const items = (itemsWithProduct ?? [])
-    .map((row) => {
-      const item = row as Record<string, unknown> & {
-        sort_order?: number
-        products?: Array<Record<string, unknown>>
-      }
-      const product = item.products?.[0]
-      const { products: _products, ...rest } = item
-      return { ...rest, product }
-    })
-    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+  const items = (itemsWithProduct ?? []) as Array<
+    Record<string, unknown> & { sort_order?: number }
+  >
+  items.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
   res.json({ room_set: { ...roomSet, items } })
 }
