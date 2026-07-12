@@ -133,9 +133,14 @@ export const productTypeBadgeLabels: Record<string, string> = {
 
 export const states = {
   loadingCatalog: "Загружаем каталог…",
-  noPhoto: "Фото скоро появится",
+  // Prefer mediaLoadFailed after <img onError>; mediaMissing when URL absent
+  mediaMissing: "Фото скоро появится",
+  mediaLoadFailed: "Фото не загрузилось",
+  noPhoto: "Фото не загрузилось", // alias of mediaLoadFailed for existing call sites
   genericErrorTitle: "Что-то пошло не так",
-  genericErrorBody: "Обновите страницу. Если не поможет — напишите нам, решим вручную.",
+  genericErrorBody: "Обновите страницу. Если не поможет - напишите нам, решим вручную.",
+  // Buyer-facing: no ports / Medusa. Ops diagnosis stays in doctor/logs.
+  apiUnavailableHint: "Сервис каталога временно недоступен - обновите страницу или зайдите чуть позже",
 }
 
 export const catalogCopy = {
@@ -143,7 +148,7 @@ export const catalogCopy = {
   lead: "Спальня, гостиная, кабинет, прихожая.",
   kidsLead: "Мебель для детской в Woodright Kids",
   supporting: "Фильтры помогут сузить выбор по комнате, коллекции и цене.",
-  loadError: "Каталог не загрузился. Обновите страницу или зайдите чуть позже.",
+  loadError: `Каталог не загрузился. ${states.apiUnavailableHint}`,
   emptyFilteredTitle: "Ничего не нашлось по фильтрам",
   emptyFilteredBody: "Снимите часть условий — или опишите задачу, и мы соберём исполнение по проекту.",
 }
@@ -151,7 +156,7 @@ export const catalogCopy = {
 export const kidsCatalogCopy = {
   h1: "Мебель для детской комнаты",
   lead: "Кровати, шкафы, комоды, столы и стеллажи. Коллекции с ручной росписью — для комнаты, которая растёт вместе с ребёнком.",
-  loadError: "Детский каталог не загрузился. Обновите страницу или зайдите чуть позже.",
+  loadError: `Детский каталог не загрузился. ${states.apiUnavailableHint}`,
   emptyTitle: "Здесь пока пусто по этим фильтрам",
   emptyBody: "Измените параметры — или напишите нам, подберём по комнате, возрасту и характеру ребёнка.",
 }
@@ -169,7 +174,7 @@ export const roomsCopy = {
   h1: "Комната целиком, а не набор предметов",
   lead: "Спальня, детская, кабинет, гостиная, прихожая. Готовые сочетания, где сохранены стиль, пропорции и удобство.",
   supporting: "Можно взять комплект целиком или начать с одного предмета.",
-  loadError: "Комнаты не загрузились. Обновите страницу или зайдите чуть позже.",
+  loadError: `Комнаты не загрузились. ${states.apiUnavailableHint}`,
   emptyBody: "Готовые комплекты скоро появятся.",
   kidsEntryTitle: "Детские комнаты",
   kidsEntryText: "Безопасные материалы, продуманная эргономика и роспись, которая нравится и детям, и взрослым.",
@@ -178,13 +183,13 @@ export const roomsCopy = {
 export const kidsRoomsCopy = {
   h1: "Детские комнаты",
   lead: "Готовые комплекты — от первых лет до школы.",
-  loadError: "Детские комнаты не загрузились. Обновите страницу или зайдите чуть позже.",
+  loadError: `Детские комнаты не загрузились. ${states.apiUnavailableHint}`,
   emptyBody: "Комплекты для детских ещё готовим. Загляните в каталог или напишите нам — подберём комнату под ребёнка.",
 }
 
 export const roomSetDetail = {
   notFound: "Комплект не найден",
-  loadError: "Не удалось загрузить комплект. Обновите страницу.",
+  loadError: `Не удалось загрузить комплект. ${states.apiUnavailableHint}`,
   priceFromLabel: "Цена от",
   priceUnknown: "уточняется",
   compositionTitle: "Что входит в комплект",
@@ -215,7 +220,7 @@ export const bespokeLanding = {
 export const bespokeCatalogCopy = {
   h1: "Направления по проекту",
   lead: "Кухни, гардеробные, шкафы и другие изделия по вашим размерам.",
-  loadError: "Не загрузилось. Обновите страницу.",
+  loadError: `Не загрузилось. ${states.apiUnavailableHint}`,
   emptyBody: "Позиции скоро появятся. Опишите задачу — соберём решение под вас.",
 }
 

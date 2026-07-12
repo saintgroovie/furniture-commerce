@@ -13,10 +13,17 @@ type Props = {
   title: string
 }
 
-function OliverPdpHeroAbsent({ className }: { className: string }) {
+function OliverPdpHeroAbsent({
+  className,
+  reason,
+}: {
+  className: string
+  reason: "missing" | "failed"
+}) {
+  const label = reason === "failed" ? states.mediaLoadFailed : states.mediaMissing
   return (
-    <div className={`${className} oliver-media-absent`} aria-label="Фото скоро появится">
-      <span className="oliver-media-absent-label">{states.noPhoto}</span>
+    <div className={`${className} oliver-media-absent`} aria-label={label}>
+      <span className="oliver-media-absent-label">{label}</span>
     </div>
   )
 }
@@ -139,7 +146,10 @@ export function OliverPdpMediaSwitcher({ mainSrc, extraSrcs, title }: Props) {
     <div className="product-pdp-media-switcher oliver-pdp-media-switcher">
       <div className="product-pdp-media-hero">
         {heroEmpty ? (
-          <OliverPdpHeroAbsent className="product-detail-img" />
+          <OliverPdpHeroAbsent
+            className="product-detail-img"
+            reason={heroFailed ? "failed" : "missing"}
+          />
         ) : (
           <img
             src={displayHeroSrc}

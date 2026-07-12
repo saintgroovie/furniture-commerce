@@ -123,7 +123,7 @@ export function ProductPdpMediaSwitcher({
       <div className="product-pdp-media-hero">
         {heroIsPlaceholder ? (
           <div className="product-detail-img oliver-media-absent">
-            <span className="oliver-media-absent-label">{states.noPhoto}</span>
+            <span className="oliver-media-absent-label">{states.mediaMissing}</span>
           </div>
         ) : (
           <img

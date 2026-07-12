@@ -24,6 +24,19 @@ export default defineConfig({
           port: 5173,
           clientPort: 5173,
         },
+        // Do not restart Admin Vite on media/tmp churn (catalog photos live under static/)
+        watch: {
+          ignored: [
+            "**/node_modules/**",
+            "**/uploads/**",
+            "**/static/**",
+            "**/.medusa/**",
+            "**/private/**",
+            "**/tmp/**",
+            "**/test-results/**",
+            "**/.next/**",
+          ],
+        },
       },
     }),
   },

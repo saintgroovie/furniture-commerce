@@ -12,7 +12,7 @@
     "db:migrate": "medusa db:migrate",
     "db:sync-links": "medusa db:sync-links",
     "seed": "medusa exec ./src/scripts/seed.ts",
-    "postinstall": "node scripts/patch-skip-cart-promotions.mjs",
+    "postinstall": "node scripts/patch-skip-cart-promotions.mjs && node scripts/patch-medusa-develop-watch.mjs --warn-only",
     "generate:catalog-card-derivatives": "tsx scripts/generate-catalog-card-derivatives.ts"
   },
   "dependencies": {
