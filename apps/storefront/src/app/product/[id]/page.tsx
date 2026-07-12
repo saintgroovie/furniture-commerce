@@ -1,7 +1,8 @@
 import Link from "next/link"
 import type { Metadata } from "next"
+import { cache } from "react"
 import { getSiteUrl } from "@/lib/api/base"
-import { getProduct, getProducts, NOT_FOUND } from "@/lib/api/products"
+import { getCatalogProducts, getProduct, NOT_FOUND } from "@/lib/api/products"
 import { formatRub, getPrice } from "@/lib/format"
 import {
   formatRequestQuotePriceLabel,
@@ -67,10 +68,13 @@ function truncate(str: string, max: number): string {
 
 const BADGE_LABELS = productTypeBadgeLabels
 
+/** Deduplicate generateMetadata + page product fetch within one request. */
+const loadPdpProduct = cache(async (idOrHandle: string) => getProduct(idOrHandle))
+
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const base = getSiteUrl()
   try {
-    const res = await getProduct(params.id)
+    const res = await loadPdpProduct(params.id)
     const product = res.product as Record<string, unknown> | undefined
     if (!product) return { title: "Товар", alternates: { canonical: `${base}/product/${params.id}` } }
     const title = getBuyerFacingProductTitle(product)
@@ -95,7 +99,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
 export default async function ProductPage({ params }: { params: { id: string } }) {
   let product: Record<string, unknown> | null = null
   try {
-    const res = await getProduct(params.id)
+    const res = await loadPdpProduct(params.id)
     product = res.product ?? null
   } catch (e) {
     if (e instanceof Error && e.message === NOT_FOUND) {
@@ -218,7 +222,8 @@ export default async function ProductPage({ params }: { params: { id: string } }
   let displayGroupMembers: Record<string, unknown>[] = []
   if (meta?.display_group && meta?.collection) {
     try {
-      const plist = await getProducts()
+      // Browse DTO is enough for sibling thumbs/prices; avoid full /store/products fan-out.
+      const plist = await getCatalogProducts()
       const list = (plist.products ?? []) as Record<string, unknown>[]
       displayGroupMembers = getDisplayGroupMembers(product, list)
     } catch {
