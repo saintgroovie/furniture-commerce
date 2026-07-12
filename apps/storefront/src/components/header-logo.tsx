@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { useKidsSection } from "@/lib/use-kids-section"
 
 /**
  * Wordmark + «KIDS» pill. The pill is always in the DOM so the switch
@@ -11,14 +11,13 @@ import { usePathname } from "next/navigation"
  * left to re-center as the badge unfolds, which is the whole effect.
  */
 export function HeaderLogo() {
-  const pathname = usePathname()
-  const isKids = pathname === "/kids" || pathname.startsWith("/kids/")
+  const isKids = useKidsSection()
 
   return (
     <Link
       href="/"
       className="logo"
-      aria-label={isKids ? "Woodright Kids — на главную" : "Woodright — на главную"}
+      aria-label={isKids ? "Woodright Kids - на главную" : "Woodright - на главную"}
     >
       <img
         src="/brand/woodright-logo-transparent.png"

@@ -118,6 +118,23 @@ img {
   gap: var(--space-lg);
 }
 
+/* Edge tints of the two header strips live in registered custom properties
+   so the brown → sage-green swap on entering /kids is a real color tween
+   (gradients themselves don't interpolate). Same 1s spring-like curve as
+   the KIDS badge, so the whole header changes in one coherent motion. */
+@property --header-edge-top {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #ffffff;
+}
+
+@property --header-edge-main {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #ffffff;
+}
+
+
 /* ---- Site Header ---- */
 
 .site-header {
@@ -125,13 +142,38 @@ img {
   position: sticky;
   top: 0;
   z-index: 50;
+  --header-edge-top: color-mix(in srgb, var(--color-accent) 38%, var(--color-surface));
+  --header-edge-main: color-mix(in srgb, var(--color-accent) 13%, var(--color-bg));
+  transition:
+    --header-edge-top 1s cubic-bezier(0.22, 1, 0.36, 1),
+    --header-edge-main 1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.site-header[data-section="kids"] {
+  --header-edge-top: color-mix(in srgb, #507356 38%, var(--color-surface));
+  --header-edge-main: color-mix(in srgb, #507356 13%, #f5f7f5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-header {
+    transition: none;
+  }
 }
 
 /* -- Top bar -- */
 
 .header-top {
   border-bottom: 1px solid var(--color-border);
+  /* Warm wash at the outer edges, clean surface in the middle. */
+  background: linear-gradient(
+    90deg,
+    var(--header-edge-top) 0%,
+    var(--color-surface) 13.5%,
+    var(--color-surface) 86.5%,
+    var(--header-edge-top) 100%
+  );
 }
+
 
 .header-top-inner {
   display: flex;
@@ -261,6 +303,15 @@ img {
 
 .header-main {
   border-bottom: 1px solid var(--color-border);
+  /* Echo of the top-bar wash: white base, edges tuned to sit exactly
+     between the page background and the top bar's edge tone. */
+  background: linear-gradient(
+    90deg,
+    var(--header-edge-main) 0%,
+    var(--color-surface) 13.5%,
+    var(--color-surface) 86.5%,
+    var(--header-edge-main) 100%
+  );
 }
 
 .header-main-inner {
