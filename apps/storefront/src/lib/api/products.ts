@@ -30,6 +30,31 @@ export async function getProducts(params?: {
   return res.json()
 }
 
+/**
+ * Catalog listing fetch — opt-in `/store/catalog-products` projection (PERF-02).
+ * Dedicated path: Medusa core rejects unknown query keys (e.g. `view`) on `/store/products`.
+ */
+export async function getCatalogProducts() {
+  const base = getBaseUrl()
+  const res = await medusaFetch(`${base}/store/catalog-products`)
+  if (!res.ok) {
+    const text = await res.text()
+    let message = "Не удалось загрузить каталог."
+    try {
+      const data = text ? JSON.parse(text) : null
+      if (data && typeof (data as { message?: unknown }).message === "string") {
+        message = (data as { message: string }).message
+      } else if (text) {
+        message = text
+      }
+    } catch {
+      if (text) message = text
+    }
+    throw new Error(message)
+  }
+  return res.json()
+}
+
 export const NOT_FOUND = "NOT_FOUND"
 
 async function listStoreProductByHandle(

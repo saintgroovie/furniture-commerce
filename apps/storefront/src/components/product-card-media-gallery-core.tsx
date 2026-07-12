@@ -25,6 +25,7 @@ import {
 } from "@/lib/greenwich-paint-media"
 import { buildGalleryStripUrls, buildPdpThumbStripUrls } from "@/lib/product-images"
 import { useVerifiedStripExtras } from "@/components/use-verified-strip-extras"
+import { CARD_STRIP_IMAGE_PROBE_LIMIT } from "@/lib/client/extra-image-url-verify"
 import { useSwatchColors } from "@/lib/use-swatch-colors"
 import { fallbackHexForToken } from "@/lib/swatch-fallback-colors"
 import {
@@ -53,6 +54,8 @@ type Props = {
   greenwichPaintMatrix?: GreenwichPaintMatrixEntry[]
   layout?: "card" | "pdp"
   heroObjectPosition?: string
+  /** PERF-08: first above-fold card hero — high fetch priority, not lazy. */
+  priorityHero?: boolean
 }
 
 function resolveCombinedMedia(
@@ -210,6 +213,7 @@ export function ProductCardMediaGalleryCore({
   greenwichPaintMatrix,
   layout = "card",
   heroObjectPosition,
+  priorityHero = false,
 }: Props) {
   const isGreenwichBed = Boolean(greenwichBedMatrix && greenwichBedMatrix.length > 0)
   const isGreenwichPaint = Boolean(greenwichPaintMatrix && greenwichPaintMatrix.length > 0)
@@ -514,9 +518,49 @@ export function ProductCardMediaGalleryCore({
     setPdpSwatchSlot(document.getElementById("pdp-color-options-slot"))
   }, [layout])
 
+  // Phase F: catalog cards defer Image() probes until near-viewport or pointer enter.
+  // PDP keeps immediate full-budget probes (not in this PR's card-only scope).
+  const isPdpLayout = layout === "pdp"
+  const mediaRootRef = useRef<HTMLDivElement | null>(null)
+  const [cardStripProbeEnabled, setCardStripProbeEnabled] = useState(isPdpLayout)
+
+  useEffect(() => {
+    if (isPdpLayout) {
+      setCardStripProbeEnabled(true)
+      return
+    }
+    const el = mediaRootRef.current
+    if (!el) return
+    if (typeof IntersectionObserver === "undefined") {
+      setCardStripProbeEnabled(true)
+      return
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setCardStripProbeEnabled(true)
+          io.disconnect()
+        }
+      },
+      { root: null, rootMargin: "200px 0px", threshold: 0.01 }
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [isPdpLayout])
+
+  const enableCardStripProbes = useCallback(() => {
+    if (!isPdpLayout) setCardStripProbeEnabled(true)
+  }, [isPdpLayout])
+
   const rawVisibleStrip = useVerifiedStripExtras(
     galleryStripCandidates,
-    failedExtras
+    failedExtras,
+    isPdpLayout
+      ? undefined
+      : {
+          maxProbes: CARD_STRIP_IMAGE_PROBE_LIMIT,
+          enabled: cardStripProbeEnabled,
+        }
   )
   // Defense in depth: if the main photo was ever a legitimate strip candidate
   // (catalog "card" layout), guarantee it stays visible no matter what the async
@@ -666,7 +710,8 @@ export function ProductCardMediaGalleryCore({
   const swatchSamples = useSwatchColors(
     swatchSamplingKey.split("|").filter(Boolean).length > 1
       ? swatchSamplingVariants
-      : undefined
+      : undefined,
+    isPdpLayout ? undefined : { enabled: cardStripProbeEnabled }
   )
 
   const showFinish =
@@ -1141,7 +1186,8 @@ export function ProductCardMediaGalleryCore({
         src={displayHeroSrc}
         alt={alt}
         className={`${isPdp ? "product-detail-img" : "card-img"}${isPdp ? " is-zoomable" : ""}`}
-        loading="lazy"
+        loading={priorityHero && !isPdp ? "eager" : "lazy"}
+        fetchPriority={priorityHero && !isPdp ? "high" : undefined}
         style={
           isPdp && heroObjectPosition
             ? { objectPosition: heroObjectPosition }
@@ -1271,7 +1317,9 @@ export function ProductCardMediaGalleryCore({
 
   return (
     <div
+      ref={mediaRootRef}
       className={`product-card-media-switcher${oliverMode ? " oliver-card-media-switcher" : ""}${isPdp ? " product-detail-media-switcher" : ""}`}
+      onPointerEnter={isPdp ? undefined : enableCardStripProbes}
     >
       {isPdp ? (
         heroImage

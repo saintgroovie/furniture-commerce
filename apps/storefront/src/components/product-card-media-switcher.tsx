@@ -17,6 +17,7 @@ type Props = {
   greenwichPaintMatrix?: GreenwichPaintMatrixEntry[]
   href: string
   alt: string
+  priorityHero?: boolean
 }
 
 export function ProductCardMediaSwitcher({
@@ -31,6 +32,7 @@ export function ProductCardMediaSwitcher({
   greenwichPaintMatrix,
   href,
   alt,
+  priorityHero = false,
 }: Props) {
   return (
     <ProductCardMediaGalleryCore
@@ -45,6 +47,7 @@ export function ProductCardMediaSwitcher({
       greenwichPaintMatrix={greenwichPaintMatrix}
       href={href}
       alt={alt}
+      priorityHero={priorityHero}
     />
   )
 }

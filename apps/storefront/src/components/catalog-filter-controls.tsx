@@ -15,6 +15,7 @@ import {
   buildCatalogHref,
 } from "@/lib/catalog-filter-params"
 import { CatalogSortDropdown } from "@/components/catalog-sort-dropdown"
+import { isUnmodifiedPrimaryClick } from "@/lib/client/is-unmodified-primary-click"
 import {
   type CatalogFacets,
   type CatalogFilterState,
@@ -30,12 +31,64 @@ type Props = {
   facets: CatalogFacets
   resultCount: number
   showBespokeCta?: boolean
+  /**
+   * When set, filter changes stay on the client (history.pushState + local
+   * recompute). App Router does not refetch the page / Medusa.
+   */
+  onClientNavigate?: (next: CatalogFilterState) => void
   children: ReactNode
 }
 
 function toggleMulti(values: string[], value: string): string[] {
   const v = value.toLowerCase()
   return values.includes(v) ? values.filter((x) => x !== v) : [...values, v]
+}
+
+type PillBox = { left: number; top: number; width: number; height: number }
+
+/* The sliding pills (active indicator + hover ghost) never animate
+   width/height — those are layout properties, they run on the main thread
+   and stutter the moment React re-renders the product grid after a filter
+   change. Instead each pill is three transform-only parts: two fixed
+   half-round caps and a 1px middle strip stretched with scaleX. Same
+   duration/curve on every part keeps the shape coherent mid-flight, and
+   the whole glide stays on the compositor. Parts overlap by 0.5px so the
+   seams never show (fills are opaque). */
+function pillPartsGeometry(box: PillBox) {
+  const r = box.height / 2
+  return {
+    container: {
+      transform: `translate3d(${box.left}px, ${box.top}px, 0)`,
+      height: `${box.height}px`,
+    },
+    capL: {
+      width: `${r}px`,
+      borderRadius: `${r}px 0 0 ${r}px`,
+    },
+    mid: {
+      transform: `translate3d(${r - 0.5}px, 0, 0) scaleX(${Math.max(box.width - 2 * r + 1, 0)})`,
+    },
+    capR: {
+      width: `${r}px`,
+      borderRadius: `0 ${r}px ${r}px 0`,
+      transform: `translate3d(${box.width - r}px, 0, 0)`,
+    },
+  }
+}
+
+/** Imperative twin of pillPartsGeometry for the ref-driven hover ghost. */
+function layoutPillParts(container: HTMLElement, box: PillBox) {
+  const [capL, mid, capR] = Array.from(container.children) as HTMLElement[]
+  if (!capL || !mid || !capR) return
+  const g = pillPartsGeometry(box)
+  container.style.transform = g.container.transform
+  container.style.height = g.container.height
+  capL.style.width = g.capL.width
+  capL.style.borderRadius = g.capL.borderRadius
+  mid.style.transform = g.mid.transform
+  capR.style.width = g.capR.width
+  capR.style.borderRadius = g.capR.borderRadius
+  capR.style.transform = g.capR.transform
 }
 
 /* Pre-hydration bootstrap for --catalog-filter-fit (see the sidebar effect
@@ -73,6 +126,7 @@ export function CatalogFilterControls({
   facets,
   resultCount,
   showBespokeCta = false,
+  onClientNavigate,
   children,
 }: Props) {
   const router = useRouter()
@@ -112,6 +166,46 @@ export function CatalogFilterControls({
       width: activeTab.offsetWidth,
       height: activeTab.offsetHeight,
     })
+  }, [])
+
+  /* Hover ghost: a soft flat pill that glides after the cursor between
+     tabs (same magic-motion idea as the active indicator, one layer below
+     it). Fully imperative: pointer handlers write styles straight into the
+     persistent DOM element — zero React re-renders on hover, so the glide
+     can't be delayed by the component tree. Geometry uses the same 3-part
+     transform-only layout as the indicator (see layoutPillParts). When the
+     ghost re-appears after being hidden it snaps into place with
+     transitions off (data-instant + reflow flush), then fades in — no
+     stale glide across the whole track. */
+  const ghostRef = useRef<HTMLSpanElement>(null)
+
+  const onTabsPointerOver = useCallback((e: { target: EventTarget }) => {
+    const nav = tabsRef.current
+    const ghost = ghostRef.current
+    if (!nav || !ghost || !(e.target instanceof Element)) return
+    const tab = e.target.closest<HTMLElement>(".filter-tab")
+    if (!tab || !nav.contains(tab)) return
+    const box = {
+      left: tab.offsetLeft,
+      top: tab.offsetTop,
+      width: tab.offsetWidth,
+      height: tab.offsetHeight,
+    }
+    if (ghost.dataset.shown !== "true") {
+      ghost.dataset.instant = "true"
+      layoutPillParts(ghost, box)
+      // Flush styles so the reposition lands before transitions re-enable.
+      void ghost.offsetWidth
+      delete ghost.dataset.instant
+      ghost.dataset.shown = "true"
+    } else {
+      layoutPillParts(ghost, box)
+    }
+  }, [])
+
+  const onTabsPointerLeave = useCallback(() => {
+    const ghost = ghostRef.current
+    if (ghost) delete ghost.dataset.shown
   }, [])
 
   /* Optimistic active tab: the pill + label colors switch on click, not when
@@ -198,12 +292,43 @@ export function CatalogFilterControls({
 
   const navigate = useCallback(
     (next: CatalogFilterState) => {
+      if (onClientNavigate) {
+        startTransition(() => {
+          onClientNavigate(next)
+        })
+        return
+      }
       const href = buildCatalogHref(basePath, next)
       startTransition(() => {
         router.push(href)
       })
     },
-    [basePath, router]
+    [basePath, router, onClientNavigate]
+  )
+
+  const onFilterLinkClick = useCallback(
+    (
+      e: {
+        preventDefault: () => void
+        button?: number
+        metaKey?: boolean
+        ctrlKey?: boolean
+        shiftKey?: boolean
+        altKey?: boolean
+      },
+      next: CatalogFilterState,
+      extra?: () => void
+    ) => {
+      if (!onClientNavigate) {
+        extra?.()
+        return
+      }
+      if (!isUnmodifiedPrimaryClick(e)) return
+      e.preventDefault()
+      extra?.()
+      navigate(next)
+    },
+    [onClientNavigate, navigate]
   )
 
   const submitSearch = () => {
@@ -223,7 +348,11 @@ export function CatalogFilterControls({
             href={basePath}
             className="catalog-filter-panel-reset"
             scroll={false}
-            onClick={() => setSearchDraft("")}
+            onClick={(e) =>
+              onFilterLinkClick(e, { category: [], collection: [] }, () =>
+                setSearchDraft("")
+              )
+            }
           >
             Сбросить
           </Link>
@@ -240,26 +369,38 @@ export function CatalogFilterControls({
             <ActiveChip
               label={`«${state.q}»`}
               removeHref={buildCatalogHref(basePath, { ...state, q: undefined })}
+              onRemove={
+                onClientNavigate
+                  ? () => navigate({ ...state, q: undefined })
+                  : undefined
+              }
             />
           )}
           {state.type && (
             <ActiveChip
               label={PRODUCT_TYPE_FILTER_LABELS[state.type] ?? state.type}
               removeHref={buildCatalogHref(basePath, { ...state, type: undefined })}
+              onRemove={
+                onClientNavigate
+                  ? () => navigate({ ...state, type: undefined })
+                  : undefined
+              }
             />
           )}
           {state.category.map((c) => {
             const label =
               facets.categories.find((f) => f.value === c)?.label ??
               getCategoryFilterLabel(c)
+            const next = {
+              ...state,
+              category: state.category.filter((x) => x !== c),
+            }
             return (
               <ActiveChip
                 key={`cat-${c}`}
                 label={label}
-                removeHref={buildCatalogHref(basePath, {
-                  ...state,
-                  category: state.category.filter((x) => x !== c),
-                })}
+                removeHref={buildCatalogHref(basePath, next)}
+                onRemove={onClientNavigate ? () => navigate(next) : undefined}
               />
             )
           })}
@@ -267,14 +408,16 @@ export function CatalogFilterControls({
             const label =
               facets.collections.find((f) => f.value === c)?.label ??
               getCollectionFilterLabel(c)
+            const next = {
+              ...state,
+              collection: state.collection.filter((x) => x !== c),
+            }
             return (
               <ActiveChip
                 key={`col-${c}`}
                 label={label}
-                removeHref={buildCatalogHref(basePath, {
-                  ...state,
-                  collection: state.collection.filter((x) => x !== c),
-                })}
+                removeHref={buildCatalogHref(basePath, next)}
+                onRemove={onClientNavigate ? () => navigate(next) : undefined}
               />
             )
           })}
@@ -286,6 +429,16 @@ export function CatalogFilterControls({
                 priceMin: undefined,
                 priceMax: undefined,
               })}
+              onRemove={
+                onClientNavigate
+                  ? () =>
+                      navigate({
+                        ...state,
+                        priceMin: undefined,
+                        priceMax: undefined,
+                      })
+                  : undefined
+              }
             />
           )}
         </div>
@@ -304,6 +457,9 @@ export function CatalogFilterControls({
               }
               scroll={false}
               aria-pressed={state.collection.length === 0}
+              onClick={(e) =>
+                onFilterLinkClick(e, { ...state, collection: [] })
+              }
             >
               <span>Все</span>
               <span className="catalog-filter-count">
@@ -312,13 +468,14 @@ export function CatalogFilterControls({
             </Link>
             {facets.collections.map((opt) => {
               const active = state.collection.includes(opt.value)
+              const next = {
+                ...state,
+                collection: toggleMulti(state.collection, opt.value),
+              }
               return (
                 <Link
                   key={opt.value}
-                  href={buildCatalogHref(basePath, {
-                    ...state,
-                    collection: toggleMulti(state.collection, opt.value),
-                  })}
+                  href={buildCatalogHref(basePath, next)}
                   className={
                     active
                       ? "catalog-filter-option catalog-filter-option-active"
@@ -326,6 +483,7 @@ export function CatalogFilterControls({
                   }
                   scroll={false}
                   aria-pressed={active}
+                  onClick={(e) => onFilterLinkClick(e, next)}
                 >
                   <span>{opt.label}</span>
                   <span className="catalog-filter-count">{opt.count}</span>
@@ -349,6 +507,7 @@ export function CatalogFilterControls({
               }
               scroll={false}
               aria-pressed={state.category.length === 0}
+              onClick={(e) => onFilterLinkClick(e, { ...state, category: [] })}
             >
               <span>Все</span>
               <span className="catalog-filter-count">
@@ -357,13 +516,14 @@ export function CatalogFilterControls({
             </Link>
             {facets.categories.map((opt) => {
               const active = state.category.includes(opt.value)
+              const next = {
+                ...state,
+                category: toggleMulti(state.category, opt.value),
+              }
               return (
                 <Link
                   key={opt.value}
-                  href={buildCatalogHref(basePath, {
-                    ...state,
-                    category: toggleMulti(state.category, opt.value),
-                  })}
+                  href={buildCatalogHref(basePath, next)}
                   className={
                     active
                       ? "catalog-filter-option catalog-filter-option-active"
@@ -371,6 +531,7 @@ export function CatalogFilterControls({
                   }
                   scroll={false}
                   aria-pressed={active}
+                  onClick={(e) => onFilterLinkClick(e, next)}
                 >
                   <span>{opt.label}</span>
                   <span className="catalog-filter-count">{opt.count}</span>
@@ -404,26 +565,42 @@ export function CatalogFilterControls({
           aria-label="Тип товара"
           ref={tabsRef}
           data-slider={tabIndicator ? "true" : undefined}
+          onPointerOver={onTabsPointerOver}
+          onPointerLeave={onTabsPointerLeave}
         >
-          {tabIndicator && (
-            <span
-              className="filter-tabs-indicator"
-              aria-hidden="true"
-              style={{
-                /* transform, не left/top: движение уходит на compositor
-                   thread и не дёргается, пока main thread занят перерисовкой
-                   грида после смены фильтра. */
-                transform: `translate3d(${tabIndicator.left}px, ${tabIndicator.top}px, 0)`,
-                width: tabIndicator.width,
-                height: tabIndicator.height,
-              }}
-            />
-          )}
+          <span
+            ref={ghostRef}
+            className="filter-tabs-hover-ghost"
+            aria-hidden="true"
+          >
+            <span className="filter-tabs-pill-cap" />
+            <span className="filter-tabs-pill-mid" />
+            <span className="filter-tabs-pill-cap" />
+          </span>
+          {tabIndicator &&
+            (() => {
+              const g = pillPartsGeometry(tabIndicator)
+              return (
+                <span
+                  className="filter-tabs-indicator"
+                  aria-hidden="true"
+                  style={g.container}
+                >
+                  <span className="filter-tabs-pill-cap" style={g.capL} />
+                  <span className="filter-tabs-pill-mid" style={g.mid} />
+                  <span className="filter-tabs-pill-cap" style={g.capR} />
+                </span>
+              )
+            })()}
           <Link
             href={buildCatalogHref(basePath, { ...state, type: undefined })}
             className={!activeType ? "filter-tab filter-tab-active" : "filter-tab"}
             scroll={false}
-            onClick={() => setPendingType({ type: undefined })}
+            onClick={(e) =>
+              onFilterLinkClick(e, { ...state, type: undefined }, () =>
+                setPendingType({ type: undefined })
+              )
+            }
           >
             Все
           </Link>
@@ -433,15 +610,20 @@ export function CatalogFilterControls({
               state.type === opt.value
                 ? undefined
                 : (opt.value as CatalogFilterState["type"])
+            const next = { ...state, type: nextType }
             return (
               <Link
                 key={opt.value}
-                href={buildCatalogHref(basePath, { ...state, type: nextType })}
+                href={buildCatalogHref(basePath, next)}
                 className={
                   isActive ? "filter-tab filter-tab-active" : "filter-tab"
                 }
                 scroll={false}
-                onClick={() => setPendingType({ type: nextType })}
+                onClick={(e) =>
+                  onFilterLinkClick(e, next, () =>
+                    setPendingType({ type: nextType })
+                  )
+                }
               >
                 {PRODUCT_TYPE_FILTER_LABELS[opt.value] ?? opt.label}
               </Link>
@@ -670,14 +852,26 @@ function CatalogPriceFilter({
 function ActiveChip({
   label,
   removeHref,
+  onRemove,
 }: {
   label: string
   removeHref: string
+  onRemove?: () => void
 }) {
   return (
     <span className="catalog-active-chip">
       {label}
-      <Link href={removeHref} scroll={false} aria-label={`Убрать фильтр ${label}`}>
+      <Link
+        href={removeHref}
+        scroll={false}
+        aria-label={`Убрать фильтр ${label}`}
+        onClick={(e) => {
+          if (!onRemove) return
+          if (!isUnmodifiedPrimaryClick(e)) return
+          e.preventDefault()
+          onRemove()
+        }}
+      >
         ×
       </Link>
     </span>
