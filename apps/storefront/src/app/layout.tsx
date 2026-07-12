@@ -6,6 +6,7 @@ import { HeaderCartLink } from "@/components/header-cart-link"
 import { HeaderLogo } from "@/components/header-logo"
 import { MobileNav } from "@/components/mobile-nav"
 import { NavDropdown } from "@/components/nav-dropdown"
+import { SiteHeader } from "@/components/site-header"
 import { a11yCopy, footer as footerCopy, nav as navCopy, seo } from "@/lib/woodright-copy"
 import "./globals.css"
 
@@ -61,7 +62,7 @@ export default function RootLayout({
         <a href="#main-content" className="skip-link">
           {a11yCopy.skipToContent}
         </a>
-        <header className="site-header">
+        <SiteHeader>
           {/* Top bar */}
           <div className="header-top">
             <div className="container header-top-inner">
@@ -134,7 +135,7 @@ export default function RootLayout({
           </div>
 
           <MobileNav />
-        </header>
+        </SiteHeader>
         <main id="main-content" className="container page-section" tabIndex={-1}>
           {children}
         </main>
