@@ -22,7 +22,11 @@ Plan: Strategy A (stock-shell + contextual Woodright)
 
 ## Runtime status
 
-Isolated Admin `:9001` must be up:
+**Foreground run 2026-07-13 MSK:** Loop 4 consolidated smoke **PASS** on `http://localhost:9001`  
+(`one_admin`, `readiness`, `simple_promo_ui`, `resilience`; pageErrors empty).  
+Also: `woodright-flag-off-redirects.smoke.mjs` **PASS**.
+
+Isolated Admin:
 
 ```sh
 ./scripts/start-woodright-admin-ux-b5.sh start
@@ -36,7 +40,14 @@ cd apps/backend
 NODE_PATH=/tmp/b5-playwright-qa/node_modules node src/admin/__tests__/woodright-loop4-operator-journeys.smoke.mjs
 ```
 
-Screenshots/report: `tmp/admin-ux-loop4/` (local, not committed).
+Screenshots/report: under `tmp/admin-ux-loop4/` (local, not committed).
+
+## Operator access
+
+- URL: http://localhost:9001/app/woodright  
+- Login: `admin@woodright.ru` / `admin123`  
+- Use `localhost`, not `127.0.0.1`  
+- PR: https://github.com/saintgroovie/furniture-commerce/pull/23 (ready for review)
 
 ## Parity
 

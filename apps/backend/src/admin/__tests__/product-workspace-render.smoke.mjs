@@ -4,13 +4,17 @@
  * Prerequisites:
  * - Medusa listening on B6_BASE (default http://localhost:9001)
  * - Isolated DB with Package B.5 fixtures + local admin user
- * - Playwright installed (project or external)
+ * - Playwright via NODE_PATH=/tmp/b5-playwright-qa/node_modules
  *
  * Run:
- *   B6_BASE=http://localhost:9001 node src/admin/__tests__/product-workspace-render.smoke.mjs
+ *   NODE_PATH=/tmp/b5-playwright-qa/node_modules B6_BASE=http://localhost:9001 \
+ *     node src/admin/__tests__/product-workspace-render.smoke.mjs
  */
-import { chromium } from "playwright"
+import { createRequire } from "node:module"
 import fs from "fs"
+
+const require = createRequire("/tmp/b5-playwright-qa/package.json")
+const { chromium } = require("playwright")
 
 const BASE = process.env.B6_BASE || "http://localhost:9001"
 const STD = process.env.B6_PRODUCT_ID || "prod_01KX9PD26JVQJS4M811SPZZRDV"
