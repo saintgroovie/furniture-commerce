@@ -1,27 +1,31 @@
-# Catalog perf - next actions (execute order)
+# Catalog perf - next actions
 
 **Date:** 2026-07-12  
-**Mandate:** full catalog + key page load optimization - 12m loop until done
+**Local cold-load optimization:** DONE (loop stopped)
 
-## Done on main
-- PR #24 package, #26 W3e compact, #27 browse price split
+## Landed on main
+| PR | What |
+|----|------|
+| #24 | Catalog-perf package (browse API, H4, W3g) |
+| #26 | W3e compact browse VM |
+| #27 | Browse price-split latency |
+| #29 | SSR hero-only catalog extras |
+| #30 | PDP display-group lean fetch |
+| #31 | RoomSet `?view=storefront` lean |
 
-## Measured after rebuild (local)
-| Metric | Before | After |
-|--------|--------|-------|
-| catalog-products TTFB | ~2.6–3.5s | **~0.16–0.27s** |
-| catalog-products bytes | ~401KB | **~222KB** |
-| `/catalog` HTML | ~681KB | **~481KB (−29%)** |
-| `/catalog` total | ~2.1s | **~0.32s** |
-| `/kids/catalog` total | ~5.5s | **~0.30s** |
-| `/` total | ~3.9s | **~0.24s** |
+## Local measured (worktree production build on :3002 + Medusa :9000)
+| Surface | Result |
+|---------|--------|
+| catalog-products | ~0.13s / ~222KB |
+| `/catalog` | ~310KB, 99 imgs, ~0.24s total |
+| `/kids/catalog` | ~127KB, 39 imgs |
+| PDP (display_group) | TTFB ~0.09–1.3s (was multi-10s) |
 
-## Next
-1. Cut SSR `<img>` count on `/catalog` (still 235) - W3f / stricter SSR hero-only
-2. Prod H4 when host available
-3. Stop loop when catalog+key pages meet load goals without regress
+## Operator-only remaining
+1. **Prod H4:** generate → deploy derivatives → `h4-coverage-gate --http` → bake `NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES=1`
+2. Re-measure RoomSet lean on **populated** `room_sets`
+3. Prod smoke: catalog ids / kids / facets / heroes / PDP / rooms
 
 ## Do not
-- Bake prod H4 flag without coverage
-- Cache without invalidation
-- `git add -A`
+- Restart speculative local levers without new bottleneck evidence
+- Bake prod H4 flag without coverage gate
