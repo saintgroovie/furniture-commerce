@@ -36,7 +36,13 @@ export function catalogCardDerivativesEnabled(): boolean {
 }
 
 export function toCatalogCardDerivativePath(staticPath: string): string | null {
-  const t = staticPath.trim()
+  let t = staticPath.trim()
+  try {
+    // Thumbnails may arrive percent-encoded (e.g. Cyrillic filenames).
+    t = decodeURIComponent(t)
+  } catch {
+    // keep raw
+  }
   const prefix = matchProductStaticPrefix(t)
   if (!prefix) return null
   if (t.includes(DERIVATIVE_MARKER)) return t
@@ -66,8 +72,14 @@ export function resolveCatalogCardImageSrc(
   if (t.startsWith("http://") || t.startsWith("https://")) {
     try {
       const u = new URL(t)
-      if (matchProductStaticPrefix(u.pathname)) path = u.pathname
-      else if (u.pathname.startsWith("/static/products/")) path = u.pathname
+      let pathname = u.pathname
+      try {
+        pathname = decodeURIComponent(pathname)
+      } catch {
+        // keep encoded pathname
+      }
+      if (matchProductStaticPrefix(pathname)) path = pathname
+      else if (pathname.startsWith("/static/products/")) path = pathname
       else return t
     } catch {
       return t

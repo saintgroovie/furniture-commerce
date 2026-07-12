@@ -22,6 +22,19 @@ assert.equal(
   "/product-static/products/greenwich/derivatives/card/GR-09-1_main_01.webp"
 )
 assert.equal(toCatalogCardDerivativePath("/uploads/x.png"), null)
+assert.equal(
+  toCatalogCardDerivativePath(
+    "/static/products/oliver/ol-05-%D0%BD_legacy_main.jpg"
+  ),
+  "/static/products/oliver/derivatives/card/ol-05-н_legacy_main.webp"
+)
+assert.equal(
+  resolveCatalogCardImageSrc(
+    "http://localhost:9000/static/products/oliver/ol-05-%D0%BD_legacy_main.jpg",
+    { preferDerivative: true }
+  ),
+  "/static/products/oliver/derivatives/card/ol-05-н_legacy_main.webp"
+)
 
 // Default preferDerivative is off
 assert.equal(
