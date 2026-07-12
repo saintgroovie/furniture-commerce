@@ -296,7 +296,12 @@ cmd_status() {
       ;;
   esac
   log "mode:    $mode_guess"
-  log "watch:   $(watch_patch_status)"
+  if [[ "$mode_guess" == "qa" ]]; then
+    # develop.js may still carry the ignore patch; qa itself has no chokidar watcher.
+    log "watch:   n/a (qa = medusa start; develop patch=$(watch_patch_status))"
+  else
+    log "watch:   patch=$(watch_patch_status)"
+  fi
   log "admin:   $(fingerprint_admin)  (http://localhost:${PORT}/app/login)"
 
   # ready = owned LISTEN + /health 200. launchctl/supervisor alive alone is NOT buyer-ready.

@@ -144,7 +144,7 @@ confirm_target_pid() {
 }
 
 cmd_status() {
-  local pids code
+  local pids code identity="none" state_pid="" listen_pid="" owned=0
   pids="$(listeners_on_port || true)"
   code="$(http_code "$HEALTH_URL")"
   log "repo:    $REPO_ROOT"
@@ -154,16 +154,31 @@ cmd_status() {
     log "listen:  $pids"
     for p in $pids; do
       ps -p "$p" -o pid=,etime=,command= 2>/dev/null || true
+      if is_our_storefront_pid "$p"; then
+        owned=1
+        [[ -z "$listen_pid" ]] && listen_pid="$p"
+      fi
     done
   else
     log "listen:  (none)"
   fi
   if [[ -f "$STATE_FILE" ]]; then
-    log "state:   pid=$(read_state_field pid || true) identity=$(state_matches_pid "$(read_state_field pid || true)" && echo ok || echo stale)"
+    state_pid="$(read_state_field pid || true)"
+    if [[ -n "${state_pid:-}" ]] && state_matches_pid "$state_pid"; then
+      identity="ok"
+    else
+      identity="stale"
+    fi
+    log "state:   pid=$state_pid identity=$identity"
   else
     log "state:   (none)"
   fi
   if [[ "$code" != "000" && "$code" != "000000" ]]; then
+    # LaunchAgent may leave state on an old parent PID; heal when buyer HTTP is up.
+    if [[ "$owned" -eq 1 && "$identity" != "ok" && -n "$listen_pid" ]]; then
+      write_state "$listen_pid"
+      log "state:   identity healed -> pid=$listen_pid"
+    fi
     log "status:  ok"
     return 0
   fi
