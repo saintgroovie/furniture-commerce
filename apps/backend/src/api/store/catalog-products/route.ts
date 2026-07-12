@@ -10,6 +10,6 @@ import { projectCatalogBrowseProduct } from "../products/catalog-browse-projecti
  * G2: explicit allowlist browse DTO (not metadata denylist).
  */
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
-  const products = await loadStoreProductList(req)
+  const products = await loadStoreProductList(req, { mode: "browse" })
   res.json({ products: products.map(projectCatalogBrowseProduct) })
 }
