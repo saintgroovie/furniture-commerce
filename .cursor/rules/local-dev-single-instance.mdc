@@ -1,0 +1,77 @@
+---
+description: Single Medusa instance on :9000 - no parallel backends; reuse or stop/start
+alwaysApply: true
+---
+
+# Local Medusa single-instance (port 9000)
+
+Complements `foreground-only-execution.mdc` (no autostart unless operator asks to fix/start).
+
+## Contract
+
+- **Canonical runtime root:** `/Users/leonidmbp/Documents/projects/furniture-commerce`
+- **One listener only** on TCP `:9000` for Woodright Medusa.
+- Secondary worktrees (product-copy, admin-ux, local-stability, …) **must not** start a second Medusa on `:9000`.
+- Admin/experimental backends use **`:9001+`** only.
+- Before any start: `lsof -nP -iTCP:9000 -sTCP:LISTEN` (or `scripts/local-dev/woodright-backend.sh status`).
+  - Healthy (`/health` → 200) → **reuse**, do not spawn another process.
+  - Unhealthy listener / `EADDRINUSE` zombies → `scripts/local-dev/woodright-backend.sh stop` then `start` (only when the operator asked to fix/start).
+- Prefer the entrypoint scripts under `scripts/local-dev/` (and synced copies in `~/.woodright/qa-dev-servers/`) over ad-hoc `nohup medusa develop`.
+- **QA / smoke / catalog-photos:** prefer `woodright-backend.sh start qa` (`medusa start --no-types` after build; no watcher).
+- **Admin UI / backend code edits:** `start develop` (Vite admin; `ADMIN_VITE_HMR=0` by default), still one instance only.
+- Never `killall node` / `pkill node`. Only PIDs listening on `:9000` or the recorded pidfile.
+
+## Operator commands
+
+```bash
+scripts/local-dev/woodright-backend.sh status
+scripts/local-dev/woodright-backend.sh stop
+scripts/local-dev/woodright-backend.sh start qa       # catalog/photo QA (needs prior build)
+scripts/local-dev/woodright-backend.sh start develop  # Admin UI + backend reload
+scripts/local-dev/woodright-backend.sh doctor-lite
+scripts/local-dev/woodright-doctor.sh
+scripts/local-dev/woodright-doctor.sh --backend-only
+scripts/local-dev/woodright-doctor.sh --admin-only
+scripts/local-dev/woodright-storefront.sh status
+scripts/local-dev/woodright-backend-scenarios.sh
+```
+
+## Hardening (P1)
+
+- `start` / `stop` / `restart` take an exclusive mkdir lock under `~/.woodright/qa-dev-servers/backend-9000.lock`
+- State file `backend-9000.state` stores `pid`, `root_pid`, `mode`, `repo`, `lstart` (legacy `.pid` mirrored)
+- Reuse only healthy **Woodright** listeners for the same `WOODRIGHT_REPO_ROOT` and **same mode**; otherwise `restart <mode>`
+- `stop` / KILL only confirmed Woodright PIDs; foreign listener → refuse (no blind kill)
+- `restart` is fail-closed (`stop` errors abort restart)
+- Buyer UI must not expose `:9000` / Medusa; use doctor for ops diagnosis
+- Storefront `:3002` has parallel entrypoint `woodright-storefront.sh`
+
+## Agent checklist (before claiming catalog/photos/Admin fixed)
+
+1. `scripts/local-dev/woodright-backend.sh status` → health 200, **one** listener, `mode:` / `watch:` / `state identity` sane
+2. Catalog/photos smoke: `woodright-doctor.sh --backend-only` - prefer **qa** runtime
+3. Admin UI: `admin:` not `broken_stub` + `woodright-doctor.sh --admin-only` - prefer **develop**
+4. Do **not** claim catalog/photos fixed while `--backend-only` fails; do **not** claim Admin fixed while `--admin-only` fails
+5. Secondary worktrees: never start Medusa on `:9000` / Next on `:3002`; Admin experiments on `:9001` only
+6. Recovery only when operator asked: `stop` then `start develop|qa` - never second nohup
+7. Open Admin as `http://localhost:9000/app/login` - do not mix cookies with `:9001`
+
+## Worktree isolation
+
+- Dev servers (`:9000`, `:3002`) only from the **canonical** root above.
+- This rule applies to every worktree; secondary trees may edit code but must not bind the shared ports.
+- Parallel experiments: Medusa on `:9001+`, storefront on another port if needed.
+
+## Watch / restart hygiene (develop)
+
+- Prefer `start qa` for catalog/photo QA (no watcher).
+- Before `start develop`, entrypoint runs `scripts/local-dev/patch-medusa-develop-watch.mjs` (ignore `static`, `tmp`, `uploads`, …).
+- Admin Vite watch ignores in `apps/backend/medusa-config.ts` include `**/static/**`.
+- Runbook: `docs/operator/local-dev-stability.md`
+
+## Symptoms of violation
+
+- Catalog / kids catalog `data-state=error`
+- `/product-static/...` → 500 while storefront `:3002` is up
+- Admin `Cannot GET /app`, white screen, or login spinner (often host/cookie mix or stale Vite cache)
+- Logs: `EADDRINUSE`, `WebSocket server error: Port is already in use`, repeated `Creating server`
