@@ -1,3 +1,13 @@
 # Read-only DB snapshots stay local (no DB dumps in repo).
 # Regenerate: node docs/product-copy/scripts/export-products-readonly.mjs
 export/
+
+# Apply runtime: full snapshots / request journals stay local.
+# Safe to commit: product-copy-preapply-reconciliation.csv, product-copy-apply-plan.json,
+# and depersonalized summaries under apply/reports/.
+apply/snapshots/
+apply/journals/
+apply/*.before.json
+apply/*.after.json
+apply/product-copy-apply-journal.jsonl
+apply/product-copy-apply-result.json

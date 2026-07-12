@@ -1,0 +1,74 @@
+{
+  "endpoint": "http://127.0.0.1:9000",
+  "mode": "apply",
+  "register_field_counts": {
+    "title": 47,
+    "subtitle": 157,
+    "description": 156,
+    "other": 0,
+    "total": 360
+  },
+  "arithmetic_note": "47 title + 157 subtitle + 156 description = 360. Prior 359/360 report used wrong subtitle count (156 instead of 157; s-ox-05 has subtitle).",
+  "applied_products": 155,
+  "skipped_products": 2,
+  "failed_products": 0,
+  "fields_applied": {
+    "title": 47,
+    "subtitle": 155,
+    "description": 154
+  },
+  "skipped": [
+    {
+      "product_id": "prod_01KNTBXADE04TT9T88M1SRC2T7",
+      "handle": "ol-08-1",
+      "apply_status": "skip_identity_conflict",
+      "notes": "skipped until metadata identity conflict is resolved manually"
+    },
+    {
+      "product_id": "prod_01KNTBXADE4BY5ASV1EEQ9SQHZ",
+      "handle": "ol-08-1-mirror",
+      "apply_status": "skip_identity_conflict",
+      "notes": "skipped until metadata identity conflict is resolved manually"
+    }
+  ],
+  "integrity_issues": 0,
+  "catalog_count_after": 157,
+  "postapply": {
+    "catalog_count": 157,
+    "matched_payload_fields": 356,
+    "text_mismatches": 0,
+    "non_text_changes": 0,
+    "specials": {
+      "s-ox-05": {
+        "title_applied": true,
+        "subtitle_applied": true,
+        "description_unchanged": true,
+        "title": "Ступени с перилами и ящиками Оксфорд",
+        "subtitle": "Ступени с перилами и ящиками к комплексу Оксфорд.",
+        "description": ""
+      },
+      "ol-08-1": {
+        "texts_unchanged": true,
+        "note": "not in before-snapshot of ready set; verified vs pre-apply export"
+      },
+      "ol-08-1-mirror": {
+        "texts_unchanged": true,
+        "note": "not in before-snapshot of ready set; verified vs pre-apply export"
+      }
+    }
+  },
+  "storefront_smoke": {
+    "at": "2026-07-12T02:37:33.286Z",
+    "cases": 16,
+    "viewports": 2,
+    "total_inspections": 32,
+    "failed_checks": 0,
+    "note_subtitle": "subtitle is stored in API but not rendered by storefront (known; out of scope)",
+    "failed": []
+  },
+  "unresolved_policy": {
+    "s-ox-05": "apply title+subtitle only; description empty / not sent",
+    "ol-08-1": "skip_identity_conflict — full skip until metadata fixed",
+    "ol-08-1-mirror": "skip_identity_conflict — full skip until metadata fixed"
+  }
+}

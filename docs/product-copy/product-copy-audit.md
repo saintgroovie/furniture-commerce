@@ -43,9 +43,21 @@ Read-only аудит каталога + полный редакторский п
 
 ## 4. Что сделано
 
-- Написаны **subtitle + description для 154 товаров** (`safe_to_rewrite`) и **2 товаров с identity-конфликтом** (тексты — только по подтверждённой части фактов, конфликт зафиксирован).
+- Написаны **subtitle для всех 157 товаров** и **description для 156** (`safe_to_rewrite` ×154 + `identity_conflict` ×2; у `s-ox-05` description намеренно пустой).
 - **47 названий нормализовано** (типографика/опечатки/регистр/расшифровка обрубков) — без единого переименования модели, коллекции или мотива. Полный список — в `product-copy-change-register.csv` (field=title).
-- **1 товар оставлен без описания** (`s-ox-05`, `needs_product_data`) — данных нет, водой не заполнялся.
+- **1 товар оставлен без описания** (`s-ox-05`, `needs_product_data`) — данных нет, водой не заполнялся; у него есть нормализованный title и безопасный subtitle из названия.
+- Агрегация change-register (без дублей / без `old==new` / без чужих полей):
+
+```text
+field,count
+title,47
+subtitle,157
+description,156
+other,0
+total,360
+```
+
+  Прежнее «47+156+156=359 при total 360» было ошибкой отчёта: subtitle считали как 156 (по числу description), хотя subtitle есть у всех 157, включая `s-ox-05`.
 - Каждый текст опирается на реестр фактов (`source_facts` в change-register): габариты из `metadata.dimensions`, конфигурация из названия, варианты исполнения из `finish_color_labels` / `fabric_upholstery_labels` / `headboard_model_labels` / `material_tier_labels`, мотивы из `motif`, «стоимость по заявке» из `launch_mode: request_quote`.
 
 ### Распределение по статусам
@@ -71,7 +83,7 @@ Read-only аудит каталога + полный редакторский п
 До: описания не было; title «Комод стандартный Ant`s Village (гл.440)»
 После: title «Комод стандартный Ant's Village (гл. 440)»; текст для взрослого покупателя: уменьшенная глубина 44 см, выбор исполнения корпуса (полностью массив / фронты массив + ЛДСП), расчёт стоимости по заявке.
 
-Остальные примеры — в `product-copy-change-register.csv` (360 строк).
+Остальные примеры — в `product-copy-change-register.csv` (360 строк = 47 title + 157 subtitle + 156 description).
 
 ## 6. Проверки качества
 
@@ -84,22 +96,26 @@ Read-only аудит каталога + полный редакторский п
 
 ## 7. Риски и ограничения
 
-- **Изменения не применены** — до применения PDP продолжает показывать старые/пустые тексты. Применение — отдельный шаг с явного одобрения оператора (см. dry-run artifact).
 - Oxford (4 шт.) описан по interim-данным пилота (пометка в `mapping_notes`) — тексты сознательно осторожные; при финализации коллекции их стоит перепроверить.
-- `ol-08-1` / `ol-08-1-mirror` — конфликт metadata требует ручной проверки (см. unresolved).
+- `ol-08-1` / `ol-08-1-mirror` — конфликт metadata требует ручной проверки (см. unresolved); при local apply обе записи **пропущены**.
 - Названия тканей Oliver (leona/linda/lorna/torno/lillian) в данных встречаются в разнобое регистров и написаний (lilian/lillian) — в текстах использовано единое написание с заглавной; **сами значения данных не менялись**, унификация значений — отдельная дата-задача.
 
-## 8. Storefront smoke (read-only, текущие данные)
+## 8. Storefront smoke
 
-Проверено на живом storefront `:3002` + backend `:9000` (Playwright, `scripts/smoke-current-rendering.mjs`), 9 PDP разных классов: Greenwich STANDARD ×3, Oliver/Provence CONFIGURABLE ×3, Kids/Willie Winkie ×3; desktop 1440 и mobile 390.
+До apply: Playwright `scripts/smoke-current-rendering.mjs` (текущие/пустые тексты).
 
-- `description` рендерится в `.pdp-description` и уходит в `meta[name=description]` — новые тексты после применения автоматически попадут и в PDP, и в SEO.
-- Пустое описание ⇒ блока нет, meta падает в заглушку «Товар из каталога Woodright.» — текущее состояние 142 товаров.
-- Mobile: блок описания не переполняет вьюпорт.
-- **Витринный finding (вне scope):** `product.subtitle` на PDP и карточках сейчас не рендерится вообще — подготовленные краткие описания станут видимы только после отдельной витринной задачи. Дизайн в рамках этого прохода не менялся.
+После local apply: `scripts/smoke-postapply-rendering.mjs` - 16 PDP (STANDARD ×3, CONFIGURABLE ×3, Kids ×3, Country, Oxford, short/long desc, normalized title, `s-ox-05`, обе conflict Oliver) × desktop 1440 + mobile 390 = **32 inspections, 0 failed checks**. Новые description видны в `.pdp-description` и в `meta[name=description]`. `subtitle` в API есть, на storefront не рендерится (вне scope).
 
 ## 9. Поля, которые нельзя было безопасно изменить
 
-- `metadata.canonical_name` — конфликтные значения (ol-08-*) не правились: это данные, а не витринный текст.
-- Названия цветов/тканей в `finish_color_labels` и родственных полях — значения данных, влияют на свотчи и корзину.
-- `s-ox-05` — описание не написано: нет габаритов, состава и совместимости (см. unresolved).
+- `metadata.canonical_name` - конфликтные значения (ol-08-*) не правились: это данные, а не витринный текст.
+- Названия цветов/тканей в `finish_color_labels` и родственных полях - значения данных, влияют на свотчи и корзину.
+- `s-ox-05` - полное description не написано: нет габаритов, состава и совместимости (см. unresolved). При apply записаны только title + subtitle.
+
+## 10. Local apply (2026-07-12)
+
+- Endpoint: `http://127.0.0.1:9000` only (guarded script).
+- Applied: **155** products; skipped: **2** (`ol-08-*`); failed: **0**.
+- Fields written: title **47**, subtitle **155**, description **154** (только эти ключи).
+- Post-apply: catalog still **157**; non-text fields unchanged; payload text match for applied fields.
+- Artifacts: `docs/product-copy/scripts/apply-product-copy-local.mjs`, `docs/product-copy/apply/*`, reports under `apply/reports/`. Snapshots/journals gitignored.

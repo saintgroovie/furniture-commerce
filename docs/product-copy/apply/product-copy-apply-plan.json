@@ -1,0 +1,85 @@
+{
+  "generated_at": "2026-07-12T02:33:01.183Z",
+  "mode": "apply",
+  "endpoint": "http://127.0.0.1:9000",
+  "localhost_only": true,
+  "catalog_count_live": 157,
+  "catalog_count_baseline": 157,
+  "register_field_counts": {
+    "title": 47,
+    "subtitle": 157,
+    "description": 156,
+    "other": 0,
+    "total": 360
+  },
+  "register_integrity": {
+    "duplicates": 0,
+    "same_text_rows": 0,
+    "unknown_fields": 0,
+    "arithmetic_note": "47 title + 157 subtitle + 156 description = 360. Prior 359/360 report used wrong subtitle count (156 instead of 157; s-ox-05 has subtitle)."
+  },
+  "unresolved_policy": {
+    "s-ox-05": "apply title+subtitle only; description empty / not sent",
+    "ol-08-1": "skip_identity_conflict — full skip until metadata fixed",
+    "ol-08-1-mirror": "skip_identity_conflict — full skip until metadata fixed"
+  },
+  "ready_products": 155,
+  "skipped_products": 2,
+  "expected_http_updates": 155,
+  "fields_to_apply": {
+    "title": 47,
+    "subtitle": 155,
+    "description": 154
+  },
+  "forbidden_fields": [
+    "prices",
+    "sku",
+    "handle",
+    "variants",
+    "options",
+    "images",
+    "thumbnail",
+    "status",
+    "collection_id",
+    "categories",
+    "metadata"
+  ],
+  "skipped": [
+    {
+      "product_id": "prod_01KNTBXADE04TT9T88M1SRC2T7",
+      "handle": "ol-08-1",
+      "apply_status": "skip_identity_conflict",
+      "notes": "skipped until metadata identity conflict is resolved manually"
+    },
+    {
+      "product_id": "prod_01KNTBXADE4BY5ASV1EEQ9SQHZ",
+      "handle": "ol-08-1-mirror",
+      "apply_status": "skip_identity_conflict",
+      "notes": "skipped until metadata identity conflict is resolved manually"
+    }
+  ],
+  "ready_handles_sample": [
+    "co-02-1",
+    "co-05-1",
+    "co-08-1",
+    "co-14-2",
+    "co-15-2",
+    "co-61-1",
+    "co-62-1",
+    "co-62-2",
+    "co-62-3",
+    "co-65-1",
+    "co-65-2",
+    "co-66-1",
+    "co-69-1",
+    "greenwich-gr-09-1-mirror",
+    "greenwich-gr-05-1",
+    "greenwich-gr-44-1",
+    "greenwich-gr-67-1",
+    "greenwich-gr-42-1",
+    "greenwich-gr-08-1",
+    "greenwich-gr-08-2"
+  ],
+  "live_export_path": "/Users/leonidmbp/Documents/projects/furniture-commerce-product-copy/docs/product-copy/apply/snapshots/live-export-preapply-2026-07-12T02-33-01-119Z.json",
+  "unresolved_csv_rows": 3
+}
