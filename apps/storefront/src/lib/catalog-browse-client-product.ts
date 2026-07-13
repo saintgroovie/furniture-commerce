@@ -1,40 +1,21 @@
 /**
- * G2 / PERF-03 + W3e: explicit allowlist projection for `/store/catalog-products`.
- * Replaces G1 metadata denylist — unknown operational keys never enter the
- * catalog wire payload. Default `/store/products` stays untouched.
+ * W3e: compact browse view-model for RSC → CatalogBrowseClient props.
  *
- * W3e: keep the catalog wire lean, but cards still need a short gallery strip
- * (see storefront `CARD_STRIP_IMAGE_PROBE_LIMIT`). Cap — do not drop to hero-only.
- * Diversify by finish/color token so later swatches are not starved by the
- * first cluster of images.
+ * `/store/catalog-products` already allowlists fields (G2/W3c). This pass
+ * mirrors the browse caps so client serialization stays lean even when the
+ * running Medusa process is older than the storefront build, and drops
+ * fields the browse client never reads (`status`).
+ *
+ * Caps must leave room for the card gallery strip
+ * (`CARD_STRIP_IMAGE_PROBE_LIMIT` = 4) — hero-only (1) hid all extras.
+ * Diversify by finish token so later swatches keep strip candidates.
  */
 
-/** Soft total gallery URL budget on the browse wire. */
-export const CATALOG_BROWSE_MAX_IMAGES = 24
+const CATALOG_BROWSE_MAX_IMAGES = 24
+const CATALOG_BROWSE_MAX_IMAGES_PER_TOKEN = 3
+const CATALOG_BROWSE_MAX_EXECUTION_URLS = 5
 
-/** Per finish/color token budget (main + a few strip extras). */
-export const CATALOG_BROWSE_MAX_IMAGES_PER_TOKEN = 3
-
-/** Max media URLs kept per execution / matrix row on browse (main + strip). */
-export const CATALOG_BROWSE_MAX_EXECUTION_URLS = 5
-
-/** Product root fields kept for catalog listing. */
-export const CATALOG_PRODUCT_ROOT_KEYS = [
-  "id",
-  "handle",
-  "title",
-  "thumbnail",
-  "metadata",
-  "images",
-  "variants",
-  "product_classification",
-] as const
-
-/**
- * Metadata keys kept for catalog cards/filters.
- * Intentionally includes `finish_metadata_source` (Provence paint/wood gate).
- */
-export const CATALOG_METADATA_ALLOW = new Set([
+const META_ALLOW = new Set([
   "collection",
   "collection_label",
   "category_handle",
@@ -108,15 +89,13 @@ function slimExecutionEntries(value: unknown): unknown {
   })
 }
 
-export function projectCatalogMetadataAllowlist(
-  metadata: unknown
-): Record<string, unknown> | undefined {
+function projectMetadata(metadata: unknown): Record<string, unknown> | undefined {
   if (metadata == null || typeof metadata !== "object" || Array.isArray(metadata)) {
     return metadata as Record<string, unknown> | undefined
   }
   const out: Record<string, unknown> = {}
   for (const [k, v] of Object.entries(metadata as Record<string, unknown>)) {
-    if (!CATALOG_METADATA_ALLOW.has(k)) continue
+    if (!META_ALLOW.has(k)) continue
     out[k] = EXECUTION_URL_KEYS.has(k) ? slimExecutionEntries(v) : v
   }
   return out
@@ -135,7 +114,7 @@ function browseImageTokenKey(url: string): string {
   return "_other"
 }
 
-function projectCatalogImages(images: unknown): Array<{ url: string }> {
+function projectImages(images: unknown): Array<{ url: string }> {
   if (!Array.isArray(images)) return []
   const out: Array<{ url: string }> = []
   const perToken = new Map<string, number>()
@@ -154,7 +133,7 @@ function projectCatalogImages(images: unknown): Array<{ url: string }> {
   return out
 }
 
-function projectCatalogVariants(variants: unknown): Array<Record<string, unknown>> {
+function projectVariants(variants: unknown): Array<Record<string, unknown>> {
   if (!Array.isArray(variants)) return []
   return variants.map((variant) => {
     if (!variant || typeof variant !== "object") return {}
@@ -169,21 +148,14 @@ function projectCatalogVariants(variants: unknown): Array<Record<string, unknown
           })
           .filter((p): p is { amount: number } => p != null)
       : []
-    const slim: Record<string, unknown> = {
-      id: v.id,
-      prices,
-    }
+    const slim: Record<string, unknown> = { id: v.id, prices }
     if (typeof v.sku === "string") slim.sku = v.sku
     return slim
   })
 }
 
-/**
- * Slim catalog product DTO (G2 + W3e).
- * Drops unknown metadata, price_set trees, non-url image fields, and
- * browse-irrelevant gallery/execution URL fan-out.
- */
-export function projectCatalogBrowseProduct(
+/** Compact product for CatalogBrowseClient serialization. */
+export function toCatalogBrowseClientProduct(
   product: Record<string, unknown>
 ): Record<string, unknown> {
   const classification = product.product_classification
@@ -192,9 +164,9 @@ export function projectCatalogBrowseProduct(
     handle: product.handle,
     title: product.title,
     thumbnail: product.thumbnail,
-    metadata: projectCatalogMetadataAllowlist(product.metadata),
-    images: projectCatalogImages(product.images),
-    variants: projectCatalogVariants(product.variants),
+    metadata: projectMetadata(product.metadata),
+    images: projectImages(product.images),
+    variants: projectVariants(product.variants),
     product_classification:
       classification && typeof classification === "object"
         ? {
@@ -203,4 +175,10 @@ export function projectCatalogBrowseProduct(
           }
         : classification,
   }
+}
+
+export function toCatalogBrowseClientProducts(
+  products: Array<Record<string, unknown>>
+): Array<Record<string, unknown>> {
+  return products.map(toCatalogBrowseClientProduct)
 }

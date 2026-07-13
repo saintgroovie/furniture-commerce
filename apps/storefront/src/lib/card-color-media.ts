@@ -1,6 +1,7 @@
 import {
   collectExtraProductImageUrls,
   collectProductImageUrls,
+  galleryImageBasenameKey,
   normalizeImageEntryUrl,
   resolveStorefrontProductImageSrc,
 } from "./product-images"
@@ -501,20 +502,58 @@ export function finishLabelForProduct(
   return "Цвет"
 }
 
+/**
+ * Metadata execution `urls` are often hero-only after browse lean / dimension
+ * pipelines. Card strips need sibling angles from `product.images` for the
+ * same finish token (backend treat images as SoT after hero-only buckets).
+ */
+function mergeExecutionUrlsWithProductImages(
+  key: string,
+  metaUrls: string[],
+  productImageUrls: string[]
+): string[] {
+  const keyNorm = key.trim().toLowerCase()
+  if (!keyNorm || productImageUrls.length === 0) return metaUrls
+
+  const matched = productImageUrls.filter(
+    (u) => extractExecutionTokenFromUrl(u)?.toLowerCase() === keyNorm
+  )
+  if (matched.length === 0) return metaUrls
+
+  const out: string[] = []
+  const seen = new Set<string>()
+  const push = (raw: string) => {
+    const t = raw.trim()
+    if (!t) return
+    const stem = galleryImageBasenameKey(t).replace(/\.[^.]+$/, "")
+    if (!stem || seen.has(stem)) return
+    seen.add(stem)
+    out.push(t)
+  }
+  for (const u of metaUrls) push(u)
+  for (const u of matched) push(u)
+  return out.length > 0 ? out : metaUrls
+}
+
 function colorExecutionsFromMetadataArray(
   raw: unknown,
-  opts?: { handle?: string }
+  opts?: { handle?: string; productImageUrls?: string[] }
 ): CardColorVariant[] | undefined {
   if (!Array.isArray(raw) || raw.length < 2) return undefined
+  const productImageUrls = opts?.productImageUrls ?? []
   const variants: CardColorVariant[] = []
   for (const entry of raw) {
     if (!entry || typeof entry !== "object") continue
     const o = entry as Record<string, unknown>
     const key = typeof o.key === "string" ? o.key : null
     const label = typeof o.label === "string" ? o.label.trim() : ""
-    const urls = Array.isArray(o.urls)
+    const metaUrls = Array.isArray(o.urls)
       ? o.urls.filter((u): u is string => typeof u === "string" && u.trim().length > 0)
       : []
+    const urls =
+      key != null
+        ? mergeExecutionUrlsWithProductImages(key, metaUrls, productImageUrls)
+        : metaUrls
     const swatchHex =
       typeof o.swatch_hex === "string" && o.swatch_hex.trim().length > 0
         ? o.swatch_hex.trim()
@@ -599,7 +638,10 @@ function finishExecutionsFromMetadata(
     return undefined
   }
   const source = repaired.changed ? repaired.executions : raw
-  const variants = colorExecutionsFromMetadataArray(source, { handle })
+  const variants = colorExecutionsFromMetadataArray(source, {
+    handle,
+    productImageUrls: urls,
+  })
   if (!variants || variants.length < 2) return variants
   const h = handle?.toLowerCase() ?? ""
   if (h.startsWith("pv-")) {
@@ -624,14 +666,18 @@ function fabricUpholsteryExecutionsFromMetadata(
     "fabric_upholstery_executions",
     "upholstery_color_executions"
   )
-  return colorExecutionsFromMetadataArray(raw)
+  return colorExecutionsFromMetadataArray(raw, {
+    productImageUrls: collectProductImageUrls(product),
+  })
 }
 
 function frameMaterialExecutionsFromMetadata(
   product: Record<string, unknown>
 ): CardColorVariant[] | undefined {
   const raw = metadataExecutionsRaw(product, "frame_material_executions")
-  return colorExecutionsFromMetadataArray(raw)
+  return colorExecutionsFromMetadataArray(raw, {
+    productImageUrls: collectProductImageUrls(product),
+  })
 }
 
 function constructionTierExecutionsFromMetadata(
@@ -642,7 +688,9 @@ function constructionTierExecutionsFromMetadata(
     "construction_tier_executions",
     "material_tier_executions"
   )
-  return colorExecutionsFromMetadataArray(raw)
+  return colorExecutionsFromMetadataArray(raw, {
+    productImageUrls: collectProductImageUrls(product),
+  })
 }
 
 /** @deprecated use fabricUpholsteryExecutionsFromMetadata */
@@ -825,6 +873,7 @@ function provencePaintWoodSelectorsFromMetadata(
 
   const variants = colorExecutionsFromMetadataArray(meta?.finish_color_executions, {
     handle,
+    productImageUrls: urls,
   })
   if (!variants || variants.length < 2) return null
   const cream = variants.find((v) => v.key === "cream")
