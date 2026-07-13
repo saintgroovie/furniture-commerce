@@ -6,7 +6,11 @@ import { HeaderCartLink } from "@/components/header-cart-link"
 import { HeaderLogo } from "@/components/header-logo"
 import { MobileNav } from "@/components/mobile-nav"
 import { NavDropdown } from "@/components/nav-dropdown"
+import { SiteHeader } from "@/components/site-header"
+import { WoodrightWordmark } from "@/components/woodright-wordmark"
+import { KidsSectionProvider } from "@/lib/use-kids-section"
 import { a11yCopy, footer as footerCopy, nav as navCopy, seo } from "@/lib/woodright-copy"
+import { formatRuInline } from "@/lib/format-ru-copy"
 import "./globals.css"
 
 const inter = Inter({
@@ -61,7 +65,11 @@ export default function RootLayout({
         <a href="#main-content" className="skip-link">
           {a11yCopy.skipToContent}
         </a>
-        <header className="site-header">
+        {/* Provider sits above both the header and <main> so the sticky
+            header tint and the route loader share one kids flag (pathname
+            + optimistic link clicks). */}
+        <KidsSectionProvider>
+        <SiteHeader>
           {/* Top bar */}
           <div className="header-top">
             <div className="container header-top-inner">
@@ -134,29 +142,54 @@ export default function RootLayout({
           </div>
 
           <MobileNav />
-        </header>
+        </SiteHeader>
         <main id="main-content" className="container page-section" tabIndex={-1}>
           {children}
         </main>
+        </KidsSectionProvider>
         <footer className="site-footer">
           <div className="container footer-inner">
             <div className="footer-columns">
-              <div className="footer-brand">
-                <Link href="/" className="footer-brand-logo">Woodright</Link>
-                <p className="footer-brand-text">{footerCopy.brandText}</p>
-              </div>
-              {footerCopy.columns.map((column) => (
-                <div className="footer-column" key={column.title}>
-                  <h3 className="footer-column-title">{column.title}</h3>
-                  <ul className="footer-column-links">
-                    {column.links.map((link) => (
-                      <li key={link.href}>
-                        <Link href={link.href}>{link.label}</Link>
-                      </li>
+              <div className="footer-column footer-brand">
+                <div className="footer-brand-copy">
+                  <Link href="/" className="footer-column-title footer-brand-logo" aria-label="Woodright - на главную">
+                    <WoodrightWordmark className="footer-brand-wordmark" />
+                  </Link>
+                  <div className="footer-column-body footer-brand-lead">
+                    {footerCopy.brandText.lead.map((line) => (
+                      <span className="footer-row" key={line}>
+                        {formatRuInline(line)}
+                      </span>
                     ))}
-                  </ul>
+                    <ul className="footer-brand-bullets">
+                      {footerCopy.brandText.bullets.map((line) => (
+                        <li className="footer-row" key={line}>
+                          {formatRuInline(line)}
+                        </li>
+                      ))}
+                    </ul>
+                    {footerCopy.brandText.closing.map((line) => (
+                      <span className="footer-row" key={line}>
+                        {formatRuInline(line)}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              ))}
+              </div>
+              <nav className="footer-nav" aria-label="Разделы сайта">
+                {footerCopy.columns.map((column) => (
+                  <div className="footer-column" key={column.title}>
+                    <h3 className="footer-column-title">{column.title}</h3>
+                    <ul className="footer-column-body footer-column-links">
+                      {column.links.map((link) => (
+                        <li className="footer-row" key={link.href}>
+                          <Link href={link.href}>{link.label}</Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </nav>
             </div>
             <div className="footer-bottom">
               <span>{footerCopy.copyright(new Date().getFullYear())}</span>
