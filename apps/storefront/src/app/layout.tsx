@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next"
-import { Inter } from "next/font/google"
 import Link from "next/link"
 import { getSiteUrl } from "@/lib/api/base"
 import { HeaderCartLink } from "@/components/header-cart-link"
@@ -13,11 +12,9 @@ import { a11yCopy, footer as footerCopy, nav as navCopy, seo } from "@/lib/woodr
 import { formatRuInline } from "@/lib/format-ru-copy"
 import "./globals.css"
 
-const inter = Inter({
-  subsets: ["latin", "cyrillic"],
-  display: "swap",
-  variable: "--font-sans",
-})
+// Local Design Mode: do not use next/font/google. Google Fonts TLS stalls freeze
+// Cursor Browser / Design Mode. System stack keeps UI responsive offline.
+const localSansClass = "wr-local-sans"
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
@@ -56,7 +53,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="ru" className={inter.variable}>
+    <html lang="ru" className={localSansClass}>
       <body>
         <script
           type="application/ld+json"

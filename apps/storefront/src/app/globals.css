@@ -23,6 +23,7 @@ button {
 }
 
 :root {
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --color-fg: #2c2420;
   --color-fg-secondary: #635a54;
   --color-fg-muted: #6f6862;
@@ -1110,16 +1111,22 @@ select:focus-visible {
 }
 
 /* ---- Site Footer ----
-   Brand window on the left Шоурум/Каталог power line | four nav columns on
+   Brand column on the left Шоурум/Каталог power line | four nav columns on
    a 1.2 : 1 : 1 : 1 gap rhythm | last column on the right power line
    (Контакты / Корзина). Empty grid tracks are the gutters; nav uses
    display:contents so its columns participate in this grid.
    Shared --footer-head-* / --footer-row-h keep brand + nav on one lattice.
-   Brand frame is 4px short of the row; band margins compensate so the
-   window stays vertically centered between the two rules. */
+   Warm wash lives on .site-footer and falls from the top rule — no brand card frame. */
 
 .site-footer {
   border-top: 1px solid var(--color-border);
+  /* Gradient starts at the top divider and washes onto the brand/nav band. */
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-accent) 28%, var(--color-bg)) 0%,
+    var(--color-bg) 36%,
+    var(--color-bg) 100%
+  );
   /* Vertical air between the two rules lives on .footer-columns margins. */
   padding-block: 0 var(--space-lg);
   margin-top: 2.5rem;
@@ -1138,17 +1145,17 @@ select:focus-visible {
   --footer-head-gap: 1rem;
   /* Roomier row pitch for column link lists (and brand lead on the same lattice). */
   --footer-row-h: 2rem;
-  /* Visible air from each rule to the brand frame (keep equal → centered). */
+  /* Visible air from each rule to the brand/nav lattice (keep equal). */
   --footer-band-inset: 0.45rem;
-  /* Trim the frame bottom (padding), not a %-height hack - brand may be
-     the tallest grid item once the bullet list is in. */
+  /* Trim brand bottom padding to match prior lattice (no card crop). */
   --footer-brand-crop: 8px;
-  /* Brand window air (also applied as invisible pad on nav columns). */
+  /* Brand pad (also applied as invisible pad on nav columns). */
   --footer-brand-pad-x: 1.75rem;
   --footer-brand-pad-y: 1.6rem;
   /* Base nav gutter; brand stand-off is always 1.2× this.
      Use a literal Nfr max (not calc(N * 1fr)) - fr-in-calc is unreliable. */
   --footer-nav-gap: 3.25rem;
+  position: relative;
   display: grid;
   width: 100%;
   margin-block: var(--footer-band-inset);
@@ -1163,6 +1170,29 @@ select:focus-visible {
     minmax(var(--footer-nav-gap), 1fr)
     max-content;
   align-items: start;
+}
+
+/* Thin vertical rule between brand and Каталог.
+   Anchored to .footer-brand; extends through --footer-band-inset so the
+   stroke runs the full band between the footer's horizontal rules.
+   Mid-gutter horizontally (half of 1.2× gap, nudged by half brand pad). */
+.footer-brand::after {
+  content: "";
+  position: absolute;
+  top: calc(-1 * var(--footer-band-inset) - 1px);
+  bottom: calc(-1 * var(--footer-band-inset) - 1px);
+  left: auto;
+  right: calc(
+    -0.5 * var(--footer-nav-gap) * 1.2 + 0.5 * var(--footer-brand-pad-x)
+  );
+  width: 1px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-fg) 20%, var(--color-border)) 0%,
+    var(--color-border) 42%,
+    color-mix(in srgb, var(--color-border) 88%, var(--color-bg)) 100%
+  );
+  pointer-events: none;
 }
 
 /* Children become grid items of .footer-columns (gap tracks stay empty). */
@@ -1202,10 +1232,10 @@ select:focus-visible {
   padding-block: var(--footer-brand-pad-y);
 }
 
-/* Brand window: left edge flush with the Шоурум/Каталог power line.
-   Top-aligned copy keeps wordmark/rows on the shared lattice with nav;
-   align-items:center parks the left-aligned cluster on the horizontal
-   midline of the frame. Bottom pad is cropped by --footer-brand-crop. */
+/* Brand column: left edge flush with the Шоурум/Каталог power line.
+   Top-aligned copy keeps wordmark/rows on the shared lattice with nav.
+   No card frame/radius — gradient is on .site-footer from the top rule.
+   Bottom pad is cropped by --footer-brand-crop. */
 .footer-brand {
   position: relative;
   box-sizing: border-box;
@@ -1217,17 +1247,12 @@ select:focus-visible {
     calc(var(--footer-brand-pad-y) - var(--footer-brand-crop));
   margin: 0;
   border: none;
-  border-radius: var(--radius-lg);
-  box-shadow: 0 0 0 1px var(--color-border);
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--color-accent) 28%, var(--color-bg)) 0%,
-    var(--color-bg) 36%,
-    var(--color-bg) 100%
-  );
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
 }
 
-/* Left-aligned copy cluster, parked in the middle of the frame. */
+/* Left-aligned copy cluster on the shared footer lattice. */
 .footer-brand-copy {
   display: flex;
   flex-direction: column;
@@ -1362,6 +1387,11 @@ select:focus-visible {
     grid-template-columns: 1fr;
     row-gap: var(--space-xl);
     margin-block: var(--space-lg);
+  }
+
+  .footer-brand::after {
+    content: none;
+    display: none;
   }
 
   .footer-nav {
