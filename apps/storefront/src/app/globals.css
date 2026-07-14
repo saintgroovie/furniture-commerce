@@ -1578,13 +1578,8 @@ button:disabled,
   padding-right: 30px;
 }
 
-/* Execution swatches (Дерево/Обивка/Цвет) are portalled out of
-   .product-detail-media-switcher into #pdp-color-options-slot, below the CTA
-   buttons in .product-detail-info — see ProductCardMediaGalleryCore. Styled
-   here so the row/label/swatch sizing matches the PDP context (bigger than
-   the compact catalog-card strip) wherever the portal lands them. */
 .pdp-color-options-slot {
-  margin-top: var(--space-md);
+  margin-top: var(--space-xs);
 }
 
 .pdp-color-options-slot:empty {
@@ -1593,34 +1588,66 @@ button:disabled,
 
 .pdp-color-options-slot .product-card-execution-controls {
   margin-top: 0;
-  padding-top: var(--space-md);
+  padding-top: 0;
   padding-bottom: 0;
-  gap: 0.6rem;
-  border-top: 1px solid var(--color-border);
+  gap: var(--space-md);
+  border-top: none;
+  background: transparent;
 }
 
+/* Group heading above its control row: label + selected value on one line. */
 .pdp-color-options-slot .product-card-selector-section {
-  grid-template-columns: 5rem minmax(0, 1fr);
-  align-items: center;
-  gap: 0 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
   padding: 0;
   min-height: unset;
 }
 
+/* Stacked heading: group name on the first line, currently selected value on
+   the second — the hierarchy survives long value names (no weak inline dash). */
 .pdp-color-options-slot .product-card-selector-label {
-  line-height: 1.2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  line-height: 1.35;
   padding-top: 0;
   margin: 0;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: normal;
+  color: var(--color-fg);
+}
+
+.pdp-color-options-slot .product-card-selector-value {
+  font-weight: 400;
+  color: var(--color-fg-secondary);
+  min-width: 0;
 }
 
 .pdp-color-options-slot .product-card-swatch-scroll-rail {
   padding-bottom: 0;
 }
 
+/* Same catalog swatch, one size up: identical border, radius, hover, active
+   ring and focus tokens (all inherited from .product-card-execution-swatch) —
+   only the box grows to a 44px touch target with a 36px sample inside. */
 .pdp-color-options-slot .product-card-execution-swatch {
-  width: 30px;
-  height: 30px;
+  width: 44px;
+  height: 44px;
+  padding: 3px;
+}
+
+/* Catalog active ring (surface gap + action ring), scaled with the swatch so
+   the mark stays proportional at 44px. Same tokens, not a new state. */
+.pdp-color-options-slot .product-card-execution-swatch.is-active {
+  box-shadow:
+    0 0 0 2px var(--color-surface),
+    0 0 0 3.5px color-mix(in srgb, var(--color-action) 55%, transparent);
 }
 
 /* Text chips (e.g. Изголовье: Frame/Cloud/Plane) keep their natural width on
@@ -1628,50 +1655,197 @@ button:disabled,
 .pdp-color-options-slot .product-card-model-chip {
   font-size: 0.8125rem;
   line-height: 1.2;
-  padding: 0.4rem 0.8rem;
+  padding: 0.55rem 1rem;
   border-radius: var(--radius-sm);
+  min-height: 2.5rem;
 }
 
 .pdp-color-options-slot .product-card-execution-swatches--inline {
-  min-height: 38px;
+  min-height: 42px;
 }
 
+/* Buy panel: every value visible at once in a stable wrapping grid — no
+   horizontal scroll, no disclosure, no reflow after a pick. Fixed 44px tracks
+   keep row/column positions identical regardless of which value is active. */
 .pdp-color-options-slot .product-card-swatch-scroll-rail .product-card-swatch-scroll-rail__track {
-  min-height: 38px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 44px);
+  gap: 8px;
+  min-height: 48px;
+  overflow: visible;
+  background: transparent;
+  padding: 2px 0;
 }
 
-/* PDP thumb rail — same scroll-rail engine as the catalog card, scaled up
-   for the larger hero image (all 4 PDP gallery paths render inside
-   .product-detail-media-col, including the two without execution swatches). */
+.pdp-color-options-slot .product-card-selector-section,
+.pdp-color-options-slot .product-card-execution-swatches {
+  background: transparent;
+}
+
+.pdp-color-options-slot .product-card-swatch-scroll-arrow {
+  display: none;
+}
+
+/* Keyboard-accessible hero opener: the photo itself is the button. */
+.pdp-hero-open {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: zoom-in;
+}
+
+.pdp-hero-open:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: -3px;
+  border-radius: 2px;
+}
+
+/* Quiet fullscreen affordance pinned to the photo corner: zoom glyph +
+   photo count. Decorative (the whole hero is the button), so no pointer
+   events of its own. */
+.pdp-hero-affordance {
+  position: absolute;
+  right: clamp(12px, 1.5vw, 24px);
+  bottom: clamp(12px, 1.5vw, 24px);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-fg-secondary);
+  font-size: 0.8125rem;
+  line-height: 1;
+  pointer-events: none;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.pdp-hero-affordance-icon {
+  width: 15px;
+  height: 15px;
+}
+
+.pdp-hero-open:hover .pdp-hero-affordance,
+.pdp-hero-open:focus-visible .pdp-hero-affordance {
+  color: var(--color-fg);
+  border-color: var(--color-fg-muted);
+}
+
+/* PDP thumb rail — same thumbs as the catalog card, scaled up (all 4 PDP
+   gallery paths render inside .product-detail-media-col, including the two
+   without execution swatches). */
 .product-detail-media-col .product-card-media-thumbs-carousel {
-  margin-top: var(--space-sm);
+  border-top: none;
+  background: transparent;
 }
 
 .product-detail-media-col .product-card-media-thumbs-track {
-  min-height: 68px;
-  gap: 8px;
-  padding: 8px var(--space-sm);
+  background: transparent;
 }
 
 .product-detail-media-col .product-card-media-thumb {
-  width: 60px;
-  height: 60px;
-  border-radius: 7px;
+  width: 72px;
+  height: 72px;
+  border-radius: 4px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  transition: border-color 0.15s;
 }
 
-.product-detail-media-col .product-card-media-thumbs-arrow {
-  width: 30px;
-  height: 30px;
+.product-detail-media-col .product-card-media-thumb:hover {
+  border-color: var(--color-fg-muted);
 }
 
-.product-detail-media-col .product-card-media-thumbs-carousel:has(.product-card-media-thumbs-arrow--prev)
-  .product-card-media-thumbs-track {
-  padding-left: 34px;
+/* Same quiet action-hue frame as the catalog thumb, doubled to 2px so the
+   active state survives the larger tile. */
+.product-detail-media-col .product-card-media-thumb.is-active {
+  border-color: color-mix(in srgb, var(--color-action) 45%, var(--color-border));
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--color-action) 45%, var(--color-border));
 }
 
-.product-detail-media-col .product-card-media-thumbs-carousel:has(.product-card-media-thumbs-arrow--next)
-  .product-card-media-thumbs-track {
-  padding-right: 34px;
+.product-detail-media-col .product-card-media-thumb:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 2px;
+}
+
+/* Desktop: vertical rail on the left edge of the media zone — gallery
+   navigation lives beside the photo, never inside the furniture silhouette
+   (thumbs under the image used to land between chair/console legs). */
+@media (min-width: 921px) {
+  .pdp-media .product-detail-media-switcher,
+  .pdp-media .product-pdp-media-switcher {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .pdp-media .product-pdp-media-hero {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+  }
+
+  .pdp-media .product-card-media-thumbs-carousel {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+    margin: 0;
+    padding-left: clamp(var(--space-md), 2vw, var(--space-xl));
+  }
+
+  .pdp-media .product-card-media-thumbs-track {
+    flex-direction: column;
+    /* Long strips wrap into a second column instead of outgrowing the photo
+       or introducing a nested scroll — the cap mirrors the hero img height. */
+    flex-wrap: wrap;
+    max-height: clamp(440px, calc(100vh - 260px), 780px);
+    max-height: clamp(440px, calc(100dvh - 260px), 780px);
+    align-items: flex-start;
+    align-content: flex-start;
+    gap: 10px;
+    padding: 6px 0;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  /* The rail never scrolls on desktop (it grows with the strip), so the
+     horizontal-scroll arrows have no meaning here. */
+  .pdp-media .product-card-media-thumbs-arrow {
+    display: none;
+  }
+
+  .pdp-media
+    .product-card-media-thumbs-carousel:has(.product-card-media-thumbs-arrow--prev)
+    .product-card-media-thumbs-track,
+  .pdp-media
+    .product-card-media-thumbs-carousel:has(.product-card-media-thumbs-arrow--next)
+    .product-card-media-thumbs-track {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+/* Mobile / tablet portrait: horizontal strip below the photo, outside the
+   product's visual frame. */
+@media (max-width: 920px) {
+  .product-detail-media-col .product-card-media-thumb {
+    width: 64px;
+    height: 64px;
+  }
+
+  .product-detail-media-col .product-card-media-thumbs-track {
+    min-height: 78px;
+    gap: 8px;
+    padding: 6px var(--space-md);
+    justify-content: center;
+    justify-content: safe center;
+  }
 }
 
 .product-card-model-selectors {
@@ -3432,17 +3606,74 @@ button:disabled,
   margin-top: var(--space-lg);
 }
 
-/* ---- Product Detail ---- */
+/* ---- Product Detail (PDP) ---- */
 
-.product-detail {
-  display: grid;
-  grid-template-columns: 3fr 2fr;
-  gap: var(--space-xl);
-  align-items: start;
+/* Full-bleed first screen: the media zone reaches the left viewport edge and
+   the buy panel keeps a readable fixed-width column on the right. The 100vw
+   breakout reuses the .hp pattern; body { overflow-x: clip } swallows the
+   scrollbar-width rounding. */
+.pdp-hero {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  /* Cancel .page-section top padding so the media plate starts at the header. */
+  margin-top: calc(-1 * var(--space-xl));
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  justify-content: center;
 }
 
-.product-detail-media-col {
+.pdp-hero-inner {
+  width: 100%;
+  max-width: 1840px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(376px, 35vw, 500px);
+  column-gap: clamp(var(--space-lg), 3.5vw, var(--space-2xl));
+}
+
+.pdp-media {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: var(--space-lg);
+}
+
+.pdp-panel-col {
+  min-width: 0;
+  padding-right: clamp(var(--space-lg), 3.5vw, 64px);
+  padding-top: clamp(var(--space-lg), 4.5vh, 56px);
+  padding-bottom: var(--space-xl);
+}
+
+.pdp-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* Keep the buy panel in view while the gallery scrolls — only when the
+   viewport is tall enough that a long configurator cannot get trapped
+   (no inner scroll container, per UX contract). */
+@media (min-width: 921px) and (min-height: 720px) {
+  .pdp-panel {
+    position: sticky;
+    top: 120px;
+  }
+}
+
+@media (max-width: 920px) {
+  .pdp-hero-inner {
+    grid-template-columns: 1fr;
+  }
+
+  .pdp-panel-col {
+    padding-inline: var(--space-lg);
+    padding-top: var(--space-lg);
+  }
+
+  .pdp-media {
+    padding-bottom: 0;
+  }
 }
 
 .product-pdp-media-switcher {
@@ -3453,9 +3684,10 @@ button:disabled,
 }
 
 .product-pdp-media-hero {
-  border-radius: var(--radius);
   overflow: hidden;
-  background: var(--color-bg);
+  background: var(--color-surface);
+  /* Horizontal hero swipe navigates photos; vertical stays native scroll. */
+  touch-action: pan-y;
 }
 
 .product-pdp-media-preload {
@@ -3498,81 +3730,71 @@ button:disabled,
   font-size: 0.75rem;
 }
 
-@media (max-width: 768px) {
-  .product-detail {
-    grid-template-columns: 1fr;
+/* Hero photo: the full product is always visible — object-fit: contain on the
+   shared white surface (catalog photos are shot on white, so pure white is the
+   only background that hides the photo rectangle), no furniture is ever
+   cropped and mixed aspect ratios all frame correctly. The height budget
+   reserves only header + thumb rail, so the drawn product is as large as the
+   viewport allows without an artificially tall hero. Fixed height per
+   viewport keeps the first paint free of layout shift. Slightly-above-center
+   object-position gives optical (not just mathematical) centering. */
+.product-detail-img {
+  width: 100%;
+  height: clamp(440px, calc(100vh - 260px), 780px);
+  height: clamp(440px, calc(100dvh - 260px), 780px);
+  /* Inner air: contain maps into the content box, so this padding guarantees
+     the silhouette never touches the header edge or the media zone borders —
+     for any aspect ratio, without per-product zoom factors. */
+  padding: clamp(16px, 2.5vh, 28px) clamp(12px, 1.5vw, 24px);
+  box-sizing: border-box;
+  background: var(--color-surface);
+  object-fit: contain;
+  object-position: center center;
+  display: block;
+}
+
+@media (max-width: 920px) {
+  .product-detail-img {
+    height: clamp(340px, 52vh, 560px);
+    padding: 12px;
   }
 }
 
-.product-detail-img {
-  width: 100%;
-  border-radius: var(--radius);
-  background: var(--color-bg);
-  aspect-ratio: 4 / 5;
-  object-fit: cover;
-}
-
-/* Hero photo opens the full-size lightbox on click — cropped to 4/5 here,
-   shown uncropped (object-fit: contain) in .pdp-lightbox-img. */
+/* Hero photo opens the fullscreen gallery on click. */
 .product-detail-img.is-zoomable {
   cursor: zoom-in;
 }
 
-.product-detail-info {
+/* 1. Context row: collection left, article right — secondary, not lost. */
+.pdp-context-row {
   display: flex;
-  flex-direction: column;
+  align-items: baseline;
+  justify-content: space-between;
   gap: var(--space-md);
+  flex-wrap: wrap;
 }
 
-/* Desktop: keep the buy column in view while the tall gallery scrolls */
-@media (min-width: 769px) {
-  .product-detail-info {
-    position: sticky;
-    top: 104px;
-  }
-}
-
-.product-detail-info .cta-group {
-  margin-top: 0;
-}
-
-.product-detail-info .cta-group .btn-primary {
-  min-height: 2.5rem;
-  padding: 0.6875rem 1.3125rem;
-  font-size: 0.96875rem;
-}
-
+/* Same voice as .product-card-collection on the catalog card. */
 .pdp-collection-label {
-  font-size: 0.85rem;
+  font-size: 0.8125rem;
   color: var(--color-fg-muted);
-  letter-spacing: 0.03em;
-  margin-bottom: calc(-1 * var(--space-sm));
+  letter-spacing: 0.02em;
+}
+
+.pdp-article {
+  font-size: 0.8125rem;
+  color: var(--color-fg-muted);
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
 }
 
 .pdp-canonical-name {
   font-size: 0.9rem;
   color: var(--color-fg-muted);
-  margin-top: calc(-1 * var(--space-xs));
-}
-
-.pdp-article {
-  font-size: 0.85rem;
-  color: var(--color-fg-muted);
   margin-top: calc(-1 * var(--space-sm));
 }
 
-.pdp-dimensions {
-  font-size: 0.85rem;
-  color: var(--color-fg-muted);
-  margin-top: calc(-1 * var(--space-sm));
-}
-
-.pdp-description {
-  color: var(--color-fg-secondary);
-  line-height: 1.6;
-  max-width: 52ch;
-}
-
+/* 2. Title */
 .product-detail-header {
   display: flex;
   flex-direction: column;
@@ -3580,8 +3802,293 @@ button:disabled,
   gap: var(--space-xs);
 }
 
+.pdp-title {
+  font-size: clamp(1.85rem, 2.9vw, 2.6rem);
+  line-height: 1.06;
+  letter-spacing: -0.018em;
+  font-weight: 600;
+}
+
+/* 3. Short positioning line (real subtitle field) */
+.pdp-subtitle {
+  color: var(--color-fg-secondary);
+  font-size: 0.9975rem;
+  line-height: 1.55;
+  max-width: 46ch;
+  margin-top: calc(-1 * var(--space-xs));
+}
+
+/* 4. Dimensions: width / height / depth — depth always last. Quiet top and
+   bottom rules only (the catalog system has no vertical hairlines). */
+.pdp-dimensions-row {
+  display: flex;
+  gap: clamp(var(--space-lg), 3vw, var(--space-2xl));
+  margin: 0;
+  padding-block: var(--space-md);
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.pdp-dimension-cell {
+  flex: 0 1 auto;
+}
+
+.pdp-dimension-cell dt {
+  font-size: 0.8125rem;
+  color: var(--color-fg-muted);
+  margin-bottom: 2px;
+}
+
+.pdp-dimension-cell dd {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: var(--color-fg);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 5. Price */
 .product-detail-price {
-  font-size: 1.35rem;
+  font-size: clamp(1.75rem, 2.1vw, 1.95rem);
+  font-weight: 600;
+  letter-spacing: -0.012em;
+}
+
+/* 6/7. Configurator lives above the CTA; stacked group heading shared by
+   every group: name on the first line, selected value on the second. */
+.pdp-option-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  font-size: 0.875rem;
+  line-height: 1.35;
+}
+
+.pdp-option-heading-label {
+  font-weight: 600;
+  color: var(--color-fg);
+}
+
+.pdp-option-heading-value {
+  color: var(--color-fg-secondary);
+  min-width: 0;
+}
+
+.pdp-panel .cta-group {
+  margin-top: var(--space-sm);
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-sm);
+}
+
+/* Same .btn / .btn-primary tokens as everywhere else in the catalog — the
+   PDP only stretches the button to the panel width and guarantees a 44px
+   touch target. No separate button variant. */
+.pdp-panel .cta-group .btn {
+  width: 100%;
+  justify-content: center;
+  text-align: center;
+  min-height: 2.75rem;
+}
+
+/* 8. Service block: short true facts as quiet secondary lines above one text
+   action — no icons, no per-line hairlines (the catalog system has neither). */
+.pdp-service-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: var(--space-xs);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--color-border);
+  font-size: 0.875rem;
+  color: var(--color-fg-secondary);
+  line-height: 1.5;
+}
+
+.pdp-service-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  margin-top: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-fg);
+  text-decoration: none;
+}
+
+.pdp-service-link:hover {
+  color: var(--color-action);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.pdp-service-link-arrow {
+  transition: transform 0.15s;
+}
+
+.pdp-service-link:hover .pdp-service-link-arrow {
+  transform: translateX(3px);
+}
+
+/* ---- Below the first screen: editorial description + full specs ---- */
+
+.pdp-below {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(300px, 1fr);
+  gap: clamp(var(--space-xl), 7vw, 120px);
+  padding-block: clamp(var(--space-xl), 7vh, 76px);
+  align-items: start;
+}
+
+.pdp-below h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--color-fg);
+  margin-bottom: var(--space-md);
+}
+
+.pdp-description {
+  color: var(--color-fg-secondary);
+  line-height: 1.75;
+  font-size: 1rem;
+  max-width: 62ch;
+}
+
+/* Editorial lead: the opening paragraph carries slightly more weight */
+.pdp-description-block .pdp-description:first-of-type {
+  font-size: 1.125rem;
+  line-height: 1.65;
+  color: var(--color-fg);
+}
+
+.pdp-description + .pdp-description {
+  margin-top: var(--space-md);
+}
+
+.pdp-specs-list {
+  margin: 0;
+}
+
+.pdp-specs-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding-block: 12px;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.9375rem;
+}
+
+.pdp-specs-row dt {
+  color: var(--color-fg-muted);
+}
+
+.pdp-specs-row dd {
+  margin: 0;
+  color: var(--color-fg);
+  font-weight: 500;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.pdp-specs-catalog-link {
+  display: inline-block;
+  margin-top: var(--space-md);
+}
+
+@media (max-width: 768px) {
+  .pdp-below {
+    grid-template-columns: 1fr;
+    gap: var(--space-xl);
+    padding-block: var(--space-xl);
+  }
+}
+
+/* ---- QA-only: /qa/pdp-configurator-preview (multi-group fixtures) ---- */
+
+.qa-pdp-preview-note {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-top: calc(-1 * var(--space-xl));
+  padding: 8px var(--space-lg);
+  background: #fdf3e2;
+  border-bottom: 1px solid #ecd9b8;
+  font-size: 0.8125rem;
+  color: #7a5c2e;
+  text-align: center;
+}
+
+.qa-pdp-preview .pdp-hero {
+  margin-top: 0;
+}
+
+.qa-pdp-preview-img {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-fg-muted);
+  font-size: 0.875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px dashed var(--color-border);
+}
+
+.qa-pdp-preview-price-note {
+  margin-top: 2px;
+  font-size: 0.8125rem;
+  color: var(--color-fg-muted);
+}
+
+.qa-pdp-preview-unpicked {
+  font-style: italic;
+}
+
+.qa-pdp-preview-helper {
+  font-size: 0.8125rem;
+  color: var(--color-fg-muted);
+}
+
+.qa-pdp-preview-invalid {
+  font-size: 0.875rem;
+  color: #9a4a2e;
+}
+
+.qa-pdp-preview-chip {
+  cursor: pointer;
+}
+
+.qa-pdp-preview-chip:hover:not(:disabled):not(.is-active) {
+  border-color: var(--color-fg-muted);
+}
+
+/* Unavailable value: struck sample + muted label — not only a hue change.
+   Scoped to the QA preview until real unavailable data exists on buyer PDP. */
+.qa-pdp-preview .pdp-size-chip.is-unavailable {
+  opacity: 0.55;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+.qa-pdp-preview .product-card-execution-swatch.is-unavailable {
+  cursor: not-allowed;
+  opacity: 0.6;
+  position: relative;
+}
+
+.qa-pdp-preview .product-card-execution-swatch.is-unavailable::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  background: linear-gradient(
+    135deg,
+    transparent calc(50% - 1px),
+    var(--color-fg-muted) calc(50% - 1px),
+    var(--color-fg-muted) calc(50% + 1px),
+    transparent calc(50% + 1px)
+  );
+  pointer-events: none;
 }
 
 /* PDP "Размер" option group — sibling sizes (separate products via
@@ -3591,12 +4098,6 @@ button:disabled,
   flex-direction: column;
   gap: var(--space-sm);
   margin-top: var(--space-xs);
-}
-
-.pdp-size-selector-label {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--color-fg);
 }
 
 .pdp-size-chip-row {
@@ -3610,7 +4111,7 @@ button:disabled,
   flex-direction: column;
   align-items: flex-start;
   gap: 2px;
-  padding: 7px 14px;
+  padding: 9px 15px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
@@ -4216,112 +4717,243 @@ a.pdp-size-chip:hover {
   }
 }
 
-/* ---- PDP photo lightbox — full-size, uncropped photo on hero click ---- */
+/* ---- PDP fullscreen gallery (lightbox) ----
+   Milky, calm viewer: backdrop matches the brand background; minimal round
+   controls; swipe / pinch / pan handled in the component. */
 
 .pdp-lightbox {
   position: fixed;
   inset: 0;
   z-index: 1000;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(20, 17, 14, 0.9);
-  padding: var(--space-lg);
-  box-sizing: border-box;
-  cursor: zoom-out;
+  flex-direction: column;
+  outline: none;
 }
 
-.pdp-lightbox-img {
-  max-width: 92vw;
-  max-height: 88vh;
-  width: auto;
-  height: auto;
-  object-fit: contain;
-  border-radius: var(--radius-sm);
-  cursor: default;
-  background: #fff;
-}
-
-.pdp-lightbox-close {
+.pdp-lightbox-backdrop {
   position: absolute;
-  top: var(--space-md);
-  right: var(--space-md);
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
-  font-size: 1.5rem;
-  line-height: 1;
+  inset: 0;
+  background: rgba(250, 248, 245, 0.98);
+  animation: pdp-lb-fade 0.22s ease-out;
+}
+
+.pdp-lightbox-topbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px clamp(14px, 2vw, 24px);
+  padding-top: max(14px, env(safe-area-inset-top));
+}
+
+.pdp-lightbox-counter {
+  margin-right: auto;
+  font-size: 0.875rem;
+  color: var(--color-fg-secondary);
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.pdp-lightbox-control {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-fg);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  padding: 0;
+  transition: background 0.15s, border-color 0.15s;
 }
 
-.pdp-lightbox-close:hover {
-  background: rgba(255, 255, 255, 0.22);
+.pdp-lightbox-control svg {
+  width: 22px;
+  height: 22px;
+}
+
+.pdp-lightbox-control:hover {
+  background: var(--color-bg);
+  border-color: var(--color-fg-muted);
+}
+
+.pdp-lightbox-control:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 2px;
+}
+
+.pdp-lightbox-stage {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 72px clamp(16px, 7vw, 104px) 10px;
+  touch-action: none;
+  cursor: zoom-in;
+}
+
+.pdp-lightbox-stage.is-zoomed {
+  cursor: grab;
+}
+
+.pdp-lightbox-stage.is-zoomed.is-dragging {
+  cursor: grabbing;
+}
+
+.pdp-lightbox-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-select: none;
+  background: #fff;
+  box-shadow: 0 24px 80px rgba(44, 36, 32, 0.16);
+  opacity: 0;
+  transition: transform 0.28s ease, opacity 0.18s ease;
+  will-change: transform;
+}
+
+.pdp-lightbox-img.is-ready {
+  opacity: 1;
+  animation: pdp-lb-img-in 0.26s ease-out;
 }
 
 .pdp-lightbox-nav {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
-  font-size: 1.75rem;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.pdp-lightbox-nav:hover {
-  background: rgba(255, 255, 255, 0.22);
+  z-index: 2;
 }
 
 .pdp-lightbox-nav--prev {
-  left: var(--space-md);
+  left: clamp(10px, 2.5vw, 30px);
 }
 
 .pdp-lightbox-nav--next {
-  right: var(--space-md);
+  right: clamp(10px, 2.5vw, 30px);
 }
 
-.pdp-lightbox-counter {
-  position: absolute;
-  bottom: var(--space-md);
-  left: 50%;
-  transform: translateX(-50%);
-  color: #fff;
-  font-size: 0.8rem;
-  letter-spacing: 0.02em;
-  background: rgba(255, 255, 255, 0.12);
-  padding: 0.2rem 0.65rem;
-  border-radius: 999px;
+.pdp-lightbox-thumbs {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  gap: 8px;
+  padding: 10px clamp(12px, 4vw, 24px);
+  padding-bottom: max(14px, env(safe-area-inset-bottom));
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.pdp-lightbox-thumbs::-webkit-scrollbar {
+  display: none;
+}
+
+/* Center the strip when it fits, keep natural scroll when it overflows. */
+.pdp-lightbox-thumb:first-child {
+  margin-left: auto;
+}
+
+.pdp-lightbox-thumb:last-child {
+  margin-right: auto;
+}
+
+.pdp-lightbox-thumb {
+  flex: 0 0 auto;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  padding: 0;
+  overflow: hidden;
+  cursor: pointer;
+  opacity: 0.72;
+  transition: opacity 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.pdp-lightbox-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pdp-lightbox-thumb:hover {
+  opacity: 1;
+}
+
+.pdp-lightbox-thumb:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 2px;
+  opacity: 1;
+}
+
+.pdp-lightbox-thumb.is-active {
+  opacity: 1;
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 1px var(--color-brand);
+}
+
+@keyframes pdp-lb-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes pdp-lb-img-in {
+  from {
+    opacity: 0;
+    transform: scale(0.985);
+  }
 }
 
 @media (max-width: 640px) {
-  .pdp-lightbox {
-    padding: var(--space-md);
+  .pdp-lightbox-stage {
+    padding: 64px 10px 8px;
   }
 
-  .pdp-lightbox-nav {
-    width: 40px;
-    height: 40px;
-    font-size: 1.4rem;
+  .pdp-lightbox-control {
+    width: 42px;
+    height: 42px;
   }
 
-  .pdp-lightbox-close {
-    width: 36px;
-    height: 36px;
-    font-size: 1.3rem;
+  .pdp-lightbox-nav--prev {
+    left: 8px;
+  }
+
+  .pdp-lightbox-nav--next {
+    right: 8px;
+  }
+
+  .pdp-lightbox-thumb {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pdp-lightbox-backdrop,
+  .pdp-lightbox-img.is-ready {
+    animation: none;
+  }
+
+  .pdp-lightbox-img {
+    transition: opacity 0.01s linear;
+  }
+
+  .pdp-lightbox-thumb {
+    transition: none;
   }
 }
 

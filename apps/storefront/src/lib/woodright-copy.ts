@@ -266,11 +266,20 @@ export const bespokeLanding = {
     { title: "Расскажете задачу", text: "Комната, размеры, стиль и сроки" },
     { title: "Подберём состав", text: "Модели, отделки, ткани и варианты исполнения" },
     { title: "Посчитаем", text: "Зафиксируем состав, стоимость и следующие шаги" },
-    { title: "Запустим в работу", text: [
-      "После согласования",
-      "производство или подготовка к отгрузке",
-    ] },
+    { title: "Запустим в работу", text: "После согласования - производство или подготовка к отгрузке" },
   ],
+  note: [
+    "Начните с заявки",
+    "Остальное подскажем",
+  ],
+  finalCta: {
+    title: "Опишите задачу",
+    text: [
+      "Комната, размеры и сроки",
+      "Вернёмся с составом и ориентиром по цене",
+    ],
+    button: "Обсудить проект",
+  },
 }
 
 export const bespokeCatalogCopy = {
@@ -507,6 +516,31 @@ export const pdpCopy = {
   errorBody: "Обновите страницу или вернитесь в каталог",
   sizeSelectorLabel: "Размер",
   articleLabel: "Арт.",
+  dimensionWidth: "Ширина",
+  dimensionHeight: "Высота",
+  dimensionDepth: "Глубина",
+  unitCm: "см",
+  unitMm: "мм",
+  descriptionHeading: "Описание",
+  specsHeading: "Характеристики",
+  specCollection: "Коллекция",
+  specArticle: "Артикул",
+  serviceLines: [
+    "Массив дерева и ручная отделка",
+    "Шоурум в Москве - принимаем по договорённости",
+  ],
+  serviceConsultLabel: "Получить консультацию",
+}
+
+export const pdpLightboxCopy = {
+  open: "Открыть фото на весь экран",
+  close: "Закрыть",
+  prev: "Предыдущее фото",
+  next: "Следующее фото",
+  zoomIn: "Увеличить фото",
+  zoomOut: "Вернуть масштаб",
+  thumbsLabel: "Все фото",
+  dialogSuffix: "фото",
 }
 
 export const aboutCopy = {

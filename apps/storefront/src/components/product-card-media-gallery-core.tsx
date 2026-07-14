@@ -5,6 +5,9 @@ import type { MouseEvent, ReactNode } from "react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { ProductThumbCarousel } from "@/components/product-thumb-carousel"
+import { PdpHeroAffordance } from "@/components/pdp-hero-affordance"
+import { PdpImageLightbox } from "@/components/pdp-image-lightbox"
+import { useHeroSwipe } from "@/components/use-hero-swipe"
 import type { CardColorVariant, CardModelVariant } from "@/lib/card-color-media"
 import {
   defaultGreenwichBedSelection,
@@ -26,6 +29,7 @@ import {
   type GreenwichPaintMatrixEntry,
 } from "@/lib/greenwich-paint-media"
 import {
+  buildPdpGalleryPhotoSet,
   resolveBuyerGalleryThumbStrip,
   shouldShowBuyerGalleryRail,
 } from "@/lib/pdp-gallery-photo-set"
@@ -48,7 +52,7 @@ import {
   publishPdpExecutionSelection,
   type PdpExecutionSpec,
 } from "@/lib/cart/pdp-selection"
-import { states } from "@/lib/woodright-copy"
+import { pdpLightboxCopy, states } from "@/lib/woodright-copy"
 
 type Props = {
   mainSrc: string
@@ -308,6 +312,7 @@ export function ProductCardMediaGalleryCore({
   const [activeGalleryUrl, setActiveGalleryUrl] = useState<string | null>(null)
   const [failedExtras, setFailedExtras] = useState<Set<string>>(() => new Set())
   const [pendingPreloadUrl, setPendingPreloadUrl] = useState<string | null>(null)
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
   const pendingRef = useRef<string | null>(null)
   const executionSwapSeqRef = useRef(0)
   const executionHeroPreloadRef = useRef<Map<string, Promise<boolean>>>(
@@ -834,6 +839,13 @@ export function ProductCardMediaGalleryCore({
     [effectiveMain, visibleStrip]
   )
   const showThumbRow = shouldShowBuyerGalleryRail(thumbStrip)
+  const pdpGalleryPhotos = useMemo(
+    () =>
+      layout === "pdp"
+        ? buildPdpGalleryPhotoSet(effectiveMain, visibleStrip)
+        : visibleStrip,
+    [layout, effectiveMain, visibleStrip]
+  )
 
   const preloadExecutionHero = useCallback((src: string): Promise<boolean> => {
     const normalized = src.trim()
@@ -1526,7 +1538,7 @@ export function ProductCardMediaGalleryCore({
       <img
         src={displayHeroSrc}
         alt={alt}
-        className={isPdp ? "product-detail-img" : "card-img"}
+        className={`${isPdp ? "product-detail-img" : "card-img"}${isPdp ? " is-zoomable" : ""}`}
         loading={priorityHero && !isPdp ? "eager" : "lazy"}
         fetchPriority={priorityHero && !isPdp ? "high" : undefined}
         style={
@@ -1537,6 +1549,44 @@ export function ProductCardMediaGalleryCore({
         onError={onHeroError}
       />
     )
+
+  const pdpLightboxImages =
+    pdpGalleryPhotos.length > 0 ? pdpGalleryPhotos : displayHeroSrc ? [displayHeroSrc] : []
+  const openLightbox = useCallback(() => {
+    if (!isPdp || heroEmpty || !displayHeroSrc) return
+    const idx = pdpLightboxImages.indexOf(displayHeroSrc)
+    setLightboxIndex(idx >= 0 ? idx : 0)
+  }, [isPdp, heroEmpty, displayHeroSrc, pdpLightboxImages])
+
+  const heroCycle = pdpGalleryPhotos
+  const stepHero = useCallback(
+    (dir: 1 | -1) => {
+      if (heroCycle.length < 2) return
+      const i = heroCycle.indexOf(displayHeroSrc)
+      const next =
+        heroCycle[
+          (((i < 0 ? 0 : i) + dir) % heroCycle.length + heroCycle.length) % heroCycle.length
+        ]!
+      if (next === effectiveMain) {
+        setDisplayHeroSrc(effectiveMain)
+        setActiveGalleryUrl(null)
+        setHeroFailed(false)
+        pendingRef.current = null
+        setPendingPreloadUrl(null)
+        return
+      }
+      if (pendingRef.current === next) return
+      pendingRef.current = next
+      setPendingPreloadUrl(next)
+    },
+    [heroCycle, displayHeroSrc, effectiveMain]
+  )
+
+  const heroSwipe = useHeroSwipe(
+    isPdp && heroCycle.length > 1,
+    () => stepHero(-1),
+    () => stepHero(1)
+  )
 
   const executionControlsMarkup = showExecutionControls ? (
         <div className="product-card-execution-controls">
@@ -1691,7 +1741,21 @@ export function ProductCardMediaGalleryCore({
       onPointerEnter={isPdp ? undefined : enableCardStripProbes}
     >
       {isPdp ? (
-        <div className="product-pdp-media-hero">{heroImage}</div>
+        <div className="product-pdp-media-hero" {...heroSwipe}>
+          {heroEmpty || !displayHeroSrc ? (
+            heroImage
+          ) : (
+            <button
+              type="button"
+              className="pdp-hero-open"
+              onClick={openLightbox}
+              aria-label={`${alt} - ${pdpLightboxCopy.open}`}
+            >
+              {heroImage}
+              <PdpHeroAffordance count={pdpLightboxImages.length} />
+            </button>
+          )}
+        </div>
       ) : (
         <Link href={href} className="product-card-media-link card-link" aria-label={alt}>
           {heroImage}
@@ -1720,6 +1784,15 @@ export function ProductCardMediaGalleryCore({
           {executionControlsMarkup}
           {thumbRowMarkup}
         </div>
+      )}
+      {isPdp && lightboxIndex !== null && (
+        <PdpImageLightbox
+          images={pdpLightboxImages}
+          activeIndex={lightboxIndex}
+          alt={alt}
+          onClose={() => setLightboxIndex(null)}
+          onNavigate={setLightboxIndex}
+        />
       )}
     </div>
   )
