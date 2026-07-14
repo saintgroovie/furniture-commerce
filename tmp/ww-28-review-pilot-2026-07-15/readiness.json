@@ -1,0 +1,64 @@
+{
+  "generated_at": "2026-07-14T23:50:37.756337+00:00",
+  "verdict": "ready",
+  "whitelist_source": "flow-a-pilot-28-hardcoded-after-tmp-cleanup",
+  "whitelist_handle_count": 28,
+  "handles": [
+    "av-05-1",
+    "ba-05-3",
+    "ba-62-1",
+    "fa-05-3",
+    "fa-06-1",
+    "fa-67-1",
+    "fk-05-1",
+    "fk-05-3",
+    "in-67-1",
+    "mo-02-1",
+    "mo-81-1",
+    "pa-05-1",
+    "pa-05-3",
+    "pa-62-1",
+    "rl-05-3",
+    "rl-67-1",
+    "rs-05-3",
+    "rs-62-1",
+    "sh-81-1",
+    "tb-05-3",
+    "tb-62-1",
+    "tb-67-1",
+    "te-02-2",
+    "te-05-1",
+    "te-05-3",
+    "te-62-1",
+    "to-62-1",
+    "tw-05-3"
+  ],
+  "export_root": "/Users/leonidmbp/Documents/woodright-legacy-private-export/2026-07-07",
+  "required_csvs": {
+    "kids": {
+      "path": "/Users/leonidmbp/Documents/woodright-legacy-private-export/2026-07-07/candidate-pack/public-crawl-v1/candidate-images-kids.csv",
+      "ok": true,
+      "bytes": 337415
+    },
+    "woodright": {
+      "path": "/Users/leonidmbp/Documents/woodright-legacy-private-export/2026-07-07/candidate-pack/public-crawl-v1/candidate-images-woodright.csv",
+      "ok": true,
+      "bytes": 811023
+    },
+    "summary": {
+      "path": "/Users/leonidmbp/Documents/woodright-legacy-private-export/2026-07-07/candidate-pack/public-crawl-v1/candidate-products-summary.csv",
+      "ok": true,
+      "bytes": 254670
+    },
+    "suspicious": {
+      "path": "/Users/leonidmbp/Documents/woodright-legacy-private-export/2026-07-07/reports/public-crawl-suspicious-images.csv",
+      "ok": true,
+      "bytes": 6848
+    },
+    "overlap": {
+      "path": "/Users/leonidmbp/Documents/woodright-legacy-private-export/2026-07-07/reports/current-catalog-overlap/overlap-products.csv",
+      "ok": true,
+      "bytes": 521601
+    }
+  }
+}
