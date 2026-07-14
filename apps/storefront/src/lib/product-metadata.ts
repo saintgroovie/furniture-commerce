@@ -193,12 +193,15 @@ export function getDimensions(product: ProductLike): Dimensions | null {
 }
 
 export function formatDimensionsCompact(dim: Dimensions): string {
+  // Card preview meta: whole centimeters (1244 mm -> 124), no unit label.
+  // Narrow no-break spaces around × - a touch of air, still one unbreakable
+  // run. The PDP keeps exact millimeters via formatDimensionsLabeled.
+  const cm = (mm: number) => String(Math.round(mm / 10))
   const parts: string[] = []
-  if (dim.width_mm) parts.push(String(dim.width_mm))
-  if (dim.depth_mm) parts.push(String(dim.depth_mm))
-  if (dim.height_mm) parts.push(String(dim.height_mm))
-  // Compact card meta: no space around × (650×30×1000).
-  return parts.join("×")
+  if (dim.width_mm) parts.push(cm(dim.width_mm))
+  if (dim.depth_mm) parts.push(cm(dim.depth_mm))
+  if (dim.height_mm) parts.push(cm(dim.height_mm))
+  return parts.join("\u202F×\u202F")
 }
 
 export function formatDimensionsLabeled(dim: Dimensions): string {

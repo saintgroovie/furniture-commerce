@@ -128,6 +128,8 @@ const EXECUTION_LABELS: Record<string, string> = {
   darkblue: "Син-серый",
   "grey-blue": "Серо-голубой",
   frame: "Каркас",
+  cloud: "Клауд",
+  plane: "Плейн",
   velvet: "Велюр",
   linen: "Лён",
   oak: "Дуб",
@@ -768,6 +770,14 @@ function materialTierExecutionsFromMetadata(
   return constructionTierExecutionsFromMetadata(product)
 }
 
+/* Buyer-facing RU names for headboard models - metadata stores the latin
+   originals (Frame/Cloud/Plane). */
+const HEADBOARD_MODEL_LABELS_RU: Record<string, string> = {
+  frame: "Фрейм",
+  cloud: "Клауд",
+  plane: "Плейн",
+}
+
 function headboardExecutionsFromMetadata(
   product: Record<string, unknown>
 ): CardModelVariant[] | undefined {
@@ -787,7 +797,7 @@ function headboardExecutionsFromMetadata(
     const resolved = urls.map((u) => resolveStorefrontProductImageSrc(u))
     variants.push({
       key,
-      label,
+      label: HEADBOARD_MODEL_LABELS_RU[key] ?? label,
       mainSrc: resolved[0]!,
       extraSrcs: resolved.slice(1),
       modelToken: key,
@@ -1195,7 +1205,7 @@ function buildModelVariantsFromBuckets(
     if (!main && extras.length === 0) continue
     variants.push({
       key: `model:${token}`,
-      label: EXECUTION_LABELS[token] ?? token,
+      label: HEADBOARD_MODEL_LABELS_RU[token] ?? EXECUTION_LABELS[token] ?? token,
       mainSrc: main,
       extraSrcs: extras,
       modelToken: token,

@@ -5,7 +5,11 @@ import {
   isRequestQuoteProduct,
 } from "@/lib/request-quote"
 import type { DisplayGroup } from "@/lib/display-group"
+import { formatGroupHint } from "@/lib/display-group"
 import {
+  getCollectionLabel,
+  getSubcollectionLabel,
+  getArticle,
   getDimensions,
   formatDimensionsCompact,
 } from "@/lib/product-metadata"
@@ -103,7 +107,13 @@ export function ProductCard({
     ? formatRequestQuotePriceLabel(product as Record<string, unknown>)
     : null
 
+  const collectionLabel = getCollectionLabel(product as Record<string, unknown>)
+  const subcollectionLabel = getSubcollectionLabel(product as Record<string, unknown>)
+  const article = getArticle(product as Record<string, unknown>)
   const dim = getDimensions(product as Record<string, unknown>)
+
+  const contextParts = [collectionLabel, subcollectionLabel, article].filter(Boolean)
+  const contextLine = contextParts.length > 0 ? contextParts.join(" · ") : null
 
   const handle = product.handle ?? ""
   const isOliver = handle.startsWith("ol-")
@@ -302,6 +312,14 @@ export function ProductCard({
       {mediaBlock}
       <Link href={productHref} className="card-body card-link">
         <div className="card-text-stack">
+          {(contextLine || (displayGroup && displayGroup.count > 1)) && (
+            <div className="card-context-row">
+              {contextLine && <span className="card-context">{contextLine}</span>}
+              {displayGroup && displayGroup.count > 1 && (
+                <span className="variant-hint">{formatGroupHint(displayGroup.count)}</span>
+              )}
+            </div>
+          )}
           <h3>{product.title}</h3>
           {dim != null && (
             <span className="card-dimensions">{formatDimensionsCompact(dim)}</span>
