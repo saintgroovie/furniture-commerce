@@ -218,11 +218,7 @@ img {
 .logo-image {
   display: block;
   height: 20px;
-  /* Inline SVG: derive width from the wordmark viewBox and paint via
-     currentColor so the vector matches the old PNG ink exactly. */
   width: auto;
-  aspect-ratio: 16489 / 2114;
-  color: var(--color-logo-ink);
   flex: none;
 }
 
