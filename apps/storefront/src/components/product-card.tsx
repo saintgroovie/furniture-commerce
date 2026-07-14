@@ -5,11 +5,7 @@ import {
   isRequestQuoteProduct,
 } from "@/lib/request-quote"
 import type { DisplayGroup } from "@/lib/display-group"
-import { formatGroupHint } from "@/lib/display-group"
 import {
-  getCollectionLabel,
-  getSubcollectionLabel,
-  getArticle,
   getDimensions,
   formatDimensionsCompact,
 } from "@/lib/product-metadata"
@@ -17,6 +13,8 @@ import { OliverCardMediaSwitcher } from "@/components/oliver-card-media-switcher
 import { ProductCardMediaSwitcher } from "@/components/product-card-media-switcher"
 import {
   buildIntraProductExecutionSelectors,
+  collectSameExecutionExtraImageUrls,
+  enrichCardColorVariantsWithCatalogExtras,
   finishLabelForProduct,
   isUpholsteredProduct,
   type CardColorVariant,
@@ -34,6 +32,7 @@ import {
   collectExtraProductImageUrls,
   mergeUniqueExtraUrls,
   normalizeImageEntryUrl,
+  resolveCardHeroAndNearDuplicateExtras,
   resolvePdpMediaBundle,
   resolveStorefrontProductImageSrc,
 } from "@/lib/product-images"
@@ -100,13 +99,7 @@ export function ProductCard({
     ? formatRequestQuotePriceLabel(product as Record<string, unknown>)
     : null
 
-  const collectionLabel = getCollectionLabel(product as Record<string, unknown>)
-  const subcollectionLabel = getSubcollectionLabel(product as Record<string, unknown>)
-  const article = getArticle(product as Record<string, unknown>)
   const dim = getDimensions(product as Record<string, unknown>)
-
-  const contextParts = [collectionLabel, subcollectionLabel, article].filter(Boolean)
-  const contextLine = contextParts.length > 0 ? contextParts.join(" · ") : null
 
   const handle = product.handle ?? ""
   const isOliver = handle.startsWith("ol-")
@@ -137,10 +130,20 @@ export function ProductCard({
           mainSrcForCard
         )
 
+  const productRecord = product as Record<string, unknown>
   const headboardVariants = executionSelectors.headboard
-  const upholsteryVariants = executionSelectors.upholstery
-  const woodVariants = executionSelectors.wood
-  const finishVariants = executionSelectors.finish
+  const upholsteryVariants = enrichCardColorVariantsWithCatalogExtras(
+    executionSelectors.upholstery,
+    productRecord
+  )
+  const woodVariants = enrichCardColorVariantsWithCatalogExtras(
+    executionSelectors.wood,
+    productRecord
+  )
+  const finishVariants = enrichCardColorVariantsWithCatalogExtras(
+    executionSelectors.finish,
+    productRecord
+  )
   const finishLabel = executionSelectors.finishLabel ?? "Цвет"
   const greenwichBedMatrix = executionSelectors.greenwichBedMatrix
   const greenwichPaintMatrix = executionSelectors.greenwichPaintMatrix
@@ -177,17 +180,28 @@ export function ProductCard({
   const activeFinish = finishVariants?.[0]
   const isProvencePaintWood = executionSelectors.provencePaintWood === true
 
+  const pickMain = (...candidates: Array<string | null | undefined>) => {
+    for (const c of candidates) {
+      const t = typeof c === "string" ? c.trim() : ""
+      if (t) return t
+    }
+    return ""
+  }
   const mainSrc = matrixMedia?.mainSrc
     ? matrixMedia.mainSrc
     : isProvencePaintWood
       ? mainSrcForCard
-      : activeHeadboard?.mainSrc ??
-        activeSeparateFabric?.mainSrc ??
-        activeUpholstery?.mainSrc ??
-        activeWood?.mainSrc ??
-        activeFinish?.mainSrc ??
-        mainSrcForCard
-  const extraSrcs = matrixMedia
+      : pickMain(
+          activeHeadboard?.mainSrc,
+          activeSeparateFabric?.mainSrc,
+          activeUpholstery?.mainSrc,
+          activeWood?.mainSrc,
+          activeFinish?.mainSrc,
+          mainSrcForCard
+        )
+  /* Prefer execution/matrix extras. Catalog projection often keeps urls:[main] only —
+     then fill same-token siblings from product.images (never other finishes). */
+  const scopedExecutionExtras = matrixMedia
     ? matrixMedia.extraSrcs
     : isProvencePaintWood && activeFinish != null
       ? activeFinish.extraSrcs
@@ -196,22 +210,35 @@ export function ProductCard({
         : activeSeparateFabric != null
           ? activeSeparateFabric.extraSrcs
           : activeUpholstery != null
-          ? activeUpholstery.extraSrcs
-          : activeWood != null
-            ? activeWood.extraSrcs
-            : activeFinish != null
-              ? activeFinish.extraSrcs
-              : mergeUniqueExtraUrls(mainSrcForCard, [
-                  collectExtraProductImageUrls(
-                    product as Record<string, unknown>,
-                    mainSrcForCard
-                  ),
-                ])
+            ? activeUpholstery.extraSrcs
+            : activeWood != null
+              ? activeWood.extraSrcs
+              : activeFinish != null
+                ? activeFinish.extraSrcs
+                : null
+  const extraSrcs =
+    scopedExecutionExtras != null && scopedExecutionExtras.length > 0
+      ? scopedExecutionExtras
+      : scopedExecutionExtras != null
+        ? collectSameExecutionExtraImageUrls(
+            productRecord,
+            mainSrc,
+            activeFinish?.key ??
+              activeUpholstery?.key ??
+              activeSeparateFabric?.key ??
+              null
+          )
+        : mergeUniqueExtraUrls(mainSrcForCard, [
+            collectExtraProductImageUrls(productRecord, mainSrcForCard),
+          ])
 
-  const { mainSrc: cardMainSrc, extraSrcs: cardExtraSrcs } = resolvePdpMediaBundle(
-    mainSrc,
-    extraSrcs
-  )
+  const bundled = resolvePdpMediaBundle(mainSrc, extraSrcs)
+  const { mainSrc: cardMainSrc, extraSrcs: cardExtraSrcs } =
+    resolveCardHeroAndNearDuplicateExtras(
+      bundled.mainSrc,
+      bundled.extraSrcs,
+      handle
+    )
 
   const mediaBlock = isOliver ? (
     <OliverCardMediaSwitcher
@@ -226,6 +253,7 @@ export function ProductCard({
       href={productHref}
       title={product.title}
       priorityHero={priorityHero}
+      productHandle={handle}
     />
   ) : (
     <ProductCardMediaSwitcher
@@ -236,6 +264,7 @@ export function ProductCard({
       woodVariants={woodVariants}
       finishVariants={finishVariants}
       finishLabel={finishLabel}
+      productHandle={handle}
       greenwichBedMatrix={greenwichBedMatrix}
       greenwichPaintMatrix={greenwichPaintMatrix}
       href={productHref}
@@ -249,9 +278,6 @@ export function ProductCard({
       {mediaBlock}
       <Link href={productHref} className="card-body card-link">
         <div className="card-text-stack">
-          {contextLine && (
-            <span className="card-context">{contextLine}</span>
-          )}
           <h3>{product.title}</h3>
           {dim != null && (
             <span className="card-dimensions">{formatDimensionsCompact(dim)}</span>
@@ -262,9 +288,6 @@ export function ProductCard({
             ) : price != null ? (
               <p className="price">{pricePrefix}{formatRub(price)}</p>
             ) : null}
-            {displayGroup && displayGroup.count > 1 && (
-              <span className="variant-hint">{formatGroupHint(displayGroup.count)}</span>
-            )}
             {badgeLabel && <span className="badge">{badgeLabel}</span>}
           </div>
         </div>

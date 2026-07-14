@@ -1,0 +1,32 @@
+---
+description: Buyer gallery strip — card main-first; PDP extras-only (no hero duplicate rail)
+globs:
+  - apps/storefront/src/components/product-card-media-gallery-core.tsx
+  - apps/storefront/src/components/product-pdp-media-switcher.tsx
+  - apps/storefront/src/components/oliver-pdp-media-switcher.tsx
+  - apps/storefront/src/components/product-thumb-carousel.tsx
+  - apps/storefront/src/lib/oliver-pdp-thumb-strip.ts
+  - apps/storefront/src/lib/product-images.ts
+  - apps/storefront/src/lib/pdp-gallery-photo-set.ts
+  - apps/storefront/src/lib/*gallery*fidelity*
+---
+
+# Gallery strip contract (card vs PDP)
+
+**RCA:** `docs/ai/GALLERY_RETURN_TO_MAIN_RCA.md`
+
+## Canon
+
+| Surface | Strip builder | Return-to-main |
+|---------|---------------|----------------|
+| Catalog **card** | `buildGalleryStripUrls` (main first) | Click main thumb |
+| **PDP** (core / generic / Oliver default) | `buildPdpThumbStripUrls` (extras only) | Re-click active extra; lightbox; Oliver color-hero pair may include main |
+| Rail visibility | `shouldShowBuyerGalleryRail` / `resolveBuyerGalleryThumbStrip` — show when ≥ 1 photo (single-photo SKUs included). Multi-photo PDP stays extras-only; single-photo PDP falls back to main as the only thumb. | Never gate PDP on extras-only strip length alone for multi-photo |
+
+## Do not
+
+- Put main into every multi-photo PDP strip to “fix” return-to-main (reads as duplicate)
+- Hide the rail for single-photo products (`length > 1` gate) — operator rejected that
+- Use `showThumbRow = visibleStrip.length > 1` on extras-only PDP strips (hides 2-photo SKUs)
+- Claim `:3002` verified without `yarn build:qa` after gallery edits
+- Ship gallery strip changes without `yarn test:gallery-contract`

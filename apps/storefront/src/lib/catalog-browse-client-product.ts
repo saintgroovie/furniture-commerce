@@ -33,6 +33,8 @@ const META_ALLOW = new Set([
   "frame_material_executions",
   "headboard_model_executions",
   "bed_execution_matrix",
+  "greenwich_paint_execution_matrix",
+  "execution_dimension_contract",
   "paint_finish_labels",
   "finish_color_labels",
   "fabric_upholstery_labels",
@@ -59,6 +61,7 @@ const EXECUTION_URL_KEYS = new Set([
   "construction_tier_executions",
   "material_tier_executions",
   "bed_execution_matrix",
+  "greenwich_paint_execution_matrix",
 ])
 
 function slimUrlList(urls: unknown): string[] | undefined {

@@ -13,6 +13,7 @@ type Props = {
   greenwichBedMatrix?: GreenwichBedMatrixEntry[]
   title: string
   heroObjectPosition?: string
+  productHandle?: string
 }
 
 /** Greenwich bed PDP: headboard + wood + fabric matrix with scoped gallery. */
@@ -25,6 +26,7 @@ export function GreenwichBedPdpMediaSwitcher({
   greenwichBedMatrix,
   title,
   heroObjectPosition,
+  productHandle,
 }: Props) {
   return (
     <ProductCardMediaGalleryCore
@@ -38,6 +40,7 @@ export function GreenwichBedPdpMediaSwitcher({
       alt={title}
       layout="pdp"
       heroObjectPosition={heroObjectPosition}
+      productHandle={productHandle}
     />
   )
 }

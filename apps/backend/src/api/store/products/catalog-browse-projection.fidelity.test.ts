@@ -20,6 +20,8 @@ assert.equal(CATALOG_BROWSE_MAX_EXECUTION_URLS, 5)
 assert.ok(CATALOG_METADATA_ALLOW.has("collection"))
 assert.ok(CATALOG_METADATA_ALLOW.has("finish_metadata_source"))
 assert.ok(CATALOG_METADATA_ALLOW.has("bed_execution_matrix"))
+assert.ok(CATALOG_METADATA_ALLOW.has("greenwich_paint_execution_matrix"))
+assert.ok(CATALOG_METADATA_ALLOW.has("execution_dimension_contract"))
 assert.equal(CATALOG_METADATA_ALLOW.has("shared_scene_media"), false)
 assert.equal(CATALOG_METADATA_ALLOW.has("workbook_row_key"), false)
 
@@ -146,6 +148,54 @@ assert.equal(CATALOG_METADATA_ALLOW.has("workbook_row_key"), false)
   assert.equal(urls.filter((u) => /_white\d/.test(u)).length, 3)
   assert.equal(urls.filter((u) => /_graphite\d/.test(u)).length, 3)
   assert.equal(urls.filter((u) => /_green\d/.test(u)).length, 2)
+}
+
+{
+  // Greenwich paint matrix must stay on catalog wire (Color→Wood card UX).
+  const matrix = [
+    {
+      frame_material: "natural",
+      paint_finish: "cream",
+      label: "Сливочный",
+      urls: Array.from({ length: 8 }, (_, i) => `/static/cream_n_${i}.jpg`),
+    },
+    {
+      frame_material: "dark",
+      paint_finish: "cream",
+      label: "Сливочный",
+      urls: Array.from({ length: 8 }, (_, i) => `/static/cream_d_${i}.jpg`),
+    },
+  ]
+  const out = projectCatalogBrowseProduct({
+    id: "prod_gw",
+    handle: "greenwich-gr-05-1",
+    title: "Scale",
+    thumbnail: "/static/cream_n_0.jpg",
+    metadata: {
+      greenwich_paint_execution_matrix: matrix,
+      execution_dimension_contract:
+        "paint_finish|frame_material|greenwich_paint_execution_matrix|shared_scene",
+      shared_scene_media: { drop: true },
+    },
+    images: [],
+    variants: [],
+  })
+  const meta = out.metadata as {
+    greenwich_paint_execution_matrix: Array<{ urls: string[] }>
+    execution_dimension_contract?: string
+    shared_scene_media?: unknown
+  }
+  assert.equal(meta.greenwich_paint_execution_matrix.length, 2)
+  assert.equal(
+    meta.greenwich_paint_execution_matrix[0]!.urls.length,
+    CATALOG_BROWSE_MAX_EXECUTION_URLS
+  )
+  assert.equal(
+    meta.greenwich_paint_execution_matrix[1]!.urls.length,
+    CATALOG_BROWSE_MAX_EXECUTION_URLS
+  )
+  assert.match(meta.execution_dimension_contract || "", /greenwich_paint_execution_matrix/)
+  assert.equal(meta.shared_scene_media, undefined)
 }
 
 console.log("catalog-browse-projection.fidelity.test.ts: ok")

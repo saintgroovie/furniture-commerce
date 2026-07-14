@@ -2,6 +2,8 @@ import {
   collectExtraProductImageUrls,
   collectProductImageUrls,
   galleryImageBasenameKey,
+  isAngleLikeGalleryBasename,
+  isColorFinishFrameBasename,
   normalizeImageEntryUrl,
   resolveStorefrontProductImageSrc,
 } from "./product-images"
@@ -126,8 +128,6 @@ const EXECUTION_LABELS: Record<string, string> = {
   darkblue: "Син-серый",
   "grey-blue": "Серо-голубой",
   frame: "Каркас",
-  cloud: "Cloud",
-  plane: "Plane",
   velvet: "Велюр",
   linen: "Лён",
   oak: "Дуб",
@@ -216,6 +216,61 @@ export function isGreenwichNeutralDetailAsset(url: string): boolean {
   if (/sizes\d|габарит|наполнение|noliver_var|bedroom|wideheader|view0/i.test(hay)) return true
   if (!extractGreenwichFinishTokenFromUrl(url)) return true
   return false
+}
+
+/**
+ * Catalog `/store/catalog-products` often keeps finish/matrix `urls: [main]` only,
+ * while `product.images` still has same-finish siblings (e.g. white05/white06).
+ * Fill extras from images scoped to the active execution token - never other finishes.
+ */
+export function collectSameExecutionExtraImageUrls(
+  product: Record<string, unknown>,
+  mainSrc: string,
+  executionKey?: string | null
+): string[] {
+  const mainNorm = typeof mainSrc === "string" ? mainSrc.trim() : ""
+  const key = (
+    (typeof executionKey === "string" && executionKey.trim()) ||
+    extractExecutionTokenFromUrl(mainNorm) ||
+    ""
+  ).toLowerCase()
+  const candidates = collectExtraProductImageUrls(product, mainNorm).map((u) =>
+    resolveStorefrontProductImageSrc(u)
+  )
+  if (!key) {
+    // No execution token: only explicit angle/gallery slots (never finish frames).
+    return candidates.filter((u) => isAngleLikeGalleryBasename(u))
+  }
+  return candidates.filter((u) => {
+    const token = (extractExecutionTokenFromUrl(u) || "").toLowerCase()
+    // Same-token only. Tokenless / unknown finishes must not enter the bucket.
+    return Boolean(token) && token === key
+  })
+}
+
+/** Attach same-token catalog image extras when a variant only has a slim main URL. */
+export function enrichCardColorVariantsWithCatalogExtras(
+  variants: CardColorVariant[] | undefined,
+  product: Record<string, unknown>
+): CardColorVariant[] | undefined {
+  if (!variants?.length) return variants
+  let changed = false
+  const next = variants.map((v) => {
+    const mainSrc = resolveStorefrontProductImageSrc(v.mainSrc)
+    const existing = v.extraSrcs.map((u) => resolveStorefrontProductImageSrc(u))
+    if (existing.length > 0) {
+      if (mainSrc !== v.mainSrc || existing.some((u, i) => u !== v.extraSrcs[i])) {
+        changed = true
+        return { ...v, mainSrc, extraSrcs: existing }
+      }
+      return v
+    }
+    const extras = collectSameExecutionExtraImageUrls(product, mainSrc, v.key)
+    if (!extras.length && mainSrc === v.mainSrc) return v
+    changed = true
+    return { ...v, mainSrc, extraSrcs: extras }
+  })
+  return changed ? next : variants
 }
 
 export function isHeadboardModelToken(
@@ -506,6 +561,10 @@ export function finishLabelForProduct(
  * Metadata execution `urls` are often hero-only after browse lean / dimension
  * pipelines. Card strips need sibling angles from `product.images` for the
  * same finish token (backend treat images as SoT after hero-only buckets).
+ *
+ * Do **not** merge extra `*_color_<token>_*` finish frames from `product.images`
+ * (e.g. ol-82-1 torno_01..04) - those are the same finish, not camera angles,
+ * and flood kids/catalog strips with lookalike duplicates.
  */
 function mergeExecutionUrlsWithProductImages(
   key: string,
@@ -515,9 +574,12 @@ function mergeExecutionUrlsWithProductImages(
   const keyNorm = key.trim().toLowerCase()
   if (!keyNorm || productImageUrls.length === 0) return metaUrls
 
-  const matched = productImageUrls.filter(
-    (u) => extractExecutionTokenFromUrl(u)?.toLowerCase() === keyNorm
-  )
+  const matched = productImageUrls.filter((u) => {
+    if (extractExecutionTokenFromUrl(u)?.toLowerCase() !== keyNorm) return false
+    // Angle siblings only. Same-token color_* frames stay execution-owned.
+    if (isColorFinishFrameBasename(u)) return false
+    return isAngleLikeGalleryBasename(u)
+  })
   if (matched.length === 0) return metaUrls
 
   const out: string[] = []

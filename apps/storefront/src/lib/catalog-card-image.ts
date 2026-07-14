@@ -102,3 +102,24 @@ export function resolveCatalogCardHeroSrc(
   if (!catalogCardDerivativesEnabled()) return storefront
   return resolveCatalogCardImageSrc(storefront, { preferDerivative: true })
 }
+
+/**
+ * Resolve every URL used by a catalog execution switch (hero + thumb strip).
+ *
+ * Without this, the initial card uses a ~10 KB WebP derivative but a swatch
+ * click jumps back to the ~300 KB source JPEG. That causes two competing hero
+ * requests because the card-quality effect immediately rewrites it back to the
+ * derivative. Keep PDP media untouched by calling this helper only for cards.
+ */
+export function resolveCatalogCardMediaBundle(
+  mainSrc: string,
+  extraSrcs: readonly string[],
+  resolveStorefront: (url: string) => string
+): { mainSrc: string; extraSrcs: string[] } {
+  return {
+    mainSrc: resolveCatalogCardHeroSrc(mainSrc, resolveStorefront),
+    extraSrcs: extraSrcs.map((url) =>
+      resolveCatalogCardHeroSrc(url, resolveStorefront)
+    ),
+  }
+}

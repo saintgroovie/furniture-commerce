@@ -288,6 +288,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
               greenwichBedMatrix={greenwichBedMatrix}
               title={titleStr}
               heroObjectPosition={heroObjectPosition}
+              productHandle={handle}
             />
           ) : useExecutionPdp ? (
             <ProductPdpExecutionMediaSwitcher
@@ -306,6 +307,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
               oliverMode={isOliver}
               separateFabricRows={executionSelectors.separateFabricRows}
               heroObjectPosition={heroObjectPosition}
+              productHandle={handle}
             />
           ) : isOliver ? (
             <OliverPdpMediaSwitcher
