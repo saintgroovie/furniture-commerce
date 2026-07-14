@@ -46,49 +46,24 @@ function toggleMulti(values: string[], value: string): string[] {
 
 type PillBox = { left: number; top: number; width: number; height: number }
 
-/* The sliding pills (active indicator + hover ghost) never animate
-   width/height — those are layout properties, they run on the main thread
-   and stutter the moment React re-renders the product grid after a filter
-   change. Instead each pill is three transform-only parts: two fixed
-   half-round caps and a 1px middle strip stretched with scaleX. Same
-   duration/curve on every part keeps the shape coherent mid-flight, and
-   the whole glide stays on the compositor. Parts overlap by 0.5px so the
-   seams never show (fills are opaque). */
-function pillPartsGeometry(box: PillBox) {
-  const r = box.height / 2
+function tabBox(tab: HTMLElement): PillBox {
   return {
-    container: {
-      transform: `translate3d(${box.left}px, ${box.top}px, 0)`,
-      height: `${box.height}px`,
-    },
-    capL: {
-      width: `${r}px`,
-      borderRadius: `${r}px 0 0 ${r}px`,
-    },
-    mid: {
-      transform: `translate3d(${r - 0.5}px, 0, 0) scaleX(${Math.max(box.width - 2 * r + 1, 0)})`,
-    },
-    capR: {
-      width: `${r}px`,
-      borderRadius: `0 ${r}px ${r}px 0`,
-      transform: `translate3d(${box.width - r}px, 0, 0)`,
-    },
+    left: Math.round(tab.offsetLeft),
+    top: Math.round(tab.offsetTop),
+    width: Math.round(tab.offsetWidth),
+    height: Math.round(tab.offsetHeight),
   }
 }
 
-/** Imperative twin of pillPartsGeometry for the ref-driven hover ghost. */
-function layoutPillParts(container: HTMLElement, box: PillBox) {
-  const [capL, mid, capR] = Array.from(container.children) as HTMLElement[]
-  if (!capL || !mid || !capR) return
-  const g = pillPartsGeometry(box)
-  container.style.transform = g.container.transform
-  container.style.height = g.container.height
-  capL.style.width = g.capL.width
-  capL.style.borderRadius = g.capL.borderRadius
-  mid.style.transform = g.mid.transform
-  capR.style.width = g.capR.width
-  capR.style.borderRadius = g.capR.borderRadius
-  capR.style.transform = g.capR.transform
+/* Active indicator + hover ghost share one layout helper: a single rounded
+   rect (not 3-part caps). Cap/mid seams and scaleX made the tip arc drift
+   off the track's concentric radius; one border-radius matches the track
+   math exactly (outer R = pill R + pad + border). Width transition is OK
+   here — optimistic pendingType starts the glide before the grid re-render. */
+function layoutPillBox(el: HTMLElement, box: PillBox) {
+  el.style.transform = `translate3d(${box.left}px, ${box.top}px, 0)`
+  el.style.width = `${box.width}px`
+  el.style.height = `${box.height}px`
 }
 
 /* Pre-hydration bootstrap for --catalog-filter-fit (see the sidebar effect
@@ -160,23 +135,14 @@ export function CatalogFilterControls({
       setTabIndicator(null)
       return
     }
-    setTabIndicator({
-      left: activeTab.offsetLeft,
-      top: activeTab.offsetTop,
-      width: activeTab.offsetWidth,
-      height: activeTab.offsetHeight,
-    })
+    setTabIndicator(tabBox(activeTab))
   }, [])
 
-  /* Hover ghost: a soft flat pill that glides after the cursor between
-     tabs (same magic-motion idea as the active indicator, one layer below
-     it). Fully imperative: pointer handlers write styles straight into the
-     persistent DOM element — zero React re-renders on hover, so the glide
-     can't be delayed by the component tree. Geometry uses the same 3-part
-     transform-only layout as the indicator (see layoutPillParts). When the
-     ghost re-appears after being hidden it snaps into place with
-     transitions off (data-instant + reflow flush), then fades in — no
-     stale glide across the whole track. */
+  /* Hover ghost: single rounded element, styles written imperatively —
+     zero React re-renders on hover. Single piece (not 3-part) so the
+     accent gradient never shows a cap/mid seam at the tip. On leave it
+     fades out in place; on re-enter it snaps under the cursor
+     (data-instant) then fades in — no stale glide across the track. */
   const ghostRef = useRef<HTMLSpanElement>(null)
 
   const onTabsPointerOver = useCallback((e: { target: EventTarget }) => {
@@ -185,25 +151,32 @@ export function CatalogFilterControls({
     if (!nav || !ghost || !(e.target instanceof Element)) return
     const tab = e.target.closest<HTMLElement>(".filter-tab")
     if (!tab || !nav.contains(tab)) return
-    const box = {
-      left: tab.offsetLeft,
-      top: tab.offsetTop,
-      width: tab.offsetWidth,
-      height: tab.offsetHeight,
+    // Active tab already has the dark indicator — hide the ghost so the
+    // two layers never fight for the same silhouette.
+    if (tab.classList.contains("filter-tab-active")) {
+      delete ghost.dataset.shown
+      return
     }
+    const box = tabBox(tab)
     if (ghost.dataset.shown !== "true") {
       ghost.dataset.instant = "true"
-      layoutPillParts(ghost, box)
-      // Flush styles so the reposition lands before transitions re-enable.
+      layoutPillBox(ghost, box)
       void ghost.offsetWidth
       delete ghost.dataset.instant
       ghost.dataset.shown = "true"
     } else {
-      layoutPillParts(ghost, box)
+      layoutPillBox(ghost, box)
     }
   }, [])
 
   const onTabsPointerLeave = useCallback(() => {
+    const ghost = ghostRef.current
+    if (ghost) delete ghost.dataset.shown
+  }, [])
+
+  /* Drop the ghost on press so the dark indicator takes over alone —
+     otherwise both layers sit under the same tab for a beat mid-click. */
+  const onTabsPointerDown = useCallback(() => {
     const ghost = ghostRef.current
     if (ghost) delete ghost.dataset.shown
   }, [])
@@ -567,31 +540,24 @@ export function CatalogFilterControls({
           data-slider={tabIndicator ? "true" : undefined}
           onPointerOver={onTabsPointerOver}
           onPointerLeave={onTabsPointerLeave}
+          onPointerDown={onTabsPointerDown}
         >
           <span
             ref={ghostRef}
             className="filter-tabs-hover-ghost"
             aria-hidden="true"
-          >
-            <span className="filter-tabs-pill-cap" />
-            <span className="filter-tabs-pill-mid" />
-            <span className="filter-tabs-pill-cap" />
-          </span>
-          {tabIndicator &&
-            (() => {
-              const g = pillPartsGeometry(tabIndicator)
-              return (
-                <span
-                  className="filter-tabs-indicator"
-                  aria-hidden="true"
-                  style={g.container}
-                >
-                  <span className="filter-tabs-pill-cap" style={g.capL} />
-                  <span className="filter-tabs-pill-mid" style={g.mid} />
-                  <span className="filter-tabs-pill-cap" style={g.capR} />
-                </span>
-              )
-            })()}
+          />
+          {tabIndicator && (
+            <span
+              className="filter-tabs-indicator"
+              aria-hidden="true"
+              style={{
+                transform: `translate3d(${tabIndicator.left}px, ${tabIndicator.top}px, 0)`,
+                width: tabIndicator.width,
+                height: tabIndicator.height,
+              }}
+            />
+          )}
           <Link
             href={buildCatalogHref(basePath, { ...state, type: undefined })}
             className={!activeType ? "filter-tab filter-tab-active" : "filter-tab"}

@@ -130,16 +130,64 @@ img {
 
 /* -- Top bar -- */
 
+/* Edge tints of the two header strips live in registered custom properties
+   so the brown → sage-green swap on entering /kids is a real color tween
+   (gradients themselves don't interpolate). Shared motion tokens with the
+   KIDS pill so tint + reveal read as one gesture. */
+@property --header-edge-top {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #ffffff;
+}
+
+@property --header-edge-main {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #ffffff;
+}
+
+.site-header {
+  /* Slightly short + calm decelerate: long springy 1s + oversized max-width
+     / 0fr→1fr felt sticky, then jerky once the competing badge translate
+     fought the logo's translateX(-50%) re-center. */
+  --logo-kids-duration: 0.52s;
+  --logo-kids-ease: cubic-bezier(0.33, 1, 0.68, 1);
+  /* Badge border-box ≈ 45–46px; +1px slack so the right stroke isn't clipped. */
+  --logo-kids-w: 2.9375rem;
+  --logo-kids-gap: 0.3rem;
+  /* Slot height matches the 20px wordmark box — flex centering is enough. */
+  --logo-kids-nudge-y: 0px;
+  --header-edge-top: color-mix(in srgb, var(--color-accent) 38%, var(--color-surface));
+  --header-edge-main: color-mix(in srgb, var(--color-accent) 13%, var(--color-bg));
+  transition:
+    --header-edge-top var(--logo-kids-duration) var(--logo-kids-ease),
+    --header-edge-main var(--logo-kids-duration) var(--logo-kids-ease);
+}
+
+/* Kids section: same gradients re-tinted with the kids sage green.
+   Trigger is data-section on the header (pathname / optimistic click),
+   not :has(.kids-theme) — that class only mounts after the kids RSC
+   segment streams in, so the tint would arrive too late. */
+.site-header[data-section="kids"] {
+  --header-edge-top: color-mix(in srgb, #507356 38%, var(--color-surface));
+  --header-edge-main: color-mix(in srgb, #507356 13%, #f5f7f5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-header {
+    transition: none;
+  }
+}
+
 .header-top {
   border-bottom: 1px solid var(--color-border);
-  /* Soft warm-brown wash at the outer edges, clean surface in the middle;
-     mixes the brand accent into the surface so it stays in the site palette. */
+  /* Warm wash at the outer edges, clean surface in the middle. */
   background: linear-gradient(
     90deg,
-    color-mix(in srgb, var(--color-accent) 18%, var(--color-surface)) 0%,
-    var(--color-surface) 26%,
-    var(--color-surface) 74%,
-    color-mix(in srgb, var(--color-accent) 18%, var(--color-surface)) 100%
+    var(--header-edge-top) 0%,
+    var(--color-surface) 13.5%,
+    var(--color-surface) 86.5%,
+    var(--header-edge-top) 100%
   );
 }
 
@@ -163,73 +211,78 @@ img {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
+  /* Keep width tweens from dirtying the sticky header paint layer. */
+  isolation: isolate;
 }
 
 .logo-image {
   display: block;
   height: 20px;
+  /* Inline SVG: derive width from the wordmark viewBox and paint via
+     currentColor so the vector matches the old PNG ink exactly. */
   width: auto;
+  aspect-ratio: 16489 / 2114;
+  color: var(--color-logo-ink);
+  flex: none;
 }
 
-/* «KIDS» pill next to the wordmark, shown only inside the kids section.
-   It's always in the DOM: on the main site it's collapsed to zero width
-   and fully transparent, in /kids it unfolds. Animating max-width (not
-   display) is what makes the switch feel deliberate: .logo is centered
-   with translateX(-50%), so as the pill grows the wordmark glides left a
-   few pixels to re-center — one calm, premium movement instead of a snap.
-   Same sage green as .kids-theme's --color-accent (that variable itself
-   isn't available up here in the header, which sits outside .kids-theme). */
-/* Two layers so the pill visibly *slides out* from behind the wordmark
-   (and slides back under it on the way out) instead of just growing in
-   place, which read as almost no animation at this size:
-   - .logo-kids-slot  — the clipping window; its max-width animates so the
-     wordmark glides while re-centering (.logo is translateX(-50%)-centered);
-   - .logo-kids-badge — the finished pill at its natural size, translated
-     fully left (hidden behind the wordmark's edge inside the clipped slot)
-     and sliding right into place. The pill never changes size, so the
-     border/rounding never squish mid-flight — it's the whole finished
-     badge that emerges, like a drawer opening. */
+/* «KIDS» pill next to the wordmark (kids section only).
+   Always in the DOM: adult ↔ kids is a CSS tween, not a mount jump.
+   .logo is translateX(-50%)-centered, so opening the slot re-centers the
+   pair and the wordmark glides left with the edge-tint tween.
+
+   Reveal = one layout property (width → fixed rem), overflow clip.
+   No badge translateX and no 0fr→1fr grid: those fought the logo's
+   -50% re-center and read as jerk. Gap is folded into the same width
+   so margin isn't a second layout tween. */
 .logo-kids-slot {
   display: inline-flex;
   align-items: center;
-  max-width: 0;
-  margin-left: 0;
+  flex: none;
+  box-sizing: border-box;
+  width: 0;
+  height: 20px; /* same cross-size as .logo-image for true flex centering */
+  margin: 0;
+  padding: 0;
   overflow: hidden;
-  transition:
-    max-width 1s cubic-bezier(0.22, 1, 0.36, 1),
-    margin-left 1s cubic-bezier(0.22, 1, 0.36, 1);
+  transform: translateY(var(--logo-kids-nudge-y));
+  transition: width var(--logo-kids-duration) var(--logo-kids-ease);
 }
 
 .logo-kids-slot.is-visible {
-  max-width: 5rem;
-  margin-left: 4px;
+  /* gap + badge in one width tween */
+  width: calc(var(--logo-kids-gap) + var(--logo-kids-w));
 }
 
 .logo-kids-badge {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   flex: none;
-  padding: 0.1rem 0.55rem;
+  box-sizing: border-box;
+  /* Sit after the gap; slot clips until width reaches this point. */
+  margin-left: var(--logo-kids-gap);
+  height: 1rem;
+  padding: 0 0.5rem;
   border: 1px solid color-mix(in srgb, #628c6a 55%, transparent);
   border-radius: 999px;
-  font-size: 0.66rem;
+  font-size: 0.625rem;
   font-weight: 600;
-  letter-spacing: 0.12em;
-  text-indent: 0.12em; /* balances letter-spacing's trailing gap */
+  letter-spacing: 0.1em;
+  text-indent: 0.1em; /* balances letter-spacing's trailing gap */
   text-transform: uppercase;
   line-height: 1;
   white-space: nowrap;
   color: #628c6a;
   opacity: 0;
-  transform: translateX(-110%);
-  transition:
-    transform 1s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.7s ease 0.05s;
+  /* Exit: fade with the closing wipe (base rule). Enter uses the
+     .is-visible rule below (slight delay so the clip has opened). */
+  transition: opacity 0.22s ease;
 }
 
 .logo-kids-slot.is-visible .logo-kids-badge {
   opacity: 1;
-  transform: translateX(0);
+  transition: opacity 0.32s ease 0.06s;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -271,6 +324,15 @@ img {
 
 .header-main {
   border-bottom: 1px solid var(--color-border);
+  /* Echo of the top-bar wash: white base, edges tuned to sit exactly
+     between the page background and the top bar's edge tone. */
+  background: linear-gradient(
+    90deg,
+    var(--header-edge-main) 0%,
+    var(--color-surface) 13.5%,
+    var(--color-surface) 86.5%,
+    var(--header-edge-main) 100%
+  );
 }
 
 .header-main-inner {
@@ -868,11 +930,170 @@ select:focus-visible {
 
 .system-state-loading {
   padding-block: var(--space-3xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-lg);
+  /* Delayed fade-in so the loader never flashes on near-instant
+     navigations. Kept short: the section cross-fade (loading.tsx flips
+     data-section at 550ms) must start only after this has finished,
+     otherwise the "from" color is never actually seen. */
+  opacity: 0;
+  animation: loading-appear 0.35s ease 0.15s forwards;
+}
+
+/* Brown ↔ kids-green recolor = cross-fade of two fully-painted variants
+   stacked in one grid cell. Opacity is compositor-only, so the recolor
+   stays fluid while the main thread streams the destination page (a
+   custom-property color tween runs on the main thread and would freeze
+   exactly then). The flip is driven by loading.tsx: mounts showing the
+   section being left, flips data-section a frame later. */
+.loading-stack {
+  display: grid;
+}
+
+.loading-visual {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-lg);
+  will-change: opacity;
+  /* Same tween as the header edge wash (--logo-kids-duration/ease live on
+     .site-header, so the values are repeated here). */
+  transition: opacity 0.72s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.loading-visual-adult {
+  --loading-base: var(--color-border);
+  --loading-ink: var(--color-logo-ink);
+  --loading-bar-a: var(--color-accent);
+  --loading-bar-b: var(--color-brand);
+}
+
+/* Kids palette = the interface greens themselves (kids accent/action +
+   the nav's sage), not darkened mixes — deep-green ink read too heavy. */
+.loading-visual-kids {
+  --loading-base: #d5dfd7;
+  --loading-ink: #507356;
+  --loading-bar-a: #598060;
+  --loading-bar-b: #507356;
+  opacity: 0;
+}
+
+.system-state-loading[data-section="kids"] .loading-visual-adult {
+  opacity: 0;
+}
+
+.system-state-loading[data-section="kids"] .loading-visual-kids {
+  opacity: 1;
+}
+
+.loading-mark {
+  position: relative;
+  width: min(14rem, 56vw);
+  /* The sheen animates mask-position (paint, not compositor); contain
+     keeps that repaint clipped to the wordmark box. */
+  contain: layout paint;
+}
+
+.loading-mark-base,
+.loading-mark-sheen {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.loading-mark-base {
+  color: var(--loading-base);
+}
+
+.loading-mark-sheen {
+  position: absolute;
+  inset: 0;
+  color: var(--loading-ink);
+  -webkit-mask-image: linear-gradient(105deg, transparent 25%, #000 45%, #000 55%, transparent 75%);
+  mask-image: linear-gradient(105deg, transparent 25%, #000 45%, #000 55%, transparent 75%);
+  -webkit-mask-size: 250% 100%;
+  mask-size: 250% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  animation: loading-sheen 2.4s cubic-bezier(0.45, 0.05, 0.35, 0.95) infinite;
+}
+
+.loading-track {
+  width: min(14rem, 56vw);
+  height: 2px;
+  border-radius: 999px;
+  background: var(--loading-base);
+  overflow: hidden;
+}
+
+.loading-track-bar {
+  display: block;
+  width: 34%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--loading-bar-a), var(--loading-bar-b));
+  /* transform-only glide stays on the compositor */
+  animation: loading-glide 1.6s cubic-bezier(0.55, 0.1, 0.45, 0.9) infinite;
+  will-change: transform;
 }
 
 .system-state-loading-text {
-  color: var(--color-fg-secondary);
-  font-size: 1rem;
+  color: var(--color-fg-muted);
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@keyframes loading-appear {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes loading-sheen {
+  0% {
+    -webkit-mask-position: 100% 0;
+    mask-position: 100% 0;
+  }
+  100% {
+    -webkit-mask-position: 0% 0;
+    mask-position: 0% 0;
+  }
+}
+
+@keyframes loading-glide {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(420%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .system-state-loading {
+    opacity: 1;
+    animation: none;
+  }
+
+  .loading-visual {
+    transition: none;
+  }
+
+  .loading-mark-sheen {
+    animation: none;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .loading-track-bar {
+    animation: none;
+    width: 100%;
+    transform: none;
+  }
 }
 
 .checkout-payment-clarity {
@@ -892,11 +1113,19 @@ select:focus-visible {
   text-align: left;
 }
 
-/* ---- Site Footer ---- */
+/* ---- Site Footer ----
+   Brand window on the left Шоурум/Каталог power line | four nav columns on
+   a 1.2 : 1 : 1 : 1 gap rhythm | last column on the right power line
+   (Контакты / Корзина). Empty grid tracks are the gutters; nav uses
+   display:contents so its columns participate in this grid.
+   Shared --footer-head-* / --footer-row-h keep brand + nav on one lattice.
+   Brand frame is 4px short of the row; band margins compensate so the
+   window stays vertically centered between the two rules. */
 
 .site-footer {
   border-top: 1px solid var(--color-border);
-  padding-block: var(--space-lg) var(--space-md);
+  /* Vertical air between the two rules lives on .footer-columns margins. */
+  padding-block: 0 var(--space-lg);
   margin-top: 2.5rem;
   color: var(--color-fg-secondary);
   font-size: 0.9rem;
@@ -905,108 +1134,216 @@ select:focus-visible {
 .footer-inner {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: 0;
 }
 
-/* Brand masthead | nav block. Brand column = content width (no empty track). */
 .footer-columns {
+  --footer-head-h: 1.35rem;
+  --footer-head-gap: 1rem;
+  /* Roomier row pitch for column link lists (and brand lead on the same lattice). */
+  --footer-row-h: 2rem;
+  /* Visible air from each rule to the brand frame (keep equal → centered). */
+  --footer-band-inset: 0.45rem;
+  /* Trim the frame bottom (padding), not a %-height hack - brand may be
+     the tallest grid item once the bullet list is in. */
+  --footer-brand-crop: 8px;
+  /* Brand window air (also applied as invisible pad on nav columns). */
+  --footer-brand-pad-x: 1.75rem;
+  --footer-brand-pad-y: 1.6rem;
+  /* Base nav gutter; brand stand-off is always 1.2× this.
+     Use a literal Nfr max (not calc(N * 1fr)) - fr-in-calc is unreliable. */
+  --footer-nav-gap: 3.25rem;
   display: grid;
-  grid-template-columns: max-content minmax(0, 1fr);
-  column-gap: var(--space-md);
-  row-gap: var(--space-lg);
+  width: 100%;
+  margin-block: var(--footer-band-inset);
+  grid-template-columns:
+    max-content
+    minmax(calc(var(--footer-nav-gap) * 1.2), 1.2fr)
+    max-content
+    minmax(var(--footer-nav-gap), 1fr)
+    max-content
+    minmax(var(--footer-nav-gap), 1fr)
+    max-content
+    minmax(var(--footer-nav-gap), 1fr)
+    max-content;
   align-items: start;
 }
 
+/* Children become grid items of .footer-columns (gap tracks stay empty). */
 .footer-nav {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  column-gap: var(--space-md);
-  row-gap: var(--space-lg);
-  align-items: start;
-  min-width: 0;
+  display: contents;
+}
+
+.footer-brand {
+  grid-column: 1;
+}
+
+.footer-nav .footer-column:nth-child(1) {
+  grid-column: 3;
+}
+
+.footer-nav .footer-column:nth-child(2) {
+  grid-column: 5;
+}
+
+.footer-nav .footer-column:nth-child(3) {
+  grid-column: 7;
+}
+
+.footer-nav .footer-column:nth-child(4) {
+  grid-column: 9;
 }
 
 .footer-column {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  align-items: flex-start;
 }
 
-/* Nav column titles */
-.footer-column-title {
-  display: block;
-  margin: 0;
-  font-size: 0.95rem;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  line-height: 1.25;
-  color: var(--color-fg);
+/* Invisible pad matching the brand window so nav titles/rows share the lattice. */
+.footer-nav .footer-column {
+  padding-block: var(--footer-brand-pad-y);
 }
 
-/* Brand masthead - larger wordmark + tagline vs nav links */
+/* Brand window: left edge flush with the Шоурум/Каталог power line.
+   Top-aligned copy keeps wordmark/rows on the shared lattice with nav;
+   align-items:center parks the left-aligned cluster on the horizontal
+   midline of the frame. Bottom pad is cropped by --footer-brand-crop. */
 .footer-brand {
-  min-width: 0;
-  max-width: 22rem;
+  position: relative;
+  box-sizing: border-box;
+  align-self: start;
+  align-items: center;
+  justify-content: flex-start;
+  height: auto;
+  padding: var(--footer-brand-pad-y) var(--footer-brand-pad-x)
+    calc(var(--footer-brand-pad-y) - var(--footer-brand-crop));
+  margin: 0;
+  border: none;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 0 0 1px var(--color-border);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-accent) 28%, var(--color-bg)) 0%,
+    var(--color-bg) 36%,
+    var(--color-bg) 100%
+  );
+}
+
+/* Left-aligned copy cluster, parked in the middle of the frame. */
+.footer-brand-copy {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.55rem;
+  width: max-content;
+  max-width: 100%;
+}
+
+/* Shared header slot: wordmark and caps labels share height + bottom gap.
+   align-items:center so the 18px wordmark and ~12px caps share one optical
+   midline (flex-end left the SVG sitting visibly above the column titles). */
+.footer-column-title {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: var(--footer-head-h);
+  margin: 0 0 var(--footer-head-gap);
+  padding: 0;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  line-height: 1;
+  color: var(--color-fg);
 }
 
 .footer-brand-logo {
-  display: block;
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 500;
-  letter-spacing: -0.03em;
-  line-height: 1.05;
   color: var(--color-fg);
   text-decoration: none;
 }
 
+.footer-brand .footer-column-title {
+  /* Tighter gap from wordmark to the description block (nav keeps 1rem). */
+  margin-bottom: 0.65rem;
+}
+
 .footer-brand-logo:hover {
   color: var(--color-fg);
+  text-decoration: none;
+}
+
+.footer-brand-wordmark {
+  display: block;
+  height: 18px;
+  width: auto;
+  aspect-ratio: 16489 / 2114;
+}
+
+/* Shared body: every row is the same fixed height, no extra gap */
+.footer-column-body {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  font-size: 0.875rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
 }
 
 .footer-brand-lead {
-  margin: 0;
+  font-size: 0.875rem;
+}
+
+/* Disc bullets for brand capability lines - real list markers, not hyphens. */
+.footer-brand-bullets {
+  margin-block: 0.25rem;
+  padding: 0;
+  list-style: none;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 0.25rem;
-  font-size: 0.95rem;
-  font-weight: 400;
-  line-height: 1.4;
-  letter-spacing: -0.015em;
+}
+
+.footer-brand-bullets .footer-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.footer-brand-bullets .footer-row::before {
+  content: "";
+  flex: none;
+  width: 0.3em;
+  height: 0.3em;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.75;
+}
+
+.footer-row {
+  display: block;
+  box-sizing: border-box;
+  height: var(--footer-row-h);
+  margin: 0;
+  padding: 0;
+  line-height: var(--footer-row-h);
+  white-space: nowrap;
   color: var(--color-fg-secondary);
 }
 
-.footer-brand-lead-line {
+.footer-column-links .footer-row {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.footer-column-links .footer-row a {
   display: block;
-  text-wrap: pretty;
-}
-
-.footer-column-links {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  font-size: 0.95rem;
-}
-
-.footer-column-links li {
-  margin: 0;
-  line-height: 1.4;
-}
-
-.footer-column-links a {
+  height: 100%;
   color: var(--color-fg-muted);
 }
 
-.footer-column-links a:hover {
+.footer-column-links .footer-row a:hover {
   color: var(--color-fg);
 }
 
@@ -1020,53 +1357,52 @@ select:focus-visible {
 
 @media (max-width: 1100px) {
   .footer-columns {
-    column-gap: var(--space-md);
-  }
-
-  .footer-nav {
-    column-gap: var(--space-sm);
-  }
-
-  .footer-brand {
-    max-width: 20rem;
-  }
-
-  .footer-brand-lead {
-    font-size: 0.9rem;
+    --footer-nav-gap: 2.5rem;
   }
 }
 
 @media (max-width: 900px) {
   .footer-columns {
     grid-template-columns: 1fr;
-    row-gap: var(--space-lg);
+    row-gap: var(--space-xl);
+    margin-block: var(--space-lg);
   }
 
   .footer-nav {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: var(--space-lg);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xl);
+  }
+
+  .footer-brand,
+  .footer-nav .footer-column:nth-child(1),
+  .footer-nav .footer-column:nth-child(2),
+  .footer-nav .footer-column:nth-child(3),
+  .footer-nav .footer-column:nth-child(4) {
+    grid-column: auto;
   }
 
   .footer-brand {
-    max-width: 32rem;
+    margin: 0;
   }
 
-  .footer-brand-lead {
-    font-size: 0.95rem;
+  .footer-nav .footer-column {
+    padding-block: 0;
   }
 }
 
 @media (max-width: 520px) {
   .footer-nav {
-    grid-template-columns: 1fr;
+    flex-direction: column;
+    gap: var(--space-lg);
   }
 
-  .footer-brand-logo {
-    font-size: 1.35rem;
+  .footer-brand-wordmark {
+    height: 16px;
   }
 
   .footer-brand-lead {
-    font-size: 0.9rem;
+    font-size: 0.875rem;
   }
 }
 
@@ -1222,7 +1558,7 @@ button:disabled,
   letter-spacing: 0.02em;
 }
 
-.product-detail .oliver-media-absent.product-detail-img {
+.pdp-media .oliver-media-absent.product-detail-img {
   object-fit: none;
   display: flex;
   align-items: center;
@@ -1330,6 +1666,12 @@ button:disabled,
   scroll-snap-align: start;
 }
 
+/* Catalog card only (PDP thumbs keep their own inset): the thumb strip starts
+   on the same left axis as the card text and the selector labels above. */
+.product-card .product-card-media-thumbs-track {
+  padding-inline: calc(var(--product-card-gutter, var(--space-lg)) - 0.4rem);
+}
+
 /* Legacy class kept for any stale references; carousel uses track above */
 .product-card-media-thumbs {
   display: flex;
@@ -1353,7 +1695,7 @@ button:disabled,
   width: 40px;
   height: 40px;
   padding: 0;
-  border: 2px solid transparent;
+  border: 1px solid transparent;
   border-radius: 4px;
   overflow: hidden;
   cursor: pointer;
@@ -1366,7 +1708,8 @@ button:disabled,
 }
 
 .product-card-media-thumb.is-active {
-  border-color: var(--color-action);
+  /* Quiet 1px frame - action hue mixed down so it doesn't shout over the photo */
+  border-color: color-mix(in srgb, var(--color-action) 45%, var(--color-border));
 }
 
 .product-card-media-thumb-img {
@@ -1391,8 +1734,8 @@ button:disabled,
   gap: 6px;
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 6px var(--space-sm, 0.5rem) 0;
-  min-height: 36px;
+  padding: 4px var(--space-sm, 0.5rem) 0;
+  min-height: 30px;
   box-sizing: border-box;
   align-items: center;
   background: var(--color-bg);
@@ -1406,10 +1749,10 @@ button:disabled,
 .product-card-execution-swatch,
 .product-card-color-swatch {
   flex: 0 0 auto;
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   padding: 0;
-  border: 1px solid rgba(44, 40, 36, 0.14);
+  border: 1px solid rgba(44, 40, 36, 0.12);
   border-radius: 4px;
   overflow: hidden;
   cursor: pointer;
@@ -1445,8 +1788,8 @@ button:disabled,
 .product-card-execution-controls {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.5rem 0 0.25rem;
+  gap: 0.3rem;
+  padding: 0.5rem 0 0.3rem;
   background: var(--color-bg);
   position: relative;
   z-index: 1;
@@ -1454,11 +1797,15 @@ button:disabled,
 
 .product-card-selector-section {
   display: grid;
-  grid-template-columns: 3.25rem minmax(0, 1fr);
+  /* Fallback when subgrid is unavailable: fixed min keeps swatch rails on
+     one shared left edge; max-content lets a long label push, not clip. */
+  grid-template-columns: minmax(3.25rem, max-content) minmax(0, 1fr);
   align-items: center;
-  gap: 0 10px;
-  padding: 0 var(--space-sm, 0.5rem);
-  min-height: unset;
+  gap: 0 12px;
+  /* Same inline inset as .product-card .card-body - labels sit on the same
+     left axis as the brand/name/price text below. */
+  padding: 0 calc(var(--product-card-gutter, var(--space-lg)) - 0.4rem);
+  min-height: 24px;
   box-sizing: border-box;
   background: var(--color-bg);
   position: relative;
@@ -1466,13 +1813,33 @@ button:disabled,
   pointer-events: auto;
 }
 
+/* Label column sized by the widest label of THIS card (subgrid), so short
+   labels (Цвет/Дерево) don't inherit a wide fixed track - swatches start
+   right after the longest label instead of a fixed 60px column. */
+@supports (grid-template-columns: subgrid) {
+  .product-card-execution-controls {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    column-gap: 12px;
+    row-gap: 0.3rem;
+  }
+
+  .product-card-execution-controls > .product-card-selector-section {
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+  }
+}
+
+/* Micro-caps label - same voice as section titles, quiet next to swatches */
 .product-card-selector-label {
-  font-size: 0.625rem;
-  color: color-mix(in srgb, var(--color-fg-muted) 90%, transparent);
+  font-size: 0.5625rem;
+  font-weight: 500;
+  color: var(--color-fg-muted);
   flex: 0 0 auto;
-  line-height: 1.1;
+  line-height: 1.2;
   white-space: nowrap;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
 }
 
 .product-card-model-chips {
@@ -1487,7 +1854,7 @@ button:disabled,
   flex-wrap: nowrap;
   gap: 5px;
   padding: 0;
-  min-height: 32px;
+  min-height: 28px;
   overflow-x: auto;
   min-width: 0;
 }
@@ -1496,8 +1863,6 @@ button:disabled,
 .product-card-swatch-scroll-rail {
   position: relative;
   min-width: 0;
-  /* Keep chip row clear of any overlay scrollbar gutter */
-  padding-bottom: 2px;
 }
 
 .product-card-swatch-scroll-rail .product-card-swatch-scroll-rail__track {
@@ -1508,9 +1873,9 @@ button:disabled,
   /* Small inline padding so the active-swatch ring is not clipped by the
      scroll container at the row edges. */
   padding: 0 4px;
-  /* Tall enough for the 28px scroll arrows and the active-swatch ring
-     (24px swatch + 3px ring each side) without vertical clipping. */
-  min-height: 32px;
+  /* Room for the active-swatch ring (20px swatch + 2.5px ring each side)
+     and the full-height edge arrows without vertical clipping. */
+  min-height: 28px;
   overflow-x: auto;
   overflow-y: hidden;
   min-width: 0;
@@ -1529,55 +1894,85 @@ button:disabled,
   background: transparent;
 }
 
+/* Edge arrows: quiet full-height chevrons on a soft fade instead of a round
+   floating button - swatches slide under the fade, nothing overlaps them. */
 .product-card-swatch-scroll-arrow {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 0;
+  bottom: 0;
   z-index: 2;
-  width: 28px;
-  height: 28px;
+  width: 22px;
+  height: auto;
   padding: 0;
-  border: 1px solid var(--color-border);
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--color-surface) 94%, transparent);
-  color: var(--color-fg-secondary);
-  font-size: 0.875rem;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-fg-muted);
+  font-size: 0.8125rem;
   line-height: 1;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 1px 3px rgba(44, 36, 32, 0.1);
+  box-shadow: none;
+  transition: color 0.15s;
+  animation: swatch-scroll-arrow-in 0.2s ease;
+}
+
+@keyframes swatch-scroll-arrow-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .product-card-swatch-scroll-arrow:hover {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
+  color: var(--color-fg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-card-swatch-scroll-arrow {
+    animation: none;
+  }
+
+  .product-card-swatch-scroll-rail .product-card-swatch-scroll-rail__track {
+    transition: none;
+    scroll-behavior: auto;
+  }
 }
 
 .product-card-swatch-scroll-arrow:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
-  outline-offset: 1px;
+  outline-offset: -2px;
+  border-radius: var(--radius-sm);
 }
 
 .product-card-swatch-scroll-arrow--prev {
   left: 0;
+  justify-content: flex-start;
+  padding-left: 2px;
+  background: linear-gradient(to right, var(--color-bg) 55%, transparent);
 }
 
 .product-card-swatch-scroll-arrow--next {
   right: 0;
+  justify-content: flex-end;
+  padding-right: 2px;
+  background: linear-gradient(to left, var(--color-bg) 55%, transparent);
 }
 
-.product-card-swatch-scroll-rail:has(.product-card-swatch-scroll-arrow--prev)
-  .product-card-swatch-scroll-rail__track {
-  padding-left: 30px;
-}
+/* Arrows overlay the strip (no reserved padding): the track length never
+   changes when an arrow appears mid-scroll, so an arrow click always lands
+   flush on the edge in one smooth run. The snap logic in scrollSwatches
+   offsets interior stops past the fade so the first visible chip is clear. */
 
-.product-card-swatch-scroll-rail:has(.product-card-swatch-scroll-arrow--next)
-  .product-card-swatch-scroll-rail__track {
-  padding-right: 30px;
-}
-
+/* Execution option groups (Дерево/Обивка/Цвет/Изголовье/…) are portalled out
+   of .product-detail-media-switcher into #pdp-color-options-slot — above the
+   CTA in the buy panel (configuration always precedes the action). Styled here
+   so the group heading / swatch sizing matches the PDP buy panel wherever the
+   portal lands them. */
 .pdp-color-options-slot {
   margin-top: var(--space-xs);
 }
@@ -1871,11 +2266,12 @@ button:disabled,
 
 .product-card-model-chip {
   flex: 0 0 auto;
-  font-size: 0.6875rem;
+  font-size: 0.625rem;
   line-height: 1.2;
-  padding: 3px 8px;
+  letter-spacing: 0.02em;
+  padding: 2.5px 7px;
   border: 1px solid rgba(44, 40, 36, 0.12);
-  border-radius: 3px;
+  border-radius: 4px;
   background: var(--color-surface);
   color: color-mix(in srgb, var(--color-fg-muted) 88%, transparent);
   cursor: pointer;
@@ -1964,13 +2360,13 @@ button:disabled,
   background: #3d2b24;
 }
 
-/* Selected swatch: surface gap + calm dark ring — unambiguous but quiet */
+/* Selected swatch: surface gap + calm dark ring - unambiguous but quiet */
 .product-card-execution-swatch.is-active,
 .product-card-color-swatch.is-active {
   border: 1px solid transparent;
   box-shadow:
     0 0 0 1.5px var(--color-surface),
-    0 0 0 3px color-mix(in srgb, var(--color-action) 62%, transparent);
+    0 0 0 2.5px color-mix(in srgb, var(--color-action) 55%, transparent);
 }
 
 .product-card-execution-swatch:focus-visible,
@@ -2014,6 +2410,7 @@ button:disabled,
 }
 
 .product-card .card-body .card-text-stack > .card-context,
+.product-card .card-body .card-text-stack > .card-context-row,
 .product-card .card-body .card-text-stack > h3,
 .product-card .card-body .card-text-stack > .card-dimensions,
 .product-card .card-body .card-text-stack > .card-price-row {
@@ -2051,6 +2448,22 @@ button:disabled,
   font-size: 0.75rem;
   color: var(--color-fg-muted);
   letter-spacing: 0.02em;
+}
+
+/* Brand line: context left, variant count («5 размеров») pinned top-right.
+   The text stack aligns children flex-start, so stretch this row explicitly -
+   otherwise it shrink-wraps and margin-left:auto has no room to push. */
+.card-context-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  align-self: stretch;
+}
+
+.card-context-row .variant-hint {
+  margin-left: auto;
+  font-size: 0.75rem;
+  white-space: nowrap;
 }
 
 .card-dimensions {
@@ -2222,6 +2635,8 @@ button:disabled,
    One size step below the lead (16px vs 15px): its 500 weight + colour
    already carry emphasis, so equal size would make it outweigh the lead. */
 .catalog-hero-kids-link {
+  /* Slight air after the room list before the Kids entry point. */
+  margin-inline-start: 0.25rem;
   color: #628c6a;
   font-size: 0.875rem;
   font-weight: 500;
@@ -2309,48 +2724,114 @@ button:disabled,
 /* ---- Filter Tabs ---- */
 
 .filter-tabs {
+  /* Nested capsule math: outer R = pill R + pad + border, so the gap
+     between the active fill and the track stroke stays even all the way
+     around the tip (not pinched at the apex). Height hugs the 32px tab
+     with no leftover flex slack — leftover vertical space was making the
+     side gap 4px and the top/bottom gap 5px, which broke concentricity. */
+  --filter-tab-h: 32px;
+  --filter-tabs-pad: 4px;
+  --filter-tabs-border-w: 1px;
+  --filter-tabs-radius: calc(
+    var(--filter-tab-h) / 2 + var(--filter-tabs-pad) + var(--filter-tabs-border-w)
+  );
+
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   position: relative;
-  height: 44px;
+  height: calc(
+    var(--filter-tab-h) + 2 * var(--filter-tabs-pad) + 2 * var(--filter-tabs-border-w)
+  );
   gap: 4px;
-  padding: 4px;
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
+  padding: var(--filter-tabs-pad);
+  border: var(--filter-tabs-border-w) solid var(--color-border);
+  border-radius: var(--filter-tabs-radius);
   background: color-mix(in srgb, var(--color-surface) 86%, var(--color-bg));
+  /* Clip sliding pills to the capsule. translateZ(0) makes a containing
+     layer so transformed children respect overflow+radius in WebKit/Blink
+     — without the elliptical radial-gradient mask, which soft-clipped the
+     tips and made the stroke gap look uneven at the apex. */
+  overflow: hidden;
+  isolation: isolate;
+  transform: translateZ(0);
 }
 
-/* The sliding dark pill behind the active tab. Positioned from JS
-   measurements (offsetLeft/offsetWidth of .filter-tab-active), glides
-   between tabs on change instead of the background snapping. Its first
-   mount paints in place (transition only animates subsequent moves).
-   The move itself is a transform (translate3d), not left/top: transform
-   animates on the compositor thread, so the glide stays smooth even
-   while the main thread is busy re-rendering the product grid after the
-   route change. Only width/height (which do need layout) remain as
-   transitioned box properties — the element is absolutely positioned
-   with no children, so that layout is contained and cheap. */
-.filter-tabs-indicator {
+/* Sliding pills: single rounded rects. Outer track R = pill R + pad +
+   border (see --filter-tabs-radius), so the gap to the stroke stays even
+   around the tip. */
+.filter-tabs-indicator,
+.filter-tabs-hover-ghost {
   position: absolute;
   left: 0;
   top: 0;
   z-index: 0;
-  border-radius: 999px;
-  background: var(--color-action);
-  box-shadow: 0 4px 14px rgba(44, 36, 32, 0.12);
   pointer-events: none;
-  will-change: transform;
+  border-radius: calc(var(--filter-tab-h) / 2);
+  will-change: transform, width;
+}
+
+.filter-tabs-indicator {
+  /* Short + decisive: settles before the eye registers lag. */
+  --pill-speed: 0.26s;
+  --pill-ease: cubic-bezier(0.2, 0.9, 0.2, 1);
+  background: var(--color-action);
   transition:
-    transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-    width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-    height 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    transform var(--pill-speed) var(--pill-ease),
+    width var(--pill-speed) var(--pill-ease),
+    height var(--pill-speed) var(--pill-ease),
+    background-color 0.12s ease;
+}
+
+/* Hovering the already-active tab: the flat dark pill answers with the
+   same hover color as the no-slider fallback (ghost is hidden on active). */
+.filter-tabs[data-slider]:has(.filter-tab-active:hover) .filter-tabs-indicator {
+  background: var(--color-action-hover);
+}
+
+/* Accent wash (brown / kids sage via --color-accent). Faster than the
+   indicator — cursor shadow, not a second selector. */
+.filter-tabs-hover-ghost {
+  --pill-speed: 0.16s;
+  --pill-ease: cubic-bezier(0.2, 0.9, 0.2, 1);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-accent) 8%, var(--color-surface)) 0%,
+    color-mix(in srgb, var(--color-accent) 18%, var(--color-surface)) 100%
+  );
+  opacity: 0;
+  will-change: transform, opacity, width;
+  transition:
+    transform var(--pill-speed) var(--pill-ease),
+    width var(--pill-speed) var(--pill-ease),
+    height var(--pill-speed) var(--pill-ease),
+    opacity 0.1s ease;
+}
+
+.filter-tabs-hover-ghost[data-shown] {
+  opacity: 1;
+}
+
+/* Re-appearing ghost snaps into place (JS sets data-instant around the
+   reposition), then only fades — no glide from a stale position. */
+.filter-tabs-hover-ghost[data-instant] {
+  transition: none;
+}
+
+/* Touch: there is no real hover, and pointerleave may never fire — the
+   ghost would stick to the last tapped tab. */
+@media (hover: none) {
+  .filter-tabs-hover-ghost {
+    display: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .filter-tabs-indicator,
+  .filter-tabs-hover-ghost,
   .filter-tab {
     transition: none;
+    animation: none;
   }
 }
 
@@ -2359,20 +2840,19 @@ button:disabled,
   align-items: center;
   position: relative;
   z-index: 1; /* label above the sliding indicator */
-  height: 32px;
+  height: var(--filter-tab-h);
   padding: 0 12px;
   border: 1px solid transparent;
-  border-radius: 999px;
+  border-radius: calc(var(--filter-tab-h) / 2);
   font-size: 0.8rem;
   font-weight: 500;
   color: var(--color-fg-secondary);
   text-decoration: none;
-  /* Label recolor rides the same 0.45s curve as the pill's glide, so the
-     text finishes going light exactly when the pill settles under it. */
+  /* Label recolor rides the same curve/duration as the pill's glide. */
   transition:
     background 0.15s,
     border-color 0.15s,
-    color 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    color 0.26s cubic-bezier(0.2, 0.9, 0.2, 1);
 }
 
 .filter-tab:hover {
@@ -2380,6 +2860,20 @@ button:disabled,
   border-color: var(--color-border);
   color: var(--color-fg);
   text-decoration: none;
+}
+
+/* Once the sliding layers are mounted, the gliding ghost owns the hover
+   fill — per-tab backgrounds would double it up and snap while the ghost
+   glides. The label deepens toward the section accent over the accent
+   wash: brown-tinted ink in the adult catalog, green in kids. */
+.filter-tabs[data-slider] .filter-tab:hover {
+  background: transparent;
+  border-color: transparent;
+  color: color-mix(in srgb, var(--color-accent) 55%, var(--color-fg));
+}
+
+.filter-tabs[data-slider] .filter-tab-active:hover {
+  color: var(--color-surface);
 }
 
 /* Static dark pill: the SSR / no-JS fallback, and also what paints before
@@ -2390,7 +2884,6 @@ button:disabled,
   background: var(--color-action);
   color: var(--color-surface);
   border-color: var(--color-action);
-  box-shadow: 0 4px 14px rgba(44, 36, 32, 0.12);
 }
 
 .filter-tab-active:hover {
@@ -2825,17 +3318,15 @@ button:disabled,
    container (.catalog-filter-scroll) it would be pulled above the scroll
    box's content edge, and anything past that edge is unreachable — the
    chips rendered with their tops sliced off.
-   The negative bottom margin instead trims .catalog-filter-scroll's own
-   1.1rem inter-block gap down to the same ~6px the chips use between
-   themselves — the chips are a summary of the fieldset right below them,
-   not a separate block, so they read tighter than the gap between the
-   two fieldsets further down. */
+   A light negative bottom margin only slightly trims the scroll column's
+   0.65rem gap — enough air under the chip before «Коллекции», without
+   reading as a separate block above the fieldsets. */
 .catalog-active-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
   align-items: center;
-  margin-bottom: -0.35rem;
+  margin-bottom: -0.1rem;
 }
 
 .catalog-active-empty {
@@ -2964,9 +3455,7 @@ button:disabled,
    The negative top margin (safe here, unlike on .catalog-active-chips:
    it moves *this whole box* relative to the head above, not an internal
    child relative to its own scrolling edge) trims the panel's 1.1rem
-   head→scroll gap down to match the chips' 12px margin-bottom below, so
-   an active chip sits vertically centered between the head divider and
-   the fieldset legend under it. */
+   head→scroll gap so an active chip sits calmly under the head divider. */
 .catalog-filter-scroll {
   display: flex;
   flex-direction: column;
@@ -4558,50 +5047,6 @@ a.pdp-size-chip:hover {
   --color-border: #e0d8d0;
 }
 
-.bespoke-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: var(--space-sm);
-  margin-bottom: var(--space-lg);
-  border-bottom: 1px solid var(--color-border);
-}
-
-/* /bespoke/request reads faster without the section subnav (title + rule):
-   the page's own compact intro is the entry point there. Scoped via :has()
-   so /bespoke and /bespoke/catalog keep the subnav unchanged — the shared
-   bespoke/layout.tsx itself isn't touched. */
-.bespoke-theme:has(.bespoke-request-page) .bespoke-nav {
-  display: none;
-}
-
-.bespoke-nav-title {
-  font-weight: 600;
-  font-size: 0.95rem;
-  color: var(--color-accent);
-}
-
-.bespoke-nav-title:hover {
-  text-decoration: none;
-}
-
-.bespoke-nav-links {
-  display: flex;
-  gap: var(--space-lg);
-}
-
-.bespoke-nav-links a {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--color-fg-secondary);
-  transition: color 0.15s;
-}
-
-.bespoke-nav-links a:hover {
-  color: var(--color-fg);
-  text-decoration: none;
-}
-
 /* ---- Cross-Entry Block ---- */
 
 .cross-entry-block {
@@ -5120,55 +5565,173 @@ a.pdp-size-chip:hover {
   }
 }
 
-/* ---- Bespoke landing lists ---- */
+/* ---- Bespoke landing (/bespoke) ----
+   One-viewport composition on desktop: shared 4-col rail for «when» and
+   «process», no decorative cards, tight section rhythm under the header. */
 
-.bespoke-info-list {
-  list-style: none;
+.bespoke-landing {
+  --bespoke-cols: repeat(4, minmax(0, 1fr));
+  --bespoke-gap: 1.25rem;
+  --bespoke-section-y: 0.85rem;
+  /* Cancel .page-section vertical padding - land under header, sit above footer */
+  margin-block: calc(-1 * var(--space-xl));
+  min-height: calc(100dvh - 6.75rem);
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
-  margin-top: var(--space-md);
+  justify-content: space-between;
+  box-sizing: border-box;
+  padding-bottom: var(--space-md);
 }
 
-.bespoke-info-list li {
+.bespoke-landing .hero {
+  padding: var(--space-md) 0 var(--bespoke-section-y);
+  text-align: center;
+}
+
+.bespoke-landing .hero h1 {
+  font-size: clamp(1.55rem, 2.1vw, 1.85rem);
+  margin: 0 0 0.45rem;
+  letter-spacing: -0.02em;
+}
+
+.bespoke-landing .hero p {
+  max-width: 36rem;
+  margin-inline: auto;
+  margin-block: 0;
   color: var(--color-fg-secondary);
-  line-height: 1.6;
+  font-size: 0.9375rem;
+  line-height: 1.45;
 }
 
-.bespoke-info-list strong {
-  color: var(--color-fg);
+.bespoke-landing .hero-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 0.85rem;
 }
 
-.bespoke-process-list {
+.bespoke-landing .hero-note {
+  margin-top: 0.65rem;
+  color: var(--color-fg-muted);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.bespoke-section {
+  padding-block: var(--bespoke-section-y);
+  border-top: 1px solid var(--color-border);
+}
+
+.bespoke-section-title {
+  font-size: 1.05rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.7rem;
+}
+
+.bespoke-when-grid,
+.bespoke-process-grid {
   list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: var(--bespoke-cols);
+  gap: var(--bespoke-gap);
+  align-items: start;
+}
+
+/* Flat columns on the same rail as process - no card chrome */
+.bespoke-when-card,
+.bespoke-process-step {
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
-  margin-top: var(--space-md);
+  align-items: flex-start;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0.55rem 0 0;
+  border-top: 1px solid var(--color-border);
+  background: transparent;
+  border-radius: 0;
+  border-right: none;
+  border-bottom: none;
+  border-left: none;
 }
 
-.bespoke-process-list li {
-  display: flex;
-  gap: var(--space-md);
-  align-items: flex-start;
+.bespoke-when-card h3,
+.bespoke-process-step h3 {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.bespoke-when-card p,
+.bespoke-process-step p {
+  color: var(--color-fg-secondary);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  margin: 0;
 }
 
 .bespoke-process-step-index {
-  flex-shrink: 0;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
-  border: 1px solid var(--color-border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.85rem;
-  color: var(--color-fg-secondary);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-accent);
+  line-height: 1;
 }
 
-.bespoke-process-list p {
+.bespoke-final-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.45rem;
+  padding-block: var(--bespoke-section-y) 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.bespoke-final-cta .bespoke-section-title {
+  margin: 0;
+}
+
+.bespoke-final-cta p {
   color: var(--color-fg-secondary);
-  margin-top: 0.15rem;
+  max-width: 32rem;
+  margin: 0;
+  line-height: 1.4;
+  font-size: 0.8125rem;
+}
+
+.bespoke-final-cta .btn {
+  margin-top: 0.35rem;
+}
+
+@media (max-width: 900px) {
+  .bespoke-landing {
+    min-height: 0;
+    justify-content: flex-start;
+    margin-bottom: 0;
+    padding-bottom: var(--space-lg);
+  }
+
+  .bespoke-when-grid,
+  .bespoke-process-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .bespoke-landing .hero h1 {
+    font-size: 1.5rem;
+  }
+
+  .bespoke-when-grid,
+  .bespoke-process-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ---- Eyebrow ---- */
@@ -5183,12 +5746,12 @@ a.pdp-size-chip:hover {
 }
 
 /* ---- Bespoke request page ----
-   Compact intro (no eyebrow, no section subnav — see .bespoke-nav:has()
-   override above), then a two-column desktop composition where the form
-   card is the primary object (left, compact, starts right under the intro)
-   and a visualized two-card "help" aside sits to the right, lighter and
-   narrower than the form. Below the 880px breakpoint everything stacks
-   into one column in this order: intro -> form card -> help. */
+   Compact intro (no eyebrow, no section subnav), then a two-column desktop
+   composition where the form card is the primary object (left, compact,
+   starts right under the intro) and a visualized two-card "help" aside sits
+   to the right, lighter and narrower than the form. Below the 880px
+   breakpoint everything stacks into one column in this order:
+   intro -> form card -> help. */
 
 .bespoke-request-page {
   display: flex;

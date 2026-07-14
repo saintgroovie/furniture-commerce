@@ -64,11 +64,13 @@ export const systemCopy = {
 }
 
 export const footer = {
-  /** Masthead blurb under brand wordmark - two thoughts, not a link list. */
-  brandText: [
-    "Мебель из массива для взрослых и детских комнат",
-    "Готовые модели, комнаты целиком и работа по проекту",
-  ],
+  /** Masthead under brand wordmark. Lead + disc bullets + closing;
+   * each string is one grid row (same pitch as nav links). */
+  brandText: {
+    lead: ["Мебель из массива", "для взрослых и детских комнат"],
+    bullets: ["Готовые модели", "Окрашивание и роспись", "Стеновые панели"],
+    closing: ["Проекты любой сложности"],
+  },
   columns: [
     {
       title: "Каталог",
