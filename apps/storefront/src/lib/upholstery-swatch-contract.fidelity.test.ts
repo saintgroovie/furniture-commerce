@@ -43,8 +43,8 @@ assert.match(
 
 assert.match(
   core,
-  /isPdpLayout \? undefined : \{ enabled: false \}/,
-  "catalog must call useSwatchColors with enabled:false (no Image sampling)"
+  /useSwatchColors\([\s\S]*?\{ enabled: false \}\s*\)/,
+  "catalog and PDP must use metadata/token swatches without Image sampling"
 )
 assert.equal(
   /useSwatchColors\([\s\S]*?enabled:\s*cardStripProbeEnabled/.test(core),

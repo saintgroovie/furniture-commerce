@@ -60,8 +60,43 @@ const oliverStripPath = path.join(root, "lib/oliver-pdp-thumb-strip.ts")
   )
   assert.match(
     core,
+    /isPdpLayout\s*\?\s*\{\s*mode:\s*"optimistic"\s*\}/,
+    "PDP execution switches must not clear and Image()-reprobe the strip"
+  )
+  assert.match(
+    core,
+    /image\.decode\(\)\.then\(\(\) => finish\(true\)\)/,
+    "PDP execution hero must decode before replacing the painted image"
+  )
+  assert.match(
+    core,
+    /executionSwapSeqRef\.current !== seq/,
+    "rapid PDP execution clicks must use last-write-wins sequence gating"
+  )
+  assert.match(
+    core,
+    /if \(!ready\) \{[\s\S]*?setDisplayHeroSrc\(""\)[\s\S]*?setHeroFailed\(true\)/,
+    "failed selected hero must not leave the previous execution photo painted"
+  )
+  assert.match(
+    core,
+    /executionHeroPreloadRef\.current\.get\(normalized\) === pending/,
+    "an older failed preload must not evict a newer request for the same URL"
+  )
+  assert.match(
+    core,
     /isGreenwichPaint \|\| isProvencePaintWood[\s\S]*?visibleWoodVariants\.length >= 1/,
     "Greenwich wood row must remain visible with one available frame"
+  )
+  assert.match(
+    core,
+    /availableFabricKeysForHeadboardAnyWood/,
+    "Greenwich bed fabric row must stay stable across wood changes"
+  )
+  assert.match(
+    core,
+    /coerceGreenwichBedSelectionFabricFirst/,
+    "Greenwich bed fabric clicks must preserve the clicked fabric"
   )
   assert.equal(
     /withExtrasFallback/.test(core),
@@ -153,6 +188,11 @@ const oliverStripPath = path.join(root, "lib/oliver-pdp-thumb-strip.ts")
     cardSrc,
     /pickMain/,
     "product-card must keep pickMain for empty wood.mainSrc"
+  )
+  assert.match(
+    cardSrc,
+    /resolveCatalogCardMediaBundle\(\s*storefrontBundle\.mainSrc/,
+    "card must resolve execution hero to derivative before first client paint"
   )
 }
 

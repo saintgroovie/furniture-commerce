@@ -12,7 +12,9 @@ import {
   coerceGreenwichBedSelection,
   availableWoodKeysForHeadboard,
   availableFabricKeysForHeadboard,
+  availableFabricKeysForHeadboardAnyWood,
   buildGreenwichBedSwatchVariants,
+  coerceGreenwichBedSelectionFabricFirst,
   type GreenwichBedMatrixEntry,
 } from "@/lib/greenwich-bed-media"
 import {
@@ -307,6 +309,14 @@ export function ProductCardMediaGalleryCore({
   const [failedExtras, setFailedExtras] = useState<Set<string>>(() => new Set())
   const [pendingPreloadUrl, setPendingPreloadUrl] = useState<string | null>(null)
   const pendingRef = useRef<string | null>(null)
+  const executionSwapSeqRef = useRef(0)
+  const executionHeroPreloadRef = useRef<Map<string, Promise<boolean>>>(
+    new Map()
+  )
+  const activeHeadboardKeyRef = useRef(activeHeadboardKey)
+  const activeUpholsteryKeyRef = useRef(activeUpholsteryKey)
+  const activeWoodKeyRef = useRef(activeWoodKey)
+  const activeFinishKeyRef = useRef(activeFinishKey)
   // PDP-only: color/wood/upholstery swatches render below the CTA buttons in
   // .product-detail-info (not stacked under the hero photo) — the swatch UI
   // itself never moves in the DOM, it's teleported via portal into a slot
@@ -314,6 +324,18 @@ export function ProductCardMediaGalleryCore({
   // exists once mounted in the browser, so this stays null during the
   // server-rendered/hydration pass and the portal appears after mount.
   const [pdpSwatchSlot, setPdpSwatchSlot] = useState<HTMLElement | null>(null)
+
+  useEffect(() => {
+    activeHeadboardKeyRef.current = activeHeadboardKey
+    activeUpholsteryKeyRef.current = activeUpholsteryKey
+    activeWoodKeyRef.current = activeWoodKey
+    activeFinishKeyRef.current = activeFinishKey
+  }, [
+    activeHeadboardKey,
+    activeUpholsteryKey,
+    activeWoodKey,
+    activeFinishKey,
+  ])
 
   const activeHeadboard = useMemo(() => {
     if (!hasHeadboard || !headboardVariants) return null
@@ -567,6 +589,8 @@ export function ProductCardMediaGalleryCore({
     setActiveGalleryUrl(null)
     setFailedExtras(new Set())
     pendingRef.current = null
+    executionSwapSeqRef.current += 1
+    executionHeroPreloadRef.current.clear()
     setPendingPreloadUrl(null)
   }, [
     productMediaKey,
@@ -607,8 +631,9 @@ export function ProductCardMediaGalleryCore({
     setPdpSwatchSlot(document.getElementById("pdp-color-options-slot"))
   }, [layout])
 
-  // Catalog strips are optimistic (no Image() stampede). Do not defer/unmount
-  // rails or swatches - that looked like a broken catalog after hydration.
+  // Buyer strips are optimistic (no Image() stampede). Broken thumbs prune
+  // themselves via onError. PDP must not clear/rebuild the rail on every
+  // execution switch - that reflows the hero column and causes visible shake.
   const isPdpLayout = layout === "pdp"
 
   const [cardStripProbeEnabled, setCardStripProbeEnabled] = useState(true)
@@ -628,7 +653,7 @@ export function ProductCardMediaGalleryCore({
     stripProbeCandidates,
     failedExtras,
     isPdpLayout
-      ? undefined
+      ? { mode: "optimistic" }
       : {
           maxProbes: CARD_STRIP_IMAGE_PROBE_LIMIT,
           enabled: cardStripProbeEnabled,
@@ -684,10 +709,9 @@ export function ProductCardMediaGalleryCore({
       return upholsteryVariants
     }
     const allowed = new Set(
-      availableFabricKeysForHeadboard(
+      availableFabricKeysForHeadboardAnyWood(
         greenwichBedMatrix,
-        activeHeadboardKey,
-        activeWoodKey
+        activeHeadboardKey
       )
     )
     return upholsteryVariants.filter((v) => allowed.has(v.key))
@@ -695,7 +719,6 @@ export function ProductCardMediaGalleryCore({
     isGreenwichBed,
     greenwichBedMatrix,
     activeHeadboardKey,
-    activeWoodKey,
     upholsteryVariants,
   ])
   const showVisibleUpholstery =
@@ -786,9 +809,10 @@ export function ProductCardMediaGalleryCore({
     swatchSamplingKey.split("|").filter(Boolean).length > 1
       ? swatchSamplingVariants
       : undefined,
-    // Catalog: metadata/token only — never Image()/canvas sampling on the grid
-    // (stampede + hero starvation). PDP keeps immediate sampling when needed.
-    isPdpLayout ? undefined : { enabled: false }
+    // Metadata/token colors cover buyer-facing rows. Never Image()/canvas
+    // sample full product heroes: PDP sampling used to download the whole
+    // execution matrix and compete with the selected hero.
+    { enabled: false }
   )
 
   const showFinish =
@@ -810,6 +834,51 @@ export function ProductCardMediaGalleryCore({
     [effectiveMain, visibleStrip]
   )
   const showThumbRow = shouldShowBuyerGalleryRail(thumbStrip)
+
+  const preloadExecutionHero = useCallback((src: string): Promise<boolean> => {
+    const normalized = src.trim()
+    if (!normalized || typeof Image === "undefined") {
+      return Promise.resolve(false)
+    }
+    const cached = executionHeroPreloadRef.current.get(normalized)
+    if (cached) return cached
+
+    let pending: Promise<boolean>
+    pending = new Promise<boolean>((resolve) => {
+      const image = new Image()
+      image.decoding = "async"
+      let settled = false
+      let decodeStarted = false
+      const finish = (ok: boolean) => {
+        if (settled) return
+        settled = true
+        if (
+          !ok &&
+          executionHeroPreloadRef.current.get(normalized) === pending
+        ) {
+          executionHeroPreloadRef.current.delete(normalized)
+        }
+        resolve(ok)
+      }
+      const decode = () => {
+        if (decodeStarted) return
+        decodeStarted = true
+        if (typeof image.decode !== "function") {
+          finish(image.naturalWidth > 0)
+          return
+        }
+        image.decode().then(() => finish(true)).catch(() => {
+          finish(image.naturalWidth > 0)
+        })
+      }
+      image.onload = decode
+      image.onerror = () => finish(false)
+      image.src = normalized
+      if (image.complete && image.naturalWidth > 0) decode()
+    })
+    executionHeroPreloadRef.current.set(normalized, pending)
+    return pending
+  }, [])
 
   /* Greenwich wood toggles should feel immediate even on a cold connection.
      Prewarm only the alternate frame for the active paint (at most one image),
@@ -842,9 +911,7 @@ export function ProductCardMediaGalleryCore({
               media.mainSrc,
               resolveStorefrontProductImageSrc
             )
-      const image = new Image()
-      image.decoding = "async"
-      image.src = src
+      void preloadExecutionHero(src)
     }
   }, [
     layout,
@@ -852,26 +919,97 @@ export function ProductCardMediaGalleryCore({
     greenwichPaintMatrix,
     activeFinishKey,
     activeWoodKey,
+    preloadExecutionHero,
+  ])
+
+  /* Warm the first few PDP alternatives after initial paint. Hover/focus below
+     covers the rest without downloading an entire 12-color matrix up front. */
+  useEffect(() => {
+    if (layout !== "pdp" || typeof navigator === "undefined") return
+    const connection = (
+      navigator as Navigator & {
+        connection?: { saveData?: boolean; effectiveType?: string }
+      }
+    ).connection
+    if (
+      connection?.saveData ||
+      connection?.effectiveType === "slow-2g" ||
+      connection?.effectiveType === "2g"
+    ) {
+      return
+    }
+    const candidates = [
+      ...(headboardVariants ?? []),
+      ...(upholsteryVariants ?? []),
+      ...(woodVariants ?? []),
+      ...(finishVariants ?? []),
+    ]
+      .map((variant) => variant.mainSrc?.trim())
+      .filter((src): src is string => Boolean(src && src !== displayHeroSrc))
+      .filter((src, index, all) => all.indexOf(src) === index)
+      .slice(0, 4)
+    let cancelled = false
+    const timer = window.setTimeout(() => {
+      void (async () => {
+        for (const src of candidates) {
+          if (cancelled) return
+          await preloadExecutionHero(src)
+        }
+      })()
+    }, 300)
+    return () => {
+      cancelled = true
+      window.clearTimeout(timer)
+    }
+  }, [
+    layout,
+    headboardVariants,
+    upholsteryVariants,
+    woodVariants,
+    finishVariants,
+    displayHeroSrc,
+    preloadExecutionHero,
   ])
 
   const applyMediaSelection = useCallback(
     (nextMain: string) => {
       const normalized = nextMain.trim()
-      setDisplayHeroSrc(
-        layout === "pdp"
-          ? normalized
-          : resolveCatalogCardHeroSrc(
-              normalized,
-              resolveStorefrontProductImageSrc
-            )
-      )
       setActiveGalleryUrl(null)
       setHeroFailed(false)
       setFailedExtras(new Set())
       pendingRef.current = null
       setPendingPreloadUrl(null)
+
+      const seq = executionSwapSeqRef.current + 1
+      executionSwapSeqRef.current = seq
+      if (layout !== "pdp" || !normalized || typeof Image === "undefined") {
+        setDisplayHeroSrc(
+          layout === "pdp"
+            ? normalized
+            : resolveCatalogCardHeroSrc(
+                normalized,
+                resolveStorefrontProductImageSrc
+              )
+        )
+        return
+      }
+
+      /* Keep the current PDP hero painted until the selected execution image
+         is downloaded and decoded. This avoids a blank/repaint jump inside the
+         fixed contain box. Sequence gating makes rapid clicks last-write-wins. */
+      void preloadExecutionHero(normalized).then((ready) => {
+        if (executionSwapSeqRef.current !== seq) return
+        if (!ready) {
+          // The selector already represents the requested execution. Never
+          // leave the previous execution photo painted as if it still matched.
+          setDisplayHeroSrc("")
+          setHeroFailed(true)
+          return
+        }
+        setDisplayHeroSrc(normalized)
+      })
     },
-    [layout]
+    [layout, preloadExecutionHero]
   )
 
   const onHeroError = useCallback(() => {
@@ -888,6 +1026,7 @@ export function ProductCardMediaGalleryCore({
     (url: string, isMain: boolean) => (e: MouseEvent<HTMLButtonElement>) => {
       e.preventDefault()
       e.stopPropagation()
+      executionSwapSeqRef.current += 1
       if (isMain) {
         if (activeGalleryUrl === null && displayHeroSrc === effectiveMain) return
         setDisplayHeroSrc(effectiveMain)
@@ -939,15 +1078,23 @@ export function ProductCardMediaGalleryCore({
       e.stopPropagation()
       if (variant.key === activeHeadboardKey) return
       setActiveHeadboardKey(variant.key)
-      if (isGreenwichBed && greenwichBedMatrix && activeWoodKey && activeUpholsteryKey) {
+      activeHeadboardKeyRef.current = variant.key
+      if (
+        isGreenwichBed &&
+        greenwichBedMatrix &&
+        activeWoodKeyRef.current &&
+        activeUpholsteryKeyRef.current
+      ) {
         const coerced = coerceGreenwichBedSelection(
           greenwichBedMatrix,
           variant.key,
-          activeWoodKey,
-          activeUpholsteryKey
+          activeWoodKeyRef.current,
+          activeUpholsteryKeyRef.current
         )
         setActiveWoodKey(coerced.frameMaterial)
         setActiveUpholsteryKey(coerced.fabric)
+        activeWoodKeyRef.current = coerced.frameMaterial
+        activeUpholsteryKeyRef.current = coerced.fabric
         const media = resolveGreenwichBedMedia(
           greenwichBedMatrix,
           coerced.headboard,
@@ -985,17 +1132,24 @@ export function ProductCardMediaGalleryCore({
     (variant: CardColorVariant) => (e: MouseEvent<HTMLButtonElement>) => {
       e.preventDefault()
       e.stopPropagation()
-      if (variant.key === activeUpholsteryKey) return
       setActiveUpholsteryKey(variant.key)
-      if (isGreenwichBed && greenwichBedMatrix && activeHeadboardKey && activeWoodKey) {
-        const coerced = coerceGreenwichBedSelection(
+      activeUpholsteryKeyRef.current = variant.key
+      if (
+        isGreenwichBed &&
+        greenwichBedMatrix &&
+        activeHeadboardKeyRef.current &&
+        activeWoodKeyRef.current
+      ) {
+        const coerced = coerceGreenwichBedSelectionFabricFirst(
           greenwichBedMatrix,
-          activeHeadboardKey,
-          activeWoodKey,
-          variant.key
+          activeHeadboardKeyRef.current,
+          variant.key,
+          activeWoodKeyRef.current
         )
         setActiveWoodKey(coerced.frameMaterial)
         setActiveUpholsteryKey(coerced.fabric)
+        activeWoodKeyRef.current = coerced.frameMaterial
+        activeUpholsteryKeyRef.current = coerced.fabric
         const media = resolveGreenwichBedMedia(
           greenwichBedMatrix,
           coerced.headboard,
@@ -1007,15 +1161,21 @@ export function ProductCardMediaGalleryCore({
           return
         }
       }
-      const media = resolveCombinedMedia(
-        mainSrc,
-        extraSrcs,
-        activeHeadboard,
-        variant,
-        activeWood,
-        activeFinish
+      const selectedMain = variant.mainSrc.trim()
+      if (selectedMain) {
+        applyMediaSelection(selectedMain)
+        return
+      }
+      applyMediaSelection(
+        resolveCombinedMedia(
+          mainSrc,
+          extraSrcs,
+          activeHeadboard,
+          variant,
+          activeWood,
+          activeFinish
+        ).mainSrc
       )
-      applyMediaSelection(media.mainSrc)
     },
     [
       activeUpholsteryKey,
@@ -1037,22 +1197,25 @@ export function ProductCardMediaGalleryCore({
       e.preventDefault()
       e.stopPropagation()
       if (isProvencePaintWood) {
-        if (activeProvenceMediaKey === "wood") return
         setActiveProvenceMediaKey("wood")
         setActiveWoodKey(variant.key)
+        activeWoodKeyRef.current = variant.key
         applyMediaSelection(variant.mainSrc)
         return
       }
       setActiveWoodKey(variant.key)
-      if (isGreenwichBed && greenwichBedMatrix && activeHeadboardKey) {
+      activeWoodKeyRef.current = variant.key
+      if (isGreenwichBed && greenwichBedMatrix && activeHeadboardKeyRef.current) {
         const coerced = coerceGreenwichBedSelection(
           greenwichBedMatrix,
-          activeHeadboardKey,
+          activeHeadboardKeyRef.current,
           variant.key,
-          activeUpholsteryKey
+          activeUpholsteryKeyRef.current
         )
         setActiveWoodKey(coerced.frameMaterial)
         setActiveUpholsteryKey(coerced.fabric)
+        activeWoodKeyRef.current = coerced.frameMaterial
+        activeUpholsteryKeyRef.current = coerced.fabric
         const media = resolveGreenwichBedMedia(
           greenwichBedMatrix,
           coerced.headboard,
@@ -1064,13 +1227,18 @@ export function ProductCardMediaGalleryCore({
           return
         }
       }
-      if (isGreenwichPaint && greenwichPaintMatrix && activeFinishKey) {
+      if (
+        isGreenwichPaint &&
+        greenwichPaintMatrix &&
+        activeFinishKeyRef.current
+      ) {
         const coerced = coerceGreenwichPaintSelection(
           greenwichPaintMatrix,
-          activeFinishKey,
+          activeFinishKeyRef.current,
           variant.key
         )
         setActiveWoodKey(coerced.frameMaterial)
+        activeWoodKeyRef.current = coerced.frameMaterial
         const media = resolveGreenwichPaintMedia(
           greenwichPaintMatrix,
           coerced.frameMaterial,
@@ -1081,15 +1249,21 @@ export function ProductCardMediaGalleryCore({
           return
         }
       }
-      const media = resolveCombinedMedia(
-        mainSrc,
-        extraSrcs,
-        activeHeadboard,
-        activeUpholstery,
-        variant,
-        activeFinish
+      const selectedMain = variant.mainSrc.trim()
+      if (selectedMain) {
+        applyMediaSelection(selectedMain)
+        return
+      }
+      applyMediaSelection(
+        resolveCombinedMedia(
+          mainSrc,
+          extraSrcs,
+          activeHeadboard,
+          activeUpholstery,
+          variant,
+          activeFinish
+        ).mainSrc
       )
-      applyMediaSelection(media.mainSrc)
     },
     [
       activeWoodKey,
@@ -1116,21 +1290,24 @@ export function ProductCardMediaGalleryCore({
       e.preventDefault()
       e.stopPropagation()
       if (isProvencePaintWood) {
-        if (activeProvenceMediaKey === "cream") return
         setActiveProvenceMediaKey("cream")
         setActiveFinishKey(variant.key)
+        activeFinishKeyRef.current = variant.key
         applyMediaSelection(variant.mainSrc)
         return
       }
       setActiveFinishKey(variant.key)
+      activeFinishKeyRef.current = variant.key
       if (isGreenwichPaint && greenwichPaintMatrix) {
         const coerced = coerceGreenwichPaintSelection(
           greenwichPaintMatrix,
           variant.key,
-          activeWoodKey
+          activeWoodKeyRef.current
         )
         setActiveFinishKey(coerced.paintFinish)
         setActiveWoodKey(coerced.frameMaterial)
+        activeFinishKeyRef.current = coerced.paintFinish
+        activeWoodKeyRef.current = coerced.frameMaterial
         const media = resolveGreenwichPaintMedia(
           greenwichPaintMatrix,
           coerced.frameMaterial,
@@ -1141,15 +1318,21 @@ export function ProductCardMediaGalleryCore({
           return
         }
       }
-      const media = resolveCombinedMedia(
-        mainSrc,
-        extraSrcs,
-        activeHeadboard,
-        activeUpholstery,
-        activeWood,
-        variant
+      const selectedMain = variant.mainSrc.trim()
+      if (selectedMain) {
+        applyMediaSelection(selectedMain)
+        return
+      }
+      applyMediaSelection(
+        resolveCombinedMedia(
+          mainSrc,
+          extraSrcs,
+          activeHeadboard,
+          activeUpholstery,
+          activeWood,
+          variant
+        ).mainSrc
       )
-      applyMediaSelection(media.mainSrc)
     },
     [
       activeFinishKey,
@@ -1231,6 +1414,21 @@ export function ProductCardMediaGalleryCore({
               aria-pressed={isActive}
               aria-label={variant.label}
               title={variant.label}
+              onPointerEnter={() => {
+                if (layout === "pdp" && variant.mainSrc?.trim()) {
+                  void preloadExecutionHero(variant.mainSrc)
+                }
+              }}
+              onFocus={() => {
+                if (layout === "pdp" && variant.mainSrc?.trim()) {
+                  void preloadExecutionHero(variant.mainSrc)
+                }
+              }}
+              onTouchStart={() => {
+                if (layout === "pdp" && variant.mainSrc?.trim()) {
+                  void preloadExecutionHero(variant.mainSrc)
+                }
+              }}
               onClick={onPick(variant)}
             >
               {useImageSwatch ? (

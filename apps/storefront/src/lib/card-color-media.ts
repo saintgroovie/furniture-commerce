@@ -924,13 +924,47 @@ function isProvencePaintWoodSplitMeta(
   return meta?.finish_metadata_source === "provence_paint_wood_split"
 }
 
+/**
+ * Provence split evidence lives in execution metadata even when the catalog
+ * browse image projection keeps only the first three generic (`_other`) files.
+ * Use the canonical execution URLs for the guard instead of treating the slim
+ * `product.images` list as the source of truth.
+ */
+function collectProvenceExecutionEvidenceUrls(
+  product: Record<string, unknown>
+): string[] {
+  const out = collectProductImageUrls(product)
+  const seen = new Set(
+    out.map((url) => (url.split("/").pop() ?? url).toLowerCase())
+  )
+  const meta = product.metadata as Record<string, unknown> | undefined
+  for (const key of ["finish_color_executions", "paint_finish_executions"]) {
+    const entries = meta?.[key]
+    if (!Array.isArray(entries)) continue
+    for (const entry of entries) {
+      if (!entry || typeof entry !== "object") continue
+      const urls = (entry as { urls?: unknown }).urls
+      if (!Array.isArray(urls)) continue
+      for (const raw of urls) {
+        if (typeof raw !== "string" || !raw.trim()) continue
+        const url = raw.trim()
+        const basename = (url.split("/").pop() ?? url).toLowerCase()
+        if (seen.has(basename)) continue
+        seen.add(basename)
+        out.push(url)
+      }
+    }
+  }
+  return out
+}
+
 function provencePaintWoodSelectorsFromMetadata(
   product: Record<string, unknown>
 ): CardExecutionSelectors | null {
   const handle = typeof product.handle === "string" ? product.handle : ""
   const meta = product.metadata as Record<string, unknown> | undefined
   if (!isProvencePaintWoodSplitMeta(meta, handle)) return null
-  const urls = collectProductImageUrls(product)
+  const urls = collectProvenceExecutionEvidenceUrls(product)
   if (!hasProvencePaintWoodDualFinishEvidence(urls, handle)) return null
 
   const variants = colorExecutionsFromMetadataArray(meta?.finish_color_executions, {
@@ -995,7 +1029,7 @@ export function buildIntraProductExecutionSelectors(
   const handleEarly =
     typeof product.handle === "string" ? product.handle.toLowerCase() : ""
   if (handleEarly.startsWith("pv-")) {
-    const urls = collectProductImageUrls(product)
+    const urls = collectProvenceExecutionEvidenceUrls(product)
     if (!hasProvencePaintWoodDualFinishEvidence(urls, handleEarly)) {
       return { confidence: "metadata_blocked" }
     }

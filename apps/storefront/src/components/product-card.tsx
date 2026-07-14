@@ -16,6 +16,7 @@ import {
   collectSameExecutionExtraImageUrls,
   enrichCardColorVariantsWithCatalogExtras,
   finishLabelForProduct,
+  hasPdpExecutionControls,
   isUpholsteredProduct,
   type CardColorVariant,
   type CardExecutionSelectors,
@@ -36,7 +37,10 @@ import {
   resolvePdpMediaBundle,
   resolveStorefrontProductImageSrc,
 } from "@/lib/product-images"
-import { resolveCatalogCardHeroSrc } from "@/lib/catalog-card-image"
+import {
+  resolveCatalogCardHeroSrc,
+  resolveCatalogCardMediaBundle,
+} from "@/lib/catalog-card-image"
 import { productTypeBadgeLabels } from "@/lib/woodright-copy"
 
 type Product = {
@@ -111,24 +115,39 @@ export function ProductCard({
     ? product.display_group_color_variants
     : undefined
 
+  const intraProductSelectors = buildIntraProductExecutionSelectors(
+    product as Record<string, unknown>,
+    mainSrcForCard
+  )
+  const hasCanonicalSelectors = hasPdpExecutionControls(intraProductSelectors)
   const executionSelectors: CardExecutionSelectors =
     displayGroupVariants && displayGroupVariants.length > 0
       ? isUpholsteredProduct(product as Record<string, unknown>)
         ? {
-            upholstery: displayGroupVariants,
-            confidence: "heuristic",
+            ...intraProductSelectors,
+            ...(intraProductSelectors.upholstery ||
+            intraProductSelectors.separateFabricRows
+              ? {}
+              : { upholstery: displayGroupVariants }),
+            confidence: hasCanonicalSelectors
+              ? intraProductSelectors.confidence
+              : "heuristic",
           }
         : {
-            finish: displayGroupVariants,
-            finishLabel: finishLabelForProduct(
-              product as Record<string, unknown>
-            ),
-            confidence: "heuristic",
+            ...intraProductSelectors,
+            ...(intraProductSelectors.finish
+              ? {}
+              : {
+                  finish: displayGroupVariants,
+                  finishLabel: finishLabelForProduct(
+                    product as Record<string, unknown>
+                  ),
+                }),
+            confidence: hasCanonicalSelectors
+              ? intraProductSelectors.confidence
+              : "heuristic",
           }
-      : buildIntraProductExecutionSelectors(
-          product as Record<string, unknown>,
-          mainSrcForCard
-        )
+      : intraProductSelectors
 
   const productRecord = product as Record<string, unknown>
   const headboardVariants = executionSelectors.headboard
@@ -232,7 +251,12 @@ export function ProductCard({
             collectExtraProductImageUrls(productRecord, mainSrcForCard),
           ])
 
-  const bundled = resolvePdpMediaBundle(mainSrc, extraSrcs)
+  const storefrontBundle = resolvePdpMediaBundle(mainSrc, extraSrcs)
+  const bundled = resolveCatalogCardMediaBundle(
+    storefrontBundle.mainSrc,
+    storefrontBundle.extraSrcs,
+    resolveStorefrontProductImageSrc
+  )
   const { mainSrc: cardMainSrc, extraSrcs: cardExtraSrcs } =
     resolveCardHeroAndNearDuplicateExtras(
       bundled.mainSrc,

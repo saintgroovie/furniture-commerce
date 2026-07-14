@@ -6,6 +6,7 @@
  */
 import assert from "node:assert/strict"
 import {
+  buildIntraProductExecutionSelectors,
   collectSameExecutionExtraImageUrls,
   enrichCardColorVariantsWithCatalogExtras,
 } from "./card-color-media"
@@ -111,6 +112,52 @@ const scaleSlim = {
     enriched![1]!.extraSrcs.map((u) => u.split("/").pop()),
     ["GR-05-1_greenwich_graphite05.jpg"]
   )
+}
+
+{
+  const provenceSlim = {
+    handle: "pv-61-1",
+    thumbnail: "/static/products/provence/PV-61-1_gallery_01.jpg",
+    // Browse projection intentionally kept only three generic files. Execution
+    // metadata remains canonical and must be sufficient to restore both rows.
+    images: [
+      { url: "/static/products/provence/PV-61-1_gallery_01.jpg" },
+      { url: "/static/products/provence/PV-61-1_gallery_03.jpg" },
+      { url: "/static/products/provence/pv-61-1-i2.jpg" },
+    ],
+    metadata: {
+      finish_metadata_source: "provence_paint_wood_split",
+      finish_color_executions: [
+        {
+          key: "cream",
+          label: "Кремовый",
+          urls: [
+            "/static/products/provence/PV-61-1_gallery_03.jpg",
+            "/static/products/provence/pv-61-1-i2.jpg",
+            "/static/products/provence/pv-61-1-i1.jpg",
+            "/static/products/provence/PV-61-1_gallery_02.jpg",
+          ],
+        },
+        {
+          key: "wood",
+          label: "Дерево",
+          urls: [
+            "/static/products/provence/PV-61-1_main.jpg",
+            "/static/products/provence/pv-61-1-i3.jpg",
+            "/static/products/provence/pv-61-1-i4.jpg",
+          ],
+        },
+      ],
+    },
+  }
+  const selectors = buildIntraProductExecutionSelectors(
+    provenceSlim,
+    provenceSlim.thumbnail
+  )
+  assert.equal(selectors.provencePaintWood, true)
+  assert.equal(selectors.finish?.length, 1)
+  assert.equal(selectors.wood?.length, 1)
+  assert.match(selectors.wood?.[0]?.mainSrc ?? "", /PV-61-1_main\.jpg$/i)
 }
 
 console.log("catalog-slim-finish-extras.fidelity.test.ts: ok")
