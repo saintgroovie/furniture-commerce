@@ -117,6 +117,8 @@ export const actions = {
   viewProduct: "Подробнее",
   addToCart: "Добавить в корзину",
   chooseExecution: "Выбрать исполнение",
+  /** PDP CTA while required execution groups are still empty. */
+  chooseParameters: "Выберите параметры",
   requestQuote: "Запросить расчёт",
   getConsultation: "Получить консультацию",
   discussProject: "Обсудить проект",
@@ -527,6 +529,10 @@ export const pdpCopy = {
   specsHeading: "Характеристики",
   specCollection: "Коллекция",
   specArticle: "Артикул",
+  /** Shown next to an option group title before the buyer picks a value. */
+  optionChooseValue: "Выберите",
+  /** Material execution dropdown + cart line spec label. */
+  materialTierLabel: "Исполнение",
   serviceLines: [
     "Массив дерева и ручная отделка",
     "Шоурум в Москве - принимаем по договорённости",

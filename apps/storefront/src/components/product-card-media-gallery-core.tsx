@@ -22,6 +22,7 @@ import {
 } from "@/lib/greenwich-bed-media"
 import {
   availableFrameKeysForPaint,
+  availablePaintKeysForFrame,
   coerceGreenwichPaintSelection,
   defaultGreenwichPaintSelection,
   isGreenwichPaintProductHandle,
@@ -51,8 +52,9 @@ import {
   clearPdpExecutionSelection,
   publishPdpExecutionSelection,
   type PdpExecutionSpec,
+  type PdpPurchaseGate,
 } from "@/lib/cart/pdp-selection"
-import { pdpLightboxCopy, states } from "@/lib/woodright-copy"
+import { pdpCopy, pdpLightboxCopy, states } from "@/lib/woodright-copy"
 
 type Props = {
   mainSrc: string
@@ -267,16 +269,15 @@ export function ProductCardMediaGalleryCore({
   )
 
   const [activeSeparateFabricKey, setActiveSeparateFabricKey] = useState<string | null>(
-    () => separateFabricRows?.[0]?.key ?? null
+    () => (layout === "pdp" ? null : separateFabricRows?.[0]?.key ?? null)
   )
 
   const activeSeparateFabric = useMemo(() => {
     if (!hasSeparateFabricRows || !separateFabricRows) return null
-    return (
-      separateFabricRows.find((v) => v.key === activeSeparateFabricKey) ??
-      separateFabricRows[0]
-    )
-  }, [activeSeparateFabricKey, separateFabricRows, hasSeparateFabricRows])
+    const found = separateFabricRows.find((v) => v.key === activeSeparateFabricKey)
+    if (found) return found
+    return layout === "pdp" ? null : separateFabricRows[0]
+  }, [activeSeparateFabricKey, separateFabricRows, hasSeparateFabricRows, layout])
 
   const hasHeadboard = Boolean(headboardVariants && headboardVariants.length > 1)
   const hasUpholstery = Boolean(
@@ -286,27 +287,35 @@ export function ProductCardMediaGalleryCore({
   const hasFinish = Boolean(finishVariants && finishVariants.length > 1)
 
   const [activeHeadboardKey, setActiveHeadboardKey] = useState<string | null>(
-    () => bedDefaults?.headboard ?? headboardVariants?.[0]?.key ?? null
+    () =>
+      layout === "pdp"
+        ? null
+        : bedDefaults?.headboard ?? headboardVariants?.[0]?.key ?? null
   )
   const [activeUpholsteryKey, setActiveUpholsteryKey] = useState<string | null>(
-    () => bedDefaults?.fabric ?? upholsteryVariants?.[0]?.key ?? null
+    () =>
+      layout === "pdp"
+        ? null
+        : bedDefaults?.fabric ?? upholsteryVariants?.[0]?.key ?? null
   )
   const [activeWoodKey, setActiveWoodKey] = useState<string | null>(
     () =>
-      bedDefaults?.frameMaterial ??
-      paintDefaults?.frameMaterial ??
-      woodVariants?.[0]?.key ??
-      null
+      layout === "pdp"
+        ? null
+        : bedDefaults?.frameMaterial ??
+          paintDefaults?.frameMaterial ??
+          woodVariants?.[0]?.key ??
+          null
   )
   const [activeFinishKey, setActiveFinishKey] = useState<string | null>(
     () =>
-      paintDefaults?.paintFinish ??
-      finishVariants?.[0]?.key ??
-      null
+      layout === "pdp"
+        ? null
+        : paintDefaults?.paintFinish ?? finishVariants?.[0]?.key ?? null
   )
-  const [activeProvenceMediaKey, setActiveProvenceMediaKey] = useState<"cream" | "wood">(
-    "cream"
-  )
+  const [activeProvenceMediaKey, setActiveProvenceMediaKey] = useState<
+    "cream" | "wood" | null
+  >(() => (layout === "pdp" ? null : "cream"))
   const [displayHeroSrc, setDisplayHeroSrc] = useState(mainSrc.trim())
   const [heroFailed, setHeroFailed] = useState(false)
   const [activeGalleryUrl, setActiveGalleryUrl] = useState<string | null>(null)
@@ -344,31 +353,31 @@ export function ProductCardMediaGalleryCore({
 
   const activeHeadboard = useMemo(() => {
     if (!hasHeadboard || !headboardVariants) return null
-    return (
-      headboardVariants.find((v) => v.key === activeHeadboardKey) ??
-      headboardVariants[0]
-    )
-  }, [activeHeadboardKey, headboardVariants, hasHeadboard])
+    const found = headboardVariants.find((v) => v.key === activeHeadboardKey)
+    if (found) return found
+    return layout === "pdp" ? null : headboardVariants[0]
+  }, [activeHeadboardKey, headboardVariants, hasHeadboard, layout])
 
   const activeUpholstery = useMemo(() => {
     if (!hasUpholstery || !upholsteryVariants) return null
-    return (
-      upholsteryVariants.find((v) => v.key === activeUpholsteryKey) ??
-      upholsteryVariants[0]
-    )
-  }, [activeUpholsteryKey, upholsteryVariants, hasUpholstery])
+    const found = upholsteryVariants.find((v) => v.key === activeUpholsteryKey)
+    if (found) return found
+    return layout === "pdp" ? null : upholsteryVariants[0]
+  }, [activeUpholsteryKey, upholsteryVariants, hasUpholstery, layout])
 
   const activeWood = useMemo(() => {
     if (!hasWood || !woodVariants) return null
-    return woodVariants.find((v) => v.key === activeWoodKey) ?? woodVariants[0]
-  }, [activeWoodKey, woodVariants, hasWood])
+    const found = woodVariants.find((v) => v.key === activeWoodKey)
+    if (found) return found
+    return layout === "pdp" ? null : woodVariants[0]
+  }, [activeWoodKey, woodVariants, hasWood, layout])
 
   const activeFinish = useMemo(() => {
     if (!hasFinish || !finishVariants) return null
-    return (
-      finishVariants.find((v) => v.key === activeFinishKey) ?? finishVariants[0]
-    )
-  }, [activeFinishKey, finishVariants, hasFinish])
+    const found = finishVariants.find((v) => v.key === activeFinishKey)
+    if (found) return found
+    return layout === "pdp" ? null : finishVariants[0]
+  }, [activeFinishKey, finishVariants, hasFinish, layout])
 
   const resolved = useMemo(() => {
     if (isGreenwichBed &&
@@ -408,13 +417,25 @@ export function ProductCardMediaGalleryCore({
         return { mainSrc: fromPaint.mainSrc, extraSrcs: scoped }
       }
     }
-    if (isProvencePaintWood && activeFinish && activeWood) {
+    if (isProvencePaintWood && activeProvenceMediaKey && activeFinish && activeWood) {
       const variant =
         activeProvenceMediaKey === "wood" ? activeWood : activeFinish
       return {
         mainSrc: variant.mainSrc.trim(),
         extraSrcs: variant.extraSrcs,
       }
+    }
+    /* PDP with nothing confirmed yet: keep the server hero, do not imply first swatch. */
+    if (
+      layout === "pdp" &&
+      !activeHeadboardKey &&
+      !activeUpholsteryKey &&
+      !activeWoodKey &&
+      !activeFinishKey &&
+      !activeSeparateFabricKey &&
+      !activeProvenceMediaKey
+    ) {
+      return { mainSrc: mainSrc.trim(), extraSrcs }
     }
     return resolveCombinedMedia(
       mainSrc,
@@ -433,6 +454,7 @@ export function ProductCardMediaGalleryCore({
     activeWoodKey,
     activeUpholsteryKey,
     activeFinishKey,
+    activeSeparateFabricKey,
     activeProvenceMediaKey,
     isProvencePaintWood,
     mainSrc,
@@ -443,6 +465,7 @@ export function ProductCardMediaGalleryCore({
     activeSeparateFabric,
     hasSeparateFabricRows,
     activeFinish,
+    layout,
   ])
   const variantMain = resolved.mainSrc
   const variantExtras = resolved.extraSrcs
@@ -537,6 +560,26 @@ export function ProductCardMediaGalleryCore({
       greenwichPaintMatrix && greenwichPaintMatrix.length > 0
         ? defaultGreenwichPaintSelection(greenwichPaintMatrix)
         : null
+
+    if (layout === "pdp") {
+      /* Buyer must confirm each required group — do not pre-select first values. */
+      setActiveHeadboardKey(null)
+      setActiveUpholsteryKey(null)
+      setActiveWoodKey(null)
+      setActiveFinishKey(null)
+      setActiveSeparateFabricKey(null)
+      setActiveProvenceMediaKey(null)
+      setDisplayHeroSrc(mainSrc.trim())
+      setHeroFailed(false)
+      setActiveGalleryUrl(null)
+      setFailedExtras(new Set())
+      pendingRef.current = null
+      executionSwapSeqRef.current += 1
+      executionHeroPreloadRef.current.clear()
+      setPendingPreloadUrl(null)
+      return
+    }
+
     setActiveHeadboardKey(bedDefault?.headboard ?? headboardVariants?.[0]?.key ?? null)
     setActiveUpholsteryKey(bedDefault?.fabric ?? upholsteryVariants?.[0]?.key ?? null)
     setActiveWoodKey(
@@ -583,12 +626,7 @@ export function ProductCardMediaGalleryCore({
             })()
     const initialMain = initial?.mainSrc?.trim() ?? mainSrc.trim()
     setDisplayHeroSrc(
-      layout === "pdp"
-        ? initialMain
-        : resolveCatalogCardHeroSrc(
-            initialMain,
-            resolveStorefrontProductImageSrc
-          )
+      resolveCatalogCardHeroSrc(initialMain, resolveStorefrontProductImageSrc)
     )
     setHeroFailed(false)
     setActiveGalleryUrl(null)
@@ -680,7 +718,58 @@ export function ProductCardMediaGalleryCore({
   const showHeadboard = hasHeadboard && headboardVariants != null
   const showUpholstery = hasUpholstery && upholsteryVariants != null
   const showWood = hasWood && woodVariants != null
+  const woodDisabledKeys = useMemo(() => {
+    const disabled = new Set<string>()
+    if (layout !== "pdp" || !woodVariants) return disabled
+    if (isGreenwichPaint && greenwichPaintMatrix && activeFinishKey) {
+      const allowed = new Set(
+        availableFrameKeysForPaint(greenwichPaintMatrix, activeFinishKey)
+      )
+      for (const v of woodVariants) {
+        if (!allowed.has(v.key)) disabled.add(v.key)
+      }
+    }
+    if (isGreenwichBed && greenwichBedMatrix && activeHeadboardKey) {
+      const allowed = new Set(
+        availableWoodKeysForHeadboard(greenwichBedMatrix, activeHeadboardKey)
+      )
+      for (const v of woodVariants) {
+        if (!allowed.has(v.key)) disabled.add(v.key)
+      }
+    }
+    return disabled
+  }, [
+    layout,
+    woodVariants,
+    isGreenwichPaint,
+    greenwichPaintMatrix,
+    activeFinishKey,
+    isGreenwichBed,
+    greenwichBedMatrix,
+    activeHeadboardKey,
+  ])
+  const finishDisabledKeys = useMemo(() => {
+    const disabled = new Set<string>()
+    if (layout !== "pdp" || !finishVariants) return disabled
+    if (isGreenwichPaint && greenwichPaintMatrix && activeWoodKey) {
+      const allowed = new Set(
+        availablePaintKeysForFrame(greenwichPaintMatrix, activeWoodKey)
+      )
+      for (const v of finishVariants) {
+        if (!allowed.has(v.key)) disabled.add(v.key)
+      }
+    }
+    return disabled
+  }, [
+    layout,
+    finishVariants,
+    isGreenwichPaint,
+    greenwichPaintMatrix,
+    activeWoodKey,
+  ])
   const visibleWoodVariants = useMemo(() => {
+    /* PDP keeps the full assortment visible and marks conflicts disabled. */
+    if (layout === "pdp") return woodVariants
     if (isGreenwichPaint && greenwichPaintMatrix && activeFinishKey && woodVariants) {
       const allowed = new Set(
         availableFrameKeysForPaint(greenwichPaintMatrix, activeFinishKey)
@@ -695,6 +784,7 @@ export function ProductCardMediaGalleryCore({
     )
     return woodVariants.filter((v) => allowed.has(v.key))
   }, [
+    layout,
     isGreenwichPaint,
     greenwichPaintMatrix,
     activeFinishKey,
@@ -703,7 +793,43 @@ export function ProductCardMediaGalleryCore({
     activeHeadboardKey,
     woodVariants,
   ])
+  const upholsteryDisabledKeys = useMemo(() => {
+    const disabled = new Set<string>()
+    if (
+      layout !== "pdp" ||
+      !isGreenwichBed ||
+      !greenwichBedMatrix ||
+      !activeHeadboardKey ||
+      !upholsteryVariants
+    ) {
+      return disabled
+    }
+    const allowed = new Set(
+      activeWoodKey
+        ? availableFabricKeysForHeadboard(
+            greenwichBedMatrix,
+            activeHeadboardKey,
+            activeWoodKey
+          )
+        : availableFabricKeysForHeadboardAnyWood(
+            greenwichBedMatrix,
+            activeHeadboardKey
+          )
+    )
+    for (const v of upholsteryVariants) {
+      if (!allowed.has(v.key)) disabled.add(v.key)
+    }
+    return disabled
+  }, [
+    layout,
+    isGreenwichBed,
+    greenwichBedMatrix,
+    activeHeadboardKey,
+    activeWoodKey,
+    upholsteryVariants,
+  ])
   const visibleUpholsteryVariants = useMemo(() => {
+    if (layout === "pdp") return upholsteryVariants
     if (
       !isGreenwichBed ||
       !greenwichBedMatrix ||
@@ -721,9 +847,11 @@ export function ProductCardMediaGalleryCore({
     )
     return upholsteryVariants.filter((v) => allowed.has(v.key))
   }, [
+    layout,
     isGreenwichBed,
     greenwichBedMatrix,
     activeHeadboardKey,
+    activeWoodKey,
     upholsteryVariants,
   ])
   const showVisibleUpholstery =
@@ -1097,6 +1225,58 @@ export function ProductCardMediaGalleryCore({
         activeWoodKeyRef.current &&
         activeUpholsteryKeyRef.current
       ) {
+        if (layout === "pdp") {
+          const woods = availableWoodKeysForHeadboard(
+            greenwichBedMatrix,
+            variant.key
+          )
+          let wood = activeWoodKeyRef.current
+          let fabric = activeUpholsteryKeyRef.current
+          if (wood && !woods.includes(wood)) {
+            wood = null
+            setActiveWoodKey(null)
+            activeWoodKeyRef.current = null
+          }
+          if (wood && fabric) {
+            const fabrics = availableFabricKeysForHeadboard(
+              greenwichBedMatrix,
+              variant.key,
+              wood
+            )
+            if (!fabrics.includes(fabric)) {
+              fabric = null
+              setActiveUpholsteryKey(null)
+              activeUpholsteryKeyRef.current = null
+            }
+          } else if (fabric) {
+            const fabrics = availableFabricKeysForHeadboardAnyWood(
+              greenwichBedMatrix,
+              variant.key
+            )
+            if (!fabrics.includes(fabric)) {
+              fabric = null
+              setActiveUpholsteryKey(null)
+              activeUpholsteryKeyRef.current = null
+            }
+          }
+          if (wood && fabric) {
+            const media = resolveGreenwichBedMedia(
+              greenwichBedMatrix,
+              variant.key,
+              wood,
+              fabric
+            )
+            if (media) {
+              applyMediaSelection(media.mainSrc)
+              return
+            }
+            /* Triplet unavailable even if pairwise checks passed — clear fabric. */
+            setActiveUpholsteryKey(null)
+            activeUpholsteryKeyRef.current = null
+          }
+          applyMediaSelection(variant.mainSrc.trim())
+          return
+        }
         const coerced = coerceGreenwichBedSelection(
           greenwichBedMatrix,
           variant.key,
@@ -1127,6 +1307,7 @@ export function ProductCardMediaGalleryCore({
       isGreenwichBed,
       greenwichBedMatrix,
       applyMediaSelection,
+      layout,
     ]
   )
 
@@ -1144,6 +1325,35 @@ export function ProductCardMediaGalleryCore({
     (variant: CardColorVariant) => (e: MouseEvent<HTMLButtonElement>) => {
       e.preventDefault()
       e.stopPropagation()
+      if (
+        layout === "pdp" &&
+        isGreenwichBed &&
+        greenwichBedMatrix &&
+        activeHeadboardKeyRef.current &&
+        activeWoodKeyRef.current
+      ) {
+        const fabrics = availableFabricKeysForHeadboard(
+          greenwichBedMatrix,
+          activeHeadboardKeyRef.current,
+          activeWoodKeyRef.current
+        )
+        if (!fabrics.includes(variant.key)) {
+          return
+        }
+        const media = resolveGreenwichBedMedia(
+          greenwichBedMatrix,
+          activeHeadboardKeyRef.current,
+          activeWoodKeyRef.current,
+          variant.key
+        )
+        if (!media) {
+          return
+        }
+        setActiveUpholsteryKey(variant.key)
+        activeUpholsteryKeyRef.current = variant.key
+        applyMediaSelection(media.mainSrc)
+        return
+      }
       setActiveUpholsteryKey(variant.key)
       activeUpholsteryKeyRef.current = variant.key
       if (
@@ -1201,6 +1411,7 @@ export function ProductCardMediaGalleryCore({
       mainSrc,
       extraSrcs,
       applyMediaSelection,
+      layout,
     ]
   )
 
@@ -1218,25 +1429,65 @@ export function ProductCardMediaGalleryCore({
       setActiveWoodKey(variant.key)
       activeWoodKeyRef.current = variant.key
       if (isGreenwichBed && greenwichBedMatrix && activeHeadboardKeyRef.current) {
-        const coerced = coerceGreenwichBedSelection(
-          greenwichBedMatrix,
-          activeHeadboardKeyRef.current,
-          variant.key,
-          activeUpholsteryKeyRef.current
-        )
-        setActiveWoodKey(coerced.frameMaterial)
-        setActiveUpholsteryKey(coerced.fabric)
-        activeWoodKeyRef.current = coerced.frameMaterial
-        activeUpholsteryKeyRef.current = coerced.fabric
-        const media = resolveGreenwichBedMedia(
-          greenwichBedMatrix,
-          coerced.headboard,
-          coerced.frameMaterial,
-          coerced.fabric
-        )
-        if (media) {
-          applyMediaSelection(media.mainSrc)
-          return
+        if (layout === "pdp") {
+          const woods = availableWoodKeysForHeadboard(
+            greenwichBedMatrix,
+            activeHeadboardKeyRef.current
+          )
+          if (!woods.includes(variant.key)) {
+            return
+          }
+          let fabric = activeUpholsteryKeyRef.current
+          if (fabric) {
+            const fabrics = availableFabricKeysForHeadboard(
+              greenwichBedMatrix,
+              activeHeadboardKeyRef.current,
+              variant.key
+            )
+            if (!fabrics.includes(fabric)) {
+              fabric = null
+              setActiveUpholsteryKey(null)
+              activeUpholsteryKeyRef.current = null
+            }
+          }
+          if (fabric) {
+            const media = resolveGreenwichBedMedia(
+              greenwichBedMatrix,
+              activeHeadboardKeyRef.current,
+              variant.key,
+              fabric
+            )
+            if (media) {
+              applyMediaSelection(media.mainSrc)
+              return
+            }
+          }
+          const selectedMain = variant.mainSrc.trim()
+          if (selectedMain) {
+            applyMediaSelection(selectedMain)
+            return
+          }
+        } else {
+          const coerced = coerceGreenwichBedSelection(
+            greenwichBedMatrix,
+            activeHeadboardKeyRef.current,
+            variant.key,
+            activeUpholsteryKeyRef.current
+          )
+          setActiveWoodKey(coerced.frameMaterial)
+          setActiveUpholsteryKey(coerced.fabric)
+          activeWoodKeyRef.current = coerced.frameMaterial
+          activeUpholsteryKeyRef.current = coerced.fabric
+          const media = resolveGreenwichBedMedia(
+            greenwichBedMatrix,
+            coerced.headboard,
+            coerced.frameMaterial,
+            coerced.fabric
+          )
+          if (media) {
+            applyMediaSelection(media.mainSrc)
+            return
+          }
         }
       }
       if (
@@ -1244,21 +1495,39 @@ export function ProductCardMediaGalleryCore({
         greenwichPaintMatrix &&
         activeFinishKeyRef.current
       ) {
-        const coerced = coerceGreenwichPaintSelection(
-          greenwichPaintMatrix,
-          activeFinishKeyRef.current,
-          variant.key
-        )
-        setActiveWoodKey(coerced.frameMaterial)
-        activeWoodKeyRef.current = coerced.frameMaterial
-        const media = resolveGreenwichPaintMedia(
-          greenwichPaintMatrix,
-          coerced.frameMaterial,
-          coerced.paintFinish
-        )
-        if (media) {
-          applyMediaSelection(media.mainSrc)
+        const finish = activeFinishKeyRef.current
+        const frames = availableFrameKeysForPaint(greenwichPaintMatrix, finish)
+        if (layout === "pdp" && !frames.includes(variant.key)) {
+          /* Incompatible — leave finish selected, do not invent a frame. */
           return
+        }
+        if (layout === "pdp") {
+          const media = resolveGreenwichPaintMedia(
+            greenwichPaintMatrix,
+            variant.key,
+            finish
+          )
+          if (media) {
+            applyMediaSelection(media.mainSrc)
+            return
+          }
+        } else {
+          const coerced = coerceGreenwichPaintSelection(
+            greenwichPaintMatrix,
+            finish,
+            variant.key
+          )
+          setActiveWoodKey(coerced.frameMaterial)
+          activeWoodKeyRef.current = coerced.frameMaterial
+          const media = resolveGreenwichPaintMedia(
+            greenwichPaintMatrix,
+            coerced.frameMaterial,
+            coerced.paintFinish
+          )
+          if (media) {
+            applyMediaSelection(media.mainSrc)
+            return
+          }
         }
       }
       const selectedMain = variant.mainSrc.trim()
@@ -1294,6 +1563,7 @@ export function ProductCardMediaGalleryCore({
       mainSrc,
       extraSrcs,
       applyMediaSelection,
+      layout,
     ]
   )
 
@@ -1311,10 +1581,35 @@ export function ProductCardMediaGalleryCore({
       setActiveFinishKey(variant.key)
       activeFinishKeyRef.current = variant.key
       if (isGreenwichPaint && greenwichPaintMatrix) {
+        const frames = availableFrameKeysForPaint(greenwichPaintMatrix, variant.key)
+        const currentWood = activeWoodKeyRef.current
+        if (layout === "pdp") {
+          if (currentWood && !frames.includes(currentWood)) {
+            setActiveWoodKey(null)
+            activeWoodKeyRef.current = null
+          }
+          if (currentWood && frames.includes(currentWood)) {
+            const media = resolveGreenwichPaintMedia(
+              greenwichPaintMatrix,
+              currentWood,
+              variant.key
+            )
+            if (media) {
+              applyMediaSelection(media.mainSrc)
+              return
+            }
+          }
+          const selectedMain = variant.mainSrc.trim()
+          if (selectedMain) {
+            applyMediaSelection(selectedMain)
+            return
+          }
+          return
+        }
         const coerced = coerceGreenwichPaintSelection(
           greenwichPaintMatrix,
           variant.key,
-          activeWoodKeyRef.current
+          currentWood
         )
         setActiveFinishKey(coerced.paintFinish)
         setActiveWoodKey(coerced.frameMaterial)
@@ -1359,6 +1654,7 @@ export function ProductCardMediaGalleryCore({
       mainSrc,
       extraSrcs,
       applyMediaSelection,
+      layout,
     ]
   )
 
@@ -1368,13 +1664,20 @@ export function ProductCardMediaGalleryCore({
     variants: CardColorVariant[],
     activeKey: string | null,
     onPick: (v: CardColorVariant) => (e: MouseEvent<HTMLButtonElement>) => void,
-    options: { imageSwatches?: boolean; rowKey?: string } = {}
+    options: {
+      imageSwatches?: boolean
+      rowKey?: string
+      disabledKeys?: Set<string>
+    } = {}
   ) => {
-    /* PDP option-group heading pattern: label + currently selected value.
-       Catalog cards keep the compact label-only strip. */
+    /* PDP: compact "Цвет - Белый G503" / "Цвет - Выберите" on one line. */
     const activeValueLabel =
       layout === "pdp"
         ? (variants.find((v) => v.key === activeKey)?.label ?? null)
+        : null
+    const headingValue =
+      layout === "pdp"
+        ? activeValueLabel ?? pdpCopy.optionChooseValue
         : null
     return (
     <div
@@ -1386,8 +1689,13 @@ export function ProductCardMediaGalleryCore({
     >
       <span className="product-card-selector-label">
         {label}
-        {activeValueLabel != null && activeValueLabel !== label && (
-          <span className="product-card-selector-value">{activeValueLabel}</span>
+        {headingValue != null && (
+          <>
+            <span className="product-card-selector-sep" aria-hidden="true">
+              {" - "}
+            </span>
+            <span className="product-card-selector-value">{headingValue}</span>
+          </>
         )}
       </span>
       <ProductCardSwatchScrollRail
@@ -1396,6 +1704,7 @@ export function ProductCardMediaGalleryCore({
       >
         {variants.map((variant) => {
           const isActive = variant.key === activeKey
+          const isDisabled = Boolean(options.disabledKeys?.has(variant.key))
           const token = variant.swatchToken
           const sampled = swatchSamples.get(variant.key)
           const imageSrc = (variant.mainSrc?.trim() || sampled?.imageUrl?.trim()) ?? ""
@@ -1412,7 +1721,7 @@ export function ProductCardMediaGalleryCore({
             <button
               key={variant.key}
               type="button"
-              className={`product-card-execution-swatch${isActive ? " is-active" : ""}`}
+              className={`product-card-execution-swatch${isActive ? " is-active" : ""}${isDisabled ? " is-unavailable" : ""}`}
               data-swatch-token={token ?? "neutral"}
               data-swatch-source={
                 useImageSwatch
@@ -1424,24 +1733,29 @@ export function ProductCardMediaGalleryCore({
                       : "fallback_token"
               }
               aria-pressed={isActive}
+              aria-disabled={isDisabled}
+              disabled={isDisabled}
               aria-label={variant.label}
               title={variant.label}
               onPointerEnter={() => {
+                if (isDisabled) return
                 if (layout === "pdp" && variant.mainSrc?.trim()) {
                   void preloadExecutionHero(variant.mainSrc)
                 }
               }}
               onFocus={() => {
+                if (isDisabled) return
                 if (layout === "pdp" && variant.mainSrc?.trim()) {
                   void preloadExecutionHero(variant.mainSrc)
                 }
               }}
               onTouchStart={() => {
+                if (isDisabled) return
                 if (layout === "pdp" && variant.mainSrc?.trim()) {
                   void preloadExecutionHero(variant.mainSrc)
                 }
               }}
-              onClick={onPick(variant)}
+              onClick={isDisabled ? undefined : onPick(variant)}
             >
               {useImageSwatch ? (
                 <img
@@ -1468,57 +1782,139 @@ export function ProductCardMediaGalleryCore({
   const heroEmpty = oliverMode && (!displayHeroSrc || heroFailed)
   const isPdp = layout === "pdp"
 
-  /* PDP: publish the current execution choice (photo + shown selector values)
-     for ProductCta's add-to-cart — the cart page renders the thumbnail and
-     spec lines from this. Only user-visible selectors are published, so a
-     product without swatches contributes no noise. */
+  /* PDP: publish confirmed execution + purchase gate for price / CTA.
+     Never treat first-value media defaults as buyer confirmation. */
   useEffect(() => {
     if (!isPdp) return
+
+    const missingLabels: string[] = []
     const specs: PdpExecutionSpec[] = []
-    if (showHeadboard && activeHeadboard) {
-      specs.push({ label: "Изголовье", value: activeHeadboard.label })
+
+    if (showHeadboard) {
+      if (activeHeadboardKey && activeHeadboard) {
+        specs.push({ label: "Изголовье", value: activeHeadboard.label })
+      } else {
+        missingLabels.push("Изголовье")
+      }
     }
-    if (showSeparateFabricRows && activeSeparateFabric) {
-      specs.push({ label: "Обивка", value: activeSeparateFabric.label })
-    } else if (showVisibleUpholstery && activeUpholstery) {
-      specs.push({ label: "Обивка", value: activeUpholstery.label })
+    if (showSeparateFabricRows) {
+      if (activeSeparateFabricKey && activeSeparateFabric) {
+        specs.push({ label: "Обивка", value: activeSeparateFabric.label })
+      } else {
+        missingLabels.push("Обивка")
+      }
+    } else if (showVisibleUpholstery) {
+      if (activeUpholsteryKey && activeUpholstery) {
+        specs.push({ label: "Обивка", value: activeUpholstery.label })
+      } else {
+        missingLabels.push("Обивка")
+      }
     }
+
     if (isProvencePaintWood) {
-      const provenceActive =
-        activeProvenceMediaKey === "wood" ? woodVariants?.[0] : finishVariants?.[0]
-      if (provenceActive) {
-        specs.push({
-          label: activeProvenceMediaKey === "wood" ? "Дерево" : finishLabel,
-          value: provenceActive.label,
-        })
+      if (activeProvenceMediaKey === "wood" && activeWood) {
+        specs.push({ label: "Дерево", value: activeWood.label })
+      } else if (activeProvenceMediaKey === "cream" && activeFinish) {
+        specs.push({ label: finishLabel, value: activeFinish.label })
+      } else {
+        missingLabels.push(finishLabel)
       }
     } else {
-      if (showVisibleWood && activeWood) {
-        specs.push({ label: "Дерево", value: activeWood.label })
+      if (showFinish) {
+        if (activeFinishKey && activeFinish) {
+          specs.push({ label: finishLabel, value: activeFinish.label })
+        } else {
+          missingLabels.push(finishLabel)
+        }
       }
-      if (showFinish && activeFinish) {
-        specs.push({ label: finishLabel, value: activeFinish.label })
+      if (showVisibleWood) {
+        if (activeWoodKey && activeWood) {
+          specs.push({ label: "Дерево", value: activeWood.label })
+        } else {
+          missingLabels.push("Дерево")
+        }
       }
     }
-    publishPdpExecutionSelection({ imageSrc: variantMain || undefined, specs })
+
+    const hasGroups =
+      showHeadboard ||
+      showSeparateFabricRows ||
+      showVisibleUpholstery ||
+      showFinish ||
+      showVisibleWood ||
+      isProvencePaintWood
+
+    let combinationAvailable = true
+    if (hasGroups && missingLabels.length === 0) {
+      if (isGreenwichPaint && greenwichPaintMatrix && activeWoodKey && activeFinishKey) {
+        combinationAvailable = Boolean(
+          resolveGreenwichPaintMedia(
+            greenwichPaintMatrix,
+            activeWoodKey,
+            activeFinishKey
+          )
+        )
+      } else if (
+        isGreenwichBed &&
+        greenwichBedMatrix &&
+        activeHeadboardKey &&
+        activeWoodKey &&
+        activeUpholsteryKey
+      ) {
+        combinationAvailable = Boolean(
+          resolveGreenwichBedMedia(
+            greenwichBedMatrix,
+            activeHeadboardKey,
+            activeWoodKey,
+            activeUpholsteryKey
+          )
+        )
+      }
+    }
+
+    const gate: PdpPurchaseGate = {
+      productKey: productHandle?.trim() || null,
+      requiresSelection: hasGroups,
+      complete: !hasGroups || missingLabels.length === 0,
+      combinationAvailable,
+      missingLabels,
+      specs,
+      imageSrc: variantMain || undefined,
+    }
+
+    publishPdpExecutionSelection({
+      imageSrc: gate.complete && gate.combinationAvailable ? variantMain || undefined : undefined,
+      specs: gate.complete && gate.combinationAvailable ? specs : [],
+      gate,
+    })
   }, [
     isPdp,
     variantMain,
     showHeadboard,
     activeHeadboard,
+    activeHeadboardKey,
     showSeparateFabricRows,
     activeSeparateFabric,
+    activeSeparateFabricKey,
     showVisibleUpholstery,
     activeUpholstery,
+    activeUpholsteryKey,
     showVisibleWood,
     activeWood,
+    activeWoodKey,
     showFinish,
     activeFinish,
+    activeFinishKey,
     finishLabel,
     isProvencePaintWood,
     activeProvenceMediaKey,
     woodVariants,
     finishVariants,
+    isGreenwichPaint,
+    greenwichPaintMatrix,
+    isGreenwichBed,
+    greenwichBedMatrix,
+    productHandle,
   ])
 
   useEffect(() => {
@@ -1599,10 +1995,15 @@ export function ProductCardMediaGalleryCore({
             >
               <span className="product-card-selector-label">
                 Изголовье
-                {isPdp && activeHeadboard != null && (
-                  <span className="product-card-selector-value">
-                    {activeHeadboard.label}
-                  </span>
+                {isPdp && (
+                  <>
+                    <span className="product-card-selector-sep" aria-hidden="true">
+                      {" - "}
+                    </span>
+                    <span className="product-card-selector-value">
+                      {activeHeadboard?.label ?? pdpCopy.optionChooseValue}
+                    </span>
+                  </>
                 )}
               </span>
               <div className="product-card-model-chips">
@@ -1640,7 +2041,8 @@ export function ProductCardMediaGalleryCore({
               "Обивка",
               visibleUpholsteryVariants!,
               activeUpholsteryKey,
-              onUpholsteryPick
+              onUpholsteryPick,
+              { disabledKeys: upholsteryDisabledKeys }
               /* Color chips (curated swatchHex). Do NOT pass imageSwatches:
                  Greenwich bed matrix fills mainSrc with whole-bed heroes, which
                  rendered as misleading mini product photos. Fabric closeups use
@@ -1658,7 +2060,8 @@ export function ProductCardMediaGalleryCore({
                       ? "cream"
                       : null
                     : activeFinishKey,
-                  onFinishPick
+                  onFinishPick,
+                  { disabledKeys: finishDisabledKeys }
                 )}
               {showVisibleWood &&
                 renderSwatchRow(
@@ -1670,7 +2073,8 @@ export function ProductCardMediaGalleryCore({
                       ? "wood"
                       : null
                     : activeWoodKey,
-                  onWoodPick
+                  onWoodPick,
+                  { disabledKeys: woodDisabledKeys }
                 )}
             </>
           ) : isGreenwichPaintProductHandle(productHandle) &&
@@ -1683,14 +2087,16 @@ export function ProductCardMediaGalleryCore({
                 finishLabel,
                 visibleFinishVariants!,
                 activeFinishKey,
-                onFinishPick
+                onFinishPick,
+                { disabledKeys: finishDisabledKeys }
               )}
               {renderSwatchRow(
                 "Дерево",
                 "Дерево",
                 visibleWoodVariants!,
                 activeWoodKey,
-                onWoodPick
+                onWoodPick,
+                { disabledKeys: woodDisabledKeys }
               )}
             </>
           ) : (
@@ -1701,7 +2107,8 @@ export function ProductCardMediaGalleryCore({
                   "Дерево",
                   visibleWoodVariants!,
                   activeWoodKey,
-                  onWoodPick
+                  onWoodPick,
+                  { disabledKeys: woodDisabledKeys }
                 )}
               {showFinish &&
                 renderSwatchRow(
@@ -1709,7 +2116,8 @@ export function ProductCardMediaGalleryCore({
                   finishLabel,
                   visibleFinishVariants!,
                   activeFinishKey,
-                  onFinishPick
+                  onFinishPick,
+                  { disabledKeys: finishDisabledKeys }
                 )}
             </>
           )}

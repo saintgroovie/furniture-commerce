@@ -2001,11 +2001,9 @@ button:disabled,
 
 /* Execution option groups (Дерево/Обивка/Цвет/Изголовье/…) are portalled out
    of .product-detail-media-switcher into #pdp-color-options-slot — above the
-   CTA in the buy panel (configuration always precedes the action). Styled here
-   so the group heading / swatch sizing matches the PDP buy panel wherever the
-   portal lands them. */
+   price and CTA in the buy panel. Compact finish samples, not heavy tiles. */
 .pdp-color-options-slot {
-  margin-top: var(--space-xs);
+  margin-top: var(--space-sm);
 }
 
 .pdp-color-options-slot:empty {
@@ -2016,37 +2014,41 @@ button:disabled,
   margin-top: 0;
   padding-top: 0;
   padding-bottom: 0;
-  gap: var(--space-md);
+  gap: 0.75rem;
   border-top: none;
   background: transparent;
 }
 
-/* Group heading above its control row: label + selected value on one line. */
+/* One-line group heading: «Цвет - Белый G503» / «Цвет - Выберите». */
 .pdp-color-options-slot .product-card-selector-section {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 8px;
+  gap: 6px;
   padding: 0;
   min-height: unset;
 }
 
-/* Stacked heading: group name on the first line, currently selected value on
-   the second — the hierarchy survives long value names (no weak inline dash). */
 .pdp-color-options-slot .product-card-selector-label {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0;
   line-height: 1.35;
   padding-top: 0;
   margin: 0;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: 0;
   text-transform: none;
   white-space: normal;
   color: var(--color-fg);
+}
+
+.pdp-color-options-slot .product-card-selector-sep {
+  font-weight: 400;
+  color: var(--color-fg-muted);
 }
 
 .pdp-color-options-slot .product-card-selector-value {
@@ -2059,48 +2061,95 @@ button:disabled,
   padding-bottom: 0;
 }
 
-/* Same catalog swatch, one size up: identical border, radius, hover, active
-   ring and focus tokens (all inherited from .product-card-execution-swatch) —
-   only the box grows to a 44px touch target with a 36px sample inside. */
+/* Premium finish sample: tight ring gap, fixed size (do not grow with column). */
 .pdp-color-options-slot .product-card-execution-swatch {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   padding: 3px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  box-shadow: none;
+  box-sizing: border-box;
+  transition: box-shadow 150ms ease, opacity 150ms ease;
 }
 
-/* Catalog active ring (surface gap + action ring), scaled with the swatch so
-   the mark stays proportional at 44px. Same tokens, not a new state. */
+.pdp-color-options-slot .product-card-execution-swatch-fill,
+.pdp-color-options-slot .product-card-execution-swatch-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 3px;
+  border: 1px solid color-mix(in srgb, var(--color-fg) 14%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-bg) 35%, transparent);
+}
+
+.pdp-color-options-slot .product-card-execution-swatch:hover:not(:disabled):not(.is-unavailable) {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-fg) 28%, transparent);
+}
+
 .pdp-color-options-slot .product-card-execution-swatch.is-active {
   box-shadow:
-    0 0 0 2px var(--color-surface),
-    0 0 0 3.5px color-mix(in srgb, var(--color-action) 55%, transparent);
+    0 0 0 1px var(--color-bg),
+    0 0 0 2px var(--color-fg);
 }
 
-/* Text chips (e.g. Изголовье: Frame/Cloud/Plane) keep their natural width on
-   the PDP — only color/material swatches are square. */
+.pdp-color-options-slot .product-card-execution-swatch:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 1px;
+}
+
+.pdp-color-options-slot .product-card-execution-swatch.is-unavailable,
+.pdp-color-options-slot .product-card-execution-swatch:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  position: relative;
+}
+
+.pdp-color-options-slot .product-card-execution-swatch.is-unavailable::after,
+.pdp-color-options-slot .product-card-execution-swatch:disabled::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border-radius: 2px;
+  background: linear-gradient(
+    135deg,
+    transparent calc(50% - 0.5px),
+    color-mix(in srgb, var(--color-fg) 55%, transparent) calc(50% - 0.5px),
+    color-mix(in srgb, var(--color-fg) 55%, transparent) calc(50% + 0.5px),
+    transparent calc(50% + 0.5px)
+  );
+  pointer-events: none;
+}
+
+/* Text chips (e.g. Изголовье: Frame/Cloud/Plane) keep natural width on PDP. */
 .pdp-color-options-slot .product-card-model-chip {
   font-size: 0.8125rem;
   line-height: 1.2;
-  padding: 0.55rem 1rem;
+  padding: 0.5rem 0.85rem;
   border-radius: var(--radius-sm);
   min-height: 2.5rem;
 }
 
 .pdp-color-options-slot .product-card-execution-swatches--inline {
-  min-height: 42px;
+  min-height: 40px;
 }
 
-/* Buy panel: every value visible at once in a stable wrapping grid — no
-   horizontal scroll, no disclosure, no reflow after a pick. Fixed 44px tracks
-   keep row/column positions identical regardless of which value is active. */
+/* Full column width: fixed 40px cells, as many per row as fit, then wrap. */
+.pdp-color-options-slot .product-card-swatch-scroll-rail {
+  width: 100%;
+}
+
 .pdp-color-options-slot .product-card-swatch-scroll-rail .product-card-swatch-scroll-rail__track {
   display: grid;
-  grid-template-columns: repeat(auto-fill, 44px);
-  gap: 8px;
-  min-height: 48px;
+  width: 100%;
+  grid-template-columns: repeat(auto-fill, 40px);
+  justify-content: start;
+  gap: 6px;
+  min-height: 40px;
   overflow: visible;
   background: transparent;
-  padding: 2px 0;
+  padding: 1px 0;
+  max-width: none;
 }
 
 .pdp-color-options-slot .product-card-selector-section,
@@ -2110,6 +2159,214 @@ button:disabled,
 
 .pdp-color-options-slot .product-card-swatch-scroll-arrow {
   display: none;
+}
+
+/* ---- PDP material execution dropdown (Исполнение) ----
+   APG select-only combobox in the buy panel: configurator-grade trigger
+   (64–72px), spacious option rows with description + price, quiet shadow.
+   The menu is absolutely positioned inside .pdp-panel (no overflow clipping
+   on the panel/column) and sits above the sticky panel context. */
+.pdp-material-select {
+  position: relative;
+  width: 100%;
+}
+
+.pdp-material-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  width: 100%;
+  min-height: 68px;
+  padding: 0.75rem 1rem 0.75rem 1.125rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-fg);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pdp-material-trigger:hover {
+  border-color: color-mix(in srgb, var(--color-action) 35%, var(--color-border));
+}
+
+.pdp-material-trigger.is-open {
+  border-color: color-mix(in srgb, var(--color-action) 55%, var(--color-border));
+}
+
+.pdp-material-trigger:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-accent) 60%, transparent);
+  outline-offset: 2px;
+}
+
+.pdp-material-trigger-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pdp-material-trigger-label {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-fg-muted);
+}
+
+.pdp-material-trigger-value {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--color-fg);
+}
+
+.pdp-material-trigger-side {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 0 0 auto;
+}
+
+.pdp-material-trigger-price {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--color-fg-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.pdp-material-chevron {
+  flex: 0 0 auto;
+  width: 0;
+  height: 0;
+  border-left: 4.5px solid transparent;
+  border-right: 4.5px solid transparent;
+  border-top: 5px solid currentColor;
+  opacity: 0.5;
+  transition: transform 0.15s ease;
+}
+
+.pdp-material-trigger.is-open .pdp-material-chevron {
+  transform: rotate(180deg);
+}
+
+.pdp-material-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: var(--space-xs) 0;
+  list-style: none;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 32px rgba(44, 36, 32, 0.12);
+  z-index: 80;
+  animation: pdp-material-menu-open 0.14s ease-out;
+}
+
+@keyframes pdp-material-menu-open {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pdp-material-menu {
+    animation: none;
+  }
+}
+
+.pdp-material-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1.125rem;
+  cursor: pointer;
+}
+
+.pdp-material-option + .pdp-material-option {
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent);
+}
+
+.pdp-material-option.is-active {
+  background: color-mix(in srgb, var(--color-action) 6%, var(--color-surface));
+}
+
+.pdp-material-option.is-selected {
+  background: color-mix(in srgb, var(--color-accent) 8%, var(--color-surface));
+}
+
+.pdp-material-option-check {
+  flex: 0 0 auto;
+  width: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-action);
+}
+
+.pdp-material-option-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.pdp-material-option-label {
+  font-size: 0.9375rem;
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--color-fg);
+}
+
+.pdp-material-option.is-selected .pdp-material-option-label {
+  font-weight: 500;
+}
+
+.pdp-material-option-desc {
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: var(--color-fg-secondary);
+}
+
+.pdp-material-option-price {
+  flex: 0 0 auto;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--color-fg);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Reserved price slot — avoids layout jump when hint ↔ price swap. */
+.pdp-price-area {
+  min-height: 2.75rem;
+  display: flex;
+  align-items: flex-end;
+  margin-top: var(--space-md);
+}
+
+.pdp-price-hint {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  color: var(--color-fg-secondary);
+  font-weight: 400;
+}
+
+.pdp-price-area .product-detail-price {
+  margin: 0;
 }
 
 /* Keyboard-accessible hero opener: the photo itself is the button. */
@@ -4369,19 +4626,20 @@ button:disabled,
 
 /* 5. Price */
 .product-detail-price {
-  font-size: clamp(1.75rem, 2.1vw, 1.95rem);
+  font-size: clamp(1.5rem, 2vw, 1.75rem);
   font-weight: 600;
   letter-spacing: -0.012em;
+  font-variant-numeric: tabular-nums;
 }
 
-/* 6/7. Configurator lives above the CTA; stacked group heading shared by
-   every group: name on the first line, selected value on the second. */
+/* Size / option group heading: label + value on one quiet line. */
 .pdp-option-heading {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  font-size: 0.875rem;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0;
+  font-size: 0.8125rem;
   line-height: 1.35;
 }
 
@@ -4390,7 +4648,13 @@ button:disabled,
   color: var(--color-fg);
 }
 
+.pdp-option-heading-sep {
+  font-weight: 400;
+  color: var(--color-fg-muted);
+}
+
 .pdp-option-heading-value {
+  font-weight: 400;
   color: var(--color-fg-secondary);
   min-width: 0;
 }

@@ -20,7 +20,7 @@ import { formatRub } from "@/lib/format"
 import { resolveStorefrontProductImageSrc } from "@/lib/product-images"
 import { isKidsCartLineItem } from "@/lib/kids"
 import { ChecklistIcon } from "@/components/bespoke-help-icons"
-import { actions, cartCopy } from "@/lib/woodright-copy"
+import { actions, cartCopy, pdpCopy } from "@/lib/woodright-copy"
 import { CopyLines } from "@/components/copy-lines"
 import { flatCopy } from "@/lib/format-ru-copy"
 
@@ -55,18 +55,28 @@ function itemThumbSrc(item: Record<string, unknown>): string | null {
   return null
 }
 
-/** Спецификация исполнения («Цвет: Молочный», «Дерево: Дуб») из metadata. */
+/** Спецификация исполнения («Исполнение: …», «Цвет: Молочный») из metadata. */
 function itemExecutionSpecs(item: Record<string, unknown>): ExecutionSpec[] {
   const meta = (item.metadata ?? {}) as Record<string, unknown>
   const raw = meta.execution_specs
-  if (!Array.isArray(raw)) return []
-  return raw.filter(
+  const specs = (Array.isArray(raw) ? raw : []).filter(
     (s): s is ExecutionSpec =>
       s != null &&
       typeof s === "object" &&
       typeof (s as ExecutionSpec).label === "string" &&
       typeof (s as ExecutionSpec).value === "string"
   )
+  /* Материальное исполнение: сервер пишет авторитетный label в line metadata —
+     показываем его, даже если специфика PDP не попала в execution_specs. */
+  const materialLabel = meta.material_execution_label
+  if (
+    typeof materialLabel === "string" &&
+    materialLabel.trim() &&
+    !specs.some((s) => s.label === pdpCopy.materialTierLabel)
+  ) {
+    return [{ label: pdpCopy.materialTierLabel, value: materialLabel.trim() }, ...specs]
+  }
+  return specs
 }
 
 function itemArticle(item: Record<string, unknown>): string | null {

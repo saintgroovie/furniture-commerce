@@ -8,6 +8,10 @@ import {
   isRequestQuoteProduct,
 } from "@/lib/request-quote"
 import { ProductCta } from "@/components/product-cta"
+import { PdpPriceBlock } from "@/components/pdp-price-block"
+import { PdpMaterialTierSelect } from "@/components/pdp-material-tier-select"
+import { PdpSizeChips } from "@/components/pdp-size-chips"
+import { buildMaterialTierOptions } from "@/lib/material-tiers"
 import { CopyLines } from "@/components/copy-lines"
 import { OliverPdpMediaSwitcher } from "@/components/oliver-pdp-media-switcher"
 import { GreenwichBedPdpMediaSwitcher } from "@/components/greenwich-bed-pdp-media-switcher"
@@ -225,6 +229,8 @@ export default async function ProductPage({ params }: { params: { id: string } }
   const useExecutionPdp =
     isGreenwichBed || hasPdpExecutionControls(executionSelectors)
   const price = getPrice(product)
+  /* Material execution options from metadata.material_tiers (backend SoT). */
+  const materialTiers = buildMaterialTierOptions(product)
   const requestQuotePrice = isRequestQuoteProduct(product)
     ? formatRequestQuotePriceLabel(product)
     : null
@@ -331,24 +337,25 @@ export default async function ProductPage({ params }: { params: { id: string } }
       : []),
   ]
 
+  /* Chip prices carry the base (full solid) amount; the client component
+     applies the selected material multiplier so chips and the main price
+     block never show conflicting numbers. */
   const sizeChips =
     displayGroupMembers.length > 0
       ? [
           {
             id: product.id as string,
             label: titleStr,
-            priceLabel:
-              requestQuotePrice ?? (price != null ? formatRub(price) : null),
+            basePrice: price,
             sort: (meta?.display_group_sort as number | undefined) ?? 99,
             isCurrent: true,
           },
           ...displayGroupMembers.map((m) => {
-            const mp = getPrice(m)
             const mMeta = m.metadata as Record<string, unknown> | undefined
             return {
               id: m.id as string,
               label: String(m.title ?? "Вариант"),
-              priceLabel: mp != null ? formatRub(mp) : null,
+              basePrice: getPrice(m),
               sort: (mMeta?.display_group_sort as number | undefined) ?? 99,
               isCurrent: false,
             }
@@ -469,60 +476,59 @@ export default async function ProductPage({ params }: { params: { id: string } }
                 </dl>
               )}
 
-              {/* 5. Price */}
-              {requestQuotePrice != null ? (
-                <p className="price product-detail-price">{requestQuotePrice}</p>
-              ) : price != null ? (
-                <p className="price product-detail-price">{formatRub(price)}</p>
-              ) : isRequestQuoteProduct(product) ? (
-                <p className="price product-detail-price">{labels.requestQuotePrice}</p>
-              ) : null}
-
-              {/* 6. Configuration — always before the CTA */}
+              {/* 5. Configuration — material execution, then size + other
+                  execution groups, all before price / CTA */}
+              {materialTiers && (
+                <PdpMaterialTierSelect
+                  productKey={handle || (product.id as string)}
+                  options={materialTiers}
+                  requestQuote={isRequestQuoteProduct(product)}
+                />
+              )}
               {sizeChips.length > 0 && (
-                <div className="pdp-size-selector" role="group" aria-label={pdpCopy.sizeSelectorLabel}>
-                  <span className="pdp-option-heading">
-                    <span className="pdp-option-heading-label">{pdpCopy.sizeSelectorLabel}</span>
-                    <span className="pdp-option-heading-value">
-                      {sizeChips.find((c) => c.isCurrent)?.label}
-                    </span>
-                  </span>
-                  <div className="pdp-size-chip-row">
-                    {sizeChips.map((chip) =>
-                      chip.isCurrent ? (
-                        <span
-                          key={chip.id}
-                          className="pdp-size-chip is-active"
-                          aria-current="true"
-                        >
-                          <span className="pdp-size-chip-label">{chip.label}</span>
-                          {chip.priceLabel != null && (
-                            <span className="pdp-size-chip-price">{chip.priceLabel}</span>
-                          )}
-                        </span>
-                      ) : (
-                        <Link
-                          key={chip.id}
-                          href={`/product/${chip.id}`}
-                          className="pdp-size-chip"
-                        >
-                          <span className="pdp-size-chip-label">{chip.label}</span>
-                          {chip.priceLabel != null && (
-                            <span className="pdp-size-chip-price">{chip.priceLabel}</span>
-                          )}
-                        </Link>
-                      )
-                    )}
-                  </div>
-                </div>
+                <PdpSizeChips
+                  productKey={handle || (product.id as string)}
+                  chips={sizeChips}
+                  materialTiers={materialTiers}
+                  requestQuote={isRequestQuoteProduct(product)}
+                />
               )}
               {/* Portal target for execution option groups (Дерево/Обивка/Цвет/…).
                   Always mounted so the media gallery core never renders into a
                   missing node; CSS collapses it when empty. */}
               <div id="pdp-color-options-slot" className="pdp-color-options-slot" />
 
+              {/* 6. Price — after required options; gated when execution controls exist */}
+              <PdpPriceBlock
+                priceLabel={
+                  requestQuotePrice != null
+                    ? requestQuotePrice
+                    : price != null
+                      ? formatRub(price)
+                      : isRequestQuoteProduct(product)
+                        ? labels.requestQuotePrice
+                        : null
+                }
+                requiresBuyerSelection={
+                  useExecutionPdp &&
+                  !isRequestQuoteProduct(product) &&
+                  productType !== "BESPOKE"
+                }
+                productKey={handle || (product.id as string)}
+                materialTiers={materialTiers}
+                requestQuote={isRequestQuoteProduct(product)}
+              />
+
               {/* 7. CTA */}
-              <ProductCta product={product} />
+              <ProductCta
+                product={product}
+                requiresBuyerSelection={
+                  useExecutionPdp &&
+                  !isRequestQuoteProduct(product) &&
+                  productType !== "BESPOKE"
+                }
+                materialTiers={materialTiers}
+              />
 
               {/* 8. Service block — real brand facts + real contact page only */}
               <div className="pdp-service-block">
