@@ -1,8 +1,21 @@
+/**
+ * Fail-closed verify for all approved Greenwich bed SKUs (or one INSPECT_PRODUCT_ID).
+ *
+ *   npx medusa exec ./src/scripts/verify-greenwich-bed-matrix.ts
+ *   INSPECT_PRODUCT_ID=prod_… npx medusa exec ./src/scripts/verify-greenwich-bed-matrix.ts
+ */
 import type { ExecArgs } from "@medusajs/framework/types"
 import { Modules } from "@medusajs/framework/utils"
 
-const ID = process.env.INSPECT_PRODUCT_ID ?? "prod_01KM1QHNHZXXSRPFEKAZRSFPDE"
+const APPROVED_HANDLES = [
+  "greenwich-gr-09-1-bed-90",
+  "greenwich-gr-12-1",
+  "greenwich-gr-14-1",
+  "greenwich-gr-16-1",
+  "greenwich-gr-18-1",
+] as const
 
+const EXPECTED_CELLS = 11
 const COMBO_TOKEN_RE = /(natural_beige|dark_beige|natural_darkblue|dark_darkblue)/i
 
 function basename(url: string): string {
@@ -21,30 +34,14 @@ function isUnscopedPool(url: string): boolean {
   return /gr-bed-pool_(frame|cloud|plane)_/i.test(b)
 }
 
-/**
- * Fail-closed verify for Greenwich bed matrix cells:
- * - product must exist
- * - expected cell count
- * - hero must carry the cell combo token
- * - no cross-headboard contamination
- * - no foreign combo_key tokens inside a cell
- * - no unscoped headboard-pool URLs in any cell position
- */
-export default async function verifyGreenwichBedMatrix({ container }: ExecArgs): Promise<void> {
-  const logger = container.resolve("logger")
-  const m = container.resolve(Modules.PRODUCT)
-  const p = (await m.listProducts({ id: ID }, { take: 1 }))[0]
-  if (!p) {
-    throw new Error(`Greenwich bed matrix verification failed: product ${ID} not found`)
-  }
-  const md = (p.metadata ?? {}) as Record<string, unknown>
-  const matrix = md.bed_execution_matrix as Array<Record<string, unknown>> | undefined
-  logger.info(`handle=${p.handle} thumb=${p.thumbnail?.split("/").pop()}`)
-  logger.info(`matrix cells=${matrix?.length ?? 0}`)
+function verifyMatrixCells(
+  logger: { info: (m: string) => void; warn: (m: string) => void; error: (m: string) => void },
+  label: string,
+  matrix: Array<Record<string, unknown>> | undefined
+): boolean {
   let failed = false
-  const EXPECTED = 11
-  if ((matrix?.length ?? 0) !== EXPECTED) {
-    logger.error(`matrix count ${matrix?.length ?? 0} !== ${EXPECTED}`)
+  if ((matrix?.length ?? 0) !== EXPECTED_CELLS) {
+    logger.error(`${label}: matrix count ${matrix?.length ?? 0} !== ${EXPECTED_CELLS}`)
     failed = true
   }
   for (const cell of matrix ?? []) {
@@ -57,7 +54,9 @@ export default async function verifyGreenwichBedMatrix({ container }: ExecArgs):
 
     const heroToken = urls[0] ? parseComboKey(urls[0]) : null
     if (!heroToken || heroToken !== cellCombo) {
-      logger.warn(`HERO-COMBO-MISMATCH: expected=${cellCombo} got=${heroToken} file=${files[0]}`)
+      logger.warn(
+        `${label}: HERO-COMBO-MISMATCH expected=${cellCombo} got=${heroToken} file=${files[0]}`
+      )
       failed = true
     }
 
@@ -69,29 +68,70 @@ export default async function verifyGreenwichBedMatrix({ container }: ExecArgs):
       if (hb === "plane" && /_frame_|_cloud_/.test(hay)) return true
       return false
     })
-
     const foreignCombo = urls.filter((u) => {
       const token = parseComboKey(u)
       return Boolean(token && token !== cellCombo)
     })
-
     const unscopedPool = urls.filter((u) => isUnscopedPool(u))
 
     logger.info(
-      `${cell.headboard_model}|${cell.frame_material}|${cell.fabric_upholstery} urls=${urls.length} crossHb=${crossHb.length} foreignCombo=${foreignCombo.length} unscopedPool=${unscopedPool.length} hero=${files[0]}`
+      `${label} ${cell.headboard_model}|${cell.frame_material}|${cell.fabric_upholstery} urls=${urls.length} crossHb=${crossHb.length} foreignCombo=${foreignCombo.length} unscopedPool=${unscopedPool.length}`
     )
     if (crossHb.length > 0) {
-      logger.warn(`CROSS-HEADBOARD: ${crossHb.join(", ")}`)
+      logger.warn(`${label}: CROSS-HEADBOARD ${crossHb.join(", ")}`)
       failed = true
     }
     if (foreignCombo.length > 0) {
-      logger.warn(`FOREIGN-COMBO: ${foreignCombo.map((u) => basename(u)).join(", ")}`)
+      logger.warn(
+        `${label}: FOREIGN-COMBO ${foreignCombo.map((u) => basename(u)).join(", ")}`
+      )
       failed = true
     }
     if (unscopedPool.length > 0) {
-      logger.warn(`UNSCOPED-POOL-IN-CELL: ${unscopedPool.map((u) => basename(u)).join(", ")}`)
+      logger.warn(
+        `${label}: UNSCOPED-POOL-IN-CELL ${unscopedPool.map((u) => basename(u)).join(", ")}`
+      )
       failed = true
     }
   }
-  if (failed) throw new Error("Greenwich bed matrix verification failed")
+  return !failed
+}
+
+export default async function verifyGreenwichBedMatrix({ container }: ExecArgs): Promise<void> {
+  const logger = container.resolve("logger")
+  const m = container.resolve(Modules.PRODUCT)
+  const singleId = process.env.INSPECT_PRODUCT_ID?.trim()
+
+  const targets: Array<{ id: string; handle: string }> = []
+  if (singleId) {
+    const p = (await m.listProducts({ id: singleId }, { take: 1 }))[0]
+    if (!p) {
+      throw new Error(`Greenwich bed matrix verification failed: product ${singleId} not found`)
+    }
+    targets.push({ id: p.id, handle: String(p.handle ?? p.id) })
+  } else {
+    for (const handle of APPROVED_HANDLES) {
+      const p = (await m.listProducts({ handle }, { take: 1 }))[0]
+      if (!p?.id) {
+        throw new Error(`Greenwich bed matrix verification failed: missing ${handle}`)
+      }
+      targets.push({ id: p.id, handle })
+    }
+  }
+
+  let allOk = true
+  for (const t of targets) {
+    const p = (await m.listProducts({ id: t.id }, { take: 1 }))[0]
+    if (!p) {
+      throw new Error(`Greenwich bed matrix verification failed: product ${t.id} not found`)
+    }
+    const md = (p.metadata ?? {}) as Record<string, unknown>
+    const matrix = md.bed_execution_matrix as Array<Record<string, unknown>> | undefined
+    logger.info(`verify handle=${p.handle} id=${p.id} cells=${matrix?.length ?? 0}`)
+    const ok = verifyMatrixCells(logger, String(p.handle), matrix)
+    if (!ok) allOk = false
+  }
+
+  if (!allOk) throw new Error("Greenwich bed matrix verification failed")
+  logger.info(`VERIFY PASS (${targets.length} product(s))`)
 }

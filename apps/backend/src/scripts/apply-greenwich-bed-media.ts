@@ -23,6 +23,20 @@ import { DIMENSION_METADATA_VERSION } from "../lib/gallery-dimension-metadata"
 
 const MANIFEST_REL = "tmp/greenwich-bed-headboard-import/manifests/greenwich-bed-pool.json"
 
+/**
+ * Fail-closed owner-approved apply scope. Manifest handles must equal this set
+ * exactly (same members; order may differ). Extra/missing handles abort apply.
+ */
+const APPROVED_GREENWICH_BED_HANDLES = [
+  "greenwich-gr-09-1-bed-90",
+  "greenwich-gr-12-1",
+  "greenwich-gr-14-1",
+  "greenwich-gr-16-1",
+  "greenwich-gr-18-1",
+] as const
+
+const EXPECTED_MATRIX_CELLS = 11
+
 type HeadboardExecution = { key: string; label: string; urls: string[] }
 
 type ColorExecution = { key: string; label: string; urls: string[] }
@@ -141,6 +155,25 @@ function loadAndValidateManifest(root: string): { manifestPath: string; manifest
     throw new Error(`Manifest ${MANIFEST_REL}: gallery_urls[] must be non-empty`)
   }
 
+  const approved = new Set<string>(APPROVED_GREENWICH_BED_HANDLES)
+  const declared = [...new Set(manifest.handles.map((h) => h.trim()).filter(Boolean))]
+  const extra = declared.filter((h) => !approved.has(h))
+  const missing = APPROVED_GREENWICH_BED_HANDLES.filter((h) => !declared.includes(h))
+  if (extra.length > 0 || missing.length > 0) {
+    throw new Error(
+      `Manifest handle scope mismatch vs APPROVED_GREENWICH_BED_HANDLES. ` +
+        `extra=[${extra.join(", ")}] missing=[${missing.join(", ")}]`
+    )
+  }
+  if (
+    manifest.display_group != null &&
+    manifest.display_group !== "greenwich-bed"
+  ) {
+    throw new Error(
+      `Manifest display_group must be "greenwich-bed" (got ${String(manifest.display_group)})`
+    )
+  }
+
   for (const rel of manifest.gallery_urls) {
     const disk = path.join(root, "apps/backend", rel.replace(/^\//, ""))
     if (!fs.existsSync(disk)) {
@@ -170,23 +203,69 @@ export default async function applyGreenwichBedMedia({ container }: ExecArgs): P
   const galleryUrls = bundle.gallery_urls.map((u) => absUrl(base, u))
 
   const productModule = container.resolve(Modules.PRODUCT)
-  const planned: string[] = []
 
-  for (const handle of manifest.handles) {
+  if (bundle.bed_execution_matrix.length !== EXPECTED_MATRIX_CELLS) {
+    throw new Error(
+      `Builder produced ${bundle.bed_execution_matrix.length} matrix cells; expected ${EXPECTED_MATRIX_CELLS}`
+    )
+  }
+
+  /* Preflight: resolve all five products and scope guards before any write. */
+  type Target = {
+    handle: string
+    id: string
+    product: {
+      id: string
+      handle?: string | null
+      metadata?: Record<string, unknown> | null
+    }
+  }
+  const targets: Target[] = []
+  const missingHandles: string[] = []
+
+  for (const handle of APPROVED_GREENWICH_BED_HANDLES) {
     const listed = await productModule.listProducts(
       { handle },
       { take: 1, relations: ["images", "variants"] }
     )
     const product = listed?.[0]
     if (!product?.id) {
-      logger.warn(`Skip missing product: ${handle}`)
+      missingHandles.push(handle)
       continue
     }
-    planned.push(handle)
+    const meta = (product.metadata ?? {}) as Record<string, unknown>
+    if (
+      meta.display_group != null &&
+      meta.display_group !== "greenwich-bed" &&
+      meta.display_group !== (manifest.display_group ?? "greenwich-bed")
+    ) {
+      throw new Error(
+        `Refusing ${handle}: display_group=${String(meta.display_group)}`
+      )
+    }
+    targets.push({ handle, id: product.id, product })
+  }
 
-    if (dryRun) continue
+  if (missingHandles.length > 0) {
+    throw new Error(
+      `Missing products for approved handles: ${missingHandles.join(", ")}`
+    )
+  }
+  if (targets.length !== APPROVED_GREENWICH_BED_HANDLES.length) {
+    throw new Error(
+      `Preflight incomplete: resolved ${targets.length}/${APPROVED_GREENWICH_BED_HANDLES.length}`
+    )
+  }
 
-    const meta = { ...(product.metadata ?? {}) } as Record<string, unknown>
+  if (dryRun) {
+    logger.info(
+      `[DRY-RUN] Would update ${targets.length} bed SKU(s) from ${manifestPath}: matrix=${bundle.bed_execution_matrix.length}, gallery=${galleryUrls.length} — ${targets.map((t) => t.handle).join(", ")}`
+    )
+    return
+  }
+
+  for (const target of targets) {
+    const meta = { ...(target.product.metadata ?? {}) } as Record<string, unknown>
     meta.display_group = manifest.display_group ?? "greenwich-bed"
     meta.headboard_model_labels = bundle.headboard_model_labels
     meta.headboard_model_executions = bundle.headboard_model_executions
@@ -209,24 +288,13 @@ export default async function applyGreenwichBedMedia({ container }: ExecArgs): P
     delete meta.paint_finish_executions
     delete meta.paint_finish_labels
 
-    await productModule.updateProducts(product.id, {
+    await productModule.updateProducts(target.id, {
       thumbnail: thumbnailUrl,
-      images: toMedusaImages(galleryUrls, handle),
+      images: toMedusaImages(galleryUrls, target.handle),
       metadata: meta,
     })
     logger.info(
-      `Updated ${handle}: matrix=${bundle.bed_execution_matrix.length} cells, thumb=${bundle.thumbnail_url.split("/").pop()}`
+      `Updated ${target.handle}: matrix=${bundle.bed_execution_matrix.length} cells, thumb=${bundle.thumbnail_url.split("/").pop()}`
     )
-  }
-
-  if (dryRun) {
-    logger.info(
-      `[DRY-RUN] Would update ${planned.length} bed SKU(s) from ${manifestPath}: matrix=${bundle.bed_execution_matrix.length}, gallery=${galleryUrls.length} — ${planned.join(", ")}`
-    )
-    return
-  }
-
-  if (planned.length === 0) {
-    throw new Error(`No products found for handles in ${MANIFEST_REL}`)
   }
 }
