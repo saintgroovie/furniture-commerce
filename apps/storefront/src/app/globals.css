@@ -4333,7 +4333,7 @@ button:disabled,
   margin-top: calc(-1 * var(--space-xs));
 }
 
-/* 4. Dimensions: width / height / depth — depth always last. Quiet top and
+/* 4. Dimensions: height → width → depth. Quiet top and
    bottom rules only (the catalog system has no vertical hairlines). */
 .pdp-dimensions-row {
   display: flex;
