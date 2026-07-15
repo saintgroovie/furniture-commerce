@@ -2,7 +2,8 @@
 
 /**
  * Mobile navigation — parity with desktop buyer routes.
- * Replaces the checkbox/aria-hidden hack with a real button + Escape/focus/scroll lock.
+ * Baseline architecture (woodright-copy + CSS scroll-lock class) preserved.
+ * Package A1 gap-fill: focus containment, closed-menu unmount, Escape/focus restore.
  */
 import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
@@ -28,12 +29,13 @@ const SECONDARY: NavLink[] = [
   { href: "/contacts", label: navCopy.contacts },
 ]
 
+const PANEL_ID = "mobile-nav-panel"
+
 export function MobileNav() {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
   const btnRef = useRef<HTMLButtonElement>(null)
-  const panelId = "mobile-nav-panel"
-  const previouslyFocused = useRef<HTMLElement | null>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
 
   const close = useCallback((restoreFocus = true) => {
     setOpen(false)
@@ -54,14 +56,44 @@ export function MobileNav() {
       return
     }
 
-    previouslyFocused.current = document.activeElement as HTMLElement | null
     document.body.classList.add("mobile-nav-open")
     document.documentElement.classList.add("mobile-nav-open")
+
+    const panel = panelRef.current
+    const focusables = () =>
+      panel
+        ? Array.from(
+            panel.querySelectorAll<HTMLElement>(
+              'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+            )
+          ).filter((el) => !el.hasAttribute("disabled") && el.tabIndex !== -1)
+        : []
+
+    requestAnimationFrame(() => {
+      focusables()[0]?.focus()
+    })
 
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
         e.preventDefault()
         close(true)
+        return
+      }
+      if (e.key !== "Tab" || !panel) return
+      const items = focusables()
+      if (items.length === 0) return
+      const first = items[0]
+      const last = items[items.length - 1]
+      const active = document.activeElement as HTMLElement | null
+      if (e.shiftKey && active === first) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault()
+        first.focus()
+      } else if (active && !panel.contains(active) && active !== btnRef.current) {
+        e.preventDefault()
+        first.focus()
       }
     }
 
@@ -74,11 +106,8 @@ export function MobileNav() {
   }, [open, close])
 
   function toggle() {
-    if (open) {
-      close(true)
-    } else {
-      setOpen(true)
-    }
+    if (open) close(true)
+    else setOpen(true)
   }
 
   return (
@@ -88,7 +117,7 @@ export function MobileNav() {
         type="button"
         className="mobile-nav-btn"
         aria-expanded={open}
-        aria-controls={panelId}
+        aria-controls={PANEL_ID}
         aria-label={open ? a11yCopy.closeMenu : a11yCopy.openMenu}
         onClick={toggle}
       >
@@ -96,47 +125,40 @@ export function MobileNav() {
       </button>
 
       <div
-        id={panelId}
+        ref={panelRef}
+        id={PANEL_ID}
         className={`mobile-nav-overlay${open ? " is-open" : ""}`}
         data-open={open ? "true" : "false"}
         aria-hidden={!open}
       >
-        <nav className="mobile-nav" aria-label={a11yCopy.mobileNavLabel}>
-          <div className="mobile-nav-group">
-            {PRIMARY.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={item.className}
-                tabIndex={open ? undefined : -1}
-                onClick={() => close(false)}
-              >
-                {item.label}
+        {open ? (
+          <nav className="mobile-nav" aria-label={a11yCopy.mobileNavLabel}>
+            <div className="mobile-nav-group">
+              {PRIMARY.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={item.className}
+                  onClick={() => close(false)}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+            <div className="mobile-nav-group">
+              {SECONDARY.map((item) => (
+                <Link key={item.href} href={item.href} onClick={() => close(false)}>
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+            <div className="mobile-nav-group mobile-nav-group-cart">
+              <Link href="/cart" onClick={() => close(false)}>
+                {navCopy.cart}
               </Link>
-            ))}
-          </div>
-          <div className="mobile-nav-group">
-            {SECONDARY.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                tabIndex={open ? undefined : -1}
-                onClick={() => close(false)}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </div>
-          <div className="mobile-nav-group mobile-nav-group-cart">
-            <Link
-              href="/cart"
-              tabIndex={open ? undefined : -1}
-              onClick={() => close(false)}
-            >
-              {navCopy.cart}
-            </Link>
-          </div>
-        </nav>
+            </div>
+          </nav>
+        ) : null}
       </div>
     </>
   )

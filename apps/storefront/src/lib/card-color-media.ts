@@ -14,6 +14,7 @@ import {
   shouldSuppressOliverFinishWhenFabricCanonical,
 } from "./oliver-finish-execution-guard"
 import { hasProvencePaintWoodDualFinishEvidence } from "./provence-finish-execution-guard"
+import { buyerFacingWoodToneLabel } from "./buyer-wood-label"
 import {
   greenwichBedMatrixFromProduct,
   isGreenwichBedProduct,
@@ -389,10 +390,14 @@ export function executionLabelForToken(
   product?: Record<string, unknown>
 ): string {
   if (product && token) {
+    const frameLabels = labelsFromMetadata(product, "frame_material_labels")
+    const fromFrame = frameLabels?.[token]
+    if (typeof fromFrame === "string" && fromFrame.trim()) {
+      return buyerFacingWoodToneLabel(fromFrame.trim(), token)
+    }
     const labelMaps = [
       labelsFromMetadata(product, "paint_finish_labels", "finish_color_labels"),
       labelsFromMetadata(product, "fabric_upholstery_labels", "upholstery_color_labels"),
-      labelsFromMetadata(product, "frame_material_labels"),
       labelsFromMetadata(product, "construction_tier_labels", "material_tier_labels"),
     ]
     for (const labels of labelMaps) {
@@ -739,9 +744,14 @@ function frameMaterialExecutionsFromMetadata(
   product: Record<string, unknown>
 ): CardColorVariant[] | undefined {
   const raw = metadataExecutionsRaw(product, "frame_material_executions")
-  return colorExecutionsFromMetadataArray(raw, {
+  const variants = colorExecutionsFromMetadataArray(raw, {
     productImageUrls: collectProductImageUrls(product),
   })
+  if (!variants) return undefined
+  return variants.map((v) => ({
+    ...v,
+    label: buyerFacingWoodToneLabel(v.label, v.key),
+  }))
 }
 
 function constructionTierExecutionsFromMetadata(
@@ -825,7 +835,10 @@ function dimensionOnlyColorVariants(
         : null
     variants.push({
       key,
-      label,
+      label:
+        sampleRegion === "frame_wood"
+          ? buyerFacingWoodToneLabel(label, key)
+          : label,
       mainSrc: "",
       extraSrcs: [],
       swatchToken: swatchKey(key),

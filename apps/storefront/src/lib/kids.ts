@@ -46,6 +46,9 @@ export function isKidsStorefrontProduct(
  */
 export function isKidsCartLineItem(item: Record<string, unknown>): boolean {
   const lineMeta = (item.metadata as Record<string, unknown> | undefined) ?? {}
+  if (lineMeta.storefront_section === "kids" || lineMeta.cart_group === "kids") {
+    return true
+  }
 
   const productRaw = (item.product as Record<string, unknown> | undefined) ?? {}
   const handleFromLine =
@@ -56,18 +59,6 @@ export function isKidsCartLineItem(item: Record<string, unknown>): boolean {
       (typeof productRaw.handle === "string" && productRaw.handle) ||
       handleFromLine,
     metadata: (productRaw.metadata as Record<string, unknown> | undefined) ?? {},
-  }
-
-  // BESPOKE never enters the kids cart path (even if stamped kids metadata).
-  const classification = product.product_classification as
-    | { product_type?: string }
-    | undefined
-  const legacyType = product.productType as { product_type?: string } | undefined
-  const productType = classification?.product_type ?? legacyType?.product_type
-  if (productType === BESPOKE_PRODUCT_TYPE) return false
-
-  if (lineMeta.storefront_section === "kids" || lineMeta.cart_group === "kids") {
-    return true
   }
 
   return (

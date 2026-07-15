@@ -2,6 +2,7 @@
  * Greenwich paint SKU: wood (natural/dark) × paint color matrix for card / PDP.
  */
 import type { CardColorVariant } from "./card-color-media"
+import { buyerFacingWoodToneLabel } from "./buyer-wood-label"
 import { resolveStorefrontProductImageSrc } from "./product-images"
 import { fallbackHexForToken } from "./swatch-fallback-colors"
 
@@ -227,15 +228,18 @@ export function buildGreenwichPaintWoodVariants(
     )
   )
   if (frames.length < 2) return undefined
-  return frames.map((key) => ({
-    key,
-    label:
+  return frames.map((key) => {
+    const rawLabel =
       labelByKey.get(key) ??
-      (key === "natural" ? "Светлое дерево" : "Тёмное дерево"),
-    mainSrc: "",
-    extraSrcs: [],
-    swatchToken: key,
-    swatchSampleRegion: "frame_wood" as const,
-    swatchHex: hexByKey.get(key) ?? fallbackHexForToken(key === "dark" ? "dark" : "natural"),
-  }))
+      (key === "natural" ? "Светлое дерево" : "Тёмное дерево")
+    return {
+      key,
+      label: buyerFacingWoodToneLabel(rawLabel, key),
+      mainSrc: "",
+      extraSrcs: [],
+      swatchToken: key,
+      swatchSampleRegion: "frame_wood" as const,
+      swatchHex: hexByKey.get(key) ?? fallbackHexForToken(key === "dark" ? "dark" : "natural"),
+    }
+  })
 }

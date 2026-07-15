@@ -3,7 +3,10 @@
 import { useEffect, useState } from "react"
 import { systemCopy } from "@/lib/woodright-copy"
 import { WoodrightWordmark } from "@/components/woodright-wordmark"
-import { useKidsSectionTransition } from "@/lib/use-kids-section"
+import {
+  useKidsEnterOnLoadingAppear,
+  useKidsSectionTransition,
+} from "@/lib/use-kids-section"
 
 /* One fully-painted color variant of the loader (wordmark + track). The
    brown and kids-green variants are stacked in the same grid cell and
@@ -35,6 +38,17 @@ export default function Loading() {
      section navigations mount settled — no false recolor. */
   const { from, target } = useKidsSectionTransition()
   const [section, setSection] = useState(from)
+  /* Kids catalog → PDP: start KIDS enter with this loader's appear delay
+     (not on the catalog click). */
+  useKidsEnterOnLoadingAppear()
+
+  /* Kids catalog → PDP can briefly lose optimistic context before the
+     product bridge settles. If both from+target say kids, never paint
+     the adult (brown) loader — adopt kids immediately. Do not sync the
+     adult→kids cross-fade case (from !== target). */
+  useEffect(() => {
+    if (from && target && !section) setSection(true)
+  }, [from, target, section])
 
   useEffect(() => {
     if (section === target) return
