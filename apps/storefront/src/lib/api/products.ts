@@ -1,13 +1,4 @@
-import * as React from "react"
 import { getBaseUrl, medusaCatalogFetch, medusaFetch } from "./base"
-
-/** Next RSC provides `cache`; plain Node fidelity runners may not. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function requestCache<T extends (...args: any[]) => any>(fn: T): T {
-  const cache = (React as { cache?: <U extends (...args: any[]) => any>(f: U) => U })
-    .cache
-  return typeof cache === "function" ? cache(fn) : fn
-}
 
 export async function getProducts(params?: {
   category_id?: string
@@ -43,11 +34,11 @@ export async function getProducts(params?: {
  * Catalog listing fetch — opt-in `/store/catalog-products` projection (PERF-02).
  * Dedicated path: Medusa core rejects unknown query keys (e.g. `view`) on `/store/products`.
  *
- * Wrapped in React `cache()` when available so catalog + kids + PDP display-group
- * share one upstream call per RSC request. Uses `medusaCatalogFetch` (short
- * revalidate), not cart `no-store`.
+ * Uses `medusaCatalogFetch` (short revalidate), not cart `no-store`.
+ * No React `cache()` wrapper: React 18.3.1 does not export `cache`, and catalog
+ * pages call this once per RSC request (kids membership uses passed products).
  */
-export const getCatalogProducts = requestCache(async () => {
+export async function getCatalogProducts() {
   const base = getBaseUrl()
   const res = await medusaCatalogFetch(`${base}/store/catalog-products`)
   if (!res.ok) {
@@ -66,7 +57,7 @@ export const getCatalogProducts = requestCache(async () => {
     throw new Error(message)
   }
   return res.json()
-})
+}
 
 export const NOT_FOUND = "NOT_FOUND"
 
