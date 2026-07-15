@@ -58,7 +58,8 @@ export function ProductCta({
   const productKey = productKeyOf(product)
   const gateOk = gateMatchesProduct(gate, productKey)
 
-  /* Selected material execution; falls back to the default (first) tier. */
+  /* Selected material execution. When the buyer has not changed the dropdown
+     yet, use the first tier (LDSP) — the same default the select publishes. */
   function selectedMaterialTier(live = false): MaterialTierOption | null {
     if (!materialTiers || materialTiers.length === 0) return null
     const selection = live ? readPdpMaterialSelection() : materialSelection
@@ -85,8 +86,9 @@ export function ProductCta({
       : undefined
   const productId = product.id as string | undefined
 
-  /* Defaults publish after mount; until then allow CTA — add-to-cart falls
-     back to first material tier + omits finish (= standard color price). */
+  /* Defaults publish after mount; until then allow CTA. Add-to-cart always
+     sends material_execution_code when tiers exist (first tier if unset) and
+     omits finish_execution_key when no finish was chosen (server color ×1). */
   const selectionBlocked =
     gateOk &&
     gate.requiresSelection &&

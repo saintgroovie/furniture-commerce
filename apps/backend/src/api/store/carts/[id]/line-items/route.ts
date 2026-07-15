@@ -1,16 +1,7 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { addToCartWorkflow } from "@medusajs/core-flows"
 import { QueryContext } from "@medusajs/framework/utils"
-import {
-  findMaterialTier,
-  parseMaterialTiers,
-} from "../../../../../lib/material-tier-contract"
-import {
-  resolveConfiguredUnitPrice,
-  resolveFinishColorMultiplier,
-  finishLabelFromMetadata,
-  isKnownFinishExecutionKey,
-} from "../../../../../lib/finish-color-premium-contract"
+import { resolveConfiguredLineItemPricing } from "../../../../../lib/configured-line-item-pricing"
 
 /**
  * Override of the core POST /store/carts/:id/line-items route.
@@ -112,7 +103,6 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   if (!finishKey) delete metadata.finish_execution_key
 
   const query = req.scope.resolve("query") as QueryGraph
-  let unitPrice: number | undefined
 
   const { data: carts } = await query.graph({
     entity: "cart",
@@ -154,76 +144,19 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     return
   }
 
-  const productMeta = variant.product?.metadata
-  const tiers = parseMaterialTiers(productMeta)
-  const hasTiers = Boolean(tiers && tiers.length > 0)
-
-  /* B1: products with material_tiers require an explicit execution code.
-     No silent LDSP default — legacy clients must send material_execution_code. */
-  if (hasTiers && !executionCode) {
-    res.status(400).json({
-      message:
-        "material_execution_code is required for products with material tiers.",
-      code: "MATERIAL_EXECUTION_REQUIRED",
+  const priced = resolveConfiguredLineItemPricing({
+    productMetadata: variant.product?.metadata,
+    materialExecutionCode: executionCode,
+    finishExecutionKey: finishKey,
+    calculatedBaseAmount: resolveCalculatedBaseAmount(variant),
+    metadata,
+  })
+  if (!priced.ok) {
+    res.status(priced.status).json({
+      message: priced.message,
+      code: priced.code,
     })
     return
-  }
-
-  const needsConfiguredPricing =
-    Boolean(executionCode) || Boolean(finishKey)
-
-  if (needsConfiguredPricing) {
-    let materialMultiplier = 1
-    if (executionCode) {
-      const tier = tiers ? findMaterialTier(tiers, executionCode) : null
-      if (!tier) {
-        res.status(400).json({
-          message: `Unknown material execution "${executionCode}" for this product.`,
-          code: "UNKNOWN_MATERIAL_EXECUTION",
-        })
-        return
-      }
-      materialMultiplier = tier.price_multiplier
-      metadata.material_execution_code = tier.key
-      metadata.material_execution_label = tier.label_ru
-      metadata.material_price_multiplier = tier.price_multiplier
-    }
-
-    let colorMultiplier = 1
-    if (finishKey) {
-      if (!isKnownFinishExecutionKey(productMeta, finishKey)) {
-        res.status(400).json({
-          message: `Unknown finish execution "${finishKey}" for this product.`,
-          code: "UNKNOWN_FINISH_EXECUTION",
-        })
-        return
-      }
-      colorMultiplier = resolveFinishColorMultiplier(productMeta, finishKey)
-      metadata.finish_execution_key = finishKey
-      metadata.finish_color_multiplier = colorMultiplier
-      const finishLabel = finishLabelFromMetadata(productMeta, finishKey)
-      if (finishLabel) metadata.finish_execution_label = finishLabel
-    }
-
-    /* A1: only Medusa calculated_price in cart currency/region context. */
-    const baseAmount = resolveCalculatedBaseAmount(variant)
-    if (baseAmount == null) {
-      res.status(400).json({
-        message: "Variant has no calculated price for this cart.",
-        code: "VARIANT_PRICE_NOT_FOUND",
-      })
-      return
-    }
-
-    const resolved = resolveConfiguredUnitPrice(
-      baseAmount,
-      materialMultiplier,
-      colorMultiplier
-    )
-    metadata.resolved_unit_price = resolved
-    if (resolved !== baseAmount) {
-      unitPrice = resolved
-    }
   }
 
   await addToCartWorkflow(req.scope).run({
@@ -233,8 +166,10 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         {
           variant_id: variantId,
           quantity,
-          ...(Object.keys(metadata).length > 0 ? { metadata } : {}),
-          ...(unitPrice != null ? { unit_price: unitPrice } : {}),
+          ...(Object.keys(priced.metadata).length > 0
+            ? { metadata: priced.metadata }
+            : {}),
+          ...(priced.unitPrice != null ? { unit_price: priced.unitPrice } : {}),
         },
       ],
       // Same contract as the core route: workflow hooks receive additional_data.
