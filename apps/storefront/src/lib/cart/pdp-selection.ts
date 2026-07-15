@@ -30,16 +30,25 @@ export type PdpPurchaseGate = {
   combinationAvailable: boolean
   /** Labels of required groups still without a pick (buyer-facing). */
   missingLabels: string[]
-  /** Confirmed specs only — never implicit first-value defaults. */
+  /** Confirmed specs (PDP starts on first/default values = lowest price). */
   specs: PdpExecutionSpec[]
   /** Hero matching the confirmed selection, when available. */
   imageSrc?: string
+  /**
+   * Active paint/finish key when a finish row is shown. Used with
+   * `standardFinishKey` for the +5% non-standard color premium.
+   */
+  finishKey?: string | null
+  /** First finish key in the buyer-facing row (= standard / lowest color price). */
+  standardFinishKey?: string | null
 }
 
 export type PdpExecutionSelection = {
   imageSrc?: string
   specs: PdpExecutionSpec[]
   gate: PdpPurchaseGate
+  /** Convenience mirror of gate.finishKey for cart metadata. */
+  finishKey?: string | null
 }
 
 const EMPTY_GATE: PdpPurchaseGate = {

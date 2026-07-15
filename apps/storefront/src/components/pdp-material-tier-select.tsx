@@ -9,6 +9,14 @@ import {
   publishPdpMaterialSelection,
   usePdpMaterialSelection,
 } from "@/lib/cart/pdp-material-selection"
+import {
+  gateMatchesProduct,
+  usePdpPurchaseGate,
+} from "@/lib/cart/pdp-selection"
+import {
+  resolveConfiguredUnitPrice,
+  resolveFinishColorMultiplier,
+} from "@/lib/finish-color-premium"
 import { formatRub } from "@/lib/format"
 import { pdpCopy } from "@/lib/woodright-copy"
 
@@ -30,6 +38,8 @@ type Props = {
 export function PdpMaterialTierSelect({ productKey, options, requestQuote = false }: Props) {
   const [open, setOpen] = useState(false)
   const selection = usePdpMaterialSelection()
+  const gate = usePdpPurchaseGate()
+  const gateOk = gateMatchesProduct(gate, productKey)
   const selectedCode = materialCodeForProduct(selection, productKey) ?? options[0]?.code
   const selectedIndex = Math.max(0, options.findIndex((o) => o.code === selectedCode))
   const [activeIndex, setActiveIndex] = useState(selectedIndex)
@@ -38,6 +48,9 @@ export function PdpMaterialTierSelect({ productKey, options, requestQuote = fals
   const listboxId = useId()
 
   const selected = options[selectedIndex] ?? options[0]
+  const colorMultiplier = gateOk
+    ? resolveFinishColorMultiplier(gate.finishKey, gate.standardFinishKey)
+    : 1
 
   /* A pick made on a previous PDP must not leak into this one. */
   useEffect(() => {
@@ -116,8 +129,16 @@ export function PdpMaterialTierSelect({ productKey, options, requestQuote = fals
   }
 
   const priceLabel = (opt: MaterialTierOption): string | null => {
-    if (opt.price == null) return null
-    return requestQuote ? `от ${formatRub(opt.price)}` : formatRub(opt.price)
+    /* Derive from solid_full base via multiplier so color premium stays consistent. */
+    const solid = options.find((o) => o.multiplier === 1 && o.price != null)
+    const base =
+      solid?.price ??
+      (opt.price != null && opt.multiplier > 0
+        ? Math.round(opt.price / opt.multiplier)
+        : null)
+    if (base == null) return null
+    const amount = resolveConfiguredUnitPrice(base, opt.multiplier, colorMultiplier)
+    return requestQuote ? `от ${formatRub(amount)}` : formatRub(amount)
   }
 
   return (

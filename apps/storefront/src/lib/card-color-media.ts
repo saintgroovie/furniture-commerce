@@ -686,8 +686,8 @@ function finishExecutionsFromMetadata(
   }
   const raw = metadataExecutionsRaw(
     product,
-    "finish_color_executions",
-    "paint_finish_executions"
+    "paint_finish_executions",
+    "finish_color_executions"
   )
   const urls = collectProductImageUrls(product)
   if (Array.isArray(raw) && isOliverFalseFinishColorSplit(urls, raw as Array<{ key: string; label: string; urls: string[] }>, handle)) {
@@ -948,7 +948,7 @@ function collectProvenceExecutionEvidenceUrls(
     out.map((url) => (url.split("/").pop() ?? url).toLowerCase())
   )
   const meta = product.metadata as Record<string, unknown> | undefined
-  for (const key of ["finish_color_executions", "paint_finish_executions"]) {
+  for (const key of ["paint_finish_executions", "finish_color_executions"]) {
     const entries = meta?.[key]
     if (!Array.isArray(entries)) continue
     for (const entry of entries) {

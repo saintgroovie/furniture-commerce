@@ -55,7 +55,9 @@ import {
   orderedBuyerFacingDimensions,
 } from "@/lib/product-metadata"
 import { formatRuInline } from "@/lib/format-ru-copy"
+import { isKidsStorefrontProduct } from "@/lib/kids"
 import { actions, labels, pdpCopy, productTypeBadgeLabels } from "@/lib/woodright-copy"
+import { KidsProductSection } from "@/components/kids-product-section"
 
 function pdpHeroThumbnail(product: Record<string, unknown>): string | undefined {
   const t = product.thumbnail
@@ -372,8 +374,23 @@ export default async function ProductPage({ params }: { params: { id: string } }
     ...(mainImage && { image: mainImage }),
   }
 
+  const isKidsProduct = isKidsStorefrontProduct(product)
+
   return (
-    <div data-state="success" className="pdp">
+    <div
+      data-state="success"
+      className="pdp"
+      {...(isKidsProduct ? { "data-kids-product": "" } : {})}
+    >
+      <KidsProductSection active={isKidsProduct} />
+      {isKidsProduct ? (
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){document.querySelectorAll('a.logo,a.footer-brand-logo').forEach(function(a){a.setAttribute('href','/kids');a.setAttribute('aria-label','Woodright Kids - на главную детской');});})();",
+          }}
+        />
+      ) : null}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
@@ -509,6 +526,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
                         ? labels.requestQuotePrice
                         : null
                 }
+                basePrice={price}
                 requiresBuyerSelection={
                   useExecutionPdp &&
                   !isRequestQuoteProduct(product) &&

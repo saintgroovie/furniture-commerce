@@ -4,9 +4,9 @@
  *
  * Source of truth: `product.metadata.material_tiers` written by the backend
  * normalizer. The single Medusa variant RUB price is the `solid_full` price;
- * every tier's display price derives as `round(base × price_multiplier)`.
- * The cart price is resolved server-side from the same metadata — this module
- * only mirrors the formula for display.
+ * display/cart price is `round(base × material_multiplier × color_multiplier)`
+ * (see finish-color-premium). This module builds material options; color is
+ * applied by the price / chips / CTA consumers.
  */
 
 import { getPrice } from "@/lib/format"

@@ -269,15 +269,16 @@ export function ProductCardMediaGalleryCore({
   )
 
   const [activeSeparateFabricKey, setActiveSeparateFabricKey] = useState<string | null>(
-    () => (layout === "pdp" ? null : separateFabricRows?.[0]?.key ?? null)
+    () => separateFabricRows?.[0]?.key ?? null
   )
 
   const activeSeparateFabric = useMemo(() => {
     if (!hasSeparateFabricRows || !separateFabricRows) return null
-    const found = separateFabricRows.find((v) => v.key === activeSeparateFabricKey)
-    if (found) return found
-    return layout === "pdp" ? null : separateFabricRows[0]
-  }, [activeSeparateFabricKey, separateFabricRows, hasSeparateFabricRows, layout])
+    return (
+      separateFabricRows.find((v) => v.key === activeSeparateFabricKey) ??
+      separateFabricRows[0]
+    )
+  }, [activeSeparateFabricKey, separateFabricRows, hasSeparateFabricRows])
 
   const hasHeadboard = Boolean(headboardVariants && headboardVariants.length > 1)
   const hasUpholstery = Boolean(
@@ -287,42 +288,42 @@ export function ProductCardMediaGalleryCore({
   const hasFinish = Boolean(finishVariants && finishVariants.length > 1)
 
   const [activeHeadboardKey, setActiveHeadboardKey] = useState<string | null>(
-    () =>
-      layout === "pdp"
-        ? null
-        : bedDefaults?.headboard ?? headboardVariants?.[0]?.key ?? null
+    () => bedDefaults?.headboard ?? headboardVariants?.[0]?.key ?? null
   )
   const [activeUpholsteryKey, setActiveUpholsteryKey] = useState<string | null>(
-    () =>
-      layout === "pdp"
-        ? null
-        : bedDefaults?.fabric ?? upholsteryVariants?.[0]?.key ?? null
+    () => bedDefaults?.fabric ?? upholsteryVariants?.[0]?.key ?? null
   )
   const [activeWoodKey, setActiveWoodKey] = useState<string | null>(
     () =>
-      layout === "pdp"
-        ? null
-        : bedDefaults?.frameMaterial ??
-          paintDefaults?.frameMaterial ??
-          woodVariants?.[0]?.key ??
-          null
+      bedDefaults?.frameMaterial ??
+      paintDefaults?.frameMaterial ??
+      woodVariants?.[0]?.key ??
+      null
   )
   const [activeFinishKey, setActiveFinishKey] = useState<string | null>(
     () =>
-      layout === "pdp"
-        ? null
-        : paintDefaults?.paintFinish ?? finishVariants?.[0]?.key ?? null
+      paintDefaults?.paintFinish ??
+      finishVariants?.[0]?.key ??
+      null
   )
-  const [activeProvenceMediaKey, setActiveProvenceMediaKey] = useState<
-    "cream" | "wood" | null
-  >(() => (layout === "pdp" ? null : "cream"))
+  const [activeProvenceMediaKey, setActiveProvenceMediaKey] = useState<"cream" | "wood" | null>(
+    "cream"
+  )
   const [displayHeroSrc, setDisplayHeroSrc] = useState(mainSrc.trim())
   const [heroFailed, setHeroFailed] = useState(false)
   const [activeGalleryUrl, setActiveGalleryUrl] = useState<string | null>(null)
   const [failedExtras, setFailedExtras] = useState<Set<string>>(() => new Set())
   const [pendingPreloadUrl, setPendingPreloadUrl] = useState<string | null>(null)
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
+  /** Strip-identity URL being preloaded (stable if preload retries a derivative original). */
+  const pendingLogicalRef = useRef<string | null>(null)
   const pendingRef = useRef<string | null>(null)
+  /** True after this preload attempt already swapped derivative → original. */
+  const preloadFallbackTriedRef = useRef(false)
+  /** Logical strip URL → last known-good display src (survives re-clicks). */
+  const [knownGoodSrcByLogical, setKnownGoodSrcByLogical] = useState<
+    Record<string, string>
+  >({})
   const executionSwapSeqRef = useRef(0)
   const executionHeroPreloadRef = useRef<Map<string, Promise<boolean>>>(
     new Map()
@@ -353,31 +354,31 @@ export function ProductCardMediaGalleryCore({
 
   const activeHeadboard = useMemo(() => {
     if (!hasHeadboard || !headboardVariants) return null
-    const found = headboardVariants.find((v) => v.key === activeHeadboardKey)
-    if (found) return found
-    return layout === "pdp" ? null : headboardVariants[0]
-  }, [activeHeadboardKey, headboardVariants, hasHeadboard, layout])
+    return (
+      headboardVariants.find((v) => v.key === activeHeadboardKey) ??
+      headboardVariants[0]
+    )
+  }, [activeHeadboardKey, headboardVariants, hasHeadboard])
 
   const activeUpholstery = useMemo(() => {
     if (!hasUpholstery || !upholsteryVariants) return null
-    const found = upholsteryVariants.find((v) => v.key === activeUpholsteryKey)
-    if (found) return found
-    return layout === "pdp" ? null : upholsteryVariants[0]
-  }, [activeUpholsteryKey, upholsteryVariants, hasUpholstery, layout])
+    return (
+      upholsteryVariants.find((v) => v.key === activeUpholsteryKey) ??
+      upholsteryVariants[0]
+    )
+  }, [activeUpholsteryKey, upholsteryVariants, hasUpholstery])
 
   const activeWood = useMemo(() => {
     if (!hasWood || !woodVariants) return null
-    const found = woodVariants.find((v) => v.key === activeWoodKey)
-    if (found) return found
-    return layout === "pdp" ? null : woodVariants[0]
-  }, [activeWoodKey, woodVariants, hasWood, layout])
+    return woodVariants.find((v) => v.key === activeWoodKey) ?? woodVariants[0]
+  }, [activeWoodKey, woodVariants, hasWood])
 
   const activeFinish = useMemo(() => {
     if (!hasFinish || !finishVariants) return null
-    const found = finishVariants.find((v) => v.key === activeFinishKey)
-    if (found) return found
-    return layout === "pdp" ? null : finishVariants[0]
-  }, [activeFinishKey, finishVariants, hasFinish, layout])
+    return (
+      finishVariants.find((v) => v.key === activeFinishKey) ?? finishVariants[0]
+    )
+  }, [activeFinishKey, finishVariants, hasFinish])
 
   const resolved = useMemo(() => {
     if (isGreenwichBed &&
@@ -425,18 +426,6 @@ export function ProductCardMediaGalleryCore({
         extraSrcs: variant.extraSrcs,
       }
     }
-    /* PDP with nothing confirmed yet: keep the server hero, do not imply first swatch. */
-    if (
-      layout === "pdp" &&
-      !activeHeadboardKey &&
-      !activeUpholsteryKey &&
-      !activeWoodKey &&
-      !activeFinishKey &&
-      !activeSeparateFabricKey &&
-      !activeProvenceMediaKey
-    ) {
-      return { mainSrc: mainSrc.trim(), extraSrcs }
-    }
     return resolveCombinedMedia(
       mainSrc,
       extraSrcs,
@@ -465,26 +454,40 @@ export function ProductCardMediaGalleryCore({
     activeSeparateFabric,
     hasSeparateFabricRows,
     activeFinish,
-    layout,
   ])
   const variantMain = resolved.mainSrc
   const variantExtras = resolved.extraSrcs
 
   /** Evidence-backed near-dup collapse (card + PDP). No blind iso pairing. */
   const cardQualityMedia = useMemo(() => {
-    const displayMedia =
-      layout === "pdp"
-        ? { mainSrc: variantMain, extraSrcs: variantExtras }
-        : resolveCatalogCardMediaBundle(
-            variantMain,
-            variantExtras,
-            resolveStorefrontProductImageSrc
-          )
-    return resolveCardHeroAndNearDuplicateExtras(
-      displayMedia.mainSrc,
-      displayMedia.extraSrcs,
+    if (layout === "pdp") {
+      const evidenced = resolveCardHeroAndNearDuplicateExtras(
+        variantMain,
+        variantExtras,
+        productHandle
+      )
+      return { ...evidenced, fallbackBySrc: {} as Record<string, string> }
+    }
+    const bundled = resolveCatalogCardMediaBundle(
+      variantMain,
+      variantExtras,
+      resolveStorefrontProductImageSrc
+    )
+    const evidenced = resolveCardHeroAndNearDuplicateExtras(
+      bundled.mainSrc,
+      bundled.extraSrcs,
       productHandle
     )
+    const fallbackBySrc: Record<string, string> = {}
+    for (const [display, original] of Object.entries(bundled.fallbackBySrc)) {
+      if (
+        evidenced.mainSrc === display ||
+        evidenced.extraSrcs.includes(display)
+      ) {
+        fallbackBySrc[display] = original
+      }
+    }
+    return { ...evidenced, fallbackBySrc }
   }, [layout, variantMain, variantExtras, productHandle])
 
   const galleryStripCandidates = useMemo(() => {
@@ -506,6 +509,7 @@ export function ProductCardMediaGalleryCore({
 
   /** Hero after evidence near-dup resolve (card + PDP). */
   const effectiveMain = cardQualityMedia.mainSrc
+  const derivativeFallbackBySrc = cardQualityMedia.fallbackBySrc
 
   const productMediaKey = useMemo(
     () =>
@@ -561,25 +565,6 @@ export function ProductCardMediaGalleryCore({
         ? defaultGreenwichPaintSelection(greenwichPaintMatrix)
         : null
 
-    if (layout === "pdp") {
-      /* Buyer must confirm each required group — do not pre-select first values. */
-      setActiveHeadboardKey(null)
-      setActiveUpholsteryKey(null)
-      setActiveWoodKey(null)
-      setActiveFinishKey(null)
-      setActiveSeparateFabricKey(null)
-      setActiveProvenceMediaKey(null)
-      setDisplayHeroSrc(mainSrc.trim())
-      setHeroFailed(false)
-      setActiveGalleryUrl(null)
-      setFailedExtras(new Set())
-      pendingRef.current = null
-      executionSwapSeqRef.current += 1
-      executionHeroPreloadRef.current.clear()
-      setPendingPreloadUrl(null)
-      return
-    }
-
     setActiveHeadboardKey(bedDefault?.headboard ?? headboardVariants?.[0]?.key ?? null)
     setActiveUpholsteryKey(bedDefault?.fabric ?? upholsteryVariants?.[0]?.key ?? null)
     setActiveWoodKey(
@@ -589,6 +574,7 @@ export function ProductCardMediaGalleryCore({
         null
     )
     setActiveFinishKey(paintDefault?.paintFinish ?? finishVariants?.[0]?.key ?? null)
+    setActiveSeparateFabricKey(separateFabricRows?.[0]?.key ?? null)
     setActiveProvenceMediaKey("cream")
     const initial =
       bedDefault && greenwichBedMatrix
@@ -626,12 +612,17 @@ export function ProductCardMediaGalleryCore({
             })()
     const initialMain = initial?.mainSrc?.trim() ?? mainSrc.trim()
     setDisplayHeroSrc(
-      resolveCatalogCardHeroSrc(initialMain, resolveStorefrontProductImageSrc)
+      layout === "pdp"
+        ? initialMain
+        : resolveCatalogCardHeroSrc(initialMain, resolveStorefrontProductImageSrc)
     )
     setHeroFailed(false)
     setActiveGalleryUrl(null)
     setFailedExtras(new Set())
+    setKnownGoodSrcByLogical({})
     pendingRef.current = null
+    pendingLogicalRef.current = null
+    preloadFallbackTriedRef.current = false
     executionSwapSeqRef.current += 1
     executionHeroPreloadRef.current.clear()
     setPendingPreloadUrl(null)
@@ -641,6 +632,7 @@ export function ProductCardMediaGalleryCore({
     upholsteryVariants,
     woodVariants,
     finishVariants,
+    separateFabricRows,
     greenwichBedMatrix,
     greenwichPaintMatrix,
     mainSrc,
@@ -1117,7 +1109,10 @@ export function ProductCardMediaGalleryCore({
       setActiveGalleryUrl(null)
       setHeroFailed(false)
       setFailedExtras(new Set())
+      setKnownGoodSrcByLogical({})
       pendingRef.current = null
+      pendingLogicalRef.current = null
+      preloadFallbackTriedRef.current = false
       setPendingPreloadUrl(null)
 
       const seq = executionSwapSeqRef.current + 1
@@ -1153,14 +1148,38 @@ export function ProductCardMediaGalleryCore({
   )
 
   const onHeroError = useCallback(() => {
-    if (oliverMode && displayHeroSrc === effectiveMain) {
+    const fb = derivativeFallbackBySrc[displayHeroSrc]
+    if (fb && displayHeroSrc !== fb) {
+      const logicalKey = activeGalleryUrl ?? effectiveMain
+      setKnownGoodSrcByLogical((prev) => ({
+        ...prev,
+        [logicalKey]: fb,
+      }))
+      setDisplayHeroSrc(fb)
+      setHeroFailed(false)
+      return
+    }
+    const mainFb = derivativeFallbackBySrc[effectiveMain]
+    if (
+      oliverMode &&
+      (displayHeroSrc === effectiveMain ||
+        (mainFb != null && displayHeroSrc === mainFb) ||
+        displayHeroSrc === knownGoodSrcByLogical[effectiveMain])
+    ) {
       setHeroFailed(true)
       return
     }
     setDisplayHeroSrc(effectiveMain)
     setActiveGalleryUrl(null)
     setHeroFailed(false)
-  }, [displayHeroSrc, oliverMode, effectiveMain])
+  }, [
+    displayHeroSrc,
+    oliverMode,
+    effectiveMain,
+    derivativeFallbackBySrc,
+    knownGoodSrcByLogical,
+    activeGalleryUrl,
+  ])
 
   const onThumbPick = useCallback(
     (url: string, isMain: boolean) => (e: MouseEvent<HTMLButtonElement>) => {
@@ -1168,49 +1187,93 @@ export function ProductCardMediaGalleryCore({
       e.stopPropagation()
       executionSwapSeqRef.current += 1
       if (isMain) {
-        if (activeGalleryUrl === null && displayHeroSrc === effectiveMain) return
-        setDisplayHeroSrc(effectiveMain)
+        const mainFb = derivativeFallbackBySrc[effectiveMain]
+        const knownMain = knownGoodSrcByLogical[effectiveMain]
+        const showingMain =
+          displayHeroSrc === effectiveMain ||
+          (mainFb != null && displayHeroSrc === mainFb) ||
+          (knownMain != null && displayHeroSrc === knownMain)
+        if (activeGalleryUrl === null && showingMain) return
+        setDisplayHeroSrc(knownMain ?? effectiveMain)
         setActiveGalleryUrl(null)
         setHeroFailed(false)
         pendingRef.current = null
+        pendingLogicalRef.current = null
+        preloadFallbackTriedRef.current = false
         setPendingPreloadUrl(null)
         return
       }
       if (activeGalleryUrl === url) {
         // Re-click active extra → return to main (card + PDP). Cards also keep
         // main in the strip; this is a second path if the main thumb is missed.
-        setDisplayHeroSrc(effectiveMain)
+        setDisplayHeroSrc(
+          knownGoodSrcByLogical[effectiveMain] ?? effectiveMain
+        )
         setActiveGalleryUrl(null)
         setHeroFailed(false)
         pendingRef.current = null
+        pendingLogicalRef.current = null
+        preloadFallbackTriedRef.current = false
         setPendingPreloadUrl(null)
         return
       }
-      if (pendingRef.current === url) return
-      pendingRef.current = url
-      setPendingPreloadUrl(url)
+      if (pendingLogicalRef.current === url) return
+      const startUrl = knownGoodSrcByLogical[url] ?? url
+      preloadFallbackTriedRef.current = startUrl !== url
+      pendingLogicalRef.current = url
+      pendingRef.current = startUrl
+      setPendingPreloadUrl(startUrl)
     },
-    [activeGalleryUrl, displayHeroSrc, effectiveMain]
+    [
+      activeGalleryUrl,
+      displayHeroSrc,
+      effectiveMain,
+      derivativeFallbackBySrc,
+      knownGoodSrcByLogical,
+    ]
   )
 
   const onPreloadLoad = useCallback(() => {
-    const u = pendingRef.current
-    if (!u) return
-    setDisplayHeroSrc(u)
+    const loaded = pendingRef.current
+    const logical = pendingLogicalRef.current
+    if (!loaded) return
+    if (logical) {
+      setKnownGoodSrcByLogical((prev) =>
+        prev[logical] === loaded ? prev : { ...prev, [logical]: loaded }
+      )
+    }
+    setDisplayHeroSrc(loaded)
     setHeroFailed(false)
-    setActiveGalleryUrl(u === effectiveMain ? null : u)
+    setActiveGalleryUrl(
+      !logical || logical === effectiveMain ? null : logical
+    )
     pendingRef.current = null
+    pendingLogicalRef.current = null
+    preloadFallbackTriedRef.current = false
     setPendingPreloadUrl(null)
   }, [effectiveMain])
 
   const onPreloadError = useCallback(() => {
     const u = pendingRef.current
-    pendingRef.current = null
-    setPendingPreloadUrl(null)
+    const logical = pendingLogicalRef.current
     if (!u) return
-    if (u === effectiveMain) return
-    setFailedExtras((prev) => new Set(prev).add(u))
-  }, [effectiveMain])
+    const fb =
+      derivativeFallbackBySrc[u] ??
+      (logical ? derivativeFallbackBySrc[logical] : undefined)
+    if (fb && u !== fb && !preloadFallbackTriedRef.current) {
+      preloadFallbackTriedRef.current = true
+      pendingRef.current = fb
+      setPendingPreloadUrl(fb)
+      return
+    }
+    pendingRef.current = null
+    pendingLogicalRef.current = null
+    preloadFallbackTriedRef.current = false
+    setPendingPreloadUrl(null)
+    const blacklist = logical && logical !== effectiveMain ? logical : u
+    if (blacklist === effectiveMain) return
+    setFailedExtras((prev) => new Set(prev).add(blacklist))
+  }, [effectiveMain, derivativeFallbackBySrc])
 
   const onHeadboardPick = useCallback(
     (variant: CardModelVariant) => (e: MouseEvent<HTMLButtonElement>) => {
@@ -1872,6 +1935,12 @@ export function ProductCardMediaGalleryCore({
       }
     }
 
+    const standardFinishKey = finishVariants?.[0]?.key ?? null
+    const finishKeyForPrice =
+      showFinish || isProvencePaintWood
+        ? activeFinishKey ?? standardFinishKey
+        : null
+
     const gate: PdpPurchaseGate = {
       productKey: productHandle?.trim() || null,
       requiresSelection: hasGroups,
@@ -1880,12 +1949,15 @@ export function ProductCardMediaGalleryCore({
       missingLabels,
       specs,
       imageSrc: variantMain || undefined,
+      finishKey: finishKeyForPrice,
+      standardFinishKey,
     }
 
     publishPdpExecutionSelection({
       imageSrc: gate.complete && gate.combinationAvailable ? variantMain || undefined : undefined,
       specs: gate.complete && gate.combinationAvailable ? specs : [],
       gate,
+      finishKey: finishKeyForPrice,
     })
   }, [
     isPdp,
@@ -1964,18 +2036,25 @@ export function ProductCardMediaGalleryCore({
           (((i < 0 ? 0 : i) + dir) % heroCycle.length + heroCycle.length) % heroCycle.length
         ]!
       if (next === effectiveMain) {
-        setDisplayHeroSrc(effectiveMain)
+        setDisplayHeroSrc(
+          knownGoodSrcByLogical[effectiveMain] ?? effectiveMain
+        )
         setActiveGalleryUrl(null)
         setHeroFailed(false)
         pendingRef.current = null
+        pendingLogicalRef.current = null
+        preloadFallbackTriedRef.current = false
         setPendingPreloadUrl(null)
         return
       }
-      if (pendingRef.current === next) return
-      pendingRef.current = next
-      setPendingPreloadUrl(next)
+      if (pendingLogicalRef.current === next) return
+      const startUrl = knownGoodSrcByLogical[next] ?? next
+      preloadFallbackTriedRef.current = startUrl !== next
+      pendingLogicalRef.current = next
+      pendingRef.current = startUrl
+      setPendingPreloadUrl(startUrl)
     },
-    [heroCycle, displayHeroSrc, effectiveMain]
+    [heroCycle, displayHeroSrc, effectiveMain, knownGoodSrcByLogical]
   )
 
   const heroSwipe = useHeroSwipe(
@@ -2132,6 +2211,7 @@ export function ProductCardMediaGalleryCore({
       displayHeroSrc={displayHeroSrc}
       pendingPreloadUrl={pendingPreloadUrl}
       onThumbPick={onThumbPick}
+      srcFallbackByUrl={derivativeFallbackBySrc}
       onThumbError={(url) => {
         if (url === effectiveMain) return
         setFailedExtras((prev) => {

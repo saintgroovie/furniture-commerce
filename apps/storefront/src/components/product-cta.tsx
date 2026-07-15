@@ -85,16 +85,12 @@ export function ProductCta({
       : undefined
   const productId = product.id as string | undefined
 
-  const selectionReady =
+  /* Defaults publish after mount; until then allow CTA — add-to-cart falls
+     back to first material tier + omits finish (= standard color price). */
+  const selectionBlocked =
     gateOk &&
     gate.requiresSelection &&
-    gate.complete &&
-    gate.combinationAvailable
-  const selectionBlocked = requiresBuyerSelection
-    ? !selectionReady
-    : gateOk &&
-      gate.requiresSelection &&
-      (!gate.complete || !gate.combinationAvailable)
+    (!gate.complete || !gate.combinationAvailable)
   const canAdd = Boolean(variantId) && !selectionBlocked && !adding
 
   async function handleAddToCart(e: MouseEvent<HTMLButtonElement>) {
@@ -102,13 +98,10 @@ export function ProductCta({
     if (requiresBuyerSelection) {
       const live = readPdpExecutionSelection()?.gate
       if (
-        !(
-          live &&
-          gateMatchesProduct(live, productKey) &&
-          live.requiresSelection &&
-          live.complete &&
-          live.combinationAvailable
-        )
+        live &&
+        gateMatchesProduct(live, productKey) &&
+        live.requiresSelection &&
+        (!live.complete || !live.combinationAvailable)
       ) {
         return
       }
@@ -123,7 +116,12 @@ export function ProductCta({
       const cartId = await ensureCart()
       /* Выбранное на PDP исполнение (цвет/отделка) — не Medusa-вариант, поэтому
          едет в line item metadata: корзина рендерит из него миниатюру и спеку. */
-      const selection = readPdpExecutionSelection()
+      const selectionRaw = readPdpExecutionSelection()
+      const selection =
+        selectionRaw &&
+        gateMatchesProduct(selectionRaw.gate, productKey)
+          ? selectionRaw
+          : null
       const isKids =
         isKidsMetadataStorefrontProduct(product) ||
         isOliverKidsCollectionProduct(product)
@@ -136,10 +134,15 @@ export function ProductCta({
           : []),
         ...(selection?.specs ?? []),
       ]
+      const finishKey =
+        selection?.finishKey?.trim() ||
+        selection?.gate.finishKey?.trim() ||
+        null
       const metadata: Record<string, unknown> = {
         ...(selection?.imageSrc ? { execution_image: selection.imageSrc } : {}),
         ...(specs.length > 0 ? { execution_specs: specs } : {}),
         ...(materialTier ? { material_execution_code: materialTier.code } : {}),
+        ...(finishKey ? { finish_execution_key: finishKey } : {}),
         ...(isKids ? { storefront_section: "kids" } : {}),
       }
       const data = await addLineItem(cartId, {

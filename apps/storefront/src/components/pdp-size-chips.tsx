@@ -5,8 +5,15 @@ import {
   materialCodeForProduct,
   usePdpMaterialSelection,
 } from "@/lib/cart/pdp-material-selection"
+import {
+  gateMatchesProduct,
+  usePdpPurchaseGate,
+} from "@/lib/cart/pdp-selection"
 import type { MaterialTierOption } from "@/lib/material-tiers"
-import { resolveMaterialTierPrice } from "@/lib/material-tiers"
+import {
+  resolveConfiguredUnitPrice,
+  resolveFinishColorMultiplier,
+} from "@/lib/finish-color-premium"
 import { formatRub } from "@/lib/format"
 import { pdpCopy } from "@/lib/woodright-copy"
 
@@ -34,23 +41,31 @@ type Props = {
 }
 
 /**
- * Size selector chips whose prices follow the material execution selected in
- * the PDP dropdown — the big price block and the chips must never show
- * conflicting numbers for the same configuration.
+ * Size selector chips whose prices follow material × color on the PDP — the
+ * big price block and the chips must never show conflicting numbers.
  */
 export function PdpSizeChips({ productKey, chips, materialTiers, requestQuote }: Props) {
   const materialSelection = usePdpMaterialSelection()
+  const gate = usePdpPurchaseGate()
+  const gateOk = gateMatchesProduct(gate, productKey)
 
-  let multiplier = 1
+  let materialMultiplier = 1
   if (materialTiers && materialTiers.length > 0) {
     const code = materialCodeForProduct(materialSelection, productKey)
     const tier = materialTiers.find((t) => t.code === code) ?? materialTiers[0]
-    multiplier = tier.multiplier
+    materialMultiplier = tier.multiplier
   }
+  const colorMultiplier = gateOk
+    ? resolveFinishColorMultiplier(gate.finishKey, gate.standardFinishKey)
+    : 1
 
   const priceLabelFor = (basePrice: number | null): string | null => {
     if (basePrice == null) return null
-    const amount = resolveMaterialTierPrice(basePrice, multiplier)
+    const amount = resolveConfiguredUnitPrice(
+      basePrice,
+      materialMultiplier,
+      colorMultiplier
+    )
     return requestQuote ? `от ${formatRub(amount)}` : formatRub(amount)
   }
 
