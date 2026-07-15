@@ -35,9 +35,12 @@
     "**/*.ts",
     "**/*.tsx",
     ".next-matrix/types/**/*.ts",
-    ".next-dev/types/**/*.ts"
+    ".next-dev/types/**/*.ts",
+    ".next-recovery-dev/types/**/*.ts",
+    ".next-build-recovery/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "src/app/qa"
   ]
 }

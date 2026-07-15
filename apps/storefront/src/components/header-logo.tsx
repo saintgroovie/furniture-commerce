@@ -11,16 +11,18 @@ import { useKidsSection } from "@/lib/use-kids-section"
  *
  * Inline SVG (same geometry as the old 273×35 PNG box) so ink stays crisp
  * at any DPR; kids-slot width is fixed in rem and does not depend on
- * raster intrinsic size.
+ * raster intrinsic size. Kids chrome links to /kids (not the adult home).
  */
 export function HeaderLogo() {
   const isKids = useKidsSection()
 
   return (
     <Link
-      href="/"
+      href={isKids ? "/kids" : "/"}
       className="logo"
-      aria-label={isKids ? "Woodright Kids - на главную" : "Woodright - на главную"}
+      aria-label={
+        isKids ? "Woodright Kids - на главную детской" : "Woodright - на главную"
+      }
     >
       <WoodrightWordmark className="logo-image" />
       <span
