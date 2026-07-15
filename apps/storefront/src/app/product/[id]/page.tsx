@@ -48,6 +48,7 @@ import {
   getArticle,
   getDimensions,
   getPdpHeroObjectPosition,
+  orderedBuyerFacingDimensions,
 } from "@/lib/product-metadata"
 import { formatRuInline } from "@/lib/format-ru-copy"
 import { actions, labels, pdpCopy, productTypeBadgeLabels } from "@/lib/woodright-copy"
@@ -301,13 +302,17 @@ export default async function ProductPage({ params }: { params: { id: string } }
       ? String(product.description).trim()
       : null
 
-  /* Buyer-facing hero order is fixed: width, height, depth — depth last. */
+  /* Buyer-facing order is fixed: height → width → depth (cm hero + mm specs). */
+  const dimensionLabelByAxis = {
+    height: pdpCopy.dimensionHeight,
+    width: pdpCopy.dimensionWidth,
+    depth: pdpCopy.dimensionDepth,
+  } as const
   const dimensionCells = dim
-    ? ([
-        dim.width_mm ? { label: pdpCopy.dimensionWidth, mm: dim.width_mm } : null,
-        dim.height_mm ? { label: pdpCopy.dimensionHeight, mm: dim.height_mm } : null,
-        dim.depth_mm ? { label: pdpCopy.dimensionDepth, mm: dim.depth_mm } : null,
-      ].filter(Boolean) as Array<{ label: string; mm: number }>)
+    ? orderedBuyerFacingDimensions(dim).map(({ axis, mm }) => ({
+        label: dimensionLabelByAxis[axis],
+        mm,
+      }))
     : []
 
   const specRows = [
@@ -450,7 +455,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
                 <p className="pdp-subtitle">{formatRuInline(subtitle)}</p>
               )}
 
-              {/* 4. Dimensions: width / height / depth — depth last */}
+              {/* 4. Dimensions: height → width → depth */}
               {dimensionCells.length > 0 && (
                 <dl className="pdp-dimensions-row">
                   {dimensionCells.map((c) => (

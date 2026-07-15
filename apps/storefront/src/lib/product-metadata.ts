@@ -6,6 +6,35 @@ type Dimensions = {
   height_mm?: number
 }
 
+/** Buyer-facing axis order. Storage schema stays width_mm / height_mm / depth_mm. */
+export type BuyerFacingDimensionAxis = "height" | "width" | "depth"
+
+export const BUYER_FACING_DIMENSION_ORDER: readonly BuyerFacingDimensionAxis[] = [
+  "height",
+  "width",
+  "depth",
+] as const
+
+const AXIS_TO_MM_KEY: Record<BuyerFacingDimensionAxis, keyof Dimensions> = {
+  height: "height_mm",
+  width: "width_mm",
+  depth: "depth_mm",
+}
+
+/** Present dimensions in the fixed buyer order: height → width → depth. */
+export function orderedBuyerFacingDimensions(
+  dim: Dimensions
+): Array<{ axis: BuyerFacingDimensionAxis; mm: number }> {
+  const out: Array<{ axis: BuyerFacingDimensionAxis; mm: number }> = []
+  for (const axis of BUYER_FACING_DIMENSION_ORDER) {
+    const mm = dim[AXIS_TO_MM_KEY[axis]]
+    if (typeof mm === "number" && Number.isFinite(mm) && mm > 0) {
+      out.push({ axis, mm })
+    }
+  }
+  return out
+}
+
 type ProductLike = Record<string, unknown>
 
 function meta(product: ProductLike): Record<string, unknown> {
@@ -195,20 +224,23 @@ export function getDimensions(product: ProductLike): Dimensions | null {
 export function formatDimensionsCompact(dim: Dimensions): string {
   // Card preview meta: whole centimeters (1244 mm -> 124), no unit label.
   // Narrow no-break spaces around × - a touch of air, still one unbreakable
-  // run. The PDP keeps exact millimeters via formatDimensionsLabeled.
+  // run. Order matches PDP: height → width → depth.
   const cm = (mm: number) => String(Math.round(mm / 10))
-  const parts: string[] = []
-  if (dim.width_mm) parts.push(cm(dim.width_mm))
-  if (dim.depth_mm) parts.push(cm(dim.depth_mm))
-  if (dim.height_mm) parts.push(cm(dim.height_mm))
+  const parts = orderedBuyerFacingDimensions(dim).map(({ mm }) => cm(mm))
   return parts.join("\u202F×\u202F")
 }
 
+const LABELED_AXIS_ABBR: Record<BuyerFacingDimensionAxis, string> = {
+  height: "В.",
+  width: "Ш.",
+  depth: "Гл.",
+}
+
 export function formatDimensionsLabeled(dim: Dimensions): string {
-  const parts: string[] = []
-  if (dim.width_mm) parts.push(`Ш. ${dim.width_mm}`)
-  if (dim.depth_mm) parts.push(`Гл. ${dim.depth_mm}`)
-  if (dim.height_mm) parts.push(`В. ${dim.height_mm}`)
+  // Technical / mm form. Same axis order as cm hero and card compact.
+  const parts = orderedBuyerFacingDimensions(dim).map(
+    ({ axis, mm }) => `${LABELED_AXIS_ABBR[axis]} ${mm}`
+  )
   return parts.join(" × ") + " мм"
 }
 
