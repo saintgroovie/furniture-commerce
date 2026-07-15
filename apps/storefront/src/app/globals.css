@@ -63,7 +63,22 @@ html {
 }
 
 body {
+  /* Sticky page shell: short routes (Контакты, service pages) must not
+     stretch the footer to fill the viewport — main absorbs the slack,
+     footer stays content-sized like on /catalog. */
   min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+#main-content {
+  flex: 1 0 auto;
+}
+
+.site-header,
+.site-footer {
+  flex: 0 0 auto;
 }
 
 a {
@@ -147,6 +162,18 @@ img {
   initial-value: #ffffff;
 }
 
+@property --footer-wash-top {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #ffffff;
+}
+
+@property --footer-wash-mid {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #ffffff;
+}
+
 .site-header {
   /* Slightly short + calm decelerate: long springy 1s + oversized max-width
      / 0fr→1fr felt sticky, then jerky once the competing badge translate
@@ -169,9 +196,20 @@ img {
    Trigger is data-section on the header (pathname / optimistic click),
    not :has(.kids-theme) — that class only mounts after the kids RSC
    segment streams in, so the tint would arrive too late. */
-.site-header[data-section="kids"] {
+.site-header[data-section="kids"],
+body:has([data-kids-product]) .site-header {
   --header-edge-top: color-mix(in srgb, #507356 38%, var(--color-surface));
   --header-edge-main: color-mix(in srgb, #507356 13%, #f5f7f5);
+}
+
+/* Kids action ink on the whole page chrome: cart badge, fly-dot, PDP
+   «В корзину» / request CTA (.btn-primary → --color-action). Same sage as
+   .kids-theme; body:has(header[data-section=kids]) covers /kids/* before
+   the RSC theme wrapper lands, and data-kids-product covers kids PDPs. */
+body:has(.site-header[data-section="kids"]),
+body:has([data-kids-product]) {
+  --color-action: #507356;
+  --color-action-hover: #446249;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -251,7 +289,8 @@ img {
   transition: width var(--logo-kids-duration) var(--logo-kids-ease);
 }
 
-.logo-kids-slot.is-visible {
+.logo-kids-slot.is-visible,
+body:has([data-kids-product]) .logo-kids-slot {
   /* gap + badge in one width tween */
   width: calc(var(--logo-kids-gap) + var(--logo-kids-w));
 }
@@ -282,7 +321,8 @@ img {
   transition: opacity 0.22s ease;
 }
 
-.logo-kids-slot.is-visible .logo-kids-badge {
+.logo-kids-slot.is-visible .logo-kids-badge,
+body:has([data-kids-product]) .logo-kids-slot .logo-kids-badge {
   opacity: 1;
   transition: opacity 0.32s ease 0.06s;
 }
@@ -449,7 +489,8 @@ img {
     transform 0.35s cubic-bezier(0.34, 1.4, 0.64, 1),
     opacity 0.25s ease,
     margin-left 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-    margin-right 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    margin-right 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color var(--logo-kids-duration, 0.52s) var(--logo-kids-ease, cubic-bezier(0.33, 1, 0.68, 1));
 }
 
 .header-cart-count.is-visible {
@@ -1124,19 +1165,44 @@ select:focus-visible {
    Warm wash lives on .site-footer and falls from the top rule — no brand card frame. */
 
 .site-footer {
+  /* Same adult ↔ kids tween language as .site-header edge wash. */
+  --footer-wash-top: color-mix(in srgb, var(--color-accent) 28%, var(--color-bg));
+  --footer-wash-mid: var(--color-bg);
   border-top: 1px solid var(--color-border);
   /* Gradient starts at the top divider and washes onto the brand/nav band. */
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--color-accent) 28%, var(--color-bg)) 0%,
-    var(--color-bg) 36%,
-    var(--color-bg) 100%
+    var(--footer-wash-top) 0%,
+    var(--footer-wash-mid) 36%,
+    var(--footer-wash-mid) 100%
   );
+  transition:
+    --footer-wash-top var(--logo-kids-duration, 0.52s) var(--logo-kids-ease, cubic-bezier(0.33, 1, 0.68, 1)),
+    --footer-wash-mid var(--logo-kids-duration, 0.52s) var(--logo-kids-ease, cubic-bezier(0.33, 1, 0.68, 1));
   /* Vertical air between the two rules lives on .footer-columns margins. */
   padding-block: 0 var(--space-lg);
   margin-top: 2.5rem;
   color: var(--color-fg-secondary);
   font-size: 0.9rem;
+  /* Never fill leftover viewport height on short pages. */
+  height: auto;
+  min-height: 0;
+  align-self: stretch;
+}
+
+/* Kids section / kids PDP: sage wash matching header + .kids-theme.
+   `data-section` is client-driven; `body:has([data-kids-product])` covers
+   kids PDP SSR/first paint before the provider opts in. */
+.site-footer[data-section="kids"],
+body:has([data-kids-product]) .site-footer {
+  --footer-wash-top: color-mix(in srgb, #507356 28%, #f5f7f5);
+  --footer-wash-mid: #f5f7f5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-footer {
+    transition: none;
+  }
 }
 
 .footer-inner {
@@ -1175,6 +1241,8 @@ select:focus-visible {
     minmax(var(--footer-nav-gap), 1fr)
     max-content;
   align-items: start;
+  align-content: start;
+  height: auto;
 }
 
 /* Thin vertical rule between brand and Каталог.
@@ -1230,6 +1298,8 @@ select:focus-visible {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  align-self: start;
+  height: fit-content;
 }
 
 /* Invisible pad matching the brand window so nav titles/rows share the lattice. */
@@ -1285,8 +1355,15 @@ select:focus-visible {
 }
 
 .footer-brand-logo {
+  display: inline-flex;
+  align-items: center;
   color: var(--color-fg);
   text-decoration: none;
+}
+
+.footer-brand-mark {
+  display: inline-flex;
+  align-items: center;
 }
 
 .footer-brand .footer-column-title {
@@ -1301,9 +1378,17 @@ select:focus-visible {
 
 .footer-brand-wordmark {
   display: block;
+  /* Pin both axes like .logo-image so the Kids pill tween stays calm. */
   height: 18px;
-  width: auto;
-  aspect-ratio: 16489 / 2114;
+  width: calc(18px * 16489 / 2114);
+  flex: none;
+  color: var(--color-logo-ink);
+  overflow: visible;
+}
+
+/* Footer wordmark is 18px; keep the shared Kids slot on the same cross-size. */
+.footer-brand-logo .logo-kids-slot {
+  height: 18px;
 }
 
 /* Shared body: every row is the same fixed height, no extra gap */
@@ -2184,6 +2269,9 @@ button:disabled,
   background: var(--color-surface);
   color: var(--color-fg);
   text-align: left;
+  /* Global `button` sets nowrap; the tier label must wrap on narrow screens
+     instead of running under the price. */
+  white-space: normal;
   cursor: pointer;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
@@ -4581,18 +4669,22 @@ button:disabled,
 
 .pdp-title {
   font-size: clamp(1.85rem, 2.9vw, 2.6rem);
-  line-height: 1.06;
+  line-height: 1.12;
   letter-spacing: -0.018em;
   font-weight: 600;
+  /* Explicit CopyLines break: type row, then transcribed model row. */
+  text-wrap: pretty;
 }
 
-/* 3. Short positioning line (real subtitle field) */
+/* 3. Short positioning line (real subtitle field).
+   CopyLines may emit 2 meaning rows (name / measure) - keep lead air tight. */
 .pdp-subtitle {
   color: var(--color-fg-secondary);
   font-size: 0.9975rem;
-  line-height: 1.55;
-  max-width: 46ch;
+  line-height: 1.45;
+  max-width: 42ch;
   margin-top: calc(-1 * var(--space-xs));
+  text-wrap: pretty;
 }
 
 /* 4. Dimensions: height → width → depth. Quiet top and
@@ -4734,22 +4826,30 @@ button:disabled,
   margin-bottom: var(--space-md);
 }
 
-.pdp-description {
-  color: var(--color-fg-secondary);
-  line-height: 1.75;
-  font-size: 1rem;
-  max-width: 62ch;
+.pdp-description-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55em;
+  max-width: 58ch;
 }
 
-/* Editorial lead: the opening paragraph carries slightly more weight */
-.pdp-description-block .pdp-description:first-of-type {
-  font-size: 1.125rem;
-  line-height: 1.65;
-  color: var(--color-fg);
-}
-
-.pdp-description + .pdp-description {
+.pdp-description-group + .pdp-description-group {
   margin-top: var(--space-md);
+}
+
+.pdp-description {
+  margin: 0;
+  color: var(--color-fg-secondary);
+  line-height: 1.65;
+  font-size: 1rem;
+  text-wrap: pretty;
+}
+
+/* Opening sentence of the editorial block - slightly more weight */
+.pdp-description.is-lead {
+  font-size: 1.0625rem;
+  line-height: 1.55;
+  color: var(--color-fg);
 }
 
 .pdp-specs-list {
