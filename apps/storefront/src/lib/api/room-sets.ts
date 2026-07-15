@@ -1,8 +1,10 @@
-import { getBaseUrl, medusaFetch } from "./base"
+import { getBaseUrl, medusaCatalogFetch, medusaFetch } from "./base"
 
+/** Room-set list (catalog kids membership + `/rooms` / `/kids/rooms` listings).
+ * Read cache OK: short catalog TTL; accept ≤~TTL listing staleness. */
 export async function getRoomSets() {
   const base = getBaseUrl()
-  const res = await medusaFetch(`${base}/store/room-sets`)
+  const res = await medusaCatalogFetch(`${base}/store/room-sets`)
   if (!res.ok) throw new Error(await res.text())
   return res.json()
 }
@@ -26,7 +28,7 @@ export async function getRoomSetBySlug(slug: string) {
  */
 export async function getRoomSetProductIdsBySlug(slug: string) {
   const base = getBaseUrl()
-  const res = await medusaFetch(
+  const res = await medusaCatalogFetch(
     `${base}/store/room-sets/${encodeURIComponent(slug)}?view=product_ids`
   )
   if (res.status === 404) throw new Error(NOT_FOUND)
