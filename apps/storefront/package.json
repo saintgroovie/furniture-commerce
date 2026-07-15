@@ -16,6 +16,7 @@
     "check:landing-css": "node scripts/check-landing-css-assets.mjs",
     "check:landing-css:heal": "node scripts/check-landing-css-assets.mjs --heal",
     "test:gallery-contract": "../backend/node_modules/.bin/tsx src/lib/catalog-card-image.fidelity.test.ts && ../backend/node_modules/.bin/tsx src/lib/catalog-card-gallery-dedupe.fidelity.test.ts && ../backend/node_modules/.bin/tsx src/lib/gallery-strip-buyer-contract.fidelity.test.ts && ../backend/node_modules/.bin/tsx src/lib/pdp-gallery-photo-set.fidelity.test.ts && ../backend/node_modules/.bin/tsx src/lib/upholstery-swatch-contract.fidelity.test.ts && ../backend/node_modules/.bin/tsx src/lib/client/extra-image-url-verify.fidelity.test.ts && ../backend/node_modules/.bin/tsx src/lib/catalog-slim-finish-extras.fidelity.test.ts",
+    "e2e:material-pricing": "node scripts/e2e-material-execution-pricing.cjs",
     "lint": "next lint"
   },
   "dependencies": {
