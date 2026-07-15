@@ -218,9 +218,14 @@ img {
 
 .logo-image {
   display: block;
+  /* Pin both axes: SVG `width:auto` can collapse/expand during the kids
+     slot tween and fight translateX(-50%) re-center. Box matches the old
+     273×35 PNG at 20px height (16489/2114 viewBox). */
   height: 20px;
-  width: auto;
+  width: calc(20px * 16489 / 2114);
   flex: none;
+  color: var(--color-logo-ink);
+  overflow: visible;
 }
 
 /* «KIDS» pill next to the wordmark (kids section only).
