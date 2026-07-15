@@ -1,8 +1,7 @@
 import Link from "next/link"
 import type { Metadata } from "next"
-import { cache } from "react"
 import { getSiteUrl } from "@/lib/api/base"
-import { getCatalogProducts, getProduct, NOT_FOUND } from "@/lib/api/products"
+import { getProduct, getProducts, NOT_FOUND } from "@/lib/api/products"
 import { formatRub, getPrice } from "@/lib/format"
 import {
   formatRequestQuotePriceLabel,
@@ -60,6 +59,7 @@ import {
 import { layoutBuyerFacingTitle } from "@/lib/en-name-ru"
 import { formatRuInline } from "@/lib/format-ru-copy"
 import {
+  isPdpCollectionContextSentence,
   layoutPdpDescription,
   layoutPdpSubtitle,
 } from "@/lib/pdp-copy-layout"
@@ -98,13 +98,10 @@ function mmToCmLabel(mm: number): string {
 
 const BADGE_LABELS = productTypeBadgeLabels
 
-/** Deduplicate generateMetadata + page product fetch within one request. */
-const loadPdpProduct = cache(async (idOrHandle: string) => getProduct(idOrHandle))
-
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const base = getSiteUrl()
   try {
-    const res = await loadPdpProduct(params.id)
+    const res = await getProduct(params.id)
     const product = res.product as Record<string, unknown> | undefined
     if (!product) return { title: "Товар", alternates: { canonical: `${base}/product/${params.id}` } }
     const title = getBuyerFacingProductTitle(product)
@@ -129,7 +126,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
 export default async function ProductPage({ params }: { params: { id: string } }) {
   let product: Record<string, unknown> | null = null
   try {
-    const res = await loadPdpProduct(params.id)
+    const res = await getProduct(params.id)
     product = res.product ?? null
   } catch (e) {
     if (e instanceof Error && e.message === NOT_FOUND) {
@@ -258,8 +255,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
   let displayGroupMembers: Record<string, unknown>[] = []
   if (meta?.display_group && meta?.collection) {
     try {
-      // Browse DTO is enough for sibling thumbs/prices; avoid full /store/products fan-out.
-      const plist = await getCatalogProducts()
+      const plist = await getProducts()
       const list = (plist.products ?? []) as Record<string, unknown>[]
       displayGroupMembers = getDisplayGroupMembers(product, list)
     } catch {
@@ -605,20 +601,30 @@ export default async function ProductPage({ params }: { params: { id: string } }
           {description && (
             <div className="pdp-description-block">
               <h2>{pdpCopy.descriptionHeading}</h2>
-              {layoutPdpDescription(description).map((sentences, pi) => (
-                <div
-                  key={pi}
-                  className={`pdp-description-group${pi === 0 ? " is-lead-group" : ""}`}
-                >
-                  {sentences.map((sentence, si) => (
-                    <CopyLines
-                      key={si}
-                      className={`pdp-description${pi === 0 && si === 0 ? " is-lead" : ""}`}
-                      lines={sentence}
-                    />
-                  ))}
-                </div>
-              ))}
+              {layoutPdpDescription(description).map((blocks, pi) => {
+                const collectionOnly = blocks.every((lines) =>
+                  lines.every(isPdpCollectionContextSentence)
+                )
+                return (
+                  <div
+                    key={pi}
+                    className={`pdp-description-group${collectionOnly ? " is-collection-group" : ""}`}
+                  >
+                    {blocks.map((lines, si) => {
+                      const joined = lines.join(" ")
+                      return (
+                        <CopyLines
+                          key={si}
+                          className={`pdp-description${
+                            isPdpCollectionContextSentence(joined) ? " is-collection" : ""
+                          }`}
+                          lines={lines}
+                        />
+                      )
+                    })}
+                  </div>
+                )
+              })}
             </div>
           )}
           {specRows.length > 0 && (

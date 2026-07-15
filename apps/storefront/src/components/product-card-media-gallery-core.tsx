@@ -1760,7 +1760,7 @@ export function ProductCardMediaGalleryCore({
       disabledKeys?: Set<string>
     } = {}
   ) => {
-    /* PDP: compact "Цвет - Белый G503" / "Цвет - Выберите" on one line. */
+    /* PDP: compact "Цвет: Белый G503" / "Цвет: Выберите" on one line. */
     const activeValueLabel =
       layout === "pdp"
         ? (variants.find((v) => v.key === activeKey)?.label ?? null)
@@ -1782,7 +1782,7 @@ export function ProductCardMediaGalleryCore({
         {headingValue != null && (
           <>
             <span className="product-card-selector-sep" aria-hidden="true">
-              {" - "}
+              {": "}
             </span>
             <span className="product-card-selector-value">{headingValue}</span>
           </>
@@ -2105,7 +2105,7 @@ export function ProductCardMediaGalleryCore({
                 {isPdp && (
                   <>
                     <span className="product-card-selector-sep" aria-hidden="true">
-                      {" - "}
+                      {": "}
                     </span>
                     <span className="product-card-selector-value">
                       {activeHeadboard?.label ?? pdpCopy.optionChooseValue}
