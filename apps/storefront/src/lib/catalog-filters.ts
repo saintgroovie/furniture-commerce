@@ -65,12 +65,12 @@ function humanizeFilterKey(key: string): string {
 }
 
 const COLLECTION_FILTER_LABELS: Record<string, string> = {
-  greenwich: "Greenwich",
-  oliver: "Oliver",
-  "oliver-kids": "Oliver Kids",
-  "willie-winkie": "Willie Winkie",
-  monchelsea: "Monchelsea",
-  provence: "Provence",
+  greenwich: "Гринвич",
+  oliver: "Оливер",
+  "oliver-kids": "Оливер · детская",
+  "willie-winkie": "Вилли Винки",
+  monchelsea: "Мончелси",
+  provence: "Прованс",
   country: "Кантри",
   "country-london-paris": "Кантри",
 }
@@ -139,13 +139,36 @@ function productSearchText(product: Record<string, unknown>): string {
 }
 
 export function normalizeCollectionFilterKey(raw: string): string {
-  const key = raw.trim().toLowerCase().replace(/[_\s]+/g, "-")
+  const key = raw
+    .trim()
+    .toLowerCase()
+    .replace(/[·•]/g, " ")
+    .replace(/[_\s]+/g, "-")
+    .replace(/-+/g, "-")
   if (!key) return key
   if (key.startsWith("country")) return "country"
   if (key === "кантри") return "country"
+  if (key === "оливер" || key === "oliver") return "oliver"
+  if (
+    key === "оливер-kids" ||
+    key === "oliver-kids" ||
+    key === "оливер-детская" ||
+    key === "oliver-kids-line"
+  ) {
+    return "oliver-kids"
+  }
+  if (key === "гринвич" || key === "greenwich") return "greenwich"
+  if (key === "мончелси" || key === "monchelsea") return "monchelsea"
+  if (key === "прованс" || key === "provence") return "provence"
   if (key === "molly") return "willie-winkie"
-  if (key === "willie-winkie" || key === "willie-winkie-kids") return "willie-winkie"
-  if (key === "willie") return "willie-winkie"
+  if (
+    key === "willie-winkie" ||
+    key === "willie-winkie-kids" ||
+    key === "вилли-винки" ||
+    key === "willie"
+  ) {
+    return "willie-winkie"
+  }
   return key
 }
 

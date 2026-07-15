@@ -7,6 +7,7 @@
 const EXACT_NAME_RU: Record<string, string> = {
   hole: "Хоул",
   scale: "Скейл",
+  step: "Степ",
   molly: "Молли",
   oxford: "Оксфорд",
   grace: "Грейс",
@@ -182,8 +183,9 @@ export type BuyerFacingTitleLayout = {
   /** Flat title for SEO / cards: «Прикроватная тумба Хоул». */
   text: string
   /**
-   * PDP H1 lines when type + model split cleanly:
-   * ["Прикроватная тумба", "Хоул"]. Otherwise a single transcribed line.
+   * PDP H1 lines. Two lines only when the RU type is multi-word
+   * (e.g. «Прикроватная тумба» / «Хоул»). Short titles stay one line
+   * («Консоль Степ») — forced breaks looked like a CSS wrap bug.
    */
   lines: string[]
 }
@@ -191,6 +193,7 @@ export type BuyerFacingTitleLayout = {
 /**
  * Split «RU type + EN model» and transcribe the model.
  * No English model → one transcribed line (type only / full title).
+ * Two-line H1 only when the type phrase has 2+ words.
  */
 export function layoutBuyerFacingTitle(rawTitle: string): BuyerFacingTitleLayout {
   const cleaned = rawTitle
@@ -215,10 +218,14 @@ export function layoutBuyerFacingTitle(rawTitle: string): BuyerFacingTitleLayout
         ? modelRaw.replace(/\bwoodright kids\b/gi, "Woodright Kids").replace(/\bwoodright\b/gi, "Woodright")
         : transcribeEnNamesInRuText(modelRaw)
       const typeRu = transcribeEnNamesInRuText(typePart)
-      return {
-        text: `${typeRu} ${modelRu}`.trim(),
-        lines: [typeRu, modelRu],
+      const flat = `${typeRu} ${modelRu}`.trim()
+      const typeWordCount = typeRu.split(/\s+/).filter(Boolean).length
+      /* «Консоль Степ» fits one line; «Прикроватная тумба» / «Хоул» needs the
+         meaning break so the long type does not fight the model name. */
+      if (typeWordCount >= 2) {
+        return { text: flat, lines: [typeRu, modelRu] }
       }
+      return { text: flat, lines: [flat] }
     }
   }
 
