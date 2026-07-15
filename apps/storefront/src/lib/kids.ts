@@ -39,16 +39,14 @@ export function isKidsStorefrontProduct(
 
 /**
  * Fast kids check for a cart line item — no room-set / catalog fan-out.
- * Uses (in order): line metadata stamp from add-to-cart, expanded
- * `item.product.metadata` from getCart fields, then `product_handle` for Oliver.
+ * Order: explicit BESPOKE → not kids (fail-closed even with kids stamps);
+ * then line metadata stamp from add-to-cart; then expanded
+ * `item.product.metadata` / Oliver handle fallbacks.
  * Room-set-only exclusivity from `resolveKidsProducts` is intentionally skipped
  * here; kids room-set CTA stamps `storefront_section: "kids"` on add.
  */
 export function isKidsCartLineItem(item: Record<string, unknown>): boolean {
   const lineMeta = (item.metadata as Record<string, unknown> | undefined) ?? {}
-  if (lineMeta.storefront_section === "kids" || lineMeta.cart_group === "kids") {
-    return true
-  }
 
   const productRaw = (item.product as Record<string, unknown> | undefined) ?? {}
   const handleFromLine =
@@ -59,6 +57,18 @@ export function isKidsCartLineItem(item: Record<string, unknown>): boolean {
       (typeof productRaw.handle === "string" && productRaw.handle) ||
       handleFromLine,
     metadata: (productRaw.metadata as Record<string, unknown> | undefined) ?? {},
+  }
+
+  // BESPOKE never enters the kids cart path (even if stamped kids metadata).
+  const classification = product.product_classification as
+    | { product_type?: string }
+    | undefined
+  const legacyType = product.productType as { product_type?: string } | undefined
+  const productType = classification?.product_type ?? legacyType?.product_type
+  if (productType === BESPOKE_PRODUCT_TYPE) return false
+
+  if (lineMeta.storefront_section === "kids" || lineMeta.cart_group === "kids") {
+    return true
   }
 
   return (
