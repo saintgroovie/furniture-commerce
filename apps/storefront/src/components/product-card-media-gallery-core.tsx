@@ -148,6 +148,8 @@ type SwatchScrollRailProps = {
   stripKey: string
 }
 
+const EMPTY_SHARED_INTERIORS: string[] = []
+
 function ProductCardSwatchScrollRail({
   ariaLabel,
   children,
@@ -248,7 +250,7 @@ export function ProductCardMediaGalleryCore({
   productHandle,
 }: Props) {
   const isGreenwichBed = Boolean(greenwichBedMatrix && greenwichBedMatrix.length > 0)
-  const bedInteriorSrcs = sharedInteriorSrcs ?? []
+  const bedInteriorSrcs = sharedInteriorSrcs ?? EMPTY_SHARED_INTERIORS
   const bedMediaOptions = useMemo(
     () =>
       bedInteriorSrcs.length > 0 ? { interiorUrls: bedInteriorSrcs } : undefined,
@@ -1075,10 +1077,82 @@ export function ProductCardMediaGalleryCore({
     preloadExecutionHero,
   ])
 
+  /* Greenwich bed: warm every wood×fabric hero for the active headboard so
+     swatch picks resolve from cache instead of waiting on network+decode. */
+  useEffect(() => {
+    if (
+      layout !== "pdp" ||
+      !isGreenwichBed ||
+      !greenwichBedMatrix ||
+      !activeHeadboardKey ||
+      typeof Image === "undefined"
+    ) {
+      return
+    }
+    const connection = (
+      navigator as Navigator & {
+        connection?: { saveData?: boolean; effectiveType?: string }
+      }
+    ).connection
+    if (
+      connection?.saveData ||
+      connection?.effectiveType === "slow-2g" ||
+      connection?.effectiveType === "2g"
+    ) {
+      return
+    }
+    const woods = availableWoodKeysForHeadboard(
+      greenwichBedMatrix,
+      activeHeadboardKey
+    )
+    const urls: string[] = []
+    for (const wood of woods) {
+      for (const fabric of availableFabricKeysForHeadboard(
+        greenwichBedMatrix,
+        activeHeadboardKey,
+        wood
+      )) {
+        const media = resolveGreenwichBedMedia(
+          greenwichBedMatrix,
+          activeHeadboardKey,
+          wood,
+          fabric,
+          bedMediaOptions
+        )
+        const src = media?.mainSrc?.trim()
+        if (src && src !== displayHeroSrc) urls.push(src)
+      }
+    }
+    const unique = [...new Set(urls)]
+    let cancelled = false
+    const timer = window.setTimeout(() => {
+      void (async () => {
+        for (const src of unique) {
+          if (cancelled) return
+          await preloadExecutionHero(src)
+        }
+      })()
+    }, 0)
+    return () => {
+      cancelled = true
+      window.clearTimeout(timer)
+    }
+  }, [
+    layout,
+    isGreenwichBed,
+    greenwichBedMatrix,
+    activeHeadboardKey,
+    bedMediaOptions,
+    displayHeroSrc,
+    preloadExecutionHero,
+  ])
+
   /* Warm the first few PDP alternatives after initial paint. Hover/focus below
-     covers the rest without downloading an entire 12-color matrix up front. */
+     covers the rest without downloading an entire 12-color matrix up front.
+     Greenwich bed/paint matrix paths are warmed separately above. */
   useEffect(() => {
     if (layout !== "pdp" || typeof navigator === "undefined") return
+    if (isGreenwichBed || isGreenwichPaint) return
     const connection = (
       navigator as Navigator & {
         connection?: { saveData?: boolean; effectiveType?: string }
@@ -1116,6 +1190,8 @@ export function ProductCardMediaGalleryCore({
     }
   }, [
     layout,
+    isGreenwichBed,
+    isGreenwichPaint,
     headboardVariants,
     upholsteryVariants,
     woodVariants,
@@ -1150,19 +1226,16 @@ export function ProductCardMediaGalleryCore({
         return
       }
 
-      /* Keep the current PDP hero painted until the selected execution image
-         is downloaded and decoded. This avoids a blank/repaint jump inside the
-         fixed contain box. Sequence gating makes rapid clicks last-write-wins. */
+      /* Optimistic PDP swap: update hero immediately so swatches feel instant.
+         Preload still runs to warm decode cache; if load fails, clear to the
+         failed state rather than leaving a mismatched previous execution. */
+      setDisplayHeroSrc(normalized)
       void preloadExecutionHero(normalized).then((ready) => {
         if (executionSwapSeqRef.current !== seq) return
         if (!ready) {
-          // The selector already represents the requested execution. Never
-          // leave the previous execution photo painted as if it still matched.
           setDisplayHeroSrc("")
           setHeroFailed(true)
-          return
         }
-        setDisplayHeroSrc(normalized)
       })
     },
     [layout, preloadExecutionHero]
