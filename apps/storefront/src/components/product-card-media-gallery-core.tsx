@@ -71,6 +71,11 @@ type Props = {
   separateFabricRows?: CardColorVariant[]
   /** Greenwich bed matrix — scoped hero + gallery per headboard/wood/fabric. */
   greenwichBedMatrix?: GreenwichBedMatrixEntry[]
+  /**
+   * Shared interior URLs from product metadata (`shared_scene_media`,
+   * scene_type=interior). Appended after combo-scoped extras on PDP.
+   */
+  sharedInteriorSrcs?: string[]
   /** Greenwich paint matrix — scoped hero + gallery per wood/paint. */
   greenwichPaintMatrix?: GreenwichPaintMatrixEntry[]
   layout?: "card" | "pdp"
@@ -235,6 +240,7 @@ export function ProductCardMediaGalleryCore({
   separateFabricRows,
   oliverMode = false,
   greenwichBedMatrix,
+  sharedInteriorSrcs,
   greenwichPaintMatrix,
   layout = "card",
   heroObjectPosition,
@@ -242,6 +248,12 @@ export function ProductCardMediaGalleryCore({
   productHandle,
 }: Props) {
   const isGreenwichBed = Boolean(greenwichBedMatrix && greenwichBedMatrix.length > 0)
+  const bedInteriorSrcs = sharedInteriorSrcs ?? []
+  const bedMediaOptions = useMemo(
+    () =>
+      bedInteriorSrcs.length > 0 ? { interiorUrls: bedInteriorSrcs } : undefined,
+    [bedInteriorSrcs]
+  )
   const isGreenwichPaint = Boolean(greenwichPaintMatrix && greenwichPaintMatrix.length > 0)
   const isProvencePaintWood = Boolean(
     finishVariants?.length === 1 &&
@@ -391,7 +403,8 @@ export function ProductCardMediaGalleryCore({
         greenwichBedMatrix,
         activeHeadboardKey,
         activeWoodKey,
-        activeUpholsteryKey
+        activeUpholsteryKey,
+        bedMediaOptions
       )
       if (fromMatrix) {
         // Catalog projection may slim matrix urls to [main]; keep same-token
@@ -438,6 +451,7 @@ export function ProductCardMediaGalleryCore({
     isGreenwichBed,
     isGreenwichPaint,
     greenwichBedMatrix,
+    bedMediaOptions,
     greenwichPaintMatrix,
     activeHeadboardKey,
     activeWoodKey,
@@ -582,7 +596,8 @@ export function ProductCardMediaGalleryCore({
             greenwichBedMatrix,
             bedDefault.headboard,
             bedDefault.frameMaterial,
-            bedDefault.fabric
+            bedDefault.fabric,
+            bedMediaOptions
           )
         : paintDefault && greenwichPaintMatrix
           ? resolveGreenwichPaintMedia(
@@ -656,9 +671,15 @@ export function ProductCardMediaGalleryCore({
   const resolveMatrixMain = useCallback(
     (hb: string, wood: string, fabric: string) => {
       if (!greenwichBedMatrix) return null
-      return resolveGreenwichBedMedia(greenwichBedMatrix, hb, wood, fabric)
+      return resolveGreenwichBedMedia(
+        greenwichBedMatrix,
+        hb,
+        wood,
+        fabric,
+        bedMediaOptions
+      )
     },
-    [greenwichBedMatrix]
+    [greenwichBedMatrix, bedMediaOptions]
   )
 
   useEffect(() => {
@@ -1327,7 +1348,8 @@ export function ProductCardMediaGalleryCore({
               greenwichBedMatrix,
               variant.key,
               wood,
-              fabric
+              fabric,
+              bedMediaOptions
             )
             if (media) {
               applyMediaSelection(media.mainSrc)
@@ -1354,7 +1376,8 @@ export function ProductCardMediaGalleryCore({
           greenwichBedMatrix,
           coerced.headboard,
           coerced.frameMaterial,
-          coerced.fabric
+          coerced.fabric,
+          bedMediaOptions
         )
         if (media) {
           applyMediaSelection(media.mainSrc)
@@ -1407,7 +1430,8 @@ export function ProductCardMediaGalleryCore({
           greenwichBedMatrix,
           activeHeadboardKeyRef.current,
           activeWoodKeyRef.current,
-          variant.key
+          variant.key,
+          bedMediaOptions
         )
         if (!media) {
           return
@@ -1439,7 +1463,8 @@ export function ProductCardMediaGalleryCore({
           greenwichBedMatrix,
           coerced.headboard,
           coerced.frameMaterial,
-          coerced.fabric
+          coerced.fabric,
+          bedMediaOptions
         )
         if (media) {
           applyMediaSelection(media.mainSrc)
@@ -1518,7 +1543,8 @@ export function ProductCardMediaGalleryCore({
               greenwichBedMatrix,
               activeHeadboardKeyRef.current,
               variant.key,
-              fabric
+              fabric,
+              bedMediaOptions
             )
             if (media) {
               applyMediaSelection(media.mainSrc)
@@ -1545,7 +1571,8 @@ export function ProductCardMediaGalleryCore({
             greenwichBedMatrix,
             coerced.headboard,
             coerced.frameMaterial,
-            coerced.fabric
+            coerced.fabric,
+            bedMediaOptions
           )
           if (media) {
             applyMediaSelection(media.mainSrc)
@@ -1929,7 +1956,8 @@ export function ProductCardMediaGalleryCore({
             greenwichBedMatrix,
             activeHeadboardKey,
             activeWoodKey,
-            activeUpholsteryKey
+            activeUpholsteryKey,
+            bedMediaOptions
           )
         )
       }

@@ -1,3 +1,7 @@
+import {
+  layoutBuyerFacingTitle,
+  type BuyerFacingTitleLayout,
+} from "@/lib/en-name-ru"
 import { isOliverKidsHandle } from "@/lib/oliver-kids-scope"
 
 type Dimensions = {
@@ -187,18 +191,21 @@ export function getCanonicalName(product: ProductLike): string | null {
   return typeof name === "string" && name.trim() ? name.trim() : null
 }
 
-/** Buyer-facing H1 — fixes known workbook typos without mutating Medusa in SSR. */
-export function getBuyerFacingProductTitle(product: ProductLike): string {
+/** Buyer-facing H1 layout: type line + transcribed model (when present). */
+export function getBuyerFacingProductTitleLayout(
+  product: ProductLike
+): BuyerFacingTitleLayout {
   const raw =
     getCanonicalName(product) ??
     (typeof product.title === "string" && product.title.trim()
       ? product.title.trim()
       : "Товар")
-  return raw
-    .replace(/филенгками/gi, "филенками")
-    .replace(/\/\s*филен/gi, " и филен")
-    .replace(/\.\s*$/g, "")
-    .trim()
+  return layoutBuyerFacingTitle(raw)
+}
+
+/** Flat buyer-facing title (SEO / single-line). EN model names → Cyrillic. */
+export function getBuyerFacingProductTitle(product: ProductLike): string {
+  return getBuyerFacingProductTitleLayout(product).text
 }
 
 export function getSubcollectionLabel(product: ProductLike): string | null {

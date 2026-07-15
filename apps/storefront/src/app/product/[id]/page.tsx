@@ -25,6 +25,7 @@ import {
 } from "@/lib/card-color-media"
 import {
   defaultGreenwichBedSelection,
+  greenwichBedInteriorUrlsFromProduct,
   isGreenwichBedProduct,
   resolveGreenwichBedMedia,
 } from "@/lib/greenwich-bed-media"
@@ -49,12 +50,18 @@ import {
   getSubcollectionLabel,
   getCanonicalName,
   getBuyerFacingProductTitle,
+  getBuyerFacingProductTitleLayout,
   getArticle,
   getDimensions,
   getPdpHeroObjectPosition,
   orderedBuyerFacingDimensions,
 } from "@/lib/product-metadata"
+import { layoutBuyerFacingTitle } from "@/lib/en-name-ru"
 import { formatRuInline } from "@/lib/format-ru-copy"
+import {
+  layoutPdpDescription,
+  layoutPdpSubtitle,
+} from "@/lib/pdp-copy-layout"
 import { isKidsStorefrontProduct } from "@/lib/kids"
 import { actions, labels, pdpCopy, productTypeBadgeLabels } from "@/lib/woodright-copy"
 import { KidsProductSection } from "@/components/kids-product-section"
@@ -160,6 +167,9 @@ export default async function ProductPage({ params }: { params: { id: string } }
   const executionSelectors = buildIntraProductExecutionSelectors(product, thumbSrc)
   const greenwichBedMatrix = executionSelectors.greenwichBedMatrix
   const greenwichPaintMatrix = executionSelectors.greenwichPaintMatrix
+  const bedInteriorSrcs = isGreenwichBed
+    ? greenwichBedInteriorUrlsFromProduct(product)
+    : []
   const bedDefaults =
     greenwichBedMatrix && greenwichBedMatrix.length > 0
       ? defaultGreenwichBedSelection(greenwichBedMatrix)
@@ -174,7 +184,8 @@ export default async function ProductPage({ params }: { params: { id: string } }
           greenwichBedMatrix,
           bedDefaults.headboard,
           bedDefaults.frameMaterial,
-          bedDefaults.fabric
+          bedDefaults.fabric,
+          bedInteriorSrcs.length > 0 ? { interiorUrls: bedInteriorSrcs } : undefined
         )
       : null
   const paintMatrixMedia =
@@ -294,11 +305,16 @@ export default async function ProductPage({ params }: { params: { id: string } }
   const { mainSrc: pdpMainSrc, extraSrcs: pdpResolvedExtras } =
     resolvePdpMediaBundle(evidenced.mainSrc, evidenced.extraSrcs)
 
-  const titleStr = getBuyerFacingProductTitle(product)
+  const titleLayout = getBuyerFacingProductTitleLayout(product)
+  const titleStr = titleLayout.text
   const canonicalName = getCanonicalName(product)
+  const canonicalLayout = canonicalName
+    ? layoutBuyerFacingTitle(canonicalName)
+    : null
+  /* Hide workbook line when it only differs by Latin vs transcribed model. */
   const showCanonicalLine =
-    canonicalName != null &&
-    canonicalName.toLowerCase() !== titleStr.trim().toLowerCase()
+    canonicalLayout != null &&
+    canonicalLayout.text.toLowerCase() !== titleStr.trim().toLowerCase()
 
   const collectionLabel = getCollectionLabel(product)
   const subcollectionLabel = getSubcollectionLabel(product)
@@ -408,6 +424,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
                 upholsteryVariants={executionSelectors.upholstery}
                 woodVariants={executionSelectors.wood}
                 greenwichBedMatrix={greenwichBedMatrix}
+                sharedInteriorSrcs={bedInteriorSrcs}
                 title={titleStr}
                 heroObjectPosition={heroObjectPosition}
                 productHandle={handle}
@@ -467,16 +484,28 @@ export default async function ProductPage({ params }: { params: { id: string } }
 
               {/* 2. Title */}
               <div className="product-detail-header">
-                <h1 className="pdp-title">{titleStr}</h1>
+                <CopyLines
+                  as="h1"
+                  className="pdp-title"
+                  lines={titleLayout.lines}
+                />
                 {badgeLabel && <span className="badge">{badgeLabel}</span>}
               </div>
-              {showCanonicalLine && canonicalName && (
-                <span className="pdp-canonical-name">{canonicalName}</span>
+              {showCanonicalLine && canonicalLayout && (
+                <CopyLines
+                  as="span"
+                  className="pdp-canonical-name"
+                  lines={canonicalLayout.lines}
+                />
               )}
 
-              {/* 3. Short positioning line (real `subtitle` field only) */}
+              {/* 3. Short positioning line (real `subtitle` field only).
+                  Layout only: Woodright dashes + meaning breaks via CopyLines. */}
               {subtitle && (
-                <p className="pdp-subtitle">{formatRuInline(subtitle)}</p>
+                <CopyLines
+                  className="pdp-subtitle"
+                  lines={layoutPdpSubtitle(subtitle)}
+                />
               )}
 
               {/* 4. Dimensions: height → width → depth */}
@@ -571,10 +600,19 @@ export default async function ProductPage({ params }: { params: { id: string } }
           {description && (
             <div className="pdp-description-block">
               <h2>{pdpCopy.descriptionHeading}</h2>
-              {description.split(/\n+/).map((para, i) => (
-                <p key={i} className="pdp-description">
-                  {para}
-                </p>
+              {layoutPdpDescription(description).map((sentences, pi) => (
+                <div
+                  key={pi}
+                  className={`pdp-description-group${pi === 0 ? " is-lead-group" : ""}`}
+                >
+                  {sentences.map((sentence, si) => (
+                    <CopyLines
+                      key={si}
+                      className={`pdp-description${pi === 0 && si === 0 ? " is-lead" : ""}`}
+                      lines={sentence}
+                    />
+                  ))}
+                </div>
               ))}
             </div>
           )}

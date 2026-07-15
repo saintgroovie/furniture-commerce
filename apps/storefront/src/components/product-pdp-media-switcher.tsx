@@ -7,7 +7,7 @@ import { PdpHeroAffordance } from "@/components/pdp-hero-affordance"
 import { PdpImageLightbox } from "@/components/pdp-image-lightbox"
 import { useHeroSwipe } from "@/components/use-hero-swipe"
 import { useVerifiedStripExtras } from "@/components/use-verified-strip-extras"
-import { buildPdpGalleryPhotoSet } from "@/lib/pdp-gallery-photo-set"
+import { buildPdpGalleryPhotoSet, resolveBuyerGalleryThumbStrip, shouldShowBuyerGalleryRail } from "@/lib/pdp-gallery-photo-set"
 import { buildPdpThumbStripUrls } from "@/lib/product-images"
 import { pdpLightboxCopy, states } from "@/lib/woodright-copy"
 
@@ -65,7 +65,11 @@ export function ProductPdpMediaSwitcher({
     () => buildPdpGalleryPhotoSet(mainTrimmed, visibleStrip),
     [mainTrimmed, visibleStrip]
   )
-  const showThumbRow = galleryPhotos.length > 1
+  const thumbStrip = useMemo(
+    () => resolveBuyerGalleryThumbStrip(mainTrimmed, visibleStrip),
+    [mainTrimmed, visibleStrip]
+  )
+  const showThumbRow = shouldShowBuyerGalleryRail(thumbStrip)
 
   const onHeroError = useCallback(() => {
     setDisplayHeroSrc(mainTrimmed)
@@ -209,7 +213,7 @@ export function ProductPdpMediaSwitcher({
       {showThumbRow && (
         <ProductThumbCarousel
           variantMain={mainTrimmed}
-          visibleStrip={visibleStrip}
+          visibleStrip={thumbStrip}
           activeGalleryUrl={activeGalleryUrl}
           displayHeroSrc={displayHeroSrc}
           pendingPreloadUrl={pendingPreloadUrl}
