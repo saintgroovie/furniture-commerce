@@ -77,7 +77,20 @@ const KEEP_TOGETHER_PHRASES = [
   "детская комната",
   "детской комнаты",
   "детских комнат",
+  /* PDP measure / finish collocations */
+  "по фронту",
+  "при высоте",
+  "при ширине",
+  "при глубине",
+  "в ширину",
+  "в высоту",
+  "в глубину",
+  "тон в тон",
+  "цветовой акцент",
 ].sort((a, b) => b.length - a.length)
+
+/** «124 см» / «63,5 см» - number and unit stay on one line. */
+const MEASURE_UNIT = /(\d+(?:[.,]\d+)?)\s+(см|мм|м)\b/gi
 
 /** «… под проект(у|ом|…)» / «… по проекту» - glue noun + prep + project word. */
 const PROJECT_COLLOCATION =
@@ -132,6 +145,10 @@ export function formatRuInline(text: string): string {
   let out = applyKeepTogetherPhrases(text)
   out = applyProjectCollocations(out)
   out = applyAndCollocations(out)
+  out = out.replace(
+    MEASURE_UNIT,
+    (_m, num: string, unit: string) => `${num}\u00A0${unit}`
+  )
   out = out.replace(HANGING_TOKEN, (_m, prefix: string, token: string) => `${prefix}${token}\u00A0`)
   return out
 }

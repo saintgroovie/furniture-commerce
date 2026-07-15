@@ -5,7 +5,7 @@ type Props = {
   lines: CopyBlock
   className?: string
   style?: CSSProperties
-  as?: "p" | "span" | "div"
+  as?: "p" | "span" | "div" | "h1" | "h2" | "h3"
   role?: string
 }
 

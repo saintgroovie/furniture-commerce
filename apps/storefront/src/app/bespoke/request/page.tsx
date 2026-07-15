@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Suspense } from "react"
 import { BespokeForm } from "@/components/bespoke-form"
 import { ChecklistIcon, MeasureIcon } from "@/components/bespoke-help-icons"
+import { CopyLines } from "@/components/copy-lines"
 import { bespokeRequestCopy, seo } from "@/lib/woodright-copy"
 
 export const metadata: Metadata = {
@@ -19,16 +20,12 @@ export default function BespokeRequestPage() {
     <div className="bespoke-request-page">
       <div className="bespoke-request-header">
         <h1>{bespokeRequestCopy.h1}</h1>
-        <p className="bespoke-request-lead">
-          {bespokeRequestCopy.lead[0]}
-          <br />
-          {bespokeRequestCopy.lead[1]}
-        </p>
+        <CopyLines className="bespoke-request-lead" lines={bespokeRequestCopy.lead} />
       </div>
 
       <div className="bespoke-request-layout">
         <div className="bespoke-request-card">
-          <Suspense fallback={<p className="info-text">Загружаем форму…</p>}>
+          <Suspense fallback={<CopyLines className="info-text" lines="Загружаем форму…" />}>
             <BespokeForm />
           </Suspense>
         </div>
@@ -62,7 +59,7 @@ export default function BespokeRequestPage() {
             </ul>
           </div>
 
-          <p className="page-caption">{bespokeRequestCopy.introCaption}</p>
+          <CopyLines className="page-caption" lines={bespokeRequestCopy.introCaption} />
         </aside>
       </div>
     </div>

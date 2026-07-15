@@ -23,6 +23,7 @@ button {
 }
 
 :root {
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --color-fg: #2c2420;
   --color-fg-secondary: #635a54;
   --color-fg-muted: #6f6862;
@@ -62,7 +63,22 @@ html {
 }
 
 body {
+  /* Sticky page shell: short routes (Контакты, service pages) must not
+     stretch the footer to fill the viewport — main absorbs the slack,
+     footer stays content-sized like on /catalog. */
   min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+#main-content {
+  flex: 1 0 auto;
+}
+
+.site-header,
+.site-footer {
+  flex: 0 0 auto;
 }
 
 a {
@@ -146,6 +162,18 @@ img {
   initial-value: #ffffff;
 }
 
+@property --footer-wash-top {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #ffffff;
+}
+
+@property --footer-wash-mid {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #ffffff;
+}
+
 .site-header {
   /* Slightly short + calm decelerate: long springy 1s + oversized max-width
      / 0fr→1fr felt sticky, then jerky once the competing badge translate
@@ -168,9 +196,20 @@ img {
    Trigger is data-section on the header (pathname / optimistic click),
    not :has(.kids-theme) — that class only mounts after the kids RSC
    segment streams in, so the tint would arrive too late. */
-.site-header[data-section="kids"] {
+.site-header[data-section="kids"],
+body:has([data-kids-product]) .site-header {
   --header-edge-top: color-mix(in srgb, #507356 38%, var(--color-surface));
   --header-edge-main: color-mix(in srgb, #507356 13%, #f5f7f5);
+}
+
+/* Kids action ink on the whole page chrome: cart badge, fly-dot, PDP
+   «В корзину» / request CTA (.btn-primary → --color-action). Same sage as
+   .kids-theme; body:has(header[data-section=kids]) covers /kids/* before
+   the RSC theme wrapper lands, and data-kids-product covers kids PDPs. */
+body:has(.site-header[data-section="kids"]),
+body:has([data-kids-product]) {
+  --color-action: #507356;
+  --color-action-hover: #446249;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -217,13 +256,14 @@ img {
 
 .logo-image {
   display: block;
+  /* Pin both axes: SVG `width:auto` can collapse/expand during the kids
+     slot tween and fight translateX(-50%) re-center. Box matches the old
+     273×35 PNG at 20px height (16489/2114 viewBox). */
   height: 20px;
-  /* Inline SVG: derive width from the wordmark viewBox and paint via
-     currentColor so the vector matches the old PNG ink exactly. */
-  width: auto;
-  aspect-ratio: 16489 / 2114;
-  color: var(--color-logo-ink);
+  width: calc(20px * 16489 / 2114);
   flex: none;
+  color: var(--color-logo-ink);
+  overflow: visible;
 }
 
 /* «KIDS» pill next to the wordmark (kids section only).
@@ -249,7 +289,8 @@ img {
   transition: width var(--logo-kids-duration) var(--logo-kids-ease);
 }
 
-.logo-kids-slot.is-visible {
+.logo-kids-slot.is-visible,
+body:has([data-kids-product]) .logo-kids-slot {
   /* gap + badge in one width tween */
   width: calc(var(--logo-kids-gap) + var(--logo-kids-w));
 }
@@ -280,7 +321,8 @@ img {
   transition: opacity 0.22s ease;
 }
 
-.logo-kids-slot.is-visible .logo-kids-badge {
+.logo-kids-slot.is-visible .logo-kids-badge,
+body:has([data-kids-product]) .logo-kids-slot .logo-kids-badge {
   opacity: 1;
   transition: opacity 0.32s ease 0.06s;
 }
@@ -447,7 +489,8 @@ img {
     transform 0.35s cubic-bezier(0.34, 1.4, 0.64, 1),
     opacity 0.25s ease,
     margin-left 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-    margin-right 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    margin-right 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color var(--logo-kids-duration, 0.52s) var(--logo-kids-ease, cubic-bezier(0.33, 1, 0.68, 1));
 }
 
 .header-cart-count.is-visible {
@@ -1114,21 +1157,52 @@ select:focus-visible {
 }
 
 /* ---- Site Footer ----
-   Brand window on the left Шоурум/Каталог power line | four nav columns on
+   Brand column on the left Шоурум/Каталог power line | four nav columns on
    a 1.2 : 1 : 1 : 1 gap rhythm | last column on the right power line
    (Контакты / Корзина). Empty grid tracks are the gutters; nav uses
    display:contents so its columns participate in this grid.
    Shared --footer-head-* / --footer-row-h keep brand + nav on one lattice.
-   Brand frame is 4px short of the row; band margins compensate so the
-   window stays vertically centered between the two rules. */
+   Warm wash lives on .site-footer and falls from the top rule — no brand card frame. */
 
 .site-footer {
+  /* Same adult ↔ kids tween language as .site-header edge wash. */
+  --footer-wash-top: color-mix(in srgb, var(--color-accent) 28%, var(--color-bg));
+  --footer-wash-mid: var(--color-bg);
   border-top: 1px solid var(--color-border);
+  /* Gradient starts at the top divider and washes onto the brand/nav band. */
+  background: linear-gradient(
+    180deg,
+    var(--footer-wash-top) 0%,
+    var(--footer-wash-mid) 36%,
+    var(--footer-wash-mid) 100%
+  );
+  transition:
+    --footer-wash-top var(--logo-kids-duration, 0.52s) var(--logo-kids-ease, cubic-bezier(0.33, 1, 0.68, 1)),
+    --footer-wash-mid var(--logo-kids-duration, 0.52s) var(--logo-kids-ease, cubic-bezier(0.33, 1, 0.68, 1));
   /* Vertical air between the two rules lives on .footer-columns margins. */
   padding-block: 0 var(--space-lg);
   margin-top: 2.5rem;
   color: var(--color-fg-secondary);
   font-size: 0.9rem;
+  /* Never fill leftover viewport height on short pages. */
+  height: auto;
+  min-height: 0;
+  align-self: stretch;
+}
+
+/* Kids section / kids PDP: sage wash matching header + .kids-theme.
+   `data-section` is client-driven; `body:has([data-kids-product])` covers
+   kids PDP SSR/first paint before the provider opts in. */
+.site-footer[data-section="kids"],
+body:has([data-kids-product]) .site-footer {
+  --footer-wash-top: color-mix(in srgb, #507356 28%, #f5f7f5);
+  --footer-wash-mid: #f5f7f5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-footer {
+    transition: none;
+  }
 }
 
 .footer-inner {
@@ -1142,17 +1216,17 @@ select:focus-visible {
   --footer-head-gap: 1rem;
   /* Roomier row pitch for column link lists (and brand lead on the same lattice). */
   --footer-row-h: 2rem;
-  /* Visible air from each rule to the brand frame (keep equal → centered). */
+  /* Visible air from each rule to the brand/nav lattice (keep equal). */
   --footer-band-inset: 0.45rem;
-  /* Trim the frame bottom (padding), not a %-height hack - brand may be
-     the tallest grid item once the bullet list is in. */
+  /* Trim brand bottom padding to match prior lattice (no card crop). */
   --footer-brand-crop: 8px;
-  /* Brand window air (also applied as invisible pad on nav columns). */
+  /* Brand pad (also applied as invisible pad on nav columns). */
   --footer-brand-pad-x: 1.75rem;
   --footer-brand-pad-y: 1.6rem;
   /* Base nav gutter; brand stand-off is always 1.2× this.
      Use a literal Nfr max (not calc(N * 1fr)) - fr-in-calc is unreliable. */
   --footer-nav-gap: 3.25rem;
+  position: relative;
   display: grid;
   width: 100%;
   margin-block: var(--footer-band-inset);
@@ -1167,6 +1241,31 @@ select:focus-visible {
     minmax(var(--footer-nav-gap), 1fr)
     max-content;
   align-items: start;
+  align-content: start;
+  height: auto;
+}
+
+/* Thin vertical rule between brand and Каталог.
+   Anchored to .footer-brand; extends through --footer-band-inset so the
+   stroke runs the full band between the footer's horizontal rules.
+   Mid-gutter horizontally (half of 1.2× gap, nudged by half brand pad). */
+.footer-brand::after {
+  content: "";
+  position: absolute;
+  top: calc(-1 * var(--footer-band-inset) - 1px);
+  bottom: calc(-1 * var(--footer-band-inset) - 1px);
+  left: auto;
+  right: calc(
+    -0.5 * var(--footer-nav-gap) * 1.2 + 0.5 * var(--footer-brand-pad-x)
+  );
+  width: 1px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-fg) 20%, var(--color-border)) 0%,
+    var(--color-border) 42%,
+    color-mix(in srgb, var(--color-border) 88%, var(--color-bg)) 100%
+  );
+  pointer-events: none;
 }
 
 /* Children become grid items of .footer-columns (gap tracks stay empty). */
@@ -1199,6 +1298,8 @@ select:focus-visible {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  align-self: start;
+  height: fit-content;
 }
 
 /* Invisible pad matching the brand window so nav titles/rows share the lattice. */
@@ -1206,10 +1307,10 @@ select:focus-visible {
   padding-block: var(--footer-brand-pad-y);
 }
 
-/* Brand window: left edge flush with the Шоурум/Каталог power line.
-   Top-aligned copy keeps wordmark/rows on the shared lattice with nav;
-   align-items:center parks the left-aligned cluster on the horizontal
-   midline of the frame. Bottom pad is cropped by --footer-brand-crop. */
+/* Brand column: left edge flush with the Шоурум/Каталог power line.
+   Top-aligned copy keeps wordmark/rows on the shared lattice with nav.
+   No card frame/radius — gradient is on .site-footer from the top rule.
+   Bottom pad is cropped by --footer-brand-crop. */
 .footer-brand {
   position: relative;
   box-sizing: border-box;
@@ -1221,17 +1322,12 @@ select:focus-visible {
     calc(var(--footer-brand-pad-y) - var(--footer-brand-crop));
   margin: 0;
   border: none;
-  border-radius: var(--radius-lg);
-  box-shadow: 0 0 0 1px var(--color-border);
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--color-accent) 28%, var(--color-bg)) 0%,
-    var(--color-bg) 36%,
-    var(--color-bg) 100%
-  );
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
 }
 
-/* Left-aligned copy cluster, parked in the middle of the frame. */
+/* Left-aligned copy cluster on the shared footer lattice. */
 .footer-brand-copy {
   display: flex;
   flex-direction: column;
@@ -1259,8 +1355,15 @@ select:focus-visible {
 }
 
 .footer-brand-logo {
+  display: inline-flex;
+  align-items: center;
   color: var(--color-fg);
   text-decoration: none;
+}
+
+.footer-brand-mark {
+  display: inline-flex;
+  align-items: center;
 }
 
 .footer-brand .footer-column-title {
@@ -1275,9 +1378,17 @@ select:focus-visible {
 
 .footer-brand-wordmark {
   display: block;
+  /* Pin both axes like .logo-image so the Kids pill tween stays calm. */
   height: 18px;
-  width: auto;
-  aspect-ratio: 16489 / 2114;
+  width: calc(18px * 16489 / 2114);
+  flex: none;
+  color: var(--color-logo-ink);
+  overflow: visible;
+}
+
+/* Footer wordmark is 18px; keep the shared Kids slot on the same cross-size. */
+.footer-brand-logo .logo-kids-slot {
+  height: 18px;
 }
 
 /* Shared body: every row is the same fixed height, no extra gap */
@@ -1366,6 +1477,11 @@ select:focus-visible {
     grid-template-columns: 1fr;
     row-gap: var(--space-xl);
     margin-block: var(--space-lg);
+  }
+
+  .footer-brand::after {
+    content: none;
+    display: none;
   }
 
   .footer-nav {
@@ -1970,11 +2086,9 @@ button:disabled,
 
 /* Execution option groups (Дерево/Обивка/Цвет/Изголовье/…) are portalled out
    of .product-detail-media-switcher into #pdp-color-options-slot — above the
-   CTA in the buy panel (configuration always precedes the action). Styled here
-   so the group heading / swatch sizing matches the PDP buy panel wherever the
-   portal lands them. */
+   price and CTA in the buy panel. Compact finish samples, not heavy tiles. */
 .pdp-color-options-slot {
-  margin-top: var(--space-xs);
+  margin-top: var(--space-sm);
 }
 
 .pdp-color-options-slot:empty {
@@ -1985,37 +2099,41 @@ button:disabled,
   margin-top: 0;
   padding-top: 0;
   padding-bottom: 0;
-  gap: var(--space-md);
+  gap: 0.75rem;
   border-top: none;
   background: transparent;
 }
 
-/* Group heading above its control row: label + selected value on one line. */
+/* One-line group heading: «Цвет - Белый G503» / «Цвет - Выберите». */
 .pdp-color-options-slot .product-card-selector-section {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 8px;
+  gap: 6px;
   padding: 0;
   min-height: unset;
 }
 
-/* Stacked heading: group name on the first line, currently selected value on
-   the second — the hierarchy survives long value names (no weak inline dash). */
 .pdp-color-options-slot .product-card-selector-label {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0;
   line-height: 1.35;
   padding-top: 0;
   margin: 0;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: 0;
   text-transform: none;
   white-space: normal;
   color: var(--color-fg);
+}
+
+.pdp-color-options-slot .product-card-selector-sep {
+  font-weight: 400;
+  color: var(--color-fg-muted);
 }
 
 .pdp-color-options-slot .product-card-selector-value {
@@ -2028,48 +2146,95 @@ button:disabled,
   padding-bottom: 0;
 }
 
-/* Same catalog swatch, one size up: identical border, radius, hover, active
-   ring and focus tokens (all inherited from .product-card-execution-swatch) —
-   only the box grows to a 44px touch target with a 36px sample inside. */
+/* Premium finish sample: tight ring gap, fixed size (do not grow with column). */
 .pdp-color-options-slot .product-card-execution-swatch {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   padding: 3px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  box-shadow: none;
+  box-sizing: border-box;
+  transition: box-shadow 150ms ease, opacity 150ms ease;
 }
 
-/* Catalog active ring (surface gap + action ring), scaled with the swatch so
-   the mark stays proportional at 44px. Same tokens, not a new state. */
+.pdp-color-options-slot .product-card-execution-swatch-fill,
+.pdp-color-options-slot .product-card-execution-swatch-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 3px;
+  border: 1px solid color-mix(in srgb, var(--color-fg) 14%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-bg) 35%, transparent);
+}
+
+.pdp-color-options-slot .product-card-execution-swatch:hover:not(:disabled):not(.is-unavailable) {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-fg) 28%, transparent);
+}
+
 .pdp-color-options-slot .product-card-execution-swatch.is-active {
   box-shadow:
-    0 0 0 2px var(--color-surface),
-    0 0 0 3.5px color-mix(in srgb, var(--color-action) 55%, transparent);
+    0 0 0 1px var(--color-bg),
+    0 0 0 2px var(--color-fg);
 }
 
-/* Text chips (e.g. Изголовье: Frame/Cloud/Plane) keep their natural width on
-   the PDP — only color/material swatches are square. */
+.pdp-color-options-slot .product-card-execution-swatch:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 1px;
+}
+
+.pdp-color-options-slot .product-card-execution-swatch.is-unavailable,
+.pdp-color-options-slot .product-card-execution-swatch:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  position: relative;
+}
+
+.pdp-color-options-slot .product-card-execution-swatch.is-unavailable::after,
+.pdp-color-options-slot .product-card-execution-swatch:disabled::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border-radius: 2px;
+  background: linear-gradient(
+    135deg,
+    transparent calc(50% - 0.5px),
+    color-mix(in srgb, var(--color-fg) 55%, transparent) calc(50% - 0.5px),
+    color-mix(in srgb, var(--color-fg) 55%, transparent) calc(50% + 0.5px),
+    transparent calc(50% + 0.5px)
+  );
+  pointer-events: none;
+}
+
+/* Text chips (e.g. Изголовье: Frame/Cloud/Plane) keep natural width on PDP. */
 .pdp-color-options-slot .product-card-model-chip {
   font-size: 0.8125rem;
   line-height: 1.2;
-  padding: 0.55rem 1rem;
+  padding: 0.5rem 0.85rem;
   border-radius: var(--radius-sm);
   min-height: 2.5rem;
 }
 
 .pdp-color-options-slot .product-card-execution-swatches--inline {
-  min-height: 42px;
+  min-height: 40px;
 }
 
-/* Buy panel: every value visible at once in a stable wrapping grid — no
-   horizontal scroll, no disclosure, no reflow after a pick. Fixed 44px tracks
-   keep row/column positions identical regardless of which value is active. */
+/* Full column width: fixed 40px cells, as many per row as fit, then wrap. */
+.pdp-color-options-slot .product-card-swatch-scroll-rail {
+  width: 100%;
+}
+
 .pdp-color-options-slot .product-card-swatch-scroll-rail .product-card-swatch-scroll-rail__track {
   display: grid;
-  grid-template-columns: repeat(auto-fill, 44px);
-  gap: 8px;
-  min-height: 48px;
+  width: 100%;
+  grid-template-columns: repeat(auto-fill, 40px);
+  justify-content: start;
+  gap: 6px;
+  min-height: 40px;
   overflow: visible;
   background: transparent;
-  padding: 2px 0;
+  padding: 1px 0;
+  max-width: none;
 }
 
 .pdp-color-options-slot .product-card-selector-section,
@@ -2079,6 +2244,217 @@ button:disabled,
 
 .pdp-color-options-slot .product-card-swatch-scroll-arrow {
   display: none;
+}
+
+/* ---- PDP material execution dropdown (Исполнение) ----
+   APG select-only combobox in the buy panel: configurator-grade trigger
+   (64–72px), spacious option rows with description + price, quiet shadow.
+   The menu is absolutely positioned inside .pdp-panel (no overflow clipping
+   on the panel/column) and sits above the sticky panel context. */
+.pdp-material-select {
+  position: relative;
+  width: 100%;
+}
+
+.pdp-material-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  width: 100%;
+  min-height: 68px;
+  padding: 0.75rem 1rem 0.75rem 1.125rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-fg);
+  text-align: left;
+  /* Global `button` sets nowrap; the tier label must wrap on narrow screens
+     instead of running under the price. */
+  white-space: normal;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pdp-material-trigger:hover {
+  border-color: color-mix(in srgb, var(--color-action) 35%, var(--color-border));
+}
+
+.pdp-material-trigger.is-open {
+  border-color: color-mix(in srgb, var(--color-action) 55%, var(--color-border));
+}
+
+.pdp-material-trigger:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-accent) 60%, transparent);
+  outline-offset: 2px;
+}
+
+.pdp-material-trigger-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pdp-material-trigger-label {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-fg-muted);
+}
+
+.pdp-material-trigger-value {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--color-fg);
+}
+
+.pdp-material-trigger-side {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 0 0 auto;
+}
+
+.pdp-material-trigger-price {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--color-fg-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.pdp-material-chevron {
+  flex: 0 0 auto;
+  width: 0;
+  height: 0;
+  border-left: 4.5px solid transparent;
+  border-right: 4.5px solid transparent;
+  border-top: 5px solid currentColor;
+  opacity: 0.5;
+  transition: transform 0.15s ease;
+}
+
+.pdp-material-trigger.is-open .pdp-material-chevron {
+  transform: rotate(180deg);
+}
+
+.pdp-material-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: var(--space-xs) 0;
+  list-style: none;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 32px rgba(44, 36, 32, 0.12);
+  z-index: 80;
+  animation: pdp-material-menu-open 0.14s ease-out;
+}
+
+@keyframes pdp-material-menu-open {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pdp-material-menu {
+    animation: none;
+  }
+}
+
+.pdp-material-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1.125rem;
+  cursor: pointer;
+}
+
+.pdp-material-option + .pdp-material-option {
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent);
+}
+
+.pdp-material-option.is-active {
+  background: color-mix(in srgb, var(--color-action) 6%, var(--color-surface));
+}
+
+.pdp-material-option.is-selected {
+  background: color-mix(in srgb, var(--color-accent) 8%, var(--color-surface));
+}
+
+.pdp-material-option-check {
+  flex: 0 0 auto;
+  width: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-action);
+}
+
+.pdp-material-option-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.pdp-material-option-label {
+  font-size: 0.9375rem;
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--color-fg);
+}
+
+.pdp-material-option.is-selected .pdp-material-option-label {
+  font-weight: 500;
+}
+
+.pdp-material-option-desc {
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: var(--color-fg-secondary);
+}
+
+.pdp-material-option-price {
+  flex: 0 0 auto;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--color-fg);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Reserved price slot — avoids layout jump when hint ↔ price swap. */
+.pdp-price-area {
+  min-height: 2.75rem;
+  display: flex;
+  align-items: flex-end;
+  margin-top: var(--space-md);
+}
+
+.pdp-price-hint {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  color: var(--color-fg-secondary);
+  font-weight: 400;
+}
+
+.pdp-price-area .product-detail-price {
+  margin: 0;
 }
 
 /* Keyboard-accessible hero opener: the photo itself is the button. */
@@ -4293,21 +4669,25 @@ button:disabled,
 
 .pdp-title {
   font-size: clamp(1.85rem, 2.9vw, 2.6rem);
-  line-height: 1.06;
+  line-height: 1.12;
   letter-spacing: -0.018em;
   font-weight: 600;
+  /* Explicit CopyLines break: type row, then transcribed model row. */
+  text-wrap: pretty;
 }
 
-/* 3. Short positioning line (real subtitle field) */
+/* 3. Short positioning line (real subtitle field).
+   CopyLines may emit 2 meaning rows (name / measure) - keep lead air tight. */
 .pdp-subtitle {
   color: var(--color-fg-secondary);
   font-size: 0.9975rem;
-  line-height: 1.55;
-  max-width: 46ch;
+  line-height: 1.45;
+  max-width: 42ch;
   margin-top: calc(-1 * var(--space-xs));
+  text-wrap: pretty;
 }
 
-/* 4. Dimensions: width / height / depth — depth always last. Quiet top and
+/* 4. Dimensions: height → width → depth. Quiet top and
    bottom rules only (the catalog system has no vertical hairlines). */
 .pdp-dimensions-row {
   display: flex;
@@ -4338,19 +4718,20 @@ button:disabled,
 
 /* 5. Price */
 .product-detail-price {
-  font-size: clamp(1.75rem, 2.1vw, 1.95rem);
+  font-size: clamp(1.5rem, 2vw, 1.75rem);
   font-weight: 600;
   letter-spacing: -0.012em;
+  font-variant-numeric: tabular-nums;
 }
 
-/* 6/7. Configurator lives above the CTA; stacked group heading shared by
-   every group: name on the first line, selected value on the second. */
+/* Size / option group heading: label + value on one quiet line. */
 .pdp-option-heading {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  font-size: 0.875rem;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0;
+  font-size: 0.8125rem;
   line-height: 1.35;
 }
 
@@ -4359,7 +4740,13 @@ button:disabled,
   color: var(--color-fg);
 }
 
+.pdp-option-heading-sep {
+  font-weight: 400;
+  color: var(--color-fg-muted);
+}
+
 .pdp-option-heading-value {
+  font-weight: 400;
   color: var(--color-fg-secondary);
   min-width: 0;
 }
@@ -4439,22 +4826,30 @@ button:disabled,
   margin-bottom: var(--space-md);
 }
 
-.pdp-description {
-  color: var(--color-fg-secondary);
-  line-height: 1.75;
-  font-size: 1rem;
-  max-width: 62ch;
+.pdp-description-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55em;
+  max-width: 58ch;
 }
 
-/* Editorial lead: the opening paragraph carries slightly more weight */
-.pdp-description-block .pdp-description:first-of-type {
-  font-size: 1.125rem;
-  line-height: 1.65;
-  color: var(--color-fg);
-}
-
-.pdp-description + .pdp-description {
+.pdp-description-group + .pdp-description-group {
   margin-top: var(--space-md);
+}
+
+.pdp-description {
+  margin: 0;
+  color: var(--color-fg-secondary);
+  line-height: 1.65;
+  font-size: 1rem;
+  text-wrap: pretty;
+}
+
+/* Opening sentence of the editorial block - slightly more weight */
+.pdp-description.is-lead {
+  font-size: 1.0625rem;
+  line-height: 1.55;
+  color: var(--color-fg);
 }
 
 .pdp-specs-list {
@@ -7728,228 +8123,4 @@ body {
   .hp-bprocess-grid {
     grid-template-columns: 1fr;
   }
-}
-
-
-/* === recovered from origin/main (PDP/bespoke/footer selectors) === */
-.footer-brand-text {
-  margin-top: var(--space-sm);
-  max-width: 32ch;
-  line-height: 1.6;
-  color: var(--color-fg-muted);
-}
-
-.product-detail .oliver-media-absent.product-detail-img {
-  object-fit: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px dashed var(--color-border);
-}
-
-/* Execution swatches (Дерево/Обивка/Цвет) are portalled out of
-   .product-detail-media-switcher into #pdp-color-options-slot, below the CTA
-   buttons in .product-detail-info — see ProductCardMediaGalleryCore. Styled
-   here so the row/label/swatch sizing matches the PDP context (bigger than
-   the compact catalog-card strip) wherever the portal lands them. */
-.pdp-color-options-slot {
-  margin-top: var(--space-md);
-}
-
-/* PDP thumb rail — same scroll-rail engine as the catalog card, scaled up
-   for the larger hero image (all 4 PDP gallery paths render inside
-   .product-detail-media-col, including the two without execution swatches). */
-.product-detail-media-col .product-card-media-thumbs-carousel {
-  margin-top: var(--space-sm);
-}
-
-.product-detail-media-col .product-card-media-thumbs-arrow {
-  width: 30px;
-  height: 30px;
-}
-
-.product-detail-media-col .product-card-media-thumbs-carousel:has(.product-card-media-thumbs-arrow--prev)
-  .product-card-media-thumbs-track {
-  padding-left: 34px;
-}
-
-.product-detail-media-col .product-card-media-thumbs-carousel:has(.product-card-media-thumbs-arrow--next)
-  .product-card-media-thumbs-track {
-  padding-right: 34px;
-}
-
-/* ---- Product Detail ---- */
-
-.product-detail {
-  display: grid;
-  grid-template-columns: 3fr 2fr;
-  gap: var(--space-xl);
-  align-items: start;
-}
-
-/* Hero photo opens the full-size lightbox on click — cropped to 4/5 here,
-   shown uncropped (object-fit: contain) in .pdp-lightbox-img. */
-.product-detail-img.is-zoomable {
-  cursor: zoom-in;
-}
-
-.product-detail-info {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-}
-
-.product-detail-info .cta-group {
-  margin-top: 0;
-}
-
-.product-detail-info .cta-group .btn-primary {
-  min-height: 2.5rem;
-  padding: 0.6875rem 1.3125rem;
-  font-size: 0.96875rem;
-}
-
-.pdp-dimensions {
-  font-size: 0.85rem;
-  color: var(--color-fg-muted);
-  margin-top: calc(-1 * var(--space-sm));
-}
-
-.pdp-size-selector-label {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--color-fg);
-}
-
-.bespoke-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: var(--space-sm);
-  margin-bottom: var(--space-lg);
-  border-bottom: 1px solid var(--color-border);
-}
-
-/* /bespoke/request reads faster without the section subnav (title + rule):
-   the page's own compact intro is the entry point there. Scoped via :has()
-   so /bespoke and /bespoke/catalog keep the subnav unchanged — the shared
-   bespoke/layout.tsx itself isn't touched. */
-.bespoke-theme:has(.bespoke-request-page) .bespoke-nav {
-  display: none;
-}
-
-.bespoke-nav-title {
-  font-weight: 600;
-  font-size: 0.95rem;
-  color: var(--color-accent);
-}
-
-.bespoke-nav-title:hover {
-  text-decoration: none;
-}
-
-.bespoke-nav-links {
-  display: flex;
-  gap: var(--space-lg);
-}
-
-.bespoke-nav-links a {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--color-fg-secondary);
-  transition: color 0.15s;
-}
-
-.bespoke-nav-links a:hover {
-  color: var(--color-fg);
-  text-decoration: none;
-}
-
-.pdp-lightbox-close {
-  position: absolute;
-  top: var(--space-md);
-  right: var(--space-md);
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
-  font-size: 1.5rem;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.pdp-lightbox-close:hover {
-  background: rgba(255, 255, 255, 0.22);
-}
-
-/* ---- Bespoke landing lists ---- */
-
-.bespoke-info-list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-  margin-top: var(--space-md);
-}
-
-.bespoke-info-list li {
-  color: var(--color-fg-secondary);
-  line-height: 1.6;
-}
-
-.bespoke-info-list strong {
-  color: var(--color-fg);
-}
-
-.bespoke-process-list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-lg);
-  margin-top: var(--space-md);
-}
-
-.bespoke-process-list li {
-  display: flex;
-  gap: var(--space-md);
-  align-items: flex-start;
-}
-
-.bespoke-process-list p {
-  color: var(--color-fg-secondary);
-  margin-top: 0.15rem;
-}
-
-/* ---- Bespoke request page ----
-   Compact intro (no eyebrow, no section subnav — see .bespoke-nav:has()
-   override above), then a two-column desktop composition where the form
-   card is the primary object (left, compact, starts right under the intro)
-   and a visualized two-card "help" aside sits to the right, lighter and
-   narrower than the form. Below the 880px breakpoint everything stacks
-   into one column in this order: intro -> form card -> help. */
-
-.bespoke-request-page {
-  display: flex;
-  flex-direction: column;
-  /* Proximity: the h1+lead pair is tight (0.5rem), the break between the
-     intro group and the form/aside group is visibly larger (1.25rem). */
-  gap: 1.25rem;
-  /* Full container width (no own max-width): the 50% form column below must
-     resolve against the site container so the card's right edge lands
-     exactly on the site's central axis. */
-  /* This page's <main> is `.page-section`, which carries a sitewide
-     var(--space-xl) (40px) top padding — too much for this compact page.
-     A negative margin cancels it directly (no :has() dependency, so it
-     is not at the mercy of :has() browser support), then padding-top
-     below re-adds only the small gap this page actually wants. */
-  margin-top: calc(-1 * var(--space-xl));
-  /* Top padding mirrors the flex gap below the intro block (1.25rem), so the
-     header sits at equal distance from the site header above and the form
-     card below. */
-  padding-block: 1.25rem var(--space-xl);
 }

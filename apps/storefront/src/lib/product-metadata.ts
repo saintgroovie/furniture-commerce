@@ -1,7 +1,42 @@
+import {
+  layoutBuyerFacingTitle,
+  type BuyerFacingTitleLayout,
+} from "@/lib/en-name-ru"
+import { isOliverKidsHandle } from "@/lib/oliver-kids-scope"
+
 type Dimensions = {
   width_mm?: number
   depth_mm?: number
   height_mm?: number
+}
+
+/** Buyer-facing axis order. Storage schema stays width_mm / height_mm / depth_mm. */
+export type BuyerFacingDimensionAxis = "height" | "width" | "depth"
+
+export const BUYER_FACING_DIMENSION_ORDER: readonly BuyerFacingDimensionAxis[] = [
+  "height",
+  "width",
+  "depth",
+] as const
+
+const AXIS_TO_MM_KEY: Record<BuyerFacingDimensionAxis, keyof Dimensions> = {
+  height: "height_mm",
+  width: "width_mm",
+  depth: "depth_mm",
+}
+
+/** Present dimensions in the fixed buyer order: height → width → depth. */
+export function orderedBuyerFacingDimensions(
+  dim: Dimensions
+): Array<{ axis: BuyerFacingDimensionAxis; mm: number }> {
+  const out: Array<{ axis: BuyerFacingDimensionAxis; mm: number }> = []
+  for (const axis of BUYER_FACING_DIMENSION_ORDER) {
+    const mm = dim[AXIS_TO_MM_KEY[axis]]
+    if (typeof mm === "number" && Number.isFinite(mm) && mm > 0) {
+      out.push({ axis, mm })
+    }
+  }
+  return out
 }
 
 type ProductLike = Record<string, unknown>
@@ -10,16 +45,59 @@ function meta(product: ProductLike): Record<string, unknown> {
   return (product.metadata as Record<string, unknown>) ?? {}
 }
 
+/** Buyer-facing collection titles (handles/slugs stay English). */
 const COLLECTION_SLUG_LABELS: Record<string, string> = {
   country: "Кантри",
   "country-london-paris": "Кантри",
-  greenwich: "Greenwich",
-  oliver: "Oliver",
-  provence: "Provence",
+  greenwich: "Гринвич",
+  oliver: "Оливер",
+  "oliver-kids": "Оливер · детская",
+  "willie-winkie": "Вилли Винки",
+  monchelsea: "Мончелси",
+  provence: "Прованс",
+}
+
+/** Map English (or already-RU) display titles back to the Russian buyer label. */
+const COLLECTION_TITLE_ALIASES: Record<string, string> = {
+  greenwich: "Гринвич",
+  гринвич: "Гринвич",
+  oliver: "Оливер",
+  оливер: "Оливер",
+  "oliver-kids": "Оливер · детская",
+  "oliver-kids-line": "Оливер · детская",
+  "оливер-детская": "Оливер · детская",
+  "оливер-·-детская": "Оливер · детская",
+  "willie-winkie": "Вилли Винки",
+  "вилли-винки": "Вилли Винки",
+  "willie-winkie-kids": "Вилли Винки",
+  monchelsea: "Мончелси",
+  мончелси: "Мончелси",
+  provence: "Прованс",
+  прованс: "Прованс",
+  country: "Кантри",
+  кантри: "Кантри",
 }
 
 /** Buyer-facing primary collection on catalog/PDP cards (Russian UI). */
 const COUNTRY_CARD_LABEL = "Кантри"
+
+function normalizeCollectionLabelKey(label: string): string {
+  return label
+    .trim()
+    .toLowerCase()
+    .replace(/[·•]/g, " ")
+    .replace(/[_\s]+/g, "-")
+    .replace(/-+/g, "-")
+}
+
+function localizeKnownCollectionLabel(label: string): string {
+  const trimmed = label.trim()
+  if (!trimmed) return trimmed
+  const key = normalizeCollectionLabelKey(trimmed)
+  if (COLLECTION_SLUG_LABELS[key]) return COLLECTION_SLUG_LABELS[key]!
+  if (COLLECTION_TITLE_ALIASES[key]) return COLLECTION_TITLE_ALIASES[key]!
+  return trimmed
+}
 
 function isCountryProduct(product: ProductLike, m: Record<string, unknown>): boolean {
   const handle = product.handle
@@ -64,9 +142,13 @@ function humanizeCollectionSlug(slug: string): string {
 function collectionFromHandle(handle: string): string | null {
   const h = handle.toLowerCase()
   if (h.startsWith("co-")) return COUNTRY_CARD_LABEL
-  if (h.startsWith("ol-")) return "Oliver"
-  if (h.startsWith("pv-")) return "Provence"
-  if (h.startsWith("greenwich-") || h.startsWith("gr-")) return "Greenwich"
+  if (h.startsWith("ol-")) {
+    if (isOliverKidsHandle(h)) return COLLECTION_SLUG_LABELS["oliver-kids"]!
+    return COLLECTION_SLUG_LABELS.oliver!
+  }
+  if (h.startsWith("pv-")) return COLLECTION_SLUG_LABELS.provence!
+  if (h.startsWith("greenwich-") || h.startsWith("gr-")) return COLLECTION_SLUG_LABELS.greenwich!
+  if (h.startsWith("mn-") || h.startsWith("monchelsea-")) return COLLECTION_SLUG_LABELS.monchelsea!
   return null
 }
 
@@ -81,7 +163,9 @@ export function getCollectionLabel(product: ProductLike): string | null {
   }
 
   const label = m.collection_label
-  if (typeof label === "string" && label.trim()) return label.trim()
+  if (typeof label === "string" && label.trim()) {
+    return localizeKnownCollectionLabel(label)
+  }
 
   const collection = m.collection
   if (typeof collection === "string" && collection.trim()) {
@@ -107,18 +191,21 @@ export function getCanonicalName(product: ProductLike): string | null {
   return typeof name === "string" && name.trim() ? name.trim() : null
 }
 
-/** Buyer-facing H1 — fixes known workbook typos without mutating Medusa in SSR. */
-export function getBuyerFacingProductTitle(product: ProductLike): string {
+/** Buyer-facing H1 layout: type line + transcribed model (when present). */
+export function getBuyerFacingProductTitleLayout(
+  product: ProductLike
+): BuyerFacingTitleLayout {
   const raw =
     getCanonicalName(product) ??
     (typeof product.title === "string" && product.title.trim()
       ? product.title.trim()
       : "Товар")
-  return raw
-    .replace(/филенгками/gi, "филенками")
-    .replace(/\/\s*филен/gi, " и филен")
-    .replace(/\.\s*$/g, "")
-    .trim()
+  return layoutBuyerFacingTitle(raw)
+}
+
+/** Flat buyer-facing title (SEO / single-line). EN model names → Cyrillic. */
+export function getBuyerFacingProductTitle(product: ProductLike): string {
+  return getBuyerFacingProductTitleLayout(product).text
 }
 
 export function getSubcollectionLabel(product: ProductLike): string | null {
@@ -142,18 +229,25 @@ export function getDimensions(product: ProductLike): Dimensions | null {
 }
 
 export function formatDimensionsCompact(dim: Dimensions): string {
-  const parts: string[] = []
-  if (dim.width_mm) parts.push(String(dim.width_mm))
-  if (dim.depth_mm) parts.push(String(dim.depth_mm))
-  if (dim.height_mm) parts.push(String(dim.height_mm))
-  return parts.join(" × ")
+  // Card preview meta: whole centimeters (1244 mm -> 124), no unit label.
+  // Narrow no-break spaces around × - a touch of air, still one unbreakable
+  // run. Order matches PDP: height → width → depth.
+  const cm = (mm: number) => String(Math.round(mm / 10))
+  const parts = orderedBuyerFacingDimensions(dim).map(({ mm }) => cm(mm))
+  return parts.join("\u202F×\u202F")
+}
+
+const LABELED_AXIS_ABBR: Record<BuyerFacingDimensionAxis, string> = {
+  height: "В.",
+  width: "Ш.",
+  depth: "Гл.",
 }
 
 export function formatDimensionsLabeled(dim: Dimensions): string {
-  const parts: string[] = []
-  if (dim.width_mm) parts.push(`Ш. ${dim.width_mm}`)
-  if (dim.depth_mm) parts.push(`Гл. ${dim.depth_mm}`)
-  if (dim.height_mm) parts.push(`В. ${dim.height_mm}`)
+  // Technical / mm form. Same axis order as cm hero and card compact.
+  const parts = orderedBuyerFacingDimensions(dim).map(
+    ({ axis, mm }) => `${LABELED_AXIS_ABBR[axis]} ${mm}`
+  )
   return parts.join(" × ") + " мм"
 }
 

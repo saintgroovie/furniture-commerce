@@ -27,6 +27,16 @@ export function isKidsMetadataStorefrontProduct(
   return false
 }
 
+/** Kids PDP / chrome: metadata kids section or Oliver kids collection. */
+export function isKidsStorefrontProduct(
+  product: Record<string, unknown>
+): boolean {
+  return (
+    isKidsMetadataStorefrontProduct(product) ||
+    isOliverKidsCollectionProduct(product)
+  )
+}
+
 /**
  * Fast kids check for a cart line item — no room-set / catalog fan-out.
  * Uses (in order): line metadata stamp from add-to-cart, expanded
