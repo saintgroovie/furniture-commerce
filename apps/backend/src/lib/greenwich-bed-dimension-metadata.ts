@@ -166,6 +166,12 @@ export function buildGreenwichBedDimensionBundle(
 
   for (const url of relUrls) {
     const file = basename(url)
+
+    if (isSharedInterior(file)) {
+      sharedInteriors.push(url)
+      continue
+    }
+
     const hb = headboardFromFilename(file)
     if (!hb) continue
 
@@ -179,23 +185,31 @@ export function buildGreenwichBedDimensionBundle(
       galleries.get(hb)!.push(url)
       continue
     }
-
-    if (hb === "cloud" && isSharedInterior(file)) {
-      sharedInteriors.push(url)
-    }
   }
 
   const matrix: GreenwichBedMatrixEntry[] = []
 
   for (const hb of HEADBOARDS) {
-    const hbGallery = sortGalleryUrls(galleries.get(hb.key) ?? [])
     const hbHeroes = heroes.get(hb.key) ?? new Map()
+    /* Headboard pool shots (frame_01…) stay out of every combo cell — they
+       are unscoped and would leak foreign fabric/wood into the PDP strip.
+       Pool URLs remain available via gallery_urls for Medusa images[]. */
 
     for (const combo of COMBO_ORDER) {
       const hero = hbHeroes.get(combo)
       if (!hero) continue
       const { frame_material, fabric_upholstery } = splitCombo(combo)
-      const urls = [hero, ...hbGallery.filter((u) => u !== hero)]
+      /* Cell = combo hero + any other same-combo-tagged shots for this headboard. */
+      const comboExtras: string[] = []
+      for (const url of relUrls) {
+        const file = basename(url)
+        if (headboardFromFilename(file) !== hb.key) continue
+        const urlCombo = parseComboKey(file)
+        if (urlCombo !== combo) continue
+        if (url === hero) continue
+        comboExtras.push(url)
+      }
+      const urls = [hero, ...sortGalleryUrls(comboExtras)]
       matrix.push({
         headboard_model: hb.key,
         frame_material,
@@ -244,6 +258,11 @@ export function buildGreenwichBedDimensionBundle(
   const gallerySet = new Set<string>()
   for (const entry of matrix) {
     for (const u of entry.urls) gallerySet.add(u)
+  }
+  /* Keep headboard pool + interiors in the flat gallery for Medusa images[],
+     but they are not duplicated into every matrix cell. */
+  for (const hb of HEADBOARDS) {
+    for (const u of galleries.get(hb.key) ?? []) gallerySet.add(u)
   }
   for (const u of sharedInteriors) gallerySet.add(u)
 

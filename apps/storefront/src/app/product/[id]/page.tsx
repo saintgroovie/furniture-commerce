@@ -25,6 +25,7 @@ import {
 } from "@/lib/card-color-media"
 import {
   defaultGreenwichBedSelection,
+  greenwichBedInteriorUrlsFromProduct,
   isGreenwichBedProduct,
   resolveGreenwichBedMedia,
 } from "@/lib/greenwich-bed-media"
@@ -160,6 +161,9 @@ export default async function ProductPage({ params }: { params: { id: string } }
   const executionSelectors = buildIntraProductExecutionSelectors(product, thumbSrc)
   const greenwichBedMatrix = executionSelectors.greenwichBedMatrix
   const greenwichPaintMatrix = executionSelectors.greenwichPaintMatrix
+  const bedInteriorSrcs = isGreenwichBed
+    ? greenwichBedInteriorUrlsFromProduct(product)
+    : []
   const bedDefaults =
     greenwichBedMatrix && greenwichBedMatrix.length > 0
       ? defaultGreenwichBedSelection(greenwichBedMatrix)
@@ -174,7 +178,8 @@ export default async function ProductPage({ params }: { params: { id: string } }
           greenwichBedMatrix,
           bedDefaults.headboard,
           bedDefaults.frameMaterial,
-          bedDefaults.fabric
+          bedDefaults.fabric,
+          bedInteriorSrcs.length > 0 ? { interiorUrls: bedInteriorSrcs } : undefined
         )
       : null
   const paintMatrixMedia =
@@ -408,6 +413,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
                 upholsteryVariants={executionSelectors.upholstery}
                 woodVariants={executionSelectors.wood}
                 greenwichBedMatrix={greenwichBedMatrix}
+                sharedInteriorSrcs={bedInteriorSrcs}
                 title={titleStr}
                 heroObjectPosition={heroObjectPosition}
                 productHandle={handle}
