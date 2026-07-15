@@ -19,8 +19,10 @@ import {
  *   round(solid_full_base × material_multiplier × color_multiplier)
  *
  * - material_multiplier from `product.metadata.material_tiers`
- *   (omitted code → position 0 / LDSP when tiers exist)
+ *   (code required when tiers exist — no silent LDSP default)
  * - color_multiplier: 1 for the first (standard) finish, 1.05 otherwise
+ * - base amount must come from Medusa `calculated_price` in cart
+ *   currency/region context — raw `prices[]` is never used
  *
  * Client-sent label / multiplier / resolved price values are discarded and
  * rewritten with authoritative ones. Products without material tiers and
@@ -46,11 +48,6 @@ type QueryGraph = {
   }) => Promise<{ data: unknown[] }>
 }
 
-type VariantPriceRow = {
-  amount?: number | string | null
-  currency_code?: string | null
-}
-
 const CART_RESPONSE_FALLBACK_FIELDS = [
   "id",
   "currency_code",
@@ -63,30 +60,12 @@ const CART_RESPONSE_FALLBACK_FIELDS = [
   "items.metadata",
 ]
 
-function resolveBaseAmount(
-  variant: {
-    calculated_price?: { calculated_amount?: number | string | null }
-    prices?: VariantPriceRow[]
-  },
-  currencyCode: string | undefined
-): { amount: number; usedPriceFallback: boolean } | null {
+function resolveCalculatedBaseAmount(variant: {
+  calculated_price?: { calculated_amount?: number | string | null }
+}): number | null {
   const calculated = Number(variant.calculated_price?.calculated_amount)
   if (Number.isFinite(calculated) && calculated > 0) {
-    return { amount: calculated, usedPriceFallback: false }
-  }
-  const prices = Array.isArray(variant.prices) ? variant.prices : []
-  const currency = typeof currencyCode === "string" ? currencyCode.trim().toLowerCase() : ""
-  const matched =
-    (currency
-      ? prices.find(
-          (p) =>
-            typeof p.currency_code === "string" &&
-            p.currency_code.trim().toLowerCase() === currency
-        )
-      : undefined) ?? prices[0]
-  const fallback = Number(matched?.amount)
-  if (Number.isFinite(fallback) && fallback > 0) {
-    return { amount: fallback, usedPriceFallback: true }
+    return calculated
   }
   return null
 }
@@ -155,8 +134,6 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       "product.id",
       "product.metadata",
       "calculated_price.*",
-      "prices.amount",
-      "prices.currency_code",
     ],
     filters: { id: variantId },
     context: {
@@ -170,7 +147,6 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     | {
         product?: { metadata?: Record<string, unknown> }
         calculated_price?: { calculated_amount?: number | string | null }
-        prices?: VariantPriceRow[]
       }
     | undefined
   if (!variant) {
@@ -180,7 +156,21 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
   const productMeta = variant.product?.metadata
   const tiers = parseMaterialTiers(productMeta)
-  const needsConfiguredPricing = Boolean(tiers) || Boolean(executionCode) || Boolean(finishKey)
+  const hasTiers = Boolean(tiers && tiers.length > 0)
+
+  /* B1: products with material_tiers require an explicit execution code.
+     No silent LDSP default — legacy clients must send material_execution_code. */
+  if (hasTiers && !executionCode) {
+    res.status(400).json({
+      message:
+        "material_execution_code is required for products with material tiers.",
+      code: "MATERIAL_EXECUTION_REQUIRED",
+    })
+    return
+  }
+
+  const needsConfiguredPricing =
+    Boolean(executionCode) || Boolean(finishKey)
 
   if (needsConfiguredPricing) {
     let materialMultiplier = 1
@@ -193,13 +183,6 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         })
         return
       }
-      materialMultiplier = tier.price_multiplier
-      metadata.material_execution_code = tier.key
-      metadata.material_execution_label = tier.label_ru
-      metadata.material_price_multiplier = tier.price_multiplier
-    } else if (tiers && tiers.length > 0) {
-      /* Product rule: lowest default = position 0 (LDSP) when material omitted. */
-      const tier = tiers[0]
       materialMultiplier = tier.price_multiplier
       metadata.material_execution_code = tier.key
       metadata.material_execution_label = tier.label_ru
@@ -222,8 +205,9 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       if (finishLabel) metadata.finish_execution_label = finishLabel
     }
 
-    const base = resolveBaseAmount(variant, cart.currency_code)
-    if (!base) {
+    /* A1: only Medusa calculated_price in cart currency/region context. */
+    const baseAmount = resolveCalculatedBaseAmount(variant)
+    if (baseAmount == null) {
       res.status(400).json({
         message: "Variant has no calculated price for this cart.",
         code: "VARIANT_PRICE_NOT_FOUND",
@@ -232,14 +216,12 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     }
 
     const resolved = resolveConfiguredUnitPrice(
-      base.amount,
+      baseAmount,
       materialMultiplier,
       colorMultiplier
     )
     metadata.resolved_unit_price = resolved
-    /* Always pin unit_price on the configured path so Medusa cannot replace a
-       missing calculated_price with a different amount after fallback. */
-    if (base.usedPriceFallback || resolved !== base.amount) {
+    if (resolved !== baseAmount) {
       unitPrice = resolved
     }
   }
