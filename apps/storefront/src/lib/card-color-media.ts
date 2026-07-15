@@ -1,6 +1,9 @@
 import {
   collectExtraProductImageUrls,
   collectProductImageUrls,
+  galleryImageBasenameKey,
+  isAngleLikeGalleryBasename,
+  isColorFinishFrameBasename,
   normalizeImageEntryUrl,
   resolveStorefrontProductImageSrc,
 } from "./product-images"
@@ -125,8 +128,8 @@ const EXECUTION_LABELS: Record<string, string> = {
   darkblue: "Син-серый",
   "grey-blue": "Серо-голубой",
   frame: "Каркас",
-  cloud: "Cloud",
-  plane: "Plane",
+  cloud: "Клауд",
+  plane: "Плейн",
   velvet: "Велюр",
   linen: "Лён",
   oak: "Дуб",
@@ -215,6 +218,61 @@ export function isGreenwichNeutralDetailAsset(url: string): boolean {
   if (/sizes\d|габарит|наполнение|noliver_var|bedroom|wideheader|view0/i.test(hay)) return true
   if (!extractGreenwichFinishTokenFromUrl(url)) return true
   return false
+}
+
+/**
+ * Catalog `/store/catalog-products` often keeps finish/matrix `urls: [main]` only,
+ * while `product.images` still has same-finish siblings (e.g. white05/white06).
+ * Fill extras from images scoped to the active execution token - never other finishes.
+ */
+export function collectSameExecutionExtraImageUrls(
+  product: Record<string, unknown>,
+  mainSrc: string,
+  executionKey?: string | null
+): string[] {
+  const mainNorm = typeof mainSrc === "string" ? mainSrc.trim() : ""
+  const key = (
+    (typeof executionKey === "string" && executionKey.trim()) ||
+    extractExecutionTokenFromUrl(mainNorm) ||
+    ""
+  ).toLowerCase()
+  const candidates = collectExtraProductImageUrls(product, mainNorm).map((u) =>
+    resolveStorefrontProductImageSrc(u)
+  )
+  if (!key) {
+    // No execution token: only explicit angle/gallery slots (never finish frames).
+    return candidates.filter((u) => isAngleLikeGalleryBasename(u))
+  }
+  return candidates.filter((u) => {
+    const token = (extractExecutionTokenFromUrl(u) || "").toLowerCase()
+    // Same-token only. Tokenless / unknown finishes must not enter the bucket.
+    return Boolean(token) && token === key
+  })
+}
+
+/** Attach same-token catalog image extras when a variant only has a slim main URL. */
+export function enrichCardColorVariantsWithCatalogExtras(
+  variants: CardColorVariant[] | undefined,
+  product: Record<string, unknown>
+): CardColorVariant[] | undefined {
+  if (!variants?.length) return variants
+  let changed = false
+  const next = variants.map((v) => {
+    const mainSrc = resolveStorefrontProductImageSrc(v.mainSrc)
+    const existing = v.extraSrcs.map((u) => resolveStorefrontProductImageSrc(u))
+    if (existing.length > 0) {
+      if (mainSrc !== v.mainSrc || existing.some((u, i) => u !== v.extraSrcs[i])) {
+        changed = true
+        return { ...v, mainSrc, extraSrcs: existing }
+      }
+      return v
+    }
+    const extras = collectSameExecutionExtraImageUrls(product, mainSrc, v.key)
+    if (!extras.length && mainSrc === v.mainSrc) return v
+    changed = true
+    return { ...v, mainSrc, extraSrcs: extras }
+  })
+  return changed ? next : variants
 }
 
 export function isHeadboardModelToken(
@@ -501,20 +559,65 @@ export function finishLabelForProduct(
   return "Цвет"
 }
 
+/**
+ * Metadata execution `urls` are often hero-only after browse lean / dimension
+ * pipelines. Card strips need sibling angles from `product.images` for the
+ * same finish token (backend treat images as SoT after hero-only buckets).
+ *
+ * Do **not** merge extra `*_color_<token>_*` finish frames from `product.images`
+ * (e.g. ol-82-1 torno_01..04) - those are the same finish, not camera angles,
+ * and flood kids/catalog strips with lookalike duplicates.
+ */
+function mergeExecutionUrlsWithProductImages(
+  key: string,
+  metaUrls: string[],
+  productImageUrls: string[]
+): string[] {
+  const keyNorm = key.trim().toLowerCase()
+  if (!keyNorm || productImageUrls.length === 0) return metaUrls
+
+  const matched = productImageUrls.filter((u) => {
+    if (extractExecutionTokenFromUrl(u)?.toLowerCase() !== keyNorm) return false
+    // Angle siblings only. Same-token color_* frames stay execution-owned.
+    if (isColorFinishFrameBasename(u)) return false
+    return isAngleLikeGalleryBasename(u)
+  })
+  if (matched.length === 0) return metaUrls
+
+  const out: string[] = []
+  const seen = new Set<string>()
+  const push = (raw: string) => {
+    const t = raw.trim()
+    if (!t) return
+    const stem = galleryImageBasenameKey(t).replace(/\.[^.]+$/, "")
+    if (!stem || seen.has(stem)) return
+    seen.add(stem)
+    out.push(t)
+  }
+  for (const u of metaUrls) push(u)
+  for (const u of matched) push(u)
+  return out.length > 0 ? out : metaUrls
+}
+
 function colorExecutionsFromMetadataArray(
   raw: unknown,
-  opts?: { handle?: string }
+  opts?: { handle?: string; productImageUrls?: string[] }
 ): CardColorVariant[] | undefined {
   if (!Array.isArray(raw) || raw.length < 2) return undefined
+  const productImageUrls = opts?.productImageUrls ?? []
   const variants: CardColorVariant[] = []
   for (const entry of raw) {
     if (!entry || typeof entry !== "object") continue
     const o = entry as Record<string, unknown>
     const key = typeof o.key === "string" ? o.key : null
     const label = typeof o.label === "string" ? o.label.trim() : ""
-    const urls = Array.isArray(o.urls)
+    const metaUrls = Array.isArray(o.urls)
       ? o.urls.filter((u): u is string => typeof u === "string" && u.trim().length > 0)
       : []
+    const urls =
+      key != null
+        ? mergeExecutionUrlsWithProductImages(key, metaUrls, productImageUrls)
+        : metaUrls
     const swatchHex =
       typeof o.swatch_hex === "string" && o.swatch_hex.trim().length > 0
         ? o.swatch_hex.trim()
@@ -583,8 +686,8 @@ function finishExecutionsFromMetadata(
   }
   const raw = metadataExecutionsRaw(
     product,
-    "finish_color_executions",
-    "paint_finish_executions"
+    "paint_finish_executions",
+    "finish_color_executions"
   )
   const urls = collectProductImageUrls(product)
   if (Array.isArray(raw) && isOliverFalseFinishColorSplit(urls, raw as Array<{ key: string; label: string; urls: string[] }>, handle)) {
@@ -599,7 +702,10 @@ function finishExecutionsFromMetadata(
     return undefined
   }
   const source = repaired.changed ? repaired.executions : raw
-  const variants = colorExecutionsFromMetadataArray(source, { handle })
+  const variants = colorExecutionsFromMetadataArray(source, {
+    handle,
+    productImageUrls: urls,
+  })
   if (!variants || variants.length < 2) return variants
   const h = handle?.toLowerCase() ?? ""
   if (h.startsWith("pv-")) {
@@ -624,14 +730,18 @@ function fabricUpholsteryExecutionsFromMetadata(
     "fabric_upholstery_executions",
     "upholstery_color_executions"
   )
-  return colorExecutionsFromMetadataArray(raw)
+  return colorExecutionsFromMetadataArray(raw, {
+    productImageUrls: collectProductImageUrls(product),
+  })
 }
 
 function frameMaterialExecutionsFromMetadata(
   product: Record<string, unknown>
 ): CardColorVariant[] | undefined {
   const raw = metadataExecutionsRaw(product, "frame_material_executions")
-  return colorExecutionsFromMetadataArray(raw)
+  return colorExecutionsFromMetadataArray(raw, {
+    productImageUrls: collectProductImageUrls(product),
+  })
 }
 
 function constructionTierExecutionsFromMetadata(
@@ -642,7 +752,9 @@ function constructionTierExecutionsFromMetadata(
     "construction_tier_executions",
     "material_tier_executions"
   )
-  return colorExecutionsFromMetadataArray(raw)
+  return colorExecutionsFromMetadataArray(raw, {
+    productImageUrls: collectProductImageUrls(product),
+  })
 }
 
 /** @deprecated use fabricUpholsteryExecutionsFromMetadata */
@@ -656,6 +768,14 @@ function materialTierExecutionsFromMetadata(
   product: Record<string, unknown>
 ): CardColorVariant[] | undefined {
   return constructionTierExecutionsFromMetadata(product)
+}
+
+/* Buyer-facing RU names for headboard models - metadata stores the latin
+   originals (Frame/Cloud/Plane). */
+const HEADBOARD_MODEL_LABELS_RU: Record<string, string> = {
+  frame: "Фрейм",
+  cloud: "Клауд",
+  plane: "Плейн",
 }
 
 function headboardExecutionsFromMetadata(
@@ -677,7 +797,7 @@ function headboardExecutionsFromMetadata(
     const resolved = urls.map((u) => resolveStorefrontProductImageSrc(u))
     variants.push({
       key,
-      label,
+      label: HEADBOARD_MODEL_LABELS_RU[key] ?? label,
       mainSrc: resolved[0]!,
       extraSrcs: resolved.slice(1),
       modelToken: key,
@@ -814,17 +934,52 @@ function isProvencePaintWoodSplitMeta(
   return meta?.finish_metadata_source === "provence_paint_wood_split"
 }
 
+/**
+ * Provence split evidence lives in execution metadata even when the catalog
+ * browse image projection keeps only the first three generic (`_other`) files.
+ * Use the canonical execution URLs for the guard instead of treating the slim
+ * `product.images` list as the source of truth.
+ */
+function collectProvenceExecutionEvidenceUrls(
+  product: Record<string, unknown>
+): string[] {
+  const out = collectProductImageUrls(product)
+  const seen = new Set(
+    out.map((url) => (url.split("/").pop() ?? url).toLowerCase())
+  )
+  const meta = product.metadata as Record<string, unknown> | undefined
+  for (const key of ["paint_finish_executions", "finish_color_executions"]) {
+    const entries = meta?.[key]
+    if (!Array.isArray(entries)) continue
+    for (const entry of entries) {
+      if (!entry || typeof entry !== "object") continue
+      const urls = (entry as { urls?: unknown }).urls
+      if (!Array.isArray(urls)) continue
+      for (const raw of urls) {
+        if (typeof raw !== "string" || !raw.trim()) continue
+        const url = raw.trim()
+        const basename = (url.split("/").pop() ?? url).toLowerCase()
+        if (seen.has(basename)) continue
+        seen.add(basename)
+        out.push(url)
+      }
+    }
+  }
+  return out
+}
+
 function provencePaintWoodSelectorsFromMetadata(
   product: Record<string, unknown>
 ): CardExecutionSelectors | null {
   const handle = typeof product.handle === "string" ? product.handle : ""
   const meta = product.metadata as Record<string, unknown> | undefined
   if (!isProvencePaintWoodSplitMeta(meta, handle)) return null
-  const urls = collectProductImageUrls(product)
+  const urls = collectProvenceExecutionEvidenceUrls(product)
   if (!hasProvencePaintWoodDualFinishEvidence(urls, handle)) return null
 
   const variants = colorExecutionsFromMetadataArray(meta?.finish_color_executions, {
     handle,
+    productImageUrls: urls,
   })
   if (!variants || variants.length < 2) return null
   const cream = variants.find((v) => v.key === "cream")
@@ -884,7 +1039,7 @@ export function buildIntraProductExecutionSelectors(
   const handleEarly =
     typeof product.handle === "string" ? product.handle.toLowerCase() : ""
   if (handleEarly.startsWith("pv-")) {
-    const urls = collectProductImageUrls(product)
+    const urls = collectProvenceExecutionEvidenceUrls(product)
     if (!hasProvencePaintWoodDualFinishEvidence(urls, handleEarly)) {
       return { confidence: "metadata_blocked" }
     }
@@ -1050,7 +1205,7 @@ function buildModelVariantsFromBuckets(
     if (!main && extras.length === 0) continue
     variants.push({
       key: `model:${token}`,
-      label: EXECUTION_LABELS[token] ?? token,
+      label: HEADBOARD_MODEL_LABELS_RU[token] ?? EXECUTION_LABELS[token] ?? token,
       mainSrc: main,
       extraSrcs: extras,
       modelToken: token,

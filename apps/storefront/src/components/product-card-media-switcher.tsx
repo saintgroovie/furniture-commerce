@@ -18,6 +18,7 @@ type Props = {
   href: string
   alt: string
   priorityHero?: boolean
+  productHandle?: string
 }
 
 export function ProductCardMediaSwitcher({
@@ -33,6 +34,7 @@ export function ProductCardMediaSwitcher({
   href,
   alt,
   priorityHero = false,
+  productHandle,
 }: Props) {
   return (
     <ProductCardMediaGalleryCore
@@ -48,6 +50,7 @@ export function ProductCardMediaSwitcher({
       href={href}
       alt={alt}
       priorityHero={priorityHero}
+      productHandle={productHandle}
     />
   )
 }
