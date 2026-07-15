@@ -3,10 +3,13 @@
 import type { MouseEvent } from "react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { ProductThumbCarousel } from "@/components/product-thumb-carousel"
+import { PdpHeroAffordance } from "@/components/pdp-hero-affordance"
 import { PdpImageLightbox } from "@/components/pdp-image-lightbox"
+import { useHeroSwipe } from "@/components/use-hero-swipe"
 import { useVerifiedStripExtras } from "@/components/use-verified-strip-extras"
+import { buildPdpGalleryPhotoSet, resolveBuyerGalleryThumbStrip, shouldShowBuyerGalleryRail } from "@/lib/pdp-gallery-photo-set"
 import { buildPdpThumbStripUrls } from "@/lib/product-images"
-import { states } from "@/lib/woodright-copy"
+import { pdpLightboxCopy, states } from "@/lib/woodright-copy"
 
 type Props = {
   mainSrc: string
@@ -56,7 +59,17 @@ export function ProductPdpMediaSwitcher({
     return [mainTrimmed, ...rawVisibleStrip.filter((u) => u !== mainTrimmed)]
   }, [rawVisibleStrip, galleryStripCandidates, mainTrimmed])
 
-  const showThumbRow = visibleStrip.length > 0
+  /* Full photo set (hero + extras). Extras-only strips are length 1 for a
+     2-photo SKU — never gate the rail on strip length alone. */
+  const galleryPhotos = useMemo(
+    () => buildPdpGalleryPhotoSet(mainTrimmed, visibleStrip),
+    [mainTrimmed, visibleStrip]
+  )
+  const thumbStrip = useMemo(
+    () => resolveBuyerGalleryThumbStrip(mainTrimmed, visibleStrip),
+    [mainTrimmed, visibleStrip]
+  )
+  const showThumbRow = shouldShowBuyerGalleryRail(thumbStrip)
 
   const onHeroError = useCallback(() => {
     setDisplayHeroSrc(mainTrimmed)
@@ -110,7 +123,7 @@ export function ProductPdpMediaSwitcher({
 
   const heroIsPlaceholder = !displayHeroSrc
 
-  const lightboxImages = visibleStrip.length > 0 ? visibleStrip : [displayHeroSrc]
+  const lightboxImages = galleryPhotos.length > 0 ? galleryPhotos : [displayHeroSrc]
 
   const openLightbox = useCallback(() => {
     if (heroIsPlaceholder) return
@@ -118,27 +131,63 @@ export function ProductPdpMediaSwitcher({
     setLightboxIndex(idx >= 0 ? idx : 0)
   }, [heroIsPlaceholder, lightboxImages, displayHeroSrc])
 
+  /* Touch swipe on the hero cycles the same set as lightbox / affordance. */
+  const heroCycle = galleryPhotos
+
+  const stepHero = useCallback(
+    (dir: 1 | -1) => {
+      if (heroCycle.length < 2) return
+      const i = heroCycle.indexOf(displayHeroSrc)
+      const next =
+        heroCycle[(((i < 0 ? 0 : i) + dir) % heroCycle.length + heroCycle.length) % heroCycle.length]!
+      if (next === mainTrimmed) {
+        setDisplayHeroSrc(mainTrimmed)
+        setActiveGalleryUrl(null)
+        pendingRef.current = null
+        setPendingPreloadUrl(null)
+        return
+      }
+      if (pendingRef.current === next) return
+      pendingRef.current = next
+      setPendingPreloadUrl(next)
+    },
+    [heroCycle, displayHeroSrc, mainTrimmed]
+  )
+
+  const heroSwipe = useHeroSwipe(
+    heroCycle.length > 1,
+    () => stepHero(-1),
+    () => stepHero(1)
+  )
+
   return (
     <div className="product-pdp-media-switcher">
-      <div className="product-pdp-media-hero">
+      <div className="product-pdp-media-hero" {...heroSwipe}>
         {heroIsPlaceholder ? (
           <div className="product-detail-img oliver-media-absent">
-            <span className="oliver-media-absent-label">{states.mediaMissing}</span>
+            <span className="oliver-media-absent-label">{states.noPhoto}</span>
           </div>
         ) : (
-          <img
-            src={displayHeroSrc}
-            alt={alt}
-            className="product-detail-img is-zoomable"
-            style={
-              heroObjectPosition
-                ? { objectPosition: heroObjectPosition }
-                : undefined
-            }
-            loading="eager"
-            onError={onHeroError}
+          <button
+            type="button"
+            className="pdp-hero-open"
             onClick={openLightbox}
-          />
+            aria-label={`${alt} - ${pdpLightboxCopy.open}`}
+          >
+            <img
+              src={displayHeroSrc}
+              alt={alt}
+              className="product-detail-img is-zoomable"
+              style={
+                heroObjectPosition
+                  ? { objectPosition: heroObjectPosition }
+                  : undefined
+              }
+              loading="eager"
+              onError={onHeroError}
+            />
+            <PdpHeroAffordance count={lightboxImages.length} />
+          </button>
         )}
       </div>
       {lightboxIndex !== null && (
@@ -164,7 +213,7 @@ export function ProductPdpMediaSwitcher({
       {showThumbRow && (
         <ProductThumbCarousel
           variantMain={mainTrimmed}
-          visibleStrip={visibleStrip}
+          visibleStrip={thumbStrip}
           activeGalleryUrl={activeGalleryUrl}
           displayHeroSrc={displayHeroSrc}
           pendingPreloadUrl={pendingPreloadUrl}

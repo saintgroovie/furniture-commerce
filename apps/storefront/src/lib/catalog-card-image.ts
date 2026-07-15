@@ -102,3 +102,115 @@ export function resolveCatalogCardHeroSrc(
   if (!catalogCardDerivativesEnabled()) return storefront
   return resolveCatalogCardImageSrc(storefront, { preferDerivative: true })
 }
+
+/**
+ * Map of catalog-card display URL → storefront original.
+ * When a speculative `/derivatives/card/*.webp` 404s, UI must swap to the
+ * original JPEG/PNG instead of treating the photo as missing.
+ */
+export type CatalogCardDerivativeFallbackBySrc = Readonly<
+  Record<string, string>
+>
+
+export type CatalogCardMediaBundle = {
+  mainSrc: string
+  extraSrcs: string[]
+  /** display (often webp derivative) → storefront original; empty when flag off */
+  fallbackBySrc: CatalogCardDerivativeFallbackBySrc
+}
+
+function recordDerivativeFallback(
+  out: Record<string, string>,
+  display: string,
+  original: string
+): void {
+  const d = display.trim()
+  const o = original.trim()
+  if (!d || !o || d === o) return
+  out[d] = o
+}
+
+/**
+ * Recover the sibling original path when `src` is already a card WebP derivative
+ * (e.g. after product-card pre-resolved URLs and gallery core resolves again).
+ * Catalog assets are overwhelmingly `.jpg`; `.png` is tried by the thumb/hero
+ * error path when the jpg sibling 404s via optional secondary candidates.
+ */
+export function catalogCardOriginalFromDerivative(src: string): string | null {
+  let t = typeof src === "string" ? src.trim() : ""
+  if (!t) return null
+  try {
+    t = decodeURIComponent(t)
+  } catch {
+    // keep raw
+  }
+  let path = t
+  if (t.startsWith("http://") || t.startsWith("https://")) {
+    try {
+      path = new URL(t).pathname
+    } catch {
+      return null
+    }
+  }
+  if (!path.includes(DERIVATIVE_MARKER)) return null
+  const restored = path.replace(/\/derivatives\/card\//i, "/")
+  if (/\.webp$/i.test(restored)) {
+    return restored.replace(/\.webp$/i, ".jpg")
+  }
+  return restored
+}
+
+/** Secondary original candidates after the primary jpg recovery fails. */
+export function catalogCardOriginalFallbackCandidates(src: string): string[] {
+  const primary = catalogCardOriginalFromDerivative(src)
+  if (!primary) return []
+  const out = [primary]
+  if (/\.jpg$/i.test(primary)) {
+    out.push(primary.replace(/\.jpg$/i, ".jpeg"), primary.replace(/\.jpg$/i, ".png"))
+  }
+  return out
+}
+
+/**
+ * Resolve every URL used by a catalog execution switch (hero + thumb strip).
+ *
+ * Without this, the initial card uses a ~10 KB WebP derivative but a swatch
+ * click jumps back to the ~300 KB source JPEG. That causes two competing hero
+ * requests because the card-quality effect immediately rewrites it back to the
+ * derivative. Keep PDP media untouched by calling this helper only for cards.
+ *
+ * Derivatives are optional. Callers must fall back via `fallbackBySrc` on
+ * image error — never blacklist a photo solely because its WebP is missing.
+ */
+export function resolveCatalogCardMediaBundle(
+  mainSrc: string,
+  extraSrcs: readonly string[],
+  resolveStorefront: (url: string) => string
+): CatalogCardMediaBundle {
+  const fallbackBySrc: Record<string, string> = {}
+  const mainOriginalRaw = resolveStorefront(mainSrc)
+  const mainDisplay = resolveCatalogCardHeroSrc(mainSrc, resolveStorefront)
+  const mainOriginal =
+    mainDisplay !== mainOriginalRaw
+      ? mainOriginalRaw
+      : catalogCardOriginalFromDerivative(mainDisplay) ?? mainOriginalRaw
+  recordDerivativeFallback(fallbackBySrc, mainDisplay, mainOriginal)
+
+  const resolvedExtras: string[] = []
+  for (const url of extraSrcs) {
+    const originalRaw = resolveStorefront(url)
+    const display = resolveCatalogCardHeroSrc(url, resolveStorefront)
+    const original =
+      display !== originalRaw
+        ? originalRaw
+        : catalogCardOriginalFromDerivative(display) ?? originalRaw
+    recordDerivativeFallback(fallbackBySrc, display, original)
+    resolvedExtras.push(display)
+  }
+
+  return {
+    mainSrc: mainDisplay,
+    extraSrcs: resolvedExtras,
+    fallbackBySrc,
+  }
+}

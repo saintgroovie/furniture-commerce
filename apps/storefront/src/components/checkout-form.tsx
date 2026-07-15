@@ -21,6 +21,8 @@ import { completeCart, prepareCheckoutForCompletion } from "@/lib/api/checkout"
 import { formatRub, getOrderDisplayNumber } from "@/lib/format"
 import { PackageIcon, ChecklistIcon } from "@/components/bespoke-help-icons"
 import { checkoutCopy as copy } from "@/lib/woodright-copy"
+import { CopyLines } from "@/components/copy-lines"
+import { flatCopy } from "@/lib/format-ru-copy"
 
 type CheckoutState =
   | "empty_cart"
@@ -68,10 +70,10 @@ export function CheckoutForm() {
           clearCartIdFromSession()
           setCartId(null)
           setState("invalid_cart_state")
-          setErrorMessage(copy.invalidState)
+          setErrorMessage(flatCopy(copy.invalidState))
         } else {
           setState("server_error")
-          setErrorMessage(copy.loadError)
+          setErrorMessage(flatCopy(copy.loadError))
         }
       })
   }, [])
@@ -92,7 +94,7 @@ export function CheckoutForm() {
     // Такие же обязательные поля, как в «Рассчитать проект»: имя и телефон.
     // Остальное (email, адрес, город) — необязательно, менеджер уточнит при звонке.
     const nextNameError = name ? "" : copy.nameRequired
-    const nextPhoneError = phone ? "" : copy.phoneRequired
+    const nextPhoneError = phone ? "" : flatCopy(copy.phoneRequired)
     setNameError(nextNameError)
     setPhoneError(nextPhoneError)
     if (nextNameError || nextPhoneError) {
@@ -132,11 +134,11 @@ export function CheckoutForm() {
         setState("success")
       } else {
         setState("server_error")
-        setErrorMessage(result.error ?? copy.serverError)
+        setErrorMessage(result.error ?? flatCopy(copy.serverError))
       }
     } catch (err) {
       setState("server_error")
-      setErrorMessage(err instanceof Error ? err.message : copy.serverError)
+      setErrorMessage(err instanceof Error ? err.message : flatCopy(copy.serverError))
     } finally {
       submittingRef.current = false
     }
@@ -153,7 +155,7 @@ export function CheckoutForm() {
     cardContent = (
       <>
         <p className="bespoke-request-card-title">{copy.emptyCartTitle}</p>
-        <p className="page-caption bespoke-request-card-caption">{copy.emptyCartBody}</p>
+        <CopyLines className="page-caption bespoke-request-card-caption" lines={copy.emptyCartBody} />
         <p className="nav-links">
           <Link href="/catalog">В каталог</Link>
           {" · "}
@@ -168,9 +170,9 @@ export function CheckoutForm() {
   } else if (state === "invalid_cart_state") {
     cardContent = (
       <>
-        <p className="bespoke-request-card-title">{copy.invalidState}</p>
+        <CopyLines className="bespoke-request-card-title" lines={copy.invalidState} />
         <p className="nav-links">
-          <Link href="/catalog">В каталог</Link> или <Link href="/cart">в корзину</Link>.
+          <Link href="/catalog">В каталог</Link> или <Link href="/cart">в корзину</Link>
         </p>
       </>
     )
@@ -184,9 +186,9 @@ export function CheckoutForm() {
           </p>
         )}
         {orderNumber && (
-          <p className="checkout-order-note" role="alert">{copy.orderNumberNote}</p>
+          <CopyLines className="checkout-order-note" role="alert" lines={copy.orderNumberNote} />
         )}
-        <p className="request-success-text">{copy.paymentNote}</p>
+        <CopyLines className="request-success-text" lines={copy.paymentNote} />
         <Link href="/catalog" className="btn btn-primary">{copy.successCta}</Link>
       </div>
     )
@@ -195,7 +197,7 @@ export function CheckoutForm() {
     cardContent = (
       <>
         <h2 className="bespoke-request-card-title">{copy.formTitle}</h2>
-        <p className="page-caption bespoke-request-card-caption">{copy.formCaption}</p>
+        <CopyLines className="page-caption bespoke-request-card-caption" lines={copy.formCaption} />
 
         <form onSubmit={handleSubmit} data-state={cardState} className="form-stack bespoke-form">
           <div className="form-field">
@@ -258,7 +260,7 @@ export function CheckoutForm() {
             <input id="checkout-country" name="country_code" type="text" defaultValue="ru" disabled={submitting} />
           </div>
 
-          <p className="checkout-payment-clarity">{copy.paymentClarity}</p>
+          <CopyLines className="checkout-payment-clarity" lines={copy.paymentClarity} />
 
           <button type="submit" className="btn btn-primary bespoke-submit-btn" disabled={submitting}>
             {submitting ? copy.submitting : copy.submit}
@@ -313,7 +315,7 @@ export function CheckoutForm() {
           </ul>
         </div>
 
-        <p className="page-caption">{copy.asideCaption}</p>
+        <CopyLines className="page-caption" lines={copy.asideCaption} />
       </aside>
     </div>
   )

@@ -1,0 +1,362 @@
+{
+  "version": 1,
+  "generated_at": "2026-07-13T16:26:12.289Z",
+  "policy": {
+    "collapse": "md5_equal; or non-color angle-linked pair with hamming===0; or iso/slot twin with hamming<=2. Never aHash-only across _color_ finishes.",
+    "do_not_collapse": "filename twin with hamming>=9 (distinct angles, e.g. av-05-1)",
+    "restore": "PDP buyer role-slot collapse may drop a protected twin; restore from raw pool"
+  },
+  "control_cases": {
+    "av-05-1": [
+      {
+        "pair": [
+          "av-05-1-iso-1_il9e-v6.jpg",
+          "av-05-1-iso_hvyo-8t.jpg"
+        ],
+        "hamming": 13,
+        "reason": "filename_false_twin_distinct_angles"
+      }
+    ],
+    "ol-84-1": {
+      "keep_basename": "ol-84-1-i2.jpg",
+      "drop_basenames": [
+        "ol-84-1_gallery_01.jpg"
+      ],
+      "hamming": 0,
+      "md5_equal": false,
+      "reason": "true_perceptual_near_dup"
+    }
+  },
+  "collapse_by_handle": {
+    "ol-25-1": {
+      "keep_basename": "ol-25-1-i2.jpg",
+      "drop_basenames": [
+        "ol-25-1_gallery_01.jpg"
+      ],
+      "hamming": 0,
+      "md5_equal": false,
+      "reason": "true_perceptual_near_dup"
+    },
+    "ol-84-1": {
+      "keep_basename": "ol-84-1-i2.jpg",
+      "drop_basenames": [
+        "ol-84-1_gallery_01.jpg"
+      ],
+      "hamming": 0,
+      "md5_equal": false,
+      "reason": "true_perceptual_near_dup"
+    },
+    "pv-05-2": {
+      "keep_basename": "pv-05-2-i2.jpg",
+      "drop_basenames": [
+        "pv-05-2_gallery_02.jpg"
+      ],
+      "hamming": 0,
+      "md5_equal": false,
+      "reason": "true_perceptual_near_dup"
+    },
+    "pv-02-1": {
+      "keep_basename": "pv-02-1-i2.jpg",
+      "drop_basenames": [
+        "pv-02-1_gallery_02.jpg"
+      ],
+      "hamming": 0,
+      "md5_equal": false,
+      "reason": "true_perceptual_near_dup"
+    },
+    "pv-06-2": {
+      "keep_basename": "pv-06-2-i2.jpg",
+      "drop_basenames": [
+        "pv-06-2_gallery_02.jpg"
+      ],
+      "hamming": 2,
+      "md5_equal": false,
+      "reason": "true_perceptual_near_dup"
+    },
+    "ol-86-1": {
+      "keep_basename": "ol-86-1-i2.jpg",
+      "drop_basenames": [
+        "ol-86-1_gallery_01.jpg"
+      ],
+      "hamming": 0,
+      "md5_equal": false,
+      "reason": "true_perceptual_near_dup"
+    },
+    "pv-08-2": {
+      "keep_basename": "pv-08-2-i2.jpg",
+      "drop_basenames": [
+        "pv-08-2_gallery_02.jpg"
+      ],
+      "hamming": 0,
+      "md5_equal": false,
+      "reason": "true_perceptual_near_dup"
+    },
+    "pv-09-1": {
+      "keep_basename": "pv-09-1-i2.jpg",
+      "drop_basenames": [
+        "pv-09-1_gallery_02.jpg"
+      ],
+      "hamming": 0,
+      "md5_equal": false,
+      "reason": "true_perceptual_near_dup"
+    },
+    "pv-09-2": {
+      "keep_basename": "pv-09-2-i2.jpg",
+      "drop_basenames": [
+        "pv-09-2_gallery_01.jpg"
+      ],
+      "hamming": 0,
+      "md5_equal": false,
+      "reason": "true_perceptual_near_dup"
+    },
+    "pv-55-1": {
+      "keep_basename": "pv-55-1-i2.jpg",
+      "drop_basenames": [
+        "pv-55-1_gallery_02.jpg"
+      ],
+      "hamming": 0,
+      "md5_equal": false,
+      "reason": "true_perceptual_near_dup"
+    },
+    "pv-62-1": {
+      "keep_basename": "pv-62-1-i2.jpg",
+      "drop_basenames": [
+        "pv-62-1_gallery_02.jpg"
+      ],
+      "hamming": 0,
+      "md5_equal": false,
+      "reason": "true_perceptual_near_dup"
+    },
+    "pv-23-1": {
+      "keep_basename": "pv-23-1-i2.jpg",
+      "drop_basenames": [
+        "pv-23-1_gallery_02.jpg"
+      ],
+      "hamming": 2,
+      "md5_equal": false,
+      "reason": "true_perceptual_near_dup"
+    },
+    "pv-43-1": {
+      "keep_basename": "pv-43-1-i2.jpg",
+      "drop_basenames": [
+        "pv-43-1_gallery_01.jpg"
+      ],
+      "hamming": 0,
+      "md5_equal": false,
+      "reason": "true_perceptual_near_dup"
+    },
+    "pv-69-1": {
+      "keep_basename": "pv-69-1-i2.jpg",
+      "drop_basenames": [
+        "pv-69-1_gallery_01.jpg"
+      ],
+      "hamming": 0,
+      "md5_equal": false,
+      "reason": "true_perceptual_near_dup"
+    },
+    "pv-65-5": {
+      "keep_basename": "pv-65-5-i2.jpg",
+      "drop_basenames": [
+        "pv-65-5_gallery_02.jpg"
+      ],
+      "hamming": 0,
+      "md5_equal": false,
+      "reason": "true_perceptual_near_dup"
+    },
+    "pv-65-8": {
+      "keep_basename": "pv-65-8-i2.jpg",
+      "drop_basenames": [
+        "pv-65-8_gallery_02.jpg"
+      ],
+      "hamming": 0,
+      "md5_equal": false,
+      "reason": "true_perceptual_near_dup"
+    },
+    "pv-68-2": {
+      "keep_basename": "pv-68-2-i2.jpg",
+      "drop_basenames": [
+        "pv-68-2_gallery_01.jpg"
+      ],
+      "hamming": 0,
+      "md5_equal": false,
+      "reason": "true_perceptual_near_dup"
+    },
+    "pv-65-7": {
+      "keep_basename": "pv-65-7-i2.jpg",
+      "drop_basenames": [
+        "pv-65-7_gallery_01.jpg"
+      ],
+      "hamming": 0,
+      "md5_equal": false,
+      "reason": "true_perceptual_near_dup"
+    },
+    "rs-62-1": {
+      "keep_basename": "rs-62-1-iso-1_b5hy-if.jpg",
+      "drop_basenames": [
+        "rs-62-1-iso_y7lu-80.jpg"
+      ],
+      "hamming": 2,
+      "md5_equal": false,
+      "reason": "true_perceptual_near_dup"
+    },
+    "tb-05-3": {
+      "keep_basename": "tb-05-3-iso-1_sqfh-8k.jpg",
+      "drop_basenames": [
+        "tb-05-3-iso_bjma-8x.jpg"
+      ],
+      "hamming": 1,
+      "md5_equal": false,
+      "reason": "true_perceptual_near_dup"
+    }
+  },
+  "do_not_collapse": {
+    "ol-01-2": [
+      {
+        "pair": [
+          "ol-01-2-i2.jpg",
+          "OL-01-2_gallery_04.jpg"
+        ],
+        "hamming": 11,
+        "reason": "filename_false_twin_distinct_angles"
+      }
+    ],
+    "ol-61-2": [
+      {
+        "pair": [
+          "ol-61-2-i2.jpg",
+          "OL-61-2_gallery_03.jpg"
+        ],
+        "hamming": 35,
+        "reason": "filename_false_twin_distinct_angles"
+      }
+    ],
+    "ol-62-2": [
+      {
+        "pair": [
+          "ol-62-2-i2.jpg",
+          "OL-62-2_gallery_01.jpg"
+        ],
+        "hamming": 12,
+        "reason": "filename_false_twin_distinct_angles"
+      }
+    ],
+    "pv-05-2": [
+      {
+        "pair": [
+          "PV-05-2_gallery_01.jpg",
+          "pv-05-2-i2.jpg"
+        ],
+        "hamming": 16,
+        "reason": "filename_false_twin_distinct_angles"
+      }
+    ],
+    "pv-03-1": [
+      {
+        "pair": [
+          "PV-03-1_gallery_01.jpg",
+          "pv-03-1-i2.jpg"
+        ],
+        "hamming": 14,
+        "reason": "filename_false_twin_distinct_angles"
+      },
+      {
+        "pair": [
+          "pv-03-1-i2.jpg",
+          "PV-03-1_gallery_02.jpg"
+        ],
+        "hamming": 20,
+        "reason": "filename_false_twin_distinct_angles"
+      }
+    ],
+    "pv-06-2": [
+      {
+        "pair": [
+          "PV-06-2_gallery_01.jpg",
+          "pv-06-2-i2.jpg"
+        ],
+        "hamming": 15,
+        "reason": "filename_false_twin_distinct_angles"
+      }
+    ],
+    "pv-08-2": [
+      {
+        "pair": [
+          "PV-08-2_gallery_01.jpg",
+          "pv-08-2-i2.jpg"
+        ],
+        "hamming": 20,
+        "reason": "filename_false_twin_distinct_angles"
+      }
+    ],
+    "pv-65-5": [
+      {
+        "pair": [
+          "PV-65-5_gallery_01.jpg",
+          "pv-65-5-i2.jpg"
+        ],
+        "hamming": 11,
+        "reason": "filename_false_twin_distinct_angles"
+      }
+    ],
+    "pv-65-8": [
+      {
+        "pair": [
+          "PV-65-8_gallery_01.jpg",
+          "pv-65-8-i2.jpg"
+        ],
+        "hamming": 10,
+        "reason": "filename_false_twin_distinct_angles"
+      }
+    ],
+    "av-05-1": [
+      {
+        "pair": [
+          "av-05-1-iso-1_il9e-v6.jpg",
+          "av-05-1-iso_hvyo-8t.jpg"
+        ],
+        "hamming": 13,
+        "reason": "filename_false_twin_distinct_angles"
+      }
+    ],
+    "fa-06-1": [
+      {
+        "pair": [
+          "fa-06-1-iso-1.jpg",
+          "fa-06-1-iso.jpg"
+        ],
+        "hamming": 9,
+        "reason": "filename_false_twin_distinct_angles"
+      }
+    ],
+    "fk-05-1": [
+      {
+        "pair": [
+          "fk-05-1-iso-1.jpg",
+          "fk-05-1-iso.jpg"
+        ],
+        "hamming": 19,
+        "reason": "filename_false_twin_distinct_angles"
+      }
+    ],
+    "rs-05-3": [
+      {
+        "pair": [
+          "rs-05-3-iso-1.jpg",
+          "rs-05-3-iso.jpg"
+        ],
+        "hamming": 9,
+        "reason": "filename_false_twin_distinct_angles"
+      }
+    ],
+    "sh-81-1": [
+      {
+        "pair": [
+          "sh-81-1-iso-1_s30u-ab.jpg",
+          "sh-81-1-iso.jpg"
+        ],
+        "hamming": 16,
+        "reason": "filename_false_twin_distinct_angles"
+      }
+    ]
+  }
+}

@@ -5,6 +5,7 @@ import {
   createElement,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -15,6 +16,10 @@ function isKidsPath(pathname: string): boolean {
   return pathname === "/kids" || pathname.startsWith("/kids/")
 }
 
+function isProductPath(pathname: string): boolean {
+  return pathname === "/product" || pathname.startsWith("/product/")
+}
+
 type KidsSectionState = {
   /**
    * The section the user is visually coming from. Captured at link-click
@@ -23,34 +28,52 @@ type KidsSectionState = {
    * returns the destination, so the pathname alone can't tell "from".
    */
   from: boolean
-  /** Where the user is heading: pathname + optimistic link click. */
+  /** Where the user is heading: pathname + optimistic link click + PDP. */
   target: boolean
 }
 
-const KidsSectionContext = createContext<KidsSectionState>({
+type KidsSectionContextValue = KidsSectionState & {
+  /** PDP (and similar) mounts set this so chrome stays kids off `/kids/*`. */
+  setProductKids: (next: boolean) => void
+}
+
+const KidsSectionContext = createContext<KidsSectionContextValue>({
   from: false,
   target: false,
+  setProductKids: () => {},
 })
 
 type PendingNav = { target: boolean; from: boolean }
 
 /**
- * Owns the adult ↔ kids flag for the sticky header (edge wash + KIDS pill).
- *
- * Pathname is the source of truth. In-app link clicks flip the flag in the
- * capture phase so the CSS tween starts on click — not after the kids RSC
- * segment (and `.kids-theme`) finally mounts in the page body.
+ * Owns the adult ↔ kids flag for sticky chrome (header edge wash, footer
+ * wash, KIDS pill). Pathname is the baseline; in-app clicks flip early;
+ * kids PDPs under `/product/*` opt in via `useKidsProductSection`.
  */
 export function KidsSectionProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const pathKids = isKidsPath(pathname)
   const [pending, setPending] = useState<PendingNav | null>(null)
+  const [productKids, setProductKids] = useState(false)
 
   /* Reset after the navigation commits. This effect runs after the commit
      that may show the route loader — the loader captures `from` in its
      mount state before this fires. */
   useEffect(() => {
     setPending(null)
+  }, [pathname])
+
+  /* Leave PDP opt-in when leaving /product/* so adult routes don't stick.
+     On /product/* also re-read the SSR `data-kids-product` marker so a
+     hard refresh opts chrome in before KidsProductSection's effect. */
+  useLayoutEffect(() => {
+    if (!isProductPath(pathname)) {
+      setProductKids(false)
+      return
+    }
+    if (document.querySelector("[data-kids-product]")) {
+      setProductKids(true)
+    }
   }, [pathname])
 
   useEffect(() => {
@@ -74,20 +97,31 @@ export function KidsSectionProvider({ children }: { children: ReactNode }) {
       } catch {
         return
       }
+      const fromKids =
+        isKidsPath(window.location.pathname) ||
+        (isProductPath(window.location.pathname) && productKids)
+      /* Kids catalog → /product/*: keep kids chrome until the PDP marker
+         confirms (or clears) after the route commits. */
+      const targetKids =
+        isKidsPath(path) || (fromKids && isProductPath(path))
       setPending({
-        target: isKidsPath(path),
-        from: isKidsPath(window.location.pathname),
+        target: targetKids,
+        from: fromKids,
       })
     }
 
     document.addEventListener("click", onClick, true)
     return () => document.removeEventListener("click", onClick, true)
-  }, [])
+  }, [productKids])
 
-  const target = pending ? pending.target : pathKids
-  const from = pending ? pending.from : pathKids
+  const settledKids = pathKids || productKids
+  const target = pending ? pending.target : settledKids
+  const from = pending ? pending.from : settledKids
 
-  const value = useMemo(() => ({ from, target }), [from, target])
+  const value = useMemo(
+    () => ({ from, target, setProductKids }),
+    [from, target]
+  )
 
   return createElement(KidsSectionContext.Provider, { value }, children)
 }
@@ -102,5 +136,18 @@ export function useKidsSection(): boolean {
  * destination), e.g. the route loader.
  */
 export function useKidsSectionTransition(): KidsSectionState {
-  return useContext(KidsSectionContext)
+  const { from, target } = useContext(KidsSectionContext)
+  return { from, target }
+}
+
+/**
+ * Kids PDP chrome: opt the shared header/footer into the kids section while
+ * this product page is mounted (layout effect avoids a one-frame adult flash).
+ */
+export function useKidsProductSection(isKidsProduct: boolean): void {
+  const { setProductKids } = useContext(KidsSectionContext)
+  useLayoutEffect(() => {
+    setProductKids(isKidsProduct)
+    return () => setProductKids(false)
+  }, [isKidsProduct, setProductKids])
 }

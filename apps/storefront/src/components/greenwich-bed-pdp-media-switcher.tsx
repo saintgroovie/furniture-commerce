@@ -11,8 +11,11 @@ type Props = {
   upholsteryVariants?: CardColorVariant[]
   woodVariants?: CardColorVariant[]
   greenwichBedMatrix?: GreenwichBedMatrixEntry[]
+  /** Interiors from shared_scene_media (scene_type=interior). */
+  sharedInteriorSrcs?: string[]
   title: string
   heroObjectPosition?: string
+  productHandle?: string
 }
 
 /** Greenwich bed PDP: headboard + wood + fabric matrix with scoped gallery. */
@@ -23,8 +26,10 @@ export function GreenwichBedPdpMediaSwitcher({
   upholsteryVariants,
   woodVariants,
   greenwichBedMatrix,
+  sharedInteriorSrcs,
   title,
   heroObjectPosition,
+  productHandle,
 }: Props) {
   return (
     <ProductCardMediaGalleryCore
@@ -34,10 +39,12 @@ export function GreenwichBedPdpMediaSwitcher({
       upholsteryVariants={upholsteryVariants}
       woodVariants={woodVariants}
       greenwichBedMatrix={greenwichBedMatrix}
+      sharedInteriorSrcs={sharedInteriorSrcs}
       href="#"
       alt={title}
       layout="pdp"
       heroObjectPosition={heroObjectPosition}
+      productHandle={productHandle}
     />
   )
 }

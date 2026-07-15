@@ -7,12 +7,14 @@ import { useSearchParams } from "next/navigation"
 import { createLead } from "@/lib/api/leads"
 import { createBespokeRequest } from "@/lib/api/bespoke-requests"
 import { bespokeForm as copy, bespokeRequestCopy } from "@/lib/woodright-copy"
+import { CopyLines } from "@/components/copy-lines"
+import { flatCopy } from "@/lib/format-ru-copy"
 
 type Status = "idle" | "submitting" | "success" | "error_validation" | "error_server"
 type TaskOption = { value: string; label: string }
 
 /**
- * Custom listbox-style dropdown for "Что нужно рассчитать" — same interaction
+ * Custom listbox-style dropdown for "Что нужно рассчитать" - same interaction
  * pattern as CatalogSortDropdown (click/hover/Enter/Esc/outside-click), but
  * full-width and styled to look like a form input in its closed state.
  */
@@ -152,6 +154,8 @@ export function BespokeForm() {
   const searchParams = useSearchParams()
   const productId = searchParams.get("product_id") ?? undefined
   const roomSetId = searchParams.get("room_set_id") ?? undefined
+  /* Материальное исполнение, выбранное на PDP (label из product contract). */
+  const materialLabel = searchParams.get("material")?.trim() || undefined
 
   const [status, setStatus] = useState<Status>("idle")
   const [errorMessage, setErrorMessage] = useState("")
@@ -171,7 +175,7 @@ export function BespokeForm() {
     const commentRaw = (form.elements.namedItem("comment") as HTMLTextAreaElement)?.value?.trim() ?? ""
 
     const nextNameError = name ? "" : copy.nameRequired
-    const nextPhoneError = phone ? "" : copy.phoneRequired
+    const nextPhoneError = phone ? "" : flatCopy(copy.phoneRequired)
     setNameError(nextNameError)
     setPhoneError(nextPhoneError)
     if (nextNameError || nextPhoneError) {
@@ -179,12 +183,13 @@ export function BespokeForm() {
       return
     }
 
-    // city и task_type — frontend-only уточнения; API их отдельно не поддерживает,
+    // city и task_type - frontend-only уточнения; API их отдельно не поддерживает,
     // поэтому аккуратно добавляем выбор первыми строками в общий comment.
     const taskLabel = copy.taskOptions.find((option) => option.value === taskType)?.label
     const headerLines = [
       city ? `${copy.fields.city}: ${city}` : null,
       taskLabel ? `${copy.fields.taskType}: ${taskLabel}` : null,
+      materialLabel ? `Исполнение: ${materialLabel}` : null,
     ].filter((line): line is string => Boolean(line))
     const comment = headerLines.length
       ? `${headerLines.join("\n")}${commentRaw ? `\n\n${commentRaw}` : ""}`
@@ -207,12 +212,13 @@ export function BespokeForm() {
         lead_id: leadId,
         product_id: productId ?? null,
         room_set_id: roomSetId ?? null,
+        materials: materialLabel ?? null,
         comment: comment || null,
       })
       setStatus("success")
     } catch {
       setStatus("error_server")
-      setErrorMessage(copy.serverError)
+      setErrorMessage(flatCopy(copy.serverError))
     } finally {
       submittingRef.current = false
     }
@@ -222,7 +228,7 @@ export function BespokeForm() {
     return (
       <div data-state="success" className="request-success">
         <p className="request-success-title">{copy.successTitle}</p>
-        <p className="request-success-text">{copy.successBody}</p>
+        <CopyLines className="request-success-text" lines={copy.successBody} />
         <Link href="/catalog" className="btn btn-primary">{copy.successCta}</Link>
       </div>
     )
@@ -233,7 +239,7 @@ export function BespokeForm() {
   return (
     <>
       <h2 className="bespoke-request-card-title">{bespokeRequestCopy.formTitle}</h2>
-      <p className="page-caption bespoke-request-card-caption">{bespokeRequestCopy.formCaption}</p>
+      <CopyLines className="page-caption bespoke-request-card-caption" lines={bespokeRequestCopy.formCaption} />
 
       <form onSubmit={handleSubmit} data-state={status} className="form-stack bespoke-form">
         <div className="form-field">
@@ -310,7 +316,7 @@ export function BespokeForm() {
           {submitting ? copy.submitting : copy.submit}
         </button>
 
-        <p className="form-consent-note">{copy.consentNote}</p>
+        <CopyLines className="form-consent-note" lines={copy.consentNote} />
 
         {status === "error_server" && (
           <div className="form-alert-error" role="alert">{errorMessage}</div>
