@@ -1,0 +1,174 @@
+# Build and push Woodright staging images to GHCR (SHA-tagged).
+# Manual only — does not deploy to Dokploy or production.
+#
+# Storefront NEXT_PUBLIC_* values are compile-time. This workflow REQUIRES
+# repository/environment secrets so images are never published with
+# 127.0.0.1 placeholders or an empty publishable key.
+name: Build staging images
+
+on:
+  workflow_dispatch:
+    inputs:
+      git_sha:
+        description: "Exact commit SHA to build (immutable). Leave empty for the workflow ref SHA."
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/saintgroovie/woodright
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: staging
+    steps:
+      - name: Resolve and validate SHA
+        id: sha
+        env:
+          INPUT_SHA: ${{ inputs.git_sha }}
+          FALLBACK_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          if [ -n "${INPUT_SHA}" ]; then
+            CANDIDATE="${INPUT_SHA}"
+          else
+            CANDIDATE="${FALLBACK_SHA}"
+          fi
+          # Full 40-char commit SHA only — blocks injection and unsafe Docker tags.
+          if ! printf '%s' "${CANDIDATE}" | grep -Eq '^[0-9a-fA-F]{40}$'; then
+            echo "Invalid git_sha: must be a full 40-char hex commit SHA" >&2
+            exit 1
+          fi
+          echo "sha=${CANDIDATE}" >> "${GITHUB_OUTPUT}"
+
+      - name: Checkout exact SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.sha.outputs.sha }}
+          fetch-depth: 0
+
+      - name: Restrict SHA to trusted deployment ancestry
+        env:
+          CANDIDATE_SHA: ${{ steps.sha.outputs.sha }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main integrate/deploy-candidate-20260716 2>/dev/null || git fetch --no-tags origin main
+          if ! git rev-parse --verify origin/main >/dev/null 2>&1; then
+            echo "origin/main missing after fetch" >&2
+            exit 1
+          fi
+          # Candidate must be based on main (main is an ancestor of the SHA).
+          if ! git merge-base --is-ancestor origin/main "${CANDIDATE_SHA}"; then
+            # Allow building an older main SHA that is still on origin/main history.
+            if ! git merge-base --is-ancestor "${CANDIDATE_SHA}" origin/main; then
+              echo "Refusing SHA ${CANDIDATE_SHA}: not on origin/main ancestry" >&2
+              exit 1
+            fi
+          fi
+          TRUSTED_TIPS="origin/main"
+          if git rev-parse --verify origin/integrate/deploy-candidate-20260716 >/dev/null 2>&1; then
+            TRUSTED_TIPS="${TRUSTED_TIPS} origin/integrate/deploy-candidate-20260716"
+          fi
+          ok=0
+          for tip in ${TRUSTED_TIPS}; do
+            if git merge-base --is-ancestor "${CANDIDATE_SHA}" "${tip}"; then
+              echo "SHA ${CANDIDATE_SHA} is ancestor of ${tip}"
+              ok=1
+              break
+            fi
+          done
+          if [ "${ok}" -ne 1 ]; then
+            echo "Refusing SHA ${CANDIDATE_SHA}: not on trusted tips:${TRUSTED_TIPS}" >&2
+            exit 1
+          fi
+
+      - name: Validate required storefront build secrets
+        env:
+          NEXT_PUBLIC_MEDUSA_BACKEND_URL: ${{ secrets.STAGING_NEXT_PUBLIC_MEDUSA_BACKEND_URL }}
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.STAGING_NEXT_PUBLIC_SITE_URL }}
+          NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: ${{ secrets.STAGING_NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY }}
+        run: |
+          set -euo pipefail
+          fail=0
+          require_http() {
+            local name="$1" value="$2"
+            if [ -z "${value}" ]; then
+              echo "Missing secret: ${name}" >&2
+              fail=1
+              return
+            fi
+            case "${value}" in
+              http://127.0.0.1*|http://localhost*|https://127.0.0.1*|https://localhost*)
+                echo "Secret ${name} must not use localhost/127.0.0.1 (got compile-time bake risk)" >&2
+                fail=1
+                ;;
+              http://*|https://*) ;;
+              *)
+                echo "Secret ${name} must be an http(s) URL" >&2
+                fail=1
+                ;;
+            esac
+          }
+          require_http STAGING_NEXT_PUBLIC_MEDUSA_BACKEND_URL "${NEXT_PUBLIC_MEDUSA_BACKEND_URL}"
+          require_http STAGING_NEXT_PUBLIC_SITE_URL "${NEXT_PUBLIC_SITE_URL}"
+          if [ -z "${NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY}" ]; then
+            echo "Missing secret: STAGING_NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY" >&2
+            fail=1
+          fi
+          if [ "${fail}" -ne 0 ]; then
+            echo "Refusing to publish a non-deployable storefront image." >&2
+            exit 1
+          fi
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./apps/backend
+          file: ./apps/backend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}-backend:${{ steps.sha.outputs.sha }}
+            ${{ env.IMAGE_PREFIX }}-backend:sha-${{ steps.sha.outputs.sha }}
+          provenance: false
+
+      - name: Build and push storefront
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./apps/storefront/Dockerfile
+          push: true
+          build-args: |
+            NEXT_PUBLIC_MEDUSA_BACKEND_URL=${{ secrets.STAGING_NEXT_PUBLIC_MEDUSA_BACKEND_URL }}
+            MEDUSA_BACKEND_URL=http://backend:9000
+            NEXT_PUBLIC_SITE_URL=${{ secrets.STAGING_NEXT_PUBLIC_SITE_URL }}
+            NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=${{ secrets.STAGING_NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY }}
+            NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES=0
+          tags: |
+            ${{ env.IMAGE_PREFIX }}-storefront:${{ steps.sha.outputs.sha }}
+            ${{ env.IMAGE_PREFIX }}-storefront:sha-${{ steps.sha.outputs.sha }}
+          provenance: false
+
+      - name: Record digests
+        run: |
+          set -euo pipefail
+          SHA="${{ steps.sha.outputs.sha }}"
+          echo "backend=${{ env.IMAGE_PREFIX }}-backend:${SHA}"
+          echo "storefront=${{ env.IMAGE_PREFIX }}-storefront:${SHA}"
+          docker buildx imagetools inspect "${{ env.IMAGE_PREFIX }}-backend:${SHA}" | head -n 20
+          docker buildx imagetools inspect "${{ env.IMAGE_PREFIX }}-storefront:${SHA}" | head -n 20

@@ -39,7 +39,7 @@ import { toCatalogBrowseClientProduct } from "./catalog-browse-client-product"
   const out = toCatalogBrowseClientProduct(raw)
   assert.equal(out.status, undefined)
   assert.equal(out.description, undefined)
-  assert.deepEqual(out.images, [{ url: "/a.jpg" }])
+  assert.deepEqual(out.images, [{ url: "/a.jpg" }, { url: "/b.jpg" }])
   assert.deepEqual(out.product_classification, { product_type: "STANDARD" })
   const meta = out.metadata as Record<string, unknown>
   assert.equal(meta.collection, "greenwich")
@@ -47,7 +47,7 @@ import { toCatalogBrowseClientProduct } from "./catalog-browse-client-product"
   assert.equal(meta.launch_mode, "request_quote")
   assert.equal(meta.display_group_sort, 2)
   assert.deepEqual(meta.finish_color_executions, [
-    { key: "w", label: "White", urls: ["/1.jpg"] },
+    { key: "w", label: "White", urls: ["/1.jpg", "/2.jpg"] },
   ])
 }
 
