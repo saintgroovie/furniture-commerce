@@ -38,9 +38,11 @@ Do **not** auto-seed. Do **not** migrate Dokploy’s own Postgres.
 ## Images
 
 ```bash
+# backend (context = apps/backend)
 docker build -t woodright-backend:<sha> -f apps/backend/Dockerfile apps/backend
 
-docker build -t woodright-storefront:<sha> -f apps/storefront/Dockerfile apps/storefront \
+# storefront (context = repository root — required for shared backend lib imports)
+docker build -t woodright-storefront:<sha> -f apps/storefront/Dockerfile . \
   --build-arg NEXT_PUBLIC_MEDUSA_BACKEND_URL=https://api-staging.example \
   --build-arg MEDUSA_BACKEND_URL=http://backend:9000 \
   --build-arg NEXT_PUBLIC_SITE_URL=https://staging.example \

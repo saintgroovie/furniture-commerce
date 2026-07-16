@@ -1,19 +1,23 @@
 # Woodright Next.js storefront — production image
-# Build-args required for NEXT_PUBLIC_* bake-in.
-# Note: apps/*/.yarn is gitignored; rely on corepack + yarn.lock.
+# MUST be built with repository root as context:
+#   docker build -f apps/storefront/Dockerfile .
+# Storefront imports shared gallery helpers from apps/backend/src/lib.
 
 FROM node:20-bookworm-slim AS deps
-WORKDIR /app
+WORKDIR /workspace/apps/storefront
 RUN corepack enable
-COPY package.json yarn.lock .yarnrc.yml ./
+COPY apps/storefront/package.json apps/storefront/yarn.lock apps/storefront/.yarnrc.yml ./
 RUN yarn install --immutable
 
 FROM node:20-bookworm-slim AS build
-WORKDIR /app
+WORKDIR /workspace
 RUN corepack enable
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/package.json /app/yarn.lock /app/.yarnrc.yml ./
-COPY . .
+COPY --from=deps /workspace/apps/storefront/node_modules ./apps/storefront/node_modules
+COPY --from=deps /workspace/apps/storefront/package.json /workspace/apps/storefront/yarn.lock /workspace/apps/storefront/.yarnrc.yml ./apps/storefront/
+COPY apps/storefront ./apps/storefront
+# Shared buyer-gallery helpers imported via ../../../backend/src/lib/*
+COPY apps/backend/src/lib ./apps/backend/src/lib
+WORKDIR /workspace/apps/storefront
 ARG NEXT_PUBLIC_MEDUSA_BACKEND_URL
 ARG MEDUSA_BACKEND_URL
 ARG NEXT_PUBLIC_SITE_URL
@@ -32,17 +36,19 @@ RUN test -n "$NEXT_PUBLIC_MEDUSA_BACKEND_URL" \
  && yarn build
 
 FROM node:20-bookworm-slim AS runner
-WORKDIR /app
+WORKDIR /workspace/apps/storefront
 ENV NODE_ENV=production \
     PORT=3002 \
     HOSTNAME=0.0.0.0 \
     NEXT_DIST_DIR=.next-build
 RUN useradd --system --uid 10001 --create-home nextjs
-COPY --from=build --chown=nextjs:nextjs /app/package.json /app/yarn.lock /app/.yarnrc.yml ./
-COPY --from=build --chown=nextjs:nextjs /app/node_modules ./node_modules
-COPY --from=build --chown=nextjs:nextjs /app/.next-build ./.next-build
-COPY --from=build --chown=nextjs:nextjs /app/public ./public
-COPY --from=build --chown=nextjs:nextjs /app/next.config.js ./next.config.js
+COPY --from=build --chown=nextjs:nextjs /workspace/apps/storefront/package.json /workspace/apps/storefront/yarn.lock /workspace/apps/storefront/.yarnrc.yml ./
+COPY --from=build --chown=nextjs:nextjs /workspace/apps/storefront/node_modules ./node_modules
+COPY --from=build --chown=nextjs:nextjs /workspace/apps/storefront/.next-build ./.next-build
+COPY --from=build --chown=nextjs:nextjs /workspace/apps/storefront/public ./public
+COPY --from=build --chown=nextjs:nextjs /workspace/apps/storefront/next.config.js ./next.config.js
+# Keep runtime resolution path for any residual relative imports
+COPY --from=build --chown=nextjs:nextjs /workspace/apps/backend/src/lib /workspace/apps/backend/src/lib
 USER nextjs
 EXPOSE 3002
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=5 \
