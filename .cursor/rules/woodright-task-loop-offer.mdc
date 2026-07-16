@@ -1,0 +1,51 @@
+---
+description: >-
+  Offer or run woodright-task-loop on short triggers / mega-prompt patterns.
+  AlwaysApply companion to woodright-core.
+alwaysApply: true
+---
+
+# Woodright task LOOP - offer / triggers
+
+Skill SoT: `.cursor/skills/woodright-task-loop/SKILL.md` (+ `types.md`).
+
+## Когда запускать сразу (без предложения)
+
+Только явный короткий trigger в **текущем** сообщении:
+
+- `луп` / `луп до пуша` / `луп: fix` / `луп: verify` / `луп: type=…`
+- ответ на предложение: `да` / `делай` / повтор любого trigger выше
+
+Фразы вроде «until exhausted», «residual», «по схеме» **сами по себе не автозапуск** - максимум предложение (ниже).
+
+## Когда ПРЕДЛОЖИТЬ луп (один раз)
+
+В начале ответа, если явного trigger ещё нет, но сигнал сильный:
+
+| Сигнал | Предложить |
+|--------|------------|
+| Длинный ритуал: кодекс + правки + регейт (+ коммит/пуш) | `луп` или `луп до пуша` |
+| «не останавливайся / пока не закончено / всё по схеме / until exhausted / residual» без слова `луп` | `луп` / `луп до пуша` |
+| После вашего FORMAT A с непустым «Что осталось» (must-do) | `луп: fix` |
+| Явный pricing / media workstream без trigger | `луп: type=pricing` / `type=media` |
+
+Текст предложения:
+
+```text
+Можно коротко: `луп` / `луп до пуша` / `луп: fix` / `луп: type=…`
+(skill: woodright-task-loop). Запустить сейчас?
+```
+
+### Анти-nag
+
+1. Не чаще одного предложения на один user turn
+2. Если owner уже отказал (`нет` / `не надо` / `без лупа`) - **не предлагать снова в этой сессии**, пока не появится новый явный trigger
+3. Не предлагать на informational Q&A / «где файл» / mid-task FORMAT C без residual
+4. Не предлагать, если trigger уже дан
+
+Запомнить отказ: в ответе/внутреннем ходе сессии достаточно не повторять offer; не писать отказ в git.
+
+## Не автозапускать
+
+- Без явного trigger / согласия на предложение
+- Product decision / missing permission → вопрос или BLOCKED, не маскировать лупом

@@ -16,6 +16,15 @@ Domain skills (`material-execution-pricing-loop`, `media-photo-verify-loops`, �
 
 Canonical repo: `/Users/leonidmbp/Documents/projects/furniture-commerce` (thin mirror не SoT).
 
+## Agent offer protocol
+
+AlwaysApply rule: `.cursor/rules/woodright-task-loop-offer.mdc`
+
+- Explicit short trigger (`луп` / …) → **run this skill immediately**
+- Mega-prompt / residual **without** trigger → **one** offer; never auto-run on «until exhausted» alone
+- After owner refusal → no more offers that session until a new explicit trigger
+- Session start hook injects a one-line cheat-sheet (`.cursor/hooks.json`) - context only, does not execute the loop
+
 ## Короткие триггеры
 
 | Trigger | Mode | Commit intent |
@@ -26,7 +35,8 @@ Canonical repo: `/Users/leonidmbp/Documents/projects/furniture-commerce` (thin m
 | `луп: verify` | gates + evidence + Codex only | no |
 | `луп: type=<pack>` | full, force type pack | as above if combined (`луп до пуша: type=backend`) |
 
-Синонимы (тоже читать этот skill): «по схеме», «кодекс / дебаты / правки / регейт», «не останавливайся пока не исчерпано», «continue until exhausted», «residual».
+Синонимы **для предложения** (не автозапуск): «по схеме» + кодекс/правки/регейт, «until exhausted», «residual», «не останавливайся пока не исчерпано».  
+Автозапуск только на явных triggers из таблицы выше (или «да»/«делай» после offer).
 
 Если trigger короткий, **не** ждать повторной портянки про FORMAT A / pathspecs / foreground / no `git add -A` - это уже здесь и в alwaysApply rules.
 
