@@ -4,3 +4,13 @@ node_modules
 .env.local
 *.log
 .DS_Store
+static/**
+!static/.gitkeep
+uploads
+private
+tmp
+test-results
+.medusa
+dist
+coverage
+**/*.test.ts
