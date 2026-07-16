@@ -36,7 +36,6 @@ import {
 } from "@/lib/pdp-gallery-photo-set"
 import {
   buildGalleryStripUrls,
-  buildPdpThumbStripUrls,
   resolveCardHeroAndNearDuplicateExtras,
   resolveStorefrontProductImageSrc,
 } from "@/lib/product-images"
@@ -504,22 +503,14 @@ export function ProductCardMediaGalleryCore({
     return { ...evidenced, fallbackBySrc }
   }, [layout, variantMain, variantExtras, productHandle])
 
-  const galleryStripCandidates = useMemo(() => {
-    // Card: main-first so return-to-main is a real thumb (hero is a Link).
-    // PDP: extras-only - hero already fills the large slot; return via re-click
-    // on the active extra. Do NOT put main in the PDP strip:
-    // that reads as a duplicate and, with near-dup collapse, can hide the rail.
-    if (layout === "pdp") {
-      return buildPdpThumbStripUrls(
+  const galleryStripCandidates = useMemo(
+    () =>
+      buildGalleryStripUrls(
         cardQualityMedia.mainSrc,
         cardQualityMedia.extraSrcs
-      )
-    }
-    return buildGalleryStripUrls(
-      cardQualityMedia.mainSrc,
-      cardQualityMedia.extraSrcs
-    )
-  }, [layout, cardQualityMedia])
+      ),
+    [cardQualityMedia]
+  )
 
   /** Hero after evidence near-dup resolve (card + PDP). */
   const effectiveMain = cardQualityMedia.mainSrc
@@ -972,9 +963,7 @@ export function ProductCardMediaGalleryCore({
     showVisibleUpholstery ||
     showVisibleWood ||
     showFinish
-  /* Always show the gallery rail when there is at least one photo (including
-     single-photo SKUs). PDP multi-photo stays extras-only; single-photo PDP
-     falls back to main as the only thumb. */
+  /* Rail uses the same canonical photo set as the counter / fullscreen. */
   const thumbStrip = useMemo(
     () => resolveBuyerGalleryThumbStrip(effectiveMain, visibleStrip),
     [effectiveMain, visibleStrip]
@@ -1225,17 +1214,7 @@ export function ProductCardMediaGalleryCore({
         return
       }
       if (activeGalleryUrl === url) {
-        // Re-click active extra → return to main (card + PDP). Cards also keep
-        // main in the strip; this is a second path if the main thumb is missed.
-        setDisplayHeroSrc(
-          knownGoodSrcByLogical[effectiveMain] ?? effectiveMain
-        )
-        setActiveGalleryUrl(null)
-        setHeroFailed(false)
-        pendingRef.current = null
-        pendingLogicalRef.current = null
-        preloadFallbackTriedRef.current = false
-        setPendingPreloadUrl(null)
+        // Already selected — no toggle. Primary is a real thumb (isMain path).
         return
       }
       if (pendingLogicalRef.current === url) return
@@ -1309,59 +1288,8 @@ export function ProductCardMediaGalleryCore({
         activeWoodKeyRef.current &&
         activeUpholsteryKeyRef.current
       ) {
-        if (layout === "pdp") {
-          const woods = availableWoodKeysForHeadboard(
-            greenwichBedMatrix,
-            variant.key
-          )
-          let wood = activeWoodKeyRef.current
-          let fabric = activeUpholsteryKeyRef.current
-          if (wood && !woods.includes(wood)) {
-            wood = null
-            setActiveWoodKey(null)
-            activeWoodKeyRef.current = null
-          }
-          if (wood && fabric) {
-            const fabrics = availableFabricKeysForHeadboard(
-              greenwichBedMatrix,
-              variant.key,
-              wood
-            )
-            if (!fabrics.includes(fabric)) {
-              fabric = null
-              setActiveUpholsteryKey(null)
-              activeUpholsteryKeyRef.current = null
-            }
-          } else if (fabric) {
-            const fabrics = availableFabricKeysForHeadboardAnyWood(
-              greenwichBedMatrix,
-              variant.key
-            )
-            if (!fabrics.includes(fabric)) {
-              fabric = null
-              setActiveUpholsteryKey(null)
-              activeUpholsteryKeyRef.current = null
-            }
-          }
-          if (wood && fabric) {
-            const media = resolveGreenwichBedMedia(
-              greenwichBedMatrix,
-              variant.key,
-              wood,
-              fabric,
-              bedMediaOptions
-            )
-            if (media) {
-              applyMediaSelection(media.mainSrc)
-              return
-            }
-            /* Triplet unavailable even if pairwise checks passed — clear fabric. */
-            setActiveUpholsteryKey(null)
-            activeUpholsteryKeyRef.current = null
-          }
-          applyMediaSelection(variant.mainSrc.trim())
-          return
-        }
+        // Atomic coerce — never null wood/fabric on PDP (that hid price via
+        // incomplete purchase gate until another click).
         const coerced = coerceGreenwichBedSelection(
           greenwichBedMatrix,
           variant.key,
@@ -1525,59 +1453,27 @@ export function ProductCardMediaGalleryCore({
           if (!woods.includes(variant.key)) {
             return
           }
-          let fabric = activeUpholsteryKeyRef.current
-          if (fabric) {
-            const fabrics = availableFabricKeysForHeadboard(
-              greenwichBedMatrix,
-              activeHeadboardKeyRef.current,
-              variant.key
-            )
-            if (!fabrics.includes(fabric)) {
-              fabric = null
-              setActiveUpholsteryKey(null)
-              activeUpholsteryKeyRef.current = null
-            }
-          }
-          if (fabric) {
-            const media = resolveGreenwichBedMedia(
-              greenwichBedMatrix,
-              activeHeadboardKeyRef.current,
-              variant.key,
-              fabric,
-              bedMediaOptions
-            )
-            if (media) {
-              applyMediaSelection(media.mainSrc)
-              return
-            }
-          }
-          const selectedMain = variant.mainSrc.trim()
-          if (selectedMain) {
-            applyMediaSelection(selectedMain)
-            return
-          }
-        } else {
-          const coerced = coerceGreenwichBedSelection(
-            greenwichBedMatrix,
-            activeHeadboardKeyRef.current,
-            variant.key,
-            activeUpholsteryKeyRef.current
-          )
-          setActiveWoodKey(coerced.frameMaterial)
-          setActiveUpholsteryKey(coerced.fabric)
-          activeWoodKeyRef.current = coerced.frameMaterial
-          activeUpholsteryKeyRef.current = coerced.fabric
-          const media = resolveGreenwichBedMedia(
-            greenwichBedMatrix,
-            coerced.headboard,
-            coerced.frameMaterial,
-            coerced.fabric,
-            bedMediaOptions
-          )
-          if (media) {
-            applyMediaSelection(media.mainSrc)
-            return
-          }
+        }
+        const coerced = coerceGreenwichBedSelection(
+          greenwichBedMatrix,
+          activeHeadboardKeyRef.current,
+          variant.key,
+          activeUpholsteryKeyRef.current
+        )
+        setActiveWoodKey(coerced.frameMaterial)
+        setActiveUpholsteryKey(coerced.fabric)
+        activeWoodKeyRef.current = coerced.frameMaterial
+        activeUpholsteryKeyRef.current = coerced.fabric
+        const media = resolveGreenwichBedMedia(
+          greenwichBedMatrix,
+          coerced.headboard,
+          coerced.frameMaterial,
+          coerced.fabric,
+          bedMediaOptions
+        )
+        if (media) {
+          applyMediaSelection(media.mainSrc)
+          return
         }
       }
       if (
@@ -1586,38 +1482,25 @@ export function ProductCardMediaGalleryCore({
         activeFinishKeyRef.current
       ) {
         const finish = activeFinishKeyRef.current
-        const frames = availableFrameKeysForPaint(greenwichPaintMatrix, finish)
-        if (layout === "pdp" && !frames.includes(variant.key)) {
-          /* Incompatible — leave finish selected, do not invent a frame. */
-          return
-        }
         if (layout === "pdp") {
-          const media = resolveGreenwichPaintMedia(
-            greenwichPaintMatrix,
-            variant.key,
-            finish
-          )
-          if (media) {
-            applyMediaSelection(media.mainSrc)
-            return
-          }
-        } else {
-          const coerced = coerceGreenwichPaintSelection(
-            greenwichPaintMatrix,
-            finish,
-            variant.key
-          )
-          setActiveWoodKey(coerced.frameMaterial)
-          activeWoodKeyRef.current = coerced.frameMaterial
-          const media = resolveGreenwichPaintMedia(
-            greenwichPaintMatrix,
-            coerced.frameMaterial,
-            coerced.paintFinish
-          )
-          if (media) {
-            applyMediaSelection(media.mainSrc)
-            return
-          }
+          const frames = availableFrameKeysForPaint(greenwichPaintMatrix, finish)
+          if (!frames.includes(variant.key)) return
+        }
+        const coerced = coerceGreenwichPaintSelection(
+          greenwichPaintMatrix,
+          finish,
+          variant.key
+        )
+        setActiveWoodKey(coerced.frameMaterial)
+        activeWoodKeyRef.current = coerced.frameMaterial
+        const media = resolveGreenwichPaintMedia(
+          greenwichPaintMatrix,
+          coerced.frameMaterial,
+          coerced.paintFinish
+        )
+        if (media) {
+          applyMediaSelection(media.mainSrc)
+          return
         }
       }
       const selectedMain = variant.mainSrc.trim()
@@ -1671,35 +1554,10 @@ export function ProductCardMediaGalleryCore({
       setActiveFinishKey(variant.key)
       activeFinishKeyRef.current = variant.key
       if (isGreenwichPaint && greenwichPaintMatrix) {
-        const frames = availableFrameKeysForPaint(greenwichPaintMatrix, variant.key)
-        const currentWood = activeWoodKeyRef.current
-        if (layout === "pdp") {
-          if (currentWood && !frames.includes(currentWood)) {
-            setActiveWoodKey(null)
-            activeWoodKeyRef.current = null
-          }
-          if (currentWood && frames.includes(currentWood)) {
-            const media = resolveGreenwichPaintMedia(
-              greenwichPaintMatrix,
-              currentWood,
-              variant.key
-            )
-            if (media) {
-              applyMediaSelection(media.mainSrc)
-              return
-            }
-          }
-          const selectedMain = variant.mainSrc.trim()
-          if (selectedMain) {
-            applyMediaSelection(selectedMain)
-            return
-          }
-          return
-        }
         const coerced = coerceGreenwichPaintSelection(
           greenwichPaintMatrix,
           variant.key,
-          currentWood
+          activeWoodKeyRef.current
         )
         setActiveFinishKey(coerced.paintFinish)
         setActiveWoodKey(coerced.frameMaterial)

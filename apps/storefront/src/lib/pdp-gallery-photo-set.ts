@@ -1,9 +1,9 @@
 /**
- * Full PDP photo set used for rail visibility and strip accounting.
+ * Canonical PDP photo set: hero first, then unique extras.
  *
- * PDP strips are usually extras-only ({@link buildPdpThumbStripUrls}). This
- * helper expands them to unique photos: hero first, then strip URLs that are
- * not the hero. Prefer this count over raw strip length when comparing sets.
+ * Counter, thumbnails, swipe, and fullscreen must all use this list so
+ * `N фото` always matches N selectable frames and the primary frame is
+ * reachable with one click on the first thumb.
  */
 export function buildPdpGalleryPhotoSet(
   mainSrc: string,
@@ -22,18 +22,16 @@ export function buildPdpGalleryPhotoSet(
 }
 
 /**
- * Thumb URLs passed to {@link ProductThumbCarousel}.
+ * Thumb URLs for {@link ProductThumbCarousel}.
  *
- * Multi-photo PDP stays extras-only (no hero duplicate in the rail). Single-photo
- * SKUs still show a one-thumb gallery — operator canon; do not hide the rail.
+ * Always the full canonical photo set (hero included). Extras-only rails made
+ * return-to-primary require a second click on the active extra.
  */
 export function resolveBuyerGalleryThumbStrip(
   mainSrc: string,
   visibleStrip: readonly string[]
 ): string[] {
-  if (visibleStrip.length > 0) return [...visibleStrip]
-  const main = typeof mainSrc === "string" ? mainSrc.trim() : ""
-  return main ? [main] : []
+  return buildPdpGalleryPhotoSet(mainSrc, visibleStrip)
 }
 
 /** Rail is shown whenever there is at least one photo thumb. */

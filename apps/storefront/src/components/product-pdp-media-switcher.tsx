@@ -8,7 +8,7 @@ import { PdpImageLightbox } from "@/components/pdp-image-lightbox"
 import { useHeroSwipe } from "@/components/use-hero-swipe"
 import { useVerifiedStripExtras } from "@/components/use-verified-strip-extras"
 import { buildPdpGalleryPhotoSet, resolveBuyerGalleryThumbStrip, shouldShowBuyerGalleryRail } from "@/lib/pdp-gallery-photo-set"
-import { buildPdpThumbStripUrls } from "@/lib/product-images"
+import { buildGalleryStripUrls } from "@/lib/product-images"
 import { pdpLightboxCopy, states } from "@/lib/woodright-copy"
 
 type Props = {
@@ -33,7 +33,7 @@ export function ProductPdpMediaSwitcher({
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
 
   const galleryStripCandidates = useMemo(
-    () => buildPdpThumbStripUrls(mainTrimmed, extraSrcs),
+    () => buildGalleryStripUrls(mainTrimmed, extraSrcs),
     [mainTrimmed, extraSrcs]
   )
 
@@ -92,8 +92,7 @@ export function ProductPdpMediaSwitcher({
         return
       }
       if (activeGalleryUrl === url) {
-        setDisplayHeroSrc(mainTrimmed)
-        setActiveGalleryUrl(null)
+        // Already selected — primary return is the first (isMain) thumb.
         return
       }
       if (pendingRef.current === url) return

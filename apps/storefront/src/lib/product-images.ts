@@ -397,8 +397,8 @@ export function mergeUniqueExtraUrls(mainSrc: string, segments: string[][]): str
 }
 
 /**
- * PDP thumb row: extras only — hero already shows `mainSrc` (no duplicate main thumb).
- * Catalog cards use {@link buildGalleryStripUrls} so return-to-main stays selectable.
+ * @deprecated Prefer {@link buildGalleryStripUrls}. Kept for callers that need
+ * extras-only probe lists; buyer rails must include the hero.
  */
 export function buildPdpThumbStripUrls(mainSrc: string, extraSrcs: string[]): string[] {
   const mainNorm = typeof mainSrc === "string" ? mainSrc.trim() : ""
@@ -412,7 +412,7 @@ export function buildPdpThumbStripUrls(mainSrc: string, extraSrcs: string[]): st
 
 /**
  * Gallery thumb strip: `mainSrc` first, then extras; trims and dedupes.
- * Catalog cards: hero is always a selectable thumb. PDP uses {@link buildPdpThumbStripUrls}.
+ * Catalog cards and PDP buyer rails share this main-first contract.
  */
 export function buildGalleryStripUrls(mainSrc: string, extraSrcs: string[]): string[] {
   const mainNorm = typeof mainSrc === "string" ? mainSrc.trim() : ""
