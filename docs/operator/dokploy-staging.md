@@ -64,6 +64,39 @@ Legacy `Dockerfile.dev` files remain for local Docker hybrid demos only.
 
 Mount dedicated volume at `/server/static` (image pre-creates dir as UID 10001). Copy catalog media from a verified source after deploy. Keep `NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES=0` until coverage gate passes.
 
+### Staging media sync (required for buyer images)
+
+Storefront serves product photos via same-origin rewrite:
+
+`/product-static/*` → Medusa `GET /static/*` (see `apps/storefront/next.config.js`).
+
+If the staging volume is empty, homepage/catalog images return **404** even when URLs are correct (no `localhost`).
+
+Verified source (Mac, do not delete):
+
+- path: `apps/backend/static` on the canonical checkout that matches the accepted catalog media set
+- expected scale: ~3000+ files / ~350MB+
+
+Sync into the staging Docker volume (example; adjust compose project prefix if needed):
+
+```bash
+# Mac: archive (no secrets)
+tar -C apps/backend/static -czf /tmp/woodright-staging-static.tgz .
+
+# Upload to VM import area, then on VM:
+VOL=$(docker volume inspect woodright-stack-3dsdhd_woodright_staging_media -f '{{.Mountpoint}}')
+sudo tar -xzf /srv/woodright/import/files/woodright-staging-static.tgz -C "$VOL"
+sudo chown -R 10001:10001 "$VOL"
+
+# Smoke (must be image/jpeg 200, not HTML 404):
+curl -sS -o /dev/null -w '%{http_code} %{content_type}\n' \
+  http://127.0.0.1:9000/static/products/oliver/OL-95-1_gallery_02.jpg
+curl -sS -o /dev/null -w '%{http_code} %{content_type}\n' \
+  http://127.0.0.1:3002/product-static/products/oliver/OL-95-1_gallery_02.jpg
+```
+
+Do **not** invent stub images. Do **not** delete the Mac source after sync.
+
 ## Data exclusions
 
 Do not import customers, orders, addresses, sessions, payment secrets, or legacy admin passwords.
