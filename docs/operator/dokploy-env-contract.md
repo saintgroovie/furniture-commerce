@@ -4,7 +4,7 @@
 
 | Variable | Notes |
 |---|---|
-| `DATABASE_URL` | Dedicated Woodright DB only |
+| `DATABASE_URL` | Dedicated Woodright DB only. For Docker-internal Postgres use `?sslmode=disable` (or `&sslmode=disable`) so Node `pg` does not hang on SSL negotiation. |
 | `REDIS_URL` | Required when `NODE_ENV=production` |
 | `JWT_SECRET` | ≥32 chars, unique per environment |
 | `COOKIE_SECRET` | ≥32 chars, unique per environment |
@@ -12,7 +12,7 @@
 | `ADMIN_CORS` | Exact admin origins |
 | `AUTH_CORS` | Auth origins matching admin/store |
 | `MEDUSA_BACKEND_URL` | Public backend URL |
-| `MEDUSA_LOCAL_HTTP` | Must be `0` on HTTPS staging |
+| `MEDUSA_LOCAL_HTTP` | `1` for temporary `http://IP` review; must be `0` on HTTPS staging |
 
 ## Storefront build-time (required)
 
