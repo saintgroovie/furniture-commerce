@@ -1,11 +1,11 @@
 # Woodright Next.js storefront — production image
 # Build-args required for NEXT_PUBLIC_* bake-in.
+# Note: apps/*/.yarn is gitignored; rely on corepack + yarn.lock.
 
 FROM node:20-bookworm-slim AS deps
 WORKDIR /app
 RUN corepack enable
 COPY package.json yarn.lock .yarnrc.yml ./
-COPY .yarn ./.yarn
 RUN yarn install --immutable
 
 FROM node:20-bookworm-slim AS build
@@ -13,7 +13,6 @@ WORKDIR /app
 RUN corepack enable
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/package.json /app/yarn.lock /app/.yarnrc.yml ./
-COPY --from=deps /app/.yarn ./.yarn
 COPY . .
 ARG NEXT_PUBLIC_MEDUSA_BACKEND_URL
 ARG MEDUSA_BACKEND_URL
@@ -40,7 +39,6 @@ ENV NODE_ENV=production \
     NEXT_DIST_DIR=.next-build
 RUN useradd --system --uid 10001 --create-home nextjs
 COPY --from=build --chown=nextjs:nextjs /app/package.json /app/yarn.lock /app/.yarnrc.yml ./
-COPY --from=build --chown=nextjs:nextjs /app/.yarn ./.yarn
 COPY --from=build --chown=nextjs:nextjs /app/node_modules ./node_modules
 COPY --from=build --chown=nextjs:nextjs /app/.next-build ./.next-build
 COPY --from=build --chown=nextjs:nextjs /app/public ./public

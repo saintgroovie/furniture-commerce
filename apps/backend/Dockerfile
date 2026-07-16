@@ -7,7 +7,6 @@ FROM node:20-bookworm-slim AS deps
 WORKDIR /server
 RUN corepack enable
 COPY package.json yarn.lock .yarnrc.yml ./
-COPY .yarn ./.yarn
 # postinstall patches live under scripts/ and must exist before yarn install
 COPY scripts ./scripts
 RUN yarn install --immutable
@@ -17,7 +16,6 @@ WORKDIR /server
 RUN corepack enable
 COPY --from=deps /server/node_modules ./node_modules
 COPY --from=deps /server/package.json /server/yarn.lock /server/.yarnrc.yml ./
-COPY --from=deps /server/.yarn ./.yarn
 COPY . .
 # Build-time placeholders for Medusa config load only (discarded from runtime contract).
 # No real credentials: unreachable local DSN without embedded password material.
@@ -36,7 +34,6 @@ RUN corepack enable \
  && mkdir -p /server/static \
  && chown -R medusa:medusa /server/static
 COPY --from=build --chown=medusa:medusa /server/package.json /server/yarn.lock /server/.yarnrc.yml ./
-COPY --from=build --chown=medusa:medusa /server/.yarn ./.yarn
 COPY --from=build --chown=medusa:medusa /server/node_modules ./node_modules
 COPY --from=build --chown=medusa:medusa /server/dist ./dist
 COPY --from=build --chown=medusa:medusa /server/medusa-config.ts ./medusa-config.ts
