@@ -29,9 +29,9 @@ button {
   --color-fg-muted: #6f6862;
   --color-accent: #7c6a5b;
   /* Brand brown for wordmark + filled CTAs (.btn-primary → --color-action). */
-  --color-logo-ink: #39231a;
-  --color-brand: #39231a;
-  --color-brand-hover: #2b1a13;
+  --color-logo-ink: #473128;
+  --color-brand: #473128;
+  --color-brand-hover: #35251e;
   --color-action: var(--color-brand);
   --color-action-hover: var(--color-brand-hover);
   --color-success: #3d7a56;
