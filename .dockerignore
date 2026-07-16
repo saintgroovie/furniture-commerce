@@ -1,0 +1,17 @@
+.git
+**/node_modules
+**/.next
+**/.next-build
+**/.next-dev
+**/dist
+**/.medusa
+**/.yarn
+**/*.log
+**/tmp
+**/test-results
+apps/backend/static
+apps/backend/uploads
+apps/backend/private
+docs
+data
+.cursor

@@ -83,8 +83,8 @@ services:
   storefront:
     image: ${WOODRIGHT_STOREFRONT_IMAGE:-woodright-storefront:local}
     build:
-      context: ./apps/storefront
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/storefront/Dockerfile
       args:
         NEXT_PUBLIC_MEDUSA_BACKEND_URL: ${NEXT_PUBLIC_MEDUSA_BACKEND_URL:?set NEXT_PUBLIC_MEDUSA_BACKEND_URL}
         MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL_INTERNAL:-http://backend:9000}
