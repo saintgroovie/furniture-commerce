@@ -5,12 +5,15 @@
  * mirrors the browse caps so client serialization stays lean even when the
  * running Medusa process is older than the storefront build, and drops
  * fields the browse client never reads (`status`).
+ *
+ * Caps must leave room for the card gallery strip
+ * (`CARD_STRIP_IMAGE_PROBE_LIMIT` = 4) — hero-only (1) hid all extras.
+ * Diversify by finish token so later swatches keep strip candidates.
  */
 
-import { sanitizeGreenwichPaintMatrix } from "./greenwich-paint-media"
-
-const CATALOG_BROWSE_MAX_IMAGES = 1
-const CATALOG_BROWSE_MAX_EXECUTION_URLS = 1
+const CATALOG_BROWSE_MAX_IMAGES = 24
+const CATALOG_BROWSE_MAX_IMAGES_PER_TOKEN = 3
+const CATALOG_BROWSE_MAX_EXECUTION_URLS = 5
 
 const META_ALLOW = new Set([
   "collection",
@@ -96,29 +99,39 @@ function projectMetadata(metadata: unknown): Record<string, unknown> | undefined
   const out: Record<string, unknown> = {}
   for (const [k, v] of Object.entries(metadata as Record<string, unknown>)) {
     if (!META_ALLOW.has(k)) continue
-    // Split mixed natural/dark paint-matrix cells before URL slim so each wood
-    // tone keeps a hero after CATALOG_BROWSE_MAX_EXECUTION_URLS=1.
-    const normalized =
-      k === "greenwich_paint_execution_matrix"
-        ? sanitizeGreenwichPaintMatrix(v)
-        : v
-    out[k] = EXECUTION_URL_KEYS.has(k)
-      ? slimExecutionEntries(normalized)
-      : normalized
+    out[k] = EXECUTION_URL_KEYS.has(k) ? slimExecutionEntries(v) : v
   }
   return out
+}
+
+function browseImageTokenKey(url: string): string {
+  const base = (url.split("/").pop() ?? url).toLowerCase()
+  const greenwich = base.match(
+    /greenwich(?:[_-]dark)?[_-](grey-blue|darkblue|white|cacao|powder|cream|terracote|graphite|green|olive|capuchino|grey)(?:\d|[_\-.]|$)/
+  )
+  if (greenwich?.[1]) return greenwich[1]
+  const color = base.match(/(?:^|[_-])color[_-]([a-z0-9-]+)/)
+  if (color?.[1]) return color[1]
+  const fabric = base.match(/(?:^|[_-])(?:fabric|upholstery)[_-]([a-z0-9-]+)/)
+  if (fabric?.[1]) return fabric[1]
+  return "_other"
 }
 
 function projectImages(images: unknown): Array<{ url: string }> {
   if (!Array.isArray(images)) return []
   const out: Array<{ url: string }> = []
+  const perToken = new Map<string, number>()
   for (const entry of images) {
     if (!entry || typeof entry !== "object") continue
     const url = (entry as { url?: unknown }).url
-    if (typeof url === "string" && url.trim()) {
-      out.push({ url: url.trim() })
-      if (out.length >= CATALOG_BROWSE_MAX_IMAGES) break
-    }
+    if (typeof url !== "string" || !url.trim()) continue
+    const trimmed = url.trim()
+    const token = browseImageTokenKey(trimmed)
+    const used = perToken.get(token) ?? 0
+    if (used >= CATALOG_BROWSE_MAX_IMAGES_PER_TOKEN) continue
+    perToken.set(token, used + 1)
+    out.push({ url: trimmed })
+    if (out.length >= CATALOG_BROWSE_MAX_IMAGES) break
   }
   return out
 }

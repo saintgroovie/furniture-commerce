@@ -3,15 +3,20 @@
  * Replaces G1 metadata denylist — unknown operational keys never enter the
  * catalog wire payload. Default `/store/products` stays untouched.
  *
- * W3e: browse cards need hero + execution keys, not full PDP galleries.
- * Cap images and execution `urls[]` so RSC/HTML stay lean.
+ * W3e: keep the catalog wire lean, but cards still need a short gallery strip
+ * (see storefront `CARD_STRIP_IMAGE_PROBE_LIMIT`). Cap — do not drop to hero-only.
+ * Diversify by finish/color token so later swatches are not starved by the
+ * first cluster of images.
  */
 
-/** Max gallery URLs on the browse wire (hero + thumbnail cover the card). */
-export const CATALOG_BROWSE_MAX_IMAGES = 1
+/** Soft total gallery URL budget on the browse wire. */
+export const CATALOG_BROWSE_MAX_IMAGES = 24
 
-/** Max media URLs kept per execution / matrix row on browse. */
-export const CATALOG_BROWSE_MAX_EXECUTION_URLS = 1
+/** Per finish/color token budget (main + a few strip extras). */
+export const CATALOG_BROWSE_MAX_IMAGES_PER_TOKEN = 3
+
+/** Max media URLs kept per execution / matrix row on browse (main + strip). */
+export const CATALOG_BROWSE_MAX_EXECUTION_URLS = 5
 
 /** Product root fields kept for catalog listing. */
 export const CATALOG_PRODUCT_ROOT_KEYS = [
@@ -47,6 +52,8 @@ export const CATALOG_METADATA_ALLOW = new Set([
   "frame_material_executions",
   "headboard_model_executions",
   "bed_execution_matrix",
+  "greenwich_paint_execution_matrix",
+  "execution_dimension_contract",
   "paint_finish_labels",
   "finish_color_labels",
   "fabric_upholstery_labels",
@@ -73,6 +80,7 @@ const EXECUTION_URL_KEYS = new Set([
   "construction_tier_executions",
   "material_tier_executions",
   "bed_execution_matrix",
+  "greenwich_paint_execution_matrix",
 ])
 
 function slimUrlList(urls: unknown): string[] | undefined {
@@ -117,16 +125,34 @@ export function projectCatalogMetadataAllowlist(
   return out
 }
 
+function browseImageTokenKey(url: string): string {
+  const base = (url.split("/").pop() ?? url).toLowerCase()
+  const greenwich = base.match(
+    /greenwich(?:[_-]dark)?[_-](grey-blue|darkblue|white|cacao|powder|cream|terracote|graphite|green|olive|capuchino|grey)(?:\d|[_\-.]|$)/
+  )
+  if (greenwich?.[1]) return greenwich[1]
+  const color = base.match(/(?:^|[_-])color[_-]([a-z0-9-]+)/)
+  if (color?.[1]) return color[1]
+  const fabric = base.match(/(?:^|[_-])(?:fabric|upholstery)[_-]([a-z0-9-]+)/)
+  if (fabric?.[1]) return fabric[1]
+  return "_other"
+}
+
 function projectCatalogImages(images: unknown): Array<{ url: string }> {
   if (!Array.isArray(images)) return []
   const out: Array<{ url: string }> = []
+  const perToken = new Map<string, number>()
   for (const entry of images) {
     if (!entry || typeof entry !== "object") continue
     const url = (entry as { url?: unknown }).url
-    if (typeof url === "string" && url.trim()) {
-      out.push({ url: url.trim() })
-      if (out.length >= CATALOG_BROWSE_MAX_IMAGES) break
-    }
+    if (typeof url !== "string" || !url.trim()) continue
+    const trimmed = url.trim()
+    const token = browseImageTokenKey(trimmed)
+    const used = perToken.get(token) ?? 0
+    if (used >= CATALOG_BROWSE_MAX_IMAGES_PER_TOKEN) continue
+    perToken.set(token, used + 1)
+    out.push({ url: trimmed })
+    if (out.length >= CATALOG_BROWSE_MAX_IMAGES) break
   }
   return out
 }

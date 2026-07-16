@@ -2,9 +2,12 @@
  * Shared store product list loader for default `/store/products` and
  * opt-in `/store/catalog-products` (PERF-02 / G1 → W3c projected query).
  *
- * Browse latency (W3e follow-up): product graph omits nested `price_set` and
- * `images` (every published catalog product has `thumbnail`). Prices attach
- * in one batched `product_variant` graph. Default `/store/products` unchanged.
+ * Browse latency (W3e): omit nested `price_set` (batched later) and full
+ * `images.*`. Keep lean `images.url` so catalog cards can show a short gallery
+ * strip; `/store/catalog-products` projection caps to
+ * `CATALOG_BROWSE_MAX_IMAGES`. Thumbnail alone is not enough (extras come from
+ * `product.images`, not from execution `urls` which are often hero-only).
+ * Default `/store/products` unchanged.
  */
 import type { MedusaRequest } from "@medusajs/framework/http"
 
@@ -24,7 +27,7 @@ const DEFAULT_PRODUCT_FIELDS = [
 ] as const
 
 /**
- * Browse product graph fields - no nested pricing/images (loaded separately).
+ * Browse product graph fields - no nested pricing; lean image URLs only.
  * Exported for fidelity / measure scripts.
  */
 export const BROWSE_PRODUCT_FIELDS = [
@@ -34,6 +37,7 @@ export const BROWSE_PRODUCT_FIELDS = [
   "status",
   "thumbnail",
   "metadata",
+  "images.url",
   "variants.id",
   "variants.sku",
   "product_classification.product_type",
@@ -47,6 +51,7 @@ const BROWSE_FILTERED_PRODUCT_FIELDS = [
   "status",
   "thumbnail",
   "metadata",
+  "images.url",
   "variants.id",
   "variants.sku",
   "product_categories.category_id",
