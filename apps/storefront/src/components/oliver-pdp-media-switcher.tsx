@@ -111,9 +111,7 @@ export function OliverPdpMediaSwitcher({ mainSrc, extraSrcs, title }: Props) {
         return
       }
       if (activeGalleryUrl === url) {
-        setDisplayHeroSrc(mainTrimmed)
-        setActiveGalleryUrl(null)
-        setHeroFailed(false)
+        // Already selected — primary return is the first (isMain) thumb.
         return
       }
       if (pendingRef.current === url) return
