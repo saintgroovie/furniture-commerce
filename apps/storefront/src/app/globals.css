@@ -28,10 +28,10 @@ button {
   --color-fg-secondary: #635a54;
   --color-fg-muted: #6f6862;
   --color-accent: #7c6a5b;
-  /* Operator swatch base #4e4744; +saturation for less dusty filled controls. */
-  --color-logo-ink: #281c17;
-  --color-brand: #3c2f29;
-  --color-brand-hover: #281f1a;
+  /* Brand brown for wordmark + filled CTAs (.btn-primary → --color-action). */
+  --color-logo-ink: #39231a;
+  --color-brand: #39231a;
+  --color-brand-hover: #2b1a13;
   --color-action: var(--color-brand);
   --color-action-hover: var(--color-brand-hover);
   --color-success: #3d7a56;
