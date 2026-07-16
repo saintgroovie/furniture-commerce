@@ -7,6 +7,8 @@
  * fields the browse client never reads (`status`).
  */
 
+import { sanitizeGreenwichPaintMatrix } from "./greenwich-paint-media"
+
 const CATALOG_BROWSE_MAX_IMAGES = 1
 const CATALOG_BROWSE_MAX_EXECUTION_URLS = 1
 
@@ -94,7 +96,15 @@ function projectMetadata(metadata: unknown): Record<string, unknown> | undefined
   const out: Record<string, unknown> = {}
   for (const [k, v] of Object.entries(metadata as Record<string, unknown>)) {
     if (!META_ALLOW.has(k)) continue
-    out[k] = EXECUTION_URL_KEYS.has(k) ? slimExecutionEntries(v) : v
+    // Split mixed natural/dark paint-matrix cells before URL slim so each wood
+    // tone keeps a hero after CATALOG_BROWSE_MAX_EXECUTION_URLS=1.
+    const normalized =
+      k === "greenwich_paint_execution_matrix"
+        ? sanitizeGreenwichPaintMatrix(v)
+        : v
+    out[k] = EXECUTION_URL_KEYS.has(k)
+      ? slimExecutionEntries(normalized)
+      : normalized
   }
   return out
 }
