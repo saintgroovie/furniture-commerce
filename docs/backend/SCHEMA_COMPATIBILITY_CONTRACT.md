@@ -42,9 +42,13 @@ Middleware on `POST /store/carts/:id/line-items`:
 
 - Catalog browse projection / `MAX_IMAGES`
 - Media serving / admin build symlink
-- Seed script rename
 - Admin UX
 - Migrations
+- Running seed against the shared live DB (seed identity is aligned; do not execute without explicit approval)
+
+## Seed identity note
+
+`src/scripts/seed.ts` uses `createProductClassifications` + `product_classification_id` so a fresh seed remains compatible with this module. It is not a migration and must not be run against the shared QA database without an explicit operator approval.
 
 ## Related branch
 
