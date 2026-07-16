@@ -19,7 +19,6 @@ const DEFAULT_PRODUCT_FIELDS = [
   "variants.*",
   "variants.price_set.prices.amount",
   "images.*",
-  "productType.*",
   "product_categories.*",
   "product_classification.*",
 ] as const
@@ -207,10 +206,7 @@ export async function loadStoreProductList(
       const fromClassification = (
         p.product_classification as Record<string, string> | undefined
       )?.product_type
-      const fromProductType = (
-        p.productType as Record<string, string> | undefined
-      )?.product_type
-      return fromClassification === productType || fromProductType === productType
+      return fromClassification === productType
     })
   }
   return result

@@ -16,13 +16,15 @@
     "generate:catalog-card-derivatives": "tsx scripts/generate-catalog-card-derivatives.ts"
   },
   "dependencies": {
-    "@medusajs/framework": "^2.0.0",
-    "@medusajs/medusa": "^2.0.0",
+    "@medusajs/admin-sdk": "2.17.2",
+    "@medusajs/framework": "^2.17.2",
+    "@medusajs/medusa": "^2.17.2",
     "sharp": "0.35.3"
   },
   "devDependencies": {
-    "@medusajs/cli": "^2.0.0",
+    "@medusajs/cli": "^2.17.2",
     "@types/node": "^20.0.0",
+    "ts-node": "^10.9.2",
     "typescript": "^5.0.0"
   },
   "engines": {
