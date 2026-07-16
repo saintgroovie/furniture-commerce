@@ -1,5 +1,5 @@
 #!/bin/sh
 set -eu
-# Corepack is enabled in the image build; do not re-run as non-root.
+# Prefer compiled JS entry via medusa CLI binary — no yarn/corepack at runtime.
 echo "Running Medusa migrations (no seed)..."
-exec yarn medusa db:migrate
+exec ./node_modules/.bin/medusa db:migrate

@@ -53,4 +53,5 @@ USER nextjs
 EXPOSE 3002
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=5 \
   CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||3002)+'/').then(r=>process.exit(r.status<500?0:1)).catch(()=>process.exit(1))"
-CMD ["yarn", "start"]
+# Avoid `yarn` at runtime (corepack may try to write .yarn as UID 10001).
+CMD ["./node_modules/.bin/next", "start"]
