@@ -64,8 +64,9 @@ services:
       - woodright_staging_media:/server/static
     networks:
       - woodright_staging
-    expose:
-      - "9000"
+    # Temporary host publish for IP review; prefer Traefik domains later.
+    ports:
+      - "9000:9000"
     healthcheck:
       test:
         [
@@ -100,8 +101,9 @@ services:
       MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL_INTERNAL:-http://backend:9000}
     networks:
       - woodright_staging
-    expose:
-      - "3002"
+    # Temporary host publish for IP review; prefer Traefik domains later.
+    ports:
+      - "3002:3002"
     healthcheck:
       test:
         [

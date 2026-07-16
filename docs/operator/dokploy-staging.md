@@ -67,3 +67,7 @@ Do not import customers, orders, addresses, sessions, payment secrets, or legacy
 ## Rollback
 
 Redeploy previous image tag SHA; restore staging Postgres from the last staging dump if schema changed. Never delete source media or Dokploy volumes.
+
+## HTTP IP staging note
+
+If reviewing over `http://IP` (no TLS yet), set `MEDUSA_LOCAL_HTTP=1` so admin/store cookies work. Switch to `0` when HTTPS domains are attached.
