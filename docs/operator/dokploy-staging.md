@@ -3,8 +3,14 @@
 ## Release candidate policy
 
 - Staging must deploy an **immutable git SHA**, not a dirty worktree.
-- Staging release branch: `chore/dokploy-staging-release-20260716`
-  - includes `origin/main` **plus** backend schema compatibility (PR #42) until that PR merges to `main`.
+- Staging release branch: `integrate/deploy-candidate-20260716`
+  - built from current `origin/main` plus backend schema compatibility (PR #42),
+    Dokploy staging packaging, and catalog browse gallery-strip projection.
+  - After merge to `main`, deploy the merge commit SHA (not a dirty worktree).
+- GHCR workflow `Build staging images` requires GitHub Environment `staging`
+  secrets (`STAGING_NEXT_PUBLIC_*`). It refuses localhost / empty publishable key.
+  For first cutover, VM-local `docker build` with real build-args is acceptable
+  if GHCR secrets are not yet configured — still tag images with the full Git SHA.
 - Provider in Dokploy: **only** `Dokploy-2026-07-16-izsro0`.
 - Do **not** use `Dokploy-2026-07-16-rsbgii`.
 
@@ -44,11 +50,13 @@ Do **not** auto-seed. Do **not** migrate Dokploy’s own Postgres.
 docker build -t woodright-backend:<sha> -f apps/backend/Dockerfile apps/backend
 
 # storefront (context = repository root — required for shared backend lib imports)
+# Buyer-facing / cutover images MUST bake a real publishable key and public URLs.
+# Do not use empty NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY for :3002 cutover candidates.
 docker build -t woodright-storefront:<sha> -f apps/storefront/Dockerfile . \
   --build-arg NEXT_PUBLIC_MEDUSA_BACKEND_URL=https://api-staging.example \
   --build-arg MEDUSA_BACKEND_URL=http://backend:9000 \
   --build-arg NEXT_PUBLIC_SITE_URL=https://staging.example \
-  --build-arg NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY= \
+  --build-arg NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=<staging-publishable-key> \
   --build-arg NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES=0
 ```
 
@@ -56,9 +64,16 @@ Legacy `Dockerfile.dev` files remain for local Docker hybrid demos only.
 
 ## Publishable API key bootstrap
 
-1. First storefront image may bake an **empty** `NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY` so the panel can boot and an admin can create a key.
-2. Create the publishable key in Medusa Admin.
-3. **Rebuild** storefront with the real key build-arg and redeploy storefront only.
+`NEXT_PUBLIC_*` values are compile-time. An empty publishable key produces a storefront that cannot load `/catalog` (Store API returns 400).
+
+Allowed bootstrap sequence (admin only, not a public cutover candidate):
+
+1. If no publishable key exists yet, create one in Medusa Admin (backend can run without a storefront key).
+2. Link the key to the Default Sales Channel.
+3. Build the storefront with the **real** key and real public URLs.
+4. Only then tag/deploy that image as the `:3002` cutover candidate.
+
+Never leave an empty-key storefront image on the public staging port.
 
 ## Media
 
