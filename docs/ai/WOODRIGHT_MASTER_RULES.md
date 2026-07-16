@@ -153,6 +153,13 @@ Stage только нужные hunks, если файл был dirty до за�
 Не «исправь весь сайт» одним diff.
 Не начинать массовую правку по одному скриншоту без карты компонентов.
 
+### B1.1. Короткий task LOOP (вместо портянок)
+
+Skill: `.cursor/skills/woodright-task-loop/`  
+Триггеры: `луп` | `луп до пуша` | `луп: fix` | `луп: verify` | `луп: type=<pack>`  
+Domain packs: `pricing` → `material-execution-pricing-loop`; `media` → `media-photo-verify-loops` (см. `types.md`).  
+Machine pointer: `.cursor/rules/woodright-core.mdc` (Project skills).
+
 ## B2. UX общие принципы (default)
 
 Премиальный мебельный бренд ≠ маркетплейс / админка / SaaS / дешёвый шаблон.

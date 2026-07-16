@@ -12,7 +12,7 @@ alwaysApply: true
 **Human FORMAT examples:** `docs/ai/RESPONSE_FORMAT.md`
 **AlwaysApply companions:** `woodright-response-format.mdc`, `github-access.mdc`, `foreground-only-execution.mdc`, `language-preference.mdc`, `operator-location.mdc`, `dash-typography.mdc`, `ux-copywriting.mdc`
 **Task-specific (globs):** `woodright-model-routing.mdc`, `kids-content-separation.mdc`
-**Project skills:** `.cursor/skills/` - agent playbooks (read on match). RU UX/UI copy: `ru-ux-ui-copywriting`
+**Project skills:** `.cursor/skills/` - agent playbooks (read on match). Universal task LOOP: `woodright-task-loop` (short triggers `луп` / `луп до пуша`). RU UX/UI copy: `ru-ux-ui-copywriting`. Media photo verify LOOPs: `media-photo-verify-loops`. Material pricing LOOP pack: `material-execution-pricing-loop`.
 
 Do not store branch/HEAD/PID/dirty tree here.
 

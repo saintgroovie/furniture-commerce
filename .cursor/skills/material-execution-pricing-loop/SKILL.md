@@ -10,6 +10,8 @@ description: >-
 
 # Material execution pricing LOOP
 
+**Parent:** universal [woodright-task-loop](../woodright-task-loop/SKILL.md) (`луп: type=pricing`). This skill is the **pricing pack** (commands, artifacts, domain checklist) - not a second orchestration SoT.
+
 Агентский playbook: **прогнать gates → сохранить evidence → Codex → правки → re-gate**, пока `must-do: []`.
 
 ## Когда читать
