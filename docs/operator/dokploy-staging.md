@@ -97,6 +97,17 @@ curl -sS -o /dev/null -w '%{http_code} %{content_type}\n' \
 
 Do **not** invent stub images. Do **not** delete the Mac source after sync.
 
+### Catalog data + publishable key (required for `/catalog`)
+
+Empty migrated schema alone is not enough. Staging needs:
+
+1. Catalog-safe DB import (products/variants/prices/regions/collections/classifications/media refs) with **scrub** of customers, orders, carts, users, auth, and API keys.
+2. All intended products linked to the Default Sales Channel (`product_sales_channel`).
+3. A **new** publishable API key created in staging Admin, linked to that sales channel.
+4. Storefront **rebuild** with `NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY` (Next inlines `NEXT_PUBLIC_*` at build time). Runtime-only env is not enough.
+
+Without (3)+(4), storefront SSR calls `/store/catalog-products` return 400 and the UI shows «Каталог не загрузился» even when the database has products.
+
 ## Data exclusions
 
 Do not import customers, orders, addresses, sessions, payment secrets, or legacy admin passwords.
