@@ -432,6 +432,11 @@ export function buildAllCatalogFacets(
   })
 }
 
+/**
+ * Client sort override. When `sort` is unset, entries stay in the order from
+ * the browse API (backend merchandising order) after filters + display-group
+ * collapse. Do not re-apply merchandising here — that would duplicate SoT.
+ */
 export function sortDisplayEntries(
   entries: DisplayEntry[],
   sort: CatalogFilterState["sort"]

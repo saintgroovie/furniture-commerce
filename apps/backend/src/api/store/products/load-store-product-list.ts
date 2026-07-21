@@ -10,6 +10,7 @@
  * Default `/store/products` unchanged.
  */
 import type { MedusaRequest } from "@medusajs/framework/http"
+import { sortProductsByMerchandisingOrder } from "../../../lib/catalog-merchandising-order"
 
 export type StoreProductListMode = "default" | "browse"
 
@@ -214,5 +215,13 @@ export async function loadStoreProductList(
       return fromClassification === productType
     })
   }
+
+  // Browse listing: merchandising order is the default catalog SoT and must
+  // run on the full result set before any future limit/offset pagination.
+  // Default `/store/products` keeps query order for non-catalog consumers.
+  if (mode === "browse") {
+    result = sortProductsByMerchandisingOrder(result)
+  }
+
   return result
 }
