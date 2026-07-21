@@ -1,0 +1,138 @@
+---
+description: Protect personal data and prevent unsafe macOS changes
+alwaysApply: true
+---
+
+# Personal data and Mac safety
+
+This rule is a **standalone security / data-safety guardrail**. It overrides inferred intent, broad task goals (“optimize”, “fix it”, “free memory”, “do everything necessary”), and autonomous troubleshooting.
+
+**Precedence over other repository rules:** for conflicts about personal data, secrets, paths outside the active project, macOS system processes/services, LaunchAgents/LaunchDaemons, startup services, file permissions/ownership outside the project, process kill/restart, Docker mutations, GUI/`open` launches, or Cursor global user settings, **this rule wins** over other `.cursor/rules` (including other `alwaysApply` operational rules). Operational playbooks may diagnose and propose exact commands, but must not execute those actions unless this rule’s absolute/permission-gated conditions are met.
+
+An **explicit current user instruction** may authorize only the **permission-gated** exceptions below. **Absolute** prohibitions remain non-overridable unless this rule is changed.
+
+## Absolute vs permission-gated
+
+**Absolute (never override via casual prompt):**
+
+* mutate macOS system processes/services (see §2);
+* `sudo`; Cursor global user settings; shell profiles; global Git config;
+* Keychain / browser credential stores;
+* destructive mass actions (`killall`, broad `pkill`, `rm -rf` outside approved paths).
+
+**Permission-gated (needs exact named target in the same user message):**
+
+* exact non-system PID / process;
+* exact project Docker container + action;
+* exact GUI application or URL to launch;
+* exact personal file/location outside the active project.
+
+Permission for one action does not apply to any other action.
+
+## 1. Personal data
+
+Do not search for, open, read, copy, index, summarize, upload, or modify personal data unless the user explicitly names the exact file or location and asks to work with it.
+
+Protected locations and data include:
+
+* `~/Desktop`, `~/Downloads`, and personal folders outside the active project;
+* `~/Library`;
+* browser profiles, history, cookies, sessions, and saved passwords;
+* Keychain data;
+* email, messages, photos, contacts, calendars, and personal documents;
+* SSH private keys;
+* `.env` contents, passwords, API keys, tokens, certificates, and cloud credentials;
+* files belonging to unrelated projects.
+
+### Active project scope
+
+Default writable/readable project work is limited to:
+
+* the **explicitly opened** repository root / workspace folder, or
+* a **genuine Git worktree** of that same repository (verify via `git worktree list`).
+
+For the Woodright furniture-commerce project specifically:
+
+* canonical repo: `/Users/leonidmbp/Documents/projects/furniture-commerce`;
+* `/Users/leonidmbp/furniture-commerce` is a **thin mirror**, not an independent writable worktree — do not treat it as a second source of truth; do not sync or rewrite rules there unless the user explicitly requests mirror sync.
+
+Never upload personal files, repository files, logs, or secrets to external services without explicit permission. No external network request that transmits repository or machine-derived data without explicit permission (localhost diagnostics exempt).
+
+## 2. macOS system safety
+
+Do not stop, restart, kill, renice, disable, unload, or modify macOS system processes and services.
+
+This includes:
+
+* `bird`;
+* `fileproviderd`;
+* iCloud processes;
+* Finder;
+* Dock;
+* WindowServer;
+* Spotlight and indexing processes;
+* networking, VPN, DNS, security, login, and synchronization services.
+
+Never use `sudo` or modify:
+
+* macOS system settings;
+* startup services;
+* LaunchAgents or LaunchDaemons;
+* firewall, VPN, DNS, routing, or network interfaces;
+* file permissions or ownership outside the active project;
+* Cursor global user settings;
+* shell profiles or global Git configuration.
+
+## 3. Processes, Docker, and GUI applications
+
+Without an explicit user command naming the exact target, do not:
+
+* kill or restart any process;
+* stop, restart, remove, or change Docker containers;
+* run `docker update`, `docker system prune`, or destructive Docker commands;
+* launch applications or URLs using `open`, AppleScript, or GUI automation;
+* start persistent background services;
+* use `killall`, broad `pkill`, `rm -rf`, or other mass actions.
+
+A general request such as “fix it”, “optimize everything”, “free memory”, “continue”, or “clean up the environment” is **not** permission for these actions.
+
+## 4. Allowed read-only diagnostics (no extra permission)
+
+Without additional permission, the agent may run **bounded read-only** diagnostics:
+
+* `curl` / `lsof` / `ps` / `pgrep` (including `localhost`);
+* `docker ps`, `docker inspect`, and project-scoped `docker logs` (no mutating `docker exec`);
+* reading **project-owned** logs under the active repository / genuine worktree (e.g. repo `tmp/`, project logs if inside scope).
+
+Read-only process inspection is allowed. Log inspection outside the active project requires an explicitly named path. Do not display or persist env values, CLI secrets, browser data, or unrelated file paths.
+
+Inspection must **not** change system state.
+
+## 5. Explicit permission fallback
+
+If the agent needs a **permission-gated** capability that is not explicitly allowed by the current instruction (access, execution rights, a file outside default project scope, a process change, a Docker mutation, a GUI action, personal data, an external path, or similar), it must stop and ask the user for permission.
+
+**Absolute prohibitions** (§ Absolute vs permission-gated / §2) must be **refused**, not requested. Do not ask the user to authorize mutating macOS system processes, `sudo`, Keychain/browser credential access, Cursor global user settings, shell profiles, global Git config, or destructive mass actions.
+
+The permission request must state:
+
+* what exact action is needed;
+* the exact file, path, PID, container, URL, command, or resource involved;
+* why it is needed;
+* what will change;
+* any relevant risk.
+
+Do not infer permission from broad phrases such as “fix it”, “continue”, “do everything necessary”, “optimize”, or “make it work”.
+
+Silence or lack of a response is not permission.
+
+Permission applies only to the exact action requested and does not extend to later actions.
+
+When a potentially dangerous **permission-gated** action appears necessary:
+
+1. stop at diagnosis;
+2. explain what was found;
+3. show the exact proposed action or command (as a permission request above);
+4. wait for explicit user permission.
+
+If the needed action is an **absolute prohibition**, stop at diagnosis, explain why it is forbidden, and do not propose executing it.
