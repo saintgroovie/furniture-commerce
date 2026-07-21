@@ -6,9 +6,9 @@
 2. Scoped PR → CI (fidelity + governance gates).
 3. Merge to `main` → **does not** auto-cutover staging/demo.
 4. Manual `workflow_dispatch` **Build staging images** → capture **immutable digests**.
-5. Dokploy + `manual_flock_deploy` cutover only with `image@sha256:…`.
+5. Dokploy + `manual_flock_deploy` cutover only with `image@sha256:…` under global lock + cutover transaction (see `docs/operator/cutover-transactions.md`).
 6. Public hydrated DOM verification + ≥5 race samples.
-7. Update `ACTIVE_OWNER.json` / `ACTIVE-RUNTIME-OWNER.txt` together.
+7. Update `ACTIVE_OWNER.json` / `ACTIVE-RUNTIME-OWNER.txt` together (ACTIVE_RELEASE only after public gate; reconciliation ≠ deploy).
 
 ## Candidate / canonical / public
 

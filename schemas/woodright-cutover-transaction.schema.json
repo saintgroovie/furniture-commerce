@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://woodright.local/schemas/woodright-cutover-transaction.schema.json",
+  "title": "WoodrightCutoverTransaction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "transaction_id",
+    "environment",
+    "operator",
+    "controller",
+    "host",
+    "started_at",
+    "updated_at",
+    "state",
+    "expected",
+    "target",
+    "lock_path"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "const": "1" },
+    "transaction_id": {
+      "type": "string",
+      "pattern": "^ctx-[0-9]{8}T[0-9]{6}Z-[a-z0-9-]{4,32}$"
+    },
+    "environment": { "type": "string", "enum": ["staging", "production", "local-canonical"] },
+    "operator": { "type": "string", "minLength": 1 },
+    "controller": { "type": "string", "minLength": 1 },
+    "host": { "type": "string", "minLength": 1 },
+    "started_at": { "type": "string" },
+    "updated_at": { "type": "string" },
+    "state": {
+      "type": "string",
+      "enum": [
+        "planned",
+        "locked",
+        "preflight_passed",
+        "prepared",
+        "backend_switching",
+        "backend_healthy",
+        "storefront_switching",
+        "storefront_healthy",
+        "public_verifying",
+        "active",
+        "rolling_back",
+        "rolled_back",
+        "failed",
+        "aborted_conflict"
+      ]
+    },
+    "expected": { "$ref": "#/$defs/releaseIdentity" },
+    "target": { "$ref": "#/$defs/releaseIdentity" },
+    "workflow_run_id": { "type": ["string", "integer", "null"] },
+    "build_manifest_ref": { "type": ["string", "null"] },
+    "release_manifest_draft_ref": { "type": ["string", "null"] },
+    "lock_path": { "type": "string", "const": "/srv/woodright/locks/live-cutover.lock" },
+    "backup_path": { "type": ["string", "null"] },
+    "rollback_keepers": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "backend_keeper": { "type": "string" },
+        "storefront_keeper": { "type": "string" }
+      }
+    },
+    "health": { "type": ["object", "null"] },
+    "public_verification": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "passed": { "type": "boolean" },
+        "url": { "type": "string" },
+        "samples": { "type": "integer" },
+        "first_title": { "type": ["string", "null"] }
+      }
+    },
+    "failure_reason": { "type": ["string", "null"] },
+    "rollback_result": { "type": ["string", "null"] },
+    "event_kind": {
+      "type": "string",
+      "enum": ["cutover", "restart", "rollback", "reconciled_external_cutover", "aborted"]
+    },
+    "notes": { "type": "string" },
+    "transition_history": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": [
+          "planned",
+          "locked",
+          "preflight_passed",
+          "prepared",
+          "backend_switching",
+          "backend_healthy",
+          "storefront_switching",
+          "storefront_healthy",
+          "public_verifying",
+          "active",
+          "rolling_back",
+          "rolled_back",
+          "failed",
+          "aborted_conflict"
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "releaseIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["release_sha", "backend_digest", "storefront_digest"],
+      "properties": {
+        "release_sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "backend_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "storefront_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      }
+    }
+  }
+}

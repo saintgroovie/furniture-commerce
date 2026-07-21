@@ -6,3 +6,4 @@ digests sha256:578bd815b104fbb44473b4dfc992e62d5e1041889be7fc3271cf9e582c1cabcf 
 five race samples stable
 rollback keepers ready
 hydrated DOM first card Кровать
+cutover transaction id: ctx-20260721T120000Z-example

@@ -1,0 +1,15 @@
+# LIVE MUTATION LOCK POLICY
+#
+# Canonical exclusive flock for ALL live-mutating paths:
+CANONICAL_LOCK_PATH=/srv/woodright/locks/live-cutover.lock
+#
+# Required for: cutover, restart (digest-only), rollback, live container replace,
+# ACTIVE_RELEASE metadata promotion after public gate, reconciliation metadata write.
+#
+# Forbidden: separate Dokploy-only / manual-only / rollback-only locks that omit this path.
+# Dokploy limitation: if Dokploy cannot acquire flock natively, operators MUST run
+# pre-deploy wrapper that holds this lock, OR declare Dokploy as sole owner and
+# disable parallel manual_flock_deploy. Partial coverage must be documented honestly.
+#
+# LIVE_MUTATING=true
+# requires_global_lock=true
