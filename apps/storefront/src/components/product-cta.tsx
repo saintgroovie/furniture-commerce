@@ -59,16 +59,12 @@ export function ProductCta({
   const productKey = productKeyOf(product)
   const gateOk = gateMatchesProduct(gate, productKey)
 
-  const materialCode = materialCodeForProduct(materialSelection, productKey)
-  const materialIncomplete = Boolean(materialTiers?.length) && !materialCode
-
-  /* Selected material execution; no default tier fallback. */
+  /* Selected material execution; falls back to the default (first) tier. */
   function selectedMaterialTier(live = false): MaterialTierOption | null {
     if (!materialTiers || materialTiers.length === 0) return null
     const selection = live ? readPdpMaterialSelection() : materialSelection
     const code = materialCodeForProduct(selection, productKey)
-    if (!code) return null
-    return materialTiers.find((t) => t.code === code) ?? null
+    return materialTiers.find((t) => t.code === code) ?? materialTiers[0]
   }
 
   /* Selected execution rides into the bespoke/request-quote form. */
@@ -90,12 +86,12 @@ export function ProductCta({
       : undefined
   const productId = product.id as string | undefined
 
-  /* Gallery and material picks must be explicit before add-to-cart.
-     Fail closed while the gallery gate has not published for this product. */
-  const executionGatePending =
-    requiresBuyerSelection &&
-    (!gateOk || !gate.requiresSelection || !gate.complete || !gate.combinationAvailable)
-  const selectionBlocked = materialIncomplete || executionGatePending
+  /* Defaults publish after mount; until then allow CTA — add-to-cart falls
+     back to first material tier + omits finish (= standard color price). */
+  const selectionBlocked =
+    gateOk &&
+    gate.requiresSelection &&
+    (!gate.complete || !gate.combinationAvailable)
   const canAdd = Boolean(variantId) && !selectionBlocked && !adding
 
   async function handleAddToCart(e: MouseEvent<HTMLButtonElement>) {
@@ -103,18 +99,13 @@ export function ProductCta({
     if (requiresBuyerSelection) {
       const live = readPdpExecutionSelection()?.gate
       if (
-        !live ||
-        !gateMatchesProduct(live, productKey) ||
-        !live.requiresSelection ||
-        !live.complete ||
-        !live.combinationAvailable
+        live &&
+        gateMatchesProduct(live, productKey) &&
+        live.requiresSelection &&
+        (!live.complete || !live.combinationAvailable)
       ) {
         return
       }
-    }
-    if (materialTiers?.length) {
-      const liveCode = materialCodeForProduct(readPdpMaterialSelection(), productKey)
-      if (!liveCode) return
     }
     /* Captured before the awaits: the flight dot launches from the CTA's
        center, and currentTarget is only valid synchronously. */

@@ -10,6 +10,16 @@ function isPositivePrice(amount: number | null | undefined): amount is number {
   return amount != null && Number.isFinite(amount) && amount > 0
 }
 
+function readBackendDefaultMinPrice(
+  product: Record<string, unknown>
+): number | null {
+  const meta = product.metadata as Record<string, unknown> | undefined
+  const cfg = meta?.buyer_default_configuration
+  if (!cfg || typeof cfg !== "object" || Array.isArray(cfg)) return null
+  const min = (cfg as { min_unit_price?: unknown }).min_unit_price
+  return isPositivePrice(typeof min === "number" ? min : null) ? min : null
+}
+
 function minMaterialTierPrice(product: Record<string, unknown>): number | null {
   const tiers = buildMaterialTierOptions(product)
   if (!tiers) return null
@@ -41,6 +51,12 @@ export function resolveCatalogCardPrice(
       prefix: "",
       requestQuoteLabel: formatRequestQuotePriceLabel(product),
     }
+  }
+
+  /* Prefer backend-projected default configuration (browse DTO contract). */
+  const backendMin = readBackendDefaultMinPrice(product)
+  if (backendMin != null) {
+    return { amount: backendMin, prefix: "от ", requestQuoteLabel: null }
   }
 
   const tierMin = minMaterialTierPrice(product)

@@ -43,6 +43,33 @@ function product(
   assert.equal(resolved.requestQuoteLabel, null)
 }
 
+// Backend buyer_default_configuration is preferred SoT
+{
+  const p = product({
+    metadata: {
+      buyer_default_configuration: {
+        min_unit_price: 54_355,
+        material_execution_code: "solid_front_ldsp_body",
+      },
+      material_tiers: {
+        solid_front_ldsp_body: {
+          key: "solid_front_ldsp_body",
+          label_ru: "ЛДСП",
+          price_multiplier: 0.7,
+          position: 0,
+        },
+        solid_full: {
+          key: "solid_full",
+          label_ru: "Массив",
+          price_multiplier: 1,
+          position: 1,
+        },
+      },
+    },
+  })
+  assert.equal(resolveCatalogCardPrice(p).amount, 54_355)
+}
+
 // STANDARD single variant, no tiers → exact price
 {
   const p = product({

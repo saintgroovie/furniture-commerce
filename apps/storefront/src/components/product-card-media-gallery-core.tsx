@@ -281,7 +281,7 @@ export function ProductCardMediaGalleryCore({
   )
 
   const [activeSeparateFabricKey, setActiveSeparateFabricKey] = useState<string | null>(
-    () => (isPdpLayout ? null : separateFabricRows?.[0]?.key ?? null)
+    () => separateFabricRows?.[0]?.key ?? null
   )
 
   const activeSeparateFabric = useMemo(() => {
@@ -299,32 +299,28 @@ export function ProductCardMediaGalleryCore({
   const hasWood = Boolean(woodVariants && woodVariants.length > 1)
   const hasFinish = Boolean(finishVariants && finishVariants.length > 1)
 
-  const [activeHeadboardKey, setActiveHeadboardKey] = useState<string | null>(() =>
-    isPdpLayout
-      ? null
-      : bedDefaults?.headboard ?? headboardVariants?.[0]?.key ?? null
+  const [activeHeadboardKey, setActiveHeadboardKey] = useState<string | null>(
+    () => bedDefaults?.headboard ?? headboardVariants?.[0]?.key ?? null
   )
-  const [activeUpholsteryKey, setActiveUpholsteryKey] = useState<string | null>(() =>
-    isPdpLayout
-      ? null
-      : bedDefaults?.fabric ?? upholsteryVariants?.[0]?.key ?? null
+  const [activeUpholsteryKey, setActiveUpholsteryKey] = useState<string | null>(
+    () => bedDefaults?.fabric ?? upholsteryVariants?.[0]?.key ?? null
   )
-  const [activeWoodKey, setActiveWoodKey] = useState<string | null>(() =>
-    isPdpLayout
-      ? null
-      : bedDefaults?.frameMaterial ??
-          paintDefaults?.frameMaterial ??
-          woodVariants?.[0]?.key ??
-          null
+  const [activeWoodKey, setActiveWoodKey] = useState<string | null>(
+    () =>
+      bedDefaults?.frameMaterial ??
+      paintDefaults?.frameMaterial ??
+      woodVariants?.[0]?.key ??
+      null
   )
-  const [activeFinishKey, setActiveFinishKey] = useState<string | null>(() =>
-    isPdpLayout
-      ? null
-      : paintDefaults?.paintFinish ?? finishVariants?.[0]?.key ?? null
+  const [activeFinishKey, setActiveFinishKey] = useState<string | null>(
+    () =>
+      paintDefaults?.paintFinish ??
+      finishVariants?.[0]?.key ??
+      null
   )
   const [activeProvenceMediaKey, setActiveProvenceMediaKey] = useState<
     "cream" | "wood" | null
-  >(() => (isPdpLayout ? null : "cream"))
+  >("cream")
   const [displayHeroSrc, setDisplayHeroSrc] = useState(mainSrc.trim())
   const [heroFailed, setHeroFailed] = useState(false)
   const [activeGalleryUrl, setActiveGalleryUrl] = useState<string | null>(null)
@@ -575,26 +571,17 @@ export function ProductCardMediaGalleryCore({
         ? defaultGreenwichPaintSelection(greenwichPaintMatrix)
         : null
 
-    if (layout === "pdp") {
-      setActiveHeadboardKey(null)
-      setActiveUpholsteryKey(null)
-      setActiveWoodKey(null)
-      setActiveFinishKey(null)
-      setActiveSeparateFabricKey(null)
-      setActiveProvenceMediaKey(null)
-    } else {
-      setActiveHeadboardKey(bedDefault?.headboard ?? headboardVariants?.[0]?.key ?? null)
-      setActiveUpholsteryKey(bedDefault?.fabric ?? upholsteryVariants?.[0]?.key ?? null)
-      setActiveWoodKey(
-        bedDefault?.frameMaterial ??
-          paintDefault?.frameMaterial ??
-          woodVariants?.[0]?.key ??
-          null
-      )
-      setActiveFinishKey(paintDefault?.paintFinish ?? finishVariants?.[0]?.key ?? null)
-      setActiveSeparateFabricKey(separateFabricRows?.[0]?.key ?? null)
-      setActiveProvenceMediaKey("cream")
-    }
+    setActiveHeadboardKey(bedDefault?.headboard ?? headboardVariants?.[0]?.key ?? null)
+    setActiveUpholsteryKey(bedDefault?.fabric ?? upholsteryVariants?.[0]?.key ?? null)
+    setActiveWoodKey(
+      bedDefault?.frameMaterial ??
+        paintDefault?.frameMaterial ??
+        woodVariants?.[0]?.key ??
+        null
+    )
+    setActiveFinishKey(paintDefault?.paintFinish ?? finishVariants?.[0]?.key ?? null)
+    setActiveSeparateFabricKey(separateFabricRows?.[0]?.key ?? null)
+    setActiveProvenceMediaKey("cream")
     const initial =
       bedDefault && greenwichBedMatrix
         ? resolveGreenwichBedMedia(

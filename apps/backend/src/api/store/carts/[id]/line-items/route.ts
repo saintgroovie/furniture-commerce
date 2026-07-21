@@ -5,6 +5,7 @@ import {
   findMaterialTier,
   parseMaterialTiers,
 } from "../../../../../lib/material-tier-contract"
+import { resolveDefaultBuyerConfiguration } from "../../../../../lib/default-buyer-configuration"
 import {
   resolveConfiguredUnitPrice,
   resolveFinishColorMultiplier,
@@ -19,7 +20,7 @@ import {
  *   round(solid_full_base × material_multiplier × color_multiplier)
  *
  * - material_multiplier from `product.metadata.material_tiers`
- *   (missing code while tiers exist → 400 MATERIAL_EXECUTION_REQUIRED)
+ *   (omitted code → position 0 / LDSP when tiers exist — PDP default contract)
  * - color_multiplier: 1 for the first (standard) finish, 1.05 otherwise
  *
  * Client-sent label / multiplier / resolved price values are discarded and
@@ -198,12 +199,25 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       metadata.material_execution_label = tier.label_ru
       metadata.material_price_multiplier = tier.price_multiplier
     } else if (tiers && tiers.length > 0) {
-      /* Fail closed: material tiers require an explicit buyer pick (PDP contract). */
-      res.status(400).json({
-        message: "Material execution is required for this product.",
-        code: "MATERIAL_EXECUTION_REQUIRED",
+      /* Same default as browse/PDP: resolveDefaultBuyerConfiguration (tiers[0]). */
+      const defaults = resolveDefaultBuyerConfiguration({
+        variants: [
+          {
+            id: variantId,
+            calculated_price: variant.calculated_price,
+            prices: variant.prices,
+          },
+        ],
+        metadata: productMeta ?? {},
       })
-      return
+      const tier =
+        (defaults?.material_execution_code
+          ? findMaterialTier(tiers, defaults.material_execution_code)
+          : null) ?? tiers[0]!
+      materialMultiplier = tier.price_multiplier
+      metadata.material_execution_code = tier.key
+      metadata.material_execution_label = tier.label_ru
+      metadata.material_price_multiplier = tier.price_multiplier
     }
 
     let colorMultiplier = 1

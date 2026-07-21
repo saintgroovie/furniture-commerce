@@ -10,6 +10,7 @@
  * Default `/store/products` unchanged.
  */
 import type { MedusaRequest } from "@medusajs/framework/http"
+import { projectDefaultBuyerConfigurationsOntoProducts } from "../../../lib/default-buyer-configuration"
 import { sortProductsByMerchandisingOrder } from "../../../lib/catalog-merchandising-order"
 
 export type StoreProductListMode = "default" | "browse"
@@ -216,11 +217,15 @@ export async function loadStoreProductList(
     })
   }
 
-  // Browse listing: merchandising order is the default catalog SoT and must
-  // run on the full result set before any future limit/offset pagination.
-  // Default `/store/products` keeps query order for non-catalog consumers.
+  // Browse listing: default configuration → merchandising order (before any
+  // future limit/offset). Default `/store/products` still gets
+  // default-configuration projection so handle-based PDP fallback shares the
+  // same opening price contract as browse.
   if (mode === "browse") {
+    result = projectDefaultBuyerConfigurationsOntoProducts(result)
     result = sortProductsByMerchandisingOrder(result)
+  } else {
+    result = projectDefaultBuyerConfigurationsOntoProducts(result)
   }
 
   return result

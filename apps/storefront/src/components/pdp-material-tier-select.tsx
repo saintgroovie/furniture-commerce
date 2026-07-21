@@ -23,42 +23,46 @@ import { pdpCopy } from "@/lib/woodright-copy"
 type Props = {
   /** Product handle/id — guards against a stale pick after client navigation. */
   productKey: string
-  /** Ordered tier options from `metadata.material_tiers`. */
+  /** Ordered tier options from `metadata.material_tiers` (position 0 = default). */
   options: MaterialTierOption[]
   /** request_quote products show reference prices as «от … ₽». */
   requestQuote?: boolean
 }
 
-const MATERIAL_PLACEHOLDER = `${pdpCopy.optionChooseValue} ${pdpCopy.materialTierLabel.toLowerCase()}`
-
 /**
- * PDP material execution dropdown. LDSP is listed first but not auto-selected;
- * price / CTA consumers react only after an explicit pick.
+ * PDP material execution dropdown — APG select-only combobox in the Woodright
+ * visual language (see .pdp-material-* styles). The first option is always
+ * selected by default; the pick is published to pdp-material-selection so the
+ * price block and CTA react as one unit.
  */
 export function PdpMaterialTierSelect({ productKey, options, requestQuote = false }: Props) {
   const [open, setOpen] = useState(false)
   const selection = usePdpMaterialSelection()
   const gate = usePdpPurchaseGate()
   const gateOk = gateMatchesProduct(gate, productKey)
-  const selectedCode = materialCodeForProduct(selection, productKey)
-  const selectedIndex =
-    selectedCode != null ? options.findIndex((o) => o.code === selectedCode) : -1
-  const [activeIndex, setActiveIndex] = useState(() =>
-    selectedIndex >= 0 ? selectedIndex : 0
-  )
+  const selectedCode = materialCodeForProduct(selection, productKey) ?? options[0]?.code
+  const selectedIndex = Math.max(0, options.findIndex((o) => o.code === selectedCode))
+  const [activeIndex, setActiveIndex] = useState(selectedIndex)
   const rootRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const listboxId = useId()
 
-  const selected = selectedIndex >= 0 ? options[selectedIndex] : null
+  const selected = options[selectedIndex] ?? options[0]
   const colorMultiplier = gateOk
     ? resolveFinishColorMultiplier(gate.finishKey, gate.standardFinishKey)
     : 1
 
-  /* A pick made on a previous PDP must not leak into this one. */
+  /* Publish cheapest (position 0) tier as the selected default so price, CTA,
+     and cart metadata share one configuration identity from first paint. */
   useEffect(() => {
+    const defaultTier = options[0]
+    if (defaultTier) {
+      publishPdpMaterialSelection({ productKey, code: defaultTier.code })
+    }
     return () => clearPdpMaterialSelection()
-  }, [productKey])
+    // options identity changes every render; key off the default code.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional
+  }, [productKey, options[0]?.code])
 
   useEffect(() => {
     if (!open) return
@@ -72,20 +76,20 @@ export function PdpMaterialTierSelect({ productKey, options, requestQuote = fals
   }, [open])
 
   const openList = useCallback(() => {
-    setActiveIndex(selectedIndex >= 0 ? selectedIndex : 0)
+    setActiveIndex(Math.max(0, options.findIndex((o) => o.code === selectedCode)))
     setOpen(true)
-  }, [options, selectedIndex])
+  }, [options, selectedCode])
 
   const commit = useCallback(
     (idx: number) => {
       const opt = options[idx]
       setOpen(false)
       buttonRef.current?.focus()
-      if (opt) {
+      if (opt && opt.code !== selectedCode) {
         publishPdpMaterialSelection({ productKey, code: opt.code })
       }
     },
-    [options, productKey]
+    [options, productKey, selectedCode]
   )
 
   const onKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
@@ -161,9 +165,7 @@ export function PdpMaterialTierSelect({ productKey, options, requestQuote = fals
       >
         <span className="pdp-material-trigger-main">
           <span className="pdp-material-trigger-label">{pdpCopy.materialTierLabel}</span>
-          <span className="pdp-material-trigger-value">
-            {selected?.label ?? MATERIAL_PLACEHOLDER}
-          </span>
+          <span className="pdp-material-trigger-value">{selected?.label}</span>
         </span>
         <span className="pdp-material-trigger-side">
           {selected && priceLabel(selected) != null && (
@@ -180,7 +182,7 @@ export function PdpMaterialTierSelect({ productKey, options, requestQuote = fals
           aria-label={pdpCopy.materialTierLabel}
         >
           {options.map((opt, idx) => {
-            const isSelected = selectedCode != null && opt.code === selectedCode
+            const isSelected = opt.code === selectedCode
             const isActive = idx === activeIndex
             return (
               <li

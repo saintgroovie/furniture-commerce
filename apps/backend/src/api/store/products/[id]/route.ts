@@ -1,4 +1,5 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { projectDefaultBuyerConfigurationOntoProduct } from "../../../lib/default-buyer-configuration"
 
 /**
  * Product detail by id. Variants must include flattened `prices` so PDP
@@ -7,6 +8,9 @@ import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
  * Medusa graph `variants.*` does not nest `price_set`; request
  * `variants.price_set.prices.*` and mirror into `prices` (same contract as
  * `/store/products` list loader).
+ *
+ * Also projects `metadata.buyer_default_configuration` so PDP opening price
+ * shares the same backend-resolved default as catalog browse cards.
  */
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const id = req.params.id as string
@@ -46,5 +50,5 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       return variant
     })
   }
-  res.json({ product: raw })
+  res.json({ product: projectDefaultBuyerConfigurationOntoProduct(raw) })
 }
