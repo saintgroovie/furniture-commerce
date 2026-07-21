@@ -7,6 +7,7 @@ import assert from "node:assert/strict"
 import {
   applyCatalogFilters,
   clearCatalogFilterState,
+  getProductCategoryKey,
   hasActiveCatalogFilters,
   type CatalogFilterState,
 } from "./catalog-filters"
@@ -181,6 +182,14 @@ function ids(products: Record<string, unknown>[]): string[] {
   // Fixed: with type BESPOKE on a pool that already excluded BESPOKE → empty
   const fixed = applyCatalogFilters(mainScoped, baseState({ type: "BESPOKE" }))
   assert.deepEqual(fixed, [])
+}
+
+// buyer_item_type fallback when category_handle missing
+{
+  const key = getProductCategoryKey({
+    metadata: { buyer_item_type: "pelenalnye-stoleshnicy" },
+  })
+  assert.equal(key, "pelenalnye-stoleshnicy")
 }
 
 console.log("catalog-filter.fidelity.test.ts: all assertions passed")

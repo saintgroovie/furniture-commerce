@@ -53,6 +53,7 @@ export const CATEGORY_FILTER_LABELS: Record<string, string> = {
   divany: "Диваны",
   bortiki: "Бортики",
   baldahiny: "Балдахины",
+  "pelenalnye-stoleshnicy": "Пеленальные столешницы",
 }
 
 function humanizeFilterKey(key: string): string {
@@ -93,9 +94,14 @@ function meta(product: Record<string, unknown>): Record<string, unknown> {
 }
 
 export function getProductCategoryKey(product: Record<string, unknown>): string | null {
-  const handle = meta(product).category_handle
+  const m = meta(product)
+  const handle = m.category_handle
   if (typeof handle === "string" && handle.trim()) {
     return handle.trim().toLowerCase()
+  }
+  const buyerType = m.buyer_item_type
+  if (typeof buyerType === "string" && buyerType.trim()) {
+    return buyerType.trim().toLowerCase()
   }
   return null
 }
