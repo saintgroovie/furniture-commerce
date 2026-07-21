@@ -40,8 +40,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: yarn
-          cache-dependency-path: apps/storefront/yarn.lock
+
+      - name: Enable Corepack (Yarn 4)
+        working-directory: .
+        run: |
+          corepack enable
+          corepack prepare yarn@4.6.0 --activate
+          yarn --version
 
       - name: Install
         run: yarn install --immutable
@@ -64,8 +69,6 @@ jobs:
         run: yarn build
 
       - name: Client artifact URL gate
-        env:
-          MEDUSA_BACKEND_INTERNAL_URL: http://backend:9000
         run: |
           set -euo pipefail
           ROOT=".next-build/static/chunks"
@@ -95,14 +98,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: yarn
-          cache-dependency-path: apps/backend/yarn.lock
+      - name: Enable Corepack (Yarn 4)
+        working-directory: .
+        run: |
+          corepack enable
+          corepack prepare yarn@4.6.0 --activate
+          yarn --version
       - name: Install
         run: yarn install --immutable
       - name: Run classification/cart/catalog fidelity
         run: |
           set -euo pipefail
-          # Prefer yarn dlx tsx for colocated fidelity without permanent tsx dep.
           mapfile -t FILES < <(find src -name '*.fidelity.test.ts' | sort)
           echo "found ${#FILES[@]} fidelity files"
           for f in "${FILES[@]}"; do
