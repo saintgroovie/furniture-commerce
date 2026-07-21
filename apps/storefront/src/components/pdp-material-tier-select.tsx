@@ -52,10 +52,17 @@ export function PdpMaterialTierSelect({ productKey, options, requestQuote = fals
     ? resolveFinishColorMultiplier(gate.finishKey, gate.standardFinishKey)
     : 1
 
-  /* A pick made on a previous PDP must not leak into this one. */
+  /* Publish cheapest (position 0) tier as the selected default so price, CTA,
+     and cart metadata share one configuration identity from first paint. */
   useEffect(() => {
+    const defaultTier = options[0]
+    if (defaultTier) {
+      publishPdpMaterialSelection({ productKey, code: defaultTier.code })
+    }
     return () => clearPdpMaterialSelection()
-  }, [productKey])
+    // options identity changes every render; key off the default code.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional
+  }, [productKey, options[0]?.code])
 
   useEffect(() => {
     if (!open) return

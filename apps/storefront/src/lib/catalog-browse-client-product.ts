@@ -24,6 +24,8 @@ const META_ALLOW = new Set([
   "collection",
   "collection_label",
   "category_handle",
+  "buyer_default_configuration",
+  "material_tiers",
   "display_group",
   "display_group_sort",
   "display_group_title",

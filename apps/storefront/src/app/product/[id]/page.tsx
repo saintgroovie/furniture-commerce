@@ -285,6 +285,19 @@ export default async function ProductPage({
   const price = getPrice(product)
   /* Material execution options from metadata.material_tiers (backend SoT). */
   const materialTiers = buildMaterialTierOptions(product)
+  const backendDefaultMin = (() => {
+    const cfg = (product.metadata as Record<string, unknown> | undefined)
+      ?.buyer_default_configuration
+    if (!cfg || typeof cfg !== "object" || Array.isArray(cfg)) return null
+    const min = (cfg as { min_unit_price?: unknown }).min_unit_price
+    return typeof min === "number" && Number.isFinite(min) && min > 0 ? min : null
+  })()
+  /* Opening PDP amount = backend default, else cheapest tier, else solid_full. */
+  const openingPrice =
+    backendDefaultMin ??
+    (materialTiers?.[0]?.price != null && Number.isFinite(materialTiers[0].price)
+      ? materialTiers[0].price
+      : price)
   const requestQuotePrice = isRequestQuoteProduct(product)
     ? formatRequestQuotePriceLabel(product)
     : null
@@ -614,8 +627,8 @@ export default async function ProductPage({
                 priceLabel={
                   requestQuotePrice != null
                     ? requestQuotePrice
-                    : price != null
-                      ? formatRub(price)
+                    : openingPrice != null
+                      ? formatRub(openingPrice)
                       : isRequestQuoteProduct(product)
                         ? labels.requestQuotePrice
                         : null
