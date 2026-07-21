@@ -47,12 +47,35 @@ function getJson(url, headers = {}) {
 function inferClass(p) {
   const title = String(p.title || "").toLowerCase()
   const handle = String(p.handle || "").toLowerCase()
+  const md = p.metadata && typeof p.metadata === "object" ? p.metadata : {}
+  // Prefer structured metadata (catalog-products projection) before title fallback.
   const category =
     p.category_handle ||
+    md.category_handle ||
     p.categories?.[0]?.handle ||
     p.collection?.metadata?.category_handle ||
     null
-  const collection = p.collection?.handle || p.collection?.title || null
+  const category_source = p.category_handle
+    ? "top.category_handle"
+    : md.category_handle
+      ? "metadata.category_handle"
+      : p.categories?.[0]?.handle
+        ? "categories[].handle"
+        : null
+  const collection =
+    (typeof p.collection === "object" && p.collection?.handle) ||
+    (typeof p.collection === "string" ? p.collection : null) ||
+    md.collection ||
+    md.collection_label ||
+    null
+  const collection_source =
+    typeof p.collection === "object" && p.collection?.handle
+      ? "collection.handle"
+      : md.collection
+        ? "metadata.collection"
+        : md.collection_label
+          ? "metadata.collection_label"
+          : null
   let inferred = "unknown"
   let confidence = "low"
   let reason = "insufficient signals"
@@ -76,13 +99,13 @@ function inferClass(p) {
   } else if (category) {
     inferred = "categorized"
     confidence = "high"
-    reason = `category_handle=${category}`
+    reason = `category_handle=${category} via ${category_source}`
   } else if (isFurnitureWord) {
     inferred = "furniture_title_fallback"
     confidence = "low"
     reason = "title fallback without category_handle"
   }
-  return { category, collection, inferred, confidence, reason }
+  return { category, collection, category_source, collection_source, inferred, confidence, reason }
 }
 
 function analyzeProducts(products, marker) {
@@ -117,6 +140,8 @@ function analyzeProducts(products, marker) {
       title: p.title,
       collection: info.collection,
       category: info.category,
+      category_source: info.category_source,
+      collection_source: info.collection_source,
       type: p.type?.value || p.type || null,
       inferred_class: info.inferred,
       confidence: info.confidence,
@@ -235,14 +260,30 @@ async function main() {
   let outDir = null
   let releaseSha = null
   let fixture = null
+  let mode = "store-list"
+  let headers = {}
+  let bundleId = null
+  let backendRevision = null
+  let storefrontRevision = null
   for (let i = 0; i < args.length; i++) {
     if (args[i] === "--api") api = args[++i]
     if (args[i] === "--out") outDir = args[++i]
     if (args[i] === "--release-sha") releaseSha = args[++i]
     if (args[i] === "--fixture") fixture = args[++i]
+    if (args[i] === "--mode") mode = args[++i]
+    if (args[i] === "--bundle-id") bundleId = args[++i]
+    if (args[i] === "--backend-revision") backendRevision = args[++i]
+    if (args[i] === "--storefront-revision") storefrontRevision = args[++i]
+    if (args[i] === "--publishable-key-env") {
+      const envName = args[++i]
+      const v = process.env[envName]
+      if (v) headers["x-publishable-api-key"] = v
+    }
   }
   if (!outDir) {
-    console.error("usage: audit-catalog-data-quality.cjs --out <dir> [--api <url>] [--fixture <products.json>] [--release-sha sha]")
+    console.error(
+      "usage: audit-catalog-data-quality.cjs --out <dir> [--mode store-list|catalog-projection|backend-readonly] [--api <url>] [--fixture <products.json>] [--bundle-id id] [--backend-revision sha] [--storefront-revision sha]"
+    )
     process.exit(2)
   }
   let products = []
@@ -252,11 +293,11 @@ async function main() {
     const doc = JSON.parse(fs.readFileSync(fixture, "utf8"))
     products = doc.products || doc
     marker = doc.marker || null
+    mode = doc.mode || mode
   } else if (api) {
-    // Prefer a store products list endpoint; operator may pass full URL with limit.
-    const res = await getJson(api)
+    const res = await getJson(api, headers)
     marker = res.headers["x-woodright-catalog-order"] || null
-    products = res.json.products || res.json || []
+    products = res.json.products || res.json.items || res.json || []
     if (!Array.isArray(products)) throw new Error("unexpected API shape")
   } else {
     throw new Error("provide --api or --fixture")
@@ -265,14 +306,22 @@ async function main() {
   const payload = {
     generated_at: new Date().toISOString(),
     source_url,
+    mode,
     release_sha: releaseSha,
+    bundle_id: bundleId,
+    backend_revision: backendRevision,
+    storefront_revision: storefrontRevision,
     marker,
     counts,
     rows,
-    regeneration_command: `node scripts/catalog/audit-catalog-data-quality.cjs --out <dir> --api '${api || ""}' --release-sha ${releaseSha || ""}`,
+    field_sources: {
+      category_handle: ["metadata.category_handle", "top.category_handle", "categories[].handle"],
+      collection: ["collection.handle", "metadata.collection", "metadata.collection_label"],
+    },
+    regeneration_command: `node scripts/catalog/audit-catalog-data-quality.cjs --out <dir> --mode ${mode} --api '<url>' --bundle-id ${bundleId || ""}`,
   }
   const paths = writeOutputs(outDir, payload)
-  console.log(JSON.stringify({ ok: true, counts, paths }, null, 2))
+  console.log(JSON.stringify({ ok: true, counts, paths, mode }, null, 2))
 }
 
 main().catch((e) => {

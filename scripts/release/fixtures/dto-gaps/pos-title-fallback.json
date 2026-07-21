@@ -1,0 +1,19 @@
+{
+  "field_source_matrix": [
+    {
+      "field": "x"
+    }
+  ],
+  "rows": [
+    {
+      "field": "x",
+      "endpoint_has_field": false,
+      "source_has_field": false,
+      "title_only_inference": true,
+      "checked_source": true
+    }
+  ],
+  "expect_classifications": {
+    "x": "derived_from_title"
+  }
+}

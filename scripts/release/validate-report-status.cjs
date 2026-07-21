@@ -38,6 +38,36 @@ function validate(text, errors) {
     errors.push("status done* forbidden while external cutover unproven")
   }
 
+  // GATE AQ — report correctness for split / DQ / reconciliation language
+  const claimsSplit =
+    /split\s+pair|backend\s+revision|storefront\s+revision|be\s+digest|sf\s+digest/i.test(text)
+  if (
+    claimsSplit &&
+    /single\s+release\s+sha|one\s+release\s+sha|entire\s+pair.*\b[0-9a-f]{7,40}\b/i.test(text) &&
+    /identity\s+of\s+(the\s+)?(whole\s+)?pair|pair\s+identity\s+is\s+[0-9a-f]{7}/i.test(text)
+  ) {
+    errors.push("split pair described by one SHA")
+  }
+  if (
+    /split\s+pair/i.test(text) &&
+    /active_release_sha\s*[:=]\s*[0-9a-f]{7,40}/i.test(text) &&
+    !/bundle_id|not\s+a\s+pair\s+identity|must\s+not\s+describe/i.test(text)
+  ) {
+    errors.push("split pair described by one SHA")
+  }
+  if (/metadata\s+reconciliation/i.test(text) && /(?:^|\n).*called\s+deploy|reconciliation\s+is\s+a\s+deploy/i.test(text)) {
+    errors.push("reconciliation called deploy")
+  }
+  if (
+    /dto\s+gap|not_exposed_by_endpoint/i.test(text) &&
+    /dto\s+gaps?\s+(are|is|=)\s+catalog\s+data\s+gaps?/i.test(text)
+  ) {
+    errors.push("DTO gaps called catalog data gaps")
+  }
+  if (/metadata\s+migration/i.test(text) && /metadata\s+migration\s+(is|=)\s+(a\s+)?cutover/i.test(text)) {
+    errors.push("metadata migration called cutover")
+  }
+
   if (!/done_deployed_and_verified/.test(text)) return
   for (const re of REQUIRED_FOR_DEPLOYED_VERIFIED) {
     if (!re.test(text)) errors.push(`done_deployed_and_verified missing evidence matching ${re}`)

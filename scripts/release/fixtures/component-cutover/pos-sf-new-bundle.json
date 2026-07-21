@@ -1,0 +1,6 @@
+{
+  "activation_mode": "storefront_only_cutover",
+  "previous_bundle_id": "wrb-20260721T154307Z-be643a429-sf643a429",
+  "new_bundle_id": "wrb-20260721T155624Z-be643a429-sf54d1802",
+  "reused_old_release_sha_as_pair_identity": false
+}

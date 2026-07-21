@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://woodright.local/schemas/woodright-mutation-lease.schema.json",
+  "title": "WoodrightMutationLease",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "lease_id",
+    "environment",
+    "issued_at",
+    "expires_at",
+    "actor",
+    "controller",
+    "action",
+    "expected_bundle_id",
+    "expected_backend_digest",
+    "expected_storefront_digest",
+    "observed_bundle_id",
+    "observed_backend_digest",
+    "observed_storefront_digest",
+    "target_bundle_id",
+    "lock_path",
+    "transaction_id",
+    "single_use",
+    "status"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "const": "1" },
+    "lease_id": { "type": "string", "pattern": "^lease-[0-9]{8}T[0-9]{6}Z-[a-z0-9-]{4,32}$" },
+    "environment": { "type": "string", "enum": ["staging", "production", "local-canonical"] },
+    "issued_at": { "type": "string" },
+    "expires_at": { "type": "string" },
+    "actor": { "type": "string", "minLength": 1 },
+    "controller": { "type": "string", "minLength": 1 },
+    "action": {
+      "type": "string",
+      "enum": ["pair_cutover", "storefront_only_cutover", "restart", "rollback", "metadata_reconciliation"]
+    },
+    "expected_bundle_id": { "type": "string", "minLength": 1 },
+    "expected_backend_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "expected_storefront_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "observed_bundle_id": { "type": "string", "minLength": 1 },
+    "observed_backend_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "observed_storefront_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "target_bundle_id": { "type": "string", "minLength": 1 },
+    "lock_path": { "type": "string", "const": "/srv/woodright/locks/live-cutover.lock" },
+    "transaction_id": { "type": "string", "pattern": "^ctx-[0-9]{8}T[0-9]{6}Z-[a-z0-9-]{4,32}$" },
+    "single_use": { "type": "boolean", "const": true },
+    "status": { "type": "string", "enum": ["issued", "consumed", "expired", "aborted"] },
+    "now_iso": { "type": "string" }
+  }
+}
