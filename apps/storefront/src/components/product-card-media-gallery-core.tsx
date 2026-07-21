@@ -683,11 +683,34 @@ export function ProductCardMediaGalleryCore({
   // execution switch - that reflows the hero column and causes visible shake.
   const isPdpLayout = layout === "pdp"
 
-  const [cardStripProbeEnabled, setCardStripProbeEnabled] = useState(true)
+  // Catalog: defer strip network until near-viewport / pointer / keyboard focus.
+  // Default true stampeded ~4 thumb URLs × visible cards on mount (W3g).
+  const [cardStripProbeEnabled, setCardStripProbeEnabled] = useState(false)
+  const cardRootRef = useRef<HTMLDivElement>(null)
 
   const enableCardStripProbes = useCallback(() => {
     if (!isPdpLayout) setCardStripProbeEnabled(true)
   }, [isPdpLayout])
+
+  useEffect(() => {
+    if (isPdpLayout || cardStripProbeEnabled) return
+    const el = cardRootRef.current
+    if (!el || typeof IntersectionObserver === "undefined") {
+      setCardStripProbeEnabled(true)
+      return
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setCardStripProbeEnabled(true)
+          io.disconnect()
+        }
+      },
+      { root: null, rootMargin: "200px 0px", threshold: 0.01 }
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [isPdpLayout, cardStripProbeEnabled])
 
   const stripProbeCandidates = useMemo(() => {
     // Cards: hero <img> already proved effectiveMain — keep it out of the
@@ -2111,8 +2134,10 @@ export function ProductCardMediaGalleryCore({
 
   return (
     <div
+      ref={cardRootRef}
       className={`product-card-media-switcher${oliverMode ? " oliver-card-media-switcher" : ""}${isPdp ? " product-detail-media-switcher" : ""}`}
       onPointerEnter={isPdp ? undefined : enableCardStripProbes}
+      onFocusCapture={isPdp ? undefined : enableCardStripProbes}
     >
       {isPdp ? (
         <div className="product-pdp-media-hero" {...heroSwipe}>
