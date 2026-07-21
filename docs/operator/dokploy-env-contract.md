@@ -12,7 +12,7 @@
 | `ADMIN_CORS` | Exact admin origins |
 | `AUTH_CORS` | Auth origins matching admin/store |
 | `MEDUSA_BACKEND_URL` | Public backend URL |
-| `MEDUSA_LOCAL_HTTP` | `1` for temporary `http://IP` review; must be `0` on HTTPS staging |
+| `MEDUSA_LOCAL_HTTP` | Must be `0` (or unset) on HTTPS staging/demo. Set `1` only for temporary cleartext `http://IP` local/admin review — production code ignores it for cookie `Secure` |
 
 ## Storefront build-time (required)
 

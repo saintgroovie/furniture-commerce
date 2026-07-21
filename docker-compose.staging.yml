@@ -58,8 +58,9 @@ services:
       ADMIN_CORS: ${ADMIN_CORS:?set ADMIN_CORS}
       AUTH_CORS: ${AUTH_CORS:?set AUTH_CORS}
       MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL:?set MEDUSA_BACKEND_URL}
-      # IP/http review: set MEDUSA_LOCAL_HTTP=1 in Dokploy env; HTTPS domains → 0
-      MEDUSA_LOCAL_HTTP: ${MEDUSA_LOCAL_HTTP:-1}
+      # HTTPS staging/demo: leave unset or 0. Only set MEDUSA_LOCAL_HTTP=1 for
+      # temporary cleartext http://IP admin review (non-production workflow).
+      MEDUSA_LOCAL_HTTP: ${MEDUSA_LOCAL_HTTP:-0}
       PORT: "9000"
     volumes:
       - woodright_staging_media:/server/static

@@ -1,8 +1,25 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { LEAD_MODULE } from "../../../modules/lead"
 import LeadModuleService from "../../../modules/lead/service"
+import {
+  checkPublicMutationRateLimit,
+  clientKeyFromRequest,
+} from "../_lib/public-mutation-rate-limit"
 
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
+  const rl = checkPublicMutationRateLimit({
+    key: `leads:${clientKeyFromRequest(req)}`,
+    limit: 10,
+    windowMs: 60_000,
+  })
+  res.setHeader("X-RateLimit-Limit", "10")
+  res.setHeader("X-RateLimit-Remaining", String(rl.remaining))
+  res.setHeader("X-RateLimit-Reset", String(Math.ceil(rl.resetAt / 1000)))
+  if (!rl.ok) {
+    res.status(429).json({ message: "Too many requests" })
+    return
+  }
+
   const body = req.body as {
     source?: string
     name?: string
