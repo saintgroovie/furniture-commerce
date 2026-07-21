@@ -2,7 +2,7 @@ import Link from "next/link"
 import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { getSiteUrl } from "@/lib/api/base"
-import { getProduct, getProducts, NOT_FOUND } from "@/lib/api/products"
+import { getCatalogProducts, getProduct, NOT_FOUND } from "@/lib/api/products"
 import { getMotifContext } from "@/lib/api/motif-themes"
 import { formatRub, getPrice } from "@/lib/format"
 import {
@@ -308,7 +308,9 @@ export default async function ProductPage({
   let displayGroupMembers: Record<string, unknown>[] = []
   if (meta?.display_group && meta?.collection) {
     try {
-      const plist = await getProducts()
+      // Lean browse projection keeps display_group* + collection + variant prices.
+      // Avoid full `/store/products` list (~1.4MB) for sibling size chips only.
+      const plist = await getCatalogProducts()
       const list = (plist.products ?? []) as Record<string, unknown>[]
       displayGroupMembers = getDisplayGroupMembers(product, list)
     } catch {
