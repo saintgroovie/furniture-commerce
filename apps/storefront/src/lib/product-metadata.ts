@@ -1,3 +1,4 @@
+import { formatBuyerFacingMeasureText } from "@/lib/buyer-measure-text"
 import {
   layoutBuyerFacingTitle,
   type BuyerFacingTitleLayout,
@@ -200,7 +201,12 @@ export function getBuyerFacingProductTitleLayout(
     (typeof product.title === "string" && product.title.trim()
       ? product.title.trim()
       : "Товар")
-  return layoutBuyerFacingTitle(raw)
+  const layout = layoutBuyerFacingTitle(raw)
+  return {
+    ...layout,
+    text: formatBuyerFacingMeasureText(layout.text),
+    lines: layout.lines.map((line) => formatBuyerFacingMeasureText(line)),
+  }
 }
 
 /** Flat buyer-facing title (SEO / single-line). EN model names → Cyrillic. */
@@ -235,6 +241,16 @@ export function formatDimensionsCompact(dim: Dimensions): string {
   const cm = (mm: number) => String(Math.round(mm / 10))
   const parts = orderedBuyerFacingDimensions(dim).map(({ mm }) => cm(mm))
   return parts.join("\u202F×\u202F")
+}
+
+export function formatDimensionsCompactLabeled(dim: Dimensions): {
+  values: string
+  caption: string
+} {
+  return {
+    values: formatDimensionsCompact(dim),
+    caption: "В × Ш × Г, см",
+  }
 }
 
 const LABELED_AXIS_ABBR: Record<BuyerFacingDimensionAxis, string> = {
