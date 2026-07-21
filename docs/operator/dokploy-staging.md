@@ -133,6 +133,8 @@ Redeploy previous image tag SHA; restore staging Postgres from the last staging 
 
 ## HTTP IP staging note
 
-If reviewing over `http://IP` (no TLS yet), set `MEDUSA_LOCAL_HTTP=1` so admin/store cookies work. Switch to `0` when HTTPS domains are attached.
+HTTPS staging/demo must keep `MEDUSA_LOCAL_HTTP=0` (or unset). Production Medusa config forces `Secure` cookies and ignores `MEDUSA_LOCAL_HTTP=1` for cookie flags (misconfiguration safety).
+
+Temporary cleartext `http://IP` admin review (local/operator only, not buyer Host): set `MEDUSA_LOCAL_HTTP=1` so cookies work without TLS. Switch back to `0` before HTTPS cutover.
 
 Internal Postgres DSN must include `sslmode=disable` (Node `pg` otherwise may stall during migrate/start SSL negotiation).
