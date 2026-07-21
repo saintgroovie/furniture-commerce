@@ -22,7 +22,12 @@ export function WillieWinkieMotifProductCard({
         <span className="ww-product-card-well">
           {img ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={img} alt="" loading="lazy" decoding="async" />
+            <img
+              src={img}
+              alt={product.title}
+              loading="lazy"
+              decoding="async"
+            />
           ) : (
             <span className="ww-product-card-empty">
               {willieWinkieMotifsCopy.imageMissing}

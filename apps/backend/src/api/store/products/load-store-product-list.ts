@@ -10,6 +10,10 @@
  * Default `/store/products` unchanged.
  */
 import type { MedusaRequest } from "@medusajs/framework/http"
+import {
+  dedupeCatalogProductsById,
+  projectBuyerItemTypesOntoProducts,
+} from "../../../lib/buyer-item-type"
 import { projectDefaultBuyerConfigurationsOntoProducts } from "../../../lib/default-buyer-configuration"
 import { sortProductsByMerchandisingOrder } from "../../../lib/catalog-merchandising-order"
 
@@ -42,6 +46,7 @@ export const BROWSE_PRODUCT_FIELDS = [
   "images.url",
   "variants.id",
   "variants.sku",
+  "product_categories.handle",
   "product_classification.product_type",
 ] as const
 
@@ -57,6 +62,7 @@ const BROWSE_FILTERED_PRODUCT_FIELDS = [
   "variants.id",
   "variants.sku",
   "product_categories.category_id",
+  "product_categories.handle",
   "product_classification.product_type",
 ] as const
 
@@ -217,11 +223,12 @@ export async function loadStoreProductList(
     })
   }
 
-  // Browse listing: default configuration → merchandising order (before any
-  // future limit/offset). Default `/store/products` still gets
-  // default-configuration projection so handle-based PDP fallback shares the
-  // same opening price contract as browse.
+  // Browse listing: dedupe → buyer item type → default configuration →
+  // merchandising order (before any future limit/offset). Default
+  // `/store/products` still gets default-configuration projection so
+  // handle-based PDP fallback shares the same opening price contract as browse.
   if (mode === "browse") {
+    result = projectBuyerItemTypesOntoProducts(dedupeCatalogProductsById(result))
     result = projectDefaultBuyerConfigurationsOntoProducts(result)
     result = sortProductsByMerchandisingOrder(result)
   } else {

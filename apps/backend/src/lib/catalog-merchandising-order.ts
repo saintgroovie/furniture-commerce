@@ -62,6 +62,10 @@ const TYPE_RANK: Record<string, { tier: MerchandisingItemTier; rank: number }> =
     polki: { tier: MERCHANDISING_ITEM_TIER.COMPLEMENTARY, rank: 10 },
     bortiki: { tier: MERCHANDISING_ITEM_TIER.COMPLEMENTARY, rank: 20 },
     baldahiny: { tier: MERCHANDISING_ITEM_TIER.COMPLEMENTARY, rank: 30 },
+    "pelenalnye-stoleshnicy": {
+      tier: MERCHANDISING_ITEM_TIER.COMPLEMENTARY,
+      rank: 40,
+    },
     zerkala: { tier: MERCHANDISING_ITEM_TIER.ACCESSORY, rank: 10 },
     chasy: { tier: MERCHANDISING_ITEM_TIER.ACCESSORY, rank: 20 },
   }
@@ -209,6 +213,7 @@ export function inferItemTypeKeyFromText(blob: string): string | null {
   if (/полк/.test(t)) return "polki"
   if (/бортик/.test(t)) return "bortiki"
   if (/балдахин|canopy/.test(t)) return "baldahiny"
+  if (/пеленальн|changing\s*top/.test(t)) return "pelenalnye-stoleshnicy"
   return null
 }
 

@@ -51,4 +51,24 @@ import { toCatalogBrowseClientProduct } from "./catalog-browse-client-product"
   ])
 }
 
+{
+  const out = toCatalogBrowseClientProduct({
+    id: "p2",
+    handle: "ww-1",
+    title: "Комод",
+    metadata: {
+      collection: "willie-winkie",
+      category_handle: "komody",
+      buyer_item_type: "komody",
+      buyer_item_type_source: "title_fallback",
+      workbook_row_key: "secret",
+    },
+  })
+  const meta = out.metadata as Record<string, unknown>
+  assert.equal(meta.category_handle, "komody")
+  assert.equal(meta.buyer_item_type, "komody")
+  assert.equal(meta.buyer_item_type_source, "title_fallback")
+  assert.equal(meta.workbook_row_key, undefined)
+}
+
 console.log("catalog-browse-client-product.fidelity.test.ts: ok")
