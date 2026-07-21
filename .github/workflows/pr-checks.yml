@@ -52,12 +52,18 @@ jobs:
         run: yarn install --immutable
 
       - name: Production typecheck
+        env:
+          MEDUSA_BACKEND_INTERNAL_URL: http://backend:9000
         run: yarn typecheck
 
       - name: Full typecheck (includes QA boards)
+        env:
+          MEDUSA_BACKEND_INTERNAL_URL: http://backend:9000
         run: yarn typecheck:all
 
       - name: Lint
+        env:
+          MEDUSA_BACKEND_INTERNAL_URL: http://backend:9000
         run: yarn lint
 
       - name: Production build
