@@ -18,6 +18,9 @@ on `GET /store/catalog-products` (also via Next rewrite `/store/catalog-products
 
 API order alone is not enough - confirm DOM card order after hydration.
 
+Release/runtime rules: `docs/operator/release-governance.md`, `.cursor/rules/woodright-release-runtime-governance.mdc`.  
+Public verify: `node scripts/release/verify-public-catalog.cjs --base https://woodright-demo.ru`.
+
 ## Source of truth
 
 **Backend only:** `apps/backend/src/lib/catalog-merchandising-order.ts`

@@ -31,7 +31,7 @@ jobs:
           set -euo pipefail
           # Scan the checked-out tree (not a rev-range — git grep needs trees).
           if git grep -nE '(BEGIN (RSA |OPENSSH )?PRIVATE KEY|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})' -- \
-            '*.ts' '*.tsx' '*.js' '*.mjs' '*.yml' '*.yaml' '*.md' '*.env' '*.env.*' 2>/dev/null; then
+            '*.ts' '*.tsx' '*.js' '*.cjs' '*.yml' '*.yaml' '*.md' '*.env' '*.env.*' 2>/dev/null; then
             echo "Potential secret material in tracked files" >&2
             exit 1
           fi
@@ -120,3 +120,21 @@ jobs:
           for f in "${FILES[@]}"; do
             yarn dlx tsx "$f"
           done
+
+  release-governance:
+    name: Release governance gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Manifest / deploy / owner / report fixtures
+        run: |
+          set -euo pipefail
+          node scripts/release/validate-release-manifest.cjs --fixture-dir scripts/release/fixtures
+          node scripts/release/validate-deploy-inputs.cjs --fixture-dir scripts/release/fixtures/deploy
+          node scripts/release/check-owner-state.cjs --fixture-dir scripts/release/fixtures/owner
+          node scripts/release/validate-report-status.cjs --fixture-dir scripts/release/fixtures/reports
+          echo "release_governance_gates=ok"
