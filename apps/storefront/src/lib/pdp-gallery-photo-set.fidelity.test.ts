@@ -45,9 +45,11 @@ const g2 = "/static/products/a/g2.jpg"
 }
 
 {
-  /* Whitespace / non-string ignored. */
-  // @ts-expect-error intentional junk in strip
-  const photos = buildPdpGalleryPhotoSet(` ${main} `, ["", "  ", g1, null, g2])
+  /* Whitespace / non-string ignored (runtime filter; cast keeps fidelity intent). */
+  const photos = buildPdpGalleryPhotoSet(
+    ` ${main} `,
+    ["", "  ", g1, null, g2] as unknown as readonly string[]
+  )
   assert.deepEqual(photos, [main, g1, g2])
 }
 

@@ -8,7 +8,11 @@ export function loadBoardState(): BoardPersistedState | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_KEY)
     if (!raw) return null
-    const parsed = JSON.parse(raw) as BoardPersistedState & { version?: number }
+    const parsed = JSON.parse(raw) as {
+      version?: number
+      savedAt?: string
+      decisions?: BoardPersistedState["decisions"] | Record<string, PersistedItemState>
+    }
     if (!parsed?.decisions) return null
     if (parsed.version === 1) {
       const migrated: BoardPersistedState = {
@@ -25,7 +29,7 @@ export function loadBoardState(): BoardPersistedState | null {
       return migrated
     }
     if (parsed.version !== 2) return null
-    return parsed
+    return parsed as BoardPersistedState
   } catch {
     return null
   }

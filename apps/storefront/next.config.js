@@ -9,10 +9,10 @@ const backendUrl = resolveMedusaBackendInternalUrl(process.env)
 
 const nextConfig = {
   reactStrictMode: true,
-  // Pre-existing origin/main QA board type errors fail `next build` typecheck.
-  // Design packaging does not modify QA boards; keep buyer build unblocked.
+  // Production typecheck excludes src/app/qa (proof-only boards). Do not use
+  // ignoreBuildErrors — buyer build must fail on real production TS errors.
   typescript: {
-    ignoreBuildErrors: true,
+    tsconfigPath: "./tsconfig.production.json",
   },
   // QA: :3002 and :3004 run separate `next dev` from the same app — isolate caches.
   distDir: process.env.NEXT_DIST_DIR || ".next",

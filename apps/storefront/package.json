@@ -11,7 +11,10 @@
     "start": "NEXT_DIST_DIR=.next-build next start",
     "check:landing-css": "node scripts/check-landing-css-assets.mjs",
     "check:landing-css:heal": "node scripts/check-landing-css-assets.mjs --heal",
-    "lint": "next lint"
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit -p tsconfig.production.json",
+    "typecheck:all": "tsc --noEmit -p tsconfig.json",
+    "test:fidelity": "node scripts/run-fidelity-tests.mjs"
   },
   "dependencies": {
     "next": "^14.2.0",

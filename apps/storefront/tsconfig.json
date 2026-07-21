@@ -40,7 +40,6 @@
     ".next-build/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules",
-    "src/app/qa"
+    "node_modules"
   ]
 }

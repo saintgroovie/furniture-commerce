@@ -1,0 +1,110 @@
+# PR checks for Woodright monorepo (storefront production gate + fidelity).
+name: PR checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: pr-checks-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  storefront:
+    name: Storefront production gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: apps/storefront
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Secret scan (heuristic, no values)
+        working-directory: .
+        run: |
+          set -euo pipefail
+          # Scan the checked-out tree (not a rev-range — git grep needs trees).
+          if git grep -nE '(BEGIN (RSA |OPENSSH )?PRIVATE KEY|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})' -- \
+            '*.ts' '*.tsx' '*.js' '*.mjs' '*.yml' '*.yaml' '*.md' '*.env' '*.env.*' 2>/dev/null; then
+            echo "Potential secret material in tracked files" >&2
+            exit 1
+          fi
+          echo "secret_scan=ok"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: yarn
+          cache-dependency-path: apps/storefront/yarn.lock
+
+      - name: Install
+        run: yarn install --immutable
+
+      - name: Production typecheck
+        run: yarn typecheck
+
+      - name: Full typecheck (includes QA boards)
+        run: yarn typecheck:all
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Production build
+        env:
+          MEDUSA_BACKEND_INTERNAL_URL: http://backend:9000
+          NEXT_PUBLIC_SITE_URL: https://woodright-demo.ru
+          NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: pk_test_ci_placeholder
+          NEXT_PUBLIC_MEDUSA_BACKEND_URL: ""
+        run: yarn build
+
+      - name: Client artifact URL gate
+        env:
+          MEDUSA_BACKEND_INTERNAL_URL: http://backend:9000
+        run: |
+          set -euo pipefail
+          ROOT=".next-build/static/chunks"
+          test -d "$ROOT"
+          if grep -R --fixed-strings -l '89.169.188.29:9000' "$ROOT" 2>/dev/null; then
+            echo "client leak: public IP:9000" >&2
+            exit 1
+          fi
+          if grep -R --fixed-strings -l 'http://backend:9000' "$ROOT" 2>/dev/null; then
+            echo "client leak: docker hostname" >&2
+            exit 1
+          fi
+          echo "client_artifact_gate=ok"
+
+      - name: Fidelity tests
+        run: yarn test:fidelity
+
+  backend-fidelity:
+    name: Backend fidelity tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: apps/backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: yarn
+          cache-dependency-path: apps/backend/yarn.lock
+      - name: Install
+        run: yarn install --immutable
+      - name: Run classification/cart/catalog fidelity
+        run: |
+          set -euo pipefail
+          # Prefer yarn dlx tsx for colocated fidelity without permanent tsx dep.
+          mapfile -t FILES < <(find src -name '*.fidelity.test.ts' | sort)
+          echo "found ${#FILES[@]} fidelity files"
+          for f in "${FILES[@]}"; do
+            yarn dlx tsx "$f"
+          done
