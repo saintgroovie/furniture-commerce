@@ -1,7 +1,9 @@
 import Link from "next/link"
 import type { Metadata } from "next"
+import { redirect } from "next/navigation"
 import { getSiteUrl } from "@/lib/api/base"
 import { getProduct, getProducts, NOT_FOUND } from "@/lib/api/products"
+import { getMotifContext } from "@/lib/api/motif-themes"
 import { formatRub, getPrice } from "@/lib/format"
 import {
   formatRequestQuotePriceLabel,
@@ -17,6 +19,8 @@ import { OliverPdpMediaSwitcher } from "@/components/oliver-pdp-media-switcher"
 import { GreenwichBedPdpMediaSwitcher } from "@/components/greenwich-bed-pdp-media-switcher"
 import { ProductPdpExecutionMediaSwitcher } from "@/components/product-pdp-execution-media-switcher"
 import { ProductPdpMediaSwitcher } from "@/components/product-pdp-media-switcher"
+import { PdpMotifSelector } from "@/components/pdp-motif-selector"
+import { PdpRelatedInMotif } from "@/components/pdp-related-in-motif"
 import {
   buildIntraProductExecutionSelectors,
   cardThumbnailSrcFromProduct,
@@ -64,7 +68,7 @@ import {
   layoutPdpSubtitle,
 } from "@/lib/pdp-copy-layout"
 import { isKidsStorefrontProduct } from "@/lib/kids"
-import { actions, labels, pdpCopy, productTypeBadgeLabels } from "@/lib/woodright-copy"
+import { actions, labels, pdpCopy, productTypeBadgeLabels, willieWinkieMotifsCopy } from "@/lib/woodright-copy"
 import { KidsProductSection } from "@/components/kids-product-section"
 
 function pdpHeroThumbnail(product: Record<string, unknown>): string | undefined {
@@ -123,7 +127,13 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   }
 }
 
-export default async function ProductPage({ params }: { params: { id: string } }) {
+export default async function ProductPage({
+  params,
+  searchParams,
+}: {
+  params: { id: string }
+  searchParams?: Record<string, string | string[] | undefined>
+}) {
   let product: Record<string, unknown> | null = null
   try {
     const res = await getProduct(params.id)
@@ -162,6 +172,36 @@ export default async function ProductPage({ params }: { params: { id: string } }
 
   const base = getSiteUrl()
   const handle = String(product.handle ?? "")
+  const motifRaw = searchParams?.motif
+  const motifQuery =
+    typeof motifRaw === "string"
+      ? motifRaw.trim()
+      : Array.isArray(motifRaw) && typeof motifRaw[0] === "string"
+        ? motifRaw[0].trim()
+        : ""
+
+  let motifContext: Awaited<ReturnType<typeof getMotifContext>> = null
+  if (handle) {
+    try {
+      motifContext = await getMotifContext({
+        handle,
+        motif: motifQuery || null,
+      })
+    } catch {
+      motifContext = null
+    }
+  }
+
+  if (
+    motifContext?.motif_status === "redirect" &&
+    motifContext.redirect_handle &&
+    motifContext.selected_motif?.motif_slug
+  ) {
+    redirect(
+      `/product/${encodeURIComponent(motifContext.redirect_handle)}?motif=${encodeURIComponent(motifContext.selected_motif.motif_slug)}`
+    )
+  }
+
   const isOliver = handle.startsWith("ol-")
   const isGreenwichBed = isGreenwichBedProduct(product)
   const thumbSrc = cardThumbnailSrcFromProduct(product)
@@ -523,6 +563,30 @@ export default async function ProductPage({ params }: { params: { id: string } }
                 </dl>
               )}
 
+              {/* Motif selection (Willie Winkie) — before other configuration */}
+              {motifContext &&
+                (motifContext.motif_status === "unsupported" ||
+                  motifContext.motif_status === "unknown") && (
+                  <div className="pdp-motif-notice" role="status">
+                    <p className="pdp-motif-notice-title">
+                      {motifContext.motif_status === "unsupported"
+                        ? willieWinkieMotifsCopy.motifUnavailableTitle
+                        : willieWinkieMotifsCopy.motifUnknownTitle}
+                    </p>
+                    <p className="pdp-motif-notice-body">
+                      {motifContext.motif_status === "unsupported"
+                        ? willieWinkieMotifsCopy.motifUnavailableBody
+                        : willieWinkieMotifsCopy.motifUnknownBody}
+                    </p>
+                  </div>
+                )}
+              {motifContext && motifContext.motif_options.length > 0 && (
+                <PdpMotifSelector
+                  options={motifContext.motif_options}
+                  motifPagePath={motifContext.motif_page_path}
+                />
+              )}
+
               {/* 5. Configuration — material execution, then size + other
                   execution groups, all before price / CTA */}
               {materialTiers && (
@@ -645,6 +709,15 @@ export default async function ProductPage({ params }: { params: { id: string } }
           )}
         </section>
       )}
+      {motifContext &&
+        motifContext.selected_motif &&
+        motifContext.related_products_in_motif.length > 0 && (
+          <PdpRelatedInMotif
+            products={motifContext.related_products_in_motif}
+            motifSlug={motifContext.selected_motif.motif_slug}
+            motifPagePath={motifContext.motif_page_path}
+          />
+        )}
     </div>
   )
 }
