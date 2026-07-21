@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { homeCopy } from "@/lib/woodright-copy"
+import { HomeImg } from "./home-img"
 
 export type HomeSceneSpot = {
   /** Percent offsets inside the scene image. */
@@ -134,7 +135,7 @@ export function HomeRoomScene({ scenes }: { scenes: HomeScene[] }) {
       <div className="hp-scene-stage">
         {scenes.map((s, i) =>
           mounted.has(i) ? (
-            <img
+            <HomeImg
               key={s.id}
               src={s.img}
               alt={i === active ? s.alt : ""}

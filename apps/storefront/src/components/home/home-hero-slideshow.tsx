@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { HomeImg } from "./home-img"
 
 export type HeroSlide = { src: string; alt: string }
 
@@ -9,6 +10,8 @@ export type HeroSlide = { src: string; alt: string }
  * page load. Only slide 0 gets `src` on first paint; later slides receive
  * `src` after a short delay so their multi-hundred-KB JPGs stay off the
  * critical path without blanking the hero mid-cycle.
+ *
+ * URLs prefer catalog-card WebP derivatives when baked (see HomeImg).
  */
 export function HomeHeroSlideshow({ slides }: { slides: readonly HeroSlide[] }) {
   const [extrasReady, setExtrasReady] = useState(false)
@@ -33,7 +36,7 @@ export function HomeHeroSlideshow({ slides }: { slides: readonly HeroSlide[] }) 
       {slides.map((slide, i) => {
         const showSrc = i === 0 || extrasReady
         return (
-          <img
+          <HomeImg
             key={slide.src}
             src={showSrc ? slide.src : undefined}
             alt={i === 0 ? slide.alt : ""}

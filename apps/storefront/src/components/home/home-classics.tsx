@@ -3,6 +3,7 @@ import { homeCopy } from "@/lib/woodright-copy"
 import { formatRuInline } from "@/lib/format-ru-copy"
 import type { HomeProduct } from "./home-data"
 import { HomeDeferredCardLayers } from "./home-deferred-card-layers"
+import { HomeImg } from "./home-img"
 
 export function FeaturedCard({
   product,
@@ -23,7 +24,7 @@ export function FeaturedCard({
         className="hp-featured-media"
         style={{ "--cycle-delay": `${index * 3.1}s` } as React.CSSProperties}
       >
-        <img
+        <HomeImg
           src={product.img}
           alt={product.title}
           loading="lazy"
