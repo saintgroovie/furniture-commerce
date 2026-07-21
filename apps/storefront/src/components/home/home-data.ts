@@ -1,4 +1,5 @@
-import { formatRub, getPrice } from "@/lib/format"
+import { formatRub } from "@/lib/format"
+import { resolveCatalogCardPrice } from "@/lib/catalog-card-price"
 import { getArticle, getCollectionLabel } from "@/lib/product-metadata"
 import {
   collectExtraProductImageUrls,
@@ -26,7 +27,12 @@ export function toHomeProduct(product: Record<string, unknown>): HomeProduct | n
   const title = typeof product.title === "string" ? product.title : null
   const thumbRaw = typeof product.thumbnail === "string" ? product.thumbnail.trim() : ""
   if (!id || !title || !thumbRaw) return null
-  const price = getPrice(product)
+  const cardPrice = resolveCatalogCardPrice(product)
+  const priceLabel =
+    cardPrice.requestQuoteLabel ??
+    (cardPrice.amount != null
+      ? `${cardPrice.prefix}${formatRub(cardPrice.amount)}`
+      : null)
   const extra = collectExtraProductImageUrls(product, thumbRaw)
   return {
     id,
@@ -36,7 +42,7 @@ export function toHomeProduct(product: Record<string, unknown>): HomeProduct | n
     img: resolveStorefrontProductImageSrc(thumbRaw),
     hoverImg: extra.length > 0 ? resolveStorefrontProductImageSrc(extra[0]) : null,
     variantImgs: [],
-    priceLabel: price != null ? formatRub(price) : null,
+    priceLabel,
     collectionLabel: getCollectionLabel(product),
     article: getArticle(product),
   }

@@ -17,6 +17,7 @@ import {
 } from "@/lib/cart/pdp-material-selection"
 import type { MaterialTierOption } from "@/lib/material-tiers"
 import { addLineItem } from "@/lib/api/cart"
+import { cartLineConfigurationIdentity } from "@/lib/cart-line-identity"
 import { userFacingError } from "@/lib/user-facing-error"
 import { isRequestQuoteProduct } from "@/lib/request-quote"
 import { isKidsMetadataStorefrontProduct } from "@/lib/kids"
@@ -58,12 +59,16 @@ export function ProductCta({
   const productKey = productKeyOf(product)
   const gateOk = gateMatchesProduct(gate, productKey)
 
-  /* Selected material execution; falls back to the default (first) tier. */
+  const materialCode = materialCodeForProduct(materialSelection, productKey)
+  const materialIncomplete = Boolean(materialTiers?.length) && !materialCode
+
+  /* Selected material execution; no default tier fallback. */
   function selectedMaterialTier(live = false): MaterialTierOption | null {
     if (!materialTiers || materialTiers.length === 0) return null
     const selection = live ? readPdpMaterialSelection() : materialSelection
     const code = materialCodeForProduct(selection, productKey)
-    return materialTiers.find((t) => t.code === code) ?? materialTiers[0]
+    if (!code) return null
+    return materialTiers.find((t) => t.code === code) ?? null
   }
 
   /* Selected execution rides into the bespoke/request-quote form. */
@@ -85,12 +90,12 @@ export function ProductCta({
       : undefined
   const productId = product.id as string | undefined
 
-  /* Defaults publish after mount; until then allow CTA — add-to-cart falls
-     back to first material tier + omits finish (= standard color price). */
-  const selectionBlocked =
-    gateOk &&
-    gate.requiresSelection &&
-    (!gate.complete || !gate.combinationAvailable)
+  /* Gallery and material picks must be explicit before add-to-cart.
+     Fail closed while the gallery gate has not published for this product. */
+  const executionGatePending =
+    requiresBuyerSelection &&
+    (!gateOk || !gate.requiresSelection || !gate.complete || !gate.combinationAvailable)
+  const selectionBlocked = materialIncomplete || executionGatePending
   const canAdd = Boolean(variantId) && !selectionBlocked && !adding
 
   async function handleAddToCart(e: MouseEvent<HTMLButtonElement>) {
@@ -98,13 +103,18 @@ export function ProductCta({
     if (requiresBuyerSelection) {
       const live = readPdpExecutionSelection()?.gate
       if (
-        live &&
-        gateMatchesProduct(live, productKey) &&
-        live.requiresSelection &&
-        (!live.complete || !live.combinationAvailable)
+        !live ||
+        !gateMatchesProduct(live, productKey) ||
+        !live.requiresSelection ||
+        !live.complete ||
+        !live.combinationAvailable
       ) {
         return
       }
+    }
+    if (materialTiers?.length) {
+      const liveCode = materialCodeForProduct(readPdpMaterialSelection(), productKey)
+      if (!liveCode) return
     }
     /* Captured before the awaits: the flight dot launches from the CTA's
        center, and currentTarget is only valid synchronously. */
@@ -145,6 +155,11 @@ export function ProductCta({
         ...(finishKey ? { finish_execution_key: finishKey } : {}),
         ...(isKids ? { storefront_section: "kids" } : {}),
       }
+      metadata.configuration_identity = cartLineConfigurationIdentity({
+        variant_id: variantId,
+        product_id: productId,
+        metadata,
+      })
       const data = await addLineItem(cartId, {
         variant_id: variantId,
         quantity: 1,

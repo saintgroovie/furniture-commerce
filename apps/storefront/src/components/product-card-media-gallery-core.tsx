@@ -246,6 +246,7 @@ export function ProductCardMediaGalleryCore({
   priorityHero = false,
   productHandle,
 }: Props) {
+  const isPdpLayout = layout === "pdp"
   const isGreenwichBed = Boolean(greenwichBedMatrix && greenwichBedMatrix.length > 0)
   const bedInteriorSrcs = sharedInteriorSrcs ?? []
   const bedMediaOptions = useMemo(
@@ -280,7 +281,7 @@ export function ProductCardMediaGalleryCore({
   )
 
   const [activeSeparateFabricKey, setActiveSeparateFabricKey] = useState<string | null>(
-    () => separateFabricRows?.[0]?.key ?? null
+    () => (isPdpLayout ? null : separateFabricRows?.[0]?.key ?? null)
   )
 
   const activeSeparateFabric = useMemo(() => {
@@ -298,28 +299,32 @@ export function ProductCardMediaGalleryCore({
   const hasWood = Boolean(woodVariants && woodVariants.length > 1)
   const hasFinish = Boolean(finishVariants && finishVariants.length > 1)
 
-  const [activeHeadboardKey, setActiveHeadboardKey] = useState<string | null>(
-    () => bedDefaults?.headboard ?? headboardVariants?.[0]?.key ?? null
+  const [activeHeadboardKey, setActiveHeadboardKey] = useState<string | null>(() =>
+    isPdpLayout
+      ? null
+      : bedDefaults?.headboard ?? headboardVariants?.[0]?.key ?? null
   )
-  const [activeUpholsteryKey, setActiveUpholsteryKey] = useState<string | null>(
-    () => bedDefaults?.fabric ?? upholsteryVariants?.[0]?.key ?? null
+  const [activeUpholsteryKey, setActiveUpholsteryKey] = useState<string | null>(() =>
+    isPdpLayout
+      ? null
+      : bedDefaults?.fabric ?? upholsteryVariants?.[0]?.key ?? null
   )
-  const [activeWoodKey, setActiveWoodKey] = useState<string | null>(
-    () =>
-      bedDefaults?.frameMaterial ??
-      paintDefaults?.frameMaterial ??
-      woodVariants?.[0]?.key ??
-      null
+  const [activeWoodKey, setActiveWoodKey] = useState<string | null>(() =>
+    isPdpLayout
+      ? null
+      : bedDefaults?.frameMaterial ??
+          paintDefaults?.frameMaterial ??
+          woodVariants?.[0]?.key ??
+          null
   )
-  const [activeFinishKey, setActiveFinishKey] = useState<string | null>(
-    () =>
-      paintDefaults?.paintFinish ??
-      finishVariants?.[0]?.key ??
-      null
+  const [activeFinishKey, setActiveFinishKey] = useState<string | null>(() =>
+    isPdpLayout
+      ? null
+      : paintDefaults?.paintFinish ?? finishVariants?.[0]?.key ?? null
   )
-  const [activeProvenceMediaKey, setActiveProvenceMediaKey] = useState<"cream" | "wood" | null>(
-    "cream"
-  )
+  const [activeProvenceMediaKey, setActiveProvenceMediaKey] = useState<
+    "cream" | "wood" | null
+  >(() => (isPdpLayout ? null : "cream"))
   const [displayHeroSrc, setDisplayHeroSrc] = useState(mainSrc.trim())
   const [heroFailed, setHeroFailed] = useState(false)
   const [activeGalleryUrl, setActiveGalleryUrl] = useState<string | null>(null)
@@ -570,17 +575,26 @@ export function ProductCardMediaGalleryCore({
         ? defaultGreenwichPaintSelection(greenwichPaintMatrix)
         : null
 
-    setActiveHeadboardKey(bedDefault?.headboard ?? headboardVariants?.[0]?.key ?? null)
-    setActiveUpholsteryKey(bedDefault?.fabric ?? upholsteryVariants?.[0]?.key ?? null)
-    setActiveWoodKey(
-      bedDefault?.frameMaterial ??
-        paintDefault?.frameMaterial ??
-        woodVariants?.[0]?.key ??
-        null
-    )
-    setActiveFinishKey(paintDefault?.paintFinish ?? finishVariants?.[0]?.key ?? null)
-    setActiveSeparateFabricKey(separateFabricRows?.[0]?.key ?? null)
-    setActiveProvenceMediaKey("cream")
+    if (layout === "pdp") {
+      setActiveHeadboardKey(null)
+      setActiveUpholsteryKey(null)
+      setActiveWoodKey(null)
+      setActiveFinishKey(null)
+      setActiveSeparateFabricKey(null)
+      setActiveProvenceMediaKey(null)
+    } else {
+      setActiveHeadboardKey(bedDefault?.headboard ?? headboardVariants?.[0]?.key ?? null)
+      setActiveUpholsteryKey(bedDefault?.fabric ?? upholsteryVariants?.[0]?.key ?? null)
+      setActiveWoodKey(
+        bedDefault?.frameMaterial ??
+          paintDefault?.frameMaterial ??
+          woodVariants?.[0]?.key ??
+          null
+      )
+      setActiveFinishKey(paintDefault?.paintFinish ?? finishVariants?.[0]?.key ?? null)
+      setActiveSeparateFabricKey(separateFabricRows?.[0]?.key ?? null)
+      setActiveProvenceMediaKey("cream")
+    }
     const initial =
       bedDefault && greenwichBedMatrix
         ? resolveGreenwichBedMedia(
@@ -681,7 +695,6 @@ export function ProductCardMediaGalleryCore({
   // Buyer strips are optimistic (no Image() stampede). Broken thumbs prune
   // themselves via onError. PDP must not clear/rebuild the rail on every
   // execution switch - that reflows the hero column and causes visible shake.
-  const isPdpLayout = layout === "pdp"
 
   // Catalog: defer strip network until near-viewport / pointer / keyboard focus.
   // Default true stampeded ~4 thumb URLs × visible cards on mount (W3g).
@@ -1751,7 +1764,12 @@ export function ProductCardMediaGalleryCore({
   }
 
   const heroEmpty = oliverMode && (!displayHeroSrc || heroFailed)
-  const isPdp = layout === "pdp"
+  const isPdp = isPdpLayout
+  const heroAlt = alt.trim()
+  const lightboxAlt =
+    lightboxIndex != null && lightboxIndex > 0 && heroAlt
+      ? `${heroAlt}, дополнительный вид ${lightboxIndex + 1}`
+      : heroAlt
 
   /* PDP: publish confirmed execution + purchase gate for price / CTA.
      Never treat first-value media defaults as buyer confirmation. */
@@ -1914,7 +1932,7 @@ export function ProductCardMediaGalleryCore({
     ) : (
       <img
         src={displayHeroSrc}
-        alt={alt}
+        alt={heroAlt}
         className={`${isPdp ? "product-detail-img" : "card-img"}${isPdp ? " is-zoomable" : ""}`}
         loading={priorityHero && !isPdp ? "eager" : "lazy"}
         fetchPriority={priorityHero && !isPdp ? "high" : undefined}
@@ -2148,7 +2166,7 @@ export function ProductCardMediaGalleryCore({
               type="button"
               className="pdp-hero-open"
               onClick={openLightbox}
-              aria-label={`${alt} - ${pdpLightboxCopy.open}`}
+              aria-label={`${heroAlt} - ${pdpLightboxCopy.open}`}
             >
               {heroImage}
               <PdpHeroAffordance count={pdpLightboxImages.length} />
@@ -2156,7 +2174,7 @@ export function ProductCardMediaGalleryCore({
           )}
         </div>
       ) : (
-        <Link href={href} className="product-card-media-link card-link" aria-label={alt}>
+        <Link href={href} className="product-card-media-link card-link" aria-label={heroAlt || undefined}>
           {heroImage}
         </Link>
       )}
@@ -2188,7 +2206,7 @@ export function ProductCardMediaGalleryCore({
         <PdpImageLightbox
           images={pdpLightboxImages}
           activeIndex={lightboxIndex}
-          alt={alt}
+          alt={lightboxAlt}
           onClose={() => setLightboxIndex(null)}
           onNavigate={setLightboxIndex}
         />

@@ -4,9 +4,9 @@
  * Bridge between the PDP material execution dropdown and price / CTA blocks.
  *
  * Mirrors pdp-selection.ts: module singleton (one PDP mounted at a time),
- * `productKey` rejects a stale pick after client navigation. Unlike the
- * purchase gate there is no empty state — consumers fall back to the first
- * (default) tier option when no pick has been published yet.
+ * `productKey` rejects a stale pick after client navigation. There is no
+ * default tier — price / CTA consumers treat null from materialCodeForProduct
+ * as an incomplete pick until the buyer selects an option.
  */
 
 import { useSyncExternalStore } from "react"
@@ -37,7 +37,7 @@ export function readPdpMaterialSelection(): PdpMaterialSelection | null {
   return current
 }
 
-/** Selected tier code for this product, or null → caller uses the default tier. */
+/** Selected tier code for this product, or null when unset. */
 export function materialCodeForProduct(
   selection: PdpMaterialSelection | null,
   productKey: string

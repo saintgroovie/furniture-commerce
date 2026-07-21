@@ -15,6 +15,7 @@ import {
   resolveFinishColorMultiplier,
 } from "@/lib/finish-color-premium"
 import { formatRub } from "@/lib/format"
+import { pdpCopy } from "@/lib/woodright-copy"
 
 type Props = {
   /** Preformatted price label from server (existing getPrice / request-quote). */
@@ -25,16 +26,15 @@ type Props = {
    */
   basePrice?: number | null
   /**
-   * When true, hide price only for an unavailable combination. Defaults
-   * (LDSP + first/standard color) show immediately — including SSR before the
-   * gallery publishes the gate.
+   * When true, hide price only for an unavailable combination. Material tier
+   * and gallery picks must be explicit before a price is shown.
    */
   requiresBuyerSelection: boolean
   /** Product handle/id — rejects a stale gate from a previous PDP. */
   productKey: string
   /**
-   * Ordered material tier options (position 0 = default / lowest). When present
-   * the shown price follows the tier picked in the material dropdown.
+   * Ordered material tier options. The shown price follows an explicit tier
+   * pick in the material dropdown — no default tier fallback.
    */
   materialTiers?: MaterialTierOption[] | null
   /** request_quote products keep the «от … ₽» reference-price shape. */
@@ -42,8 +42,8 @@ type Props = {
 }
 
 /**
- * Price under option groups. Defaults (LDSP + first/standard color) show the
- * lowest configured price immediately; switching material or color updates live.
+ * Price under option groups. Material tier and execution picks must be
+ * confirmed before an exact price is shown.
  */
 export function PdpPriceBlock({
   priceLabel,
@@ -56,6 +56,10 @@ export function PdpPriceBlock({
   const gate = usePdpPurchaseGate()
   const gateOk = gateMatchesProduct(gate, productKey)
   const materialSelection = usePdpMaterialSelection()
+
+  const materialCode = materialCodeForProduct(materialSelection, productKey)
+  const materialIncomplete =
+    Boolean(materialTiers?.length) && !materialCode
 
   const combinationUnavailable =
     requiresBuyerSelection &&
@@ -76,12 +80,16 @@ export function PdpPriceBlock({
       ? resolveFinishColorMultiplier(gate.finishKey, gate.standardFinishKey)
       : 1
 
-  if (basePrice != null && Number.isFinite(basePrice) && basePrice > 0) {
+  if (
+    basePrice != null &&
+    Number.isFinite(basePrice) &&
+    basePrice > 0 &&
+    !materialIncomplete
+  ) {
     let materialMultiplier = 1
-    if (materialTiers && materialTiers.length > 0) {
-      const code = materialCodeForProduct(materialSelection, productKey)
-      const tier = materialTiers.find((t) => t.code === code) ?? materialTiers[0]
-      materialMultiplier = tier.multiplier
+    if (materialTiers && materialTiers.length > 0 && materialCode) {
+      const tier = materialTiers.find((t) => t.code === materialCode)
+      if (tier) materialMultiplier = tier.multiplier
     }
     const amount = resolveConfiguredUnitPrice(
       basePrice,
@@ -89,29 +97,41 @@ export function PdpPriceBlock({
       colorMultiplier
     )
     effectiveLabel = requestQuote ? `от ${formatRub(amount)}` : formatRub(amount)
-  } else if (materialTiers && materialTiers.length > 0) {
-    const code = materialCodeForProduct(materialSelection, productKey)
-    const tier = materialTiers.find((t) => t.code === code) ?? materialTiers[0]
-    if (tier.price != null) {
+  } else if (
+    materialTiers &&
+    materialTiers.length > 0 &&
+    materialCode &&
+    !materialIncomplete
+  ) {
+    const tier = materialTiers.find((t) => t.code === materialCode)
+    if (tier?.price != null) {
       const amount =
         colorMultiplier === 1
           ? tier.price
           : Math.round(tier.price * colorMultiplier)
       effectiveLabel = requestQuote ? `от ${formatRub(amount)}` : formatRub(amount)
     }
+  } else if (materialIncomplete) {
+    effectiveLabel = null
   }
 
   const showPrice =
-    Boolean(effectiveLabel) && !combinationUnavailable && !selectionIncomplete
+    Boolean(effectiveLabel) &&
+    !combinationUnavailable &&
+    !selectionIncomplete &&
+    !materialIncomplete
 
-  const hint =
-    !showPrice && requiresBuyerSelection
-      ? combinationUnavailable
-        ? "Такое сочетание недоступно"
-        : gateOk && gate.requiresSelection
+  const materialHint = `${pdpCopy.optionChooseValue} ${pdpCopy.materialTierLabel.toLowerCase()}`
+
+  const hint = !showPrice
+    ? combinationUnavailable
+      ? "Такое сочетание недоступно"
+      : materialIncomplete
+        ? materialHint
+        : requiresBuyerSelection && gateOk && gate.requiresSelection
           ? pdpPriceHintForGate(gate)
           : null
-      : null
+    : null
 
   return (
     <div className="pdp-price-area" aria-live="polite">
