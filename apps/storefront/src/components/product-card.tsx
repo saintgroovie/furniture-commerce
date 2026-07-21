@@ -8,7 +8,7 @@ import {
   getSubcollectionLabel,
   getArticle,
   getDimensions,
-  formatDimensionsCompact,
+  formatDimensionsCompactLabeled,
 } from "@/lib/product-metadata"
 import { OliverCardMediaSwitcher } from "@/components/oliver-card-media-switcher"
 import { ProductCardMediaSwitcher } from "@/components/product-card-media-switcher"
@@ -104,6 +104,7 @@ export function ProductCard({
   const subcollectionLabel = getSubcollectionLabel(product as Record<string, unknown>)
   const article = getArticle(product as Record<string, unknown>)
   const dim = getDimensions(product as Record<string, unknown>)
+  const dimLabeled = dim != null ? formatDimensionsCompactLabeled(dim) : null
 
   const contextParts = [collectionLabel, subcollectionLabel, article].filter(Boolean)
   const contextLine = contextParts.length > 0 ? contextParts.join(" · ") : null
@@ -314,8 +315,11 @@ export function ProductCard({
             </div>
           )}
           <h3>{product.title}</h3>
-          {dim != null && (
-            <span className="card-dimensions">{formatDimensionsCompact(dim)}</span>
+          {dimLabeled != null && (
+            <span className="card-dimensions">
+              {dimLabeled.values}
+              <span className="card-dimensions-caption">{dimLabeled.caption}</span>
+            </span>
           )}
           <div className="card-price-row">
             {cardPrice.requestQuoteLabel != null ? (
