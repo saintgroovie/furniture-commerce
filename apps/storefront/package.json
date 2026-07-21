@@ -11,7 +11,11 @@
     "start": "NEXT_DIST_DIR=.next-build next start",
     "check:landing-css": "node scripts/check-landing-css-assets.mjs",
     "check:landing-css:heal": "node scripts/check-landing-css-assets.mjs --heal",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:meta-image-url": "tsx src/lib/product-meta-image-url.fidelity.test.ts",
+    "test:url-contract": "tsx src/lib/medusa-backend-url-contract.fidelity.test.ts",
+    "scan:forbidden-origins": "node scripts/scan-forbidden-origins.mjs",
+    "test:https-hardening": "yarn test:meta-image-url && yarn test:url-contract && yarn scan:forbidden-origins"
   },
   "dependencies": {
     "next": "^14.2.0",
@@ -23,6 +27,7 @@
     "@types/node": "^20.0.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
+    "tsx": "^4.23.1",
     "typescript": "^5.0.0"
   }
 }
