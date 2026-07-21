@@ -54,6 +54,17 @@ export function resolveCatalogCardPrice(
     }
   }
 
+  /* Grouped catalog cards: displayGroup.minPrice is the min across members
+     (each resolved via this helper without a group). Prefer it over the
+     representative product's own default so the card never overstates. */
+  if (displayGroup?.minPrice != null && isPositivePrice(displayGroup.minPrice)) {
+    return {
+      amount: displayGroup.minPrice,
+      prefix: "от ",
+      requestQuoteLabel: null,
+    }
+  }
+
   /* Prefer backend-projected default configuration (browse DTO contract). */
   const backendMin = readBackendDefaultMinPrice(product)
   if (backendMin != null) {
@@ -64,13 +75,11 @@ export function resolveCatalogCardPrice(
     return { amount: backendMin, prefix, requestQuoteLabel: null }
   }
 
+  /* Fallback only when browse DTO lacks buyer_default_configuration (older
+     backend). Prefer not to invent a second SoT when the projection exists. */
   const tierMin = minMaterialTierPrice(product)
   if (tierMin != null) {
     return { amount: tierMin, prefix: "от ", requestQuoteLabel: null }
-  }
-
-  if (displayGroup?.minPrice != null && isPositivePrice(displayGroup.minPrice)) {
-    return { amount: displayGroup.minPrice, prefix: "от ", requestQuoteLabel: null }
   }
 
   const base = getPrice(product)

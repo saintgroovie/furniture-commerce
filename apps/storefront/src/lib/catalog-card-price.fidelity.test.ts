@@ -116,4 +116,33 @@ function product(
   assert.equal(resolved.amount, 80_000)
 }
 
+// Group min wins over representative backend default (cheaper sibling)
+{
+  const p = product({
+    metadata: {
+      buyer_default_configuration: {
+        min_unit_price: 90_000,
+        material_execution_code: "solid_front_ldsp_body",
+      },
+      material_tiers: {
+        solid_front_ldsp_body: {
+          key: "solid_front_ldsp_body",
+          label_ru: "ЛДСП",
+          price_multiplier: 0.7,
+          position: 0,
+        },
+        solid_full: {
+          key: "solid_full",
+          label_ru: "Массив",
+          price_multiplier: 1,
+          position: 1,
+        },
+      },
+    },
+  })
+  const resolved = resolveCatalogCardPrice(p, { count: 2, minPrice: 54_355 })
+  assert.equal(resolved.amount, 54_355)
+  assert.equal(resolved.prefix, "от ")
+}
+
 console.log("catalog-card-price.fidelity.test.ts: ok")
