@@ -11,7 +11,10 @@ import {
   projectBuyerItemTypeOntoProduct,
   resolveBuyerItemType,
 } from "./buyer-item-type"
-import { sortProductsByMerchandisingOrder } from "./catalog-merchandising-order"
+import {
+  inferItemTypeKeyFromText,
+  sortProductsByMerchandisingOrder,
+} from "./catalog-merchandising-order"
 
 function product(
   partial: Record<string, unknown> & { id: string; title: string }
@@ -306,6 +309,88 @@ function assertFacetsAlign(products: Record<string, unknown>[]) {
   assert.equal((unknown.metadata as Record<string, unknown>).buyer_item_type, null)
   assert.equal(countBuyerItemTypeFacets([unknown]).size, 0)
   assert.equal((unknown.metadata as Record<string, unknown>).motif_slug, "ballet")
+}
+
+// Owner-approved WW handles (Flow A matrix proposed_category=stoly-i-stoliki)
+{
+  for (const handle of ["mo-81-1", "sh-81-1", "fa-06-1"] as const) {
+    const projected = projectBuyerItemTypeOntoProduct(
+      product({
+        id: handle,
+        handle,
+        title: "ignored when confirmed handle exists",
+        metadata: {
+          collection: "willie-winkie",
+          motif_slug: "ballet",
+        },
+        product_classification: { product_type: "CONFIGURABLE" },
+      })
+    )
+    const meta = projected.metadata as Record<string, unknown>
+    assert.equal(meta.buyer_item_type, "stoly")
+    assert.equal(meta.buyer_item_type_source, "confirmed_handle")
+    assert.equal(meta.category_handle, "stoly")
+    assert.equal(meta.motif_slug, "ballet")
+    assert.equal(
+      (projected.product_classification as { product_type: string }).product_type,
+      "CONFIGURABLE"
+    )
+  }
+  const facets = countBuyerItemTypeFacets(
+    ["mo-81-1", "sh-81-1", "fa-06-1"].map((handle) =>
+      projectBuyerItemTypeOntoProduct(
+        product({
+          id: handle,
+          handle,
+          title: "x",
+          metadata: { collection: "willie-winkie" },
+        })
+      )
+    )
+  )
+  assert.equal(facets.get("stoly"), 3)
+}
+
+// Oxford stairs remain unknown without inventing a type
+{
+  const stairs = resolveBuyerItemType(
+    product({
+      id: "s-ox-05",
+      handle: "s-ox-05",
+      title: "Ступени с перилами и ящиками Оксфорд",
+      metadata: { collection: "oxford" },
+      product_classification: { product_type: "CONFIGURABLE" },
+    })
+  )
+  assert.equal(stairs.key, null)
+  assert.equal(stairs.source, "unknown")
+  assert.equal(stairs.facetEligible, false)
+}
+
+// Title-fallback false-positive guards (do not invent from partial words)
+{
+  assert.equal(
+    inferItemTypeKeyFromText("Пеленальная столешница к комоду"),
+    "pelenalnye-stoleshnicy"
+  )
+  assert.notEqual(inferItemTypeKeyFromText("Пеленальная столешница"), "stoly")
+  assert.equal(inferItemTypeKeyFromText("Бортик кровати мягкий"), "bortiki")
+  assert.notEqual(inferItemTypeKeyFromText("Бортик кровати мягкий"), "krovati")
+  assert.equal(
+    inferItemTypeKeyFromText("Шкаф с зеркальной вставкой"),
+    "shkafy"
+  )
+  assert.notEqual(
+    inferItemTypeKeyFromText("Шкаф с зеркальной вставкой"),
+    "zerkala"
+  )
+  assert.equal(
+    inferItemTypeKeyFromText("Зеркальная вставка декоративная"),
+    null
+  )
+  assert.equal(inferItemTypeKeyFromText("Зеркало навесное"), "zerkala")
+  // Diminutive «столик» is intentionally not title-inferred — use confirmed map
+  assert.equal(inferItemTypeKeyFromText("Столик детский Molly"), null)
 }
 
 console.log("buyer-item-type.fidelity.test.ts: ok")
