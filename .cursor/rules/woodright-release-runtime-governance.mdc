@@ -1,0 +1,83 @@
+---
+description: Release/runtime governance — digests, parity, DOM proof, single owner
+alwaysApply: true
+---
+
+# Woodright release & runtime governance
+
+Complements `woodright-core.mdc`, `woodright-response-format.mdc`, `foreground-only-execution.mdc`, `review-server-stability-gate.mdc`, `github-access.mdc`, `personal-data-mac-safety.mdc`.
+
+## Status taxonomy (no bare `done`)
+
+Use exactly one:
+
+| Status | Meaning |
+|---|---|
+| `audited_only` | Audit only; no product change |
+| `implemented_locally` | Code changed; runtime not verified |
+| `candidate_verified` | Candidate API + hydrated DOM OK; canonical unchanged |
+| `integrated_not_deployed` | In `main`; runtime not updated |
+| `deployed_not_verified` | Runtime updated; public DOM gate incomplete |
+| `done_deployed_and_verified` | Public hydrated DOM + digests + integrity + ≥5 samples |
+| `done_governance_merged_no_deploy` | Governance/CI merged; active runtime intentionally unchanged |
+| `rolled_back` | New release rolled back; previous restored |
+| `blocked` | Cannot continue safely |
+| `unsafe` | Must not leave runtime/changes as-is |
+
+`done_deployed_and_verified` **requires**: public URL, exact digests, public DOM evidence, rollback identity, five stable samples. API-only or candidate-only is never enough.
+
+## Immutable digest only
+
+Cutover / restart pin is `image@sha256:…` only. Mutable tags (including SHA-like tags) may help locate an image but are **not** release identity. Tag drift after build → document drift; **do not** redeploy from the drifted tag.
+
+## Backend / storefront SHA parity
+
+One release = one exact Git SHA for both images. Exception: documented emergency rollback to a previously verified digest pair.
+
+## Candidate ≠ canonical ≠ public
+
+Always name separately: candidate URL/ports, canonical local (`:3002`→`:9000`), public URL, each storefront’s backend upstream, each SHA/digest.
+
+## API ≠ UI
+
+Correct JSON order is supporting evidence only. Buyer-facing tasks need hydrated DOM after SSR, hydration, filters, grouping, navigation, sort reset.
+
+## Single runtime owner
+
+One controller per runtime pair. Forbidden simultaneous control via Dokploy + Compose + systemd + cron + Nightly + LaunchAgent + ad-hoc shell. Pre-cutover owner audit required. `ACTIVE_OWNER.json` and `ACTIVE-RUNTIME-OWNER.txt` must agree or deploy is blocked.
+
+## Rollback before cutover
+
+Capture previous digests, keepers, commands, backup dir, health baseline **before** live swap. Do not invent rollback after failure.
+
+## Five public samples
+
+After cutover: ≥5 public samples (timestamp, status, marker, first item, critical DOM, digest/SHA if available). Divergence → competing owner / stale replica / cache split → not done.
+
+## Clean release source
+
+Build from a clean worktree at an exact commit. No dirty WIP, no foreign `.next`, no uncommitted release source.
+
+## No blind cherry-pick
+
+Three-way semantic audit (old parent, source commit, current main) before integrate. Text merge ≠ semantic OK.
+
+## Data integrity + no unauthorized mutations
+
+Before/after catalog releases: count, IDs, visibility, prices, images, collections, critical PDP, cart smoke. Do not mutate catalog/prices/SKU/media/schema/motifs without a separate explicit scope.
+
+## Markers support digests
+
+Markers (e.g. `x-woodright-catalog-order`) support identity; they do not replace digests, Git provenance, DOM, health, or integrity.
+
+## Evidence outside Git
+
+Screenshots, logs, PID, traces, inspect JSON → `/tmp` or task dir. Never commit runtime evidence into product commits.
+
+## Deployment report identity
+
+Every deploy packet must list: release SHA, backend/storefront digests, container IDs, workflow run, owner, previous digests, rollback path, public verification URL.
+
+## Owner worktrees
+
+Never clean/reset/checkout/delete the owner’s dirty worktree without separate explicit permission. Integrate in a new clean worktree.
