@@ -218,4 +218,77 @@ function assertFacetsAlign(products: Record<string, unknown>[]) {
   assert.equal(resolved.source, "product_category")
 }
 
+// Motif metadata must not replace buyer product type (Willie Winkie)
+{
+  const dresser = projectBuyerItemTypeOntoProduct(
+    product({
+      id: "ww-komod",
+      title: "Комод высокий",
+      metadata: {
+        collection: "willie-winkie",
+        motif_key: "ballet",
+        motif_slug: "ballet",
+        motif_title: "Ballet",
+      },
+    })
+  )
+  const table = projectBuyerItemTypeOntoProduct(
+    product({
+      id: "ww-stol",
+      title: "Стол письменный",
+      metadata: {
+        collection: "willie-winkie",
+        motif_key: "ants-village",
+        motif_slug: "ants-village",
+        motif_title: "Ant's Village",
+      },
+    })
+  )
+  assert.equal((dresser.metadata as Record<string, unknown>).category_handle, "komody")
+  assert.equal((table.metadata as Record<string, unknown>).category_handle, "stoly")
+  assert.equal((dresser.metadata as Record<string, unknown>).motif_slug, "ballet")
+  assert.equal((table.metadata as Record<string, unknown>).motif_slug, "ants-village")
+
+  const byMotif = [dresser, table].filter(
+    (p) => (p.metadata as Record<string, unknown>).motif_slug === "ballet"
+  )
+  const typeFacets = countBuyerItemTypeFacets(byMotif)
+  assert.equal(typeFacets.get("komody"), 1)
+  assert.equal(typeFacets.get("stoly"), undefined)
+
+  const byType = [dresser, table].filter(
+    (p) => (p.metadata as Record<string, unknown>).category_handle === "stoly"
+  )
+  assert.equal(byType.length, 1)
+  assert.equal((byType[0]!.metadata as Record<string, unknown>).motif_slug, "ants-village")
+}
+
+// Item without motif stays in product-type facets
+{
+  const bare = projectBuyerItemTypeOntoProduct(
+    product({
+      id: "ww-bare",
+      title: "Тумба прикроватная",
+      metadata: { collection: "willie-winkie" },
+    })
+  )
+  assert.equal((bare.metadata as Record<string, unknown>).category_handle, "tumby")
+  assert.equal(countBuyerItemTypeFacets([bare]).get("tumby"), 1)
+  assert.equal((bare.metadata as Record<string, unknown>).motif_slug, undefined)
+}
+
+// Invalid / unknown type stays out of misleading facets
+{
+  const unknown = projectBuyerItemTypeOntoProduct(
+    product({
+      id: "x",
+      title: "Mystery SKU",
+      metadata: { collection: "willie-winkie", motif_slug: "ballet" },
+    })
+  )
+  assert.equal((unknown.metadata as Record<string, unknown>).buyer_item_type, null)
+  assert.equal(countBuyerItemTypeFacets([unknown]).size, 0)
+  assert.equal((unknown.metadata as Record<string, unknown>).motif_slug, "ballet")
+}
+
 console.log("buyer-item-type.fidelity.test.ts: ok")

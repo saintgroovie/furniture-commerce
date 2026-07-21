@@ -192,4 +192,51 @@ function ids(products: Record<string, unknown>[]): string[] {
   assert.equal(key, "pelenalnye-stoleshnicy")
 }
 
+// Willie Winkie collection + product type stay independent dimensions
+{
+  const pool = [
+    {
+      id: "1",
+      title: "Комод Ballet",
+      metadata: {
+        collection: "willie-winkie",
+        category_handle: "komody",
+        motif_slug: "ballet",
+      },
+      product_classification: { product_type: "CONFIGURABLE" },
+    },
+    {
+      id: "2",
+      title: "Стол Pastoral",
+      metadata: {
+        collection: "willie-winkie",
+        category_handle: "stoly",
+        motif_slug: "pastoral",
+      },
+      product_classification: { product_type: "CONFIGURABLE" },
+    },
+    {
+      id: "3",
+      title: "Кровать Oliver",
+      metadata: { collection: "oliver", category_handle: "krovati" },
+      product_classification: { product_type: "CONFIGURABLE" },
+    },
+  ]
+  const wwOnly = applyCatalogFilters(
+    pool,
+    baseState({ collection: ["willie-winkie"] })
+  )
+  assert.equal(wwOnly.length, 2)
+  const wwKomody = applyCatalogFilters(
+    pool,
+    baseState({ collection: ["willie-winkie"], category: ["komody"] })
+  )
+  assert.equal(wwKomody.length, 1)
+  assert.equal(wwKomody[0]!.id, "1")
+  assert.equal(
+    (wwKomody[0]!.metadata as Record<string, unknown>).motif_slug,
+    "ballet"
+  )
+}
+
 console.log("catalog-filter.fidelity.test.ts: all assertions passed")

@@ -161,6 +161,9 @@ export function resolveBuyerItemType(
   }
 }
 
+/** Alias matching product-type SoT naming in ops prompts. */
+export const resolveBuyerProductType = resolveBuyerItemType
+
 /**
  * Shallow-project buyer type onto browse DTO metadata (in-memory only).
  * Prefer filling `category_handle` when missing so storefront facets /
