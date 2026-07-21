@@ -184,14 +184,30 @@ jobs:
         env:
           BACKEND_DIGEST: ${{ steps.backend.outputs.digest }}
           STOREFRONT_DIGEST: ${{ steps.storefront.outputs.digest }}
+          SHA: ${{ steps.sha.outputs.sha }}
+          IMAGE_PREFIX: ${{ env.IMAGE_PREFIX }}
         run: |
           set -euo pipefail
-          SHA="${{ steps.sha.outputs.sha }}"
-          echo "backend=${{ env.IMAGE_PREFIX }}-backend:${SHA}"
-          echo "storefront=${{ env.IMAGE_PREFIX }}-storefront:${SHA}"
+          if [ -z "${BACKEND_DIGEST}" ] || [ -z "${STOREFRONT_DIGEST}" ]; then
+            echo "Missing image digests from build-push outputs" >&2
+            exit 1
+          fi
+          case "${BACKEND_DIGEST}" in sha256:*) ;; *) echo "backend digest must be sha256:…" >&2; exit 1 ;; esac
+          case "${STOREFRONT_DIGEST}" in sha256:*) ;; *) echo "storefront digest must be sha256:…" >&2; exit 1 ;; esac
+          echo "backend=${IMAGE_PREFIX}-backend:${SHA}"
+          echo "storefront=${IMAGE_PREFIX}-storefront:${SHA}"
           echo "backend_digest=${BACKEND_DIGEST}"
           echo "storefront_digest=${STOREFRONT_DIGEST}"
-          docker buildx imagetools inspect "${{ env.IMAGE_PREFIX }}-backend:${SHA}" | head -n 40
-          docker buildx imagetools inspect "${{ env.IMAGE_PREFIX }}-storefront:${SHA}" | head -n 40
+          echo "WARNING: mutable tags :${SHA} / :sha-${SHA} can drift on later rebuilds - cutover MUST pin @digest"
+          docker buildx imagetools inspect "${IMAGE_PREFIX}-backend:${SHA}" | head -n 40
+          docker buildx imagetools inspect "${IMAGE_PREFIX}-storefront:${SHA}" | head -n 40
           echo "=== storefront OCI labels (config) ==="
-          docker buildx imagetools inspect "${{ env.IMAGE_PREFIX }}-storefront:${SHA}" --format '{{json .Manifest}}' | head -c 2000 || true
+          docker buildx imagetools inspect "${IMAGE_PREFIX}-storefront:${SHA}" --format '{{json .Manifest}}' | head -c 2000 || true
+          python3 scripts/release/write-release-manifest-partial.py
+
+      - name: Upload release digest artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: woodright-release-manifest-partial-${{ steps.sha.outputs.sha }}
+          path: release-artifacts/release-manifest.partial.json
+          if-no-files-found: error

@@ -1,0 +1,22 @@
+{
+  "release_sha": "5683afa62890531f26b6e53b25800173c8efbb20",
+  "backend": {
+    "digest": "",
+    "oci_revision": "5683afa62890531f26b6e53b25800173c8efbb20",
+    "ref": "ghcr.io/saintgroovie/woodright-backend:5683afa"
+  },
+  "storefront": {
+    "digest": "sha256:0f4224829a9c4887968374876c03338b805c7925a1a3dd5d4e740804543db7cc",
+    "oci_revision": "5683afa62890531f26b6e53b25800173c8efbb20",
+    "ref": "ghcr.io/saintgroovie/woodright-storefront@sha256:0f4224829a9c4887968374876c03338b805c7925a1a3dd5d4e740804543db7cc"
+  },
+  "tag_drift": false,
+  "owner_files_agree": true,
+  "competing_controller": false,
+  "dirty_source": false,
+  "rollback": {
+    "backend_keeper": "woodright-staging-backend-rollback-20260721T130125Z",
+    "storefront_keeper": "woodright-staging-storefront-rollback-20260721T130125Z",
+    "commands_path": "/srv/woodright/backups/pre-5683afa-cutover-20260721T130125Z/COMMANDS.md"
+  }
+}
