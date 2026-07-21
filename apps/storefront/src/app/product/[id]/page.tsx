@@ -40,6 +40,8 @@ import {
   mergeUniqueExtraUrls,
   resolveCardHeroAndNearDuplicateExtras,
   resolvePdpMediaBundle,
+  resolveProductPrimaryImageForMeta,
+  resolveStorefrontProductImageSrc,
 } from "@/lib/product-images"
 import { collectProductImageUrls } from "@/lib/oliver-buyer-gallery"
 import { restoreEvidenceProtectedAngles } from "@/lib/media-near-dup-collapse"
@@ -74,9 +76,9 @@ function pdpHeroThumbnail(product: Record<string, unknown>): string | undefined 
   return s.length > 0 ? s : undefined
 }
 
-/** OG / JSON-LD: same stable source as PDP hero — `thumbnail` only. */
+/** OG: PDP hero thumbnail only, normalized to same-origin `/product-static`. */
 function primaryImageForMeta(product: Record<string, unknown>): string | undefined {
-  return pdpHeroThumbnail(product)
+  return resolveProductPrimaryImageForMeta(pdpHeroThumbnail(product))
 }
 
 function truncate(str: string, max: number): string {
@@ -388,7 +390,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
     name: (product.title as string) ?? "Товар",
     description: description ?? undefined,
     url: `${base}/product/${params.id}`,
-    ...(mainImage && { image: mainImage }),
+    ...(mainImage && { image: resolveStorefrontProductImageSrc(mainImage) }),
   }
 
   const isKidsProduct = isKidsStorefrontProduct(product)

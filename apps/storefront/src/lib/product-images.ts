@@ -114,6 +114,19 @@ export function resolvePdpMediaSrc(url: string): string {
 /** Storefront `<img src>` for Medusa product media (catalog, PDP, swatches). */
 export const resolveStorefrontProductImageSrc = resolvePdpMediaSrc
 
+/**
+ * OG / JSON-LD primary product image: thumbnail (or any media URL) → same-origin `/product-static`.
+ * Never leave environment-specific hosts (`localhost`, demo IP, public `:9000`) in metadata output.
+ */
+export function resolveProductPrimaryImageForMeta(
+  thumbnail: string | null | undefined
+): string | undefined {
+  const s = typeof thumbnail === "string" ? thumbnail.trim() : ""
+  if (!s) return undefined
+  return resolveStorefrontProductImageSrc(s)
+}
+
+
 export function resolvePdpMediaBundle(mainSrc: string, extraSrcs: string[]): {
   mainSrc: string
   extraSrcs: string[]
