@@ -11,7 +11,12 @@ export function getCartIdFromSession(): string | null {
 }
 
 export function setCartIdToSession(cartId: string): void {
-  document.cookie = `${CART_COOKIE}=${encodeURIComponent(cartId)}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`
+  // Buyer Host is HTTPS; Secure prevents cookie on cleartext. SameSite=Lax for CSRF baseline.
+  const secure =
+    typeof window !== "undefined" && window.location.protocol === "https:"
+      ? "; Secure"
+      : ""
+  document.cookie = `${CART_COOKIE}=${encodeURIComponent(cartId)}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax${secure}`
 }
 
 export function clearCartIdFromSession(): void {

@@ -18,6 +18,7 @@ import {
 import { groupProductsForDisplay } from "@/lib/display-group"
 import { isUnmodifiedPrimaryClick } from "@/lib/client/is-unmodified-primary-click"
 import { actions } from "@/lib/woodright-copy"
+import { useCspNonce } from "@/lib/csp-nonce"
 
 export type CatalogBrowseCopy = {
   emptyFilteredTitle: string
@@ -113,12 +114,14 @@ export function CatalogBrowseClient({
   }, [siteUrl, displayEntries])
 
   const dataState = displayEntries.length === 0 ? "empty" : "success"
+  const cspNonce = useCspNonce()
 
   return (
     <div data-state={dataState} data-catalog-browse="client">
       {itemListJsonLd && (
         <script
           type="application/ld+json"
+          nonce={cspNonce}
           dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
         />
       )}

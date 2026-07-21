@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next"
 import Link from "next/link"
+import { headers } from "next/headers"
 import { getSiteUrl } from "@/lib/api/base"
 import { HeaderCartLink } from "@/components/header-cart-link"
 import { HeaderLogo } from "@/components/header-logo"
@@ -8,6 +9,7 @@ import { NavDropdown } from "@/components/nav-dropdown"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import { KidsSectionProvider } from "@/lib/use-kids-section"
+import { CspNonceProvider } from "@/lib/csp-nonce"
 import { a11yCopy, footer as footerCopy, nav as navCopy, seo } from "@/lib/woodright-copy"
 import { formatRuInline } from "@/lib/format-ru-copy"
 import "./globals.css"
@@ -52,11 +54,15 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  // CSP nonce from middleware (x-nonce). Required for JSON-LD + Next bootstrap.
+  const nonce = headers().get("x-nonce") ?? undefined
   return (
     <html lang="ru" className={localSansClass}>
       <body>
+        <CspNonceProvider nonce={nonce}>
         <script
           type="application/ld+json"
+          nonce={nonce}
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
         <a href="#main-content" className="skip-link">
@@ -189,6 +195,7 @@ export default function RootLayout({
           }
         />
         </KidsSectionProvider>
+        </CspNonceProvider>
       </body>
     </html>
   )

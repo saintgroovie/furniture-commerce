@@ -24,6 +24,7 @@ import {
   getCollectionFilterLabel,
   hasActiveCatalogFilters,
 } from "@/lib/catalog-filters"
+import { useCspNonce } from "@/lib/csp-nonce"
 
 type Props = {
   basePath: string
@@ -105,6 +106,7 @@ export function CatalogFilterControls({
   children,
 }: Props) {
   const router = useRouter()
+  const cspNonce = useCspNonce()
   const [isPending, startTransition] = useTransition()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [searchDraft, setSearchDraft] = useState(state.q ?? "")
@@ -717,7 +719,10 @@ export function CatalogFilterControls({
           >
             Показать
           </button>
-          <script dangerouslySetInnerHTML={{ __html: FILTER_FIT_BOOTSTRAP }} />
+          <script
+            nonce={cspNonce}
+            dangerouslySetInnerHTML={{ __html: FILTER_FIT_BOOTSTRAP }}
+          />
         </aside>
         <div className="catalog-product-area">{children}</div>
       </div>
