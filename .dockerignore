@@ -9,9 +9,25 @@
 **/*.log
 **/tmp
 **/test-results
+**/coverage
+**/playwright-report
+**/*.tsbuildinfo
 apps/backend/static
 apps/backend/uploads
 apps/backend/private
+apps/backend/src/admin
+apps/backend/src/api
+apps/backend/src/modules
+apps/backend/src/scripts
+apps/backend/src/workflows
+apps/backend/src/subscribers
+apps/backend/src/jobs
+apps/backend/src/links
+# Keep apps/backend/src/lib (storefront relative imports at build time)
 docs
 data
 .cursor
+schemas
+scripts
+*.md
+!apps/storefront/README.md
