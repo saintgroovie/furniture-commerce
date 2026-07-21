@@ -246,7 +246,6 @@ export function ProductCardMediaGalleryCore({
   priorityHero = false,
   productHandle,
 }: Props) {
-  const isPdpLayout = layout === "pdp"
   const isGreenwichBed = Boolean(greenwichBedMatrix && greenwichBedMatrix.length > 0)
   const bedInteriorSrcs = sharedInteriorSrcs ?? []
   const bedMediaOptions = useMemo(
@@ -318,9 +317,9 @@ export function ProductCardMediaGalleryCore({
       finishVariants?.[0]?.key ??
       null
   )
-  const [activeProvenceMediaKey, setActiveProvenceMediaKey] = useState<
-    "cream" | "wood" | null
-  >("cream")
+  const [activeProvenceMediaKey, setActiveProvenceMediaKey] = useState<"cream" | "wood" | null>(
+    "cream"
+  )
   const [displayHeroSrc, setDisplayHeroSrc] = useState(mainSrc.trim())
   const [heroFailed, setHeroFailed] = useState(false)
   const [activeGalleryUrl, setActiveGalleryUrl] = useState<string | null>(null)
@@ -682,6 +681,7 @@ export function ProductCardMediaGalleryCore({
   // Buyer strips are optimistic (no Image() stampede). Broken thumbs prune
   // themselves via onError. PDP must not clear/rebuild the rail on every
   // execution switch - that reflows the hero column and causes visible shake.
+  const isPdpLayout = layout === "pdp"
 
   // Catalog: defer strip network until near-viewport / pointer / keyboard focus.
   // Default true stampeded ~4 thumb URLs × visible cards on mount (W3g).
@@ -1751,7 +1751,7 @@ export function ProductCardMediaGalleryCore({
   }
 
   const heroEmpty = oliverMode && (!displayHeroSrc || heroFailed)
-  const isPdp = isPdpLayout
+  const isPdp = layout === "pdp"
 
   /* PDP: publish confirmed execution + purchase gate for price / CTA.
      Never treat first-value media defaults as buyer confirmation. */
