@@ -1,0 +1,27 @@
+{
+  "schema_version": "1",
+  "updated_at": "2026-07-21T15:00:00Z",
+  "candidates": [
+    {
+      "candidate_id": "e34388f",
+      "task": "motif-premium-ui",
+      "owner": "preserved-other-task",
+      "created_at": "2026-07-21T12:00:00Z",
+      "last_verified_at": "2026-07-21T15:00:00Z",
+      "review_after": "2026-07-28T00:00:00Z",
+      "storefront_port": 3032,
+      "backend_port": 9032,
+      "branch": null,
+      "sha": "e34388fc07ab3decfb4672994aa625396d9f9986",
+      "container_ids": [
+        "dd66c461905d",
+        "fa87166cfc35"
+      ],
+      "public_route": true,
+      "competing_with_live": false,
+      "status": "preserved",
+      "cleanup_requires_owner_approval": true,
+      "notes": "do not auto-stop"
+    }
+  ]
+}

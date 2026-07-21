@@ -39,3 +39,5 @@ Disagreement **blocks** cutover.
 ## Single owner rule
 
 Do not manage the same `woodright-staging-backend` / `woodright-staging-storefront` pair from Compose, systemd, cron, Nightly, LaunchAgent, and Dokploy at once.
+
+See also: `docs/operator/candidate-runtime-lifecycle.md`.

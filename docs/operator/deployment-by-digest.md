@@ -34,3 +34,5 @@ node scripts/release/validate-deploy-inputs.cjs --fixture-dir scripts/release/fi
 ```
 
 Do **not** run cutover scripts against live from CI.
+
+See also: `docs/operator/build-provenance.md`.

@@ -34,9 +34,22 @@ function validate(input, errors) {
       if (/:(latest|stable|prod|staging)(@|$)/i.test(ref) || /\/latest(@|$)/i.test(ref)) {
         errors.push(`${side}: floating tag in ref rejected (latest/stable/…)`)
       }
+      // SHA-like tags are mutable registry pointers — never authoritative without @sha256
+      if (/:[0-9a-f]{7,40}(@|$)/i.test(ref) && !ref.includes("@sha256:")) {
+        errors.push(`${side}: SHA-like tag without digest rejected`)
+      }
+      if (/:(sha-|mutable-sha-|build-)[^@]+$/i.test(ref) && !ref.includes("@sha256:")) {
+        errors.push(`${side}: convenience/build tag without digest rejected`)
+      }
       if (!ref.includes("@sha256:")) {
         errors.push(`${side}: ref must be digest-pinned (image@sha256:…)`)
       }
+    }
+    if (d.tag && !d.digest) {
+      errors.push(`${side}: tag without digest rejected`)
+    }
+    if (typeof d.tag === "string" && /^(sha-)?[0-9a-f]{7,40}$/i.test(d.tag) && d.authoritative_tag === true) {
+      errors.push(`${side}: SHA-like tag must not be marked authoritative`)
     }
   }
   if (

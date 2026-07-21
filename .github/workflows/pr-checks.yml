@@ -133,8 +133,18 @@ jobs:
       - name: Manifest / deploy / owner / report fixtures
         run: |
           set -euo pipefail
+          node scripts/release/build-identity.cjs --self-test
           node scripts/release/validate-release-manifest.cjs --fixture-dir scripts/release/fixtures
+          node scripts/release/validate-build-manifest.cjs --fixture-dir scripts/release/fixtures/build
           node scripts/release/validate-deploy-inputs.cjs --fixture-dir scripts/release/fixtures/deploy
           node scripts/release/check-owner-state.cjs --fixture-dir scripts/release/fixtures/owner
+          node scripts/release/check-active-release.cjs --fixture-dir scripts/release/fixtures/active
+          node scripts/release/check-candidate-registry.cjs --fixture-dir scripts/release/fixtures/candidates
           node scripts/release/validate-report-status.cjs --fixture-dir scripts/release/fixtures/reports
+          node scripts/release/check-governance-no-deploy.cjs .github/workflows
+          node scripts/catalog/audit-catalog-data-quality.cjs --self-test-readonly
+          node scripts/catalog/audit-catalog-data-quality.cjs \
+            --fixture scripts/catalog/fixtures/sample-products.json \
+            --out /tmp/woodright-catalog-audit-ci \
+            --release-sha 0000000000000000000000000000000000000000
           echo "release_governance_gates=ok"
