@@ -19,6 +19,8 @@ assert.equal(CATALOG_BROWSE_MAX_EXECUTION_URLS, 5)
 
 assert.ok(CATALOG_METADATA_ALLOW.has("material_tiers"))
 assert.ok(CATALOG_METADATA_ALLOW.has("buyer_default_configuration"))
+assert.ok(CATALOG_METADATA_ALLOW.has("buyer_item_type"))
+assert.ok(CATALOG_METADATA_ALLOW.has("buyer_item_type_source"))
 assert.ok(CATALOG_METADATA_ALLOW.has("bed_execution_matrix"))
 assert.ok(CATALOG_METADATA_ALLOW.has("greenwich_paint_execution_matrix"))
 assert.ok(CATALOG_METADATA_ALLOW.has("execution_dimension_contract"))
@@ -41,6 +43,20 @@ assert.equal(CATALOG_METADATA_ALLOW.has("workbook_row_key"), false)
   assert.equal(projected.shared_scene_media, undefined)
   assert.equal(projected.workbook_row_key, undefined)
   assert.equal(projected.readiness_status, undefined)
+}
+
+{
+  const meta = {
+    buyer_item_type: "komody",
+    buyer_item_type_source: "title_fallback",
+    category_handle: "komody",
+    workbook_row_key: "secret",
+  }
+  const projected = projectCatalogMetadataAllowlist(meta)!
+  assert.equal(projected.buyer_item_type, "komody")
+  assert.equal(projected.buyer_item_type_source, "title_fallback")
+  assert.equal(projected.category_handle, "komody")
+  assert.equal(projected.workbook_row_key, undefined)
 }
 
 {

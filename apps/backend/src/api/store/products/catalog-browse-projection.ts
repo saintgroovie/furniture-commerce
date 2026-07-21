@@ -38,6 +38,8 @@ export const CATALOG_METADATA_ALLOW = new Set([
   "collection",
   "collection_label",
   "category_handle",
+  "buyer_item_type",
+  "buyer_item_type_source",
   "buyer_default_configuration",
   "material_tiers",
   "display_group",

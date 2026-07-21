@@ -14,6 +14,7 @@ import {
   shouldSuppressOliverFinishWhenFabricCanonical,
 } from "./oliver-finish-execution-guard"
 import { hasProvencePaintWoodDualFinishEvidence } from "./provence-finish-execution-guard"
+import { formatBuyerFacingFinishLabel } from "./buyer-finish-label"
 import { buyerFacingWoodToneLabel } from "./buyer-wood-label"
 import {
   greenwichBedMatrixFromProduct,
@@ -413,7 +414,7 @@ export function executionLabelForToken(
     }
   }
   if (!token) return EXECUTION_LABELS[NEUTRAL_KEY]!
-  return EXECUTION_LABELS[token] ?? token
+  return EXECUTION_LABELS[token] ?? formatBuyerFacingFinishLabel(token)
 }
 
 export function swatchTokenForProduct(

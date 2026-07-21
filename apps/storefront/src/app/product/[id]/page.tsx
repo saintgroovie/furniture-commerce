@@ -68,6 +68,7 @@ import {
   layoutPdpSubtitle,
 } from "@/lib/pdp-copy-layout"
 import { isKidsStorefrontProduct } from "@/lib/kids"
+import { getCollectionFilterKey } from "@/lib/catalog-filters"
 import { actions, labels, pdpCopy, productTypeBadgeLabels, willieWinkieMotifsCopy } from "@/lib/woodright-copy"
 import { KidsProductSection } from "@/components/kids-product-section"
 
@@ -362,7 +363,7 @@ export default async function ProductPage({
     resolvePdpMediaBundle(evidenced.mainSrc, evidenced.extraSrcs)
 
   const titleLayout = getBuyerFacingProductTitleLayout(product)
-  const titleStr = titleLayout.text
+  const titleStr = getBuyerFacingProductTitle(product)
   const canonicalName = getCanonicalName(product)
   const canonicalLayout = canonicalName
     ? layoutBuyerFacingTitle(canonicalName)
@@ -447,6 +448,11 @@ export default async function ProductPage({
   }
 
   const isKidsProduct = isKidsStorefrontProduct(product)
+  const collectionFilterKey = getCollectionFilterKey(product)
+  const catalogHref = isKidsProduct ? "/kids/catalog" : "/catalog"
+  const collectionHref = collectionFilterKey
+    ? `${catalogHref}?collection=${encodeURIComponent(collectionFilterKey)}`
+    : null
 
   return (
     <div
@@ -522,6 +528,28 @@ export default async function ProductPage({
 
           <div className="pdp-panel-col">
             <div className="pdp-panel">
+              <nav className="pdp-breadcrumbs" aria-label="Навигация по разделам">
+                {isKidsProduct && (
+                  <>
+                    <Link href="/kids">Детская</Link>
+                    <span aria-hidden="true"> / </span>
+                  </>
+                )}
+                <Link href={catalogHref}>Каталог</Link>
+                {collectionLabel && (
+                  <>
+                    <span aria-hidden="true"> / </span>
+                    {collectionHref ? (
+                      <Link href={collectionHref}>{collectionLabel}</Link>
+                    ) : (
+                      <span>{collectionLabel}</span>
+                    )}
+                  </>
+                )}
+                <span aria-hidden="true"> / </span>
+                <span aria-current="page">{titleStr}</span>
+              </nav>
+
               {/* 1. Context: collection + article — secondary but present */}
               {(collectionLabel || subcollectionLabel || article) && (
                 <div className="pdp-context-row">

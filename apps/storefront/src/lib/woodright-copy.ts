@@ -220,14 +220,18 @@ export const willieWinkieMotifsCopy = {
     `${willieWinkieMotifsCopy.motifCountLabel(motifs)} · ${willieWinkieMotifsCopy.productCountLabel(products)}`,
   motifCountLabel: (n: number) =>
     n === 1 ? "1 роспись" : n >= 2 && n <= 4 ? `${n} росписи` : `${n} росписей`,
-  directoryLoadError:
-    "Росписи не загрузились. Обновите страницу или зайдите чуть позже",
+  directoryLoadError: [
+    "Росписи не загрузились",
+    "Обновите страницу или зайдите чуть позже",
+  ],
   directoryEmptyTitle: "Росписи временно недоступны",
   directoryEmptyBody: "Загляните в каталог детской мебели",
   motifNotFoundTitle: "Такой росписи нет",
   motifNotFoundBody: "Выберите тему из каталога росписей Willie Winkie",
-  motifLoadError:
-    "Не удалось загрузить роспись. Обновите страницу или зайдите чуть позже",
+  motifLoadError: [
+    "Не удалось загрузить роспись",
+    "Обновите страницу или зайдите чуть позже",
+  ],
   motifEmptyTitle: "В этой росписи пока нет доступной мебели",
   motifEmptyBody: "Загляните в другие темы или в каталог детской мебели",
   availableTypesPrefix: "Мебель",
