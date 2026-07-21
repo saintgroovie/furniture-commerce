@@ -9,7 +9,7 @@ const backendUrl = resolveMedusaBackendInternalUrl(process.env)
 
 const nextConfig = {
   reactStrictMode: true,
-  // Production typecheck excludes src/app/qa (proof-only boards). Do not use
+  // Honest production typecheck (includes QA App Router routes). Do not use
   // ignoreBuildErrors — buyer build must fail on real production TS errors.
   typescript: {
     tsconfigPath: "./tsconfig.production.json",

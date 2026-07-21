@@ -9,9 +9,7 @@
   ],
   "exclude": [
     "node_modules",
-    "src/app/qa",
     ".next",
-    ".next-build",
     ".next-dev",
     ".next-matrix"
   ]
