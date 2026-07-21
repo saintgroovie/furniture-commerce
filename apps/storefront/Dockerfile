@@ -18,20 +18,23 @@ COPY apps/storefront ./apps/storefront
 # Shared buyer-gallery helpers imported via ../../../backend/src/lib/*
 COPY apps/backend/src/lib ./apps/backend/src/lib
 WORKDIR /workspace/apps/storefront
-ARG NEXT_PUBLIC_MEDUSA_BACKEND_URL
+ARG NEXT_PUBLIC_MEDUSA_BACKEND_URL=
 ARG MEDUSA_BACKEND_URL
+ARG MEDUSA_BACKEND_INTERNAL_URL
 ARG NEXT_PUBLIC_SITE_URL
 ARG NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=
 ARG NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES=0
 ENV NEXT_DIST_DIR=.next-build \
     NEXT_PUBLIC_MEDUSA_BACKEND_URL=$NEXT_PUBLIC_MEDUSA_BACKEND_URL \
     MEDUSA_BACKEND_URL=$MEDUSA_BACKEND_URL \
+    MEDUSA_BACKEND_INTERNAL_URL=$MEDUSA_BACKEND_INTERNAL_URL \
     NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL \
     NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=$NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY \
     NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES=$NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES \
     NODE_ENV=production
-RUN test -n "$NEXT_PUBLIC_MEDUSA_BACKEND_URL" \
- && test -n "$MEDUSA_BACKEND_URL" \
+# NEXT_PUBLIC_MEDUSA_BACKEND_URL is optional: browser uses same-origin /store + /product-static.
+# Do not bake a public :9000 host into the client bundle.
+RUN test -n "$MEDUSA_BACKEND_URL" \
  && test -n "$NEXT_PUBLIC_SITE_URL" \
  && yarn build
 
@@ -47,6 +50,7 @@ COPY --from=build --chown=nextjs:nextjs /workspace/apps/storefront/node_modules 
 COPY --from=build --chown=nextjs:nextjs /workspace/apps/storefront/.next-build ./.next-build
 COPY --from=build --chown=nextjs:nextjs /workspace/apps/storefront/public ./public
 COPY --from=build --chown=nextjs:nextjs /workspace/apps/storefront/next.config.js ./next.config.js
+COPY --from=build --chown=nextjs:nextjs /workspace/apps/storefront/medusa-backend-internal-url.cjs ./medusa-backend-internal-url.cjs
 # Keep runtime resolution path for any residual relative imports
 COPY --from=build --chown=nextjs:nextjs /workspace/apps/backend/src/lib /workspace/apps/backend/src/lib
 USER nextjs
