@@ -1,0 +1,13 @@
+{
+  "note": "Sample aggregate baseline only — regenerate from live with audit script. Not a product dump.",
+  "timestamp": "2026-07-21T00:00:00Z",
+  "release_sha": null,
+  "marker": "merchandising-v1",
+  "total_published": null,
+  "missing_category_count": null,
+  "missing_collection_count": null,
+  "title_fallback_count": null,
+  "unknown_tier_count": null,
+  "ambiguous_classification_count": null,
+  "missing_media_count": null
+}

@@ -44,3 +44,5 @@ See `.cursor/rules/woodright-release-runtime-governance.mdc`. Bare `done` is for
 ## Evidence
 
 Keep screenshots/logs/inspect JSON under `/tmp` or a task directory — not in product commits.
+
+See also: `docs/operator/build-provenance.md`, `docs/operator/candidate-runtime-lifecycle.md`.

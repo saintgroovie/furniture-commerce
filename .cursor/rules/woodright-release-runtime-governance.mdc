@@ -81,3 +81,52 @@ Every deploy packet must list: release SHA, backend/storefront digests, containe
 ## Owner worktrees
 
 Never clean/reset/checkout/delete the owner’s dirty worktree without separate explicit permission. Integrate in a new clean worktree.
+
+
+## Build ≠ release (21)
+
+Successful image build is not a release. Build workflows must not change active owner/release manifests, rollback keepers, or claim deployed. Authorization = separate release manifest + cutover.
+
+## Unique build execution identity (22–24)
+
+Every build needs source SHA + workflow run ID + run attempt. Unique discovery tag: `build-<sha>-run-<runId>-attempt-<attempt>`. Re-attempts get a new tag. SHA-like tags remain **mutable** registry pointers; digest is the only immutable identity.
+
+## Build arguments in provenance (25)
+
+Non-secret build arg **names** and a fingerprint belong in the build manifest. Never store secret values.
+
+## Active release manifest required (26–27)
+
+Before the next cutover, server must have a validated active release manifest (+ checksum). Owner TXT/JSON alone are insufficient. Owner + release state updates are transactional (temp → validate → atomic rename).
+
+## Evidence durability (28, 40)
+
+`/tmp` is not an owner-review archive. Important artifacts need regenerable scripts, durable copy outside repo or CI retention, and SHA-256 checksums.
+
+## Candidate lifecycle (29–30)
+
+Every candidate needs owner/task/ports/SHA/review_after/public_route flags. Expiry means review, not auto-delete.
+
+## In-progress workflows (31)
+
+Relevant image builds must be resolved or explicitly marked unresolved in the handoff; do not use their tags until provenance completes.
+
+## Data fallback measurable (32–34)
+
+Catalog audits must count missing category/collection, title fallback, unknown tier, ambiguous classification. Owner-review CSV/JSON must be regenerable from a timestamped API snapshot. No silent fallback expansion.
+
+## Governance merge ≠ deploy (35)
+
+Rules/docs/CI merges must not change active runtime. Image build after merge ≠ deploy. Unexpected cutover = governance violation.
+
+## Tag namespace ownership (36)
+
+Each image-writing workflow declares `woodright.tag.namespace`. No silent shared authoritative tags.
+
+## Partial pair not releasable (37)
+
+Backend without matching storefront (same SHA, both digests, tests) is not a release.
+
+## Restart reuses active digests (38–39)
+
+Restart uses digests from the active release manifest. Do not re-resolve mutable tags. Registry tag movement ≠ live runtime change.
