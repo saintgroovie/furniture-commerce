@@ -9,7 +9,6 @@ import {
   getArticle,
   getDimensions,
   formatDimensionsCompact,
-  getBuyerFacingProductTitle,
 } from "@/lib/product-metadata"
 import { OliverCardMediaSwitcher } from "@/components/oliver-card-media-switcher"
 import { ProductCardMediaSwitcher } from "@/components/product-card-media-switcher"
@@ -100,7 +99,6 @@ export function ProductCard({
   const badgeLabel = type ? BADGE_LABELS[type] : undefined
 
   const cardPrice = resolveCatalogCardPrice(product as Record<string, unknown>, displayGroup)
-  const buyerTitle = getBuyerFacingProductTitle(product as Record<string, unknown>)
 
   const collectionLabel = getCollectionLabel(product as Record<string, unknown>)
   const subcollectionLabel = getSubcollectionLabel(product as Record<string, unknown>)
@@ -280,7 +278,7 @@ export function ProductCard({
       finishLabel={finishLabel}
       separateFabricRows={separateFabricRows}
       href={productHref}
-      title={buyerTitle}
+      title={product.title}
       priorityHero={priorityHero}
       productHandle={handle}
     />
@@ -297,7 +295,7 @@ export function ProductCard({
       greenwichBedMatrix={greenwichBedMatrix}
       greenwichPaintMatrix={greenwichPaintMatrix}
       href={productHref}
-      alt={buyerTitle}
+      alt={product.title}
       priorityHero={priorityHero}
     />
   )
@@ -315,7 +313,7 @@ export function ProductCard({
               )}
             </div>
           )}
-          <h3>{buyerTitle}</h3>
+          <h3>{product.title}</h3>
           {dim != null && (
             <span className="card-dimensions">{formatDimensionsCompact(dim)}</span>
           )}
