@@ -192,6 +192,18 @@ function ids(products: Record<string, unknown>[]): string[] {
   assert.equal(key, "pelenalnye-stoleshnicy")
 }
 
+// buyer_item_type preferred over stale category_handle (override case)
+{
+  const key = getProductCategoryKey({
+    metadata: {
+      category_handle: "zerkala",
+      buyer_item_type: "shkafy",
+      buyer_item_type_source: "category_override",
+    },
+  })
+  assert.equal(key, "shkafy")
+}
+
 // Willie Winkie collection + product type stay independent dimensions
 {
   const pool = [

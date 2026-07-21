@@ -218,6 +218,23 @@ function assertFacetsAlign(products: Record<string, unknown>[]) {
   assert.equal(resolved.source, "product_category")
 }
 
+// category_override must overwrite misclassified category_handle for facets
+{
+  const projected = projectBuyerItemTypeOntoProduct(
+    product({
+      id: "mis-tagged",
+      title: "Шкаф с зеркалом",
+      metadata: { collection: "oliver", category_handle: "zerkala" },
+    })
+  )
+  const meta = projected.metadata as Record<string, unknown>
+  assert.equal(meta.buyer_item_type_source, "category_override")
+  assert.equal(meta.buyer_item_type, "shkafy")
+  assert.equal(meta.category_handle, "shkafy")
+  assert.equal(countBuyerItemTypeFacets([projected]).get("shkafy"), 1)
+  assert.equal(countBuyerItemTypeFacets([projected]).get("zerkala"), undefined)
+}
+
 // Motif metadata must not replace buyer product type (Willie Winkie)
 {
   const dresser = projectBuyerItemTypeOntoProduct(

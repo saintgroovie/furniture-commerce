@@ -176,8 +176,13 @@ export function projectBuyerItemTypeOntoProduct<
   const meta = { ...asMeta(product) }
   const existing = normalizeHandle(meta.category_handle)
 
-  if (!existing && resolved.key && resolved.facetEligible) {
-    meta.category_handle = resolved.key
+  // Authoritative projected type for facets: fill missing handles, and overwrite
+  // when merchandising category_override corrects a misclassified handle
+  // (e.g. furniture wrongly tagged zerkala/chasy).
+  if (resolved.key && resolved.facetEligible) {
+    if (!existing || resolved.source === "category_override") {
+      meta.category_handle = resolved.key
+    }
   }
   meta.buyer_item_type = resolved.key
   meta.buyer_item_type_source = resolved.source

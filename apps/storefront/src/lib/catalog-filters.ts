@@ -95,13 +95,14 @@ function meta(product: Record<string, unknown>): Record<string, unknown> {
 
 export function getProductCategoryKey(product: Record<string, unknown>): string | null {
   const m = meta(product)
-  const handle = m.category_handle
-  if (typeof handle === "string" && handle.trim()) {
-    return handle.trim().toLowerCase()
-  }
+  // Prefer authoritative projected buyer type when present (includes overrides).
   const buyerType = m.buyer_item_type
   if (typeof buyerType === "string" && buyerType.trim()) {
     return buyerType.trim().toLowerCase()
+  }
+  const handle = m.category_handle
+  if (typeof handle === "string" && handle.trim()) {
+    return handle.trim().toLowerCase()
   }
   return null
 }
