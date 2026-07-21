@@ -8,7 +8,7 @@ import {
   getSubcollectionLabel,
   getArticle,
   getDimensions,
-  formatDimensionsCompactLabeled,
+  formatDimensionsCompact,
   getBuyerFacingProductTitle,
 } from "@/lib/product-metadata"
 import { OliverCardMediaSwitcher } from "@/components/oliver-card-media-switcher"
@@ -316,15 +316,9 @@ export function ProductCard({
             </div>
           )}
           <h3>{buyerTitle}</h3>
-          {dim != null && (() => {
-            const labeled = formatDimensionsCompactLabeled(dim)
-            return (
-              <span className="card-dimensions">
-                <span className="card-dimensions-values">{labeled.values}</span>
-                <span className="card-dimensions-caption">{labeled.caption}</span>
-              </span>
-            )
-          })()}
+          {dim != null && (
+            <span className="card-dimensions">{formatDimensionsCompact(dim)}</span>
+          )}
           <div className="card-price-row">
             {cardPrice.requestQuoteLabel != null ? (
               <p className="price">{cardPrice.requestQuoteLabel}</p>
