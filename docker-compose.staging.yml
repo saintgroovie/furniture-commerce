@@ -65,9 +65,8 @@ services:
       - woodright_staging_media:/server/static
     networks:
       - woodright_staging
-    # Temporary host publish for IP review; prefer Traefik domains later.
-    ports:
-      - "9000:9000"
+      - dokploy-network
+    # No host publish: Traefik (dokploy-network) + internal Docker DNS only.
     healthcheck:
       test:
         [
@@ -105,9 +104,8 @@ services:
       MEDUSA_BACKEND_INTERNAL_URL: ${MEDUSA_BACKEND_URL_INTERNAL:-http://backend:9000}
     networks:
       - woodright_staging
-    # Temporary host publish for IP review; prefer Traefik domains later.
-    ports:
-      - "3002:3002"
+      - dokploy-network
+    # No host publish: Traefik Host/TLS via dokploy-network only.
     healthcheck:
       test:
         [
@@ -129,3 +127,5 @@ volumes:
 networks:
   woodright_staging:
     driver: bridge
+  dokploy-network:
+    external: true
