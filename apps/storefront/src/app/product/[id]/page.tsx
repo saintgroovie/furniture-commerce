@@ -1,5 +1,6 @@
 import Link from "next/link"
 import type { Metadata } from "next"
+import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import { getSiteUrl } from "@/lib/api/base"
 import { getCatalogProducts, getProduct, NOT_FOUND } from "@/lib/api/products"
@@ -454,6 +455,8 @@ export default async function ProductPage({
     ? `${catalogHref}?collection=${encodeURIComponent(collectionFilterKey)}`
     : null
 
+  const cspNonce = headers().get("x-nonce") ?? undefined
+
   return (
     <div
       data-state="success"
@@ -463,6 +466,7 @@ export default async function ProductPage({
       <KidsProductSection active={isKidsProduct} />
       {isKidsProduct ? (
         <script
+          nonce={cspNonce}
           dangerouslySetInnerHTML={{
             __html:
               "(function(){document.querySelectorAll('a.logo,a.footer-brand-logo').forEach(function(a){a.setAttribute('href','/kids');a.setAttribute('aria-label','Woodright Kids - на главную детской');});})();",
@@ -471,6 +475,7 @@ export default async function ProductPage({
       ) : null}
       <script
         type="application/ld+json"
+        nonce={cspNonce}
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
       />
 
