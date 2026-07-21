@@ -1752,11 +1752,6 @@ export function ProductCardMediaGalleryCore({
 
   const heroEmpty = oliverMode && (!displayHeroSrc || heroFailed)
   const isPdp = isPdpLayout
-  const heroAlt = alt.trim()
-  const lightboxAlt =
-    lightboxIndex != null && lightboxIndex > 0 && heroAlt
-      ? `${heroAlt}, дополнительный вид ${lightboxIndex + 1}`
-      : heroAlt
 
   /* PDP: publish confirmed execution + purchase gate for price / CTA.
      Never treat first-value media defaults as buyer confirmation. */
@@ -1919,7 +1914,7 @@ export function ProductCardMediaGalleryCore({
     ) : (
       <img
         src={displayHeroSrc}
-        alt={heroAlt}
+        alt={alt}
         className={`${isPdp ? "product-detail-img" : "card-img"}${isPdp ? " is-zoomable" : ""}`}
         loading={priorityHero && !isPdp ? "eager" : "lazy"}
         fetchPriority={priorityHero && !isPdp ? "high" : undefined}
@@ -2153,7 +2148,7 @@ export function ProductCardMediaGalleryCore({
               type="button"
               className="pdp-hero-open"
               onClick={openLightbox}
-              aria-label={`${heroAlt} - ${pdpLightboxCopy.open}`}
+              aria-label={`${alt} - ${pdpLightboxCopy.open}`}
             >
               {heroImage}
               <PdpHeroAffordance count={pdpLightboxImages.length} />
@@ -2161,7 +2156,7 @@ export function ProductCardMediaGalleryCore({
           )}
         </div>
       ) : (
-        <Link href={href} className="product-card-media-link card-link" aria-label={heroAlt || undefined}>
+        <Link href={href} className="product-card-media-link card-link" aria-label={alt}>
           {heroImage}
         </Link>
       )}
@@ -2193,7 +2188,7 @@ export function ProductCardMediaGalleryCore({
         <PdpImageLightbox
           images={pdpLightboxImages}
           activeIndex={lightboxIndex}
-          alt={lightboxAlt}
+          alt={alt}
           onClose={() => setLightboxIndex(null)}
           onNavigate={setLightboxIndex}
         />
