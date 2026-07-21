@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { HomeImg } from "./home-img"
 
 /**
  * Finish-variant / hover layers for product cards. Kept out of the initial
@@ -41,7 +42,7 @@ export function HomeDeferredCardLayers({
   return (
     <>
       {variants.slice(0, 2).map((src, vi) => (
-        <img
+        <HomeImg
           key={src}
           src={src}
           alt=""
@@ -54,7 +55,7 @@ export function HomeDeferredCardLayers({
         />
       ))}
       {hoverImg && (
-        <img
+        <HomeImg
           src={hoverImg}
           alt=""
           aria-hidden="true"

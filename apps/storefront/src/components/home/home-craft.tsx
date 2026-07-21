@@ -1,6 +1,7 @@
 import { homeCopy } from "@/lib/woodright-copy"
 import { formatRuInline } from "@/lib/format-ru-copy"
 import { homeMedia } from "./home-media"
+import { HomeImg } from "./home-img"
 
 /**
  * Dark production section. Heading is the existing hero note («Собственное
@@ -35,7 +36,7 @@ export function HomeCraft() {
               <li className="hp-craft-item" key={bullet} style={{ "--reveal-i": i } as React.CSSProperties}>
                 {media && (
                   <span className="hp-craft-media">
-                    <img
+                    <HomeImg
                       src={media.src}
                       alt={media.alt}
                       style={
