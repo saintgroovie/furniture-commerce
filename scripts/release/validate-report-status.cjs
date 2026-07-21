@@ -23,6 +23,21 @@ function validate(text, errors) {
     errors.push("bare `done` token without taxonomy suffix is forbidden")
   }
 
+  // GATE Z: metadata reconciliation must not claim deploy
+  const deployYes = /deploy\s+performed:\s*yes/i.test(text)
+  const onlyReconciliation =
+    /reconciled_external_cutover|metadata\s+reconciliation/i.test(text) &&
+    !/cutover\s+transaction\s+id\s*:\s*ctx-/i.test(text)
+  if (deployYes && onlyReconciliation) {
+    errors.push("deploy performed: yes forbidden for metadata-only reconciliation")
+  }
+  if (/done_deployed_and_verified/.test(text) && !/transaction_id|cutover transaction/i.test(text)) {
+    errors.push("done_deployed_and_verified requires cutover transaction evidence")
+  }
+  if (/external\s+unproven\s+cutover/i.test(text) && /task status[\s\S]{0,80}\bdone_/i.test(text)) {
+    errors.push("status done* forbidden while external cutover unproven")
+  }
+
   if (!/done_deployed_and_verified/.test(text)) return
   for (const re of REQUIRED_FOR_DEPLOYED_VERIFIED) {
     if (!re.test(text)) errors.push(`done_deployed_and_verified missing evidence matching ${re}`)

@@ -130,3 +130,36 @@ Backend without matching storefront (same SHA, both digests, tests) is not a rel
 ## Restart reuses active digests (38–39)
 
 Restart uses digests from the active release manifest. Do not re-resolve mutable tags. Registry tag movement ≠ live runtime change.
+
+
+## Global cutover lock (41)
+
+Any live cutover, restart, rollback, or container replacement must use one canonical lock: `/srv/woodright/locks/live-cutover.lock` (flock). Competing per-path locks without this lock are forbidden.
+
+## Compare-and-swap (42–43, 55)
+
+Live mutation requires `expected_current_release_sha` + expected backend/storefront digests matching ACTIVE_RELEASE, ACTIVE_OWNER, and live containers immediately before mutation. External change → abort `aborted_conflict`; do not chase live blindly.
+
+## Reconciliation ≠ deploy (44–45)
+
+ACTIVE_RELEASE must not be updated from container existence alone. Provenance + health + public verification required. Post-external metadata write is `reconciled_external_cutover`, never claimed as this agent’s deploy.
+
+## Cutover transaction (46–49)
+
+Every cutover/rollback has a transaction ID and validated state machine (`planned`…`active`/`rolled_back`/`failed`/`aborted_conflict`). ACTIVE_RELEASE is written only after public buyer-visible gate. Rollback uses the same lock, CAS, and verification.
+
+## Restart / identity (50, 52–53)
+
+Restart reuses exact digests from ACTIVE_RELEASE (no mutable tag resolve). Owner/manifest/Config.Image/RepoDigests/OCI revisions must agree. Unknown live image without Git/workflow/digest provenance is critical.
+
+## Audit + drift (51, 54)
+
+Cutover audit log is append-only with hash chain. Long governance tasks re-check live identity before any metadata write.
+
+## Candidate / DQ / aborted dirs (56–59)
+
+Review date ≠ cleanup permission. Live DQ is GET-only and names source release + checksums. Empty aborted release directories need reference audit before removal.
+
+## Operator identity (60)
+
+Cutover/reconciliation events record actor/controller without credentials.
