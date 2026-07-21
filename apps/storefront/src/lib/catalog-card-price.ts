@@ -17,7 +17,8 @@ function readBackendDefaultMinPrice(
   const cfg = meta?.buyer_default_configuration
   if (!cfg || typeof cfg !== "object" || Array.isArray(cfg)) return null
   const min = (cfg as { min_unit_price?: unknown }).min_unit_price
-  return isPositivePrice(typeof min === "number" ? min : null) ? min : null
+  if (typeof min !== "number" || !isPositivePrice(min)) return null
+  return min
 }
 
 function minMaterialTierPrice(product: Record<string, unknown>): number | null {
