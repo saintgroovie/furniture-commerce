@@ -90,8 +90,8 @@ assert.equal(
   assert.equal(matrix.length, 2)
   const nat = matrix.find((c) => c.frame_material === "natural")!
   const dark = matrix.find((c) => c.frame_material === "dark")!
-  assert.equal(nat.urls.length, 1)
-  assert.equal(dark.urls.length, 1)
+  assert.equal(nat.urls.length, 2)
+  assert.equal(dark.urls.length, 2)
   assert.ok(!isGreenwichDarkWoodAssetUrl(nat.urls[0]!))
   assert.ok(isGreenwichDarkWoodAssetUrl(dark.urls[0]!))
 

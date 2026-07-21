@@ -116,6 +116,8 @@ type Props = {
   mainActionDisabledTitle?: string
   /** Override gallery button label (e.g. «+ Во все галереи») */
   galleryButtonLabel?: string
+  /** Operator role override for this media (null = inferred) */
+  roleOverride?: V2RoleSlot | null
   /** Called when operator changes the role override via dropdown */
   onSetRoleOverride?: (mediaId: string, role: V2RoleSlot | null) => void
   /** Parent-owned effective preview — drives filter, sort, and DOM proof attributes */

@@ -112,7 +112,7 @@ for (const q of queries) {
 
 {
   // Catalog cards need Color→Wood; client browse must keep paint matrix.
-  // main lean caps keep 1 URL per matrix cell — enough for hero swap.
+  // Lean cap keeps CATALOG_BROWSE_MAX_EXECUTION_URLS (5) per matrix cell.
   const matrix = [
     {
       frame_material: "natural",
@@ -149,11 +149,12 @@ for (const q of queries) {
     workbook_row_key?: unknown
   }
   assert.equal(meta.greenwich_paint_execution_matrix.length, 2)
-  assert.equal(meta.greenwich_paint_execution_matrix[0]!.urls.length, 1)
+  assert.equal(meta.greenwich_paint_execution_matrix[0]!.urls.length, 5)
   assert.equal(
     meta.greenwich_paint_execution_matrix[0]!.urls[0],
     "/static/cream_n_0.jpg"
   )
+  assert.equal(meta.greenwich_paint_execution_matrix[1]!.urls.length, 5)
   assert.equal(
     meta.greenwich_paint_execution_matrix[1]!.urls[0],
     "/static/cream_d_0.jpg"

@@ -279,8 +279,8 @@ export function MediaPoolPanel({
   }, [poolItems, effectiveNoPreviewCount, currentMainId, gallerySet, selectedHandle, activeVariantKey])
 
   // Apply filter, then preview-first sort (scope is secondary inside preview tier only)
-  const filteredItems = useMemo<PoolItem[]>(() => {
-    if (hideNoPreviewContradiction) return []
+  const filteredItems = useMemo(() => {
+    if (hideNoPreviewContradiction) return [] as PoolItem[]
 
     let items = poolItems
 
@@ -311,7 +311,7 @@ export function MediaPoolPanel({
       gallerySet,
       runtimeFailedIds,
       recoveryById
-    )
+    ) as PoolItem[]
   }, [
     poolItems,
     activeFilter,

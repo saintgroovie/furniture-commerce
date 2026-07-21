@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "next-env.d.ts",
+    "medusa-backend-internal-url.cjs",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    ".next-build/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next",
+    ".next-dev",
+    ".next-matrix"
+  ]
+}
