@@ -1,13 +1,30 @@
+/**
+ * Medusa API base URL.
+ * - Server: Docker-internal / loopback from server-only env (never NEXT_PUBLIC).
+ * - Browser: same-origin empty base so `/store/...` hits Next rewrites → backend.
+ *
+ * No localhost:9000 / host.docker.internal string literals here — this module is
+ * imported by Client Components (cart/checkout) and must not embed :9000 hosts.
+ */
 export function getBaseUrl(): string {
-  if (typeof window === "undefined" && process.env.MEDUSA_BACKEND_URL) {
-    const serverUrl = process.env.MEDUSA_BACKEND_URL
-    // Docker SSR: compose sets medusa:9000 but backend may run on host (host.docker.internal).
-    if (serverUrl.includes("://medusa:")) {
-      return "http://host.docker.internal:9000"
-    }
-    return serverUrl
+  if (typeof window !== "undefined") {
+    return ""
   }
-  return process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? ""
+
+  const raw =
+    process.env.MEDUSA_BACKEND_INTERNAL_URL ||
+    process.env.MEDUSA_BACKEND_URL_INTERNAL ||
+    process.env.MEDUSA_BACKEND_URL ||
+    ""
+  const trimmed = String(raw).trim().replace(/\/$/, "")
+
+  if (!trimmed) {
+    throw new Error(
+      "Missing MEDUSA_BACKEND_INTERNAL_URL (or MEDUSA_BACKEND_URL) for server-side Medusa fetches"
+    )
+  }
+
+  return trimmed
 }
 
 /** Base URL of the storefront for metadataBase, canonical, OG. */

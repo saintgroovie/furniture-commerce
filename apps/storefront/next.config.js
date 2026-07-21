@@ -1,8 +1,11 @@
 /** @type {import('next').NextConfig} */
-const backendUrl =
-  process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ||
-  process.env.MEDUSA_BACKEND_URL ||
-  "http://localhost:9000"
+const {
+  resolveMedusaBackendInternalUrl,
+} = require("./medusa-backend-internal-url.cjs")
+
+// Server-only upstream for rewrites. Do NOT prefer NEXT_PUBLIC_* here — that baked
+// the public :9000 host into /product-static and blocked closing the published port.
+const backendUrl = resolveMedusaBackendInternalUrl(process.env)
 
 const nextConfig = {
   reactStrictMode: true,
@@ -26,6 +29,16 @@ const nextConfig = {
       {
         source: "/product-static/:path*",
         destination: `${backendUrl}/static/:path*`,
+      },
+      // Same-origin Store API for browser cart/checkout — avoids public :9000.
+      {
+        source: "/store/:path*",
+        destination: `${backendUrl}/store/:path*`,
+      },
+      // Same-origin uploads (rare legacy paths) — avoid emitting public :9000 in img src.
+      {
+        source: "/uploads/:path*",
+        destination: `${backendUrl}/uploads/:path*`,
       },
     ]
   },

@@ -154,8 +154,9 @@ jobs:
           file: ./apps/storefront/Dockerfile
           push: true
           build-args: |
-            NEXT_PUBLIC_MEDUSA_BACKEND_URL=${{ secrets.STAGING_NEXT_PUBLIC_MEDUSA_BACKEND_URL }}
+            NEXT_PUBLIC_MEDUSA_BACKEND_URL=
             MEDUSA_BACKEND_URL=http://backend:9000
+            MEDUSA_BACKEND_INTERNAL_URL=http://backend:9000
             NEXT_PUBLIC_SITE_URL=${{ secrets.STAGING_NEXT_PUBLIC_SITE_URL }}
             NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=${{ secrets.STAGING_NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY }}
             NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES=0
