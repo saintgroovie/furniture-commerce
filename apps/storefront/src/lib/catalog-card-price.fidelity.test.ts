@@ -68,6 +68,23 @@ function product(
     },
   })
   assert.equal(resolveCatalogCardPrice(p).amount, 54_355)
+  assert.equal(resolveCatalogCardPrice(p).prefix, "от ")
+}
+
+// STANDARD + buyer_default without tiers → exact price (no «от»)
+{
+  const p = product({
+    product_classification: { product_type: "STANDARD" },
+    metadata: {
+      buyer_default_configuration: {
+        min_unit_price: 12_000,
+        material_execution_code: null,
+      },
+    },
+  })
+  const resolved = resolveCatalogCardPrice(p)
+  assert.equal(resolved.amount, 12_000)
+  assert.equal(resolved.prefix, "")
 }
 
 // STANDARD single variant, no tiers → exact price

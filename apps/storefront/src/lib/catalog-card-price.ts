@@ -57,7 +57,11 @@ export function resolveCatalogCardPrice(
   /* Prefer backend-projected default configuration (browse DTO contract). */
   const backendMin = readBackendDefaultMinPrice(product)
   if (backendMin != null) {
-    return { amount: backendMin, prefix: "от ", requestQuoteLabel: null }
+    const hasTiers = minMaterialTierPrice(product) != null
+    const productType = getProductType(product)
+    const prefix =
+      hasTiers || productType === "CONFIGURABLE" ? "от " : ""
+    return { amount: backendMin, prefix, requestQuoteLabel: null }
   }
 
   const tierMin = minMaterialTierPrice(product)
