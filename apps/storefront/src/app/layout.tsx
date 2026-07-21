@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next"
 import Link from "next/link"
 import { getSiteUrl } from "@/lib/api/base"
+import { ContactsNavDropdown } from "@/components/contacts-nav-dropdown"
 import { HeaderCartLink } from "@/components/header-cart-link"
 import { HeaderLogo } from "@/components/header-logo"
 import { MobileNav } from "@/components/mobile-nav"
@@ -8,6 +9,7 @@ import { NavDropdown } from "@/components/nav-dropdown"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import { KidsSectionProvider } from "@/lib/use-kids-section"
+import { getShowroomOrganizationContactLd } from "@/lib/showroom-contacts"
 import { a11yCopy, footer as footerCopy, nav as navCopy, seo } from "@/lib/woodright-copy"
 import { formatRuInline } from "@/lib/format-ru-copy"
 import "./globals.css"
@@ -45,6 +47,7 @@ const organizationJsonLd = {
   "@type": "Organization",
   name: "Woodright",
   url: getSiteUrl(),
+  ...getShowroomOrganizationContactLd(),
 }
 
 export default function RootLayout({
@@ -82,7 +85,7 @@ export default function RootLayout({
                     { label: "Оставить заявку", href: "/designers/request" },
                   ]}
                 />
-                <Link href="/contacts">{navCopy.contacts}</Link>
+                <ContactsNavDropdown label={navCopy.contacts} />
               </div>
             </div>
           </div>
