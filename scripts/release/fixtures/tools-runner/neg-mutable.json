@@ -1,0 +1,7 @@
+{
+  "image": "node:22",
+  "read_only": true,
+  "privileged": false,
+  "docker_socket_mount": false,
+  "writable_repo_mount": false
+}

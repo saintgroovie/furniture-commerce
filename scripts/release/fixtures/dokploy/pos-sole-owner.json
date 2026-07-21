@@ -1,0 +1,9 @@
+{
+  "enforcement_mode": "dokploy_sole_owner",
+  "sole_owner": "Dokploy",
+  "manual_mutation_allowed": false,
+  "direct_mutation_path_open": false,
+  "claim_bypass_closed": false,
+  "dokploy_ui_residual": true,
+  "wrapper_decorative": false
+}

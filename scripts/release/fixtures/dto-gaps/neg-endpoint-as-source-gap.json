@@ -1,0 +1,17 @@
+{
+  "field_source_matrix": [
+    {
+      "field": "category_handle"
+    }
+  ],
+  "rows": [
+    {
+      "field": "category_handle",
+      "endpoint_has_field": false,
+      "source_has_field": false,
+      "endpoint_declares_absence": true,
+      "checked_source": false,
+      "counts_as_source_gap": true
+    }
+  ]
+}

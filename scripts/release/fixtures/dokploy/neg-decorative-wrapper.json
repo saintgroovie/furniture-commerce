@@ -1,0 +1,6 @@
+{
+  "enforcement_mode": "wrapper_mandatory",
+  "direct_mutation_path_open": false,
+  "claim_bypass_closed": true,
+  "wrapper_decorative": true
+}

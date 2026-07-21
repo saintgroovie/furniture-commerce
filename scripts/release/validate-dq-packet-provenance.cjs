@@ -1,15 +1,34 @@
 #!/usr/bin/env node
 /**
- * DQ packet provenance: source release, count, marker, checksum, mutations=false.
+ * DQ packet provenance (Gate AN + legacy Gate for S–AC).
+ * Authoritative packets require bundle_id + BE/SF revisions + digests.
+ * Legacy fixtures may use source_release_sha only when require_bundle is not set.
  */
 const fs = require("fs")
 const path = require("path")
 
 const SHA_RE = /^[0-9a-f]{40}$/
+const BUNDLE_RE = /^wrb-[0-9]{8}T[0-9]{6}Z-be[0-9a-f]{7,40}-sf[0-9a-f]{7,40}$/
+const DIGEST_RE = /^sha256:[0-9a-f]{64}$/
 
 function evaluate(doc) {
   const errors = []
-  if (!SHA_RE.test(doc.source_release_sha || "")) errors.push("source_release_sha invalid")
+  const requireBundle = doc.require_bundle === true || doc.require_split_identity === true
+  const hasBundle = BUNDLE_RE.test(doc.bundle_id || "")
+
+  if (requireBundle || hasBundle) {
+    if (!hasBundle) errors.push("bundle_id required")
+    if (!SHA_RE.test(doc.backend_revision || "")) errors.push("backend_revision required")
+    if (!SHA_RE.test(doc.storefront_revision || "")) errors.push("storefront_revision required")
+    if (!DIGEST_RE.test(doc.backend_digest || "")) errors.push("backend_digest required")
+    if (!DIGEST_RE.test(doc.storefront_digest || "")) errors.push("storefront_digest required")
+    if (!Array.isArray(doc.field_source_matrix) || doc.field_source_matrix.length < 1) {
+      errors.push("field-source matrix required")
+    }
+  } else if (!SHA_RE.test(doc.source_release_sha || "")) {
+    errors.push("source_release_sha invalid")
+  }
+
   if (typeof doc.product_count !== "number" || doc.product_count < 0) errors.push("product_count required")
   if (!doc.marker) errors.push("marker required")
   if (!doc.generated_at) errors.push("generated_at required")

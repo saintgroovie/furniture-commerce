@@ -20,6 +20,7 @@ Use exactly one:
 | `deployed_not_verified` | Runtime updated; public DOM gate incomplete |
 | `done_deployed_and_verified` | Public hydrated DOM + digests + integrity + ≥5 samples |
 | `done_governance_merged_no_deploy` | Governance/CI merged; active runtime intentionally unchanged |
+| `done_governance_merged_no_deploy_with_known_dokploy_bypass` | Governance merged; runtime unchanged; Dokploy UI residual bypass explicitly declared (not closed) |
 | `rolled_back` | New release rolled back; previous restored |
 | `blocked` | Cannot continue safely |
 | `unsafe` | Must not leave runtime/changes as-is |
@@ -163,3 +164,83 @@ Review date ≠ cleanup permission. Live DQ is GET-only and names source release
 ## Operator identity (60)
 
 Cutover/reconciliation events record actor/controller without credentials.
+
+## Release bundle may contain multiple source revisions (61)
+
+If backend and storefront have different revisions, the manifest must describe both. Never present the storefront SHA as the SHA of the whole pair.
+
+## Bundle ID is not a Git SHA (62)
+
+A split release receives a separate immutable `bundle_id` (e.g. `wrb-…-be…-sf…`). Bundle identity must not be a bare Git SHA.
+
+## Component provenance is mandatory (63)
+
+Each component has its own revision, workflow run, attempt, unique build tag, digest, OCI labels, and PR reference.
+
+## Split pair requires compatibility evidence (64)
+
+SF-only or BE-only cutover is allowed only with a compatibility contract and buyer-visible QA. HTTP 200 alone is insufficient.
+
+## ACTIVE_RELEASE points to a bundle (65)
+
+ACTIVE_RELEASE must reference a bundle manifest (path + checksum), not only a single Git SHA.
+
+## Primary revision must not hide component revision (66)
+
+Optional primary/revision fields never replace backend and storefront component revisions.
+
+## Dokploy bypass must be closed or declared (67)
+
+Do not claim global lock coverage while Dokploy can mutate live directly. Residual UI bypass must be explicit in machine-readable policy (`claim_bypass_closed=false`).
+
+## Decorative wrappers do not count (68)
+
+A wrapper is not enforcement if a direct Dokploy path remains available without the gate.
+
+## Sole-owner policy must be machine-readable (69)
+
+If Dokploy is sole mutation owner, ACTIVE_OWNER (and validators) must record sole owner and forbid manual mutation paths.
+
+## Mutation leases are single-use (70)
+
+A lease cannot be reused or used after expiry. Lease does not replace CAS or the transaction log.
+
+## Host tooling must be reproducible (71)
+
+Missing host Node/Python must not make governance gates fictional. Use a pinned tools runner.
+
+## Server tool images must be digest-pinned (72)
+
+Governance tools run only from an exact `image@sha256:…`. Mutable tags are rejected.
+
+## DTO absence is not data absence (73)
+
+Absence of a field in a Store DTO does not prove absence in source data.
+
+## DQ audits must name field sources (74)
+
+Every DQ metric names the endpoint/source used. Field-source matrix is required for authoritative packets.
+
+## Projection gaps and data gaps are separate (75)
+
+Owner-review packets must not mix backend data remediation with API projection remediation.
+
+## Title fallback is secondary evidence (76)
+
+Title inference applies only after structured-source checks.
+
+## Live DQ uses exact bundle identity (77)
+
+DQ packets record `bundle_id`, backend revision, storefront revision, and digests.
+
+## Split rollback is component-aware (78)
+
+Rollback manifests distinguish pair rollback, storefront-only rollback, and backend-only rollback (only if the contract allows).
+
+## Component cutover must update bundle metadata (79)
+
+After SF-only/BE-only cutover, active state becomes a new bundle - not the old release with a silently swapped container.
+
+## Metadata migration must not change runtime (80)
+
+Manifest v1 → v2 migration is not a restart or deploy. Before/after container IDs and digests must be proven unchanged.
