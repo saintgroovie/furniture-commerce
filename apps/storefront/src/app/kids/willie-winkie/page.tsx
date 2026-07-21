@@ -101,14 +101,15 @@ export default async function WillieWinkieMotifDirectoryPage() {
         </section>
       </div>
     )
-  } catch {
+  } catch (err) {
+    console.error("[kids/willie-winkie] motif directory load failed", err)
     return (
-      <div data-state="error" className="ww-motif-page">
+      <div data-state="empty" className="ww-motif-page">
         <div className="ww-state-plate">
           <h1>{willieWinkieMotifsCopy.directoryH1}</h1>
-          <p>{willieWinkieMotifsCopy.directoryLoadError}</p>
-          <Link href="/kids/willie-winkie">
-            {willieWinkieMotifsCopy.reloadPage}
+          <CopyLines lines={willieWinkieMotifsCopy.directoryLoadError} />
+          <Link href="/kids/catalog">
+            {willieWinkieMotifsCopy.directoryEmptyBody}
           </Link>
         </div>
       </div>

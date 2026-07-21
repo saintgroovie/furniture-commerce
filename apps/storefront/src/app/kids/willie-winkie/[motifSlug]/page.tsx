@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
+import { CopyLines } from "@/components/copy-lines"
 import { WillieWinkieMotifProductCard } from "@/components/willie-winkie-motif-product-card"
 import { resolveMotifCoverSrc } from "@/components/willie-winkie-motif-directory"
 import { getSiteUrl } from "@/lib/api/base"
@@ -40,7 +41,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     }
   } catch {
     return {
-      title: willieWinkieMotifsCopy.motifLoadError,
+      title: willieWinkieMotifsCopy.motifLoadError[0],
       robots: { index: false, follow: false },
     }
   }
@@ -167,12 +168,13 @@ export default async function WillieWinkieMotifPage({ params }: PageProps) {
         </section>
       </div>
     )
-  } catch {
+  } catch (err) {
+    console.error("[kids/willie-winkie/motif] load failed", err)
     return (
-      <div data-state="error" className="ww-motif-page">
+      <div data-state="empty" className="ww-motif-page">
         <div className="ww-state-plate">
           <h1>{willieWinkieMotifsCopy.directoryH1}</h1>
-          <p>{willieWinkieMotifsCopy.motifLoadError}</p>
+          <CopyLines lines={willieWinkieMotifsCopy.motifLoadError} />
           <Link href="/kids/willie-winkie">
             {willieWinkieMotifsCopy.backToDirectory}
           </Link>

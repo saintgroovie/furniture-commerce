@@ -1,6 +1,7 @@
 import Link from "next/link"
 import type { Metadata } from "next"
 import { ProductCard } from "@/components/product-card"
+import { CopyLines } from "@/components/copy-lines"
 import { resolveBespokeProducts } from "@/lib/bespoke"
 import { groupProductsForDisplay } from "@/lib/display-group"
 import { bespokeCatalogCopy, seo } from "@/lib/woodright-copy"
@@ -21,15 +22,19 @@ export default async function BespokeCatalogPage() {
   try {
     const data = await resolveBespokeProducts()
     products = data.products
-  } catch {
+  } catch (err) {
+    console.error("[bespoke/catalog] products load failed", err)
     return (
-      <div data-state="error">
+      <div data-state="empty">
         <h1>{bespokeCatalogCopy.h1}</h1>
-        <p className="info-text" style={{ marginTop: "0.5rem" }}>
-          {bespokeCatalogCopy.loadError}
-        </p>
-        <div className="nav-links" style={{ marginTop: "1rem" }}>
-          <Link href="/bespoke">В раздел «По проекту»</Link>
+        <div className="status-message">
+          <CopyLines lines={bespokeCatalogCopy.emptyBody} />
+          <div
+            className="nav-links nav-links-center"
+            style={{ marginTop: "1rem" }}
+          >
+            <Link href="/bespoke">В раздел «По проекту»</Link>
+          </div>
         </div>
       </div>
     )
