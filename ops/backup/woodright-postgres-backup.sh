@@ -65,13 +65,16 @@ fi
 SIZE=$(wc -c <"$TMP" | tr -d ' ')
 [[ "$SIZE" -gt 0 ]] || die "empty dump"
 
-# TOC list (no row data). Pipe dump into container stdin.
-if ! docker exec -i "$PG_CONTAINER" \
-  pg_restore -l - <"$TMP" >"$LIST" 2>"$BACKUP_ROOT/logs/pg-restore-list-${TS}.err"; then
+# TOC list (no row data). Copy into container — Alpine pg_restore rejects stdin "-".
+LIST_IN="/tmp/wr-pg-backup-list-${TS}.dump"
+docker cp "$TMP" "${PG_CONTAINER}:${LIST_IN}"
+if ! docker exec "$PG_CONTAINER" pg_restore -l "$LIST_IN" >"$LIST" 2>"$BACKUP_ROOT/logs/pg-restore-list-${TS}.err"; then
+  docker exec "$PG_CONTAINER" rm -f "$LIST_IN" >/dev/null 2>&1 || true
   mkdir -p "$BACKUP_ROOT/quarantine"
   mv -f "$TMP" "$BACKUP_ROOT/quarantine/${OUT_BASE}.dump.badlist" 2>/dev/null || true
   die "pg_restore --list failed"
 fi
+docker exec "$PG_CONTAINER" rm -f "$LIST_IN" >/dev/null 2>&1 || true
 rm -f "$BACKUP_ROOT/logs/pg-restore-list-${TS}.err"
 chmod 0600 "$TMP" "$LIST"
 
