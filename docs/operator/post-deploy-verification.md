@@ -1,5 +1,20 @@
 # Post-deploy verification
 
+
+## Runtime identity gate (fail-closed)
+
+Before treating any probe as public evidence:
+
+```bash
+bash scripts/verify-public-runtime-identity.sh \
+  --url https://api.woodright-demo.ru/health \
+  --identity-file /srv/woodright/runtime-identity/ACTIVE_PUBLIC.json
+```
+
+`http://127.0.0.1:9200` and `localhost` are **invalid_public_evidence**.
+
+See `docs/operator/runtime-identity.md`.
+
 ## Public verifier (read-only)
 
 ```bash
