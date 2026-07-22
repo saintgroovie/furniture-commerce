@@ -132,7 +132,7 @@ Every public evidence block must include:
 - DB identity **alias**
 - container IDs
 - timestamp
-- `Evidence classification:` one of  
+- `Evidence classification:` one of
   `public_domain_evidence` | `public_origin_evidence` | `candidate_evidence` | `local_dev_evidence` | `invalid_public_evidence`
 
 Forbidden as public proof:
@@ -141,7 +141,7 @@ Forbidden as public proof:
 
 Correct:
 
-`non_public_candidate :9200 показал… - не используется для public acceptance`  
+`non_public_candidate :9200 показал… - не используется для public acceptance`
 (`Evidence classification: invalid_public_evidence`)
 
 ## Deployment preflight
