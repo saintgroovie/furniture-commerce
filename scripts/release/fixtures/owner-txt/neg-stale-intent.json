@@ -1,0 +1,14 @@
+{
+  "generated_consistent": true,
+  "active": {
+    "component_revisions": {
+      "backend": "006d4f7",
+      "storefront": "006d4f7"
+    }
+  },
+  "owner_txt": {
+    "desired_git_sha": "f7f6760",
+    "presents_as_active": true
+  },
+  "require_complete_observations": false
+}

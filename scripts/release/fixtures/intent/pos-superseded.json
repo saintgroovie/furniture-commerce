@@ -1,0 +1,16 @@
+{
+  "intent_registry_separate": true,
+  "intents": [
+    {
+      "intent_id": "y",
+      "status": "superseded",
+      "status_reason": "replaced by security cutover",
+      "evidence_paths": [
+        "e"
+      ],
+      "created_at": "2026-07-22T00:00:00Z",
+      "target_environment": "public_demo"
+    }
+  ],
+  "schema_version": "1"
+}

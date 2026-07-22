@@ -60,7 +60,68 @@ function evaluate(doc) {
     result = "public_behavior_drifted"
   }
   if (doc.force_result && RESULTS.has(doc.force_result)) result = doc.force_result
-  return { result, reasons, read_only: true, mutated: false }
+
+  const observed = !!(
+    c.backend_digest &&
+    c.storefront_digest &&
+    c.backend_container_id &&
+    c.storefront_container_id &&
+    a.backend_digest &&
+    a.storefront_digest &&
+    a.backend_container_id &&
+    a.storefront_container_id
+  )
+  if (!observed && doc.require_complete_observations !== false) {
+    reasons.push("incomplete live observations")
+    if (result === "consistent") result = "metadata_stale"
+  }
+  const active_bundle_matches_containers =
+    observed &&
+    c.backend_digest === a.backend_digest &&
+    c.storefront_digest === a.storefront_digest &&
+    c.backend_container_id === a.backend_container_id &&
+    c.storefront_container_id === a.storefront_container_id
+  const active_owner_matches_bundle =
+    !!(o.backend_digest && o.storefront_digest && a.backend_digest && a.storefront_digest) &&
+    o.backend_digest === a.backend_digest &&
+    o.storefront_digest === a.storefront_digest &&
+    !(o.release_sha && a.release_sha && o.release_sha !== a.release_sha)
+  const owner_txt_matches_active = doc.owner_txt_matches_active !== false && doc.owner_txt_has_stale_intent !== true
+  if (doc.owner_txt_has_stale_intent === true) {
+    reasons.push("owner TXT contains stale intent as active")
+    if (result === "consistent") result = "metadata_stale"
+  }
+  if (doc.intent_leakage_into_active === true) {
+    reasons.push("intent leakage into active state")
+    if (result === "consistent") result = "metadata_stale"
+  }
+  const pending_intents_count = Number(doc.pending_intents_count || 0)
+  const stale_intents_count = Number(doc.stale_intents_count || 0)
+  const external_mutation_detected = doc.external_mutation_detected === true
+  if (external_mutation_detected) {
+    reasons.push("external mutation detected")
+    if (result === "consistent") result = "containers_drifted"
+  }
+  const reconciliation_required = !active_bundle_matches_containers || doc.reconciliation_required === true || result === "metadata_stale"
+  const public_behavior_consistent = p.behavior_ok !== false
+  const active_metadata_consistent =
+    active_bundle_matches_containers && active_owner_matches_bundle && owner_txt_matches_active && !reconciliation_required
+
+  return {
+    result,
+    reasons,
+    read_only: true,
+    mutated: false,
+    active_metadata_consistent,
+    active_bundle_matches_containers,
+    active_owner_matches_bundle,
+    owner_txt_matches_active,
+    pending_intents_count,
+    stale_intents_count,
+    external_mutation_detected,
+    reconciliation_required,
+    public_behavior_consistent,
+  }
 }
 
 function runOne(file) {
