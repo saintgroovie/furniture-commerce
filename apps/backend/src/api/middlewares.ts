@@ -6,6 +6,7 @@ import {
 } from "@medusajs/framework/http"
 import { Modules } from "@medusajs/framework/utils"
 import { evaluateCartClassificationGate } from "./cart-classification-gate"
+import { attachRuntimeIdentityHeaders } from "./runtime-identity-headers"
 
 /**
  * Блокирует добавление BESPOKE в корзину: проверка до вызова стандартного add-to-cart flow Medusa, без его дублирования.
@@ -102,6 +103,15 @@ async function ensureNotBespokeForCart(
 
 export default defineMiddlewares({
   routes: [
+    {
+      // Runtime identity for QA / release governance (env-driven; no secrets).
+      matcher: "/store*",
+      middlewares: [attachRuntimeIdentityHeaders],
+    },
+    {
+      matcher: "/health",
+      middlewares: [attachRuntimeIdentityHeaders],
+    },
     {
       matcher: "/store/carts/:id/line-items",
       method: ["POST"],

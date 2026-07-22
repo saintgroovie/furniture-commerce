@@ -4,6 +4,7 @@ import {
   shouldEmitXRobotsTag,
   X_ROBOTS_TAG_NOINDEX,
 } from "@/lib/indexing-policy"
+import { storefrontRuntimeIdentityHeaders } from "@/lib/runtime-identity-headers"
 
 /**
  * Buyer security headers + CSP with per-request nonce.
@@ -57,6 +58,10 @@ export function middleware(request: NextRequest) {
 
   if (shouldEmitXRobotsTag()) {
     response.headers.set("X-Robots-Tag", X_ROBOTS_TAG_NOINDEX)
+  }
+
+  for (const [k, v] of Object.entries(storefrontRuntimeIdentityHeaders())) {
+    response.headers.set(k, v)
   }
 
   const proto =

@@ -62,6 +62,17 @@ services:
       # temporary cleartext http://IP admin review (non-production workflow).
       MEDUSA_LOCAL_HTTP: ${MEDUSA_LOCAL_HTTP:-0}
       PORT: "9000"
+      # Runtime identity (fail-closed QA). Prefer aliases, never put DSN here.
+      WOODRIGHT_RUNTIME_ROLE: ${WOODRIGHT_RUNTIME_ROLE:-public_demo}
+      WOODRIGHT_EXPOSURE: ${WOODRIGHT_EXPOSURE:-public}
+      WOODRIGHT_RELEASE_SHA: ${WOODRIGHT_RELEASE_SHA:-}
+      WOODRIGHT_DATABASE_IDENTITY_ALIAS: ${WOODRIGHT_DATABASE_IDENTITY_ALIAS:-public_demo_db}
+    labels:
+      com.woodright.runtime-role: ${WOODRIGHT_RUNTIME_ROLE:-public_demo}
+      com.woodright.exposure: ${WOODRIGHT_EXPOSURE:-public}
+      com.woodright.canonical-domain: ${WOODRIGHT_CANONICAL_DOMAIN:-woodright-demo.ru}
+      com.woodright.release-sha: ${WOODRIGHT_RELEASE_SHA:-unknown}
+      com.woodright.deployment-owner: ${WOODRIGHT_DEPLOYMENT_OWNER:-Dokploy}
     volumes:
       - woodright_staging_media:/server/static
     networks:
@@ -105,6 +116,15 @@ services:
       MEDUSA_BACKEND_INTERNAL_URL: ${MEDUSA_BACKEND_URL_INTERNAL:-http://backend:9000}
       # Demo/staging SEO: fail-closed noindex (see docs/operator/seo-indexing-policy.md)
       WOODRIGHT_INDEXING_MODE: ${WOODRIGHT_INDEXING_MODE:-noindex}
+      WOODRIGHT_RUNTIME_ROLE: ${WOODRIGHT_RUNTIME_ROLE:-public_demo}
+      WOODRIGHT_EXPOSURE: ${WOODRIGHT_EXPOSURE:-public}
+      WOODRIGHT_RELEASE_SHA: ${WOODRIGHT_RELEASE_SHA:-}
+    labels:
+      com.woodright.runtime-role: ${WOODRIGHT_RUNTIME_ROLE:-public_demo}
+      com.woodright.exposure: ${WOODRIGHT_EXPOSURE:-public}
+      com.woodright.canonical-domain: ${WOODRIGHT_CANONICAL_DOMAIN:-woodright-demo.ru}
+      com.woodright.release-sha: ${WOODRIGHT_RELEASE_SHA:-unknown}
+      com.woodright.deployment-owner: ${WOODRIGHT_DEPLOYMENT_OWNER:-Dokploy}
     networks:
       - woodright_staging
       - dokploy-network
