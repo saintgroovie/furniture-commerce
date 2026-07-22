@@ -4,6 +4,7 @@ import { cache } from "react"
 import { getSiteUrl } from "@/lib/api/base"
 import { getRoomSetStorefrontBySlug, NOT_FOUND } from "@/lib/api/room-sets"
 import { RoomSetCta } from "@/components/room-set-cta"
+import { indexingCanonical } from "@/lib/indexing-policy"
 import { roomSetDetail } from "@/lib/woodright-copy"
 
 function truncate(str: string, max: number): string {
@@ -15,10 +16,13 @@ const loadRoomSet = cache(async (slug: string) => getRoomSetStorefrontBySlug(slu
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const base = getSiteUrl()
+  const selfCanonical = indexingCanonical(`${base}/rooms/${params.slug}`)
   try {
     const data = await loadRoomSet(params.slug)
     const roomSet = data.room_set
-    if (!roomSet) return { title: "Комплект", alternates: { canonical: `${base}/rooms/${params.slug}` } }
+    if (!roomSet) {
+      return { title: "Комплект", ...(selfCanonical ? { alternates: selfCanonical } : {}) }
+    }
     const title = String(roomSet.title ?? "Комплект")
     const desc = roomSet.description ? truncate(String(roomSet.description), 160) : `Готовый комплект мебели: ${title}.`
     return {
@@ -29,10 +33,10 @@ export async function generateMetadata({ params }: { params: { slug: string } })
         description: desc,
         url: `/rooms/${params.slug}`,
       },
-      alternates: { canonical: `${base}/rooms/${params.slug}` },
+      ...(selfCanonical ? { alternates: selfCanonical } : {}),
     }
   } catch {
-    return { title: "Комплект", alternates: { canonical: `${base}/rooms/${params.slug}` } }
+    return { title: "Комплект", ...(selfCanonical ? { alternates: selfCanonical } : {}) }
   }
 }
 

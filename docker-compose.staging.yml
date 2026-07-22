@@ -103,6 +103,8 @@ services:
       PORT: "3002"
       MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL_INTERNAL:-http://backend:9000}
       MEDUSA_BACKEND_INTERNAL_URL: ${MEDUSA_BACKEND_URL_INTERNAL:-http://backend:9000}
+      # Demo/staging SEO: fail-closed noindex (see docs/operator/seo-indexing-policy.md)
+      WOODRIGHT_INDEXING_MODE: ${WOODRIGHT_INDEXING_MODE:-noindex}
     networks:
       - woodright_staging
       - dokploy-network

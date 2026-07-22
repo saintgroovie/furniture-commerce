@@ -36,6 +36,7 @@ assert.doesNotMatch(middleware, /'unsafe-eval'/, "CSP must not allow unsafe-eval
 assert.match(middleware, /Strict-Transport-Security/, "middleware must set HSTS on HTTPS")
 assert.match(middleware, /X-Content-Type-Options/, "middleware must set nosniff")
 assert.match(middleware, /frame-ancestors 'none'/, "CSP frame-ancestors none")
+assert.match(middleware, /X-Robots-Tag/, "middleware must set X-Robots-Tag under noindex policy")
 assert.doesNotMatch(
   middleware,
   /fullscreen=\(\)/,

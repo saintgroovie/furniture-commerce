@@ -5,6 +5,7 @@ import { WillieWinkieMotifProductCard } from "@/components/willie-winkie-motif-p
 import { resolveMotifCoverSrc } from "@/components/willie-winkie-motif-directory"
 import { getSiteUrl } from "@/lib/api/base"
 import { getMotifTheme } from "@/lib/api/motif-themes"
+import { indexingCanonical } from "@/lib/indexing-policy"
 import { resolveStorefrontProductImageSrc } from "@/lib/product-images"
 import { seo, willieWinkieMotifsCopy } from "@/lib/woodright-copy"
 
@@ -16,10 +17,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   try {
     const data = await getMotifTheme(slug)
     if (!data?.motif_theme) {
+      const hub = indexingCanonical(`${base}/kids/willie-winkie`)
       return {
         title: willieWinkieMotifsCopy.motifNotFoundTitle,
         robots: { index: false, follow: false },
-        alternates: { canonical: `${base}/kids/willie-winkie` },
+        ...(hub ? { alternates: hub } : {}),
       }
     }
     const theme = data.motif_theme
@@ -28,10 +30,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const image = imageRaw
       ? resolveStorefrontProductImageSrc(imageRaw)
       : undefined
+    const self = indexingCanonical(
+      `${base}/kids/willie-winkie/${theme.motif_slug}`
+    )
     return {
       title: meta.title,
       description: meta.description,
-      alternates: { canonical: `${base}/kids/willie-winkie/${theme.motif_slug}` },
+      ...(self ? { alternates: self } : {}),
       openGraph: {
         title: meta.title,
         description: meta.description,

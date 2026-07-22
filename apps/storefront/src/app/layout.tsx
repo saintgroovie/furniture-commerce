@@ -10,6 +10,7 @@ import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import { KidsSectionProvider } from "@/lib/use-kids-section"
 import { CspNonceProvider } from "@/lib/csp-nonce"
+import { indexingRobotsMetadata } from "@/lib/indexing-policy"
 import { a11yCopy, footer as footerCopy, nav as navCopy, seo } from "@/lib/woodright-copy"
 import { formatRuInline } from "@/lib/format-ru-copy"
 import "./globals.css"
@@ -22,6 +23,8 @@ export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: { default: "Woodright", template: "%s | Woodright" },
   description: seo.home.description,
+  // Demo/staging fail-closed: noindex/nofollow/noarchive (WOODRIGHT_INDEXING_MODE).
+  robots: indexingRobotsMetadata(),
   openGraph: {
     siteName: "Woodright",
     locale: "ru_RU",
