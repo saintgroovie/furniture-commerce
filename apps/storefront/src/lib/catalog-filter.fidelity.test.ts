@@ -7,6 +7,7 @@ import assert from "node:assert/strict"
 import {
   applyCatalogFilters,
   clearCatalogFilterState,
+  getCategoryFilterLabel,
   getProductCategoryKey,
   hasActiveCatalogFilters,
   type CatalogFilterState,
@@ -249,6 +250,12 @@ function ids(products: Record<string, unknown>[]): string[] {
     (wwKomody[0]!.metadata as Record<string, unknown>).motif_slug,
     "ballet"
   )
+}
+
+// Owner-approved Oxford steps facet label
+{
+  assert.equal(getCategoryFilterLabel("stupeni"), "Ступени")
+  assert.equal(getCategoryFilterLabel("stoly"), "Столы")
 }
 
 console.log("catalog-filter.fidelity.test.ts: all assertions passed")

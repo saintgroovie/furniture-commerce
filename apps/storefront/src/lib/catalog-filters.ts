@@ -54,6 +54,7 @@ export const CATEGORY_FILTER_LABELS: Record<string, string> = {
   bortiki: "Бортики",
   baldahiny: "Балдахины",
   "pelenalnye-stoleshnicy": "Пеленальные столешницы",
+  stupeni: "Ступени",
 }
 
 function humanizeFilterKey(key: string): string {

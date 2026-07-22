@@ -5,11 +5,13 @@
  * and from motif (Ant's Village) / collection (Willie Winkie).
  *
  * Priority (documented SoT):
- * 1. metadata.category_handle (structured ingest)
- * 2. product_categories[].handle (Medusa category link), via alias map
- * 3. title/handle inference — fail-safe for display/facets/sort only;
+ * 1. confirmed product-handle dictionary (owner-approved matrix / draft)
+ * 2. metadata.category_handle (structured ingest), with merchandising
+ *    category_override when mis-tagged accessories
+ * 3. product_categories[].handle (Medusa category link), via alias map
+ * 4. title/handle inference — fail-safe for display/facets/sort only;
  *    never written back to DB; source tagged `title_fallback`
- * 4. unknown — product stays in catalog; omitted from type facets;
+ * 5. unknown — product stays in catalog; omitted from type facets;
  *    listed in QA inventory
  *
  * Reuses merchandising type resolution so sort and facets share one key space.
@@ -41,7 +43,27 @@ export const BUYER_ITEM_TYPE_HANDLE_ALIASES: Record<string, string> = {
   canopies: "baldahiny",
 }
 
+/**
+ * Exact product-handle → canonical buyer item type.
+ *
+ * Evidence (no DB write; browse projection only):
+ * - Willie Winkie Flow A operator matrix
+ *   (vv-painting-sku-matrix-filled.csv, operator_decision=approve,
+ *   proposed_category=stoly-i-stoliki) + launch-a draft → `stoly`
+ * - Oxford `s-ox-05`: explicit owner decision 2026-07-22 → `stupeni`
+ *   (legacy workbook toy-box is intentionally ignored)
+ */
+export const CONFIRMED_PRODUCT_HANDLE_BUYER_ITEM_TYPES: Readonly<
+  Record<string, string>
+> = {
+  "mo-81-1": "stoly",
+  "sh-81-1": "stoly",
+  "fa-06-1": "stoly",
+  "s-ox-05": "stupeni",
+}
+
 export type BuyerItemTypeSource =
+  | "confirmed_handle"
   | "category_handle"
   | "product_category"
   | "category_override"
@@ -99,12 +121,30 @@ function categoryHandlesFromProduct(product: Record<string, unknown>): string[] 
   return out
 }
 
+function confirmedTypeFromProductHandle(
+  product: Record<string, unknown>
+): string | null {
+  const handle = normalizeHandle(product.handle)
+  if (!handle) return null
+  const key = CONFIRMED_PRODUCT_HANDLE_BUYER_ITEM_TYPES[handle]
+  return key ? canonicalizeTypeKey(key) : null
+}
+
 /**
  * Resolve buyer furniture type. Never mutates `product` or the database.
  */
 export function resolveBuyerItemType(
   product: Record<string, unknown>
 ): ResolvedBuyerItemType {
+  const confirmed = confirmedTypeFromProductHandle(product)
+  if (confirmed) {
+    return {
+      key: confirmed,
+      source: "confirmed_handle",
+      facetEligible: true,
+    }
+  }
+
   const meta = asMeta(product)
   const structured = normalizeHandle(meta.category_handle)
   if (structured) {
@@ -180,7 +220,11 @@ export function projectBuyerItemTypeOntoProduct<
   // when merchandising category_override corrects a misclassified handle
   // (e.g. furniture wrongly tagged zerkala/chasy).
   if (resolved.key && resolved.facetEligible) {
-    if (!existing || resolved.source === "category_override") {
+    if (
+      !existing ||
+      resolved.source === "category_override" ||
+      resolved.source === "confirmed_handle"
+    ) {
       meta.category_handle = resolved.key
     }
   }
@@ -236,7 +280,11 @@ export function buildMissingBuyerItemTypeInventory(
   const rows: BuyerItemTypeInventoryRow[] = []
   for (const product of products) {
     const resolved = resolveBuyerItemType(product)
-    if (resolved.source === "category_handle" || resolved.source === "product_category") {
+    if (
+      resolved.source === "category_handle" ||
+      resolved.source === "product_category" ||
+      resolved.source === "confirmed_handle"
+    ) {
       continue
     }
     const meta = asMeta(product)

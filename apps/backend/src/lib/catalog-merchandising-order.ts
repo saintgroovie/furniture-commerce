@@ -59,6 +59,8 @@ const TYPE_RANK: Record<string, { tier: MerchandisingItemTier; rank: number }> =
     stulya: { tier: MERCHANDISING_ITEM_TIER.SUPPORTING, rank: 40 },
     kresla: { tier: MERCHANDISING_ITEM_TIER.SUPPORTING, rank: 50 },
     skameyki: { tier: MERCHANDISING_ITEM_TIER.SUPPORTING, rank: 60 },
+    // Oxford steps: supporting furniture adjunct, below beds/wardrobes/tables.
+    stupeni: { tier: MERCHANDISING_ITEM_TIER.SUPPORTING, rank: 70 },
     polki: { tier: MERCHANDISING_ITEM_TIER.COMPLEMENTARY, rank: 10 },
     bortiki: { tier: MERCHANDISING_ITEM_TIER.COMPLEMENTARY, rank: 20 },
     baldahiny: { tier: MERCHANDISING_ITEM_TIER.COMPLEMENTARY, rank: 30 },
@@ -173,7 +175,7 @@ function productSearchBlob(product: Record<string, unknown>): string {
 const FURNITURE_WITH_MIRROR_RE =
   /шкаф|гардероб|туалетн|столик|комод|тумб|консол|кровать|стол\b|стеллаж|полк/
 
-const PURE_MIRROR_RE = /зеркал|mirror/
+const PURE_MIRROR_RE = /зеркало|зеркала|зеркалом|mirror/
 // Avoid JS `\\b` (ASCII-only): require the word «часы», not «часовой».
 const PURE_CLOCK_RE = /часы|clock/
 
@@ -186,12 +188,18 @@ export function inferItemTypeKeyFromText(blob: string): string | null {
   if (!t.trim()) return null
 
   // Accessory only when not primarily furniture (e.g. шкаф с зеркалом).
+  // Require the noun «зеркало» — not adjective «зеркальная вставка».
   if (PURE_MIRROR_RE.test(t) && !FURNITURE_WITH_MIRROR_RE.test(t)) {
     return "zerkala"
   }
   if (PURE_CLOCK_RE.test(t) && !FURNITURE_WITH_MIRROR_RE.test(t)) {
     return "chasy"
   }
+
+  // Specific accessories before broader furniture stems they contain.
+  if (/пеленальн|changing\s*top/.test(t)) return "pelenalnye-stoleshnicy"
+  if (/бортик/.test(t)) return "bortiki"
+  if (/балдахин|canopy/.test(t)) return "baldahiny"
 
   // Nightstands before beds: «прикроватная» contains «кроват» as a substring.
   if (/тумб/.test(t)) return "tumby"
@@ -211,9 +219,6 @@ export function inferItemTypeKeyFromText(blob: string): string | null {
   if (/кресл/.test(t)) return "kresla"
   if (/скам|банкет/.test(t)) return "skameyki"
   if (/полк/.test(t)) return "polki"
-  if (/бортик/.test(t)) return "bortiki"
-  if (/балдахин|canopy/.test(t)) return "baldahiny"
-  if (/пеленальн|changing\s*top/.test(t)) return "pelenalnye-stoleshnicy"
   return null
 }
 
