@@ -1,0 +1,12 @@
+{
+  "blank_interpreted_as_approve": false,
+  "supports_null_taxonomy": true,
+  "rows": [
+    {
+      "bucket": "collection_null",
+      "owner_decision": "pending",
+      "treated_as_approved": false,
+      "proposal_taxonomy": "likely_intentionally_unassigned"
+    }
+  ]
+}

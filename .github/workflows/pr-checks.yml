@@ -194,6 +194,13 @@ jobs:
           node scripts/release/validate-stack-registry.cjs scripts/release/fixtures/stacks/pos-complete.json
           node scripts/release/validate-public-route-uniqueness.cjs scripts/release/fixtures/routes/pos-unique.json
           node scripts/catalog/assert-owner-review-identity-mismatch.cjs
+          # Gates BD–BQ: live reconciliation / intents / identity
+          node scripts/release/validate-intent-registry.cjs --fixture-dir scripts/release/fixtures/intent
+          node scripts/release/validate-owner-txt-generation.cjs --fixture-dir scripts/release/fixtures/owner-txt
+          node scripts/release/validate-external-cutover-reconciliation.cjs --fixture-dir scripts/release/fixtures/external-cutover
+          node scripts/release/validate-product-identity-compare.cjs --fixture-dir scripts/release/fixtures/product-identity
+          node scripts/release/validate-stack-mutation-attribution.cjs --fixture-dir scripts/release/fixtures/stack-attribution
+          node scripts/release/validate-owner-decision-defaults.cjs --fixture-dir scripts/release/fixtures/owner-decision
           node scripts/catalog/compare-catalog-sources.cjs \
             --list-fixture scripts/catalog/fixtures/sample-products.json \
             --auth-fixture scripts/catalog/fixtures/sample-catalog-products.json \

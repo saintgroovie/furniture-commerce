@@ -1,0 +1,17 @@
+{
+  "intent_registry_separate": true,
+  "active_state_contains_pending_intent": false,
+  "intents": [
+    {
+      "intent_id": "intent-f7f6760-pr71",
+      "status": "partially_activated",
+      "status_reason": "applied to production_candidate only",
+      "evidence_paths": [
+        "/srv/woodright/backups/pre-f7f6760-product-type-closure-20260722T093942Z/"
+      ],
+      "created_at": "2026-07-22T00:00:00Z",
+      "target_environment": "public_demo"
+    }
+  ],
+  "schema_version": "1"
+}
