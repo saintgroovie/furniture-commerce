@@ -1,0 +1,10 @@
+{
+  "supports_null_taxonomy": true,
+  "all_null_called_missing": true,
+  "rows": [
+    {
+      "bucket": "collection_null",
+      "owner_decision": "pending"
+    }
+  ]
+}

@@ -324,3 +324,83 @@ A decision packet is bound to an exact source bundle and checksum.
 ## DTO gaps never enter owner decision queue (100)
 
 Engineering projection gaps must not force the owner to reclassify products.
+
+## Active state and intent are different entities (101)
+
+Planned release intent must not live inside active owner state.
+
+## Owner TXT is a view, not source of truth (102)
+
+The human-readable owner file is generated from machine-readable active state and the intent registry.
+
+## ACTIVE_RELEASE must match live containers (103)
+
+A stale active pointer is an integrity incident and requires reconciliation.
+
+## ACTIVE_OWNER cannot override bundle provenance (104)
+
+Owner metadata without component provenance is insufficient for active reconciliation.
+
+## External security cutover is reconciled, not reclaimed (105)
+
+A governance agent must not attribute an external cutover to itself.
+
+## Every release intent has a final status (106)
+
+An intent must not remain indefinitely as free text in an owner file.
+
+## Superseded intents are preserved (107)
+
+Superseded/abandoned intents keep evidence and are not silently deleted.
+
+## Active view must not contain stale intent SHA (108)
+
+Owner TXT must not present a pending SHA as the active identity.
+
+## Component digest forensics precede reconciliation (109)
+
+ACTIVE_RELEASE must not be updated without proven OCI revisions/workflow runs.
+
+## Metadata divergence is an incident (110)
+
+Container vs ACTIVE_RELEASE divergence is recorded in the audit log with duration and cause.
+
+## Container recreate requires attribution (111)
+
+Any unexpected recreate of a non-public stack must receive a controller/actor verdict.
+
+## Unattributed mutation is not normal maintenance (112)
+
+An unknown mutation remains a risk; it is not dismissed as “someone updated it”.
+
+## Rollback keepers are not live (113)
+
+Exited keeper IDs must not remain in ACTIVE_RELEASE.
+
+## Routing defines live role (114)
+
+Live is defined by active route + containers + bundle, not a historical owner file.
+
+## Baseline text is not product identity (115)
+
+A displayed title change requires ID/handle/group checks before calling a regression.
+
+## Group representative changes are explicit (116)
+
+If grouping selects another representative, QA evidence must record it.
+
+## Owner decision cells default to unapproved (117)
+
+An empty field or agent recommendation is not approval.
+
+## Collection null proposals name intent (118)
+
+Null collection is classified as intentionally unassigned, missing, unknown, or legacy.
+
+## Engineering gaps stay out of owner approval (119)
+
+DTO/projection gaps do not enter the owner mutation manifest.
+
+## Reconciliation must prove no runtime change (120)
+
+Before/after container IDs, digests, and routes are mandatory for metadata-only reconciliation.
