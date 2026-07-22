@@ -178,6 +178,22 @@ jobs:
           node scripts/release/validate-dq-packet-provenance.cjs --fixture-dir scripts/release/fixtures/dq-bundle
           node scripts/release/validate-metadata-migration.cjs --fixture-dir scripts/release/fixtures/metadata-migration
           node scripts/release/validate-component-cutover-state.cjs --fixture-dir scripts/release/fixtures/component-cutover
+          # Gates AR–BC: Dokploy control-plane / stacks / owner-review / mutation dry-run
+          node scripts/release/validate-dokploy-enforcement.cjs --fixture-dir scripts/release/fixtures/dokploy
+          node scripts/release/validate-stack-registry.cjs --fixture-dir scripts/release/fixtures/stacks
+          node scripts/release/validate-public-route-uniqueness.cjs --fixture-dir scripts/release/fixtures/routes
+          node scripts/release/validate-owner-review-decisions.cjs --fixture-dir scripts/release/fixtures/owner-review
+          node scripts/release/validate-catalog-mutation-manifest.cjs --fixture-dir scripts/release/fixtures/mutation-manifest
+          node scripts/catalog/dry-run-catalog-mutations.cjs --fixture-dir scripts/release/fixtures/mutation-dryrun
+          node scripts/release/validate-code-data-separation.cjs --fixture-dir scripts/release/fixtures/code-data
+          node scripts/catalog/build-owner-review-packet.cjs \
+            --endpoint-comparison scripts/catalog/fixtures/sample-endpoint-comparison.json \
+            --inventory scripts/catalog/fixtures/sample-dq-inventory.json \
+            --out /tmp/woodright-owner-review-ci
+          node scripts/release/validate-owner-review-decisions.cjs /tmp/woodright-owner-review-ci/review-decisions.json
+          node scripts/release/validate-stack-registry.cjs scripts/release/fixtures/stacks/pos-complete.json
+          node scripts/release/validate-public-route-uniqueness.cjs scripts/release/fixtures/routes/pos-unique.json
+          node scripts/catalog/assert-owner-review-identity-mismatch.cjs
           node scripts/catalog/compare-catalog-sources.cjs \
             --list-fixture scripts/catalog/fixtures/sample-products.json \
             --auth-fixture scripts/catalog/fixtures/sample-catalog-products.json \

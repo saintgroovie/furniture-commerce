@@ -244,3 +244,83 @@ After SF-only/BE-only cutover, active state becomes a new bundle - not the old r
 ## Metadata migration must not change runtime (80)
 
 Manifest v1 → v2 migration is not a restart or deploy. Before/after container IDs and digests must be proven unchanged.
+
+## Control-plane authority must be technical (81)
+
+Documentation is not enforcement if a direct mutation path remains technically available.
+
+## Dokploy UI bypass must be tested (82)
+
+`claim_bypass_closed=true` is allowed only after a safe negative test of the direct UI path.
+
+## Break-glass access must survive enforcement (83)
+
+Never close a UI bypass by losing the only admin or recovery path.
+
+## Auto-deploy is disabled unless explicitly authorized (84)
+
+Build or Git merge must not automatically change live runtime without a separate release transaction.
+
+## Every runtime stack is registered (85)
+
+Every Woodright stack has machine-readable owner, role, revisions, ports, and cleanup policy.
+
+## Container name is not environment identity (86)
+
+Environment is defined by routes, owner state, bundle, and registry - not by container name.
+
+## Public route must be unique (87)
+
+One public domain must not point at multiple non-identical stacks.
+
+## Non-public stacks require explicit role (88)
+
+A stack without a public route still needs owner/task/role.
+
+## Review date is not cleanup approval (89)
+
+A review date starts an audit; it does not authorize stop/delete.
+
+## Category and collection decisions are independent (90)
+
+Do not derive collection from category or category from collection without a separate rule and evidence.
+
+## Null collection may be intentional (91)
+
+`collection=null` is not an error until business expectation says otherwise.
+
+## Owner data decisions are explicit (92)
+
+An agent proposal is not owner approval.
+
+## High confidence does not mean auto-apply (93)
+
+High-confidence rows still require an authorized decision workflow.
+
+## Data mutations use exact product IDs (94)
+
+Never apply catalog mutation by title, position, or fuzzy matching.
+
+## Every mutation has before and after (95)
+
+A mutation manifest stores exact before/after and a source fingerprint.
+
+## Data mutations are reversible (96)
+
+Every changed field has a rollback value.
+
+## Dry-run is mandatory (97)
+
+No catalog mutation without a reproducible dry-run.
+
+## Code release and data mutation are separate transactions (98)
+
+A code deploy must not silently apply catalog data changes.
+
+## Owner-review packets have checksums (99)
+
+A decision packet is bound to an exact source bundle and checksum.
+
+## DTO gaps never enter owner decision queue (100)
+
+Engineering projection gaps must not force the owner to reclassify products.
