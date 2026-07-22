@@ -25,6 +25,7 @@ import {
   hasActiveCatalogFilters,
 } from "@/lib/catalog-filters"
 import { useCspNonce } from "@/lib/csp-nonce"
+import { a11yCopy } from "@/lib/woodright-copy"
 
 type Props = {
   basePath: string
@@ -46,6 +47,8 @@ function toggleMulti(values: string[], value: string): string[] {
 }
 
 type PillBox = { left: number; top: number; width: number; height: number }
+
+const CATALOG_FILTER_SIDEBAR_ID = "catalog-filter-sidebar"
 
 function tabBox(tab: HTMLElement): PillBox {
   return {
@@ -110,6 +113,7 @@ export function CatalogFilterControls({
   const [isPending, startTransition] = useTransition()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [searchDraft, setSearchDraft] = useState(state.q ?? "")
+  const filterToggleRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     setSearchDraft(state.q ?? "")
@@ -227,6 +231,27 @@ export function CatalogFilterControls({
      rather than hard-coded. 24 mirrors --space-lg. */
   const sidebarRef = useRef<HTMLElement>(null)
 
+  /* Mobile filter drawer: Escape closes and restores focus to the toggle. */
+  useEffect(() => {
+    if (!mobileOpen) return
+    const sidebar = sidebarRef.current
+    requestAnimationFrame(() => {
+      const first = sidebar?.querySelector<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )
+      first?.focus()
+    })
+    function onKeyDown(e: globalThis.KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.preventDefault()
+        setMobileOpen(false)
+        requestAnimationFrame(() => filterToggleRef.current?.focus())
+      }
+    }
+    document.addEventListener("keydown", onKeyDown)
+    return () => document.removeEventListener("keydown", onKeyDown)
+  }, [mobileOpen])
+
   useEffect(() => {
     const sidebar = sidebarRef.current
     const panel = sidebar?.querySelector<HTMLElement>(".catalog-filter-panel")
@@ -339,7 +364,11 @@ export function CatalogFilterControls({
           never pushed below the fold by a long collections/type list. */}
       <div className="catalog-filter-scroll">
       {active && (
-        <div className="catalog-active-chips" aria-label="Активные фильтры">
+        <div
+          className="catalog-active-chips"
+          role="group"
+          aria-label={a11yCopy.activeFiltersLabel}
+        >
           {state.q && (
             <ActiveChip
               label={`«${state.q}»`}
@@ -692,9 +721,14 @@ export function CatalogFilterControls({
           </div>
 
           <button
+            ref={filterToggleRef}
             type="button"
             className="catalog-filter-mobile-toggle"
             aria-expanded={mobileOpen}
+            aria-controls={CATALOG_FILTER_SIDEBAR_ID}
+            aria-label={
+              mobileOpen ? a11yCopy.closeFilters : a11yCopy.openFilters
+            }
             onClick={() => setMobileOpen((v) => !v)}
           >
             Фильтры
@@ -705,8 +739,9 @@ export function CatalogFilterControls({
       <div className="catalog-filter-layout">
         <aside
           ref={sidebarRef}
+          id={CATALOG_FILTER_SIDEBAR_ID}
           className={`catalog-filter-sidebar ${mobileOpen ? "catalog-filter-sidebar-open" : ""}`}
-          aria-label="Фильтры каталога"
+          aria-label={a11yCopy.catalogFiltersLabel}
           /* The bootstrap script mutates this element's style attribute
              before hydration — expected, not a markup mismatch. */
           suppressHydrationWarning
@@ -715,7 +750,11 @@ export function CatalogFilterControls({
           <button
             type="button"
             className="catalog-filter-apply-mobile"
-            onClick={() => setMobileOpen(false)}
+            aria-label={a11yCopy.applyFilters}
+            onClick={() => {
+              setMobileOpen(false)
+              requestAnimationFrame(() => filterToggleRef.current?.focus())
+            }}
           >
             Показать
           </button>

@@ -2,8 +2,8 @@
 
 /**
  * Mobile navigation — parity with desktop buyer routes.
- * Baseline architecture (woodright-copy + CSS scroll-lock class) preserved.
- * Package A1 gap-fill: focus containment, closed-menu unmount, Escape/focus restore.
+ * Disclosure + dialog pattern: focus containment, Escape, focus restore,
+ * background inert while open (WCAG 2.2 focus management).
  */
 import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
@@ -31,6 +31,16 @@ const SECONDARY: NavLink[] = [
 
 const PANEL_ID = "mobile-nav-panel"
 
+function setBackgroundInert(enabled: boolean) {
+  const main = document.getElementById("main-content")
+  const footer = document.querySelector("footer")
+  for (const el of [main, footer]) {
+    if (!el) continue
+    if (enabled) el.setAttribute("inert", "")
+    else el.removeAttribute("inert")
+  }
+}
+
 export function MobileNav() {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
@@ -53,11 +63,13 @@ export function MobileNav() {
     if (!open) {
       document.body.classList.remove("mobile-nav-open")
       document.documentElement.classList.remove("mobile-nav-open")
+      setBackgroundInert(false)
       return
     }
 
     document.body.classList.add("mobile-nav-open")
     document.documentElement.classList.add("mobile-nav-open")
+    setBackgroundInert(true)
 
     const panel = panelRef.current
     const focusables = () =>
@@ -102,6 +114,7 @@ export function MobileNav() {
       document.removeEventListener("keydown", onKeyDown)
       document.body.classList.remove("mobile-nav-open")
       document.documentElement.classList.remove("mobile-nav-open")
+      setBackgroundInert(false)
     }
   }, [open, close])
 
@@ -129,7 +142,13 @@ export function MobileNav() {
         id={PANEL_ID}
         className={`mobile-nav-overlay${open ? " is-open" : ""}`}
         data-open={open ? "true" : "false"}
-        aria-hidden={!open}
+        {...(open
+          ? {
+              role: "dialog",
+              "aria-modal": true as const,
+              "aria-label": a11yCopy.mobileNavLabel,
+            }
+          : { "aria-hidden": true as const })}
       >
         {open ? (
           <nav className="mobile-nav" aria-label={a11yCopy.mobileNavLabel}>

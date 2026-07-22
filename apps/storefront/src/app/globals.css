@@ -958,6 +958,14 @@ select:focus-visible {
   outline: none;
 }
 
+/* Ensure focus rings are not clipped by overflow on rounded controls. */
+.catalog-filter-mobile-toggle:focus-visible,
+.catalog-filter-apply-mobile:focus-visible,
+.nav-dropdown-toggle:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 2px;
+}
+
 /* ---- System states (404 / error / loading) ---- */
 
 .system-state {
@@ -3453,7 +3461,8 @@ button.pdp-material-trigger:focus-visible {
 }
 
 .catalog-search:focus-within {
-  border-color: var(--color-fg-muted);
+  border-color: var(--color-action);
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--color-action);
 }
 
 /* >1180px only: 3-column grid exists, so "middle card" / "third card" are
@@ -3519,7 +3528,8 @@ button.pdp-material-trigger:focus-visible {
   color: var(--color-fg);
 }
 
-.catalog-search input[type="search"]:focus {
+.catalog-search input[type="search"]:focus,
+.catalog-search input[type="search"]:focus-visible {
   outline: none;
 }
 
@@ -4194,8 +4204,9 @@ button.pdp-material-trigger:focus-visible {
 }
 
 .catalog-filter-price input:focus-visible {
-  outline: none;
-  border-color: var(--color-fg-muted);
+  outline: 2px solid var(--color-action);
+  outline-offset: 2px;
+  border-color: var(--color-action);
 }
 
 .catalog-filter-price input::-webkit-outer-spin-button,
