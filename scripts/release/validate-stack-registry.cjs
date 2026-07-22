@@ -6,7 +6,8 @@ const path = require("path")
 const ROLES = new Set([
   "public_demo",
   "staging",
-  "production_candidate",
+  "non_public_candidate",
+  "production_candidate", // legacy alias; prefer non_public_candidate
   "rehearsal",
   "rollback_keeper",
   "owner_review",
@@ -57,7 +58,11 @@ function evaluate(doc) {
     const pc = stacks.find((s) => /woodright-production/i.test(s.display_name || s.stack_id || ""))
     if (!pc) errors.push("non-public stack registered missing")
     else {
-      if (pc.actual_role !== "production_candidate" && pc.actual_role !== "rehearsal") {
+      if (
+        pc.actual_role !== "production_candidate" &&
+        pc.actual_role !== "non_public_candidate" &&
+        pc.actual_role !== "rehearsal"
+      ) {
         errors.push("production named stack role unresolved")
       }
       if (pc.public_route !== false) errors.push("production named stack must not be public")

@@ -22,6 +22,12 @@ Human-readable summary (must agree):
 
 `/srv/woodright/locks/ACTIVE-RUNTIME-OWNER.txt`
 
+**Public runtime identity (preferred SoT for role/exposure/route):**
+
+`/srv/woodright/runtime-identity/ACTIVE_PUBLIC.json`
+
+See `docs/operator/runtime-identity.md`. Do not treat stale `ACTIVE_RELEASE.json` digests as ground truth when they disagree with Traefik + live containers.
+
 Deploy lock:
 
 `/srv/woodright/runtime-ownership/DEPLOY.lock` (flock)
