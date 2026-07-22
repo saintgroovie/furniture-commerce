@@ -351,20 +351,41 @@ function assertFacetsAlign(products: Record<string, unknown>[]) {
   assert.equal(facets.get("stoly"), 3)
 }
 
-// Oxford stairs remain unknown without inventing a type
+// Owner-approved Oxford steps → stupeni (legacy toy-box must not win)
 {
-  const stairs = resolveBuyerItemType(
+  const stairs = projectBuyerItemTypeOntoProduct(
     product({
       id: "s-ox-05",
       handle: "s-ox-05",
       title: "Ступени с перилами и ящиками Оксфорд",
-      metadata: { collection: "oxford" },
+      metadata: {
+        collection: "oxford",
+        category_handle: "toy-box",
+      },
       product_classification: { product_type: "CONFIGURABLE" },
     })
   )
-  assert.equal(stairs.key, null)
-  assert.equal(stairs.source, "unknown")
-  assert.equal(stairs.facetEligible, false)
+  const meta = stairs.metadata as Record<string, unknown>
+  assert.equal(meta.buyer_item_type, "stupeni")
+  assert.equal(meta.buyer_item_type_source, "confirmed_handle")
+  assert.equal(meta.category_handle, "stupeni")
+  assert.equal(
+    (stairs.product_classification as { product_type: string }).product_type,
+    "CONFIGURABLE"
+  )
+  assert.equal(countBuyerItemTypeFacets([stairs]).get("stupeni"), 1)
+  assert.equal(countBuyerItemTypeFacets([stairs]).get("toy-box"), undefined)
+
+  // Unrelated Oxford product does not inherit stupeni
+  const otherOx = resolveBuyerItemType(
+    product({
+      id: "ox-14-1",
+      handle: "ox-14-1",
+      title: "Кровать Оксфорд",
+      metadata: { collection: "oxford" },
+    })
+  )
+  assert.notEqual(otherOx.key, "stupeni")
 }
 
 // Title-fallback false-positive guards (do not invent from partial words)
@@ -391,6 +412,11 @@ function assertFacetsAlign(products: Record<string, unknown>[]) {
   assert.equal(inferItemTypeKeyFromText("Зеркало навесное"), "zerkala")
   // Diminutive «столик» is intentionally not title-inferred — use confirmed map
   assert.equal(inferItemTypeKeyFromText("Столик детский Molly"), null)
+  // «ящики» alone must not become komody / toy-box
+  assert.notEqual(inferItemTypeKeyFromText("Ступени с перилами и ящиками"), "komody")
+  assert.equal(inferItemTypeKeyFromText("Ступени с перилами и ящиками"), null)
+  assert.equal(inferItemTypeKeyFromText("Ballet Pastoral Ant's Village"), null)
+  assert.equal(inferItemTypeKeyFromText("solid_front_ldsp_body"), null)
 }
 
 console.log("buyer-item-type.fidelity.test.ts: ok")

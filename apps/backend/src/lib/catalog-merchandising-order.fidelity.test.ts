@@ -486,4 +486,33 @@ function product(partial: Record<string, unknown>): Record<string, unknown> {
   )
 }
 
+// Oxford steps: below anchor furniture, above pure accessories
+{
+  const bed = product({
+    id: "bed",
+    title: "Кровать",
+    metadata: { collection: "oxford", category_handle: "krovati" },
+  })
+  const steps = product({
+    id: "s-ox-05",
+    handle: "s-ox-05",
+    title: "Ступени с перилами и ящиками Оксфорд",
+    metadata: { collection: "oxford", category_handle: "stupeni" },
+  })
+  const mirror = product({
+    id: "m",
+    title: "Зеркало",
+    metadata: { collection: "oxford", category_handle: "zerkala" },
+  })
+  assert.equal(resolveMerchandisingItemType(steps).key, "stupeni")
+  assert.equal(
+    resolveMerchandisingItemType(steps).tier,
+    MERCHANDISING_ITEM_TIER.SUPPORTING
+  )
+  const sorted = sortProductsByMerchandisingOrder([mirror, steps, bed])
+  assert.equal(sorted[0]!.id, "bed")
+  assert.equal(sorted[1]!.id, "s-ox-05")
+  assert.equal(sorted[2]!.id, "m")
+}
+
 console.log("catalog-merchandising-order.fidelity.test.ts: ok")

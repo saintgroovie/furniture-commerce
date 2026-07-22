@@ -46,11 +46,12 @@ export const BUYER_ITEM_TYPE_HANDLE_ALIASES: Record<string, string> = {
 /**
  * Exact product-handle → canonical buyer item type.
  *
- * Evidence: Willie Winkie Flow A operator matrix
- * (vv-painting-sku-matrix-filled.csv, operator_decision=approve,
- * proposed_category=stoly-i-stoliki) + matching launch-a draft categories.
- * Canonicalized via BUYER_ITEM_TYPE_HANDLE_ALIASES → `stoly`.
- * No DB write; browse projection only.
+ * Evidence (no DB write; browse projection only):
+ * - Willie Winkie Flow A operator matrix
+ *   (vv-painting-sku-matrix-filled.csv, operator_decision=approve,
+ *   proposed_category=stoly-i-stoliki) + launch-a draft → `stoly`
+ * - Oxford `s-ox-05`: explicit owner decision 2026-07-22 → `stupeni`
+ *   (legacy workbook toy-box is intentionally ignored)
  */
 export const CONFIRMED_PRODUCT_HANDLE_BUYER_ITEM_TYPES: Readonly<
   Record<string, string>
@@ -58,6 +59,7 @@ export const CONFIRMED_PRODUCT_HANDLE_BUYER_ITEM_TYPES: Readonly<
   "mo-81-1": "stoly",
   "sh-81-1": "stoly",
   "fa-06-1": "stoly",
+  "s-ox-05": "stupeni",
 }
 
 export type BuyerItemTypeSource =

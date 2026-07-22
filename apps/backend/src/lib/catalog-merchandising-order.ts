@@ -59,6 +59,8 @@ const TYPE_RANK: Record<string, { tier: MerchandisingItemTier; rank: number }> =
     stulya: { tier: MERCHANDISING_ITEM_TIER.SUPPORTING, rank: 40 },
     kresla: { tier: MERCHANDISING_ITEM_TIER.SUPPORTING, rank: 50 },
     skameyki: { tier: MERCHANDISING_ITEM_TIER.SUPPORTING, rank: 60 },
+    // Oxford steps: supporting furniture adjunct, below beds/wardrobes/tables.
+    stupeni: { tier: MERCHANDISING_ITEM_TIER.SUPPORTING, rank: 70 },
     polki: { tier: MERCHANDISING_ITEM_TIER.COMPLEMENTARY, rank: 10 },
     bortiki: { tier: MERCHANDISING_ITEM_TIER.COMPLEMENTARY, rank: 20 },
     baldahiny: { tier: MERCHANDISING_ITEM_TIER.COMPLEMENTARY, rank: 30 },
