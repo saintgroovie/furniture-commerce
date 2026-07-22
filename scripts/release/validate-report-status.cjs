@@ -68,6 +68,21 @@ function validate(text, errors) {
     errors.push("metadata migration called cutover")
   }
 
+  // Runtime identity: :9200 / loopback must not be framed as public evidence
+  const claimsPublicEvidence =
+    /public\s+(acceptance|evidence|proof|smoke|qa)|public_domain_evidence|done_deployed_and_verified/i.test(
+      text
+    )
+  if (
+    claimsPublicEvidence &&
+    /(?:localhost|127\.0\.0\.1):9200/i.test(text) &&
+    !/invalid_public_evidence|not\s+used\s+for\s+public|не\s+используется\s+для\s+public|candidate_evidence|non_public_candidate/i.test(
+      text
+    )
+  ) {
+    errors.push("localhost:9200 framed as public evidence without invalid_public_evidence marker")
+  }
+
   if (!/done_deployed_and_verified/.test(text)) return
   for (const re of REQUIRED_FOR_DEPLOYED_VERIFIED) {
     if (!re.test(text)) errors.push(`done_deployed_and_verified missing evidence matching ${re}`)

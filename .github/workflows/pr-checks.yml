@@ -201,6 +201,36 @@ jobs:
           node scripts/release/validate-product-identity-compare.cjs --fixture-dir scripts/release/fixtures/product-identity
           node scripts/release/validate-stack-mutation-attribution.cjs --fixture-dir scripts/release/fixtures/stack-attribution
           node scripts/release/validate-owner-decision-defaults.cjs --fixture-dir scripts/release/fixtures/owner-decision
+          # Runtime identity / public evidence fail-closed
+          node scripts/release/validate-runtime-identity.cjs --self-test
+          node scripts/release/validate-runtime-identity.cjs --fixture-dir scripts/release/fixtures/runtime-identity
+          node scripts/release/assert-public-deploy-target.cjs --self-test
+          node scripts/release/verify-public-runtime-identity.cjs --offline \
+            --url https://api.woodright-demo.ru/health \
+            --headers-json '{"x-woodright-runtime-role":"public_demo","x-woodright-exposure":"public","x-woodright-release-sha":"f7f6760fca86ff503529da6696c04159e76ef9c8"}' \
+            --expected-sha f7f6760fca86ff503529da6696c04159e76ef9c8
+          if node scripts/release/verify-public-runtime-identity.cjs --url http://127.0.0.1:9200/health; then
+            echo "expected public verifier to reject :9200" >&2
+            exit 1
+          fi
+          if node scripts/release/verify-public-runtime-identity.cjs --url http://api.woodright-demo.ru/health; then
+            echo "expected public verifier to reject http canonical URL" >&2
+            exit 1
+          fi
+          if node scripts/release/verify-public-runtime-identity.cjs --offline \
+            --url https://api.woodright-demo.ru/health \
+            --final-url http://127.0.0.1:9200/health \
+            --headers-json '{"x-woodright-runtime-role":"public_demo","x-woodright-exposure":"public","x-woodright-release-sha":"f7f6760fca86ff503529da6696c04159e76ef9c8"}' \
+            --expected-sha f7f6760fca86ff503529da6696c04159e76ef9c8; then
+            echo "expected public verifier to reject non-canonical final URL" >&2
+            exit 1
+          fi
+          if node scripts/release/verify-public-runtime-identity.cjs --offline \
+            --url https://api.woodright-demo.ru/health \
+            --headers-json '{"x-woodright-runtime-role":"non_public_candidate","x-woodright-exposure":"private"}'; then
+            echo "expected public verifier to reject private exposure" >&2
+            exit 1
+          fi
           node scripts/catalog/compare-catalog-sources.cjs \
             --list-fixture scripts/catalog/fixtures/sample-products.json \
             --auth-fixture scripts/catalog/fixtures/sample-catalog-products.json \
