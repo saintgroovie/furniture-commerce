@@ -69,7 +69,10 @@ Env vars:
 WOODRIGHT_RUNTIME_ROLE=public_demo|non_public_candidate
 WOODRIGHT_EXPOSURE=public|private
 WOODRIGHT_RELEASE_SHA=<40-hex>
-WOODRIGHT_DATABASE_IDENTITY_ALIAS=public_demo_db|non_public_candidate_db
+WOODRIGHT_DATABASE_IDENTITY=public_demo_db|non_public_candidate_db
+WOODRIGHT_DATABASE_IDENTITY_ALIAS=…   # legacy alias of WOODRIGHT_DATABASE_IDENTITY
+WOODRIGHT_CANONICAL_DOMAIN=woodright-demo.ru|none
+WOODRIGHT_CANONICAL_API_ORIGIN=https://api.woodright-demo.ru|none
 ```
 
 ## Container labels
@@ -79,6 +82,7 @@ com.woodright.runtime-role
 com.woodright.exposure
 com.woodright.canonical-domain
 com.woodright.release-sha
+com.woodright.database-identity
 com.woodright.deployment-owner
 ```
 
