@@ -193,6 +193,32 @@ jobs:
           node scripts/release/validate-owner-review-decisions.cjs /tmp/woodright-owner-review-ci/review-decisions.json
           node scripts/release/validate-stack-registry.cjs scripts/release/fixtures/stacks/pos-complete.json
           node scripts/release/validate-public-route-uniqueness.cjs scripts/release/fixtures/routes/pos-unique.json
+          python3 - <<'PY'
+import json, subprocess, tempfile
+from pathlib import Path
+cmp = json.loads(Path("scripts/catalog/fixtures/sample-endpoint-comparison.json").read_text())
+inv = {k: cmp[k] for k in cmp if k != "rows"}
+inv["bundle_id"] = "wrb-TAMPERED"
+td = tempfile.mkdtemp()
+Path(td, "cmp.json").write_text(json.dumps(cmp))
+Path(td, "inv.json").write_text(json.dumps(inv))
+r = subprocess.run(
+    [
+        "node",
+        "scripts/catalog/build-owner-review-packet.cjs",
+        "--endpoint-comparison",
+        f"{td}/cmp.json",
+        "--inventory",
+        f"{td}/inv.json",
+        "--out",
+        f"{td}/out",
+    ],
+    capture_output=True,
+    text=True,
+)
+assert r.returncode != 0, "identity mismatch must fail"
+print("PASS owner-review identity mismatch")
+PY
           node scripts/catalog/compare-catalog-sources.cjs \
             --list-fixture scripts/catalog/fixtures/sample-products.json \
             --auth-fixture scripts/catalog/fixtures/sample-catalog-products.json \

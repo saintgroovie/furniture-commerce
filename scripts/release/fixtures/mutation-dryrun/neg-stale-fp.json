@@ -21,7 +21,11 @@
       },
       "before_fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
       "reviewed_by": "owner",
-      "reviewed_at": "2026-07-22T00:00:00Z"
+      "reviewed_at": "2026-07-22T00:00:00Z",
+      "authorization_evidence": "signed-decision-or-1",
+      "owner_review_packet_id": "or-fixture-1"
     }
-  ]
+  ],
+  "owner_review_packet_id": "or-fixture-1",
+  "owner_review_packet_checksum_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
 }

@@ -31,6 +31,42 @@ function main() {
   }
   const cmp = JSON.parse(fs.readFileSync(input, "utf8"))
   const inv = inventory ? JSON.parse(fs.readFileSync(inventory, "utf8")) : cmp
+  // Fail-closed: inventory identity must match endpoint-comparison on every shared key.
+  // Rows always come from cmp. Packet identity prefers cmp, then inventory only for
+  // fields absent from comparison (e.g. inventory-only checksum_sha256).
+  const IDENTITY_KEYS = [
+    "bundle_id",
+    "backend_revision",
+    "storefront_revision",
+    "backend_digest",
+    "storefront_digest",
+    "checksum_sha256",
+    "marker",
+    "buyer_visible_count",
+  ]
+  if (inventory) {
+    const mismatches = []
+    for (const k of IDENTITY_KEYS) {
+      const a = cmp[k]
+      const b = inv[k]
+      if (a === undefined || a === null || b === undefined || b === null) continue
+      if (a !== b) mismatches.push(`${k}: comparison=${JSON.stringify(a)} inventory=${JSON.stringify(b)}`)
+    }
+    if (mismatches.length) {
+      console.error("INVALID source identity mismatch between endpoint-comparison and inventory:")
+      for (const m of mismatches) console.error(" -", m)
+      process.exit(1)
+    }
+  }
+  const identitySource = {}
+  for (const k of IDENTITY_KEYS) {
+    if (cmp[k] !== undefined && cmp[k] !== null) identitySource[k] = cmp[k]
+    else if (inv[k] !== undefined && inv[k] !== null) identitySource[k] = inv[k]
+  }
+  if (!identitySource.checksum_sha256) {
+    console.error("INVALID missing source checksum_sha256 (provide on comparison or inventory)")
+    process.exit(1)
+  }
   const rows = cmp.rows || []
   const categoryGaps = []
   const collectionMissing = []
@@ -118,13 +154,13 @@ function main() {
   const packetId = `owner-review-${new Date().toISOString().replace(/[:.]/g, "").slice(0, 15)}Z`
   const sourceIdentity = {
     packet_id: packetId,
-    source_bundle_id: inv.bundle_id,
-    backend_revision: inv.backend_revision,
-    storefront_revision: inv.storefront_revision,
-    backend_digest: inv.backend_digest,
-    storefront_digest: inv.storefront_digest,
-    source_checksum_sha256: inv.checksum_sha256,
-    marker: inv.marker,
+    source_bundle_id: identitySource.bundle_id,
+    backend_revision: identitySource.backend_revision,
+    storefront_revision: identitySource.storefront_revision,
+    backend_digest: identitySource.backend_digest,
+    storefront_digest: identitySource.storefront_digest,
+    source_checksum_sha256: identitySource.checksum_sha256,
+    marker: identitySource.marker,
     generated_at: new Date().toISOString(),
     rejects_store_products_as_completeness: true,
     mutations: false,
@@ -136,7 +172,7 @@ function main() {
       title_fallback: titleFallback.length,
       ambiguous_mirrors: ambiguous.length,
       engineering_dto_gaps: dtoGaps.length,
-      buyer_visible: inv.buyer_visible_count,
+      buyer_visible: identitySource.buyer_visible_count ?? rows.length,
     },
   }
 

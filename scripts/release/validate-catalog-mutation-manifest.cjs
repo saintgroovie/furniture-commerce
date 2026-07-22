@@ -29,6 +29,9 @@ function evaluate(doc) {
     if (!TYPES.has(m.mutation_type)) errors.push("invalid mutation type")
     if (!m.before || !m.after) errors.push("before/after required")
     if (m.rollback_value === undefined) errors.push("rollback required")
+    else if (JSON.stringify(m.rollback_value) !== JSON.stringify(m.before)) {
+      errors.push("rollback_value must equal before")
+    }
     if (!m.before_fingerprint) errors.push("before fingerprint required")
   }
   if (doc.reversible !== true && rows.length) errors.push("manifest must be reversible")

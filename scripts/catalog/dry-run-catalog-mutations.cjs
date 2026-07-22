@@ -28,6 +28,12 @@ function dryRun(input) {
   if (!Array.isArray(decisions) || decisions.length < 1) {
     errors.push("approved_decisions required")
   }
+  if (!input.owner_review_packet_id) {
+    errors.push("owner_review_packet_id required")
+  }
+  if (!input.owner_review_packet_checksum_sha256) {
+    errors.push("owner_review_packet_checksum_sha256 required")
+  }
   const byId = new Map((snapshot.products || []).map((p) => [p.id, p]))
   if (
     input.expected_bundle_id &&
@@ -58,8 +64,14 @@ function dryRun(input) {
       errors.push("owner decision missing")
       continue
     }
-    if (!d.reviewed_by || !d.reviewed_at) {
+    if (!d.reviewed_by || !d.reviewed_at || !d.authorization_evidence) {
       errors.push("owner approval evidence missing")
+      conflicts.push({ product_id: d.product_id, reason: "owner approval evidence missing" })
+      continue
+    }
+    if (d.owner_review_packet_id && input.owner_review_packet_id && d.owner_review_packet_id !== input.owner_review_packet_id) {
+      errors.push("owner_review_packet_id mismatch")
+      conflicts.push({ product_id: d.product_id, reason: "owner_review_packet_id mismatch" })
       continue
     }
     const prod = byId.get(d.product_id)

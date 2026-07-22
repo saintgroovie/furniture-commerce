@@ -1,5 +1,5 @@
 {
-  "expected_bundle_id": "wrb-other",
+  "expected_bundle_id": "wrb-20260721T155624Z-be643a429-sf54d1802",
   "source_snapshot": {
     "bundle_id": "wrb-20260721T155624Z-be643a429-sf54d1802",
     "products": [
@@ -22,10 +22,7 @@
       "before_fingerprint": "132bd3ef13031f8192816361cde192e94a268018afc10be2afc6953dec0fdb2e",
       "reviewed_by": "owner",
       "reviewed_at": "2026-07-22T00:00:00Z",
-      "authorization_evidence": "signed-decision-or-1",
-      "owner_review_packet_id": "or-fixture-1"
+      "authorization_evidence": "x"
     }
-  ],
-  "owner_review_packet_id": "or-fixture-1",
-  "owner_review_packet_checksum_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+  ]
 }
