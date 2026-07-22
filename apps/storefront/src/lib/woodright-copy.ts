@@ -35,6 +35,11 @@ export const a11yCopy = {
   openMenu: "Открыть меню",
   closeMenu: "Закрыть меню",
   mobileNavLabel: "Мобильная навигация",
+  openFilters: "Открыть фильтры",
+  closeFilters: "Закрыть фильтры",
+  catalogFiltersLabel: "Фильтры каталога",
+  activeFiltersLabel: "Активные фильтры",
+  applyFilters: "Показать результаты",
 }
 
 export const systemCopy = {

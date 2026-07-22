@@ -63,12 +63,16 @@ export function NavDropdown({ label, href, items, className }: Props) {
         className="nav-dropdown-toggle"
         aria-expanded={open}
         aria-controls={menuId}
-        aria-haspopup="true"
         aria-label={`${label}, подменю`}
         onClick={() => setOpen((v) => !v)}
       />
       {open && (
-        <div id={menuId} className="nav-dropdown-menu">
+        <div
+          id={menuId}
+          className="nav-dropdown-menu"
+          role="region"
+          aria-label={`${label}, подменю`}
+        >
           {items.map((item) => (
             <Link
               key={item.href}
