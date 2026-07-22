@@ -1,0 +1,15 @@
+[Unit]
+Description=Woodright daily backup timer
+Documentation=file:///srv/woodright/docs/backup-policy.md
+
+[Timer]
+# Daily at 02:17 UTC with jitter; Persistent catches missed runs after reboot.
+OnCalendar=*-*-* 02:17:00 UTC
+Persistent=true
+RandomizedDelaySec=900
+Unit=woodright-backup.service
+# Prevent overlap with a long-running oneshot
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target
