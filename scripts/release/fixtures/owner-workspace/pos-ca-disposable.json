@@ -1,0 +1,10 @@
+{
+  "gate": "CA",
+  "disposable_app": {
+    "public_domain": null,
+    "live_volume_mount": false,
+    "secret_env": false,
+    "image": "nginx@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "pinned": true
+  }
+}

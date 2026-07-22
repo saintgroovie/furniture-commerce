@@ -1,0 +1,5 @@
+{
+  "gate": "CB",
+  "claim_bypass_closed_live": false,
+  "test_only_closure_reported_as_live": false
+}
