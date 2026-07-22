@@ -1,0 +1,19 @@
+{
+  "packet_id": "or",
+  "source_bundle_id": "wrb-20260721T155624Z-be643a429-sf54d1802",
+  "source_checksum_sha256": "8787878787878787878787878787878787878787878787878787878787878787",
+  "rejects_store_products_as_completeness": true,
+  "mutations": false,
+  "automatic_apply": false,
+  "rows": [
+    {
+      "product_id": "p1",
+      "bucket": "category_gap",
+      "owner_decision": "approve_proposal",
+      "reviewed_by": "owner",
+      "reviewed_at": "2026-07-22T00:00:00Z",
+      "authorization_evidence": "ticket-1",
+      "automatic_apply_allowed": false
+    }
+  ]
+}

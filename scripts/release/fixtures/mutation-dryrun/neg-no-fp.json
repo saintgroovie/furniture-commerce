@@ -1,0 +1,26 @@
+{
+  "expected_bundle_id": "wrb-20260721T155624Z-be643a429-sf54d1802",
+  "source_snapshot": {
+    "bundle_id": "wrb-20260721T155624Z-be643a429-sf54d1802",
+    "products": [
+      {
+        "id": "p1",
+        "metadata": {
+          "category_handle": null,
+          "collection": null
+        }
+      }
+    ]
+  },
+  "approved_decisions": [
+    {
+      "product_id": "p1",
+      "owner_decision": "approve_proposal",
+      "proposed": {
+        "category_handle": "krovati"
+      },
+      "reviewed_by": "owner",
+      "reviewed_at": "2026-07-22T00:00:00Z"
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+{
+  "deploy_script_contains_unapproved_catalog_mutation": false,
+  "mutation_manifest_contains_image_cutover": false
+}

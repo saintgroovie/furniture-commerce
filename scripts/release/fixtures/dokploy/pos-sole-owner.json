@@ -1,9 +1,18 @@
 {
-  "enforcement_mode": "dokploy_sole_owner",
+  "enforcement_mode": "sole_owner_with_known_ui_bypass",
   "sole_owner": "Dokploy",
   "manual_mutation_allowed": false,
-  "direct_mutation_path_open": false,
+  "direct_mutation_path_open": true,
   "claim_bypass_closed": false,
   "dokploy_ui_residual": true,
-  "wrapper_decorative": false
+  "wrapper_decorative": false,
+  "public_cutover_allowed": false,
+  "negative_ui_test_status": "not_run_live_risk",
+  "negative_ui_test_evidence": null,
+  "enforcement_assurance": "advisory_with_known_ui_bypass",
+  "break_glass": {
+    "recovery_reference": "ssh://leonid@host + ACTIVE_RELEASE backup",
+    "contains_secrets": false,
+    "procedure": "docs/operator/dokploy-break-glass.md"
+  }
 }
