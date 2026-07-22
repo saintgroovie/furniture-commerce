@@ -404,3 +404,83 @@ DTO/projection gaps do not enter the owner mutation manifest.
 ## Reconciliation must prove no runtime change (120)
 
 Before/after container IDs, digests, and routes are mandatory for metadata-only reconciliation.
+
+## Owner review uses authoritative packets (121)
+
+Review UI is not built from a truncated DTO without source comparison.
+
+## Category and collection approvals are separate (122)
+
+One decision must not confirm another field.
+
+## Blank decision means pending (123)
+
+An empty field is never treated as approval.
+
+## Agent proposal is not owner approval (124)
+
+A recommendation stays a recommendation until an explicit owner decision.
+
+## Engineering gaps do not enter owner mutations (125)
+
+DTO/projection issues are shown separately.
+
+## Products without confirmed images auto-defer (126)
+
+Only confirmed no-image rows are automatically sent to «Отложено» with reason «Изображения пока не найдены».
+
+## Auto-defer does not confirm product fields (127)
+
+No-image defer does not approve category, collection, or other fields.
+
+## Ambiguous media is not no-image (128)
+
+Disputed media bindings require a separate review.
+
+## Owner decisions are reversible (129)
+
+Decision workspace must support undo and audit history.
+
+## Owner decision artifacts are durable (130)
+
+Decisions are stored outside `/tmp`, with checksum and source identity.
+
+## Review UI has no write API (131)
+
+Owner-review workspace must not call production mutation endpoints.
+
+## Mutation preview excludes non-approved rows (132)
+
+Pending, rejected, deferred, and engineering-only rows are excluded from apply preview.
+
+## No approvals means no-op (133)
+
+An empty approved set returns `no_approved_mutations` and does not auto-select proposals.
+
+## Every future mutation uses exact ID (134)
+
+Mutation targets are exact product ID and source fingerprint.
+
+## Dokploy negative tests use disposable apps (135)
+
+Control-plane bypass must not be tested on the live application.
+
+## Test apps never use live data (136)
+
+A disposable app must not receive production DB, media, env, or secrets.
+
+## Test app has no public route (137)
+
+Public domain/Traefik labels are forbidden.
+
+## Test evidence does not change live claim (138)
+
+Closure in a test environment does not mean live control-plane closure.
+
+## Test resources are cleaned by ownership (139)
+
+Only test resources created by the current cycle may be deleted.
+
+## Candidate review date does not authorize early cleanup (140)
+
+Before the review date and without owner approval, stop/delete remain forbidden.

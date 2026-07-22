@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Woodright - решения по каталогу</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <div class="brand-mark">Woodright</div>
+      <div class="brand-sub">Owner decisions - только локально, без записи в каталог</div>
+    </div>
+    <div class="summary" id="summary"></div>
+  </header>
+
+  <nav class="tabs" id="tabs" aria-label="Очереди решений">
+    <button type="button" data-tab="needs" class="active">Требуют решения</button>
+    <button type="button" data-tab="category">Категория</button>
+    <button type="button" data-tab="collection">Коллекция</button>
+    <button type="button" data-tab="mirrors">Зеркала</button>
+    <button type="button" data-tab="deferred">Отложено</button>
+    <button type="button" data-tab="resolved">Решено</button>
+    <button type="button" data-tab="engineering">Инженерные замечания</button>
+    <button type="button" data-tab="preview">Превью мутаций</button>
+  </nav>
+
+  <section class="toolbar">
+    <label>Рецензент
+      <input id="reviewer" type="text" placeholder="Ваше имя" autocomplete="name" />
+    </label>
+    <button type="button" id="btn-export">Экспорт</button>
+    <button type="button" id="btn-undo">Отменить последнее</button>
+    <button type="button" id="btn-reload">Перезагрузить</button>
+    <span class="hint">Пустое решение = ожидает. Предложение агента ≠ одобрение.</span>
+  </section>
+
+  <main id="main" class="grid"></main>
+  <aside id="preview-panel" class="preview hidden"></aside>
+
+  <script src="/app.js"></script>
+</body>
+</html>

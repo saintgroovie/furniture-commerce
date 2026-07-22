@@ -1,0 +1,9 @@
+{
+  "gate": "BZ",
+  "mutations": [
+    {
+      "product_id": "prod_1",
+      "source_fingerprint": "abc"
+    }
+  ]
+}

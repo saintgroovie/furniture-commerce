@@ -1,0 +1,10 @@
+{
+  "gate": "BW",
+  "undo_appends_event": true,
+  "require_undo_event": true,
+  "history": [
+    {
+      "event_type": "undo"
+    }
+  ]
+}

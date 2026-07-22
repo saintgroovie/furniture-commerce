@@ -242,4 +242,8 @@ jobs:
             --storefront-digest sha256:f493381a466b94956e62ccc9c3617731e91fcbace54ae648bbdfbbd711f33347
           test -f scripts/release/run-server-governance-tool.sh
           bash -n scripts/release/run-server-governance-tool.sh
+          # Gates BR–CE: owner decision workspace / disposable Dokploy / mutation preview
+          node scripts/release/validate-owner-decision-workspace.cjs --fixture-dir scripts/release/fixtures/owner-workspace
+          node tools/catalog-owner-decision-workspace/scripts/run-unit-tests.cjs
+          node tools/catalog-owner-decision-workspace/scripts/assert-no-write-api.cjs
           echo "release_governance_gates=ok"

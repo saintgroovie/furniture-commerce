@@ -1,0 +1,16 @@
+{
+  "gate": "BR",
+  "source_checksum_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "source_bundle_id": "x",
+  "decision_key_omits_bucket": true,
+  "rows": [
+    {
+      "product_id": "p1",
+      "bucket": "category_gap"
+    },
+    {
+      "product_id": "p1",
+      "bucket": "title_fallback"
+    }
+  ]
+}

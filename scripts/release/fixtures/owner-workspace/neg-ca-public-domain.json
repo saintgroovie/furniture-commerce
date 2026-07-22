@@ -1,0 +1,7 @@
+{
+  "gate": "CA",
+  "disposable_app": {
+    "public_domain": "test.woodright-demo.ru",
+    "image": "nginx@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  }
+}
