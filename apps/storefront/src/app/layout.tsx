@@ -116,7 +116,7 @@ export default function RootLayout({
                   className="header-nav-kids"
                   items={[
                     { label: "Каталог", href: "/kids/catalog" },
-                    { label: "Росписи Willie Winkie", href: "/kids/willie-winkie" },
+                    { label: "Росписи Вилли Винки", href: "/kids/willie-winkie" },
                     { label: "Комнаты", href: "/kids/rooms" },
                     { label: "О разделе", href: "/kids" },
                   ]}

@@ -9,8 +9,13 @@ import {
   buildMotifContext,
   buildMotifThemeDetail,
   buildMotifThemes,
+  isLegacyEnglishMotifTitle,
+  motifBuyerDisplayName,
   motifCtaKind,
+  MOTIF_BUYER_DISPLAY_NAMES_RU,
+  MOTIF_CANONICAL_SLUGS,
   MOTIF_CTA_LABELS,
+  MOTIF_LEGACY_ENGLISH_TITLES,
 } from "./motif-theme"
 
 function ww(partial: {
@@ -102,6 +107,25 @@ const sample = [
   }),
 ]
 
+// Canonical inventory: exactly 14 Russian buyer display names
+assert.equal(MOTIF_CANONICAL_SLUGS.length, 14)
+assert.equal(Object.keys(MOTIF_BUYER_DISPLAY_NAMES_RU).length, 14)
+assert.equal(MOTIF_LEGACY_ENGLISH_TITLES.length, 14)
+
+const displayNames = MOTIF_CANONICAL_SLUGS.map((slug) => motifBuyerDisplayName(slug))
+assert.equal(new Set(displayNames).size, 14, "display names must be unique")
+for (const slug of MOTIF_CANONICAL_SLUGS) {
+  const name = motifBuyerDisplayName(slug)
+  assert.ok(name.trim().length > 0, `empty display for ${slug}`)
+  assert.notEqual(name.toLowerCase(), slug)
+  assert.ok(/[А-Яа-яЁё]/.test(name), `display must be Cyrillic for ${slug}: ${name}`)
+  assert.ok(!isLegacyEnglishMotifTitle(name), `English leaked for ${slug}: ${name}`)
+}
+assert.equal(motifBuyerDisplayName("molly"), "Молли")
+assert.equal(motifBuyerDisplayName("tommy"), "Томми")
+assert.equal(motifBuyerDisplayName("unknown-slug"), "Роспись")
+assert.ok(!isLegacyEnglishMotifTitle("Роспись"))
+
 assert.equal(motifCtaKind(1), "view_product")
 assert.equal(motifCtaKind(2), "view_furniture")
 assert.equal(motifCtaKind(3), "view_collection")
@@ -113,6 +137,7 @@ assert.equal(MOTIF_CTA_LABELS.view_collection, "Посмотреть колле�
   const themes = buildMotifThemes(sample)
   assert.equal(themes.length, 3)
   const templars = themes.find((t) => t.motif_slug === "templars")!
+  assert.equal(templars.motif_title, "Тамплиеры")
   assert.equal(templars.motif_available_family_count, 3)
   assert.equal(templars.motif_available_product_count, 3)
   assert.equal(templars.cta_kind, "view_collection")
@@ -120,16 +145,23 @@ assert.equal(MOTIF_CTA_LABELS.view_collection, "Посмотреть колле�
   assert.ok(templars.motif_cover?.includes("te-"))
   assert.equal(templars.preview_products.length, 3)
   assert.ok(templars.preview_products.every((p) => p.title !== "INTERNAL SOURCE TITLE"))
+  assert.ok(templars.preview_products.every((p) => p.motif_title === "Тамплиеры"))
   assert.ok(templars.preview_products.every((p) => !("sku" in p)))
   assert.ok(templars.preview_products.every((p) => !("id" in p)))
 
   const ballet = themes.find((t) => t.motif_slug === "ballet")!
+  assert.equal(ballet.motif_title, "Балет")
   assert.equal(ballet.motif_available_family_count, 2)
   assert.equal(ballet.cta_kind, "view_furniture")
 
   const tommy = themes.find((t) => t.motif_slug === "tommy")!
+  assert.equal(tommy.motif_title, "Томми")
   assert.equal(tommy.motif_available_family_count, 1)
   assert.equal(tommy.cta_kind, "view_product")
+
+  for (const theme of themes) {
+    assert.ok(!isLegacyEnglishMotifTitle(theme.motif_title))
+  }
 
   const leaks = assertBuyerSafeMotifPayload({ motif_themes: themes })
   assert.deepEqual(leaks, [], leaks.join(", "))
@@ -137,8 +169,10 @@ assert.equal(MOTIF_CTA_LABELS.view_collection, "Посмотреть колле�
 
 {
   const detail = buildMotifThemeDetail(sample, "templars")!
+  assert.equal(detail.motif_title, "Тамплиеры")
   assert.equal(detail.products.length, 3)
   assert.ok(detail.products.every((p) => p.motif_slug === "templars"))
+  assert.ok(detail.products.every((p) => p.motif_title === "Тамплиеры"))
   assert.equal(buildMotifThemeDetail(sample, "missing"), null)
   const leaks = assertBuyerSafeMotifPayload(detail)
   assert.deepEqual(leaks, [], leaks.join(", "))
@@ -152,8 +186,10 @@ assert.equal(MOTIF_CTA_LABELS.view_collection, "Посмотреть колле�
   })!
   assert.equal(matched.motif_status, "matched")
   assert.equal(matched.redirect_handle, null)
+  assert.equal(matched.selected_motif?.motif_title, "Тамплиеры")
   assert.equal(matched.motif_options.length, 3) // same family: templars/ballet/tommy komod
   assert.ok(matched.motif_options.every((o) => o.product_handle !== ""))
+  assert.ok(matched.motif_options.every((o) => !isLegacyEnglishMotifTitle(o.motif_title)))
   assert.equal(matched.related_products_in_motif.length, 2)
   assert.ok(
     matched.related_products_in_motif.every((p) => p.handle !== "te-05-1")
@@ -166,6 +202,7 @@ assert.equal(MOTIF_CTA_LABELS.view_collection, "Посмотреть колле�
   })!
   assert.equal(redirect.motif_status, "redirect")
   assert.equal(redirect.redirect_handle, "ba-05-1")
+  assert.equal(redirect.selected_motif?.motif_title, "Балет")
 
   const unsupported = buildMotifContext({
     products: sample,
@@ -194,6 +231,7 @@ assert.equal(MOTIF_CTA_LABELS.view_collection, "Посмотреть колле�
   assert.equal(unsupportedFamily.motif_status, "unsupported")
   assert.equal(unsupportedFamily.redirect_handle, null)
   assert.equal(unsupportedFamily.selected_motif?.motif_slug, "templars")
+  assert.equal(unsupportedFamily.selected_motif?.motif_title, "Тамплиеры")
 
   const absent = buildMotifContext({
     products: sample,
@@ -202,6 +240,7 @@ assert.equal(MOTIF_CTA_LABELS.view_collection, "Посмотреть колле�
   })!
   assert.equal(absent.motif_status, "absent")
   assert.equal(absent.selected_motif?.motif_slug, "templars")
+  assert.equal(absent.selected_motif?.motif_title, "Тамплиеры")
 
   const leaks = assertBuyerSafeMotifPayload(matched)
   assert.deepEqual(leaks, [], leaks.join(", "))

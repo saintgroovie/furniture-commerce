@@ -117,7 +117,9 @@ export default async function WillieWinkieMotifPage({ params }: PageProps) {
             <p className="ww-motif-detail-crumb ww-motif-detail-crumb--desktop">
               <Link href="/kids">{willieWinkieMotifsCopy.backToKids}</Link>
               <span aria-hidden="true"> / </span>
-              <Link href="/kids/willie-winkie">Willie Winkie</Link>
+              <Link href="/kids/willie-winkie">
+                {willieWinkieMotifsCopy.backToDirectoryShort}
+              </Link>
               <span aria-hidden="true"> / </span>
               <span>{theme.motif_title}</span>
             </p>
@@ -158,7 +160,7 @@ export default async function WillieWinkieMotifPage({ params }: PageProps) {
               {willieWinkieMotifsCopy.productsSectionTitle}
             </h2>
             <p className="ww-motif-section-lead">
-              {willieWinkieMotifsCopy.productsOnlySubhead(theme.motif_title)}
+              {willieWinkieMotifsCopy.productsOnlySubhead}
             </p>
           </div>
           <div className={gridMod}>
