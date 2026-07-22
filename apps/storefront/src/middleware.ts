@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
+import {
+  shouldEmitXRobotsTag,
+  X_ROBOTS_TAG_NOINDEX,
+} from "@/lib/indexing-policy"
 
 /**
  * Buyer security headers + CSP with per-request nonce.
@@ -8,6 +12,8 @@ import type { NextRequest } from "next/server"
  *
  * HSTS is set only for HTTPS requests (Traefik terminates TLS in staging).
  * Fullscreen stays allowed (gallery). COEP/COOP not enabled (external media risk).
+ *
+ * Demo/staging SEO: X-Robots-Tag noindex when indexing policy is fail-closed.
  */
 export function middleware(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64")
@@ -48,6 +54,10 @@ export function middleware(request: NextRequest) {
   )
   response.headers.set("X-Frame-Options", "DENY")
   response.headers.set("X-DNS-Prefetch-Control", "off")
+
+  if (shouldEmitXRobotsTag()) {
+    response.headers.set("X-Robots-Tag", X_ROBOTS_TAG_NOINDEX)
+  }
 
   const proto =
     request.headers.get("x-forwarded-proto") ||

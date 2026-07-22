@@ -6,6 +6,7 @@ import { getSiteUrl } from "@/lib/api/base"
 import { getCatalogProducts, getProduct, NOT_FOUND } from "@/lib/api/products"
 import { getMotifContext } from "@/lib/api/motif-themes"
 import { formatRub, getPrice } from "@/lib/format"
+import { indexingCanonical } from "@/lib/indexing-policy"
 import {
   formatRequestQuotePriceLabel,
   isRequestQuoteProduct,
@@ -106,10 +107,13 @@ const BADGE_LABELS = productTypeBadgeLabels
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const base = getSiteUrl()
+  const selfCanonical = indexingCanonical(`${base}/product/${params.id}`)
   try {
     const res = await getProduct(params.id)
     const product = res.product as Record<string, unknown> | undefined
-    if (!product) return { title: "Товар", alternates: { canonical: `${base}/product/${params.id}` } }
+    if (!product) {
+      return { title: "Товар", ...(selfCanonical ? { alternates: selfCanonical } : {}) }
+    }
     const title = getBuyerFacingProductTitle(product)
     const desc = product.description ? truncate(String(product.description), 160) : "Товар из каталога Woodright."
     const imageUrl = primaryImageForMeta(product)
@@ -122,10 +126,10 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
         url: `/product/${params.id}`,
         ...(imageUrl && { images: [imageUrl] }),
       },
-      alternates: { canonical: `${base}/product/${params.id}` },
+      ...(selfCanonical ? { alternates: selfCanonical } : {}),
     }
   } catch {
-    return { title: "Товар", alternates: { canonical: `${base}/product/${params.id}` } }
+    return { title: "Товар", ...(selfCanonical ? { alternates: selfCanonical } : {}) }
   }
 }
 

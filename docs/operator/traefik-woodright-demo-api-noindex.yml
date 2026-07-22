@@ -1,0 +1,73 @@
+# Traefik dynamic snippet — API Host noindex (apply on VM at deploy)
+#
+# Target file on staging: /etc/dokploy/traefik/dynamic/woodright-demo.yml
+# Backup before edit. Does not touch legacy woodright.ru.
+#
+# Adds:
+# - X-Robots-Tag on all api.woodright-demo.ru responses
+# - Prefer pairing with buyer storefront middleware X-Robots-Tag
+
+http:
+  middlewares:
+    woodright-www-to-apex:
+      redirectRegex:
+        regex: "^https?://www\\.woodright-demo\\.ru/(.*)"
+        replacement: "https://woodright-demo.ru/${1}"
+        permanent: true
+
+    woodright-api-noindex:
+      headers:
+        customResponseHeaders:
+          X-Robots-Tag: "noindex, nofollow, noarchive"
+
+  routers:
+    woodright-api-http:
+      rule: Host(`api.woodright-demo.ru`)
+      entryPoints: [web]
+      middlewares: [redirect-to-https]
+      service: woodright-backend
+
+    woodright-api-https:
+      rule: Host(`api.woodright-demo.ru`)
+      entryPoints: [websecure]
+      tls:
+        certResolver: letsencrypt
+      middlewares: [woodright-api-noindex]
+      service: woodright-backend
+
+    woodright-sf-http:
+      rule: Host(`woodright-demo.ru`)
+      entryPoints: [web]
+      middlewares: [redirect-to-https]
+      service: woodright-storefront
+
+    woodright-sf-https:
+      rule: Host(`woodright-demo.ru`)
+      entryPoints: [websecure]
+      tls:
+        certResolver: letsencrypt
+      service: woodright-storefront
+
+    woodright-www-http:
+      rule: Host(`www.woodright-demo.ru`)
+      entryPoints: [web]
+      middlewares: [woodright-www-to-apex]
+      service: noop@internal
+
+    woodright-www-https:
+      rule: Host(`www.woodright-demo.ru`)
+      entryPoints: [websecure]
+      tls:
+        certResolver: letsencrypt
+      middlewares: [woodright-www-to-apex]
+      service: noop@internal
+
+  services:
+    woodright-backend:
+      loadBalancer:
+        servers:
+          - url: "http://woodright-staging-backend:9000"
+    woodright-storefront:
+      loadBalancer:
+        servers:
+          - url: "http://woodright-staging-storefront:3002"

@@ -7,13 +7,16 @@ import {
 } from "@/components/willie-winkie-motif-directory"
 import { getSiteUrl } from "@/lib/api/base"
 import { getMotifThemes } from "@/lib/api/motif-themes"
+import { indexingCanonical } from "@/lib/indexing-policy"
 import { resolveStorefrontProductImageSrc } from "@/lib/product-images"
 import { seo, willieWinkieMotifsCopy } from "@/lib/woodright-copy"
+
+const willieCanonical = indexingCanonical(`${getSiteUrl()}/kids/willie-winkie`)
 
 export const metadata: Metadata = {
   title: seo.willieWinkieMotifs.title,
   description: seo.willieWinkieMotifs.description,
-  alternates: { canonical: `${getSiteUrl()}/kids/willie-winkie` },
+  ...(willieCanonical ? { alternates: willieCanonical } : {}),
   openGraph: {
     title: seo.willieWinkieMotifs.title,
     description: seo.willieWinkieMotifs.description,
