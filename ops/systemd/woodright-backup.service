@@ -1,0 +1,28 @@
+[Unit]
+Description=Woodright automated backup (oneshot)
+Documentation=file:///srv/woodright/docs/backup-policy.md
+After=docker.service network-online.target
+Wants=network-online.target
+# Does not manage application containers.
+
+[Service]
+Type=oneshot
+User=root
+UMask=0077
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+TimeoutStartSec=7200
+TimeoutStopSec=120
+# No Restart= - oneshot must not loop
+Environment=WOODRIGHT_BACKUP_ROOT=/srv/woodright/backups/automated
+Environment=WOODRIGHT_ACTIVE_OWNER=/srv/woodright/runtime-ownership/ACTIVE_OWNER.json
+# Credentials are inside the postgres container; never put DATABASE_URL here.
+ExecStart=/srv/woodright/ops/backup/woodright-backup-run.sh
+# Bounded journal noise
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=woodright-backup
+
+[Install]
+WantedBy=multi-user.target
