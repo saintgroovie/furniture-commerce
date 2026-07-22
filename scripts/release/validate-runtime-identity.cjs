@@ -17,6 +17,7 @@ const {
   assertNoSecrets,
   sameRuntimeForPricingCompare,
   digestsMatch,
+  releasePairMismatchWarning,
   SCHEMA_VERSION,
 } = require("./runtime-identity-lib.cjs")
 
@@ -167,6 +168,15 @@ function selfTest() {
     { runtime_role: "public_demo", exposure: "public", database_identity_alias: "public_demo_db" }
   )
   cases.push(["same-runtime price compare ok", priceSame.ok])
+
+  const mismatch = releasePairMismatchWarning({
+    backend_revision: "a".repeat(40),
+    storefront_revision: "b".repeat(40),
+  })
+  cases.push([
+    "surface BE/SF release mismatch",
+    mismatch && mismatch.warning === "backend_storefront_release_mismatch",
+  ])
 
   const reportPhrase = "backend localhost:9200 показал цену"
   cases.push([

@@ -228,13 +228,29 @@ function buildIdentityHeadersFromEnv(env = process.env) {
   const role = normalizeLegacyRole(env.WOODRIGHT_RUNTIME_ROLE || "")
   const exposure = env.WOODRIGHT_EXPOSURE || ""
   const sha = env.WOODRIGHT_RELEASE_SHA || ""
-  const dbAlias = env.WOODRIGHT_DATABASE_IDENTITY_ALIAS || ""
+  const dbAlias =
+    env.WOODRIGHT_DATABASE_IDENTITY || env.WOODRIGHT_DATABASE_IDENTITY_ALIAS || ""
   const headers = {}
   if (role) headers["x-woodright-runtime-role"] = role
   if (exposure) headers["x-woodright-exposure"] = exposure
   if (sha) headers["x-woodright-release-sha"] = sha
   if (dbAlias) headers["x-woodright-database-identity"] = dbAlias
   return headers
+}
+
+/** Surface BE/SF release mismatch for operators (not a hard schema error alone). */
+function releasePairMismatchWarning(identity) {
+  if (!identity) return null
+  const be = identity.backend_revision || identity.release_sha
+  const sf = identity.storefront_revision || identity.release_sha
+  if (be && sf && be !== sf) {
+    return {
+      warning: "backend_storefront_release_mismatch",
+      backend_revision: be,
+      storefront_revision: sf,
+    }
+  }
+  return null
 }
 
 function evaluatePublicHeaders(headers, expected = {}) {
@@ -350,4 +366,5 @@ module.exports = {
   evaluateCandidateHeaders,
   digestsMatch,
   sameRuntimeForPricingCompare,
+  releasePairMismatchWarning,
 }

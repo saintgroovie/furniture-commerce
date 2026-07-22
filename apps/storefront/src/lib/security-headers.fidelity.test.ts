@@ -42,6 +42,10 @@ assert.match(
   /storefrontRuntimeIdentityHeaders/,
   "middleware must attach runtime identity headers"
 )
+const identityLib = read("src/lib/runtime-identity-headers.ts")
+assert.match(identityLib, /WOODRIGHT_DATABASE_IDENTITY/)
+assert.match(identityLib, /x-woodright-database-identity/)
+assert.doesNotMatch(identityLib, /NEXT_PUBLIC_WOODRIGHT/)
 assert.doesNotMatch(
   middleware,
   /fullscreen=\(\)/,
