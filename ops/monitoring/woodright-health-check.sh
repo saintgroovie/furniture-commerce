@@ -67,7 +67,7 @@ curl_hdr() {
 }
 
 # --- BUYER ---
-for path in / /catalog /kids/catalog /product-static; do
+for path in / /catalog /kids/catalog; do
   code=$(curl_code "${BUYER_HOST}${path}")
   if [[ "$code" == "200" ]]; then
     add_check "buyer${path}" info pass "http=$code"
@@ -75,6 +75,14 @@ for path in / /catalog /kids/catalog /product-static; do
     add_check "buyer${path}" critical fail "http=$code"
   fi
 done
+# /product-static index may 301/404; probe a known asset instead (media integrity).
+PS_ASSET="${WOODRIGHT_PRODUCT_STATIC_PROBE:-/product-static/products/oliver/OL-95-1_gallery_02.jpg}"
+PS_CODE=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 -L "${BUYER_HOST}${PS_ASSET}" 2>/dev/null || echo "000")
+if [[ "$PS_CODE" == "200" ]]; then
+  add_check "buyer_product_static_asset" info pass "http=$PS_CODE path=$PS_ASSET"
+else
+  add_check "buyer_product_static_asset" critical fail "http=$PS_CODE path=$PS_ASSET"
+fi
 # PDP - try a known handle or skip soft
 PDP_CODE=$(curl_code "${BUYER_HOST}/products" || true)
 # soft: catalog already covered
