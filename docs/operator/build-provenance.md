@@ -30,6 +30,7 @@ Format:
 - Does **not** publish bare `:<FULL_SHA>` tags
 - Writes `build-manifest.json` with `release_authorized: false`
 - Declares `woodright.tag.namespace=build-staging-images`
+- Bakes `com.woodright.deployment-owner=Dokploy` on backend + storefront OCI config (metadata only; does not replace `ACTIVE_OWNER.json`)
 - Does not deploy / does not mutate ACTIVE_OWNER
 
 ## Manifests
