@@ -192,6 +192,7 @@ jobs:
             woodright.workflow.run_attempt=${{ github.run_attempt }}
             woodright.build.unique_tag=${{ steps.meta.outputs.unique_tag }}
             woodright.tag.authoritative=false
+            com.woodright.deployment-owner=Dokploy
           tags: |
             ${{ env.IMAGE_PREFIX }}-backend:${{ steps.meta.outputs.unique_tag }}
 
@@ -215,6 +216,7 @@ jobs:
             woodright.workflow.run_attempt=${{ github.run_attempt }}
             woodright.build.unique_tag=${{ steps.meta.outputs.unique_tag }}
             woodright.tag.authoritative=false
+            com.woodright.deployment-owner=Dokploy
           build-args: |
             NEXT_PUBLIC_MEDUSA_BACKEND_URL=
             MEDUSA_BACKEND_URL=http://backend:9000
@@ -274,6 +276,12 @@ jobs:
           fi
           if [ "${BE_REV}" != "${SHA}" ] || [ "${SF_REV}" != "${SHA}" ]; then
             echo "OCI revision mismatch BE=${BE_REV} SF=${SF_REV} expected=${SHA}" >&2
+            exit 1
+          fi
+          BE_OWNER=$(docker buildx imagetools inspect "${IMAGE_PREFIX}-backend@${BACKEND_DIGEST}" --format '{{index .Image.Config.Labels "com.woodright.deployment-owner"}}')
+          SF_OWNER=$(docker buildx imagetools inspect "${IMAGE_PREFIX}-storefront@${STOREFRONT_DIGEST}" --format '{{index .Image.Config.Labels "com.woodright.deployment-owner"}}')
+          if [ "${BE_OWNER}" != "Dokploy" ] || [ "${SF_OWNER}" != "Dokploy" ]; then
+            echo "deployment-owner label missing/wrong BE=${BE_OWNER} SF=${SF_OWNER} expected=Dokploy" >&2
             exit 1
           fi
           mkdir -p release-artifacts
