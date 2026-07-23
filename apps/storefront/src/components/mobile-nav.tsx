@@ -8,6 +8,16 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import {
+  BUYER_CLOSE_PEER_EVENT,
+  BUYER_DIALOG_LAYER,
+  BUYER_MOBILE_MQ,
+  handleDialogKeydown,
+  listFocusable,
+  requestCloseBuyerDialogPeer,
+  setBuyerChromeInert,
+  type BuyerClosePeerDetail,
+} from "@/lib/buyer-dialog-a11y"
 import { a11yCopy, nav as navCopy } from "@/lib/woodright-copy"
 
 type NavLink = {
@@ -30,15 +40,16 @@ const SECONDARY: NavLink[] = [
 ]
 
 const PANEL_ID = "mobile-nav-panel"
+const LAYER = BUYER_DIALOG_LAYER.mobileNav
 
-function setBackgroundInert(enabled: boolean) {
-  const main = document.getElementById("main-content")
-  const footer = document.querySelector("footer")
-  for (const el of [main, footer]) {
-    if (!el) continue
-    if (enabled) el.setAttribute("inert", "")
-    else el.removeAttribute("inert")
-  }
+function setMobileNavBackgroundInert(enabled: boolean) {
+  /* Header chrome (top + main nav) + main + footer. The MobileNav trigger
+     and dialog stay outside those sections so they remain operable. */
+  setBuyerChromeInert(
+    enabled,
+    [document.getElementById("main-content")],
+    LAYER
+  )
 }
 
 export function MobileNav() {
@@ -59,54 +70,53 @@ export function MobileNav() {
     setOpen(false)
   }, [pathname])
 
+  // Peer dialog (catalog filters) requested exclusive ownership.
+  useEffect(() => {
+    function onPeerClose(e: Event) {
+      const detail = (e as CustomEvent<BuyerClosePeerDetail>).detail
+      if (detail?.exceptLayer === LAYER) return
+      setOpen(false)
+    }
+    document.addEventListener(BUYER_CLOSE_PEER_EVENT, onPeerClose)
+    return () => document.removeEventListener(BUYER_CLOSE_PEER_EVENT, onPeerClose)
+  }, [])
+
+  // Desktop viewport: clear mobile-only dialog state + inert.
+  useEffect(() => {
+    const mq = window.matchMedia(BUYER_MOBILE_MQ)
+    function onChange() {
+      if (!mq.matches) setOpen(false)
+    }
+    onChange()
+    mq.addEventListener("change", onChange)
+    return () => mq.removeEventListener("change", onChange)
+  }, [])
+
   useEffect(() => {
     if (!open) {
       document.body.classList.remove("mobile-nav-open")
       document.documentElement.classList.remove("mobile-nav-open")
-      setBackgroundInert(false)
+      setMobileNavBackgroundInert(false)
       return
     }
 
+    requestCloseBuyerDialogPeer(LAYER)
     document.body.classList.add("mobile-nav-open")
     document.documentElement.classList.add("mobile-nav-open")
-    setBackgroundInert(true)
+    setMobileNavBackgroundInert(true)
 
     const panel = panelRef.current
-    const focusables = () =>
-      panel
-        ? Array.from(
-            panel.querySelectorAll<HTMLElement>(
-              'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
-            )
-          ).filter((el) => !el.hasAttribute("disabled") && el.tabIndex !== -1)
-        : []
 
     requestAnimationFrame(() => {
-      focusables()[0]?.focus()
+      listFocusable(panel)[0]?.focus()
     })
 
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        e.preventDefault()
-        close(true)
-        return
-      }
-      if (e.key !== "Tab" || !panel) return
-      const items = focusables()
-      if (items.length === 0) return
-      const first = items[0]
-      const last = items[items.length - 1]
-      const active = document.activeElement as HTMLElement | null
-      if (e.shiftKey && active === first) {
-        e.preventDefault()
-        last.focus()
-      } else if (!e.shiftKey && active === last) {
-        e.preventDefault()
-        first.focus()
-      } else if (active && !panel.contains(active) && active !== btnRef.current) {
-        e.preventDefault()
-        first.focus()
-      }
+      handleDialogKeydown(e, {
+        panel,
+        trigger: btnRef.current,
+        onEscape: () => close(true),
+      })
     }
 
     document.addEventListener("keydown", onKeyDown)
@@ -114,7 +124,7 @@ export function MobileNav() {
       document.removeEventListener("keydown", onKeyDown)
       document.body.classList.remove("mobile-nav-open")
       document.documentElement.classList.remove("mobile-nav-open")
-      setBackgroundInert(false)
+      setMobileNavBackgroundInert(false)
     }
   }, [open, close])
 

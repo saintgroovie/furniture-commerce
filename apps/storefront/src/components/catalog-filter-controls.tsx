@@ -24,6 +24,16 @@ import {
   getCollectionFilterLabel,
   hasActiveCatalogFilters,
 } from "@/lib/catalog-filters"
+import {
+  BUYER_CLOSE_PEER_EVENT,
+  BUYER_DIALOG_LAYER,
+  BUYER_MOBILE_MQ,
+  handleDialogKeydown,
+  listFocusable,
+  requestCloseBuyerDialogPeer,
+  setBuyerChromeInert,
+  type BuyerClosePeerDetail,
+} from "@/lib/buyer-dialog-a11y"
 import { useCspNonce } from "@/lib/csp-nonce"
 import { a11yCopy } from "@/lib/woodright-copy"
 
@@ -231,26 +241,71 @@ export function CatalogFilterControls({
      rather than hard-coded. 24 mirrors --space-lg. */
   const sidebarRef = useRef<HTMLElement>(null)
 
-  /* Mobile filter drawer: Escape closes and restores focus to the toggle. */
+  /* Mobile filter drawer: dialog contract (semantics + inert + focus trap).
+     Drawer lives inside #main-content, so we inert product area (sibling),
+     not the whole main — otherwise the dialog would become inert too.
+     Layer ownership keeps extras/chrome inert until this layer releases. */
+  const setFilterBackgroundInert = useCallback((enabled: boolean) => {
+    setBuyerChromeInert(
+      enabled,
+      [document.querySelector(".catalog-product-area")],
+      BUYER_DIALOG_LAYER.catalogFilters
+    )
+  }, [])
+
+  const closeMobileFilters = useCallback((restoreFocus = true) => {
+    setMobileOpen(false)
+    if (restoreFocus) {
+      requestAnimationFrame(() => filterToggleRef.current?.focus())
+    }
+  }, [])
+
+  // Peer dialog (mobile nav) requested exclusive ownership.
   useEffect(() => {
-    if (!mobileOpen) return
+    function onPeerClose(e: Event) {
+      const detail = (e as CustomEvent<BuyerClosePeerDetail>).detail
+      if (detail?.exceptLayer === BUYER_DIALOG_LAYER.catalogFilters) return
+      setMobileOpen(false)
+    }
+    document.addEventListener(BUYER_CLOSE_PEER_EVENT, onPeerClose)
+    return () => document.removeEventListener(BUYER_CLOSE_PEER_EVENT, onPeerClose)
+  }, [])
+
+  // Desktop viewport: clear mobile-only drawer state + inert.
+  useEffect(() => {
+    const mq = window.matchMedia(BUYER_MOBILE_MQ)
+    function onChange() {
+      if (!mq.matches) setMobileOpen(false)
+    }
+    onChange()
+    mq.addEventListener("change", onChange)
+    return () => mq.removeEventListener("change", onChange)
+  }, [])
+
+  useEffect(() => {
+    if (!mobileOpen) {
+      setFilterBackgroundInert(false)
+      return
+    }
+    requestCloseBuyerDialogPeer(BUYER_DIALOG_LAYER.catalogFilters)
     const sidebar = sidebarRef.current
+    setFilterBackgroundInert(true)
     requestAnimationFrame(() => {
-      const first = sidebar?.querySelector<HTMLElement>(
-        'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
-      )
-      first?.focus()
+      listFocusable(sidebar)[0]?.focus()
     })
     function onKeyDown(e: globalThis.KeyboardEvent) {
-      if (e.key === "Escape") {
-        e.preventDefault()
-        setMobileOpen(false)
-        requestAnimationFrame(() => filterToggleRef.current?.focus())
-      }
+      handleDialogKeydown(e, {
+        panel: sidebar,
+        trigger: filterToggleRef.current,
+        onEscape: () => closeMobileFilters(true),
+      })
     }
     document.addEventListener("keydown", onKeyDown)
-    return () => document.removeEventListener("keydown", onKeyDown)
-  }, [mobileOpen])
+    return () => {
+      document.removeEventListener("keydown", onKeyDown)
+      setFilterBackgroundInert(false)
+    }
+  }, [mobileOpen, closeMobileFilters, setFilterBackgroundInert])
 
   useEffect(() => {
     const sidebar = sidebarRef.current
@@ -742,6 +797,12 @@ export function CatalogFilterControls({
           id={CATALOG_FILTER_SIDEBAR_ID}
           className={`catalog-filter-sidebar ${mobileOpen ? "catalog-filter-sidebar-open" : ""}`}
           aria-label={a11yCopy.catalogFiltersLabel}
+          {...(mobileOpen
+            ? {
+                role: "dialog" as const,
+                "aria-modal": true as const,
+              }
+            : null)}
           /* The bootstrap script mutates this element's style attribute
              before hydration — expected, not a markup mismatch. */
           suppressHydrationWarning
@@ -751,10 +812,7 @@ export function CatalogFilterControls({
             type="button"
             className="catalog-filter-apply-mobile"
             aria-label={a11yCopy.applyFilters}
-            onClick={() => {
-              setMobileOpen(false)
-              requestAnimationFrame(() => filterToggleRef.current?.focus())
-            }}
+            onClick={() => closeMobileFilters(true)}
           >
             Показать
           </button>
