@@ -2,13 +2,22 @@
 
 import { useEffect, useState, type CSSProperties } from "react"
 import { catalogCardOriginalFromDerivative } from "@/lib/catalog-card-image"
-import { resolveHomeImageSrc } from "./home-image"
+import {
+  resolveHomeImageSrc,
+  type HomeImageSurface,
+} from "./home-image"
 
 export { resolveHomeImageSrc }
+export type { HomeImageSurface }
 
 type HomeImgProps = {
   /** Original `/product-static/…` (or already-resolved) URL. */
   src: string | undefined
+  /**
+   * Image surface contract. Premium surfaces keep originals; catalog cards
+   * may prefer card WebP when the bake flag is on.
+   */
+  surface?: HomeImageSurface
   alt?: string
   className?: string
   loading?: "eager" | "lazy"
@@ -22,9 +31,10 @@ type HomeImgProps = {
   "data-active"?: string
 }
 
-/** Homepage image: prefer catalog-card WebP when baked; fall back on error. */
+/** Homepage image: surface-aware original vs catalog-card WebP + onError fallback. */
 export function HomeImg({
   src,
+  surface = "CATALOG_CARD",
   alt = "",
   className,
   loading,
@@ -38,7 +48,9 @@ export function HomeImg({
   "data-active": dataActive,
 }: HomeImgProps) {
   const original = typeof src === "string" ? src.trim() : ""
-  const preferred = original ? resolveHomeImageSrc(original) : ""
+  const preferred = original
+    ? resolveHomeImageSrc(original, { surface })
+    : ""
   const [current, setCurrent] = useState(preferred)
 
   useEffect(() => {

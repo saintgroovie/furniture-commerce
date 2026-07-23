@@ -136,6 +136,7 @@ export function HomeRoomScene({ scenes }: { scenes: HomeScene[] }) {
         {scenes.map((s, i) =>
           mounted.has(i) ? (
             <HomeImg
+              surface="ROOM_COMPOSITION"
               key={s.id}
               src={s.img}
               alt={i === active ? s.alt : ""}

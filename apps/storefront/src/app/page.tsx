@@ -173,7 +173,9 @@ function buildScenes(sceneProducts: Map<string, HomeProduct>): HomeScene[] {
   ].filter((s): s is NonNullable<typeof s> => s != null)
   scenes.push({
     id: "greenwich",
-    img: resolveHomeImageSrc(homeMedia.roomSceneGreenwich),
+    img: resolveHomeImageSrc(homeMedia.roomSceneGreenwich, {
+      surface: "ROOM_COMPOSITION",
+    }),
     alt: "Светлая спальня Greenwich с кроватью, рабочим столом и тумбой",
     spots: greenwichSpots,
   })
@@ -185,7 +187,9 @@ function buildScenes(sceneProducts: Map<string, HomeProduct>): HomeScene[] {
   ].filter((s): s is NonNullable<typeof s> => s != null)
   scenes.push({
     id: "cloud",
-    img: resolveHomeImageSrc(homeMedia.roomSceneCloud),
+    img: resolveHomeImageSrc(homeMedia.roomSceneCloud, {
+      surface: "ROOM_COMPOSITION",
+    }),
     alt: "Спальня Cloud с кроватью, рабочим столом и гардеробом",
     spots: cloudSpots,
   })

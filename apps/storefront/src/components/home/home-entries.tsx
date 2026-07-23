@@ -45,6 +45,7 @@ export function HomeEntries() {
               {media && (
                 <span className="hp-entry-media">
                   <HomeImg
+                    surface="LIFESTYLE_BLOCK"
                     src={media.src}
                     alt=""
                     aria-hidden="true"

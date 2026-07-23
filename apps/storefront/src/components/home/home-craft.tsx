@@ -37,6 +37,7 @@ export function HomeCraft() {
                 {media && (
                   <span className="hp-craft-media">
                     <HomeImg
+                      surface="LIFESTYLE_BLOCK"
                       src={media.src}
                       alt={media.alt}
                       style={
