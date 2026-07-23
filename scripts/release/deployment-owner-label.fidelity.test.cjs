@@ -2,17 +2,17 @@
  * Static fidelity: staging image workflow bakes Dokploy deployment-owner OCI label
  * on BOTH backend and storefront, and fail-closes via imagetools inspect.
  *
- * Invoked from PR checks release-governance job.
+ * Invoked from PR checks release-governance job (plain node, no yarn dlx).
  *
- *   yarn dlx tsx scripts/release/deployment-owner-label.fidelity.test.ts
+ *   node scripts/release/deployment-owner-label.fidelity.test.cjs
  */
-import assert from "node:assert/strict"
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
+"use strict"
 
-const root = process.cwd().endsWith("apps/storefront")
-  ? join(process.cwd(), "../..")
-  : process.cwd()
+const assert = require("node:assert/strict")
+const { readFileSync } = require("node:fs")
+const { join } = require("node:path")
+
+const root = process.cwd()
 const wfPath = join(root, ".github/workflows/build-staging-images.yml")
 const wf = readFileSync(wfPath, "utf8")
 
@@ -41,7 +41,6 @@ assert.match(
   /if \[ "\$\{BE_OWNER\}" != "Dokploy" \] \|\| \[ "\$\{SF_OWNER\}" != "Dokploy" \]/
 )
 
-// Docs authority note present
 const docs = readFileSync(
   join(root, "docs/operator/build-provenance.md"),
   "utf8"
@@ -49,4 +48,4 @@ const docs = readFileSync(
 assert.match(docs, /com\.woodright\.deployment-owner=Dokploy/)
 assert.match(docs, /ACTIVE_OWNER\.json/)
 
-console.log("deployment-owner-label.fidelity.test.ts: ok")
+console.log("deployment-owner-label.fidelity.test.cjs: ok")
