@@ -133,6 +133,11 @@ async function assertFiltersOpenContract(page, label) {
     const productLink = document.querySelector(
       ".catalog-product-area a, .catalog-product-area button"
     )
+    const tab = document.querySelector(".catalog-controls a, .catalog-controls button")
+    const search = document.querySelector(".catalog-search input, .catalog-search button")
+    const sort = document.querySelector(".catalog-sort button, .catalog-sort select")
+    const underInert = (el) =>
+      !el || !!(el.closest("[inert]") || el.hasAttribute("inert"))
     return {
       open: aside?.classList.contains("catalog-filter-sidebar-open"),
       role: aside?.getAttribute("role"),
@@ -144,11 +149,20 @@ async function assertFiltersOpenContract(page, label) {
       productInert: document
         .querySelector(".catalog-product-area")
         ?.hasAttribute("inert"),
+      controlsInert: document
+        .querySelector(".catalog-controls")
+        ?.hasAttribute("inert"),
+      searchInert: document.querySelector(".catalog-search")?.hasAttribute("inert"),
+      sortInert: document.querySelector(".catalog-sort")?.hasAttribute("inert"),
       footerInert: document.querySelector("footer")?.hasAttribute("inert"),
       focusInAside: aside?.contains(document.activeElement),
-      productFocusable: productLink
-        ? !(productLink.closest("[inert]") || productLink.hasAttribute("inert"))
-        : null,
+      toggleInert: document
+        .querySelector(".catalog-filter-mobile-toggle")
+        ?.hasAttribute("inert"),
+      productFocusable: productLink ? !underInert(productLink) : null,
+      tabFocusable: tab ? !underInert(tab) : null,
+      searchFocusable: search ? !underInert(search) : null,
+      sortFocusable: sort ? !underInert(sort) : null,
     }
   })
   if (
@@ -158,9 +172,16 @@ async function assertFiltersOpenContract(page, label) {
     filtOpen.label &&
     filtOpen.headerTopInert &&
     filtOpen.productInert &&
+    filtOpen.controlsInert &&
+    filtOpen.searchInert &&
+    filtOpen.sortInert &&
     filtOpen.footerInert &&
     filtOpen.focusInAside &&
-    filtOpen.productFocusable === false
+    !filtOpen.toggleInert &&
+    filtOpen.productFocusable === false &&
+    filtOpen.tabFocusable === false &&
+    filtOpen.searchFocusable === false &&
+    filtOpen.sortFocusable === false
   ) {
     pass(label)
   } else {
@@ -180,6 +201,11 @@ async function assertFiltersClosed(page, label, expectFocusToggle = false) {
     productInert: document
       .querySelector(".catalog-product-area")
       ?.hasAttribute("inert"),
+    controlsInert: document
+      .querySelector(".catalog-controls")
+      ?.hasAttribute("inert"),
+    searchInert: document.querySelector(".catalog-search")?.hasAttribute("inert"),
+    sortInert: document.querySelector(".catalog-sort")?.hasAttribute("inert"),
     headerTopInert: document
       .querySelector("header .header-top")
       ?.hasAttribute("inert"),
@@ -192,6 +218,9 @@ async function assertFiltersClosed(page, label, expectFocusToggle = false) {
   if (
     !filtClosed.open &&
     !filtClosed.productInert &&
+    !filtClosed.controlsInert &&
+    !filtClosed.searchInert &&
+    !filtClosed.sortInert &&
     !filtClosed.headerTopInert &&
     !filtClosed.footerInert &&
     filtClosed.role !== "dialog" &&

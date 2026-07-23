@@ -242,13 +242,20 @@ export function CatalogFilterControls({
   const sidebarRef = useRef<HTMLElement>(null)
 
   /* Mobile filter drawer: dialog contract (semantics + inert + focus trap).
-     Drawer lives inside #main-content, so we inert product area (sibling),
-     not the whole main — otherwise the dialog would become inert too.
+     Drawer lives inside #main-content, so we inert background siblings
+     (tabs/search/sort/product area), not the whole main — otherwise the
+     dialog would become inert too. Toggle stays outside inert targets so
+     focus restore remains possible.
      Layer ownership keeps extras/chrome inert until this layer releases. */
   const setFilterBackgroundInert = useCallback((enabled: boolean) => {
     setBuyerChromeInert(
       enabled,
-      [document.querySelector(".catalog-product-area")],
+      [
+        document.querySelector(".catalog-controls"),
+        document.querySelector(".catalog-search"),
+        document.querySelector(".catalog-sort"),
+        document.querySelector(".catalog-product-area"),
+      ],
       BUYER_DIALOG_LAYER.catalogFilters
     )
   }, [])
