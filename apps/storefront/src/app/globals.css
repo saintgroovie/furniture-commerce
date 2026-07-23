@@ -8485,14 +8485,46 @@ body {
   background: var(--ww-panel);
   border: 1px solid var(--ww-hairline);
   box-shadow: var(--ww-shadow-rest);
+  position: relative;
+  /* Prefer compositor-friendly props only; no image scale / filter / animated shadow. */
   transition:
-    box-shadow var(--ww-t-base) var(--ww-ease),
-    transform var(--ww-t-base) var(--ww-ease);
+    border-color 220ms var(--ww-ease),
+    transform 220ms var(--ww-ease);
 }
 
-.ww-motif-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--ww-shadow-hover);
+/* Hover only on fine pointers - avoids sticky hover on touch. */
+@media (hover: hover) and (pointer: fine) {
+  .ww-motif-card:hover {
+    transform: translate3d(0, -2px, 0);
+    border-color: color-mix(in srgb, var(--ww-olive) 42%, var(--ww-hairline));
+  }
+
+  .ww-motif-card:hover .ww-motif-title {
+    color: var(--ww-olive-ink);
+  }
+
+  .ww-motif-card:hover .ww-motif-cta span {
+    transform: translate3d(2px, 0, 0);
+  }
+
+  .ww-motif-card:hover::after {
+    opacity: 1;
+  }
+}
+
+.ww-motif-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--ww-olive) 8%, transparent),
+    transparent 42%
+  );
+  opacity: 0;
+  transition: opacity 220ms var(--ww-ease);
 }
 
 .ww-motif-card:focus-visible {
@@ -8501,9 +8533,14 @@ body {
   transform: none;
 }
 
+.ww-motif-card:focus-visible::after {
+  opacity: 0;
+}
+
 .ww-motif-card.is-selected,
 .ww-motif-card[aria-current="page"] {
-  box-shadow: inset 0 0 0 1.5px var(--ww-olive);
+  border-color: var(--ww-olive);
+  box-shadow: inset 0 0 0 1px var(--ww-olive);
 }
 
 .ww-motif-card.is-selected .ww-motif-caption,
@@ -8526,14 +8563,7 @@ body {
   padding: 5%;
   display: block;
   mix-blend-mode: multiply;
-  transition: transform var(--ww-t-base) var(--ww-ease);
-}
-
-.ww-motif-card:hover .ww-motif-well img {
-  transform: scale(1.02);
-}
-
-.ww-motif-card:focus-visible .ww-motif-well img {
+  /* Image stays stable - no hover transform (avoids repaint of large blended layers). */
   transform: none;
 }
 
@@ -8553,6 +8583,8 @@ body {
   padding: 14px 16px 16px;
   border-top: 1px solid var(--ww-hairline);
   background: var(--ww-panel);
+  position: relative;
+  z-index: 1;
 }
 
 .ww-motif-title {
@@ -8560,11 +8592,7 @@ body {
   font-size: 1.0625rem;
   line-height: 1.3;
   font-weight: 500;
-  transition: color var(--ww-t-fast) var(--ww-ease);
-}
-
-.ww-motif-card:hover .ww-motif-title {
-  color: var(--ww-olive-ink);
+  transition: color 180ms var(--ww-ease);
 }
 
 .ww-motif-meta,
@@ -8584,11 +8612,7 @@ body {
 
 .ww-motif-cta span {
   display: inline-block;
-  transition: transform var(--ww-t-fast) var(--ww-ease);
-}
-
-.ww-motif-card:hover .ww-motif-cta span {
-  transform: translateX(2px);
+  transition: transform 180ms var(--ww-ease);
 }
 
 .ww-motif-card:focus-visible .ww-motif-cta span {
@@ -9007,6 +9031,7 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .ww-motif-card,
+  .ww-motif-card::after,
   .ww-motif-well img,
   .ww-motif-cta span,
   .ww-motif-title,
@@ -9016,9 +9041,13 @@ body {
   }
 
   .ww-motif-card:hover,
-  .ww-motif-card:hover .ww-motif-well img,
   .ww-motif-card:hover .ww-motif-cta span {
     transform: none !important;
+  }
+
+  .ww-motif-card:hover::after,
+  .ww-motif-card::after {
+    opacity: 0 !important;
   }
 }
 

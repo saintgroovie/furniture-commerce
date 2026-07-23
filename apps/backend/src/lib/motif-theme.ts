@@ -12,6 +12,72 @@
 
 export const WILLIE_WINKIE_COLLECTION = "willie-winkie" as const
 
+/**
+ * Canonical buyer-facing Russian display names for Willie Winkie motifs.
+ * Keyed by stable `motif_slug` (Latin, never localized). Single SoT for API wire
+ * `motif_title` — product.metadata may still hold English internal labels.
+ */
+export const MOTIF_BUYER_DISPLAY_NAMES_RU = {
+  "ants-village": "Деревня муравьёв",
+  ballet: "Балет",
+  fairies: "Феи",
+  "fantasy-kingdom": "Сказочное королевство",
+  infanta: "Инфанта",
+  molly: "Молли",
+  pastoral: "Пастораль",
+  "royal-lilies": "Королевские лилии",
+  "rural-scenery": "Сельский пейзаж",
+  "sweet-home": "Милый дом",
+  "teddy-bear": "Плюшевый мишка",
+  templars: "Тамплиеры",
+  "tiggy-winkle": "Тигги-Винкл",
+  tommy: "Томми",
+} as const satisfies Record<string, string>
+
+export type MotifCanonicalSlug = keyof typeof MOTIF_BUYER_DISPLAY_NAMES_RU
+
+export const MOTIF_CANONICAL_SLUGS = Object.freeze(
+  Object.keys(MOTIF_BUYER_DISPLAY_NAMES_RU) as MotifCanonicalSlug[]
+)
+
+/** Legacy English labels that must never appear as buyer-facing `motif_title`. */
+export const MOTIF_LEGACY_ENGLISH_TITLES = Object.freeze([
+  "Ant's Village",
+  "Ballet",
+  "Fairies",
+  "Fantasy Kingdom",
+  "Infanta",
+  "Molly",
+  "Pastoral",
+  "Royal Lilies",
+  "Rural Scenery",
+  "Sweet Home",
+  "Teddy Bear",
+  "Templars",
+  "Tiggy-Winkle",
+  "Tommy",
+] as const)
+
+const MOTIF_LEGACY_ENGLISH_TITLE_SET = new Set<string>(
+  MOTIF_LEGACY_ENGLISH_TITLES.map((t) => t.toLowerCase())
+)
+
+/**
+ * Resolve buyer-facing motif title. Never returns known English legacy labels.
+ * Unknown slug → neutral "Роспись" (not metadata English).
+ */
+export function motifBuyerDisplayName(slug: string): string {
+  const key = slug.trim().toLowerCase()
+  if (key in MOTIF_BUYER_DISPLAY_NAMES_RU) {
+    return MOTIF_BUYER_DISPLAY_NAMES_RU[key as MotifCanonicalSlug]
+  }
+  return "Роспись"
+}
+
+export function isLegacyEnglishMotifTitle(title: string): boolean {
+  return MOTIF_LEGACY_ENGLISH_TITLE_SET.has(title.trim().toLowerCase())
+}
+
 /** Keys allowed on motif product-card metadata (if ever nested). Prefer flat DTO. */
 export const MOTIF_BUYER_METADATA_KEYS = [
   "motif_key",
@@ -181,15 +247,17 @@ export function toMotifProductCard(
   if (!isWillieWinkieMotifProduct(product)) return null
   const meta = metaOf(product)
   const handle = asNonEmptyString(product.handle)
-  if (!handle) return null
+  const motifSlug = asNonEmptyString(meta.motif_slug)
+  if (!handle || !motifSlug) return null
   return {
     handle,
     title: buyerTitle(product),
     thumbnail: readThumbnail(product),
     price_amount: readPriceAmount(product),
     motif_key: asNonEmptyString(meta.motif_key)!,
-    motif_slug: asNonEmptyString(meta.motif_slug)!,
-    motif_title: asNonEmptyString(meta.motif_title)!,
+    motif_slug: motifSlug,
+    // Buyer wire uses Russian display name; metadata may still hold English.
+    motif_title: motifBuyerDisplayName(motifSlug),
     family_title: asNonEmptyString(meta.family_canonical_title) ?? buyerTitle(product),
   }
 }
@@ -263,11 +331,9 @@ export function buildMotifThemes(
       })
       continue
     }
-    // Fail-closed on conflicting motif identity for the same slug.
-    if (
-      existing.motif_key !== card.motif_key ||
-      existing.motif_title !== card.motif_title
-    ) {
+    // Fail-closed on conflicting motif_key for the same slug.
+    // Buyer motif_title is derived from slug, so identity is keyed by motif_key.
+    if (existing.motif_key !== card.motif_key) {
       continue
     }
     existing.cards.push(card)
@@ -284,7 +350,7 @@ export function buildMotifThemes(
         b.familyKeys
       )
     )
-    .sort((a, b) => a.motif_title.localeCompare(b.motif_title, "en"))
+    .sort((a, b) => a.motif_title.localeCompare(b.motif_title, "ru"))
 }
 
 export function buildMotifThemeDetail(
@@ -304,7 +370,7 @@ export function buildMotifThemeDetail(
     const familyKey = readFamilyKey(product)
     if (!card || !familyKey) continue
     if (card.motif_slug.toLowerCase() !== slug) continue
-    if (motifKey && (card.motif_key !== motifKey || card.motif_title !== motifTitle)) {
+    if (motifKey && card.motif_key !== motifKey) {
       continue
     }
     cards.push(card)
@@ -365,7 +431,7 @@ export function buildMotifContext(args: {
       }
     })
     .filter((o): o is MotifOptionDto => o != null)
-    .sort((a, b) => a.motif_title.localeCompare(b.motif_title, "en"))
+    .sort((a, b) => a.motif_title.localeCompare(b.motif_title, "ru"))
 
   const q = asNonEmptyString(args.motifQuery)?.toLowerCase() ?? null
   let motif_status: MotifContextStatus = "absent"
