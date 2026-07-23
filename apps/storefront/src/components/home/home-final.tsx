@@ -10,6 +10,7 @@ export function HomeFinal() {
   return (
     <section className="hp-final" aria-labelledby="hp-final-title" data-reveal>
       <HomeImg
+        surface="LARGE_CTA"
         src={homeMedia.finalInterior}
         alt=""
         aria-hidden="true"

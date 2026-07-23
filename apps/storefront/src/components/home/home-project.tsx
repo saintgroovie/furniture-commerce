@@ -17,13 +17,13 @@ export function HomeProject() {
         <div className="hp-project-collage" aria-hidden="true">
           <span className="hp-project-lines" />
           <span className="hp-project-shot hp-project-shot-a">
-            <HomeImg src={homeMedia.projectFinishGraphite} alt="" loading="lazy" decoding="async" draggable={false} />
+            <HomeImg surface="LIFESTYLE_BLOCK" src={homeMedia.projectFinishGraphite} alt="" loading="lazy" decoding="async" draggable={false} />
           </span>
           <span className="hp-project-shot hp-project-shot-b">
-            <HomeImg src={homeMedia.projectFinishWhite} alt="" loading="lazy" decoding="async" draggable={false} />
+            <HomeImg surface="LIFESTYLE_BLOCK" src={homeMedia.projectFinishWhite} alt="" loading="lazy" decoding="async" draggable={false} />
           </span>
           <span className="hp-project-shot hp-project-shot-c">
-            <HomeImg src={homeMedia.projectFabricChair} alt="" loading="lazy" decoding="async" draggable={false} />
+            <HomeImg surface="LIFESTYLE_BLOCK" src={homeMedia.projectFabricChair} alt="" loading="lazy" decoding="async" draggable={false} />
           </span>
           <span className="hp-project-swatches">
             <i />
