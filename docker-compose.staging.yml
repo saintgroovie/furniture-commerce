@@ -79,9 +79,15 @@ services:
       com.woodright.deployment-owner: ${WOODRIGHT_DEPLOYMENT_OWNER:-Dokploy}
     volumes:
       - woodright_staging_media:/server/static
+    # Storefront rewrites /product-static → http://backend:9000/static (baked
+    # MEDUSA_BACKEND_* default). Service DNS alone is lost when containers are
+    # recreated via docker create/rename cutover with container_name override.
+    # Explicit alias on the shared app network must survive every recreate.
     networks:
-      - woodright_staging
-      - dokploy-network
+      woodright_staging:
+        aliases:
+          - backend
+      dokploy-network: {}
     # No host publish: Traefik (dokploy-network) + internal Docker DNS only.
     healthcheck:
       test:

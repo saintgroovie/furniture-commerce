@@ -1,0 +1,43 @@
+{
+  "expect": "fail",
+  "fail_reason": "candidate holds public alias",
+  "shared_network": "woodright_staging",
+  "containers": [
+    {
+      "name": "woodright-staging-backend",
+      "running": true,
+      "role": "public_demo",
+      "exposure": "public",
+      "networks": {
+        "woodright_staging": {
+          "aliases": ["backend"],
+          "ipv4": "172.19.0.4"
+        }
+      }
+    },
+    {
+      "name": "woodright-staging-storefront",
+      "running": true,
+      "role": "public_demo",
+      "exposure": "public",
+      "networks": {
+        "woodright_staging": {
+          "aliases": ["storefront"],
+          "ipv4": "172.19.0.7"
+        }
+      }
+    },
+    {
+      "name": "woodright-candidate-be-x",
+      "running": true,
+      "role": "non_public_candidate",
+      "exposure": "private",
+      "networks": {
+        "woodright_staging": {
+          "aliases": ["backend"],
+          "ipv4": "172.19.0.55"
+        }
+      }
+    }
+  ]
+}

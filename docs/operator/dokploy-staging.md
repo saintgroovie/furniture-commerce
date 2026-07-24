@@ -1,5 +1,55 @@
 # Dokploy staging — Woodright
 
+## Backend Docker DNS alias (`backend`)
+
+Storefront same-origin media proxy depends on hostname `backend`:
+
+- `MEDUSA_BACKEND_URL` / `MEDUSA_BACKEND_INTERNAL_URL` default: `http://backend:9000`
+- Next rewrite: `/product-static/*` → `${backendUrl}/static/*`
+
+Compose service name alone is **not** enough when public containers use
+`container_name: woodright-staging-*` and are recreated via `docker create`
+(cutover keepers). Those recreates do not inherit Compose service DNS.
+
+**Canonical contract** in `docker-compose.staging.yml`:
+
+```yaml
+  backend:
+    networks:
+      woodright_staging:
+        aliases:
+          - backend
+      dokploy-network: {}
+```
+
+Rules:
+
+- Alias exists only on the shared app network (`woodright_staging` /
+  project-prefixed `*_woodright_staging`), never as public DNS.
+- Exactly one **running** public backend may hold alias `backend`.
+- Candidate / private containers must not hold this alias on the public shared network.
+- Manual `docker network connect --alias backend` is emergency-only; after
+  declarative compose apply + recreate it must not be required.
+
+Verifier (CI + VM):
+
+```bash
+node scripts/release/verify-backend-network-alias.cjs
+node scripts/release/verify-backend-network-alias.cjs --fixture-dir scripts/release/fixtures/backend-alias
+# on public host after recreate (SHA required — fail-closed):
+node scripts/release/verify-backend-network-alias.cjs --live \
+  --expected-release-sha 646d4e6c313deb2ba3c2ccbc6f57566959e53d71
+```
+
+Emergency-only (non-durable) restore before rollback:
+
+`EMERGENCY_BACKEND_ALIAS=1 SHARED_NET=… ./scripts/release/attach-backend-network-alias.sh`
+
+
+If `ENOTFOUND backend` returns after a recreate: treat as failed cutover —
+restore declarative compose / recreate backend; do not close the incident with
+a one-off manual alias.
+
 ## Release candidate policy
 
 - Staging must deploy an **immutable git SHA**, not a dirty worktree.
