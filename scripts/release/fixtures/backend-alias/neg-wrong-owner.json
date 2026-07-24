@@ -1,0 +1,46 @@
+{
+  "expect": "fail",
+  "fail_reason": "wrong container owns alias",
+  "shared_network": "woodright_staging",
+  "containers": [
+    {
+      "name": "woodright-staging-backend",
+      "running": true,
+      "role": "public_demo",
+      "exposure": "public",
+      "networks": {
+        "woodright_staging": {
+          "aliases": [],
+          "ipv4": "172.19.0.4"
+        }
+      }
+    },
+    {
+      "name": "woodright-staging-storefront",
+      "running": true,
+      "role": "public_demo",
+      "exposure": "public",
+      "networks": {
+        "woodright_staging": {
+          "aliases": ["storefront"],
+          "ipv4": "172.19.0.7"
+        }
+      }
+    },
+    {
+      "name": "woodright-production-backend",
+      "running": true,
+      "role": "public_demo",
+      "exposure": "public",
+      "networks": {
+        "woodright_staging": {
+          "aliases": ["backend"],
+          "ipv4": "172.19.0.8"
+        }
+      }
+    }
+  ],
+  "dns_from_storefront": {
+    "backend": "172.19.0.8"
+  }
+}
