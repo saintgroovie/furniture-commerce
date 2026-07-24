@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Woodright - проверка перед публикацией</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <div class="brand-name">Woodright</div>
+      <div class="brand-sub">Проверка перед публикацией</div>
+    </div>
+    <div class="top-stats" id="topStats"></div>
+    <div class="top-actions sticky-actions">
+      <button type="button" id="btnUndo" class="btn ghost">Отменить</button>
+      <button type="button" id="btnExport" class="btn">Экспорт решений</button>
+    </div>
+  </header>
+
+  <nav class="nav" id="nav">
+    <button data-view="overview" class="active">Обзор</button>
+    <button data-view="create">Новые · 81</button>
+    <button data-view="update">Обновлённые · 56</button>
+    <button data-view="noop">Без изменений · 11</button>
+    <button data-view="ol65">OL-65</button>
+    <button data-view="inventory">Продажа и наличие</button>
+    <button data-view="auto">Авто-правила</button>
+    <button data-view="decisions">Решения</button>
+    <button data-view="notes">Технические notes</button>
+  </nav>
+
+  <section class="toolbar">
+    <input id="search" type="search" placeholder="Поиск по SKU или названию" />
+    <select id="filterClass">
+      <option value="">Все классы готовности</option>
+      <option value="READY_FOR_OWNER_PUBLICATION_REVIEW">Готов к review</option>
+      <option value="INVENTORY_DECISION_REQUIRED">Нужно правило продажи</option>
+      <option value="CONTENT_CORRECTION_REQUIRED">Нужна правка контента</option>
+      <option value="MEDIA_CORRECTION_REQUIRED">Нужна правка медиа</option>
+      <option value="TECHNICAL_REPAIR_REQUIRED">Нужен техремонт</option>
+      <option value="KEEP_DRAFT_RECOMMENDED">Рекомендуется draft</option>
+    </select>
+    <select id="filterDecision">
+      <option value="">Все решения</option>
+      <option value="PENDING">Только pending owner review</option>
+      <option value="AUTO">Автоматически решённые</option>
+      <option value="DIM_RECOVERED">Габариты восстановлены</option>
+      <option value="DIM_AMBIG">Неоднозначные габариты</option>
+      <option value="NO_MEDIA">Нет фотографий</option>
+      <option value="MEDIA_MAP">Требуется media mapping</option>
+      <option value="REPAIRS">Repairs approved, not applied</option>
+      <option value="FULL_PLAN">Fully verified repair plan</option>
+      <option value="PARTIAL_PLAN">Partial repair plan</option>
+      <option value="SOURCE_CONFLICT">Source conflict</option>
+      <option value="DONE">Только решённые (ручные)</option>
+    </select>
+    <label class="batch"><input type="checkbox" id="filterOverrides" /> Только индивидуальные настройки</label>
+    <label class="batch"><input type="checkbox" id="selectAllVisible" /> Выбрать видимые</label>
+    <select id="batchDecision"></select>
+    <button type="button" id="btnBatch" class="btn ghost">Применить к выбранным</button>
+  </section>
+
+  <main id="main"></main>
+  <div id="lightbox" class="lightbox hidden" role="dialog" aria-modal="true" aria-label="Просмотр фото">
+    <button type="button" class="lightbox-close" id="lightboxClose">Закрыть</button>
+    <button type="button" class="lightbox-arrow lightbox-prev" id="lightboxPrev" aria-label="Предыдущее фото">‹</button>
+    <div class="lightbox-stage">
+      <img id="lightboxImg" alt="" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" />
+      <span class="lightbox-counter" id="lightboxCounter">1 / 1</span>
+    </div>
+    <button type="button" class="lightbox-arrow lightbox-next" id="lightboxNext" aria-label="Следующее фото">›</button>
+  </div>
+  <script src="/ux-helpers.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>
