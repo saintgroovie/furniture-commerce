@@ -20,7 +20,18 @@ assert.equal(saleLabel("KEEP_DRAFT_UNTIL_REAL_STOCK_SOURCE"), "Не продав
 assert.equal(saleLabel("NON_CART_REQUEST_ONLY"), "Только заявка");
 assert.equal(saleHeadline("MADE_TO_ORDER_WITHOUT_HARD_STOCK"), "Продаётся под заказ");
 assert.equal(saleHeadline("NON_CART_REQUEST_ONLY"), "Только заявка");
-assert.match(saleExplain("MADE_TO_ORDER_WITHOUT_HARD_STOCK"), /не обязан находиться на складе/i);
+assert.match(
+  saleExplain("MADE_TO_ORDER_WITHOUT_HARD_STOCK"),
+  /изготавливается или заказывается после оформления/i
+);
+assert.match(
+  saleExplain("KEEP_DRAFT_UNTIL_REAL_STOCK_SOURCE"),
+  /нельзя заказать/i
+);
+assert.match(
+  saleExplain("NON_CART_REQUEST_ONLY"),
+  /нельзя добавить в корзину/i
+);
 assert.equal(saleSelectOptionLabel("KEEP_DRAFT_UNTIL_REAL_STOCK_SOURCE"), "Не продавать");
 assert.equal(
   saleInheritOptionLabel("MADE_TO_ORDER_WITHOUT_HARD_STOCK"),
