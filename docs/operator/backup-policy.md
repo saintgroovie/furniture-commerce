@@ -61,3 +61,7 @@ Permissions: directories `0700`, files `0600`. Not published via Traefik. Not mo
 - Restore onto live DB/volume  
 - Automatic container restart from backup tooling  
 - Secrets in Git / unit bodies / world-readable args  
+
+## Related
+
+- Backend media promotion / discovery: `docs/operator/backend-media-promotion-gate.md`

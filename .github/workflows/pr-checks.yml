@@ -143,6 +143,8 @@ jobs:
           node scripts/release/validate-report-status.cjs --fixture-dir scripts/release/fixtures/reports
           node scripts/release/check-governance-no-deploy.cjs .github/workflows
           node scripts/release/deployment-owner-label.fidelity.test.cjs
+          bash scripts/ops/test-runtime-discovery-fidelity.sh
+          node scripts/release/backend-media-promotion.fidelity.test.cjs
           node scripts/release/backend-network-alias.fidelity.test.cjs
           # Gates S–AC: cutover lock / CAS / TX / active-after-public / recon / audit / drift / cleanup / DQ
           node scripts/release/check-global-lock-policy.cjs scripts/release

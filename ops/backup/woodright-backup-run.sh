@@ -3,15 +3,17 @@
 set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+OPS_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 # shellcheck source=lib/woodright-backup-root.sh
 source "$SCRIPT_DIR/lib/woodright-backup-root.sh"
+# shellcheck source=../lib/woodright-runtime-discovery.sh
+source "$OPS_ROOT/lib/woodright-runtime-discovery.sh"
 
 BACKUP_ROOT="${WOODRIGHT_BACKUP_ROOT:-/srv/woodright/backups/automated}"
 ACTIVE_OWNER="${WOODRIGHT_ACTIVE_OWNER:-/srv/woodright/runtime-ownership/ACTIVE_OWNER.json}"
 DISK_WARN_PCT="${WOODRIGHT_DISK_WARN_PCT:-75}"
 DISK_CRIT_PCT="${WOODRIGHT_DISK_CRIT_PCT:-85}"
-SF_CONTAINER="${WOODRIGHT_SF_CONTAINER:-woodright-stack-3dsdhd-storefront-1}"
-BE_CONTAINER="${WOODRIGHT_BE_CONTAINER:-woodright-stack-3dsdhd-backend-1}"
+# SF/BE: explicit env override OR discovery (no ephemeral compose default names)
 RUN_RETENTION="${WOODRIGHT_RUN_RETENTION:-1}"
 TS="$(date -u +%Y%m%dT%H%M%SZ)"
 ROOT_READY=0
@@ -75,7 +77,19 @@ if [[ "$USAGE" -ge "$DISK_WARN_PCT" ]]; then
   log "WARN disk usage ${USAGE}% >= warn ${DISK_WARN_PCT}%"
 fi
 
-# Runtime identity (read-only)
+# Runtime identity (read-only) — discover public_demo pair fail-closed
+SF_CONTAINER=""
+BE_CONTAINER=""
+if ! wr_discover_storefront_container >/dev/null; then
+  die "storefront discovery failed: ${WR_DISCOVERY_VERDICT:-unknown}"
+fi
+SF_CONTAINER="$WR_SF_CONTAINER"
+if ! wr_discover_backend_container >/dev/null; then
+  die "backend discovery failed: ${WR_DISCOVERY_VERDICT:-unknown}"
+fi
+BE_CONTAINER="$WR_BE_CONTAINER"
+log "discovered sf=$SF_CONTAINER be=$BE_CONTAINER"
+
 SF_DIGEST=$(docker inspect "$SF_CONTAINER" --format '{{index .Image}}' 2>/dev/null || echo unknown)
 BE_DIGEST=$(docker inspect "$BE_CONTAINER" --format '{{index .Image}}' 2>/dev/null || echo unknown)
 # Prefer RepoDigest when available

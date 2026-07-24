@@ -9,8 +9,15 @@ EXPECTED_RELEASE="${WOODRIGHT_EXPECTED_RELEASE:-/srv/woodright/runtime-ownership
 BACKUP_ROOT="${WOODRIGHT_BACKUP_ROOT:-/srv/woodright/backups/automated}"
 BUYER_HOST="${WOODRIGHT_BUYER_HOST:-https://woodright-demo.ru}"
 API_HOST="${WOODRIGHT_API_HOST:-https://api.woodright-demo.ru}"
-SF_CONTAINER="${WOODRIGHT_SF_CONTAINER:-woodright-stack-3dsdhd-storefront-1}"
-BE_CONTAINER="${WOODRIGHT_BE_CONTAINER:-woodright-stack-3dsdhd-backend-1}"
+# Resolve SF/BE via discovery (explicit WOODRIGHT_*_CONTAINER still honored).
+# Fail-closed: no hardcoded ephemeral compose names; discovery runs after add_check exists.
+OPS_LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib/woodright-runtime-discovery.sh"
+# shellcheck source=../lib/woodright-runtime-discovery.sh
+source "$OPS_LIB"
+SF_CONTAINER=""
+BE_CONTAINER=""
+SF_DISCOVERY_OK=0
+BE_DISCOVERY_OK=0
 PG_CONTAINER="${WOODRIGHT_PG_CONTAINER:-woodright-stack-3dsdhd-postgres-1}"
 REDIS_CONTAINER="${WOODRIGHT_REDIS_CONTAINER:-woodright-stack-3dsdhd-redis-1}"
 DISK_WARN="${WOODRIGHT_DISK_WARN_PCT:-75}"
@@ -66,6 +73,23 @@ curl_hdr() {
   '
 }
 
+# --- DISCOVERY (no command-substitution; preserve WR_DISCOVERY_VERDICT) ---
+# Call functions in-shell; never fall back to unvalidated hardcoded names.
+if wr_discover_storefront_container >/dev/null 2>&1; then
+  SF_CONTAINER="$WR_SF_CONTAINER"
+  SF_DISCOVERY_OK=1
+  add_check "discovery_sf" info pass "verdict=${WR_DISCOVERY_VERDICT:-DISCOVERY_OK} container=$SF_CONTAINER"
+else
+  add_check "discovery_sf" critical fail "verdict=${WR_DISCOVERY_VERDICT:-DISCOVERY_FAIL}"
+fi
+if wr_discover_backend_container >/dev/null 2>&1; then
+  BE_CONTAINER="$WR_BE_CONTAINER"
+  BE_DISCOVERY_OK=1
+  add_check "discovery_be" info pass "verdict=${WR_DISCOVERY_VERDICT:-DISCOVERY_OK} container=$BE_CONTAINER"
+else
+  add_check "discovery_be" critical fail "verdict=${WR_DISCOVERY_VERDICT:-DISCOVERY_FAIL}"
+fi
+
 # --- BUYER ---
 for path in / /catalog /kids/catalog; do
   code=$(curl_code "${BUYER_HOST}${path}")
@@ -115,37 +139,49 @@ else
   add_check "store_regions_denied" warning fail "http=$STORE_REG"
 fi
 
-# Containers (no predictable /tmp files)
-for c in "$SF_CONTAINER" "$BE_CONTAINER" "$PG_CONTAINER" "$REDIS_CONTAINER"; do
+# Containers (only discovered SF/BE + fixed data plane names)
+check_container() {
+  local c="$1" label="$2"
+  [[ -n "$c" ]] || { add_check "container_${label}" critical fail "undiscovered"; return; }
   st=$(docker inspect "$c" --format '{{.State.Health.Status}}{{.State.Status}}' 2>/dev/null || true)
   if [[ -n "$st" ]]; then
     restarts=$(docker inspect "$c" --format '{{.RestartCount}}' 2>/dev/null || echo "?")
     if [[ "$st" == *running* || "$st" == *healthy* ]]; then
-      add_check "container_${c##*-}" info pass "state=$st restarts=$restarts"
+      add_check "container_${label}" info pass "state=$st restarts=$restarts name=$c"
     else
-      add_check "container_${c##*-}" critical fail "state=$st"
+      add_check "container_${label}" critical fail "state=$st name=$c"
     fi
   else
-    add_check "container_${c##*-}" critical fail "missing"
+    add_check "container_${label}" critical fail "missing name=$c"
   fi
-done
+}
+check_container "$SF_CONTAINER" "storefront"
+check_container "$BE_CONTAINER" "backend"
+check_container "$PG_CONTAINER" "postgres"
+check_container "$REDIS_CONTAINER" "redis"
 
-# Media mount
+# Media mount (backend only when discovery succeeded)
 MEDIA_OK=0
-if docker inspect "$BE_CONTAINER" --format '{{range .Mounts}}{{println .Name .Destination}}{{end}}' 2>/dev/null | grep -q 'woodright_staging_media /server/static'; then
-  MEDIA_OK=1
-  add_check "media_mount" info pass "present"
-else
-  if [[ -n "$FIXTURE_MEDIA_PATH" ]]; then
-    add_check "media_mount" critical fail "fixture_missing"
+if [[ "$BE_DISCOVERY_OK" -eq 1 ]]; then
+  if docker inspect "$BE_CONTAINER" --format '{{range .Mounts}}{{println .Name .Destination}}{{end}}' 2>/dev/null | grep -q 'woodright_staging_media /server/static'; then
+    MEDIA_OK=1
+    add_check "media_mount" info pass "present"
   else
-    add_check "media_mount" critical fail "absent"
+    if [[ -n "$FIXTURE_MEDIA_PATH" ]]; then
+      add_check "media_mount" critical fail "fixture_missing"
+    else
+      add_check "media_mount" critical fail "absent"
+    fi
   fi
+else
+  add_check "media_mount" critical fail "skipped_undiscovered_backend"
 fi
 
 # Identity digests
-SF_IMG=$(docker inspect "$SF_CONTAINER" --format '{{.Image}}' 2>/dev/null || echo unknown)
-BE_IMG=$(docker inspect "$BE_CONTAINER" --format '{{.Image}}' 2>/dev/null || echo unknown)
+SF_IMG="unknown"
+BE_IMG="unknown"
+[[ "$SF_DISCOVERY_OK" -eq 1 ]] && SF_IMG=$(docker inspect "$SF_CONTAINER" --format '{{.Image}}' 2>/dev/null || echo unknown)
+[[ "$BE_DISCOVERY_OK" -eq 1 ]] && BE_IMG=$(docker inspect "$BE_CONTAINER" --format '{{.Image}}' 2>/dev/null || echo unknown)
 EXP_SF=""; EXP_BE=""; OWNER="unknown"
 if [[ -f "$EXPECTED_RELEASE" ]]; then
   EXP_SF=$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("storefront_digest") or d.get("sf_digest") or "")' "$EXPECTED_RELEASE" 2>/dev/null || true)
