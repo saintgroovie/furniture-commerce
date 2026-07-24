@@ -195,6 +195,10 @@ function evaluate(doc) {
 
   const running = doc.running || {}
   if (running.backend_digest != null || doc.require_running) {
+    if (doc.require_running) {
+      if (running.backend_running !== true) errors.push("running.backend not running")
+      if (running.storefront_running !== true) errors.push("running.storefront not running")
+    }
     checkDigest("running.backend", running.backend_digest, wantBe)
     checkDigest("running.storefront", running.storefront_digest, wantSf)
     if (running.backend_release_sha && running.backend_release_sha !== wantSha) {
@@ -547,6 +551,8 @@ function liveInventory() {
     storefront_role: labelOrEnv(sf, "com.woodright.runtime-role", "WOODRIGHT_RUNTIME_ROLE"),
     backend_exposure: labelOrEnv(be, "com.woodright.exposure", "WOODRIGHT_EXPOSURE"),
     storefront_exposure: labelOrEnv(sf, "com.woodright.exposure", "WOODRIGHT_EXPOSURE"),
+    backend_running: !!(be.State && be.State.Running === true),
+    storefront_running: !!(sf.State && sf.State.Running === true),
   }
 
   let active_public = null

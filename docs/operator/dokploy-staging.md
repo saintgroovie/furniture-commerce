@@ -28,8 +28,16 @@ EXPECTED_RELEASE_SHA=<40-hex> \
 EXPECTED_BACKEND_DIGEST=sha256:<64-hex> \
 EXPECTED_STOREFRONT_DIGEST=sha256:<64-hex> \
 ./scripts/release/reconcile-public-image-pins.sh
+```
 
-APPLY=1 ./scripts/release/reconcile-public-image-pins.sh
+Apply (same expected pair required):
+
+```bash
+EXPECTED_RELEASE_SHA=<40-hex> \
+EXPECTED_BACKEND_DIGEST=sha256:<64-hex> \
+EXPECTED_STOREFRONT_DIGEST=sha256:<64-hex> \
+APPLY=1 \
+./scripts/release/reconcile-public-image-pins.sh
 ```
 
 Verify:
