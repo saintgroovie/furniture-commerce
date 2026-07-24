@@ -132,5 +132,12 @@ fi
 rm -rf "$TMP2"
 rm -rf "$TMP"
 
+# Runtime discovery + media promotion gate fidelity
+if ! bash "$ROOT/scripts/ops/test-runtime-discovery-fidelity.sh"; then
+  fail "runtime discovery / media gate fidelity"
+else
+  pass "runtime discovery / media gate fidelity"
+fi
+
 [[ $FAIL -eq 0 ]] && { echo "ALL FIDELITY TESTS PASSED"; exit 0; }
 echo "FIDELITY FAILURES=$FAIL"; exit 1

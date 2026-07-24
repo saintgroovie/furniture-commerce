@@ -8,7 +8,7 @@
 4. Manual `workflow_dispatch` **Build staging images** → capture **immutable digests**.
 5. Dokploy + `manual_flock_deploy` cutover only with `image@sha256:…` under global lock + cutover transaction (see `docs/operator/cutover-transactions.md`).
 6. Public hydrated DOM verification + ≥5 race samples.
-7. Update `ACTIVE_OWNER.json` / `ACTIVE-RUNTIME-OWNER.txt` together (ACTIVE_RELEASE only after public gate; reconciliation ≠ deploy).
+7. Update `ACTIVE_OWNER.json` / `ACTIVE-RUNTIME-OWNER.txt` together **only via** `ops/release/reconcile-runtime-manifests.sh` (runs `assert-manifest-update-allowed.sh` / media gate first). ACTIVE_RELEASE only after public gate; reconciliation ≠ deploy. Never hand-edit live manifests to match a broken container.
 
 ## Candidate / canonical / public
 
@@ -34,7 +34,7 @@ Backend and storefront OCI `org.opencontainers.image.revision` must equal the sa
 
 `source → commit → branch → workflow run → digests → containers → public DOM`
 
-Schema: `schemas/woodright-release-manifest.schema.json`  
+Schema: `schemas/woodright-release-manifest.schema.json`
 Validator: `node scripts/release/validate-release-manifest.cjs`
 
 ## Status taxonomy

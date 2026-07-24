@@ -23,8 +23,8 @@
 
 ## Update procedure
 
-1. Owner-approved release / cutover completes  
-2. Human updates `ACTIVE_OWNER.json` or `EXPECTED_RELEASE.json`  
-3. Monitor only compares  
+1. Owner-approved release / cutover completes (backend recreate must pass `ops/release/verify-backend-media-mount.sh`)
+2. Operator runs `ops/release/reconcile-runtime-manifests.sh --apply` with candidate JSON (gate runs first; blocks on `Mounts=[]` / wrong volume / product-static fail)
+3. Monitor only compares; confirm `media_mount=pass`
 
-Never let backup/monitor scripts rewrite these files.
+Never let backup/monitor scripts rewrite these files. Never bypass `reconcile-runtime-manifests.sh` for live owner/expected updates.

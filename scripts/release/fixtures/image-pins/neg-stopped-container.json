@@ -1,0 +1,23 @@
+{
+  "expect": "fail",
+  "fail_reason": "not running",
+  "require_running": true,
+  "expected": {
+    "release_sha": "eb298fd88e8877b3b35dc1e38536acab05bbf81f",
+    "backend_digest": "sha256:347e6fe400b980da61342f77df31609043c1912ebdd5fc22f6adea5bab8220d8",
+    "storefront_digest": "sha256:3826ef261461ec4e0eabeebf8b8207adb80470125ce1e58a4801ebb67c479871"
+  },
+  "running": {
+    "backend_digest": "sha256:347e6fe400b980da61342f77df31609043c1912ebdd5fc22f6adea5bab8220d8",
+    "storefront_digest": "sha256:3826ef261461ec4e0eabeebf8b8207adb80470125ce1e58a4801ebb67c479871",
+    "backend_release_sha": "eb298fd88e8877b3b35dc1e38536acab05bbf81f",
+    "storefront_release_sha": "eb298fd88e8877b3b35dc1e38536acab05bbf81f",
+    "backend_role": "public_demo",
+    "storefront_role": "public_demo",
+    "backend_exposure": "public",
+    "storefront_exposure": "public",
+    "backend_running": false,
+    "storefront_running": true
+  },
+  "alias_ok": true
+}
