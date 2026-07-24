@@ -50,7 +50,7 @@ python3 scripts/local/durable_local_server.py start \
 3. Re-run stability gate before any URL.
 4. `stop` only after identity match (pid + lstart + cmdline + cwd). Stale/recycled PIDs are refused, not killed.
 
-State dir (ops exception, mode `0700`): `~/.woodright/durable-local-servers/<name>/`  
+State dir (ops exception, mode `0700`): `~/.woodright/durable-local-servers/<name>/`
 (same family as `~/.woodright/qa-dev-servers/` used by local-dev entrypoints).
 
 ## Owner-review / V12 apps
