@@ -1,5 +1,48 @@
 # Dokploy staging — Woodright
 
+## Public image pin consistency
+
+Compose interpolates immutable digests from Dokploy `.env`:
+
+```yaml
+image: ${WOODRIGHT_BACKEND_IMAGE:-woodright-backend:local}
+image: ${WOODRIGHT_STOREFRONT_IMAGE:-woodright-storefront:local}
+```
+
+Therefore `.env` pins are an **active** input for any naive `docker compose up`.
+They must match:
+
+- running public containers
+- `docker compose config --images`
+- `/srv/woodright/runtime-identity/ACTIVE_PUBLIC.json`
+- `/srv/woodright/runtime-identity/DOKPLOY_IMAGE_PINS.env`
+
+Drift risk: a successful cutover that recreates containers with CLI image overrides
+can leave root `.env` on older digests. The next compose recreate then rolls public
+runtime backward.
+
+Reconcile (dry-run default):
+
+```bash
+EXPECTED_RELEASE_SHA=<40-hex> \
+EXPECTED_BACKEND_DIGEST=sha256:<64-hex> \
+EXPECTED_STOREFRONT_DIGEST=sha256:<64-hex> \
+./scripts/release/reconcile-public-image-pins.sh
+
+APPLY=1 ./scripts/release/reconcile-public-image-pins.sh
+```
+
+Verify:
+
+```bash
+node scripts/release/verify-public-image-pin-consistency.cjs --live \
+  --expected-release-sha <40-hex> \
+  --expected-backend-digest sha256:<64-hex> \
+  --expected-storefront-digest sha256:<64-hex>
+```
+
+Never run `docker compose up` while this verifier fails.
+
 ## Backend Docker DNS alias (`backend`)
 
 Storefront same-origin media proxy depends on hostname `backend`:
