@@ -192,12 +192,16 @@ function evaluateInventory(doc) {
   if (doc.dns_from_storefront && Object.prototype.hasOwnProperty.call(doc.dns_from_storefront, alias)) {
     const resolved = doc.dns_from_storefront[alias]
     if (!resolved) errors.push(`storefront DNS for '${alias}' empty`)
-    else if (beNet && beNet.ipv4 && resolved !== beNet.ipv4 && !beNet.ipv4.startsWith(resolved)) {
-      // allow exact IP or CIDR prefix match without requiring CIDR equality
-      const beIp = String(beNet.ipv4).split("/")[0]
-      if (resolved !== beIp) {
+    else if (beNet) {
+      // Multi-homed backends may resolve to any attached IP (shared or dokploy).
+      const beIps = new Set()
+      if (beNet.ipv4) beIps.add(String(beNet.ipv4).split("/")[0])
+      for (const n of Object.values(be.networks || {})) {
+        if (n && n.ipv4) beIps.add(String(n.ipv4).split("/")[0])
+      }
+      if (beIps.size > 0 && !beIps.has(resolved)) {
         errors.push(
-          `DNS '${alias}'=${resolved} does not match backend ipv4 ${beIp}`
+          `DNS '${alias}'=${resolved} does not match backend ipv4s [${[...beIps].join(", ")}]`
         )
       }
     }
