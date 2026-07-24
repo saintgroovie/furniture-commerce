@@ -1,0 +1,57 @@
+---
+description: Woodright foreground-only — no background gate; no false done/verified
+alwaysApply: true
+---
+
+# Foreground-only execution
+
+Complements `woodright-core.mdc` (precedence, Codex table, FORMAT summary).
+
+**Completion evidence** = only what finished in the **visible foreground session** of the current answer. Background execution is not proof of completion.
+
+## Contract
+
+- Never wait on Cursor “Run in the background” / “continue in background” / “background task” / “resumed task”.
+- Work in foreground: bounded commands, read-only checks, scoped validation. Persistent servers/watch only on **explicit** user request.
+- Prefer: `yarn build`, `tsc --noEmit`, `yarn test` (no watch), `curl --max-time`, `lsof`. Always set Shell `block_until_ms`.
+- **Do not start:** `yarn/npm/pnpm dev`, `next dev`, `medusa develop`, `* --watch` / `--ui`, interactive prompts (`git rebase -i`, pagers) - unless the operator **explicitly** asked to raise a local preview.
+- When the operator **does** ask to raise/keep a local preview:
+  - `:9000` / `:3002` → `scripts/local-dev/woodright-backend.sh` / `woodright-storefront.sh` (canonical root; `local-dev-single-instance.mdc`)
+  - other ports → alwaysApply `durable-local-review-servers.mdc` (`scripts/local/durable_local_server.py` or Terminal)
+  - **Forbidden:** pinning servers to the Cursor agent shell (`block_until_ms: 0`, bare `nohup &`)
+- Dev server: probe with `curl`/`lsof`; reuse if up; if down and not asked to start → report `server not running` + exact durable start command; **no autostart**.
+- **Review URLs:** before handing any localhost link to the operator, pass alwaysApply `review-server-stability-gate.mdc` (listener + health + exact path + steady sample). “Ready in” / PID in a log is not enough.
+- No `killall node` / `pkill node`; only a specific PID when truly needed and safe.
+- No unbounded `find` on huge trees.
+
+## Background gate → blocked
+
+If a background prompt appears/interrupts:
+
+1. Stop claiming progress (`done` / `verified` / runtime QA / screenshot pass forbidden without new foreground evidence).
+2. Use FORMAT A **blocked** variant (or user-requested schema with same honesty).
+3. **Task status:** `blocked` (not `done` / not success-tone).
+4. Status token: `blocked_by_cursor_background_prompt` when that is the cause.
+
+## Blocked / failed packet (compatible FORMAT A)
+
+Blocked FORMAT A = **one** outer copy block (prefer `~~~~markdown`); all required sections inside it. Do not close the outer fence before Git status / GitHub push / GitHub PR / recovery. Full markdown-integrity contract: `woodright-response-format.mdc` (do not duplicate here).
+
+Order inside one fenced `# Woodright report packet`:
+
+1. `## Human summary` → `### Task status` = `blocked`|`failed`
+2. What was started
+3. Where it stopped
+4. What is confirmed
+5. What is not confirmed
+6. `## Changed files`
+7. `## Validation` / Evidence
+8. `## Codex CLI reviewer` (`Codex reviewer status` + gate if any)
+9. `## Git status`
+10. `### GitHub push` (not under Human summary)
+11. `### GitHub PR` if push happened or review/merge flow required it
+12. Safe recovery / `## Что осталось`
+
+No `done` / `verified` / `safe` claims if required checks did not finish foreground.
+
+Full prose examples: `docs/ai/RESPONSE_FORMAT.md`.
