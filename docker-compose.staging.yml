@@ -160,7 +160,11 @@ services:
 volumes:
   woodright_staging_pg:
   woodright_staging_redis:
+  # External durable media — never create empty replacement volume on compose up.
+  # Full name must match live Docker volume used by public_demo backend.
   woodright_staging_media:
+    external: true
+    name: woodright-stack-3dsdhd_woodright_staging_media
 
 networks:
   woodright_staging:

@@ -17,6 +17,9 @@ TimeoutStopSec=120
 # No Restart= - oneshot must not loop
 Environment=WOODRIGHT_BACKUP_ROOT=/srv/woodright/backups/automated
 Environment=WOODRIGHT_ACTIVE_OWNER=/srv/woodright/runtime-ownership/ACTIVE_OWNER.json
+# Optional: WOODRIGHT_BE_CONTAINER / WOODRIGHT_SF_CONTAINER explicit pins.
+# If unset, ops/lib/woodright-runtime-discovery.sh resolves public_demo fail-closed.
+# Do NOT bake ephemeral compose names (woodright-stack-*-backend-1).
 # Credentials are inside the postgres container; never put DATABASE_URL here.
 ExecStart=/srv/woodright/ops/backup/woodright-backup-run.sh
 # Bounded journal noise

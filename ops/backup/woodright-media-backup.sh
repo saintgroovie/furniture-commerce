@@ -3,13 +3,17 @@
 set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+OPS_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 # shellcheck source=lib/woodright-backup-root.sh
 source "$SCRIPT_DIR/lib/woodright-backup-root.sh"
+# shellcheck source=../lib/woodright-runtime-discovery.sh
+source "$OPS_ROOT/lib/woodright-runtime-discovery.sh"
 
 BACKUP_ROOT="${WOODRIGHT_BACKUP_ROOT:-/srv/woodright/backups/automated}"
 MEDIA_VOLUME="${WOODRIGHT_MEDIA_VOLUME:-woodright-stack-3dsdhd_woodright_staging_media}"
 MEDIA_MOUNT_IN_BE="${WOODRIGHT_MEDIA_MOUNT_IN_BE:-/server/static}"
-BE_CONTAINER="${WOODRIGHT_BE_CONTAINER:-woodright-stack-3dsdhd-backend-1}"
+# No hardcoded Dokploy-compose ephemeral name. Explicit WOODRIGHT_BE_CONTAINER
+# still wins; otherwise discovery (ACTIVE_OWNER → labels+digest+media).
 MIN_FILES="${WOODRIGHT_MEDIA_MIN_FILES:-100}"
 MIN_BYTES="${WOODRIGHT_MEDIA_MIN_BYTES:-1048576}"
 ACTIVE_OWNER="${WOODRIGHT_ACTIVE_OWNER:-/srv/woodright/runtime-ownership/ACTIVE_OWNER.json}"
@@ -39,6 +43,13 @@ wr_under_root "$lock_dir" || die "LOCK_FILE outside BACKUP_ROOT: refused"
 
 exec 9>"$LOCK_FILE"
 flock -n 9 || die "media backup lock held"
+
+BE_CONTAINER=""
+if ! wr_discover_backend_container >/dev/null; then
+  die "backend discovery failed: ${WR_DISCOVERY_VERDICT:-unknown}"
+fi
+BE_CONTAINER="$WR_BE_CONTAINER"
+log "discovered backend container=$BE_CONTAINER verdict=$WR_DISCOVERY_VERDICT"
 
 # Prove mount from backend inspect (JSON - no field ambiguity)
 MOUNT_SRC=$(docker inspect "$BE_CONTAINER" --format '{{json .Mounts}}' \
