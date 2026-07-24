@@ -1,0 +1,26 @@
+{
+  "expect": "pass",
+  "shared_network": "woodright_staging",
+  "containers": [
+    {
+      "name": "woodright-staging-backend",
+      "running": true,
+      "role": "public_demo",
+      "exposure": "public",
+      "networks": {
+        "woodright_staging": { "aliases": ["backend"], "ipv4": "172.19.0.4" },
+        "dokploy-network": { "aliases": [], "ipv4": "10.0.1.90" }
+      }
+    },
+    {
+      "name": "woodright-staging-storefront",
+      "running": true,
+      "role": "public_demo",
+      "exposure": "public",
+      "networks": {
+        "woodright_staging": { "aliases": ["storefront"], "ipv4": "172.19.0.7" }
+      }
+    }
+  ],
+  "dns_from_storefront": { "backend": "10.0.1.90" }
+}
