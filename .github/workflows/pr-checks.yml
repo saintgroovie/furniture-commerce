@@ -146,6 +146,8 @@ jobs:
           bash scripts/ops/test-runtime-discovery-fidelity.sh
           node scripts/release/backend-media-promotion.fidelity.test.cjs
           node scripts/release/backend-network-alias.fidelity.test.cjs
+          node scripts/release/public-image-pin-consistency.fidelity.test.cjs
+          node scripts/release/public-image-pin-lock.fidelity.test.cjs
           # Gates S–AC: cutover lock / CAS / TX / active-after-public / recon / audit / drift / cleanup / DQ
           node scripts/release/check-global-lock-policy.cjs scripts/release
           node scripts/release/check-global-lock-policy.cjs --fixture-dir scripts/release/fixtures/lock

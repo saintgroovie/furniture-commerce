@@ -1,5 +1,94 @@
 # Dokploy staging — Woodright
 
+## Public image pin consistency
+
+Compose interpolates immutable digests from Dokploy `.env`:
+
+```yaml
+image: ${WOODRIGHT_BACKEND_IMAGE:-woodright-backend:local}
+image: ${WOODRIGHT_STOREFRONT_IMAGE:-woodright-storefront:local}
+```
+
+Therefore `.env` pins are an **active** input for any naive `docker compose up`.
+They must match:
+
+- running public containers
+- `docker compose config --images`
+- `/srv/woodright/runtime-identity/ACTIVE_PUBLIC.json`
+- `/srv/woodright/runtime-identity/DOKPLOY_IMAGE_PINS.env`
+- `/srv/woodright/runtime-identity/public-demo.json` (when present)
+- `/srv/woodright/runtime-ownership/ACTIVE_RELEASE.json` (when reconcile updates it)
+
+Drift risk: a successful cutover that recreates containers with CLI image overrides
+can leave root `.env` on older digests. The next compose recreate then rolls public
+runtime backward.
+
+### Canonical lock
+
+Public pin mutation is serialized by the same exclusive cutover lock as other
+live public mutations:
+
+`/srv/woodright/locks/live-cutover.lock`
+
+`reconcile-public-image-pins.sh` acquires this flock itself for the whole
+authoritative transaction:
+
+lock → live revalidation → backup → multi-file writes → compose/verify →
+rollback on failure → release (FD close; lock file is never deleted)
+
+Do **not** run a parallel Dokploy redeploy / cutover / second reconcile while
+the updater holds the lock. Lock contention is fail-closed (exit `3`) with the
+lock path in diagnostics - not a silent partial write.
+
+Never edit image pins in separate ad-hoc commands across `.env`,
+`DOKPLOY_IMAGE_PINS.env`, and identity JSON files. Use the updater so the pair
+stays atomic.
+
+### Dry-run vs apply
+
+Authoritative dry-run (default) also takes the exclusive lock and builds a
+preview from the post-lock snapshot. It does not write targets.
+
+```bash
+EXPECTED_RELEASE_SHA=<40-hex> \
+EXPECTED_BACKEND_DIGEST=sha256:<64-hex> \
+EXPECTED_STOREFRONT_DIGEST=sha256:<64-hex> \
+./scripts/release/reconcile-public-image-pins.sh
+```
+
+Apply (same expected pair required; live containers must already match):
+
+```bash
+EXPECTED_RELEASE_SHA=<40-hex> \
+EXPECTED_BACKEND_DIGEST=sha256:<64-hex> \
+EXPECTED_STOREFRONT_DIGEST=sha256:<64-hex> \
+APPLY=1 \
+./scripts/release/reconcile-public-image-pins.sh
+```
+
+Non-authoritative diagnostics only (no lock; may race; never for apply):
+
+```bash
+READ_ONLY_NO_LOCK=1 \
+EXPECTED_RELEASE_SHA=<40-hex> \
+EXPECTED_BACKEND_DIGEST=sha256:<64-hex> \
+EXPECTED_STOREFRONT_DIGEST=sha256:<64-hex> \
+./scripts/release/reconcile-public-image-pins.sh
+```
+
+Verify (read-only; run before any UI redeploy):
+
+```bash
+node scripts/release/verify-public-image-pin-consistency.cjs --live \
+  --expected-release-sha <40-hex> \
+  --expected-backend-digest sha256:<64-hex> \
+  --expected-storefront-digest sha256:<64-hex>
+```
+
+Never run `docker compose up` while this verifier fails.
+Never override `WOODRIGHT_CUTOVER_LOCK_PATH` in production without the
+repository test guard (`WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK=1` is CI/fixture only).
+
 ## Backend Docker DNS alias (`backend`)
 
 Storefront same-origin media proxy depends on hostname `backend`:
