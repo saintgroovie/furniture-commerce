@@ -14,18 +14,33 @@ assert.match(src, /STOREFRONT_VIEW\s*=\s*"storefront"/)
 assert.match(src, /view === STOREFRONT_VIEW/)
 assert.match(
   src,
-  /product\.variants\.id/,
-  "storefront view must request variant ids for CTA"
+  /exactlyOneProduct/,
+  "must fail-closed normalize products[] → singular product"
 )
 assert.match(
   src,
-  /product\.title/,
+  /missing product link/,
+  "zero product links must fail closed"
+)
+assert.match(
+  src,
+  /products\.variants\.id/,
+  "storefront view must request variant ids via products[] graph link"
+)
+assert.match(
+  src,
+  /products\.title/,
   "storefront view must keep titles for composition list"
 )
 assert.match(
   src,
-  /product\.\*|product\.variants\.\*/,
-  "default detail must keep full product/variants projection"
+  /products\.\*|products\.variants\.\*/,
+  "default detail must keep full products/variants projection"
+)
+assert.doesNotMatch(
+  src,
+  /fields:\s*\[[^\]]*"[*]".*"product\.\*"/s,
+  "must not query singular product.* on room_set_item (empty under current link)"
 )
 
 console.log("room-set-slug-views.fidelity.test.ts: ok")
