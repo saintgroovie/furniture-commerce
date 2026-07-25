@@ -776,17 +776,43 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 }
 
 .contacts-nav-dropdown {
-  /* Keep the open panel inside the header right cluster on narrow desktops. */
   position: relative;
 }
 
 .contacts-nav-dropdown-menu {
   left: auto;
   right: 0;
-  min-width: 280px;
-  max-width: min(320px, calc(100vw - 2rem));
+  width: 400px;
+  min-width: 0;
+  max-width: min(400px, calc(100vw - 1.5rem));
   padding: 0;
   overflow: visible;
+  box-shadow: 0 8px 28px rgba(44, 36, 32, 0.1);
+}
+
+/* Neutralize generic `.nav-dropdown-menu a` chrome (padding / hover fill)
+   so phones and messengers stay compact text links, not menu rows. */
+.contacts-nav-dropdown-menu a.showroom-contacts-phone,
+.contacts-nav-dropdown-menu a.showroom-contacts-messenger-link {
+  display: inline-flex;
+  padding: 0.15rem 0;
+  background: transparent;
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+}
+
+.contacts-nav-dropdown-menu a.showroom-contacts-phone {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 0;
+}
+
+.contacts-nav-dropdown-menu a.showroom-contacts-phone:hover,
+.contacts-nav-dropdown-menu a.showroom-contacts-messenger-link:hover {
+  background: transparent;
+  text-decoration: none;
 }
 
 .contacts-nav-dropdown-bridge {
@@ -800,18 +826,41 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 .showroom-contacts {
   display: flex;
   flex-direction: column;
-  gap: 0.875rem;
-  padding: 1rem 1.125rem 1.05rem;
   text-align: left;
   color: var(--color-fg);
 }
 
+.showroom-contacts--dropdown {
+  gap: 0.875rem;
+  padding: 1.5rem 1.625rem 1.375rem;
+}
+
+.showroom-contacts--page {
+  gap: 1.125rem;
+  padding: 1.75rem 1.75rem 1.5rem;
+}
+
+.showroom-contacts--mobile {
+  gap: 0.75rem;
+  padding: 0.5rem 0 0.25rem;
+}
+
 .showroom-contacts-title {
   margin: 0;
-  font-size: 0.8125rem;
   font-weight: 600;
-  letter-spacing: 0.01em;
   color: var(--color-brand);
+  letter-spacing: 0.005em;
+}
+
+.showroom-contacts--dropdown .showroom-contacts-title,
+.showroom-contacts--mobile .showroom-contacts-title {
+  font-size: 1.25rem; /* 20px */
+  line-height: 1.3;
+}
+
+.showroom-contacts--page .showroom-contacts-title {
+  font-size: 1.375rem;
+  line-height: 1.3;
 }
 
 .showroom-contacts-address {
@@ -820,69 +869,107 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   gap: 0.2rem;
   margin: 0;
   font-style: normal;
-  font-size: 0.8125rem;
-  line-height: 1.45;
   color: var(--color-fg-secondary);
+}
+
+.showroom-contacts--dropdown .showroom-contacts-address,
+.showroom-contacts--mobile .showroom-contacts-address {
+  font-size: 0.9375rem; /* 15px */
+  line-height: 1.5;
+}
+
+.showroom-contacts--page .showroom-contacts-address {
+  font-size: 1rem;
+  line-height: 1.55;
+  gap: 0.25rem;
 }
 
 .showroom-contacts-address-line {
   display: block;
 }
 
+.showroom-contacts-divider {
+  height: 1px;
+  margin: 0.125rem 0 0;
+  background: var(--color-border);
+  border: 0;
+}
+
 .showroom-contacts-actions {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.875rem;
 }
 
 .showroom-contacts-phone {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
-  padding: 0.55rem 0.65rem;
-  min-height: 44px;
-  justify-content: center;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-bg);
+  align-items: flex-start;
+  gap: 0.3rem;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: none;
   text-decoration: none;
   color: inherit;
-  transition: background 0.12s ease, border-color 0.12s ease;
+  border-radius: var(--radius-sm);
 }
 
 .showroom-contacts-phone:hover {
-  background: var(--color-surface);
-  border-color: color-mix(in srgb, var(--color-accent) 35%, var(--color-border));
   text-decoration: none;
+}
+
+.showroom-contacts-phone:hover .showroom-contacts-phone-number {
+  color: var(--color-brand);
 }
 
 .showroom-contacts-phone:focus-visible {
   outline: 2px solid var(--color-action);
-  outline-offset: 2px;
+  outline-offset: 3px;
 }
 
 .showroom-contacts-phone-label {
-  font-size: 0.6875rem;
+  display: block;
+  font-size: 0.8125rem; /* 13px */
   font-weight: 500;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
+  line-height: 1.3;
   color: var(--color-fg-muted);
 }
 
 .showroom-contacts-phone-number {
-  font-size: 0.9375rem;
+  display: block;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
   color: var(--color-fg);
+  transition: color 0.12s ease;
+}
+
+.showroom-contacts--dropdown .showroom-contacts-phone-number,
+.showroom-contacts--mobile .showroom-contacts-phone-number {
+  font-size: 1.125rem; /* 18px */
+  line-height: 1.25;
+}
+
+.showroom-contacts--page .showroom-contacts-phone-number {
+  font-size: 1.25rem;
+  line-height: 1.25;
+}
+
+.showroom-contacts--mobile .showroom-contacts-phone {
+  min-height: 44px;
+  justify-content: center;
+  padding: 0.35rem 0;
 }
 
 .showroom-contacts-messengers {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 0.35rem 0.15rem;
+  justify-content: flex-start;
+  gap: 0.25rem 1.25rem;
   margin: 0;
-  padding: 0.15rem 0 0;
+  padding: 0.35rem 0 0;
   list-style: none;
   border-top: 1px solid var(--color-border);
 }
@@ -890,13 +977,7 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 .showroom-contacts-messenger-item {
   display: inline-flex;
   align-items: center;
-}
-
-.showroom-contacts-messenger-item:not(:last-child)::after {
-  content: "·";
-  margin: 0 0.4rem;
-  color: var(--color-fg-muted);
-  pointer-events: none;
+  flex: 0 0 auto;
 }
 
 .showroom-contacts-messenger-link,
@@ -904,11 +985,15 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  padding: 0.25rem 0.15rem;
-  font-size: 0.8125rem;
+  padding: 0.15rem 0;
+  font-size: 0.875rem; /* 14px */
   font-weight: 500;
+  line-height: 1.3;
   color: var(--color-fg-secondary);
   text-decoration: none;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm);
 }
 
 .showroom-contacts-messenger-link:hover {
@@ -919,7 +1004,6 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 .showroom-contacts-messenger-link:focus-visible {
   outline: 2px solid var(--color-action);
   outline-offset: 2px;
-  border-radius: var(--radius-sm);
 }
 
 .showroom-contacts-messenger-text {
@@ -928,16 +1012,23 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 }
 
 .contacts-page-panel {
-  max-width: 360px;
-  margin: 0.25rem 0 0.5rem;
+  max-width: 28rem;
+  margin: 0.5rem 0 0.75rem;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   box-shadow: 0 4px 16px rgba(44, 36, 32, 0.06);
 }
 
-.contacts-page-panel .showroom-contacts {
-  padding: 1.15rem 1.25rem 1.2rem;
+@media (max-width: 440px) {
+  .contacts-nav-dropdown-menu {
+    width: min(400px, calc(100vw - 1.25rem));
+  }
+
+  .showroom-contacts-messengers {
+    flex-wrap: wrap;
+    gap: 0.15rem 1rem;
+  }
 }
 
 /* -- Mobile nav -- */
@@ -1167,30 +1258,55 @@ html.mobile-nav-open {
   }
 
   .mobile-nav-contacts-panel {
-    padding: 0.35rem 0 0.85rem;
+    padding: 0.25rem 0 0.65rem;
     max-width: 100%;
     overflow-x: hidden;
   }
 
-  .mobile-nav-contacts-panel .showroom-contacts {
-    padding: 0.65rem 0 0.25rem;
-    gap: 0.75rem;
+  .mobile-nav-contacts-panel .showroom-contacts--mobile {
+    max-width: 100%;
   }
 
-  .mobile-nav-contacts-panel .showroom-contacts-title {
+  /* Neutralize `.mobile-nav a` (display:block + border-bottom + nav padding)
+     so contact phones/messengers stay compact text, not menu rows. */
+  .mobile-nav-contacts-panel a.showroom-contacts-phone,
+  .mobile-nav-contacts-panel a.showroom-contacts-messenger-link {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
+    width: auto;
+    min-height: 44px;
+    padding: 0.35rem 0;
+    border-bottom: 0;
+    font-size: inherit;
+    font-weight: inherit;
+    color: inherit;
+    background: transparent;
+  }
+
+  .mobile-nav-contacts-panel a.showroom-contacts-messenger-link {
+    flex-direction: row;
+    align-items: center;
+    gap: 0;
+    padding: 0.15rem 0;
     font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-fg-secondary);
   }
 
-  .mobile-nav-contacts-panel .showroom-contacts-address {
-    font-size: 0.875rem;
+  .mobile-nav-contacts-panel a.showroom-contacts-phone:hover,
+  .mobile-nav-contacts-panel a.showroom-contacts-messenger-link:hover {
+    color: inherit;
+    background: transparent;
   }
 
-  .mobile-nav-contacts-panel .showroom-contacts-phone {
-    min-height: 48px;
+  .mobile-nav-contacts-panel a.showroom-contacts-phone:hover .showroom-contacts-phone-number {
+    color: var(--color-brand);
   }
 
-  .mobile-nav-contacts-panel .showroom-contacts-messengers {
-    gap: 0.25rem 0.1rem;
+  .mobile-nav-contacts-panel a.showroom-contacts-messenger-link:hover {
+    color: var(--color-fg);
   }
 }
 

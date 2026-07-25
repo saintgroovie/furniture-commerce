@@ -28,6 +28,16 @@ export const showroomContacts = {
     "МТК «Гранд-2», вход 3",
     "4 этаж, подиум Woodright",
   ] as const,
+  /**
+   * Compact address for dropdown / mobile chrome only.
+   * Same facts as `addressLines` - presentation fold, not a second SoT.
+   */
+  addressLinesCompact: [
+    "Московская область, г. Химки",
+    "ул. Бутаково, д. 4",
+    "МТК «Гранд-2» · вход 3 · 4 этаж",
+    "подиум Woodright",
+  ] as const,
   /** Schema.org PostalAddress fields derived from addressLines (no invented geo). */
   postalAddress: {
     addressCountry: "RU",
@@ -36,7 +46,7 @@ export const showroomContacts = {
     streetAddress: "ул. Бутаково, д. 4, МТК «Гранд-2», вход 3, 4 этаж, подиум Woodright",
   },
   freeCall: {
-    label: "Позвонить бесплатно",
+    label: "Бесплатный звонок",
     display: "+7 (800) 555-17-36",
     tel: "+78005551736",
   } satisfies ShowroomPhone,

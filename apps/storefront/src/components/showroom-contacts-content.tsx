@@ -1,24 +1,29 @@
 import { showroomContacts } from "@/lib/showroom-contacts"
 import { formatRuInline } from "@/lib/format-ru-copy"
 
+export type ShowroomContactsVariant = "dropdown" | "page" | "mobile"
+
 type Props = {
-  /** Visual density for desktop panel vs mobile accordion body. */
-  variant: "desktop" | "mobile"
+  variant: ShowroomContactsVariant
   /** Optional id prefix so desktop/mobile aria ids stay unique if both mount. */
   idPrefix?: string
 }
 
 /**
- * Shared showroom contact body for header dropdown and mobile accordion.
- * Data comes only from `showroomContacts`.
+ * Shared showroom contact body. Data only from `showroomContacts`.
+ * Layout density differs by variant - do not force one huge chrome everywhere.
  */
-export function ShowroomContactsContent({ variant, idPrefix = "showroom" }: Props) {
+export function ShowroomContactsContent({
+  variant,
+  idPrefix = "showroom",
+}: Props) {
   const titleId = `${idPrefix}-title`
   const addressId = `${idPrefix}-address`
-  const isMobile = variant === "mobile"
-  const rootClass = isMobile
-    ? "showroom-contacts showroom-contacts--mobile"
-    : "showroom-contacts showroom-contacts--desktop"
+  const addressLines =
+    variant === "page"
+      ? showroomContacts.addressLines
+      : showroomContacts.addressLinesCompact
+  const rootClass = `showroom-contacts showroom-contacts--${variant}`
 
   return (
     <div className={rootClass} role="group" aria-labelledby={titleId}>
@@ -27,12 +32,14 @@ export function ShowroomContactsContent({ variant, idPrefix = "showroom" }: Prop
       </p>
 
       <address id={addressId} className="showroom-contacts-address">
-        {showroomContacts.addressLines.map((line) => (
+        {addressLines.map((line) => (
           <span className="showroom-contacts-address-line" key={line}>
             {formatRuInline(line)}
           </span>
         ))}
       </address>
+
+      <div className="showroom-contacts-divider" aria-hidden="true" />
 
       <div className="showroom-contacts-actions">
         <a

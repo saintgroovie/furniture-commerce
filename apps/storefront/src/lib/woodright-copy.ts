@@ -21,7 +21,7 @@
  */
 
 export const nav = {
-  showroom: "Шоурум: Химки",
+  showroom: "Шоурум в Химках",
   designers: "Дизайнерам",
   contacts: "Контакты",
   catalog: "Каталог",

@@ -125,7 +125,7 @@ export function ContactsNavDropdown({ label, className }: Props) {
         >
           {/* Invisible bridge removes any hover flicker between trigger and panel. */}
           <span className="contacts-nav-dropdown-bridge" aria-hidden="true" />
-          <ShowroomContactsContent variant="desktop" idPrefix={menuId} />
+          <ShowroomContactsContent variant="dropdown" idPrefix={menuId} />
         </div>
       ) : null}
     </div>

@@ -19,7 +19,7 @@ export default function ContactsPage() {
       <h1>{contactsCopy.h1}</h1>
       <CopyLines className="info-text" lines={contactsCopy.lead} />
       <div className="contacts-page-panel">
-        <ShowroomContactsContent variant="desktop" idPrefix="contacts-page" />
+        <ShowroomContactsContent variant="page" idPrefix="contacts-page" />
       </div>
       <CopyLines className="info-text" lines={contactsCopy.formHelper} />
       <div className="nav-links">
