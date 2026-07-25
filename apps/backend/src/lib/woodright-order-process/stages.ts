@@ -112,8 +112,9 @@ export function listAllowedTransitions(
   ctx: TransitionContext = {}
 ): OrderProcessStage[] {
   if (from === "canceled") return []
+  // Narrowing: after the canceled early-return, `from` excludes "canceled".
   if (ctx.medusa_order_canceled) {
-    return from === "canceled" ? [] : ["canceled"]
+    return ["canceled"]
   }
   if (from === "on_hold") {
     const resume = ctx.previous_stage
@@ -122,11 +123,7 @@ export function listAllowedTransitions(
     }
     return WORKING.filter((s) => s !== "new")
   }
-  const next = [...NORMAL_TRANSITIONS[from]]
-  if (ctx.medusa_order_canceled && !next.includes("canceled")) {
-    next.push("canceled")
-  }
-  return next
+  return [...NORMAL_TRANSITIONS[from]]
 }
 
 export function assertStageTransition(

@@ -1,9 +1,9 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { Modules } from "@medusajs/framework/utils"
 import { createHash } from "node:crypto"
-import { ORDER_PROCESS_MODULE } from "../../../../../modules/order-process"
-import type { OrderProcessServiceLike } from "../../../../../lib/woodright-order-process/ensure-process"
-import { mintOrderAccessToken } from "../../../../../lib/woodright-order-process/guest-access-token"
+import { ORDER_PROCESS_MODULE } from "../../../../../../modules/order-process"
+import type { OrderProcessServiceLike } from "../../../../../../lib/woodright-order-process/ensure-process"
+import { mintOrderAccessToken } from "../../../../../../lib/woodright-order-process/guest-access-token"
 
 function hashCartId(cartId: string): string {
   return createHash("sha256").update(cartId, "utf8").digest("hex")
@@ -37,10 +37,10 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     return
   }
 
-  const orderModule = req.scope.resolve(Modules.ORDER) as {
+  const orderModule = req.scope.resolve(Modules.ORDER) as unknown as {
     retrieveOrder: (id: string) => Promise<Record<string, unknown>>
   }
-  const cartModule = req.scope.resolve(Modules.CART) as {
+  const cartModule = req.scope.resolve(Modules.CART) as unknown as {
     retrieveCart: (id: string) => Promise<Record<string, unknown>>
   }
 

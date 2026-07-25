@@ -61,7 +61,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
   let medusaCanceled = false
   try {
-    const orderModule = req.scope.resolve(Modules.ORDER) as {
+    const orderModule = req.scope.resolve(Modules.ORDER) as unknown as {
       retrieveOrder: (id: string) => Promise<Record<string, unknown>>
     }
     const order = await orderModule.retrieveOrder(orderId)

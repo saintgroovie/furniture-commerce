@@ -57,7 +57,10 @@ async function ensureNotBespokeForCart(
       metadata?: Record<string, unknown> | null
     }
     try {
-      variant = await productModule.retrieveProductVariant(variantId)
+      variant = (await productModule.retrieveProductVariant(variantId)) as {
+        product_id?: string
+        metadata?: Record<string, unknown> | null
+      }
     } catch {
       res.status(500).json({
         message: "Unable to validate product type for cart operation.",
@@ -165,25 +168,39 @@ async function ensureNotBespokeForCart(
   }
 
   // Attach per-variant snapshots only (no cross-item overwrite).
-  if (body.variant_id && snapshotsByVariant.has(body.variant_id)) {
-    body.metadata = {
-      ...stripClientSalesSnapshot(body.metadata),
-      woodright_sales_snapshot: snapshotsByVariant.get(body.variant_id),
+  // Medusa may expose a validatedBody clone; mutate both so the line-items
+  // override (which prefers validatedBody) keeps the server snapshot.
+  const attachSnapshot = (target: {
+    variant_id?: string
+    metadata?: Record<string, unknown>
+    items?: Array<{ variant_id?: string; metadata?: Record<string, unknown> }>
+  }) => {
+    if (target.variant_id && snapshotsByVariant.has(target.variant_id)) {
+      target.metadata = {
+        ...stripClientSalesSnapshot(target.metadata),
+        woodright_sales_snapshot: snapshotsByVariant.get(target.variant_id),
+      }
+    }
+    if (Array.isArray(target.items)) {
+      target.items = target.items.map((item) => {
+        const vid = item.variant_id
+        const snap = vid ? snapshotsByVariant.get(vid) : undefined
+        if (!snap) return item
+        return {
+          ...item,
+          metadata: {
+            ...stripClientSalesSnapshot(item.metadata),
+            woodright_sales_snapshot: snap,
+          },
+        }
+      })
     }
   }
-  if (Array.isArray(body.items)) {
-    body.items = body.items.map((item) => {
-      const vid = item.variant_id
-      const snap = vid ? snapshotsByVariant.get(vid) : undefined
-      if (!snap) return item
-      return {
-        ...item,
-        metadata: {
-          ...stripClientSalesSnapshot(item.metadata),
-          woodright_sales_snapshot: snap,
-        },
-      }
-    })
+
+  attachSnapshot(body)
+  const validated = (req as { validatedBody?: typeof body }).validatedBody
+  if (validated && validated !== body) {
+    attachSnapshot(validated)
   }
 
   next()

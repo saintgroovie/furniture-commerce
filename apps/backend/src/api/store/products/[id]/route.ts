@@ -1,6 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { projectDefaultBuyerConfigurationOntoProduct } from "../../../../lib/default-buyer-configuration"
-import { attachBuyerPurchaseContract } from "./attach-buyer-purchase"
+import { attachBuyerPurchaseContract } from "../attach-buyer-purchase"
 
 /**
  * Product detail by id. Variants must include flattened `prices` so PDP

@@ -1,18 +1,18 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { Modules } from "@medusajs/framework/utils"
-import { ORDER_PROCESS_MODULE } from "../../../../../modules/order-process"
-import { PAYMENT_LINK_MODULE } from "../../../../../modules/payment-link"
+import { ORDER_PROCESS_MODULE } from "../../../../../../modules/order-process"
+import { PAYMENT_LINK_MODULE } from "../../../../../../modules/payment-link"
 import {
   asProcessRecord,
   ensureOrderProcess,
   type OrderProcessServiceLike,
-} from "../../../../../lib/woodright-order-process/ensure-process"
-import { buildBuyerProcessDto } from "../../../../../lib/woodright-order-process/buyer-process-dto"
+} from "../../../../../../lib/woodright-order-process/ensure-process"
+import { buildBuyerProcessDto } from "../../../../../../lib/woodright-order-process/buyer-process-dto"
 import {
   isAccessExpired,
   tokensMatch,
-} from "../../../../../lib/woodright-order-process/guest-access-token"
-import type { ProcessEventRecord } from "../../../../../lib/woodright-order-process/transition"
+} from "../../../../../../lib/woodright-order-process/guest-access-token"
+import type { ProcessEventRecord } from "../../../../../../lib/woodright-order-process/transition"
 
 function extractToken(req: MedusaRequest): string | null {
   const q = req.query.token
@@ -109,7 +109,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   let fulfillmentStatus: string | null = null
   let canceled = false
   try {
-    const orderModule = req.scope.resolve(Modules.ORDER) as {
+    const orderModule = req.scope.resolve(Modules.ORDER) as unknown as {
       retrieveOrder: (
         id: string,
         config?: Record<string, unknown>

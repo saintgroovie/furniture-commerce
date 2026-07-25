@@ -35,7 +35,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   let medusaOrder: Record<string, unknown> | null = null
   let canceled = false
   try {
-    const orderModule = req.scope.resolve(Modules.ORDER) as {
+    const orderModule = req.scope.resolve(Modules.ORDER) as unknown as {
       retrieveOrder: (
         id: string,
         config?: Record<string, unknown>
