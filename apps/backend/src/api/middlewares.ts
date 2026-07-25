@@ -13,6 +13,7 @@ import {
   type WoodrightSalesSnapshotV1,
 } from "../lib/woodright-sales/sales-snapshot"
 import type { SalesMode, SalesModifier } from "../lib/woodright-sales/sales-modes"
+import { resolveFurnitureDimensions } from "../lib/woodright-dimensions"
 import { attachRuntimeIdentityHeaders } from "./runtime-identity-headers"
 
 /**
@@ -51,7 +52,10 @@ async function ensureNotBespokeForCart(
   const snapshotsByVariant = new Map<string, WoodrightSalesSnapshotV1>()
 
   for (const variantId of variantIds) {
-    let variant
+    let variant: {
+      product_id?: string
+      metadata?: Record<string, unknown> | null
+    }
     try {
       variant = await productModule.retrieveProductVariant(variantId)
     } catch {
@@ -77,6 +81,7 @@ async function ensureNotBespokeForCart(
         entity: "product",
         fields: [
           "id",
+          "metadata",
           "product_classification.product_type",
           "product_sales_policy.*",
         ],
@@ -93,6 +98,7 @@ async function ensureNotBespokeForCart(
 
     const product = products?.[0] as
       | {
+          metadata?: Record<string, unknown> | null
           product_classification?: { product_type?: string }
           product_sales_policy?:
             | {
@@ -145,7 +151,17 @@ async function ensureNotBespokeForCart(
       modifiers: (policy?.modifiers as SalesModifier[] | undefined) ?? undefined,
       classification: classification as "STANDARD" | "CONFIGURABLE" | "BESPOKE",
     })
-    snapshotsByVariant.set(variantId, buildSalesSnapshot({ contract }))
+    const dims = resolveFurnitureDimensions({
+      product: { metadata: product?.metadata ?? null },
+      variant: { metadata: variant?.metadata ?? null },
+    })
+    snapshotsByVariant.set(
+      variantId,
+      buildSalesSnapshot({
+        contract,
+        dimensions: dims.mm,
+      })
+    )
   }
 
   // Attach per-variant snapshots only (no cross-item overwrite).

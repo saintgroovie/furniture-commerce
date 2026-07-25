@@ -173,6 +173,28 @@ import { validateSalesPolicy } from "./validate-sales-policy"
   assert.equal(snap.configuration_summary, "oak / oil")
   assert.equal(snap.customer_visible_promise, "Срок около 6 недель")
   assert.equal(snap.captured_at, "2026-07-25T10:00:00.000Z")
+  assert.equal(snap.dimensions, null)
+}
+
+{
+  const contract = buildBuyerPurchaseContract({ sales_mode: "made_to_order" })
+  const snap = buildSalesSnapshot({
+    contract,
+    dimensions: {
+      height_mm: 900,
+      width_mm: 0 as unknown as number,
+      depth_mm: 450,
+    },
+  })
+  assert.deepEqual(snap.dimensions, {
+    unit: "mm",
+    height_mm: 900,
+    depth_mm: 450,
+  })
+  assert.equal(
+    snap.dimensions && "width_mm" in snap.dimensions,
+    false
+  )
 }
 
 {

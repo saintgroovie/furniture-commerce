@@ -1,10 +1,11 @@
 /**
- *   ../backend/node_modules/.bin/tsx src/lib/dimensions-presentation.fidelity.test.ts
+ *   yarn dlx tsx src/lib/dimensions-presentation.fidelity.test.ts
  */
 import assert from "node:assert/strict"
 import {
   formatDimensionsCompact,
   formatDimensionsCompactLabeled,
+  getDimensions,
   orderedBuyerFacingDimensions,
 } from "./product-metadata"
 import { formatBuyerFacingMeasureText } from "./buyer-measure-text"
@@ -37,6 +38,40 @@ import { formatBuyerFacingMeasureText } from "./buyer-measure-text"
     depth_mm: undefined as number | undefined,
   }
   assert.equal(formatDimensionsCompact(dim), "")
+}
+
+// Variant-first + per-axis product fallback (selected variant, not first).
+{
+  const product = {
+    metadata: {
+      dimensions: { height_mm: 800, width_mm: 1000, depth_mm: 400 },
+    },
+    variants: [
+      {
+        id: "var_a",
+        metadata: {
+          dimensions: { height_mm: 900, width_mm: 1200, depth_mm: 450 },
+        },
+      },
+      {
+        id: "var_b",
+        metadata: {
+          dimensions: { height_mm: 950, width_mm: 1400 },
+        },
+      },
+    ],
+  }
+  const a = getDimensions(product, product.variants[0])
+  const b = getDimensions(product, product.variants[1])
+  assert.deepEqual(a, { height_mm: 900, width_mm: 1200, depth_mm: 450 })
+  // depth falls back to product for variant B
+  assert.deepEqual(b, { height_mm: 950, width_mm: 1400, depth_mm: 400 })
+  // zeros on variant → product fallback
+  const zeroVar = getDimensions(product, {
+    id: "var_z",
+    metadata: { dimensions: { height_mm: 0, width_mm: 0, depth_mm: 0 } },
+  })
+  assert.deepEqual(zeroVar, { height_mm: 800, width_mm: 1000, depth_mm: 400 })
 }
 
 {

@@ -225,13 +225,87 @@ export function getArticle(product: ProductLike): string | null {
   return typeof sku === "string" && sku ? sku : null
 }
 
-export function getDimensions(product: ProductLike): Dimensions | null {
-  const m = meta(product)
-  const dim = (m.dimensions ?? m.dimensions_normalized) as
-    | Dimensions
+function normalizeAxisMm(raw: unknown): number | undefined {
+  if (typeof raw === "number" && Number.isFinite(raw) && raw > 0) return raw
+  if (typeof raw === "string") {
+    const t = raw.trim()
+    if (!/^-?\d+(\.\d+)?$/.test(t)) return undefined
+    const n = Number(t)
+    if (Number.isFinite(n) && n > 0) return n
+  }
+  return undefined
+}
+
+function readEntityDimensions(
+  entity: ProductLike | null | undefined
+): Dimensions | null {
+  if (!entity) return null
+  const m = (entity.metadata as Record<string, unknown> | undefined) ?? {}
+  const raw = (m.dimensions ?? m.dimensions_normalized) as
+    | Record<string, unknown>
     | undefined
-  if (!dim || (!dim.width_mm && !dim.depth_mm && !dim.height_mm)) return null
+  if (!raw || typeof raw !== "object") return null
+  const dim: Dimensions = {}
+  const h = normalizeAxisMm(raw.height_mm)
+  const w = normalizeAxisMm(raw.width_mm)
+  const d = normalizeAxisMm(raw.depth_mm)
+  if (h != null) dim.height_mm = h
+  if (w != null) dim.width_mm = w
+  if (d != null) dim.depth_mm = d
+  if (dim.height_mm == null && dim.width_mm == null && dim.depth_mm == null) {
+    return null
+  }
   return dim
+}
+
+/**
+ * Variant-first furniture dimensions (height → width → depth).
+ * Product-level axes fill only missing variant axes.
+ * Zeros / invalid values are unknown - never shown.
+ *
+ * Does not read Medusa variant.height/width/length (not furniture SoT).
+ */
+export function getDimensions(
+  product: ProductLike,
+  selectedVariant?: ProductLike | null
+): Dimensions | null {
+  const variant =
+    selectedVariant ??
+    (() => {
+      // Prefer explicitly selected variant; do not invent from “first” when
+      // caller passes null. When omitted, product-only (catalog cards).
+      return null
+    })()
+
+  const fromVariant = readEntityDimensions(variant)
+  const fromProduct = readEntityDimensions(product)
+  if (!fromVariant && !fromProduct) return null
+
+  const out: Dimensions = {}
+  for (const key of ["height_mm", "width_mm", "depth_mm"] as const) {
+    const v = fromVariant?.[key]
+    const p = fromProduct?.[key]
+    if (typeof v === "number" && v > 0) out[key] = v
+    else if (typeof p === "number" && p > 0) out[key] = p
+  }
+  if (out.height_mm == null && out.width_mm == null && out.depth_mm == null) {
+    return null
+  }
+  return out
+}
+
+/** Resolve dimensions for a specific variant id on a product payload. */
+export function getDimensionsForVariantId(
+  product: ProductLike,
+  variantId: string | null | undefined
+): Dimensions | null {
+  if (!variantId) return getDimensions(product, null)
+  const variants = product.variants as Array<ProductLike> | undefined
+  const selected =
+    Array.isArray(variants)
+      ? variants.find((v) => v && v.id === variantId) ?? null
+      : null
+  return getDimensions(product, selected)
 }
 
 export function formatDimensionsCompact(dim: Dimensions): string {
