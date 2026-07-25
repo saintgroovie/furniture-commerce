@@ -12,7 +12,6 @@ const {
   writeFileSync,
   readFileSync,
   chmodSync,
-  mkdirSync,
   existsSync,
 } = require("node:fs")
 const { join } = require("node:path")
@@ -51,9 +50,11 @@ const composeOnly = spawnSync(
 assert.equal(composeOnly.status, 0, composeOnly.stderr || composeOnly.stdout)
 
 // Dry-run updater on temp env: only IMAGE lines change; secrets preserved.
+// Uses fixture lock path (test-only) so CI never touches /srv/woodright/locks.
 const dir = mkdtempSync(join(tmpdir(), "wr-pin-reconcile-"))
 const envPath = join(dir, ".env")
 const composePath = join(dir, "docker-compose.staging.yml")
+const lockPath = join(dir, "live-cutover.lock")
 writeFileSync(
   envPath,
   [
@@ -67,11 +68,17 @@ writeFileSync(
   ].join("\n")
 )
 chmodSync(envPath, 0o644)
-// Minimal compose for path existence checks in updater
 writeFileSync(
   composePath,
   readFileSync(join(root, "docker-compose.staging.yml"), "utf8")
 )
+writeFileSync(lockPath, "")
+
+const testLockEnv = {
+  WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK: "1",
+  WOODRIGHT_CUTOVER_LOCK_PATH: lockPath,
+  LOCK_TIMEOUT_SEC: "5",
+}
 
 const dry = spawnSync(
   "bash",
@@ -81,6 +88,7 @@ const dry = spawnSync(
     encoding: "utf8",
     env: {
       ...process.env,
+      ...testLockEnv,
       EXPECTED_RELEASE_SHA: SHA,
       EXPECTED_BACKEND_DIGEST: BE,
       EXPECTED_STOREFRONT_DIGEST: SF,
@@ -96,6 +104,7 @@ const dry = spawnSync(
 )
 assert.equal(dry.status, 0, dry.stderr || dry.stdout)
 assert.match(dry.stdout, /dry_run_complete/)
+assert.match(dry.stdout, /lock_acquired=yes/)
 assert.doesNotMatch(dry.stdout + dry.stderr, /do-not-print-or-change|also-secret/)
 // file unchanged on dry-run
 const afterDry = readFileSync(envPath, "utf8")
@@ -112,6 +121,7 @@ assert.match(afterDry, /5243c7c8f1146c2832af7093f1a98f4f8c4f8e5039f733d406d9571c
       encoding: "utf8",
       env: {
         ...process.env,
+        ...testLockEnv,
         EXPECTED_RELEASE_SHA: SHA,
         EXPECTED_BACKEND_DIGEST: BE,
         EXPECTED_STOREFRONT_DIGEST: SF,
@@ -127,6 +137,7 @@ assert.match(afterDry, /5243c7c8f1146c2832af7093f1a98f4f8c4f8e5039f733d406d9571c
     }
   )
   assert.equal(apply.status, 0, apply.stderr || apply.stdout)
+  assert.match(apply.stdout, /lock_acquired=yes/)
   const after = readFileSync(envPath, "utf8")
   assert.match(after, new RegExp(BE.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")))
   assert.match(after, new RegExp(SF.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")))
@@ -140,5 +151,6 @@ assert.match(afterDry, /5243c7c8f1146c2832af7093f1a98f4f8c4f8e5039f733d406d9571c
 assert.ok(existsSync(join(root, "docs/operator/dokploy-staging.md")))
 const docs = readFileSync(join(root, "docs/operator/dokploy-staging.md"), "utf8")
 assert.match(docs, /reconcile-public-image-pins|image pin/)
+assert.match(docs, /live-cutover\.lock/)
 
 console.log("public-image-pin-consistency.fidelity.test.cjs: ok")

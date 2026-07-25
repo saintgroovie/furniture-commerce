@@ -1,28 +1,42 @@
 #!/usr/bin/env bash
+# LIVE_MUTATING=true
+# requires_global_lock=true
+#
 # Atomically reconcile public image pin sources to an exact release pair.
+# Holds canonical exclusive flock for the entire authoritative transaction:
+#   lock → live revalidation → backup → writes → compose/verify → rollback → release
 #
 # Updates (pair-only, no secrets):
 #   - Dokploy compose .env: WOODRIGHT_BACKEND_IMAGE, WOODRIGHT_STOREFRONT_IMAGE, STOREFRONT_IMAGE
 #   - optional: DOKPLOY_IMAGE_PINS.env
-#   - optional: ACTIVE_PUBLIC.json digests/sha/pins (+ companion public-demo.json)
+#   - optional: ACTIVE_PUBLIC.json (+ public-demo.json)
+#   - optional: ACTIVE_RELEASE.json
 #
 # Does NOT recreate containers. Does NOT print secret values.
 #
-# Usage (dry-run default):
-#   EXPECTED_RELEASE_SHA=eb298fd... \
-#   EXPECTED_BACKEND_DIGEST=sha256:347e6fe4... \
-#   EXPECTED_STOREFRONT_DIGEST=sha256:3826ef26... \
-#   ./scripts/release/reconcile-public-image-pins.sh
+# Exit codes:
+#   0 success
+#   2 validation / usage
+#   3 lock contention
+#   4 permission / root failure
+#   5 live drift after lock
+#   6 transaction write failure
+#   7 post-write verification failure
+#   8 rollback failure
+#
+# Usage (authoritative dry-run default; takes exclusive lock):
+#   EXPECTED_RELEASE_SHA=... EXPECTED_BACKEND_DIGEST=... EXPECTED_STOREFRONT_DIGEST=... \
+#     ./scripts/release/reconcile-public-image-pins.sh
 #
 # Apply:
-#   APPLY=1 ./scripts/release/reconcile-public-image-pins.sh
+#   APPLY=1 ... ./scripts/release/reconcile-public-image-pins.sh
 #
-# Paths overridable via ENV_FILE / PINS_FILE / ACTIVE_PUBLIC_FILE.
+# Non-authoritative diagnostics only:
+#   READ_ONLY_NO_LOCK=1 ... ./scripts/release/reconcile-public-image-pins.sh
 set -euo pipefail
 
 DIGEST_RE='^sha256:[0-9a-f]{64}$'
 SHA_RE='^[0-9a-f]{40}$'
-PIN_KEYS_RE='^(WOODRIGHT_BACKEND_IMAGE|WOODRIGHT_STOREFRONT_IMAGE|STOREFRONT_IMAGE)$'
 
 EXPECTED_RELEASE_SHA="${EXPECTED_RELEASE_SHA:-}"
 EXPECTED_BACKEND_DIGEST="${EXPECTED_BACKEND_DIGEST:-}"
@@ -30,7 +44,9 @@ EXPECTED_STOREFRONT_DIGEST="${EXPECTED_STOREFRONT_DIGEST:-}"
 APPLY="${APPLY:-0}"
 UPDATE_PINS="${UPDATE_PINS:-1}"
 UPDATE_ACTIVE_PUBLIC="${UPDATE_ACTIVE_PUBLIC:-1}"
+UPDATE_ACTIVE_RELEASE="${UPDATE_ACTIVE_RELEASE:-0}"
 REQUIRE_LIVE_MATCH="${REQUIRE_LIVE_MATCH:-1}"
+READ_ONLY_NO_LOCK="${READ_ONLY_NO_LOCK:-0}"
 BACKEND_CONTAINER="${BACKEND_CONTAINER:-woodright-staging-backend}"
 STOREFRONT_CONTAINER="${STOREFRONT_CONTAINER:-woodright-staging-storefront}"
 
@@ -39,13 +55,41 @@ COMPOSE_FILE="${COMPOSE_FILE:-/etc/dokploy/compose/woodright-stack-3dsdhd/code/d
 PINS_FILE="${PINS_FILE:-/srv/woodright/runtime-identity/DOKPLOY_IMAGE_PINS.env}"
 ACTIVE_PUBLIC_FILE="${ACTIVE_PUBLIC_FILE:-/srv/woodright/runtime-identity/ACTIVE_PUBLIC.json}"
 PUBLIC_DEMO_FILE="${PUBLIC_DEMO_FILE:-/srv/woodright/runtime-identity/public-demo.json}"
+ACTIVE_RELEASE_FILE="${ACTIVE_RELEASE_FILE:-/srv/woodright/runtime-ownership/ACTIVE_RELEASE.json}"
 BACKUP_DIR="${BACKUP_DIR:-/tmp/wr-ops-reconcile-pins-backup}"
 SKIP_COMPOSE_VALIDATE="${SKIP_COMPOSE_VALIDATE:-0}"
 BE_REPO="${BE_REPO:-ghcr.io/saintgroovie/woodright-backend}"
 SF_REPO="${SF_REPO:-ghcr.io/saintgroovie/woodright-storefront}"
 
-die() { echo "error: $*" >&2; exit 2; }
+CANONICAL_LOCK_PATH="/srv/woodright/locks/live-cutover.lock"
+LOCK_TIMEOUT_SEC="${LOCK_TIMEOUT_SEC:-30}"
+LOCK_FD=9
+LOCK_HELD=0
+LOCK_HOLDER_PID=""
+TRANSACTION_STARTED=0
+ROLLBACK_PERFORMED=0
+LOCK_PATH=""
+
+# Test-only fault injection (requires WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK=1)
+FAULT_AFTER="${WOODRIGHT_PIN_RECONCILE_FAULT_AFTER:-}"
+
+fail() {
+  local code="$1"
+  shift
+  echo "error: $*" >&2
+  echo "summary mode=$([ "$APPLY" = "1" ] && echo apply || echo dry_run) lock_path=${LOCK_PATH:-none} lock_acquired=$([ "$LOCK_HELD" = "1" ] && echo yes || echo no) transaction_started=$([ "$TRANSACTION_STARTED" = "1" ] && echo yes || echo no) rollback_performed=$([ "$ROLLBACK_PERFORMED" = "1" ] && echo yes || echo no)" >&2
+  exit "$code"
+}
+
 log() { echo "$*"; }
+
+release_lock_holder() {
+  if [[ -n "${LOCK_HOLDER_PID:-}" ]]; then
+    kill "$LOCK_HOLDER_PID" 2>/dev/null || true
+    wait "$LOCK_HOLDER_PID" 2>/dev/null || true
+    LOCK_HOLDER_PID=""
+  fi
+}
 
 need_sudo_for() {
   local f="$1"
@@ -57,11 +101,109 @@ need_sudo_for() {
   return 0
 }
 
-[[ "$EXPECTED_RELEASE_SHA" =~ $SHA_RE ]] || die "EXPECTED_RELEASE_SHA invalid"
-[[ "$EXPECTED_BACKEND_DIGEST" =~ $DIGEST_RE ]] || die "EXPECTED_BACKEND_DIGEST invalid"
-[[ "$EXPECTED_STOREFRONT_DIGEST" =~ $DIGEST_RE ]] || die "EXPECTED_STOREFRONT_DIGEST invalid"
-[[ -f "$ENV_FILE" ]] || die "missing ENV_FILE=$ENV_FILE"
-[[ -f "$COMPOSE_FILE" ]] || die "missing COMPOSE_FILE=$COMPOSE_FILE"
+resolve_lock_path() {
+  if [[ "${WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK:-}" == "1" && -n "${WOODRIGHT_CUTOVER_LOCK_PATH:-}" ]]; then
+    printf '%s' "$WOODRIGHT_CUTOVER_LOCK_PATH"
+    return 0
+  fi
+  if [[ -n "${WOODRIGHT_CUTOVER_LOCK_PATH:-}" && "${WOODRIGHT_CUTOVER_LOCK_PATH}" != "$CANONICAL_LOCK_PATH" ]]; then
+    fail 2 "WOODRIGHT_CUTOVER_LOCK_PATH override rejected without WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK=1"
+  fi
+  printf '%s' "$CANONICAL_LOCK_PATH"
+}
+
+acquire_lock() {
+  if [[ "$READ_ONLY_NO_LOCK" == "1" ]]; then
+    if [[ "$APPLY" == "1" ]]; then
+      fail 2 "APPLY forbids READ_ONLY_NO_LOCK"
+    fi
+    LOCK_PATH="(none)"
+    log "lock_acquired=no mode=read_only_no_lock warning=non_authoritative_preview"
+    return 0
+  fi
+  LOCK_PATH="$(resolve_lock_path)"
+  if [[ ! "$LOCK_TIMEOUT_SEC" =~ ^[0-9]+$ ]] || [[ "$LOCK_TIMEOUT_SEC" -lt 1 ]] || [[ "$LOCK_TIMEOUT_SEC" -gt 600 ]]; then
+    fail 2 "invalid LOCK_TIMEOUT_SEC"
+  fi
+  mkdir -p "$(dirname "$LOCK_PATH")"
+  # Create/open lock file; do not delete on release.
+  if [[ ! -e "$LOCK_PATH" ]]; then
+    : >>"$LOCK_PATH" || fail 4 "cannot create lock file $LOCK_PATH"
+  fi
+
+  if command -v flock >/dev/null 2>&1; then
+    eval "exec ${LOCK_FD}>>\"\$LOCK_PATH\""
+    if ! flock -x -w "$LOCK_TIMEOUT_SEC" "$LOCK_FD"; then
+      log "lock_acquired=no path=$LOCK_PATH reason=contention timeout=${LOCK_TIMEOUT_SEC}s"
+      fail 3 "lock contention on $LOCK_PATH"
+    fi
+    LOCK_HELD=1
+    log "lock_acquired=yes path=$LOCK_PATH timeout_sec=$LOCK_TIMEOUT_SEC via=flock"
+    return 0
+  fi
+
+  # Portable fallback when util-linux flock is absent (e.g. macOS local fidelity).
+  # A dedicated holder process keeps the exclusive lock until EXIT.
+  local ready
+  ready="$(mktemp)"
+  python3 - "$LOCK_PATH" "$LOCK_TIMEOUT_SEC" "$ready" <<'PY' &
+import fcntl, os, sys, time
+path, timeout, ready = sys.argv[1], float(sys.argv[2]), sys.argv[3]
+deadline = time.time() + timeout
+fd = os.open(path, os.O_RDWR | os.O_CREAT, 0o644)
+while True:
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        break
+    except BlockingIOError:
+        if time.time() >= deadline:
+            with open(ready, "w", encoding="utf-8") as fh:
+                fh.write("fail\n")
+            raise SystemExit(1)
+        time.sleep(0.05)
+with open(ready, "w", encoding="utf-8") as fh:
+    fh.write("ok\n")
+while True:
+    time.sleep(3600)
+PY
+  LOCK_HOLDER_PID=$!
+  local deadline=$((SECONDS + LOCK_TIMEOUT_SEC + 2))
+  while (( SECONDS < deadline )); do
+    if [[ -s "$ready" ]]; then
+      break
+    fi
+    if ! kill -0 "$LOCK_HOLDER_PID" 2>/dev/null; then
+      break
+    fi
+    sleep 0.05
+  done
+  local status
+  status="$(cat "$ready" 2>/dev/null || true)"
+  rm -f "$ready"
+  if [[ "$status" != "ok" ]]; then
+    release_lock_holder
+    log "lock_acquired=no path=$LOCK_PATH reason=contention timeout=${LOCK_TIMEOUT_SEC}s"
+    fail 3 "lock contention on $LOCK_PATH"
+  fi
+  LOCK_HELD=1
+  log "lock_acquired=yes path=$LOCK_PATH timeout_sec=$LOCK_TIMEOUT_SEC via=python_holder"
+}
+
+maybe_fault() {
+  local stage="$1"
+  if [[ "${WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK:-}" == "1" && -n "$FAULT_AFTER" && "$FAULT_AFTER" == "$stage" ]]; then
+    if [[ "$TRANSACTION_STARTED" == "1" ]] && declare -F tx_fail >/dev/null 2>&1; then
+      tx_fail 7 "injected fault after $stage"
+    fi
+    fail 7 "injected fault after $stage"
+  fi
+}
+
+[[ "$EXPECTED_RELEASE_SHA" =~ $SHA_RE ]] || fail 2 "EXPECTED_RELEASE_SHA invalid"
+[[ "$EXPECTED_BACKEND_DIGEST" =~ $DIGEST_RE ]] || fail 2 "EXPECTED_BACKEND_DIGEST invalid"
+[[ "$EXPECTED_STOREFRONT_DIGEST" =~ $DIGEST_RE ]] || fail 2 "EXPECTED_STOREFRONT_DIGEST invalid"
+[[ -f "$ENV_FILE" ]] || fail 2 "missing ENV_FILE=$ENV_FILE"
+[[ -f "$COMPOSE_FILE" ]] || fail 2 "missing COMPOSE_FILE=$COMPOSE_FILE"
 
 BE_REF="${BE_REPO}@${EXPECTED_BACKEND_DIGEST}"
 SF_REF="${SF_REPO}@${EXPECTED_STOREFRONT_DIGEST}"
@@ -69,11 +211,11 @@ SF_REF="${SF_REPO}@${EXPECTED_STOREFRONT_DIGEST}"
 TS="$(date -u +%Y%m%dT%H%M%SZ)"
 mkdir -p "$BACKUP_DIR"
 
-# Collect targets
 TARGETS=("$ENV_FILE")
 [[ "$UPDATE_PINS" == "1" && -f "$PINS_FILE" ]] && TARGETS+=("$PINS_FILE")
 [[ "$UPDATE_ACTIVE_PUBLIC" == "1" && -f "$ACTIVE_PUBLIC_FILE" ]] && TARGETS+=("$ACTIVE_PUBLIC_FILE")
 [[ "$UPDATE_ACTIVE_PUBLIC" == "1" && -f "$PUBLIC_DEMO_FILE" ]] && TARGETS+=("$PUBLIC_DEMO_FILE")
+[[ "$UPDATE_ACTIVE_RELEASE" == "1" && -f "$ACTIVE_RELEASE_FILE" ]] && TARGETS+=("$ACTIVE_RELEASE_FILE")
 
 USE_SUDO=0
 for t in "${TARGETS[@]}"; do
@@ -85,7 +227,7 @@ if [[ "$USE_SUDO" == "1" ]]; then
   if sudo -n true 2>/dev/null; then
     log "privilege=sudo-n for root-owned targets"
   else
-    die "blocked_root_env_write: need sudo -n for one or more targets"
+    fail 4 "blocked_root_env_write: need sudo -n for one or more targets"
   fi
 fi
 
@@ -99,8 +241,8 @@ run_priv() {
 
 assert_live_match() {
   [[ "$REQUIRE_LIVE_MATCH" == "1" ]] || { log "live_match=skipped"; return 0; }
-  command -v docker >/dev/null || die "docker required for live match"
-  python3 - "$BACKEND_CONTAINER" "$STOREFRONT_CONTAINER" "$EXPECTED_RELEASE_SHA" "$EXPECTED_BACKEND_DIGEST" "$EXPECTED_STOREFRONT_DIGEST" <<'PY'
+  command -v docker >/dev/null || fail 2 "docker required for live match"
+  if ! python3 - "$BACKEND_CONTAINER" "$STOREFRONT_CONTAINER" "$EXPECTED_RELEASE_SHA" "$EXPECTED_BACKEND_DIGEST" "$EXPECTED_STOREFRONT_DIGEST" <<'PY'
 import json, re, subprocess, sys
 be_name, sf_name, want_sha, want_be, want_sf = sys.argv[1:6]
 DIGEST_RE = re.compile(r"sha256:[0-9a-f]{64}")
@@ -151,6 +293,12 @@ for name in (be_name, sf_name):
         raise SystemExit(f"{name} digest mismatch live={dig} want={want}")
 print("live_match_ok")
 PY
+  then
+    if [[ "$TRANSACTION_STARTED" == "1" ]] && declare -F tx_fail >/dev/null 2>&1; then
+      tx_fail 5 "live drift after mutation"
+    fi
+    fail 5 "live drift after lock acquire"
+  fi
 }
 
 rewrite_env_pins() {
@@ -241,18 +389,50 @@ doc["dokploy_image_pins"]={
   "WOODRIGHT_STOREFRONT_IMAGE": sf_ref,
 }
 try:
-    for name, key_full, key_short in (
-        (be_name, "backend_container_id", None),
-        (sf_name, "storefront_container_id", None),
+    for name, key_full in (
+        (be_name, "backend_container_id"),
+        (sf_name, "storefront_container_id"),
     ):
         r=subprocess.run(["docker","inspect","-f","{{.Id}}",name],capture_output=True,text=True)
         if r.returncode==0:
-            full=r.stdout.strip()
-            doc[key_full]=full
+            doc[key_full]=r.stdout.strip()
 except Exception:
     pass
 doc["generated_at"]=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 doc["note"]=f"reconciled image pins to live {sha[:12]} digests; compose/env/ACTIVE_PUBLIC aligned"
+Path(dst).write_text(json.dumps(doc, indent=2) + "\n")
+PY
+}
+
+rewrite_active_release() {
+  local src="$1" dst="$2"
+  python3 - "$src" "$dst" "$EXPECTED_RELEASE_SHA" "$EXPECTED_BACKEND_DIGEST" "$EXPECTED_STOREFRONT_DIGEST" "$BACKEND_CONTAINER" "$STOREFRONT_CONTAINER" <<'PY'
+import json, subprocess, sys
+from pathlib import Path
+from datetime import datetime, timezone
+src, dst, sha, be_d, sf_d, be_name, sf_name = sys.argv[1:8]
+doc=json.loads(Path(src).read_text())
+doc["active_release_sha"]=sha
+doc["release_sha"]=sha
+doc["backend_revision"]=sha
+doc["storefront_revision"]=sha
+doc["backend_digest"]=be_d
+doc["storefront_digest"]=sf_d
+doc["component_revisions"]={"backend": sha, "storefront": sha}
+doc["updated_utc"]=datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+doc["notes"]="reconciled under live-cutover.lock with public image pins"
+try:
+    for name, short, full in (
+        (be_name, "backend_container_id", "backend_container_id_full"),
+        (sf_name, "storefront_container_id", "storefront_container_id_full"),
+    ):
+        r=subprocess.run(["docker","inspect","-f","{{.Id}}",name],capture_output=True,text=True)
+        if r.returncode==0:
+            cid=r.stdout.strip()
+            doc[short]=cid[:12]
+            doc[full]=cid
+except Exception:
+    pass
 Path(dst).write_text(json.dumps(doc, indent=2) + "\n")
 PY
 }
@@ -321,14 +501,36 @@ log "planned sha=$EXPECTED_RELEASE_SHA"
 log "env_file=$ENV_FILE"
 log "targets=${#TARGETS[@]}"
 log "dry_run=$([ "$APPLY" = "1" ] && echo no || echo yes)"
+log "canonical_lock=$CANONICAL_LOCK_PATH"
 
+# Exclusive lock before authoritative live read / mutation planning.
+acquire_lock
+
+# Authoritative snapshot only after lock.
 assert_live_match
 
 TMP_ENV="$(mktemp)"
 TMP_PINS="$(mktemp)"
 TMP_AP="$(mktemp)"
-cleanup() { rm -f "$TMP_ENV" "$TMP_PINS" "$TMP_AP"; }
-trap cleanup EXIT
+TMP_AR="$(mktemp)"
+CLEANUP_DONE=0
+cleanup_on_exit() {
+  local ec="${1:-$?}"
+  [[ "$CLEANUP_DONE" == "1" ]] && return 0
+  CLEANUP_DONE=1
+  if [[ "$TRANSACTION_STARTED" == "1" && "$ROLLBACK_PERFORMED" != "1" && "$ec" -ne 0 ]]; then
+    if declare -F restore_all >/dev/null 2>&1; then
+      log "exit_path_rollback under_lock=yes exit_code=$ec"
+      restore_all || true
+    fi
+  fi
+  rm -f "${TMP_ENV:-}" "${TMP_PINS:-}" "${TMP_AP:-}" "${TMP_AR:-}"
+  release_lock_holder
+}
+trap 'cleanup_on_exit $?' EXIT
+trap 'cleanup_on_exit 130; exit 130' INT
+trap 'cleanup_on_exit 143; exit 143' TERM
+trap 'cleanup_on_exit 129; exit 129' HUP
 
 rewrite_env_pins "$ENV_FILE" "$TMP_ENV"
 validate_env_pins "$TMP_ENV"
@@ -344,12 +546,17 @@ if [[ "$UPDATE_ACTIVE_PUBLIC" == "1" && -f "$ACTIVE_PUBLIC_FILE" ]]; then
   rewrite_active_public "$ACTIVE_PUBLIC_FILE" "$TMP_AP"
 fi
 
+if [[ "$UPDATE_ACTIVE_RELEASE" == "1" && -f "$ACTIVE_RELEASE_FILE" ]]; then
+  rewrite_active_release "$ACTIVE_RELEASE_FILE" "$TMP_AR"
+fi
+
 if [[ "$APPLY" != "1" ]]; then
   log "dry_run_complete; set APPLY=1 to write"
+  log "summary mode=dry_run lock_path=$LOCK_PATH lock_acquired=$([ "$LOCK_HELD" = "1" ] && echo yes || echo no) transaction_started=no rollback_performed=no consistency=preview_ok"
   exit 0
 fi
 
-# Backups for every target before any mutation
+# Backups inside lock
 declare -a BACKED=()
 for t in "${TARGETS[@]}"; do
   base="$(basename "$t")"
@@ -358,73 +565,93 @@ for t in "${TARGETS[@]}"; do
   BACKED+=("$t|$bak")
 done
 log "backup_dir=$BACKUP_DIR"
+TRANSACTION_STARTED=1
 
 restore_all() {
-  log "restoring_all_targets"
+  log "restoring_all_targets under_lock=yes"
+  ROLLBACK_PERFORMED=1
   local pair dest bak
+  local ok=1
   for pair in "${BACKED[@]}"; do
     dest="${pair%%|*}"
     bak="${pair#*|}"
-    atomic_install "$bak" "$dest" || true
+    if ! atomic_install "$bak" "$dest"; then
+      ok=0
+    fi
   done
+  if [[ "$ok" != "1" ]]; then
+    fail 8 "rollback failed while holding lock"
+  fi
 }
 
-# Install all staged files; rollback everything on any failure
+tx_fail() {
+  local code="$1"
+  shift
+  restore_all
+  fail "$code" "$*"
+}
+
 if ! atomic_install "$TMP_ENV" "$ENV_FILE"; then
-  restore_all
-  die "failed installing .env"
+  tx_fail 6 "failed installing .env"
 fi
+maybe_fault env
 if ! validate_env_pins "$ENV_FILE"; then
-  restore_all
-  die "post-install .env validation failed"
+  tx_fail 7 "post-install .env validation failed"
 fi
 
 if [[ "$UPDATE_PINS" == "1" && -f "$PINS_FILE" ]]; then
   if ! atomic_install "$TMP_PINS" "$PINS_FILE"; then
-    restore_all
-    die "failed installing pins"
+    tx_fail 6 "failed installing pins"
   fi
+  maybe_fault pins
   if ! validate_env_pins "$PINS_FILE"; then
-    restore_all
-    die "post-install pins validation failed"
+    tx_fail 7 "post-install pins validation failed"
   fi
 fi
 
 if [[ "$UPDATE_ACTIVE_PUBLIC" == "1" && -f "$ACTIVE_PUBLIC_FILE" ]]; then
   if ! atomic_install "$TMP_AP" "$ACTIVE_PUBLIC_FILE"; then
-    restore_all
-    die "failed installing ACTIVE_PUBLIC"
+    tx_fail 6 "failed installing ACTIVE_PUBLIC"
   fi
+  maybe_fault active_public
   if [[ -f "$PUBLIC_DEMO_FILE" ]]; then
     if ! atomic_install "$TMP_AP" "$PUBLIC_DEMO_FILE"; then
-      restore_all
-      die "failed installing public-demo.json"
+      tx_fail 6 "failed installing public-demo.json"
     fi
+  fi
+fi
+
+if [[ "$UPDATE_ACTIVE_RELEASE" == "1" && -f "$ACTIVE_RELEASE_FILE" ]]; then
+  if ! atomic_install "$TMP_AR" "$ACTIVE_RELEASE_FILE"; then
+    tx_fail 6 "failed installing ACTIVE_RELEASE"
   fi
 fi
 
 if [[ "$SKIP_COMPOSE_VALIDATE" == "1" ]]; then
   log "compose_validate=skipped"
 else
+  maybe_fault compose
   if ! COMPOSE_IMAGES="$(docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" config --images)"; then
-    restore_all
-    die "docker compose config failed"
+    tx_fail 7 "docker compose config failed"
   fi
   if ! echo "$COMPOSE_IMAGES" | grep -F "${EXPECTED_BACKEND_DIGEST#sha256:}" >/dev/null && \
      ! echo "$COMPOSE_IMAGES" | grep -F "$EXPECTED_BACKEND_DIGEST" >/dev/null; then
-    restore_all
-    die "compose config did not resolve backend digest"
+    tx_fail 7 "compose config did not resolve backend digest"
   fi
   if ! echo "$COMPOSE_IMAGES" | grep -F "${EXPECTED_STOREFRONT_DIGEST#sha256:}" >/dev/null && \
      ! echo "$COMPOSE_IMAGES" | grep -F "$EXPECTED_STOREFRONT_DIGEST" >/dev/null; then
-    restore_all
-    die "compose config did not resolve storefront digest"
+    tx_fail 7 "compose config did not resolve storefront digest"
   fi
   if echo "$COMPOSE_IMAGES" | grep -E '5243c7c8f1146c2832af7093f1a98f4f8c4f8e5039f733d406d9571c9c657fe8|034db9486b9be45e282f543f7f26cbeb862a38b1282218bd0528831a44cf0828' >/dev/null; then
-    restore_all
-    die "stale digests still present in compose config"
+    tx_fail 7 "stale digests still present in compose config"
   fi
   log "compose_resolved_ok"
 fi
 
+maybe_fault verify
+# Final authoritative live match still under lock.
+assert_live_match
+
 log "apply_complete"
+log "summary mode=apply lock_path=$LOCK_PATH lock_acquired=yes transaction_started=yes rollback_performed=no consistency=pass"
+# Lock FD closes automatically on process exit.
