@@ -22,6 +22,11 @@ const MESSENGER_E164_DIGITS = "79672587144"
 
 export const showroomContacts = {
   title: "Шоурум Woodright",
+  /**
+   * Compact chrome label for desktop top-bar trigger and mobile accordion.
+   * Not a second address SoT - presentation only; full address stays in addressLines.
+   */
+  shortLabel: "Шоурум: «Гранд», Химки",
   addressLines: [
     "Московская область, г. Химки",
     "ул. Бутаково, д. 4",

@@ -73,7 +73,12 @@ export default function RootLayout({
           {/* Top bar */}
           <div className="header-top">
             <div className="container header-top-inner">
-              <span className="header-top-left">{navCopy.showroom}</span>
+              <div className="header-top-left">
+                <ContactsNavDropdown
+                  label={navCopy.showroom}
+                  align="start"
+                />
+              </div>
               <HeaderLogo />
               <div className="header-top-right">
                 <NavDropdown
@@ -85,7 +90,7 @@ export default function RootLayout({
                     { label: "Оставить заявку", href: "/designers/request" },
                   ]}
                 />
-                <ContactsNavDropdown label={navCopy.contacts} />
+                <Link href="/contacts">{navCopy.contacts}</Link>
               </div>
             </div>
           </div>

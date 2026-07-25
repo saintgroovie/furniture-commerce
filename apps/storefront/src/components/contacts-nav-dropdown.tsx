@@ -12,10 +12,12 @@ import { ShowroomContactsContent } from "@/components/showroom-contacts-content"
 type Props = {
   label: string
   className?: string
+  /** Panel horizontal alignment relative to the trigger. */
+  align?: "start" | "end"
 }
 
 /**
- * Top-bar «Контакты» control with a premium showroom panel.
+ * Top-bar showroom disclosure with a premium contact panel.
  * Opens on hover, keyboard focus, and click; closes on leave, Escape, outside click.
  * Hover zone wraps trigger + panel so there is no dead gap that collapses the menu.
  *
@@ -23,13 +25,17 @@ type Props = {
  * click lands; a toggle would immediately close the panel. Close via leave /
  * outside / Escape instead.
  */
-export function ContactsNavDropdown({ label, className }: Props) {
+export function ContactsNavDropdown({
+  label,
+  className,
+  align = "start",
+}: Props) {
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const suppressFocusOpenRef = useRef(false)
   const reactId = useId()
-  const menuId = `contacts-menu-${reactId.replace(/:/g, "")}`
+  const menuId = `showroom-menu-${reactId.replace(/:/g, "")}`
 
   useEffect(() => {
     if (!open) return
@@ -38,7 +44,7 @@ export function ContactsNavDropdown({ label, className }: Props) {
       if (e.key === "Escape") {
         e.preventDefault()
         // Suppress only the focus() we issue below. If the trigger is already
-        // focused, focus() is a no-op and no focus event runs — clear on rAF
+        // focused, focus() is a no-op and no focus event runs - clear on rAF
         // so the flag cannot stick and block a later keyboard reopen.
         suppressFocusOpenRef.current = true
         setOpen(false)
@@ -88,9 +94,14 @@ export function ContactsNavDropdown({ label, className }: Props) {
     setOpen(false)
   }
 
-  const rootClass = className
-    ? `nav-dropdown contacts-nav-dropdown ${className}`
-    : "nav-dropdown contacts-nav-dropdown"
+  const rootClass = [
+    "nav-dropdown",
+    "contacts-nav-dropdown",
+    `contacts-nav-dropdown--align-${align}`,
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ")
 
   return (
     <div

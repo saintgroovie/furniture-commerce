@@ -4,7 +4,7 @@
  * Mobile navigation — parity with desktop buyer routes.
  * Baseline architecture (woodright-copy + CSS scroll-lock class) preserved.
  * Package A1 gap-fill: focus containment, closed-menu unmount, Escape/focus restore.
- * Contacts: expandable showroom panel (no hover), data from showroomContacts.
+ * Showroom: expandable accordion (no hover); «Контакты» is a plain /contacts link.
  */
 import { useCallback, useEffect, useId, useRef, useState } from "react"
 import Link from "next/link"
@@ -34,20 +34,20 @@ const PANEL_ID = "mobile-nav-panel"
 
 export function MobileNav() {
   const [open, setOpen] = useState(false)
-  const [contactsOpen, setContactsOpen] = useState(false)
+  const [showroomOpen, setShowroomOpen] = useState(false)
   const pathname = usePathname()
   const btnRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
-  const contactsTriggerRef = useRef<HTMLButtonElement>(null)
-  const contactsOpenRef = useRef(false)
-  const contactsPanelId = useId().replace(/:/g, "")
-  const contactsRegionId = `mobile-contacts-${contactsPanelId}`
+  const showroomTriggerRef = useRef<HTMLButtonElement>(null)
+  const showroomOpenRef = useRef(false)
+  const showroomPanelId = useId().replace(/:/g, "")
+  const showroomRegionId = `mobile-showroom-${showroomPanelId}`
 
-  contactsOpenRef.current = contactsOpen
+  showroomOpenRef.current = showroomOpen
 
   const close = useCallback((restoreFocus = true) => {
     setOpen(false)
-    setContactsOpen(false)
+    setShowroomOpen(false)
     if (restoreFocus) {
       requestAnimationFrame(() => btnRef.current?.focus())
     }
@@ -56,11 +56,11 @@ export function MobileNav() {
   // Close on route change (after link navigation).
   useEffect(() => {
     setOpen(false)
-    setContactsOpen(false)
+    setShowroomOpen(false)
   }, [pathname])
 
   // Scroll-lock + initial focus + keyboard trap. Depends only on `open`
-  // so expanding «Контакты» does not steal focus back to the first link.
+  // so expanding the showroom accordion does not steal focus back to the first link.
   useEffect(() => {
     if (!open) {
       document.body.classList.remove("mobile-nav-open")
@@ -88,9 +88,9 @@ export function MobileNav() {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
         e.preventDefault()
-        if (contactsOpenRef.current) {
-          setContactsOpen(false)
-          requestAnimationFrame(() => contactsTriggerRef.current?.focus())
+        if (showroomOpenRef.current) {
+          setShowroomOpen(false)
+          requestAnimationFrame(() => showroomTriggerRef.current?.focus())
           return
         }
         close(true)
@@ -168,36 +168,39 @@ export function MobileNav() {
                   {item.label}
                 </Link>
               ))}
-              <div className="mobile-nav-contacts">
+              <div className="mobile-nav-showroom">
                 <button
-                  ref={contactsTriggerRef}
+                  ref={showroomTriggerRef}
                   type="button"
-                  className="mobile-nav-contacts-trigger"
-                  aria-expanded={contactsOpen}
-                  aria-controls={contactsRegionId}
-                  onClick={() => setContactsOpen((v) => !v)}
+                  className="mobile-nav-showroom-trigger"
+                  aria-expanded={showroomOpen}
+                  aria-controls={showroomRegionId}
+                  onClick={() => setShowroomOpen((v) => !v)}
                 >
-                  <span>{navCopy.contacts}</span>
+                  <span className="mobile-nav-showroom-label">{navCopy.showroom}</span>
                   <span
-                    className="mobile-nav-contacts-chevron"
-                    data-expanded={contactsOpen ? "true" : "false"}
+                    className="mobile-nav-showroom-chevron"
+                    data-expanded={showroomOpen ? "true" : "false"}
                     aria-hidden="true"
                   />
                 </button>
-                {contactsOpen ? (
+                {showroomOpen ? (
                   <div
-                    id={contactsRegionId}
-                    className="mobile-nav-contacts-panel"
+                    id={showroomRegionId}
+                    className="mobile-nav-showroom-panel"
                     role="region"
-                    aria-label={navCopy.contacts}
+                    aria-label={navCopy.showroom}
                   >
                     <ShowroomContactsContent
                       variant="mobile"
-                      idPrefix={contactsRegionId}
+                      idPrefix={showroomRegionId}
                     />
                   </div>
                 ) : null}
               </div>
+              <Link href="/contacts" onClick={() => close(false)}>
+                {navCopy.contacts}
+              </Link>
             </div>
             <div className="mobile-nav-group mobile-nav-group-cart">
               <Link href="/cart" onClick={() => close(false)}>

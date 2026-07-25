@@ -16,12 +16,15 @@
  *
  * Некоторые поля (`note`, `supporting`) пока не выводятся в JSX -
  * они готовы к использованию, точечные правки разметки описаны в отчёте.
- * Публичные контакты шоурума (адрес, телефоны, мессенджеры) - только
+ * Публичные контакты шоурума (адрес, телефоны, мессенджеры, shortLabel) - только
  * `@/lib/showroom-contacts`, не дублировать здесь.
  */
 
+import { showroomContacts } from "@/lib/showroom-contacts"
+
 export const nav = {
-  showroom: "Шоурум в Химках",
+  /** Desktop/mobile chrome label - SoT: showroomContacts.shortLabel */
+  showroom: showroomContacts.shortLabel,
   designers: "Дизайнерам",
   contacts: "Контакты",
   catalog: "Каталог",
