@@ -14,12 +14,24 @@ export type ItemsAction =
   | "noop"
   | "conflict"
 
+export type SlotState = "orphan" | "linked" | "unresolved" | "ambiguous"
+
+/** Classify one item's product-link slot. Only true orphans are recoverable. */
+export function slotState(item: ItemRow): SlotState {
+  const products = item.products
+  if (!Array.isArray(products) || products.length === 0) return "orphan"
+  if (products.length > 1) return "ambiguous"
+  const h = products[0]?.handle
+  if (typeof h === "string" && h.length > 0) return "linked"
+  // Product stub present without handle — not a recoverable orphan.
+  return "unresolved"
+}
+
 export function itemHandles(items: ItemRow[]): Array<string | null> {
   return items.map((it) => {
-    const products = it.products
-    if (Array.isArray(products) && products.length > 1) return null
-    const h = products?.[0]?.handle
-    return typeof h === "string" ? h : null
+    const st = slotState(it)
+    if (st !== "linked") return null
+    return it.products![0]!.handle as string
   })
 }
 
@@ -37,10 +49,6 @@ export function sortOrdersAreContiguousSlots(items: ItemRow[]): boolean {
   return true
 }
 
-function itemHasAmbiguousProductLinks(item: ItemRow): boolean {
-  return Array.isArray(item.products) && item.products.length > 1
-}
-
 /**
  * Classify item/link state for idempotent interruption recovery.
  * Items must already be sorted by sort_order ascending.
@@ -53,16 +61,19 @@ export function classifyItemsAction(
   if (items.length > desired.length) return "conflict"
   if (!sortOrdersAreContiguousSlots(items)) return "conflict"
   if (!items.every((it) => typeof it.id === "string")) return "conflict"
-  // Application invariant: each room_set_item links to exactly 0 or 1 product.
-  if (items.some(itemHasAmbiguousProductLinks)) return "conflict"
+
+  const states = items.map(slotState)
+  if (states.some((s) => s === "ambiguous" || s === "unresolved")) {
+    return "conflict"
+  }
 
   const handles = itemHandles(items)
 
   const prefixCompatible = (n: number): boolean => {
     for (let i = 0; i < n; i++) {
-      const h = handles[i]
-      if (h == null) continue
-      if (h !== desired[i]) return false
+      const st = states[i]
+      if (st === "orphan") continue
+      if (handles[i] !== desired[i]) return false
     }
     return true
   }
@@ -71,15 +82,19 @@ export function classifyItemsAction(
 
   if (
     handles.length === desired.length &&
+    states.every((s) => s === "linked") &&
     handles.every((h, i) => h === desired[i])
   ) {
     return "noop"
   }
 
-  if (handles.length === desired.length && handles.every((h) => h == null)) {
+  if (
+    handles.length === desired.length &&
+    states.every((s) => s === "orphan")
+  ) {
     return "complete_orphan_links"
   }
 
-  // Partial prefix (fewer items and/or some orphans) — recoverable.
+  // Partial prefix: linked and/or true orphans only.
   return "reconcile_partial"
 }

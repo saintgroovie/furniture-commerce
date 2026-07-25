@@ -19,8 +19,8 @@ assert.match(
 )
 assert.match(
   src,
-  /multiple product links/,
-  "ambiguous multi-link must return explicit error"
+  /missing product link/,
+  "zero product links must fail closed"
 )
 assert.match(
   src,

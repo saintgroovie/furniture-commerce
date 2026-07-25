@@ -63,17 +63,15 @@ assert.match(
   /slug:\s*"spalnya-cloud"[\s\S]*?GR-BED-POOL_cloud_bedroom2_int_View04\.jpg/
 )
 
+assert.match(txt, /is_active: false/)
+assert.match(txt, /ACTIVATE room_set/)
+assert.match(txt, /deactivate_until_items_ok|inactive until items complete/)
 assert.match(txt, /asOne\(/)
 assert.match(txt, /Array\.isArray\(value\) \? value\[0\] : value/)
 assert.doesNotMatch(txt, /ol-85-1|ol-95-1|ol-81-1/)
 assert.doesNotMatch(txt, /deleteRoomSets|deleteRoomSetItems/)
 assert.match(txt, /FAIL_CLOSED/)
 assert.match(txt, /soft-deleted/)
-assert.match(
-  txt,
-  /setTimeout\(r,\s*75\)/,
-  "create gap must keep created_at DESC card order deterministic"
-)
 
 const desired = ["a", "b", "c"]
 
@@ -96,11 +94,20 @@ assert.equal(
     [
       { id: "1", sort_order: 0, products: [] },
       { id: "2", sort_order: 1 },
-      { id: "3", sort_order: 2, products: [{}] },
+      { id: "3", sort_order: 2, products: [] },
     ],
     desired
   ),
   "complete_orphan_links"
+)
+
+// Unresolved product stub (not a true orphan) → conflict
+assert.equal(
+  classifyItemsAction(
+    [{ id: "1", sort_order: 0, products: [{}] }],
+    desired
+  ),
+  "conflict"
 )
 
 // Linked prefix after interruption after first item

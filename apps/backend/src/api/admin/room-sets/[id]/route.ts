@@ -26,16 +26,19 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const items: Array<Record<string, unknown> & { sort_order?: number }> = []
   for (const row of (itemsWithProduct ?? []) as Array<Record<string, unknown>>) {
     const one = exactlyOneProduct(row.products as unknown[] | undefined)
-    if (!one.ok && one.reason === "ambiguous") {
+    if (!one.ok) {
       res.status(500).json({
-        message: "Room set item has multiple product links",
+        message:
+          one.reason === "ambiguous"
+            ? "Room set item has multiple product links"
+            : "Room set item missing product link",
       })
       return
     }
     const { products: _drop, ...rest } = row
     items.push({
       ...rest,
-      product: one.ok ? one.product : undefined,
+      product: one.product,
     } as Record<string, unknown> & { sort_order?: number })
   }
   items.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))

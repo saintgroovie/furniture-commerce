@@ -287,18 +287,18 @@ export default async function seedRoomsV1OwnerApproved({
   }
 
   // --- Apply / dry-run from plan ---
+  // Publish rule: never leave a buyer-visible RoomSet with incomplete items.
+  // Create/repair while inactive, then activate only after composition is exact.
   for (const plan of plans) {
     const { spec } = plan
     let roomSetId = plan.existing?.id
+    const needsItemWork = plan.itemsAction !== "noop"
 
     if (plan.action === "create") {
-      logger.info(`[rooms-v1] CREATE room_set slug=${spec.slug}`)
+      logger.info(
+        `[rooms-v1] CREATE room_set slug=${spec.slug} (inactive until items complete)`
+      )
       if (apply) {
-        // Sequential creates with a short gap so created_at DESC card order
-        // (Cloud then Greenwich) stays deterministic even on coarse clocks.
-        if (counts.inserted_roomsets > 0) {
-          await new Promise((r) => setTimeout(r, 75))
-        }
         const created = asOne(
           await roomSetService.createRoomSets({
             title: spec.title,
@@ -306,7 +306,7 @@ export default async function seedRoomsV1OwnerApproved({
             hero_image: spec.hero_image,
             room_type: spec.room_type,
             style: spec.style,
-            is_active: true,
+            is_active: false,
           })
         )
         roomSetId = created.id
@@ -314,8 +314,12 @@ export default async function seedRoomsV1OwnerApproved({
         roomSetId = `dry-run-${spec.slug}`
       }
       counts.inserted_roomsets++
-    } else if (plan.action === "update_meta") {
-      logger.info(`[rooms-v1] UPDATE room_set slug=${spec.slug} id=${roomSetId}`)
+    } else if (plan.action === "update_meta" || needsItemWork) {
+      // Deactivate before item repair if currently active and incomplete.
+      logger.info(
+        `[rooms-v1] UPDATE room_set slug=${spec.slug} id=${roomSetId} ` +
+          `(prepare${needsItemWork ? "; deactivate_until_items_ok" : ""})`
+      )
       if (apply && roomSetId) {
         await roomSetService.updateRoomSets({
           id: roomSetId,
@@ -323,10 +327,11 @@ export default async function seedRoomsV1OwnerApproved({
           hero_image: spec.hero_image,
           room_type: spec.room_type,
           style: spec.style,
-          is_active: true,
+          is_active: needsItemWork ? false : true,
         })
       }
-      counts.updated_roomsets++
+      if (plan.action === "update_meta") counts.updated_roomsets++
+      else counts.noop_roomsets++
     } else {
       logger.info(`[rooms-v1] NOOP room_set slug=${spec.slug}`)
       counts.noop_roomsets++
@@ -343,7 +348,7 @@ export default async function seedRoomsV1OwnerApproved({
         counts.inserted_items += Math.max(0, missing)
         counts.inserted_links += Math.max(0, missing)
         counts.completed_orphan_links += plan.items.filter(
-          (it) => !it.products?.[0]?.handle
+          (it) => !Array.isArray(it.products) || it.products.length === 0
         ).length
       } else {
         counts.noop_items += spec.product_handles.length
@@ -356,6 +361,13 @@ export default async function seedRoomsV1OwnerApproved({
         `[rooms-v1] NOOP items slug=${spec.slug} count=${spec.product_handles.length}`
       )
       counts.noop_items += spec.product_handles.length
+      // Ensure active if we only repaired meta to inactive by mistake — noop path stays active.
+      if (apply && plan.existing && plan.existing.is_active !== true) {
+        await roomSetService.updateRoomSets({
+          id: roomSetId,
+          is_active: true,
+        })
+      }
       continue
     }
 
@@ -363,17 +375,25 @@ export default async function seedRoomsV1OwnerApproved({
       plan.itemsAction === "complete_orphan_links" ||
       plan.itemsAction === "reconcile_partial"
     ) {
-      // Complete missing links on existing prefix, then create remaining items.
       for (let idx = 0; idx < plan.items.length; idx++) {
         const handle = spec.product_handles[idx]
         const productId = productIdByHandle.get(handle)!
         const item = plan.items[idx]
-        const existingHandle = item.products?.[0]?.handle
-        if (existingHandle === handle) continue
-        if (existingHandle != null && existingHandle !== handle) {
+        const products = item.products
+        if (Array.isArray(products) && products.length === 1) {
+          const existingHandle = products[0]?.handle
+          if (existingHandle === handle) continue
+          if (existingHandle != null) {
+            throw new Error(
+              `FAIL_CLOSED: item sort=${idx} handle drift ${existingHandle}!=${handle}`
+            )
+          }
           throw new Error(
-            `FAIL_CLOSED: item sort=${idx} handle drift ${existingHandle}!=${handle}`
+            `FAIL_CLOSED: item sort=${idx} unresolved product stub (not a true orphan)`
           )
+        }
+        if (Array.isArray(products) && products.length > 1) {
+          throw new Error(`FAIL_CLOSED: item sort=${idx} ambiguous product links`)
         }
         if (!item?.id) {
           throw new Error(`FAIL_CLOSED: orphan item missing id at sort=${idx}`)
@@ -411,31 +431,43 @@ export default async function seedRoomsV1OwnerApproved({
         counts.inserted_items++
         counts.inserted_links++
       }
-      continue
+    } else {
+      // create_all
+      for (let idx = 0; idx < spec.product_handles.length; idx++) {
+        const handle = spec.product_handles[idx]
+        const productId = productIdByHandle.get(handle)!
+        logger.info(
+          `[rooms-v1] CREATE item+link slug=${spec.slug} sort=${idx} handle=${handle}`
+        )
+        if (apply) {
+          const item = asOne(
+            await roomSetService.createRoomSetItems({
+              room_set_id: roomSetId,
+              quantity: 1,
+              sort_order: idx,
+            })
+          )
+          await link.create({
+            [Modules.PRODUCT]: { product_id: productId },
+            [ROOM_SET_MODULE]: { room_set_item_id: item.id },
+          })
+        }
+        counts.inserted_items++
+        counts.inserted_links++
+      }
     }
 
-    // create_all
-    for (let idx = 0; idx < spec.product_handles.length; idx++) {
-      const handle = spec.product_handles[idx]
-      const productId = productIdByHandle.get(handle)!
-      logger.info(
-        `[rooms-v1] CREATE item+link slug=${spec.slug} sort=${idx} handle=${handle}`
-      )
-      if (apply) {
-        const item = asOne(
-          await roomSetService.createRoomSetItems({
-            room_set_id: roomSetId,
-            quantity: 1,
-            sort_order: idx,
-          })
-        )
-        await link.create({
-          [Modules.PRODUCT]: { product_id: productId },
-          [ROOM_SET_MODULE]: { room_set_item_id: item.id },
-        })
-      }
-      counts.inserted_items++
-      counts.inserted_links++
+    // Final publish step: activate only after exact composition writes.
+    logger.info(`[rooms-v1] ACTIVATE room_set slug=${spec.slug}`)
+    if (apply && roomSetId) {
+      await roomSetService.updateRoomSets({
+        id: roomSetId,
+        title: spec.title,
+        hero_image: spec.hero_image,
+        room_type: spec.room_type,
+        style: spec.style,
+        is_active: true,
+      })
     }
   }
 
