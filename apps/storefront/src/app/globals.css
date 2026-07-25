@@ -5272,10 +5272,21 @@ a.pdp-size-chip:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.65rem var(--space-md);
+  padding: 0;
   background: var(--color-bg);
   border-radius: var(--radius-sm);
   font-size: 0.9rem;
+  overflow: hidden;
+}
+
+.room-set-item-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.65rem var(--space-md);
+  color: inherit;
+  text-decoration: none;
 }
 
 .room-set-item a {
@@ -5284,7 +5295,52 @@ a.pdp-size-chip:hover {
 }
 
 .room-set-item a:hover {
+  text-decoration: none;
+}
+
+.room-set-item-link:hover .room-set-item-title,
+.room-set-item-link:hover .room-set-item-open {
   text-decoration: underline;
+}
+
+.room-set-item-link:focus-visible {
+  outline: 2px solid var(--color-accent, #8b7355);
+  outline-offset: 2px;
+}
+
+.room-set-item-thumb {
+  width: 3.25rem;
+  height: 3.25rem;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface, #f4f1ea);
+  flex-shrink: 0;
+}
+
+.room-set-item-thumb-placeholder {
+  display: inline-block;
+}
+
+.room-set-item-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.room-set-item-title {
+  font-weight: 500;
+}
+
+.room-set-item-open {
+  font-size: 0.8rem;
+  color: var(--color-muted, #6b6560);
+}
+
+.room-set-item-qty {
+  flex-shrink: 0;
+  color: var(--color-muted, #6b6560);
 }
 
 /* ---- Room Set Detail ---- */

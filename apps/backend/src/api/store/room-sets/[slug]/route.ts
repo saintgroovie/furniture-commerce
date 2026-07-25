@@ -1,4 +1,5 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { exactlyOneProduct } from "../../../../lib/room-set-item-product"
 import { ROOM_SET_MODULE } from "../../../../modules/room-set"
 import RoomSetModuleService from "../../../../modules/room-set/service"
 
@@ -7,7 +8,7 @@ const PRODUCT_IDS_VIEW = "product_ids"
 
 /**
  * Opt-in storefront room detail: title + type + first-variant ids for CTA.
- * Default detail (`product.*` / `variants.*`) stays for other consumers.
+ * Default detail (`products.*` / `variants.*`) stays for other consumers.
  */
 const STOREFRONT_VIEW = "storefront"
 
@@ -55,15 +56,18 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         sort_order?: number
         products?: Array<{ id?: string }>
       }
-      const productId = item.products?.[0]?.id
-      if (typeof productId !== "string" || !productId) {
+      const one = exactlyOneProduct(item.products)
+      if (!one.ok || typeof one.product.id !== "string" || !one.product.id) {
         res.status(500).json({
-          message: "Room set item missing product id (product_ids view)",
+          message:
+            one.ok === false && one.reason === "ambiguous"
+              ? "Room set item has multiple product links (product_ids view)"
+              : "Room set item missing product id (product_ids view)",
         })
         return
       }
       const { products: _products, ...rest } = item
-      items.push({ ...rest, product: { id: productId } })
+      items.push({ ...rest, product: { id: one.product.id } })
     }
     items.sort(
       (a, b) => ((a.sort_order as number) ?? 0) - ((b.sort_order as number) ?? 0)
@@ -79,47 +83,66 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         "id",
         "quantity",
         "sort_order",
-        "product.id",
-        "product.title",
-        "product.product_classification.product_type",
-        "product.variants.id",
+        "products.id",
+        "products.title",
+        "products.handle",
+        "products.thumbnail",
+        "products.product_classification.product_type",
+        "products.variants.id",
       ],
       filters: { room_set_id: roomSet.id },
     })
-    const items = ((itemsStorefront ?? []) as Array<Record<string, unknown>>).map(
-      (row) => {
-        const product = row.product as Record<string, unknown> | undefined
-        if (!product || typeof product !== "object") return row
-        const variantsRaw = product.variants
-        const variants = Array.isArray(variantsRaw)
-          ? variantsRaw
-              .map((v) => {
-                if (!v || typeof v !== "object") return null
-                const id = (v as { id?: unknown }).id
-                return typeof id === "string" ? { id } : null
-              })
-              .filter((v): v is { id: string } => v != null)
-              .slice(0, 1)
-          : []
-        const classification = product.product_classification as
-          | { product_type?: unknown }
-          | undefined
-        return {
+    const items: Array<Record<string, unknown>> = []
+    for (const row of (itemsStorefront ?? []) as Array<Record<string, unknown>>) {
+      const products = row.products as Array<Record<string, unknown>> | undefined
+      const one = exactlyOneProduct(products)
+      if (!one.ok && one.reason === "ambiguous") {
+        res.status(500).json({
+          message: "Room set item has multiple product links (storefront view)",
+        })
+        return
+      }
+      if (!one.ok) {
+        items.push({
           id: row.id,
           quantity: row.quantity,
           sort_order: row.sort_order,
-          product: {
-            id: product.id,
-            title: product.title,
-            product_classification:
-              classification && typeof classification.product_type === "string"
-                ? { product_type: classification.product_type }
-                : undefined,
-            variants,
-          },
-        }
+        })
+        continue
       }
-    )
+      const product = one.product
+      const variantsRaw = product.variants
+      const variants = Array.isArray(variantsRaw)
+        ? variantsRaw
+            .map((v) => {
+              if (!v || typeof v !== "object") return null
+              const id = (v as { id?: unknown }).id
+              return typeof id === "string" ? { id } : null
+            })
+            .filter((v): v is { id: string } => v != null)
+            .slice(0, 1)
+        : []
+      const classification = product.product_classification as
+        | { product_type?: unknown }
+        | undefined
+      items.push({
+        id: row.id,
+        quantity: row.quantity,
+        sort_order: row.sort_order,
+        product: {
+          id: product.id,
+          title: product.title,
+          handle: product.handle,
+          thumbnail:
+            typeof product.thumbnail === "string" ? product.thumbnail : undefined,
+          product_classification:
+            classification && typeof classification.product_type === "string"
+              ? { product_type: classification.product_type }
+              : undefined,
+          variants,
+        },
+      })
+    }
     items.sort(
       (a, b) =>
         ((a.sort_order as number) ?? 0) - ((b.sort_order as number) ?? 0)
@@ -133,15 +156,27 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     entity: "room_set_item",
     fields: [
       "*",
-      "product.*",
-      "product.product_classification.*",
-      "product.variants.*",
+      "products.*",
+      "products.product_classification.*",
+      "products.variants.*",
     ],
     filters: { room_set_id: roomSet.id },
   })
-  const items = (itemsWithProduct ?? []) as Array<
-    Record<string, unknown> & { sort_order?: number }
-  >
+  const items: Array<Record<string, unknown> & { sort_order?: number }> = []
+  for (const row of (itemsWithProduct ?? []) as Array<Record<string, unknown>>) {
+    const one = exactlyOneProduct(row.products as unknown[] | undefined)
+    if (!one.ok && one.reason === "ambiguous") {
+      res.status(500).json({
+        message: "Room set item has multiple product links",
+      })
+      return
+    }
+    const { products: _drop, ...rest } = row
+    items.push({
+      ...rest,
+      product: one.ok ? one.product : undefined,
+    } as Record<string, unknown> & { sort_order?: number })
+  }
   items.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
   res.json({ room_set: { ...roomSet, items } })
 }
