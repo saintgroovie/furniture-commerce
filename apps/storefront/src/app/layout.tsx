@@ -1,11 +1,15 @@
 import type { Metadata, Viewport } from "next"
 import Link from "next/link"
 import { getSiteUrl } from "@/lib/api/base"
-import { ContactsNavDropdown } from "@/components/contacts-nav-dropdown"
+import {
+  HeaderHoverDropdown,
+  HeaderHoverDropdownProvider,
+} from "@/components/contacts-nav-dropdown"
 import { HeaderCartLink } from "@/components/header-cart-link"
 import { HeaderLogo } from "@/components/header-logo"
 import { MobileNav } from "@/components/mobile-nav"
 import { NavDropdown } from "@/components/nav-dropdown"
+import { ShowroomContactsContent } from "@/components/showroom-contacts-content"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import { KidsSectionProvider } from "@/lib/use-kids-section"
@@ -71,13 +75,21 @@ export default function RootLayout({
         <KidsSectionProvider>
         <SiteHeader>
           {/* Top bar */}
+          <HeaderHoverDropdownProvider>
           <div className="header-top">
             <div className="container header-top-inner">
               <div className="header-top-left">
-                <ContactsNavDropdown
+                <HeaderHoverDropdown
+                  id="showroom"
+                  href="/contacts"
                   label={navCopy.showroom}
                   align="start"
-                />
+                >
+                  <ShowroomContactsContent
+                    variant="showroom"
+                    idPrefix="header-showroom"
+                  />
+                </HeaderHoverDropdown>
               </div>
               <HeaderLogo />
               <div className="header-top-right">
@@ -90,10 +102,21 @@ export default function RootLayout({
                     { label: "Оставить заявку", href: "/designers/request" },
                   ]}
                 />
-                <Link href="/contacts">{navCopy.contacts}</Link>
+                <HeaderHoverDropdown
+                  id="contacts"
+                  href="/contacts"
+                  label={navCopy.contacts}
+                  align="end"
+                >
+                  <ShowroomContactsContent
+                    variant="contacts"
+                    idPrefix="header-contacts"
+                  />
+                </HeaderHoverDropdown>
               </div>
             </div>
           </div>
+          </HeaderHoverDropdownProvider>
 
           {/* Main nav */}
           <div className="header-main">

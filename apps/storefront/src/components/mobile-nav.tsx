@@ -4,12 +4,11 @@
  * Mobile navigation — parity with desktop buyer routes.
  * Baseline architecture (woodright-copy + CSS scroll-lock class) preserved.
  * Package A1 gap-fill: focus containment, closed-menu unmount, Escape/focus restore.
- * Showroom: expandable accordion (no hover); «Контакты» is a plain /contacts link.
+ * Showroom + Contacts: plain /contacts links (no hover dropdown / no accordion).
  */
-import { useCallback, useEffect, useId, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ShowroomContactsContent } from "@/components/showroom-contacts-content"
 import { a11yCopy, nav as navCopy } from "@/lib/woodright-copy"
 
 type NavLink = {
@@ -34,20 +33,12 @@ const PANEL_ID = "mobile-nav-panel"
 
 export function MobileNav() {
   const [open, setOpen] = useState(false)
-  const [showroomOpen, setShowroomOpen] = useState(false)
   const pathname = usePathname()
   const btnRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
-  const showroomTriggerRef = useRef<HTMLButtonElement>(null)
-  const showroomOpenRef = useRef(false)
-  const showroomPanelId = useId().replace(/:/g, "")
-  const showroomRegionId = `mobile-showroom-${showroomPanelId}`
-
-  showroomOpenRef.current = showroomOpen
 
   const close = useCallback((restoreFocus = true) => {
     setOpen(false)
-    setShowroomOpen(false)
     if (restoreFocus) {
       requestAnimationFrame(() => btnRef.current?.focus())
     }
@@ -56,11 +47,9 @@ export function MobileNav() {
   // Close on route change (after link navigation).
   useEffect(() => {
     setOpen(false)
-    setShowroomOpen(false)
   }, [pathname])
 
-  // Scroll-lock + initial focus + keyboard trap. Depends only on `open`
-  // so expanding the showroom accordion does not steal focus back to the first link.
+  // Scroll-lock + initial focus + keyboard trap.
   useEffect(() => {
     if (!open) {
       document.body.classList.remove("mobile-nav-open")
@@ -88,11 +77,6 @@ export function MobileNav() {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
         e.preventDefault()
-        if (showroomOpenRef.current) {
-          setShowroomOpen(false)
-          requestAnimationFrame(() => showroomTriggerRef.current?.focus())
-          return
-        }
         close(true)
         return
       }
@@ -168,36 +152,13 @@ export function MobileNav() {
                   {item.label}
                 </Link>
               ))}
-              <div className="mobile-nav-showroom">
-                <button
-                  ref={showroomTriggerRef}
-                  type="button"
-                  className="mobile-nav-showroom-trigger"
-                  aria-expanded={showroomOpen}
-                  aria-controls={showroomRegionId}
-                  onClick={() => setShowroomOpen((v) => !v)}
-                >
-                  <span className="mobile-nav-showroom-label">{navCopy.showroom}</span>
-                  <span
-                    className="mobile-nav-showroom-chevron"
-                    data-expanded={showroomOpen ? "true" : "false"}
-                    aria-hidden="true"
-                  />
-                </button>
-                {showroomOpen ? (
-                  <div
-                    id={showroomRegionId}
-                    className="mobile-nav-showroom-panel"
-                    role="region"
-                    aria-label={navCopy.showroom}
-                  >
-                    <ShowroomContactsContent
-                      variant="mobile"
-                      idPrefix={showroomRegionId}
-                    />
-                  </div>
-                ) : null}
-              </div>
+              <Link
+                href="/contacts"
+                className="mobile-nav-showroom-link"
+                onClick={() => close(false)}
+              >
+                {navCopy.showroom}
+              </Link>
               <Link href="/contacts" onClick={() => close(false)}>
                 {navCopy.contacts}
               </Link>

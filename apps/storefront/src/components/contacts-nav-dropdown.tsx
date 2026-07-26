@@ -1,41 +1,125 @@
 "use client"
 
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import {
+  createContext,
+  useCallback,
+  useContext,
   useEffect,
   useId,
   useRef,
   useState,
   type FocusEvent as ReactFocusEvent,
+  type ReactNode,
 } from "react"
-import { ShowroomContactsContent } from "@/components/showroom-contacts-content"
+
+type SetActiveId = (
+  next: string | null | ((prev: string | null) => string | null)
+) => void
+
+type DropdownContextValue = {
+  activeId: string | null
+  setActiveId: SetActiveId
+}
+
+const HeaderHoverDropdownContext = createContext<DropdownContextValue | null>(
+  null
+)
+
+/** Coordinates exclusive open state across top-bar hover dropdowns. */
+export function HeaderHoverDropdownProvider({
+  children,
+}: {
+  children: ReactNode
+}) {
+  const [activeId, setActiveIdState] = useState<string | null>(null)
+  const setActiveId = useCallback<SetActiveId>((next) => {
+    setActiveIdState((prev) =>
+      typeof next === "function" ? next(prev) : next
+    )
+  }, [])
+
+  return (
+    <HeaderHoverDropdownContext.Provider value={{ activeId, setActiveId }}>
+      {children}
+    </HeaderHoverDropdownContext.Provider>
+  )
+}
 
 type Props = {
+  /** Stable id for exclusive open coordination. */
+  id: string
+  href: string
   label: string
-  className?: string
-  /** Panel horizontal alignment relative to the trigger. */
   align?: "start" | "end"
+  className?: string
+  children: ReactNode
 }
 
 /**
- * Top-bar showroom disclosure with a premium contact panel.
- * Opens on hover, keyboard focus, and click; closes on leave, Escape, outside click.
- * Hover zone wraps trigger + panel so there is no dead gap that collapses the menu.
- *
- * Click always opens (does not toggle-close). Hover already opens before a mouse
- * click lands; a toggle would immediately close the panel. Close via leave /
- * outside / Escape instead.
+ * Top-bar hover/focus preview dropdown with a real navigation link trigger.
+ * - Hover / keyboard focus opens the panel
+ * - Click / Enter on the trigger navigates to `href` (no preventDefault, no click-toggle)
+ * - Escape closes and restores focus; suppressFocusOpenRef cannot stick
+ * - At most one coordinated panel is open at a time
  */
-export function ContactsNavDropdown({
+export function HeaderHoverDropdown({
+  id,
+  href,
   label,
-  className,
   align = "start",
+  className,
+  children,
 }: Props) {
-  const [open, setOpen] = useState(false)
+  const ctx = useContext(HeaderHoverDropdownContext)
+  if (!ctx) {
+    throw new Error("HeaderHoverDropdown requires HeaderHoverDropdownProvider")
+  }
+  const { activeId, setActiveId } = ctx
+  const open = activeId === id
+
   const containerRef = useRef<HTMLDivElement>(null)
-  const triggerRef = useRef<HTMLButtonElement>(null)
+  const triggerRef = useRef<HTMLAnchorElement>(null)
   const suppressFocusOpenRef = useRef(false)
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const reactId = useId()
-  const menuId = `showroom-menu-${reactId.replace(/:/g, "")}`
+  const menuId = `header-hover-${id}-${reactId.replace(/:/g, "")}`
+  const pathname = usePathname()
+
+  const clearCloseTimer = useCallback(() => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current)
+      closeTimerRef.current = null
+    }
+  }, [])
+
+  const openMenu = useCallback(() => {
+    clearCloseTimer()
+    setActiveId(id)
+  }, [clearCloseTimer, id, setActiveId])
+
+  const closeMenu = useCallback(() => {
+    clearCloseTimer()
+    setActiveId((prev) => (prev === id ? null : prev))
+  }, [clearCloseTimer, id, setActiveId])
+
+  /** Delayed close so the cursor can cross into a sibling dropdown without flicker. */
+  const scheduleClose = useCallback(() => {
+    clearCloseTimer()
+    closeTimerRef.current = setTimeout(() => {
+      setActiveId((prev) => (prev === id ? null : prev))
+    }, 60)
+  }, [clearCloseTimer, id, setActiveId])
+
+  useEffect(() => {
+    return () => clearCloseTimer()
+  }, [clearCloseTimer])
+
+  // Close after navigation.
+  useEffect(() => {
+    setActiveId(null)
+  }, [pathname, setActiveId])
 
   useEffect(() => {
     if (!open) return
@@ -47,7 +131,7 @@ export function ContactsNavDropdown({
         // focused, focus() is a no-op and no focus event runs - clear on rAF
         // so the flag cannot stick and block a later keyboard reopen.
         suppressFocusOpenRef.current = true
-        setOpen(false)
+        setActiveId((prev) => (prev === id ? null : prev))
         triggerRef.current?.focus()
         requestAnimationFrame(() => {
           suppressFocusOpenRef.current = false
@@ -60,7 +144,7 @@ export function ContactsNavDropdown({
         containerRef.current &&
         !containerRef.current.contains(e.target as Node)
       ) {
-        setOpen(false)
+        setActiveId((prev) => (prev === id ? null : prev))
       }
     }
 
@@ -70,28 +154,20 @@ export function ContactsNavDropdown({
       document.removeEventListener("keydown", onKeyDown)
       document.removeEventListener("mousedown", onPointerDownOutside)
     }
-  }, [open])
-
-  function openMenu() {
-    setOpen(true)
-  }
-
-  function closeMenu() {
-    setOpen(false)
-  }
+  }, [open, id, setActiveId])
 
   function onFocus() {
     if (suppressFocusOpenRef.current) {
       suppressFocusOpenRef.current = false
       return
     }
-    setOpen(true)
+    openMenu()
   }
 
   function onBlur(e: ReactFocusEvent<HTMLDivElement>) {
     const next = e.relatedTarget as Node | null
     if (next && containerRef.current?.contains(next)) return
-    setOpen(false)
+    closeMenu()
   }
 
   const rootClass = [
@@ -108,25 +184,25 @@ export function ContactsNavDropdown({
       className={rootClass}
       ref={containerRef}
       onMouseEnter={openMenu}
-      onMouseLeave={closeMenu}
+      onMouseLeave={scheduleClose}
       onFocus={onFocus}
       onBlur={onBlur}
     >
-      <button
+      <Link
         ref={triggerRef}
-        type="button"
+        href={href}
         className="nav-dropdown-link contacts-nav-trigger"
         aria-expanded={open}
+        aria-haspopup="true"
         aria-controls={menuId}
-        onClick={openMenu}
       >
-        {label}
-      </button>
-      <span
-        className="nav-dropdown-toggle contacts-nav-chevron"
-        aria-hidden="true"
-        data-expanded={open ? "true" : "false"}
-      />
+        <span className="contacts-nav-trigger-label">{label}</span>
+        <span
+          className="nav-dropdown-toggle contacts-nav-chevron"
+          aria-hidden="true"
+          data-expanded={open ? "true" : "false"}
+        />
+      </Link>
       {open ? (
         <div
           id={menuId}
@@ -134,9 +210,8 @@ export function ContactsNavDropdown({
           role="region"
           aria-label={label}
         >
-          {/* Invisible bridge removes any hover flicker between trigger and panel. */}
           <span className="contacts-nav-dropdown-bridge" aria-hidden="true" />
-          <ShowroomContactsContent variant="dropdown" idPrefix={menuId} />
+          {children}
         </div>
       ) : null}
     </div>

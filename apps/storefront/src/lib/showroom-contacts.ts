@@ -22,11 +22,15 @@ const MESSENGER_E164_DIGITS = "79672587144"
 
 export const showroomContacts = {
   title: "Шоурум Woodright",
+  /** Contacts-oriented panel title (header contacts dropdown). */
+  contactsTitle: "Контакты Woodright",
   /**
-   * Compact chrome label for desktop top-bar trigger and mobile accordion.
+   * Compact chrome label for desktop/mobile top-bar showroom entry.
    * Not a second address SoT - presentation only; full address stays in addressLines.
    */
   shortLabel: "Шоурум: «Гранд», Химки",
+  /** Presentation label for the direct showroom phone in the showroom dropdown. */
+  showroomCallLabel: "Телефон шоурума",
   addressLines: [
     "Московская область, г. Химки",
     "ул. Бутаково, д. 4",
@@ -34,7 +38,7 @@ export const showroomContacts = {
     "4 этаж, подиум Woodright",
   ] as const,
   /**
-   * Compact address for dropdown / mobile chrome only.
+   * Compact address for showroom dropdown chrome only.
    * Same facts as `addressLines` - presentation fold, not a second SoT.
    */
   addressLinesCompact: [

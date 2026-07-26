@@ -259,18 +259,24 @@ body:has([data-kids-product]) {
 }
 
 .header-top-left .contacts-nav-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
   font-size: 0.8125rem;
   color: var(--color-fg-muted);
   text-align: left;
+  text-decoration: none;
   white-space: nowrap;
 }
 
 .header-top-left .contacts-nav-trigger:hover {
   color: var(--color-fg-secondary);
+  text-decoration: none;
 }
 
 .header-top-left .contacts-nav-chevron {
   opacity: 0.4;
+  pointer-events: none;
 }
 
 .logo {
@@ -769,6 +775,8 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   appearance: none;
   background: none;
   border: none;
+  display: inline-flex;
+  align-items: center;
   padding: 0.3rem 0;
   margin: 0;
   cursor: pointer;
@@ -777,10 +785,16 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   font-weight: 400;
   color: var(--color-fg-secondary);
   line-height: inherit;
+  text-decoration: none;
+}
+
+.contacts-nav-trigger-label {
+  display: inline;
 }
 
 .contacts-nav-trigger:hover {
   color: var(--color-fg);
+  text-decoration: none;
 }
 
 .contacts-nav-trigger:focus-visible {
@@ -791,6 +805,7 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 
 .contacts-nav-chevron {
   pointer-events: none;
+  flex: none;
 }
 
 .contacts-nav-chevron[data-expanded="true"]::after {
@@ -802,24 +817,38 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 }
 
 .contacts-nav-dropdown-menu {
-  width: 400px;
+  width: 380px;
   min-width: 0;
-  max-width: min(400px, calc(100vw - 1.5rem));
+  max-width: min(380px, calc(100vw - 1.5rem));
   padding: 0;
   overflow: visible;
   box-shadow: 0 8px 28px rgba(44, 36, 32, 0.1);
 }
 
-/* Showroom trigger lives in the left top bar - panel opens under it. */
+/* Showroom trigger - panel under left edge. */
 .contacts-nav-dropdown--align-start .contacts-nav-dropdown-menu {
   left: 0;
   right: auto;
 }
 
-/* Kept for rare right-side placement; not used by current header IA. */
+/* Contacts trigger - panel under right edge. */
 .contacts-nav-dropdown--align-end .contacts-nav-dropdown-menu {
   left: auto;
   right: 0;
+}
+
+.header-top-right .contacts-nav-trigger {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--color-fg-secondary);
+}
+
+.header-top-right .contacts-nav-trigger:hover {
+  color: var(--color-fg);
+}
+
+.header-top-right .contacts-nav-chevron {
+  opacity: 0.35;
 }
 
 /* Neutralize generic `.nav-dropdown-menu a` chrome (padding / hover fill)
@@ -862,19 +891,19 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   color: var(--color-fg);
 }
 
-.showroom-contacts--dropdown {
-  gap: 0.875rem;
+.showroom-contacts--showroom {
+  gap: 0.75rem;
   padding: 1.5rem 1.625rem 1.375rem;
+}
+
+.showroom-contacts--contacts {
+  gap: 0.75rem;
+  padding: 1.375rem 1.5rem 1.25rem;
 }
 
 .showroom-contacts--page {
   gap: 1.125rem;
   padding: 1.75rem 1.75rem 1.5rem;
-}
-
-.showroom-contacts--mobile {
-  gap: 0.75rem;
-  padding: 0.5rem 0 0.25rem;
 }
 
 .showroom-contacts-title {
@@ -884,8 +913,8 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   letter-spacing: 0.005em;
 }
 
-.showroom-contacts--dropdown .showroom-contacts-title,
-.showroom-contacts--mobile .showroom-contacts-title {
+.showroom-contacts--showroom .showroom-contacts-title,
+.showroom-contacts--contacts .showroom-contacts-title {
   font-size: 1.25rem; /* 20px */
   line-height: 1.3;
 }
@@ -904,8 +933,7 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   color: var(--color-fg-secondary);
 }
 
-.showroom-contacts--dropdown .showroom-contacts-address,
-.showroom-contacts--mobile .showroom-contacts-address {
+.showroom-contacts--showroom .showroom-contacts-address {
   font-size: 0.9375rem; /* 15px */
   line-height: 1.5;
 }
@@ -977,8 +1005,8 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   transition: color 0.12s ease;
 }
 
-.showroom-contacts--dropdown .showroom-contacts-phone-number,
-.showroom-contacts--mobile .showroom-contacts-phone-number {
+.showroom-contacts--showroom .showroom-contacts-phone-number,
+.showroom-contacts--contacts .showroom-contacts-phone-number {
   font-size: 1.125rem; /* 18px */
   line-height: 1.25;
 }
@@ -988,10 +1016,12 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   line-height: 1.25;
 }
 
-.showroom-contacts--mobile .showroom-contacts-phone {
-  min-height: 44px;
-  justify-content: center;
-  padding: 0.35rem 0;
+.showroom-contacts--contacts .showroom-contacts-actions {
+  gap: 0.75rem;
+}
+
+.showroom-contacts--contacts .showroom-contacts-messengers {
+  padding-top: 0.25rem;
 }
 
 .showroom-contacts-messengers {
@@ -1054,7 +1084,7 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 
 @media (max-width: 440px) {
   .contacts-nav-dropdown-menu {
-    width: min(400px, calc(100vw - 1.25rem));
+    width: min(380px, calc(100vw - 1.25rem));
   }
 
   .showroom-contacts-messengers {
@@ -1234,118 +1264,21 @@ html.mobile-nav-open {
     color: color-mix(in srgb, #598060 85%, black 15%);
   }
 
-  .mobile-nav-showroom {
-    display: flex;
-    flex-direction: column;
-    border-bottom: 1px solid var(--color-border);
-  }
-
-  .mobile-nav-showroom-trigger {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    width: 100%;
-    min-height: 44px;
+  .mobile-nav-showroom-link {
+    display: block;
     padding: 0.875rem 0;
-    border: none;
-    border-bottom: 1px solid var(--color-border);
-    background: none;
-    font: inherit;
+    min-height: 44px;
     font-size: 1rem;
     font-weight: 500;
     color: var(--color-fg);
-    text-align: left;
-    cursor: pointer;
-  }
-
-  .mobile-nav-showroom-label {
-    flex: 1 1 auto;
-    min-width: 0;
+    border-bottom: 1px solid var(--color-border);
     line-height: 1.35;
+    overflow-wrap: anywhere;
   }
 
-  .mobile-nav-showroom-trigger:focus-visible {
-    outline: 2px solid var(--color-action);
-    outline-offset: 2px;
-    border-radius: var(--radius-sm);
-  }
-
-  .mobile-nav-showroom-chevron {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    flex: none;
-    opacity: 0.45;
-  }
-
-  .mobile-nav-showroom-chevron::after {
-    content: "";
-    display: block;
-    width: 0;
-    height: 0;
-    border-left: 4px solid transparent;
-    border-right: 4px solid transparent;
-    border-top: 4.5px solid currentColor;
-    transition: transform 0.15s;
-  }
-
-  .mobile-nav-showroom-chevron[data-expanded="true"]::after {
-    transform: rotate(180deg);
-  }
-
-  .mobile-nav-showroom-panel {
-    padding: 0.25rem 0 0.65rem;
-    max-width: 100%;
-    overflow-x: hidden;
-  }
-
-  .mobile-nav-showroom-panel .showroom-contacts--mobile {
-    max-width: 100%;
-  }
-
-  /* Neutralize `.mobile-nav a` (display:block + border-bottom + nav padding)
-     so contact phones/messengers stay compact text, not menu rows. */
-  .mobile-nav-showroom-panel a.showroom-contacts-phone,
-  .mobile-nav-showroom-panel a.showroom-contacts-messenger-link {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.3rem;
-    width: auto;
-    min-height: 44px;
-    padding: 0.35rem 0;
-    border-bottom: 0;
-    font-size: inherit;
-    font-weight: inherit;
-    color: inherit;
-    background: transparent;
-  }
-
-  .mobile-nav-showroom-panel a.showroom-contacts-messenger-link {
-    flex-direction: row;
-    align-items: center;
-    gap: 0;
-    padding: 0.15rem 0;
-    font-size: 0.875rem;
-    font-weight: 500;
+  .mobile-nav-showroom-link:hover {
+    text-decoration: none;
     color: var(--color-fg-secondary);
-  }
-
-  .mobile-nav-showroom-panel a.showroom-contacts-phone:hover,
-  .mobile-nav-showroom-panel a.showroom-contacts-messenger-link:hover {
-    color: inherit;
-    background: transparent;
-  }
-
-  .mobile-nav-showroom-panel a.showroom-contacts-phone:hover .showroom-contacts-phone-number {
-    color: var(--color-brand);
-  }
-
-  .mobile-nav-showroom-panel a.showroom-contacts-messenger-link:hover {
-    color: var(--color-fg);
   }
 }
 
