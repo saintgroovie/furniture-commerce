@@ -1,6 +1,6 @@
 import { defineRouteConfig } from "@medusajs/admin-sdk"
 import { useCallback, useEffect, useState, type CSSProperties } from "react"
-import { adminJson } from "../../lib/admin-fetch"
+import { adminJson } from "../../../lib/admin-fetch"
 
 const STAGE_LABELS: Record<string, string> = {
   new: "Новый заказ",
