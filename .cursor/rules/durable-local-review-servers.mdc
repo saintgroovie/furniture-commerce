@@ -1,0 +1,62 @@
+---
+description: Durable local servers — never pin Next/Medusa/review apps to Cursor agent shells
+alwaysApply: true
+---
+
+# Durable local review / preview servers
+
+Complements `foreground-only-execution.mdc`, `review-server-stability-gate.mdc`, and `local-dev-single-instance.mdc`.
+
+## Why
+
+Cursor aborts agent shells (often exit **143** / SIGTERM). Children of that shell die even with plain `nohup … &` or Shell `block_until_ms: 0`.
+
+**Health 200 in a previous turn ≠ process still alive.**
+
+## Hard bans
+
+- Do not pin long-lived `next` / `medusa` / review HTTP apps to the Cursor agent shell (`block_until_ms: 0`, bare `nohup &`).
+- Do not restart a stack that is already healthy on the intended port/worktree.
+- Do not hand localhost URLs without same-turn `review-server-stability-gate.mdc`.
+- No LaunchAgents / LaunchDaemons from the agent (`personal-data-mac-safety.mdc`).
+- No autostart without **explicit** operator request.
+- Never `killall node` / broad `pkill`.
+
+## Shared ports `:9000` / `:3002` (canonical only)
+
+Managed **only** by entrypoints under `scripts/local-dev/` from the **canonical** root (see `local-dev-single-instance.mdc`):
+
+```sh
+scripts/local-dev/woodright-backend.sh status|start develop|start qa|stop
+scripts/local-dev/woodright-storefront.sh status|start develop|start qa|stop
+```
+
+The generic launcher below **refuses** ports `9000` and `3002`. Secondary worktrees must not bind those ports.
+
+## Alternate preview ports (worktree SF/BE)
+
+When the operator asks for a preview on another port (e.g. `3028`/`3029`):
+
+1. Probe → if up, **reuse**.
+2. Start via durable detach (not agent-shell background):
+
+```sh
+python3 scripts/local/durable_local_server.py start \
+  --name sf-3029 --cwd /path/to/worktree/apps/storefront --port 3029 \
+  --cmd 'yarn next dev --port 3029 --hostname 127.0.0.1' \
+  --env NEXT_DIST_DIR=.next-dev
+```
+
+3. Re-run stability gate before any URL.
+4. `stop` only after identity match (pid + lstart + cmdline + cwd). Stale/recycled PIDs are refused, not killed.
+
+State dir (ops exception, mode `0700`): `~/.woodright/durable-local-servers/<name>/`
+(same family as `~/.woodright/qa-dev-servers/` used by local-dev entrypoints).
+
+## Owner-review / V12 apps
+
+Use that app’s `scripts/daemon_server.py` / Start|Stop `.command`. Do not substitute agent-shell Python.
+
+## Honesty
+
+After Cursor abort: say `killed_by_cursor_agent_shell`. Fix = durable entrypoint / Terminal - not a third agent-shell restart loop.
