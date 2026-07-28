@@ -100,11 +100,10 @@ export default async function RoomSetPage({ params }: { params: { slug: string }
   const items = ((roomSet.items as RoomItem[]) ?? []).slice().sort(
     (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
   )
-  const heroRaw =
+  const hero =
     typeof roomSet.hero_image === "string" && roomSet.hero_image.trim()
       ? roomSet.hero_image.trim()
       : null
-  const hero = heroRaw ? resolveStorefrontProductImageSrc(heroRaw) : null
 
   return (
     <div className="room-set-detail" data-state="success">

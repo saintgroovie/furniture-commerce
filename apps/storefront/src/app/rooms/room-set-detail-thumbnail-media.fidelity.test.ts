@@ -16,7 +16,9 @@ assert.match(
   /import\s+\{\s*resolveStorefrontProductImageSrc\s*\}\s+from\s+"@\/lib\/product-images"/
 )
 assert.match(page, /resolveStorefrontProductImageSrc\(thumbRaw\)/)
-assert.match(page, /resolveStorefrontProductImageSrc\(heroRaw\)/)
+// Hero stays as stored buyer URL from seed (/product-static/...); this pass
+// only repairs product thumbnail projection.
+assert.doesNotMatch(page, /resolveStorefrontProductImageSrc\(hero/)
 // Must not bind raw thumbnail to img src without resolver
 assert.doesNotMatch(
   page,
