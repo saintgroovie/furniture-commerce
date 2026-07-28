@@ -11,6 +11,8 @@ Historical seed slugs (`spalnya`, `gostinaya`, …) stay inactive forever under 
 
 ## Run
 
+Local source tree (TypeScript):
+
 ```sh
 # dry-run
 npx medusa exec ./src/scripts/seed-rooms-v1-owner-approved.ts
@@ -19,6 +21,21 @@ npx medusa exec ./src/scripts/seed-rooms-v1-owner-approved.ts
 WOODRIGHT_ROOMS_V1_CONFIRM=1 WOODRIGHT_ROOMS_V1_APPLY=1 \
   npx medusa exec ./src/scripts/seed-rooms-v1-owner-approved.ts
 ```
+
+Immutable staging backend image (compiled JS, after clean recreate — no host bind):
+
+```sh
+# dry-run / plan (default)
+./node_modules/.bin/medusa exec ./src/scripts/seed-rooms-v1-owner-approved.js
+
+# apply (staging only — both flags required)
+WOODRIGHT_ROOMS_V1_CONFIRM=1 WOODRIGHT_ROOMS_V1_APPLY=1 \
+  ./node_modules/.bin/medusa exec ./src/scripts/seed-rooms-v1-owner-approved.js
+```
+
+The production image build compiles these ops scripts via
+`apps/backend/scripts/compile-ops-seeds.mjs` into `dist/src/scripts/`.
+They are **not** run on container start, healthcheck, or migrate.
 
 Card order uses create order (Cloud first, Greenwich second) so store `created_at DESC` yields Greenwich → Cloud. No schema migration.
 
