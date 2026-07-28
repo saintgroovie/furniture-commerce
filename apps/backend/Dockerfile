@@ -28,7 +28,10 @@ ENV NODE_ENV=development \
     COOKIE_SECRET=woodright-image-build-cookie-placeholder-000000
 RUN yarn medusa build \
  && test -f dist/medusa-config.js \
- && test -f dist/package.json
+ && test -f dist/package.json \
+ && node ./scripts/compile-ops-seeds.mjs \
+ && test -f dist/src/scripts/seed-rooms-v1-owner-approved.js \
+ && test -f dist/src/scripts/seed-rooms-v1-plan.js
 
 FROM node:20-bookworm-slim AS runner
 WORKDIR /server
@@ -40,6 +43,7 @@ RUN useradd --system --uid 10001 --create-home medusa \
  && chown -R medusa:medusa /server/static /home/medusa
 
 # App root = compiled Medusa server artifact (JS config), not TS sources.
+# Ops seeds: compiled into dist/src/scripts by compile-ops-seeds.mjs (not startup).
 COPY --from=build --chown=medusa:medusa /server/dist/ ./
 COPY --from=build --chown=medusa:medusa /server/node_modules ./node_modules
 COPY --from=build --chown=medusa:medusa /server/scripts ./scripts
@@ -49,4 +53,5 @@ EXPOSE 9000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=5 \
   CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||9000)+'/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 # Avoid `yarn` at runtime (corepack would try to write /server/.yarn as UID 10001).
+# Seed is NEVER part of CMD — explicit `medusa exec` only (staging guards inside script).
 CMD ["./node_modules/.bin/medusa", "start"]

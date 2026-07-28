@@ -323,6 +323,7 @@ export const roomSetDetail = {
   priceFromLabel: "Цена от",
   priceUnknown: "уточняется",
   compositionTitle: "Что входит в комплект",
+  openProduct: "Открыть товар",
 }
 
 export const bespokeLanding = {
@@ -554,6 +555,8 @@ export const checkoutCopy = {
     "Сохраните номер",
     "он понадобится при оплате и вопросах менеджеру",
   ],
+  trackOrderCta: "Следить за заказом",
+  trackOrderHint: "Откройте ссылку, чтобы видеть статус изготовления",
   paymentNote:
     [
     "Заказ отправлен на подтверждение",
@@ -589,6 +592,28 @@ export const productCta = {
   bespokeCtaLabel: "Запросить расчёт",
   requestQuoteCtaLabel: "Оставить заявку",
   requestQuoteManagerNote: "Уточним состав, отделку и подготовим расчёт",
+  unavailableCtaLabel: "Узнать о возобновлении",
+  madeToOrderCtaLabel: "Заказать",
+  configurableToOrderCtaLabel: "Настроить и заказать",
+  discussProjectCtaLabel: "Обсудить проект",
+}
+
+export const orderTrackCopy = {
+  title: "Статус заказа",
+  loading: "Загружаем статус…",
+  missingParams: "Откройте ссылку из письма или экрана оформления заказа",
+  loadError: [
+    "Не удалось загрузить статус",
+    "Проверьте ссылку или напишите нам",
+  ],
+  consolidatedHeading: "Сейчас по заказу",
+  paymentHeading: "Оплата",
+  productionHeading: "Изготовление",
+  deliveryHeading: "Доставка",
+  timelineHeading: "Этапы",
+  eventsHeading: "История",
+  nextActionLabel: "Что дальше",
+  noEvents: "Пока нет обновлений",
 }
 
 export const pdpCopy = {
