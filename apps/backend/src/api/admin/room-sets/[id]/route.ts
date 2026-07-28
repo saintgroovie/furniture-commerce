@@ -1,4 +1,5 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { exactlyOneProduct } from "../../../../lib/room-set-item-product"
 import { ROOM_SET_MODULE } from "../../../../modules/room-set"
 import RoomSetModuleService from "../../../../modules/room-set/service"
 
@@ -11,14 +12,35 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     return
   }
   const query = req.scope.resolve("query") as {
-    graph: (args: { entity: string; fields: string[]; filters?: Record<string, unknown> }) => Promise<{ data: unknown[] }>
+    graph: (args: {
+      entity: string
+      fields: string[]
+      filters?: Record<string, unknown>
+    }) => Promise<{ data: unknown[] }>
   }
   const { data: itemsWithProduct } = await query.graph({
     entity: "room_set_item",
-    fields: ["*", "product.*"],
+    fields: ["*", "products.*"],
     filters: { room_set_id: id },
   })
-  const items = (itemsWithProduct ?? []) as Array<Record<string, unknown> & { sort_order?: number }>
+  const items: Array<Record<string, unknown> & { sort_order?: number }> = []
+  for (const row of (itemsWithProduct ?? []) as Array<Record<string, unknown>>) {
+    const one = exactlyOneProduct(row.products as unknown[] | undefined)
+    if (!one.ok) {
+      res.status(500).json({
+        message:
+          one.reason === "ambiguous"
+            ? "Room set item has multiple product links"
+            : "Room set item missing product link",
+      })
+      return
+    }
+    const { products: _drop, ...rest } = row
+    items.push({
+      ...rest,
+      product: one.product,
+    } as Record<string, unknown> & { sort_order?: number })
+  }
   items.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
   res.json({ room_set: { ...roomSet, items } })
 }
