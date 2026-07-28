@@ -24,8 +24,8 @@ source "$ROOT/ops/lib/woodright-staging-mutation-lock.sh"
 MODE="${ROOMSET_SEED_MODE:-dry-run}"
 TARGET="${ROOMSET_SEED_TARGET:-staging}"
 SCOPE="${ROOMSET_SEED_SCOPE:-rooms-v1-owner-approved}"
-IMAGE="${WOODRIGHT_SEED_IMAGE:?set WOODRIGHT_SEED_IMAGE to exact digest ref ghcr.io/...@sha256:...}"
-ENV_FILE="${WOODRIGHT_SEED_ENV_FILE:?set WOODRIGHT_SEED_ENV_FILE (mode 600)}"
+IMAGE="${WOODRIGHT_SEED_IMAGE:-}"
+ENV_FILE="${WOODRIGHT_SEED_ENV_FILE:-}"
 NET="${WOODRIGHT_SEED_NETWORK:-dokploy-network}"
 SCRIPT_PATH="${WOODRIGHT_SEED_SCRIPT:-./src/scripts/seed-rooms-v1-owner-approved.js}"
 
@@ -33,21 +33,24 @@ die() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 
 [[ "$MODE" == "dry-run" || "$MODE" == "apply" ]] || die "ROOMSET_SEED_MODE must be dry-run|apply"
 [[ "$TARGET" == "staging" ]] || die "refused: ROOMSET_SEED_TARGET must be staging (got $TARGET)"
-case "$IMAGE" in
-  *production*|*woodright.ru*) die "refused: production image/target" ;;
-esac
 if [[ "$MODE" == "apply" ]]; then
   [[ "${WOODRIGHT_SEED_APPLY_AUTHORIZED:-}" == "1" ]] || \
     die "apply refused: set WOODRIGHT_SEED_APPLY_AUTHORIZED=1 after explicit owner approval"
 fi
 
-# Acquire BEFORE env/image mutation-side validation so contention fails closed on the lock.
+# Acquire BEFORE image/env validation so contention fails closed on the lock
+# even when callers omit WOODRIGHT_SEED_* (seedharden race class).
 wr_staging_mutation_lock_acquire \
   "actor=run-staging-seed-rooms-v1" \
   "command=$0 mode=$MODE" \
-  "target=$IMAGE" \
+  "target=${IMAGE:-unset}" \
   || die "canonical live-cutover.lock busy/unavailable"
 
+[[ -n "$IMAGE" ]] || die "set WOODRIGHT_SEED_IMAGE to exact digest ref ghcr.io/...@sha256:..."
+[[ -n "$ENV_FILE" ]] || die "set WOODRIGHT_SEED_ENV_FILE (mode 600)"
+case "$IMAGE" in
+  *production*|*woodright.ru*) die "refused: production image/target" ;;
+esac
 [[ -f "$ENV_FILE" ]] || die "missing env file"
 ENV_MODE="$(stat -c '%a' "$ENV_FILE" 2>/dev/null || stat -f '%Lp' "$ENV_FILE")"
 [[ "$ENV_MODE" == "600" || "$ENV_MODE" == "0600" ]] || die "ENV_FILE mode must be 600"
