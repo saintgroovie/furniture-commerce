@@ -6,6 +6,7 @@ import { getRoomSetStorefrontBySlug, NOT_FOUND } from "@/lib/api/room-sets"
 import { RoomSetCta } from "@/components/room-set-cta"
 import { CopyLines } from "@/components/copy-lines"
 import { indexingCanonical } from "@/lib/indexing-policy"
+import { resolveStorefrontProductImageSrc } from "@/lib/product-images"
 import { roomSetDetail } from "@/lib/woodright-copy"
 
 function truncate(str: string, max: number): string {
@@ -99,10 +100,11 @@ export default async function RoomSetPage({ params }: { params: { slug: string }
   const items = ((roomSet.items as RoomItem[]) ?? []).slice().sort(
     (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
   )
-  const hero =
+  const heroRaw =
     typeof roomSet.hero_image === "string" && roomSet.hero_image.trim()
       ? roomSet.hero_image.trim()
       : null
+  const hero = heroRaw ? resolveStorefrontProductImageSrc(heroRaw) : null
 
   return (
     <div className="room-set-detail" data-state="success">
@@ -128,10 +130,16 @@ export default async function RoomSetPage({ params }: { params: { slug: string }
           const title = String(product?.title ?? "Товар")
           const qty = Number(item.quantity ?? 1)
           const href = productHref(product)
-          const thumb =
+          const thumbRaw =
             typeof product?.thumbnail === "string" && product.thumbnail.trim()
               ? product.thumbnail.trim()
               : null
+          // Buyer-facing media must go through the same resolver as catalog/PDP
+          // (`/static/...` → `/product-static/...` via Next rewrite). Raw `/static/`
+          // on the storefront origin 404s.
+          const thumb = thumbRaw
+            ? resolveStorefrontProductImageSrc(thumbRaw)
+            : null
           const key = String(item.id ?? product?.id ?? i)
 
           if (!href) {
