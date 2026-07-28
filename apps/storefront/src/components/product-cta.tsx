@@ -24,6 +24,13 @@ import { isKidsMetadataStorefrontProduct } from "@/lib/kids"
 import { isOliverKidsCollectionProduct } from "@/lib/catalog-scope"
 import { actions, pdpCopy, productCta as copy } from "@/lib/woodright-copy"
 import { flatCopy } from "@/lib/format-ru-copy"
+import {
+  ctaLabelForPurchase,
+  isBespokeLikePurchase,
+  isQuoteLikePurchase,
+  isUnavailablePurchase,
+  readProductPurchase,
+} from "@/lib/woodright-order/purchase-contract"
 
 type Props = {
   product: Record<string, unknown>
@@ -58,6 +65,7 @@ export function ProductCta({
   const materialSelection = usePdpMaterialSelection()
   const productKey = productKeyOf(product)
   const gateOk = gateMatchesProduct(gate, productKey)
+  const purchase = readProductPurchase(product)
 
   /* Selected material execution; falls back to the default (first) tier. */
   function selectedMaterialTier(live = false): MaterialTierOption | null {
@@ -166,6 +174,116 @@ export function ProductCta({
       setError(userFacingError(e, flatCopy(copy.addToCartFailed)))
     } finally {
       setAdding(false)
+    }
+  }
+
+  /* Prefer server `product.purchase` DTO when present. */
+  if (purchase) {
+    if (isUnavailablePurchase(purchase)) {
+      return (
+        <div>
+          <div className="cta-group">
+            <span className="btn btn-primary" aria-disabled="true">
+              {ctaLabelForPurchase(purchase, copy.unavailableCtaLabel)}
+            </span>
+          </div>
+          {purchase.availability_label && (
+            <p className="info-text" style={{ marginTop: "0.75rem" }}>
+              {purchase.availability_label}
+            </p>
+          )}
+          {purchase.buyer_message && (
+            <p className="info-text" style={{ marginTop: "0.5rem" }}>
+              {purchase.buyer_message}
+            </p>
+          )}
+        </div>
+      )
+    }
+
+    if (isBespokeLikePurchase(purchase)) {
+      return (
+        <div className="cta-group">
+          <Link href={bespokeRequestHref(productId)} className="btn btn-primary">
+            {ctaLabelForPurchase(purchase, copy.bespokeCtaLabel)}
+          </Link>
+        </div>
+      )
+    }
+
+    if (isQuoteLikePurchase(purchase)) {
+      return (
+        <div>
+          <div className="cta-group">
+            <Link href={bespokeRequestHref(productId)} className="btn btn-primary">
+              {ctaLabelForPurchase(purchase, copy.requestQuoteCtaLabel)}
+            </Link>
+          </div>
+          <p className="info-text" style={{ marginTop: "0.75rem" }}>
+            {purchase.buyer_message || copy.requestQuoteManagerNote}
+          </p>
+        </div>
+      )
+    }
+
+    if (purchase.purchase_flow === "cart" || purchase.can_purchase) {
+      const salesCta = ctaLabelForPurchase(purchase, actions.addToCart)
+      const primaryLabel = adding
+        ? copy.addingInProgress
+        : selectionBlocked
+          ? actions.chooseParameters
+          : !variantId
+            ? copy.noVariant
+            : salesCta
+
+      const primaryButton = variantId ? (
+        <button
+          type="button"
+          onClick={handleAddToCart}
+          disabled={!canAdd}
+          className="btn btn-primary"
+          aria-disabled={!canAdd}
+        >
+          {primaryLabel}
+        </button>
+      ) : (
+        <span className="info-text">{copy.noVariant}</span>
+      )
+
+      const showConfigureSecondary =
+        purchase.sales_mode === "configurable_to_order" ||
+        productType === "CONFIGURABLE"
+
+      return (
+        <div>
+          <div className="cta-group">
+            {primaryButton}
+            {showConfigureSecondary && (
+              <Link href={bespokeRequestHref(productId)} className="btn btn-secondary">
+                {copy.configureBespoke}
+              </Link>
+            )}
+          </div>
+          {purchase.availability_label && (
+            <p className="info-text" style={{ marginTop: "0.75rem" }}>
+              {purchase.availability_label}
+            </p>
+          )}
+          {success && (
+            <div className="feedback">
+              <span className="feedback-success">{copy.addedTitle}</span>
+              <Link href="/cart">
+                {actions.toCart} →
+              </Link>
+            </div>
+          )}
+          {error && (
+            <div className="feedback">
+              <span className="feedback-error">{error}</span>
+            </div>
+          )}
+        </div>
+      )
     }
   }
 

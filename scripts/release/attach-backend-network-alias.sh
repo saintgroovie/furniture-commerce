@@ -1,22 +1,17 @@
 #!/usr/bin/env bash
+# LIVE_MUTATING=true
+# requires_global_lock=true
 # EMERGENCY ONLY: attach public backend to the shared app network with alias
 # `backend`. This is NOT durable across recreate and is NOT the source of truth.
 # Canonical SoT: docker-compose.staging.yml backend.networks.woodright_staging.aliases.
 #
-# Prefer compose recreate after declarative alias is applied. Use this script
-# only to restore media proxy briefly before rollback or compose fix.
-#
 # Requires: EMERGENCY_BACKEND_ALIAS=1
-#
-# Usage:
-#   EMERGENCY_BACKEND_ALIAS=1 \
-#   SHARED_NET=woodright-stack-3dsdhd_woodright_staging \
-#   BACKEND_CONTAINER=woodright-staging-backend \
-#   ./scripts/release/attach-backend-network-alias.sh
-#
-# Idempotent when alias already present. Disconnect/reconnect may briefly
-# interrupt storefront→backend DNS; avoid on healthy declarative stacks.
+# Holds canonical /srv/woodright/locks/live-cutover.lock (flock) across network mutation.
 set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# shellcheck source=../../ops/lib/woodright-staging-mutation-lock.sh
+source "$ROOT/ops/lib/woodright-staging-mutation-lock.sh"
 
 BACKEND_CONTAINER="${BACKEND_CONTAINER:-woodright-staging-backend}"
 SHARED_NET="${SHARED_NET:-}"
@@ -33,12 +28,18 @@ if [[ -z "$SHARED_NET" ]]; then
   exit 2
 fi
 
+wr_staging_mutation_lock_acquire \
+  "actor=attach-backend-network-alias" \
+  "command=$0" \
+  "target=$BACKEND_CONTAINER" \
+  || { echo "canonical live-cutover.lock busy/unavailable" >&2; exit 3; }
+
+# Revalidate under the lock.
 if ! docker inspect "$BACKEND_CONTAINER" >/dev/null 2>&1; then
   echo "missing container: $BACKEND_CONTAINER" >&2
   exit 2
 fi
 
-# If already attached with alias, exit 0.
 ALIASES="$(docker inspect -f "{{range \$k, \$v := .NetworkSettings.Networks}}{{if eq \$k \"$SHARED_NET\"}}{{json .Aliases}}{{end}}{{end}}" "$BACKEND_CONTAINER" 2>/dev/null || true)"
 if printf '%s' "$ALIASES" | grep -q "\"$ALIAS\""; then
   echo "emergency_alias_present container=$BACKEND_CONTAINER net=$SHARED_NET alias=$ALIAS"

@@ -23,7 +23,21 @@ if (wantJson) {
 for (const p of products) {
   const m = p.metadata ?? {}
   const dims = m.dimensions
-    ? `${m.dimensions.width_mm ?? "?"}x${m.dimensions.depth_mm ?? "?"}x${m.dimensions.height_mm ?? "?"}`
+    ? (() => {
+        const parts: string[] = []
+        // Height → Width → Depth; zeros are unknown (not "?") when absent.
+        for (const key of ["height_mm", "width_mm", "depth_mm"]) {
+          const v = m.dimensions[key]
+          if (typeof v === "number" && Number.isFinite(v) && v > 0) {
+            parts.push(String(v))
+          } else {
+            parts.push("?")
+          }
+        }
+        // If all unknown, show dash.
+        if (parts.every((p) => p === "?")) return "-"
+        return parts.join("x")
+      })()
     : "-"
   const opts = (p.options ?? [])
     .map((o) => `${o.title}[${(o.values ?? []).map((v) => v.value).join("|")}]`)
