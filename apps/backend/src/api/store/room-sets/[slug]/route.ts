@@ -86,6 +86,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         "products.id",
         "products.title",
         "products.handle",
+        "products.thumbnail",
         "products.product_classification.product_type",
         "products.variants.id",
       ],
@@ -127,6 +128,8 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
           id: product.id,
           title: product.title,
           handle: product.handle,
+          thumbnail:
+            typeof product.thumbnail === "string" ? product.thumbnail : undefined,
           product_classification:
             classification && typeof classification.product_type === "string"
               ? { product_type: classification.product_type }

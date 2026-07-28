@@ -34,6 +34,21 @@ assert.match(
 )
 assert.match(
   src,
+  /products\.handle/,
+  "storefront view must project canonical product handle for PDP links"
+)
+assert.match(
+  src,
+  /products\.thumbnail/,
+  "storefront view may include thumbnail for composition media"
+)
+assert.match(
+  src,
+  /handle:\s*product\.handle/,
+  "storefront DTO must expose handle on singular product"
+)
+assert.match(
+  src,
   /products\.\*|products\.variants\.\*/,
   "default detail must keep full products/variants projection"
 )

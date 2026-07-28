@@ -323,6 +323,7 @@ export const roomSetDetail = {
   priceFromLabel: "Цена от",
   priceUnknown: "уточняется",
   compositionTitle: "Что входит в комплект",
+  openProduct: "Открыть товар",
 }
 
 export const bespokeLanding = {
