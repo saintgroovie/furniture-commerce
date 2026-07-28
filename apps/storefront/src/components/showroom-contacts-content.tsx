@@ -70,7 +70,7 @@ export function ShowroomContactsContent({
     return (
       <div className={rootClass} role="group" aria-labelledby={titleId}>
         <p id={titleId} className="showroom-contacts-title">
-          {formatRuInline(showroomContacts.title)}
+          {formatRuInline(showroomContacts.showroomDropdownTitle)}
         </p>
         <address id={addressId} className="showroom-contacts-address">
           {showroomContacts.addressLinesCompact.map((line) => (
@@ -109,6 +109,7 @@ export function ShowroomContactsContent({
             tel={showroomContacts.writeOrCall.tel}
           />
         </div>
+        <div className="showroom-contacts-divider" aria-hidden="true" />
         <MessengerList />
       </div>
     )

@@ -52,6 +52,8 @@ type Props = {
   id: string
   href: string
   label: string
+  /** Shared header preview shell: width + content-density variant. */
+  panelVariant: "showroom" | "contacts"
   align?: "start" | "end"
   className?: string
   children: ReactNode
@@ -68,6 +70,7 @@ export function HeaderHoverDropdown({
   id,
   href,
   label,
+  panelVariant,
   align = "start",
   className,
   children,
@@ -206,7 +209,7 @@ export function HeaderHoverDropdown({
       {open ? (
         <div
           id={menuId}
-          className="nav-dropdown-menu contacts-nav-dropdown-menu"
+          className={`nav-dropdown-menu contacts-nav-dropdown-menu header-info-dropdown header-info-dropdown--${panelVariant}`}
           role="region"
           aria-label={label}
         >

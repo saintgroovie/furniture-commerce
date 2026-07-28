@@ -83,6 +83,7 @@ export default function RootLayout({
                   id="showroom"
                   href="/contacts"
                   label={navCopy.showroom}
+                  panelVariant="showroom"
                   align="start"
                 >
                   <ShowroomContactsContent
@@ -106,6 +107,7 @@ export default function RootLayout({
                   id="contacts"
                   href="/contacts"
                   label={navCopy.contacts}
+                  panelVariant="contacts"
                   align="end"
                 >
                   <ShowroomContactsContent

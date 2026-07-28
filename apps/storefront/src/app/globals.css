@@ -262,20 +262,20 @@ body:has([data-kids-product]) {
   display: inline-flex;
   align-items: center;
   gap: 0;
-  font-size: 0.8125rem;
-  color: var(--color-fg-muted);
+  font-size: 0.875rem;
+  color: var(--color-fg-secondary);
   text-align: left;
   text-decoration: none;
   white-space: nowrap;
 }
 
 .header-top-left .contacts-nav-trigger:hover {
-  color: var(--color-fg-secondary);
+  color: var(--color-fg);
   text-decoration: none;
 }
 
 .header-top-left .contacts-nav-chevron {
-  opacity: 0.4;
+  opacity: 0.35;
   pointer-events: none;
 }
 
@@ -769,7 +769,7 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   opacity: 0.35;
 }
 
-/* -- Contacts showroom panel (top bar + shared content) -- */
+/* -- Header info dropdowns (showroom + contacts previews) -- */
 
 .contacts-nav-trigger {
   appearance: none;
@@ -777,6 +777,7 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   border: none;
   display: inline-flex;
   align-items: center;
+  gap: 0;
   padding: 0.3rem 0;
   margin: 0;
   cursor: pointer;
@@ -786,6 +787,7 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   color: var(--color-fg-secondary);
   line-height: inherit;
   text-decoration: none;
+  white-space: nowrap;
 }
 
 .contacts-nav-trigger-label {
@@ -806,6 +808,7 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 .contacts-nav-chevron {
   pointer-events: none;
   flex: none;
+  opacity: 0.35;
 }
 
 .contacts-nav-chevron[data-expanded="true"]::after {
@@ -816,13 +819,39 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   position: relative;
 }
 
-.contacts-nav-dropdown-menu {
-  width: 380px;
+/*
+  Shared preview shell. Width comes from modifiers only - never from
+  parent flex / page panel / `width: 100%` cascade.
+*/
+.header-info-dropdown {
+  box-sizing: border-box;
+  width: 392px;
   min-width: 0;
-  max-width: min(380px, calc(100vw - 1.5rem));
+  max-width: min(392px, calc(100vw - 1.5rem));
+  /* Visual gap under top-bar row; bridge covers the dead zone. */
+  top: calc(100% + 8px);
   padding: 0;
   overflow: visible;
-  box-shadow: 0 8px 28px rgba(44, 36, 32, 0.1);
+  background: var(--color-surface);
+  border: 1px solid color-mix(in srgb, var(--color-border) 85%, transparent);
+  border-radius: 9px;
+  box-shadow: 0 6px 20px rgba(44, 36, 32, 0.07);
+}
+
+.header-info-dropdown--showroom {
+  width: 392px;
+  max-width: min(392px, calc(100vw - 1.5rem));
+}
+
+.header-info-dropdown--contacts {
+  width: 360px;
+  max-width: min(360px, calc(100vw - 1.5rem));
+}
+
+.contacts-nav-dropdown-menu {
+  /* Positioning only - shell chrome lives on .header-info-dropdown. */
+  padding: 0;
+  overflow: visible;
 }
 
 /* Showroom trigger - panel under left edge. */
@@ -837,6 +866,17 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   right: 0;
 }
 
+.header-top-left .contacts-nav-trigger {
+  font-size: 0.875rem;
+  color: var(--color-fg-secondary);
+  text-align: left;
+}
+
+.header-top-left .contacts-nav-trigger:hover {
+  color: var(--color-fg);
+  text-decoration: none;
+}
+
 .header-top-right .contacts-nav-trigger {
   font-size: 0.875rem;
   font-weight: 400;
@@ -845,10 +885,6 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 
 .header-top-right .contacts-nav-trigger:hover {
   color: var(--color-fg);
-}
-
-.header-top-right .contacts-nav-chevron {
-  opacity: 0.35;
 }
 
 /* Neutralize generic `.nav-dropdown-menu a` chrome (padding / hover fill)
@@ -887,81 +923,203 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 .showroom-contacts {
   display: flex;
   flex-direction: column;
+  align-items: stretch;
   text-align: left;
   color: var(--color-fg);
 }
 
-.showroom-contacts--showroom {
-  gap: 0.75rem;
-  padding: 1.5rem 1.625rem 1.375rem;
-}
-
+/* Header preview density - shared outer padding / rhythm. */
+.showroom-contacts--showroom,
 .showroom-contacts--contacts {
-  gap: 0.75rem;
-  padding: 1.375rem 1.5rem 1.25rem;
+  box-sizing: border-box;
+  gap: 0;
+  padding: 24px;
 }
 
+.showroom-contacts--showroom .showroom-contacts-title,
+.showroom-contacts--contacts .showroom-contacts-title {
+  margin: 0 0 18px;
+  font-size: 1.25rem; /* 20px */
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: 0.005em;
+  color: var(--color-brand);
+}
+
+.showroom-contacts--showroom .showroom-contacts-address {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 0 18px;
+  font-size: 0.9375rem; /* 15px */
+  font-style: normal;
+  line-height: 1.5;
+  color: var(--color-fg-secondary);
+}
+
+.showroom-contacts--showroom .showroom-contacts-divider,
+.showroom-contacts--contacts .showroom-contacts-divider {
+  height: 1px;
+  margin: 0 0 18px;
+  background: var(--color-border);
+  border: 0;
+}
+
+.showroom-contacts--showroom .showroom-contacts-actions,
+.showroom-contacts--contacts .showroom-contacts-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 0;
+}
+
+.showroom-contacts--contacts .showroom-contacts-actions {
+  margin-bottom: 18px;
+}
+
+.showroom-contacts--showroom .showroom-contacts-phone,
+.showroom-contacts--contacts .showroom-contacts-phone {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: none;
+  text-decoration: none;
+  color: inherit;
+  border-radius: var(--radius-sm);
+}
+
+.showroom-contacts--showroom .showroom-contacts-phone-label,
+.showroom-contacts--contacts .showroom-contacts-phone-label {
+  display: block;
+  font-size: 0.8125rem; /* 13px */
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--color-fg-muted);
+}
+
+.showroom-contacts--showroom .showroom-contacts-phone-number,
+.showroom-contacts--contacts .showroom-contacts-phone-number {
+  display: block;
+  font-size: 1.1875rem; /* 19px */
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25;
+  white-space: nowrap;
+  color: var(--color-fg);
+  transition: color 0.12s ease;
+}
+
+.showroom-contacts--showroom .showroom-contacts-phone:hover .showroom-contacts-phone-number,
+.showroom-contacts--contacts .showroom-contacts-phone:hover .showroom-contacts-phone-number {
+  color: var(--color-brand);
+}
+
+.showroom-contacts--showroom .showroom-contacts-phone:focus-visible,
+.showroom-contacts--contacts .showroom-contacts-phone:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 3px;
+}
+
+.showroom-contacts--contacts .showroom-contacts-messengers {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 26px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 0;
+}
+
+.showroom-contacts--contacts .showroom-contacts-messenger-item {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.showroom-contacts--contacts .showroom-contacts-messenger-link,
+.showroom-contacts--contacts .showroom-contacts-messenger-text {
+  display: inline-flex;
+  align-items: center;
+  min-height: 0;
+  padding: 0;
+  font-size: 0.9375rem; /* 15px */
+  font-weight: 500;
+  line-height: 1.3;
+  text-decoration: none;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm);
+}
+
+.showroom-contacts--contacts .showroom-contacts-messenger-link {
+  color: var(--color-fg-secondary);
+}
+
+.showroom-contacts--contacts .showroom-contacts-messenger-link:hover {
+  color: var(--color-fg);
+  text-decoration: none;
+}
+
+.showroom-contacts--contacts .showroom-contacts-messenger-link:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 2px;
+}
+
+.showroom-contacts--contacts .showroom-contacts-messenger-text {
+  color: var(--color-fg-muted);
+  cursor: default;
+}
+
+/* Page variant - spacious contacts page card (isolated from header previews). */
 .showroom-contacts--page {
   gap: 1.125rem;
   padding: 1.75rem 1.75rem 1.5rem;
 }
 
-.showroom-contacts-title {
-  margin: 0;
-  font-weight: 600;
-  color: var(--color-brand);
-  letter-spacing: 0.005em;
-}
-
-.showroom-contacts--showroom .showroom-contacts-title,
-.showroom-contacts--contacts .showroom-contacts-title {
-  font-size: 1.25rem; /* 20px */
-  line-height: 1.3;
-}
-
 .showroom-contacts--page .showroom-contacts-title {
-  font-size: 1.375rem;
-  line-height: 1.3;
-}
-
-.showroom-contacts-address {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
   margin: 0;
-  font-style: normal;
-  color: var(--color-fg-secondary);
-}
-
-.showroom-contacts--showroom .showroom-contacts-address {
-  font-size: 0.9375rem; /* 15px */
-  line-height: 1.5;
+  font-size: 1.375rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.005em;
+  color: var(--color-brand);
 }
 
 .showroom-contacts--page .showroom-contacts-address {
-  font-size: 1rem;
-  line-height: 1.55;
+  display: flex;
+  flex-direction: column;
   gap: 0.25rem;
+  margin: 0;
+  font-size: 1rem;
+  font-style: normal;
+  line-height: 1.55;
+  color: var(--color-fg-secondary);
 }
 
-.showroom-contacts-address-line {
+.showroom-contacts--page .showroom-contacts-address-line {
   display: block;
 }
 
-.showroom-contacts-divider {
+.showroom-contacts--page .showroom-contacts-divider {
   height: 1px;
   margin: 0.125rem 0 0;
   background: var(--color-border);
   border: 0;
 }
 
-.showroom-contacts-actions {
+.showroom-contacts--page .showroom-contacts-actions {
   display: flex;
   flex-direction: column;
   gap: 0.875rem;
 }
 
-.showroom-contacts-phone {
+.showroom-contacts--page .showroom-contacts-phone {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -975,56 +1133,39 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   border-radius: var(--radius-sm);
 }
 
-.showroom-contacts-phone:hover {
+.showroom-contacts--page .showroom-contacts-phone:hover {
   text-decoration: none;
 }
 
-.showroom-contacts-phone:hover .showroom-contacts-phone-number {
+.showroom-contacts--page .showroom-contacts-phone:hover .showroom-contacts-phone-number {
   color: var(--color-brand);
 }
 
-.showroom-contacts-phone:focus-visible {
+.showroom-contacts--page .showroom-contacts-phone:focus-visible {
   outline: 2px solid var(--color-action);
   outline-offset: 3px;
 }
 
-.showroom-contacts-phone-label {
+.showroom-contacts--page .showroom-contacts-phone-label {
   display: block;
-  font-size: 0.8125rem; /* 13px */
+  font-size: 0.8125rem;
   font-weight: 500;
   line-height: 1.3;
   color: var(--color-fg-muted);
 }
 
-.showroom-contacts-phone-number {
+.showroom-contacts--page .showroom-contacts-phone-number {
   display: block;
+  font-size: 1.25rem;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
+  line-height: 1.25;
   white-space: nowrap;
   color: var(--color-fg);
   transition: color 0.12s ease;
 }
 
-.showroom-contacts--showroom .showroom-contacts-phone-number,
-.showroom-contacts--contacts .showroom-contacts-phone-number {
-  font-size: 1.125rem; /* 18px */
-  line-height: 1.25;
-}
-
-.showroom-contacts--page .showroom-contacts-phone-number {
-  font-size: 1.25rem;
-  line-height: 1.25;
-}
-
-.showroom-contacts--contacts .showroom-contacts-actions {
-  gap: 0.75rem;
-}
-
-.showroom-contacts--contacts .showroom-contacts-messengers {
-  padding-top: 0.25rem;
-}
-
-.showroom-contacts-messengers {
+.showroom-contacts--page .showroom-contacts-messengers {
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
@@ -1036,19 +1177,19 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   border-top: 1px solid var(--color-border);
 }
 
-.showroom-contacts-messenger-item {
+.showroom-contacts--page .showroom-contacts-messenger-item {
   display: inline-flex;
   align-items: center;
   flex: 0 0 auto;
 }
 
-.showroom-contacts-messenger-link,
-.showroom-contacts-messenger-text {
+.showroom-contacts--page .showroom-contacts-messenger-link,
+.showroom-contacts--page .showroom-contacts-messenger-text {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
   padding: 0.15rem 0;
-  font-size: 0.875rem; /* 14px */
+  font-size: 0.875rem;
   font-weight: 500;
   line-height: 1.3;
   color: var(--color-fg-secondary);
@@ -1058,17 +1199,17 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   border-radius: var(--radius-sm);
 }
 
-.showroom-contacts-messenger-link:hover {
+.showroom-contacts--page .showroom-contacts-messenger-link:hover {
   color: var(--color-fg);
   text-decoration: none;
 }
 
-.showroom-contacts-messenger-link:focus-visible {
+.showroom-contacts--page .showroom-contacts-messenger-link:focus-visible {
   outline: 2px solid var(--color-action);
   outline-offset: 2px;
 }
 
-.showroom-contacts-messenger-text {
+.showroom-contacts--page .showroom-contacts-messenger-text {
   color: var(--color-fg-muted);
   cursor: default;
 }
@@ -1083,11 +1224,13 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 }
 
 @media (max-width: 440px) {
-  .contacts-nav-dropdown-menu {
-    width: min(380px, calc(100vw - 1.25rem));
+  .header-info-dropdown--showroom,
+  .header-info-dropdown--contacts {
+    width: min(100%, calc(100vw - 1.25rem));
+    max-width: min(392px, calc(100vw - 1.25rem));
   }
 
-  .showroom-contacts-messengers {
+  .showroom-contacts--page .showroom-contacts-messengers {
     flex-wrap: wrap;
     gap: 0.15rem 1rem;
   }
