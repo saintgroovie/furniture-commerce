@@ -49,12 +49,15 @@ export function ShowroomContactsContent({
         >
           <ContactPhoneAction
             density="dropdown"
-            tone="primary"
+            tone="secondary"
             label={contactsCopy.showroomCallCta}
             display={showroomContacts.writeOrCall.display}
             tel={showroomContacts.writeOrCall.tel}
           />
-          <ContactMapAction density="dropdown" />
+          <ContactMapAction
+            density="dropdown"
+            aria-label={contactsCopy.mapCta}
+          />
         </ContactActionGrid>
       </div>
     )

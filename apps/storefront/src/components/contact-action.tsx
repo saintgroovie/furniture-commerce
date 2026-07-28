@@ -115,14 +115,17 @@ export function ContactActionLink({
   className,
   children,
   external = false,
+  "aria-label": ariaLabel,
 }: ContactActionBaseProps & {
   href: string
   external?: boolean
+  "aria-label"?: string
 }) {
   return (
     <a
       className={actionClassName({ density, tone, layout, className })}
       href={href}
+      aria-label={ariaLabel}
       {...(external
         ? { target: "_blank", rel: "noopener noreferrer" }
         : {})}
@@ -206,12 +209,14 @@ type MapActionProps = {
   layout?: ContactActionLayout
   /** Page uses full CTA; dropdown uses short label. */
   label?: string
+  "aria-label"?: string
 }
 
 export function ContactMapAction({
   density = "page",
   layout,
   label,
+  "aria-label": ariaLabel,
 }: MapActionProps) {
   const resolvedLayout: ContactActionLayout =
     layout ?? (density === "dropdown" ? "trailingBubble" : "leadingIcon")
@@ -229,6 +234,7 @@ export function ContactMapAction({
       layout={resolvedLayout}
       className="contact-action--map"
       external
+      aria-label={ariaLabel}
       icon={<ContactMapPinIcon size={iconSize} />}
     >
       <span className="contact-action-copy contact-action-copy--single">
@@ -253,7 +259,7 @@ type MessengerGridProps = {
 export function ContactMessengerActions({
   density = "page",
 }: MessengerGridProps) {
-  const iconSize = density === "dropdown" ? 16 : 18
+  const iconSize = density === "dropdown" ? 14 : 18
   const maxAccessibleLabel = `MAX - связь по номеру ${showroomContacts.writeOrCall.display}`
 
   return (

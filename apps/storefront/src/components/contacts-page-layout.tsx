@@ -52,7 +52,7 @@ export function ContactsPageLayout() {
                 label={showroomContacts.showroomCallLabel}
                 display={showroomContacts.writeOrCall.display}
                 tel={showroomContacts.writeOrCall.tel}
-                tone="secondary"
+                tone="primary"
               />
               <ContactMapAction density="page" />
             </ContactActionGrid>
@@ -80,11 +80,13 @@ export function ContactsPageLayout() {
                 label={showroomContacts.freeCall.label}
                 display={showroomContacts.freeCall.display}
                 tel={showroomContacts.freeCall.tel}
+                tone="primary"
               />
               <ContactPhoneAction
                 label={showroomContacts.writeOrCall.label}
                 display={showroomContacts.writeOrCall.display}
                 tel={showroomContacts.writeOrCall.tel}
+                tone="secondary"
               />
             </ContactActionGrid>
           </div>
