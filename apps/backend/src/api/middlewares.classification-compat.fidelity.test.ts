@@ -33,16 +33,14 @@ assert.doesNotMatch(serviceSrc, /\bProductType\b/)
 assert.match(linkSrc, /linkable\.productClassification/)
 assert.doesNotMatch(linkSrc, /linkable\.productType/)
 
-assert.match(
-  middlewareSrc,
-  /fields:\s*\[["']id["'],\s*["']product_classification\.product_type["']\]/
-)
+assert.match(middlewareSrc, /product_classification\.product_type/)
+assert.match(middlewareSrc, /product_sales_policy\.\*/)
 assert.match(middlewareSrc, /BESPOKE_NOT_ALLOWED_IN_CART/)
 assert.match(middlewareSrc, /PRODUCT_TYPE_VALIDATION_FAILED/)
-assert.match(middlewareSrc, /evaluateCartClassificationGate/)
+assert.match(middlewareSrc, /evaluateCartSalesGate/)
 assert.match(
   middlewareSrc,
-  /from ["']\.\/cart-classification-gate["']/
+  /from ["']\.\.\/lib\/woodright-sales\/cart-sales-gate["']/
 )
 assert.doesNotMatch(middlewareSrc, /productType\.\*/)
 assert.match(middlewareSrc, /for \(const variantId of variantIds\)/)

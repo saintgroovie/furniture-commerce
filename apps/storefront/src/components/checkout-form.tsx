@@ -23,6 +23,7 @@ import { PackageIcon, ChecklistIcon } from "@/components/bespoke-help-icons"
 import { checkoutCopy as copy } from "@/lib/woodright-copy"
 import { CopyLines } from "@/components/copy-lines"
 import { flatCopy } from "@/lib/format-ru-copy"
+import { mintOrderAccess } from "@/lib/woodright-order/api"
 
 type CheckoutState =
   | "empty_cart"
@@ -40,6 +41,7 @@ export function CheckoutForm() {
   const [errorMessage, setErrorMessage] = useState<string>("")
   const [orderNumber, setOrderNumber] = useState<string>("")
   const [cartId, setCartId] = useState<string | null>(null)
+  const [trackHref, setTrackHref] = useState<string | null>(null)
   const [nameError, setNameError] = useState("")
   const [phoneError, setPhoneError] = useState("")
   const submittingRef = useRef(false)
@@ -129,6 +131,15 @@ export function CheckoutForm() {
       const result = data as { type?: string; order?: { id?: string }; error?: string }
       if (result.type === "order" && result.order) {
         setOrderNumber(getOrderDisplayNumber(result.order as Record<string, unknown>))
+        const orderId = result.order.id
+        if (orderId) {
+          try {
+            const access = await mintOrderAccess({ orderId, cartId })
+            if (access.track_path) setTrackHref(access.track_path)
+          } catch {
+            // Tracking link is best-effort for MVP; order success still stands.
+          }
+        }
         clearCartIdFromSession()
         emitCartUpdated({ count: 0 })
         setState("success")
@@ -189,7 +200,21 @@ export function CheckoutForm() {
           <CopyLines className="checkout-order-note" role="alert" lines={copy.orderNumberNote} />
         )}
         <CopyLines className="request-success-text" lines={copy.paymentNote} />
-        <Link href="/catalog" className="btn btn-primary">{copy.successCta}</Link>
+        {trackHref && (
+          <p className="request-success-text" style={{ marginTop: "0.75rem" }}>
+            <Link href={trackHref} className="btn btn-primary">
+              {copy.trackOrderCta}
+            </Link>
+          </p>
+        )}
+        {trackHref && (
+          <p className="info-text" style={{ marginTop: "0.5rem" }}>
+            {copy.trackOrderHint}
+          </p>
+        )}
+        <Link href="/catalog" className="btn btn-secondary" style={{ marginTop: "0.75rem" }}>
+          {copy.successCta}
+        </Link>
       </div>
     )
   } else {
