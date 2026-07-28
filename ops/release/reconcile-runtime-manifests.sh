@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
+# LIVE_MUTATING=true
+# requires_global_lock=true
 # Owner-controlled ACTIVE_OWNER / EXPECTED_RELEASE reconcile.
-# ALWAYS runs media promotion gate first. Never auto-fills digests from a broken live container.
+# ALWAYS runs media promotion gate. Never auto-fills digests from a broken live container.
+# --apply: acquire live-cutover.lock via flock, then re-run gate, then install.
+# --dry-run: gate only (no lock, no write).
 #
 # Usage:
 #   ops/release/reconcile-runtime-manifests.sh --dry-run \
@@ -8,12 +12,12 @@
 #     --expected-src /path/EXPECTED_RELEASE.candidate.json
 #   ops/release/reconcile-runtime-manifests.sh --apply \
 #     --active-src ... --expected-src ...
-#
-# Destinations default to /srv/woodright/runtime-ownership/{ACTIVE_OWNER,EXPECTED_RELEASE}.json
 set -Eeuo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 ASSERT="$ROOT/ops/release/assert-manifest-update-allowed.sh"
+# shellcheck source=../lib/woodright-staging-mutation-lock.sh
+source "$ROOT/ops/lib/woodright-staging-mutation-lock.sh"
 
 MODE=""
 ACTIVE_SRC=""
@@ -43,15 +47,22 @@ done
 [[ -n "$ACTIVE_SRC" && -f "$ACTIVE_SRC" ]] || die "missing --active-src"
 [[ -n "$EXPECTED_SRC" && -f "$EXPECTED_SRC" ]] || die "missing --expected-src"
 
-# Gate FIRST — blocks reconcile when Mounts=[] / wrong volume / product-static fail / etc.
-bash "$ASSERT"
-
 if [[ "$MODE" == "dry-run" ]]; then
+  bash "$ASSERT"
   printf 'reconcile-runtime-manifests: DRY-RUN ok (gate PASS); would install:\n'
   printf '  %s -> %s\n' "$ACTIVE_SRC" "$ACTIVE_DST"
   printf '  %s -> %s\n' "$EXPECTED_SRC" "$EXPECTED_DST"
   exit 0
 fi
+
+wr_staging_mutation_lock_acquire \
+  "actor=reconcile-runtime-manifests" \
+  "command=$0 --apply" \
+  "target=manifests" \
+  || die "canonical live-cutover.lock busy/unavailable"
+
+# Re-run gate under the lock immediately before install.
+bash "$ASSERT"
 
 install -m 0600 "$ACTIVE_SRC" "$ACTIVE_DST"
 install -m 0600 "$EXPECTED_SRC" "$EXPECTED_DST"
