@@ -31,7 +31,9 @@ RUN yarn medusa build \
  && test -f dist/package.json \
  && node ./scripts/compile-ops-seeds.mjs \
  && test -f dist/src/scripts/seed-rooms-v1-owner-approved.js \
- && test -f dist/src/scripts/seed-rooms-v1-plan.js
+ && test -f dist/src/scripts/seed-rooms-v1-plan.js \
+ && test -f dist/src/scripts/seed-rooms-v1-manifest.js \
+ && test -f dist/src/scripts/seed-rooms-v1-target-gate.js
 
 FROM node:20-bookworm-slim AS runner
 WORKDIR /server
