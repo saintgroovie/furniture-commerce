@@ -31,25 +31,26 @@ SCRIPT_PATH="${WOODRIGHT_SEED_SCRIPT:-./src/scripts/seed-rooms-v1-owner-approved
 
 die() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 
+[[ "$MODE" == "dry-run" || "$MODE" == "apply" ]] || die "ROOMSET_SEED_MODE must be dry-run|apply"
 [[ "$TARGET" == "staging" ]] || die "refused: ROOMSET_SEED_TARGET must be staging (got $TARGET)"
 case "$IMAGE" in
   *production*|*woodright.ru*) die "refused: production image/target" ;;
 esac
-[[ -f "$ENV_FILE" ]] || die "missing env file"
-ENV_MODE="$(stat -c '%a' "$ENV_FILE" 2>/dev/null || stat -f '%Lp' "$ENV_FILE")"
-[[ "$ENV_MODE" == "600" || "$ENV_MODE" == "0600" ]] || die "ENV_FILE mode must be 600"
-
 if [[ "$MODE" == "apply" ]]; then
   [[ "${WOODRIGHT_SEED_APPLY_AUTHORIZED:-}" == "1" ]] || \
     die "apply refused: set WOODRIGHT_SEED_APPLY_AUTHORIZED=1 after explicit owner approval"
 fi
-[[ "$MODE" == "dry-run" || "$MODE" == "apply" ]] || die "ROOMSET_SEED_MODE must be dry-run|apply"
 
+# Acquire BEFORE env/image mutation-side validation so contention fails closed on the lock.
 wr_staging_mutation_lock_acquire \
   "actor=run-staging-seed-rooms-v1" \
   "command=$0 mode=$MODE" \
   "target=$IMAGE" \
   || die "canonical live-cutover.lock busy/unavailable"
+
+[[ -f "$ENV_FILE" ]] || die "missing env file"
+ENV_MODE="$(stat -c '%a' "$ENV_FILE" 2>/dev/null || stat -f '%Lp' "$ENV_FILE")"
+[[ "$ENV_MODE" == "600" || "$ENV_MODE" == "0600" ]] || die "ENV_FILE mode must be 600"
 
 # Ephemeral exec container only — never rename/replace woodright-staging-* live names.
 docker run --rm \
