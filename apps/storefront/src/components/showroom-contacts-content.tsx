@@ -1,9 +1,12 @@
-import { showroomContacts } from "@/lib/showroom-contacts"
-import { formatRuInline } from "@/lib/format-ru-copy"
 import {
-  ContactMessengerList,
-  ContactPhoneLink,
-} from "@/components/contact-channel-primitives"
+  ContactActionGrid,
+  ContactMapAction,
+  ContactMessengerActions,
+  ContactPhoneAction,
+} from "@/components/contact-action"
+import { formatRuInline } from "@/lib/format-ru-copy"
+import { contactsCopy } from "@/lib/woodright-copy"
+import { showroomContacts } from "@/lib/showroom-contacts"
 
 export type ShowroomContactsVariant = "showroom" | "contacts"
 
@@ -15,7 +18,8 @@ type Props = {
 
 /**
  * Header preview bodies from `showroomContacts`.
- * Full `/contacts` page uses `ContactsPageLayout` - not this component.
+ * Uses compact `ContactAction` density - not page-sized tiles.
+ * Full `/contacts` page uses `ContactsPageLayout`.
  */
 export function ShowroomContactsContent({
   variant,
@@ -39,13 +43,19 @@ export function ShowroomContactsContent({
           ))}
         </address>
         <div className="showroom-contacts-divider" aria-hidden="true" />
-        <div className="showroom-contacts-actions">
-          <ContactPhoneLink
-            label={showroomContacts.showroomCallLabel}
+        <ContactActionGrid
+          density="dropdown"
+          className="showroom-contacts-action-grid"
+        >
+          <ContactPhoneAction
+            density="dropdown"
+            tone="primary"
+            label={contactsCopy.showroomCallCta}
             display={showroomContacts.writeOrCall.display}
             tel={showroomContacts.writeOrCall.tel}
           />
-        </div>
+          <ContactMapAction density="dropdown" />
+        </ContactActionGrid>
       </div>
     )
   }
@@ -55,20 +65,22 @@ export function ShowroomContactsContent({
       <p id={titleId} className="showroom-contacts-title">
         {formatRuInline(showroomContacts.contactsTitle)}
       </p>
-      <div className="showroom-contacts-actions">
-        <ContactPhoneLink
+      <div className="showroom-contacts-phone-stack">
+        <ContactPhoneAction
+          density="dropdown"
           label={showroomContacts.freeCall.label}
           display={showroomContacts.freeCall.display}
           tel={showroomContacts.freeCall.tel}
         />
-        <ContactPhoneLink
+        <ContactPhoneAction
+          density="dropdown"
           label={showroomContacts.writeOrCall.label}
           display={showroomContacts.writeOrCall.display}
           tel={showroomContacts.writeOrCall.tel}
         />
       </div>
       <div className="showroom-contacts-divider" aria-hidden="true" />
-      <ContactMessengerList />
+      <ContactMessengerActions density="dropdown" maxWithPhone={false} />
     </div>
   )
 }

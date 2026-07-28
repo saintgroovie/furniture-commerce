@@ -733,11 +733,14 @@ export const contactsCopy = {
   channelsHeading: "Связаться с Woodright",
   messengersLabel: "Мессенджеры",
   mapCta: "Посмотреть в Яндекс Картах",
+  /** Compact map label for header dropdown density. */
+  mapCtaShort: "Яндекс Карты",
+  /** Compact showroom phone CTA for header dropdown. */
+  showroomCallCta: "Позвонить в шоурум",
   ctaTitle: "Есть вопрос по мебели или индивидуальному проекту?",
   ctaBody:
     "Оставьте заявку - менеджер свяжется с вами и поможет подобрать решение",
   ctaPrimary: "Оставить заявку",
-  ctaSecondary: "Перейти в каталог",
 }
 
 export const homeCopy = {

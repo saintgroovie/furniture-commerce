@@ -1,9 +1,10 @@
 import Link from "next/link"
 import {
-  ContactsPageMapAction,
-  ContactsPageMessengerActions,
-  ContactsPagePhoneAction,
-} from "@/components/contacts-page-actions"
+  ContactActionGrid,
+  ContactMapAction,
+  ContactMessengerActions,
+  ContactPhoneAction,
+} from "@/components/contact-action"
 import { formatRuInline } from "@/lib/format-ru-copy"
 import { contactsCopy } from "@/lib/woodright-copy"
 import { showroomContacts } from "@/lib/showroom-contacts"
@@ -37,15 +38,15 @@ export function ContactsPageLayout() {
               </span>
             ))}
           </address>
-          <div className="contacts-page-showroom-actions">
-            <ContactsPagePhoneAction
+          <ContactActionGrid density="page" className="contacts-page-action-grid">
+            <ContactPhoneAction
               label={showroomContacts.showroomCallLabel}
               display={showroomContacts.writeOrCall.display}
               tel={showroomContacts.writeOrCall.tel}
               tone="primary"
             />
-            <ContactsPageMapAction />
-          </div>
+            <ContactMapAction density="page" />
+          </ContactActionGrid>
         </section>
 
         <div className="contacts-page-divider" aria-hidden="true" />
@@ -60,19 +61,19 @@ export function ContactsPageLayout() {
           <h2 id="contacts-channels-heading" className="contacts-page-col-title">
             {formatRuInline(contactsCopy.channelsHeading)}
           </h2>
-          <div className="contacts-page-phones">
-            <ContactsPagePhoneAction
+          <ContactActionGrid density="page" className="contacts-page-action-grid">
+            <ContactPhoneAction
               label={showroomContacts.freeCall.label}
               display={showroomContacts.freeCall.display}
               tel={showroomContacts.freeCall.tel}
             />
-            <ContactsPagePhoneAction
+            <ContactPhoneAction
               label={showroomContacts.writeOrCall.label}
               display={showroomContacts.writeOrCall.display}
               tel={showroomContacts.writeOrCall.tel}
             />
-          </div>
-          <ContactsPageMessengerActions />
+          </ContactActionGrid>
+          <ContactMessengerActions density="page" />
         </section>
       </div>
 
@@ -91,12 +92,6 @@ export function ContactsPageLayout() {
             className="btn btn-primary contacts-page-cta-btn"
           >
             {contactsCopy.ctaPrimary}
-          </Link>
-          <Link
-            href="/catalog"
-            className="btn btn-secondary contacts-page-cta-btn"
-          >
-            {contactsCopy.ctaSecondary}
           </Link>
         </div>
       </section>
