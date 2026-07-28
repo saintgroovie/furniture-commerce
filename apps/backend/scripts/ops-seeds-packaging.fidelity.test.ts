@@ -58,6 +58,16 @@ assert.match(
   "Dockerfile must assert compiled plan artifact"
 )
 assert.match(
+  compileScript,
+  /seed-rooms-v1-manifest\.ts/,
+  "compile allowlist includes manifest"
+)
+assert.match(
+  compileScript,
+  /seed-rooms-v1-target-gate\.ts/,
+  "compile allowlist includes target gate"
+)
+assert.match(
   dockerfile,
   /CMD\s*\[\s*"\.\/node_modules\/\.bin\/medusa",\s*"start"\s*\]/,
   "CMD must remain medusa start only"
@@ -121,9 +131,17 @@ assert.ok(fs.statSync(seedJs).size > 32, "compiled seed js non-empty")
 assert.ok(fs.statSync(planJs).size > 32, "compiled plan js non-empty")
 
 const seedJsText = fs.readFileSync(seedJs, "utf8")
-assert.match(seedJsText, /WOODRIGHT_ROOMS_V1_CONFIRM/, "production/staging confirm guard preserved")
-assert.match(seedJsText, /WOODRIGHT_ROOMS_V1_APPLY/, "explicit apply flag preserved")
-assert.match(seedJsText, /woodright_staging/, "staging DB name guard preserved")
+assert.match(seedJsText, /ROOMSET_SEED_TARGET|assertRoomsetSeedGate/, "new target gate wired")
+assert.match(seedJsText, /ROOMSET_SEED_MODE|assertRoomsetSeedGate/, "explicit mode gate wired")
+const gateJs = path.join(ROOT, "dist", "src", "scripts", "seed-rooms-v1-target-gate.js")
+const manifestJs = path.join(ROOT, "dist", "src", "scripts", "seed-rooms-v1-manifest.js")
+assert.ok(fs.existsSync(gateJs), "compiled target-gate js must exist")
+assert.ok(fs.existsSync(manifestJs), "compiled manifest js must exist")
+const gateJsText = fs.readFileSync(gateJs, "utf8")
+assert.match(gateJsText, /woodright_staging/, "staging DB name guard preserved")
+assert.match(gateJsText, /woodright_production/, "production DB name guard present")
+assert.match(gateJsText, /ROOMSET_V1_PRODUCTION_OWNER_APPROVED/)
+assert.match(gateJsText, /I_UNDERSTAND_THIS_WRITES_PRODUCTION/)
 assert.doesNotMatch(seedJsText, /medusa start/, "seed artifact is not a startup entry")
 
 // Fidelity tests must not be compiled into dist/src/scripts
