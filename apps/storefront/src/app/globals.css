@@ -892,10 +892,12 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 .contacts-nav-dropdown-menu a.showroom-contacts-phone,
 .contacts-nav-dropdown-menu a.showroom-contacts-messenger-link {
   display: inline-flex;
-  padding: 0.15rem 0;
+  padding: 0;
+  margin: 0;
   background: transparent;
   font-size: inherit;
   font-weight: inherit;
+  line-height: inherit;
   color: inherit;
 }
 
@@ -928,20 +930,32 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   color: var(--color-fg);
 }
 
-/* Header preview density - shared outer padding / rhythm. */
+/*
+  Header preview rhythm - isolated from page typography.
+  Tokens keep title/group/label/number/divider/messenger spacing proportional.
+*/
 .showroom-contacts--showroom,
 .showroom-contacts--contacts {
+  --hc-pad: 1.5rem; /* 24px */
+  --hc-gap-section: 1.4375rem; /* 23px - title→group, group→group, group→divider */
+  --hc-gap-label-number: 0.4375rem; /* 7px */
+  --hc-gap-after-divider: 1.3125rem; /* 21px - divider→phone/messengers */
+  --hc-gap-address-line: 0.4375rem; /* 7px */
+  --hc-messenger-gap: 1.625rem; /* 26px */
   box-sizing: border-box;
   gap: 0;
-  padding: 24px;
+  padding: var(--hc-pad);
+  /* Reset body/html line-height bleed into compact chrome. */
+  line-height: 1.2;
 }
 
 .showroom-contacts--showroom .showroom-contacts-title,
 .showroom-contacts--contacts .showroom-contacts-title {
-  margin: 0 0 18px;
+  margin: 0 0 var(--hc-gap-section);
+  padding: 0;
   font-size: 1.25rem; /* 20px */
   font-weight: 600;
-  line-height: 1.25;
+  line-height: 1.2;
   letter-spacing: 0.005em;
   color: var(--color-brand);
 }
@@ -949,19 +963,27 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 .showroom-contacts--showroom .showroom-contacts-address {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin: 0 0 18px;
+  gap: var(--hc-gap-address-line);
+  margin: 0 0 var(--hc-gap-section);
+  padding: 0;
   font-size: 0.9375rem; /* 15px */
   font-style: normal;
-  line-height: 1.5;
+  line-height: 1.35;
   color: var(--color-fg-secondary);
+}
+
+.showroom-contacts--showroom .showroom-contacts-address-line {
+  margin: 0;
+  padding: 0;
 }
 
 .showroom-contacts--showroom .showroom-contacts-divider,
 .showroom-contacts--contacts .showroom-contacts-divider {
+  flex: 0 0 auto;
   height: 1px;
-  margin: 0 0 18px;
-  background: var(--color-border);
+  margin: 0 0 var(--hc-gap-after-divider);
+  padding: 0;
+  background: color-mix(in srgb, var(--color-border) 88%, transparent);
   border: 0;
 }
 
@@ -969,12 +991,13 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 .showroom-contacts--contacts .showroom-contacts-actions {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--hc-gap-section);
   margin: 0;
+  padding: 0;
 }
 
 .showroom-contacts--contacts .showroom-contacts-actions {
-  margin-bottom: 18px;
+  margin-bottom: var(--hc-gap-section);
 }
 
 .showroom-contacts--showroom .showroom-contacts-phone,
@@ -982,7 +1005,7 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 5px;
+  gap: var(--hc-gap-label-number);
   padding: 0;
   margin: 0;
   border: 0;
@@ -990,24 +1013,29 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   text-decoration: none;
   color: inherit;
   border-radius: var(--radius-sm);
+  line-height: inherit;
 }
 
 .showroom-contacts--showroom .showroom-contacts-phone-label,
 .showroom-contacts--contacts .showroom-contacts-phone-label {
   display: block;
+  margin: 0;
+  padding: 0;
   font-size: 0.8125rem; /* 13px */
   font-weight: 500;
-  line-height: 1.35;
+  line-height: 1.3;
   color: var(--color-fg-muted);
 }
 
 .showroom-contacts--showroom .showroom-contacts-phone-number,
 .showroom-contacts--contacts .showroom-contacts-phone-number {
   display: block;
-  font-size: 1.1875rem; /* 19px */
+  margin: 0;
+  padding: 0;
+  font-size: 1.25rem; /* 20px */
   font-weight: 500;
   font-variant-numeric: tabular-nums;
-  line-height: 1.25;
+  line-height: 1.15;
   white-space: nowrap;
   color: var(--color-fg);
   transition: color 0.12s ease;
@@ -1027,9 +1055,9 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 .showroom-contacts--contacts .showroom-contacts-messengers {
   display: flex;
   flex-wrap: nowrap;
-  align-items: center;
+  align-items: baseline;
   justify-content: flex-start;
-  gap: 26px;
+  gap: var(--hc-messenger-gap);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -1038,19 +1066,22 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 
 .showroom-contacts--contacts .showroom-contacts-messenger-item {
   display: inline-flex;
-  align-items: center;
+  align-items: baseline;
   flex: 0 0 auto;
+  margin: 0;
+  padding: 0;
 }
 
 .showroom-contacts--contacts .showroom-contacts-messenger-link,
 .showroom-contacts--contacts .showroom-contacts-messenger-text {
   display: inline-flex;
-  align-items: center;
+  align-items: baseline;
   min-height: 0;
+  margin: 0;
   padding: 0;
   font-size: 0.9375rem; /* 15px */
   font-weight: 500;
-  line-height: 1.3;
+  line-height: 1.25;
   text-decoration: none;
   background: none;
   border: 0;
@@ -1093,7 +1124,9 @@ main:has(.contacts-page) {
 }
 
 .contacts-page {
-  --contacts-page-gap: 1.75rem; /* 28px - shared by page + CTA nested tracks */
+  --contacts-page-gap: 1.75rem; /* 28px - H1/intro 12-track gap */
+  /* Optical air around the center axis - half left / half right of divider. */
+  --contacts-center-gutter: clamp(4.5rem, 6vw, 5.75rem); /* ~72–92px */
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
   column-gap: var(--contacts-page-gap);
@@ -1127,12 +1160,16 @@ main:has(.contacts-page) {
   overflow-wrap: anywhere;
 }
 
-/* Nested 12-track stage keeps the same gap/tracks as the page master grid. */
+/*
+  Contact stage: two equal content zones + explicit center gutter.
+  Divider sits on the stage midpoint (center of the gutter), so each
+  column keeps ~half the gutter as optical air - not stuck to the line.
+*/
 .contacts-page-stage {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  column-gap: var(--contacts-page-gap);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: var(--contacts-center-gutter);
   align-items: start;
   position: relative;
   margin-top: 3.125rem; /* 50px intro → stage */
@@ -1141,7 +1178,7 @@ main:has(.contacts-page) {
 }
 
 .contacts-page-col--showroom {
-  grid-column: 1 / span 6;
+  grid-column: 1;
   min-width: 0;
   width: 100%;
 }
@@ -1153,12 +1190,12 @@ main:has(.contacts-page) {
   bottom: 0;
   width: 1px;
   transform: translateX(-50%);
-  background: color-mix(in srgb, var(--color-border) 78%, transparent);
+  background: color-mix(in srgb, var(--color-border) 70%, transparent);
   pointer-events: none;
 }
 
 .contacts-page-col--channels {
-  grid-column: 7 / -1;
+  grid-column: 2;
   min-width: 0;
   width: 100%;
 }
@@ -1315,14 +1352,14 @@ main:has(.contacts-page) {
 }
 
 /*
-  CTA soft band - same 12 tracks + gap as the page (no inset padding that
-  would offset nested columns away from H1/showroom/contacts guides).
+  CTA soft band - same two equal zones + center gutter as the contact stage
+  (no horizontal inset that would offset guides).
 */
 .contacts-page-cta {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  column-gap: var(--contacts-page-gap);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: var(--contacts-center-gutter);
   align-items: center;
   margin-top: 4.25rem; /* 68px stage → CTA */
   margin-bottom: 0;
@@ -1334,7 +1371,7 @@ main:has(.contacts-page) {
 }
 
 .contacts-page-cta-copy {
-  grid-column: 1 / span 6;
+  grid-column: 1;
   min-width: 0;
   max-width: none;
 }
@@ -1361,7 +1398,7 @@ main:has(.contacts-page) {
 }
 
 .contacts-page-cta-actions {
-  grid-column: 8 / -1;
+  grid-column: 2;
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
@@ -1403,6 +1440,7 @@ main:has(.contacts-page).page-section {
 @media (max-width: 1024px) {
   .contacts-page {
     --contacts-page-gap: 1.5rem; /* 24px */
+    --contacts-center-gutter: clamp(4.5rem, 7vw, 5.25rem); /* keep ≥36px air each side */
   }
 }
 
