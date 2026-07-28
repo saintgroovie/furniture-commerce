@@ -14,7 +14,9 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit -p tsconfig.production.json",
     "typecheck:all": "tsc --noEmit -p tsconfig.json",
-    "test:fidelity": "node scripts/run-fidelity-tests.mjs"
+    "test:fidelity": "node scripts/run-fidelity-tests.mjs",
+    "test:mobile-layout": "node scripts/mobile-layout.smoke.cjs",
+    "test:a11y-dialogs": "node scripts/a11y-dialog-keyboard.smoke.cjs"
   },
   "dependencies": {
     "next": "^14.2.0",
