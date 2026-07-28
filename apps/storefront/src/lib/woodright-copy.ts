@@ -727,6 +727,8 @@ export const contactsCopy = {
   /** Single flowing intro - width driven by master-grid span, no forced breaks. */
   lead: "Уточнить наличие, подобрать исполнение или обсудить индивидуальный проект можно по телефону или в мессенджерах",
   showroomEyebrow: "Шоурум",
+  /** Action-title pair with `channelsHeading` on the contacts column. */
+  showroomHeading: "Посетить магазин Woodright",
   channelsEyebrow: "Контакты",
   channelsHeading: "Связаться с Woodright",
   messengersLabel: "Мессенджеры",

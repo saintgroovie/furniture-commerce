@@ -27,8 +27,11 @@ export function ContactsPageLayout() {
             {formatRuInline(contactsCopy.showroomEyebrow)}
           </p>
           <h2 id="contacts-showroom-heading" className="contacts-page-col-title">
-            {formatRuInline(showroomContacts.pageShowroomHeading)}
+            {formatRuInline(contactsCopy.showroomHeading)}
           </h2>
+          <p className="contacts-page-location">
+            {formatRuInline(showroomContacts.pageShowroomLocation)}
+          </p>
           <address className="contacts-page-address">
             {showroomContacts.addressLines.map((line) => (
               <span className="contacts-page-address-line" key={line}>
@@ -94,10 +97,16 @@ export function ContactsPageLayout() {
           </p>
         </div>
         <div className="contacts-page-cta-actions">
-          <Link href="/bespoke/request" className="btn btn-primary">
+          <Link
+            href="/bespoke/request"
+            className="btn btn-primary contacts-page-cta-btn"
+          >
             {contactsCopy.ctaPrimary}
           </Link>
-          <Link href="/catalog" className="contacts-page-cta-secondary">
+          <Link
+            href="/catalog"
+            className="btn btn-secondary contacts-page-cta-btn"
+          >
             {contactsCopy.ctaSecondary}
           </Link>
         </div>

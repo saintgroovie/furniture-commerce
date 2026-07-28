@@ -22,8 +22,11 @@ const MESSENGER_E164_DIGITS = "79672587144"
 
 export const showroomContacts = {
   title: "Шоурум Woodright",
-  /** Full-page showroom column heading (not the dropdown title). */
-  pageShowroomHeading: "«Гранд», Химки",
+  /**
+   * Secondary place label under the page showroom action title.
+   * Not the column H2 - action title lives in `contactsCopy.showroomHeading`.
+   */
+  pageShowroomLocation: "«Гранд», Химки",
   /** Contacts-oriented panel title (header contacts dropdown). */
   contactsTitle: "Контакты Woodright",
   /**
