@@ -477,10 +477,19 @@ function cardHTML(p) {
   const d = decisionOf(p.sku);
   const note = noteOf(p.sku);
   const opts = optsFor(p);
+  // 0 / empty are unknown - never render as a real size (no "0 × 0 × 0").
+  const axisCm = [p.height_cm, p.width_cm, p.depth_cm];
+  const knownAxes = [
+    ["В", p.height_cm],
+    ["Ш", p.width_cm],
+    ["Г", p.depth_cm],
+  ].filter(([, v]) => !isEmptyDim(v));
   const dims =
-    p.height_cm != null && p.width_cm != null && p.depth_cm != null && p.height_cm !== ""
-      ? `${p.height_cm} × ${p.width_cm} × ${p.depth_cm} см (В → Ш → Г)`
-      : "габариты не заданы";
+    knownAxes.length === 3
+      ? `${axisCm.join(" × ")} см (В → Ш → Г)`
+      : knownAxes.length > 0
+        ? `${knownAxes.map(([label, v]) => `${label}: ${v}`).join(" · ")} см`
+        : "Размеры не указаны";
   const pd = STATE.decisions?.products?.[p.sku] || {};
   const dr = p.dimension_recovery || {};
 

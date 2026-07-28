@@ -29,6 +29,11 @@ import { formatBuyerFacingMeasureText } from "./buyer-measure-text"
   assert.equal(compact.split("\u202F×\u202F").length, 2)
   const axes = orderedBuyerFacingDimensions(dim).map((r) => r.axis)
   assert.deepEqual(axes, ["height", "width"])
+  const labeled = formatDimensionsCompactLabeled(dim)
+  assert.equal(labeled.caption, "см")
+  assert.equal(labeled.values, "В 90 · Ш 120")
+  assert.equal(labeled.values.includes("Г "), false)
+  assert.equal(/\b0\b/.test(labeled.values), false)
 }
 
 {

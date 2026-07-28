@@ -321,9 +321,24 @@ export function formatDimensionsCompactLabeled(dim: Dimensions): {
   values: string
   caption: string
 } {
+  const axes = orderedBuyerFacingDimensions(dim)
+  if (axes.length === 3) {
+    return {
+      values: formatDimensionsCompact(dim),
+      caption: "В × Ш × Г, см",
+    }
+  }
+  // Partial: labeled values only - never imply a full H×W×D triple.
+  const abbr: Record<BuyerFacingDimensionAxis, string> = {
+    height: "В",
+    width: "Ш",
+    depth: "Г",
+  }
   return {
-    values: formatDimensionsCompact(dim),
-    caption: "В × Ш × Г, см",
+    values: axes
+      .map(({ axis, mm }) => `${abbr[axis]} ${Math.round(mm / 10)}`)
+      .join(" · "),
+    caption: "см",
   }
 }
 
