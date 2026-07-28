@@ -9,17 +9,52 @@ Complements `foreground-only-execution.mdc`, `review-server-stability-gate.mdc`,
 
 ## Why
 
-Cursor aborts agent shells (often exit **143** / SIGTERM). Children of that shell die even with plain `nohup … &` or Shell `block_until_ms: 0`.
+Cursor aborts agent shells (often exit **143** / SIGTERM). Children of that shell die even with plain `nohup … &`, `disown`, unmanaged `screen`/`tmux`, or Shell `block_until_ms: 0`.
 
 **Health 200 in a previous turn ≠ process still alive.**
 
+## Absolute ban - agent-shell review servers
+
+**Never** start or keep a review/preview HTTP server as a child of the Cursor agent shell.
+
+Forbidden patterns (any of these → wrong):
+
+- Shell tool with `block_until_ms: 0` running `next start` / `next dev` / `medusa develop` / `yarn start`
+- `command … &` / bare `nohup … &` / `disown` from the agent shell
+- unmanaged `screen` / `tmux` started from the agent shell to hold a preview
+- “restart preview in agent background again” after `killed_by_cursor_agent_shell`
+
+Correct patterns only:
+
+1. `python3 scripts/local/durable_local_server.py start …` (alternate ports, **not** `:9000`/`:3002`)
+2. Operator Terminal / `scripts/local-dev/woodright-*.sh` for canonical `:9000`/`:3002`
+3. Exact GUI Terminal launch **only** when the operator named Terminal/`open` in the same message (`personal-data-mac-safety.mdc`)
+
+If the agent already used a forbidden pattern and Cursor aborted it → report `killed_by_cursor_agent_shell`, then recover with (1) or (2). Do **not** repeat the forbidden pattern. Do **not** auto-restart until the death cause is classified (Cursor abort vs intentional stop vs crash).
+
+## Mandatory check - operator asks to look visually
+
+Triggers (RU/EN, any close form): «где посмотреть», «визуально», «открой preview», «посмотреть в браузере», «review URL», «localhost», «покажи на сайте», «дай рабочую ссылку», «рабочая ссылка», «подними preview».
+
+**Before answering with any localhost link or “откройте …”, the agent MUST:**
+
+1. **Probe** intended port with `lsof` + bounded `curl` in **this** turn.
+2. If down → start **only** via durable path below (or give the operator the same command for their Terminal). **Forbidden:** agent-shell background / `block_until_ms: 0` / bare `nohup` / unmanaged `screen`/`tmux`.
+3. Pass full `review-server-stability-gate.mdc` (listener + health + exact review path + ≥5s second sample) in **this** turn.
+4. Prove the runtime is the **intended worktree/branch** (listener cwd matches intended checkout + unique content token). Do not reuse a random process on the same port from another worktree.
+5. If Cursor abort killed a prior preview → say `killed_by_cursor_agent_shell` once; recover with durable launcher - **never** another agent-shell restart.
+
+If any step fails → `server not stable` / `server not running` + exact durable start command. **No** live URL.
+
+Packet honesty when visual review was requested but gate failed: Task status cannot claim visual QA `done`. When the gate passes, record in the packet: intended name/port, worktree cwd identity, health codes, and that the runtime is durable (not agent-shell).
+
 ## Hard bans
 
-- Do not pin long-lived `next` / `medusa` / review HTTP apps to the Cursor agent shell (`block_until_ms: 0`, bare `nohup &`).
+- Do not pin long-lived `next` / `medusa` / review HTTP apps to the Cursor agent shell (`block_until_ms: 0`, bare `nohup &`, `disown`, unmanaged `screen`/`tmux`).
 - Do not restart a stack that is already healthy on the intended port/worktree.
 - Do not hand localhost URLs without same-turn `review-server-stability-gate.mdc`.
 - No LaunchAgents / LaunchDaemons from the agent (`personal-data-mac-safety.mdc`).
-- No autostart without **explicit** operator request.
+- No autostart without **explicit** operator request (visual-look / «дай рабочую ссылку» counts as request to raise/reuse preview).
 - Never `killall node` / broad `pkill`.
 
 ## Shared ports `:9000` / `:3002` (canonical only)
@@ -37,7 +72,7 @@ The generic launcher below **refuses** ports `9000` and `3002`. Secondary worktr
 
 When the operator asks for a preview on another port (e.g. `3028`/`3029`):
 
-1. Probe → if up, **reuse**.
+1. Probe → if up **and** listener cwd matches the intended worktree, **reuse**. Otherwise do not reuse.
 2. Start via durable detach (not agent-shell background):
 
 ```sh
@@ -59,4 +94,4 @@ Use that app’s `scripts/daemon_server.py` / Start|Stop `.command`. Do not subs
 
 ## Honesty
 
-After Cursor abort: say `killed_by_cursor_agent_shell`. Fix = durable entrypoint / Terminal - not a third agent-shell restart loop.
+After Cursor abort: say `killed_by_cursor_agent_shell`. Fix = durable entrypoint / Terminal - never another agent-shell restart.
