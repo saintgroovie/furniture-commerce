@@ -1,8 +1,9 @@
 import Link from "next/link"
 import {
-  ContactMessengerList,
-  ContactPhoneLink,
-} from "@/components/contact-channel-primitives"
+  ContactsPageMapAction,
+  ContactsPageMessengerActions,
+  ContactsPagePhoneAction,
+} from "@/components/contacts-page-actions"
 import { formatRuInline } from "@/lib/format-ru-copy"
 import { contactsCopy } from "@/lib/woodright-copy"
 import { showroomContacts } from "@/lib/showroom-contacts"
@@ -29,9 +30,6 @@ export function ContactsPageLayout() {
           <h2 id="contacts-showroom-heading" className="contacts-page-col-title">
             {formatRuInline(contactsCopy.showroomHeading)}
           </h2>
-          <p className="contacts-page-location">
-            {formatRuInline(showroomContacts.pageShowroomLocation)}
-          </p>
           <address className="contacts-page-address">
             {showroomContacts.addressLines.map((line) => (
               <span className="contacts-page-address-line" key={line}>
@@ -39,12 +37,15 @@ export function ContactsPageLayout() {
               </span>
             ))}
           </address>
-          <ContactPhoneLink
-            className="contacts-page-phone"
-            label={showroomContacts.showroomCallLabel}
-            display={showroomContacts.writeOrCall.display}
-            tel={showroomContacts.writeOrCall.tel}
-          />
+          <div className="contacts-page-showroom-actions">
+            <ContactsPagePhoneAction
+              label={showroomContacts.showroomCallLabel}
+              display={showroomContacts.writeOrCall.display}
+              tel={showroomContacts.writeOrCall.tel}
+              tone="primary"
+            />
+            <ContactsPageMapAction />
+          </div>
         </section>
 
         <div className="contacts-page-divider" aria-hidden="true" />
@@ -60,30 +61,18 @@ export function ContactsPageLayout() {
             {formatRuInline(contactsCopy.channelsHeading)}
           </h2>
           <div className="contacts-page-phones">
-            <ContactPhoneLink
-              className="contacts-page-phone"
+            <ContactsPagePhoneAction
               label={showroomContacts.freeCall.label}
               display={showroomContacts.freeCall.display}
               tel={showroomContacts.freeCall.tel}
             />
-            <ContactPhoneLink
-              className="contacts-page-phone"
+            <ContactsPagePhoneAction
               label={showroomContacts.writeOrCall.label}
               display={showroomContacts.writeOrCall.display}
               tel={showroomContacts.writeOrCall.tel}
             />
           </div>
-          <div className="contacts-page-messengers-block">
-            <p className="contacts-page-messengers-label">
-              {formatRuInline(contactsCopy.messengersLabel)}
-            </p>
-            <ContactMessengerList
-              listClassName="contacts-page-messengers"
-              itemClassName="contacts-page-messenger-item"
-              linkClassName="contacts-page-messenger-link"
-              textClassName="contacts-page-messenger-text"
-            />
-          </div>
+          <ContactsPageMessengerActions />
         </section>
       </div>
 

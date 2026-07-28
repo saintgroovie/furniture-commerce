@@ -732,6 +732,7 @@ export const contactsCopy = {
   channelsEyebrow: "Контакты",
   channelsHeading: "Связаться с Woodright",
   messengersLabel: "Мессенджеры",
+  mapCta: "Посмотреть в Яндекс Картах",
   ctaTitle: "Есть вопрос по мебели или индивидуальному проекту?",
   ctaBody:
     "Оставьте заявку - менеджер свяжется с вами и поможет подобрать решение",
