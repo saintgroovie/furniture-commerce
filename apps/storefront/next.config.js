@@ -25,10 +25,12 @@ const nextConfig = {
   },
   // QA: :3002 and :3004 run separate `next dev` from the same app — isolate caches.
   distDir: process.env.NEXT_DIST_DIR || ".next",
-  experimental: {
-    // Required when storefront lives under apps/ and imports ../../../backend/...
-    outputFileTracingRoot: monorepoRoot,
-  },
+  // Required when storefront lives under apps/ and imports ../../../backend/...
+  // Next.js 16: moved out of experimental.
+  outputFileTracingRoot: monorepoRoot,
+  // Keep webpack customizations (dev cache disable). Explicitly opt out of the
+  // Next 16 default Turbopack production build until turbopack migration.
+  turbopack: {},
   webpack: (config, { dev }) => {
     // QA tradeoff: disable webpack FS cache in dev only — prevents corrupted .next/cache
     // pack ENOENT → intermittent 404 on /catalog during HMR. Production build unaffected.

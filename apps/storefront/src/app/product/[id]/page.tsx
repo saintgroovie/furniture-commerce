@@ -459,7 +459,7 @@ export default async function ProductPage({
     ? `${catalogHref}?collection=${encodeURIComponent(collectionFilterKey)}`
     : null
 
-  const cspNonce = headers().get("x-nonce") ?? undefined
+  const cspNonce = (await headers()).get("x-nonce") ?? undefined
 
   return (
     <div

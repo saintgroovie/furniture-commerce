@@ -52,13 +52,13 @@ const organizationJsonLd = {
   url: getSiteUrl(),
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   // CSP nonce from middleware (x-nonce). Required for JSON-LD + Next bootstrap.
-  const nonce = headers().get("x-nonce") ?? undefined
+  const nonce = (await headers()).get("x-nonce") ?? undefined
   return (
     <html lang="ru" className={localSansClass}>
       <body>
