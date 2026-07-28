@@ -1076,54 +1076,109 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   cursor: default;
 }
 
-/* Page variant - spacious contacts page card (isolated from header previews). */
-.showroom-contacts--page {
-  gap: 1.125rem;
-  padding: 1.75rem 1.75rem 1.5rem;
+/* ---- Contacts page (`/contacts`) - independent of header dropdown shells ---- */
+
+/*
+  Body is a column flex shell; short pages shrink-wrap `main` to content.
+  Force the contacts route onto the shared `.container` measure so the
+  two-column layout can use the 1120–1200 px band (not a ~450–850 px card).
+*/
+main:has(.contacts-page) {
+  width: 100%;
+  max-width: var(--max-width);
+  box-sizing: border-box;
 }
 
-.showroom-contacts--page .showroom-contacts-title {
-  margin: 0;
-  font-size: 1.375rem;
-  font-weight: 600;
-  line-height: 1.3;
-  letter-spacing: 0.005em;
-  color: var(--color-brand);
-}
-
-.showroom-contacts--page .showroom-contacts-address {
+.contacts-page {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  width: 100%;
+  max-width: 1160px;
   margin: 0;
-  font-size: 1rem;
+  padding-bottom: 0.5rem;
+}
+
+.contacts-page-header {
+  max-width: 40rem; /* ~640px intro measure */
+}
+
+.contacts-page-title {
+  margin: 0;
+  font-size: clamp(2rem, 2.4vw, 2.5rem); /* 32–40px */
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--color-fg);
+}
+
+.contacts-page-intro {
+  margin: 1.35rem 0 0;
+  font-size: 1.0625rem; /* 17px */
+  line-height: 1.55;
+  color: var(--color-fg-secondary);
+}
+
+.contacts-page-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 4.5rem; /* 72px */
+  align-items: start;
+  margin-top: 3.5rem; /* 56px */
+  padding-top: 0.25rem;
+}
+
+.contacts-page-col--channels {
+  padding-left: 4.5rem;
+  border-left: 1px solid var(--color-border);
+}
+
+.contacts-page-eyebrow {
+  margin: 0 0 0.625rem;
+  font-size: 0.8125rem; /* 13px */
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--color-fg-muted);
+}
+
+.contacts-page-col-title {
+  margin: 0 0 1.75rem;
+  font-size: 1.625rem; /* 26px */
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--color-fg);
+}
+
+.contacts-page-col-title--solo {
+  margin-top: 0;
+}
+
+.contacts-page-address {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0 0 1.75rem;
+  font-size: 1.0625rem; /* 17px */
   font-style: normal;
   line-height: 1.55;
   color: var(--color-fg-secondary);
 }
 
-.showroom-contacts--page .showroom-contacts-address-line {
+.contacts-page-address-line {
   display: block;
 }
 
-.showroom-contacts--page .showroom-contacts-divider {
-  height: 1px;
-  margin: 0.125rem 0 0;
-  background: var(--color-border);
-  border: 0;
-}
-
-.showroom-contacts--page .showroom-contacts-actions {
+.contacts-page-phones {
   display: flex;
   flex-direction: column;
-  gap: 0.875rem;
+  gap: 1.75rem; /* 28px */
 }
 
-.showroom-contacts--page .showroom-contacts-phone {
+.contacts-page-phone {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.3rem;
+  gap: 0.4rem;
   padding: 0;
   margin: 0;
   border: 0;
@@ -1133,30 +1188,30 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   border-radius: var(--radius-sm);
 }
 
-.showroom-contacts--page .showroom-contacts-phone:hover {
+.contacts-page-phone:hover {
   text-decoration: none;
 }
 
-.showroom-contacts--page .showroom-contacts-phone:hover .showroom-contacts-phone-number {
+.contacts-page-phone:hover .contacts-page-phone-number {
   color: var(--color-brand);
 }
 
-.showroom-contacts--page .showroom-contacts-phone:focus-visible {
+.contacts-page-phone:focus-visible {
   outline: 2px solid var(--color-action);
   outline-offset: 3px;
 }
 
-.showroom-contacts--page .showroom-contacts-phone-label {
+.contacts-page-phone-label {
   display: block;
-  font-size: 0.8125rem;
+  font-size: 0.875rem; /* 14px */
   font-weight: 500;
-  line-height: 1.3;
+  line-height: 1.35;
   color: var(--color-fg-muted);
 }
 
-.showroom-contacts--page .showroom-contacts-phone-number {
+.contacts-page-phone-number {
   display: block;
-  font-size: 1.25rem;
+  font-size: 1.5rem; /* 24px */
   font-weight: 500;
   font-variant-numeric: tabular-nums;
   line-height: 1.25;
@@ -1165,62 +1220,160 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   transition: color 0.12s ease;
 }
 
-.showroom-contacts--page .showroom-contacts-messengers {
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 0.25rem 1.25rem;
-  margin: 0;
-  padding: 0.35rem 0 0;
-  list-style: none;
-  border-top: 1px solid var(--color-border);
+.contacts-page-messengers-block {
+  margin-top: 1.75rem;
 }
 
-.showroom-contacts--page .showroom-contacts-messenger-item {
+.contacts-page-messengers-label {
+  margin: 0 0 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--color-fg-muted);
+}
+
+.contacts-page-messengers {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.35rem 1.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.contacts-page-messenger-item {
   display: inline-flex;
   align-items: center;
   flex: 0 0 auto;
 }
 
-.showroom-contacts--page .showroom-contacts-messenger-link,
-.showroom-contacts--page .showroom-contacts-messenger-text {
+.contacts-page-messenger-link,
+.contacts-page-messenger-text {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
   padding: 0.15rem 0;
-  font-size: 0.875rem;
+  font-size: 1rem; /* 16px */
   font-weight: 500;
   line-height: 1.3;
-  color: var(--color-fg-secondary);
   text-decoration: none;
   background: none;
   border: 0;
   border-radius: var(--radius-sm);
 }
 
-.showroom-contacts--page .showroom-contacts-messenger-link:hover {
-  color: var(--color-fg);
-  text-decoration: none;
+.contacts-page-messenger-link {
+  color: var(--color-fg-secondary);
 }
 
-.showroom-contacts--page .showroom-contacts-messenger-link:focus-visible {
+.contacts-page-messenger-link:hover {
+  color: var(--color-fg);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.contacts-page-messenger-link:focus-visible {
   outline: 2px solid var(--color-action);
   outline-offset: 2px;
 }
 
-.showroom-contacts--page .showroom-contacts-messenger-text {
+.contacts-page-messenger-text {
   color: var(--color-fg-muted);
   cursor: default;
 }
 
-.contacts-page-panel {
-  max-width: 28rem;
-  margin: 0.5rem 0 0.75rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+.contacts-page-cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.75rem 2.5rem;
+  margin-top: 4.5rem; /* 72px */
+  padding: 2.5rem 2.25rem;
+  background: color-mix(in srgb, var(--color-surface) 72%, var(--color-bg));
+  border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  border-radius: 10px;
+}
+
+.contacts-page-cta-copy {
+  flex: 1 1 18rem;
+  max-width: 36rem;
+}
+
+.contacts-page-cta-title {
+  margin: 0;
+  font-size: 1.375rem; /* 22px */
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--color-fg);
+}
+
+.contacts-page-cta-body {
+  margin: 0.85rem 0 0;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--color-fg-secondary);
+}
+
+.contacts-page-cta-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.85rem;
+  flex: 0 0 auto;
+}
+
+.contacts-page-cta-secondary {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--color-fg-secondary);
+  text-decoration: none;
   border-radius: var(--radius-sm);
-  box-shadow: 0 4px 16px rgba(44, 36, 32, 0.06);
+}
+
+.contacts-page-cta-secondary:hover {
+  color: var(--color-fg);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.contacts-page-cta-secondary:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 3px;
+}
+
+@media (max-width: 900px) {
+  .contacts-page-grid {
+    grid-template-columns: 1fr;
+    gap: 2.75rem;
+    margin-top: 2.75rem;
+  }
+
+  .contacts-page-col--channels {
+    padding-left: 0;
+    padding-top: 2.75rem;
+    border-left: 0;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .contacts-page-cta {
+    flex-direction: column;
+    align-items: stretch;
+    margin-top: 3.25rem;
+    padding: 2rem 1.5rem;
+  }
+
+  .contacts-page-cta-actions {
+    align-items: stretch;
+  }
+
+  .contacts-page-cta-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 @media (max-width: 440px) {
@@ -1230,9 +1383,16 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
     max-width: min(392px, calc(100vw - 1.25rem));
   }
 
-  .showroom-contacts--page .showroom-contacts-messengers {
-    flex-wrap: wrap;
-    gap: 0.15rem 1rem;
+  .contacts-page-title {
+    font-size: 1.875rem;
+  }
+
+  .contacts-page-phone-number {
+    font-size: 1.25rem; /* 20px - still readable, no horizontal scroll */
+  }
+
+  .contacts-page-messengers {
+    gap: 0.15rem 1.25rem;
   }
 }
 

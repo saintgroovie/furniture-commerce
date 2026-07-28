@@ -1,7 +1,11 @@
 import { showroomContacts } from "@/lib/showroom-contacts"
 import { formatRuInline } from "@/lib/format-ru-copy"
+import {
+  ContactMessengerList,
+  ContactPhoneLink,
+} from "@/components/contact-channel-primitives"
 
-export type ShowroomContactsVariant = "showroom" | "contacts" | "page"
+export type ShowroomContactsVariant = "showroom" | "contacts"
 
 type Props = {
   variant: ShowroomContactsVariant
@@ -9,54 +13,9 @@ type Props = {
   idPrefix?: string
 }
 
-function PhoneLink({
-  label,
-  display,
-  tel,
-}: {
-  label: string
-  display: string
-  tel: string
-}) {
-  return (
-    <a className="showroom-contacts-phone" href={`tel:${tel}`}>
-      <span className="showroom-contacts-phone-label">{formatRuInline(label)}</span>
-      <span className="showroom-contacts-phone-number">{display}</span>
-    </a>
-  )
-}
-
-function MessengerList() {
-  return (
-    <ul className="showroom-contacts-messengers" aria-label="Мессенджеры">
-      {showroomContacts.messengers.map((item) => (
-        <li key={item.id} className="showroom-contacts-messenger-item">
-          {item.href ? (
-            <a
-              className="showroom-contacts-messenger-link"
-              href={item.href}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {item.label}
-            </a>
-          ) : (
-            <span
-              className="showroom-contacts-messenger-text"
-              title={`${item.label}: напишите или позвоните на ${showroomContacts.writeOrCall.display}`}
-            >
-              {item.label}
-            </span>
-          )}
-        </li>
-      ))}
-    </ul>
-  )
-}
-
 /**
- * Shared contact body from `showroomContacts`.
- * Variants split IA: location preview vs contact channels vs full page.
+ * Header preview bodies from `showroomContacts`.
+ * Full `/contacts` page uses `ContactsPageLayout` - not this component.
  */
 export function ShowroomContactsContent({
   variant,
@@ -81,7 +40,7 @@ export function ShowroomContactsContent({
         </address>
         <div className="showroom-contacts-divider" aria-hidden="true" />
         <div className="showroom-contacts-actions">
-          <PhoneLink
+          <ContactPhoneLink
             label={showroomContacts.showroomCallLabel}
             display={showroomContacts.writeOrCall.display}
             tel={showroomContacts.writeOrCall.tel}
@@ -91,57 +50,25 @@ export function ShowroomContactsContent({
     )
   }
 
-  if (variant === "contacts") {
-    return (
-      <div className={rootClass} role="group" aria-labelledby={titleId}>
-        <p id={titleId} className="showroom-contacts-title">
-          {formatRuInline(showroomContacts.contactsTitle)}
-        </p>
-        <div className="showroom-contacts-actions">
-          <PhoneLink
-            label={showroomContacts.freeCall.label}
-            display={showroomContacts.freeCall.display}
-            tel={showroomContacts.freeCall.tel}
-          />
-          <PhoneLink
-            label={showroomContacts.writeOrCall.label}
-            display={showroomContacts.writeOrCall.display}
-            tel={showroomContacts.writeOrCall.tel}
-          />
-        </div>
-        <div className="showroom-contacts-divider" aria-hidden="true" />
-        <MessengerList />
-      </div>
-    )
-  }
-
-  // page - full information
   return (
     <div className={rootClass} role="group" aria-labelledby={titleId}>
       <p id={titleId} className="showroom-contacts-title">
-        {formatRuInline(showroomContacts.title)}
+        {formatRuInline(showroomContacts.contactsTitle)}
       </p>
-      <address id={addressId} className="showroom-contacts-address">
-        {showroomContacts.addressLines.map((line) => (
-          <span className="showroom-contacts-address-line" key={line}>
-            {formatRuInline(line)}
-          </span>
-        ))}
-      </address>
-      <div className="showroom-contacts-divider" aria-hidden="true" />
       <div className="showroom-contacts-actions">
-        <PhoneLink
+        <ContactPhoneLink
           label={showroomContacts.freeCall.label}
           display={showroomContacts.freeCall.display}
           tel={showroomContacts.freeCall.tel}
         />
-        <PhoneLink
+        <ContactPhoneLink
           label={showroomContacts.writeOrCall.label}
           display={showroomContacts.writeOrCall.display}
           tel={showroomContacts.writeOrCall.tel}
         />
       </div>
-      <MessengerList />
+      <div className="showroom-contacts-divider" aria-hidden="true" />
+      <ContactMessengerList />
     </div>
   )
 }
