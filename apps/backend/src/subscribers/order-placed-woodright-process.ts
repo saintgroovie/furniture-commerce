@@ -2,6 +2,7 @@ import type {
   SubscriberArgs,
   SubscriberConfig,
 } from "@medusajs/framework/subscribers"
+import { Modules } from "@medusajs/framework/utils"
 import { ORDER_PROCESS_MODULE } from "../modules/order-process"
 import {
   ensureOrderProcess,
@@ -32,11 +33,22 @@ export default async function orderPlacedWoodrightProcess({
   const service = container.resolve(
     ORDER_PROCESS_MODULE
   ) as unknown as OrderProcessServiceLike
+  const orderModule = container.resolve(Modules.ORDER) as unknown as {
+    retrieveOrder: (
+      id: string,
+      config?: Record<string, unknown>
+    ) => Promise<Record<string, unknown>>
+  }
 
-  const { process, created } = await ensureOrderProcess(service, orderId, {
+  const ensured = await ensureOrderProcess(service, orderModule, orderId, {
     source: "order.placed",
     actor_type: "system",
   })
+  if (!ensured.ok) {
+    // Fail-closed: never create process/history without a real Medusa order.
+    return
+  }
+  const { process, created } = ensured
 
   if (!notificationsEnabled()) return
 

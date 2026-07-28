@@ -6,6 +6,7 @@ import {
   ensureOrderProcess,
   type OrderProcessServiceLike,
 } from "../../../../../lib/woodright-order-process/ensure-process"
+import { orderExistenceHttp } from "../../../../../lib/woodright-order-process/assert-medusa-order-exists"
 import { allowedTransitionsForAdmin } from "../../../../../lib/woodright-order-process/transition"
 import {
   mapDeliveryBuyerLabel,
@@ -21,11 +22,26 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const service = req.scope.resolve(
     ORDER_PROCESS_MODULE
   ) as unknown as OrderProcessServiceLike
+  const orderModule = req.scope.resolve(Modules.ORDER) as unknown as {
+    retrieveOrder: (
+      id: string,
+      config?: Record<string, unknown>
+    ) => Promise<Record<string, unknown>>
+  }
 
-  const { process } = await ensureOrderProcess(service, orderId, {
+  const ensured = await ensureOrderProcess(service, orderModule, orderId, {
     source: "admin_ensure",
     actor_type: "admin",
   })
+  if (!ensured.ok) {
+    const http = orderExistenceHttp(ensured)
+    res.status(http.status).json({
+      code: http.code,
+      message: http.message,
+    })
+    return
+  }
+  const { process } = ensured
 
   const events = await service.listWoodrightOrderProcessEvents(
     { process_id: process.id },
@@ -35,12 +51,6 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   let medusaOrder: Record<string, unknown> | null = null
   let canceled = false
   try {
-    const orderModule = req.scope.resolve(Modules.ORDER) as unknown as {
-      retrieveOrder: (
-        id: string,
-        config?: Record<string, unknown>
-      ) => Promise<Record<string, unknown>>
-    }
     medusaOrder = await orderModule.retrieveOrder(orderId, {
       select: [
         "id",
