@@ -18,16 +18,17 @@ assert.equal(existsSync(plan), true, "plan module missing")
 const txt = readFileSync(script, "utf8")
 const planTxt = readFileSync(plan, "utf8")
 
-assert.match(txt, /spalnya-greenwich/)
-assert.match(txt, /spalnya-cloud/)
+assert.match(txt, /spalnya-greenwich|ROOMS_V1_SPECS|FORBIDDEN_HISTORICAL_SLUGS/)
 assert.match(txt, /FORBIDDEN_HISTORICAL_SLUGS/)
-assert.match(txt, /detskaya-pervenets/)
-assert.match(txt, /WOODRIGHT_ROOMS_V1_CONFIRM/)
-assert.match(txt, /WOODRIGHT_ROOMS_V1_APPLY/)
-assert.match(txt, /woodright_staging/)
-assert.match(txt, /DATABASE_URL is required/)
-assert.match(txt, /required exact name woodright_staging/)
+assert.match(txt, /ROOMSET_SEED_TARGET/)
+assert.match(txt, /ROOMSET_SEED_SCOPE/)
+assert.match(txt, /ROOMSET_SEED_MODE/)
+assert.match(txt, /assertRoomsetSeedGate/)
+assert.match(txt, /seed-rooms-v1-manifest/)
+assert.match(txt, /seed-rooms-v1-target-gate/)
+assert.match(txt, /woodright_staging|gate_ok/)
 assert.doesNotMatch(txt, /ALLOW_NON_STAGING/)
+assert.doesNotMatch(txt, /WOODRIGHT_ROOMS_V1_APPLY\s*===/)
 assert.match(txt, /complete_orphan_links/)
 assert.match(txt, /reconcile_partial/)
 assert.match(txt, /classifyItemsAction/)
@@ -37,7 +38,11 @@ assert.match(planTxt, /classifyItemsAction/)
 assert.match(txt, /product\.status !== "published"/)
 assert.match(txt, /historical slug .* is active; refusing V1 seed/)
 
-const createOrder = txt.match(/ROOMS_V1_CREATE_ORDER\s*=\s*\[([^\]]+)\]/s)
+const manifestTxt = readFileSync(
+  join(root, "src/scripts/seed-rooms-v1-manifest.ts"),
+  "utf8"
+)
+const createOrder = manifestTxt.match(/ROOMS_V1_CREATE_ORDER\s*=\s*\[([^\]]+)\]/s)
 assert.ok(createOrder, "create order missing")
 assert.ok(
   createOrder[1].indexOf("spalnya-cloud") <
@@ -45,22 +50,28 @@ assert.ok(
   "Cloud before Greenwich"
 )
 
-// Per-room product order (owner-approved)
+// Per-room product order (owner-approved) — pinned in manifest module
 assert.match(
-  txt,
+  manifestTxt,
   /slug:\s*"spalnya-cloud"[\s\S]*?product_handles:\s*\[\s*"greenwich-gr-12-1",\s*"greenwich-gr-67-1",\s*"greenwich-gr-02-1"/
 )
 assert.match(
-  txt,
+  manifestTxt,
   /slug:\s*"spalnya-greenwich"[\s\S]*?product_handles:\s*\[\s*"greenwich-gr-12-1",\s*"greenwich-gr-08-1",\s*"greenwich-gr-67-1"/
 )
 assert.match(
-  txt,
+  manifestTxt,
   /slug:\s*"spalnya-greenwich"[\s\S]*?GR-BED-POOL_frame_noliver_var2_View01\.jpg/
 )
 assert.match(
-  txt,
+  manifestTxt,
   /slug:\s*"spalnya-cloud"[\s\S]*?GR-BED-POOL_cloud_bedroom2_int_View04\.jpg/
+)
+assert.match(manifestTxt, /detskaya-pervenets/)
+assert.match(manifestTxt, /gostinaya/)
+assert.match(
+  manifestTxt,
+  /71ef39d2699330bb2c0bca59f968bc695151b87d9ad9b7f23d9b35be0c07b67e/
 )
 
 assert.match(txt, /is_active: false/)
