@@ -1079,9 +1079,12 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 /* ---- Contacts page (`/contacts`) - independent of header dropdown shells ---- */
 
 /*
+  Contacts page master grid.
   Body is a column flex shell; short pages shrink-wrap `main` to content.
   Force the contacts route onto the shared `.container` measure so the
-  page shares the same left edge as header/footer.
+  page shares the same left/right edges as header/footer.
+  One 12-column grid owns H1, intro, contact stage, center divider, and CTA.
+  Dropdown chrome uses `.showroom-contacts*` / `.header-info-dropdown*` only.
 */
 main:has(.contacts-page) {
   width: 100%;
@@ -1090,19 +1093,22 @@ main:has(.contacts-page) {
 }
 
 .contacts-page {
-  display: flex;
-  flex-direction: column;
+  --contacts-page-gap: 1.75rem; /* 28px - shared by page + CTA nested tracks */
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--contacts-page-gap);
+  row-gap: 0;
   width: 100%;
   margin: 0;
   padding-bottom: 0;
-}
-
-.contacts-page-header {
-  max-width: 40.5rem; /* ~648px intro measure */
+  align-items: start;
 }
 
 .contacts-page-title {
+  grid-column: 1 / span 7;
   margin: 0;
+  max-width: 100%;
+  min-width: 0;
   font-size: clamp(2.125rem, 2.5vw, 2.5rem); /* ~34–40px */
   font-weight: 600;
   line-height: 1.2;
@@ -1111,28 +1117,50 @@ main:has(.contacts-page) {
 }
 
 .contacts-page-intro {
-  margin: 1.375rem 0 0; /* ~22px */
-  max-width: 40.5rem;
+  grid-column: 1 / span 7;
+  margin: 1.375rem 0 0; /* ~22px H1 → intro */
+  max-width: 100%;
+  min-width: 0;
   font-size: 1.0625rem; /* 17px */
   line-height: 1.55;
   color: var(--color-fg-secondary);
+  overflow-wrap: anywhere;
 }
 
-.contacts-page-grid {
+/* Nested 12-track stage keeps the same gap/tracks as the page master grid. */
+.contacts-page-stage {
+  grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  column-gap: 0;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--contacts-page-gap);
   align-items: start;
-  margin-top: 3.25rem; /* ~52px */
+  position: relative;
+  margin-top: 3.125rem; /* 50px intro → stage */
+  width: 100%;
+  min-width: 0;
 }
 
 .contacts-page-col--showroom {
-  padding-right: 2.25rem; /* 36px to divider */
-  border-right: 1px solid color-mix(in srgb, var(--color-border) 78%, transparent);
+  grid-column: 1 / span 6;
+  min-width: 0;
+  width: 100%;
+}
+
+.contacts-page-divider {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  transform: translateX(-50%);
+  background: color-mix(in srgb, var(--color-border) 78%, transparent);
+  pointer-events: none;
 }
 
 .contacts-page-col--channels {
-  padding-left: 2.25rem; /* 36px from divider → ~72px content gap */
+  grid-column: 7 / -1;
+  min-width: 0;
+  width: 100%;
 }
 
 .contacts-page-eyebrow {
@@ -1141,11 +1169,10 @@ main:has(.contacts-page) {
   font-weight: 500;
   line-height: 1.35;
   color: var(--color-fg-muted);
-  min-height: 1.125rem;
 }
 
 .contacts-page-col-title {
-  margin: 0 0 1.75rem; /* 28px */
+  margin: 0 0 1.75rem; /* 28px title → content */
   font-size: 1.6875rem; /* 27px */
   font-weight: 600;
   line-height: 1.25;
@@ -1186,6 +1213,8 @@ main:has(.contacts-page) {
   text-decoration: none;
   color: inherit;
   border-radius: var(--radius-sm);
+  width: 100%;
+  max-width: none;
 }
 
 .contacts-page-phone:hover {
@@ -1211,6 +1240,7 @@ main:has(.contacts-page) {
 
 .contacts-page-phone-number {
   display: block;
+  max-width: 100%;
   font-size: 1.375rem; /* 22px */
   font-weight: 500;
   font-variant-numeric: tabular-nums;
@@ -1284,50 +1314,67 @@ main:has(.contacts-page) {
   cursor: default;
 }
 
+/*
+  CTA soft band - same 12 tracks + gap as the page (no inset padding that
+  would offset nested columns away from H1/showroom/contacts guides).
+*/
 .contacts-page-cta {
-  display: flex;
-  flex-wrap: wrap;
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--contacts-page-gap);
   align-items: center;
-  justify-content: space-between;
-  gap: 1.5rem 2rem;
-  margin-top: 4rem; /* 64px */
+  margin-top: 4.25rem; /* 68px stage → CTA */
   margin-bottom: 0;
-  padding: 2.25rem 2rem; /* ~36px */
-  background: color-mix(in srgb, var(--color-surface) 68%, var(--color-bg));
-  border: 1px solid color-mix(in srgb, var(--color-border) 72%, transparent);
-  border-radius: 10px;
+  padding: 2.125rem 0; /* ~34px vertical only */
+  background: color-mix(in srgb, var(--color-surface) 55%, var(--color-bg));
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent);
+  border-radius: 0;
 }
 
 .contacts-page-cta-copy {
-  flex: 1 1 18rem;
-  max-width: 34rem;
+  grid-column: 1 / span 6;
+  min-width: 0;
+  max-width: none;
 }
 
 .contacts-page-cta-title {
   margin: 0;
+  max-width: 100%;
   font-size: 1.375rem; /* 22px */
   font-weight: 600;
   line-height: 1.3;
   color: var(--color-fg);
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+  word-break: normal;
 }
 
 .contacts-page-cta-body {
   margin: 0.75rem 0 0;
+  max-width: 100%;
   font-size: 1rem;
   line-height: 1.5;
   color: var(--color-fg-secondary);
+  overflow-wrap: anywhere;
 }
 
 .contacts-page-cta-actions {
+  grid-column: 8 / -1;
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
   align-items: center;
-  gap: 1.25rem 1.75rem;
-  flex: 0 0 auto;
+  justify-content: flex-end;
+  gap: 1.25rem 1.75rem; /* ~28px */
+  min-width: 0;
 }
 
 .contacts-page-cta-secondary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   font-size: 0.9375rem;
   font-weight: 500;
   line-height: 1.4;
@@ -1350,47 +1397,82 @@ main:has(.contacts-page) {
 
 /* Keep footer close after CTA without inventing empty min-height. */
 main:has(.contacts-page).page-section {
-  padding-bottom: 3.5rem; /* ~56px inside page-section; total CTA→footer ~72–96 with footer top */
+  padding-bottom: 4.5rem; /* ~72px CTA → footer inside page-section rhythm */
+}
+
+@media (max-width: 1024px) {
+  .contacts-page {
+    --contacts-page-gap: 1.5rem; /* 24px */
+  }
 }
 
 @media (max-width: 900px) {
-  .contacts-page-grid {
-    grid-template-columns: 1fr;
-    row-gap: 0;
+  .contacts-page {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .contacts-page-title,
+  .contacts-page-intro,
+  .contacts-page-stage,
+  .contacts-page-col--showroom,
+  .contacts-page-col--channels,
+  .contacts-page-cta {
+    width: 100%;
+  }
+
+  .contacts-page-intro {
+    margin-top: 1.25rem;
+  }
+
+  .contacts-page-stage {
+    display: flex;
+    flex-direction: column;
     margin-top: 2.75rem;
   }
 
   .contacts-page-col--showroom {
-    padding-right: 0;
     padding-bottom: 2.25rem;
-    border-right: 0;
     border-bottom: 1px solid color-mix(in srgb, var(--color-border) 78%, transparent);
   }
 
+  .contacts-page-divider {
+    display: none;
+  }
+
   .contacts-page-col--channels {
-    padding-left: 0;
-    padding-top: 2.25rem;
+    margin-top: 2.25rem;
   }
 
   .contacts-page-cta {
+    display: flex;
     flex-direction: column;
     align-items: stretch;
+    gap: 1.5rem;
     margin-top: 3rem;
-    padding: 1.75rem 1.5rem;
+    padding: 1.75rem 0;
+  }
+
+  .contacts-page-cta-copy,
+  .contacts-page-cta-actions {
+    width: 100%;
   }
 
   .contacts-page-cta-actions {
     flex-direction: column;
     align-items: stretch;
+    justify-content: flex-start;
     gap: 1rem;
   }
 
   .contacts-page-cta-actions .btn {
     width: 100%;
+    min-height: 44px;
     justify-content: center;
   }
 
   .contacts-page-cta-secondary {
+    justify-content: center;
     text-align: center;
   }
 }
@@ -1407,7 +1489,16 @@ main:has(.contacts-page).page-section {
   }
 
   .contacts-page-phone-number {
-    font-size: 1.25rem; /* 20px - still readable, no horizontal scroll */
+    font-size: 1.1875rem; /* 19px - keep nowrap readable without page overflow */
+  }
+
+  .contacts-page,
+  .contacts-page-cta,
+  .contacts-page-cta-copy,
+  .contacts-page-cta-title {
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: clip;
   }
 
   .contacts-page-messengers {

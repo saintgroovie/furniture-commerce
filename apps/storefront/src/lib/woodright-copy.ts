@@ -724,20 +724,15 @@ export const designersRequestCopy = {
 
 export const contactsCopy = {
   h1: "Контакты",
-  /** Single flowing intro - width-driven wrap, no forced line breaks. */
+  /** Single flowing intro - width driven by master-grid span, no forced breaks. */
   lead: "Уточнить наличие, подобрать исполнение или обсудить индивидуальный проект можно по телефону или в мессенджерах",
   showroomEyebrow: "Шоурум",
   channelsEyebrow: "Контакты",
   channelsHeading: "Связаться с Woodright",
   messengersLabel: "Мессенджеры",
-  ctaTitle: [
-    "Есть вопрос",
-    "по мебели или индивидуальному проекту?",
-  ],
-  ctaBody: [
-    "Оставьте заявку",
-    "Менеджер свяжется с вами и поможет подобрать решение",
-  ],
+  ctaTitle: "Есть вопрос по мебели или индивидуальному проекту?",
+  ctaBody:
+    "Оставьте заявку - менеджер свяжется с вами и поможет подобрать решение",
   ctaPrimary: "Оставить заявку",
   ctaSecondary: "Перейти в каталог",
 }
