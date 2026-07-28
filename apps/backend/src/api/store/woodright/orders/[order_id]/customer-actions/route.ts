@@ -1,5 +1,5 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 import { ORDER_PROCESS_MODULE } from "../../../../../../modules/order-process"
 import {
   ensureOrderProcess,
@@ -86,7 +86,21 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     return
   }
 
-  const { process } = await ensureOrderProcess(service, orderId)
+  const orderModule = req.scope.resolve(Modules.ORDER) as unknown as {
+    retrieveOrder: (
+      id: string,
+      config?: Record<string, unknown>
+    ) => Promise<Record<string, unknown>>
+  }
+
+  const ensured = await ensureOrderProcess(service, orderModule, orderId, {
+    source: "store_customer_action",
+  })
+  if (!ensured.ok) {
+    deny()
+    return
+  }
+  const { process } = ensured
   if (process.current_stage !== "awaiting_customer_approval") {
     res.status(400).json({
       code: "ACTION_NOT_AVAILABLE",

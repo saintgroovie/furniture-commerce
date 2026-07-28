@@ -72,9 +72,21 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     return
   }
 
-  const { process } = await ensureOrderProcess(service, orderId, {
+  const orderModule = req.scope.resolve(Modules.ORDER) as unknown as {
+    retrieveOrder: (
+      id: string,
+      config?: Record<string, unknown>
+    ) => Promise<Record<string, unknown>>
+  }
+
+  const ensured = await ensureOrderProcess(service, orderModule, orderId, {
     source: "store_ensure",
   })
+  if (!ensured.ok) {
+    deny()
+    return
+  }
+  const { process } = ensured
 
   const eventRows = await service.listWoodrightOrderProcessEvents(
     { process_id: process.id },

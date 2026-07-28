@@ -1,5 +1,10 @@
 import type { OrderProcessStage } from "./stages"
 import type { ProcessRecord } from "./transition"
+import {
+  assertMedusaOrderExists,
+  type OrderExistenceFail,
+  type OrderModuleLike,
+} from "./assert-medusa-order-exists"
 
 /** Minimal shape of order-process MedusaService methods used by API/subscribers. */
 export type OrderProcessServiceLike = {
@@ -58,20 +63,45 @@ export function asProcessRecord(row: Record<string, unknown>): ProcessRecord {
   }
 }
 
+export type EnsureOrderProcessOk = {
+  ok: true
+  process: ProcessRecord
+  created: boolean
+}
+
+export type EnsureOrderProcessResult = EnsureOrderProcessOk | OrderExistenceFail
+
+/**
+ * Ensure a Woodright order process exists for a **real** Medusa order.
+ * Always asserts Medusa order existence before list/create/event writes.
+ */
 export async function ensureOrderProcess(
   service: OrderProcessServiceLike,
+  orderModule: OrderModuleLike,
   orderId: string,
   opts: { source?: string; actor_type?: "system" | "admin" } = {}
-): Promise<{ process: ProcessRecord; created: boolean }> {
+): Promise<EnsureOrderProcessResult> {
+  const existence = await assertMedusaOrderExists(orderModule, orderId)
+  if (!existence.ok) {
+    return existence
+  }
+  const verifiedOrderId = existence.order_id
+
   const existing = await service.listWoodrightOrderProcesses({
-    order_id: orderId,
+    order_id: verifiedOrderId,
   })
   if (existing?.length) {
-    return { process: asProcessRecord(existing[0] as unknown as Record<string, unknown>), created: false }
+    return {
+      ok: true,
+      process: asProcessRecord(
+        existing[0] as unknown as Record<string, unknown>
+      ),
+      created: false,
+    }
   }
 
   const createdRaw = await service.createWoodrightOrderProcesses({
-    order_id: orderId,
+    order_id: verifiedOrderId,
     current_stage: "new",
     previous_stage: null,
     version: 1,
@@ -89,7 +119,7 @@ export async function ensureOrderProcess(
 
   await service.createWoodrightOrderProcessEvents({
     process_id: process.id,
-    order_id: orderId,
+    order_id: verifiedOrderId,
     previous_stage: null,
     next_stage: "new",
     event_type: "created",
@@ -101,9 +131,11 @@ export async function ensureOrderProcess(
     internal_note: null,
     notification_requested: false,
     source: opts.source ?? "ensure",
-    idempotency_key: `created:${orderId}`,
+    idempotency_key: `created:${verifiedOrderId}`,
     correlation_id: null,
   })
 
-  return { process, created: true }
+  return { ok: true, process, created: true }
 }
+
+export type { OrderModuleLike }
