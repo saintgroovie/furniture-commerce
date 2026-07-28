@@ -3,7 +3,11 @@ import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 import { PRODUCT_SALES_MODULE } from "../../../../../../modules/product-sales"
 import { buildBuyerPurchaseContract } from "../../../../../../lib/woodright-sales/buyer-purchase-contract"
 import { validateSalesPolicy } from "../../../../../../lib/woodright-sales/validate-sales-policy"
-import type { SalesMode, SalesModifier } from "../../../../../../lib/woodright-sales/sales-modes"
+import type {
+  ProductClassificationType,
+  SalesMode,
+  SalesModifier,
+} from "../../../../../../lib/woodright-sales/sales-modes"
 
 type SalesPolicyRow = {
   id: string
@@ -28,10 +32,32 @@ type ProductSalesServiceLike = {
   deleteProductSalesPolicies: (ids: string[]) => Promise<unknown>
 }
 
-async function loadLinkedPolicy(
+type ProductPreviewRow = {
+  id: string
+  classification: ProductClassificationType | null
+  policy: SalesPolicyRow | null
+  launch_mode: string | null
+}
+
+function readLaunchMode(meta: unknown): string | null {
+  if (!meta || typeof meta !== "object") return null
+  const launch = (meta as Record<string, unknown>).launch_mode
+  return typeof launch === "string" ? launch : null
+}
+
+function normalizeClassification(
+  raw: unknown
+): ProductClassificationType | null {
+  if (raw === "STANDARD" || raw === "CONFIGURABLE" || raw === "BESPOKE") {
+    return raw
+  }
+  return null
+}
+
+async function loadProductPreview(
   req: MedusaRequest,
   productId: string
-): Promise<SalesPolicyRow | null> {
+): Promise<ProductPreviewRow | null> {
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY) as {
     graph: (args: {
       entity: string
@@ -42,24 +68,56 @@ async function loadLinkedPolicy(
   try {
     const { data } = await query.graph({
       entity: "product",
-      fields: ["id", "product_sales_policy.*"],
+      fields: [
+        "id",
+        "metadata",
+        "product_sales_policy.*",
+        "product_classification.product_type",
+      ],
       filters: { id: productId },
     })
     const product = data?.[0] as
-      | { product_sales_policy?: SalesPolicyRow | SalesPolicyRow[] | null }
+      | {
+          id?: string
+          metadata?: unknown
+          product_sales_policy?: SalesPolicyRow | SalesPolicyRow[] | null
+          product_classification?: { product_type?: unknown } | null
+        }
       | undefined
-    const raw = product?.product_sales_policy
-    if (!raw) return null
-    return Array.isArray(raw) ? raw[0] ?? null : raw
+    if (!product?.id) return null
+    const raw = product.product_sales_policy
+    const policy = !raw ? null : Array.isArray(raw) ? raw[0] ?? null : raw
+    return {
+      id: String(product.id),
+      classification: normalizeClassification(
+        product.product_classification?.product_type
+      ),
+      policy,
+      launch_mode: readLaunchMode(product.metadata),
+    }
   } catch {
     return null
   }
 }
 
-function withPreview(policy: SalesPolicyRow | null) {
+async function loadLinkedPolicy(
+  req: MedusaRequest,
+  productId: string
+): Promise<SalesPolicyRow | null> {
+  const preview = await loadProductPreview(req, productId)
+  return preview?.policy ?? null
+}
+
+function withPreview(
+  policy: SalesPolicyRow | null,
+  classification: ProductClassificationType | null,
+  launch_mode: string | null = null
+) {
   const purchase = buildBuyerPurchaseContract({
     sales_mode: policy?.sales_mode ?? null,
     modifiers: (policy?.modifiers as SalesModifier[] | undefined) ?? [],
+    classification,
+    launch_mode,
     manager_confirmation_required: policy?.manager_confirmation_required,
     lead_time_text: policy?.lead_time_text,
     buyer_message: policy?.buyer_message,
@@ -69,8 +127,17 @@ function withPreview(policy: SalesPolicyRow | null) {
 
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const productId = req.params.id as string
-  const policy = await loadLinkedPolicy(req, productId)
-  res.json(withPreview(policy))
+  const preview = await loadProductPreview(req, productId)
+  if (!preview) {
+    res.status(404).json({
+      code: "PRODUCT_NOT_FOUND",
+      message: "Товар не найден",
+    })
+    return
+  }
+  res.json(
+    withPreview(preview.policy, preview.classification, preview.launch_mode)
+  )
 }
 
 export async function PUT(req: MedusaRequest, res: MedusaResponse) {
@@ -84,6 +151,15 @@ export async function PUT(req: MedusaRequest, res: MedusaResponse) {
     related_room_set_id?: string | null
     showroom_sample_available?: boolean
     unavailable_reason?: string | null
+  }
+
+  const preview = await loadProductPreview(req, productId)
+  if (!preview) {
+    res.status(404).json({
+      code: "PRODUCT_NOT_FOUND",
+      message: "Товар не найден",
+    })
+    return
   }
 
   const validated = validateSalesPolicy({
@@ -104,7 +180,7 @@ export async function PUT(req: MedusaRequest, res: MedusaResponse) {
     dismiss?: (data: Record<string, unknown>) => Promise<unknown>
   }
 
-  const existing = await loadLinkedPolicy(req, productId)
+  const existing = preview.policy
   const payload = {
     sales_mode: validated.sales_mode,
     modifiers: validated.modifiers,
@@ -135,12 +211,22 @@ export async function PUT(req: MedusaRequest, res: MedusaResponse) {
     })
   }
 
-  res.json(withPreview(policy))
+  res.json(
+    withPreview(policy, preview.classification, preview.launch_mode)
+  )
 }
 
 export async function DELETE(req: MedusaRequest, res: MedusaResponse) {
   const productId = req.params.id as string
-  const existing = await loadLinkedPolicy(req, productId)
+  const preview = await loadProductPreview(req, productId)
+  if (!preview) {
+    res.status(404).json({
+      code: "PRODUCT_NOT_FOUND",
+      message: "Товар не найден",
+    })
+    return
+  }
+  const existing = preview.policy
   if (!existing?.id) {
     res.json({ deleted: true, sales_policy: null })
     return
