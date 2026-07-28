@@ -80,7 +80,7 @@ export function ShowroomContactsContent({
         />
       </div>
       <div className="showroom-contacts-divider" aria-hidden="true" />
-      <ContactMessengerActions density="dropdown" maxWithPhone={false} />
+      <ContactMessengerActions density="dropdown" />
     </div>
   )
 }

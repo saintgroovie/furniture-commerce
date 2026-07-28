@@ -844,8 +844,8 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 }
 
 .header-info-dropdown--contacts {
-  width: 360px;
-  max-width: min(360px, calc(100vw - 1.5rem));
+  width: 368px;
+  max-width: min(368px, calc(100vw - 1.5rem));
 }
 
 .contacts-nav-dropdown-menu {
@@ -888,7 +888,7 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 }
 
 /* Neutralize generic `.nav-dropdown-menu a` chrome so compact contact
-   actions keep their own padding/border (not nav menu row fill). */
+   actions keep their own padding/border/layout (not nav menu row fill). */
 .contacts-nav-dropdown-menu a.contact-action {
   margin: 0;
   font-size: inherit;
@@ -898,8 +898,39 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   text-decoration: none;
 }
 
+.contacts-nav-dropdown-menu a.contact-action.contact-action--layout-leading {
+  display: inline-flex;
+  align-items: center;
+}
+
+.contacts-nav-dropdown-menu a.contact-action.contact-action--layout-trailing-bubble {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 0.6875rem;
+  row-gap: 0;
+}
+
+/* Beat `.nav-dropdown-menu a` padding (0,1,1) with density packing. */
+.contacts-nav-dropdown-menu a.contact-action.contact-action--density-dropdown {
+  min-height: 3.5rem;
+  padding: 0.6875rem 0.8125rem;
+  border-radius: 8px;
+}
+
+.contacts-nav-dropdown-menu a.contact-action.contact-action--density-dropdown.contact-action--map {
+  min-height: 3.5rem;
+  padding: 0.6875rem 0.8125rem;
+}
+
+.contacts-nav-dropdown-menu a.contact-action.contact-action--density-dropdown.contact-action--channel {
+  min-height: 2.5rem;
+  padding: 0.4rem 0.55rem;
+}
+
 .contacts-nav-dropdown-menu a.contact-action:hover {
   text-decoration: none;
+  background: color-mix(in srgb, var(--color-bg) 88%, var(--color-surface));
 }
 
 .contacts-nav-dropdown-bridge {
@@ -924,8 +955,8 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 */
 .showroom-contacts--showroom,
 .showroom-contacts--contacts {
-  --hc-pad: 1.25rem; /* 20px - keep panel compact with action tiles */
-  --hc-gap-section: 1.125rem; /* 18px */
+  --hc-pad: 1.375rem; /* 22px */
+  --hc-gap-section: 1.125rem; /* 18px title → first action */
   --hc-gap-address-line: 0.375rem; /* 6px */
   --hc-gap-after-divider: 1rem; /* 16px */
   box-sizing: border-box;
@@ -975,7 +1006,7 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 .showroom-contacts--contacts .showroom-contacts-phone-stack {
   display: flex;
   flex-direction: column;
-  gap: 0.625rem; /* 10px */
+  gap: 0.6875rem; /* 11px */
   margin: 0 0 var(--hc-gap-section);
 }
 
@@ -985,10 +1016,6 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 
 .showroom-contacts .contact-messenger-block {
   margin-top: 0;
-}
-
-.showroom-contacts .contact-messenger-label {
-  display: none; /* dropdown channels are self-labelled */
 }
 
 /* ---- Shared contact-action primitive (page + dropdown densities) ---- */
@@ -1002,8 +1029,8 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   width: 100%;
   max-width: 100%;
   margin: 0;
-  border: 1px solid color-mix(in srgb, var(--color-border) 88%, var(--color-fg-muted));
-  background: color-mix(in srgb, var(--color-bg) 92%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-border) 72%, transparent);
+  background: color-mix(in srgb, var(--color-bg) 97%, var(--color-surface));
   color: var(--color-fg);
   text-decoration: none;
   font-family: inherit;
@@ -1012,8 +1039,8 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 }
 
 .contact-action:hover {
-  background: var(--color-bg);
-  border-color: var(--color-fg-muted);
+  background: color-mix(in srgb, var(--color-bg) 88%, var(--color-surface));
+  border-color: color-mix(in srgb, var(--color-border) 88%, var(--color-fg-muted));
   text-decoration: none;
 }
 
@@ -1023,9 +1050,10 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 }
 
 .contact-action:active {
-  background: color-mix(in srgb, var(--color-surface) 40%, var(--color-bg));
+  background: color-mix(in srgb, var(--color-surface) 28%, var(--color-bg));
 }
 
+/* Primary brown reserved for compact dropdown showroom CTA only. */
 .contact-action--primary {
   background: var(--color-action);
   border-color: var(--color-action);
@@ -1045,16 +1073,30 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 .contact-action--static {
   cursor: default;
   pointer-events: none;
-  background: color-mix(in srgb, var(--color-surface) 35%, var(--color-bg));
-  border-color: color-mix(in srgb, var(--color-border) 70%, transparent);
+  background: color-mix(in srgb, var(--color-bg) 94%, var(--color-surface));
+  border-color: color-mix(in srgb, var(--color-border) 62%, transparent);
   color: var(--color-fg-secondary);
 }
 
 .contact-action--static:hover,
 .contact-action--static:active {
-  background: color-mix(in srgb, var(--color-surface) 35%, var(--color-bg));
-  border-color: color-mix(in srgb, var(--color-border) 70%, transparent);
+  background: color-mix(in srgb, var(--color-bg) 94%, var(--color-surface));
+  border-color: color-mix(in srgb, var(--color-border) 62%, transparent);
   color: var(--color-fg-secondary);
+}
+
+.contact-action--layout-leading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.contact-action.contact-action--layout-trailing-bubble {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 0.6875rem; /* 11px */
+  row-gap: 0;
 }
 
 .contact-action-icon {
@@ -1069,11 +1111,40 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   display: block;
 }
 
+.contact-action-icon--bubble {
+  box-sizing: border-box;
+  width: 1.875rem; /* 30px */
+  height: 1.875rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 78%, transparent);
+  background: color-mix(in srgb, var(--color-surface) 42%, var(--color-bg));
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.contact-action--primary .contact-action-icon--bubble {
+  border-color: color-mix(in srgb, #fff 34%, transparent);
+  background: color-mix(in srgb, #fff 14%, transparent);
+  color: #fff;
+}
+
 .contact-action-body {
   display: flex;
   flex: 1 1 auto;
   min-width: 0;
   align-items: center;
+}
+
+.contact-action.contact-action--layout-trailing-bubble .contact-action-body {
+  flex: initial;
+  width: auto;
+  max-width: 100%;
+  min-width: 0;
+  grid-column: 1;
+  grid-row: 1;
 }
 
 .contact-action-copy {
@@ -1111,6 +1182,10 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   white-space: nowrap;
 }
 
+.contact-action-line {
+  white-space: nowrap;
+}
+
 .contact-action-muted {
   color: var(--color-fg-muted);
   font-weight: 500;
@@ -1129,12 +1204,12 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   min-height: 3rem; /* 48px - single-line actions */
 }
 
-.contact-action--density-page .contact-action-icon {
+.contact-action--density-page .contact-action-icon:not(.contact-action-icon--bubble) {
   width: 1.125rem;
   height: 1.125rem;
 }
 
-.contact-action--density-page .contact-action-icon svg {
+.contact-action--density-page .contact-action-icon:not(.contact-action-icon--bubble) svg {
   width: 18px;
   height: 18px;
 }
@@ -1155,31 +1230,41 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 }
 
 .contact-action--density-dropdown {
-  min-height: 3.125rem; /* 50px phone tiles */
-  padding: 0.45rem 0.7rem;
+  min-height: 3.5rem; /* 56px trailing phone tiles */
+  padding: 0.6875rem 0.8125rem; /* 11×13 */
   border-radius: 8px;
   font-size: 0.875rem;
-  gap: 0.5rem; /* 8px */
+  gap: 0.625rem; /* 10px */
 }
 
-.contact-action--density-dropdown.contact-action--map,
+.contact-action--density-dropdown.contact-action--map {
+  min-height: 3.5rem;
+  padding: 0.6875rem 0.8125rem;
+}
+
 .contact-action--density-dropdown.contact-action--channel {
   min-height: 2.5rem; /* 40px */
-  padding: 0.4rem 0.65rem;
+  padding: 0.4rem 0.55rem;
+  gap: 0.4rem;
 }
 
 .contact-action--density-dropdown .contact-action-copy {
-  gap: 0.1rem;
+  gap: 0.25rem; /* 4px */
 }
 
-.contact-action--density-dropdown .contact-action-icon {
+.contact-action--density-dropdown .contact-action-icon:not(.contact-action-icon--bubble) {
   width: 1rem;
   height: 1rem;
 }
 
-.contact-action--density-dropdown .contact-action-icon svg {
+.contact-action--density-dropdown .contact-action-icon:not(.contact-action-icon--bubble) svg {
   width: 16px;
   height: 16px;
+}
+
+.contact-action--density-dropdown .contact-action-icon--bubble svg {
+  width: 14px;
+  height: 14px;
 }
 
 .contact-action--density-dropdown .contact-action-kicker {
@@ -1225,49 +1310,47 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 }
 
 .contact-messenger-block {
-  margin-top: 1.25rem; /* 20px */
-}
-
-.contact-messenger-label {
-  margin: 0 0 0.625rem;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  line-height: 1.35;
-  color: var(--color-fg-muted);
+  margin: 0;
+  min-width: 0;
 }
 
 .contacts-page .contacts-page-action-grid {
   margin-top: 0;
 }
 
-.contacts-page .contact-action-grid--pair + .contact-messenger-block,
-.contacts-page .contacts-page-col--channels > .contact-messenger-block {
-  margin-top: 1.25rem;
-}
-
-@media (max-width: 1100px) {
-  /* Sync collapse: both page action grids go single-column together. */
+@media (max-width: 1024px) {
+  /* Keep messenger trio equal; only stack phone pairs if they feel tight. */
   .contacts-page .contact-action-grid--pair {
-    grid-template-columns: 1fr;
-  }
-
-  .contacts-page .contact-action-grid--channels {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 900px) {
-  .contacts-page .contact-action-grid--pair,
-  .contacts-page .contact-action-grid--channels {
+  .contacts-page .contact-action-grid--pair {
     grid-template-columns: 1fr;
+  }
+
+  .contacts-page .contact-action-grid--channels {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .contacts-page .contact-action-grid--channels .contact-action-grid-item:last-child {
+    grid-column: 1 / -1;
   }
 }
 
-/* Dropdown compact pair: prefer 2 cols when width allows. */
-.showroom-contacts .contact-action-grid--pair.contact-action-grid--dropdown {
+/* Dropdown showroom: stack call + map so trailing bubbles stay compact. */
+.showroom-contacts--showroom .contact-action-grid--pair.contact-action-grid--dropdown {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.625rem; /* 10px */
+  align-items: stretch;
+}
+
+/* Contacts dropdown keeps messenger trio; showroom pair handled above. */
+.showroom-contacts--contacts .contact-action-grid--pair.contact-action-grid--dropdown {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.5rem;
-  align-items: start; /* avoid stretching map to phone tile height */
+  gap: 0.625rem;
+  align-items: stretch;
 }
 
 .showroom-contacts .contact-action-grid--channels.contact-action-grid--dropdown {
@@ -1276,8 +1359,7 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 }
 
 @media (max-width: 420px) {
-  .showroom-contacts .contact-action-grid--pair.contact-action-grid--dropdown,
-  .showroom-contacts .contact-action-grid--channels.contact-action-grid--dropdown {
+  .showroom-contacts--contacts .contact-action-grid--pair.contact-action-grid--dropdown {
     grid-template-columns: 1fr;
   }
 }
@@ -1336,43 +1418,86 @@ main:has(.contacts-page) {
 }
 
 /*
-  Contact stage: two equal content zones + explicit center gutter.
-  Divider sits on the stage midpoint (center of the gutter), so each
-  column keeps ~half the gutter as optical air - not stuck to the line.
+  Contact stage: two equal content zones + shared three-row contract.
+  Rows: header (eyebrow+H2) / primary (address | phones) / secondary (actions).
+  Subgrid keeps secondary action tops aligned across columns.
+  Divider sits on the stage midpoint (center of the gutter).
 */
 .contacts-page-stage {
+  --contacts-stage-row-gap: 1.75rem; /* 28px shared between logical rows */
   grid-column: 1 / -1;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: auto auto auto;
   column-gap: var(--contacts-center-gutter);
-  align-items: start;
+  row-gap: var(--contacts-stage-row-gap);
+  align-items: stretch;
   position: relative;
   margin-top: 3.125rem; /* 50px intro → stage */
   width: 100%;
   min-width: 0;
 }
 
-.contacts-page-col--showroom {
-  grid-column: 1;
+.contacts-page-col {
   min-width: 0;
   width: 100%;
 }
 
-.contacts-page-divider {
+.contacts-page-col--showroom {
+  grid-column: 1;
+  grid-row: 1 / -1;
+}
+
+.contacts-page-col--channels {
+  grid-column: 2;
+  grid-row: 1 / -1;
+}
+
+@supports (grid-template-rows: subgrid) {
+  .contacts-page-col {
+    display: grid;
+    grid-template-rows: subgrid;
+    row-gap: var(--contacts-stage-row-gap);
+    align-content: stretch;
+  }
+}
+
+@supports not (grid-template-rows: subgrid) {
+  /* Fallback: same three-row stack per column (no cross-column sync). */
+  .contacts-page-col {
+    display: flex;
+    flex-direction: column;
+    gap: var(--contacts-stage-row-gap);
+  }
+}
+
+.contacts-page-row {
+  min-width: 0;
+  width: 100%;
+}
+
+.contacts-page-row--header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.contacts-page-row--primary,
+.contacts-page-row--secondary {
+  align-self: start;
+}
+
+/* Decorative center rule - pseudo avoids occupying a grid track. */
+.contacts-page-stage::before {
+  content: "";
   position: absolute;
   left: 50%;
   top: 0;
   bottom: 0;
   width: 1px;
   transform: translateX(-50%);
-  background: color-mix(in srgb, var(--color-border) 70%, transparent);
+  background: color-mix(in srgb, var(--color-border) 62%, transparent);
   pointer-events: none;
-}
-
-.contacts-page-col--channels {
-  grid-column: 2;
-  min-width: 0;
-  width: 100%;
 }
 
 .contacts-page-eyebrow {
@@ -1384,7 +1509,7 @@ main:has(.contacts-page) {
 }
 
 .contacts-page-col-title {
-  margin: 0 0 1.75rem; /* 28px title → content - shared for both columns */
+  margin: 0;
   font-size: 1.6875rem; /* 27px - shared token for both column H2s */
   font-weight: 600;
   line-height: 1.25;
@@ -1397,7 +1522,7 @@ main:has(.contacts-page) {
   display: flex;
   flex-direction: column;
   gap: 0.5rem; /* 8px */
-  margin: 0 0 1.75rem; /* 28px → showroom actions */
+  margin: 0;
   font-size: 1.0625rem; /* 17px */
   font-style: normal;
   line-height: 1.5;
@@ -1532,15 +1657,24 @@ main:has(.contacts-page).page-section {
     display: flex;
     flex-direction: column;
     margin-top: 2.75rem;
+    row-gap: 0;
+  }
+
+  .contacts-page-stage::before,
+  .contacts-page-divider {
+    display: none;
+  }
+
+  .contacts-page-col {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    grid-row: auto;
   }
 
   .contacts-page-col--showroom {
     padding-bottom: 2.25rem;
     border-bottom: 1px solid color-mix(in srgb, var(--color-border) 78%, transparent);
-  }
-
-  .contacts-page-divider {
-    display: none;
   }
 
   .contacts-page-col--channels {

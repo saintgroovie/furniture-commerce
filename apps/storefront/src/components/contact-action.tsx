@@ -11,10 +11,12 @@ import { showroomContacts } from "@/lib/showroom-contacts"
 
 export type ContactActionDensity = "page" | "dropdown"
 export type ContactActionTone = "primary" | "secondary" | "static"
+export type ContactActionLayout = "leadingIcon" | "trailingBubble"
 
 type ContactActionBaseProps = {
   density?: ContactActionDensity
   tone?: ContactActionTone
+  layout?: ContactActionLayout
   icon: ReactNode
   className?: string
   children: ReactNode
@@ -32,33 +34,83 @@ function toneClass(tone: ContactActionTone) {
   return "contact-action--secondary"
 }
 
+function layoutClass(layout: ContactActionLayout) {
+  return layout === "trailingBubble"
+    ? "contact-action--layout-trailing-bubble"
+    : "contact-action--layout-leading"
+}
+
 function actionClassName({
   density = "page",
   tone = "secondary",
+  layout = "leadingIcon",
   className = "",
 }: {
   density?: ContactActionDensity
   tone?: ContactActionTone
+  layout?: ContactActionLayout
   className?: string
 }) {
   return [
     "contact-action",
     densityClass(density),
     toneClass(tone),
+    layoutClass(layout),
     className,
   ]
     .filter(Boolean)
     .join(" ")
 }
 
+function ActionChrome({
+  layout,
+  icon,
+  children,
+}: {
+  layout: ContactActionLayout
+  icon: ReactNode
+  children: ReactNode
+}) {
+  const iconEl = (
+    <span
+      className={
+        layout === "trailingBubble"
+          ? "contact-action-icon contact-action-icon--bubble"
+          : "contact-action-icon"
+      }
+      aria-hidden="true"
+    >
+      {icon}
+    </span>
+  )
+  const bodyEl = <span className="contact-action-body">{children}</span>
+
+  if (layout === "trailingBubble") {
+    return (
+      <>
+        {bodyEl}
+        {iconEl}
+      </>
+    )
+  }
+
+  return (
+    <>
+      {iconEl}
+      {bodyEl}
+    </>
+  )
+}
+
 /**
  * Shared bordered contact action tile.
- * Page and dropdown share chrome; density modifiers set size only.
+ * Page and dropdown share chrome; density/layout modifiers isolate size and icon placement.
  */
 export function ContactActionLink({
   href,
   density = "page",
   tone = "secondary",
+  layout = "leadingIcon",
   icon,
   className,
   children,
@@ -69,16 +121,15 @@ export function ContactActionLink({
 }) {
   return (
     <a
-      className={actionClassName({ density, tone, className })}
+      className={actionClassName({ density, tone, layout, className })}
       href={href}
       {...(external
         ? { target: "_blank", rel: "noopener noreferrer" }
         : {})}
     >
-      <span className="contact-action-icon" aria-hidden="true">
-        {icon}
-      </span>
-      <span className="contact-action-body">{children}</span>
+      <ActionChrome layout={layout} icon={icon}>
+        {children}
+      </ActionChrome>
     </a>
   )
 }
@@ -86,20 +137,20 @@ export function ContactActionLink({
 /** Non-interactive channel tile (MAX). */
 export function ContactActionStatic({
   density = "page",
+  layout = "leadingIcon",
   icon,
   className,
   children,
-  title,
-}: ContactActionBaseProps & { title?: string }) {
+  "aria-label": ariaLabel,
+}: ContactActionBaseProps & { "aria-label"?: string }) {
   return (
     <span
-      className={actionClassName({ density, tone: "static", className })}
-      title={title}
+      className={actionClassName({ density, tone: "static", layout, className })}
+      aria-label={ariaLabel}
     >
-      <span className="contact-action-icon" aria-hidden="true">
-        {icon}
-      </span>
-      <span className="contact-action-body">{children}</span>
+      <ActionChrome layout={layout} icon={icon}>
+        {children}
+      </ActionChrome>
     </span>
   )
 }
@@ -110,6 +161,7 @@ type PhoneTileProps = {
   tel: string
   density?: ContactActionDensity
   tone?: "primary" | "secondary"
+  layout?: ContactActionLayout
   /** Optional primary line above the number (dropdown showroom CTA). */
   headline?: string
 }
@@ -121,14 +173,18 @@ export function ContactPhoneAction({
   tel,
   density = "page",
   tone = "secondary",
+  layout,
   headline,
 }: PhoneTileProps) {
-  const iconSize = density === "dropdown" ? 16 : 18
+  const resolvedLayout: ContactActionLayout =
+    layout ?? (density === "dropdown" ? "trailingBubble" : "leadingIcon")
+  const iconSize = density === "dropdown" ? 14 : 18
   return (
     <ContactActionLink
       href={`tel:${tel}`}
       density={density}
       tone={tone}
+      layout={resolvedLayout}
       className="contact-action--phone"
       icon={<ContactPhoneIcon size={iconSize} />}
     >
@@ -147,15 +203,19 @@ export function ContactPhoneAction({
 
 type MapActionProps = {
   density?: ContactActionDensity
+  layout?: ContactActionLayout
   /** Page uses full CTA; dropdown uses short label. */
   label?: string
 }
 
 export function ContactMapAction({
   density = "page",
+  layout,
   label,
 }: MapActionProps) {
-  const iconSize = density === "dropdown" ? 16 : 18
+  const resolvedLayout: ContactActionLayout =
+    layout ?? (density === "dropdown" ? "trailingBubble" : "leadingIcon")
+  const iconSize = density === "dropdown" ? 14 : 18
   const text =
     label ??
     (density === "dropdown"
@@ -166,6 +226,7 @@ export function ContactMapAction({
       href={showroomContacts.yandexMapsUrl}
       density={density}
       tone="secondary"
+      layout={resolvedLayout}
       className="contact-action--map"
       external
       icon={<ContactMapPinIcon size={iconSize} />}
@@ -179,7 +240,7 @@ export function ContactMapAction({
 
 function channelIcon(
   id: "telegram" | "whatsapp" | "max",
-  size: 16 | 18
+  size: 14 | 16 | 18
 ) {
   if (id === "telegram") return <ContactSendIcon size={size} />
   return <ContactMessageIcon size={size} />
@@ -187,22 +248,16 @@ function channelIcon(
 
 type MessengerGridProps = {
   density?: ContactActionDensity
-  /** Page shows `MAX · phone`; dropdown shows `MAX` only. */
-  maxWithPhone?: boolean
 }
 
 export function ContactMessengerActions({
   density = "page",
-  maxWithPhone = density === "page",
 }: MessengerGridProps) {
   const iconSize = density === "dropdown" ? 16 : 18
+  const maxAccessibleLabel = `MAX - связь по номеру ${showroomContacts.writeOrCall.display}`
+
   return (
     <div className="contact-messenger-block">
-      {density === "page" ? (
-        <p className="contact-messenger-label">
-          {formatRuInline(contactsCopy.messengersLabel)}
-        </p>
-      ) : null}
       <ul
         className={`contact-action-grid contact-action-grid--channels contact-action-grid--${density}`}
         aria-label={contactsCopy.messengersLabel}
@@ -214,6 +269,7 @@ export function ContactMessengerActions({
                 href={item.href}
                 density={density}
                 tone="secondary"
+                layout="leadingIcon"
                 className="contact-action--channel"
                 external
                 icon={channelIcon(item.id, iconSize)}
@@ -225,19 +281,17 @@ export function ContactMessengerActions({
             ) : (
               <ContactActionStatic
                 density={density}
+                layout="leadingIcon"
                 className="contact-action--channel"
-                title={`${item.label}: напишите или позвоните на ${showroomContacts.writeOrCall.display}`}
+                aria-label={maxAccessibleLabel}
                 icon={channelIcon(item.id, iconSize)}
               >
                 <span className="contact-action-copy contact-action-copy--single">
-                  <span className="contact-action-line">
+                  <span className="contact-action-line" aria-hidden="true">
                     {item.label}
-                    {maxWithPhone ? (
-                      <span className="contact-action-muted">
-                        {" "}
-                        · {showroomContacts.writeOrCall.display}
-                      </span>
-                    ) : null}
+                  </span>
+                  <span className="sr-only">
+                    {`связь по номеру ${showroomContacts.writeOrCall.display}`}
                   </span>
                 </span>
               </ContactActionStatic>

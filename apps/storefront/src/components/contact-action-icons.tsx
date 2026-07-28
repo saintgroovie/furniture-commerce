@@ -3,7 +3,7 @@
  * Matches local bespoke-help-icons style - no new icon dependency.
  */
 
-type IconSize = 16 | 18
+type IconSize = 14 | 16 | 18
 
 function baseProps(size: IconSize = 18) {
   return {
