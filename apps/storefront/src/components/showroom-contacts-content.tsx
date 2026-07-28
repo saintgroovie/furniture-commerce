@@ -29,7 +29,7 @@ export function ShowroomContactsContent({
     return (
       <div className={rootClass} role="group" aria-labelledby={titleId}>
         <p id={titleId} className="showroom-contacts-title">
-          {formatRuInline(showroomContacts.showroomDropdownTitle)}
+          {formatRuInline(showroomContacts.title)}
         </p>
         <address id={addressId} className="showroom-contacts-address">
           {showroomContacts.addressLinesCompact.map((line) => (

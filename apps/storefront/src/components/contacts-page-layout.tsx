@@ -17,7 +17,7 @@ export function ContactsPageLayout() {
     <div className="contacts-page">
       <header className="contacts-page-header">
         <h1 className="contacts-page-title">{contactsCopy.h1}</h1>
-        <CopyLines className="contacts-page-intro" lines={contactsCopy.lead} />
+        <p className="contacts-page-intro">{formatRuInline(contactsCopy.lead)}</p>
       </header>
 
       <div className="contacts-page-grid">
@@ -50,10 +50,10 @@ export function ContactsPageLayout() {
           className="contacts-page-col contacts-page-col--channels"
           aria-labelledby="contacts-channels-heading"
         >
-          <h2
-            id="contacts-channels-heading"
-            className="contacts-page-col-title contacts-page-col-title--solo"
-          >
+          <p className="contacts-page-eyebrow">
+            {formatRuInline(contactsCopy.channelsEyebrow)}
+          </p>
+          <h2 id="contacts-channels-heading" className="contacts-page-col-title">
             {formatRuInline(contactsCopy.channelsHeading)}
           </h2>
           <div className="contacts-page-phones">
@@ -87,7 +87,7 @@ export function ContactsPageLayout() {
       <section className="contacts-page-cta" aria-labelledby="contacts-cta-heading">
         <div className="contacts-page-cta-copy">
           <h2 id="contacts-cta-heading" className="contacts-page-cta-title">
-            {formatRuInline(contactsCopy.ctaTitle)}
+            <CopyLines as="span" lines={contactsCopy.ctaTitle} />
           </h2>
           <CopyLines className="contacts-page-cta-body" lines={contactsCopy.ctaBody} />
         </div>

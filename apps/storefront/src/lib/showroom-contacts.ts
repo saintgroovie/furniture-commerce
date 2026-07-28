@@ -22,11 +22,6 @@ const MESSENGER_E164_DIGITS = "79672587144"
 
 export const showroomContacts = {
   title: "Шоурум Woodright",
-  /**
- * Showroom header-dropdown title - continues the «Гранд» trigger context.
- * Page column heading uses `pageShowroomHeading`.
- */
-  showroomDropdownTitle: "Шоурум «Гранд»",
   /** Full-page showroom column heading (not the dropdown title). */
   pageShowroomHeading: "«Гранд», Химки",
   /** Contacts-oriented panel title (header contacts dropdown). */
