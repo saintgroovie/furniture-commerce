@@ -19,6 +19,7 @@ import { HomeRevealObserver } from "@/components/home/home-reveal-observer"
 import { HomeRoomScene, type HomeScene } from "@/components/home/home-room-scene"
 import { pickByHandles, toHomeProduct, type HomeProduct } from "@/components/home/home-data"
 import { homeMedia } from "@/components/home/home-media"
+import { resolveHomeImageSrc } from "@/components/home/home-image"
 
 export const metadata: Metadata = {
   title: seo.home.title,
@@ -148,7 +149,9 @@ async function loadHomeShowcase(): Promise<{
   // is enough for first paint.
   for (const p of featured) {
     const variants = p.handle ? homeMedia.featuredVariants[p.handle] : undefined
-    if (variants?.length) p.variantImgs = variants
+    if (variants?.length) {
+      p.variantImgs = variants.map((src) => resolveHomeImageSrc(src))
+    }
   }
 
   return { featured, kids, sceneProducts }
@@ -170,7 +173,9 @@ function buildScenes(sceneProducts: Map<string, HomeProduct>): HomeScene[] {
   ].filter((s): s is NonNullable<typeof s> => s != null)
   scenes.push({
     id: "greenwich",
-    img: homeMedia.roomSceneGreenwich,
+    img: resolveHomeImageSrc(homeMedia.roomSceneGreenwich, {
+      surface: "ROOM_COMPOSITION",
+    }),
     alt: "Светлая спальня Greenwich с кроватью, рабочим столом и тумбой",
     spots: greenwichSpots,
   })
@@ -182,7 +187,9 @@ function buildScenes(sceneProducts: Map<string, HomeProduct>): HomeScene[] {
   ].filter((s): s is NonNullable<typeof s> => s != null)
   scenes.push({
     id: "cloud",
-    img: homeMedia.roomSceneCloud,
+    img: resolveHomeImageSrc(homeMedia.roomSceneCloud, {
+      surface: "ROOM_COMPOSITION",
+    }),
     alt: "Спальня Cloud с кроватью, рабочим столом и гардеробом",
     spots: cloudSpots,
   })

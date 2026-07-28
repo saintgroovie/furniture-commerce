@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next"
 import Link from "next/link"
+import { headers } from "next/headers"
 import { getSiteUrl } from "@/lib/api/base"
 import {
   HeaderHoverDropdown,
@@ -14,6 +15,8 @@ import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import { KidsSectionProvider } from "@/lib/use-kids-section"
 import { getShowroomOrganizationContactLd } from "@/lib/showroom-contacts"
+import { CspNonceProvider } from "@/lib/csp-nonce"
+import { indexingRobotsMetadata } from "@/lib/indexing-policy"
 import { a11yCopy, footer as footerCopy, nav as navCopy, seo } from "@/lib/woodright-copy"
 import { formatRuInline } from "@/lib/format-ru-copy"
 import "./globals.css"
@@ -26,6 +29,8 @@ export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: { default: "Woodright", template: "%s | Woodright" },
   description: seo.home.description,
+  // Demo/staging fail-closed: noindex/nofollow/noarchive (WOODRIGHT_INDEXING_MODE).
+  robots: indexingRobotsMetadata(),
   openGraph: {
     siteName: "Woodright",
     locale: "ru_RU",
@@ -59,11 +64,15 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  // CSP nonce from middleware (x-nonce). Required for JSON-LD + Next bootstrap.
+  const nonce = headers().get("x-nonce") ?? undefined
   return (
     <html lang="ru" className={localSansClass}>
       <body>
+        <CspNonceProvider nonce={nonce}>
         <script
           type="application/ld+json"
+          nonce={nonce}
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
         <a href="#main-content" className="skip-link">
@@ -140,6 +149,7 @@ export default function RootLayout({
                   className="header-nav-kids"
                   items={[
                     { label: "Каталог", href: "/kids/catalog" },
+                    { label: "Росписи Вилли Винки", href: "/kids/willie-winkie" },
                     { label: "Комнаты", href: "/kids/rooms" },
                     { label: "О разделе", href: "/kids" },
                   ]}
@@ -221,6 +231,7 @@ export default function RootLayout({
           }
         />
         </KidsSectionProvider>
+        </CspNonceProvider>
       </body>
     </html>
   )

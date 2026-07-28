@@ -1,0 +1,255 @@
+# PR checks for Woodright monorepo (storefront production gate + fidelity).
+name: PR checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: pr-checks-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  storefront:
+    name: Storefront production gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: apps/storefront
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Secret scan (heuristic, no values)
+        working-directory: .
+        run: |
+          set -euo pipefail
+          # Scan the checked-out tree (not a rev-range — git grep needs trees).
+          if git grep -nE '(BEGIN (RSA |OPENSSH )?PRIVATE KEY|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})' -- \
+            '*.ts' '*.tsx' '*.js' '*.cjs' '*.yml' '*.yaml' '*.md' '*.env' '*.env.*' 2>/dev/null; then
+            echo "Potential secret material in tracked files" >&2
+            exit 1
+          fi
+          echo "secret_scan=ok"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Enable Corepack (Yarn 4)
+        working-directory: .
+        run: |
+          corepack enable
+          corepack prepare yarn@4.6.0 --activate
+          yarn --version
+
+      - name: Install
+        run: yarn install --immutable
+
+      - name: Production typecheck
+        env:
+          MEDUSA_BACKEND_INTERNAL_URL: http://backend:9000
+        run: yarn typecheck
+
+      - name: Full typecheck (includes QA boards)
+        env:
+          MEDUSA_BACKEND_INTERNAL_URL: http://backend:9000
+        run: yarn typecheck:all
+
+      - name: Lint
+        env:
+          MEDUSA_BACKEND_INTERNAL_URL: http://backend:9000
+        run: yarn lint
+
+      - name: Production build
+        env:
+          MEDUSA_BACKEND_INTERNAL_URL: http://backend:9000
+          NEXT_PUBLIC_SITE_URL: https://woodright-demo.ru
+          NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: pk_test_ci_placeholder
+          NEXT_PUBLIC_MEDUSA_BACKEND_URL: ""
+        run: yarn build
+
+      - name: Client artifact URL gate
+        run: |
+          set -euo pipefail
+          ROOT=".next-build/static/chunks"
+          test -d "$ROOT"
+          if grep -R --fixed-strings -l '89.169.188.29:9000' "$ROOT" 2>/dev/null; then
+            echo "client leak: public IP:9000" >&2
+            exit 1
+          fi
+          if grep -R --fixed-strings -l 'http://backend:9000' "$ROOT" 2>/dev/null; then
+            echo "client leak: docker hostname" >&2
+            exit 1
+          fi
+          echo "client_artifact_gate=ok"
+
+      - name: Fidelity tests
+        run: yarn test:fidelity
+
+  backend-fidelity:
+    name: Backend fidelity tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: apps/backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Enable Corepack (Yarn 4)
+        working-directory: .
+        run: |
+          corepack enable
+          corepack prepare yarn@4.6.0 --activate
+          yarn --version
+      - name: Install
+        run: yarn install --immutable
+      - name: Run classification/cart/catalog fidelity
+        run: |
+          set -euo pipefail
+          mapfile -t FILES < <(find src -name '*.fidelity.test.ts' | sort)
+          echo "found ${#FILES[@]} fidelity files"
+          for f in "${FILES[@]}"; do
+            yarn dlx tsx "$f"
+          done
+
+  release-governance:
+    name: Release governance gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Manifest / deploy / owner / report fixtures
+        run: |
+          set -euo pipefail
+          node scripts/release/build-identity.cjs --self-test
+          node scripts/release/validate-release-manifest.cjs --fixture-dir scripts/release/fixtures
+          node scripts/release/validate-build-manifest.cjs --fixture-dir scripts/release/fixtures/build
+          node scripts/release/validate-deploy-inputs.cjs --fixture-dir scripts/release/fixtures/deploy
+          node scripts/release/check-owner-state.cjs --fixture-dir scripts/release/fixtures/owner
+          node scripts/release/check-active-release.cjs --fixture-dir scripts/release/fixtures/active
+          node scripts/release/check-candidate-registry.cjs --fixture-dir scripts/release/fixtures/candidates
+          node scripts/release/validate-report-status.cjs --fixture-dir scripts/release/fixtures/reports
+          node scripts/release/check-governance-no-deploy.cjs .github/workflows
+          node scripts/release/deployment-owner-label.fidelity.test.cjs
+          bash scripts/ops/test-runtime-discovery-fidelity.sh
+          node scripts/release/backend-media-promotion.fidelity.test.cjs
+          node scripts/release/backend-network-alias.fidelity.test.cjs
+          node scripts/release/public-image-pin-consistency.fidelity.test.cjs
+          node scripts/release/public-image-pin-lock.fidelity.test.cjs
+          # Gates S–AC: cutover lock / CAS / TX / active-after-public / recon / audit / drift / cleanup / DQ
+          node scripts/release/check-global-lock-policy.cjs scripts/release
+          node scripts/release/check-global-lock-policy.cjs --fixture-dir scripts/release/fixtures/lock
+          node scripts/release/validate-compare-and-swap.cjs --fixture-dir scripts/release/fixtures/cas
+          node scripts/release/validate-cutover-transaction.cjs --fixture-dir scripts/release/fixtures/tx
+          node scripts/release/validate-active-after-public.cjs --fixture-dir scripts/release/fixtures/active-public
+          node scripts/release/validate-reconciliation.cjs --fixture-dir scripts/release/fixtures/reconciliation
+          node scripts/release/validate-cutover-audit-log.cjs --fixture-dir scripts/release/fixtures/audit
+          node scripts/release/monitor-live-drift.cjs --fixture-dir scripts/release/fixtures/drift
+          node scripts/release/validate-candidate-cleanup.cjs --fixture-dir scripts/release/fixtures/candidate-cleanup
+          node scripts/release/validate-dq-packet-provenance.cjs --fixture-dir scripts/release/fixtures/dq
+          node scripts/release/validate-aborted-release-dir.cjs --fixture-dir scripts/release/fixtures/aborted-dir
+          node scripts/catalog/audit-catalog-data-quality.cjs --self-test-readonly
+          node scripts/catalog/audit-catalog-data-quality.cjs \
+            --fixture scripts/catalog/fixtures/sample-products.json \
+            --out /tmp/woodright-catalog-audit-ci \
+            --release-sha 0000000000000000000000000000000000000000
+          # Gates AD–AQ: split bundle / Dokploy / tools / DQ sources
+          node scripts/release/validate-release-bundle-manifest.cjs --fixture-dir scripts/release/fixtures/bundle
+          node scripts/release/validate-release-bundle-manifest.cjs --fixture-dir scripts/release/fixtures/rollback
+          node scripts/release/validate-component-provenance.cjs --fixture-dir scripts/release/fixtures/provenance
+          node scripts/release/validate-compatibility-contract.cjs --fixture-dir scripts/release/fixtures/compat
+          node scripts/release/validate-active-release-bundle.cjs --fixture-dir scripts/release/fixtures/active-bundle
+          # Production-mode path: flat ACTIVE_RELEASE + relative manifest_path (exact bytes checksum)
+          node scripts/release/validate-active-release-bundle.cjs scripts/release/fixtures/active-bundle/pos-server-path.json
+          if node scripts/release/validate-active-release-bundle.cjs scripts/release/fixtures/active-bundle/pos-valid.json; then
+            echo "expected production mode to reject CI envelope" >&2
+            exit 1
+          fi
+          node scripts/release/validate-dokploy-enforcement.cjs --fixture-dir scripts/release/fixtures/dokploy
+          node scripts/release/validate-mutation-lease.cjs --fixture-dir scripts/release/fixtures/lease
+          node scripts/release/validate-tools-runner-policy.cjs --fixture-dir scripts/release/fixtures/tools-runner
+          node scripts/release/validate-dto-data-gap-distinction.cjs --fixture-dir scripts/release/fixtures/dto-gaps
+          node scripts/release/validate-dq-packet-provenance.cjs --fixture-dir scripts/release/fixtures/dq-bundle
+          node scripts/release/validate-metadata-migration.cjs --fixture-dir scripts/release/fixtures/metadata-migration
+          node scripts/release/validate-component-cutover-state.cjs --fixture-dir scripts/release/fixtures/component-cutover
+          # Gates AR–BC: Dokploy control-plane / stacks / owner-review / mutation dry-run
+          node scripts/release/validate-dokploy-enforcement.cjs --fixture-dir scripts/release/fixtures/dokploy
+          node scripts/release/validate-stack-registry.cjs --fixture-dir scripts/release/fixtures/stacks
+          node scripts/release/validate-public-route-uniqueness.cjs --fixture-dir scripts/release/fixtures/routes
+          node scripts/release/validate-owner-review-decisions.cjs --fixture-dir scripts/release/fixtures/owner-review
+          node scripts/release/validate-catalog-mutation-manifest.cjs --fixture-dir scripts/release/fixtures/mutation-manifest
+          node scripts/catalog/dry-run-catalog-mutations.cjs --fixture-dir scripts/release/fixtures/mutation-dryrun
+          node scripts/release/validate-code-data-separation.cjs --fixture-dir scripts/release/fixtures/code-data
+          node scripts/catalog/build-owner-review-packet.cjs \
+            --endpoint-comparison scripts/catalog/fixtures/sample-endpoint-comparison.json \
+            --inventory scripts/catalog/fixtures/sample-dq-inventory.json \
+            --out /tmp/woodright-owner-review-ci
+          node scripts/release/validate-owner-review-decisions.cjs /tmp/woodright-owner-review-ci/review-decisions.json
+          node scripts/release/validate-stack-registry.cjs scripts/release/fixtures/stacks/pos-complete.json
+          node scripts/release/validate-public-route-uniqueness.cjs scripts/release/fixtures/routes/pos-unique.json
+          node scripts/catalog/assert-owner-review-identity-mismatch.cjs
+          # Gates BD–BQ: live reconciliation / intents / identity
+          node scripts/release/validate-intent-registry.cjs --fixture-dir scripts/release/fixtures/intent
+          node scripts/release/validate-owner-txt-generation.cjs --fixture-dir scripts/release/fixtures/owner-txt
+          node scripts/release/validate-external-cutover-reconciliation.cjs --fixture-dir scripts/release/fixtures/external-cutover
+          node scripts/release/validate-product-identity-compare.cjs --fixture-dir scripts/release/fixtures/product-identity
+          node scripts/release/validate-stack-mutation-attribution.cjs --fixture-dir scripts/release/fixtures/stack-attribution
+          node scripts/release/validate-owner-decision-defaults.cjs --fixture-dir scripts/release/fixtures/owner-decision
+          # Runtime identity / public evidence fail-closed
+          node scripts/release/validate-runtime-identity.cjs --self-test
+          node scripts/release/validate-runtime-identity.cjs --fixture-dir scripts/release/fixtures/runtime-identity
+          node scripts/release/assert-public-deploy-target.cjs --self-test
+          node scripts/release/verify-public-runtime-identity.cjs --offline \
+            --url https://api.woodright-demo.ru/health \
+            --headers-json '{"x-woodright-runtime-role":"public_demo","x-woodright-exposure":"public","x-woodright-release-sha":"f7f6760fca86ff503529da6696c04159e76ef9c8"}' \
+            --expected-sha f7f6760fca86ff503529da6696c04159e76ef9c8
+          if node scripts/release/verify-public-runtime-identity.cjs --url http://127.0.0.1:9200/health; then
+            echo "expected public verifier to reject :9200" >&2
+            exit 1
+          fi
+          if node scripts/release/verify-public-runtime-identity.cjs --url http://api.woodright-demo.ru/health; then
+            echo "expected public verifier to reject http canonical URL" >&2
+            exit 1
+          fi
+          if node scripts/release/verify-public-runtime-identity.cjs --offline \
+            --url https://api.woodright-demo.ru/health \
+            --final-url http://127.0.0.1:9200/health \
+            --headers-json '{"x-woodright-runtime-role":"public_demo","x-woodright-exposure":"public","x-woodright-release-sha":"f7f6760fca86ff503529da6696c04159e76ef9c8"}' \
+            --expected-sha f7f6760fca86ff503529da6696c04159e76ef9c8; then
+            echo "expected public verifier to reject non-canonical final URL" >&2
+            exit 1
+          fi
+          if node scripts/release/verify-public-runtime-identity.cjs --offline \
+            --url https://api.woodright-demo.ru/health \
+            --headers-json '{"x-woodright-runtime-role":"non_public_candidate","x-woodright-exposure":"private"}'; then
+            echo "expected public verifier to reject private exposure" >&2
+            exit 1
+          fi
+          node scripts/catalog/compare-catalog-sources.cjs \
+            --list-fixture scripts/catalog/fixtures/sample-products.json \
+            --auth-fixture scripts/catalog/fixtures/sample-catalog-products.json \
+            --out /tmp/woodright-catalog-compare-ci \
+            --bundle-id wrb-20260721T155624Z-be643a429-sf54d1802 \
+            --backend-revision 643a429927adc934b89596df34dddb4a9d096cf6 \
+            --storefront-revision 54d1802cae921ed10acfaee2f0b742e63b511232 \
+            --backend-digest sha256:8fa5b643b222afda217733d2c652942b7b4fecb12d3d19aef143f55d86efdf17 \
+            --storefront-digest sha256:f493381a466b94956e62ccc9c3617731e91fcbace54ae648bbdfbbd711f33347
+          test -f scripts/release/run-server-governance-tool.sh
+          bash -n scripts/release/run-server-governance-tool.sh
+          # Gates BR–CE: owner decision workspace / disposable Dokploy / mutation preview
+          node scripts/release/validate-owner-decision-workspace.cjs --fixture-dir scripts/release/fixtures/owner-workspace
+          node tools/catalog-owner-decision-workspace/scripts/run-unit-tests.cjs
+          node tools/catalog-owner-decision-workspace/scripts/assert-no-write-api.cjs
+          echo "release_governance_gates=ok"

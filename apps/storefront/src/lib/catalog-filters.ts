@@ -53,6 +53,8 @@ export const CATEGORY_FILTER_LABELS: Record<string, string> = {
   divany: "Диваны",
   bortiki: "Бортики",
   baldahiny: "Балдахины",
+  "pelenalnye-stoleshnicy": "Пеленальные столешницы",
+  stupeni: "Ступени",
 }
 
 function humanizeFilterKey(key: string): string {
@@ -93,7 +95,13 @@ function meta(product: Record<string, unknown>): Record<string, unknown> {
 }
 
 export function getProductCategoryKey(product: Record<string, unknown>): string | null {
-  const handle = meta(product).category_handle
+  const m = meta(product)
+  // Prefer authoritative projected buyer type when present (includes overrides).
+  const buyerType = m.buyer_item_type
+  if (typeof buyerType === "string" && buyerType.trim()) {
+    return buyerType.trim().toLowerCase()
+  }
+  const handle = m.category_handle
   if (typeof handle === "string" && handle.trim()) {
     return handle.trim().toLowerCase()
   }
@@ -432,6 +440,11 @@ export function buildAllCatalogFacets(
   })
 }
 
+/**
+ * Client sort override. When `sort` is unset, entries stay in the order from
+ * the browse API (backend merchandising order) after filters + display-group
+ * collapse. Do not re-apply merchandising here — that would duplicate SoT.
+ */
 export function sortDisplayEntries(
   entries: DisplayEntry[],
   sort: CatalogFilterState["sort"]

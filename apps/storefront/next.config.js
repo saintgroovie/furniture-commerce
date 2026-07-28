@@ -1,4 +1,5 @@
 /** @type {import('next').NextConfig} */
+const path = require("path")
 const {
   resolveMedusaBackendInternalUrl,
 } = require("./medusa-backend-internal-url.cjs")
@@ -7,15 +8,27 @@ const {
 // the public :9000 host into /product-static and blocked closing the published port.
 const backendUrl = resolveMedusaBackendInternalUrl(process.env)
 
+// Monorepo root (apps/storefront → ../..) so standalone tracing includes the few
+// backend/src/lib gallery helpers imported via relative paths.
+const monorepoRoot = path.join(__dirname, "../..")
+
 const nextConfig = {
   reactStrictMode: true,
-  // Pre-existing origin/main QA board type errors fail `next build` typecheck.
-  // Design packaging does not modify QA boards; keep buyer build unblocked.
+  // Slim runtime image: traced server + minimal node_modules (not full yarn tree).
+  output: "standalone",
+  // Do not advertise the framework to browsers.
+  poweredByHeader: false,
+  // Honest production typecheck (includes QA App Router routes). Do not use
+  // ignoreBuildErrors — buyer build must fail on real production TS errors.
   typescript: {
-    ignoreBuildErrors: true,
+    tsconfigPath: "./tsconfig.production.json",
   },
   // QA: :3002 and :3004 run separate `next dev` from the same app — isolate caches.
   distDir: process.env.NEXT_DIST_DIR || ".next",
+  experimental: {
+    // Required when storefront lives under apps/ and imports ../../../backend/...
+    outputFileTracingRoot: monorepoRoot,
+  },
   webpack: (config, { dev }) => {
     // QA tradeoff: disable webpack FS cache in dev only — prevents corrupted .next/cache
     // pack ENOENT → intermittent 404 on /catalog during HMR. Production build unaffected.
@@ -39,6 +52,32 @@ const nextConfig = {
       {
         source: "/uploads/:path*",
         destination: `${backendUrl}/uploads/:path*`,
+      },
+    ]
+  },
+  /**
+   * Defense-in-depth static headers for assets that skip middleware matcher.
+   * Dynamic CSP (nonce) lives in `src/middleware.ts`.
+   */
+  async headers() {
+    const base = [
+      { key: "X-Content-Type-Options", value: "nosniff" },
+      { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+      { key: "X-Frame-Options", value: "DENY" },
+      {
+        key: "Permissions-Policy",
+        value:
+          "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()",
+      },
+    ]
+    return [
+      {
+        source: "/_next/static/:path*",
+        headers: base,
+      },
+      {
+        source: "/:path*",
+        headers: base,
       },
     ]
   },

@@ -58,14 +58,36 @@ services:
       ADMIN_CORS: ${ADMIN_CORS:?set ADMIN_CORS}
       AUTH_CORS: ${AUTH_CORS:?set AUTH_CORS}
       MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL:?set MEDUSA_BACKEND_URL}
-      # IP/http review: set MEDUSA_LOCAL_HTTP=1 in Dokploy env; HTTPS domains → 0
-      MEDUSA_LOCAL_HTTP: ${MEDUSA_LOCAL_HTTP:-1}
+      # HTTPS staging/demo: leave unset or 0. Only set MEDUSA_LOCAL_HTTP=1 for
+      # temporary cleartext http://IP admin review (non-production workflow).
+      MEDUSA_LOCAL_HTTP: ${MEDUSA_LOCAL_HTTP:-0}
       PORT: "9000"
+      # Runtime identity (fail-closed QA). Alias only — never put DSN here.
+      WOODRIGHT_RUNTIME_ROLE: ${WOODRIGHT_RUNTIME_ROLE:-public_demo}
+      WOODRIGHT_EXPOSURE: ${WOODRIGHT_EXPOSURE:-public}
+      WOODRIGHT_RELEASE_SHA: ${WOODRIGHT_RELEASE_SHA:-}
+      WOODRIGHT_DATABASE_IDENTITY: ${WOODRIGHT_DATABASE_IDENTITY:-${WOODRIGHT_DATABASE_IDENTITY_ALIAS:-public_demo_db}}
+      WOODRIGHT_DATABASE_IDENTITY_ALIAS: ${WOODRIGHT_DATABASE_IDENTITY_ALIAS:-${WOODRIGHT_DATABASE_IDENTITY:-public_demo_db}}
+      WOODRIGHT_CANONICAL_DOMAIN: ${WOODRIGHT_CANONICAL_DOMAIN:-woodright-demo.ru}
+      WOODRIGHT_CANONICAL_API_ORIGIN: ${WOODRIGHT_CANONICAL_API_ORIGIN:-https://api.woodright-demo.ru}
+    labels:
+      com.woodright.runtime-role: ${WOODRIGHT_RUNTIME_ROLE:-public_demo}
+      com.woodright.exposure: ${WOODRIGHT_EXPOSURE:-public}
+      com.woodright.canonical-domain: ${WOODRIGHT_CANONICAL_DOMAIN:-woodright-demo.ru}
+      com.woodright.release-sha: ${WOODRIGHT_RELEASE_SHA:-unknown}
+      com.woodright.database-identity: ${WOODRIGHT_DATABASE_IDENTITY:-${WOODRIGHT_DATABASE_IDENTITY_ALIAS:-public_demo_db}}
+      com.woodright.deployment-owner: ${WOODRIGHT_DEPLOYMENT_OWNER:-Dokploy}
     volumes:
       - woodright_staging_media:/server/static
+    # Storefront rewrites /product-static → http://backend:9000/static (baked
+    # MEDUSA_BACKEND_* default). Service DNS alone is lost when containers are
+    # recreated via docker create/rename cutover with container_name override.
+    # Explicit alias on the shared app network must survive every recreate.
     networks:
-      - woodright_staging
-      - dokploy-network
+      woodright_staging:
+        aliases:
+          - backend
+      dokploy-network: {}
     # No host publish: Traefik (dokploy-network) + internal Docker DNS only.
     healthcheck:
       test:
@@ -92,7 +114,7 @@ services:
         MEDUSA_BACKEND_INTERNAL_URL: ${MEDUSA_BACKEND_URL_INTERNAL:-http://backend:9000}
         NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:?set NEXT_PUBLIC_SITE_URL}
         NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: ${NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY:?set NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY}
-        NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES: ${NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES:-0}
+        NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES: ${NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES:-1}
     restart: unless-stopped
     depends_on:
       backend:
@@ -102,6 +124,22 @@ services:
       PORT: "3002"
       MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL_INTERNAL:-http://backend:9000}
       MEDUSA_BACKEND_INTERNAL_URL: ${MEDUSA_BACKEND_URL_INTERNAL:-http://backend:9000}
+      # Demo/staging SEO: fail-closed noindex (see docs/operator/seo-indexing-policy.md)
+      WOODRIGHT_INDEXING_MODE: ${WOODRIGHT_INDEXING_MODE:-noindex}
+      WOODRIGHT_RUNTIME_ROLE: ${WOODRIGHT_RUNTIME_ROLE:-public_demo}
+      WOODRIGHT_EXPOSURE: ${WOODRIGHT_EXPOSURE:-public}
+      WOODRIGHT_RELEASE_SHA: ${WOODRIGHT_RELEASE_SHA:-}
+      WOODRIGHT_DATABASE_IDENTITY: ${WOODRIGHT_DATABASE_IDENTITY:-${WOODRIGHT_DATABASE_IDENTITY_ALIAS:-public_demo_db}}
+      WOODRIGHT_DATABASE_IDENTITY_ALIAS: ${WOODRIGHT_DATABASE_IDENTITY_ALIAS:-${WOODRIGHT_DATABASE_IDENTITY:-public_demo_db}}
+      WOODRIGHT_CANONICAL_DOMAIN: ${WOODRIGHT_CANONICAL_DOMAIN:-woodright-demo.ru}
+      WOODRIGHT_CANONICAL_API_ORIGIN: ${WOODRIGHT_CANONICAL_API_ORIGIN:-https://api.woodright-demo.ru}
+    labels:
+      com.woodright.runtime-role: ${WOODRIGHT_RUNTIME_ROLE:-public_demo}
+      com.woodright.exposure: ${WOODRIGHT_EXPOSURE:-public}
+      com.woodright.canonical-domain: ${WOODRIGHT_CANONICAL_DOMAIN:-woodright-demo.ru}
+      com.woodright.release-sha: ${WOODRIGHT_RELEASE_SHA:-unknown}
+      com.woodright.database-identity: ${WOODRIGHT_DATABASE_IDENTITY:-${WOODRIGHT_DATABASE_IDENTITY_ALIAS:-public_demo_db}}
+      com.woodright.deployment-owner: ${WOODRIGHT_DEPLOYMENT_OWNER:-Dokploy}
     networks:
       - woodright_staging
       - dokploy-network
@@ -122,7 +160,11 @@ services:
 volumes:
   woodright_staging_pg:
   woodright_staging_redis:
+  # External durable media — never create empty replacement volume on compose up.
+  # Full name must match live Docker volume used by public_demo backend.
   woodright_staging_media:
+    external: true
+    name: woodright-stack-3dsdhd_woodright_staging_media
 
 networks:
   woodright_staging:

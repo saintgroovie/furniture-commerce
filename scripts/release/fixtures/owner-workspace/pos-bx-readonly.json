@@ -1,0 +1,5 @@
+{
+  "gate": "BX",
+  "contains_production_write": false,
+  "review_source_text": "GET /api/bootstrap local persistence"
+}

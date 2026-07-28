@@ -1,0 +1,37 @@
+{
+  "schema_version": "1",
+  "source_sha": "5683afa62890531f26b6e53b25800173c8efbb20",
+  "source_branch": "main",
+  "workflow_name": "Build staging images",
+  "workflow_run_id": "29830575969",
+  "workflow_run_attempt": 1,
+  "event_name": "workflow_dispatch",
+  "actor": "operator",
+  "build_started_at": "2026-07-21T12:33:24Z",
+  "build_completed_at": "2026-07-21T12:40:00Z",
+  "backend": {
+    "repository": "ghcr.io/saintgroovie/woodright-backend",
+    "unique_tag": "build-5683afa62890531f26b6e53b25800173c8efbb20-run-29830575969-attempt-1",
+    "digest": "sha256:578bd815b104fbb44473b4dfc992e62d5e1041889be7fc3271cf9e582c1cabcf",
+    "oci_revision": "5683afa62890531f26b6e53b25800173c8efbb20"
+  },
+  "storefront": {
+    "repository": "ghcr.io/saintgroovie/woodright-storefront",
+    "unique_tag": "build-5683afa62890531f26b6e53b25800173c8efbb20-run-29830575969-attempt-1",
+    "digest": "sha256:0f4224829a9c4887968374876c03338b805c7925a1a3dd5d4e740804543db7cc",
+    "oci_revision": "5683afa62890531f26b6e53b25800173c8efbb20"
+  },
+  "convenience_aliases": [
+    {
+      "repository": "ghcr.io/saintgroovie/woodright-backend",
+      "tag": "mutable-sha-5683afa62890531f26b6e53b25800173c8efbb20",
+      "mutable": true
+    }
+  ],
+  "build_argument_names": [
+    "NEXT_PUBLIC_SITE_URL"
+  ],
+  "build_config_fingerprint": "abc123",
+  "tests_summary": null,
+  "release_authorized": true
+}

@@ -11,5 +11,7 @@ import { projectCatalogBrowseProduct } from "../products/catalog-browse-projecti
  */
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const products = await loadStoreProductList(req, { mode: "browse" })
+  // Forensic / ops marker: proves this response went through merchandising sort.
+  res.setHeader("x-woodright-catalog-order", "merchandising-v1")
   res.json({ products: products.map(projectCatalogBrowseProduct) })
 }

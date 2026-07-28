@@ -26,6 +26,10 @@ data/processed/
 apps/backend/.medusa/
 dist/
 .yarn/
+*.tsbuildinfo
+apps/storefront/.next/
+apps/storefront/.next-*/
+apps/storefront/next-env.d.ts
 
 # Stray npm lockfile (project uses Yarn; yarn.lock is the tracked lockfile)
 package-lock.json

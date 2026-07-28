@@ -17,6 +17,7 @@ import {
 } from "@/lib/cart/pdp-material-selection"
 import type { MaterialTierOption } from "@/lib/material-tiers"
 import { addLineItem } from "@/lib/api/cart"
+import { cartLineConfigurationIdentity } from "@/lib/cart-line-identity"
 import { userFacingError } from "@/lib/user-facing-error"
 import { isRequestQuoteProduct } from "@/lib/request-quote"
 import { isKidsMetadataStorefrontProduct } from "@/lib/kids"
@@ -145,6 +146,11 @@ export function ProductCta({
         ...(finishKey ? { finish_execution_key: finishKey } : {}),
         ...(isKids ? { storefront_section: "kids" } : {}),
       }
+      metadata.configuration_identity = cartLineConfigurationIdentity({
+        variant_id: variantId,
+        product_id: productId,
+        metadata,
+      })
       const data = await addLineItem(cartId, {
         variant_id: variantId,
         quantity: 1,

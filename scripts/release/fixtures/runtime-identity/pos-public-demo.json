@@ -1,0 +1,21 @@
+{
+  "schema_version": "1",
+  "runtime_role": "public_demo",
+  "exposure": "public",
+  "environment_label": "public_demo",
+  "canonical_domain": "woodright-demo.ru",
+  "canonical_api_origin": "https://api.woodright-demo.ru",
+  "release_sha": "f7f6760fca86ff503529da6696c04159e76ef9c8",
+  "backend_image_digest": "sha256:a69d12004cb78ff519b3159c5d482a6cc802ce678a4a94e5d0d947dc5ee06b76",
+  "storefront_image_digest": "sha256:fe9922df9430505b845f445f4610bb0d71e522c44fcb463d69e6c6a40e355a3d",
+  "backend_container": "woodright-staging-backend",
+  "storefront_container": "woodright-staging-storefront",
+  "database_identity": "woodright_staging",
+  "database_identity_alias": "public_demo_db",
+  "deployment_owner": "Dokploy",
+  "traefik_router": "woodright-demo-http",
+  "traefik_service": "woodright-staging-backend",
+  "legacy_container_family": "woodright-staging-*",
+  "generated_at": "2026-07-22T00:00:00.000Z",
+  "note": "fixture template only — live ACTIVE_PUBLIC is VM-generated"
+}

@@ -3,14 +3,20 @@ import ProductModule from "@medusajs/medusa/product"
 import RoomSetModule from "../modules/room-set"
 
 /**
- * Link: Product (1) <-> (many) RoomSetItem.
- * One product can appear in many room set items; each room set item references one product.
- * Use isList: true on Product side so that one product can be linked to many room_set_items.
+ * Link: Product (many) <-> (many) RoomSetItem.
+ * One product may appear in many room compositions.
+ * Application invariant (seed planner + store/admin normalizers): each
+ * room_set_item must still resolve to exactly one product — multi-link is
+ * fail-closed. Both sides need isList: true so Link.create allows a second
+ * room_set_item for the same product_id (shared SKUs across RoomSets).
  */
 export default defineLink(
   {
     linkable: ProductModule.linkable.product,
     isList: true,
   },
-  RoomSetModule.linkable.roomSetItem
+  {
+    linkable: RoomSetModule.linkable.roomSetItem,
+    isList: true,
+  }
 )

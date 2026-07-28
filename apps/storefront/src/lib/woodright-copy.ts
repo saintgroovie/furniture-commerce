@@ -40,6 +40,11 @@ export const a11yCopy = {
   openMenu: "Открыть меню",
   closeMenu: "Закрыть меню",
   mobileNavLabel: "Мобильная навигация",
+  openFilters: "Открыть фильтры",
+  closeFilters: "Закрыть фильтры",
+  catalogFiltersLabel: "Фильтры каталога",
+  activeFiltersLabel: "Активные фильтры",
+  applyFilters: "Показать результаты",
 }
 
 export const systemCopy = {
@@ -91,6 +96,7 @@ export const footer = {
       links: [
         { label: "О разделе", href: "/kids" },
         { label: "Каталог", href: "/kids/catalog" },
+        { label: "Росписи Вилли Винки", href: "/kids/willie-winkie" },
         { label: "Детские комнаты", href: "/kids/rooms" },
       ],
     },
@@ -207,6 +213,77 @@ export const kidsHome = {
   ctaCatalog: "Смотреть детскую мебель",
   ctaRooms: "Готовые детские комнаты",
   ctaBespoke: "Обсудить проект",
+  ctaWillieWinkie: "Росписи Вилли Винки",
+}
+
+export const willieWinkieMotifsCopy = {
+  directoryH1: "Росписи Вилли Винки",
+  directoryCrumb: "Детская / Вилли Винки",
+  directoryLead: [
+    "Ручная роспись на массиве дерева",
+    "Каждая тема - свой характер рисунка и свой набор мебели",
+  ],
+  directoryHeroCta: "Смотреть росписи",
+  directorySectionTitle: "Выберите роспись",
+  directorySectionLead: "Откройте тему и посмотрите доступную мебель",
+  directoryMeta: (motifs: number, products: number) =>
+    `${willieWinkieMotifsCopy.motifCountLabel(motifs)} · ${willieWinkieMotifsCopy.productCountLabel(products)}`,
+  motifCountLabel: (n: number) =>
+    n === 1 ? "1 роспись" : n >= 2 && n <= 4 ? `${n} росписи` : `${n} росписей`,
+  directoryLoadError: [
+    "Росписи не загрузились",
+    "Обновите страницу или зайдите чуть позже",
+  ],
+  directoryEmptyTitle: "Росписи временно недоступны",
+  directoryEmptyBody: "Загляните в каталог детской мебели",
+  motifNotFoundTitle: "Такой росписи нет",
+  motifNotFoundBody: "Выберите тему из каталога росписей Вилли Винки",
+  motifLoadError: [
+    "Не удалось загрузить роспись",
+    "Обновите страницу или зайдите чуть позже",
+  ],
+  motifEmptyTitle: "В этой росписи пока нет доступной мебели",
+  motifEmptyBody: "Загляните в другие темы или в каталог детской мебели",
+  availableTypesPrefix: "Мебель",
+  productsSectionTitle: "Мебель с этой росписью",
+  /** Neutral availability copy - never use restrictive «только». */
+  productsOnlySubhead: "Доступны эти предметы",
+  productsSectionMeta: (n: number) =>
+    n === 1
+      ? "1 доступный предмет"
+      : n >= 2 && n <= 4
+        ? `${n} доступных предмета`
+        : `${n} доступных предметов`,
+  productsToAnchor: "К предметам",
+  productCountLabel: (n: number) =>
+    n === 1 ? "1 предмет" : n >= 2 && n <= 4 ? `${n} предмета` : `${n} предметов`,
+  familyCountLabel: (n: number) =>
+    n === 1 ? "1 вид мебели" : n >= 2 && n <= 4 ? `${n} вида мебели` : `${n} видов мебели`,
+  familiesLine: (titles: string[]) => {
+    if (titles.length === 0) return null
+    if (titles.length <= 3) return titles.join(", ")
+    return `${titles.slice(0, 3).join(", ")} и ещё ${titles.length - 3}`
+  },
+  tileMeta: (familyCount: number, productCount: number) =>
+    `${willieWinkieMotifsCopy.familyCountLabel(familyCount)} · ${willieWinkieMotifsCopy.productCountLabel(productCount)}`,
+  cardCta: "Смотреть",
+  youAreHere: "Вы здесь",
+  backToDirectory: "Все росписи Вилли Винки",
+  backToDirectoryShort: "Вилли Винки",
+  backToKids: "В детскую секцию",
+  openCatalog: "В каталог детской мебели",
+  reloadPage: "Обновить страницу",
+  detailItemsMeta: (n: number) => `Предметов - ${n}`,
+  viewAllInMotif: "Посмотреть всю мебель в этой росписи",
+  relatedTitle: "Другие предметы в этой росписи",
+  motifSelectorLabel: "Роспись",
+  motifChooseLink: "Все росписи",
+  motifUnavailableTitle: "Эта роспись недоступна для выбранного предмета",
+  motifUnavailableBody: "Показана штатная конфигурация товара",
+  motifUnknownTitle: "Выбранная роспись не найдена",
+  motifUnknownBody: "Показана штатная конфигурация товара",
+  priceUnavailable: "Цену уточним",
+  imageMissing: "Фото скоро появится",
 }
 
 export const roomsCopy = {
@@ -251,6 +328,7 @@ export const roomSetDetail = {
   priceFromLabel: "Цена от",
   priceUnknown: "уточняется",
   compositionTitle: "Что входит в комплект",
+  openProduct: "Открыть товар",
 }
 
 export const bespokeLanding = {
@@ -749,6 +827,15 @@ export const seo = {
     title: "Каталог детской мебели Woodright",
     description: "Детская мебель Woodright из массива: кровати, шкафы, комоды, столы и стеллажи с ручной росписью.",
   },
+  willieWinkieMotifs: {
+    title: "Росписи Вилли Винки - детская мебель Woodright",
+    description:
+      "Художественные росписи Вилли Винки: выберите тему и посмотрите доступную мебель в этой росписи.",
+  },
+  willieWinkieMotif: (title: string) => ({
+    title: `${title} - роспись Вилли Винки | Woodright`,
+    description: `Мебель Вилли Винки в росписи ${title}: предметы с подтверждёнными сочетаниями и ручной росписью.`,
+  }),
   rooms: {
     title: "Мебель по комнатам Woodright - спальни, детские, кабинеты, гостиные",
     description: "Готовые сочетания мебели Woodright для спальни, детской, кабинета, гостиной и прихожей. Комплект целиком или по предметам.",

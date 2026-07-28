@@ -1,9 +1,6 @@
 import Link from "next/link"
-import { formatRub, getPrice } from "@/lib/format"
-import {
-  formatRequestQuotePriceLabel,
-  isRequestQuoteProduct,
-} from "@/lib/request-quote"
+import { formatRub } from "@/lib/format"
+import { resolveCatalogCardPrice } from "@/lib/catalog-card-price"
 import type { DisplayGroup } from "@/lib/display-group"
 import { formatGroupHint } from "@/lib/display-group"
 import {
@@ -11,7 +8,7 @@ import {
   getSubcollectionLabel,
   getArticle,
   getDimensions,
-  formatDimensionsCompact,
+  formatDimensionsCompactLabeled,
 } from "@/lib/product-metadata"
 import { OliverCardMediaSwitcher } from "@/components/oliver-card-media-switcher"
 import { ProductCardMediaSwitcher } from "@/components/product-card-media-switcher"
@@ -101,16 +98,13 @@ export function ProductCard({
     (product as { custom_product_type?: { product_type?: string } }).custom_product_type?.product_type
   const badgeLabel = type ? BADGE_LABELS[type] : undefined
 
-  const price = displayGroup?.minPrice ?? getPrice(product)
-  const pricePrefix = displayGroup ? "от " : ""
-  const requestQuotePrice = isRequestQuoteProduct(product as Record<string, unknown>)
-    ? formatRequestQuotePriceLabel(product as Record<string, unknown>)
-    : null
+  const cardPrice = resolveCatalogCardPrice(product as Record<string, unknown>, displayGroup)
 
   const collectionLabel = getCollectionLabel(product as Record<string, unknown>)
   const subcollectionLabel = getSubcollectionLabel(product as Record<string, unknown>)
   const article = getArticle(product as Record<string, unknown>)
   const dim = getDimensions(product as Record<string, unknown>)
+  const dimLabeled = dim != null ? formatDimensionsCompactLabeled(dim) : null
 
   const contextParts = [collectionLabel, subcollectionLabel, article].filter(Boolean)
   const contextLine = contextParts.length > 0 ? contextParts.join(" · ") : null
@@ -321,14 +315,17 @@ export function ProductCard({
             </div>
           )}
           <h3>{product.title}</h3>
-          {dim != null && (
-            <span className="card-dimensions">{formatDimensionsCompact(dim)}</span>
+          {dimLabeled != null && (
+            <span className="card-dimensions">
+              {dimLabeled.values}
+              <span className="card-dimensions-caption">{dimLabeled.caption}</span>
+            </span>
           )}
           <div className="card-price-row">
-            {requestQuotePrice != null ? (
-              <p className="price">{requestQuotePrice}</p>
-            ) : price != null ? (
-              <p className="price">{pricePrefix}{formatRub(price)}</p>
+            {cardPrice.requestQuoteLabel != null ? (
+              <p className="price">{cardPrice.requestQuoteLabel}</p>
+            ) : cardPrice.amount != null ? (
+              <p className="price">{cardPrice.prefix}{formatRub(cardPrice.amount)}</p>
             ) : null}
             {badgeLabel && <span className="badge">{badgeLabel}</span>}
           </div>

@@ -1,6 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { HomeImg } from "./home-img"
+import type { HomeImageSurface } from "./home-image"
 
 export type HeroSlide = { src: string; alt: string }
 
@@ -9,8 +11,16 @@ export type HeroSlide = { src: string; alt: string }
  * page load. Only slide 0 gets `src` on first paint; later slides receive
  * `src` after a short delay so their multi-hundred-KB JPGs stay off the
  * critical path without blanking the hero mid-cycle.
+ *
+ * Premium hero surfaces keep original assets (Option B); do not use card WebP.
  */
-export function HomeHeroSlideshow({ slides }: { slides: readonly HeroSlide[] }) {
+export function HomeHeroSlideshow({
+  slides,
+  surface = "HOME_HERO",
+}: {
+  slides: readonly HeroSlide[]
+  surface?: Extract<HomeImageSurface, "HOME_HERO" | "KIDS_HERO">
+}) {
   const [extrasReady, setExtrasReady] = useState(false)
 
   useEffect(() => {
@@ -33,9 +43,10 @@ export function HomeHeroSlideshow({ slides }: { slides: readonly HeroSlide[] }) 
       {slides.map((slide, i) => {
         const showSrc = i === 0 || extrasReady
         return (
-          <img
+          <HomeImg
             key={slide.src}
             src={showSrc ? slide.src : undefined}
+            surface={surface}
             alt={i === 0 ? slide.alt : ""}
             aria-hidden={i === 0 ? undefined : true}
             className="hp-hero-img"

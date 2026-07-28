@@ -10,7 +10,7 @@ export function KidsHero() {
   return (
     <section className="hp-hero" aria-labelledby="hp-kids-hero-title">
       <div className="hp-hero-plate hp-khero-plate">
-        <HomeHeroSlideshow slides={kidsMedia.heroSlides} />
+        <HomeHeroSlideshow slides={kidsMedia.heroSlides} surface="KIDS_HERO" />
         <div className="hp-hero-panel">
           <h1 id="hp-kids-hero-title">{kidsHome.h1}</h1>
           {/* lead[0] («…ручная роспись») opens the paint gallery below,

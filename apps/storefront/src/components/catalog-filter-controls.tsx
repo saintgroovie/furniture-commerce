@@ -24,6 +24,18 @@ import {
   getCollectionFilterLabel,
   hasActiveCatalogFilters,
 } from "@/lib/catalog-filters"
+import {
+  BUYER_CLOSE_PEER_EVENT,
+  BUYER_DIALOG_LAYER,
+  BUYER_MOBILE_MQ,
+  handleDialogKeydown,
+  listFocusable,
+  requestCloseBuyerDialogPeer,
+  setBuyerChromeInert,
+  type BuyerClosePeerDetail,
+} from "@/lib/buyer-dialog-a11y"
+import { useCspNonce } from "@/lib/csp-nonce"
+import { a11yCopy } from "@/lib/woodright-copy"
 
 type Props = {
   basePath: string
@@ -45,6 +57,8 @@ function toggleMulti(values: string[], value: string): string[] {
 }
 
 type PillBox = { left: number; top: number; width: number; height: number }
+
+const CATALOG_FILTER_SIDEBAR_ID = "catalog-filter-sidebar"
 
 function tabBox(tab: HTMLElement): PillBox {
   return {
@@ -105,9 +119,11 @@ export function CatalogFilterControls({
   children,
 }: Props) {
   const router = useRouter()
+  const cspNonce = useCspNonce()
   const [isPending, startTransition] = useTransition()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [searchDraft, setSearchDraft] = useState(state.q ?? "")
+  const filterToggleRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     setSearchDraft(state.q ?? "")
@@ -225,6 +241,79 @@ export function CatalogFilterControls({
      rather than hard-coded. 24 mirrors --space-lg. */
   const sidebarRef = useRef<HTMLElement>(null)
 
+  /* Mobile filter drawer: dialog contract (semantics + inert + focus trap).
+     Drawer lives inside #main-content, so we inert background siblings
+     (tabs/search/sort/product area), not the whole main — otherwise the
+     dialog would become inert too. Toggle stays outside inert targets so
+     focus restore remains possible.
+     Layer ownership keeps extras/chrome inert until this layer releases. */
+  const setFilterBackgroundInert = useCallback((enabled: boolean) => {
+    setBuyerChromeInert(
+      enabled,
+      [
+        document.querySelector(".catalog-controls"),
+        document.querySelector(".catalog-search"),
+        document.querySelector(".catalog-sort"),
+        document.querySelector(".catalog-product-area"),
+      ],
+      BUYER_DIALOG_LAYER.catalogFilters
+    )
+  }, [])
+
+  const closeMobileFilters = useCallback((restoreFocus = true) => {
+    setMobileOpen(false)
+    if (restoreFocus) {
+      requestAnimationFrame(() => filterToggleRef.current?.focus())
+    }
+  }, [])
+
+  // Peer dialog (mobile nav) requested exclusive ownership.
+  useEffect(() => {
+    function onPeerClose(e: Event) {
+      const detail = (e as CustomEvent<BuyerClosePeerDetail>).detail
+      if (detail?.exceptLayer === BUYER_DIALOG_LAYER.catalogFilters) return
+      setMobileOpen(false)
+    }
+    document.addEventListener(BUYER_CLOSE_PEER_EVENT, onPeerClose)
+    return () => document.removeEventListener(BUYER_CLOSE_PEER_EVENT, onPeerClose)
+  }, [])
+
+  // Desktop viewport: clear mobile-only drawer state + inert.
+  useEffect(() => {
+    const mq = window.matchMedia(BUYER_MOBILE_MQ)
+    function onChange() {
+      if (!mq.matches) setMobileOpen(false)
+    }
+    onChange()
+    mq.addEventListener("change", onChange)
+    return () => mq.removeEventListener("change", onChange)
+  }, [])
+
+  useEffect(() => {
+    if (!mobileOpen) {
+      setFilterBackgroundInert(false)
+      return
+    }
+    requestCloseBuyerDialogPeer(BUYER_DIALOG_LAYER.catalogFilters)
+    const sidebar = sidebarRef.current
+    setFilterBackgroundInert(true)
+    requestAnimationFrame(() => {
+      listFocusable(sidebar)[0]?.focus()
+    })
+    function onKeyDown(e: globalThis.KeyboardEvent) {
+      handleDialogKeydown(e, {
+        panel: sidebar,
+        trigger: filterToggleRef.current,
+        onEscape: () => closeMobileFilters(true),
+      })
+    }
+    document.addEventListener("keydown", onKeyDown)
+    return () => {
+      document.removeEventListener("keydown", onKeyDown)
+      setFilterBackgroundInert(false)
+    }
+  }, [mobileOpen, closeMobileFilters, setFilterBackgroundInert])
+
   useEffect(() => {
     const sidebar = sidebarRef.current
     const panel = sidebar?.querySelector<HTMLElement>(".catalog-filter-panel")
@@ -337,7 +426,11 @@ export function CatalogFilterControls({
           never pushed below the fold by a long collections/type list. */}
       <div className="catalog-filter-scroll">
       {active && (
-        <div className="catalog-active-chips" aria-label="Активные фильтры">
+        <div
+          className="catalog-active-chips"
+          role="group"
+          aria-label={a11yCopy.activeFiltersLabel}
+        >
           {state.q && (
             <ActiveChip
               label={`«${state.q}»`}
@@ -690,9 +783,14 @@ export function CatalogFilterControls({
           </div>
 
           <button
+            ref={filterToggleRef}
             type="button"
             className="catalog-filter-mobile-toggle"
             aria-expanded={mobileOpen}
+            aria-controls={CATALOG_FILTER_SIDEBAR_ID}
+            aria-label={
+              mobileOpen ? a11yCopy.closeFilters : a11yCopy.openFilters
+            }
             onClick={() => setMobileOpen((v) => !v)}
           >
             Фильтры
@@ -703,8 +801,15 @@ export function CatalogFilterControls({
       <div className="catalog-filter-layout">
         <aside
           ref={sidebarRef}
+          id={CATALOG_FILTER_SIDEBAR_ID}
           className={`catalog-filter-sidebar ${mobileOpen ? "catalog-filter-sidebar-open" : ""}`}
-          aria-label="Фильтры каталога"
+          aria-label={a11yCopy.catalogFiltersLabel}
+          {...(mobileOpen
+            ? {
+                role: "dialog" as const,
+                "aria-modal": true as const,
+              }
+            : null)}
           /* The bootstrap script mutates this element's style attribute
              before hydration — expected, not a markup mismatch. */
           suppressHydrationWarning
@@ -713,11 +818,15 @@ export function CatalogFilterControls({
           <button
             type="button"
             className="catalog-filter-apply-mobile"
-            onClick={() => setMobileOpen(false)}
+            aria-label={a11yCopy.applyFilters}
+            onClick={() => closeMobileFilters(true)}
           >
             Показать
           </button>
-          <script dangerouslySetInnerHTML={{ __html: FILTER_FIT_BOOTSTRAP }} />
+          <script
+            nonce={cspNonce}
+            dangerouslySetInnerHTML={{ __html: FILTER_FIT_BOOTSTRAP }}
+          />
         </aside>
         <div className="catalog-product-area">{children}</div>
       </div>
