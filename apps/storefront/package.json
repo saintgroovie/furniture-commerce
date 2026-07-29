@@ -2,7 +2,7 @@
   "name": "storefront",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "yarn@4.6.0",
+  "packageManager": "yarn@4.17.1",
   "scripts": {
     "dev": "NEXT_DIST_DIR=.next-dev next dev --port 3002",
     "build": "NEXT_DIST_DIR=.next-build next build",
@@ -23,7 +23,7 @@
     "server-only": "^0.0.1"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
+    "@types/node": "20.19.43",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "eslint": "^8.57.0",
