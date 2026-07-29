@@ -1441,16 +1441,131 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   align-items: stretch;
 }
 
-/* Contacts dropdown keeps messenger trio; showroom pair handled above. */
+/* Contacts dropdown phone pair (write/call + free call); showroom stack above. */
 .showroom-contacts--contacts .contact-action-grid--pair.contact-action-grid--dropdown {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.5rem;
   align-items: stretch;
 }
 
-.showroom-contacts .contact-action-grid--channels.contact-action-grid--dropdown {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+/*
+  Contacts dropdown messengers: real channel pair + separate MAX utility row.
+  Scoped under .contact-dropdown-* so page / showroom chrome stay untouched.
+*/
+.contact-dropdown-channels {
+  display: grid;
+  gap: 0;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+}
+
+.contact-dropdown-channel-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.5rem; /* 8px */
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  align-items: stretch;
+}
+
+.contact-dropdown-channel-pair .contact-action-grid-item {
+  min-width: 0;
+  display: flex;
+}
+
+.contact-dropdown-channel-pair .contact-action-grid-item > .contact-action {
+  flex: 1 1 auto;
+  width: 100%;
+}
+
+.contacts-nav-dropdown-menu a.contact-action.contact-action--density-dropdown.contact-dropdown-channel-link,
+.showroom-contacts--contacts
+  a.contact-action.contact-action--density-dropdown.contact-dropdown-channel-link {
+  min-height: 2.75rem; /* 44px - single-line messenger links */
+  padding: 0.5rem 0.6875rem; /* 8×11 */
+  gap: 0.5rem; /* 8px */
+  border-radius: 8px;
+}
+
+.contact-dropdown-channel-link .contact-action-line {
+  font-size: 0.875rem; /* 14px */
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.contact-dropdown-max-wrap {
+  width: 100%;
+  margin-top: 0.5rem; /* 8px under Telegram/WhatsApp */
+}
+
+.contacts-nav-dropdown-menu
+  button.contact-action.contact-action--density-dropdown.contact-dropdown-max-action,
+.showroom-contacts--contacts
+  button.contact-action.contact-action--density-dropdown.contact-dropdown-max-action {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 3.1875rem; /* 51px */
+  padding: 0.5625rem 0.6875rem; /* 9×11 */
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 78%, transparent);
+  background: color-mix(in srgb, var(--color-bg) 72%, var(--color-surface));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 0.625rem; /* 10px */
+  box-shadow: none;
+}
+
+.contact-dropdown-max-action .contact-action-copy {
+  display: grid;
+  gap: 0.1875rem; /* 3px */
+  min-width: 0;
+}
+
+.contact-dropdown-max-action .contact-action-kicker {
+  font-size: 0.6875rem; /* 11px */
+  line-height: 1.2;
+  color: var(--color-fg-muted);
+}
+
+.contact-dropdown-max-action .contact-action-value {
+  font-size: 0.875rem; /* 14px */
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--color-fg);
+  white-space: nowrap;
+}
+
+/* Trailing copy bubble - decorative, not a nested control. */
+.contact-dropdown-max-action .contact-action-icon--bubble.contact-dropdown-max-bubble {
+  box-sizing: border-box;
+  width: 1.75rem; /* 28px */
+  height: 1.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-brand);
+  background: var(--color-brand);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.contact-dropdown-max-action .contact-action-icon--bubble svg {
+  width: 14px;
+  height: 14px;
+}
+
+.contact-dropdown-max-action.contact-action--copied .contact-action-icon--bubble,
+.contact-dropdown-max-action.contact-action--copy-error .contact-action-icon--bubble {
+  /* Keep bubble geometry stable across copy states. */
+  width: 1.75rem;
+  height: 1.75rem;
 }
 
 @media (max-width: 420px) {

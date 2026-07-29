@@ -16,6 +16,8 @@ type ContactActionBaseProps = {
   tone?: ContactActionTone
   layout?: ContactActionLayout
   icon: ReactNode
+  /** Extra class on the icon/bubble chrome (e.g. dropdown MAX bubble marker). */
+  iconClassName?: string
   className?: string
   children: ReactNode
 }
@@ -63,19 +65,24 @@ function actionClassName({
 function ActionChrome({
   layout,
   icon,
+  iconClassName = "",
   children,
 }: {
   layout: ContactActionLayout
   icon: ReactNode
+  iconClassName?: string
   children: ReactNode
 }) {
   const iconEl = (
     <span
-      className={
+      className={[
         layout === "trailingBubble"
           ? "contact-action-icon contact-action-icon--bubble"
-          : "contact-action-icon"
-      }
+          : "contact-action-icon",
+        iconClassName,
+      ]
+        .filter(Boolean)
+        .join(" ")}
       aria-hidden="true"
     >
       {icon}
@@ -110,6 +117,7 @@ export function ContactActionLink({
   tone = "secondary",
   layout = "leadingIcon",
   icon,
+  iconClassName,
   className,
   children,
   external = false,
@@ -128,7 +136,7 @@ export function ContactActionLink({
         ? { target: "_blank", rel: "noopener noreferrer" }
         : {})}
     >
-      <ActionChrome layout={layout} icon={icon}>
+      <ActionChrome layout={layout} icon={icon} iconClassName={iconClassName}>
         {children}
       </ActionChrome>
     </a>
@@ -141,6 +149,7 @@ export function ContactActionButton({
   tone = "secondary",
   layout = "leadingIcon",
   icon,
+  iconClassName,
   className,
   children,
   onClick,
@@ -161,7 +170,7 @@ export function ContactActionButton({
       aria-describedby={ariaDescribedBy}
       onClick={onClick}
     >
-      <ActionChrome layout={layout} icon={icon}>
+      <ActionChrome layout={layout} icon={icon} iconClassName={iconClassName}>
         {children}
       </ActionChrome>
     </button>
