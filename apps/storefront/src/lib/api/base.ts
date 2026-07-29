@@ -36,6 +36,17 @@ function getPublishableKey(): string {
   return process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ""
 }
 
+/** Default server-side Medusa fetch budget (build/SSR without a live backend). */
+const DEFAULT_MEDUSA_FETCH_TIMEOUT_MS = 8_000
+
+function withMedusaTimeout(init?: RequestInit): RequestInit {
+  if (init?.signal) return init ?? {}
+  if (typeof AbortSignal !== "undefined" && "timeout" in AbortSignal) {
+    return { ...init, signal: AbortSignal.timeout(DEFAULT_MEDUSA_FETCH_TIMEOUT_MS) }
+  }
+  return init ?? {}
+}
+
 /** Fetch wrapper that adds the publishable API key header. */
 export function medusaFetch(url: string, init?: RequestInit): Promise<Response> {
   const key = getPublishableKey()
@@ -43,8 +54,9 @@ export function medusaFetch(url: string, init?: RequestInit): Promise<Response> 
   if (key) {
     headers.set("x-publishable-api-key", key)
   }
+  const timed = withMedusaTimeout(init)
   // Cart / checkout / mutations must never be served from Next Data Cache.
-  return fetch(url, { ...init, headers, cache: "no-store" })
+  return fetch(url, { ...timed, headers, cache: "no-store" })
 }
 
 /**
@@ -71,11 +83,13 @@ export function medusaCatalogFetch(
   const revalidate = Number.isFinite(parsed) ? parsed : 60
 
   if (revalidate <= 0) {
-    return fetch(url, { ...init, headers, cache: "no-store" })
+    const timed = withMedusaTimeout(init)
+    return fetch(url, { ...timed, headers, cache: "no-store" })
   }
 
+  const timed = withMedusaTimeout(init)
   return fetch(url, {
-    ...init,
+    ...timed,
     headers,
     next: { revalidate },
   })
