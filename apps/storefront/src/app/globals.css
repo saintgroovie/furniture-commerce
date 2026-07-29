@@ -249,6 +249,34 @@ body:has([data-kids-product]) {
   color: var(--color-fg-muted);
   min-width: 0;
   flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.header-top-left .contacts-nav-dropdown {
+  max-width: 100%;
+}
+
+.header-top-left .contacts-nav-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  font-size: 0.875rem;
+  color: var(--color-fg-secondary);
+  text-align: left;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.header-top-left .contacts-nav-trigger:hover {
+  color: var(--color-fg);
+  text-decoration: none;
+}
+
+.header-top-left .contacts-nav-chevron {
+  opacity: 0.35;
+  pointer-events: none;
 }
 
 .logo {
@@ -741,6 +769,1090 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   opacity: 0.35;
 }
 
+/* -- Header info dropdowns (showroom + contacts previews) -- */
+
+.contacts-nav-trigger {
+  appearance: none;
+  background: none;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  padding: 0.3rem 0;
+  margin: 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--color-fg-secondary);
+  line-height: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.contacts-nav-trigger-label {
+  display: inline;
+}
+
+.contacts-nav-trigger:hover {
+  color: var(--color-fg);
+  text-decoration: none;
+}
+
+.contacts-nav-trigger:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+.contacts-nav-chevron {
+  pointer-events: none;
+  flex: none;
+  opacity: 0.35;
+}
+
+.contacts-nav-chevron[data-expanded="true"]::after {
+  transform: rotate(180deg);
+}
+
+.contacts-nav-dropdown {
+  position: relative;
+}
+
+/*
+  Shared preview shell. Width comes from modifiers only - never from
+  parent flex / page panel / `width: 100%` cascade.
+*/
+.header-info-dropdown {
+  box-sizing: border-box;
+  width: 392px;
+  min-width: 0;
+  max-width: min(392px, calc(100vw - 1.5rem));
+  /* Visual gap under top-bar row; bridge covers the dead zone. */
+  top: calc(100% + 8px);
+  padding: 0;
+  overflow: visible;
+  background: var(--color-surface);
+  border: 1px solid color-mix(in srgb, var(--color-border) 85%, transparent);
+  border-radius: 9px;
+  box-shadow: 0 6px 20px rgba(44, 36, 32, 0.07);
+}
+
+.header-info-dropdown--showroom {
+  width: 360px;
+  max-width: min(360px, calc(100vw - 1.5rem));
+}
+
+.header-info-dropdown--contacts {
+  width: 360px;
+  max-width: min(360px, calc(100vw - 1.5rem));
+}
+
+.contacts-nav-dropdown-menu {
+  /* Positioning only - shell chrome lives on .header-info-dropdown. */
+  padding: 0;
+  overflow: visible;
+}
+
+/* Showroom trigger - panel under left edge. */
+.contacts-nav-dropdown--align-start .contacts-nav-dropdown-menu {
+  left: 0;
+  right: auto;
+}
+
+/* Contacts trigger - panel under right edge. */
+.contacts-nav-dropdown--align-end .contacts-nav-dropdown-menu {
+  left: auto;
+  right: 0;
+}
+
+.header-top-left .contacts-nav-trigger {
+  font-size: 0.875rem;
+  color: var(--color-fg-secondary);
+  text-align: left;
+}
+
+.header-top-left .contacts-nav-trigger:hover {
+  color: var(--color-fg);
+  text-decoration: none;
+}
+
+.header-top-right .contacts-nav-trigger {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--color-fg-secondary);
+}
+
+.header-top-right .contacts-nav-trigger:hover {
+  color: var(--color-fg);
+}
+
+/* Neutralize generic `.nav-dropdown-menu a` chrome so compact contact
+   actions keep their own padding/border/layout (not nav menu row fill). */
+.contacts-nav-dropdown-menu a.contact-action,
+.contacts-nav-dropdown-menu button.contact-action {
+  margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  color: inherit;
+  text-decoration: none;
+}
+
+.contacts-nav-dropdown-menu a.contact-action.contact-action--layout-leading,
+.contacts-nav-dropdown-menu button.contact-action.contact-action--layout-leading {
+  display: inline-flex;
+  align-items: center;
+}
+
+.contacts-nav-dropdown-menu a.contact-action.contact-action--layout-trailing-bubble,
+.contacts-nav-dropdown-menu button.contact-action.contact-action--layout-trailing-bubble {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 0.6875rem;
+  row-gap: 0;
+}
+
+/* Beat `.nav-dropdown-menu a` padding (0,1,1) with density packing. */
+.contacts-nav-dropdown-menu a.contact-action.contact-action--density-dropdown,
+.contacts-nav-dropdown-menu button.contact-action.contact-action--density-dropdown {
+  min-height: 3.375rem; /* 54px phone rows */
+  padding: 0.625rem 0.75rem; /* 10×12 */
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-surface) 55%, var(--color-bg));
+  border-color: color-mix(in srgb, var(--color-border) 70%, transparent);
+  color: var(--color-fg);
+}
+
+.contacts-nav-dropdown-menu a.contact-action.contact-action--density-dropdown.contact-action--map {
+  min-height: 2.875rem; /* 46px - lighter than phone */
+  padding: 0.5625rem 0.75rem;
+}
+
+.contacts-nav-dropdown-menu a.contact-action.contact-action--density-dropdown.contact-action--channel,
+.contacts-nav-dropdown-menu button.contact-action.contact-action--density-dropdown.contact-action--channel {
+  min-height: 2.5625rem; /* 41px */
+  padding: 0.5rem 0.5625rem;
+}
+
+.contacts-nav-dropdown-menu a.contact-action:hover,
+.contacts-nav-dropdown-menu button.contact-action:hover {
+  text-decoration: none;
+  background: color-mix(in srgb, var(--color-surface) 72%, var(--color-bg));
+}
+
+/* Never inherit page primary fill into header dropdowns. */
+.contacts-nav-dropdown-menu a.contact-action.contact-action--primary {
+  background: color-mix(in srgb, var(--color-surface) 55%, var(--color-bg));
+  border-color: color-mix(in srgb, var(--color-border) 70%, transparent);
+  color: var(--color-fg);
+}
+
+.contacts-nav-dropdown-menu a.contact-action.contact-action--primary:hover {
+  background: color-mix(in srgb, var(--color-surface) 72%, var(--color-bg));
+  border-color: color-mix(in srgb, var(--color-border) 82%, transparent);
+  color: var(--color-fg);
+}
+
+.contacts-nav-dropdown-menu a.contact-action.contact-action--primary .contact-action-kicker {
+  color: var(--color-fg-muted);
+}
+
+.contacts-nav-dropdown-bridge {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -10px;
+  height: 10px;
+}
+
+.showroom-contacts {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  text-align: left;
+  color: var(--color-fg);
+}
+
+/*
+  Header preview rhythm - isolated from page typography.
+  Compact contact-action density lives under `.contact-action--density-dropdown`.
+*/
+.showroom-contacts--showroom,
+.showroom-contacts--contacts {
+  --hc-pad: 1.3125rem; /* 21px */
+  --hc-gap-section: 1.0625rem; /* 17px title → content */
+  --hc-gap-address-line: 0.25rem; /* 4px */
+  --hc-gap-after-divider: 0.875rem; /* 14px */
+  box-sizing: border-box;
+  gap: 0;
+  padding: var(--hc-pad);
+  line-height: 1.2;
+}
+
+.showroom-contacts--showroom .showroom-contacts-title,
+.showroom-contacts--contacts .showroom-contacts-title {
+  margin: 0 0 var(--hc-gap-section);
+  padding: 0;
+  font-size: 1.1875rem; /* 19px */
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.005em;
+  color: var(--color-brand);
+}
+
+.showroom-contacts--showroom .showroom-contacts-address {
+  display: flex;
+  flex-direction: column;
+  gap: var(--hc-gap-address-line);
+  margin: 0 0 var(--hc-gap-section);
+  padding: 0;
+  font-size: 0.875rem; /* 14px */
+  font-style: normal;
+  line-height: 1.42;
+  color: var(--color-fg-secondary);
+}
+
+.showroom-contacts--showroom .showroom-contacts-address-line {
+  margin: 0;
+  padding: 0;
+}
+
+.showroom-contacts--showroom .showroom-contacts-divider,
+.showroom-contacts--contacts .showroom-contacts-divider {
+  flex: 0 0 auto;
+  height: 1px;
+  margin: 0 0 var(--hc-gap-after-divider);
+  padding: 0;
+  background: color-mix(in srgb, var(--color-border) 88%, transparent);
+  border: 0;
+}
+
+.showroom-contacts--contacts .showroom-contacts-phone-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem; /* 8px */
+  margin: 0 0 var(--hc-gap-after-divider);
+}
+
+.showroom-contacts .showroom-contacts-action-grid {
+  width: 100%;
+}
+
+.showroom-contacts .contact-messenger-block {
+  margin-top: 0;
+}
+
+/* ---- Shared contact-action primitive (page + dropdown densities) ---- */
+
+.contact-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.6875rem; /* 11px */
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  border: 1px solid color-mix(in srgb, var(--color-border) 68%, transparent);
+  background: color-mix(in srgb, var(--color-surface) 48%, var(--color-bg));
+  color: var(--color-fg);
+  text-align: left;
+  text-decoration: none;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.contact-action:hover {
+  background: color-mix(in srgb, var(--color-surface) 68%, var(--color-bg));
+  border-color: color-mix(in srgb, var(--color-border) 88%, var(--color-fg-muted));
+  text-decoration: none;
+}
+
+.contact-action:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 3px;
+}
+
+.contact-action:active {
+  background: color-mix(in srgb, var(--color-surface) 78%, var(--color-bg));
+}
+
+/* Page primary fill - warm brown with light text. Not used as giant dropdown tile. */
+.contact-action--primary {
+  background: var(--color-brand);
+  border-color: var(--color-brand);
+  color: #fff;
+}
+
+.contact-action--primary:hover {
+  background: var(--color-brand-hover);
+  border-color: var(--color-brand-hover);
+  color: #fff;
+}
+
+.contact-action--primary:active {
+  background: var(--color-brand-hover);
+}
+
+.contact-action--primary .contact-action-kicker {
+  color: color-mix(in srgb, #fff 82%, transparent);
+}
+
+.contact-action--primary .contact-action-value,
+.contact-action--primary .contact-action-line,
+.contact-action--primary .contact-action-headline,
+.contact-action--primary .contact-action-icon {
+  color: #fff;
+}
+
+.contact-action--static {
+  cursor: default;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--color-bg) 88%, var(--color-surface));
+  border-color: color-mix(in srgb, var(--color-border) 58%, transparent);
+  color: var(--color-fg-muted);
+}
+
+.contact-action--static:hover,
+.contact-action--static:active {
+  background: color-mix(in srgb, var(--color-bg) 88%, var(--color-surface));
+  border-color: color-mix(in srgb, var(--color-border) 58%, transparent);
+  color: var(--color-fg-muted);
+}
+
+.contact-action--layout-leading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.contact-action.contact-action--layout-trailing-bubble {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 0.625rem; /* 10px */
+  row-gap: 0;
+}
+
+.contact-action-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  color: currentColor;
+}
+
+.contact-action-icon svg {
+  display: block;
+}
+
+.contact-action-icon--bubble {
+  box-sizing: border-box;
+  width: 1.75rem; /* 28px */
+  height: 1.75rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 72%, transparent);
+  background: color-mix(in srgb, var(--color-surface) 55%, var(--color-bg));
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  grid-column: 2;
+  grid-row: 1;
+  color: var(--color-fg-secondary);
+}
+
+/* Phone accent bubble in compact dropdown - brown fill, white icon. */
+.contact-action--density-dropdown.contact-action--phone .contact-action-icon--bubble {
+  width: 1.75rem; /* 28px */
+  height: 1.75rem;
+  border-color: var(--color-brand);
+  background: var(--color-brand);
+  color: #fff;
+}
+
+.contact-action--density-dropdown.contact-action--map .contact-action-icon--bubble {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-color: color-mix(in srgb, var(--color-border) 78%, transparent);
+  background: color-mix(in srgb, var(--color-surface) 62%, var(--color-bg));
+  color: var(--color-brand);
+}
+
+.contact-action-body {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  align-items: center;
+}
+
+.contact-action.contact-action--layout-trailing-bubble .contact-action-body {
+  flex: initial;
+  width: auto;
+  max-width: 100%;
+  min-width: 0;
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.contact-action-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  min-width: 0;
+  text-align: left;
+}
+
+.contact-action-copy--single {
+  flex-direction: row;
+  align-items: center;
+}
+
+.contact-action-kicker {
+  font-weight: 500;
+  color: var(--color-fg-muted);
+}
+
+.contact-action-value,
+.contact-action-line,
+.contact-action-headline {
+  font-weight: 500;
+  color: currentColor;
+}
+
+.contact-action-value {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.contact-action-line {
+  white-space: nowrap;
+}
+
+.contact-action-muted {
+  color: var(--color-fg-muted);
+  font-weight: 500;
+}
+
+/* Channel leading icons use brand accent (not full brand-color buttons). */
+.contact-action--channel:not(.contact-action--static) .contact-action-icon {
+  color: var(--color-brand);
+}
+
+.contact-action--density-page {
+  min-height: 4.125rem; /* 66px - shared phone/map pair contract */
+  padding: 0.8125rem 0.9375rem; /* 13×15 */
+  border-radius: 9px;
+  font-size: 0.9375rem;
+  gap: 0.6875rem; /* 11px */
+}
+
+.contact-action--density-page.contact-action--map {
+  min-height: 4.125rem; /* same geometry as paired phone */
+}
+
+.contact-action--density-page.contact-action--channel {
+  min-height: 3.875rem; /* 62px - fits two-line channel copy without clipping */
+  padding: 0.625rem 0.75rem; /* 10×12 */
+  gap: 0.5rem; /* 8px */
+  align-items: center;
+}
+
+.contact-action--density-page .contact-action-icon:not(.contact-action-icon--bubble) {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.contact-action--density-page .contact-action-icon:not(.contact-action-icon--bubble) svg {
+  width: 18px;
+  height: 18px;
+}
+
+.contact-action--density-page.contact-action--channel .contact-action-icon:not(.contact-action-icon--bubble) svg {
+  width: 16px;
+  height: 16px;
+}
+
+.contact-action--density-page .contact-action-kicker {
+  font-size: 0.8125rem; /* 13px */
+  line-height: 1.3;
+}
+
+.contact-action--density-page.contact-action--channel .contact-action-kicker {
+  font-size: 0.6875rem; /* 11px */
+  line-height: 1.25;
+}
+
+.contact-action--density-page .contact-action-value {
+  font-size: 1.0625rem; /* 17px */
+  line-height: 1.2;
+}
+
+.contact-action--density-page.contact-action--channel .contact-action-value {
+  font-size: 0.875rem; /* 14px */
+  line-height: 1.2;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.contact-action--density-page .contact-action-line {
+  font-size: 1rem; /* 16px */
+  line-height: 1.25;
+}
+
+.contact-action--copied {
+  border-color: color-mix(in srgb, var(--color-brand) 42%, var(--color-border));
+  background: color-mix(in srgb, var(--color-surface) 62%, var(--color-bg));
+}
+
+.contact-action--copy-error {
+  border-color: color-mix(in srgb, var(--color-border) 88%, var(--color-fg-muted));
+}
+
+.contact-action-max-wrap {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+}
+
+.contact-action-max-wrap > .contact-action {
+  flex: 1 1 auto;
+}
+
+.contact-max-helper {
+  box-sizing: border-box;
+  margin: 0.5625rem 0 0; /* 9px */
+  min-height: 2.125rem; /* reserve ~2 lines so copy feedback does not jump panel */
+  font-size: 0.75rem; /* 12px */
+  line-height: 1.35;
+  font-weight: 500;
+  color: var(--color-fg-muted);
+}
+
+.contact-action--density-dropdown {
+  min-height: 3.375rem; /* 54px */
+  padding: 0.625rem 0.75rem; /* 10×12 */
+  border-radius: 8px;
+  font-size: 0.875rem;
+  gap: 0.625rem; /* 10px */
+  background: color-mix(in srgb, var(--color-surface) 55%, var(--color-bg));
+}
+
+.contact-action--density-dropdown.contact-action--map {
+  min-height: 2.875rem; /* 46px */
+  padding: 0.5625rem 0.75rem;
+}
+
+.contact-action--density-dropdown.contact-action--channel {
+  min-height: 2.5625rem; /* 41px */
+  padding: 0.5rem 0.5625rem;
+  gap: 0.375rem; /* 6px */
+}
+
+.contact-action--density-dropdown .contact-action-copy {
+  gap: 0.1875rem; /* 3px */
+}
+
+.contact-action--density-dropdown .contact-action-icon:not(.contact-action-icon--bubble) {
+  width: 0.9375rem;
+  height: 0.9375rem;
+}
+
+.contact-action--density-dropdown .contact-action-icon:not(.contact-action-icon--bubble) svg {
+  width: 15px;
+  height: 15px;
+}
+
+.contact-action--density-dropdown .contact-action-icon--bubble svg {
+  width: 14px;
+  height: 14px;
+}
+
+.contact-action--density-dropdown .contact-action-kicker {
+  font-size: 0.6875rem; /* 11px */
+  line-height: 1.25;
+}
+
+.contact-action--density-dropdown .contact-action-value {
+  font-size: 0.875rem; /* 14px */
+  line-height: 1.2;
+}
+
+.contact-action--density-dropdown .contact-action-line {
+  font-size: 0.8125rem; /* 13px */
+  line-height: 1.25;
+}
+
+.contact-action-grid {
+  display: grid;
+  gap: 0.75rem; /* 12px */
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.contact-action-grid--pair {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.contact-action-grid--channels {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.contact-action-grid-item {
+  min-width: 0;
+  display: flex;
+}
+
+.contact-action-grid-item > .contact-action,
+.contact-action-grid-item > .contact-action-max-wrap {
+  flex: 1 1 auto;
+  width: 100%;
+}
+
+.contact-messenger-block {
+  margin: 0;
+  min-width: 0;
+}
+
+.contacts-page .contacts-page-action-grid {
+  margin-top: 0;
+}
+
+@media (max-width: 1024px) {
+  /* Keep messenger trio equal; only stack phone pairs if they feel tight. */
+  .contacts-page .contact-action-grid--pair {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .contacts-page .contact-action-grid--pair {
+    grid-template-columns: 1fr;
+  }
+
+  .contacts-page .contact-action-grid--channels {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .contacts-page .contact-action-grid--channels .contact-action-grid-item:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Dropdown showroom: stack call + map so trailing bubbles stay compact. */
+.showroom-contacts--showroom .contact-action-grid--pair.contact-action-grid--dropdown {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.5rem; /* 8px */
+  align-items: stretch;
+}
+
+/* Contacts dropdown keeps messenger trio; showroom pair handled above. */
+.showroom-contacts--contacts .contact-action-grid--pair.contact-action-grid--dropdown {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.showroom-contacts .contact-action-grid--channels.contact-action-grid--dropdown {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem; /* 8px */
+}
+
+@media (max-width: 420px) {
+  .showroom-contacts--contacts .contact-action-grid--pair.contact-action-grid--dropdown {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- Contacts page (`/contacts`) - independent of header dropdown shells ---- */
+
+/*
+  Contacts page master grid.
+  Body is a column flex shell; short pages shrink-wrap `main` to content.
+  Force the contacts route onto the shared `.container` measure so the
+  page shares the same left/right edges as header/footer.
+  One 12-column grid owns H1, intro, contact stage, center divider, and CTA.
+  Dropdown chrome uses `.showroom-contacts*` / `.header-info-dropdown*` only.
+*/
+main:has(.contacts-page) {
+  width: 100%;
+  max-width: var(--max-width);
+  box-sizing: border-box;
+}
+
+.contacts-page {
+  --contacts-page-gap: 1.75rem; /* 28px - H1/intro 12-track gap */
+  /* Optical air around the center axis - half left / half right of divider. */
+  --contacts-center-gutter: clamp(4.5rem, 6vw, 5.75rem); /* ~72–92px */
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--contacts-page-gap);
+  row-gap: 0;
+  width: 100%;
+  margin: 0;
+  padding-bottom: 0;
+  align-items: start;
+}
+
+.contacts-page-title {
+  grid-column: 1 / span 7;
+  margin: 0;
+  max-width: 100%;
+  min-width: 0;
+  font-size: clamp(2.125rem, 2.5vw, 2.5rem); /* ~34–40px */
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--color-fg);
+}
+
+.contacts-page-intro {
+  grid-column: 1 / span 7;
+  margin: 1.375rem 0 0; /* ~22px H1 → intro */
+  max-width: 100%;
+  min-width: 0;
+  font-size: 1.0625rem; /* 17px */
+  line-height: 1.55;
+  color: var(--color-fg-secondary);
+  overflow-wrap: anywhere;
+}
+
+/*
+  Contact stage: two equal content zones + shared three-row contract.
+  Rows: header (eyebrow+H2) / primary (address | phones) / secondary (actions).
+  Subgrid keeps secondary action tops aligned across columns.
+  Divider sits on the stage midpoint (center of the gutter).
+*/
+.contacts-page-stage {
+  --contacts-stage-row-gap: 1.75rem; /* 28px shared between logical rows */
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: auto auto auto;
+  column-gap: var(--contacts-center-gutter);
+  row-gap: var(--contacts-stage-row-gap);
+  align-items: stretch;
+  position: relative;
+  margin-top: 3.125rem; /* 50px intro → stage */
+  width: 100%;
+  min-width: 0;
+}
+
+.contacts-page-col {
+  min-width: 0;
+  width: 100%;
+}
+
+.contacts-page-col--showroom {
+  grid-column: 1;
+  grid-row: 1 / -1;
+}
+
+.contacts-page-col--channels {
+  grid-column: 2;
+  grid-row: 1 / -1;
+}
+
+@supports (grid-template-rows: subgrid) {
+  .contacts-page-col {
+    display: grid;
+    grid-template-rows: subgrid;
+    row-gap: var(--contacts-stage-row-gap);
+    align-content: stretch;
+  }
+}
+
+@supports not (grid-template-rows: subgrid) {
+  /* Fallback: same three-row stack per column (no cross-column sync). */
+  .contacts-page-col {
+    display: flex;
+    flex-direction: column;
+    gap: var(--contacts-stage-row-gap);
+  }
+}
+
+.contacts-page-row {
+  min-width: 0;
+  width: 100%;
+}
+
+.contacts-page-row--header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.contacts-page-row--primary,
+.contacts-page-row--secondary {
+  align-self: start;
+}
+
+/* Decorative center rule - pseudo avoids occupying a grid track. */
+.contacts-page-stage::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  transform: translateX(-50%);
+  background: color-mix(in srgb, var(--color-border) 62%, transparent);
+  pointer-events: none;
+}
+
+.contacts-page-eyebrow {
+  margin: 0 0 0.5625rem; /* 9px */
+  font-size: 0.8125rem; /* 13px */
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--color-brand);
+}
+
+.contacts-page-col-title {
+  margin: 0;
+  font-size: 1.625rem; /* 26px - shared token for both column H2s */
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--color-fg);
+  text-wrap: pretty;
+}
+
+.contacts-page-address {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem; /* 8px */
+  margin: 0;
+  font-size: 1.0625rem; /* 17px */
+  font-style: normal;
+  line-height: 1.5;
+  color: var(--color-fg-secondary);
+}
+
+.contacts-page-address-line {
+  display: block;
+}
+
+/*
+  CTA contained service card - single primary action.
+  Card chrome retained; catalog secondary removed.
+*/
+.contacts-page-cta {
+  --cta-pad-y: 2.25rem; /* 36px */
+  --cta-pad-x: 2rem; /* 32px */
+  --cta-gap-title-body: 1rem; /* 16px */
+  --cta-zone-gap: clamp(2rem, 3vw, 3rem); /* 32–48px */
+  --cta-btn-height: 3rem; /* 48px */
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: var(--cta-zone-gap);
+  align-items: center;
+  box-sizing: border-box;
+  margin-top: 4.25rem; /* 68px stage → CTA */
+  margin-bottom: 0;
+  padding: var(--cta-pad-y) var(--cta-pad-x);
+  background: color-mix(in srgb, var(--color-surface) 55%, var(--color-bg));
+  border: 1px solid color-mix(in srgb, var(--color-border) 72%, transparent);
+  border-radius: 11px;
+  box-shadow: none;
+}
+
+.contacts-page-cta-copy {
+  grid-column: 1;
+  justify-self: stretch;
+  align-self: center;
+  min-width: 0;
+  width: 100%;
+}
+
+.contacts-page-cta-title {
+  margin: 0;
+  max-width: min(100%, 40rem);
+  font-size: 1.4375rem; /* 23px */
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--color-fg);
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.contacts-page-cta-body {
+  margin: var(--cta-gap-title-body) 0 0;
+  max-width: min(100%, 38rem);
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--color-fg-secondary);
+  overflow-wrap: anywhere;
+}
+
+.contacts-page-cta-actions {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  justify-self: end;
+  align-self: center;
+  min-width: 0;
+  width: auto;
+}
+
+.contacts-page-cta-actions .contacts-page-cta-btn {
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  height: var(--cta-btn-height);
+  min-height: var(--cta-btn-height);
+  padding: 0 1.5rem;
+  font-size: 0.9375rem;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* Keep footer close after CTA without inventing empty min-height. */
+main:has(.contacts-page).page-section {
+  padding-bottom: 5rem; /* ~80px CTA → footer inside page-section rhythm */
+}
+
+@media (max-width: 1100px) {
+  .contacts-page-col-title {
+    font-size: 1.5rem; /* 24px - keep H2 pair balanced when left title wraps */
+  }
+}
+
+@media (max-width: 1024px) {
+  .contacts-page {
+    --contacts-page-gap: 1.5rem; /* 24px */
+    --contacts-center-gutter: clamp(4.5rem, 7vw, 5.25rem); /* keep ≥36px air each side */
+  }
+
+  .contacts-page-cta {
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: clamp(1.5rem, 2.5vw, 2rem);
+  }
+}
+
+@media (max-width: 900px) {
+  .contacts-page {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .contacts-page-title,
+  .contacts-page-intro,
+  .contacts-page-stage,
+  .contacts-page-col--showroom,
+  .contacts-page-col--channels,
+  .contacts-page-cta {
+    width: 100%;
+  }
+
+  .contacts-page-intro {
+    margin-top: 1.25rem;
+  }
+
+  .contacts-page-stage {
+    display: flex;
+    flex-direction: column;
+    margin-top: 2.75rem;
+    row-gap: 0;
+  }
+
+  .contacts-page-stage::before,
+  .contacts-page-divider {
+    display: none;
+  }
+
+  .contacts-page-col {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    grid-row: auto;
+  }
+
+  .contacts-page-col--showroom {
+    padding-bottom: 2.25rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-border) 78%, transparent);
+  }
+
+  .contacts-page-col--channels {
+    margin-top: 2.25rem;
+  }
+
+  .contacts-page-cta {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.625rem; /* 26px */
+    margin-top: 3rem;
+    padding: 1.5rem; /* 24px card inset on mobile */
+  }
+
+  .contacts-page-cta-copy,
+  .contacts-page-cta-actions {
+    width: 100%;
+    max-width: none;
+    justify-self: stretch;
+  }
+
+  .contacts-page-cta-title {
+    font-size: 1.25rem; /* 20px */
+  }
+
+  .contacts-page-cta-body {
+    font-size: 0.9375rem; /* 15px */
+  }
+
+  .contacts-page-cta-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 0.75rem; /* 12px */
+  }
+
+  .contacts-page-cta-actions .contacts-page-cta-btn {
+    width: 100%;
+    min-height: 2.875rem; /* 46px */
+    height: auto;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 440px) {
+  .header-info-dropdown--showroom,
+  .header-info-dropdown--contacts {
+    width: min(100%, calc(100vw - 1.25rem));
+    max-width: min(360px, calc(100vw - 1.25rem));
+  }
+
+  .contacts-page-title {
+    font-size: 1.875rem;
+  }
+
+  .contacts-page,
+  .contacts-page-cta,
+  .contacts-page-cta-copy,
+  .contacts-page-cta-title {
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: clip;
+  }
+
+}
+
 /* -- Mobile nav -- */
 
 .mobile-nav-btn {
@@ -910,6 +2022,23 @@ html.mobile-nav-open {
 
   .mobile-nav a.mobile-nav-kids:hover {
     color: color-mix(in srgb, #598060 85%, black 15%);
+  }
+
+  .mobile-nav-showroom-link {
+    display: block;
+    padding: 0.875rem 0;
+    min-height: 44px;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--color-fg);
+    border-bottom: 1px solid var(--color-border);
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+
+  .mobile-nav-showroom-link:hover {
+    text-decoration: none;
+    color: var(--color-fg-secondary);
   }
 }
 
