@@ -144,7 +144,9 @@ jobs:
           node scripts/release/check-governance-no-deploy.cjs .github/workflows
           node scripts/release/deployment-owner-label.fidelity.test.cjs
           bash scripts/ops/test-runtime-discovery-fidelity.sh
+          bash scripts/ops/test-media-gate-v2-fidelity.sh
           node scripts/release/backend-media-promotion.fidelity.test.cjs
+          node scripts/release/staging-mutation-lock.fidelity.test.cjs
           node scripts/release/backend-network-alias.fidelity.test.cjs
           node scripts/release/public-image-pin-consistency.fidelity.test.cjs
           node scripts/release/public-image-pin-lock.fidelity.test.cjs

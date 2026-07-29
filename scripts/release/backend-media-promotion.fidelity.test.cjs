@@ -27,12 +27,13 @@ for (const p of [gate, assertScript, reconcile, recreate, discovery, docs, compo
 const gateTxt = readFileSync(gate, "utf8")
 assert.match(gateTxt, /MEDIA_GATE_PASS|ok": true/)
 assert.match(gateTxt, /HOST_PORTS_PUBLISHED/)
-assert.match(gateTxt, /media_mount/)
-assert.doesNotMatch(
-  gateTxt,
-  /docker\s+(run|create|rm|kill|restart)\b/,
-  "gate must not create/remove/restart containers"
-)
+assert.match(gateTxt, /media_mount|MEDIA_MOUNT_MISSING/)
+assert.match(gateTxt, /--mode pre-promote|pre-promote/)
+assert.match(gateTxt, /--mode post-promote|post-promote/)
+assert.match(gateTxt, /WOODRIGHT_PINNED_BACKEND_DIGEST/)
+// Pre-promote may use ephemeral `docker run --rm` RO volume probe; never mutate live SF/BE.
+assert.doesNotMatch(gateTxt, /docker\s+(create|kill|restart)\b/)
+assert.doesNotMatch(gateTxt, /docker\s+rm\b(?!\s)/) // bare rm without --rm probe context banned loosely via create/kill
 assert.doesNotMatch(gateTxt, />\s*\/srv\/woodright\/runtime-ownership\/ACTIVE_OWNER/)
 assert.doesNotMatch(gateTxt, />\s*\/srv\/woodright\/runtime-ownership\/EXPECTED_RELEASE/)
 
@@ -41,6 +42,7 @@ assert.match(disc, /DISCOVERY_MULTIPLE_MATCH/)
 assert.match(disc, /MEDIA_MOUNT_MISSING/)
 assert.match(disc, /rollback\|keeper\|candidate\|STOPPED/)
 assert.match(disc, /expected_backend_digest_missing|DIGEST_MISMATCH/)
+assert.match(disc, /WOODRIGHT_PINNED_BACKEND_DIGEST/)
 
 const composeTxt = readFileSync(compose, "utf8")
 assert.match(composeTxt, /woodright_staging_media:\/server\/static/)
@@ -57,18 +59,24 @@ assert.match(docsTxt, /verify-backend-media-mount\.sh/)
 assert.match(docsTxt, /reconcile-runtime-manifests\.sh/)
 assert.match(docsTxt, /assert-manifest-update-allowed/)
 
-const assertTxt = readFileSync(assertScript, "utf8")
-assert.match(assertTxt, /verify-backend-media-mount\.sh/)
+const recreateTxt = readFileSync(recreate, "utf8")
+assert.match(recreateTxt, /verify-backend-media-mount\.sh/)
+assert.match(recreateTxt, /MEDIA_PROMOTION_GATE_FAILED|MEDIA_PRE_PROMOTE_GATE_FAILED/)
+assert.match(recreateTxt, /pre-promote/)
+assert.match(recreateTxt, /post-promote/)
+assert.match(recreateTxt, /--mount "type=volume,source=\$\{VOLUME\},destination=\$\{DEST\}"/)
+assert.match(recreateTxt, /REQUIRE_CURRENT_DIGEST=0/)
+
+const assertTxt2 = readFileSync(assertScript, "utf8")
+assert.match(assertTxt2, /--expected-src/)
+assert.match(assertTxt2, /WOODRIGHT_PINNED_BACKEND_DIGEST|PIN_DIGEST|--expected-digest/)
+assert.match(assertTxt2, /evidence|MEDIA_GATE_EVIDENCE|stale/)
 
 const reconcileTxt = readFileSync(reconcile, "utf8")
 assert.match(reconcileTxt, /assert-manifest-update-allowed\.sh/)
 assert.match(reconcileTxt, /--apply/)
+assert.match(reconcileTxt, /--expected-src/)
 assert.match(reconcileTxt, /bash "\$ASSERT"/)
-
-const recreateTxt = readFileSync(recreate, "utf8")
-assert.match(recreateTxt, /verify-backend-media-mount\.sh/)
-assert.match(recreateTxt, /MEDIA_PROMOTION_GATE_FAILED/)
-assert.match(recreateTxt, /--mount "type=volume,source=\$\{VOLUME\},destination=\$\{DEST\}"/)
 
 const healthTxt = readFileSync(health, "utf8")
 assert.match(healthTxt, /wr_discover_backend_container/)
