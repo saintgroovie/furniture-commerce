@@ -21,7 +21,7 @@ function loadPlaywright() {
   ].filter(Boolean)
   for (const c of candidates) {
     try {
-      // eslint-disable-next-line import/no-dynamic-require, global-require
+      // Dynamic path candidates for optional Playwright installs.
       return require(c)
     } catch {
       /* try next */
