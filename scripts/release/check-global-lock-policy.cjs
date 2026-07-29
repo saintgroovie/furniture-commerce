@@ -46,7 +46,7 @@ function main() {
     }
     process.exit(failed ? 1 : 0)
   }
-  const root = args[0] || "scripts/release"
+  const roots = args.length ? args : ["scripts/release", "ops/release", "ops/lib", "apps/backend/scripts"]
   const errors = []
   const warnings = []
   function walk(d) {
@@ -59,9 +59,9 @@ function main() {
       else if (/\.(cjs|sh|py)$/.test(name)) scanFile(p, errors, warnings)
     }
   }
-  walk(root)
+  for (const root of roots) walk(root)
   // Always require policy file declaring canonical lock
-  const policy = path.join(root, "LIVE_MUTATION_LOCK_POLICY.txt")
+  const policy = path.join("scripts/release", "LIVE_MUTATION_LOCK_POLICY.txt")
   if (fs.existsSync(policy)) {
     const t = fs.readFileSync(policy, "utf8")
     if (!t.includes(CANONICAL)) errors.push("LIVE_MUTATION_LOCK_POLICY.txt missing canonical path")

@@ -143,5 +143,11 @@ export default defineConfig({
     {
       resolve: "./src/modules/payment-link",
     },
+    {
+      resolve: "./src/modules/product-sales",
+    },
+    {
+      resolve: "./src/modules/order-process",
+    },
   ],
 })

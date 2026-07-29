@@ -25,6 +25,8 @@ const OUT_DIR = path.join(ROOT, "dist", "src", "scripts")
 /** Allowlist only — do not widen without an explicit packaging review. */
 const OPS_SEED_FILES = [
   "seed-rooms-v1-plan.ts",
+  "seed-rooms-v1-manifest.ts",
+  "seed-rooms-v1-target-gate.ts",
   "seed-rooms-v1-owner-approved.ts",
 ]
 

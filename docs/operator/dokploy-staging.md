@@ -175,9 +175,13 @@ docker run --rm --network <staging_net> \
   -e AUTH_CORS=... \
   -e MEDUSA_BACKEND_URL=... \
   -e MEDUSA_LOCAL_HTTP=1 \
+  -e WOODRIGHT_CUTOVER_LOCK_OK=1 \
   "${WOODRIGHT_BACKEND_IMAGE:-woodright-backend:local}" ./scripts/migrate-only.sh
 ```
 
+Staging preference: hold `/srv/woodright/locks/live-cutover.lock` via
+`WOODRIGHT_MIGRATE_AUTHORIZED=1 ops/release/run-staging-db-migrate.sh`
+(which injects `WOODRIGHT_CUTOVER_LOCK_OK=1`). Bare `migrate-only.sh` refuses without that proof.
 Image CMD uses `./node_modules/.bin/medusa` (not `yarn`) so non-root UID 10001 does not need write access to `/server/.yarn`. App root is compiled `dist/` (`medusa-config.js`).
 
 Do **not** auto-seed. Do **not** migrate Dokploy’s own Postgres.

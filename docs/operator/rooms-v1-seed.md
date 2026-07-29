@@ -1,6 +1,6 @@
 # RoomSet V1 seed (owner-approved)
 
-Staging-only idempotent seed for two published RoomSets:
+Idempotent seed for two published RoomSets (fail-closed staging / production targets):
 
 | Slug | Title | Card order |
 |------|-------|------------|
@@ -8,46 +8,56 @@ Staging-only idempotent seed for two published RoomSets:
 | `spalnya-cloud` | Спальня Cloud | 2 |
 
 Historical seed slugs (`spalnya`, `gostinaya`, …) stay inactive forever under this script.
+Oliver remains `DEFERRED` (not created).
 
-## Run
+Manifest ID: `rooms-v1-owner-approved`  
+Pinned manifest SHA: `71ef39d2699330bb2c0bca59f968bc695151b87d9ad9b7f23d9b35be0c07b67e`
 
-Local source tree (TypeScript):
+## Required environment
+
+| Variable | Staging | Production |
+|----------|---------|------------|
+| `ROOMSET_SEED_TARGET` | `staging` | `production` |
+| `ROOMSET_SEED_SCOPE` | `rooms-v1-owner-approved` | same |
+| `ROOMSET_SEED_MODE` | `dry-run` or `apply` | same (required) |
+| `DATABASE_URL` | DB name exact `woodright_staging` | exact `woodright_production` |
+| `ROOMSET_SEED_CONFIRM` | unset | `ROOMSET_V1_PRODUCTION_OWNER_APPROVED` |
+| `ROOMSET_SEED_PRODUCTION_ACK` | unset | `I_UNDERSTAND_THIS_WRITES_PRODUCTION` |
+
+Legacy `WOODRIGHT_ROOMS_V1_*` flags are rejected (FAIL_CLOSED).
+`NODE_ENV` is not authorization.
+Missing mode → FAIL_CLOSED (no silent dry-run default).
+
+## Run (local TypeScript)
 
 ```sh
-# dry-run
-npx medusa exec ./src/scripts/seed-rooms-v1-owner-approved.ts
+ROOMSET_SEED_TARGET=staging \
+ROOMSET_SEED_SCOPE=rooms-v1-owner-approved \
+ROOMSET_SEED_MODE=dry-run \
+  npx medusa exec ./src/scripts/seed-rooms-v1-owner-approved.ts
 
-# apply (staging)
-WOODRIGHT_ROOMS_V1_CONFIRM=1 WOODRIGHT_ROOMS_V1_APPLY=1 \
+ROOMSET_SEED_TARGET=staging \
+ROOMSET_SEED_SCOPE=rooms-v1-owner-approved \
+ROOMSET_SEED_MODE=apply \
   npx medusa exec ./src/scripts/seed-rooms-v1-owner-approved.ts
 ```
 
-Immutable staging backend image (compiled JS, after clean recreate — no host bind):
+## Run (immutable backend image)
 
 ```sh
-# dry-run / plan (default)
-./node_modules/.bin/medusa exec ./src/scripts/seed-rooms-v1-owner-approved.js
-
-# apply (staging only — both flags required)
-WOODRIGHT_ROOMS_V1_CONFIRM=1 WOODRIGHT_ROOMS_V1_APPLY=1 \
+ROOMSET_SEED_TARGET=staging \
+ROOMSET_SEED_SCOPE=rooms-v1-owner-approved \
+ROOMSET_SEED_MODE=dry-run \
   ./node_modules/.bin/medusa exec ./src/scripts/seed-rooms-v1-owner-approved.js
 ```
 
-The production image build compiles these ops scripts via
-`apps/backend/scripts/compile-ops-seeds.mjs` into `dist/src/scripts/`.
-They are **not** run on container start, healthcheck, or migrate.
+Production apply is **owner-gated** and is never part of deploy/CMD/health/migrate.
+Do not paste credentials into shell history; use container `DATABASE_URL`.
 
-Card order uses create order (Cloud first, Greenwich second) so store `created_at DESC` yields Greenwich → Cloud. No schema migration.
+The image build compiles ops scripts via `apps/backend/scripts/compile-ops-seeds.mjs`
+into `dist/src/scripts/` (plan, manifest, target-gate, owner-approved).
 
-Shared products across rooms require `room-set-product` link with `isList: true` on **both** sides. Each `room_set_item` must still resolve to exactly one product (seed/API fail-closed on multi-link).
+Card order uses create order (Cloud first, Greenwich second) so store `created_at DESC`
+yields Greenwich → Cloud. No schema migration.
 
 Rollback: set `is_active=false` on the two V1 slugs only. Do not delete historical rows.
-
-SQL backup example (staging):
-
-```sh
-pg_dump -U woodright -d woodright_staging \
-  --table=room_set --table=room_set_item \
-  --table=product_product_roomsetmodule_room_set_item \
-  --no-owner --no-acl > rooms-v1-backup.sql
-```

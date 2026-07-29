@@ -1,0 +1,43 @@
+---
+description: Never hand the operator review URLs until listeners and HTTP paths are proven stable
+alwaysApply: true
+---
+
+# Review server stability gate
+
+Complements `foreground-only-execution.mdc`, `durable-local-review-servers.mdc`, and `local-dev-single-instance.mdc`.
+
+Cursor may abort background shells when a chat is summarized or ended. **"Started" / "Ready in" / a PID in a log is not proof the server is still up.**
+
+## Mandatory before any visual / localhost handoff
+
+If the operator asks to look at the UI (or the agent is about to paste a localhost URL), complete this gate in the **same** turn. Also follow the **Mandatory check - operator asks to look visually** section in `durable-local-review-servers.mdc` (durable start only - never agent-shell `block_until_ms: 0`).
+
+## Hard gate before any review URL
+
+Do **not** tell the operator to open `http://localhost:…` / `http://127.0.0.1:…` until **all** of the following succeed in the **same** turn, after the last start/restart:
+
+1. **Listener:** `lsof -nP -iTCP:<port> -sTCP:LISTEN` shows a project-owned process.
+2. **Health:** bounded `curl --max-time` succeeds:
+   - Medusa: `/health` → 200
+   - Storefront: `/` → 200 (not hang / not 000)
+3. **Review path:** bounded `curl` of the **exact** URL (or its path) returns the expected status (usually 200) and a minimal content token (title, `data-state`, route marker) - not only the homepage.
+4. **Steady sample:** repeat steps 1–3 once more after ≥5s. If either sample fails → do not hand out the URL.
+5. **Identity:** listener cwd matches the intended worktree (from `lsof`/`ps`, or durable helper `status` showing verified live cwd). A durable `--name` alone is not enough. Port ownership must not be borrowed from another checkout.
+
+If any step fails → report `server not stable` (or `server not running`), what failed, and the exact **durable** start command. **No** “откройте …”, **no** success-tone review handoff.
+
+## After Cursor aborts a shell
+
+Abort/error notifications for `next dev` / `medusa develop` / `next start` mean the review session may be dead even if an earlier turn looked healthy.
+
+- Re-run the hard gate before repeating any review URL.
+- Do not assume nohup/disown / Shell `block_until_ms: 0` / unmanaged `screen`/`tmux` survived.
+- Durable viewing: alwaysApply `durable-local-review-servers.mdc` + `local-dev-single-instance.mdc` (`scripts/local-dev/woodright-*.sh` for `:9000`/`:3002`, or `scripts/local/durable_local_server.py` for alternate ports / Terminal). Do not create/modify LaunchAgents (absolute ban in `personal-data-mac-safety.mdc`).
+- Do **not** enter a restart loop in the agent shell. Classify the stop cause first (`killed_by_cursor_agent_shell` vs intentional stop vs crash). One durable start (or reuse), then gate.
+
+## Honesty in packets
+
+- Review URL sections require a timestamped gate result: ports, health codes, review-path codes, and worktree/cwd identity.
+- If the gate was not re-run in this turn → write `review URLs: not re-verified this turn` and do not paste localhost links as live.
+- `blocked_by_cursor_background_prompt` / `killed_by_cursor_agent_shell` when Cursor abort is why the gate fails mid-handoff.

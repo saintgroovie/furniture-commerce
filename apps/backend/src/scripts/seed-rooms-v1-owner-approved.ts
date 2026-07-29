@@ -1,5 +1,5 @@
 /**
- * Owner-approved RoomSet V1 seed (staging only).
+ * Owner-approved RoomSet V1 seed (staging + gated production).
  *
  * Creates exactly two active RoomSets from home-scene provenance:
  *   - spalnya-cloud (created first → older created_at)
@@ -7,87 +7,47 @@
  *
  * NEVER touches the five historical seed slugs.
  * NEVER deletes rows. NEVER mutates products/prices.
+ * NEVER auto-runs on startup / migrate / health / deploy.
  *
- * Interruption recovery (idempotent retry):
- *   - complete_orphan_links: full item set exists, product links missing
- *   - reconcile_partial: validated prefix (linked or orphan) + create remaining
- *   Wrong handles → FAIL_CLOSED conflict (no delete)
+ * Target contract (fail-closed):
+ *   ROOMSET_SEED_TARGET=staging|production
+ *   ROOMSET_SEED_SCOPE=rooms-v1-owner-approved
+ *   ROOMSET_SEED_MODE=dry-run|apply
+ *   DATABASE_URL db name must match target exactly
+ *   production also requires:
+ *     ROOMSET_SEED_CONFIRM=ROOMSET_V1_PRODUCTION_OWNER_APPROVED
+ *     ROOMSET_SEED_PRODUCTION_ACK=I_UNDERSTAND_THIS_WRITES_PRODUCTION
  *
- * Dry-run (default):
- *   npx medusa exec ./src/scripts/seed-rooms-v1-owner-approved.ts
- *
- * Apply (staging only — requires BOTH flags):
- *   WOODRIGHT_ROOMS_V1_CONFIRM=1 WOODRIGHT_ROOMS_V1_APPLY=1 \
- *     npx medusa exec ./src/scripts/seed-rooms-v1-owner-approved.ts
+ * See docs/operator/rooms-v1-seed.md
  */
 import type { ExecArgs } from "@medusajs/framework/types"
 import { Modules } from "@medusajs/framework/utils"
 import { ROOM_SET_MODULE } from "../modules/room-set"
 import type RoomSetModuleService from "../modules/room-set/service"
 import {
+  FORBIDDEN_HISTORICAL_SLUGS,
+  ROOMS_V1_BUYER_CARD_ORDER,
+  ROOMS_V1_CREATE_ORDER,
+  ROOMS_V1_SPECS,
+  ROOMSET_V1_MANIFEST_ID,
+  type RoomsV1Spec,
+} from "./seed-rooms-v1-manifest"
+import {
   classifyItemsAction,
   itemHandles,
   type ItemRow,
   type ItemsAction,
 } from "./seed-rooms-v1-plan"
+import { assertRoomsetSeedGate } from "./seed-rooms-v1-target-gate"
 
-/** Historical seed slugs — must never be reactivated or reused by this script. */
-export const FORBIDDEN_HISTORICAL_SLUGS = [
-  "detskaya-pervenets",
-  "detskaya-shkolnika",
-  "kabinet",
-  "spalnya",
-  "gostinaya",
-] as const
-
-/**
- * Create order: Cloud first, Greenwich second.
- * Store API lists active RoomSets by created_at DESC → Greenwich then Cloud.
- */
-export const ROOMS_V1_CREATE_ORDER = ["spalnya-cloud", "spalnya-greenwich"] as const
-
-export type RoomsV1Spec = {
-  slug: string
-  title: string
-  room_type: string
-  style: string
-  hero_image: string
-  /** Buyer card order (1 = first). Enforced via create order, not a DB column. */
-  page_order: number
-  product_handles: string[]
+export {
+  FORBIDDEN_HISTORICAL_SLUGS,
+  ROOMS_V1_BUYER_CARD_ORDER,
+  ROOMS_V1_CREATE_ORDER,
+  ROOMS_V1_SPECS,
+  ROOMSET_V1_MANIFEST_ID,
 }
-
-/** Owner-approved product order (exact). */
-export const ROOMS_V1_SPECS: RoomsV1Spec[] = [
-  {
-    slug: "spalnya-cloud",
-    title: "Спальня Cloud",
-    room_type: "спальня",
-    style: "Greenwich",
-    hero_image:
-      "/product-static/products/greenwich/beds-shared/GR-BED-POOL_cloud_bedroom2_int_View04.jpg",
-    page_order: 2,
-    product_handles: [
-      "greenwich-gr-12-1",
-      "greenwich-gr-67-1",
-      "greenwich-gr-02-1",
-    ],
-  },
-  {
-    slug: "spalnya-greenwich",
-    title: "Спальня Greenwich",
-    room_type: "спальня",
-    style: "Greenwich",
-    hero_image:
-      "/product-static/products/greenwich/beds-shared/GR-BED-POOL_frame_noliver_var2_View01.jpg",
-    page_order: 1,
-    product_handles: [
-      "greenwich-gr-12-1",
-      "greenwich-gr-08-1",
-      "greenwich-gr-67-1",
-    ],
-  },
-]
+export type { RoomsV1Spec }
 
 type Counts = {
   inserted_roomsets: number
@@ -98,6 +58,8 @@ type Counts = {
   noop_roomsets: number
   noop_items: number
   deleted_rows: number
+  conflicts: number
+  historical_reactivated: number
 }
 
 type RoomSetRow = {
@@ -119,17 +81,19 @@ function emptyCounts(): Counts {
     noop_roomsets: 0,
     noop_items: 0,
     deleted_rows: 0,
+    conflicts: 0,
+    historical_reactivated: 0,
   }
 }
 
-function parseDatabaseName(databaseUrl: string): string | null {
-  try {
-    const u = new URL(databaseUrl)
-    const name = u.pathname.replace(/^\//, "").split("?")[0]
-    return name || null
-  } catch {
-    return null
-  }
+function semanticMutations(c: Counts): number {
+  return (
+    c.inserted_roomsets +
+    c.updated_roomsets +
+    c.inserted_items +
+    c.inserted_links +
+    c.completed_orphan_links
+  )
 }
 
 /** MedusaService create* may return T or T[] depending on input shape/version. */
@@ -146,24 +110,18 @@ export default async function seedRoomsV1OwnerApproved({
     error: (s: string) => void
   }
 
-  const confirm = process.env.WOODRIGHT_ROOMS_V1_CONFIRM === "1"
-  const apply = process.env.WOODRIGHT_ROOMS_V1_APPLY === "1"
-  if (apply && !confirm) {
-    throw new Error("Set WOODRIGHT_ROOMS_V1_CONFIRM=1 before APPLY")
+  const gate = assertRoomsetSeedGate()
+  if (!gate.ok) {
+    throw new Error(gate.message)
   }
-  const mode = apply ? "APPLY" : "DRY-RUN"
+  const apply = gate.apply
+  const mode = gate.mode === "apply" ? "APPLY" : "DRY-RUN"
 
-  const dbUrl = process.env.DATABASE_URL || ""
-  if (!dbUrl) {
-    throw new Error("FAIL_CLOSED: DATABASE_URL is required")
-  }
-  const dbName = parseDatabaseName(dbUrl)
-  if (dbName !== "woodright_staging") {
-    throw new Error(
-      `FAIL_CLOSED: refusing database "${dbName ?? "unparseable"}" ` +
-        `(required exact name woodright_staging)`
-    )
-  }
+  logger.info(
+    `[rooms-v1] gate_ok target=${gate.target} scope=${gate.scope} mode=${gate.mode} ` +
+      `db=${gate.dbName} host=${gate.hostname} manifest_id=${gate.manifestId} ` +
+      `manifest_sha=${gate.manifestSha}`
+  )
 
   for (const slug of FORBIDDEN_HISTORICAL_SLUGS) {
     if (ROOMS_V1_SPECS.some((s) => s.slug === slug)) {
@@ -196,6 +154,7 @@ export default async function seedRoomsV1OwnerApproved({
     const list = await roomSetService.listRoomSets({ slug }, { take: 1 })
     const row = list[0] as { is_active?: boolean } | undefined
     if (row && row.is_active === true) {
+      counts.historical_reactivated++
       throw new Error(
         `FAIL_CLOSED: historical slug ${slug} is active; refusing V1 seed`
       )
@@ -226,7 +185,9 @@ export default async function seedRoomsV1OwnerApproved({
     productIdByHandle.set(handle, String(product.id))
   }
 
-  logger.info(`[rooms-v1] ${mode}: staging_ok handles_ok=${allHandles.length}`)
+  logger.info(
+    `[rooms-v1] ${mode}: target_ok=${gate.target} handles_ok=${allHandles.length}`
+  )
 
   type Plan = {
     spec: RoomsV1Spec
@@ -261,6 +222,7 @@ export default async function seedRoomsV1OwnerApproved({
     const itemsAction = classifyItemsAction(items, desired)
 
     if (itemsAction === "conflict") {
+      counts.conflicts++
       const handles = itemHandles(items)
       throw new Error(
         `FAIL_CLOSED: room_set ${spec.slug} has unexpected items ` +
@@ -315,7 +277,6 @@ export default async function seedRoomsV1OwnerApproved({
       }
       counts.inserted_roomsets++
     } else if (plan.action === "update_meta" || needsItemWork) {
-      // Deactivate before item repair if currently active and incomplete.
       logger.info(
         `[rooms-v1] UPDATE room_set slug=${spec.slug} id=${roomSetId} ` +
           `(prepare${needsItemWork ? "; deactivate_until_items_ok" : ""})`
@@ -361,7 +322,6 @@ export default async function seedRoomsV1OwnerApproved({
         `[rooms-v1] NOOP items slug=${spec.slug} count=${spec.product_handles.length}`
       )
       counts.noop_items += spec.product_handles.length
-      // Ensure active if we only repaired meta to inactive by mistake — noop path stays active.
       if (apply && plan.existing && plan.existing.is_active !== true) {
         await roomSetService.updateRoomSets({
           id: roomSetId,
@@ -432,7 +392,6 @@ export default async function seedRoomsV1OwnerApproved({
         counts.inserted_links++
       }
     } else {
-      // create_all
       for (let idx = 0; idx < spec.product_handles.length; idx++) {
         const handle = spec.product_handles[idx]
         const productId = productIdByHandle.get(handle)!
@@ -457,7 +416,6 @@ export default async function seedRoomsV1OwnerApproved({
       }
     }
 
-    // Final publish step: activate only after exact composition writes.
     logger.info(`[rooms-v1] ACTIVATE room_set slug=${spec.slug}`)
     if (apply && roomSetId) {
       await roomSetService.updateRoomSets({
@@ -471,11 +429,11 @@ export default async function seedRoomsV1OwnerApproved({
     }
   }
 
-  // --- Post-mutation: historical still inactive ---
   for (const slug of FORBIDDEN_HISTORICAL_SLUGS) {
     const list = await roomSetService.listRoomSets({ slug }, { take: 1 })
     const row = list[0] as { is_active?: boolean } | undefined
     if (row && row.is_active === true) {
+      counts.historical_reactivated++
       throw new Error(
         `FAIL_CLOSED: historical slug ${slug} became active during run`
       )
@@ -485,9 +443,15 @@ export default async function seedRoomsV1OwnerApproved({
   logger.info(
     `[rooms-v1] ${mode} summary ` +
       JSON.stringify({
+        target: gate.target,
+        db_name: gate.dbName,
+        mode: gate.mode,
+        manifest_id: gate.manifestId,
+        manifest_sha: gate.manifestSha,
         ...counts,
+        semantic_mutations: semanticMutations(counts),
         create_order: ROOMS_V1_CREATE_ORDER,
-        buyer_card_order: ["spalnya-greenwich", "spalnya-cloud"],
+        buyer_card_order: ROOMS_V1_BUYER_CARD_ORDER,
       })
   )
 }

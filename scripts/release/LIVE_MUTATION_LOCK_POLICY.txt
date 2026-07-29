@@ -13,3 +13,18 @@ CANONICAL_LOCK_PATH=/srv/woodright/locks/live-cutover.lock
 #
 # LIVE_MUTATING=true
 # requires_global_lock=true
+
+# Covered ops/release mutators (must source ops/lib/woodright-staging-mutation-lock.sh):
+# - recreate-staging-backend-with-media.sh
+# - reconcile-runtime-manifests.sh (--apply only)
+# - run-staging-seed-rooms-v1.sh (dry-run and apply)
+# - run-staging-db-migrate.sh
+# - scripts/release/attach-backend-network-alias.sh (when mutating)
+#
+# In-image: apps/backend/scripts/migrate-only.sh requires WOODRIGHT_CUTOVER_LOCK_OK=1
+# (proof that host held live-cutover.lock). Do not invoke bare migrate-only against staging.
+#
+# Forbidden: ad-hoc docker rename/replace of woodright-staging-* without this lock
+# (seedharden / agent cutover class). Legacy DEPLOY.lock is not authoritative.
+#
+# Shared helper: ops/lib/woodright-staging-mutation-lock.sh
