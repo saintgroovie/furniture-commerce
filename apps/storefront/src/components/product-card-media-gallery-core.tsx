@@ -2122,8 +2122,21 @@ export function ProductCardMediaGalleryCore(props: Props) {
     props.upholsteryVariants?.map((v) => `${v.key}\u0001${v.mainSrc}`).join("\u0004") ?? "",
     props.woodVariants?.map((v) => `${v.key}\u0001${v.mainSrc}`).join("\u0005") ?? "",
     props.finishVariants?.map((v) => `${v.key}\u0001${v.mainSrc}`).join("\u0007") ?? "",
-    props.greenwichBedMatrix?.length ?? 0,
-    props.greenwichPaintMatrix?.length ?? 0,
+    props.greenwichBedMatrix
+      ?.map((row) =>
+        [
+          row.headboard_model,
+          row.frame_material,
+          row.fabric_upholstery,
+          ...row.urls,
+        ].join("\u0002")
+      )
+      .join("\u0003") ?? "",
+    props.greenwichPaintMatrix
+      ?.map((row) =>
+        [row.frame_material, row.paint_finish, ...row.urls].join("\u0002")
+      )
+      .join("\u0003") ?? "",
     props.productHandle ?? "",
     props.layout ?? "card",
   ].join("|")

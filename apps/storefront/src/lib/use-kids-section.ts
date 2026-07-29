@@ -8,6 +8,7 @@ import {
   useEffect,
   useLayoutEffect,
   useMemo,
+  useReducer,
   useState,
   type ReactNode,
 } from "react"
@@ -75,6 +76,25 @@ const KidsSectionContext = createContext<KidsSectionContextValue>({
 
 type PendingNav = { target: boolean; from: boolean }
 
+type KidsEnterState = { armed: boolean; nonce: number }
+
+function kidsEnterReducer(
+  state: KidsEnterState,
+  action: "arm" | "disarm" | "play"
+): KidsEnterState {
+  switch (action) {
+    case "arm":
+      return state.armed ? state : { ...state, armed: true }
+    case "disarm":
+      return state.armed ? { ...state, armed: false } : state
+    case "play":
+      if (!state.armed) return state
+      return { armed: false, nonce: state.nonce + 1 }
+    default:
+      return state
+  }
+}
+
 /**
  * Owns the adult ↔ kids flag for sticky chrome (header edge wash, footer
  * wash, KIDS pill). Pathname is the baseline; in-app clicks flip early;
@@ -90,16 +110,15 @@ export function KidsSectionProvider({ children }: { children: ReactNode }) {
   const pathKids = isKidsPath(pathname)
   const [pending, setPending] = useState<PendingNav | null>(null)
   const [productKids, setProductKidsState] = useState(false)
-  const [kidsEnterNonce, setKidsEnterNonce] = useState(0)
-  /** Click armed a kids→PDP enter; cleared once the glide actually starts. */
-  const [enterArmed, setEnterArmed] = useState(false)
+  /** Click arms kids→PDP enter; play clears arm and bumps nonce once. */
+  const [kidsEnter, dispatchKidsEnter] = useReducer(kidsEnterReducer, {
+    armed: false,
+    nonce: 0,
+  })
+  const kidsEnterNonce = kidsEnter.nonce
 
   const playKidsEnterReplay = useCallback(() => {
-    setEnterArmed((armed) => {
-      if (!armed) return false
-      setKidsEnterNonce((n) => n + 1)
-      return false
-    })
+    dispatchKidsEnter("play")
   }, [])
 
 
@@ -131,7 +150,7 @@ export function KidsSectionProvider({ children }: { children: ReactNode }) {
     })
     if (!isProductPath(pathname)) {
       setProductKidsState(false)
-      setEnterArmed(false)
+      dispatchKidsEnter("disarm")
     } else if (typeof document !== "undefined" && document.querySelector("[data-kids-product]")) {
       setProductKidsState(true)
       setPending(null)
@@ -172,7 +191,7 @@ export function KidsSectionProvider({ children }: { children: ReactNode }) {
       })
       /* Arm only — the enter glide waits for loader appear (or PDP settle). */
       if (fromKids && targetKids && isProductPath(path)) {
-        setEnterArmed(true)
+        dispatchKidsEnter("arm")
       }
     }
 
