@@ -39,6 +39,12 @@ export function useVerifiedStripExtras(
   const [verified, setVerified] = useState<string[]>([])
   const [probeDone, setProbeDone] = useState(false)
   const key = extraSrcs.join("\u0000")
+  const [syncedKey, setSyncedKey] = useState(key)
+  if (key !== syncedKey) {
+    setSyncedKey(key)
+    setVerified([])
+    setProbeDone(false)
+  }
 
   useEffect(() => {
     if (mode === "optimistic") return
@@ -49,8 +55,6 @@ export function useVerifiedStripExtras(
       return
     }
     let cancelled = false
-    setVerified([])
-    setProbeDone(false)
     filterExtrasBySuccessfulImageLoad(extraSrcs, maxProbes).then((ok) => {
       if (!cancelled) {
         setVerified(ok)

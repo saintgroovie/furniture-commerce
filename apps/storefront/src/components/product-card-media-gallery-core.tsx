@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import type { MouseEvent, ReactNode } from "react"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react"
 import { createPortal } from "react-dom"
 import { ProductThumbCarousel } from "@/components/product-thumb-carousel"
 import { PdpHeroAffordance } from "@/components/pdp-hero-affordance"
