@@ -35,3 +35,19 @@ export function isAccessExpired(
   const exp = typeof expiresAt === "string" ? new Date(expiresAt) : expiresAt
   return Number.isNaN(exp.getTime()) || exp.getTime() <= now.getTime()
 }
+
+/**
+ * Buyer track path: token only in URL fragment (never in HTTP query/path).
+ * Fragments are not sent to proxies/servers and cannot enter SSR request URLs.
+ */
+export function buildGuestOrderTrackPath(
+  orderId: string,
+  token: string
+): string {
+  const id = orderId.trim()
+  const t = token.trim()
+  if (!id || !t) {
+    throw new Error("order_id and token are required for track path")
+  }
+  return `/orders/track?order_id=${encodeURIComponent(id)}#token=${encodeURIComponent(t)}`
+}

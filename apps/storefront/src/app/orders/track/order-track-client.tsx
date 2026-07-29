@@ -9,23 +9,50 @@ import {
 import { orderTrackCopy as copy } from "@/lib/woodright-copy"
 import { CopyLines } from "@/components/copy-lines"
 import { flatCopy } from "@/lib/format-ru-copy"
+import {
+  orderTrackSessionKey,
+  parseOrderTrackFragmentToken,
+} from "@/lib/order-track-token-handoff"
 
 type LoadState = "loading" | "ready" | "missing" | "error"
+
+function clearSensitiveUrlParts(): void {
+  if (typeof window === "undefined") return
+  const url = new URL(window.location.href)
+  let changed = false
+  if (url.searchParams.has("token")) {
+    url.searchParams.delete("token")
+    changed = true
+  }
+  if (url.hash) {
+    url.hash = ""
+    changed = true
+  }
+  if (changed) {
+    window.history.replaceState({}, "", `${url.pathname}${url.search}`)
+  }
+}
 
 export function OrderTrackClient() {
   const params = useSearchParams()
   const orderId = (params.get("order_id") ?? "").trim()
-  const tokenFromQuery = (params.get("token") ?? "").trim()
 
   const [state, setState] = useState<LoadState>("loading")
   const [data, setData] = useState<BuyerProcessResponse | null>(null)
   const [error, setError] = useState("")
 
   useEffect(() => {
-    let token = tokenFromQuery
-    if (!token && orderId && typeof window !== "undefined") {
+    let token = ""
+    if (typeof window !== "undefined") {
       try {
-        token = sessionStorage.getItem(`woodright_order_token:${orderId}`) ?? ""
+        token = parseOrderTrackFragmentToken(window.location.hash) ?? ""
+        if (!token && orderId) {
+          token = sessionStorage.getItem(orderTrackSessionKey(orderId)) ?? ""
+        }
+        if (token && orderId) {
+          sessionStorage.setItem(orderTrackSessionKey(orderId), token)
+        }
+        clearSensitiveUrlParts()
       } catch {
         token = ""
       }
@@ -35,19 +62,7 @@ export function OrderTrackClient() {
       setState("missing")
       return
     }
-    // Drop token from the address bar after first read (history / referrer hygiene).
-    try {
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem(`woodright_order_token:${orderId}`, token)
-        const url = new URL(window.location.href)
-        if (url.searchParams.has("token")) {
-          url.searchParams.delete("token")
-          window.history.replaceState({}, "", url.toString())
-        }
-      }
-    } catch {
-      // ignore storage / history failures
-    }
+
     let cancelled = false
     setState("loading")
     fetchOrderProcess({ orderId, token })
@@ -58,13 +73,15 @@ export function OrderTrackClient() {
       })
       .catch((e: unknown) => {
         if (cancelled) return
-        setError(e instanceof Error ? e.message : flatCopy(copy.loadError))
+        // Never echo raw token / auth material from failed responses.
+        setError(flatCopy(copy.loadError))
         setState("error")
+        void e
       })
     return () => {
       cancelled = true
     }
-  }, [orderId, tokenFromQuery])
+  }, [orderId])
 
   if (state === "missing") {
     return <p className="info-text">{copy.missingParams}</p>
