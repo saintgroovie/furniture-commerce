@@ -7,6 +7,10 @@ import { RoomSetCta } from "@/components/room-set-cta"
 import { CopyLines } from "@/components/copy-lines"
 import { indexingCanonical } from "@/lib/indexing-policy"
 import { resolveStorefrontProductImageSrc } from "@/lib/product-images"
+import {
+  roomSetProductLinkAriaLabel,
+  roomSetProductThumbAlt,
+} from "@/lib/room-set-item-a11y"
 import { roomSetDetail } from "@/lib/woodright-copy"
 
 function truncate(str: string, max: number): string {
@@ -151,17 +155,20 @@ export default async function RoomSetPage({ params }: { params: { slug: string }
           }
 
           // One accessible link for the whole row — no nested interactive elements.
+          // Pattern A: aria-label supplies the concise accessible name; thumb alt
+          // uses the buyer-facing title (never SKU/id). Visible title stays for UI.
           return (
             <li key={key} className="room-set-item" data-pdp-link="ok">
               <Link
                 href={href}
                 className="room-set-item-link"
                 data-product-handle={product?.handle}
+                aria-label={roomSetProductLinkAriaLabel(title)}
               >
                 {thumb ? (
                   <img
                     src={thumb}
-                    alt=""
+                    alt={roomSetProductThumbAlt(title)}
                     className="room-set-item-thumb"
                     loading="lazy"
                   />

@@ -4,6 +4,7 @@
  * Mobile navigation — parity with desktop buyer routes.
  * Disclosure + dialog pattern: focus containment, Escape, focus restore,
  * background inert while open (WCAG 2.2 focus management).
+ * Showroom + Contacts: plain /contacts links (no hover dropdown / no accordion).
  */
 import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
@@ -36,7 +37,6 @@ const PRIMARY: NavLink[] = [
 const SECONDARY: NavLink[] = [
   { href: "/about", label: navCopy.about },
   { href: "/designers", label: navCopy.designers },
-  { href: "/contacts", label: navCopy.contacts },
 ]
 
 const PANEL_ID = "mobile-nav-panel"
@@ -92,6 +92,7 @@ export function MobileNav() {
     return () => mq.removeEventListener("change", onChange)
   }, [])
 
+  // Scroll-lock + initial focus + keyboard trap.
   useEffect(() => {
     if (!open) {
       document.body.classList.remove("mobile-nav-open")
@@ -180,6 +181,16 @@ export function MobileNav() {
                   {item.label}
                 </Link>
               ))}
+              <Link
+                href="/contacts"
+                className="mobile-nav-showroom-link"
+                onClick={() => close(false)}
+              >
+                {navCopy.showroom}
+              </Link>
+              <Link href="/contacts" onClick={() => close(false)}>
+                {navCopy.contacts}
+              </Link>
             </div>
             <div className="mobile-nav-group mobile-nav-group-cart">
               <Link href="/cart" onClick={() => close(false)}>

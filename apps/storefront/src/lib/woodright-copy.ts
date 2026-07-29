@@ -14,12 +14,17 @@
  * Точки / отбивки / висячие предлоги: `.cursor/rules/ux-copywriting.mdc`.
  * Одно предложение в UI - без конечной точки; две мысли - две строки (`string[]`).
  *
- * Некоторые поля (`note`, `supporting`, `showroomNote`) пока не выводятся в JSX -
+ * Некоторые поля (`note`, `supporting`) пока не выводятся в JSX -
  * они готовы к использованию, точечные правки разметки описаны в отчёте.
+ * Публичные контакты шоурума (адрес, телефоны, мессенджеры, shortLabel) - только
+ * `@/lib/showroom-contacts`, не дублировать здесь.
  */
 
+import { showroomContacts } from "@/lib/showroom-contacts"
+
 export const nav = {
-  showroom: "Шоурум: Москва",
+  /** Desktop/mobile chrome label - SoT: showroomContacts.shortLabel */
+  showroom: showroomContacts.shortLabel,
   designers: "Дизайнерам",
   contacts: "Контакты",
   catalog: "Каталог",
@@ -637,7 +642,7 @@ export const pdpCopy = {
   materialTierLabel: "Исполнение",
   serviceLines: [
     "Массив дерева и ручная отделка",
-    "Шоурум в Москве - принимаем по договорённости",
+    "Шоурум в Химках - принимаем по договорённости",
   ],
   serviceConsultLabel: "Получить консультацию",
 }
@@ -743,20 +748,40 @@ export const designersRequestCopy = {
 
 export const contactsCopy = {
   h1: "Контакты",
-  lead: [
-    "Уточнить наличие, подобрать исполнение, обсудить детскую или проект",
-    "напишите нам",
-  ],
-  showroomNote: [
-    "Шоурум в Москве",
-    "принимаем по договорённости",
-  ],
-  formHelper: [
-    "Оставьте заявку",
-    "подскажем, как быстрее решить задачу",
-  ],
+  /** Single flowing intro - width driven by master-grid span, no forced breaks. */
+  lead: "Уточнить наличие, подобрать исполнение или обсудить индивидуальный проект можно по телефону или в мессенджерах",
+  showroomEyebrow: "Шоурум",
+  /** Action-title pair with `channelsHeading` on the contacts column. */
+  showroomHeading: "Посетить магазин Woodright",
+  channelsEyebrow: "Контакты",
+  channelsHeading: "Связаться с Woodright",
+  messengersLabel: "Мессенджеры",
+  /** Full accessible name for the Yandex Maps link. */
+  mapCta: "Посмотреть в Яндекс Картах",
+  /** Page map tile kicker - pairs with phone kicker/value rhythm. */
+  mapKicker: "Маршрут",
+  /** Page/dropdown visible map value (one line). */
+  mapValue: "Яндекс Карты",
+  /** Compact showroom phone CTA for header dropdown. */
+  showroomCallCta: "Позвонить в шоурум",
+  /** Shared value for Telegram / WhatsApp page tiles. */
+  messengerWriteValue: "Написать",
+  maxLabel: "MAX",
+  maxCopyValue: "Скопировать номер",
+  maxCopiedValue: "Номер скопирован",
+  maxCopyError: "Не удалось скопировать номер",
+  maxDropdownIdle: "MAX",
+  maxDropdownCopied: "Скопировано",
+  maxDropdownHelper: "MAX - нажмите, чтобы скопировать номер",
+  maxDropdownHelperCopied:
+    "Номер скопирован - найдите Woodright в MAX по номеру",
+  maxAriaIdle:
+    "Скопировать номер {display} для поиска Woodright в MAX",
+  maxAriaCopied: "Номер {display} скопирован",
+  ctaTitle: "Есть вопрос по мебели или индивидуальному проекту?",
+  ctaBody:
+    "Оставьте заявку - менеджер свяжется с вами и поможет подобрать решение",
   ctaPrimary: "Оставить заявку",
-  ctaSecondary: "Перейти в каталог",
 }
 
 export const homeCopy = {
@@ -904,6 +929,7 @@ export const seo = {
   },
   contacts: {
     title: "Контакты Woodright",
-    description: "Контакты Woodright: консультация по каталогу, детской мебели, отделкам и проектным заявкам. Шоурум в Москве.",
+    description:
+      "Контакты Woodright: консультация по каталогу, детской мебели, отделкам и проектным заявкам. Шоурум в Химках, МТК «Гранд-2».",
   },
 }
