@@ -12,7 +12,7 @@
  * состояниях, "Состав заказа" — только когда есть загруженная корзина).
  */
 import type { ReactNode } from "react"
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, useSyncExternalStore } from "react"
 import Link from "next/link"
 import { getCartIdFromSession, clearCartIdFromSession } from "@/lib/cart/session"
 import { emitCartUpdated } from "@/lib/cart/cart-events"
@@ -35,42 +35,63 @@ type CheckoutState =
   | "server_error"
   | "invalid_cart_state"
 
+function subscribeNoop() {
+  return () => {}
+}
+
+function useIsClient() {
+  return useSyncExternalStore(subscribeNoop, () => true, () => false)
+}
+
+function useSessionCartId() {
+  return useSyncExternalStore(
+    subscribeNoop,
+    () => getCartIdFromSession(),
+    () => null
+  )
+}
+
 export function CheckoutForm() {
-  const [state, setState] = useState<CheckoutState>("loading")
+  const isClient = useIsClient()
+  const sessionCartId = useSessionCartId()
   const [cart, setCart] = useState<Record<string, unknown> | null>(null)
   const [errorMessage, setErrorMessage] = useState<string>("")
   const [orderNumber, setOrderNumber] = useState<string>("")
-  const [cartId, setCartId] = useState<string | null>(null)
+  /** undefined = follow session; null = cleared locally after empty/error */
+  const [cartIdOverride, setCartIdOverride] = useState<string | null | undefined>(
+    undefined
+  )
+  const cartId = cartIdOverride === undefined ? sessionCartId : cartIdOverride
+  const [state, setState] = useState<CheckoutState>("loading")
   const [trackHref, setTrackHref] = useState<string | null>(null)
   const [nameError, setNameError] = useState("")
   const [phoneError, setPhoneError] = useState("")
   const submittingRef = useRef(false)
 
   useEffect(() => {
-    const id = getCartIdFromSession()
-    setCartId(id)
-    if (!id) {
-      setState("empty_cart")
+    if (!isClient || !sessionCartId) {
       return
     }
-    setState("loading")
-    getCart(id)
+    let cancelled = false
+    getCart(sessionCartId)
       .then((data: { cart?: Record<string, unknown> }) => {
+        if (cancelled) return
         const c = data.cart ?? null
         setCart(c)
         const items = (c?.items as unknown[]) ?? []
         if (!Array.isArray(items) || items.length === 0) {
           clearCartIdFromSession()
-          setCartId(null)
+          setCartIdOverride(null)
           setState("empty_cart")
         } else {
           setState("ready")
         }
       })
       .catch((e: unknown) => {
+        if (cancelled) return
         if (e instanceof Error && e.message === CART_NOT_FOUND) {
           clearCartIdFromSession()
-          setCartId(null)
+          setCartIdOverride(null)
           setState("invalid_cart_state")
           setErrorMessage(flatCopy(copy.invalidState))
         } else {
@@ -78,7 +99,17 @@ export function CheckoutForm() {
           setErrorMessage(flatCopy(copy.loadError))
         }
       })
-  }, [])
+    return () => {
+      cancelled = true
+    }
+  }, [isClient, sessionCartId])
+
+  const effectiveState: CheckoutState =
+    !isClient
+      ? "loading"
+      : !cartId && (state === "loading" || state === "empty_cart")
+        ? "empty_cart"
+        : state
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -141,6 +172,7 @@ export function CheckoutForm() {
           }
         }
         clearCartIdFromSession()
+        setCartIdOverride(null)
         emitCartUpdated({ count: 0 })
         setState("success")
       } else {
@@ -160,9 +192,9 @@ export function CheckoutForm() {
   const submitting = state === "submitting"
 
   let cardContent: ReactNode
-  let cardState: string = state
+  let cardState: string = effectiveState
 
-  if (state === "empty_cart") {
+  if (effectiveState === "empty_cart") {
     cardContent = (
       <>
         <p className="bespoke-request-card-title">{copy.emptyCartTitle}</p>
@@ -176,9 +208,9 @@ export function CheckoutForm() {
         </p>
       </>
     )
-  } else if (state === "loading") {
+  } else if (effectiveState === "loading") {
     cardContent = <p className="info-text">Загружаем корзину…</p>
-  } else if (state === "invalid_cart_state") {
+  } else if (effectiveState === "invalid_cart_state") {
     cardContent = (
       <>
         <CopyLines className="bespoke-request-card-title" lines={copy.invalidState} />
@@ -187,7 +219,7 @@ export function CheckoutForm() {
         </p>
       </>
     )
-  } else if (state === "success") {
+  } else if (effectiveState === "success") {
     cardContent = (
       <div className="request-success">
         <p className="request-success-title">{copy.successTitle}</p>

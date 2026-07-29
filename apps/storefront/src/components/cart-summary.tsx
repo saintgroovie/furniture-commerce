@@ -11,7 +11,7 @@
  * («Что дальше»). Группировка Woodright / Woodright Kids сохранена внутри
  * карточки как секции с прежними заголовками.
  */
-import { useEffect, useState } from "react"
+import { useEffect, useState, useSyncExternalStore } from "react"
 import Link from "next/link"
 import { getCartIdFromSession, clearCartIdFromSession } from "@/lib/cart/session"
 import { countCartItems, emitCartUpdated } from "@/lib/cart/cart-events"
@@ -84,22 +84,37 @@ function itemArticle(item: Record<string, unknown>): string | null {
   return typeof sku === "string" && sku.trim() ? sku.trim() : null
 }
 
+function subscribeNoop() {
+  return () => {}
+}
+
+function useIsClient() {
+  return useSyncExternalStore(subscribeNoop, () => true, () => false)
+}
+
+function useSessionCartId() {
+  return useSyncExternalStore(
+    subscribeNoop,
+    () => getCartIdFromSession(),
+    () => null
+  )
+}
+
 export function CartSummary() {
+  const isClient = useIsClient()
+  const sessionCartId = useSessionCartId()
   const [cart, setCart] = useState<Record<string, unknown> | null>(null)
   const [viewState, setViewState] = useState<CartViewState>("loading")
   const [mutating, setMutating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const cartId = getCartIdFromSession()
-    if (!cartId) {
-      setCart(null)
-      setViewState("empty")
+    if (!isClient || !sessionCartId) {
       return
     }
 
     let cancelled = false
-    getCart(cartId)
+    getCart(sessionCartId)
       .then((data: { cart?: Record<string, unknown> }) => {
         if (cancelled) return
         const c = data.cart ?? null
@@ -126,7 +141,14 @@ export function CartSummary() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [isClient, sessionCartId])
+
+  const effectiveView: CartViewState =
+    !isClient
+      ? "loading"
+      : !sessionCartId && viewState === "loading"
+        ? "empty"
+        : viewState
 
   async function handleRemove(cartId: string, lineId: string) {
     setMutating(true)
@@ -179,14 +201,14 @@ export function CartSummary() {
     )
   }
 
-  if (viewState === "loading") {
+  if (effectiveView === "loading") {
     return cardShell(
       "loading",
       <p className="info-text">Загружаем корзину…</p>
     )
   }
 
-  if (viewState === "error") {
+  if (effectiveView === "error") {
     return cardShell(
       "error",
       <>
@@ -198,7 +220,7 @@ export function CartSummary() {
     )
   }
 
-  if (viewState === "invalid_state") {
+  if (effectiveView === "invalid_state") {
     return cardShell(
       "invalid_state",
       <>
