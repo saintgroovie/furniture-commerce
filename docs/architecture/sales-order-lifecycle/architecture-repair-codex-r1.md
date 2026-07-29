@@ -52,7 +52,7 @@ Table `woodright_order_access`:
 
 Issuance: `POST /store/woodright/orders/:order_id/access` with `{ cart_id }` proving that cart completed into this order (query Medusa). Returns `{ token, expires_at, track_path }` **once** per successful mint (re-mint rotates hash).
 
-Retrieval: `Authorization: Bearer <token>` preferred; `?token=` accepted once then client should drop from URL (document). Validation: constant-time hash compare, expiry, not revoked → else **404**.
+Retrieval: `Authorization: Bearer <token>` only (query `?token=` rejected). Track links use URL fragment `#token=` so proxies/SSR never see plaintext. Validation: constant-time hash compare, expiry, not revoked → else **404**.
 
 No HMAC-in-query as primary design.
 
