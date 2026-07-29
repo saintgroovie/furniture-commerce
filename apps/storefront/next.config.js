@@ -59,7 +59,7 @@ const nextConfig = {
   },
   /**
    * Defense-in-depth static headers for assets that skip middleware matcher.
-   * Dynamic CSP (nonce) lives in `src/middleware.ts`.
+   * Dynamic CSP (nonce) lives in `src/proxy.ts`.
    */
   async headers() {
     const base = [

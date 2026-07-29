@@ -24,30 +24,30 @@ assert.doesNotMatch(
   "ignoreBuildErrors must stay absent"
 )
 
-const middleware = read("src/middleware.ts")
-assert.match(middleware, /Content-Security-Policy/, "middleware must set CSP")
+const proxySrc = read("src/proxy.ts")
+assert.match(proxySrc, /Content-Security-Policy/, "proxy must set CSP")
 assert.match(
-  middleware,
+  proxySrc,
   /requestHeaders\.set\(\s*["']Content-Security-Policy["']/,
   "CSP must be set on the request for Next nonce discovery"
 )
-assert.match(middleware, /nonce-/, "CSP must use nonce")
-assert.doesNotMatch(middleware, /'unsafe-eval'/, "CSP must not allow unsafe-eval")
-assert.match(middleware, /Strict-Transport-Security/, "middleware must set HSTS on HTTPS")
-assert.match(middleware, /X-Content-Type-Options/, "middleware must set nosniff")
-assert.match(middleware, /frame-ancestors 'none'/, "CSP frame-ancestors none")
-assert.match(middleware, /X-Robots-Tag/, "middleware must set X-Robots-Tag under noindex policy")
+assert.match(proxySrc, /nonce-/, "CSP must use nonce")
+assert.doesNotMatch(proxySrc, /'unsafe-eval'/, "CSP must not allow unsafe-eval")
+assert.match(proxySrc, /Strict-Transport-Security/, "proxy must set HSTS on HTTPS")
+assert.match(proxySrc, /X-Content-Type-Options/, "proxy must set nosniff")
+assert.match(proxySrc, /frame-ancestors 'none'/, "CSP frame-ancestors none")
+assert.match(proxySrc, /X-Robots-Tag/, "proxy must set X-Robots-Tag under noindex policy")
 assert.match(
-  middleware,
+  proxySrc,
   /storefrontRuntimeIdentityHeaders/,
-  "middleware must attach runtime identity headers"
+  "proxy must attach runtime identity headers"
 )
 const identityLib = read("src/lib/runtime-identity-headers.ts")
 assert.match(identityLib, /WOODRIGHT_DATABASE_IDENTITY/)
 assert.match(identityLib, /x-woodright-database-identity/)
 assert.doesNotMatch(identityLib, /NEXT_PUBLIC_WOODRIGHT/)
 assert.doesNotMatch(
-  middleware,
+  proxySrc,
   /fullscreen=\(\)/,
   "do not disable fullscreen (PDP gallery)"
 )

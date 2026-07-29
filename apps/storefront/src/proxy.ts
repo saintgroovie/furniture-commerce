@@ -67,7 +67,7 @@ function applySecurityHeaders(
   return response
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64")
 
   const csp = [
@@ -103,7 +103,7 @@ export function middleware(request: NextRequest) {
   }
 
   const requestHeaders = new Headers(request.headers)
-  // Next 14 reads CSP from the *request* to stamp nonce on bootstrap scripts.
+  // Next reads CSP from the *request* to stamp nonce on bootstrap scripts.
   requestHeaders.set("Content-Security-Policy", csp)
   requestHeaders.set("x-nonce", nonce)
 
