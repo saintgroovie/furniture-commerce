@@ -105,11 +105,16 @@ function mmToCmLabel(mm: number): string {
 
 const BADGE_LABELS = productTypeBadgeLabels
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}): Promise<Metadata> {
+  const { id } = await params
   const base = getSiteUrl()
-  const selfCanonical = indexingCanonical(`${base}/product/${params.id}`)
+  const selfCanonical = indexingCanonical(`${base}/product/${id}`)
   try {
-    const res = await getProduct(params.id)
+    const res = await getProduct(id)
     const product = res.product as Record<string, unknown> | undefined
     if (!product) {
       return { title: "Товар", ...(selfCanonical ? { alternates: selfCanonical } : {}) }
@@ -123,7 +128,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       openGraph: {
         title,
         description: desc,
-        url: `/product/${params.id}`,
+        url: `/product/${id}`,
         ...(imageUrl && { images: [imageUrl] }),
       },
       ...(selfCanonical ? { alternates: selfCanonical } : {}),
@@ -137,12 +142,14 @@ export default async function ProductPage({
   params,
   searchParams,
 }: {
-  params: { id: string }
-  searchParams?: Record<string, string | string[] | undefined>
+  params: Promise<{ id: string }>
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
 }) {
+  const { id } = await params
+  const resolvedSearchParams = searchParams ? await searchParams : undefined
   let product: Record<string, unknown> | null = null
   try {
-    const res = await getProduct(params.id)
+    const res = await getProduct(id)
     product = res.product ?? null
   } catch (e) {
     if (e instanceof Error && e.message === NOT_FOUND) {
@@ -178,7 +185,7 @@ export default async function ProductPage({
 
   const base = getSiteUrl()
   const handle = String(product.handle ?? "")
-  const motifRaw = searchParams?.motif
+  const motifRaw = resolvedSearchParams?.motif
   const motifQuery =
     typeof motifRaw === "string"
       ? motifRaw.trim()
@@ -448,7 +455,7 @@ export default async function ProductPage({
     "@type": "Product",
     name: (product.title as string) ?? "Товар",
     description: description ?? undefined,
-    url: `${base}/product/${params.id}`,
+    url: `${base}/product/${id}`,
     ...(mainImage && { image: mainImage }),
   }
 
