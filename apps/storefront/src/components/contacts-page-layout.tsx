@@ -75,7 +75,11 @@ export function ContactsPageLayout() {
             </h2>
           </header>
           <div className="contacts-page-row contacts-page-row--primary">
-            <ContactActionGrid density="page" className="contacts-page-action-grid">
+            <ContactActionGrid
+              density="page"
+              layout="stack"
+              className="contacts-page-action-grid contacts-page-phone-stack"
+            >
               <ContactPhoneAction
                 label={showroomContacts.freeCall.label}
                 display={showroomContacts.freeCall.display}

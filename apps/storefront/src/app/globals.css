@@ -1055,8 +1055,8 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   width: 100%;
   max-width: 100%;
   margin: 0;
-  border: 1px solid color-mix(in srgb, var(--color-border) 68%, transparent);
-  background: color-mix(in srgb, var(--color-surface) 48%, var(--color-bg));
+  border: 1px solid color-mix(in srgb, var(--color-border) 52%, transparent);
+  background: color-mix(in srgb, var(--color-surface) 38%, var(--color-bg));
   color: var(--color-fg);
   text-align: left;
   text-decoration: none;
@@ -1065,12 +1065,13 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   cursor: pointer;
   appearance: none;
   -webkit-appearance: none;
+  box-shadow: none;
   transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
 }
 
 .contact-action:hover {
-  background: color-mix(in srgb, var(--color-surface) 68%, var(--color-bg));
-  border-color: color-mix(in srgb, var(--color-border) 88%, var(--color-fg-muted));
+  background: color-mix(in srgb, var(--color-surface) 58%, var(--color-bg));
+  border-color: color-mix(in srgb, var(--color-border) 72%, var(--color-fg-muted));
   text-decoration: none;
 }
 
@@ -1246,32 +1247,32 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 }
 
 .contact-action--density-page {
-  min-height: 4.125rem; /* 66px - shared phone/map pair contract */
-  padding: 0.8125rem 0.9375rem; /* 13×15 */
+  min-height: 4rem; /* 64px - shared secondary showroom/messenger contract */
+  padding: 0.75rem 0.9375rem; /* 12×15 */
   border-radius: 9px;
   font-size: 0.9375rem;
-  gap: 0.6875rem; /* 11px */
+  gap: 0.625rem; /* 10px */
 }
 
 .contact-action--density-page.contact-action--map {
-  min-height: 4.125rem; /* same geometry as paired phone */
+  min-height: 4rem;
 }
 
 .contact-action--density-page.contact-action--channel {
-  min-height: 3.875rem; /* 62px - fits two-line channel copy without clipping */
-  padding: 0.625rem 0.75rem; /* 10×12 */
-  gap: 0.5rem; /* 8px */
+  min-height: 4rem; /* equal messenger trio, one-line values */
+  padding: 0.6875rem 0.875rem; /* 11×14 */
+  gap: 0.5625rem; /* 9px */
   align-items: center;
 }
 
 .contact-action--density-page .contact-action-icon:not(.contact-action-icon--bubble) {
-  width: 1.125rem;
-  height: 1.125rem;
+  width: 1.0625rem;
+  height: 1.0625rem;
 }
 
 .contact-action--density-page .contact-action-icon:not(.contact-action-icon--bubble) svg {
-  width: 18px;
-  height: 18px;
+  width: 17px;
+  height: 17px;
 }
 
 .contact-action--density-page.contact-action--channel .contact-action-icon:not(.contact-action-icon--bubble) svg {
@@ -1280,8 +1281,8 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 }
 
 .contact-action--density-page .contact-action-kicker {
-  font-size: 0.8125rem; /* 13px */
-  line-height: 1.3;
+  font-size: 0.75rem; /* 12px */
+  line-height: 1.25;
 }
 
 .contact-action--density-page.contact-action--channel .contact-action-kicker {
@@ -1290,20 +1291,50 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 }
 
 .contact-action--density-page .contact-action-value {
-  font-size: 1.0625rem; /* 17px */
-  line-height: 1.2;
+  font-size: 1rem; /* 16px */
+  line-height: 1.15;
 }
 
 .contact-action--density-page.contact-action--channel .contact-action-value {
-  font-size: 0.875rem; /* 14px */
+  font-size: 0.9375rem; /* 15px */
   line-height: 1.2;
-  white-space: normal;
-  overflow-wrap: break-word;
+  white-space: nowrap;
+}
+
+.contact-action--density-page .contact-action-copy {
+  gap: 0.1875rem; /* 3px */
 }
 
 .contact-action--density-page .contact-action-line {
   font-size: 1rem; /* 16px */
   line-height: 1.25;
+}
+
+/* Compact vertical phone stack (right primary column only). */
+.contacts-page-phone-stack.contact-action-grid--stack .contact-action--density-page {
+  min-height: 3.125rem; /* 50px */
+  padding: 0.5625rem 0.875rem; /* 9×14 */
+  gap: 0.625rem; /* 10px */
+  border-radius: 8px;
+}
+
+.contacts-page-phone-stack.contact-action-grid--stack .contact-action--density-page .contact-action-kicker {
+  font-size: 0.6875rem; /* 11px */
+  line-height: 1.25;
+}
+
+.contacts-page-phone-stack.contact-action-grid--stack .contact-action--density-page .contact-action-value {
+  font-size: 1rem; /* 16px */
+  line-height: 1.15;
+}
+
+.contacts-page-phone-stack.contact-action-grid--stack .contact-action--density-page .contact-action-copy {
+  gap: 0.125rem; /* 2px */
+}
+
+.contacts-page-phone-stack.contact-action-grid--stack .contact-action--density-page .contact-action-icon:not(.contact-action-icon--bubble) svg {
+  width: 16px;
+  height: 16px;
 }
 
 .contact-action--copied {
@@ -1404,8 +1435,15 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   align-items: stretch;
 }
 
+.contact-action-grid--stack {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.5625rem; /* 9px - compact vertical phone stack */
+  align-items: stretch;
+}
+
 .contact-action-grid--channels {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6875rem; /* 11px */
 }
 
 .contact-action-grid-item {
@@ -1426,27 +1464,6 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 
 .contacts-page .contacts-page-action-grid {
   margin-top: 0;
-}
-
-@media (max-width: 1024px) {
-  /* Keep messenger trio equal; only stack phone pairs if they feel tight. */
-  .contacts-page .contact-action-grid--pair {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 900px) {
-  .contacts-page .contact-action-grid--pair {
-    grid-template-columns: 1fr;
-  }
-
-  .contacts-page .contact-action-grid--channels {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .contacts-page .contact-action-grid--channels .contact-action-grid-item:last-child {
-    grid-column: 1 / -1;
-  }
 }
 
 /* Dropdown showroom: stack call + map so trailing bubbles stay compact. */
@@ -1534,7 +1551,7 @@ main:has(.contacts-page) {
   Divider sits on the stage midpoint (center of the gutter).
 */
 .contacts-page-stage {
-  --contacts-stage-row-gap: 1.75rem; /* 28px shared between logical rows */
+  --contacts-stage-row-gap: 1.875rem; /* 30px shared primary → secondary */
   grid-column: 1 / -1;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -1631,11 +1648,11 @@ main:has(.contacts-page) {
 .contacts-page-address {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem; /* 8px */
+  gap: 0.4375rem; /* 7px */
   margin: 0;
-  font-size: 1.0625rem; /* 17px */
+  font-size: 0.975rem; /* ~15.6px */
   font-style: normal;
-  line-height: 1.5;
+  line-height: 1.42;
   color: var(--color-fg-secondary);
 }
 
@@ -1730,21 +1747,8 @@ main:has(.contacts-page).page-section {
   .contacts-page-col-title {
     font-size: 1.5rem; /* 24px - keep H2 pair balanced when left title wraps */
   }
-}
 
-@media (max-width: 1024px) {
-  .contacts-page {
-    --contacts-page-gap: 1.5rem; /* 24px */
-    --contacts-center-gutter: clamp(4.5rem, 7vw, 5.25rem); /* keep ≥36px air each side */
-  }
-
-  .contacts-page-cta {
-    grid-template-columns: minmax(0, 1fr) auto;
-    column-gap: clamp(1.5rem, 2.5vw, 2rem);
-  }
-}
-
-@media (max-width: 900px) {
+  /* One column before dual grids get cramped (~1080–1120). */
   .contacts-page {
     display: flex;
     flex-direction: column;
@@ -1768,6 +1772,7 @@ main:has(.contacts-page).page-section {
     flex-direction: column;
     margin-top: 2.75rem;
     row-gap: 0;
+    column-gap: 0;
   }
 
   .contacts-page-stage::before,
@@ -1779,6 +1784,7 @@ main:has(.contacts-page).page-section {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+    grid-column: auto;
     grid-row: auto;
   }
 
@@ -1791,13 +1797,17 @@ main:has(.contacts-page).page-section {
     margin-top: 2.25rem;
   }
 
+  .contacts-page .contact-action-grid--pair {
+    grid-template-columns: 1fr;
+  }
+
   .contacts-page-cta {
     display: flex;
     flex-direction: column;
     align-items: stretch;
     gap: 1.625rem; /* 26px */
     margin-top: 3rem;
-    padding: 1.5rem; /* 24px card inset on mobile */
+    padding: 1.5rem; /* 24px card inset */
   }
 
   .contacts-page-cta-copy,
@@ -1828,6 +1838,23 @@ main:has(.contacts-page).page-section {
     min-height: 2.875rem; /* 46px */
     height: auto;
     justify-content: center;
+  }
+}
+
+@media (max-width: 1024px) {
+  .contacts-page {
+    --contacts-page-gap: 1.5rem; /* 24px */
+    --contacts-center-gutter: clamp(4.5rem, 7vw, 5.25rem);
+  }
+}
+
+@media (max-width: 900px) {
+  .contacts-page .contact-action-grid--channels {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .contacts-page .contact-action-grid--channels .contact-action-grid-item--max {
+    grid-column: 1 / -1;
   }
 }
 

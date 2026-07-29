@@ -767,9 +767,10 @@ export const contactsCopy = {
   /** Shared value for Telegram / WhatsApp page tiles. */
   messengerWriteValue: "Написать",
   maxLabel: "MAX",
-  maxCopyValue: "Скопировать номер",
-  maxCopiedValue: "Номер скопирован",
-  maxCopyError: "Не удалось скопировать номер",
+  /** Page MAX visible value - short so messenger trio stays one-line equal. */
+  maxCopyValue: "Скопировать",
+  maxCopiedValue: "Скопировано",
+  maxCopyError: "Ошибка копирования",
   maxDropdownIdle: "MAX",
   maxDropdownCopied: "Скопировано",
   maxDropdownHelper: "MAX - нажмите, чтобы скопировать номер",

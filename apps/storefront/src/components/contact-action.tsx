@@ -262,19 +262,23 @@ export function ContactMapAction({
   )
 }
 
-/** Equal two-column action grid shared by showroom + contacts page columns. */
+export type ContactActionGridLayout = "pair" | "stack"
+
+/** Shared action grid: horizontal pair or vertical stack (page contacts phones). */
 export function ContactActionGrid({
   density = "page",
+  layout = "pair",
   children,
   className = "",
 }: {
   density?: ContactActionDensity
+  layout?: ContactActionGridLayout
   children: ReactNode
   className?: string
 }) {
   return (
     <div
-      className={`contact-action-grid contact-action-grid--pair contact-action-grid--${density} ${className}`.trim()}
+      className={`contact-action-grid contact-action-grid--${layout} contact-action-grid--${density} ${className}`.trim()}
     >
       {children}
     </div>
