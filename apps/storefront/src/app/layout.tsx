@@ -133,6 +133,7 @@ export default function RootLayout({
           <div className="header-main">
             <div className="container header-main-inner">
               <nav className="header-nav" aria-label="Основная навигация">
+                {/* Canonical IA: Каталог → Комнаты → Детская → По проекту → О бренде */}
                 <NavDropdown
                   href="/catalog"
                   label={navCopy.catalog}
@@ -142,6 +143,8 @@ export default function RootLayout({
                     { label: "С выбором исполнения", href: "/catalog?product_type=CONFIGURABLE" },
                   ]}
                 />
+
+                <Link href="/rooms" className="header-nav-link">{navCopy.rooms}</Link>
 
                 <NavDropdown
                   href="/kids"
@@ -154,8 +157,6 @@ export default function RootLayout({
                     { label: "О разделе", href: "/kids" },
                   ]}
                 />
-
-                <Link href="/rooms" className="header-nav-link">{navCopy.rooms}</Link>
 
                 <NavDropdown
                   href="/bespoke"

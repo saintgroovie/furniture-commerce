@@ -84,9 +84,14 @@ function itemArticle(item: Record<string, unknown>): string | null {
   return typeof sku === "string" && sku.trim() ? sku.trim() : null
 }
 
-export function CartSummary() {
+type CartSummaryProps = {
+  /** Server-known empty vs loading: avoids SSR «Загружаем корзину…» with no cookie. */
+  initialViewState?: Extract<CartViewState, "loading" | "empty">
+}
+
+export function CartSummary({ initialViewState = "loading" }: CartSummaryProps) {
   const [cart, setCart] = useState<Record<string, unknown> | null>(null)
-  const [viewState, setViewState] = useState<CartViewState>("loading")
+  const [viewState, setViewState] = useState<CartViewState>(initialViewState)
   const [mutating, setMutating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -97,6 +102,8 @@ export function CartSummary() {
       setViewState("empty")
       return
     }
+    /* Cookie present but SSR started as empty (stale prop) — show loading. */
+    setViewState((prev) => (prev === "empty" ? "loading" : prev))
 
     let cancelled = false
     getCart(cartId)
