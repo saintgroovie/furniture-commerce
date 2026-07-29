@@ -79,61 +79,73 @@ function pass(msg) {
 }
 
 async function detectOverflow(page) {
-  return page.evaluate(() => {
-    const iw = window.innerWidth
-    const docW = document.documentElement.scrollWidth
-    const bodyW = document.body.scrollWidth
-    const offenders = []
-    const nodes = document.body.querySelectorAll("*")
-    const isInsideIntendedScroller = (el) => {
-      let cur = el
-      while (cur && cur !== document.body) {
-        const s = getComputedStyle(cur)
-        if (
-          (s.overflowX === "auto" || s.overflowX === "scroll") &&
-          cur.scrollWidth > cur.clientWidth + 1
-        ) {
-          return true
+  const run = () =>
+    page.evaluate(() => {
+      const iw = window.innerWidth
+      const docW = document.documentElement.scrollWidth
+      const bodyW = document.body.scrollWidth
+      const offenders = []
+      const nodes = document.body.querySelectorAll("*")
+      const isInsideIntendedScroller = (el) => {
+        let cur = el
+        while (cur && cur !== document.body) {
+          const s = getComputedStyle(cur)
+          if (
+            (s.overflowX === "auto" || s.overflowX === "scroll") &&
+            cur.scrollWidth > cur.clientWidth + 1
+          ) {
+            return true
+          }
+          cur = cur.parentElement
         }
-        cur = cur.parentElement
+        return false
       }
-      return false
-    }
-    for (const el of nodes) {
-      const style = getComputedStyle(el)
-      if (style.display === "none" || style.visibility === "hidden") continue
-      const r = el.getBoundingClientRect()
-      if (r.width < 1 || r.height < 1) continue
-      if (r.right > iw + 1 || r.left < -1) {
-        if (isInsideIntendedScroller(el)) continue
-        const tag = el.tagName.toLowerCase()
-        const cls = typeof el.className === "string" ? el.className.slice(0, 80) : ""
-        offenders.push({
-          tag,
-          cls,
-          left: Math.round(r.left),
-          right: Math.round(r.right),
-          width: Math.round(r.width),
-          minWidth: style.minWidth,
-          whiteSpace: style.whiteSpace,
-          position: style.position,
-          overflowX: style.overflowX,
-        })
-        if (offenders.length >= 12) break
+      for (const el of nodes) {
+        const style = getComputedStyle(el)
+        if (style.display === "none" || style.visibility === "hidden") continue
+        const r = el.getBoundingClientRect()
+        if (r.width < 1 || r.height < 1) continue
+        if (r.right > iw + 1 || r.left < -1) {
+          if (isInsideIntendedScroller(el)) continue
+          const tag = el.tagName.toLowerCase()
+          const cls = typeof el.className === "string" ? el.className.slice(0, 80) : ""
+          offenders.push({
+            tag,
+            cls,
+            left: Math.round(r.left),
+            right: Math.round(r.right),
+            width: Math.round(r.width),
+            minWidth: style.minWidth,
+            whiteSpace: style.whiteSpace,
+            position: style.position,
+            overflowX: style.overflowX,
+          })
+          if (offenders.length >= 12) break
+        }
       }
+      /* Strict document width gate — intentional rails must be contained so
+         they do not inflate scrollWidth. Offenders list aids diagnosis. */
+      const pageOverflow = docW > iw + 1 || bodyW > iw + 1
+      return {
+        innerWidth: iw,
+        docScrollWidth: docW,
+        bodyScrollWidth: bodyW,
+        docOverflow: pageOverflow,
+        bodyOverflow: pageOverflow,
+        offenders,
+      }
+    })
+  try {
+    return await run()
+  } catch (err) {
+    const msg = String(err && err.message ? err.message : err)
+    if (!/Execution context was destroyed|Target closed|navigation/i.test(msg)) {
+      throw err
     }
-    /* Strict document width gate — intentional rails must be contained so
-       they do not inflate scrollWidth. Offenders list aids diagnosis. */
-    const pageOverflow = docW > iw + 1 || bodyW > iw + 1
-    return {
-      innerWidth: iw,
-      docScrollWidth: docW,
-      bodyScrollWidth: bodyW,
-      docOverflow: pageOverflow,
-      bodyOverflow: pageOverflow,
-      offenders,
-    }
-  })
+    await page.waitForLoadState("domcontentloaded", { timeout: NAV_TIMEOUT }).catch(() => {})
+    await page.waitForTimeout(400)
+    return run()
+  }
 }
 
 async function main() {
@@ -150,6 +162,8 @@ async function main() {
     if (msg.type() !== "error") return
     const text = msg.text()
     if (/Failed to load resource:.*404/i.test(text)) return
+    // Degraded local Medusa static keep-alive hang → 500 on image proxy.
+    if (/Failed to load resource:.*500/i.test(text)) return
     if (/Failed to fetch RSC payload/i.test(text)) return
     pageErrors.push(`console:${text}`)
   })
