@@ -2,7 +2,7 @@
   "name": "storefront",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "yarn@4.6.0",
+  "packageManager": "yarn@4.17.1",
   "scripts": {
     "dev": "NEXT_DIST_DIR=.next-dev next dev --port 3002",
     "build": "NEXT_DIST_DIR=.next-build next build",
