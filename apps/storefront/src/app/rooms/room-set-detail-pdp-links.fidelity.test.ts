@@ -19,6 +19,8 @@ assert.match(page, /product\?\.handle/)
 assert.match(page, /room-set-item-link/)
 assert.match(page, /data-product-handle/)
 assert.match(page, /roomSetDetail\.openProduct/)
+assert.match(page, /aria-label=\{roomSetProductLinkAriaLabel\(title\)\}/)
+assert.match(page, /alt=\{roomSetProductThumbAlt\(title\)\}/)
 assert.match(copy, /openProduct:\s*"Открыть товар"/)
 
 // Must not invent handles from SKU/title/slug/id
