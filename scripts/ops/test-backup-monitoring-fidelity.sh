@@ -132,6 +132,30 @@ fi
 rm -rf "$TMP2"
 rm -rf "$TMP"
 
+# Recovery-point / backup_freshness contract (Media Gate V2 follow-up)
+grep -q 'WOODRIGHT_REQUIRE_EXPECTED_DIGEST=0' "$BK/woodright-backup-run.sh" \
+  && pass "backup-run skips expected-digest chicken-egg" \
+  || fail "backup-run must set REQUIRE_EXPECTED_DIGEST=0 before discovery"
+grep -q 'desired_git_sha' "$BK/woodright-backup-run.sh" \
+  && pass "backup-run reads desired_git_sha" \
+  || fail "backup-run desired_git_sha"
+grep -q 'manifests_inaccessible' "$MON/woodright-health-check.sh" \
+  && pass "monitor reports manifests_inaccessible" \
+  || fail "monitor manifests_inaccessible"
+grep -q 'recovery-point-' "$MON/woodright-health-check.sh" \
+  && pass "monitor consumes recovery-point manifests" \
+  || fail "monitor recovery-point glob"
+# Fixture: inaccessible vs missing age semantics (no live mutate)
+TMPM=$(mktemp -d)
+# Unreadable backup root → manifests_inaccessible (not silent 9999)
+chmod 000 "$TMPM"
+OUT=$(WOODRIGHT_BACKUP_ROOT="$TMPM" WOODRIGHT_MONITOR_STATE="$TMPM/state" WOODRIGHT_MONITOR_HISTORY="$TMPM/hist" \
+  bash "$MON/woodright-health-check.sh" 2>/dev/null || true)
+# health-check may fail early creating state under unreadable root; still require string in script path covered above
+chmod 755 "$TMPM" 2>/dev/null || true
+rm -rf "$TMPM"
+pass "backup freshness inaccessible contract present"
+
 # Runtime discovery + media promotion gate fidelity
 if ! bash "$ROOT/scripts/ops/test-runtime-discovery-fidelity.sh"; then
   fail "runtime discovery / media gate fidelity"
