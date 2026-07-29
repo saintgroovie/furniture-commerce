@@ -75,6 +75,7 @@ export function OrderTrackClient() {
         if (cancelled) return
         // Never echo raw token / auth material from failed responses.
         setError(flatCopy(copy.loadError))
+        setState("error")
         void e
       })
     return () => {
