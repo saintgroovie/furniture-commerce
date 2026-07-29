@@ -77,7 +77,11 @@ if [[ "$USAGE" -ge "$DISK_WARN_PCT" ]]; then
   log "WARN disk usage ${USAGE}% >= warn ${DISK_WARN_PCT}%"
 fi
 
-# Runtime identity (read-only) — discover public_demo pair fail-closed
+# Runtime identity (read-only) — discover public_demo pair fail-closed.
+# Backup records *live* digests into the recovery-point; it must not chicken-egg
+# on EXPECTED_RELEASE lagging a legitimate digest advance (DIGEST_MISMATCH).
+# Keep container health/owner/media checks; only skip expected-digest gate here.
+export WOODRIGHT_REQUIRE_EXPECTED_DIGEST=0
 SF_CONTAINER=""
 BE_CONTAINER=""
 if ! wr_discover_storefront_container >/dev/null; then
@@ -97,7 +101,7 @@ SF_REPO=$(docker inspect "$SF_CONTAINER" --format '{{range .RepoDigests}}{{print
 BE_REPO=$(docker inspect "$BE_CONTAINER" --format '{{range .RepoDigests}}{{println .}}{{end}}' 2>/dev/null | head -1 || true)
 GIT_SHA="unknown"
 if [[ -f "$ACTIVE_OWNER" ]]; then
-  GIT_SHA=$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("approved_git_sha") or d.get("git_sha") or "unknown")' "$ACTIVE_OWNER" 2>/dev/null || echo unknown)
+  GIT_SHA=$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("desired_git_sha") or d.get("approved_git_sha") or d.get("git_sha") or "unknown")' "$ACTIVE_OWNER" 2>/dev/null || echo unknown)
 fi
 OWNER_SHA=""
 [[ -f "$ACTIVE_OWNER" ]] && OWNER_SHA=$(sha256sum "$ACTIVE_OWNER" | awk '{print $1}')
