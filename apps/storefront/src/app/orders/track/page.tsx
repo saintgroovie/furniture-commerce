@@ -2,6 +2,9 @@ import { Suspense } from "react"
 import { OrderTrackClient } from "./order-track-client"
 import { orderTrackCopy } from "@/lib/woodright-copy"
 
+/** Guest track must never be statically cached or shared at the edge. */
+export const dynamic = "force-dynamic"
+
 export const metadata = {
   title: orderTrackCopy.title,
   robots: { index: false, follow: false },

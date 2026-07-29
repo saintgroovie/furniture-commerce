@@ -1,5 +1,5 @@
 /**
- * Source-contract fidelity: token must not enter HTML bootstrap path or API query.
+ * Source-contract fidelity: fragment handoff; no query token transport.
  * Run from apps/storefront:
  *   node --experimental-strip-types src/lib/order-track-token-leak.fidelity.test.ts
  */
@@ -27,17 +27,30 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "../..")
     join(root, "src/app/orders/track/order-track-client.tsx"),
     "utf8"
   )
-  assert.match(src, /ORDER_TRACK_HANDOFF_COOKIE/)
+  assert.match(src, /parseOrderTrackFragmentToken/)
   assert.match(src, /sessionStorage/)
+  assert.match(src, /history\.replaceState/)
   assert.doesNotMatch(src, /params\.get\(["']token["']\)/)
+  assert.doesNotMatch(src, /ORDER_TRACK_HANDOFF_COOKIE/)
   assert.doesNotMatch(src, /tokenFromQuery/)
 }
 
 {
   const src = readFileSync(join(root, "src/middleware.ts"), "utf8")
-  assert.match(src, /stripTokenFromOrderTrackSearch/)
-  assert.match(src, /ORDER_TRACK_HANDOFF_COOKIE/)
+  assert.match(src, /stripLegacyQueryTokenFromOrderTrackSearch/)
+  assert.doesNotMatch(src, /ORDER_TRACK_HANDOFF_COOKIE/)
+  assert.doesNotMatch(src, /encodeOrderTrackHandoff/)
   assert.match(src, /NextResponse\.redirect/)
+}
+
+{
+  const src = readFileSync(
+    join(root, "src/lib/order-track-token-handoff.ts"),
+    "utf8"
+  )
+  assert.match(src, /buildGuestOrderTrackPath/)
+  assert.match(src, /#token=/)
+  assert.doesNotMatch(src, /ORDER_TRACK_HANDOFF_COOKIE/)
 }
 
 console.log("order-track-token-leak.fidelity: ok")

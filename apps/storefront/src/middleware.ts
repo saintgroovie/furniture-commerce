@@ -5,11 +5,7 @@ import {
   X_ROBOTS_TAG_NOINDEX,
 } from "@/lib/indexing-policy"
 import { storefrontRuntimeIdentityHeaders } from "@/lib/runtime-identity-headers"
-import {
-  ORDER_TRACK_HANDOFF_COOKIE,
-  encodeOrderTrackHandoff,
-  stripTokenFromOrderTrackSearch,
-} from "@/lib/order-track-token-handoff"
+import { stripLegacyQueryTokenFromOrderTrackSearch } from "@/lib/order-track-token-handoff"
 
 /**
  * Buyer security headers + CSP with per-request nonce.
@@ -21,7 +17,8 @@ import {
  *
  * Demo/staging SEO: X-Robots-Tag noindex when indexing policy is fail-closed.
  *
- * Guest order track: strip `?token=` before HTML render (cookie handoff).
+ * Guest order track: primary token transport is URL fragment (client-only).
+ * Legacy `?token=` is stripped without handoff (Option A - not supported).
  */
 function applySecurityHeaders(
   request: NextRequest,
@@ -91,7 +88,10 @@ export function middleware(request: NextRequest) {
     "upgrade-insecure-requests",
   ].join("; ")
 
-  const strip = stripTokenFromOrderTrackSearch(
+  // Option A: never consume query tokens into cookies/session. Strip only so
+  // SSR/Flight cannot serialize them. First hop of a legacy bookmark may still
+  // hit upstream access logs - new mint links never use query tokens.
+  const strip = stripLegacyQueryTokenFromOrderTrackSearch(
     request.nextUrl.pathname,
     request.nextUrl.search
   )
@@ -99,22 +99,6 @@ export function middleware(request: NextRequest) {
     const dest = request.nextUrl.clone()
     dest.search = strip.nextSearch
     const redirect = NextResponse.redirect(dest, 307)
-    const proto =
-      request.headers.get("x-forwarded-proto") ||
-      request.nextUrl.protocol.replace(":", "")
-    // Only hand off when order_id is present so the cookie cannot be applied
-    // to a different track page in another tab.
-    if (strip.orderId) {
-      redirect.cookies.set({
-        name: ORDER_TRACK_HANDOFF_COOKIE,
-        value: encodeOrderTrackHandoff(strip.orderId, strip.token),
-        path: "/orders/track",
-        maxAge: 120,
-        sameSite: "lax",
-        secure: proto === "https",
-        httpOnly: false,
-      })
-    }
     return applySecurityHeaders(request, redirect, nonce, csp)
   }
 

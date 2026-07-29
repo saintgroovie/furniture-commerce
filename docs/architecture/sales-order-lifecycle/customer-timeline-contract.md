@@ -6,7 +6,7 @@ Current storefront has **no** account orders. Checkout shows inline success with
 
 ## MVP surfaces
 
-1. **Checkout success** — keep number; add deep link `/orders/track?order_id=…&token=…` when token issued.
+1. **Checkout success** - keep number; add deep link `/orders/track?order_id=…#token=…` when token issued (fragment only; never query).
 2. **Track page** `/orders/track` — guest-safe order progress (token required).
 3. Future account list — out of scope unless auth lands.
 

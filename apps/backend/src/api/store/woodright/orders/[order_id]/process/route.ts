@@ -14,9 +14,8 @@ import {
 } from "../../../../../../lib/woodright-order-process/guest-access-token"
 import type { ProcessEventRecord } from "../../../../../../lib/woodright-order-process/transition"
 
+/** Bearer only - never accept `?token=` (access logs / proxy URL leakage). */
 function extractToken(req: MedusaRequest): string | null {
-  const q = req.query.token
-  if (typeof q === "string" && q.trim()) return q.trim()
   const auth = req.headers.authorization
   if (typeof auth === "string" && auth.toLowerCase().startsWith("bearer ")) {
     const t = auth.slice(7).trim()

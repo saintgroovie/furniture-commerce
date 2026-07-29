@@ -10,33 +10,27 @@ import { orderTrackCopy as copy } from "@/lib/woodright-copy"
 import { CopyLines } from "@/components/copy-lines"
 import { flatCopy } from "@/lib/format-ru-copy"
 import {
-  ORDER_TRACK_HANDOFF_COOKIE,
-  decodeOrderTrackHandoff,
   orderTrackSessionKey,
+  parseOrderTrackFragmentToken,
 } from "@/lib/order-track-token-handoff"
 
 type LoadState = "loading" | "ready" | "missing" | "error"
 
-function readHandoffCookieForOrder(orderId: string): string {
-  if (typeof document === "undefined" || !orderId) return ""
-  const parts = document.cookie.split("; ")
-  for (const part of parts) {
-    const eq = part.indexOf("=")
-    if (eq < 0) continue
-    const name = part.slice(0, eq)
-    if (name !== ORDER_TRACK_HANDOFF_COOKIE) continue
-    const raw = part.slice(eq + 1)
-    const parsed = decodeOrderTrackHandoff(raw)
-    if (!parsed) return ""
-    if (parsed.orderId !== orderId) return ""
-    return parsed.token
+function clearSensitiveUrlParts(): void {
+  if (typeof window === "undefined") return
+  const url = new URL(window.location.href)
+  let changed = false
+  if (url.searchParams.has("token")) {
+    url.searchParams.delete("token")
+    changed = true
   }
-  return ""
-}
-
-function clearHandoffCookie(): void {
-  if (typeof document === "undefined") return
-  document.cookie = `${ORDER_TRACK_HANDOFF_COOKIE}=; Path=/orders/track; Max-Age=0; SameSite=Lax`
+  if (url.hash) {
+    url.hash = ""
+    changed = true
+  }
+  if (changed) {
+    window.history.replaceState({}, "", `${url.pathname}${url.search}`)
+  }
 }
 
 export function OrderTrackClient() {
@@ -51,11 +45,14 @@ export function OrderTrackClient() {
     let token = ""
     if (typeof window !== "undefined") {
       try {
-        token = readHandoffCookieForOrder(orderId)
-        if (token) clearHandoffCookie()
+        token = parseOrderTrackFragmentToken(window.location.hash) ?? ""
         if (!token && orderId) {
           token = sessionStorage.getItem(orderTrackSessionKey(orderId)) ?? ""
         }
+        if (token && orderId) {
+          sessionStorage.setItem(orderTrackSessionKey(orderId), token)
+        }
+        clearSensitiveUrlParts()
       } catch {
         token = ""
       }
@@ -64,20 +61,6 @@ export function OrderTrackClient() {
     if (!orderId || !token) {
       setState("missing")
       return
-    }
-
-    try {
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem(orderTrackSessionKey(orderId), token)
-        // Defense in depth if a token ever remains in the address bar.
-        const url = new URL(window.location.href)
-        if (url.searchParams.has("token")) {
-          url.searchParams.delete("token")
-          window.history.replaceState({}, "", url.toString())
-        }
-      }
-    } catch {
-      // ignore storage / history failures
     }
 
     let cancelled = false
@@ -90,8 +73,9 @@ export function OrderTrackClient() {
       })
       .catch((e: unknown) => {
         if (cancelled) return
-        setError(e instanceof Error ? e.message : flatCopy(copy.loadError))
-        setState("error")
+        // Never echo raw token / auth material from failed responses.
+        setError(flatCopy(copy.loadError))
+        void e
       })
     return () => {
       cancelled = true

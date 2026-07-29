@@ -3,7 +3,10 @@ import { Modules } from "@medusajs/framework/utils"
 import { createHash } from "node:crypto"
 import { ORDER_PROCESS_MODULE } from "../../../../../../modules/order-process"
 import type { OrderProcessServiceLike } from "../../../../../../lib/woodright-order-process/ensure-process"
-import { mintOrderAccessToken } from "../../../../../../lib/woodright-order-process/guest-access-token"
+import {
+  buildGuestOrderTrackPath,
+  mintOrderAccessToken,
+} from "../../../../../../lib/woodright-order-process/guest-access-token"
 
 function hashCartId(cartId: string): string {
   return createHash("sha256").update(cartId, "utf8").digest("hex")
@@ -130,6 +133,6 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     order_id: orderId,
     token: minted.token,
     expires_at: minted.expires_at.toISOString(),
-    track_path: `/orders/track?order_id=${encodeURIComponent(orderId)}&token=${encodeURIComponent(minted.token)}`,
+    track_path: buildGuestOrderTrackPath(orderId, minted.token),
   })
 }
