@@ -45,8 +45,9 @@ jobs:
         working-directory: .
         run: |
           corepack enable
-          corepack prepare yarn@4.6.0 --activate
+          corepack prepare yarn@4.17.1 --activate
           yarn --version
+          test "$(yarn --version)" = "4.17.1"
 
       - name: Install
         run: yarn install --immutable
@@ -108,8 +109,9 @@ jobs:
         working-directory: .
         run: |
           corepack enable
-          corepack prepare yarn@4.6.0 --activate
+          corepack prepare yarn@4.17.1 --activate
           yarn --version
+          test "$(yarn --version)" = "4.17.1"
       - name: Install
         run: yarn install --immutable
       - name: Run classification/cart/catalog fidelity
