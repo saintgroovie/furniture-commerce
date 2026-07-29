@@ -16,6 +16,7 @@ import {
 } from "./fake-notifications"
 import {
   hashOrderAccessToken,
+  buildGuestOrderTrackPath,
   mintOrderAccessToken,
   tokensMatch,
 } from "./guest-access-token"
@@ -269,6 +270,12 @@ function baseProcess(
   assert.equal(minted.token_hash, hashOrderAccessToken(minted.token))
   assert.equal(tokensMatch(minted.token, minted.token_hash), true)
   assert.equal(tokensMatch("wrong-token", minted.token_hash), false)
+  const track = buildGuestOrderTrackPath("order_01TEST", minted.token)
+  assert.ok(track.includes("#token="))
+  assert.equal(track.includes("?token="), false)
+  assert.equal(track.includes("&token="), false)
+  const httpTarget = track.split("#")[0]
+  assert.equal(httpTarget.includes("token"), false)
 }
 
 // --- store event strips internal_note ---

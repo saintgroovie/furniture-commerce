@@ -1,9 +1,20 @@
 #!/usr/bin/env bash
-# Fail-closed pre-promote gate: refuse backend promotion without durable media mount.
-# Read-only. Never repairs mounts, never updates ACTIVE_OWNER / EXPECTED_RELEASE.
+# Fail-closed media promotion gate (v2).
+# Read-only w.r.t. manifests and buyer runtime. Never updates ACTIVE_OWNER / EXPECTED_RELEASE.
+#
+# Modes:
+#   --mode post-promote (default)
+#     Validate an exact live backend container + media mount.
+#     Digest may be pinned via --expected-digest / --target-sha (digest-advance safe),
+#     otherwise falls back to EXPECTED_RELEASE.json (stable no-op path).
+#   --mode pre-promote
+#     Validate target immutable image + media volume BEFORE live cutover.
+#     Does NOT require target digest to be running or listed in EXPECTED_RELEASE.
+#     Does NOT mutate Docker/live containers (optional RO volume probe only).
 #
 # Usage:
-#   ops/release/verify-backend-media-mount.sh [--container NAME]
+#   ops/release/verify-backend-media-mount.sh [--mode post-promote] [--container NAME]
+#   ops/release/verify-backend-media-mount.sh --mode pre-promote --target-image repo@sha256:…
 #   ops/release/verify-backend-media-mount.sh --compose-only [--compose-file PATH]
 #   ops/release/verify-backend-media-mount.sh --fixture-dir DIR
 #
@@ -25,6 +36,12 @@ REQUIRE_RW=1
 COMPOSE_ONLY=0
 FIXTURE_DIR=""
 CONTAINER_ARG=""
+MODE="post-promote"
+TARGET_IMAGE=""
+TARGET_SHA=""
+EXPECTED_DIGEST=""
+WRITE_EVIDENCE=""
+SKIP_VOLUME_PROBE=0
 
 fail_json() {
   local code="$1" msg="$2"
@@ -38,13 +55,21 @@ ok_json() {
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --mode) MODE="$2"; shift 2 ;;
     --container) CONTAINER_ARG="$2"; shift 2 ;;
     --compose-file) COMPOSE_FILE="$2"; shift 2 ;;
     --compose-only) COMPOSE_ONLY=1; shift ;;
     --fixture-dir) FIXTURE_DIR="$2"; shift 2 ;;
     --buyer-host) BUYER_HOST="$2"; shift 2 ;;
+    --target-image) TARGET_IMAGE="$2"; shift 2 ;;
+    --target-sha) TARGET_SHA="$2"; shift 2 ;;
+    --expected-digest|--target-digest) EXPECTED_DIGEST="$2"; shift 2 ;;
+    --media-volume) MEDIA_VOLUME="$2"; WOODRIGHT_MEDIA_VOLUME="$2"; shift 2 ;;
+    --mount-destination) MEDIA_DEST="$2"; WOODRIGHT_MEDIA_MOUNT_IN_BE="$2"; shift 2 ;;
+    --write-evidence) WRITE_EVIDENCE="$2"; shift 2 ;;
+    --skip-volume-probe) SKIP_VOLUME_PROBE=1; shift ;;
     -h|--help)
-      sed -n '1,20p' "$0"
+      sed -n '1,40p' "$0"
       exit 0
       ;;
     *) fail_json INVALID_ARG "unknown arg $1" ;;
@@ -55,13 +80,215 @@ assert_compose_declares_media() {
   local text
   [[ -f "$COMPOSE_FILE" ]] || fail_json COMPOSE_MISSING "compose not found: $COMPOSE_FILE"
   text=$(cat "$COMPOSE_FILE")
-  # backend service must map volume to /server/static
   echo "$text" | grep -q 'woodright_staging_media:/server/static' \
     || fail_json COMPOSE_MOUNT_MISSING "compose missing woodright_staging_media:/server/static"
   echo "$text" | grep -q 'name: woodright-stack-3dsdhd_woodright_staging_media' \
     || fail_json COMPOSE_VOLUME_NAME "compose missing external volume full name"
   echo "$text" | grep -A2 'woodright_staging_media:' | grep -q 'external: true' \
     || fail_json COMPOSE_EXTERNAL "media volume must be external: true"
+}
+
+assert_immutable_digest_ref() {
+  local ref="$1"
+  [[ "$ref" == *@sha256:* ]] || fail_json TARGET_NOT_IMMUTABLE "target image must be repo@sha256:<64hex> (got mutable/tag-only)"
+  local dig="${ref##*@}"
+  [[ "$dig" =~ ^sha256:[0-9a-f]{64}$ ]] || fail_json TARGET_NOT_IMMUTABLE "bad digest in image ref"
+}
+
+probe_volume_content_ro() {
+  local vol="$1"
+  local out
+  out=$(docker run --rm \
+    --network none \
+    -v "${vol}:/m:ro" \
+    alpine:3.20 \
+    sh -c 'files=$(find /m -type f 2>/dev/null | wc -l | tr -d " "); bytes=$(du -sb /m 2>/dev/null | cut -f1); jpeg=$(find /m -type f \( -iname "*.jpg" -o -iname "*.jpeg" \) 2>/dev/null | head -1); webp=$(find /m -type f -iname "*.webp" 2>/dev/null | head -1); printf "files=%s\nbytes=%s\njpeg=%s\nwebp=%s\n" "$files" "${bytes:-0}" "$jpeg" "$webp"' \
+    2>/dev/null) || fail_json VOLUME_PROBE_FAIL "cannot probe volume $vol"
+  local files bytes jpeg webp
+  files=$(printf '%s\n' "$out" | sed -n 's/^files=//p' | head -1)
+  bytes=$(printf '%s\n' "$out" | sed -n 's/^bytes=//p' | head -1)
+  jpeg=$(printf '%s\n' "$out" | sed -n 's/^jpeg=//p' | head -1)
+  webp=$(printf '%s\n' "$out" | sed -n 's/^webp=//p' | head -1)
+  [[ "$files" =~ ^[0-9]+$ ]] || fail_json EMPTY_MEDIA "files_unreadable"
+  [[ "$bytes" =~ ^[0-9]+$ ]] || fail_json EMPTY_MEDIA "bytes_unreadable"
+  [[ "$files" -ge "$MIN_FILES" ]] || fail_json EMPTY_MEDIA "files=$files"
+  [[ "$bytes" -ge "$MIN_BYTES" ]] || fail_json EMPTY_MEDIA "bytes=$bytes"
+  [[ -n "$jpeg" ]] || fail_json MISSING_REPRESENTATIVE "jpeg"
+  [[ -n "$webp" ]] || fail_json MISSING_REPRESENTATIVE "webp"
+  printf '%s %s' "$files" "$bytes"
+}
+
+run_pre_promote() {
+  assert_compose_declares_media
+  [[ -n "$TARGET_IMAGE" ]] || fail_json TARGET_IMAGE_REQUIRED "pre-promote requires --target-image repo@sha256:…"
+  assert_immutable_digest_ref "$TARGET_IMAGE"
+  local dig="${TARGET_IMAGE##*@}"
+  if [[ -n "$EXPECTED_DIGEST" && "$EXPECTED_DIGEST" != "$dig" ]]; then
+    fail_json TARGET_DIGEST_MISMATCH "target-image digest != --expected-digest"
+  fi
+  EXPECTED_DIGEST="$dig"
+  if [[ -n "$TARGET_SHA" && ! "$TARGET_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+    fail_json TARGET_SHA_INVALID "target-sha must be 40 hex"
+  fi
+
+  # Image must be inspectable (local cache or previously pulled).
+  if ! docker image inspect "$TARGET_IMAGE" >/dev/null 2>&1 \
+    && ! docker image inspect "$EXPECTED_DIGEST" >/dev/null 2>&1; then
+    fail_json TARGET_IMAGE_UNAVAILABLE "image not local: $TARGET_IMAGE"
+  fi
+  local oci_rev=""
+  oci_rev=$(docker image inspect "$TARGET_IMAGE" --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' 2>/dev/null \
+    || docker image inspect "$EXPECTED_DIGEST" --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' 2>/dev/null \
+    || true)
+  if [[ -n "$TARGET_SHA" ]]; then
+    [[ "$oci_rev" == "$TARGET_SHA" ]] || fail_json OCI_REV_MISMATCH "image revision=${oci_rev:-empty} want=$TARGET_SHA"
+  fi
+  local oci_title=""
+  oci_title=$(docker image inspect "$TARGET_IMAGE" --format '{{index .Config.Labels "org.opencontainers.image.title"}}' 2>/dev/null \
+    || docker image inspect "$EXPECTED_DIGEST" --format '{{index .Config.Labels "org.opencontainers.image.title"}}' 2>/dev/null \
+    || true)
+  if [[ -n "$oci_title" && "$oci_title" != "woodright-backend" ]]; then
+    fail_json OCI_TITLE_MISMATCH "title=$oci_title"
+  fi
+
+  docker volume inspect "$MEDIA_VOLUME" >/dev/null 2>&1 \
+    || fail_json MEDIA_VOLUME_MISSING "volume missing: $MEDIA_VOLUME"
+  [[ "$MEDIA_DEST" == "/server/static" ]] || fail_json MOUNT_DEST_INVALID "planned dest must be /server/static (got $MEDIA_DEST)"
+
+  local files=0 bytes=0
+  if [[ "$SKIP_VOLUME_PROBE" -eq 0 ]]; then
+    local probed
+    probed=$(probe_volume_content_ro "$MEDIA_VOLUME")
+    files=${probed%% *}
+    bytes=${probed##* }
+  fi
+
+  # Explicitly do not require / mutate EXPECTED_RELEASE or running digest.
+  ok_json "$(python3 -c 'import json,sys; print(json.dumps({"mode":"pre-promote","target_image":sys.argv[1],"target_digest":sys.argv[2],"target_sha":sys.argv[3],"oci_revision":sys.argv[4],"volume":sys.argv[5],"mount_destination":sys.argv[6],"files":int(sys.argv[7]),"bytes":int(sys.argv[8]),"manifests":"unchanged","running_required":False}))' \
+    "$TARGET_IMAGE" "$EXPECTED_DIGEST" "${TARGET_SHA:-}" "${oci_rev:-}" "$MEDIA_VOLUME" "$MEDIA_DEST" "${files:-0}" "${bytes:-0}")"
+}
+
+assert_no_host_ports() {
+  local BE="$1"
+  local PORT_BINDINGS PORTS_JSON PUBLISHED_HOST
+  PORT_BINDINGS=$(docker inspect "$BE" --format '{{json .HostConfig.PortBindings}}' 2>/dev/null || echo "")
+  if [[ -z "$PORT_BINDINGS" || ( "$PORT_BINDINGS" != "{}" && "$PORT_BINDINGS" != "null" ) ]]; then
+    fail_json HOST_PORTS_PUBLISHED "PortBindings=$PORT_BINDINGS"
+  fi
+  PORTS_JSON=$(docker inspect "$BE" --format '{{json .NetworkSettings.Ports}}' 2>/dev/null || true)
+  [[ -n "$PORTS_JSON" ]] || fail_json HOST_PORTS_PUBLISHED "NetworkSettings.Ports_unreadable"
+  PUBLISHED_HOST=$(printf '%s' "$PORTS_JSON" | python3 -c '
+import json,sys
+raw=sys.stdin.read()
+try:
+  ports=json.loads(raw)
+except Exception:
+  print("__PARSE_FAIL__"); raise SystemExit(0)
+if ports is None:
+  print("", end=""); raise SystemExit(0)
+if not isinstance(ports, dict):
+  print("__PARSE_FAIL__"); raise SystemExit(0)
+hits=[]
+for k,v in ports.items():
+  if not v:
+    continue
+  for b in v:
+    if b.get("HostPort"):
+      hits.append("%s->%s:%s" % (k, b.get("HostIp") or "", b.get("HostPort")))
+print(",".join(hits), end="")
+')
+  [[ "$PUBLISHED_HOST" != "__PARSE_FAIL__" ]] || fail_json HOST_PORTS_PUBLISHED "NetworkSettings.Ports_parse_fail"
+  [[ -z "$PUBLISHED_HOST" ]] || fail_json HOST_PORTS_PUBLISHED "$PUBLISHED_HOST"
+}
+
+write_evidence_file() {
+  local path="$1" be="$2" dig="$3" sha="$4" files="$5" bytes="$6"
+  [[ -n "$path" ]] || return 0
+  local cid
+  cid=$(docker inspect -f '{{.Id}}' "$be")
+  umask 077
+  python3 - "$path" "$cid" "$be" "$dig" "$sha" "$files" "$bytes" "$MEDIA_VOLUME" <<'PY'
+import json,sys,time
+path,cid,name,dig,sha,files,bytes_,vol=sys.argv[1:9]
+ev={
+  "schema":"woodright.media_gate_evidence.v2",
+  "created_at_unix": int(time.time()),
+  "created_at_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+  "mode":"post-promote",
+  "container_id": cid,
+  "container_name": name,
+  "digest": dig,
+  "git_sha": sha or None,
+  "media_volume": vol,
+  "files": int(files),
+  "bytes": int(bytes_),
+  "verdict":"MEDIA_GATE_PASS",
+}
+open(path,"w").write(json.dumps(ev, indent=2)+"\n")
+PY
+}
+
+run_post_promote() {
+  assert_compose_declares_media
+
+  # Digest pin for advance: do NOT require EXPECTED_RELEASE to already list the new digest.
+  if [[ -n "$EXPECTED_DIGEST" ]]; then
+    [[ "$EXPECTED_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]] || fail_json TARGET_NOT_IMMUTABLE "bad --expected-digest"
+    export WOODRIGHT_PINNED_BACKEND_DIGEST="$EXPECTED_DIGEST"
+    export WOODRIGHT_REQUIRE_EXPECTED_DIGEST=1
+    if [[ -n "$TARGET_SHA" ]]; then
+      [[ "$TARGET_SHA" =~ ^[0-9a-f]{40}$ ]] || fail_json TARGET_SHA_INVALID "target-sha must be 40 hex"
+      export WOODRIGHT_PINNED_GIT_SHA="$TARGET_SHA"
+    fi
+  fi
+
+  if [[ -n "$CONTAINER_ARG" ]]; then
+    export WOODRIGHT_BE_CONTAINER="$CONTAINER_ARG"
+  fi
+  if ! wr_discover_backend_container >/dev/null; then
+    fail_json "${WR_DISCOVERY_VERDICT:-DISCOVERY_FAIL}" "backend discovery failed"
+  fi
+  local BE="${WR_BE_CONTAINER}"
+  [[ -n "$BE" ]] || fail_json DISCOVERY_FAIL "empty WR_BE_CONTAINER"
+  if wr_name_is_excluded "$BE"; then
+    fail_json NAME_EXCLUDED "refusing keeper/candidate as live: $BE"
+  fi
+
+  assert_no_host_ports "$BE"
+
+  local FILE_COUNT BYTE_SIZE
+  FILE_COUNT=$(docker exec "$BE" sh -c 'find /server/static -type f 2>/dev/null | wc -l' | tr -d ' ')
+  BYTE_SIZE=$(docker exec "$BE" sh -c 'du -sb /server/static 2>/dev/null | cut -f1' | tr -d ' ')
+  [[ "$FILE_COUNT" =~ ^[0-9]+$ ]] || fail_json EMPTY_MEDIA "files_unreadable"
+  [[ "$BYTE_SIZE" =~ ^[0-9]+$ ]] || fail_json EMPTY_MEDIA "bytes_unreadable"
+  [[ "$FILE_COUNT" -ge "$MIN_FILES" ]] || fail_json EMPTY_MEDIA "files=$FILE_COUNT"
+  [[ "$BYTE_SIZE" -ge "$MIN_BYTES" ]] || fail_json EMPTY_MEDIA "bytes=$BYTE_SIZE"
+
+  local HAS_JPEG HAS_WEBP
+  HAS_JPEG=$(docker exec "$BE" sh -c 'find /server/static -type f \( -iname "*.jpg" -o -iname "*.jpeg" \) 2>/dev/null | head -1' || true)
+  HAS_WEBP=$(docker exec "$BE" sh -c 'find /server/static -type f -iname "*.webp" 2>/dev/null | head -1' || true)
+  [[ -n "$HAS_JPEG" ]] || fail_json MISSING_REPRESENTATIVE "jpeg"
+  [[ -n "$HAS_WEBP" ]] || fail_json MISSING_REPRESENTATIVE "webp"
+
+  local MOUNT_NAME MOUNT_RW
+  MOUNT_NAME=$(wr_container_mount_name_at "$BE" "$MEDIA_DEST")
+  MOUNT_RW=$(wr_container_mount_rw_at "$BE" "$MEDIA_DEST")
+  [[ "$MOUNT_NAME" == "$MEDIA_VOLUME" && "$MOUNT_RW" == "true" && "$FILE_COUNT" -ge "$MIN_FILES" ]] \
+    || fail_json MEDIA_MOUNT_MISSING "media_mount_contract_fail name=$MOUNT_NAME rw=$MOUNT_RW files=$FILE_COUNT"
+
+  local PS_STATUS="skipped"
+  if [[ -n "$BUYER_HOST" ]]; then
+    PS_STATUS=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 "${BUYER_HOST}${PRODUCT_STATIC_SAMPLE}" || echo 000)
+    [[ "$PS_STATUS" == "200" ]] || fail_json PRODUCT_STATIC_FAIL "status=$PS_STATUS"
+  fi
+
+  local live_dig=""
+  live_dig=$(wr_container_image_id "$BE")
+  local pin_digest="${WOODRIGHT_PINNED_BACKEND_DIGEST:-$EXPECTED_DIGEST}"
+  write_evidence_file "$WRITE_EVIDENCE" "$BE" "${pin_digest:-$live_dig}" "${TARGET_SHA:-}" "$FILE_COUNT" "$BYTE_SIZE"
+
+  ok_json "$(python3 -c 'import json,sys; print(json.dumps({"mode":"post-promote","container":sys.argv[1],"volume":sys.argv[2],"files":int(sys.argv[3]),"bytes":int(sys.argv[4]),"product_static":sys.argv[5],"host_ports":"none","media_mount":"pass","pinned_digest":sys.argv[6] or None}))' \
+    "$BE" "$MEDIA_VOLUME" "$FILE_COUNT" "$BYTE_SIZE" "$PS_STATUS" "${pin_digest:-}")"
 }
 
 if [[ "$COMPOSE_ONLY" -eq 1 ]]; then
@@ -110,75 +337,8 @@ PY
   exit $?
 fi
 
-assert_compose_declares_media
-
-# Resolve container WITHOUT command-substitution (preserve WR_DISCOVERY_VERDICT)
-if [[ -n "$CONTAINER_ARG" ]]; then
-  export WOODRIGHT_BE_CONTAINER="$CONTAINER_ARG"
-fi
-if ! wr_discover_backend_container >/dev/null; then
-  fail_json "${WR_DISCOVERY_VERDICT:-DISCOVERY_FAIL}" "backend discovery failed"
-fi
-BE="${WR_BE_CONTAINER}"
-[[ -n "$BE" ]] || fail_json DISCOVERY_FAIL "empty WR_BE_CONTAINER"
-
-# No published host ports on public backend (PortBindings must be empty)
-PORT_BINDINGS=$(docker inspect "$BE" --format '{{json .HostConfig.PortBindings}}' 2>/dev/null || echo "")
-if [[ -z "$PORT_BINDINGS" || ( "$PORT_BINDINGS" != "{}" && "$PORT_BINDINGS" != "null" ) ]]; then
-  fail_json HOST_PORTS_PUBLISHED "PortBindings=$PORT_BINDINGS"
-fi
-# Also reject any HostIp:HostPort mapping in NetworkSettings.Ports
-PORTS_JSON=$(docker inspect "$BE" --format '{{json .NetworkSettings.Ports}}' 2>/dev/null || true)
-[[ -n "$PORTS_JSON" ]] || fail_json HOST_PORTS_PUBLISHED "NetworkSettings.Ports_unreadable"
-PUBLISHED_HOST=$(printf '%s' "$PORTS_JSON" | python3 -c '
-import json,sys
-raw=sys.stdin.read()
-try:
-  ports=json.loads(raw)
-except Exception:
-  print("__PARSE_FAIL__"); raise SystemExit(0)
-if ports is None:
-  print("", end=""); raise SystemExit(0)
-if not isinstance(ports, dict):
-  print("__PARSE_FAIL__"); raise SystemExit(0)
-hits=[]
-for k,v in ports.items():
-  if not v:
-    continue
-  for b in v:
-    if b.get("HostPort"):
-      hits.append("%s->%s:%s" % (k, b.get("HostIp") or "", b.get("HostPort")))
-print(",".join(hits), end="")
-')
-[[ "$PUBLISHED_HOST" != "__PARSE_FAIL__" ]] || fail_json HOST_PORTS_PUBLISHED "NetworkSettings.Ports_parse_fail"
-[[ -z "$PUBLISHED_HOST" ]] || fail_json HOST_PORTS_PUBLISHED "$PUBLISHED_HOST"
-
-# Live volume content gates via docker exec into validated backend (no helper create/rm)
-FILE_COUNT=$(docker exec "$BE" sh -c 'find /server/static -type f 2>/dev/null | wc -l' | tr -d ' ')
-BYTE_SIZE=$(docker exec "$BE" sh -c 'du -sb /server/static 2>/dev/null | cut -f1' | tr -d ' ')
-[[ "$FILE_COUNT" =~ ^[0-9]+$ ]] || fail_json EMPTY_MEDIA "files_unreadable"
-[[ "$BYTE_SIZE" =~ ^[0-9]+$ ]] || fail_json EMPTY_MEDIA "bytes_unreadable"
-[[ "$FILE_COUNT" -ge "$MIN_FILES" ]] || fail_json EMPTY_MEDIA "files=$FILE_COUNT"
-[[ "$BYTE_SIZE" -ge "$MIN_BYTES" ]] || fail_json EMPTY_MEDIA "bytes=$BYTE_SIZE"
-
-HAS_JPEG=$(docker exec "$BE" sh -c 'find /server/static -type f \( -iname "*.jpg" -o -iname "*.jpeg" \) 2>/dev/null | head -1' || true)
-HAS_WEBP=$(docker exec "$BE" sh -c 'find /server/static -type f -iname "*.webp" 2>/dev/null | head -1' || true)
-[[ -n "$HAS_JPEG" ]] || fail_json MISSING_REPRESENTATIVE "jpeg"
-[[ -n "$HAS_WEBP" ]] || fail_json MISSING_REPRESENTATIVE "webp"
-
-# media_mount contract (same conditions monitoring uses for media_mount=pass)
-MEDIA_MOUNT_OK=1
-MOUNT_NAME=$(wr_container_mount_name_at "$BE" "$MEDIA_DEST")
-MOUNT_RW=$(wr_container_mount_rw_at "$BE" "$MEDIA_DEST")
-[[ "$MOUNT_NAME" == "$MEDIA_VOLUME" && "$MOUNT_RW" == "true" && "$FILE_COUNT" -ge "$MIN_FILES" ]] \
-  || MEDIA_MOUNT_OK=0
-[[ "$MEDIA_MOUNT_OK" -eq 1 ]] || fail_json MEDIA_MOUNT_MISSING "media_mount_contract_fail name=$MOUNT_NAME rw=$MOUNT_RW files=$FILE_COUNT"
-
-PS_STATUS="skipped"
-if [[ -n "$BUYER_HOST" ]]; then
-  PS_STATUS=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 "${BUYER_HOST}${PRODUCT_STATIC_SAMPLE}" || echo 000)
-  [[ "$PS_STATUS" == "200" ]] || fail_json PRODUCT_STATIC_FAIL "status=$PS_STATUS"
-fi
-
-ok_json "$(python3 -c 'import json,sys; print(json.dumps({"container":sys.argv[1],"volume":sys.argv[2],"files":int(sys.argv[3]),"bytes":int(sys.argv[4]),"product_static":sys.argv[5],"host_ports":"none","media_mount":"pass"}))' \
-  "$BE" "$MEDIA_VOLUME" "$FILE_COUNT" "$BYTE_SIZE" "$PS_STATUS")"
+case "$MODE" in
+  pre-promote) run_pre_promote ;;
+  post-promote) run_post_promote ;;
+  *) fail_json INVALID_MODE "mode must be pre-promote|post-promote (got $MODE)" ;;
+esac

@@ -63,9 +63,9 @@ export async function fetchOrderProcess(input: {
   token: string
 }): Promise<BuyerProcessResponse> {
   const base = typeof window !== "undefined" ? "" : getBaseUrl()
-  const qs = new URLSearchParams({ token: input.token })
+  // Bearer only - never put the guest token in the query string (access logs / proxies).
   const res = await medusaFetch(
-    `${base}/store/woodright/orders/${encodeURIComponent(input.orderId)}/process?${qs}`,
+    `${base}/store/woodright/orders/${encodeURIComponent(input.orderId)}/process`,
     {
       headers: {
         Authorization: `Bearer ${input.token}`,

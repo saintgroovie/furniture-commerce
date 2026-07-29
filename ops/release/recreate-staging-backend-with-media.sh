@@ -86,12 +86,39 @@ docker image inspect "$IMAGE" >/dev/null || die "image ref not local: $IMAGE"
 RESOLVED_ID="$(docker image inspect "$IMAGE" --format '{{.Id}}')"
 log "resolved_image_id=$RESOLVED_ID expected_digest=$EXPECTED_DIGEST"
 
+# Fail-closed media promotion gate BEFORE declaring success / any manifest reconcile.
+REPO_ROOT="${WOODRIGHT_REPO_ROOT:-}"
+if [[ -z "$REPO_ROOT" ]]; then
+  HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  if [[ -x "$HERE/verify-backend-media-mount.sh" ]]; then
+    GATE="$HERE/verify-backend-media-mount.sh"
+  else
+    die "set WOODRIGHT_REPO_ROOT or install verify-backend-media-mount.sh beside this script"
+  fi
+else
+  GATE="$REPO_ROOT/ops/release/verify-backend-media-mount.sh"
+fi
+[[ -x "$GATE" ]] || die "media gate missing: $GATE"
+
+# Mode A — pre-promote target validation BEFORE any live mutation.
+# Does not require EXPECTED_RELEASE to already list the target digest.
+TARGET_SHA="${TARGET_SHA:-${WOODRIGHT_TARGET_SHA:-}}"
+log "running_pre_promote_media_gate gate=$GATE target=$EXPECTED_DIGEST"
+PRE_ARGS=(--mode pre-promote --target-image "$IMAGE" --expected-digest "$EXPECTED_DIGEST" --media-volume "$VOLUME" --mount-destination "$DEST")
+if [[ -n "$TARGET_SHA" ]]; then
+  PRE_ARGS+=(--target-sha "$TARGET_SHA")
+fi
+bash "$GATE" "${PRE_ARGS[@]}" || die "MEDIA_PRE_PROMOTE_GATE_FAILED"
+
 wr_staging_mutation_lock_acquire \
   "actor=recreate-staging-backend-with-media" \
   "command=$0" \
   "target=$EXPECTED_DIGEST" \
   || die "canonical live-cutover.lock busy/unavailable"
 log "flock_acquired lock=$WR_STAGING_MUTATION_LOCK_PATH"
+
+# Re-run Mode A under the lock (no live mutation; closes TOCTOU before stop).
+bash "$GATE" "${PRE_ARGS[@]}" || die "MEDIA_PRE_PROMOTE_GATE_FAILED_UNDER_LOCK"
 
 # Live identity checks ONLY under the lock (re-validated immediately before stop).
 if docker inspect "$KEEP_NAME" >/dev/null 2>&1; then
@@ -101,8 +128,11 @@ docker inspect "$NAME" >/dev/null || die "live container missing: $NAME"
 CUR_IMG="$(docker inspect "$NAME" --format '{{.Image}}')"
 log "current_image_id=$CUR_IMG"
 if [[ "$REQUIRE_CURRENT_DIGEST" == "1" ]]; then
-  [[ "$CUR_IMG" == "$RESOLVED_ID" ]] || die "live image id mismatch want=$RESOLVED_ID have=$CUR_IMG"
+  if [[ "$CUR_IMG" != "$RESOLVED_ID" ]]; then
+    die "live image id mismatch want=$RESOLVED_ID have=$CUR_IMG (for digest-advance set REQUIRE_CURRENT_DIGEST=0 after Mode A PASS)"
+  fi
 fi
+# Digest-advance path: REQUIRE_CURRENT_DIGEST=0 allows current != target; Mode A + Mode B pin target.
 
 # All non-destructive checks completed BEFORE stop
 docker stop "$NAME"
@@ -155,26 +185,20 @@ done
 st="$(docker inspect "$NAME" --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}')"
 [[ "$st" == "healthy" ]] || die "not healthy after wait: $st"
 
-# Fail-closed media promotion gate BEFORE declaring success / any manifest reconcile.
-REPO_ROOT="${WOODRIGHT_REPO_ROOT:-}"
-if [[ -z "$REPO_ROOT" ]]; then
-  # Prefer installed ops copy next to this script when shipped under /srv/woodright/ops/release
-  HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  if [[ -x "$HERE/verify-backend-media-mount.sh" ]]; then
-    GATE="$HERE/verify-backend-media-mount.sh"
-  else
-    die "set WOODRIGHT_REPO_ROOT or install verify-backend-media-mount.sh beside this script"
-  fi
-else
-  GATE="$REPO_ROOT/ops/release/verify-backend-media-mount.sh"
+# Fail-closed Mode B post-promote gate: pin target digest (EXPECTED_RELEASE may still be old).
+EVIDENCE_PATH="${WOODRIGHT_MEDIA_GATE_EVIDENCE:-/tmp/woodright-media-gate-evidence-${EXPECTED_DIGEST##sha256:}.json}"
+log "running_post_promote_media_gate gate=$GATE container=$NAME digest=$EXPECTED_DIGEST"
+POST_ARGS=(--mode post-promote --container "$NAME" --expected-digest "$EXPECTED_DIGEST" --media-volume "$VOLUME" --mount-destination "$DEST" --write-evidence "$EVIDENCE_PATH")
+if [[ -n "${TARGET_SHA:-}" ]]; then
+  POST_ARGS+=(--target-sha "$TARGET_SHA")
 fi
-[[ -x "$GATE" ]] || die "media gate missing: $GATE"
-log "running_media_gate gate=$GATE container=$NAME"
-WOODRIGHT_BE_CONTAINER="$NAME" WOODRIGHT_MEDIA_VOLUME="$VOLUME" WOODRIGHT_MEDIA_MOUNT_IN_BE="$DEST" \
-  bash "$GATE" --container "$NAME" ${WOODRIGHT_BUYER_HOST:+--buyer-host "$WOODRIGHT_BUYER_HOST"} \
+if [[ -n "${WOODRIGHT_BUYER_HOST:-}" ]]; then
+  POST_ARGS+=(--buyer-host "$WOODRIGHT_BUYER_HOST")
+fi
+bash "$GATE" "${POST_ARGS[@]}" \
   || die "MEDIA_PROMOTION_GATE_FAILED - refusing to declare recreate success (keeper=$KEEP_NAME)"
 
 trap - ERR
 PHASE=0
-log "CREATED name=$NAME image=$IMAGE mount=${VOLUME}:${DEST} keeper=$KEEP_NAME media_gate=PASS"
+log "CREATED name=$NAME image=$IMAGE mount=${VOLUME}:${DEST} keeper=$KEEP_NAME media_gate=PASS evidence=$EVIDENCE_PATH"
 log "NOTE: update ACTIVE_OWNER/EXPECTED_RELEASE only via ops/release/reconcile-runtime-manifests.sh"
