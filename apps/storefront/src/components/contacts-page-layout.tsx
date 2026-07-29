@@ -74,11 +74,11 @@ export function ContactsPageLayout() {
               {formatRuInline(contactsCopy.channelsHeading)}
             </h2>
           </header>
-          <div className="contacts-page-row contacts-page-row--primary">
+          <div className="contacts-page-row contacts-page-row--primary contacts-page-row--primary-phones">
             <ContactActionGrid
               density="page"
-              layout="stack"
-              className="contacts-page-action-grid contacts-page-phone-stack"
+              layout="pair"
+              className="contacts-page-action-grid contacts-page-phone-pair"
             >
               <ContactPhoneAction
                 label={showroomContacts.freeCall.label}

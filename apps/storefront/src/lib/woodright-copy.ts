@@ -767,15 +767,13 @@ export const contactsCopy = {
   /** Shared value for Telegram / WhatsApp page tiles. */
   messengerWriteValue: "Написать",
   maxLabel: "MAX",
-  /** Page MAX visible value - short so messenger trio stays one-line equal. */
+  /** Visible MAX value - short so page + dropdown channel tiles stay one-line. */
   maxCopyValue: "Скопировать",
   maxCopiedValue: "Скопировано",
-  maxCopyError: "Ошибка копирования",
-  maxDropdownIdle: "MAX",
-  maxDropdownCopied: "Скопировано",
-  maxDropdownHelper: "MAX - нажмите, чтобы скопировать номер",
-  maxDropdownHelperCopied:
-    "Номер скопирован - найдите Woodright в MAX по номеру",
+  /** Short visible error inside the tile. */
+  maxVisibleError: "Ошибка",
+  /** Full live/aria error (not shown as tile value). */
+  maxAriaError: "Не удалось скопировать номер",
   maxAriaIdle:
     "Скопировать номер {display} для поиска Woodright в MAX",
   maxAriaCopied: "Номер {display} скопирован",

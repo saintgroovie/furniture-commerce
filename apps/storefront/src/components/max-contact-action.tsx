@@ -51,6 +51,7 @@ type MaxContactActionProps = {
 /**
  * Honest MAX action: copies the Woodright direct phone number so the visitor
  * can find the brand inside the MAX app. No invented chat deeplink.
+ * Purpose is shown inside the tile (kicker MAX + value Скопировать).
  */
 export function MaxContactAction({
   density = "page",
@@ -60,7 +61,7 @@ export function MaxContactAction({
   const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const tel = showroomContacts.writeOrCall.tel
   const display = showroomContacts.writeOrCall.display
-  const iconSize = density === "dropdown" ? 14 : 18
+  const iconSize = density === "dropdown" ? 14 : 16
 
   useEffect(() => {
     return () => {
@@ -91,28 +92,21 @@ export function MaxContactAction({
     state === "copied"
       ? contactsCopy.maxAriaCopied.replace("{display}", display)
       : state === "error"
-        ? contactsCopy.maxCopyError
+        ? contactsCopy.maxAriaError
         : contactsCopy.maxAriaIdle.replace("{display}", display)
 
-  const pageValue =
+  const visibleValue =
     state === "copied"
       ? contactsCopy.maxCopiedValue
       : state === "error"
-        ? contactsCopy.maxCopyError
+        ? contactsCopy.maxVisibleError
         : contactsCopy.maxCopyValue
-
-  const dropdownLine =
-    state === "copied"
-      ? contactsCopy.maxDropdownCopied
-      : state === "error"
-        ? contactsCopy.maxCopyError
-        : contactsCopy.maxDropdownIdle
 
   const liveStatus =
     state === "copied"
       ? contactsCopy.maxAriaCopied.replace("{display}", display)
       : state === "error"
-        ? contactsCopy.maxCopyError
+        ? contactsCopy.maxAriaError
         : ""
 
   return (
@@ -135,20 +129,14 @@ export function MaxContactAction({
           void onCopy()
         }}
       >
-        {density === "page" ? (
-          <span className="contact-action-copy">
-            <span className="contact-action-kicker">
-              {formatRuInline(contactsCopy.maxLabel)}
-            </span>
-            <span className="contact-action-value">
-              {formatRuInline(pageValue)}
-            </span>
+        <span className="contact-action-copy">
+          <span className="contact-action-kicker">
+            {formatRuInline(contactsCopy.maxLabel)}
           </span>
-        ) : (
-          <span className="contact-action-copy contact-action-copy--single">
-            <span className="contact-action-line">{dropdownLine}</span>
+          <span className="contact-action-value">
+            {formatRuInline(visibleValue)}
           </span>
-        )}
+        </span>
       </ContactActionButton>
       <span className="sr-only" aria-live="polite">
         {liveStatus}
