@@ -48,7 +48,7 @@ done
 [[ -n "$EXPECTED_SRC" && -f "$EXPECTED_SRC" ]] || die "missing --expected-src"
 
 if [[ "$MODE" == "dry-run" ]]; then
-  bash "$ASSERT"
+  bash "$ASSERT" ${EXPECTED_SRC:+--expected-src "$EXPECTED_SRC"}
   printf 'reconcile-runtime-manifests: DRY-RUN ok (gate PASS); would install:\n'
   printf '  %s -> %s\n' "$ACTIVE_SRC" "$ACTIVE_DST"
   printf '  %s -> %s\n' "$EXPECTED_SRC" "$EXPECTED_DST"
@@ -61,8 +61,8 @@ wr_staging_mutation_lock_acquire \
   "target=manifests" \
   || die "canonical live-cutover.lock busy/unavailable"
 
-# Re-run gate under the lock immediately before install.
-bash "$ASSERT"
+# Re-run gate under the lock immediately before install (pin candidate digests).
+bash "$ASSERT" --expected-src "$EXPECTED_SRC"
 
 install -m 0600 "$ACTIVE_SRC" "$ACTIVE_DST"
 install -m 0600 "$EXPECTED_SRC" "$EXPECTED_DST"

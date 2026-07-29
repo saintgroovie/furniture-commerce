@@ -11,17 +11,12 @@ import {
   tokensMatch,
 } from "../../../../../../lib/woodright-order-process/guest-access-token"
 
+/** Bearer only - never accept query/body plaintext token transport. */
 function extractToken(req: MedusaRequest): string | null {
-  const q = req.query.token
-  if (typeof q === "string" && q.trim()) return q.trim()
   const auth = req.headers.authorization
   if (typeof auth === "string" && auth.toLowerCase().startsWith("bearer ")) {
     const t = auth.slice(7).trim()
     return t || null
-  }
-  const body = req.body as { token?: string } | undefined
-  if (typeof body?.token === "string" && body.token.trim()) {
-    return body.token.trim()
   }
   return null
 }

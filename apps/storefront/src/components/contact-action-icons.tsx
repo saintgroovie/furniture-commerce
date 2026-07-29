@@ -57,3 +57,13 @@ export function ContactMessageIcon({ size = 18 }: { size?: IconSize }) {
     </svg>
   )
 }
+
+/** Copy / clipboard metaphor for MAX number action. */
+export function ContactCopyIcon({ size = 18 }: { size?: IconSize }) {
+  return (
+    <svg {...baseProps(size)}>
+      <rect x="8.5" y="8.5" width="10" height="12" rx="1.5" />
+      <path d="M15.5 8.5V6.2A1.7 1.7 0 0 0 13.8 4.5H6.2A1.7 1.7 0 0 0 4.5 6.2v7.6A1.7 1.7 0 0 0 6.2 15.5H8.5" />
+    </svg>
+  )
+}

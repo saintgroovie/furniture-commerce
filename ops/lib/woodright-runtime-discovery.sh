@@ -20,6 +20,10 @@
 : "${WOODRIGHT_REQUIRE_MEDIA_MOUNT:=1}"
 : "${WOODRIGHT_REQUIRE_PUBLIC_DEMO:=1}"
 : "${WOODRIGHT_REQUIRE_EXPECTED_DIGEST:=1}"
+# Optional explicit pin for digest-advance / post-promote (overrides EXPECTED_RELEASE file).
+# When set, WOODRIGHT_REQUIRE_EXPECTED_DIGEST must be 1 for the pin check to run.
+: "${WOODRIGHT_PINNED_BACKEND_DIGEST:=}"
+: "${WOODRIGHT_PINNED_GIT_SHA:=}"
 
 wr_discovery_log() { printf '%s\n' "$*" >&2; }
 
@@ -133,27 +137,49 @@ wr_validate_backend_candidate() {
     fi
   fi
 
-  if [[ "${WOODRIGHT_REQUIRE_EXPECTED_DIGEST}" == "1" && -f "$WOODRIGHT_EXPECTED_RELEASE" ]]; then
-    expected_digest=$(wr_json_get "$WOODRIGHT_EXPECTED_RELEASE" backend_digest)
-    expected_sha=$(wr_json_get "$WOODRIGHT_EXPECTED_RELEASE" approved_git_sha)
+  if [[ "${WOODRIGHT_REQUIRE_EXPECTED_DIGEST}" == "1" ]]; then
+    if [[ -n "${WOODRIGHT_PINNED_BACKEND_DIGEST}" ]]; then
+      expected_digest="$WOODRIGHT_PINNED_BACKEND_DIGEST"
+      expected_sha="${WOODRIGHT_PINNED_GIT_SHA:-}"
+    elif [[ -f "$WOODRIGHT_EXPECTED_RELEASE" ]]; then
+      expected_digest=$(wr_json_get "$WOODRIGHT_EXPECTED_RELEASE" backend_digest)
+      expected_sha=$(wr_json_get "$WOODRIGHT_EXPECTED_RELEASE" approved_git_sha)
+    else
+      expected_digest=""
+      expected_sha=""
+    fi
     if [[ -z "$expected_digest" || ! "$expected_digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
       wr_discovery_set_verdict DIGEST_MISMATCH "expected_backend_digest_missing"
       return 1
     fi
-    if [[ -z "$expected_sha" || ! "$expected_sha" =~ ^[0-9a-f]{40}$ ]]; then
-      wr_discovery_set_verdict DIGEST_MISMATCH "expected_git_sha_missing"
+    # Git SHA required when pinning via EXPECTED_RELEASE; optional when only digest pin is set
+    # for mid-promotion post-gate (SHA checked when WOODRIGHT_PINNED_GIT_SHA is non-empty).
+    if [[ -z "${WOODRIGHT_PINNED_BACKEND_DIGEST}" ]]; then
+      if [[ -z "$expected_sha" || ! "$expected_sha" =~ ^[0-9a-f]{40}$ ]]; then
+        wr_discovery_set_verdict DIGEST_MISMATCH "expected_git_sha_missing"
+        return 1
+      fi
+    elif [[ -n "$expected_sha" && ! "$expected_sha" =~ ^[0-9a-f]{40}$ ]]; then
+      wr_discovery_set_verdict DIGEST_MISMATCH "pinned_git_sha_invalid"
       return 1
     fi
     img=$(wr_container_image_id "$name")
     if [[ "$img" != "$expected_digest" ]]; then
-      wr_discovery_set_verdict DIGEST_MISMATCH "have=${img:0:19}… want=${expected_digest:0:19}…"
-      return 1
+      # Also accept when Image Id equals resolved Id for the pinned digest ref.
+      local resolved=""
+      resolved=$(docker image inspect "$expected_digest" --format '{{.Id}}' 2>/dev/null || true)
+      if [[ -z "$resolved" || "$img" != "$resolved" ]]; then
+        wr_discovery_set_verdict DIGEST_MISMATCH "have=${img:0:19}… want=${expected_digest:0:19}…"
+        return 1
+      fi
     fi
-    local rev
-    rev=$(wr_container_label "$name" "org.opencontainers.image.revision")
-    if [[ -z "$rev" || "$rev" != "$expected_sha" ]]; then
-      wr_discovery_set_verdict DIGEST_MISMATCH "oci_rev_mismatch"
-      return 1
+    if [[ -n "$expected_sha" ]]; then
+      local rev
+      rev=$(wr_container_label "$name" "org.opencontainers.image.revision")
+      if [[ -z "$rev" || "$rev" != "$expected_sha" ]]; then
+        wr_discovery_set_verdict DIGEST_MISMATCH "oci_rev_mismatch"
+        return 1
+      fi
     fi
   fi
 
