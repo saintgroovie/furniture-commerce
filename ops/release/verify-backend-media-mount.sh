@@ -103,19 +103,20 @@ probe_volume_content_ro() {
     -v "${vol}:/m:ro" \
     alpine:3.20 \
     sh -c 'files=$(find /m -type f 2>/dev/null | wc -l | tr -d " "); bytes=$(du -sb /m 2>/dev/null | cut -f1); jpeg=$(find /m -type f \( -iname "*.jpg" -o -iname "*.jpeg" \) 2>/dev/null | head -1); webp=$(find /m -type f -iname "*.webp" 2>/dev/null | head -1); printf "files=%s\nbytes=%s\njpeg=%s\nwebp=%s\n" "$files" "${bytes:-0}" "$jpeg" "$webp"' \
-    2>/dev/null) || fail_json VOLUME_PROBE_FAIL "cannot probe volume $vol"
+    2>/dev/null) || { echo "VOLUME_PROBE_FAIL" >&2; return 1; }
   local files bytes jpeg webp
   files=$(printf '%s\n' "$out" | sed -n 's/^files=//p' | head -1)
   bytes=$(printf '%s\n' "$out" | sed -n 's/^bytes=//p' | head -1)
   jpeg=$(printf '%s\n' "$out" | sed -n 's/^jpeg=//p' | head -1)
   webp=$(printf '%s\n' "$out" | sed -n 's/^webp=//p' | head -1)
-  [[ "$files" =~ ^[0-9]+$ ]] || fail_json EMPTY_MEDIA "files_unreadable"
-  [[ "$bytes" =~ ^[0-9]+$ ]] || fail_json EMPTY_MEDIA "bytes_unreadable"
-  [[ "$files" -ge "$MIN_FILES" ]] || fail_json EMPTY_MEDIA "files=$files"
-  [[ "$bytes" -ge "$MIN_BYTES" ]] || fail_json EMPTY_MEDIA "bytes=$bytes"
-  [[ -n "$jpeg" ]] || fail_json MISSING_REPRESENTATIVE "jpeg"
-  [[ -n "$webp" ]] || fail_json MISSING_REPRESENTATIVE "webp"
+  [[ "$files" =~ ^[0-9]+$ ]] || { echo "EMPTY_MEDIA files_unreadable" >&2; return 1; }
+  [[ "$bytes" =~ ^[0-9]+$ ]] || { echo "EMPTY_MEDIA bytes_unreadable" >&2; return 1; }
+  [[ "$files" -ge "$MIN_FILES" ]] || { echo "EMPTY_MEDIA files=$files" >&2; return 1; }
+  [[ "$bytes" -ge "$MIN_BYTES" ]] || { echo "EMPTY_MEDIA bytes=$bytes" >&2; return 1; }
+  [[ -n "$jpeg" ]] || { echo "MISSING_REPRESENTATIVE jpeg" >&2; return 1; }
+  [[ -n "$webp" ]] || { echo "MISSING_REPRESENTATIVE webp" >&2; return 1; }
   printf '%s %s' "$files" "$bytes"
+  return 0
 }
 
 run_pre_promote() {
@@ -157,8 +158,22 @@ run_pre_promote() {
 
   local files=0 bytes=0
   if [[ "$SKIP_VOLUME_PROBE" -eq 0 ]]; then
-    local probed
-    probed=$(probe_volume_content_ro "$MEDIA_VOLUME")
+    local probed probe_err
+    set +e
+    probed=$(probe_volume_content_ro "$MEDIA_VOLUME" 2>/tmp/woodright-media-probe.err)
+    local probe_rc=$?
+    set -e
+    if [[ "$probe_rc" -ne 0 ]]; then
+      probe_err=$(cat /tmp/woodright-media-probe.err 2>/dev/null || true)
+      rm -f /tmp/woodright-media-probe.err
+      case "$probe_err" in
+        VOLUME_PROBE_FAIL*) fail_json VOLUME_PROBE_FAIL "cannot probe volume $MEDIA_VOLUME" ;;
+        EMPTY_MEDIA*) fail_json EMPTY_MEDIA "${probe_err#EMPTY_MEDIA }" ;;
+        MISSING_REPRESENTATIVE*) fail_json MISSING_REPRESENTATIVE "${probe_err#MISSING_REPRESENTATIVE }" ;;
+        *) fail_json EMPTY_MEDIA "${probe_err:-probe_failed}" ;;
+      esac
+    fi
+    rm -f /tmp/woodright-media-probe.err
     files=${probed%% *}
     bytes=${probed##* }
   fi
