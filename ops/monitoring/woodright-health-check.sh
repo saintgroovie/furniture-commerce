@@ -277,20 +277,31 @@ elif [[ "$INODE_PCT" -ge "$INODE_WARN" ]]; then add_check "inodes" warning fail 
 else add_check "inodes" info pass "pct=$INODE_PCT"; fi
 
 # Backup freshness
-LATEST_RP=$(ls -1t "$BACKUP_ROOT"/manifests/recovery-point-*.json 2>/dev/null | head -1 || true)
+MANIFESTS_DIR="$BACKUP_ROOT/manifests"
 if [[ -n "$FIXTURE_BACKUP_AGE_H" ]]; then
   AGE_H="$FIXTURE_BACKUP_AGE_H"
-elif [[ -n "$LATEST_RP" ]]; then
-  # parse timestamp from filename recovery-point-YYYYMMDDTHHMMSSZ.json
-  BT=$(basename "$LATEST_RP" | sed -n 's/recovery-point-\([0-9T]*Z\)\.json/\1/p')
-  BS=$(date -u -d "${BT:0:4}-${BT:4:2}-${BT:6:2} ${BT:9:2}:${BT:11:2}:${BT:13:2}" +%s 2>/dev/null || echo 0)
-  AGE_H=$(( (NOW - BS) / 3600 ))
+  if [[ "$AGE_H" -gt "$BACKUP_CRIT_H" ]]; then add_check "backup_freshness" critical fail "age_h=$AGE_H"
+  elif [[ "$AGE_H" -gt "$BACKUP_WARN_H" ]]; then add_check "backup_freshness" warning fail "age_h=$AGE_H"
+  else add_check "backup_freshness" info pass "age_h=$AGE_H"; fi
+elif ! ls -1d "$BACKUP_ROOT" >/dev/null 2>&1; then
+  add_check "backup_freshness" critical fail "manifests_inaccessible"
+elif [[ ! -d "$MANIFESTS_DIR" ]]; then
+  add_check "backup_freshness" critical fail "manifests_dir_missing"
+elif [[ ! -r "$MANIFESTS_DIR" ]]; then
+  add_check "backup_freshness" critical fail "manifests_inaccessible"
 else
-  AGE_H=9999
+  LATEST_RP=$(ls -1t "$MANIFESTS_DIR"/recovery-point-*.json 2>/dev/null | head -1 || true)
+  if [[ -n "$LATEST_RP" ]]; then
+    BT=$(basename "$LATEST_RP" | sed -n 's/recovery-point-\([0-9T]*Z\)\.json/\1/p')
+    BS=$(date -u -d "${BT:0:4}-${BT:4:2}-${BT:6:2} ${BT:9:2}:${BT:11:2}:${BT:13:2}" +%s 2>/dev/null || echo 0)
+    AGE_H=$(( (NOW - BS) / 3600 ))
+    if [[ "$AGE_H" -gt "$BACKUP_CRIT_H" ]]; then add_check "backup_freshness" critical fail "age_h=$AGE_H"
+    elif [[ "$AGE_H" -gt "$BACKUP_WARN_H" ]]; then add_check "backup_freshness" warning fail "age_h=$AGE_H"
+    else add_check "backup_freshness" info pass "age_h=$AGE_H path=$(basename "$LATEST_RP")"; fi
+  else
+    add_check "backup_freshness" critical fail "age_h=9999"
+  fi
 fi
-if [[ "$AGE_H" -gt "$BACKUP_CRIT_H" ]]; then add_check "backup_freshness" critical fail "age_h=$AGE_H"
-elif [[ "$AGE_H" -gt "$BACKUP_WARN_H" ]]; then add_check "backup_freshness" warning fail "age_h=$AGE_H"
-else add_check "backup_freshness" info pass "age_h=$AGE_H"; fi
 
 # DB / Redis readiness (no query text / no keys)
 if docker exec "$PG_CONTAINER" pg_isready -U woodright >/dev/null 2>&1; then
