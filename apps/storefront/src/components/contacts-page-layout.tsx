@@ -2,9 +2,9 @@ import Link from "next/link"
 import {
   ContactActionGrid,
   ContactMapAction,
-  ContactMessengerActions,
   ContactPhoneAction,
 } from "@/components/contact-action"
+import { ContactMessengerActions } from "@/components/contact-messenger-actions"
 import { formatRuInline } from "@/lib/format-ru-copy"
 import { contactsCopy } from "@/lib/woodright-copy"
 import { showroomContacts } from "@/lib/showroom-contacts"

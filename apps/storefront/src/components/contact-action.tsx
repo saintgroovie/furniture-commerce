@@ -1,9 +1,7 @@
 import type { ReactNode } from "react"
 import {
   ContactMapPinIcon,
-  ContactMessageIcon,
   ContactPhoneIcon,
-  ContactSendIcon,
 } from "@/components/contact-action-icons"
 import { formatRuInline } from "@/lib/format-ru-copy"
 import { contactsCopy } from "@/lib/woodright-copy"
@@ -103,7 +101,7 @@ function ActionChrome({
 }
 
 /**
- * Shared bordered contact action tile.
+ * Shared bordered contact action tile (link).
  * Page and dropdown share chrome; density/layout modifiers isolate size and icon placement.
  */
 export function ContactActionLink({
@@ -137,24 +135,36 @@ export function ContactActionLink({
   )
 }
 
-/** Non-interactive channel tile (MAX). */
-export function ContactActionStatic({
+/** Shared bordered contact action as a real button (MAX copy). */
+export function ContactActionButton({
   density = "page",
+  tone = "secondary",
   layout = "leadingIcon",
   icon,
   className,
   children,
+  onClick,
   "aria-label": ariaLabel,
-}: ContactActionBaseProps & { "aria-label"?: string }) {
+  "aria-describedby": ariaDescribedBy,
+  type = "button",
+}: ContactActionBaseProps & {
+  onClick?: () => void
+  "aria-label"?: string
+  "aria-describedby"?: string
+  type?: "button" | "submit" | "reset"
+}) {
   return (
-    <span
-      className={actionClassName({ density, tone: "static", layout, className })}
+    <button
+      type={type}
+      className={actionClassName({ density, tone, layout, className })}
       aria-label={ariaLabel}
+      aria-describedby={ariaDescribedBy}
+      onClick={onClick}
     >
       <ActionChrome layout={layout} icon={icon}>
         {children}
       </ActionChrome>
-    </span>
+    </button>
   )
 }
 
@@ -207,25 +217,20 @@ export function ContactPhoneAction({
 type MapActionProps = {
   density?: ContactActionDensity
   layout?: ContactActionLayout
-  /** Page uses full CTA; dropdown uses short label. */
-  label?: string
-  "aria-label"?: string
 }
 
+/**
+ * Yandex Maps action.
+ * Page density uses the same kicker/value contract as phone tiles.
+ * Dropdown density stays compact single-line with trailing bubble.
+ */
 export function ContactMapAction({
   density = "page",
   layout,
-  label,
-  "aria-label": ariaLabel,
 }: MapActionProps) {
   const resolvedLayout: ContactActionLayout =
     layout ?? (density === "dropdown" ? "trailingBubble" : "leadingIcon")
   const iconSize = density === "dropdown" ? 14 : 18
-  const text =
-    label ??
-    (density === "dropdown"
-      ? contactsCopy.mapCtaShort
-      : contactsCopy.mapCta)
   return (
     <ContactActionLink
       href={showroomContacts.yandexMapsUrl}
@@ -234,78 +239,26 @@ export function ContactMapAction({
       layout={resolvedLayout}
       className="contact-action--map"
       external
-      aria-label={ariaLabel}
+      aria-label={contactsCopy.mapCta}
       icon={<ContactMapPinIcon size={iconSize} />}
     >
-      <span className="contact-action-copy contact-action-copy--single">
-        <span className="contact-action-line">{formatRuInline(text)}</span>
-      </span>
+      {density === "page" ? (
+        <span className="contact-action-copy">
+          <span className="contact-action-kicker">
+            {formatRuInline(contactsCopy.mapKicker)}
+          </span>
+          <span className="contact-action-value">
+            {formatRuInline(contactsCopy.mapValue)}
+          </span>
+        </span>
+      ) : (
+        <span className="contact-action-copy contact-action-copy--single">
+          <span className="contact-action-line">
+            {formatRuInline(contactsCopy.mapValue)}
+          </span>
+        </span>
+      )}
     </ContactActionLink>
-  )
-}
-
-function channelIcon(
-  id: "telegram" | "whatsapp" | "max",
-  size: 14 | 16 | 18
-) {
-  if (id === "telegram") return <ContactSendIcon size={size} />
-  return <ContactMessageIcon size={size} />
-}
-
-type MessengerGridProps = {
-  density?: ContactActionDensity
-}
-
-export function ContactMessengerActions({
-  density = "page",
-}: MessengerGridProps) {
-  const iconSize = density === "dropdown" ? 14 : 18
-  const maxAccessibleLabel = `MAX - связь по номеру ${showroomContacts.writeOrCall.display}`
-
-  return (
-    <div className="contact-messenger-block">
-      <ul
-        className={`contact-action-grid contact-action-grid--channels contact-action-grid--${density}`}
-        aria-label={contactsCopy.messengersLabel}
-      >
-        {showroomContacts.messengers.map((item) => (
-          <li key={item.id} className="contact-action-grid-item">
-            {item.href ? (
-              <ContactActionLink
-                href={item.href}
-                density={density}
-                tone="secondary"
-                layout="leadingIcon"
-                className="contact-action--channel"
-                external
-                icon={channelIcon(item.id, iconSize)}
-              >
-                <span className="contact-action-copy contact-action-copy--single">
-                  <span className="contact-action-line">{item.label}</span>
-                </span>
-              </ContactActionLink>
-            ) : (
-              <ContactActionStatic
-                density={density}
-                layout="leadingIcon"
-                className="contact-action--channel"
-                aria-label={maxAccessibleLabel}
-                icon={channelIcon(item.id, iconSize)}
-              >
-                <span className="contact-action-copy contact-action-copy--single">
-                  <span className="contact-action-line" aria-hidden="true">
-                    {item.label}
-                  </span>
-                  <span className="sr-only">
-                    {`связь по номеру ${showroomContacts.writeOrCall.display}`}
-                  </span>
-                </span>
-              </ContactActionStatic>
-            )}
-          </li>
-        ))}
-      </ul>
-    </div>
   )
 }
 

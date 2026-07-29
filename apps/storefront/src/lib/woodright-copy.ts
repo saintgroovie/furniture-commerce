@@ -756,11 +756,28 @@ export const contactsCopy = {
   channelsEyebrow: "Контакты",
   channelsHeading: "Связаться с Woodright",
   messengersLabel: "Мессенджеры",
+  /** Full accessible name for the Yandex Maps link. */
   mapCta: "Посмотреть в Яндекс Картах",
-  /** Compact map label for header dropdown density. */
-  mapCtaShort: "Яндекс Карты",
+  /** Page map tile kicker - pairs with phone kicker/value rhythm. */
+  mapKicker: "Маршрут",
+  /** Page/dropdown visible map value (one line). */
+  mapValue: "Яндекс Карты",
   /** Compact showroom phone CTA for header dropdown. */
   showroomCallCta: "Позвонить в шоурум",
+  /** Shared value for Telegram / WhatsApp page tiles. */
+  messengerWriteValue: "Написать",
+  maxLabel: "MAX",
+  maxCopyValue: "Скопировать номер",
+  maxCopiedValue: "Номер скопирован",
+  maxCopyError: "Не удалось скопировать номер",
+  maxDropdownIdle: "MAX",
+  maxDropdownCopied: "Скопировано",
+  maxDropdownHelper: "MAX - нажмите, чтобы скопировать номер",
+  maxDropdownHelperCopied:
+    "Номер скопирован - найдите Woodright в MAX по номеру",
+  maxAriaIdle:
+    "Скопировать номер {display} для поиска Woodright в MAX",
+  maxAriaCopied: "Номер {display} скопирован",
   ctaTitle: "Есть вопрос по мебели или индивидуальному проекту?",
   ctaBody:
     "Оставьте заявку - менеджер свяжется с вами и поможет подобрать решение",
