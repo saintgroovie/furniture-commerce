@@ -113,7 +113,7 @@ export function LegacyMediaBoardV2Client({
 }) {
   const isOrphanP0Overlay = overlayMode === ORPHAN_P0_OVERLAY_ID
   // --- Data loading state ---
-  const [status, setStatus] = useState<V2LoadStatus>("idle")
+  const [status, setStatus] = useState<V2LoadStatus>("loading")
   const [error, setError] = useState<string | null>(null)
   const [catalogDegraded, setCatalogDegraded] = useState<{
     missing_file?: string
@@ -127,66 +127,59 @@ export function LegacyMediaBoardV2Client({
   const [recoveryById, setRecoveryById] = useState<Map<string, LegacyMediaPreviewRecoveryEntry>>(new Map())
 
   // --- UI selection state ---
-  const [selectedHandle, setSelectedHandle] = useState<string | null>(null)
+  const [selectedHandle, setSelectedHandle] = useState<string | null>(() => {
+    if (initialHandle) return initialHandle
+    if (typeof window === "undefined") return null
+    if (overlayMode === ORPHAN_P0_OVERLAY_ID) {
+      return loadOrphanP0OverlayState()?.focusedCatalogHandle ?? null
+    }
+    return loadV2PersistedState()?.selectedHandle ?? null
+  })
   const [search, setSearch] = useState("")
 
   // --- Assignment state (persisted via localStorage Commit 4) ---
-  const [productStates, setProductStates] = useState<Record<string, V2ProductState>>({})
+  const [productStates, setProductStates] = useState<Record<string, V2ProductState>>(() => {
+    if (typeof window === "undefined" || overlayMode === ORPHAN_P0_OVERLAY_ID) return {}
+    return loadV2PersistedState()?.productStates ?? {}
+  })
 
   // --- Persistence state ---
-  const [savedAt, setSavedAt] = useState<string | null>(null)
+  const [savedAt, setSavedAt] = useState<string | null>(() => {
+    if (typeof window === "undefined" || overlayMode === ORPHAN_P0_OVERLAY_ID) return null
+    return loadV2PersistedState()?.savedAt ?? null
+  })
   const hasSavedOnceRef = useRef(false)
-  const hasHydratedRef = useRef(false)
 
   // --- Orphan P0 overlay (read-only routing; isolated localStorage) ---
   const [overlayData, setOverlayData] = useState<OrphanP0OverlayData | null>(null)
   const [overlayLoadStatus, setOverlayLoadStatus] = useState<
     "idle" | "loading" | "loaded" | "missing" | "error"
-  >("idle")
+  >(() => (overlayMode === ORPHAN_P0_OVERLAY_ID ? "loading" : "idle"))
   const [overlayError, setOverlayError] = useState<string | null>(null)
   const [overlayMissing, setOverlayMissing] = useState<OrphanP0OverlayMissingArtifact | null>(null)
-  const [overlayState, setOverlayState] = useState(makeEmptyOrphanP0OverlayState)
+  const [overlayState, setOverlayState] = useState(() => {
+    if (typeof window === "undefined" || overlayMode !== ORPHAN_P0_OVERLAY_ID) {
+      return makeEmptyOrphanP0OverlayState()
+    }
+    return loadOrphanP0OverlayState() ?? makeEmptyOrphanP0OverlayState()
+  })
   const [overlayFilter, setOverlayFilter] = useState("")
-  const [focusedOverlayPackIndex, setFocusedOverlayPackIndex] = useState<number | null>(null)
-  const overlayHydratedRef = useRef(false)
+  const [focusedOverlayPackIndex, setFocusedOverlayPackIndex] = useState<number | null>(() => {
+    if (typeof window === "undefined" || overlayMode !== ORPHAN_P0_OVERLAY_ID) return null
+    return loadOrphanP0OverlayState()?.focusedPackIndex ?? null
+  })
 
   // --- Lifted pool filter state (Commit 3) ---
   const [poolFilter, setPoolFilter] = useState<V2RoleFilter>("all")
-
-  // Reset filter when selected handle changes
-  useEffect(() => {
+  const [poolFilterHandle, setPoolFilterHandle] = useState(selectedHandle)
+  if (selectedHandle !== poolFilterHandle) {
+    setPoolFilterHandle(selectedHandle)
     setPoolFilter("all")
-  }, [selectedHandle])
-
-  // --- Late hydrate: merge disk state without clobbering in-memory operator edits ---
-  useEffect(() => {
-    if (hasHydratedRef.current || isOrphanP0Overlay) return
-    hasHydratedRef.current = true
-    const persisted = loadV2PersistedState()
-    if (!persisted) return
-    setProductStates((prev) => mergeV2ProductStates(persisted.productStates, prev))
-    setSelectedHandle((prev) => prev ?? persisted.selectedHandle)
-    setSavedAt((prev) => prev ?? persisted.savedAt)
-  }, [isOrphanP0Overlay])
-
-  useEffect(() => {
-    if (!isOrphanP0Overlay || overlayHydratedRef.current) return
-    overlayHydratedRef.current = true
-    const persisted = loadOrphanP0OverlayState()
-    if (!persisted) return
-    setOverlayState(persisted)
-    setFocusedOverlayPackIndex(persisted.focusedPackIndex)
-    if (persisted.focusedCatalogHandle) {
-      setSelectedHandle(persisted.focusedCatalogHandle)
-    }
-  }, [isOrphanP0Overlay])
+  }
 
   useEffect(() => {
     if (!isOrphanP0Overlay) return
     let cancelled = false
-    setOverlayLoadStatus("loading")
-    setOverlayError(null)
-    setOverlayMissing(null)
     void (async () => {
       try {
         const res = await fetch(`${V2_API_BASE}/orphan-p0-overlay`)
@@ -236,8 +229,6 @@ export function LegacyMediaBoardV2Client({
   // --- Data loading ---
   useEffect(() => {
     let cancelled = false
-    setStatus("loading")
-    setError(null)
 
     async function load() {
       try {
@@ -373,27 +364,27 @@ export function LegacyMediaBoardV2Client({
 
   const isSharedColorlessTab = activeVariantKey === NEEDS_COLOR_VARIANT_KEY
 
-  // When product or visible tabs change, ensure active tab is visible (milk default)
-  useEffect(() => {
-    if (!selectedHandle || colorVariants.length === 0) return
+  // Keep active tab visible when product/tabs change (render-time adjust).
+  if (selectedHandle && colorVariants.length > 0) {
     const state = productStates[selectedHandle]
     const saved = state?.activeVariantKey
     const visible =
       saved &&
       saved !== LEGACY_ALL_VARIANT_KEY &&
       colorVariants.some((v) => v.variantKey === saved)
-    if (visible) return
-    const next = pickDefaultVariantKey(colorVariants, state ?? null)
-    if (saved === next) return
-    setProductStates((prev) => {
-      const existing = prev[selectedHandle] ?? makeEmptyProductState(selectedHandle, next)
-      if (existing.activeVariantKey === next) return prev
-      return {
-        ...prev,
-        [selectedHandle]: { ...existing, activeVariantKey: next },
+    if (!visible) {
+      const next = pickDefaultVariantKey(colorVariants, state ?? null)
+      if (saved !== next) {
+        const existing = state ?? makeEmptyProductState(selectedHandle, next)
+        if (existing.activeVariantKey !== next) {
+          setProductStates((prev) => ({
+            ...prev,
+            [selectedHandle]: { ...existing, activeVariantKey: next },
+          }))
+        }
       }
-    })
-  }, [selectedHandle, colorVariants, productStates])
+    }
+  }
 
   // --- Derived: current product assignment state ---
   const currentProductState = useMemo<V2ProductState | null>(() => {
@@ -634,7 +625,6 @@ export function LegacyMediaBoardV2Client({
     setSelectedHandle(null)
     setSavedAt(null)
     hasSavedOnceRef.current = false
-    hasHydratedRef.current = false
   }, [])
 
   const overlayCatalogHandles = useMemo(() => {

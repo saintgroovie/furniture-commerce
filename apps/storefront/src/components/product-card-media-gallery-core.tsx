@@ -226,7 +226,7 @@ function ProductCardSwatchScrollRail({
   )
 }
 
-export function ProductCardMediaGalleryCore({
+function ProductCardMediaGalleryCoreInner({
   mainSrc,
   extraSrcs,
   headboardVariants,
@@ -349,7 +349,6 @@ export function ProductCardMediaGalleryCore({
   // rendered by the PDP page below <ProductCta>. SSR-safe: the slot only
   // exists once mounted in the browser, so this stays null during the
   // server-rendered/hydration pass and the portal appears after mount.
-  const [pdpSwatchSlot, setPdpSwatchSlot] = useState<HTMLElement | null>(null)
 
   useEffect(() => {
     activeHeadboardKeyRef.current = activeHeadboardKey
@@ -560,104 +559,15 @@ export function ProductCardMediaGalleryCore({
     ]
   )
 
-  useEffect(() => {
-    const bedDefault =
-      greenwichBedMatrix && greenwichBedMatrix.length > 0
-        ? defaultGreenwichBedSelection(greenwichBedMatrix)
-        : null
-    const paintDefault =
-      greenwichPaintMatrix && greenwichPaintMatrix.length > 0
-        ? defaultGreenwichPaintSelection(greenwichPaintMatrix)
-        : null
 
-    setActiveHeadboardKey(bedDefault?.headboard ?? headboardVariants?.[0]?.key ?? null)
-    setActiveUpholsteryKey(bedDefault?.fabric ?? upholsteryVariants?.[0]?.key ?? null)
-    setActiveWoodKey(
-      bedDefault?.frameMaterial ??
-        paintDefault?.frameMaterial ??
-        woodVariants?.[0]?.key ??
-        null
-    )
-    setActiveFinishKey(paintDefault?.paintFinish ?? finishVariants?.[0]?.key ?? null)
-    setActiveSeparateFabricKey(separateFabricRows?.[0]?.key ?? null)
-    setActiveProvenceMediaKey("cream")
-    const initial =
-      bedDefault && greenwichBedMatrix
-        ? resolveGreenwichBedMedia(
-            greenwichBedMatrix,
-            bedDefault.headboard,
-            bedDefault.frameMaterial,
-            bedDefault.fabric,
-            bedMediaOptions
-          )
-        : paintDefault && greenwichPaintMatrix
-          ? resolveGreenwichPaintMedia(
-              greenwichPaintMatrix,
-              paintDefault.frameMaterial,
-              paintDefault.paintFinish
-            )
-          : isProvencePaintWood && finishVariants?.[0]
-            ? {
-                mainSrc: finishVariants[0].mainSrc.trim(),
-                extraSrcs: finishVariants[0].extraSrcs,
-              }
-          : (() => {
-              const combined = resolveCombinedMedia(
-                mainSrc,
-                extraSrcs,
-                headboardVariants?.[0],
-                upholsteryVariants?.[0],
-                woodVariants?.[0],
-                finishVariants?.[0]
-              )
-              return resolveCardHeroAndNearDuplicateExtras(
-                combined.mainSrc,
-                combined.extraSrcs,
-                productHandle
-              )
-            })()
-    const initialMain = initial?.mainSrc?.trim() ?? mainSrc.trim()
-    setDisplayHeroSrc(
-      layout === "pdp"
-        ? initialMain
-        : resolveCatalogCardHeroSrc(initialMain, resolveStorefrontProductImageSrc)
-    )
-    setHeroFailed(false)
-    setActiveGalleryUrl(null)
-    setFailedExtras(new Set())
-    setKnownGoodSrcByLogical({})
-    pendingRef.current = null
-    pendingLogicalRef.current = null
-    preloadFallbackTriedRef.current = false
-    executionSwapSeqRef.current += 1
-    executionHeroPreloadRef.current.clear()
-    setPendingPreloadUrl(null)
-  }, [
-    productMediaKey,
-    headboardVariants,
-    upholsteryVariants,
-    woodVariants,
-    finishVariants,
-    separateFabricRows,
-    greenwichBedMatrix,
-    greenwichPaintMatrix,
-    mainSrc,
-    extraSrcs,
-    productHandle,
-    layout,
-    isProvencePaintWood,
-  ])
-
-  // Catalog: keep hero on the quality-resolved main when execution selection changes
-  // (unless the shopper already picked a strip thumb).
-  useEffect(() => {
-    if (layout === "pdp") return
-    if (activeGalleryUrl != null) return
+  // Catalog: keep hero on quality-resolved main unless a strip thumb is selected.
+  if (layout !== "pdp" && activeGalleryUrl == null) {
     const next = cardQualityMedia.mainSrc.trim()
-    if (!next) return
-    setDisplayHeroSrc(next)
-    setHeroFailed(false)
-  }, [layout, cardQualityMedia.mainSrc, activeGalleryUrl])
+    if (next && next !== displayHeroSrc) {
+      setDisplayHeroSrc(next)
+      setHeroFailed(false)
+    }
+  }
 
   const resolveMatrixMain = useCallback(
     (hb: string, wood: string, fabric: string) => {
@@ -673,15 +583,21 @@ export function ProductCardMediaGalleryCore({
     [greenwichBedMatrix, bedMediaOptions]
   )
 
-  useEffect(() => {
-    if (layout !== "pdp") return
-    setPdpSwatchSlot(document.getElementById("pdp-color-options-slot"))
-  }, [layout])
 
   // Buyer strips are optimistic (no Image() stampede). Broken thumbs prune
   // themselves via onError. PDP must not clear/rebuild the rail on every
   // execution switch - that reflows the hero column and causes visible shake.
   const isPdpLayout = layout === "pdp"
+  const pdpSwatchSlot = useSyncExternalStore(
+    (onStoreChange) => {
+      if (typeof document === "undefined") return () => {}
+      const mo = new MutationObserver(onStoreChange)
+      mo.observe(document.body, { childList: true, subtree: true })
+      return () => mo.disconnect()
+    },
+    () => (isPdpLayout ? document.getElementById("pdp-color-options-slot") : null),
+    () => null
+  )
 
   // Catalog: defer strip network until near-viewport / pointer / keyboard focus.
   // Default true stampeded ~4 thumb URLs × visible cards on mount (W3g).
@@ -2195,4 +2111,21 @@ export function ProductCardMediaGalleryCore({
       )}
     </div>
   )
+}
+
+
+export function ProductCardMediaGalleryCore(props: Props) {
+  const remountKey = [
+    props.mainSrc,
+    props.extraSrcs.join("\u0000"),
+    props.headboardVariants?.map((v) => `${v.key}\u0001${v.mainSrc}`).join("\u0003") ?? "",
+    props.upholsteryVariants?.map((v) => `${v.key}\u0001${v.mainSrc}`).join("\u0004") ?? "",
+    props.woodVariants?.map((v) => `${v.key}\u0001${v.mainSrc}`).join("\u0005") ?? "",
+    props.finishVariants?.map((v) => `${v.key}\u0001${v.mainSrc}`).join("\u0007") ?? "",
+    props.greenwichBedMatrix?.length ?? 0,
+    props.greenwichPaintMatrix?.length ?? 0,
+    props.productHandle ?? "",
+    props.layout ?? "card",
+  ].join("|")
+  return <ProductCardMediaGalleryCoreInner key={remountKey} {...props} />
 }

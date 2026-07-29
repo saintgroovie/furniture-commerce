@@ -21,6 +21,29 @@ assert.match(layout, /a11yCopy\.skipToContent/)
 assert.match(layout, /id="main-content"/)
 assert.match(layout, /lang="ru"/)
 
+/* Canonical main-nav order in desktop header: Catalog → Rooms → Kids → … */
+{
+  const navStart = layout.indexOf('aria-label="Основная навигация"')
+  assert.ok(navStart > 0, "main nav landmark")
+  const navChunk = layout.slice(navStart, navStart + 1800)
+  const catalog = navChunk.indexOf('href="/catalog"')
+  const rooms = navChunk.indexOf('href="/rooms"')
+  const kids = navChunk.indexOf('href="/kids"')
+  assert.ok(catalog >= 0 && rooms > catalog && kids > rooms, "desktop nav Catalog→Rooms→Kids")
+}
+
+const mobileNavOrder = read("src/components/mobile-nav.tsx")
+{
+  const primary = mobileNavOrder.slice(
+    mobileNavOrder.indexOf("const PRIMARY"),
+    mobileNavOrder.indexOf("const SECONDARY")
+  )
+  const catalog = primary.indexOf('"/catalog"')
+  const rooms = primary.indexOf('"/rooms"')
+  const kids = primary.indexOf('"/kids"')
+  assert.ok(catalog >= 0 && rooms > catalog && kids > rooms, "mobile PRIMARY Catalog→Rooms→Kids")
+}
+
 const globals = read("src/app/globals.css")
 assert.match(globals, /\.skip-link:focus/)
 assert.match(globals, /a:focus-visible/)

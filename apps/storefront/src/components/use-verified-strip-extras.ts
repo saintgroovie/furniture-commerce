@@ -42,21 +42,13 @@ export function useVerifiedStripExtras(
 
   useEffect(() => {
     if (mode === "optimistic") return
-    let cancelled = false
     if (!enabled) {
-      setVerified([])
-      setProbeDone(false)
-      return () => {
-        cancelled = true
-      }
+      return
     }
     if (extraSrcs.length === 0) {
-      setVerified([])
-      setProbeDone(true)
-      return () => {
-        cancelled = true
-      }
+      return
     }
+    let cancelled = false
     setVerified([])
     setProbeDone(false)
     filterExtrasBySuccessfulImageLoad(extraSrcs, maxProbes).then((ok) => {
@@ -73,6 +65,7 @@ export function useVerifiedStripExtras(
 
   return useMemo(() => {
     if (!enabled) return []
+    if (extraSrcs.length === 0) return []
     if (mode === "optimistic") {
       return selectUrlsToProbe(extraSrcs, maxProbes).filter(
         (u) => !failedExtras.has(u)

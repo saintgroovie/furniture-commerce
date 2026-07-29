@@ -61,7 +61,8 @@ if [[ "$REQUIRE_EVIDENCE" == "1" ]]; then
   [[ -n "$EVIDENCE_PATH" && -f "$EVIDENCE_PATH" ]] || die "media gate evidence missing (required)"
   python3 - "$EVIDENCE_PATH" "$PIN_DIGEST" "$MAX_EVIDENCE_AGE_SEC" "${LIVE_CID}" "${WOODRIGHT_MEDIA_VOLUME:-woodright-stack-3dsdhd_woodright_staging_media}" <<'PY'
 import json,sys,time
-path,pin,max_age,live_name,want_vol=sys.argv[1:6]
+path,pin,max_age_s,live_name,want_vol=sys.argv[1:6]
+max_age=int(max_age_s)
 ev=json.load(open(path))
 if ev.get("schema")!="woodright.media_gate_evidence.v2":
   raise SystemExit("evidence schema invalid")

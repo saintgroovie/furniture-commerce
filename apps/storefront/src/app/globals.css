@@ -60,6 +60,7 @@ html {
   color: var(--color-fg);
   background: var(--color-bg);
   -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
 }
 
 body {
@@ -70,6 +71,7 @@ body {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  overflow-x: clip;
 }
 
 #main-content {
@@ -2601,6 +2603,18 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .site-footer {
   color: var(--color-fg-secondary);
 }
 
+/* Brand lead/bullets: nowrap+fixed height overflows narrow mobile columns. */
+@media (max-width: 1100px) {
+  .footer-brand-lead .footer-row,
+  .footer-brand-bullets .footer-row {
+    white-space: normal;
+    height: auto;
+    min-height: var(--footer-row-h);
+    line-height: 1.35;
+    padding-block: 0.15rem;
+  }
+}
+
 .footer-column-links .footer-row {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2627,11 +2641,8 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .site-footer {
 @media (max-width: 1100px) {
   .footer-columns {
     --footer-nav-gap: 2.5rem;
-  }
-}
-
-@media (max-width: 900px) {
-  .footer-columns {
+    /* Desktop lattice (max-content × 5 + fr gutters) overflows mid tablets
+       (~901–1100). Stack earlier; keep dense lattice for wide desktops. */
     grid-template-columns: 1fr;
     row-gap: var(--space-xl);
     margin-block: var(--space-lg);
@@ -6107,11 +6118,11 @@ button.pdp-material-trigger:focus-visible {
     var(--pdp-below-logo-end) - var(--pdp-below-gutter) - var(--pdp-below-gap)
   );
   width: 100vw;
-  max-width: 100vw;
   margin-left: calc(50% - 50vw);
   box-sizing: border-box;
   display: grid;
-  grid-template-columns: minmax(0, var(--pdp-below-desc-track)) minmax(300px, 1fr);
+  /* minmax(0,…) — avoid 300px min track forcing page overflow at 769–900px */
+  grid-template-columns: minmax(0, var(--pdp-below-desc-track)) minmax(0, 1fr);
   gap: var(--pdp-below-gap);
   /* Less air above «Описание / Характеристики»; keep a fuller bottom close. */
   padding-top: clamp(var(--space-md), 3.5vh, 40px);
@@ -6213,7 +6224,8 @@ button.pdp-material-trigger:focus-visible {
   margin-top: var(--space-lg);
 }
 
-@media (max-width: 768px) {
+/* Stack below-fold earlier than phone: two min tracks + gutters overflow mid tablets. */
+@media (max-width: 900px) {
   .pdp-below {
     grid-template-columns: 1fr;
     gap: var(--space-xl);
@@ -7580,7 +7592,8 @@ a.pdp-size-chip:hover {
   white-space: nowrap;
 }
 
-@media (max-width: 780px) {
+/* Wrap earlier than phone: nowrap leads overflow between ~781–900px. */
+@media (max-width: 900px) {
   .bespoke-request-lead {
     white-space: normal;
   }
@@ -7931,12 +7944,9 @@ a.pdp-size-chip:hover {
    ========================================================================== */
 
 /* Full-bleed: the homepage breaks out of main.container and manages its own
-   inner gutters via .hp-wrap. body overflow-x is clipped to swallow the
-   scrollbar-width rounding of the 100vw breakout. Kept global (not scoped
-   to :has(.hp)): the PDP full-bleed hero relies on the same clip. */
-body {
-  overflow-x: clip;
-}
+   inner gutters via .hp-wrap. html/body overflow-x: clip (declared above)
+   swallows the scrollbar-width rounding of the 100vw breakout. Kept global
+   (not scoped to :has(.hp)): the PDP full-bleed hero relies on the same clip. */
 
 /* Reduced motion: silence every homepage animation and transition in one
    place - hover zooms, CTA arrow slides, scene fades, hero/card cycles,
@@ -8624,6 +8634,7 @@ body {
 .hp-craft {
   background: var(--hp-dark);
   color: var(--hp-dark-fg);
+  overflow-x: clip;
   /* Discreet drafting grid. */
   background-image: repeating-linear-gradient(
       to right,
@@ -8685,6 +8696,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
+  min-width: 0;
 }
 
 .hp-craft-media {
@@ -9010,7 +9022,7 @@ body {
   }
 
   .hp-craft-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     row-gap: var(--space-lg);
   }
 
@@ -9070,18 +9082,27 @@ body {
   /* Featured products become a horizontal rail. */
   .hp-featured {
     display: block;
+    min-width: 0;
+    max-width: 100%;
+    /* Contain the rail so grid-auto-columns do not inflate document width. */
+    overflow-x: clip;
   }
 
   .hp-featured-grid {
     display: grid;
     grid-auto-flow: column;
-    grid-auto-columns: 72%;
+    grid-auto-columns: min(72%, 16.5rem);
     grid-template-columns: none;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
     padding-bottom: var(--space-sm);
     margin-top: var(--space-md);
+    overscroll-behavior-x: contain;
   }
 
   .hp-featured-grid .hp-featured-card {
@@ -9092,8 +9113,9 @@ body {
     aspect-ratio: 4 / 3;
   }
 
+  /* 3×120 min tracks overflow ~320–360px; keep two columns on phone. */
   .hp-kids-objects {
-    grid-template-columns: repeat(3, minmax(120px, 1fr));
+    grid-template-columns: 1fr 1fr;
     gap: var(--space-sm);
   }
 
@@ -9104,7 +9126,7 @@ body {
 
 @media (max-width: 480px) {
   .hp-craft-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--space-sm);
   }
 

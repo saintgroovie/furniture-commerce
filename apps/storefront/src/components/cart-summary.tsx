@@ -84,6 +84,11 @@ function itemArticle(item: Record<string, unknown>): string | null {
   return typeof sku === "string" && sku.trim() ? sku.trim() : null
 }
 
+type CartSummaryProps = {
+  /** Server-known empty vs loading: avoids SSR «Загружаем корзину…» with no cookie. */
+  initialViewState?: Extract<CartViewState, "loading" | "empty">
+}
+
 function subscribeNoop() {
   return () => {}
 }
@@ -100,11 +105,11 @@ function useSessionCartId() {
   )
 }
 
-export function CartSummary() {
+export function CartSummary({ initialViewState = "loading" }: CartSummaryProps) {
   const isClient = useIsClient()
   const sessionCartId = useSessionCartId()
   const [cart, setCart] = useState<Record<string, unknown> | null>(null)
-  const [viewState, setViewState] = useState<CartViewState>("loading")
+  const [viewState, setViewState] = useState<CartViewState>(initialViewState)
   const [mutating, setMutating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -143,11 +148,14 @@ export function CartSummary() {
     }
   }, [isClient, sessionCartId])
 
-  const effectiveView: CartViewState =
-    !isClient
-      ? "loading"
-      : !sessionCartId && viewState === "loading"
-        ? "empty"
+  const effectiveView: CartViewState = !isClient
+    ? initialViewState
+    : !sessionCartId
+      ? viewState === "error" || viewState === "invalid_state"
+        ? viewState
+        : "empty"
+      : viewState === "empty" && !cart
+        ? "loading"
         : viewState
 
   async function handleRemove(cartId: string, lineId: string) {
