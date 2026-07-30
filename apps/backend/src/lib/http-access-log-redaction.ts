@@ -94,22 +94,26 @@ let registered = false
 /**
  * Override morgan's `url` token so Medusa's JSON access logger never persists
  * plaintext sensitive query values. Safe to call multiple times.
+ *
+ * Fail-closed: if morgan cannot be required/overridden, throws so startup does
+ * not silently serve without redaction. `registered` is set only after success.
  */
 export function registerHttpAccessLogRedaction(): void {
   if (registered) {
     return
   }
-  registered = true
-  try {
-    // Transitive runtime dependency of @medusajs/framework
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const morgan = require("morgan") as {
-      token: (name: string, fn: (req: UrlCarrier) => string) => void
-    }
-    morgan.token("url", (req: UrlCarrier) =>
-      redactUrlForAccessLog(req.originalUrl || req.url || "-")
-    )
-  } catch {
-    // Tests / environments without morgan: request mutation middleware still helps.
+  // Declared direct dependency for production hardening (also transitive via Medusa).
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const morgan = require("morgan") as {
+    token: (name: string, fn: (req: UrlCarrier) => string) => void
   }
+  if (typeof morgan?.token !== "function") {
+    throw new Error(
+      "http-access-log-redaction: morgan.token unavailable; refusing to start without URL redaction"
+    )
+  }
+  morgan.token("url", (req: UrlCarrier) =>
+    redactUrlForAccessLog(req.originalUrl || req.url || "-")
+  )
+  registered = true
 }

@@ -84,7 +84,7 @@ import {
 }
 
 {
-  // Idempotent register (no throw without/with morgan)
+  // register requires morgan (declared dependency); idempotent after success
   registerHttpAccessLogRedaction()
   registerHttpAccessLogRedaction()
 }

@@ -37,8 +37,22 @@ Prefer exact OCI digests recorded at cutover time. Example prior foreign anchors
    - operator interactive `psql` / `medusa exec`
 2. Stop backend (and storefront if it may write) with compose:
    `cd /etc/dokploy/compose/woodright-production/code && docker compose --env-file .env stop backend storefront`
-3. Confirm no new sessions:
-   `docker exec woodright-production-postgres psql -U woodright_production -d woodright_production -c "select pid, usename, state, query_start from pg_stat_activity where datname='woodright_production';"`
+3. Terminate non-operator sessions and confirm **zero** unexpected connections:
+
+```sh
+docker exec woodright-production-postgres psql -U woodright_production -d postgres -v ON_ERROR_STOP=1 -c "
+SELECT pg_terminate_backend(pid)
+FROM pg_stat_activity
+WHERE datname = 'woodright_production'
+  AND pid <> pg_backend_pid();
+"
+docker exec woodright-production-postgres psql -U woodright_production -d postgres -Atc "
+SELECT count(*) FROM pg_stat_activity
+WHERE datname='woodright_production' AND pid <> pg_backend_pid();
+"
+# must print 0 before continuing
+```
+
 4. Record quiesce UTC timestamp.
 
 ## Phase C - preserve failed state
@@ -48,22 +62,33 @@ Save: migration ledger, container inspect, pins/digests, recent logs (redacted).
 
 ## Phase D - restore target DB
 
-**Never** restore into staging/demo DB. Confirm `current_database() = woodright_production`.
+**Never** restore into staging/demo DB. Confirm target identity explicitly.
 
-Preferred safe strategies:
+**Do not** rely on in-place `pg_restore --clean --if-exists` against a long-lived
+production DB as the sole strategy: objects created after the dump TOC can survive
+and create a hybrid schema.
 
-1. Restore into a disposable rehearsal DB first (name contains `restore_rehearsal`) and verify.
-2. Only then restore production using the chosen dump after Phase B quiesce.
+Required clean strategy (pick one, document which):
 
-Example restore (after quiesce):
+1. **Preferred:** create replacement DB `woodright_production_restore_<UTC>`, restore into it with
+   `pg_restore --exit-on-error --no-owner` (and `--single-transaction` when dump format allows),
+   verify (Phase E), then swap by renaming DBs under quiesce
+   (old → `_failed_<UTC>`, new → `woodright_production`).
+2. **Alternate:** `DROP DATABASE woodright_production` (after terminate) →
+   `CREATE DATABASE woodright_production` → restore into empty DB with `--exit-on-error`.
+   Abort and recover from the Phase C incident dump if restore fails mid-way.
+
+Example restore into an empty/replacement DB:
 
 ```sh
 docker cp /path/to/woodright_production.dump woodright-production-postgres:/tmp/restore.dump
 docker exec woodright-production-postgres \
-  pg_restore -U woodright_production -d woodright_production --clean --if-exists -Fc /tmp/restore.dump
+  pg_restore -U woodright_production -d woodright_production_restore_<UTC> \
+  --exit-on-error --no-owner --no-acl -Fc /tmp/restore.dump
 ```
 
-Handle ownership/ACL; abort on incomplete restore.
+If restoring an older dump that lacks later Medusa migrations required by the target image,
+re-run `medusa db:migrate --skip-scripts` from the **target** image after restore and before resume.
 
 ## Phase E - verify restored DB (before writers)
 
