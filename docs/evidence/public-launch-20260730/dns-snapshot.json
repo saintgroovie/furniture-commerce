@@ -1,0 +1,65 @@
+{
+  "captured_at": "2026-07-30T19:02:37Z",
+  "zone": "woodright.ru",
+  "authoritative_note": "answers via local resolver; NS point to itb-host",
+  "NS": [
+    "woodright.ru.\t\t3600\tIN\tNS\tns2.itb-host.ru.",
+    "woodright.ru.\t\t3600\tIN\tNS\tns1.itb-host.ru."
+  ],
+  "SOA": [
+    "woodright.ru.\t\t3600\tIN\tSOA\tlocalhost. tech.itb-host.ru. 2026021509 10800 3600 604800 86400"
+  ],
+  "A": [
+    "woodright.ru.\t\t3600\tIN\tA\t79.133.175.43"
+  ],
+  "AAAA": [],
+  "www_A": [
+    "www.woodright.ru.\t3600\tIN\tA\t79.133.175.43"
+  ],
+  "api_A": [],
+  "admin_A": [],
+  "mail_A": [],
+  "MX": [
+    "woodright.ru.\t\t3600\tIN\tMX\t20 mail.woodright.ru.",
+    "woodright.ru.\t\t3600\tIN\tMX\t10 mx.yandex.net."
+  ],
+  "TXT": [
+    "woodright.ru.\t\t3600\tIN\tTXT\t\"v=spf1 ip4:79.133.175.238 a mx ~all\""
+  ],
+  "CAA": [],
+  "DMARC": [],
+  "spf_contains_a_mechanism": true,
+  "spf_raw": "v=spf1 ip4:79.133.175.238 a mx ~all",
+  "spf_warning": "Changing apex A from 79.133.175.43 will change SPF 'a' authorization semantics. Owner must keep 'a' intentionally or replace with explicit mail IP before web cutover.",
+  "mail_records_must_preserve": [
+    "NS",
+    "MX",
+    "TXT/SPF",
+    "DMARC"
+  ],
+  "proposed_web_only_mutations_not_applied": [
+    {
+      "name": "@",
+      "type": "A",
+      "from": "79.133.175.43",
+      "to": "89.169.188.29",
+      "ttl_recommend": 300
+    },
+    {
+      "name": "www",
+      "type": "A",
+      "from": "79.133.175.43",
+      "to": "89.169.188.29 or CNAME apex",
+      "ttl_recommend": 300
+    },
+    {
+      "name": "api",
+      "type": "A",
+      "from": "NXDOMAIN",
+      "to": "89.169.188.29",
+      "ttl_recommend": 300
+    }
+  ],
+  "vm_ip": "89.169.188.29",
+  "parking_ip": "79.133.175.43"
+}

@@ -101,9 +101,15 @@ function assertStaticArtifacts() {
   ok("indexing-policy does not auto-index public_indexable alias")
 
   const footer = read("apps/storefront/src/lib/woodright-copy.ts")
-  if (/href: "\/privacy"/.test(footer) || /href: "\/offer"/.test(footer)) {
-    fail("footer must not link incomplete legal pages until owner inputs complete")
-  } else ok("footer does not advertise incomplete legal pages")
+  // Public-launch-blockers merge (2026-07-30) resolution: the 5 buyer legal
+  // pages (privacy/terms/delivery/payment/returns) are explicitly footer-linked
+  // even while `incompleteForPublicLaunch` is true - each renders confirmed
+  // showroom/checkout facts only, with a neutral "готовится" note, never a
+  // finished legal document. /offer and /warranty (oferta / warranty
+  // commitments) stay unlinked until owner input completes them.
+  if (/href: "\/offer"/.test(footer) || /href: "\/warranty"/.test(footer)) {
+    fail("footer must not link oferta/warranty pages until owner inputs complete")
+  } else ok("footer does not advertise oferta/warranty ahead of owner approval")
 }
 
 function evaluateFixture(name) {

@@ -1,3 +1,8 @@
+import {
+  assertProductionLikeSiteUrl,
+  isProductionLikeRuntime,
+} from "@/lib/launch-contract"
+
 /**
  * Medusa API base URL.
  * - Server: Docker-internal / loopback from server-only env (never NEXT_PUBLIC).
@@ -27,9 +32,50 @@ export function getBaseUrl(): string {
   return trimmed
 }
 
-/** Base URL of the storefront for metadataBase, canonical, OG. */
+/**
+ * Base URL of the storefront for metadataBase, canonical, OG.
+ *
+ * Fail-closed for production-like processes (see `@/lib/launch-contract`):
+ * - `WOODRIGHT_RUNTIME_ROLE` production/production_candidate, OR
+ * - `WOODRIGHT_LAUNCH_MODE` set, OR
+ * - `NODE_ENV=production` (covers plain `next build`/`next start`)
+ * require `NEXT_PUBLIC_SITE_URL` with no `localhost:8000` fallback.
+ *
+ * The stricter demo/loopback rejection (`assertProductionLikeSiteUrl`) only
+ * fires when a launch mode is explicitly set or the runtime role is
+ * production-like - a bare `NODE_ENV=production` build (e.g. CI's
+ * `https://woodright-demo.ru` build check) still passes, unchanged.
+ *
+ * Local/dev without a production-like role keeps the `localhost:8000`
+ * fallback for DX.
+ */
 export function getSiteUrl(): string {
-  return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:8000"
+  const raw = process.env.NEXT_PUBLIC_SITE_URL
+  const runtimeRole = process.env.WOODRIGHT_RUNTIME_ROLE
+  const launchModeRaw = process.env.WOODRIGHT_LAUNCH_MODE
+  const nodeEnv = process.env.NODE_ENV
+
+  const roleIsProductionLike = isProductionLikeRuntime(runtimeRole)
+  const launchModeIsSet = Boolean(launchModeRaw && String(launchModeRaw).trim())
+  const requireExplicit = roleIsProductionLike || launchModeIsSet || nodeEnv === "production"
+
+  if (!requireExplicit) {
+    const trimmed = String(raw ?? "").trim()
+    return trimmed ? trimmed.replace(/\/$/, "") : "http://localhost:8000"
+  }
+
+  const trimmed = String(raw ?? "").trim()
+  if (!trimmed) {
+    throw new Error(
+      "NEXT_PUBLIC_SITE_URL is required (WOODRIGHT_RUNTIME_ROLE production-like / WOODRIGHT_LAUNCH_MODE set / NODE_ENV=production) - no localhost fallback"
+    )
+  }
+
+  if (launchModeIsSet || roleIsProductionLike) {
+    return assertProductionLikeSiteUrl(trimmed)
+  }
+
+  return trimmed.replace(/\/$/, "")
 }
 
 function getPublishableKey(): string {

@@ -2,6 +2,13 @@ import { loadEnv, defineConfig } from "@medusajs/framework/utils"
 import { woodrightAdminFaviconPlugin } from "./src/admin/vite/favicon-plugin"
 import { woodrightAdminNormalizeHostPlugin } from "./src/admin/vite/normalize-admin-host-plugin"
 import {
+  assertKnownLaunchCorsProfile,
+  assertProductionAdminCors,
+  assertProductionAuthCors,
+  assertProductionStoreCors,
+  parseCorsOrigins,
+} from "./src/lib/launch-cors"
+import {
   validateAdminCorsPrivate,
   validateProductionAuthCors,
   validateProductionStoreCors,
@@ -142,15 +149,42 @@ if (isProduction && localHttp) {
   )
 }
 
+const resolvedStoreCors = resolveCors("STORE_CORS", process.env.STORE_CORS, LOCAL_STORE_CORS)
+const resolvedAdminCors = resolveCors("ADMIN_CORS", process.env.ADMIN_CORS, LOCAL_ADMIN_CORS)
+const resolvedAuthCors = resolveCors("AUTH_CORS", process.env.AUTH_CORS, LOCAL_AUTH_CORS)
+
+/**
+ * Public-launch CORS gate - opt-in only, never wired unconditionally.
+ *
+ * The currently running private candidate uses loopback-only STORE_CORS /
+ * ADMIN_CORS; requiring apex+www unconditionally here (from just
+ * WOODRIGHT_RUNTIME_ROLE=production_candidate) would break that candidate
+ * until a redeploy ships the new env. Set
+ * `WOODRIGHT_LAUNCH_CORS_PROFILE=production_buyer` explicitly to require the
+ * real apex/www buyer origins (see `./src/lib/launch-cors.ts`). Unset =
+ * unchanged current behavior.
+ */
+const launchCorsProfile = String(process.env.WOODRIGHT_LAUNCH_CORS_PROFILE || "").trim()
+assertKnownLaunchCorsProfile(launchCorsProfile)
+if (launchCorsProfile === "production_buyer") {
+  const corsEnv = {
+    runtimeExposure: process.env.WOODRIGHT_RUNTIME_EXPOSURE,
+    runtimeRole: process.env.WOODRIGHT_RUNTIME_ROLE,
+  }
+  assertProductionStoreCors(parseCorsOrigins(resolvedStoreCors), corsEnv)
+  assertProductionAdminCors(parseCorsOrigins(resolvedAdminCors))
+  assertProductionAuthCors(parseCorsOrigins(resolvedAuthCors), corsEnv)
+}
+
 export default defineConfig({
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL!,
     redisUrl: process.env.REDIS_URL,
     http: {
       // Hybrid storefront is :3002; Docker full profile historically publishes :8000.
-      storeCors: resolveCors("STORE_CORS", process.env.STORE_CORS, LOCAL_STORE_CORS),
-      adminCors: resolveCors("ADMIN_CORS", process.env.ADMIN_CORS, LOCAL_ADMIN_CORS),
-      authCors: resolveCors("AUTH_CORS", process.env.AUTH_CORS, LOCAL_AUTH_CORS),
+      storeCors: resolvedStoreCors,
+      adminCors: resolvedAdminCors,
+      authCors: resolvedAuthCors,
       jwtSecret: resolveSecret(
         "JWT_SECRET",
         process.env.JWT_SECRET,

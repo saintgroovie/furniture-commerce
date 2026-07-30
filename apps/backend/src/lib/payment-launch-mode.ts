@@ -3,6 +3,12 @@
  *
  * Target launch: manager_payment_link (no online PSP activation).
  * Buyer payment labels remain in derive-customer-status / mapPaymentBuyerLabel.
+ *
+ * Distinct from the storefront's `WOODRIGHT_PAYMENT_MODE` contract
+ * (`apps/storefront/src/lib/payment-mode.ts`, only mode `manual_invoice`) -
+ * same operational scenario (no online PSP; manager sends a payment link),
+ * different env var per app. Setting one does not set the other; see the
+ * mapping note in `scripts/release/check-public-launch-readiness.cjs`.
  */
 
 export type PaymentLaunchMode =

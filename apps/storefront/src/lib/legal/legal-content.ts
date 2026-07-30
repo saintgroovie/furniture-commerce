@@ -5,6 +5,7 @@
  */
 
 import { showroomContacts } from "@/lib/showroom-contacts"
+import { checkoutCopy } from "@/lib/woodright-copy"
 import {
   isLegalLaunchComplete,
   loadLegalOwnerValuesFromEnv,
@@ -14,6 +15,7 @@ import {
 
 export type LegalPageId =
   | "privacy"
+  | "terms"
   | "offer"
   | "delivery"
   | "payment"
@@ -155,6 +157,38 @@ export function buildLegalPage(
             : []),
         ],
       }
+    case "terms":
+      return {
+        ...base,
+        id,
+        title: incomplete ? "Условия покупки - подготовка" : "Условия покупки",
+        path: "/terms",
+        lead: [
+          incomplete
+            ? "Как проходит оформление - полный текст условий появится после утверждения владельцем"
+            : "Как оформляется заказ на мебель Woodright",
+        ],
+        sections: [
+          {
+            // Provenance: checkoutCopy.paymentClarity (@/lib/woodright-copy).
+            heading: "Как проходит оформление",
+            paragraphs: [...checkoutCopy.paymentClarity],
+          },
+          {
+            heading: "Полные условия",
+            paragraphs:
+              identityLines.length > 0
+                ? identityLines
+                : [
+                    "Полный текст условий покупки появится на этой странице после утверждения владельцем",
+                  ],
+          },
+          {
+            heading: "Связь",
+            paragraphs: showroom,
+          },
+        ],
+      }
     case "offer":
       return {
         ...base,
@@ -287,6 +321,7 @@ export function buildLegalPage(
 
 export const LEGAL_PAGE_IDS: LegalPageId[] = [
   "privacy",
+  "terms",
   "offer",
   "delivery",
   "payment",
@@ -296,6 +331,7 @@ export const LEGAL_PAGE_IDS: LegalPageId[] = [
 
 export const LEGAL_PAGE_PATHS: Record<LegalPageId, string> = {
   privacy: "/privacy",
+  terms: "/terms",
   offer: "/offer",
   delivery: "/delivery",
   payment: "/payment",

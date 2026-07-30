@@ -1,0 +1,31 @@
+{
+  "ok": true,
+  "checked_handle": "a-07-1",
+  "checked_at": "2026-07-30T18:30:00.000Z",
+  "database": "woodright_production",
+  "source": "woodright-production-backend read-only",
+  "classification": "soft_deleted_residue_plus_live_draft_no_published_collision",
+  "published_buyer_visible_collision": false,
+  "duplicates": [],
+  "records": [
+    {
+      "id": "prod_01KY5SCBG6D21E5PC9Q4DEXJ5Z",
+      "handle": "a-07-1",
+      "title": "Сундук пиратский",
+      "status": "draft",
+      "deleted_at": "2026-07-22T20:48:56.244Z",
+      "routable": false,
+      "role": "soft_deleted_residue"
+    },
+    {
+      "id": "prod_01KY5SEY9MMP10REXCZ48C111E",
+      "handle": "a-07-1",
+      "title": "Сундук пиратский",
+      "status": "draft",
+      "deleted_at": null,
+      "routable": false,
+      "role": "live_draft_canonical_candidate"
+    }
+  ],
+  "notes": "Non-deleted GROUP BY handle HAVING count(*)>1 is empty. No published rows for a-07-1. Not a public_indexable published-collision blocker; hygiene before publish still owner-gated."
+}
