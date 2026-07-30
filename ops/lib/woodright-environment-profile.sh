@@ -82,8 +82,14 @@ wr_load_environment_profile() {
   export WOODRIGHT_EXPECTED_RELEASE="${WOODRIGHT_EXPECTED_RELEASE}"
   export WOODRIGHT_MEDIA_VOLUME="${WOODRIGHT_MEDIA_VOLUME}"
   export WOODRIGHT_MEDIA_MOUNT_IN_BE="${WOODRIGHT_MEDIA_MOUNT_IN_BE:-/server/static}"
-  export WR_STAGING_MUTATION_LOCK_PATH="${WOODRIGHT_MUTATION_LOCK_PATH}"
-  export WR_STAGING_MUTATION_LOCK_META="${WOODRIGHT_MUTATION_LOCK_PATH}.meta"
+  # Do not clobber an inherited lock path from a parent mutator (pair cutover → pin reconcile).
+  # Profile still exports WOODRIGHT_MUTATION_LOCK_PATH as the environment canonical target.
+  if [[ "${WOODRIGHT_STAGING_MUTATION_LOCK_HELD:-0}" == "1" && -n "${WR_STAGING_MUTATION_LOCK_PATH:-}" ]]; then
+    export WR_STAGING_MUTATION_LOCK_META="${WR_STAGING_MUTATION_LOCK_PATH}.meta"
+  else
+    export WR_STAGING_MUTATION_LOCK_PATH="${WOODRIGHT_MUTATION_LOCK_PATH}"
+    export WR_STAGING_MUTATION_LOCK_META="${WOODRIGHT_MUTATION_LOCK_PATH}.meta"
+  fi
 
   if [[ -n "${WOODRIGHT_REQUIRED_RUNTIME_ROLE:-}" && "${WOODRIGHT_REQUIRED_RUNTIME_ROLE}" == "public_demo" ]]; then
     export WOODRIGHT_REQUIRE_PUBLIC_DEMO=1
@@ -91,7 +97,7 @@ wr_load_environment_profile() {
     export WOODRIGHT_REQUIRE_PUBLIC_DEMO=0
   fi
 
-  wr_env_log "loaded environment=$env_name class=${WOODRIGHT_ENVIRONMENT_CLASS:-} provisioned=${WOODRIGHT_ENVIRONMENT_PROVISIONED:-0} profile=$path lock=${WOODRIGHT_MUTATION_LOCK_PATH}"
+  wr_env_log "loaded environment=$env_name class=${WOODRIGHT_ENVIRONMENT_CLASS:-} provisioned=${WOODRIGHT_ENVIRONMENT_PROVISIONED:-0} profile=$path lock=${WOODRIGHT_MUTATION_LOCK_PATH} held_lock=${WR_STAGING_MUTATION_LOCK_PATH}"
   return 0
 }
 

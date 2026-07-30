@@ -106,6 +106,10 @@ const baseEnv = {
 
 for (const rel of [
   "ops/release/recreate-staging-backend-with-media.sh",
+  "ops/release/recreate-staging-storefront.sh",
+  "ops/release/cutover-public-demo-pair.sh",
+  "ops/release/rollback-staging-backend-from-keeper.sh",
+  "ops/release/rollback-staging-storefront-from-keeper.sh",
   "ops/release/reconcile-runtime-manifests.sh",
   "ops/release/run-staging-seed-rooms-v1.sh",
   "scripts/release/attach-backend-network-alias.sh",
