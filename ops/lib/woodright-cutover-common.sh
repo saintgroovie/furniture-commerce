@@ -194,24 +194,69 @@ wr_cutover_assert_image_revision() {
   }
 }
 
+wr_cutover_install_file() {
+  # Copy src -> dest; use sudo -n when dest (or parent) is not writable, matching pin reconciler privilege model.
+  local src="${1:?}"
+  local dest="${2:?}"
+  [[ -f "$src" ]] || return 1
+  if [[ -e "$dest" ]]; then
+    if [[ -w "$dest" ]]; then
+      cp -p "$src" "$dest"
+      return $?
+    fi
+  else
+    if [[ -w "$(dirname "$dest")" ]]; then
+      cp -p "$src" "$dest"
+      return $?
+    fi
+  fi
+  if command -v sudo >/dev/null 2>&1; then
+    sudo -n cp -p "$src" "$dest"
+    return $?
+  fi
+  wr_cutover_die "cannot write $dest (need writable path or sudo -n)"
+  return 1
+}
+
 wr_cutover_pin_backup() {
   local evidence="${1:?}"
   local pins="${2:-/srv/woodright/runtime-identity/DOKPLOY_IMAGE_PINS.env}"
   local active="${3:-/srv/woodright/runtime-identity/ACTIVE_PUBLIC.json}"
+  local public_demo="${4:-/srv/woodright/runtime-identity/public-demo.json}"
+  local compose_env="${5:-/etc/dokploy/compose/woodright-stack-3dsdhd/code/.env}"
   umask 077
   mkdir -p "$evidence/pin-backup"
   if [[ -f "$pins" ]]; then
-    cp -p "$pins" "$evidence/pin-backup/DOKPLOY_IMAGE_PINS.env" || return 1
-    # checksum of pin file (contents may contain digests only - still ok)
+    # Evidence dir is operator-writable; read source with sudo if needed
+    if [[ -r "$pins" ]]; then
+      cp -p "$pins" "$evidence/pin-backup/DOKPLOY_IMAGE_PINS.env" || return 1
+    elif command -v sudo >/dev/null 2>&1; then
+      sudo -n cp -p "$pins" "$evidence/pin-backup/DOKPLOY_IMAGE_PINS.env" || return 1
+    else
+      return 1
+    fi
     if command -v shasum >/dev/null 2>&1; then
-      shasum -a 256 "$pins" >"$evidence/pin-backup/DOKPLOY_IMAGE_PINS.env.sha256"
+      shasum -a 256 "$evidence/pin-backup/DOKPLOY_IMAGE_PINS.env" >"$evidence/pin-backup/DOKPLOY_IMAGE_PINS.env.sha256"
     elif command -v sha256sum >/dev/null 2>&1; then
-      sha256sum "$pins" >"$evidence/pin-backup/DOKPLOY_IMAGE_PINS.env.sha256"
+      sha256sum "$evidence/pin-backup/DOKPLOY_IMAGE_PINS.env" >"$evidence/pin-backup/DOKPLOY_IMAGE_PINS.env.sha256"
     fi
   fi
-  if [[ -f "$active" ]]; then
-    cp -p "$active" "$evidence/pin-backup/ACTIVE_PUBLIC.json" || return 1
-  fi
+  for pair in \
+    "$active:ACTIVE_PUBLIC.json" \
+    "$public_demo:public-demo.json" \
+    "$compose_env:dokploy-compose.env"
+  do
+    local src="${pair%%:*}"
+    local name="${pair##*:}"
+    [[ -f "$src" ]] || continue
+    if [[ -r "$src" ]]; then
+      cp -p "$src" "$evidence/pin-backup/$name" || return 1
+    elif command -v sudo >/dev/null 2>&1; then
+      sudo -n cp -p "$src" "$evidence/pin-backup/$name" || return 1
+    else
+      return 1
+    fi
+  done
 }
 
 wr_cutover_atomic_write() {

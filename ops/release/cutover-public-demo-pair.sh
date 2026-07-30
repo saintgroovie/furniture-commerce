@@ -246,14 +246,22 @@ pair_rollback() {
     log "no SF keeper to restore"
   fi
   if [[ -f "$EVIDENCE_DIR/pin-backup/DOKPLOY_IMAGE_PINS.env" ]]; then
-    local pins="/srv/woodright/runtime-identity/DOKPLOY_IMAGE_PINS.env"
-    if [[ -f "$pins" ]]; then
-      cp -p "$EVIDENCE_DIR/pin-backup/DOKPLOY_IMAGE_PINS.env" "$pins" && pin_ok=1 || pin_ok=0
-    else
-      pin_ok=1
-    fi
+    wr_cutover_install_file "$EVIDENCE_DIR/pin-backup/DOKPLOY_IMAGE_PINS.env" \
+      /srv/woodright/runtime-identity/DOKPLOY_IMAGE_PINS.env && pin_ok=1 || pin_ok=0
   else
     pin_ok=1
+  fi
+  if [[ -f "$EVIDENCE_DIR/pin-backup/ACTIVE_PUBLIC.json" ]]; then
+    wr_cutover_install_file "$EVIDENCE_DIR/pin-backup/ACTIVE_PUBLIC.json" \
+      /srv/woodright/runtime-identity/ACTIVE_PUBLIC.json || pin_ok=0
+  fi
+  if [[ -f "$EVIDENCE_DIR/pin-backup/public-demo.json" ]]; then
+    wr_cutover_install_file "$EVIDENCE_DIR/pin-backup/public-demo.json" \
+      /srv/woodright/runtime-identity/public-demo.json || pin_ok=0
+  fi
+  if [[ -f "$EVIDENCE_DIR/pin-backup/dokploy-compose.env" ]]; then
+    wr_cutover_install_file "$EVIDENCE_DIR/pin-backup/dokploy-compose.env" \
+      /etc/dokploy/compose/woodright-stack-3dsdhd/code/.env || pin_ok=0
   fi
   printf '{"backend":%s,"storefront":%s,"pins":%s}\n' "$be_ok" "$sf_ok" "$pin_ok" \
     >"$EVIDENCE_DIR/json/pair-rollback-result.json"
@@ -451,7 +459,8 @@ if ! run_smoke; then
   exit "${ROLLBACK_RC:-12}"
 fi
 
-# Pin reconcile AFTER live match (official contract)
+# Pin reconcile UNDER the same canonical lock (inherited) before SUCCESS.
+# Releasing the lock before authoritative pin SoT alignment is a correctness race.
 if [[ -x "$REPO_ROOT/scripts/release/reconcile-public-image-pins.sh" ]]; then
   if [[ "${WOODRIGHT_SKIP_PIN_RECONCILE:-0}" != "1" ]]; then
     cat >"$EVIDENCE_DIR/json/planned-pin-reconcile.env" <<EOF
@@ -462,13 +471,45 @@ APPLY=1
 EOF
     printf 'WOODRIGHT_BACKEND_IMAGE=%s\nWOODRIGHT_STOREFRONT_IMAGE=%s\n' \
       "$BE_IMAGE" "$SF_IMAGE" >"$EVIDENCE_DIR/json/planned-pins.env"
-    log "NOTE: after lock release run:"
-    log "  set -a; source $EVIDENCE_DIR/json/planned-pin-reconcile.env; set +a"
-    log "  bash $REPO_ROOT/scripts/release/reconcile-public-image-pins.sh"
+    wr_staging_mutation_lock_export_inherit || {
+      log "lock inherit export failed before pin APPLY"
+      pair_rollback || true
+      exit "${ROLLBACK_RC:-12}"
+    }
+    log "pin_reconcile_begin under_inherited_lock=yes"
+    if ! EXPECTED_RELEASE_SHA="$TARGET_SHA" \
+      EXPECTED_BACKEND_DIGEST="$BE_DIGEST" \
+      EXPECTED_STOREFRONT_DIGEST="$SF_DIGEST" \
+      APPLY=1 \
+      UPDATE_PINS=1 \
+      UPDATE_ACTIVE_PUBLIC=1 \
+      bash "$REPO_ROOT/scripts/release/reconcile-public-image-pins.sh"; then
+      log "pin reconcile APPLY failed - rolling back pair"
+      printf '{"pin_apply":"failed"}\n' >"$EVIDENCE_DIR/json/pin-apply-result.json"
+      pair_rollback || true
+      exit "${ROLLBACK_RC:-12}"
+    fi
+    printf '{"pin_apply":"ok","under_lock":true}\n' >"$EVIDENCE_DIR/json/pin-apply-result.json"
+    log "pin_reconcile_ok under_inherited_lock=yes"
+  else
+    log "WARN WOODRIGHT_SKIP_PIN_RECONCILE=1 after runtime mutation"
+    pair_rollback || true
+    exit "${ROLLBACK_RC:-12}"
   fi
+else
+  log "missing reconcile-public-image-pins.sh after runtime mutation"
+  pair_rollback || true
+  exit "${ROLLBACK_RC:-12}"
 fi
 
-printf '{"verdict":"success","target_sha":"%s","backend_digest":"%s","storefront_digest":"%s"}\n' \
+# Re-verify pair identity after pin writes (still under lock)
+if ! verify_pair; then
+  log "post-pin pair identity verify failed - rollback"
+  pair_rollback || true
+  exit "${ROLLBACK_RC:-12}"
+fi
+
+printf '{"verdict":"success","target_sha":"%s","backend_digest":"%s","storefront_digest":"%s","pin_apply":"ok"}\n' \
   "$TARGET_SHA" "$BE_DIGEST" "$SF_DIGEST" >"$EVIDENCE_DIR/json/final-verdict.json"
 {
   echo "# Pair cutover success"
@@ -476,8 +517,9 @@ printf '{"verdict":"success","target_sha":"%s","backend_digest":"%s","storefront
   echo "- be: $BE_DIGEST"
   echo "- sf: $SF_DIGEST"
   echo "- keepers: $BE_KEEP / $SF_KEEP"
+  echo "- pin_apply: ok (under canonical lock)"
 } >"$EVIDENCE_DIR/SUMMARY.md"
 
-log "PAIR_CUTOVER_OK sha=$TARGET_SHA"
+log "PAIR_CUTOVER_OK sha=$TARGET_SHA pin_apply=ok"
 # lock released via trap on EXIT from lock helper
 exit 0

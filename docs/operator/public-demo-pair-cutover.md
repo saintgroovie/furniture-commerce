@@ -82,19 +82,21 @@ Image-only cutover does **not** restore PostgreSQL.
 
 ## Pin handling
 
-`reconcile-public-image-pins.sh` requires live containers to **already** match target digests. It is a post-cutover reconciler, not a forward recreate.
+`reconcile-public-image-pins.sh` requires live containers to **already** match target digests. It is not a forward recreate.
 
-After a successful pair execute (lock released), the deploy task must:
+**Pair cutover holds the canonical lock through:**
 
-```bash
-export EXPECTED_RELEASE_SHA=<40hex>
-export EXPECTED_BACKEND_DIGEST=sha256:<64hex>
-export EXPECTED_STOREFRONT_DIGEST=sha256:<64hex>
-export APPLY=1
-bash scripts/release/reconcile-public-image-pins.sh
-```
+1. runtime recreate + health
+2. pair identity verify + critical smoke
+3. inherited-lock `APPLY=1` pin reconciliation (`.env` / `DOKPLOY_IMAGE_PINS.env` / `ACTIVE_PUBLIC.json`)
+4. post-pin identity re-verify
+5. only then `PAIR_CUTOVER_OK` and lock release
 
-Evidence includes `planned-pin-reconcile.env` with those exact variables. Then re-run pair `--mode verify` and pin consistency checks.
+Pin APPLY failure triggers pair rollback (keepers + pin backup restore). `WOODRIGHT_SKIP_PIN_RECONCILE=1` cannot yield SUCCESS.
+
+Standalone pin reconcile (outside pair) still acquires the lock itself. Nested under pair uses inherited flock FD / owned marker (forged env alone is rejected).
+
+Evidence includes `planned-pin-reconcile.env` and `pin-apply-result.json`.
 
 ## Dokploy ownership
 
@@ -150,5 +152,6 @@ bash scripts/ops/test-public-demo-pair-cutover-fidelity.sh
 
 ## Known notes
 
-- Pin APPLY remains a deliberate second step after lock release (avoids nested lock with pin reconciler's own flock).
+- Pin APPLY runs under the same canonical lock via inherited flock (not a post-release manual step).
 - Full browser smoke (burger/filters/React #310) stays in the deploy task, not in shell helpers.
+- Standalone `reconcile-public-image-pins.sh` without pair remains valid for pin-only repair when live already matches.

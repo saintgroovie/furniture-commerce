@@ -328,6 +328,73 @@ else
   pass "pending migration refused"
 fi
 
+# 11) pin lifecycle: SUCCESS only after under-lock APPLY; inherit supported
+PAIR_SRC="$(cat "$PAIR")"
+echo "$PAIR_SRC" | grep -q 'reconcile-public-image-pins.sh' && pass "pair references pin reconciler" || fail "pair missing pin reconciler"
+echo "$PAIR_SRC" | grep -q 'wr_cutover_install_file' && pass "pair uses sudo-aware pin restore" || fail "pair missing wr_cutover_install_file"
+COMMON_SRC="$(cat "$COMMON")"
+echo "$COMMON_SRC" | grep -q 'sudo -n cp' && pass "common pin backup/install supports sudo -n" || fail "common missing sudo -n cp"
+echo "$PAIR_SRC" | grep -q 'pin_reconcile_begin under_inherited_lock' && pass "pair APPLY under inherited lock" || fail "pair missing under-lock APPLY"
+echo "$PAIR_SRC" | grep -q 'WOODRIGHT_SKIP_PIN_RECONCILE=1 after runtime mutation' && pass "skip pin rolls back" || fail "skip pin rollback missing"
+if echo "$PAIR_SRC" | grep -q 'AFTER this script exits'; then fail "stale post-lock APPLY instruction"; else pass "no post-lock APPLY instruction"; fi
+PIN_SRC="$(cat "$ROOT/scripts/release/reconcile-public-image-pins.sh")"
+echo "$PIN_SRC" | grep -q 'mode=inherited' && pass "pin reconciler supports inherited lock" || fail "pin reconciler missing inherit"
+echo "$PIN_SRC" | grep -q 'inherited_lock_retained_by_parent' && pass "pin reconciler retains parent lock" || fail "pin reconciler releases parent"
+echo "$PIN_SRC" | grep -q 'path_ok' && pass "pin inherit proves FD path" || fail "pin inherit missing path proof"
+
+# 12) forged inherit rejected by pin reconciler (no owned FD)
+PIN="$ROOT/scripts/release/reconcile-public-image-pins.sh"
+PINDIR="$TMP/pin-inherit"
+mkdir -p "$PINDIR"
+printf 'WOODRIGHT_BACKEND_IMAGE=ghcr.io/saintgroovie/woodright-backend@%s\nWOODRIGHT_STOREFRONT_IMAGE=ghcr.io/saintgroovie/woodright-storefront@%s\nSTOREFRONT_IMAGE=ghcr.io/saintgroovie/woodright-storefront@%s\n' "$OLD_BE" "$OLD_SF" "$OLD_SF" >"$PINDIR/.env"
+cp "$ROOT/docker-compose.staging.yml" "$PINDIR/docker-compose.staging.yml" 2>/dev/null || printf 'services: {}\n' >"$PINDIR/docker-compose.staging.yml"
+touch "$PINDIR/live-cutover.lock"
+if WOODRIGHT_STAGING_MUTATION_LOCK_HELD=1 _WR_STAGING_LOCK_OWNED=0 \
+  EXPECTED_RELEASE_SHA="$SHA40" EXPECTED_BACKEND_DIGEST="$BE_DIG" EXPECTED_STOREFRONT_DIGEST="$SF_DIG" \
+  ENV_FILE="$PINDIR/.env" COMPOSE_FILE="$PINDIR/docker-compose.staging.yml" \
+  UPDATE_PINS=0 UPDATE_ACTIVE_PUBLIC=0 UPDATE_ACTIVE_RELEASE=0 REQUIRE_LIVE_MATCH=0 SKIP_COMPOSE_VALIDATE=1 \
+  WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK=1 WOODRIGHT_CUTOVER_LOCK_PATH="$PINDIR/live-cutover.lock" \
+  APPLY=0 bash "$PIN" >/dev/null 2>&1; then
+  fail "forged pin inherit accepted"
+else
+  pass "forged pin inherit rejected"
+fi
+# OWNED=1 with unrelated open FD 9 (not lock path, no holder) must fail
+if (
+  exec 9>/dev/null
+  export WOODRIGHT_STAGING_MUTATION_LOCK_HELD=1 _WR_STAGING_LOCK_OWNED=1
+  unset WR_STAGING_FCNTL_HOLDER_9 || true
+  EXPECTED_RELEASE_SHA="$SHA40" EXPECTED_BACKEND_DIGEST="$BE_DIG" EXPECTED_STOREFRONT_DIGEST="$SF_DIG" \
+    ENV_FILE="$PINDIR/.env" COMPOSE_FILE="$PINDIR/docker-compose.staging.yml" \
+    UPDATE_PINS=0 UPDATE_ACTIVE_PUBLIC=0 UPDATE_ACTIVE_RELEASE=0 REQUIRE_LIVE_MATCH=0 SKIP_COMPOSE_VALIDATE=1 \
+    WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK=1 WOODRIGHT_CUTOVER_LOCK_PATH="$PINDIR/live-cutover.lock" \
+    APPLY=0 bash "$PIN"
+) >/dev/null 2>&1; then
+  fail "unrelated FD9 inherit accepted"
+else
+  pass "unrelated FD9 inherit rejected"
+fi
+
+# real inherit: hold lock via shared helper, run pin dry-run nested
+# shellcheck source=/dev/null
+source "$LOCK"
+export WR_STAGING_MUTATION_LOCK_PATH="$PINDIR/live-cutover.lock"
+export WR_STAGING_MUTATION_LOCK_ALLOW_NONCANONICAL=1
+wr_staging_mutation_lock_acquire actor=pin-parent command=test
+wr_staging_mutation_lock_export_inherit
+EXPECTED_RELEASE_SHA="$SHA40" EXPECTED_BACKEND_DIGEST="$BE_DIG" EXPECTED_STOREFRONT_DIGEST="$SF_DIG" \
+  ENV_FILE="$PINDIR/.env" COMPOSE_FILE="$PINDIR/docker-compose.staging.yml" \
+  UPDATE_PINS=0 UPDATE_ACTIVE_PUBLIC=0 UPDATE_ACTIVE_RELEASE=0 REQUIRE_LIVE_MATCH=0 SKIP_COMPOSE_VALIDATE=1 \
+  WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK=1 WOODRIGHT_CUTOVER_LOCK_PATH="$PINDIR/live-cutover.lock" \
+  APPLY=0 bash "$PIN" >"$TMP/pin-inherit.out" 2>&1 || true
+if grep -q 'mode=inherited' "$TMP/pin-inherit.out"; then
+  pass "pin reconciler inherits parent lock"
+else
+  fail "pin reconciler did not inherit"
+  cat "$TMP/pin-inherit.out" || true
+fi
+wr_staging_mutation_lock_release
+
 if [[ "$FAILED" -eq 0 ]]; then
   echo "OK public-demo pair cutover fidelity ($TMP)"
   exit 0
