@@ -34,37 +34,59 @@ export type V2PersistedState = {
 }
 
 // ---------------------------------------------------------------------------
-// Read
+// Read (cached for useSyncExternalStore referential stability)
 // ---------------------------------------------------------------------------
+
+let v2CachedRaw: string | null | undefined
+let v2CachedParsed: V2PersistedState | null = null
+
+function invalidateV2PersistedCache(): void {
+  v2CachedRaw = undefined
+  v2CachedParsed = null
+}
+
+function parseV2PersistedRaw(raw: string): V2PersistedState | null {
+  const parsed = JSON.parse(raw) as unknown
+  if (typeof parsed !== "object" || parsed === null) return null
+  const version = (parsed as { version?: string }).version
+  if (version !== V2_LS_VERSION && version !== V2_LS_VERSION_LEGACY) return null
+
+  const stored = parsed as V2PersistedState
+  const productStates =
+    version === V2_LS_VERSION_LEGACY
+      ? migratePersistedProductStates(stored.productStates ?? {})
+      : stored.productStates ?? {}
+
+  return {
+    version: V2_LS_VERSION,
+    savedAt: stored.savedAt,
+    productStates,
+    selectedHandle: stored.selectedHandle ?? null,
+  }
+}
 
 /**
  * Load the full persisted v2board state from localStorage.
  * Returns null if absent, corrupt, or version mismatch.
  * Never throws — always returns null on error.
+ *
+ * Repeated calls with unchanged storage return the same object reference
+ * (React 19 useSyncExternalStore getSnapshot contract).
  */
 export function loadV2PersistedState(): V2PersistedState | null {
   if (typeof window === "undefined") return null
   try {
     const raw = window.localStorage.getItem(V2_LS_KEY)
-    if (!raw) return null
-    const parsed = JSON.parse(raw) as unknown
-    if (typeof parsed !== "object" || parsed === null) return null
-    const version = (parsed as { version?: string }).version
-    if (version !== V2_LS_VERSION && version !== V2_LS_VERSION_LEGACY) return null
-
-    const stored = parsed as V2PersistedState
-    const productStates =
-      version === V2_LS_VERSION_LEGACY
-        ? migratePersistedProductStates(stored.productStates ?? {})
-        : stored.productStates ?? {}
-
-    return {
-      version: V2_LS_VERSION,
-      savedAt: stored.savedAt,
-      productStates,
-      selectedHandle: stored.selectedHandle ?? null,
+    if (raw === v2CachedRaw) return v2CachedParsed
+    v2CachedRaw = raw
+    if (!raw) {
+      v2CachedParsed = null
+      return null
     }
+    v2CachedParsed = parseV2PersistedRaw(raw)
+    return v2CachedParsed
   } catch {
+    invalidateV2PersistedCache()
     return null
   }
 }
@@ -85,7 +107,10 @@ export function subscribeV2PersistedState(onStoreChange: () => void): () => void
     }
   }
   const onStorage = (e: StorageEvent) => {
-    if (e.key === V2_LS_KEY || e.key === null) onStoreChange()
+    if (e.key === V2_LS_KEY || e.key === null) {
+      invalidateV2PersistedCache()
+      onStoreChange()
+    }
   }
   window.addEventListener("storage", onStorage)
   return () => {
@@ -160,6 +185,7 @@ export function saveV2PersistedState(
       selectedHandle,
     }
     window.localStorage.setItem(V2_LS_KEY, JSON.stringify(value))
+    invalidateV2PersistedCache()
     notifyV2PersistedListeners()
   } catch {
     // Storage quota or private browsing — silently ignore
@@ -178,6 +204,7 @@ export function clearV2PersistedState(): void {
   if (typeof window === "undefined") return
   try {
     window.localStorage.removeItem(V2_LS_KEY)
+    invalidateV2PersistedCache()
     notifyV2PersistedListeners()
   } catch {
     // Ignore
