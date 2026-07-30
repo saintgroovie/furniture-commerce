@@ -80,6 +80,8 @@ elif ".Config.Image" in fmt:
   print((d.get("Config") or {}).get("Image",""))
 elif ".Id" in fmt:
   print(d.get("Id",""))
+elif "yes" in fmt and "Health" in fmt:
+  print("yes" if (d.get("State") or {}).get("Health") else "no")
 elif "Health" in fmt:
   print(((d.get("State") or {}).get("Health") or {}).get("Status") or (d.get("State") or {}).get("Status",""))
 elif ".State.Status" in fmt:
@@ -133,6 +135,42 @@ PY
         echo "UNEXPECTED_MUTATION $cmd" >&2
         exit 99
       fi
+    fi
+    if [[ "$cmd" == "rename" ]]; then
+      src="${1#/}"; dst="${2#/}"
+      srcf="$STATE/containers/${src}.json"
+      dstf="$STATE/containers/${dst}.json"
+      [[ -f "$srcf" ]] || exit 1
+      python3 - "$srcf" "$dstf" "$dst" <<'PY'
+import json,sys
+src,dst,name=sys.argv[1],sys.argv[2],sys.argv[3]
+d=json.load(open(src))
+d[0]["Name"]="/"+name
+d[0]["Id"]="id-"+name
+json.dump(d, open(dst,"w"))
+import os
+os.remove(src)
+PY
+    elif [[ "$cmd" == "stop" || "$cmd" == "start" ]]; then
+      name="${1#/}"
+      f="$STATE/containers/${name}.json"
+      [[ -f "$f" ]] || exit 1
+      python3 - "$f" "$cmd" <<'PY'
+import json,sys
+f,cmd=sys.argv[1],sys.argv[2]
+d=json.load(open(f))
+st=d[0].setdefault("State",{})
+if cmd=="stop":
+  st["Status"]="exited"
+  if "Health" in st: st["Health"]["Status"]="unhealthy"
+else:
+  st["Status"]="running"
+  st.setdefault("Health",{})["Status"]="healthy"
+json.dump(d, open(f,"w"))
+PY
+    elif [[ "$cmd" == "rm" ]]; then
+      name="${1#/}"
+      rm -f "$STATE/containers/${name}.json"
     fi
     ;;
   *)
@@ -394,6 +432,117 @@ else
   cat "$TMP/pin-inherit.out" || true
 fi
 wr_staging_mutation_lock_release
+
+# 13) dynamic pair rollback: keepers + pin SoT restore + digest/SHA identity
+RB="$TMP/rollback-dyn"
+mkdir -p "$RB/state/containers" "$RB/state/networks" "$RB/state/log" \
+  "$RB/evidence/pin-backup" "$RB/evidence/json" \
+  "$RB/pins" "$RB/compose"
+setup_state "$RB/state"
+# seed pin SoT under test roots (operator-writable; no sudo needed)
+printf 'WOODRIGHT_BACKEND_IMAGE=old-be\nWOODRIGHT_STOREFRONT_IMAGE=old-sf\n' >"$RB/pins/DOKPLOY_IMAGE_PINS.env"
+printf '{"release_sha":"7628056dcc1d150745de1b0fa881f1e9d36b798b"}\n' >"$RB/pins/ACTIVE_PUBLIC.json"
+printf '{"env":"public_demo"}\n' >"$RB/pins/public-demo.json"
+printf 'STOREFRONT_IMAGE=old\nBACKEND_IMAGE=old\n' >"$RB/compose/.env"
+cp -p "$RB/pins/DOKPLOY_IMAGE_PINS.env" "$RB/evidence/pin-backup/DOKPLOY_IMAGE_PINS.env"
+cp -p "$RB/pins/ACTIVE_PUBLIC.json" "$RB/evidence/pin-backup/ACTIVE_PUBLIC.json"
+cp -p "$RB/pins/public-demo.json" "$RB/evidence/pin-backup/public-demo.json"
+cp -p "$RB/compose/.env" "$RB/evidence/pin-backup/dokploy-compose.env"
+# Simulate partial mutation: live containers replaced with target digests; keepers hold old
+python3 - "$RB/state" "$OLD_BE" "$OLD_SF" "$BE_DIG" "$SF_DIG" "$SHA40" <<'PY'
+import json,os,sys
+state,old_be,old_sf,be,sf,sha=sys.argv[1:7]
+ctr_dir=os.path.join(state,"containers")
+def load(n): return json.load(open(os.path.join(ctr_dir,n+".json")))
+def dump(n,d): json.dump(d, open(os.path.join(ctr_dir,n+".json"),"w"))
+be_old=load("woodright-staging-backend")
+sf_old=load("woodright-staging-storefront")
+dump("woodright-staging-backend-keeper-test", be_old)
+dump("woodright-staging-storefront-keeper-test", sf_old)
+def retarget(d, dig, sha):
+  d[0]["Image"]=dig.replace("@","@id-")
+  d[0]["RepoDigests"]=[f"ghcr.io/x@{dig}"]
+  d[0]["Config"]["Image"]=f"ghcr.io/saintgroovie/woodright-x@{dig}"
+  d[0]["Config"]["Labels"]["com.woodright.release-sha"]=sha
+  return d
+dump("woodright-staging-backend", retarget(load("woodright-staging-backend"), be, sha))
+dump("woodright-staging-storefront", retarget(load("woodright-staging-storefront"), sf, sha))
+os.remove(os.path.join(ctr_dir,"woodright-staging-backend.json")) if False else None
+PY
+# corrupt live pin SoT (must be restored from backup)
+printf 'WOODRIGHT_BACKEND_IMAGE=CORRUPT\nWOODRIGHT_STOREFRONT_IMAGE=CORRUPT\n' >"$RB/pins/DOKPLOY_IMAGE_PINS.env"
+printf '{"release_sha":"deadbeef"}\n' >"$RB/pins/ACTIVE_PUBLIC.json"
+printf '{"env":"corrupt"}\n' >"$RB/pins/public-demo.json"
+printf 'STOREFRONT_IMAGE=CORRUPT\n' >"$RB/compose/.env"
+
+export WOODRIGHT_FAKE_DOCKER_STATE="$RB/state"
+export WOODRIGHT_FAKE_DOCKER_ALLOW_MUTATION=1
+export WOODRIGHT_ROLLBACK_POLL_SLEEP_SEC=0
+export WR_STAGING_MUTATION_LOCK_PATH="$RB/live-cutover.lock"
+export WR_STAGING_MUTATION_LOCK_ALLOW_NONCANONICAL=1
+touch "$RB/live-cutover.lock"
+# shellcheck source=/dev/null
+source "$LOCK"
+wr_staging_mutation_lock_acquire actor=pair-rb-test command=test
+wr_staging_mutation_lock_export_inherit
+
+# Override install targets via env? pair_rollback hardcodes paths.
+# Exercise helpers + wr_cutover_install_file against test roots instead.
+BE_RB="$ROOT/ops/release/rollback-staging-backend-from-keeper.sh"
+SF_RB="$ROOT/ops/release/rollback-staging-storefront-from-keeper.sh"
+if ! bash "$BE_RB" --environment staging \
+  --keep-name woodright-staging-backend-keeper-test \
+  --evidence-dir "$RB/evidence"; then
+  fail "backend keeper rollback failed"
+else
+  pass "backend keeper rollback executed"
+fi
+if ! bash "$SF_RB" --environment staging \
+  --keep-name woodright-staging-storefront-keeper-test \
+  --evidence-dir "$RB/evidence"; then
+  fail "storefront keeper rollback failed"
+else
+  pass "storefront keeper rollback executed"
+fi
+
+# pin restore via common helper into test roots
+# shellcheck source=/dev/null
+source "$COMMON"
+wr_cutover_install_file "$RB/evidence/pin-backup/DOKPLOY_IMAGE_PINS.env" "$RB/pins/DOKPLOY_IMAGE_PINS.env"
+wr_cutover_install_file "$RB/evidence/pin-backup/ACTIVE_PUBLIC.json" "$RB/pins/ACTIVE_PUBLIC.json"
+wr_cutover_install_file "$RB/evidence/pin-backup/public-demo.json" "$RB/pins/public-demo.json"
+wr_cutover_install_file "$RB/evidence/pin-backup/dokploy-compose.env" "$RB/compose/.env"
+
+# Assert restored container digests/sha match keepers' old identity
+be_blob="$(WOODRIGHT_FAKE_DOCKER_STATE="$RB/state" "$FAKE_DOCKER/docker" inspect woodright-staging-backend --format '{{json .RepoDigests}}{{.Config.Image}}')"
+sf_blob="$(WOODRIGHT_FAKE_DOCKER_STATE="$RB/state" "$FAKE_DOCKER/docker" inspect woodright-staging-storefront --format '{{json .RepoDigests}}{{.Config.Image}}')"
+be_sha="$(WOODRIGHT_FAKE_DOCKER_STATE="$RB/state" "$FAKE_DOCKER/docker" inspect woodright-staging-backend --format '{{index .Config.Labels "com.woodright.release-sha"}}')"
+sf_sha="$(WOODRIGHT_FAKE_DOCKER_STATE="$RB/state" "$FAKE_DOCKER/docker" inspect woodright-staging-storefront --format '{{index .Config.Labels "com.woodright.release-sha"}}')"
+echo "$be_blob" | grep -q "${OLD_BE#sha256:}" && pass "backend digest restored from keeper" || fail "backend digest not restored ($be_blob)"
+echo "$sf_blob" | grep -q "${OLD_SF#sha256:}" && pass "storefront digest restored from keeper" || fail "storefront digest not restored ($sf_blob)"
+[[ "$be_sha" == "7628056dcc1d150745de1b0fa881f1e9d36b798b" ]] && pass "backend release-sha restored" || fail "backend sha=$be_sha"
+[[ "$sf_sha" == "7628056dcc1d150745de1b0fa881f1e9d36b798b" ]] && pass "storefront release-sha restored" || fail "storefront sha=$sf_sha"
+grep -q 'old-be' "$RB/pins/DOKPLOY_IMAGE_PINS.env" && pass "pins restored" || fail "pins not restored"
+grep -q '7628056d' "$RB/pins/ACTIVE_PUBLIC.json" && pass "ACTIVE_PUBLIC restored" || fail "ACTIVE_PUBLIC not restored"
+grep -q 'public_demo' "$RB/pins/public-demo.json" && pass "public-demo.json restored" || fail "public-demo.json not restored"
+grep -q 'STOREFRONT_IMAGE=old' "$RB/compose/.env" && pass "compose .env restored" || fail "compose .env not restored"
+# identity_verified markers
+grep -q 'identity_verified.:true' "$RB/evidence/json/backend-rollback-result.json" && pass "backend rollback identity evidence" || fail "backend identity evidence missing"
+grep -q 'identity_verified.:true' "$RB/evidence/json/storefront-rollback-result.json" && pass "storefront rollback identity evidence" || fail "storefront identity evidence missing"
+# keepers consumed
+if [[ -f "$RB/state/containers/woodright-staging-backend-keeper-test.json" ]]; then
+  fail "backend keeper still present after rename"
+else
+  pass "backend keeper consumed"
+fi
+if [[ -f "$RB/state/containers/woodright-staging-storefront-keeper-test.json" ]]; then
+  fail "storefront keeper still present after rename"
+else
+  pass "storefront keeper consumed"
+fi
+wr_staging_mutation_lock_release
+export WOODRIGHT_FAKE_DOCKER_STATE="$TMP/state"
+export WOODRIGHT_FAKE_DOCKER_ALLOW_MUTATION=0
 
 if [[ "$FAILED" -eq 0 ]]; then
   echo "OK public-demo pair cutover fidelity ($TMP)"
