@@ -24,12 +24,10 @@ const woodrightRuntimeRole = String(process.env.WOODRIGHT_RUNTIME_ROLE ?? "")
   .trim()
   .toLowerCase()
 const isPublicExposure = woodrightExposure === "public"
-// Production apex CORS/Admin gates apply only to production public cutover profiles.
-// public_demo keeps demo origins and must not be forced onto woodright.ru allowlists.
-const isProductionPublicCutoverProfile =
-  isPublicExposure &&
-  (woodrightRuntimeRole === "production" ||
-    woodrightRuntimeRole === "production_candidate")
+const isPublicDemoRole = woodrightRuntimeRole === "public_demo"
+// Fail-closed: any public exposure that is not an explicit public_demo role must
+// enforce production apex CORS + private Admin (including empty/unknown roles).
+const isProductionPublicCutoverProfile = isPublicExposure && !isPublicDemoRole
 const adminExposure = String(process.env.WOODRIGHT_ADMIN_EXPOSURE ?? "")
   .trim()
   .toLowerCase()
@@ -38,7 +36,18 @@ const adminExposureResolved =
 
 if (isProductionPublicCutoverProfile && adminExposureResolved !== "private") {
   throw new Error(
-    "WOODRIGHT_EXPOSURE=public on production requires WOODRIGHT_ADMIN_EXPOSURE=private (or unset)"
+    "WOODRIGHT_EXPOSURE=public (non-public_demo) requires WOODRIGHT_ADMIN_EXPOSURE=private (or unset)"
+  )
+}
+if (
+  isPublicExposure &&
+  woodrightRuntimeRole &&
+  !isPublicDemoRole &&
+  woodrightRuntimeRole !== "production" &&
+  woodrightRuntimeRole !== "production_candidate"
+) {
+  throw new Error(
+    `WOODRIGHT_EXPOSURE=public with unexpected WOODRIGHT_RUNTIME_ROLE=${woodrightRuntimeRole}`
   )
 }
 
