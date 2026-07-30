@@ -5739,6 +5739,44 @@ button.pdp-material-trigger:focus-visible {
   margin-top: var(--space-lg);
 }
 
+.bespoke-catalog-empty-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-lg);
+  max-width: 36rem;
+  margin-inline: auto;
+}
+
+.bespoke-catalog-empty-copy {
+  margin: 0;
+  color: var(--color-fg-secondary);
+  line-height: 1.55;
+  text-align: center;
+}
+
+.bespoke-catalog-empty-actions {
+  width: 100%;
+  justify-content: center;
+  gap: var(--space-md);
+}
+
+.bespoke-catalog-empty-actions .btn {
+  min-height: 2.75rem;
+}
+
+@media (max-width: 480px) {
+  .bespoke-catalog-empty-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .bespoke-catalog-empty-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 /* ---- Inline Feedback ---- */
 
 .feedback {
@@ -8199,51 +8237,20 @@ a.pdp-size-chip:hover {
   object-fit: cover;
   object-position: 62% 48%;
   opacity: 0;
+  /* JS double-buffer sets data-active after preload/decode - never animate
+     opacity to 0 on the only visible layer (brown plate flash). */
+  transition: opacity 420ms ease;
+  transform-origin: 58% 55%;
+  pointer-events: none;
 }
 
-.hp-hero-img[data-slide="0"] {
+.hp-hero-img[data-active="true"] {
   opacity: 1;
 }
 
-/* Slideshow: three interiors, ~7s per slide, 1s cross-fade + slow drift.
-   Reduced motion keeps only the first slide, static. */
-@media (prefers-reduced-motion: no-preference) {
+@media (prefers-reduced-motion: reduce) {
   .hp-hero-img {
-    /* Cross-fade only - continuous Ken Burns scale was a sustained GPU cost
-       across three full-bleed layers and is not needed for still-lifes. */
-    animation: hp-hero-cycle 21s linear infinite;
-    transform-origin: 58% 55%;
-  }
-
-  /* Negative delay: slide 0 is already fully visible at load. */
-  .hp-hero-img[data-slide="0"] {
-    animation-delay: -1.05s;
-  }
-
-  .hp-hero-img[data-slide="1"] {
-    animation-delay: 5.95s;
-  }
-
-  .hp-hero-img[data-slide="2"] {
-    animation-delay: 12.95s;
-  }
-
-  @keyframes hp-hero-cycle {
-    0% {
-      opacity: 0;
-    }
-    5% {
-      opacity: 1;
-    }
-    33.33% {
-      opacity: 1;
-    }
-    38.33% {
-      opacity: 0;
-    }
-    100% {
-      opacity: 0;
-    }
+    transition: none;
   }
 }
 
@@ -9302,17 +9309,9 @@ a.pdp-size-chip:hover {
   background: rgba(255, 255, 255, 0.92);
 }
 
-/* Kids hero slides cross-fade only: the Ken Burns drift is dropped here.
-   Animating scale on a full-viewport image that is also multiply-blended
-   forces a full re-composite every frame (visible jank + banding stripes
-   on the gradient), and the still-lifes don't need the drift anyway. */
-@media (prefers-reduced-motion: no-preference) {
-  .hp--kids .hp-hero-img {
-    /* Only the name is overridden so the per-slide stagger delays from the
-       base hero rules keep applying. */
-    animation-name: hp-hero-cycle;
-  }
-}
+/* Kids hero uses the same JS double-buffer as the main home hero
+   (HomeHeroSlideshow). No CSS opacity cycle — multiply-blend + keyframes
+   previously forced full-viewport recomposites and brown/olive flashes. */
 
 /* Entries: three even columns (no tall catalog card on the kids landing). */
 .hp-kentries-grid {
@@ -9477,12 +9476,11 @@ a.pdp-size-chip:hover {
   min-height: clamp(460px, 68vh, 700px);
 }
 
-/* Single static hero photo: without this the base .hp-hero-img slideshow
-   keyframes would fade the only slide out mid-cycle. */
+/* Single static hero photo — always visible (no JS slideshow). */
 .hp--bespoke .hp-hero-img {
   object-position: 50% 62%;
-  animation: none;
-  transform: none;
+  opacity: 1;
+  transition: none;
 }
 
 .hp-bhero-note {
