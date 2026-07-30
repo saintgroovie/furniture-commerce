@@ -35,6 +35,8 @@ Never restore a backup over a live DB with active writers. Prefer disposable
 - Do not `docker system prune` or delete failed release images during the rollback window.
 - After rollback: health + public smoke; do not immediately re-attempt without a root cause.
 - Prefer Dokploy/`manual_flock_deploy` naming contract over ad-hoc `docker run`.
+- Official pair cutover + keeper rollback: [public-demo-pair-cutover.md](./public-demo-pair-cutover.md)
+  (`cutover-public-demo-pair.sh`, `rollback-staging-*-from-keeper.sh`).
 
 ## DNS / woodright.ru
 

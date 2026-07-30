@@ -9,6 +9,7 @@
 # Canonical exclusive lock: /srv/woodright/locks/live-cutover.lock (via ops/lib helper).
 # Requires explicit: --environment staging
 # Legacy DEPLOY.lock is no longer the mutex; do not invent a second lock.
+# Pair cutover parent may nest via WOODRIGHT_STAGING_MUTATION_LOCK_HELD + owned FD.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -32,7 +33,8 @@ EXPECTED_DIGEST="${EXPECTED_DIGEST:?set EXPECTED_DIGEST sha256:<64hex>}"
 KEEP_NAME="${KEEP_NAME:?set KEEP_NAME}"
 # Deprecated alias kept for rollback script env compatibility only (not the mutex).
 LOCK_FILE="${LOCK_FILE:-/srv/woodright/runtime-ownership/DEPLOY.lock}"
-ROLLBACK_SCRIPT="${ROLLBACK_SCRIPT:-/srv/woodright/runtime-ownership/rollback-staging-backend-media-repair.sh}"
+# Prefer in-repo keeper rollback; VM legacy path remains overridable via ROLLBACK_SCRIPT.
+ROLLBACK_SCRIPT="${ROLLBACK_SCRIPT:-$HERE/rollback-staging-backend-from-keeper.sh}"
 REQUIRE_CURRENT_DIGEST="${REQUIRE_CURRENT_DIGEST:-1}"
 
 # Profile is authority for NAME/VOLUME/NET (ignore conflicting inherited overrides)
@@ -69,9 +71,18 @@ recover() {
     docker start "$NAME" || log "recover_restart_failed"
     log "RECOVER restarted original $NAME"
   elif [[ "$PHASE" -eq 2 ]]; then
-    SKIP_FLOCK=1 NAME="$NAME" KEEP_NAME="$KEEP_NAME" EXPECTED_DIGEST="$EXPECTED_DIGEST" IMAGE="$IMAGE" \
-      LOCK_FILE="$LOCK_FILE" NET_STACK="$NET_STACK" NET_DOKPLOY="$NET_DOKPLOY" \
-      bash "$ROLLBACK_SCRIPT" || log "AUTO_ROLLBACK_SCRIPT_FAILED"
+    # In-repo rollback uses CLI; legacy VM script may still consume NAME/KEEP_NAME env.
+    if [[ "$(basename "$ROLLBACK_SCRIPT")" == "rollback-staging-backend-from-keeper.sh" ]]; then
+      bash "$ROLLBACK_SCRIPT" --environment staging \
+        --keep-name "$KEEP_NAME" \
+        --evidence-dir "${WOODRIGHT_CUTOVER_EVIDENCE_DIR:-/tmp}" \
+        || log "AUTO_ROLLBACK_SCRIPT_FAILED"
+    else
+      # Legacy VM rollback scripts may still honor SKIP_FLOCK=1; in-repo helper does not.
+      SKIP_FLOCK=1 NAME="$NAME" KEEP_NAME="$KEEP_NAME" EXPECTED_DIGEST="$EXPECTED_DIGEST" IMAGE="$IMAGE" \
+        LOCK_FILE="$LOCK_FILE" NET_STACK="$NET_STACK" NET_DOKPLOY="$NET_DOKPLOY" \
+        bash "$ROLLBACK_SCRIPT" || log "AUTO_ROLLBACK_SCRIPT_FAILED"
+    fi
   fi
   RECOVERING=0
   return "$rc"
@@ -92,6 +103,8 @@ die() {
 
 [[ "$EXPECTED_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]] || die "EXPECTED_DIGEST must be sha256:<64hex>"
 [[ "$IMAGE" == *"@${EXPECTED_DIGEST}" ]] || die "IMAGE must be repo@${EXPECTED_DIGEST}"
+TARGET_SHA="${TARGET_SHA:-${WOODRIGHT_TARGET_SHA:-}}"
+[[ "$TARGET_SHA" =~ ^[0-9a-f]{40}$ ]] || die "TARGET_SHA/WOODRIGHT_TARGET_SHA must be full 40-hex for release-sha label"
 
 [[ -f "$ENV_FILE" ]] || die "missing ENV_FILE=$ENV_FILE"
 ENV_MODE="$(stat -c '%a' "$ENV_FILE" 2>/dev/null || stat -f '%Lp' "$ENV_FILE")"
@@ -124,7 +137,6 @@ fi
 
 # Mode A — pre-promote target validation BEFORE any live mutation.
 # Does not require EXPECTED_RELEASE to already list the target digest.
-TARGET_SHA="${TARGET_SHA:-${WOODRIGHT_TARGET_SHA:-}}"
 log "running_pre_promote_media_gate gate=$GATE target=$EXPECTED_DIGEST"
 PRE_ARGS=(--environment staging --mode pre-promote --target-image "$IMAGE" --expected-digest "$EXPECTED_DIGEST" --media-volume "$VOLUME" --mount-destination "$DEST")
 if [[ -n "$TARGET_SHA" ]]; then
@@ -166,13 +178,16 @@ docker rename "$NAME" "$KEEP_NAME"
 PHASE=2
 log "renamed_to_keeper $KEEP_NAME"
 
-docker create \
+  docker create \
   --name "$NAME" \
   --restart unless-stopped \
   --network "$NET_STACK" \
   --network-alias backend \
   --label "com.woodright.deployment-owner=Dokploy" \
   --label "com.woodright.runtime-role=public_demo" \
+  --label "com.woodright.exposure=public" \
+  --label "com.woodright.release-sha=${TARGET_SHA}" \
+  --label "com.woodright.database-identity=${WOODRIGHT_DB_NAME:-woodright_staging}" \
   --env-file "$ENV_FILE" \
   --mount "type=volume,source=${VOLUME},destination=${DEST}" \
   --health-cmd="node -e \"fetch('http://127.0.0.1:9000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\"" \
