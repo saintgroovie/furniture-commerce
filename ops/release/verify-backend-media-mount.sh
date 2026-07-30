@@ -22,6 +22,8 @@
 set -Eeuo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# shellcheck source=../lib/woodright-environment-profile.sh
+source "$ROOT/ops/lib/woodright-environment-profile.sh"
 # shellcheck source=../lib/woodright-runtime-discovery.sh
 source "$ROOT/ops/lib/woodright-runtime-discovery.sh"
 
@@ -42,6 +44,7 @@ TARGET_SHA=""
 EXPECTED_DIGEST=""
 WRITE_EVIDENCE=""
 SKIP_VOLUME_PROBE=0
+ENV_ARG=""
 
 fail_json() {
   local code="$1" msg="$2"
@@ -55,6 +58,8 @@ ok_json() {
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --environment) ENV_ARG="$2"; shift 2 ;;
+    --environment=*) ENV_ARG="${1#--environment=}"; shift ;;
     --mode) MODE="$2"; shift 2 ;;
     --container) CONTAINER_ARG="$2"; shift 2 ;;
     --compose-file) COMPOSE_FILE="$2"; shift 2 ;;
@@ -75,6 +80,22 @@ while [[ $# -gt 0 ]]; do
     *) fail_json INVALID_ARG "unknown arg $1" ;;
   esac
 done
+
+# Environment required except pure fixture-dir mode (unit fixtures)
+if [[ -z "$FIXTURE_DIR" ]]; then
+  if [[ -n "$ENV_ARG" ]]; then
+    wr_load_environment_profile "$ENV_ARG" || fail_json ENV_PROFILE "failed to load environment=$ENV_ARG"
+  elif [[ "${WOODRIGHT_ENV_PROFILE_LOADED:-0}" != "1" ]]; then
+    fail_json ENV_REQUIRED "missing required --environment <staging|production>"
+  fi
+  MEDIA_VOLUME="${WOODRIGHT_MEDIA_VOLUME}"
+  MEDIA_DEST="${WOODRIGHT_MEDIA_MOUNT_IN_BE:-/server/static}"
+  BUYER_HOST="${BUYER_HOST:-$WOODRIGHT_BUYER_HOST}"
+fi
+
+if [[ "$COMPOSE_ONLY" == "1" && "${WOODRIGHT_ENVIRONMENT:-}" != "staging" && -z "$FIXTURE_DIR" ]]; then
+  fail_json COMPOSE_ONLY_STAGING "compose-only gate is staging-only"
+fi
 
 assert_compose_declares_media() {
   local text

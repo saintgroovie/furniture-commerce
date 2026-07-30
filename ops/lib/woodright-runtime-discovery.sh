@@ -265,37 +265,86 @@ wr_validate_storefront_candidate() {
   return 0
 }
 
-wr_list_public_demo_backend_names() {
-  # Running containers with public_demo + Dokploy owner + backend image title; exclude keepers.
-  local id name owner role title
+wr_list_env_scoped_backend_names() {
+  # Environment-scoped listing when profile loaded; else legacy public_demo (staging-implicit).
+  local id name owner role title compose prefix want_owner want_role want_title want_compose
+  prefix="${WOODRIGHT_BE_NAME_PREFIX:-woodright-staging-}"
+  want_owner="${WOODRIGHT_REQUIRED_OWNER_LABEL:-Dokploy}"
+  want_role="${WOODRIGHT_REQUIRED_RUNTIME_ROLE-public_demo}"
+  want_title="${WOODRIGHT_REQUIRED_BE_TITLE:-woodright-backend}"
+  want_compose="${WOODRIGHT_COMPOSE_PROJECT-}"
   while read -r id; do
     [[ -n "$id" ]] || continue
     name=$(docker inspect -f '{{.Name}}' "$id" | sed 's#^/##')
     wr_name_is_excluded "$name" && continue
+    case "$name" in
+      ${prefix}*) ;;
+      *) continue ;;
+    esac
     owner=$(wr_container_label "$id" "com.woodright.deployment-owner")
     role=$(wr_container_label "$id" "com.woodright.runtime-role")
     title=$(wr_container_label "$id" "org.opencontainers.image.title")
-    [[ "$owner" == "Dokploy" ]] || continue
-    [[ "$role" == "public_demo" ]] || continue
-    [[ "$title" == "woodright-backend" ]] || continue
+    compose=$(wr_container_label "$id" "com.docker.compose.project")
+    [[ "$owner" == "$want_owner" ]] || continue
+    if [[ -n "$want_role" ]]; then
+      [[ "$role" == "$want_role" ]] || continue
+    fi
+    [[ "$title" == "$want_title" ]] || continue
+    if [[ -n "$want_compose" ]]; then
+      if [[ "${WOODRIGHT_REQUIRE_COMPOSE_LABEL:-0}" == "1" && -z "$compose" ]]; then
+        continue
+      fi
+      if [[ -n "$compose" && "$compose" != "$want_compose" ]]; then
+        continue
+      fi
+    fi
+    printf '%s\n' "$name"
+  done < <(docker ps -q)
+}
+
+wr_list_public_demo_backend_names() {
+  # Backward-compatible name; delegates to env-scoped listing (defaults = staging/public_demo).
+  wr_list_env_scoped_backend_names
+}
+
+wr_list_env_scoped_storefront_names() {
+  local id name owner role title compose prefix want_owner want_role want_title want_compose
+  prefix="${WOODRIGHT_SF_NAME_PREFIX:-woodright-staging-}"
+  want_owner="${WOODRIGHT_REQUIRED_OWNER_LABEL:-Dokploy}"
+  want_role="${WOODRIGHT_REQUIRED_RUNTIME_ROLE-public_demo}"
+  want_title="${WOODRIGHT_REQUIRED_SF_TITLE:-woodright-storefront}"
+  want_compose="${WOODRIGHT_COMPOSE_PROJECT-}"
+  while read -r id; do
+    [[ -n "$id" ]] || continue
+    name=$(docker inspect -f '{{.Name}}' "$id" | sed 's#^/##')
+    wr_name_is_excluded "$name" && continue
+    case "$name" in
+      ${prefix}*) ;;
+      *) continue ;;
+    esac
+    owner=$(wr_container_label "$id" "com.woodright.deployment-owner")
+    role=$(wr_container_label "$id" "com.woodright.runtime-role")
+    title=$(wr_container_label "$id" "org.opencontainers.image.title")
+    compose=$(wr_container_label "$id" "com.docker.compose.project")
+    [[ "$owner" == "$want_owner" ]] || continue
+    if [[ -n "$want_role" ]]; then
+      [[ "$role" == "$want_role" ]] || continue
+    fi
+    [[ "$title" == "$want_title" ]] || continue
+    if [[ -n "$want_compose" ]]; then
+      if [[ "${WOODRIGHT_REQUIRE_COMPOSE_LABEL:-0}" == "1" && -z "$compose" ]]; then
+        continue
+      fi
+      if [[ -n "$compose" && "$compose" != "$want_compose" ]]; then
+        continue
+      fi
+    fi
     printf '%s\n' "$name"
   done < <(docker ps -q)
 }
 
 wr_list_public_demo_storefront_names() {
-  local id name owner role title
-  while read -r id; do
-    [[ -n "$id" ]] || continue
-    name=$(docker inspect -f '{{.Name}}' "$id" | sed 's#^/##')
-    wr_name_is_excluded "$name" && continue
-    owner=$(wr_container_label "$id" "com.woodright.deployment-owner")
-    role=$(wr_container_label "$id" "com.woodright.runtime-role")
-    title=$(wr_container_label "$id" "org.opencontainers.image.title")
-    [[ "$owner" == "Dokploy" ]] || continue
-    [[ "$role" == "public_demo" ]] || continue
-    [[ "$title" == "woodright-storefront" ]] || continue
-    printf '%s\n' "$name"
-  done < <(docker ps -q)
+  wr_list_env_scoped_storefront_names
 }
 
 wr_masked_backend_inventory() {
@@ -325,6 +374,12 @@ wr_discover_backend_container() {
   WR_BE_CONTAINER=""
 
   if [[ -n "$override" ]]; then
+    if [[ "${WOODRIGHT_ENV_PROFILE_LOADED:-0}" == "1" ]]; then
+      # shellcheck source=woodright-environment-profile.sh
+      if declare -F wr_assert_container_matches_environment >/dev/null 2>&1; then
+        wr_assert_container_matches_environment "$override" backend || return 1
+      fi
+    fi
     if wr_validate_backend_candidate "$override"; then
       WR_BE_CONTAINER="$override"
       printf '%s\n' "$override"
@@ -336,7 +391,13 @@ wr_discover_backend_container() {
   if [[ -f "$WOODRIGHT_ACTIVE_OWNER" ]]; then
     from_owner=$(wr_json_get "$WOODRIGHT_ACTIVE_OWNER" be_container)
     if [[ -n "$from_owner" ]]; then
-      if wr_validate_backend_candidate "$from_owner"; then
+      if [[ "${WOODRIGHT_ENV_PROFILE_LOADED:-0}" == "1" ]] && declare -F wr_assert_container_matches_environment >/dev/null 2>&1; then
+        if ! wr_assert_container_matches_environment "$from_owner" backend; then
+          wr_discovery_log "ACTIVE_OWNER be_container rejected by environment profile"
+          from_owner=""
+        fi
+      fi
+      if [[ -n "$from_owner" ]] && wr_validate_backend_candidate "$from_owner"; then
         WR_BE_CONTAINER="$from_owner"
         printf '%s\n' "$from_owner"
         return 0
@@ -350,7 +411,7 @@ wr_discover_backend_container() {
     if wr_validate_backend_candidate "$m"; then
       matches+=("$m")
     fi
-  done < <(wr_list_public_demo_backend_names)
+  done < <(wr_list_env_scoped_backend_names)
 
   if [[ "${#matches[@]}" -eq 0 ]]; then
     wr_discovery_set_verdict DISCOVERY_ZERO_MATCH
@@ -378,6 +439,9 @@ wr_discover_storefront_container() {
   WR_SF_CONTAINER=""
 
   if [[ -n "$override" ]]; then
+    if [[ "${WOODRIGHT_ENV_PROFILE_LOADED:-0}" == "1" ]] && declare -F wr_assert_container_matches_environment >/dev/null 2>&1; then
+      wr_assert_container_matches_environment "$override" storefront || return 1
+    fi
     if wr_validate_storefront_candidate "$override"; then
       WR_SF_CONTAINER="$override"
       printf '%s\n' "$override"
@@ -388,10 +452,15 @@ wr_discover_storefront_container() {
 
   if [[ -f "$WOODRIGHT_ACTIVE_OWNER" ]]; then
     from_owner=$(wr_json_get "$WOODRIGHT_ACTIVE_OWNER" sf_container)
-    if [[ -n "$from_owner" ]] && wr_validate_storefront_candidate "$from_owner"; then
-      WR_SF_CONTAINER="$from_owner"
-      printf '%s\n' "$from_owner"
-      return 0
+    if [[ -n "$from_owner" ]]; then
+      if [[ "${WOODRIGHT_ENV_PROFILE_LOADED:-0}" == "1" ]] && declare -F wr_assert_container_matches_environment >/dev/null 2>&1; then
+        wr_assert_container_matches_environment "$from_owner" storefront || from_owner=""
+      fi
+      if [[ -n "$from_owner" ]] && wr_validate_storefront_candidate "$from_owner"; then
+        WR_SF_CONTAINER="$from_owner"
+        printf '%s\n' "$from_owner"
+        return 0
+      fi
     fi
   fi
 
@@ -400,7 +469,7 @@ wr_discover_storefront_container() {
     if wr_validate_storefront_candidate "$m"; then
       matches+=("$m")
     fi
-  done < <(wr_list_public_demo_storefront_names)
+  done < <(wr_list_env_scoped_storefront_names)
 
   if [[ "${#matches[@]}" -eq 0 ]]; then
     wr_discovery_set_verdict DISCOVERY_ZERO_MATCH

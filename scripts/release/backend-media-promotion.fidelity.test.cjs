@@ -76,7 +76,11 @@ const reconcileTxt = readFileSync(reconcile, "utf8")
 assert.match(reconcileTxt, /assert-manifest-update-allowed\.sh/)
 assert.match(reconcileTxt, /--apply/)
 assert.match(reconcileTxt, /--expected-src/)
+assert.match(reconcileTxt, /--environment/)
 assert.match(reconcileTxt, /bash "\$ASSERT"/)
+
+assert.match(recreateTxt, /--environment staging|wr_require_environment_from_args/)
+assert.match(gateTxt, /ENV_REQUIRED|missing required --environment|--environment/)
 
 const healthTxt = readFileSync(health, "utf8")
 assert.match(healthTxt, /wr_discover_backend_container/)
