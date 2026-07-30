@@ -1,5 +1,7 @@
 import type { Metadata } from "next"
+import { cookies } from "next/headers"
 import { CartSummary } from "@/components/cart-summary"
+import { CART_ID_COOKIE } from "@/lib/cart/cart-cookie"
 import { cartCopy } from "@/lib/woodright-copy"
 import { CopyLines } from "@/components/copy-lines"
 
@@ -10,6 +12,11 @@ export const metadata: Metadata = {
 }
 
 export default function CartPage() {
+  /* Cart payload is client-fetched (cookie + Medusa). Without a cart_id cookie
+     SSR must not claim «Загружаем…» — show empty immediately. With a cookie,
+     keep a short loading shell until getCart resolves. */
+  const hasCartCookie = Boolean(cookies().get(CART_ID_COOKIE)?.value?.trim())
+
   return (
     <div className="bespoke-request-page">
       <div className="bespoke-request-header">
@@ -17,7 +24,7 @@ export default function CartPage() {
         <CopyLines className="bespoke-request-lead" lines={cartCopy.lead} />
       </div>
 
-      <CartSummary />
+      <CartSummary initialViewState={hasCartCookie ? "loading" : "empty"} />
     </div>
   )
 }

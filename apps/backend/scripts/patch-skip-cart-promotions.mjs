@@ -14,8 +14,8 @@ import { fileURLToPath } from "node:url"
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const workflowsDir = path.resolve(
-  __dirname,
-  "../node_modules/@medusajs/core-flows/dist/cart/workflows"
+  process.env.WOODRIGHT_PROMOTIONS_PATCH_DIR ||
+    path.join(__dirname, "../node_modules/@medusajs/core-flows/dist/cart/workflows")
 )
 
 const files = ["create-carts.js", "refresh-cart-items.js"]
