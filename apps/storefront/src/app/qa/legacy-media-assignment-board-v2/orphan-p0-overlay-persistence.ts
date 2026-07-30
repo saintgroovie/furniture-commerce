@@ -15,10 +15,38 @@ export function loadOrphanP0OverlayState(): OrphanP0OverlayPersistedState | null
   }
 }
 
+export function getOrphanP0OverlayServerSnapshot(): null {
+  return null
+}
+
+const orphanListeners = new Set<() => void>()
+
+export function subscribeOrphanP0OverlayState(onStoreChange: () => void): () => void {
+  orphanListeners.add(onStoreChange)
+  if (typeof window === "undefined") {
+    return () => {
+      orphanListeners.delete(onStoreChange)
+    }
+  }
+  const onStorage = (e: StorageEvent) => {
+    if (e.key === ORPHAN_P0_OVERLAY_LS_KEY || e.key === null) onStoreChange()
+  }
+  window.addEventListener("storage", onStorage)
+  return () => {
+    orphanListeners.delete(onStoreChange)
+    window.removeEventListener("storage", onStorage)
+  }
+}
+
+function notifyOrphanListeners(): void {
+  for (const listener of orphanListeners) listener()
+}
+
 export function saveOrphanP0OverlayState(state: OrphanP0OverlayPersistedState): void {
   if (typeof window === "undefined") return
   try {
     window.localStorage.setItem(ORPHAN_P0_OVERLAY_LS_KEY, JSON.stringify(state))
+    notifyOrphanListeners()
   } catch {
     /* quota / security */
   }

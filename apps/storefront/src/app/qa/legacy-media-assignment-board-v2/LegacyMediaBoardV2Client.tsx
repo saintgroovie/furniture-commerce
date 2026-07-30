@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react"
 import type {
   InvItem,
   CandidateEntry,
@@ -35,9 +35,11 @@ import {
 import { ProductWorkspace } from "./ProductWorkspace"
 import { ExportToolbar } from "./ExportToolbar"
 import {
+  getV2PersistedServerSnapshot,
   loadV2PersistedState,
   mergeV2ProductStates,
   saveV2PersistedState,
+  subscribeV2PersistedState,
 } from "./legacy-board-v2-persistence"
 import {
   addToGallery as syncAddToGallery,
@@ -56,9 +58,11 @@ import {
 import { V2_BOARD_BUILD, V2_BOARD_BUILD_LABEL } from "./legacy-board-v2-build"
 import type { OrphanP0OverlayCandidate, OrphanP0OverlayData } from "./orphan-p0-overlay-types"
 import {
+  getOrphanP0OverlayServerSnapshot,
   loadOrphanP0OverlayState,
   makeEmptyOrphanP0OverlayState,
   saveOrphanP0OverlayState,
+  subscribeOrphanP0OverlayState,
 } from "./orphan-p0-overlay-persistence"
 import { OrphanP0OverlayPanel, downloadOrphanP0OverlayExport } from "./OrphanP0OverlayPanel"
 import { OrphanP0OverlayMissingPanel } from "./OrphanP0OverlayMissingPanel"
@@ -127,28 +131,36 @@ export function LegacyMediaBoardV2Client({
   const [recoveryById, setRecoveryById] = useState<Map<string, LegacyMediaPreviewRecoveryEntry>>(new Map())
 
   // --- UI selection state ---
-  const [selectedHandle, setSelectedHandle] = useState<string | null>(() => {
-    if (initialHandle) return initialHandle
-    if (typeof window === "undefined") return null
-    if (overlayMode === ORPHAN_P0_OVERLAY_ID) {
-      return loadOrphanP0OverlayState()?.focusedCatalogHandle ?? null
-    }
-    return loadV2PersistedState()?.selectedHandle ?? null
-  })
+  // Persisted LS via useSyncExternalStore (server snapshot null) — no LS reads in useState
+  // initializers, which would diverge SSR vs first client paint.
+  const persistedV2 = useSyncExternalStore(
+    subscribeV2PersistedState,
+    loadV2PersistedState,
+    getV2PersistedServerSnapshot
+  )
+  const persistedOrphan = useSyncExternalStore(
+    subscribeOrphanP0OverlayState,
+    loadOrphanP0OverlayState,
+    getOrphanP0OverlayServerSnapshot
+  )
+
+  const [selectedHandle, setSelectedHandle] = useState<string | null>(initialHandle ?? null)
   const [search, setSearch] = useState("")
 
   // --- Assignment state (persisted via localStorage Commit 4) ---
-  const [productStates, setProductStates] = useState<Record<string, V2ProductState>>(() => {
-    if (typeof window === "undefined" || overlayMode === ORPHAN_P0_OVERLAY_ID) return {}
-    return loadV2PersistedState()?.productStates ?? {}
-  })
+  const [productStates, setProductStates] = useState<Record<string, V2ProductState>>({})
 
   // --- Persistence state ---
-  const [savedAt, setSavedAt] = useState<string | null>(() => {
-    if (typeof window === "undefined" || overlayMode === ORPHAN_P0_OVERLAY_ID) return null
-    return loadV2PersistedState()?.savedAt ?? null
-  })
+  const [savedAt, setSavedAt] = useState<string | null>(null)
   const hasSavedOnceRef = useRef(false)
+  const [v2Bootstrapped, setV2Bootstrapped] = useState(false)
+
+  if (!v2Bootstrapped && overlayMode !== ORPHAN_P0_OVERLAY_ID && persistedV2) {
+    setV2Bootstrapped(true)
+    if (!initialHandle) setSelectedHandle(persistedV2.selectedHandle ?? null)
+    setProductStates(persistedV2.productStates ?? {})
+    setSavedAt(persistedV2.savedAt ?? null)
+  }
 
   // --- Orphan P0 overlay (read-only routing; isolated localStorage) ---
   const [overlayData, setOverlayData] = useState<OrphanP0OverlayData | null>(null)
@@ -157,18 +169,17 @@ export function LegacyMediaBoardV2Client({
   >(() => (overlayMode === ORPHAN_P0_OVERLAY_ID ? "loading" : "idle"))
   const [overlayError, setOverlayError] = useState<string | null>(null)
   const [overlayMissing, setOverlayMissing] = useState<OrphanP0OverlayMissingArtifact | null>(null)
-  const [overlayState, setOverlayState] = useState(() => {
-    if (typeof window === "undefined" || overlayMode !== ORPHAN_P0_OVERLAY_ID) {
-      return makeEmptyOrphanP0OverlayState()
-    }
-    return loadOrphanP0OverlayState() ?? makeEmptyOrphanP0OverlayState()
-  })
+  const [overlayState, setOverlayState] = useState(makeEmptyOrphanP0OverlayState)
   const [overlayFilter, setOverlayFilter] = useState("")
-  const [focusedOverlayPackIndex, setFocusedOverlayPackIndex] = useState<number | null>(() => {
-    if (typeof window === "undefined" || overlayMode !== ORPHAN_P0_OVERLAY_ID) return null
-    return loadOrphanP0OverlayState()?.focusedPackIndex ?? null
-  })
+  const [focusedOverlayPackIndex, setFocusedOverlayPackIndex] = useState<number | null>(null)
+  const [orphanBootstrapped, setOrphanBootstrapped] = useState(false)
 
+  if (overlayMode === ORPHAN_P0_OVERLAY_ID && !orphanBootstrapped && persistedOrphan) {
+    setOrphanBootstrapped(true)
+    setOverlayState(persistedOrphan)
+    setFocusedOverlayPackIndex(persistedOrphan.focusedPackIndex ?? null)
+    if (!initialHandle) setSelectedHandle(persistedOrphan.focusedCatalogHandle ?? null)
+  }
   // --- Lifted pool filter state (Commit 3) ---
   const [poolFilter, setPoolFilter] = useState<V2RoleFilter>("all")
   const [poolFilterHandle, setPoolFilterHandle] = useState(selectedHandle)

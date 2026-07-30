@@ -69,6 +69,35 @@ export function loadV2PersistedState(): V2PersistedState | null {
   }
 }
 
+/** Server / hydration snapshot — always empty so SSR and first client paint match. */
+export function getV2PersistedServerSnapshot(): null {
+  return null
+}
+
+/** Cross-tab + same-tab notify after writes (storage event is cross-tab only). */
+const v2PersistedListeners = new Set<() => void>()
+
+export function subscribeV2PersistedState(onStoreChange: () => void): () => void {
+  v2PersistedListeners.add(onStoreChange)
+  if (typeof window === "undefined") {
+    return () => {
+      v2PersistedListeners.delete(onStoreChange)
+    }
+  }
+  const onStorage = (e: StorageEvent) => {
+    if (e.key === V2_LS_KEY || e.key === null) onStoreChange()
+  }
+  window.addEventListener("storage", onStorage)
+  return () => {
+    v2PersistedListeners.delete(onStoreChange)
+    window.removeEventListener("storage", onStorage)
+  }
+}
+
+function notifyV2PersistedListeners(): void {
+  for (const listener of v2PersistedListeners) listener()
+}
+
 // ---------------------------------------------------------------------------
 // Write
 // ---------------------------------------------------------------------------
@@ -131,6 +160,7 @@ export function saveV2PersistedState(
       selectedHandle,
     }
     window.localStorage.setItem(V2_LS_KEY, JSON.stringify(value))
+    notifyV2PersistedListeners()
   } catch {
     // Storage quota or private browsing — silently ignore
   }
@@ -148,6 +178,7 @@ export function clearV2PersistedState(): void {
   if (typeof window === "undefined") return
   try {
     window.localStorage.removeItem(V2_LS_KEY)
+    notifyV2PersistedListeners()
   } catch {
     // Ignore
   }
