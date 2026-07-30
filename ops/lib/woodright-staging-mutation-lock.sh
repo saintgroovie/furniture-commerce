@@ -155,10 +155,13 @@ wr_staging_mutation_lock_acquire() {
   fi
 
   if [[ "${WR_STAGING_MUTATION_LOCK_ALLOW_NONCANONICAL:-0}" != "1" ]]; then
-    if [[ "$WR_STAGING_MUTATION_LOCK_PATH" != /srv/woodright/locks/live-cutover.lock ]]; then
-      wr_staging_mutation_lock_log "ERROR non-canonical lock path refused: $WR_STAGING_MUTATION_LOCK_PATH"
-      return 4
-    fi
+    case "$WR_STAGING_MUTATION_LOCK_PATH" in
+      /srv/woodright/locks/live-cutover.lock|/srv/woodright/locks/production-cutover.lock) ;;
+      *)
+        wr_staging_mutation_lock_log "ERROR non-canonical lock path refused: $WR_STAGING_MUTATION_LOCK_PATH"
+        return 4
+        ;;
+    esac
   fi
 
   mkdir -p "$WR_STAGING_MUTATION_LOCK_DIR" || {

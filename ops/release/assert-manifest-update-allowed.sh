@@ -8,17 +8,22 @@
 set -Eeuo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 GATE="$ROOT/ops/release/verify-backend-media-mount.sh"
+# shellcheck source=../lib/woodright-environment-profile.sh
+source "$ROOT/ops/lib/woodright-environment-profile.sh"
 
-BUYER_HOST="${WOODRIGHT_BUYER_HOST:-https://woodright-demo.ru}"
+BUYER_HOST=""
 EXPECTED_SRC=""
 REQUIRE_EVIDENCE="${WOODRIGHT_REQUIRE_MEDIA_GATE_EVIDENCE:-0}"
 EVIDENCE_PATH="${WOODRIGHT_MEDIA_GATE_EVIDENCE:-}"
 MAX_EVIDENCE_AGE_SEC="${WOODRIGHT_MEDIA_GATE_EVIDENCE_MAX_AGE_SEC:-1800}"
+ENV_ARG=""
 
 die() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --environment) ENV_ARG="$2"; shift 2 ;;
+    --environment=*) ENV_ARG="${1#--environment=}"; shift ;;
     --expected-src) EXPECTED_SRC="$2"; shift 2 ;;
     --evidence) EVIDENCE_PATH="$2"; REQUIRE_EVIDENCE=1; shift 2 ;;
     --require-evidence) REQUIRE_EVIDENCE=1; shift ;;
@@ -30,8 +35,16 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+[[ -n "$ENV_ARG" ]] || die "missing required --environment <staging|production>"
+wr_load_environment_profile "$ENV_ARG" || exit 1
+BUYER_HOST="${WOODRIGHT_BUYER_HOST}"
+
 echo "assert-manifest-update-allowed: running media promotion gate…" >&2
-"$GATE" --compose-only --compose-file "${WOODRIGHT_COMPOSE_FILE:-$ROOT/docker-compose.staging.yml}"
+if [[ "${WOODRIGHT_ENVIRONMENT}" == "staging" ]]; then
+  "$GATE" --environment staging --compose-only --compose-file "${WOODRIGHT_COMPOSE_FILE:-$ROOT/docker-compose.staging.yml}"
+else
+  echo "assert-manifest-update-allowed: skip staging compose-only for environment=${WOODRIGHT_ENVIRONMENT}" >&2
+fi
 
 PIN_DIGEST=""
 PIN_SHA=""
@@ -43,9 +56,11 @@ if [[ -n "$EXPECTED_SRC" ]]; then
   [[ "$PIN_SHA" =~ ^[0-9a-f]{40}$ ]] || die "expected-src approved_git_sha invalid"
 fi
 
-POST_ARGS=(--mode post-promote --buyer-host "$BUYER_HOST")
+POST_ARGS=(--environment "$WOODRIGHT_ENVIRONMENT" --mode post-promote --buyer-host "$BUYER_HOST")
 if [[ -n "${WOODRIGHT_BE_CONTAINER:-}" ]]; then
   POST_ARGS+=(--container "$WOODRIGHT_BE_CONTAINER")
+elif [[ -n "${WOODRIGHT_BE_CONTAINER_DEFAULT:-}" ]]; then
+  POST_ARGS+=(--container "$WOODRIGHT_BE_CONTAINER_DEFAULT")
 fi
 if [[ -n "$PIN_DIGEST" ]]; then
   POST_ARGS+=(--expected-digest "$PIN_DIGEST" --target-sha "$PIN_SHA")

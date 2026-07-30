@@ -95,12 +95,12 @@ else
 fi
 
 # --- Pre-promote: mutable tag only ---
-OUT=$(bash "$GATE" --mode pre-promote --target-image "ghcr.io/example/be:latest" --skip-volume-probe 2>/dev/null || true)
+OUT=$(bash "$GATE" --environment staging --mode pre-promote --target-image "ghcr.io/example/be:latest" --skip-volume-probe 2>/dev/null || true)
 echo "$OUT" | grep -q TARGET_NOT_IMMUTABLE && pass "mutable tag FAIL" || fail "mutable tag FAIL ($OUT)"
 
 # --- Pre-promote: digest unavailable (fake dig, skip volume) ---
 FAKE='sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
-OUT=$(bash "$GATE" --mode pre-promote \
+OUT=$(bash "$GATE" --environment staging --mode pre-promote \
   --target-image "ghcr.io/example/woodright-backend@${FAKE}" \
   --expected-digest "$FAKE" \
   --skip-volume-probe 2>/dev/null || true)
@@ -108,7 +108,7 @@ echo "$OUT" | grep -qE 'TARGET_IMAGE_UNAVAILABLE|TARGET_NOT_IMMUTABLE' && pass "
   || fail "unavailable digest ($OUT)"
 
 # --- Pre-promote: wrong mount destination ---
-OUT=$(bash "$GATE" --mode pre-promote \
+OUT=$(bash "$GATE" --environment staging --mode pre-promote \
   --target-image "ghcr.io/example/woodright-backend@${FAKE}" \
   --mount-destination /tmp/not-static \
   --skip-volume-probe 2>/dev/null || true)
@@ -117,7 +117,7 @@ echo "$OUT" | grep -qE 'MOUNT_DEST_INVALID|TARGET_IMAGE_UNAVAILABLE' && pass "ba
   || fail "bad dest ($OUT)"
 
 # --- Compose-only (no Docker mutation of app) ---
-if bash "$GATE" --compose-only >/dev/null; then
+if bash "$GATE" --environment staging --compose-only >/dev/null; then
   pass "compose-only PASS"
 else
   fail "compose-only"

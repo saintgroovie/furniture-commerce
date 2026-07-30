@@ -7,32 +7,54 @@
 # After healthy: MUST pass ops/release/verify-backend-media-mount.sh (fail-closed).
 # Manifest updates: ops/release/reconcile-runtime-manifests.sh only (runs assert/gate first).
 # Canonical exclusive lock: /srv/woodright/locks/live-cutover.lock (via ops/lib helper).
+# Requires explicit: --environment staging
 # Legacy DEPLOY.lock is no longer the mutex; do not invent a second lock.
 set -euo pipefail
 
-NAME="${NAME:-woodright-staging-backend}"
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=../lib/woodright-environment-profile.sh
+source "$HERE/../lib/woodright-environment-profile.sh"
+# shellcheck source=../lib/woodright-staging-mutation-lock.sh
+source "$HERE/../lib/woodright-staging-mutation-lock.sh"
+# shellcheck source=../lib/woodright-validation-freeze.sh
+source "$HERE/../lib/woodright-validation-freeze.sh"
+
+log() { printf '%s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*"; }
+die_early() { log "ERROR: $*"; exit 1; }
+
+wr_require_environment_from_args "$@" || exit 1
+[[ "${WOODRIGHT_ENVIRONMENT}" == "staging" ]] || die_early "only --environment staging allowed (got ${WOODRIGHT_ENVIRONMENT})"
+wr_validation_freeze_assert_clear_for_mutation staging || exit 1
+
 IMAGE="${IMAGE:?set IMAGE to exact digest ref}"
 ENV_FILE="${ENV_FILE:?set ENV_FILE}"
 EXPECTED_DIGEST="${EXPECTED_DIGEST:?set EXPECTED_DIGEST sha256:<64hex>}"
-NET_STACK="${NET_STACK:-woodright-stack-3dsdhd_woodright_staging}"
-NET_DOKPLOY="${NET_DOKPLOY:-dokploy-network}"
-VOLUME="${VOLUME:-woodright-stack-3dsdhd_woodright_staging_media}"
-DEST="${DEST:-/server/static}"
 KEEP_NAME="${KEEP_NAME:?set KEEP_NAME}"
 # Deprecated alias kept for rollback script env compatibility only (not the mutex).
 LOCK_FILE="${LOCK_FILE:-/srv/woodright/runtime-ownership/DEPLOY.lock}"
 ROLLBACK_SCRIPT="${ROLLBACK_SCRIPT:-/srv/woodright/runtime-ownership/rollback-staging-backend-media-repair.sh}"
 REQUIRE_CURRENT_DIGEST="${REQUIRE_CURRENT_DIGEST:-1}"
 
-HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=../lib/woodright-staging-mutation-lock.sh
-source "$HERE/../lib/woodright-staging-mutation-lock.sh"
+# Profile is authority for NAME/VOLUME/NET (ignore conflicting inherited overrides)
+if [[ -n "${NAME:-}" && "$NAME" != "${WOODRIGHT_BE_CONTAINER_DEFAULT}" ]]; then
+  case "$NAME" in
+    ${WOODRIGHT_BE_NAME_PREFIX}*) ;;
+    *) die_early "NAME='$NAME' rejected for environment=staging" ;;
+  esac
+fi
+NAME="${WOODRIGHT_BE_CONTAINER_DEFAULT}"
+NET_STACK="${WOODRIGHT_NET_STACK}"
+NET_DOKPLOY="${WOODRIGHT_NET_DOKPLOY:-dokploy-network}"
+VOLUME="${WOODRIGHT_MEDIA_VOLUME}"
+DEST="${WOODRIGHT_MEDIA_MOUNT_IN_BE:-/server/static}"
+wr_assert_media_volume_for_environment "$VOLUME" || exit 1
+case "$NAME" in
+  *production*|*"woodright.ru"*) die_early "refused: production-like NAME=$NAME" ;;
+esac
 
 # 0=not stopped, 1=stopped but not renamed, 2=renamed to keeper
 PHASE=0
 RECOVERING=0
-
-log() { printf '%s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*"; }
 
 recover() {
   local rc=${1:-1}
@@ -43,7 +65,7 @@ recover() {
   RECOVERING=1
   log "RECOVER begin phase=$PHASE rc=$rc"
   if [[ "$PHASE" -eq 1 ]]; then
-    # stopped but rename failed — restart original live name
+    # stopped but rename failed - restart original live name
     docker start "$NAME" || log "recover_restart_failed"
     log "RECOVER restarted original $NAME"
   elif [[ "$PHASE" -eq 2 ]]; then
@@ -104,7 +126,7 @@ fi
 # Does not require EXPECTED_RELEASE to already list the target digest.
 TARGET_SHA="${TARGET_SHA:-${WOODRIGHT_TARGET_SHA:-}}"
 log "running_pre_promote_media_gate gate=$GATE target=$EXPECTED_DIGEST"
-PRE_ARGS=(--mode pre-promote --target-image "$IMAGE" --expected-digest "$EXPECTED_DIGEST" --media-volume "$VOLUME" --mount-destination "$DEST")
+PRE_ARGS=(--environment staging --mode pre-promote --target-image "$IMAGE" --expected-digest "$EXPECTED_DIGEST" --media-volume "$VOLUME" --mount-destination "$DEST")
 if [[ -n "$TARGET_SHA" ]]; then
   PRE_ARGS+=(--target-sha "$TARGET_SHA")
 fi
@@ -116,6 +138,7 @@ wr_staging_mutation_lock_acquire \
   "target=$EXPECTED_DIGEST" \
   || die "canonical live-cutover.lock busy/unavailable"
 log "flock_acquired lock=$WR_STAGING_MUTATION_LOCK_PATH"
+wr_validation_freeze_assert_clear_for_mutation staging || die "validation freeze active under lock"
 
 # Re-run Mode A under the lock (no live mutation; closes TOCTOU before stop).
 bash "$GATE" "${PRE_ARGS[@]}" || die "MEDIA_PRE_PROMOTE_GATE_FAILED_UNDER_LOCK"
@@ -188,7 +211,7 @@ st="$(docker inspect "$NAME" --format '{{if .State.Health}}{{.State.Health.Statu
 # Fail-closed Mode B post-promote gate: pin target digest (EXPECTED_RELEASE may still be old).
 EVIDENCE_PATH="${WOODRIGHT_MEDIA_GATE_EVIDENCE:-/tmp/woodright-media-gate-evidence-${EXPECTED_DIGEST##sha256:}.json}"
 log "running_post_promote_media_gate gate=$GATE container=$NAME digest=$EXPECTED_DIGEST"
-POST_ARGS=(--mode post-promote --container "$NAME" --expected-digest "$EXPECTED_DIGEST" --media-volume "$VOLUME" --mount-destination "$DEST" --write-evidence "$EVIDENCE_PATH")
+POST_ARGS=(--environment staging --mode post-promote --container "$NAME" --expected-digest "$EXPECTED_DIGEST" --media-volume "$VOLUME" --mount-destination "$DEST" --write-evidence "$EVIDENCE_PATH")
 if [[ -n "${TARGET_SHA:-}" ]]; then
   POST_ARGS+=(--target-sha "$TARGET_SHA")
 fi

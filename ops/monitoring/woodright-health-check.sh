@@ -299,7 +299,7 @@ else
     elif [[ "$AGE_H" -gt "$BACKUP_WARN_H" ]]; then add_check "backup_freshness" warning fail "age_h=$AGE_H"
     else add_check "backup_freshness" info pass "age_h=$AGE_H path=$(basename "$LATEST_RP")"; fi
   else
-    add_check "backup_freshness" critical fail "age_h=9999"
+    add_check "backup_freshness" critical fail "manifests_absent"
   fi
 fi
 
