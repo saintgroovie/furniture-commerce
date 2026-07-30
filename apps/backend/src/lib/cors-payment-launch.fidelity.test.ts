@@ -119,4 +119,13 @@ assert.equal(MANAGER_PAYMENT_LAUNCH_COPY.unpaid, "Ожидает оплаты")
 assert.equal(MANAGER_PAYMENT_LAUNCH_COPY.operatorMarkedPaid, "Оплата отмечена менеджером")
 assert.equal(MANAGER_PAYMENT_LAUNCH_COPY.captured, "Оплата подтверждена")
 
+// Role/exposure matrix notes (medusa-config gates; documented here for fidelity):
+// - public + public_demo → demo origins allowed (no production allowlist)
+// - public + production|production_candidate|empty|unknown → production allowlist
+assert.ok(
+  validateProductionStoreCors("https://woodright-demo.ru").some(
+    (i) => i.code === "demo_in_production" || i.code === "unapproved_store_origin" || i.code === "missing_apex"
+  )
+)
+
 console.log("cors-payment-launch.fidelity: ok")

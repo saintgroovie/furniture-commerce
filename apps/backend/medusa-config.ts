@@ -27,16 +27,34 @@ const localHttp = process.env.MEDUSA_LOCAL_HTTP === "1"
 const woodrightExposure = String(process.env.WOODRIGHT_EXPOSURE ?? "")
   .trim()
   .toLowerCase()
+const woodrightRuntimeRole = String(process.env.WOODRIGHT_RUNTIME_ROLE ?? "")
+  .trim()
+  .toLowerCase()
 const isPublicExposure = woodrightExposure === "public"
+const isPublicDemoRole = woodrightRuntimeRole === "public_demo"
+// Fail-closed: any public exposure that is not an explicit public_demo role must
+// enforce production apex CORS + private Admin (including empty/unknown roles).
+const isProductionPublicCutoverProfile = isPublicExposure && !isPublicDemoRole
 const adminExposure = String(process.env.WOODRIGHT_ADMIN_EXPOSURE ?? "")
   .trim()
   .toLowerCase()
 const adminExposureResolved =
   adminExposure === "" || adminExposure === "private" ? "private" : adminExposure
 
-if (isPublicExposure && adminExposureResolved !== "private") {
+if (isProductionPublicCutoverProfile && adminExposureResolved !== "private") {
   throw new Error(
-    "WOODRIGHT_EXPOSURE=public requires WOODRIGHT_ADMIN_EXPOSURE=private (or unset)"
+    "WOODRIGHT_EXPOSURE=public (non-public_demo) requires WOODRIGHT_ADMIN_EXPOSURE=private (or unset)"
+  )
+}
+if (
+  isPublicExposure &&
+  woodrightRuntimeRole &&
+  !isPublicDemoRole &&
+  woodrightRuntimeRole !== "production" &&
+  woodrightRuntimeRole !== "production_candidate"
+) {
+  throw new Error(
+    `WOODRIGHT_EXPOSURE=public with unexpected WOODRIGHT_RUNTIME_ROLE=${woodrightRuntimeRole}`
   )
 }
 
@@ -68,9 +86,9 @@ function resolveCors(
     if (required.includes("*") || /(^|,)\s*null\s*(,|$)/i.test(required)) {
       throw new Error(`${name} must not contain wildcards or null origins`)
     }
-    // Public cutover profile: enforce apex STORE_CORS and private Admin CORS.
-    // Private loopback candidates keep current allowlists without this gate.
-    if (isPublicExposure) {
+    // Production public cutover profile: enforce apex STORE_CORS and private Admin CORS.
+    // public_demo (WOODRIGHT_EXPOSURE=public + runtime_role=public_demo) keeps demo origins.
+    if (isProductionPublicCutoverProfile) {
       if (name === "STORE_CORS") {
         const issues = validateProductionStoreCors(required)
         if (issues.length) {
