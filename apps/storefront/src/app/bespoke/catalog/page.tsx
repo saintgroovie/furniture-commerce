@@ -1,5 +1,6 @@
 import Link from "next/link"
 import type { Metadata } from "next"
+import type { ComponentProps } from "react"
 import { ProductCard } from "@/components/product-card"
 import { CopyLines } from "@/components/copy-lines"
 import { resolveBespokeProducts } from "@/lib/bespoke"
@@ -16,6 +17,33 @@ export const metadata: Metadata = {
   },
 }
 
+function BespokeCatalogEmpty({
+  body = bespokeCatalogCopy.emptyBody,
+}: {
+  body?: readonly string[]
+}) {
+  return (
+    <div data-state="empty" className="bespoke-catalog-empty">
+      <h1>{bespokeCatalogCopy.h1}</h1>
+      <div className="status-message bespoke-catalog-empty-body">
+        <CopyLines
+          className="bespoke-catalog-empty-copy"
+          lines={body}
+          as="div"
+        />
+        <div className="nav-links nav-links-center bespoke-catalog-empty-actions">
+          <Link href="/bespoke/request" className="btn btn-primary">
+            {bespokeCatalogCopy.emptyCtaRequest}
+          </Link>
+          <Link href="/bespoke" className="btn btn-secondary">
+            {bespokeCatalogCopy.emptyCtaSection}
+          </Link>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default async function BespokeCatalogPage() {
   let products: Array<Record<string, unknown>> = []
 
@@ -24,40 +52,13 @@ export default async function BespokeCatalogPage() {
     products = data.products
   } catch (err) {
     console.error("[bespoke/catalog] products load failed", err)
-    return (
-      <div data-state="empty">
-        <h1>{bespokeCatalogCopy.h1}</h1>
-        <div className="status-message">
-          <CopyLines lines={bespokeCatalogCopy.emptyBody} />
-          <div
-            className="nav-links nav-links-center"
-            style={{ marginTop: "1rem" }}
-          >
-            <Link href="/bespoke">В раздел «По проекту»</Link>
-          </div>
-        </div>
-      </div>
-    )
+    return <BespokeCatalogEmpty body={bespokeCatalogCopy.loadError} />
   }
 
   const displayEntries = groupProductsForDisplay(products)
 
   if (products.length === 0) {
-    return (
-      <div data-state="empty">
-        <h1>{bespokeCatalogCopy.h1}</h1>
-        <div className="status-message">
-          <p>{bespokeCatalogCopy.emptyBody}</p>
-          <div
-            className="nav-links nav-links-center"
-            style={{ marginTop: "1rem" }}
-          >
-            <Link href="/bespoke/request">Заявка на расчёт</Link>
-            <Link href="/bespoke">В раздел «По проекту»</Link>
-          </div>
-        </div>
-      </div>
-    )
+    return <BespokeCatalogEmpty />
   }
 
   return (
@@ -70,7 +71,7 @@ export default async function BespokeCatalogPage() {
         {displayEntries.map((entry) => (
           <li key={(entry.product as { id?: string }).id as string}>
             <ProductCard
-              product={entry.product as any}
+              product={entry.product as ComponentProps<typeof ProductCard>["product"]}
               displayGroup={entry.displayGroup}
             />
           </li>
