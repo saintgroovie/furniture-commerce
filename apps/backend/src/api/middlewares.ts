@@ -14,7 +14,24 @@ import {
 } from "../lib/woodright-sales/sales-snapshot"
 import type { SalesMode, SalesModifier } from "../lib/woodright-sales/sales-modes"
 import { resolveFurnitureDimensions } from "../lib/woodright-dimensions"
+import {
+  redactRequestUrlsForAccessLog,
+  registerHttpAccessLogRedaction,
+} from "../lib/http-access-log-redaction"
 import { attachRuntimeIdentityHeaders } from "./runtime-identity-headers"
+
+// Install morgan `url` token redaction as soon as API middlewares load.
+registerHttpAccessLogRedaction()
+
+/** Defense-in-depth: mutate req URL fields before handlers / finish logging. */
+function redactSensitiveAccessLogUrls(
+  req: MedusaRequest,
+  _res: MedusaResponse,
+  next: MedusaNextFunction
+) {
+  redactRequestUrlsForAccessLog(req)
+  next()
+}
 
 /**
  * Cart add gate: classification fail-closed + sales policy when present.
@@ -208,6 +225,11 @@ async function ensureNotBespokeForCart(
 
 export default defineMiddlewares({
   routes: [
+    {
+      // Broad matcher: redact before publishable-key / route handlers when possible.
+      matcher: "/*",
+      middlewares: [redactSensitiveAccessLogUrls],
+    },
     {
       // Runtime identity for QA / release governance (env-driven; no secrets).
       matcher: "/store*",

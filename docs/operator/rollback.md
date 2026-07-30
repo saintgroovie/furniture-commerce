@@ -6,18 +6,37 @@ Capture rollback **before** cutover. Never invent keepers after a failed deploy.
 
 ## Recorded fields
 
-- previous backend/storefront digests
-- keeper container names
-- backup directory
-- `COMMANDS.md` with rename/start sequence under `DEPLOY.lock`
+- previous backend/storefront **digests** (authority)
+- backup directory + checksums
+- `COMMANDS.md` with digest-based restore under the canonical live mutation lock
+- whether keeper containers actually exist (optional; often absent after compose recreate)
 
-Example (5683afa cutover):
+## Keeper containers vs image anchors
 
-`/srv/woodright/backups/pre-5683afa-cutover-20260721T130125Z/COMMANDS.md`
+- **Keeper containers** are optional temporary rename holdbacks. They may be
+  consumed by `docker compose ... --force-recreate`.
+- **Image digest anchors** (local and/or GHCR) are the durable rollback target.
+- Do not document production rollback as requiring keepers if they are not present.
+- Do not use staging keeper names for production.
 
-## Rules
+## Production-candidate (private)
 
-- Redeploy **previous exact digests** (or start keepers), not `latest`.
+See: [production-candidate-rollback.md](./production-candidate-rollback.md)
+
+Phases: lock → quiesce writers → preserve failed state → restore DB (only if needed) →
+verify schema/ledger → restore digests/pins → controlled resume → post-gate.
+
+Never restore a backup over a live DB with active writers. Prefer disposable
+`restore_rehearsal` targets for practice.
+
+## Public demo
+
+- Redeploy **previous exact digests**, not `latest`.
 - Do not `docker system prune` or delete failed release images during the rollback window.
 - After rollback: health + public smoke; do not immediately re-attempt without a root cause.
 - Prefer Dokploy/`manual_flock_deploy` naming contract over ad-hoc `docker run`.
+
+## DNS / woodright.ru
+
+Rollback of private production-candidate does **not** change DNS or `woodright.ru`.
+Public launch remains a separate owner decision.
