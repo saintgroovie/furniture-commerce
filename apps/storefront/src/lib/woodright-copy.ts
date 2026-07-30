@@ -116,6 +116,9 @@ export const footer = {
         { label: "Материалы", href: "/about/materials" },
         { label: "Дизайнерам", href: "/designers/terms" },
         { label: "Контакты", href: "/contacts" },
+        // Legal routes exist for prep/preview; footer links ship only after
+        // owner legal inputs complete (cutover). Avoid presenting incomplete
+        // оферта/политика as finished buyer documents.
       ],
     },
     {

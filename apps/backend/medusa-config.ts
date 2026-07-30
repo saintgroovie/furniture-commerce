@@ -8,6 +8,15 @@ import {
   assertProductionStoreCors,
   parseCorsOrigins,
 } from "./src/lib/launch-cors"
+import {
+  validateAdminCorsPrivate,
+  validateProductionAuthCors,
+  validateProductionStoreCors,
+} from "./src/lib/cors-origin-policy"
+import {
+  resolvePaymentLaunchMode,
+  validatePaymentLaunchMode,
+} from "./src/lib/payment-launch-mode"
 
 loadEnv(process.env.NODE_ENV || "development", process.cwd())
 
@@ -15,6 +24,21 @@ const nodeEnv = process.env.NODE_ENV || "development"
 const isProduction = ["production", "prod"].includes(nodeEnv)
 // medusa start defaults NODE_ENV to production; on local HTTP secure cookies are never sent.
 const localHttp = process.env.MEDUSA_LOCAL_HTTP === "1"
+const woodrightExposure = String(process.env.WOODRIGHT_EXPOSURE ?? "")
+  .trim()
+  .toLowerCase()
+const isPublicExposure = woodrightExposure === "public"
+const adminExposure = String(process.env.WOODRIGHT_ADMIN_EXPOSURE ?? "")
+  .trim()
+  .toLowerCase()
+const adminExposureResolved =
+  adminExposure === "" || adminExposure === "private" ? "private" : adminExposure
+
+if (isPublicExposure && adminExposureResolved !== "private") {
+  throw new Error(
+    "WOODRIGHT_EXPOSURE=public requires WOODRIGHT_ADMIN_EXPOSURE=private (or unset)"
+  )
+}
 
 const LOCAL_STORE_CORS =
   "http://localhost:3002,http://127.0.0.1:3002,http://localhost:8000,http://127.0.0.1:8000"
@@ -39,9 +63,52 @@ function resolveCors(
   localDefault: string
 ): string {
   if (isProduction) {
-    return requireEnv(name, envValue, 8)
+    const required = requireEnv(name, envValue, 8)
+    // Fail closed on wildcards / null origin tokens in production allowlists.
+    if (required.includes("*") || /(^|,)\s*null\s*(,|$)/i.test(required)) {
+      throw new Error(`${name} must not contain wildcards or null origins`)
+    }
+    // Public cutover profile: enforce apex STORE_CORS and private Admin CORS.
+    // Private loopback candidates keep current allowlists without this gate.
+    if (isPublicExposure) {
+      if (name === "STORE_CORS") {
+        const issues = validateProductionStoreCors(required)
+        if (issues.length) {
+          throw new Error(
+            `STORE_CORS public profile invalid: ${issues.map((i) => i.code).join(", ")}`
+          )
+        }
+      }
+      if (name === "ADMIN_CORS") {
+        const issues = validateAdminCorsPrivate(required)
+        if (issues.length) {
+          throw new Error(
+            `ADMIN_CORS public profile invalid: ${issues.map((i) => i.code).join(", ")}`
+          )
+        }
+      }
+      if (name === "AUTH_CORS") {
+        const issues = validateProductionAuthCors(required)
+        if (issues.length) {
+          throw new Error(
+            `AUTH_CORS public profile invalid: ${issues.map((i) => i.code).join(", ")}`
+          )
+        }
+      }
+    }
+    return required
   }
   return (envValue ?? localDefault).trim()
+}
+
+{
+  const paymentIssues = validatePaymentLaunchMode(resolvePaymentLaunchMode())
+  const blocking = paymentIssues.filter((i) => i.blocking)
+  if (blocking.length && (isProduction || isPublicExposure)) {
+    throw new Error(
+      `WOODRIGHT_PAYMENT_LAUNCH_MODE invalid: ${blocking.map((i) => i.code).join(", ")}`
+    )
+  }
 }
 
 function resolveSecret(
@@ -126,10 +193,18 @@ export default defineConfig({
     // Embedded Admin must call the same origin. Absolute MEDUSA_BACKEND_URL
     // like http://localhost:9000 breaks login when the tab is opened as
     // http://127.0.0.1:9000 (cross-host session cookie / CORS on /auth).
-    // Keep MEDUSA_BACKEND_URL for scripts; Admin uses same-origin unless overridden.
-    backendUrl:
-      process.env.ADMIN_BACKEND_URL ??
-      (localHttp || !isProduction ? "" : process.env.MEDUSA_BACKEND_URL || ""),
+    // Keep MEDUSA_BACKEND_URL for scripts; private Admin always prefers same-origin.
+    // Explicit ADMIN_BACKEND_URL="" or unset under private Admin → "".
+    backendUrl: (() => {
+      if (Object.prototype.hasOwnProperty.call(process.env, "ADMIN_BACKEND_URL")) {
+        return String(process.env.ADMIN_BACKEND_URL ?? "").trim()
+      }
+      if (adminExposureResolved === "private" || isPublicExposure) {
+        return ""
+      }
+      if (localHttp || !isProduction) return ""
+      return process.env.MEDUSA_BACKEND_URL || ""
+    })(),
     vite: (config) => ({
       ...config,
       plugins: [
