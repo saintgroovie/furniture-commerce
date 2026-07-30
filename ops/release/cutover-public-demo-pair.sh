@@ -227,54 +227,12 @@ run_backup_gate() {
 }
 
 pair_rollback() {
-  log "PAIR_ROLLBACK begin"
-  local be_ok=0 sf_ok=0 pin_ok=0
-  if [[ -n "$BE_KEEP" ]] && wr_cutover_docker inspect "$BE_KEEP" >/dev/null 2>&1; then
-    bash "$HERE/rollback-staging-backend-from-keeper.sh" \
-      --environment staging --keep-name "$BE_KEEP" --evidence-dir "$EVIDENCE_DIR" \
-      && be_ok=1 || be_ok=0
-  else
-    be_ok=1
-    log "no BE keeper to restore"
-  fi
-  if [[ -n "$SF_KEEP" ]] && wr_cutover_docker inspect "$SF_KEEP" >/dev/null 2>&1; then
-    bash "$HERE/rollback-staging-storefront-from-keeper.sh" \
-      --environment staging --keep-name "$SF_KEEP" --evidence-dir "$EVIDENCE_DIR" \
-      && sf_ok=1 || sf_ok=0
-  else
-    sf_ok=1
-    log "no SF keeper to restore"
-  fi
-  if [[ -f "$EVIDENCE_DIR/pin-backup/DOKPLOY_IMAGE_PINS.env" ]]; then
-    wr_cutover_install_file "$EVIDENCE_DIR/pin-backup/DOKPLOY_IMAGE_PINS.env" \
-      /srv/woodright/runtime-identity/DOKPLOY_IMAGE_PINS.env && pin_ok=1 || pin_ok=0
-  else
-    pin_ok=1
-  fi
-  if [[ -f "$EVIDENCE_DIR/pin-backup/ACTIVE_PUBLIC.json" ]]; then
-    wr_cutover_install_file "$EVIDENCE_DIR/pin-backup/ACTIVE_PUBLIC.json" \
-      /srv/woodright/runtime-identity/ACTIVE_PUBLIC.json || pin_ok=0
-  fi
-  if [[ -f "$EVIDENCE_DIR/pin-backup/public-demo.json" ]]; then
-    wr_cutover_install_file "$EVIDENCE_DIR/pin-backup/public-demo.json" \
-      /srv/woodright/runtime-identity/public-demo.json || pin_ok=0
-  fi
-  if [[ -f "$EVIDENCE_DIR/pin-backup/dokploy-compose.env" ]]; then
-    wr_cutover_install_file "$EVIDENCE_DIR/pin-backup/dokploy-compose.env" \
-      /etc/dokploy/compose/woodright-stack-3dsdhd/code/.env || pin_ok=0
-  fi
-  printf '{"backend":%s,"storefront":%s,"pins":%s}\n' "$be_ok" "$sf_ok" "$pin_ok" \
-    >"$EVIDENCE_DIR/json/pair-rollback-result.json"
-  if [[ "$be_ok" -eq 1 && "$sf_ok" -eq 1 && "$pin_ok" -eq 1 ]]; then
-    ROLLBACK_RC=10
-    log "PAIR_ROLLBACK_OK"
-  elif [[ "$be_ok" -eq 1 || "$sf_ok" -eq 1 ]]; then
-    ROLLBACK_RC=11
-    log "PAIR_ROLLBACK_PARTIAL"
-  else
-    ROLLBACK_RC=12
-    log "PAIR_ROLLBACK_FAILED"
-  fi
+  wr_cutover_pair_rollback \
+    "$EVIDENCE_DIR" \
+    "${BE_KEEP:-}" \
+    "${SF_KEEP:-}" \
+    "$HERE/rollback-staging-backend-from-keeper.sh" \
+    "$HERE/rollback-staging-storefront-from-keeper.sh"
   return "$ROLLBACK_RC"
 }
 
