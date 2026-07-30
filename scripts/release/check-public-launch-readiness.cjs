@@ -32,6 +32,19 @@
  *
  * `--environment` must be exactly "production" for this gate - "public_demo"
  * (or any other value) is rejected, never silently treated as production.
+ *
+ * `--payment-mode` mapping (avoid drift between the two payment-mode
+ * contracts that exist after the 2026-07-30 public-launch-blockers merge):
+ *   this flag                          | storefront contract        | backend contract
+ *   --payment-mode manual_invoice      | WOODRIGHT_PAYMENT_MODE      | WOODRIGHT_PAYMENT_LAUNCH_MODE
+ *                                      | =manual_invoice (only mode, | =manager_payment_link (default)
+ *                                      | see apps/storefront/src/lib/| see apps/backend/src/lib/
+ *                                      | payment-mode.ts)            | payment-launch-mode.ts
+ * Both describe the same operational scenario (no online PSP; manager sends
+ * a payment link after order confirmation) under different env-var names in
+ * different apps. This gate only validates the flag value passed by the
+ * operator - it does not read either app's live env - so keep the operator
+ * runbook honest that setting one env var does not set the other.
  */
 const fs = require("fs")
 

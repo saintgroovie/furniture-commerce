@@ -13,6 +13,13 @@
  * Do not add a second mode (e.g. `online_provider`) until a real online PSP
  * integration exists in the codebase - see `woodright-core.mdc`: "Do NOT
  * invent legal facts... PSP names".
+ *
+ * Distinct from the backend's `WOODRIGHT_PAYMENT_LAUNCH_MODE` contract
+ * (`apps/backend/src/lib/payment-launch-mode.ts`, default
+ * `manager_payment_link`) - same operational scenario (no online PSP;
+ * manager sends a payment link), different env var per app. Setting one
+ * does not set the other; see the mapping note in
+ * `scripts/release/check-public-launch-readiness.cjs`.
  */
 import {
   isProductionLikeRuntime,
