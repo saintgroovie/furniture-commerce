@@ -67,3 +67,12 @@ export function ContactCopyIcon({ size = 18 }: { size?: IconSize }) {
     </svg>
   )
 }
+
+/** Thin check for MAX copy success state. */
+export function ContactCheckIcon({ size = 18 }: { size?: IconSize }) {
+  return (
+    <svg {...baseProps(size)}>
+      <path d="M5.5 12.2l4.1 4.1 8.9-8.9" />
+    </svg>
+  )
+}

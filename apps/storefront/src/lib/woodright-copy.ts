@@ -766,15 +766,21 @@ export const contactsCopy = {
   showroomCallCta: "Позвонить в шоурум",
   /** Shared value for Telegram / WhatsApp page tiles. */
   messengerWriteValue: "Написать",
+  /** Accessible names for dropdown messenger links (visible label stays short). */
+  messengerTelegramAria: "Написать в Telegram",
+  messengerWhatsappAria: "Написать в WhatsApp",
   maxLabel: "MAX",
-  maxCopyValue: "Скопировать номер",
-  maxCopiedValue: "Номер скопирован",
-  maxCopyError: "Не удалось скопировать номер",
-  maxDropdownIdle: "MAX",
-  maxDropdownCopied: "Скопировано",
-  maxDropdownHelper: "MAX - нажмите, чтобы скопировать номер",
-  maxDropdownHelperCopied:
-    "Номер скопирован - найдите Woodright в MAX по номеру",
+  /** Page MAX tile value - short channel rhythm. */
+  maxCopyValue: "Скопировать",
+  maxCopiedValue: "Скопировано",
+  /** Short visible error inside the page tile. */
+  maxVisibleError: "Ошибка",
+  /** Dropdown MAX utility-row value (purpose inside the row). */
+  maxDropdownCopyValue: "Скопировать номер",
+  maxDropdownCopiedValue: "Номер скопирован",
+  maxDropdownErrorValue: "Не удалось скопировать",
+  /** Full live/aria error (not shown as a separate helper row). */
+  maxAriaError: "Не удалось скопировать номер",
   maxAriaIdle:
     "Скопировать номер {display} для поиска Woodright в MAX",
   maxAriaCopied: "Номер {display} скопирован",
