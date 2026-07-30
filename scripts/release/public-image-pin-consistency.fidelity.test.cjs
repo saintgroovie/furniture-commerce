@@ -82,7 +82,7 @@ const testLockEnv = {
 
 const dry = spawnSync(
   "bash",
-  ["scripts/release/reconcile-public-image-pins.sh"],
+  ["scripts/release/reconcile-public-image-pins.sh", "--environment", "public_demo", "--component", "pair"],
   {
     cwd: root,
     encoding: "utf8",
@@ -115,7 +115,7 @@ assert.match(afterDry, /5243c7c8f1146c2832af7093f1a98f4f8c4f8e5039f733d406d9571c
 {
   const apply = spawnSync(
     "bash",
-    ["scripts/release/reconcile-public-image-pins.sh"],
+    ["scripts/release/reconcile-public-image-pins.sh", "--environment", "public_demo", "--component", "pair"],
     {
       cwd: root,
       encoding: "utf8",

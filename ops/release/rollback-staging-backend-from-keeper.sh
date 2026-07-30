@@ -25,7 +25,7 @@ die() { log "ERROR: $*"; exit 2; }
 
 FULL_ARGV=("$@")
 wr_require_environment_from_args "${FULL_ARGV[@]}" || exit 1
-[[ "${WOODRIGHT_ENVIRONMENT}" == "staging" ]] || die "only --environment staging"
+[[ "${WOODRIGHT_ENVIRONMENT}" == "public_demo" ]] || die "only --environment public_demo"
 
 set -- "${FULL_ARGV[@]}"
 while [[ $# -gt 0 ]]; do

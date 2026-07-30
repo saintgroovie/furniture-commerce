@@ -4,8 +4,8 @@
 # Official pair cutover for public_demo (staging): backend + storefront under one flock.
 # Backend-first (storefront depends on API; SF can briefly use old or new BE during transition).
 # Does NOT run DB migrations. Does NOT touch production / woodright.ru / DNS.
-# Requires: --environment staging
-# Canonical lock path (policy scan): /srv/woodright/locks/live-cutover.lock
+# Requires: --environment public_demo --component pair
+# Canonical lock: environment-scoped via profile (public_demo → /srv/woodright/locks/public_demo/live-cutover.lock)
 set -Eeuo pipefail
 IFS=$'\n\t'
 
@@ -19,6 +19,10 @@ source "$HERE/../lib/woodright-staging-mutation-lock.sh"
 source "$HERE/../lib/woodright-validation-freeze.sh"
 # shellcheck source=../lib/woodright-cutover-common.sh
 source "$HERE/../lib/woodright-cutover-common.sh"
+# shellcheck source=../lib/woodright-component-authority.sh
+source "$HERE/../lib/woodright-component-authority.sh"
+# shellcheck source=../lib/woodright-oci-provenance.sh
+source "$HERE/../lib/woodright-oci-provenance.sh"
 
 MODE="dry-run"
 CONFIRM=""
@@ -47,7 +51,7 @@ ROLLBACK_RC=0
 
 usage() {
   cat <<'EOF'
-Usage: cutover-public-demo-pair.sh --environment staging --mode <mode> [options]
+Usage: cutover-public-demo-pair.sh --environment public_demo --mode <mode> [options]
 
 Modes: dry-run | preflight | execute | verify
 
@@ -82,6 +86,8 @@ parse_args() {
       --help|-h) usage; exit 0 ;;
       --environment) shift 2 ;;
       --environment=*) shift ;;
+      --component) shift 2 ;;
+      --component=*) shift ;;
       --mode) MODE="${2:?}"; shift 2 ;;
       --mode=*) MODE="${1#--mode=}"; shift ;;
       --target-sha) TARGET_SHA="${2:?}"; shift 2 ;;
@@ -112,7 +118,7 @@ default_images() {
 }
 
 scope_gate() {
-  [[ "${WOODRIGHT_ENVIRONMENT}" == "staging" ]] || die "pair cutover only supports --environment staging"
+  [[ "${WOODRIGHT_ENVIRONMENT}" == "public_demo" ]] || die "pair cutover only supports --environment public_demo"
   [[ "${WOODRIGHT_REQUIRED_RUNTIME_ROLE}" == "public_demo" ]] || die "profile runtime role must be public_demo"
   local be sf
   be="${WOODRIGHT_BE_CONTAINER_DEFAULT}"
@@ -283,9 +289,13 @@ run_smoke() {
 
 FULL_ARGV=("$@")
 wr_require_environment_from_args "${FULL_ARGV[@]}" || exit 1
+wr_require_component_from_args "${FULL_ARGV[@]}" || die "missing required --component pair"
+[[ "${WOODRIGHT_COMPONENT_SCOPE}" == "pair" ]] || die "pair cutover requires --component pair"
 parse_args "${FULL_ARGV[@]}"
 scope_gate
-wr_validation_freeze_assert_clear_for_mutation staging || exit 1
+wr_assert_environment_provisioned || exit 1
+wr_validation_freeze_assert_clear_for_mutation "$WOODRIGHT_ENVIRONMENT" || exit 1
+wr_prelock_validate_environment_target || exit 1
 
 case "$MODE" in
   dry-run|preflight|execute|verify) ;;
@@ -315,21 +325,25 @@ if [[ "$MODE" == "verify" ]]; then
   exit 0
 fi
 
-# Read-only identity
+# Read-only identity + environment authority
 wr_cutover_docker inspect "${WOODRIGHT_BE_CONTAINER_DEFAULT}" >/dev/null \
   || die "missing backend container"
 wr_cutover_docker inspect "${WOODRIGHT_SF_CONTAINER_DEFAULT}" >/dev/null \
   || die "missing storefront container"
+wr_assert_container_matches_environment "${WOODRIGHT_BE_CONTAINER_DEFAULT}" backend || die "backend environment mismatch"
+wr_assert_container_matches_environment "${WOODRIGHT_SF_CONTAINER_DEFAULT}" storefront || die "storefront environment mismatch"
 capture_old_identity
 
-# Image presence / revision
+# Image presence / revision + OCI provenance
 if wr_cutover_docker image inspect "$BE_IMAGE" >/dev/null 2>&1; then
+  wr_assert_component_provenance "$BE_IMAGE" "$TARGET_SHA" "$BE_DIGEST" || die "backend OCI_PROVENANCE_FAILED"
   wr_cutover_assert_image_revision "$BE_IMAGE" "$TARGET_SHA" || exit 2
 else
   [[ "$MODE" != "execute" ]] || die "backend image not local"
   [[ "${WOODRIGHT_ALLOW_MISSING_LOCAL_IMAGE:-0}" == "1" ]] || die "backend image not local"
 fi
 if wr_cutover_docker image inspect "$SF_IMAGE" >/dev/null 2>&1; then
+  wr_assert_component_provenance "$SF_IMAGE" "$TARGET_SHA" "$SF_DIGEST" || die "storefront OCI_PROVENANCE_FAILED"
   wr_cutover_assert_image_revision "$SF_IMAGE" "$TARGET_SHA" || exit 2
 else
   [[ "$MODE" != "execute" ]] || die "storefront image not local"
@@ -361,18 +375,21 @@ SF_KEEP="woodright-staging-storefront-keeper-${TS}"
 
 wr_staging_mutation_lock_acquire \
   "actor=cutover-public-demo-pair" \
-  "command=$0" \
+  "command=$0 --environment public_demo --component pair" \
   "target=$TARGET_SHA" \
   || exit 3
 wr_staging_mutation_lock_export_inherit || die "lock inherit export failed"
 log "lock held for pair cutover"
 
-# Re-validate under lock
+# Re-validate under lock (selection freeze)
+wr_prelock_validate_environment_target || die "under-lock environment retarget detected"
+wr_assert_container_matches_environment "${WOODRIGHT_BE_CONTAINER_DEFAULT}" backend || die "under-lock backend retarget"
+wr_assert_container_matches_environment "${WOODRIGHT_SF_CONTAINER_DEFAULT}" storefront || die "under-lock storefront retarget"
 capture_old_identity
 run_backup_gate
 
 MUTATION_STARTED=1
-# Backend recreate (digest-advance)
+# Backend recreate (digest-advance) under pair component scope
 if ! REQUIRE_CURRENT_DIGEST=0 \
   IMAGE="$BE_IMAGE" \
   EXPECTED_DIGEST="$BE_DIGEST" \
@@ -381,17 +398,18 @@ if ! REQUIRE_CURRENT_DIGEST=0 \
   TARGET_SHA="$TARGET_SHA" \
   WOODRIGHT_TARGET_SHA="$TARGET_SHA" \
   ROLLBACK_SCRIPT="$HERE/rollback-staging-backend-from-keeper.sh" \
-  bash "$HERE/recreate-staging-backend-with-media.sh" --environment staging; then
+  bash "$HERE/recreate-staging-backend-with-media.sh" --environment public_demo --component pair; then
   log "backend recreate failed"
   pair_rollback || true
   exit "${ROLLBACK_RC:-12}"
 fi
 
-# Storefront recreate
+# Storefront recreate under pair component scope
 if ! REQUIRE_CURRENT_DIGEST=0 \
   SKIP_PUBLIC_VERIFY="${SKIP_PUBLIC_VERIFY:-0}" \
   bash "$HERE/recreate-staging-storefront.sh" \
-  --environment staging \
+  --environment public_demo \
+  --component pair \
   --mode execute \
   --image "$SF_IMAGE" \
   --digest "$SF_DIGEST" \
@@ -441,7 +459,9 @@ EOF
       APPLY=1 \
       UPDATE_PINS=1 \
       UPDATE_ACTIVE_PUBLIC=1 \
-      bash "$REPO_ROOT/scripts/release/reconcile-public-image-pins.sh"; then
+      bash "$REPO_ROOT/scripts/release/reconcile-public-image-pins.sh" \
+        --environment public_demo \
+        --component pair; then
       log "pin reconcile APPLY failed - rolling back pair"
       printf '{"pin_apply":"failed"}\n' >"$EVIDENCE_DIR/json/pin-apply-result.json"
       pair_rollback || true

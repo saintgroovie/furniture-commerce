@@ -50,8 +50,9 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-[[ -n "$ENV_ARG" ]] || die "missing required --environment <staging|production>"
+[[ -n "$ENV_ARG" ]] || die "missing required --environment <public_demo|staging|production>"
 wr_load_environment_profile "$ENV_ARG" || exit 1
+wr_assert_environment_provisioned || exit 1
 
 ACTIVE_DST="${ACTIVE_DST:-$WOODRIGHT_ACTIVE_OWNER}"
 EXPECTED_DST="${EXPECTED_DST:-$WOODRIGHT_EXPECTED_RELEASE}"
@@ -70,6 +71,8 @@ if [[ "$MODE" == "dry-run" ]]; then
   exit 0
 fi
 
+wr_prelock_validate_environment_target || die "pre-lock environment validation failed"
+
 wr_staging_mutation_lock_acquire \
   "actor=reconcile-runtime-manifests" \
   "command=$0 --apply --environment $WOODRIGHT_ENVIRONMENT" \
@@ -77,6 +80,7 @@ wr_staging_mutation_lock_acquire \
   || die "canonical mutation lock busy/unavailable"
 
 wr_validation_freeze_assert_clear_for_mutation "$WOODRIGHT_ENVIRONMENT" || die "validation freeze active"
+wr_prelock_validate_environment_target || die "under-lock environment retarget detected"
 
 # Re-run gate under the lock immediately before install (pin candidate digests).
 bash "$ASSERT" --environment "$WOODRIGHT_ENVIRONMENT" --expected-src "$EXPECTED_SRC"

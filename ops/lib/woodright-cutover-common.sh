@@ -219,11 +219,13 @@ wr_cutover_install_file() {
 }
 
 wr_cutover_pin_paths() {
-  # Canonical pin/config SoT destinations (overridable for fidelity harness only).
-  WOODRIGHT_CUTOVER_PINS_ENV="${WOODRIGHT_CUTOVER_PINS_ENV:-/srv/woodright/runtime-identity/DOKPLOY_IMAGE_PINS.env}"
-  WOODRIGHT_CUTOVER_ACTIVE_PUBLIC="${WOODRIGHT_CUTOVER_ACTIVE_PUBLIC:-/srv/woodright/runtime-identity/ACTIVE_PUBLIC.json}"
-  WOODRIGHT_CUTOVER_PUBLIC_DEMO_JSON="${WOODRIGHT_CUTOVER_PUBLIC_DEMO_JSON:-/srv/woodright/runtime-identity/public-demo.json}"
-  WOODRIGHT_CUTOVER_COMPOSE_ENV="${WOODRIGHT_CUTOVER_COMPOSE_ENV:-/etc/dokploy/compose/woodright-stack-3dsdhd/code/.env}"
+  # Canonical pin/config SoT destinations — environment-scoped via profile when loaded.
+  # Harness may override WOODRIGHT_CUTOVER_* explicitly. Never default to shared legacy root.
+  local identity_dir="${WOODRIGHT_IDENTITY_DIR:-/srv/woodright/runtime-identity-public-demo}"
+  WOODRIGHT_CUTOVER_PINS_ENV="${WOODRIGHT_CUTOVER_PINS_ENV:-${identity_dir}/DOKPLOY_IMAGE_PINS.env}"
+  WOODRIGHT_CUTOVER_ACTIVE_PUBLIC="${WOODRIGHT_CUTOVER_ACTIVE_PUBLIC:-${WOODRIGHT_ACTIVE_PUBLIC:-${identity_dir}/ACTIVE_PUBLIC.json}}"
+  WOODRIGHT_CUTOVER_PUBLIC_DEMO_JSON="${WOODRIGHT_CUTOVER_PUBLIC_DEMO_JSON:-${WOODRIGHT_PUBLIC_DEMO_FILE:-${identity_dir}/public-demo.json}}"
+  WOODRIGHT_CUTOVER_COMPOSE_ENV="${WOODRIGHT_CUTOVER_COMPOSE_ENV:-${WOODRIGHT_COMPOSE_ENV_FILE:-/etc/dokploy/compose/woodright-stack-3dsdhd/code/.env}}"
 }
 
 wr_cutover_pair_rollback() {
@@ -237,19 +239,20 @@ wr_cutover_pair_rollback() {
   local be_rb="${4:?}"
   local sf_rb="${5:?}"
   local be_ok=0 sf_ok=0 pin_ok=0
+  local env_name="${WOODRIGHT_ENVIRONMENT:-public_demo}"
   wr_cutover_pin_paths
   mkdir -p "$evidence/json"
   wr_cutover_log() { printf '%s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*"; }
   wr_cutover_log "PAIR_ROLLBACK begin"
   if [[ -n "$be_keep" ]] && wr_cutover_docker inspect "$be_keep" >/dev/null 2>&1; then
-    bash "$be_rb" --environment staging --keep-name "$be_keep" --evidence-dir "$evidence" \
+    bash "$be_rb" --environment "$env_name" --keep-name "$be_keep" --evidence-dir "$evidence" \
       && be_ok=1 || be_ok=0
   else
     be_ok=1
     wr_cutover_log "no BE keeper to restore"
   fi
   if [[ -n "$sf_keep" ]] && wr_cutover_docker inspect "$sf_keep" >/dev/null 2>&1; then
-    bash "$sf_rb" --environment staging --keep-name "$sf_keep" --evidence-dir "$evidence" \
+    bash "$sf_rb" --environment "$env_name" --keep-name "$sf_keep" --evidence-dir "$evidence" \
       && sf_ok=1 || sf_ok=0
   else
     sf_ok=1

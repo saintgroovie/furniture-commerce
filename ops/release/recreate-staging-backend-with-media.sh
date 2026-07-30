@@ -6,9 +6,11 @@
 # Preserves exact image digest + env; ALWAYS mounts staging media at /server/static.
 # After healthy: MUST pass ops/release/verify-backend-media-mount.sh (fail-closed).
 # Manifest updates: ops/release/reconcile-runtime-manifests.sh only (runs assert/gate first).
-# Canonical exclusive lock: /srv/woodright/locks/live-cutover.lock (via ops/lib helper).
-# Requires explicit: --environment staging
-# Legacy DEPLOY.lock is no longer the mutex; do not invent a second lock.
+# Canonical exclusive lock: environment-scoped via profile
+#   /srv/woodright/locks/public_demo/live-cutover.lock
+# Legacy allowlisted: /srv/woodright/locks/live-cutover.lock
+# Requires explicit: --environment public_demo --component backend|pair
+# staging is unprovisioned and must not select public_demo containers.
 # Pair cutover parent may nest via WOODRIGHT_STAGING_MUTATION_LOCK_HELD + owned FD.
 set -euo pipefail
 
@@ -19,20 +21,30 @@ source "$HERE/../lib/woodright-environment-profile.sh"
 source "$HERE/../lib/woodright-staging-mutation-lock.sh"
 # shellcheck source=../lib/woodright-validation-freeze.sh
 source "$HERE/../lib/woodright-validation-freeze.sh"
+# shellcheck source=../lib/woodright-component-authority.sh
+source "$HERE/../lib/woodright-component-authority.sh"
+# shellcheck source=../lib/woodright-oci-provenance.sh
+source "$HERE/../lib/woodright-oci-provenance.sh"
 
 log() { printf '%s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*"; }
 die_early() { log "ERROR: $*"; exit 1; }
 
 wr_require_environment_from_args "$@" || exit 1
-[[ "${WOODRIGHT_ENVIRONMENT}" == "staging" ]] || die_early "only --environment staging allowed (got ${WOODRIGHT_ENVIRONMENT})"
-wr_validation_freeze_assert_clear_for_mutation staging || exit 1
+wr_assert_environment_provisioned || exit 1
+[[ "${WOODRIGHT_ENVIRONMENT}" == "public_demo" ]] || die_early "only --environment public_demo allowed for this helper (got ${WOODRIGHT_ENVIRONMENT}; staging is not an alias for public_demo)"
+wr_require_component_from_args "$@" || die_early "missing required --component <backend|pair> for backend recreate"
+[[ "${WOODRIGHT_COMPONENT_SCOPE}" == "backend" || "${WOODRIGHT_COMPONENT_SCOPE}" == "pair" ]] || die_early "backend recreate requires --component backend|pair"
+wr_validation_freeze_assert_clear_for_mutation "$WOODRIGHT_ENVIRONMENT" || exit 1
+wr_prelock_validate_environment_target || exit 1
 
 IMAGE="${IMAGE:?set IMAGE to exact digest ref}"
 ENV_FILE="${ENV_FILE:?set ENV_FILE}"
 EXPECTED_DIGEST="${EXPECTED_DIGEST:?set EXPECTED_DIGEST sha256:<64hex>}"
+TARGET_SHA="${TARGET_SHA:-${WOODRIGHT_TARGET_SHA:-}}"
+[[ "$TARGET_SHA" =~ ^[0-9a-f]{40}$ ]] || die_early "TARGET_SHA / WOODRIGHT_TARGET_SHA required (40-hex) for OCI provenance"
 KEEP_NAME="${KEEP_NAME:?set KEEP_NAME}"
 # Deprecated alias kept for rollback script env compatibility only (not the mutex).
-LOCK_FILE="${LOCK_FILE:-/srv/woodright/runtime-ownership/DEPLOY.lock}"
+LOCK_FILE="${LOCK_FILE:-${WOODRIGHT_OWNERSHIP_DIR}/DEPLOY.lock}"
 # Prefer in-repo keeper rollback; VM legacy path remains overridable via ROLLBACK_SCRIPT.
 ROLLBACK_SCRIPT="${ROLLBACK_SCRIPT:-$HERE/rollback-staging-backend-from-keeper.sh}"
 REQUIRE_CURRENT_DIGEST="${REQUIRE_CURRENT_DIGEST:-1}"
@@ -41,7 +53,7 @@ REQUIRE_CURRENT_DIGEST="${REQUIRE_CURRENT_DIGEST:-1}"
 if [[ -n "${NAME:-}" && "$NAME" != "${WOODRIGHT_BE_CONTAINER_DEFAULT}" ]]; then
   case "$NAME" in
     ${WOODRIGHT_BE_NAME_PREFIX}*) ;;
-    *) die_early "NAME='$NAME' rejected for environment=staging" ;;
+    *) die_early "NAME='$NAME' rejected for environment=${WOODRIGHT_ENVIRONMENT}" ;;
   esac
 fi
 NAME="${WOODRIGHT_BE_CONTAINER_DEFAULT}"
@@ -73,7 +85,7 @@ recover() {
   elif [[ "$PHASE" -eq 2 ]]; then
     # In-repo rollback uses CLI; legacy VM script may still consume NAME/KEEP_NAME env.
     if [[ "$(basename "$ROLLBACK_SCRIPT")" == "rollback-staging-backend-from-keeper.sh" ]]; then
-      bash "$ROLLBACK_SCRIPT" --environment staging \
+      bash "$ROLLBACK_SCRIPT" --environment public_demo \
         --keep-name "$KEEP_NAME" \
         --evidence-dir "${WOODRIGHT_CUTOVER_EVIDENCE_DIR:-/tmp}" \
         || log "AUTO_ROLLBACK_SCRIPT_FAILED"
@@ -138,19 +150,23 @@ fi
 # Mode A — pre-promote target validation BEFORE any live mutation.
 # Does not require EXPECTED_RELEASE to already list the target digest.
 log "running_pre_promote_media_gate gate=$GATE target=$EXPECTED_DIGEST"
-PRE_ARGS=(--environment staging --mode pre-promote --target-image "$IMAGE" --expected-digest "$EXPECTED_DIGEST" --media-volume "$VOLUME" --mount-destination "$DEST")
-if [[ -n "$TARGET_SHA" ]]; then
-  PRE_ARGS+=(--target-sha "$TARGET_SHA")
-fi
+PRE_ARGS=(--environment "$WOODRIGHT_ENVIRONMENT" --mode pre-promote --target-image "$IMAGE" --expected-digest "$EXPECTED_DIGEST" --media-volume "$VOLUME" --mount-destination "$DEST" --target-sha "$TARGET_SHA")
+wr_assert_component_provenance "$IMAGE" "$TARGET_SHA" "$EXPECTED_DIGEST" || die "OCI_PROVENANCE_FAILED"
 bash "$GATE" "${PRE_ARGS[@]}" || die "MEDIA_PRE_PROMOTE_GATE_FAILED"
+
+# Freeze storefront peer before backend mutation when scope=backend
+if [[ "${WOODRIGHT_COMPONENT_SCOPE}" == "backend" ]]; then
+  wr_freeze_peer_digest storefront "${WOODRIGHT_SF_CONTAINER_DEFAULT}" || die "cannot freeze storefront peer"
+fi
 
 wr_staging_mutation_lock_acquire \
   "actor=recreate-staging-backend-with-media" \
-  "command=$0" \
+  "command=$0 --environment $WOODRIGHT_ENVIRONMENT" \
   "target=$EXPECTED_DIGEST" \
-  || die "canonical live-cutover.lock busy/unavailable"
+  || die "canonical environment lock busy/unavailable"
 log "flock_acquired lock=$WR_STAGING_MUTATION_LOCK_PATH"
-wr_validation_freeze_assert_clear_for_mutation staging || die "validation freeze active under lock"
+wr_validation_freeze_assert_clear_for_mutation "$WOODRIGHT_ENVIRONMENT" || die "validation freeze active under lock"
+wr_prelock_validate_environment_target || die "under-lock environment retarget detected"
 
 # Re-run Mode A under the lock (no live mutation; closes TOCTOU before stop).
 bash "$GATE" "${PRE_ARGS[@]}" || die "MEDIA_PRE_PROMOTE_GATE_FAILED_UNDER_LOCK"
@@ -226,15 +242,17 @@ st="$(docker inspect "$NAME" --format '{{if .State.Health}}{{.State.Health.Statu
 # Fail-closed Mode B post-promote gate: pin target digest (EXPECTED_RELEASE may still be old).
 EVIDENCE_PATH="${WOODRIGHT_MEDIA_GATE_EVIDENCE:-/tmp/woodright-media-gate-evidence-${EXPECTED_DIGEST##sha256:}.json}"
 log "running_post_promote_media_gate gate=$GATE container=$NAME digest=$EXPECTED_DIGEST"
-POST_ARGS=(--environment staging --mode post-promote --container "$NAME" --expected-digest "$EXPECTED_DIGEST" --media-volume "$VOLUME" --mount-destination "$DEST" --write-evidence "$EVIDENCE_PATH")
-if [[ -n "${TARGET_SHA:-}" ]]; then
-  POST_ARGS+=(--target-sha "$TARGET_SHA")
-fi
+POST_ARGS=(--environment "$WOODRIGHT_ENVIRONMENT" --mode post-promote --container "$NAME" --expected-digest "$EXPECTED_DIGEST" --media-volume "$VOLUME" --mount-destination "$DEST" --write-evidence "$EVIDENCE_PATH" --target-sha "$TARGET_SHA")
 if [[ -n "${WOODRIGHT_BUYER_HOST:-}" ]]; then
   POST_ARGS+=(--buyer-host "$WOODRIGHT_BUYER_HOST")
 fi
 bash "$GATE" "${POST_ARGS[@]}" \
   || die "MEDIA_PROMOTION_GATE_FAILED - refusing to declare recreate success (keeper=$KEEP_NAME)"
+
+# Peer freeze check after mutation
+if [[ "${WOODRIGHT_COMPONENT_SCOPE}" == "backend" ]]; then
+  wr_assert_peer_unchanged storefront "${WOODRIGHT_SF_CONTAINER_DEFAULT}" || die "storefront peer changed during backend-only"
+fi
 
 trap - ERR
 PHASE=0

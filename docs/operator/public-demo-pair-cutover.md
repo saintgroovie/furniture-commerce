@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Official, lock-safe tooling to cut over **public_demo** (`--environment staging`) to a verified backend + storefront **immutable digest pair**.
+Official, lock-safe tooling to cut over **public_demo** (`--environment public_demo`) to a verified backend + storefront **immutable digest pair**.
 
 This replaces ad-hoc `docker create` during deploy. Ad-hoc recreate is forbidden because it risks Dokploy ownership drift, missing keepers, split release SHA, and irreversible partial cutovers.
 
@@ -106,21 +106,21 @@ Recreate keeps `com.woodright.deployment-owner=Dokploy`, dual networks (`woodrig
 
 ```bash
 # Dry-run / preflight (no mutation)
-ops/release/cutover-public-demo-pair.sh --environment staging --mode dry-run \
+ops/release/cutover-public-demo-pair.sh --environment public_demo --mode dry-run \
   --target-sha <40hex> \
   --backend-digest sha256:<64hex> \
   --storefront-digest sha256:<64hex> \
   --evidence-dir /tmp/wr-cutover-evidence-$$
 
 # Verify-only (after a prior cutover)
-ops/release/cutover-public-demo-pair.sh --environment staging --mode verify \
+ops/release/cutover-public-demo-pair.sh --environment public_demo --mode verify \
   --target-sha <40hex> \
   --backend-digest sha256:<64hex> \
   --storefront-digest sha256:<64hex> \
   --evidence-dir /tmp/wr-cutover-verify-$$
 
 # Execute (separate deploy task; requires confirm token + env files mode 600)
-ops/release/cutover-public-demo-pair.sh --environment staging --mode execute \
+ops/release/cutover-public-demo-pair.sh --environment public_demo --mode execute \
   --target-sha <40hex> \
   --backend-digest sha256:<64hex> \
   --storefront-digest sha256:<64hex> \

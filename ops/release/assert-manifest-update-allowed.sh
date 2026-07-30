@@ -35,15 +35,16 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-[[ -n "$ENV_ARG" ]] || die "missing required --environment <staging|production>"
+[[ -n "$ENV_ARG" ]] || die "missing required --environment <public_demo|staging|production>"
 wr_load_environment_profile "$ENV_ARG" || exit 1
+wr_assert_environment_provisioned || exit 1
 BUYER_HOST="${WOODRIGHT_BUYER_HOST}"
 
 echo "assert-manifest-update-allowed: running media promotion gate…" >&2
-if [[ "${WOODRIGHT_ENVIRONMENT}" == "staging" ]]; then
-  "$GATE" --environment staging --compose-only --compose-file "${WOODRIGHT_COMPOSE_FILE:-$ROOT/docker-compose.staging.yml}"
+if [[ "${WOODRIGHT_ENVIRONMENT}" == "public_demo" ]]; then
+  "$GATE" --environment public_demo --compose-only --compose-file "${WOODRIGHT_COMPOSE_FILE:-$ROOT/docker-compose.staging.yml}"
 else
-  echo "assert-manifest-update-allowed: skip staging compose-only for environment=${WOODRIGHT_ENVIRONMENT}" >&2
+  echo "assert-manifest-update-allowed: skip public_demo compose-only for environment=${WOODRIGHT_ENVIRONMENT}" >&2
 fi
 
 PIN_DIGEST=""
