@@ -79,7 +79,7 @@ assert.match(reconcileTxt, /--expected-src/)
 assert.match(reconcileTxt, /--environment/)
 assert.match(reconcileTxt, /bash "\$ASSERT"/)
 
-assert.match(recreateTxt, /--environment staging|wr_require_environment_from_args/)
+assert.match(recreateTxt, /--environment public_demo|wr_require_environment_from_args/)
 assert.match(gateTxt, /ENV_REQUIRED|missing required --environment|--environment/)
 
 const healthTxt = readFileSync(health, "utf8")

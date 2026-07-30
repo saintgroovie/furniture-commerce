@@ -28,7 +28,8 @@ const OLD_SF = "sha256:034db9486b9be45e282f543f7f26cbeb862a38b1282218bd0528831a4
 const script = "scripts/release/reconcile-public-image-pins.sh"
 const src = readFileSync(join(root, script), "utf8")
 assert.match(src, /LIVE_MUTATING=true/)
-assert.match(src, /\/srv\/woodright\/locks\/live-cutover\.lock/)
+assert.match(src, /missing required --environment/)
+assert.match(src, /WOODRIGHT_MUTATION_LOCK_PATH|public_demo\/live-cutover\.lock/)
 assert.match(src, /flock -x|python_holder|fcntl\.flock/)
 assert.doesNotMatch(src, /SKIP_LOCK=1/)
 
@@ -150,7 +151,7 @@ function waitHeld(proc, timeoutMs = 3000) {
 {
   const dir = mkdtempSync(join(tmpdir(), "wr-pin-lock-dry-"))
   const { env, paths } = baseEnv(dir, { APPLY: "0" })
-  const r = spawnSync("bash", [script], { cwd: root, encoding: "utf8", env })
+  const r = spawnSync("bash", [script, "--environment", "public_demo", "--component", "pair"], { cwd: root, encoding: "utf8", env })
   assert.equal(r.status, 0, r.stderr || r.stdout)
   assert.match(r.stdout, /lock_acquired=yes/)
   assert.match(r.stdout, /dry_run_complete/)
@@ -164,7 +165,7 @@ function waitHeld(proc, timeoutMs = 3000) {
   const before = readFileSync(paths.envPath, "utf8")
   const holder = holdLock(paths.lockPath, 8)
   assert.equal(waitHeld(holder), true, "lock holder did not signal HELD")
-  const r = spawnSync("bash", [script], { cwd: root, encoding: "utf8", env })
+  const r = spawnSync("bash", [script, "--environment", "public_demo", "--component", "pair"], { cwd: root, encoding: "utf8", env })
   assert.equal(r.status, 3, r.stderr || r.stdout)
   assert.match(r.stderr + r.stdout, /lock contention|lock_acquired=no/)
   assert.equal(readFileSync(paths.envPath, "utf8"), before)
@@ -175,7 +176,7 @@ function waitHeld(proc, timeoutMs = 3000) {
 {
   const dir = mkdtempSync(join(tmpdir(), "wr-pin-lock-apply-"))
   const { env, paths } = baseEnv(dir, { APPLY: "1" })
-  const r = spawnSync("bash", [script], { cwd: root, encoding: "utf8", env })
+  const r = spawnSync("bash", [script, "--environment", "public_demo", "--component", "pair"], { cwd: root, encoding: "utf8", env })
   assert.equal(r.status, 0, r.stderr || r.stdout)
   assert.match(r.stdout, /lock_acquired=yes/)
   assert.match(r.stdout, /apply_complete/)
@@ -193,7 +194,7 @@ function waitHeld(proc, timeoutMs = 3000) {
     WOODRIGHT_PIN_RECONCILE_FAULT_AFTER: "env",
   })
   const before = readFileSync(paths.envPath, "utf8")
-  const r = spawnSync("bash", [script], { cwd: root, encoding: "utf8", env })
+  const r = spawnSync("bash", [script, "--environment", "public_demo", "--component", "pair"], { cwd: root, encoding: "utf8", env })
   assert.equal(r.status, 7, r.stderr || r.stdout)
   assert.match(r.stderr + r.stdout, /restoring_all_targets|rollback_performed=yes|injected fault/)
   assert.equal(readFileSync(paths.envPath, "utf8"), before)
@@ -207,7 +208,7 @@ function waitHeld(proc, timeoutMs = 3000) {
     WOODRIGHT_PIN_RECONCILE_FAULT_AFTER: "verify",
   })
   const before = readFileSync(paths.envPath, "utf8")
-  const r = spawnSync("bash", [script], { cwd: root, encoding: "utf8", env })
+  const r = spawnSync("bash", [script, "--environment", "public_demo", "--component", "pair"], { cwd: root, encoding: "utf8", env })
   assert.equal(r.status, 7, r.stderr || r.stdout)
   assert.match(r.stderr + r.stdout, /restoring_all_targets|rollback_performed=yes|injected fault/)
   assert.equal(readFileSync(paths.envPath, "utf8"), before)
@@ -219,7 +220,7 @@ function waitHeld(proc, timeoutMs = 3000) {
   const { env, paths } = baseEnv(dir, { APPLY: "1", LOCK_TIMEOUT_SEC: "2" })
   const holder = holdLock(paths.lockPath, 3)
   assert.equal(waitHeld(holder), true)
-  const b = spawnSync("bash", [script], {
+  const b = spawnSync("bash", [script, "--environment", "public_demo", "--component", "pair"], {
     cwd: root,
     encoding: "utf8",
     env: {
@@ -231,7 +232,7 @@ function waitHeld(proc, timeoutMs = 3000) {
   assert.equal(b.status, 3, b.stderr || b.stdout)
   holder.kill("SIGTERM")
   sleepMs(100)
-  const a = spawnSync("bash", [script], { cwd: root, encoding: "utf8", env })
+  const a = spawnSync("bash", [script, "--environment", "public_demo", "--component", "pair"], { cwd: root, encoding: "utf8", env })
   assert.equal(a.status, 0, a.stderr || a.stdout)
   const after = readFileSync(paths.envPath, "utf8")
   assert.match(after, new RegExp(BE.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")))
@@ -247,7 +248,7 @@ function waitHeld(proc, timeoutMs = 3000) {
   })
   const holder = holdLock(paths.lockPath, 5)
   assert.equal(waitHeld(holder), true)
-  const r = spawnSync("bash", [script], { cwd: root, encoding: "utf8", env })
+  const r = spawnSync("bash", [script, "--environment", "public_demo", "--component", "pair"], { cwd: root, encoding: "utf8", env })
   assert.equal(r.status, 0, r.stderr || r.stdout)
   assert.match(r.stdout, /read_only_no_lock|non_authoritative/)
   holder.kill("SIGTERM")
@@ -257,7 +258,7 @@ function waitHeld(proc, timeoutMs = 3000) {
 {
   const dir = mkdtempSync(join(tmpdir(), "wr-pin-lock-forbid-"))
   const { env } = baseEnv(dir, { APPLY: "1", READ_ONLY_NO_LOCK: "1" })
-  const r = spawnSync("bash", [script], { cwd: root, encoding: "utf8", env })
+  const r = spawnSync("bash", [script, "--environment", "public_demo", "--component", "pair"], { cwd: root, encoding: "utf8", env })
   assert.equal(r.status, 2, r.stderr || r.stdout)
 }
 
@@ -270,7 +271,7 @@ function waitHeld(proc, timeoutMs = 3000) {
     WOODRIGHT_CUTOVER_LOCK_PATH: join(dir, "evil.lock"),
     REQUIRE_LIVE_MATCH: "0",
   })
-  const r = spawnSync("bash", [script], { cwd: root, encoding: "utf8", env })
+  const r = spawnSync("bash", [script, "--environment", "public_demo", "--component", "pair"], { cwd: root, encoding: "utf8", env })
   assert.equal(r.status, 2, r.stderr || r.stdout)
   assert.match(r.stderr + r.stdout, /override rejected/)
 }
