@@ -220,10 +220,11 @@ wr_cutover_install_file() {
 
 wr_cutover_pin_backup() {
   local evidence="${1:?}"
-  local pins="${2:-/srv/woodright/runtime-identity/DOKPLOY_IMAGE_PINS.env}"
-  local active="${3:-/srv/woodright/runtime-identity/ACTIVE_PUBLIC.json}"
-  local public_demo="${4:-/srv/woodright/runtime-identity/public-demo.json}"
-  local compose_env="${5:-/etc/dokploy/compose/woodright-stack-3dsdhd/code/.env}"
+  local identity_dir="${WOODRIGHT_IDENTITY_DIR:-/srv/woodright/runtime-identity-public-demo}"
+  local pins="${2:-${identity_dir}/DOKPLOY_IMAGE_PINS.env}"
+  local active="${3:-${WOODRIGHT_ACTIVE_PUBLIC:-${identity_dir}/ACTIVE_PUBLIC.json}}"
+  local public_demo="${4:-${WOODRIGHT_PUBLIC_DEMO_FILE:-${identity_dir}/public-demo.json}}"
+  local compose_env="${5:-${WOODRIGHT_COMPOSE_ENV_FILE:-/etc/dokploy/compose/woodright-stack-3dsdhd/code/.env}}"
   umask 077
   mkdir -p "$evidence/pin-backup"
   if [[ -f "$pins" ]]; then

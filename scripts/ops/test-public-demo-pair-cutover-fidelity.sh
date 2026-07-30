@@ -74,6 +74,14 @@ elif "release-sha" in fmt:
   print((d.get("Config") or {}).get("Labels",{}).get("com.woodright.release-sha",""))
 elif "deployment-owner" in fmt:
   print((d.get("Config") or {}).get("Labels",{}).get("com.woodright.deployment-owner",""))
+elif "exposure" in fmt and "com.woodright.exposure" in fmt:
+  print((d.get("Config") or {}).get("Labels",{}).get("com.woodright.exposure",""))
+elif "database-identity" in fmt:
+  print((d.get("Config") or {}).get("Labels",{}).get("com.woodright.database-identity",""))
+elif "image.title" in fmt or "org.opencontainers.image.title" in fmt:
+  print((d.get("Config") or {}).get("Labels",{}).get("org.opencontainers.image.title",""))
+elif "compose.project" in fmt:
+  print((d.get("Config") or {}).get("Labels",{}).get("com.docker.compose.project",""))
 elif ".Image" in fmt and "Config" not in fmt:
   print(d.get("Image",""))
 elif ".Config.Image" in fmt:
@@ -116,6 +124,9 @@ d=json.load(open(sys.argv[1]))
 fmt=sys.argv[2]
 if "revision" in fmt:
   print((d.get("Config") or {}).get("Labels",{}).get("org.opencontainers.image.revision",""))
+elif "RepoDigests" in fmt:
+  digs=d.get("RepoDigests") or []
+  print(digs[0] if digs else "")
 elif ".Id" in fmt:
   print(d.get("Id",""))
 else:
@@ -158,6 +169,7 @@ setup_state() {
 import json,sys,os
 state,old_be,old_sf=sys.argv[1],sys.argv[2],sys.argv[3]
 def ctr(name, image, role="public_demo"):
+  title = "woodright-storefront" if "storefront" in name else "woodright-backend"
   return [{
     "Id": f"id-{name}",
     "Name": f"/{name}",
@@ -165,12 +177,14 @@ def ctr(name, image, role="public_demo"):
     "RepoDigests": [f"ghcr.io/x@{image}"],
     "Config": {
       "Image": f"ghcr.io/saintgroovie/woodright-x@{image}",
-      "Env": ["WOODRIGHT_RUNTIME_ROLE=public_demo","MOCK_SECRET_VALUE=should-not-leak","PATH=/usr/bin"],
+      "Env": ["WOODRIGHT_RUNTIME_ROLE=public_demo","WOODRIGHT_DATABASE_IDENTITY_ALIAS=public_demo_db","MOCK_SECRET_VALUE=should-not-leak","PATH=/usr/bin"],
       "Labels": {
         "com.woodright.runtime-role": role,
         "com.woodright.deployment-owner": "Dokploy",
         "com.woodright.exposure": "public",
+        "com.woodright.database-identity": "public_demo_db",
         "com.woodright.release-sha": "7628056dcc1d150745de1b0fa881f1e9d36b798b",
+        "org.opencontainers.image.title": title,
       },
       "Cmd": ["node","server.js"],
       "Healthcheck": {"Test":["CMD-SHELL","true"]},
@@ -195,7 +209,7 @@ state,be,sf,sha=sys.argv[1:5]
 for dig,title in ((be,"woodright-backend"),(sf,"woodright-storefront")):
   img=f"ghcr.io/saintgroovie/{title}@{dig}"
   key=img.replace("/","_")
-  doc={"Id": f"img-{dig[-12:]}", "Config": {"Labels": {
+  doc={"Id": dig, "RepoDigests": [f"ghcr.io/saintgroovie/{title}@{dig}"], "Config": {"Labels": {
     "org.opencontainers.image.revision": sha,
     "org.opencontainers.image.title": title,
     "com.woodright.deployment-owner": "Dokploy",
@@ -239,7 +253,7 @@ printf 'WOODRIGHT_RUNTIME_ROLE=public_demo\nWOODRIGHT_RELEASE_SHA=%s\n' "$SHA40"
 chmod 600 "$ENVF"
 rm -f "$TMP/state/log/mutations.log"
 if WOODRIGHT_FAKE_DOCKER_ALLOW_MUTATION=0 \
-  bash "$SF" --environment public_demo --mode dry-run \
+  bash "$SF" --environment public_demo --component storefront --mode dry-run \
   --image "ghcr.io/saintgroovie/woodright-storefront@${SF_DIG}" \
   --digest "$SF_DIG" --target-sha "$SHA40" \
   --keep-name "woodright-staging-storefront-keeper-test" \
@@ -251,7 +265,7 @@ fi
 if [[ -f "$TMP/state/log/mutations.log" ]]; then fail "dry-run mutated docker"; else pass "dry-run no docker mutation"; fi
 
 # 4) refuse production environment for storefront helper
-if bash "$SF" --environment production --mode dry-run \
+if bash "$SF" --environment production --component storefront --mode dry-run \
   --image "ghcr.io/saintgroovie/woodright-storefront@${SF_DIG}" \
   --digest "$SF_DIG" --target-sha "$SHA40" \
   --keep-name "k" --env-file "$ENVF" --evidence-dir "$EV" 2>/dev/null; then
@@ -264,7 +278,7 @@ fi
 EV2="$TMP/ev-pair"
 mkdir -p "$EV2"
 rm -f "$TMP/state/log/mutations.log"
-if bash "$PAIR" --environment public_demo --mode dry-run \
+if bash "$PAIR" --environment public_demo --component pair --mode dry-run \
   --target-sha "$SHA40" \
   --backend-digest "$BE_DIG" \
   --storefront-digest "$SF_DIG" \
@@ -277,7 +291,7 @@ fi
 if [[ -f "$TMP/state/log/mutations.log" ]]; then fail "pair dry-run mutated"; else pass "pair dry-run no mutation"; fi
 
 # 6) pair missing confirm on execute should fail before mutation
-if bash "$PAIR" --environment public_demo --mode execute \
+if bash "$PAIR" --environment public_demo --component pair --mode execute \
   --target-sha "$SHA40" --backend-digest "$BE_DIG" --storefront-digest "$SF_DIG" \
   --evidence-dir "$EV2" --backend-env-file "$ENVF" --storefront-env-file "$ENVF" 2>/dev/null; then
   fail "execute without confirm succeeded"
@@ -320,7 +334,7 @@ fi
 # 10) pending migration gate
 EV3="$TMP/ev-mig"
 mkdir -p "$EV3"
-if WOODRIGHT_PENDING_MIGRATION=1 bash "$PAIR" --environment public_demo --mode dry-run \
+if WOODRIGHT_PENDING_MIGRATION=1 bash "$PAIR" --environment public_demo --component pair --mode dry-run \
   --target-sha "$SHA40" --backend-digest "$BE_DIG" --storefront-digest "$SF_DIG" \
   --evidence-dir "$EV3" 2>/dev/null; then
   fail "pending migration allowed"

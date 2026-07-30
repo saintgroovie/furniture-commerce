@@ -233,6 +233,31 @@ else
   ok "recreate requires --component"
 fi
 
+# 24b) storefront recreate requires --component
+if bash "$ROOT/ops/release/recreate-staging-storefront.sh" --environment public_demo --mode dry-run \
+  --image "ghcr.io/saintgroovie/woodright-storefront@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" \
+  --digest sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
+  --target-sha aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
+  --keep-name k --env-file /dev/null --evidence-dir /tmp 2>/dev/null; then
+  fail "storefront without --component should fail"
+else
+  ok "storefront recreate requires --component"
+fi
+
+# 24c) installer lists pair/storefront helpers
+grep -q 'ops/release/cutover-public-demo-pair.sh' "$ROOT/ops/release/install-environment-governance.sh" \
+  || fail "installer missing pair cutover"
+grep -q 'ops/release/recreate-staging-storefront.sh' "$ROOT/ops/release/install-environment-governance.sh" \
+  || fail "installer missing storefront recreate"
+ok "installer includes pair+storefront helpers"
+
+# 24d) pair rollback uses environment-scoped identity dir
+if grep -n '/srv/woodright/runtime-identity/ACTIVE_PUBLIC.json' "$ROOT/ops/release/cutover-public-demo-pair.sh" | grep -v WOODRIGHT; then
+  fail "pair rollback still hardcodes legacy shared identity root"
+else
+  ok "pair rollback uses scoped identity paths"
+fi
+
 # 25) pin reconcile requires --component
 if EXPECTED_RELEASE_SHA=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
   EXPECTED_BACKEND_DIGEST=sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \

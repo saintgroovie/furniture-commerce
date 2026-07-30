@@ -44,10 +44,16 @@ FILES=(
   ops/lib/woodright-validation-freeze.sh
   ops/lib/woodright-staging-mutation-lock.sh
   ops/lib/woodright-runtime-discovery.sh
+  ops/lib/woodright-cutover-common.sh
   ops/config/runtime-environments/public_demo.conf
   ops/config/runtime-environments/staging.conf
   ops/config/runtime-environments/production.conf
   ops/release/recreate-staging-backend-with-media.sh
+  ops/release/recreate-staging-storefront.sh
+  ops/release/cutover-public-demo-pair.sh
+  ops/release/public-demo-critical-http-smoke.sh
+  ops/release/rollback-staging-backend-from-keeper.sh
+  ops/release/rollback-staging-storefront-from-keeper.sh
   ops/release/verify-backend-media-mount.sh
   ops/release/reconcile-runtime-manifests.sh
   ops/release/assert-manifest-update-allowed.sh

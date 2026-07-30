@@ -4,7 +4,7 @@
 # Durable flock recreate for woodright-staging-storefront (public_demo / staging only).
 # Exact digest + RELEASE_SHA; preserves Dokploy ownership labels and dual networks.
 # Canonical lock: /srv/woodright/locks/live-cutover.lock (nestable under pair orchestrator).
-# Requires: --environment public_demo
+# Requires: --environment public_demo --component storefront|pair
 set -Eeuo pipefail
 IFS=$'\n\t'
 
@@ -17,6 +17,10 @@ source "$HERE/../lib/woodright-staging-mutation-lock.sh"
 source "$HERE/../lib/woodright-validation-freeze.sh"
 # shellcheck source=../lib/woodright-cutover-common.sh
 source "$HERE/../lib/woodright-cutover-common.sh"
+# shellcheck source=../lib/woodright-component-authority.sh
+source "$HERE/../lib/woodright-component-authority.sh"
+# shellcheck source=../lib/woodright-oci-provenance.sh
+source "$HERE/../lib/woodright-oci-provenance.sh"
 
 MODE="execute"
 CONFIRM=""
@@ -34,9 +38,13 @@ RECOVERING=0
 
 usage() {
   cat <<'EOF'
-Usage: recreate-staging-storefront.sh --environment public_demo --mode <mode> [options]
+Usage: recreate-staging-storefront.sh --environment public_demo --component storefront|pair --mode <mode> [options]
 
 Modes: dry-run | preflight | execute | rollback | verify
+
+Required:
+  --environment public_demo
+  --component storefront|pair
 
 Required (dry-run|preflight|execute):
   --image ghcr.io/.../woodright-storefront@sha256:<64hex>
@@ -85,6 +93,8 @@ parse_args() {
       --help|-h) usage; exit 0 ;;
       --environment) shift; shift || true ;;
       --environment=*) shift ;;
+      --component) shift; shift || true ;;
+      --component=*) shift ;;
       --mode) MODE="${2:?}"; shift 2 ;;
       --mode=*) MODE="${1#--mode=}"; shift ;;
       --image) IMAGE="${2:?}"; shift 2 ;;
@@ -232,7 +242,11 @@ FULL_ARGV=("$@")
 wr_require_environment_from_args "${FULL_ARGV[@]}" || exit 1
 [[ "${WOODRIGHT_ENVIRONMENT}" == "public_demo" ]] || die "only --environment public_demo allowed"
 wr_assert_environment_provisioned || exit 1
+wr_require_component_from_args "${FULL_ARGV[@]}" || die "missing required --component <storefront|pair>"
+[[ "${WOODRIGHT_COMPONENT_SCOPE}" == "storefront" || "${WOODRIGHT_COMPONENT_SCOPE}" == "pair" ]] \
+  || die "storefront recreate requires --component storefront|pair"
 wr_validation_freeze_assert_clear_for_mutation "$WOODRIGHT_ENVIRONMENT" || exit 1
+wr_prelock_validate_environment_target || exit 1
 parse_args "${FULL_ARGV[@]}"
 
 NAME="${WOODRIGHT_SF_CONTAINER_DEFAULT}"
@@ -264,6 +278,7 @@ log "env_file_path=$ENV_FILE mode=$env_mode (contents not logged)"
 wr_cutover_evidence_init "$EVIDENCE_DIR" "storefront-$MODE" || exit 2
 
 if wr_cutover_docker image inspect "$IMAGE" >/dev/null 2>&1; then
+  wr_assert_component_provenance "$IMAGE" "$TARGET_SHA" "$EXPECTED_DIGEST" || die "OCI_PROVENANCE_FAILED"
   wr_cutover_assert_image_revision "$IMAGE" "$TARGET_SHA" || exit 2
   RESOLVED_ID="$(wr_cutover_docker image inspect "$IMAGE" --format '{{.Id}}')"
 else
@@ -275,10 +290,20 @@ fi
 wr_cutover_docker network inspect "$NET_STACK" >/dev/null || die "missing network $NET_STACK"
 wr_cutover_docker network inspect "$NET_DOKPLOY" >/dev/null || die "missing network $NET_DOKPLOY"
 wr_cutover_docker inspect "$NAME" >/dev/null || die "live container missing: $NAME"
+wr_assert_container_matches_environment "$NAME" storefront || die "storefront container environment mismatch"
+
+# Storefront-only: freeze backend peer before any mutation planning.
+if [[ "${WOODRIGHT_COMPONENT_SCOPE}" == "storefront" ]]; then
+  wr_freeze_peer_digest backend "${WOODRIGHT_BE_CONTAINER_DEFAULT}" || die "cannot freeze backend peer"
+  printf '%s\n' "${WOODRIGHT_FROZEN_BACKEND_DIGEST}" >"$EVIDENCE_DIR/json/frozen-backend-digest.txt"
+fi
 
 if [[ "$MODE" == "dry-run" || "$MODE" == "preflight" ]]; then
-  log "PLANNED stop/rename/create/start name=$NAME image=$IMAGE keep=$KEEP_NAME sha=$TARGET_SHA"
+  log "PLANNED stop/rename/create/start name=$NAME image=$IMAGE keep=$KEEP_NAME sha=$TARGET_SHA component=${WOODRIGHT_COMPONENT_SCOPE}"
   log "PLANNED nets=$NET_STACK+$NET_DOKPLOY alias=storefront owner=Dokploy role=public_demo"
+  if [[ "${WOODRIGHT_COMPONENT_SCOPE}" == "storefront" ]]; then
+    log "PLANNED backend_frozen=${WOODRIGHT_FROZEN_BACKEND_DIGEST}"
+  fi
   log "DRY_RUN_OR_PREFLIGHT_OK mode=$MODE (no mutation)"
   exit 0
 fi
@@ -288,11 +313,17 @@ trap on_err ERR
 
 wr_staging_mutation_lock_acquire \
   "actor=recreate-staging-storefront" \
-  "command=$0" \
+  "command=$0 --environment $WOODRIGHT_ENVIRONMENT --component $WOODRIGHT_COMPONENT_SCOPE" \
   "target=$EXPECTED_DIGEST" \
   || die "canonical live-cutover.lock busy/unavailable"
 log "flock_acquired_or_inherited lock=$WR_STAGING_MUTATION_LOCK_PATH"
 wr_validation_freeze_assert_clear_for_mutation "$WOODRIGHT_ENVIRONMENT" || die "validation freeze active"
+wr_prelock_validate_environment_target || die "under-lock environment retarget detected"
+wr_assert_container_matches_environment "$NAME" storefront || die "under-lock storefront retarget"
+
+if [[ "${WOODRIGHT_COMPONENT_SCOPE}" == "storefront" ]]; then
+  wr_assert_peer_unchanged backend "${WOODRIGHT_BE_CONTAINER_DEFAULT}" || die "backend peer changed before storefront mutation"
+fi
 
 if wr_cutover_docker inspect "$KEEP_NAME" >/dev/null 2>&1; then
   die "keeper already exists: $KEEP_NAME"
@@ -318,9 +349,12 @@ NEW_IMG="$(wr_cutover_docker inspect "$NAME" --format '{{.Image}}')"
 [[ "$NEW_IMG" == "$RESOLVED_ID" ]] || die "new image id mismatch"
 wait_healthy || die "not healthy after wait"
 verify_public_identity || die "public identity failed after recreate"
+if [[ "${WOODRIGHT_COMPONENT_SCOPE}" == "storefront" ]]; then
+  wr_assert_peer_unchanged backend "${WOODRIGHT_BE_CONTAINER_DEFAULT}" || die "backend peer changed during storefront-only"
+fi
 
 trap - ERR
 PHASE=0
 wr_cutover_docker inspect "$NAME" | wr_cutover_sanitize_inspect_json \
   >"$EVIDENCE_DIR/sanitized/storefront-inspect-after.json"
-log "CREATED name=$NAME image=$IMAGE keeper=$KEEP_NAME sha=$TARGET_SHA"
+log "CREATED name=$NAME image=$IMAGE keeper=$KEEP_NAME sha=$TARGET_SHA component=${WOODRIGHT_COMPONENT_SCOPE}"

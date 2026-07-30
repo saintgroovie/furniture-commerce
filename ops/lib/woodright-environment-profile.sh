@@ -174,17 +174,17 @@ wr_assert_container_matches_environment() {
     esac
   fi
 
-  owner="$(docker inspect -f '{{index .Config.Labels "com.woodright.deployment-owner"}}' "$name" 2>/dev/null || true)"
-  role="$(docker inspect -f '{{index .Config.Labels "com.woodright.runtime-role"}}' "$name" 2>/dev/null || true)"
-  exposure="$(docker inspect -f '{{index .Config.Labels "com.woodright.exposure"}}' "$name" 2>/dev/null || true)"
-  title="$(docker inspect -f '{{index .Config.Labels "org.opencontainers.image.title"}}' "$name" 2>/dev/null || true)"
-  compose="$(docker inspect -f '{{index .Config.Labels "com.docker.compose.project"}}' "$name" 2>/dev/null || true)"
-  db_alias="$(docker inspect -f '{{index .Config.Labels "com.woodright.database-identity"}}' "$name" 2>/dev/null || true)"
+  owner="$(docker inspect --format '{{index .Config.Labels "com.woodright.deployment-owner"}}' "$name" 2>/dev/null || true)"
+  role="$(docker inspect --format '{{index .Config.Labels "com.woodright.runtime-role"}}' "$name" 2>/dev/null || true)"
+  exposure="$(docker inspect --format '{{index .Config.Labels "com.woodright.exposure"}}' "$name" 2>/dev/null || true)"
+  title="$(docker inspect --format '{{index .Config.Labels "org.opencontainers.image.title"}}' "$name" 2>/dev/null || true)"
+  compose="$(docker inspect --format '{{index .Config.Labels "com.docker.compose.project"}}' "$name" 2>/dev/null || true)"
+  db_alias="$(docker inspect --format '{{index .Config.Labels "com.woodright.database-identity"}}' "$name" 2>/dev/null || true)"
   if [[ -z "$db_alias" ]]; then
-    db_alias="$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$name" 2>/dev/null | awk -F= '/^WOODRIGHT_DATABASE_IDENTITY_ALIAS=/{print $2; exit}')"
+    db_alias="$(docker inspect --format '{{range .Config.Env}}{{println .}}{{end}}' "$name" 2>/dev/null | awk -F= '/^WOODRIGHT_DATABASE_IDENTITY_ALIAS=/{print $2; exit}')"
   fi
   if [[ -z "$exposure" ]]; then
-    exposure="$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$name" 2>/dev/null | awk -F= '/^WOODRIGHT_EXPOSURE=/{print $2; exit}')"
+    exposure="$(docker inspect --format '{{range .Config.Env}}{{println .}}{{end}}' "$name" 2>/dev/null | awk -F= '/^WOODRIGHT_EXPOSURE=/{print $2; exit}')"
   fi
 
   if [[ -n "${WOODRIGHT_REQUIRED_OWNER_LABEL:-}" && "$owner" != "${WOODRIGHT_REQUIRED_OWNER_LABEL}" ]]; then
