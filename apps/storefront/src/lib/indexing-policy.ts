@@ -7,15 +7,37 @@
  *
  * Do not use NEXT_PUBLIC_* for this decision. Browser must not own SEO policy.
  * Do not derive policy solely from hostname (legacy woodright.ru is out of scope).
+ *
+ * `WOODRIGHT_LAUNCH_MODE` (see `@/lib/launch-contract`) is the newer typed
+ * public-launch contract. When it is set, it wins over legacy
+ * `WOODRIGHT_INDEXING_MODE` for the *default* (no-arg) resolution below -
+ * this keeps one indexing decision instead of two env vars disagreeing.
+ * Explicit callers that pass their own `raw` value (as the fidelity test
+ * does) are unaffected; only the default-parameter env read changes.
  */
+import {
+  DEMO_HOSTS,
+  LOOPBACK_HOST_RE,
+  launchModeToIndexingMode,
+  parseLaunchModeLenient,
+} from "./launch-contract"
 
 export type IndexingMode = "noindex" | "index"
 
 export const X_ROBOTS_TAG_NOINDEX = "noindex, nofollow, noarchive"
 
+/** Default raw indexing source: WOODRIGHT_LAUNCH_MODE wins over WOODRIGHT_INDEXING_MODE when set. */
+function defaultIndexingRaw(): string | undefined {
+  const launchMode = parseLaunchModeLenient(process.env.WOODRIGHT_LAUNCH_MODE)
+  if (launchMode) {
+    return launchModeToIndexingMode(launchMode)
+  }
+  return process.env.WOODRIGHT_INDEXING_MODE
+}
+
 /** Resolve mode from a raw env string (tests pass explicit values). */
 export function resolveIndexingMode(
-  raw: string | undefined | null = process.env.WOODRIGHT_INDEXING_MODE
+  raw: string | undefined | null = defaultIndexingRaw()
 ): IndexingMode {
   const v = String(raw ?? "")
     .trim()
@@ -43,13 +65,18 @@ export function indexingRobotsMetadata(raw?: string | null): {
 }
 
 /**
- * Canonical link in noindex mode: omit (prefer no false link to legacy production).
- * In index mode: self-canonical absolute URL.
+ * Canonical link:
+ * - When `WOODRIGHT_LAUNCH_MODE` is set: always emit production-safe self-canonical
+ *   via `launchCanonical` (private_noindex still uses real host; robots stay noindex).
+ * - Legacy (no launch mode): omit in noindex; emit in index (demo-safe fail-closed).
  */
 export function indexingCanonical(
   absoluteUrl: string,
   raw?: string | null
 ): { canonical: string } | undefined {
+  if (parseLaunchModeLenient(process.env.WOODRIGHT_LAUNCH_MODE)) {
+    return launchCanonical(absoluteUrl)
+  }
   if (!isIndexingAllowed(raw)) return undefined
   return { canonical: absoluteUrl }
 }
@@ -61,7 +88,7 @@ export function indexingCanonical(
  * also emits in development.
  */
 export function shouldEmitXRobotsTag(
-  raw: string | undefined | null = process.env.WOODRIGHT_INDEXING_MODE,
+  raw: string | undefined | null = defaultIndexingRaw(),
   nodeEnv: string | undefined = process.env.NODE_ENV
 ): boolean {
   if (isIndexingAllowed(raw)) return false
@@ -69,6 +96,35 @@ export function shouldEmitXRobotsTag(
     return false
   }
   return true
+}
+
+/**
+ * Public-launch canonical: unlike `indexingCanonical`, this always emits a
+ * canonical when `absoluteUrl` is a production-safe (https, non-demo,
+ * non-loopback) URL - regardless of indexing mode. Robots stays gated
+ * separately (`indexingRobotsMetadata` / `shouldEmitXRobotsTag`).
+ *
+ * Rationale: a `private_noindex` production candidate still wants a stable
+ * self-canonical for metadata QA (built from `getSiteUrl()`, which resolves
+ * to the real production host once a launch mode / production-like role is
+ * set) - only the robots directive should say noindex, not the canonical
+ * link. Kept separate from `indexingCanonical` (legacy demo-mode gate used
+ * by existing indexed/noindex page wiring + its fidelity assertions) so
+ * existing callers are not silently changed - do not merge the two without
+ * re-auditing every `indexingCanonical` call site.
+ */
+export function launchCanonical(absoluteUrl: string): { canonical: string } | undefined {
+  let url: URL
+  try {
+    url = new URL(absoluteUrl)
+  } catch {
+    return undefined
+  }
+  if (url.protocol !== "https:") return undefined
+  if (LOOPBACK_HOST_RE.test(url.hostname) || LOOPBACK_HOST_RE.test(url.host)) return undefined
+  const host = url.hostname.toLowerCase()
+  if (DEMO_HOSTS.some((demo) => host === demo || host.endsWith(`.${demo}`))) return undefined
+  return { canonical: absoluteUrl }
 }
 
 /** robots.txt body for current mode. No Sitemap line in noindex. */

@@ -28,6 +28,11 @@ ARG NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=
 # Staging media volume has card WebP derivatives; bake-on so catalog heroes
 # prefer /derivatives/card/*.webp with onError fallback to originals.
 ARG NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES=1
+# Public-launch contract (apps/storefront/src/lib/launch-contract.ts /
+# payment-mode.ts). Unset by default - CI/local builds are unaffected;
+# only enforced below when explicitly passed.
+ARG WOODRIGHT_LAUNCH_MODE=
+ARG WOODRIGHT_PAYMENT_MODE=
 ENV NEXT_DIST_DIR=.next-build \
     NEXT_PUBLIC_MEDUSA_BACKEND_URL=$NEXT_PUBLIC_MEDUSA_BACKEND_URL \
     MEDUSA_BACKEND_URL=$MEDUSA_BACKEND_URL \
@@ -35,11 +40,37 @@ ENV NEXT_DIST_DIR=.next-build \
     NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL \
     NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=$NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY \
     NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES=$NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES \
+    WOODRIGHT_LAUNCH_MODE=$WOODRIGHT_LAUNCH_MODE \
+    WOODRIGHT_PAYMENT_MODE=$WOODRIGHT_PAYMENT_MODE \
     NODE_ENV=production
 # NEXT_PUBLIC_MEDUSA_BACKEND_URL is optional: browser uses same-origin /store + /product-static.
 # Do not bake a public :9000 host into the client bundle.
+#
+# When WOODRIGHT_LAUNCH_MODE is passed (private_noindex or public_indexable),
+# additionally enforce: NEXT_PUBLIC_SITE_URL must not be a demo/loopback host,
+# and NEXT_PUBLIC_MEDUSA_BACKEND_URL must be set (the public API contract URL
+# for metadata/gates - MEDUSA_BACKEND_INTERNAL_URL stays the Docker-internal
+# upstream regardless). Unset WOODRIGHT_LAUNCH_MODE = unchanged CI behavior.
 RUN test -n "$MEDUSA_BACKEND_URL" \
  && test -n "$NEXT_PUBLIC_SITE_URL" \
+ && if [ -n "$WOODRIGHT_LAUNCH_MODE" ]; then \
+      case "$WOODRIGHT_LAUNCH_MODE" in \
+        private_noindex|public_indexable) ;; \
+        *) echo "WOODRIGHT_LAUNCH_MODE must be private_noindex|public_indexable, got: $WOODRIGHT_LAUNCH_MODE" >&2; exit 1 ;; \
+      esac; \
+      case "$WOODRIGHT_PAYMENT_MODE" in \
+        manual_invoice) ;; \
+        *) echo "WOODRIGHT_LAUNCH_MODE set requires WOODRIGHT_PAYMENT_MODE=manual_invoice, got: ${WOODRIGHT_PAYMENT_MODE:-<empty>}" >&2; exit 1 ;; \
+      esac; \
+      echo "$NEXT_PUBLIC_SITE_URL" | grep -Eq '^https://(www\.)?woodright\.ru/?$' \
+        || { echo "WOODRIGHT_LAUNCH_MODE requires NEXT_PUBLIC_SITE_URL=https://woodright.ru (or www), got: $NEXT_PUBLIC_SITE_URL" >&2; exit 1; }; \
+      echo "$NEXT_PUBLIC_SITE_URL" | grep -Eiq 'woodright-demo\.ru|127\.0\.0\.1|localhost' \
+        && { echo "WOODRIGHT_LAUNCH_MODE rejects demo/loopback NEXT_PUBLIC_SITE_URL: $NEXT_PUBLIC_SITE_URL" >&2; exit 1; }; \
+      echo "$NEXT_PUBLIC_MEDUSA_BACKEND_URL" | grep -Eq '^https://api\.woodright\.ru/?$' \
+        || { echo "WOODRIGHT_LAUNCH_MODE requires NEXT_PUBLIC_MEDUSA_BACKEND_URL=https://api.woodright.ru, got: ${NEXT_PUBLIC_MEDUSA_BACKEND_URL:-<empty>}" >&2; exit 1; }; \
+      echo "$NEXT_PUBLIC_MEDUSA_BACKEND_URL" | grep -Eiq 'woodright-demo\.ru|127\.0\.0\.1|localhost' \
+        && { echo "WOODRIGHT_LAUNCH_MODE rejects demo/loopback API URL: $NEXT_PUBLIC_MEDUSA_BACKEND_URL" >&2; exit 1; }; \
+    fi \
  && yarn build \
  && test -f .next-build/standalone/apps/storefront/server.js \
  && (test -d .next-build/standalone/node_modules \
