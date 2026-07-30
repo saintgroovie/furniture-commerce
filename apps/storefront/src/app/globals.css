@@ -846,8 +846,8 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 }
 
 .header-info-dropdown--contacts {
-  width: 360px;
-  max-width: min(360px, calc(100vw - 1.5rem));
+  width: 368px;
+  max-width: min(368px, calc(100vw - 1.5rem));
 }
 
 .contacts-nav-dropdown-menu {
@@ -934,8 +934,9 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 
 .contacts-nav-dropdown-menu a.contact-action.contact-action--density-dropdown.contact-action--channel,
 .contacts-nav-dropdown-menu button.contact-action.contact-action--density-dropdown.contact-action--channel {
-  min-height: 2.5625rem; /* 41px */
-  padding: 0.5rem 0.5625rem;
+  min-height: 3.125rem; /* 50px - two-line channel tiles */
+  padding: 0.5rem 0.5rem; /* 8×8 */
+  gap: 0.375rem; /* 6px */
 }
 
 .contacts-nav-dropdown-menu a.contact-action:hover,
@@ -1057,8 +1058,8 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   width: 100%;
   max-width: 100%;
   margin: 0;
-  border: 1px solid color-mix(in srgb, var(--color-border) 68%, transparent);
-  background: color-mix(in srgb, var(--color-surface) 48%, var(--color-bg));
+  border: 1px solid color-mix(in srgb, var(--color-border) 52%, transparent);
+  background: color-mix(in srgb, var(--color-surface) 38%, var(--color-bg));
   color: var(--color-fg);
   text-align: left;
   text-decoration: none;
@@ -1067,12 +1068,13 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   cursor: pointer;
   appearance: none;
   -webkit-appearance: none;
+  box-shadow: none;
   transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
 }
 
 .contact-action:hover {
-  background: color-mix(in srgb, var(--color-surface) 68%, var(--color-bg));
-  border-color: color-mix(in srgb, var(--color-border) 88%, var(--color-fg-muted));
+  background: color-mix(in srgb, var(--color-surface) 58%, var(--color-bg));
+  border-color: color-mix(in srgb, var(--color-border) 72%, var(--color-fg-muted));
   text-decoration: none;
 }
 
@@ -1248,32 +1250,32 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 }
 
 .contact-action--density-page {
-  min-height: 4.125rem; /* 66px - shared phone/map pair contract */
-  padding: 0.8125rem 0.9375rem; /* 13×15 */
+  min-height: 4rem; /* 64px - shared secondary showroom/messenger contract */
+  padding: 0.75rem 0.9375rem; /* 12×15 */
   border-radius: 9px;
   font-size: 0.9375rem;
-  gap: 0.6875rem; /* 11px */
+  gap: 0.625rem; /* 10px */
 }
 
 .contact-action--density-page.contact-action--map {
-  min-height: 4.125rem; /* same geometry as paired phone */
+  min-height: 4rem;
 }
 
 .contact-action--density-page.contact-action--channel {
-  min-height: 3.875rem; /* 62px - fits two-line channel copy without clipping */
-  padding: 0.625rem 0.75rem; /* 10×12 */
-  gap: 0.5rem; /* 8px */
+  min-height: 4rem; /* equal messenger trio, one-line values */
+  padding: 0.6875rem 0.875rem; /* 11×14 */
+  gap: 0.5625rem; /* 9px */
   align-items: center;
 }
 
 .contact-action--density-page .contact-action-icon:not(.contact-action-icon--bubble) {
-  width: 1.125rem;
-  height: 1.125rem;
+  width: 1.0625rem;
+  height: 1.0625rem;
 }
 
 .contact-action--density-page .contact-action-icon:not(.contact-action-icon--bubble) svg {
-  width: 18px;
-  height: 18px;
+  width: 17px;
+  height: 17px;
 }
 
 .contact-action--density-page.contact-action--channel .contact-action-icon:not(.contact-action-icon--bubble) svg {
@@ -1282,8 +1284,8 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 }
 
 .contact-action--density-page .contact-action-kicker {
-  font-size: 0.8125rem; /* 13px */
-  line-height: 1.3;
+  font-size: 0.75rem; /* 12px */
+  line-height: 1.25;
 }
 
 .contact-action--density-page.contact-action--channel .contact-action-kicker {
@@ -1292,21 +1294,26 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 }
 
 .contact-action--density-page .contact-action-value {
-  font-size: 1.0625rem; /* 17px */
-  line-height: 1.2;
+  font-size: 1rem; /* 16px */
+  line-height: 1.15;
 }
 
 .contact-action--density-page.contact-action--channel .contact-action-value {
-  font-size: 0.875rem; /* 14px */
+  font-size: 0.9375rem; /* 15px */
   line-height: 1.2;
-  white-space: normal;
-  overflow-wrap: break-word;
+  white-space: nowrap;
+}
+
+.contact-action--density-page .contact-action-copy {
+  gap: 0.1875rem; /* 3px */
 }
 
 .contact-action--density-page .contact-action-line {
   font-size: 1rem; /* 16px */
   line-height: 1.25;
 }
+
+/* Compact vertical phone stack removed - right primary uses shared pair grid. */
 
 .contact-action--copied {
   border-color: color-mix(in srgb, var(--color-brand) 42%, var(--color-border));
@@ -1328,16 +1335,6 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   flex: 1 1 auto;
 }
 
-.contact-max-helper {
-  box-sizing: border-box;
-  margin: 0.5625rem 0 0; /* 9px */
-  min-height: 2.125rem; /* reserve ~2 lines so copy feedback does not jump panel */
-  font-size: 0.75rem; /* 12px */
-  line-height: 1.35;
-  font-weight: 500;
-  color: var(--color-fg-muted);
-}
-
 .contact-action--density-dropdown {
   min-height: 3.375rem; /* 54px */
   padding: 0.625rem 0.75rem; /* 10×12 */
@@ -1353,23 +1350,24 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 }
 
 .contact-action--density-dropdown.contact-action--channel {
-  min-height: 2.5625rem; /* 41px */
-  padding: 0.5rem 0.5625rem;
+  min-height: 3.125rem; /* 50px two-line channels */
+  padding: 0.5rem 0.5rem; /* 8×8 */
   gap: 0.375rem; /* 6px */
+  border-radius: 7px;
 }
 
 .contact-action--density-dropdown .contact-action-copy {
-  gap: 0.1875rem; /* 3px */
+  gap: 0.125rem; /* 2px */
 }
 
 .contact-action--density-dropdown .contact-action-icon:not(.contact-action-icon--bubble) {
-  width: 0.9375rem;
-  height: 0.9375rem;
+  width: 0.875rem;
+  height: 0.875rem;
 }
 
 .contact-action--density-dropdown .contact-action-icon:not(.contact-action-icon--bubble) svg {
-  width: 15px;
-  height: 15px;
+  width: 14px;
+  height: 14px;
 }
 
 .contact-action--density-dropdown .contact-action-icon--bubble svg {
@@ -1379,12 +1377,13 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 
 .contact-action--density-dropdown .contact-action-kicker {
   font-size: 0.6875rem; /* 11px */
-  line-height: 1.25;
+  line-height: 1.2;
 }
 
 .contact-action--density-dropdown .contact-action-value {
-  font-size: 0.875rem; /* 14px */
-  line-height: 1.2;
+  font-size: 0.8125rem; /* 13px */
+  line-height: 1.15;
+  white-space: nowrap;
 }
 
 .contact-action--density-dropdown .contact-action-line {
@@ -1406,8 +1405,15 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   align-items: stretch;
 }
 
+.contact-action-grid--stack {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.5625rem; /* 9px - compact vertical phone stack */
+  align-items: stretch;
+}
+
 .contact-action-grid--channels {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6875rem; /* 11px */
 }
 
 .contact-action-grid-item {
@@ -1430,27 +1436,6 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   margin-top: 0;
 }
 
-@media (max-width: 1024px) {
-  /* Keep messenger trio equal; only stack phone pairs if they feel tight. */
-  .contacts-page .contact-action-grid--pair {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 900px) {
-  .contacts-page .contact-action-grid--pair {
-    grid-template-columns: 1fr;
-  }
-
-  .contacts-page .contact-action-grid--channels {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .contacts-page .contact-action-grid--channels .contact-action-grid-item:last-child {
-    grid-column: 1 / -1;
-  }
-}
-
 /* Dropdown showroom: stack call + map so trailing bubbles stay compact. */
 .showroom-contacts--showroom .contact-action-grid--pair.contact-action-grid--dropdown {
   grid-template-columns: minmax(0, 1fr);
@@ -1458,16 +1443,131 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   align-items: stretch;
 }
 
-/* Contacts dropdown keeps messenger trio; showroom pair handled above. */
+/* Contacts dropdown phone pair (write/call + free call); showroom stack above. */
 .showroom-contacts--contacts .contact-action-grid--pair.contact-action-grid--dropdown {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.5rem;
   align-items: stretch;
 }
 
-.showroom-contacts .contact-action-grid--channels.contact-action-grid--dropdown {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+/*
+  Contacts dropdown messengers: real channel pair + separate MAX utility row.
+  Scoped under .contact-dropdown-* so page / showroom chrome stay untouched.
+*/
+.contact-dropdown-channels {
+  display: grid;
+  gap: 0;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+}
+
+.contact-dropdown-channel-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.5rem; /* 8px */
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  align-items: stretch;
+}
+
+.contact-dropdown-channel-pair .contact-action-grid-item {
+  min-width: 0;
+  display: flex;
+}
+
+.contact-dropdown-channel-pair .contact-action-grid-item > .contact-action {
+  flex: 1 1 auto;
+  width: 100%;
+}
+
+.contacts-nav-dropdown-menu a.contact-action.contact-action--density-dropdown.contact-dropdown-channel-link,
+.showroom-contacts--contacts
+  a.contact-action.contact-action--density-dropdown.contact-dropdown-channel-link {
+  min-height: 2.75rem; /* 44px - single-line messenger links */
+  padding: 0.5rem 0.6875rem; /* 8×11 */
+  gap: 0.5rem; /* 8px */
+  border-radius: 8px;
+}
+
+.contact-dropdown-channel-link .contact-action-line {
+  font-size: 0.875rem; /* 14px */
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.contact-dropdown-max-wrap {
+  width: 100%;
+  margin-top: 0.5rem; /* 8px under Telegram/WhatsApp */
+}
+
+.contacts-nav-dropdown-menu
+  button.contact-action.contact-action--density-dropdown.contact-dropdown-max-action,
+.showroom-contacts--contacts
+  button.contact-action.contact-action--density-dropdown.contact-dropdown-max-action {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 3.1875rem; /* 51px */
+  padding: 0.5625rem 0.6875rem; /* 9×11 */
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 78%, transparent);
+  background: color-mix(in srgb, var(--color-bg) 72%, var(--color-surface));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 0.625rem; /* 10px */
+  box-shadow: none;
+}
+
+.contact-dropdown-max-action .contact-action-copy {
+  display: grid;
+  gap: 0.1875rem; /* 3px */
+  min-width: 0;
+}
+
+.contact-dropdown-max-action .contact-action-kicker {
+  font-size: 0.6875rem; /* 11px */
+  line-height: 1.2;
+  color: var(--color-fg-muted);
+}
+
+.contact-dropdown-max-action .contact-action-value {
+  font-size: 0.875rem; /* 14px */
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--color-fg);
+  white-space: nowrap;
+}
+
+/* Trailing copy bubble - decorative, not a nested control. */
+.contact-dropdown-max-action .contact-action-icon--bubble.contact-dropdown-max-bubble {
+  box-sizing: border-box;
+  width: 1.75rem; /* 28px */
+  height: 1.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-brand);
+  background: var(--color-brand);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.contact-dropdown-max-action .contact-action-icon--bubble svg {
+  width: 14px;
+  height: 14px;
+}
+
+.contact-dropdown-max-action.contact-action--copied .contact-action-icon--bubble,
+.contact-dropdown-max-action.contact-action--copy-error .contact-action-icon--bubble {
+  /* Keep bubble geometry stable across copy states. */
+  width: 1.75rem;
+  height: 1.75rem;
 }
 
 @media (max-width: 420px) {
@@ -1536,7 +1636,7 @@ main:has(.contacts-page) {
   Divider sits on the stage midpoint (center of the gutter).
 */
 .contacts-page-stage {
-  --contacts-stage-row-gap: 1.75rem; /* 28px shared between logical rows */
+  --contacts-stage-row-gap: 1.875rem; /* 30px shared primary → secondary */
   grid-column: 1 / -1;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -1599,6 +1699,22 @@ main:has(.contacts-page) {
   align-self: start;
 }
 
+/*
+  Right primary phone pair sits optically centered in the address-height
+  primary track (subgrid). Tops of secondary rows stay synced.
+*/
+.contacts-page-row--primary-phones {
+  display: grid;
+  align-items: center;
+  align-self: stretch;
+  width: 100%;
+  min-height: 100%;
+}
+
+.contacts-page-row--primary-phones .contacts-page-phone-pair {
+  width: 100%;
+}
+
 /* Decorative center rule - pseudo avoids occupying a grid track. */
 .contacts-page-stage::before {
   content: "";
@@ -1633,11 +1749,11 @@ main:has(.contacts-page) {
 .contacts-page-address {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem; /* 8px */
+  gap: 0.4375rem; /* 7px */
   margin: 0;
-  font-size: 1.0625rem; /* 17px */
+  font-size: 0.975rem; /* ~15.6px */
   font-style: normal;
-  line-height: 1.5;
+  line-height: 1.42;
   color: var(--color-fg-secondary);
 }
 
@@ -1732,21 +1848,8 @@ main:has(.contacts-page).page-section {
   .contacts-page-col-title {
     font-size: 1.5rem; /* 24px - keep H2 pair balanced when left title wraps */
   }
-}
 
-@media (max-width: 1024px) {
-  .contacts-page {
-    --contacts-page-gap: 1.5rem; /* 24px */
-    --contacts-center-gutter: clamp(4.5rem, 7vw, 5.25rem); /* keep ≥36px air each side */
-  }
-
-  .contacts-page-cta {
-    grid-template-columns: minmax(0, 1fr) auto;
-    column-gap: clamp(1.5rem, 2.5vw, 2rem);
-  }
-}
-
-@media (max-width: 900px) {
+  /* One column before dual grids get cramped (~1080–1120). */
   .contacts-page {
     display: flex;
     flex-direction: column;
@@ -1770,6 +1873,7 @@ main:has(.contacts-page).page-section {
     flex-direction: column;
     margin-top: 2.75rem;
     row-gap: 0;
+    column-gap: 0;
   }
 
   .contacts-page-stage::before,
@@ -1781,6 +1885,7 @@ main:has(.contacts-page).page-section {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+    grid-column: auto;
     grid-row: auto;
   }
 
@@ -1793,13 +1898,17 @@ main:has(.contacts-page).page-section {
     margin-top: 2.25rem;
   }
 
+  .contacts-page .contact-action-grid--pair {
+    grid-template-columns: 1fr;
+  }
+
   .contacts-page-cta {
     display: flex;
     flex-direction: column;
     align-items: stretch;
     gap: 1.625rem; /* 26px */
     margin-top: 3rem;
-    padding: 1.5rem; /* 24px card inset on mobile */
+    padding: 1.5rem; /* 24px card inset */
   }
 
   .contacts-page-cta-copy,
@@ -1830,6 +1939,23 @@ main:has(.contacts-page).page-section {
     min-height: 2.875rem; /* 46px */
     height: auto;
     justify-content: center;
+  }
+}
+
+@media (max-width: 1024px) {
+  .contacts-page {
+    --contacts-page-gap: 1.5rem; /* 24px */
+    --contacts-center-gutter: clamp(4.5rem, 7vw, 5.25rem);
+  }
+}
+
+@media (max-width: 900px) {
+  .contacts-page .contact-action-grid--channels {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .contacts-page .contact-action-grid--channels .contact-action-grid-item--max {
+    grid-column: 1 / -1;
   }
 }
 

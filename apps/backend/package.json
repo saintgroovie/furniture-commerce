@@ -19,6 +19,7 @@
     "@medusajs/admin-sdk": "2.18.0",
     "@medusajs/framework": "2.18.0",
     "@medusajs/medusa": "2.18.0",
+    "morgan": "^1.10.0",
     "sharp": "0.35.3"
   },
   "devDependencies": {

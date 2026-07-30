@@ -40,7 +40,7 @@ else
 fi
 
 # Compose-only gate against repo compose
-if "$GATE" --compose-only --compose-file "$ROOT/docker-compose.staging.yml" >/tmp/wr-gate-compose.json; then
+if "$GATE" --environment staging --compose-only --compose-file "$ROOT/docker-compose.staging.yml" >/tmp/wr-gate-compose.json; then
   grep -q '"ok": true' /tmp/wr-gate-compose.json && pass "compose-only gate" || fail "compose-only json"
 else
   fail "compose-only gate exit"
