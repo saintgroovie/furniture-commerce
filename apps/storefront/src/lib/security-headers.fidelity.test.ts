@@ -33,6 +33,11 @@ assert.match(
 )
 assert.match(middleware, /nonce-/, "CSP must use nonce")
 assert.doesNotMatch(middleware, /'unsafe-eval'/, "CSP must not allow unsafe-eval")
+assert.match(
+  middleware,
+  /buildConnectSrcDirective/,
+  "middleware must build connect-src via csp-policy helper"
+)
 assert.match(middleware, /Strict-Transport-Security/, "middleware must set HSTS on HTTPS")
 assert.match(middleware, /X-Content-Type-Options/, "middleware must set nosniff")
 assert.match(middleware, /frame-ancestors 'none'/, "CSP frame-ancestors none")

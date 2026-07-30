@@ -1,12 +1,15 @@
 /**
  * Server-controlled Woodright indexing policy (demo/staging fail-closed).
  *
- * Env: WOODRIGHT_INDEXING_MODE = "noindex" | "index"
+ * Env: WOODRIGHT_INDEXING_MODE =
+ *   "noindex" | "private_noindex" | "index"
  * - empty / unknown / anything else → noindex (fail-closed)
- * - "index" requires an explicit env change + separate production release
+ * - "index" requires explicit env + separate owner approval + readiness gates
+ * - alias "public_indexable" is NOT accepted at runtime (templates only) to prevent
+ *   accidental indexing before legal/Admin/DNS gates pass
  *
  * Do not use NEXT_PUBLIC_* for this decision. Browser must not own SEO policy.
- * Do not derive policy solely from hostname (legacy woodright.ru is out of scope).
+ * Do not derive policy solely from hostname.
  */
 
 export type IndexingMode = "noindex" | "index"
@@ -20,6 +23,7 @@ export function resolveIndexingMode(
   const v = String(raw ?? "")
     .trim()
     .toLowerCase()
+  // Intentionally do NOT accept public_indexable here - see launch-config aliases.
   if (v === "index") return "index"
   return "noindex"
 }
