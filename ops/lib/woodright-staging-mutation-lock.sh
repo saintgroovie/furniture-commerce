@@ -232,3 +232,33 @@ PY
   wr_staging_mutation_lock_log "acquired actor=$actor path=$WR_STAGING_MUTATION_LOCK_PATH pid=$$"
   return 0
 }
+
+# Export inherit markers for child processes that inherit the flock FD.
+# Parent must keep FD open. Forged use without ownership still fails in acquire().
+wr_staging_mutation_lock_export_inherit() {
+  if [[ "$_WR_STAGING_LOCK_OWNED" != "1" ]]; then
+    wr_staging_mutation_lock_log "ERROR export_inherit without ownership"
+    return 4
+  fi
+  if ! wr_staging_mutation_lock_fd_is_open; then
+    local holder_var="WR_STAGING_FCNTL_HOLDER_${WR_STAGING_MUTATION_LOCK_FD}"
+    local holder_pid="${!holder_var:-}"
+    if [[ -z "$holder_pid" ]] || ! kill -0 "$holder_pid" 2>/dev/null; then
+      wr_staging_mutation_lock_log "ERROR export_inherit without open FD or fcntl holder"
+      return 4
+    fi
+  fi
+  export WOODRIGHT_STAGING_MUTATION_LOCK_HELD=1
+  export _WR_STAGING_LOCK_OWNED=1
+  export WR_STAGING_MUTATION_LOCK_PATH
+  export WR_STAGING_MUTATION_LOCK_META
+  export WR_STAGING_MUTATION_LOCK_FD
+  export WR_STAGING_MUTATION_LOCK_ALLOW_NONCANONICAL
+  # Preserve fcntl holder pid for child inherit checks
+  local holder_var="WR_STAGING_FCNTL_HOLDER_${WR_STAGING_MUTATION_LOCK_FD}"
+  if [[ -n "${!holder_var:-}" ]]; then
+    export "$holder_var"
+  fi
+  wr_staging_mutation_lock_log "export_inherit_ok fd=$WR_STAGING_MUTATION_LOCK_FD path=$WR_STAGING_MUTATION_LOCK_PATH"
+  return 0
+}

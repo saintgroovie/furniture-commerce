@@ -63,9 +63,10 @@ SF_REPO="${SF_REPO:-ghcr.io/saintgroovie/woodright-storefront}"
 
 CANONICAL_LOCK_PATH="/srv/woodright/locks/live-cutover.lock"
 LOCK_TIMEOUT_SEC="${LOCK_TIMEOUT_SEC:-30}"
-LOCK_FD=9
+LOCK_FD="${WR_STAGING_MUTATION_LOCK_FD:-9}"
 LOCK_HELD=0
 LOCK_HOLDER_PID=""
+INHERITED_LOCK=0
 TRANSACTION_STARTED=0
 ROLLBACK_PERFORMED=0
 LOCK_PATH=""
@@ -125,6 +126,44 @@ acquire_lock() {
   if [[ ! "$LOCK_TIMEOUT_SEC" =~ ^[0-9]+$ ]] || [[ "$LOCK_TIMEOUT_SEC" -lt 1 ]] || [[ "$LOCK_TIMEOUT_SEC" -gt 600 ]]; then
     fail 2 "invalid LOCK_TIMEOUT_SEC"
   fi
+
+  # Inherited hold from pair cutover (or other owner of woodright-staging-mutation-lock.sh).
+  # Env flag alone is insufficient: require owned marker + FD that is the lock file (or live fcntl holder).
+  if [[ "${WOODRIGHT_STAGING_MUTATION_LOCK_HELD:-0}" == "1" ]]; then
+    local fd_ok=0 holder_ok=0 path_ok=0
+    local holder_var="WR_STAGING_FCNTL_HOLDER_${LOCK_FD}"
+    local holder_pid="${!holder_var:-}"
+    if { : >&"$LOCK_FD"; } 2>/dev/null; then
+      fd_ok=1
+      # Prove FD refers to the lock path when /proc is available (Linux VM).
+      if [[ -e "/proc/$$/fd/${LOCK_FD}" ]]; then
+        local got want
+        got="$(readlink -f "/proc/$$/fd/${LOCK_FD}" 2>/dev/null || readlink "/proc/$$/fd/${LOCK_FD}" 2>/dev/null || true)"
+        want="$(readlink -f "$LOCK_PATH" 2>/dev/null || echo "$LOCK_PATH")"
+        if [[ -n "$got" && "$got" == "$want" ]]; then
+          path_ok=1
+        fi
+      else
+        # macOS/local harness: require live fcntl holder exported by mutation-lock helper
+        path_ok=0
+      fi
+    fi
+    if [[ "${_WR_STAGING_LOCK_OWNED:-0}" == "1" && -n "$holder_pid" ]] && kill -0 "$holder_pid" 2>/dev/null; then
+      holder_ok=1
+    fi
+    # Accept only: (owned + FD path matches lock) OR (owned + fcntl holder alive)
+    if [[ "${_WR_STAGING_LOCK_OWNED:-0}" == "1" && ( "$path_ok" -eq 1 || "$holder_ok" -eq 1 ) ]]; then
+      if [[ -n "${WR_STAGING_MUTATION_LOCK_PATH:-}" && "$LOCK_PATH" != "$WR_STAGING_MUTATION_LOCK_PATH" ]]; then
+        fail 2 "inherited lock path mismatch want=$WR_STAGING_MUTATION_LOCK_PATH have=$LOCK_PATH"
+      fi
+      INHERITED_LOCK=1
+      LOCK_HELD=1
+      log "lock_acquired=yes path=$LOCK_PATH mode=inherited fd=$LOCK_FD path_ok=$path_ok holder_ok=$holder_ok"
+      return 0
+    fi
+    fail 4 "forged_or_stale WOODRIGHT_STAGING_MUTATION_LOCK_HELD without proven lock FD/holder"
+  fi
+
   mkdir -p "$(dirname "$LOCK_PATH")"
   # Create/open lock file; do not delete on release.
   if [[ ! -e "$LOCK_PATH" ]]; then
@@ -525,6 +564,11 @@ cleanup_on_exit() {
     fi
   fi
   rm -f "${TMP_ENV:-}" "${TMP_PINS:-}" "${TMP_AP:-}" "${TMP_AR:-}"
+  # Never unlock/release when lock was inherited from pair orchestrator.
+  if [[ "${INHERITED_LOCK:-0}" == "1" ]]; then
+    log "inherited_lock_retained_by_parent path=${LOCK_PATH:-}"
+    return 0
+  fi
   release_lock_holder
 }
 trap 'cleanup_on_exit $?' EXIT
