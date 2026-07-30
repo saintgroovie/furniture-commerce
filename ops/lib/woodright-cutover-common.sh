@@ -218,12 +218,83 @@ wr_cutover_install_file() {
   return 1
 }
 
+wr_cutover_pin_paths() {
+  # Canonical pin/config SoT destinations (overridable for fidelity harness only).
+  WOODRIGHT_CUTOVER_PINS_ENV="${WOODRIGHT_CUTOVER_PINS_ENV:-/srv/woodright/runtime-identity/DOKPLOY_IMAGE_PINS.env}"
+  WOODRIGHT_CUTOVER_ACTIVE_PUBLIC="${WOODRIGHT_CUTOVER_ACTIVE_PUBLIC:-/srv/woodright/runtime-identity/ACTIVE_PUBLIC.json}"
+  WOODRIGHT_CUTOVER_PUBLIC_DEMO_JSON="${WOODRIGHT_CUTOVER_PUBLIC_DEMO_JSON:-/srv/woodright/runtime-identity/public-demo.json}"
+  WOODRIGHT_CUTOVER_COMPOSE_ENV="${WOODRIGHT_CUTOVER_COMPOSE_ENV:-/etc/dokploy/compose/woodright-stack-3dsdhd/code/.env}"
+}
+
+wr_cutover_pair_rollback() {
+  # Orchestrated pair rollback: BE keeper + SF keeper + pin/config SoT restore.
+  # Args: evidence_dir be_keep sf_keep rollback_be_script rollback_sf_script
+  # Optional env pin destinations via wr_cutover_pin_paths.
+  # Sets ROLLBACK_RC: 10=ok 11=partial 12=failed. Returns that code.
+  local evidence="${1:?}"
+  local be_keep="${2:-}"
+  local sf_keep="${3:-}"
+  local be_rb="${4:?}"
+  local sf_rb="${5:?}"
+  local be_ok=0 sf_ok=0 pin_ok=0
+  wr_cutover_pin_paths
+  mkdir -p "$evidence/json"
+  wr_cutover_log() { printf '%s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*"; }
+  wr_cutover_log "PAIR_ROLLBACK begin"
+  if [[ -n "$be_keep" ]] && wr_cutover_docker inspect "$be_keep" >/dev/null 2>&1; then
+    bash "$be_rb" --environment staging --keep-name "$be_keep" --evidence-dir "$evidence" \
+      && be_ok=1 || be_ok=0
+  else
+    be_ok=1
+    wr_cutover_log "no BE keeper to restore"
+  fi
+  if [[ -n "$sf_keep" ]] && wr_cutover_docker inspect "$sf_keep" >/dev/null 2>&1; then
+    bash "$sf_rb" --environment staging --keep-name "$sf_keep" --evidence-dir "$evidence" \
+      && sf_ok=1 || sf_ok=0
+  else
+    sf_ok=1
+    wr_cutover_log "no SF keeper to restore"
+  fi
+  if [[ -f "$evidence/pin-backup/DOKPLOY_IMAGE_PINS.env" ]]; then
+    wr_cutover_install_file "$evidence/pin-backup/DOKPLOY_IMAGE_PINS.env" \
+      "$WOODRIGHT_CUTOVER_PINS_ENV" && pin_ok=1 || pin_ok=0
+  else
+    pin_ok=1
+  fi
+  if [[ -f "$evidence/pin-backup/ACTIVE_PUBLIC.json" ]]; then
+    wr_cutover_install_file "$evidence/pin-backup/ACTIVE_PUBLIC.json" \
+      "$WOODRIGHT_CUTOVER_ACTIVE_PUBLIC" || pin_ok=0
+  fi
+  if [[ -f "$evidence/pin-backup/public-demo.json" ]]; then
+    wr_cutover_install_file "$evidence/pin-backup/public-demo.json" \
+      "$WOODRIGHT_CUTOVER_PUBLIC_DEMO_JSON" || pin_ok=0
+  fi
+  if [[ -f "$evidence/pin-backup/dokploy-compose.env" ]]; then
+    wr_cutover_install_file "$evidence/pin-backup/dokploy-compose.env" \
+      "$WOODRIGHT_CUTOVER_COMPOSE_ENV" || pin_ok=0
+  fi
+  printf '{"backend":%s,"storefront":%s,"pins":%s}\n' "$be_ok" "$sf_ok" "$pin_ok" \
+    >"$evidence/json/pair-rollback-result.json"
+  if [[ "$be_ok" -eq 1 && "$sf_ok" -eq 1 && "$pin_ok" -eq 1 ]]; then
+    ROLLBACK_RC=10
+    wr_cutover_log "PAIR_ROLLBACK_OK"
+  elif [[ "$be_ok" -eq 1 || "$sf_ok" -eq 1 ]]; then
+    ROLLBACK_RC=11
+    wr_cutover_log "PAIR_ROLLBACK_PARTIAL"
+  else
+    ROLLBACK_RC=12
+    wr_cutover_log "PAIR_ROLLBACK_FAILED"
+  fi
+  return "$ROLLBACK_RC"
+}
+
 wr_cutover_pin_backup() {
   local evidence="${1:?}"
-  local pins="${2:-/srv/woodright/runtime-identity/DOKPLOY_IMAGE_PINS.env}"
-  local active="${3:-/srv/woodright/runtime-identity/ACTIVE_PUBLIC.json}"
-  local public_demo="${4:-/srv/woodright/runtime-identity/public-demo.json}"
-  local compose_env="${5:-/etc/dokploy/compose/woodright-stack-3dsdhd/code/.env}"
+  wr_cutover_pin_paths
+  local pins="${2:-$WOODRIGHT_CUTOVER_PINS_ENV}"
+  local active="${3:-$WOODRIGHT_CUTOVER_ACTIVE_PUBLIC}"
+  local public_demo="${4:-$WOODRIGHT_CUTOVER_PUBLIC_DEMO_JSON}"
+  local compose_env="${5:-$WOODRIGHT_CUTOVER_COMPOSE_ENV}"
   umask 077
   mkdir -p "$evidence/pin-backup"
   if [[ -f "$pins" ]]; then
