@@ -58,6 +58,13 @@ wr_staging_mutation_lock_acquire \
 
 wr_cutover_docker inspect "$KEEP_NAME" >/dev/null || die "keeper missing: $KEEP_NAME"
 
+# Capture keeper identity before rename (authoritative restore target)
+KEEP_DIGEST_BLOB="$(wr_cutover_docker inspect "$KEEP_NAME" --format '{{json .RepoDigests}}{{.Config.Image}}{{.Image}}')"
+KEEP_SHA="$(wr_cutover_docker inspect "$KEEP_NAME" --format '{{index .Config.Labels "com.woodright.release-sha"}}')"
+KEEP_ROLE="$(wr_cutover_docker inspect "$KEEP_NAME" --format '{{index .Config.Labels "com.woodright.runtime-role"}}')"
+[[ "$KEEP_ROLE" == "public_demo" ]] || die "keeper runtime-role must be public_demo (got '${KEEP_ROLE:-empty}')"
+# release-sha may be absent on legacy keepers; digest identity remains mandatory.
+
 if wr_cutover_docker inspect "$NAME" >/dev/null 2>&1; then
   FAILED_SUFFIX="failed-$(date -u +%Y%m%dT%H%M%SZ)"
   wr_cutover_docker stop "$NAME" || true
@@ -78,9 +85,19 @@ done
 st="$(wr_cutover_docker inspect "$NAME" --format '{{.State.Status}}')"
 [[ "$st" == "running" ]] || die "storefront not running after rollback"
 
+# Fail-closed: restored live must match keeper digest identity + release-sha
+LIVE_DIGEST_BLOB="$(wr_cutover_docker inspect "$NAME" --format '{{json .RepoDigests}}{{.Config.Image}}{{.Image}}')"
+LIVE_SHA="$(wr_cutover_docker inspect "$NAME" --format '{{index .Config.Labels "com.woodright.release-sha"}}')"
+LIVE_ROLE="$(wr_cutover_docker inspect "$NAME" --format '{{index .Config.Labels "com.woodright.runtime-role"}}')"
+[[ "$LIVE_DIGEST_BLOB" == "$KEEP_DIGEST_BLOB" ]] || die "storefront digest identity mismatch after rollback"
+[[ "$LIVE_ROLE" == "public_demo" ]] || die "storefront runtime-role mismatch after rollback"
+if [[ -n "$KEEP_SHA" && "$KEEP_SHA" != "<no value>" ]]; then
+  [[ "$LIVE_SHA" == "$KEEP_SHA" ]] || die "storefront release-sha mismatch after rollback (want $KEEP_SHA got ${LIVE_SHA:-empty})"
+fi
+
 if [[ -n "$EVIDENCE_DIR" ]]; then
   mkdir -p "$EVIDENCE_DIR/json"
-  printf '{"restored_from_keeper":"%s","live":"%s","failed_suffix":"%s"}\n' \
-    "$KEEP_NAME" "$NAME" "$FAILED_SUFFIX" >"$EVIDENCE_DIR/json/storefront-rollback-result.json"
+  printf '{"restored_from_keeper":"%s","live":"%s","failed_suffix":"%s","release_sha":"%s","identity_verified":true}\n' \
+    "$KEEP_NAME" "$NAME" "$FAILED_SUFFIX" "${KEEP_SHA:-}" >"$EVIDENCE_DIR/json/storefront-rollback-result.json"
 fi
-log "ROLLBACK_OK storefront from_keeper=$KEEP_NAME"
+log "ROLLBACK_OK storefront from_keeper=$KEEP_NAME sha=${KEEP_SHA:-none}"

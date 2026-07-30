@@ -252,8 +252,10 @@ grep -q 'ops/release/recreate-staging-storefront.sh' "$ROOT/ops/release/install-
 ok "installer includes pair+storefront helpers"
 
 # 24d) pair rollback uses environment-scoped identity dir
-if grep -n '/srv/woodright/runtime-identity/ACTIVE_PUBLIC.json' "$ROOT/ops/release/cutover-public-demo-pair.sh" | grep -v WOODRIGHT; then
-  fail "pair rollback still hardcodes legacy shared identity root"
+if grep -nE '/srv/woodright/runtime-identity/(ACTIVE_PUBLIC|DOKPLOY|public-demo)' \
+  "$ROOT/ops/lib/woodright-cutover-common.sh" "$ROOT/ops/release/cutover-public-demo-pair.sh" \
+  | grep -v runtime-identity-public-demo | grep -v '^[^:]*:[[:space:]]*#'; then
+  fail "pair rollback/pin paths still hardcode legacy shared identity root"
 else
   ok "pair rollback uses scoped identity paths"
 fi

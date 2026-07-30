@@ -73,3 +73,17 @@ Install copies helpers/profiles only. It does **not** recreate containers or cha
 ```bash
 bash scripts/ops/test-environment-governance-fidelity.sh
 ```
+
+## Validation freeze hold for QA cycles
+
+Official deep validation / stability watches on staging should hold a bounded freeze:
+
+```bash
+source ops/lib/woodright-hold-validation-freeze.sh
+wr_hold_validation_freeze_for_command staging \
+  "qa-operator" "cycle-id" "bounded-validation" 1800 -- \
+  ./your-validation-entrypoint.sh --environment staging
+```
+
+Ordinary one-off public curl does not require a freeze. Mutators refuse an active freeze unless an audited override is set.
+Storefront digest cutovers must use `ops/release/recreate-staging-storefront.sh` (inherits OCI labels from the image; do not copy previous container Labels).
