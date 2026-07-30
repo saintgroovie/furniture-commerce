@@ -34,8 +34,24 @@ FIXTURE_MEDIA_PATH="${WOODRIGHT_FIXTURE_MEDIA_MISSING:-}"
 FIXTURE_TLS_HOST="${WOODRIGHT_FIXTURE_TLS_HOST:-}"
 
 TS="$(date -u +%Y%m%dT%H%M%SZ)"
-mkdir -p "$STATE_DIR" "$HISTORY_DIR"
-chmod 0700 "$STATE_DIR" "$HISTORY_DIR" 2>/dev/null || true
+# Authoritative monitor writes are root-only by default. Unprivileged runs
+# (e.g. pair cutover dry-run) must not overwrite last-status.json with false
+# critical when backup manifests are root:root 0700.
+WR_MONITOR_WRITE="${WOODRIGHT_MONITOR_WRITE:-}"
+if [[ -z "$WR_MONITOR_WRITE" ]]; then
+  if [[ "$(id -u)" -eq 0 ]]; then
+    WR_MONITOR_WRITE=1
+  else
+    WR_MONITOR_WRITE=0
+  fi
+fi
+if [[ "$WR_MONITOR_WRITE" == "1" ]]; then
+  mkdir -p "$STATE_DIR" "$HISTORY_DIR"
+  # State dir must be traversable by operators so cutover can read last-status.json
+  # without sudo. History stays private.
+  chmod 0755 "$STATE_DIR" 2>/dev/null || true
+  chmod 0700 "$HISTORY_DIR" 2>/dev/null || true
+fi
 
 CHECKS_JSON="[]"
 OVERALL="ok"
@@ -283,11 +299,13 @@ if [[ -n "$FIXTURE_BACKUP_AGE_H" ]]; then
   if [[ "$AGE_H" -gt "$BACKUP_CRIT_H" ]]; then add_check "backup_freshness" critical fail "age_h=$AGE_H"
   elif [[ "$AGE_H" -gt "$BACKUP_WARN_H" ]]; then add_check "backup_freshness" warning fail "age_h=$AGE_H"
   else add_check "backup_freshness" info pass "age_h=$AGE_H"; fi
-elif ! ls -1d "$BACKUP_ROOT" >/dev/null 2>&1; then
+elif [[ ! -d "$BACKUP_ROOT" ]]; then
+  add_check "backup_freshness" critical fail "manifests_inaccessible"
+elif [[ ! -r "$BACKUP_ROOT" || ! -x "$BACKUP_ROOT" ]]; then
   add_check "backup_freshness" critical fail "manifests_inaccessible"
 elif [[ ! -d "$MANIFESTS_DIR" ]]; then
   add_check "backup_freshness" critical fail "manifests_dir_missing"
-elif [[ ! -r "$MANIFESTS_DIR" ]]; then
+elif [[ ! -r "$MANIFESTS_DIR" || ! -x "$MANIFESTS_DIR" ]]; then
   add_check "backup_freshness" critical fail "manifests_inaccessible"
 else
   LATEST_RP=$(ls -1t "$MANIFESTS_DIR"/recovery-point-*.json 2>/dev/null | head -1 || true)
@@ -319,10 +337,31 @@ else
   add_check "redis_ping" critical fail "no_pong"
 fi
 
-# Write outputs
+# Write outputs (authoritative path only)
 OUT_JSON="$STATE_DIR/last-status.json"
 OUT_TXT="$STATE_DIR/last-status.txt"
 HIST="$HISTORY_DIR/status-${TS}.json"
+
+if [[ "$WR_MONITOR_WRITE" != "1" ]]; then
+  python3 - "$TS" "$OVERALL" "$EXIT_CODE" "$CHECKS_JSON" "$SF_IMG" "$BE_IMG" <<'PY'
+import json, sys
+ts, overall, code, checks, sf, be = sys.argv[1:]
+obj = {
+  "timestamp_utc": ts,
+  "overall": overall,
+  "exit_code": int(code),
+  "storefront_image": sf,
+  "backend_image": be,
+  "checks": json.loads(checks),
+  "alerting": "external_alert_destination_deferred",
+  "authoritative_write": False,
+  "note": "non-root advisory run; did not overwrite monitor state",
+}
+print(json.dumps(obj, indent=2))
+PY
+  echo "Woodright monitor $TS overall=$OVERALL exit=$EXIT_CODE (advisory; state not written)" >&2
+  exit "$EXIT_CODE"
+fi
 
 python3 - "$OUT_JSON" "$HIST" "$TS" "$OVERALL" "$EXIT_CODE" "$CHECKS_JSON" "$SF_IMG" "$BE_IMG" <<'PY'
 import json, sys, os
@@ -341,7 +380,10 @@ for p in (out, hist):
   with open(p, "w", encoding="utf-8") as f:
     json.dump(obj, f, indent=2)
     f.write("\n")
-  os.chmod(p, 0o600)
+  # last-status.json must be readable by non-root cutover operators;
+  # history copies stay private.
+  mode = 0o644 if p.endswith("last-status.json") else 0o600
+  os.chmod(p, mode)
 print(json.dumps(obj, indent=2))
 PY
 
@@ -352,7 +394,7 @@ PY
   || python3 -c 'import json,sys; d=json.load(open(sys.argv[1]));
 [print("  [%s] %s: %s - %s" % (c["severity"], c["name"], c["status"], c["detail"])) for c in d["checks"]]' "$OUT_JSON"
 } >"$OUT_TXT"
-chmod 0600 "$OUT_TXT"
+chmod 0644 "$OUT_TXT"
 
 # Keep history bounded (last 200)
 old=()

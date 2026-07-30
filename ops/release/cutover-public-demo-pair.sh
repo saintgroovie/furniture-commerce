@@ -32,6 +32,10 @@ SF_DIGEST=""
 BE_IMAGE=""
 SF_IMAGE=""
 EXPECTED_OLD_SHA=""
+EXPECTED_OLD_BE_DIGEST=""
+EXPECTED_OLD_SF_DIGEST=""
+EXPECTED_OLD_BE_ID=""
+EXPECTED_OLD_SF_ID=""
 EVIDENCE_DIR=""
 BE_ENV_FILE=""
 SF_ENV_FILE=""
@@ -44,6 +48,12 @@ BE_KEEP=""
 SF_KEEP=""
 OLD_BE_DIGEST=""
 OLD_SF_DIGEST=""
+OLD_BE_ID=""
+OLD_SF_ID=""
+PRELOCK_BE_DIGEST=""
+PRELOCK_SF_DIGEST=""
+PRELOCK_BE_ID=""
+PRELOCK_SF_ID=""
 ROLLBACK_RC=0
 
 # Exit codes
@@ -66,6 +76,10 @@ Execute additionally:
   --storefront-env-file <mode 600>
   --confirm-mutation I_UNDERSTAND_PUBLIC_DEMO_CUTOVER
   [--expected-old-sha <40hex>]
+  [--expected-old-backend-digest sha256:<64hex>]
+  [--expected-old-storefront-digest sha256:<64hex>]
+  [--expected-old-backend-id <docker-id>]
+  [--expected-old-storefront-id <docker-id>]
   [--pdp-url <https://woodright-demo.ru/products/...>]
 
 Optional images (default ghcr.io/saintgroovie/woodright-{backend,storefront}@DIGEST):
@@ -100,6 +114,14 @@ parse_args() {
       --storefront-image) SF_IMAGE="${2:?}"; shift 2 ;;
       --expected-old-sha) EXPECTED_OLD_SHA="${2:?}"; shift 2 ;;
       --expected-old-sha=*) EXPECTED_OLD_SHA="${1#--expected-old-sha=}"; shift ;;
+      --expected-old-backend-digest) EXPECTED_OLD_BE_DIGEST="${2:?}"; shift 2 ;;
+      --expected-old-backend-digest=*) EXPECTED_OLD_BE_DIGEST="${1#--expected-old-backend-digest=}"; shift ;;
+      --expected-old-storefront-digest) EXPECTED_OLD_SF_DIGEST="${2:?}"; shift 2 ;;
+      --expected-old-storefront-digest=*) EXPECTED_OLD_SF_DIGEST="${1#--expected-old-storefront-digest=}"; shift ;;
+      --expected-old-backend-id) EXPECTED_OLD_BE_ID="${2:?}"; shift 2 ;;
+      --expected-old-backend-id=*) EXPECTED_OLD_BE_ID="${1#--expected-old-backend-id=}"; shift ;;
+      --expected-old-storefront-id) EXPECTED_OLD_SF_ID="${2:?}"; shift 2 ;;
+      --expected-old-storefront-id=*) EXPECTED_OLD_SF_ID="${1#--expected-old-storefront-id=}"; shift ;;
       --evidence-dir) EVIDENCE_DIR="${2:?}"; shift 2 ;;
       --evidence-dir=*) EVIDENCE_DIR="${1#--evidence-dir=}"; shift ;;
       --backend-env-file) BE_ENV_FILE="${2:?}"; shift 2 ;;
@@ -129,32 +151,31 @@ scope_gate() {
   case "$sf" in *production*) die "production SF name" ;; esac
 }
 
+_digest_from_inspect_json() {
+  python3 - "$1" <<'PY'
+import json,sys,re
+d=json.load(open(sys.argv[1]))
+obj=d[0] if isinstance(d, list) else d
+img=(obj.get("Config") or {}).get("Image","") or str(obj.get("Image",""))
+m=re.search(r'sha256:[0-9a-f]{64}', img)
+print(m.group(0) if m else "")
+PY
+}
+
 capture_old_identity() {
   local be="${WOODRIGHT_BE_CONTAINER_DEFAULT}"
   local sf="${WOODRIGHT_SF_CONTAINER_DEFAULT}"
   wr_cutover_docker inspect "$be" | wr_cutover_sanitize_inspect_json >"$EVIDENCE_DIR/sanitized/backend-before.json"
   wr_cutover_docker inspect "$sf" | wr_cutover_sanitize_inspect_json >"$EVIDENCE_DIR/sanitized/storefront-before.json"
-  OLD_BE_DIGEST="$(python3 - "$EVIDENCE_DIR/sanitized/backend-before.json" <<'PY'
-import json,sys,re
-d=json.load(open(sys.argv[1]))
-obj=d[0] if isinstance(d, list) else d
-img=(obj.get("Config") or {}).get("Image","") or str(obj.get("Image",""))
-m=re.search(r'sha256:[0-9a-f]{64}', img)
-print(m.group(0) if m else "")
-PY
-)"
-  OLD_SF_DIGEST="$(python3 - "$EVIDENCE_DIR/sanitized/storefront-before.json" <<'PY'
-import json,sys,re
-d=json.load(open(sys.argv[1]))
-obj=d[0] if isinstance(d, list) else d
-img=(obj.get("Config") or {}).get("Image","") or str(obj.get("Image",""))
-m=re.search(r'sha256:[0-9a-f]{64}', img)
-print(m.group(0) if m else "")
-PY
-)"
+  OLD_BE_DIGEST="$(_digest_from_inspect_json "$EVIDENCE_DIR/sanitized/backend-before.json")"
+  OLD_SF_DIGEST="$(_digest_from_inspect_json "$EVIDENCE_DIR/sanitized/storefront-before.json")"
+  OLD_BE_ID="$(wr_cutover_docker inspect "$be" --format '{{.Id}}' 2>/dev/null || true)"
+  OLD_SF_ID="$(wr_cutover_docker inspect "$sf" --format '{{.Id}}' 2>/dev/null || true)"
   printf '%s\n' "$OLD_BE_DIGEST" >"$EVIDENCE_DIR/json/old-backend-digest.txt"
   printf '%s\n' "$OLD_SF_DIGEST" >"$EVIDENCE_DIR/json/old-storefront-digest.txt"
-  # Live release SHA labels (both sides must agree)
+  printf '%s\n' "$OLD_BE_ID" >"$EVIDENCE_DIR/json/old-backend-id.txt"
+  printf '%s\n' "$OLD_SF_ID" >"$EVIDENCE_DIR/json/old-storefront-id.txt"
+  # Live release SHA labels (both sides must agree when both present)
   OLD_BE_SHA="$(wr_cutover_docker inspect "$be" --format '{{index .Config.Labels "com.woodright.release-sha"}}' 2>/dev/null || true)"
   OLD_SF_SHA="$(wr_cutover_docker inspect "$sf" --format '{{index .Config.Labels "com.woodright.release-sha"}}' 2>/dev/null || true)"
   printf '%s\n' "$OLD_BE_SHA" >"$EVIDENCE_DIR/json/old-backend-release-sha.txt"
@@ -165,12 +186,39 @@ PY
   if [[ -n "$EXPECTED_OLD_SHA" ]]; then
     wr_cutover_require_full_sha "$EXPECTED_OLD_SHA" || exit 2
     if [[ -z "$OLD_BE_SHA" || -z "$OLD_SF_SHA" ]]; then
-      die "expected-old-sha set but live release-sha labels missing (be='${OLD_BE_SHA}' sf='${OLD_SF_SHA}')"
+      die "expected-old-sha set but live release-sha labels missing (be='${OLD_BE_SHA}' sf='${OLD_SF_SHA}'); use --expected-old-*-digest/--expected-old-*-id instead"
     fi
     if [[ "$OLD_BE_SHA" != "$EXPECTED_OLD_SHA" || "$OLD_SF_SHA" != "$EXPECTED_OLD_SHA" ]]; then
       die "live release sha mismatch want=$EXPECTED_OLD_SHA be=$OLD_BE_SHA sf=$OLD_SF_SHA"
     fi
   fi
+  if [[ -n "$EXPECTED_OLD_BE_DIGEST" ]]; then
+    wr_cutover_require_digest "$EXPECTED_OLD_BE_DIGEST" || exit 2
+    [[ "$OLD_BE_DIGEST" == "$EXPECTED_OLD_BE_DIGEST" ]] || die "expected-old-backend-digest mismatch want=$EXPECTED_OLD_BE_DIGEST got=$OLD_BE_DIGEST"
+  fi
+  if [[ -n "$EXPECTED_OLD_SF_DIGEST" ]]; then
+    wr_cutover_require_digest "$EXPECTED_OLD_SF_DIGEST" || exit 2
+    [[ "$OLD_SF_DIGEST" == "$EXPECTED_OLD_SF_DIGEST" ]] || die "expected-old-storefront-digest mismatch want=$EXPECTED_OLD_SF_DIGEST got=$OLD_SF_DIGEST"
+  fi
+  if [[ -n "$EXPECTED_OLD_BE_ID" ]]; then
+    [[ "$OLD_BE_ID" == "$EXPECTED_OLD_BE_ID" || "$OLD_BE_ID" == "${EXPECTED_OLD_BE_ID}"* ]] \
+      || die "expected-old-backend-id mismatch want=$EXPECTED_OLD_BE_ID got=$OLD_BE_ID"
+  fi
+  if [[ -n "$EXPECTED_OLD_SF_ID" ]]; then
+    [[ "$OLD_SF_ID" == "$EXPECTED_OLD_SF_ID" || "$OLD_SF_ID" == "${EXPECTED_OLD_SF_ID}"* ]] \
+      || die "expected-old-storefront-id mismatch want=$EXPECTED_OLD_SF_ID got=$OLD_SF_ID"
+  fi
+}
+
+assert_identity_stable_under_lock() {
+  # Compare under-lock capture to pre-lock snapshot (TOCTOU gate).
+  [[ -n "$PRELOCK_BE_ID" && -n "$PRELOCK_SF_ID" ]] || die "pre-lock identity snapshot missing"
+  [[ -n "$PRELOCK_BE_DIGEST" && -n "$PRELOCK_SF_DIGEST" ]] || die "pre-lock digest snapshot missing"
+  [[ "$OLD_BE_ID" == "$PRELOCK_BE_ID" ]] || die "TOCTOU backend id changed pre=$PRELOCK_BE_ID under=$OLD_BE_ID"
+  [[ "$OLD_SF_ID" == "$PRELOCK_SF_ID" ]] || die "TOCTOU storefront id changed pre=$PRELOCK_SF_ID under=$OLD_SF_ID"
+  [[ "$OLD_BE_DIGEST" == "$PRELOCK_BE_DIGEST" ]] || die "TOCTOU backend digest changed pre=$PRELOCK_BE_DIGEST under=$OLD_BE_DIGEST"
+  [[ "$OLD_SF_DIGEST" == "$PRELOCK_SF_DIGEST" ]] || die "TOCTOU storefront digest changed pre=$PRELOCK_SF_DIGEST under=$OLD_SF_DIGEST"
+  printf '%s\n' "ok" >"$EVIDENCE_DIR/json/identity-toctou-pass.txt"
 }
 
 check_no_migration() {
@@ -196,23 +244,87 @@ check_no_migration() {
 
 check_monitor() {
   [[ "$SKIP_MONITOR" == "1" ]] && return 0
-  local mon="${REPO_ROOT}/ops/monitoring/woodright-health-check.sh"
-  if [[ ! -x "$mon" ]]; then
-    log "WARN monitor script missing locally; skip"
-    return 0
-  fi
   if [[ "${WOODRIGHT_CUTOVER_FAKE_MONITOR:-}" == "red" ]]; then
     die "monitor red (harness)"
   fi
-  # Remote/host: best-effort; dry-run may skip execution under harness
-  if [[ "${WOODRIGHT_CUTOVER_SKIP_MONITOR_EXEC:-0}" == "1" ]]; then
-    log "monitor exec skipped (harness)"
+  if [[ "${WOODRIGHT_CUTOVER_FAKE_MONITOR:-}" == "ok" ]]; then
+    log "monitor ok (harness)"
     return 0
   fi
-  if ! "$mon" >/dev/null 2>&1; then
-    # Script prints JSON; treat non-zero as fail when present
-    log "WARN monitor returned non-zero (continue only if overall ok proven elsewhere)"
+  # Never exec the health-check binary as the current user from cutover:
+  # non-root runs can mis-read root-only backup manifests and overwrite
+  # last-status.json to a false critical. Read the authoritative state file.
+  local state_json="${WOODRIGHT_MONITOR_STATE_JSON:-/srv/woodright/monitoring/state/last-status.json}"
+  local max_age_s="${WOODRIGHT_MONITOR_MAX_AGE_S:-1800}"
+  local skew_s="${WOODRIGHT_MONITOR_CLOCK_SKEW_S:-120}"
+  local refresh="${WOODRIGHT_REFRESH_MONITOR:-0}"
+  local use_sudo_reader=0
+
+  if [[ "$refresh" == "1" && "$MODE" == "execute" ]]; then
+    if command -v systemctl >/dev/null 2>&1 && sudo -n systemctl start woodright-monitor.service >/dev/null 2>&1; then
+      log "refreshed woodright-monitor.service via sudo -n"
+      sleep 2
+    else
+      log "WARN monitor refresh unavailable (sudo -n systemctl); reading existing state"
+    fi
   fi
+
+  if [[ -r "$state_json" ]]; then
+    use_sudo_reader=0
+  elif command -v sudo >/dev/null 2>&1 && sudo -n test -r "$state_json" >/dev/null 2>&1; then
+    use_sudo_reader=1
+  else
+    die "monitor state unreadable: $state_json (need world-readable last-status.json or sudo -n)"
+  fi
+
+  local overall age_s
+  if [[ "$use_sudo_reader" == "1" ]]; then
+    overall="$(sudo -n python3 - "$state_json" <<'PY'
+import json,sys
+print(json.load(open(sys.argv[1])).get("overall",""))
+PY
+)"
+    age_s="$(sudo -n python3 - "$state_json" <<'PY'
+import json,sys,time,re
+from datetime import datetime,timezone
+obj=json.load(open(sys.argv[1]))
+ts=str(obj.get("timestamp_utc") or "")
+m=re.fullmatch(r"(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z", ts)
+if not m:
+  print(999999); raise SystemExit
+dt=datetime(int(m[1]),int(m[2]),int(m[3]),int(m[4]),int(m[5]),int(m[6]),tzinfo=timezone.utc)
+print(int(time.time()-dt.timestamp()))
+PY
+)"
+  else
+    overall="$(python3 - "$state_json" <<'PY'
+import json,sys
+print(json.load(open(sys.argv[1])).get("overall",""))
+PY
+)"
+    age_s="$(python3 - "$state_json" <<'PY'
+import json,sys,time,re
+from datetime import datetime,timezone
+obj=json.load(open(sys.argv[1]))
+ts=str(obj.get("timestamp_utc") or "")
+m=re.fullmatch(r"(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z", ts)
+if not m:
+  print(999999); raise SystemExit
+dt=datetime(int(m[1]),int(m[2]),int(m[3]),int(m[4]),int(m[5]),int(m[6]),tzinfo=timezone.utc)
+print(int(time.time()-dt.timestamp()))
+PY
+)"
+  fi
+  printf '{"state_json":"%s","overall":"%s","age_s":%s,"max_age_s":%s,"skew_s":%s,"mode":"%s","sudo_reader":%s}\n' \
+    "$state_json" "$overall" "$age_s" "$max_age_s" "$skew_s" "$MODE" "$use_sudo_reader" >"$EVIDENCE_DIR/json/monitor-gate.json"
+  [[ "$overall" == "ok" ]] || die "monitor overall=$overall (want=ok) from $state_json"
+  if [[ "$age_s" -lt $((0 - skew_s)) ]]; then
+    die "monitor timestamp in the future age_s=$age_s skew_s=$skew_s from $state_json"
+  fi
+  if [[ "$age_s" -gt "$max_age_s" ]]; then
+    die "monitor stale age_s=$age_s max_age_s=$max_age_s from $state_json"
+  fi
+  log "monitor gate pass overall=ok age_s=$age_s"
 }
 
 run_backup_gate() {
@@ -333,6 +445,14 @@ wr_cutover_docker inspect "${WOODRIGHT_SF_CONTAINER_DEFAULT}" >/dev/null \
 wr_assert_container_matches_environment "${WOODRIGHT_BE_CONTAINER_DEFAULT}" backend || die "backend environment mismatch"
 wr_assert_container_matches_environment "${WOODRIGHT_SF_CONTAINER_DEFAULT}" storefront || die "storefront environment mismatch"
 capture_old_identity
+PRELOCK_BE_DIGEST="$OLD_BE_DIGEST"
+PRELOCK_SF_DIGEST="$OLD_SF_DIGEST"
+PRELOCK_BE_ID="$OLD_BE_ID"
+PRELOCK_SF_ID="$OLD_SF_ID"
+printf '%s\n' "$PRELOCK_BE_DIGEST" >"$EVIDENCE_DIR/json/prelock-backend-digest.txt"
+printf '%s\n' "$PRELOCK_SF_DIGEST" >"$EVIDENCE_DIR/json/prelock-storefront-digest.txt"
+printf '%s\n' "$PRELOCK_BE_ID" >"$EVIDENCE_DIR/json/prelock-backend-id.txt"
+printf '%s\n' "$PRELOCK_SF_ID" >"$EVIDENCE_DIR/json/prelock-storefront-id.txt"
 
 # Image presence / revision + OCI provenance
 if wr_cutover_docker image inspect "$BE_IMAGE" >/dev/null 2>&1; then
@@ -386,6 +506,7 @@ wr_prelock_validate_environment_target || die "under-lock environment retarget d
 wr_assert_container_matches_environment "${WOODRIGHT_BE_CONTAINER_DEFAULT}" backend || die "under-lock backend retarget"
 wr_assert_container_matches_environment "${WOODRIGHT_SF_CONTAINER_DEFAULT}" storefront || die "under-lock storefront retarget"
 capture_old_identity
+assert_identity_stable_under_lock
 run_backup_gate
 
 MUTATION_STARTED=1
