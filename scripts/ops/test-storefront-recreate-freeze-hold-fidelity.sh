@@ -49,6 +49,44 @@ set -e
 }
 case $- in *e*) ;; *) echo "FAIL errexit not restored"; exit 1 ;; esac
 
+# public_demo is a first-class freeze namespace (buyer demo), not an alias of staging.
+set +e
+wr_hold_validation_freeze_for_command public_demo pd-actor pd-cycle pd-reason 60 -- bash -c '
+  test -f "$WOODRIGHT_VALIDATION_FREEZE_DIR/validation-freeze-public_demo.lease" || exit 11
+  test ! -f "$WOODRIGHT_VALIDATION_FREEZE_DIR/validation-freeze-staging.lease" || exit 12
+  exit 43
+'
+rc=$?
+set -e
+[[ "$rc" -eq 43 ]] || { echo "FAIL public_demo hold status want=43 got=$rc"; exit 1; }
+[[ ! -f "$WOODRIGHT_VALIDATION_FREEZE_DIR/validation-freeze-public_demo.lease" ]] || {
+  echo "FAIL public_demo lease not released"; exit 1
+}
+
+set +e
+wr_hold_validation_freeze_for_command production bad-actor bad-cycle bad-reason 60 -- true 2>"$TMP/prod.err"
+rc=$?
+set -e
+[[ "$rc" -ne 0 ]] || { echo "FAIL production hold must be rejected"; exit 1; }
+grep -q 'staging|public_demo' "$TMP/prod.err"
+
+# Distinct namespaces: active staging freeze must not satisfy public_demo assert-clear,
+# and active public_demo freeze must block public_demo mutators.
+wr_validation_freeze_acquire staging st-actor st-cycle st-reason 120
+if ! wr_validation_freeze_assert_clear_for_mutation public_demo 2>"$TMP/cross.err"; then
+  echo "FAIL staging freeze must not block public_demo assert (separate runtime)"; exit 1
+fi
+wr_validation_freeze_release staging st-actor st-cycle || true
+rm -f "$WOODRIGHT_VALIDATION_FREEZE_DIR/validation-freeze-staging.lease"
+
+wr_validation_freeze_acquire public_demo pd2-actor pd2-cycle pd2-reason 120
+if wr_validation_freeze_assert_clear_for_mutation public_demo 2>"$TMP/pdblock.err"; then
+  echo "FAIL expected public_demo freeze to block public_demo mutation"; exit 1
+fi
+grep -Eqi 'freeze|active|lease' "$TMP/pdblock.err"
+wr_validation_freeze_release public_demo pd2-actor pd2-cycle || true
+rm -f "$WOODRIGHT_VALIDATION_FREEZE_DIR/validation-freeze-public_demo.lease"
+
 printf 'WOODRIGHT_EXPOSURE=public\n' >"$TMP/outside/prod.env"
 chmod 600 "$TMP/outside/prod.env"
 ln -s "$TMP/outside/prod.env" "$TMP/own/escape.env"
