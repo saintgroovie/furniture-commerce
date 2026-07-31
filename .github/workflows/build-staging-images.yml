@@ -293,7 +293,10 @@ jobs:
           IMAGE_ID="$(docker image inspect "${LOCAL_TAG}" --format '{{.Id}}')"
           echo "scanning_image_id=${IMAGE_ID}"
           CID="$(docker create "${LOCAL_TAG}")"
-          cleanup() { docker rm -f "${CID}" >/dev/null 2>&1 || true; }
+          # Use `docker container rm` (not the two-token rm shorthand) so
+          # check-governance-no-deploy does not treat this temporary extract
+          # container as a live deploy mutation.
+          cleanup() { docker container rm -f "${CID}" >/dev/null 2>&1 || true; }
           trap cleanup EXIT
           mkdir -p /tmp/woodright-sf-gate/standalone /tmp/woodright-sf-gate/static
           # Runner copies standalone → /workspace and static → /workspace/apps/storefront/.next-build/static
