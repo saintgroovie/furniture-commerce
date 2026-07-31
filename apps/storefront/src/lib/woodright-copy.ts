@@ -391,9 +391,10 @@ export const bespokeCatalogCopy = {
   ],
   emptyBody: [
     "Позиции скоро появятся",
-    "Опишите задачу",
-    "соберём решение под вас",
+    "Опишите задачу - соберём решение под вас",
   ],
+  emptyCtaRequest: "Заявка на расчёт",
+  emptyCtaSection: "В раздел «По проекту»",
 }
 
 export const bespokeRequestCopy = {

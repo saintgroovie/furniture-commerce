@@ -79,7 +79,61 @@ export function getSiteUrl(): string {
 }
 
 function getPublishableKey(): string {
-  return process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ""
+  // Prefer server-only override so standalone/runtime can inject without rebuild.
+  // NEXT_PUBLIC_* is inlined at build time and may be empty in local QA images.
+  return (
+    process.env.MEDUSA_PUBLISHABLE_KEY ||
+    process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ||
+    ""
+  )
+}
+
+/** Default server-side Medusa fetch budget (build/SSR without a live backend). */
+const DEFAULT_MEDUSA_FETCH_TIMEOUT_MS = 8_000
+
+function medusaFetchTimeoutMs(): number {
+  const raw = process.env.MEDUSA_FETCH_TIMEOUT_MS
+  if (raw === undefined || raw === "") return DEFAULT_MEDUSA_FETCH_TIMEOUT_MS
+  const parsed = Number.parseInt(raw, 10)
+  return Number.isFinite(parsed) && parsed > 0
+    ? parsed
+    : DEFAULT_MEDUSA_FETCH_TIMEOUT_MS
+}
+
+/**
+ * Next.js 16 patches `fetch` with streaming transforms. Attaching abort signals
+ * to that patched fetch can throw
+ * `TypeError: controller[kState].transformAlgorithm is not a function` during SSR
+ * and leave catalog/PDP on the empty shell.
+ *
+ * Bound the wait with an outer `Promise.race` timer instead of attaching a signal
+ * to the patched fetch. Callers that pass an explicit `signal` own lifecycle and
+ * bypass the default race budget.
+ */
+async function fetchWithMedusaTimeout(
+  url: string,
+  init?: RequestInit
+): Promise<Response> {
+  if (init?.signal) {
+    return fetch(url, init)
+  }
+  const { signal: _ignored, ...rest } = init ?? {}
+  const timeoutMs = medusaFetchTimeoutMs()
+  let timer: ReturnType<typeof setTimeout> | undefined
+  try {
+    return await Promise.race([
+      fetch(url, rest),
+      new Promise<Response>((_, reject) => {
+        timer = setTimeout(() => {
+          reject(
+            new Error(`Medusa fetch timed out after ${timeoutMs}ms: ${url}`)
+          )
+        }, timeoutMs)
+      }),
+    ])
+  } finally {
+    if (timer !== undefined) clearTimeout(timer)
+  }
 }
 
 /** Fetch wrapper that adds the publishable API key header. */
@@ -90,7 +144,7 @@ export function medusaFetch(url: string, init?: RequestInit): Promise<Response> 
     headers.set("x-publishable-api-key", key)
   }
   // Cart / checkout / mutations must never be served from Next Data Cache.
-  return fetch(url, { ...init, headers, cache: "no-store" })
+  return fetchWithMedusaTimeout(url, { ...init, headers, cache: "no-store" })
 }
 
 /**
@@ -117,10 +171,10 @@ export function medusaCatalogFetch(
   const revalidate = Number.isFinite(parsed) ? parsed : 60
 
   if (revalidate <= 0) {
-    return fetch(url, { ...init, headers, cache: "no-store" })
+    return fetchWithMedusaTimeout(url, { ...init, headers, cache: "no-store" })
   }
 
-  return fetch(url, {
+  return fetchWithMedusaTimeout(url, {
     ...init,
     headers,
     next: { revalidate },

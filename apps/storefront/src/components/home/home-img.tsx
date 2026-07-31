@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, type CSSProperties } from "react"
+import { useState, type CSSProperties } from "react"
 import { catalogCardOriginalFromDerivative } from "@/lib/catalog-card-image"
 import {
   resolveHomeImageSrc,
@@ -31,10 +31,15 @@ type HomeImgProps = {
   "data-active"?: string
 }
 
-/** Homepage image: surface-aware original vs catalog-card WebP + onError fallback. */
-export function HomeImg({
-  src,
-  surface = "CATALOG_CARD",
+type HomeImgInnerProps = Omit<HomeImgProps, "src" | "surface"> & {
+  preferred: string
+  original: string
+}
+
+/** Inner image keyed by preferred src so fallback state resets without an effect. */
+function HomeImgInner({
+  preferred,
+  original,
   alt = "",
   className,
   loading,
@@ -46,32 +51,8 @@ export function HomeImg({
   "data-slide": dataSlide,
   "data-cycle": dataCycle,
   "data-active": dataActive,
-}: HomeImgProps) {
-  const original = typeof src === "string" ? src.trim() : ""
-  const preferred = original
-    ? resolveHomeImageSrc(original, { surface })
-    : ""
+}: HomeImgInnerProps) {
   const [current, setCurrent] = useState(preferred)
-
-  useEffect(() => {
-    setCurrent(preferred)
-  }, [preferred])
-
-  if (!original) {
-    return (
-      <img
-        alt={alt}
-        className={className}
-        aria-hidden={ariaHidden}
-        data-slide={dataSlide}
-        data-cycle={dataCycle}
-        data-active={dataActive}
-        decoding={decoding}
-        draggable={draggable}
-        style={style}
-      />
-    )
-  }
 
   return (
     <img
@@ -97,6 +78,43 @@ export function HomeImg({
         const recovered = catalogCardOriginalFromDerivative(current)
         if (recovered && recovered !== current) setCurrent(recovered)
       }}
+    />
+  )
+}
+
+/** Homepage image: surface-aware original vs catalog-card WebP + onError fallback. */
+export function HomeImg({
+  src,
+  surface = "CATALOG_CARD",
+  ...rest
+}: HomeImgProps) {
+  const original = typeof src === "string" ? src.trim() : ""
+  const preferred = original
+    ? resolveHomeImageSrc(original, { surface })
+    : ""
+
+  if (!original) {
+    return (
+      <img
+        alt={rest.alt}
+        className={rest.className}
+        aria-hidden={rest["aria-hidden"]}
+        data-slide={rest["data-slide"]}
+        data-cycle={rest["data-cycle"]}
+        data-active={rest["data-active"]}
+        decoding={rest.decoding ?? "async"}
+        draggable={rest.draggable ?? false}
+        style={rest.style}
+      />
+    )
+  }
+
+  return (
+    <HomeImgInner
+      key={preferred}
+      preferred={preferred}
+      original={original}
+      {...rest}
     />
   )
 }

@@ -39,10 +39,11 @@ export function ProductThumbCarousel({
   /** Logical strip URL → display src after a derivative fallback. */
   const [srcOverrides, setSrcOverrides] = useState<Record<string, string>>({})
   const stripKey = visibleStrip.join("\u0000")
-
-  useEffect(() => {
+  const [overridesStripKey, setOverridesStripKey] = useState(stripKey)
+  if (stripKey !== overridesStripKey) {
+    setOverridesStripKey(stripKey)
     setSrcOverrides({})
-  }, [stripKey])
+  }
 
   const updateScrollArrows = useCallback(() => {
     const el = trackRef.current

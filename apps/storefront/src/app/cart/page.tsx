@@ -11,11 +11,12 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
-export default function CartPage() {
+export default async function CartPage() {
   /* Cart payload is client-fetched (cookie + Medusa). Without a cart_id cookie
      SSR must not claim «Загружаем…» — show empty immediately. With a cookie,
      keep a short loading shell until getCart resolves. */
-  const hasCartCookie = Boolean(cookies().get(CART_ID_COOKIE)?.value?.trim())
+  const jar = await cookies()
+  const hasCartCookie = Boolean(jar.get(CART_ID_COOKIE)?.value?.trim())
 
   return (
     <div className="bespoke-request-page">

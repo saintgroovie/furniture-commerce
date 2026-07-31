@@ -123,11 +123,14 @@ export function CatalogFilterControls({
   const [isPending, startTransition] = useTransition()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [searchDraft, setSearchDraft] = useState(state.q ?? "")
+  const [searchSyncQ, setSearchSyncQ] = useState(state.q ?? "")
   const filterToggleRef = useRef<HTMLButtonElement>(null)
 
-  useEffect(() => {
-    setSearchDraft(state.q ?? "")
-  }, [state.q])
+  const routeQ = state.q ?? ""
+  if (routeQ !== searchSyncQ) {
+    setSearchSyncQ(routeQ)
+    setSearchDraft(routeQ)
+  }
 
   /* Sliding pill behind the segmented tabs: instead of the dark background
      snapping from one tab to another on navigation, a single absolutely
@@ -206,10 +209,11 @@ export function CatalogFilterControls({
   const [pendingType, setPendingType] = useState<{
     type: CatalogFilterState["type"] | undefined
   } | null>(null)
-
-  useEffect(() => {
-    setPendingType(null)
-  }, [state.type])
+  const [typeForPending, setTypeForPending] = useState(state.type)
+  if (state.type !== typeForPending) {
+    setTypeForPending(state.type)
+    if (pendingType) setPendingType(null)
+  }
 
   const activeType = pendingType ? pendingType.type : state.type
 
@@ -837,7 +841,22 @@ export function CatalogFilterControls({
 /** Draft-based price inputs: navigation happens only on explicit apply
     (button / Enter), never on blur — no surprise page reloads while typing.
     Clearing resets only the price, other filters stay in the query string. */
-function CatalogPriceFilter({
+function CatalogPriceFilter(props: {
+  priceMin?: number
+  priceMax?: number
+  priceRange: CatalogFacets["priceRange"]
+  onApply: (priceMin?: number, priceMax?: number) => void
+}) {
+  const { priceMin, priceMax } = props
+  return (
+    <CatalogPriceFilterInner
+      key={`${priceMin ?? ""}:${priceMax ?? ""}`}
+      {...props}
+    />
+  )
+}
+
+function CatalogPriceFilterInner({
   priceMin,
   priceMax,
   priceRange,
@@ -850,13 +869,6 @@ function CatalogPriceFilter({
 }) {
   const [minDraft, setMinDraft] = useState(priceMin != null ? String(priceMin) : "")
   const [maxDraft, setMaxDraft] = useState(priceMax != null ? String(priceMax) : "")
-
-  useEffect(() => {
-    setMinDraft(priceMin != null ? String(priceMin) : "")
-  }, [priceMin])
-  useEffect(() => {
-    setMaxDraft(priceMax != null ? String(priceMax) : "")
-  }, [priceMax])
 
   const parseDraft = (raw: string): number | undefined => {
     const t = raw.trim()

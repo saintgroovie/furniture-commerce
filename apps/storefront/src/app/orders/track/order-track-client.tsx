@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useSyncExternalStore } from "react"
 import { useSearchParams } from "next/navigation"
 import {
   fetchOrderProcess,
@@ -33,38 +33,49 @@ function clearSensitiveUrlParts(): void {
   }
 }
 
+function subscribeNoop() {
+  return () => {}
+}
+
+function readTrackToken(orderId: string): string {
+  if (typeof window === "undefined") return ""
+  try {
+    let token = parseOrderTrackFragmentToken(window.location.hash) ?? ""
+    if (!token && orderId) {
+      token = sessionStorage.getItem(orderTrackSessionKey(orderId)) ?? ""
+    }
+    if (token && orderId) {
+      sessionStorage.setItem(orderTrackSessionKey(orderId), token)
+    }
+    clearSensitiveUrlParts()
+    return token
+  } catch {
+    return ""
+  }
+}
+
 export function OrderTrackClient() {
   const params = useSearchParams()
   const orderId = (params.get("order_id") ?? "").trim()
+  const isClient = useSyncExternalStore(subscribeNoop, () => true, () => false)
+  const token = useSyncExternalStore(
+    subscribeNoop,
+    () => (orderId ? readTrackToken(orderId) : ""),
+    () => ""
+  )
 
   const [state, setState] = useState<LoadState>("loading")
   const [data, setData] = useState<BuyerProcessResponse | null>(null)
   const [error, setError] = useState("")
 
-  useEffect(() => {
-    let token = ""
-    if (typeof window !== "undefined") {
-      try {
-        token = parseOrderTrackFragmentToken(window.location.hash) ?? ""
-        if (!token && orderId) {
-          token = sessionStorage.getItem(orderTrackSessionKey(orderId)) ?? ""
-        }
-        if (token && orderId) {
-          sessionStorage.setItem(orderTrackSessionKey(orderId), token)
-        }
-        clearSensitiveUrlParts()
-      } catch {
-        token = ""
-      }
-    }
+  const missing = isClient && (!orderId || !token)
 
-    if (!orderId || !token) {
-      setState("missing")
+  useEffect(() => {
+    if (!isClient || !orderId || !token) {
       return
     }
 
     let cancelled = false
-    setState("loading")
     fetchOrderProcess({ orderId, token })
       .then((res) => {
         if (cancelled) return
@@ -81,17 +92,23 @@ export function OrderTrackClient() {
     return () => {
       cancelled = true
     }
-  }, [orderId])
+  }, [isClient, orderId, token])
 
-  if (state === "missing") {
+  const effectiveState: LoadState = !isClient
+    ? "loading"
+    : missing
+      ? "missing"
+      : state
+
+  if (effectiveState === "missing") {
     return <p className="info-text">{copy.missingParams}</p>
   }
 
-  if (state === "loading") {
+  if (effectiveState === "loading") {
     return <p className="info-text">{copy.loading}</p>
   }
 
-  if (state === "error") {
+  if (effectiveState === "error") {
     return (
       <div>
         <CopyLines className="feedback-error" lines={copy.loadError} />

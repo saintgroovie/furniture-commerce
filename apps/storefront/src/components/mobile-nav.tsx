@@ -55,8 +55,15 @@ function setMobileNavBackgroundInert(enabled: boolean) {
 export function MobileNav() {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
+  const [pathAtOpen, setPathAtOpen] = useState(pathname)
   const btnRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
+
+  // Close on route change (adjust state during render - React-recommended reset).
+  if (pathname !== pathAtOpen) {
+    setPathAtOpen(pathname)
+    if (open) setOpen(false)
+  }
 
   const close = useCallback((restoreFocus = true) => {
     setOpen(false)
@@ -64,11 +71,6 @@ export function MobileNav() {
       requestAnimationFrame(() => btnRef.current?.focus())
     }
   }, [])
-
-  // Close on route change (after link navigation).
-  useEffect(() => {
-    setOpen(false)
-  }, [pathname])
 
   // Peer dialog (catalog filters) requested exclusive ownership.
   useEffect(() => {

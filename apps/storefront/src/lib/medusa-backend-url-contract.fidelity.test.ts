@@ -36,6 +36,17 @@ const {
 }
 
 {
+  // Loopback IPv4 must not be rejected by the dotted-quad public-IP guard.
+  assert.equal(
+    resolveMedusaBackendInternalUrl({
+      NODE_ENV: "production",
+      MEDUSA_BACKEND_URL: "http://127.0.0.1:9019",
+    }),
+    "http://127.0.0.1:9019"
+  )
+}
+
+{
   assert.throws(
     () =>
       resolveMedusaBackendInternalUrl({
