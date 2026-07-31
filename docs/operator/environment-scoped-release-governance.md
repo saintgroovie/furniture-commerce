@@ -76,10 +76,21 @@ bash scripts/ops/test-environment-governance-fidelity.sh
 
 ## Validation freeze hold for QA cycles
 
-Official deep validation / stability watches on staging should hold a bounded freeze:
+Official deep validation / stability watches must hold a bounded freeze on the **same** environment authority as the mutators under test:
+
+- buyer demo (`woodright-demo.ru`) → `public_demo`
+- unprovisioned private staging → `staging` (when provisioned)
+
+`staging` is **not** an alias of `public_demo`. A `staging` freeze does not protect the public demo stack.
 
 ```bash
 source ops/lib/woodright-hold-validation-freeze.sh
+# Buyer demo QA
+wr_hold_validation_freeze_for_command public_demo \
+  "qa-operator" "cycle-id" "bounded-validation" 1800 -- \
+  ./your-validation-entrypoint.sh --environment public_demo
+
+# Private staging QA (only when that environment is provisioned)
 wr_hold_validation_freeze_for_command staging \
   "qa-operator" "cycle-id" "bounded-validation" 1800 -- \
   ./your-validation-entrypoint.sh --environment staging
