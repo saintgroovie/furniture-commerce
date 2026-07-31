@@ -172,6 +172,16 @@ PYI
 
 create_storefront() {
   local image="$1"
+  local db_identity_alias
+  db_identity_alias="$(wr_canonical_db_identity_label)" || die "canonical DB identity unavailable"
+  [[ "$db_identity_alias" == "public_demo_db" ]] || die "public_demo storefront requires database-identity=public_demo_db (got '$db_identity_alias')"
+  if [[ -n "${EVIDENCE_DIR:-}" ]]; then
+    mkdir -p "$EVIDENCE_DIR/json"
+    printf '{"database_connection_name":"%s","database_identity_alias":"%s"}\n' \
+      "${WOODRIGHT_DATABASE_CONNECTION_NAME:-}" "$db_identity_alias" \
+      >"$EVIDENCE_DIR/json/database-identity-plan.json"
+  fi
+  log "PLANNED database_identity_alias=$db_identity_alias database_connection_name=${WOODRIGHT_DATABASE_CONNECTION_NAME:-none}"
   wr_cutover_docker create \
     --name "$NAME" \
     --restart unless-stopped \
@@ -181,7 +191,7 @@ create_storefront() {
     --label "com.woodright.runtime-role=public_demo" \
     --label "com.woodright.exposure=public" \
     --label "com.woodright.release-sha=${TARGET_SHA}" \
-    --label "com.woodright.database-identity=${WOODRIGHT_DB_NAME}" \
+    --label "com.woodright.database-identity=${db_identity_alias}" \
     --env-file "$ENV_FILE" \
     --health-cmd="node -e \"fetch('http://127.0.0.1:3002/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\"" \
     --health-interval=30s \
@@ -226,8 +236,8 @@ run_verify() {
   wr_cutover_require_digest "$EXPECTED_DIGEST" || exit 2
   wr_cutover_require_full_sha "$TARGET_SHA" || exit 2
   local digests role
-  digests="$(wr_cutover_docker inspect "$NAME" --format '{{json .RepoDigests}}{{.Image}}{{.Config.Image}}')"
-  echo "$digests" | grep -q "${EXPECTED_DIGEST#sha256:}" || die "live digest mismatch for $NAME"
+  digests="$(wr_cutover_container_immutable_digest "$NAME" storefront)" || die "live digest resolve failed for $NAME"
+  [[ "$digests" == "$EXPECTED_DIGEST" ]] || die "live digest mismatch for $NAME have=$digests want=$EXPECTED_DIGEST"
   role="$(wr_cutover_docker inspect "$NAME" --format '{{index .Config.Labels "com.woodright.runtime-role"}}')"
   [[ "$role" == "public_demo" ]] || die "runtime-role want public_demo have=$role"
   if [[ -z "$EVIDENCE_DIR" ]]; then
@@ -242,6 +252,7 @@ FULL_ARGV=("$@")
 wr_require_environment_from_args "${FULL_ARGV[@]}" || exit 1
 [[ "${WOODRIGHT_ENVIRONMENT}" == "public_demo" ]] || die "only --environment public_demo allowed"
 wr_assert_environment_provisioned || exit 1
+wr_require_canonical_db_identity || exit 1
 wr_require_component_from_args "${FULL_ARGV[@]}" || die "missing required --component <storefront|pair>"
 [[ "${WOODRIGHT_COMPONENT_SCOPE}" == "storefront" || "${WOODRIGHT_COMPONENT_SCOPE}" == "pair" ]] \
   || die "storefront recreate requires --component storefront|pair"
