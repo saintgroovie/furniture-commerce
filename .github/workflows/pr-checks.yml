@@ -152,6 +152,10 @@ jobs:
           node scripts/release/backend-network-alias.fidelity.test.cjs
           node scripts/release/public-image-pin-consistency.fidelity.test.cjs
           node scripts/release/public-image-pin-lock.fidelity.test.cjs
+          # Production-candidate image bake + cutover helper (2026-07-31 RCA fix)
+          node scripts/release/image-build-profile.fidelity.test.cjs
+          node scripts/release/scan-storefront-contamination.fidelity.test.cjs
+          node scripts/release/cutover-production-candidate.fidelity.test.cjs
           # Gates S–AC: cutover lock / CAS / TX / active-after-public / recon / audit / drift / cleanup / DQ
           node scripts/release/check-global-lock-policy.cjs scripts/release
           node scripts/release/check-global-lock-policy.cjs --fixture-dir scripts/release/fixtures/lock

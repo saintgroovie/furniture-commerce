@@ -25,12 +25,25 @@ Format:
 
 ## Current workflow policy
 
+- Requires an explicit `build_profile` input (`public_demo` | `production_candidate` -
+  no default that could silently pick one). Resolved via
+  `scripts/release/resolve-image-build-profile.cjs` from
+  `ops/config/image-build-profiles/*.conf` - the workflow never reads a
+  "site URL" secret for what gets baked; see RCA in that resolver's header
+  comment and `ops/config/image-build-profiles/production_candidate.conf`.
 - Publishes unique `build-…` tags
+  - `build_profile=public_demo` → namespace `build-staging-images`, tag `build-<sha>-run-…`
+  - `build_profile=production_candidate` → namespace `build-production-candidate`, tag `build-prod-cand-<sha>-run-…` (never collides with a demo build of the same SHA)
 - Optional convenience alias `mutable-sha-<FULL_SHA>` (explicitly mutable)
 - Does **not** publish bare `:<FULL_SHA>` tags
-- Writes `build-manifest.json` with `release_authorized: false`
-- Declares `woodright.tag.namespace=build-staging-images`
-- Bakes `com.woodright.deployment-owner=Dokploy` on backend + storefront OCI config (metadata only; does not replace `ACTIVE_OWNER.json`)
+- Storefront image build is gated by `scripts/release/scan-storefront-contamination.cjs`
+  (scans the actual compiled bytes for the wrong host/launch-contract markers)
+  BEFORE the image is pushed
+- Writes `build-manifest.json` with `release_authorized: false`, plus
+  `build_profile` / `profile_checksum` / `baked_storefront_values` /
+  `contamination_scan` / `launch_contract` (non-secret evidence only)
+- Declares `woodright.tag.namespace` (see namespace-per-profile above)
+- Bakes `com.woodright.deployment-owner=Dokploy` and `woodright.image.build_profile` on backend + storefront OCI config (metadata only; does not replace `ACTIVE_OWNER.json`)
 - Does not deploy / does not mutate ACTIVE_OWNER
 
 ## Manifests

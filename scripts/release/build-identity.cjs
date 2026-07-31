@@ -6,12 +6,21 @@
 const DIGEST_RE = /^sha256:[0-9a-f]{64}$/
 const SHA_RE = /^[0-9a-f]{40}$/
 
-function uniqueBuildTag({ sourceSha, runId, attempt }) {
+/**
+ * `profile` is optional and only changes the prefix for
+ * `build_profile=production_candidate` (namespace `build-production-candidate`,
+ * see .github/workflows/build-staging-images.yml) so a production-candidate
+ * build of a given SHA never collides with a public_demo build of the same
+ * SHA. Omitting `profile` (or passing `public_demo`) keeps the original
+ * `build-<sha>-run-<run-id>-attempt-<attempt>` format.
+ */
+function uniqueBuildTag({ sourceSha, runId, attempt, profile }) {
   if (!SHA_RE.test(sourceSha || "")) throw new Error("sourceSha must be 40-char hex")
   if (runId == null || String(runId).trim() === "") throw new Error("runId required")
   const att = Number(attempt)
   if (!Number.isInteger(att) || att < 1) throw new Error("attempt must be integer >= 1")
-  return `build-${sourceSha}-run-${runId}-attempt-${att}`
+  const prefix = profile === "production_candidate" ? "build-prod-cand-" : "build-"
+  return `${prefix}${sourceSha}-run-${runId}-attempt-${att}`
 }
 
 function assertDistinctExecutions(a, b) {
