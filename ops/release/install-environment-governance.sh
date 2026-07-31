@@ -42,6 +42,7 @@ FILES=(
   ops/lib/woodright-component-authority.sh
   ops/lib/woodright-oci-provenance.sh
   ops/lib/woodright-validation-freeze.sh
+  ops/lib/woodright-hold-validation-freeze.sh
   ops/lib/woodright-staging-mutation-lock.sh
   ops/lib/woodright-runtime-discovery.sh
   ops/lib/woodright-cutover-common.sh
