@@ -582,6 +582,12 @@ PAIR_SRC="$(cat "$PAIR")"
 echo "$PAIR_SRC" | grep -q 'assert_identity_stable_under_lock' && pass "pair has TOCTOU identity gate" || fail "pair missing TOCTOU gate"
 echo "$PAIR_SRC" | grep -q 'expected-old-backend-digest' && pass "pair supports expected-old digests" || fail "pair missing expected-old digests"
 echo "$PAIR_SRC" | grep -q 'last-status.json' && pass "pair reads monitor state file" || fail "pair missing monitor state read"
+# Under-lock monitor revalidation must appear after lock acquire and before MUTATION_STARTED
+if awk '/wr_staging_mutation_lock_acquire/,/MUTATION_STARTED=1/' "$PAIR" | grep -q 'check_monitor'; then
+  pass "check_monitor revalidated under lock before mutation"
+else
+  fail "check_monitor missing under lock before mutation"
+fi
 # Fail if check_monitor still invokes the monitor script (not merely comments)
 if awk '/^check_monitor\(\)/,/^}/' "$PAIR" | grep -E '\$mon|/\s*ops/monitoring/woodright-health-check\.sh|bash .+woodright-health-check'; then
   fail "check_monitor still execs health-check"

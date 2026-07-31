@@ -501,12 +501,13 @@ wr_staging_mutation_lock_acquire \
 wr_staging_mutation_lock_export_inherit || die "lock inherit export failed"
 log "lock held for pair cutover"
 
-# Re-validate under lock (selection freeze)
+# Re-validate under lock (selection freeze + monitor freshness after lock wait)
 wr_prelock_validate_environment_target || die "under-lock environment retarget detected"
 wr_assert_container_matches_environment "${WOODRIGHT_BE_CONTAINER_DEFAULT}" backend || die "under-lock backend retarget"
 wr_assert_container_matches_environment "${WOODRIGHT_SF_CONTAINER_DEFAULT}" storefront || die "under-lock storefront retarget"
 capture_old_identity
 assert_identity_stable_under_lock
+check_monitor
 run_backup_gate
 
 MUTATION_STARTED=1
