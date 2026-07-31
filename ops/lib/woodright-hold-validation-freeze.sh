@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
-# Helper: hold a bounded staging validation freeze for official QA/validation cycles.
+# Helper: hold a bounded validation freeze for official QA/validation cycles.
 # Usage:
 #   source ops/lib/woodright-hold-validation-freeze.sh
-#   wr_hold_validation_freeze_for_command staging <actor> <cycle> <reason> <ttl_sec> -- <command...>
+#   wr_hold_validation_freeze_for_command <env> <actor> <cycle> <reason> <ttl_sec> -- <command...>
 #
+# Allowed <env>: staging | public_demo
+# Buyer demo woodright-demo.ru is public_demo (not an alias of staging).
 # Does not overwrite an active foreign lease (different actor/cycle/pid).
 # Releases only the lease this call owns. Ordinary one-off curls need no freeze.
 # Mutex uses Python fcntl LOCK_EX (Linux VM + macOS fidelity).
@@ -143,10 +145,13 @@ wr_hold_validation_freeze_for_command() {
     return 2
   }
   shift
-  [[ "$env_name" == "staging" ]] || {
-    echo "ERROR: hold helper only supports staging (got $env_name)" >&2
-    return 1
-  }
+  case "$env_name" in
+    staging|public_demo) ;;
+    *)
+      echo "ERROR: hold helper only supports staging|public_demo (got $env_name)" >&2
+      return 1
+      ;;
+  esac
   wr_validation_freeze_acquire_owned "$env_name" "$actor" "$cycle" "$reason" "$ttl_sec" "$$" || return 1
   owner_pid=$$
   case $- in *e*) had_errexit=1 ;; esac
