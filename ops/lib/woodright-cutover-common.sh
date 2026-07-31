@@ -115,7 +115,9 @@ wr_cutover_evidence_init() {
 
 wr_cutover_sanitize_inspect_json() {
   # stdin: docker inspect JSON array/object → stdout: Env values redacted to ***
-  python3 - <<'PY'
+  # IMPORTANT: must not use a heredoc as python's program source - that steals stdin
+  # from the inspect pipe and yields inspect_parse_failed / empty digests.
+  python3 -c '
 import json,sys
 raw=sys.stdin.read()
 try:
@@ -150,7 +152,7 @@ def walk(obj):
   return obj
 
 print(json.dumps(walk(data), indent=2, sort_keys=True))
-PY
+'
 }
 
 wr_cutover_write_json() {

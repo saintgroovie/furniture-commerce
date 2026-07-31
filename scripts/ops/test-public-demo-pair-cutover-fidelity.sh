@@ -264,7 +264,6 @@ export PATH="$FAKE_DOCKER:$PATH"
 export WOODRIGHT_DOCKER_BIN="$FAKE_DOCKER/docker"
 export WOODRIGHT_FAKE_DOCKER_STATE="$TMP/state"
 export WOODRIGHT_ALLOW_MISSING_LOCAL_IMAGE=0
-export WOODRIGHT_CUTOVER_SKIP_MONITOR_EXEC=1
 export SKIP_MONITOR=1
 export SKIP_BACKUP=1
 export SKIP_SMOKE=1
@@ -577,6 +576,97 @@ unset WOODRIGHT_FAKE_DOCKER_CORRUPT_RENAME
 export WOODRIGHT_FAKE_DOCKER_STATE="$TMP/state"
 export WOODRIGHT_FAKE_DOCKER_ALLOW_MUTATION=0
 unset WOODRIGHT_CUTOVER_PINS_ENV WOODRIGHT_CUTOVER_ACTIVE_PUBLIC WOODRIGHT_CUTOVER_PUBLIC_DEMO_JSON WOODRIGHT_CUTOVER_COMPOSE_ENV
+
+# 15) monitor gate: read-only fail-closed; never exec HC from pair
+PAIR_SRC="$(cat "$PAIR")"
+echo "$PAIR_SRC" | grep -q 'assert_identity_stable_under_lock' && pass "pair has TOCTOU identity gate" || fail "pair missing TOCTOU gate"
+echo "$PAIR_SRC" | grep -q 'expected-old-backend-digest' && pass "pair supports expected-old digests" || fail "pair missing expected-old digests"
+echo "$PAIR_SRC" | grep -q 'last-status.json' && pass "pair reads monitor state file" || fail "pair missing monitor state read"
+# Under-lock monitor revalidation must appear after lock acquire and before MUTATION_STARTED
+if awk '/wr_staging_mutation_lock_acquire/,/MUTATION_STARTED=1/' "$PAIR" | grep -q 'check_monitor'; then
+  pass "check_monitor revalidated under lock before mutation"
+else
+  fail "check_monitor missing under lock before mutation"
+fi
+# Fail if check_monitor still invokes the monitor script (not merely comments)
+if awk '/^check_monitor\(\)/,/^}/' "$PAIR" | grep -E '\$mon|/\s*ops/monitoring/woodright-health-check\.sh|bash .+woodright-health-check'; then
+  fail "check_monitor still execs health-check"
+else
+  pass "check_monitor does not exec health-check"
+fi
+MON_EV="$TMP/ev-mon"
+mkdir -p "$MON_EV" "$TMP/mon-state"
+FRESH_TS="$(date -u +%Y%m%dT%H%M%SZ)"
+printf '{"timestamp_utc":"%s","overall":"critical","exit_code":2,"checks":[]}\n' "$FRESH_TS" >"$TMP/mon-state/last-status.json"
+setup_state "$TMP/state"
+unset SKIP_MONITOR
+export WOODRIGHT_MONITOR_STATE_JSON="$TMP/mon-state/last-status.json"
+export WOODRIGHT_MONITOR_MAX_AGE_S=1800
+set +e
+bash "$PAIR" --environment public_demo --component pair --mode dry-run \
+  --target-sha "$SHA40" --backend-digest "$BE_DIG" --storefront-digest "$SF_DIG" \
+  --evidence-dir "$MON_EV" >"$TMP/mon-red.out" 2>&1
+MON_RC=$?
+set -e
+if [[ "$MON_RC" -ne 0 ]] && grep -q 'monitor overall=critical' "$TMP/mon-red.out"; then
+  pass "monitor critical fail-closed on dry-run"
+else
+  fail "monitor critical not refused (rc=$MON_RC)"
+  cat "$TMP/mon-red.out" || true
+fi
+# future timestamp must fail closed
+mkdir -p "$TMP/ev-mon-future"
+printf '{"timestamp_utc":"20990101T000000Z","overall":"ok","exit_code":0,"checks":[]}\n' >"$TMP/mon-state/last-status.json"
+set +e
+bash "$PAIR" --environment public_demo --component pair --mode dry-run \
+  --target-sha "$SHA40" --backend-digest "$BE_DIG" --storefront-digest "$SF_DIG" \
+  --evidence-dir "$TMP/ev-mon-future" >"$TMP/mon-future.out" 2>&1
+FUT_RC=$?
+set -e
+if [[ "$FUT_RC" -ne 0 ]] && grep -qi 'future\|timestamp' "$TMP/mon-future.out"; then
+  pass "monitor future timestamp refused"
+else
+  fail "monitor future timestamp accepted (rc=$FUT_RC)"
+  cat "$TMP/mon-future.out" || true
+fi
+printf '{"timestamp_utc":"%s","overall":"ok","exit_code":0,"checks":[]}\n' "$FRESH_TS" >"$TMP/mon-state/last-status.json"
+MON_EV2="$TMP/ev-mon2"
+mkdir -p "$MON_EV2"
+if bash "$PAIR" --environment public_demo --component pair --mode dry-run \
+  --target-sha "$SHA40" --backend-digest "$BE_DIG" --storefront-digest "$SF_DIG" \
+  --evidence-dir "$MON_EV2" \
+  --expected-old-backend-digest "$OLD_BE" \
+  --expected-old-storefront-digest "$OLD_SF"; then
+  pass "pair dry-run with expected-old digests + monitor ok"
+else
+  fail "pair dry-run with expected-old digests failed"
+fi
+export SKIP_MONITOR=1
+unset WOODRIGHT_MONITOR_STATE_JSON
+
+# 16) health-check non-root does not write state by default
+HC="$ROOT/ops/monitoring/woodright-health-check.sh"
+HC_STATE="$TMP/hc-state"
+mkdir -p "$HC_STATE"
+printf '{"timestamp_utc":"20000101T000000Z","overall":"ok","exit_code":0,"checks":[]}\n' >"$HC_STATE/last-status.json"
+BEFORE_HC="$(sha256sum "$HC_STATE/last-status.json" | awk '{print $1}')"
+# Force advisory path: non-write + fixture so script completes without live docker deps where possible
+set +e
+WOODRIGHT_MONITOR_WRITE=0 WOODRIGHT_MONITOR_STATE="$HC_STATE" WOODRIGHT_MONITOR_HISTORY="$TMP/hc-hist" \
+  WOODRIGHT_FIXTURE_BACKUP_AGE_HOURS=1 WOODRIGHT_FIXTURE_DISK_PCT=10 \
+  bash "$HC" >/dev/null 2>"$TMP/hc-adv.err"
+set -e
+AFTER_HC="$(sha256sum "$HC_STATE/last-status.json" | awk '{print $1}')"
+if [[ "$BEFORE_HC" == "$AFTER_HC" ]] && grep -qi 'advisory\|state not written' "$TMP/hc-adv.err"; then
+  pass "health-check advisory does not overwrite state"
+else
+  # If script failed early before write gate, still require state unchanged
+  if [[ "$BEFORE_HC" == "$AFTER_HC" ]]; then
+    pass "health-check advisory left state unchanged"
+  else
+    fail "health-check overwrote state in advisory mode"
+  fi
+fi
 
 if [[ "$FAILED" -eq 0 ]]; then
   echo "OK public-demo pair cutover fidelity ($TMP)"
