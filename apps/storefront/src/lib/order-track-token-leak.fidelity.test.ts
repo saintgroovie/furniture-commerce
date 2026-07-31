@@ -36,7 +36,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "../..")
 }
 
 {
-  const src = readFileSync(join(root, "src/middleware.ts"), "utf8")
+  const src = readFileSync(join(root, "src/proxy.ts"), "utf8")
   assert.match(src, /stripLegacyQueryTokenFromOrderTrackSearch/)
   assert.doesNotMatch(src, /ORDER_TRACK_HANDOFF_COOKIE/)
   assert.doesNotMatch(src, /encodeOrderTrackHandoff/)

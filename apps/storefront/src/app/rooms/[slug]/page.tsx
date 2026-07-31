@@ -40,11 +40,16 @@ function productHref(product: RoomProduct | undefined): string | null {
   return `/product/${encodeURIComponent(handle)}`
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const { slug } = await params
   const base = getSiteUrl()
-  const selfCanonical = indexingCanonical(`${base}/rooms/${params.slug}`)
+  const selfCanonical = indexingCanonical(`${base}/rooms/${slug}`)
   try {
-    const data = await loadRoomSet(params.slug)
+    const data = await loadRoomSet(slug)
     const roomSet = data.room_set
     if (!roomSet) {
       return { title: "Комплект", ...(selfCanonical ? { alternates: selfCanonical } : {}) }
@@ -57,7 +62,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       openGraph: {
         title,
         description: desc,
-        url: `/rooms/${params.slug}`,
+        url: `/rooms/${slug}`,
       },
       ...(selfCanonical ? { alternates: selfCanonical } : {}),
     }
@@ -66,10 +71,15 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   }
 }
 
-export default async function RoomSetPage({ params }: { params: { slug: string } }) {
+export default async function RoomSetPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}) {
+  const { slug } = await params
   let data: { room_set?: Record<string, unknown> } = {}
   try {
-    data = await loadRoomSet(params.slug)
+    data = await loadRoomSet(slug)
   } catch (e) {
     if (e instanceof Error && e.message === NOT_FOUND) {
       return (

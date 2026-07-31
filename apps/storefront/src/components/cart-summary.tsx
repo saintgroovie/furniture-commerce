@@ -11,7 +11,7 @@
  * («Что дальше»). Группировка Woodright / Woodright Kids сохранена внутри
  * карточки как секции с прежними заголовками.
  */
-import { useEffect, useState } from "react"
+import { useEffect, useState, useSyncExternalStore } from "react"
 import Link from "next/link"
 import { getCartIdFromSession, clearCartIdFromSession } from "@/lib/cart/session"
 import { countCartItems, emitCartUpdated } from "@/lib/cart/cart-events"
@@ -89,24 +89,37 @@ type CartSummaryProps = {
   initialViewState?: Extract<CartViewState, "loading" | "empty">
 }
 
+function subscribeNoop() {
+  return () => {}
+}
+
+function useIsClient() {
+  return useSyncExternalStore(subscribeNoop, () => true, () => false)
+}
+
+function useSessionCartId() {
+  return useSyncExternalStore(
+    subscribeNoop,
+    () => getCartIdFromSession(),
+    () => null
+  )
+}
+
 export function CartSummary({ initialViewState = "loading" }: CartSummaryProps) {
+  const isClient = useIsClient()
+  const sessionCartId = useSessionCartId()
   const [cart, setCart] = useState<Record<string, unknown> | null>(null)
   const [viewState, setViewState] = useState<CartViewState>(initialViewState)
   const [mutating, setMutating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const cartId = getCartIdFromSession()
-    if (!cartId) {
-      setCart(null)
-      setViewState("empty")
+    if (!isClient || !sessionCartId) {
       return
     }
-    /* Cookie present but SSR started as empty (stale prop) — show loading. */
-    setViewState((prev) => (prev === "empty" ? "loading" : prev))
 
     let cancelled = false
-    getCart(cartId)
+    getCart(sessionCartId)
       .then((data: { cart?: Record<string, unknown> }) => {
         if (cancelled) return
         const c = data.cart ?? null
@@ -133,7 +146,17 @@ export function CartSummary({ initialViewState = "loading" }: CartSummaryProps) 
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [isClient, sessionCartId])
+
+  const effectiveView: CartViewState = !isClient
+    ? initialViewState
+    : !sessionCartId
+      ? viewState === "error" || viewState === "invalid_state"
+        ? viewState
+        : "empty"
+      : viewState === "empty" && !cart
+        ? "loading"
+        : viewState
 
   async function handleRemove(cartId: string, lineId: string) {
     setMutating(true)
@@ -186,14 +209,14 @@ export function CartSummary({ initialViewState = "loading" }: CartSummaryProps) 
     )
   }
 
-  if (viewState === "loading") {
+  if (effectiveView === "loading") {
     return cardShell(
       "loading",
       <p className="info-text">Загружаем корзину…</p>
     )
   }
 
-  if (viewState === "error") {
+  if (effectiveView === "error") {
     return cardShell(
       "error",
       <>
@@ -205,7 +228,7 @@ export function CartSummary({ initialViewState = "loading" }: CartSummaryProps) 
     )
   }
 
-  if (viewState === "invalid_state") {
+  if (effectiveView === "invalid_state") {
     return cardShell(
       "invalid_state",
       <>

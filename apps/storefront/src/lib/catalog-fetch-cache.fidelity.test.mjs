@@ -25,6 +25,18 @@ describe("catalog-fetch-cache fidelity", () => {
     assert.match(apiBase, /function medusaFetch[\s\S]*cache:\s*"no-store"/)
   })
 
+  it("bounds Medusa wait with Promise.race, not AbortSignal on patched fetch", () => {
+    const fn = apiBase.match(
+      /async function fetchWithMedusaTimeout[\s\S]*?\n\}/
+    )?.[0]
+    assert.ok(fn, "fetchWithMedusaTimeout missing")
+    assert.match(fn, /Promise\.race/)
+    assert.match(fn, /Medusa fetch timed out after/)
+    assert.doesNotMatch(fn, /AbortSignal\.timeout|new AbortController/)
+    // Default path must not invent a signal; caller-owned signal still passthrough.
+    assert.match(fn, /if \(init\?\.signal\)/)
+  })
+
   it("routes getCatalogProducts through medusaCatalogFetch without React.cache", () => {
     assert.doesNotMatch(productsApi, /function requestCache/)
     assert.doesNotMatch(productsApi, /React\.cache|requestCache\(/)

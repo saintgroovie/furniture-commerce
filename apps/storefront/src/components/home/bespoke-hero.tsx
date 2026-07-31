@@ -13,6 +13,7 @@ export function BespokeHero() {
           alt={bespokeMedia.hero.alt}
           className="hp-hero-img"
           data-slide={0}
+          data-active="true"
           fetchPriority="high"
           decoding="async"
           draggable={false}

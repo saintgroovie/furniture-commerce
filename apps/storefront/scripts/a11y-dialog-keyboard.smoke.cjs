@@ -21,7 +21,6 @@ function loadPlaywright() {
   ].filter(Boolean)
   for (const c of candidates) {
     try {
-      // eslint-disable-next-line import/no-dynamic-require, global-require
       return require(c)
     } catch {
       /* try next */

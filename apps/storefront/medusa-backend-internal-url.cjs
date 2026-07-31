@@ -51,10 +51,16 @@ function resolveMedusaBackendInternalUrl(env = process.env) {
   }
 
   // Fail closed: never rewrite through the public VM review IP / storefront port.
+  // Loopback IPv4 (127.0.0.1) is allowed — the dotted-quad check must not reject it.
+  const isLoopbackHost =
+    parsed.hostname === "localhost" ||
+    parsed.hostname === "127.0.0.1" ||
+    parsed.hostname === "::1"
+  const isDottedQuad = /^(?:\d{1,3}\.){3}\d{1,3}$/.test(parsed.hostname)
   if (
     parsed.hostname === "89.169.188.29" ||
     parsed.port === "3002" ||
-    /^(?:\d{1,3}\.){3}\d{1,3}$/.test(parsed.hostname)
+    (isDottedQuad && !isLoopbackHost)
   ) {
     throw new Error(
       "Medusa rewrite upstream must be Docker-internal or loopback — not a public IP"

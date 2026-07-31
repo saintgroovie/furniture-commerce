@@ -8,7 +8,7 @@ import {
   useEffect,
   useLayoutEffect,
   useMemo,
-  useRef,
+  useReducer,
   useState,
   type ReactNode,
 } from "react"
@@ -76,6 +76,25 @@ const KidsSectionContext = createContext<KidsSectionContextValue>({
 
 type PendingNav = { target: boolean; from: boolean }
 
+type KidsEnterState = { armed: boolean; nonce: number }
+
+function kidsEnterReducer(
+  state: KidsEnterState,
+  action: "arm" | "disarm" | "play"
+): KidsEnterState {
+  switch (action) {
+    case "arm":
+      return state.armed ? state : { ...state, armed: true }
+    case "disarm":
+      return state.armed ? { ...state, armed: false } : state
+    case "play":
+      if (!state.armed) return state
+      return { armed: false, nonce: state.nonce + 1 }
+    default:
+      return state
+  }
+}
+
 /**
  * Owns the adult ↔ kids flag for sticky chrome (header edge wash, footer
  * wash, KIDS pill). Pathname is the baseline; in-app clicks flip early;
@@ -91,17 +110,17 @@ export function KidsSectionProvider({ children }: { children: ReactNode }) {
   const pathKids = isKidsPath(pathname)
   const [pending, setPending] = useState<PendingNav | null>(null)
   const [productKids, setProductKidsState] = useState(false)
-  const [kidsEnterNonce, setKidsEnterNonce] = useState(0)
-  const [chromeKids, setChromeKids] = useState(pathKids)
-  const [chromeSnap, setChromeSnap] = useState(false)
-  /** Click armed a kids→PDP enter; cleared once the glide actually starts. */
-  const enterArmedRef = useRef(false)
+  /** Click arms kids→PDP enter; play clears arm and bumps nonce once. */
+  const [kidsEnter, dispatchKidsEnter] = useReducer(kidsEnterReducer, {
+    armed: false,
+    nonce: 0,
+  })
+  const kidsEnterNonce = kidsEnter.nonce
 
   const playKidsEnterReplay = useCallback(() => {
-    if (!enterArmedRef.current) return
-    enterArmedRef.current = false
-    setKidsEnterNonce((n) => n + 1)
+    dispatchKidsEnter("play")
   }, [])
+
 
   const notifyLoadingAppear = useCallback(() => {
     playKidsEnterReplay()
@@ -121,30 +140,22 @@ export function KidsSectionProvider({ children }: { children: ReactNode }) {
     setProductKidsState(next)
   }, [])
 
-  /* Reset optimistic nav after the route commits — except kids→product:
-     `/product/*` is not a kids path, so clearing here would drop kids
-     chrome until KidsProductSection runs (brown loader). */
-  useEffect(() => {
+  /* Reset optimistic nav after the route commits — except kids→product. */
+  const [pathForPending, setPathForPending] = useState(pathname)
+  if (pathname !== pathForPending) {
+    setPathForPending(pathname)
     setPending((prev) => {
       if (prev?.target && isProductPath(pathname)) return prev
       return null
     })
-  }, [pathname])
-
-  /* Leave PDP opt-in when leaving /product/* so adult routes don't stick.
-     On /product/* also re-read the SSR `data-kids-product` marker so a
-     hard refresh opts chrome in before KidsProductSection's effect. */
-  useLayoutEffect(() => {
     if (!isProductPath(pathname)) {
       setProductKidsState(false)
-      enterArmedRef.current = false
-      return
-    }
-    if (document.querySelector("[data-kids-product]")) {
+      dispatchKidsEnter("disarm")
+    } else if (typeof document !== "undefined" && document.querySelector("[data-kids-product]")) {
       setProductKidsState(true)
       setPending(null)
     }
-  }, [pathname])
+  }
 
   useEffect(() => {
     function onClick(e: MouseEvent) {
@@ -180,7 +191,7 @@ export function KidsSectionProvider({ children }: { children: ReactNode }) {
       })
       /* Arm only — the enter glide waits for loader appear (or PDP settle). */
       if (fromKids && targetKids && isProductPath(path)) {
-        enterArmedRef.current = true
+        dispatchKidsEnter("arm")
       }
     }
 
@@ -192,43 +203,47 @@ export function KidsSectionProvider({ children }: { children: ReactNode }) {
   const target = pending ? pending.target : settledKids
   const from = pending ? pending.from : settledKids
 
-  /* Keep visual chrome aligned with section target. Kids→PDP enter replay
-     (below) briefly overrides this in the same commit / following frames. */
-  useLayoutEffect(() => {
-    setChromeKids(target)
-    setChromeSnap(false)
-  }, [target])
+  /* Enter replay override: null means follow `target`. */
+  const [chromeOverride, setChromeOverride] = useState<{
+    kids: boolean
+    snap: boolean
+  } | null>(null)
+  const [enterNonceSeen, setEnterNonceSeen] = useState(0)
+  if (kidsEnterNonce !== enterNonceSeen) {
+    setEnterNonceSeen(kidsEnterNonce)
+    if (kidsEnterNonce) {
+      if (
+        typeof window !== "undefined" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      ) {
+        // Follow target without override (reduced motion skips snap replay).
+        setChromeOverride(null)
+      } else {
+        setChromeOverride({ kids: false, snap: true })
+      }
+    }
+  }
 
-  /* Snap-closed then open — driven by nonce from loader appear / PDP settle. */
   useLayoutEffect(() => {
     if (!kidsEnterNonce) return
-
     if (
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches
     ) {
-      setChromeKids(true)
-      setChromeSnap(false)
       document.documentElement.classList.remove("is-kids-chrome-snap")
       return
     }
-
     let cancelled = false
     let outer = 0
     let inner = 0
-    setChromeSnap(true)
-    setChromeKids(false)
     document.documentElement.classList.add("is-kids-chrome-snap")
-
     outer = window.requestAnimationFrame(() => {
       inner = window.requestAnimationFrame(() => {
         if (cancelled) return
         document.documentElement.classList.remove("is-kids-chrome-snap")
-        setChromeSnap(false)
-        setChromeKids(true)
+        setChromeOverride(null)
       })
     })
-
     return () => {
       cancelled = true
       window.cancelAnimationFrame(outer)
@@ -236,6 +251,9 @@ export function KidsSectionProvider({ children }: { children: ReactNode }) {
       document.documentElement.classList.remove("is-kids-chrome-snap")
     }
   }, [kidsEnterNonce])
+
+  const chromeKids = chromeOverride ? chromeOverride.kids : target
+  const chromeSnap = chromeOverride ? chromeOverride.snap : false
 
   const value = useMemo(
     () => ({

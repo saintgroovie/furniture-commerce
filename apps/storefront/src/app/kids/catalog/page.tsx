@@ -26,9 +26,10 @@ export const metadata: Metadata = {
 export default async function KidsCatalogPage({
   searchParams,
 }: {
-  searchParams: Record<string, string | string[] | undefined>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
-  const filterState = parseCatalogFilterState(searchParams)
+  const resolvedSearchParams = await searchParams
+  const filterState = parseCatalogFilterState(resolvedSearchParams)
 
   let scoped: Array<Record<string, unknown>> = []
 

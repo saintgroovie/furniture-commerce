@@ -1,7 +1,23 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useSyncExternalStore } from "react"
 import { HomeImg } from "./home-img"
+
+const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)"
+
+function subscribeReducedMotion(onStoreChange: () => void) {
+  const mq = window.matchMedia(REDUCED_MOTION_QUERY)
+  mq.addEventListener("change", onStoreChange)
+  return () => mq.removeEventListener("change", onStoreChange)
+}
+
+function getReducedMotionSnapshot() {
+  return window.matchMedia(REDUCED_MOTION_QUERY).matches
+}
+
+function getReducedMotionServerSnapshot() {
+  return false
+}
 
 /**
  * Finish-variant / hover layers for product cards. Kept out of the initial
@@ -14,19 +30,20 @@ export function HomeDeferredCardLayers({
   variants?: string[]
   hoverImg?: string | null
 }) {
-  const [ready, setReady] = useState(false)
+  const reducedMotion = useSyncExternalStore(
+    subscribeReducedMotion,
+    getReducedMotionSnapshot,
+    getReducedMotionServerSnapshot
+  )
+  const [deferredReady, setDeferredReady] = useState(false)
 
   useEffect(() => {
     if (variants.length === 0 && !hoverImg) return
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      // Hover still useful without motion; variants cycle is CSS-only so skip.
-      if (hoverImg) setReady(true)
-      return
-    }
+    if (reducedMotion) return
 
     let cancelled = false
     const arm = () => {
-      if (!cancelled) setReady(true)
+      if (!cancelled) setDeferredReady(true)
     }
     // Time-gated only - idle callbacks fire too early after DCL.
     const timer = window.setTimeout(arm, 2800)
@@ -35,25 +52,28 @@ export function HomeDeferredCardLayers({
       cancelled = true
       window.clearTimeout(timer)
     }
-  }, [variants.length, hoverImg])
+  }, [variants.length, hoverImg, reducedMotion])
+
+  const ready = reducedMotion ? Boolean(hoverImg) : deferredReady
 
   if (!ready) return null
 
   return (
     <>
-      {variants.slice(0, 2).map((src, vi) => (
-        <HomeImg
-          key={src}
-          src={src}
-          alt=""
-          aria-hidden="true"
-          className="hp-cycle-img"
-          data-cycle={vi + 1}
-          loading="lazy"
-          decoding="async"
-          draggable={false}
-        />
-      ))}
+      {!reducedMotion &&
+        variants.slice(0, 2).map((src, vi) => (
+          <HomeImg
+            key={src}
+            src={src}
+            alt=""
+            aria-hidden="true"
+            className="hp-cycle-img"
+            data-cycle={vi + 1}
+            loading="lazy"
+            decoding="async"
+            draggable={false}
+          />
+        ))}
       {hoverImg && (
         <HomeImg
           src={hoverImg}
