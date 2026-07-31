@@ -39,23 +39,49 @@ wr_staging_mutation_lock_write_meta() {
   local command="${2:-}"
   local target="${3:-}"
   local task="${4:-}"
+  local env_name="${WOODRIGHT_ENVIRONMENT:-}"
+  local hostname_s component digest compose_project be_name sf_name
+  hostname_s="$(hostname 2>/dev/null || echo unknown)"
+  component="${WOODRIGHT_COMPONENT_SCOPE:-}"
+  digest="${WOODRIGHT_TARGET_DIGEST:-$target}"
+  compose_project="${WOODRIGHT_COMPOSE_PROJECT:-}"
+  be_name="${WOODRIGHT_BE_CONTAINER_DEFAULT:-}"
+  sf_name="${WOODRIGHT_SF_CONTAINER_DEFAULT:-}"
   umask 077
+  mkdir -p "$(dirname "$WR_STAGING_MUTATION_LOCK_META")" 2>/dev/null || true
   cat >"$WR_STAGING_MUTATION_LOCK_META" <<EOF
 {
+  "environment": $(printf '%s' "$env_name" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))'),
   "actor": $(printf '%s' "$actor" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))'),
   "command": $(printf '%s' "$command" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))'),
   "pid": $$,
   "ppid": $PPID,
   "uid": $(id -u),
   "user": $(printf '%s' "$(id -un)" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))'),
+  "hostname": $(printf '%s' "$hostname_s" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))'),
   "started_at_utc": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
   "target": $(printf '%s' "$target" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))'),
+  "target_source_sha": $(printf '%s' "${WOODRIGHT_TARGET_SHA:-}" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))'),
+  "target_component": $(printf '%s' "$component" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))'),
+  "target_digest": $(printf '%s' "$digest" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))'),
+  "compose_project": $(printf '%s' "$compose_project" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))'),
+  "backend_container": $(printf '%s' "$be_name" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))'),
+  "storefront_container": $(printf '%s' "$sf_name" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))'),
   "task_cycle": $(printf '%s' "$task" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))'),
   "approved_owner": "Dokploy",
   "lock_path": "$WR_STAGING_MUTATION_LOCK_PATH",
   "note": "metadata is not the mutex; flock on lock_path is authoritative"
 }
 EOF
+  # Fail-closed: metadata environment must match loaded profile when set
+  if [[ -n "$env_name" ]]; then
+    local meta_env
+    meta_env="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("environment") or "")' "$WR_STAGING_MUTATION_LOCK_META" 2>/dev/null || true)"
+    if [[ "$meta_env" != "$env_name" ]]; then
+      wr_staging_mutation_lock_log "ERROR: lock meta environment mismatch have=$meta_env want=$env_name"
+      return 1
+    fi
+  fi
 }
 
 wr_staging_mutation_lock_mark_stale_meta() {
@@ -156,7 +182,11 @@ wr_staging_mutation_lock_acquire() {
 
   if [[ "${WR_STAGING_MUTATION_LOCK_ALLOW_NONCANONICAL:-0}" != "1" ]]; then
     case "$WR_STAGING_MUTATION_LOCK_PATH" in
-      /srv/woodright/locks/live-cutover.lock|/srv/woodright/locks/production-cutover.lock) ;;
+      /srv/woodright/locks/public_demo/live-cutover.lock|\
+      /srv/woodright/locks/staging/live-cutover.lock|\
+      /srv/woodright/locks/production/live-cutover.lock|\
+      /srv/woodright/locks/live-cutover.lock|\
+      /srv/woodright/locks/production-cutover.lock) ;;
       *)
         wr_staging_mutation_lock_log "ERROR non-canonical lock path refused: $WR_STAGING_MUTATION_LOCK_PATH"
         return 4
@@ -230,5 +260,35 @@ PY
   wr_staging_mutation_lock_write_meta "$actor" "$command" "$target" "$task" || true
   wr_staging_mutation_lock_install_traps
   wr_staging_mutation_lock_log "acquired actor=$actor path=$WR_STAGING_MUTATION_LOCK_PATH pid=$$"
+  return 0
+}
+
+# Export inherit markers for child processes that inherit the flock FD.
+# Parent must keep FD open. Forged use without ownership still fails in acquire().
+wr_staging_mutation_lock_export_inherit() {
+  if [[ "$_WR_STAGING_LOCK_OWNED" != "1" ]]; then
+    wr_staging_mutation_lock_log "ERROR export_inherit without ownership"
+    return 4
+  fi
+  if ! wr_staging_mutation_lock_fd_is_open; then
+    local holder_var="WR_STAGING_FCNTL_HOLDER_${WR_STAGING_MUTATION_LOCK_FD}"
+    local holder_pid="${!holder_var:-}"
+    if [[ -z "$holder_pid" ]] || ! kill -0 "$holder_pid" 2>/dev/null; then
+      wr_staging_mutation_lock_log "ERROR export_inherit without open FD or fcntl holder"
+      return 4
+    fi
+  fi
+  export WOODRIGHT_STAGING_MUTATION_LOCK_HELD=1
+  export _WR_STAGING_LOCK_OWNED=1
+  export WR_STAGING_MUTATION_LOCK_PATH
+  export WR_STAGING_MUTATION_LOCK_META
+  export WR_STAGING_MUTATION_LOCK_FD
+  export WR_STAGING_MUTATION_LOCK_ALLOW_NONCANONICAL
+  # Preserve fcntl holder pid for child inherit checks
+  local holder_var="WR_STAGING_FCNTL_HOLDER_${WR_STAGING_MUTATION_LOCK_FD}"
+  if [[ -n "${!holder_var:-}" ]]; then
+    export "$holder_var"
+  fi
+  wr_staging_mutation_lock_log "export_inherit_ok fd=$WR_STAGING_MUTATION_LOCK_FD path=$WR_STAGING_MUTATION_LOCK_PATH"
   return 0
 }

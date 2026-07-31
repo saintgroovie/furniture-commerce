@@ -116,6 +116,19 @@ export const footer = {
         { label: "Материалы", href: "/about/materials" },
         { label: "Дизайнерам", href: "/designers/terms" },
         { label: "Контакты", href: "/contacts" },
+        // Legal routes exist for prep/preview; footer links ship only after
+        // owner legal inputs complete (cutover). Avoid presenting incomplete
+        // оферта/политика as finished buyer documents.
+      ],
+    },
+    {
+      title: "Покупателям",
+      links: [
+        { label: "Политика конфиденциальности", href: "/privacy" },
+        { label: "Условия покупки", href: "/terms" },
+        { label: "Доставка", href: "/delivery" },
+        { label: "Оплата", href: "/payment" },
+        { label: "Возврат", href: "/returns" },
       ],
     },
   ],
@@ -938,5 +951,25 @@ export const seo = {
     title: "Контакты Woodright",
     description:
       "Контакты Woodright: консультация по каталогу, детской мебели, отделкам и проектным заявкам. Шоурум в Химках, МТК «Гранд-2».",
+  },
+  privacy: {
+    title: "Политика конфиденциальности - Woodright",
+    description: "Как Woodright обрабатывает персональные данные покупателей",
+  },
+  terms: {
+    title: "Условия покупки - Woodright",
+    description: "Как оформляется заказ на мебель Woodright",
+  },
+  delivery: {
+    title: "Доставка - Woodright",
+    description: "Условия доставки мебели Woodright",
+  },
+  payment: {
+    title: "Оплата - Woodright",
+    description: "Как оплачивается заказ на мебель Woodright",
+  },
+  returns: {
+    title: "Возврат - Woodright",
+    description: "Условия возврата мебели Woodright",
   },
 }

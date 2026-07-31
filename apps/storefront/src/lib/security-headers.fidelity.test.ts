@@ -33,6 +33,11 @@ assert.match(
 )
 assert.match(proxySrc, /nonce-/, "CSP must use nonce")
 assert.doesNotMatch(proxySrc, /'unsafe-eval'/, "CSP must not allow unsafe-eval")
+assert.match(
+  proxySrc,
+  /buildConnectSrcDirective/,
+  "proxy must build connect-src via csp-policy helper"
+)
 assert.match(proxySrc, /Strict-Transport-Security/, "proxy must set HSTS on HTTPS")
 assert.match(proxySrc, /X-Content-Type-Options/, "proxy must set nosniff")
 assert.match(proxySrc, /frame-ancestors 'none'/, "CSP frame-ancestors none")
