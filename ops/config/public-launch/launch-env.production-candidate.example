@@ -1,0 +1,54 @@
+# Woodright private production_candidate bake - EXAMPLE ONLY, not loaded by
+# any running process. This documents the env shape for a `private_noindex`
+# production candidate: real production hostnames baked into metadata/OG for
+# QA, but robots noindex and no public DNS/CORS cutover.
+#
+# Copy relevant lines into the real candidate build/deploy env when that
+# specific bake is explicitly approved. See:
+#   - apps/storefront/src/lib/launch-contract.ts (types + fail-closed resolvers)
+#   - apps/storefront/src/lib/legal-content.ts (owner-approval gate)
+#   - apps/storefront/src/lib/payment-mode.ts
+#   - ops/config/runtime-environments/production.conf (existing candidate profile)
+
+# --- Launch contract (server-only; never read by the browser bundle) ---
+WOODRIGHT_RUNTIME_ROLE=production_candidate
+WOODRIGHT_RUNTIME_EXPOSURE=private
+WOODRIGHT_LAUNCH_MODE=private_noindex
+WOODRIGHT_ADMIN_EXPOSURE=private
+WOODRIGHT_PAYMENT_MODE=manual_invoice
+WOODRIGHT_LEGAL_CONTENT_STATUS=draft
+
+# Legacy indexing var - WOODRIGHT_LAUNCH_MODE above wins when both are set
+# (apps/storefront/src/lib/indexing-policy.ts). Kept here only for operators
+# who still grep for the old var name; safe to omit once launch mode is set.
+# WOODRIGHT_INDEXING_MODE=noindex
+
+# --- Storefront build/runtime contract (public metadata/OG host, not a DNS bind) ---
+# Required once WOODRIGHT_LAUNCH_MODE is set - no localhost:8000 fallback,
+# validated https/non-demo/non-loopback (apps/storefront/src/lib/api/base.ts).
+NEXT_PUBLIC_SITE_URL=https://woodright.ru
+
+# Public Medusa API contract URL for metadata/gates. The browser may still
+# call same-origin `/store/...` via Next rewrites regardless of this value -
+# see apps/storefront/src/lib/api/base.ts (`getBaseUrl`) - this var documents
+# the public contract, it does not change server-side fetch routing.
+NEXT_PUBLIC_MEDUSA_BACKEND_URL=https://api.woodright.ru
+
+# Docker-internal upstream stays internal - never the public API host above.
+MEDUSA_BACKEND_INTERNAL_URL=http://backend:9000
+
+# --- Backend CORS (candidate: production buyer origins + private QA loopback) ---
+# Do NOT set WOODRIGHT_LAUNCH_CORS_PROFILE=production_buyer until private QA
+# loopback is allowed by launch-cors private-candidate rules or dropped.
+# Apex/www are the buyer contract; :3200 is private QA only.
+# See ops/config/public-launch/cors-production.env.example.
+STORE_CORS=https://woodright.ru,https://www.woodright.ru,http://127.0.0.1:3200
+AUTH_CORS=https://woodright.ru,https://www.woodright.ru,http://127.0.0.1:3200
+# Admin stays private / loopback - never publish admin.woodright.ru automatically.
+ADMIN_CORS=http://127.0.0.1:9200,http://127.0.0.1:5173
+
+# --- Dockerfile build args (see apps/storefront/Dockerfile) ---
+# Same launch mode as above - Dockerfile fails the build if NEXT_PUBLIC_SITE_URL
+# looks like a demo/loopback host while this is set.
+# WOODRIGHT_LAUNCH_MODE=private_noindex
+# WOODRIGHT_PAYMENT_MODE=manual_invoice

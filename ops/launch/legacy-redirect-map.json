@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "generated_for": "public-launch-preparation-20260730",
+  "coverage": "partial",
+  "coverage_note": "Full legacy CS-Cart URL inventory not available in-repo; expand from owner sitemap/analytics before indexable launch.",
+  "rules": [
+    { "from": "/contacts", "to": "/contacts", "type": "exact", "status": 301 },
+    { "from": "/about", "to": "/about", "type": "exact", "status": 301 },
+    { "from": "/catalog", "to": "/catalog", "type": "exact", "status": 301 },
+    { "from": "/cart", "to": "/cart", "type": "exact", "status": 301 },
+    { "from": "/checkout", "to": "/checkout", "type": "exact", "status": 301 }
+  ],
+  "security": {
+    "preserve_query": false,
+    "strip_params": ["token", "guest_token", "access_token", "session"],
+    "forbid_homepage_funnel_default": true,
+    "forbid_chains": true
+  },
+  "www_to_apex": {
+    "from_host": "www.woodright.ru",
+    "to_host": "woodright.ru",
+    "status": 301
+  }
+}

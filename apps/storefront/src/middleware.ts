@@ -4,6 +4,7 @@ import {
   shouldEmitXRobotsTag,
   X_ROBOTS_TAG_NOINDEX,
 } from "@/lib/indexing-policy"
+import { buildConnectSrcDirective } from "@/lib/csp-policy"
 import { storefrontRuntimeIdentityHeaders } from "@/lib/runtime-identity-headers"
 import { stripLegacyQueryTokenFromOrderTrackSearch } from "@/lib/order-track-token-handoff"
 
@@ -78,8 +79,8 @@ export function middleware(request: NextRequest) {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
     "font-src 'self' data:",
-    // Same-origin /store + /product-static rewrites; no public :9000.
-    "connect-src 'self'",
+    // Same-origin rewrites by default; public/demo may add canonical API origin.
+    buildConnectSrcDirective(),
     "media-src 'self' blob:",
     "object-src 'none'",
     "base-uri 'self'",
