@@ -26,6 +26,8 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 source "$ROOT/ops/lib/woodright-environment-profile.sh"
 # shellcheck source=../lib/woodright-runtime-discovery.sh
 source "$ROOT/ops/lib/woodright-runtime-discovery.sh"
+# shellcheck source=../lib/woodright-host-publish.sh
+source "$ROOT/ops/lib/woodright-host-publish.sh"
 
 COMPOSE_FILE="${WOODRIGHT_COMPOSE_FILE:-$ROOT/docker-compose.staging.yml}"
 MEDIA_VOLUME="${WOODRIGHT_MEDIA_VOLUME:-woodright-stack-3dsdhd_woodright_staging_media}"
@@ -204,42 +206,82 @@ run_pre_promote() {
     bytes=${probed##* }
   fi
 
+  # Mode A host-publish: planned bindings must match profile (deny ⇒ empty).
+  assert_planned_host_publish backend
+
   # Explicitly do not require / mutate EXPECTED_RELEASE or running digest.
-  ok_json "$(python3 -c 'import json,sys; print(json.dumps({"mode":"pre-promote","target_image":sys.argv[1],"target_digest":sys.argv[2],"target_sha":sys.argv[3],"oci_revision":sys.argv[4],"volume":sys.argv[5],"mount_destination":sys.argv[6],"files":int(sys.argv[7]),"bytes":int(sys.argv[8]),"manifests":"unchanged","running_required":False}))' \
-    "$TARGET_IMAGE" "$EXPECTED_DIGEST" "${TARGET_SHA:-}" "${oci_rev:-}" "$MEDIA_VOLUME" "$MEDIA_DEST" "${files:-0}" "${bytes:-0}")"
+  ok_json "$(python3 -c 'import json,sys; print(json.dumps({"mode":"pre-promote","target_image":sys.argv[1],"target_digest":sys.argv[2],"target_sha":sys.argv[3],"oci_revision":sys.argv[4],"volume":sys.argv[5],"mount_destination":sys.argv[6],"files":int(sys.argv[7]),"bytes":int(sys.argv[8]),"manifests":"unchanged","running_required":False,"host_publish":"mode_a_pass","host_publish_policy":sys.argv[9]}))' \
+    "$TARGET_IMAGE" "$EXPECTED_DIGEST" "${TARGET_SHA:-}" "${oci_rev:-}" "$MEDIA_VOLUME" "$MEDIA_DEST" "${files:-0}" "${bytes:-0}" "${WOODRIGHT_HOST_PUBLISH_POLICY:-}")"
 }
 
-assert_no_host_ports() {
-  local BE="$1"
-  local PORT_BINDINGS PORTS_JSON PUBLISHED_HOST
-  PORT_BINDINGS=$(docker inspect "$BE" --format '{{json .HostConfig.PortBindings}}' 2>/dev/null || echo "")
-  if [[ -z "$PORT_BINDINGS" || ( "$PORT_BINDINGS" != "{}" && "$PORT_BINDINGS" != "null" ) ]]; then
-    fail_json HOST_PORTS_PUBLISHED "PortBindings=$PORT_BINDINGS"
+# Mode A: planned host-publish must match profile before mutation.
+# Deny: default planned=[] unless WOODRIGHT_PLANNED_HOST_BINDINGS_JSON is set (then that plan is checked).
+# loopback_allowlist: WOODRIGHT_PLANNED_HOST_BINDINGS_JSON is REQUIRED (no tautological self-compare).
+# Legacy WOODRIGHT_ALLOW_HOST_PUBLISH is ignored (not authority).
+assert_planned_host_publish() {
+  local role="${1:-backend}"
+  local planned out verdict message
+  if [[ -z "${WOODRIGHT_HOST_PUBLISH_POLICY:-}" ]]; then
+    fail_json HOST_PUBLISH_POLICY_MISSING "profile missing WOODRIGHT_HOST_PUBLISH_POLICY"
   fi
-  PORTS_JSON=$(docker inspect "$BE" --format '{{json .NetworkSettings.Ports}}' 2>/dev/null || true)
-  [[ -n "$PORTS_JSON" ]] || fail_json HOST_PORTS_PUBLISHED "NetworkSettings.Ports_unreadable"
-  PUBLISHED_HOST=$(printf '%s' "$PORTS_JSON" | python3 -c '
-import json,sys
-raw=sys.stdin.read()
-try:
-  ports=json.loads(raw)
-except Exception:
-  print("__PARSE_FAIL__"); raise SystemExit(0)
-if ports is None:
-  print("", end=""); raise SystemExit(0)
-if not isinstance(ports, dict):
-  print("__PARSE_FAIL__"); raise SystemExit(0)
-hits=[]
-for k,v in ports.items():
-  if not v:
-    continue
-  for b in v:
-    if b.get("HostPort"):
-      hits.append("%s->%s:%s" % (k, b.get("HostIp") or "", b.get("HostPort")))
-print(",".join(hits), end="")
-')
-  [[ "$PUBLISHED_HOST" != "__PARSE_FAIL__" ]] || fail_json HOST_PORTS_PUBLISHED "NetworkSettings.Ports_parse_fail"
-  [[ -z "$PUBLISHED_HOST" ]] || fail_json HOST_PORTS_PUBLISHED "$PUBLISHED_HOST"
+  if [[ -n "${WOODRIGHT_PLANNED_HOST_BINDINGS_JSON:-}" ]]; then
+    planned="${WOODRIGHT_PLANNED_HOST_BINDINGS_JSON}"
+  elif [[ "${WOODRIGHT_HOST_PUBLISH_POLICY}" == "deny" ]]; then
+    planned='[]'
+  else
+    fail_json HOST_PUBLISH_MODE_A_PLANNED_REQUIRED \
+      "loopback_allowlist Mode A requires WOODRIGHT_PLANNED_HOST_BINDINGS_JSON (exact planned bindings; profile allowlist alone is not a plan)"
+  fi
+  export WR_HP_MODE=planned
+  export WR_HP_POLICY="${WOODRIGHT_HOST_PUBLISH_POLICY}"
+  export WR_HP_ALLOWED="${WOODRIGHT_ALLOWED_HOST_BINDINGS:-}"
+  export WR_HP_ROLE="$role"
+  export WR_HP_NETWORK_MODE="${WR_HP_PLANNED_NETWORK_MODE:-bridge}"
+  export WR_HP_COMPOSE_PROJECT="${WOODRIGHT_COMPOSE_PROJECT:-}"
+  export WR_HP_EXPECTED_COMPOSE="${WOODRIGHT_COMPOSE_PROJECT:-}"
+  export WR_HP_REQUIRE_COMPOSE=0
+  export WR_HP_BINDINGS_JSON="$planned"
+  set +e
+  out="$(wr_hp_evaluate_python 2>/dev/null)"
+  local rc=$?
+  set -e
+  [[ $rc -eq 0 ]] && return 0
+  verdict="$(python3 -c 'import json,sys; d=json.loads(sys.argv[1] or "{}"); print(d.get("verdict") or "HOST_PORTS_PUBLISHED")' "${out:-}")"
+  message="$(python3 -c 'import json,sys; d=json.loads(sys.argv[1] or "{}"); print(d.get("message") or "planned_host_publish_fail")' "${out:-}")"
+  if [[ "$verdict" == "HOST_PUBLISH_UNEXPECTED_PORT" && "${WOODRIGHT_HOST_PUBLISH_POLICY}" == "deny" ]]; then
+    fail_json HOST_PORTS_PUBLISHED "$message"
+  fi
+  fail_json "$verdict" "$message"
+}
+
+# Mode B: live Docker bindings must equal profile allowlist (or zero if deny).
+assert_live_host_publish() {
+  local BE="$1"
+  local role="${2:-backend}"
+  local out verdict message
+  if [[ -z "${WOODRIGHT_HOST_PUBLISH_POLICY:-}" ]]; then
+    fail_json HOST_PUBLISH_POLICY_MISSING "profile missing WOODRIGHT_HOST_PUBLISH_POLICY"
+  fi
+  export WR_HP_MODE=live
+  export WR_HP_POLICY="${WOODRIGHT_HOST_PUBLISH_POLICY}"
+  export WR_HP_ALLOWED="${WOODRIGHT_ALLOWED_HOST_BINDINGS:-}"
+  export WR_HP_ROLE="$role"
+  export WR_HP_NETWORK_MODE="$(docker inspect "$BE" --format '{{.HostConfig.NetworkMode}}' 2>/dev/null || true)"
+  export WR_HP_COMPOSE_PROJECT="$(docker inspect "$BE" --format '{{index .Config.Labels "com.docker.compose.project"}}' 2>/dev/null || true)"
+  export WR_HP_EXPECTED_COMPOSE="${WOODRIGHT_COMPOSE_PROJECT:-}"
+  export WR_HP_REQUIRE_COMPOSE="${WOODRIGHT_REQUIRE_COMPOSE_LABEL:-0}"
+  export WR_HP_BINDINGS_JSON="$(wr_hp_docker_bindings_json "$BE" "$role")"
+  set +e
+  out="$(wr_hp_evaluate_python 2>/dev/null)"
+  local rc=$?
+  set -e
+  [[ $rc -eq 0 ]] && return 0
+  verdict="$(python3 -c 'import json,sys; d=json.loads(sys.argv[1] or "{}"); print(d.get("verdict") or "HOST_PORTS_PUBLISHED")' "${out:-}")"
+  message="$(python3 -c 'import json,sys; d=json.loads(sys.argv[1] or "{}"); print(d.get("message") or "live_host_publish_fail")' "${out:-}")"
+  if [[ "$verdict" == "HOST_PUBLISH_UNEXPECTED_PORT" && "${WOODRIGHT_HOST_PUBLISH_POLICY}" == "deny" ]]; then
+    fail_json HOST_PORTS_PUBLISHED "$message"
+  fi
+  fail_json "$verdict" "$message"
 }
 
 write_evidence_file() {
@@ -295,7 +337,7 @@ run_post_promote() {
     fail_json NAME_EXCLUDED "refusing keeper/candidate as live: $BE"
   fi
 
-  assert_no_host_ports "$BE"
+  assert_live_host_publish "$BE" backend
 
   local FILE_COUNT BYTE_SIZE
   FILE_COUNT=$(docker exec "$BE" sh -c 'find /server/static -type f 2>/dev/null | wc -l' | tr -d ' ')
@@ -328,8 +370,8 @@ run_post_promote() {
   local pin_digest="${WOODRIGHT_PINNED_BACKEND_DIGEST:-$EXPECTED_DIGEST}"
   write_evidence_file "$WRITE_EVIDENCE" "$BE" "${pin_digest:-$live_dig}" "${TARGET_SHA:-}" "$FILE_COUNT" "$BYTE_SIZE"
 
-  ok_json "$(python3 -c 'import json,sys; print(json.dumps({"mode":"post-promote","container":sys.argv[1],"volume":sys.argv[2],"files":int(sys.argv[3]),"bytes":int(sys.argv[4]),"product_static":sys.argv[5],"host_ports":"none","media_mount":"pass","pinned_digest":sys.argv[6] or None}))' \
-    "$BE" "$MEDIA_VOLUME" "$FILE_COUNT" "$BYTE_SIZE" "$PS_STATUS" "${pin_digest:-}")"
+  ok_json "$(python3 -c 'import json,sys; print(json.dumps({"mode":"post-promote","container":sys.argv[1],"volume":sys.argv[2],"files":int(sys.argv[3]),"bytes":int(sys.argv[4]),"product_static":sys.argv[5],"host_ports":"policy_checked","host_publish_policy":sys.argv[7],"media_mount":"pass","pinned_digest":sys.argv[6] or None}))' \
+    "$BE" "$MEDIA_VOLUME" "$FILE_COUNT" "$BYTE_SIZE" "$PS_STATUS" "${pin_digest:-}" "${WOODRIGHT_HOST_PUBLISH_POLICY:-}")"
 }
 
 if [[ "$COMPOSE_ONLY" -eq 1 ]]; then

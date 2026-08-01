@@ -21,6 +21,8 @@ source "$HERE/../lib/woodright-cutover-common.sh"
 source "$HERE/../lib/woodright-component-authority.sh"
 # shellcheck source=../lib/woodright-oci-provenance.sh
 source "$HERE/../lib/woodright-oci-provenance.sh"
+# shellcheck source=../lib/woodright-host-publish.sh
+source "$HERE/../lib/woodright-host-publish.sh"
 
 MODE="execute"
 CONFIRM=""
@@ -182,23 +184,26 @@ create_storefront() {
       >"$EVIDENCE_DIR/json/database-identity-plan.json"
   fi
   log "PLANNED database_identity_alias=$db_identity_alias database_connection_name=${WOODRIGHT_DATABASE_CONNECTION_NAME:-none}"
-  wr_cutover_docker create \
-    --name "$NAME" \
-    --restart unless-stopped \
-    --network "$NET_STACK" \
-    --network-alias storefront \
-    --label "com.woodright.deployment-owner=Dokploy" \
-    --label "com.woodright.runtime-role=public_demo" \
-    --label "com.woodright.exposure=public" \
-    --label "com.woodright.release-sha=${TARGET_SHA}" \
-    --label "com.woodright.database-identity=${db_identity_alias}" \
-    --env-file "$ENV_FILE" \
-    --health-cmd="node -e \"fetch('http://127.0.0.1:3002/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\"" \
-    --health-interval=30s \
-    --health-timeout=5s \
-    --health-retries=5 \
-    --health-start-period=40s \
+  local -a create_args=(
+    --name "$NAME"
+    --restart unless-stopped
+    --network "$NET_STACK"
+    --network-alias storefront
+    --label "com.woodright.deployment-owner=Dokploy"
+    --label "com.woodright.runtime-role=public_demo"
+    --label "com.woodright.exposure=public"
+    --label "com.woodright.release-sha=${TARGET_SHA}"
+    --label "com.woodright.database-identity=${db_identity_alias}"
+    --env-file "$ENV_FILE"
+    --health-cmd="node -e \"fetch('http://127.0.0.1:3002/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""
+    --health-interval=30s
+    --health-timeout=5s
+    --health-retries=5
+    --health-start-period=40s
     "$image"
+  )
+  wr_hp_refuse_publish_flags "${create_args[@]}" || return 1
+  wr_cutover_docker create "${create_args[@]}"
   wr_cutover_docker network connect "$NET_DOKPLOY" "$NAME"
 }
 
@@ -253,6 +258,8 @@ wr_require_environment_from_args "${FULL_ARGV[@]}" || exit 1
 [[ "${WOODRIGHT_ENVIRONMENT}" == "public_demo" ]] || die "only --environment public_demo allowed"
 wr_assert_environment_provisioned || exit 1
 wr_require_canonical_db_identity || exit 1
+wr_hp_require_policy || die "host_publish_policy"
+wr_hp_assert_planned_deny >/dev/null || die "HOST_PUBLISH_PLANNED_DENY_FAILED"
 wr_require_component_from_args "${FULL_ARGV[@]}" || die "missing required --component <storefront|pair>"
 [[ "${WOODRIGHT_COMPONENT_SCOPE}" == "storefront" || "${WOODRIGHT_COMPONENT_SCOPE}" == "pair" ]] \
   || die "storefront recreate requires --component storefront|pair"

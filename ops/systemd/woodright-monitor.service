@@ -13,12 +13,15 @@ Nice=5
 TimeoutStartSec=300
 Environment=WOODRIGHT_MONITOR_STATE=/srv/woodright/monitoring/state
 Environment=WOODRIGHT_MONITOR_HISTORY=/srv/woodright/monitoring/history
-Environment=WOODRIGHT_ACTIVE_OWNER=/srv/woodright/runtime-ownership/ACTIVE_OWNER.json
-Environment=WOODRIGHT_EXPECTED_RELEASE=/srv/woodright/runtime-ownership/EXPECTED_RELEASE.json
+Environment=WOODRIGHT_ACTIVE_OWNER=/srv/woodright/runtime-ownership-public-demo/ACTIVE_OWNER.json
+Environment=WOODRIGHT_EXPECTED_RELEASE=/srv/woodright/runtime-ownership-public-demo/EXPECTED_RELEASE.json
 Environment=WOODRIGHT_BACKUP_ROOT=/srv/woodright/backups/automated
 Environment=WOODRIGHT_BUYER_HOST=https://woodright-demo.ru
 Environment=WOODRIGHT_API_HOST=https://api.woodright-demo.ru
-ExecStart=/srv/woodright/ops/monitoring/woodright-health-check.sh
+Environment=WOODRIGHT_SF_CONTAINER=woodright-staging-storefront
+Environment=WOODRIGHT_BE_CONTAINER=woodright-staging-backend
+# Profile authority for host-publish (deny). Do not rely on inherited boolean.
+ExecStart=/srv/woodright/ops/monitoring/woodright-health-check.sh --environment public_demo
 # Accept warning(1) / critical(2) as completed oneshot for timer purposes;
 # operator reads state JSON / exit via journal.
 SuccessExitStatus=0 1 2

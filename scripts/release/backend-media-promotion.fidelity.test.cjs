@@ -26,7 +26,8 @@ for (const p of [gate, assertScript, reconcile, recreate, discovery, docs, compo
 
 const gateTxt = readFileSync(gate, "utf8")
 assert.match(gateTxt, /MEDIA_GATE_PASS|ok": true/)
-assert.match(gateTxt, /HOST_PORTS_PUBLISHED/)
+assert.match(gateTxt, /HOST_PORTS_PUBLISHED|HOST_PUBLISH_/)
+assert.match(gateTxt, /woodright-host-publish|assert_live_host_publish|assert_planned_host_publish/)
 assert.match(gateTxt, /media_mount|MEDIA_MOUNT_MISSING/)
 assert.match(gateTxt, /--mode pre-promote|pre-promote/)
 assert.match(gateTxt, /--mode post-promote|post-promote/)

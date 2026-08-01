@@ -1,6 +1,6 @@
 # Backend media promotion gate (Woodright) — Media Gate V2
 
-**Audience:** release operators / SRE  
+**Audience:** release operators / SRE
 **Scope:** staging `public_demo` backend only. Does not cut over production `woodright.ru`.
 
 ## Why (V1 chicken-and-egg)
@@ -13,17 +13,17 @@ V2 splits validation so the gate can prove the **target** media contract **befor
 
 Do **not** declare a backend deployment successful and do **not** update `ACTIVE_OWNER.json` / `EXPECTED_RELEASE.json` until **all** are true (Mode B PASS):
 
-1. Backend healthy  
-2. Image digest matches **planned target** (pin or expected)  
-3. `com.woodright.deployment-owner=Dokploy`  
-4. Media mount present at `/server/static`  
-5. Exact volume `woodright-stack-3dsdhd_woodright_staging_media`  
-6. Mount is **RW**  
-7. Volume not empty (min files/bytes; lower bound, not a fixed constant)  
-8. Representative JPEG + WebP readable  
-9. Buyer `/product-static` sample HTTP 200 (when `--buyer-host` is set)  
-10. No host port publication  
-11. Keeper/candidate names never treated as live  
+1. Backend healthy
+2. Image digest matches **planned target** (pin or expected)
+3. `com.woodright.deployment-owner=Dokploy`
+4. Media mount present at `/server/static`
+5. Exact volume `woodright-stack-3dsdhd_woodright_staging_media`
+6. Mount is **RW**
+7. Volume not empty (min files/bytes; lower bound, not a fixed constant)
+8. Representative JPEG + WebP readable
+9. Buyer `/product-static` sample HTTP 200 (when `--buyer-host` is set)
+10. Host-publish contract matches environment profile (`deny` ⇒ zero ports; `loopback_allowlist` ⇒ exact role/IP/port/protocol set). Legacy `WOODRIGHT_ALLOW_HOST_PUBLISH` is **not** authority.
+11. Keeper/candidate names never treated as live
 
 Until Mode B PASS, `ACTIVE_OWNER` / `EXPECTED_RELEASE` stay on the **old stable** release (no premature identity). No `PENDING_RELEASE.json` is required: pass target digest via wrapper args + `WOODRIGHT_PINNED_*` + optional evidence file.
 
@@ -63,12 +63,12 @@ Stable no-op (current digest already in EXPECTED_RELEASE) still works without `-
 
 `ops/release/recreate-staging-backend-with-media.sh`:
 
-1. Mode A (before lock)  
-2. Acquire `/srv/woodright/locks/live-cutover.lock`  
-3. Mode A again under lock  
-4. Stop → keeper → create with volume mount (no host ports)  
-5. Wait healthy → Mode B with digest pin + evidence  
-6. On Mode B fail: ERR recovery restores keeper under the same lock  
+1. Mode A (before lock)
+2. Acquire `/srv/woodright/locks/live-cutover.lock`
+3. Mode A again under lock
+4. Stop → keeper → create with volume mount (no host ports)
+5. Wait healthy → Mode B with digest pin + evidence
+6. On Mode B fail: ERR recovery restores keeper under the same lock
 
 For **digest advance**, set `REQUIRE_CURRENT_DIGEST=0` (default `1` is for same-digest remount repair). Pass `TARGET_SHA` / `WOODRIGHT_TARGET_SHA` when OCI revision must match.
 

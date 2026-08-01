@@ -39,6 +39,7 @@ TS="$(date -u +%Y%m%dT%H%M%SZ)"
 BACKUP="/srv/woodright/backups/pre-env-gov-install-${SOURCE_SHA:0:12}-$TS"
 FILES=(
   ops/lib/woodright-environment-profile.sh
+  ops/lib/woodright-host-publish.sh
   ops/lib/woodright-component-authority.sh
   ops/lib/woodright-oci-provenance.sh
   ops/lib/woodright-validation-freeze.sh
@@ -59,8 +60,12 @@ FILES=(
   ops/release/verify-backend-media-mount.sh
   ops/release/reconcile-runtime-manifests.sh
   ops/release/assert-manifest-update-allowed.sh
+  ops/monitoring/woodright-health-check.sh
+  ops/monitoring/woodright-host-publish-check.sh
+  ops/systemd/woodright-monitor.service
   scripts/release/reconcile-public-image-pins.sh
   docs/operator/environment-scoped-release-governance.md
+  docs/operator/backend-media-promotion-gate.md
 )
 
 log "install_plan source_sha=$SOURCE_SHA repo=$REPO_ROOT ops_root=$OPS_ROOT backup=$BACKUP dry_run=$DRY_RUN"
@@ -136,6 +141,21 @@ for rel in "${FILES[@]}"; do
   esac
   echo "install $rel -> $dest sha=$(checksums "$dest")" >>"$MANIFEST"
 done
+
+# Live systemd unit (profile-aware monitor). Backup first; daemon-reload only (no timer start/stop).
+if [[ -d /etc/systemd/system ]]; then
+  UNIT_SRC="$REPO_ROOT/ops/systemd/woodright-monitor.service"
+  UNIT_DST=/etc/systemd/system/woodright-monitor.service
+  if [[ -f "$UNIT_DST" ]]; then
+    cp -a "$UNIT_DST" "$BACKUP/etc_systemd_woodright-monitor.service"
+  fi
+  install -m 0644 "$UNIT_SRC" "$UNIT_DST"
+  echo "install ops/systemd/woodright-monitor.service -> $UNIT_DST sha=$(checksums "$UNIT_DST")" >>"$MANIFEST"
+  if command -v systemctl >/dev/null 2>&1; then
+    systemctl daemon-reload
+    echo "systemctl_daemon_reload=1" >>"$MANIFEST"
+  fi
+fi
 
 # Version markers
 echo "$SOURCE_SHA" >/srv/woodright/tools/release/INSTALLED_ENV_GOVERNANCE_SHA.txt
