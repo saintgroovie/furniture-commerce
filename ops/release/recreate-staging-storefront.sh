@@ -359,6 +359,9 @@ wr_cutover_docker start "$NAME"
 NEW_IMG="$(wr_cutover_docker inspect "$NAME" --format '{{.Image}}')"
 [[ "$NEW_IMG" == "$RESOLVED_ID" ]] || die "new image id mismatch"
 wait_healthy || die "not healthy after wait"
+# Fail-closed: created container must carry canonical governance DB alias.
+wr_assert_container_matches_environment "$NAME" storefront \
+  || die "post-create storefront environment/DB-identity gate failed (keeper=$KEEP_NAME)"
 verify_public_identity || die "public identity failed after recreate"
 if [[ "${WOODRIGHT_COMPONENT_SCOPE}" == "storefront" ]]; then
   wr_assert_peer_unchanged backend "${WOODRIGHT_BE_CONTAINER_DEFAULT}" || die "backend peer changed during storefront-only"

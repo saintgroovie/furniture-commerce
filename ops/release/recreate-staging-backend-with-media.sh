@@ -267,6 +267,10 @@ fi
 bash "$GATE" "${POST_ARGS[@]}" \
   || die "MEDIA_PROMOTION_GATE_FAILED - refusing to declare recreate success (keeper=$KEEP_NAME)"
 
+# Fail-closed: created container must carry canonical governance DB alias (not physical DB name).
+wr_assert_container_matches_environment "$NAME" backend \
+  || die "post-create backend environment/DB-identity gate failed (keeper=$KEEP_NAME)"
+
 # Peer freeze check after mutation
 if [[ "${WOODRIGHT_COMPONENT_SCOPE}" == "backend" ]]; then
   wr_assert_peer_unchanged storefront "${WOODRIGHT_SF_CONTAINER_DEFAULT}" || die "storefront peer changed during backend-only"

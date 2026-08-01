@@ -338,6 +338,28 @@ grep -q 'WOODRIGHT_ROLLBACK_EXPECT_SF_DIGEST' "$ROOT/ops/release/cutover-public-
   && pass "pair_rollback exports expect SF digest" \
   || fail "pair_rollback missing expect SF export"
 
+# Mid-cutover: post-backend identity gate BEFORE storefront recreate / pin APPLY
+if awk '
+  /recreate-staging-backend-with-media.sh/ { be=1; next }
+  be && /wr_assert_container_matches_environment.*backend/ { gate=1; next }
+  be && /recreate-staging-storefront.sh/ {
+    if (gate) { print "OK"; exit 0 }
+    print "MISSING_GATE"; exit 1
+  }
+' "$ROOT/ops/release/cutover-public-demo-pair.sh" | grep -q OK; then
+  pass "pair mid-cutover DB/env gate before storefront"
+else
+  fail "pair missing mid-cutover identity gate before storefront"
+fi
+grep -q 'post-create backend environment/DB-identity gate' \
+  "$ROOT/ops/release/recreate-staging-backend-with-media.sh" \
+  && pass "backend recreate post-create identity gate" \
+  || fail "backend recreate missing post-create identity gate"
+grep -q 'post-create storefront environment/DB-identity gate' \
+  "$ROOT/ops/release/recreate-staging-storefront.sh" \
+  && pass "storefront recreate post-create identity gate" \
+  || fail "storefront recreate missing post-create identity gate"
+
 # --- Exact incident: BE retargeted with wrong DB label, SF unchanged, pair rollback ---
 python3 - "$TMP/state" "$NEW_BE" "$NEW_SHA" "$OLD_BE" "$OLD_SHA" <<'PY'
 import json, os, sys
@@ -372,8 +394,7 @@ else
   cat "$TMP/gate.err" || true
 fi
 
-# Automatic pair rollback (BE keeper only, SF unchanged) — no shim
-# Mimic orchestrator wiring: OLD_SF_DIGEST captured pre-mutation
+# Drive pair mid-cutover fragment: gate fail → pair_rollback (no SF recreate / pin APPLY)
 EV="$TMP/evidence"
 mkdir -p "$EV/json" "$EV/pin-backup" "$TMP/pins"
 printf 'WOODRIGHT_BACKEND_IMAGE=ghcr.io/saintgroovie/woodright-backend@%s\nWOODRIGHT_STOREFRONT_IMAGE=ghcr.io/saintgroovie/woodright-storefront@%s\n' \
@@ -402,22 +423,42 @@ source "$LOCK"
 wr_staging_mutation_lock_acquire actor=hotfix-rb-test command=test
 wr_staging_mutation_lock_export_inherit
 
+SF_ID_BEFORE="$("$FAKE/docker" inspect woodright-staging-storefront --format '{{.Id}}')"
+SF_MUT_BEFORE="$(grep -cE ' (create|rename|start|stop) .*storefront' "$TMP/state/log/commands.log" 2>/dev/null || true)"
+PIN_APPLY_BEFORE="$(grep -cE 'APPLY=1|pin.?APPLY|reconcile-public-image-pins' "$TMP/state/log/commands.log" 2>/dev/null || true)"
+: "${SF_MUT_BEFORE:=0}"
+: "${PIN_APPLY_BEFORE:=0}"
+
+# Exact orchestrator transition after backend "success":
 set +e
-wr_cutover_pair_rollback \
-  "$EV" \
-  "woodright-staging-backend-keeper-20260731T173758Z" \
-  "" \
-  "$BE_RB" \
-  "$SF_RB"
-RB_RC=$?
+if ! wr_assert_container_matches_environment woodright-staging-backend backend >"$TMP/mid.out" 2>"$TMP/mid.err"; then
+  wr_cutover_pair_rollback \
+    "$EV" \
+    "woodright-staging-backend-keeper-20260731T173758Z" \
+    "" \
+    "$BE_RB" \
+    "$SF_RB"
+  RB_RC=$?
+else
+  RB_RC=99
+fi
 set -e
 
-[[ "$RB_RC" -eq 10 ]] && pass "incident pair_rollback RC=10 (not partial)" || fail "pair_rollback rc=$RB_RC want 10"
+[[ "$RB_RC" -eq 10 ]] && pass "incident mid-cutover gate→pair_rollback RC=10 (not partial)" || fail "pair_rollback rc=$RB_RC want 10"
 grep -q PAIR_ROLLBACK_OK <<<"$(tail -5 "$EV/json/pair-rollback-result.json" 2>/dev/null || true)" || true
 [[ -f "$EV/json/pair-rollback-result.json" ]] || fail "missing pair-rollback-result"
 grep -q '"backend":1' "$EV/json/pair-rollback-result.json" && pass "backend restored flag" || fail "backend flag"
 grep -q '"storefront":1' "$EV/json/pair-rollback-result.json" && pass "storefront unchanged flag" || fail "storefront flag"
 [[ -f "$EV/json/storefront-unchanged-after-rollback.json" ]] && pass "SF unchanged evidence" || fail "SF unchanged evidence missing"
+
+SF_ID_AFTER="$("$FAKE/docker" inspect woodright-staging-storefront --format '{{.Id}}')"
+SF_MUT_AFTER="$(grep -cE ' (create|rename|start|stop) .*storefront' "$TMP/state/log/commands.log" 2>/dev/null || true)"
+PIN_APPLY_AFTER="$(grep -cE 'APPLY=1|pin.?APPLY|reconcile-public-image-pins' "$TMP/state/log/commands.log" 2>/dev/null || true)"
+: "${SF_MUT_AFTER:=0}"
+: "${PIN_APPLY_AFTER:=0}"
+[[ "$SF_ID_BEFORE" == "$SF_ID_AFTER" ]] && pass "SF container ID unchanged across mid-cutover rollback" || fail "SF id changed"
+[[ "$SF_MUT_AFTER" -eq "$SF_MUT_BEFORE" ]] && pass "SF mutation count 0 during mid-cutover rollback" || fail "SF mutated mid-cutover before=$SF_MUT_BEFORE after=$SF_MUT_AFTER"
+[[ "$PIN_APPLY_AFTER" -eq "$PIN_APPLY_BEFORE" ]] && pass "pin APPLY count 0 during mid-cutover rollback" || fail "pin APPLY invoked mid-cutover"
 
 restored="$(wr_cutover_container_immutable_digest woodright-staging-backend backend)"
 sf_after="$(wr_cutover_container_immutable_digest woodright-staging-storefront storefront)"

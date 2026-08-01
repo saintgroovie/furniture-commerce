@@ -605,6 +605,15 @@ PAIR_SRC="$(cat "$PAIR")"
 echo "$PAIR_SRC" | grep -q 'assert_identity_stable_under_lock' && pass "pair has TOCTOU identity gate" || fail "pair missing TOCTOU gate"
 echo "$PAIR_SRC" | grep -q 'expected-old-backend-digest' && pass "pair supports expected-old digests" || fail "pair missing expected-old digests"
 echo "$PAIR_SRC" | grep -q 'last-status.json' && pass "pair reads monitor state file" || fail "pair missing monitor state read"
+if awk '
+  /recreate-staging-backend-with-media.sh/ { be=1; next }
+  be && /wr_assert_container_matches_environment.*backend/ { gate=1; next }
+  be && /recreate-staging-storefront.sh/ { if (gate) exit 0; exit 1 }
+' "$PAIR"; then
+  pass "pair mid-cutover identity gate before storefront"
+else
+  fail "pair missing mid-cutover identity gate before storefront"
+fi
 # Under-lock monitor revalidation must appear after lock acquire and before MUTATION_STARTED
 if awk '/wr_staging_mutation_lock_acquire/,/MUTATION_STARTED=1/' "$PAIR" | grep -q 'check_monitor'; then
   pass "check_monitor revalidated under lock before mutation"

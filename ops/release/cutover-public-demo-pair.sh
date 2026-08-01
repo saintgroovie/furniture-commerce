@@ -551,6 +551,16 @@ if ! REQUIRE_CURRENT_DIGEST=0 \
   exit "${ROLLBACK_RC:-12}"
 fi
 
+# Mid-cutover gate: refuse wrong/missing DB identity (and env labels) on the new
+# backend BEFORE storefront mutation or pin APPLY. Models the prior incident where
+# BE was replaced with woodright_staging label while SF was still old.
+if ! wr_assert_container_matches_environment "${WOODRIGHT_BE_CONTAINER_DEFAULT}" backend; then
+  log "post-backend DB/environment identity gate failed - rolling back pair (storefront untouched)"
+  pair_rollback || true
+  exit "${ROLLBACK_RC:-12}"
+fi
+log "post-backend identity gate PASS container=${WOODRIGHT_BE_CONTAINER_DEFAULT}"
+
 # Storefront recreate under pair component scope
 if ! REQUIRE_CURRENT_DIGEST=0 \
   SKIP_PUBLIC_VERIFY="${SKIP_PUBLIC_VERIFY:-0}" \
