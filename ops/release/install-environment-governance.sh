@@ -52,6 +52,7 @@ FILES=(
   ops/release/recreate-staging-backend-with-media.sh
   ops/release/recreate-staging-storefront.sh
   ops/release/cutover-public-demo-pair.sh
+  ops/release/cutover-production-candidate.sh
   ops/release/public-demo-critical-http-smoke.sh
   ops/release/rollback-staging-backend-from-keeper.sh
   ops/release/rollback-staging-storefront-from-keeper.sh

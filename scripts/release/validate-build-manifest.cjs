@@ -26,11 +26,27 @@ const ALLOWED_ROOT = new Set([
   "convenience_aliases",
   "build_argument_names",
   "build_config_fingerprint",
+  "build_profile",
+  "profile_checksum",
+  "baked_storefront_values",
+  "contamination_scan",
+  "launch_contract",
   "tests_summary",
   "release_authorized",
   "notes",
 ])
 const ALLOWED_IMG = new Set(["repository", "unique_tag", "digest", "oci_revision"])
+const ALLOWED_BUILD_PROFILE_NAMES = new Set(["public_demo", "production_candidate"])
+const ALLOWED_BAKED_STOREFRONT_KEYS = new Set([
+  "NEXT_PUBLIC_SITE_URL",
+  "NEXT_PUBLIC_MEDUSA_BACKEND_URL",
+  "WOODRIGHT_LAUNCH_MODE",
+  "WOODRIGHT_PAYMENT_MODE",
+  "WOODRIGHT_RUNTIME_ROLE",
+  "WOODRIGHT_RUNTIME_EXPOSURE",
+  "WOODRIGHT_DB_ALIAS",
+  "WOODRIGHT_ADMIN_EXPOSURE",
+])
 
 function fail(msg, errors) {
   errors.push(msg)
@@ -62,6 +78,15 @@ function validateImage(side, img, sourceSha, errors) {
   }
 }
 
+function expectedUniqueTag(doc) {
+  return uniqueBuildTag({
+    sourceSha: doc.source_sha,
+    runId: doc.workflow_run_id,
+    attempt: doc.workflow_run_attempt,
+    profile: doc.build_profile,
+  })
+}
+
 function validate(doc, errors) {
   if (!doc || typeof doc !== "object" || Array.isArray(doc)) {
     fail("manifest must be object", errors)
@@ -89,6 +114,73 @@ function validate(doc, errors) {
   if (!doc.build_config_fingerprint) fail("build_config_fingerprint required", errors)
   if (doc.release_authorized !== false) fail("release_authorized must be false on build manifest", errors)
 
+  // Optional image-build-profile evidence (scripts/release/resolve-image-build-profile.cjs).
+  // All optional for backward compat with older manifests that predate profiles.
+  if (doc.build_profile != null) {
+    if (!ALLOWED_BUILD_PROFILE_NAMES.has(doc.build_profile)) {
+      fail(`build_profile must be one of ${[...ALLOWED_BUILD_PROFILE_NAMES].join("|")}`, errors)
+    }
+    if (!/^[0-9a-f]{64}$/.test(doc.profile_checksum || "")) {
+      fail("profile_checksum required (sha256 hex) when build_profile is set", errors)
+    }
+    if (!doc.baked_storefront_values || typeof doc.baked_storefront_values !== "object") {
+      fail("baked_storefront_values required (object) when build_profile is set", errors)
+    } else {
+      rejectExtra(doc.baked_storefront_values, ALLOWED_BAKED_STOREFRONT_KEYS, "baked_storefront_values", errors)
+      try {
+        const { loadProfile, validateProfileValues } = require("./resolve-image-build-profile.cjs")
+        const resolved = loadProfile(doc.build_profile)
+        if (doc.profile_checksum !== resolved.checksum) {
+          fail(
+            `profile_checksum must equal tracked profile file checksum for ${doc.build_profile}`,
+            errors
+          )
+        }
+        const expectedKeys = [
+          "NEXT_PUBLIC_SITE_URL",
+          "NEXT_PUBLIC_MEDUSA_BACKEND_URL",
+          "WOODRIGHT_LAUNCH_MODE",
+          "WOODRIGHT_PAYMENT_MODE",
+          "WOODRIGHT_RUNTIME_ROLE",
+          "WOODRIGHT_RUNTIME_EXPOSURE",
+          "WOODRIGHT_DB_ALIAS",
+          "WOODRIGHT_ADMIN_EXPOSURE",
+        ]
+        for (const k of expectedKeys) {
+          const got = doc.baked_storefront_values[k]
+          const want = resolved.values[k]
+          if (got == null || got === "") {
+            fail(`baked_storefront_values.${k} required when build_profile is set`, errors)
+          } else if (want != null && String(got) !== String(want)) {
+            fail(
+              `baked_storefront_values.${k} must equal profile ${doc.build_profile} value`,
+              errors
+            )
+          }
+        }
+        // Fail-closed: baked values themselves must satisfy profile validators
+        // (rejects demo host on production_candidate, etc.).
+        const profileErrors = validateProfileValues(doc.build_profile, {
+          ...resolved.values,
+          ...doc.baked_storefront_values,
+          WOODRIGHT_IMAGE_BUILD_PROFILE: doc.build_profile,
+        })
+        for (const pe of profileErrors) fail(`baked profile validation: ${pe}`, errors)
+      } catch (e) {
+        fail(`profile checksum/value verification failed: ${e.message || e}`, errors)
+      }
+    }
+    if (doc.contamination_scan !== "pass") {
+      fail('contamination_scan must be "pass" when build_profile is set (fail-closed elsewhere otherwise)', errors)
+    }
+    if (doc.launch_contract !== "pass") {
+      fail('launch_contract must be "pass" when build_profile is set (fail-closed elsewhere otherwise)', errors)
+    }
+  } else {
+    if (doc.profile_checksum != null) fail("profile_checksum set without build_profile", errors)
+    if (doc.baked_storefront_values != null) fail("baked_storefront_values set without build_profile", errors)
+  }
+
   validateImage("backend", doc.backend, doc.source_sha, errors)
   validateImage("storefront", doc.storefront, doc.source_sha, errors)
   if (doc.backend?.oci_revision && doc.storefront?.oci_revision) {
@@ -103,11 +195,7 @@ function validate(doc, errors) {
   }
 
   try {
-    const expected = uniqueBuildTag({
-      sourceSha: doc.source_sha,
-      runId: doc.workflow_run_id,
-      attempt: doc.workflow_run_attempt,
-    })
+    const expected = expectedUniqueTag(doc)
     if (doc.backend?.unique_tag && doc.backend.unique_tag !== expected) {
       fail(`backend.unique_tag must equal ${expected}`, errors)
     }
