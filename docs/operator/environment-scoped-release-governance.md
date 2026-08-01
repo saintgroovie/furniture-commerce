@@ -44,6 +44,32 @@ Lock metadata includes environment, actor, command, PID, hostname, target SHA/di
 
 A process for one environment cannot write another environment's ACTIVE/EXPECTED/ACTIVE_PUBLIC paths.
 
+## Host-publish contract
+
+Profile authority (not inherited boolean):
+
+| Field | Meaning |
+|-------|---------|
+| `WOODRIGHT_HOST_PUBLISH_POLICY` | `deny` or `loopback_allowlist` (required; missing → fail) |
+| `WOODRIGHT_ALLOWED_HOST_BINDINGS` | Exact tokens `role:cport/proto=host_ip:host_port` (comma-separated, no whitespace) |
+
+| Environment | Policy | Allowed bindings |
+|-------------|--------|------------------|
+| `public_demo` | `deny` | none (Traefik only) |
+| `staging` | `deny` | none (unprovisioned) |
+| `production` (private candidate) | `loopback_allowlist` | `storefront:3002/tcp=127.0.0.1:3200`, `backend:9000/tcp=127.0.0.1:9200` |
+
+Forbidden: `0.0.0.0`, empty HostIp, `::`, public interface IPs, undeclared ports, UDP (unless declared), host networking, role/port mismatches.
+
+Legacy `WOODRIGHT_ALLOW_HOST_PUBLISH` / `WOODRIGHT_ALLOWED_HOST_BIND_PREFIX` are **ignored** by gates.
+
+Library: `ops/lib/woodright-host-publish.sh`
+Monitor: `ops/monitoring/woodright-host-publish-check.sh --environment <id>`
+Fidelity: `bash scripts/ops/test-host-publish-fidelity.sh`
+Root monitor unit must pass `--environment public_demo` (see `ops/systemd/woodright-monitor.service`).
+
+Mode A (planned) runs in media pre-promote; Mode B (live Docker) in post-promote + host-publish monitor.
+
 ## Component authority
 
 ```bash

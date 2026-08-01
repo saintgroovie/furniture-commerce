@@ -25,6 +25,8 @@ source "$HERE/../lib/woodright-validation-freeze.sh"
 source "$HERE/../lib/woodright-component-authority.sh"
 # shellcheck source=../lib/woodright-oci-provenance.sh
 source "$HERE/../lib/woodright-oci-provenance.sh"
+# shellcheck source=../lib/woodright-host-publish.sh
+source "$HERE/../lib/woodright-host-publish.sh"
 
 log() { printf '%s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*"; }
 die_early() { log "ERROR: $*"; exit 1; }
@@ -32,6 +34,9 @@ die_early() { log "ERROR: $*"; exit 1; }
 wr_require_environment_from_args "$@" || exit 1
 wr_assert_environment_provisioned || exit 1
 [[ "${WOODRIGHT_ENVIRONMENT}" == "public_demo" ]] || die_early "only --environment public_demo allowed for this helper (got ${WOODRIGHT_ENVIRONMENT}; staging is not an alias for public_demo)"
+wr_hp_require_policy || die_early "host_publish_policy"
+# Recreate helper never publishes host ports (Traefik only).
+wr_hp_assert_planned_deny >/dev/null || die_early "HOST_PUBLISH_PLANNED_DENY_FAILED"
 wr_require_component_from_args "$@" || die_early "missing required --component <backend|pair> for backend recreate"
 [[ "${WOODRIGHT_COMPONENT_SCOPE}" == "backend" || "${WOODRIGHT_COMPONENT_SCOPE}" == "pair" ]] || die_early "backend recreate requires --component backend|pair"
 wr_validation_freeze_assert_clear_for_mutation "$WOODRIGHT_ENVIRONMENT" || exit 1
@@ -194,25 +199,28 @@ docker rename "$NAME" "$KEEP_NAME"
 PHASE=2
 log "renamed_to_keeper $KEEP_NAME"
 
-  docker create \
-  --name "$NAME" \
-  --restart unless-stopped \
-  --network "$NET_STACK" \
-  --network-alias backend \
-  --label "com.woodright.deployment-owner=Dokploy" \
-  --label "com.woodright.runtime-role=public_demo" \
-  --label "com.woodright.exposure=public" \
-  --label "com.woodright.release-sha=${TARGET_SHA}" \
-  --label "com.woodright.database-identity=${WOODRIGHT_DB_NAME:-woodright_staging}" \
-  --env-file "$ENV_FILE" \
-  --mount "type=volume,source=${VOLUME},destination=${DEST}" \
-  --health-cmd="node -e \"fetch('http://127.0.0.1:9000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\"" \
-  --health-interval=30s \
-  --health-timeout=5s \
-  --health-retries=5 \
-  --health-start-period=60s \
-  "$IMAGE" \
+CREATE_ARGS=(
+  --name "$NAME"
+  --restart unless-stopped
+  --network "$NET_STACK"
+  --network-alias backend
+  --label "com.woodright.deployment-owner=Dokploy"
+  --label "com.woodright.runtime-role=public_demo"
+  --label "com.woodright.exposure=public"
+  --label "com.woodright.release-sha=${TARGET_SHA}"
+  --label "com.woodright.database-identity=${WOODRIGHT_DB_NAME:-woodright_staging}"
+  --env-file "$ENV_FILE"
+  --mount "type=volume,source=${VOLUME},destination=${DEST}"
+  --health-cmd="node -e \"fetch('http://127.0.0.1:9000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""
+  --health-interval=30s
+  --health-timeout=5s
+  --health-retries=5
+  --health-start-period=60s
+  "$IMAGE"
   ./node_modules/.bin/medusa start
+)
+wr_hp_refuse_publish_flags "${CREATE_ARGS[@]}" || die "HOST_PUBLISH_CREATE_PUBLISH_FLAG"
+docker create "${CREATE_ARGS[@]}"
 
 docker network connect "$NET_DOKPLOY" "$NAME"
 docker start "$NAME"

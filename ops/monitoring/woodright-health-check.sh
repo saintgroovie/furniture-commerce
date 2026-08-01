@@ -14,6 +14,25 @@ API_HOST="${WOODRIGHT_API_HOST:-https://api.woodright-demo.ru}"
 OPS_LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib/woodright-runtime-discovery.sh"
 # shellcheck source=../lib/woodright-runtime-discovery.sh
 source "$OPS_LIB"
+HP_LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib/woodright-host-publish.sh"
+# shellcheck source=../lib/woodright-host-publish.sh
+source "$HP_LIB"
+ENV_PROFILE_LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib/woodright-environment-profile.sh"
+
+# Optional: --environment <name> loads profile for host-publish + path pins.
+# Remaining monitor behavior stays env-driven for backward compatibility.
+if [[ "${1:-}" == "--environment" || "${1:-}" == --environment=* ]]; then
+  # shellcheck source=../lib/woodright-environment-profile.sh
+  source "$ENV_PROFILE_LIB"
+  wr_require_environment_from_args "$@" || exit 2
+  ACTIVE_OWNER="${WOODRIGHT_ACTIVE_OWNER}"
+  EXPECTED_RELEASE="${WOODRIGHT_EXPECTED_RELEASE}"
+  BUYER_HOST="${WOODRIGHT_BUYER_HOST}"
+  API_HOST="${WOODRIGHT_API_HOST}"
+  export WOODRIGHT_BE_CONTAINER="${WOODRIGHT_BE_CONTAINER:-$WOODRIGHT_BE_CONTAINER_DEFAULT}"
+  export WOODRIGHT_SF_CONTAINER="${WOODRIGHT_SF_CONTAINER:-$WOODRIGHT_SF_CONTAINER_DEFAULT}"
+fi
+
 SF_CONTAINER=""
 BE_CONTAINER=""
 SF_DISCOVERY_OK=0
@@ -32,6 +51,7 @@ FIXTURE_BACKUP_AGE_H="${WOODRIGHT_FIXTURE_BACKUP_AGE_HOURS:-}"
 FIXTURE_DISK_PCT="${WOODRIGHT_FIXTURE_DISK_PCT:-}"
 FIXTURE_MEDIA_PATH="${WOODRIGHT_FIXTURE_MEDIA_MISSING:-}"
 FIXTURE_TLS_HOST="${WOODRIGHT_FIXTURE_TLS_HOST:-}"
+FIXTURE_HOST_PUBLISH_JSON="${WOODRIGHT_FIXTURE_HOST_PUBLISH_JSON:-}"
 
 TS="$(date -u +%Y%m%dT%H%M%SZ)"
 # Authoritative monitor writes are root-only by default. Unprivileged runs
@@ -254,6 +274,69 @@ for port in 3000 3002 9000; do
     add_check "listen_$port" info pass "not_listening"
   fi
 done
+
+# Host-publish contract (profile policy). Distinguishes deny vs loopback allowlist.
+# Candidate loopback ports (3200/9200) are NOT treated as raw public ports.
+# Fail-closed: if SF+BE discovered but no policy/profile, treat as deny (any HostPort → critical).
+if [[ -n "${WOODRIGHT_HOST_PUBLISH_POLICY:-}" || -n "$FIXTURE_HOST_PUBLISH_JSON" ]]; then
+  if [[ -n "$FIXTURE_HOST_PUBLISH_JSON" ]]; then
+    HP_DETAIL="$FIXTURE_HOST_PUBLISH_JSON"
+    HP_OK=$(python3 -c 'import json,sys; d=json.loads(sys.argv[1]); print("1" if d.get("ok") else "0")' "$HP_DETAIL")
+    HP_TOKEN=$(python3 -c 'import json,sys; d=json.loads(sys.argv[1]); print(d.get("monitor_token") or d.get("verdict") or "host_publish")' "$HP_DETAIL")
+  elif [[ "${SF_DISCOVERY_OK}" -eq 1 && "${BE_DISCOVERY_OK}" -eq 1 ]]; then
+    set +e
+    HP_DETAIL="$(
+      export WR_HP_MODE=live
+      export WR_HP_POLICY="${WOODRIGHT_HOST_PUBLISH_POLICY}"
+      export WR_HP_ALLOWED="${WOODRIGHT_ALLOWED_HOST_BINDINGS:-}"
+      export WR_HP_ROLE=all
+      be_b="$(wr_hp_docker_bindings_json "$BE_CONTAINER" backend)"
+      sf_b="$(wr_hp_docker_bindings_json "$SF_CONTAINER" storefront)"
+      export WR_HP_BINDINGS_JSON="$(python3 -c 'import json,sys; print(json.dumps(json.loads(sys.argv[1])+json.loads(sys.argv[2])))' "$be_b" "$sf_b")"
+      export WR_HP_NETWORK_MODE="$(docker inspect "$BE_CONTAINER" --format '{{.HostConfig.NetworkMode}}' 2>/dev/null || true)"
+      export WR_HP_COMPOSE_PROJECT="$(docker inspect "$BE_CONTAINER" --format '{{index .Config.Labels "com.docker.compose.project"}}' 2>/dev/null || true)"
+      export WR_HP_EXPECTED_COMPOSE="${WOODRIGHT_COMPOSE_PROJECT:-}"
+      export WR_HP_REQUIRE_COMPOSE="${WOODRIGHT_REQUIRE_COMPOSE_LABEL:-0}"
+      wr_hp_evaluate_python 2>/dev/null
+    )"
+    HP_RC=$?
+    set -e
+    if [[ $HP_RC -eq 0 ]]; then
+      HP_OK=1
+      HP_TOKEN=$(python3 -c 'import json,sys; d=json.loads(sys.argv[1]); print(d.get("monitor_token") or "host_publish_pass")' "$HP_DETAIL")
+    else
+      HP_OK=0
+      HP_TOKEN=$(python3 -c 'import json,sys; d=json.loads(sys.argv[1] or "{}"); v=d.get("verdict") or "";
+print(d.get("monitor_token") or ("host_publish_public_bind_critical" if "PUBLIC" in v else "host_publish_unexpected_port_critical" if "UNEXPECTED" in v else "host_publish_profile_mismatch_critical"))' "${HP_DETAIL:-}")
+    fi
+  else
+    HP_OK=0
+    HP_TOKEN="host_publish_policy_missing_critical"
+    HP_DETAIL='{"ok":false,"verdict":"HOST_PUBLISH_POLICY_OR_DISCOVERY"}'
+  fi
+  if [[ "$HP_OK" == "1" ]]; then
+    add_check "$HP_TOKEN" info pass "$(python3 -c 'import json,sys; d=json.loads(sys.argv[1]); print("policy=%s expected=%s actual=%s" % (d.get("policy"), d.get("expected_bindings"), d.get("actual_bindings")))' "$HP_DETAIL")"
+  else
+    add_check "$HP_TOKEN" critical fail "$(python3 -c 'import json,sys; d=json.loads(sys.argv[1] or "{}"); print(d.get("message") or d.get("verdict") or "host_publish_fail")' "${HP_DETAIL:-}")"
+  fi
+elif [[ "${SF_DISCOVERY_OK}" -eq 1 && "${BE_DISCOVERY_OK}" -eq 1 ]]; then
+  # No profile policy loaded: fail-closed deny for discovered app pair (prevents monitor false-green).
+  set +e
+  be_b="$(wr_hp_docker_bindings_json "$BE_CONTAINER" backend)"
+  sf_b="$(wr_hp_docker_bindings_json "$SF_CONTAINER" storefront)"
+  merged="$(python3 -c 'import json,sys; print(json.dumps(json.loads(sys.argv[1])+json.loads(sys.argv[2])))' "$be_b" "$sf_b")"
+  HP_DETAIL="$(wr_hp_fail_closed_deny_bindings_json "$merged" 2>/dev/null)"
+  HP_RC=$?
+  set -e
+  if [[ $HP_RC -eq 0 ]]; then
+    add_check "host_publish_denied_pass" warning pass "fail_closed_deny_no_profile actual=[]"
+  else
+    add_check "host_publish_policy_missing_critical" critical fail "$(python3 -c 'import json,sys; d=json.loads(sys.argv[1] or "{}"); print(d.get("message") or "host_publish without profile; published ports present")' "${HP_DETAIL:-}")"
+  fi
+elif [[ "${WOODRIGHT_ENV_PROFILE_LOADED:-0}" == "1" ]]; then
+  add_check "host_publish_policy_missing_critical" critical fail "WOODRIGHT_HOST_PUBLISH_POLICY unset"
+fi
+
 # Public postgres/redis
 if ss -lntH '( sport = :5432 )' 2>/dev/null | grep -q '0.0.0.0\|::\|\*'; then
   # may be docker-proxy bound - still check DOCKER-USER intent via iptables read
