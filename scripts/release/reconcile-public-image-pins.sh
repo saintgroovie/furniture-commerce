@@ -38,7 +38,20 @@
 #   READ_ONLY_NO_LOCK=1 ... ./scripts/release/reconcile-public-image-pins.sh --environment public_demo
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# Resolve repository root even when invoked via symlink (install places the
+# canonical file under /srv/woodright/tools/release and may expose scripts/release → tools/release).
+_wr_pin_script_src="${BASH_SOURCE[0]}"
+while [[ -L "$_wr_pin_script_src" ]]; do
+  _wr_pin_script_dir="$(cd -P "$(dirname "$_wr_pin_script_src")" && pwd)"
+  _wr_pin_script_link="$(readlink "$_wr_pin_script_src")"
+  if [[ "$_wr_pin_script_link" != /* ]]; then
+    _wr_pin_script_src="$_wr_pin_script_dir/$_wr_pin_script_link"
+  else
+    _wr_pin_script_src="$_wr_pin_script_link"
+  fi
+done
+ROOT="$(cd -P "$(dirname "$_wr_pin_script_src")/../.." && pwd)"
+unset _wr_pin_script_src _wr_pin_script_dir _wr_pin_script_link
 # shellcheck source=../../ops/lib/woodright-environment-profile.sh
 source "$ROOT/ops/lib/woodright-environment-profile.sh"
 # shellcheck source=../../ops/lib/woodright-oci-provenance.sh
@@ -144,12 +157,18 @@ release_lock_holder() {
 
 need_sudo_for() {
   local f="$1"
+  local d
+  d="$(dirname "$f")"
+  # Atomic install stages a sibling temp inside dirname, then renames onto dest.
+  # A user-writable dest file inside a root-owned parent still needs sudo.
+  if [[ ! -w "$d" ]]; then
+    return 0
+  fi
   if [[ -e "$f" ]]; then
     [[ -w "$f" ]] && return 1
     return 0
   fi
-  [[ -w "$(dirname "$f")" ]] && return 1
-  return 0
+  return 1
 }
 
 resolve_lock_path() {
@@ -644,16 +663,22 @@ atomic_install() {
   mode="$(python3 -c 'import os,stat; st=os.stat("'"$dest"'"); print(oct(stat.S_IMODE(st.st_mode))[2:])')"
   owner="$(python3 -c 'import os; print(os.stat("'"$dest"'").st_uid)')"
   group="$(python3 -c 'import os; print(os.stat("'"$dest"'").st_gid)')"
-  local dir base
+  local dir base safe_base staged
   dir="$(dirname "$dest")"
   base="$(basename "$dest")"
-  local staged="${dir}/.${base}.wr-reconcile-$$"
+  # Avoid ".env" → staged name "..env.*" (hidden-dot collision).
+  safe_base="${base#.}"
+  [[ -n "$safe_base" ]] || safe_base="target"
+  # Secure exclusive create in dest dir (mitigates predictable-name symlink races
+  # when USE_SUDO elevates for a sibling root-owned target in the same transaction).
   if [[ "$USE_SUDO" == "1" ]]; then
+    staged="$(sudo -n mktemp "${dir}/.wr-reconcile.${safe_base}.XXXXXX")"
     sudo -n cp "$src_tmp" "$staged"
     sudo -n chmod "$mode" "$staged"
     sudo -n chown "${owner}:${group}" "$staged"
     sudo -n mv -f "$staged" "$dest"
   else
+    staged="$(mktemp "${dir}/.wr-reconcile.${safe_base}.XXXXXX")"
     cp "$src_tmp" "$staged"
     chmod "$mode" "$staged"
     mv -f "$staged" "$dest"

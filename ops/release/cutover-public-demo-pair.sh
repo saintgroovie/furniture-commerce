@@ -594,7 +594,19 @@ fi
 
 # Pin reconcile UNDER the same canonical lock (inherited) before SUCCESS.
 # Releasing the lock before authoritative pin SoT alignment is a correctness race.
-if [[ -x "$REPO_ROOT/scripts/release/reconcile-public-image-pins.sh" ]]; then
+# Install maps scripts/release → /srv/woodright/tools/release; accept either path / symlink.
+PIN_RECONCILE_SCRIPT=""
+for _pin_cand in \
+  "$REPO_ROOT/scripts/release/reconcile-public-image-pins.sh" \
+  "$REPO_ROOT/tools/release/reconcile-public-image-pins.sh"
+do
+  if [[ -x "$_pin_cand" ]]; then
+    PIN_RECONCILE_SCRIPT="$_pin_cand"
+    break
+  fi
+done
+unset _pin_cand
+if [[ -n "$PIN_RECONCILE_SCRIPT" ]]; then
   if [[ "${WOODRIGHT_SKIP_PIN_RECONCILE:-0}" != "1" ]]; then
     cat >"$EVIDENCE_DIR/json/planned-pin-reconcile.env" <<EOF
 EXPECTED_RELEASE_SHA=${TARGET_SHA}
@@ -604,19 +616,20 @@ APPLY=1
 EOF
     printf 'WOODRIGHT_BACKEND_IMAGE=%s\nWOODRIGHT_STOREFRONT_IMAGE=%s\n' \
       "$BE_IMAGE" "$SF_IMAGE" >"$EVIDENCE_DIR/json/planned-pins.env"
+    printf '%s\n' "$PIN_RECONCILE_SCRIPT" >"$EVIDENCE_DIR/json/pin-reconcile-script-path.txt"
     wr_staging_mutation_lock_export_inherit || {
       log "lock inherit export failed before pin APPLY"
       pair_rollback || true
       exit "${ROLLBACK_RC:-12}"
     }
-    log "pin_reconcile_begin under_inherited_lock=yes"
+    log "pin_reconcile_begin under_inherited_lock=yes script=$PIN_RECONCILE_SCRIPT"
     if ! EXPECTED_RELEASE_SHA="$TARGET_SHA" \
       EXPECTED_BACKEND_DIGEST="$BE_DIGEST" \
       EXPECTED_STOREFRONT_DIGEST="$SF_DIGEST" \
       APPLY=1 \
       UPDATE_PINS=1 \
       UPDATE_ACTIVE_PUBLIC=1 \
-      bash "$REPO_ROOT/scripts/release/reconcile-public-image-pins.sh" \
+      bash "$PIN_RECONCILE_SCRIPT" \
         --environment public_demo \
         --component pair; then
       log "pin reconcile APPLY failed - rolling back pair"
@@ -632,7 +645,7 @@ EOF
     exit "${ROLLBACK_RC:-12}"
   fi
 else
-  log "missing reconcile-public-image-pins.sh after runtime mutation"
+  log "missing reconcile-public-image-pins.sh after runtime mutation (checked scripts/release and tools/release under $REPO_ROOT)"
   pair_rollback || true
   exit "${ROLLBACK_RC:-12}"
 fi
