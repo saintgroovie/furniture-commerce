@@ -167,8 +167,13 @@ capture_old_identity() {
   local sf="${WOODRIGHT_SF_CONTAINER_DEFAULT}"
   wr_cutover_docker inspect "$be" | wr_cutover_sanitize_inspect_json >"$EVIDENCE_DIR/sanitized/backend-before.json"
   wr_cutover_docker inspect "$sf" | wr_cutover_sanitize_inspect_json >"$EVIDENCE_DIR/sanitized/storefront-before.json"
-  OLD_BE_DIGEST="$(_digest_from_inspect_json "$EVIDENCE_DIR/sanitized/backend-before.json")"
-  OLD_SF_DIGEST="$(_digest_from_inspect_json "$EVIDENCE_DIR/sanitized/storefront-before.json")"
+  # Prefer immutable RepoDigest via image inspect (never container .RepoDigests).
+  OLD_BE_DIGEST="$(wr_cutover_container_immutable_digest "$be" backend)" \
+    || OLD_BE_DIGEST="$(_digest_from_inspect_json "$EVIDENCE_DIR/sanitized/backend-before.json")"
+  OLD_SF_DIGEST="$(wr_cutover_container_immutable_digest "$sf" storefront)" \
+    || OLD_SF_DIGEST="$(_digest_from_inspect_json "$EVIDENCE_DIR/sanitized/storefront-before.json")"
+  wr_cutover_require_digest "$OLD_BE_DIGEST" || die "old backend digest unresolved"
+  wr_cutover_require_digest "$OLD_SF_DIGEST" || die "old storefront digest unresolved"
   OLD_BE_ID="$(wr_cutover_docker inspect "$be" --format '{{.Id}}' 2>/dev/null || true)"
   OLD_SF_ID="$(wr_cutover_docker inspect "$sf" --format '{{.Id}}' 2>/dev/null || true)"
   printf '%s\n' "$OLD_BE_DIGEST" >"$EVIDENCE_DIR/json/old-backend-digest.txt"
@@ -345,6 +350,8 @@ run_backup_gate() {
 }
 
 pair_rollback() {
+  # Peer SF digest must be the pre-mutation OLD_SF_DIGEST (wired by execute path).
+  export WOODRIGHT_ROLLBACK_EXPECT_SF_DIGEST="${WOODRIGHT_ROLLBACK_EXPECT_SF_DIGEST:-${OLD_SF_DIGEST:-}}"
   wr_cutover_pair_rollback \
     "$EVIDENCE_DIR" \
     "${BE_KEEP:-}" \
@@ -358,18 +365,21 @@ verify_pair() {
   local be="${WOODRIGHT_BE_CONTAINER_DEFAULT}"
   local sf="${WOODRIGHT_SF_CONTAINER_DEFAULT}"
   local be_d sf_d
-  be_d="$(wr_cutover_docker inspect "$be" --format '{{json .RepoDigests}}{{.Config.Image}}')"
-  sf_d="$(wr_cutover_docker inspect "$sf" --format '{{json .RepoDigests}}{{.Config.Image}}')"
-  echo "$be_d" | grep -q "${BE_DIGEST#sha256:}" || return 1
-  echo "$sf_d" | grep -q "${SF_DIGEST#sha256:}" || return 1
-  local role_sf role_be owner_sf owner_be
+  be_d="$(wr_cutover_container_immutable_digest "$be" backend)" || return 1
+  sf_d="$(wr_cutover_container_immutable_digest "$sf" storefront)" || return 1
+  [[ "$be_d" == "$BE_DIGEST" ]] || return 1
+  [[ "$sf_d" == "$SF_DIGEST" ]] || return 1
+  local role_sf role_be owner_sf owner_be db_sf db_be
   role_sf="$(wr_cutover_docker inspect "$sf" --format '{{index .Config.Labels "com.woodright.runtime-role"}}')"
   role_be="$(wr_cutover_docker inspect "$be" --format '{{index .Config.Labels "com.woodright.runtime-role"}}')"
   owner_sf="$(wr_cutover_docker inspect "$sf" --format '{{index .Config.Labels "com.woodright.deployment-owner"}}')"
   owner_be="$(wr_cutover_docker inspect "$be" --format '{{index .Config.Labels "com.woodright.deployment-owner"}}')"
+  db_sf="$(wr_cutover_docker inspect "$sf" --format '{{index .Config.Labels "com.woodright.database-identity"}}')"
+  db_be="$(wr_cutover_docker inspect "$be" --format '{{index .Config.Labels "com.woodright.database-identity"}}')"
   [[ "$role_sf" == "public_demo" ]] || return 1
   [[ "$role_be" == "public_demo" ]] || return 1
   [[ "$owner_sf" == "Dokploy" && "$owner_be" == "Dokploy" ]] || return 1
+  [[ "$db_sf" == "public_demo_db" && "$db_be" == "public_demo_db" ]] || return 1
   if [[ "${SKIP_PUBLIC_VERIFY:-0}" == "1" ]]; then
     return 0
   fi
@@ -382,7 +392,7 @@ verify_pair() {
   echo "$api" | grep -qi "x-woodright-release-sha: ${TARGET_SHA}" || return 1
   echo "$sfh" | grep -qi "x-robots-tag:.*noindex" || return 1
   echo "$sfh" | grep -qi "x-woodright-runtime-role: public_demo" || return 1
-  echo "$sfh" | grep -qi "x-woodright-database-identity: public_demo_db\|x-woodright-database-identity: woodright_staging" || true
+  echo "$sfh" | grep -qi "x-woodright-database-identity: public_demo_db" || return 1
   return 0
 }
 
@@ -473,10 +483,20 @@ fi
 check_monitor
 
 if [[ "$MODE" == "dry-run" || "$MODE" == "preflight" ]]; then
+  wr_require_canonical_db_identity || exit 1
   log "PLANNED pair cutover sha=$TARGET_SHA be=$BE_DIGEST sf=$SF_DIGEST"
   log "PLANNED order=backend_then_storefront lock=$WR_STAGING_MUTATION_LOCK_PATH"
   log "PLANNED containers=${WOODRIGHT_BE_CONTAINER_DEFAULT}+${WOODRIGHT_SF_CONTAINER_DEFAULT}"
+  log "PLANNED database_identity_alias=${WOODRIGHT_DATABASE_IDENTITY_ALIAS} database_connection_name=${WOODRIGHT_DATABASE_CONNECTION_NAME:-none}"
+  log "PLANNED label com.woodright.database-identity=${WOODRIGHT_DATABASE_IDENTITY_ALIAS}"
   log "PLANNED no_migration no_production no_dns"
+  # Prove old digests resolve via image inspect (no container .RepoDigests)
+  if wr_cutover_resolve_container_image_identity "${WOODRIGHT_BE_CONTAINER_DEFAULT}" backend; then
+    log "PLANNED old_backend_digest_via_image_inspect=$WR_CUTOVER_REPO_DIGEST"
+  fi
+  if wr_cutover_resolve_container_image_identity "${WOODRIGHT_SF_CONTAINER_DEFAULT}" storefront; then
+    log "PLANNED old_storefront_digest_via_image_inspect=$WR_CUTOVER_REPO_DIGEST"
+  fi
   # Prove dry-run does not mutate: record container IDs
   wr_cutover_docker inspect "${WOODRIGHT_BE_CONTAINER_DEFAULT}" --format '{{.Id}}' >"$EVIDENCE_DIR/json/be-id-before.txt"
   wr_cutover_docker inspect "${WOODRIGHT_SF_CONTAINER_DEFAULT}" --format '{{.Id}}' >"$EVIDENCE_DIR/json/sf-id-before.txt"
@@ -510,6 +530,11 @@ assert_identity_stable_under_lock
 check_monitor
 run_backup_gate
 
+# Wire peer-SF identity for BE-only auto-rollback (no SF keeper yet).
+export WOODRIGHT_ROLLBACK_EXPECT_SF_DIGEST="$OLD_SF_DIGEST"
+[[ -n "$WOODRIGHT_ROLLBACK_EXPECT_SF_DIGEST" ]] || die "OLD_SF_DIGEST missing before mutation"
+printf '%s\n' "$WOODRIGHT_ROLLBACK_EXPECT_SF_DIGEST" >"$EVIDENCE_DIR/json/rollback-expect-storefront-digest.txt"
+
 MUTATION_STARTED=1
 # Backend recreate (digest-advance) under pair component scope
 if ! REQUIRE_CURRENT_DIGEST=0 \
@@ -525,6 +550,16 @@ if ! REQUIRE_CURRENT_DIGEST=0 \
   pair_rollback || true
   exit "${ROLLBACK_RC:-12}"
 fi
+
+# Mid-cutover gate: refuse wrong/missing DB identity (and env labels) on the new
+# backend BEFORE storefront mutation or pin APPLY. Models the prior incident where
+# BE was replaced with woodright_staging label while SF was still old.
+if ! wr_assert_container_matches_environment "${WOODRIGHT_BE_CONTAINER_DEFAULT}" backend; then
+  log "post-backend DB/environment identity gate failed - rolling back pair (storefront untouched)"
+  pair_rollback || true
+  exit "${ROLLBACK_RC:-12}"
+fi
+log "post-backend identity gate PASS container=${WOODRIGHT_BE_CONTAINER_DEFAULT}"
 
 # Storefront recreate under pair component scope
 if ! REQUIRE_CURRENT_DIGEST=0 \
