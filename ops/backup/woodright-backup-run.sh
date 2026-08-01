@@ -94,11 +94,13 @@ fi
 BE_CONTAINER="$WR_BE_CONTAINER"
 log "discovered sf=$SF_CONTAINER be=$BE_CONTAINER"
 
-SF_DIGEST=$(docker inspect "$SF_CONTAINER" --format '{{index .Image}}' 2>/dev/null || echo unknown)
-BE_DIGEST=$(docker inspect "$BE_CONTAINER" --format '{{index .Image}}' 2>/dev/null || echo unknown)
-# Prefer RepoDigest when available
-SF_REPO=$(docker inspect "$SF_CONTAINER" --format '{{range .RepoDigests}}{{println .}}{{end}}' 2>/dev/null | head -1 || true)
-BE_REPO=$(docker inspect "$BE_CONTAINER" --format '{{range .RepoDigests}}{{println .}}{{end}}' 2>/dev/null | head -1 || true)
+SF_DIGEST=$(docker inspect "$SF_CONTAINER" --format '{{.Image}}' 2>/dev/null || echo unknown)
+BE_DIGEST=$(docker inspect "$BE_CONTAINER" --format '{{.Image}}' 2>/dev/null || echo unknown)
+# Prefer RepoDigest from image inspect (container inspect has no .RepoDigests)
+SF_IMG_ID=$(docker inspect "$SF_CONTAINER" --format '{{.Image}}' 2>/dev/null || true)
+BE_IMG_ID=$(docker inspect "$BE_CONTAINER" --format '{{.Image}}' 2>/dev/null || true)
+SF_REPO=$(docker image inspect "$SF_IMG_ID" --format '{{range .RepoDigests}}{{println .}}{{end}}' 2>/dev/null | head -1 || true)
+BE_REPO=$(docker image inspect "$BE_IMG_ID" --format '{{range .RepoDigests}}{{println .}}{{end}}' 2>/dev/null | head -1 || true)
 GIT_SHA="unknown"
 if [[ -f "$ACTIVE_OWNER" ]]; then
   GIT_SHA=$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("desired_git_sha") or d.get("approved_git_sha") or d.get("git_sha") or "unknown")' "$ACTIVE_OWNER" 2>/dev/null || echo unknown)

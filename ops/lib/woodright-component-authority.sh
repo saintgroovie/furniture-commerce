@@ -55,10 +55,16 @@ wr_freeze_peer_digest() {
   local peer_kind="$1" # backend|storefront
   local container="$2"
   local digest
+  # Prefer Config.Image @digest; else resolve via image inspect (never container .RepoDigests).
   digest="$(docker inspect "$container" --format '{{.Config.Image}}' 2>/dev/null || true)"
   if [[ ! "$digest" =~ @sha256:[0-9a-f]{64}$ ]]; then
-    # Resolve via RepoDigests when Config.Image is short id
-    digest="$(docker inspect "$container" --format '{{index .RepoDigests 0}}' 2>/dev/null || true)"
+    if command -v wr_cutover_container_immutable_digest >/dev/null 2>&1 || type wr_cutover_container_immutable_digest >/dev/null 2>&1; then
+      digest="$(wr_cutover_container_immutable_digest "$container" "$peer_kind" 2>/dev/null || true)"
+    else
+      local image_id
+      image_id="$(docker inspect "$container" --format '{{.Image}}' 2>/dev/null || true)"
+      digest="$(docker image inspect "$image_id" --format '{{json .RepoDigests}}' 2>/dev/null | grep -oE 'sha256:[0-9a-f]{64}' | head -1 || true)"
+    fi
   fi
   if [[ ! "$digest" =~ sha256:[0-9a-f]{64} ]]; then
     wr_component_die "cannot freeze $peer_kind digest from $container"
@@ -88,7 +94,13 @@ wr_assert_peer_unchanged() {
   have="$(docker inspect "$container" --format '{{.Config.Image}}' 2>/dev/null || true)"
   have="$(printf '%s' "$have" | grep -oE 'sha256:[0-9a-f]{64}' | head -1)"
   if [[ -z "$have" ]]; then
-    have="$(docker inspect "$container" --format '{{index .RepoDigests 0}}' 2>/dev/null | grep -oE 'sha256:[0-9a-f]{64}' | head -1)"
+    if command -v wr_cutover_container_immutable_digest >/dev/null 2>&1 || type wr_cutover_container_immutable_digest >/dev/null 2>&1; then
+      have="$(wr_cutover_container_immutable_digest "$container" "$peer_kind" 2>/dev/null || true)"
+    else
+      local image_id
+      image_id="$(docker inspect "$container" --format '{{.Image}}' 2>/dev/null || true)"
+      have="$(docker image inspect "$image_id" --format '{{json .RepoDigests}}' 2>/dev/null | grep -oE 'sha256:[0-9a-f]{64}' | head -1 || true)"
+    fi
   fi
   if [[ "$have" != "$want" ]]; then
     wr_component_die "$peer_kind digest changed under ${WOODRIGHT_COMPONENT_SCOPE:-unknown} scope (have=$have want=$want) — P0 stop"

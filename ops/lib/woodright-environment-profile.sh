@@ -147,6 +147,34 @@ wr_assert_environment_provisioned() {
   return 0
 }
 
+# Canonical logical DB identity (governance label / HTTP header alias).
+# Distinct from WOODRIGHT_DB_NAME (physical PostgreSQL database / connection name).
+# Fail-closed when profile lacks WOODRIGHT_REQUIRED_DB_ALIAS.
+wr_require_canonical_db_identity() {
+  [[ "${WOODRIGHT_ENV_PROFILE_LOADED:-0}" == "1" ]] || { wr_env_die "profile not loaded"; return 1; }
+  local alias="${WOODRIGHT_REQUIRED_DB_ALIAS:-}"
+  if [[ -z "$alias" ]]; then
+    wr_env_die "WOODRIGHT_REQUIRED_DB_ALIAS missing for environment=${WOODRIGHT_ENVIRONMENT:-unknown}"
+    return 1
+  fi
+  case "$alias" in
+    *[:/\\]*|*[[:space:]]*|*@*|*.*)
+      wr_env_die "invalid WOODRIGHT_REQUIRED_DB_ALIAS='$alias'"
+      return 1
+      ;;
+  esac
+  # Never promote physical connection DB name into governance identity.
+  export WOODRIGHT_DATABASE_IDENTITY_ALIAS="$alias"
+  export WOODRIGHT_DATABASE_CONNECTION_NAME="${WOODRIGHT_DB_NAME:-}"
+  wr_env_log "db_identity alias=${WOODRIGHT_DATABASE_IDENTITY_ALIAS} connection_name=${WOODRIGHT_DATABASE_CONNECTION_NAME:-none}"
+  return 0
+}
+
+wr_canonical_db_identity_label() {
+  wr_require_canonical_db_identity || return 1
+  printf '%s\n' "${WOODRIGHT_DATABASE_IDENTITY_ALIAS}"
+}
+
 wr_assert_container_matches_environment() {
   local name="$1"
   local kind="${2:-backend}" # backend|storefront
@@ -200,9 +228,15 @@ wr_assert_container_matches_environment() {
     wr_env_die "exposure mismatch for $name (have='$exposure' want='${WOODRIGHT_REQUIRED_EXPOSURE}')"
     return 1
   fi
-  if [[ -n "${WOODRIGHT_REQUIRED_DB_ALIAS:-}" && -n "$db_alias" && "$db_alias" != "${WOODRIGHT_REQUIRED_DB_ALIAS}" ]]; then
-    wr_env_die "DB alias mismatch for $name (have='$db_alias' want='${WOODRIGHT_REQUIRED_DB_ALIAS}')"
-    return 1
+  if [[ -n "${WOODRIGHT_REQUIRED_DB_ALIAS:-}" ]]; then
+    if [[ -z "$db_alias" ]]; then
+      wr_env_die "DB alias missing for $name (want='${WOODRIGHT_REQUIRED_DB_ALIAS}')"
+      return 1
+    fi
+    if [[ "$db_alias" != "${WOODRIGHT_REQUIRED_DB_ALIAS}" ]]; then
+      wr_env_die "DB alias mismatch for $name (have='$db_alias' want='${WOODRIGHT_REQUIRED_DB_ALIAS}')"
+      return 1
+    fi
   fi
   if [[ "$kind" == "backend" && -n "${WOODRIGHT_REQUIRED_BE_TITLE:-}" && "$title" != "${WOODRIGHT_REQUIRED_BE_TITLE}" ]]; then
     wr_env_die "title mismatch for $name"

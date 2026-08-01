@@ -25,12 +25,15 @@ source "$HERE/../lib/woodright-validation-freeze.sh"
 source "$HERE/../lib/woodright-component-authority.sh"
 # shellcheck source=../lib/woodright-oci-provenance.sh
 source "$HERE/../lib/woodright-oci-provenance.sh"
+# shellcheck source=../lib/woodright-cutover-common.sh
+source "$HERE/../lib/woodright-cutover-common.sh"
 
 log() { printf '%s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*"; }
 die_early() { log "ERROR: $*"; exit 1; }
 
 wr_require_environment_from_args "$@" || exit 1
 wr_assert_environment_provisioned || exit 1
+wr_require_canonical_db_identity || exit 1
 [[ "${WOODRIGHT_ENVIRONMENT}" == "public_demo" ]] || die_early "only --environment public_demo allowed for this helper (got ${WOODRIGHT_ENVIRONMENT}; staging is not an alias for public_demo)"
 wr_require_component_from_args "$@" || die_early "missing required --component <backend|pair> for backend recreate"
 [[ "${WOODRIGHT_COMPONENT_SCOPE}" == "backend" || "${WOODRIGHT_COMPONENT_SCOPE}" == "pair" ]] || die_early "backend recreate requires --component backend|pair"
@@ -185,6 +188,21 @@ if [[ "$REQUIRE_CURRENT_DIGEST" == "1" ]]; then
 fi
 # Digest-advance path: REQUIRE_CURRENT_DIGEST=0 allows current != target; Mode A + Mode B pin target.
 
+# Governance identity alias ≠ physical PostgreSQL DB name (WOODRIGHT_DB_NAME).
+# Resolve BEFORE stop/rename so a missing alias cannot leave the stack half-mutated.
+DB_IDENTITY_ALIAS="$(wr_canonical_db_identity_label)" || die_early "canonical DB identity unavailable"
+[[ "$DB_IDENTITY_ALIAS" == "public_demo_db" ]] || die_early "public_demo backend requires database-identity=public_demo_db (got '$DB_IDENTITY_ALIAS')"
+if [[ -n "${WOODRIGHT_DATABASE_CONNECTION_NAME:-}" && "$DB_IDENTITY_ALIAS" == "${WOODRIGHT_DATABASE_CONNECTION_NAME}" ]]; then
+  die_early "refusing governance identity equal to physical DB name ($DB_IDENTITY_ALIAS)"
+fi
+if [[ -n "${EVIDENCE_DIR:-}" ]]; then
+  mkdir -p "$EVIDENCE_DIR/json"
+  printf '{"database_connection_name":"%s","database_identity_alias":"%s"}\n' \
+    "${WOODRIGHT_DATABASE_CONNECTION_NAME:-}" "$DB_IDENTITY_ALIAS" \
+    >"$EVIDENCE_DIR/json/database-identity-plan.json"
+fi
+log "PLANNED database_identity_alias=$DB_IDENTITY_ALIAS database_connection_name=${WOODRIGHT_DATABASE_CONNECTION_NAME:-none}"
+
 # All non-destructive checks completed BEFORE stop
 docker stop "$NAME"
 PHASE=1
@@ -194,7 +212,7 @@ docker rename "$NAME" "$KEEP_NAME"
 PHASE=2
 log "renamed_to_keeper $KEEP_NAME"
 
-  docker create \
+docker create \
   --name "$NAME" \
   --restart unless-stopped \
   --network "$NET_STACK" \
@@ -203,7 +221,7 @@ log "renamed_to_keeper $KEEP_NAME"
   --label "com.woodright.runtime-role=public_demo" \
   --label "com.woodright.exposure=public" \
   --label "com.woodright.release-sha=${TARGET_SHA}" \
-  --label "com.woodright.database-identity=${WOODRIGHT_DB_NAME:-woodright_staging}" \
+  --label "com.woodright.database-identity=${DB_IDENTITY_ALIAS}" \
   --env-file "$ENV_FILE" \
   --mount "type=volume,source=${VOLUME},destination=${DEST}" \
   --health-cmd="node -e \"fetch('http://127.0.0.1:9000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\"" \
@@ -248,6 +266,10 @@ if [[ -n "${WOODRIGHT_BUYER_HOST:-}" ]]; then
 fi
 bash "$GATE" "${POST_ARGS[@]}" \
   || die "MEDIA_PROMOTION_GATE_FAILED - refusing to declare recreate success (keeper=$KEEP_NAME)"
+
+# Fail-closed: created container must carry canonical governance DB alias (not physical DB name).
+wr_assert_container_matches_environment "$NAME" backend \
+  || die "post-create backend environment/DB-identity gate failed (keeper=$KEEP_NAME)"
 
 # Peer freeze check after mutation
 if [[ "${WOODRIGHT_COMPONENT_SCOPE}" == "backend" ]]; then
