@@ -84,6 +84,12 @@ Image-only cutover does **not** restore PostgreSQL.
 
 `reconcile-public-image-pins.sh` requires live containers to **already** match target digests. It is not a forward recreate.
 
+Environment governance install places the canonical binary at
+`/srv/woodright/tools/release/reconcile-public-image-pins.sh` and maintains a
+symlink at `/srv/woodright/scripts/release/reconcile-public-image-pins.sh`.
+Pair cutover resolves either path. Atomic pin APPLY treats a writable target
+file inside a non-writable (root-owned) parent as requiring `sudo -n`.
+
 **Pair cutover holds the canonical lock through:**
 
 1. runtime recreate + health
