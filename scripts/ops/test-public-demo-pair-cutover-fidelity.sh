@@ -333,12 +333,23 @@ fi
 EV2="$TMP/ev-pair"
 mkdir -p "$EV2"
 rm -f "$TMP/state/log/mutations.log"
+# --expected-old-sha requires both commits in the local git object store.
+# GitHub Actions shallow clones often lack historical SHAs; omit the gate arg
+# when objects are missing so the rest of the dry-run still runs.
+PAIR_DRY_EXTRA=()
+OLD_SHA_FOR_GATE="7628056dcc1d150745de1b0fa881f1e9d36b798b"
+if git -C "$ROOT" cat-file -e "${OLD_SHA_FOR_GATE}^{commit}" 2>/dev/null \
+  && git -C "$ROOT" cat-file -e "${SHA40}^{commit}" 2>/dev/null; then
+  PAIR_DRY_EXTRA=(--expected-old-sha "$OLD_SHA_FOR_GATE")
+else
+  echo "NOTE: skipping --expected-old-sha (git objects not present in this clone)" >&2
+fi
 if bash "$PAIR" --environment public_demo --component pair --mode dry-run \
   --target-sha "$SHA40" \
   --backend-digest "$BE_DIG" \
   --storefront-digest "$SF_DIG" \
   --evidence-dir "$EV2" \
-  --expected-old-sha "7628056dcc1d150745de1b0fa881f1e9d36b798b"; then
+  "${PAIR_DRY_EXTRA[@]}"; then
   pass "pair dry-run exit 0"
 else
   fail "pair dry-run failed"

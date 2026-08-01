@@ -2,12 +2,17 @@
 /**
  * Fidelity tests for ops/release/cutover-production-candidate.sh.
  *
- * This helper is dry-run-only in this release (execute is a fail-closed
- * stub), so these tests exercise real subprocess invocations against the
- * checked-in ops/config/runtime-environments/production.conf - no Docker
- * daemon required for the negative/usage cases, and the positive dry-run
- * case tolerates Docker being absent (containers/images simply report as
- * "not present locally", which is still a valid, non-mutating dry-run).
+ * The helper is live-mutating in execute mode, so this suite only covers the
+ * CLI contract and the read-only dry-run packet: usage refusals, environment
+ * scoping, the confirm-token gate, and dry-run JSON shape. Every case here
+ * runs the real script against the checked-in
+ * ops/config/runtime-environments/production.conf and never reaches a
+ * mutation (no Docker daemon required - absent containers/images simply
+ * report as "not present locally", which is still a valid dry-run).
+ *
+ * The execute state machine itself (locking, pin writes, recreate, health,
+ * rollback, traps) is covered by the shell harness:
+ *   scripts/ops/test-production-candidate-cutover-execute-fidelity.sh
  *
  * Invoked from PR checks release-governance job (plain node, no yarn dlx).
  *
@@ -37,17 +42,20 @@ function run(args) {
 }
 
 const SHA = "a".repeat(40)
-const DIGEST = `sha256:${"b".repeat(64)}`
-const SF_REF = `ghcr.io/saintgroovie/woodright-storefront@${DIGEST}`
-const BE_REF = `ghcr.io/saintgroovie/woodright-backend@${DIGEST}`
+const CONFIRM = "I_UNDERSTAND_PRIVATE_PRODUCTION_CANDIDATE_CUTOVER"
+const PRODUCTION_LOCK = "/srv/woodright/locks/production/live-cutover.lock"
+const BE_REF = `ghcr.io/saintgroovie/woodright-backend@sha256:${"b".repeat(64)}`
+const SF_REF = `ghcr.io/saintgroovie/woodright-storefront@sha256:${"c".repeat(64)}`
 
-// 1. Static: header declares this is NOT live-mutating, execute is a stub.
+// 1. Static: header declares the execute path is live-mutating and needs the
+//    global lock (check-global-lock-policy relies on both).
 {
   const text = fs.readFileSync(helper, "utf8")
-  check(/LIVE_MUTATING\s*=\s*false/.test(text), "header declares LIVE_MUTATING=false")
+  check(/^# LIVE_MUTATING=true$/m.test(text), "header declares LIVE_MUTATING=true")
+  check(/^# requires_global_lock=true$/m.test(text), "header declares requires_global_lock=true")
   check(
-    /execute mode not enabled in this release/.test(text),
-    "execute path contains the fail-closed stub message"
+    !/execute mode not enabled/.test(text),
+    "execute path is no longer a fail-closed stub"
   )
   check(fs.statSync(helper).mode & 0o111, "script is executable")
 }
@@ -139,6 +147,59 @@ const BE_REF = `ghcr.io/saintgroovie/woodright-backend@${DIGEST}`
     check(packet.no_dns_change === true, "packet asserts no_dns_change")
     check(packet.candidates.backend.applicable === true, "packet includes applicable backend candidate")
     check(packet.candidates.storefront.applicable === true, "packet includes applicable storefront candidate")
+
+    // Application SHA (OCI revision of the images) and helper install SHA (the
+    // ops commit that installed this script) are separate fields; the helper
+    // SHA must never be substituted for the release SHA.
+    check(
+      packet.application_source_sha === SHA,
+      "packet.application_source_sha carries the requested application sha"
+    )
+    check(
+      Object.prototype.hasOwnProperty.call(packet, "helper_install_sha"),
+      "packet exposes helper_install_sha as its own field"
+    )
+    check(
+      packet.helper_install_sha !== SHA,
+      "packet.helper_install_sha is not the application sha",
+      String(packet.helper_install_sha)
+    )
+    check(
+      packet.planned_mutation.ownership_targets.release_sha_field === "application_source_sha",
+      "planned ownership metadata records the application sha, not the helper sha"
+    )
+
+    // Planned-mutation disclosure: pin plan, recreate order, rollback refs,
+    // health plan and the phase state machine.
+    const plan = packet.planned_mutation
+    check(
+      plan.pin_plan.keys.WOODRIGHT_BACKEND_IMAGE === BE_REF &&
+        plan.pin_plan.keys.WOODRIGHT_STOREFRONT_IMAGE === SF_REF,
+      "pin plan targets both compose .env image keys"
+    )
+    check(
+      JSON.stringify(plan.recreate.order) === JSON.stringify(["backend", "storefront"]),
+      "recreate order is backend then storefront"
+    )
+    check(
+      plan.recreate.flags.includes("--no-deps") &&
+        JSON.stringify(plan.recreate.never_recreated) === JSON.stringify(["postgres", "redis"]),
+      "recreate uses --no-deps and never touches postgres/redis"
+    )
+    check(
+      typeof plan.rollback_refs.pin_backup === "string" && plan.rollback_refs.pin_backup.length > 0,
+      "rollback refs name the pin backup"
+    )
+    check(
+      plan.health_plan.http.some((u) => u.startsWith("http://127.0.0.1:")),
+      "health plan probes loopback only"
+    )
+    check(
+      plan.state_machine[0] === "prepared" &&
+        plan.state_machine.includes("pins_written") &&
+        plan.state_machine.includes("health_passed"),
+      "planned state machine is disclosed"
+    )
   }
 }
 
@@ -162,7 +223,8 @@ const BE_REF = `ghcr.io/saintgroovie/woodright-backend@${DIGEST}`
   }
 }
 
-// 11. execute mode without --confirm-mutation fails closed (usage error).
+// 11. execute mode without --confirm-mutation fails closed (usage error),
+//     before any lock is taken or any pin is written.
 {
   const r = run([
     "--environment",
@@ -177,10 +239,14 @@ const BE_REF = `ghcr.io/saintgroovie/woodright-backend@${DIGEST}`
     "execute",
   ])
   check(r.status === 2, "execute without confirm-mutation exits 2", r.stderr)
+  check(
+    /confirm/i.test(r.stderr) && /I_UNDERSTAND_PRIVATE_PRODUCTION_CANDIDATE_CUTOVER/.test(r.stderr),
+    "refusal names the required confirm token",
+    r.stderr
+  )
 }
 
-// 12. execute mode with the correct confirm token still fails closed (exit 3),
-//     proving no mutation path is reachable in this release.
+// 12. execute mode with a wrong confirm token fails closed the same way.
 {
   const r = run([
     "--environment",
@@ -194,14 +260,60 @@ const BE_REF = `ghcr.io/saintgroovie/woodright-backend@${DIGEST}`
     "--mode",
     "execute",
     "--confirm-mutation",
-    "I_UNDERSTAND_PRIVATE_PRODUCTION_CANDIDATE_CUTOVER",
+    "I_UNDERSTAND_PRIVATE_PRODUCTION_CANDIDATE_CUTOVERX",
   ])
-  check(r.status === 3, "execute with correct confirm token still exits 3 (stubbed)", r.stderr)
-  check(/execute mode not enabled/.test(r.stderr), "execute stub message printed")
+  check(r.status === 2, "execute with a wrong confirm token exits 2", r.stderr)
 }
 
-// 13. Governance: check-global-lock-policy must not flag this script as an
-//     undeclared live-mutating script (it correctly declares LIVE_MUTATING=false).
+// 12b. --dry-run and --execute together is ambiguous -> refused.
+{
+  const r = run([
+    "--environment",
+    "production",
+    "--component",
+    "backend",
+    "--source-sha",
+    SHA,
+    "--backend-ref",
+    BE_REF,
+    "--dry-run",
+    "--execute",
+    "--confirm-mutation",
+    CONFIRM,
+  ])
+  check(r.status === 2, "--dry-run together with --execute exits 2", r.stderr)
+  check(
+    /conflicting modes/i.test(r.stderr) && /--dry-run/.test(r.stderr) && /--execute/.test(r.stderr),
+    "refusal explains the conflict",
+    r.stderr
+  )
+}
+
+// 12c. execute is still refused for non-production environments even with the
+//      correct confirm token (scope guard beats the token).
+{
+  for (const env of ["public_demo", "staging"]) {
+    const r = run([
+      "--environment",
+      env,
+      "--component",
+      "backend",
+      "--source-sha",
+      SHA,
+      "--backend-ref",
+      BE_REF,
+      "--mode",
+      "execute",
+      "--confirm-mutation",
+      CONFIRM,
+    ])
+    check(r.status !== 0, `execute refused for --environment ${env}`, r.stderr)
+    check(!/lock acquired/i.test(r.stderr), `no lock taken for --environment ${env}`, r.stderr)
+  }
+}
+
+// 13. Governance: check-global-lock-policy must accept this script - it now
+//     declares LIVE_MUTATING=true together with requires_global_lock=true.
 {
   const r = spawnSync("node", [path.join(root, "scripts/release/check-global-lock-policy.cjs"), "ops/release"], {
     cwd: root,
@@ -224,6 +336,18 @@ const BE_REF = `ghcr.io/saintgroovie/woodright-backend@${DIGEST}`
   const text = fs.readFileSync(helper, "utf8")
   check(/exec 219>>"\$lock_path"/.test(text), "dry-run lock probe uses append-open (>>), not truncate")
   check(!/exec 219>"\$lock_path"/.test(text), "dry-run lock probe does not truncate-open (>) the lock file")
+}
+
+// 16. Only the canonical production lock may be used, and the execute path
+//     must go through the shared flock helper (not an ad-hoc lock file).
+{
+  const text = fs.readFileSync(helper, "utf8")
+  check(text.includes(PRODUCTION_LOCK), "helper names the canonical production lock path")
+  check(/wr_staging_mutation_lock_acquire/.test(text), "execute path acquires the shared flock")
+  check(
+    !/reconcile-public-image-pins|recreate-staging-(backend|storefront)/.test(text),
+    "helper does not call public_demo-only runtime helpers"
+  )
 }
 
 process.exit(failed ? 1 : 0)
