@@ -130,7 +130,7 @@ for rel in "${FILES[@]}"; do
     *) die "unmapped $rel" ;;
   esac
   mkdir -p "$(dirname "$dest")"
-  if [[ -f "$dest" ]]; then
+  if [[ -f "$dest" || -L "$dest" ]]; then
     cp -a "$dest" "$BACKUP/$(echo "$rel" | tr '/' '_')"
     echo "backup $dest -> $BACKUP sha=$(checksums "$dest")" >>"$MANIFEST"
   fi
@@ -140,6 +140,22 @@ for rel in "${FILES[@]}"; do
     *.conf|*.md) chmod 0644 "$dest" ;;
   esac
   echo "install $rel -> $dest sha=$(checksums "$dest")" >>"$MANIFEST"
+  # Pair cutover historically looks under scripts/release; keep a stable symlink
+  # from the install layout (tools/release) so both paths resolve.
+  if [[ "$rel" == scripts/release/* ]]; then
+    mkdir -p /srv/woodright/scripts/release
+    local_link="/srv/woodright/scripts/release/$(basename "$rel")"
+    if [[ -e "$local_link" || -L "$local_link" ]]; then
+      cp -a "$local_link" "$BACKUP/scripts_release_$(basename "$rel").pre-symlink"
+      if [[ -e "$local_link" ]]; then
+        echo "backup $local_link -> $BACKUP sha=$(checksums "$local_link")" >>"$MANIFEST"
+      else
+        echo "backup $local_link -> $BACKUP sha=dangling-symlink" >>"$MANIFEST"
+      fi
+    fi
+    ln -sfn "$dest" "$local_link"
+    echo "symlink $local_link -> $dest" >>"$MANIFEST"
+  fi
 done
 
 # Live systemd unit (profile-aware monitor). Backup first; daemon-reload only (no timer start/stop).
