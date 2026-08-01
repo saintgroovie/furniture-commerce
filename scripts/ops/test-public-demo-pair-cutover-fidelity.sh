@@ -67,7 +67,9 @@ import json,sys
 d=json.load(open(sys.argv[1]))[0]
 fmt=sys.argv[2]
 if "RepoDigests" in fmt:
-  print(json.dumps(d.get("RepoDigests") or []) + (d.get("Config") or {}).get("Image","") + str(d.get("Image","")))
+  # Real docker container inspect has no .RepoDigests — fail closed like Docker template error
+  sys.stderr.write('template parsing error: map has no entry for key "RepoDigests"\n')
+  sys.exit(1)
 elif "runtime-role" in fmt:
   print((d.get("Config") or {}).get("Labels",{}).get("com.woodright.runtime-role",""))
 elif "release-sha" in fmt:
@@ -161,8 +163,9 @@ d[0]["Id"]="id-"+name
 if os.environ.get("WOODRIGHT_FAKE_DOCKER_CORRUPT_RENAME")=="1" and "keeper" in src:
   bad="sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
   d[0]["Image"]=bad
-  d[0]["RepoDigests"]=["ghcr.io/x@"+bad]
-  d[0]["Config"]["Image"]="ghcr.io/saintgroovie/woodright-x@"+bad
+  d[0].pop("RepoDigests", None)
+  title="woodright-storefront" if "storefront" in name else "woodright-backend"
+  d[0]["Config"]["Image"]=f"ghcr.io/saintgroovie/{title}@"+bad
 json.dump(d, open(dst,"w"))
 os.remove(src)
 PY
@@ -215,10 +218,9 @@ def ctr(name, image, role="public_demo"):
   return [{
     "Id": f"id-{name}",
     "Name": f"/{name}",
-    "Image": image.replace("@","@id-"),
-    "RepoDigests": [f"ghcr.io/x@{image}"],
+    "Image": image,
     "Config": {
-      "Image": f"ghcr.io/saintgroovie/woodright-x@{image}",
+      "Image": f"ghcr.io/saintgroovie/{title}@{image}",
       "Env": ["WOODRIGHT_RUNTIME_ROLE=public_demo","WOODRIGHT_DATABASE_IDENTITY_ALIAS=public_demo_db","MOCK_SECRET_VALUE=should-not-leak","PATH=/usr/bin"],
       "Labels": {
         "com.woodright.runtime-role": role,
@@ -226,6 +228,7 @@ def ctr(name, image, role="public_demo"):
         "com.woodright.exposure": "public",
         "com.woodright.database-identity": "public_demo_db",
         "com.woodright.release-sha": "7628056dcc1d150745de1b0fa881f1e9d36b798b",
+        "org.opencontainers.image.revision": "7628056dcc1d150745de1b0fa881f1e9d36b798b",
         "org.opencontainers.image.title": title,
       },
       "Cmd": ["node","server.js"],
@@ -239,10 +242,21 @@ def ctr(name, image, role="public_demo"):
     "Mounts": [],
     "State": {"Status":"running","Health":{"Status":"healthy"}},
   }]
+def write_image(dig, title, sha="7628056dcc1d150745de1b0fa881f1e9d36b798b"):
+  img=f"ghcr.io/saintgroovie/{title}@{dig}"
+  doc={"Id": dig, "RepoDigests": [f"ghcr.io/saintgroovie/{title}@{dig}"], "Config": {"Labels": {
+    "org.opencontainers.image.revision": sha,
+    "org.opencontainers.image.title": title,
+    "com.woodright.deployment-owner": "Dokploy",
+  }}}
+  open(os.path.join(state,"images",dig.replace("/","_")+".json"),"w").write(json.dumps(doc))
+  open(os.path.join(state,"images",img.replace("/","_")+".json"),"w").write(json.dumps(doc))
 open(os.path.join(state,"containers","woodright-staging-backend.json"),"w").write(json.dumps(ctr("woodright-staging-backend", old_be)))
 open(os.path.join(state,"containers","woodright-staging-storefront.json"),"w").write(json.dumps(ctr("woodright-staging-storefront", old_sf)))
 # production must exist for exclusion checks but never be target
 open(os.path.join(state,"containers","woodright-production-backend.json"),"w").write(json.dumps(ctr("woodright-production-backend", old_be, role="production_candidate")))
+write_image(old_be, "woodright-backend")
+write_image(old_sf, "woodright-storefront")
 PY
   # target images with revision labels
   python3 - "$state" "$BE_DIG" "$SF_DIG" "$SHA40" <<'PY'
@@ -250,13 +264,13 @@ import json,sys,os
 state,be,sf,sha=sys.argv[1:5]
 for dig,title in ((be,"woodright-backend"),(sf,"woodright-storefront")):
   img=f"ghcr.io/saintgroovie/{title}@{dig}"
-  key=img.replace("/","_")
   doc={"Id": dig, "RepoDigests": [f"ghcr.io/saintgroovie/{title}@{dig}"], "Config": {"Labels": {
     "org.opencontainers.image.revision": sha,
     "org.opencontainers.image.title": title,
     "com.woodright.deployment-owner": "Dokploy",
   }}}
-  open(os.path.join(state,"images",key+".json"),"w").write(json.dumps(doc))
+  open(os.path.join(state,"images",dig.replace("/","_")+".json"),"w").write(json.dumps(doc))
+  open(os.path.join(state,"images",img.replace("/","_")+".json"),"w").write(json.dumps(doc))
 PY
 }
 
@@ -474,14 +488,23 @@ be_old=load("woodright-staging-backend")
 sf_old=load("woodright-staging-storefront")
 dump("woodright-staging-backend-keeper-test", be_old)
 dump("woodright-staging-storefront-keeper-test", sf_old)
-def retarget(d, dig, sha):
-  d[0]["Image"]=dig.replace("@","@id-")
-  d[0]["RepoDigests"]=[f"ghcr.io/x@{dig}"]
-  d[0]["Config"]["Image"]=f"ghcr.io/saintgroovie/woodright-x@{dig}"
+def retarget(d, dig, sha, title):
+  d[0]["Image"]=dig
+  d[0].pop("RepoDigests", None)
+  d[0]["Config"]["Image"]=f"ghcr.io/saintgroovie/{title}@{dig}"
   d[0]["Config"]["Labels"]["com.woodright.release-sha"]=sha
+  d[0]["Config"]["Labels"]["org.opencontainers.image.revision"]=sha
+  img=f"ghcr.io/saintgroovie/{title}@{dig}"
+  doc={"Id": dig, "RepoDigests": [img], "Config": {"Labels": {
+    "org.opencontainers.image.revision": sha,
+    "org.opencontainers.image.title": title,
+  }}}
+  imgdir=os.path.join(state,"images")
+  open(os.path.join(imgdir, dig.replace("/","_")+".json"),"w").write(json.dumps(doc))
+  open(os.path.join(imgdir, img.replace("/","_")+".json"),"w").write(json.dumps(doc))
   return d
-dump("woodright-staging-backend", retarget(load("woodright-staging-backend"), be, sha))
-dump("woodright-staging-storefront", retarget(load("woodright-staging-storefront"), sf, sha))
+dump("woodright-staging-backend", retarget(load("woodright-staging-backend"), be, sha, "woodright-backend"))
+dump("woodright-staging-storefront", retarget(load("woodright-staging-storefront"), sf, sha, "woodright-storefront"))
 PY
 printf 'WOODRIGHT_BACKEND_IMAGE=CORRUPT\nWOODRIGHT_STOREFRONT_IMAGE=CORRUPT\n' >"$RB/pins/DOKPLOY_IMAGE_PINS.env"
 printf '{"release_sha":"deadbeef"}\n' >"$RB/pins/ACTIVE_PUBLIC.json"
@@ -520,12 +543,12 @@ grep -q '"backend":1' "$RB/evidence/json/pair-rollback-result.json" && pass "pai
 grep -q '"storefront":1' "$RB/evidence/json/pair-rollback-result.json" && pass "pair-rollback storefront ok flag" || fail "pair-rollback storefront flag"
 grep -q '"pins":1' "$RB/evidence/json/pair-rollback-result.json" && pass "pair-rollback pins ok flag" || fail "pair-rollback pins flag"
 
-be_blob="$(WOODRIGHT_FAKE_DOCKER_STATE="$RB/state" "$FAKE_DOCKER/docker" inspect woodright-staging-backend --format '{{json .RepoDigests}}{{.Config.Image}}')"
-sf_blob="$(WOODRIGHT_FAKE_DOCKER_STATE="$RB/state" "$FAKE_DOCKER/docker" inspect woodright-staging-storefront --format '{{json .RepoDigests}}{{.Config.Image}}')"
+be_dig="$(WOODRIGHT_DOCKER_BIN="$FAKE_DOCKER/docker" WOODRIGHT_FAKE_DOCKER_STATE="$RB/state" bash -c 'source "'"$COMMON"'"; wr_cutover_container_immutable_digest woodright-staging-backend backend')"
+sf_dig="$(WOODRIGHT_DOCKER_BIN="$FAKE_DOCKER/docker" WOODRIGHT_FAKE_DOCKER_STATE="$RB/state" bash -c 'source "'"$COMMON"'"; wr_cutover_container_immutable_digest woodright-staging-storefront storefront')"
 be_sha="$(WOODRIGHT_FAKE_DOCKER_STATE="$RB/state" "$FAKE_DOCKER/docker" inspect woodright-staging-backend --format '{{index .Config.Labels "com.woodright.release-sha"}}')"
 sf_sha="$(WOODRIGHT_FAKE_DOCKER_STATE="$RB/state" "$FAKE_DOCKER/docker" inspect woodright-staging-storefront --format '{{index .Config.Labels "com.woodright.release-sha"}}')"
-echo "$be_blob" | grep -q "${OLD_BE#sha256:}" && pass "backend digest restored via pair_rollback" || fail "backend digest not restored"
-echo "$sf_blob" | grep -q "${OLD_SF#sha256:}" && pass "storefront digest restored via pair_rollback" || fail "storefront digest not restored"
+[[ "$be_dig" == "$OLD_BE" ]] && pass "backend digest restored via pair_rollback" || fail "backend digest not restored have=$be_dig"
+[[ "$sf_dig" == "$OLD_SF" ]] && pass "storefront digest restored via pair_rollback" || fail "storefront digest not restored have=$sf_dig"
 [[ "$be_sha" == "7628056dcc1d150745de1b0fa881f1e9d36b798b" ]] && pass "backend release-sha restored" || fail "backend sha=$be_sha"
 [[ "$sf_sha" == "7628056dcc1d150745de1b0fa881f1e9d36b798b" ]] && pass "storefront release-sha restored" || fail "storefront sha=$sf_sha"
 grep -q 'old-be' "$RB/pins/DOKPLOY_IMAGE_PINS.env" && pass "pins restored by pair_rollback" || fail "pins not restored"
@@ -565,7 +588,7 @@ bash "$ROOT/ops/release/rollback-staging-storefront-from-keeper.sh" \
   --evidence-dir "$NEG/evidence" >"$NEG/out.txt" 2>&1
 NEG_RC=$?
 set -e
-if [[ "$NEG_RC" -ne 0 ]] && grep -qi 'digest identity mismatch' "$NEG/out.txt"; then
+if [[ "$NEG_RC" -ne 0 ]] && grep -qiE 'digest identity mismatch|digest resolve failed|image missing|RepoDigest' "$NEG/out.txt"; then
   pass "storefront rollback fails closed on digest mismatch"
 else
   fail "storefront rollback did not fail closed (rc=$NEG_RC)"
@@ -582,6 +605,15 @@ PAIR_SRC="$(cat "$PAIR")"
 echo "$PAIR_SRC" | grep -q 'assert_identity_stable_under_lock' && pass "pair has TOCTOU identity gate" || fail "pair missing TOCTOU gate"
 echo "$PAIR_SRC" | grep -q 'expected-old-backend-digest' && pass "pair supports expected-old digests" || fail "pair missing expected-old digests"
 echo "$PAIR_SRC" | grep -q 'last-status.json' && pass "pair reads monitor state file" || fail "pair missing monitor state read"
+if awk '
+  /recreate-staging-backend-with-media.sh/ { be=1; next }
+  be && /wr_assert_container_matches_environment.*backend/ { gate=1; next }
+  be && /recreate-staging-storefront.sh/ { if (gate) exit 0; exit 1 }
+' "$PAIR"; then
+  pass "pair mid-cutover identity gate before storefront"
+else
+  fail "pair missing mid-cutover identity gate before storefront"
+fi
 # Under-lock monitor revalidation must appear after lock acquire and before MUTATION_STARTED
 if awk '/wr_staging_mutation_lock_acquire/,/MUTATION_STARTED=1/' "$PAIR" | grep -q 'check_monitor'; then
   pass "check_monitor revalidated under lock before mutation"

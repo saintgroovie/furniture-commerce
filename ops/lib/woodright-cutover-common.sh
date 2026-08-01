@@ -257,8 +257,28 @@ wr_cutover_pair_rollback() {
     bash "$sf_rb" --environment "$env_name" --keep-name "$sf_keep" --evidence-dir "$evidence" \
       && sf_ok=1 || sf_ok=0
   else
+    # No SF keeper ⇒ storefront must still be the pre-cutover live (common: BE failed before SF recreate).
     sf_ok=1
-    wr_cutover_log "no SF keeper to restore"
+    wr_cutover_log "no SF keeper to restore - verifying live storefront unchanged"
+    if wr_cutover_docker inspect "${WOODRIGHT_SF_CONTAINER_DEFAULT:-woodright-staging-storefront}" >/dev/null 2>&1; then
+      if wr_cutover_resolve_container_image_identity \
+        "${WOODRIGHT_SF_CONTAINER_DEFAULT:-woodright-staging-storefront}" storefront; then
+        printf '{"storefront_unchanged":true,"repo_digest":"%s","release_sha":"%s"}\n' \
+          "$WR_CUTOVER_REPO_DIGEST" "${WR_CUTOVER_RELEASE_SHA:-}" \
+          >"$evidence/json/storefront-unchanged-after-rollback.json" || true
+        if [[ -n "${WOODRIGHT_ROLLBACK_EXPECT_SF_DIGEST:-}" && \
+              "$WR_CUTOVER_REPO_DIGEST" != "${WOODRIGHT_ROLLBACK_EXPECT_SF_DIGEST}" ]]; then
+          wr_cutover_log "ERROR: storefront digest drifted during BE-only rollback have=$WR_CUTOVER_REPO_DIGEST want=$WOODRIGHT_ROLLBACK_EXPECT_SF_DIGEST"
+          sf_ok=0
+        fi
+      else
+        wr_cutover_log "ERROR: cannot resolve live storefront digest after BE-only rollback"
+        sf_ok=0
+      fi
+    else
+      wr_cutover_log "ERROR: live storefront missing after BE-only rollback"
+      sf_ok=0
+    fi
   fi
   if [[ -f "$evidence/pin-backup/DOKPLOY_IMAGE_PINS.env" ]]; then
     wr_cutover_install_file "$evidence/pin-backup/DOKPLOY_IMAGE_PINS.env" \
@@ -347,4 +367,157 @@ wr_cutover_atomic_write() {
   tmp="$(mktemp "${dir}/.wr-cutover-XXXXXX")"
   printf '%s' "$content" >"$tmp"
   mv -f "$tmp" "$dest"
+}
+
+# Expected GHCR repository (no digest/tag) for public_demo components.
+wr_cutover_expected_image_repository() {
+  case "${1:-}" in
+    backend) printf '%s\n' "ghcr.io/saintgroovie/woodright-backend" ;;
+    storefront) printf '%s\n' "ghcr.io/saintgroovie/woodright-storefront" ;;
+    *)
+      wr_cutover_die "unknown image component '${1:-}' (backend|storefront)"
+      return 1
+      ;;
+  esac
+}
+
+# Resolve immutable RepoDigest for a running/stopped container via image inspect.
+# Never reads container .RepoDigests (absent on real docker container inspect).
+# Sets:
+#   WR_CUTOVER_CTR_ID WR_CUTOVER_CONFIG_IMAGE WR_CUTOVER_IMAGE_ID
+#   WR_CUTOVER_REPO_DIGEST WR_CUTOVER_REPOSITORY WR_CUTOVER_REPO_DIGEST_REF
+#   WR_CUTOVER_OCI_REVISION WR_CUTOVER_RELEASE_SHA
+wr_cutover_resolve_container_image_identity() {
+  local container="${1:?}"
+  local component="${2:-}" # backend|storefront|empty
+  local expect_repo="${3:-}"
+  local cid config_image image_id raw_json
+  local oci_rev release_sha
+  local resolved
+
+  WR_CUTOVER_CTR_ID=""
+  WR_CUTOVER_CONFIG_IMAGE=""
+  WR_CUTOVER_IMAGE_ID=""
+  WR_CUTOVER_REPO_DIGEST=""
+  WR_CUTOVER_REPOSITORY=""
+  WR_CUTOVER_REPO_DIGEST_REF=""
+  WR_CUTOVER_OCI_REVISION=""
+  WR_CUTOVER_RELEASE_SHA=""
+
+  if [[ -z "$expect_repo" && -n "$component" ]]; then
+    expect_repo="$(wr_cutover_expected_image_repository "$component")" || return 1
+  fi
+  [[ -n "$expect_repo" ]] || {
+    wr_cutover_die "expected repository required for container image identity ($container)"
+    return 1
+  }
+  case "$expect_repo" in
+    *:latest|*@*|*" "*) wr_cutover_die "invalid expect_repo='$expect_repo'"; return 1 ;;
+  esac
+
+  wr_cutover_docker inspect "$container" >/dev/null 2>&1 || {
+    wr_cutover_die "container missing: $container"
+    return 1
+  }
+
+  cid="$(wr_cutover_docker inspect "$container" --format '{{.Id}}')"
+  config_image="$(wr_cutover_docker inspect "$container" --format '{{.Config.Image}}')"
+  image_id="$(wr_cutover_docker inspect "$container" --format '{{.Image}}')"
+  oci_rev="$(wr_cutover_docker inspect "$container" --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' 2>/dev/null || true)"
+  release_sha="$(wr_cutover_docker inspect "$container" --format '{{index .Config.Labels "com.woodright.release-sha"}}' 2>/dev/null || true)"
+  [[ -n "$cid" && -n "$image_id" ]] || {
+    wr_cutover_die "container inspect incomplete for $container"
+    return 1
+  }
+
+  if [[ -n "$config_image" ]]; then
+    case "$config_image" in
+      *:latest|*:main|*:staging)
+        wr_cutover_die "refused tag-only Config.Image on $container: $config_image"
+        return 1
+        ;;
+    esac
+  fi
+
+  raw_json=""
+  if ! raw_json="$(wr_cutover_docker image inspect "$image_id" 2>/dev/null)"; then
+    if [[ -n "$config_image" ]] && raw_json="$(wr_cutover_docker image inspect "$config_image" 2>/dev/null)"; then
+      :
+    else
+      wr_cutover_die "image missing for container=$container image_id=$image_id config_image=${config_image:-empty}"
+      return 1
+    fi
+  fi
+
+  resolved="$(
+    EXPECT_REPO="$expect_repo" python3 -c '
+import json, os, re, sys
+raw = sys.stdin.read()
+expect = os.environ["EXPECT_REPO"]
+try:
+  docs = json.loads(raw)
+except Exception:
+  sys.stderr.write("image_inspect_parse_failed\n")
+  sys.exit(2)
+if isinstance(docs, dict):
+  docs = [docs]
+if not docs:
+  sys.stderr.write("empty_image_inspect\n")
+  sys.exit(2)
+digests = docs[0].get("RepoDigests") or []
+if not isinstance(digests, list):
+  digests = []
+matched = []
+pat = re.compile(r"^" + re.escape(expect) + r"@(sha256:[0-9a-f]{64})$")
+for d in digests:
+  if isinstance(d, str):
+    m = pat.match(d)
+    if m:
+      matched.append((m.group(1), d))
+if len(matched) == 0:
+  sys.stderr.write("no_matching_RepoDigest expect=%s have=%s\n" % (expect, json.dumps(digests)))
+  sys.exit(3)
+if len(matched) > 1:
+  sys.stderr.write("ambiguous_RepoDigest expect=%s matches=%s\n" % (expect, json.dumps([x[1] for x in matched])))
+  sys.exit(4)
+digest_hex, ref = matched[0]
+labels = ((docs[0].get("Config") or {}).get("Labels")) or {}
+oci = labels.get("org.opencontainers.image.revision") or ""
+# digest|ref|repo|oci
+sys.stdout.write("%s\t%s\t%s\t%s\n" % (digest_hex, ref, expect, oci))
+' <<<"$raw_json"
+  )" || {
+    wr_cutover_die "RepoDigest resolve failed for $container (expect_repo=$expect_repo)"
+    return 1
+  }
+
+  local digest_hex repo_digest_ref repository img_oci
+  IFS=$'\t' read -r digest_hex repo_digest_ref repository img_oci <<<"$resolved"
+  [[ "$digest_hex" =~ $WR_DIGEST_RE ]] || {
+    wr_cutover_die "resolved digest invalid for $container got='${digest_hex:-empty}'"
+    return 1
+  }
+
+  WR_CUTOVER_CTR_ID="$cid"
+  WR_CUTOVER_CONFIG_IMAGE="$config_image"
+  WR_CUTOVER_IMAGE_ID="$image_id"
+  WR_CUTOVER_REPO_DIGEST="$digest_hex"
+  WR_CUTOVER_REPOSITORY="$repository"
+  WR_CUTOVER_REPO_DIGEST_REF="$repo_digest_ref"
+  WR_CUTOVER_OCI_REVISION="${oci_rev:-${img_oci:-}}"
+  if [[ "$WR_CUTOVER_OCI_REVISION" == "<no value>" ]]; then
+    WR_CUTOVER_OCI_REVISION="${img_oci:-}"
+  fi
+  WR_CUTOVER_RELEASE_SHA="${release_sha:-}"
+  if [[ "$WR_CUTOVER_RELEASE_SHA" == "<no value>" ]]; then
+    WR_CUTOVER_RELEASE_SHA=""
+  fi
+  return 0
+}
+
+wr_cutover_container_immutable_digest() {
+  local container="${1:?}"
+  local component="${2:?}"
+  wr_cutover_resolve_container_image_identity "$container" "$component" || return 1
+  printf '%s\n' "$WR_CUTOVER_REPO_DIGEST"
 }
