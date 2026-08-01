@@ -107,6 +107,70 @@ export function hasPdpExecutionControls(sel: CardExecutionSelectors): boolean {
   )
 }
 
+/**
+ * Oliver fabric *collection* / family keys (LEONA, LILLIAN, …).
+ * These are not individual buyer color swatches and must not become
+ * vertical catalog-card option axes (PASS A containment).
+ */
+export const OLIVER_FABRIC_FAMILY_KEYS = new Set([
+  "leona",
+  "lillian",
+  "linda",
+  "lorna",
+  "torno",
+  "lilian",
+])
+
+export function isFabricFamilyUpholsteryKey(key: string): boolean {
+  return OLIVER_FABRIC_FAMILY_KEYS.has(key.trim().toLowerCase())
+}
+
+/** True when every upholstery entry is a fabric-family key (not a color). */
+export function isFabricFamilyOnlyUpholstery(
+  variants: CardColorVariant[] | undefined
+): boolean {
+  if (!variants?.length) return false
+  return variants.every((v) => isFabricFamilyUpholsteryKey(v.key))
+}
+
+/**
+ * Catalog product-card preview containment (PASS A).
+ * - Always drops `separateFabricRows` (catalog preview never vertical fabric-family toolbars).
+ * - For Oliver (`ol-*`) only: strips fabric-family keys from upholstery/finish.
+ * - Other collections may legitimately reuse tokens like `torno` as finish colors.
+ * PDP must keep calling `buildIntraProductExecutionSelectors` without this helper.
+ */
+export function containCatalogCardExecutionSelectors(
+  sel: CardExecutionSelectors,
+  product?: Record<string, unknown>
+): CardExecutionSelectors {
+  const next: CardExecutionSelectors = { ...sel }
+  delete next.separateFabricRows
+
+  const handle =
+    typeof product?.handle === "string" ? product.handle.toLowerCase() : ""
+  if (!handle.startsWith("ol-")) return next
+
+  if (next.upholstery?.length) {
+    const kept = next.upholstery.filter((v) => !isFabricFamilyUpholsteryKey(v.key))
+    if (kept.length === 0) delete next.upholstery
+    else next.upholstery = kept
+  }
+
+  /* Mis-bucketed fabric families in finish_color_executions (e.g. OL-56 lilian)
+     must not appear as a fake «Цвет» axis on the catalog card. Data repair = PASS B. */
+  if (next.finish?.length) {
+    const kept = next.finish.filter((v) => !isFabricFamilyUpholsteryKey(v.key))
+    if (kept.length === 0) {
+      delete next.finish
+      delete next.finishLabel
+    } else {
+      next.finish = kept
+    }
+  }
+  return next
+}
+
 const EXECUTION_LABELS: Record<string, string> = {
   [NEUTRAL_KEY]: "Основной",
   blue: "Голубой",
