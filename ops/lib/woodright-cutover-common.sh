@@ -71,6 +71,22 @@ wr_cutover_require_confirm() {
   }
 }
 
+# Generic confirm-token comparison for helpers that own a different token than
+# the public_demo one above (e.g. the private production-candidate cutover).
+# Does not relax wr_cutover_require_confirm / WR_CONFIRM_TOKEN.
+wr_cutover_require_confirm_token() {
+  local expected="${1:-}"
+  local actual="${2:-}"
+  [[ -n "$expected" ]] || {
+    wr_cutover_die "confirm token contract missing an expected value"
+    return 1
+  }
+  [[ "$actual" == "$expected" ]] || {
+    wr_cutover_die "mutation requires --confirm-mutation ${expected}"
+    return 1
+  }
+}
+
 wr_cutover_evidence_init() {
   local root="${1:?}"
   local mode="${2:-unknown}"

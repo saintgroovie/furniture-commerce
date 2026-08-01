@@ -126,7 +126,10 @@ jobs:
   release-governance:
     name: Release governance gates
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # Raised from 10: the cutover execute-path shell harnesses spawn a few
+    # thousand short-lived processes (fake docker/compose shims) and take a
+    # couple of minutes on hosted runners.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -156,6 +159,12 @@ jobs:
           node scripts/release/image-build-profile.fidelity.test.cjs
           node scripts/release/scan-storefront-contamination.fidelity.test.cjs
           node scripts/release/cutover-production-candidate.fidelity.test.cjs
+          # Private production-candidate execute path: locking, atomic pin
+          # writes, keeper-based recreate, health gates, rollback and traps.
+          # Runs entirely against a /tmp fake filesystem + docker/compose shims.
+          bash scripts/ops/test-production-candidate-cutover-execute-fidelity.sh
+          bash scripts/ops/test-public-demo-pair-cutover-fidelity.sh
+          bash scripts/ops/test-environment-governance-fidelity.sh
           # Gates S–AC: cutover lock / CAS / TX / active-after-public / recon / audit / drift / cleanup / DQ
           node scripts/release/check-global-lock-policy.cjs scripts/release
           node scripts/release/check-global-lock-policy.cjs --fixture-dir scripts/release/fixtures/lock

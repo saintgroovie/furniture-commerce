@@ -5,6 +5,39 @@ Audience: operators restoring the **private** Woodright production-candidate
 
 This is **not** public-demo rollback and **not** a `woodright.ru` DNS procedure.
 
+## Scope: image rollback is automatic, DB rollback is this document
+
+`ops/release/cutover-production-candidate.sh --mode execute` now performs the
+image pair cutover itself and **rolls itself back** on any failure after the
+first pin write - including on `SIGINT` / `SIGTERM` / `SIGHUP`. It restores the
+backed-up compose `.env` pins and the renamed keeper containers under the same
+lock, then exits `10` with state `rolled_back`. `ACTIVE_OWNER` /
+`EXPECTED_RELEASE` / `ACTIVE_RELEASE` are written **only** after health and the
+loopback HTTP gates pass, so a rolled-back attempt never publishes a release.
+
+Consequences for the manual procedure below:
+
+- The helper takes the production-scoped lock
+  `/srv/woodright/locks/production/live-cutover.lock` (from
+  `ops/config/runtime-environments/production.conf`), not the generic one named
+  in Phase A. Do not run both at once.
+- Keeper containers **do** exist for an automated cutover
+  (`woodright-production-<component>-keeper-<UTC>`), and the helper restores
+  them on failure. They are still not a durable anchor: for a later manual
+  rollback use the recorded digests, as described below.
+- The evidence directory of the failed run
+  (`.../private-pair-cutover-<UTC>/`) holds `state.txt`,
+  `state-transitions.log`, the pin backup and the pre/post inspect snapshots.
+  Read it before starting any manual step.
+- The application release SHA (`application_source_sha`, the OCI revision of
+  the images) and the helper install SHA (`helper_install_sha`, the ops commit
+  that installed the script) are recorded as separate fields. When restoring,
+  anchor on the application SHA - never on the helper SHA.
+
+Use the phases below when the image-level rollback is not enough: database
+damage, a partially applied migration, or a failure discovered after the
+cutover already committed.
+
 ## Anchors (digest, not tag)
 
 Prefer exact OCI digests recorded at cutover time. Example prior foreign anchors
