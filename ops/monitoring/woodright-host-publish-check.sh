@@ -85,7 +85,7 @@ if "monitor_token" not in d:
   else:
     d["monitor_token"]="host_publish_profile_mismatch_critical"
 print(json.dumps(d, indent=2, sort_keys=True))
-' "${OUT:-{}}" "$WOODRIGHT_ENVIRONMENT" "$RC"
+' "${OUT:-"{}"}" "$WOODRIGHT_ENVIRONMENT" "$RC"
 
 [[ $RC -eq 0 ]] || exit 2
 exit 0
