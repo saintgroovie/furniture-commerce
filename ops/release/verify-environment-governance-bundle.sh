@@ -80,6 +80,7 @@ REQUIRED_JSON='[
   "ops/release/recreate-staging-storefront.sh",
   "ops/release/cutover-public-demo-pair.sh",
   "ops/release/cutover-production-candidate.sh",
+  "ops/release/recover-production-candidate-skew.sh",
   "ops/release/public-demo-critical-http-smoke.sh",
   "ops/release/rollback-staging-backend-from-keeper.sh",
   "ops/release/rollback-staging-storefront-from-keeper.sh",
@@ -93,7 +94,8 @@ REQUIRED_JSON='[
   "ops/systemd/woodright-monitor.service",
   "scripts/release/reconcile-public-image-pins.sh",
   "docs/operator/environment-scoped-release-governance.md",
-  "docs/operator/backend-media-promotion-gate.md"
+  "docs/operator/backend-media-promotion-gate.md",
+  "docs/operator/production-candidate-rollback.md"
 ]'
 
 python3 - "$MANIFEST" "$MARKER_SHA" "$OPS_ROOT" "$TOOLS_ROOT" "$DOCS_ROOT" "$REQUIRED_JSON" <<'PY'
