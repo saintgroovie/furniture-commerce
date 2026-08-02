@@ -385,9 +385,8 @@ for rel in \
   ops/release/rollback-staging-storefront-from-keeper.sh \
   ops/release/rollback-staging-backend-from-keeper.sh
 do
-  t="$(cat "$ROOT/$rel")"
-  echo "$t" | grep -q 'LIVE_MUTATING=true' && pass "$rel LIVE_MUTATING" || fail "$rel LIVE_MUTATING"
-  echo "$t" | grep -q 'live-cutover.lock\|woodright-staging-mutation-lock' && pass "$rel lock" || fail "$rel lock"
+  grep -q 'LIVE_MUTATING=true' "$ROOT/$rel" && pass "$rel LIVE_MUTATING" || fail "$rel LIVE_MUTATING"
+  grep -qE 'live-cutover\.lock|woodright-staging-mutation-lock' "$ROOT/$rel" && pass "$rel lock" || fail "$rel lock"
 done
 
 # 9) global lock policy
@@ -567,7 +566,7 @@ grep -q 'identity_verified.:true' "$RB/evidence/json/backend-rollback-result.jso
 grep -q 'identity_verified.:true' "$RB/evidence/json/storefront-rollback-result.json" && pass "storefront identity evidence" || fail "storefront identity evidence missing"
 [[ ! -f "$RB/state/containers/woodright-staging-backend-keeper-test.json" ]] && pass "backend keeper consumed" || fail "backend keeper remains"
 [[ ! -f "$RB/state/containers/woodright-staging-storefront-keeper-test.json" ]] && pass "storefront keeper consumed" || fail "storefront keeper remains"
-echo "$PAIR_SRC" | grep -q 'wr_cutover_pair_rollback' && pass "pair script delegates to wr_cutover_pair_rollback" || fail "pair script missing wr_cutover_pair_rollback"
+grep -q 'wr_cutover_pair_rollback' "$PAIR" && pass "pair script delegates to wr_cutover_pair_rollback" || fail "pair script missing wr_cutover_pair_rollback"
 wr_staging_mutation_lock_release
 
 # 14) negative: digest corruption on keeper rename must fail closed
@@ -609,10 +608,9 @@ export WOODRIGHT_FAKE_DOCKER_ALLOW_MUTATION=0
 unset WOODRIGHT_CUTOVER_PINS_ENV WOODRIGHT_CUTOVER_ACTIVE_PUBLIC WOODRIGHT_CUTOVER_PUBLIC_DEMO_JSON WOODRIGHT_CUTOVER_COMPOSE_ENV
 
 # 15) monitor gate: read-only fail-closed; never exec HC from pair
-PAIR_SRC="$(cat "$PAIR")"
-echo "$PAIR_SRC" | grep -q 'assert_identity_stable_under_lock' && pass "pair has TOCTOU identity gate" || fail "pair missing TOCTOU gate"
-echo "$PAIR_SRC" | grep -q 'expected-old-backend-digest' && pass "pair supports expected-old digests" || fail "pair missing expected-old digests"
-echo "$PAIR_SRC" | grep -q 'last-status.json' && pass "pair reads monitor state file" || fail "pair missing monitor state read"
+grep -q 'assert_identity_stable_under_lock' "$PAIR" && pass "pair has TOCTOU identity gate" || fail "pair missing TOCTOU gate"
+grep -q 'expected-old-backend-digest' "$PAIR" && pass "pair supports expected-old digests" || fail "pair missing expected-old digests"
+grep -q 'last-status.json' "$PAIR" && pass "pair reads monitor state file" || fail "pair missing monitor state read"
 if awk '
   /recreate-staging-backend-with-media.sh/ { be=1; next }
   be && /wr_assert_container_matches_environment.*backend/ { gate=1; next }
