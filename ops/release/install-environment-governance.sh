@@ -29,6 +29,9 @@ DRY_RUN=0
 ALLOW_DIRTY_SOURCE="${WOODRIGHT_INSTALL_ALLOW_DIRTY_SOURCE:-0}"
 MUTATION_STARTED=0
 RESTORE_DONE=0
+INSTALL_OK=0
+INSTALL_LOCK_FD=200
+INSTALL_FCNTL_HOLDER_PID=""
 
 die() {
   echo "ERROR: $*" >&2
@@ -37,9 +40,111 @@ die() {
     # restore_previous_bundle is defined later; only called after install mutation starts.
     restore_previous_bundle || log "RESTORE_FAILED from die()"
   fi
+  release_install_lock_holders 2>/dev/null || true
   exit 1
 }
 log() { echo "$*"; }
+
+# Non-blocking exclusive lock helper (util-linux flock OR python fcntl).
+# Usage: wr_try_flock_nb <path> <fd>  -> 0 if acquired, 1 if busy
+wr_try_flock_nb() {
+  local path="$1"
+  local fd="$2"
+  : >>"$path"
+  if command -v flock >/dev/null 2>&1; then
+    eval "exec ${fd}>>\"\$path\""
+    if flock -n "$fd"; then
+      return 0
+    fi
+    eval "exec ${fd}>&-" 2>/dev/null || true
+    return 1
+  fi
+  local ready
+  ready="$(mktemp)"
+  python3 - "$path" "$ready" <<'PY' &
+import fcntl, os, sys, time
+path, ready = sys.argv[1], sys.argv[2]
+fd = os.open(path, os.O_RDWR | os.O_CREAT, 0o644)
+try:
+    fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+except BlockingIOError:
+    sys.exit(3)
+open(ready, "w").write("1")
+while True:
+    time.sleep(3600)
+PY
+  local holder=$!
+  local i=0
+  while [[ ! -s "$ready" && "$i" -lt 40 ]]; do
+    if ! kill -0 "$holder" 2>/dev/null; then
+      rm -f "$ready"
+      return 1
+    fi
+    sleep 0.05
+    i=$((i + 1))
+  done
+  if [[ ! -s "$ready" ]]; then
+    kill "$holder" 2>/dev/null || true
+    rm -f "$ready"
+    return 1
+  fi
+  rm -f "$ready"
+  INSTALL_FCNTL_HOLDER_PID="$holder"
+  return 0
+}
+
+wr_probe_lock_busy() {
+  local path="$1"
+  [[ -e "$path" ]] || return 1
+  if command -v flock >/dev/null 2>&1; then
+    if ! ( flock -n 9 ) 9>>"$path"; then
+      return 0
+    fi
+    return 1
+  fi
+  python3 - "$path" <<'PY'
+import fcntl, os, sys
+path = sys.argv[1]
+fd = os.open(path, os.O_RDWR | os.O_CREAT, 0o644)
+try:
+    fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+except BlockingIOError:
+    sys.exit(0)
+sys.exit(1)
+PY
+}
+
+acquire_install_lock() {
+  local lock_path="${WOODRIGHT_INSTALL_LOCK_PATH:-$WR_ROOT/locks/env-governance-install.lock}"
+  mkdir -p "$(dirname "$lock_path")"
+  if ! wr_try_flock_nb "$lock_path" 200; then
+    die "env-governance install lock busy: $lock_path (refuse concurrent install)"
+  fi
+  log "install_lock_acquired path=$lock_path"
+}
+
+assert_no_active_runtime_locks() {
+  local p
+  for p in \
+    "$WR_ROOT/locks/public_demo/live-cutover.lock" \
+    "$WR_ROOT/locks/staging/live-cutover.lock" \
+    "$WR_ROOT/locks/production/live-cutover.lock" \
+    "$WR_ROOT/locks/live-cutover.lock"
+  do
+    if wr_probe_lock_busy "$p"; then
+      die "refusing install while runtime mutation lock held: $p"
+    fi
+  done
+}
+
+release_install_lock_holders() {
+  if [[ -n "${INSTALL_FCNTL_HOLDER_PID:-}" ]]; then
+    kill "$INSTALL_FCNTL_HOLDER_PID" 2>/dev/null || true
+    wait "$INSTALL_FCNTL_HOLDER_PID" 2>/dev/null || true
+    INSTALL_FCNTL_HOLDER_PID=""
+  fi
+  exec 200>&- 2>/dev/null || true
+}
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -189,6 +294,8 @@ if [[ "$DRY_RUN" == "1" ]]; then
 fi
 
 assert_source_integrity
+acquire_install_lock
+assert_no_active_runtime_locks
 
 mkdir -p "$BACKUP" \
   "$OPS_ROOT/lib" \
@@ -197,7 +304,8 @@ mkdir -p "$BACKUP" \
   "$OPS_ROOT/monitoring" \
   "$OPS_ROOT/systemd" \
   "$TOOLS_ROOT" \
-  "$DOCS_ROOT"
+  "$DOCS_ROOT" \
+  "$WR_ROOT/locks"
 
 if [[ "$CANONICAL_LAYOUT" == "1" ]]; then
   mkdir -p \
@@ -322,6 +430,7 @@ restore_previous_bundle() {
 
 MUTATION_STARTED=0
 RESTORE_DONE=0
+INSTALL_OK=0
 on_install_err() {
   local rc=$?
   if [[ "$MUTATION_STARTED" == "1" && "$RESTORE_DONE" != "1" ]]; then
@@ -330,7 +439,34 @@ on_install_err() {
   fi
   exit "$rc"
 }
+on_install_interrupt() {
+  local sig="${1:-INT}"
+  log "INSTALL_INTERRUPTED signal=$sig mutation_started=$MUTATION_STARTED"
+  if [[ "$MUTATION_STARTED" == "1" && "$RESTORE_DONE" != "1" ]]; then
+    RESTORE_DONE=1
+    restore_previous_bundle || log "RESTORE_FAILED during $sig trap"
+  fi
+  case "$sig" in
+    TERM) exit 143 ;;
+    HUP) exit 129 ;;
+    *) exit 130 ;;
+  esac
+}
+on_install_exit() {
+  # Runs on every exit path; restore only if mutation left an incomplete bundle.
+  if [[ "$INSTALL_OK" != "1" ]]; then
+    if [[ "$MUTATION_STARTED" == "1" && "$RESTORE_DONE" != "1" ]]; then
+      RESTORE_DONE=1
+      restore_previous_bundle || log "RESTORE_FAILED during EXIT trap"
+    fi
+  fi
+  release_install_lock_holders
+}
 trap 'on_install_err' ERR
+trap 'on_install_interrupt INT' INT
+trap 'on_install_interrupt TERM' TERM
+trap 'on_install_interrupt HUP' HUP
+trap 'on_install_exit' EXIT
 
 # Backup + install
 MUTATION_STARTED=1
@@ -355,6 +491,9 @@ for rel in "${FILES[@]}"; do
   # Test-only fault injection (never set in production installs).
   if [[ -n "${WOODRIGHT_INSTALL_FORCE_FAIL_AFTER:-}" && "$rel" == "$WOODRIGHT_INSTALL_FORCE_FAIL_AFTER" ]]; then
     die "forced_fail_after=$rel"
+  fi
+  if [[ -n "${WOODRIGHT_INSTALL_SLEEP_AFTER:-}" && "$rel" == "$WOODRIGHT_INSTALL_SLEEP_AFTER" ]]; then
+    sleep "${WOODRIGHT_INSTALL_SLEEP_SEC:-30}"
   fi
 
   if [[ "$rel" == scripts/release/* ]]; then
@@ -520,5 +659,7 @@ if [[ "$CANONICAL_LAYOUT" == "1" ]]; then
 fi
 cp "$TEXT_MANIFEST" "$TEXT_MANIFEST_DST"
 
+INSTALL_OK=1
+MUTATION_STARTED=0
 log "INSTALL_OK source_sha=$SOURCE_SHA backup=$BACKUP bundle_manifest=$BUNDLE_MANIFEST_DST"
 log "NOTE: application runtime unchanged; digests/containers not mutated"
