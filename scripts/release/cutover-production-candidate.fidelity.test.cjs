@@ -190,17 +190,105 @@ const SF_REF = `ghcr.io/saintgroovie/woodright-storefront@sha256:${"c".repeat(64
       typeof plan.rollback_refs.pin_backup === "string" && plan.rollback_refs.pin_backup.length > 0,
       "rollback refs name the pin backup"
     )
+
+    // Keeper containers are gone: a renamed container keeps its Compose
+    // project labels, so `compose up` destroys it and the "restore" becomes a
+    // silent no-op. The disclosed plan must say so.
+    check(
+      plan.container_recreate_uses_keepers === false,
+      "planned recreate declares container_recreate_uses_keepers=false"
+    )
+    check(
+      !Object.prototype.hasOwnProperty.call(plan.rollback_refs, "keeper_names"),
+      "rollback refs no longer advertise keeper names"
+    )
+    check(
+      typeof plan.rollback_refs.method === "string" && /pins/.test(plan.rollback_refs.method),
+      "rollback method is pin-anchored"
+    )
+    check(
+      Array.isArray(plan.rollback_refs.postconditions) &&
+        plan.rollback_refs.postconditions.includes("runtime_repo_digests_equal_restored_pins"),
+      "rollback discloses the pins==runtime postcondition"
+    )
+
     check(
       plan.health_plan.http.some((u) => u.startsWith("http://127.0.0.1:")),
       "health plan probes loopback only"
     )
     check(
+      typeof plan.health_plan.deadline_sec.backend === "string" &&
+        Number(plan.health_plan.deadline_sec.backend) > 0 &&
+        Number(plan.health_plan.deadline_sec.storefront) > 0,
+      "health plan discloses per-component readiness deadlines"
+    )
+    check(
+      Array.isArray(plan.health_plan.transient_docker_states) &&
+        plan.health_plan.transient_docker_states.some((s) => /starting/.test(s)),
+      "health plan treats docker health 'starting' as transient"
+    )
+    check(
+      Array.isArray(plan.health_plan.terminal_docker_states) &&
+        plan.health_plan.terminal_docker_states.includes("exited"),
+      "health plan lists terminal docker states"
+    )
+
+    check(
       plan.state_machine[0] === "prepared" &&
         plan.state_machine.includes("pins_written") &&
-        plan.state_machine.includes("health_passed"),
-      "planned state machine is disclosed"
+        plan.state_machine.includes("health_passed") &&
+        plan.state_machine[plan.state_machine.length - 1].includes("rollback_incomplete"),
+      "planned state machine is disclosed and includes rollback_incomplete"
+    )
+    check(
+      plan.exit_codes["13"] !== undefined && /rollback_incomplete/.test(plan.exit_codes["13"]),
+      "exit code 13 is documented as rollback_incomplete"
+    )
+
+    // Skew disclosure: with no live containers on the test host both sides are
+    // unknown, so the helper must NOT claim a skew it cannot prove.
+    check(packet.existing_pin_runtime_skew === false, "no skew claimed when the runtime cannot be read")
+    check(packet.normal_execute_blocked === false, "execute not blocked when there is no proven skew")
+    check(
+      packet.pin_runtime_comparison.backend.verdict === "unknown" &&
+        packet.pin_runtime_comparison.storefront.verdict === "unknown",
+      "pin/runtime verdicts are 'unknown' rather than guessed"
+    )
+    check(
+      packet.pin_runtime_comparison.blocking_token === "existing_pin_runtime_skew_requires_recovery",
+      "packet names the blocking token used by the execute refusal"
+    )
+    check(
+      /recover-production-candidate-skew\.sh/.test(packet.pin_runtime_comparison.recovery_helper),
+      "packet points at the skew recovery helper"
     )
   }
+}
+
+// 9b. Header/usage document the new exit codes and the no-keeper rollback.
+{
+  const text = fs.readFileSync(helper, "utf8")
+  check(/13 rollback_incomplete/.test(text), "header documents exit 13 rollback_incomplete")
+  check(/NO KEEPER CONTAINERS/.test(text), "header states the rollback does not use keepers")
+  check(
+    /existing_pin_runtime_skew_requires_recovery/.test(text),
+    "helper carries the skew refusal token"
+  )
+  const r = run(["--help"])
+  check(r.status === 0, "--help exits 0", r.stderr)
+  check(/13 rollback_incomplete/.test(r.stdout), "usage lists exit 13", r.stdout)
+  check(/No keeper/i.test(r.stdout), "usage states keepers are not used", r.stdout)
+}
+
+// 9c. The skew recovery helper exists and is wired into the install set.
+{
+  const recovery = path.join(root, "ops/release/recover-production-candidate-skew.sh")
+  check(fs.existsSync(recovery), "recover-production-candidate-skew.sh exists")
+  const installer = fs.readFileSync(path.join(root, "ops/release/install-environment-governance.sh"), "utf8")
+  check(
+    /ops\/release\/recover-production-candidate-skew\.sh/.test(installer),
+    "installer ships the skew recovery helper"
+  )
 }
 
 // 10. component=backend only requires --backend-ref, and marks storefront N/A.

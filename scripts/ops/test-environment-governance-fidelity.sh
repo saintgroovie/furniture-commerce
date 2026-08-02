@@ -251,6 +251,23 @@ grep -q 'ops/release/recreate-staging-storefront.sh' "$ROOT/ops/release/install-
   || fail "installer missing storefront recreate"
 ok "installer includes pair+storefront helpers"
 
+# 24c-bis) installer ships the production cutover helper AND its skew recovery
+# companion - shipping only one of the pair leaves the VM unable to recover a
+# pin/runtime skew that the cutover helper now refuses to run against.
+grep -q 'ops/release/cutover-production-candidate.sh' "$ROOT/ops/release/install-environment-governance.sh" \
+  || fail "installer missing production cutover helper"
+grep -q 'ops/release/recover-production-candidate-skew.sh' "$ROOT/ops/release/install-environment-governance.sh" \
+  || fail "installer missing production skew recovery helper"
+[[ -f "$ROOT/ops/release/recover-production-candidate-skew.sh" ]] \
+  || fail "skew recovery helper missing from the repo"
+grep -q 'existing_pin_runtime_skew_requires_recovery' "$ROOT/ops/release/cutover-production-candidate.sh" \
+  || fail "cutover helper does not refuse an existing pin/runtime skew"
+grep -q 'recover-production-candidate-skew.sh' "$ROOT/ops/release/cutover-production-candidate.sh" \
+  || fail "cutover helper does not point at the recovery helper"
+grep -q 'I_UNDERSTAND_PRODUCTION_PIN_RUNTIME_SKEW_RECOVERY' "$ROOT/ops/release/recover-production-candidate-skew.sh" \
+  || fail "skew recovery helper missing its confirm token"
+ok "installer includes the production cutover + skew recovery pair"
+
 # 24d) pair rollback uses environment-scoped identity dir
 if grep -nE '/srv/woodright/runtime-identity/(ACTIVE_PUBLIC|DOKPLOY|public-demo)' \
   "$ROOT/ops/lib/woodright-cutover-common.sh" "$ROOT/ops/release/cutover-public-demo-pair.sh" \

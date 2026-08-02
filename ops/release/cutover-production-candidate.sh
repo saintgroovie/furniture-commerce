@@ -51,14 +51,39 @@
 # Execute: requires --confirm-mutation I_UNDERSTAND_PRIVATE_PRODUCTION_CANDIDATE_CUTOVER.
 # Phase state machine (persisted in the evidence dir):
 #   prepared -> pins_written -> containers_recreated -> health_passed
-#            -> acceptance_passed -> committed | rolled_back | failed_before_mutation
+#            -> acceptance_passed
+#            -> committed | rolled_back | rollback_incomplete
+#            | failed_before_mutation
+#
 # Rollback is armed by the FIRST successful pin write; any P0/P1 after that
-# restores pins + keeper containers under the same lock. Never migrations,
-# seeds, DNS, public Traefik labels, prune, or postgres/redis recreate.
+# restores the backed-up pins and brings the runtime back to them under the
+# same lock. NO KEEPER CONTAINERS: renaming a live container aside keeps its
+# Compose project labels, so the next `compose up` recreates/destroys the
+# keeper and the "restore" silently becomes a no-op. The rollback authority is
+# the pair (backed-up compose .env, PRE_BE_REF/PRE_SF_REF - the exact
+# immutable RepoDigest refs of the containers that were live before the first
+# write, proven present locally before any mutation).
+#
+# Rollback is only reported as rolled_back (exit 10) after ALL postconditions
+# hold: pins restored, runtime RepoDigests byte-equal to the restored pin refs,
+# private loopback binds, media volume mounted, no public Traefik, and the
+# minimal loopback HTTP gates. If any postcondition fails the run reports
+# rollback_incomplete (exit 13) - never a false ROLLBACK_OK.
+#
+# Never migrations, seeds, DNS, public Traefik labels, prune, or postgres/redis
+# recreate.
+#
+# Pre-existing pin/runtime skew (compose .env pins != live container digests)
+# is refused before the lock and before any write: a normal cutover cannot use
+# a pin file that does not describe the runtime, because that file is also the
+# rollback anchor. Recover first with
+# ops/release/recover-production-candidate-skew.sh.
 #
 # Exit codes:
 #   0 ok | 2 usage/validation | 3 lock | 4 dry-run candidate mismatch
-#   10 rollback_ok | 11 rollback_partial | 12 rollback_failed
+#   10 rollback_ok (verified) | 11 rollback_partial (reserved, not emitted)
+#   12 rollback_failed (pins could not be restored)
+#   13 rollback_incomplete (pins restored, postconditions not proven)
 #
 # Fidelity coverage (both run in the PR checks release-governance job):
 #   scripts/release/cutover-production-candidate.fidelity.test.cjs - CLI
@@ -107,11 +132,33 @@ ROLLBACK_RC=0
 PINS_WRITTEN=""
 COMPONENTS_RECREATED=""
 METADATA_WRITTEN=0
-KEEPER_BE=""
-KEEPER_SF=""
 TS_RUN="$(date -u +%Y%m%dT%H%M%SZ)"
-PLANNED_KEEPER_BE=""
-PLANNED_KEEPER_SF=""
+
+# Rollback anchors: the exact immutable refs the containers ran on before the
+# first write. Captured under the lock, proven present locally, and recorded in
+# the evidence dir before any pin is installed.
+PRE_BE_REF=""
+PRE_SF_REF=""
+
+# Pre-existing pin/runtime skew (computed read-only in both modes).
+LIVE_BE_REF=""
+LIVE_SF_REF=""
+PIN_BE_VALUE=""
+PIN_SF_VALUE=""
+SKEW_BE="unknown"
+SKEW_SF="unknown"
+EXISTING_SKEW=0
+
+# Readiness polling defaults (seconds). Both are derived from the image
+# healthcheck when it is inspectable; these are the documented fallbacks for
+# images whose HEALTHCHECK cannot be read (backend --start-period=60s,
+# storefront --start-period=40s, plus interval*retries and margin).
+READY_DEADLINE_BE_DEFAULT=180
+READY_DEADLINE_SF_DEFAULT=150
+READY_DEADLINE_MARGIN_SEC=30
+READY_POLL_INTERVAL_DEFAULT=2
+# A container that keeps restarting is terminal, not "still starting".
+READY_RESTART_LOOP_THRESHOLD=3
 
 # All diagnostic/status lines go to stderr; stdout is reserved for the single
 # machine-readable JSON packet at the end of a successful run.
@@ -134,9 +181,14 @@ Optional:
   --confirm-mutation <token>  (execute only: I_UNDERSTAND_PRIVATE_PRODUCTION_CANDIDATE_CUTOVER)
 
 Dry-run: read-only. No lock held, no pin writes, no recreate, no ACTIVE/EXPECTED writes.
-Execute: pins -> recreate (backend then storefront, --no-deps) -> health -> ACTIVE,
+Execute: pins -> recreate (backend then storefront, --no-deps) -> readiness -> ACTIVE,
          under /srv/woodright/locks/production/live-cutover.lock, with automatic
-         rollback of pins + keeper containers on any failure after the first pin write.
+         rollback (restore pins, recreate on the pre-cutover digests, verify
+         postconditions) on any failure after the first pin write. No keeper
+         containers are created or trusted.
+
+Exit codes: 0 ok | 2 validation | 3 lock | 4 dry-run mismatch
+            10 rollback_ok (verified) | 12 rollback_failed | 13 rollback_incomplete
 EOF
 }
 
@@ -230,6 +282,14 @@ resolve_helper_install_sha() {
 # CLI + environment authority
 # ---------------------------------------------------------------------------
 FULL_ARGV=("$@")
+
+# --help must work before the environment gate: refusing to print usage until
+# the operator already knows the flags is not a safety property.
+for wr_arg in "${FULL_ARGV[@]-}"; do
+  case "$wr_arg" in
+    -h|--help) usage; exit 0 ;;
+  esac
+done
 
 # --environment / --component are re-validated here on top of the shared
 # helpers: wr_require_environment_from_args accepts public_demo|staging|
@@ -423,6 +483,67 @@ container_digest() {
 
 container_id() { prod_docker inspect "$1" --format '{{.Id}}' 2>/dev/null || true; }
 
+container_started_at() { prod_docker inspect "$1" --format '{{.State.StartedAt}}' 2>/dev/null || true; }
+
+# Exact immutable RepoDigest ref (registry/repository@sha256:<64hex>) of a live
+# container. Config.Image is authoritative when compose pinned a digest ref;
+# otherwise fall back to the shared image-inspect resolver. Empty output means
+# "cannot prove it" - callers that need a rollback anchor must fail closed.
+resolve_live_ref() {
+  local name="$1" title="$2" component="$3"
+  local want_repo="${IMAGE_REGISTRY%/}/${title}"
+  local ref=""
+  ref="$(prod_docker inspect "$name" --format '{{.Config.Image}}' 2>/dev/null || true)"
+  if [[ "$ref" != "${want_repo}@sha256:"* ]]; then
+    ref=""
+    if wr_cutover_resolve_container_image_identity "$name" "$component" "$want_repo" >/dev/null 2>&1; then
+      ref="${WR_CUTOVER_REPO_DIGEST_REF:-}"
+    fi
+  fi
+  case "$ref" in
+    "${want_repo}@sha256:"*)
+      [[ "${ref##*@}" =~ ^sha256:[0-9a-f]{64}$ ]] || ref=""
+      ;;
+    *) ref="" ;;
+  esac
+  printf '%s\n' "$ref"
+}
+
+pin_value_of() {
+  local key="$1"
+  [[ -r "$COMPOSE_ENV_FILE" ]] || return 0
+  awk -F= -v k="$key" '$1==k {sub(/^[^=]*=/, ""); print; exit}' "$COMPOSE_ENV_FILE" 2>/dev/null || true
+}
+
+# Read-only comparison of the compose .env pins against the live runtime.
+# "unknown" whenever either side cannot be proven (absent container, unreadable
+# pin file) - only a proven difference sets the skew flag.
+detect_existing_skew() {
+  local verdict
+  PIN_BE_VALUE="$(pin_value_of WOODRIGHT_BACKEND_IMAGE)"
+  PIN_SF_VALUE="$(pin_value_of WOODRIGHT_STOREFRONT_IMAGE)"
+  if [[ "${WR_BE_CONTAINER_PRESENT:-false}" == "true" ]]; then
+    LIVE_BE_REF="$(resolve_live_ref "${WOODRIGHT_BE_CONTAINER_DEFAULT}" "${WOODRIGHT_REQUIRED_BE_TITLE:-woodright-backend}" backend)"
+  fi
+  if [[ "${WR_SF_CONTAINER_PRESENT:-false}" == "true" ]]; then
+    LIVE_SF_REF="$(resolve_live_ref "${WOODRIGHT_SF_CONTAINER_DEFAULT}" "${WOODRIGHT_REQUIRED_SF_TITLE:-woodright-storefront}" storefront)"
+  fi
+  for verdict in backend storefront; do
+    local pin live result
+    if [[ "$verdict" == "backend" ]]; then pin="$PIN_BE_VALUE"; live="$LIVE_BE_REF"; else pin="$PIN_SF_VALUE"; live="$LIVE_SF_REF"; fi
+    if [[ -z "$pin" || -z "$live" ]]; then
+      result="unknown"
+    elif [[ "$pin" == "$live" ]]; then
+      result="match"
+    else
+      result="skew"
+      EXISTING_SKEW=1
+      log "EXISTING_PIN_RUNTIME_SKEW $verdict pin=$pin runtime=$live"
+    fi
+    if [[ "$verdict" == "backend" ]]; then SKEW_BE="$result"; else SKEW_SF="$result"; fi
+  done
+}
+
 host_port_of() {
   # http://127.0.0.1:9200 -> 9200
   local url="$1"
@@ -527,6 +648,178 @@ PY
 }
 
 # ---------------------------------------------------------------------------
+# Loopback HTTP probes. Defined before the readiness/rollback helpers so the
+# EXIT-trap rollback path can always reach them, whatever phase it fires in.
+# ---------------------------------------------------------------------------
+http_status() {
+  local url="$1"
+  if [[ -n "${WOODRIGHT_FAKE_HTTP_BIN:-}" ]] && harness_enabled; then
+    "${WOODRIGHT_FAKE_HTTP_BIN}" "$url" 2>/dev/null || echo 000
+    return 0
+  fi
+  curl -sS -o /dev/null -w '%{http_code}' --max-time 15 "$url" 2>/dev/null || echo 000
+}
+
+http_gate() {
+  local label="$1" url="$2"
+  if [[ "${WOODRIGHT_CUTOVER_SKIP_HTTP:-0}" == "1" ]] && harness_enabled; then
+    log "HARNESS skipping HTTP gate $label ($url)"
+    return 0
+  fi
+  local code
+  code="$(http_status "$url")"
+  if [[ -n "$EVIDENCE_DIR" && -d "$EVIDENCE_DIR/raw" ]]; then
+    printf '%s %s %s\n' "$label" "$url" "$code" >>"$EVIDENCE_DIR/raw/http-gates.txt" 2>/dev/null || true
+  fi
+  [[ "$code" == "200" ]] || { log "http gate FAILED $label $url code=$code"; return 1; }
+  log "http gate ok $label $url code=$code"
+  return 0
+}
+
+# ---------------------------------------------------------------------------
+# Readiness polling (replaces the one-shot docker_health_ok that treated the
+# Docker health state "starting" as a hard failure - backend HEALTHCHECK uses
+# --start-period=60s and storefront --start-period=40s, so a fresh container is
+# ALWAYS "starting" for a while and a one-shot read is guaranteed to be wrong).
+# ---------------------------------------------------------------------------
+ready_poll_interval() {
+  if harness_enabled && [[ -n "${WOODRIGHT_CUTOVER_POLL_INTERVAL_SEC:-}" ]]; then
+    printf '%s\n' "${WOODRIGHT_CUTOVER_POLL_INTERVAL_SEC}"
+    return 0
+  fi
+  printf '%s\n' "$READY_POLL_INTERVAL_DEFAULT"
+}
+
+# Deadline for one component. Derived from the image/container HEALTHCHECK when
+# Docker exposes it (StartPeriod + Interval*Retries + margin, all in ns), else
+# the documented fallbacks: backend 180s, storefront 150s.
+component_ready_deadline_sec() {
+  local kind="$1" name="$2"
+  local fallback="$READY_DEADLINE_BE_DEFAULT"
+  [[ "$kind" == "backend" ]] || fallback="$READY_DEADLINE_SF_DEFAULT"
+  if harness_enabled && [[ -n "${WOODRIGHT_CUTOVER_READY_DEADLINE_SEC:-}" ]]; then
+    printf '%s\n' "${WOODRIGHT_CUTOVER_READY_DEADLINE_SEC}"
+    return 0
+  fi
+  local blob start interval retries derived
+  blob="$(prod_docker inspect "$name" --format \
+    "{{.Config.Healthcheck.StartPeriod}}${WR_FIELD_SEP}{{.Config.Healthcheck.Interval}}${WR_FIELD_SEP}{{.Config.Healthcheck.Retries}}" \
+    2>/dev/null || true)"
+  local fields=() line
+  while IFS= read -r line; do fields+=("$line"); done <<<"${blob//${WR_FIELD_SEP}/$'\n'}"
+  start="${fields[0]-}"; interval="${fields[1]-}"; retries="${fields[2]-}"
+  if [[ "$start" =~ ^[0-9]+$ && "$interval" =~ ^[0-9]+$ && "$retries" =~ ^[0-9]+$ && "$start" -gt 0 ]]; then
+    derived=$(( start / 1000000000 + (interval / 1000000000) * retries + READY_DEADLINE_MARGIN_SEC ))
+    if [[ "$derived" -gt 0 ]]; then
+      printf '%s\n' "$derived"
+      return 0
+    fi
+  fi
+  printf '%s\n' "$fallback"
+}
+
+readiness_url_for() {
+  case "$1" in
+    backend) printf '%s\n' "${WOODRIGHT_API_HOST%/}/health" ;;
+    *) printf '%s\n' "${WOODRIGHT_BUYER_HOST%/}/" ;;
+  esac
+}
+
+poll_note() {
+  local kind="$1"
+  shift
+  [[ -n "$EVIDENCE_DIR" && -d "$EVIDENCE_DIR/raw" ]] || return 0
+  printf '%s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*" >>"$EVIDENCE_DIR/raw/health-poll-$kind.txt" 2>/dev/null || true
+  return 0
+}
+
+# wait_component_ready <kind> <container-name> <deadline-sec> [phase-label]
+#   absent / exited / dead / removing / restart loop -> immediate failure
+#   starting                                          -> transient, keep polling
+#   healthy                                           -> proceed to HTTP
+#   unhealthy                                         -> keep polling until deadline
+#   no healthcheck                                    -> HTTP-only readiness
+wait_component_ready() {
+  local kind="$1" name="$2" deadline="$3" label="${4:-forward}"
+  local url started now attempt=0 blob status health restarts fields=() line
+  local docker_ready=0 healthcheck_present=1
+  url="$(readiness_url_for "$kind")"
+  started="$(date +%s)"
+  poll_note "$kind" "begin label=$label container=$name deadline=${deadline}s url=$url"
+  while :; do
+    attempt=$((attempt + 1))
+    if ! prod_docker inspect "$name" >/dev/null 2>&1; then
+      poll_note "$kind" "attempt=$attempt container=absent"
+      log "readiness: $kind container '$name' is absent - terminal"
+      return 1
+    fi
+    blob="$(prod_docker inspect "$name" --format \
+      "{{.State.Status}}${WR_FIELD_SEP}{{.State.Health.Status}}${WR_FIELD_SEP}{{.RestartCount}}" \
+      2>/dev/null || true)"
+    fields=()
+    while IFS= read -r line; do fields+=("$line"); done <<<"${blob//${WR_FIELD_SEP}/$'\n'}"
+    status="${fields[0]-}"; health="${fields[1]-}"; restarts="${fields[2]-}"
+    if harness_enabled && [[ "${WOODRIGHT_CUTOVER_TEST_FORCE_HEALTH:-}" == "healthy" ]]; then
+      health="healthy"
+    fi
+    poll_note "$kind" "attempt=$attempt status=${status:-<empty>} health=${health:-<none>} restarts=${restarts:-<none>}"
+    case "$status" in
+      exited|dead|removing)
+        log "readiness: $kind status=$status - terminal"
+        return 1
+        ;;
+    esac
+    if [[ "$restarts" =~ ^[0-9]+$ ]] && [[ "$restarts" -ge "$READY_RESTART_LOOP_THRESHOLD" ]]; then
+      log "readiness: $kind restart loop detected (RestartCount=$restarts >= $READY_RESTART_LOOP_THRESHOLD) - terminal"
+      return 1
+    fi
+    case "$health" in
+      healthy) docker_ready=1 ;;
+      ""|"<no value>"|"<nil>")
+        healthcheck_present=0
+        docker_ready=1
+        ;;
+      *) docker_ready=0 ;;
+    esac
+    if [[ "$status" == "running" && "$docker_ready" == "1" ]]; then
+      if [[ "$healthcheck_present" == "0" ]]; then
+        log "readiness: $kind has no healthcheck - HTTP-only readiness"
+      else
+        log "readiness: $kind docker health=healthy after ${attempt} poll(s)"
+      fi
+      break
+    fi
+    now="$(date +%s)"
+    if [[ $(( now - started )) -ge "$deadline" ]]; then
+      log "readiness: $kind docker gate timed out after ${deadline}s (status=${status:-<empty>} health=${health:-<none>})"
+      return 1
+    fi
+    sleep "$(ready_poll_interval)"
+  done
+
+  if harness_enabled && [[ "${WOODRIGHT_CUTOVER_SKIP_HTTP:-0}" == "1" ]]; then
+    poll_note "$kind" "http skipped (harness)"
+    return 0
+  fi
+  local code
+  while :; do
+    attempt=$((attempt + 1))
+    code="$(http_status "$url")"
+    poll_note "$kind" "attempt=$attempt http=$url code=$code"
+    if [[ "$code" == "200" ]]; then
+      log "readiness: $kind HTTP $url code=200"
+      return 0
+    fi
+    now="$(date +%s)"
+    if [[ $(( now - started )) -ge "$deadline" ]]; then
+      log "readiness: $kind HTTP gate timed out after ${deadline}s (last code=$code url=$url)"
+      return 1
+    fi
+    sleep "$(ready_poll_interval)"
+  done
+}
+
+# ---------------------------------------------------------------------------
 # Dry-run path (read-only from here on)
 # ---------------------------------------------------------------------------
 COMPOSE_ENV_FILE="${WOODRIGHT_CUTOVER_COMPOSE_ENV:-${WOODRIGHT_COMPOSE_ENV_FILE:-}}"
@@ -545,8 +838,20 @@ if need_be; then inspect_image_candidate BE "$BE_REF"; else WR_BE_PRESENT=n_a; W
 inspect_container BE "${WOODRIGHT_BE_CONTAINER_DEFAULT}"
 inspect_container SF "${WOODRIGHT_SF_CONTAINER_DEFAULT}"
 
-if need_be; then PLANNED_KEEPER_BE="${WOODRIGHT_BE_CONTAINER_DEFAULT}-keeper-${TS_RUN}"; fi
-if need_sf; then PLANNED_KEEPER_SF="${WOODRIGHT_SF_CONTAINER_DEFAULT}-keeper-${TS_RUN}"; fi
+detect_existing_skew
+
+# Would a rollback have images to recreate on? Reported in the dry-run packet so
+# the operator learns about a missing anchor image before execute refuses.
+rollback_anchor_images_present() {
+  local kind ref
+  for kind in backend storefront; do
+    component_in_scope "$kind" || continue
+    if [[ "$kind" == "backend" ]]; then ref="$LIVE_BE_REF"; else ref="$LIVE_SF_REF"; fi
+    [[ -n "$ref" ]] || return 1
+    prod_docker image inspect "$ref" >/dev/null 2>&1 || return 1
+  done
+  return 0
+}
 
 emit_packet() {
   local packet_mode="$1" verdict="$2"
@@ -569,7 +874,17 @@ emit_packet() {
   WR_PACKET_OWNERSHIP_DIR="${WOODRIGHT_OWNERSHIP_DIR:-}" \
   WR_PACKET_API_HOST="${WOODRIGHT_API_HOST:-}" \
   WR_PACKET_BUYER_HOST="${WOODRIGHT_BUYER_HOST:-}" \
-  WR_PACKET_KEEPERS="${PLANNED_KEEPER_BE}|${PLANNED_KEEPER_SF}" \
+  WR_PACKET_PRE_BE_REF="${PRE_BE_REF:-$LIVE_BE_REF}" \
+  WR_PACKET_PRE_SF_REF="${PRE_SF_REF:-$LIVE_SF_REF}" \
+  WR_PACKET_PIN_BE="$PIN_BE_VALUE" \
+  WR_PACKET_PIN_SF="$PIN_SF_VALUE" \
+  WR_PACKET_SKEW_BE="$SKEW_BE" \
+  WR_PACKET_SKEW_SF="$SKEW_SF" \
+  WR_PACKET_SKEW="$EXISTING_SKEW" \
+  WR_PACKET_READY_BE_SEC="$(component_ready_deadline_sec backend "${WOODRIGHT_BE_CONTAINER_DEFAULT}")" \
+  WR_PACKET_READY_SF_SEC="$(component_ready_deadline_sec storefront "${WOODRIGHT_SF_CONTAINER_DEFAULT}")" \
+  WR_PACKET_POLL_SEC="$(ready_poll_interval)" \
+  WR_PACKET_PRE_IMAGES_PRESENT="$(rollback_anchor_images_present && echo true || echo false)" \
   python3 - "$WOODRIGHT_ENVIRONMENT" "$WOODRIGHT_ENVIRONMENT_CLASS" "$COMPONENT" "$SOURCE_SHA" "$packet_mode" \
     "${WOODRIGHT_BE_CONTAINER_DEFAULT}" "${WOODRIGHT_SF_CONTAINER_DEFAULT}" \
     "${WOODRIGHT_MUTATION_LOCK_PATH:-}" <<'PY'
@@ -643,7 +958,9 @@ if need_sf:
 
 recreate_order = [c for c in ("backend", "storefront") if (c == "backend" and need_be) or (c == "storefront" and need_sf)]
 
-keep_be, _, keep_sf = os.environ.get("WR_PACKET_KEEPERS", "|").partition("|")
+existing_skew = os.environ.get("WR_PACKET_SKEW", "0") == "1"
+buyer_host = os.environ.get("WR_PACKET_BUYER_HOST", "").rstrip("/")
+api_host = os.environ.get("WR_PACKET_API_HOST", "").rstrip("/")
 
 packet = {
     "tool": "cutover-production-candidate.sh",
@@ -680,7 +997,10 @@ packet = {
             "order": recreate_order,
             "compose_file": os.environ.get("WR_PACKET_COMPOSE_FILE", ""),
             "compose_project": os.environ.get("WR_PACKET_COMPOSE_PROJECT", ""),
-            "flags": ["up", "-d", "--no-deps"],
+            # --force-recreate: Compose can consider a same-service container
+            # "up to date" and leave the previous image running even though the
+            # pin already moved. Forcing it makes "recreated" mean recreated.
+            "flags": ["up", "-d", "--no-deps", "--force-recreate"],
             "never_recreated": ["postgres", "redis"],
         },
         "rollback_refs": {
@@ -689,13 +1009,40 @@ packet = {
             "storefront_container_id": os.environ.get("WR_SF_CONTAINER_ID", ""),
             "storefront_image": os.environ.get("WR_SF_CONTAINER_IMAGE", ""),
             "pin_backup": "evidence/pin-backup/dokploy-compose.env",
-            "keeper_names": {"backend": keep_be, "storefront": keep_sf},
+            # Immutable refs the runtime would be restored to. These, together
+            # with the pin backup, are the ONLY rollback authority.
+            "backend_ref": os.environ.get("WR_PACKET_PRE_BE_REF", ""),
+            "storefront_ref": os.environ.get("WR_PACKET_PRE_SF_REF", ""),
+            "images_present_locally": os.environ.get("WR_PACKET_PRE_IMAGES_PRESENT", "") == "true",
+            "method": "restore_pins_then_compose_recreate_on_previous_digests",
+            "postconditions": [
+                "pins_restored",
+                "runtime_repo_digests_equal_restored_pins",
+                "private_loopback_binds",
+                "media_volume_mounted",
+                "no_public_traefik",
+                "minimal_loopback_http_gates",
+            ],
         },
+        "container_recreate_uses_keepers": False,
         "health_plan": {
+            "readiness": "wait_component_ready (poll, starting is transient)",
             "docker_health": recreate_order,
+            "poll_interval_sec": os.environ.get("WR_PACKET_POLL_SEC", ""),
+            "deadline_sec": {
+                "backend": os.environ.get("WR_PACKET_READY_BE_SEC", ""),
+                "storefront": os.environ.get("WR_PACKET_READY_SF_SEC", ""),
+            },
+            "terminal_docker_states": ["absent", "exited", "dead", "removing", "restart_loop"],
+            "transient_docker_states": ["created", "starting", "unhealthy_before_deadline"],
             "http": [
-                f"{os.environ.get('WR_PACKET_API_HOST', '').rstrip('/')}/health",
-                f"{os.environ.get('WR_PACKET_BUYER_HOST', '').rstrip('/')}/",
+                f"{api_host}/health",
+                f"{buyer_host}/",
+            ],
+            "http_final_acceptance": [
+                f"{buyer_host}/contacts",
+                f"{buyer_host}/catalog",
+                f"{buyer_host}/privacy",
             ],
         },
         "ownership_targets": {
@@ -709,8 +1056,34 @@ packet = {
             "containers_recreated",
             "health_passed",
             "acceptance_passed",
-            "committed|rolled_back|failed_before_mutation",
+            "committed|rolled_back|rollback_incomplete|failed_before_mutation",
         ],
+        "exit_codes": {
+            "0": "ok",
+            "2": "usage/validation",
+            "3": "lock",
+            "4": "dry-run candidate mismatch",
+            "10": "rollback_ok (postconditions verified)",
+            "11": "rollback_partial (reserved, not emitted)",
+            "12": "rollback_failed (pins could not be restored)",
+            "13": "rollback_incomplete (pins restored, postconditions not proven)",
+        },
+    },
+    "existing_pin_runtime_skew": existing_skew,
+    "normal_execute_blocked": existing_skew,
+    "pin_runtime_comparison": {
+        "backend": {
+            "pin": os.environ.get("WR_PACKET_PIN_BE", ""),
+            "runtime": os.environ.get("WR_PACKET_PRE_BE_REF", ""),
+            "verdict": os.environ.get("WR_PACKET_SKEW_BE", "unknown"),
+        },
+        "storefront": {
+            "pin": os.environ.get("WR_PACKET_PIN_SF", ""),
+            "runtime": os.environ.get("WR_PACKET_PRE_SF_REF", ""),
+            "verdict": os.environ.get("WR_PACKET_SKEW_SF", "unknown"),
+        },
+        "recovery_helper": "ops/release/recover-production-candidate-skew.sh",
+        "blocking_token": "existing_pin_runtime_skew_requires_recovery",
     },
     "no_migrations": True,
     "no_seeds": True,
@@ -758,6 +1131,21 @@ fi
 # ===========================================================================
 
 [[ "$MISMATCH" -eq 0 ]] || die "candidate image mismatch - refusing execute (see MISMATCH lines above)"
+
+# Pre-existing pin/runtime skew makes the compose .env a lie about the runtime,
+# and that same file is the rollback anchor. Refuse before the lock, before the
+# evidence dir and before any write.
+if [[ "$EXISTING_SKEW" -eq 1 ]]; then
+  die "existing_pin_runtime_skew_requires_recovery: compose pins do not describe the live runtime (backend pin='${PIN_BE_VALUE:-<unset>}' runtime='${LIVE_BE_REF:-<unresolved>}' verdict=$SKEW_BE; storefront pin='${PIN_SF_VALUE:-<unset>}' runtime='${LIVE_SF_REF:-<unresolved>}' verdict=$SKEW_SF) - run ops/release/recover-production-candidate-skew.sh first; a normal cutover cannot use a pin file that is not the runtime's rollback anchor"
+fi
+
+# Defined before the rollback helpers: the EXIT trap may need it from any phase.
+compose_up() {
+  local service="$1"
+  shift
+  prod_compose -f "${WOODRIGHT_COMPOSE_FILE}" --env-file "$COMPOSE_ENV_FILE" \
+    --project-name "${WOODRIGHT_COMPOSE_PROJECT}" up -d --no-deps "$@" "$service"
+}
 
 record_state() {
   PHASE="$1"
@@ -831,36 +1219,113 @@ restore_ownership_metadata() {
   return "$rc"
 }
 
-restore_component_from_keeper() {
-  local kind="$1"
-  local name keeper
-  if [[ "$kind" == "backend" ]]; then
-    name="${WOODRIGHT_BE_CONTAINER_DEFAULT}"; keeper="$KEEPER_BE"
-  else
-    name="${WOODRIGHT_SF_CONTAINER_DEFAULT}"; keeper="$KEEPER_SF"
+container_name_for() {
+  case "$1" in
+    backend) printf '%s\n' "${WOODRIGHT_BE_CONTAINER_DEFAULT}" ;;
+    *) printf '%s\n' "${WOODRIGHT_SF_CONTAINER_DEFAULT}" ;;
+  esac
+}
+
+pin_key_for() {
+  case "$1" in
+    backend) printf '%s\n' "WOODRIGHT_BACKEND_IMAGE" ;;
+    *) printf '%s\n' "WOODRIGHT_STOREFRONT_IMAGE" ;;
+  esac
+}
+
+image_title_for() {
+  case "$1" in
+    backend) printf '%s\n' "${WOODRIGHT_REQUIRED_BE_TITLE:-woodright-backend}" ;;
+    *) printf '%s\n' "${WOODRIGHT_REQUIRED_SF_TITLE:-woodright-storefront}" ;;
+  esac
+}
+
+host_port_for() {
+  case "$1" in
+    backend) printf '%s\n' "$BE_PORT" ;;
+    *) printf '%s\n' "$SF_PORT" ;;
+  esac
+}
+
+component_in_scope() {
+  case "$1" in
+    backend) need_be ;;
+    *) need_sf ;;
+  esac
+}
+
+# Bring one component back onto the ref the restored pin file now names.
+# --force-recreate because the container currently runs the candidate image
+# while the pin file already says otherwise: without it Compose may consider a
+# same-service container "up to date" and leave the candidate running.
+rollback_recreate_component() {
+  local kind="$1" want_ref="$2"
+  local name up_rc=0
+  name="$(container_name_for "$kind")"
+  if harness_enabled && [[ "${WOODRIGHT_CUTOVER_ROLLBACK_SKIP_RECREATE:-0}" == "1" ]]; then
+    log "HARNESS rollback recreate skipped for $kind (simulating a recreate that did not take)"
+    return 1
   fi
-  if [[ -z "$keeper" ]] || ! prod_docker inspect "$keeper" >/dev/null 2>&1; then
-    log "ROLLBACK $kind: no keeper to restore (nothing was renamed aside)"
-    return 0
+  compose_up "$kind" --force-recreate >&2 || up_rc=$?
+  if [[ "$up_rc" -ne 0 ]]; then
+    log "ROLLBACK $kind: compose recreate on $want_ref failed rc=$up_rc"
+    return 1
   fi
-  if prod_docker inspect "$name" >/dev/null 2>&1; then
-    # Preserve the failed container for forensics instead of removing it.
-    prod_docker stop "$name" >/dev/null 2>&1 || true
-    prod_docker rename "$name" "${name}-failed-${TS_RUN}" >/dev/null 2>&1 || {
-      log "ROLLBACK $kind: cannot move failed container aside"
-      return 1
-    }
-  fi
-  prod_docker rename "$keeper" "$name" >/dev/null 2>&1 || {
-    log "ROLLBACK $kind: keeper rename back FAILED ($keeper -> $name)"
+  prod_docker inspect "$name" >/dev/null 2>&1 || {
+    log "ROLLBACK $kind: container '$name' missing after recreate"
     return 1
   }
-  prod_docker start "$name" >/dev/null 2>&1 || {
-    log "ROLLBACK $kind: keeper start FAILED ($name)"
-    return 1
-  }
-  log "ROLLBACK $kind restored from keeper $keeper"
+  log "ROLLBACK $kind: recreated on $want_ref"
   return 0
+}
+
+# Postcondition 1: the runtime RepoDigest ref must be byte-equal to the pin the
+# restored compose .env now carries. This is what makes exit 10 honest.
+verify_runtime_matches_pins() {
+  local rc=0 kind name want got
+  for kind in backend storefront; do
+    name="$(container_name_for "$kind")"
+    prod_docker inspect "$name" >/dev/null 2>&1 || {
+      log "ROLLBACK_VERIFY $kind container '$name' absent"
+      rc=1
+      continue
+    }
+    want="$(pin_value_of "$(pin_key_for "$kind")")"
+    got="$(resolve_live_ref "$name" "$(image_title_for "$kind")" "$kind")"
+    if [[ -z "$want" || -z "$got" ]]; then
+      log "ROLLBACK_VERIFY $kind cannot prove pin/runtime equality (pin='${want:-<unset>}' runtime='${got:-<unresolved>}')"
+      rc=1
+      continue
+    fi
+    if [[ "$want" != "$got" ]]; then
+      log "ROLLBACK_VERIFY $kind MISMATCH pin=$want runtime=$got"
+      rc=1
+      continue
+    fi
+    log "ROLLBACK_VERIFY $kind ok pin==runtime==$got"
+  done
+  return "$rc"
+}
+
+# Postcondition 2: the stack is still the private candidate we started from.
+verify_rollback_exposure() {
+  local rc=0 kind name
+  for kind in backend storefront; do
+    name="$(container_name_for "$kind")"
+    prod_docker inspect "$name" >/dev/null 2>&1 || { rc=1; continue; }
+    assert_private_binds "$name" "$(host_port_for "$kind")" >&2 || rc=1
+    assert_no_public_traefik "$name" >&2 || rc=1
+  done
+  assert_media_volume >&2 || rc=1
+  return "$rc"
+}
+
+# Postcondition 3: minimal loopback HTTP gates on the restored runtime.
+verify_rollback_http() {
+  local rc=0
+  http_gate rollback-backend "${WOODRIGHT_API_HOST%/}/health" || rc=1
+  http_gate rollback-storefront "${WOODRIGHT_BUYER_HOST%/}/" || rc=1
+  return "$rc"
 }
 
 run_rollback() {
@@ -869,32 +1334,75 @@ run_rollback() {
     return "$ROLLBACK_RC"
   fi
   ROLLBACK_DONE=1
-  log "ROLLBACK begin phase=$PHASE recreated=[${COMPONENTS_RECREATED# }]"
-  local pin_ok=1 sf_ok=1 be_ok=1 meta_ok=1
-  # Keeper-driven, not success-driven: a component whose recreate failed
-  # mid-flight has already been renamed aside and must be restored too.
-  # Storefront first (reverse of the recreate order), then backend.
-  [[ -z "$KEEPER_SF" ]] || restore_component_from_keeper storefront || sf_ok=0
-  [[ -z "$KEEPER_BE" ]] || restore_component_from_keeper backend || be_ok=0
+  log "ROLLBACK begin phase=$PHASE recreated=[${COMPONENTS_RECREATED# }] method=restore_pins_then_compose_recreate (no keepers)"
+  local pin_ok=1 runtime_ok=1 verify_ok=1 exposure_ok=1 http_ok=1 meta_ok=1
+  local kind name want deadline
+
   restore_pins || pin_ok=0
+
+  if [[ "$pin_ok" == "1" ]]; then
+    # Backend first, then storefront - the same dependency order as forward.
+    for kind in backend storefront; do
+      component_in_scope "$kind" || continue
+      name="$(container_name_for "$kind")"
+      want="$(pin_value_of "$(pin_key_for "$kind")")"
+      if [[ -z "$want" ]]; then
+        log "ROLLBACK $kind: restored pin file has no $(pin_key_for "$kind") value"
+        runtime_ok=0
+        continue
+      fi
+      if [[ "$(resolve_live_ref "$name" "$(image_title_for "$kind")" "$kind")" == "$want" ]]; then
+        log "ROLLBACK $kind: already on $want - no recreate needed"
+        continue
+      fi
+      if ! rollback_recreate_component "$kind" "$want"; then
+        runtime_ok=0
+        continue
+      fi
+      deadline="$(component_ready_deadline_sec "$kind" "$name")"
+      if ! wait_component_ready "$kind" "$name" "$deadline" rollback; then
+        log "ROLLBACK $kind: restored container did not become ready"
+        runtime_ok=0
+      fi
+    done
+  else
+    runtime_ok=0
+  fi
+
   if [[ "$METADATA_WRITTEN" == "1" ]]; then
     restore_ownership_metadata || meta_ok=0
   fi
+
+  # Postconditions - evaluated even when an earlier step already failed, so the
+  # evidence records exactly what is and is not true.
+  verify_runtime_matches_pins || verify_ok=0
+  verify_rollback_exposure || exposure_ok=0
+  verify_rollback_http || http_ok=0
+
   if [[ -n "$EVIDENCE_DIR" && -d "$EVIDENCE_DIR/json" ]]; then
-    printf '{"phase_at_rollback":"%s","backend":%s,"storefront":%s,"pins":%s,"metadata":%s}\n' \
-      "$PHASE" "$be_ok" "$sf_ok" "$pin_ok" "$meta_ok" >"$EVIDENCE_DIR/json/rollback-result.json"
+    printf '{"phase_at_rollback":"%s","method":"restore_pins_then_compose_recreate","keepers_used":false,"pins":%s,"runtime_recreate":%s,"pins_equal_runtime":%s,"exposure":%s,"http":%s,"metadata":%s,"pre_backend_ref":"%s","pre_storefront_ref":"%s"}\n' \
+      "$PHASE" "$pin_ok" "$runtime_ok" "$verify_ok" "$exposure_ok" "$http_ok" "$meta_ok" \
+      "$PRE_BE_REF" "$PRE_SF_REF" >"$EVIDENCE_DIR/json/rollback-result.json" 2>/dev/null || true
   fi
-  if [[ "$be_ok" == "1" && "$sf_ok" == "1" && "$pin_ok" == "1" && "$meta_ok" == "1" ]]; then
+
+  if [[ "$pin_ok" == "1" && "$runtime_ok" == "1" && "$verify_ok" == "1" \
+     && "$exposure_ok" == "1" && "$http_ok" == "1" && "$meta_ok" == "1" ]]; then
     ROLLBACK_RC=10
-    log "ROLLBACK_OK"
-  elif [[ "$be_ok" == "1" || "$sf_ok" == "1" || "$pin_ok" == "1" ]]; then
-    ROLLBACK_RC=11
-    log "ROLLBACK_PARTIAL"
-  else
-    ROLLBACK_RC=12
-    log "ROLLBACK_FAILED"
+    record_state rolled_back
+    log "ROLLBACK_OK (pins restored, runtime digests == pins, private binds, media volume, no public Traefik, HTTP gates)"
+    return "$ROLLBACK_RC"
   fi
-  record_state rolled_back
+
+  if [[ "$pin_ok" != "1" ]]; then
+    ROLLBACK_RC=12
+    record_state rollback_incomplete
+    log "ROLLBACK_FAILED pins could not be restored - runtime and pins are both unproven; treat as an open incident"
+    return "$ROLLBACK_RC"
+  fi
+
+  ROLLBACK_RC=13
+  record_state rollback_incomplete
+  log "ROLLBACK_INCOMPLETE pins=$pin_ok runtime_recreate=$runtime_ok pins_equal_runtime=$verify_ok exposure=$exposure_ok http=$http_ok metadata=$meta_ok - NOT reporting ROLLBACK_OK"
   return "$ROLLBACK_RC"
 }
 
@@ -908,6 +1416,9 @@ prod_on_exit() {
     exit "$rc"
   fi
   if rollback_armed; then
+    # run_rollback owns the terminal state (rolled_back | rollback_incomplete)
+    # and the exit code (10 | 12 | 13). Never overwrite either here: an
+    # incomplete rollback must not be re-labelled as rolled_back.
     run_rollback || true
     rc="${ROLLBACK_RC:-12}"
   else
@@ -1046,6 +1557,50 @@ backup_file "$COMPOSE_ENV_FILE" dokploy-compose.env || die "compose .env backup 
 for own in ACTIVE_OWNER.json EXPECTED_RELEASE.json ACTIVE_RELEASE.json; do
   backup_file "${WOODRIGHT_OWNERSHIP_DIR%/}/$own" "$own" || die "ownership backup failed: $own"
 done
+
+# --- rollback anchors (captured before the first write) ---------------------
+# The exact immutable refs the containers are running RIGHT NOW. Every in-scope
+# anchor must also be present in the local image store, otherwise a rollback
+# could not recreate anything and we must refuse before mutating.
+capture_rollback_anchors() {
+  local kind name title ref present scope
+  local be_present=false sf_present=false
+  for kind in backend storefront; do
+    name="$(container_name_for "$kind")"
+    title="$(image_title_for "$kind")"
+    ref=""
+    present=false
+    if prod_docker inspect "$name" >/dev/null 2>&1; then
+      ref="$(resolve_live_ref "$name" "$title" "$kind")"
+    fi
+    if [[ -n "$ref" ]] && prod_docker image inspect "$ref" >/dev/null 2>&1; then
+      present=true
+    fi
+    if component_in_scope "$kind"; then
+      [[ -n "$ref" ]] || die "cannot resolve the live $kind RepoDigest ref - refusing to mutate without a rollback anchor"
+      [[ "$present" == "true" ]] \
+        || die "rollback anchor image is not present locally: $ref (execute never pulls - refusing before any write)"
+      local pinned
+      pinned="$(pin_value_of "$(pin_key_for "$kind")")"
+      [[ "$pinned" == "$ref" ]] \
+        || die "rollback anchor disagrees with the compose pin for $kind (pin='${pinned:-<unset>}' runtime='$ref') - existing_pin_runtime_skew_requires_recovery"
+    fi
+    if [[ "$kind" == "backend" ]]; then
+      PRE_BE_REF="$ref"; be_present="$present"
+    else
+      PRE_SF_REF="$ref"; sf_present="$present"
+    fi
+  done
+  scope="$COMPONENT"
+  printf '{"method":"restore_pins_then_compose_recreate","keepers_used":false,"component_scope":"%s","captured_at_utc":"%s","backend":{"ref":"%s","container_id":"%s","started_at":"%s","image_present_locally":%s},"storefront":{"ref":"%s","container_id":"%s","started_at":"%s","image_present_locally":%s}}\n' \
+    "$scope" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+    "$PRE_BE_REF" "$(container_id "${WOODRIGHT_BE_CONTAINER_DEFAULT}")" "$(container_started_at "${WOODRIGHT_BE_CONTAINER_DEFAULT}")" "$be_present" \
+    "$PRE_SF_REF" "$(container_id "${WOODRIGHT_SF_CONTAINER_DEFAULT}")" "$(container_started_at "${WOODRIGHT_SF_CONTAINER_DEFAULT}")" "$sf_present" \
+    >"$EVIDENCE_DIR/json/rollback-anchors.json"
+  log "rollback anchors backend=${PRE_BE_REF:-n/a} storefront=${PRE_SF_REF:-n/a} (verified present locally; no keepers)"
+}
+capture_rollback_anchors
+
 record_state prepared
 
 test_pause_at() {
@@ -1106,11 +1661,6 @@ if other_key:
         sys.exit(1)
 print("pin_file_ok")
 PY
-}
-
-pin_value_of() {
-  local key="$1"
-  awk -F= -v k="$key" '$1==k {sub(/^[^=]*=/, ""); print; exit}' "$COMPOSE_ENV_FILE" 2>/dev/null || true
 }
 
 # Atomic pin install for the required component set: render ALL required
@@ -1182,27 +1732,19 @@ fi
 test_pause_at pins_written
 
 # --- recreate ---------------------------------------------------------------
-compose_up() {
-  local service="$1"
-  prod_compose -f "${WOODRIGHT_COMPOSE_FILE}" --env-file "$COMPOSE_ENV_FILE" \
-    --project-name "${WOODRIGHT_COMPOSE_PROJECT}" up -d --no-deps "$service"
-}
-
+# Forward recreate never renames the live container aside. A renamed container
+# keeps its com.docker.compose.* labels, so the very next `compose up` for the
+# same project/service treats it as the service's container and recreates or
+# removes it - the "keeper" evaporates exactly when rollback would need it.
+# The rollback anchor is the pin backup plus PRE_*_REF instead.
 recreate_component() {
   local kind="$1"
-  local name keeper want_digest fault
+  local name want_digest fault forced=0
   if [[ "$kind" == "backend" ]]; then
     name="${WOODRIGHT_BE_CONTAINER_DEFAULT}"; want_digest="${BE_REF##*@}"; fault="backend_recreate"
   else
     name="${WOODRIGHT_SF_CONTAINER_DEFAULT}"; want_digest="${SF_REF##*@}"; fault="storefront_recreate"
   fi
-  keeper="${name}-keeper-${TS_RUN}"
-  prod_docker rename "$name" "$keeper" >/dev/null 2>&1 || {
-    log "$kind: rename to keeper failed"
-    return 1
-  }
-  if [[ "$kind" == "backend" ]]; then KEEPER_BE="$keeper"; else KEEPER_SF="$keeper"; fi
-  log "$kind: live container renamed to keeper $keeper"
   local up_rc=0
   compose_up "$kind" >&2 || up_rc=$?
   if wr_fault "$fault"; then up_rc=1; fi
@@ -1216,13 +1758,27 @@ recreate_component() {
   }
   local got
   got="$(container_digest "$name")"
+  # A plain `up -d` recreates on a changed image pin. --force-recreate is the
+  # documented fallback for the case where Compose still considers the existing
+  # container up to date; it is only used when the digest did not move.
+  if [[ "$got" != "$want_digest" ]]; then
+    log "$kind: still on $got after compose up - retrying with --force-recreate"
+    forced=1
+    up_rc=0
+    compose_up "$kind" --force-recreate >&2 || up_rc=$?
+    if [[ "$up_rc" -ne 0 ]]; then
+      log "$kind: compose up --force-recreate failed rc=$up_rc"
+      return 1
+    fi
+    got="$(container_digest "$name")"
+  fi
   if wr_fault wrong_digest_after_recreate; then got="sha256:$(printf '0%.0s' {1..64})"; fi
   if [[ "$got" != "$want_digest" ]]; then
     log "$kind: digest mismatch after recreate have=$got want=$want_digest"
     return 1
   fi
   COMPONENTS_RECREATED="${COMPONENTS_RECREATED} ${kind}"
-  log "$kind: recreated at $want_digest"
+  log "$kind: recreated at $want_digest (force_recreate=$forced, no keeper container created)"
   return 0
 }
 
@@ -1238,62 +1794,29 @@ if need_sf; then
 fi
 record_state containers_recreated
 
-# --- health -----------------------------------------------------------------
-docker_health_ok() {
-  local name="$1" status health
-  status="$(prod_docker inspect "$name" --format '{{.State.Status}}' 2>/dev/null || true)"
-  health="$(prod_docker inspect "$name" --format '{{.State.Health.Status}}' 2>/dev/null || true)"
-  if [[ "${WOODRIGHT_CUTOVER_TEST_FORCE_HEALTH:-}" == "healthy" ]] && harness_enabled; then
-    log "HARNESS forced health=healthy for $name (status=$status)"
-    return 0
-  fi
-  [[ "$status" == "running" ]] || { log "health: $name status=$status"; return 1; }
-  case "$health" in
-    healthy) return 0 ;;
-    ""|"<no value>"|"<nil>")
-      log "health: $name has no healthcheck - accepting running status"
-      return 0
-      ;;
-    *) log "health: $name health=$health"; return 1 ;;
-  esac
-}
-
-http_status() {
-  local url="$1"
-  if [[ -n "${WOODRIGHT_FAKE_HTTP_BIN:-}" ]] && harness_enabled; then
-    "${WOODRIGHT_FAKE_HTTP_BIN}" "$url" 2>/dev/null || echo 000
-    return 0
-  fi
-  curl -sS -o /dev/null -w '%{http_code}' --max-time 15 "$url" 2>/dev/null || echo 000
-}
-
-http_gate() {
-  local label="$1" url="$2"
-  if [[ "${WOODRIGHT_CUTOVER_SKIP_HTTP:-0}" == "1" ]] && harness_enabled; then
-    log "HARNESS skipping HTTP gate $label ($url)"
-    return 0
-  fi
-  local code
-  code="$(http_status "$url")"
-  printf '%s %s %s\n' "$label" "$url" "$code" >>"$EVIDENCE_DIR/raw/http-gates.txt"
-  [[ "$code" == "200" ]] || { log "http gate FAILED $label $url code=$code"; return 1; }
-  log "http gate ok $label $url code=$code"
-  return 0
-}
-
+# --- readiness --------------------------------------------------------------
+# Docker health "starting" is the NORMAL state of a freshly recreated container
+# (backend --start-period=60s, storefront --start-period=40s), so readiness is
+# polled to a deadline instead of read once.
 if need_be; then
-  if wr_fault backend_health || ! docker_health_ok "${WOODRIGHT_BE_CONTAINER_DEFAULT}"; then
-    die "backend health gate failed"
+  BE_DEADLINE="$(component_ready_deadline_sec backend "${WOODRIGHT_BE_CONTAINER_DEFAULT}")"
+  log "readiness plan backend deadline=${BE_DEADLINE}s poll=$(ready_poll_interval)s"
+  if wr_fault backend_health \
+     || ! wait_component_ready backend "${WOODRIGHT_BE_CONTAINER_DEFAULT}" "$BE_DEADLINE"; then
+    die "backend readiness gate failed"
   fi
-  if wr_fault backend_http || ! http_gate backend "${WOODRIGHT_API_HOST%/}/health"; then
+  if wr_fault backend_http; then
     die "backend HTTP gate failed"
   fi
 fi
 if need_sf; then
-  if wr_fault storefront_health || ! docker_health_ok "${WOODRIGHT_SF_CONTAINER_DEFAULT}"; then
-    die "storefront health gate failed"
+  SF_DEADLINE="$(component_ready_deadline_sec storefront "${WOODRIGHT_SF_CONTAINER_DEFAULT}")"
+  log "readiness plan storefront deadline=${SF_DEADLINE}s poll=$(ready_poll_interval)s"
+  if wr_fault storefront_health \
+     || ! wait_component_ready storefront "${WOODRIGHT_SF_CONTAINER_DEFAULT}" "$SF_DEADLINE"; then
+    die "storefront readiness gate failed"
   fi
-  if wr_fault storefront_http || ! http_gate storefront "${WOODRIGHT_BUYER_HOST%/}/"; then
+  if wr_fault storefront_http; then
     die "storefront HTTP gate failed"
   fi
 fi
@@ -1319,6 +1842,19 @@ if need_sf; then
     || die "acceptance failed: storefront no longer matches the production profile"
 fi
 assert_media_volume >&2 || die "acceptance failed: media volume gate"
+
+# Final acceptance HTTP gates. Readiness above already proved `/health` and `/`
+# once each; these are the recorded, required gates for the committed release.
+if need_be; then
+  http_gate backend "${WOODRIGHT_API_HOST%/}/health" || die "acceptance failed: backend HTTP gate"
+fi
+if need_sf; then
+  http_gate storefront "${WOODRIGHT_BUYER_HOST%/}/" || die "acceptance failed: storefront HTTP gate"
+  for sf_route in /contacts /catalog /privacy; do
+    http_gate "storefront${sf_route}" "${WOODRIGHT_BUYER_HOST%/}${sf_route}" \
+      || die "acceptance failed: storefront route gate ${sf_route}"
+  done
+fi
 record_state acceptance_passed
 
 # --- scoped ownership metadata (ACTIVE only after health + gates) -----------
@@ -1461,7 +1997,9 @@ record_state committed
   echo "- helper_install_sha: ${HELPER_INSTALL_SHA:-<empty>}"
   echo "- backend: ${BE_REF:-n/a}"
   echo "- storefront: ${SF_REF:-n/a}"
-  echo "- keepers: ${KEEPER_BE:-none} / ${KEEPER_SF:-none}"
+  echo "- rollback anchor backend: ${PRE_BE_REF:-n/a}"
+  echo "- rollback anchor storefront: ${PRE_SF_REF:-n/a}"
+  echo "- keeper containers: none (rollback anchors on pins + immutable refs)"
   echo "- lock: $WR_STAGING_MUTATION_LOCK_PATH"
 } >"$EVIDENCE_DIR/SUMMARY.md"
 

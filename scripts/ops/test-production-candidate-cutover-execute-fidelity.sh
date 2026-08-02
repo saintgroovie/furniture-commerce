@@ -75,308 +75,11 @@ printf 'services:\n  backend: {}\n  storefront: {}\n  postgres: {}\n  redis: {}\
 : >"$PD_LOCK"
 
 # --------------------------------------------------------------------------
-# fake docker
+# fake docker / docker compose / http (shared with the skew recovery harness)
 # --------------------------------------------------------------------------
-cat >"$BIN/docker" <<'DOCKER_EOF'
-#!/usr/bin/env bash
-set -euo pipefail
-STATE="${WOODRIGHT_FAKE_DOCKER_STATE:?}"
-mkdir -p "$STATE/containers" "$STATE/images" "$STATE/volumes" "$STATE/log"
-printf 'docker %s\n' "$*" >>"$STATE/log/commands.log"
-
-# Go-template rendering is served from a flat "path<TAB>value" projection of
-# the document. The projection is rebuilt only when the JSON changes, so the
-# hot inspect path costs one awk instead of one python interpreter start.
-project() {
-  local json="$1" props="$2"
-  # Writers drop the projection explicitly (mtime granularity is too coarse
-  # to be trusted for same-second rewrites).
-  [[ -f "$props" ]] && return 0
-  python3 - "$json" "$props" <<'PY'
-import json, sys
-doc = json.load(open(sys.argv[1]))
-obj = doc[0] if isinstance(doc, list) else doc
-rows = []
-
-def scalar(v):
-    if v is True:
-        return "true"
-    if v is False:
-        return "false"
-    return "" if v is None else str(v)
-
-def emit(path, node):
-    if isinstance(node, (dict, list)):
-        rows.append(("json:" + path, json.dumps(node)))
-        items = node.items() if isinstance(node, dict) else enumerate(node)
-        for key, value in items:
-            emit(f"{path}.{key}", value)
-    else:
-        rows.append((path, scalar(node)))
-
-emit("", obj)
-with open(sys.argv[2], "w", encoding="utf-8") as fh:
-    for key, value in rows:
-        fh.write(f"{key}\t{value}\n")
-PY
-}
-
-render() {
-  local json="$1" fmt="$2"
-  local props="${json%.json}.props"
-  project "$json" "$props"
-  RENDER_JSON="$json" RENDER_PROPS="$props" awk -v fmt="$fmt" '
-    BEGIN { FS = "\t" }
-    { if (!($1 in seen)) { seen[$1] = 1; val[$1] = $2 } }
-    END {
-      out = ""
-      rest = fmt
-      while (match(rest, /\{\{[^}]*\}\}/)) {
-        out = out substr(rest, 1, RSTART - 1)
-        tok = substr(rest, RSTART + 2, RLENGTH - 4)
-        rest = substr(rest, RSTART + RLENGTH)
-        gsub(/^[ \t]+|[ \t]+$/, "", tok)
-        key = ""
-        kind = "scalar"
-        if (tok ~ /^index[ \t]+\./) {
-          sub(/^index[ \t]+/, "", tok)
-          split(tok, parts, /[ \t]+/)
-          arg = parts[2]
-          gsub(/"/, "", arg)
-          key = parts[1] "." arg
-          kind = "index"
-        } else if (tok ~ /^json[ \t]+\./) {
-          sub(/^json[ \t]+/, "", tok)
-          key = "json:" tok
-          kind = "json"
-        } else if (tok ~ /^\./) {
-          key = tok
-        } else {
-          key = "__unsupported__"
-        }
-        if (key in val) {
-          out = out val[key]
-        } else if (kind == "index") {
-          out = out ""
-        } else if (kind == "json") {
-          out = out "null"
-        } else {
-          out = out "<no value>"
-        }
-      }
-      print out rest
-    }
-  ' "$props"
-}
-
-require_mutation() {
-  if [[ "${WOODRIGHT_FAKE_DOCKER_ALLOW_MUTATION:-0}" != "1" ]]; then
-    echo "UNEXPECTED_MUTATION $*" >&2
-    exit 99
-  fi
-  printf '%s\n' "$*" >>"$STATE/log/mutations.log"
-  printf '%s\n' "$*" >>"$STATE/log/journal.log"
-}
-
-image_key() { printf '%s' "${1//\//_}"; }
-
-cmd="${1:-}"
-shift || true
-
-case "$cmd" in
-  inspect|"image")
-    if [[ "$cmd" == "image" ]]; then
-      [[ "${1:-}" == "inspect" ]] || exit 1
-      shift
-    fi
-    fmt=""
-    target=""
-    while [[ $# -gt 0 ]]; do
-      case "$1" in
-        --format) fmt="$2"; shift 2 ;;
-        --format=*) fmt="${1#--format=}"; shift ;;
-        *) target="$1"; shift ;;
-      esac
-    done
-    f="$STATE/containers/${target#/}.json"
-    [[ -f "$f" ]] || f="$STATE/images/$(image_key "$target").json"
-    [[ -f "$f" ]] || exit 1
-    if [[ -n "$fmt" ]]; then render "$f" "$fmt"; else cat "$f"; fi
-    ;;
-  volume)
-    [[ "${1:-}" == "inspect" ]] || exit 1
-    shift
-    [[ -f "$STATE/volumes/${1:-}.ok" ]] || exit 1
-    echo '[{"Name":"'"$1"'"}]'
-    ;;
-  compose)
-    exec "${WOODRIGHT_FAKE_COMPOSE_BIN:?}" "$@"
-    ;;
-  rename)
-    require_mutation "rename $1 $2"
-    src="$STATE/containers/${1#/}.json"
-    dst="$STATE/containers/${2#/}.json"
-    [[ -f "$src" ]] || exit 1
-    rm -f "${src%.json}.props" "${dst%.json}.props"
-    python3 - "$src" "$dst" "$2" <<'PY'
-import json, os, sys
-src, dst, name = sys.argv[1:4]
-d = json.load(open(src))
-obj = d[0] if isinstance(d, list) else d
-obj["Name"] = "/" + name.lstrip("/")
-json.dump(d, open(dst, "w"))
-os.remove(src)
-PY
-    ;;
-  stop|start)
-    require_mutation "$cmd $1"
-    f="$STATE/containers/${1#/}.json"
-    [[ -f "$f" ]] || exit 1
-    rm -f "${f%.json}.props"
-    python3 - "$f" "$cmd" <<'PY'
-import json, sys
-f, action = sys.argv[1:3]
-d = json.load(open(f))
-obj = d[0] if isinstance(d, list) else d
-st = obj.setdefault("State", {})
-if action == "stop":
-    st["Status"] = "exited"
-    if isinstance(st.get("Health"), dict):
-        st["Health"]["Status"] = "unhealthy"
-else:
-    st["Status"] = "running"
-    if isinstance(st.get("Health"), dict):
-        st["Health"]["Status"] = "healthy"
-json.dump(d, open(f, "w"))
-PY
-    ;;
-  rm)
-    args=()
-    for a in "$@"; do [[ "$a" == -* ]] || args+=("$a"); done
-    require_mutation "rm ${args[*]}"
-    for a in "${args[@]}"; do rm -f "$STATE/containers/${a#/}.json" "$STATE/containers/${a#/}.props"; done
-    ;;
-  *)
-    exit 0
-    ;;
-esac
-DOCKER_EOF
-chmod +x "$BIN/docker"
-
-# --------------------------------------------------------------------------
-# fake docker compose
-# --------------------------------------------------------------------------
-cat >"$BIN/compose" <<'COMPOSE_EOF'
-#!/usr/bin/env bash
-set -euo pipefail
-STATE="${WOODRIGHT_FAKE_DOCKER_STATE:?}"
-mkdir -p "$STATE/log" "$STATE/containers"
-printf 'compose %s\n' "$*" >>"$STATE/log/commands.log"
-
-env_file=""; project=""; compose_file=""; service=""; up=0
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    -f|--file) compose_file="$2"; shift 2 ;;
-    --env-file) env_file="$2"; shift 2 ;;
-    --project-name|-p) project="$2"; shift 2 ;;
-    up) up=1; shift ;;
-    -d|--detach|--no-deps) shift ;;
-    *) service="$1"; shift ;;
-  esac
-done
-[[ "$up" == "1" ]] || exit 0
-[[ -f "$compose_file" ]] || { echo "compose file missing: $compose_file" >&2; exit 1; }
-[[ -f "$env_file" ]] || { echo "env file missing: $env_file" >&2; exit 1; }
-if [[ "${WOODRIGHT_FAKE_DOCKER_ALLOW_MUTATION:-0}" != "1" ]]; then
-  echo "UNEXPECTED_MUTATION compose up $service" >&2
-  exit 99
-fi
-printf 'compose_up %s project=%s\n' "$service" "$project" >>"$STATE/log/mutations.log"
-printf 'compose_up %s\n' "$service" >>"$STATE/log/journal.log"
-if [[ "${WOODRIGHT_FAKE_COMPOSE_FAIL:-}" == "$service" ]]; then
-  echo "harness: compose up $service failed" >&2
-  exit 1
-fi
-
-python3 - "$STATE" "$env_file" "$service" <<'PY'
-import json, os, sys
-state, env_file, service = sys.argv[1:4]
-pins = {}
-for line in open(env_file, encoding="utf-8"):
-    if "=" in line and not line.strip().startswith("#"):
-        k, v = line.rstrip("\n").split("=", 1)
-        pins[k] = v
-key = "WOODRIGHT_BACKEND_IMAGE" if service == "backend" else "WOODRIGHT_STOREFRONT_IMAGE"
-image = pins.get(key, "")
-digest = image.split("@")[-1]
-if os.environ.get("WOODRIGHT_FAKE_COMPOSE_WRONG_DIGEST") == service:
-    digest = "sha256:" + ("9" * 64)
-    image = image.split("@")[0] + "@" + digest
-name = f"woodright-production-{service}"
-title = "woodright-backend" if service == "backend" else "woodright-storefront"
-host_ip = "0.0.0.0" if os.environ.get("WOODRIGHT_FAKE_COMPOSE_PUBLIC_BIND") == service else "127.0.0.1"
-host_port = "9200" if service == "backend" else "3200"
-container_port = "9000/tcp" if service == "backend" else "3000/tcp"
-health = "unhealthy" if os.environ.get("WOODRIGHT_FAKE_COMPOSE_UNHEALTHY") == service else "healthy"
-labels = {
-    "com.woodright.deployment-owner": "Dokploy",
-    "com.woodright.exposure": "private",
-    "com.woodright.database-identity": "non_public_candidate_db",
-    "org.opencontainers.image.title": title,
-    "com.docker.compose.project": "woodright-production",
-    "com.woodright.release-sha": os.environ.get("WOODRIGHT_FAKE_RELEASE_SHA", ""),
-}
-if os.environ.get("WOODRIGHT_FAKE_COMPOSE_PUBLIC_TRAEFIK") == service:
-    labels["traefik.enable"] = "true"
-    labels["traefik.http.routers.wr.rule"] = "Host(`woodright.ru`)"
-doc = [{
-    "Id": f"id-{service}-new",
-    "Name": f"/{name}",
-    "Image": digest,
-    "RepoDigests": [f"ghcr.io/saintgroovie/{title}@{digest}"],
-    "RestartCount": 0,
-    "Config": {
-        "Image": image,
-        "Env": [
-            "WOODRIGHT_EXPOSURE=private",
-            "WOODRIGHT_DATABASE_IDENTITY_ALIAS=non_public_candidate_db",
-            "PGPASSWORD=MOCK_SECRET_VALUE",
-        ],
-        "Labels": labels,
-        "Healthcheck": {"Test": ["CMD-SHELL", "true"]},
-    },
-    "HostConfig": {
-        "Binds": [],
-        "PortBindings": {container_port: [{"HostIp": host_ip, "HostPort": host_port}]},
-    },
-    "Mounts": (
-        [{"Type": "volume", "Name": "woodright-production_woodright-production_media",
-          "Destination": "/server/static"}] if service == "backend" else []
-    ),
-    "State": {"Status": "running", "Health": {"Status": health}},
-    "NetworkSettings": {"Networks": {"dokploy-network": {}}, "Ports": {}},
-}]
-json.dump(doc, open(os.path.join(state, "containers", f"{name}.json"), "w"))
-props = os.path.join(state, "containers", f"{name}.props")
-if os.path.exists(props):
-    os.remove(props)
-PY
-COMPOSE_EOF
-chmod +x "$BIN/compose"
-
-# --------------------------------------------------------------------------
-# fake http probe
-# --------------------------------------------------------------------------
-cat >"$BIN/http" <<'HTTP_EOF'
-#!/usr/bin/env bash
-url="${1:-}"
-if [[ -n "${WOODRIGHT_FAKE_HTTP_FAIL:-}" && "$url" == *"${WOODRIGHT_FAKE_HTTP_FAIL}"* ]]; then
-  echo 503
-  exit 0
-fi
-echo 200
-HTTP_EOF
-chmod +x "$BIN/http"
+# shellcheck source=lib/woodright-production-fake-runtime.sh
+source "$ROOT/scripts/ops/lib/woodright-production-fake-runtime.sh"
+wr_fake_runtime_install "$BIN"
 
 # --------------------------------------------------------------------------
 # harness state helpers
@@ -384,7 +87,7 @@ chmod +x "$BIN/http"
 write_container() {
   local service="$1" digest="$2" host_ip="${3:-127.0.0.1}" traefik="${4:-0}"
   python3 - "$STATE" "$service" "$digest" "$host_ip" "$traefik" <<'PY'
-import json, os, sys
+import json, os, sys, time
 state, service, digest, host_ip, traefik = sys.argv[1:6]
 name = f"woodright-production-{service}"
 title = "woodright-backend" if service == "backend" else "woodright-storefront"
@@ -426,13 +129,19 @@ doc = [{
         [{"Type": "volume", "Name": "woodright-production_woodright-production_media",
           "Destination": "/server/static"}] if service == "backend" else []
     ),
-    "State": {"Status": "running", "Health": {"Status": "healthy"}},
+    "State": {
+        "Status": "running",
+        "StartedAt": "2026-08-01T00:00:00.000000000Z",
+        "Health": {"Status": "healthy"},
+    },
     "NetworkSettings": {"Networks": {"dokploy-network": {}}, "Ports": {}},
 }]
 json.dump(doc, open(os.path.join(state, "containers", f"{name}.json"), "w"))
 props = os.path.join(state, "containers", f"{name}.props")
 if os.path.exists(props):
     os.remove(props)
+os.makedirs(os.path.join(state, "deployed"), exist_ok=True)
+open(os.path.join(state, "deployed", service), "w").write(digest)
 PY
 }
 
@@ -459,7 +168,8 @@ PY
 
 reset_harness() {
   rm -rf "$STATE"
-  mkdir -p "$STATE/containers" "$STATE/images" "$STATE/volumes" "$STATE/log"
+  mkdir -p "$STATE/containers" "$STATE/images" "$STATE/volumes" "$STATE/log" \
+    "$STATE/health-ready-at" "$STATE/deployed"
   touch "$STATE/volumes/${MEDIA_VOL}.ok"
   write_container backend "$OLD_BE_DIG"
   write_container storefront "$OLD_SF_DIG"
@@ -510,7 +220,16 @@ id_of() {
   WOODRIGHT_FAKE_DOCKER_STATE="$STATE" "$BIN/docker" inspect "$1" --format '{{.Id}}' 2>/dev/null || true
 }
 container_exists() { [[ -f "$STATE/containers/$1.json" ]]; }
+# Keepers are gone for good: the helper must never rename a live container aside.
 keeper_count() { find "$STATE/containers" -name '*keeper*' | wc -l | tr -d ' '; }
+assert_no_keepers() {
+  local label="$1"
+  if [[ "$(keeper_count)" == "0" ]] && ! grep -q 'rename' "$STATE/log/journal.log" 2>/dev/null; then
+    pass "$label: no keeper container was created or renamed"
+  else
+    fail "$label: keeper artefacts present ($(keeper_count) containers)"
+  fi
+}
 
 assert_public_demo_untouched() {
   local label="$1" now
@@ -550,7 +269,10 @@ base_env() {
     "WOODRIGHT_FAKE_HTTP_BIN=$BIN/http" \
     "WOODRIGHT_HELPER_INSTALL_SHA=$HELPER_SHA" \
     "WR_STAGING_MUTATION_LOCK_ALLOW_NONCANONICAL=1" \
-    "WR_STAGING_MUTATION_LOCK_TIMEOUT_SEC=5"
+    "WR_STAGING_MUTATION_LOCK_TIMEOUT_SEC=5" \
+    "WOODRIGHT_CUTOVER_POLL_INTERVAL_SEC=1" \
+    "WOODRIGHT_CUTOVER_READY_DEADLINE_SEC=8" \
+    "WOODRIGHT_FAKE_COMPOSE_DEFECT_DIGESTS=$NEW_BE_DIG,$NEW_SF_DIG"
 }
 
 # run_exec <evidence-dir> <out-file> [extra env assignments...]
@@ -595,15 +317,34 @@ ACTUAL_STATES="$(awk '{print $2}' "$EV/state-transitions.log" | awk '!seen[$0]++
   || fail "success: state order = $(echo "$ACTUAL_STATES" | tr '\n' ',')"
 
 JOURNAL="$(cat "$STATE/log/journal.log")"
-EXPECTED_JOURNAL=$'rename woodright-production-backend woodright-production-backend-keeper*\ncompose_up backend\nrename woodright-production-storefront woodright-production-storefront-keeper*\ncompose_up storefront'
-if [[ "$(echo "$JOURNAL" | sed -n '2p')" == "compose_up backend" \
-   && "$(echo "$JOURNAL" | sed -n '4p')" == "compose_up storefront" \
-   && "$(echo "$JOURNAL" | sed -n '1p')" == rename\ woodright-production-backend\ * \
-   && "$(echo "$JOURNAL" | sed -n '3p')" == rename\ woodright-production-storefront\ * ]]; then
-  pass "success: keeper rename then compose up, backend before storefront"
+if [[ "$JOURNAL" == $'compose_up backend\ncompose_up storefront' ]]; then
+  pass "success: compose up only, backend before storefront (no keeper rename)"
 else
   fail "success: mutation order = $(echo "$JOURNAL" | tr '\n' '|')"
 fi
+assert_no_keepers "success"
+grep -qE 'compose_up backend .*force=0' "$STATE/log/mutations.log" \
+  && pass "success: forward recreate uses a plain up when the pin already moves the digest" \
+  || fail "success: forward recreate forced a recreate it did not need"
+grep -q 'no keeper container created' "$TMP/out-success.txt" \
+  && pass "success: recreate log states no keeper was created" || fail "success: keeper wording missing"
+[[ -f "$EV/json/rollback-anchors.json" ]] \
+  && pass "success: pre-mutation rollback anchors recorded" || fail "success: rollback anchors missing"
+python3 - "$EV/json/rollback-anchors.json" "$OLD_BE_REF" "$OLD_SF_REF" <<'PY' \
+  && pass "success: anchors are the exact pre-cutover immutable refs" || fail "success: anchor refs wrong"
+import json, sys
+doc = json.load(open(sys.argv[1]))
+assert doc["backend"]["ref"] == sys.argv[2], doc
+assert doc["storefront"]["ref"] == sys.argv[3], doc
+assert doc["backend"]["image_present_locally"] is True
+assert doc["storefront"]["image_present_locally"] is True
+assert doc["method"] == "restore_pins_then_compose_recreate"
+assert doc["keepers_used"] is False
+PY
+[[ -s "$EV/raw/health-poll-backend.txt" ]] \
+  && pass "success: readiness polling evidence written for backend" || fail "success: no backend poll evidence"
+[[ -s "$EV/raw/health-poll-storefront.txt" ]] \
+  && pass "success: readiness polling evidence written for storefront" || fail "success: no storefront poll evidence"
 if grep -qE 'postgres|redis' "$STATE/log/mutations.log"; then
   fail "success: postgres/redis were touched"
 else
@@ -655,7 +396,7 @@ run_exec "$EV" "$TMP/out-second-pin.txt" "WOODRIGHT_CUTOVER_FAULT=second_pin"
 lock_is_free "$LOCK" && pass "second_pin: lock released" || fail "second_pin: lock held"
 
 # ==========================================================================
-# 4) backend recreate fails -> rollback pins + keeper
+# 4) backend recreate fails -> pins restored, runtime never left the old digest
 # ==========================================================================
 reset_harness
 EV="$TMP/ev-be-recreate"
@@ -663,11 +404,23 @@ run_exec "$EV" "$TMP/out-be-recreate.txt" "WOODRIGHT_FAKE_COMPOSE_FAIL=backend"
 [[ "$RC" -eq 10 ]] && pass "backend_recreate: rollback_ok exit 10" || fail "backend_recreate: rc=$RC"
 [[ "$(state_file "$EV")" == "rolled_back" ]] && pass "backend_recreate: rolled_back" || fail "backend_recreate: state"
 [[ "$(pin_of WOODRIGHT_BACKEND_IMAGE)" == "$OLD_BE_REF" ]] && pass "backend_recreate: pins restored" || fail "backend_recreate: pins not restored"
-[[ "$(digest_of woodright-production-backend)" == "$OLD_BE_DIG" ]] && pass "backend_recreate: keeper restored live" || fail "backend_recreate: live digest wrong"
-[[ "$(id_of woodright-production-backend)" == "id-backend-live" ]] && pass "backend_recreate: original container id back in place" || fail "backend_recreate: id mismatch"
-[[ "$(keeper_count)" == "0" ]] && pass "backend_recreate: keeper consumed" || fail "backend_recreate: keeper left behind"
+[[ "$(digest_of woodright-production-backend)" == "$OLD_BE_DIG" ]] && pass "backend_recreate: backend still on the pre-cutover digest" || fail "backend_recreate: live digest wrong"
+[[ "$(id_of woodright-production-backend)" == "id-backend-live" ]] && pass "backend_recreate: original container never replaced" || fail "backend_recreate: id mismatch"
+assert_no_keepers "backend_recreate"
+grep -q 'no recreate needed' "$TMP/out-be-recreate.txt" \
+  && pass "backend_recreate: rollback skipped a needless recreate (runtime already on the pin)" \
+  || fail "backend_recreate: rollback recreated an already-correct container"
 container_exists woodright-production-storefront && pass "backend_recreate: storefront never touched" || fail "backend_recreate: storefront missing"
 [[ "$(digest_of woodright-production-storefront)" == "$OLD_SF_DIG" ]] && pass "backend_recreate: storefront digest unchanged" || fail "backend_recreate: storefront digest"
+python3 - "$EV/json/rollback-result.json" <<'PY' \
+  && pass "backend_recreate: rollback result records verified postconditions" || fail "backend_recreate: rollback result"
+import json, sys
+doc = json.load(open(sys.argv[1]))
+assert doc["keepers_used"] is False, doc
+assert doc["method"] == "restore_pins_then_compose_recreate", doc
+for key in ("pins", "runtime_recreate", "pins_equal_runtime", "exposure", "http", "metadata"):
+    assert doc[key] == 1, (key, doc)
+PY
 lock_is_free "$LOCK" && pass "backend_recreate: lock released" || fail "backend_recreate: lock held"
 
 # ==========================================================================
@@ -691,7 +444,7 @@ run_exec "$EV" "$TMP/out-sf-recreate.txt" "WOODRIGHT_FAKE_COMPOSE_FAIL=storefron
 [[ "$(digest_of woodright-production-backend)" == "$OLD_BE_DIG" ]] && pass "storefront_recreate: backend rolled back too" || fail "storefront_recreate: backend digest"
 [[ "$(digest_of woodright-production-storefront)" == "$OLD_SF_DIG" ]] && pass "storefront_recreate: storefront restored" || fail "storefront_recreate: storefront digest"
 [[ "$(pin_of WOODRIGHT_STOREFRONT_IMAGE)" == "$OLD_SF_REF" ]] && pass "storefront_recreate: pins restored" || fail "storefront_recreate: pins"
-[[ "$(keeper_count)" == "0" ]] && pass "storefront_recreate: both keepers consumed" || fail "storefront_recreate: keepers left"
+assert_no_keepers "storefront_recreate"
 
 # ==========================================================================
 # 7) storefront route/http fails -> rollback
@@ -700,7 +453,10 @@ reset_harness
 EV="$TMP/ev-sf-http"
 run_exec "$EV" "$TMP/out-sf-http.txt" "WOODRIGHT_FAKE_HTTP_FAIL=3200"
 [[ "$RC" -eq 10 ]] && pass "storefront_http: rollback_ok exit 10" || fail "storefront_http: rc=$RC"
-grep -q 'http gate FAILED storefront' "$TMP/out-sf-http.txt" && pass "storefront_http: gate reported" || fail "storefront_http: gate not reported"
+grep -qE 'HTTP gate timed out|http gate FAILED storefront' "$TMP/out-sf-http.txt" \
+  && pass "storefront_http: failure reported after polling to the deadline" || fail "storefront_http: gate not reported"
+grep -q 'attempt=' "$EV/raw/health-poll-storefront.txt" \
+  && pass "storefront_http: HTTP was retried, not read once" || fail "storefront_http: no retry evidence"
 [[ "$(digest_of woodright-production-storefront)" == "$OLD_SF_DIG" ]] && pass "storefront_http: storefront rolled back" || fail "storefront_http: sf digest"
 [[ "$(digest_of woodright-production-backend)" == "$OLD_BE_DIG" ]] && pass "storefront_http: backend rolled back" || fail "storefront_http: be digest"
 [[ ! -f "$OWN_DIR/ACTIVE_OWNER.json" ]] && pass "storefront_http: ACTIVE not written" || fail "storefront_http: ACTIVE written"
@@ -927,9 +683,38 @@ assert packet["application_source_sha"] != packet["helper_install_sha"]
 plan = packet["planned_mutation"]
 assert plan["recreate"]["order"] == ["backend", "storefront"], plan["recreate"]["order"]
 assert plan["pin_plan"]["keys"]["WOODRIGHT_BACKEND_IMAGE"].endswith("a" * 64)
-assert plan["rollback_refs"]["keeper_names"]["backend"].startswith("woodright-production-backend-keeper-")
 assert "prepared" in plan["state_machine"]
 assert packet["no_mutation_performed"] is True
+
+# Rollback is anchored on the live digests, never on keeper containers.
+assert plan["container_recreate_uses_keepers"] is False, plan
+assert "keeper_names" not in json.dumps(plan), "packet still advertises keepers"
+rb = plan["rollback_refs"]
+assert rb["method"].startswith("restore_pins_then_compose_recreate"), rb
+assert rb["backend_ref"].endswith("c" * 64), rb
+assert rb["storefront_ref"].endswith("d" * 64), rb
+assert rb["images_present_locally"] is True, rb
+assert "pins_restored" in rb["postconditions"], rb
+assert "runtime_repo_digests_equal_restored_pins" in rb["postconditions"], rb
+
+# Readiness is a poll to a deadline, not a one-shot health read.
+poll = plan["health_plan"]
+assert int(poll["poll_interval_sec"]) >= 1, poll
+assert int(poll["deadline_sec"]["backend"]) >= 1, poll
+assert int(poll["deadline_sec"]["storefront"]) >= 1, poll
+assert "starting" in poll["transient_docker_states"], poll
+assert "exited" in poll["terminal_docker_states"], poll
+assert "dead" in poll["terminal_docker_states"], poll
+assert plan["recreate"]["flags"][-1] == "--force-recreate", plan["recreate"]
+
+# Documented exit codes include the honest-rollback ones.
+codes = plan["exit_codes"]
+assert codes["10"].startswith("rollback"), codes
+assert "13" in codes and "incomplete" in codes["13"], codes
+
+# No pre-existing skew in this fixture.
+assert packet["existing_pin_runtime_skew"] is False, packet
+assert packet["normal_execute_blocked"] is False, packet
 PY
 
 # ==========================================================================
@@ -1054,12 +839,163 @@ grep -q 'locks/production/live-cutover.lock' "$TMP/out-badlock.txt" \
 lock_is_free "$PD_LOCK" && pass "refusal: public_demo lock never taken" || fail "refusal: public_demo lock held"
 
 # ==========================================================================
-# 22) static contract checks
+# 22) readiness: Docker health "starting" is transient, not a failure
+#     (backend HEALTHCHECK --start-period=60s in production)
+# ==========================================================================
+reset_harness
+EV="$TMP/ev-starting"
+run_exec "$EV" "$TMP/out-starting.txt" \
+  "WOODRIGHT_FAKE_COMPOSE_STARTING=backend" "WOODRIGHT_FAKE_COMPOSE_STARTING_SEC=3"
+[[ "$RC" -eq 0 ]] && pass "starting_then_healthy: committed, starting was not treated as failure" \
+  || { fail "starting_then_healthy: rc=$RC"; sed -n '1,40p' "$TMP/out-starting.txt"; }
+[[ "$(state_file "$EV")" == "committed" ]] && pass "starting_then_healthy: state committed" || fail "starting_then_healthy: state=$(state_file "$EV")"
+grep -q 'health=starting' "$EV/raw/health-poll-backend.txt" \
+  && pass "starting_then_healthy: poll evidence records the starting window" || fail "starting_then_healthy: no starting attempt recorded"
+grep -q 'health=healthy' "$EV/raw/health-poll-backend.txt" \
+  && pass "starting_then_healthy: poll evidence records the healthy flip" || fail "starting_then_healthy: no healthy attempt recorded"
+[[ "$(digest_of woodright-production-backend)" == "$NEW_BE_DIG" ]] \
+  && pass "starting_then_healthy: backend advanced" || fail "starting_then_healthy: backend digest"
+
+# ==========================================================================
+# 23) readiness: health never becomes healthy -> deadline -> verified rollback
+# ==========================================================================
+reset_harness
+EV="$TMP/ev-health-timeout"
+run_exec "$EV" "$TMP/out-health-timeout.txt" \
+  "WOODRIGHT_FAKE_COMPOSE_UNHEALTHY=storefront" "WOODRIGHT_CUTOVER_READY_DEADLINE_SEC=4"
+[[ "$RC" -eq 10 ]] && pass "health_timeout: rollback_ok exit 10" || fail "health_timeout: rc=$RC"
+grep -q 'docker gate timed out' "$TMP/out-health-timeout.txt" \
+  && pass "health_timeout: reported as a deadline, not a single failed read" || fail "health_timeout: no deadline message"
+POLL_ATTEMPTS="$(grep -c 'attempt=' "$EV/raw/health-poll-storefront.txt" || true)"
+[[ "$POLL_ATTEMPTS" -ge 2 ]] && pass "health_timeout: polled $POLL_ATTEMPTS times before giving up" \
+  || fail "health_timeout: only $POLL_ATTEMPTS attempt(s) - still one-shot"
+[[ "$(digest_of woodright-production-storefront)" == "$OLD_SF_DIG" ]] \
+  && pass "health_timeout: storefront recreated back onto the pre-cutover digest" || fail "health_timeout: sf digest"
+[[ "$(digest_of woodright-production-backend)" == "$OLD_BE_DIG" ]] \
+  && pass "health_timeout: backend rolled back too" || fail "health_timeout: be digest"
+[[ "$(pin_of WOODRIGHT_STOREFRONT_IMAGE)" == "$OLD_SF_REF" ]] && pass "health_timeout: pins restored" || fail "health_timeout: pins"
+grep -q 'ROLLBACK_VERIFY storefront ok pin==runtime' "$TMP/out-health-timeout.txt" \
+  && pass "health_timeout: postcondition pins==runtime was actually evaluated" || fail "health_timeout: no postcondition proof"
+assert_no_keepers "health_timeout"
+
+# ==========================================================================
+# 24) readiness: HTTP is flaky at first, then 200 -> commit (no rollback)
+# ==========================================================================
+reset_harness
+EV="$TMP/ev-http-flaky"
+run_exec "$EV" "$TMP/out-http-flaky.txt" \
+  "WOODRIGHT_FAKE_HTTP_FLAKY_PORT=3200" "WOODRIGHT_FAKE_HTTP_FLAKY_TIMES=2"
+[[ "$RC" -eq 0 ]] && pass "http_flaky: transient 503s did not trigger a rollback" \
+  || { fail "http_flaky: rc=$RC"; sed -n '1,40p' "$TMP/out-http-flaky.txt"; }
+grep -q 'code=503' "$EV/raw/health-poll-storefront.txt" \
+  && pass "http_flaky: the transient failures were observed" || fail "http_flaky: no 503 recorded"
+grep -q 'code=200' "$EV/raw/health-poll-storefront.txt" \
+  && pass "http_flaky: readiness proceeded on the first 200" || fail "http_flaky: no 200 recorded"
+[[ "$(state_file "$EV")" == "committed" ]] && pass "http_flaky: committed" || fail "http_flaky: state=$(state_file "$EV")"
+
+# ==========================================================================
+# 25) pins restored but the runtime is still the candidate
+#     -> rollback_incomplete exit 13, never a false ROLLBACK_OK
+# ==========================================================================
+reset_harness
+EV="$TMP/ev-rollback-incomplete"
+run_exec "$EV" "$TMP/out-rollback-incomplete.txt" \
+  "WOODRIGHT_FAKE_COMPOSE_UNHEALTHY=storefront" "WOODRIGHT_CUTOVER_READY_DEADLINE_SEC=3" \
+  "WOODRIGHT_CUTOVER_ROLLBACK_SKIP_RECREATE=1"
+[[ "$RC" -eq 13 ]] && pass "rollback_incomplete: exit 13 (not 10)" || fail "rollback_incomplete: rc=$RC"
+[[ "$(state_file "$EV")" == "rollback_incomplete" ]] && pass "rollback_incomplete: state rollback_incomplete" \
+  || fail "rollback_incomplete: state=$(state_file "$EV")"
+grep -q 'ROLLBACK_INCOMPLETE' "$TMP/out-rollback-incomplete.txt" \
+  && pass "rollback_incomplete: reported explicitly" || fail "rollback_incomplete: not reported"
+grep -q 'ROLLBACK_OK (pins restored' "$TMP/out-rollback-incomplete.txt" \
+  && fail "rollback_incomplete: claimed ROLLBACK_OK anyway" || pass "rollback_incomplete: never claims ROLLBACK_OK"
+[[ "$(pin_of WOODRIGHT_STOREFRONT_IMAGE)" == "$OLD_SF_REF" ]] \
+  && pass "rollback_incomplete: pins were restored" || fail "rollback_incomplete: pins not restored"
+[[ "$(digest_of woodright-production-storefront)" == "$NEW_SF_DIG" ]] \
+  && pass "rollback_incomplete: runtime is provably still the candidate" || fail "rollback_incomplete: sf digest"
+grep -q 'ROLLBACK_VERIFY storefront MISMATCH' "$TMP/out-rollback-incomplete.txt" \
+  && pass "rollback_incomplete: the pin/runtime mismatch is named" || fail "rollback_incomplete: mismatch not named"
+python3 - "$EV/json/rollback-result.json" <<'PY' \
+  && pass "rollback_incomplete: evidence separates what held from what did not" || fail "rollback_incomplete: evidence"
+import json, sys
+doc = json.load(open(sys.argv[1]))
+assert doc["pins"] == 1, doc
+assert doc["pins_equal_runtime"] == 0, doc
+assert doc["keepers_used"] is False, doc
+PY
+[[ ! -f "$OWN_DIR/ACTIVE_OWNER.json" ]] && pass "rollback_incomplete: no release published" || fail "rollback_incomplete: ACTIVE_OWNER written"
+lock_is_free "$LOCK" && pass "rollback_incomplete: lock released" || fail "rollback_incomplete: lock held"
+
+# ==========================================================================
+# 26) pre-existing pin/runtime skew: execute dies before the lock and any write
+# ==========================================================================
+reset_harness
+# Runtime moved to the candidate digests while the pins still name the old pair.
+write_container backend "$NEW_BE_DIG"
+write_container storefront "$NEW_SF_DIG"
+EV="$TMP/ev-existing-skew"
+run_exec "$EV" "$TMP/out-existing-skew.txt"
+[[ "$RC" -eq 2 ]] && pass "existing_skew: refused with exit 2" || fail "existing_skew: rc=$RC"
+grep -q 'existing_pin_runtime_skew_requires_recovery' "$TMP/out-existing-skew.txt" \
+  && pass "existing_skew: names the blocking token" || fail "existing_skew: token missing"
+grep -q 'recover-production-candidate-skew.sh' "$TMP/out-existing-skew.txt" \
+  && pass "existing_skew: points at the recovery helper" || fail "existing_skew: no recovery pointer"
+[[ ! -f "$STATE/log/mutations.log" ]] && pass "existing_skew: nothing was recreated" || fail "existing_skew: docker mutated"
+[[ "$(pin_of WOODRIGHT_BACKEND_IMAGE)" == "$OLD_BE_REF" ]] && pass "existing_skew: pins untouched" || fail "existing_skew: pins changed"
+[[ ! -d "$EV" ]] && pass "existing_skew: refused before evidence/lock" || fail "existing_skew: evidence dir created"
+lock_is_free "$LOCK" && pass "existing_skew: lock never taken" || fail "existing_skew: lock held"
+
+# the same skew must be visible - and non-fatal - in the read-only dry-run
+ENVS=()
+while IFS= read -r line; do ENVS+=("$line"); done < <(base_env)
+ENVS+=("WOODRIGHT_FAKE_DOCKER_ALLOW_MUTATION=0")
+set +e
+env "${ENVS[@]}" bash "$SCRIPT" \
+  --environment production --component pair --source-sha "$APP_SHA" \
+  --backend-ref "$BE_REF" --storefront-ref "$SF_REF" >"$TMP/out-skew-dryrun.txt" 2>"$TMP/err-skew-dryrun.txt"
+RC=$?
+set -e
+python3 - "$TMP/out-skew-dryrun.txt" <<'PY' \
+  && pass "existing_skew: dry-run packet reports the skew and the block" || fail "existing_skew: dry-run packet fields"
+import json, sys
+raw = open(sys.argv[1]).read()
+packet = json.loads(raw[raw.index("{"):])
+assert packet["existing_pin_runtime_skew"] is True, packet
+assert packet["normal_execute_blocked"] is True, packet
+cmp = packet["pin_runtime_comparison"]
+assert cmp["backend"]["verdict"] == "skew", cmp
+assert cmp["recovery_helper"].endswith("recover-production-candidate-skew.sh"), cmp
+assert cmp["blocking_token"] == "existing_pin_runtime_skew_requires_recovery", cmp
+PY
+[[ ! -f "$STATE/log/mutations.log" ]] && pass "existing_skew: dry-run stayed read-only" || fail "existing_skew: dry-run mutated"
+
+# ==========================================================================
+# 27) static contract checks
 # ==========================================================================
 grep -q '^# LIVE_MUTATING=true' "$SCRIPT" && pass "static: header declares LIVE_MUTATING=true" || fail "static: LIVE_MUTATING header"
 grep -q '^# requires_global_lock=true' "$SCRIPT" && pass "static: header declares requires_global_lock=true" || fail "static: requires_global_lock header"
 grep -q '/srv/woodright/locks/production/live-cutover.lock' "$SCRIPT" && pass "static: names the canonical production lock" || fail "static: canonical lock path"
 grep -q 'wr_staging_mutation_lock_acquire' "$SCRIPT" && pass "static: uses the shared flock helper" || fail "static: lock helper"
+if grep -qE 'keeper' "$SCRIPT"; then
+  # Prose about why keepers are gone is fine; creating one is not.
+  if grep -qE '^\s*(prod_docker|docker) rename|KEEPER_(BE|SF)=' "$SCRIPT"; then
+    fail "static: script still renames containers into keepers"
+  else
+    pass "static: keeper mentions are documentation only, no rename path"
+  fi
+else
+  pass "static: no keeper references at all"
+fi
+grep -q 'wait_component_ready' "$SCRIPT" && pass "static: readiness is a polling helper" || fail "static: no wait_component_ready"
+if grep -qE '^[[:space:]]*docker_health_ok[[:space:]]*(\(\)|")' "$SCRIPT"; then
+  fail "static: one-shot docker_health_ok is still defined or called"
+else
+  pass "static: one-shot docker_health_ok is gone (mentions are prose only)"
+fi
+grep -q 'recover-production-candidate-skew.sh' "$SCRIPT" \
+  && pass "static: refers operators to the skew recovery helper" || fail "static: no recovery helper reference"
+[[ -x "$ROOT/ops/release/recover-production-candidate-skew.sh" || -f "$ROOT/ops/release/recover-production-candidate-skew.sh" ]] \
+  && pass "static: the skew recovery helper exists" || fail "static: recovery helper missing"
 if grep -qE 'db:migrate|medusa exec|--seed|docker (system )?prune' "$SCRIPT"; then
   fail "static: script references migrations/seeds/prune"
 else
