@@ -169,6 +169,8 @@ fi
 
 # 9) Mid-install forced failure restores previous distinct content
 install_into "$WR_A" "$TMP/backups-a4" >/dev/null
+LATER="$WR_A/ops/release/cutover-public-demo-pair.sh"
+LATER_SHA="$(shasum -a 256 "$LATER" | awk '{print $1}')"
 # Make currently installed profile uniquely tagged, then fail while reinstalling clean harness.
 echo "# previous-unique-$(date +%s)" >>"$WR_A/ops/lib/woodright-environment-profile.sh"
 TAGGED_SHA="$(shasum -a 256 "$WR_A/ops/lib/woodright-environment-profile.sh" | awk '{print $1}')"
@@ -186,9 +188,11 @@ set -e
 grep -q "RESTORE_OK\|RESTORE_BEGIN" /tmp/wr-forcefail.out && ok "9_restore_invoked" || fail "9_restore_invoked"
 RESTORED_SHA="$(shasum -a 256 "$WR_A/ops/lib/woodright-environment-profile.sh" | awk '{print $1}')"
 [[ "$RESTORED_SHA" == "$TAGGED_SHA" ]] && ok "9_profile_restored_tagged" || fail "9_profile_restored_tagged have=$RESTORED_SHA want=$TAGGED_SHA"
-# Marker must remain previous successful install SHA (still SHA_H) and not be cleared incorrectly
 NEW_MARKER="$(tr -d '[:space:]' <"$WR_A/tools/release/INSTALLED_ENV_GOVERNANCE_SHA.txt")"
 [[ "$NEW_MARKER" == "$SHA_H" ]] && ok "9_marker_kept" || fail "9_marker_kept have=$NEW_MARKER"
+[[ -f "$LATER" ]] && ok "9_later_file_exists" || fail "9_later_file_exists"
+LATER_AFTER="$(shasum -a 256 "$LATER" | awk '{print $1}')"
+[[ "$LATER_AFTER" == "$LATER_SHA" ]] && ok "9_later_file_untouched" || fail "9_later_file_untouched"
 
 # 10) Truncated manifest refused
 python3 - <<PY

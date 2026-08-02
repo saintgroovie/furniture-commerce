@@ -229,18 +229,26 @@ PREV_BUNDLE_MANIFEST=""
 if [[ -f "$MARKER" ]]; then
   cp -a "$MARKER" "$BACKUP/INSTALLED_ENV_GOVERNANCE_SHA.txt"
   PREV_MARKER="$BACKUP/INSTALLED_ENV_GOVERNANCE_SHA.txt"
+else
+  : >"$BACKUP/marker_was_absent"
 fi
 if [[ -f "$MARKER_FROM" ]]; then
   cp -a "$MARKER_FROM" "$BACKUP/INSTALLED_FROM_MERGE_SHA.txt"
   PREV_MARKER_FROM="$BACKUP/INSTALLED_FROM_MERGE_SHA.txt"
+else
+  : >"$BACKUP/marker_from_was_absent"
 fi
 if [[ -f "$TEXT_MANIFEST_DST" ]]; then
   cp -a "$TEXT_MANIFEST_DST" "$BACKUP/ENV_GOVERNANCE_INSTALL_MANIFEST.txt"
   PREV_TEXT_MANIFEST="$BACKUP/ENV_GOVERNANCE_INSTALL_MANIFEST.txt"
+else
+  : >"$BACKUP/text_manifest_was_absent"
 fi
 if [[ -f "$BUNDLE_MANIFEST_DST" ]]; then
   cp -a "$BUNDLE_MANIFEST_DST" "$BACKUP/ENV_GOVERNANCE_BUNDLE_MANIFEST.json"
   PREV_BUNDLE_MANIFEST="$BACKUP/ENV_GOVERNANCE_BUNDLE_MANIFEST.json"
+else
+  : >"$BACKUP/bundle_manifest_was_absent"
 fi
 
 TEXT_MANIFEST="$BACKUP/INSTALL_MANIFEST.txt"
@@ -252,50 +260,50 @@ TEXT_MANIFEST="$BACKUP/INSTALL_MANIFEST.txt"
 
 restore_previous_bundle() {
   log "RESTORE_BEGIN backup=$BACKUP"
-  local rel dest bak
+  local rel dest bak absent
   for rel in "${FILES[@]}"; do
     dest="$(dest_for "$rel")"
     bak="$BACKUP/$(echo "$rel" | tr '/' '_')"
+    absent="$BACKUP/$(echo "$rel" | tr '/' '_').was_absent"
     if [[ -f "$bak" || -L "$bak" ]]; then
       mkdir -p "$(dirname "$dest")"
       cp -a "$bak" "$dest"
       log "restored $dest"
-    else
-      # Fresh install / no prior version: remove partially written file.
+    elif [[ -f "$absent" ]]; then
+      # This install created the path (it was absent before this run).
       if [[ -e "$dest" || -L "$dest" ]]; then
         rm -f "$dest"
         log "removed_new $dest"
       fi
+    else
+      # Not visited yet in this install loop - leave existing file alone.
+      :
     fi
   done
   if [[ -n "$PREV_MARKER" && -f "$PREV_MARKER" ]]; then
     cp -a "$PREV_MARKER" "$MARKER"
-  else
+  elif [[ -f "$BACKUP/marker_was_absent" ]]; then
     rm -f "$MARKER"
   fi
   if [[ -n "$PREV_MARKER_FROM" && -f "$PREV_MARKER_FROM" ]]; then
     cp -a "$PREV_MARKER_FROM" "$MARKER_FROM"
-  else
+  elif [[ -f "$BACKUP/marker_from_was_absent" ]]; then
     rm -f "$MARKER_FROM"
   fi
   if [[ -n "$PREV_TEXT_MANIFEST" && -f "$PREV_TEXT_MANIFEST" ]]; then
     cp -a "$PREV_TEXT_MANIFEST" "$TEXT_MANIFEST_DST"
-  else
+  elif [[ -f "$BACKUP/text_manifest_was_absent" ]]; then
     rm -f "$TEXT_MANIFEST_DST"
   fi
   if [[ -n "$PREV_BUNDLE_MANIFEST" && -f "$PREV_BUNDLE_MANIFEST" ]]; then
     cp -a "$PREV_BUNDLE_MANIFEST" "$BUNDLE_MANIFEST_DST"
-  else
+  elif [[ -f "$BACKUP/bundle_manifest_was_absent" ]]; then
     rm -f "$BUNDLE_MANIFEST_DST"
   fi
   if [[ -f "$BACKUP/etc_systemd_woodright-monitor.service" && -d /etc/systemd/system ]]; then
     cp -a "$BACKUP/etc_systemd_woodright-monitor.service" /etc/systemd/system/woodright-monitor.service
-  elif [[ "$CANONICAL_LAYOUT" == "1" && -f /etc/systemd/system/woodright-monitor.service && ! -f "$BACKUP/etc_systemd_woodright-monitor.service" ]]; then
-    # Fresh unit with no prior backup: leave unit in place only if it existed before mutation.
-    # Tracked via sentinel written before unit install.
-    if [[ -f "$BACKUP/systemd_unit_was_absent" ]]; then
-      rm -f /etc/systemd/system/woodright-monitor.service
-    fi
+  elif [[ "$CANONICAL_LAYOUT" == "1" && -f "$BACKUP/systemd_unit_was_absent" ]]; then
+    rm -f /etc/systemd/system/woodright-monitor.service
   fi
   # Compat symlink restore/removal for scripts/release helpers.
   local base link_dst link_bak
@@ -305,10 +313,8 @@ restore_previous_bundle() {
     if [[ -e "$link_bak" || -L "$link_bak" ]]; then
       mkdir -p "$(dirname "$link_dst")"
       cp -a "$link_bak" "$link_dst"
-    elif [[ -L "$link_dst" || -e "$link_dst" ]]; then
-      if [[ -f "$BACKUP/scripts_release_${base}.was_absent" ]]; then
-        rm -f "$link_dst"
-      fi
+    elif [[ -f "$BACKUP/scripts_release_${base}.was_absent" ]]; then
+      rm -f "$link_dst"
     fi
   done
   log "RESTORE_OK"
@@ -337,6 +343,8 @@ for rel in "${FILES[@]}"; do
     [[ ! -L "$dest" || "$rel" == scripts/release/* ]] || die "refusing to overwrite unexpected symlink dest=$dest"
     cp -a "$dest" "$BACKUP/$(echo "$rel" | tr '/' '_')"
     echo "backup $dest -> $BACKUP sha=$(checksums "$dest")" >>"$TEXT_MANIFEST"
+  else
+    : >"$BACKUP/$(echo "$rel" | tr '/' '_').was_absent"
   fi
   install -m "$mode" "$src" "$dest"
   [[ ! -L "$dest" ]] || die "destination became symlink after install: $dest"
