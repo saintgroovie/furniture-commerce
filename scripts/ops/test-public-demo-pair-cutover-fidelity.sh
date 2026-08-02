@@ -409,21 +409,18 @@ else
 fi
 
 # 11) pin lifecycle: SUCCESS only after under-lock APPLY; inherit supported
-PAIR_SRC="$(cat "$PAIR")"
-echo "$PAIR_SRC" | grep -q 'reconcile-public-image-pins.sh' && pass "pair references pin reconciler" || fail "pair missing pin reconciler"
-echo "$PAIR_SRC" | grep -q 'wr_cutover_install_file\|wr_cutover_pair_rollback' && pass "pair uses sudo-aware pin restore" || fail "pair missing wr_cutover_install_file"
-COMMON_SRC="$(cat "$COMMON")"
-echo "$COMMON_SRC" | grep -q 'sudo -n cp' && pass "common pin backup/install supports sudo -n" || fail "common missing sudo -n cp"
-echo "$PAIR_SRC" | grep -q 'pin_reconcile_begin under_inherited_lock' && pass "pair APPLY under inherited lock" || fail "pair missing under-lock APPLY"
-echo "$PAIR_SRC" | grep -q 'WOODRIGHT_SKIP_PIN_RECONCILE=1 after runtime mutation' && pass "skip pin rolls back" || fail "skip pin rollback missing"
-if echo "$PAIR_SRC" | grep -q 'AFTER this script exits'; then fail "stale post-lock APPLY instruction"; else pass "no post-lock APPLY instruction"; fi
-PIN_SRC="$(cat "$ROOT/scripts/release/reconcile-public-image-pins.sh")"
-echo "$PIN_SRC" | grep -q 'mode=inherited' && pass "pin reconciler supports inherited lock" || fail "pin reconciler missing inherit"
-echo "$PIN_SRC" | grep -q 'inherited_lock_retained_by_parent' && pass "pin reconciler retains parent lock" || fail "pin reconciler releases parent"
-echo "$PIN_SRC" | grep -q 'path_ok' && pass "pin inherit proves FD path" || fail "pin inherit missing path proof"
+grep -q 'reconcile-public-image-pins.sh' "$PAIR" && pass "pair references pin reconciler" || fail "pair missing pin reconciler"
+grep -q 'wr_cutover_install_file\|wr_cutover_pair_rollback' "$PAIR" && pass "pair uses sudo-aware pin restore" || fail "pair missing wr_cutover_install_file"
+grep -q 'sudo -n cp' "$COMMON" && pass "common pin backup/install supports sudo -n" || fail "common missing sudo -n cp"
+grep -q 'pin_reconcile_begin under_inherited_lock' "$PAIR" && pass "pair APPLY under inherited lock" || fail "pair missing under-lock APPLY"
+grep -q 'WOODRIGHT_SKIP_PIN_RECONCILE=1 after runtime mutation' "$PAIR" && pass "skip pin rolls back" || fail "skip pin rollback missing"
+if grep -q 'AFTER this script exits' "$PAIR"; then fail "stale post-lock APPLY instruction"; else pass "no post-lock APPLY instruction"; fi
+PIN="$ROOT/scripts/release/reconcile-public-image-pins.sh"
+grep -q 'mode=inherited' "$PIN" && pass "pin reconciler supports inherited lock" || fail "pin reconciler missing inherit"
+grep -q 'inherited_lock_retained_by_parent' "$PIN" && pass "pin reconciler retains parent lock" || fail "pin reconciler releases parent"
+grep -q 'path_ok' "$PIN" && pass "pin inherit proves FD path" || fail "pin inherit missing path proof"
 
 # 12) forged inherit rejected by pin reconciler (no owned FD)
-PIN="$ROOT/scripts/release/reconcile-public-image-pins.sh"
 PINDIR="$TMP/pin-inherit"
 mkdir -p "$PINDIR"
 printf 'WOODRIGHT_BACKEND_IMAGE=ghcr.io/saintgroovie/woodright-backend@%s\nWOODRIGHT_STOREFRONT_IMAGE=ghcr.io/saintgroovie/woodright-storefront@%s\nSTOREFRONT_IMAGE=ghcr.io/saintgroovie/woodright-storefront@%s\n' "$OLD_BE" "$OLD_SF" "$OLD_SF" >"$PINDIR/.env"
