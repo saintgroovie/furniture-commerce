@@ -167,5 +167,42 @@ else
   ok "8_marker_manifest_disagree"
 fi
 
+# 9) Mid-install forced failure restores previous marker/files
+install_into "$WR_A" "$TMP/backups-a4" >/dev/null
+OLD_COMMON_SHA="$(shasum -a 256 "$WR_A/ops/lib/woodright-cutover-common.sh" | awk '{print $1}')"
+OLD_MARKER="$(tr -d '[:space:]' <"$WR_A/tools/release/INSTALLED_ENV_GOVERNANCE_SHA.txt")"
+set +e
+WOODRIGHT_INSTALL_WR_ROOT="$WR_A" \
+WOODRIGHT_INSTALL_BACKUP_ROOT="$TMP/backups-forcefail" \
+WOODRIGHT_INSTALL_FORCE_FAIL_AFTER="ops/lib/woodright-host-publish.sh" \
+bash "$HARNESS/ops/release/install-environment-governance.sh" \
+  --source-sha "$SHA_H" --repo-root "$HARNESS" --ops-root "$WR_A/ops" \
+  >/tmp/wr-forcefail.out 2>&1
+RC=$?
+set -e
+[[ "$RC" -ne 0 ]] && ok "9_force_fail_nonzero" || fail "9_force_fail_nonzero"
+NEW_MARKER="$(tr -d '[:space:]' <"$WR_A/tools/release/INSTALLED_ENV_GOVERNANCE_SHA.txt")"
+[[ "$NEW_MARKER" == "$OLD_MARKER" ]] && ok "9_marker_restored" || fail "9_marker_restored have=$NEW_MARKER"
+NEW_COMMON_SHA="$(shasum -a 256 "$WR_A/ops/lib/woodright-cutover-common.sh" | awk '{print $1}')"
+[[ "$NEW_COMMON_SHA" == "$OLD_COMMON_SHA" ]] && ok "9_common_restored" || fail "9_common_restored"
+
+# 10) Truncated manifest refused
+python3 - <<PY
+import json
+from pathlib import Path
+p=Path("$WR_A/tools/release/ENV_GOVERNANCE_BUNDLE_MANIFEST.json")
+d=json.loads(p.read_text())
+d["files"]=d["files"][:3]
+p.write_text(json.dumps(d))
+PY
+if bash "$WR_A/ops/release/verify-environment-governance-bundle.sh" \
+  --ops-root "$WR_A/ops" \
+  --manifest "$WR_A/tools/release/ENV_GOVERNANCE_BUNDLE_MANIFEST.json" \
+  --marker "$WR_A/tools/release/INSTALLED_ENV_GOVERNANCE_SHA.txt" >/tmp/wr-trunc.out 2>&1; then
+  fail "10_truncated_should_fail"
+else
+  ok "10_truncated_manifest"
+fi
+
 echo "SUMMARY pass=$PASS fail=$FAIL"
 [[ "$FAIL" -eq 0 ]]

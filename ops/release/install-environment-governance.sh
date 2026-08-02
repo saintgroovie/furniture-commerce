@@ -250,19 +250,33 @@ restore_previous_bundle() {
       mkdir -p "$(dirname "$dest")"
       cp -a "$bak" "$dest"
       log "restored $dest"
+    else
+      # Fresh install / no prior version: remove partially written file.
+      if [[ -e "$dest" || -L "$dest" ]]; then
+        rm -f "$dest"
+        log "removed_new $dest"
+      fi
     fi
   done
   if [[ -n "$PREV_MARKER" && -f "$PREV_MARKER" ]]; then
     cp -a "$PREV_MARKER" "$MARKER"
+  else
+    rm -f "$MARKER"
   fi
   if [[ -n "$PREV_MARKER_FROM" && -f "$PREV_MARKER_FROM" ]]; then
     cp -a "$PREV_MARKER_FROM" "$MARKER_FROM"
+  else
+    rm -f "$MARKER_FROM"
   fi
   if [[ -n "$PREV_TEXT_MANIFEST" && -f "$PREV_TEXT_MANIFEST" ]]; then
     cp -a "$PREV_TEXT_MANIFEST" "$TEXT_MANIFEST_DST"
+  else
+    rm -f "$TEXT_MANIFEST_DST"
   fi
   if [[ -n "$PREV_BUNDLE_MANIFEST" && -f "$PREV_BUNDLE_MANIFEST" ]]; then
     cp -a "$PREV_BUNDLE_MANIFEST" "$BUNDLE_MANIFEST_DST"
+  else
+    rm -f "$BUNDLE_MANIFEST_DST"
   fi
   if [[ -f "$BACKUP/etc_systemd_woodright-monitor.service" && -d /etc/systemd/system ]]; then
     cp -a "$BACKUP/etc_systemd_woodright-monitor.service" /etc/systemd/system/woodright-monitor.service
@@ -270,7 +284,20 @@ restore_previous_bundle() {
   log "RESTORE_OK"
 }
 
+MUTATION_STARTED=0
+RESTORE_DONE=0
+on_install_err() {
+  local rc=$?
+  if [[ "$MUTATION_STARTED" == "1" && "$RESTORE_DONE" != "1" ]]; then
+    RESTORE_DONE=1
+    restore_previous_bundle || log "RESTORE_FAILED during ERR trap"
+  fi
+  exit "$rc"
+}
+trap 'on_install_err' ERR
+
 # Backup + install
+MUTATION_STARTED=1
 for rel in "${FILES[@]}"; do
   src="$REPO_ROOT/$rel"
   dest="$(dest_for "$rel")"
@@ -287,6 +314,10 @@ for rel in "${FILES[@]}"; do
   want="$(checksums "$src")"
   [[ "$got" == "$want" ]] || die "post-copy checksum mismatch for $rel"
   echo "install $rel -> $dest sha=$got mode=$mode" >>"$TEXT_MANIFEST"
+  # Test-only fault injection (never set in production installs).
+  if [[ -n "${WOODRIGHT_INSTALL_FORCE_FAIL_AFTER:-}" && "$rel" == "$WOODRIGHT_INSTALL_FORCE_FAIL_AFTER" ]]; then
+    die "forced_fail_after=$rel"
+  fi
 
   if [[ "$rel" == scripts/release/* ]]; then
     scripts_release_dir="${WR_ROOT}/scripts/release"
@@ -403,6 +434,7 @@ for rel in "${FILES[@]}"; do
 done
 if [[ "$VERIFY_FAIL" != "0" ]]; then
   restore_previous_bundle
+  RESTORE_DONE=1
   die "install verify failed; previous bundle restored; marker not updated"
 fi
 
@@ -421,6 +453,7 @@ if ! bash "$OPS_ROOT/release/verify-environment-governance-bundle.sh" \
   --manifest "$BUNDLE_MANIFEST_DST" \
   --marker "$MARKER"; then
   restore_previous_bundle
+  RESTORE_DONE=1
   die "post-marker bundle verify failed; restored previous bundle"
 fi
 

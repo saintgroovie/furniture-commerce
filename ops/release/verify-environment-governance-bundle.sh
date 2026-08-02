@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Verify installed environment-governance tooling matches one source SHA + bundle manifest.
 # Fail-closed on mixed checksums, missing files, unexpected symlinks on critical paths,
-# or marker/manifest disagreement.
+# truncated manifests, redirected installed_path, or marker/manifest disagreement.
 #
 # Usage:
 #   bash ops/release/verify-environment-governance-bundle.sh \
@@ -12,12 +12,12 @@ set -euo pipefail
 
 OPS_ROOT="/srv/woodright/ops"
 TOOLS_ROOT="/srv/woodright/tools/release"
+DOCS_ROOT="/srv/woodright/docs/operator"
 EXPECTED_SHA=""
 MANIFEST=""
-MARKER="${TOOLS_ROOT}/INSTALLED_ENV_GOVERNANCE_SHA.txt"
+MARKER=""
 
 die() { echo "ERROR: $*" >&2; exit 2; }
-log() { echo "$*"; }
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -28,21 +28,20 @@ while [[ $# -gt 0 ]]; do
     --manifest) MANIFEST="$2"; shift 2 ;;
     --manifest=*) MANIFEST="${1#--manifest=}"; shift ;;
     --marker) MARKER="$2"; shift 2 ;;
+    --tools-root) TOOLS_ROOT="$2"; shift 2 ;;
+    --docs-root) DOCS_ROOT="$2"; shift 2 ;;
     -h|--help) sed -n '1,20p' "$0"; exit 0 ;;
     *) die "unknown arg $1" ;;
   esac
 done
 
-[[ -z "$MANIFEST" ]] && MANIFEST="${TOOLS_ROOT}/ENV_GOVERNANCE_BUNDLE_MANIFEST.json"
-
-checksums() {
-  local f="$1"
-  if command -v sha256sum >/dev/null 2>&1; then
-    sha256sum "$f" | awk '{print $1}'
-  else
-    shasum -a 256 "$f" | awk '{print $1}'
-  fi
-}
+if [[ "$OPS_ROOT" != "/srv/woodright/ops" ]]; then
+  wr_parent="$(cd "$(dirname "$OPS_ROOT")" && pwd)"
+  TOOLS_ROOT="${WOODRIGHT_INSTALL_TOOLS_ROOT:-$wr_parent/tools/release}"
+  DOCS_ROOT="${WOODRIGHT_INSTALL_DOCS_ROOT:-$wr_parent/docs/operator}"
+fi
+[[ -n "$MANIFEST" ]] || MANIFEST="${TOOLS_ROOT}/ENV_GOVERNANCE_BUNDLE_MANIFEST.json"
+[[ -n "$MARKER" ]] || MARKER="${TOOLS_ROOT}/INSTALLED_ENV_GOVERNANCE_SHA.txt"
 
 [[ -f "$MARKER" ]] || die "missing marker: $MARKER"
 [[ -f "$MANIFEST" ]] || die "missing bundle manifest: $MANIFEST"
@@ -56,11 +55,46 @@ if [[ -n "$EXPECTED_SHA" ]]; then
   [[ "$MARKER_SHA" == "$EXPECTED_SHA" ]] || die "marker mismatch have=$MARKER_SHA want=$EXPECTED_SHA"
 fi
 
-python3 - "$MANIFEST" "$MARKER_SHA" "$OPS_ROOT" "$TOOLS_ROOT" <<'PY'
-import hashlib, json, os, sys
+# Canonical required relative paths (must stay in sync with installer FILES).
+REQUIRED_JSON='[
+  "ops/lib/woodright-environment-profile.sh",
+  "ops/lib/woodright-host-publish.sh",
+  "ops/lib/woodright-component-authority.sh",
+  "ops/lib/woodright-oci-provenance.sh",
+  "ops/lib/woodright-validation-freeze.sh",
+  "ops/lib/woodright-hold-validation-freeze.sh",
+  "ops/lib/woodright-staging-mutation-lock.sh",
+  "ops/lib/woodright-runtime-discovery.sh",
+  "ops/lib/woodright-cutover-common.sh",
+  "ops/config/runtime-environments/public_demo.conf",
+  "ops/config/runtime-environments/staging.conf",
+  "ops/config/runtime-environments/production.conf",
+  "ops/release/recreate-staging-backend-with-media.sh",
+  "ops/release/recreate-staging-storefront.sh",
+  "ops/release/cutover-public-demo-pair.sh",
+  "ops/release/cutover-production-candidate.sh",
+  "ops/release/public-demo-critical-http-smoke.sh",
+  "ops/release/rollback-staging-backend-from-keeper.sh",
+  "ops/release/rollback-staging-storefront-from-keeper.sh",
+  "ops/release/verify-backend-media-mount.sh",
+  "ops/release/reconcile-runtime-manifests.sh",
+  "ops/release/assert-manifest-update-allowed.sh",
+  "ops/release/install-environment-governance.sh",
+  "ops/release/verify-environment-governance-bundle.sh",
+  "ops/monitoring/woodright-health-check.sh",
+  "ops/monitoring/woodright-host-publish-check.sh",
+  "ops/systemd/woodright-monitor.service",
+  "scripts/release/reconcile-public-image-pins.sh",
+  "docs/operator/environment-scoped-release-governance.md",
+  "docs/operator/backend-media-promotion-gate.md"
+]'
+
+python3 - "$MANIFEST" "$MARKER_SHA" "$OPS_ROOT" "$TOOLS_ROOT" "$DOCS_ROOT" "$REQUIRED_JSON" <<'PY'
+import hashlib, json, sys
 from pathlib import Path
 
-manifest_path, marker_sha, ops_root, tools_root = sys.argv[1:5]
+manifest_path, marker_sha, ops_root, tools_root, docs_root, required_json = sys.argv[1:7]
+required = json.loads(required_json)
 data = json.loads(Path(manifest_path).read_text())
 src = data.get("source_sha") or ""
 if src != marker_sha:
@@ -71,48 +105,58 @@ if not files:
     print("ERROR: empty bundle files list", file=sys.stderr)
     raise SystemExit(2)
 
+def derived_dest(rel: str) -> str:
+    if rel.startswith("ops/"):
+        return str(Path(ops_root) / rel[len("ops/"):])
+    if rel.startswith("scripts/release/"):
+        return str(Path(tools_root) / Path(rel).name)
+    if rel.startswith("docs/operator/"):
+        return str(Path(docs_root) / Path(rel).name)
+    raise ValueError(f"unmapped {rel}")
+
+by_rel = {}
 errors = []
 for entry in files:
     rel = entry.get("relative_path") or ""
+    if not rel:
+        errors.append("entry missing relative_path")
+        continue
+    if rel in by_rel:
+        errors.append(f"duplicate relative_path {rel}")
+        continue
+    by_rel[rel] = entry
+    derived = derived_dest(rel)
+    claimed = entry.get("installed_path") or ""
+    if claimed and claimed != derived:
+        errors.append(f"redirected installed_path refused {rel}: claimed={claimed} derived={derived}")
+        continue
     want = entry.get("sha256") or ""
-    role = entry.get("role") or "required"
-    dest = entry.get("installed_path") or ""
-    if not dest:
-        if rel.startswith("ops/"):
-            dest = str(Path(ops_root) / rel[len("ops/"):])
-        elif rel.startswith("scripts/release/"):
-            dest = str(Path(tools_root) / Path(rel).name)
-        elif rel.startswith("docs/operator/"):
-            dest = f"/srv/woodright/docs/operator/{Path(rel).name}"
-        else:
-            errors.append(f"unmapped {rel}")
-            continue
-    p = Path(dest)
+    p = Path(derived)
     if not p.exists():
-        if role == "optional":
-            continue
-        errors.append(f"missing {dest} ({rel})")
+        errors.append(f"missing {derived} ({rel})")
         continue
     if p.is_symlink():
-        # Allowed only for documented tools/release compat links, never for critical ops scripts.
-        if not str(p).startswith(str(Path(tools_root).parent / "scripts" / "release")):
-            errors.append(f"symlink refused {dest}")
-            continue
-    raw = p.read_bytes()
-    got = hashlib.sha256(raw).hexdigest()
+        errors.append(f"symlink refused {derived}")
+        continue
+    got = hashlib.sha256(p.read_bytes()).hexdigest()
     if got != want:
         errors.append(f"checksum mismatch {rel}: have={got} want={want}")
         continue
     mode_want = entry.get("mode")
     if mode_want:
-        mode_got = oct(p.stat().st_mode & 0o777)
-        if mode_got != mode_want and mode_got != mode_want.lstrip("0") and f"0o{int(mode_want, 8):o}" != mode_got:
-            # compare as ints
-            try:
-                if (p.stat().st_mode & 0o777) != int(str(mode_want), 8):
-                    errors.append(f"mode mismatch {rel}: have={mode_got} want={mode_want}")
-            except ValueError:
-                errors.append(f"mode parse failed {rel}: want={mode_want}")
+        try:
+            if (p.stat().st_mode & 0o777) != int(str(mode_want), 8):
+                errors.append(f"mode mismatch {rel}: have={oct(p.stat().st_mode & 0o777)} want={mode_want}")
+        except ValueError:
+            errors.append(f"mode parse failed {rel}: want={mode_want}")
+
+missing_required = [r for r in required if r not in by_rel]
+if missing_required:
+    for r in missing_required:
+        errors.append(f"manifest missing required relative_path {r}")
+
+if len(by_rel) < len(required):
+    errors.append(f"truncated_manifest have={len(by_rel)} want>={len(required)}")
 
 if errors:
     print("VERIFY_FAIL mixed_or_corrupt_bundle:")
@@ -120,5 +164,5 @@ if errors:
         print(f" - {e}")
     raise SystemExit(2)
 
-print(f"VERIFY_OK source_sha={marker_sha} files={len(files)}")
+print(f"VERIFY_OK source_sha={marker_sha} files={len(by_rel)}")
 PY
