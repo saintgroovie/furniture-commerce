@@ -314,7 +314,7 @@ restore_previous_bundle() {
   log "RESTORE_OK"
 }
 
-MUTATION_STARTED=1
+MUTATION_STARTED=0
 RESTORE_DONE=0
 on_install_err() {
   local rc=$?
