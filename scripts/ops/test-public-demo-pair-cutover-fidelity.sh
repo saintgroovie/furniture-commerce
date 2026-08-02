@@ -385,9 +385,8 @@ for rel in \
   ops/release/rollback-staging-storefront-from-keeper.sh \
   ops/release/rollback-staging-backend-from-keeper.sh
 do
-  t="$(cat "$ROOT/$rel")"
-  echo "$t" | grep -q 'LIVE_MUTATING=true' && pass "$rel LIVE_MUTATING" || fail "$rel LIVE_MUTATING"
-  echo "$t" | grep -q 'live-cutover.lock\|woodright-staging-mutation-lock' && pass "$rel lock" || fail "$rel lock"
+  grep -q 'LIVE_MUTATING=true' "$ROOT/$rel" && pass "$rel LIVE_MUTATING" || fail "$rel LIVE_MUTATING"
+  grep -qE 'live-cutover\.lock|woodright-staging-mutation-lock' "$ROOT/$rel" && pass "$rel lock" || fail "$rel lock"
 done
 
 # 9) global lock policy
@@ -409,21 +408,18 @@ else
 fi
 
 # 11) pin lifecycle: SUCCESS only after under-lock APPLY; inherit supported
-PAIR_SRC="$(cat "$PAIR")"
-echo "$PAIR_SRC" | grep -q 'reconcile-public-image-pins.sh' && pass "pair references pin reconciler" || fail "pair missing pin reconciler"
-echo "$PAIR_SRC" | grep -q 'wr_cutover_install_file\|wr_cutover_pair_rollback' && pass "pair uses sudo-aware pin restore" || fail "pair missing wr_cutover_install_file"
-COMMON_SRC="$(cat "$COMMON")"
-echo "$COMMON_SRC" | grep -q 'sudo -n cp' && pass "common pin backup/install supports sudo -n" || fail "common missing sudo -n cp"
-echo "$PAIR_SRC" | grep -q 'pin_reconcile_begin under_inherited_lock' && pass "pair APPLY under inherited lock" || fail "pair missing under-lock APPLY"
-echo "$PAIR_SRC" | grep -q 'WOODRIGHT_SKIP_PIN_RECONCILE=1 after runtime mutation' && pass "skip pin rolls back" || fail "skip pin rollback missing"
-if echo "$PAIR_SRC" | grep -q 'AFTER this script exits'; then fail "stale post-lock APPLY instruction"; else pass "no post-lock APPLY instruction"; fi
-PIN_SRC="$(cat "$ROOT/scripts/release/reconcile-public-image-pins.sh")"
-echo "$PIN_SRC" | grep -q 'mode=inherited' && pass "pin reconciler supports inherited lock" || fail "pin reconciler missing inherit"
-echo "$PIN_SRC" | grep -q 'inherited_lock_retained_by_parent' && pass "pin reconciler retains parent lock" || fail "pin reconciler releases parent"
-echo "$PIN_SRC" | grep -q 'path_ok' && pass "pin inherit proves FD path" || fail "pin inherit missing path proof"
+grep -q 'reconcile-public-image-pins.sh' "$PAIR" && pass "pair references pin reconciler" || fail "pair missing pin reconciler"
+grep -q 'wr_cutover_install_file\|wr_cutover_pair_rollback' "$PAIR" && pass "pair uses sudo-aware pin restore" || fail "pair missing wr_cutover_install_file"
+grep -q 'sudo -n cp' "$COMMON" && pass "common pin backup/install supports sudo -n" || fail "common missing sudo -n cp"
+grep -q 'pin_reconcile_begin under_inherited_lock' "$PAIR" && pass "pair APPLY under inherited lock" || fail "pair missing under-lock APPLY"
+grep -q 'WOODRIGHT_SKIP_PIN_RECONCILE=1 after runtime mutation' "$PAIR" && pass "skip pin rolls back" || fail "skip pin rollback missing"
+if grep -q 'AFTER this script exits' "$PAIR"; then fail "stale post-lock APPLY instruction"; else pass "no post-lock APPLY instruction"; fi
+PIN="$ROOT/scripts/release/reconcile-public-image-pins.sh"
+grep -q 'mode=inherited' "$PIN" && pass "pin reconciler supports inherited lock" || fail "pin reconciler missing inherit"
+grep -q 'inherited_lock_retained_by_parent' "$PIN" && pass "pin reconciler retains parent lock" || fail "pin reconciler releases parent"
+grep -q 'path_ok' "$PIN" && pass "pin inherit proves FD path" || fail "pin inherit missing path proof"
 
 # 12) forged inherit rejected by pin reconciler (no owned FD)
-PIN="$ROOT/scripts/release/reconcile-public-image-pins.sh"
 PINDIR="$TMP/pin-inherit"
 mkdir -p "$PINDIR"
 printf 'WOODRIGHT_BACKEND_IMAGE=ghcr.io/saintgroovie/woodright-backend@%s\nWOODRIGHT_STOREFRONT_IMAGE=ghcr.io/saintgroovie/woodright-storefront@%s\nSTOREFRONT_IMAGE=ghcr.io/saintgroovie/woodright-storefront@%s\n' "$OLD_BE" "$OLD_SF" "$OLD_SF" >"$PINDIR/.env"
@@ -570,7 +566,7 @@ grep -q 'identity_verified.:true' "$RB/evidence/json/backend-rollback-result.jso
 grep -q 'identity_verified.:true' "$RB/evidence/json/storefront-rollback-result.json" && pass "storefront identity evidence" || fail "storefront identity evidence missing"
 [[ ! -f "$RB/state/containers/woodright-staging-backend-keeper-test.json" ]] && pass "backend keeper consumed" || fail "backend keeper remains"
 [[ ! -f "$RB/state/containers/woodright-staging-storefront-keeper-test.json" ]] && pass "storefront keeper consumed" || fail "storefront keeper remains"
-echo "$PAIR_SRC" | grep -q 'wr_cutover_pair_rollback' && pass "pair script delegates to wr_cutover_pair_rollback" || fail "pair script missing wr_cutover_pair_rollback"
+grep -q 'wr_cutover_pair_rollback' "$PAIR" && pass "pair script delegates to wr_cutover_pair_rollback" || fail "pair script missing wr_cutover_pair_rollback"
 wr_staging_mutation_lock_release
 
 # 14) negative: digest corruption on keeper rename must fail closed
@@ -612,10 +608,9 @@ export WOODRIGHT_FAKE_DOCKER_ALLOW_MUTATION=0
 unset WOODRIGHT_CUTOVER_PINS_ENV WOODRIGHT_CUTOVER_ACTIVE_PUBLIC WOODRIGHT_CUTOVER_PUBLIC_DEMO_JSON WOODRIGHT_CUTOVER_COMPOSE_ENV
 
 # 15) monitor gate: read-only fail-closed; never exec HC from pair
-PAIR_SRC="$(cat "$PAIR")"
-echo "$PAIR_SRC" | grep -q 'assert_identity_stable_under_lock' && pass "pair has TOCTOU identity gate" || fail "pair missing TOCTOU gate"
-echo "$PAIR_SRC" | grep -q 'expected-old-backend-digest' && pass "pair supports expected-old digests" || fail "pair missing expected-old digests"
-echo "$PAIR_SRC" | grep -q 'last-status.json' && pass "pair reads monitor state file" || fail "pair missing monitor state read"
+grep -q 'assert_identity_stable_under_lock' "$PAIR" && pass "pair has TOCTOU identity gate" || fail "pair missing TOCTOU gate"
+grep -q 'expected-old-backend-digest' "$PAIR" && pass "pair supports expected-old digests" || fail "pair missing expected-old digests"
+grep -q 'last-status.json' "$PAIR" && pass "pair reads monitor state file" || fail "pair missing monitor state read"
 if awk '
   /recreate-staging-backend-with-media.sh/ { be=1; next }
   be && /wr_assert_container_matches_environment.*backend/ { gate=1; next }
