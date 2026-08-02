@@ -429,27 +429,21 @@ GOV_IN_PROGRESS="${WOODRIGHT_GOVERNANCE_IN_PROGRESS:-/srv/woodright/tools/releas
 if [[ -f "$GOV_IN_PROGRESS" ]]; then
   die "governance install in progress or incomplete: $GOV_IN_PROGRESS"
 fi
-# Refuse while the exclusive install lock is held (overlap with live file replacement).
+# Hold the exclusive install lock for this process lifetime (FD 8) so an installer
+# cannot replace scripts between this gate and the cutover runtime lock.
+# Requires util-linux flock on the VM; harnesses without the lock dir skip.
 GOV_INSTALL_LOCK="${WOODRIGHT_INSTALL_LOCK_PATH:-/srv/woodright/locks/env-governance-install.lock}"
-if [[ -e "$GOV_INSTALL_LOCK" ]]; then
-  if command -v flock >/dev/null 2>&1; then
-    if ! ( flock -n 8 ) 8>>"$GOV_INSTALL_LOCK"; then
-      die "governance install lock busy: $GOV_INSTALL_LOCK"
-    fi
-  else
-    if ! python3 - "$GOV_INSTALL_LOCK" <<'PY'
-import fcntl, os, sys
-fd = os.open(sys.argv[1], os.O_RDWR | os.O_CREAT, 0o644)
-try:
-    fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-except BlockingIOError:
-    sys.exit(1)
-sys.exit(0)
-PY
-    then
-      die "governance install lock busy: $GOV_INSTALL_LOCK"
-    fi
+GOV_INSTALL_LOCK_DIR="$(dirname "$GOV_INSTALL_LOCK")"
+if [[ "${WOODRIGHT_SKIP_GOV_INSTALL_LOCK:-0}" != "1" ]] \
+  && { [[ -e "$GOV_INSTALL_LOCK" ]] || [[ -d "$GOV_INSTALL_LOCK_DIR" ]]; }; then
+  command -v flock >/dev/null 2>&1 || die "flock required to hold governance install lock on $GOV_INSTALL_LOCK"
+  mkdir -p "$GOV_INSTALL_LOCK_DIR"
+  : >>"$GOV_INSTALL_LOCK"
+  exec 8>>"$GOV_INSTALL_LOCK"
+  if ! flock -n 8; then
+    die "governance install lock busy: $GOV_INSTALL_LOCK"
   fi
+  log "governance_install_lock_held path=$GOV_INSTALL_LOCK fd=8"
 fi
 
 [[ -n "$TARGET_SHA" && -n "$BE_DIGEST" && -n "$SF_DIGEST" && -n "$EVIDENCE_DIR" ]] \
@@ -536,6 +530,11 @@ fi
 wr_cutover_require_confirm "$CONFIRM" || exit 2
 [[ -n "$BE_ENV_FILE" && -n "$SF_ENV_FILE" ]] || die "execute requires backend/storefront env files"
 [[ -f "$BE_ENV_FILE" && -f "$SF_ENV_FILE" ]] || die "env files missing"
+
+# Re-check durable install journal immediately before runtime lock (defense in depth).
+if [[ -f "$GOV_IN_PROGRESS" ]]; then
+  die "governance install in progress or incomplete: $GOV_IN_PROGRESS"
+fi
 
 TS="$(date -u +%Y%m%dT%H%M%SZ)"
 BE_KEEP="woodright-staging-backend-keeper-${TS}"
