@@ -12,9 +12,12 @@ import {
   LOOPBACK_HOST_RE,
   PRODUCTION_API_ORIGIN,
   PRODUCTION_BUYER_ORIGINS,
+  PUBLIC_DEMO_BUYER_ORIGINS,
   assertProductionLikeApiUrl,
   assertProductionLikeSiteUrl,
+  assertPublicDemoSiteUrl,
   isProductionLikeRuntime,
+  isPublicDemoRuntime,
   launchModeToIndexingMode,
   parseLaunchModeLenient,
   resolveLaunchMode,
@@ -99,6 +102,18 @@ assert.throws(() => assertProductionLikeSiteUrl("https://localhost:8000"), /loop
 assert.throws(() => assertProductionLikeSiteUrl("https://127.0.0.1:8000"), /loopback/)
 assert.throws(() => assertProductionLikeSiteUrl("not a url"), /valid absolute URL/)
 
+// --- assertPublicDemoSiteUrl / isPublicDemoRuntime ---
+assert.deepEqual(PUBLIC_DEMO_BUYER_ORIGINS, [
+  "https://woodright-demo.ru",
+  "https://www.woodright-demo.ru",
+])
+assert.equal(isPublicDemoRuntime("public_demo"), true)
+assert.equal(isPublicDemoRuntime(undefined, "public_demo"), true)
+assert.equal(isPublicDemoRuntime("production"), false)
+assert.equal(assertPublicDemoSiteUrl("https://woodright-demo.ru"), "https://woodright-demo.ru")
+assert.throws(() => assertPublicDemoSiteUrl("https://woodright.ru"), /production host/)
+assert.throws(() => assertPublicDemoSiteUrl("https://evil.example"), /woodright-demo\.ru/)
+
 // --- assertProductionLikeApiUrl ---
 assert.equal(assertProductionLikeApiUrl("https://api.woodright.ru"), "https://api.woodright.ru")
 assert.throws(() => assertProductionLikeApiUrl(undefined), /required/)
@@ -160,7 +175,9 @@ assert.equal(
 // --- Static wiring: getSiteUrl must consume this contract, no localhost fallback in production-like paths ---
 const base = read("src/lib/api/base.ts")
 assert.match(base, /assertProductionLikeSiteUrl/, "base.ts must validate production-like site URL")
+assert.match(base, /assertPublicDemoSiteUrl/, "base.ts must validate public-demo site URL")
 assert.match(base, /isProductionLikeRuntime/, "base.ts must check production-like runtime role")
+assert.match(base, /isPublicDemoRuntime/, "base.ts must check public_demo identity")
 
 // --- Static wiring: indexing-policy must derive from WOODRIGHT_LAUNCH_MODE ---
 const indexingPolicy = read("src/lib/indexing-policy.ts")

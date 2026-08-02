@@ -62,6 +62,17 @@ export const PRODUCTION_BUYER_ORIGINS = [
 
 export const PRODUCTION_API_ORIGIN = "https://api.woodright.ru" as const
 
+/**
+ * Canonical buyer hosts for `public_demo` image/runtime builds.
+ * Exact allowlist only - never substring / wildcard matching.
+ */
+export const PUBLIC_DEMO_BUYER_HOSTS = ["woodright-demo.ru", "www.woodright-demo.ru"] as const
+
+export const PUBLIC_DEMO_BUYER_ORIGINS = [
+  "https://woodright-demo.ru",
+  "https://www.woodright-demo.ru",
+] as const
+
 /** Recommended (not enforced) production values for docs/scripts/templates. */
 export const RECOMMENDED_PRODUCTION_SITE_URL: string = PRODUCTION_BUYER_ORIGINS[0]
 export const RECOMMENDED_PRODUCTION_API_URL: string = PRODUCTION_API_ORIGIN
@@ -69,6 +80,16 @@ export const RECOMMENDED_PRODUCTION_API_URL: string = PRODUCTION_API_ORIGIN
 function isDemoHost(hostname: string): boolean {
   const h = hostname.toLowerCase()
   return DEMO_HOSTS.some((demo) => h === demo || h.endsWith(`.${demo}`))
+}
+
+function isPublicDemoBuyerHost(hostname: string): boolean {
+  const h = hostname.toLowerCase()
+  return (PUBLIC_DEMO_BUYER_HOSTS as readonly string[]).includes(h)
+}
+
+function isProductionBuyerHost(hostname: string): boolean {
+  const h = hostname.toLowerCase()
+  return h === "woodright.ru" || h === "www.woodright.ru"
 }
 
 function isLoopbackHost(url: URL): boolean {
@@ -108,6 +129,52 @@ export function assertProductionLikeSiteUrl(raw: string | undefined | null): str
     throw new Error(`Production-like site URL must not be a demo host: "${value}"`)
   }
   return value.replace(/\/$/, "")
+}
+
+/**
+ * Require the canonical public_demo buyer site URL.
+ * Fail-closed: https + exact demo buyer host only. Rejects production apex,
+ * loopback, API demo host, and unknown hosts. Does not grant production authority.
+ */
+export function assertPublicDemoSiteUrl(raw: string | undefined | null): string {
+  const value = String(raw ?? "").trim()
+  if (!value) {
+    throw new Error(
+      "Public-demo site URL is required (NEXT_PUBLIC_SITE_URL) - no localhost fallback"
+    )
+  }
+  const url = parseAbsoluteUrl(value)
+  if (!url) {
+    throw new Error(`Public-demo site URL is not a valid absolute URL: "${value}"`)
+  }
+  if (url.protocol !== "https:") {
+    throw new Error(`Public-demo site URL must be https: "${value}"`)
+  }
+  if (isLoopbackHost(url)) {
+    throw new Error(`Public-demo site URL must not be loopback/localhost: "${value}"`)
+  }
+  if (isProductionBuyerHost(url.hostname)) {
+    throw new Error(`Public-demo site URL must not be a production host: "${value}"`)
+  }
+  if (!isPublicDemoBuyerHost(url.hostname)) {
+    throw new Error(
+      `Public-demo site URL must be https://woodright-demo.ru (or www), got: "${value}"`
+    )
+  }
+  return value.replace(/\/$/, "")
+}
+
+/**
+ * True when bake/runtime identity is explicitly public_demo via role or image
+ * build profile. Exact string match only.
+ */
+export function isPublicDemoRuntime(
+  role: string | undefined | null,
+  imageBuildProfile?: string | undefined | null
+): boolean {
+  const r = String(role ?? "").trim()
+  const p = String(imageBuildProfile ?? "").trim()
+  return r === "public_demo" || p === "public_demo"
 }
 
 /**
