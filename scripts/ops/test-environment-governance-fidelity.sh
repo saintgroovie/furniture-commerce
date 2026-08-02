@@ -268,6 +268,27 @@ grep -q 'I_UNDERSTAND_PRODUCTION_PIN_RUNTIME_SKEW_RECOVERY' "$ROOT/ops/release/r
   || fail "skew recovery helper missing its confirm token"
 ok "installer includes the production cutover + skew recovery pair"
 
+# 24c-ter) installer FILES and verify REQUIRED_JSON must stay identical. A drift
+# here causes live install to copy files then fail post-marker verify and restore
+# the previous bundle (exactly what blocked shipping recover-production-candidate-skew.sh).
+python3 - "$ROOT" <<'PY' || fail "installer FILES vs verify REQUIRED_JSON drift"
+import json, pathlib, re, sys
+root = pathlib.Path(sys.argv[1])
+inst = (root / "ops/release/install-environment-governance.sh").read_text()
+ver = (root / "ops/release/verify-environment-governance-bundle.sh").read_text()
+flist = [
+    ln.strip()
+    for ln in re.search(r"^FILES=\((.*?)^\)", inst, re.M | re.S).group(1).splitlines()
+    if ln.strip() and not ln.strip().startswith("#")
+]
+rlist = json.loads(re.search(r"REQUIRED_JSON='(\[.*?\])'", ver, re.S).group(1))
+if flist != rlist:
+    print("only_in_FILES", sorted(set(flist) - set(rlist)), file=sys.stderr)
+    print("only_in_REQUIRED", sorted(set(rlist) - set(flist)), file=sys.stderr)
+    raise SystemExit(1)
+PY
+ok "installer FILES matches verify REQUIRED_JSON"
+
 # 24d) pair rollback uses environment-scoped identity dir
 if grep -nE '/srv/woodright/runtime-identity/(ACTIVE_PUBLIC|DOKPLOY|public-demo)' \
   "$ROOT/ops/lib/woodright-cutover-common.sh" "$ROOT/ops/release/cutover-public-demo-pair.sh" \
