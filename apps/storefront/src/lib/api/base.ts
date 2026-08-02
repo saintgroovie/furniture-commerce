@@ -1,6 +1,8 @@
 import {
   assertProductionLikeSiteUrl,
+  assertPublicDemoSiteUrl,
   isProductionLikeRuntime,
+  isPublicDemoRuntime,
 } from "@/lib/launch-contract"
 
 /**
@@ -41,10 +43,14 @@ export function getBaseUrl(): string {
  * - `NODE_ENV=production` (covers plain `next build`/`next start`)
  * require `NEXT_PUBLIC_SITE_URL` with no `localhost:8000` fallback.
  *
- * The stricter demo/loopback rejection (`assertProductionLikeSiteUrl`) only
- * fires when a launch mode is explicitly set or the runtime role is
- * production-like - a bare `NODE_ENV=production` build (e.g. CI's
- * `https://woodright-demo.ru` build check) still passes, unchanged.
+ * Explicit `public_demo` identity (`WOODRIGHT_RUNTIME_ROLE` or
+ * `WOODRIGHT_IMAGE_BUILD_PROFILE`) uses the public-demo host allowlist even
+ * when `WOODRIGHT_LAUNCH_MODE` is set (image bake). Production-like roles
+ * never accept demo hosts.
+ *
+ * A bare `NODE_ENV=production` build without launch mode / production-like
+ * role (e.g. CI storefront check with demo URL) still accepts a trimmed URL
+ * without production-like rejection.
  *
  * Local/dev without a production-like role keeps the `localhost:8000`
  * fallback for DX.
@@ -52,12 +58,15 @@ export function getBaseUrl(): string {
 export function getSiteUrl(): string {
   const raw = process.env.NEXT_PUBLIC_SITE_URL
   const runtimeRole = process.env.WOODRIGHT_RUNTIME_ROLE
+  const imageBuildProfile = process.env.WOODRIGHT_IMAGE_BUILD_PROFILE
   const launchModeRaw = process.env.WOODRIGHT_LAUNCH_MODE
   const nodeEnv = process.env.NODE_ENV
 
   const roleIsProductionLike = isProductionLikeRuntime(runtimeRole)
+  const publicDemoIdentity = isPublicDemoRuntime(runtimeRole, imageBuildProfile)
   const launchModeIsSet = Boolean(launchModeRaw && String(launchModeRaw).trim())
-  const requireExplicit = roleIsProductionLike || launchModeIsSet || nodeEnv === "production"
+  const requireExplicit =
+    roleIsProductionLike || publicDemoIdentity || launchModeIsSet || nodeEnv === "production"
 
   if (!requireExplicit) {
     const trimmed = String(raw ?? "").trim()
@@ -67,8 +76,17 @@ export function getSiteUrl(): string {
   const trimmed = String(raw ?? "").trim()
   if (!trimmed) {
     throw new Error(
-      "NEXT_PUBLIC_SITE_URL is required (WOODRIGHT_RUNTIME_ROLE production-like / WOODRIGHT_LAUNCH_MODE set / NODE_ENV=production) - no localhost fallback"
+      "NEXT_PUBLIC_SITE_URL is required (WOODRIGHT_RUNTIME_ROLE production-like / public_demo / WOODRIGHT_LAUNCH_MODE set / NODE_ENV=production) - no localhost fallback"
     )
+  }
+
+  if (publicDemoIdentity) {
+    if (roleIsProductionLike) {
+      throw new Error(
+        `Conflicting public_demo identity with production-like WOODRIGHT_RUNTIME_ROLE="${runtimeRole}"`
+      )
+    }
+    return assertPublicDemoSiteUrl(trimmed)
   }
 
   if (launchModeIsSet || roleIsProductionLike) {
