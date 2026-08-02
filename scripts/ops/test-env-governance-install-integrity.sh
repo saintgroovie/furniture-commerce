@@ -294,5 +294,66 @@ wait "$CUT_PID" 2>/dev/null || true
 [[ "$CUT_RC" -ne 0 ]] && ok "13_cutover_lock_refused" || fail "13_cutover_lock_refused"
 grep -qi 'runtime mutation lock held' /tmp/wr-cutlock.out && ok "13_cutover_lock_message" || fail "13_cutover_lock_message"
 
+# 14) Install holds runtime locks for the whole mutation window (no TOCTOU probe-only)
+install_into "$WR_A" "$TMP/backups-a7" >/dev/null
+set +e
+WOODRIGHT_INSTALL_WR_ROOT="$WR_A" \
+WOODRIGHT_INSTALL_BACKUP_ROOT="$TMP/backups-hold" \
+WOODRIGHT_INSTALL_SLEEP_AFTER="ops/lib/woodright-environment-profile.sh" \
+WOODRIGHT_INSTALL_SLEEP_SEC=20 \
+bash "$HARNESS/ops/release/install-environment-governance.sh" \
+  --source-sha "$SHA_H" --repo-root "$HARNESS" --ops-root "$WR_A/ops" \
+  >/tmp/wr-hold.out 2>&1 &
+HOLD_PID=$!
+for _ in $(seq 1 50); do
+  if grep -q 'runtime_lock_held' /tmp/wr-hold.out 2>/dev/null; then
+    break
+  fi
+  sleep 0.2
+done
+# While installer holds public_demo cutover lock, another holder must fail.
+set +e
+python3 - "$WR_A/locks/public_demo/live-cutover.lock" <<'PY'
+import fcntl, os, sys
+fd = os.open(sys.argv[1], os.O_RDWR | os.O_CREAT, 0o644)
+try:
+    fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+except BlockingIOError:
+    sys.exit(0)
+sys.exit(1)
+PY
+HOLD_PROBE=$?
+set -e
+kill -TERM "$HOLD_PID" 2>/dev/null || true
+wait "$HOLD_PID" 2>/dev/null || true
+[[ "$HOLD_PROBE" -eq 0 ]] && ok "14_runtime_lock_held_during_install" || fail "14_runtime_lock_held_during_install"
+# Ensure prior install locks are fully released before next case.
+sleep 0.5
+# Drop any stale in-progress journal from the interrupted install.
+rm -f "$WR_A/tools/release/ENV_GOVERNANCE_INSTALL_IN_PROGRESS.json"
+
+# 15) In-progress journal refuses verify and is cleared after successful install
+# Use a dedicated tree so leftover lock holders from case 14 cannot poison this case.
+WR_C="$TMP/wr-c"
+mkdir -p "$WR_C"
+install_into "$WR_C" "$TMP/backups-c1" >/dev/null
+printf '{"state":"in_progress","pid":1}\n' >"$WR_C/tools/release/ENV_GOVERNANCE_INSTALL_IN_PROGRESS.json"
+if bash "$WR_C/ops/release/verify-environment-governance-bundle.sh" \
+  --ops-root "$WR_C/ops" \
+  --manifest "$WR_C/tools/release/ENV_GOVERNANCE_BUNDLE_MANIFEST.json" \
+  --marker "$WR_C/tools/release/INSTALLED_ENV_GOVERNANCE_SHA.txt" >/tmp/wr-inp.out 2>&1; then
+  fail "15_in_progress_verify_should_fail"
+else
+  ok "15_in_progress_verify_refused"
+fi
+# Successful reinstall clears the journal
+if install_into "$WR_C" "$TMP/backups-c2" >/tmp/wr-clear-inp.out 2>&1; then
+  ok "15_reinstall_ok"
+else
+  fail "15_reinstall_ok"; tail -20 /tmp/wr-clear-inp.out
+fi
+[[ ! -f "$WR_C/tools/release/ENV_GOVERNANCE_INSTALL_IN_PROGRESS.json" ]] \
+  && ok "15_in_progress_cleared" || fail "15_in_progress_cleared"
+
 echo "SUMMARY pass=$PASS fail=$FAIL"
 [[ "$FAIL" -eq 0 ]]

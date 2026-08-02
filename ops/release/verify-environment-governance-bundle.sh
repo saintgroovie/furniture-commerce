@@ -16,6 +16,7 @@ DOCS_ROOT="/srv/woodright/docs/operator"
 EXPECTED_SHA=""
 MANIFEST=""
 MARKER=""
+ALLOW_IN_PROGRESS=0
 
 die() { echo "ERROR: $*" >&2; exit 2; }
 
@@ -30,6 +31,7 @@ while [[ $# -gt 0 ]]; do
     --marker) MARKER="$2"; shift 2 ;;
     --tools-root) TOOLS_ROOT="$2"; shift 2 ;;
     --docs-root) DOCS_ROOT="$2"; shift 2 ;;
+    --allow-in-progress) ALLOW_IN_PROGRESS=1; shift ;;
     -h|--help) sed -n '1,20p' "$0"; exit 0 ;;
     *) die "unknown arg $1" ;;
   esac
@@ -42,6 +44,11 @@ if [[ "$OPS_ROOT" != "/srv/woodright/ops" ]]; then
 fi
 [[ -n "$MANIFEST" ]] || MANIFEST="${TOOLS_ROOT}/ENV_GOVERNANCE_BUNDLE_MANIFEST.json"
 [[ -n "$MARKER" ]] || MARKER="${TOOLS_ROOT}/INSTALLED_ENV_GOVERNANCE_SHA.txt"
+IN_PROGRESS="${TOOLS_ROOT}/ENV_GOVERNANCE_INSTALL_IN_PROGRESS.json"
+
+if [[ "$ALLOW_IN_PROGRESS" != "1" && -f "$IN_PROGRESS" ]]; then
+  die "incomplete or in-progress governance install detected: $IN_PROGRESS (refuse verify until install completes or is restored)"
+fi
 
 [[ -f "$MARKER" ]] || die "missing marker: $MARKER"
 [[ -f "$MANIFEST" ]] || die "missing bundle manifest: $MANIFEST"

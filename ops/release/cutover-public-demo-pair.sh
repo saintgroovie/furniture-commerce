@@ -424,6 +424,34 @@ case "$MODE" in
   *) die "invalid mode=$MODE" ;;
 esac
 
+# Refuse while a governance install is incomplete/in-progress (SIGKILL mixed-bundle guard).
+GOV_IN_PROGRESS="${WOODRIGHT_GOVERNANCE_IN_PROGRESS:-/srv/woodright/tools/release/ENV_GOVERNANCE_INSTALL_IN_PROGRESS.json}"
+if [[ -f "$GOV_IN_PROGRESS" ]]; then
+  die "governance install in progress or incomplete: $GOV_IN_PROGRESS"
+fi
+# Refuse while the exclusive install lock is held (overlap with live file replacement).
+GOV_INSTALL_LOCK="${WOODRIGHT_INSTALL_LOCK_PATH:-/srv/woodright/locks/env-governance-install.lock}"
+if [[ -e "$GOV_INSTALL_LOCK" ]]; then
+  if command -v flock >/dev/null 2>&1; then
+    if ! ( flock -n 8 ) 8>>"$GOV_INSTALL_LOCK"; then
+      die "governance install lock busy: $GOV_INSTALL_LOCK"
+    fi
+  else
+    if ! python3 - "$GOV_INSTALL_LOCK" <<'PY'
+import fcntl, os, sys
+fd = os.open(sys.argv[1], os.O_RDWR | os.O_CREAT, 0o644)
+try:
+    fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+except BlockingIOError:
+    sys.exit(1)
+sys.exit(0)
+PY
+    then
+      die "governance install lock busy: $GOV_INSTALL_LOCK"
+    fi
+  fi
+fi
+
 [[ -n "$TARGET_SHA" && -n "$BE_DIGEST" && -n "$SF_DIGEST" && -n "$EVIDENCE_DIR" ]] \
   || die "missing required target/digests/evidence-dir"
 wr_cutover_require_full_sha "$TARGET_SHA" || exit 2

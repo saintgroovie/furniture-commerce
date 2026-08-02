@@ -89,7 +89,11 @@ PY
     return 1
   fi
   rm -f "$ready"
-  INSTALL_FCNTL_HOLDER_PID="$holder"
+  if [[ -n "${INSTALL_FCNTL_HOLDER_PID:-}" ]]; then
+    INSTALL_FCNTL_HOLDER_PID="$INSTALL_FCNTL_HOLDER_PID $holder"
+  else
+    INSTALL_FCNTL_HOLDER_PID="$holder"
+  fi
   return 0
 }
 
@@ -123,7 +127,9 @@ acquire_install_lock() {
   log "install_lock_acquired path=$lock_path"
 }
 
-assert_no_active_runtime_locks() {
+# Hold ALL runtime mutation locks for the whole install window (no TOCTOU probe-only).
+RUNTIME_LOCK_NEXT_FD=201
+hold_runtime_locks_for_install() {
   local p
   for p in \
     "$WR_ROOT/locks/public_demo/live-cutover.lock" \
@@ -131,19 +137,50 @@ assert_no_active_runtime_locks() {
     "$WR_ROOT/locks/production/live-cutover.lock" \
     "$WR_ROOT/locks/live-cutover.lock"
   do
-    if wr_probe_lock_busy "$p"; then
+    mkdir -p "$(dirname "$p")"
+    : >>"$p"
+    if ! wr_try_flock_nb "$p" "$RUNTIME_LOCK_NEXT_FD"; then
       die "refusing install while runtime mutation lock held: $p"
     fi
+    log "runtime_lock_held path=$p fd=$RUNTIME_LOCK_NEXT_FD"
+    RUNTIME_LOCK_NEXT_FD=$((RUNTIME_LOCK_NEXT_FD + 1))
   done
+}
+
+write_install_in_progress() {
+  mkdir -p "$TOOLS_ROOT"
+  cat >"$IN_PROGRESS_DST" <<EOF
+{
+  "schema_version": 1,
+  "state": "in_progress",
+  "source_sha": "$SOURCE_SHA",
+  "pid": $$,
+  "started_at_utc": "$TS",
+  "backup": "$BACKUP"
+}
+EOF
+  chmod 0644 "$IN_PROGRESS_DST"
+  log "install_in_progress_written path=$IN_PROGRESS_DST"
+}
+
+clear_install_in_progress() {
+  rm -f "$IN_PROGRESS_DST"
 }
 
 release_install_lock_holders() {
   if [[ -n "${INSTALL_FCNTL_HOLDER_PID:-}" ]]; then
-    kill "$INSTALL_FCNTL_HOLDER_PID" 2>/dev/null || true
-    wait "$INSTALL_FCNTL_HOLDER_PID" 2>/dev/null || true
+    # May be a space-separated list when multiple fcntl holders are tracked.
+    local pid
+    for pid in $INSTALL_FCNTL_HOLDER_PID; do
+      kill "$pid" 2>/dev/null || true
+      wait "$pid" 2>/dev/null || true
+    done
     INSTALL_FCNTL_HOLDER_PID=""
   fi
-  exec 200>&- 2>/dev/null || true
+  local fd
+  for fd in 200 201 202 203 204 205; do
+    eval "exec ${fd}>&-" 2>/dev/null || true
+  done
 }
 
 while [[ $# -gt 0 ]]; do
@@ -172,11 +209,13 @@ if [[ "$OPS_ROOT" != "/srv/woodright/ops" ]]; then
   TOOLS_ROOT="${WOODRIGHT_INSTALL_TOOLS_ROOT:-$WR_ROOT/tools/release}"
   DOCS_ROOT="${WOODRIGHT_INSTALL_DOCS_ROOT:-$WR_ROOT/docs/operator}"
 fi
-BACKUP="${WOODRIGHT_INSTALL_BACKUP_ROOT:-$WR_ROOT/backups}/pre-env-gov-install-${SOURCE_SHA:0:12}-$TS"
+BACKUP_PARENT="${WOODRIGHT_INSTALL_BACKUP_ROOT:-$WR_ROOT/backups}"
+BACKUP=""
 MARKER="${TOOLS_ROOT}/INSTALLED_ENV_GOVERNANCE_SHA.txt"
 MARKER_FROM="${TOOLS_ROOT}/INSTALLED_FROM_MERGE_SHA.txt"
 TEXT_MANIFEST_DST="${TOOLS_ROOT}/ENV_GOVERNANCE_INSTALL_MANIFEST.txt"
 BUNDLE_MANIFEST_DST="${TOOLS_ROOT}/ENV_GOVERNANCE_BUNDLE_MANIFEST.json"
+IN_PROGRESS_DST="${TOOLS_ROOT}/ENV_GOVERNANCE_INSTALL_IN_PROGRESS.json"
 CANONICAL_LAYOUT=0
 [[ "$OPS_ROOT" == "/srv/woodright/ops" ]] && CANONICAL_LAYOUT=1
 
@@ -285,7 +324,7 @@ assert_source_integrity() {
   done
 }
 
-log "install_plan source_sha=$SOURCE_SHA repo=$REPO_ROOT ops_root=$OPS_ROOT backup=$BACKUP dry_run=$DRY_RUN"
+log "install_plan source_sha=$SOURCE_SHA repo=$REPO_ROOT ops_root=$OPS_ROOT backup_parent=$BACKUP_PARENT dry_run=$DRY_RUN"
 
 if [[ "$DRY_RUN" == "1" ]]; then
   assert_source_integrity
@@ -295,9 +334,12 @@ fi
 
 assert_source_integrity
 acquire_install_lock
-assert_no_active_runtime_locks
+hold_runtime_locks_for_install
 
-mkdir -p "$BACKUP" \
+mkdir -p "$BACKUP_PARENT"
+BACKUP="$(mktemp -d "$BACKUP_PARENT/pre-env-gov-install-${SOURCE_SHA:0:12}-$TS.XXXXXX")"
+
+mkdir -p \
   "$OPS_ROOT/lib" \
   "$OPS_ROOT/config/runtime-environments" \
   "$OPS_ROOT/release" \
@@ -426,6 +468,7 @@ restore_previous_bundle() {
     fi
   done
   log "RESTORE_OK"
+  clear_install_in_progress
 }
 
 MUTATION_STARTED=0
@@ -446,6 +489,7 @@ on_install_interrupt() {
     RESTORE_DONE=1
     restore_previous_bundle || log "RESTORE_FAILED during $sig trap"
   fi
+  release_install_lock_holders
   case "$sig" in
     TERM) exit 143 ;;
     HUP) exit 129 ;;
@@ -469,6 +513,7 @@ trap 'on_install_interrupt HUP' HUP
 trap 'on_install_exit' EXIT
 
 # Backup + install
+write_install_in_progress
 MUTATION_STARTED=1
 for rel in "${FILES[@]}"; do
   src="$REPO_ROOT/$rel"
@@ -632,7 +677,8 @@ if ! bash "$OPS_ROOT/release/verify-environment-governance-bundle.sh" \
   --ops-root "$OPS_ROOT" \
   --expected-sha "$SOURCE_SHA" \
   --manifest "$BUNDLE_MANIFEST_DST" \
-  --marker "$MARKER"; then
+  --marker "$MARKER" \
+  --allow-in-progress; then
   restore_previous_bundle
   RESTORE_DONE=1
   die "post-marker bundle verify failed; restored previous bundle"
@@ -659,6 +705,7 @@ if [[ "$CANONICAL_LAYOUT" == "1" ]]; then
 fi
 cp "$TEXT_MANIFEST" "$TEXT_MANIFEST_DST"
 
+clear_install_in_progress
 INSTALL_OK=1
 MUTATION_STARTED=0
 log "INSTALL_OK source_sha=$SOURCE_SHA backup=$BACKUP bundle_manifest=$BUNDLE_MANIFEST_DST"
