@@ -124,3 +124,24 @@ wr_hold_validation_freeze_for_command staging \
 
 Ordinary one-off public curl does not require a freeze. Mutators refuse an active freeze unless an audited override is set.
 Storefront digest cutovers must use `ops/release/recreate-staging-storefront.sh` (inherits OCI labels from the image; do not copy previous container Labels).
+
+## Tooling bundle integrity (unified install)
+
+Official install:
+
+```sh
+bash ops/release/install-environment-governance.sh \
+  --source-sha <40-hex> \
+  --repo-root /path/to/clean/checkout
+```
+
+Rules:
+
+- `--source-sha` must equal `git rev-parse HEAD` of `--repo-root`
+- dirty tracked bundle files are refused
+- source/destination symlinks for critical ops scripts are refused
+- marker `INSTALLED_ENV_GOVERNANCE_SHA.txt` is written only after full checksum verify
+- machine-readable inventory: `/srv/woodright/tools/release/ENV_GOVERNANCE_BUNDLE_MANIFEST.json`
+- verify without mutation: `bash ops/release/verify-environment-governance-bundle.sh --expected-sha <40-hex>`
+
+Partial helper installs that overwrite a subset of libs without updating the governance marker create a mixed bundle and must be treated as integrity incidents. Prefer the full governance installer for all cutover/common/profile updates.
