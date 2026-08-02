@@ -167,24 +167,28 @@ else
   ok "8_marker_manifest_disagree"
 fi
 
-# 9) Mid-install forced failure restores previous marker/files
+# 9) Mid-install forced failure restores previous distinct content
 install_into "$WR_A" "$TMP/backups-a4" >/dev/null
-OLD_COMMON_SHA="$(shasum -a 256 "$WR_A/ops/lib/woodright-cutover-common.sh" | awk '{print $1}')"
-OLD_MARKER="$(tr -d '[:space:]' <"$WR_A/tools/release/INSTALLED_ENV_GOVERNANCE_SHA.txt")"
+# Make currently installed profile uniquely tagged, then fail while reinstalling clean harness.
+echo "# previous-unique-$(date +%s)" >>"$WR_A/ops/lib/woodright-environment-profile.sh"
+TAGGED_SHA="$(shasum -a 256 "$WR_A/ops/lib/woodright-environment-profile.sh" | awk '{print $1}')"
+# Backup tagged as "previous" by starting install that fails after overwriting profile.
 set +e
 WOODRIGHT_INSTALL_WR_ROOT="$WR_A" \
 WOODRIGHT_INSTALL_BACKUP_ROOT="$TMP/backups-forcefail" \
-WOODRIGHT_INSTALL_FORCE_FAIL_AFTER="ops/lib/woodright-host-publish.sh" \
+WOODRIGHT_INSTALL_FORCE_FAIL_AFTER="ops/lib/woodright-environment-profile.sh" \
 bash "$HARNESS/ops/release/install-environment-governance.sh" \
   --source-sha "$SHA_H" --repo-root "$HARNESS" --ops-root "$WR_A/ops" \
   >/tmp/wr-forcefail.out 2>&1
 RC=$?
 set -e
 [[ "$RC" -ne 0 ]] && ok "9_force_fail_nonzero" || fail "9_force_fail_nonzero"
+grep -q "RESTORE_OK\|RESTORE_BEGIN" /tmp/wr-forcefail.out && ok "9_restore_invoked" || fail "9_restore_invoked"
+RESTORED_SHA="$(shasum -a 256 "$WR_A/ops/lib/woodright-environment-profile.sh" | awk '{print $1}')"
+[[ "$RESTORED_SHA" == "$TAGGED_SHA" ]] && ok "9_profile_restored_tagged" || fail "9_profile_restored_tagged have=$RESTORED_SHA want=$TAGGED_SHA"
+# Marker must remain previous successful install SHA (still SHA_H) and not be cleared incorrectly
 NEW_MARKER="$(tr -d '[:space:]' <"$WR_A/tools/release/INSTALLED_ENV_GOVERNANCE_SHA.txt")"
-[[ "$NEW_MARKER" == "$OLD_MARKER" ]] && ok "9_marker_restored" || fail "9_marker_restored have=$NEW_MARKER"
-NEW_COMMON_SHA="$(shasum -a 256 "$WR_A/ops/lib/woodright-cutover-common.sh" | awk '{print $1}')"
-[[ "$NEW_COMMON_SHA" == "$OLD_COMMON_SHA" ]] && ok "9_common_restored" || fail "9_common_restored"
+[[ "$NEW_MARKER" == "$SHA_H" ]] && ok "9_marker_kept" || fail "9_marker_kept have=$NEW_MARKER"
 
 # 10) Truncated manifest refused
 python3 - <<PY

@@ -27,8 +27,18 @@ TOOLS_ROOT="/srv/woodright/tools/release"
 DOCS_ROOT="/srv/woodright/docs/operator"
 DRY_RUN=0
 ALLOW_DIRTY_SOURCE="${WOODRIGHT_INSTALL_ALLOW_DIRTY_SOURCE:-0}"
+MUTATION_STARTED=0
+RESTORE_DONE=0
 
-die() { echo "ERROR: $*" >&2; exit 1; }
+die() {
+  echo "ERROR: $*" >&2
+  if [[ "${MUTATION_STARTED:-0}" == "1" && "${RESTORE_DONE:-0}" != "1" ]]; then
+    RESTORE_DONE=1
+    # restore_previous_bundle is defined later; only called after install mutation starts.
+    restore_previous_bundle || log "RESTORE_FAILED from die()"
+  fi
+  exit 1
+}
 log() { echo "$*"; }
 
 while [[ $# -gt 0 ]]; do
@@ -280,11 +290,31 @@ restore_previous_bundle() {
   fi
   if [[ -f "$BACKUP/etc_systemd_woodright-monitor.service" && -d /etc/systemd/system ]]; then
     cp -a "$BACKUP/etc_systemd_woodright-monitor.service" /etc/systemd/system/woodright-monitor.service
+  elif [[ "$CANONICAL_LAYOUT" == "1" && -f /etc/systemd/system/woodright-monitor.service && ! -f "$BACKUP/etc_systemd_woodright-monitor.service" ]]; then
+    # Fresh unit with no prior backup: leave unit in place only if it existed before mutation.
+    # Tracked via sentinel written before unit install.
+    if [[ -f "$BACKUP/systemd_unit_was_absent" ]]; then
+      rm -f /etc/systemd/system/woodright-monitor.service
+    fi
   fi
+  # Compat symlink restore/removal for scripts/release helpers.
+  local base link_dst link_bak
+  for base in reconcile-public-image-pins.sh; do
+    link_dst="${WR_ROOT}/scripts/release/${base}"
+    link_bak="$BACKUP/scripts_release_${base}.pre-symlink"
+    if [[ -e "$link_bak" || -L "$link_bak" ]]; then
+      mkdir -p "$(dirname "$link_dst")"
+      cp -a "$link_bak" "$link_dst"
+    elif [[ -L "$link_dst" || -e "$link_dst" ]]; then
+      if [[ -f "$BACKUP/scripts_release_${base}.was_absent" ]]; then
+        rm -f "$link_dst"
+      fi
+    fi
+  done
   log "RESTORE_OK"
 }
 
-MUTATION_STARTED=0
+MUTATION_STARTED=1
 RESTORE_DONE=0
 on_install_err() {
   local rc=$?
@@ -330,6 +360,8 @@ for rel in "${FILES[@]}"; do
       else
         echo "backup $local_link -> $BACKUP sha=symlink-or-dangling" >>"$TEXT_MANIFEST"
       fi
+    else
+      : >"$BACKUP/scripts_release_$(basename "$rel").was_absent"
     fi
     ln -sfn "$dest" "$local_link"
     echo "symlink $local_link -> $dest" >>"$TEXT_MANIFEST"
@@ -342,6 +374,8 @@ if [[ "$CANONICAL_LAYOUT" == "1" && -d /etc/systemd/system ]]; then
   UNIT_DST=/etc/systemd/system/woodright-monitor.service
   if [[ -f "$UNIT_DST" ]]; then
     cp -a "$UNIT_DST" "$BACKUP/etc_systemd_woodright-monitor.service"
+  else
+    : >"$BACKUP/systemd_unit_was_absent"
   fi
   install -m 0644 "$UNIT_SRC" "$UNIT_DST"
   echo "install ops/systemd/woodright-monitor.service -> $UNIT_DST sha=$(checksums "$UNIT_DST")" >>"$TEXT_MANIFEST"

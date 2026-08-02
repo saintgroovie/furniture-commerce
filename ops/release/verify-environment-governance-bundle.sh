@@ -155,8 +155,13 @@ if missing_required:
     for r in missing_required:
         errors.append(f"manifest missing required relative_path {r}")
 
-if len(by_rel) < len(required):
-    errors.append(f"truncated_manifest have={len(by_rel)} want>={len(required)}")
+extra = [r for r in by_rel if r not in required]
+if extra:
+    for r in extra:
+        errors.append(f"manifest extra relative_path refused {r}")
+
+if len(by_rel) != len(required):
+    errors.append(f"manifest_size_mismatch have={len(by_rel)} want={len(required)}")
 
 if errors:
     print("VERIFY_FAIL mixed_or_corrupt_bundle:")
