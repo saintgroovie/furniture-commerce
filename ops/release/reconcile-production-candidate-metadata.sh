@@ -26,6 +26,10 @@ source "$SCRIPT_DIR/../lib/woodright-staging-mutation-lock.sh"
 source "$SCRIPT_DIR/../lib/woodright-component-authority.sh"
 # shellcheck source=../lib/woodright-install-provenance.sh
 source "$SCRIPT_DIR/../lib/woodright-install-provenance.sh"
+# shellcheck source=../lib/woodright-compose-env-authority.sh
+source "$SCRIPT_DIR/../lib/woodright-compose-env-authority.sh"
+# shellcheck source=../lib/woodright-production-release-sha-reconcile.sh
+source "$SCRIPT_DIR/../lib/woodright-production-release-sha-reconcile.sh"
 
 CONFIRM_TOKEN='I_UNDERSTAND_PRODUCTION_METADATA_PROVENANCE_CORRECTION'
 MODE="dry-run"
@@ -57,7 +61,10 @@ usage() {
 
 Usage: reconcile-production-candidate-metadata.sh \\
   --environment production \\
-  --correction helper-install-provenance \\
+  --correction <helper-install-provenance|compose-common-release-sha> \\
+  ...
+
+helper-install-provenance:
   --application-source-sha <40hex> \\
   --operation-helper-sha <40hex> \\
   --operation-helper-checksum <64hex> \\
@@ -67,6 +74,13 @@ Usage: reconcile-production-candidate-metadata.sh \\
   --original-evidence /srv/woodright/reports/production/<dir> \\
   [--dry-run|--execute] \\
   [--confirm-mutation $CONFIRM_TOKEN]
+
+compose-common-release-sha (metadata-only; no container recreate):
+  --application-source-sha <40hex> \\
+  --current-helper-install-sha <40hex> \\
+  --storefront-ref / --backend-ref (exact live digests) \\
+  [--dry-run|--execute] \\
+  [--confirm-mutation $WR_PC_RELEASE_SHA_CONFIRM]
 
 For the 20260803 adopt-live residual, when evidence json/helper-install-sha.txt
 still holds the stale marker value, --operation-helper-checksum must equal the
@@ -134,7 +148,8 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-[[ "$CORRECTION" == "helper-install-provenance" ]] || die "refused --correction '${CORRECTION:-}' (only helper-install-provenance)"
+[[ "$CORRECTION" == "helper-install-provenance" || "$CORRECTION" == "compose-common-release-sha" ]] \
+  || die "refused --correction '${CORRECTION:-}' (helper-install-provenance|compose-common-release-sha)"
 case "$MODE_REQUESTS" in
   *"|dry-run|"*)
     case "$MODE_REQUESTS" in
@@ -142,27 +157,6 @@ case "$MODE_REQUESTS" in
     esac
     ;;
 esac
-require_full_sha "$SOURCE_SHA" application-source-sha
-require_full_sha "$OPERATION_HELPER_SHA" operation-helper-sha
-require_full_sha "$CURRENT_HELPER_SHA" current-helper-install-sha
-require_immutable_ref "$SF_REF" storefront
-require_immutable_ref "$BE_REF" backend
-[[ -n "$ORIGINAL_EVIDENCE" ]] || die "missing --original-evidence"
-[[ "$ORIGINAL_EVIDENCE" == /srv/woodright/reports/production/* ]] \
-  || die "refused original evidence outside /srv/woodright/reports/production/: $ORIGINAL_EVIDENCE"
-[[ -d "$ORIGINAL_EVIDENCE" ]] || die "original evidence directory absent: $ORIGINAL_EVIDENCE"
-if [[ "$MODE" == "execute" ]]; then
-  [[ "$CONFIRM" == "$CONFIRM_TOKEN" ]] || die "execute requires --confirm-mutation $CONFIRM_TOKEN"
-fi
-
-# Resolve current installed governance SHA (canonical). Dry-run reports legacy drift.
-if [[ "$MODE" == "dry-run" ]]; then
-  wr_resolve_installed_governance_sha --dry-run || die "canonical governance marker unresolved"
-else
-  wr_resolve_installed_governance_sha --mutating || die "canonical governance marker unresolved or legacy drift"
-fi
-[[ "$WR_INSTALLED_GOVERNANCE_SHA" == "$CURRENT_HELPER_SHA" ]] \
-  || die "current helper install SHA mismatch: marker/canonical=$WR_INSTALLED_GOVERNANCE_SHA declared=$CURRENT_HELPER_SHA"
 
 OWN_DIR="${WOODRIGHT_OWNERSHIP_DIR:-/srv/woodright/runtime-ownership-production}"
 COMPOSE_ENV="${WOODRIGHT_COMPOSE_ENV_FILE:-/etc/dokploy/compose/woodright-production/code/.env}"
@@ -190,6 +184,35 @@ print((d["State"].get("Health") or {}).get("Status") or "")
 print(d.get("RestartCount", 0))
 PY
 }
+
+# --- compose-common-release-sha (metadata-only compose key) ----------------
+if [[ "$CORRECTION" == "compose-common-release-sha" ]]; then
+  wr_pc_release_sha_run "$MODE" "$CONFIRM"
+  exit $?
+fi
+
+# --- helper-install-provenance (existing path) -----------------------------
+require_full_sha "$SOURCE_SHA" application-source-sha
+require_full_sha "$OPERATION_HELPER_SHA" operation-helper-sha
+require_full_sha "$CURRENT_HELPER_SHA" current-helper-install-sha
+require_immutable_ref "$SF_REF" storefront
+require_immutable_ref "$BE_REF" backend
+[[ -n "$ORIGINAL_EVIDENCE" ]] || die "missing --original-evidence"
+[[ "$ORIGINAL_EVIDENCE" == /srv/woodright/reports/production/* ]] \
+  || die "refused original evidence outside /srv/woodright/reports/production/: $ORIGINAL_EVIDENCE"
+[[ -d "$ORIGINAL_EVIDENCE" ]] || die "original evidence directory absent: $ORIGINAL_EVIDENCE"
+if [[ "$MODE" == "execute" ]]; then
+  [[ "$CONFIRM" == "$CONFIRM_TOKEN" ]] || die "execute requires --confirm-mutation $CONFIRM_TOKEN"
+fi
+
+# Resolve current installed governance SHA (canonical). Dry-run reports legacy drift.
+if [[ "$MODE" == "dry-run" ]]; then
+  wr_resolve_installed_governance_sha --dry-run || die "canonical governance marker unresolved"
+else
+  wr_resolve_installed_governance_sha --mutating || die "canonical governance marker unresolved or legacy drift"
+fi
+[[ "$WR_INSTALLED_GOVERNANCE_SHA" == "$CURRENT_HELPER_SHA" ]] \
+  || die "current helper install SHA mismatch: marker/canonical=$WR_INSTALLED_GOVERNANCE_SHA declared=$CURRENT_HELPER_SHA"
 
 read_json() {
   python3 -c 'import json,sys; print(json.dumps(json.load(open(sys.argv[1]))))' "$1"

@@ -92,6 +92,8 @@ source "$HERE/../lib/woodright-cutover-common.sh"
 source "$HERE/../lib/woodright-component-authority.sh"
 # shellcheck source=../lib/woodright-oci-provenance.sh
 source "$HERE/../lib/woodright-oci-provenance.sh"
+# shellcheck source=../lib/woodright-compose-env-authority.sh
+source "$HERE/../lib/woodright-compose-env-authority.sh"
 # shellcheck source=../lib/woodright-staging-mutation-lock.sh
 source "$HERE/../lib/woodright-staging-mutation-lock.sh"
 
@@ -1165,23 +1167,44 @@ print("pin_file_ok")
 PY
 }
 
-# Single atomic pair install: both image keys rendered into one temp file,
-# validated as a whole, then published once. No mixed-pin window.
+# Single atomic pair install: image pins + WOODRIGHT_RELEASE_SHA when both
+# target refs prove OCI revision == SOURCE_SHA. Validated as a whole, then
+# published once. No mixed-pin window.
 write_pair_pins_atomic() {
-  local be_want sf_want tmp
+  local be_want sf_want tmp write_release=0
+  local compose_parent
+  local -a render_args=() validate_args=()
   be_want="$(target_ref_for backend)"
   sf_want="$(target_ref_for storefront)"
-  tmp="$(mktemp "$(dirname "$COMPOSE_ENV_FILE")/.wr-recovery-pin-XXXXXX" 2>/dev/null || true)"
+  compose_parent="$(dirname -- "$COMPOSE_ENV_FILE")"
+  wr_compose_env_assert_path_under "$COMPOSE_ENV_FILE" "$compose_parent" || return 1
+  wr_compose_env_assert_no_duplicate_governed_keys "$COMPOSE_ENV_FILE" || return 1
+
+  if [[ "$(wr_oci_image_revision "$be_want")" == "$SOURCE_SHA" \
+     && "$(wr_oci_image_revision "$sf_want")" == "$SOURCE_SHA" ]]; then
+    write_release=1
+  fi
+
+  tmp="$(mktemp "${compose_parent}/.wr-recovery-pin-XXXXXX" 2>/dev/null || true)"
   if [[ -z "$tmp" ]]; then
     log "NOTE pin tmp falls back to the evidence dir (compose dir not writable by this user)"
     tmp="$(mktemp "$EVIDENCE_DIR/pin-backup/.wr-recovery-pin-XXXXXX")"
   fi
+  [[ ! -L "$tmp" ]] || { rm -f "$tmp"; return 1; }
   cp -p "$COMPOSE_ENV_FILE" "$tmp" || { rm -f "$tmp"; return 1; }
-  render_pin "$tmp" "${tmp}.be" WOODRIGHT_BACKEND_IMAGE "$be_want" || { rm -f "$tmp" "${tmp}.be"; return 1; }
-  mv -f "${tmp}.be" "$tmp" || { rm -f "$tmp" "${tmp}.be"; return 1; }
-  render_pin "$tmp" "${tmp}.sf" WOODRIGHT_STOREFRONT_IMAGE "$sf_want" || { rm -f "$tmp" "${tmp}.sf"; return 1; }
-  mv -f "${tmp}.sf" "$tmp" || { rm -f "$tmp" "${tmp}.sf"; return 1; }
-  validate_pin_file "$tmp" "$be_want" "$sf_want" >&2 || { rm -f "$tmp"; return 1; }
+  render_args=(WOODRIGHT_BACKEND_IMAGE "$be_want" WOODRIGHT_STOREFRONT_IMAGE "$sf_want")
+  validate_args=(WOODRIGHT_BACKEND_IMAGE "$be_want" WOODRIGHT_STOREFRONT_IMAGE "$sf_want")
+  if [[ "$write_release" -eq 1 ]]; then
+    render_args+=(WOODRIGHT_RELEASE_SHA "$SOURCE_SHA")
+    validate_args+=(WOODRIGHT_RELEASE_SHA "$SOURCE_SHA")
+  fi
+  if ! wr_compose_env_render_keys "$tmp" "${tmp}.next" "${render_args[@]}"; then
+    rm -f "$tmp" "${tmp}.next"
+    return 1
+  fi
+  mv -f "${tmp}.next" "$tmp" || { rm -f "$tmp" "${tmp}.next"; return 1; }
+  wr_compose_env_validate_keys "$tmp" "${validate_args[@]}" >&2 || { rm -f "$tmp"; return 1; }
+  wr_compose_env_assert_no_duplicate_governed_keys "$tmp" || { rm -f "$tmp"; return 1; }
   # Phase marks "about to publish". PINS_INSTALLED flips in the next statement
   # after a successful install (no statements between install and the flag).
   record_state pins_written
@@ -1203,10 +1226,14 @@ write_pair_pins_atomic() {
     return 1
   fi
   rm -f "$tmp"
-  printf '%s WOODRIGHT_BACKEND_IMAGE=%s\n%s WOODRIGHT_STOREFRONT_IMAGE=%s\n' \
-    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$be_want" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$sf_want" \
-    >>"$EVIDENCE_DIR/json/pins-written.txt"
-  log "PIN_WRITTEN_ATOMIC backend=$be_want storefront=$sf_want"
+  {
+    printf '%s WOODRIGHT_BACKEND_IMAGE=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$be_want"
+    printf '%s WOODRIGHT_STOREFRONT_IMAGE=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$sf_want"
+    if [[ "$write_release" -eq 1 ]]; then
+      printf '%s WOODRIGHT_RELEASE_SHA=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$SOURCE_SHA"
+    fi
+  } >>"$EVIDENCE_DIR/json/pins-written.txt"
+  log "PIN_WRITTEN_ATOMIC backend=$be_want storefront=$sf_want release_sha_written=$write_release"
   return 0
 }
 
