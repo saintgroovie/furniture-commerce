@@ -7,9 +7,13 @@
 export type ShowroomMessengerLink = {
   id: "telegram" | "whatsapp" | "max"
   label: string
-  /** Confirmed deep link only. `null` = show as available channel, not a URL. */
-  href: string | null
+  /** Confirmed external messenger URL (open in new tab). */
+  href: string
 }
+
+/** Owner-provided public MAX profile URL - do not invent or transform. */
+export const MAX_PUBLIC_PROFILE_URL =
+  "https://max.ru/u/f9LHodD0cOJ5_V6hgbN0ynWCHmdN5hSOJw23-7TpHcNYdvB-CNqBlw4dsHI" as const
 
 export type ShowroomPhone = {
   label: string
@@ -95,9 +99,7 @@ export const showroomContacts = {
     {
       id: "max",
       label: "MAX",
-      // Official MAX deeplinks target bots (`max.ru/<bot>`), not phone chats.
-      // No confirmed phone deeplink in project or public docs - do not invent.
-      href: null,
+      href: MAX_PUBLIC_PROFILE_URL,
     },
   ] satisfies ReadonlyArray<ShowroomMessengerLink>,
 } as const
