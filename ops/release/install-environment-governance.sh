@@ -236,6 +236,8 @@ FILES=(
   ops/lib/woodright-cutover-common.sh
   ops/lib/woodright-install-provenance.sh
   ops/lib/woodright-compose-service-recreate.sh
+  ops/lib/woodright-compose-env-authority.sh
+  ops/lib/woodright-public-demo-metadata-authority.sh
   ops/config/runtime-environments/public_demo.conf
   ops/config/runtime-environments/staging.conf
   ops/config/runtime-environments/production.conf
@@ -245,6 +247,7 @@ FILES=(
   ops/release/cutover-production-candidate.sh
   ops/release/recover-production-candidate-skew.sh
   ops/release/reconcile-production-candidate-metadata.sh
+  ops/release/reconcile-public-demo-metadata.sh
   ops/release/public-demo-critical-http-smoke.sh
   ops/release/rollback-staging-backend-from-keeper.sh
   ops/release/rollback-staging-storefront-from-keeper.sh
@@ -276,6 +279,9 @@ role_for() {
     ops/lib/woodright-host-publish.sh) echo host_publish ;;
     ops/lib/woodright-component-authority.sh) echo component_authority ;;
     ops/release/reconcile-runtime-manifests.sh) echo runtime_manifest_reconciler ;;
+    ops/release/reconcile-public-demo-metadata.sh) echo public_demo_metadata_reconciler ;;
+    ops/lib/woodright-compose-env-authority.sh) echo compose_env_authority ;;
+    ops/lib/woodright-public-demo-metadata-authority.sh) echo public_demo_metadata_authority ;;
     scripts/release/reconcile-public-image-pins.sh) echo pin_reconciler ;;
     ops/monitoring/*) echo monitor_helper ;;
     ops/systemd/*) echo systemd_unit ;;
@@ -652,6 +658,9 @@ def role_for(rel: str) -> str:
         "ops/lib/woodright-component-authority.sh": "component_authority",
         "ops/release/reconcile-runtime-manifests.sh": "runtime_manifest_reconciler",
         "scripts/release/reconcile-public-image-pins.sh": "pin_reconciler",
+        "ops/release/reconcile-public-demo-metadata.sh": "public_demo_metadata_reconciler",
+        "ops/lib/woodright-compose-env-authority.sh": "compose_env_authority",
+        "ops/lib/woodright-public-demo-metadata-authority.sh": "public_demo_metadata_authority",
         "ops/release/install-environment-governance.sh": "installer",
         "ops/release/verify-environment-governance-bundle.sh": "bundle_verifier",
     }
