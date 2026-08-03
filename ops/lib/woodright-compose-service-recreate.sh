@@ -94,10 +94,23 @@ wr_compose_assert_no_service_owned_keeper() {
   local service="${2:?}"
   local canonical="${3:?}"
   local docker_bin="${WOODRIGHT_DOCKER_BIN:-docker}"
-  local id name proj svc
+  local id name proj svc ps_out
+  local -a ids=()
 
-  while read -r id; do
+  # Fail closed if enumeration fails (do not treat a broken `docker ps` as
+  # "no colliding keepers").
+  if ! ps_out="$("$docker_bin" ps -aq \
+      --filter "label=com.docker.compose.project=${project}" \
+      --filter "label=com.docker.compose.service=${service}" 2>/dev/null)"; then
+    echo "ERROR: docker ps failed while enumerating compose service $project/$service" >&2
+    return 1
+  fi
+  while IFS= read -r id; do
     [[ -n "$id" ]] || continue
+    ids+=("$id")
+  done <<<"$ps_out"
+
+  for id in "${ids[@]}"; do
     name="$("$docker_bin" inspect --format '{{.Name}}' "$id" | sed 's#^/##')"
     [[ "$name" == "$canonical" ]] && continue
     proj="$("$docker_bin" inspect --format '{{index .Config.Labels "com.docker.compose.project"}}' "$id" 2>/dev/null || true)"
@@ -106,6 +119,6 @@ wr_compose_assert_no_service_owned_keeper() {
       echo "ERROR: non-canonical container '$name' still owns compose service $project/$service" >&2
       return 1
     fi
-  done < <("$docker_bin" ps -aq --filter "label=com.docker.compose.project=${project}" --filter "label=com.docker.compose.service=${service}")
+  done
   return 0
 }

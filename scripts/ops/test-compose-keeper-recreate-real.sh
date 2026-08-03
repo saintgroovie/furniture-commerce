@@ -53,7 +53,7 @@ LABEL_SVC="$(docker inspect -f '{{index .Config.Labels "com.docker.compose.servi
   || fail "old: keeper lost compose.service (got $LABEL_SVC)"
 
 set +e
-docker compose -p "$PROJ" -f "$COMPOSE" up -d --no-deps backend >/tmp/wr-ck-old-up.out 2>&1
+docker compose -p "$PROJ" -f "$COMPOSE" up -d --no-deps backend >"$DIR/old-up.out" 2>&1
 OLD_RC=$?
 set -e
 [[ "$OLD_RC" -eq 0 ]] && pass "old: compose up exit 0" || fail "old: compose up rc=$OLD_RC"
@@ -74,7 +74,7 @@ docker rm -f "$KEEP" >/dev/null 2>&1 || true
 docker compose -p "$PROJ" -f "$COMPOSE" up -d >/dev/null
 docker rename "$BE" "$KEEP"
 set +e
-docker compose -p "$PROJ" -f "$COMPOSE" up -d --no-deps --force-recreate backend >/tmp/wr-ck-force.out 2>&1
+docker compose -p "$PROJ" -f "$COMPOSE" up -d --no-deps --force-recreate backend >"$DIR/force-recreate.out" 2>&1
 set -e
 KEEPER_LEFT=0; docker inspect "$KEEP" >/dev/null 2>&1 && KEEPER_LEFT=1 || true
 CANON_OK=0; docker inspect "$BE" >/dev/null 2>&1 && CANON_OK=1 || true
@@ -84,6 +84,8 @@ else
   fail "variant-C: unexpected canonical=$CANON_OK keeper=$KEEPER_LEFT"
 fi
 docker compose -p "$PROJ" -f "$COMPOSE" down --remove-orphans >/dev/null
+# remove any leftover renamed name from the variant-C path
+docker rm -f "$KEEP" >/dev/null 2>&1 || true
 
 # --- 3) Strategy B success: force-recreate without rename ---
 docker compose -p "$PROJ" -f "$COMPOSE" up -d >/dev/null
