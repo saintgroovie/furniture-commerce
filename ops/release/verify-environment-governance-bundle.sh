@@ -73,6 +73,7 @@ REQUIRED_JSON='[
   "ops/lib/woodright-staging-mutation-lock.sh",
   "ops/lib/woodright-runtime-discovery.sh",
   "ops/lib/woodright-cutover-common.sh",
+  "ops/lib/woodright-install-provenance.sh",
   "ops/lib/woodright-compose-service-recreate.sh",
   "ops/config/runtime-environments/public_demo.conf",
   "ops/config/runtime-environments/staging.conf",
@@ -82,6 +83,7 @@ REQUIRED_JSON='[
   "ops/release/cutover-public-demo-pair.sh",
   "ops/release/cutover-production-candidate.sh",
   "ops/release/recover-production-candidate-skew.sh",
+  "ops/release/reconcile-production-candidate-metadata.sh",
   "ops/release/public-demo-critical-http-smoke.sh",
   "ops/release/rollback-staging-backend-from-keeper.sh",
   "ops/release/rollback-staging-storefront-from-keeper.sh",
@@ -96,7 +98,8 @@ REQUIRED_JSON='[
   "scripts/release/reconcile-public-image-pins.sh",
   "docs/operator/environment-scoped-release-governance.md",
   "docs/operator/backend-media-promotion-gate.md",
-  "docs/operator/production-candidate-rollback.md"
+  "docs/operator/production-candidate-rollback.md",
+  "docs/operator/production-helper-install-provenance.md"
 ]'
 
 python3 - "$MANIFEST" "$MARKER_SHA" "$OPS_ROOT" "$TOOLS_ROOT" "$DOCS_ROOT" "$REQUIRED_JSON" <<'PY'
@@ -181,3 +184,21 @@ if errors:
 
 print(f"VERIFY_OK source_sha={marker_sha} files={len(by_rel)}")
 PY
+
+# Legacy compatibility mirrors must equal the canonical governance marker.
+# WR root is derived from --ops-root (parent of ops/), not from a stale
+# WOODRIGHT_INSTALL_WR_ROOT inherited from the calling shell - harnesses and
+# disposable installs would otherwise check /srv/woodright by accident.
+if [[ -f "${OPS_ROOT}/lib/woodright-install-provenance.sh" ]]; then
+  # shellcheck source=ops/lib/woodright-install-provenance.sh
+  source "${OPS_ROOT}/lib/woodright-install-provenance.sh"
+  WR_PARENT="$(cd "$(dirname "$OPS_ROOT")" && pwd)"
+  if [[ "$OPS_ROOT" == "/srv/woodright/ops" ]]; then
+    VERIFY_WR_ROOT="${WOODRIGHT_INSTALL_WR_ROOT:-/srv/woodright}"
+  else
+    VERIFY_WR_ROOT="$WR_PARENT"
+  fi
+  if ! wr_install_provenance_verify_mirrors "$MARKER_SHA" "$VERIFY_WR_ROOT" "$TOOLS_ROOT"; then
+    die "governance provenance mirrors diverge from canonical marker $MARKER_SHA"
+  fi
+fi

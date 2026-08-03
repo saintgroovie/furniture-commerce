@@ -98,6 +98,8 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$HERE/../.." && pwd)"
 # shellcheck source=../lib/woodright-environment-profile.sh
 source "$HERE/../lib/woodright-environment-profile.sh"
+# shellcheck disable=SC1091
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib/woodright-install-provenance.sh"
 # shellcheck source=../lib/woodright-cutover-common.sh
 source "$HERE/../lib/woodright-cutover-common.sh"
 # shellcheck source=../lib/woodright-compose-service-recreate.sh
@@ -265,20 +267,21 @@ sha256_of() {
 }
 
 resolve_helper_install_sha() {
-  local file="${WOODRIGHT_HELPER_INSTALL_SHA_FILE:-$HELPER_SHA_FILE_DEFAULT}"
-  if [[ -n "${WOODRIGHT_HELPER_INSTALL_SHA:-}" ]]; then
-    HELPER_INSTALL_SHA="${WOODRIGHT_HELPER_INSTALL_SHA}"
-    log "helper_install_sha from env (application_source_sha stays independent)"
-    return 0
+  # Canonical authority: tools/release/INSTALLED_ENV_GOVERNANCE_SHA.txt
+  # (via wr_resolve_installed_governance_sha). Legacy cutover/root markers are
+  # mirrors only - mismatch fail-closes mutating paths.
+  local mode_flag="--mutating"
+  if [[ "${MODE:-}" == "dry-run" || "${DRY_RUN:-0}" == "1" ]]; then
+    mode_flag="--dry-run"
   fi
-  if [[ -r "$file" ]]; then
-    HELPER_INSTALL_SHA="$(tr -d '[:space:]' <"$file" 2>/dev/null || true)"
-    log "helper_install_sha from $file"
-    return 0
+  # Harness may set WOODRIGHT_INSTALL_WR_ROOT / WOODRIGHT_HELPER_INSTALL_SHA.
+  if ! wr_resolve_installed_governance_sha "$mode_flag"; then
+    die "installed governance/helper provenance unresolved or drifted (canonical vs legacy markers)"
   fi
-  HELPER_INSTALL_SHA=""
-  log "NOTE helper_install_sha unresolved (no WOODRIGHT_HELPER_INSTALL_SHA, no $file) - recorded as empty, never substituted by application_source_sha"
+  HELPER_INSTALL_SHA="$WR_INSTALLED_GOVERNANCE_SHA"
+  log "operation_helper_install_sha=$HELPER_INSTALL_SHA source=$WR_INSTALL_PROVENANCE_SOURCE legacy_cutover=$WR_INSTALL_PROVENANCE_LEGACY_CUTOVER legacy_root=$WR_INSTALL_PROVENANCE_LEGACY_ROOT"
 }
+
 
 # ---------------------------------------------------------------------------
 # CLI + environment authority
@@ -348,6 +351,14 @@ wr_prelock_validate_environment_target || exit 1
 
 need_sf() { [[ "$COMPONENT" == "storefront" || "$COMPONENT" == "pair" ]]; }
 need_be() { [[ "$COMPONENT" == "backend" || "$COMPONENT" == "pair" ]]; }
+# Defined early: dry-run packet builders call this before the execute-only
+# section where a duplicate used to live (late definition → command-not-found).
+component_in_scope() {
+  case "$1" in
+    backend) need_be ;;
+    *) need_sf ;;
+  esac
+}
 
 IMAGE_REGISTRY="${WOODRIGHT_IMAGE_REGISTRY:-ghcr.io/saintgroovie}"
 assert_ref_repository() {
@@ -973,9 +984,11 @@ packet = {
     "source_sha": source_sha,
     "application_source_sha": source_sha,
     "helper_install_sha": os.environ.get("WR_PACKET_HELPER_SHA", ""),
+    "operation_helper_install_sha": os.environ.get("WR_PACKET_HELPER_SHA", ""),
     "sha_separation_note": (
         "application_source_sha is the OCI revision of the images; "
-        "helper_install_sha is the ops commit that installed this script; "
+        "operation_helper_install_sha (alias helper_install_sha) is the ops "
+        "commit that installed the helper performing this operation; "
         "they are recorded separately and never substituted for each other"
     ),
     "mutation_lock_path": lock_path,
@@ -1246,13 +1259,6 @@ host_port_for() {
   case "$1" in
     backend) printf '%s\n' "$BE_PORT" ;;
     *) printf '%s\n' "$SF_PORT" ;;
-  esac
-}
-
-component_in_scope() {
-  case "$1" in
-    backend) need_be ;;
-    *) need_sf ;;
   esac
 }
 
@@ -1912,6 +1918,7 @@ common = {
     # Two distinct provenance fields - the helper SHA is never the release SHA.
     "application_source_sha": app_sha,
     "helper_install_sha": helper_sha,
+    "operation_helper_install_sha": helper_sha,
     "public_exposure": "private",
     "updated_at_utc": now,
 }

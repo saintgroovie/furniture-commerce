@@ -37,15 +37,27 @@ function check(cond, msg, extra) {
   }
 }
 
-function run(args) {
-  return spawnSync("bash", [helper, ...args], { cwd: root, encoding: "utf8" })
-}
-
 const SHA = "a".repeat(40)
+const HELPER_SHA = "b".repeat(40)
 const CONFIRM = "I_UNDERSTAND_PRIVATE_PRODUCTION_CANDIDATE_CUTOVER"
 const PRODUCTION_LOCK = "/srv/woodright/locks/production/live-cutover.lock"
 const BE_REF = `ghcr.io/saintgroovie/woodright-backend@sha256:${"b".repeat(64)}`
 const SF_REF = `ghcr.io/saintgroovie/woodright-storefront@sha256:${"c".repeat(64)}`
+
+function run(args, extraEnv = {}) {
+  return spawnSync("bash", [helper, ...args], {
+    cwd: root,
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      // Harness: no live /srv markers. Allow env override as sole provenance
+      // source so dry-run CLI contract tests do not require a real install.
+      WOODRIGHT_HELPER_INSTALL_SHA: HELPER_SHA,
+      WOODRIGHT_PROVENANCE_ALLOW_ENV_OVERRIDE: "1",
+      ...extraEnv,
+    },
+  })
+}
 
 // 1. Static: header declares the execute path is live-mutating and needs the
 //    global lock (check-global-lock-policy relies on both).
