@@ -10,6 +10,53 @@ wr_pc_release_sha_oci_of_ref() {
   docker image inspect "$ref" --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' 2>/dev/null || true
 }
 
+# Portable fill from runtime_digest (macOS bash 3.2: no mapfile).
+wr_pc_release_sha_fill_runtime() {
+  local name="$1"
+  local -a __lines=()
+  local __line __i=0
+  while IFS= read -r __line; do
+    __lines[$__i]="$__line"
+    __i=$((__i + 1))
+  done < <(runtime_digest "$name")
+  local __d0="${2:-}" __d1="${3:-}" __d2="${4:-}" __d3="${5:-}" __d4="${6:-}"
+  if [[ -n "$__d0" ]]; then printf -v "$__d0" '%s' "${__lines[0]:-}"; fi
+  if [[ -n "$__d1" ]]; then printf -v "$__d1" '%s' "${__lines[1]:-}"; fi
+  if [[ -n "$__d2" ]]; then printf -v "$__d2" '%s' "${__lines[2]:-}"; fi
+  if [[ -n "$__d3" ]]; then printf -v "$__d3" '%s' "${__lines[3]:-}"; fi
+  if [[ -n "$__d4" ]]; then printf -v "$__d4" '%s' "${__lines[4]:-}"; fi
+}
+
+wr_pc_release_sha_assert_no_public_traefik() {
+  local name="$1"
+  local labels
+  labels="$(docker inspect "$name" --format '{{json .Config.Labels}}' 2>/dev/null || true)"
+  [[ -n "$labels" && "$labels" != "<no value>" ]] || labels="null"
+  python3 - "$name" "$labels" "${WOODRIGHT_FORBIDDEN_DOMAINS:-}" <<'PY'
+import json, sys
+name, raw, forbidden_raw = sys.argv[1:4]
+try:
+    labels = json.loads(raw)
+except Exception:
+    labels = None
+labels = labels or {}
+forbidden = [d.strip() for d in forbidden_raw.split(",") if d.strip()]
+problems = []
+if str(labels.get("traefik.enable", "")).lower() == "true":
+    problems.append("traefik.enable=true")
+for key, value in labels.items():
+    if key.startswith("traefik.") and "Host(" in str(value):
+        problems.append(f"traefik router rule {key}")
+    for domain in forbidden:
+        if domain and domain in str(value):
+            problems.append(f"forbidden domain {domain} in {key}")
+if problems:
+    print(f"PUBLIC_EXPOSURE {name} " + "; ".join(sorted(set(problems))), file=sys.stderr)
+    raise SystemExit(1)
+print(f"private_exposure_ok {name}", file=sys.stderr)
+PY
+}
+
 wr_pc_release_sha_run() {
   local mode="$1"
   local confirm="${2:-}"
@@ -17,12 +64,18 @@ wr_pc_release_sha_run() {
   local compose_parent
   local pin_sf pin_be release_now
   local sf_name be_name
-  local -a sf_rt be_rt sf_rt2 be_rt2
+  # Runtime fields are filled via printf -v from a helper (bash 3.2 has no
+  # nameref) - keep them non-local so the helper can assign them.
+  sf_dig="" be_dig="" sf_id="" be_id="" sf_started="" be_started="" sf_health="" be_health=""
+  sf_dig2="" be_dig2="" sf_id2="" be_id2=""
   local sf_oci be_oci
   local own_dir evidence_dir ts
   local want_sha="$SOURCE_SHA"
   local backup tmp staged
   local before_sha after_sha
+  local allowed_root
+  local f ACTIVE_APP ACTIVE_SF ACTIVE_BE OWNER_APP EXPECT_APP
+  local ACTIVE_APP2 OWNER_APP2 EXPECT_APP2 ACTIVE_SF2 ACTIVE_BE2
 
   [[ "$WOODRIGHT_ENVIRONMENT" == "production" ]] || die "compose-common-release-sha: production only"
   require_full_sha "$want_sha" application-source-sha
@@ -59,11 +112,19 @@ wr_pc_release_sha_run() {
   [[ "$pin_sf" == "$SF_REF" ]] || die "pin storefront mismatch"
   [[ "$pin_be" == "$BE_REF" ]] || die "pin backend mismatch"
 
-  mapfile -t sf_rt < <(runtime_digest "$sf_name")
-  mapfile -t be_rt < <(runtime_digest "$be_name")
-  [[ "${sf_rt[0]}" == "$SF_REF" ]] || die "runtime storefront digest mismatch"
-  [[ "${be_rt[0]}" == "$BE_REF" ]] || die "runtime backend digest mismatch"
-  [[ "${sf_rt[3]}" == "healthy" && "${be_rt[3]}" == "healthy" ]] || die "containers not healthy"
+  wr_pc_release_sha_fill_runtime "$sf_name" sf_dig sf_id sf_started sf_health
+  wr_pc_release_sha_fill_runtime "$be_name" be_dig be_id be_started be_health
+  [[ "$sf_dig" == "$SF_REF" ]] || die "runtime storefront digest mismatch"
+  [[ "$be_dig" == "$BE_REF" ]] || die "runtime backend digest mismatch"
+  [[ "$sf_health" == "healthy" && "$be_health" == "healthy" ]] || die "containers not healthy"
+
+  # Exposure / role / DB alias gates (profile-driven). No public Traefik.
+  wr_assert_container_matches_environment "$sf_name" storefront \
+    || die "storefront environment identity gate failed"
+  wr_assert_container_matches_environment "$be_name" backend \
+    || die "backend environment identity gate failed"
+  wr_pc_release_sha_assert_no_public_traefik "$sf_name" || die "storefront public Traefik refused"
+  wr_pc_release_sha_assert_no_public_traefik "$be_name" || die "backend public Traefik refused"
 
   sf_oci="$(wr_pc_release_sha_oci_of_ref "$SF_REF")"
   be_oci="$(wr_pc_release_sha_oci_of_ref "$BE_REF")"
@@ -92,7 +153,9 @@ wr_pc_release_sha_run() {
   "metadata_only": true,
   "container_recreate_planned": false,
   "pin_image_write_planned": false,
+  "release_sha_write_planned": false,
   "compose_release_sha_write_planned": false,
+  "runtime_recreate_planned": false,
   "runtime_mutation_planned": false
 }
 EOF
@@ -109,10 +172,13 @@ EOF
   "metadata_only": true,
   "container_recreate_planned": false,
   "pin_image_write_planned": false,
+  "release_sha_write_planned": true,
   "compose_release_sha_write_planned": true,
+  "runtime_recreate_planned": false,
   "runtime_mutation_planned": false,
   "application_source_sha": "$want_sha",
   "current_release_sha_present": $([[ -n "$release_now" ]] && echo true || echo false),
+  "current_release_sha_matches_target": $([[ "$release_now" == "$want_sha" ]] && echo true || echo false),
   "pins": {"storefront": "$pin_sf", "backend": "$pin_be"},
   "runtime_digests_match": true,
   "oci_revisions_match": true,
@@ -138,21 +204,31 @@ EOF
   printf '%s\n' "$want_sha" >"$evidence_dir/json/application-source-sha.txt"
   printf '%s\n' "$CURRENT_HELPER_SHA" >"$evidence_dir/json/metadata-correction-helper-sha.txt"
   printf '%s\n' "compose-common-release-sha" >"$evidence_dir/json/correction.txt"
+  printf '%s\n' "$sf_id" >"$evidence_dir/json/storefront-id-frozen.txt"
+  printf '%s\n' "$be_id" >"$evidence_dir/json/backend-id-frozen.txt"
+  printf '%s\n' "$sf_started" >"$evidence_dir/json/storefront-started-at-frozen.txt"
+  printf '%s\n' "$be_started" >"$evidence_dir/json/backend-started-at-frozen.txt"
   # Checksums only - never copy secret-bearing .env into evidence unless under pin-backup with 0600
   before_sha="$(wr_compose_env_sha256 "$compose_env")"
   printf '%s\n' "$before_sha" >"$evidence_dir/json/compose-env-before.sha256"
   cp -p "$compose_env" "$evidence_dir/pin-backup/dokploy-compose.env"
   chmod 0600 "$evidence_dir/pin-backup/dokploy-compose.env"
 
-  wr_staging_lock_acquire "reconcile-production-candidate-compose-release-sha" || die "lock contention"
+  # Align staging-lock path with the production profile mutation lock.
+  WR_STAGING_MUTATION_LOCK_PATH="${WOODRIGHT_MUTATION_LOCK_PATH:?}"
+  export WR_STAGING_MUTATION_LOCK_PATH
+  WR_STAGING_MUTATION_LOCK_DIR="$(dirname "$WR_STAGING_MUTATION_LOCK_PATH")"
+  WR_STAGING_MUTATION_LOCK_META="${WR_STAGING_MUTATION_LOCK_PATH}.meta"
+
+  wr_staging_mutation_lock_acquire "reconcile-production-candidate-compose-release-sha" || die "lock contention"
   LOCK_HELD=1
-  trap 'if [[ "${LOCK_HELD:-0}" == "1" ]]; then wr_staging_lock_release || true; LOCK_HELD=0; fi' EXIT
+  trap 'if [[ "${LOCK_HELD:-0}" == "1" ]]; then wr_staging_mutation_lock_release || true; LOCK_HELD=0; fi' EXIT
 
   # Under-lock re-gates (Codex: re-run every gate before/after write)
-  mapfile -t sf_rt2 < <(runtime_digest "$sf_name")
-  mapfile -t be_rt2 < <(runtime_digest "$be_name")
-  [[ "${sf_rt2[1]}" == "${sf_rt[1]}" && "${be_rt2[1]}" == "${be_rt[1]}" ]] || die "container IDs changed under lock"
-  [[ "${sf_rt2[0]}" == "$SF_REF" && "${be_rt2[0]}" == "$BE_REF" ]] || die "runtime digests changed under lock"
+  wr_pc_release_sha_fill_runtime "$sf_name" sf_dig2 sf_id2
+  wr_pc_release_sha_fill_runtime "$be_name" be_dig2 be_id2
+  [[ "$sf_id2" == "$sf_id" && "$be_id2" == "$be_id" ]] || die "container IDs changed under lock"
+  [[ "$sf_dig2" == "$SF_REF" && "$be_dig2" == "$BE_REF" ]] || die "runtime digests changed under lock"
   [[ "$(pin_of WOODRIGHT_STOREFRONT_IMAGE)" == "$SF_REF" ]] || die "storefront pin changed under lock"
   [[ "$(pin_of WOODRIGHT_BACKEND_IMAGE)" == "$BE_REF" ]] || die "backend pin changed under lock"
   [[ "$(wr_pc_release_sha_oci_of_ref "$SF_REF")" == "$want_sha" ]] || die "storefront OCI changed under lock"
@@ -208,9 +284,9 @@ EOF
     wr_compose_env_restore_backup "$evidence_dir/pin-backup/dokploy-compose.env" "$compose_env" "$allowed_root" || true
     die "storefront pin drifted after release-sha write"
   }
-  mapfile -t sf_rt2 < <(runtime_digest "$sf_name")
-  mapfile -t be_rt2 < <(runtime_digest "$be_name")
-  [[ "${sf_rt2[1]}" == "${sf_rt[1]}" && "${be_rt2[1]}" == "${be_rt[1]}" ]] || {
+  wr_pc_release_sha_fill_runtime "$sf_name" sf_dig2 sf_id2
+  wr_pc_release_sha_fill_runtime "$be_name" be_dig2 be_id2
+  [[ "$sf_id2" == "$sf_id" && "$be_id2" == "$be_id" ]] || {
     wr_compose_env_restore_backup "$evidence_dir/pin-backup/dokploy-compose.env" "$compose_env" "$allowed_root" || true
     die "containers mutated during metadata-only release-sha write"
   }
@@ -232,7 +308,7 @@ EOF
 }
 EOF
   log "PRODUCTION_CANDIDATE_COMPOSE_RELEASE_SHA_OK sha=$want_sha"
-  wr_staging_lock_release || true
+  wr_staging_mutation_lock_release || true
   LOCK_HELD=0
   return 0
 }

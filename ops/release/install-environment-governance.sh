@@ -247,6 +247,7 @@ FILES=(
   ops/release/cutover-production-candidate.sh
   ops/release/recover-production-candidate-skew.sh
   ops/release/reconcile-production-candidate-metadata.sh
+  ops/release/reconcile-production-release-sha.sh
   ops/release/public-demo-critical-http-smoke.sh
   ops/release/rollback-staging-backend-from-keeper.sh
   ops/release/rollback-staging-storefront-from-keeper.sh

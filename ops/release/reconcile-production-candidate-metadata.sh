@@ -174,9 +174,15 @@ runtime_digest() {
   python3 - "$name" <<'PY'
 import json, subprocess, sys
 name = sys.argv[1]
-d = json.loads(subprocess.check_output(["docker", "inspect", name], text=True))[0]
-img = json.loads(subprocess.check_output(["docker", "image", "inspect", d["Image"]], text=True))[0]
-digs = img.get("RepoDigests") or []
+
+def first(obj):
+    if isinstance(obj, list):
+        return obj[0] if obj else {}
+    return obj or {}
+
+d = first(json.loads(subprocess.check_output(["docker", "inspect", name], text=True)))
+img = first(json.loads(subprocess.check_output(["docker", "image", "inspect", d["Image"]], text=True)))
+digs = img.get("RepoDigests") or d.get("RepoDigests") or []
 print(digs[0] if digs else "")
 print(d["Id"])
 print(d["State"]["StartedAt"])

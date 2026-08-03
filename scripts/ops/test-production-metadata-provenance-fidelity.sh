@@ -144,9 +144,17 @@ rlist = json.loads(re.search(r"REQUIRED_JSON='(\[.*?\])'", ver, re.S).group(1))
 assert flist == rlist, (set(flist)-set(rlist), set(rlist)-set(flist))
 assert "ops/lib/woodright-install-provenance.sh" in flist
 assert "ops/release/reconcile-production-candidate-metadata.sh" in flist
+assert "ops/release/reconcile-production-release-sha.sh" in flist
 assert "docs/operator/production-helper-install-provenance.md" in flist
 PY
-pass "installer FILES matches verify REQUIRED_JSON (incl provenance)"
+pass "installer FILES matches verify REQUIRED_JSON (incl provenance + release-sha wrapper)"
+
+grep -q 'compose-common-release-sha' "$HELPER" \
+  && grep -q 'I_UNDERSTAND_PRODUCTION_METADATA_COMPOSE_RELEASE_SHA_CORRECTION' \
+    "$ROOT/ops/lib/woodright-production-release-sha-reconcile.sh" \
+  && pass "compose-common-release-sha correction present" || fail "compose-common-release-sha missing"
+[[ -f "$ROOT/ops/release/reconcile-production-release-sha.sh" ]] \
+  && pass "thin release-sha wrapper exists" || fail "thin wrapper missing"
 
 # recovery helper no longer defaults to legacy cutover marker as primary
 grep -q 'wr_resolve_installed_governance_sha' "$ROOT/ops/release/recover-production-candidate-skew.sh" \
