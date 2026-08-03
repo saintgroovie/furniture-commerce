@@ -315,13 +315,15 @@ labels = {
     "com.woodright.database-identity": "non_public_candidate_db",
     "org.opencontainers.image.title": title,
     "com.docker.compose.project": "woodright-production",
+    "com.docker.compose.service": service,
+    "com.docker.compose.container-number": "1",
     "com.woodright.release-sha": os.environ.get("WOODRIGHT_FAKE_RELEASE_SHA", ""),
 }
 if defect("WOODRIGHT_FAKE_COMPOSE_PUBLIC_TRAEFIK"):
     labels["traefik.enable"] = "true"
     labels["traefik.http.routers.wr.rule"] = "Host(`woodright.ru`)"
 doc = [{
-    "Id": f"id-{service}-new",
+    "Id": f"id-{service}-new-{int(time.time()*1000)}",
     "Name": f"/{name}",
     "Image": digest,
     "RepoDigests": [f"ghcr.io/saintgroovie/{title}@{digest}"],

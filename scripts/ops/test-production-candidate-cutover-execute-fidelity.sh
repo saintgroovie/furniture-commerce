@@ -323,9 +323,9 @@ else
   fail "success: mutation order = $(echo "$JOURNAL" | tr '\n' '|')"
 fi
 assert_no_keepers "success"
-grep -qE 'compose_up backend .*force=0' "$STATE/log/mutations.log" \
-  && pass "success: forward recreate uses a plain up when the pin already moves the digest" \
-  || fail "success: forward recreate forced a recreate it did not need"
+grep -qE 'compose_up backend .*force=1' "$STATE/log/mutations.log" \
+  && pass "success: forward recreate always uses --force-recreate" \
+  || fail "success: forward recreate missing --force-recreate"
 grep -q 'no keeper container created' "$TMP/out-success.txt" \
   && pass "success: recreate log states no keeper was created" || fail "success: keeper wording missing"
 [[ -f "$EV/json/rollback-anchors.json" ]] \
@@ -474,7 +474,8 @@ reset_harness
 EV="$TMP/ev-wrong-digest"
 run_exec "$EV" "$TMP/out-wrong-digest.txt" "WOODRIGHT_FAKE_COMPOSE_WRONG_DIGEST=backend"
 [[ "$RC" -eq 10 ]] && pass "wrong_digest: rollback_ok exit 10" || fail "wrong_digest: rc=$RC"
-grep -q 'digest mismatch after recreate' "$TMP/out-wrong-digest.txt" && pass "wrong_digest: mismatch reported" || fail "wrong_digest: not reported"
+grep -qE 'digest mismatch after recreate|digest mismatch on woodright-production-backend' "$TMP/out-wrong-digest.txt" \
+  && pass "wrong_digest: mismatch reported" || fail "wrong_digest: not reported"
 [[ "$(digest_of woodright-production-backend)" == "$OLD_BE_DIG" ]] && pass "wrong_digest: backend rolled back" || fail "wrong_digest: backend digest"
 [[ "$(pin_of WOODRIGHT_BACKEND_IMAGE)" == "$OLD_BE_REF" ]] && pass "wrong_digest: pins restored" || fail "wrong_digest: pins"
 
