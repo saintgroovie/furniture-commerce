@@ -130,13 +130,13 @@ for i in range(0, len(args), 2):
     updates[k] = v
     order.append(k)
 lines = open(src, "r", encoding="utf-8").read().splitlines()
-  # Pre-check duplicates / noncanonical forms for keys we touch
-  for k in order:
+# Pre-check duplicates / noncanonical forms for keys we touch
+import re
+for k in order:
     hits = [l for l in lines if l.startswith(k + "=")]
     if len(hits) > 1:
         print(f"COMPOSE_ENV_DUPLICATE_KEY {k}", file=sys.stderr)
         sys.exit(1)
-    import re
     pat = re.compile(rf'^[ \t]*(?:export[ \t]+)?{re.escape(k)}[ \t]*=')
     all_forms = [l for l in lines if pat.match(l)]
     if len(all_forms) > 1:

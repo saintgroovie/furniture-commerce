@@ -1177,7 +1177,8 @@ write_pair_pins_atomic() {
   be_want="$(target_ref_for backend)"
   sf_want="$(target_ref_for storefront)"
   compose_parent="$(dirname -- "$COMPOSE_ENV_FILE")"
-  wr_compose_env_assert_path_under "$COMPOSE_ENV_FILE" "$compose_parent" || return 1
+  allowed_root="${WOODRIGHT_DOKPLOY_COMPOSE_DIR:-$compose_parent}"
+  wr_compose_env_assert_path_under "$COMPOSE_ENV_FILE" "$allowed_root" || return 1
   wr_compose_env_assert_no_duplicate_governed_keys "$COMPOSE_ENV_FILE" || return 1
 
   if [[ "$(wr_oci_image_revision "$be_want")" == "$SOURCE_SHA" \
