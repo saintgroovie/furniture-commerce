@@ -110,6 +110,11 @@ wr_compose_assert_no_service_owned_keeper() {
     ids+=("$id")
   done <<<"$ps_out"
 
+  # Under `set -u`, "${ids[@]}" is unbound when the array is empty (bash < 4.4
+  # and some macOS /bin/bash builds). Empty means no service-owned containers
+  # matched the label filter — that is success after a clean recreate.
+  ((${#ids[@]} > 0)) || return 0
+
   for id in "${ids[@]}"; do
     name="$("$docker_bin" inspect --format '{{.Name}}' "$id" | sed 's#^/##')"
     [[ "$name" == "$canonical" ]] && continue
