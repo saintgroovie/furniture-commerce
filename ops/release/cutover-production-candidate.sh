@@ -102,6 +102,8 @@ source "$HERE/../lib/woodright-environment-profile.sh"
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib/woodright-install-provenance.sh"
 # shellcheck source=../lib/woodright-cutover-common.sh
 source "$HERE/../lib/woodright-cutover-common.sh"
+# shellcheck source=../lib/woodright-compose-service-recreate.sh
+source "$HERE/../lib/woodright-compose-service-recreate.sh"
 # shellcheck source=../lib/woodright-component-authority.sh
 source "$HERE/../lib/woodright-component-authority.sh"
 # shellcheck source=../lib/woodright-oci-provenance.sh
@@ -1740,51 +1742,46 @@ test_pause_at pins_written
 # --- recreate ---------------------------------------------------------------
 # Forward recreate never renames the live container aside. A renamed container
 # keeps its com.docker.compose.* labels, so the very next `compose up` for the
-# same project/service treats it as the service's container and recreates or
-# removes it - the "keeper" evaporates exactly when rollback would need it.
-# The rollback anchor is the pin backup plus PRE_*_REF instead.
+# same project/service treats it as the service's container and may exit 0
+# without creating the canonical name (or --force-recreate adopts/destroys the
+# keeper). Rollback authority is the pin backup plus PRE_*_REF instead.
+# Always --force-recreate: plain `up` is a no-op when digests already match
+# (identity reconcile refreshing RELEASE_SHA/env) and Compose exit 0 is not
+# proof of a new container.
 recreate_component() {
   local kind="$1"
-  local name want_digest fault forced=0
+  local name want_digest fault prev_id up_rc=0
   if [[ "$kind" == "backend" ]]; then
     name="${WOODRIGHT_BE_CONTAINER_DEFAULT}"; want_digest="${BE_REF##*@}"; fault="backend_recreate"
   else
     name="${WOODRIGHT_SF_CONTAINER_DEFAULT}"; want_digest="${SF_REF##*@}"; fault="storefront_recreate"
   fi
-  local up_rc=0
-  compose_up "$kind" >&2 || up_rc=$?
+  prev_id="$(prod_docker inspect --format '{{.Id}}' "$name" 2>/dev/null || true)"
+  compose_up "$kind" --force-recreate >&2 || up_rc=$?
   if wr_fault "$fault"; then up_rc=1; fi
   if [[ "$up_rc" -ne 0 ]]; then
-    log "$kind: compose up failed rc=$up_rc"
+    log "$kind: compose up --force-recreate failed rc=$up_rc"
     return 1
   fi
-  prod_docker inspect "$name" >/dev/null 2>&1 || {
-    log "$kind: recreated container '$name' is missing after compose up"
+  if ! wr_compose_verify_recreate_postconditions \
+      "$kind" "$name" "$prev_id" "$want_digest" "${WOODRIGHT_COMPOSE_PROJECT}"; then
+    log "$kind: recreate postconditions failed"
     return 1
-  }
+  fi
+  if ! wr_compose_assert_no_service_owned_keeper \
+      "${WOODRIGHT_COMPOSE_PROJECT}" "$kind" "$name"; then
+    log "$kind: compose service still owned by a non-canonical container"
+    return 1
+  fi
   local got
   got="$(container_digest "$name")"
-  # A plain `up -d` recreates on a changed image pin. --force-recreate is the
-  # documented fallback for the case where Compose still considers the existing
-  # container up to date; it is only used when the digest did not move.
-  if [[ "$got" != "$want_digest" ]]; then
-    log "$kind: still on $got after compose up - retrying with --force-recreate"
-    forced=1
-    up_rc=0
-    compose_up "$kind" --force-recreate >&2 || up_rc=$?
-    if [[ "$up_rc" -ne 0 ]]; then
-      log "$kind: compose up --force-recreate failed rc=$up_rc"
-      return 1
-    fi
-    got="$(container_digest "$name")"
-  fi
   if wr_fault wrong_digest_after_recreate; then got="sha256:$(printf '0%.0s' {1..64})"; fi
   if [[ "$got" != "$want_digest" ]]; then
     log "$kind: digest mismatch after recreate have=$got want=$want_digest"
     return 1
   fi
   COMPONENTS_RECREATED="${COMPONENTS_RECREATED} ${kind}"
-  log "$kind: recreated at $want_digest (force_recreate=$forced, no keeper container created)"
+  log "$kind: recreated at $want_digest (force_recreate=1, no keeper container created)"
   return 0
 }
 

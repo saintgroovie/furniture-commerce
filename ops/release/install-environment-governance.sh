@@ -235,6 +235,7 @@ FILES=(
   ops/lib/woodright-runtime-discovery.sh
   ops/lib/woodright-cutover-common.sh
   ops/lib/woodright-install-provenance.sh
+  ops/lib/woodright-compose-service-recreate.sh
   ops/config/runtime-environments/public_demo.conf
   ops/config/runtime-environments/staging.conf
   ops/config/runtime-environments/production.conf
@@ -270,6 +271,7 @@ role_for() {
     ops/release/rollback-staging-backend-from-keeper.sh) echo backend_rollback ;;
     ops/release/rollback-staging-storefront-from-keeper.sh) echo storefront_rollback ;;
     ops/lib/woodright-cutover-common.sh) echo cutover_common ;;
+    ops/lib/woodright-compose-service-recreate.sh) echo compose_service_recreate ;;
     ops/lib/woodright-environment-profile.sh) echo environment_profile ;;
     ops/lib/woodright-host-publish.sh) echo host_publish ;;
     ops/lib/woodright-component-authority.sh) echo component_authority ;;
@@ -644,6 +646,7 @@ def role_for(rel: str) -> str:
         "ops/release/rollback-staging-backend-from-keeper.sh": "backend_rollback",
         "ops/release/rollback-staging-storefront-from-keeper.sh": "storefront_rollback",
         "ops/lib/woodright-cutover-common.sh": "cutover_common",
+        "ops/lib/woodright-compose-service-recreate.sh": "compose_service_recreate",
         "ops/lib/woodright-environment-profile.sh": "environment_profile",
         "ops/lib/woodright-host-publish.sh": "host_publish",
         "ops/lib/woodright-component-authority.sh": "component_authority",

@@ -265,3 +265,16 @@ re-run `medusa db:migrate --skip-scripts` from the **target** image after restor
 
 Two HTTP rounds: health, release headers, catalog, Rooms, cart, track, Admin shell, media.
 Confirm staging/public-demo unchanged. No DNS / `woodright.ru` changes in this procedure.
+
+## Compose-safe recreate (no rename keepers)
+
+Do **not** `docker rename` a Compose-managed live container into a keeper before
+`docker compose up`. Compose discovers services by `com.docker.compose.*` labels,
+so rename+up can exit 0 while the canonical name is missing, and
+`--force-recreate` after rename adopts/destroys the keeper.
+
+Production-candidate cutover uses Strategy B: pin backup + immutable image refs
+as rollback authority, and always `compose up -d --no-deps --force-recreate`
+with postconditions (canonical exists, new container ID, digest, compose labels).
+See `ops/lib/woodright-compose-service-recreate.sh` and
+`scripts/ops/test-compose-keeper-recreate-real.sh`.
