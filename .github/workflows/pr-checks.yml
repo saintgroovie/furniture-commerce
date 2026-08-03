@@ -164,6 +164,7 @@ jobs:
           # Runs entirely against a /tmp fake filesystem + docker/compose shims.
           bash scripts/ops/test-production-candidate-cutover-execute-fidelity.sh
           bash scripts/ops/test-public-demo-pair-cutover-fidelity.sh
+          bash scripts/ops/test-public-demo-metadata-authority-fidelity.sh
           bash scripts/ops/test-environment-governance-fidelity.sh
           # Gates S–AC: cutover lock / CAS / TX / active-after-public / recon / audit / drift / cleanup / DQ
           node scripts/release/check-global-lock-policy.cjs scripts/release
