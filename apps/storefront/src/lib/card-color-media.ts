@@ -90,7 +90,11 @@ export type CardExecutionSelectors = {
   greenwichPaintMatrix?: import("./greenwich-paint-media").GreenwichPaintMatrixEntry[]
   /** Provence pv-* paint (cream) × lacquered wood split — separate Цвет/Дерево rows. */
   provencePaintWood?: boolean
-  /** Oliver standalone bed: one selector row per fabric (Lilian, Lorna), not one grouped rail. */
+  /**
+   * Legacy multi-row Oliver fabric-family axes (one toolbar per family).
+   * PASS B.1: builder must not emit this for family-only lists; kept only for
+   * defensive rendering / containment if an older payload still carries it.
+   */
   separateFabricRows?: CardColorVariant[]
 }
 
@@ -137,9 +141,11 @@ export function isFabricFamilyOnlyUpholstery(
 /**
  * Catalog product-card preview containment (PASS A).
  * - Always drops `separateFabricRows` (catalog preview never vertical fabric-family toolbars).
- * - For Oliver (`ol-*`) only: strips fabric-family keys from upholstery/finish.
+ * - For Oliver (`ol-*`) only: strips fabric-family keys from upholstery/finish
+ *   (card preview stays compact; families are not catalog option axes).
  * - Other collections may legitimately reuse tokens like `torno` as finish colors.
- * PDP must keep calling `buildIntraProductExecutionSelectors` without this helper.
+ * PDP uses `buildIntraProductExecutionSelectors` directly; PASS B.1 emits at most
+ * one `upholstery` axis for Oliver fabric families (never `separateFabricRows`).
  */
 export function containCatalogCardExecutionSelectors(
   sel: CardExecutionSelectors,
@@ -1091,12 +1097,26 @@ function isOliverStandaloneMultiFabricProduct(
   return Boolean(metadataFabric && metadataFabric.length >= 2)
 }
 
-function oliverSeparateFabricRowSelectors(
+/**
+ * PASS B.1 — Oliver standalone multi-family fabric list.
+ *
+ * Contract: SINGLE_INTERACTIVE_FAMILY_AXIS
+ * - Families are values of one `Обивка` axis (media preview), not separate section axes.
+ * - Do not emit `separateFabricRows` (that path forces product-thumbnail image swatches).
+ * - PDP renderer must not pass `imageSwatches` for this row (hex/token chips only).
+ * - Price/Medusa variant are unchanged; selection only swaps execution media.
+ */
+function oliverUnifiedFabricFamilySelectors(
   metadataFabric: CardColorVariant[],
   metadataFrame: CardColorVariant[] | undefined
 ): CardExecutionSelectors {
   return {
-    separateFabricRows: metadataFabric,
+    /* Strip any metadata hex: family keys are collections, not evidenced colors. */
+    upholstery: metadataFabric.map((row) => ({
+      ...row,
+      swatchHex: undefined,
+      swatchToken: undefined,
+    })),
     wood: metadataFrame,
     confidence: "canonical",
   }
@@ -1177,7 +1197,7 @@ export function buildIntraProductExecutionSelectors(
           metadataHeadboard
         )
       ) {
-        return oliverSeparateFabricRowSelectors(metadataFabric, metadataFrame)
+        return oliverUnifiedFabricFamilySelectors(metadataFabric, metadataFrame)
       }
       return {
         upholstery: metadataFabric,
@@ -1212,7 +1232,7 @@ export function buildIntraProductExecutionSelectors(
         metadataHeadboard
       )
     ) {
-      return oliverSeparateFabricRowSelectors(metadataFabric, metadataFrame)
+      return oliverUnifiedFabricFamilySelectors(metadataFabric, metadataFrame)
     }
     return {
       upholstery: metadataFabric,

@@ -73,7 +73,9 @@ for (const [handle, keys] of [
 ] as Array<[string, string[]]>) {
   const product = fabricProduct(handle, keys)
   const raw = buildIntraProductExecutionSelectors(product, "/static/x.jpg")
-  assert.ok((raw.separateFabricRows?.length ?? 0) >= 2, handle)
+  // PASS B.1: one upholstery axis (families as values), never separateFabricRows.
+  assert.equal(raw.separateFabricRows, undefined, handle)
+  assert.equal(raw.upholstery?.length, keys.length, handle)
   const card = containCatalogCardExecutionSelectors(raw, product)
   assert.equal(card.separateFabricRows, undefined, handle)
   assert.equal(card.upholstery, undefined, handle)
