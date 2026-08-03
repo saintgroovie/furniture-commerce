@@ -657,43 +657,127 @@ Path(dst).write_text(json.dumps(doc, indent=2) + "\n")
 PY
 }
 
+# Verify regular-file metadata (no symlink). Used before rename and after.
+# When use_sudo=1, inspect via sudo -n (staged temps may be in root-only dirs).
+_wr_pin_verify_meta() {
+  local path="$1" mode="$2" owner="$3" group="$4" label="${5:-path}" use_sudo="${6:-0}"
+  local -a runner=(python3)
+  if [[ "$use_sudo" == "1" ]]; then
+    runner=(sudo -n python3)
+  fi
+  "${runner[@]}" - "$path" "$mode" "$owner" "$group" "$label" <<'PY'
+import os, stat, sys
+path, mode, owner, group, label = sys.argv[1:6]
+if os.path.islink(path):
+    raise SystemExit(f"{label} is a symlink: {path}")
+st = os.lstat(path)
+if not stat.S_ISREG(st.st_mode):
+    raise SystemExit(f"{label} is not a regular file: {path}")
+amode = oct(stat.S_IMODE(st.st_mode))[2:]
+aowner = f"{st.st_uid}:{st.st_gid}"
+if amode != mode:
+    raise SystemExit(f"mode not preserved for {path} ({amode} != {mode})")
+if aowner != f"{owner}:{group}":
+    raise SystemExit(f"owner not preserved for {path} ({aowner} != {owner}:{group})")
+PY
+}
+
+# Resolve canonical owner/group/mode for an authority/pin destination.
+# Existing dest wins; missing dest inherits from non-symlink parent directory
+# (never effective root ownership as a silent fallback).
+_wr_pin_dest_meta() {
+  local dest="$1"
+  local parent mode owner group
+  parent="$(dirname "$dest")"
+  if [[ -L "$parent" ]]; then
+    echo "error: parent directory is a symlink: $parent" >&2
+    return 1
+  fi
+  if [[ -e "$dest" || -L "$dest" ]]; then
+    if [[ -L "$dest" ]]; then
+      echo "error: destination is a symlink: $dest" >&2
+      return 1
+    fi
+    if [[ ! -f "$dest" ]]; then
+      echo "error: destination is not a regular file: $dest" >&2
+      return 1
+    fi
+    mode="$(python3 -c 'import os,stat; st=os.lstat("'"$dest"'"); print(oct(stat.S_IMODE(st.st_mode))[2:])')"
+    owner="$(python3 -c 'import os; print(os.lstat("'"$dest"'").st_uid)')"
+    group="$(python3 -c 'import os; print(os.lstat("'"$dest"'").st_gid)')"
+  else
+    [[ -d "$parent" ]] || {
+      echo "error: destination parent missing: $parent" >&2
+      return 1
+    }
+    # New authority files default to mode 0600; inherit parent ownership.
+    mode="${WOODRIGHT_PIN_NEW_FILE_MODE:-600}"
+    owner="$(python3 -c 'import os; print(os.stat("'"$parent"'").st_uid)')"
+    group="$(python3 -c 'import os; print(os.stat("'"$parent"'").st_gid)')"
+  fi
+  printf '%s %s %s' "$mode" "$owner" "$group"
+}
+
 atomic_install() {
   local src_tmp="$1" dest="$2"
-  local mode owner group
-  mode="$(python3 -c 'import os,stat; st=os.stat("'"$dest"'"); print(oct(stat.S_IMODE(st.st_mode))[2:])')"
-  owner="$(python3 -c 'import os; print(os.stat("'"$dest"'").st_uid)')"
-  group="$(python3 -c 'import os; print(os.stat("'"$dest"'").st_gid)')"
+  local mode owner group meta
   local dir base safe_base staged
+  local euid
+  euid="$(id -u)"
+
+  meta="$(_wr_pin_dest_meta "$dest")" || return 1
+  # shellcheck disable=SC2086
+  set -- $meta
+  mode="$1"
+  owner="$2"
+  group="$3"
+
   dir="$(dirname "$dest")"
   base="$(basename "$dest")"
   # Avoid ".env" → staged name "..env.*" (hidden-dot collision).
   safe_base="${base#.}"
   [[ -n "$safe_base" ]] || safe_base="target"
-  # Secure exclusive create in dest dir (mitigates predictable-name symlink races
-  # when USE_SUDO elevates for a sibling root-owned target in the same transaction).
+
+  # Secure exclusive create in dest dir (same filesystem → rename(2) keeps staged ownership).
+  # Incident 2026-08-03: pair cutover under `sudo` runs reconciler with euid=0, so
+  # need_sudo_for returns false (root can write) and USE_SUDO=0. The previous
+  # non-sudo branch never chown'd → final owner 0:0 vs canonical 1000:1000.
+  # Contract: always apply exact destination UID:GID:mode on the staged file
+  # before atomic rename, whether elevated via sudo or already root.
   if [[ "$USE_SUDO" == "1" ]]; then
     staged="$(sudo -n mktemp "${dir}/.wr-reconcile.${safe_base}.XXXXXX")"
     sudo -n cp "$src_tmp" "$staged"
     sudo -n chmod "$mode" "$staged"
     sudo -n chown "${owner}:${group}" "$staged"
+    _wr_pin_verify_meta "$staged" "$mode" "$owner" "$group" "staged" 1 || {
+      sudo -n rm -f "$staged" 2>/dev/null || true
+      return 1
+    }
     sudo -n mv -f "$staged" "$dest"
   else
     staged="$(mktemp "${dir}/.wr-reconcile.${safe_base}.XXXXXX")"
     cp "$src_tmp" "$staged"
     chmod "$mode" "$staged"
+    # Preserve canonical destination ownership when creating as root (euid=0)
+    # or whenever staged ownership already differs from the destination contract.
+    if [[ "$euid" -eq 0 ]]; then
+      chown "${owner}:${group}" "$staged"
+    elif [[ "$(python3 -c 'import os; print(os.lstat("'"$staged"'").st_uid)')" != "$owner" \
+         || "$(python3 -c 'import os; print(os.lstat("'"$staged"'").st_gid)')" != "$group" ]]; then
+      # Non-root: only succeed when permitted (typically owner==self).
+      chown "${owner}:${group}" "$staged" 2>/dev/null || {
+        rm -f "$staged"
+        echo "error: cannot set staged ownership ${owner}:${group} for $dest (euid=$euid)" >&2
+        return 1
+      }
+    fi
+    _wr_pin_verify_meta "$staged" "$mode" "$owner" "$group" "staged" 0 || {
+      rm -f "$staged"
+      return 1
+    }
     mv -f "$staged" "$dest"
   fi
-  python3 - "$dest" "$mode" "$owner" "$group" <<'PY'
-import os, stat, sys
-dest, mode, owner, group = sys.argv[1:5]
-st = os.stat(dest)
-amode = oct(stat.S_IMODE(st.st_mode))[2:]
-aowner = f"{st.st_uid}:{st.st_gid}"
-if amode != mode:
-    raise SystemExit(f"mode not preserved for {dest} ({amode} != {mode})")
-if aowner != f"{owner}:{group}":
-    raise SystemExit(f"owner not preserved for {dest} ({aowner} != {owner}:{group})")
-PY
+  _wr_pin_verify_meta "$dest" "$mode" "$owner" "$group" "destination" "$USE_SUDO" || return 1
 }
 
 print_pin_diff() {

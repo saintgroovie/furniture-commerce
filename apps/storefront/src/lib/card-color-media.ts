@@ -32,6 +32,7 @@ import {
   isGreenwichPaintProduct,
 } from "./greenwich-paint-media"
 import { isMilkLikeFinishKey } from "../../../backend/src/lib/country-finish-labels"
+import { productWithNormalizedUpholsteryMetadata } from "../../../backend/src/lib/upholstery-color-normalization"
 
 export type CardColorVariant = {
   key: string
@@ -1105,29 +1106,38 @@ export function buildIntraProductExecutionSelectors(
   product: Record<string, unknown>,
   mainSrc: string
 ): CardExecutionSelectors {
-  const greenwichBed = greenwichBedSelectorsFromMetadata(product)
+  /* PASS B: normalize fabric/finish taxonomy in-memory before selectors.
+     Does not mutate Medusa DB; does not invent colors. */
+  const { product: normalizedProduct } =
+    productWithNormalizedUpholsteryMetadata(product)
+
+  const greenwichBed = greenwichBedSelectorsFromMetadata(normalizedProduct)
   if (greenwichBed) return greenwichBed
 
-  const greenwichPaint = greenwichPaintSelectorsFromMetadata(product)
+  const greenwichPaint = greenwichPaintSelectorsFromMetadata(normalizedProduct)
   if (greenwichPaint) return greenwichPaint
 
-  const provencePaintWood = provencePaintWoodSelectorsFromMetadata(product)
+  const provencePaintWood =
+    provencePaintWoodSelectorsFromMetadata(normalizedProduct)
   if (provencePaintWood) return provencePaintWood
 
   const handleEarly =
-    typeof product.handle === "string" ? product.handle.toLowerCase() : ""
+    typeof normalizedProduct.handle === "string"
+      ? normalizedProduct.handle.toLowerCase()
+      : ""
   if (handleEarly.startsWith("pv-")) {
-    const urls = collectProvenceExecutionEvidenceUrls(product)
+    const urls = collectProvenceExecutionEvidenceUrls(normalizedProduct)
     if (!hasProvencePaintWoodDualFinishEvidence(urls, handleEarly)) {
       return { confidence: "metadata_blocked" }
     }
   }
 
-  const metadataHeadboard = headboardExecutionsFromMetadata(product)
-  const metadataFabric = fabricUpholsteryExecutionsFromMetadata(product)
-  const metadataPaint = finishExecutionsFromMetadata(product)
-  const metadataFrame = frameMaterialExecutionsFromMetadata(product)
-  const metadataConstruction = constructionTierExecutionsFromMetadata(product)
+  const metadataHeadboard = headboardExecutionsFromMetadata(normalizedProduct)
+  const metadataFabric = fabricUpholsteryExecutionsFromMetadata(normalizedProduct)
+  const metadataPaint = finishExecutionsFromMetadata(normalizedProduct)
+  const metadataFrame = frameMaterialExecutionsFromMetadata(normalizedProduct)
+  const metadataConstruction =
+    constructionTierExecutionsFromMetadata(normalizedProduct)
 
   if (metadataHeadboard) {
     const out: CardExecutionSelectors = {
@@ -1137,7 +1147,7 @@ export function buildIntraProductExecutionSelectors(
     if (metadataFabric) out.upholstery = metadataFabric
     if (metadataPaint) {
       out.finish = metadataPaint
-      out.finishLabel = finishLabelForProduct(product)
+      out.finishLabel = finishLabelForProduct(normalizedProduct)
     }
     return out
   }
@@ -1154,11 +1164,19 @@ export function buildIntraProductExecutionSelectors(
     if (
       executionKeysMatch(metadataPaint, metadataFabric) ||
       shouldSuppressOliverFinishWhenFabricCanonical(
-        typeof product.handle === "string" ? product.handle : undefined,
-        product.metadata as Record<string, unknown> | undefined
+        typeof normalizedProduct.handle === "string"
+          ? normalizedProduct.handle
+          : undefined,
+        normalizedProduct.metadata as Record<string, unknown> | undefined
       )
     ) {
-      if (isOliverStandaloneMultiFabricProduct(product, metadataFabric, metadataHeadboard)) {
+      if (
+        isOliverStandaloneMultiFabricProduct(
+          normalizedProduct,
+          metadataFabric,
+          metadataHeadboard
+        )
+      ) {
         return oliverSeparateFabricRowSelectors(metadataFabric, metadataFrame)
       }
       return {
@@ -1169,7 +1187,7 @@ export function buildIntraProductExecutionSelectors(
     }
     return {
       finish: metadataPaint,
-      finishLabel: finishLabelForProduct(product),
+      finishLabel: finishLabelForProduct(normalizedProduct),
       upholstery: metadataFabric,
       wood: metadataFrame,
       confidence: "canonical",
@@ -1179,7 +1197,7 @@ export function buildIntraProductExecutionSelectors(
   if (metadataPaint) {
     const out: CardExecutionSelectors = {
       finish: metadataPaint,
-      finishLabel: finishLabelForProduct(product),
+      finishLabel: finishLabelForProduct(normalizedProduct),
       confidence: "canonical",
     }
     if (metadataFrame) out.wood = metadataFrame
@@ -1187,7 +1205,13 @@ export function buildIntraProductExecutionSelectors(
   }
 
   if (metadataFabric) {
-    if (isOliverStandaloneMultiFabricProduct(product, metadataFabric, metadataHeadboard)) {
+    if (
+      isOliverStandaloneMultiFabricProduct(
+        normalizedProduct,
+        metadataFabric,
+        metadataHeadboard
+      )
+    ) {
       return oliverSeparateFabricRowSelectors(metadataFabric, metadataFrame)
     }
     return {
@@ -1204,7 +1228,8 @@ export function buildIntraProductExecutionSelectors(
     }
   }
 
-  const metadataMaterialTier = materialTierExecutionsFromMetadata(product)
+  const metadataMaterialTier =
+    materialTierExecutionsFromMetadata(normalizedProduct)
   if (metadataMaterialTier) {
     return {
       finish: metadataMaterialTier,
@@ -1214,24 +1239,31 @@ export function buildIntraProductExecutionSelectors(
   }
 
   const mainNorm = mainSrc.trim()
-  const productUrls = collectProductImageUrls(product)
-  const handle = typeof product.handle === "string" ? product.handle.toLowerCase() : ""
+  const productUrls = collectProductImageUrls(normalizedProduct)
+  const handle =
+    typeof normalizedProduct.handle === "string"
+      ? normalizedProduct.handle.toLowerCase()
+      : ""
   if (detectOliverGalleryColorHeroPair(productUrls) && handle.startsWith("ol-")) {
     return { confidence: "metadata_blocked" }
   }
 
   const { upholsteryBuckets, woodBuckets, modelBuckets } =
-    bucketProductImages(product)
+    bucketProductImages(normalizedProduct)
 
   const headboard = buildModelVariantsFromBuckets(modelBuckets, mainNorm)
   const upholstery = buildColorVariantsFromBuckets(
     upholsteryBuckets,
     mainNorm,
-    product
+    normalizedProduct
   )
-  const wood = buildColorVariantsFromBuckets(woodBuckets, mainNorm, product)
+  const wood = buildColorVariantsFromBuckets(
+    woodBuckets,
+    mainNorm,
+    normalizedProduct
+  )
 
-  const upholstered = isUpholsteredProduct(product)
+  const upholstered = isUpholsteredProduct(normalizedProduct)
   const hasUpholstery = Boolean(upholstery && upholstery.length > 1)
   const hasWood = Boolean(wood && wood.length > 1)
 
@@ -1251,7 +1283,7 @@ export function buildIntraProductExecutionSelectors(
     out.confidence = "metadata_blocked"
   } else if (hasWood && !upholstered) {
     out.finish = wood
-    out.finishLabel = finishLabelForProduct(product)
+    out.finishLabel = finishLabelForProduct(normalizedProduct)
     out.confidence = "heuristic"
   } else if (out.headboard) {
     out.confidence = "metadata_blocked"
