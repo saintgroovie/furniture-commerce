@@ -18,13 +18,11 @@
  * Explicit callers that pass their own `raw` value (as the fidelity test
  * does) are unaffected; only the default-parameter env read changes.
  */
+import { DEMO_HOSTS, LOOPBACK_HOST_RE } from "./demo-hosts"
 import {
-  DEMO_HOSTS,
-  LOOPBACK_HOST_RE,
   launchModeToIndexingMode,
   parseLaunchModeLenient,
-} from "./launch-contract"
-
+} from "./launch-mode"
 export type IndexingMode = "noindex" | "index"
 
 export const X_ROBOTS_TAG_NOINDEX = "noindex, nofollow, noarchive"

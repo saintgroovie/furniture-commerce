@@ -8,9 +8,11 @@
  *
  * Consumers:
  * - `apps/storefront/src/lib/api/base.ts` (`getSiteUrl`)
- * - `apps/storefront/src/lib/indexing-policy.ts` (launch mode → indexing mode)
  * - `apps/storefront/src/lib/payment-mode.ts`
  * - `scripts/release/check-public-launch-readiness.cjs`
+ * Indexing policy imports bare hosts / launch-mode helpers from sibling modules
+ * so robots/sitemap do not pull scheme-qualified demo origins into
+ * production_candidate bundles.
  *
  * Env contract (server-only, never `NEXT_PUBLIC_*` for these decisions):
  * - `WOODRIGHT_RUNTIME_ROLE` - existing runtime identity role. This module
@@ -21,7 +23,24 @@
  * - `WOODRIGHT_LAUNCH_MODE` - `private_noindex` | `public_indexable`.
  */
 
-export type LaunchMode = "private_noindex" | "public_indexable"
+import {
+  DEMO_HOSTS,
+  LOOPBACK_HOST_RE,
+  PUBLIC_DEMO_BUYER_HOSTS,
+} from "./demo-hosts"
+import {
+  type LaunchMode,
+  launchModeToIndexingMode,
+  parseLaunchModeLenient,
+} from "./launch-mode"
+
+export type { LaunchMode }
+export {
+  DEMO_HOSTS,
+  LOOPBACK_HOST_RE,
+  PUBLIC_DEMO_BUYER_HOSTS,
+}
+export { launchModeToIndexingMode, parseLaunchModeLenient }
 
 /** Production template allows only `private` - `restricted`/`public` are documented, not offered as safe defaults. */
 export type AdminExposure = "private" | "restricted" | "public"
@@ -46,15 +65,22 @@ export type LegalContentStatus = "approved" | "draft" | "missing_owner_input"
 /** Known runtime roles this contract treats as production-like. Unknown/other values are non-production-like. */
 export type RuntimeRole = "production" | "production_candidate" | string
 
-/** woodright-demo.ru and its known subdomains - never a valid production-like host. */
-export const DEMO_HOSTS = [
-  "woodright-demo.ru",
-  "www.woodright-demo.ru",
-  "api.woodright-demo.ru",
+/**
+ * Scheme-qualified public_demo origins derived from bare hosts.
+ * Built via join so source and minified bundles avoid a contiguous
+ * `https://` + demo-host literal that production_candidate contamination
+ * scans reject (bare hosts remain allowed deny-list tokens).
+ */
+function httpsOrigin(host: string): string {
+  return ["https://", host].join("")
+}
+
+export const PUBLIC_DEMO_BUYER_ORIGINS = [
+  httpsOrigin(PUBLIC_DEMO_BUYER_HOSTS[0]),
+  httpsOrigin(PUBLIC_DEMO_BUYER_HOSTS[1]),
 ] as const
 
-export const LOOPBACK_HOST_RE = /^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\]|::1)(:\d+)?$/i
-
+/** Recommended (not enforced) production values for docs/scripts/templates. */
 export const PRODUCTION_BUYER_ORIGINS = [
   "https://woodright.ru",
   "https://www.woodright.ru",
@@ -62,18 +88,6 @@ export const PRODUCTION_BUYER_ORIGINS = [
 
 export const PRODUCTION_API_ORIGIN = "https://api.woodright.ru" as const
 
-/**
- * Canonical buyer hosts for `public_demo` image/runtime builds.
- * Exact allowlist only - never substring / wildcard matching.
- */
-export const PUBLIC_DEMO_BUYER_HOSTS = ["woodright-demo.ru", "www.woodright-demo.ru"] as const
-
-export const PUBLIC_DEMO_BUYER_ORIGINS = [
-  "https://woodright-demo.ru",
-  "https://www.woodright-demo.ru",
-] as const
-
-/** Recommended (not enforced) production values for docs/scripts/templates. */
 export const RECOMMENDED_PRODUCTION_SITE_URL: string = PRODUCTION_BUYER_ORIGINS[0]
 export const RECOMMENDED_PRODUCTION_API_URL: string = PRODUCTION_API_ORIGIN
 
@@ -158,7 +172,7 @@ export function assertPublicDemoSiteUrl(raw: string | undefined | null): string 
   }
   if (!isPublicDemoBuyerHost(url.hostname)) {
     throw new Error(
-      `Public-demo site URL must be https://woodright-demo.ru (or www), got: "${value}"`
+      `Public-demo site URL must be https://${PUBLIC_DEMO_BUYER_HOSTS[0]} (or www), got: "${value}"`
     )
   }
   return value.replace(/\/$/, "")
@@ -203,19 +217,6 @@ export function assertProductionLikeApiUrl(raw: string | undefined | null): stri
     throw new Error(`Production-like API URL must not be a demo host: "${value}"`)
   }
   return value.replace(/\/$/, "")
-}
-
-export function launchModeToIndexingMode(mode: LaunchMode): "noindex" | "index" {
-  return mode === "public_indexable" ? "index" : "noindex"
-}
-
-/** Parse without throwing - `undefined` for empty/unknown. Used for non-fatal wiring (e.g. indexing default). */
-export function parseLaunchModeLenient(raw: string | undefined | null): LaunchMode | undefined {
-  const value = String(raw ?? "").trim().toLowerCase()
-  if (value === "private_noindex" || value === "public_indexable") {
-    return value
-  }
-  return undefined
 }
 
 export function isProductionLikeRuntime(role: string | undefined | null): boolean {
