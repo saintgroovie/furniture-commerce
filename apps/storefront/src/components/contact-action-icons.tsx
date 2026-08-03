@@ -49,30 +49,11 @@ export function ContactSendIcon({ size = 18 }: { size?: IconSize }) {
   )
 }
 
-/** Message bubble metaphor for WhatsApp / generic chat. */
+/** Message bubble metaphor for WhatsApp / MAX / generic chat. */
 export function ContactMessageIcon({ size = 18 }: { size?: IconSize }) {
   return (
     <svg {...baseProps(size)}>
       <path d="M5.5 18.2l1.4-2.6A7 7 0 1 1 9.2 18.8l-3.7.6c-.5.1-.9-.3-.8-.8l.8-2.4z" />
-    </svg>
-  )
-}
-
-/** Copy / clipboard metaphor for MAX number action. */
-export function ContactCopyIcon({ size = 18 }: { size?: IconSize }) {
-  return (
-    <svg {...baseProps(size)}>
-      <rect x="8.5" y="8.5" width="10" height="12" rx="1.5" />
-      <path d="M15.5 8.5V6.2A1.7 1.7 0 0 0 13.8 4.5H6.2A1.7 1.7 0 0 0 4.5 6.2v7.6A1.7 1.7 0 0 0 6.2 15.5H8.5" />
-    </svg>
-  )
-}
-
-/** Thin check for MAX copy success state. */
-export function ContactCheckIcon({ size = 18 }: { size?: IconSize }) {
-  return (
-    <svg {...baseProps(size)}>
-      <path d="M5.5 12.2l4.1 4.1 8.9-8.9" />
     </svg>
   )
 }

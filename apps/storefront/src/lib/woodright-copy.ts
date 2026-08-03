@@ -780,24 +780,12 @@ export const contactsCopy = {
   showroomCallCta: "Позвонить в шоурум",
   /** Shared value for Telegram / WhatsApp page tiles. */
   messengerWriteValue: "Написать",
-  /** Accessible names for dropdown messenger links (visible label stays short). */
+  /** Page MAX tile value - direct profile link (not copy). */
+  maxWriteValue: "Написать в MAX",
+  /** Accessible names for messenger links (visible label stays short in dropdown). */
   messengerTelegramAria: "Написать в Telegram",
   messengerWhatsappAria: "Написать в WhatsApp",
-  maxLabel: "MAX",
-  /** Page MAX tile value - short channel rhythm. */
-  maxCopyValue: "Скопировать",
-  maxCopiedValue: "Скопировано",
-  /** Short visible error inside the page tile. */
-  maxVisibleError: "Ошибка",
-  /** Dropdown MAX utility-row value (purpose inside the row). */
-  maxDropdownCopyValue: "Скопировать номер",
-  maxDropdownCopiedValue: "Номер скопирован",
-  maxDropdownErrorValue: "Не удалось скопировать",
-  /** Full live/aria error (not shown as a separate helper row). */
-  maxAriaError: "Не удалось скопировать номер",
-  maxAriaIdle:
-    "Скопировать номер {display} для поиска Woodright в MAX",
-  maxAriaCopied: "Номер {display} скопирован",
+  messengerMaxAria: "Написать в MAX",
   ctaTitle: "Есть вопрос по мебели или индивидуальному проекту?",
   ctaBody:
     "Оставьте заявку - менеджер свяжется с вами и поможет подобрать решение",
