@@ -78,8 +78,16 @@ unset WOODRIGHT_HELPER_INSTALL_SHA
 printf '%s\n' "$SHA_A" >"$WR/INSTALLED_PRODUCTION_CUTOVER_HELPER_SHA.txt"
 export WOODRIGHT_HELPER_INSTALL_SHA="$SHA_A"
 wr_resolve_installed_governance_sha --mutating
-[[ "$WR_INSTALL_PROVENANCE_SOURCE" == "env" ]] && pass "helper uses env override source" || fail "env source"
-unset WOODRIGHT_HELPER_INSTALL_SHA
+[[ "$WR_INSTALL_PROVENANCE_SOURCE" == "canonical+env" || "$WR_INSTALL_PROVENANCE_SOURCE" == "canonical" ]] \
+  && pass "helper uses canonical when env matches" || fail "env+canonical source"
+# Harness-only override without canonical marker
+rm -f "$TOOLS/INSTALLED_ENV_GOVERNANCE_SHA.txt"
+export WOODRIGHT_PROVENANCE_ALLOW_ENV_OVERRIDE=1
+export WOODRIGHT_HELPER_INSTALL_SHA="$SHA_A"
+wr_resolve_installed_governance_sha --mutating
+[[ "$WR_INSTALL_PROVENANCE_SOURCE" == "env" ]] && pass "helper uses env override source when allowed" || fail "env source"
+unset WOODRIGHT_HELPER_INSTALL_SHA WOODRIGHT_PROVENANCE_ALLOW_ENV_OVERRIDE
+printf '%s\n' "$SHA_A" >"$TOOLS/INSTALLED_ENV_GOVERNANCE_SHA.txt"
 
 # write markers
 rm -f "$WR/INSTALLED_PRODUCTION_CUTOVER_HELPER_SHA.txt" "$WR/INSTALLED_ENV_GOVERNANCE_SHA.txt"
@@ -185,6 +193,8 @@ grep -q 'SF_RT3_RAW' "$HELPER" \
   && grep -q 'BE_RT3_RAW' "$HELPER" \
   && grep -q 'runtime_inspect_incomplete_fields' "$HELPER" \
   && pass "runtime_digest status-propagating capture" || fail "runtime_digest capture"
+grep -q 'overlapping original evidence' "$HELPER" \
+  && pass "evidence dir overlap guard present" || fail "evidence overlap guard"
 
 # Unit: restore_before pattern restores ownership files after a bad post-write
 UNIT="$TMP/meta-unit"

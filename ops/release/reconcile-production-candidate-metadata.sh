@@ -284,7 +284,6 @@ EOF
 fi
 
 TS="$(date -u +%Y%m%dT%H%M%SZ)"
-EVIDENCE_DIR="${WOODRIGHT_EVIDENCE_DIR:-/srv/woodright/reports/production/metadata-provenance-correction-$TS}"
 
 proposed_fields() {
   python3 - <<PY
@@ -338,6 +337,20 @@ EOF
 fi
 
 # --- execute ---
+# Correction evidence must never overwrite the immutable original recovery packet.
+EVIDENCE_DIR="${WOODRIGHT_EVIDENCE_DIR:-/srv/woodright/reports/production/metadata-provenance-correction-$TS}"
+EVIDENCE_DIR="$(python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$EVIDENCE_DIR")"
+ORIGINAL_EVIDENCE_REAL="$(python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$ORIGINAL_EVIDENCE")"
+case "$EVIDENCE_DIR" in
+  "$ORIGINAL_EVIDENCE_REAL"|"$ORIGINAL_EVIDENCE_REAL"/*)
+    die "refused WOODRIGHT_EVIDENCE_DIR overlapping original evidence: $EVIDENCE_DIR"
+    ;;
+esac
+case "$ORIGINAL_EVIDENCE_REAL" in
+  "$EVIDENCE_DIR"/*)
+    die "refused original evidence nested under correction evidence dir: $ORIGINAL_EVIDENCE_REAL"
+    ;;
+esac
 mkdir -p "$EVIDENCE_DIR"/{json,before,after,staging}
 record_state prepared
 printf '%s\n' "$SOURCE_SHA" >"$EVIDENCE_DIR/json/application-source-sha.txt"

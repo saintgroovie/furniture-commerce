@@ -104,16 +104,35 @@ wr_resolve_installed_governance_sha() {
   WR_INSTALL_PROVENANCE_OK=0
 
   local override="${WOODRIGHT_INSTALLED_GOVERNANCE_SHA:-${WOODRIGHT_HELPER_INSTALL_SHA:-}}"
+  local canon=""
+  local have_canon=0
+  if canon="$(wr_install_provenance_read_sha_file "$WR_GOVERNANCE_MARKER_CANONICAL")"; then
+    have_canon=1
+  fi
+
   if [[ -n "$override" ]]; then
     if [[ ! "$override" =~ $WR_INSTALL_PROVENANCE_SHA_RE ]]; then
       wr_install_provenance_log "ERROR: override SHA must be full 40-hex (got '${override}')"
       return 2
     fi
-    WR_INSTALLED_GOVERNANCE_SHA="$override"
-    WR_INSTALL_PROVENANCE_SOURCE="env"
+    if [[ "$have_canon" == "1" ]]; then
+      if [[ "$override" != "$canon" ]]; then
+        wr_install_provenance_log "ERROR: env override '$override' diverges from canonical marker '$canon' at $WR_GOVERNANCE_MARKER_CANONICAL - refuse second authority"
+        return 3
+      fi
+      WR_INSTALLED_GOVERNANCE_SHA="$canon"
+      WR_INSTALL_PROVENANCE_SOURCE="canonical+env"
+    else
+      # Harness-only: allow override when no canonical marker exists.
+      if [[ "${WOODRIGHT_PROVENANCE_ALLOW_ENV_OVERRIDE:-0}" != "1" ]]; then
+        wr_install_provenance_log "ERROR: env override set but canonical marker missing/invalid: $WR_GOVERNANCE_MARKER_CANONICAL"
+        return 2
+      fi
+      WR_INSTALLED_GOVERNANCE_SHA="$override"
+      WR_INSTALL_PROVENANCE_SOURCE="env"
+    fi
   else
-    local canon=""
-    if ! canon="$(wr_install_provenance_read_sha_file "$WR_GOVERNANCE_MARKER_CANONICAL")"; then
+    if [[ "$have_canon" != "1" ]]; then
       wr_install_provenance_log "ERROR: missing/invalid canonical governance marker: $WR_GOVERNANCE_MARKER_CANONICAL"
       return 2
     fi
