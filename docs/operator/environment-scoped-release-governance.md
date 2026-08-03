@@ -156,3 +156,17 @@ Compatibility mirrors (same SHA, not independent authorities):
 - `/srv/woodright/INSTALLED_ENV_GOVERNANCE_SHA.txt`
 
 See `docs/operator/production-helper-install-provenance.md`.
+
+## Public demo metadata-only authority
+
+When live public_demo containers already match the accepted application SHA and
+image digests, residual compose `WOODRIGHT_RELEASE_SHA` / `ACTIVE_OWNER.approved_git_sha`
+drift must be corrected with:
+
+`ops/release/reconcile-public-demo-metadata.sh --environment public_demo ...`
+
+This path is metadata-only: no container recreate, restart, image pull, pin digest
+rewrite, DB, or media mutation. Use dry-run first; execute requires the confirm token
+`I_UNDERSTAND_PUBLIC_DEMO_METADATA_AUTHORITY_RECONCILE` and the canonical
+`/srv/woodright/locks/public_demo/live-cutover.lock`.
+
