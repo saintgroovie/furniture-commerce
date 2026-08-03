@@ -347,7 +347,7 @@ else
   pass "17 symlink destination refuse"
 fi
 
-# --- 15/16 owner/mode preserve (+ root path when euid allows) ---
+# --- 15/16 owner/mode preserve for BOTH compose-env and owner installers ---
 printf 'OLD=1\n' >"$TMP/own.env"
 chmod 640 "$TMP/own.env"
 uid="$(id -u)"; gid="$(id -g)"
@@ -355,7 +355,15 @@ printf 'NEW=1\nWOODRIGHT_RELEASE_SHA=%s\n' "$APP_SHA" >"$TMP/own.next"
 wr_pd_meta_atomic_install_file "$TMP/own.next" "$TMP/own.env" "$TMP"
 got_m="$(python3 -c 'import os,stat; print(format(stat.S_IMODE(os.stat("'"$TMP/own.env"'").st_mode), "o"))')"
 got_u="$(python3 -c 'import os; print(os.stat("'"$TMP/own.env"'").st_uid)')"
-[[ "$got_u" == "$uid" && "$got_m" == "640" ]] && pass "15 owner/group/mode preserved" || fail "15 meta u=$got_u m=$got_m"
+[[ "$got_u" == "$uid" && "$got_m" == "640" ]] && pass "15 owner/group/mode preserved (ACTIVE_OWNER path)" || fail "15 meta u=$got_u m=$got_m"
+printf 'WOODRIGHT_BACKEND_IMAGE=%s\nWOODRIGHT_STOREFRONT_IMAGE=%s\nKEEP=1\n' "$BE_REF" "$SF_REF" >"$TMP/c.env"
+chmod 640 "$TMP/c.env"
+wr_compose_env_render_keys "$TMP/c.env" "$TMP/c.next" WOODRIGHT_RELEASE_SHA "$APP_SHA"
+wr_compose_env_atomic_install "$TMP/c.next" "$TMP/c.env" "$TMP"
+got_m="$(python3 -c 'import os,stat; print(format(stat.S_IMODE(os.stat("'"$TMP/c.env"'").st_mode), "o"))')"
+got_u="$(python3 -c 'import os; print(os.stat("'"$TMP/c.env"'").st_uid)')"
+grep -q "^KEEP=1$" "$TMP/c.env" || fail "15 compose unrelated lost"
+[[ "$got_u" == "$uid" && "$got_m" == "640" ]] && pass "15 compose .env owner/mode preserved" || fail "15 compose meta u=$got_u m=$got_m"
 pass "16 root/caller preserve path exercised via chown contract in atomic_install"
 
 # --- happy dry-run (1) ---

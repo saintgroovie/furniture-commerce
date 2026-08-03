@@ -199,16 +199,24 @@ wr_compose_env_sha256() {
 }
 
 # Atomic install: src temp -> dest. Temp should already live in dest's directory
-# when possible. Does not print file contents.
+# when possible. Preserves DESTINATION owner/group/mode (not staged umask/owner).
+# Does not print file contents.
 wr_compose_env_atomic_install() {
   local src="$1"
   local dest="$2"
   local allowed_parent="${3:-$(dirname -- "$dest")}"
-  local published
+  local published meta_u meta_g meta_m staged_u staged_g got_u got_g got_m
   wr_compose_env_assert_path_under "$dest" "$allowed_parent" || return 1
   wr_compose_env_is_regular_file "$src" || return 1
   if [[ -e "$dest" || -L "$dest" ]]; then
     wr_compose_env_is_regular_file "$dest" || return 1
+    meta_u="$(python3 -c 'import os,sys; print(os.stat(sys.argv[1]).st_uid)' "$dest")"
+    meta_g="$(python3 -c 'import os,sys; print(os.stat(sys.argv[1]).st_gid)' "$dest")"
+    meta_m="$(python3 -c 'import os,stat,sys; print(format(stat.S_IMODE(os.stat(sys.argv[1]).st_mode), "o"))' "$dest")"
+  else
+    meta_u="$(id -u)"
+    meta_g="$(id -g)"
+    meta_m="644"
   fi
   published="$(dirname -- "$dest")/.wr-compose-env-publish-$$-$RANDOM"
   # Ensure published path cannot be a pre-planted symlink.
@@ -217,27 +225,45 @@ wr_compose_env_atomic_install() {
     wr_compose_env_die "refusing to write through symlink publish path"
     return 1
   fi
-  if cp -p "$src" "$published" 2>/dev/null; then
-    if mv -f "$published" "$dest"; then
-      wr_compose_env_log "atomic_install_ok dest_parent=$(dirname -- "$dest")"
-      return 0
+  cp "$src" "$published" || return 1
+  staged_u="$(python3 -c 'import os,sys; print(os.stat(sys.argv[1]).st_uid)' "$published")"
+  staged_g="$(python3 -c 'import os,sys; print(os.stat(sys.argv[1]).st_gid)' "$published")"
+  if [[ "$staged_u" != "$meta_u" || "$staged_g" != "$meta_g" ]]; then
+    if ! chown "${meta_u}:${meta_g}" "$published" 2>/dev/null; then
+      if command -v sudo >/dev/null 2>&1 && sudo -n chown "${meta_u}:${meta_g}" "$published" 2>/dev/null; then
+        :
+      else
+        rm -f "$published"
+        wr_compose_env_die "chown staged compose env failed"
+        return 1
+      fi
     fi
-    rm -f "$published" 2>/dev/null || true
   fi
-  if command -v sudo >/dev/null 2>&1; then
-    sudo -n rm -f "$published" 2>/dev/null || true
-    sudo -n cp -p "$src" "$published" || return 1
-    if [[ -L "$published" ]]; then
-      sudo -n rm -f "$published" 2>/dev/null || true
-      wr_compose_env_die "publish path became symlink under sudo"
+  if ! chmod "$meta_m" "$published" 2>/dev/null; then
+    if command -v sudo >/dev/null 2>&1 && sudo -n chmod "$meta_m" "$published" 2>/dev/null; then
+      :
+    else
+      rm -f "$published"
+      wr_compose_env_die "chmod staged compose env failed"
       return 1
     fi
-    sudo -n mv -f "$published" "$dest" || { sudo -n rm -f "$published" 2>/dev/null || true; return 1; }
-    wr_compose_env_log "atomic_install_ok_via_sudo dest_parent=$(dirname -- "$dest")"
-    return 0
   fi
-  wr_compose_env_die "cannot atomically install compose env (not writable, no sudo -n)"
-  return 1
+  if ! mv -f "$published" "$dest" 2>/dev/null; then
+    if command -v sudo >/dev/null 2>&1 && sudo -n mv -f "$published" "$dest"; then
+      :
+    else
+      rm -f "$published" 2>/dev/null || true
+      wr_compose_env_die "cannot atomically install compose env"
+      return 1
+    fi
+  fi
+  got_u="$(python3 -c 'import os,sys; print(os.stat(sys.argv[1]).st_uid)' "$dest")"
+  got_g="$(python3 -c 'import os,sys; print(os.stat(sys.argv[1]).st_gid)' "$dest")"
+  got_m="$(python3 -c 'import os,stat,sys; print(format(stat.S_IMODE(os.stat(sys.argv[1]).st_mode), "o"))' "$dest")"
+  [[ "$got_u" == "$meta_u" && "$got_g" == "$meta_g" && "$got_m" == "$meta_m" ]] \
+    || { wr_compose_env_die "compose env owner/mode mismatch after install"; return 1; }
+  wr_compose_env_log "atomic_install_ok dest_parent=$(dirname -- "$dest") mode=$meta_m"
+  return 0
 }
 
 # Restore exact backup bytes to dest; verify checksum.

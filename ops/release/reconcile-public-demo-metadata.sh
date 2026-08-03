@@ -130,14 +130,20 @@ case "$WR_STAGING_MUTATION_LOCK_PATH" in
   *) die "refused lock path '$WR_STAGING_MUTATION_LOCK_PATH' (public_demo only)" ;;
 esac
 
+# Pre-lock gates for dry-run / early refuse. Execute re-runs under lock and
+# recomputes need_* + backups from the locked snapshot only.
 wr_pd_meta_run_gates "$SOURCE_SHA" "$BE_REF" "$SF_REF" || die "runtime/authority gate failed"
 
-release_now="${WR_PD_META_RELEASE_NOW:-}"
-approved_now="${WR_PD_META_APPROVED_NOW:-}"
-need_env=0
-need_owner=0
-[[ "$release_now" == "$SOURCE_SHA" ]] || need_env=1
-[[ "$approved_now" == "$SOURCE_SHA" ]] || need_owner=1
+recompute_need_flags() {
+  release_now="${WR_PD_META_RELEASE_NOW:-}"
+  approved_now="${WR_PD_META_APPROVED_NOW:-}"
+  need_env=0
+  need_owner=0
+  [[ "$release_now" == "$SOURCE_SHA" ]] || need_env=1
+  [[ "$approved_now" == "$SOURCE_SHA" ]] || need_owner=1
+}
+
+recompute_need_flags
 
 emit_plan() {
   local status="$1"
@@ -167,13 +173,12 @@ emit_plan() {
 EOF
 }
 
-if [[ "$need_env" == "0" && "$need_owner" == "0" ]]; then
-  emit_plan already_corrected
-  log "ALREADY_CORRECTED release_sha+approved_git_sha already $SOURCE_SHA"
-  exit 0
-fi
-
 if [[ "$MODE" == "dry-run" ]]; then
+  if [[ "$need_env" == "0" && "$need_owner" == "0" ]]; then
+    emit_plan already_corrected
+    log "ALREADY_CORRECTED release_sha+approved_git_sha already $SOURCE_SHA"
+    exit 0
+  fi
   emit_plan dry-run
   log "DRY_RUN_OK metadata_only need_env=$need_env need_owner=$need_owner"
   exit 0
@@ -189,34 +194,86 @@ chmod 0700 "$EVIDENCE_DIR" "$EVIDENCE_DIR/json" "$EVIDENCE_DIR/backup" 2>/dev/nu
 record_state prepared
 printf '%s\n' "$SOURCE_SHA" >"$EVIDENCE_DIR/json/application-source-sha.txt"
 printf '%s\n' "$CURRENT_HELPER_SHA" >"$EVIDENCE_DIR/json/helper-install-sha.txt"
-printf '%s\n' "$WR_PD_META_BE_ID" >"$EVIDENCE_DIR/json/backend-container-id-before.txt"
-printf '%s\n' "$WR_PD_META_SF_ID" >"$EVIDENCE_DIR/json/storefront-container-id-before.txt"
-printf '%s\n' "$WR_PD_META_BE_START" >"$EVIDENCE_DIR/json/backend-started-before.txt"
-printf '%s\n' "$WR_PD_META_SF_START" >"$EVIDENCE_DIR/json/storefront-started-before.txt"
 
 compose_env="${WOODRIGHT_COMPOSE_ENV_FILE}"
 allowed_root="${WOODRIGHT_DOKPLOY_COMPOSE_DIR}"
 active_owner="${WOODRIGHT_ACTIVE_OWNER}"
 own_parent="$(dirname -- "$active_owner")"
+TX_COMMITTED=0
+TX_STARTED=0
+ROLLBACK_OK=0
 
-before_env_sha="$(wr_compose_env_sha256 "$compose_env")"
-before_owner_sha="$(wr_pd_meta_sha256 "$active_owner")"
-printf '%s\n' "$before_env_sha" >"$EVIDENCE_DIR/json/compose-env-before.sha256"
-printf '%s\n' "$before_owner_sha" >"$EVIDENCE_DIR/json/active-owner-before.sha256"
-cp -p "$compose_env" "$EVIDENCE_DIR/backup/dokploy-compose.env"
-chmod 0600 "$EVIDENCE_DIR/backup/dokploy-compose.env"
-cp -p "$active_owner" "$EVIDENCE_DIR/backup/ACTIVE_OWNER.json"
-chmod 0600 "$EVIDENCE_DIR/backup/ACTIVE_OWNER.json"
+capture_file_meta() {
+  local path="$1" out="$2"
+  python3 - "$path" "$out" <<'PY'
+import os, stat, sys
+p, out = sys.argv[1:3]
+s = os.stat(p)
+open(out, "w").write(f"{s.st_uid}:{s.st_gid}:{format(stat.S_IMODE(s.st_mode), 'o')}\n")
+PY
+}
+
+apply_file_meta() {
+  local path="$1" meta_file="$2"
+  local u g m
+  IFS=':' read -r u g m <"$meta_file"
+  if ! chown "${u}:${g}" "$path" 2>/dev/null; then
+    sudo -n chown "${u}:${g}" "$path" || return 1
+  fi
+  if ! chmod "$m" "$path" 2>/dev/null; then
+    sudo -n chmod "$m" "$path" || return 1
+  fi
+  return 0
+}
+
+verify_restored() {
+  local path="$1" want_sha="$2" meta_file="$3"
+  local got_sha got_meta
+  got_sha="$(wr_pd_meta_sha256 "$path")"
+  [[ "$got_sha" == "$want_sha" ]] || return 1
+  capture_file_meta "$path" "${meta_file}.after"
+  [[ "$(cat "$meta_file")" == "$(cat "${meta_file}.after")" ]] || return 1
+  return 0
+}
 
 rollback_all() {
+  local env_ok=0 owner_ok=0
   log "ROLLBACK_BEGIN"
   ROLLBACK_PERFORMED=1
-  wr_compose_env_restore_backup "$EVIDENCE_DIR/backup/dokploy-compose.env" "$compose_env" "$allowed_root" \
-    || log "ERROR: compose env restore failed"
-  wr_pd_meta_atomic_install_file "$EVIDENCE_DIR/backup/ACTIVE_OWNER.json" "$active_owner" "$own_parent" \
-    || log "ERROR: ACTIVE_OWNER restore failed"
-  record_state rolled_back
-  log "ROLLBACK_DONE"
+  if wr_compose_env_restore_backup "$EVIDENCE_DIR/backup/dokploy-compose.env" "$compose_env" "$allowed_root" \
+    && apply_file_meta "$compose_env" "$EVIDENCE_DIR/backup/dokploy-compose.env.meta" \
+    && verify_restored "$compose_env" "$before_env_sha" "$EVIDENCE_DIR/backup/dokploy-compose.env.meta"; then
+    env_ok=1
+  else
+    log "ERROR: compose env restore failed"
+  fi
+  if wr_pd_meta_atomic_install_file "$EVIDENCE_DIR/backup/ACTIVE_OWNER.json" "$active_owner" "$own_parent" \
+    && apply_file_meta "$active_owner" "$EVIDENCE_DIR/backup/ACTIVE_OWNER.json.meta" \
+    && verify_restored "$active_owner" "$before_owner_sha" "$EVIDENCE_DIR/backup/ACTIVE_OWNER.json.meta"; then
+    owner_ok=1
+  else
+    log "ERROR: ACTIVE_OWNER restore failed"
+  fi
+  if [[ "$env_ok" == "1" && "$owner_ok" == "1" ]]; then
+    ROLLBACK_OK=1
+    record_state rolled_back
+    log "ROLLBACK_DONE"
+    return 0
+  fi
+  record_state rollback_incomplete
+  log "ROLLBACK_INCOMPLETE"
+  return 1
+}
+
+on_exit_tx() {
+  if [[ "${TX_STARTED:-0}" == "1" && "${TX_COMMITTED:-0}" != "1" && "${ROLLBACK_PERFORMED:-0}" != "1" ]]; then
+    log "EXIT_TRAP rolling back incomplete metadata transaction"
+    rollback_all || true
+  fi
+  if [[ "${LOCK_HELD:-0}" == "1" ]]; then
+    wr_staging_mutation_lock_release || true
+    LOCK_HELD=0
+  fi
 }
 
 wr_staging_mutation_lock_acquire \
@@ -225,19 +282,37 @@ wr_staging_mutation_lock_acquire \
   target="$SOURCE_SHA" \
   || { echo "ERROR: lock contention" >&2; exit 3; }
 LOCK_HELD=1
-trap 'if [[ "${LOCK_HELD:-0}" == "1" ]]; then wr_staging_mutation_lock_release || true; LOCK_HELD=0; fi' EXIT
+trap 'ec=$?; on_exit_tx; exit "$ec"' EXIT
+trap 'on_exit_tx; exit 130' INT
+trap 'on_exit_tx; exit 143' TERM
 
-# Under-lock revalidation
-wr_pd_meta_run_gates "$SOURCE_SHA" "$BE_REF" "$SF_REF" || {
+# Under-lock: re-gate, recompute need_*, then snapshot backups.
+wr_pd_meta_run_gates "$SOURCE_SHA" "$BE_REF" "$SF_REF" || die "under-lock gate failed"
+recompute_need_flags
+printf '%s\n' "$WR_PD_META_BE_ID" >"$EVIDENCE_DIR/json/backend-container-id-before.txt"
+printf '%s\n' "$WR_PD_META_SF_ID" >"$EVIDENCE_DIR/json/storefront-container-id-before.txt"
+printf '%s\n' "$WR_PD_META_BE_START" >"$EVIDENCE_DIR/json/backend-started-before.txt"
+printf '%s\n' "$WR_PD_META_SF_START" >"$EVIDENCE_DIR/json/storefront-started-before.txt"
+
+if [[ "$need_env" == "0" && "$need_owner" == "0" ]]; then
+  emit_plan already_corrected
+  log "ALREADY_CORRECTED under lock release_sha+approved_git_sha already $SOURCE_SHA"
+  TX_COMMITTED=1
   wr_staging_mutation_lock_release || true
   LOCK_HELD=0
-  die "under-lock gate failed"
-}
-wr_pd_meta_assert_containers_unchanged || {
-  wr_staging_mutation_lock_release || true
-  LOCK_HELD=0
-  die "containers drifted before write"
-}
+  exit 0
+fi
+
+before_env_sha="$(wr_compose_env_sha256 "$compose_env")"
+before_owner_sha="$(wr_pd_meta_sha256 "$active_owner")"
+printf '%s\n' "$before_env_sha" >"$EVIDENCE_DIR/json/compose-env-before.sha256"
+printf '%s\n' "$before_owner_sha" >"$EVIDENCE_DIR/json/active-owner-before.sha256"
+capture_file_meta "$compose_env" "$EVIDENCE_DIR/backup/dokploy-compose.env.meta"
+capture_file_meta "$active_owner" "$EVIDENCE_DIR/backup/ACTIVE_OWNER.json.meta"
+cp -p "$compose_env" "$EVIDENCE_DIR/backup/dokploy-compose.env"
+chmod 0600 "$EVIDENCE_DIR/backup/dokploy-compose.env"
+cp -p "$active_owner" "$EVIDENCE_DIR/backup/ACTIVE_OWNER.json"
+chmod 0600 "$EVIDENCE_DIR/backup/ACTIVE_OWNER.json"
 
 compose_parent="$(dirname -- "$compose_env")"
 tmp_env="$(mktemp "${compose_parent}/.wr-pd-meta-env-XXXXXX")"
@@ -246,8 +321,8 @@ tmp_owner="$(mktemp "${own_parent}/.wr-pd-meta-owner-XXXXXX")"
 staged_owner="${tmp_owner}.next"
 cleanup_tmps() { rm -f "$tmp_env" "$staged_env" "$tmp_owner" "$staged_owner" 2>/dev/null || true; }
 
-cp -p "$compose_env" "$tmp_env"
-cp -p "$active_owner" "$tmp_owner"
+cp "$compose_env" "$tmp_env"
+cp "$active_owner" "$tmp_owner"
 
 if [[ "$need_env" == "1" ]]; then
   wr_compose_env_render_keys "$tmp_env" "$staged_env" WOODRIGHT_RELEASE_SHA "$SOURCE_SHA" \
@@ -260,41 +335,32 @@ if [[ "$need_env" == "1" ]]; then
   wr_compose_env_assert_no_duplicate_governed_keys "$staged_env" \
     || { cleanup_tmps; die "duplicate keys in staged env"; }
 else
-  cp -p "$tmp_env" "$staged_env"
+  cp "$tmp_env" "$staged_env"
 fi
 
 if [[ "$need_owner" == "1" ]]; then
   wr_pd_meta_render_owner_approved "$tmp_owner" "$staged_owner" "$SOURCE_SHA" "$CURRENT_HELPER_SHA" \
     || { cleanup_tmps; die "render ACTIVE_OWNER approved_git_sha failed"; }
 else
-  cp -p "$tmp_owner" "$staged_owner"
+  cp "$tmp_owner" "$staged_owner"
 fi
 
 record_state writing
-ENV_OK=0
-OWNER_OK=0
+TX_STARTED=1
 if [[ "$need_env" == "1" ]]; then
-  if wr_compose_env_atomic_install "$staged_env" "$compose_env" "$allowed_root"; then
-    ENV_OK=1
-  else
+  if ! wr_compose_env_atomic_install "$staged_env" "$compose_env" "$allowed_root"; then
     cleanup_tmps
-    rollback_all
+    rollback_all || true
     exit 14
   fi
-else
-  ENV_OK=1
 fi
 
 if [[ "$need_owner" == "1" ]]; then
-  if wr_pd_meta_atomic_install_file "$staged_owner" "$active_owner" "$own_parent"; then
-    OWNER_OK=1
-  else
+  if ! wr_pd_meta_atomic_install_file "$staged_owner" "$active_owner" "$own_parent"; then
     cleanup_tmps
-    rollback_all
+    rollback_all || true
     exit 14
   fi
-else
-  OWNER_OK=1
 fi
 cleanup_tmps
 
@@ -314,20 +380,28 @@ if [[ "$got_release" != "$SOURCE_SHA" \
    || "$got_be_img" != "$BE_REF" \
    || "$got_sf_img" != "$SF_REF" ]]; then
   log "ERROR: authority postcondition failed - rolling back"
-  rollback_all
+  rollback_all || true
   exit 14
 fi
 
 if ! wr_pd_meta_assert_containers_unchanged; then
   log "ERROR: containers mutated during metadata write - rolling back"
-  rollback_all
+  rollback_all || true
   exit 14
 fi
 
-# Re-assert ACTIVE_PUBLIC / EXPECTED unchanged (sha only)
 ap_sha="$(wr_pd_meta_json_get "${WOODRIGHT_ACTIVE_PUBLIC}" release_sha)"
-[[ "$ap_sha" == "$SOURCE_SHA" ]] || { rollback_all; die "ACTIVE_PUBLIC drifted"; }
+[[ "$ap_sha" == "$SOURCE_SHA" ]] || { rollback_all || true; die "ACTIVE_PUBLIC drifted"; }
 
+# Verify destination meta preserved vs pre-write sidecar
+capture_file_meta "$compose_env" "$EVIDENCE_DIR/json/compose-env-after.meta"
+[[ "$(cat "$EVIDENCE_DIR/backup/dokploy-compose.env.meta")" == "$(cat "$EVIDENCE_DIR/json/compose-env-after.meta")" ]] \
+  || { log "ERROR: compose env owner/mode not preserved"; rollback_all || true; exit 14; }
+capture_file_meta "$active_owner" "$EVIDENCE_DIR/json/active-owner-after.meta"
+[[ "$(cat "$EVIDENCE_DIR/backup/ACTIVE_OWNER.json.meta")" == "$(cat "$EVIDENCE_DIR/json/active-owner-after.meta")" ]] \
+  || { log "ERROR: ACTIVE_OWNER owner/mode not preserved"; rollback_all || true; exit 14; }
+
+TX_COMMITTED=1
 record_state metadata_correction_committed
 printf '%s\n' "$WR_PD_META_BE_ID" >"$EVIDENCE_DIR/json/backend-container-id-after.txt"
 printf '%s\n' "$WR_PD_META_SF_ID" >"$EVIDENCE_DIR/json/storefront-container-id-after.txt"
