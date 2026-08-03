@@ -65,35 +65,40 @@ wr_compose_env_assert_path_under() {
 wr_compose_env_count_exact_key() {
   local path="$1" key="$2"
   python3 - "$path" "$key" <<'PY'
-import sys
+import re, sys
 path, key = sys.argv[1:3]
-prefix = key + "="
+# Compose dotenv-ish: optional export, optional whitespace around '='.
+pat = re.compile(rf'^[ \t]*(?:export[ \t]+)?{re.escape(key)}[ \t]*=')
 n = 0
 for line in open(path, "r", encoding="utf-8"):
-    if line.startswith(prefix) or line.rstrip("\n") == key:
+    if pat.match(line):
         n += 1
 print(n)
 PY
 }
 
-# Fail-closed if any governed key is duplicated OR appears with a space-like
-# ambiguous form Compose would not treat as the same key (`KEY =value`).
+# Fail-closed if any governed key is duplicated OR appears in a non-canonical
+# assignment form (leading spaces, export, spaces around '=') that Compose
+# dotenv may still honor while our exact KEY= writers would miss.
 wr_compose_env_assert_no_duplicate_governed_keys() {
   local path="$1"
   python3 - "$path" "${WR_COMPOSE_ENV_GOVERNED_KEYS[@]}" <<'PY'
-import sys
+import re, sys
 path = sys.argv[1]
 keys = sys.argv[2:]
 lines = open(path, "r", encoding="utf-8").read().splitlines()
 errors = []
 for key in keys:
     exact = [l for l in lines if l.startswith(key + "=")]
-    if len(exact) > 1:
+    # Any dotenv-like assignment for this key (including non-canonical forms).
+    pat = re.compile(rf'^[ \t]*(?:export[ \t]+)?{re.escape(key)}[ \t]*=')
+    all_forms = [l for l in lines if pat.match(l)]
+    if len(all_forms) > 1:
+        errors.append(f"duplicate {key} count={len(all_forms)}")
+    elif len(all_forms) == 1 and (len(exact) != 1 or exact[0] != all_forms[0]):
+        errors.append(f"noncanonical assignment for {key}")
+    elif len(exact) > 1:
         errors.append(f"duplicate {key} count={len(exact)}")
-    # Ambiguous spaced assignment forms (not accepted by our pin writers).
-    spaced = [l for l in lines if l.startswith(key + " =") or l.startswith(key + "\t=")]
-    if spaced:
-        errors.append(f"ambiguous spaced assignment for {key}")
 if errors:
     print("COMPOSE_ENV_KEY_CONTRACT_FAIL: " + "; ".join(errors), file=sys.stderr)
     sys.exit(1)
@@ -125,14 +130,19 @@ for i in range(0, len(args), 2):
     updates[k] = v
     order.append(k)
 lines = open(src, "r", encoding="utf-8").read().splitlines()
-# Pre-check duplicates for keys we touch
-for k in order:
+  # Pre-check duplicates / noncanonical forms for keys we touch
+  for k in order:
     hits = [l for l in lines if l.startswith(k + "=")]
     if len(hits) > 1:
         print(f"COMPOSE_ENV_DUPLICATE_KEY {k}", file=sys.stderr)
         sys.exit(1)
-    spaced = [l for l in lines if l.startswith(k + " =") or l.startswith(k + "\t=")]
-    if spaced:
+    import re
+    pat = re.compile(rf'^[ \t]*(?:export[ \t]+)?{re.escape(k)}[ \t]*=')
+    all_forms = [l for l in lines if pat.match(l)]
+    if len(all_forms) > 1:
+        print(f"COMPOSE_ENV_DUPLICATE_KEY {k}", file=sys.stderr)
+        sys.exit(1)
+    if all_forms and (len(hits) != 1 or hits[0] != all_forms[0]):
         print(f"COMPOSE_ENV_AMBIGUOUS_KEY {k}", file=sys.stderr)
         sys.exit(1)
 result = []

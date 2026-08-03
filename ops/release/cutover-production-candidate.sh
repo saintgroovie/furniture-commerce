@@ -1717,7 +1717,8 @@ write_required_pins_atomic() {
   need_sf && sf_want="$SF_REF"
 
   compose_parent="$(dirname -- "$COMPOSE_ENV_FILE")"
-  wr_compose_env_assert_path_under "$COMPOSE_ENV_FILE" "$compose_parent" || return 1
+  allowed_root="${WOODRIGHT_DOKPLOY_COMPOSE_DIR:-$compose_parent}"
+  wr_compose_env_assert_path_under "$COMPOSE_ENV_FILE" "$allowed_root" || return 1
   wr_compose_env_assert_no_duplicate_governed_keys "$COMPOSE_ENV_FILE" || return 1
 
   if should_write_common_release_sha; then

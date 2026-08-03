@@ -39,7 +39,13 @@ wr_pc_release_sha_run() {
     || die "current helper install SHA mismatch: marker=$WR_INSTALLED_GOVERNANCE_SHA declared=$CURRENT_HELPER_SHA"
 
   compose_parent="$(dirname -- "$compose_env")"
-  wr_compose_env_assert_path_under "$compose_env" "$compose_parent" || die "compose env path refused"
+  # Independently governed allowed root from profile (not derived solely from dest).
+  allowed_root="${WOODRIGHT_DOKPLOY_COMPOSE_DIR:-}"
+  [[ -n "$allowed_root" ]] || die "WOODRIGHT_DOKPLOY_COMPOSE_DIR unset in profile"
+  wr_compose_env_assert_path_under "$compose_env" "$allowed_root" || die "compose env path refused"
+  # Also require the configured env file identity matches profile exactly.
+  [[ "$compose_env" == "${WOODRIGHT_COMPOSE_ENV_FILE}" ]] \
+    || die "compose env path diverges from profile WOODRIGHT_COMPOSE_ENV_FILE"
   wr_compose_env_is_regular_file "$compose_env" || die "compose env must be a regular file"
   wr_compose_env_assert_no_duplicate_governed_keys "$compose_env" || die "duplicate governed keys in compose env"
 
@@ -151,6 +157,16 @@ EOF
   [[ "$(pin_of WOODRIGHT_BACKEND_IMAGE)" == "$BE_REF" ]] || die "backend pin changed under lock"
   [[ "$(wr_pc_release_sha_oci_of_ref "$SF_REF")" == "$want_sha" ]] || die "storefront OCI changed under lock"
   [[ "$(wr_pc_release_sha_oci_of_ref "$BE_REF")" == "$want_sha" ]] || die "backend OCI changed under lock"
+  # Re-read ownership under lock (Codex: do not trust pre-lock snapshots alone).
+  ACTIVE_APP2="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("application_source_sha",""))' "$own_dir/ACTIVE_RELEASE.json")"
+  OWNER_APP2="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("application_source_sha",""))' "$own_dir/ACTIVE_OWNER.json")"
+  EXPECT_APP2="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("application_source_sha",""))' "$own_dir/EXPECTED_RELEASE.json")"
+  ACTIVE_SF2="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("storefront_image",""))' "$own_dir/ACTIVE_RELEASE.json")"
+  ACTIVE_BE2="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("backend_image",""))' "$own_dir/ACTIVE_RELEASE.json")"
+  [[ "$ACTIVE_APP2" == "$want_sha" && "$OWNER_APP2" == "$want_sha" && "$EXPECT_APP2" == "$want_sha" ]] \
+    || die "ownership application_source_sha drifted under lock"
+  [[ "$ACTIVE_SF2" == "$SF_REF" && "$ACTIVE_BE2" == "$BE_REF" ]] \
+    || die "ACTIVE images drifted under lock"
 
   tmp="$(mktemp "${compose_parent}/.wr-pc-release-sha-XXXXXX")"
   [[ ! -L "$tmp" ]] || { rm -f "$tmp"; die "temp path is symlink"; }
@@ -169,7 +185,7 @@ EOF
     || { rm -f "$tmp" "$staged"; die "duplicate keys in staged env"; }
 
   record_state pins_written
-  if ! wr_compose_env_atomic_install "$staged" "$compose_env" "$compose_parent"; then
+  if ! wr_compose_env_atomic_install "$staged" "$compose_env" "$allowed_root"; then
     rm -f "$tmp" "$staged"
     die "atomic compose env install failed"
   fi
@@ -179,23 +195,23 @@ EOF
   printf '%s\n' "$after_sha" >"$evidence_dir/json/compose-env-after.sha256"
   [[ "$(pin_of WOODRIGHT_RELEASE_SHA)" == "$want_sha" ]] || {
     log "ERROR: postcondition RELEASE_SHA mismatch - restoring backup"
-    wr_compose_env_restore_backup "$evidence_dir/pin-backup/dokploy-compose.env" "$compose_env" "$compose_parent" \
+    wr_compose_env_restore_backup "$evidence_dir/pin-backup/dokploy-compose.env" "$compose_env" "$allowed_root" \
       || die "CRITICAL: compose env restore failed"
     record_state metadata_correction_incomplete
     exit 14
   }
   [[ "$(pin_of WOODRIGHT_BACKEND_IMAGE)" == "$BE_REF" ]] || {
-    wr_compose_env_restore_backup "$evidence_dir/pin-backup/dokploy-compose.env" "$compose_env" "$compose_parent" || true
+    wr_compose_env_restore_backup "$evidence_dir/pin-backup/dokploy-compose.env" "$compose_env" "$allowed_root" || true
     die "backend pin drifted after release-sha write"
   }
   [[ "$(pin_of WOODRIGHT_STOREFRONT_IMAGE)" == "$SF_REF" ]] || {
-    wr_compose_env_restore_backup "$evidence_dir/pin-backup/dokploy-compose.env" "$compose_env" "$compose_parent" || true
+    wr_compose_env_restore_backup "$evidence_dir/pin-backup/dokploy-compose.env" "$compose_env" "$allowed_root" || true
     die "storefront pin drifted after release-sha write"
   }
   mapfile -t sf_rt2 < <(runtime_digest "$sf_name")
   mapfile -t be_rt2 < <(runtime_digest "$be_name")
   [[ "${sf_rt2[1]}" == "${sf_rt[1]}" && "${be_rt2[1]}" == "${be_rt[1]}" ]] || {
-    wr_compose_env_restore_backup "$evidence_dir/pin-backup/dokploy-compose.env" "$compose_env" "$compose_parent" || true
+    wr_compose_env_restore_backup "$evidence_dir/pin-backup/dokploy-compose.env" "$compose_env" "$allowed_root" || true
     die "containers mutated during metadata-only release-sha write"
   }
 
