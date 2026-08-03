@@ -196,6 +196,7 @@ PY
 # Dokploy compose environment (harness copy)
 WOODRIGHT_BACKEND_IMAGE=${OLD_BE_REF}
 WOODRIGHT_STOREFRONT_IMAGE=${OLD_SF_REF}
+WOODRIGHT_RELEASE_SHA=9946b42aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 POSTGRES_PASSWORD=MOCK_SECRET_VALUE
 UNRELATED_KEY=keep-me
 EOF
@@ -309,6 +310,7 @@ run_exec "$EV" "$TMP/out-success.txt"
 [[ "$(state_file "$EV")" == "committed" ]] && pass "success: state committed" || fail "success: state=$(state_file "$EV")"
 [[ "$(pin_of WOODRIGHT_BACKEND_IMAGE)" == "$BE_REF" ]] && pass "success: backend pin advanced" || fail "success: backend pin=$(pin_of WOODRIGHT_BACKEND_IMAGE)"
 [[ "$(pin_of WOODRIGHT_STOREFRONT_IMAGE)" == "$SF_REF" ]] && pass "success: storefront pin advanced" || fail "success: storefront pin"
+[[ "$(pin_of WOODRIGHT_RELEASE_SHA)" == "$APP_SHA" ]] && pass "success: common WOODRIGHT_RELEASE_SHA advanced" || fail "success: RELEASE_SHA=$(pin_of WOODRIGHT_RELEASE_SHA)"
 [[ "$(pin_of UNRELATED_KEY)" == "keep-me" ]] && pass "success: unrelated compose keys preserved" || fail "success: unrelated key lost"
 [[ "$(digest_of woodright-production-backend)" == "$NEW_BE_DIG" ]] && pass "success: backend runs the new digest" || fail "success: backend digest"
 [[ "$(digest_of woodright-production-storefront)" == "$NEW_SF_DIG" ]] && pass "success: storefront runs the new digest" || fail "success: storefront digest"
@@ -407,6 +409,8 @@ run_exec "$EV" "$TMP/out-be-recreate.txt" "WOODRIGHT_FAKE_COMPOSE_FAIL=backend"
 [[ "$RC" -eq 10 ]] && pass "backend_recreate: rollback_ok exit 10" || fail "backend_recreate: rc=$RC"
 [[ "$(state_file "$EV")" == "rolled_back" ]] && pass "backend_recreate: rolled_back" || fail "backend_recreate: state"
 [[ "$(pin_of WOODRIGHT_BACKEND_IMAGE)" == "$OLD_BE_REF" ]] && pass "backend_recreate: pins restored" || fail "backend_recreate: pins not restored"
+[[ "$(pin_of WOODRIGHT_RELEASE_SHA)" == "9946b42aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" ]] \
+  && pass "backend_recreate: RELEASE_SHA restored from backup" || fail "backend_recreate: RELEASE_SHA not restored"
 [[ "$(digest_of woodright-production-backend)" == "$OLD_BE_DIG" ]] && pass "backend_recreate: backend still on the pre-cutover digest" || fail "backend_recreate: live digest wrong"
 [[ "$(id_of woodright-production-backend)" == "id-backend-live" ]] && pass "backend_recreate: original container never replaced" || fail "backend_recreate: id mismatch"
 assert_no_keepers "backend_recreate"
@@ -687,6 +691,9 @@ assert packet["application_source_sha"] != packet["helper_install_sha"]
 plan = packet["planned_mutation"]
 assert plan["recreate"]["order"] == ["backend", "storefront"], plan["recreate"]["order"]
 assert plan["pin_plan"]["keys"]["WOODRIGHT_BACKEND_IMAGE"].endswith("a" * 64)
+assert plan["pin_plan"]["keys"]["WOODRIGHT_RELEASE_SHA"] == sys.argv[2], plan["pin_plan"]["keys"]
+assert plan["pin_plan"]["common_release_sha"] == sys.argv[2]
+assert "WOODRIGHT_RELEASE_SHA" in plan["pin_plan"]["write_order"]
 assert "prepared" in plan["state_machine"]
 assert packet["no_mutation_performed"] is True
 
