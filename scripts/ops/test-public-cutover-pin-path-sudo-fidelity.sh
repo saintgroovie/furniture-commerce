@@ -87,12 +87,15 @@ else
   pass "no predictable PID staged path in atomic_install"
 fi
 # Exercise non-sudo atomic_install via extracted function against a temp dest.
+# Include ownership helpers introduced for the 2026-08-03 root/sudo owner-preserve fix.
 # shellcheck disable=SC1090
 eval "$(
   awk '
+    /^_wr_pin_verify_meta\(\)/ {grab=1}
+    /^_wr_pin_dest_meta\(\)/ {grab=1}
     /^atomic_install\(\)/ {grab=1}
     grab {print}
-    grab && /^}/ {exit}
+    grab && /^}/ {grab=0; print ""}
   ' "$PIN"
 )"
 # Stub sudo away - atomic_install path under test is USE_SUDO=0
@@ -231,7 +234,9 @@ else
 fi
 
 # 8) Install creates scripts/release symlink after tools/release install
-if grep -q 'ln -sfn' "$INSTALL" && grep -q '/srv/woodright/scripts/release' "$INSTALL"; then
+# Contract uses ${WR_ROOT}/scripts/release (not a hardcoded /srv path).
+if grep -q 'ln -sfn' "$INSTALL" \
+  && grep -q 'scripts_release_dir="${WR_ROOT}/scripts/release"' "$INSTALL"; then
   pass "install-environment-governance creates scripts/release symlink"
 else
   fail "install does not create scripts/release symlink for pin script"
