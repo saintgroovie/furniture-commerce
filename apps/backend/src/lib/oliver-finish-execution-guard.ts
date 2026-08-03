@@ -20,7 +20,7 @@ export function extractOliverColorTokenFromUrl(url: string): string | null {
   const explicit = hay.match(/(?:color|colour)[_-]([a-z0-9-]+)/i)
   if (explicit?.[1]) {
     const t = explicit[1].toLowerCase()
-    return t === "lillian" ? "lilian" : t
+    return t === "lilian" ? "lillian" : t
   }
   return null
 }
