@@ -9,6 +9,7 @@ import { PdpHeroAffordance } from "@/components/pdp-hero-affordance"
 import { PdpImageLightbox } from "@/components/pdp-image-lightbox"
 import { useHeroSwipe } from "@/components/use-hero-swipe"
 import type { CardColorVariant, CardModelVariant } from "@/lib/card-color-media"
+import { isFabricFamilyOnlyUpholstery } from "@/lib/card-color-media"
 import {
   defaultGreenwichBedSelection,
   resolveGreenwichBedMedia,
@@ -1940,18 +1941,63 @@ function ProductCardMediaGalleryCoreInner({
               )
             )}
           {showVisibleUpholstery &&
-            renderSwatchRow(
-              "Обивка",
-              "Обивка",
-              visibleUpholsteryVariants!,
-              activeUpholsteryKey,
-              onUpholsteryPick,
-              { disabledKeys: upholsteryDisabledKeys }
-              /* Color chips (curated swatchHex). Do NOT pass imageSwatches:
-                 Greenwich bed matrix fills mainSrc with whole-bed heroes, which
-                 rendered as misleading mini product photos. Fabric closeups use
-                 separateFabricRows + imageSwatches instead (Oliver). */
-            )}
+            (isFabricFamilyOnlyUpholstery(visibleUpholsteryVariants!) ? (
+              /* PASS B.1: fabric families = text chips under one «Обивка».
+                 Never color swatches / product-thumbnail image tiles. */
+              <div
+                className="product-card-selector-section"
+                role="toolbar"
+                aria-label="Обивка"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <span className="product-card-selector-label">
+                  Обивка
+                  {isPdp && (
+                    <>
+                      <span className="product-card-selector-sep" aria-hidden="true">
+                        {": "}
+                      </span>
+                      <span className="product-card-selector-value">
+                        {activeUpholstery?.label ?? pdpCopy.optionChooseValue}
+                      </span>
+                    </>
+                  )}
+                </span>
+                <div className="product-card-model-chips">
+                  {visibleUpholsteryVariants!.map((variant) => {
+                    const isActive = variant.key === activeUpholsteryKey
+                    const isDisabled = Boolean(
+                      upholsteryDisabledKeys?.has(variant.key)
+                    )
+                    return (
+                      <button
+                        key={variant.key}
+                        type="button"
+                        className={`product-card-model-chip${isActive ? " is-active" : ""}${isDisabled ? " is-unavailable" : ""}`}
+                        aria-pressed={isActive}
+                        disabled={isDisabled}
+                        onClick={onUpholsteryPick(variant)}
+                      >
+                        {variant.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            ) : (
+              renderSwatchRow(
+                "Обивка",
+                "Обивка",
+                visibleUpholsteryVariants!,
+                activeUpholsteryKey,
+                onUpholsteryPick,
+                { disabledKeys: upholsteryDisabledKeys }
+                /* Color chips (curated swatchHex / tokens). Do NOT pass imageSwatches:
+                   execution mainSrc is often a full-product hero. PASS B.1: Oliver
+                   fabric families use text chips above — never separateFabricRows
+                   + product-thumbnail tiles. */
+              )
+            ))}
           {isGreenwichPaint || isProvencePaintWood ? (
             <>
               {showFinish &&

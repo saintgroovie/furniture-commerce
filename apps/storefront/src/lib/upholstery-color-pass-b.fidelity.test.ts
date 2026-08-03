@@ -9,7 +9,7 @@ import {
 } from "./card-color-media"
 
 {
-  /* OL-07-1: PDP may separate fabric rows; card PASS A contains */
+  /* OL-07-1: PASS B.1 single Обивка axis; card PASS A contains */
   const product = {
     handle: "ol-07-1",
     title: "Сундук",
@@ -24,7 +24,8 @@ import {
     },
   }
   const raw = buildIntraProductExecutionSelectors(product, product.thumbnail)
-  assert.ok((raw.separateFabricRows?.length ?? 0) >= 2)
+  assert.equal(raw.separateFabricRows, undefined)
+  assert.equal(raw.upholstery?.length, 4)
   const card = containCatalogCardExecutionSelectors(raw, product)
   assert.equal(card.separateFabricRows, undefined)
   assert.equal(card.upholstery, undefined)

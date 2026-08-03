@@ -242,7 +242,7 @@ export function normalizeUpholsteryMetadata(
     actions.push("CODE_NORMALIZATION_ONLY")
     actions.push("METADATA_VALUE_NORMALIZATION_REQUIRED")
     notes.push(
-      "Multiple fabric families present — card PASS A containment; PDP separate rows OK"
+      "Multiple fabric families present — card PASS A containment; PDP PASS B.1 single Обивка axis (no per-family sections)"
     )
   } else if (fabric.length === 0 && soft && finishBefore.length === 0) {
     actions.push("OWNER_MAPPING_REQUIRED")

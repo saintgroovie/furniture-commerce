@@ -13,6 +13,7 @@
 - Do not treat finish paint as upholstery
 - Fabric-family keys are not catalog card axes (PASS A retained)
 - Soft + finish family keys → rebucket to fabric for selectors; data apply separate
+- PASS B.1: PDP uses one «Обивка» axis for Oliver fabric families (text chips); never per-family `separateFabricRows` / product-thumbnail swatches
 
 ## Data apply
 Evidence `data-plan/EXACT-PUBLIC-DEMO-UPHOLSTERY-DATA-REPAIR.md` — **not applied** in this PR.
