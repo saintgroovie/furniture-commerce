@@ -145,3 +145,14 @@ Rules:
 - verify without mutation: `bash ops/release/verify-environment-governance-bundle.sh --expected-sha <40-hex>`
 
 Partial helper installs that overwrite a subset of libs without updating the governance marker create a mixed bundle and must be treated as integrity incidents. Prefer the full governance installer for all cutover/common/profile updates.
+
+## Install provenance markers
+
+Canonical: `/srv/woodright/tools/release/INSTALLED_ENV_GOVERNANCE_SHA.txt`
+
+Compatibility mirrors (same SHA, not independent authorities):
+
+- `/srv/woodright/INSTALLED_PRODUCTION_CUTOVER_HELPER_SHA.txt`
+- `/srv/woodright/INSTALLED_ENV_GOVERNANCE_SHA.txt`
+
+See `docs/operator/production-helper-install-provenance.md`.

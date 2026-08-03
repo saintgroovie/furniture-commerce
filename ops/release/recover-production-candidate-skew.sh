@@ -84,6 +84,8 @@ IFS=$'\n\t'
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=../lib/woodright-environment-profile.sh
 source "$HERE/../lib/woodright-environment-profile.sh"
+# shellcheck disable=SC1091
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib/woodright-install-provenance.sh"
 # shellcheck source=../lib/woodright-cutover-common.sh
 source "$HERE/../lib/woodright-cutover-common.sh"
 # shellcheck source=../lib/woodright-component-authority.sh
@@ -240,18 +242,21 @@ sha256_of() {
 }
 
 resolve_helper_install_sha() {
-  local file="${WOODRIGHT_HELPER_INSTALL_SHA_FILE:-$HELPER_SHA_FILE_DEFAULT}"
-  if [[ -n "${WOODRIGHT_HELPER_INSTALL_SHA:-}" ]]; then
-    HELPER_INSTALL_SHA="${WOODRIGHT_HELPER_INSTALL_SHA}"
-    return 0
+  # Canonical authority: tools/release/INSTALLED_ENV_GOVERNANCE_SHA.txt
+  # (via wr_resolve_installed_governance_sha). Legacy cutover/root markers are
+  # mirrors only - mismatch fail-closes mutating paths.
+  local mode_flag="--mutating"
+  if [[ "${MODE:-}" == "dry-run" || "${DRY_RUN:-0}" == "1" ]]; then
+    mode_flag="--dry-run"
   fi
-  if [[ -r "$file" ]]; then
-    HELPER_INSTALL_SHA="$(tr -d '[:space:]' <"$file" 2>/dev/null || true)"
-    return 0
+  # Harness may set WOODRIGHT_INSTALL_WR_ROOT / WOODRIGHT_HELPER_INSTALL_SHA.
+  if ! wr_resolve_installed_governance_sha "$mode_flag"; then
+    die "installed governance/helper provenance unresolved or drifted (canonical vs legacy markers)"
   fi
-  HELPER_INSTALL_SHA=""
-  log "NOTE helper_install_sha unresolved - recorded as empty, never substituted by application_source_sha"
+  HELPER_INSTALL_SHA="$WR_INSTALLED_GOVERNANCE_SHA"
+  log "operation_helper_install_sha=$HELPER_INSTALL_SHA source=$WR_INSTALL_PROVENANCE_SOURCE legacy_cutover=$WR_INSTALL_PROVENANCE_LEGACY_CUTOVER legacy_root=$WR_INSTALL_PROVENANCE_LEGACY_ROOT"
 }
+
 
 # ---------------------------------------------------------------------------
 # CLI + environment authority
@@ -818,9 +823,11 @@ packet = {
     "environment_class": environment_class,
     "application_source_sha": source_sha,
     "helper_install_sha": os.environ.get("WR_PACKET_HELPER_SHA", ""),
+    "operation_helper_install_sha": os.environ.get("WR_PACKET_HELPER_SHA", ""),
     "sha_separation_note": (
         "application_source_sha is the OCI revision of the images; "
-        "helper_install_sha is the ops commit that installed this script; "
+        "operation_helper_install_sha (alias helper_install_sha) is the ops "
+        "commit that installed the helper performing this operation; "
         "they are recorded separately and never substituted for each other"
     ),
     "mutation_lock_path": lock_path,
@@ -1253,6 +1260,7 @@ common = {
     "component": "pair",
     "application_source_sha": app_sha,
     "helper_install_sha": helper_sha,
+    "operation_helper_install_sha": helper_sha,
     "public_exposure": "private",
     "updated_at_utc": now,
 }

@@ -212,6 +212,10 @@ fi
 BACKUP_PARENT="${WOODRIGHT_INSTALL_BACKUP_ROOT:-$WR_ROOT/backups}"
 BACKUP=""
 MARKER="${TOOLS_ROOT}/INSTALLED_ENV_GOVERNANCE_SHA.txt"
+# shellcheck source=ops/lib/woodright-install-provenance.sh
+source "$REPO_ROOT/ops/lib/woodright-install-provenance.sh"
+WOODRIGHT_INSTALL_WR_ROOT="$WR_ROOT"
+
 MARKER_FROM="${TOOLS_ROOT}/INSTALLED_FROM_MERGE_SHA.txt"
 TEXT_MANIFEST_DST="${TOOLS_ROOT}/ENV_GOVERNANCE_INSTALL_MANIFEST.txt"
 BUNDLE_MANIFEST_DST="${TOOLS_ROOT}/ENV_GOVERNANCE_BUNDLE_MANIFEST.json"
@@ -230,6 +234,7 @@ FILES=(
   ops/lib/woodright-staging-mutation-lock.sh
   ops/lib/woodright-runtime-discovery.sh
   ops/lib/woodright-cutover-common.sh
+  ops/lib/woodright-install-provenance.sh
   ops/config/runtime-environments/public_demo.conf
   ops/config/runtime-environments/staging.conf
   ops/config/runtime-environments/production.conf
@@ -238,6 +243,7 @@ FILES=(
   ops/release/cutover-public-demo-pair.sh
   ops/release/cutover-production-candidate.sh
   ops/release/recover-production-candidate-skew.sh
+  ops/release/reconcile-production-candidate-metadata.sh
   ops/release/public-demo-critical-http-smoke.sh
   ops/release/rollback-staging-backend-from-keeper.sh
   ops/release/rollback-staging-storefront-from-keeper.sh
@@ -253,6 +259,7 @@ FILES=(
   docs/operator/environment-scoped-release-governance.md
   docs/operator/backend-media-promotion-gate.md
   docs/operator/production-candidate-rollback.md
+  docs/operator/production-helper-install-provenance.md
 )
 
 role_for() {
@@ -378,6 +385,10 @@ PREV_MARKER=""
 PREV_MARKER_FROM=""
 PREV_TEXT_MANIFEST=""
 PREV_BUNDLE_MANIFEST=""
+PREV_LEGACY_CUTOVER=""
+PREV_LEGACY_ROOT=""
+LEGACY_CUTOVER_MARKER="${WR_ROOT}/INSTALLED_PRODUCTION_CUTOVER_HELPER_SHA.txt"
+LEGACY_ROOT_MARKER="${WR_ROOT}/INSTALLED_ENV_GOVERNANCE_SHA.txt"
 if [[ -f "$MARKER" ]]; then
   cp -a "$MARKER" "$BACKUP/INSTALLED_ENV_GOVERNANCE_SHA.txt"
   PREV_MARKER="$BACKUP/INSTALLED_ENV_GOVERNANCE_SHA.txt"
@@ -389,6 +400,18 @@ if [[ -f "$MARKER_FROM" ]]; then
   PREV_MARKER_FROM="$BACKUP/INSTALLED_FROM_MERGE_SHA.txt"
 else
   : >"$BACKUP/marker_from_was_absent"
+fi
+if [[ -f "$LEGACY_CUTOVER_MARKER" ]]; then
+  cp -a "$LEGACY_CUTOVER_MARKER" "$BACKUP/INSTALLED_PRODUCTION_CUTOVER_HELPER_SHA.txt"
+  PREV_LEGACY_CUTOVER="$BACKUP/INSTALLED_PRODUCTION_CUTOVER_HELPER_SHA.txt"
+else
+  : >"$BACKUP/legacy_cutover_was_absent"
+fi
+if [[ -f "$LEGACY_ROOT_MARKER" ]]; then
+  cp -a "$LEGACY_ROOT_MARKER" "$BACKUP/INSTALLED_ENV_GOVERNANCE_SHA.root.txt"
+  PREV_LEGACY_ROOT="$BACKUP/INSTALLED_ENV_GOVERNANCE_SHA.root.txt"
+else
+  : >"$BACKUP/legacy_root_was_absent"
 fi
 if [[ -f "$TEXT_MANIFEST_DST" ]]; then
   cp -a "$TEXT_MANIFEST_DST" "$BACKUP/ENV_GOVERNANCE_INSTALL_MANIFEST.txt"
@@ -441,6 +464,18 @@ restore_previous_bundle() {
     cp -a "$PREV_MARKER_FROM" "$MARKER_FROM"
   elif [[ -f "$BACKUP/marker_from_was_absent" ]]; then
     rm -f "$MARKER_FROM"
+  fi
+  # Legacy compatibility mirrors must roll back with the canonical marker so a
+  # failed install cannot leave diverging authorities.
+  if [[ -n "$PREV_LEGACY_CUTOVER" && -f "$PREV_LEGACY_CUTOVER" ]]; then
+    cp -a "$PREV_LEGACY_CUTOVER" "$LEGACY_CUTOVER_MARKER"
+  elif [[ -f "$BACKUP/legacy_cutover_was_absent" ]]; then
+    rm -f "$LEGACY_CUTOVER_MARKER"
+  fi
+  if [[ -n "$PREV_LEGACY_ROOT" && -f "$PREV_LEGACY_ROOT" ]]; then
+    cp -a "$PREV_LEGACY_ROOT" "$LEGACY_ROOT_MARKER"
+  elif [[ -f "$BACKUP/legacy_root_was_absent" ]]; then
+    rm -f "$LEGACY_ROOT_MARKER"
   fi
   if [[ -n "$PREV_TEXT_MANIFEST" && -f "$PREV_TEXT_MANIFEST" ]]; then
     cp -a "$PREV_TEXT_MANIFEST" "$TEXT_MANIFEST_DST"
@@ -666,13 +701,12 @@ if [[ "$VERIFY_FAIL" != "0" ]]; then
   die "install verify failed; previous bundle restored; marker not updated"
 fi
 
-# Marker ONLY after full PASS
+# Marker ONLY after full PASS (canonical tools/release + legacy compatibility mirrors)
 mkdir -p "$TOOLS_ROOT"
-printf '%s\n' "$SOURCE_SHA" >"$MARKER"
-printf '%s\n' "$SOURCE_SHA" >"$MARKER_FROM"
 cp "$TEXT_MANIFEST" "$TEXT_MANIFEST_DST"
 cp "$BUNDLE_TMP" "$BUNDLE_MANIFEST_DST"
-chmod 0644 "$MARKER" "$MARKER_FROM" "$TEXT_MANIFEST_DST" "$BUNDLE_MANIFEST_DST"
+chmod 0644 "$TEXT_MANIFEST_DST" "$BUNDLE_MANIFEST_DST"
+WOODRIGHT_INSTALL_WR_ROOT="$WR_ROOT" wr_install_provenance_write_markers "$SOURCE_SHA" "$WR_ROOT" "$TOOLS_ROOT"
 
 # Final verifier (same SHA)
 if ! bash "$OPS_ROOT/release/verify-environment-governance-bundle.sh" \
@@ -684,6 +718,11 @@ if ! bash "$OPS_ROOT/release/verify-environment-governance-bundle.sh" \
   restore_previous_bundle
   RESTORE_DONE=1
   die "post-marker bundle verify failed; restored previous bundle"
+fi
+if ! WOODRIGHT_INSTALL_WR_ROOT="$WR_ROOT" wr_install_provenance_verify_mirrors "$SOURCE_SHA" "$WR_ROOT" "$TOOLS_ROOT"; then
+  restore_previous_bundle
+  RESTORE_DONE=1
+  die "post-marker provenance mirror verify failed; restored previous bundle"
 fi
 
 # Seed public_demo ownership from legacy shared root if empty (metadata copy only)

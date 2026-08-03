@@ -95,7 +95,7 @@ Consequences for the manual procedure further down:
   `json/rollback-result.json`, `raw/health-poll-*.txt`, the pin backup and the
   pre/post inspect snapshots. Read it before starting any manual step.
 - The application release SHA (`application_source_sha`, the OCI revision of
-  the images) and the helper install SHA (`helper_install_sha`, the ops commit
+  the images) and the operation helper SHA (`operation_helper_install_sha` / alias `helper_install_sha`, the ops commit
   that installed the script) are recorded as separate fields. When restoring,
   anchor on the application SHA - never on the helper SHA.
 

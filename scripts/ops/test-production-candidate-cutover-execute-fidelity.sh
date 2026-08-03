@@ -753,21 +753,29 @@ for name in ("ACTIVE_OWNER.json", "EXPECTED_RELEASE.json", "ACTIVE_RELEASE.json"
     doc = json.load(open(os.path.join(own, name)))
     assert doc["application_source_sha"] == app, (name, doc["application_source_sha"])
     assert doc["helper_install_sha"] == helper, (name, doc["helper_install_sha"])
+    # Alias field: same operation helper SHA may appear twice (helper_install_sha +
+    # operation_helper_install_sha). Never substitute the application SHA.
+    op = doc.get("operation_helper_install_sha", helper)
+    assert op == helper, (name, op)
     blob = json.dumps(doc)
-    assert blob.count(helper) == 1, f"{name} repeats the helper SHA"
+    assert blob.count(helper) in (1, 2), f"{name} unexpected helper SHA count={blob.count(helper)}"
+    assert app not in (doc["helper_install_sha"], op)
 expected = json.load(open(os.path.join(own, "EXPECTED_RELEASE.json")))
 assert expected["backend_digest"].startswith("sha256:")
 PY
 grep -q "$HELPER_SHA" "$EV/json/helper-install-sha.txt" && pass "sha_separation: evidence records the helper SHA" || fail "sha_separation: evidence helper sha"
 grep -q "$APP_SHA" "$EV/json/application-source-sha.txt" && pass "sha_separation: evidence records the application SHA" || fail "sha_separation: evidence app sha"
 
-# unresolved helper SHA must stay empty, never fall back to the application SHA
+# Missing install provenance must fail closed - never fall back to application SHA
+# and never commit with an empty helper field.
 reset_harness
 EV="$TMP/ev-no-helper-sha"
 ENVS=()
 while IFS= read -r line; do ENVS+=("$line"); done < <(base_env)
 ENVS+=("WOODRIGHT_EVIDENCE_DIR=$EV" "WOODRIGHT_FAKE_DOCKER_ALLOW_MUTATION=1"
-  "WOODRIGHT_HELPER_INSTALL_SHA=" "WOODRIGHT_HELPER_INSTALL_SHA_FILE=$TMP/absent-helper-sha.txt")
+  "WOODRIGHT_HELPER_INSTALL_SHA=" "WOODRIGHT_INSTALLED_GOVERNANCE_SHA="
+  "WOODRIGHT_INSTALL_WR_ROOT=$TMP/wr-no-gov-root")
+mkdir -p "$TMP/wr-no-gov-root/tools/release"
 set +e
 env "${ENVS[@]}" bash "$SCRIPT" \
   --environment production --component pair --source-sha "$APP_SHA" \
@@ -775,11 +783,19 @@ env "${ENVS[@]}" bash "$SCRIPT" \
   --mode execute --confirm-mutation "$CONFIRM" >"$TMP/out-no-helper-sha.txt" 2>&1
 RC=$?
 set -e
-[[ "$RC" -eq 0 ]] && pass "no_helper_sha: execute succeeded" || fail "no_helper_sha: rc=$RC"
-grep -q '"helper_install_sha": ""' "$OWN_DIR/ACTIVE_RELEASE.json" \
-  && pass "no_helper_sha: empty helper SHA, not the application SHA" || fail "no_helper_sha: helper field"
-grep -q '"application_source_sha": "'"$APP_SHA"'"' "$OWN_DIR/ACTIVE_RELEASE.json" \
-  && pass "no_helper_sha: application SHA still recorded" || fail "no_helper_sha: app field"
+[[ "$RC" -ne 0 ]] && pass "no_helper_sha: execute fail-closed" || fail "no_helper_sha: rc=$RC (expected non-zero)"
+grep -qE 'provenance unresolved|missing/invalid canonical' "$TMP/out-no-helper-sha.txt" \
+  && pass "no_helper_sha: reports missing canonical provenance" || fail "no_helper_sha: error text"
+[[ ! -f "$OWN_DIR/ACTIVE_OWNER.json" ]] \
+  && pass "no_helper_sha: no ACTIVE_OWNER written" || fail "no_helper_sha: ACTIVE_OWNER written despite fail-closed"
+grep -q 'pre-existing' "$OWN_DIR/ACTIVE_RELEASE.json" \
+  && pass "no_helper_sha: pre-existing ACTIVE_RELEASE intact" || fail "no_helper_sha: ACTIVE_RELEASE clobbered"
+# Guard: application SHA must not appear as a substitute helper value in any stdout JSON
+if grep -q "\"helper_install_sha\": \"$APP_SHA\"" "$TMP/out-no-helper-sha.txt"; then
+  fail "no_helper_sha: application SHA substituted into helper field"
+else
+  pass "no_helper_sha: application SHA not substituted for helper"
+fi
 
 # ==========================================================================
 # 20) WOODRIGHT_COMPOSE_BIN override is honoured
