@@ -143,40 +143,6 @@ export function ContactActionLink({
   )
 }
 
-/** Shared bordered contact action as a real button (MAX copy). */
-export function ContactActionButton({
-  density = "page",
-  tone = "secondary",
-  layout = "leadingIcon",
-  icon,
-  iconClassName,
-  className,
-  children,
-  onClick,
-  "aria-label": ariaLabel,
-  "aria-describedby": ariaDescribedBy,
-  type = "button",
-}: ContactActionBaseProps & {
-  onClick?: () => void
-  "aria-label"?: string
-  "aria-describedby"?: string
-  type?: "button" | "submit" | "reset"
-}) {
-  return (
-    <button
-      type={type}
-      className={actionClassName({ density, tone, layout, className })}
-      aria-label={ariaLabel}
-      aria-describedby={ariaDescribedBy}
-      onClick={onClick}
-    >
-      <ActionChrome layout={layout} icon={icon} iconClassName={iconClassName}>
-        {children}
-      </ActionChrome>
-    </button>
-  )
-}
-
 type PhoneTileProps = {
   label: string
   display: string

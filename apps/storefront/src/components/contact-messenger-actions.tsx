@@ -1,5 +1,3 @@
-"use client"
-
 import {
   ContactActionLink,
   type ContactActionDensity,
@@ -8,51 +6,45 @@ import {
   ContactMessageIcon,
   ContactSendIcon,
 } from "@/components/contact-action-icons"
-import { MaxContactAction } from "@/components/max-contact-action"
 import { formatRuInline } from "@/lib/format-ru-copy"
 import { contactsCopy } from "@/lib/woodright-copy"
 import { showroomContacts } from "@/lib/showroom-contacts"
 
-function channelIcon(id: "telegram" | "whatsapp", size: 14 | 16 | 18) {
+function channelIcon(id: "telegram" | "whatsapp" | "max", size: 14 | 16) {
   if (id === "telegram") return <ContactSendIcon size={size} />
   return <ContactMessageIcon size={size} />
+}
+
+function channelAria(id: "telegram" | "whatsapp" | "max"): string {
+  if (id === "telegram") return contactsCopy.messengerTelegramAria
+  if (id === "whatsapp") return contactsCopy.messengerWhatsappAria
+  return contactsCopy.messengerMaxAria
+}
+
+function channelValue(id: "telegram" | "whatsapp" | "max"): string {
+  if (id === "max") return contactsCopy.maxWriteValue
+  return contactsCopy.messengerWriteValue
 }
 
 type MessengerGridProps = {
   density?: ContactActionDensity
 }
 
-function linkChannels() {
-  return showroomContacts.messengers.flatMap((item) => {
-    if (item.id === "telegram" || item.id === "whatsapp") {
-      if (!item.href) return []
-      return [
-        {
-          id: item.id,
-          label: item.label,
-          href: item.href,
-        } as const,
-      ]
-    }
-    return []
-  })
-}
-
 /**
- * Page: three equal channel tiles (Telegram / WhatsApp / MAX).
- * Dropdown: real messenger pair + separate full-width MAX copy utility.
- * MAX purpose lives inside the action - no external helper caption.
+ * Page + dropdown messenger channels from `showroomContacts.messengers`.
+ * Every channel is a real external link - no copy-number utility.
  */
 export function ContactMessengerActions({
   density = "page",
 }: MessengerGridProps) {
-  const channels = linkChannels()
+  const channels = showroomContacts.messengers
+  const iconSize = density === "dropdown" ? 14 : 16
 
   if (density === "dropdown") {
     return (
       <div className="contact-messenger-block contact-dropdown-channels">
         <ul
-          className="contact-action-grid contact-dropdown-channel-pair"
+          className="contact-action-grid contact-dropdown-channel-trio"
           aria-label={contactsCopy.messengersLabel}
         >
           {channels.map((item) => (
@@ -64,12 +56,8 @@ export function ContactMessengerActions({
                 layout="leadingIcon"
                 className="contact-action--channel contact-dropdown-channel-link"
                 external
-                aria-label={
-                  item.id === "telegram"
-                    ? contactsCopy.messengerTelegramAria
-                    : contactsCopy.messengerWhatsappAria
-                }
-                icon={channelIcon(item.id, 14)}
+                aria-label={channelAria(item.id)}
+                icon={channelIcon(item.id, iconSize)}
               >
                 <span className="contact-action-copy contact-action-copy--single">
                   <span className="contact-action-line">
@@ -80,7 +68,6 @@ export function ContactMessengerActions({
             </li>
           ))}
         </ul>
-        <MaxContactAction density="dropdown" />
       </div>
     )
   }
@@ -100,22 +87,20 @@ export function ContactMessengerActions({
               layout="leadingIcon"
               className="contact-action--channel"
               external
-              icon={channelIcon(item.id, 16)}
+              aria-label={channelAria(item.id)}
+              icon={channelIcon(item.id, iconSize)}
             >
               <span className="contact-action-copy">
                 <span className="contact-action-kicker">
                   {formatRuInline(item.label)}
                 </span>
                 <span className="contact-action-value">
-                  {formatRuInline(contactsCopy.messengerWriteValue)}
+                  {formatRuInline(channelValue(item.id))}
                 </span>
               </span>
             </ContactActionLink>
           </li>
         ))}
-        <li className="contact-action-grid-item contact-action-grid-item--max">
-          <MaxContactAction density="page" />
-        </li>
       </ul>
     </div>
   )
