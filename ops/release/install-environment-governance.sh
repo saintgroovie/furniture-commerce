@@ -237,6 +237,7 @@ FILES=(
   ops/lib/woodright-install-provenance.sh
   ops/lib/woodright-compose-service-recreate.sh
   ops/lib/woodright-compose-env-authority.sh
+  ops/lib/woodright-production-release-sha-reconcile.sh
   ops/lib/woodright-public-demo-metadata-authority.sh
   ops/config/runtime-environments/public_demo.conf
   ops/config/runtime-environments/staging.conf
@@ -247,6 +248,7 @@ FILES=(
   ops/release/cutover-production-candidate.sh
   ops/release/recover-production-candidate-skew.sh
   ops/release/reconcile-production-candidate-metadata.sh
+  ops/release/reconcile-production-release-sha.sh
   ops/release/reconcile-public-demo-metadata.sh
   ops/release/public-demo-critical-http-smoke.sh
   ops/release/rollback-staging-backend-from-keeper.sh
@@ -259,11 +261,13 @@ FILES=(
   ops/monitoring/woodright-health-check.sh
   ops/monitoring/woodright-host-publish-check.sh
   ops/systemd/woodright-monitor.service
+  ops/systemd/woodright-monitor-production-candidate.service
   scripts/release/reconcile-public-image-pins.sh
   docs/operator/environment-scoped-release-governance.md
   docs/operator/backend-media-promotion-gate.md
   docs/operator/production-candidate-rollback.md
   docs/operator/production-helper-install-provenance.md
+  docs/operator/production-candidate-authority-reconcile.md
 )
 
 role_for() {
@@ -279,7 +283,9 @@ role_for() {
     ops/lib/woodright-host-publish.sh) echo host_publish ;;
     ops/lib/woodright-component-authority.sh) echo component_authority ;;
     ops/release/reconcile-runtime-manifests.sh) echo runtime_manifest_reconciler ;;
+    ops/release/reconcile-production-release-sha.sh) echo production_release_sha_reconciler ;;
     ops/release/reconcile-public-demo-metadata.sh) echo public_demo_metadata_reconciler ;;
+    ops/lib/woodright-production-release-sha-reconcile.sh) echo production_release_sha_reconcile_lib ;;
     ops/lib/woodright-compose-env-authority.sh) echo compose_env_authority ;;
     ops/lib/woodright-public-demo-metadata-authority.sh) echo public_demo_metadata_authority ;;
     scripts/release/reconcile-public-image-pins.sh) echo pin_reconciler ;;
@@ -497,8 +503,16 @@ restore_previous_bundle() {
   fi
   if [[ -f "$BACKUP/etc_systemd_woodright-monitor.service" && -d /etc/systemd/system ]]; then
     cp -a "$BACKUP/etc_systemd_woodright-monitor.service" /etc/systemd/system/woodright-monitor.service
+  elif [[ "$CANONICAL_LAYOUT" == "1" && -f "$BACKUP/etc_systemd_woodright-monitor.service.was_absent" ]]; then
+    rm -f /etc/systemd/system/woodright-monitor.service
   elif [[ "$CANONICAL_LAYOUT" == "1" && -f "$BACKUP/systemd_unit_was_absent" ]]; then
     rm -f /etc/systemd/system/woodright-monitor.service
+  fi
+  if [[ -f "$BACKUP/etc_systemd_woodright-monitor-production-candidate.service" && -d /etc/systemd/system ]]; then
+    cp -a "$BACKUP/etc_systemd_woodright-monitor-production-candidate.service" \
+      /etc/systemd/system/woodright-monitor-production-candidate.service
+  elif [[ "$CANONICAL_LAYOUT" == "1" && -f "$BACKUP/etc_systemd_woodright-monitor-production-candidate.service.was_absent" ]]; then
+    rm -f /etc/systemd/system/woodright-monitor-production-candidate.service
   fi
   # Compat symlink restore/removal for scripts/release helpers.
   local base link_dst link_bak
@@ -605,17 +619,20 @@ for rel in "${FILES[@]}"; do
   fi
 done
 
-# Live systemd unit (profile-aware monitor). Backup first; daemon-reload only.
+# Live systemd units (profile-aware monitors). Backup first; daemon-reload only.
 if [[ "$CANONICAL_LAYOUT" == "1" && -d /etc/systemd/system ]]; then
-  UNIT_SRC="$REPO_ROOT/ops/systemd/woodright-monitor.service"
-  UNIT_DST=/etc/systemd/system/woodright-monitor.service
-  if [[ -f "$UNIT_DST" ]]; then
-    cp -a "$UNIT_DST" "$BACKUP/etc_systemd_woodright-monitor.service"
-  else
-    : >"$BACKUP/systemd_unit_was_absent"
-  fi
-  install -m 0644 "$UNIT_SRC" "$UNIT_DST"
-  echo "install ops/systemd/woodright-monitor.service -> $UNIT_DST sha=$(checksums "$UNIT_DST")" >>"$TEXT_MANIFEST"
+  for unit_rel in ops/systemd/woodright-monitor.service ops/systemd/woodright-monitor-production-candidate.service; do
+    UNIT_SRC="$REPO_ROOT/$unit_rel"
+    UNIT_DST="/etc/systemd/system/$(basename "$unit_rel")"
+    bak_name="etc_systemd_$(basename "$unit_rel")"
+    if [[ -f "$UNIT_DST" ]]; then
+      cp -a "$UNIT_DST" "$BACKUP/$bak_name"
+    else
+      : >"$BACKUP/${bak_name}.was_absent"
+    fi
+    install -m 0644 "$UNIT_SRC" "$UNIT_DST"
+    echo "install $unit_rel -> $UNIT_DST sha=$(checksums "$UNIT_DST")" >>"$TEXT_MANIFEST"
+  done
   if command -v systemctl >/dev/null 2>&1; then
     systemctl daemon-reload
     echo "systemctl_daemon_reload=1" >>"$TEXT_MANIFEST"
@@ -659,8 +676,10 @@ def role_for(rel: str) -> str:
         "ops/release/reconcile-runtime-manifests.sh": "runtime_manifest_reconciler",
         "scripts/release/reconcile-public-image-pins.sh": "pin_reconciler",
         "ops/release/reconcile-public-demo-metadata.sh": "public_demo_metadata_reconciler",
+        "ops/release/reconcile-production-release-sha.sh": "production_release_sha_reconciler",
         "ops/lib/woodright-compose-env-authority.sh": "compose_env_authority",
         "ops/lib/woodright-public-demo-metadata-authority.sh": "public_demo_metadata_authority",
+        "ops/lib/woodright-production-release-sha-reconcile.sh": "production_release_sha_reconcile_lib",
         "ops/release/install-environment-governance.sh": "installer",
         "ops/release/verify-environment-governance-bundle.sh": "bundle_verifier",
     }
@@ -719,6 +738,22 @@ cp "$TEXT_MANIFEST" "$TEXT_MANIFEST_DST"
 cp "$BUNDLE_TMP" "$BUNDLE_MANIFEST_DST"
 chmod 0644 "$TEXT_MANIFEST_DST" "$BUNDLE_MANIFEST_DST"
 WOODRIGHT_INSTALL_WR_ROOT="$WR_ROOT" wr_install_provenance_write_markers "$SOURCE_SHA" "$WR_ROOT" "$TOOLS_ROOT"
+
+# Re-validate every installed FILE against source AFTER marker write (race/TOCTOU).
+POST_MARKER_FAIL=0
+for rel in "${FILES[@]}"; do
+  src="$REPO_ROOT/$rel"
+  dest="$(dest_for "$rel")"
+  if [[ "$(checksums "$dest")" != "$(checksums "$src")" ]]; then
+    log "POST_MARKER_MISMATCH $rel"
+    POST_MARKER_FAIL=1
+  fi
+done
+if [[ "$POST_MARKER_FAIL" != "0" ]]; then
+  restore_previous_bundle
+  RESTORE_DONE=1
+  die "post-marker file revalidation failed; previous bundle restored"
+fi
 
 # Final verifier (same SHA)
 if ! bash "$OPS_ROOT/release/verify-environment-governance-bundle.sh" \

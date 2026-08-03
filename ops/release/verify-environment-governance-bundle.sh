@@ -76,6 +76,7 @@ REQUIRED_JSON='[
   "ops/lib/woodright-install-provenance.sh",
   "ops/lib/woodright-compose-service-recreate.sh",
   "ops/lib/woodright-compose-env-authority.sh",
+  "ops/lib/woodright-production-release-sha-reconcile.sh",
   "ops/lib/woodright-public-demo-metadata-authority.sh",
   "ops/config/runtime-environments/public_demo.conf",
   "ops/config/runtime-environments/staging.conf",
@@ -86,6 +87,7 @@ REQUIRED_JSON='[
   "ops/release/cutover-production-candidate.sh",
   "ops/release/recover-production-candidate-skew.sh",
   "ops/release/reconcile-production-candidate-metadata.sh",
+  "ops/release/reconcile-production-release-sha.sh",
   "ops/release/reconcile-public-demo-metadata.sh",
   "ops/release/public-demo-critical-http-smoke.sh",
   "ops/release/rollback-staging-backend-from-keeper.sh",
@@ -98,11 +100,13 @@ REQUIRED_JSON='[
   "ops/monitoring/woodright-health-check.sh",
   "ops/monitoring/woodright-host-publish-check.sh",
   "ops/systemd/woodright-monitor.service",
+  "ops/systemd/woodright-monitor-production-candidate.service",
   "scripts/release/reconcile-public-image-pins.sh",
   "docs/operator/environment-scoped-release-governance.md",
   "docs/operator/backend-media-promotion-gate.md",
   "docs/operator/production-candidate-rollback.md",
-  "docs/operator/production-helper-install-provenance.md"
+  "docs/operator/production-helper-install-provenance.md",
+  "docs/operator/production-candidate-authority-reconcile.md"
 ]'
 
 python3 - "$MANIFEST" "$MARKER_SHA" "$OPS_ROOT" "$TOOLS_ROOT" "$DOCS_ROOT" "$REQUIRED_JSON" <<'PY'

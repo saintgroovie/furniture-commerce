@@ -26,6 +26,10 @@ source "$SCRIPT_DIR/../lib/woodright-staging-mutation-lock.sh"
 source "$SCRIPT_DIR/../lib/woodright-component-authority.sh"
 # shellcheck source=../lib/woodright-install-provenance.sh
 source "$SCRIPT_DIR/../lib/woodright-install-provenance.sh"
+# shellcheck source=../lib/woodright-compose-env-authority.sh
+source "$SCRIPT_DIR/../lib/woodright-compose-env-authority.sh"
+# shellcheck source=../lib/woodright-production-release-sha-reconcile.sh
+source "$SCRIPT_DIR/../lib/woodright-production-release-sha-reconcile.sh"
 
 CONFIRM_TOKEN='I_UNDERSTAND_PRODUCTION_METADATA_PROVENANCE_CORRECTION'
 MODE="dry-run"
@@ -57,7 +61,10 @@ usage() {
 
 Usage: reconcile-production-candidate-metadata.sh \\
   --environment production \\
-  --correction helper-install-provenance \\
+  --correction <helper-install-provenance|compose-common-release-sha> \\
+  ...
+
+helper-install-provenance:
   --application-source-sha <40hex> \\
   --operation-helper-sha <40hex> \\
   --operation-helper-checksum <64hex> \\
@@ -67,6 +74,13 @@ Usage: reconcile-production-candidate-metadata.sh \\
   --original-evidence /srv/woodright/reports/production/<dir> \\
   [--dry-run|--execute] \\
   [--confirm-mutation $CONFIRM_TOKEN]
+
+compose-common-release-sha (metadata-only; no container recreate):
+  --application-source-sha <40hex> \\
+  --current-helper-install-sha <40hex> \\
+  --storefront-ref / --backend-ref (exact live digests) \\
+  [--dry-run|--execute] \\
+  [--confirm-mutation $WR_PC_RELEASE_SHA_CONFIRM]
 
 For the 20260803 adopt-live residual, when evidence json/helper-install-sha.txt
 still holds the stale marker value, --operation-helper-checksum must equal the
@@ -134,7 +148,8 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-[[ "$CORRECTION" == "helper-install-provenance" ]] || die "refused --correction '${CORRECTION:-}' (only helper-install-provenance)"
+[[ "$CORRECTION" == "helper-install-provenance" || "$CORRECTION" == "compose-common-release-sha" ]] \
+  || die "refused --correction '${CORRECTION:-}' (helper-install-provenance|compose-common-release-sha)"
 case "$MODE_REQUESTS" in
   *"|dry-run|"*)
     case "$MODE_REQUESTS" in
@@ -142,6 +157,47 @@ case "$MODE_REQUESTS" in
     esac
     ;;
 esac
+
+OWN_DIR="${WOODRIGHT_OWNERSHIP_DIR:-/srv/woodright/runtime-ownership-production}"
+COMPOSE_ENV="${WOODRIGHT_COMPOSE_ENV_FILE:-/etc/dokploy/compose/woodright-production/code/.env}"
+SF_NAME="${WOODRIGHT_SF_CONTAINER_DEFAULT:-woodright-production-storefront}"
+BE_NAME="${WOODRIGHT_BE_CONTAINER_DEFAULT:-woodright-production-backend}"
+LOCK_PATH="${WR_STAGING_MUTATION_LOCK_PATH:-/srv/woodright/locks/production/live-cutover.lock}"
+
+pin_of() {
+  local key="$1"
+  grep -E "^${key}=" "$COMPOSE_ENV" 2>/dev/null | head -1 | cut -d= -f2- || true
+}
+
+runtime_digest() {
+  local name="$1"
+  python3 - "$name" <<'PY'
+import json, subprocess, sys
+name = sys.argv[1]
+
+def first(obj):
+    if isinstance(obj, list):
+        return obj[0] if obj else {}
+    return obj or {}
+
+d = first(json.loads(subprocess.check_output(["docker", "inspect", name], text=True)))
+img = first(json.loads(subprocess.check_output(["docker", "image", "inspect", d["Image"]], text=True)))
+digs = img.get("RepoDigests") or d.get("RepoDigests") or []
+print(digs[0] if digs else "")
+print(d["Id"])
+print(d["State"]["StartedAt"])
+print((d["State"].get("Health") or {}).get("Status") or "")
+print(d.get("RestartCount", 0))
+PY
+}
+
+# --- compose-common-release-sha (metadata-only compose key) ----------------
+if [[ "$CORRECTION" == "compose-common-release-sha" ]]; then
+  wr_pc_release_sha_run "$MODE" "$CONFIRM"
+  exit $?
+fi
+
+# --- helper-install-provenance (existing path) -----------------------------
 require_full_sha "$SOURCE_SHA" application-source-sha
 require_full_sha "$OPERATION_HELPER_SHA" operation-helper-sha
 require_full_sha "$CURRENT_HELPER_SHA" current-helper-install-sha
@@ -163,33 +219,6 @@ else
 fi
 [[ "$WR_INSTALLED_GOVERNANCE_SHA" == "$CURRENT_HELPER_SHA" ]] \
   || die "current helper install SHA mismatch: marker/canonical=$WR_INSTALLED_GOVERNANCE_SHA declared=$CURRENT_HELPER_SHA"
-
-OWN_DIR="${WOODRIGHT_OWNERSHIP_DIR:-/srv/woodright/runtime-ownership-production}"
-COMPOSE_ENV="${WOODRIGHT_COMPOSE_ENV_FILE:-/etc/dokploy/compose/woodright-production/code/.env}"
-SF_NAME="${WOODRIGHT_SF_CONTAINER_DEFAULT:-woodright-production-storefront}"
-BE_NAME="${WOODRIGHT_BE_CONTAINER_DEFAULT:-woodright-production-backend}"
-LOCK_PATH="${WR_STAGING_MUTATION_LOCK_PATH:-/srv/woodright/locks/production/live-cutover.lock}"
-
-pin_of() {
-  local key="$1"
-  grep -E "^${key}=" "$COMPOSE_ENV" 2>/dev/null | head -1 | cut -d= -f2- || true
-}
-
-runtime_digest() {
-  local name="$1"
-  python3 - "$name" <<'PY'
-import json, subprocess, sys
-name = sys.argv[1]
-d = json.loads(subprocess.check_output(["docker", "inspect", name], text=True))[0]
-img = json.loads(subprocess.check_output(["docker", "image", "inspect", d["Image"]], text=True))[0]
-digs = img.get("RepoDigests") or []
-print(digs[0] if digs else "")
-print(d["Id"])
-print(d["State"]["StartedAt"])
-print((d["State"].get("Health") or {}).get("Status") or "")
-print(d.get("RestartCount", 0))
-PY
-}
 
 read_json() {
   python3 -c 'import json,sys; print(json.dumps(json.load(open(sys.argv[1]))))' "$1"

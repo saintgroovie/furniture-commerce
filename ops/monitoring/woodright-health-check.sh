@@ -9,6 +9,8 @@ EXPECTED_RELEASE="${WOODRIGHT_EXPECTED_RELEASE:-/srv/woodright/runtime-ownership
 BACKUP_ROOT="${WOODRIGHT_BACKUP_ROOT:-/srv/woodright/backups/automated}"
 BUYER_HOST="${WOODRIGHT_BUYER_HOST:-https://woodright-demo.ru}"
 API_HOST="${WOODRIGHT_API_HOST:-https://api.woodright-demo.ru}"
+# Capture explicit media volume BEFORE discovery lib applies its staging default.
+_WR_MEDIA_VOLUME_PRESET="${WOODRIGHT_MEDIA_VOLUME-__unset__}"
 # Resolve SF/BE via discovery (explicit WOODRIGHT_*_CONTAINER still honored).
 # Fail-closed: no hardcoded ephemeral compose names; discovery runs after add_check exists.
 OPS_LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib/woodright-runtime-discovery.sh"
@@ -31,6 +33,9 @@ if [[ "${1:-}" == "--environment" || "${1:-}" == --environment=* ]]; then
   API_HOST="${WOODRIGHT_API_HOST}"
   export WOODRIGHT_BE_CONTAINER="${WOODRIGHT_BE_CONTAINER:-$WOODRIGHT_BE_CONTAINER_DEFAULT}"
   export WOODRIGHT_SF_CONTAINER="${WOODRIGHT_SF_CONTAINER:-$WOODRIGHT_SF_CONTAINER_DEFAULT}"
+elif [[ "$_WR_MEDIA_VOLUME_PRESET" == "__unset__" ]]; then
+  # No profile and no explicit media volume: do not inherit discovery's staging default.
+  unset WOODRIGHT_MEDIA_VOLUME || true
 fi
 
 SF_CONTAINER=""
@@ -111,19 +116,28 @@ curl_hdr() {
 
 # --- DISCOVERY (no command-substitution; preserve WR_DISCOVERY_VERDICT) ---
 # Call functions in-shell; never fall back to unvalidated hardcoded names.
-if wr_discover_storefront_container >/dev/null 2>&1; then
-  SF_CONTAINER="$WR_SF_CONTAINER"
-  SF_DISCOVERY_OK=1
-  add_check "discovery_sf" info pass "verdict=${WR_DISCOVERY_VERDICT:-DISCOVERY_OK} container=$SF_CONTAINER"
-else
-  add_check "discovery_sf" critical fail "verdict=${WR_DISCOVERY_VERDICT:-DISCOVERY_FAIL}"
-fi
-if wr_discover_backend_container >/dev/null 2>&1; then
+# Test-only: WOODRIGHT_FIXTURE_BE_DISCOVERY_OK=1 skips live discovery (media unit tests).
+if [[ "${WOODRIGHT_FIXTURE_BE_DISCOVERY_OK:-0}" == "1" && -n "${WOODRIGHT_BE_CONTAINER:-}" ]]; then
+  BE_CONTAINER="$WOODRIGHT_BE_CONTAINER"
+  BE_DISCOVERY_OK=1
+  add_check "discovery_be" info pass "verdict=FIXTURE container=$BE_CONTAINER"
+elif wr_discover_backend_container >/dev/null 2>&1; then
   BE_CONTAINER="$WR_BE_CONTAINER"
   BE_DISCOVERY_OK=1
   add_check "discovery_be" info pass "verdict=${WR_DISCOVERY_VERDICT:-DISCOVERY_OK} container=$BE_CONTAINER"
 else
   add_check "discovery_be" critical fail "verdict=${WR_DISCOVERY_VERDICT:-DISCOVERY_FAIL}"
+fi
+if [[ "${WOODRIGHT_FIXTURE_SF_DISCOVERY_OK:-0}" == "1" && -n "${WOODRIGHT_SF_CONTAINER:-}" ]]; then
+  SF_CONTAINER="$WOODRIGHT_SF_CONTAINER"
+  SF_DISCOVERY_OK=1
+  add_check "discovery_sf" info pass "verdict=FIXTURE container=$SF_CONTAINER"
+elif wr_discover_storefront_container >/dev/null 2>&1; then
+  SF_CONTAINER="$WR_SF_CONTAINER"
+  SF_DISCOVERY_OK=1
+  add_check "discovery_sf" info pass "verdict=${WR_DISCOVERY_VERDICT:-DISCOVERY_OK} container=$SF_CONTAINER"
+else
+  add_check "discovery_sf" critical fail "verdict=${WR_DISCOVERY_VERDICT:-DISCOVERY_FAIL}"
 fi
 
 # --- BUYER ---
@@ -196,19 +210,114 @@ check_container "$BE_CONTAINER" "backend"
 check_container "$PG_CONTAINER" "postgres"
 check_container "$REDIS_CONTAINER" "redis"
 
-# Media mount (backend only when discovery succeeded)
+# Media mount (backend only when discovery succeeded).
+# Expected identity comes from the governed environment profile
+# (WOODRIGHT_MEDIA_VOLUME + WOODRIGHT_MEDIA_MOUNT_IN_BE). Never hardcode a
+# staging volume name here - that caused false-critical on production-candidate.
 MEDIA_OK=0
-if [[ "$BE_DISCOVERY_OK" -eq 1 ]]; then
-  if docker inspect "$BE_CONTAINER" --format '{{range .Mounts}}{{println .Name .Destination}}{{end}}' 2>/dev/null | grep -q 'woodright_staging_media /server/static'; then
-    MEDIA_OK=1
-    add_check "media_mount" info pass "present"
-  else
-    if [[ -n "$FIXTURE_MEDIA_PATH" ]]; then
-      add_check "media_mount" critical fail "fixture_missing"
-    else
-      add_check "media_mount" critical fail "absent"
-    fi
+check_media_mount_contract() {
+  local container="$1"
+  local expected_vol expected_dest
+  local fixture_json="${WOODRIGHT_FIXTURE_MEDIA_MOUNTS_JSON:-}"
+  expected_vol="${WOODRIGHT_MEDIA_VOLUME:-}"
+  expected_dest="${WOODRIGHT_MEDIA_MOUNT_IN_BE:-/server/static}"
+
+  if [[ -n "$FIXTURE_MEDIA_PATH" ]]; then
+    add_check "media_mount" critical fail "fixture_missing"
+    return
   fi
+  if [[ -z "$expected_vol" ]]; then
+    add_check "media_mount" critical fail "missing_expected_media_identity"
+    return
+  fi
+  if [[ -z "$expected_dest" ]]; then
+    add_check "media_mount" critical fail "missing_expected_media_destination"
+    return
+  fi
+
+  # Structural inspect: exactly one Type=volume match on Name+Destination.
+  # Fixture JSON (tests only) bypasses docker when WOODRIGHT_FIXTURE_MEDIA_MOUNTS_JSON is set.
+  local verdict
+  verdict="$(
+    EXPECTED_VOL="$expected_vol" EXPECTED_DEST="$expected_dest" \
+    CONTAINER="$container" FIXTURE_JSON="$fixture_json" python3 <<'PY'
+import json, os, subprocess, sys
+
+want_name = os.environ["EXPECTED_VOL"]
+want_dest = os.environ["EXPECTED_DEST"]
+fixture = os.environ.get("FIXTURE_JSON") or ""
+container = os.environ.get("CONTAINER") or ""
+
+def fail(code: str) -> None:
+    print(code)
+    sys.exit(0)
+
+try:
+    if fixture:
+        mounts = json.loads(fixture)
+        if not isinstance(mounts, list):
+            fail("malformed_inspect")
+    else:
+        raw = subprocess.check_output(
+            ["docker", "inspect", container],
+            text=True,
+            stderr=subprocess.DEVNULL,
+        )
+        docs = json.loads(raw)
+        if not isinstance(docs, list) or not docs:
+            fail("malformed_inspect")
+        mounts = docs[0].get("Mounts")
+        if mounts is None:
+            fail("malformed_inspect")
+        if not isinstance(mounts, list):
+            fail("malformed_inspect")
+except (subprocess.CalledProcessError, json.JSONDecodeError, OSError, TypeError, KeyError):
+    fail("inspect_failed")
+
+matches = []
+for m in mounts:
+    if not isinstance(m, dict):
+        fail("malformed_inspect")
+    if (
+        m.get("Type") == "volume"
+        and m.get("Name") == want_name
+        and m.get("Destination") == want_dest
+    ):
+        matches.append(m)
+
+if len(matches) == 0:
+    # Distinguish wrong volume / wrong dest / bind / absent for operators.
+    same_dest = [m for m in mounts if isinstance(m, dict) and m.get("Destination") == want_dest]
+    if not same_dest:
+        fail("absent")
+    if any(m.get("Type") == "bind" for m in same_dest):
+        fail("bind_mount")
+    names = sorted({str(m.get("Name") or "") for m in same_dest})
+    if names and names != [want_name]:
+        fail("wrong_volume")
+    fail("absent")
+if len(matches) > 1:
+    fail("ambiguous_multiple_mounts")
+print("pass")
+PY
+  )"
+
+  case "$verdict" in
+    pass)
+      MEDIA_OK=1
+      add_check "media_mount" info pass "present vol=${expected_vol}"
+      ;;
+    missing_expected_media_identity|missing_expected_media_destination)
+      add_check "media_mount" critical fail "$verdict"
+      ;;
+    *)
+      add_check "media_mount" critical fail "${verdict:-unknown}"
+      ;;
+  esac
+}
+
+if [[ "$BE_DISCOVERY_OK" -eq 1 ]]; then
+  check_media_mount_contract "$BE_CONTAINER"
 else
   add_check "media_mount" critical fail "skipped_undiscovered_backend"
 fi

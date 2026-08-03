@@ -108,6 +108,8 @@ source "$HERE/../lib/woodright-compose-service-recreate.sh"
 source "$HERE/../lib/woodright-component-authority.sh"
 # shellcheck source=../lib/woodright-oci-provenance.sh
 source "$HERE/../lib/woodright-oci-provenance.sh"
+# shellcheck source=../lib/woodright-compose-env-authority.sh
+source "$HERE/../lib/woodright-compose-env-authority.sh"
 # shellcheck source=../lib/woodright-staging-mutation-lock.sh
 source "$HERE/../lib/woodright-staging-mutation-lock.sh"
 
@@ -143,6 +145,7 @@ TS_RUN="$(date -u +%Y%m%dT%H%M%SZ)"
 # the evidence dir before any pin is installed.
 PRE_BE_REF=""
 PRE_SF_REF=""
+PRE_RELEASE_SHA=""
 
 # Pre-existing pin/runtime skew (computed read-only in both modes).
 LIVE_BE_REF=""
@@ -866,8 +869,24 @@ rollback_anchor_images_present() {
   return 0
 }
 
+# Common WOODRIGHT_RELEASE_SHA is part of the atomic pin transaction when the
+# resulting backend+storefront pin set both prove OCI revision == SOURCE_SHA.
+should_write_common_release_sha() {
+  local be_want sf_want be_rev sf_rev
+  be_want="$(pin_value_of WOODRIGHT_BACKEND_IMAGE)"
+  sf_want="$(pin_value_of WOODRIGHT_STOREFRONT_IMAGE)"
+  need_be && be_want="$BE_REF"
+  need_sf && sf_want="$SF_REF"
+  [[ -n "$be_want" && -n "$sf_want" ]] || return 1
+  be_rev="$(wr_oci_image_revision "$be_want")"
+  sf_rev="$(wr_oci_image_revision "$sf_want")"
+  [[ "$be_rev" == "$SOURCE_SHA" && "$sf_rev" == "$SOURCE_SHA" ]]
+}
+
 emit_packet() {
   local packet_mode="$1" verdict="$2"
+  local write_release=0
+  if should_write_common_release_sha; then write_release=1; fi
   export WR_LOCK_STATUS WR_SF_PRESENT WR_SF_REVISION WR_SF_BUILD_PROFILE WR_SF_REF \
     WR_BE_PRESENT WR_BE_REVISION WR_BE_BUILD_PROFILE WR_BE_REF \
     WR_BE_CONTAINER_PRESENT WR_SF_CONTAINER_PRESENT \
@@ -881,6 +900,8 @@ emit_packet() {
   WR_PACKET_EVIDENCE_DIR="$EVIDENCE_DIR" \
   WR_PACKET_PHASE="$PHASE" \
   WR_PACKET_VERDICT="$verdict" \
+  WR_PACKET_WRITE_RELEASE_SHA="$write_release" \
+  WR_PACKET_CURRENT_RELEASE_SHA="$(pin_value_of WOODRIGHT_RELEASE_SHA)" \
   WR_PACKET_COMPOSE_ENV="$COMPOSE_ENV_FILE" \
   WR_PACKET_COMPOSE_FILE="${WOODRIGHT_COMPOSE_FILE:-}" \
   WR_PACKET_COMPOSE_PROJECT="${WOODRIGHT_COMPOSE_PROJECT:-}" \
@@ -968,6 +989,10 @@ if need_be:
     pin_keys["WOODRIGHT_BACKEND_IMAGE"] = os.environ.get("WR_BE_REF", "")
 if need_sf:
     pin_keys["WOODRIGHT_STOREFRONT_IMAGE"] = os.environ.get("WR_SF_REF", "")
+# Common release authority: always part of the atomic pin transaction when the
+# pair (or both components after this write) share SOURCE_SHA as OCI revision.
+if os.environ.get("WR_PACKET_WRITE_RELEASE_SHA", "1") == "1":
+    pin_keys["WOODRIGHT_RELEASE_SHA"] = source_sha
 
 recreate_order = [c for c in ("backend", "storefront") if (c == "backend" and need_be) or (c == "storefront" and need_sf)]
 
@@ -1005,8 +1030,15 @@ packet = {
         "pin_plan": {
             "compose_env_file": os.environ.get("WR_PACKET_COMPOSE_ENV", ""),
             "keys": pin_keys,
-            "write_order": [k for k in ("WOODRIGHT_BACKEND_IMAGE", "WOODRIGHT_STOREFRONT_IMAGE") if k in pin_keys],
+            "write_order": [
+                k for k in (
+                    "WOODRIGHT_BACKEND_IMAGE",
+                    "WOODRIGHT_STOREFRONT_IMAGE",
+                    "WOODRIGHT_RELEASE_SHA",
+                ) if k in pin_keys
+            ],
             "atomic": "tmp on same filesystem, validated, then installed",
+            "common_release_sha": source_sha if "WOODRIGHT_RELEASE_SHA" in pin_keys else None,
         },
         "recreate": {
             "order": recreate_order,
@@ -1033,11 +1065,16 @@ packet = {
             "postconditions": [
                 "pins_restored",
                 "runtime_repo_digests_equal_restored_pins",
+                "compose_release_sha_restored_from_pin_backup",
                 "private_loopback_binds",
                 "media_volume_mounted",
                 "no_public_traefik",
                 "minimal_loopback_http_gates",
             ],
+            # WOODRIGHT_RELEASE_SHA is restored via the pin-backup env snapshot.
+            # It is informational runtime identity - not an independent rollback
+            # digest authority (image refs + pin backup remain authoritative).
+            "release_sha_is_rollback_authority": False,
         },
         "container_recreate_uses_keepers": False,
         "health_plan": {
@@ -1086,6 +1123,23 @@ packet = {
     },
     "existing_pin_runtime_skew": existing_skew,
     "normal_execute_blocked": existing_skew,
+    "compose_release_sha": {
+        "current": os.environ.get("WR_PACKET_CURRENT_RELEASE_SHA", "") or None,
+        "proposed": source_sha if os.environ.get("WR_PACKET_WRITE_RELEASE_SHA", "0") == "1" else None,
+        "informational_drift": bool(
+            os.environ.get("WR_PACKET_CURRENT_RELEASE_SHA", "")
+            and os.environ.get("WR_PACKET_CURRENT_RELEASE_SHA", "") != source_sha
+        ),
+        "blocks_valid_pair_cutover": False,
+        "is_deploy_or_rollback_authority": False,
+        "note": (
+            "WOODRIGHT_RELEASE_SHA is an informational runtime identity marker "
+            "(x-woodright-release-sha). Stale current values are reported as "
+            "informational_drift and do not block a valid pair cutover plan; "
+            "execute rewrites the marker atomically with image pins when both "
+            "OCI revisions equal application_source_sha."
+        ),
+    },
     "pin_runtime_comparison": {
         "backend": {
             "pin": os.environ.get("WR_PACKET_PIN_BE", ""),
@@ -1208,6 +1262,23 @@ restore_pins() {
   [[ -f "$backup" ]] || { log "ROLLBACK no pin backup to restore"; return 0; }
   if prod_atomic_install "$backup" "$COMPOSE_ENV_FILE"; then
     log "ROLLBACK pins restored -> $COMPOSE_ENV_FILE"
+    # Harness-only: corrupt RELEASE_SHA after a successful pin restore so the
+    # incomplete-marker path can be proven (must not report false rolled_back).
+    if wr_fault rollback_release_sha_mismatch; then
+      log "HARNESS corrupting WOODRIGHT_RELEASE_SHA after pin restore"
+      python3 - "$COMPOSE_ENV_FILE" <<'PY'
+import pathlib, re, sys
+path = pathlib.Path(sys.argv[1])
+text = path.read_text(encoding="utf-8")
+new = re.sub(
+    r'(?m)^([ \t]*(?:export[ \t]+)?)WOODRIGHT_RELEASE_SHA[ \t]*=.*$',
+    r'\1WOODRIGHT_RELEASE_SHA=deadbeefdeadbeefdeadbeefdeadbeefdeadbeef',
+    text,
+    count=1,
+)
+path.write_text(new, encoding="utf-8")
+PY
+    fi
     return 0
   fi
   log "ROLLBACK pin restore FAILED -> $COMPOSE_ENV_FILE"
@@ -1315,6 +1386,34 @@ verify_runtime_matches_pins() {
   return "$rc"
 }
 
+# Postcondition 1b: restored WOODRIGHT_RELEASE_SHA must match the pin-backup
+# snapshot. Image digests alone are not enough - a mixed marker is incomplete.
+verify_rollback_release_sha() {
+  local backup="$EVIDENCE_DIR/pin-backup/dokploy-compose.env"
+  local want got
+  [[ -f "$backup" ]] || {
+    log "ROLLBACK_VERIFY RELEASE_SHA backup missing"
+    return 1
+  }
+  want="$(awk -F= '$1=="WOODRIGHT_RELEASE_SHA" {sub(/^[^=]*=/, ""); print; exit}' "$backup" 2>/dev/null || true)"
+  got="$(pin_value_of WOODRIGHT_RELEASE_SHA)"
+  if [[ -z "$want" ]]; then
+    # Pre-cutover env had no marker - restored env must also lack it (or be empty).
+    if [[ -z "$got" ]]; then
+      log "ROLLBACK_VERIFY RELEASE_SHA ok (absent in backup and live)"
+      return 0
+    fi
+    log "ROLLBACK_VERIFY RELEASE_SHA unexpected live marker after backup without key"
+    return 1
+  fi
+  if [[ "$got" != "$want" ]]; then
+    log "ROLLBACK_VERIFY RELEASE_SHA MISMATCH want=$want got=${got:-<unset>} - NOT reporting ROLLBACK_OK"
+    return 1
+  fi
+  log "ROLLBACK_VERIFY RELEASE_SHA ok restored=$got"
+  return 0
+}
+
 # Postcondition 2: the stack is still the private candidate we started from.
 verify_rollback_exposure() {
   local rc=0 kind name
@@ -1343,7 +1442,7 @@ run_rollback() {
   fi
   ROLLBACK_DONE=1
   log "ROLLBACK begin phase=$PHASE recreated=[${COMPONENTS_RECREATED# }] method=restore_pins_then_compose_recreate (no keepers)"
-  local pin_ok=1 runtime_ok=1 verify_ok=1 exposure_ok=1 http_ok=1 meta_ok=1
+  local pin_ok=1 runtime_ok=1 verify_ok=1 release_ok=1 exposure_ok=1 http_ok=1 meta_ok=1
   local kind name want deadline
 
   restore_pins || pin_ok=0
@@ -1384,20 +1483,21 @@ run_rollback() {
   # Postconditions - evaluated even when an earlier step already failed, so the
   # evidence records exactly what is and is not true.
   verify_runtime_matches_pins || verify_ok=0
+  verify_rollback_release_sha || release_ok=0
   verify_rollback_exposure || exposure_ok=0
   verify_rollback_http || http_ok=0
 
   if [[ -n "$EVIDENCE_DIR" && -d "$EVIDENCE_DIR/json" ]]; then
-    printf '{"phase_at_rollback":"%s","method":"restore_pins_then_compose_recreate","keepers_used":false,"pins":%s,"runtime_recreate":%s,"pins_equal_runtime":%s,"exposure":%s,"http":%s,"metadata":%s,"pre_backend_ref":"%s","pre_storefront_ref":"%s"}\n' \
-      "$PHASE" "$pin_ok" "$runtime_ok" "$verify_ok" "$exposure_ok" "$http_ok" "$meta_ok" \
-      "$PRE_BE_REF" "$PRE_SF_REF" >"$EVIDENCE_DIR/json/rollback-result.json" 2>/dev/null || true
+    printf '{"phase_at_rollback":"%s","method":"restore_pins_then_compose_recreate","keepers_used":false,"pins":%s,"runtime_recreate":%s,"pins_equal_runtime":%s,"release_sha":%s,"exposure":%s,"http":%s,"metadata":%s,"pre_backend_ref":"%s","pre_storefront_ref":"%s","pre_release_sha":"%s"}\n' \
+      "$PHASE" "$pin_ok" "$runtime_ok" "$verify_ok" "$release_ok" "$exposure_ok" "$http_ok" "$meta_ok" \
+      "$PRE_BE_REF" "$PRE_SF_REF" "${PRE_RELEASE_SHA}" >"$EVIDENCE_DIR/json/rollback-result.json" 2>/dev/null || true
   fi
 
   if [[ "$pin_ok" == "1" && "$runtime_ok" == "1" && "$verify_ok" == "1" \
-     && "$exposure_ok" == "1" && "$http_ok" == "1" && "$meta_ok" == "1" ]]; then
+     && "$release_ok" == "1" && "$exposure_ok" == "1" && "$http_ok" == "1" && "$meta_ok" == "1" ]]; then
     ROLLBACK_RC=10
     record_state rolled_back
-    log "ROLLBACK_OK (pins restored, runtime digests == pins, private binds, media volume, no public Traefik, HTTP gates)"
+    log "ROLLBACK_OK (pins restored, runtime digests == pins, RELEASE_SHA restored, private binds, media volume, no public Traefik, HTTP gates)"
     return "$ROLLBACK_RC"
   fi
 
@@ -1410,7 +1510,7 @@ run_rollback() {
 
   ROLLBACK_RC=13
   record_state rollback_incomplete
-  log "ROLLBACK_INCOMPLETE pins=$pin_ok runtime_recreate=$runtime_ok pins_equal_runtime=$verify_ok exposure=$exposure_ok http=$http_ok metadata=$meta_ok - NOT reporting ROLLBACK_OK"
+  log "ROLLBACK_INCOMPLETE pins=$pin_ok runtime_recreate=$runtime_ok pins_equal_runtime=$verify_ok release_sha=$release_ok exposure=$exposure_ok http=$http_ok metadata=$meta_ok - NOT reporting ROLLBACK_OK"
   return "$ROLLBACK_RC"
 }
 
@@ -1599,13 +1699,14 @@ capture_rollback_anchors() {
       PRE_SF_REF="$ref"; sf_present="$present"
     fi
   done
+  PRE_RELEASE_SHA="$(pin_value_of WOODRIGHT_RELEASE_SHA)"
   scope="$COMPONENT"
-  printf '{"method":"restore_pins_then_compose_recreate","keepers_used":false,"component_scope":"%s","captured_at_utc":"%s","backend":{"ref":"%s","container_id":"%s","started_at":"%s","image_present_locally":%s},"storefront":{"ref":"%s","container_id":"%s","started_at":"%s","image_present_locally":%s}}\n' \
-    "$scope" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+  printf '{"method":"restore_pins_then_compose_recreate","keepers_used":false,"component_scope":"%s","captured_at_utc":"%s","pre_release_sha":"%s","backend":{"ref":"%s","container_id":"%s","started_at":"%s","image_present_locally":%s},"storefront":{"ref":"%s","container_id":"%s","started_at":"%s","image_present_locally":%s}}\n' \
+    "$scope" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${PRE_RELEASE_SHA}" \
     "$PRE_BE_REF" "$(container_id "${WOODRIGHT_BE_CONTAINER_DEFAULT}")" "$(container_started_at "${WOODRIGHT_BE_CONTAINER_DEFAULT}")" "$be_present" \
     "$PRE_SF_REF" "$(container_id "${WOODRIGHT_SF_CONTAINER_DEFAULT}")" "$(container_started_at "${WOODRIGHT_SF_CONTAINER_DEFAULT}")" "$sf_present" \
     >"$EVIDENCE_DIR/json/rollback-anchors.json"
-  log "rollback anchors backend=${PRE_BE_REF:-n/a} storefront=${PRE_SF_REF:-n/a} (verified present locally; no keepers)"
+  log "rollback anchors backend=${PRE_BE_REF:-n/a} storefront=${PRE_SF_REF:-n/a} release_sha=${PRE_RELEASE_SHA:-n/a} (verified present locally; no keepers)"
 }
 capture_rollback_anchors
 
@@ -1672,41 +1773,68 @@ PY
 }
 
 # Atomic pin install for the required component set: render ALL required
-# image keys into one temp file, validate the whole file, arm rollback
-# (PHASE=pins_written) BEFORE the single install, then install once.
+# image keys AND (when both pins prove OCI==SOURCE_SHA) WOODRIGHT_RELEASE_SHA
+# into one temp file, validate the whole file, arm rollback (PHASE=pins_written)
+# BEFORE the single install, then install once.
 # This closes the mixed-pin window where a signal could land after the
 # first key replace but before record_state.
 write_required_pins_atomic() {
-  local tmp cur be_want sf_want
+  local tmp be_want sf_want write_release=0
+  local -a render_args=() validate_args=()
+  local compose_parent
   be_want="$(pin_value_of WOODRIGHT_BACKEND_IMAGE)"
   sf_want="$(pin_value_of WOODRIGHT_STOREFRONT_IMAGE)"
   need_be && be_want="$BE_REF"
   need_sf && sf_want="$SF_REF"
 
-  tmp="$(mktemp "$(dirname "$COMPOSE_ENV_FILE")/.wr-prod-pin-XXXXXX" 2>/dev/null || true)"
+  compose_parent="$(dirname -- "$COMPOSE_ENV_FILE")"
+  allowed_root="${WOODRIGHT_DOKPLOY_COMPOSE_DIR:-$compose_parent}"
+  wr_compose_env_assert_path_under "$COMPOSE_ENV_FILE" "$allowed_root" || return 1
+  wr_compose_env_assert_no_duplicate_governed_keys "$COMPOSE_ENV_FILE" || return 1
+
+  if should_write_common_release_sha; then
+    write_release=1
+  fi
+
+  tmp="$(mktemp "${compose_parent}/.wr-prod-pin-XXXXXX" 2>/dev/null || true)"
   if [[ -z "$tmp" ]]; then
     log "NOTE pin tmp falls back to the evidence dir (compose dir not writable by this user)"
     tmp="$(mktemp "$EVIDENCE_DIR/pin-backup/.wr-prod-pin-XXXXXX")"
   fi
+  [[ ! -L "$tmp" ]] || { rm -f "$tmp"; return 1; }
   cp -p "$COMPOSE_ENV_FILE" "$tmp" || { rm -f "$tmp"; return 1; }
 
-  if need_be; then
-    render_pin "$tmp" "${tmp}.be" WOODRIGHT_BACKEND_IMAGE "$BE_REF" || { rm -f "$tmp" "${tmp}.be"; return 1; }
-    mv -f "${tmp}.be" "$tmp" || { rm -f "$tmp" "${tmp}.be"; return 1; }
+  need_be && render_args+=(WOODRIGHT_BACKEND_IMAGE "$BE_REF")
+  need_sf && render_args+=(WOODRIGHT_STOREFRONT_IMAGE "$SF_REF")
+  if [[ "$write_release" -eq 1 ]]; then
+    render_args+=(WOODRIGHT_RELEASE_SHA "$SOURCE_SHA")
   fi
-  if need_sf; then
-    render_pin "$tmp" "${tmp}.sf" WOODRIGHT_STOREFRONT_IMAGE "$SF_REF" || { rm -f "$tmp" "${tmp}.sf"; return 1; }
-    mv -f "${tmp}.sf" "$tmp" || { rm -f "$tmp" "${tmp}.sf"; return 1; }
+  [[ "${#render_args[@]}" -gt 0 ]] || { rm -f "$tmp"; return 1; }
+
+  if ! wr_compose_env_render_keys "$tmp" "${tmp}.next" "${render_args[@]}"; then
+    rm -f "$tmp" "${tmp}.next"
+    return 1
+  fi
+  mv -f "${tmp}.next" "$tmp" || { rm -f "$tmp" "${tmp}.next"; return 1; }
+
+  need_be && validate_args+=(WOODRIGHT_BACKEND_IMAGE "$BE_REF")
+  need_sf && validate_args+=(WOODRIGHT_STOREFRONT_IMAGE "$SF_REF")
+  if [[ "$write_release" -eq 1 ]]; then
+    validate_args+=(WOODRIGHT_RELEASE_SHA "$SOURCE_SHA")
+  fi
+  # Sibling pins must remain exact when we did not rewrite them.
+  if need_be && ! need_sf; then
+    validate_args+=(WOODRIGHT_STOREFRONT_IMAGE "$sf_want")
+  fi
+  if need_sf && ! need_be; then
+    validate_args+=(WOODRIGHT_BACKEND_IMAGE "$be_want")
   fi
 
-  if need_be; then
-    validate_pin_file "$tmp" WOODRIGHT_BACKEND_IMAGE "$BE_REF" WOODRIGHT_STOREFRONT_IMAGE "$sf_want" >&2 \
-      || { rm -f "$tmp"; return 1; }
+  if ! wr_compose_env_validate_keys "$tmp" "${validate_args[@]}" >&2; then
+    rm -f "$tmp"
+    return 1
   fi
-  if need_sf; then
-    validate_pin_file "$tmp" WOODRIGHT_STOREFRONT_IMAGE "$SF_REF" WOODRIGHT_BACKEND_IMAGE "$be_want" >&2 \
-      || { rm -f "$tmp"; return 1; }
-  fi
+  wr_compose_env_assert_no_duplicate_governed_keys "$tmp" || { rm -f "$tmp"; return 1; }
 
   # Fault injection: first_pin = fail before any install (no writes).
   # second_pin kept for harness compatibility = also fail before install
@@ -1727,6 +1855,10 @@ write_required_pins_atomic() {
     && printf '%s WOODRIGHT_BACKEND_IMAGE=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$BE_REF" >>"$EVIDENCE_DIR/json/pins-written.txt"
   need_sf && PINS_WRITTEN="${PINS_WRITTEN} WOODRIGHT_STOREFRONT_IMAGE" \
     && printf '%s WOODRIGHT_STOREFRONT_IMAGE=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$SF_REF" >>"$EVIDENCE_DIR/json/pins-written.txt"
+  if [[ "$write_release" -eq 1 ]]; then
+    PINS_WRITTEN="${PINS_WRITTEN} WOODRIGHT_RELEASE_SHA"
+    printf '%s WOODRIGHT_RELEASE_SHA=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$SOURCE_SHA" >>"$EVIDENCE_DIR/json/pins-written.txt"
+  fi
   log "PIN_WRITTEN_ATOMIC keys=${PINS_WRITTEN}"
   return 0
 }
@@ -1989,6 +2121,15 @@ PY
 
 if ! write_ownership_metadata; then
   die "scoped ownership metadata write failed"
+fi
+
+# Authority matrix postcondition: pair cutover must leave the common compose
+# release key aligned with SOURCE_SHA (same as both component OCI revisions).
+if [[ "$COMPONENT" == "pair" ]]; then
+  [[ "$(pin_value_of WOODRIGHT_RELEASE_SHA)" == "$SOURCE_SHA" ]] \
+    || die "authority postcondition failed: WOODRIGHT_RELEASE_SHA must equal application SOURCE_SHA after pair cutover"
+  wr_compose_env_assert_no_duplicate_governed_keys "$COMPOSE_ENV_FILE" \
+    || die "authority postcondition failed: duplicate governed compose keys"
 fi
 
 # --- commit -----------------------------------------------------------------

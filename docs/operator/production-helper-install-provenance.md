@@ -82,3 +82,7 @@ requires:
 
 (the recovery helper script sha256 at execute time). Original evidence directories
 remain immutable.
+
+## Also see
+
+`docs/operator/production-candidate-authority-reconcile.md` (compose `WOODRIGHT_RELEASE_SHA` metadata-only mode).

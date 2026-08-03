@@ -196,6 +196,7 @@ PY
 # Dokploy compose environment (harness copy)
 WOODRIGHT_BACKEND_IMAGE=${OLD_BE_REF}
 WOODRIGHT_STOREFRONT_IMAGE=${OLD_SF_REF}
+WOODRIGHT_RELEASE_SHA=9946b42aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 POSTGRES_PASSWORD=MOCK_SECRET_VALUE
 UNRELATED_KEY=keep-me
 EOF
@@ -309,6 +310,7 @@ run_exec "$EV" "$TMP/out-success.txt"
 [[ "$(state_file "$EV")" == "committed" ]] && pass "success: state committed" || fail "success: state=$(state_file "$EV")"
 [[ "$(pin_of WOODRIGHT_BACKEND_IMAGE)" == "$BE_REF" ]] && pass "success: backend pin advanced" || fail "success: backend pin=$(pin_of WOODRIGHT_BACKEND_IMAGE)"
 [[ "$(pin_of WOODRIGHT_STOREFRONT_IMAGE)" == "$SF_REF" ]] && pass "success: storefront pin advanced" || fail "success: storefront pin"
+[[ "$(pin_of WOODRIGHT_RELEASE_SHA)" == "$APP_SHA" ]] && pass "success: common WOODRIGHT_RELEASE_SHA advanced" || fail "success: RELEASE_SHA=$(pin_of WOODRIGHT_RELEASE_SHA)"
 [[ "$(pin_of UNRELATED_KEY)" == "keep-me" ]] && pass "success: unrelated compose keys preserved" || fail "success: unrelated key lost"
 [[ "$(digest_of woodright-production-backend)" == "$NEW_BE_DIG" ]] && pass "success: backend runs the new digest" || fail "success: backend digest"
 [[ "$(digest_of woodright-production-storefront)" == "$NEW_SF_DIG" ]] && pass "success: storefront runs the new digest" || fail "success: storefront digest"
@@ -407,6 +409,8 @@ run_exec "$EV" "$TMP/out-be-recreate.txt" "WOODRIGHT_FAKE_COMPOSE_FAIL=backend"
 [[ "$RC" -eq 10 ]] && pass "backend_recreate: rollback_ok exit 10" || fail "backend_recreate: rc=$RC"
 [[ "$(state_file "$EV")" == "rolled_back" ]] && pass "backend_recreate: rolled_back" || fail "backend_recreate: state"
 [[ "$(pin_of WOODRIGHT_BACKEND_IMAGE)" == "$OLD_BE_REF" ]] && pass "backend_recreate: pins restored" || fail "backend_recreate: pins not restored"
+[[ "$(pin_of WOODRIGHT_RELEASE_SHA)" == "9946b42aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" ]] \
+  && pass "backend_recreate: RELEASE_SHA restored from backup" || fail "backend_recreate: RELEASE_SHA not restored"
 [[ "$(digest_of woodright-production-backend)" == "$OLD_BE_DIG" ]] && pass "backend_recreate: backend still on the pre-cutover digest" || fail "backend_recreate: live digest wrong"
 [[ "$(id_of woodright-production-backend)" == "id-backend-live" ]] && pass "backend_recreate: original container never replaced" || fail "backend_recreate: id mismatch"
 assert_no_keepers "backend_recreate"
@@ -421,10 +425,44 @@ import json, sys
 doc = json.load(open(sys.argv[1]))
 assert doc["keepers_used"] is False, doc
 assert doc["method"] == "restore_pins_then_compose_recreate", doc
-for key in ("pins", "runtime_recreate", "pins_equal_runtime", "exposure", "http", "metadata"):
+for key in ("pins", "runtime_recreate", "pins_equal_runtime", "release_sha", "exposure", "http", "metadata"):
     assert doc[key] == 1, (key, doc)
 PY
-lock_is_free "$LOCK" && pass "backend_recreate: lock released" || fail "backend_recreate: lock held"
+
+# ==========================================================================
+# 4b) images restored but RELEASE_SHA mismatch -> rollback_incomplete (not rolled_back)
+# ==========================================================================
+reset_harness
+EV="$TMP/ev-rb-release-mismatch"
+run_exec "$EV" "$TMP/out-rb-release-mismatch.txt" \
+  "WOODRIGHT_FAKE_COMPOSE_FAIL=backend" \
+  "WOODRIGHT_CUTOVER_FAULT=rollback_release_sha_mismatch"
+[[ "$RC" -eq 13 ]] && pass "rb_release_mismatch: exit 13 incomplete" || fail "rb_release_mismatch: rc=$RC"
+[[ "$(state_file "$EV")" == "rollback_incomplete" ]] \
+  && pass "rb_release_mismatch: state rollback_incomplete" \
+  || fail "rb_release_mismatch: state=$(state_file "$EV")"
+[[ "$(state_file "$EV")" != "rolled_back" ]] \
+  && pass "rb_release_mismatch: not false rolled_back" \
+  || fail "rb_release_mismatch: false rolled_back"
+[[ "$(pin_of WOODRIGHT_BACKEND_IMAGE)" == "$OLD_BE_REF" ]] \
+  && pass "rb_release_mismatch: image pins restored" \
+  || fail "rb_release_mismatch: backend pin wrong"
+[[ "$(pin_of WOODRIGHT_RELEASE_SHA)" == "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef" ]] \
+  && pass "rb_release_mismatch: marker left corrupted by harness" \
+  || fail "rb_release_mismatch: unexpected RELEASE_SHA=$(pin_of WOODRIGHT_RELEASE_SHA)"
+python3 - "$EV/json/rollback-result.json" <<'PY' \
+  && pass "rb_release_mismatch: evidence records release_sha=0" || fail "rb_release_mismatch: evidence"
+import json, sys
+doc = json.load(open(sys.argv[1]))
+assert doc["pins"] == 1, doc
+assert doc["release_sha"] == 0, doc
+assert doc["pins_equal_runtime"] == 1, doc
+PY
+grep -q 'RELEASE_SHA MISMATCH' "$TMP/out-rb-release-mismatch.txt" \
+  && pass "rb_release_mismatch: mismatch named in log" \
+  || fail "rb_release_mismatch: mismatch not logged"
+assert_public_demo_untouched "rb_release_mismatch"
+lock_is_free "$LOCK" && pass "rb_release_mismatch: lock released" || fail "rb_release_mismatch: lock held"
 
 # ==========================================================================
 # 5) backend unhealthy -> rollback
@@ -687,8 +725,19 @@ assert packet["application_source_sha"] != packet["helper_install_sha"]
 plan = packet["planned_mutation"]
 assert plan["recreate"]["order"] == ["backend", "storefront"], plan["recreate"]["order"]
 assert plan["pin_plan"]["keys"]["WOODRIGHT_BACKEND_IMAGE"].endswith("a" * 64)
+assert plan["pin_plan"]["keys"]["WOODRIGHT_RELEASE_SHA"] == sys.argv[2], plan["pin_plan"]["keys"]
+assert plan["pin_plan"]["common_release_sha"] == sys.argv[2]
+assert "WOODRIGHT_RELEASE_SHA" in plan["pin_plan"]["write_order"]
 assert "prepared" in plan["state_machine"]
 assert packet["no_mutation_performed"] is True
+
+# Stale informational marker is reported but does not block a valid plan.
+crs = packet["compose_release_sha"]
+assert crs["informational_drift"] is True, crs
+assert crs["current"] == "9946b42aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", crs
+assert crs["proposed"] == sys.argv[2], crs
+assert crs["blocks_valid_pair_cutover"] is False, crs
+assert crs["is_deploy_or_rollback_authority"] is False, crs
 
 # Rollback is anchored on the live digests, never on keeper containers.
 assert plan["container_recreate_uses_keepers"] is False, plan
@@ -700,6 +749,8 @@ assert rb["storefront_ref"].endswith("d" * 64), rb
 assert rb["images_present_locally"] is True, rb
 assert "pins_restored" in rb["postconditions"], rb
 assert "runtime_repo_digests_equal_restored_pins" in rb["postconditions"], rb
+assert "compose_release_sha_restored_from_pin_backup" in rb["postconditions"], rb
+assert rb["release_sha_is_rollback_authority"] is False, rb
 
 # Readiness is a poll to a deadline, not a one-shot health read.
 poll = plan["health_plan"]
