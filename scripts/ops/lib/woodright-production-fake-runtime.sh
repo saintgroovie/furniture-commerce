@@ -143,6 +143,32 @@ case "$cmd" in
       esac
     done
   f="$STATE/containers/${target#/}.json"
+  # Allow inspect by container Id (docker ps -aq returns Ids, not names).
+  if [[ ! -f "$f" ]]; then
+    f="$(python3 - "$STATE" "$target" <<'PY'
+import json, os, sys
+state, want = sys.argv[1:3]
+want = want.lstrip("/")
+root = os.path.join(state, "containers")
+if not os.path.isdir(root):
+    sys.exit(0)
+for name in os.listdir(root):
+    if not name.endswith(".json"):
+        continue
+    path = os.path.join(root, name)
+    try:
+        d = json.load(open(path))
+    except Exception:
+        continue
+    obj = d[0] if isinstance(d, list) else d
+    cid = str(obj.get("Id", "")).lstrip("/")
+    cname = str(obj.get("Name", "")).lstrip("/")
+    if want in (cid, cname) or cid.startswith(want) or want.startswith(cid):
+        print(path)
+        break
+PY
+)"
+  fi
   # Deferred health flip: a container may be created "starting" with a
   # ready-at epoch. Once that epoch passes, the very next inspect observes
   # "healthy" - exactly how a real --start-period behaves.
@@ -159,10 +185,83 @@ json.dump(d, open(sys.argv[1], "w"))
 PY
     fi
   fi
+  # Also flip health when inspecting by Id that resolved to a named file.
+  if [[ -f "$f" ]]; then
+    base="$(basename "$f" .json)"
+    if [[ -f "$STATE/health-ready-at/${base}" ]]; then
+      ready_at="$(cat "$STATE/health-ready-at/${base}")"
+      if [[ "$(date +%s)" -ge "$ready_at" ]]; then
+        rm -f "${f%.json}.props" "$STATE/health-ready-at/${base}"
+        python3 - "$f" <<'PY'
+import json, sys
+d = json.load(open(sys.argv[1]))
+obj = d[0] if isinstance(d, list) else d
+obj.setdefault("State", {}).setdefault("Health", {})["Status"] = "healthy"
+json.dump(d, open(sys.argv[1], "w"))
+PY
+      fi
+    fi
+  fi
   [[ -f "$f" ]] || f="$STATE/images/$(image_key "$target").json"
   [[ -f "$f" ]] || exit 1
   if [[ -n "$fmt" ]]; then render "$f" "$fmt"; else cat "$f"; fi
   ;;
+  ps)
+    # Minimal label-filter support for compose keeper ownership checks:
+    #   docker ps -aq --filter label=com.docker.compose.project=X \
+    #                 --filter label=com.docker.compose.service=Y
+    quiet=0
+    declare -a label_filters=()
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        -q|-aq|-qa) quiet=1; shift ;;
+        -a|--all) shift ;;
+        --filter|-f)
+          case "$2" in
+            label=*) label_filters+=("${2#label=}") ;;
+          esac
+          shift 2
+          ;;
+        --filter=*)
+          case "${1#--filter=}" in
+            label=*) label_filters+=("${1#--filter=label=}") ;;
+          esac
+          shift
+          ;;
+        *) shift ;;
+      esac
+    done
+    python3 - "$STATE" "${label_filters[@]}" <<'PY'
+import json, os, sys
+state = sys.argv[1]
+filters = sys.argv[2:]
+root = os.path.join(state, "containers")
+if not os.path.isdir(root):
+    sys.exit(0)
+for name in sorted(os.listdir(root)):
+    if not name.endswith(".json"):
+        continue
+    path = os.path.join(root, name)
+    try:
+        d = json.load(open(path))
+    except Exception:
+        continue
+    obj = d[0] if isinstance(d, list) else d
+    labels = (obj.get("Config") or {}).get("Labels") or {}
+    ok = True
+    for flt in filters:
+        if "=" not in flt:
+            ok = False
+            break
+        k, v = flt.split("=", 1)
+        if labels.get(k) != v:
+            ok = False
+            break
+    if not ok:
+        continue
+    print(obj.get("Id") or name[:-5])
+PY
+    ;;
   volume)
     [[ "${1:-}" == "inspect" ]] || exit 1
     shift
@@ -315,13 +414,15 @@ labels = {
     "com.woodright.database-identity": "non_public_candidate_db",
     "org.opencontainers.image.title": title,
     "com.docker.compose.project": "woodright-production",
+    "com.docker.compose.service": service,
+    "com.docker.compose.container-number": "1",
     "com.woodright.release-sha": os.environ.get("WOODRIGHT_FAKE_RELEASE_SHA", ""),
 }
 if defect("WOODRIGHT_FAKE_COMPOSE_PUBLIC_TRAEFIK"):
     labels["traefik.enable"] = "true"
     labels["traefik.http.routers.wr.rule"] = "Host(`woodright.ru`)"
 doc = [{
-    "Id": f"id-{service}-new",
+    "Id": f"id-{service}-new-{int(time.time()*1000)}",
     "Name": f"/{name}",
     "Image": digest,
     "RepoDigests": [f"ghcr.io/saintgroovie/{title}@{digest}"],

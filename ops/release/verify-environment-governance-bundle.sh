@@ -73,6 +73,7 @@ REQUIRED_JSON='[
   "ops/lib/woodright-staging-mutation-lock.sh",
   "ops/lib/woodright-runtime-discovery.sh",
   "ops/lib/woodright-cutover-common.sh",
+  "ops/lib/woodright-compose-service-recreate.sh",
   "ops/config/runtime-environments/public_demo.conf",
   "ops/config/runtime-environments/staging.conf",
   "ops/config/runtime-environments/production.conf",

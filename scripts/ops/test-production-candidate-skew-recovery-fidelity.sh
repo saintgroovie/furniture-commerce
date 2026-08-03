@@ -91,6 +91,8 @@ labels = {
     "com.woodright.database-identity": "non_public_candidate_db",
     "org.opencontainers.image.title": title,
     "com.docker.compose.project": "woodright-production",
+    "com.docker.compose.service": service,
+    "com.docker.compose.container-number": "1",
 }
 if traefik == "1":
     labels["traefik.enable"] = "true"
