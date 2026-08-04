@@ -39,17 +39,53 @@ wr_load_environment_profile staging || fail "staging load"
 [[ "$WOODRIGHT_ENVIRONMENT_PROVISIONED" == "0" ]] || fail "staging must be unprovisioned"
 if wr_assert_environment_provisioned 2>/dev/null; then fail "staging provisioned assert should fail"; else ok "staging unprovisioned fail-closed"; fi
 
-# 5) production loads
+# 5) production loads (private PRODUCTION_CANDIDATE — not public_production)
 unset WOODRIGHT_ENVIRONMENT WOODRIGHT_ENV_PROFILE_LOADED || true
 wr_load_environment_profile production || fail "production load"
 [[ "$WOODRIGHT_MUTATION_LOCK_PATH" == "/srv/woodright/locks/production/live-cutover.lock" ]] || fail "prod lock"
 [[ "$WOODRIGHT_OWNERSHIP_DIR" == "/srv/woodright/runtime-ownership-production" ]] || fail "prod ownership"
+[[ "$WOODRIGHT_ENVIRONMENT_CLASS" == "PRODUCTION_CANDIDATE" ]] || fail "prod class"
+[[ "$WOODRIGHT_PUBLIC_EXPOSURE" == "private" ]] || fail "prod exposure"
+[[ "$WOODRIGHT_REQUIRED_DB_ALIAS" == "non_public_candidate_db" ]] || fail "prod db alias"
+# Capture candidate paths for isolation asserts against public_production
+PROD_OWN="$WOODRIGHT_OWNERSHIP_DIR"
+PROD_LOCK="$WOODRIGHT_MUTATION_LOCK_PATH"
+PROD_BACKUP="${WOODRIGHT_BACKUP_ROOT:-}"
 ok "production profile loads exact pins"
+
+# 5b) public_production loads as isolated public indexable contract
+unset WOODRIGHT_ENVIRONMENT WOODRIGHT_ENV_PROFILE_LOADED || true
+wr_load_environment_profile public_production || fail "public_production load"
+[[ "$WOODRIGHT_ENVIRONMENT" == "public_production" ]] || fail "public_production env id"
+[[ "$WOODRIGHT_ENVIRONMENT_CLASS" == "PUBLIC_PRODUCTION" ]] || fail "public_production class"
+[[ "$WOODRIGHT_PUBLIC_EXPOSURE" == "public" ]] || fail "public_production exposure"
+[[ "$WOODRIGHT_LAUNCH_MODE" == "public_indexable" ]] || fail "public_production launch mode"
+[[ "$WOODRIGHT_SEO_MODE" == "public_indexable" ]] || fail "public_production seo mode"
+[[ "$WOODRIGHT_CANONICAL_SITE_URL" == "https://woodright.ru" ]] || fail "public_production site url"
+[[ "$WOODRIGHT_PUBLIC_API_URL" == "https://api.woodright.ru" ]] || fail "public_production api url"
+[[ "$WOODRIGHT_REQUIRED_DB_ALIAS" == "public_production_db" ]] || fail "public_production db alias"
+[[ "$WOODRIGHT_OWNERSHIP_DIR" == "/srv/woodright/runtime-ownership-public-production" ]] || fail "public_production ownership"
+[[ "$WOODRIGHT_MUTATION_LOCK_PATH" == "/srv/woodright/locks/public_production/live-cutover.lock" ]] || fail "public_production lock"
+[[ "$WOODRIGHT_BACKUP_ROOT" == "/srv/woodright/backups/automated/public-production" ]] || fail "public_production backup"
+[[ "$WOODRIGHT_MONITOR_STATE_ROOT" == "/srv/woodright/monitoring/public-production/state" ]] || fail "public_production monitor"
+[[ "$WOODRIGHT_OWNER_APPROVAL_ENVIRONMENT" == "public_production" ]] || fail "public_production approval env"
+[[ "$WOODRIGHT_ENVIRONMENT_PROVISIONED" == "0" ]] || fail "public_production must be unprovisioned"
+[[ "$WOODRIGHT_OWNERSHIP_DIR" != "$PROD_OWN" ]] || fail "ownership must not share with production candidate"
+[[ "$WOODRIGHT_MUTATION_LOCK_PATH" != "$PROD_LOCK" ]] || fail "lock must not share with production candidate"
+if [[ -n "$PROD_BACKUP" && "$WOODRIGHT_BACKUP_ROOT" == "$PROD_BACKUP" ]]; then
+  fail "backup must not share with production candidate"
+fi
+if wr_assert_environment_provisioned 2>/dev/null; then fail "public_production provisioned assert should fail"; else ok "public_production unprovisioned fail-closed"; fi
+ok "public_production profile loads isolated pins"
 
 # 6) inherited conflict
 unset WOODRIGHT_ENV_PROFILE_LOADED || true
 export WOODRIGHT_ENVIRONMENT=public_demo
 if wr_load_environment_profile production 2>/dev/null; then fail "inherited conflict should fail"; else ok "inherited env conflict fails"; fi
+unset WOODRIGHT_ENVIRONMENT || true
+unset WOODRIGHT_ENV_PROFILE_LOADED || true
+export WOODRIGHT_ENVIRONMENT=production
+if wr_load_environment_profile public_production 2>/dev/null; then fail "candidate→public_production conflict should fail"; else ok "candidate vs public_production conflict fails"; fi
 unset WOODRIGHT_ENVIRONMENT || true
 
 # 7) path traversal name
@@ -128,15 +164,18 @@ else
   ok "staging cannot target public_demo manifests"
 fi
 
-# 16) locks differ across all three
+# 16) locks differ across demo / staging / production candidate / public_production
 unset WOODRIGHT_ENVIRONMENT WOODRIGHT_ENV_PROFILE_LOADED || true
 wr_load_environment_profile public_demo; L1=$WOODRIGHT_MUTATION_LOCK_PATH
 unset WOODRIGHT_ENVIRONMENT WOODRIGHT_ENV_PROFILE_LOADED || true
 wr_load_environment_profile staging; L2=$WOODRIGHT_MUTATION_LOCK_PATH
 unset WOODRIGHT_ENVIRONMENT WOODRIGHT_ENV_PROFILE_LOADED || true
 wr_load_environment_profile production; L3=$WOODRIGHT_MUTATION_LOCK_PATH
+unset WOODRIGHT_ENVIRONMENT WOODRIGHT_ENV_PROFILE_LOADED || true
+wr_load_environment_profile public_production; L4=$WOODRIGHT_MUTATION_LOCK_PATH
 [[ "$L1" != "$L2" && "$L2" != "$L3" && "$L1" != "$L3" ]] || fail "locks must all differ"
-ok "three environment locks differ"
+[[ "$L4" != "$L1" && "$L4" != "$L2" && "$L4" != "$L3" ]] || fail "public_production lock must differ"
+ok "four environment locks differ"
 
 # 17) component authority
 if wr_require_component_from_args 2>/dev/null; then fail "component required"; else ok "missing component fails"; fi
@@ -202,12 +241,14 @@ source "$ROOT/ops/lib/woodright-staging-mutation-lock.sh"
 for p in \
   /srv/woodright/locks/public_demo/live-cutover.lock \
   /srv/woodright/locks/staging/live-cutover.lock \
-  /srv/woodright/locks/production/live-cutover.lock
+  /srv/woodright/locks/production/live-cutover.lock \
+  /srv/woodright/locks/public_production/live-cutover.lock
  do
   case "$p" in
     /srv/woodright/locks/public_demo/live-cutover.lock|\
     /srv/woodright/locks/staging/live-cutover.lock|\
     /srv/woodright/locks/production/live-cutover.lock|\
+    /srv/woodright/locks/public_production/live-cutover.lock|\
     /srv/woodright/locks/live-cutover.lock|\
     /srv/woodright/locks/production-cutover.lock) ;;
     *) fail "allowlist missing $p" ;;
