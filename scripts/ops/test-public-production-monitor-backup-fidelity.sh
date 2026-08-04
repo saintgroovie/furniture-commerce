@@ -264,7 +264,7 @@ fi
 
 # --- Profile validator token ---
 VAL=$(node "$ROOT/scripts/release/validate-public-production-profile.cjs" --repo-root "$ROOT" 2>/dev/null | tail -1)
-[[ "$VAL" == "STATUS PUBLIC_PRODUCTION_PROFILE_VALID_SEO_MONITOR_BACKUP_CONTRACTS_READY_RUNTIME_GATES_PENDING" ]] \
+[[ "$VAL" == "STATUS PUBLIC_PRODUCTION_PROFILE_VALID_CONTRACTS_READY_OWNER_DECISIONS_PENDING" ]] \
   && pass "validator status token" \
   || fail "validator status token got=$VAL"
 node "$ROOT/scripts/release/validate-public-production-profile.cjs" --repo-root "$ROOT" 2>/dev/null \
