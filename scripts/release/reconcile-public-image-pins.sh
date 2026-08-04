@@ -58,6 +58,8 @@ source "$ROOT/ops/lib/woodright-environment-profile.sh"
 source "$ROOT/ops/lib/woodright-oci-provenance.sh"
 # shellcheck source=../../ops/lib/woodright-component-authority.sh
 source "$ROOT/ops/lib/woodright-component-authority.sh"
+# shellcheck source=../../ops/lib/woodright-owner-approved-release.sh
+source "$ROOT/ops/lib/woodright-owner-approved-release.sh"
 
 DIGEST_RE='^sha256:[0-9a-f]{64}$'
 SHA_RE='^[0-9a-f]{40}$'
@@ -321,6 +323,31 @@ maybe_fault() {
 [[ "$EXPECTED_STOREFRONT_DIGEST" =~ $DIGEST_RE ]] || fail 2 "EXPECTED_STOREFRONT_DIGEST invalid"
 [[ -f "$ENV_FILE" ]] || fail 2 "missing ENV_FILE=$ENV_FILE"
 [[ -f "$COMPOSE_FILE" ]] || fail 2 "missing COMPOSE_FILE=$COMPOSE_FILE"
+
+# Fixture harness only: write matching owner approval under WOODRIGHT_META_ROOT.
+# Production / VM paths never set WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK.
+if [[ "${WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK:-}" == "1" ]]; then
+  : "${WOODRIGHT_META_ROOT:?WOODRIGHT_META_ROOT required when WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK=1}"
+  _wr_oa_dir="${WOODRIGHT_META_ROOT}/public_demo"
+  mkdir -p "$_wr_oa_dir"
+  _wr_oa_fixture="${_wr_oa_dir}/OWNER_APPROVED_RELEASE.json"
+  cat >"$_wr_oa_fixture" <<EOF
+{
+  "schema_version": 1,
+  "environment": "public_demo",
+  "application_sha": "${EXPECTED_RELEASE_SHA}",
+  "backend_digest": "${EXPECTED_BACKEND_DIGEST}",
+  "storefront_digest": "${EXPECTED_STOREFRONT_DIGEST}",
+  "owner_decision": "approved",
+  "owner_authorization_id": "OWNER-PASS-fixture-pin-reconcile-test",
+  "issued_at": "1970-01-01T00:00:00Z",
+  "tooling_schema_version": "owner-approved-release-v1"
+}
+EOF
+  chmod 0644 "$_wr_oa_fixture"
+  unset WOODRIGHT_OWNER_APPROVED_RELEASE_PATH
+  log "owner_approval_fixture_for_test_lock path=$_wr_oa_fixture meta_root=$WOODRIGHT_META_ROOT"
+fi
 
 if [[ "${WOODRIGHT_COMPONENT_SCOPE}" == "storefront" ]]; then
   if [[ "${WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK:-}" == "1" ]]; then
@@ -815,6 +842,21 @@ log "canonical_lock=$CANONICAL_LOCK_PATH"
 
 # Exclusive lock before authoritative live read / mutation planning.
 acquire_lock
+
+# Owner-approved exact identity before pin staging / authority write (Gate A under lock).
+# READ_ONLY_NO_LOCK may skip only with explicit WOODRIGHT_OWNER_APPROVAL_SKIP_READONLY=1.
+if [[ "$READ_ONLY_NO_LOCK" != "1" || "${WOODRIGHT_OWNER_APPROVAL_SKIP_READONLY:-0}" != "1" ]]; then
+  export WOODRIGHT_OWNER_APPROVAL_REQUIRE_PAIR=1
+  _oa_ev="${WOODRIGHT_PIN_EVIDENCE_DIR:-${EVIDENCE_DIR:-}}"
+  if ! wr_require_owner_approved_release \
+    "${WOODRIGHT_ENVIRONMENT}" "$EXPECTED_RELEASE_SHA" \
+    "$EXPECTED_BACKEND_DIGEST" "$EXPECTED_STOREFRONT_DIGEST" \
+    "${_oa_ev}" "gate_a_pins"; then
+    fail 2 "OWNER_APPROVAL_DENIED result=${WR_OWNER_APPROVAL_RESULT:-unknown} (pin reconcile)"
+  fi
+  unset _oa_ev
+  log "owner_approval_ok gate=pins sha=$EXPECTED_RELEASE_SHA"
+fi
 
 # Authoritative snapshot only after lock.
 assert_live_match

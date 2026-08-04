@@ -23,6 +23,8 @@ source "$HERE/../lib/woodright-component-authority.sh"
 source "$HERE/../lib/woodright-oci-provenance.sh"
 # shellcheck source=../lib/woodright-host-publish.sh
 source "$HERE/../lib/woodright-host-publish.sh"
+# shellcheck source=../lib/woodright-owner-approved-release.sh
+source "$HERE/../lib/woodright-owner-approved-release.sh"
 
 MODE="execute"
 CONFIRM=""
@@ -284,8 +286,18 @@ esac
 
 [[ -n "$IMAGE" && -n "$EXPECTED_DIGEST" && -n "$TARGET_SHA" && -n "$KEEP_NAME" && -n "$ENV_FILE" && -n "$EVIDENCE_DIR" ]] \
   || die "missing required args for mode=$MODE"
-wr_cutover_require_image_at_digest "$IMAGE" "$EXPECTED_DIGEST" || exit 2
 wr_cutover_require_full_sha "$TARGET_SHA" || exit 2
+wr_cutover_require_digest "$EXPECTED_DIGEST" || exit 2
+# Gate A — before image inspect/pull planning. Peer BE digest optional for SF-only.
+_oa_be="${WOODRIGHT_OWNER_APPROVAL_PEER_BE_DIGEST:-${EXPECTED_BACKEND_DIGEST:-${WOODRIGHT_FROZEN_BACKEND_DIGEST:-}}}"
+OWNER_APPROVAL_CHECKSUM_GATE_A=""
+if ! wr_require_owner_approved_release \
+  "$WOODRIGHT_ENVIRONMENT" "$TARGET_SHA" "${_oa_be}" "$EXPECTED_DIGEST" "$EVIDENCE_DIR" "gate_a_storefront"; then
+  die "OWNER_APPROVAL_DENIED result=${WR_OWNER_APPROVAL_RESULT:-unknown} (storefront recreate)"
+fi
+OWNER_APPROVAL_CHECKSUM_GATE_A="${WR_OA_CHECKSUM:-}"
+unset _oa_be
+wr_cutover_require_image_at_digest "$IMAGE" "$EXPECTED_DIGEST" || exit 2
 wr_cutover_refuse_production_name "$KEEP_NAME" || exit 2
 [[ "$KEEP_NAME" != "$NAME" ]] || die "KEEP_NAME must differ from live name"
 [[ -f "$ENV_FILE" ]] || die "missing ENV_FILE=$ENV_FILE"
@@ -335,6 +347,13 @@ wr_staging_mutation_lock_acquire \
   "target=$EXPECTED_DIGEST" \
   || die "canonical live-cutover.lock busy/unavailable"
 log "flock_acquired_or_inherited lock=$WR_STAGING_MUTATION_LOCK_PATH"
+_oa_be="${WOODRIGHT_OWNER_APPROVAL_PEER_BE_DIGEST:-${EXPECTED_BACKEND_DIGEST:-${WOODRIGHT_FROZEN_BACKEND_DIGEST:-}}}"
+if ! wr_require_owner_approved_release_under_lock \
+  "$WOODRIGHT_ENVIRONMENT" "$TARGET_SHA" "${_oa_be}" "$EXPECTED_DIGEST" \
+  "$EVIDENCE_DIR" "$OWNER_APPROVAL_CHECKSUM_GATE_A"; then
+  die "OWNER_APPROVAL_DENIED result=${WR_OWNER_APPROVAL_RESULT:-unknown} (storefront gate_b)"
+fi
+unset _oa_be
 wr_validation_freeze_assert_clear_for_mutation "$WOODRIGHT_ENVIRONMENT" || die "validation freeze active"
 wr_prelock_validate_environment_target || die "under-lock environment retarget detected"
 wr_assert_container_matches_environment "$NAME" storefront || die "under-lock storefront retarget"
