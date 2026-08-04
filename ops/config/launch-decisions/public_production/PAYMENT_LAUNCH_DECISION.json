@@ -1,0 +1,15 @@
+{
+  "schema": "woodright_payment_launch_decision_v1",
+  "environment": "public_production",
+  "decision_status": "pending",
+  "decision_type": "manual_invoice",
+  "authorization_id": null,
+  "issued_at_utc": "2026-08-04T16:00:00Z",
+  "approval_record_id": null,
+  "owner": null,
+  "evidence_reference": "docs/owner/public-production-payment-notification-review.md",
+  "operational_sop_version": null,
+  "sales_sop_path": null,
+  "expires_at_utc": null,
+  "notes": "Repository pending fixture. Owner must choose MANUAL_INVOICE_ACCEPTED_FOR_LAUNCH or ONLINE_PAYMENT_REQUIRED_BEFORE_LAUNCH. Not a launch authorization."
+}

@@ -9,7 +9,7 @@
  *   node scripts/release/validate-public-production-profile.cjs --repo-root /path
  *
  * Status token (last stdout line):
- *   STATUS PUBLIC_PRODUCTION_PROFILE_VALID_SEO_MONITOR_BACKUP_CONTRACTS_READY_RUNTIME_GATES_PENDING
+ *   STATUS PUBLIC_PRODUCTION_PROFILE_VALID_CONTRACTS_READY_OWNER_DECISIONS_PENDING
  *   STATUS PUBLIC_PRODUCTION_PROFILE_INVALID
  */
 const fs = require("fs")
@@ -283,10 +283,47 @@ function main() {
     fail(errors, "backup helper must support plan-only mode")
   }
 
+  // Payment + notification decision contracts (repository pending fixtures)
+  for (const rel of [
+    "ops/config/launch-decisions/public_production/PAYMENT_LAUNCH_DECISION.json",
+    "ops/config/launch-decisions/public_production/NOTIFICATION_LAUNCH_DECISION.json",
+    "scripts/release/validate-payment-notification-decisions.cjs",
+    "docs/owner/public-production-payment-notification-review.md",
+    "docs/operator/public-production-manual-invoice-sales-sop.md",
+    "docs/operator/public-production-manual-notification-sop.md",
+    "docs/operator/buyer-disclosure-manual-invoice-proposed.md",
+  ]) {
+    mustExist(errors, root, rel)
+    contractReady.push(rel)
+  }
+  if (!/WOODRIGHT_PAYMENT_LAUNCH_DECISION_REPO=ops\/config\/launch-decisions\/public_production\//.test(
+    fs.readFileSync(profilePath, "utf8")
+  )) {
+    fail(errors, "profile must pin payment decision repo path")
+  }
+  // Run nested decision validator expecting pending
+  const { spawnSync } = require("child_process")
+  const nested = spawnSync(
+    process.execPath,
+    [
+      path.join(root, "scripts/release/validate-payment-notification-decisions.cjs"),
+      "--repo-root",
+      root,
+      "--expect-status",
+      "pending",
+    ],
+    { encoding: "utf8" }
+  )
+  if (nested.status !== 0) {
+    fail(errors, `payment/notification decision validator failed: ${nested.stderr || nested.stdout}`)
+  }
+
   // Remaining launch / runtime gates (expected pending)
   blockers.push("LEGAL_CONTENT_STATUS!=approved")
   blockers.push("PAYMENT_DECISION_STATUS=pending")
   blockers.push("NOTIFICATION_DECISION_STATUS=pending")
+  blockers.push("owner_payment_authorization_missing")
+  blockers.push("owner_notification_authorization_missing")
   blockers.push("owner_approval_manifest_public_production_missing")
   blockers.push("monitor_backup_runtime_not_provisioned")
   blockers.push("alert_destination_not_provisioned_on_vm")
@@ -299,6 +336,7 @@ function main() {
     profile_valid: errors.length === 0,
     seo_contract_present: errors.length === 0,
     monitor_backup_contracts_present: errors.length === 0,
+    payment_notification_decision_contracts_present: errors.length === 0,
     launch_ready: false,
     runtime_provisioned: false,
     errors,
@@ -310,9 +348,7 @@ function main() {
     console.log("STATUS PUBLIC_PRODUCTION_PROFILE_INVALID")
     process.exit(2)
   }
-  console.log(
-    "STATUS PUBLIC_PRODUCTION_PROFILE_VALID_SEO_MONITOR_BACKUP_CONTRACTS_READY_RUNTIME_GATES_PENDING"
-  )
+  console.log("STATUS PUBLIC_PRODUCTION_PROFILE_VALID_CONTRACTS_READY_OWNER_DECISIONS_PENDING")
   process.exit(0)
 }
 
