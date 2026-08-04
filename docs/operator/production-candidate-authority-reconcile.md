@@ -66,10 +66,39 @@ ops/release/reconcile-production-candidate-metadata.sh \
 # --execute --confirm-mutation I_UNDERSTAND_PRODUCTION_METADATA_COMPOSE_RELEASE_SHA_CORRECTION
 ```
 
-Gates (under production lock on execute): live RepoDigests, OCI revisions,
-exact image pins, ownership `application_source_sha`, health, profile
-role/exposure/DB alias, no public Traefik. No container recreate. Full compose
+Gates before any planned write (dry-run and execute): live RepoDigests, OCI
+revisions, exact image pins, ownership `application_source_sha`, health,
+profile role/exposure/DB alias, no public Traefik labels, and exact Docker
+private host-publish contract (`HostConfig.PortBindings` agreeing with
+`NetworkSettings.Ports`). Execute then takes the production mutation lock for
+the metadata write path; exposure gates are fail-closed before that lock and
+before evidence / `.env` mutation (they are not a substitute for locking
+against external container replacement). No container recreate. Full compose
 `.env` byte backup + checksummed restore on failure. Never prints env values.
+
+### Exposure gates (independent)
+
+Metadata-only release-SHA reconcile is allowed only when **both** pass:
+
+1. **Traefik** - no public router / `traefik.enable=true` / forbidden domains on
+   live containers.
+2. **Docker published ports** - live inspect must match the production profile
+   allowlist exactly:
+   - storefront `127.0.0.1:3200` → container `3002/tcp`
+   - backend `127.0.0.1:9200` → container `9000/tcp`
+   - no extra published ports
+   - reject `0.0.0.0`, empty `HostIp`, `::`, `[::]`, and any non-loopback IP
+
+Loopback bind is **not** the same as “no Traefik”. Both gates run in dry-run
+and execute, after read-only discovery and **before** any `.env` write / backup
+publication / confirmation-gated mutation. Confirmation tokens cannot bypass
+exposure gates.
+
+`WOODRIGHT_RELEASE_SHA` in compose `.env` remains informational metadata and is
+not publish authority. A stale marker may safely remain until the next governed
+metadata reconcile or atomic pair cutover. Merging this source fix does **not**
+authorize live reconcile; after governance install, run a new stabilization
+gate before any owner `--execute`.
 
 Dry-run packet fields include:
 
