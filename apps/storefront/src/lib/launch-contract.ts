@@ -195,6 +195,9 @@ export function isPublicDemoRuntime(
  * Exact public site runtime identity. Required (with explicit SEO/launch mode)
  * before indexable SEO may engage. Distinct from private `production` /
  * `production_candidate`.
+ *
+ * When both role and image build profile are non-empty, they must agree on
+ * `public_production` - conflicting identities fail closed.
  */
 export function isPublicProductionRuntime(
   role: string | undefined | null,
@@ -202,6 +205,9 @@ export function isPublicProductionRuntime(
 ): boolean {
   const r = String(role ?? "").trim()
   const p = String(imageBuildProfile ?? "").trim()
+  if (r && p) {
+    return r === "public_production" && p === "public_production"
+  }
   return r === "public_production" || p === "public_production"
 }
 

@@ -84,6 +84,33 @@ assert.equal(
 )
 assert.equal(
   resolveSeoMode({
+    seoMode: "public_indexable",
+    runtimeRole: "production",
+    imageBuildProfile: "public_production",
+  }),
+  "private_noindex",
+  "conflicting role vs profile must fail closed"
+)
+assert.equal(
+  resolveSeoMode({
+    seoMode: "public_indexable",
+    runtimeRole: "production_candidate",
+    imageBuildProfile: "public_production",
+  }),
+  "private_noindex",
+  "candidate role + public_production profile must fail closed"
+)
+assert.equal(
+  resolveSeoMode({
+    seoMode: "public_indexable",
+    runtimeRole: "public_production",
+    imageBuildProfile: "production_candidate",
+  }),
+  "private_noindex",
+  "public_production role + candidate profile must fail closed"
+)
+assert.equal(
+  resolveSeoMode({
     indexingMode: "index",
     runtimeRole: "public_production",
   }),
