@@ -192,6 +192,20 @@ export function isPublicDemoRuntime(
 }
 
 /**
+ * Exact public site runtime identity. Required (with explicit SEO/launch mode)
+ * before indexable SEO may engage. Distinct from private `production` /
+ * `production_candidate`.
+ */
+export function isPublicProductionRuntime(
+  role: string | undefined | null,
+  imageBuildProfile?: string | undefined | null
+): boolean {
+  const r = String(role ?? "").trim()
+  const p = String(imageBuildProfile ?? "").trim()
+  return r === "public_production" || p === "public_production"
+}
+
+/**
  * Require an https, non-demo, non-loopback absolute URL for the public
  * Medusa API contract. `api.woodright.ru` is recommended but not enforced -
  * some private candidates legitimately proxy through another host.
@@ -221,7 +235,11 @@ export function assertProductionLikeApiUrl(raw: string | undefined | null): stri
 
 export function isProductionLikeRuntime(role: string | undefined | null): boolean {
   const value = String(role ?? "").trim()
-  return value === "production" || value === "production_candidate"
+  return (
+    value === "production" ||
+    value === "production_candidate" ||
+    value === "public_production"
+  )
 }
 
 export type ResolveLaunchModeEnv = {
