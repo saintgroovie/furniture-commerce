@@ -152,10 +152,11 @@ if [[ "${WOODRIGHT_ENVIRONMENT:-}" == "public_production" ]]; then
     owner_review|draft|"") add_check "legal_status" critical fail "status=${WOODRIGHT_LEGAL_CONTENT_STATUS:-unset}" ;;
     *) add_check "legal_status" critical fail "status=${WOODRIGHT_LEGAL_CONTENT_STATUS}" ;;
   esac
-  if [[ "${WOODRIGHT_PAYMENT_DECISION_STATUS:-pending}" == "accepted" ]]; then
-    add_check "payment_decision" info pass "accepted"
+  if [[ "${WOODRIGHT_PAYMENT_DECISION_STATUS:-pending}" == "accepted_manual" \
+    && "${WOODRIGHT_PAYMENT_MODE:-}" == "manual_invoice" ]]; then
+    add_check "payment_decision" info pass "manual_invoice+accepted_manual"
   else
-    add_check "payment_decision" critical fail "status=${WOODRIGHT_PAYMENT_DECISION_STATUS:-pending}"
+    add_check "payment_decision" critical fail "mode=${WOODRIGHT_PAYMENT_MODE:-unset};status=${WOODRIGHT_PAYMENT_DECISION_STATUS:-pending}"
   fi
   if [[ "${WOODRIGHT_NOTIFICATION_DECISION_STATUS:-pending}" == "accepted" ]]; then
     add_check "notification_decision" info pass "accepted"

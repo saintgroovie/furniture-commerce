@@ -36,11 +36,34 @@ Profile schema can validate while launch remains blocked until:
 
 1. exact `public_production` owner approval manifest
 2. `LEGAL_CONTENT_STATUS=approved`
-3. payment owner decision
+3. payment owner decision (`WOODRIGHT_PAYMENT_DECISION_STATUS=accepted_manual` with `WOODRIGHT_PAYMENT_MODE=manual_invoice`)
 4. notification/SMTP owner decision
 5. public-production monitor + backup **contracts** present (repository); runtime provision still required
 6. DNS/TLS/Traefik pre-DNS proof
 7. qualified application images for the final application SHA (does **not** inherit `22cbd68` OWNER PASS)
+
+### Public-ready `manual_invoice` (payment gate only)
+
+Checkout creates the order without online capture (`pp_system_default` plumbing). There is **no** online PSP at launch.
+
+| Field | Public-ready value |
+|---|---|
+| `WOODRIGHT_PAYMENT_MODE` | `manual_invoice` |
+| `WOODRIGHT_PAYMENT_DECISION_STATUS` | `accepted_manual` |
+
+Owner attestation means: buyer places an order on the site; payment happens after manager confirmation / invoice (manager payment link or requisites) - not card capture on the storefront.
+
+Rules:
+
+- `pending` / missing / unknown / bare `accepted` / `rejected` → payment gate closed
+- `manual_invoice` alone never unlocks public payment readiness
+- status flip without `manual_invoice` never unlocks
+- payment gate readiness ≠ `launch_ready` and ≠ deploy / DNS / indexing approval
+- fake notifications are unrelated to payment readiness
+- production conf may stay `PAYMENT_DECISION_STATUS=pending` until a separate decision-recording batch
+- rollback: set decision back to `pending` (or `rejected`) and keep non-public / non-indexable until re-attested
+
+SoT helpers: `apps/storefront/src/lib/payment-readiness.ts`, `scripts/release/lib/payment-readiness.cjs`.
 
 Validator:
 

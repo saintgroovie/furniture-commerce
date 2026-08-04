@@ -14,12 +14,18 @@
  */
 const fs = require("fs")
 const path = require("path")
+const {
+  evaluatePublicPaymentReady,
+  parsePaymentDecisionStatus,
+  PUBLIC_READY_PAYMENT_DECISION,
+} = require("./lib/payment-readiness.cjs")
 
 function parseArgs(argv) {
-  const out = { "repo-root": process.cwd() }
+  const out = { "repo-root": process.cwd(), "profile-path": null }
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i]
     if (a === "--repo-root") out["repo-root"] = argv[++i]
+    if (a === "--profile-path") out["profile-path"] = argv[++i]
   }
   return out
 }
@@ -41,12 +47,13 @@ function main() {
   const blockers = []
   const contractReady = []
 
-  const profilePath = path.join(
-    root,
-    "ops/config/runtime-environments/public_production.conf"
-  )
+  const profilePath = args["profile-path"]
+    ? path.resolve(args["profile-path"])
+    : path.join(root, "ops/config/runtime-environments/public_production.conf")
+  let paymentDecisionRaw = ""
+  let paymentModeRaw = ""
   if (!fs.existsSync(profilePath)) {
-    fail(errors, "missing public_production.conf")
+    fail(errors, `missing profile at ${path.relative(root, profilePath) || profilePath}`)
   } else {
     const conf = fs.readFileSync(profilePath, "utf8")
     const required = [
@@ -61,7 +68,6 @@ function main() {
       ["WOODRIGHT_OWNER_APPROVAL_ENVIRONMENT", "public_production"],
       ["WOODRIGHT_ADMIN_EXPOSURE", "private"],
       ["WOODRIGHT_LEGAL_CONTENT_STATUS", "draft"],
-      ["WOODRIGHT_PAYMENT_DECISION_STATUS", "pending"],
       ["WOODRIGHT_NOTIFICATION_DECISION_STATUS", "pending"],
       ["WOODRIGHT_ENVIRONMENT_PROVISIONED", "0"],
       ["WOODRIGHT_HOST_PUBLISH_POLICY", "deny"],
@@ -81,6 +87,26 @@ function main() {
       const m = conf.match(re)
       if (!m) fail(errors, `missing ${key}`)
       else if (m[1].trim() !== expect) fail(errors, `${key} want=${expect} got=${m[1].trim()}`)
+    }
+    const payModeMatch = conf.match(/^WOODRIGHT_PAYMENT_MODE=(.*)$/m)
+    if (!payModeMatch) fail(errors, "missing WOODRIGHT_PAYMENT_MODE")
+    else {
+      paymentModeRaw = payModeMatch[1].trim()
+      if (paymentModeRaw !== "manual_invoice") {
+        fail(errors, `WOODRIGHT_PAYMENT_MODE want=manual_invoice got=${paymentModeRaw}`)
+      }
+    }
+    const payDecMatch = conf.match(/^WOODRIGHT_PAYMENT_DECISION_STATUS=(.*)$/m)
+    if (!payDecMatch) fail(errors, "missing WOODRIGHT_PAYMENT_DECISION_STATUS")
+    else {
+      paymentDecisionRaw = payDecMatch[1].trim()
+      const parsed = parsePaymentDecisionStatus(paymentDecisionRaw)
+      if (parsed.kind !== "pending" && parsed.kind !== "accepted_manual") {
+        fail(
+          errors,
+          `WOODRIGHT_PAYMENT_DECISION_STATUS must be pending|accepted_manual (got ${paymentDecisionRaw})`
+        )
+      }
     }
     for (const banned of [
       "runtime-ownership-public-demo",
@@ -271,6 +297,12 @@ function main() {
   if (!health.includes("wr_assert_public_production_path_isolation")) {
     fail(errors, "health-check must assert path isolation for public_production")
   }
+  if (!health.includes("accepted_manual")) {
+    fail(errors, "health-check must require accepted_manual for payment decision pass")
+  }
+  if (!/WOODRIGHT_PAYMENT_MODE.*manual_invoice/.test(health)) {
+    fail(errors, "health-check must require WOODRIGHT_PAYMENT_MODE=manual_invoice with accepted_manual")
+  }
 
   // Backup helper must refuse wrong env / demo DB
   const bak = fs.readFileSync(
@@ -283,9 +315,29 @@ function main() {
     fail(errors, "backup helper must support plan-only mode")
   }
 
-  // Remaining launch / runtime gates (expected pending)
+  // Remaining launch / runtime gates (expected pending on real profile).
+  // Payment gate clears only when owner-attested accepted_manual + manual_invoice;
+  // that never alone makes launch_ready true.
   blockers.push("LEGAL_CONTENT_STATUS!=approved")
-  blockers.push("PAYMENT_DECISION_STATUS=pending")
+  const paymentReady = evaluatePublicPaymentReady({
+    paymentMode: paymentModeRaw,
+    paymentDecisionStatus: paymentDecisionRaw,
+  })
+  if (paymentReady.ready) {
+    contractReady.push(`payment_contract_ready:${PUBLIC_READY_PAYMENT_DECISION}`)
+  } else if (paymentReady.conflict) {
+    blockers.push(`PAYMENT_DECISION_STATUS=conflict:${paymentReady.reason}`)
+  } else if (paymentReady.decisionKind === "pending") {
+    blockers.push("PAYMENT_DECISION_STATUS=pending")
+  } else if (paymentReady.decisionKind === "missing") {
+    blockers.push("PAYMENT_DECISION_STATUS=missing")
+  } else if (paymentReady.decisionKind === "rejected") {
+    blockers.push("PAYMENT_DECISION_STATUS=rejected")
+  } else if (!paymentReady.paymentModeOk) {
+    blockers.push(`PAYMENT_MODE_NOT_PUBLIC_READY:${paymentReady.reason}`)
+  } else {
+    blockers.push(`PAYMENT_DECISION_STATUS=unsupported:${paymentDecisionRaw || "<empty>"}`)
+  }
   blockers.push("NOTIFICATION_DECISION_STATUS=pending")
   blockers.push("owner_approval_manifest_public_production_missing")
   blockers.push("monitor_backup_runtime_not_provisioned")
@@ -299,6 +351,8 @@ function main() {
     profile_valid: errors.length === 0,
     seo_contract_present: errors.length === 0,
     monitor_backup_contracts_present: errors.length === 0,
+    payment_contract_ready: paymentReady.ready,
+    payment_contract_detail: paymentReady.reason,
     launch_ready: false,
     runtime_provisioned: false,
     errors,
