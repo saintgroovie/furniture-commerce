@@ -44,6 +44,12 @@ Lock metadata includes environment, actor, command, PID, hostname, target SHA/di
 
 A process for one environment cannot write another environment's ACTIVE/EXPECTED/ACTIVE_PUBLIC paths.
 
+### Public-demo legacy `ACTIVE_RELEASE.json`
+
+`WOODRIGHT_ACTIVE_RELEASE` under `public_demo.conf` remains as a **compatibility path only** (`WOODRIGHT_ACTIVE_RELEASE_DEPRECATED=1`, `AUTHORITATIVE=0`, `COMPATIBILITY_ONLY=1`).
+
+Canonical public-demo mutating authority is OWNER + EXPECTED + ACTIVE_PUBLIC + pins/runtime/OCI + owner approval. The legacy file may stay stale forever without blocking monitor/cutover. Do not enable `UPDATE_ACTIVE_RELEASE=1` from normal pair cutover/recreate. Optional compatibility writes require `--confirm-mutation I_UNDERSTAND_LEGACY_ACTIVE_RELEASE_IS_NON_AUTHORITATIVE`. See `docs/operator/runtime-ownership.md`.
+
 ## Host-publish contract
 
 Profile authority (not inherited boolean):

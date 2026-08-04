@@ -40,14 +40,17 @@ Git holds **templates/fixtures/generators/validators** only. Live container IDs 
 These may lag after mid-cycle cutovers:
 
 - `/srv/woodright/runtime-ownership/ACTIVE_RELEASE.json`
+- `/srv/woodright/runtime-ownership-public-demo/ACTIVE_RELEASE.json` (public-demo compatibility residue; non-authoritative)
 - `/srv/woodright/runtime-ownership/STACKS.json` digests
 
 Hierarchy:
 
 1. **Traefik route + live container digests** (ground truth for public)
 2. **`ACTIVE_PUBLIC.json`** (must match Traefik)
-3. `ACTIVE_OWNER.json` (owner lock / digests for cutover)
+3. `ACTIVE_OWNER.json` / `EXPECTED_RELEASE.json` (owner lock / digests for cutover)
 4. Deprecated files must set `"deprecated": true` + `superseded_by` and must **not** be read as current identity by scripts
+
+Public-demo helpers must not treat a stale schema-v2 `ACTIVE_RELEASE.json` as cutover/rollback/monitor authority. Live sync/delete is out of scope for normal operations.
 
 ## Response headers
 

@@ -13,7 +13,14 @@
 #   - Dokploy compose .env: WOODRIGHT_BACKEND_IMAGE, WOODRIGHT_STOREFRONT_IMAGE, STOREFRONT_IMAGE
 #   - optional: DOKPLOY_IMAGE_PINS.env
 #   - optional: ACTIVE_PUBLIC.json (+ public-demo.json)
-#   - optional: ACTIVE_RELEASE.json
+#   - optional: ACTIVE_RELEASE.json (LEGACY compatibility mirror ONLY; default OFF)
+#
+# Legacy ACTIVE_RELEASE.json under runtime-ownership-public-demo/ is non-authoritative.
+# UPDATE_ACTIVE_RELEASE defaults to 0. Normal cutover/recreate must leave it off.
+# Enabling UPDATE_ACTIVE_RELEASE=1 requires:
+#   --confirm-mutation I_UNDERSTAND_LEGACY_ACTIVE_RELEASE_IS_NON_AUTHORITATIVE
+# Evidence records LEGACY_ACTIVE_RELEASE_COMPATIBILITY_MIRROR_WRITE.
+# Stale legacy mirror is NOT treated as pin/runtime drift.
 #
 # Does NOT recreate containers. Does NOT print secret values.
 #
@@ -74,6 +81,8 @@ UPDATE_ACTIVE_RELEASE="${UPDATE_ACTIVE_RELEASE:-0}"
 REQUIRE_LIVE_MATCH="${REQUIRE_LIVE_MATCH:-1}"
 READ_ONLY_NO_LOCK="${READ_ONLY_NO_LOCK:-0}"
 COMPONENT_SCOPE=""
+LEGACY_ACTIVE_CONFIRM_TOKEN='I_UNDERSTAND_LEGACY_ACTIVE_RELEASE_IS_NON_AUTHORITATIVE'
+CONFIRM_MUTATION=""
 # Parse --environment / --component from argv (remaining env vars still supported)
 ENV_ARG=""
 COMP_ARG=""
@@ -84,6 +93,8 @@ while [[ $# -gt 0 ]]; do
     --environment=*) ENV_ARG="${1#--environment=}"; shift ;;
     --component) COMP_ARG="$2"; shift 2 ;;
     --component=*) COMP_ARG="${1#--component=}"; shift ;;
+    --confirm-mutation) CONFIRM_MUTATION="$2"; shift 2 ;;
+    --confirm-mutation=*) CONFIRM_MUTATION="${1#--confirm-mutation=}"; shift ;;
     *) _filtered+=("$1"); shift ;;
   esac
 done
@@ -99,6 +110,15 @@ wr_assert_environment_provisioned || exit 2
 [[ -n "$COMP_ARG" ]] || { echo "error: missing required --component <storefront|backend|pair>" >&2; exit 2; }
 wr_assert_component_scope "$COMP_ARG" || exit 2
 COMPONENT_SCOPE="$WOODRIGHT_COMPONENT_SCOPE"
+
+# Legacy ACTIVE_RELEASE mirror is opt-in only and never part of normal cutover.
+if [[ "$UPDATE_ACTIVE_RELEASE" == "1" ]]; then
+  if [[ "$CONFIRM_MUTATION" != "$LEGACY_ACTIVE_CONFIRM_TOKEN" ]]; then
+    echo "error: UPDATE_ACTIVE_RELEASE=1 requires --confirm-mutation $LEGACY_ACTIVE_CONFIRM_TOKEN (legacy non-authoritative mirror)" >&2
+    exit 2
+  fi
+  log "LEGACY_ACTIVE_RELEASE_COMPATIBILITY_MIRROR_WRITE_REQUESTED environment=${WOODRIGHT_ENVIRONMENT} apply=${APPLY}"
+fi
 
 BACKEND_CONTAINER="${BACKEND_CONTAINER:-$WOODRIGHT_BE_CONTAINER_DEFAULT}"
 STOREFRONT_CONTAINER="${STOREFRONT_CONTAINER:-$WOODRIGHT_SF_CONTAINER_DEFAULT}"
@@ -667,7 +687,13 @@ else:
     raise SystemExit(f"unknown scope {scope}")
 doc["component_revisions"]=comps
 doc["updated_utc"]=datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-doc["notes"]=f"reconciled under environment lock scope={scope}"
+doc["notes"]=f"legacy compatibility mirror reconciled under environment lock scope={scope}; non-authoritative"
+# Schema-v2 / bundle pointer residue: never claim authority after governed rewrite.
+doc["deprecated"]=True
+doc["do_not_use_as_current_identity"]=True
+doc["authority"]=False
+doc["compatibility_only"]=True
+doc["superseded_by"]="WOODRIGHT_ACTIVE_OWNER+WOODRIGHT_EXPECTED_RELEASE+WOODRIGHT_ACTIVE_PUBLIC"
 try:
     for name, short, full in (
         (be_name, "backend_container_id", "backend_container_id_full"),
@@ -982,6 +1008,7 @@ if [[ "$UPDATE_ACTIVE_RELEASE" == "1" && -f "$ACTIVE_RELEASE_FILE" ]]; then
   if ! atomic_install "$TMP_AR" "$ACTIVE_RELEASE_FILE"; then
     tx_fail 6 "failed installing ACTIVE_RELEASE"
   fi
+  log "LEGACY_ACTIVE_RELEASE_COMPATIBILITY_MIRROR_WRITE path=$ACTIVE_RELEASE_FILE"
 fi
 
 if [[ "$SKIP_COMPOSE_VALIDATE" == "1" ]]; then

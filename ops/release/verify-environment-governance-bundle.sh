@@ -119,13 +119,15 @@ REQUIRED_JSON='[
   "ops/systemd/woodright-backup-public-production.timer",
   "ops/systemd/woodright-restore-rehearsal-public-production.service",
   "scripts/release/reconcile-public-image-pins.sh",
+  "scripts/release/restart-active-digest-only.sh",
   "docs/operator/environment-scoped-release-governance.md",
   "docs/operator/backend-media-promotion-gate.md",
   "docs/operator/production-candidate-rollback.md",
   "docs/operator/production-helper-install-provenance.md",
   "docs/operator/production-candidate-authority-reconcile.md",
   "docs/operator/owner-approved-release-governance.md",
-  "docs/operator/public-production-monitor-backup-recovery.md"
+  "docs/operator/public-production-monitor-backup-recovery.md",
+  "docs/operator/runtime-ownership.md"
 ]'
 
 python3 - "$MANIFEST" "$MARKER_SHA" "$OPS_ROOT" "$TOOLS_ROOT" "$DOCS_ROOT" "$REQUIRED_JSON" <<'PY'
