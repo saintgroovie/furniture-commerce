@@ -18,10 +18,11 @@ import {
   collectStaticSitemapEntries,
   escapeXml,
   isBlockedSitemapPath,
+  isProductionSitemapLoc,
   mergeSitemapEntries,
   renderSitemapXml,
 } from "./sitemap-entries"
-import { robotsTxtBody } from "./indexing-policy"
+import { isIndexingAllowed, robotsTxtBody } from "./indexing-policy"
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../..")
 
@@ -134,6 +135,101 @@ assert.equal(
   "private_noindex",
   "production candidate must not unlock indexing"
 )
+
+// Conflicting / unknown populated controls must fail closed (Codex P1).
+const conflictCases: Array<{
+  name: string
+  env: Parameters<typeof resolveSeoMode>[0]
+  expected: ReturnType<typeof resolveSeoMode>
+}> = [
+  {
+    name: "SEO private + launch indexable + public_production",
+    env: {
+      seoMode: "private_noindex",
+      launchMode: "public_indexable",
+      runtimeRole: "public_production",
+    },
+    expected: "private_noindex",
+  },
+  {
+    name: "SEO demo_noindex + INDEXING=index + public_production",
+    env: {
+      seoMode: "demo_noindex",
+      indexingMode: "index",
+      runtimeRole: "public_production",
+    },
+    expected: "private_noindex",
+  },
+  {
+    name: "SEO indexable + launch private + public_production",
+    env: {
+      seoMode: "public_indexable",
+      launchMode: "private_noindex",
+      runtimeRole: "public_production",
+    },
+    expected: "private_noindex",
+  },
+  {
+    name: "launch indexable + INDEXING=noindex + public_production",
+    env: {
+      launchMode: "public_indexable",
+      indexingMode: "noindex",
+      runtimeRole: "public_production",
+    },
+    expected: "private_noindex",
+  },
+  {
+    name: "unknown SEO mode + launch indexable + public_production",
+    env: {
+      seoMode: "bogus",
+      launchMode: "public_indexable",
+      runtimeRole: "public_production",
+    },
+    expected: "private_noindex",
+  },
+  {
+    name: "unknown launch mode + SEO indexable + public_production",
+    env: {
+      seoMode: "public_indexable",
+      launchMode: "not_a_mode",
+      runtimeRole: "public_production",
+    },
+    expected: "private_noindex",
+  },
+  {
+    name: "unknown INDEXING_MODE + SEO indexable + public_production",
+    env: {
+      seoMode: "public_indexable",
+      indexingMode: "indexable",
+      runtimeRole: "public_production",
+    },
+    expected: "private_noindex",
+  },
+  {
+    name: "all three agree indexable + public_production",
+    env: {
+      seoMode: "public_indexable",
+      launchMode: "public_indexable",
+      indexingMode: "index",
+      runtimeRole: "public_production",
+    },
+    expected: "public_indexable",
+  },
+  {
+    name: "all three agree noindex + public_production",
+    env: {
+      seoMode: "private_noindex",
+      launchMode: "private_noindex",
+      indexingMode: "noindex",
+      runtimeRole: "public_production",
+    },
+    expected: "private_noindex",
+  },
+]
+for (const c of conflictCases) {
+  assert.equal(resolveSeoMode(c.env), c.expected, c.name)
+}
+
 assert.equal(seoModeToIndexingRaw("public_indexable"), "index")
 assert.equal(seoModeToIndexingRaw("demo_noindex"), "noindex")
 
@@ -179,8 +275,17 @@ const merged = mergeSitemapEntries([
   ...products,
   { loc: "https://woodright-demo.ru/product/x" },
   { loc: "http://127.0.0.1/product/x" },
+  { loc: "https://woodright.ru.evil.example/product/x" },
+  { loc: "https://evil.woodright.ru/product/x" },
 ])
-assert.ok(merged.every((e) => e.loc.startsWith("https://woodright.ru")))
+assert.ok(merged.every((e) => isProductionSitemapLoc(e.loc)))
+assert.ok(
+  !merged.some((e) => e.loc.includes("evil") || e.loc.includes("woodright-demo")),
+  "merge must reject host-prefix spoofs and demo hosts"
+)
+assert.equal(isProductionSitemapLoc("https://woodright.ru/product/x"), true)
+assert.equal(isProductionSitemapLoc("https://woodright.ru.evil.example/x"), false)
+assert.equal(isProductionSitemapLoc("https://www.woodright.ru/"), false)
 assert.equal(escapeXml(`a&b<"'>`), "a&amp;b&lt;&quot;&apos;&gt;")
 
 const xml = renderSitemapXml(merged.slice(0, 3))
@@ -191,14 +296,51 @@ assert.match(xml, /<loc>/)
 const robotsRoute = read("src/app/robots.ts")
 assert.match(robotsRoute, /sitemap/)
 assert.match(robotsRoute, /productionSitemapUrl|resolvePublicIndexableOrigin/)
+assert.match(robotsRoute, /isIndexingAllowed/)
 
 const sitemapRoute = read("src/app/sitemap.xml/route.ts")
 assert.match(sitemapRoute, /status:\s*200/)
+assert.match(sitemapRoute, /status:\s*404/)
 assert.match(sitemapRoute, /status:\s*503/)
 assert.match(sitemapRoute, /Array\.isArray\(catalog\.products\)/)
 assert.match(sitemapRoute, /renderSitemapXml/)
 assert.match(sitemapRoute, /isIndexingAllowed/)
 
+// Default-path + conflict matrices through the same helpers routes call (Codex P2).
+assert.equal(isIndexingAllowed(), false, "default env must not index")
+{
+  const defaultBody = robotsTxtBody()
+  assert.match(defaultBody, /Disallow:\s*\//)
+  assert.doesNotMatch(defaultBody, /Sitemap:/i)
+}
+
+process.env.WOODRIGHT_SEO_MODE = "private_noindex"
+process.env.WOODRIGHT_LAUNCH_MODE = "public_indexable"
+process.env.WOODRIGHT_RUNTIME_ROLE = "public_production"
+assert.equal(
+  isIndexingAllowed(),
+  false,
+  "conflicting controls must not index via default path"
+)
+assert.doesNotMatch(robotsTxtBody(), /Sitemap:/i)
+delete process.env.WOODRIGHT_SEO_MODE
+delete process.env.WOODRIGHT_LAUNCH_MODE
+delete process.env.WOODRIGHT_RUNTIME_ROLE
+
+process.env.WOODRIGHT_SEO_MODE = "public_indexable"
+process.env.WOODRIGHT_LAUNCH_MODE = "public_indexable"
+process.env.WOODRIGHT_INDEXING_MODE = "index"
+process.env.WOODRIGHT_RUNTIME_ROLE = "public_production"
+assert.equal(isIndexingAllowed(), true, "unanimous indexable must allow")
+{
+  const indexBody = robotsTxtBody()
+  assert.match(indexBody, /Allow:\s*\//)
+  assert.match(indexBody, /Sitemap:\s*https:\/\/woodright\.ru\/sitemap\.xml/)
+}
+delete process.env.WOODRIGHT_SEO_MODE
+delete process.env.WOODRIGHT_LAUNCH_MODE
+delete process.env.WOODRIGHT_INDEXING_MODE
+delete process.env.WOODRIGHT_RUNTIME_ROLE
 const pdp = read("src/app/product/[id]/page.tsx")
 assert.match(pdp, /notFound\(/)
 assert.doesNotMatch(pdp, /title:\s*"Товар"/)
