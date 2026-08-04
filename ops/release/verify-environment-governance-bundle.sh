@@ -79,6 +79,9 @@ REQUIRED_JSON='[
   "ops/lib/woodright-production-release-sha-reconcile.sh",
   "ops/lib/woodright-public-demo-metadata-authority.sh",
   "ops/lib/woodright-owner-approved-release.sh",
+  "ops/lib/woodright-ops-path-isolation.sh",
+  "ops/lib/woodright-alert-contract.sh",
+  "ops/lib/woodright-recovery-point.sh",
   "ops/config/runtime-environments/public_demo.conf",
   "ops/config/runtime-environments/staging.conf",
   "ops/config/runtime-environments/production.conf",
@@ -102,15 +105,27 @@ REQUIRED_JSON='[
   "ops/release/verify-environment-governance-bundle.sh",
   "ops/monitoring/woodright-health-check.sh",
   "ops/monitoring/woodright-host-publish-check.sh",
+  "ops/backup/lib/woodright-backup-root.sh",
+  "ops/backup/woodright-postgres-backup.sh",
+  "ops/backup/woodright-media-backup.sh",
+  "ops/backup/woodright-backup-retention.sh",
+  "ops/backup/woodright-public-production-backup-run.sh",
+  "ops/backup/woodright-public-production-restore-rehearsal.sh",
   "ops/systemd/woodright-monitor.service",
   "ops/systemd/woodright-monitor-production-candidate.service",
+  "ops/systemd/woodright-monitor-public-production.service",
+  "ops/systemd/woodright-monitor-public-production.timer",
+  "ops/systemd/woodright-backup-public-production.service",
+  "ops/systemd/woodright-backup-public-production.timer",
+  "ops/systemd/woodright-restore-rehearsal-public-production.service",
   "scripts/release/reconcile-public-image-pins.sh",
   "docs/operator/environment-scoped-release-governance.md",
   "docs/operator/backend-media-promotion-gate.md",
   "docs/operator/production-candidate-rollback.md",
   "docs/operator/production-helper-install-provenance.md",
   "docs/operator/production-candidate-authority-reconcile.md",
-  "docs/operator/owner-approved-release-governance.md"
+  "docs/operator/owner-approved-release-governance.md",
+  "docs/operator/public-production-monitor-backup-recovery.md"
 ]'
 
 python3 - "$MANIFEST" "$MARKER_SHA" "$OPS_ROOT" "$TOOLS_ROOT" "$DOCS_ROOT" "$REQUIRED_JSON" <<'PY'
