@@ -19,21 +19,33 @@
  * does) are unaffected; only the default-parameter env read changes.
  */
 import { DEMO_HOSTS, LOOPBACK_HOST_RE } from "./demo-hosts"
+import { parseLaunchModeLenient } from "./launch-mode"
 import {
-  launchModeToIndexingMode,
-  parseLaunchModeLenient,
-} from "./launch-mode"
+  productionSitemapUrl,
+  resolvePublicIndexableOrigin,
+  resolveSeoMode,
+  seoModeToIndexingRaw,
+} from "./seo-mode"
 export type IndexingMode = "noindex" | "index"
 
 export const X_ROBOTS_TAG_NOINDEX = "noindex, nofollow, noarchive"
 
-/** Default raw indexing source: WOODRIGHT_LAUNCH_MODE wins over WOODRIGHT_INDEXING_MODE when set. */
+/**
+ * Default raw indexing source: governed by resolveSeoMode() when any SEO /
+ * launch / indexing / runtime identity env is present. When none are set,
+ * return undefined so local development skips noisy X-Robots-Tag headers
+ * (legacy fidelity contract).
+ */
 function defaultIndexingRaw(): string | undefined {
-  const launchMode = parseLaunchModeLenient(process.env.WOODRIGHT_LAUNCH_MODE)
-  if (launchMode) {
-    return launchModeToIndexingMode(launchMode)
-  }
-  return process.env.WOODRIGHT_INDEXING_MODE
+  const hasGovernedInput = [
+    process.env.WOODRIGHT_SEO_MODE,
+    process.env.WOODRIGHT_LAUNCH_MODE,
+    process.env.WOODRIGHT_INDEXING_MODE,
+    process.env.WOODRIGHT_RUNTIME_ROLE,
+    process.env.WOODRIGHT_IMAGE_BUILD_PROFILE,
+  ].some((v) => String(v ?? "").trim() !== "")
+  if (!hasGovernedInput) return undefined
+  return seoModeToIndexingRaw(resolveSeoMode())
 }
 
 /** Resolve mode from a raw env string (tests pass explicit values). */
@@ -129,11 +141,15 @@ export function launchCanonical(absoluteUrl: string): { canonical: string } | un
   return { canonical: absoluteUrl }
 }
 
-/** robots.txt body for current mode. No Sitemap line in noindex. */
+/** robots.txt body for current mode. Sitemap line only for public_indexable. */
 export function robotsTxtBody(raw?: string | null): string {
   if (isIndexingAllowed(raw)) {
-    // Production cutover will supply a real Sitemap URL in a dedicated release.
-    return ["User-agent: *", "Allow: /", ""].join("\n")
+    const origin = resolvePublicIndexableOrigin()
+    const sitemap =
+      origin === "https://woodright.ru"
+        ? productionSitemapUrl()
+        : `${origin}/sitemap.xml`
+    return ["User-agent: *", "Allow: /", `Sitemap: ${sitemap}`, ""].join("\n")
   }
   return ["User-agent: *", "Disallow: /", ""].join("\n")
 }

@@ -135,6 +135,7 @@ hold_runtime_locks_for_install() {
     "$WR_ROOT/locks/public_demo/live-cutover.lock" \
     "$WR_ROOT/locks/staging/live-cutover.lock" \
     "$WR_ROOT/locks/production/live-cutover.lock" \
+    "$WR_ROOT/locks/public_production/live-cutover.lock" \
     "$WR_ROOT/locks/live-cutover.lock"
   do
     mkdir -p "$(dirname "$p")"
@@ -243,6 +244,7 @@ FILES=(
   ops/config/runtime-environments/public_demo.conf
   ops/config/runtime-environments/staging.conf
   ops/config/runtime-environments/production.conf
+  ops/config/runtime-environments/public_production.conf
   ops/release/recreate-staging-backend-with-media.sh
   ops/release/recreate-staging-storefront.sh
   ops/release/cutover-public-demo-pair.sh
@@ -382,18 +384,23 @@ if [[ "$CANONICAL_LAYOUT" == "1" ]]; then
     "$WR_ROOT/locks/public_demo" \
     "$WR_ROOT/locks/staging" \
     "$WR_ROOT/locks/production" \
+    "$WR_ROOT/locks/public_production" \
     "$WR_ROOT/runtime-ownership-public-demo" \
     "$WR_ROOT/runtime-ownership-staging" \
     "$WR_ROOT/runtime-ownership-production" \
+    "$WR_ROOT/runtime-ownership-public-production" \
     "$WR_ROOT/runtime-identity-public-demo" \
     "$WR_ROOT/runtime-identity-staging" \
     "$WR_ROOT/runtime-identity-production" \
+    "$WR_ROOT/runtime-identity-public-production" \
     "$WR_ROOT/reports/public_demo" \
     "$WR_ROOT/reports/staging" \
-    "$WR_ROOT/reports/production"
+    "$WR_ROOT/reports/production" \
+    "$WR_ROOT/reports/public_production"
   : >>"$WR_ROOT/locks/public_demo/live-cutover.lock"
   : >>"$WR_ROOT/locks/staging/live-cutover.lock"
   : >>"$WR_ROOT/locks/production/live-cutover.lock"
+  : >>"$WR_ROOT/locks/public_production/live-cutover.lock"
   if [[ ! -s "$WR_ROOT/locks/production/live-cutover.lock" && -e "$WR_ROOT/locks/production-cutover.lock" ]]; then
     log "note: legacy production-cutover.lock present; nested lock file created empty (flock path is nested)"
   fi

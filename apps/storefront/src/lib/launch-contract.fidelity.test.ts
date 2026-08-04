@@ -179,10 +179,16 @@ assert.match(base, /assertPublicDemoSiteUrl/, "base.ts must validate public-demo
 assert.match(base, /isProductionLikeRuntime/, "base.ts must check production-like runtime role")
 assert.match(base, /isPublicDemoRuntime/, "base.ts must check public_demo identity")
 
-// --- Static wiring: indexing-policy must derive from WOODRIGHT_LAUNCH_MODE ---
+// --- Static wiring: indexing-policy derives via resolveSeoMode (launch alone is not enough) ---
 const indexingPolicy = read("src/lib/indexing-policy.ts")
 assert.match(indexingPolicy, /WOODRIGHT_LAUNCH_MODE/, "indexing-policy.ts must read WOODRIGHT_LAUNCH_MODE")
-assert.match(indexingPolicy, /launchModeToIndexingMode/, "indexing-policy.ts must map launch mode to indexing mode")
+assert.match(indexingPolicy, /resolveSeoMode/, "indexing-policy.ts must resolve via seo-mode")
+assert.match(indexingPolicy, /seoModeToIndexingRaw/, "indexing-policy.ts must map SEO mode to indexing raw")
 assert.match(indexingPolicy, /export function launchCanonical/, "indexing-policy.ts must export launchCanonical")
+
+const seoMode = read("src/lib/seo-mode.ts")
+assert.match(seoMode, /WOODRIGHT_LAUNCH_MODE/, "seo-mode.ts must read WOODRIGHT_LAUNCH_MODE")
+assert.match(seoMode, /isPublicProductionRuntime/, "seo-mode.ts must gate indexable on public_production")
+assert.match(seoMode, /parseLaunchModeLenient/, "seo-mode.ts must parse launch mode")
 
 console.log("launch-contract.fidelity: ok")

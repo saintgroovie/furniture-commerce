@@ -7,8 +7,10 @@
 #   wr_require_environment_from_args "$@"
 #   wr_assert_environment_provisioned   # before lock / Docker / metadata writes
 #
-# Allowed: public_demo | staging | production
+# Allowed: public_demo | staging | production | public_production
 # Fail-closed: missing/unknown/path-traversal/untracked/unprovisioned → non-zero.
+# Note: `production` remains PRODUCTION_CANDIDATE (private). `public_production`
+# is a distinct PUBLIC_PRODUCTION profile - never treat them as aliases.
 # shellcheck shell=bash
 
 _WR_ENV_PROFILE_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -24,7 +26,7 @@ wr_env_die() {
 
 wr_environment_allowed_name() {
   case "$1" in
-    public_demo|staging|production) return 0 ;;
+    public_demo|staging|production|public_production) return 0 ;;
     *) return 1 ;;
   esac
 }
@@ -52,7 +54,7 @@ wr_load_environment_profile() {
   local path
   [[ -n "$env_name" ]] || { wr_env_die "environment required (no default)"; return 1; }
   wr_environment_allowed_name "$env_name" || {
-    wr_env_die "unknown environment='$env_name' (allowed: public_demo|staging|production)"
+    wr_env_die "unknown environment='$env_name' (allowed: public_demo|staging|production|public_production)"
     return 1
   }
 
@@ -122,7 +124,7 @@ wr_parse_environment_arg() {
 
 wr_require_environment_from_args() {
   if ! wr_parse_environment_arg "$@"; then
-    wr_env_die "missing required --environment <public_demo|staging|production> (no default; inherited env is not authority)"
+    wr_env_die "missing required --environment <public_demo|staging|production|public_production> (no default; inherited env is not authority)"
     return 1
   fi
   wr_load_environment_profile "$WR_PARSED_ENVIRONMENT"

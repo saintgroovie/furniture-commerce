@@ -82,6 +82,7 @@ REQUIRED_JSON='[
   "ops/config/runtime-environments/public_demo.conf",
   "ops/config/runtime-environments/staging.conf",
   "ops/config/runtime-environments/production.conf",
+  "ops/config/runtime-environments/public_production.conf",
   "ops/release/recreate-staging-backend-with-media.sh",
   "ops/release/recreate-staging-storefront.sh",
   "ops/release/cutover-public-demo-pair.sh",

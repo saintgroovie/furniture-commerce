@@ -1,7 +1,7 @@
 import Link from "next/link"
 import type { Metadata } from "next"
 import { headers } from "next/headers"
-import { redirect } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import { getSiteUrl } from "@/lib/api/base"
 import { getCatalogProducts, getProduct, NOT_FOUND } from "@/lib/api/products"
 import { getMotifContext } from "@/lib/api/motif-themes"
@@ -112,13 +112,13 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params
   const base = getSiteUrl()
-  const selfCanonical = indexingCanonical(`${base}/product/${id}`)
   try {
     const res = await getProduct(id)
     const product = res.product as Record<string, unknown> | undefined
     if (!product) {
-      return { title: "Товар", ...(selfCanonical ? { alternates: selfCanonical } : {}) }
+      notFound()
     }
+    const selfCanonical = indexingCanonical(`${base}/product/${id}`)
     const title = getBuyerFacingProductTitle(product)
     const desc = product.description ? truncate(String(product.description), 160) : "Товар из каталога Woodright."
     const imageUrl = primaryImageForMeta(product)
@@ -133,8 +133,12 @@ export async function generateMetadata({
       },
       ...(selfCanonical ? { alternates: selfCanonical } : {}),
     }
-  } catch {
-    return { title: "Товар", ...(selfCanonical ? { alternates: selfCanonical } : {}) }
+  } catch (e) {
+    if (e instanceof Error && e.message === NOT_FOUND) {
+      notFound()
+    }
+    // Framework notFound() throws; rethrow. Operational failures must not become 404.
+    throw e
   }
 }
 
@@ -153,14 +157,7 @@ export default async function ProductPage({
     product = res.product ?? null
   } catch (e) {
     if (e instanceof Error && e.message === NOT_FOUND) {
-      return (
-        <div data-state="not_found" className="status-message">
-          <h1>{pdpCopy.notFoundTitle}</h1>
-          <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
-            <Link href="/catalog">В каталог</Link>
-          </div>
-        </div>
-      )
+      notFound()
     }
     return (
       <div data-state="error" className="status-message">
@@ -173,14 +170,7 @@ export default async function ProductPage({
     )
   }
   if (!product) {
-    return (
-      <div data-state="not_found" className="status-message">
-        <h1>{pdpCopy.notFoundTitle}</h1>
-        <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
-          <Link href="/catalog">В каталог</Link>
-        </div>
-      </div>
-    )
+    notFound()
   }
 
   const base = getSiteUrl()
