@@ -145,54 +145,66 @@ assert.ok(
   `WhatsApp should be ~10–18% wider than Telegram (got ${whatsappFr}/${telegramFr})`
 )
 assert.ok(
-  maxFr / telegramFr >= 0.75 && maxFr / telegramFr <= 0.85,
-  `MAX should be ~15–25% narrower than Telegram (got ${maxFr}/${telegramFr})`
+  maxFr / telegramFr >= 0.75 && maxFr / telegramFr <= 0.82,
+  `MAX should be ~18–25% narrower than Telegram (got ${maxFr}/${telegramFr})`
 )
-// Narrow breakpoint may still use equal columns for clip safety
-assert.match(css, /Narrow shells:\s*fall back to equal columns/)
-// Page `/contacts` messenger grid stays equal three columns (unchanged presentation)
+// Page `/contacts` messenger grid stays equal three columns
 assert.match(
   css,
   /\.contact-action-grid--channels\s*\{[\s\S]*?grid-template-columns:\s*repeat\(\s*3\s*,\s*minmax\(\s*0\s*,\s*1fr\s*\)\s*\)/
 )
-// Layout polish: shared fixed inner grids centered in each cell/card
-// (not auto-sized max-content clusters that shift icon/text axes per label).
-assert.match(
-  css,
-  /\.contacts-nav-dropdown-menu a\.contact-action\.contact-action--density-dropdown\.contact-dropdown-channel-link,\s*\.showroom-contacts--contacts\s+a\.contact-action\.contact-action--density-dropdown\.contact-dropdown-channel-link\s*\{[^}]*display:\s*grid[^}]*grid-template-columns:\s*18px\s+92px[^}]*gap:\s*0\s+0\.625rem[^}]*justify-content:\s*center/
+
+// Dropdown: natural icon + max-content label, centered cluster (no fixed 92px text column)
+const dropLinkBlock = css.match(
+  /\.contacts-nav-dropdown-menu a\.contact-action\.contact-action--density-dropdown\.contact-dropdown-channel-link,\s*\.showroom-contacts--contacts\s+a\.contact-action\.contact-action--density-dropdown\.contact-dropdown-channel-link\s*\{[^}]*\}/
 )
-assert.match(
-  css,
-  /\.contact-action\.contact-action--density-page\.contact-action--channel\.contact-action--layout-leading\s*\{[^}]*display:\s*grid[^}]*grid-template-columns:\s*20px\s+132px[^}]*gap:\s*0\s+0\.625rem[^}]*justify-content:\s*center/
-)
+assert.ok(dropLinkBlock, "dropdown channel link rule required")
+assert.match(dropLinkBlock[0], /display:\s*grid/)
+assert.match(dropLinkBlock[0], /grid-template-columns:\s*18px\s+max-content/)
+assert.match(dropLinkBlock[0], /justify-content:\s*center/)
+assert.doesNotMatch(dropLinkBlock[0], /grid-template-columns:\s*18px\s+92px/)
+assert.doesNotMatch(css, /grid-template-columns:\s*18px\s+92px/)
 assert.match(
   css,
   /\.contact-dropdown-channel-link \.contact-action-line\s*\{[^}]*white-space:\s*nowrap/
 )
-// Dropdown text column fills fixed track - no max-content cluster sizing
 const dropBodyBlock = css.match(
   /\.contact-dropdown-channel-link \.contact-action-body,\s*\.contact-dropdown-channel-link \.contact-action-copy,\s*\.contact-dropdown-channel-link \.contact-action-copy--single\s*\{[^}]*\}/
 )
 assert.ok(dropBodyBlock, "dropdown channel body/copy rule required")
 assert.doesNotMatch(dropBodyBlock[0], /width:\s*max-content/)
-assert.match(dropBodyBlock[0], /width:\s*100%/)
+assert.doesNotMatch(dropBodyBlock[0], /width:\s*100%/)
+assert.match(dropBodyBlock[0], /width:\s*auto/)
 assert.match(dropBodyBlock[0], /text-align:\s*left/)
-// Page messenger copy: fixed column, left-aligned kicker+name (no max-content)
+
+// Page: left-aligned icon + flexible text (minmax 0,1fr) - not centered fixed 132px block
+const pageChannelBlock = css.match(
+  /\.contact-action\.contact-action--density-page\.contact-action--channel\.contact-action--layout-leading\s*\{[^}]*\}/
+)
+assert.ok(pageChannelBlock, "page channel card rule required")
+assert.match(pageChannelBlock[0], /display:\s*grid/)
+assert.match(
+  pageChannelBlock[0],
+  /grid-template-columns:\s*20px\s+minmax\(\s*0\s*,\s*1fr\s*\)/
+)
+assert.doesNotMatch(pageChannelBlock[0], /grid-template-columns:\s*20px\s+132px/)
+assert.doesNotMatch(css, /grid-template-columns:\s*20px\s+132px/)
+assert.doesNotMatch(pageChannelBlock[0], /justify-content:\s*center/)
+assert.match(pageChannelBlock[0], /padding:[^;]*1\.25rem/) // ~20px horizontal
 const pageCopyBlock = css.match(
   /\.contact-action--density-page\.contact-action--channel \.contact-action-copy\s*\{[^}]*\}/
 )
 assert.ok(pageCopyBlock, "page channel copy rule required")
 assert.doesNotMatch(pageCopyBlock[0], /width:\s*max-content/)
-assert.match(pageCopyBlock[0], /width:\s*100%/)
 assert.match(pageCopyBlock[0], /text-align:\s*left/)
-assert.match(pageCopyBlock[0], /flex-direction:\s*column/)
 const pageBodyBlock = css.match(
   /\.contact-action--density-page\.contact-action--channel \.contact-action-body\s*\{[^}]*\}/
 )
 assert.ok(pageBodyBlock, "page channel body rule required")
 assert.doesNotMatch(pageBodyBlock[0], /width:\s*max-content/)
 assert.match(pageBodyBlock[0], /width:\s*100%/)
-// Fixed icon slots (shared across services - not per-label offsets)
+assert.match(pageBodyBlock[0], /min-width:\s*0/)
+// Fixed icon slots
 assert.match(
   css,
   /\.contact-dropdown-channel-link \.contact-action-icon:not\(\.contact-action-icon--bubble\)\s*\{[^}]*width:\s*18px[^}]*height:\s*18px[^}]*place-items:\s*center/
@@ -205,21 +217,37 @@ assert.ok(
   whatsappFr > telegramFr && telegramFr > maxFr,
   "expected WhatsApp > Telegram > MAX grid weights"
 )
-// Compact shell lock (merged PR #156): ~596px - never desktop width:100%
+
+// Compact shell: ≤510px desktop, never 596 / never width:100%
 const contactsShellBlocks = [
   ...css.matchAll(/\.header-info-dropdown--contacts\s*\{[^}]*\}/g),
 ].map((m) => m[0])
 assert.ok(contactsShellBlocks.length >= 1, "contacts shell rule required")
 const desktopShell = contactsShellBlocks.find((block) =>
-  /(?:^|[;{\n])\s*width:\s*596px/.test(block)
+  /(?:^|[;{\n])\s*width:\s*500px/.test(block)
 )
-assert.ok(desktopShell, "desktop contacts shell must declare width: 596px")
+assert.ok(desktopShell, "desktop contacts shell must declare width: 500px")
 assert.doesNotMatch(desktopShell, /(?:^|[;{\n])\s*width:\s*100%/)
 assert.doesNotMatch(desktopShell, /(?:^|[;{\n])\s*width:\s*min\(\s*100%/)
-assert.match(desktopShell, /max-width:\s*min\(\s*596px/)
+assert.doesNotMatch(desktopShell, /(?:^|[;{\n])\s*width:\s*596px/)
+assert.doesNotMatch(css, /(?:^|[;{\n])\s*width:\s*596px/)
+assert.match(desktopShell, /max-width:\s*calc\(\s*100vw\s*-\s*24px\s*\)/)
+// No later contacts-shell override to percentage / 360px cap (showroom may still shrink)
+for (const block of contactsShellBlocks) {
+  assert.doesNotMatch(
+    block,
+    /(?:^|[;{\n])\s*width:\s*min\(\s*100%/
+  )
+  assert.doesNotMatch(block, /(?:^|[;{\n])\s*width:\s*596px/)
+}
+// Weighted trio must not be replaced by equal 1fr×3 outside a comment
 assert.doesNotMatch(
   css,
-  /\.header-info-dropdown--contacts\s*\{[^}]*(?:^|[;{\n])\s*width:\s*(?:368|400)px/
+  /\.contact-dropdown-channel-trio\s*\{[^}]*grid-template-columns:\s*repeat\(\s*3\s*,\s*minmax\(\s*0\s*,\s*1fr\s*\)\s*\)/
+)
+assert.doesNotMatch(
+  css,
+  /\.header-info-dropdown--contacts\s*\{[^}]*(?:^|[;{\n])\s*width:\s*(?:368|400|596)px/
 )
 
 // No duplicate hardcoded MAX URLs outside SoT (+ this fidelity test)

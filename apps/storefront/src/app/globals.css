@@ -845,17 +845,14 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   max-width: min(360px, calc(100vw - 1.5rem));
 }
 
-/* Canonical compact contacts menu shell from merged PR #156 (`df0c4ce`).
-   Weighted messenger tracks live ONLY inside `.contact-dropdown-channel-trio`
-   and must never change this shell’s used width. */
+/* Contacts dropdown compact shell - menu scale, not page section.
+   Content (phones / weighted trio) must fill the shell; never inflate it. */
 .nav-dropdown-menu.contacts-nav-dropdown-menu.header-info-dropdown.header-info-dropdown--contacts,
 .header-info-dropdown--contacts {
   box-sizing: border-box;
-  /* Compact menu (~580–610): free-call number + weighted WhatsApp label. */
-  width: 596px;
+  width: 500px;
   min-width: 0;
-  max-width: min(596px, calc(100vw - 1.5rem));
-  /* Flex column from `.nav-dropdown-menu` must not inflate past the shell. */
+  max-width: calc(100vw - 24px);
   flex: 0 0 auto;
 }
 
@@ -941,11 +938,12 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   padding: 0.4375rem 0.6875rem;
 }
 
-/* Contacts dropdown phone stack: match compact menu height. */
+/* Contacts dropdown phone stack: compact equal rows (~48–52px). */
 .showroom-contacts--contacts
   a.contact-action.contact-action--density-dropdown.contact-action--phone {
-  min-height: 2.875rem; /* 46px */
-  padding: 0.5rem 0.6875rem;
+  min-height: 3rem; /* 48px */
+  height: 3rem;
+  padding: 0.5rem 0.75rem; /* 8×12 */
 }
 
 /* Channel sizing is owned by `.contact-dropdown-channel-link` (single-line trio). */
@@ -1005,22 +1003,30 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   line-height: 1.2;
 }
 
-/* Contacts dropdown only - tighter menu rhythm (showroom panel unchanged). */
+/* Contacts dropdown only - compact menu rhythm (showroom panel unchanged). */
 .showroom-contacts--contacts {
-  --hc-pad: 0.875rem; /* 14px */
-  --hc-gap-section: 0.6875rem; /* 11px title → phones */
-  --hc-gap-after-divider: 0.625rem; /* 10px divider → messengers */
+  --hc-pad-x: 1rem; /* 16px */
+  --hc-pad-top: 1rem; /* 16px */
+  --hc-pad-bottom: 0.875rem; /* 14px */
+  --hc-gap-section: 0.75rem; /* 12px title → phones */
+  --hc-gap-after-divider: 0.6875rem; /* 11px divider rhythm */
+  padding: var(--hc-pad-top) var(--hc-pad-x) var(--hc-pad-bottom);
 }
 
 .showroom-contacts--showroom .showroom-contacts-title,
 .showroom-contacts--contacts .showroom-contacts-title {
   margin: 0 0 var(--hc-gap-section);
   padding: 0;
-  font-size: 1.1875rem; /* 19px */
+  font-size: 1.1875rem; /* 19px - showroom default */
   font-weight: 600;
   line-height: 1.2;
   letter-spacing: 0.005em;
   color: var(--color-brand);
+}
+
+.showroom-contacts--contacts .showroom-contacts-title {
+  font-size: 1.5rem; /* 24px - menu-scale heading */
+  line-height: 1.2;
 }
 
 .showroom-contacts--showroom .showroom-contacts-address {
@@ -1053,7 +1059,7 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 .showroom-contacts--contacts .showroom-contacts-phone-stack {
   display: flex;
   flex-direction: column;
-  gap: 0.375rem; /* 6px */
+  gap: 0.5rem; /* 8px */
   margin: 0 0 var(--hc-gap-after-divider);
 }
 
@@ -1280,17 +1286,17 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 }
 
 .contact-action.contact-action--density-page.contact-action--channel.contact-action--layout-leading {
-  /* Equal messenger cards: one shared fixed inner grid centered in each card.
-     Icon slot + text column widths are identical across Telegram/WhatsApp/MAX -
-     label length must not shift icon/text axes (no auto-sized max-content cluster). */
+  /* Page messenger cards: left-aligned icon + flexible text column.
+     Shared left padding drives one vertical axis for icon / kicker / name.
+     No centered fixed-width inner block; no fixed text-column px. */
   display: grid;
-  grid-template-columns: 20px 132px;
-  /* row 0 / column 10px - shorthand beats earlier flex `gap` on .contact-action */
-  gap: 0 0.625rem;
-  min-height: 3.625rem; /* 58px - slightly tighter, still touch-friendly */
-  padding: 0.625rem 0.75rem; /* 10×12 */
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 0 0.75rem; /* 12px */
+  min-height: 4.375rem; /* 70px */
+  padding: 0.8125rem 1.25rem; /* 13×20 */
   align-items: center;
-  justify-content: center; /* center the fixed 20+10+132 block */
+  justify-content: stretch;
+  min-width: 0;
 }
 
 .contact-action--density-page .contact-action-icon:not(.contact-action-icon--bubble) {
@@ -1315,11 +1321,12 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 
 .contact-action--density-page.contact-action--channel .contact-action-kicker {
   font-size: 0.6875rem; /* 11px - secondary «Написать в» */
-  line-height: 1.25;
+  line-height: 1.15;
   font-weight: 500;
   color: var(--color-fg-muted);
   text-align: left;
-  width: 100%;
+  width: auto;
+  max-width: 100%;
 }
 
 .contact-action--density-page .contact-action-value {
@@ -1329,41 +1336,42 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 
 .contact-action--density-page.contact-action--channel .contact-action-value {
   font-size: 0.9375rem; /* 15px - service name */
-  line-height: 1.2;
+  line-height: 1.15;
   font-weight: 500;
   white-space: nowrap;
   text-align: left;
-  width: 100%;
+  width: auto;
+  max-width: 100%;
 }
 
 .contact-action--density-page.contact-action--channel .contact-action-icon:not(.contact-action-icon--bubble) {
-  /* Fixed 20px icon slot - glyph centered inside; same for all services. */
   box-sizing: border-box;
   width: 20px;
   height: 20px;
   min-width: 20px;
   min-height: 20px;
   align-self: center;
-  justify-self: center;
+  justify-self: start;
   display: grid;
   place-items: center;
-  flex: unset;
+  flex: 0 0 auto;
+  flex-shrink: 0;
 }
 
 .contact-action--density-page.contact-action--channel .contact-action-body {
   display: flex;
   align-items: center;
-  width: 100%; /* fill the fixed 132px text column */
+  width: 100%;
   max-width: 100%;
   min-width: 0;
   flex: unset;
 }
 
 .contact-action--density-page.contact-action--channel .contact-action-copy {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  width: 100%; /* fixed column - kicker + name share one left edge */
+  display: grid;
+  align-items: start;
+  justify-items: start;
+  width: 100%;
   max-width: 100%;
   min-width: 0;
   text-align: left;
@@ -1498,9 +1506,9 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 }
 
 /*
-  Contacts dropdown messengers: Telegram / WhatsApp / MAX as equal single-line links.
-  Scoped under .contact-dropdown-* so page / showroom chrome stay untouched.
-  Always one row of three equal cells - never stack (WhatsApp must fit, not wrap).
+  Contacts dropdown messengers: content-weighted outer tracks + natural
+  icon+label clusters centered in each cell. Text column is max-content
+  (no fixed 92px reservation). Shell stays ~500px - row cannot inflate it.
 */
 .contact-dropdown-channels {
   display: grid;
@@ -1510,17 +1518,14 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   max-width: 100%;
   margin: 0;
   box-sizing: border-box;
-  /* Fill the compact shell only - never size the shell via max-content. */
   justify-items: stretch;
 }
 
 .contact-dropdown-channel-trio {
   display: grid;
-  /* Content-weighted desktop row: Telegram mid, WhatsApp widest, MAX narrowest.
-     ~+12% / ~-16% vs Telegram keeps centered clusters’ free air comparable.
-     Tracks use minmax(0, …) so the row cannot inflate the 596px shell. */
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr) minmax(0, 0.84fr);
-  gap: 0.375rem; /* 6px - identical gutters */
+  /* WhatsApp wider, MAX noticeably narrower - free air around visible clusters. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.11fr) minmax(0, 0.79fr);
+  gap: 0.5rem; /* 8px */
   width: 100%;
   max-width: 100%;
   min-width: 0;
@@ -1547,31 +1552,29 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 .contacts-nav-dropdown-menu a.contact-action.contact-action--density-dropdown.contact-dropdown-channel-link,
 .showroom-contacts--contacts
   a.contact-action.contact-action--density-dropdown.contact-dropdown-channel-link {
-  /* Shared fixed inner grid centered in each weighted outer cell.
-     Outer tracks stay weighted; inner axes are identical for all three. */
+  /* Natural visible cluster centered in weighted cell - not a shared text-start axis. */
   display: grid;
-  grid-template-columns: 18px 92px;
-  /* row 0 / column 10px - shorthand beats earlier flex `gap` on .contact-action */
-  gap: 0 0.625rem;
-  min-height: 2.5rem; /* 40px - equal single-line compact height */
+  grid-template-columns: 18px max-content;
+  gap: 0 0.625rem; /* 10px */
+  min-height: 2.5rem; /* 40px */
   height: 2.5rem;
-  padding: 0.375rem 0.5rem; /* 6×8 - room for WhatsApp nowrap */
+  padding: 0.375rem 0.5rem; /* 6×8 */
   border-radius: 8px;
   align-items: center;
-  justify-content: center; /* center the fixed 18+10+92 block */
+  justify-content: center;
   overflow: visible;
 }
 
 .contact-dropdown-channel-link .contact-action-body,
 .contact-dropdown-channel-link .contact-action-copy,
 .contact-dropdown-channel-link .contact-action-copy--single {
-  /* Fill the fixed 92px text column - never max-content (that re-skews axes). */
+  /* Second grid track is max-content - body follows label, no fixed px column. */
   display: flex;
   align-items: center;
-  width: 100%;
+  width: auto;
   min-width: 0;
-  max-width: 100%;
-  flex: unset;
+  max-width: none;
+  flex: 0 0 auto;
   overflow: visible;
   text-align: left;
 }
@@ -1582,9 +1585,9 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 
 .contact-dropdown-channel-link .contact-action-line {
   display: block;
-  width: 100%;
-  max-width: 100%;
-  font-size: 0.8125rem; /* 13px - full WhatsApp label in ~596px shell */
+  width: auto;
+  max-width: none;
+  font-size: 0.8125rem; /* 13px */
   font-weight: 500;
   line-height: 1.2;
   white-space: nowrap;
@@ -1603,7 +1606,8 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   place-items: center;
   justify-self: center;
   align-self: center;
-  flex: unset;
+  flex: 0 0 auto;
+  flex-shrink: 0;
 }
 
 @media (max-width: 420px) {
@@ -1611,30 +1615,15 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
     grid-template-columns: 1fr;
   }
 
-  /* Narrow shells: fall back to equal columns so WhatsApp never clips. */
-  .contact-dropdown-channel-trio {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.3125rem; /* 5px */
-  }
-
+  /* Keep weighted outer tracks + natural cluster; only tighten padding. */
   .contacts-nav-dropdown-menu a.contact-action.contact-action--density-dropdown.contact-dropdown-channel-link,
   .showroom-contacts--contacts
     a.contact-action.contact-action--density-dropdown.contact-dropdown-channel-link {
-    /* Same shared inner grid for all three - tighter tracks for narrow cells. */
-    grid-template-columns: 14px 70px;
-    gap: 0 0.3125rem; /* 5px column */
     padding: 0.3125rem 0.375rem; /* 5×6 */
   }
 
-  .contact-dropdown-channel-link .contact-action-icon:not(.contact-action-icon--bubble) {
-    width: 14px;
-    height: 14px;
-    min-width: 14px;
-    min-height: 14px;
-  }
-
   .contact-dropdown-channel-link .contact-action-line {
-    font-size: 0.75rem; /* 12px - still full labels when shell shrinks */
+    font-size: 0.75rem; /* 12px */
   }
 }
 
@@ -2018,9 +2007,8 @@ main:has(.contacts-page).page-section {
 }
 
 @media (max-width: 440px) {
-  .header-info-dropdown--showroom,
-  .nav-dropdown-menu.contacts-nav-dropdown-menu.header-info-dropdown.header-info-dropdown--contacts,
-  .header-info-dropdown--contacts {
+  /* Showroom shell only - contacts keeps width:500px + max-width:calc(100vw - 24px). */
+  .header-info-dropdown--showroom {
     width: min(100%, calc(100vw - 1.25rem));
     max-width: min(360px, calc(100vw - 1.25rem));
     flex: 0 0 auto;
