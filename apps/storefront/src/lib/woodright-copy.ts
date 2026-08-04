@@ -778,10 +778,11 @@ export const contactsCopy = {
   mapValue: "Яндекс Карты",
   /** Compact showroom phone CTA for header dropdown. */
   showroomCallCta: "Позвонить в шоурум",
-  /** Shared value for Telegram / WhatsApp page tiles. */
-  messengerWriteValue: "Написать",
-  /** Page MAX tile value - direct profile link (not copy). */
-  maxWriteValue: "Написать в MAX",
+  /**
+   * Page messenger tile kicker (secondary). Service name is the large value
+   * from `showroomContacts.messengers[].label`. Dropdown stays name-only.
+   */
+  messengerWriteKicker: "Написать в",
   /** Accessible names for messenger links (visible label stays short in dropdown). */
   messengerTelegramAria: "Написать в Telegram",
   messengerWhatsappAria: "Написать в WhatsApp",
