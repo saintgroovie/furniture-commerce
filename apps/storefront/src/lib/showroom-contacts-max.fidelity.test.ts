@@ -153,16 +153,22 @@ assert.match(
   css,
   /\.contact-action-grid--channels\s*\{[\s\S]*?grid-template-columns:\s*repeat\(\s*3\s*,\s*minmax\(\s*0\s*,\s*1fr\s*\)\s*\)/
 )
+// Phone pair outer grid: equal two columns
+assert.match(
+  css,
+  /\.contact-action-grid--pair\s*\{[\s\S]*?grid-template-columns:\s*repeat\(\s*2\s*,\s*minmax\(\s*0\s*,\s*1fr\s*\)\s*\)/
+)
 
-// Dropdown: natural icon + max-content label, centered cluster (no fixed 92px text column)
+// Dropdown: compact inline-flex cluster, 16px icon, CSS gap ≤7px (no fixed text column)
 const dropLinkBlock = css.match(
   /\.contacts-nav-dropdown-menu a\.contact-action\.contact-action--density-dropdown\.contact-dropdown-channel-link,\s*\.showroom-contacts--contacts\s+a\.contact-action\.contact-action--density-dropdown\.contact-dropdown-channel-link\s*\{[^}]*\}/
 )
 assert.ok(dropLinkBlock, "dropdown channel link rule required")
-assert.match(dropLinkBlock[0], /display:\s*grid/)
-assert.match(dropLinkBlock[0], /grid-template-columns:\s*18px\s+max-content/)
+assert.match(dropLinkBlock[0], /display:\s*inline-flex/)
 assert.match(dropLinkBlock[0], /justify-content:\s*center/)
+assert.match(dropLinkBlock[0], /column-gap:\s*0\.4375rem/) // 7px (≤7px CSS gap band)
 assert.doesNotMatch(dropLinkBlock[0], /grid-template-columns:\s*18px\s+92px/)
+assert.doesNotMatch(dropLinkBlock[0], /grid-template-columns:\s*18px\s+max-content/)
 assert.doesNotMatch(css, /grid-template-columns:\s*18px\s+92px/)
 assert.match(
   css,
@@ -172,46 +178,73 @@ const dropBodyBlock = css.match(
   /\.contact-dropdown-channel-link \.contact-action-body,\s*\.contact-dropdown-channel-link \.contact-action-copy,\s*\.contact-dropdown-channel-link \.contact-action-copy--single\s*\{[^}]*\}/
 )
 assert.ok(dropBodyBlock, "dropdown channel body/copy rule required")
-assert.doesNotMatch(dropBodyBlock[0], /width:\s*max-content/)
 assert.doesNotMatch(dropBodyBlock[0], /width:\s*100%/)
 assert.match(dropBodyBlock[0], /width:\s*auto/)
+assert.match(dropBodyBlock[0], /flex:\s*0\s+0\s+auto/)
 assert.match(dropBodyBlock[0], /text-align:\s*left/)
+assert.match(
+  css,
+  /\.contact-dropdown-channel-link \.contact-action-icon:not\(\.contact-action-icon--bubble\)\s*\{[^}]*(?:width|inline-size):\s*16px/
+)
+assert.match(
+  messengers,
+  /DROPDOWN_MESSENGER_ICON\s*=\s*16/
+)
 
-// Page: left-aligned icon + flexible text (minmax 0,1fr) - not centered fixed 132px block
+// Page phone: centered natural cluster - separate from messenger stretch
+const pagePhoneBlock = css.match(
+  /\.contact-action\.contact-action--density-page\.contact-action--phone\.contact-action--layout-leading,\s*\.contact-action\.contact-action--density-page\.contact-action--map\.contact-action--layout-leading\s*\{[^}]*\}/
+)
+assert.ok(pagePhoneBlock, "page phone/map card rule required")
+assert.match(pagePhoneBlock[0], /justify-content:\s*center/)
+assert.match(pagePhoneBlock[0], /column-gap:\s*0\.75rem/)
+assert.doesNotMatch(pagePhoneBlock[0], /grid-template-columns:\s*20px\s+minmax/)
+assert.match(
+  css,
+  /\.contact-action--density-page\.contact-action--phone \.contact-action-body[\s\S]*?flex:\s*0\s+0\s+auto/
+)
+assert.match(
+  css,
+  /\.contact-action--density-page\.contact-action--phone \.contact-action-icon:not\(\.contact-action-icon--bubble\)(?:,[\s\S]*?)?\{[^}]*(?:width|inline-size):\s*20px/
+)
+// Focus uses outline (bbox-stable) - no border-width bump on :focus
+assert.match(css, /\.contact-action:focus-visible\s*\{[^}]*outline:\s*2px/)
+assert.doesNotMatch(
+  css,
+  /\.contact-action(?:--density-page)?(?:\.contact-action--phone)?:focus(?:-visible)?\s*\{[^}]*border(?:-width)?:\s*2px/
+)
+
+// Page messenger: centered natural cluster (not 20px minmax(0,1fr) stretch)
 const pageChannelBlock = css.match(
   /\.contact-action\.contact-action--density-page\.contact-action--channel\.contact-action--layout-leading\s*\{[^}]*\}/
 )
 assert.ok(pageChannelBlock, "page channel card rule required")
-assert.match(pageChannelBlock[0], /display:\s*grid/)
-assert.match(
+assert.match(pageChannelBlock[0], /display:\s*flex/)
+assert.match(pageChannelBlock[0], /justify-content:\s*center/)
+assert.match(pageChannelBlock[0], /column-gap:\s*0\.5rem/) // 8px
+assert.doesNotMatch(
   pageChannelBlock[0],
   /grid-template-columns:\s*20px\s+minmax\(\s*0\s*,\s*1fr\s*\)/
 )
 assert.doesNotMatch(pageChannelBlock[0], /grid-template-columns:\s*20px\s+132px/)
 assert.doesNotMatch(css, /grid-template-columns:\s*20px\s+132px/)
-assert.doesNotMatch(pageChannelBlock[0], /justify-content:\s*center/)
-assert.match(pageChannelBlock[0], /padding:[^;]*1\.25rem/) // ~20px horizontal
+assert.doesNotMatch(css, /grid-template-columns:\s*20px\s+minmax\(\s*0\s*,\s*1fr\s*\)/)
+assert.match(pageChannelBlock[0], /padding:[^;]*1\.25rem/)
 const pageCopyBlock = css.match(
   /\.contact-action--density-page\.contact-action--channel \.contact-action-copy\s*\{[^}]*\}/
 )
 assert.ok(pageCopyBlock, "page channel copy rule required")
-assert.doesNotMatch(pageCopyBlock[0], /width:\s*max-content/)
 assert.match(pageCopyBlock[0], /text-align:\s*left/)
+assert.match(pageCopyBlock[0], /width:\s*auto/)
 const pageBodyBlock = css.match(
   /\.contact-action--density-page\.contact-action--channel \.contact-action-body\s*\{[^}]*\}/
 )
 assert.ok(pageBodyBlock, "page channel body rule required")
-assert.doesNotMatch(pageBodyBlock[0], /width:\s*max-content/)
-assert.match(pageBodyBlock[0], /width:\s*100%/)
-assert.match(pageBodyBlock[0], /min-width:\s*0/)
-// Fixed icon slots
+assert.match(pageBodyBlock[0], /width:\s*auto/)
+assert.match(pageBodyBlock[0], /flex:\s*0\s+0\s+auto/)
 assert.match(
   css,
-  /\.contact-dropdown-channel-link \.contact-action-icon:not\(\.contact-action-icon--bubble\)\s*\{[^}]*width:\s*18px[^}]*height:\s*18px[^}]*place-items:\s*center/
-)
-assert.match(
-  css,
-  /\.contact-action--density-page\.contact-action--channel \.contact-action-icon:not\(\.contact-action-icon--bubble\)\s*\{[^}]*width:\s*20px[^}]*height:\s*20px[^}]*place-items:\s*center/
+  /\.contact-action--density-page\.contact-action--channel \.contact-action-icon:not\(\.contact-action-icon--bubble\)\s*\{[^}]*(?:width|inline-size):\s*18px/
 )
 assert.ok(
   whatsappFr > telegramFr && telegramFr > maxFr,
@@ -300,19 +333,18 @@ assert.match(
   /\.contacts-nav-dropdown-menu a\.contact-action\.contact-action--density-dropdown\.contact-dropdown-channel-link[\s\S]*?\{[^}]*min-height:\s*2\.75rem[^}]*height:\s*2\.75rem/
 )
 
-// /contacts page: shared H2 → first-content spacing (not H2 line-height shrink)
+// /contacts page: shared H2 → first-content spacing (single source, not H2 shrink)
 const stageBlock = css.match(/\.contacts-page-stage\s*\{[^}]*\}/)
 assert.ok(stageBlock, "contacts-page-stage rule required")
 assert.match(
   stageBlock[0],
-  /--contacts-heading-to-content-gap:\s*2rem/
-)
+  /--contacts-heading-to-content-gap:\s*1\.5rem/
+) // 24px desktop
 assert.match(
   stageBlock[0],
   /--contacts-stage-row-gap:\s*var\(\s*--contacts-heading-to-content-gap\s*\)/
 )
 assert.match(stageBlock[0], /row-gap:\s*var\(\s*--contacts-stage-row-gap\s*\)/)
-// Both columns inherit the same stage/col row-gap token (no per-column magic)
 assert.match(
   css,
   /@supports\s*\(\s*grid-template-rows:\s*subgrid\s*\)\s*\{[\s\S]*?\.contacts-page-col\s*\{[^}]*row-gap:\s*var\(\s*--contacts-stage-row-gap\s*\)/
@@ -321,7 +353,15 @@ const phonesPrimary = css.match(/\.contacts-page-row--primary-phones\s*\{[^}]*\}
 assert.ok(phonesPrimary, "primary-phones row rule required")
 assert.match(phonesPrimary[0], /align-items:\s*start/)
 assert.doesNotMatch(phonesPrimary[0], /align-items:\s*center/)
-// Column H2 typography locked - spacing fix must not shrink title metrics
+// Competing spacing on header/primary transition must be zeroed
+assert.match(
+  css,
+  /\.contacts-page-row--header\s*\{[^}]*margin:\s*0[^}]*padding:\s*0/
+)
+assert.match(
+  css,
+  /\.contacts-page-row--primary,\s*\.contacts-page-row--secondary\s*\{[^}]*margin:\s*0[^}]*padding:\s*0/
+)
 const colTitle = css.match(/\.contacts-page-col-title\s*\{[^}]*\}/)
 assert.ok(colTitle, "contacts-page-col-title rule required")
 assert.match(colTitle[0], /font-size:\s*1\.625rem/)
@@ -330,11 +370,10 @@ assert.match(colTitle[0], /margin:\s*0/)
 const eyebrow = css.match(/\.contacts-page-eyebrow\s*\{[^}]*\}/)
 assert.ok(eyebrow, "contacts-page-eyebrow rule required")
 assert.match(eyebrow[0], /margin:\s*0\s+0\s+0\.5625rem/)
-// Mobile uses the same heading-to-content token (24–28px band)
 assert.match(
   css,
-  /@media\s*\(\s*max-width:\s*1100px\s*\)\s*\{[\s\S]*?\.contacts-page-col\s*\{[^}]*--contacts-heading-to-content-gap:\s*1\.625rem/
-)
+  /@media\s*\(\s*max-width:\s*1100px\s*\)\s*\{[\s\S]*?\.contacts-page-col\s*\{[^}]*--contacts-heading-to-content-gap:\s*1\.25rem/
+) // 20px mobile
 assert.match(
   css,
   /@media\s*\(\s*max-width:\s*1100px\s*\)\s*\{[\s\S]*?\.contacts-page-col\s*\{[^}]*gap:\s*var\(\s*--contacts-heading-to-content-gap\s*\)/

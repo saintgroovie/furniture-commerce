@@ -1256,25 +1256,93 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   padding: 0.75rem 0.9375rem; /* 12×15 */
   border-radius: 9px;
   font-size: 0.9375rem;
-  gap: 0.625rem; /* 10px */
+  gap: 0.625rem; /* 10px - overridden by phone/messenger variants */
 }
 
 .contact-action--density-page.contact-action--map {
   min-height: 4rem;
 }
 
-.contact-action.contact-action--density-page.contact-action--channel.contact-action--layout-leading {
-  /* Page messenger cards: left-aligned icon + flexible text column.
-     Shared left padding drives one vertical axis for icon / kicker / name.
-     No centered fixed-width inner block; no fixed text-column px. */
+/*
+  Page phone / map actions: equal outer cards (pair grid) + centered natural
+  cluster (icon + text). Must NOT inherit messenger stretch layout.
+*/
+.contact-action.contact-action--density-page.contact-action--phone.contact-action--layout-leading,
+.contact-action.contact-action--density-page.contact-action--map.contact-action--layout-leading {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  column-gap: 0.75rem; /* 12px */
+  gap: 0.75rem;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 4rem; /* 64px */
+  padding: 0.75rem 0.9375rem; /* 12×15 - equal cards */
+  border-radius: 9px;
+  border-width: 1px;
+}
+
+.contact-action--density-page.contact-action--phone .contact-action-icon:not(.contact-action-icon--bubble),
+.contact-action--density-page.contact-action--map .contact-action-icon:not(.contact-action-icon--bubble) {
+  box-sizing: border-box;
+  inline-size: 20px;
+  block-size: 20px;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
   display: grid;
-  grid-template-columns: 20px minmax(0, 1fr);
-  gap: 0 0.75rem; /* 12px */
+  place-items: center;
+}
+
+.contact-action--density-page.contact-action--phone .contact-action-icon:not(.contact-action-icon--bubble) svg,
+.contact-action--density-page.contact-action--map .contact-action-icon:not(.contact-action-icon--bubble) svg {
+  inline-size: 18px;
+  block-size: 18px;
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.contact-action--density-page.contact-action--phone .contact-action-body,
+.contact-action--density-page.contact-action--map .contact-action-body {
+  display: block;
+  flex: 0 0 auto;
+  width: auto;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.contact-action--density-page.contact-action--phone .contact-action-copy,
+.contact-action--density-page.contact-action--map .contact-action-copy {
+  display: grid;
+  row-gap: 0.1875rem; /* 3px */
+  width: auto;
+  max-width: 100%;
+  min-width: 0;
+  text-align: left;
+  justify-items: start;
+}
+
+/*
+  Page messenger actions: equal outer cards (3-col grid) + centered natural
+  cluster. Separate from phone geometry - no minmax(0,1fr) text column.
+*/
+.contact-action.contact-action--density-page.contact-action--channel.contact-action--layout-leading {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  column-gap: 0.5rem; /* 8px */
+  gap: 0.5rem;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
   min-height: 4.375rem; /* 70px */
   padding: 0.8125rem 1.25rem; /* 13×20 */
-  align-items: center;
-  justify-content: stretch;
-  min-width: 0;
+  border-radius: 9px;
+  border-width: 1px;
 }
 
 .contact-action--density-page .contact-action-icon:not(.contact-action-icon--bubble) {
@@ -1287,9 +1355,25 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   height: 17px;
 }
 
+.contact-action--density-page.contact-action--channel .contact-action-icon:not(.contact-action-icon--bubble) {
+  box-sizing: border-box;
+  inline-size: 18px;
+  block-size: 18px;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  min-height: 18px;
+  flex: 0 0 18px;
+  display: grid;
+  place-items: center;
+}
+
 .contact-action--density-page.contact-action--channel .contact-action-icon:not(.contact-action-icon--bubble) svg {
+  inline-size: 16px;
+  block-size: 16px;
   width: 16px;
   height: 16px;
+  display: block;
 }
 
 .contact-action--density-page .contact-action-kicker {
@@ -1322,38 +1406,23 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   max-width: 100%;
 }
 
-.contact-action--density-page.contact-action--channel .contact-action-icon:not(.contact-action-icon--bubble) {
-  box-sizing: border-box;
-  width: 20px;
-  height: 20px;
-  min-width: 20px;
-  min-height: 20px;
-  align-self: center;
-  justify-self: start;
-  display: grid;
-  place-items: center;
-  flex: 0 0 auto;
-  flex-shrink: 0;
-}
-
 .contact-action--density-page.contact-action--channel .contact-action-body {
-  display: flex;
-  align-items: center;
-  width: 100%;
+  display: block;
+  flex: 0 0 auto;
+  width: auto;
   max-width: 100%;
   min-width: 0;
-  flex: unset;
 }
 
 .contact-action--density-page.contact-action--channel .contact-action-copy {
   display: grid;
+  row-gap: 0.1875rem; /* 3px */
   align-items: start;
   justify-items: start;
-  width: 100%;
+  width: auto;
   max-width: 100%;
   min-width: 0;
   text-align: left;
-  gap: 0.1875rem; /* 3px */
 }
 
 .contact-action--density-page .contact-action-copy {
@@ -1529,24 +1598,27 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 .contacts-nav-dropdown-menu a.contact-action.contact-action--density-dropdown.contact-dropdown-channel-link,
 .showroom-contacts--contacts
   a.contact-action.contact-action--density-dropdown.contact-dropdown-channel-link {
-  /* Natural visible cluster centered in weighted cell. */
-  display: grid;
-  grid-template-columns: 18px max-content;
-  gap: 0 0.625rem; /* 10px */
+  /* Compact one-line cluster centered in weighted cell (shell stays 368px). */
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  column-gap: 0.4375rem; /* 7px - visible icon→label in 7–9px band with filled 16px SVG */
+  gap: 0.4375rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   min-height: 2.75rem; /* 44px - baseline messenger height */
   height: 2.75rem;
   padding: 0.5rem 0.5rem; /* 8×8 */
   border-radius: 8px;
-  align-items: center;
-  justify-content: center;
   overflow: visible;
-  min-width: 0;
+  box-sizing: border-box;
 }
 
 .contact-dropdown-channel-link .contact-action-body,
 .contact-dropdown-channel-link .contact-action-copy,
 .contact-dropdown-channel-link .contact-action-copy--single {
-  /* Second grid track is max-content - body follows label, no fixed px column. */
   display: flex;
   align-items: center;
   width: auto;
@@ -1565,6 +1637,7 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   display: block;
   width: auto;
   max-width: none;
+  flex: 0 0 auto;
   font-size: 0.8125rem; /* 13px */
   font-weight: 500;
   line-height: 1.2;
@@ -1576,16 +1649,23 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 
 .contact-dropdown-channel-link .contact-action-icon:not(.contact-action-icon--bubble) {
   box-sizing: border-box;
-  width: 18px;
-  height: 18px;
-  min-width: 18px;
-  min-height: 18px;
+  inline-size: 16px;
+  block-size: 16px;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  min-height: 16px;
+  flex: 0 0 16px;
   display: grid;
   place-items: center;
-  justify-self: center;
-  align-self: center;
-  flex: 0 0 auto;
-  flex-shrink: 0;
+}
+
+.contact-dropdown-channel-link .contact-action-icon:not(.contact-action-icon--bubble) svg {
+  inline-size: 16px;
+  block-size: 16px;
+  width: 16px;
+  height: 16px;
+  display: block;
 }
 
 @media (max-width: 420px) {
@@ -1664,10 +1744,11 @@ main:has(.contacts-page) {
   Subgrid keeps secondary action tops aligned across columns.
   Divider sits on the stage midpoint (center of the gutter).
   Heading → first content uses one shared row-gap token for both columns
-  (~32px desktop). Do not center primary phones - that inflated H2 → cards.
+  (24px desktop). Do not center primary phones - that inflated H2 → cards.
+  Competing margin/padding on this transition must stay 0.
 */
 .contacts-page-stage {
-  --contacts-heading-to-content-gap: 2rem; /* 32px H2 → first content (both cols) */
+  --contacts-heading-to-content-gap: 1.5rem; /* 24px H2 → first content (both cols) */
   --contacts-stage-row-gap: var(--contacts-heading-to-content-gap);
   grid-column: 1 / -1;
   display: grid;
@@ -1724,11 +1805,15 @@ main:has(.contacts-page) {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  margin: 0;
+  padding: 0;
 }
 
 .contacts-page-row--primary,
 .contacts-page-row--secondary {
   align-self: start;
+  margin: 0;
+  padding: 0;
 }
 
 /*
@@ -1915,7 +2000,7 @@ main:has(.contacts-page).page-section {
   }
 
   .contacts-page-col {
-    --contacts-heading-to-content-gap: 1.625rem; /* 26px mobile H2 → content */
+    --contacts-heading-to-content-gap: 1.25rem; /* 20px mobile H2 → content */
     display: flex;
     flex-direction: column;
     gap: var(--contacts-heading-to-content-gap);
