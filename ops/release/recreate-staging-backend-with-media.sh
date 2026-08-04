@@ -29,6 +29,8 @@ source "$HERE/../lib/woodright-oci-provenance.sh"
 source "$HERE/../lib/woodright-cutover-common.sh"
 # shellcheck source=../lib/woodright-host-publish.sh
 source "$HERE/../lib/woodright-host-publish.sh"
+# shellcheck source=../lib/woodright-owner-approved-release.sh
+source "$HERE/../lib/woodright-owner-approved-release.sh"
 
 log() { printf '%s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*"; }
 die_early() { log "ERROR: $*"; exit 1; }
@@ -50,6 +52,17 @@ ENV_FILE="${ENV_FILE:?set ENV_FILE}"
 EXPECTED_DIGEST="${EXPECTED_DIGEST:?set EXPECTED_DIGEST sha256:<64hex>}"
 TARGET_SHA="${TARGET_SHA:-${WOODRIGHT_TARGET_SHA:-}}"
 [[ "$TARGET_SHA" =~ ^[0-9a-f]{40}$ ]] || die_early "TARGET_SHA / WOODRIGHT_TARGET_SHA required (40-hex) for OCI provenance"
+# Gate A — before any docker pull/create. Peer SF digest optional for backend-only;
+# when unset, SHA + backend digest must still match owner-approved identity.
+_oa_ev="${WOODRIGHT_CUTOVER_EVIDENCE_DIR:-${EVIDENCE_DIR:-}}"
+_oa_sf="${WOODRIGHT_OWNER_APPROVAL_PEER_SF_DIGEST:-${EXPECTED_STOREFRONT_DIGEST:-}}"
+OWNER_APPROVAL_CHECKSUM_GATE_A=""
+if ! wr_require_owner_approved_release \
+  "$WOODRIGHT_ENVIRONMENT" "$TARGET_SHA" "$EXPECTED_DIGEST" "${_oa_sf}" "${_oa_ev}" "gate_a_backend"; then
+  die_early "OWNER_APPROVAL_DENIED result=${WR_OWNER_APPROVAL_RESULT:-unknown} (backend recreate)"
+fi
+OWNER_APPROVAL_CHECKSUM_GATE_A="${WR_OA_CHECKSUM:-}"
+unset _oa_ev _oa_sf
 KEEP_NAME="${KEEP_NAME:?set KEEP_NAME}"
 # Deprecated alias kept for rollback script env compatibility only (not the mutex).
 LOCK_FILE="${LOCK_FILE:-${WOODRIGHT_OWNERSHIP_DIR}/DEPLOY.lock}"
@@ -173,6 +186,14 @@ wr_staging_mutation_lock_acquire \
   "target=$EXPECTED_DIGEST" \
   || die "canonical environment lock busy/unavailable"
 log "flock_acquired lock=$WR_STAGING_MUTATION_LOCK_PATH"
+_oa_ev="${WOODRIGHT_CUTOVER_EVIDENCE_DIR:-${EVIDENCE_DIR:-}}"
+_oa_sf="${WOODRIGHT_OWNER_APPROVAL_PEER_SF_DIGEST:-${EXPECTED_STOREFRONT_DIGEST:-}}"
+if ! wr_require_owner_approved_release_under_lock \
+  "$WOODRIGHT_ENVIRONMENT" "$TARGET_SHA" "$EXPECTED_DIGEST" "${_oa_sf}" \
+  "${_oa_ev}" "$OWNER_APPROVAL_CHECKSUM_GATE_A"; then
+  die "OWNER_APPROVAL_DENIED result=${WR_OWNER_APPROVAL_RESULT:-unknown} (backend gate_b)"
+fi
+unset _oa_ev _oa_sf
 wr_validation_freeze_assert_clear_for_mutation "$WOODRIGHT_ENVIRONMENT" || die "validation freeze active under lock"
 wr_prelock_validate_environment_target || die "under-lock environment retarget detected"
 

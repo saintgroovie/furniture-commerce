@@ -61,8 +61,9 @@ function makeEnvFixture(dir) {
 
 function baseEnv(dir, extra = {}) {
   const { envPath, composePath, lockPath } = makeEnvFixture(dir)
+  const metaRoot = join(dir, "meta")
   return {
-    paths: { envPath, composePath, lockPath },
+    paths: { envPath, composePath, lockPath, metaRoot },
     env: {
       ...process.env,
       EXPECTED_RELEASE_SHA: SHA,
@@ -77,6 +78,7 @@ function baseEnv(dir, extra = {}) {
       SKIP_COMPOSE_VALIDATE: "1",
       WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK: "1",
       WOODRIGHT_CUTOVER_LOCK_PATH: lockPath,
+      WOODRIGHT_META_ROOT: metaRoot,
       LOCK_TIMEOUT_SEC: "2",
       BACKUP_DIR: join(dir, "backup"),
       ...extra,

@@ -77,6 +77,7 @@ writeFileSync(lockPath, "")
 const testLockEnv = {
   WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK: "1",
   WOODRIGHT_CUTOVER_LOCK_PATH: lockPath,
+  WOODRIGHT_META_ROOT: join(dir, "meta"),
   LOCK_TIMEOUT_SEC: "5",
 }
 
