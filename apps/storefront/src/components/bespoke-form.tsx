@@ -8,6 +8,7 @@ import { createLead } from "@/lib/api/leads"
 import { createBespokeRequest } from "@/lib/api/bespoke-requests"
 import { bespokeForm as copy, bespokeRequestCopy } from "@/lib/woodright-copy"
 import { CopyLines } from "@/components/copy-lines"
+import { FormLegalConsent } from "@/components/form-legal-consent"
 import { flatCopy } from "@/lib/format-ru-copy"
 
 type Status = "idle" | "submitting" | "success" | "error_validation" | "error_server"
@@ -316,7 +317,19 @@ export function BespokeForm() {
           {submitting ? copy.submitting : copy.submit}
         </button>
 
-        <CopyLines className="form-consent-note" lines={copy.consentNote} />
+        <FormLegalConsent
+          note={copy.consentNote}
+          links={[
+            {
+              label: copy.consentPrivacyLabel,
+              href: copy.consentPrivacyHref,
+            },
+            {
+              label: copy.consentPersonalDataLabel,
+              href: copy.consentPersonalDataHref,
+            },
+          ]}
+        />
 
         {status === "error_server" && (
           <div className="form-alert-error" role="alert">{errorMessage}</div>

@@ -124,11 +124,17 @@ export const footer = {
     {
       title: "Покупателям",
       links: [
-        { label: "Политика конфиденциальности", href: "/privacy" },
-        { label: "Условия покупки", href: "/terms" },
         { label: "Доставка", href: "/delivery" },
         { label: "Оплата", href: "/payment" },
         { label: "Возврат", href: "/returns" },
+        { label: "Гарантия", href: "/warranty" },
+        { label: "Политика конфиденциальности", href: "/privacy" },
+        { label: "Персональные данные", href: "/personal-data" },
+        { label: "Cookies", href: "/cookies" },
+        { label: "Условия пользования", href: "/terms" },
+        { label: "Оферта", href: "/offer" },
+        { label: "Реквизиты", href: "/requisites" },
+        { label: "Контакты", href: "/contacts" },
       ],
     },
   ],
@@ -469,9 +475,13 @@ export const bespokeForm = {
   ],
   successCta: "Перейти в каталог",
   consentNote: [
-    "Нажимая кнопку, вы соглашаетесь на обработку данных",
-    "Мы используем контакты только для ответа по заявке",
+    "Нажимая кнопку, вы соглашаетесь на обработку персональных данных",
+    "Контакты используем только для ответа по заявке",
   ],
+  consentPrivacyLabel: "Политика конфиденциальности",
+  consentPrivacyHref: "/privacy",
+  consentPersonalDataLabel: "Персональные данные",
+  consentPersonalDataHref: "/personal-data",
 }
 
 export const cartCopy = {
@@ -551,6 +561,16 @@ export const checkoutCopy = {
   ],
   submitting: "Отправляем…",
   submit: "Отправить заказ",
+  consentNote: [
+    "Нажимая кнопку, вы соглашаетесь на обработку персональных данных и принимаете условия оферты",
+    "Контакты и адрес используем для подтверждения заказа и доставки",
+  ],
+  consentPrivacyLabel: "Политика конфиденциальности",
+  consentPrivacyHref: "/privacy",
+  consentPersonalDataLabel: "Персональные данные",
+  consentPersonalDataHref: "/personal-data",
+  consentOfferLabel: "Оферта",
+  consentOfferHref: "/offer",
   paymentClarity:
     [
     "Сейчас оплачивать заказ не нужно",

@@ -22,6 +22,7 @@ import { formatRub, getOrderDisplayNumber } from "@/lib/format"
 import { PackageIcon, ChecklistIcon } from "@/components/bespoke-help-icons"
 import { checkoutCopy as copy } from "@/lib/woodright-copy"
 import { CopyLines } from "@/components/copy-lines"
+import { FormLegalConsent } from "@/components/form-legal-consent"
 import { flatCopy } from "@/lib/format-ru-copy"
 import { mintOrderAccess } from "@/lib/woodright-order/api"
 
@@ -318,6 +319,24 @@ export function CheckoutForm() {
           </div>
 
           <CopyLines className="checkout-payment-clarity" lines={copy.paymentClarity} />
+
+          <FormLegalConsent
+            note={copy.consentNote}
+            links={[
+              {
+                label: copy.consentPrivacyLabel,
+                href: copy.consentPrivacyHref,
+              },
+              {
+                label: copy.consentPersonalDataLabel,
+                href: copy.consentPersonalDataHref,
+              },
+              {
+                label: copy.consentOfferLabel,
+                href: copy.consentOfferHref,
+              },
+            ]}
+          />
 
           <button type="submit" className="btn btn-primary bespoke-submit-btn" disabled={submitting}>
             {submitting ? copy.submitting : copy.submit}
