@@ -1,9 +1,9 @@
 # Legal content - owner review packet
 
-**Date:** 2026-08-04 (Europe/Moscow)  
-**Branch:** `feat/legal-content-remediation-20260804`  
-**Base:** `796855a` (profile/SEO merge)  
-**Document status:** `owner_review`  
+**Date:** 2026-08-04 (Europe/Moscow)
+**Branch:** `feat/legal-content-remediation-20260804`
+**Base:** `796855a` (profile/SEO merge)
+**Document status:** `owner_review`
 **Engineering status:** `legal_content_blocked_missing_business_identity`
 
 This packet is **not** a legal opinion and **not** deployment authorization.
@@ -42,13 +42,13 @@ Silence is **not** approval.
 
 Answer concretely (do not leave blank if approving):
 
-1. **Возврат:** сроки, исключения для изделий по проекту, кто оплачивает обратную доставку  
-2. **Гарантия:** срок и объём по товарной политике  
-3. **Доставка:** география, расчёт, подъём, сборка, ориентиры сроков  
-4. **Индивидуальные товары:** отмена / изменения до старта производства  
-5. **Оплата:** оставить `manual_invoice` или требовать online payment  
-6. **Подтверждение заказа:** момент акцепта оферты  
-7. **Претензии:** канал и срок ответа  
+1. **Возврат:** сроки, исключения для изделий по проекту, кто оплачивает обратную доставку
+2. **Гарантия:** срок и объём по товарной политике
+3. **Доставка:** география, расчёт, подъём, сборка, ориентиры сроков
+4. **Индивидуальные товары:** отмена / изменения до старта производства
+5. **Оплата:** оставить `manual_invoice` или требовать online payment
+6. **Подтверждение заказа:** момент акцепта оферты
+7. **Претензии:** канал и срок ответа
 8. **Реквизиты:** публиковать ли банковские данные на `/requisites`
 
 ---
@@ -75,12 +75,12 @@ Screenshots: local preview after durable start (see evidence/screenshots).
 
 ## Section D - Required owner response
 
-1. Supply missing identity fields (entity, INN, OGRN, legal address, privacy email, PD operator).  
-2. Answer Section B decisions.  
+1. Supply missing identity fields (entity, INN, OGRN, legal address, privacy email, PD operator).
+2. Answer Section B decisions.
 3. Reply with one token:
 
-`OWNER_LEGAL_CONTENT_APPROVED`  
-`OWNER_LEGAL_CONTENT_APPROVED_WITH_NOTES`  
+`OWNER_LEGAL_CONTENT_APPROVED`
+`OWNER_LEGAL_CONTENT_APPROVED_WITH_NOTES`
 `OWNER_LEGAL_CONTENT_REJECTED`
 
 Until then:
