@@ -1,8 +1,10 @@
 /**
  * Governed SEO mode for Woodright storefront surfaces.
  *
- * Prefer explicit WOODRIGHT_SEO_MODE. Otherwise derive from launch mode /
- * runtime role. Never treat hostname or missing vars as indexable.
+ * Prefer explicit WOODRIGHT_SEO_MODE when it is the only populated control.
+ * When multiple SEO/launch/indexing controls are populated they must agree;
+ * any unknown or contradictory value fails closed to private_noindex.
+ * Never treat hostname or missing vars as indexable.
  *
  * Modes:
  * - demo_noindex
@@ -10,7 +12,7 @@
  * - public_indexable
  *
  * `public_indexable` requires BOTH:
- * 1) explicit SEO/launch (or legacy INDEXING_MODE=index) request for indexable
+ * 1) unanimous indexable request from every populated SEO/launch/indexing control
  * 2) exact public_production runtime identity (role and/or image build profile)
  *
  * Demo identity never becomes indexable even if env vars are mis-set.
@@ -22,6 +24,9 @@ import {
 import { parseLaunchModeLenient } from "./launch-mode"
 
 export type SeoMode = "demo_noindex" | "private_noindex" | "public_indexable"
+
+/** Vote from one populated control: index request, explicit noindex, or invalid. */
+type ControlVote = "indexable" | "noindex" | "invalid"
 
 const PRODUCTION_SITE_ORIGIN = "https://woodright.ru"
 const PRODUCTION_SITEMAP_URL = `${PRODUCTION_SITE_ORIGIN}/sitemap.xml`
@@ -50,30 +55,85 @@ export function parseSeoModeLenient(
   return undefined
 }
 
-function requestsIndexable(env: {
+function rawOrEnv(
+  override: string | null | undefined,
+  envKey: string
+): string {
+  if (override !== undefined && override !== null) {
+    return String(override).trim()
+  }
+  return String(process.env[envKey] ?? "").trim()
+}
+
+function voteSeoMode(raw: string): ControlVote | undefined {
+  if (!raw) return undefined
+  const parsed = parseSeoModeLenient(raw)
+  if (parsed === "public_indexable") return "indexable"
+  if (parsed === "private_noindex" || parsed === "demo_noindex") return "noindex"
+  return "invalid"
+}
+
+function voteLaunchMode(raw: string): ControlVote | undefined {
+  if (!raw) return undefined
+  const parsed = parseLaunchModeLenient(raw)
+  if (parsed === "public_indexable") return "indexable"
+  if (parsed === "private_noindex") return "noindex"
+  return "invalid"
+}
+
+function voteIndexingMode(raw: string): ControlVote | undefined {
+  if (!raw) return undefined
+  const value = raw.toLowerCase()
+  // Runtime indexing accepts only "index" as indexable (public_indexable is template-only).
+  if (value === "index") return "indexable"
+  if (
+    value === "noindex" ||
+    value === "private_noindex" ||
+    value === "demo_noindex"
+  ) {
+    return "noindex"
+  }
+  return "invalid"
+}
+
+/**
+ * Collect votes from populated SEO controls.
+ * Empty / unset controls abstain. Invalid or contradictory votes fail closed.
+ */
+function resolveControlVotes(env: {
   seoMode?: string | null
   launchMode?: string | null
   indexingMode?: string | null
-}): boolean {
-  const explicit = parseSeoModeLenient(
-    env.seoMode ?? process.env.WOODRIGHT_SEO_MODE
+}): { ok: boolean; wantsIndexable: boolean } {
+  const votes: ControlVote[] = []
+  const seoVote = voteSeoMode(rawOrEnv(env.seoMode, "WOODRIGHT_SEO_MODE"))
+  const launchVote = voteLaunchMode(
+    rawOrEnv(env.launchMode, "WOODRIGHT_LAUNCH_MODE")
   )
-  if (explicit === "public_indexable") return true
-  const launch = parseLaunchModeLenient(
-    env.launchMode ?? process.env.WOODRIGHT_LAUNCH_MODE
+  const indexingVote = voteIndexingMode(
+    rawOrEnv(env.indexingMode, "WOODRIGHT_INDEXING_MODE")
   )
-  if (launch === "public_indexable") return true
-  const indexing = String(
-    env.indexingMode ?? process.env.WOODRIGHT_INDEXING_MODE ?? ""
-  )
-    .trim()
-    .toLowerCase()
-  return indexing === "index"
+  if (seoVote) votes.push(seoVote)
+  if (launchVote) votes.push(launchVote)
+  if (indexingVote) votes.push(indexingVote)
+
+  if (votes.length === 0) {
+    return { ok: true, wantsIndexable: false }
+  }
+  if (votes.some((v) => v === "invalid")) {
+    return { ok: false, wantsIndexable: false }
+  }
+  const wantsIndex = votes.some((v) => v === "indexable")
+  const wantsNoindex = votes.some((v) => v === "noindex")
+  if (wantsIndex && wantsNoindex) {
+    return { ok: false, wantsIndexable: false }
+  }
+  return { ok: true, wantsIndexable: wantsIndex }
 }
 
 /**
  * Resolve SEO mode (fail-closed away from public_indexable).
- * Indexable only when public_production identity AND explicit indexable request.
+ * Indexable only when public_production identity AND unanimous indexable request.
  */
 export function resolveSeoMode(env: {
   seoMode?: string | null
@@ -90,22 +150,28 @@ export function resolveSeoMode(env: {
     return "demo_noindex"
   }
 
+  const controls = resolveControlVotes(env)
+  // Unknown / contradictory populated controls never unlock indexing.
+  if (!controls.ok) {
+    return "private_noindex"
+  }
+
   const explicit = parseSeoModeLenient(
-    env.seoMode ?? process.env.WOODRIGHT_SEO_MODE
+    rawOrEnv(env.seoMode, "WOODRIGHT_SEO_MODE")
   )
   const launch = parseLaunchModeLenient(
-    env.launchMode ?? process.env.WOODRIGHT_LAUNCH_MODE
+    rawOrEnv(env.launchMode, "WOODRIGHT_LAUNCH_MODE")
   )
 
   if (
-    requestsIndexable(env) &&
+    controls.wantsIndexable &&
     isPublicProductionRuntime(runtimeRole, imageBuildProfile)
   ) {
     return "public_indexable"
   }
 
   // Indexable was requested without public_production identity → fail closed.
-  if (requestsIndexable(env)) {
+  if (controls.wantsIndexable) {
     return "private_noindex"
   }
 

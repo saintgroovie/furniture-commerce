@@ -84,12 +84,22 @@ export function collectProductSitemapEntries(
   return out
 }
 
+export function isProductionSitemapLoc(loc: string): boolean {
+  let url: URL
+  try {
+    url = new URL(loc)
+  } catch {
+    return false
+  }
+  return url.protocol === "https:" && url.hostname.toLowerCase() === "woodright.ru"
+}
+
 export function mergeSitemapEntries(entries: SitemapEntry[]): SitemapEntry[] {
   const seen = new Set<string>()
   const merged: SitemapEntry[] = []
   for (const entry of entries) {
     if (!entry.loc || seen.has(entry.loc)) continue
-    if (!entry.loc.startsWith("https://woodright.ru")) continue
+    if (!isProductionSitemapLoc(entry.loc)) continue
     seen.add(entry.loc)
     merged.push(entry)
   }
