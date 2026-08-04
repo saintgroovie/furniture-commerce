@@ -1,14 +1,15 @@
 #!/usr/bin/env node
 /**
- * Read-only validator for the repository public_production profile + SEO contract.
- * Does not imply launch_ready / deploy authorization.
+ * Read-only validator for the repository public_production profile + SEO +
+ * monitor/backup/recovery contracts.
+ * Does not imply launch_ready / deploy authorization / VM install.
  *
  * Usage:
  *   node scripts/release/validate-public-production-profile.cjs
  *   node scripts/release/validate-public-production-profile.cjs --repo-root /path
  *
  * Status token (last stdout line):
- *   STATUS PUBLIC_PRODUCTION_PROFILE_VALID_SEO_READY_LAUNCH_GATES_PENDING
+ *   STATUS PUBLIC_PRODUCTION_PROFILE_VALID_SEO_MONITOR_BACKUP_CONTRACTS_READY_RUNTIME_GATES_PENDING
  *   STATUS PUBLIC_PRODUCTION_PROFILE_INVALID
  */
 const fs = require("fs")
@@ -27,11 +28,18 @@ function fail(errors, msg) {
   errors.push(msg)
 }
 
+function mustExist(errors, root, rel) {
+  const p = path.join(root, rel)
+  if (!fs.existsSync(p)) fail(errors, `missing ${rel}`)
+  return p
+}
+
 function main() {
   const args = parseArgs(process.argv.slice(2))
   const root = path.resolve(args["repo-root"])
   const errors = []
   const blockers = []
+  const contractReady = []
 
   const profilePath = path.join(
     root,
@@ -64,6 +72,9 @@ function main() {
       ["WOODRIGHT_LAUNCH_GATE_NOTIFICATION_DECISION", "required"],
       ["WOODRIGHT_LAUNCH_GATE_MONITOR_BACKUP", "required"],
       ["WOODRIGHT_LAUNCH_GATE_DNS_TLS", "required"],
+      ["WOODRIGHT_MONITOR_BACKUP_CONTRACT", "repository_ready"],
+      ["WOODRIGHT_MONITOR_BACKUP_RUNTIME_PROVISIONED", "0"],
+      ["WOODRIGHT_ALERT_DESTINATION_REQUIRED", "1"],
     ]
     for (const [key, expect] of required) {
       const re = new RegExp(`^${key}=(.*)$`, "m")
@@ -78,16 +89,13 @@ function main() {
       "locks/production/",
       "woodright-demo.ru",
     ]) {
-      // ownership-production without -public is candidate path; allow comment mentions only via exact path tokens
       if (banned === "runtime-ownership-production/" && conf.includes("runtime-ownership-public-production")) {
-        // ok if only public-production path present
         if (conf.match(/WOODRIGHT_OWNERSHIP_DIR=.*runtime-ownership-production[^-]/)) {
           fail(errors, `shared ownership path leak: ${banned}`)
         }
         continue
       }
       if (conf.includes(banned) && !banned.includes("woodright-demo.ru")) {
-        // forbidden domains line may include demo hosts intentionally
         if (banned.includes("woodright-demo")) continue
         fail(errors, `shared/banned path token: ${banned}`)
       }
@@ -107,9 +115,14 @@ function main() {
     if (!/WOODRIGHT_MONITOR_STATE_ROOT=\/srv\/woodright\/monitoring\/public-production\//.test(conf)) {
       fail(errors, "monitor state root must be public-production scoped")
     }
+    if (!/WOODRIGHT_MONITOR_HISTORY_ROOT=\/srv\/woodright\/monitoring\/public-production\/history/.test(conf)) {
+      fail(errors, "monitor history root must be public-production scoped")
+    }
+    if (!/WOODRIGHT_ALERT_DESTINATION_PATH=\/srv\/woodright\/monitoring\/public-production\//.test(conf)) {
+      fail(errors, "alert destination path must be public-production scoped")
+    }
   }
 
-  // Loader allowlist
   const loader = fs.readFileSync(
     path.join(root, "ops/lib/woodright-environment-profile.sh"),
     "utf8"
@@ -117,8 +130,10 @@ function main() {
   if (!loader.includes("public_production")) {
     fail(errors, "environment loader missing public_production")
   }
+  if (!loader.includes("WOODRIGHT_MONITOR_STATE_ROOT")) {
+    fail(errors, "environment loader must rebind MONITOR_STATE_ROOT")
+  }
 
-  // Installer/verifier allowlists
   for (const rel of [
     "ops/release/install-environment-governance.sh",
     "ops/release/verify-environment-governance-bundle.sh",
@@ -165,21 +180,129 @@ function main() {
   if (!/throw e/.test(pdp)) {
     fail(errors, "PDP metadata must rethrow non-NOT_FOUND errors")
   }
-  // Remaining launch gates (expected pending)
+
+  // Monitor/backup/recovery contract files
+  const contractFiles = [
+    "ops/lib/woodright-ops-path-isolation.sh",
+    "ops/lib/woodright-alert-contract.sh",
+    "ops/lib/woodright-recovery-point.sh",
+    "ops/backup/woodright-public-production-backup-run.sh",
+    "ops/backup/woodright-public-production-restore-rehearsal.sh",
+    "ops/systemd/woodright-monitor-public-production.service",
+    "ops/systemd/woodright-monitor-public-production.timer",
+    "ops/systemd/woodright-backup-public-production.service",
+    "ops/systemd/woodright-backup-public-production.timer",
+    "ops/systemd/woodright-restore-rehearsal-public-production.service",
+    "docs/operator/public-production-monitor-backup-recovery.md",
+  ]
+  for (const rel of contractFiles) {
+    mustExist(errors, root, rel)
+    contractReady.push(rel)
+  }
+
+  // Unit templates must pin public-production paths and not auto-enable semantics in comments
+  const monUnit = fs.readFileSync(
+    path.join(root, "ops/systemd/woodright-monitor-public-production.service"),
+    "utf8"
+  )
+  if (!monUnit.includes("--environment public_production")) {
+    fail(errors, "monitor unit must pass --environment public_production")
+  }
+  if (!monUnit.includes("/monitoring/public-production/")) {
+    fail(errors, "monitor unit must pin public-production state path")
+  }
+  if (!monUnit.includes("do NOT enable automatically")) {
+    fail(errors, "monitor unit must document no auto-enable")
+  }
+  const bakUnit = fs.readFileSync(
+    path.join(root, "ops/systemd/woodright-backup-public-production.service"),
+    "utf8"
+  )
+  if (!bakUnit.includes("woodright-public-production-backup-run.sh")) {
+    fail(errors, "backup unit must call public-production backup helper")
+  }
+  if (!bakUnit.includes("/backups/automated/public-production")) {
+    fail(errors, "backup unit must pin public-production backup root")
+  }
+  for (const dep of [
+    "ops/backup/lib/woodright-backup-root.sh",
+    "ops/backup/woodright-postgres-backup.sh",
+    "ops/backup/woodright-media-backup.sh",
+    "ops/backup/woodright-backup-retention.sh",
+  ]) {
+    mustExist(errors, root, dep)
+  }
+  const installSrc = fs.readFileSync(
+    path.join(root, "ops/release/install-environment-governance.sh"),
+    "utf8"
+  )
+  if (!installSrc.includes("ops/backup/lib/woodright-backup-root.sh")) {
+    fail(errors, "installer must ship backup-root lib")
+  }
+  if (!installSrc.includes("ops/backup/woodright-postgres-backup.sh")) {
+    fail(errors, "installer must ship postgres backup helper")
+  }
+  // Live /etc install loop must NOT auto-install public-production units
+  if (/for unit_rel in[^;]*public-production/.test(installSrc.replace(/\n/g, " "))) {
+    fail(errors, "installer must not auto-install public-production units to /etc")
+  }
+  const restoreUnit = fs.readFileSync(
+    path.join(root, "ops/systemd/woodright-restore-rehearsal-public-production.service"),
+    "utf8"
+  )
+  if (fs.existsSync(path.join(root, "ops/systemd/woodright-restore-rehearsal-public-production.timer"))) {
+    fail(errors, "restore rehearsal must not ship an auto timer")
+  }
+  if (!restoreUnit.includes("No companion timer")) {
+    fail(errors, "restore unit must document no companion timer")
+  }
+
+  // Health-check must consume MONITOR_STATE_ROOT / fail-closed unprovisioned
+  const health = fs.readFileSync(
+    path.join(root, "ops/monitoring/woodright-health-check.sh"),
+    "utf8"
+  )
+  if (!health.includes("WOODRIGHT_MONITOR_STATE_ROOT")) {
+    fail(errors, "health-check must honor MONITOR_STATE_ROOT")
+  }
+  if (!health.includes("unprovisioned_fail_closed")) {
+    fail(errors, "health-check must fail-closed when public_production unprovisioned")
+  }
+  if (!health.includes("wr_assert_public_production_path_isolation")) {
+    fail(errors, "health-check must assert path isolation for public_production")
+  }
+
+  // Backup helper must refuse wrong env / demo DB
+  const bak = fs.readFileSync(
+    path.join(root, "ops/backup/woodright-public-production-backup-run.sh"),
+    "utf8"
+  )
+  if (!bak.includes("public_production")) fail(errors, "backup helper missing env gate")
+  if (!bak.includes("woodright_staging")) fail(errors, "backup helper must refuse staging DB")
+  if (!bak.includes("WOODRIGHT_BACKUP_PLAN_ONLY")) {
+    fail(errors, "backup helper must support plan-only mode")
+  }
+
+  // Remaining launch / runtime gates (expected pending)
   blockers.push("LEGAL_CONTENT_STATUS!=approved")
   blockers.push("PAYMENT_DECISION_STATUS=pending")
   blockers.push("NOTIFICATION_DECISION_STATUS=pending")
   blockers.push("owner_approval_manifest_public_production_missing")
-  blockers.push("monitor_backup_units_not_provisioned")
+  blockers.push("monitor_backup_runtime_not_provisioned")
+  blockers.push("alert_destination_not_provisioned_on_vm")
+  blockers.push("restore_rehearsal_not_fresh")
   blockers.push("dns_tls_not_proven")
-  blockers.push("application_images_not_qualified_for_new_seo_sha")
+  blockers.push("application_images_not_qualified")
 
   const report = {
     tool: "validate-public-production-profile.cjs",
     profile_valid: errors.length === 0,
     seo_contract_present: errors.length === 0,
+    monitor_backup_contracts_present: errors.length === 0,
     launch_ready: false,
+    runtime_provisioned: false,
     errors,
+    contract_files: contractReady,
     pending_launch_gates: blockers,
   }
   console.log(JSON.stringify(report, null, 2))
@@ -187,7 +310,9 @@ function main() {
     console.log("STATUS PUBLIC_PRODUCTION_PROFILE_INVALID")
     process.exit(2)
   }
-  console.log("STATUS PUBLIC_PRODUCTION_PROFILE_VALID_SEO_READY_LAUNCH_GATES_PENDING")
+  console.log(
+    "STATUS PUBLIC_PRODUCTION_PROFILE_VALID_SEO_MONITOR_BACKUP_CONTRACTS_READY_RUNTIME_GATES_PENDING"
+  )
   process.exit(0)
 }
 
