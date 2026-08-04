@@ -1663,9 +1663,12 @@ main:has(.contacts-page) {
   Rows: header (eyebrow+H2) / primary (address | phones) / secondary (actions).
   Subgrid keeps secondary action tops aligned across columns.
   Divider sits on the stage midpoint (center of the gutter).
+  Heading → first content uses one shared row-gap token for both columns
+  (~32px desktop). Do not center primary phones - that inflated H2 → cards.
 */
 .contacts-page-stage {
-  --contacts-stage-row-gap: 1.875rem; /* 30px shared primary → secondary */
+  --contacts-heading-to-content-gap: 2rem; /* 32px H2 → first content (both cols) */
+  --contacts-stage-row-gap: var(--contacts-heading-to-content-gap);
   grid-column: 1 / -1;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -1729,12 +1732,13 @@ main:has(.contacts-page) {
 }
 
 /*
-  Right primary phone pair sits optically centered in the address-height
-  primary track (subgrid). Tops of secondary rows stay synced.
+  Right primary phone pair top-aligns with the address block so both columns
+  share the same H2 → first-content gap (see --contacts-heading-to-content-gap).
+  Secondary rows stay synced via subgrid; track may still stretch taller.
 */
 .contacts-page-row--primary-phones {
   display: grid;
-  align-items: center;
+  align-items: start;
   align-self: stretch;
   width: 100%;
   min-height: 100%;
@@ -1911,9 +1915,10 @@ main:has(.contacts-page).page-section {
   }
 
   .contacts-page-col {
+    --contacts-heading-to-content-gap: 1.625rem; /* 26px mobile H2 → content */
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: var(--contacts-heading-to-content-gap);
     grid-column: auto;
     grid-row: auto;
   }

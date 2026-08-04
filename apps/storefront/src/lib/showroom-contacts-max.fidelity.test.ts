@@ -300,6 +300,46 @@ assert.match(
   /\.contacts-nav-dropdown-menu a\.contact-action\.contact-action--density-dropdown\.contact-dropdown-channel-link[\s\S]*?\{[^}]*min-height:\s*2\.75rem[^}]*height:\s*2\.75rem/
 )
 
+// /contacts page: shared H2 → first-content spacing (not H2 line-height shrink)
+const stageBlock = css.match(/\.contacts-page-stage\s*\{[^}]*\}/)
+assert.ok(stageBlock, "contacts-page-stage rule required")
+assert.match(
+  stageBlock[0],
+  /--contacts-heading-to-content-gap:\s*2rem/
+)
+assert.match(
+  stageBlock[0],
+  /--contacts-stage-row-gap:\s*var\(\s*--contacts-heading-to-content-gap\s*\)/
+)
+assert.match(stageBlock[0], /row-gap:\s*var\(\s*--contacts-stage-row-gap\s*\)/)
+// Both columns inherit the same stage/col row-gap token (no per-column magic)
+assert.match(
+  css,
+  /@supports\s*\(\s*grid-template-rows:\s*subgrid\s*\)\s*\{[\s\S]*?\.contacts-page-col\s*\{[^}]*row-gap:\s*var\(\s*--contacts-stage-row-gap\s*\)/
+)
+const phonesPrimary = css.match(/\.contacts-page-row--primary-phones\s*\{[^}]*\}/)
+assert.ok(phonesPrimary, "primary-phones row rule required")
+assert.match(phonesPrimary[0], /align-items:\s*start/)
+assert.doesNotMatch(phonesPrimary[0], /align-items:\s*center/)
+// Column H2 typography locked - spacing fix must not shrink title metrics
+const colTitle = css.match(/\.contacts-page-col-title\s*\{[^}]*\}/)
+assert.ok(colTitle, "contacts-page-col-title rule required")
+assert.match(colTitle[0], /font-size:\s*1\.625rem/)
+assert.match(colTitle[0], /line-height:\s*1\.25/)
+assert.match(colTitle[0], /margin:\s*0/)
+const eyebrow = css.match(/\.contacts-page-eyebrow\s*\{[^}]*\}/)
+assert.ok(eyebrow, "contacts-page-eyebrow rule required")
+assert.match(eyebrow[0], /margin:\s*0\s+0\s+0\.5625rem/)
+// Mobile uses the same heading-to-content token (24–28px band)
+assert.match(
+  css,
+  /@media\s*\(\s*max-width:\s*1100px\s*\)\s*\{[\s\S]*?\.contacts-page-col\s*\{[^}]*--contacts-heading-to-content-gap:\s*1\.625rem/
+)
+assert.match(
+  css,
+  /@media\s*\(\s*max-width:\s*1100px\s*\)\s*\{[\s\S]*?\.contacts-page-col\s*\{[^}]*gap:\s*var\(\s*--contacts-heading-to-content-gap\s*\)/
+)
+
 // No duplicate hardcoded MAX URLs outside SoT (+ this fidelity test)
 const hardcodedHits: string[] = []
 for (const file of walkTsTsx(join(storefrontRoot, "src"))) {
