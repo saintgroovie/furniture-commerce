@@ -52,7 +52,7 @@ function main() {
       ["WOODRIGHT_REQUIRED_DB_ALIAS", "public_production_db"],
       ["WOODRIGHT_OWNER_APPROVAL_ENVIRONMENT", "public_production"],
       ["WOODRIGHT_ADMIN_EXPOSURE", "private"],
-      ["WOODRIGHT_LEGAL_CONTENT_STATUS", "draft"],
+      ["WOODRIGHT_LEGAL_CONTENT_STATUS", "owner_review"],
       ["WOODRIGHT_PAYMENT_DECISION_STATUS", "pending"],
       ["WOODRIGHT_NOTIFICATION_DECISION_STATUS", "pending"],
       ["WOODRIGHT_ENVIRONMENT_PROVISIONED", "0"],
