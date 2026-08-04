@@ -1,7 +1,19 @@
 {
-  "privacy": "missing_owner_input",
-  "terms": "draft",
-  "delivery": "missing_owner_input",
-  "payment": "draft",
-  "returns": "missing_owner_input"
+  "privacy": "owner_review",
+  "personal-data": "owner_review",
+  "cookies": "owner_review",
+  "terms": "owner_review",
+  "offer": "owner_review",
+  "delivery": "owner_review",
+  "payment": "owner_review",
+  "returns": "owner_review",
+  "warranty": "owner_review",
+  "requisites": "owner_review",
+  "document": {
+    "version": "2026.08.04-owner-review",
+    "status": "owner_review",
+    "effectiveDate": "2026-08-04",
+    "approvalId": null,
+    "approvedSha": null
+  }
 }

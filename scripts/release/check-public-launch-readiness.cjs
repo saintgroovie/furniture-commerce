@@ -51,7 +51,18 @@ const fs = require("fs")
 const DEMO_HOSTS = ["woodright-demo.ru", "www.woodright-demo.ru", "api.woodright-demo.ru"]
 const LOOPBACK_RE = /^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\]|::1)(:\d+)?$/i
 const PRODUCTION_API_HOST = "api.woodright.ru"
-const REQUIRED_LEGAL_SLUGS = ["privacy", "terms", "delivery", "payment", "returns"]
+const REQUIRED_LEGAL_SLUGS = [
+  "privacy",
+  "personal-data",
+  "cookies",
+  "terms",
+  "offer",
+  "delivery",
+  "payment",
+  "returns",
+  "warranty",
+  "requisites",
+]
 const EVIDENCE_FLAGS = [
   ["duplicate-handle-report", "--duplicate-handle-report"],
   ["route-config", "--route-config"],
@@ -290,7 +301,50 @@ function evaluate(args) {
         if (missing.length) {
           errors.push(`--legal-manifest missing slugs: ${missing.join(", ")}`)
         }
-        allLegalApproved = REQUIRED_LEGAL_SLUGS.every((slug) => legalStatuses[slug] === "approved")
+        const slugsApproved = REQUIRED_LEGAL_SLUGS.every(
+          (slug) => legalStatuses[slug] === "approved"
+        )
+        // Fail-closed legal document contract (mirrors apps/storefront/src/lib/legal/legal-status.ts).
+        const envStatus = String(process.env.WOODRIGHT_LEGAL_CONTENT_STATUS ?? "")
+          .trim()
+          .toLowerCase()
+        const doc =
+          legalStatuses.document && typeof legalStatuses.document === "object"
+            ? legalStatuses.document
+            : null
+        const metaStatus = String(doc?.status ?? "")
+          .trim()
+          .toLowerCase()
+        const envOk = envStatus === "approved"
+        const metaOk = metaStatus === "approved"
+        const approvalId = String(doc?.approvalId ?? "").trim()
+        const approvedSha = String(doc?.approvedSha ?? "").trim()
+        const version = String(doc?.version ?? "").trim()
+        const effectiveDate = String(doc?.effectiveDate ?? "").trim()
+        if (!envStatus) {
+          errors.push("WOODRIGHT_LEGAL_CONTENT_STATUS missing for legal gate")
+        } else if (!["draft", "owner_review", "approved"].includes(envStatus)) {
+          errors.push(`WOODRIGHT_LEGAL_CONTENT_STATUS invalid="${envStatus}"`)
+        }
+        if (slugsApproved && (!envOk || !metaOk)) {
+          errors.push(
+            `legal slugs approved but document status not approved (env=${envStatus || "missing"} meta=${metaStatus || "missing"})`
+          )
+        }
+        if (slugsApproved && envOk && metaOk) {
+          if (!approvalId) errors.push("legal document approvalId missing")
+          if (!approvedSha) errors.push("legal document approvedSha missing")
+          if (!version) errors.push("legal document version missing")
+          if (!effectiveDate) errors.push("legal document effectiveDate missing")
+        }
+        allLegalApproved =
+          slugsApproved &&
+          envOk &&
+          metaOk &&
+          Boolean(approvalId) &&
+          Boolean(approvedSha) &&
+          Boolean(version) &&
+          Boolean(effectiveDate)
       }
     } catch (err) {
       errors.push(`--legal-manifest is not valid JSON: ${err.message}`)
