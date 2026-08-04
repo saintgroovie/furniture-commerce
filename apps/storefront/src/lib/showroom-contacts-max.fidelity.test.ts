@@ -218,36 +218,86 @@ assert.ok(
   "expected WhatsApp > Telegram > MAX grid weights"
 )
 
-// Compact shell: ≤510px desktop, never 596 / never width:100%
+// Compact shell: exact owner desktop width 368px (PR #153 baseline) - never 500/596
 const contactsShellBlocks = [
   ...css.matchAll(/\.header-info-dropdown--contacts\s*\{[^}]*\}/g),
 ].map((m) => m[0])
 assert.ok(contactsShellBlocks.length >= 1, "contacts shell rule required")
 const desktopShell = contactsShellBlocks.find((block) =>
-  /(?:^|[;{\n])\s*width:\s*500px/.test(block)
+  /(?:^|[;{\n])\s*width:\s*368px/.test(block)
 )
-assert.ok(desktopShell, "desktop contacts shell must declare width: 500px")
+assert.ok(desktopShell, "desktop contacts shell must declare width: 368px")
 assert.doesNotMatch(desktopShell, /(?:^|[;{\n])\s*width:\s*100%/)
 assert.doesNotMatch(desktopShell, /(?:^|[;{\n])\s*width:\s*min\(\s*100%/)
+assert.doesNotMatch(desktopShell, /(?:^|[;{\n])\s*width:\s*max-content/)
+assert.doesNotMatch(desktopShell, /(?:^|[;{\n])\s*width:\s*500px/)
 assert.doesNotMatch(desktopShell, /(?:^|[;{\n])\s*width:\s*596px/)
-assert.doesNotMatch(css, /(?:^|[;{\n])\s*width:\s*596px/)
 assert.match(desktopShell, /max-width:\s*calc\(\s*100vw\s*-\s*24px\s*\)/)
-// No later contacts-shell override to percentage / 360px cap (showroom may still shrink)
+assert.doesNotMatch(desktopShell, /min-width:\s*(?:500|596)px/)
+// No later contacts-shell override to percentage / 500 / 596
 for (const block of contactsShellBlocks) {
-  assert.doesNotMatch(
-    block,
-    /(?:^|[;{\n])\s*width:\s*min\(\s*100%/
-  )
-  assert.doesNotMatch(block, /(?:^|[;{\n])\s*width:\s*596px/)
+  assert.doesNotMatch(block, /(?:^|[;{\n])\s*width:\s*min\(\s*100%/)
+  assert.doesNotMatch(block, /(?:^|[;{\n])\s*width:\s*(?:500|596)px/)
 }
-// Weighted trio must not be replaced by equal 1fr×3 outside a comment
+// Explicit lock: cannot silently reintroduce 500px shell
+assert.match(
+  css,
+  /\.header-info-dropdown--contacts\s*\{[^}]*(?:^|[;{\n])\s*width:\s*368px/
+)
+assert.doesNotMatch(
+  css,
+  /\.header-info-dropdown--contacts\s*\{[^}]*(?:^|[;{\n])\s*width:\s*(?:368|400|500|596)px[^}]*width:\s*500px/
+)
+// Weighted trio must not be replaced by equal 1fr×3
 assert.doesNotMatch(
   css,
   /\.contact-dropdown-channel-trio\s*\{[^}]*grid-template-columns:\s*repeat\(\s*3\s*,\s*minmax\(\s*0\s*,\s*1fr\s*\)\s*\)/
 )
 assert.doesNotMatch(
   css,
-  /\.header-info-dropdown--contacts\s*\{[^}]*(?:^|[;{\n])\s*width:\s*(?:368|400|596)px/
+  /\.header-info-dropdown--contacts\s*\{[^}]*(?:^|[;{\n])\s*width:\s*(?:400|500|596)px/
+)
+// Grid items cannot inflate shell
+assert.match(
+  css,
+  /\.contact-dropdown-channel-trio \.contact-action-grid-item\s*\{[^}]*min-width:\s*0/
+)
+assert.match(css, /\.contact-dropdown-channel-trio\s*\{[^}]*width:\s*100%/)
+assert.match(css, /\.contact-dropdown-channel-trio\s*\{[^}]*min-width:\s*0/)
+// Ban contacts shell 500/596 specifically (not unrelated page clamps)
+assert.doesNotMatch(
+  css,
+  /\.header-info-dropdown--contacts[^{]*\{[^}]*(?:^|[;{\n])\s*width:\s*(?:500|596)px/
+)
+
+// Vertical rhythm lock from baseline 9b650856 (shell height ~273)
+assert.match(
+  css,
+  /\.showroom-contacts--showroom,\s*\.showroom-contacts--contacts\s*\{[^}]*--hc-pad:\s*1\.3125rem/
+)
+assert.match(
+  css,
+  /\.showroom-contacts--showroom,\s*\.showroom-contacts--contacts\s*\{[^}]*--hc-gap-section:\s*1\.0625rem/
+)
+assert.match(
+  css,
+  /\.showroom-contacts--showroom,\s*\.showroom-contacts--contacts\s*\{[^}]*--hc-gap-after-divider:\s*0\.875rem/
+)
+assert.match(
+  css,
+  /\.showroom-contacts--showroom \.showroom-contacts-title,\s*\.showroom-contacts--contacts \.showroom-contacts-title\s*\{[^}]*font-size:\s*1\.1875rem/
+)
+assert.doesNotMatch(
+  css,
+  /\.showroom-contacts--contacts \.showroom-contacts-title\s*\{[^}]*font-size:\s*1\.5rem/
+)
+assert.match(
+  css,
+  /\.contacts-nav-dropdown-menu a\.contact-action\.contact-action--density-dropdown,\s*\.contacts-nav-dropdown-menu button\.contact-action\.contact-action--density-dropdown\s*\{[^}]*min-height:\s*3\.375rem/
+)
+assert.match(
+  css,
+  /\.contacts-nav-dropdown-menu a\.contact-action\.contact-action--density-dropdown\.contact-dropdown-channel-link[\s\S]*?\{[^}]*min-height:\s*2\.75rem[^}]*height:\s*2\.75rem/
 )
 
 // No duplicate hardcoded MAX URLs outside SoT (+ this fidelity test)

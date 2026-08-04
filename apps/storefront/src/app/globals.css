@@ -845,12 +845,12 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   max-width: min(360px, calc(100vw - 1.5rem));
 }
 
-/* Contacts dropdown compact shell - menu scale, not page section.
-   Content (phones / weighted trio) must fill the shell; never inflate it. */
+/* Contacts dropdown shell - original desktop width from PR #153 baseline
+   (`9b650856`). Must stay menu-sized; never 500/596 or page-content width. */
 .nav-dropdown-menu.contacts-nav-dropdown-menu.header-info-dropdown.header-info-dropdown--contacts,
 .header-info-dropdown--contacts {
   box-sizing: border-box;
-  width: 500px;
+  width: 368px;
   min-width: 0;
   max-width: calc(100vw - 24px);
   flex: 0 0 auto;
@@ -922,11 +922,12 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   row-gap: 0;
 }
 
-/* Beat `.nav-dropdown-menu a` padding (0,1,1) with density packing. */
+/* Beat `.nav-dropdown-menu a` padding (0,1,1) with density packing.
+   Phone row geometry matches PR #153 baseline (`9b650856`). */
 .contacts-nav-dropdown-menu a.contact-action.contact-action--density-dropdown,
 .contacts-nav-dropdown-menu button.contact-action.contact-action--density-dropdown {
-  min-height: 2.875rem; /* 46px phone rows - compact menu */
-  padding: 0.5rem 0.6875rem; /* 8×11 */
+  min-height: 3.375rem; /* 54px phone rows */
+  padding: 0.625rem 0.75rem; /* 10×12 */
   border-radius: 8px;
   background: color-mix(in srgb, var(--color-surface) 55%, var(--color-bg));
   border-color: color-mix(in srgb, var(--color-border) 70%, transparent);
@@ -934,16 +935,8 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 }
 
 .contacts-nav-dropdown-menu a.contact-action.contact-action--density-dropdown.contact-action--map {
-  min-height: 2.5rem; /* 40px - lighter than phone */
-  padding: 0.4375rem 0.6875rem;
-}
-
-/* Contacts dropdown phone stack: compact equal rows (~48–52px). */
-.showroom-contacts--contacts
-  a.contact-action.contact-action--density-dropdown.contact-action--phone {
-  min-height: 3rem; /* 48px */
-  height: 3rem;
-  padding: 0.5rem 0.75rem; /* 8×12 */
+  min-height: 2.875rem; /* 46px - lighter than phone */
+  padding: 0.5625rem 0.75rem;
 }
 
 /* Channel sizing is owned by `.contact-dropdown-channel-link` (single-line trio). */
@@ -993,7 +986,7 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 */
 .showroom-contacts--showroom,
 .showroom-contacts--contacts {
-  --hc-pad: 1.3125rem; /* 21px */
+  --hc-pad: 1.3125rem; /* 21px - baseline 9b650856 */
   --hc-gap-section: 1.0625rem; /* 17px title → content */
   --hc-gap-address-line: 0.25rem; /* 4px */
   --hc-gap-after-divider: 0.875rem; /* 14px */
@@ -1003,30 +996,15 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   line-height: 1.2;
 }
 
-/* Contacts dropdown only - compact menu rhythm (showroom panel unchanged). */
-.showroom-contacts--contacts {
-  --hc-pad-x: 1rem; /* 16px */
-  --hc-pad-top: 1rem; /* 16px */
-  --hc-pad-bottom: 0.875rem; /* 14px */
-  --hc-gap-section: 0.75rem; /* 12px title → phones */
-  --hc-gap-after-divider: 0.6875rem; /* 11px divider rhythm */
-  padding: var(--hc-pad-top) var(--hc-pad-x) var(--hc-pad-bottom);
-}
-
 .showroom-contacts--showroom .showroom-contacts-title,
 .showroom-contacts--contacts .showroom-contacts-title {
   margin: 0 0 var(--hc-gap-section);
   padding: 0;
-  font-size: 1.1875rem; /* 19px - showroom default */
+  font-size: 1.1875rem; /* 19px */
   font-weight: 600;
   line-height: 1.2;
   letter-spacing: 0.005em;
   color: var(--color-brand);
-}
-
-.showroom-contacts--contacts .showroom-contacts-title {
-  font-size: 1.5rem; /* 24px - menu-scale heading */
-  line-height: 1.2;
 }
 
 .showroom-contacts--showroom .showroom-contacts-address {
@@ -1506,9 +1484,8 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 }
 
 /*
-  Contacts dropdown messengers: content-weighted outer tracks + natural
-  icon+label clusters centered in each cell. Text column is max-content
-  (no fixed 92px reservation). Shell stays ~500px - row cannot inflate it.
+  Contacts dropdown messengers inside 368px shell: weighted outer tracks +
+  natural icon+label clusters centered in each cell. Shell must not grow.
 */
 .contact-dropdown-channels {
   display: grid;
@@ -1523,8 +1500,8 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 
 .contact-dropdown-channel-trio {
   display: grid;
-  /* WhatsApp wider, MAX noticeably narrower - free air around visible clusters. */
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.11fr) minmax(0, 0.79fr);
+  /* WhatsApp wider, MAX narrower - fitted to 368px shell. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr) minmax(0, 0.78fr);
   gap: 0.5rem; /* 8px */
   width: 100%;
   max-width: 100%;
@@ -1552,17 +1529,18 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 .contacts-nav-dropdown-menu a.contact-action.contact-action--density-dropdown.contact-dropdown-channel-link,
 .showroom-contacts--contacts
   a.contact-action.contact-action--density-dropdown.contact-dropdown-channel-link {
-  /* Natural visible cluster centered in weighted cell - not a shared text-start axis. */
+  /* Natural visible cluster centered in weighted cell. */
   display: grid;
   grid-template-columns: 18px max-content;
   gap: 0 0.625rem; /* 10px */
-  min-height: 2.5rem; /* 40px */
-  height: 2.5rem;
-  padding: 0.375rem 0.5rem; /* 6×8 */
+  min-height: 2.75rem; /* 44px - baseline messenger height */
+  height: 2.75rem;
+  padding: 0.5rem 0.5rem; /* 8×8 */
   border-radius: 8px;
   align-items: center;
   justify-content: center;
   overflow: visible;
+  min-width: 0;
 }
 
 .contact-dropdown-channel-link .contact-action-body,
@@ -2007,7 +1985,7 @@ main:has(.contacts-page).page-section {
 }
 
 @media (max-width: 440px) {
-  /* Showroom shell only - contacts keeps width:500px + max-width:calc(100vw - 24px). */
+  /* Showroom shell only - contacts keeps width:368px + max-width:calc(100vw - 24px). */
   .header-info-dropdown--showroom {
     width: min(100%, calc(100vw - 1.25rem));
     max-width: min(360px, calc(100vw - 1.25rem));
