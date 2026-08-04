@@ -846,8 +846,10 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 }
 
 .header-info-dropdown--contacts {
-  width: 368px;
-  max-width: min(368px, calc(100vw - 1.5rem));
+  /* Compact menu shell (~580–610): fits full WhatsApp label in equal trio +
+     free-call number, without the previous tall “mini page” feel. */
+  width: 596px;
+  max-width: min(596px, calc(100vw - 1.5rem));
 }
 
 .contacts-nav-dropdown-menu {
@@ -919,8 +921,8 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 /* Beat `.nav-dropdown-menu a` padding (0,1,1) with density packing. */
 .contacts-nav-dropdown-menu a.contact-action.contact-action--density-dropdown,
 .contacts-nav-dropdown-menu button.contact-action.contact-action--density-dropdown {
-  min-height: 3.375rem; /* 54px phone rows */
-  padding: 0.625rem 0.75rem; /* 10×12 */
+  min-height: 2.875rem; /* 46px phone rows - compact menu */
+  padding: 0.5rem 0.6875rem; /* 8×11 */
   border-radius: 8px;
   background: color-mix(in srgb, var(--color-surface) 55%, var(--color-bg));
   border-color: color-mix(in srgb, var(--color-border) 70%, transparent);
@@ -928,8 +930,15 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 }
 
 .contacts-nav-dropdown-menu a.contact-action.contact-action--density-dropdown.contact-action--map {
-  min-height: 2.875rem; /* 46px - lighter than phone */
-  padding: 0.5625rem 0.75rem;
+  min-height: 2.5rem; /* 40px - lighter than phone */
+  padding: 0.4375rem 0.6875rem;
+}
+
+/* Contacts dropdown phone stack: match compact menu height. */
+.showroom-contacts--contacts
+  a.contact-action.contact-action--density-dropdown.contact-action--phone {
+  min-height: 2.875rem; /* 46px */
+  padding: 0.5rem 0.6875rem;
 }
 
 /* Channel sizing is owned by `.contact-dropdown-channel-link` (single-line trio). */
@@ -989,6 +998,13 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   line-height: 1.2;
 }
 
+/* Contacts dropdown only - tighter menu rhythm (showroom panel unchanged). */
+.showroom-contacts--contacts {
+  --hc-pad: 0.875rem; /* 14px */
+  --hc-gap-section: 0.6875rem; /* 11px title → phones */
+  --hc-gap-after-divider: 0.625rem; /* 10px divider → messengers */
+}
+
 .showroom-contacts--showroom .showroom-contacts-title,
 .showroom-contacts--contacts .showroom-contacts-title {
   margin: 0 0 var(--hc-gap-section);
@@ -1030,7 +1046,7 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 .showroom-contacts--contacts .showroom-contacts-phone-stack {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem; /* 8px */
+  gap: 0.375rem; /* 6px */
   margin: 0 0 var(--hc-gap-after-divider);
 }
 
@@ -1256,11 +1272,14 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   min-height: 4rem;
 }
 
-.contact-action--density-page.contact-action--channel {
-  min-height: 4rem; /* equal messenger trio, one-line values */
-  padding: 0.6875rem 0.875rem; /* 11×14 */
-  gap: 0.5625rem; /* 9px */
+.contact-action.contact-action--density-page.contact-action--channel.contact-action--layout-leading {
+  /* Equal messenger cards; content is a centered icon+text cluster.
+     Beats layout-leading flex-start so the cluster is not left-flush. */
+  min-height: 3.625rem; /* 58px - slightly tighter, still touch-friendly */
+  padding: 0.625rem 0.75rem; /* 10×12 */
+  gap: 0.5rem; /* 8px fixed icon → text */
   align-items: center;
+  justify-content: center; /* center the whole icon+text cluster */
 }
 
 .contact-action--density-page .contact-action-icon:not(.contact-action-icon--bubble) {
@@ -1303,14 +1322,30 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 }
 
 .contact-action--density-page.contact-action--channel .contact-action-icon:not(.contact-action-icon--bubble) {
-  flex: 0 0 auto;
+  /* Fixed icon slot so Telegram/WhatsApp/MAX glyphs share one optical box. */
+  box-sizing: border-box;
+  flex: 0 0 1rem; /* 16px slot */
+  width: 1rem;
+  height: 1rem;
   align-self: center;
+  display: inline-grid;
+  place-items: center;
 }
 
 .contact-action--density-page.contact-action--channel .contact-action-body {
   display: flex;
+  flex: 0 0 auto; /* do not stretch - keeps cluster centered */
   align-items: center;
+  width: max-content;
+  max-width: calc(100% - 1.5rem); /* icon slot + gap */
   min-width: 0;
+}
+
+.contact-action--density-page.contact-action--channel .contact-action-copy {
+  width: max-content;
+  max-width: 100%;
+  text-align: left; /* lines stay left-aligned inside the cluster */
+  gap: 0.1875rem; /* 3px */
 }
 
 .contact-action--density-page .contact-action-copy {
@@ -1458,7 +1493,7 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 .contact-dropdown-channel-trio {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.5rem; /* 8px - matches phone-stack gap */
+  gap: 0.375rem; /* 6px - compact equal row */
   width: 100%;
   max-width: 100%;
   margin: 0;
@@ -1484,39 +1519,46 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 .contacts-nav-dropdown-menu a.contact-action.contact-action--density-dropdown.contact-dropdown-channel-link,
 .showroom-contacts--contacts
   a.contact-action.contact-action--density-dropdown.contact-dropdown-channel-link {
-  min-height: 2.75rem; /* 44px - equal single-line height */
-  height: 2.75rem;
-  padding: 0.5rem 0.5rem; /* 8×8 - equal inset; fits WhatsApp in equal thirds */
-  gap: 0.375rem; /* 6px icon → label */
+  min-height: 2.5rem; /* 40px - equal single-line compact height */
+  height: 2.5rem;
+  padding: 0.375rem 0.5rem; /* 6×8 - room for WhatsApp nowrap */
+  gap: 0.375rem; /* 6px fixed icon → label */
   border-radius: 8px;
   align-items: center;
-  justify-content: flex-start;
-  overflow: hidden;
+  justify-content: center; /* center icon+label cluster inside equal cells */
+  overflow: visible;
 }
 
 .contact-dropdown-channel-link .contact-action-body,
 .contact-dropdown-channel-link .contact-action-copy,
 .contact-dropdown-channel-link .contact-action-copy--single {
+  flex: 0 0 auto; /* do not fill the cell - keeps cluster centered */
+  width: max-content;
   min-width: 0;
-  max-width: 100%;
-  overflow: hidden;
+  max-width: none;
+  overflow: visible;
+  text-align: left;
 }
 
 .contact-dropdown-channel-link .contact-action-line {
   display: block;
-  max-width: 100%;
-  font-size: 0.8125rem; /* 13px - WhatsApp fits equal cell without wrap */
+  max-width: none;
+  font-size: 0.8125rem; /* 13px - full WhatsApp label in ~596px shell */
   font-weight: 500;
   line-height: 1.2;
   white-space: nowrap;
-  overflow: hidden;
+  overflow: visible;
   text-overflow: clip;
 }
 
 .contact-dropdown-channel-link .contact-action-icon:not(.contact-action-icon--bubble) {
-  flex: 0 0 auto;
+  box-sizing: border-box;
+  flex: 0 0 0.875rem; /* fixed 14px icon slot */
   width: 0.875rem;
   height: 0.875rem;
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
 }
 
 @media (max-width: 420px) {
@@ -1527,18 +1569,18 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   /* Keep messenger trio as one equal row even on narrow dropdown shells. */
   .contact-dropdown-channel-trio {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.375rem; /* 6px */
+    gap: 0.3125rem; /* 5px */
   }
 
   .contacts-nav-dropdown-menu a.contact-action.contact-action--density-dropdown.contact-dropdown-channel-link,
   .showroom-contacts--contacts
     a.contact-action.contact-action--density-dropdown.contact-dropdown-channel-link {
-    padding: 0.4375rem 0.375rem; /* 7×6 */
+    padding: 0.3125rem 0.375rem; /* 5×6 */
     gap: 0.3125rem; /* 5px */
   }
 
   .contact-dropdown-channel-link .contact-action-line {
-    font-size: 0.75rem; /* 12px */
+    font-size: 0.75rem; /* 12px - still full labels when shell shrinks */
   }
 }
 

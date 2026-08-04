@@ -127,6 +127,24 @@ assert.match(messengers, /density="page"|density === "page"|density = "page"/)
 const css = read("app/globals.css")
 assert.match(css, /\.contact-dropdown-channel-trio\s*\{[\s\S]*?repeat\(3,\s*minmax\(0,\s*1fr\)\)/)
 assert.match(css, /Keep messenger trio as one equal row/)
+// Layout polish: center icon+label / icon+kicker clusters (not left-flush empty cells)
+assert.match(
+  css,
+  /\.contacts-nav-dropdown-menu a\.contact-action\.contact-action--density-dropdown\.contact-dropdown-channel-link,\s*\.showroom-contacts--contacts\s+a\.contact-action\.contact-action--density-dropdown\.contact-dropdown-channel-link\s*\{[^}]*justify-content:\s*center/
+)
+assert.match(
+  css,
+  /\.contact-action\.contact-action--density-page\.contact-action--channel\.contact-action--layout-leading\s*\{[^}]*justify-content:\s*center/
+)
+// Contacts dropdown shell: ~580–610px so equal trio fits full WhatsApp
+assert.match(
+  css,
+  /\.header-info-dropdown--contacts\s*\{[^}]*(?:^|[;{\n])\s*width:\s*596px/
+)
+assert.doesNotMatch(
+  css,
+  /\.header-info-dropdown--contacts\s*\{[^}]*(?:^|[;{\n])\s*width:\s*(?:368|400)px/
+)
 
 // No duplicate hardcoded MAX URLs outside SoT (+ this fidelity test)
 const hardcodedHits: string[] = []
