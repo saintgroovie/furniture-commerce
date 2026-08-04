@@ -46,12 +46,17 @@ Validator:
 
 ```sh
 node scripts/release/validate-public-production-profile.cjs
-# STATUS PUBLIC_PRODUCTION_PROFILE_VALID_SEO_MONITOR_BACKUP_CONTRACTS_READY_RUNTIME_GATES_PENDING
+# STATUS PUBLIC_PRODUCTION_PROFILE_VALID_CONTRACTS_READY_OWNER_DECISIONS_PENDING
 ```
 
 Never treat that token as `launch_ready` or deploy authorization.
 
-See also: `docs/operator/public-production-monitor-backup-recovery.md`.
+See also:
+
+- `docs/operator/public-production-monitor-backup-recovery.md`
+- `docs/owner/public-production-payment-notification-review.md`
+
+Payment/notification repository contracts exist as **pending** fixtures. Owner must supply authorization tokens before those gates can pass.
 
 ## Isolation
 
