@@ -1,0 +1,17 @@
+{
+  "schema": "woodright_notification_launch_decision_v1",
+  "environment": "public_production",
+  "decision_status": "pending",
+  "decision_type": "provider_required",
+  "authorization_id": null,
+  "issued_at_utc": "2026-08-04T16:00:00Z",
+  "approval_record_id": null,
+  "owner": null,
+  "evidence_reference": "docs/owner/public-production-payment-notification-review.md",
+  "workaround_expires_at_utc": null,
+  "operational_sop_version": null,
+  "sales_polling_sop_path": null,
+  "max_response_minutes": null,
+  "provider_readiness": false,
+  "notes": "Repository pending fixture. Owner must choose SMTP_OR_NOTIFICATION_PROVIDER_REQUIRED_BEFORE_LAUNCH or TEMPORARY_MANUAL_ORDER_MONITORING_ACCEPTED_FOR_LAUNCH. Fake outbox is not a production notification provider."
+}

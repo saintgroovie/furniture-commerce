@@ -108,7 +108,7 @@ destination file validates at `WOODRIGHT_ALERT_DESTINATION_PATH`.
 
 ```sh
 node scripts/release/validate-public-production-profile.cjs
-# STATUS PUBLIC_PRODUCTION_PROFILE_VALID_SEO_MONITOR_BACKUP_CONTRACTS_READY_RUNTIME_GATES_PENDING
+# STATUS PUBLIC_PRODUCTION_PROFILE_VALID_CONTRACTS_READY_OWNER_DECISIONS_PENDING
 ```
 
 `launch_ready` remains `false`. Runtime gates stay pending until VM provision,
