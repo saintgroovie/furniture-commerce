@@ -60,7 +60,12 @@ export type AdminExposure = "private" | "restricted" | "public"
  */
 export type PaymentMode = "manual_invoice"
 
-export type LegalContentStatus = "approved" | "draft" | "missing_owner_input"
+export type LegalContentStatus =
+  | "approved"
+  | "owner_review"
+  | "draft"
+  | "missing_owner_input"
+
 
 /** Known runtime roles this contract treats as production-like. Unknown/other values are non-production-like. */
 export type RuntimeRole = "production" | "production_candidate" | string
