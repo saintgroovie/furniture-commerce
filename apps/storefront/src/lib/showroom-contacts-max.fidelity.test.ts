@@ -1,6 +1,7 @@
 /**
  * Guard: MAX contact is a direct owner public profile link from SoT.
  * No clipboard / "Скопировать номер" copy-utility contract.
+ * Presentation: dropdown = name-only; page = «Написать в» + service name.
  *
  *   yarn exec tsx src/lib/showroom-contacts-max.fidelity.test.ts
  */
@@ -54,10 +55,33 @@ assert.match(messengers, /showroomContacts\.messengers/)
 assert.match(messengers, /ContactActionLink/)
 assert.match(messengers, /external/)
 assert.match(messengers, /contactsCopy\.messengerMaxAria/)
-assert.match(messengers, /contactsCopy\.maxWriteValue/)
+assert.match(messengers, /contactsCopy\.messengerWriteKicker/)
+assert.match(messengers, /item\.label/)
+assert.doesNotMatch(messengers, /maxWriteValue|messengerWriteValue/)
 assert.doesNotMatch(messengers, /MaxContactAction/)
 assert.doesNotMatch(messengers, /navigator\.clipboard|execCommand\(["']copy["']\)/)
 assert.doesNotMatch(messengers, /Скопировать/)
+assert.doesNotMatch(messengers, /max\.ru\/u\//)
+
+// Dropdown presentation: service name only (no visible «Написать в»)
+const dropStart = messengers.indexOf('density === "dropdown"')
+assert.ok(dropStart >= 0, "dropdown density branch required")
+const dropReturn = messengers.indexOf("return (", dropStart)
+const pageReturn = messengers.indexOf("return (", dropReturn + 1)
+assert.ok(dropReturn >= 0 && pageReturn > dropReturn, "page/dropdown returns required")
+const dropdownBranch = messengers.slice(dropStart, pageReturn)
+const pageBranch = messengers.slice(pageReturn)
+assert.match(dropdownBranch, /item\.label/)
+assert.match(dropdownBranch, /contact-action-copy--single/)
+assert.doesNotMatch(dropdownBranch, /messengerWriteKicker/)
+assert.doesNotMatch(dropdownBranch, /contact-action-kicker/)
+
+// Page presentation: kicker «Написать в» + large service label
+assert.match(pageBranch, /messengerWriteKicker/)
+assert.match(pageBranch, /contact-action-kicker/)
+assert.match(pageBranch, /contact-action-value/)
+assert.match(pageBranch, /item\.label/)
+assert.doesNotMatch(pageBranch, /maxWriteValue|messengerWriteValue|"Написать в MAX"/)
 
 const page = read("components/contacts-page-layout.tsx")
 assert.match(page, /ContactMessengerActions/)
@@ -69,8 +93,11 @@ assert.match(dropdownBody, /density="dropdown"/)
 assert.doesNotMatch(dropdownBody, /MaxContactAction|max\.ru\/u\//)
 
 const copy = read("lib/woodright-copy.ts")
-assert.match(copy, /maxWriteValue:\s*"Написать в MAX"/)
+assert.match(copy, /messengerWriteKicker:\s*"Написать в"/)
 assert.match(copy, /messengerMaxAria:\s*"Написать в MAX"/)
+assert.match(copy, /messengerTelegramAria:\s*"Написать в Telegram"/)
+assert.match(copy, /messengerWhatsappAria:\s*"Написать в WhatsApp"/)
+assert.doesNotMatch(copy, /maxWriteValue|messengerWriteValue/)
 assert.doesNotMatch(copy, /Скопировать номер/)
 assert.doesNotMatch(copy, /для поиска Woodright в MAX/)
 assert.doesNotMatch(copy, /maxCopyValue|maxAriaIdle|maxDropdownCopyValue/)
@@ -95,6 +122,11 @@ assert.match(sot, /MESSENGER_E164_DIGITS\s*=\s*"79672587144"/)
 // Desktop/mobile parity: single messenger component for page + dropdown
 assert.match(messengers, /density === "dropdown"/)
 assert.match(messengers, /density="page"|density === "page"|density = "page"/)
+
+// Dropdown CSS keeps equal trio (no 1-col stack for messengers)
+const css = read("app/globals.css")
+assert.match(css, /\.contact-dropdown-channel-trio\s*\{[\s\S]*?repeat\(3,\s*minmax\(0,\s*1fr\)\)/)
+assert.match(css, /Keep messenger trio as one equal row/)
 
 // No duplicate hardcoded MAX URLs outside SoT (+ this fidelity test)
 const hardcodedHits: string[] = []
