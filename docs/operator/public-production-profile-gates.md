@@ -38,18 +38,20 @@ Profile schema can validate while launch remains blocked until:
 2. `LEGAL_CONTENT_STATUS=approved`
 3. payment owner decision
 4. notification/SMTP owner decision
-5. public-production monitor + backup provisioned
+5. public-production monitor + backup **contracts** present (repository); runtime provision still required
 6. DNS/TLS/Traefik pre-DNS proof
-7. qualified application images for the SEO merge SHA (does **not** inherit `22cbd68` OWNER PASS)
+7. qualified application images for the final application SHA (does **not** inherit `22cbd68` OWNER PASS)
 
 Validator:
 
 ```sh
 node scripts/release/validate-public-production-profile.cjs
-# STATUS PUBLIC_PRODUCTION_PROFILE_VALID_SEO_READY_LAUNCH_GATES_PENDING
+# STATUS PUBLIC_PRODUCTION_PROFILE_VALID_SEO_MONITOR_BACKUP_CONTRACTS_READY_RUNTIME_GATES_PENDING
 ```
 
 Never treat that token as `launch_ready` or deploy authorization.
+
+See also: `docs/operator/public-production-monitor-backup-recovery.md`.
 
 ## Isolation
 
