@@ -78,14 +78,21 @@ json.dump(doc, open(os.path.join(state, "images", digest.replace("/", "_") + ".j
 PY
 }
 
+# write_container <service> <digest> [traefik=0|1] [host_ip] [extra_json_bindings_or_empty] [net_ports_mode=match|empty|public]
+# Canonical production container ports: storefront 3002, backend 9000 (WOODRIGHT_ALLOWED_HOST_BINDINGS).
 write_container() {
   local service="$1" digest="$2" traefik="${3:-0}"
-  python3 - "$STATE" "$service" "$digest" "$traefik" <<'PY'
+  # Preserve empty HostIp (Docker wildcard); only default when unset.
+  local host_ip="${4-127.0.0.1}"
+  local extra_json="${5:-[]}" net_mode="${6:-match}"
+  python3 - "$STATE" "$service" "$digest" "$traefik" "$host_ip" "$extra_json" "$net_mode" <<'PY'
 import json, os, sys
-state, service, digest, traefik = sys.argv[1:5]
+state, service, digest, traefik, host_ip, extra_json, net_mode = sys.argv[1:8]
 name = f"woodright-production-{service}"
 title = "woodright-backend" if service == "backend" else "woodright-storefront"
 ref = f"ghcr.io/saintgroovie/{title}@{digest}"
+cport = "9000" if service == "backend" else "3002"
+hport = "9200" if service == "backend" else "3200"
 labels = {
     "com.woodright.deployment-owner": "Dokploy",
     "com.woodright.exposure": "private",
@@ -97,6 +104,22 @@ labels = {
 if traefik == "1":
     labels["traefik.enable"] = "true"
     labels["traefik.http.routers.wr.rule"] = "Host(`woodright.ru`)"
+primary = [{"HostIp": host_ip, "HostPort": hport}]
+extras = json.loads(extra_json)
+if not isinstance(extras, list):
+    raise SystemExit("extras must be list")
+bindings = primary + extras
+pb = {f"{cport}/tcp": bindings}
+if net_mode == "match":
+    ports = {f"{cport}/tcp": [{"HostIp": b.get("HostIp", ""), "HostPort": str(b.get("HostPort", ""))} for b in bindings]}
+elif net_mode == "empty":
+    ports = {}
+elif net_mode == "public":
+    ports = {f"{cport}/tcp": [{"HostIp": "0.0.0.0", "HostPort": hport}]}
+elif net_mode == "null":
+    ports = None
+else:
+    raise SystemExit(f"bad net_mode={net_mode}")
 doc = [{
     "Id": f"id-{service}-live",
     "Name": f"/{name}",
@@ -115,11 +138,12 @@ doc = [{
     },
     "HostConfig": {
         "Binds": [],
-        "PortBindings": {
-            ("9000/tcp" if service == "backend" else "3000/tcp"): [
-                {"HostIp": "127.0.0.1", "HostPort": ("9200" if service == "backend" else "3200")}
-            ]
-        },
+        "NetworkMode": "bridge",
+        "PortBindings": pb,
+    },
+    "NetworkSettings": {
+        "Networks": {"dokploy-network": {}},
+        "Ports": ports,
     },
     "Mounts": (
         [{"Type": "volume", "Name": "woodright-production_woodright-production_media",
@@ -132,7 +156,11 @@ doc = [{
     },
 }]
 os.makedirs(os.path.join(state, "containers"), exist_ok=True)
-json.dump(doc, open(os.path.join(state, "containers", f"{name}.json"), "w"))
+path = os.path.join(state, "containers", f"{name}.json")
+json.dump(doc, open(path, "w"))
+props = path[:-5] + ".props"
+if os.path.isfile(props):
+    os.remove(props)
 PY
 }
 
@@ -227,9 +255,12 @@ AFTER="$(find "$TMP/srv" "$TMP/etc" -type f -exec shasum -a 256 {} \; 2>/dev/nul
 python3 - "$TMP/out-dry.txt" <<'PY' && pass "dry-run packet fields" || fail "dry-run packet"
 import json, sys
 raw = open(sys.argv[1]).read()
-start = raw.find("{")
-assert start >= 0, raw[:200]
-# Take the first JSON object only (stdout may include compose_env_governed_keys_ok).
+# Prefer the metadata plan packet (not host-publish evaluator JSON).
+marker = '"tool": "reconcile-production-candidate-metadata.sh"'
+idx = raw.find(marker)
+assert idx >= 0, raw[:400]
+start = raw.rfind("{", 0, idx)
+assert start >= 0
 decoder = json.JSONDecoder()
 packet, _ = decoder.raw_decode(raw[start:])
 assert packet["metadata_only"] is True
@@ -311,6 +342,128 @@ else
   # Still PASS the refuse gate above; message format is secondary.
   pass "public Traefik refused without required keyword (stderr format variance)"
 fi
+
+# --- Public-bind / private-bind contract (Docker PortBindings) ---
+# Helper: assert fail-before-write for a negative fixture
+assert_bind_fail() {
+  local label="$1" out="$2" token_re="$3"
+  [[ "$RC" -ne 0 ]] && pass "$label refused" || { fail "$label allowed"; return; }
+  if grep -qE "$token_re" "$out"; then
+    pass "$label token"
+  else
+    fail "$label missing token ($token_re)"; sed -n '1,60p' "$out"
+  fi
+  [[ "$(pin_of WOODRIGHT_RELEASE_SHA)" == "$STALE_SHA" ]] \
+    && pass "$label no .env write" || fail "$label wrote RELEASE_SHA"
+  [[ ! -f "$STATE/log/mutations.log" ]] && pass "$label no docker mutate" || fail "$label docker mutate"
+  [[ ! -f "$TMP/srv/reports/production/.write-marker" ]] \
+    && pass "$label no write marker" || fail "$label write marker"
+}
+
+# Valid exact private binds already covered by dry-run PASS above (127.0.0.1:3200 / 9200).
+
+# Storefront 0.0.0.0
+reset_ok
+write_container storefront "$SF_DIG" 0 "0.0.0.0"
+BEFORE_PIN="$(pin_of WOODRIGHT_RELEASE_SHA)"
+run_meta "$TMP/out-pb-sf0.txt" --dry-run
+assert_bind_fail "sf 0.0.0.0" "$TMP/out-pb-sf0.txt" "PUBLIC_BIND_EXPOSURE"
+[[ "$BEFORE_PIN" == "$(pin_of WOODRIGHT_RELEASE_SHA)" ]] || fail "sf 0.0.0.0 pin drift"
+
+# Backend 0.0.0.0
+reset_ok
+write_container backend "$BE_DIG" 0 "0.0.0.0"
+run_meta "$TMP/out-pb-be0.txt" --dry-run
+assert_bind_fail "be 0.0.0.0" "$TMP/out-pb-be0.txt" "PUBLIC_BIND_EXPOSURE"
+
+# Empty HostIp
+reset_ok
+write_container storefront "$SF_DIG" 0 ""
+run_meta "$TMP/out-pb-empty.txt" --dry-run
+assert_bind_fail "empty HostIp" "$TMP/out-pb-empty.txt" "PUBLIC_BIND_EXPOSURE"
+
+# IPv6 wildcard ::
+reset_ok
+write_container storefront "$SF_DIG" 0 "::"
+run_meta "$TMP/out-pb-v6.txt" --dry-run
+assert_bind_fail "ipv6 ::" "$TMP/out-pb-v6.txt" "PUBLIC_BIND_EXPOSURE"
+
+# IPv6 bracketed [::]
+reset_ok
+write_container backend "$BE_DIG" 0 "[::]"
+run_meta "$TMP/out-pb-br.txt" --dry-run
+assert_bind_fail "ipv6 [::]" "$TMP/out-pb-br.txt" "PUBLIC_BIND_EXPOSURE"
+
+# Foreign RFC1918
+reset_ok
+write_container storefront "$SF_DIG" 0 "10.0.0.5"
+run_meta "$TMP/out-pb-lan.txt" --dry-run
+assert_bind_fail "lan 10.x" "$TMP/out-pb-lan.txt" "PUBLIC_BIND_EXPOSURE"
+
+# Extra public binding alongside exact loopback
+reset_ok
+write_container storefront "$SF_DIG" 0 "127.0.0.1" \
+  '[{"HostIp":"0.0.0.0","HostPort":"3201"}]'
+run_meta "$TMP/out-pb-extra-pub.txt" --dry-run
+assert_bind_fail "extra public bind" "$TMP/out-pb-extra-pub.txt" "PUBLIC_BIND_EXPOSURE"
+
+# Extra unexpected loopback port
+reset_ok
+write_container backend "$BE_DIG" 0 "127.0.0.1" \
+  '[{"HostIp":"127.0.0.1","HostPort":"9201"}]'
+run_meta "$TMP/out-pb-extra-lb.txt" --dry-run
+assert_bind_fail "extra loopback port" "$TMP/out-pb-extra-lb.txt" "PRIVATE_BIND_CONTRACT_MISMATCH"
+
+# Wrong host port
+reset_ok
+python3 - "$STATE" <<'PY'
+import json, sys
+from pathlib import Path
+p = Path(sys.argv[1]) / "containers" / "woodright-production-storefront.json"
+doc = json.load(open(p))
+obj = doc[0]
+pb = obj["HostConfig"]["PortBindings"]
+pb["3002/tcp"][0]["HostPort"] = "3210"
+obj["NetworkSettings"]["Ports"]["3002/tcp"][0]["HostPort"] = "3210"
+json.dump(doc, open(p, "w"))
+PY
+run_meta "$TMP/out-pb-wrong-hp.txt" --dry-run
+assert_bind_fail "wrong host port" "$TMP/out-pb-wrong-hp.txt" "PRIVATE_BIND_CONTRACT_MISMATCH"
+
+# Wrong container port
+reset_ok
+python3 - "$STATE" <<'PY'
+import json, sys
+from pathlib import Path
+p = Path(sys.argv[1]) / "containers" / "woodright-production-backend.json"
+doc = json.load(open(p))
+obj = doc[0]
+obj["HostConfig"]["PortBindings"] = {"9001/tcp": [{"HostIp": "127.0.0.1", "HostPort": "9200"}]}
+obj["NetworkSettings"]["Ports"] = {"9001/tcp": [{"HostIp": "127.0.0.1", "HostPort": "9200"}]}
+json.dump(doc, open(p, "w"))
+PY
+run_meta "$TMP/out-pb-wrong-cp.txt" --dry-run
+assert_bind_fail "wrong container port" "$TMP/out-pb-wrong-cp.txt" "PRIVATE_BIND_CONTRACT_MISMATCH"
+
+# HostConfig private / NetworkSettings public disagreement
+reset_ok
+write_container storefront "$SF_DIG" 0 "127.0.0.1" "[]" public
+run_meta "$TMP/out-pb-disagree.txt" --dry-run
+assert_bind_fail "HostConfig/Ports disagree" "$TMP/out-pb-disagree.txt" "PORT_BINDINGS_INSPECTION_INVALID"
+
+# Empty NetworkSettings.Ports while HostConfig publishes
+reset_ok
+write_container backend "$BE_DIG" 0 "127.0.0.1" "[]" empty
+run_meta "$TMP/out-pb-empty-net.txt" --dry-run
+assert_bind_fail "empty NetworkSettings.Ports" "$TMP/out-pb-empty-net.txt" "PORT_BINDINGS_INSPECTION_INVALID"
+
+# Confirmation cannot bypass exposure gate on execute path
+reset_ok
+write_container storefront "$SF_DIG" 0 "0.0.0.0"
+CONFIRM_ARGS="--confirm-mutation $CONFIRM"
+run_meta "$TMP/out-pb-confirm.txt" --execute
+assert_bind_fail "confirm cannot bypass public bind" "$TMP/out-pb-confirm.txt" "PUBLIC_BIND_EXPOSURE"
+CONFIRM_ARGS=""
 
 # FILES allowlist includes wrapper
 python3 - "$ROOT" <<'PY' && pass "installer lists thin wrapper" || fail "installer missing wrapper"

@@ -5,6 +5,13 @@
 
 WR_PC_RELEASE_SHA_CONFIRM='I_UNDERSTAND_PRODUCTION_METADATA_COMPOSE_RELEASE_SHA_CORRECTION'
 
+# Canonical private host-publish / PortBindings contract (profile WOODRIGHT_ALLOWED_HOST_BINDINGS).
+if ! declare -F wr_hp_assert_live_pair >/dev/null 2>&1; then
+  # shellcheck source=woodright-host-publish.sh
+  source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/woodright-host-publish.sh"
+fi
+
+
 wr_pc_release_sha_oci_of_ref() {
   local ref="$1"
   docker image inspect "$ref" --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' 2>/dev/null || true
@@ -55,6 +62,73 @@ if problems:
     raise SystemExit(1)
 print(f"private_exposure_ok {name}", file=sys.stderr)
 PY
+}
+
+
+# Fail-closed Docker PortBindings / NetworkSettings private-bind gate for release-SHA reconcile.
+# Emits PUBLIC_BIND_EXPOSURE | PRIVATE_BIND_CONTRACT_MISMATCH | PORT_BINDINGS_INSPECTION_INVALID.
+wr_pc_release_sha_assert_private_binds() {
+  local sf_name="$1"
+  local be_name="$2"
+  local out rc token verdict msg
+  set +e
+  out="$(wr_hp_assert_live_pair "$be_name" "$sf_name" 2>&1)"
+  rc=$?
+  set -e
+  if [[ "$rc" -eq 0 ]]; then
+    printf '%s\n' "$out" >&2
+    echo "private_bind_ok pair $sf_name $be_name" >&2
+    return 0
+  fi
+  verdict="$(python3 -c 'import json,re,sys
+raw=sys.argv[1]
+# Prefer trailing JSON object with verdict
+m=None
+for m in re.finditer(r"\{[^{}]*\"verdict\"[^{}]*\}", raw):
+  pass
+if m:
+  try:
+    d=json.loads(m.group(0)); print(d.get("verdict") or "")
+  except Exception:
+    print("")
+else:
+  print("")
+' "$out" 2>/dev/null || true)"
+  if [[ -z "$verdict" ]]; then
+    if echo "$out" | grep -q 'PORT_BINDINGS_INSPECTION_INVALID'; then
+      verdict=PORT_BINDINGS_INSPECTION_INVALID
+    elif echo "$out" | grep -q 'HOST_PUBLISH_PUBLIC_BIND\|empty_HostIp\|wildcard_ip\|non_loopback'; then
+      verdict=HOST_PUBLISH_PUBLIC_BIND
+    else
+      verdict=HOST_PUBLISH_ALLOWLIST_MISMATCH
+    fi
+  fi
+  token="$(wr_hp_release_sha_bind_token "$verdict")"
+  msg="$(python3 -c 'import json,re,sys
+raw=sys.argv[1]
+m=None
+for m in re.finditer(r"\{[^{}]*\"verdict\"[^{}]*\}", raw):
+  pass
+if m:
+  try:
+    d=json.loads(m.group(0)); print(d.get("message") or d.get("verdict") or "bind_gate_failed")
+  except Exception:
+    print("bind_gate_failed")
+else:
+  print((raw or "bind_gate_failed").splitlines()[-1][:240])
+' "$out" 2>/dev/null || echo bind_gate_failed)"
+  echo "$token environment=${WOODRIGHT_ENVIRONMENT:-} storefront=$sf_name backend=$be_name verdict=$verdict detail=$msg" >&2
+  case "$token" in
+    PUBLIC_BIND_EXPOSURE)
+      die "storefront/backend public bind refused ($token)"
+      ;;
+    PORT_BINDINGS_INSPECTION_INVALID)
+      die "PortBindings inspection invalid ($token)"
+      ;;
+    *)
+      die "private bind contract mismatch ($token)"
+      ;;
+  esac
 }
 
 wr_pc_release_sha_run() {
@@ -118,18 +192,11 @@ wr_pc_release_sha_run() {
   [[ "$be_dig" == "$BE_REF" ]] || die "runtime backend digest mismatch"
   [[ "$sf_health" == "healthy" && "$be_health" == "healthy" ]] || die "containers not healthy"
 
-  # Exposure / role / DB alias gates (profile-driven). No public Traefik.
+  # Role / DB alias gates (profile-driven).
   wr_assert_container_matches_environment "$sf_name" storefront \
     || die "storefront environment identity gate failed"
   wr_assert_container_matches_environment "$be_name" backend \
     || die "backend environment identity gate failed"
-  wr_pc_release_sha_assert_no_public_traefik "$sf_name" || die "storefront public Traefik refused"
-  wr_pc_release_sha_assert_no_public_traefik "$be_name" || die "backend public Traefik refused"
-
-  sf_oci="$(wr_pc_release_sha_oci_of_ref "$SF_REF")"
-  be_oci="$(wr_pc_release_sha_oci_of_ref "$BE_REF")"
-  [[ "$sf_oci" == "$want_sha" && "$be_oci" == "$want_sha" ]] \
-    || die "OCI revision gate failed sf=$sf_oci be=$be_oci want=$want_sha"
 
   for f in ACTIVE_RELEASE.json ACTIVE_OWNER.json EXPECTED_RELEASE.json; do
     [[ -f "$own_dir/$f" ]] || die "missing ownership file $own_dir/$f"
@@ -142,6 +209,18 @@ wr_pc_release_sha_run() {
   [[ "$ACTIVE_APP" == "$want_sha" && "$OWNER_APP" == "$want_sha" && "$EXPECT_APP" == "$want_sha" ]] \
     || die "ownership application_source_sha not aligned to target"
   [[ "$ACTIVE_SF" == "$SF_REF" && "$ACTIVE_BE" == "$BE_REF" ]] || die "ACTIVE images do not match refs"
+
+  sf_oci="$(wr_pc_release_sha_oci_of_ref "$SF_REF")"
+  be_oci="$(wr_pc_release_sha_oci_of_ref "$BE_REF")"
+  [[ "$sf_oci" == "$want_sha" && "$be_oci" == "$want_sha" ]] \
+    || die "OCI revision gate failed sf=$sf_oci be=$be_oci want=$want_sha"
+
+  # Independent exposure gates (both required before any planned write):
+  # 1) Traefik public labels  2) Docker published PortBindings private contract
+  wr_pc_release_sha_assert_no_public_traefik "$sf_name" || die "storefront public Traefik refused"
+  wr_pc_release_sha_assert_no_public_traefik "$be_name" || die "backend public Traefik refused"
+  wr_pc_release_sha_assert_private_binds "$sf_name" "$be_name" \
+    || die "private bind contract refused"
 
   if [[ "$release_now" == "$want_sha" ]]; then
     cat <<EOF

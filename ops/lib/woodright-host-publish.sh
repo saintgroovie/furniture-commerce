@@ -123,10 +123,11 @@ def normalize_actual(items):
         hport = str(b.get("host_port") or "")
         if not role or not cport or not hport:
             fail("HOST_PUBLISH_BINDING_MALFORMED", json.dumps(b))
-        # Empty HostIp == Docker wildcard
+        # Empty HostIp == Docker wildcard (all interfaces)
         if hip == "":
             fail("HOST_PUBLISH_PUBLIC_BIND", "empty_HostIp_wildcard", binding=b)
-        if hip in ("0.0.0.0", "::", "*"):
+        # Bracketed IPv6 wildcard representations
+        if hip in ("0.0.0.0", "::", "[::]", "*"):
             fail("HOST_PUBLISH_PUBLIC_BIND", f"wildcard_ip={hip}", binding=b)
         if hip == "::1":
             fail("HOST_PUBLISH_IPV6_LOOPBACK_UNDECLARED", "ipv6_loopback_not_in_contract", binding=b)
@@ -274,22 +275,34 @@ wr_hp_docker_bindings_json() {
   python3 - "$role" "$pb" "$ports" <<'PY'
 import json,sys
 role, pb_raw, ports_raw = sys.argv[1:4]
-items=[]
 
-def add_from_map(m, source):
-  if not m or not isinstance(m, dict):
-    return
+def fail_invalid(msg, **extra):
+  out={"ok": False, "verdict": "PORT_BINDINGS_INSPECTION_INVALID", "message": msg, "role": role}
+  out.update(extra)
+  print(json.dumps(out, sort_keys=True), file=sys.stderr)
+  raise SystemExit(2)
+
+def collect(m, source):
+  items=[]
+  if m is None:
+    return None
+  if not isinstance(m, dict):
+    fail_invalid(f"{source}_not_object", source=source)
   for k,v in m.items():
     if not v:
       continue
-    # k like "3002/tcp"
-    if "/" not in k:
-      continue
-    cport, proto = k.split("/", 1)
+    if "/" not in str(k):
+      fail_invalid(f"{source}_bad_key", key=str(k), source=source)
+    cport, proto = str(k).split("/", 1)
+    if not isinstance(v, list):
+      fail_invalid(f"{source}_binding_not_list", key=str(k), source=source)
     for b in v:
+      if not isinstance(b, dict):
+        fail_invalid(f"{source}_binding_not_object", key=str(k), source=source)
       hip = b.get("HostIp")
       if hip is None:
         hip = ""
+      hip = str(hip)
       hport = str(b.get("HostPort") or "")
       items.append({
         "role": role,
@@ -299,40 +312,36 @@ def add_from_map(m, source):
         "host_port": hport,
         "source": source,
       })
+  return items
 
 try:
   pb=json.loads(pb_raw)
-except Exception:
-  print("[]"); raise SystemExit(0)
+except Exception as e:
+  fail_invalid("HostConfig.PortBindings_parse_fail", error=str(e))
 try:
   ports=json.loads(ports_raw)
-except Exception:
-  ports=None
+except Exception as e:
+  fail_invalid("NetworkSettings.Ports_parse_fail", error=str(e))
 
-# Prefer live NetworkSettings.Ports when present; also fold PortBindings so planned-only shows up when not started.
-add_from_map(ports, "NetworkSettings.Ports")
-if not items:
-  add_from_map(pb, "HostConfig.PortBindings")
-# If both exist, use Ports as authoritative but also flag extras from PortBindings not in Ports
-seen={(i["container_port"],i["protocol"],i["host_ip"],i["host_port"]) for i in items}
-if isinstance(pb, dict):
-  for k,v in pb.items():
-    if not v: continue
-    if "/" not in k: continue
-    cport, proto = k.split("/", 1)
-    for b in v:
-      hip = b.get("HostIp"); hip = "" if hip is None else hip
-      hport = str(b.get("HostPort") or "")
-      key=(str(cport), proto.lower(), hip, hport)
-      if key not in seen:
-        items.append({
-          "role": role,
-          "container_port": str(cport),
-          "protocol": proto.lower(),
-          "host_ip": hip,
-          "host_port": hport,
-          "source": "HostConfig.PortBindings",
-        })
+pb_items = collect(pb, "HostConfig.PortBindings")
+ports_items = collect(ports, "NetworkSettings.Ports")
+if pb_items is None or ports_items is None:
+  fail_invalid("bindings_null")
+
+def keyset(items):
+  return {(i["container_port"], i["protocol"], i["host_ip"], i["host_port"]) for i in items}
+
+# Running publish contract: both representations must agree when either publishes.
+if pb_items or ports_items:
+  if keyset(pb_items) != keyset(ports_items):
+    fail_invalid(
+      "HostConfig.PortBindings_disagree_NetworkSettings.Ports",
+      hostconfig=pb_items,
+      networksettings=ports_items,
+    )
+
+# Prefer NetworkSettings.Ports when present; else HostConfig.PortBindings.
+items = ports_items if ports_items else pb_items
 print(json.dumps(items))
 PY
 }
@@ -344,7 +353,9 @@ wr_hp_assert_live_role() {
   local role="$2"
   wr_hp_require_policy || return 1
   local bindings compose nm
-  bindings="$(wr_hp_docker_bindings_json "$container" "$role")"
+  if ! bindings="$(wr_hp_docker_bindings_json "$container" "$role")"; then
+    return 1
+  fi
   nm="${WR_HP_TMP_NETWORK_MODE:-}"
   compose="$(docker inspect "$container" --format '{{index .Config.Labels "com.docker.compose.project"}}' 2>/dev/null || true)"
   export WR_HP_MODE=live
@@ -371,9 +382,13 @@ wr_hp_assert_live_pair() {
   local sf="${2:-${WOODRIGHT_SF_CONTAINER_DEFAULT:-}}"
   wr_hp_require_policy || return 1
   local be_b sf_b merged compose_be compose_sf nm_be nm_sf
-  be_b="$(wr_hp_docker_bindings_json "$be" backend)"
+  if ! be_b="$(wr_hp_docker_bindings_json "$be" backend)"; then
+    return 1
+  fi
   nm_be="${WR_HP_TMP_NETWORK_MODE:-}"
-  sf_b="$(wr_hp_docker_bindings_json "$sf" storefront)"
+  if ! sf_b="$(wr_hp_docker_bindings_json "$sf" storefront)"; then
+    return 1
+  fi
   nm_sf="${WR_HP_TMP_NETWORK_MODE:-}"
   if [[ "$nm_be" == "host" || "$nm_sf" == "host" ]]; then
     wr_hp_die "HOST_PUBLISH_HOST_NETWORK"
@@ -480,4 +495,23 @@ wr_hp_fail_closed_deny_bindings_json() {
   export WR_HP_REQUIRE_COMPOSE=0
   export WR_HP_BINDINGS_JSON="$bindings_json"
   wr_hp_evaluate_python
+}
+
+# Map host-publish evaluator / inspect failures to release-SHA reconcile tokens.
+wr_hp_release_sha_bind_token() {
+  local verdict="$1"
+  case "$verdict" in
+    HOST_PUBLISH_PUBLIC_BIND|HOST_PUBLISH_IPV6_*|HOST_PUBLISH_IPV6_LOOPBACK_UNDECLARED)
+      echo PUBLIC_BIND_EXPOSURE
+      ;;
+    HOST_PUBLISH_ALLOWLIST_MISMATCH|HOST_PUBLISH_UNEXPECTED_PORT|HOST_PUBLISH_INCOMPLETE_BINDINGS|HOST_PUBLISH_DUPLICATE_BINDING|HOST_PUBLISH_UNEXPECTED_PROTOCOL)
+      echo PRIVATE_BIND_CONTRACT_MISMATCH
+      ;;
+    PORT_BINDINGS_INSPECTION_INVALID|HOST_PUBLISH_BINDINGS_PARSE_FAIL|HOST_PUBLISH_BINDING_MALFORMED)
+      echo PORT_BINDINGS_INSPECTION_INVALID
+      ;;
+    *)
+      echo PRIVATE_BIND_CONTRACT_MISMATCH
+      ;;
+  esac
 }
