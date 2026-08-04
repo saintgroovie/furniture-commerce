@@ -67,12 +67,15 @@ export default async function RootLayout({
   // CSP nonce from middleware (x-nonce). Required for JSON-LD + Next bootstrap.
   const nonce = (await headers()).get("x-nonce") ?? undefined
   return (
-    <html lang="ru" className={localSansClass}>
+    // suppressHydrationWarning: privacy/GA browser extensions mutate <html>
+    // attributes (e.g. data-google-analytics-opt-out) before React hydrates.
+    <html lang="ru" className={localSansClass} suppressHydrationWarning>
       <body>
         <CspNonceProvider nonce={nonce}>
         <script
           type="application/ld+json"
           nonce={nonce}
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
         <a href="#main-content" className="skip-link">
