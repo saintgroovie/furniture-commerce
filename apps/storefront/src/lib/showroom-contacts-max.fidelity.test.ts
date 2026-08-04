@@ -155,18 +155,51 @@ assert.match(
   css,
   /\.contact-action-grid--channels\s*\{[\s\S]*?grid-template-columns:\s*repeat\(\s*3\s*,\s*minmax\(\s*0\s*,\s*1fr\s*\)\s*\)/
 )
-// Layout polish: center icon+label / icon+kicker clusters (not left-flush empty cells)
+// Layout polish: shared fixed inner grids centered in each cell/card
+// (not auto-sized max-content clusters that shift icon/text axes per label).
 assert.match(
   css,
-  /\.contacts-nav-dropdown-menu a\.contact-action\.contact-action--density-dropdown\.contact-dropdown-channel-link,\s*\.showroom-contacts--contacts\s+a\.contact-action\.contact-action--density-dropdown\.contact-dropdown-channel-link\s*\{[^}]*justify-content:\s*center/
+  /\.contacts-nav-dropdown-menu a\.contact-action\.contact-action--density-dropdown\.contact-dropdown-channel-link,\s*\.showroom-contacts--contacts\s+a\.contact-action\.contact-action--density-dropdown\.contact-dropdown-channel-link\s*\{[^}]*display:\s*grid[^}]*grid-template-columns:\s*18px\s+92px[^}]*gap:\s*0\s+0\.625rem[^}]*justify-content:\s*center/
 )
 assert.match(
   css,
-  /\.contact-action\.contact-action--density-page\.contact-action--channel\.contact-action--layout-leading\s*\{[^}]*justify-content:\s*center/
+  /\.contact-action\.contact-action--density-page\.contact-action--channel\.contact-action--layout-leading\s*\{[^}]*display:\s*grid[^}]*grid-template-columns:\s*20px\s+132px[^}]*gap:\s*0\s+0\.625rem[^}]*justify-content:\s*center/
 )
 assert.match(
   css,
   /\.contact-dropdown-channel-link \.contact-action-line\s*\{[^}]*white-space:\s*nowrap/
+)
+// Dropdown text column fills fixed track - no max-content cluster sizing
+const dropBodyBlock = css.match(
+  /\.contact-dropdown-channel-link \.contact-action-body,\s*\.contact-dropdown-channel-link \.contact-action-copy,\s*\.contact-dropdown-channel-link \.contact-action-copy--single\s*\{[^}]*\}/
+)
+assert.ok(dropBodyBlock, "dropdown channel body/copy rule required")
+assert.doesNotMatch(dropBodyBlock[0], /width:\s*max-content/)
+assert.match(dropBodyBlock[0], /width:\s*100%/)
+assert.match(dropBodyBlock[0], /text-align:\s*left/)
+// Page messenger copy: fixed column, left-aligned kicker+name (no max-content)
+const pageCopyBlock = css.match(
+  /\.contact-action--density-page\.contact-action--channel \.contact-action-copy\s*\{[^}]*\}/
+)
+assert.ok(pageCopyBlock, "page channel copy rule required")
+assert.doesNotMatch(pageCopyBlock[0], /width:\s*max-content/)
+assert.match(pageCopyBlock[0], /width:\s*100%/)
+assert.match(pageCopyBlock[0], /text-align:\s*left/)
+assert.match(pageCopyBlock[0], /flex-direction:\s*column/)
+const pageBodyBlock = css.match(
+  /\.contact-action--density-page\.contact-action--channel \.contact-action-body\s*\{[^}]*\}/
+)
+assert.ok(pageBodyBlock, "page channel body rule required")
+assert.doesNotMatch(pageBodyBlock[0], /width:\s*max-content/)
+assert.match(pageBodyBlock[0], /width:\s*100%/)
+// Fixed icon slots (shared across services - not per-label offsets)
+assert.match(
+  css,
+  /\.contact-dropdown-channel-link \.contact-action-icon:not\(\.contact-action-icon--bubble\)\s*\{[^}]*width:\s*18px[^}]*height:\s*18px[^}]*place-items:\s*center/
+)
+assert.match(
+  css,
+  /\.contact-action--density-page\.contact-action--channel \.contact-action-icon:not\(\.contact-action-icon--bubble\)\s*\{[^}]*width:\s*20px[^}]*height:\s*20px[^}]*place-items:\s*center/
 )
 assert.ok(
   whatsappFr > telegramFr && telegramFr > maxFr,

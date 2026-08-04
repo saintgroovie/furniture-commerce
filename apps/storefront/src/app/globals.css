@@ -1280,13 +1280,17 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 }
 
 .contact-action.contact-action--density-page.contact-action--channel.contact-action--layout-leading {
-  /* Equal messenger cards; content is a centered icon+text cluster.
-     Beats layout-leading flex-start so the cluster is not left-flush. */
+  /* Equal messenger cards: one shared fixed inner grid centered in each card.
+     Icon slot + text column widths are identical across Telegram/WhatsApp/MAX -
+     label length must not shift icon/text axes (no auto-sized max-content cluster). */
+  display: grid;
+  grid-template-columns: 20px 132px;
+  /* row 0 / column 10px - shorthand beats earlier flex `gap` on .contact-action */
+  gap: 0 0.625rem;
   min-height: 3.625rem; /* 58px - slightly tighter, still touch-friendly */
   padding: 0.625rem 0.75rem; /* 10×12 */
-  gap: 0.5rem; /* 8px fixed icon → text */
   align-items: center;
-  justify-content: center; /* center the whole icon+text cluster */
+  justify-content: center; /* center the fixed 20+10+132 block */
 }
 
 .contact-action--density-page .contact-action-icon:not(.contact-action-icon--bubble) {
@@ -1314,6 +1318,8 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   line-height: 1.25;
   font-weight: 500;
   color: var(--color-fg-muted);
+  text-align: left;
+  width: 100%;
 }
 
 .contact-action--density-page .contact-action-value {
@@ -1326,32 +1332,41 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   line-height: 1.2;
   font-weight: 500;
   white-space: nowrap;
+  text-align: left;
+  width: 100%;
 }
 
 .contact-action--density-page.contact-action--channel .contact-action-icon:not(.contact-action-icon--bubble) {
-  /* Fixed icon slot so Telegram/WhatsApp/MAX glyphs share one optical box. */
+  /* Fixed 20px icon slot - glyph centered inside; same for all services. */
   box-sizing: border-box;
-  flex: 0 0 1rem; /* 16px slot */
-  width: 1rem;
-  height: 1rem;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  min-height: 20px;
   align-self: center;
-  display: inline-grid;
+  justify-self: center;
+  display: grid;
   place-items: center;
+  flex: unset;
 }
 
 .contact-action--density-page.contact-action--channel .contact-action-body {
   display: flex;
-  flex: 0 0 auto; /* do not stretch - keeps cluster centered */
   align-items: center;
-  width: max-content;
-  max-width: calc(100% - 1.5rem); /* icon slot + gap */
+  width: 100%; /* fill the fixed 132px text column */
+  max-width: 100%;
   min-width: 0;
+  flex: unset;
 }
 
 .contact-action--density-page.contact-action--channel .contact-action-copy {
-  width: max-content;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%; /* fixed column - kicker + name share one left edge */
   max-width: 100%;
-  text-align: left; /* lines stay left-aligned inside the cluster */
+  min-width: 0;
+  text-align: left;
   gap: 0.1875rem; /* 3px */
 }
 
@@ -1532,46 +1547,63 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 .contacts-nav-dropdown-menu a.contact-action.contact-action--density-dropdown.contact-dropdown-channel-link,
 .showroom-contacts--contacts
   a.contact-action.contact-action--density-dropdown.contact-dropdown-channel-link {
+  /* Shared fixed inner grid centered in each weighted outer cell.
+     Outer tracks stay weighted; inner axes are identical for all three. */
+  display: grid;
+  grid-template-columns: 18px 92px;
+  /* row 0 / column 10px - shorthand beats earlier flex `gap` on .contact-action */
+  gap: 0 0.625rem;
   min-height: 2.5rem; /* 40px - equal single-line compact height */
   height: 2.5rem;
   padding: 0.375rem 0.5rem; /* 6×8 - room for WhatsApp nowrap */
-  gap: 0.375rem; /* 6px fixed icon → label */
   border-radius: 8px;
   align-items: center;
-  justify-content: center; /* center icon+label cluster inside weighted cells */
+  justify-content: center; /* center the fixed 18+10+92 block */
   overflow: visible;
 }
 
 .contact-dropdown-channel-link .contact-action-body,
 .contact-dropdown-channel-link .contact-action-copy,
 .contact-dropdown-channel-link .contact-action-copy--single {
-  flex: 0 0 auto; /* do not fill the cell - keeps cluster centered */
-  width: max-content;
+  /* Fill the fixed 92px text column - never max-content (that re-skews axes). */
+  display: flex;
+  align-items: center;
+  width: 100%;
   min-width: 0;
-  max-width: none;
+  max-width: 100%;
+  flex: unset;
   overflow: visible;
   text-align: left;
 }
 
+.contact-dropdown-channel-link .contact-action-copy--single {
+  flex-direction: row;
+}
+
 .contact-dropdown-channel-link .contact-action-line {
   display: block;
-  max-width: none;
+  width: 100%;
+  max-width: 100%;
   font-size: 0.8125rem; /* 13px - full WhatsApp label in ~596px shell */
   font-weight: 500;
   line-height: 1.2;
   white-space: nowrap;
   overflow: visible;
   text-overflow: clip;
+  text-align: left;
 }
 
 .contact-dropdown-channel-link .contact-action-icon:not(.contact-action-icon--bubble) {
   box-sizing: border-box;
-  flex: 0 0 0.875rem; /* fixed 14px icon slot */
-  width: 0.875rem;
-  height: 0.875rem;
-  display: inline-grid;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  min-height: 18px;
+  display: grid;
   place-items: center;
-  flex-shrink: 0;
+  justify-self: center;
+  align-self: center;
+  flex: unset;
 }
 
 @media (max-width: 420px) {
@@ -1588,8 +1620,17 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   .contacts-nav-dropdown-menu a.contact-action.contact-action--density-dropdown.contact-dropdown-channel-link,
   .showroom-contacts--contacts
     a.contact-action.contact-action--density-dropdown.contact-dropdown-channel-link {
+    /* Same shared inner grid for all three - tighter tracks for narrow cells. */
+    grid-template-columns: 14px 70px;
+    gap: 0 0.3125rem; /* 5px column */
     padding: 0.3125rem 0.375rem; /* 5×6 */
-    gap: 0.3125rem; /* 5px */
+  }
+
+  .contact-dropdown-channel-link .contact-action-icon:not(.contact-action-icon--bubble) {
+    width: 14px;
+    height: 14px;
+    min-width: 14px;
+    min-height: 14px;
   }
 
   .contact-dropdown-channel-link .contact-action-line {
