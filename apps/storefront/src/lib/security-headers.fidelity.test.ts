@@ -32,7 +32,22 @@ assert.match(
   "CSP must be set on the request for Next nonce discovery"
 )
 assert.match(proxySrc, /nonce-/, "CSP must use nonce")
-assert.doesNotMatch(proxySrc, /'unsafe-eval'/, "CSP must not allow unsafe-eval")
+// unsafe-eval only in the development arm of an explicit NODE_ENV ternary.
+assert.match(
+  proxySrc,
+  /NODE_ENV\s*===\s*["']development["']/,
+  "unsafe-eval must be gated on NODE_ENV===development"
+)
+assert.match(
+  proxySrc,
+  /\? `script-src 'self' 'nonce-\$\{nonce\}' 'strict-dynamic' 'unsafe-eval'`/,
+  "development script-src may include unsafe-eval"
+)
+assert.match(
+  proxySrc,
+  /: `script-src 'self' 'nonce-\$\{nonce\}' 'strict-dynamic'`/,
+  "production script-src must remain nonce + strict-dynamic without unsafe-eval"
+)
 assert.match(
   proxySrc,
   /buildConnectSrcDirective/,
@@ -64,6 +79,25 @@ const layout = read("src/app/layout.tsx")
 assert.match(layout, /headers\(\)/, "layout must read nonce from headers()")
 assert.match(layout, /nonce=\{nonce\}/, "JSON-LD script must carry CSP nonce")
 assert.match(layout, /CspNonceProvider/, "layout must provide CSP nonce to clients")
+assert.match(
+  layout,
+  /<html[^>]*suppressHydrationWarning/,
+  "html must suppress extension-driven hydration noise"
+)
+assert.match(
+  layout,
+  /application\/ld\+json[\s\S]{0,120}suppressHydrationWarning/,
+  "JSON-LD script must suppress nonce hydration noise"
+)
+
+const footer = read("src/components/site-footer.tsx")
+assert.doesNotMatch(footer, /^["']use client["']/m, "SiteFooter must stay a server component")
+assert.match(footer, /SiteFooterChrome/, "SiteFooter must use client chrome island")
+assert.match(
+  read("src/components/site-footer-chrome.tsx"),
+  /^["']use client["']/m,
+  "SiteFooterChrome is the client island"
+)
 
 for (const rel of [
   "src/components/catalog-filter-controls.tsx",

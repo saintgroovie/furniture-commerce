@@ -71,10 +71,17 @@ function applySecurityHeaders(
 export function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64")
 
+  // React/Next development tooling needs eval() for stack reconstruction.
+  // Production CSP must stay without 'unsafe-eval' (buyer security contract).
+  const scriptSrc =
+    process.env.NODE_ENV === "development"
+      ? `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'unsafe-eval'`
+      : `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`
+
   const csp = [
     "default-src 'self'",
-    // Next bootstrap + JSON-LD: nonce + strict-dynamic; no unsafe-eval.
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
+    // Next bootstrap + JSON-LD: nonce + strict-dynamic; unsafe-eval only in development.
+    scriptSrc,
     // Next/CSS-in-JS and globals.css often need style unsafe-inline in App Router.
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
