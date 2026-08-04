@@ -33,6 +33,7 @@ import {
   launchModeToIndexingMode,
   parseLaunchModeLenient,
 } from "./launch-mode"
+import { evaluatePublicPaymentReady } from "./payment-readiness"
 
 export type { LaunchMode }
 export {
@@ -307,6 +308,17 @@ export type LaunchContractInput = {
   adminExposure: AdminExposure
   paymentMode: PaymentMode
   legalContentStatus: LegalContentStatus
+  /**
+   * Owner payment decision (`WOODRIGHT_PAYMENT_DECISION_STATUS`).
+   * Required for public_indexable payment gate; ignored for private_noindex
+   * readiness (pending is acceptable while private).
+   */
+  paymentDecisionStatus?: string | null
+  /**
+   * Optional multi-source decision signals. When non-empty, overrides
+   * `paymentDecisionStatus` and requires consensus (see payment-readiness).
+   */
+  paymentDecisionSignals?: Array<{ value: string | null | undefined; source: string }>
 }
 
 export type LaunchContractValidation = {
@@ -359,13 +371,15 @@ export function validateLaunchContract(input: LaunchContractInput): LaunchContra
         `legalContentStatus: public_indexable requires "approved" legal content (got "${input.legalContentStatus}")`
       )
     }
-    // Keep in sync with payment-mode.ts:isPublicPaymentReady - manual_invoice
-    // is the only current mode and it is not public-ready until the owner
-    // confirms a public payment story.
-    if (input.paymentMode === "manual_invoice") {
-      errors.push(
-        'paymentMode: "manual_invoice" is not public-ready - owner confirmation required before public_indexable'
-      )
+    // Keep in sync with payment-readiness.ts - manual_invoice is public-ready
+    // only with owner-attested accepted_manual (not a status-only bypass).
+    const paymentReady = evaluatePublicPaymentReady({
+      paymentMode: input.paymentMode,
+      paymentDecisionStatus: input.paymentDecisionStatus,
+      paymentDecisionSignals: input.paymentDecisionSignals,
+    })
+    if (!paymentReady.ready) {
+      errors.push(`paymentMode: ${paymentReady.reason}`)
     }
   } else if (input.legalContentStatus !== "approved") {
     warnings.push(
