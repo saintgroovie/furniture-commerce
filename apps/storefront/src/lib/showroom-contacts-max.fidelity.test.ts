@@ -123,10 +123,38 @@ assert.match(sot, /MESSENGER_E164_DIGITS\s*=\s*"79672587144"/)
 assert.match(messengers, /density === "dropdown"/)
 assert.match(messengers, /density="page"|density === "page"|density = "page"/)
 
-// Dropdown CSS keeps equal trio (no 1-col stack for messengers)
+// Dropdown messenger row: content-weighted columns (not equal 1fr trio on desktop)
 const css = read("app/globals.css")
-assert.match(css, /\.contact-dropdown-channel-trio\s*\{[\s\S]*?repeat\(3,\s*minmax\(0,\s*1fr\)\)/)
-assert.match(css, /Keep messenger trio as one equal row/)
+const trioBlock = css.match(/\.contact-dropdown-channel-trio\s*\{[^}]*\}/)
+assert.ok(trioBlock, "dropdown channel trio rule required")
+assert.doesNotMatch(
+  trioBlock[0],
+  /grid-template-columns:\s*repeat\(\s*3\s*,\s*minmax\(\s*0\s*,\s*1fr\s*\)\s*\)/
+)
+const trioCols = trioBlock[0].match(
+  /grid-template-columns:\s*minmax\(\s*0\s*,\s*([\d.]+)fr\s*\)\s+minmax\(\s*0\s*,\s*([\d.]+)fr\s*\)\s+minmax\(\s*0\s*,\s*([\d.]+)fr\s*\)/
+)
+assert.ok(trioCols, "desktop trio must declare three weighted minmax(0, Nfr) tracks")
+const telegramFr = Number(trioCols[1])
+const whatsappFr = Number(trioCols[2])
+const maxFr = Number(trioCols[3])
+assert.ok(whatsappFr > telegramFr, "WhatsApp grid weight must exceed Telegram")
+assert.ok(maxFr < telegramFr, "MAX grid weight must be below Telegram")
+assert.ok(
+  whatsappFr / telegramFr >= 1.1 && whatsappFr / telegramFr <= 1.18,
+  `WhatsApp should be ~10–18% wider than Telegram (got ${whatsappFr}/${telegramFr})`
+)
+assert.ok(
+  maxFr / telegramFr >= 0.75 && maxFr / telegramFr <= 0.85,
+  `MAX should be ~15–25% narrower than Telegram (got ${maxFr}/${telegramFr})`
+)
+// Narrow breakpoint may still use equal columns for clip safety
+assert.match(css, /Narrow shells:\s*fall back to equal columns/)
+// Page `/contacts` messenger grid stays equal three columns (unchanged presentation)
+assert.match(
+  css,
+  /\.contact-action-grid--channels\s*\{[\s\S]*?grid-template-columns:\s*repeat\(\s*3\s*,\s*minmax\(\s*0\s*,\s*1fr\s*\)\s*\)/
+)
 // Layout polish: center icon+label / icon+kicker clusters (not left-flush empty cells)
 assert.match(
   css,
@@ -136,7 +164,11 @@ assert.match(
   css,
   /\.contact-action\.contact-action--density-page\.contact-action--channel\.contact-action--layout-leading\s*\{[^}]*justify-content:\s*center/
 )
-// Contacts dropdown shell: ~580–610px so equal trio fits full WhatsApp
+assert.match(
+  css,
+  /\.contact-dropdown-channel-link \.contact-action-line\s*\{[^}]*white-space:\s*nowrap/
+)
+// Contacts dropdown shell: ~580–610px so weighted WhatsApp still fits
 assert.match(
   css,
   /\.header-info-dropdown--contacts\s*\{[^}]*(?:^|[;{\n])\s*width:\s*596px/
