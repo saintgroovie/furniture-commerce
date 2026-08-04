@@ -16,9 +16,12 @@ const STATIC_PATHS = [
   "/payment",
   "/returns",
   "/privacy",
+  "/personal-data",
+  "/cookies",
   "/terms",
   "/offer",
   "/warranty",
+  "/requisites",
 ] as const
 
 const BLOCKED_PATH_PREFIXES = [
