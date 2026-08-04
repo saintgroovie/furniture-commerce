@@ -21,17 +21,15 @@ function channelAria(id: "telegram" | "whatsapp" | "max"): string {
   return contactsCopy.messengerMaxAria
 }
 
-function channelValue(id: "telegram" | "whatsapp" | "max"): string {
-  if (id === "max") return contactsCopy.maxWriteValue
-  return contactsCopy.messengerWriteValue
-}
-
 type MessengerGridProps = {
   density?: ContactActionDensity
 }
 
 /**
  * Page + dropdown messenger channels from `showroomContacts.messengers`.
+ * Shared SoT hrefs; presentation differs by density:
+ * - dropdown: single-line service name
+ * - page: kicker `Написать в` + large service name
  * Every channel is a real external link - no copy-number utility.
  */
 export function ContactMessengerActions({
@@ -92,10 +90,10 @@ export function ContactMessengerActions({
             >
               <span className="contact-action-copy">
                 <span className="contact-action-kicker">
-                  {formatRuInline(item.label)}
+                  {formatRuInline(contactsCopy.messengerWriteKicker)}
                 </span>
                 <span className="contact-action-value">
-                  {formatRuInline(channelValue(item.id))}
+                  {formatRuInline(item.label)}
                 </span>
               </span>
             </ContactActionLink>
