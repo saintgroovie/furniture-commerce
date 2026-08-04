@@ -239,6 +239,7 @@ FILES=(
   ops/lib/woodright-compose-env-authority.sh
   ops/lib/woodright-production-release-sha-reconcile.sh
   ops/lib/woodright-public-demo-metadata-authority.sh
+  ops/lib/woodright-owner-approved-release.sh
   ops/config/runtime-environments/public_demo.conf
   ops/config/runtime-environments/staging.conf
   ops/config/runtime-environments/production.conf
@@ -250,6 +251,7 @@ FILES=(
   ops/release/reconcile-production-candidate-metadata.sh
   ops/release/reconcile-production-release-sha.sh
   ops/release/reconcile-public-demo-metadata.sh
+  ops/release/reconcile-owner-approved-release.sh
   ops/release/public-demo-critical-http-smoke.sh
   ops/release/rollback-staging-backend-from-keeper.sh
   ops/release/rollback-staging-storefront-from-keeper.sh
@@ -268,6 +270,7 @@ FILES=(
   docs/operator/production-candidate-rollback.md
   docs/operator/production-helper-install-provenance.md
   docs/operator/production-candidate-authority-reconcile.md
+  docs/operator/owner-approved-release-governance.md
 )
 
 role_for() {
@@ -288,6 +291,8 @@ role_for() {
     ops/lib/woodright-production-release-sha-reconcile.sh) echo production_release_sha_reconcile_lib ;;
     ops/lib/woodright-compose-env-authority.sh) echo compose_env_authority ;;
     ops/lib/woodright-public-demo-metadata-authority.sh) echo public_demo_metadata_authority ;;
+    ops/lib/woodright-owner-approved-release.sh) echo owner_approved_release ;;
+    ops/release/reconcile-owner-approved-release.sh) echo owner_approved_release_reconciler ;;
     scripts/release/reconcile-public-image-pins.sh) echo pin_reconciler ;;
     ops/monitoring/*) echo monitor_helper ;;
     ops/systemd/*) echo systemd_unit ;;

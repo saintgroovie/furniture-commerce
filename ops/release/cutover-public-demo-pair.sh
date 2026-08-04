@@ -23,8 +23,11 @@ source "$HERE/../lib/woodright-cutover-common.sh"
 source "$HERE/../lib/woodright-component-authority.sh"
 # shellcheck source=../lib/woodright-oci-provenance.sh
 source "$HERE/../lib/woodright-oci-provenance.sh"
+# shellcheck source=../lib/woodright-owner-approved-release.sh
+source "$HERE/../lib/woodright-owner-approved-release.sh"
 
 MODE="dry-run"
+OWNER_APPROVAL_CHECKSUM_GATE_A=""
 CONFIRM=""
 TARGET_SHA=""
 BE_DIGEST=""
@@ -452,9 +455,6 @@ wr_cutover_require_full_sha "$TARGET_SHA" || exit 2
 wr_cutover_require_digest "$BE_DIGEST" || exit 2
 wr_cutover_require_digest "$SF_DIGEST" || exit 2
 [[ "$BE_DIGEST" != "$SF_DIGEST" ]] || die "backend and storefront digests must differ"
-default_images
-wr_cutover_require_image_at_digest "$BE_IMAGE" "$BE_DIGEST" || exit 2
-wr_cutover_require_image_at_digest "$SF_IMAGE" "$SF_DIGEST" || exit 2
 
 wr_cutover_evidence_init "$EVIDENCE_DIR" "pair-$MODE" || exit 2
 printf '%s\n' "$TARGET_SHA" >"$EVIDENCE_DIR/json/target-sha.txt"
@@ -468,6 +468,21 @@ if [[ "$MODE" == "verify" ]]; then
   log "VERIFY_OK pair sha=$TARGET_SHA"
   exit 0
 fi
+
+# Gate A — owner-approved exact identity BEFORE image presence/pull planning.
+# Freeze override and confirm token do NOT authorize a different SHA/digests.
+export WOODRIGHT_OWNER_APPROVAL_REQUIRE_PAIR=1
+if ! wr_require_owner_approved_release \
+  "$WOODRIGHT_ENVIRONMENT" "$TARGET_SHA" "$BE_DIGEST" "$SF_DIGEST" "$EVIDENCE_DIR" "gate_a"; then
+  log "OWNER_APPROVAL_DENIED result=${WR_OWNER_APPROVAL_RESULT:-unknown} (gate_a pre-image)"
+  exit 2
+fi
+OWNER_APPROVAL_CHECKSUM_GATE_A="${WR_OA_CHECKSUM:-}"
+log "owner_approval_ok gate=a sha=$TARGET_SHA checksum=${OWNER_APPROVAL_CHECKSUM_GATE_A:0:12}…"
+
+default_images
+wr_cutover_require_image_at_digest "$BE_IMAGE" "$BE_DIGEST" || exit 2
+wr_cutover_require_image_at_digest "$SF_IMAGE" "$SF_DIGEST" || exit 2
 
 # Read-only identity + environment authority
 wr_cutover_docker inspect "${WOODRIGHT_BE_CONTAINER_DEFAULT}" >/dev/null \
@@ -548,6 +563,16 @@ wr_staging_mutation_lock_acquire \
 wr_staging_mutation_lock_export_inherit || die "lock inherit export failed"
 log "lock held for pair cutover"
 
+# Gate B — re-check owner approval under lock (TOCTOU / checksum drift).
+export WOODRIGHT_OWNER_APPROVAL_REQUIRE_PAIR=1
+if ! wr_require_owner_approved_release_under_lock \
+  "$WOODRIGHT_ENVIRONMENT" "$TARGET_SHA" "$BE_DIGEST" "$SF_DIGEST" \
+  "$EVIDENCE_DIR" "$OWNER_APPROVAL_CHECKSUM_GATE_A"; then
+  log "OWNER_APPROVAL_DENIED result=${WR_OWNER_APPROVAL_RESULT:-unknown} (gate_b under lock)"
+  exit 2
+fi
+log "owner_approval_ok gate=b checksum=${WR_OA_CHECKSUM:0:12}…"
+
 # Re-validate under lock (selection freeze + monitor freshness after lock wait)
 wr_prelock_validate_environment_target || die "under-lock environment retarget detected"
 wr_assert_container_matches_environment "${WOODRIGHT_BE_CONTAINER_DEFAULT}" backend || die "under-lock backend retarget"
@@ -618,6 +643,15 @@ if ! run_smoke; then
   pair_rollback || true
   exit "${ROLLBACK_RC:-12}"
 fi
+
+# Gate C — before authority/pin commit: deployed target must still match approval.
+if ! wr_require_owner_approved_matches_live \
+  "$WOODRIGHT_ENVIRONMENT" "$TARGET_SHA" "$BE_DIGEST" "$SF_DIGEST" "$EVIDENCE_DIR"; then
+  log "OWNER_APPROVAL_DENIED result=${WR_OWNER_APPROVAL_RESULT:-unknown} (gate_c pre-authority)"
+  pair_rollback || true
+  exit "${ROLLBACK_RC:-12}"
+fi
+log "owner_approval_ok gate=c pre-authority"
 
 # Pin reconcile UNDER the same canonical lock (inherited) before SUCCESS.
 # Releasing the lock before authoritative pin SoT alignment is a correctness race.

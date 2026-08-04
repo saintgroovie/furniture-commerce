@@ -284,6 +284,26 @@ export SKIP_SMOKE=1
 export WOODRIGHT_VALIDATION_FREEZE_DIR="$TMP/freeze"
 mkdir -p "$TMP/freeze"
 
+# Owner-approved fixture under WOODRIGHT_META_ROOT (canonical path layout).
+mkdir -p "$TMP/meta/public_demo"
+cat >"$TMP/meta/public_demo/OWNER_APPROVED_RELEASE.json" <<EOF
+{
+  "schema_version": 1,
+  "environment": "public_demo",
+  "application_sha": "${SHA40}",
+  "backend_digest": "${BE_DIG}",
+  "storefront_digest": "${SF_DIG}",
+  "owner_decision": "approved",
+  "owner_authorization_id": "OWNER-PASS-fixture-pair-cutover-fidelity",
+  "issued_at": "1970-01-01T00:00:00Z",
+  "tooling_schema_version": "owner-approved-release-v1"
+}
+EOF
+chmod 0644 "$TMP/meta/public_demo/OWNER_APPROVED_RELEASE.json"
+export WOODRIGHT_META_ROOT="$TMP/meta"
+unset WOODRIGHT_OWNER_APPROVED_RELEASE_PATH
+unset WOODRIGHT_OWNER_APPROVAL_FIXTURE
+
 setup_state "$TMP/state"
 
 # 1) common digest validation
