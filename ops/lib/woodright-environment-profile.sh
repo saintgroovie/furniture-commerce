@@ -84,6 +84,20 @@ wr_load_environment_profile() {
   export WOODRIGHT_EXPECTED_RELEASE="${WOODRIGHT_EXPECTED_RELEASE}"
   export WOODRIGHT_MEDIA_VOLUME="${WOODRIGHT_MEDIA_VOLUME}"
   export WOODRIGHT_MEDIA_MOUNT_IN_BE="${WOODRIGHT_MEDIA_MOUNT_IN_BE:-/server/static}"
+  # Rebind monitor/backup path aliases from profile roots when present.
+  # Units may still set WOODRIGHT_MONITOR_STATE explicitly; profile root is fallback.
+  if [[ -n "${WOODRIGHT_MONITOR_STATE_ROOT:-}" ]]; then
+    export WOODRIGHT_MONITOR_STATE="${WOODRIGHT_MONITOR_STATE:-$WOODRIGHT_MONITOR_STATE_ROOT}"
+  fi
+  if [[ -n "${WOODRIGHT_MONITOR_HISTORY_ROOT:-}" ]]; then
+    export WOODRIGHT_MONITOR_HISTORY="${WOODRIGHT_MONITOR_HISTORY:-$WOODRIGHT_MONITOR_HISTORY_ROOT}"
+  elif [[ -n "${WOODRIGHT_MONITOR_STATE_ROOT:-}" ]]; then
+    # Sibling history next to state root (.../state → .../history)
+    export WOODRIGHT_MONITOR_HISTORY="${WOODRIGHT_MONITOR_HISTORY:-${WOODRIGHT_MONITOR_STATE_ROOT%/state}/history}"
+  fi
+  if [[ -n "${WOODRIGHT_BACKUP_ROOT:-}" ]]; then
+    export WOODRIGHT_BACKUP_ROOT
+  fi
   # Do not clobber an inherited lock path from a parent mutator (pair cutover → pin reconcile).
   # Profile still exports WOODRIGHT_MUTATION_LOCK_PATH as the environment canonical target.
   if [[ "${WOODRIGHT_STAGING_MUTATION_LOCK_HELD:-0}" == "1" && -n "${WR_STAGING_MUTATION_LOCK_PATH:-}" ]]; then
