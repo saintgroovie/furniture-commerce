@@ -168,11 +168,22 @@ assert.match(
   css,
   /\.contact-dropdown-channel-link \.contact-action-line\s*\{[^}]*white-space:\s*nowrap/
 )
-// Contacts dropdown shell: ~580–610px so weighted WhatsApp still fits
-assert.match(
-  css,
-  /\.header-info-dropdown--contacts\s*\{[^}]*(?:^|[;{\n])\s*width:\s*596px/
+assert.ok(
+  whatsappFr > telegramFr && telegramFr > maxFr,
+  "expected WhatsApp > Telegram > MAX grid weights"
 )
+// Compact shell lock (merged PR #156): ~596px - never desktop width:100%
+const contactsShellBlocks = [
+  ...css.matchAll(/\.header-info-dropdown--contacts\s*\{[^}]*\}/g),
+].map((m) => m[0])
+assert.ok(contactsShellBlocks.length >= 1, "contacts shell rule required")
+const desktopShell = contactsShellBlocks.find((block) =>
+  /(?:^|[;{\n])\s*width:\s*596px/.test(block)
+)
+assert.ok(desktopShell, "desktop contacts shell must declare width: 596px")
+assert.doesNotMatch(desktopShell, /(?:^|[;{\n])\s*width:\s*100%/)
+assert.doesNotMatch(desktopShell, /(?:^|[;{\n])\s*width:\s*min\(\s*100%/)
+assert.match(desktopShell, /max-width:\s*min\(\s*596px/)
 assert.doesNotMatch(
   css,
   /\.header-info-dropdown--contacts\s*\{[^}]*(?:^|[;{\n])\s*width:\s*(?:368|400)px/
