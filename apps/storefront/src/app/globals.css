@@ -1869,7 +1869,9 @@ main:has(.contacts-page) {
   Subgrid keeps secondary action tops aligned across columns.
   Divider sits on the stage midpoint (center of the gutter).
   Heading → first content uses one shared row-gap token for both columns
-  (24px desktop). Do not center primary phones - that inflated H2 → cards.
+  (24px desktop). Primary phone pair stays in the shared track (stretch) and
+  centers vertically inside it so address and phones share one mid axis -
+  do not move the primary row itself (that would inflate H2 → cards).
   Competing margin/padding on this transition must stay 0.
 */
 .contacts-page-stage {
@@ -1942,13 +1944,13 @@ main:has(.contacts-page) {
 }
 
 /*
-  Right primary phone pair top-aligns with the address block so both columns
-  share the same H2 → first-content gap (see --contacts-heading-to-content-gap).
-  Secondary rows stay synced via subgrid; track may still stretch taller.
+  Right primary phone pair: row stretches with the address track (keeps H2 →
+  content gap + secondary subgrid sync). Contents center vertically so the
+  address block and the 72px phone pair share one horizontal mid axis.
 */
 .contacts-page-row--primary-phones {
   display: grid;
-  align-items: start;
+  align-items: center;
   align-self: stretch;
   width: 100%;
   min-height: 100%;

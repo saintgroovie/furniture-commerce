@@ -368,8 +368,9 @@ assert.match(
 )
 const phonesPrimary = css.match(/\.contacts-page-row--primary-phones\s*\{[^}]*\}/)
 assert.ok(phonesPrimary, "primary-phones row rule required")
-assert.match(phonesPrimary[0], /align-items:\s*start/)
-assert.doesNotMatch(phonesPrimary[0], /align-items:\s*center/)
+assert.match(phonesPrimary[0], /align-items:\s*center/)
+assert.match(phonesPrimary[0], /align-self:\s*stretch/)
+assert.doesNotMatch(phonesPrimary[0], /align-items:\s*start/)
 // Competing spacing on header/primary transition must be zeroed
 assert.match(
   css,
