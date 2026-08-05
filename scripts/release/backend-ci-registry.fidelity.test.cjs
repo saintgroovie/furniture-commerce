@@ -48,7 +48,19 @@ const release = jobBlock("release-governance")
 
 check(Boolean(backend), "backend-fidelity job present in pr-checks.yml")
 check(/name:\s*Backend fidelity tests/.test(backend), "required check name Backend fidelity tests preserved")
-check(/yarn install --immutable/.test(backend), "backend install uses yarn install --immutable")
+// Canonical immutable install is retained either inline or via CI-only helper.
+{
+  const helperRef = /yarn-install-network-resilient\.cjs/.test(backend)
+  const inlineImmutable = /yarn install --immutable/.test(backend)
+  const helperPath = path.join(root, "scripts/release/yarn-install-network-resilient.cjs")
+  const helperHasImmutable =
+    fs.existsSync(helperPath) &&
+    /yarn install --immutable/.test(fs.readFileSync(helperPath, "utf8"))
+  check(
+    inlineImmutable || (helperRef && helperHasImmutable),
+    "backend install uses yarn install --immutable (direct or via resilient helper)"
+  )
+}
 check(!/--no-immutable|--mode=update-lockfile|yarn up\b/.test(backend), "backend install has no lockfile-update flags")
 
 // Registry override must be on the Install step path for backend-fidelity.
@@ -65,12 +77,16 @@ check(
 
 // Ensure the env is associated with install (same job; Install step nearby).
 {
-  const installIdx = backend.indexOf("yarn install --immutable")
+  const installIdx = Math.max(
+    backend.indexOf("yarn install --immutable"),
+    backend.indexOf("yarn-install-network-resilient.cjs")
+  )
   const envIdx = backend.indexOf("YARN_NPM_REGISTRY_SERVER")
-  check(installIdx >= 0 && envIdx >= 0 && Math.abs(installIdx - envIdx) < 400, "registry env sits next to backend Install step")
+  check(installIdx >= 0 && envIdx >= 0 && Math.abs(installIdx - envIdx) < 800, "registry env sits next to backend Install step")
 }
 
-// No broad retry loops that would hide non-network yarn failures.
+// No broad shell retry loops that would hide non-network yarn failures.
+// (Bounded Node helper classification is allowed; shell for/until loops are not.)
 check(!/for\s+\w+\s+in\s+\{1\.\./.test(backend), "backend-fidelity has no shell retry loop")
 check(!/until\s+yarn\s+install/.test(backend), "backend-fidelity has no until-yarn-install retry")
 

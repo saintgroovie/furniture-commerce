@@ -40,8 +40,14 @@ if [[ "${1:-}" == "--environment" || "${1:-}" == --environment=* ]]; then
   if [[ -n "${WOODRIGHT_PG_CONTAINER_PREFIX:-}" ]]; then
     export WOODRIGHT_PG_CONTAINER="${WOODRIGHT_PG_CONTAINER:-${WOODRIGHT_PG_CONTAINER_PREFIX}}"
   fi
+  if [[ -n "${WOODRIGHT_REDIS_CONTAINER_DEFAULT:-}" ]]; then
+    export WOODRIGHT_REDIS_CONTAINER="${WOODRIGHT_REDIS_CONTAINER:-${WOODRIGHT_REDIS_CONTAINER_DEFAULT}}"
+  fi
   if [[ -n "${WOODRIGHT_DB_NAME:-}" ]]; then
     export WOODRIGHT_MONITOR_PG_DB="${WOODRIGHT_DB_NAME}"
+  fi
+  if [[ -n "${WOODRIGHT_DB_USER:-}" ]]; then
+    export WOODRIGHT_MONITOR_PG_USER="${WOODRIGHT_DB_USER}"
   fi
 elif [[ "$_WR_MEDIA_VOLUME_PRESET" == "__unset__" ]]; then
   # No profile and no explicit media volume: do not inherit discovery's staging default.
@@ -55,6 +61,9 @@ BE_DISCOVERY_OK=0
 PG_CONTAINER="${WOODRIGHT_PG_CONTAINER:-woodright-stack-3dsdhd-postgres-1}"
 REDIS_CONTAINER="${WOODRIGHT_REDIS_CONTAINER:-woodright-stack-3dsdhd-redis-1}"
 MONITOR_PG_DB="${WOODRIGHT_MONITOR_PG_DB:-woodright_staging}"
+# Profile path: WOODRIGHT_DB_USER is required (fail-closed). Legacy no-profile path keeps
+# public_demo-compatible defaults only; never invent a shared "woodright" role for production.
+MONITOR_PG_USER="${WOODRIGHT_MONITOR_PG_USER:-}"
 DISK_WARN="${WOODRIGHT_DISK_WARN_PCT:-75}"
 DISK_CRIT="${WOODRIGHT_DISK_CRIT_PCT:-85}"
 INODE_WARN="${WOODRIGHT_INODE_WARN_PCT:-75}"
@@ -621,20 +630,30 @@ else
   fi
 fi
 
-# DB / Redis readiness (no query text / no keys)
-if docker exec "$PG_CONTAINER" pg_isready -U woodright >/dev/null 2>&1; then
-  CONN=$(docker exec "$PG_CONTAINER" psql -U woodright -d "$MONITOR_PG_DB" -tAc "SELECT count(*) FROM pg_stat_activity;" 2>/dev/null | tr -d ' ' || echo "?")
-  LONG=$(docker exec "$PG_CONTAINER" psql -U woodright -d "$MONITOR_PG_DB" -tAc "SELECT count(*) FROM pg_stat_activity WHERE state='active' AND now()-query_start > interval '5 minutes';" 2>/dev/null | tr -d ' ' || echo "?")
-  BLOCKED=$(docker exec "$PG_CONTAINER" psql -U woodright -d "$MONITOR_PG_DB" -tAc "SELECT count(*) FROM pg_stat_activity WHERE wait_event_type='Lock';" 2>/dev/null | tr -d ' ' || echo "?")
-  add_check "postgres_ready" info pass "conn=$CONN long=$LONG blocked=$BLOCKED"
+# DB / Redis readiness (no query text / no keys / no connection strings)
+# Identity must come from profile (WOODRIGHT_DB_USER + WOODRIGHT_DB_NAME) or explicit
+# WOODRIGHT_MONITOR_PG_USER / WOODRIGHT_MONITOR_PG_DB. Never hardcode role "woodright"
+# for every stack — production uses woodright_production; public_demo uses woodright.
+if [[ -z "${MONITOR_PG_USER}" ]]; then
+  add_check "postgres_ready" critical fail "missing_db_user env=${WOODRIGHT_ENVIRONMENT:-none} db=${MONITOR_PG_DB} pg=${PG_CONTAINER}"
+elif ! docker exec "$PG_CONTAINER" pg_isready -U "$MONITOR_PG_USER" >/dev/null 2>&1; then
+  add_check "postgres_ready" critical fail "not_ready user=${MONITOR_PG_USER} db=${MONITOR_PG_DB} pg=${PG_CONTAINER}"
 else
-  add_check "postgres_ready" critical fail "not_ready"
+  # Prove role+database identity with a trivial read-only query before stats.
+  if ! docker exec "$PG_CONTAINER" psql -U "$MONITOR_PG_USER" -d "$MONITOR_PG_DB" -tAc "SELECT 1" >/dev/null 2>&1; then
+    add_check "postgres_ready" critical fail "identity_mismatch user=${MONITOR_PG_USER} db=${MONITOR_PG_DB} pg=${PG_CONTAINER} env=${WOODRIGHT_ENVIRONMENT:-none}"
+  else
+    CONN=$(docker exec "$PG_CONTAINER" psql -U "$MONITOR_PG_USER" -d "$MONITOR_PG_DB" -tAc "SELECT count(*) FROM pg_stat_activity;" 2>/dev/null | tr -d ' ' || echo "?")
+    LONG=$(docker exec "$PG_CONTAINER" psql -U "$MONITOR_PG_USER" -d "$MONITOR_PG_DB" -tAc "SELECT count(*) FROM pg_stat_activity WHERE state='active' AND now()-query_start > interval '5 minutes';" 2>/dev/null | tr -d ' ' || echo "?")
+    BLOCKED=$(docker exec "$PG_CONTAINER" psql -U "$MONITOR_PG_USER" -d "$MONITOR_PG_DB" -tAc "SELECT count(*) FROM pg_stat_activity WHERE wait_event_type='Lock';" 2>/dev/null | tr -d ' ' || echo "?")
+    add_check "postgres_ready" info pass "conn=$CONN long=$LONG blocked=$BLOCKED user=${MONITOR_PG_USER} db=${MONITOR_PG_DB} env=${WOODRIGHT_ENVIRONMENT:-none}"
+  fi
 fi
 if docker exec "$REDIS_CONTAINER" redis-cli ping 2>/dev/null | grep -q PONG; then
   MEM=$(docker exec "$REDIS_CONTAINER" redis-cli INFO memory 2>/dev/null | awk -F: '/used_memory_human/{gsub(/\r/,"",$2);print $2}')
-  add_check "redis_ping" info pass "mem=$MEM"
+  add_check "redis_ping" info pass "mem=$MEM redis=${REDIS_CONTAINER}"
 else
-  add_check "redis_ping" critical fail "no_pong"
+  add_check "redis_ping" critical fail "no_pong redis=${REDIS_CONTAINER}"
 fi
 
 # Write outputs (authoritative path only)
