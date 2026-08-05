@@ -191,22 +191,6 @@ assert.match(
   /DROPDOWN_MESSENGER_ICON\s*=\s*16/
 )
 
-// Page phone (channels primary pair): keep centered natural cluster
-const pagePhoneBlock = css.match(
-  /\.contact-action\.contact-action--density-page\.contact-action--phone\.contact-action--layout-leading,\s*\.contact-action\.contact-action--density-page\.contact-action--map\.contact-action--layout-leading\s*\{[^}]*\}/
-)
-assert.ok(pagePhoneBlock, "page phone/map card rule required")
-assert.match(pagePhoneBlock[0], /justify-content:\s*center/)
-assert.match(pagePhoneBlock[0], /column-gap:\s*0\.75rem/)
-assert.doesNotMatch(pagePhoneBlock[0], /min-height:\s*88px/)
-assert.match(
-  css,
-  /\.contact-action--density-page\.contact-action--phone \.contact-action-body[\s\S]*?flex:\s*0\s+0\s+auto/
-)
-assert.match(
-  css,
-  /\.contact-action--density-page\.contact-action--phone \.contact-action-icon:not\(\.contact-action-icon--bubble\)(?:,[\s\S]*?)?\{[^}]*(?:width|inline-size):\s*20px/
-)
 // Focus uses outline (bbox-stable) - no border-width bump on :focus
 assert.match(css, /\.contact-action:focus-visible\s*\{[^}]*outline:\s*2px/)
 assert.doesNotMatch(
@@ -215,8 +199,8 @@ assert.doesNotMatch(
 )
 
 /*
-  /contacts five equal page-action cards (showroom secondary + messengers):
-  shared 72px height, left grid axes 18+18+12, NOT centered auto cluster.
+  /contacts ALL page-action cards share one 72px left-axis contract
+  (showroom phone+map, channels primary phones, messengers).
 */
 assert.match(
   css,
@@ -247,7 +231,7 @@ assert.doesNotMatch(
   /\.contacts-page\s*\{[^}]*--contacts-page-action-height:\s*88px/
 )
 const equalPageAction = css.match(
-  /\.contacts-page-col--showroom\s+\.contacts-page-row--secondary\s+\.contact-action\.contact-action--density-page\.contact-action--layout-leading,\s*\.contacts-page\s+\.contact-action\.contact-action--density-page\.contact-action--channel\.contact-action--layout-leading\s*\{[^}]*\}/
+  /\.contacts-page \.contact-action\.contact-action--density-page\.contact-action--layout-leading\s*\{[^}]*\}/
 )
 assert.ok(equalPageAction, "equal page-action geometry rule required")
 assert.match(equalPageAction[0], /display:\s*grid/)
@@ -273,11 +257,11 @@ assert.doesNotMatch(
 )
 assert.match(
   css,
-  /\.contacts-page-col--showroom \.contacts-page-row--secondary \.contact-action-grid,\s*\.contacts-page-col--channels \.contacts-page-row--secondary \.contact-action-grid--channels\s*\{[^}]*min-height:\s*var\(\s*--contacts-page-action-height\s*\)/
+  /\.contacts-page \.contact-action-grid--page,\s*\.contacts-page \.contact-action-grid--channels\s*\{[^}]*min-height:\s*var\(\s*--contacts-page-action-height\s*\)/
 )
 assert.match(
   css,
-  /\.contacts-page-col--showroom \.contacts-page-row--secondary \.contact-action-grid,\s*\.contacts-page-col--channels \.contacts-page-row--secondary \.contact-action-grid--channels\s*\{[^}]*gap:\s*var\(\s*--contacts-page-action-row-gap\s*\)/
+  /\.contacts-page \.contact-action-grid--page,\s*\.contacts-page \.contact-action-grid--channels\s*\{[^}]*gap:\s*var\(\s*--contacts-page-action-row-gap\s*\)/
 )
 assert.ok(
   whatsappFr > telegramFr && telegramFr > maxFr,
