@@ -51,6 +51,41 @@ print(d.get(sys.argv[2]) or "")
 PY
 }
 
+# Normalize expected application Git SHA from EXPECTED_RELEASE into
+# WR_EXPECTED_APPLICATION_SOURCE_SHA (logical field expected_application_source_sha).
+# Accepts production cutover key application_source_sha and/or legacy/public_demo
+# approved_git_sha. Never invents SHA from checkout, tags, or origin/main.
+# Returns 0 on success; on failure sets DIGEST_MISMATCH detail token and returns 1.
+wr_resolve_expected_application_source_sha() {
+  local f="${1:-${WOODRIGHT_EXPECTED_RELEASE:-}}"
+  local app approved
+  WR_EXPECTED_APPLICATION_SOURCE_SHA=""
+  if [[ -z "$f" || ! -f "$f" ]]; then
+    wr_discovery_set_verdict DIGEST_MISMATCH "expected_git_sha_missing"
+    return 1
+  fi
+  app=$(wr_json_get "$f" application_source_sha)
+  approved=$(wr_json_get "$f" approved_git_sha)
+  if [[ -n "$app" && -n "$approved" && "$app" != "$approved" ]]; then
+    wr_discovery_set_verdict DIGEST_MISMATCH "expected_git_sha_conflict"
+    return 1
+  fi
+  if [[ -n "$app" ]]; then
+    WR_EXPECTED_APPLICATION_SOURCE_SHA="$app"
+  elif [[ -n "$approved" ]]; then
+    WR_EXPECTED_APPLICATION_SOURCE_SHA="$approved"
+  else
+    wr_discovery_set_verdict DIGEST_MISMATCH "expected_git_sha_missing"
+    return 1
+  fi
+  if [[ ! "$WR_EXPECTED_APPLICATION_SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+    wr_discovery_set_verdict DIGEST_MISMATCH "expected_git_sha_malformed"
+    WR_EXPECTED_APPLICATION_SOURCE_SHA=""
+    return 1
+  fi
+  return 0
+}
+
 wr_container_exists() {
   docker inspect "$1" >/dev/null 2>&1
 }
@@ -141,12 +176,19 @@ wr_validate_backend_candidate() {
     if [[ -n "${WOODRIGHT_PINNED_BACKEND_DIGEST}" ]]; then
       expected_digest="$WOODRIGHT_PINNED_BACKEND_DIGEST"
       expected_sha="${WOODRIGHT_PINNED_GIT_SHA:-}"
+      if [[ -n "$expected_sha" && ! "$expected_sha" =~ ^[0-9a-f]{40}$ ]]; then
+        wr_discovery_set_verdict DIGEST_MISMATCH "pinned_git_sha_invalid"
+        return 1
+      fi
     elif [[ -f "$WOODRIGHT_EXPECTED_RELEASE" ]]; then
       expected_digest=$(wr_json_get "$WOODRIGHT_EXPECTED_RELEASE" backend_digest)
-      expected_sha=$(wr_json_get "$WOODRIGHT_EXPECTED_RELEASE" approved_git_sha)
+      wr_resolve_expected_application_source_sha "$WOODRIGHT_EXPECTED_RELEASE" || return 1
+      expected_sha="$WR_EXPECTED_APPLICATION_SOURCE_SHA"
     else
       expected_digest=""
       expected_sha=""
+      wr_discovery_set_verdict DIGEST_MISMATCH "expected_git_sha_missing"
+      return 1
     fi
     if [[ -z "$expected_digest" || ! "$expected_digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
       wr_discovery_set_verdict DIGEST_MISMATCH "expected_backend_digest_missing"
@@ -159,9 +201,6 @@ wr_validate_backend_candidate() {
         wr_discovery_set_verdict DIGEST_MISMATCH "expected_git_sha_missing"
         return 1
       fi
-    elif [[ -n "$expected_sha" && ! "$expected_sha" =~ ^[0-9a-f]{40}$ ]]; then
-      wr_discovery_set_verdict DIGEST_MISMATCH "pinned_git_sha_invalid"
-      return 1
     fi
     img=$(wr_container_image_id "$name")
     if [[ "$img" != "$expected_digest" ]]; then
@@ -169,7 +208,7 @@ wr_validate_backend_candidate() {
       local resolved=""
       resolved=$(docker image inspect "$expected_digest" --format '{{.Id}}' 2>/dev/null || true)
       if [[ -z "$resolved" || "$img" != "$resolved" ]]; then
-        wr_discovery_set_verdict DIGEST_MISMATCH "have=${img:0:19}… want=${expected_digest:0:19}…"
+        wr_discovery_set_verdict DIGEST_MISMATCH "backend_digest_mismatch"
         return 1
       fi
     fi
@@ -177,7 +216,7 @@ wr_validate_backend_candidate() {
       local rev
       rev=$(wr_container_label "$name" "org.opencontainers.image.revision")
       if [[ -z "$rev" || "$rev" != "$expected_sha" ]]; then
-        wr_discovery_set_verdict DIGEST_MISMATCH "oci_rev_mismatch"
+        wr_discovery_set_verdict DIGEST_MISMATCH "backend_revision_mismatch"
         return 1
       fi
     fi
@@ -238,26 +277,31 @@ wr_validate_storefront_candidate() {
       return 1
     fi
   fi
-  if [[ "${WOODRIGHT_REQUIRE_EXPECTED_DIGEST}" == "1" && -f "$WOODRIGHT_EXPECTED_RELEASE" ]]; then
+  if [[ "${WOODRIGHT_REQUIRE_EXPECTED_DIGEST}" == "1" ]]; then
+    if [[ ! -f "$WOODRIGHT_EXPECTED_RELEASE" ]]; then
+      wr_discovery_set_verdict DIGEST_MISMATCH "expected_git_sha_missing"
+      return 1
+    fi
     expected_digest=$(wr_json_get "$WOODRIGHT_EXPECTED_RELEASE" storefront_digest)
-    expected_sha=$(wr_json_get "$WOODRIGHT_EXPECTED_RELEASE" approved_git_sha)
+    wr_resolve_expected_application_source_sha "$WOODRIGHT_EXPECTED_RELEASE" || return 1
+    expected_sha="$WR_EXPECTED_APPLICATION_SOURCE_SHA"
     if [[ -z "$expected_digest" || ! "$expected_digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
       wr_discovery_set_verdict DIGEST_MISMATCH "expected_storefront_digest_missing"
       return 1
     fi
-    if [[ -z "$expected_sha" || ! "$expected_sha" =~ ^[0-9a-f]{40}$ ]]; then
-      wr_discovery_set_verdict DIGEST_MISMATCH "expected_git_sha_missing"
-      return 1
-    fi
     img=$(wr_container_image_id "$name")
     if [[ "$img" != "$expected_digest" ]]; then
-      wr_discovery_set_verdict DIGEST_MISMATCH "sf_digest"
-      return 1
+      local resolved=""
+      resolved=$(docker image inspect "$expected_digest" --format '{{.Id}}' 2>/dev/null || true)
+      if [[ -z "$resolved" || "$img" != "$resolved" ]]; then
+        wr_discovery_set_verdict DIGEST_MISMATCH "storefront_digest_mismatch"
+        return 1
+      fi
     fi
     local rev
     rev=$(wr_container_label "$name" "org.opencontainers.image.revision")
     if [[ -z "$rev" || "$rev" != "$expected_sha" ]]; then
-      wr_discovery_set_verdict DIGEST_MISMATCH "sf_oci_rev"
+      wr_discovery_set_verdict DIGEST_MISMATCH "storefront_revision_mismatch"
       return 1
     fi
   fi
