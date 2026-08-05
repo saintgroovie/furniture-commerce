@@ -362,8 +362,8 @@ assert.match(
   /--contacts-stage-row-gap:\s*var\(\s*--contacts-heading-to-content-gap\s*\)/
 )
 assert.match(stageBlock[0], /row-gap:\s*var\(\s*--contacts-stage-row-gap\s*\)/)
-assert.match(stageBlock[0], /margin-top:\s*2rem/) // 32px intro → stage
-assert.doesNotMatch(stageBlock[0], /margin-top:\s*1\.75rem/)
+assert.match(stageBlock[0], /margin-top:\s*2\.25rem/) // 36px intro → stage
+assert.doesNotMatch(stageBlock[0], /margin-top:\s*2rem;/)
 assert.doesNotMatch(stageBlock[0], /margin-top:\s*3\.125rem/)
 const titleBlock = css.match(/\.contacts-page-title\s*\{[^}]*\}/)
 assert.ok(titleBlock, "contacts-page-title rule required")
@@ -374,8 +374,8 @@ assert.match(
 assert.doesNotMatch(titleBlock[0], /font-size:\s*clamp\(\s*1\.8125rem/)
 const introBlock = css.match(/\.contacts-page-intro\s*\{[^}]*\}/)
 assert.ok(introBlock, "contacts-page-intro rule required")
-assert.match(introBlock[0], /margin:\s*0\.75rem\s+0\s+0/)
-assert.doesNotMatch(introBlock[0], /margin:\s*1rem\s+0\s+0/)
+assert.match(introBlock[0], /margin:\s*1rem\s+0\s+0/)
+assert.doesNotMatch(introBlock[0], /margin:\s*0\.75rem\s+0\s+0/)
 assert.match(
   css,
   /main:has\(\.contacts-page\)\.page-section\s*\{[^}]*padding-top:\s*1\.25rem/

@@ -1854,7 +1854,7 @@ main:has(.contacts-page) {
 
 .contacts-page-intro {
   grid-column: 1 / span 7;
-  margin: 0.75rem 0 0; /* 12px H1 → intro */
+  margin: 1rem 0 0; /* 16px H1 → intro */
   max-width: 100%;
   min-width: 0;
   font-size: 1.0625rem; /* 17px */
@@ -1885,7 +1885,7 @@ main:has(.contacts-page) {
   row-gap: var(--contacts-stage-row-gap);
   align-items: stretch;
   position: relative;
-  margin-top: 2rem; /* 32px intro → stage */
+  margin-top: 2.25rem; /* 36px intro → stage */
   width: 100%;
   min-width: 0;
 }
@@ -2112,13 +2112,13 @@ main:has(.contacts-page).page-section {
   }
 
   .contacts-page-intro {
-    margin-top: 0.625rem; /* 10px */
+    margin-top: 0.75rem; /* 12px */
   }
 
   .contacts-page-stage {
     display: flex;
     flex-direction: column;
-    margin-top: 1.75rem; /* 28px */
+    margin-top: 2rem; /* 32px */
     row-gap: 0;
     column-gap: 0;
   }
