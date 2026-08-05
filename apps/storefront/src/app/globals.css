@@ -2042,7 +2042,7 @@ main:has(.contacts-page) {
 .contacts-page-cta-title {
   margin: 0;
   max-width: min(100%, 40rem);
-  font-size: 1.4375rem; /* 23px */
+  font-size: 1.3125rem; /* 21px */
   font-weight: 500;
   line-height: 1.3;
   letter-spacing: -0.01em;
@@ -2167,7 +2167,7 @@ main:has(.contacts-page).page-section {
   }
 
   .contacts-page-cta-title {
-    font-size: 1.25rem; /* 20px */
+    font-size: 1.1875rem; /* 19px */
     font-weight: 500;
   }
 

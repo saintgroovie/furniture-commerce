@@ -391,7 +391,9 @@ assert.doesNotMatch(ctaBlock[0], /--cta-pad-y:\s*2\.25rem/)
 const ctaTitle = css.match(/\.contacts-page-cta-title\s*\{[^}]*\}/)
 assert.ok(ctaTitle, "contacts-page-cta-title rule required")
 assert.match(ctaTitle[0], /font-weight:\s*500/)
+assert.match(ctaTitle[0], /font-size:\s*1\.3125rem/)
 assert.doesNotMatch(ctaTitle[0], /font-weight:\s*600/)
+assert.doesNotMatch(ctaTitle[0], /font-size:\s*1\.4375rem/)
 assert.match(
   css,
   /\.contacts-page-cta-actions \.contacts-page-cta-btn\s*\{[^}]*height:\s*var\(\s*--cta-btn-height\s*\)/
