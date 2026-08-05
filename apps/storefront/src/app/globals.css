@@ -1264,8 +1264,10 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 }
 
 /*
-  Page phone / map actions: equal outer cards (pair grid) + centered natural
-  cluster (icon + text). Must NOT inherit messenger stretch layout.
+  Page phone / map (incl. channels primary pair): centered natural cluster.
+  Showroom secondary + messenger page cards override via
+  `.contacts-page` equal-height contract below - do not apply that contract
+  to `.contacts-page-phone-pair`.
 */
 .contact-action.contact-action--density-page.contact-action--phone.contact-action--layout-leading,
 .contact-action.contact-action--density-page.contact-action--map.contact-action--layout-leading {
@@ -1278,8 +1280,8 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   box-sizing: border-box;
   width: 100%;
   min-width: 0;
-  min-height: 4rem; /* 64px */
-  padding: 0.75rem 0.9375rem; /* 12×15 - equal cards */
+  min-height: 4rem; /* 64px - channels primary pair */
+  padding: 0.75rem 0.9375rem; /* 12×15 */
   border-radius: 9px;
   border-width: 1px;
 }
@@ -1326,8 +1328,7 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 }
 
 /*
-  Page messenger actions: equal outer cards (3-col grid) + centered natural
-  cluster. Separate from phone geometry - no minmax(0,1fr) text column.
+  Page messenger base (overridden on /contacts secondary to equal 88px contract).
 */
 .contact-action.contact-action--density-page.contact-action--channel.contact-action--layout-leading {
   display: flex;
@@ -1538,6 +1539,139 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   margin-top: 0;
 }
 
+/*
+  /contacts equal page-action contract (5 cards only):
+  showroom secondary phone+map + messenger TG/WA/MAX.
+  Does NOT apply to channels primary pair or dropdown.
+  Axes: pad-inline 20 + icon 20 + gap 14 → icon center 30 / text start 54.
+*/
+.contacts-page-col--showroom .contacts-page-row--secondary .contact-action-grid,
+.contacts-page-col--channels .contacts-page-row--secondary .contact-action-grid--channels {
+  align-items: stretch;
+  min-height: var(--contacts-page-action-height);
+  gap: var(--contacts-page-action-row-gap);
+}
+
+.contacts-page-col--channels .contacts-page-row--secondary .contact-action-grid-item {
+  min-width: 0;
+  height: 100%;
+  display: flex;
+}
+
+.contacts-page-col--channels .contacts-page-row--secondary .contact-action-grid-item > .contact-action {
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+}
+
+.contacts-page-col--showroom
+  .contacts-page-row--secondary
+  .contact-action.contact-action--density-page.contact-action--layout-leading,
+.contacts-page
+  .contact-action.contact-action--density-page.contact-action--channel.contact-action--layout-leading {
+  display: grid;
+  grid-template-columns: var(--contacts-page-action-icon) minmax(0, 1fr);
+  column-gap: var(--contacts-page-action-gap);
+  row-gap: 0;
+  gap: 0 var(--contacts-page-action-gap);
+  align-items: center;
+  justify-content: stretch;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  min-height: var(--contacts-page-action-height);
+  min-width: 0;
+  padding: var(--contacts-page-action-pad-block) var(--contacts-page-action-pad-inline);
+  border-radius: 9px;
+  border-width: 1px;
+}
+
+.contacts-page-col--showroom
+  .contacts-page-row--secondary
+  .contact-action
+  .contact-action-icon:not(.contact-action-icon--bubble),
+.contacts-page
+  .contact-action--density-page.contact-action--channel
+  .contact-action-icon:not(.contact-action-icon--bubble) {
+  box-sizing: border-box;
+  inline-size: var(--contacts-page-action-icon);
+  block-size: var(--contacts-page-action-icon);
+  width: var(--contacts-page-action-icon);
+  height: var(--contacts-page-action-icon);
+  min-width: var(--contacts-page-action-icon);
+  min-height: var(--contacts-page-action-icon);
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  justify-self: start;
+  align-self: center;
+}
+
+.contacts-page-col--showroom
+  .contacts-page-row--secondary
+  .contact-action
+  .contact-action-icon:not(.contact-action-icon--bubble)
+  svg,
+.contacts-page
+  .contact-action--density-page.contact-action--channel
+  .contact-action-icon:not(.contact-action-icon--bubble)
+  svg {
+  inline-size: 18px;
+  block-size: 18px;
+  width: 18px;
+  height: 18px;
+  max-width: var(--contacts-page-action-icon);
+  max-height: var(--contacts-page-action-icon);
+  display: block;
+}
+
+.contacts-page-col--showroom .contacts-page-row--secondary .contact-action .contact-action-body,
+.contacts-page .contact-action--density-page.contact-action--channel .contact-action-body {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  min-width: 0;
+  flex: unset;
+}
+
+.contacts-page-col--showroom .contacts-page-row--secondary .contact-action .contact-action-copy,
+.contacts-page .contact-action--density-page.contact-action--channel .contact-action-copy {
+  display: grid;
+  row-gap: var(--contacts-page-action-text-gap);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  text-align: left;
+  justify-items: start;
+  align-content: center;
+}
+
+.contacts-page-col--showroom .contacts-page-row--secondary .contact-action .contact-action-kicker,
+.contacts-page .contact-action--density-page.contact-action--channel .contact-action-kicker {
+  font-size: 0.75rem; /* 12px - shared across five cards */
+  line-height: 1.25;
+  font-weight: 500;
+  color: var(--color-fg-muted);
+  text-align: left;
+  width: auto;
+  max-width: 100%;
+}
+
+.contacts-page-col--showroom .contacts-page-row--secondary .contact-action--primary .contact-action-kicker {
+  color: color-mix(in srgb, #fff 82%, transparent);
+}
+
+.contacts-page-col--showroom .contacts-page-row--secondary .contact-action .contact-action-value,
+.contacts-page .contact-action--density-page.contact-action--channel .contact-action-value {
+  font-size: 1rem; /* 16px - shared */
+  line-height: 1.15;
+  font-weight: 500;
+  white-space: nowrap;
+  text-align: left;
+  width: auto;
+  max-width: 100%;
+}
+
 /* Dropdown showroom: stack call + map so trailing bubbles stay compact. */
 .showroom-contacts--showroom .contact-action-grid--pair.contact-action-grid--dropdown {
   grid-template-columns: minmax(0, 1fr);
@@ -1705,6 +1839,14 @@ main:has(.contacts-page) {
   --contacts-page-gap: 1.75rem; /* 28px - H1/intro 12-track gap */
   /* Optical air around the center axis - half left / half right of divider. */
   --contacts-center-gutter: clamp(4.5rem, 6vw, 5.75rem); /* ~72–92px */
+  /* Equal showroom secondary + messenger page action cards (not primary phones). */
+  --contacts-page-action-height: 88px;
+  --contacts-page-action-pad-block: 0.875rem; /* 14px */
+  --contacts-page-action-pad-inline: 1.25rem; /* 20px */
+  --contacts-page-action-icon: 20px;
+  --contacts-page-action-gap: 0.875rem; /* 14px → text starts at 54px */
+  --contacts-page-action-text-gap: 0.25rem; /* 4px */
+  --contacts-page-action-row-gap: 0.75rem; /* 12px between cards in both rows */
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
   column-gap: var(--contacts-page-gap);

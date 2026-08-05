@@ -191,14 +191,14 @@ assert.match(
   /DROPDOWN_MESSENGER_ICON\s*=\s*16/
 )
 
-// Page phone: centered natural cluster - separate from messenger stretch
+// Page phone (channels primary pair): keep centered natural cluster
 const pagePhoneBlock = css.match(
   /\.contact-action\.contact-action--density-page\.contact-action--phone\.contact-action--layout-leading,\s*\.contact-action\.contact-action--density-page\.contact-action--map\.contact-action--layout-leading\s*\{[^}]*\}/
 )
 assert.ok(pagePhoneBlock, "page phone/map card rule required")
 assert.match(pagePhoneBlock[0], /justify-content:\s*center/)
 assert.match(pagePhoneBlock[0], /column-gap:\s*0\.75rem/)
-assert.doesNotMatch(pagePhoneBlock[0], /grid-template-columns:\s*20px\s+minmax/)
+assert.doesNotMatch(pagePhoneBlock[0], /min-height:\s*88px/)
 assert.match(
   css,
   /\.contact-action--density-page\.contact-action--phone \.contact-action-body[\s\S]*?flex:\s*0\s+0\s+auto/
@@ -214,37 +214,46 @@ assert.doesNotMatch(
   /\.contact-action(?:--density-page)?(?:\.contact-action--phone)?:focus(?:-visible)?\s*\{[^}]*border(?:-width)?:\s*2px/
 )
 
-// Page messenger: centered natural cluster (not 20px minmax(0,1fr) stretch)
-const pageChannelBlock = css.match(
-  /\.contact-action\.contact-action--density-page\.contact-action--channel\.contact-action--layout-leading\s*\{[^}]*\}/
-)
-assert.ok(pageChannelBlock, "page channel card rule required")
-assert.match(pageChannelBlock[0], /display:\s*flex/)
-assert.match(pageChannelBlock[0], /justify-content:\s*center/)
-assert.match(pageChannelBlock[0], /column-gap:\s*0\.5rem/) // 8px
-assert.doesNotMatch(
-  pageChannelBlock[0],
-  /grid-template-columns:\s*20px\s+minmax\(\s*0\s*,\s*1fr\s*\)/
-)
-assert.doesNotMatch(pageChannelBlock[0], /grid-template-columns:\s*20px\s+132px/)
-assert.doesNotMatch(css, /grid-template-columns:\s*20px\s+132px/)
-assert.doesNotMatch(css, /grid-template-columns:\s*20px\s+minmax\(\s*0\s*,\s*1fr\s*\)/)
-assert.match(pageChannelBlock[0], /padding:[^;]*1\.25rem/)
-const pageCopyBlock = css.match(
-  /\.contact-action--density-page\.contact-action--channel \.contact-action-copy\s*\{[^}]*\}/
-)
-assert.ok(pageCopyBlock, "page channel copy rule required")
-assert.match(pageCopyBlock[0], /text-align:\s*left/)
-assert.match(pageCopyBlock[0], /width:\s*auto/)
-const pageBodyBlock = css.match(
-  /\.contact-action--density-page\.contact-action--channel \.contact-action-body\s*\{[^}]*\}/
-)
-assert.ok(pageBodyBlock, "page channel body rule required")
-assert.match(pageBodyBlock[0], /width:\s*auto/)
-assert.match(pageBodyBlock[0], /flex:\s*0\s+0\s+auto/)
+/*
+  /contacts five equal page-action cards (showroom secondary + messengers):
+  shared 88px height, left grid axes 20+20+14, NOT centered auto cluster.
+*/
 assert.match(
   css,
-  /\.contact-action--density-page\.contact-action--channel \.contact-action-icon:not\(\.contact-action-icon--bubble\)\s*\{[^}]*(?:width|inline-size):\s*18px/
+  /\.contacts-page\s*\{[^}]*--contacts-page-action-height:\s*88px/
+)
+assert.match(
+  css,
+  /\.contacts-page\s*\{[^}]*--contacts-page-action-pad-inline:\s*1\.25rem/
+)
+assert.match(
+  css,
+  /\.contacts-page\s*\{[^}]*--contacts-page-action-gap:\s*0\.875rem/
+)
+const equalPageAction = css.match(
+  /\.contacts-page-col--showroom\s+\.contacts-page-row--secondary\s+\.contact-action\.contact-action--density-page\.contact-action--layout-leading,\s*\.contacts-page\s+\.contact-action\.contact-action--density-page\.contact-action--channel\.contact-action--layout-leading\s*\{[^}]*\}/
+)
+assert.ok(equalPageAction, "equal page-action geometry rule required")
+assert.match(equalPageAction[0], /display:\s*grid/)
+assert.match(
+  equalPageAction[0],
+  /grid-template-columns:\s*var\(\s*--contacts-page-action-icon\s*\)\s+minmax\(\s*0\s*,\s*1fr\s*\)/
+)
+assert.match(
+  equalPageAction[0],
+  /min-height:\s*var\(\s*--contacts-page-action-height\s*\)/
+)
+assert.match(equalPageAction[0], /align-items:\s*center/)
+assert.doesNotMatch(equalPageAction[0], /justify-content:\s*center/)
+assert.doesNotMatch(equalPageAction[0], /grid-template-columns:\s*20px\s+132px/)
+assert.doesNotMatch(css, /grid-template-columns:\s*20px\s+132px/)
+assert.match(
+  css,
+  /\.contacts-page-col--showroom \.contacts-page-row--secondary \.contact-action-grid,\s*\.contacts-page-col--channels \.contacts-page-row--secondary \.contact-action-grid--channels\s*\{[^}]*min-height:\s*var\(\s*--contacts-page-action-height\s*\)/
+)
+assert.match(
+  css,
+  /\.contacts-page-col--showroom \.contacts-page-row--secondary \.contact-action-grid,\s*\.contacts-page-col--channels \.contacts-page-row--secondary \.contact-action-grid--channels\s*\{[^}]*gap:\s*var\(\s*--contacts-page-action-row-gap\s*\)/
 )
 assert.ok(
   whatsappFr > telegramFr && telegramFr > maxFr,
