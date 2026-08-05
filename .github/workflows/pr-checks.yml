@@ -96,7 +96,8 @@ jobs:
   backend-fidelity:
     name: Backend fidelity tests
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # Raised from 30: install-level retry may sleep up to 600s cumulative on 429.
+    timeout-minutes: 45
     defaults:
       run:
         working-directory: apps/backend
@@ -112,12 +113,24 @@ jobs:
           corepack prepare yarn@4.17.1 --activate
           yarn --version
           test "$(yarn --version)" = "4.17.1"
+      # Yarn Berry global cache (enableGlobalCache=true → ~/.yarn/berry/cache).
+      # Explicit path avoids setup-node detecting Yarn 1 before Corepack activates Yarn 4.
+      - name: Restore Yarn Berry cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.yarn/berry/cache
+          key: yarn-berry-backend-${{ runner.os }}-${{ runner.arch }}-4.17.1-${{ hashFiles('apps/backend/yarn.lock') }}
+          restore-keys: |
+            yarn-berry-backend-${{ runner.os }}-${{ runner.arch }}-4.17.1-
       # Prefer npmjs over Yarn's default registry CDN - Backend fidelity hit
       # sustained HTTP 429 during PR #167 recovery (attempts 1-3).
+      # Install-level bounded retry for residual registry 429 after Yarn httpRetry.
+      # Canonical command remains: yarn install --immutable
       - name: Install
+        working-directory: .
         env:
           YARN_NPM_REGISTRY_SERVER: https://registry.npmjs.org
-        run: yarn install --immutable
+        run: node scripts/release/yarn-install-network-resilient.cjs --cwd apps/backend
       - name: Run classification/cart/catalog fidelity
         run: |
           set -euo pipefail
@@ -163,6 +176,8 @@ jobs:
           node scripts/release/image-build-profile.fidelity.test.cjs
           node scripts/release/scan-storefront-contamination.fidelity.test.cjs
           node scripts/release/backend-ci-registry.fidelity.test.cjs
+          node scripts/release/backend-ci-install-resilience.fidelity.test.cjs
+          node scripts/release/yarn-install-network-resilient.fidelity.test.cjs
           node scripts/release/cutover-production-candidate.fidelity.test.cjs
           # Private production-candidate execute path: locking, atomic pin
           # writes, keeper-based recreate, health gates, rollback and traps.
