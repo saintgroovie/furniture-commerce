@@ -10,7 +10,8 @@
 #
 # Verdicts (stderr + WR_DISCOVERY_VERDICT):
 #   DISCOVERY_OK | DISCOVERY_ZERO_MATCH | DISCOVERY_MULTIPLE_MATCH
-#   DIGEST_MISMATCH | OWNER_MISMATCH | MEDIA_MOUNT_MISSING | MEDIA_VOLUME_MISMATCH
+#   DIGEST_MISMATCH | EXPECTED_STATE_UNREADABLE | OWNER_MISMATCH
+#   MEDIA_MOUNT_MISSING | MEDIA_VOLUME_MISMATCH
 #   CONTAINER_UNHEALTHY | ROLE_MISMATCH | NAME_EXCLUDED | CONTAINER_MISSING
 
 : "${WOODRIGHT_ACTIVE_OWNER:=/srv/woodright/runtime-ownership/ACTIVE_OWNER.json}"
@@ -51,19 +52,40 @@ print(d.get(sys.argv[2]) or "")
 PY
 }
 
+# Fail closed when EXPECTED_RELEASE exists but is not readable (e.g. root:root 0600
+# under an unprivileged caller). Must not look like digest drift.
+wr_assert_expected_release_readable() {
+  local f="${1:-${WOODRIGHT_EXPECTED_RELEASE:-}}"
+  if [[ -z "$f" ]]; then
+    wr_discovery_set_verdict DIGEST_MISMATCH "expected_git_sha_missing"
+    return 1
+  fi
+  if [[ ! -e "$f" ]]; then
+    wr_discovery_set_verdict DIGEST_MISMATCH "expected_git_sha_missing"
+    return 1
+  fi
+  if [[ ! -f "$f" ]]; then
+    wr_discovery_set_verdict EXPECTED_STATE_UNREADABLE "expected_release_not_a_file"
+    return 1
+  fi
+  if [[ ! -r "$f" ]]; then
+    wr_discovery_set_verdict EXPECTED_STATE_UNREADABLE "permission_denied"
+    return 1
+  fi
+  return 0
+}
+
 # Normalize expected application Git SHA from EXPECTED_RELEASE into
 # WR_EXPECTED_APPLICATION_SOURCE_SHA (logical field expected_application_source_sha).
 # Accepts production cutover key application_source_sha and/or legacy/public_demo
 # approved_git_sha. Never invents SHA from checkout, tags, or origin/main.
-# Returns 0 on success; on failure sets DIGEST_MISMATCH detail token and returns 1.
+# Returns 0 on success; on failure sets DIGEST_MISMATCH or EXPECTED_STATE_UNREADABLE
+# detail token and returns 1.
 wr_resolve_expected_application_source_sha() {
   local f="${1:-${WOODRIGHT_EXPECTED_RELEASE:-}}"
   local app approved
   WR_EXPECTED_APPLICATION_SOURCE_SHA=""
-  if [[ -z "$f" || ! -f "$f" ]]; then
-    wr_discovery_set_verdict DIGEST_MISMATCH "expected_git_sha_missing"
-    return 1
-  fi
+  wr_assert_expected_release_readable "$f" || return 1
   app=$(wr_json_get "$f" application_source_sha)
   approved=$(wr_json_get "$f" approved_git_sha)
   if [[ -n "$app" && -n "$approved" && "$app" != "$approved" ]]; then
@@ -180,15 +202,11 @@ wr_validate_backend_candidate() {
         wr_discovery_set_verdict DIGEST_MISMATCH "pinned_git_sha_invalid"
         return 1
       fi
-    elif [[ -f "$WOODRIGHT_EXPECTED_RELEASE" ]]; then
+    else
+      wr_assert_expected_release_readable "$WOODRIGHT_EXPECTED_RELEASE" || return 1
       expected_digest=$(wr_json_get "$WOODRIGHT_EXPECTED_RELEASE" backend_digest)
       wr_resolve_expected_application_source_sha "$WOODRIGHT_EXPECTED_RELEASE" || return 1
       expected_sha="$WR_EXPECTED_APPLICATION_SOURCE_SHA"
-    else
-      expected_digest=""
-      expected_sha=""
-      wr_discovery_set_verdict DIGEST_MISMATCH "expected_git_sha_missing"
-      return 1
     fi
     if [[ -z "$expected_digest" || ! "$expected_digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
       wr_discovery_set_verdict DIGEST_MISMATCH "expected_backend_digest_missing"
@@ -278,10 +296,7 @@ wr_validate_storefront_candidate() {
     fi
   fi
   if [[ "${WOODRIGHT_REQUIRE_EXPECTED_DIGEST}" == "1" ]]; then
-    if [[ ! -f "$WOODRIGHT_EXPECTED_RELEASE" ]]; then
-      wr_discovery_set_verdict DIGEST_MISMATCH "expected_git_sha_missing"
-      return 1
-    fi
+    wr_assert_expected_release_readable "$WOODRIGHT_EXPECTED_RELEASE" || return 1
     expected_digest=$(wr_json_get "$WOODRIGHT_EXPECTED_RELEASE" storefront_digest)
     wr_resolve_expected_application_source_sha "$WOODRIGHT_EXPECTED_RELEASE" || return 1
     expected_sha="$WR_EXPECTED_APPLICATION_SOURCE_SHA"

@@ -80,6 +80,29 @@ resolve_case missing 1 expected_git_sha_missing storefront_digest "$DIG_SF"
 resolve_case empty_app 1 expected_git_sha_missing application_source_sha ""
 resolve_case malformed 1 expected_git_sha_malformed application_source_sha "not-a-sha"
 
+# Unreadable EXPECTED must be permission/state, not digest drift (non-root only:
+# root can still read mode 000 files via capability bypass of DAC).
+if [[ "$(id -u)" -eq 0 ]]; then
+  pass "resolve unreadable skipped under root (DAC bypass)"
+else
+  f="$TMP/exp-unreadable.json"
+  write_expected "$f" application_source_sha "$SHA_OK" storefront_digest "$DIG_SF" backend_digest "$DIG_BE" >/dev/null
+  chmod 000 "$f"
+  set +e
+  wr_resolve_expected_application_source_sha "$f" >/dev/null 2>"$TMP/resolve-unreadable.err"
+  rc=$?
+  set -e
+  out="$(cat "$TMP/resolve-unreadable.err" 2>/dev/null || true)"
+  chmod u+rw "$f" || true
+  if [[ "$rc" -eq 1 ]] && echo "$out" | grep -q "EXPECTED_STATE_UNREADABLE" \
+    && echo "$out" | grep -q "detail=permission_denied" \
+    && ! echo "$out" | grep -q "DIGEST_MISMATCH"; then
+    pass "resolve unreadable → EXPECTED_STATE_UNREADABLE permission_denied"
+  else
+    fail "resolve unreadable want EXPECTED_STATE_UNREADABLE permission_denied out=$out rc=$rc"
+  fi
+fi
+
 # --- docker shim for validate_* ---
 BIN="$TMP/bin"
 mkdir -p "$BIN"
