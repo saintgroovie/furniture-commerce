@@ -15,6 +15,10 @@ function channelIcon(id: "telegram" | "whatsapp" | "max", size: 14 | 16) {
   return <ContactMessageIcon size={size} />
 }
 
+/** Dropdown cluster uses a filled 16px icon slot (visible icon→label gap). */
+const DROPDOWN_MESSENGER_ICON = 16 as const
+const PAGE_MESSENGER_ICON = 16 as const
+
 function channelAria(id: "telegram" | "whatsapp" | "max"): string {
   if (id === "telegram") return contactsCopy.messengerTelegramAria
   if (id === "whatsapp") return contactsCopy.messengerWhatsappAria
@@ -36,7 +40,8 @@ export function ContactMessengerActions({
   density = "page",
 }: MessengerGridProps) {
   const channels = showroomContacts.messengers
-  const iconSize = density === "dropdown" ? 14 : 16
+  const iconSize =
+    density === "dropdown" ? DROPDOWN_MESSENGER_ICON : PAGE_MESSENGER_ICON
 
   if (density === "dropdown") {
     return (

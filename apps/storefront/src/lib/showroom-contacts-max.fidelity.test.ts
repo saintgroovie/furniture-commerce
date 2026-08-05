@@ -123,27 +123,314 @@ assert.match(sot, /MESSENGER_E164_DIGITS\s*=\s*"79672587144"/)
 assert.match(messengers, /density === "dropdown"/)
 assert.match(messengers, /density="page"|density === "page"|density = "page"/)
 
-// Dropdown CSS keeps equal trio (no 1-col stack for messengers)
+// Dropdown messenger row: content-weighted columns (not equal 1fr trio on desktop)
 const css = read("app/globals.css")
-assert.match(css, /\.contact-dropdown-channel-trio\s*\{[\s\S]*?repeat\(3,\s*minmax\(0,\s*1fr\)\)/)
-assert.match(css, /Keep messenger trio as one equal row/)
-// Layout polish: center icon+label / icon+kicker clusters (not left-flush empty cells)
+const trioBlock = css.match(/\.contact-dropdown-channel-trio\s*\{[^}]*\}/)
+assert.ok(trioBlock, "dropdown channel trio rule required")
+assert.doesNotMatch(
+  trioBlock[0],
+  /grid-template-columns:\s*repeat\(\s*3\s*,\s*minmax\(\s*0\s*,\s*1fr\s*\)\s*\)/
+)
+const trioCols = trioBlock[0].match(
+  /grid-template-columns:\s*minmax\(\s*0\s*,\s*([\d.]+)fr\s*\)\s+minmax\(\s*0\s*,\s*([\d.]+)fr\s*\)\s+minmax\(\s*0\s*,\s*([\d.]+)fr\s*\)/
+)
+assert.ok(trioCols, "desktop trio must declare three weighted minmax(0, Nfr) tracks")
+const telegramFr = Number(trioCols[1])
+const whatsappFr = Number(trioCols[2])
+const maxFr = Number(trioCols[3])
+assert.ok(whatsappFr > telegramFr, "WhatsApp grid weight must exceed Telegram")
+assert.ok(maxFr < telegramFr, "MAX grid weight must be below Telegram")
+assert.ok(
+  whatsappFr / telegramFr >= 1.1 && whatsappFr / telegramFr <= 1.18,
+  `WhatsApp should be ~10–18% wider than Telegram (got ${whatsappFr}/${telegramFr})`
+)
+assert.ok(
+  maxFr / telegramFr >= 0.75 && maxFr / telegramFr <= 0.82,
+  `MAX should be ~18–25% narrower than Telegram (got ${maxFr}/${telegramFr})`
+)
+// Page `/contacts` messenger grid stays equal three columns
 assert.match(
   css,
-  /\.contacts-nav-dropdown-menu a\.contact-action\.contact-action--density-dropdown\.contact-dropdown-channel-link,\s*\.showroom-contacts--contacts\s+a\.contact-action\.contact-action--density-dropdown\.contact-dropdown-channel-link\s*\{[^}]*justify-content:\s*center/
+  /\.contact-action-grid--channels\s*\{[\s\S]*?grid-template-columns:\s*repeat\(\s*3\s*,\s*minmax\(\s*0\s*,\s*1fr\s*\)\s*\)/
+)
+// Phone pair outer grid: equal two columns
+assert.match(
+  css,
+  /\.contact-action-grid--pair\s*\{[\s\S]*?grid-template-columns:\s*repeat\(\s*2\s*,\s*minmax\(\s*0\s*,\s*1fr\s*\)\s*\)/
+)
+
+// Dropdown: compact inline-flex cluster, 16px icon, CSS gap ≤7px (no fixed text column)
+const dropLinkBlock = css.match(
+  /\.contacts-nav-dropdown-menu a\.contact-action\.contact-action--density-dropdown\.contact-dropdown-channel-link,\s*\.showroom-contacts--contacts\s+a\.contact-action\.contact-action--density-dropdown\.contact-dropdown-channel-link\s*\{[^}]*\}/
+)
+assert.ok(dropLinkBlock, "dropdown channel link rule required")
+assert.match(dropLinkBlock[0], /display:\s*inline-flex/)
+assert.match(dropLinkBlock[0], /justify-content:\s*center/)
+assert.match(dropLinkBlock[0], /column-gap:\s*0\.4375rem/) // 7px (≤7px CSS gap band)
+assert.doesNotMatch(dropLinkBlock[0], /grid-template-columns:\s*18px\s+92px/)
+assert.doesNotMatch(dropLinkBlock[0], /grid-template-columns:\s*18px\s+max-content/)
+assert.doesNotMatch(css, /grid-template-columns:\s*18px\s+92px/)
+assert.match(
+  css,
+  /\.contact-dropdown-channel-link \.contact-action-line\s*\{[^}]*white-space:\s*nowrap/
+)
+const dropBodyBlock = css.match(
+  /\.contact-dropdown-channel-link \.contact-action-body,\s*\.contact-dropdown-channel-link \.contact-action-copy,\s*\.contact-dropdown-channel-link \.contact-action-copy--single\s*\{[^}]*\}/
+)
+assert.ok(dropBodyBlock, "dropdown channel body/copy rule required")
+assert.doesNotMatch(dropBodyBlock[0], /width:\s*100%/)
+assert.match(dropBodyBlock[0], /width:\s*auto/)
+assert.match(dropBodyBlock[0], /flex:\s*0\s+0\s+auto/)
+assert.match(dropBodyBlock[0], /text-align:\s*left/)
+assert.match(
+  css,
+  /\.contact-dropdown-channel-link \.contact-action-icon:not\(\.contact-action-icon--bubble\)\s*\{[^}]*(?:width|inline-size):\s*16px/
+)
+assert.match(
+  messengers,
+  /DROPDOWN_MESSENGER_ICON\s*=\s*16/
+)
+
+// Focus uses outline (bbox-stable) - no border-width bump on :focus
+assert.match(css, /\.contact-action:focus-visible\s*\{[^}]*outline:\s*2px/)
+assert.doesNotMatch(
+  css,
+  /\.contact-action(?:--density-page)?(?:\.contact-action--phone)?:focus(?:-visible)?\s*\{[^}]*border(?:-width)?:\s*2px/
+)
+
+/*
+  /contacts ALL page-action cards share one 64px left-axis contract
+  (showroom phone+map, channels primary phones, messengers).
+*/
+assert.match(
+  css,
+  /\.contacts-page\s*\{[^}]*--contacts-page-action-height:\s*64px/
 )
 assert.match(
   css,
-  /\.contact-action\.contact-action--density-page\.contact-action--channel\.contact-action--layout-leading\s*\{[^}]*justify-content:\s*center/
+  /\.contacts-page\s*\{[^}]*--contacts-page-action-pad-inline:\s*1\.125rem/
 )
-// Contacts dropdown shell: ~580–610px so equal trio fits full WhatsApp
 assert.match(
   css,
-  /\.header-info-dropdown--contacts\s*\{[^}]*(?:^|[;{\n])\s*width:\s*596px/
+  /\.contacts-page\s*\{[^}]*--contacts-page-action-pad-block:\s*0\.5rem/
+)
+assert.match(
+  css,
+  /\.contacts-page\s*\{[^}]*--contacts-page-action-icon:\s*18px/
+)
+assert.match(
+  css,
+  /\.contacts-page\s*\{[^}]*--contacts-page-action-gap:\s*0\.75rem/
+)
+assert.match(
+  css,
+  /\.contacts-page\s*\{[^}]*--contacts-page-action-text-gap:\s*0\.125rem/
 )
 assert.doesNotMatch(
   css,
-  /\.header-info-dropdown--contacts\s*\{[^}]*(?:^|[;{\n])\s*width:\s*(?:368|400)px/
+  /\.contacts-page\s*\{[^}]*--contacts-page-action-height:\s*(?:72|88)px/
+)
+const equalPageAction = css.match(
+  /\.contacts-page \.contact-action\.contact-action--density-page\.contact-action--layout-leading\s*\{[^}]*\}/
+)
+assert.ok(equalPageAction, "equal page-action geometry rule required")
+assert.match(equalPageAction[0], /display:\s*grid/)
+assert.match(
+  equalPageAction[0],
+  /grid-template-columns:\s*var\(\s*--contacts-page-action-icon\s*\)\s+minmax\(\s*0\s*,\s*1fr\s*\)/
+)
+assert.match(
+  equalPageAction[0],
+  /min-height:\s*var\(\s*--contacts-page-action-height\s*\)/
+)
+assert.match(
+  equalPageAction[0],
+  /(?:^|[;{\n])\s*height:\s*var\(\s*--contacts-page-action-height\s*\)/
+)
+assert.match(equalPageAction[0], /align-items:\s*center/)
+assert.doesNotMatch(equalPageAction[0], /justify-content:\s*center/)
+assert.doesNotMatch(equalPageAction[0], /grid-template-columns:\s*20px\s+132px/)
+assert.doesNotMatch(css, /grid-template-columns:\s*20px\s+132px/)
+assert.doesNotMatch(
+  equalPageAction[0],
+  /min-height:\s*(?:88px|4\.375rem|4rem)/
+)
+assert.match(
+  css,
+  /\.contacts-page \.contact-action-grid--page,\s*\.contacts-page \.contact-action-grid--channels\s*\{[^}]*min-height:\s*var\(\s*--contacts-page-action-height\s*\)/
+)
+assert.match(
+  css,
+  /\.contacts-page \.contact-action-grid--page,\s*\.contacts-page \.contact-action-grid--channels\s*\{[^}]*gap:\s*var\(\s*--contacts-page-action-row-gap\s*\)/
+)
+assert.ok(
+  whatsappFr > telegramFr && telegramFr > maxFr,
+  "expected WhatsApp > Telegram > MAX grid weights"
+)
+
+// Compact shell: exact owner desktop width 368px (PR #153 baseline) - never 500/596
+const contactsShellBlocks = [
+  ...css.matchAll(/\.header-info-dropdown--contacts\s*\{[^}]*\}/g),
+].map((m) => m[0])
+assert.ok(contactsShellBlocks.length >= 1, "contacts shell rule required")
+const desktopShell = contactsShellBlocks.find((block) =>
+  /(?:^|[;{\n])\s*width:\s*368px/.test(block)
+)
+assert.ok(desktopShell, "desktop contacts shell must declare width: 368px")
+assert.doesNotMatch(desktopShell, /(?:^|[;{\n])\s*width:\s*100%/)
+assert.doesNotMatch(desktopShell, /(?:^|[;{\n])\s*width:\s*min\(\s*100%/)
+assert.doesNotMatch(desktopShell, /(?:^|[;{\n])\s*width:\s*max-content/)
+assert.doesNotMatch(desktopShell, /(?:^|[;{\n])\s*width:\s*500px/)
+assert.doesNotMatch(desktopShell, /(?:^|[;{\n])\s*width:\s*596px/)
+assert.match(desktopShell, /max-width:\s*calc\(\s*100vw\s*-\s*24px\s*\)/)
+assert.doesNotMatch(desktopShell, /min-width:\s*(?:500|596)px/)
+// No later contacts-shell override to percentage / 500 / 596
+for (const block of contactsShellBlocks) {
+  assert.doesNotMatch(block, /(?:^|[;{\n])\s*width:\s*min\(\s*100%/)
+  assert.doesNotMatch(block, /(?:^|[;{\n])\s*width:\s*(?:500|596)px/)
+}
+// Explicit lock: cannot silently reintroduce 500px shell
+assert.match(
+  css,
+  /\.header-info-dropdown--contacts\s*\{[^}]*(?:^|[;{\n])\s*width:\s*368px/
+)
+assert.doesNotMatch(
+  css,
+  /\.header-info-dropdown--contacts\s*\{[^}]*(?:^|[;{\n])\s*width:\s*(?:368|400|500|596)px[^}]*width:\s*500px/
+)
+// Weighted trio must not be replaced by equal 1fr×3
+assert.doesNotMatch(
+  css,
+  /\.contact-dropdown-channel-trio\s*\{[^}]*grid-template-columns:\s*repeat\(\s*3\s*,\s*minmax\(\s*0\s*,\s*1fr\s*\)\s*\)/
+)
+assert.doesNotMatch(
+  css,
+  /\.header-info-dropdown--contacts\s*\{[^}]*(?:^|[;{\n])\s*width:\s*(?:400|500|596)px/
+)
+// Grid items cannot inflate shell
+assert.match(
+  css,
+  /\.contact-dropdown-channel-trio \.contact-action-grid-item\s*\{[^}]*min-width:\s*0/
+)
+assert.match(css, /\.contact-dropdown-channel-trio\s*\{[^}]*width:\s*100%/)
+assert.match(css, /\.contact-dropdown-channel-trio\s*\{[^}]*min-width:\s*0/)
+// Ban contacts shell 500/596 specifically (not unrelated page clamps)
+assert.doesNotMatch(
+  css,
+  /\.header-info-dropdown--contacts[^{]*\{[^}]*(?:^|[;{\n])\s*width:\s*(?:500|596)px/
+)
+
+// Vertical rhythm lock from baseline 9b650856 (shell height ~273)
+assert.match(
+  css,
+  /\.showroom-contacts--showroom,\s*\.showroom-contacts--contacts\s*\{[^}]*--hc-pad:\s*1\.3125rem/
+)
+assert.match(
+  css,
+  /\.showroom-contacts--showroom,\s*\.showroom-contacts--contacts\s*\{[^}]*--hc-gap-section:\s*1\.0625rem/
+)
+assert.match(
+  css,
+  /\.showroom-contacts--showroom,\s*\.showroom-contacts--contacts\s*\{[^}]*--hc-gap-after-divider:\s*0\.875rem/
+)
+assert.match(
+  css,
+  /\.showroom-contacts--showroom \.showroom-contacts-title,\s*\.showroom-contacts--contacts \.showroom-contacts-title\s*\{[^}]*font-size:\s*1\.1875rem/
+)
+assert.doesNotMatch(
+  css,
+  /\.showroom-contacts--contacts \.showroom-contacts-title\s*\{[^}]*font-size:\s*1\.5rem/
+)
+assert.match(
+  css,
+  /\.contacts-nav-dropdown-menu a\.contact-action\.contact-action--density-dropdown,\s*\.contacts-nav-dropdown-menu button\.contact-action\.contact-action--density-dropdown\s*\{[^}]*min-height:\s*3\.375rem/
+)
+assert.match(
+  css,
+  /\.contacts-nav-dropdown-menu a\.contact-action\.contact-action--density-dropdown\.contact-dropdown-channel-link[\s\S]*?\{[^}]*min-height:\s*2\.75rem[^}]*height:\s*2\.75rem/
+)
+
+// /contacts page: shared H2 → first-content spacing (single source, not H2 shrink)
+const stageBlock = css.match(/\.contacts-page-stage\s*\{[^}]*\}/)
+assert.ok(stageBlock, "contacts-page-stage rule required")
+assert.match(
+  stageBlock[0],
+  /--contacts-heading-to-content-gap:\s*1\.5rem/
+) // 24px desktop
+assert.match(
+  stageBlock[0],
+  /--contacts-stage-row-gap:\s*var\(\s*--contacts-heading-to-content-gap\s*\)/
+)
+assert.match(stageBlock[0], /row-gap:\s*var\(\s*--contacts-stage-row-gap\s*\)/)
+assert.match(stageBlock[0], /margin-top:\s*2\.25rem/) // 36px intro → stage
+assert.doesNotMatch(stageBlock[0], /margin-top:\s*2rem;/)
+assert.doesNotMatch(stageBlock[0], /margin-top:\s*3\.125rem/)
+const titleBlock = css.match(/\.contacts-page-title\s*\{[^}]*\}/)
+assert.ok(titleBlock, "contacts-page-title rule required")
+assert.match(
+  titleBlock[0],
+  /font-size:\s*clamp\(\s*1\.6875rem\s*,\s*1\.9vw\s*,\s*1\.9375rem\s*\)/
+)
+assert.doesNotMatch(titleBlock[0], /font-size:\s*clamp\(\s*1\.8125rem/)
+const introBlock = css.match(/\.contacts-page-intro\s*\{[^}]*\}/)
+assert.ok(introBlock, "contacts-page-intro rule required")
+assert.match(introBlock[0], /margin:\s*1rem\s+0\s+0/)
+assert.doesNotMatch(introBlock[0], /margin:\s*0\.75rem\s+0\s+0/)
+assert.match(
+  css,
+  /main:has\(\.contacts-page\)\.page-section\s*\{[^}]*padding-top:\s*1\.25rem/
+)
+// /contacts CTA card: tighter inset, lighter title, slightly smaller CTA button
+const ctaBlock = css.match(/\.contacts-page-cta\s*\{[^}]*\}/)
+assert.ok(ctaBlock, "contacts-page-cta rule required")
+assert.match(ctaBlock[0], /--cta-pad-y:\s*1\.5rem/)
+assert.match(ctaBlock[0], /--cta-pad-x:\s*1\.5rem/)
+assert.match(ctaBlock[0], /--cta-gap-title-body:\s*0\.75rem/)
+assert.match(ctaBlock[0], /--cta-btn-height:\s*2\.75rem/)
+assert.doesNotMatch(ctaBlock[0], /--cta-pad-y:\s*2\.25rem/)
+const ctaTitle = css.match(/\.contacts-page-cta-title\s*\{[^}]*\}/)
+assert.ok(ctaTitle, "contacts-page-cta-title rule required")
+assert.match(ctaTitle[0], /font-weight:\s*500/)
+assert.match(ctaTitle[0], /font-size:\s*1\.3125rem/)
+assert.doesNotMatch(ctaTitle[0], /font-weight:\s*600/)
+assert.doesNotMatch(ctaTitle[0], /font-size:\s*1\.4375rem/)
+assert.match(
+  css,
+  /\.contacts-page-cta-actions \.contacts-page-cta-btn\s*\{[^}]*height:\s*var\(\s*--cta-btn-height\s*\)/
+)
+assert.match(
+  css,
+  /@supports\s*\(\s*grid-template-rows:\s*subgrid\s*\)\s*\{[\s\S]*?\.contacts-page-col\s*\{[^}]*row-gap:\s*var\(\s*--contacts-stage-row-gap\s*\)/
+)
+const phonesPrimary = css.match(/\.contacts-page-row--primary-phones\s*\{[^}]*\}/)
+assert.ok(phonesPrimary, "primary-phones row rule required")
+assert.match(phonesPrimary[0], /align-items:\s*center/)
+assert.match(phonesPrimary[0], /align-self:\s*stretch/)
+assert.doesNotMatch(phonesPrimary[0], /align-items:\s*start/)
+// Competing spacing on header/primary transition must be zeroed
+assert.match(
+  css,
+  /\.contacts-page-row--header\s*\{[^}]*margin:\s*0[^}]*padding:\s*0/
+)
+assert.match(
+  css,
+  /\.contacts-page-row--primary,\s*\.contacts-page-row--secondary\s*\{[^}]*margin:\s*0[^}]*padding:\s*0/
+)
+const colTitle = css.match(/\.contacts-page-col-title\s*\{[^}]*\}/)
+assert.ok(colTitle, "contacts-page-col-title rule required")
+assert.match(colTitle[0], /font-size:\s*1\.625rem/)
+assert.match(colTitle[0], /line-height:\s*1\.25/)
+assert.match(colTitle[0], /margin:\s*0/)
+const eyebrow = css.match(/\.contacts-page-eyebrow\s*\{[^}]*\}/)
+assert.ok(eyebrow, "contacts-page-eyebrow rule required")
+assert.match(eyebrow[0], /margin:\s*0\s+0\s+0\.5625rem/)
+assert.match(
+  css,
+  /@media\s*\(\s*max-width:\s*1100px\s*\)\s*\{[\s\S]*?\.contacts-page-col\s*\{[^}]*--contacts-heading-to-content-gap:\s*1\.25rem/
+) // 20px mobile
+assert.match(
+  css,
+  /@media\s*\(\s*max-width:\s*1100px\s*\)\s*\{[\s\S]*?\.contacts-page-col\s*\{[^}]*gap:\s*var\(\s*--contacts-heading-to-content-gap\s*\)/
 )
 
 // No duplicate hardcoded MAX URLs outside SoT (+ this fidelity test)

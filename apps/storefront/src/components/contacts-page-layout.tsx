@@ -12,7 +12,8 @@ import { showroomContacts } from "@/lib/showroom-contacts"
 /**
  * Full `/contacts` page composition - independent from header dropdown shells.
  * Stage uses a shared three-row contract (header / primary / secondary) so
- * left and right columns start action bands on the same horizontal.
+ * left and right columns share one heading → first-content gap and keep
+ * secondary action bands on the same horizontal.
  * Contact values come from `showroomContacts`; chrome copy from `contactsCopy`.
  */
 export function ContactsPageLayout() {
