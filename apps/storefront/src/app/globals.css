@@ -1885,7 +1885,7 @@ main:has(.contacts-page) {
   row-gap: var(--contacts-stage-row-gap);
   align-items: stretch;
   position: relative;
-  margin-top: 1.5rem; /* 24px intro → stage */
+  margin-top: 1.75rem; /* 28px intro → stage */
   width: 100%;
   min-width: 0;
 }
@@ -2118,7 +2118,7 @@ main:has(.contacts-page).page-section {
   .contacts-page-stage {
     display: flex;
     flex-direction: column;
-    margin-top: 1.25rem; /* 20px */
+    margin-top: 1.5rem; /* 24px */
     row-gap: 0;
     column-gap: 0;
   }
