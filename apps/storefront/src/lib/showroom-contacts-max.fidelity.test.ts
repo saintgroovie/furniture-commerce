@@ -369,9 +369,9 @@ const titleBlock = css.match(/\.contacts-page-title\s*\{[^}]*\}/)
 assert.ok(titleBlock, "contacts-page-title rule required")
 assert.match(
   titleBlock[0],
-  /font-size:\s*clamp\(\s*1\.8125rem\s*,\s*2vw\s*,\s*2\.0625rem\s*\)/
+  /font-size:\s*clamp\(\s*1\.6875rem\s*,\s*1\.9vw\s*,\s*1\.9375rem\s*\)/
 )
-assert.doesNotMatch(titleBlock[0], /font-size:\s*clamp\(\s*1\.9375rem/)
+assert.doesNotMatch(titleBlock[0], /font-size:\s*clamp\(\s*1\.8125rem/)
 const introBlock = css.match(/\.contacts-page-intro\s*\{[^}]*\}/)
 assert.ok(introBlock, "contacts-page-intro rule required")
 assert.match(introBlock[0], /margin:\s*0\.75rem\s+0\s+0/)

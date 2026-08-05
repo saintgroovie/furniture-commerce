@@ -1845,7 +1845,7 @@ main:has(.contacts-page) {
   margin: 0;
   max-width: 100%;
   min-width: 0;
-  font-size: clamp(1.8125rem, 2vw, 2.0625rem); /* ~29–33px */
+  font-size: clamp(1.6875rem, 1.9vw, 1.9375rem); /* ~27–31px */
   font-weight: 600;
   line-height: 1.2;
   letter-spacing: -0.01em;
@@ -2213,7 +2213,7 @@ main:has(.contacts-page).page-section {
   }
 
   .contacts-page-title {
-    font-size: 1.625rem; /* 26px */
+    font-size: 1.5rem; /* 24px */
   }
 
   .contacts-page,
