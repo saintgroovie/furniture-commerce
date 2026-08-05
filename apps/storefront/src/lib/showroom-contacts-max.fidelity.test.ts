@@ -199,12 +199,12 @@ assert.doesNotMatch(
 )
 
 /*
-  /contacts ALL page-action cards share one 72px left-axis contract
+  /contacts ALL page-action cards share one 64px left-axis contract
   (showroom phone+map, channels primary phones, messengers).
 */
 assert.match(
   css,
-  /\.contacts-page\s*\{[^}]*--contacts-page-action-height:\s*72px/
+  /\.contacts-page\s*\{[^}]*--contacts-page-action-height:\s*64px/
 )
 assert.match(
   css,
@@ -212,7 +212,7 @@ assert.match(
 )
 assert.match(
   css,
-  /\.contacts-page\s*\{[^}]*--contacts-page-action-pad-block:\s*0\.625rem/
+  /\.contacts-page\s*\{[^}]*--contacts-page-action-pad-block:\s*0\.5rem/
 )
 assert.match(
   css,
@@ -228,7 +228,7 @@ assert.match(
 )
 assert.doesNotMatch(
   css,
-  /\.contacts-page\s*\{[^}]*--contacts-page-action-height:\s*88px/
+  /\.contacts-page\s*\{[^}]*--contacts-page-action-height:\s*(?:72|88)px/
 )
 const equalPageAction = css.match(
   /\.contacts-page \.contact-action\.contact-action--density-page\.contact-action--layout-leading\s*\{[^}]*\}/

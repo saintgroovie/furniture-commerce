@@ -1326,7 +1326,7 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 }
 
 /*
-  Page messenger base (overridden on /contacts secondary to equal 72px contract).
+  Page messenger base (overridden on /contacts to equal page-action contract).
 */
 .contact-action.contact-action--density-page.contact-action--channel.contact-action--layout-leading {
   display: flex;
@@ -1823,8 +1823,8 @@ main:has(.contacts-page) {
   /* Optical air around the center axis - half left / half right of divider. */
   --contacts-center-gutter: clamp(4.5rem, 6vw, 5.75rem); /* ~72–92px */
   /* Equal /contacts page action cards (all density-page tiles, not dropdown). */
-  --contacts-page-action-height: 72px;
-  --contacts-page-action-pad-block: 0.625rem; /* 10px */
+  --contacts-page-action-height: 64px;
+  --contacts-page-action-pad-block: 0.5rem; /* 8px */
   --contacts-page-action-pad-inline: 1.125rem; /* 18px */
   --contacts-page-action-icon: 18px;
   --contacts-page-action-gap: 0.75rem; /* 12px → text starts at 48px */
@@ -1946,7 +1946,7 @@ main:has(.contacts-page) {
 /*
   Right primary phone pair: row stretches with the address track (keeps H2 →
   content gap + secondary subgrid sync). Contents center vertically so the
-  address block and the 72px phone pair share one horizontal mid axis.
+  address block and the phone pair share one horizontal mid axis.
 */
 .contacts-page-row--primary-phones {
   display: grid;
