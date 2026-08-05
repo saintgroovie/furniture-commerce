@@ -14,6 +14,7 @@
  *     --api-url https://api.woodright.ru \
  *     --admin-exposure private \
  *     --payment-mode manual_invoice \
+ *     --payment-decision-status pending|accepted_manual \
  *     --legal-manifest path/to/legal-manifest.json \
  *     --duplicate-handle-report path/to/duplicate-handle-report.json \
  *     --route-config path/to/route-config.json \
@@ -27,9 +28,14 @@
  *   not_ready                                   - technical/contract inputs failed validation
  *   public_launch_blocked                       - public_indexable requested, not owner/technically ready
  *   private_candidate_ready_for_deploy_approval  - private_noindex + all technical checks pass
- *   public_indexable_ready_for_cutover_approval  - reserved; unreachable until a public-ready payment
- *                                                  mode + approved legal content exist
+ *   public_indexable_ready_for_cutover_approval  - public_indexable + approved legal +
+ *                                                  manual_invoice + accepted_manual + technical evidence
  *
+ * Payment public-ready requires BOTH:
+ *   --payment-mode manual_invoice
+ *   --payment-decision-status accepted_manual
+ * Status-only flips or bare `accepted` do not unlock. No online PSP exists.
+ * This gate does not authorize deploy or DNS cutover.
  * `--environment` must be exactly "production" for this gate - "public_demo"
  * (or any other value) is rejected, never silently treated as production.
  *
@@ -47,6 +53,9 @@
  * runbook honest that setting one env var does not set the other.
  */
 const fs = require("fs")
+const {
+  evaluatePublicPaymentReady,
+} = require("./lib/payment-readiness.cjs")
 
 const DEMO_HOSTS = ["woodright-demo.ru", "www.woodright-demo.ru", "api.woodright-demo.ru"]
 const LOOPBACK_RE = /^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\]|::1)(:\d+)?$/i
@@ -164,6 +173,11 @@ function evaluate(args) {
       `--payment-mode must be "manual_invoice" (only supported mode today), got "${paymentMode}"`
     )
   }
+
+  const paymentDecisionStatus =
+    args["payment-decision-status"] === true
+      ? ""
+      : args["payment-decision-status"]
 
   for (const [key, flag] of EVIDENCE_FLAGS) {
     const p = args[key]
@@ -433,9 +447,15 @@ function evaluate(args) {
     if (!allLegalApproved) {
       errors.push("public_indexable requires every legal page to be approved")
     }
-    errors.push(
-      'public_indexable requires an owner-confirmed public-ready payment mode - "manual_invoice" is not public-ready yet'
-    )
+    const paymentReady = evaluatePublicPaymentReady({
+      paymentMode,
+      paymentDecisionStatus,
+    })
+    if (!paymentReady.ready) {
+      errors.push(
+        `public_indexable requires owner-attested public-ready payment (${paymentReady.reason})`
+      )
+    }
   }
 
   const hasFatal = errors.length > 0
@@ -613,10 +633,57 @@ function runSelfTest() {
   }
 
   {
-    const r = evaluate({ ...baseArgs, "launch-mode": "public_indexable", "legal-manifest": approvedLegal })
+    const r = evaluate({
+      ...baseArgs,
+      "launch-mode": "public_indexable",
+      "legal-manifest": approvedLegal,
+      "payment-decision-status": "pending",
+    })
     cases.push([
-      "public_indexable + approved legal, but no public-ready payment mode -> still blocked",
+      "public_indexable + approved legal + pending payment decision -> still blocked",
       r.ok === false && r.status === "public_launch_blocked",
+    ])
+  }
+
+  {
+    const r = evaluate({
+      ...baseArgs,
+      "launch-mode": "public_indexable",
+      "legal-manifest": approvedLegal,
+      "payment-decision-status": "accepted",
+    })
+    cases.push([
+      "public_indexable + bare accepted (not accepted_manual) -> blocked",
+      r.ok === false && r.status === "public_launch_blocked",
+    ])
+  }
+
+  {
+    const r = evaluate({
+      ...baseArgs,
+      "launch-mode": "public_indexable",
+      "legal-manifest": approvedLegal,
+      "payment-decision-status": "accepted_manual",
+      "spf-a-accepted": true,
+    })
+    cases.push([
+      "public_indexable + approved legal + accepted_manual -> cutover approval token",
+      r.ok === true && r.status === "public_indexable_ready_for_cutover_approval",
+      r.errors,
+    ])
+  }
+
+  {
+    const r = evaluate({
+      ...baseArgs,
+      "launch-mode": "private_noindex",
+      "legal-manifest": draftLegal,
+      "payment-decision-status": "pending",
+    })
+    cases.push([
+      "private_noindex tolerates pending payment decision",
+      r.ok === true && r.status === "private_candidate_ready_for_deploy_approval",
+      r.errors,
     ])
   }
 

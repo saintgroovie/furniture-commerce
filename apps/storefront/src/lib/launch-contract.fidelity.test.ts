@@ -141,8 +141,8 @@ assert.equal(
 }
 
 {
-  // public_indexable requires approved legal + a public-ready payment mode -
-  // neither exists yet, so this must fail-closed with both errors.
+  // public_indexable requires approved legal + owner-attested payment
+  // (manual_invoice + accepted_manual). Draft + pending must fail-closed.
   const result = validateLaunchContract({
     launchMode: "public_indexable",
     siteUrl: "https://woodright.ru",
@@ -150,10 +150,68 @@ assert.equal(
     adminExposure: "private",
     paymentMode: "manual_invoice",
     legalContentStatus: "draft",
+    paymentDecisionStatus: "pending",
   })
   assert.equal(result.ok, false)
   assert.ok(result.errors.some((e) => /legalContentStatus/.test(e)))
   assert.ok(result.errors.some((e) => /paymentMode/.test(e)))
+}
+
+{
+  const result = validateLaunchContract({
+    launchMode: "public_indexable",
+    siteUrl: "https://woodright.ru",
+    apiUrl: "https://api.woodright.ru",
+    adminExposure: "private",
+    paymentMode: "manual_invoice",
+    legalContentStatus: "approved",
+    paymentDecisionStatus: "accepted_manual",
+  })
+  assert.equal(result.ok, true, result.errors.join("; "))
+}
+
+{
+  const result = validateLaunchContract({
+    launchMode: "public_indexable",
+    siteUrl: "https://woodright.ru",
+    apiUrl: "https://api.woodright.ru",
+    adminExposure: "private",
+    paymentMode: "manual_invoice",
+    legalContentStatus: "approved",
+    paymentDecisionStatus: "accepted",
+  })
+  assert.equal(result.ok, false)
+  assert.ok(result.errors.some((e) => /paymentMode/.test(e)))
+}
+
+{
+  const result = validateLaunchContract({
+    launchMode: "private_noindex",
+    siteUrl: "https://woodright.ru",
+    apiUrl: "https://api.woodright.ru",
+    adminExposure: "private",
+    paymentMode: "manual_invoice",
+    legalContentStatus: "draft",
+    paymentDecisionStatus: "pending",
+  })
+  assert.equal(result.ok, true, result.errors.join("; "))
+}
+
+{
+  const result = validateLaunchContract({
+    launchMode: "public_indexable",
+    siteUrl: "https://woodright.ru",
+    apiUrl: "https://api.woodright.ru",
+    adminExposure: "private",
+    paymentMode: "manual_invoice",
+    legalContentStatus: "approved",
+    paymentDecisionSignals: [
+      { value: "accepted_manual", source: "conf" },
+      { value: "pending", source: "cli" },
+    ],
+  })
+  assert.equal(result.ok, false)
+  assert.ok(result.errors.some((e) => /conflict/i.test(e)))
 }
 
 {

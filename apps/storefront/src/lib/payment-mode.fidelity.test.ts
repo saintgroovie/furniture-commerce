@@ -1,6 +1,6 @@
 /**
  * Guard: Woodright payment-mode contract (only manual_invoice exists;
- * pp_system_default is never a PSP; nothing is public-ready yet).
+ * pp_system_default is never a PSP; public-ready needs accepted_manual).
  *
  *   yarn dlx tsx src/lib/payment-mode.fidelity.test.ts
  */
@@ -44,10 +44,30 @@ assert.throws(
   /WOODRIGHT_PAYMENT_MODE is required/
 )
 
-// --- isPublicPaymentReady: no mode is public-ready today ---
-assert.equal(isPublicPaymentReady("manual_invoice"), false)
-for (const mode of SUPPORTED_PAYMENT_MODES) {
-  assert.equal(isPublicPaymentReady(mode), false, `${mode} must not be public-ready yet`)
-}
+// --- isPublicPaymentReady: mode alone never unlocks ---
+assert.equal(
+  isPublicPaymentReady({ paymentMode: "manual_invoice" }),
+  false,
+  "missing decision must not be public-ready"
+)
+assert.equal(
+  isPublicPaymentReady({ paymentMode: "manual_invoice", paymentDecisionStatus: "pending" }),
+  false
+)
+assert.equal(
+  isPublicPaymentReady({
+    paymentMode: "manual_invoice",
+    paymentDecisionStatus: "accepted_manual",
+  }),
+  true
+)
+assert.equal(
+  isPublicPaymentReady({
+    paymentMode: "manual_invoice",
+    paymentDecisionStatus: "accepted",
+  }),
+  false,
+  "bare accepted must not unlock"
+)
 
 console.log("payment-mode.fidelity: ok")

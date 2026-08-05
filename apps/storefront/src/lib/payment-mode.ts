@@ -4,7 +4,7 @@
  * Only `manual_invoice` exists today: the order completes without an online
  * PSP charge (`pp_system_default` no-op payment session required by Medusa
  * checkout - see `apps/storefront/src/lib/api/checkout.ts`), and a manager
- * sends a payment link to the buyer afterwards
+ * sends a payment link / invoice details to the buyer afterwards
  * (`apps/backend/src/api/admin/payment-links`).
  *
  * `pp_system_default` is checkout plumbing, never a PSP name - this module
@@ -20,13 +20,31 @@
  * manager sends a payment link), different env var per app. Setting one
  * does not set the other; see the mapping note in
  * `scripts/release/check-public-launch-readiness.cjs`.
+ *
+ * Public-ready gate: `payment-readiness.ts` - requires owner
+ * `WOODRIGHT_PAYMENT_DECISION_STATUS=accepted_manual` in addition to
+ * `manual_invoice`. Status flip alone without this mode does not unlock.
  */
 import {
   isProductionLikeRuntime,
   type PaymentMode,
 } from "@/lib/launch-contract"
+import {
+  evaluatePublicPaymentReady,
+  isPublicPaymentReady as isPublicPaymentReadyFromDecision,
+  type PublicPaymentReadyInput,
+  type PublicPaymentReadyResult,
+} from "@/lib/payment-readiness"
 
 export type { PaymentMode }
+export type { PublicPaymentReadyInput, PublicPaymentReadyResult }
+export {
+  evaluatePublicPaymentReady,
+  parsePaymentDecisionStatus,
+  resolvePaymentDecisionSignals,
+  PUBLIC_READY_PAYMENT_DECISION,
+  PUBLIC_READY_PAYMENT_MODE,
+} from "@/lib/payment-readiness"
 
 const SUPPORTED_MODES: readonly PaymentMode[] = ["manual_invoice"]
 
@@ -80,16 +98,12 @@ export function resolvePaymentMode(
 }
 
 /**
- * No current payment mode is public-ready. `manual_invoice` is acceptable
- * for `private_noindex` (private candidate, owner/QA traffic only) but must
- * not be treated as ready for `public_indexable` until the business owner
- * explicitly confirms the public payment story (PSP, invoicing entity,
- * refund flow). Keep in sync with
- * `@/lib/launch-contract`:`validateLaunchContract`'s inline duplicate check.
+ * Public payment readiness. Requires owner-attested `accepted_manual` plus
+ * `manual_invoice`. Does not read process.env - pass explicit decision.
+ * Keep in sync with `@/lib/launch-contract`:`validateLaunchContract`.
  */
-export function isPublicPaymentReady(mode: PaymentMode): boolean {
-  void mode
-  return false
+export function isPublicPaymentReady(input: PublicPaymentReadyInput): boolean {
+  return isPublicPaymentReadyFromDecision(input)
 }
 
 export function isSupportedPaymentMode(value: string): value is PaymentMode {
