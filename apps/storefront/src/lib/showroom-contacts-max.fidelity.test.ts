@@ -216,19 +216,35 @@ assert.doesNotMatch(
 
 /*
   /contacts five equal page-action cards (showroom secondary + messengers):
-  shared 88px height, left grid axes 20+20+14, NOT centered auto cluster.
+  shared 72px height, left grid axes 18+18+12, NOT centered auto cluster.
 */
 assert.match(
   css,
+  /\.contacts-page\s*\{[^}]*--contacts-page-action-height:\s*72px/
+)
+assert.match(
+  css,
+  /\.contacts-page\s*\{[^}]*--contacts-page-action-pad-inline:\s*1\.125rem/
+)
+assert.match(
+  css,
+  /\.contacts-page\s*\{[^}]*--contacts-page-action-pad-block:\s*0\.625rem/
+)
+assert.match(
+  css,
+  /\.contacts-page\s*\{[^}]*--contacts-page-action-icon:\s*18px/
+)
+assert.match(
+  css,
+  /\.contacts-page\s*\{[^}]*--contacts-page-action-gap:\s*0\.75rem/
+)
+assert.match(
+  css,
+  /\.contacts-page\s*\{[^}]*--contacts-page-action-text-gap:\s*0\.125rem/
+)
+assert.doesNotMatch(
+  css,
   /\.contacts-page\s*\{[^}]*--contacts-page-action-height:\s*88px/
-)
-assert.match(
-  css,
-  /\.contacts-page\s*\{[^}]*--contacts-page-action-pad-inline:\s*1\.25rem/
-)
-assert.match(
-  css,
-  /\.contacts-page\s*\{[^}]*--contacts-page-action-gap:\s*0\.875rem/
 )
 const equalPageAction = css.match(
   /\.contacts-page-col--showroom\s+\.contacts-page-row--secondary\s+\.contact-action\.contact-action--density-page\.contact-action--layout-leading,\s*\.contacts-page\s+\.contact-action\.contact-action--density-page\.contact-action--channel\.contact-action--layout-leading\s*\{[^}]*\}/
@@ -243,10 +259,18 @@ assert.match(
   equalPageAction[0],
   /min-height:\s*var\(\s*--contacts-page-action-height\s*\)/
 )
+assert.match(
+  equalPageAction[0],
+  /(?:^|[;{\n])\s*height:\s*var\(\s*--contacts-page-action-height\s*\)/
+)
 assert.match(equalPageAction[0], /align-items:\s*center/)
 assert.doesNotMatch(equalPageAction[0], /justify-content:\s*center/)
 assert.doesNotMatch(equalPageAction[0], /grid-template-columns:\s*20px\s+132px/)
 assert.doesNotMatch(css, /grid-template-columns:\s*20px\s+132px/)
+assert.doesNotMatch(
+  equalPageAction[0],
+  /min-height:\s*(?:88px|4\.375rem|4rem)/
+)
 assert.match(
   css,
   /\.contacts-page-col--showroom \.contacts-page-row--secondary \.contact-action-grid,\s*\.contacts-page-col--channels \.contacts-page-row--secondary \.contact-action-grid--channels\s*\{[^}]*min-height:\s*var\(\s*--contacts-page-action-height\s*\)/
