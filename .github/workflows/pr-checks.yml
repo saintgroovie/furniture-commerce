@@ -112,7 +112,11 @@ jobs:
           corepack prepare yarn@4.17.1 --activate
           yarn --version
           test "$(yarn --version)" = "4.17.1"
+      # Prefer npmjs over Yarn's default registry CDN - Backend fidelity hit
+      # sustained HTTP 429 during PR #167 recovery (attempts 1-3).
       - name: Install
+        env:
+          YARN_NPM_REGISTRY_SERVER: https://registry.npmjs.org
         run: yarn install --immutable
       - name: Run classification/cart/catalog fidelity
         run: |
@@ -158,6 +162,7 @@ jobs:
           # Production-candidate image bake + cutover helper (2026-07-31 RCA fix)
           node scripts/release/image-build-profile.fidelity.test.cjs
           node scripts/release/scan-storefront-contamination.fidelity.test.cjs
+          node scripts/release/backend-ci-registry.fidelity.test.cjs
           node scripts/release/cutover-production-candidate.fidelity.test.cjs
           # Private production-candidate execute path: locking, atomic pin
           # writes, keeper-based recreate, health gates, rollback and traps.
