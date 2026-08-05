@@ -378,6 +378,22 @@ assert.match(
   css,
   /main:has\(\.contacts-page\)\.page-section\s*\{[^}]*padding-top:\s*1\.25rem/
 )
+// /contacts CTA card: tighter inset, lighter title, slightly smaller CTA button
+const ctaBlock = css.match(/\.contacts-page-cta\s*\{[^}]*\}/)
+assert.ok(ctaBlock, "contacts-page-cta rule required")
+assert.match(ctaBlock[0], /--cta-pad-y:\s*1\.5rem/)
+assert.match(ctaBlock[0], /--cta-pad-x:\s*1\.5rem/)
+assert.match(ctaBlock[0], /--cta-gap-title-body:\s*0\.75rem/)
+assert.match(ctaBlock[0], /--cta-btn-height:\s*2\.75rem/)
+assert.doesNotMatch(ctaBlock[0], /--cta-pad-y:\s*2\.25rem/)
+const ctaTitle = css.match(/\.contacts-page-cta-title\s*\{[^}]*\}/)
+assert.ok(ctaTitle, "contacts-page-cta-title rule required")
+assert.match(ctaTitle[0], /font-weight:\s*500/)
+assert.doesNotMatch(ctaTitle[0], /font-weight:\s*600/)
+assert.match(
+  css,
+  /\.contacts-page-cta-actions \.contacts-page-cta-btn\s*\{[^}]*height:\s*var\(\s*--cta-btn-height\s*\)/
+)
 assert.match(
   css,
   /@supports\s*\(\s*grid-template-rows:\s*subgrid\s*\)\s*\{[\s\S]*?\.contacts-page-col\s*\{[^}]*row-gap:\s*var\(\s*--contacts-stage-row-gap\s*\)/
