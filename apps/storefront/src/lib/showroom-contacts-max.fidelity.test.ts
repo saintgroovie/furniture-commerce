@@ -368,12 +368,13 @@ const titleBlock = css.match(/\.contacts-page-title\s*\{[^}]*\}/)
 assert.ok(titleBlock, "contacts-page-title rule required")
 assert.match(
   titleBlock[0],
-  /font-size:\s*clamp\(\s*1\.9375rem\s*,\s*2\.2vw\s*,\s*2\.25rem\s*\)/
+  /font-size:\s*clamp\(\s*1\.8125rem\s*,\s*2vw\s*,\s*2\.0625rem\s*\)/
 )
-assert.doesNotMatch(titleBlock[0], /font-size:\s*clamp\(\s*2\.125rem/)
+assert.doesNotMatch(titleBlock[0], /font-size:\s*clamp\(\s*1\.9375rem/)
 const introBlock = css.match(/\.contacts-page-intro\s*\{[^}]*\}/)
 assert.ok(introBlock, "contacts-page-intro rule required")
-assert.match(introBlock[0], /margin:\s*1rem\s+0\s+0/)
+assert.match(introBlock[0], /margin:\s*0\.75rem\s+0\s+0/)
+assert.doesNotMatch(introBlock[0], /margin:\s*1rem\s+0\s+0/)
 assert.match(
   css,
   /main:has\(\.contacts-page\)\.page-section\s*\{[^}]*padding-top:\s*1\.25rem/

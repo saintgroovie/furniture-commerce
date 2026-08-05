@@ -1845,7 +1845,7 @@ main:has(.contacts-page) {
   margin: 0;
   max-width: 100%;
   min-width: 0;
-  font-size: clamp(1.9375rem, 2.2vw, 2.25rem); /* ~31–36px - slightly under prior 34–40 */
+  font-size: clamp(1.8125rem, 2vw, 2.0625rem); /* ~29–33px */
   font-weight: 600;
   line-height: 1.2;
   letter-spacing: -0.01em;
@@ -1854,7 +1854,7 @@ main:has(.contacts-page) {
 
 .contacts-page-intro {
   grid-column: 1 / span 7;
-  margin: 1rem 0 0; /* 16px H1 → intro */
+  margin: 0.75rem 0 0; /* 12px H1 → intro */
   max-width: 100%;
   min-width: 0;
   font-size: 1.0625rem; /* 17px */
@@ -2112,7 +2112,7 @@ main:has(.contacts-page).page-section {
   }
 
   .contacts-page-intro {
-    margin-top: 0.875rem; /* 14px */
+    margin-top: 0.625rem; /* 10px */
   }
 
   .contacts-page-stage {
@@ -2213,7 +2213,7 @@ main:has(.contacts-page).page-section {
   }
 
   .contacts-page-title {
-    font-size: 1.75rem; /* 28px */
+    font-size: 1.625rem; /* 26px */
   }
 
   .contacts-page,
