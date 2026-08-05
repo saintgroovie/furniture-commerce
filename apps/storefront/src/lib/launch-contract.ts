@@ -33,6 +33,7 @@ import {
   launchModeToIndexingMode,
   parseLaunchModeLenient,
 } from "./launch-mode"
+import { evaluatePublicPaymentReady } from "./payment-readiness"
 
 export type { LaunchMode }
 export {
@@ -192,6 +193,26 @@ export function isPublicDemoRuntime(
 }
 
 /**
+ * Exact public site runtime identity. Required (with explicit SEO/launch mode)
+ * before indexable SEO may engage. Distinct from private `production` /
+ * `production_candidate`.
+ *
+ * When both role and image build profile are non-empty, they must agree on
+ * `public_production` - conflicting identities fail closed.
+ */
+export function isPublicProductionRuntime(
+  role: string | undefined | null,
+  imageBuildProfile?: string | undefined | null
+): boolean {
+  const r = String(role ?? "").trim()
+  const p = String(imageBuildProfile ?? "").trim()
+  if (r && p) {
+    return r === "public_production" && p === "public_production"
+  }
+  return r === "public_production" || p === "public_production"
+}
+
+/**
  * Require an https, non-demo, non-loopback absolute URL for the public
  * Medusa API contract. `api.woodright.ru` is recommended but not enforced -
  * some private candidates legitimately proxy through another host.
@@ -221,7 +242,11 @@ export function assertProductionLikeApiUrl(raw: string | undefined | null): stri
 
 export function isProductionLikeRuntime(role: string | undefined | null): boolean {
   const value = String(role ?? "").trim()
-  return value === "production" || value === "production_candidate"
+  return (
+    value === "production" ||
+    value === "production_candidate" ||
+    value === "public_production"
+  )
 }
 
 export type ResolveLaunchModeEnv = {
@@ -283,6 +308,17 @@ export type LaunchContractInput = {
   adminExposure: AdminExposure
   paymentMode: PaymentMode
   legalContentStatus: LegalContentStatus
+  /**
+   * Owner payment decision (`WOODRIGHT_PAYMENT_DECISION_STATUS`).
+   * Required for public_indexable payment gate; ignored for private_noindex
+   * readiness (pending is acceptable while private).
+   */
+  paymentDecisionStatus?: string | null
+  /**
+   * Optional multi-source decision signals. When non-empty, overrides
+   * `paymentDecisionStatus` and requires consensus (see payment-readiness).
+   */
+  paymentDecisionSignals?: Array<{ value: string | null | undefined; source: string }>
 }
 
 export type LaunchContractValidation = {
@@ -335,13 +371,15 @@ export function validateLaunchContract(input: LaunchContractInput): LaunchContra
         `legalContentStatus: public_indexable requires "approved" legal content (got "${input.legalContentStatus}")`
       )
     }
-    // Keep in sync with payment-mode.ts:isPublicPaymentReady - manual_invoice
-    // is the only current mode and it is not public-ready until the owner
-    // confirms a public payment story.
-    if (input.paymentMode === "manual_invoice") {
-      errors.push(
-        'paymentMode: "manual_invoice" is not public-ready - owner confirmation required before public_indexable'
-      )
+    // Keep in sync with payment-readiness.ts - manual_invoice is public-ready
+    // only with owner-attested accepted_manual (not a status-only bypass).
+    const paymentReady = evaluatePublicPaymentReady({
+      paymentMode: input.paymentMode,
+      paymentDecisionStatus: input.paymentDecisionStatus,
+      paymentDecisionSignals: input.paymentDecisionSignals,
+    })
+    if (!paymentReady.ready) {
+      errors.push(`paymentMode: ${paymentReady.reason}`)
     }
   } else if (input.legalContentStatus !== "approved") {
     warnings.push(

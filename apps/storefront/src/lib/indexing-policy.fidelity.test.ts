@@ -23,6 +23,16 @@ function read(rel: string): string {
   return readFileSync(join(root, rel), "utf8")
 }
 
+for (const key of [
+  "WOODRIGHT_SEO_MODE",
+  "WOODRIGHT_LAUNCH_MODE",
+  "WOODRIGHT_INDEXING_MODE",
+  "WOODRIGHT_RUNTIME_ROLE",
+  "WOODRIGHT_IMAGE_BUILD_PROFILE",
+]) {
+  delete process.env[key]
+}
+
 // 1–2 fail-closed defaults
 assert.equal(resolveIndexingMode(undefined), "noindex")
 assert.equal(resolveIndexingMode(""), "noindex")
@@ -62,6 +72,7 @@ assert.doesNotMatch(body, /Allow:\s*\//)
 const bodyIndex = robotsTxtBody("index")
 assert.match(bodyIndex, /Allow:\s*\//)
 assert.doesNotMatch(bodyIndex, /Disallow:\s*\//)
+assert.match(bodyIndex, /Sitemap:\s*https:\/\/woodright\.ru\/sitemap\.xml/)
 
 assert.equal(X_ROBOTS_TAG_NOINDEX, "noindex, nofollow, noarchive")
 assert.equal(shouldEmitXRobotsTag(undefined, "production"), true)
@@ -82,11 +93,13 @@ assert.match(proxySrc, /X_ROBOTS_TAG_NOINDEX/)
 
 const robotsRoute = read("src/app/robots.ts")
 assert.match(robotsRoute, /disallow:\s*"\/"/)
-assert.doesNotMatch(robotsRoute, /sitemap:/i)
+assert.match(robotsRoute, /sitemap/)
 
 const sitemapRoute = read("src/app/sitemap.xml/route.ts")
 assert.match(sitemapRoute, /status:\s*404/)
+assert.match(sitemapRoute, /status:\s*200/)
 assert.match(sitemapRoute, /isIndexingAllowed/)
+assert.match(sitemapRoute, /renderSitemapXml/)
 
 for (const rel of [
   "src/app/product/[id]/page.tsx",
@@ -103,6 +116,10 @@ for (const rel of [
   )
   assert.doesNotMatch(src, /woodright\.ru(?!-demo)/, `${rel} must not canonical to legacy woodright.ru`)
 }
+
+const pdp = read("src/app/product/[id]/page.tsx")
+assert.match(pdp, /notFound\(/)
+assert.doesNotMatch(pdp, /title:\s*"Товар"/)
 
 const envExample = read(".env.example")
 assert.match(envExample, /WOODRIGHT_INDEXING_MODE/)

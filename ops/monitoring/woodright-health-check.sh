@@ -33,6 +33,16 @@ if [[ "${1:-}" == "--environment" || "${1:-}" == --environment=* ]]; then
   API_HOST="${WOODRIGHT_API_HOST}"
   export WOODRIGHT_BE_CONTAINER="${WOODRIGHT_BE_CONTAINER:-$WOODRIGHT_BE_CONTAINER_DEFAULT}"
   export WOODRIGHT_SF_CONTAINER="${WOODRIGHT_SF_CONTAINER:-$WOODRIGHT_SF_CONTAINER_DEFAULT}"
+  # Rebind mutable paths from profile (never inherit demo defaults after profile load).
+  STATE_DIR="${WOODRIGHT_MONITOR_STATE:-${WOODRIGHT_MONITOR_STATE_ROOT:-$STATE_DIR}}"
+  HISTORY_DIR="${WOODRIGHT_MONITOR_HISTORY:-${WOODRIGHT_MONITOR_HISTORY_ROOT:-$HISTORY_DIR}}"
+  BACKUP_ROOT="${WOODRIGHT_BACKUP_ROOT:-$BACKUP_ROOT}"
+  if [[ -n "${WOODRIGHT_PG_CONTAINER_PREFIX:-}" ]]; then
+    export WOODRIGHT_PG_CONTAINER="${WOODRIGHT_PG_CONTAINER:-${WOODRIGHT_PG_CONTAINER_PREFIX}}"
+  fi
+  if [[ -n "${WOODRIGHT_DB_NAME:-}" ]]; then
+    export WOODRIGHT_MONITOR_PG_DB="${WOODRIGHT_DB_NAME}"
+  fi
 elif [[ "$_WR_MEDIA_VOLUME_PRESET" == "__unset__" ]]; then
   # No profile and no explicit media volume: do not inherit discovery's staging default.
   unset WOODRIGHT_MEDIA_VOLUME || true
@@ -44,6 +54,7 @@ SF_DISCOVERY_OK=0
 BE_DISCOVERY_OK=0
 PG_CONTAINER="${WOODRIGHT_PG_CONTAINER:-woodright-stack-3dsdhd-postgres-1}"
 REDIS_CONTAINER="${WOODRIGHT_REDIS_CONTAINER:-woodright-stack-3dsdhd-redis-1}"
+MONITOR_PG_DB="${WOODRIGHT_MONITOR_PG_DB:-woodright_staging}"
 DISK_WARN="${WOODRIGHT_DISK_WARN_PCT:-75}"
 DISK_CRIT="${WOODRIGHT_DISK_CRIT_PCT:-85}"
 INODE_WARN="${WOODRIGHT_INODE_WARN_PCT:-75}"
@@ -117,6 +128,103 @@ curl_hdr() {
 # --- DISCOVERY (no command-substitution; preserve WR_DISCOVERY_VERDICT) ---
 # Call functions in-shell; never fall back to unvalidated hardcoded names.
 # Test-only: WOODRIGHT_FIXTURE_BE_DISCOVERY_OK=1 skips live discovery (media unit tests).
+
+# public_production fail-closed contracts (path isolation, provisioned, launch gates)
+if [[ "${WOODRIGHT_ENVIRONMENT:-}" == "public_production" ]]; then
+  ISO_LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib/woodright-ops-path-isolation.sh"
+  ALERT_LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib/woodright-alert-contract.sh"
+  # shellcheck source=../lib/woodright-ops-path-isolation.sh
+  source "$ISO_LIB"
+  # shellcheck source=../lib/woodright-alert-contract.sh
+  source "$ALERT_LIB"
+  if wr_assert_public_production_path_isolation; then
+    add_check "path_isolation" info pass "public_production_isolated"
+  else
+    add_check "path_isolation" critical fail "shared_or_invalid_paths"
+  fi
+  if [[ "${WOODRIGHT_ENVIRONMENT_PROVISIONED:-0}" == "1" ]]; then
+    add_check "environment_provisioned" info pass "provisioned"
+  else
+    add_check "environment_provisioned" critical fail "unprovisioned_fail_closed"
+  fi
+  case "${WOODRIGHT_LEGAL_CONTENT_STATUS:-}" in
+    approved) add_check "legal_status" info pass "approved" ;;
+    owner_review|draft|"") add_check "legal_status" critical fail "status=${WOODRIGHT_LEGAL_CONTENT_STATUS:-unset}" ;;
+    *) add_check "legal_status" critical fail "status=${WOODRIGHT_LEGAL_CONTENT_STATUS}" ;;
+  esac
+  if [[ "${WOODRIGHT_PAYMENT_DECISION_STATUS:-pending}" == "accepted_manual" \
+    && "${WOODRIGHT_PAYMENT_MODE:-}" == "manual_invoice" ]]; then
+    add_check "payment_decision" info pass "manual_invoice+accepted_manual"
+  else
+    add_check "payment_decision" critical fail "mode=${WOODRIGHT_PAYMENT_MODE:-unset};status=${WOODRIGHT_PAYMENT_DECISION_STATUS:-pending}"
+  fi
+  if [[ "${WOODRIGHT_NOTIFICATION_DECISION_STATUS:-pending}" == "accepted" ]]; then
+    add_check "notification_decision" info pass "accepted"
+  else
+    add_check "notification_decision" critical fail "status=${WOODRIGHT_NOTIFICATION_DECISION_STATUS:-pending}"
+  fi
+  if wr_alert_assert_public_production_destination 2>/dev/null; then
+    add_check "alert_destination" info pass "configured"
+  else
+    add_check "alert_destination" critical fail "missing_or_invalid"
+  fi
+  # When unprovisioned, skip live discovery/HTTP against missing runtime; still emit report.
+  if [[ "${WOODRIGHT_ENVIRONMENT_PROVISIONED:-0}" != "1" && "${WOODRIGHT_MONITOR_FORCE_LIVE:-0}" != "1" ]]; then
+    add_check "runtime_identity" critical fail "skipped_unprovisioned"
+    # Jump to write outputs with accumulated critical checks
+    SF_IMG="unprovisioned"
+    BE_IMG="unprovisioned"
+    OUT_JSON="$STATE_DIR/last-status.json"
+    OUT_TXT="$STATE_DIR/last-status.txt"
+    HIST="$HISTORY_DIR/status-${TS}.json"
+    if [[ "$WR_MONITOR_WRITE" != "1" ]]; then
+      python3 - "$TS" "$OVERALL" "$EXIT_CODE" "$CHECKS_JSON" "$SF_IMG" "$BE_IMG" <<'PY'
+import json, sys
+ts, overall, code, checks, sf, be = sys.argv[1:]
+obj = {
+  "timestamp_utc": ts,
+  "overall": overall,
+  "exit_code": int(code),
+  "storefront_image": sf,
+  "backend_image": be,
+  "environment": "public_production",
+  "checks": json.loads(checks),
+  "alerting": "external_alert_destination_deferred",
+  "authoritative_write": False,
+}
+print(json.dumps(obj, indent=2))
+PY
+      echo "Woodright monitor $TS overall=$OVERALL exit=$EXIT_CODE (advisory; unprovisioned)" >&2
+      exit "$EXIT_CODE"
+    fi
+    mkdir -p "$STATE_DIR" "$HISTORY_DIR" 2>/dev/null || true
+    python3 - "$OUT_JSON" "$HIST" "$TS" "$OVERALL" "$EXIT_CODE" "$CHECKS_JSON" "$SF_IMG" "$BE_IMG" <<'PY'
+import json, sys, os
+out, hist, ts, overall, code, checks, sf, be = sys.argv[1:]
+obj = {
+  "timestamp_utc": ts,
+  "overall": overall,
+  "exit_code": int(code),
+  "storefront_image": sf,
+  "backend_image": be,
+  "environment": "public_production",
+  "checks": json.loads(checks),
+  "alerting": "external_alert_destination_deferred",
+}
+for p in (out, hist):
+  os.makedirs(os.path.dirname(p), exist_ok=True)
+  with open(p, "w", encoding="utf-8") as f:
+    json.dump(obj, f, indent=2)
+    f.write("\n")
+  mode = 0o644 if p.endswith("last-status.json") else 0o600
+  os.chmod(p, mode)
+print(json.dumps(obj, indent=2))
+PY
+    echo "Woodright monitor $TS overall=$OVERALL exit=$EXIT_CODE (unprovisioned fail-closed)" >&2
+    exit "$EXIT_CODE"
+  fi
+fi
+
 if [[ "${WOODRIGHT_FIXTURE_BE_DISCOVERY_OK:-0}" == "1" && -n "${WOODRIGHT_BE_CONTAINER:-}" ]]; then
   BE_CONTAINER="$WOODRIGHT_BE_CONTAINER"
   BE_DISCOVERY_OK=1
@@ -515,9 +623,9 @@ fi
 
 # DB / Redis readiness (no query text / no keys)
 if docker exec "$PG_CONTAINER" pg_isready -U woodright >/dev/null 2>&1; then
-  CONN=$(docker exec "$PG_CONTAINER" psql -U woodright -d woodright_staging -tAc "SELECT count(*) FROM pg_stat_activity;" 2>/dev/null | tr -d ' ' || echo "?")
-  LONG=$(docker exec "$PG_CONTAINER" psql -U woodright -d woodright_staging -tAc "SELECT count(*) FROM pg_stat_activity WHERE state='active' AND now()-query_start > interval '5 minutes';" 2>/dev/null | tr -d ' ' || echo "?")
-  BLOCKED=$(docker exec "$PG_CONTAINER" psql -U woodright -d woodright_staging -tAc "SELECT count(*) FROM pg_stat_activity WHERE wait_event_type='Lock';" 2>/dev/null | tr -d ' ' || echo "?")
+  CONN=$(docker exec "$PG_CONTAINER" psql -U woodright -d "$MONITOR_PG_DB" -tAc "SELECT count(*) FROM pg_stat_activity;" 2>/dev/null | tr -d ' ' || echo "?")
+  LONG=$(docker exec "$PG_CONTAINER" psql -U woodright -d "$MONITOR_PG_DB" -tAc "SELECT count(*) FROM pg_stat_activity WHERE state='active' AND now()-query_start > interval '5 minutes';" 2>/dev/null | tr -d ' ' || echo "?")
+  BLOCKED=$(docker exec "$PG_CONTAINER" psql -U woodright -d "$MONITOR_PG_DB" -tAc "SELECT count(*) FROM pg_stat_activity WHERE wait_event_type='Lock';" 2>/dev/null | tr -d ' ' || echo "?")
   add_check "postgres_ready" info pass "conn=$CONN long=$LONG blocked=$BLOCKED"
 else
   add_check "postgres_ready" critical fail "not_ready"

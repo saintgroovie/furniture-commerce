@@ -135,6 +135,7 @@ hold_runtime_locks_for_install() {
     "$WR_ROOT/locks/public_demo/live-cutover.lock" \
     "$WR_ROOT/locks/staging/live-cutover.lock" \
     "$WR_ROOT/locks/production/live-cutover.lock" \
+    "$WR_ROOT/locks/public_production/live-cutover.lock" \
     "$WR_ROOT/locks/live-cutover.lock"
   do
     mkdir -p "$(dirname "$p")"
@@ -240,9 +241,13 @@ FILES=(
   ops/lib/woodright-production-release-sha-reconcile.sh
   ops/lib/woodright-public-demo-metadata-authority.sh
   ops/lib/woodright-owner-approved-release.sh
+  ops/lib/woodright-ops-path-isolation.sh
+  ops/lib/woodright-alert-contract.sh
+  ops/lib/woodright-recovery-point.sh
   ops/config/runtime-environments/public_demo.conf
   ops/config/runtime-environments/staging.conf
   ops/config/runtime-environments/production.conf
+  ops/config/runtime-environments/public_production.conf
   ops/release/recreate-staging-backend-with-media.sh
   ops/release/recreate-staging-storefront.sh
   ops/release/cutover-public-demo-pair.sh
@@ -262,15 +267,29 @@ FILES=(
   ops/release/verify-environment-governance-bundle.sh
   ops/monitoring/woodright-health-check.sh
   ops/monitoring/woodright-host-publish-check.sh
+  ops/backup/lib/woodright-backup-root.sh
+  ops/backup/woodright-postgres-backup.sh
+  ops/backup/woodright-media-backup.sh
+  ops/backup/woodright-backup-retention.sh
+  ops/backup/woodright-public-production-backup-run.sh
+  ops/backup/woodright-public-production-restore-rehearsal.sh
   ops/systemd/woodright-monitor.service
   ops/systemd/woodright-monitor-production-candidate.service
+  ops/systemd/woodright-monitor-public-production.service
+  ops/systemd/woodright-monitor-public-production.timer
+  ops/systemd/woodright-backup-public-production.service
+  ops/systemd/woodright-backup-public-production.timer
+  ops/systemd/woodright-restore-rehearsal-public-production.service
   scripts/release/reconcile-public-image-pins.sh
+  scripts/release/restart-active-digest-only.sh
   docs/operator/environment-scoped-release-governance.md
   docs/operator/backend-media-promotion-gate.md
   docs/operator/production-candidate-rollback.md
   docs/operator/production-helper-install-provenance.md
   docs/operator/production-candidate-authority-reconcile.md
   docs/operator/owner-approved-release-governance.md
+  docs/operator/public-production-monitor-backup-recovery.md
+  docs/operator/runtime-ownership.md
 )
 
 role_for() {
@@ -294,6 +313,7 @@ role_for() {
     ops/lib/woodright-owner-approved-release.sh) echo owner_approved_release ;;
     ops/release/reconcile-owner-approved-release.sh) echo owner_approved_release_reconciler ;;
     scripts/release/reconcile-public-image-pins.sh) echo pin_reconciler ;;
+    scripts/release/restart-active-digest-only.sh) echo legacy_restart_guard ;;
     ops/monitoring/*) echo monitor_helper ;;
     ops/systemd/*) echo systemd_unit ;;
     ops/release/install-environment-governance.sh) echo installer ;;
@@ -382,18 +402,23 @@ if [[ "$CANONICAL_LAYOUT" == "1" ]]; then
     "$WR_ROOT/locks/public_demo" \
     "$WR_ROOT/locks/staging" \
     "$WR_ROOT/locks/production" \
+    "$WR_ROOT/locks/public_production" \
     "$WR_ROOT/runtime-ownership-public-demo" \
     "$WR_ROOT/runtime-ownership-staging" \
     "$WR_ROOT/runtime-ownership-production" \
+    "$WR_ROOT/runtime-ownership-public-production" \
     "$WR_ROOT/runtime-identity-public-demo" \
     "$WR_ROOT/runtime-identity-staging" \
     "$WR_ROOT/runtime-identity-production" \
+    "$WR_ROOT/runtime-identity-public-production" \
     "$WR_ROOT/reports/public_demo" \
     "$WR_ROOT/reports/staging" \
-    "$WR_ROOT/reports/production"
+    "$WR_ROOT/reports/production" \
+    "$WR_ROOT/reports/public_production"
   : >>"$WR_ROOT/locks/public_demo/live-cutover.lock"
   : >>"$WR_ROOT/locks/staging/live-cutover.lock"
   : >>"$WR_ROOT/locks/production/live-cutover.lock"
+  : >>"$WR_ROOT/locks/public_production/live-cutover.lock"
   if [[ ! -s "$WR_ROOT/locks/production/live-cutover.lock" && -e "$WR_ROOT/locks/production-cutover.lock" ]]; then
     log "note: legacy production-cutover.lock present; nested lock file created empty (flock path is nested)"
   fi
@@ -521,7 +546,7 @@ restore_previous_bundle() {
   fi
   # Compat symlink restore/removal for scripts/release helpers.
   local base link_dst link_bak
-  for base in reconcile-public-image-pins.sh; do
+  for base in reconcile-public-image-pins.sh restart-active-digest-only.sh; do
     link_dst="${WR_ROOT}/scripts/release/${base}"
     link_bak="$BACKUP/scripts_release_${base}.pre-symlink"
     if [[ -e "$link_bak" || -L "$link_bak" ]]; then
@@ -680,6 +705,7 @@ def role_for(rel: str) -> str:
         "ops/lib/woodright-component-authority.sh": "component_authority",
         "ops/release/reconcile-runtime-manifests.sh": "runtime_manifest_reconciler",
         "scripts/release/reconcile-public-image-pins.sh": "pin_reconciler",
+        "scripts/release/restart-active-digest-only.sh": "legacy_restart_guard",
         "ops/release/reconcile-public-demo-metadata.sh": "public_demo_metadata_reconciler",
         "ops/release/reconcile-production-release-sha.sh": "production_release_sha_reconciler",
         "ops/lib/woodright-compose-env-authority.sh": "compose_env_authority",
@@ -777,7 +803,9 @@ if ! WOODRIGHT_INSTALL_WR_ROOT="$WR_ROOT" wr_install_provenance_verify_mirrors "
   die "post-marker provenance mirror verify failed; restored previous bundle"
 fi
 
-# Seed public_demo ownership from legacy shared root if empty (metadata copy only)
+# Seed public_demo ownership from legacy shared root if empty (metadata copy only).
+# ACTIVE_RELEASE.json seed is compatibility residue only - not authority. Prefer OWNER/EXPECTED/ACTIVE_PUBLIC.
+# Do not treat a later-stale ACTIVE_RELEASE mirror as install failure or runtime drift.
 if [[ "$CANONICAL_LAYOUT" == "1" ]]; then
   if [[ ! -f /srv/woodright/runtime-ownership-public-demo/ACTIVE_OWNER.json \
      && -f /srv/woodright/runtime-ownership/ACTIVE_OWNER.json ]]; then
@@ -785,9 +813,11 @@ if [[ "$CANONICAL_LAYOUT" == "1" ]]; then
       /srv/woodright/runtime-ownership-public-demo/ACTIVE_OWNER.json
     cp -a /srv/woodright/runtime-ownership/EXPECTED_RELEASE.json \
       /srv/woodright/runtime-ownership-public-demo/EXPECTED_RELEASE.json 2>/dev/null || true
+    # Compatibility-only seed; may lag forever. Never used as cutover/monitor authority.
     cp -a /srv/woodright/runtime-ownership/ACTIVE_RELEASE.json \
       /srv/woodright/runtime-ownership-public-demo/ACTIVE_RELEASE.json 2>/dev/null || true
     echo "seeded_public_demo_ownership_from_legacy=1" >>"$TEXT_MANIFEST"
+    echo "seeded_public_demo_active_release_compatibility_only=1" >>"$TEXT_MANIFEST"
   fi
   if [[ ! -f /srv/woodright/runtime-identity-public-demo/ACTIVE_PUBLIC.json \
      && -f /srv/woodright/runtime-identity/ACTIVE_PUBLIC.json ]]; then

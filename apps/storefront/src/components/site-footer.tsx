@@ -46,7 +46,7 @@ export function SiteFooter({
                     className={`logo-kids-slot${visualKids ? " is-visible" : ""}${snap ? " is-snap" : ""}`}
                     aria-hidden="true"
                   >
-                    <span className="logo-kids-badge">Kids</span>
+                    <span className="logo-kids-badge">Детская</span>
                   </span>
                 </span>
               </Link>

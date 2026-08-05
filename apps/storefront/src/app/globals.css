@@ -183,7 +183,8 @@ img {
   --logo-kids-duration: 0.52s;
   --logo-kids-ease: cubic-bezier(0.33, 1, 0.68, 1);
   /* Badge border-box ≈ 45–46px; +1px slack so the right stroke isn't clipped. */
-  --logo-kids-w: 2.9375rem;
+  /* Slot width for RU chrome label «Детская» (was sized for Latin «Kids»). */
+  --logo-kids-w: 4.75rem;
   --logo-kids-gap: 0.3rem;
   /* Slot height matches the 20px wordmark box — flex centering is enough. */
   --logo-kids-nudge-y: 0px;
@@ -303,7 +304,7 @@ body:has([data-kids-product]) {
   overflow: visible;
 }
 
-/* «KIDS» pill next to the wordmark (kids section only).
+/* «Детская» pill next to the wordmark (kids section UI chrome only).
    Always in the DOM: adult ↔ kids is a CSS tween, not a mount jump.
    .logo is translateX(-50%)-centered, so opening the slot re-centers the
    pair and the wordmark glides left with the edge-tint tween.
@@ -352,9 +353,10 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot {
   border-radius: 999px;
   font-size: 0.625rem;
   font-weight: 600;
-  letter-spacing: 0.1em;
-  text-indent: 0.1em; /* balances letter-spacing's trailing gap */
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  text-indent: 0;
+  /* RU label «Детская» — do not force Latin-style uppercase. */
+  text-transform: none;
   line-height: 1;
   white-space: nowrap;
   color: #628c6a;
@@ -8030,9 +8032,8 @@ a.pdp-size-chip:hover {
 }
 
 .bespoke-request-card {
-  /* Width comes from the grid column (50% of the container on desktop, so
-     the right edge sits on the site's central axis); left edge stays on the
-     same line as the h1/lead above. */
+  /* Width comes from the grid column (2fr of the unified ~1200 container on
+     desktop); left edge stays on the same line as the h1/lead above. */
   width: 100%;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -8101,8 +8102,8 @@ a.pdp-size-chip:hover {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
-  /* Width comes from the grid column (25% of the container = half the form
-     card's width). */
+  /* Width comes from the grid column (1fr of the unified 2fr/1fr split =
+     half the form card's track width on desktop). */
 }
 
 .bespoke-request-help-section {
@@ -8221,11 +8222,13 @@ a.pdp-size-chip:hover {
 
 @media (min-width: 880px) {
   .bespoke-request-layout {
-    /* Form column = exactly half the container, so the card's right edge
-       sits on the site's central axis; help column = a quarter of the
-       container = half the card's width. The 24px gap sits between them. */
-    grid-template-columns: 50% 25%;
+    /* PASS E unified outer grid (~1200 container): fill the container with a
+       bounded 2:1 inner split (main/form + summary/help). Replaces the prior
+       50%/25% shell that left a dead third and read as a narrow route. Form
+       content stays column-bounded — not full-bleed field stretch. */
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
     column-gap: var(--space-lg);
+    width: 100%;
   }
 }
 

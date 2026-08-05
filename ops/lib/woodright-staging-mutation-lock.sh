@@ -185,6 +185,7 @@ wr_staging_mutation_lock_acquire() {
       /srv/woodright/locks/public_demo/live-cutover.lock|\
       /srv/woodright/locks/staging/live-cutover.lock|\
       /srv/woodright/locks/production/live-cutover.lock|\
+      /srv/woodright/locks/public_production/live-cutover.lock|\
       /srv/woodright/locks/live-cutover.lock|\
       /srv/woodright/locks/production-cutover.lock) ;;
       *)
