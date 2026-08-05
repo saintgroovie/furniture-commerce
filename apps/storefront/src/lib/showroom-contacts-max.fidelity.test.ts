@@ -362,6 +362,22 @@ assert.match(
   /--contacts-stage-row-gap:\s*var\(\s*--contacts-heading-to-content-gap\s*\)/
 )
 assert.match(stageBlock[0], /row-gap:\s*var\(\s*--contacts-stage-row-gap\s*\)/)
+assert.match(stageBlock[0], /margin-top:\s*1\.5rem/) // 24px intro → stage
+assert.doesNotMatch(stageBlock[0], /margin-top:\s*3\.125rem/)
+const titleBlock = css.match(/\.contacts-page-title\s*\{[^}]*\}/)
+assert.ok(titleBlock, "contacts-page-title rule required")
+assert.match(
+  titleBlock[0],
+  /font-size:\s*clamp\(\s*1\.9375rem\s*,\s*2\.2vw\s*,\s*2\.25rem\s*\)/
+)
+assert.doesNotMatch(titleBlock[0], /font-size:\s*clamp\(\s*2\.125rem/)
+const introBlock = css.match(/\.contacts-page-intro\s*\{[^}]*\}/)
+assert.ok(introBlock, "contacts-page-intro rule required")
+assert.match(introBlock[0], /margin:\s*1rem\s+0\s+0/)
+assert.match(
+  css,
+  /main:has\(\.contacts-page\)\.page-section\s*\{[^}]*padding-top:\s*1\.25rem/
+)
 assert.match(
   css,
   /@supports\s*\(\s*grid-template-rows:\s*subgrid\s*\)\s*\{[\s\S]*?\.contacts-page-col\s*\{[^}]*row-gap:\s*var\(\s*--contacts-stage-row-gap\s*\)/

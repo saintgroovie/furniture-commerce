@@ -1845,7 +1845,7 @@ main:has(.contacts-page) {
   margin: 0;
   max-width: 100%;
   min-width: 0;
-  font-size: clamp(2.125rem, 2.5vw, 2.5rem); /* ~34–40px */
+  font-size: clamp(1.9375rem, 2.2vw, 2.25rem); /* ~31–36px - slightly under prior 34–40 */
   font-weight: 600;
   line-height: 1.2;
   letter-spacing: -0.01em;
@@ -1854,7 +1854,7 @@ main:has(.contacts-page) {
 
 .contacts-page-intro {
   grid-column: 1 / span 7;
-  margin: 1.375rem 0 0; /* ~22px H1 → intro */
+  margin: 1rem 0 0; /* 16px H1 → intro */
   max-width: 100%;
   min-width: 0;
   font-size: 1.0625rem; /* 17px */
@@ -1885,7 +1885,7 @@ main:has(.contacts-page) {
   row-gap: var(--contacts-stage-row-gap);
   align-items: stretch;
   position: relative;
-  margin-top: 3.125rem; /* 50px intro → stage */
+  margin-top: 1.5rem; /* 24px intro → stage */
   width: 100%;
   min-width: 0;
 }
@@ -2084,8 +2084,10 @@ main:has(.contacts-page) {
   white-space: nowrap;
 }
 
-/* Keep footer close after CTA without inventing empty min-height. */
+/* Keep footer close after CTA without inventing empty min-height.
+   Top pad is intentionally tight vs sitewide .page-section (space-xl). */
 main:has(.contacts-page).page-section {
+  padding-top: 1.25rem; /* 20px header → H1 */
   padding-bottom: 5rem; /* ~80px CTA → footer inside page-section rhythm */
 }
 
@@ -2110,13 +2112,13 @@ main:has(.contacts-page).page-section {
   }
 
   .contacts-page-intro {
-    margin-top: 1.25rem;
+    margin-top: 0.875rem; /* 14px */
   }
 
   .contacts-page-stage {
     display: flex;
     flex-direction: column;
-    margin-top: 2.75rem;
+    margin-top: 1.25rem; /* 20px */
     row-gap: 0;
     column-gap: 0;
   }
@@ -2210,7 +2212,7 @@ main:has(.contacts-page).page-section {
   }
 
   .contacts-page-title {
-    font-size: 1.875rem;
+    font-size: 1.75rem; /* 28px */
   }
 
   .contacts-page,
