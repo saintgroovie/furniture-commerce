@@ -1328,7 +1328,7 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
 }
 
 /*
-  Page messenger base (overridden on /contacts secondary to equal 88px contract).
+  Page messenger base (overridden on /contacts secondary to equal 72px contract).
 */
 .contact-action.contact-action--density-page.contact-action--channel.contact-action--layout-leading {
   display: flex;
