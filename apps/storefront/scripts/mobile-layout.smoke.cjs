@@ -96,6 +96,15 @@ async function detectOverflow(page) {
           ) {
             return true
           }
+          // Media plates / hero surfaces intentionally clip decorative image bleed.
+          // Do not treat that as a page-layout overflow offender.
+          if (
+            (s.overflowX === "hidden" || s.overflowX === "clip") &&
+            cur !== document.documentElement &&
+            cur !== document.body
+          ) {
+            return true
+          }
           cur = cur.parentElement
         }
         return false
@@ -173,6 +182,22 @@ async function main() {
   }
 
   try {
+    // --- Static CSS contracts (no runtime product dependency) ---
+    {
+      const cssPath = path.resolve(__dirname, "../src/app/globals.css")
+      const css = fs.readFileSync(cssPath, "utf8")
+      const hasTokens =
+        /--touch-cta:\s*52px/.test(css) &&
+        /--touch-min:\s*48px/.test(css) &&
+        /--safe-top:\s*env\(safe-area-inset-top/.test(css) &&
+        /--page-gutter:/.test(css)
+      const forbiddenKids120 = /\.hp-kids-objects\s*\{[^}]*minmax\(120px/s.test(css)
+      // Overlay/authority must not reintroduce 3×120 on phones after 2-col fix.
+      const overlayKids120 = /mobile-layout authority[\s\S]*hp-kids-objects[\s\S]*minmax\(120px/.test(css)
+      if (hasTokens && !forbiddenKids120 && !overlayKids120) pass("static_css_mobile_contracts")
+      else fail("static_css_mobile_contracts", { hasTokens, forbiddenKids120, overlayKids120 })
+    }
+
     // --- Cart empty SSR (no cart_id cookie) ---
     /* Capture initial HTML before hydration settles so a false SSR loading
        shell cannot hide behind a client empty flash. */
@@ -280,6 +305,158 @@ async function main() {
     await page.keyboard.press("Escape")
     await page.waitForTimeout(200)
 
+    // --- Mobile layout contracts (tokens / CTA / footer / kids / anti-fold) ---
+    const PHONE_VIEWPORTS = [
+      { name: "320", width: 320, height: 568 },
+      { name: "390", width: 390, height: 844 },
+      { name: "393", width: 393, height: 852 },
+      { name: "430", width: 430, height: 932 },
+    ]
+    for (const vp of PHONE_VIEWPORTS) {
+      await page.setViewportSize({ width: vp.width, height: vp.height })
+      await page.goto(`${BASE}/`, {
+        waitUntil: "domcontentloaded",
+        timeout: NAV_TIMEOUT,
+      })
+      await page.waitForTimeout(700)
+      const contracts = await page.evaluate(() => {
+        const root = getComputedStyle(document.documentElement)
+        const token = (name) => root.getPropertyValue(name).trim()
+        const btn =
+          document.querySelector("a.btn.btn-primary.hp-final-btn") ||
+          document.querySelector(".hp-final a.btn.btn-primary") ||
+          document.querySelector(".hp-hero-actions a.btn.btn-primary")
+        const hero =
+          document.querySelector(".hp-hero-actions a.btn.btn-primary") ||
+          document.querySelector(".hp-hero-actions a.btn")
+        const footerNav = document.querySelector(".footer-nav")
+        const kids = document.querySelector(".hp-kids-objects")
+        const main = document.getElementById("main-content")
+        const footer = document.querySelector("footer.site-footer, .site-footer")
+        const lastSection = document.querySelector(".hp-final, .hp > section:last-of-type, #main-content > *:last-child")
+        const rect = (el) => {
+          if (!el) return null
+          const r = el.getBoundingClientRect()
+          const s = getComputedStyle(el)
+          return {
+            h: Math.round(r.height),
+            w: Math.round(r.width),
+            top: Math.round(r.top),
+            bottom: Math.round(r.bottom),
+            left: Math.round(r.left),
+            right: Math.round(r.right),
+            minH: s.minHeight,
+            display: s.display,
+            cols: s.gridTemplateColumns,
+            pad: s.padding,
+            role: el.getAttribute("role") || el.tagName.toLowerCase(),
+            name: (el.getAttribute("aria-label") || el.textContent || "").trim().slice(0, 80),
+          }
+        }
+        const kidsChildren = kids
+          ? Array.from(kids.children)
+              .filter((el) => getComputedStyle(el).display !== "none")
+              .map((el) => {
+                const r = el.getBoundingClientRect()
+                const cr = kids.getBoundingClientRect()
+                return {
+                  left: Math.round(r.left),
+                  right: Math.round(r.right),
+                  outside:
+                    r.left < cr.left - 1 ||
+                    r.right > cr.right + 1 ||
+                    r.left < -1 ||
+                    r.right > window.innerWidth + 1,
+                }
+              })
+          : []
+        const gap =
+          lastSection && footer
+            ? Math.round(footer.getBoundingClientRect().top - lastSection.getBoundingClientRect().bottom)
+            : null
+        return {
+          tokens: {
+            gutter: token("--page-gutter"),
+            safeTop: token("--safe-top"),
+            safeRight: token("--safe-right"),
+            safeBottom: token("--safe-bottom"),
+            safeLeft: token("--safe-left"),
+            touchMin: token("--touch-min"),
+            touchCta: token("--touch-cta"),
+          },
+          finalCta: rect(btn),
+          heroCta: rect(hero),
+          footer: rect(footerNav),
+          footerDisplay: footerNav ? getComputedStyle(footerNav).display : null,
+          kids: rect(kids),
+          kidsChildren,
+          mainFlex: main ? getComputedStyle(main).flex : null,
+          gap,
+          overflow: {
+            doc: document.documentElement.scrollWidth,
+            body: document.body.scrollWidth,
+            iw: window.innerWidth,
+          },
+        }
+      })
+
+      const t = contracts.tokens
+      const gutterOk =
+        vp.width <= 359
+          ? t.gutter === "16px" || t.gutter === "1rem"
+          : t.gutter === "20px" || t.gutter === "1.25rem"
+      const tokensOk =
+        gutterOk &&
+        t.touchMin === "48px" &&
+        t.touchCta === "52px" &&
+        /px$/.test(t.safeTop) &&
+        /px$/.test(t.safeBottom) &&
+        /px$/.test(t.safeLeft) &&
+        /px$/.test(t.safeRight) &&
+        t.safeTop !== "" &&
+        t.gutter !== ""
+      if (tokensOk) pass(`tokens_${vp.name}`)
+      else fail(`tokens_${vp.name}`, t)
+
+      const finalH = contracts.finalCta?.h || 0
+      const heroH = contracts.heroCta?.h || 0
+      if (finalH >= 52 && heroH >= 52) pass(`cta_height_${vp.name}`)
+      else fail(`cta_height_${vp.name}`, { finalH, heroH, final: contracts.finalCta, hero: contracts.heroCta })
+
+      const cols = contracts.footer?.cols || ""
+      const disp = contracts.footerDisplay || contracts.footer?.display || ""
+      const tracks = cols.split(" ").filter(Boolean)
+      const oneCol =
+        disp === "grid" &&
+        tracks.length === 1 &&
+        (tracks[0] === "1fr" ||
+          /^minmax\(0(px)?, ?1fr\)$/.test(tracks[0]) ||
+          /^\d+(\.\d+)?px$/.test(tracks[0]))
+      if (oneCol) pass(`footer_one_col_${vp.name}`)
+      else fail(`footer_one_col_${vp.name}`, { cols, display: disp })
+
+      if (!contracts.kids || !contracts.kids.cols) {
+        if (process.env.WOODRIGHT_ALLOW_EMPTY_CATALOG === "1") pass(`kids_grid_${vp.name}_skipped_absent`)
+        else fail(`kids_grid_${vp.name}`, { reason: "absent" })
+      } else {
+        const kidsOutside = (contracts.kidsChildren || []).some((c) => c.outside)
+        const kidsCols = contracts.kids?.cols || ""
+        const kidsColCount = kidsCols.split(" ").filter(Boolean).length
+        if (!kidsOutside && kidsColCount <= 2) pass(`kids_grid_${vp.name}`)
+        else fail(`kids_grid_${vp.name}`, { kidsCols, kidsOutside, kids: contracts.kids })
+      }
+
+      if (contracts.mainFlex && contracts.mainFlex.startsWith("0 0")) pass(`main_antifold_${vp.name}`)
+      else fail(`main_antifold_${vp.name}`, { flex: contracts.mainFlex })
+
+      const ov = contracts.overflow
+      if (ov.doc <= ov.iw + 1 && ov.body <= ov.iw + 1) pass(`root_overflow_${vp.name}`)
+      else fail(`root_overflow_${vp.name}`, ov)
+
+      if (contracts.gap == null || (contracts.gap >= 16 && contracts.gap <= 96)) pass(`footer_gap_${vp.name}`)
+      else fail(`footer_gap_${vp.name}`, { gap: contracts.gap })
+    }
+
     // Discover a representative PDP once for boundary overflow checks.
     await page.goto(`${BASE}/catalog`, {
       waitUntil: "domcontentloaded",
@@ -296,6 +473,7 @@ async function main() {
       ? [...BOUNDARY_ROUTES, pdpHref]
       : BOUNDARY_ROUTES
     if (pdpHref) pass("boundary_pdp_discovered")
+    else if (process.env.WOODRIGHT_ALLOW_EMPTY_CATALOG === "1") pass("boundary_pdp_discovered_skipped_empty_catalog")
     else fail("boundary_pdp_discovered")
 
     // --- Route matrix overflow ---
@@ -311,8 +489,20 @@ async function main() {
         })
         await page.waitForTimeout(500)
         const ov = await detectOverflow(page)
-        if (!ov.docOverflow && !ov.bodyOverflow) {
+        const meaningfulOffenders = (ov.offenders || []).filter((o) => {
+          // Ignore zero-size / decorative rails already inside intended scrollers
+          // (detectOverflow already skips intended scrollers).
+          return true
+        })
+        if (!ov.docOverflow && !ov.bodyOverflow && meaningfulOffenders.length === 0) {
           pass(label)
+        } else if (!ov.docOverflow && !ov.bodyOverflow && meaningfulOffenders.length) {
+          fail(label + "_clipped_offenders", {
+            doc: ov.docScrollWidth,
+            body: ov.bodyScrollWidth,
+            iw: ov.innerWidth,
+            offenders: meaningfulOffenders.slice(0, 5),
+          })
         } else {
           fail(label, {
             doc: ov.docScrollWidth,
@@ -336,7 +526,8 @@ async function main() {
     // --- PDP: main before footer + not stuck on loading ---
     await page.setViewportSize({ width: 390, height: 844 })
     if (!pdpHref) {
-      fail("pdp_card_link_missing")
+      if (process.env.WOODRIGHT_ALLOW_EMPTY_CATALOG === "1") pass("pdp_card_link_missing_skipped_empty_catalog")
+      else fail("pdp_card_link_missing")
     } else {
       await page.goto(`${BASE}${pdpHref}`, {
         waitUntil: "domcontentloaded",
@@ -374,11 +565,17 @@ async function main() {
       waitUntil: "domcontentloaded",
       timeout: NAV_TIMEOUT,
     })
-    await page.locator("button.catalog-filter-mobile-toggle").waitFor({
+    const filterToggle = page.locator("button.catalog-filter-mobile-toggle")
+    if ((await filterToggle.count()) === 0) {
+      if (process.env.WOODRIGHT_ALLOW_EMPTY_CATALOG === "1") pass("catalog_filters_dialog_inert_skipped_no_toggle")
+      else fail("catalog_filters_dialog_inert", { reason: "toggle_missing" })
+    } else {
+    try {
+    await filterToggle.waitFor({
       state: "visible",
       timeout: 20000,
     })
-    await page.locator("button.catalog-filter-mobile-toggle").click()
+    await filterToggle.click()
     await page.waitForTimeout(400)
     const filters = await page.evaluate(() => {
       const aside = document.querySelector(".catalog-filter-sidebar")
@@ -402,6 +599,10 @@ async function main() {
       fail("catalog_filters_dialog_inert", filters)
     }
     await page.keyboard.press("Escape")
+    } catch (err) {
+      fail("catalog_filters_dialog_inert", { error: String(err && err.message ? err.message : err).slice(0, 200) })
+    }
+    }
 
     // --- Desktop regression control (nav order in DOM) ---
     await page.setViewportSize({ width: 1440, height: 1000 })

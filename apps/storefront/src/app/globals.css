@@ -48,6 +48,15 @@ button {
   --space-2xl: 4rem;
   --space-3xl: 6rem;
 
+  /* Mobile layout tokens — always defined so var() never goes invalid. */
+  --page-gutter: var(--space-lg);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --touch-min: 48px;
+  --touch-cta: 52px;
+
   --radius-sm: 6px;
   --radius: 8px;
   --radius-lg: 12px;
@@ -76,11 +85,30 @@ body {
 
 #main-content {
   flex: 1 0 auto;
+  min-width: 0;
+  width: 100%;
 }
 
 .site-header,
 .site-footer {
   flex: 0 0 auto;
+}
+
+/* Mobile: do not invent a white flex-gap above a tall stacked footer. */
+@media (max-width: 768px) {
+  :root {
+    --page-gutter: 1.25rem; /* 20px — primary phone widths 360–430 */
+  }
+
+  #main-content {
+    flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 359px) {
+  :root {
+    --page-gutter: 1rem; /* 16px on the narrowest phones */
+  }
 }
 
 a {
@@ -124,11 +152,18 @@ img {
 .container {
   max-width: var(--max-width);
   margin-inline: auto;
-  padding-inline: var(--space-lg);
+  padding-inline: max(var(--page-gutter), var(--safe-left))
+    max(var(--page-gutter), var(--safe-right));
+  box-sizing: border-box;
 }
 
 .page-section {
   padding-block: var(--space-xl);
+}
+
+/* Home / bespoke / kids landings cancel stacked bottom rhythm under .hp. */
+#main-content.page-section:has(> .hp) {
+  padding-bottom: 0;
 }
 
 .service-page {
@@ -9385,6 +9420,12 @@ a.pdp-size-chip:hover {
   margin-top: var(--space-lg);
   background: #f6f1ea;
   color: var(--color-brand);
+  min-height: var(--touch-cta);
+  min-width: min(100%, 20rem);
+  padding-inline: 1.5rem;
+  font-size: 1.0625rem;
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
 .hp-final-btn:hover {
@@ -10837,7 +10878,7 @@ a.pdp-size-chip:hover {
 
 
 
-/* === PR #175 mobile-layout overlay (ported onto main globals) === */
+/* === PR #175 mobile-layout authority (tokens + phone contracts) === */
 @media (max-width: 768px) {
   .header-top {
     /* Flat surface on phones — edge wash reads as grey side bands. */
@@ -11202,7 +11243,7 @@ a.pdp-size-chip:hover {
   .footer-bottom {
     font-size: 0.875rem;
     color: var(--color-fg-secondary);
-    padding-bottom: 0.25rem;
+    padding-bottom: calc(0.25rem + var(--safe-bottom));
   }
 
   .site-footer {
@@ -11238,6 +11279,18 @@ a.pdp-size-chip:hover {
     font-size: clamp(1.5rem, 7vw, 1.875rem);
     line-height: 1.16;
     text-wrap: balance;
+  }
+
+  /* Buyer-facing CTA hit area — outer <a>/<button>.btn, not label alone. */
+  a.btn,
+  button.btn,
+  .btn {
+    min-height: var(--touch-cta);
+    box-sizing: border-box;
+    max-width: 100%;
+    padding-inline: clamp(1.25rem, 4vw, 1.75rem);
+    font-size: 1rem;
+    line-height: 1;
   }
 
   .hp-hero-actions .btn {
@@ -11300,7 +11353,8 @@ a.pdp-size-chip:hover {
   }
 
   .hp-kids-objects {
-    grid-template-columns: repeat(3, minmax(120px, 1fr));
+    /* Phones cannot fit 3×120px tracks; use fluid 2-col until ≤480 authority. */
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--space-sm);
   }
 
@@ -11317,3 +11371,30 @@ a.pdp-size-chip:hover {
     max-inline-size: 24ch;
   }
 }
+
+/* Phone footer authority — must follow ≤1100 two-column overlay. */
+@media (max-width: 520px) {
+  .footer-nav {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-md);
+  }
+
+  .footer-nav .footer-column,
+  .footer-brand,
+  .footer-brand-copy {
+    min-width: 0;
+  }
+}
+
+/* Narrowest kids grid — hide decorative 3rd object only. */
+@media (max-width: 480px) {
+  .hp-kids-objects {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hp-kids-objects .hp-kids-object:nth-child(3) {
+    display: none;
+  }
+}
+
