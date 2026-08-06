@@ -319,27 +319,3 @@ export function validatePublicLaunchProfile(input: {
 
   return issues
 }
-
-/** Scheme join — avoid contiguous production-apex literals in shippable modules. */
-function httpsOrigin(host: string): string {
-  // Opaque assembly so SWC/terser cannot emit a contiguous production-apex
-  // needle (scheme + woodright host) inside public_demo server chunks.
-  const parts: string[] = []
-  parts.push("https:")
-  parts.push("//")
-  parts.push(host)
-  return parts.join("")
-}
-
-/** Prepared Woodright production private/noindex profile (documentation / dry-run). */
-export const PREPARED_PRODUCTION_PRIVATE_NOINDEX = {
-  siteOrigin: httpsOrigin("woodright.ru"),
-  apiOrigin: httpsOrigin("api.woodright.ru"),
-  indexingMode: "private_noindex" as const,
-  adminExposure: "private" as const,
-  paymentMode: "manager_payment_link" as const,
-  storeCorsOrigins: [httpsOrigin("woodright.ru"), httpsOrigin("www.woodright.ru")],
-  runtimeRole: "production",
-  exposure: "public",
-  databaseIdentity: "production_db",
-} as const

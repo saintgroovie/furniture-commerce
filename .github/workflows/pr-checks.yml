@@ -90,6 +90,65 @@ jobs:
           fi
           echo "client_artifact_gate=ok"
 
+      - name: Public-demo actual artifact contamination gate
+        working-directory: .
+        env:
+          MEDUSA_BACKEND_INTERNAL_URL: http://backend:9000
+          NEXT_PUBLIC_SITE_URL: https://woodright-demo.ru
+          NEXT_PUBLIC_MEDUSA_BACKEND_URL: https://api.woodright-demo.ru
+          NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: pk_test_ci_placeholder
+          WOODRIGHT_LAUNCH_MODE: private_noindex
+          WOODRIGHT_PAYMENT_MODE: manual_invoice
+          WOODRIGHT_IMAGE_BUILD_PROFILE: public_demo
+          WOODRIGHT_RUNTIME_ROLE: public_demo
+          WOODRIGHT_RUNTIME_EXPOSURE: public
+          WOODRIGHT_DB_ALIAS: public_demo_db
+          WOODRIGHT_ADMIN_EXPOSURE: private
+          NODE_ENV: production
+        run: |
+          set -euo pipefail
+          # Rebuild with factual public_demo bake identity so the scan matches
+          # build-staging-images contamination contract (not the generic CI build).
+          (cd apps/storefront && yarn build)
+          # Mirror Dockerfile bake-evidence write so required markers are present
+          # in the scanned tree (same contract as image contamination gate).
+          (cd apps/storefront && node -e 'const fs=require("fs"); const path=require("path"); const ev={woodright_image_build_profile:process.env.WOODRIGHT_IMAGE_BUILD_PROFILE||"",NEXT_PUBLIC_SITE_URL:process.env.NEXT_PUBLIC_SITE_URL||"",NEXT_PUBLIC_MEDUSA_BACKEND_URL:process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL||"",WOODRIGHT_LAUNCH_MODE:process.env.WOODRIGHT_LAUNCH_MODE||"",WOODRIGHT_PAYMENT_MODE:process.env.WOODRIGHT_PAYMENT_MODE||"",WOODRIGHT_RUNTIME_ROLE:process.env.WOODRIGHT_RUNTIME_ROLE||"",WOODRIGHT_DB_ALIAS:process.env.WOODRIGHT_DB_ALIAS||"",private_noindex:process.env.WOODRIGHT_LAUNCH_MODE||"",manual_invoice:process.env.WOODRIGHT_PAYMENT_MODE||""}; const body=JSON.stringify(ev,Object.keys(ev).sort(),2)+"\n"; for (const rel of [".next-build/standalone/woodright-bake-evidence.json",".next-build/static/woodright-bake-evidence.json"]) { fs.mkdirSync(path.dirname(rel),{recursive:true}); fs.writeFileSync(rel,body); console.log("wrote",rel);} ')
+          STANDALONE="apps/storefront/.next-build/standalone"
+          STATIC="apps/storefront/.next-build/static"
+          test -d "$STANDALONE"
+          test -d "$STATIC"
+          node scripts/release/scan-public-demo-actual-artifact.cjs \
+            --standalone "$STANDALONE" \
+            --static "$STATIC"
+
+      - name: Production-candidate actual artifact regression gate
+        working-directory: .
+        env:
+          MEDUSA_BACKEND_INTERNAL_URL: http://backend:9000
+          NEXT_PUBLIC_SITE_URL: https://woodright.ru
+          NEXT_PUBLIC_MEDUSA_BACKEND_URL: https://api.woodright.ru
+          NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: pk_test_ci_placeholder
+          WOODRIGHT_LAUNCH_MODE: private_noindex
+          WOODRIGHT_PAYMENT_MODE: manual_invoice
+          WOODRIGHT_IMAGE_BUILD_PROFILE: production_candidate
+          WOODRIGHT_RUNTIME_ROLE: production_candidate
+          WOODRIGHT_RUNTIME_EXPOSURE: private
+          WOODRIGHT_DB_ALIAS: non_public_candidate_db
+          WOODRIGHT_ADMIN_EXPOSURE: private
+          NODE_ENV: production
+        run: |
+          set -euo pipefail
+          (cd apps/storefront && yarn build)
+          (cd apps/storefront && node -e 'const fs=require("fs"); const path=require("path"); const ev={woodright_image_build_profile:process.env.WOODRIGHT_IMAGE_BUILD_PROFILE||"",NEXT_PUBLIC_SITE_URL:process.env.NEXT_PUBLIC_SITE_URL||"",NEXT_PUBLIC_MEDUSA_BACKEND_URL:process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL||"",WOODRIGHT_LAUNCH_MODE:process.env.WOODRIGHT_LAUNCH_MODE||"",WOODRIGHT_PAYMENT_MODE:process.env.WOODRIGHT_PAYMENT_MODE||"",WOODRIGHT_RUNTIME_ROLE:process.env.WOODRIGHT_RUNTIME_ROLE||"",WOODRIGHT_DB_ALIAS:process.env.WOODRIGHT_DB_ALIAS||"",private_noindex:process.env.WOODRIGHT_LAUNCH_MODE||"",manual_invoice:process.env.WOODRIGHT_PAYMENT_MODE||""}; const body=JSON.stringify(ev,Object.keys(ev).sort(),2)+"\n"; for (const rel of [".next-build/standalone/woodright-bake-evidence.json",".next-build/static/woodright-bake-evidence.json"]) { fs.mkdirSync(path.dirname(rel),{recursive:true}); fs.writeFileSync(rel,body); console.log("wrote",rel);} ')
+          STANDALONE="apps/storefront/.next-build/standalone"
+          STATIC="apps/storefront/.next-build/static"
+          test -d "$STANDALONE"
+          test -d "$STATIC"
+          node scripts/release/scan-storefront-contamination.cjs \
+            --profile production_candidate \
+            --path "$STANDALONE" \
+            --path "$STATIC"
+
       - name: Fidelity tests
         run: yarn test:fidelity
 
@@ -175,6 +234,7 @@ jobs:
           # Production-candidate image bake + cutover helper (2026-07-31 RCA fix)
           node scripts/release/image-build-profile.fidelity.test.cjs
           node scripts/release/scan-storefront-contamination.fidelity.test.cjs
+          node scripts/release/scan-public-demo-actual-artifact.fidelity.test.cjs
           node scripts/release/backend-ci-registry.fidelity.test.cjs
           node scripts/release/backend-ci-install-resilience.fidelity.test.cjs
           node scripts/release/yarn-install-network-resilient.fidelity.test.cjs
