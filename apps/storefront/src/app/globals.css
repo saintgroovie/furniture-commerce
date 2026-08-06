@@ -104,9 +104,9 @@ body {
   }
 }
 
-@media (max-width: 360px) {
+@media (max-width: 359px) {
   :root {
-    --page-gutter: 1rem; /* 16px on the narrowest phones */
+    --page-gutter: 1rem; /* 16px on the narrowest phones (320–359) */
   }
 }
 
@@ -1849,6 +1849,7 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .site-footer {
 .footer-bottom {
   margin: 0;
   padding-top: var(--space-md);
+  padding-bottom: var(--safe-bottom);
   border-top: 1px solid var(--color-border);
   color: var(--color-fg-muted);
   font-size: 0.8rem;
@@ -1946,7 +1947,7 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .site-footer {
   .footer-bottom {
     font-size: 0.875rem;
     color: var(--color-fg-secondary);
-    padding-bottom: 0.25rem;
+    padding-bottom: calc(0.25rem + var(--safe-bottom));
   }
 
   .site-footer {
@@ -1958,8 +1959,15 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .site-footer {
 @media (max-width: 520px) {
   .footer-nav {
     /* One column when two ~160px tracks would crush long RU labels. */
-    grid-template-columns: 1fr;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--space-md);
+  }
+
+  .footer-nav .footer-column,
+  .footer-brand,
+  .footer-brand-copy {
+    min-width: 0;
   }
 
   .footer-brand-wordmark {
@@ -8279,6 +8287,18 @@ body {
     text-wrap: balance;
   }
 
+  /* Buyer-facing CTA hit area — outer <a>/<button>.btn, not label alone. */
+  a.btn,
+  button.btn,
+  .btn {
+    min-height: var(--touch-cta);
+    box-sizing: border-box;
+    max-width: 100%;
+    padding-inline: clamp(1.25rem, 4vw, 1.75rem);
+    font-size: 1rem;
+    line-height: 1;
+  }
+
   .hp-hero-actions .btn {
     min-height: var(--touch-cta);
     font-size: 1.0625rem;
@@ -8339,7 +8359,7 @@ body {
   }
 
   .hp-kids-objects {
-    grid-template-columns: repeat(3, minmax(120px, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--space-sm);
   }
 
@@ -8376,7 +8396,7 @@ body {
   }
 
   .hp-kids-objects {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .hp-kids-objects .hp-kids-object:nth-child(3) {
