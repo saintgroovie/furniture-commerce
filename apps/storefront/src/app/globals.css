@@ -48,6 +48,15 @@ button {
   --space-2xl: 4rem;
   --space-3xl: 6rem;
 
+  /* Symmetric page gutters — mobile overrides tighten to 16–20px. */
+  --page-gutter: var(--space-lg);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --touch-min: 48px;
+  --touch-cta: 52px;
+
   --radius-sm: 6px;
   --radius: 8px;
   --radius-lg: 12px;
@@ -63,7 +72,42 @@ html {
 }
 
 body {
+  /* Sticky page shell: short routes (Контакты, service pages) must not
+     stretch the footer to fill the viewport — main absorbs the slack,
+     footer stays content-sized like on /catalog. */
   min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+#main-content {
+  flex: 1 0 auto;
+  min-width: 0;
+  width: 100%;
+  max-width: var(--max-width);
+}
+
+.site-header,
+.site-footer {
+  flex: 0 0 auto;
+}
+
+/* Mobile: do not invent a white flex-gap above a tall stacked footer. */
+@media (max-width: 768px) {
+  :root {
+    --page-gutter: 1.25rem; /* 20px — primary phone widths 375–430 */
+  }
+
+  #main-content {
+    flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 360px) {
+  :root {
+    --page-gutter: 1rem; /* 16px on the narrowest phones */
+  }
 }
 
 a {
@@ -107,11 +151,19 @@ img {
 .container {
   max-width: var(--max-width);
   margin-inline: auto;
-  padding-inline: var(--space-lg);
+  padding-inline: max(var(--page-gutter), var(--safe-left))
+    max(var(--page-gutter), var(--safe-right));
+  box-sizing: border-box;
 }
 
 .page-section {
   padding-block: var(--space-xl);
+}
+
+/* Home / bespoke / kids landings cancel their own bottom rhythm —
+   do not stack page-section padding under .hp. */
+#main-content.page-section:has(> .hp) {
+  padding-bottom: 0;
 }
 
 .service-page {
@@ -147,6 +199,18 @@ img {
   initial-value: #ffffff;
 }
 
+@property --footer-wash-top {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #ffffff;
+}
+
+@property --footer-wash-mid {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #ffffff;
+}
+
 .site-header {
   /* Slightly short + calm decelerate: long springy 1s + oversized max-width
      / 0fr→1fr felt sticky, then jerky once the competing badge translate
@@ -169,9 +233,26 @@ img {
    Trigger is data-section on the header (pathname / optimistic click),
    not :has(.kids-theme) — that class only mounts after the kids RSC
    segment streams in, so the tint would arrive too late. */
-.site-header[data-section="kids"] {
+.site-header[data-section="kids"],
+html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .site-header {
   --header-edge-top: color-mix(in srgb, #507356 38%, var(--color-surface));
   --header-edge-main: color-mix(in srgb, #507356 13%, #f5f7f5);
+}
+
+/* One-frame snap before kids→PDP enter replay (no wash tween while closed). */
+.site-header.is-kids-snap,
+.site-footer.is-kids-snap {
+  transition: none;
+}
+
+/* Kids action ink on the whole page chrome: cart badge, fly-dot, PDP
+   «В корзину» / request CTA (.btn-primary → --color-action). Same sage as
+   .kids-theme; body:has(header[data-section=kids]) covers /kids/* before
+   the RSC theme wrapper lands, and data-kids-product covers kids PDPs. */
+body:has(.site-header[data-section="kids"]),
+body:has([data-kids-product]) {
+  --color-action: #507356;
+  --color-action-hover: #446249;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -196,11 +277,12 @@ img {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 48px;
+  /* Slightly taller plate; logo stays absolute left:50% / translateX(-50%). */
+  height: 54px;
 }
 
 .header-top-left {
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   color: var(--color-fg-muted);
   min-width: 0;
   flex: 1;
@@ -251,9 +333,16 @@ img {
   transition: width var(--logo-kids-duration) var(--logo-kids-ease);
 }
 
-.logo-kids-slot.is-visible {
+.logo-kids-slot.is-visible,
+html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot {
   /* gap + badge in one width tween */
   width: calc(var(--logo-kids-gap) + var(--logo-kids-w));
+}
+
+/* Snap-closed frame for enter replay — must win over .is-visible width. */
+.logo-kids-slot.is-snap {
+  transition: none;
+  width: 0;
 }
 
 .logo-kids-badge {
@@ -282,9 +371,15 @@ img {
   transition: opacity 0.22s ease;
 }
 
-.logo-kids-slot.is-visible .logo-kids-badge {
+.logo-kids-slot.is-visible .logo-kids-badge,
+html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .logo-kids-badge {
   opacity: 1;
   transition: opacity 0.32s ease 0.06s;
+}
+
+.logo-kids-slot.is-snap .logo-kids-badge {
+  transition: none;
+  opacity: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -305,13 +400,15 @@ img {
 .header-top-right {
   display: flex;
   align-items: center;
-  gap: var(--space-lg);
+  /* Match main-nav item rhythm (12px), not space-lg - «Дизайнерам / Контакты»
+     was reading much looser than «По проекту / О бренде». */
+  gap: 12px;
   flex: 1;
   justify-content: flex-end;
 }
 
 .header-top-right > a {
-  font-size: 0.82rem;
+  font-size: 0.875rem;
   font-weight: 400;
   color: var(--color-fg-secondary);
   transition: color 0.15s;
@@ -341,7 +438,8 @@ img {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 40px;
+  /* Match the top plate step (+6px) without touching nav width math. */
+  height: 46px;
 }
 
 /* The nav row is sized so the LAST LETTER of the last item («О бренде»)
@@ -449,7 +547,8 @@ img {
     transform 0.35s cubic-bezier(0.34, 1.4, 0.64, 1),
     opacity 0.25s ease,
     margin-left 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-    margin-right 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    margin-right 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color var(--logo-kids-duration, 0.52s) var(--logo-kids-ease, cubic-bezier(0.33, 1, 0.68, 1));
 }
 
 .header-cart-count.is-visible {
@@ -666,7 +765,7 @@ img {
 
 /* Top bar dropdown */
 .header-top-right .nav-dropdown-link {
-  font-size: 0.82rem;
+  font-size: 0.875rem;
   font-weight: 400;
   color: var(--color-fg-secondary);
 }
@@ -677,6 +776,220 @@ img {
 
 .header-top-right .nav-dropdown-toggle {
   opacity: 0.35;
+}
+
+/* -- Contacts showroom panel (top bar + shared content) -- */
+
+.contacts-nav-trigger {
+  appearance: none;
+  background: none;
+  border: none;
+  padding: 0.3rem 0;
+  margin: 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--color-fg-secondary);
+  line-height: inherit;
+}
+
+.contacts-nav-trigger:hover {
+  color: var(--color-fg);
+}
+
+.contacts-nav-trigger:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+.contacts-nav-chevron {
+  pointer-events: none;
+}
+
+.contacts-nav-chevron[data-expanded="true"]::after {
+  transform: rotate(180deg);
+}
+
+.contacts-nav-dropdown {
+  /* Keep the open panel inside the header right cluster on narrow desktops. */
+  position: relative;
+}
+
+.contacts-nav-dropdown-menu {
+  left: auto;
+  right: 0;
+  min-width: 280px;
+  max-width: min(320px, calc(100vw - 2rem));
+  padding: 0;
+  overflow: visible;
+}
+
+.contacts-nav-page-link {
+  display: block;
+  padding: 0.65rem 1.125rem 0.85rem;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-fg-secondary);
+  text-decoration: none;
+}
+
+.contacts-nav-page-link:hover {
+  color: var(--color-fg);
+  text-decoration: underline;
+}
+
+.contacts-nav-dropdown-bridge {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -10px;
+  height: 10px;
+}
+
+.showroom-contacts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  padding: 1rem 1.125rem 1.05rem;
+  text-align: left;
+  color: var(--color-fg);
+}
+
+.showroom-contacts-title {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--color-brand);
+}
+
+.showroom-contacts-address {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin: 0;
+  font-style: normal;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--color-fg-secondary);
+}
+
+.showroom-contacts-address-line {
+  display: block;
+}
+
+.showroom-contacts-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.showroom-contacts-phone {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.55rem 0.65rem;
+  min-height: 44px;
+  justify-content: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.showroom-contacts-phone:hover {
+  background: var(--color-surface);
+  border-color: color-mix(in srgb, var(--color-accent) 35%, var(--color-border));
+  text-decoration: none;
+}
+
+.showroom-contacts-phone:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 2px;
+}
+
+.showroom-contacts-phone-label {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-fg-muted);
+}
+
+.showroom-contacts-phone-number {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-fg);
+}
+
+.showroom-contacts-messengers {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.15rem;
+  margin: 0;
+  padding: 0.15rem 0 0;
+  list-style: none;
+  border-top: 1px solid var(--color-border);
+}
+
+.showroom-contacts-messenger-item {
+  display: inline-flex;
+  align-items: center;
+}
+
+.showroom-contacts-messenger-item:not(:last-child)::after {
+  content: "·";
+  margin: 0 0.4rem;
+  color: var(--color-fg-muted);
+  pointer-events: none;
+}
+
+.showroom-contacts-messenger-link,
+.showroom-contacts-messenger-text {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.25rem 0.15rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-fg-secondary);
+  text-decoration: none;
+}
+
+.showroom-contacts-messenger-link:hover {
+  color: var(--color-fg);
+  text-decoration: none;
+}
+
+.showroom-contacts-messenger-link:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.showroom-contacts-messenger-text {
+  color: var(--color-fg-muted);
+  cursor: default;
+}
+
+.contacts-page-panel {
+  max-width: 360px;
+  margin: 0.25rem 0 0.5rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 16px rgba(44, 36, 32, 0.06);
+}
+
+.contacts-page-panel .showroom-contacts {
+  padding: 1.15rem 1.25rem 1.2rem;
 }
 
 /* -- Mobile nav -- */
@@ -699,12 +1012,34 @@ html.mobile-nav-open {
 }
 
 @media (max-width: 768px) {
+  .header-top {
+    /* Flat surface on phones — edge wash reads as grey side bands. */
+    background: var(--color-surface);
+    padding-top: var(--safe-top);
+  }
+
   .header-top-inner {
-    height: 52px;
+    /* Three equal slots: left spacer | centered logo | burger.
+       Keeps the wordmark on the viewport midline, not between empty left and burger. */
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    align-items: center;
+    justify-content: stretch;
+    height: 64px;
+    position: relative;
+    column-gap: var(--space-sm);
+    min-width: 0;
   }
 
   .header-top-left {
-    display: none;
+    display: block;
+    visibility: hidden;
+    pointer-events: none;
+    width: 44px;
+    height: 44px;
+    flex: none;
+    overflow: hidden;
+    min-width: 0;
   }
 
   .header-top-right {
@@ -715,6 +1050,10 @@ html.mobile-nav-open {
     position: static;
     transform: none;
     margin: 0 auto;
+    justify-self: center;
+    grid-column: 2;
+    max-width: 100%;
+    min-width: 0;
   }
 
   .header-main {
@@ -725,16 +1064,22 @@ html.mobile-nav-open {
     display: flex;
     align-items: center;
     justify-content: center;
-    position: absolute;
-    top: 6px;
-    right: var(--space-lg);
+    position: static;
+    grid-column: 3;
+    justify-self: end;
+    align-self: center;
     width: 44px;
     height: 44px;
+    min-width: 0;
+    max-width: 100%;
+    min-height: 44px;
     cursor: pointer;
     z-index: 52;
     border: none;
     background: none;
     padding: 0;
+    margin: 0;
+    box-sizing: border-box;
   }
 
   .mobile-nav-btn:focus-visible {
@@ -793,7 +1138,7 @@ html.mobile-nav-open {
 
   .mobile-nav-overlay {
     position: fixed;
-    top: 52px;
+    top: calc(64px + var(--safe-top));
     left: 0;
     right: 0;
     bottom: 0;
@@ -801,13 +1146,18 @@ html.mobile-nav-open {
     z-index: 51;
     overflow-y: auto;
     overflow-x: hidden;
+    padding-bottom: max(var(--space-lg), var(--safe-bottom));
+    min-width: 0;
   }
 
   .mobile-nav {
     display: flex;
     flex-direction: column;
-    padding: var(--space-lg);
+    padding: var(--space-lg) var(--page-gutter);
     gap: var(--space-lg);
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .mobile-nav-group {
@@ -848,6 +1198,88 @@ html.mobile-nav-open {
 
   .mobile-nav a.mobile-nav-kids:hover {
     color: color-mix(in srgb, #598060 85%, black 15%);
+  }
+
+  .mobile-nav-contacts {
+    display: flex;
+    flex-direction: column;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .mobile-nav-contacts-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 44px;
+    padding: 0.875rem 0;
+    border: none;
+    border-bottom: 1px solid var(--color-border);
+    background: none;
+    font: inherit;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--color-fg);
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .mobile-nav-contacts-trigger:focus-visible {
+    outline: 2px solid var(--color-action);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  .mobile-nav-contacts-chevron {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    flex: none;
+    opacity: 0.45;
+  }
+
+  .mobile-nav-contacts-chevron::after {
+    content: "";
+    display: block;
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 4.5px solid currentColor;
+    transition: transform 0.15s;
+  }
+
+  .mobile-nav-contacts-chevron[data-expanded="true"]::after {
+    transform: rotate(180deg);
+  }
+
+  .mobile-nav-contacts-panel {
+    padding: 0.35rem 0 0.85rem;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .mobile-nav-contacts-panel .showroom-contacts {
+    padding: 0.65rem 0 0.25rem;
+    gap: 0.75rem;
+  }
+
+  .mobile-nav-contacts-panel .showroom-contacts-title {
+    font-size: 0.875rem;
+  }
+
+  .mobile-nav-contacts-panel .showroom-contacts-address {
+    font-size: 0.875rem;
+  }
+
+  .mobile-nav-contacts-panel .showroom-contacts-phone {
+    min-height: 48px;
+  }
+
+  .mobile-nav-contacts-panel .showroom-contacts-messengers {
+    gap: 0.25rem 0.1rem;
   }
 }
 
@@ -1124,25 +1556,58 @@ select:focus-visible {
    Warm wash lives on .site-footer and falls from the top rule — no brand card frame. */
 
 .site-footer {
+  /* Same adult ↔ kids tween language as .site-header edge wash. */
+  --footer-wash-top: color-mix(in srgb, var(--color-accent) 34%, var(--color-bg));
+  --footer-wash-mid: var(--color-bg);
   border-top: 1px solid var(--color-border);
   /* Gradient starts at the top divider and washes onto the brand/nav band. */
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--color-accent) 28%, var(--color-bg)) 0%,
-    var(--color-bg) 36%,
-    var(--color-bg) 100%
+    var(--footer-wash-top) 0%,
+    var(--footer-wash-mid) 36%,
+    var(--footer-wash-mid) 100%
   );
+  transition:
+    --footer-wash-top var(--logo-kids-duration, 0.52s) var(--logo-kids-ease, cubic-bezier(0.33, 1, 0.68, 1)),
+    --footer-wash-mid var(--logo-kids-duration, 0.52s) var(--logo-kids-ease, cubic-bezier(0.33, 1, 0.68, 1));
   /* Vertical air between the two rules lives on .footer-columns margins. */
   padding-block: 0 var(--space-lg);
-  margin-top: 2.5rem;
+  padding-bottom: max(var(--space-lg), calc(var(--space-md) + var(--safe-bottom)));
+  margin-top: var(--space-xl);
   color: var(--color-fg-secondary);
   font-size: 0.9rem;
+  /* Never fill leftover viewport height on short pages. */
+  height: auto;
+  min-height: 0;
+  align-self: stretch;
 }
 
+/* Kids section / kids PDP: sage wash matching header + .kids-theme.
+   `data-section` is client-driven; `body:has([data-kids-product])` covers
+   kids PDP SSR/first paint before the provider opts in. */
+.site-footer[data-section="kids"],
+html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .site-footer {
+  --footer-wash-top: color-mix(in srgb, #507356 28%, #f5f7f5);
+  --footer-wash-mid: #f5f7f5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-footer {
+    transition: none;
+  }
+}
+
+/* Full-bleed footer shell: page gutters only, no .container max-width. */
 .footer-inner {
   display: flex;
   flex-direction: column;
   gap: 0;
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+  padding-inline: max(clamp(28px, 3vw, 64px), var(--safe-left))
+    max(clamp(28px, 3vw, 64px), var(--safe-right));
+  box-sizing: border-box;
 }
 
 .footer-columns {
@@ -1154,42 +1619,42 @@ select:focus-visible {
   --footer-band-inset: 0.45rem;
   /* Trim brand bottom padding to match prior lattice (no card crop). */
   --footer-brand-crop: 8px;
-  /* Brand pad (also applied as invisible pad on nav columns). */
-  --footer-brand-pad-x: 1.75rem;
+  /* Brand pad - keep lattice with nav; slightly tighter than legacy
+     1.75rem so the %-brand track does not look hollow on wide screens. */
+  --footer-brand-pad-x: 1.1rem;
   --footer-brand-pad-y: 1.6rem;
-  /* Base nav gutter; brand stand-off is always 1.2× this.
-     Use a literal Nfr max (not calc(N * 1fr)) - fr-in-calc is unreliable. */
-  --footer-nav-gap: 3.25rem;
+  /*
+    Lighter brand, content-nearer mid tracks, tight gaps.
+    Free space stays on the right (justify start) so gutters between
+    text edges stay compact - not smeared by wide empty tracks.
+    12+10+8+8+7+13 = 58%; 5 × 2.5% = 12.5%; ~29.5% free trailing.
+  */
+  --footer-gap-pct: 2.5;
+  container-type: inline-size;
+  container-name: footer-cols;
   position: relative;
   display: grid;
   width: 100%;
   margin-block: var(--footer-band-inset);
-  grid-template-columns:
-    max-content
-    minmax(calc(var(--footer-nav-gap) * 1.2), 1.2fr)
-    max-content
-    minmax(var(--footer-nav-gap), 1fr)
-    max-content
-    minmax(var(--footer-nav-gap), 1fr)
-    max-content
-    minmax(var(--footer-nav-gap), 1fr)
-    max-content;
+  grid-template-columns: 12% 10% 8% 8% 7% 13%;
+  column-gap: calc(var(--footer-gap-pct) * 1%);
+  row-gap: 0;
+  justify-content: center;
   align-items: start;
+  align-content: start;
+  height: auto;
+  overflow-x: clip;
 }
 
-/* Thin vertical rule between brand and Каталог.
-   Anchored to .footer-brand; extends through --footer-band-inset so the
-   stroke runs the full band between the footer's horizontal rules.
-   Mid-gutter horizontally (half of 1.2× gap, nudged by half brand pad). */
+/* Vertical rule in the brand→Каталог gap only (brand-box height). */
 .footer-brand::after {
   content: "";
   position: absolute;
-  top: calc(-1 * var(--footer-band-inset) - 1px);
-  bottom: calc(-1 * var(--footer-band-inset) - 1px);
-  left: auto;
-  right: calc(
-    -0.5 * var(--footer-nav-gap) * 1.2 + 0.5 * var(--footer-brand-pad-x)
-  );
+  top: 0;
+  bottom: 0;
+  left: 100%;
+  /* Half of the %-gap, relative to the grid container (cqw). */
+  transform: translateX(calc(var(--footer-gap-pct) * 0.5cqw - 0.5px));
   width: 1px;
   background: linear-gradient(
     180deg,
@@ -1200,29 +1665,9 @@ select:focus-visible {
   pointer-events: none;
 }
 
-/* Children become grid items of .footer-columns (gap tracks stay empty). */
+/* Nav columns participate as siblings of .footer-brand (DOM order = visual). */
 .footer-nav {
   display: contents;
-}
-
-.footer-brand {
-  grid-column: 1;
-}
-
-.footer-nav .footer-column:nth-child(1) {
-  grid-column: 3;
-}
-
-.footer-nav .footer-column:nth-child(2) {
-  grid-column: 5;
-}
-
-.footer-nav .footer-column:nth-child(3) {
-  grid-column: 7;
-}
-
-.footer-nav .footer-column:nth-child(4) {
-  grid-column: 9;
 }
 
 .footer-column {
@@ -1230,6 +1675,8 @@ select:focus-visible {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  align-self: start;
+  height: fit-content;
 }
 
 /* Invisible pad matching the brand window so nav titles/rows share the lattice. */
@@ -1237,16 +1684,17 @@ select:focus-visible {
   padding-block: var(--footer-brand-pad-y);
 }
 
-/* Brand column: left edge flush with the Шоурум/Каталог power line.
-   Top-aligned copy keeps wordmark/rows on the shared lattice with nav.
-   No card frame/radius — gradient is on .site-footer from the top rule.
-   Bottom pad is cropped by --footer-brand-crop. */
+/* Brand column: height = content so the vertical rule stays upper-band only.
+   Width comes from the %-track (no max-content / fr mix). */
 .footer-brand {
   position: relative;
   box-sizing: border-box;
   align-self: start;
-  align-items: center;
+  align-items: flex-start;
   justify-content: flex-start;
+  width: auto;
+  max-width: none;
+  min-width: 0;
   height: auto;
   padding: var(--footer-brand-pad-y) var(--footer-brand-pad-x)
     calc(var(--footer-brand-pad-y) - var(--footer-brand-crop));
@@ -1257,13 +1705,23 @@ select:focus-visible {
   background: transparent;
 }
 
-/* Left-aligned copy cluster on the shared footer lattice. */
+/* Left-aligned copy cluster; width limited by the %-track. */
 .footer-brand-copy {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  width: max-content;
+  width: 100%;
   max-width: 100%;
+}
+
+/* Brand lead may wrap inside the %-track so mid-desktop stays one row
+   without horizontal overflow; nav links keep nowrap + ellipsis. */
+.footer-brand .footer-row {
+  white-space: normal;
+  max-width: 100%;
+  height: auto;
+  min-height: var(--footer-row-h);
+  line-height: var(--footer-row-h);
 }
 
 /* Shared header slot: wordmark and caps labels share height + bottom gap.
@@ -1285,8 +1743,15 @@ select:focus-visible {
 }
 
 .footer-brand-logo {
+  display: inline-flex;
+  align-items: center;
   color: var(--color-fg);
   text-decoration: none;
+}
+
+.footer-brand-mark {
+  display: inline-flex;
+  align-items: center;
 }
 
 .footer-brand .footer-column-title {
@@ -1301,9 +1766,17 @@ select:focus-visible {
 
 .footer-brand-wordmark {
   display: block;
+  /* Pin both axes like .logo-image so the Kids pill tween stays calm. */
   height: 18px;
-  width: auto;
-  aspect-ratio: 16489 / 2114;
+  width: calc(18px * 16489 / 2114);
+  flex: none;
+  color: var(--color-logo-ink);
+  overflow: visible;
+}
+
+/* Footer wordmark is 18px; keep the shared Kids slot on the same cross-size. */
+.footer-brand-logo .logo-kids-slot {
+  height: 18px;
 }
 
 /* Shared body: every row is the same fixed height, no extra gap */
@@ -1382,16 +1855,17 @@ select:focus-visible {
 }
 
 @media (max-width: 1100px) {
-  .footer-columns {
-    --footer-nav-gap: 2.5rem;
+  .footer-inner {
+    padding-inline: max(var(--page-gutter), var(--safe-left))
+      max(var(--page-gutter), var(--safe-right));
   }
-}
 
-@media (max-width: 900px) {
   .footer-columns {
     grid-template-columns: 1fr;
-    row-gap: var(--space-xl);
-    margin-block: var(--space-lg);
+    column-gap: 0;
+    row-gap: var(--space-lg);
+    margin-block: var(--space-md);
+    overflow-x: visible;
   }
 
   .footer-brand::after {
@@ -1400,40 +1874,102 @@ select:focus-visible {
   }
 
   .footer-nav {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-xl);
-  }
-
-  .footer-brand,
-  .footer-nav .footer-column:nth-child(1),
-  .footer-nav .footer-column:nth-child(2),
-  .footer-nav .footer-column:nth-child(3),
-  .footer-nav .footer-column:nth-child(4) {
-    grid-column: auto;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-lg) var(--space-md);
+    width: 100%;
   }
 
   .footer-brand {
     margin: 0;
+    width: 100%;
+    max-width: none;
+    padding: 0;
+    align-items: flex-start;
+  }
+
+  .footer-brand-copy {
+    width: 100%;
+    max-width: 36ch;
+    align-items: flex-start;
   }
 
   .footer-nav .footer-column {
     padding-block: 0;
+    min-width: 0;
+  }
+
+  .footer-brand .footer-row {
+    white-space: normal;
+    height: auto;
+    min-height: 0;
+    line-height: 1.45;
+  }
+
+  .footer-column-title {
+    font-size: 0.8125rem;
+    letter-spacing: 0.08em;
+  }
+
+  .footer-column-body,
+  .footer-brand-lead {
+    font-size: 1rem;
+    color: var(--color-fg-secondary);
+  }
+
+  .footer-column-links .footer-row {
+    height: auto;
+    min-height: var(--touch-min);
+    line-height: 1.35;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+  }
+
+  .footer-column-links .footer-row a {
+    display: flex;
+    align-items: center;
+    min-height: var(--touch-min);
+    color: var(--color-fg-secondary);
+  }
+
+  .footer-brand-bullets {
+    margin-block: 0.35rem;
+    gap: 0.15rem;
+  }
+
+  .footer-brand-bullets .footer-row {
+    min-height: 0;
+    gap: 0.45em;
+  }
+
+  .footer-bottom {
+    font-size: 0.875rem;
+    color: var(--color-fg-secondary);
+    padding-bottom: 0.25rem;
+  }
+
+  .site-footer {
+    margin-top: var(--space-lg);
+    font-size: 1rem;
   }
 }
 
 @media (max-width: 520px) {
   .footer-nav {
-    flex-direction: column;
-    gap: var(--space-lg);
+    /* One column when two ~160px tracks would crush long RU labels. */
+    grid-template-columns: 1fr;
+    gap: var(--space-md);
   }
 
   .footer-brand-wordmark {
-    height: 16px;
+    height: 18px;
+    width: calc(18px * 16489 / 2114);
   }
 
   .footer-brand-lead {
-    font-size: 0.875rem;
+    font-size: 1rem;
+    line-height: 1.5;
   }
 }
 
@@ -2001,9 +2537,11 @@ button:disabled,
 
 /* Execution option groups (Дерево/Обивка/Цвет/Изголовье/…) are portalled out
    of .product-detail-media-switcher into #pdp-color-options-slot — above the
-   price and CTA in the buy panel. Compact finish samples, not heavy tiles. */
+   price and CTA in the buy panel. Compact finish samples, not heavy tiles.
+   No extra margin-top: .pdp-panel gap already spaces siblings; the old
+   space-sm stacked under «Исполнение» and pulled that trigger visually up. */
 .pdp-color-options-slot {
-  margin-top: var(--space-sm);
+  margin-top: 0;
 }
 
 .pdp-color-options-slot:empty {
@@ -2014,17 +2552,19 @@ button:disabled,
   margin-top: 0;
   padding-top: 0;
   padding-bottom: 0;
-  gap: 0.75rem;
+  /* Air between Цвет / Дерево / … groups */
+  gap: 0.875rem;
   border-top: none;
   background: transparent;
 }
 
-/* One-line group heading: «Цвет - Белый G503» / «Цвет - Выберите». */
+/* One-line group heading: «Цвет: Белый G503» / «Цвет: Выберите». */
 .pdp-color-options-slot .product-card-selector-section {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 6px;
+  /* Label → swatch row */
+  gap: 0.625rem;
   padding: 0;
   min-height: unset;
 }
@@ -2034,21 +2574,23 @@ button:disabled,
   flex-direction: row;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 0;
-  line-height: 1.35;
+  column-gap: 0.15em;
+  row-gap: 0.15em;
+  line-height: 1.5;
   padding-top: 0;
   margin: 0;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-weight: 600;
-  letter-spacing: 0;
+  letter-spacing: 0.01em;
   text-transform: none;
   white-space: normal;
   color: var(--color-fg);
 }
 
+/* Colon matches the group name («Цвет» / «Дерево»), not the value. */
 .pdp-color-options-slot .product-card-selector-sep {
-  font-weight: 400;
-  color: var(--color-fg-muted);
+  font-weight: 600;
+  color: var(--color-fg);
 }
 
 .pdp-color-options-slot .product-card-selector-value {
@@ -2061,13 +2603,14 @@ button:disabled,
   padding-bottom: 0;
 }
 
-/* Premium finish sample: tight ring gap, fixed size (do not grow with column). */
+/* Premium finish sample: tight ring gap, fixed size (do not grow with column).
+   ~¾ of the previous 40px cell so Цвет / Дерево rows stay denser. */
 .pdp-color-options-slot .product-card-execution-swatch {
-  width: 40px;
-  height: 40px;
-  padding: 3px;
+  width: 30px;
+  height: 30px;
+  padding: 2px;
   border: none;
-  border-radius: 4px;
+  border-radius: 3px;
   background: transparent;
   box-shadow: none;
   box-sizing: border-box;
@@ -2078,7 +2621,7 @@ button:disabled,
 .pdp-color-options-slot .product-card-execution-swatch-img {
   width: 100%;
   height: 100%;
-  border-radius: 3px;
+  border-radius: 2px;
   border: 1px solid color-mix(in srgb, var(--color-fg) 14%, transparent);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-bg) 35%, transparent);
 }
@@ -2109,8 +2652,8 @@ button:disabled,
 .pdp-color-options-slot .product-card-execution-swatch:disabled::after {
   content: "";
   position: absolute;
-  inset: 5px;
-  border-radius: 2px;
+  inset: 4px;
+  border-radius: 1px;
   background: linear-gradient(
     135deg,
     transparent calc(50% - 0.5px),
@@ -2131,10 +2674,10 @@ button:disabled,
 }
 
 .pdp-color-options-slot .product-card-execution-swatches--inline {
-  min-height: 40px;
+  min-height: 30px;
 }
 
-/* Full column width: fixed 40px cells, as many per row as fit, then wrap. */
+/* Full column width: fixed 30px cells, as many per row as fit, then wrap. */
 .pdp-color-options-slot .product-card-swatch-scroll-rail {
   width: 100%;
 }
@@ -2142,10 +2685,10 @@ button:disabled,
 .pdp-color-options-slot .product-card-swatch-scroll-rail .product-card-swatch-scroll-rail__track {
   display: grid;
   width: 100%;
-  grid-template-columns: repeat(auto-fill, 40px);
+  grid-template-columns: repeat(auto-fill, 30px);
   justify-content: start;
   gap: 6px;
-  min-height: 40px;
+  min-height: 30px;
   overflow: visible;
   background: transparent;
   padding: 1px 0;
@@ -2165,38 +2708,48 @@ button:disabled,
    APG select-only combobox in the buy panel: configurator-grade trigger
    (64–72px), spacious option rows with description + price, quiet shadow.
    The menu is absolutely positioned inside .pdp-panel (no overflow clipping
-   on the panel/column) and sits above the sticky panel context. */
+   on the panel/column) and sits above the sticky panel context.
+   No extra margin: vertical air is only `.pdp-panel` gap — same above
+   (dimensions rule) and below (Цвет / size / price). */
 .pdp-material-select {
   position: relative;
   width: 100%;
+  /* Extra air above/below on top of `.pdp-panel` gap. */
+  margin-block: 0.375rem;
 }
 
-.pdp-material-trigger {
-  display: flex;
+/* Higher specificity than global `button` padding/line-height. */
+button.pdp-material-trigger {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-md);
+  column-gap: var(--space-md);
   width: 100%;
-  min-height: 68px;
-  padding: 0.75rem 1rem 0.75rem 1.125rem;
+  box-sizing: border-box;
+  /* Slightly roomier trigger — still optically centered. */
+  padding: 1rem 1.25rem;
+  line-height: normal;
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   background: var(--color-surface);
   color: var(--color-fg);
   text-align: left;
+  /* Global `button` sets nowrap; the tier label must wrap on narrow screens
+     instead of running under the price. */
+  white-space: normal;
   cursor: pointer;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.pdp-material-trigger:hover {
+button.pdp-material-trigger:hover {
   border-color: color-mix(in srgb, var(--color-action) 35%, var(--color-border));
 }
 
-.pdp-material-trigger.is-open {
+button.pdp-material-trigger.is-open {
   border-color: color-mix(in srgb, var(--color-action) 55%, var(--color-border));
 }
 
-.pdp-material-trigger:focus-visible {
+button.pdp-material-trigger:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--color-accent) 60%, transparent);
   outline-offset: 2px;
 }
@@ -2204,30 +2757,36 @@ button:disabled,
 .pdp-material-trigger-main {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  justify-content: center;
+  /* Label ↔ value: clearer lead without unbalancing the padded box
+     (grid align-items: center keeps price locked to the stack). */
+  gap: 0.5rem;
   min-width: 0;
 }
 
 .pdp-material-trigger-label {
+  display: block;
   font-size: 0.6875rem;
   font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  line-height: 1.1;
   color: var(--color-fg-muted);
 }
 
 .pdp-material-trigger-value {
+  display: block;
   font-size: 0.9375rem;
   font-weight: 500;
-  line-height: 1.35;
+  line-height: 1.25;
   color: var(--color-fg);
 }
 
 .pdp-material-trigger-side {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  flex: 0 0 auto;
+  gap: 0.625rem;
+  align-self: center;
 }
 
 .pdp-material-trigger-price {
@@ -2349,12 +2908,16 @@ button:disabled,
   white-space: nowrap;
 }
 
-/* Reserved price slot — avoids layout jump when hint ↔ price swap. */
+/* Reserved price slot — avoids layout jump when hint ↔ price swap.
+   Center the amount in the min-height band so air to the swatches above
+   and the CTA below reads as the same (flex-start left a dead strip under
+   the glyphs and made the price look raised). Extra margin-block on top of
+   `.pdp-panel` gap - price needs a bit more air than sibling controls. */
 .pdp-price-area {
   min-height: 2.75rem;
   display: flex;
-  align-items: flex-end;
-  margin-top: var(--space-md);
+  align-items: center;
+  margin-block: 0.5rem;
 }
 
 .pdp-price-hint {
@@ -2367,6 +2930,7 @@ button:disabled,
 
 .pdp-price-area .product-detail-price {
   margin: 0;
+  line-height: 1.15;
 }
 
 /* Keyboard-accessible hero opener: the photo itself is the button. */
@@ -2386,37 +2950,77 @@ button:disabled,
   border-radius: 2px;
 }
 
-/* Quiet fullscreen affordance pinned to the photo corner: zoom glyph +
-   photo count. Decorative (the whole hero is the button), so no pointer
-   events of its own. */
+/* Gallery chrome: zoom glyph (+ count) pinned to the bottom-right of the
+   hero *content* box - not the padded mat edge. .product-detail-img uses
+   padding as passepartout; without adding that padding into the inset the
+   chip straddles the photo/mat boundary and reads as orphaned. Decorative
+   (the whole hero is the button), so no pointer events of its own. */
 .pdp-hero-affordance {
+  --pdp-hero-mat-y: clamp(16px, 2.5vh, 28px);
+  --pdp-hero-mat-x: clamp(12px, 1.5vw, 24px);
+  --pdp-hero-chip-inset: 10px;
   position: absolute;
-  right: clamp(12px, 1.5vw, 24px);
-  bottom: clamp(12px, 1.5vw, 24px);
+  z-index: 2;
+  right: calc(var(--pdp-hero-mat-x) + var(--pdp-hero-chip-inset));
+  bottom: calc(var(--pdp-hero-mat-y) + var(--pdp-hero-chip-inset));
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  min-height: 32px;
-  padding: 0 10px;
+  justify-content: center;
+  gap: 0;
+  box-sizing: border-box;
+  width: 36px;
+  height: 36px;
+  padding: 0;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
   color: var(--color-fg-secondary);
   font-size: 0.8125rem;
+  font-weight: 500;
   line-height: 1;
+  letter-spacing: 0.01em;
+  box-shadow: 0 1px 2px rgba(44, 36, 32, 0.06);
   pointer-events: none;
-  transition: color 0.15s, border-color 0.15s;
+  transition: color 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.pdp-hero-affordance.has-count {
+  width: auto;
+  min-height: 36px;
+  height: auto;
+  padding: 0 12px 0 10px;
+  gap: 6px;
 }
 
 .pdp-hero-affordance-icon {
   width: 15px;
   height: 15px;
+  flex-shrink: 0;
+}
+
+.pdp-hero-affordance-count {
+  white-space: nowrap;
 }
 
 .pdp-hero-open:hover .pdp-hero-affordance,
 .pdp-hero-open:focus-visible .pdp-hero-affordance {
   color: var(--color-fg);
   border-color: var(--color-fg-muted);
+  box-shadow: 0 1px 3px rgba(44, 36, 32, 0.1);
+}
+
+@media (max-width: 920px) {
+  .pdp-hero-affordance {
+    --pdp-hero-mat-y: 12px;
+    --pdp-hero-mat-x: 12px;
+    --pdp-hero-chip-inset: 8px;
+    width: 34px;
+    height: 34px;
+  }
+
+  .pdp-hero-affordance.has-count {
+    min-height: 34px;
+  }
 }
 
 /* PDP thumb rail — same thumbs as the catalog card, scaled up (all 4 PDP
@@ -4418,7 +5022,8 @@ button:disabled,
 .pdp-panel-col {
   min-width: 0;
   padding-right: clamp(var(--space-lg), 3.5vw, 64px);
-  padding-top: clamp(var(--space-lg), 4.5vh, 56px);
+  /* Breath under header — nudged up again after operator feedback. */
+  padding-top: clamp(1rem, 2vh, 28px);
   padding-bottom: var(--space-xl);
 }
 
@@ -4445,7 +5050,7 @@ button:disabled,
 
   .pdp-panel-col {
     padding-inline: var(--space-lg);
-    padding-top: var(--space-lg);
+    padding-top: var(--space-md);
   }
 
   .pdp-media {
@@ -4542,26 +5147,33 @@ button:disabled,
   cursor: zoom-in;
 }
 
-/* 1. Context row: collection left, article right — secondary, not lost. */
+/* 1. Context row: collection left, article right — one voice, one baseline. */
 .pdp-context-row {
   display: flex;
-  align-items: baseline;
+  /* Not baseline: Cyrillic vs Latin + tabular-nums was lifting «Арт.» above. */
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-md);
   flex-wrap: wrap;
 }
 
-/* Same voice as .product-card-collection on the catalog card. */
-.pdp-collection-label {
-  font-size: 0.8125rem;
+.pdp-collection-label,
+.pdp-article {
+  margin: 0;
+  padding: 0;
+  font-weight: 400;
+  line-height: 1.3;
+  letter-spacing: 0.01em;
   color: var(--color-fg-muted);
-  letter-spacing: 0.02em;
+}
+
+.pdp-collection-label {
+  font-size: 0.875rem;
 }
 
 .pdp-article {
+  /* One step quieter than collection name - still readable. */
   font-size: 0.8125rem;
-  color: var(--color-fg-muted);
-  letter-spacing: 0.02em;
   font-variant-numeric: tabular-nums;
 }
 
@@ -4571,47 +5183,65 @@ button:disabled,
   margin-top: calc(-1 * var(--space-sm));
 }
 
-/* 2. Title */
+/* 2. Title — sit evenly between context row and subtitle. */
 .product-detail-header {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: var(--space-xs);
+  /* Slight air under context row (was -0.375rem — too tight). */
+  margin-top: -0.125rem;
 }
 
 .pdp-title {
   font-size: clamp(1.85rem, 2.9vw, 2.6rem);
-  line-height: 1.06;
+  line-height: 1.12;
   letter-spacing: -0.018em;
   font-weight: 600;
+  margin: 0;
+  /* Explicit CopyLines break: type row, then transcribed model row. */
+  text-wrap: pretty;
 }
 
-/* 3. Short positioning line (real subtitle field) */
+/* 3. Short positioning line (real subtitle field).
+   CopyLines may emit 2 meaning rows (name / measure). */
 .pdp-subtitle {
   color: var(--color-fg-secondary);
   font-size: 0.9975rem;
-  line-height: 1.55;
-  max-width: 46ch;
-  margin-top: calc(-1 * var(--space-xs));
+  line-height: 1.45;
+  max-width: 42ch;
+  /* Slight extra under H1 so air matches the (optically lighter) gap above. */
+  margin-top: 0.125rem;
+  margin-bottom: 0.375rem;
+  text-wrap: pretty;
 }
 
-/* 4. Dimensions: height → width → depth. Quiet top and
-   bottom rules only (the catalog system has no vertical hairlines). */
+/* 4. Dimensions: height → width → depth.
+   Left-anchored cluster (not full-bleed 1fr tracks): each cell is only as
+   wide as its label/value, so the gap between columns is optically equal.
+   Quiet top and bottom rules only (no vertical hairlines). */
 .pdp-dimensions-row {
   display: flex;
-  gap: clamp(var(--space-lg), 3vw, var(--space-2xl));
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: clamp(2rem, 4vw, 3rem);
   margin: 0;
-  padding-block: var(--space-md);
+  /* Middle band: between cramped 0.7/0.9 and former space-lg (1.5).
+     Slightly more bottom for optical center vs value line-box. */
+  padding: 1.05rem 0 1.2rem;
   border-top: 1px solid var(--color-border);
   border-bottom: 1px solid var(--color-border);
 }
 
 .pdp-dimension-cell {
-  flex: 0 1 auto;
+  flex: 0 0 auto;
+  text-align: left;
 }
 
 .pdp-dimension-cell dt {
   font-size: 0.8125rem;
+  line-height: 1.2;
   color: var(--color-fg-muted);
   margin-bottom: 2px;
 }
@@ -4620,6 +5250,7 @@ button:disabled,
   margin: 0;
   font-size: 1.125rem;
   font-weight: 500;
+  line-height: 1.2;
   color: var(--color-fg);
   font-variant-numeric: tabular-nums;
 }
@@ -4660,20 +5291,23 @@ button:disabled,
 }
 
 .pdp-panel .cta-group {
-  margin-top: var(--space-sm);
+  /* Panel gap alone — extra margin stacked under the price and pulled it up. */
+  margin-top: 0;
   flex-direction: column;
   align-items: stretch;
   gap: var(--space-sm);
 }
 
 /* Same .btn / .btn-primary tokens as everywhere else in the catalog — the
-   PDP only stretches the button to the panel width and guarantees a 44px
-   touch target. No separate button variant. */
+   PDP stretches the button to the panel width and bumps size a step for
+   the buy panel. */
 .pdp-panel .cta-group .btn {
   width: 100%;
   justify-content: center;
   text-align: center;
-  min-height: 2.75rem;
+  min-height: 3rem;
+  padding: 0.8125rem 1.35rem;
+  font-size: 1rem;
 }
 
 /* 8. Service block: short true facts as quiet secondary lines above one text
@@ -4681,13 +5315,13 @@ button:disabled,
 .pdp-service-block {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   margin-top: var(--space-xs);
   padding-top: var(--space-md);
   border-top: 1px solid var(--color-border);
   font-size: 0.875rem;
   color: var(--color-fg-secondary);
-  line-height: 1.5;
+  line-height: 1.35;
 }
 
 .pdp-service-link {
@@ -4695,7 +5329,7 @@ button:disabled,
   align-items: center;
   gap: 6px;
   width: fit-content;
-  margin-top: 4px;
+  margin-top: 0.5rem;
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--color-fg);
@@ -4719,10 +5353,33 @@ button:disabled,
 /* ---- Below the first screen: editorial description + full specs ---- */
 
 .pdp-below {
+  /* Break out of main.container. Left edge = showroom powerline (same inset
+     as header .container content). Right edge = matching container gutter.
+     Column split: description ends before the centered wordmark; specs
+     start on the end of «T» (hero 100vw can skew in-flow container math). */
+  --logo-wordmark-w: calc(20px * 16489 / 2114);
+  --pdp-below-gutter: max(
+    var(--space-lg),
+    calc((100vw - var(--max-width)) / 2 + var(--space-lg))
+  );
+  --pdp-below-logo-end: calc(50vw + var(--logo-wordmark-w) / 2);
+  --pdp-below-gap: clamp(var(--space-xl), 7vw, 120px);
+  /* First track fills showroom → (T − gap); gap then lands specs on «T». */
+  --pdp-below-desc-track: calc(
+    var(--pdp-below-logo-end) - var(--pdp-below-gutter) - var(--pdp-below-gap)
+  );
+  width: 100vw;
+  max-width: 100vw;
+  margin-left: calc(50% - 50vw);
+  box-sizing: border-box;
   display: grid;
-  grid-template-columns: minmax(0, 1.6fr) minmax(300px, 1fr);
-  gap: clamp(var(--space-xl), 7vw, 120px);
-  padding-block: clamp(var(--space-xl), 7vh, 76px);
+  grid-template-columns: minmax(0, var(--pdp-below-desc-track)) minmax(300px, 1fr);
+  gap: var(--pdp-below-gap);
+  /* Less air above «Описание / Характеристики»; keep a fuller bottom close. */
+  padding-top: clamp(var(--space-md), 3.5vh, 40px);
+  padding-bottom: clamp(var(--space-xl), 7vh, 76px);
+  padding-left: var(--pdp-below-gutter);
+  padding-right: var(--pdp-below-gutter);
   align-items: start;
 }
 
@@ -4731,25 +5388,60 @@ button:disabled,
   font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--color-fg);
-  margin-bottom: var(--space-md);
+  margin: 0 0 var(--space-lg);
+}
+
+.pdp-description-block {
+  max-width: 58ch;
+}
+
+.pdp-description-group {
+  display: flex;
+  flex-direction: column;
+  /* Middle rhythm: not sparse cards, not a dense wall. */
+  gap: 0.5em;
+}
+
+.pdp-description-group + .pdp-description-group {
+  margin-top: 0.9rem;
+}
+
+/* Collection note is smaller + muted, so equal CSS gaps read as
+   «tight above / loose below» against darker body lines. Push air
+   above and pull a touch below so the two sides match optically. */
+.pdp-description-group.is-collection-group {
+  margin-top: 1.2rem;
+}
+
+.pdp-description-group.is-collection-group + .pdp-description-group {
+  margin-top: 1.15rem;
 }
 
 .pdp-description {
-  color: var(--color-fg-secondary);
-  line-height: 1.75;
-  font-size: 1rem;
-  max-width: 62ch;
-}
-
-/* Editorial lead: the opening paragraph carries slightly more weight */
-.pdp-description-block .pdp-description:first-of-type {
-  font-size: 1.125rem;
-  line-height: 1.65;
+  margin: 0;
   color: var(--color-fg);
+  line-height: 1.6;
+  font-size: 1rem;
+  /* Regular - 300 read too thin on long editorial lines. */
+  font-weight: 400;
+  text-wrap: pretty;
 }
 
-.pdp-description + .pdp-description {
-  margin-top: var(--space-md);
+/* Collection-wide note: lighter ink, one step smaller kegль, open leading. */
+.pdp-description.is-collection {
+  font-size: 0.9875rem;
+  line-height: 1.7;
+  font-weight: 400;
+  color: var(--color-fg-muted);
+}
+
+/* Mixed group: same optical fix when the muted sentence sits between body lines. */
+.pdp-description:not(.is-collection) + .pdp-description.is-collection {
+  margin-top: 0.35em;
+}
+
+.pdp-description.is-collection + .pdp-description:not(.is-collection) {
+  margin-top: 0.15em;
 }
 
 .pdp-specs-list {
@@ -4779,7 +5471,8 @@ button:disabled,
 
 .pdp-specs-catalog-link {
   display: inline-block;
-  margin-top: var(--space-md);
+  /* More air under the last specs rule before «Смотреть каталог». */
+  margin-top: var(--space-lg);
 }
 
 @media (max-width: 768px) {
@@ -6471,14 +7164,19 @@ body {
   --hp-dark-muted: #b8aca2;
   --hp-kids-bg: #eef2ec;
   --hp-kids-accent: #507356;
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
+  /* Symmetric full-bleed relative to .container gutters — avoids 100vw
+     scrollbar asymmetry (left gutter + flush right). */
+  width: calc(100% + 2 * var(--page-gutter));
+  max-width: none;
+  margin-left: calc(-1 * var(--page-gutter));
+  margin-right: calc(-1 * var(--page-gutter));
   /* Cancel .page-section top padding so the hero starts at the header. */
   margin-top: calc(-1 * var(--space-xl));
   display: flex;
   flex-direction: column;
   gap: var(--space-3xl);
-  padding-bottom: var(--space-2xl);
+  padding-bottom: var(--space-xl);
+  box-sizing: border-box;
 }
 
 .hp-wrap {
@@ -7435,7 +8133,7 @@ body {
 .hp-final {
   position: relative;
   overflow: hidden;
-  min-height: clamp(380px, 52vh, 520px);
+  min-height: clamp(420px, 58vh, 560px);
   display: grid;
   place-items: center;
   isolation: isolate;
@@ -7455,15 +8153,17 @@ body {
 .hp-final-scrim {
   position: absolute;
   inset: 0;
-  background: rgba(28, 20, 15, 0.58);
+  background: rgba(28, 20, 15, 0.52);
   z-index: -1;
 }
 
 .hp-final-body {
   text-align: center;
   color: #f6f1ea;
-  padding: clamp(2.5rem, 6vw, 4rem) var(--space-lg);
-  max-width: 36rem;
+  padding: clamp(2.25rem, 7vh, 3.5rem) var(--page-gutter);
+  max-width: min(36rem, 100%);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .hp-final-body h2 {
@@ -7471,18 +8171,28 @@ body {
   font-size: clamp(1.5rem, 2.8vw, 2.1rem);
   font-weight: 400;
   letter-spacing: -0.02em;
+  line-height: 1.18;
+  text-wrap: balance;
 }
 
 .hp-final-text {
   margin: var(--space-md) 0 0;
-  color: rgba(246, 241, 234, 0.82);
-  line-height: 1.6;
+  color: rgba(246, 241, 234, 0.9);
+  line-height: 1.45;
+  font-size: clamp(1rem, 2.6vw, 1.125rem);
+  max-inline-size: 28ch;
+  margin-inline: auto;
+  text-wrap: balance;
 }
 
 .hp-final-btn {
   margin-top: var(--space-lg);
   background: #f6f1ea;
   color: var(--color-brand);
+  min-height: var(--touch-cta);
+  min-width: min(100%, 20rem);
+  padding-inline: 1.5rem;
+  font-size: 1.0625rem;
 }
 
 .hp-final-btn:hover {
@@ -7523,7 +8233,7 @@ body {
   }
 
   .hp-craft-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     row-gap: var(--space-lg);
   }
 
@@ -7542,18 +8252,41 @@ body {
 
 @media (max-width: 768px) {
   .hp {
-    gap: var(--space-2xl);
+    gap: var(--space-xl);
+    padding-bottom: var(--space-lg);
+  }
+
+  .hp-wrap {
+    padding-inline: var(--page-gutter);
   }
 
   .hp-hero-plate {
-    min-height: clamp(440px, 72vh, 620px);
+    min-height: clamp(420px, 72vh, 620px);
+    aspect-ratio: auto;
   }
 
   .hp-hero-panel {
-    left: var(--space-sm);
-    right: var(--space-sm);
-    bottom: var(--space-sm);
+    left: var(--page-gutter);
+    right: var(--page-gutter);
+    bottom: var(--page-gutter);
     max-width: none;
+    padding: var(--space-md);
+  }
+
+  .hp-hero-panel h1 {
+    font-size: clamp(1.5rem, 7vw, 1.875rem);
+    line-height: 1.16;
+    text-wrap: balance;
+  }
+
+  .hp-hero-actions .btn {
+    min-height: var(--touch-cta);
+    font-size: 1.0625rem;
+    padding-inline: 1.35rem;
+  }
+
+  .hp-hero-actions .btn-primary {
+    min-width: min(100%, 20rem);
   }
 
   .hp-hero-markers {
@@ -7611,14 +8344,31 @@ body {
   }
 
   .hp-final {
-    min-height: 320px;
+    min-height: clamp(440px, 70vh, 520px);
+  }
+
+  .hp-final-body h2 {
+    font-size: clamp(1.5rem, 6.5vw, 1.875rem);
+  }
+
+  .hp-final-text {
+    font-size: 1.0625rem;
+    max-inline-size: 24ch;
   }
 }
 
 @media (max-width: 480px) {
   .hp-craft-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--space-sm);
+  }
+
+  .hp-craft-item {
+    min-width: 0;
+  }
+
+  .hp-craft-media img {
+    transform: scale(var(--craft-zoom, 1.35));
   }
 
   .hp-craft-caption {
@@ -7857,6 +8607,26 @@ body {
   line-height: 1.5;
 }
 
+@media (max-width: 768px) {
+  .hp-bhero-plate {
+    min-height: clamp(440px, min(72vh, 520px), 560px);
+  }
+
+  .hp--bespoke .hp-hero-img {
+    object-position: 48% 58%;
+  }
+
+  .hp--bespoke .hp-hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hp--bespoke .hp-hero-actions .btn {
+    width: 100%;
+    max-width: 20rem;
+  }
+}
+
 /* «Когда подходит»: indexed editorial text cards. */
 .hp-bwhen-grid {
   list-style: none;
@@ -8003,6 +8773,9 @@ body {
   margin-top: var(--space-lg);
   background: #f4efe9;
   color: #3d3126;
+  min-height: var(--touch-cta);
+  min-width: min(100%, 20rem);
+  font-size: 1.0625rem;
 }
 
 .hp-bfinal-btn:hover {
@@ -8022,5 +8795,37 @@ body {
   .hp-bwhen-grid,
   .hp-bprocess-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ---- Mobile layout system (shared) ------------------------------------ */
+
+@media (max-width: 768px) {
+  html {
+    /* Defensive only after full-bleed uses gutter-relative widths. */
+    overflow-x: clip;
+  }
+
+  body {
+    font-size: 1rem;
+    line-height: 1.55;
+  }
+
+  img,
+  video,
+  svg {
+    max-width: 100%;
+  }
+
+  /* iOS Safari: avoid auto-zoom on focus for form fields. */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  .footer-brand .footer-column-title {
+    height: auto;
+    min-height: var(--footer-head-h);
   }
 }

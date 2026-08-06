@@ -11,6 +11,11 @@ export type ProductThumbCarouselProps = {
   pendingPreloadUrl: string | null
   onThumbPick: (url: string, isMain: boolean) => (e: MouseEvent<HTMLButtonElement>) => void
   onThumbError: (url: string) => void
+  /**
+   * Catalog card WebP derivatives → original JPEG/PNG.
+   * On derivative 404, swap the thumb src before blacklisting the photo.
+   */
+  srcFallbackByUrl?: Readonly<Record<string, string>>
 }
 
 /**
@@ -26,11 +31,18 @@ export function ProductThumbCarousel({
   pendingPreloadUrl,
   onThumbPick,
   onThumbError,
+  srcFallbackByUrl,
 }: ProductThumbCarouselProps) {
   const trackRef = useRef<HTMLDivElement>(null)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(false)
+  /** Logical strip URL → display src after a derivative fallback. */
+  const [srcOverrides, setSrcOverrides] = useState<Record<string, string>>({})
   const stripKey = visibleStrip.join("\u0000")
+
+  useEffect(() => {
+    setSrcOverrides({})
+  }, [stripKey])
 
   const updateScrollArrows = useCallback(() => {
     const el = trackRef.current
@@ -86,9 +98,13 @@ export function ProductThumbCarousel({
         {visibleStrip.map((url) => {
           const isMain = url === variantMain
           const isActive = isMain
-            ? activeGalleryUrl === null && displayHeroSrc === variantMain
+            ? activeGalleryUrl === null &&
+              (displayHeroSrc === variantMain ||
+                displayHeroSrc === srcFallbackByUrl?.[variantMain] ||
+                displayHeroSrc === srcOverrides[variantMain])
             : activeGalleryUrl === url
-          const isBusy = pendingPreloadUrl === url
+          const isBusy = pendingPreloadUrl === url || pendingPreloadUrl === srcOverrides[url]
+          const displaySrc = srcOverrides[url] ?? url
           return (
             <button
               key={url}
@@ -101,15 +117,23 @@ export function ProductThumbCarousel({
               title={isMain ? "Основное фото" : "Показать фото"}
             >
               <img
-                src={url}
+                src={displaySrc}
                 alt=""
                 loading="lazy"
                 className="product-card-media-thumb-img"
                 onError={() => {
+                  const fallback = srcFallbackByUrl?.[url]
+                  if (fallback && displaySrc !== fallback) {
+                    setSrcOverrides((prev) =>
+                      prev[url] === fallback ? prev : { ...prev, [url]: fallback }
+                    )
+                    return
+                  }
                   // The main photo is already proven valid (it renders as the hero on
-                  // load) — never let a transient thumbnail-image hiccup blacklist it
-                  // and make it "disappear" from the strip.
-                  if (!isMain) onThumbError(url)
+                  // load, possibly after its own derivative→original fallback) — never
+                  // blacklist it from the strip.
+                  if (isMain) return
+                  onThumbError(url)
                 }}
               />
             </button>

@@ -1,13 +1,15 @@
 import type { Metadata, Viewport } from "next"
 import Link from "next/link"
 import { getSiteUrl } from "@/lib/api/base"
+import { ContactsNavDropdown } from "@/components/contacts-nav-dropdown"
 import { HeaderCartLink } from "@/components/header-cart-link"
 import { HeaderLogo } from "@/components/header-logo"
 import { MobileNav } from "@/components/mobile-nav"
 import { NavDropdown } from "@/components/nav-dropdown"
+import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
-import { WoodrightWordmark } from "@/components/woodright-wordmark"
 import { KidsSectionProvider } from "@/lib/use-kids-section"
+import { getShowroomOrganizationContactLd } from "@/lib/showroom-contacts"
 import { a11yCopy, footer as footerCopy, nav as navCopy, seo } from "@/lib/woodright-copy"
 import { formatRuInline } from "@/lib/format-ru-copy"
 import "./globals.css"
@@ -38,6 +40,10 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#faf8f5",
+  width: "device-width",
+  initialScale: 1,
+  /* Enables non-zero env(safe-area-inset-*) on iOS Safari. */
+  viewportFit: "cover",
 }
 
 const organizationJsonLd = {
@@ -45,6 +51,7 @@ const organizationJsonLd = {
   "@type": "Organization",
   name: "Woodright",
   url: getSiteUrl(),
+  ...getShowroomOrganizationContactLd(),
 }
 
 export default function RootLayout({
@@ -82,8 +89,11 @@ export default function RootLayout({
                     { label: "Оставить заявку", href: "/designers/request" },
                   ]}
                 />
-                <Link href="/contacts">{navCopy.contacts}</Link>
+                <ContactsNavDropdown label={navCopy.contacts} />
               </div>
+              {/* Burger lives in the top bar so mobile 3-col grid can balance
+                  left spacer | logo | menu without absolute positioning. */}
+              <MobileNav />
             </div>
           </div>
 
@@ -137,62 +147,55 @@ export default function RootLayout({
               <HeaderCartLink />
             </div>
           </div>
-
-          <MobileNav />
         </SiteHeader>
         <main id="main-content" className="container page-section" tabIndex={-1}>
           {children}
         </main>
-        </KidsSectionProvider>
-        <footer className="site-footer">
-          <div className="container footer-inner">
-            <div className="footer-columns">
-              <div className="footer-column footer-brand">
-                <div className="footer-brand-copy">
-                  <Link href="/" className="footer-column-title footer-brand-logo" aria-label="Woodright - на главную">
-                    <WoodrightWordmark className="footer-brand-wordmark" />
-                  </Link>
-                  <div className="footer-column-body footer-brand-lead">
-                    {footerCopy.brandText.lead.map((line) => (
-                      <span className="footer-row" key={line}>
-                        {formatRuInline(line)}
-                      </span>
-                    ))}
-                    <ul className="footer-brand-bullets">
-                      {footerCopy.brandText.bullets.map((line) => (
-                        <li className="footer-row" key={line}>
-                          {formatRuInline(line)}
-                        </li>
-                      ))}
-                    </ul>
-                    {footerCopy.brandText.closing.map((line) => (
-                      <span className="footer-row" key={line}>
-                        {formatRuInline(line)}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <nav className="footer-nav" aria-label="Разделы сайта">
-                {footerCopy.columns.map((column) => (
-                  <div className="footer-column" key={column.title}>
-                    <h3 className="footer-column-title">{column.title}</h3>
-                    <ul className="footer-column-body footer-column-links">
-                      {column.links.map((link) => (
-                        <li className="footer-row" key={link.href}>
-                          <Link href={link.href}>{link.label}</Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+        <SiteFooter
+          brandBody={
+            <div className="footer-column-body footer-brand-lead">
+              {footerCopy.brandText.lead.map((line) => (
+                <span className="footer-row" key={line}>
+                  {formatRuInline(line)}
+                </span>
+              ))}
+              <ul className="footer-brand-bullets">
+                {footerCopy.brandText.bullets.map((line) => (
+                  <li className="footer-row" key={line}>
+                    {formatRuInline(line)}
+                  </li>
                 ))}
-              </nav>
+              </ul>
+              {footerCopy.brandText.closing.map((line) => (
+                <span className="footer-row" key={line}>
+                  {formatRuInline(line)}
+                </span>
+              ))}
             </div>
+          }
+          nav={
+            <nav className="footer-nav" aria-label="Разделы сайта">
+              {footerCopy.columns.map((column) => (
+                <div className="footer-column" key={column.title}>
+                  <h3 className="footer-column-title">{column.title}</h3>
+                  <ul className="footer-column-body footer-column-links">
+                    {column.links.map((link) => (
+                      <li className="footer-row" key={link.href}>
+                        <Link href={link.href}>{link.label}</Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </nav>
+          }
+          bottom={
             <div className="footer-bottom">
               <span>{footerCopy.copyright(new Date().getFullYear())}</span>
             </div>
-          </div>
-        </footer>
+          }
+        />
+        </KidsSectionProvider>
       </body>
     </html>
   )

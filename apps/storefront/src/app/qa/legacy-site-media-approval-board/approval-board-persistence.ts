@@ -10,7 +10,7 @@ export function loadBoardState(): BoardPersistedState | null {
     if (!raw) return null
     const parsed = JSON.parse(raw) as BoardPersistedState & { version?: number }
     if (!parsed?.decisions) return null
-    if (parsed.version === 1) {
+    if ((parsed as { version?: number }).version === 1) {
       const migrated: BoardPersistedState = {
         version: 2,
         savedAt: parsed.savedAt || new Date().toISOString(),
