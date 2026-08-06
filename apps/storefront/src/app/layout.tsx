@@ -49,6 +49,10 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#faf8f5",
+  width: "device-width",
+  initialScale: 1,
+  /* Enables non-zero env(safe-area-inset-*) on iOS Safari. */
+  viewportFit: "cover",
 }
 
 const organizationJsonLd = {
