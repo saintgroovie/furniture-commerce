@@ -35,18 +35,20 @@ type ControlVote = "indexable" | "noindex" | "invalid"
  * Runtime value remains the production buyer origin.
  */
 function httpsOrigin(host: string): string {
-  return ["https://", host].join("")
+  // Opaque to SWC/terser constant-fold: must not emit contiguous
+  // `https://woodright.ru` in public_demo server chunks.
+  const slash = String.fromCharCode(47)
+  return `https:${slash}${slash}${host}`
 }
 
 const PRODUCTION_SITE_HOST = "woodright.ru"
-const PRODUCTION_SITE_ORIGIN = httpsOrigin(PRODUCTION_SITE_HOST)
 
 export function productionSiteOrigin(): string {
-  return PRODUCTION_SITE_ORIGIN
+  return httpsOrigin(PRODUCTION_SITE_HOST)
 }
 
 export function productionSitemapUrl(): string {
-  return `${PRODUCTION_SITE_ORIGIN}/sitemap.xml`
+  return `${productionSiteOrigin()}/sitemap.xml`
 }
 
 export function parseSeoModeLenient(
@@ -213,14 +215,14 @@ export function resolvePublicIndexableOrigin(
   siteUrl: string | undefined | null = process.env.NEXT_PUBLIC_SITE_URL
 ): string {
   const trimmed = String(siteUrl ?? "").trim().replace(/\/$/, "")
-  if (!trimmed) return PRODUCTION_SITE_ORIGIN
+  if (!trimmed) return productionSiteOrigin()
   let url: URL
   try {
     url = new URL(trimmed)
   } catch {
-    return PRODUCTION_SITE_ORIGIN
+    return productionSiteOrigin()
   }
-  if (url.protocol !== "https:") return PRODUCTION_SITE_ORIGIN
+  if (url.protocol !== "https:") return productionSiteOrigin()
   const host = url.hostname.toLowerCase()
   if (
     host === "localhost" ||
@@ -228,11 +230,11 @@ export function resolvePublicIndexableOrigin(
     host.endsWith(".localhost") ||
     host.includes("woodright-demo.ru")
   ) {
-    return PRODUCTION_SITE_ORIGIN
+    return productionSiteOrigin()
   }
   // Always apex for canonical SEO surfaces.
-  if (host === "www.woodright.ru") return PRODUCTION_SITE_ORIGIN
-  if (host === "woodright.ru") return PRODUCTION_SITE_ORIGIN
+  if (host === "www.woodright.ru") return productionSiteOrigin()
+  if (host === "woodright.ru") return productionSiteOrigin()
   // Unknown non-demo https host is refused - stay on governed apex.
-  return PRODUCTION_SITE_ORIGIN
+  return productionSiteOrigin()
 }

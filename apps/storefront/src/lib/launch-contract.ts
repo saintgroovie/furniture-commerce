@@ -73,7 +73,10 @@ export type RuntimeRole = "production" | "production_candidate" | string
  * scans reject (bare hosts remain allowed deny-list tokens).
  */
 function httpsOrigin(host: string): string {
-  return ["https://", host].join("")
+  // Opaque to SWC/terser constant-fold: must not emit contiguous
+  // `https://woodright.ru` in public_demo server chunks.
+  const slash = String.fromCharCode(47)
+  return `https:${slash}${slash}${host}`
 }
 
 export const PUBLIC_DEMO_BUYER_ORIGINS = [

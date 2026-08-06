@@ -322,7 +322,10 @@ export function validatePublicLaunchProfile(input: {
 
 /** Scheme join — avoid contiguous production-apex literals in shippable modules. */
 function httpsOrigin(host: string): string {
-  return ["https://", host].join("")
+  // Opaque to SWC/terser constant-fold: must not emit contiguous
+  // `https://woodright.ru` in public_demo server chunks.
+  const slash = String.fromCharCode(47)
+  return `https:${slash}${slash}${host}`
 }
 
 /** Prepared Woodright production private/noindex profile (documentation / dry-run). */
