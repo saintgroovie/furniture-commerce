@@ -1,0 +1,71 @@
+# Woodright public-launch Traefik dynamic-config TEMPLATE - NOT ACTIVATED.
+#
+# This file is not referenced by any live Traefik provider path and is not
+# wired into docker-compose. It documents the intended production routing
+# shape for the DNS cutover so review does not have to reconstruct it from
+# scratch. Copy it into the real Traefik dynamic-config directory only as
+# part of an explicitly approved DNS/TLS cutover.
+#
+# Scope:
+#   - https://woodright.ru        -> storefront
+#   - https://www.woodright.ru    -> HTTP 301 redirect to https://woodright.ru
+#   - https://api.woodright.ru    -> backend
+#   - No admin router (admin.woodright.ru) - admin stays private/loopback per
+#     ops/config/runtime-environments/production.conf (WOODRIGHT_ADMIN_EXPOSURE=private).
+#   - No demo hosts (woodright-demo.ru / api.woodright-demo.ru) here - those
+#     stay on their own existing Traefik config, untouched by this template.
+#
+# Backend service addresses are placeholders - fill from the real Dokploy
+# network/service names at cutover time, do not invent internal hostnames.
+
+http:
+  routers:
+    woodright-storefront:
+      rule: "Host(`woodright.ru`)"
+      entryPoints:
+        - websecure
+      service: woodright-storefront-svc
+      tls:
+        certResolver: letsencrypt
+
+    woodright-www-redirect:
+      rule: "Host(`www.woodright.ru`)"
+      entryPoints:
+        - websecure
+      service: woodright-storefront-svc
+      middlewares:
+        - woodright-www-to-apex
+      tls:
+        certResolver: letsencrypt
+
+    woodright-api:
+      rule: "Host(`api.woodright.ru`)"
+      entryPoints:
+        - websecure
+      service: woodright-backend-svc
+      tls:
+        certResolver: letsencrypt
+
+    # Intentionally no `woodright-admin` router here. Admin stays private -
+    # do not add a public admin.woodright.ru router without a separate,
+    # explicitly approved change.
+
+  middlewares:
+    woodright-www-to-apex:
+      redirectRegex:
+        regex: "^https://www\\.woodright\\.ru/(.*)"
+        replacement: "https://woodright.ru/${1}"
+        permanent: true
+
+  services:
+    woodright-storefront-svc:
+      loadBalancer:
+        servers:
+          # Placeholder - fill with the real Dokploy service address at cutover.
+          - url: "http://__FILL_STOREFRONT_SERVICE_ADDRESS__:3002"
+
+    woodright-backend-svc:
+      loadBalancer:
+        servers:
+          # Placeholder - fill with the real Dokploy service address at cutover.
+          - url: "http://__FILL_BACKEND_SERVICE_ADDRESS__:9000"

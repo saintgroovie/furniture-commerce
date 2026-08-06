@@ -1,14 +1,14 @@
 "use client"
 
 import type { MouseEvent } from "react"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useMemo, useRef, useState } from "react"
 import { ProductThumbCarousel } from "@/components/product-thumb-carousel"
 import { PdpHeroAffordance } from "@/components/pdp-hero-affordance"
 import { PdpImageLightbox } from "@/components/pdp-image-lightbox"
 import { useHeroSwipe } from "@/components/use-hero-swipe"
 import { useVerifiedStripExtras } from "@/components/use-verified-strip-extras"
 import { buildPdpGalleryPhotoSet, resolveBuyerGalleryThumbStrip, shouldShowBuyerGalleryRail } from "@/lib/pdp-gallery-photo-set"
-import { buildPdpThumbStripUrls } from "@/lib/product-images"
+import { buildGalleryStripUrls } from "@/lib/product-images"
 import { pdpLightboxCopy, states } from "@/lib/woodright-copy"
 
 type Props = {
@@ -18,7 +18,7 @@ type Props = {
   heroObjectPosition?: string
 }
 
-export function ProductPdpMediaSwitcher({
+function ProductPdpMediaSwitcherInner({
   mainSrc,
   extraSrcs,
   alt,
@@ -33,22 +33,9 @@ export function ProductPdpMediaSwitcher({
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
 
   const galleryStripCandidates = useMemo(
-    () => buildPdpThumbStripUrls(mainTrimmed, extraSrcs),
+    () => buildGalleryStripUrls(mainTrimmed, extraSrcs),
     [mainTrimmed, extraSrcs]
   )
-
-  const stripKey = useMemo(
-    () => galleryStripCandidates.join("\u0000"),
-    [galleryStripCandidates]
-  )
-
-  useEffect(() => {
-    setDisplayHeroSrc(mainTrimmed)
-    setActiveGalleryUrl(null)
-    setFailedExtras(new Set())
-    pendingRef.current = null
-    setPendingPreloadUrl(null)
-  }, [mainTrimmed, stripKey])
 
   const rawVisibleStrip = useVerifiedStripExtras(galleryStripCandidates, failedExtras)
   // Defense in depth: never let the main photo disappear from the strip, even if it
@@ -92,8 +79,7 @@ export function ProductPdpMediaSwitcher({
         return
       }
       if (activeGalleryUrl === url) {
-        setDisplayHeroSrc(mainTrimmed)
-        setActiveGalleryUrl(null)
+        // Already selected — primary return is the first (isMain) thumb.
         return
       }
       if (pendingRef.current === url) return
@@ -230,4 +216,10 @@ export function ProductPdpMediaSwitcher({
       )}
     </div>
   )
+}
+
+export function ProductPdpMediaSwitcher(props: Props) {
+  const mainTrimmed = props.mainSrc.trim()
+  const stripKey = [mainTrimmed, ...props.extraSrcs.map((s) => s.trim())].join("\u0000")
+  return <ProductPdpMediaSwitcherInner key={stripKey} {...props} />
 }

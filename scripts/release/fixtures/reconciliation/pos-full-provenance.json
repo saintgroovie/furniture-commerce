@@ -1,0 +1,14 @@
+{
+  "event_kind": "reconciled_external_cutover",
+  "allow_metadata_write": true,
+  "provenance": {
+    "complete": true,
+    "workflow_run_id": "29844537467",
+    "git_sha": "643a429927adc934b89596df34dddb4a9d096cf6"
+  },
+  "unknown_image": false,
+  "revision_mismatch": false,
+  "public_dom_ok": true,
+  "health_ok": true,
+  "claim_deploy": false
+}

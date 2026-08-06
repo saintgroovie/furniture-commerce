@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://woodright.local/schemas/woodright-release-manifest.schema.json",
+  "title": "WoodrightReleaseManifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "release_sha",
+    "branch",
+    "workflow_run_id",
+    "build_timestamp",
+    "backend",
+    "storefront",
+    "catalog_order_version",
+    "database_migrations",
+    "deployment_owner",
+    "target_environment",
+    "previous",
+    "rollback",
+    "public_urls",
+    "verification"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "const": "1" },
+    "release_sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "branch": { "type": "string", "minLength": 1 },
+    "pr_number": { "type": ["integer", "null"] },
+    "workflow_run_id": { "type": ["string", "integer"] },
+    "build_timestamp": { "type": "string", "minLength": 1 },
+    "backend": { "$ref": "#/$defs/imageIdentity" },
+    "storefront": { "$ref": "#/$defs/imageIdentity" },
+    "catalog_order_version": { "type": "string", "minLength": 1 },
+    "database_migrations": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "deployment_owner": { "type": "string", "minLength": 1 },
+    "target_environment": {
+      "type": "string",
+      "enum": ["staging", "production", "candidate", "local-canonical"]
+    },
+    "previous": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["release_sha", "backend_digest", "storefront_digest"],
+      "properties": {
+        "release_sha": { "type": ["string", "null"] },
+        "backend_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "storefront_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      }
+    },
+    "rollback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["backend_keeper", "storefront_keeper", "backup_directory", "commands_path"],
+      "properties": {
+        "backend_keeper": { "type": "string", "minLength": 1 },
+        "storefront_keeper": { "type": "string", "minLength": 1 },
+        "backup_directory": { "type": "string", "minLength": 1 },
+        "commands_path": { "type": "string", "minLength": 1 }
+      }
+    },
+    "public_urls": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["site", "catalog"],
+      "properties": {
+        "site": { "type": "string", "format": "uri" },
+        "catalog": { "type": "string", "format": "uri" },
+        "kids_catalog": { "type": "string", "format": "uri" },
+        "api": { "type": ["string", "null"] }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["verified_at"],
+      "properties": {
+        "verified_at": { "type": ["string", "null"] },
+        "marker": { "type": ["string", "null"] },
+        "product_count": { "type": ["integer", "null"] },
+        "first_catalog_title": { "type": ["string", "null"] },
+        "notes": { "type": "string" }
+      }
+    },
+    "notes": { "type": "string" }
+  },
+  "$defs": {
+    "imageIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "digest", "oci_revision"],
+      "properties": {
+        "repository": { "type": "string", "minLength": 1 },
+        "tag": { "type": ["string", "null"] },
+        "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "oci_revision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "oci_source": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

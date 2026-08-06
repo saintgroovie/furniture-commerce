@@ -1,0 +1,30 @@
+# LIVE MUTATION LOCK POLICY
+#
+# Canonical exclusive flock for ALL live-mutating paths:
+CANONICAL_LOCK_PATH=/srv/woodright/locks/live-cutover.lock
+#
+# Required for: cutover, restart (digest-only), rollback, live container replace,
+# ACTIVE_RELEASE metadata promotion after public gate, reconciliation metadata write.
+#
+# Forbidden: separate Dokploy-only / manual-only / rollback-only locks that omit this path.
+# Dokploy limitation: if Dokploy cannot acquire flock natively, operators MUST run
+# pre-deploy wrapper that holds this lock, OR declare Dokploy as sole owner and
+# disable parallel manual_flock_deploy. Partial coverage must be documented honestly.
+#
+# LIVE_MUTATING=true
+# requires_global_lock=true
+
+# Covered ops/release mutators (must source ops/lib/woodright-staging-mutation-lock.sh):
+# - recreate-staging-backend-with-media.sh
+# - reconcile-runtime-manifests.sh (--apply only)
+# - run-staging-seed-rooms-v1.sh (dry-run and apply)
+# - run-staging-db-migrate.sh
+# - scripts/release/attach-backend-network-alias.sh (when mutating)
+#
+# In-image: apps/backend/scripts/migrate-only.sh requires WOODRIGHT_CUTOVER_LOCK_OK=1
+# (proof that host held live-cutover.lock). Do not invoke bare migrate-only against staging.
+#
+# Forbidden: ad-hoc docker rename/replace of woodright-staging-* without this lock
+# (seedharden / agent cutover class). Legacy DEPLOY.lock is not authoritative.
+#
+# Shared helper: ops/lib/woodright-staging-mutation-lock.sh

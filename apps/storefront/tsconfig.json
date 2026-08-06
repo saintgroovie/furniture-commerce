@@ -41,6 +41,6 @@
   ],
   "exclude": [
     "node_modules",
-    "src/app/qa"
+    "src/**/*.fidelity.test.ts"
   ]
 }

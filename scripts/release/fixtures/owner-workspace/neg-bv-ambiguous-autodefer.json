@@ -1,0 +1,12 @@
+{
+  "gate": "BV",
+  "rows": [
+    {
+      "media_binding": "ambiguous",
+      "images": [
+        "http://x"
+      ],
+      "auto_defer": true
+    }
+  ]
+}

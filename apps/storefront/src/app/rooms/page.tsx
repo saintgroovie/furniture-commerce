@@ -19,13 +19,16 @@ export default async function RoomsPage() {
   let data: { room_sets?: unknown[] } = {}
   try {
     data = await getRoomSets()
-  } catch {
+  } catch (err) {
+    console.error("[rooms] room sets load failed", err)
     return (
-      <div data-state="error">
+      <div data-state="empty">
         <h1>{roomsCopy.h1}</h1>
-        <p className="info-text" style={{ marginTop: "0.5rem" }}>{roomsCopy.loadError}</p>
-        <div className="nav-links" style={{ marginTop: "1rem" }}>
-          <Link href="/">{actions.toHome}</Link>
+        <div className="status-message">
+          <p>{roomsCopy.emptyBody}</p>
+          <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
+            <Link href="/">{actions.toHome}</Link>
+          </div>
         </div>
       </div>
     )

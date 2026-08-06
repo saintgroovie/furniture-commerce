@@ -9,7 +9,7 @@ export function HomeHero() {
   return (
     <section className="hp-hero" aria-labelledby="hp-hero-title">
       <div className="hp-hero-plate">
-        <HomeHeroSlideshow slides={homeMedia.heroSlides} />
+        <HomeHeroSlideshow slides={homeMedia.heroSlides} surface="HOME_HERO" />
         <div className="hp-hero-scrim" aria-hidden="true" />
         <div className="hp-hero-panel">
           <h1 id="hp-hero-title">{hero.h1}</h1>

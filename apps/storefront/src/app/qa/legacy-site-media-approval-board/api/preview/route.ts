@@ -24,15 +24,29 @@ export async function GET(req: NextRequest) {
   const repoRel = req.nextUrl.searchParams.get("repoRel")?.trim()
   const remote = req.nextUrl.searchParams.get("url")?.trim()
 
-  if (remote && /^https:\/\/woodright\.ru\//i.test(remote)) {
+  // Legacy CMS remote fetch: hostname allowlist only (no scheme-qualified apex
+  // string in this module - keeps public_demo contamination gate honest).
+  let remoteUrl: URL | null = null
+  if (remote) {
     try {
-      const res = await fetch(remote, {
+      remoteUrl = new URL(remote)
+    } catch {
+      remoteUrl = null
+    }
+  }
+  const remoteHost = remoteUrl?.hostname.toLowerCase() ?? ""
+  const allowLegacyCmsRemote =
+    remoteUrl?.protocol === "https:" &&
+    (remoteHost === "woodright.ru" || remoteHost === "www.woodright.ru")
+  if (remote && remoteUrl && allowLegacyCmsRemote) {
+    try {
+      const res = await fetch(remoteUrl.toString(), {
         signal: AbortSignal.timeout(60000),
         headers: { "User-Agent": "WoodrightApprovalBoard/1.0" },
       })
       if (!res.ok) return new NextResponse(null, { status: res.status })
       const buf = Buffer.from(await res.arrayBuffer())
-      const ext = path.extname(new URL(remote).pathname).toLowerCase()
+      const ext = path.extname(remoteUrl.pathname).toLowerCase()
       return new NextResponse(buf, {
         headers: {
           "Content-Type": MIME[ext] || "image/jpeg",

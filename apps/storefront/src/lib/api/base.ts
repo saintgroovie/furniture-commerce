@@ -1,22 +1,157 @@
+import {
+  assertProductionLikeSiteUrl,
+  assertPublicDemoSiteUrl,
+  isProductionLikeRuntime,
+  isPublicDemoRuntime,
+} from "@/lib/launch-contract"
+
+/**
+ * Medusa API base URL.
+ * - Server: Docker-internal / loopback from server-only env (never NEXT_PUBLIC).
+ * - Browser: same-origin empty base so `/store/...` hits Next rewrites → backend.
+ *
+ * No localhost:9000 / host.docker.internal string literals here — this module is
+ * imported by Client Components (cart/checkout) and must not embed :9000 hosts.
+ */
 export function getBaseUrl(): string {
-  if (typeof window === "undefined" && process.env.MEDUSA_BACKEND_URL) {
-    const serverUrl = process.env.MEDUSA_BACKEND_URL
-    // Docker SSR: compose sets medusa:9000 but backend may run on host (host.docker.internal).
-    if (serverUrl.includes("://medusa:")) {
-      return "http://host.docker.internal:9000"
-    }
-    return serverUrl
+  if (typeof window !== "undefined") {
+    return ""
   }
-  return process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? ""
+
+  const raw =
+    process.env.MEDUSA_BACKEND_INTERNAL_URL ||
+    process.env.MEDUSA_BACKEND_URL_INTERNAL ||
+    process.env.MEDUSA_BACKEND_URL ||
+    ""
+  const trimmed = String(raw).trim().replace(/\/$/, "")
+
+  if (!trimmed) {
+    throw new Error(
+      "Missing MEDUSA_BACKEND_INTERNAL_URL (or MEDUSA_BACKEND_URL) for server-side Medusa fetches"
+    )
+  }
+
+  return trimmed
 }
 
-/** Base URL of the storefront for metadataBase, canonical, OG. */
+/**
+ * Base URL of the storefront for metadataBase, canonical, OG.
+ *
+ * Fail-closed for production-like processes (see `@/lib/launch-contract`):
+ * - `WOODRIGHT_RUNTIME_ROLE` production/production_candidate, OR
+ * - `WOODRIGHT_LAUNCH_MODE` set, OR
+ * - `NODE_ENV=production` (covers plain `next build`/`next start`)
+ * require `NEXT_PUBLIC_SITE_URL` with no `localhost:8000` fallback.
+ *
+ * Explicit `public_demo` identity (`WOODRIGHT_RUNTIME_ROLE` or
+ * `WOODRIGHT_IMAGE_BUILD_PROFILE`) uses the public-demo host allowlist even
+ * when `WOODRIGHT_LAUNCH_MODE` is set (image bake). Production-like roles
+ * never accept demo hosts.
+ *
+ * A bare `NODE_ENV=production` build without launch mode / production-like
+ * role (e.g. CI storefront check with demo URL) still accepts a trimmed URL
+ * without production-like rejection.
+ *
+ * Local/dev without a production-like role keeps the `localhost:8000`
+ * fallback for DX.
+ */
 export function getSiteUrl(): string {
-  return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:8000"
+  const raw = process.env.NEXT_PUBLIC_SITE_URL
+  const runtimeRole = process.env.WOODRIGHT_RUNTIME_ROLE
+  const imageBuildProfile = process.env.WOODRIGHT_IMAGE_BUILD_PROFILE
+  const launchModeRaw = process.env.WOODRIGHT_LAUNCH_MODE
+  const nodeEnv = process.env.NODE_ENV
+
+  const roleIsProductionLike = isProductionLikeRuntime(runtimeRole)
+  const publicDemoIdentity = isPublicDemoRuntime(runtimeRole, imageBuildProfile)
+  const launchModeIsSet = Boolean(launchModeRaw && String(launchModeRaw).trim())
+  const requireExplicit =
+    roleIsProductionLike || publicDemoIdentity || launchModeIsSet || nodeEnv === "production"
+
+  if (!requireExplicit) {
+    const trimmed = String(raw ?? "").trim()
+    return trimmed ? trimmed.replace(/\/$/, "") : "http://localhost:8000"
+  }
+
+  const trimmed = String(raw ?? "").trim()
+  if (!trimmed) {
+    throw new Error(
+      "NEXT_PUBLIC_SITE_URL is required (WOODRIGHT_RUNTIME_ROLE production-like / public_demo / WOODRIGHT_LAUNCH_MODE set / NODE_ENV=production) - no localhost fallback"
+    )
+  }
+
+  if (publicDemoIdentity) {
+    if (roleIsProductionLike) {
+      throw new Error(
+        `Conflicting public_demo identity with production-like WOODRIGHT_RUNTIME_ROLE="${runtimeRole}"`
+      )
+    }
+    return assertPublicDemoSiteUrl(trimmed)
+  }
+
+  if (launchModeIsSet || roleIsProductionLike) {
+    return assertProductionLikeSiteUrl(trimmed)
+  }
+
+  return trimmed.replace(/\/$/, "")
 }
 
 function getPublishableKey(): string {
-  return process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ""
+  // Prefer server-only override so standalone/runtime can inject without rebuild.
+  // NEXT_PUBLIC_* is inlined at build time and may be empty in local QA images.
+  return (
+    process.env.MEDUSA_PUBLISHABLE_KEY ||
+    process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ||
+    ""
+  )
+}
+
+/** Default server-side Medusa fetch budget (build/SSR without a live backend). */
+const DEFAULT_MEDUSA_FETCH_TIMEOUT_MS = 8_000
+
+function medusaFetchTimeoutMs(): number {
+  const raw = process.env.MEDUSA_FETCH_TIMEOUT_MS
+  if (raw === undefined || raw === "") return DEFAULT_MEDUSA_FETCH_TIMEOUT_MS
+  const parsed = Number.parseInt(raw, 10)
+  return Number.isFinite(parsed) && parsed > 0
+    ? parsed
+    : DEFAULT_MEDUSA_FETCH_TIMEOUT_MS
+}
+
+/**
+ * Next.js 16 patches `fetch` with streaming transforms. Attaching abort signals
+ * to that patched fetch can throw
+ * `TypeError: controller[kState].transformAlgorithm is not a function` during SSR
+ * and leave catalog/PDP on the empty shell.
+ *
+ * Bound the wait with an outer `Promise.race` timer instead of attaching a signal
+ * to the patched fetch. Callers that pass an explicit `signal` own lifecycle and
+ * bypass the default race budget.
+ */
+async function fetchWithMedusaTimeout(
+  url: string,
+  init?: RequestInit
+): Promise<Response> {
+  if (init?.signal) {
+    return fetch(url, init)
+  }
+  const { signal: _ignored, ...rest } = init ?? {}
+  const timeoutMs = medusaFetchTimeoutMs()
+  let timer: ReturnType<typeof setTimeout> | undefined
+  try {
+    return await Promise.race([
+      fetch(url, rest),
+      new Promise<Response>((_, reject) => {
+        timer = setTimeout(() => {
+          reject(
+            new Error(`Medusa fetch timed out after ${timeoutMs}ms: ${url}`)
+          )
+        }, timeoutMs)
+      }),
+    ])
+  } finally {
+    if (timer !== undefined) clearTimeout(timer)
+  }
 }
 
 /** Fetch wrapper that adds the publishable API key header. */
@@ -27,7 +162,7 @@ export function medusaFetch(url: string, init?: RequestInit): Promise<Response> 
     headers.set("x-publishable-api-key", key)
   }
   // Cart / checkout / mutations must never be served from Next Data Cache.
-  return fetch(url, { ...init, headers, cache: "no-store" })
+  return fetchWithMedusaTimeout(url, { ...init, headers, cache: "no-store" })
 }
 
 /**
@@ -54,10 +189,10 @@ export function medusaCatalogFetch(
   const revalidate = Number.isFinite(parsed) ? parsed : 60
 
   if (revalidate <= 0) {
-    return fetch(url, { ...init, headers, cache: "no-store" })
+    return fetchWithMedusaTimeout(url, { ...init, headers, cache: "no-store" })
   }
 
-  return fetch(url, {
+  return fetchWithMedusaTimeout(url, {
     ...init,
     headers,
     next: { revalidate },

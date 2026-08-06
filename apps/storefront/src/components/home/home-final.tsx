@@ -2,13 +2,15 @@ import Link from "next/link"
 import { homeCopy } from "@/lib/woodright-copy"
 import { CopyLines } from "@/components/copy-lines"
 import { homeMedia } from "./home-media"
+import { HomeImg } from "./home-img"
 
 /** Final CTA over a calm wide interior — bookend echo of the hero. */
 export function HomeFinal() {
   const { finalCta } = homeCopy
   return (
     <section className="hp-final" aria-labelledby="hp-final-title" data-reveal>
-      <img
+      <HomeImg
+        surface="LARGE_CTA"
         src={homeMedia.finalInterior}
         alt=""
         aria-hidden="true"

@@ -1,0 +1,9 @@
+{
+  "schema_version": "1",
+  "runtime_role": "public_demo",
+  "exposure": "public",
+  "canonical_domain": "woodright-demo.ru",
+  "canonical_api_origin": "https://api.woodright-demo.ru",
+  "deprecated": true,
+  "superseded_by": "/srv/woodright/runtime-identity/ACTIVE_PUBLIC.json"
+}

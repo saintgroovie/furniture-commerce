@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { formatRub } from "@/lib/format"
+import { formatRoomSetCardMeta } from "@/lib/room-set-card-meta"
 
 type RoomSet = {
   id: string
@@ -13,6 +14,7 @@ type RoomSet = {
 }
 
 export function RoomSetCard({ roomSet }: { roomSet: RoomSet }) {
+  const meta = formatRoomSetCardMeta(roomSet)
   return (
     <Link href={`/rooms/${roomSet.slug}`} className="card card-link room-set-card">
       {roomSet.hero_image ? (
@@ -27,11 +29,7 @@ export function RoomSetCard({ roomSet }: { roomSet: RoomSet }) {
       )}
       <div className="card-body">
         <h3>{roomSet.title}</h3>
-        {(roomSet.room_type || roomSet.style) && (
-          <span className="room-set-card-meta">
-            {[roomSet.room_type, roomSet.style].filter(Boolean).join(" · ")}
-          </span>
-        )}
+        {meta ? <span className="room-set-card-meta">{meta}</span> : null}
         {roomSet.price_from != null && (
           <p className="price">от {formatRub(roomSet.price_from)}</p>
         )}

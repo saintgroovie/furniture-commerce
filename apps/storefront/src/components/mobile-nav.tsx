@@ -2,12 +2,23 @@
 
 /**
  * Mobile navigation — parity with desktop buyer routes.
- * Baseline architecture (woodright-copy + CSS scroll-lock class) preserved.
- * Package A1 gap-fill: focus containment, closed-menu unmount, Escape/focus restore.
+ * Disclosure + dialog pattern: focus containment, Escape, focus restore,
+ * background inert while open (WCAG 2.2 focus management).
+ * Showroom + Contacts: plain /contacts links (no hover dropdown / no accordion).
  */
 import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import {
+  BUYER_CLOSE_PEER_EVENT,
+  BUYER_DIALOG_LAYER,
+  BUYER_MOBILE_MQ,
+  handleDialogKeydown,
+  listFocusable,
+  requestCloseBuyerDialogPeer,
+  setBuyerChromeInert,
+  type BuyerClosePeerDetail,
+} from "@/lib/buyer-dialog-a11y"
 import { a11yCopy, nav as navCopy } from "@/lib/woodright-copy"
 
 type NavLink = {
@@ -26,16 +37,33 @@ const PRIMARY: NavLink[] = [
 const SECONDARY: NavLink[] = [
   { href: "/about", label: navCopy.about },
   { href: "/designers", label: navCopy.designers },
-  { href: "/contacts", label: navCopy.contacts },
 ]
 
 const PANEL_ID = "mobile-nav-panel"
+const LAYER = BUYER_DIALOG_LAYER.mobileNav
+
+function setMobileNavBackgroundInert(enabled: boolean) {
+  /* Header chrome (top + main nav) + main + footer. The MobileNav trigger
+     and dialog stay outside those sections so they remain operable. */
+  setBuyerChromeInert(
+    enabled,
+    [document.getElementById("main-content")],
+    LAYER
+  )
+}
 
 export function MobileNav() {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
+  const [pathAtOpen, setPathAtOpen] = useState(pathname)
   const btnRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
+
+  // Close on route change (adjust state during render - React-recommended reset).
+  if (pathname !== pathAtOpen) {
+    setPathAtOpen(pathname)
+    if (open) setOpen(false)
+  }
 
   const close = useCallback((restoreFocus = true) => {
     setOpen(false)
@@ -44,57 +72,54 @@ export function MobileNav() {
     }
   }, [])
 
-  // Close on route change (after link navigation).
+  // Peer dialog (catalog filters) requested exclusive ownership.
   useEffect(() => {
-    setOpen(false)
-  }, [pathname])
+    function onPeerClose(e: Event) {
+      const detail = (e as CustomEvent<BuyerClosePeerDetail>).detail
+      if (detail?.exceptLayer === LAYER) return
+      setOpen(false)
+    }
+    document.addEventListener(BUYER_CLOSE_PEER_EVENT, onPeerClose)
+    return () => document.removeEventListener(BUYER_CLOSE_PEER_EVENT, onPeerClose)
+  }, [])
 
+  // Desktop viewport: clear mobile-only dialog state + inert.
+  useEffect(() => {
+    const mq = window.matchMedia(BUYER_MOBILE_MQ)
+    function onChange() {
+      if (!mq.matches) setOpen(false)
+    }
+    onChange()
+    mq.addEventListener("change", onChange)
+    return () => mq.removeEventListener("change", onChange)
+  }, [])
+
+  // Scroll-lock + initial focus + keyboard trap.
   useEffect(() => {
     if (!open) {
       document.body.classList.remove("mobile-nav-open")
       document.documentElement.classList.remove("mobile-nav-open")
+      setMobileNavBackgroundInert(false)
       return
     }
 
+    requestCloseBuyerDialogPeer(LAYER)
     document.body.classList.add("mobile-nav-open")
     document.documentElement.classList.add("mobile-nav-open")
+    setMobileNavBackgroundInert(true)
 
     const panel = panelRef.current
-    const focusables = () =>
-      panel
-        ? Array.from(
-            panel.querySelectorAll<HTMLElement>(
-              'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
-            )
-          ).filter((el) => !el.hasAttribute("disabled") && el.tabIndex !== -1)
-        : []
 
     requestAnimationFrame(() => {
-      focusables()[0]?.focus()
+      listFocusable(panel)[0]?.focus()
     })
 
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        e.preventDefault()
-        close(true)
-        return
-      }
-      if (e.key !== "Tab" || !panel) return
-      const items = focusables()
-      if (items.length === 0) return
-      const first = items[0]
-      const last = items[items.length - 1]
-      const active = document.activeElement as HTMLElement | null
-      if (e.shiftKey && active === first) {
-        e.preventDefault()
-        last.focus()
-      } else if (!e.shiftKey && active === last) {
-        e.preventDefault()
-        first.focus()
-      } else if (active && !panel.contains(active) && active !== btnRef.current) {
-        e.preventDefault()
-        first.focus()
-      }
+      handleDialogKeydown(e, {
+        panel,
+        trigger: btnRef.current,
+        onEscape: () => close(true),
+      })
     }
 
     document.addEventListener("keydown", onKeyDown)
@@ -102,6 +127,7 @@ export function MobileNav() {
       document.removeEventListener("keydown", onKeyDown)
       document.body.classList.remove("mobile-nav-open")
       document.documentElement.classList.remove("mobile-nav-open")
+      setMobileNavBackgroundInert(false)
     }
   }, [open, close])
 
@@ -129,7 +155,13 @@ export function MobileNav() {
         id={PANEL_ID}
         className={`mobile-nav-overlay${open ? " is-open" : ""}`}
         data-open={open ? "true" : "false"}
-        aria-hidden={!open}
+        {...(open
+          ? {
+              role: "dialog",
+              "aria-modal": true as const,
+              "aria-label": a11yCopy.mobileNavLabel,
+            }
+          : { "aria-hidden": true as const })}
       >
         {open ? (
           <nav className="mobile-nav" aria-label={a11yCopy.mobileNavLabel}>
@@ -151,6 +183,16 @@ export function MobileNav() {
                   {item.label}
                 </Link>
               ))}
+              <Link
+                href="/contacts"
+                className="mobile-nav-showroom-link"
+                onClick={() => close(false)}
+              >
+                {navCopy.showroom}
+              </Link>
+              <Link href="/contacts" onClick={() => close(false)}>
+                {navCopy.contacts}
+              </Link>
             </div>
             <div className="mobile-nav-group mobile-nav-group-cart">
               <Link href="/cart" onClick={() => close(false)}>

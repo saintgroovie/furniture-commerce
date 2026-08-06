@@ -1,0 +1,11 @@
+{
+  "empty": true,
+  "referenced_by_active": false,
+  "referenced_by_prepared": false,
+  "referenced_by_transaction": true,
+  "referenced_by_audit": false,
+  "referenced_by_rollback": false,
+  "contains_manifest": false,
+  "is_backup": false,
+  "codex_safe_to_remove": true
+}

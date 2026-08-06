@@ -1,0 +1,25 @@
+{
+  "template": "ops/config/public-launch/traefik-production.template.yml",
+  "activated": false,
+  "hosts": {
+    "apex": "woodright.ru",
+    "www": "www.woodright.ru",
+    "api": "api.woodright.ru",
+    "admin": null
+  },
+  "rules": {
+    "apex_to": "storefront",
+    "www_redirect": "301_to_apex",
+    "api_to": "backend",
+    "admin_router": "absent",
+    "demo_hosts_in_template": false
+  },
+  "entrypoints": ["websecure"],
+  "cert_resolver": "letsencrypt",
+  "validation": {
+    "no_admin_router": true,
+    "no_demo_host": true,
+    "no_wildcard_host": true,
+    "private_candidate_does_not_enable_this_template": true
+  }
+}

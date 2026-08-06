@@ -2,27 +2,35 @@
   "name": "storefront",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "yarn@4.6.0",
+  "packageManager": "yarn@4.17.1",
   "scripts": {
     "dev": "NEXT_DIST_DIR=.next-dev next dev --port 3002",
-    "build": "NEXT_DIST_DIR=.next-build next build",
+    "build": "NEXT_DIST_DIR=.next-build next build --webpack",
     "build:qa": "bash scripts/qa-rebuild.sh",
     "sync:qa-build-marker": "node scripts/sync-qa-build-marker.mjs",
     "start": "NEXT_DIST_DIR=.next-build next start",
     "check:landing-css": "node scripts/check-landing-css-assets.mjs",
     "check:landing-css:heal": "node scripts/check-landing-css-assets.mjs --heal",
-    "lint": "next lint"
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit -p tsconfig.production.json",
+    "typecheck:all": "tsc --noEmit -p tsconfig.json",
+    "test:fidelity": "node scripts/run-fidelity-tests.mjs",
+    "test:mobile-layout": "node scripts/mobile-layout.smoke.cjs",
+    "test:a11y-dialogs": "node scripts/a11y-dialog-keyboard.smoke.cjs"
   },
   "dependencies": {
-    "next": "^14.2.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "next": "16.2.12",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
     "server-only": "^0.0.1"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
-    "typescript": "^5.0.0"
+    "@eslint/eslintrc": "^3.3.6",
+    "@types/node": "20.19.43",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "eslint": "9.39.2",
+    "eslint-config-next": "16.2.12",
+    "typescript": "5.9.3"
   }
 }

@@ -2,7 +2,6 @@
 
 import {
   usePdpPurchaseGate,
-  pdpPriceHintForGate,
   gateMatchesProduct,
 } from "@/lib/cart/pdp-selection"
 import {
@@ -43,7 +42,9 @@ type Props = {
 
 /**
  * Price under option groups. Defaults (LDSP + first/standard color) show the
- * lowest configured price immediately; switching material or color updates live.
+ * lowest configured price immediately — including SSR before the gallery
+ * publishes the purchase gate. Hide only when the current combination is
+ * confirmed unavailable.
  */
 export function PdpPriceBlock({
   priceLabel,
@@ -63,12 +64,6 @@ export function PdpPriceBlock({
     gate.requiresSelection &&
     gate.complete &&
     !gate.combinationAvailable
-
-  const selectionIncomplete =
-    requiresBuyerSelection &&
-    gateOk &&
-    gate.requiresSelection &&
-    !gate.complete
 
   let effectiveLabel = priceLabel
   const colorMultiplier =
@@ -101,16 +96,13 @@ export function PdpPriceBlock({
     }
   }
 
-  const showPrice =
-    Boolean(effectiveLabel) && !combinationUnavailable && !selectionIncomplete
+  const showPrice = Boolean(effectiveLabel) && !combinationUnavailable
 
   const hint =
     !showPrice && requiresBuyerSelection
       ? combinationUnavailable
         ? "Такое сочетание недоступно"
-        : gateOk && gate.requiresSelection
-          ? pdpPriceHintForGate(gate)
-          : null
+        : null
       : null
 
   return (

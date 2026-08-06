@@ -1,0 +1,13 @@
+[Unit]
+Description=Woodright read-only monitoring timer (~15m)
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=15min
+Persistent=true
+RandomizedDelaySec=60
+Unit=woodright-monitor.service
+AccuracySec=30s
+
+[Install]
+WantedBy=timers.target

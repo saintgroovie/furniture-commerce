@@ -1,0 +1,46 @@
+{
+  "backend": {
+    "component": "backend",
+    "repository": "saintgroovie/furniture-commerce",
+    "source_sha": "643a429927adc934b89596df34dddb4a9d096cf6",
+    "pr_number": 64,
+    "workflow_run_id": 29844537467,
+    "workflow_run_attempt": 1,
+    "unique_build_tag": "build-643a429-run-29844537467-attempt-1",
+    "digest": "sha256:8fa5b643b222afda217733d2c652942b7b4fecb12d3d19aef143f55d86efdf17",
+    "oci_revision": "643a429927adc934b89596df34dddb4a9d096cf6",
+    "api_contract_version": "store-v1",
+    "compatibility_claims": [
+      "catalog-products",
+      "products-retrieve"
+    ]
+  },
+  "storefront": {
+    "component": "storefront",
+    "repository": "saintgroovie/furniture-commerce",
+    "source_sha": "54d1802cae921ed10acfaee2f0b742e63b511232",
+    "pr_number": 66,
+    "workflow_run_id": 29845801534,
+    "workflow_run_attempt": 1,
+    "unique_build_tag": "build-54d1802-run-29845801534-attempt-1",
+    "digest": "sha256:f493381a466b94956e62ccc9c3617731e91fcbace54ae648bbdfbbd711f33347",
+    "oci_revision": "54d1802cae921ed10acfaee2f0b742e63b511232",
+    "api_contract_version": "store-v1",
+    "compatibility_claims": [
+      "catalog-products",
+      "products-retrieve"
+    ]
+  },
+  "expect": {
+    "backend": {
+      "pr": 64,
+      "digest": "sha256:8fa5b643b222afda217733d2c652942b7b4fecb12d3d19aef143f55d86efdf17",
+      "source_sha": "643a429927adc934b89596df34dddb4a9d096cf6"
+    },
+    "storefront": {
+      "pr": 66,
+      "digest": "sha256:abababababababababababababababababababababababababababababababab",
+      "source_sha": "54d1802cae921ed10acfaee2f0b742e63b511232"
+    }
+  }
+}

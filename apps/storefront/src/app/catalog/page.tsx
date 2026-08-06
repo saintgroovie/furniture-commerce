@@ -43,12 +43,13 @@ export const metadata: Metadata = {
 export default async function CatalogPage({
   searchParams,
 }: {
-  searchParams: Record<string, string | string[] | undefined>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
-  const legacyQs = catalogLegacyTypeRedirectQuery(searchParams)
+  const resolvedSearchParams = await searchParams
+  const legacyQs = catalogLegacyTypeRedirectQuery(resolvedSearchParams)
   if (legacyQs) redirect(`/catalog?${legacyQs}`)
 
-  const filterState = parseCatalogFilterState(searchParams)
+  const filterState = parseCatalogFilterState(resolvedSearchParams)
   const bespokeOnly = filterState.type === BESPOKE_PRODUCT_TYPE
 
   let allRaw: Record<string, unknown>[] = []

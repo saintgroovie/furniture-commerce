@@ -1,0 +1,12 @@
+{
+  "event_name": "reconciled_external_security_cutover",
+  "component_provenance": {
+    "backend_revision": "006d4f7",
+    "backend_workflow_run_id": "1"
+  },
+  "divergence_window": {
+    "start": "x"
+  },
+  "divergence_cause": "y",
+  "runtime_unchanged_proof": {}
+}

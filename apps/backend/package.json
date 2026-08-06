@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "Medusa backend for furniture ecommerce + bespoke",
-  "packageManager": "yarn@4.6.0",
+  "packageManager": "yarn@4.17.1",
   "scripts": {
     "build": "medusa build",
     "dev": "medusa develop",
@@ -16,13 +16,14 @@
     "generate:catalog-card-derivatives": "tsx scripts/generate-catalog-card-derivatives.ts"
   },
   "dependencies": {
-    "@medusajs/admin-sdk": "2.17.2",
-    "@medusajs/framework": "^2.17.2",
-    "@medusajs/medusa": "^2.17.2",
+    "@medusajs/admin-sdk": "2.18.0",
+    "@medusajs/framework": "2.18.0",
+    "@medusajs/medusa": "2.18.0",
+    "morgan": "^1.10.0",
     "sharp": "0.35.3"
   },
   "devDependencies": {
-    "@medusajs/cli": "^2.17.2",
+    "@medusajs/cli": "2.18.0",
     "@types/node": "^20.0.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.0.0"

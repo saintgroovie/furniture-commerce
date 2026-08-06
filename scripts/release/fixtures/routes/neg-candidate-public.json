@@ -1,0 +1,11 @@
+{
+  "domains": [
+    {
+      "name": "woodright-demo.ru",
+      "storefront_targets": [
+        "x"
+      ],
+      "candidate_has_public_route": true
+    }
+  ]
+}

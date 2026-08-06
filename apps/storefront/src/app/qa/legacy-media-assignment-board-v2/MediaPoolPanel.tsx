@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useCallback, useEffect, useMemo, useState } from "react"
+import React, { useCallback, useMemo, useState } from "react"
 import type { InvItem, CandidateEntry, V2RoleFilter, V2RoleSlot } from "./legacy-board-v2-types"
 import type { VisualRole } from "./legacy-board-v2-visual-role-ranking"
 import {
@@ -129,21 +129,16 @@ export function MediaPoolPanel({
   const [hideNoPreview, setHideNoPreview] = useState(false)
   const [runtimeFailedIds, setRuntimeFailedIds] = useState<Set<string>>(() => new Set())
   const [sharedAddNotice, setSharedAddNotice] = useState<string | null>(null)
-
-  useEffect(() => {
+  const selectionKey = `${selectedHandle}:${activeVariantKey}`
+  const [syncedSelectionKey, setSyncedSelectionKey] = useState(selectionKey)
+  if (selectionKey !== syncedSelectionKey) {
+    setSyncedSelectionKey(selectionKey)
     setSharedAddNotice(null)
-  }, [selectedHandle, activeVariantKey])
-
-  /** Broad triage tab: show no-preview candidates by default (cross-SKU, schemes, etc.). */
-  useEffect(() => {
+    setRuntimeFailedIds(new Set())
     if (activeVariantKey === NEEDS_COLOR_VARIANT_KEY) {
       setHideNoPreview(false)
     }
-  }, [activeVariantKey, selectedHandle])
-
-  useEffect(() => {
-    setRuntimeFailedIds(new Set())
-  }, [selectedHandle, activeVariantKey])
+  }
 
   const handlePreviewLoadFailed = useCallback((mediaId: string) => {
     setRuntimeFailedIds((prev) => {
@@ -279,8 +274,8 @@ export function MediaPoolPanel({
   }, [poolItems, effectiveNoPreviewCount, currentMainId, gallerySet, selectedHandle, activeVariantKey])
 
   // Apply filter, then preview-first sort (scope is secondary inside preview tier only)
-  const filteredItems = useMemo<PoolItem[]>(() => {
-    if (hideNoPreviewContradiction) return []
+  const filteredItems = useMemo(() => {
+    if (hideNoPreviewContradiction) return [] as PoolItem[]
 
     let items = poolItems
 
@@ -311,7 +306,7 @@ export function MediaPoolPanel({
       gallerySet,
       runtimeFailedIds,
       recoveryById
-    )
+    ) as PoolItem[]
   }, [
     poolItems,
     activeFilter,

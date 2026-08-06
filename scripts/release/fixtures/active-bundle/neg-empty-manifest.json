@@ -1,0 +1,14 @@
+{
+  "active_release": {
+    "schema_version": "2",
+    "bundle_id": "wrb-20260721T155624Z-be643a429-sf54d1802",
+    "backend_revision": "643a429927adc934b89596df34dddb4a9d096cf6",
+    "storefront_revision": "54d1802cae921ed10acfaee2f0b742e63b511232",
+    "backend_digest": "sha256:8fa5b643b222afda217733d2c652942b7b4fecb12d3d19aef143f55d86efdf17",
+    "storefront_digest": "sha256:f493381a466b94956e62ccc9c3617731e91fcbace54ae648bbdfbbd711f33347",
+    "manifest_path": "/srv/woodright/releases/bundles/wrb-20260721T155624Z-be643a429-sf54d1802/release-manifest.json",
+    "activation_mode": "reconciled_external_cutover"
+  },
+  "manifest": {},
+  "checksum_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+}

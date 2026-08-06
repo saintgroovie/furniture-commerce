@@ -1,4 +1,5 @@
 import { buildDisplayGroupColorVariants } from "./card-color-media"
+import { resolveCatalogCardPrice } from "./catalog-card-price"
 import { getPrice } from "./format"
 
 export type DisplayGroup = {
@@ -76,7 +77,7 @@ export function groupProductsForDisplay(
       buildDisplayGroupColorVariants(members) ?? undefined
 
     const prices = members
-      .map((m) => getPrice(m))
+      .map((m) => resolveCatalogCardPrice(m).amount ?? getPrice(m))
       .filter((v): v is number => v != null)
 
     result.push({

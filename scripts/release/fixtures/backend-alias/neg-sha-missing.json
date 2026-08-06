@@ -1,0 +1,35 @@
+{
+  "expect": "fail",
+  "fail_reason": "release_sha missing",
+  "shared_network": "woodright_staging",
+  "expected_release_sha": "646d4e6c313deb2ba3c2ccbc6f57566959e53d71",
+  "containers": [
+    {
+      "name": "woodright-staging-backend",
+      "running": true,
+      "role": "public_demo",
+      "exposure": "public",
+      "networks": {
+        "woodright_staging": {
+          "aliases": ["backend"],
+          "ipv4": "172.19.0.4"
+        }
+      }
+    },
+    {
+      "name": "woodright-staging-storefront",
+      "running": true,
+      "role": "public_demo",
+      "exposure": "public",
+      "networks": {
+        "woodright_staging": {
+          "aliases": ["storefront"],
+          "ipv4": "172.19.0.7"
+        }
+      }
+    }
+  ],
+  "dns_from_storefront": {
+    "backend": "172.19.0.4"
+  }
+}
