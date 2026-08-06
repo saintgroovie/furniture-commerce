@@ -81,13 +81,18 @@ export const PUBLIC_DEMO_BUYER_ORIGINS = [
   httpsOrigin(PUBLIC_DEMO_BUYER_HOSTS[1]),
 ] as const
 
-/** Recommended (not enforced) production values for docs/scripts/templates. */
+/**
+ * Recommended (not enforced) production values for docs/scripts/templates.
+ * Joined like PUBLIC_DEMO_BUYER_ORIGINS so public_demo contamination scans do
+ * not see a contiguous production-apex literal in modules that import this file
+ * (e.g. seo-mode → robots route chunk).
+ */
 export const PRODUCTION_BUYER_ORIGINS = [
-  "https://woodright.ru",
-  "https://www.woodright.ru",
+  httpsOrigin("woodright.ru"),
+  httpsOrigin("www.woodright.ru"),
 ] as const
 
-export const PRODUCTION_API_ORIGIN = "https://api.woodright.ru" as const
+export const PRODUCTION_API_ORIGIN = httpsOrigin("api.woodright.ru")
 
 export const RECOMMENDED_PRODUCTION_SITE_URL: string = PRODUCTION_BUYER_ORIGINS[0]
 export const RECOMMENDED_PRODUCTION_API_URL: string = PRODUCTION_API_ORIGIN

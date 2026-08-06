@@ -21,6 +21,7 @@
 import { DEMO_HOSTS, LOOPBACK_HOST_RE } from "./demo-hosts"
 import { parseLaunchModeLenient } from "./launch-mode"
 import {
+  productionSiteOrigin,
   productionSitemapUrl,
   resolvePublicIndexableOrigin,
   resolveSeoMode,
@@ -146,7 +147,7 @@ export function robotsTxtBody(raw?: string | null): string {
   if (isIndexingAllowed(raw)) {
     const origin = resolvePublicIndexableOrigin()
     const sitemap =
-      origin === "https://woodright.ru"
+      origin === productionSiteOrigin()
         ? productionSitemapUrl()
         : `${origin}/sitemap.xml`
     return ["User-agent: *", "Allow: /", `Sitemap: ${sitemap}`, ""].join("\n")

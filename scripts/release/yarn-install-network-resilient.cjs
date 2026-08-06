@@ -32,6 +32,24 @@ const DEFAULTS = {
 const RETRYABLE_HTTP = new Set([408, 429, 500, 502, 503, 504])
 const NON_RETRYABLE_HTTP = new Set([400, 401, 403, 404, 405, 410, 422])
 
+/**
+ * Strip ANSI CSI/SGR (and common OSC) sequences from diagnostic text before
+ * classification. Yarn Berry colors "Response Code: 429" so naive regex misses
+ * the status when escapes sit between the label and digits.
+ *
+ * Keeps package names, Yarn codes (YN0035), URLs, and HTTP status digits.
+ */
+function stripAnsi(text) {
+  if (!text) return ""
+  return String(text)
+    // CSI: ESC [ ... command letter (includes SGR m, and other CSI)
+    .replace(/\u001b\[[0-9;?]*[ -/]*[@-~]/g, "")
+    // OSC: ESC ] ... BEL or ST
+    .replace(/\u001b\][^\u0007\u001b]*(?:\u0007|\u001b\\)/g, "")
+    // stray single ESC
+    .replace(/\u001b/g, "")
+}
+
 function redact(text) {
   if (!text) return ""
   return String(text)
@@ -66,7 +84,7 @@ function envInt(name, fallback) {
  * Rejects HTTP-date forms and malformed values.
  */
 function parseRetryAfterSeconds(text, maxSleepSec) {
-  const m = String(text).match(/Retry-After:\s*(\d+)\b/i)
+  const m = stripAnsi(text).match(/Retry-After:\s*(\d+)\b/i)
   if (!m) return null
   const sec = Number.parseInt(m[1], 10)
   if (!Number.isFinite(sec) || sec < 0) return null
@@ -74,31 +92,37 @@ function parseRetryAfterSeconds(text, maxSleepSec) {
 }
 
 function extractHttpStatuses(text) {
+  const normalized = stripAnsi(text)
   const statuses = []
   const re =
     /(?:HTTP(?:\/\d\.\d)?\s+|status(?:\s+code)?\s*[:=]?\s*|Response\s+Code:\s*|YN0035[^\n]*?\b)(\d{3})\b/gi
   let m
-  while ((m = re.exec(text))) {
+  while ((m = re.exec(normalized))) {
     statuses.push(Number.parseInt(m[1], 10))
   }
   // Yarn often prints: "Response Code: 429 (Too Many Requests)"
   const re2 = /Response Code:\s*(\d{3})/gi
-  while ((m = re2.exec(text))) {
+  while ((m = re2.exec(normalized))) {
     statuses.push(Number.parseInt(m[1], 10))
+  }
+  // Phrase form after ANSI strip (label may be absent)
+  if (/\b429\s*\(?\s*Too Many Requests\)?/i.test(normalized)) {
+    statuses.push(429)
   }
   return statuses
 }
 
 function hasNetworkCode(text, code) {
-  return new RegExp(`\\b${code}\\b`).test(text)
+  return new RegExp(`\\b${code}\\b`).test(stripAnsi(text))
 }
 
 /**
  * Classify install output. Fail-fast classes win over retryable.
  * YN0035 alone is NOT retryable without HTTP/network evidence.
+ * ANSI is stripped once before matching so colored Yarn Berry logs classify.
  */
 function classifyInstallFailure(combined) {
-  const text = String(combined || "")
+  const text = stripAnsi(combined || "")
 
   // Non-retryable: lockfile / immutable
   if (
@@ -368,6 +392,7 @@ module.exports = {
   computeBackoffSeconds,
   parseRetryAfterSeconds,
   redact,
+  stripAnsi,
   extractHttpStatuses,
   DEFAULTS,
   main,
