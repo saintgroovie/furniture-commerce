@@ -24,10 +24,30 @@ function check(cond, msg) {
   }
 }
 
+/** Yarn Berry colors status digits; mirrors incident run 31044540376. */
+const ANSI_YN0035_429 =
+  "➤ YN0035: │ @medusajs/modules-sdk@npm:2.18.0: The remote server failed to provide the requested resource\n" +
+  "➤ YN0035: │   \u001b[38;5;111mResponse Code\u001b[39m: \u001b[38;5;220m429\u001b[39m (Too Many Requests)\n" +
+  "➤ YN0035: │   \u001b[38;5;111mRequest Method\u001b[39m: GET\n" +
+  "➤ YN0035: │   \u001b[38;5;111mRequest URL\u001b[39m: \u001b[38;5;170mhttps://registry.npmjs.org/@medusajs%2fmodules-sdk\u001b[39m\n" +
+  "➤ YN0000: · Failed with errors in 10m 5s\n"
+
 const cases = [
+  {
+    name: "ANSI YN0035 Response Code 429 retry",
+    text: ANSI_YN0035_429,
+    retryable: true,
+    reasonIncludes: "429",
+  },
   {
     name: "HTTP 429 retry",
     text: "YN0035\n  Response Code: 429 (Too Many Requests)\n  Request Retry Count: 3",
+    retryable: true,
+    reasonIncludes: "429",
+  },
+  {
+    name: "ANSI 429 Too Many Requests phrase retry",
+    text: "fetch failed: \u001b[31m429 Too Many Requests\u001b[0m from registry.npmjs.org",
     retryable: true,
     reasonIncludes: "429",
   },
@@ -74,6 +94,13 @@ const cases = [
     reasonIncludes: "package_not_found",
   },
   {
+    name: "ANSI YN0035 + HTTP 404 no retry",
+    text:
+      "YN0035\n  \u001b[38;5;111mResponse Code\u001b[39m: \u001b[38;5;220m404\u001b[39m (Not Found)",
+    retryable: false,
+    reasonIncludes: "package_not_found",
+  },
+  {
     name: "YN0035 without HTTP evidence no retry",
     text: "YN0035: The remote server failed to provide the requested resource",
     retryable: false,
@@ -100,6 +127,16 @@ for (const c of cases) {
     String(r.reason).includes(c.reasonIncludes),
     `${c.name}: reason=${r.reason}`
   )
+}
+
+// ANSI stripper preserves package / Yarn code / HTTP status
+{
+  const stripped = mod.stripAnsi(ANSI_YN0035_429)
+  check(!/\u001b\[/.test(stripped), "stripAnsi removes CSI escapes")
+  check(/@medusajs\/modules-sdk/.test(stripped), "stripAnsi keeps package name")
+  check(/YN0035/.test(stripped), "stripAnsi keeps Yarn code")
+  check(/Response Code:\s*429/.test(stripped), "stripAnsi keeps Response Code 429")
+  check(mod.extractHttpStatuses(ANSI_YN0035_429).includes(429), "extractHttpStatuses sees ANSI 429")
 }
 
 check(mod.parseRetryAfterSeconds("Retry-After: 120", 300) === 120, "Retry-After 120")
@@ -186,6 +223,29 @@ process.exit(0);`
   check(countAttempts(combined) === 2, `sim1 exactly 2 attempts (got ${countAttempts(combined)})`)
 }
 
+// Scenario 1b: ANSI-colored 429 then success (incident regression)
+{
+  const state = path.join(tmpRoot, "s1b.state")
+  fs.writeFileSync(state, "0")
+  const ansiLine =
+    "YN0035: \\u001b[38;5;111mResponse Code\\u001b[39m: \\u001b[38;5;220m429\\u001b[39m (Too Many Requests)"
+  const mock = writeMock(
+    "s1b.cjs",
+    `const fs=require("fs");const s=${JSON.stringify(state)};
+let n=Number(fs.readFileSync(s,"utf8"));n++;fs.writeFileSync(s,String(n));
+if(n===1){console.error("${ansiLine}");process.exit(1)}
+process.exit(0);`
+  )
+  const r = runHelper({
+    WOODRIGHT_INSTALL_COMMAND: `${process.execPath} ${mock}`,
+  })
+  const combined = `${r.stdout}\n${r.stderr}`
+  check(r.status === 0, "sim1b ANSI 429 then success")
+  check(countAttempts(combined) === 2, `sim1b exactly 2 attempts (got ${countAttempts(combined)})`)
+  check(!/fail_fast/.test(combined), "sim1b no fail_fast on ANSI 429")
+  check(/"reason":"http_429"/.test(combined), "sim1b classified http_429")
+}
+
 // Scenario 2: all 429
 {
   const mock = writeMock(
@@ -198,6 +258,22 @@ process.exit(0);`
   const combined = `${r.stdout}\n${r.stderr}`
   check(r.status === 42, "sim2 preserves exit 42")
   check(countAttempts(combined) === 3, `sim2 max 3 attempts (got ${countAttempts(combined)})`)
+}
+
+// Scenario 2b: all ANSI 429 → exhaustion
+{
+  const mock = writeMock(
+    "s2b.cjs",
+    `console.error("YN0035: \\u001b[38;5;111mResponse Code\\u001b[39m: \\u001b[38;5;220m429\\u001b[39m (Too Many Requests)");process.exit(42);`
+  )
+  const r = runHelper({
+    WOODRIGHT_INSTALL_COMMAND: `${process.execPath} ${mock}`,
+  })
+  const combined = `${r.stdout}\n${r.stderr}`
+  check(r.status === 42, "sim2b ANSI preserves exit 42")
+  check(countAttempts(combined) === 3, `sim2b max 3 attempts (got ${countAttempts(combined)})`)
+  check(/retries_exhausted/.test(combined), "sim2b retries_exhausted")
+  check(!/fail_fast/.test(combined), "sim2b no fail_fast")
 }
 
 // Scenario 3: immutable
