@@ -27,7 +27,7 @@ ensure_chain_anchor() {
 purge_docker_user_port() {
   local bin="$1" port="$2"
   local lineno
-  while lineno=$("$bin" -L DOCKER-USER --line-numbers -n 2>/dev/null \
+  while lineno=$("$bin" -L DOCKER-USER --line-numbers -n -v 2>/dev/null \
       | awk -v iface="$IFACE" -v port="$port" -v pref="$COMMENT_PREFIX" '
           BEGIN { re_iface = "(^|[[:space:]])" iface "([[:space:]]|$)" }
           $0 !~ re_iface { next }
@@ -45,7 +45,7 @@ purge_docker_user_port() {
 purge_input_port() {
   local bin="$1" port="$2"
   local lineno
-  while lineno=$("$bin" -L INPUT --line-numbers -n 2>/dev/null \
+  while lineno=$("$bin" -L INPUT --line-numbers -n -v 2>/dev/null \
       | awk -v iface="$IFACE" -v port="$port" -v pref="$COMMENT_PREFIX" '
           BEGIN { re_iface = "(^|[[:space:]])" iface "([[:space:]]|$)" }
           $0 !~ re_iface { next }
