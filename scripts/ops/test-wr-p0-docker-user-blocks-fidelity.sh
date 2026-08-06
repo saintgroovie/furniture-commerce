@@ -27,6 +27,11 @@ else
 fi
 grep -q 'iptables required' "$SCRIPT" && pass "fail-closed ipv4 required" || fail "missing ipv4 required"
 grep -q 'apply_input_reject' "$SCRIPT" && pass "INPUT independent path" || fail "no INPUT path"
+if grep -A6 'apply_input_reject()' "$SCRIPT" | grep -q 'ctstate NEW'; then
+  pass "INPUT reject is NEW-only"
+else
+  fail "INPUT reject missing ctstate NEW"
+fi
 grep -q 'COMMENT_PREFIX\|wr-p0-block' "$SCRIPT" && pass "owned-comment purge" || fail "no owned comment"
 # Secret-ish
 if grep -EIn 'password|api_key|BEGIN RSA|SECRET=' "$SCRIPT" "$UNIT"; then fail "secret-like"; else pass "no secrets"; fi

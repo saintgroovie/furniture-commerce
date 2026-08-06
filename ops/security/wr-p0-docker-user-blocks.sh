@@ -72,9 +72,10 @@ apply_docker_user_reject() {
 apply_input_reject() {
   local bin="$1" port="$2"
   local comment="${COMMENT_PREFIX}-input-${port}"
-  if ! "$bin" -C INPUT -i "$IFACE" -p tcp --dport "$port" \
+  # Defense-in-depth on host INPUT; NEW-only so ESTABLISHED/RELATED are preserved.
+  if ! "$bin" -C INPUT -i "$IFACE" -p tcp -m conntrack --ctstate NEW --dport "$port" \
       -m comment --comment "$comment" -j REJECT --reject-with tcp-reset 2>/dev/null; then
-    "$bin" -I INPUT 1 -i "$IFACE" -p tcp --dport "$port" \
+    "$bin" -I INPUT 1 -i "$IFACE" -p tcp -m conntrack --ctstate NEW --dport "$port" \
       -m comment --comment "$comment" -j REJECT --reject-with tcp-reset
   fi
 }
