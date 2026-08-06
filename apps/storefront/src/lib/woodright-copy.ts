@@ -47,6 +47,21 @@ export const a11yCopy = {
   applyFilters: "Показать результаты",
 }
 
+/** Buyer catalog toolbar microcopy (search / filters chrome). */
+export const catalogUiCopy = {
+  searchLabel: "Поиск по каталогу",
+  /** Desktop / wide: full hint; fits the single-line search bubble. */
+  searchPlaceholder: "Поиск по названию, коллекции или категории",
+  /**
+   * ≤768px: same three search targets without the "Поиск по …" prefix so the
+   * placeholder does not clip mid-word inside the narrow input. The visible
+   * label remains `searchLabel` via sr-only.
+   */
+  searchPlaceholderCompact: "Название, коллекция или категория",
+  searchClear: "Очистить поиск",
+  searchSubmit: "Найти",
+}
+
 export const systemCopy = {
   notFound: {
     label: "404",
