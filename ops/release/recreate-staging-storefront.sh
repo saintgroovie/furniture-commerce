@@ -186,6 +186,15 @@ create_storefront() {
       >"$EVIDENCE_DIR/json/database-identity-plan.json"
   fi
   log "PLANNED database_identity_alias=$db_identity_alias database_connection_name=${WOODRIGHT_DATABASE_CONNECTION_NAME:-none}"
+  # shellcheck source=../lib/woodright-memory-limits.sh
+  source "$HERE/../lib/woodright-memory-limits.sh"
+  local _wr_mem_sf_out=""
+  if ! _wr_mem_sf_out="$(wr_mem_docker_flags_storefront)"; then
+    die "storefront memory flags invalid"
+  fi
+  # shellcheck disable=SC2206
+  local -a _wr_mem_sf=( ${_wr_mem_sf_out} )
+  [[ "${#_wr_mem_sf[@]}" -ge 4 ]] || die "storefront memory flags incomplete"
   local -a create_args=(
     --name "$NAME"
     --restart unless-stopped
@@ -196,6 +205,7 @@ create_storefront() {
     --label "com.woodright.exposure=public"
     --label "com.woodright.release-sha=${TARGET_SHA}"
     --label "com.woodright.database-identity=${db_identity_alias}"
+    "${_wr_mem_sf[@]}"
     --env-file "$ENV_FILE"
     --health-cmd="node -e \"fetch('http://127.0.0.1:3002/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""
     --health-interval=30s
@@ -288,7 +298,7 @@ esac
   || die "missing required args for mode=$MODE"
 wr_cutover_require_full_sha "$TARGET_SHA" || exit 2
 wr_cutover_require_digest "$EXPECTED_DIGEST" || exit 2
-# Gate A — before image inspect/pull planning. Peer BE digest optional for SF-only.
+# Gate A  -  before image inspect/pull planning. Peer BE digest optional for SF-only.
 _oa_be="${WOODRIGHT_OWNER_APPROVAL_PEER_BE_DIGEST:-${EXPECTED_BACKEND_DIGEST:-${WOODRIGHT_FROZEN_BACKEND_DIGEST:-}}}"
 OWNER_APPROVAL_CHECKSUM_GATE_A=""
 if ! wr_require_owner_approved_release \
