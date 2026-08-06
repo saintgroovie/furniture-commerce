@@ -9,6 +9,7 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  useSyncExternalStore,
   useTransition,
 } from "react"
 import {
@@ -35,7 +36,21 @@ import {
   type BuyerClosePeerDetail,
 } from "@/lib/buyer-dialog-a11y"
 import { useCspNonce } from "@/lib/csp-nonce"
-import { a11yCopy } from "@/lib/woodright-copy"
+import { a11yCopy, catalogUiCopy } from "@/lib/woodright-copy"
+
+function subscribeBuyerMobileMq(onChange: () => void) {
+  const mq = window.matchMedia(BUYER_MOBILE_MQ)
+  mq.addEventListener("change", onChange)
+  return () => mq.removeEventListener("change", onChange)
+}
+
+function getBuyerMobileMqSnapshot() {
+  return window.matchMedia(BUYER_MOBILE_MQ).matches
+}
+
+function getBuyerMobileMqServerSnapshot() {
+  return false
+}
 
 type Props = {
   basePath: string
@@ -125,6 +140,11 @@ export function CatalogFilterControls({
   const [searchDraft, setSearchDraft] = useState(state.q ?? "")
   const [searchSyncQ, setSearchSyncQ] = useState(state.q ?? "")
   const filterToggleRef = useRef<HTMLButtonElement>(null)
+  const compactSearchPlaceholder = useSyncExternalStore(
+    subscribeBuyerMobileMq,
+    getBuyerMobileMqSnapshot,
+    getBuyerMobileMqServerSnapshot
+  )
 
   const routeQ = state.q ?? ""
   if (routeQ !== searchSyncQ) {
@@ -727,7 +747,7 @@ export function CatalogFilterControls({
           )}
           {state.sort && <input type="hidden" name="sort" value={state.sort} />}
           <label className="sr-only" htmlFor="catalog-search-input">
-            Поиск по каталогу
+            {catalogUiCopy.searchLabel}
           </label>
           <div className="catalog-search-input-wrap">
             <input
@@ -736,14 +756,18 @@ export function CatalogFilterControls({
               type="search"
               value={searchDraft}
               onChange={(e) => setSearchDraft(e.target.value)}
-              placeholder="Поиск по названию, коллекции или категории"
+              placeholder={
+                compactSearchPlaceholder
+                  ? catalogUiCopy.searchPlaceholderCompact
+                  : catalogUiCopy.searchPlaceholder
+              }
               autoComplete="off"
             />
             {searchDraft && (
               <button
                 type="button"
                 className="catalog-search-clear"
-                aria-label="Очистить поиск"
+                aria-label={catalogUiCopy.searchClear}
                 onClick={() => setSearchDraft("")}
               >
                 <svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true">
@@ -761,7 +785,7 @@ export function CatalogFilterControls({
             Найдено {resultCount}
           </p>
           <button type="submit" className="catalog-search-btn">
-            Найти
+            {catalogUiCopy.searchSubmit}
           </button>
         </form>
 
