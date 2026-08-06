@@ -9,6 +9,7 @@ import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import {
   productionSitemapUrl,
+  productionSiteOrigin,
   resolvePublicIndexableOrigin,
   resolveSeoMode,
   seoModeToIndexingRaw,
@@ -357,5 +358,23 @@ assert.match(profile, /WOODRIGHT_OWNERSHIP_DIR=\/srv\/woodright\/runtime-ownersh
 assert.match(profile, /WOODRIGHT_MUTATION_LOCK_PATH=\/srv\/woodright\/locks\/public_production\//)
 assert.doesNotMatch(profile, /runtime-ownership-public-demo/)
 assert.doesNotMatch(profile, /runtime-ownership-production[^-]/)
+
+// Shippable SEO modules must not embed contiguous production-apex needles
+// (public_demo contamination scan / failed run 30986445900).
+{
+  const FORBIDDEN_APEX = "https://" + "woodright.ru"
+  for (const rel of [
+    "src/lib/seo-mode.ts",
+    "src/app/robots.ts",
+    "src/lib/indexing-policy.ts",
+  ]) {
+    const src = read(rel)
+    assert.ok(
+      !src.includes(FORBIDDEN_APEX),
+      `${rel} must not embed contiguous production apex (use join / productionSiteOrigin)`
+    )
+  }
+  assert.equal(productionSiteOrigin(), FORBIDDEN_APEX)
+}
 
 console.log("seo-mode.fidelity: ok")
