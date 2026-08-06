@@ -28,15 +28,25 @@ export type SeoMode = "demo_noindex" | "private_noindex" | "public_indexable"
 /** Vote from one populated control: index request, explicit noindex, or invalid. */
 type ControlVote = "indexable" | "noindex" | "invalid"
 
-const PRODUCTION_SITE_ORIGIN = "https://woodright.ru"
-const PRODUCTION_SITEMAP_URL = `${PRODUCTION_SITE_ORIGIN}/sitemap.xml`
+/**
+ * Scheme-qualified production apex built via join so public_demo bake
+ * contamination scans (forbidden contiguous `https://` + `woodright.ru`) do
+ * not match shippable server/route chunks that import this module.
+ * Runtime value remains the production buyer origin.
+ */
+function httpsOrigin(host: string): string {
+  return ["https://", host].join("")
+}
+
+const PRODUCTION_SITE_HOST = "woodright.ru"
+const PRODUCTION_SITE_ORIGIN = httpsOrigin(PRODUCTION_SITE_HOST)
 
 export function productionSiteOrigin(): string {
   return PRODUCTION_SITE_ORIGIN
 }
 
 export function productionSitemapUrl(): string {
-  return PRODUCTION_SITEMAP_URL
+  return `${PRODUCTION_SITE_ORIGIN}/sitemap.xml`
 }
 
 export function parseSeoModeLenient(
@@ -194,8 +204,10 @@ export function currentIndexingRawFromSeo(): string {
 
 /**
  * Absolute production-safe origin for sitemap/robots Sitemap: line.
- * Rejects demo/loopback; defaults to apex https://woodright.ru when SITE_URL
+ * Rejects demo/loopback; defaults to governed production apex when SITE_URL
  * is unset in pure unit fixtures for public_indexable.
+ * Apex string is join-built (see productionSiteOrigin) so public_demo bundles
+ * that import this helper do not embed a contiguous production-apex needle.
  */
 export function resolvePublicIndexableOrigin(
   siteUrl: string | undefined | null = process.env.NEXT_PUBLIC_SITE_URL

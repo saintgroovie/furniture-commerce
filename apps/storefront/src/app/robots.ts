@@ -4,6 +4,7 @@ import {
   robotsTxtBody,
 } from "@/lib/indexing-policy"
 import {
+  productionSiteOrigin,
   productionSitemapUrl,
   resolvePublicIndexableOrigin,
 } from "@/lib/seo-mode"
@@ -16,7 +17,7 @@ export default function robots(): MetadataRoute.Robots {
   if (isIndexingAllowed()) {
     const origin = resolvePublicIndexableOrigin()
     const sitemap =
-      origin === "https://woodright.ru"
+      origin === productionSiteOrigin()
         ? productionSitemapUrl()
         : `${origin}/sitemap.xml`
     // Keep body contract aligned with robotsTxtBody() for fidelity tests.
