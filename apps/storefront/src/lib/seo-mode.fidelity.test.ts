@@ -236,15 +236,25 @@ assert.equal(seoModeToIndexingRaw("demo_noindex"), "noindex")
 
 assert.equal(resolvePublicIndexableOrigin("https://www.woodright.ru"), "https://woodright.ru")
 assert.equal(resolvePublicIndexableOrigin("https://woodright.ru"), "https://woodright.ru")
-assert.equal(resolvePublicIndexableOrigin("https://woodright-demo.ru"), "https://woodright.ru")
-assert.equal(resolvePublicIndexableOrigin("http://127.0.0.1:3200"), "https://woodright.ru")
+assert.throws(
+  () => resolvePublicIndexableOrigin("https://woodright-demo.ru"),
+  /rejects demo/
+)
+assert.throws(() => resolvePublicIndexableOrigin("http://127.0.0.1:3200"), /must be https|rejects/)
+delete process.env.NEXT_PUBLIC_SITE_URL
+assert.throws(() => resolvePublicIndexableOrigin(undefined), /requires NEXT_PUBLIC_SITE_URL/)
+assert.throws(() => resolvePublicIndexableOrigin(""), /requires NEXT_PUBLIC_SITE_URL/)
+assert.throws(() => resolvePublicIndexableOrigin(null), /requires NEXT_PUBLIC_SITE_URL/)
+process.env.NEXT_PUBLIC_SITE_URL = "https://woodright.ru"
 assert.equal(productionSitemapUrl(), "https://woodright.ru/sitemap.xml")
+assert.equal(productionSiteOrigin(), "https://woodright.ru")
 
 const bodyIndex = robotsTxtBody("index")
 assert.match(bodyIndex, /Allow:\s*\//)
 assert.match(bodyIndex, /Sitemap:\s*https:\/\/woodright\.ru\/sitemap\.xml/)
 assert.doesNotMatch(bodyIndex, /woodright-demo/)
 assert.doesNotMatch(bodyIndex, /Disallow:\s*\//)
+delete process.env.NEXT_PUBLIC_SITE_URL
 
 assert.equal(isBlockedSitemapPath("/cart"), true)
 assert.equal(isBlockedSitemapPath("/checkout"), true)
@@ -296,7 +306,7 @@ assert.match(xml, /<loc>/)
 
 const robotsRoute = read("src/app/robots.ts")
 assert.match(robotsRoute, /sitemap/)
-assert.match(robotsRoute, /productionSitemapUrl|resolvePublicIndexableOrigin/)
+assert.match(robotsRoute, /resolvePublicIndexableOrigin/)
 assert.match(robotsRoute, /isIndexingAllowed/)
 
 const sitemapRoute = read("src/app/sitemap.xml/route.ts")
@@ -332,6 +342,7 @@ process.env.WOODRIGHT_SEO_MODE = "public_indexable"
 process.env.WOODRIGHT_LAUNCH_MODE = "public_indexable"
 process.env.WOODRIGHT_INDEXING_MODE = "index"
 process.env.WOODRIGHT_RUNTIME_ROLE = "public_production"
+process.env.NEXT_PUBLIC_SITE_URL = "https://woodright.ru"
 assert.equal(isIndexingAllowed(), true, "unanimous indexable must allow")
 {
   const indexBody = robotsTxtBody()
@@ -342,6 +353,7 @@ delete process.env.WOODRIGHT_SEO_MODE
 delete process.env.WOODRIGHT_LAUNCH_MODE
 delete process.env.WOODRIGHT_INDEXING_MODE
 delete process.env.WOODRIGHT_RUNTIME_ROLE
+delete process.env.NEXT_PUBLIC_SITE_URL
 const pdp = read("src/app/product/[id]/page.tsx")
 assert.match(pdp, /notFound\(/)
 assert.doesNotMatch(pdp, /title:\s*"Товар"/)
@@ -360,21 +372,30 @@ assert.doesNotMatch(profile, /runtime-ownership-public-demo/)
 assert.doesNotMatch(profile, /runtime-ownership-production[^-]/)
 
 // Shippable SEO modules must not embed contiguous production-apex needles
-// (public_demo contamination scan / failed run 30986445900).
+// (public_demo contamination scan / failed run 31082069745). Join is not isolation.
 {
   const FORBIDDEN_APEX = "https://" + "woodright.ru"
   for (const rel of [
     "src/lib/seo-mode.ts",
     "src/app/robots.ts",
     "src/lib/indexing-policy.ts",
+    "src/lib/production-hosts.ts",
   ]) {
     const src = read(rel)
     assert.ok(
       !src.includes(FORBIDDEN_APEX),
-      `${rel} must not embed contiguous production apex (use join / productionSiteOrigin)`
+      `${rel} must not embed contiguous production apex`
+    )
+    assert.doesNotMatch(
+      src,
+      /\[\s*["']https:\/\/["']\s*,\s*["']woodright\.ru["']\s*\]/,
+      `${rel} must not join-reconstruct production apex`
     )
   }
+  process.env.NEXT_PUBLIC_SITE_URL = FORBIDDEN_APEX
   assert.equal(productionSiteOrigin(), FORBIDDEN_APEX)
+  delete process.env.NEXT_PUBLIC_SITE_URL
+  assert.throws(() => productionSiteOrigin(undefined), /requires NEXT_PUBLIC_SITE_URL/)
 }
 
 console.log("seo-mode.fidelity: ok")

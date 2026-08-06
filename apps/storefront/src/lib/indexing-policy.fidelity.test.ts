@@ -69,10 +69,12 @@ assert.match(body, /Disallow:\s*\//)
 assert.doesNotMatch(body, /Sitemap:/i)
 assert.doesNotMatch(body, /Allow:\s*\//)
 
+process.env.NEXT_PUBLIC_SITE_URL = "https://" + "woodright.ru"
 const bodyIndex = robotsTxtBody("index")
 assert.match(bodyIndex, /Allow:\s*\//)
 assert.doesNotMatch(bodyIndex, /Disallow:\s*\//)
 assert.match(bodyIndex, /Sitemap:\s*https:\/\/woodright\.ru\/sitemap\.xml/)
+delete process.env.NEXT_PUBLIC_SITE_URL
 
 assert.equal(X_ROBOTS_TAG_NOINDEX, "noindex, nofollow, noarchive")
 assert.equal(shouldEmitXRobotsTag(undefined, "production"), true)
