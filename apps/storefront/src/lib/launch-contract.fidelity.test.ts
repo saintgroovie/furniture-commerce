@@ -10,8 +10,8 @@ import { fileURLToPath } from "node:url"
 import {
   DEMO_HOSTS,
   LOOPBACK_HOST_RE,
-  PRODUCTION_API_ORIGIN,
-  PRODUCTION_BUYER_ORIGINS,
+  PRODUCTION_API_HOST,
+  PRODUCTION_BUYER_HOSTS,
   PUBLIC_DEMO_BUYER_ORIGINS,
   assertProductionLikeApiUrl,
   assertProductionLikeSiteUrl,
@@ -29,9 +29,9 @@ function read(rel: string): string {
   return readFileSync(join(root, rel), "utf8")
 }
 
-// --- constants ---
-assert.deepEqual(PRODUCTION_BUYER_ORIGINS, ["https://woodright.ru", "https://www.woodright.ru"])
-assert.equal(PRODUCTION_API_ORIGIN, "https://api.woodright.ru")
+// --- constants (bare hosts only in shippable modules; no scheme-qualified production origins) ---
+assert.deepEqual(PRODUCTION_BUYER_HOSTS, ["woodright.ru", "www.woodright.ru"])
+assert.equal(PRODUCTION_API_HOST, "api.woodright.ru")
 assert.ok(DEMO_HOSTS.includes("woodright-demo.ru"))
 assert.ok(DEMO_HOSTS.includes("www.woodright-demo.ru"))
 assert.ok(DEMO_HOSTS.includes("api.woodright-demo.ru"))
@@ -39,6 +39,7 @@ assert.ok(LOOPBACK_HOST_RE.test("localhost"))
 assert.ok(LOOPBACK_HOST_RE.test("127.0.0.1"))
 assert.ok(LOOPBACK_HOST_RE.test("localhost:8000"))
 assert.ok(!LOOPBACK_HOST_RE.test("woodright.ru"))
+assert.equal(PUBLIC_DEMO_BUYER_ORIGINS.length, 2)
 
 // --- isProductionLikeRuntime ---
 assert.equal(isProductionLikeRuntime("production"), true)

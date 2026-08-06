@@ -4,7 +4,6 @@
  */
 import assert from "node:assert/strict"
 import {
-  PREPARED_PRODUCTION_PRIVATE_NOINDEX,
   normalizeOrigin,
   resolveLaunchIndexingMode,
   resolvePaymentLaunchMode,
@@ -22,6 +21,22 @@ import {
 } from "./legal/owner-inputs"
 import { LEGAL_PAGE_IDS, buildLegalPage } from "./legal/legal-content"
 import { resolveIndexingMode } from "./indexing-policy"
+
+/** Test-only prepared profile (not imported by shippable modules). */
+const PREPARED_PRODUCTION_PRIVATE_NOINDEX = {
+  siteOrigin: "https://" + "woodright.ru",
+  apiOrigin: "https://" + "api.woodright.ru",
+  indexingMode: "private_noindex" as const,
+  adminExposure: "private" as const,
+  paymentMode: "manager_payment_link" as const,
+  storeCorsOrigins: [
+    "https://" + "woodright.ru",
+    "https://" + "www.woodright.ru",
+  ],
+  runtimeRole: "production",
+  exposure: "public",
+  databaseIdentity: "production_db",
+} as const
 
 assert.equal(normalizeOrigin("https://woodright.ru/"), "https://woodright.ru")
 assert.equal(normalizeOrigin("https://evilwoodright.ru"), "https://evilwoodright.ru")
