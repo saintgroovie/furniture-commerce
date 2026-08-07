@@ -19,6 +19,9 @@ source "$OPS_LIB"
 HP_LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib/woodright-host-publish.sh"
 # shellcheck source=../lib/woodright-host-publish.sh
 source "$HP_LIB"
+HEADER_POLICY_LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib/woodright-monitor-header-policy.sh"
+# shellcheck source=../lib/woodright-monitor-header-policy.sh
+source "$HEADER_POLICY_LIB"
 ENV_PROFILE_LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib/woodright-environment-profile.sh"
 
 # Optional: --environment <name> loads profile for host-publish + path pins.
@@ -110,14 +113,16 @@ arr=json.loads(sys.argv[1])
 arr.append({"name":sys.argv[2],"severity":sys.argv[3],"status":sys.argv[4],"detail":sys.argv[5]})
 print(json.dumps(arr))
 ' "$CHECKS_JSON" "$name" "$severity" "$status" "$detail")
-  if [[ "$status" != "pass" ]]; then
-    if [[ "$severity" == "critical" ]]; then
-      OVERALL="critical"
-      EXIT_CODE=2
-    elif [[ "$severity" == "warning" && "$OVERALL" == "ok" ]]; then
-      OVERALL="warning"
-      [[ $EXIT_CODE -eq 0 ]] && EXIT_CODE=1
-    fi
+  # not_applicable is visible diagnostics only - must not raise overall / exit.
+  if [[ "$status" == "pass" || "$status" == "not_applicable" ]]; then
+    return 0
+  fi
+  if [[ "$severity" == "critical" ]]; then
+    OVERALL="critical"
+    EXIT_CODE=2
+  elif [[ "$severity" == "warning" && "$OVERALL" == "ok" ]]; then
+    OVERALL="warning"
+    [[ $EXIT_CODE -eq 0 ]] && EXIT_CODE=1
   fi
 }
 
@@ -128,11 +133,34 @@ curl_code() {
 
 curl_hdr() {
   local url="$1" hdr="$2"
+  # Test-only fixture map: {"<url>":{"header-name":"value",...}}
+  # Missing key => empty header (simulates absent). Unset fixture => live curl.
+  if [[ -n "${WOODRIGHT_FIXTURE_RESPONSE_HEADERS_JSON:-}" ]]; then
+    python3 -c '
+import json, sys
+url, hdr, raw = sys.argv[1], sys.argv[2].lower(), sys.argv[3]
+try:
+    doc = json.loads(raw)
+except Exception:
+    raise SystemExit(0)
+entry = doc.get(url) or doc.get(url.rstrip("/")) or doc.get(url.rstrip("/") + "/") or {}
+if not isinstance(entry, dict):
+    raise SystemExit(0)
+for k, v in entry.items():
+    if str(k).lower() == hdr:
+        if v is None:
+            raise SystemExit(0)
+        print(str(v))
+        raise SystemExit(0)
+' "$url" "$hdr" "$WOODRIGHT_FIXTURE_RESPONSE_HEADERS_JSON"
+    return 0
+  fi
   curl -sSI --max-time 15 "$url" 2>/dev/null | awk -v h="$(echo "$hdr" | tr '[:upper:]' '[:lower:]')" '
     BEGIN{IGNORECASE=1}
     tolower($0) ~ "^"h":" {sub(/^[^:]+:[ \t]*/,""); gsub(/\r/,""); print; exit}
   '
 }
+
 
 # --- DISCOVERY (no command-substitution; preserve WR_DISCOVERY_VERDICT) ---
 # Call functions in-shell; never fall back to unvalidated hardcoded names.
@@ -283,8 +311,30 @@ XR=$(curl_hdr "$BUYER_HOST/" "x-robots-tag" || true)
 [[ "$XR" == *noindex* ]] && add_check "buyer_x_robots" info pass "present" || add_check "buyer_x_robots" warning fail "missing_or_indexable"
 CSP=$(curl_hdr "$BUYER_HOST/" "content-security-policy" || true)
 [[ -n "$CSP" ]] && add_check "buyer_csp" info pass "present" || add_check "buyer_csp" warning fail "missing"
-HSTS=$(curl_hdr "$BUYER_HOST/" "strict-transport-security" || true)
-[[ -n "$HSTS" ]] && add_check "buyer_hsts" info pass "present" || add_check "buyer_hsts" warning fail "missing"
+# Profile-aware HSTS: private HTTP loopback => explicit not_applicable (not a fake PASS).
+_HSTS_POLICY="$(wr_monitor_buyer_hsts_policy "${WOODRIGHT_PUBLIC_EXPOSURE:-}" "$BUYER_HOST")"
+_HSTS_ACTION="${_HSTS_POLICY%%$'\t'*}"
+_HSTS_REASON="${_HSTS_POLICY#*$'\t'}"
+_HSTS_TARGET="$(wr_monitor_sanitize_http_target "$BUYER_HOST")"
+case "$_HSTS_ACTION" in
+  not_applicable)
+    add_check "buyer_hsts" info not_applicable "reason=${_HSTS_REASON};target=${_HSTS_TARGET}"
+    ;;
+  fail)
+    add_check "buyer_hsts" warning fail "reason=${_HSTS_REASON};target=${_HSTS_TARGET}"
+    ;;
+  probe)
+    HSTS=$(curl_hdr "$BUYER_HOST/" "strict-transport-security" || true)
+    if [[ -n "$HSTS" ]]; then
+      add_check "buyer_hsts" info pass "present;reason=${_HSTS_REASON};target=${_HSTS_TARGET}"
+    else
+      add_check "buyer_hsts" warning fail "missing;reason=${_HSTS_REASON};target=${_HSTS_TARGET}"
+    fi
+    ;;
+  *)
+    add_check "buyer_hsts" warning fail "reason=buyer_target_unparseable;target=${_HSTS_TARGET}"
+    ;;
+esac
 NOSNIFF=$(curl_hdr "$BUYER_HOST/" "x-content-type-options" || true)
 [[ "$NOSNIFF" == *nosniff* ]] && add_check "buyer_nosniff" info pass "present" || add_check "buyer_nosniff" warning fail "missing"
 
@@ -296,8 +346,30 @@ SITEMAP=$(curl_code "${BUYER_HOST}/sitemap.xml")
 # API
 API_CODE=$(curl_code "${API_HOST}/")
 [[ "$API_CODE" != "000" ]] && add_check "api_host" info pass "http=$API_CODE" || add_check "api_host" critical fail "unreachable"
-API_XR=$(curl_hdr "$API_HOST/" "x-robots-tag" || true)
-[[ "$API_XR" == *noindex* ]] && add_check "api_x_robots" info pass "present" || add_check "api_x_robots" warning fail "missing"
+# Profile-aware API X-Robots: private loopback => not_applicable; public/public_demo stays strict.
+_API_XR_POLICY="$(wr_monitor_api_x_robots_policy "${WOODRIGHT_PUBLIC_EXPOSURE:-}" "$API_HOST")"
+_API_XR_ACTION="${_API_XR_POLICY%%$'\t'*}"
+_API_XR_REASON="${_API_XR_POLICY#*$'\t'}"
+_API_XR_TARGET="$(wr_monitor_sanitize_http_target "$API_HOST")"
+case "$_API_XR_ACTION" in
+  not_applicable)
+    add_check "api_x_robots" info not_applicable "reason=${_API_XR_REASON};target=${_API_XR_TARGET}"
+    ;;
+  fail)
+    add_check "api_x_robots" warning fail "reason=${_API_XR_REASON};target=${_API_XR_TARGET}"
+    ;;
+  probe)
+    API_XR=$(curl_hdr "$API_HOST/" "x-robots-tag" || true)
+    if [[ "$API_XR" == *noindex* ]]; then
+      add_check "api_x_robots" info pass "present;reason=${_API_XR_REASON};target=${_API_XR_TARGET}"
+    else
+      add_check "api_x_robots" warning fail "missing;reason=${_API_XR_REASON};target=${_API_XR_TARGET}"
+    fi
+    ;;
+  *)
+    add_check "api_x_robots" warning fail "reason=api_target_unparseable;target=${_API_XR_TARGET}"
+    ;;
+esac
 STORE_REG=$(curl_code "${API_HOST}/store/regions")
 # without publishable key expect 400/401
 if [[ "$STORE_REG" == "400" || "$STORE_REG" == "401" || "$STORE_REG" == "403" ]]; then
