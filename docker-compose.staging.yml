@@ -2,7 +2,7 @@
 # Preferred first path: Dokploy builds Dockerfiles from this branch (see build:).
 # After CI/registry exists, override WOODRIGHT_*_IMAGE to immutable SHA tags.
 #
-# Secrets MUST be injected by the orchestrator — do not commit real values.
+# Secrets MUST be injected by the orchestrator  -  do not commit real values.
 # Never point DATABASE_URL at Dokploy's own Postgres.
 
 services:
@@ -43,6 +43,10 @@ services:
       context: ./apps/backend
       dockerfile: Dockerfile
     restart: unless-stopped
+    # Wave 1 memory caps (measurement-backed; see docs/operator/container-memory-limits.md)
+    mem_reservation: "${WOODRIGHT_BACKEND_MEMORY_RESERVATION:-640m}"
+    mem_limit: "${WOODRIGHT_BACKEND_MEMORY_LIMIT:-1536m}"
+    memswap_limit: "${WOODRIGHT_BACKEND_MEMORY_SWAP:-1536m}"
     depends_on:
       postgres:
         condition: service_healthy
@@ -62,7 +66,7 @@ services:
       # temporary cleartext http://IP admin review (non-production workflow).
       MEDUSA_LOCAL_HTTP: ${MEDUSA_LOCAL_HTTP:-0}
       PORT: "9000"
-      # Runtime identity (fail-closed QA). Alias only — never put DSN here.
+      # Runtime identity (fail-closed QA). Alias only  -  never put DSN here.
       WOODRIGHT_RUNTIME_ROLE: ${WOODRIGHT_RUNTIME_ROLE:-public_demo}
       WOODRIGHT_EXPOSURE: ${WOODRIGHT_EXPOSURE:-public}
       WOODRIGHT_RELEASE_SHA: ${WOODRIGHT_RELEASE_SHA:-}
@@ -116,6 +120,10 @@ services:
         NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: ${NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY:?set NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY}
         NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES: ${NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES:-1}
     restart: unless-stopped
+    # Wave 1 memory caps (measurement-backed; see docs/operator/container-memory-limits.md)
+    mem_reservation: "${WOODRIGHT_STOREFRONT_MEMORY_RESERVATION:-192m}"
+    mem_limit: "${WOODRIGHT_STOREFRONT_MEMORY_LIMIT:-512m}"
+    memswap_limit: "${WOODRIGHT_STOREFRONT_MEMORY_SWAP:-512m}"
     depends_on:
       backend:
         condition: service_healthy
@@ -160,7 +168,7 @@ services:
 volumes:
   woodright_staging_pg:
   woodright_staging_redis:
-  # External durable media — never create empty replacement volume on compose up.
+  # External durable media  -  never create empty replacement volume on compose up.
   # Full name must match live Docker volume used by public_demo backend.
   woodright_staging_media:
     external: true

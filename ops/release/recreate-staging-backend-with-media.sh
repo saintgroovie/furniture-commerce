@@ -31,6 +31,8 @@ source "$HERE/../lib/woodright-cutover-common.sh"
 source "$HERE/../lib/woodright-host-publish.sh"
 # shellcheck source=../lib/woodright-owner-approved-release.sh
 source "$HERE/../lib/woodright-owner-approved-release.sh"
+# shellcheck source=../lib/woodright-memory-limits.sh
+source "$HERE/../lib/woodright-memory-limits.sh"
 
 log() { printf '%s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*"; }
 die_early() { log "ERROR: $*"; exit 1; }
@@ -52,7 +54,7 @@ ENV_FILE="${ENV_FILE:?set ENV_FILE}"
 EXPECTED_DIGEST="${EXPECTED_DIGEST:?set EXPECTED_DIGEST sha256:<64hex>}"
 TARGET_SHA="${TARGET_SHA:-${WOODRIGHT_TARGET_SHA:-}}"
 [[ "$TARGET_SHA" =~ ^[0-9a-f]{40}$ ]] || die_early "TARGET_SHA / WOODRIGHT_TARGET_SHA required (40-hex) for OCI provenance"
-# Gate A — before any docker pull/create. Peer SF digest optional for backend-only;
+# Gate A  -  before any docker pull/create. Peer SF digest optional for backend-only;
 # when unset, SHA + backend digest must still match owner-approved identity.
 _oa_ev="${WOODRIGHT_CUTOVER_EVIDENCE_DIR:-${EVIDENCE_DIR:-}}"
 _oa_sf="${WOODRIGHT_OWNER_APPROVAL_PEER_SF_DIGEST:-${EXPECTED_STOREFRONT_DIGEST:-}}"
@@ -168,7 +170,7 @@ else
 fi
 [[ -x "$GATE" ]] || die "media gate missing: $GATE"
 
-# Mode A — pre-promote target validation BEFORE any live mutation.
+# Mode A  -  pre-promote target validation BEFORE any live mutation.
 # Does not require EXPECTED_RELEASE to already list the target digest.
 log "running_pre_promote_media_gate gate=$GATE target=$EXPECTED_DIGEST"
 PRE_ARGS=(--environment "$WOODRIGHT_ENVIRONMENT" --mode pre-promote --target-image "$IMAGE" --expected-digest "$EXPECTED_DIGEST" --media-volume "$VOLUME" --mount-destination "$DEST" --target-sha "$TARGET_SHA")
@@ -238,6 +240,17 @@ docker rename "$NAME" "$KEEP_NAME"
 PHASE=2
 log "renamed_to_keeper $KEEP_NAME"
 
+# shellcheck source=ops/lib/woodright-memory-limits.sh
+source "$HERE/../lib/woodright-memory-limits.sh"
+_wr_mem_be_out=""
+if ! _wr_mem_be_out="$(wr_mem_docker_flags_backend)"; then
+  die_early "backend memory flags invalid"
+fi
+# shellcheck disable=SC2206
+_wr_mem_be=( ${_wr_mem_be_out} )
+[[ "${#_wr_mem_be[@]}" -eq 6 ]] || die_early "backend memory flags must be exactly 6 tokens (reservation/memory/swap)"
+[[ "${_wr_mem_be[0]}" == "--memory-reservation" && "${_wr_mem_be[2]}" == "--memory" && "${_wr_mem_be[4]}" == "--memory-swap" ]] \
+  || die_early "backend memory flag names/order invalid"
 CREATE_ARGS=(
   --name "$NAME"
   --restart unless-stopped
@@ -248,6 +261,7 @@ CREATE_ARGS=(
   --label "com.woodright.exposure=public"
   --label "com.woodright.release-sha=${TARGET_SHA}"
   --label "com.woodright.database-identity=${DB_IDENTITY_ALIAS}"
+  "${_wr_mem_be[@]}"
   --env-file "$ENV_FILE"
   --mount "type=volume,source=${VOLUME},destination=${DEST}"
   --health-cmd="node -e \"fetch('http://127.0.0.1:9000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""
