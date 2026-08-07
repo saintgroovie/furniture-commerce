@@ -1,5 +1,6 @@
 import Link from "next/link"
 import type { Metadata } from "next"
+import { CopyLines } from "@/components/copy-lines"
 import { aboutMaterialsCopy, seo } from "@/lib/woodright-copy"
 
 export const metadata: Metadata = {
@@ -15,8 +16,8 @@ export default function MaterialsPage() {
   return (
     <div className="service-page">
       <h1>{aboutMaterialsCopy.h1}</h1>
-      <p className="info-text">{aboutMaterialsCopy.lead}</p>
-      <p className="info-text">{aboutMaterialsCopy.body}</p>
+      <CopyLines className="info-text" lines={aboutMaterialsCopy.lead} />
+      <CopyLines className="info-text" lines={aboutMaterialsCopy.body} />
       <div className="nav-links">
         <Link href="/bespoke/request" className="btn btn-primary">Обсудить проект</Link>
         <Link href="/about" className="btn btn-secondary">О бренде</Link>
