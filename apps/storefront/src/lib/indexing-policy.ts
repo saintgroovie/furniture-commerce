@@ -21,8 +21,6 @@
 import { DEMO_HOSTS, LOOPBACK_HOST_RE } from "./demo-hosts"
 import { parseLaunchModeLenient } from "./launch-mode"
 import {
-  productionSiteOrigin,
-  productionSitemapUrl,
   resolvePublicIndexableOrigin,
   resolveSeoMode,
   seoModeToIndexingRaw,
@@ -146,11 +144,9 @@ export function launchCanonical(absoluteUrl: string): { canonical: string } | un
 export function robotsTxtBody(raw?: string | null): string {
   if (isIndexingAllowed(raw)) {
     const origin = resolvePublicIndexableOrigin()
-    const sitemap =
-      origin === productionSiteOrigin()
-        ? productionSitemapUrl()
-        : `${origin}/sitemap.xml`
-    return ["User-agent: *", "Allow: /", `Sitemap: ${sitemap}`, ""].join("\n")
+    return ["User-agent: *", "Allow: /", `Sitemap: ${origin}/sitemap.xml`, ""].join(
+      "\n"
+    )
   }
   return ["User-agent: *", "Disallow: /", ""].join("\n")
 }

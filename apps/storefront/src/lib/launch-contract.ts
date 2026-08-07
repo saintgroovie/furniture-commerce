@@ -34,12 +34,19 @@ import {
   parseLaunchModeLenient,
 } from "./launch-mode"
 import { evaluatePublicPaymentReady } from "./payment-readiness"
+import {
+  isProductionBuyerHost,
+  PRODUCTION_API_HOST,
+  PRODUCTION_BUYER_HOSTS,
+} from "./production-hosts"
 
 export type { LaunchMode }
 export {
   DEMO_HOSTS,
   LOOPBACK_HOST_RE,
   PUBLIC_DEMO_BUYER_HOSTS,
+  PRODUCTION_BUYER_HOSTS,
+  PRODUCTION_API_HOST,
 }
 export { launchModeToIndexingMode, parseLaunchModeLenient }
 
@@ -71,6 +78,9 @@ export type RuntimeRole = "production" | "production_candidate" | string
  * Built via join so source and minified bundles avoid a contiguous
  * `https://` + demo-host literal that production_candidate contamination
  * scans reject (bare hosts remain allowed deny-list tokens).
+ *
+ * Note: production scheme-qualified origins must NOT live in this module -
+ * bundlers fold them into public_demo server chunks (bake 31082069745).
  */
 function httpsOrigin(host: string): string {
   return ["https://", host].join("")
@@ -81,22 +91,6 @@ export const PUBLIC_DEMO_BUYER_ORIGINS = [
   httpsOrigin(PUBLIC_DEMO_BUYER_HOSTS[1]),
 ] as const
 
-/**
- * Recommended (not enforced) production values for docs/scripts/templates.
- * Joined like PUBLIC_DEMO_BUYER_ORIGINS so public_demo contamination scans do
- * not see a contiguous production-apex literal in modules that import this file
- * (e.g. seo-mode → robots route chunk).
- */
-export const PRODUCTION_BUYER_ORIGINS = [
-  httpsOrigin("woodright.ru"),
-  httpsOrigin("www.woodright.ru"),
-] as const
-
-export const PRODUCTION_API_ORIGIN = httpsOrigin("api.woodright.ru")
-
-export const RECOMMENDED_PRODUCTION_SITE_URL: string = PRODUCTION_BUYER_ORIGINS[0]
-export const RECOMMENDED_PRODUCTION_API_URL: string = PRODUCTION_API_ORIGIN
-
 function isDemoHost(hostname: string): boolean {
   const h = hostname.toLowerCase()
   return DEMO_HOSTS.some((demo) => h === demo || h.endsWith(`.${demo}`))
@@ -105,11 +99,6 @@ function isDemoHost(hostname: string): boolean {
 function isPublicDemoBuyerHost(hostname: string): boolean {
   const h = hostname.toLowerCase()
   return (PUBLIC_DEMO_BUYER_HOSTS as readonly string[]).includes(h)
-}
-
-function isProductionBuyerHost(hostname: string): boolean {
-  const h = hostname.toLowerCase()
-  return h === "woodright.ru" || h === "www.woodright.ru"
 }
 
 function isLoopbackHost(url: URL): boolean {
@@ -353,10 +342,9 @@ export function validateLaunchContract(input: LaunchContractInput): LaunchContra
   }
 
   const apiHost = parseAbsoluteUrl(input.apiUrl)?.hostname
-  const recommendedApiHost = parseAbsoluteUrl(PRODUCTION_API_ORIGIN)?.hostname
-  if (apiHost && recommendedApiHost && apiHost !== recommendedApiHost) {
+  if (apiHost && apiHost !== PRODUCTION_API_HOST) {
     warnings.push(
-      `apiUrl host "${apiHost}" differs from recommended "${recommendedApiHost}"`
+      `apiUrl host "${apiHost}" differs from recommended "${PRODUCTION_API_HOST}"`
     )
   }
 

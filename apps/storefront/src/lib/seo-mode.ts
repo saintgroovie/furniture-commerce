@@ -22,6 +22,11 @@ import {
   isPublicProductionRuntime,
 } from "./launch-contract"
 import { parseLaunchModeLenient } from "./launch-mode"
+import {
+  isProductionBuyerHost,
+  isProductionSiteApexHost,
+  PRODUCTION_SITE_APEX_HOST,
+} from "./production-hosts"
 
 export type SeoMode = "demo_noindex" | "private_noindex" | "public_indexable"
 
@@ -29,24 +34,33 @@ export type SeoMode = "demo_noindex" | "private_noindex" | "public_indexable"
 type ControlVote = "indexable" | "noindex" | "invalid"
 
 /**
- * Scheme-qualified production apex built via join so public_demo bake
- * contamination scans (forbidden contiguous `https://` + `woodright.ru`) do
- * not match shippable server/route chunks that import this module.
- * Runtime value remains the production buyer origin.
+ * Production site origin for public_indexable SEO surfaces.
+ * Requires an explicit SITE_URL whose host is a production buyer host.
+ * Never hardcodes a scheme-qualified production apex (bundlers fold it into
+ * public_demo server chunks - see failed bake 31082069745).
  */
-function httpsOrigin(host: string): string {
-  return ["https://", host].join("")
+export function productionSiteOrigin(
+  siteUrl: string | undefined | null = process.env.NEXT_PUBLIC_SITE_URL
+): string {
+  return resolvePublicIndexableOrigin(siteUrl)
 }
 
-const PRODUCTION_SITE_HOST = "woodright.ru"
-const PRODUCTION_SITE_ORIGIN = httpsOrigin(PRODUCTION_SITE_HOST)
-
-export function productionSiteOrigin(): string {
-  return PRODUCTION_SITE_ORIGIN
+export function productionSitemapUrl(
+  siteUrl: string | undefined | null = process.env.NEXT_PUBLIC_SITE_URL
+): string {
+  return `${productionSiteOrigin(siteUrl)}/sitemap.xml`
 }
 
-export function productionSitemapUrl(): string {
-  return `${PRODUCTION_SITE_ORIGIN}/sitemap.xml`
+/** True when origin is the governed production apex (hostname check only). */
+export function isGovernedProductionSiteOrigin(origin: string): boolean {
+  try {
+    const url = new URL(origin)
+    return (
+      url.protocol === "https:" && isProductionSiteApexHost(url.hostname)
+    )
+  } catch {
+    return false
+  }
 }
 
 export function parseSeoModeLenient(
@@ -204,23 +218,34 @@ export function currentIndexingRawFromSeo(): string {
 
 /**
  * Absolute production-safe origin for sitemap/robots Sitemap: line.
- * Rejects demo/loopback; defaults to governed production apex when SITE_URL
- * is unset in pure unit fixtures for public_indexable.
- * Apex string is join-built (see productionSiteOrigin) so public_demo bundles
- * that import this helper do not embed a contiguous production-apex needle.
+ *
+ * Fail-closed: requires an explicit https SITE_URL on a production buyer host.
+ * No hardcoded production-apex fallback (that string must not exist in
+ * public_demo compilation inputs). www is normalized to apex via URL mutation
+ * so the returned value comes from the URL object, not a source literal.
  */
 export function resolvePublicIndexableOrigin(
   siteUrl: string | undefined | null = process.env.NEXT_PUBLIC_SITE_URL
 ): string {
   const trimmed = String(siteUrl ?? "").trim().replace(/\/$/, "")
-  if (!trimmed) return PRODUCTION_SITE_ORIGIN
+  if (!trimmed) {
+    throw new Error(
+      "resolvePublicIndexableOrigin requires NEXT_PUBLIC_SITE_URL (production buyer https origin) - no hardcoded apex fallback"
+    )
+  }
   let url: URL
   try {
     url = new URL(trimmed)
   } catch {
-    return PRODUCTION_SITE_ORIGIN
+    throw new Error(
+      `resolvePublicIndexableOrigin: SITE_URL is not a valid absolute URL: "${trimmed}"`
+    )
   }
-  if (url.protocol !== "https:") return PRODUCTION_SITE_ORIGIN
+  if (url.protocol !== "https:") {
+    throw new Error(
+      `resolvePublicIndexableOrigin: SITE_URL must be https, got: "${trimmed}"`
+    )
+  }
   const host = url.hostname.toLowerCase()
   if (
     host === "localhost" ||
@@ -228,11 +253,17 @@ export function resolvePublicIndexableOrigin(
     host.endsWith(".localhost") ||
     host.includes("woodright-demo.ru")
   ) {
-    return PRODUCTION_SITE_ORIGIN
+    throw new Error(
+      `resolvePublicIndexableOrigin rejects demo/loopback SITE_URL: "${trimmed}"`
+    )
   }
-  // Always apex for canonical SEO surfaces.
-  if (host === "www.woodright.ru") return PRODUCTION_SITE_ORIGIN
-  if (host === "woodright.ru") return PRODUCTION_SITE_ORIGIN
-  // Unknown non-demo https host is refused - stay on governed apex.
-  return PRODUCTION_SITE_ORIGIN
+  if (!isProductionBuyerHost(host)) {
+    throw new Error(
+      `resolvePublicIndexableOrigin: SITE_URL host must be ${PRODUCTION_SITE_APEX_HOST} (or www), got: "${host}"`
+    )
+  }
+  if (!isProductionSiteApexHost(host)) {
+    url.hostname = PRODUCTION_SITE_APEX_HOST
+  }
+  return url.origin
 }
