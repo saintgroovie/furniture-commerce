@@ -248,7 +248,9 @@ if ! _wr_mem_be_out="$(wr_mem_docker_flags_backend)"; then
 fi
 # shellcheck disable=SC2206
 _wr_mem_be=( ${_wr_mem_be_out} )
-[[ "${#_wr_mem_be[@]}" -ge 4 ]] || die_early "backend memory flags incomplete"
+[[ "${#_wr_mem_be[@]}" -eq 6 ]] || die_early "backend memory flags must be exactly 6 tokens (reservation/memory/swap)"
+[[ "${_wr_mem_be[0]}" == "--memory-reservation" && "${_wr_mem_be[2]}" == "--memory" && "${_wr_mem_be[4]}" == "--memory-swap" ]] \
+  || die_early "backend memory flag names/order invalid"
 CREATE_ARGS=(
   --name "$NAME"
   --restart unless-stopped

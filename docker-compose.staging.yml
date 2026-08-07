@@ -46,6 +46,7 @@ services:
     # Wave 1 memory caps (measurement-backed; see docs/operator/container-memory-limits.md)
     mem_reservation: "${WOODRIGHT_BACKEND_MEMORY_RESERVATION:-640m}"
     mem_limit: "${WOODRIGHT_BACKEND_MEMORY_LIMIT:-1536m}"
+    memswap_limit: "${WOODRIGHT_BACKEND_MEMORY_SWAP:-1536m}"
     depends_on:
       postgres:
         condition: service_healthy
@@ -122,6 +123,7 @@ services:
     # Wave 1 memory caps (measurement-backed; see docs/operator/container-memory-limits.md)
     mem_reservation: "${WOODRIGHT_STOREFRONT_MEMORY_RESERVATION:-192m}"
     mem_limit: "${WOODRIGHT_STOREFRONT_MEMORY_LIMIT:-512m}"
+    memswap_limit: "${WOODRIGHT_STOREFRONT_MEMORY_SWAP:-512m}"
     depends_on:
       backend:
         condition: service_healthy

@@ -194,7 +194,9 @@ create_storefront() {
   fi
   # shellcheck disable=SC2206
   local -a _wr_mem_sf=( ${_wr_mem_sf_out} )
-  [[ "${#_wr_mem_sf[@]}" -ge 4 ]] || die "storefront memory flags incomplete"
+  [[ "${#_wr_mem_sf[@]}" -eq 6 ]] || die "storefront memory flags must be exactly 6 tokens (reservation/memory/swap)"
+  [[ "${_wr_mem_sf[0]}" == "--memory-reservation" && "${_wr_mem_sf[2]}" == "--memory" && "${_wr_mem_sf[4]}" == "--memory-swap" ]] \
+    || die "storefront memory flag names/order invalid"
   local -a create_args=(
     --name "$NAME"
     --restart unless-stopped
