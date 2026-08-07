@@ -56,4 +56,12 @@ assert.match(filters, /categoryAllCount:\s*groupProductsForDisplay/)
 assert.match(filters, /collectionAllCount:\s*groupProductsForDisplay/)
 assert.match(filters, /countDisplayEntriesByKey/)
 
+// Q003 — CopyLines must insert a real text-node boundary before <br />
+const copyLines = read("components/copy-lines.tsx")
+assert.ok(
+  copyLines.includes('{"\\n"}'),
+  "CopyLines must include a newline text node before br"
+)
+assert.match(copyLines, /<br\s*\/>/)
+
 console.log("buyer-quality-pass.fidelity.test.ts: ok")
