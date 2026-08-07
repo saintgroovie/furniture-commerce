@@ -68,6 +68,10 @@ echo "=== api_x_robots policy matrix ==="
 expect_policy api private "http://127.0.0.1:9200" not_applicable private_loopback_api_not_publicly_indexable
 expect_policy api private "http://localhost:9200" not_applicable private_loopback_api_not_publicly_indexable
 expect_policy api private "http://[::1]:9200" not_applicable private_loopback_api_not_publicly_indexable
+# Codex P1 / policy B: private HTTPS loopback is NOT eligible for N/A
+expect_policy api private "https://127.0.0.1:9200" probe private_https_loopback_x_robots_required
+expect_policy api private "https://localhost:9200" probe private_https_loopback_x_robots_required
+expect_policy api private "https://[::1]:9200" probe private_https_loopback_x_robots_required
 expect_policy api private "https://api.example.com" fail api_exposure_target_inconsistent
 expect_policy api public "https://api.example.com" probe public_api_x_robots_required
 expect_policy api public "http://127.0.0.1:9200" fail api_exposure_target_inconsistent
@@ -289,6 +293,11 @@ HSTS_ABSENT_HTTPS='{"https://private.example/":{},"https://example.com/":{},"htt
 run_monitor_case "private_loopback_na" production \
   "http://127.0.0.1:3200" "http://127.0.0.1:9200" "$EMPTY_HDR" \
   not_applicable not_applicable
+
+# Private HTTPS loopback API must probe and fail when X-Robots absent (not N/A).
+run_monitor_case "private_https_loopback_api_not_na" production \
+  "http://127.0.0.1:3200" "https://127.0.0.1:9200" "$EMPTY_HDR" \
+  not_applicable fail
 
 run_monitor_case "private_https_hsts_present" production \
   "https://private.example" "http://127.0.0.1:9200" "$HSTS_PRESENT" \

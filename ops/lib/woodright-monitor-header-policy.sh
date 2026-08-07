@@ -150,8 +150,14 @@ wr_monitor_api_x_robots_policy() {
 
   case "$exposure" in
     private)
-      if wr_monitor_is_loopback_host "$host"; then
+      # N/A only for private + plain HTTP + loopback (Codex P1 / policy B).
+      # Private HTTPS loopback must take the strict probe path - not benign N/A.
+      if [[ "$scheme" == "http" ]] && wr_monitor_is_loopback_host "$host"; then
         printf '%s\t%s\n' "not_applicable" "private_loopback_api_not_publicly_indexable"
+        return 0
+      fi
+      if wr_monitor_is_loopback_host "$host"; then
+        printf '%s\t%s\n' "probe" "private_https_loopback_x_robots_required"
         return 0
       fi
       printf '%s\t%s\n' "fail" "api_exposure_target_inconsistent"
