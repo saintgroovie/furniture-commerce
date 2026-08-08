@@ -22,6 +22,8 @@ source "$ROOT/ops/lib/woodright-environment-profile.sh"
 source "$ROOT/ops/lib/woodright-staging-mutation-lock.sh"
 # shellcheck source=../lib/woodright-validation-freeze.sh
 source "$ROOT/ops/lib/woodright-validation-freeze.sh"
+# shellcheck source=../lib/woodright-production-ownership-access.sh
+source "$ROOT/ops/lib/woodright-production-ownership-access.sh"
 
 MODE=""
 ACTIVE_SRC=""
@@ -87,4 +89,8 @@ bash "$ASSERT" --environment "$WOODRIGHT_ENVIRONMENT" --expected-src "$EXPECTED_
 
 install -m 0600 "$ACTIVE_SRC" "$ACTIVE_DST"
 install -m 0600 "$EXPECTED_SRC" "$EXPECTED_DST"
+if [[ "$WOODRIGHT_ENVIRONMENT" == "production" ]]; then
+  wr_prod_ownership_apply_access "$ACTIVE_DST" || die "production ACTIVE_OWNER access contract failed"
+  wr_prod_ownership_apply_access "$EXPECTED_DST" || die "production EXPECTED_RELEASE access contract failed"
+fi
 printf 'reconcile-runtime-manifests: APPLIED active=%s expected=%s\n' "$ACTIVE_DST" "$EXPECTED_DST"
