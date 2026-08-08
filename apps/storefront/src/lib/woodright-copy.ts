@@ -107,6 +107,16 @@ export const footer = {
         { label: "Контакты", href: "/contacts" },
       ],
     },
+    {
+      title: "Покупателям",
+      links: [
+        { label: "Политика конфиденциальности", href: "/privacy" },
+        { label: "Условия покупки", href: "/terms" },
+        { label: "Доставка", href: "/delivery" },
+        { label: "Оплата", href: "/payment" },
+        { label: "Возврат", href: "/returns" },
+      ],
+    },
   ],
   copyright: (year: number) => `© ${year} Woodright`,
 }
