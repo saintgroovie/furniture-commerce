@@ -48,8 +48,8 @@ export const showroomContacts = {
    * Same facts as `addressLinesCompact` / `postalAddress` - presentation only.
    */
   addressLines: [
-    "МТК «Гранд-2», вход 3",
-    "4 этаж, подиум Woodright",
+    "МТК «Гранд-2», вход 3, 4 этаж",
+    "подиум Woodright",
     "Московская область, г. Химки",
     "ул. Бутаково, д. 4",
   ] as const,
