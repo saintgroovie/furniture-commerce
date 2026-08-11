@@ -104,6 +104,8 @@ assert.match(sitemapRoute, /isIndexingAllowed/)
 assert.match(sitemapRoute, /renderSitemapXml/)
 
 for (const rel of [
+  "src/app/page.tsx",
+  "src/app/catalog/page.tsx",
   "src/app/product/[id]/page.tsx",
   "src/app/rooms/[slug]/page.tsx",
   "src/app/kids/willie-winkie/page.tsx",
@@ -118,6 +120,17 @@ for (const rel of [
   )
   assert.doesNotMatch(src, /woodright\.ru(?!-demo)/, `${rel} must not canonical to legacy woodright.ru`)
 }
+
+// Home/catalog must self-canonical via getSiteUrl + indexingCanonical (base path only).
+const homeSrc = read("src/app/page.tsx")
+assert.match(homeSrc, /indexingCanonical\(`\$\{getSiteUrl\(\)\}\/`\)/)
+const catalogSrc = read("src/app/catalog/page.tsx")
+assert.match(catalogSrc, /indexingCanonical\(`\$\{getSiteUrl\(\)\}\/catalog`\)/)
+assert.doesNotMatch(
+  catalogSrc,
+  /indexingCanonical\([^\)]*searchParams/,
+  "catalog must not canonical from query/filter params"
+)
 
 const pdp = read("src/app/product/[id]/page.tsx")
 assert.match(pdp, /notFound\(/)

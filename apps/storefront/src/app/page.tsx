@@ -1,4 +1,6 @@
 import type { Metadata } from "next"
+import { getSiteUrl } from "@/lib/api/base"
+import { indexingCanonical } from "@/lib/indexing-policy"
 import { homeCopy, seo } from "@/lib/woodright-copy"
 import { formatRuInline } from "@/lib/format-ru-copy"
 import { getCatalogProducts } from "@/lib/api/products"
@@ -21,6 +23,8 @@ import { pickByHandles, toHomeProduct, type HomeProduct } from "@/components/hom
 import { homeMedia } from "@/components/home/home-media"
 import { resolveHomeImageSrc } from "@/components/home/home-image"
 
+const homeCanonical = indexingCanonical(`${getSiteUrl()}/`)
+
 export const metadata: Metadata = {
   title: seo.home.title,
   description: seo.home.description,
@@ -29,6 +33,7 @@ export const metadata: Metadata = {
     description: seo.home.description,
     url: "/",
   },
+  ...(homeCanonical ? { alternates: homeCanonical } : {}),
 }
 
 /** Curated showcase picks; missing handles are skipped, gaps are backfilled. */
