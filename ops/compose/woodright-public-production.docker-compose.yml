@@ -52,6 +52,12 @@ services:
     image: ${WOODRIGHT_BACKEND_IMAGE}
     container_name: woodright-public-production-backend
     restart: unless-stopped
+    labels:
+      com.woodright.deployment-owner: "Dokploy"
+      com.woodright.runtime-role: "${WOODRIGHT_RUNTIME_ROLE:-public_production}"
+      com.woodright.exposure: "${WOODRIGHT_EXPOSURE:-public}"
+      com.woodright.database-identity: "${WOODRIGHT_DATABASE_IDENTITY_ALIAS:-public_production_db}"
+      com.woodright.release-sha: "${WOODRIGHT_RELEASE_SHA}"
     # Wave 1 memory caps - docs/operator/container-memory-limits.md
     # Provisional production baseline: not below private candidate.
     mem_reservation: "${WOODRIGHT_BACKEND_MEMORY_RESERVATION:-640m}"
@@ -97,6 +103,12 @@ services:
     image: ${WOODRIGHT_STOREFRONT_IMAGE}
     container_name: woodright-public-production-storefront
     restart: unless-stopped
+    labels:
+      com.woodright.deployment-owner: "Dokploy"
+      com.woodright.runtime-role: "${WOODRIGHT_RUNTIME_ROLE:-public_production}"
+      com.woodright.exposure: "${WOODRIGHT_EXPOSURE:-public}"
+      com.woodright.database-identity: "${WOODRIGHT_DATABASE_IDENTITY_ALIAS:-public_production_db}"
+      com.woodright.release-sha: "${WOODRIGHT_RELEASE_SHA}"
     mem_reservation: "${WOODRIGHT_STOREFRONT_MEMORY_RESERVATION:-192m}"
     mem_limit: "${WOODRIGHT_STOREFRONT_MEMORY_LIMIT:-512m}"
     memswap_limit: "${WOODRIGHT_STOREFRONT_MEMORY_SWAP:-512m}"
