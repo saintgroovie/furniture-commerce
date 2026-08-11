@@ -7,19 +7,21 @@ const DIGEST_RE = /^sha256:[0-9a-f]{64}$/
 const SHA_RE = /^[0-9a-f]{40}$/
 
 /**
- * `profile` is optional and only changes the prefix for
- * `build_profile=production_candidate` (namespace `build-production-candidate`,
- * see .github/workflows/build-staging-images.yml) so a production-candidate
- * build of a given SHA never collides with a public_demo build of the same
- * SHA. Omitting `profile` (or passing `public_demo`) keeps the original
- * `build-<sha>-run-<run-id>-attempt-<attempt>` format.
+ * `profile` is optional and only changes the prefix for profile-scoped builds
+ * so a given SHA never collides across profiles (see
+ * .github/workflows/build-staging-images.yml):
+ *   production_candidate → build-prod-cand-
+ *   public_production    → build-public-prod-
+ *   public_demo / omit   → build-
  */
 function uniqueBuildTag({ sourceSha, runId, attempt, profile }) {
   if (!SHA_RE.test(sourceSha || "")) throw new Error("sourceSha must be 40-char hex")
   if (runId == null || String(runId).trim() === "") throw new Error("runId required")
   const att = Number(attempt)
   if (!Number.isInteger(att) || att < 1) throw new Error("attempt must be integer >= 1")
-  const prefix = profile === "production_candidate" ? "build-prod-cand-" : "build-"
+  let prefix = "build-"
+  if (profile === "production_candidate") prefix = "build-prod-cand-"
+  else if (profile === "public_production") prefix = "build-public-prod-"
   return `${prefix}${sourceSha}-run-${runId}-attempt-${att}`
 }
 
@@ -70,6 +72,16 @@ function main() {
       isAuthoritativeDeployRef(
         "ghcr.io/x/y@sha256:578bd815b104fbb44473b4dfc992e62d5e1041889be7fc3271cf9e582c1cabcf"
       ),
+    ])
+    const tPub = uniqueBuildTag({
+      sourceSha: "5683afa62890531f26b6e53b25800173c8efbb20",
+      runId: "29830575969",
+      attempt: 1,
+      profile: "public_production",
+    })
+    cases.push([
+      "public_production unique tag prefix",
+      tPub.startsWith("build-public-prod-") && tPub !== t1,
     ])
     try {
       assertDistinctExecutions(
