@@ -183,7 +183,7 @@ PY
       else cat "$f"; fi
     fi
     ;;
-  stop|start|rename|create|rm|update|kill|cp)
+  stop|start|rename|create|rm|update|kill|cp|run)
     echo "$cmd $*" >>"$STATE/log/mutations.log"
     if [[ "${WOODRIGHT_FAKE_DOCKER_ALLOW_MUTATION:-0}" != "1" ]]; then
       echo "UNEXPECTED_MUTATION $cmd" >&2
@@ -436,11 +436,13 @@ grep -q 'PLANNED memory_flags=.*--memory-reservation 640m' "$TMP/be-dry.out" \
   && pass "backend dry-run plans BE memory" || fail "backend dry-run plans BE memory"
 grep -q 'PLANNED keeper=' "$TMP/be-dry.out" && pass "backend dry-run keeper plan" || fail "backend dry-run keeper plan"
 if [[ -f "$TMP/state/log/mutations.log" ]]; then fail "backend dry-run docker mutation"; else pass "backend dry-run zero mutations"; fi
-if grep -E 'docker (stop|rename|create|start|rm|update) ' "$TMP/state/log/commands.log" 2>/dev/null; then
+if grep -E 'docker (stop|rename|create|start|rm|update|run|kill) ' "$TMP/state/log/commands.log" 2>/dev/null; then
   fail "backend dry-run mutating command logged"
 else
   pass "backend dry-run no mutating commands"
 fi
+grep -q 'PLANNED media_gate=pre-promote' "$TMP/be-dry.out" \
+  && pass "backend dry-run skips media gate docker run" || fail "backend dry-run skips media gate"
 
 rm -f "$TMP/state/log/mutations.log"
 EV_SF="$TMP/ev-sf"; mkdir -p "$EV_SF"

@@ -162,7 +162,7 @@ docker image inspect "$IMAGE" >/dev/null || die "image ref not local: $IMAGE"
 RESOLVED_ID="$(docker image inspect "$IMAGE" --format '{{.Id}}')"
 log "resolved_image_id=$RESOLVED_ID expected_digest=$EXPECTED_DIGEST"
 
-# Fail-closed media promotion gate BEFORE declaring success / any manifest reconcile.
+# Fail-closed media promotion gate path resolution (execute runs the gate; dry-run only plans it).
 REPO_ROOT="${WOODRIGHT_REPO_ROOT:-}"
 if [[ -z "$REPO_ROOT" ]]; then
   HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -176,12 +176,17 @@ else
 fi
 [[ -x "$GATE" ]] || die "media gate missing: $GATE"
 
-# Mode A  -  pre-promote target validation BEFORE any live mutation.
-# Does not require EXPECTED_RELEASE to already list the target digest.
-log "running_pre_promote_media_gate gate=$GATE target=$EXPECTED_DIGEST"
 PRE_ARGS=(--environment "$WOODRIGHT_ENVIRONMENT" --mode pre-promote --target-image "$IMAGE" --expected-digest "$EXPECTED_DIGEST" --media-volume "$VOLUME" --mount-destination "$DEST" --target-sha "$TARGET_SHA")
 wr_assert_component_provenance "$IMAGE" "$TARGET_SHA" "$EXPECTED_DIGEST" || die "OCI_PROVENANCE_FAILED"
-bash "$GATE" "${PRE_ARGS[@]}" || die "MEDIA_PRE_PROMOTE_GATE_FAILED"
+
+# Mode A uses docker run --rm inside the media gate. Skip it for dry-run/preflight so
+# --mode dry-run cannot create any container (even transient).
+if [[ "$MODE" == "execute" ]]; then
+  log "running_pre_promote_media_gate gate=$GATE target=$EXPECTED_DIGEST"
+  bash "$GATE" "${PRE_ARGS[@]}" || die "MEDIA_PRE_PROMOTE_GATE_FAILED"
+else
+  log "PLANNED media_gate=pre-promote gate=$GATE target=$EXPECTED_DIGEST (skipped in mode=$MODE; no docker run)"
+fi
 
 # Freeze storefront peer before backend mutation when scope=backend (env-only; no file write).
 if [[ "${WOODRIGHT_COMPONENT_SCOPE}" == "backend" ]]; then
@@ -255,6 +260,7 @@ if [[ "$MODE" == "dry-run" || "$MODE" == "preflight" ]]; then
   log "PLANNED memory_flags=${_wr_mem_be[*]}"
   log "PLANNED nets=$NET_STACK+$NET_DOKPLOY alias=backend mount=${VOLUME}:${DEST}"
   log "PLANNED keeper=$KEEP_NAME (no keeper create in dry-run)"
+  log "PLANNED media_gate=pre-promote+post-promote (execute only; dry-run skips docker run probe)"
   log "PLANNED ownership_reconcile=ops/release/reconcile-runtime-manifests.sh (not run)"
   if [[ "${WOODRIGHT_COMPONENT_SCOPE}" == "backend" ]]; then
     log "PLANNED storefront_frozen=${WOODRIGHT_FROZEN_STOREFRONT_DIGEST:-}"
