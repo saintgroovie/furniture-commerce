@@ -597,7 +597,7 @@ if ! REQUIRE_CURRENT_DIGEST=0 \
   TARGET_SHA="$TARGET_SHA" \
   WOODRIGHT_TARGET_SHA="$TARGET_SHA" \
   ROLLBACK_SCRIPT="$HERE/rollback-staging-backend-from-keeper.sh" \
-  bash "$HERE/recreate-staging-backend-with-media.sh" --environment public_demo --component pair; then
+  bash "$HERE/recreate-staging-backend-with-media.sh" --environment public_demo --component pair --mode execute; then
   log "backend recreate failed"
   pair_rollback || true
   exit "${ROLLBACK_RC:-12}"

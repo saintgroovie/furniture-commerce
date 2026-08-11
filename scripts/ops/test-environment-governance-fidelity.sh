@@ -92,16 +92,13 @@ unset WOODRIGHT_ENVIRONMENT || true
 # 7) path traversal name
 if wr_resolve_environment_profile_path "../public_demo" 2>/dev/null; then fail "traversal"; else ok "path traversal rejected"; fi
 
-# 8) missing --environment on recreate
-if bash "$ROOT/ops/release/recreate-staging-backend-with-media.sh" 2>/dev/null; then
-  fail "recreate without --environment should fail"
-else
-  ok "recreate requires --environment"
-fi
+# 8) missing required flags on recreate (mode required first; no silent execute)
+out8="$(bash "$ROOT/ops/release/recreate-staging-backend-with-media.sh" 2>&1 || true)"
+echo "$out8" | grep -q 'RECREATE_MODE_REQUIRED' && ok "recreate requires --mode" || fail "recreate requires --mode"
 
 # 9) staging refused by public_demo-only recreate
 if IMAGE=x ENV_FILE=/dev/null EXPECTED_DIGEST=sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa KEEP_NAME=k \
-  bash "$ROOT/ops/release/recreate-staging-backend-with-media.sh" --environment staging 2>/dev/null; then
+  bash "$ROOT/ops/release/recreate-staging-backend-with-media.sh" --mode dry-run --environment staging 2>/dev/null; then
   fail "recreate should refuse staging (unprovisioned / not public_demo)"
 else
   ok "recreate refuses --environment staging"
@@ -109,7 +106,7 @@ fi
 
 # 10) production refused by public_demo recreate helper
 if IMAGE=x ENV_FILE=/dev/null EXPECTED_DIGEST=sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa KEEP_NAME=k \
-  bash "$ROOT/ops/release/recreate-staging-backend-with-media.sh" --environment production 2>/dev/null; then
+  bash "$ROOT/ops/release/recreate-staging-backend-with-media.sh" --mode dry-run --environment production 2>/dev/null; then
   fail "recreate should refuse production env"
 else
   ok "recreate refuses --environment production"
@@ -269,11 +266,16 @@ rm -f "$WR_STAGING_MUTATION_LOCK_PATH" "$WR_STAGING_MUTATION_LOCK_META"
 # 24) recreate requires --component
 if IMAGE=x ENV_FILE=/dev/null EXPECTED_DIGEST=sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
   TARGET_SHA=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa KEEP_NAME=k \
-  bash "$ROOT/ops/release/recreate-staging-backend-with-media.sh" --environment public_demo 2>/dev/null; then
+  bash "$ROOT/ops/release/recreate-staging-backend-with-media.sh" --mode dry-run --environment public_demo 2>/dev/null; then
   fail "recreate without --component should fail"
 else
   ok "recreate requires --component"
 fi
+
+# 24a) storefront requires --mode (no silent execute default)
+unset WOODRIGHT_ENVIRONMENT WOODRIGHT_ENV_PROFILE_LOADED || true
+out24a="$(bash "$ROOT/ops/release/recreate-staging-storefront.sh" --environment public_demo --component storefront 2>&1 || true)"
+echo "$out24a" | grep -q 'RECREATE_MODE_REQUIRED' && ok "storefront requires --mode" || fail "storefront requires --mode"
 
 # 24b) storefront recreate requires --component
 if bash "$ROOT/ops/release/recreate-staging-storefront.sh" --environment public_demo --mode dry-run \
@@ -286,11 +288,15 @@ else
   ok "storefront recreate requires --component"
 fi
 
-# 24c) installer lists pair/storefront helpers
+# 24c) installer lists pair/storefront helpers + memory/mode libs
 grep -q 'ops/release/cutover-public-demo-pair.sh' "$ROOT/ops/release/install-environment-governance.sh" \
   || fail "installer missing pair cutover"
 grep -q 'ops/release/recreate-staging-storefront.sh' "$ROOT/ops/release/install-environment-governance.sh" \
   || fail "installer missing storefront recreate"
+grep -q 'ops/lib/woodright-memory-limits.sh' "$ROOT/ops/release/install-environment-governance.sh" \
+  || fail "installer missing memory-limits"
+grep -q 'ops/lib/woodright-recreate-mode.sh' "$ROOT/ops/release/install-environment-governance.sh" \
+  || fail "installer missing recreate-mode"
 ok "installer includes pair+storefront helpers"
 
 # 24c-bis) installer ships the production cutover helper AND its skew recovery

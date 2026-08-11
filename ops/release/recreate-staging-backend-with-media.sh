@@ -9,9 +9,10 @@
 # Canonical exclusive lock: environment-scoped via profile
 #   /srv/woodright/locks/public_demo/live-cutover.lock
 # Legacy allowlisted: /srv/woodright/locks/live-cutover.lock
-# Requires explicit: --environment public_demo --component backend|pair
+# Requires explicit: --environment public_demo --component backend|pair --mode dry-run|execute
 # staging is unprovisioned and must not select public_demo containers.
 # Pair cutover parent may nest via WOODRIGHT_STAGING_MUTATION_LOCK_HELD + owned FD.
+# Fail-closed: missing --mode → RECREATE_MODE_REQUIRED (never defaults to execute).
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -33,9 +34,15 @@ source "$HERE/../lib/woodright-host-publish.sh"
 source "$HERE/../lib/woodright-owner-approved-release.sh"
 # shellcheck source=../lib/woodright-memory-limits.sh
 source "$HERE/../lib/woodright-memory-limits.sh"
+# shellcheck source=../lib/woodright-recreate-mode.sh
+source "$HERE/../lib/woodright-recreate-mode.sh"
 
 log() { printf '%s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*"; }
 die_early() { log "ERROR: $*"; exit 1; }
+
+wr_recreate_parse_mode_from_args "$@" || exit 1
+wr_recreate_require_allowed_mode "dry-run preflight execute" || exit 1
+MODE="$WR_RECREATE_MODE"
 
 wr_require_environment_from_args "$@" || exit 1
 wr_assert_environment_provisioned || exit 1
@@ -128,11 +135,12 @@ on_err() {
   recover "$rc" || true
   exit "$rc"
 }
-trap on_err ERR
 
 die() {
   log "ERROR: $*"
-  recover 1 || true
+  if [[ "$MODE" == "execute" ]]; then
+    recover 1 || true
+  fi
   exit 1
 }
 
@@ -145,10 +153,8 @@ TARGET_SHA="${TARGET_SHA:-${WOODRIGHT_TARGET_SHA:-}}"
 ENV_MODE="$(stat -c '%a' "$ENV_FILE" 2>/dev/null || stat -f '%Lp' "$ENV_FILE")"
 [[ "$ENV_MODE" == "600" || "$ENV_MODE" == "0600" ]] || die "ENV_FILE mode must be 600 (have $ENV_MODE)"
 [[ -f "$ROLLBACK_SCRIPT" ]] || die "missing ROLLBACK_SCRIPT=$ROLLBACK_SCRIPT"
-# Best-effort touch of legacy DEPLOY.lock path for older docs/tools; not authoritative.
-[[ -f "$LOCK_FILE" ]] || touch "$LOCK_FILE" || true
 
-# Static infrastructure prechecks (no live container mutation) before lock.
+# Static infrastructure prechecks (no live container mutation) before lock / dry-run exit.
 docker volume inspect "$VOLUME" >/dev/null || die "missing volume $VOLUME"
 docker network inspect "$NET_STACK" >/dev/null || die "missing network $NET_STACK"
 docker network inspect "$NET_DOKPLOY" >/dev/null || die "missing network $NET_DOKPLOY"
@@ -156,7 +162,7 @@ docker image inspect "$IMAGE" >/dev/null || die "image ref not local: $IMAGE"
 RESOLVED_ID="$(docker image inspect "$IMAGE" --format '{{.Id}}')"
 log "resolved_image_id=$RESOLVED_ID expected_digest=$EXPECTED_DIGEST"
 
-# Fail-closed media promotion gate BEFORE declaring success / any manifest reconcile.
+# Fail-closed media promotion gate path resolution (execute runs the gate; dry-run only plans it).
 REPO_ROOT="${WOODRIGHT_REPO_ROOT:-}"
 if [[ -z "$REPO_ROOT" ]]; then
   HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -170,21 +176,109 @@ else
 fi
 [[ -x "$GATE" ]] || die "media gate missing: $GATE"
 
-# Mode A  -  pre-promote target validation BEFORE any live mutation.
-# Does not require EXPECTED_RELEASE to already list the target digest.
-log "running_pre_promote_media_gate gate=$GATE target=$EXPECTED_DIGEST"
 PRE_ARGS=(--environment "$WOODRIGHT_ENVIRONMENT" --mode pre-promote --target-image "$IMAGE" --expected-digest "$EXPECTED_DIGEST" --media-volume "$VOLUME" --mount-destination "$DEST" --target-sha "$TARGET_SHA")
 wr_assert_component_provenance "$IMAGE" "$TARGET_SHA" "$EXPECTED_DIGEST" || die "OCI_PROVENANCE_FAILED"
-bash "$GATE" "${PRE_ARGS[@]}" || die "MEDIA_PRE_PROMOTE_GATE_FAILED"
 
-# Freeze storefront peer before backend mutation when scope=backend
+# Mode A uses docker run --rm inside the media gate. Skip it for dry-run/preflight so
+# --mode dry-run cannot create any container (even transient).
+if [[ "$MODE" == "execute" ]]; then
+  log "running_pre_promote_media_gate gate=$GATE target=$EXPECTED_DIGEST"
+  bash "$GATE" "${PRE_ARGS[@]}" || die "MEDIA_PRE_PROMOTE_GATE_FAILED"
+else
+  log "PLANNED media_gate=pre-promote gate=$GATE target=$EXPECTED_DIGEST (skipped in mode=$MODE; no docker run)"
+fi
+
+# Freeze storefront peer before backend mutation when scope=backend (env-only; no file write).
 if [[ "${WOODRIGHT_COMPONENT_SCOPE}" == "backend" ]]; then
   wr_freeze_peer_digest storefront "${WOODRIGHT_SF_CONTAINER_DEFAULT}" || die "cannot freeze storefront peer"
 fi
 
+# Read-only live identity (also used by dry-run planning; re-checked under lock on execute).
+if docker inspect "$KEEP_NAME" >/dev/null 2>&1; then
+  die "keeper already exists: $KEEP_NAME"
+fi
+docker inspect "$NAME" >/dev/null || die "live container missing: $NAME"
+CUR_IMG="$(docker inspect "$NAME" --format '{{.Image}}')"
+log "current_image_id=$CUR_IMG"
+if [[ "$REQUIRE_CURRENT_DIGEST" == "1" ]]; then
+  if [[ "$CUR_IMG" != "$RESOLVED_ID" ]]; then
+    die "live image id mismatch want=$RESOLVED_ID have=$CUR_IMG (for digest-advance set REQUIRE_CURRENT_DIGEST=0 after Mode A PASS)"
+  fi
+fi
+
+DB_IDENTITY_ALIAS="$(wr_canonical_db_identity_label)" || die_early "canonical DB identity unavailable"
+[[ "$DB_IDENTITY_ALIAS" == "public_demo_db" ]] || die_early "public_demo backend requires database-identity=public_demo_db (got '$DB_IDENTITY_ALIAS')"
+if [[ -n "${WOODRIGHT_DATABASE_CONNECTION_NAME:-}" && "$DB_IDENTITY_ALIAS" == "${WOODRIGHT_DATABASE_CONNECTION_NAME}" ]]; then
+  die_early "refusing governance identity equal to physical DB name ($DB_IDENTITY_ALIAS)"
+fi
+if [[ -n "${EVIDENCE_DIR:-}" ]]; then
+  mkdir -p "$EVIDENCE_DIR/json"
+  printf '{"database_connection_name":"%s","database_identity_alias":"%s"}\n' \
+    "${WOODRIGHT_DATABASE_CONNECTION_NAME:-}" "$DB_IDENTITY_ALIAS" \
+    >"$EVIDENCE_DIR/json/database-identity-plan.json"
+fi
+log "PLANNED database_identity_alias=$DB_IDENTITY_ALIAS database_connection_name=${WOODRIGHT_DATABASE_CONNECTION_NAME:-none}"
+
+# shellcheck source=ops/lib/woodright-memory-limits.sh
+source "$HERE/../lib/woodright-memory-limits.sh"
+_wr_mem_be_out=""
+if ! _wr_mem_be_out="$(wr_mem_docker_flags_backend)"; then
+  die_early "backend memory flags invalid"
+fi
+# shellcheck disable=SC2206
+_wr_mem_be=( ${_wr_mem_be_out} )
+[[ "${#_wr_mem_be[@]}" -eq 6 ]] || die_early "backend memory flags must be exactly 6 tokens (reservation/memory/swap)"
+[[ "${_wr_mem_be[0]}" == "--memory-reservation" && "${_wr_mem_be[2]}" == "--memory" && "${_wr_mem_be[4]}" == "--memory-swap" ]] \
+  || die_early "backend memory flag names/order invalid"
+
+CREATE_ARGS=(
+  --name "$NAME"
+  --restart unless-stopped
+  --network "$NET_STACK"
+  --network-alias backend
+  --label "com.woodright.deployment-owner=Dokploy"
+  --label "com.woodright.runtime-role=public_demo"
+  --label "com.woodright.exposure=public"
+  --label "com.woodright.release-sha=${TARGET_SHA}"
+  --label "com.woodright.database-identity=${DB_IDENTITY_ALIAS}"
+  "${_wr_mem_be[@]}"
+  --env-file "$ENV_FILE"
+  --mount "type=volume,source=${VOLUME},destination=${DEST}"
+  --health-cmd="node -e \"fetch('http://127.0.0.1:9000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""
+  --health-interval=30s
+  --health-timeout=5s
+  --health-retries=5
+  --health-start-period=60s
+  "$IMAGE"
+  ./node_modules/.bin/medusa start
+)
+wr_hp_refuse_publish_flags "${CREATE_ARGS[@]}" || die "HOST_PUBLISH_CREATE_PUBLISH_FLAG"
+
+if [[ "$MODE" == "dry-run" || "$MODE" == "preflight" ]]; then
+  log "PLANNED stop/rename/create/start name=$NAME image=$IMAGE keep=$KEEP_NAME sha=$TARGET_SHA digest=$EXPECTED_DIGEST"
+  log "PLANNED resolved_image_id=$RESOLVED_ID current_image_id=$CUR_IMG"
+  log "PLANNED memory_flags=${_wr_mem_be[*]}"
+  log "PLANNED nets=$NET_STACK+$NET_DOKPLOY alias=backend mount=${VOLUME}:${DEST}"
+  log "PLANNED keeper=$KEEP_NAME (no keeper create in dry-run)"
+  log "PLANNED media_gate=pre-promote+post-promote (execute only; dry-run skips docker run probe)"
+  log "PLANNED ownership_reconcile=ops/release/reconcile-runtime-manifests.sh (not run)"
+  if [[ "${WOODRIGHT_COMPONENT_SCOPE}" == "backend" ]]; then
+    log "PLANNED storefront_frozen=${WOODRIGHT_FROZEN_STOREFRONT_DIGEST:-}"
+  fi
+  log "DRY_RUN_OR_PREFLIGHT_OK mode=$MODE (no mutation)"
+  exit 0
+fi
+
+[[ "$MODE" == "execute" ]] || die "INVALID_RECREATE_MODE ($MODE)"
+
+# Best-effort touch of legacy DEPLOY.lock path for older docs/tools; not authoritative.
+[[ -f "$LOCK_FILE" ]] || touch "$LOCK_FILE" || true
+
+trap on_err ERR
+
 wr_staging_mutation_lock_acquire \
   "actor=recreate-staging-backend-with-media" \
-  "command=$0 --environment $WOODRIGHT_ENVIRONMENT" \
+  "command=$0 --environment $WOODRIGHT_ENVIRONMENT --mode execute" \
   "target=$EXPECTED_DIGEST" \
   || die "canonical environment lock busy/unavailable"
 log "flock_acquired lock=$WR_STAGING_MUTATION_LOCK_PATH"
@@ -216,21 +310,6 @@ if [[ "$REQUIRE_CURRENT_DIGEST" == "1" ]]; then
 fi
 # Digest-advance path: REQUIRE_CURRENT_DIGEST=0 allows current != target; Mode A + Mode B pin target.
 
-# Governance identity alias ≠ physical PostgreSQL DB name (WOODRIGHT_DB_NAME).
-# Resolve BEFORE stop/rename so a missing alias cannot leave the stack half-mutated.
-DB_IDENTITY_ALIAS="$(wr_canonical_db_identity_label)" || die_early "canonical DB identity unavailable"
-[[ "$DB_IDENTITY_ALIAS" == "public_demo_db" ]] || die_early "public_demo backend requires database-identity=public_demo_db (got '$DB_IDENTITY_ALIAS')"
-if [[ -n "${WOODRIGHT_DATABASE_CONNECTION_NAME:-}" && "$DB_IDENTITY_ALIAS" == "${WOODRIGHT_DATABASE_CONNECTION_NAME}" ]]; then
-  die_early "refusing governance identity equal to physical DB name ($DB_IDENTITY_ALIAS)"
-fi
-if [[ -n "${EVIDENCE_DIR:-}" ]]; then
-  mkdir -p "$EVIDENCE_DIR/json"
-  printf '{"database_connection_name":"%s","database_identity_alias":"%s"}\n' \
-    "${WOODRIGHT_DATABASE_CONNECTION_NAME:-}" "$DB_IDENTITY_ALIAS" \
-    >"$EVIDENCE_DIR/json/database-identity-plan.json"
-fi
-log "PLANNED database_identity_alias=$DB_IDENTITY_ALIAS database_connection_name=${WOODRIGHT_DATABASE_CONNECTION_NAME:-none}"
-
 # All non-destructive checks completed BEFORE stop
 docker stop "$NAME"
 PHASE=1
@@ -240,39 +319,6 @@ docker rename "$NAME" "$KEEP_NAME"
 PHASE=2
 log "renamed_to_keeper $KEEP_NAME"
 
-# shellcheck source=ops/lib/woodright-memory-limits.sh
-source "$HERE/../lib/woodright-memory-limits.sh"
-_wr_mem_be_out=""
-if ! _wr_mem_be_out="$(wr_mem_docker_flags_backend)"; then
-  die_early "backend memory flags invalid"
-fi
-# shellcheck disable=SC2206
-_wr_mem_be=( ${_wr_mem_be_out} )
-[[ "${#_wr_mem_be[@]}" -eq 6 ]] || die_early "backend memory flags must be exactly 6 tokens (reservation/memory/swap)"
-[[ "${_wr_mem_be[0]}" == "--memory-reservation" && "${_wr_mem_be[2]}" == "--memory" && "${_wr_mem_be[4]}" == "--memory-swap" ]] \
-  || die_early "backend memory flag names/order invalid"
-CREATE_ARGS=(
-  --name "$NAME"
-  --restart unless-stopped
-  --network "$NET_STACK"
-  --network-alias backend
-  --label "com.woodright.deployment-owner=Dokploy"
-  --label "com.woodright.runtime-role=public_demo"
-  --label "com.woodright.exposure=public"
-  --label "com.woodright.release-sha=${TARGET_SHA}"
-  --label "com.woodright.database-identity=${DB_IDENTITY_ALIAS}"
-  "${_wr_mem_be[@]}"
-  --env-file "$ENV_FILE"
-  --mount "type=volume,source=${VOLUME},destination=${DEST}"
-  --health-cmd="node -e \"fetch('http://127.0.0.1:9000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""
-  --health-interval=30s
-  --health-timeout=5s
-  --health-retries=5
-  --health-start-period=60s
-  "$IMAGE"
-  ./node_modules/.bin/medusa start
-)
-wr_hp_refuse_publish_flags "${CREATE_ARGS[@]}" || die "HOST_PUBLISH_CREATE_PUBLISH_FLAG"
 docker create "${CREATE_ARGS[@]}"
 
 docker network connect "$NET_DOKPLOY" "$NAME"
