@@ -25,8 +25,10 @@ source "$HERE/../lib/woodright-oci-provenance.sh"
 source "$HERE/../lib/woodright-host-publish.sh"
 # shellcheck source=../lib/woodright-owner-approved-release.sh
 source "$HERE/../lib/woodright-owner-approved-release.sh"
+# shellcheck source=../lib/woodright-recreate-mode.sh
+source "$HERE/../lib/woodright-recreate-mode.sh"
 
-MODE="execute"
+MODE=""
 CONFIRM=""
 IMAGE=""
 EXPECTED_DIGEST=""
@@ -45,10 +47,12 @@ usage() {
 Usage: recreate-staging-storefront.sh --environment public_demo --component storefront|pair --mode <mode> [options]
 
 Modes: dry-run | preflight | execute | rollback | verify
+Fail-closed: --mode is required (RECREATE_MODE_REQUIRED). Never defaults to execute.
 
 Required:
   --environment public_demo
   --component storefront|pair
+  --mode <mode>
 
 Required (dry-run|preflight|execute):
   --image ghcr.io/.../woodright-storefront@sha256:<64hex>
@@ -99,8 +103,10 @@ parse_args() {
       --environment=*) shift ;;
       --component) shift; shift || true ;;
       --component=*) shift ;;
-      --mode) MODE="${2:?}"; shift 2 ;;
-      --mode=*) MODE="${1#--mode=}"; shift ;;
+      --mode|--mode=*)
+        # Parsed by wr_recreate_parse_mode_from_args (duplicate/empty fail-closed).
+        if [[ "$1" == --mode ]]; then shift 2 || true; else shift; fi
+        ;;
       --image) IMAGE="${2:?}"; shift 2 ;;
       --image=*) IMAGE="${1#--image=}"; shift ;;
       --digest) EXPECTED_DIGEST="${2:?}"; shift 2 ;;
@@ -267,19 +273,20 @@ run_verify() {
   log "VERIFY_OK name=$NAME digest=$EXPECTED_DIGEST sha=$TARGET_SHA"
 }
 
-FULL_ARGV=("$@")
-wr_require_environment_from_args "${FULL_ARGV[@]}" || exit 1
+wr_recreate_parse_mode_from_args "$@" || exit 2
+MODE="$WR_RECREATE_MODE"
+wr_require_environment_from_args "$@" || exit 1
 [[ "${WOODRIGHT_ENVIRONMENT}" == "public_demo" ]] || die "only --environment public_demo allowed"
 wr_assert_environment_provisioned || exit 1
 wr_require_canonical_db_identity || exit 1
 wr_hp_require_policy || die "host_publish_policy"
 wr_hp_assert_planned_deny >/dev/null || die "HOST_PUBLISH_PLANNED_DENY_FAILED"
-wr_require_component_from_args "${FULL_ARGV[@]}" || die "missing required --component <storefront|pair>"
+wr_require_component_from_args "$@" || die "missing required --component <storefront|pair>"
 [[ "${WOODRIGHT_COMPONENT_SCOPE}" == "storefront" || "${WOODRIGHT_COMPONENT_SCOPE}" == "pair" ]] \
   || die "storefront recreate requires --component storefront|pair"
 wr_validation_freeze_assert_clear_for_mutation "$WOODRIGHT_ENVIRONMENT" || exit 1
 wr_prelock_validate_environment_target || exit 1
-parse_args "${FULL_ARGV[@]}"
+parse_args "$@"
 
 NAME="${WOODRIGHT_SF_CONTAINER_DEFAULT}"
 NET_STACK="${WOODRIGHT_NET_STACK}"
@@ -288,7 +295,7 @@ wr_cutover_refuse_production_name "$NAME" || exit 2
 
 case "$MODE" in
   dry-run|preflight|execute|rollback|verify) ;;
-  *) die "invalid --mode=$MODE" ;;
+  *) die "INVALID_RECREATE_MODE ($MODE)" ;;
 esac
 
 case "$MODE" in
@@ -341,8 +348,18 @@ if [[ "${WOODRIGHT_COMPONENT_SCOPE}" == "storefront" ]]; then
 fi
 
 if [[ "$MODE" == "dry-run" || "$MODE" == "preflight" ]]; then
-  log "PLANNED stop/rename/create/start name=$NAME image=$IMAGE keep=$KEEP_NAME sha=$TARGET_SHA component=${WOODRIGHT_COMPONENT_SCOPE}"
+  # shellcheck source=../lib/woodright-memory-limits.sh
+  source "$HERE/../lib/woodright-memory-limits.sh"
+  _wr_mem_sf_plan=""
+  if ! _wr_mem_sf_plan="$(wr_mem_docker_flags_storefront)"; then
+    die "storefront memory flags invalid"
+  fi
+  log "PLANNED stop/rename/create/start name=$NAME image=$IMAGE keep=$KEEP_NAME sha=$TARGET_SHA digest=$EXPECTED_DIGEST component=${WOODRIGHT_COMPONENT_SCOPE}"
+  log "PLANNED resolved_image_id=$RESOLVED_ID"
+  log "PLANNED memory_flags=$(printf '%s' "${_wr_mem_sf_plan}" | tr '\n' ' ')"
   log "PLANNED nets=$NET_STACK+$NET_DOKPLOY alias=storefront owner=Dokploy role=public_demo"
+  log "PLANNED keeper=$KEEP_NAME (no keeper create in dry-run)"
+  log "PLANNED ownership_reconcile=ops/release/reconcile-runtime-manifests.sh (not run)"
   if [[ "${WOODRIGHT_COMPONENT_SCOPE}" == "storefront" ]]; then
     log "PLANNED backend_frozen=${WOODRIGHT_FROZEN_BACKEND_DIGEST}"
   fi

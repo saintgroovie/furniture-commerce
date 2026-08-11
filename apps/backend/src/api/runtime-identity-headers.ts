@@ -13,6 +13,7 @@ const ALLOWED_ROLES = new Set([
   "public_demo",
   "non_public_candidate",
   "production_candidate",
+  "public_production",
 ])
 
 const ALLOWED_EXPOSURES = new Set(["public", "private"])
@@ -20,6 +21,7 @@ const ALLOWED_EXPOSURES = new Set(["public", "private"])
 const ALLOWED_DB_ALIASES = new Set([
   "public_demo_db",
   "non_public_candidate_db",
+  "public_production_db",
 ])
 
 function normalizeRole(role: string): string {

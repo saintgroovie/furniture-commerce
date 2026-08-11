@@ -10,7 +10,7 @@
  *
  * Usage:
  *   node scripts/release/scan-storefront-contamination.cjs \
- *     --profile production_candidate|public_demo \
+ *     --profile production_candidate|public_demo|public_production \
  *     --path <standalone_dir> [--path <static_dir> ...]
  *   node scripts/release/scan-storefront-contamination.cjs --self-test
  *
@@ -94,6 +94,21 @@ function filesystemForbiddenNeedles(profile) {
       "WOODRIGHT_RUNTIME_ROLE=public_demo",
     ]
   }
+  if (profile === "public_production") {
+    return [
+      "https://woodright-demo.ru",
+      "http://woodright-demo.ru",
+      "127.0.0.1:3200",
+      "WOODRIGHT_DB_ALIAS=public_demo_db",
+      'WOODRIGHT_DB_ALIAS":"public_demo_db"',
+      "WOODRIGHT_DB_ALIAS=non_public_candidate_db",
+      'WOODRIGHT_DB_ALIAS":"non_public_candidate_db"',
+      'WOODRIGHT_RUNTIME_ROLE":"public_demo"',
+      "WOODRIGHT_RUNTIME_ROLE=public_demo",
+      'WOODRIGHT_RUNTIME_ROLE":"production_candidate"',
+      "WOODRIGHT_RUNTIME_ROLE=production_candidate",
+    ]
+  }
   // public_demo must not bake the production apex as the site/API URL.
   return ["https://woodright.ru", "https://www.woodright.ru", "https://api.woodright.ru"]
 }
@@ -101,6 +116,9 @@ function filesystemForbiddenNeedles(profile) {
 function requiredMarkersFor(profile) {
   if (profile === "production_candidate") {
     return ["https://woodright.ru", "https://api.woodright.ru", "private_noindex", "manual_invoice"]
+  }
+  if (profile === "public_production") {
+    return ["https://woodright.ru", "https://api.woodright.ru", "public_indexable", "manual_invoice"]
   }
   return ["https://woodright-demo.ru", "https://api.woodright-demo.ru", "private_noindex", "manual_invoice"]
 }

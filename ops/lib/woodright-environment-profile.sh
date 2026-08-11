@@ -33,18 +33,21 @@ wr_environment_allowed_name() {
 
 wr_resolve_environment_profile_path() {
   local env_name="$1"
-  local base resolved
+  local base resolved dir_resolved
   wr_environment_allowed_name "$env_name" || return 1
   [[ "$env_name" != *..* && "$env_name" != */* && "$env_name" != *\\* ]] || return 1
   base="${WOODRIGHT_ENV_PROFILE_DIR%/}/${env_name}.conf"
   if command -v realpath >/dev/null 2>&1; then
     resolved="$(realpath "$base" 2>/dev/null || true)"
+    dir_resolved="$(realpath "${WOODRIGHT_ENV_PROFILE_DIR%/}" 2>/dev/null || true)"
   else
     resolved="$(cd "$(dirname "$base")" 2>/dev/null && printf '%s/%s\n' "$(pwd -P)" "$(basename "$base")")"
+    dir_resolved="$(cd "${WOODRIGHT_ENV_PROFILE_DIR%/}" 2>/dev/null && pwd -P)"
   fi
-  [[ -n "$resolved" && -f "$resolved" ]] || return 1
+  [[ -n "$resolved" && -f "$resolved" && -n "$dir_resolved" ]] || return 1
+  # Compare realpath prefixes so macOS /tmp → /private/tmp does not false-reject.
   case "$resolved" in
-    "${WOODRIGHT_ENV_PROFILE_DIR%/}"/*) printf '%s\n' "$resolved"; return 0 ;;
+    "${dir_resolved}"/*) printf '%s\n' "$resolved"; return 0 ;;
     *) return 1 ;;
   esac
 }

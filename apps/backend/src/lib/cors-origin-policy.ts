@@ -20,6 +20,11 @@ export const APPROVED_PRIVATE_ADMIN_ORIGINS = [
   "http://localhost:9200",
   "https://127.0.0.1:9200",
   "https://localhost:9200",
+  // public_production prelaunch operator loopback (compose :9300)
+  "http://127.0.0.1:9300",
+  "http://localhost:9300",
+  "https://127.0.0.1:9300",
+  "https://localhost:9300",
 ] as const
 
 /** Auth CORS for public buyer surface (Admin auth stays on private Admin origins). */

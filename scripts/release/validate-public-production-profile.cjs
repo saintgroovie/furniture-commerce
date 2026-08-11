@@ -52,10 +52,15 @@ function main() {
     : path.join(root, "ops/config/runtime-environments/public_production.conf")
   let paymentDecisionRaw = ""
   let paymentModeRaw = ""
+  let environmentProvisioned = false
+  let monitorBackupRuntimeProvisioned = false
   if (!fs.existsSync(profilePath)) {
     fail(errors, `missing profile at ${path.relative(root, profilePath) || profilePath}`)
   } else {
     const conf = fs.readFileSync(profilePath, "utf8")
+    environmentProvisioned = /^WOODRIGHT_ENVIRONMENT_PROVISIONED=1$/m.test(conf)
+    monitorBackupRuntimeProvisioned =
+      /^WOODRIGHT_MONITOR_BACKUP_RUNTIME_PROVISIONED=1$/m.test(conf)
     const required = [
       ["WOODRIGHT_ENVIRONMENT", "public_production"],
       ["WOODRIGHT_ENVIRONMENT_CLASS", "PUBLIC_PRODUCTION"],
@@ -69,7 +74,7 @@ function main() {
       ["WOODRIGHT_ADMIN_EXPOSURE", "private"],
       ["WOODRIGHT_LEGAL_CONTENT_STATUS", "draft"],
       ["WOODRIGHT_NOTIFICATION_DECISION_STATUS", "pending"],
-      ["WOODRIGHT_ENVIRONMENT_PROVISIONED", "0"],
+      ["WOODRIGHT_ENVIRONMENT_PROVISIONED", "1"],
       ["WOODRIGHT_HOST_PUBLISH_POLICY", "deny"],
       ["WOODRIGHT_ALLOW_HOST_PUBLISH", "0"],
       ["WOODRIGHT_LAUNCH_GATE_OWNER_APPROVAL", "required"],
@@ -79,7 +84,7 @@ function main() {
       ["WOODRIGHT_LAUNCH_GATE_MONITOR_BACKUP", "required"],
       ["WOODRIGHT_LAUNCH_GATE_DNS_TLS", "required"],
       ["WOODRIGHT_MONITOR_BACKUP_CONTRACT", "repository_ready"],
-      ["WOODRIGHT_MONITOR_BACKUP_RUNTIME_PROVISIONED", "0"],
+      ["WOODRIGHT_MONITOR_BACKUP_RUNTIME_PROVISIONED", "1"],
       ["WOODRIGHT_ALERT_DESTINATION_REQUIRED", "1"],
     ]
     for (const [key, expect] of required) {
@@ -340,11 +345,14 @@ function main() {
   }
   blockers.push("NOTIFICATION_DECISION_STATUS=pending")
   blockers.push("owner_approval_manifest_public_production_missing")
-  blockers.push("monitor_backup_runtime_not_provisioned")
+  if (!monitorBackupRuntimeProvisioned) {
+    blockers.push("monitor_backup_runtime_not_provisioned")
+  }
   blockers.push("alert_destination_not_provisioned_on_vm")
   blockers.push("restore_rehearsal_not_fresh")
   blockers.push("dns_tls_not_proven")
   blockers.push("application_images_not_qualified")
+  // DNS/TLS and buyer cutover remain owner gates even when technical stack is provisioned.
 
   const report = {
     tool: "validate-public-production-profile.cjs",
@@ -354,7 +362,11 @@ function main() {
     payment_contract_ready: paymentReady.ready,
     payment_contract_detail: paymentReady.reason,
     launch_ready: false,
-    runtime_provisioned: false,
+    runtime_provisioned: environmentProvisioned,
+    monitor_backup_runtime_provisioned: monitorBackupRuntimeProvisioned,
+    provision_state: environmentProvisioned
+      ? "PROVISIONED_NOT_PUBLIC"
+      : "UNPROVISIONED",
     errors,
     contract_files: contractReady,
     pending_launch_gates: blockers,

@@ -13,7 +13,7 @@
  *
  * Usage:
  *   node scripts/release/resolve-image-build-profile.cjs \
- *     --profile public_demo|production_candidate \
+ *     --profile public_demo|production_candidate|public_production \
  *     [--print-env] [--checksum] [--validate]
  *   node scripts/release/resolve-image-build-profile.cjs --self-test
  *
@@ -34,7 +34,7 @@ const path = require("path")
 const crypto = require("crypto")
 
 const PROFILE_DIR = path.join(__dirname, "..", "..", "ops", "config", "image-build-profiles")
-const ALLOWED_PROFILES = new Set(["public_demo", "production_candidate"])
+const ALLOWED_PROFILES = new Set(["public_demo", "production_candidate", "public_production"])
 const SECRET_KEY_RE = /(SECRET|TOKEN|PASSWORD|PUBLISHABLE_KEY|API[_-]?KEY|PRIVATE[_-]?KEY)/i
 const SECRET_VALUE_RE = /^ghp_|^gho_|^sk_live_|-----BEGIN /i
 
@@ -124,8 +124,14 @@ function validateCommon(values, errors) {
   for (const key of REQUIRED_COMMON_KEYS) {
     if (!values[key]) errors.push(`missing required key: ${key}`)
   }
-  if (values.WOODRIGHT_LAUNCH_MODE && values.WOODRIGHT_LAUNCH_MODE !== "private_noindex") {
-    errors.push(`WOODRIGHT_LAUNCH_MODE must be private_noindex (got "${values.WOODRIGHT_LAUNCH_MODE}")`)
+  if (
+    values.WOODRIGHT_LAUNCH_MODE &&
+    values.WOODRIGHT_LAUNCH_MODE !== "private_noindex" &&
+    values.WOODRIGHT_LAUNCH_MODE !== "public_indexable"
+  ) {
+    errors.push(
+      `WOODRIGHT_LAUNCH_MODE must be private_noindex|public_indexable (got "${values.WOODRIGHT_LAUNCH_MODE}")`
+    )
   }
   if (values.WOODRIGHT_PAYMENT_MODE && values.WOODRIGHT_PAYMENT_MODE !== "manual_invoice") {
     errors.push(`WOODRIGHT_PAYMENT_MODE must be manual_invoice (got "${values.WOODRIGHT_PAYMENT_MODE}")`)
@@ -137,6 +143,9 @@ function validateCommon(values, errors) {
 }
 
 function validateProductionCandidate(values, errors) {
+  if (values.WOODRIGHT_LAUNCH_MODE !== "private_noindex") {
+    errors.push(`production_candidate requires WOODRIGHT_LAUNCH_MODE=private_noindex (got "${values.WOODRIGHT_LAUNCH_MODE}")`)
+  }
   if (values.WOODRIGHT_IMAGE_BUILD_PROFILE !== "production_candidate") {
     errors.push(`WOODRIGHT_IMAGE_BUILD_PROFILE must equal "production_candidate" (got "${values.WOODRIGHT_IMAGE_BUILD_PROFILE}")`)
   }
@@ -165,7 +174,42 @@ function validateProductionCandidate(values, errors) {
   }
 }
 
+
+function validatePublicProduction(values, errors) {
+  if (values.WOODRIGHT_IMAGE_BUILD_PROFILE !== "public_production") {
+    errors.push(`WOODRIGHT_IMAGE_BUILD_PROFILE must equal "public_production" (got "${values.WOODRIGHT_IMAGE_BUILD_PROFILE}")`)
+  }
+  if (values.WOODRIGHT_LAUNCH_MODE !== "public_indexable") {
+    errors.push(`public_production requires WOODRIGHT_LAUNCH_MODE=public_indexable (got "${values.WOODRIGHT_LAUNCH_MODE}")`)
+  }
+  if (values.NEXT_PUBLIC_SITE_URL !== "https://woodright.ru") {
+    errors.push(`public_production requires NEXT_PUBLIC_SITE_URL=https://woodright.ru (got "${values.NEXT_PUBLIC_SITE_URL}")`)
+  }
+  if (values.NEXT_PUBLIC_MEDUSA_BACKEND_URL !== "https://api.woodright.ru") {
+    errors.push(
+      `public_production requires NEXT_PUBLIC_MEDUSA_BACKEND_URL=https://api.woodright.ru (got "${values.NEXT_PUBLIC_MEDUSA_BACKEND_URL}")`
+    )
+  }
+  if (values.WOODRIGHT_RUNTIME_ROLE !== "public_production") {
+    errors.push(`public_production requires WOODRIGHT_RUNTIME_ROLE=public_production (got "${values.WOODRIGHT_RUNTIME_ROLE}")`)
+  }
+  if (values.WOODRIGHT_RUNTIME_EXPOSURE !== "public") {
+    errors.push(`public_production requires WOODRIGHT_RUNTIME_EXPOSURE=public (got "${values.WOODRIGHT_RUNTIME_EXPOSURE}")`)
+  }
+  if (values.WOODRIGHT_DB_ALIAS !== "public_production_db") {
+    errors.push(`public_production requires WOODRIGHT_DB_ALIAS=public_production_db (got "${values.WOODRIGHT_DB_ALIAS}")`)
+  }
+  const site = String(values.NEXT_PUBLIC_SITE_URL || "").toLowerCase()
+  const api = String(values.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "").toLowerCase()
+  if (site.includes("woodright-demo.ru") || api.includes("woodright-demo.ru")) {
+    errors.push("public_production rejects any woodright-demo.ru value")
+  }
+}
+
 function validatePublicDemo(values, errors) {
+  if (values.WOODRIGHT_LAUNCH_MODE !== "private_noindex") {
+    errors.push(`public_demo requires WOODRIGHT_LAUNCH_MODE=private_noindex (got "${values.WOODRIGHT_LAUNCH_MODE}")`)
+  }
   if (values.WOODRIGHT_IMAGE_BUILD_PROFILE !== "public_demo") {
     errors.push(`WOODRIGHT_IMAGE_BUILD_PROFILE must equal "public_demo" (got "${values.WOODRIGHT_IMAGE_BUILD_PROFILE}")`)
   }
@@ -201,6 +245,7 @@ function validateProfileValues(name, values) {
   validateCommon(values, errors)
   if (name === "production_candidate") validateProductionCandidate(values, errors)
   else if (name === "public_demo") validatePublicDemo(values, errors)
+  else if (name === "public_production") validatePublicProduction(values, errors)
   else errors.push(`unknown profile "${name}"`)
   return errors
 }
@@ -275,6 +320,15 @@ function runSelfTest() {
     record("public_demo resolves", false)
     console.error("  " + e.message)
   }
+  let pub
+  try {
+    pub = resolveProfile("public_production")
+    record("public_production resolves", true)
+    record("public_production valid on disk", pub.ok)
+  } catch (e) {
+    record("public_production resolves", false)
+    console.error("  " + e.message)
+  }
 
   // 5. Checksum is stable and non-empty.
   if (prod) {
@@ -318,11 +372,18 @@ function runSelfTest() {
     record("production_candidate + loopback API URL rejected", errors.length > 0)
   }
 
-  // 11. WOODRIGHT_LAUNCH_MODE=public_indexable rejected (only private_noindex allowed today).
+  // 11. WOODRIGHT_LAUNCH_MODE=public_indexable rejected on production_candidate.
   if (prod) {
     const mutated = { ...prod.values, WOODRIGHT_LAUNCH_MODE: "public_indexable" }
     const errors = validateProfileValues("production_candidate", mutated)
     record("production_candidate + public_indexable rejected", errors.length > 0)
+  }
+
+  // 11b. public_production requires public_indexable; private_noindex rejected.
+  if (pub) {
+    const mutated = { ...pub.values, WOODRIGHT_LAUNCH_MODE: "private_noindex" }
+    const errors = validateProfileValues("public_production", mutated)
+    record("public_production + private_noindex rejected", errors.length > 0)
   }
 
   // 12. Secret-looking key in profile is rejected.
@@ -359,7 +420,7 @@ function main() {
   void args.includes("--validate")
 
   if (!profileName) {
-    console.error("usage: resolve-image-build-profile.cjs --profile <public_demo|production_candidate> [--print-env] [--checksum] [--validate]")
+    console.error("usage: resolve-image-build-profile.cjs --profile <public_demo|production_candidate|public_production> [--print-env] [--checksum] [--validate]")
     console.error("       resolve-image-build-profile.cjs --self-test")
     process.exit(2)
   }

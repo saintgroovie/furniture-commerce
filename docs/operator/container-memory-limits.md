@@ -88,3 +88,13 @@ Dual-stack Wave 1 reservations (~1664 MiB) leave ≥1.5 GiB host reserve target.
 
 - PostgreSQL / Redis
 - Dokploy / Traefik platform limits
+
+## Staging recreate helpers (P1 dry-run safety)
+
+`recreate-staging-backend-with-media.sh` and `recreate-staging-storefront.sh` require an explicit `--mode`:
+
+- `--mode dry-run` — plan only (zero Docker mutation; prints planned memory flags from `woodright-memory-limits.sh`)
+- `--mode execute` — live stop/rename/create/start
+
+Missing `--mode` fails closed with `RECREATE_MODE_REQUIRED` (never defaults to execute).
+Pair cutover passes `--mode execute` to the backend leaf.
