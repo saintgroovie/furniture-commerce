@@ -15,17 +15,18 @@ import {
 } from "./media-near-dup-collapse"
 
 function medusaBackendBaseForImages(): string {
+  // Host classification only — never used as img src prefix after same-origin rewrite.
+  // Empty when unset so client chunks do not embed localhost:9000.
   const raw =
-    (typeof process !== "undefined" &&
-      (process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ||
-        process.env.MEDUSA_BACKEND_URL)) ||
-    "http://localhost:9000"
+    typeof process !== "undefined"
+      ? process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || ""
+      : ""
   return String(raw).replace(/\/$/, "")
 }
 
 /**
  * Browser-safe product image URL: `/static/...` and `/uploads/...` are served by Medusa, not Next.
- * Rewrites docker `medusa` hostnames to `localhost` for local QA.
+ * Prefer same-origin storefront paths — never emit public `:9000` as img src.
  */
 export function resolveMedusaBackendImageUrl(url: string): string {
   const t = typeof url === "string" ? url.trim() : ""
@@ -34,6 +35,12 @@ export function resolveMedusaBackendImageUrl(url: string): string {
   if (t.startsWith("http://") || t.startsWith("https://")) {
     try {
       const u = new URL(t)
+      if (u.pathname.startsWith("/static/")) {
+        return `/product-static${u.pathname.slice("/static".length)}${u.search}${u.hash}`
+      }
+      if (u.pathname.startsWith("/uploads/")) {
+        return `${u.pathname}${u.search}${u.hash}`
+      }
       if (u.hostname === "medusa" || u.hostname.endsWith(".medusa")) {
         u.hostname = "localhost"
         return u.toString()
@@ -43,8 +50,11 @@ export function resolveMedusaBackendImageUrl(url: string): string {
     }
     return t
   }
-  if (t.startsWith("/static/") || t.startsWith("/uploads/")) {
-    return `${medusaBackendBaseForImages()}${t}`
+  if (t.startsWith("/static/")) {
+    return `/product-static${t.slice("/static".length)}`
+  }
+  if (t.startsWith("/uploads/")) {
+    return t
   }
   return t
 }
@@ -52,10 +62,14 @@ export function resolveMedusaBackendImageUrl(url: string): string {
 function isMedusaBackendHost(hostname: string): boolean {
   const h = hostname.toLowerCase()
   if (h === "medusa" || h.endsWith(".medusa")) return true
-  if (h === "localhost" || h === "127.0.0.1" || h === "host.docker.internal") return true
+  if (h === "localhost" || h === "127.0.0.1" || h === "host.docker.internal") {
+    return true
+  }
   const configured = medusaBackendBaseForImages()
+  if (!configured) return false
   try {
     const backendHost = new URL(configured).hostname.toLowerCase()
+    if (!backendHost || backendHost === "0.0.0.0") return false
     return h === backendHost
   } catch {
     return false
@@ -74,18 +88,20 @@ export function resolvePdpMediaSrc(url: string): string {
     return `/product-static${s.slice("/static".length)}`
   }
   if (s.startsWith("/uploads/")) {
-    return `${medusaBackendBaseForImages()}${s}`
+    // Same-origin via Next rewrite `/uploads` → Medusa `/uploads` (no public :9000).
+    return s
   }
   if (s.startsWith("http://") || s.startsWith("https://")) {
     try {
       const u = new URL(s)
+      if (u.pathname.startsWith("/static/")) {
+        return `/product-static${u.pathname.slice("/static".length)}${u.search}${u.hash}`
+      }
+      if (u.pathname.startsWith("/uploads/")) {
+        return `${u.pathname}${u.search}${u.hash}`
+      }
       if (isMedusaBackendHost(u.hostname)) {
-        if (u.pathname.startsWith("/static/")) {
-          return `/product-static${u.pathname.slice("/static".length)}`
-        }
-        if (u.pathname.startsWith("/uploads/")) {
-          return `${medusaBackendBaseForImages()}${u.pathname}`
-        }
+        return `${u.pathname}${u.search}${u.hash}`
       }
     } catch {
       /* ignore */
@@ -397,8 +413,8 @@ export function mergeUniqueExtraUrls(mainSrc: string, segments: string[][]): str
 }
 
 /**
- * PDP thumb row: extras only — hero already shows `mainSrc` (no duplicate main thumb).
- * Catalog cards use {@link buildGalleryStripUrls} so return-to-main stays selectable.
+ * @deprecated Prefer {@link buildGalleryStripUrls}. Kept for callers that need
+ * extras-only probe lists; buyer rails must include the hero.
  */
 export function buildPdpThumbStripUrls(mainSrc: string, extraSrcs: string[]): string[] {
   const mainNorm = typeof mainSrc === "string" ? mainSrc.trim() : ""
@@ -412,7 +428,7 @@ export function buildPdpThumbStripUrls(mainSrc: string, extraSrcs: string[]): st
 
 /**
  * Gallery thumb strip: `mainSrc` first, then extras; trims and dedupes.
- * Catalog cards: hero is always a selectable thumb. PDP uses {@link buildPdpThumbStripUrls}.
+ * Catalog cards and PDP buyer rails share this main-first contract.
  */
 export function buildGalleryStripUrls(mainSrc: string, extraSrcs: string[]): string[] {
   const mainNorm = typeof mainSrc === "string" ? mainSrc.trim() : ""

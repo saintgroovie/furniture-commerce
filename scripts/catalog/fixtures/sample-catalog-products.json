@@ -1,0 +1,34 @@
+{
+  "marker": "merchandising-v1",
+  "mode": "catalog-projection",
+  "products": [
+    {
+      "id": "1",
+      "handle": "bed",
+      "title": "Кровать",
+      "metadata": {
+        "category_handle": "krovati",
+        "collection": "classic"
+      },
+      "thumbnail": "http://x"
+    },
+    {
+      "id": "2",
+      "handle": "m",
+      "title": "Зеркало",
+      "metadata": {
+        "category_handle": "zerkala",
+        "collection": null
+      },
+      "thumbnail": "http://x"
+    },
+    {
+      "id": "3",
+      "handle": "wm",
+      "title": "Шкаф с зеркалом",
+      "metadata": {
+        "category_handle": "shkafy"
+      }
+    }
+  ]
+}

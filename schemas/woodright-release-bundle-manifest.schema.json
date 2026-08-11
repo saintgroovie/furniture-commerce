@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://woodright.local/schemas/woodright-release-bundle-manifest.schema.json",
+  "title": "WoodrightReleaseBundleManifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "bundle_id",
+    "environment",
+    "status",
+    "created_at",
+    "activation_mode",
+    "operator",
+    "controller",
+    "compatibility_contract",
+    "backend",
+    "storefront",
+    "data_contract",
+    "migrations",
+    "rollback",
+    "verification",
+    "provenance"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "const": "2" },
+    "bundle_id": {
+      "type": "string",
+      "pattern": "^wrb-[0-9]{8}T[0-9]{6}Z-be[0-9a-f]{7,40}-sf[0-9a-f]{7,40}$",
+      "description": "Immutable bundle identity; must not be a bare Git SHA"
+    },
+    "environment": { "type": "string", "enum": ["staging", "production", "candidate", "local-canonical"] },
+    "status": {
+      "type": "string",
+      "enum": ["prepared", "active", "rolled_back", "superseded", "reconciled"]
+    },
+    "created_at": { "type": "string" },
+    "authorized_at": { "type": ["string", "null"] },
+    "activated_at": { "type": ["string", "null"] },
+    "activation_mode": {
+      "type": "string",
+      "enum": [
+        "pair_cutover",
+        "storefront_only_cutover",
+        "backend_only_cutover",
+        "reconciled_external_cutover",
+        "rollback"
+      ]
+    },
+    "operator": { "type": "string", "minLength": 1 },
+    "controller": { "type": "string", "minLength": 1 },
+    "transaction_id": { "type": ["string", "null"] },
+    "previous_bundle_id": { "type": ["string", "null"] },
+    "compatibility_contract": { "$ref": "#/$defs/compatibilityRef" },
+    "backend": { "$ref": "#/$defs/component" },
+    "storefront": { "$ref": "#/$defs/component" },
+    "data_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["catalog_order_version", "data_mutations"],
+      "properties": {
+        "catalog_order_version": { "type": "string", "minLength": 1 },
+        "data_mutations": { "type": "string", "const": "none" },
+        "notes": { "type": "string" }
+      }
+    },
+    "migrations": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "rollback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "backend_keeper", "storefront_keeper", "backup_directory"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["pair", "storefront_only", "backend_only_disallowed", "backend_only"]
+        },
+        "backend_keeper": { "type": "string", "minLength": 1 },
+        "storefront_keeper": { "type": "string", "minLength": 1 },
+        "backup_directory": { "type": "string", "minLength": 1 },
+        "commands_path": { "type": ["string", "null"] },
+        "backend_only_allowed": { "type": "boolean" }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["public_passed", "samples"],
+      "properties": {
+        "public_passed": { "type": "boolean" },
+        "samples": { "type": "integer", "minimum": 1 },
+        "first_catalog_title": { "type": ["string", "null"] },
+        "mirror_index": { "type": ["integer", "null"] },
+        "verified_at": { "type": ["string", "null"] },
+        "urls": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "site": { "type": "string" },
+            "catalog": { "type": "string" },
+            "kids_catalog": { "type": "string" }
+          }
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cutover_report"],
+      "properties": {
+        "cutover_report": { "type": "string" },
+        "governance_merged_sha": { "type": ["string", "null"] },
+        "notes": { "type": "string" }
+      }
+    },
+    "notes": { "type": "string" }
+  },
+  "$defs": {
+    "compatibilityRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_id", "status", "evidence_path"],
+      "properties": {
+        "contract_id": { "type": "string", "minLength": 1 },
+        "status": { "type": "string", "enum": ["compatible", "incompatible", "unknown"] },
+        "evidence_path": { "type": "string", "minLength": 1 },
+        "required_store_api_contract": { "type": "string" },
+        "provided_store_api_contract": { "type": "string" },
+        "migrations_compatible": { "type": "boolean" }
+      }
+    },
+    "component": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "component",
+        "repository",
+        "source_sha",
+        "workflow_run_id",
+        "workflow_run_attempt",
+        "digest",
+        "oci_revision"
+      ],
+      "properties": {
+        "component": { "type": "string", "enum": ["backend", "storefront"] },
+        "repository": { "type": "string", "minLength": 1 },
+        "source_sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "pr_number": { "type": ["integer", "null"] },
+        "workflow_run_id": { "type": ["string", "integer"] },
+        "workflow_run_attempt": { "type": "integer", "minimum": 1 },
+        "unique_build_tag": { "type": ["string", "null"] },
+        "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "oci_revision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "api_contract_version": { "type": ["string", "null"] },
+        "required_backend_contract": { "type": ["string", "null"] },
+        "build_public_config_fingerprint": { "type": ["string", "null"] },
+        "compatibility_claims": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

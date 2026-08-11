@@ -1,0 +1,15 @@
+[Unit]
+Description=Woodright public_production monitoring timer (~15m)
+Documentation=file:///srv/woodright/docs/operator/public-production-monitor-backup-recovery.md
+# Repository template only - do NOT enable automatically on merge.
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=15min
+Persistent=true
+RandomizedDelaySec=90
+Unit=woodright-monitor-public-production.service
+AccuracySec=30s
+
+[Install]
+WantedBy=timers.target

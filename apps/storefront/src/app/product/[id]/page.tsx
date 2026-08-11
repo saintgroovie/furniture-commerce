@@ -1,8 +1,12 @@
 import Link from "next/link"
 import type { Metadata } from "next"
+import { headers } from "next/headers"
+import { notFound, redirect } from "next/navigation"
 import { getSiteUrl } from "@/lib/api/base"
-import { getProduct, getProducts, NOT_FOUND } from "@/lib/api/products"
+import { getCatalogProducts, getProduct, NOT_FOUND } from "@/lib/api/products"
+import { getMotifContext } from "@/lib/api/motif-themes"
 import { formatRub, getPrice } from "@/lib/format"
+import { indexingCanonical } from "@/lib/indexing-policy"
 import {
   formatRequestQuotePriceLabel,
   isRequestQuoteProduct,
@@ -17,6 +21,8 @@ import { OliverPdpMediaSwitcher } from "@/components/oliver-pdp-media-switcher"
 import { GreenwichBedPdpMediaSwitcher } from "@/components/greenwich-bed-pdp-media-switcher"
 import { ProductPdpExecutionMediaSwitcher } from "@/components/product-pdp-execution-media-switcher"
 import { ProductPdpMediaSwitcher } from "@/components/product-pdp-media-switcher"
+import { PdpMotifSelector } from "@/components/pdp-motif-selector"
+import { PdpRelatedInMotif } from "@/components/pdp-related-in-motif"
 import {
   buildIntraProductExecutionSelectors,
   cardThumbnailSrcFromProduct,
@@ -50,14 +56,22 @@ import {
   getSubcollectionLabel,
   getCanonicalName,
   getBuyerFacingProductTitle,
+  getBuyerFacingProductTitleLayout,
   getArticle,
   getDimensions,
   getPdpHeroObjectPosition,
   orderedBuyerFacingDimensions,
 } from "@/lib/product-metadata"
+import { layoutBuyerFacingTitle } from "@/lib/en-name-ru"
 import { formatRuInline } from "@/lib/format-ru-copy"
+import {
+  isPdpCollectionContextSentence,
+  layoutPdpDescription,
+  layoutPdpSubtitle,
+} from "@/lib/pdp-copy-layout"
 import { isKidsStorefrontProduct } from "@/lib/kids"
-import { actions, labels, pdpCopy, productTypeBadgeLabels } from "@/lib/woodright-copy"
+import { getCollectionFilterKey } from "@/lib/catalog-filters"
+import { actions, labels, pdpCopy, productTypeBadgeLabels, willieWinkieMotifsCopy } from "@/lib/woodright-copy"
 import { KidsProductSection } from "@/components/kids-product-section"
 
 function pdpHeroThumbnail(product: Record<string, unknown>): string | undefined {
@@ -91,12 +105,20 @@ function mmToCmLabel(mm: number): string {
 
 const BADGE_LABELS = productTypeBadgeLabels
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}): Promise<Metadata> {
+  const { id } = await params
   const base = getSiteUrl()
   try {
-    const res = await getProduct(params.id)
+    const res = await getProduct(id)
     const product = res.product as Record<string, unknown> | undefined
-    if (!product) return { title: "Товар", alternates: { canonical: `${base}/product/${params.id}` } }
+    if (!product) {
+      notFound()
+    }
+    const selfCanonical = indexingCanonical(`${base}/product/${id}`)
     const title = getBuyerFacingProductTitle(product)
     const desc = product.description ? truncate(String(product.description), 160) : "Товар из каталога Woodright."
     const imageUrl = primaryImageForMeta(product)
@@ -106,31 +128,36 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       openGraph: {
         title,
         description: desc,
-        url: `/product/${params.id}`,
+        url: `/product/${id}`,
         ...(imageUrl && { images: [imageUrl] }),
       },
-      alternates: { canonical: `${base}/product/${params.id}` },
+      ...(selfCanonical ? { alternates: selfCanonical } : {}),
     }
-  } catch {
-    return { title: "Товар", alternates: { canonical: `${base}/product/${params.id}` } }
+  } catch (e) {
+    if (e instanceof Error && e.message === NOT_FOUND) {
+      notFound()
+    }
+    // Framework notFound() throws; rethrow. Operational failures must not become 404.
+    throw e
   }
 }
 
-export default async function ProductPage({ params }: { params: { id: string } }) {
+export default async function ProductPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const { id } = await params
+  const resolvedSearchParams = searchParams ? await searchParams : undefined
   let product: Record<string, unknown> | null = null
   try {
-    const res = await getProduct(params.id)
+    const res = await getProduct(id)
     product = res.product ?? null
   } catch (e) {
     if (e instanceof Error && e.message === NOT_FOUND) {
-      return (
-        <div data-state="not_found" className="status-message">
-          <h1>{pdpCopy.notFoundTitle}</h1>
-          <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
-            <Link href="/catalog">В каталог</Link>
-          </div>
-        </div>
-      )
+      notFound()
     }
     return (
       <div data-state="error" className="status-message">
@@ -143,18 +170,41 @@ export default async function ProductPage({ params }: { params: { id: string } }
     )
   }
   if (!product) {
-    return (
-      <div data-state="not_found" className="status-message">
-        <h1>{pdpCopy.notFoundTitle}</h1>
-        <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
-          <Link href="/catalog">В каталог</Link>
-        </div>
-      </div>
-    )
+    notFound()
   }
 
   const base = getSiteUrl()
   const handle = String(product.handle ?? "")
+  const motifRaw = resolvedSearchParams?.motif
+  const motifQuery =
+    typeof motifRaw === "string"
+      ? motifRaw.trim()
+      : Array.isArray(motifRaw) && typeof motifRaw[0] === "string"
+        ? motifRaw[0].trim()
+        : ""
+
+  let motifContext: Awaited<ReturnType<typeof getMotifContext>> = null
+  if (handle) {
+    try {
+      motifContext = await getMotifContext({
+        handle,
+        motif: motifQuery || null,
+      })
+    } catch {
+      motifContext = null
+    }
+  }
+
+  if (
+    motifContext?.motif_status === "redirect" &&
+    motifContext.redirect_handle &&
+    motifContext.selected_motif?.motif_slug
+  ) {
+    redirect(
+      `/product/${encodeURIComponent(motifContext.redirect_handle)}?motif=${encodeURIComponent(motifContext.selected_motif.motif_slug)}`
+    )
+  }
+
   const isOliver = handle.startsWith("ol-")
   const isGreenwichBed = isGreenwichBedProduct(product)
   const thumbSrc = cardThumbnailSrcFromProduct(product)
@@ -238,6 +288,19 @@ export default async function ProductPage({ params }: { params: { id: string } }
   const price = getPrice(product)
   /* Material execution options from metadata.material_tiers (backend SoT). */
   const materialTiers = buildMaterialTierOptions(product)
+  const backendDefaultMin = (() => {
+    const cfg = (product.metadata as Record<string, unknown> | undefined)
+      ?.buyer_default_configuration
+    if (!cfg || typeof cfg !== "object" || Array.isArray(cfg)) return null
+    const min = (cfg as { min_unit_price?: unknown }).min_unit_price
+    return typeof min === "number" && Number.isFinite(min) && min > 0 ? min : null
+  })()
+  /* Opening PDP amount = backend default, else cheapest tier, else solid_full. */
+  const openingPrice =
+    backendDefaultMin ??
+    (materialTiers?.[0]?.price != null && Number.isFinite(materialTiers[0].price)
+      ? materialTiers[0].price
+      : price)
   const requestQuotePrice = isRequestQuoteProduct(product)
     ? formatRequestQuotePriceLabel(product)
     : null
@@ -248,7 +311,9 @@ export default async function ProductPage({ params }: { params: { id: string } }
   let displayGroupMembers: Record<string, unknown>[] = []
   if (meta?.display_group && meta?.collection) {
     try {
-      const plist = await getProducts()
+      // Lean browse projection keeps display_group* + collection + variant prices.
+      // Avoid full `/store/products` list (~1.4MB) for sibling size chips only.
+      const plist = await getCatalogProducts()
       const list = (plist.products ?? []) as Record<string, unknown>[]
       displayGroupMembers = getDisplayGroupMembers(product, list)
     } catch {
@@ -299,11 +364,16 @@ export default async function ProductPage({ params }: { params: { id: string } }
   const { mainSrc: pdpMainSrc, extraSrcs: pdpResolvedExtras } =
     resolvePdpMediaBundle(evidenced.mainSrc, evidenced.extraSrcs)
 
+  const titleLayout = getBuyerFacingProductTitleLayout(product)
   const titleStr = getBuyerFacingProductTitle(product)
   const canonicalName = getCanonicalName(product)
+  const canonicalLayout = canonicalName
+    ? layoutBuyerFacingTitle(canonicalName)
+    : null
+  /* Hide workbook line when it only differs by Latin vs transcribed model. */
   const showCanonicalLine =
-    canonicalName != null &&
-    canonicalName.toLowerCase() !== titleStr.trim().toLowerCase()
+    canonicalLayout != null &&
+    canonicalLayout.text.toLowerCase() !== titleStr.trim().toLowerCase()
 
   const collectionLabel = getCollectionLabel(product)
   const subcollectionLabel = getSubcollectionLabel(product)
@@ -375,11 +445,18 @@ export default async function ProductPage({ params }: { params: { id: string } }
     "@type": "Product",
     name: (product.title as string) ?? "Товар",
     description: description ?? undefined,
-    url: `${base}/product/${params.id}`,
+    url: `${base}/product/${id}`,
     ...(mainImage && { image: mainImage }),
   }
 
   const isKidsProduct = isKidsStorefrontProduct(product)
+  const collectionFilterKey = getCollectionFilterKey(product)
+  const catalogHref = isKidsProduct ? "/kids/catalog" : "/catalog"
+  const collectionHref = collectionFilterKey
+    ? `${catalogHref}?collection=${encodeURIComponent(collectionFilterKey)}`
+    : null
+
+  const cspNonce = (await headers()).get("x-nonce") ?? undefined
 
   return (
     <div
@@ -390,6 +467,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
       <KidsProductSection active={isKidsProduct} />
       {isKidsProduct ? (
         <script
+          nonce={cspNonce}
           dangerouslySetInnerHTML={{
             __html:
               "(function(){document.querySelectorAll('a.logo,a.footer-brand-logo').forEach(function(a){a.setAttribute('href','/kids');a.setAttribute('aria-label','Woodright Kids - на главную детской');});})();",
@@ -398,6 +476,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
       ) : null}
       <script
         type="application/ld+json"
+        nonce={cspNonce}
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
       />
 
@@ -455,6 +534,28 @@ export default async function ProductPage({ params }: { params: { id: string } }
 
           <div className="pdp-panel-col">
             <div className="pdp-panel">
+              <nav className="pdp-breadcrumbs" aria-label="Навигация по разделам">
+                {isKidsProduct && (
+                  <>
+                    <Link href="/kids">Детская</Link>
+                    <span aria-hidden="true"> / </span>
+                  </>
+                )}
+                <Link href={catalogHref}>Каталог</Link>
+                {collectionLabel && (
+                  <>
+                    <span aria-hidden="true"> / </span>
+                    {collectionHref ? (
+                      <Link href={collectionHref}>{collectionLabel}</Link>
+                    ) : (
+                      <span>{collectionLabel}</span>
+                    )}
+                  </>
+                )}
+                <span aria-hidden="true"> / </span>
+                <span aria-current="page">{titleStr}</span>
+              </nav>
+
               {/* 1. Context: collection + article — secondary but present */}
               {(collectionLabel || subcollectionLabel || article) && (
                 <div className="pdp-context-row">
@@ -473,16 +574,28 @@ export default async function ProductPage({ params }: { params: { id: string } }
 
               {/* 2. Title */}
               <div className="product-detail-header">
-                <h1 className="pdp-title">{titleStr}</h1>
+                <CopyLines
+                  as="h1"
+                  className="pdp-title"
+                  lines={titleLayout.lines}
+                />
                 {badgeLabel && <span className="badge">{badgeLabel}</span>}
               </div>
-              {showCanonicalLine && canonicalName && (
-                <span className="pdp-canonical-name">{canonicalName}</span>
+              {showCanonicalLine && canonicalLayout && (
+                <CopyLines
+                  as="span"
+                  className="pdp-canonical-name"
+                  lines={canonicalLayout.lines}
+                />
               )}
 
-              {/* 3. Short positioning line (real `subtitle` field only) */}
+              {/* 3. Short positioning line (real `subtitle` field only).
+                  Layout only: Woodright dashes + meaning breaks via CopyLines. */}
               {subtitle && (
-                <p className="pdp-subtitle">{formatRuInline(subtitle)}</p>
+                <CopyLines
+                  className="pdp-subtitle"
+                  lines={layoutPdpSubtitle(subtitle)}
+                />
               )}
 
               {/* 4. Dimensions: height → width → depth */}
@@ -497,6 +610,30 @@ export default async function ProductPage({ params }: { params: { id: string } }
                     </div>
                   ))}
                 </dl>
+              )}
+
+              {/* Motif selection (Willie Winkie) — before other configuration */}
+              {motifContext &&
+                (motifContext.motif_status === "unsupported" ||
+                  motifContext.motif_status === "unknown") && (
+                  <div className="pdp-motif-notice" role="status">
+                    <p className="pdp-motif-notice-title">
+                      {motifContext.motif_status === "unsupported"
+                        ? willieWinkieMotifsCopy.motifUnavailableTitle
+                        : willieWinkieMotifsCopy.motifUnknownTitle}
+                    </p>
+                    <p className="pdp-motif-notice-body">
+                      {motifContext.motif_status === "unsupported"
+                        ? willieWinkieMotifsCopy.motifUnavailableBody
+                        : willieWinkieMotifsCopy.motifUnknownBody}
+                    </p>
+                  </div>
+                )}
+              {motifContext && motifContext.motif_options.length > 0 && (
+                <PdpMotifSelector
+                  options={motifContext.motif_options}
+                  motifPagePath={motifContext.motif_page_path}
+                />
               )}
 
               {/* 5. Configuration — material execution, then size + other
@@ -526,8 +663,8 @@ export default async function ProductPage({ params }: { params: { id: string } }
                 priceLabel={
                   requestQuotePrice != null
                     ? requestQuotePrice
-                    : price != null
-                      ? formatRub(price)
+                    : openingPrice != null
+                      ? formatRub(openingPrice)
                       : isRequestQuoteProduct(product)
                         ? labels.requestQuotePrice
                         : null
@@ -577,11 +714,30 @@ export default async function ProductPage({ params }: { params: { id: string } }
           {description && (
             <div className="pdp-description-block">
               <h2>{pdpCopy.descriptionHeading}</h2>
-              {description.split(/\n+/).map((para, i) => (
-                <p key={i} className="pdp-description">
-                  {para}
-                </p>
-              ))}
+              {layoutPdpDescription(description).map((blocks, pi) => {
+                const collectionOnly = blocks.every((lines) =>
+                  lines.every(isPdpCollectionContextSentence)
+                )
+                return (
+                  <div
+                    key={pi}
+                    className={`pdp-description-group${collectionOnly ? " is-collection-group" : ""}`}
+                  >
+                    {blocks.map((lines, si) => {
+                      const joined = lines.join(" ")
+                      return (
+                        <CopyLines
+                          key={si}
+                          className={`pdp-description${
+                            isPdpCollectionContextSentence(joined) ? " is-collection" : ""
+                          }`}
+                          lines={lines}
+                        />
+                      )
+                    })}
+                  </div>
+                )
+              })}
             </div>
           )}
           {specRows.length > 0 && (
@@ -602,6 +758,15 @@ export default async function ProductPage({ params }: { params: { id: string } }
           )}
         </section>
       )}
+      {motifContext &&
+        motifContext.selected_motif &&
+        motifContext.related_products_in_motif.length > 0 && (
+          <PdpRelatedInMotif
+            products={motifContext.related_products_in_motif}
+            motifSlug={motifContext.selected_motif.motif_slug}
+            motifPagePath={motifContext.motif_page_path}
+          />
+        )}
     </div>
   )
 }

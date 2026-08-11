@@ -1,0 +1,23 @@
+{
+  "generated_consistent": true,
+  "hand_edited_inconsistent": false,
+  "keeper_referenced_as_active": false,
+  "active": {
+    "backend_container_id": "de972e56dcaa",
+    "backend_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "component_revisions": {
+      "backend": "006d4f7",
+      "storefront": "006d4f7"
+    },
+    "storefront_container_id": "dcbfcf1ca4af",
+    "storefront_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "live_backend_container_id": "de972e56dcaa",
+  "live_backend_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "owner_txt": {
+    "desired_git_sha": "006d4f7",
+    "presents_as_active": true
+  },
+  "live_storefront_container_id": "dcbfcf1ca4af",
+  "live_storefront_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+}

@@ -1,0 +1,14 @@
+{
+  "enforcement_mode": "dokploy_sole_owner",
+  "sole_owner": "Dokploy",
+  "manual_mutation_allowed": false,
+  "direct_mutation_path_open": false,
+  "claim_bypass_closed": true,
+  "dokploy_ui_residual": false,
+  "negative_ui_test_status": "not_run_live_risk",
+  "break_glass": {
+    "recovery_reference": "ssh://leonid@host + ACTIVE_RELEASE backup",
+    "contains_secrets": false,
+    "procedure": "docs/operator/dokploy-break-glass.md"
+  }
+}

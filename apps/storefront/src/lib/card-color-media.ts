@@ -14,6 +14,8 @@ import {
   shouldSuppressOliverFinishWhenFabricCanonical,
 } from "./oliver-finish-execution-guard"
 import { hasProvencePaintWoodDualFinishEvidence } from "./provence-finish-execution-guard"
+import { formatBuyerFacingFinishLabel } from "./buyer-finish-label"
+import { buyerFacingWoodToneLabel } from "./buyer-wood-label"
 import {
   greenwichBedMatrixFromProduct,
   isGreenwichBedProduct,
@@ -30,6 +32,7 @@ import {
   isGreenwichPaintProduct,
 } from "./greenwich-paint-media"
 import { isMilkLikeFinishKey } from "../../../backend/src/lib/country-finish-labels"
+import { productWithNormalizedUpholsteryMetadata } from "../../../backend/src/lib/upholstery-color-normalization"
 
 export type CardColorVariant = {
   key: string
@@ -87,7 +90,11 @@ export type CardExecutionSelectors = {
   greenwichPaintMatrix?: import("./greenwich-paint-media").GreenwichPaintMatrixEntry[]
   /** Provence pv-* paint (cream) × lacquered wood split — separate Цвет/Дерево rows. */
   provencePaintWood?: boolean
-  /** Oliver standalone bed: one selector row per fabric (Lilian, Lorna), not one grouped rail. */
+  /**
+   * Legacy multi-row Oliver fabric-family axes (one toolbar per family).
+   * PASS B.1: builder must not emit this for family-only lists; kept only for
+   * defensive rendering / containment if an older payload still carries it.
+   */
   separateFabricRows?: CardColorVariant[]
 }
 
@@ -103,6 +110,72 @@ export function hasPdpExecutionControls(sel: CardExecutionSelectors): boolean {
     (sel.finish?.length ?? 0) > 1 ||
     (sel.separateFabricRows?.length ?? 0) >= 2
   )
+}
+
+/**
+ * Oliver fabric *collection* / family keys (LEONA, LILLIAN, …).
+ * These are not individual buyer color swatches and must not become
+ * vertical catalog-card option axes (PASS A containment).
+ */
+export const OLIVER_FABRIC_FAMILY_KEYS = new Set([
+  "leona",
+  "lillian",
+  "linda",
+  "lorna",
+  "torno",
+  "lilian",
+])
+
+export function isFabricFamilyUpholsteryKey(key: string): boolean {
+  return OLIVER_FABRIC_FAMILY_KEYS.has(key.trim().toLowerCase())
+}
+
+/** True when every upholstery entry is a fabric-family key (not a color). */
+export function isFabricFamilyOnlyUpholstery(
+  variants: CardColorVariant[] | undefined
+): boolean {
+  if (!variants?.length) return false
+  return variants.every((v) => isFabricFamilyUpholsteryKey(v.key))
+}
+
+/**
+ * Catalog product-card preview containment (PASS A).
+ * - Always drops `separateFabricRows` (catalog preview never vertical fabric-family toolbars).
+ * - For Oliver (`ol-*`) only: strips fabric-family keys from upholstery/finish
+ *   (card preview stays compact; families are not catalog option axes).
+ * - Other collections may legitimately reuse tokens like `torno` as finish colors.
+ * PDP uses `buildIntraProductExecutionSelectors` directly; PASS B.1 emits at most
+ * one `upholstery` axis for Oliver fabric families (never `separateFabricRows`).
+ */
+export function containCatalogCardExecutionSelectors(
+  sel: CardExecutionSelectors,
+  product?: Record<string, unknown>
+): CardExecutionSelectors {
+  const next: CardExecutionSelectors = { ...sel }
+  delete next.separateFabricRows
+
+  const handle =
+    typeof product?.handle === "string" ? product.handle.toLowerCase() : ""
+  if (!handle.startsWith("ol-")) return next
+
+  if (next.upholstery?.length) {
+    const kept = next.upholstery.filter((v) => !isFabricFamilyUpholsteryKey(v.key))
+    if (kept.length === 0) delete next.upholstery
+    else next.upholstery = kept
+  }
+
+  /* Mis-bucketed fabric families in finish_color_executions (e.g. OL-56 lilian)
+     must not appear as a fake «Цвет» axis on the catalog card. Data repair = PASS B. */
+  if (next.finish?.length) {
+    const kept = next.finish.filter((v) => !isFabricFamilyUpholsteryKey(v.key))
+    if (kept.length === 0) {
+      delete next.finish
+      delete next.finishLabel
+    } else {
+      next.finish = kept
+    }
+  }
+  return next
 }
 
 const EXECUTION_LABELS: Record<string, string> = {
@@ -389,10 +462,14 @@ export function executionLabelForToken(
   product?: Record<string, unknown>
 ): string {
   if (product && token) {
+    const frameLabels = labelsFromMetadata(product, "frame_material_labels")
+    const fromFrame = frameLabels?.[token]
+    if (typeof fromFrame === "string" && fromFrame.trim()) {
+      return buyerFacingWoodToneLabel(fromFrame.trim(), token)
+    }
     const labelMaps = [
       labelsFromMetadata(product, "paint_finish_labels", "finish_color_labels"),
       labelsFromMetadata(product, "fabric_upholstery_labels", "upholstery_color_labels"),
-      labelsFromMetadata(product, "frame_material_labels"),
       labelsFromMetadata(product, "construction_tier_labels", "material_tier_labels"),
     ]
     for (const labels of labelMaps) {
@@ -408,7 +485,7 @@ export function executionLabelForToken(
     }
   }
   if (!token) return EXECUTION_LABELS[NEUTRAL_KEY]!
-  return EXECUTION_LABELS[token] ?? token
+  return EXECUTION_LABELS[token] ?? formatBuyerFacingFinishLabel(token)
 }
 
 export function swatchTokenForProduct(
@@ -739,9 +816,14 @@ function frameMaterialExecutionsFromMetadata(
   product: Record<string, unknown>
 ): CardColorVariant[] | undefined {
   const raw = metadataExecutionsRaw(product, "frame_material_executions")
-  return colorExecutionsFromMetadataArray(raw, {
+  const variants = colorExecutionsFromMetadataArray(raw, {
     productImageUrls: collectProductImageUrls(product),
   })
+  if (!variants) return undefined
+  return variants.map((v) => ({
+    ...v,
+    label: buyerFacingWoodToneLabel(v.label, v.key),
+  }))
 }
 
 function constructionTierExecutionsFromMetadata(
@@ -825,7 +907,10 @@ function dimensionOnlyColorVariants(
         : null
     variants.push({
       key,
-      label,
+      label:
+        sampleRegion === "frame_wood"
+          ? buyerFacingWoodToneLabel(label, key)
+          : label,
       mainSrc: "",
       extraSrcs: [],
       swatchToken: swatchKey(key),
@@ -1012,12 +1097,26 @@ function isOliverStandaloneMultiFabricProduct(
   return Boolean(metadataFabric && metadataFabric.length >= 2)
 }
 
-function oliverSeparateFabricRowSelectors(
+/**
+ * PASS B.1 — Oliver standalone multi-family fabric list.
+ *
+ * Contract: SINGLE_INTERACTIVE_FAMILY_AXIS
+ * - Families are values of one `Обивка` axis (media preview), not separate section axes.
+ * - Do not emit `separateFabricRows` (that path forces product-thumbnail image swatches).
+ * - PDP renderer must not pass `imageSwatches` for this row (hex/token chips only).
+ * - Price/Medusa variant are unchanged; selection only swaps execution media.
+ */
+function oliverUnifiedFabricFamilySelectors(
   metadataFabric: CardColorVariant[],
   metadataFrame: CardColorVariant[] | undefined
 ): CardExecutionSelectors {
   return {
-    separateFabricRows: metadataFabric,
+    /* Strip any metadata hex: family keys are collections, not evidenced colors. */
+    upholstery: metadataFabric.map((row) => ({
+      ...row,
+      swatchHex: undefined,
+      swatchToken: undefined,
+    })),
     wood: metadataFrame,
     confidence: "canonical",
   }
@@ -1027,29 +1126,38 @@ export function buildIntraProductExecutionSelectors(
   product: Record<string, unknown>,
   mainSrc: string
 ): CardExecutionSelectors {
-  const greenwichBed = greenwichBedSelectorsFromMetadata(product)
+  /* PASS B: normalize fabric/finish taxonomy in-memory before selectors.
+     Does not mutate Medusa DB; does not invent colors. */
+  const { product: normalizedProduct } =
+    productWithNormalizedUpholsteryMetadata(product)
+
+  const greenwichBed = greenwichBedSelectorsFromMetadata(normalizedProduct)
   if (greenwichBed) return greenwichBed
 
-  const greenwichPaint = greenwichPaintSelectorsFromMetadata(product)
+  const greenwichPaint = greenwichPaintSelectorsFromMetadata(normalizedProduct)
   if (greenwichPaint) return greenwichPaint
 
-  const provencePaintWood = provencePaintWoodSelectorsFromMetadata(product)
+  const provencePaintWood =
+    provencePaintWoodSelectorsFromMetadata(normalizedProduct)
   if (provencePaintWood) return provencePaintWood
 
   const handleEarly =
-    typeof product.handle === "string" ? product.handle.toLowerCase() : ""
+    typeof normalizedProduct.handle === "string"
+      ? normalizedProduct.handle.toLowerCase()
+      : ""
   if (handleEarly.startsWith("pv-")) {
-    const urls = collectProvenceExecutionEvidenceUrls(product)
+    const urls = collectProvenceExecutionEvidenceUrls(normalizedProduct)
     if (!hasProvencePaintWoodDualFinishEvidence(urls, handleEarly)) {
       return { confidence: "metadata_blocked" }
     }
   }
 
-  const metadataHeadboard = headboardExecutionsFromMetadata(product)
-  const metadataFabric = fabricUpholsteryExecutionsFromMetadata(product)
-  const metadataPaint = finishExecutionsFromMetadata(product)
-  const metadataFrame = frameMaterialExecutionsFromMetadata(product)
-  const metadataConstruction = constructionTierExecutionsFromMetadata(product)
+  const metadataHeadboard = headboardExecutionsFromMetadata(normalizedProduct)
+  const metadataFabric = fabricUpholsteryExecutionsFromMetadata(normalizedProduct)
+  const metadataPaint = finishExecutionsFromMetadata(normalizedProduct)
+  const metadataFrame = frameMaterialExecutionsFromMetadata(normalizedProduct)
+  const metadataConstruction =
+    constructionTierExecutionsFromMetadata(normalizedProduct)
 
   if (metadataHeadboard) {
     const out: CardExecutionSelectors = {
@@ -1059,7 +1167,7 @@ export function buildIntraProductExecutionSelectors(
     if (metadataFabric) out.upholstery = metadataFabric
     if (metadataPaint) {
       out.finish = metadataPaint
-      out.finishLabel = finishLabelForProduct(product)
+      out.finishLabel = finishLabelForProduct(normalizedProduct)
     }
     return out
   }
@@ -1076,12 +1184,20 @@ export function buildIntraProductExecutionSelectors(
     if (
       executionKeysMatch(metadataPaint, metadataFabric) ||
       shouldSuppressOliverFinishWhenFabricCanonical(
-        typeof product.handle === "string" ? product.handle : undefined,
-        product.metadata as Record<string, unknown> | undefined
+        typeof normalizedProduct.handle === "string"
+          ? normalizedProduct.handle
+          : undefined,
+        normalizedProduct.metadata as Record<string, unknown> | undefined
       )
     ) {
-      if (isOliverStandaloneMultiFabricProduct(product, metadataFabric, metadataHeadboard)) {
-        return oliverSeparateFabricRowSelectors(metadataFabric, metadataFrame)
+      if (
+        isOliverStandaloneMultiFabricProduct(
+          normalizedProduct,
+          metadataFabric,
+          metadataHeadboard
+        )
+      ) {
+        return oliverUnifiedFabricFamilySelectors(metadataFabric, metadataFrame)
       }
       return {
         upholstery: metadataFabric,
@@ -1091,7 +1207,7 @@ export function buildIntraProductExecutionSelectors(
     }
     return {
       finish: metadataPaint,
-      finishLabel: finishLabelForProduct(product),
+      finishLabel: finishLabelForProduct(normalizedProduct),
       upholstery: metadataFabric,
       wood: metadataFrame,
       confidence: "canonical",
@@ -1101,7 +1217,7 @@ export function buildIntraProductExecutionSelectors(
   if (metadataPaint) {
     const out: CardExecutionSelectors = {
       finish: metadataPaint,
-      finishLabel: finishLabelForProduct(product),
+      finishLabel: finishLabelForProduct(normalizedProduct),
       confidence: "canonical",
     }
     if (metadataFrame) out.wood = metadataFrame
@@ -1109,8 +1225,14 @@ export function buildIntraProductExecutionSelectors(
   }
 
   if (metadataFabric) {
-    if (isOliverStandaloneMultiFabricProduct(product, metadataFabric, metadataHeadboard)) {
-      return oliverSeparateFabricRowSelectors(metadataFabric, metadataFrame)
+    if (
+      isOliverStandaloneMultiFabricProduct(
+        normalizedProduct,
+        metadataFabric,
+        metadataHeadboard
+      )
+    ) {
+      return oliverUnifiedFabricFamilySelectors(metadataFabric, metadataFrame)
     }
     return {
       upholstery: metadataFabric,
@@ -1126,7 +1248,8 @@ export function buildIntraProductExecutionSelectors(
     }
   }
 
-  const metadataMaterialTier = materialTierExecutionsFromMetadata(product)
+  const metadataMaterialTier =
+    materialTierExecutionsFromMetadata(normalizedProduct)
   if (metadataMaterialTier) {
     return {
       finish: metadataMaterialTier,
@@ -1136,24 +1259,31 @@ export function buildIntraProductExecutionSelectors(
   }
 
   const mainNorm = mainSrc.trim()
-  const productUrls = collectProductImageUrls(product)
-  const handle = typeof product.handle === "string" ? product.handle.toLowerCase() : ""
+  const productUrls = collectProductImageUrls(normalizedProduct)
+  const handle =
+    typeof normalizedProduct.handle === "string"
+      ? normalizedProduct.handle.toLowerCase()
+      : ""
   if (detectOliverGalleryColorHeroPair(productUrls) && handle.startsWith("ol-")) {
     return { confidence: "metadata_blocked" }
   }
 
   const { upholsteryBuckets, woodBuckets, modelBuckets } =
-    bucketProductImages(product)
+    bucketProductImages(normalizedProduct)
 
   const headboard = buildModelVariantsFromBuckets(modelBuckets, mainNorm)
   const upholstery = buildColorVariantsFromBuckets(
     upholsteryBuckets,
     mainNorm,
-    product
+    normalizedProduct
   )
-  const wood = buildColorVariantsFromBuckets(woodBuckets, mainNorm, product)
+  const wood = buildColorVariantsFromBuckets(
+    woodBuckets,
+    mainNorm,
+    normalizedProduct
+  )
 
-  const upholstered = isUpholsteredProduct(product)
+  const upholstered = isUpholsteredProduct(normalizedProduct)
   const hasUpholstery = Boolean(upholstery && upholstery.length > 1)
   const hasWood = Boolean(wood && wood.length > 1)
 
@@ -1173,7 +1303,7 @@ export function buildIntraProductExecutionSelectors(
     out.confidence = "metadata_blocked"
   } else if (hasWood && !upholstered) {
     out.finish = wood
-    out.finishLabel = finishLabelForProduct(product)
+    out.finishLabel = finishLabelForProduct(normalizedProduct)
     out.confidence = "heuristic"
   } else if (out.headboard) {
     out.confidence = "metadata_blocked"

@@ -1,7 +1,7 @@
 import Link from "next/link"
 import type { Metadata } from "next"
-import { aboutProductionCopy, seo } from "@/lib/woodright-copy"
 import { CopyLines } from "@/components/copy-lines"
+import { aboutProductionCopy, seo } from "@/lib/woodright-copy"
 
 export const metadata: Metadata = {
   title: seo.aboutProduction.title,

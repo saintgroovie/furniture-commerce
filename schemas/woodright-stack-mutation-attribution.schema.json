@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "woodright-stack-mutation-attribution.schema.json",
+  "title": "Stack mutation attribution",
+  "type": "object",
+  "required": ["stack_id", "attribution_status"],
+  "properties": {
+    "stack_id": { "type": "string" },
+    "attribution_status": {
+      "enum": [
+        "attributed_complete",
+        "attributed_controller_actor_unknown",
+        "external_unattributed",
+        "unsafe_unknown_mutation",
+        "unchanged"
+      ]
+    }
+  }
+}

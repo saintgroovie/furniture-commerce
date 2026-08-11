@@ -11,6 +11,4 @@ export const RoomSet = model.define("room_set", {
   room_type: model.text().nullable(),
   style: model.text().nullable(),
   is_active: model.boolean().default(true),
-  created_at: model.dateTime().default(() => new Date()),
-  updated_at: model.dateTime().default(() => new Date()),
 })

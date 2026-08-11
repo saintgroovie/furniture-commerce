@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://woodright.local/schemas/woodright-owner-review-decision.schema.json",
+  "type": "object",
+  "required": ["packet_id","source_bundle_id","source_checksum_sha256","mutations","rows"],
+  "properties": {
+    "packet_id": {"type":"string"},
+    "source_bundle_id": {"type":"string"},
+    "source_checksum_sha256": {"type":"string","pattern":"^[0-9a-f]{64}$"},
+    "mutations": {"const":false},
+    "automatic_apply": {"const":false},
+    "rows": {"type":"array"}
+  }
+}

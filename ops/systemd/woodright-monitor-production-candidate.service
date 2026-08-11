@@ -1,0 +1,27 @@
+[Unit]
+Description=Woodright production-candidate read-only health monitor (oneshot)
+Documentation=file:///srv/woodright/docs/operator/production-candidate-authority-reconcile.md
+After=docker.service network-online.target
+Wants=network-online.target
+# Read-only: must never restart containers, mutate firewall, or delete backups.
+
+[Service]
+Type=oneshot
+User=root
+UMask=0077
+Nice=5
+TimeoutStartSec=300
+Environment=WOODRIGHT_MONITOR_STATE=/srv/woodright/monitoring/production-candidate/state
+Environment=WOODRIGHT_MONITOR_HISTORY=/srv/woodright/monitoring/production-candidate/history
+Environment=WOODRIGHT_BACKUP_ROOT=/srv/woodright/backups/automated/production-candidate
+# Profile authority (--environment production) sets ownership paths, media
+# volume, loopback hosts, and container name prefixes. Do not hardcode staging
+# media identities here.
+ExecStart=/srv/woodright/ops/monitoring/woodright-health-check.sh --environment production
+SuccessExitStatus=0 1 2
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=woodright-monitor-production-candidate
+
+[Install]
+WantedBy=multi-user.target

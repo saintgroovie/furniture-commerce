@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://woodright.local/schemas/woodright-catalog-mutation-manifest.schema.json",
+  "type": "object",
+  "required": ["mutation_id","owner_review_packet_id","source_bundle_id","reversible","mutations"],
+  "properties": {
+    "mutation_id": {"type":"string"},
+    "owner_review_packet_id": {"type":"string"},
+    "source_bundle_id": {"type":"string"},
+    "reversible": {"const":true},
+    "mutations": {"type":"array"}
+  }
+}

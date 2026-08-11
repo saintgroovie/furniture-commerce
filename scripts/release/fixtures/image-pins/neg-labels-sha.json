@@ -1,0 +1,45 @@
+{
+  "expect": "fail",
+  "expected": {
+    "release_sha": "eb298fd88e8877b3b35dc1e38536acab05bbf81f",
+    "backend_digest": "sha256:347e6fe400b980da61342f77df31609043c1912ebdd5fc22f6adea5bab8220d8",
+    "storefront_digest": "sha256:3826ef261461ec4e0eabeebf8b8207adb80470125ce1e58a4801ebb67c479871"
+  },
+  "env": {
+    "WOODRIGHT_BACKEND_IMAGE": "ghcr.io/saintgroovie/woodright-backend@sha256:347e6fe400b980da61342f77df31609043c1912ebdd5fc22f6adea5bab8220d8",
+    "WOODRIGHT_STOREFRONT_IMAGE": "ghcr.io/saintgroovie/woodright-storefront@sha256:3826ef261461ec4e0eabeebf8b8207adb80470125ce1e58a4801ebb67c479871",
+    "STOREFRONT_IMAGE": "ghcr.io/saintgroovie/woodright-storefront@sha256:3826ef261461ec4e0eabeebf8b8207adb80470125ce1e58a4801ebb67c479871"
+  },
+  "compose_resolved": {
+    "backend": "ghcr.io/saintgroovie/woodright-backend@sha256:347e6fe400b980da61342f77df31609043c1912ebdd5fc22f6adea5bab8220d8",
+    "storefront": "ghcr.io/saintgroovie/woodright-storefront@sha256:3826ef261461ec4e0eabeebf8b8207adb80470125ce1e58a4801ebb67c479871"
+  },
+  "running": {
+    "backend_digest": "sha256:347e6fe400b980da61342f77df31609043c1912ebdd5fc22f6adea5bab8220d8",
+    "storefront_digest": "sha256:3826ef261461ec4e0eabeebf8b8207adb80470125ce1e58a4801ebb67c479871",
+    "backend_release_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "storefront_release_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "backend_role": "public_demo",
+    "storefront_role": "public_demo"
+  },
+  "active_public": {
+    "release_sha": "eb298fd88e8877b3b35dc1e38536acab05bbf81f",
+    "backend_image_digest": "sha256:347e6fe400b980da61342f77df31609043c1912ebdd5fc22f6adea5bab8220d8",
+    "storefront_image_digest": "sha256:3826ef261461ec4e0eabeebf8b8207adb80470125ce1e58a4801ebb67c479871",
+    "dokploy_image_pins": {
+      "WOODRIGHT_BACKEND_IMAGE": "ghcr.io/saintgroovie/woodright-backend@sha256:347e6fe400b980da61342f77df31609043c1912ebdd5fc22f6adea5bab8220d8",
+      "WOODRIGHT_STOREFRONT_IMAGE": "ghcr.io/saintgroovie/woodright-storefront@sha256:3826ef261461ec4e0eabeebf8b8207adb80470125ce1e58a4801ebb67c479871"
+    }
+  },
+  "dokploy_pins": {
+    "WOODRIGHT_BACKEND_IMAGE": "ghcr.io/saintgroovie/woodright-backend@sha256:347e6fe400b980da61342f77df31609043c1912ebdd5fc22f6adea5bab8220d8",
+    "WOODRIGHT_STOREFRONT_IMAGE": "ghcr.io/saintgroovie/woodright-storefront@sha256:3826ef261461ec4e0eabeebf8b8207adb80470125ce1e58a4801ebb67c479871",
+    "STOREFRONT_IMAGE": "ghcr.io/saintgroovie/woodright-storefront@sha256:3826ef261461ec4e0eabeebf8b8207adb80470125ce1e58a4801ebb67c479871"
+  },
+  "alias_ok": true,
+  "forbidden_digests": [
+    "sha256:5243c7c8f1146c2832af7093f1a98f4f8c4f8e5039f733d406d9571c9c657fe8",
+    "sha256:034db9486b9be45e282f543f7f26cbeb862a38b1282218bd0528831a44cf0828"
+  ],
+  "fail_reason": "release_sha mismatch"
+}

@@ -1,0 +1,9 @@
+{
+  "gate": "BZ",
+  "mutations": [
+    {
+      "target_by_title_only": true,
+      "title": "Bed"
+    }
+  ]
+}

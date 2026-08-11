@@ -1,0 +1,29 @@
+[Unit]
+Description=Woodright public_production read-only health monitor (oneshot)
+Documentation=file:///srv/woodright/docs/operator/public-production-monitor-backup-recovery.md
+After=docker.service network-online.target
+Wants=network-online.target
+# Read-only: must never restart containers, mutate firewall, or delete backups.
+# Repository template only - do NOT enable automatically on merge.
+
+[Service]
+Type=oneshot
+User=root
+UMask=0077
+Nice=5
+TimeoutStartSec=300
+Environment=WOODRIGHT_MONITOR_STATE=/srv/woodright/monitoring/public-production/state
+Environment=WOODRIGHT_MONITOR_HISTORY=/srv/woodright/monitoring/public-production/history
+Environment=WOODRIGHT_BACKUP_ROOT=/srv/woodright/backups/automated/public-production
+Environment=WOODRIGHT_ALERT_DESTINATION_PATH=/srv/woodright/monitoring/public-production/alert-destination.json
+# Profile authority (--environment public_production) sets ownership, media,
+# domains, DB alias, and container name prefixes.
+ExecStart=/srv/woodright/ops/monitoring/woodright-health-check.sh --environment public_production
+# Only healthy exit is success. warning(1)/critical(2) must fail the unit for alerting.
+SuccessExitStatus=0
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=woodright-monitor-public-production
+
+[Install]
+WantedBy=multi-user.target

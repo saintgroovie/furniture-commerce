@@ -7,6 +7,8 @@ import assert from "node:assert/strict"
 import {
   applyCatalogFilters,
   clearCatalogFilterState,
+  getCategoryFilterLabel,
+  getProductCategoryKey,
   hasActiveCatalogFilters,
   type CatalogFilterState,
 } from "./catalog-filters"
@@ -181,6 +183,79 @@ function ids(products: Record<string, unknown>[]): string[] {
   // Fixed: with type BESPOKE on a pool that already excluded BESPOKE → empty
   const fixed = applyCatalogFilters(mainScoped, baseState({ type: "BESPOKE" }))
   assert.deepEqual(fixed, [])
+}
+
+// buyer_item_type fallback when category_handle missing
+{
+  const key = getProductCategoryKey({
+    metadata: { buyer_item_type: "pelenalnye-stoleshnicy" },
+  })
+  assert.equal(key, "pelenalnye-stoleshnicy")
+}
+
+// buyer_item_type preferred over stale category_handle (override case)
+{
+  const key = getProductCategoryKey({
+    metadata: {
+      category_handle: "zerkala",
+      buyer_item_type: "shkafy",
+      buyer_item_type_source: "category_override",
+    },
+  })
+  assert.equal(key, "shkafy")
+}
+
+// Willie Winkie collection + product type stay independent dimensions
+{
+  const pool = [
+    {
+      id: "1",
+      title: "Комод Ballet",
+      metadata: {
+        collection: "willie-winkie",
+        category_handle: "komody",
+        motif_slug: "ballet",
+      },
+      product_classification: { product_type: "CONFIGURABLE" },
+    },
+    {
+      id: "2",
+      title: "Стол Pastoral",
+      metadata: {
+        collection: "willie-winkie",
+        category_handle: "stoly",
+        motif_slug: "pastoral",
+      },
+      product_classification: { product_type: "CONFIGURABLE" },
+    },
+    {
+      id: "3",
+      title: "Кровать Oliver",
+      metadata: { collection: "oliver", category_handle: "krovati" },
+      product_classification: { product_type: "CONFIGURABLE" },
+    },
+  ]
+  const wwOnly = applyCatalogFilters(
+    pool,
+    baseState({ collection: ["willie-winkie"] })
+  )
+  assert.equal(wwOnly.length, 2)
+  const wwKomody = applyCatalogFilters(
+    pool,
+    baseState({ collection: ["willie-winkie"], category: ["komody"] })
+  )
+  assert.equal(wwKomody.length, 1)
+  assert.equal(wwKomody[0]!.id, "1")
+  assert.equal(
+    (wwKomody[0]!.metadata as Record<string, unknown>).motif_slug,
+    "ballet"
+  )
+}
+
+// Owner-approved Oxford steps facet label
+{
+  assert.equal(getCategoryFilterLabel("stupeni"), "Ступени")
+  assert.equal(getCategoryFilterLabel("stoly"), "Столы")
 }
 
 console.log("catalog-filter.fidelity.test.ts: all assertions passed")

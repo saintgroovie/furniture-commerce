@@ -1,11 +1,10 @@
 import type { Metadata } from "next"
 import { CheckoutForm } from "@/components/checkout-form"
 import { checkoutCopy } from "@/lib/woodright-copy"
-import { CopyLines } from "@/components/copy-lines"
 
 export const metadata: Metadata = {
   title: checkoutCopy.title,
-  description: "Оформление заказа Woodright",
+  description: "Оформление заказа Woodright.",
   robots: { index: false, follow: false },
 }
 
@@ -14,11 +13,14 @@ export default function CheckoutPage() {
     <div className="bespoke-request-page">
       <div className="bespoke-request-header">
         <h1>{checkoutCopy.title}</h1>
-        <CopyLines className="bespoke-request-lead" lines={checkoutCopy.lead} />
-        <CopyLines
-          className="checkout-payment-clarity checkout-payment-clarity-page"
-          lines={checkoutCopy.paymentClarity}
-        />
+        <p className="bespoke-request-lead">
+          {checkoutCopy.lead[0]}
+          <br />
+          {checkoutCopy.lead[1]}
+        </p>
+        <p className="checkout-payment-clarity checkout-payment-clarity-page">
+          {checkoutCopy.paymentClarity}
+        </p>
       </div>
 
       <CheckoutForm />

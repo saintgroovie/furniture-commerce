@@ -1,0 +1,51 @@
+{
+  "schema_version": "1",
+  "release_sha": "5683afa62890531f26b6e53b25800173c8efbb20",
+  "branch": "main",
+  "pr_number": 59,
+  "workflow_run_id": "29830575969",
+  "build_timestamp": "2026-07-21T12:37:00Z",
+  "backend": {
+    "repository": "ghcr.io/saintgroovie/woodright-backend",
+    "tag": "5683afa62890531f26b6e53b25800173c8efbb20",
+    "digest": "sha256:578bd815b104fbb44473b4dfc992e62d5e1041889be7fc3271cf9e582c1cabcf",
+    "oci_revision": "5683afa62890531f26b6e53b25800173c8efbb20",
+    "oci_source": "https://github.com/saintgroovie/furniture-commerce"
+  },
+  "storefront": {
+    "repository": "ghcr.io/saintgroovie/woodright-storefront",
+    "tag": "5683afa62890531f26b6e53b25800173c8efbb20",
+    "digest": "sha256:0f4224829a9c4887968374876c03338b805c7925a1a3dd5d4e740804543db7cc",
+    "oci_revision": "5683afa62890531f26b6e53b25800173c8efbb20",
+    "oci_source": "https://github.com/saintgroovie/furniture-commerce"
+  },
+  "catalog_order_version": "merchandising-v1",
+  "database_migrations": [],
+  "deployment_owner": "Dokploy+manual_flock_deploy",
+  "target_environment": "staging",
+  "previous": {
+    "release_sha": "18fd46515ea69f79c653f20dd0038406885c3cf9",
+    "backend_digest": "sha256:aad598d5c0486a7269c829d202e5c3054149c28c4d871315d15b99a45e89d53d",
+    "storefront_digest": "sha256:68660a46efaf2aba884292455d8e300bf5a9763ee9fb247088914e85ce38142a"
+  },
+  "rollback": {
+    "backend_keeper": "woodright-staging-backend-rollback-20260721T130125Z",
+    "storefront_keeper": "woodright-staging-storefront-rollback-20260721T130125Z",
+    "backup_directory": "/srv/woodright/backups/pre-5683afa-cutover-20260721T130125Z",
+    "commands_path": "/srv/woodright/backups/pre-5683afa-cutover-20260721T130125Z/COMMANDS.md"
+  },
+  "public_urls": {
+    "site": "https://woodright-demo.ru/",
+    "catalog": "https://woodright-demo.ru/catalog",
+    "kids_catalog": "https://woodright-demo.ru/kids/catalog",
+    "api": "https://api.woodright-demo.ru"
+  },
+  "verification": {
+    "verified_at": "2026-07-21T13:08:00Z",
+    "marker": "merchandising-v1",
+    "product_count": 157,
+    "first_catalog_title": "Кровать",
+    "notes": "tag drift documented; pin digests"
+  },
+  "notes": "Authorized digests from workflow 29830575969; mutable tags later drifted."
+}

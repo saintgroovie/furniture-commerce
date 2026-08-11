@@ -2,6 +2,7 @@
  * Greenwich paint SKU: wood (natural/dark) × paint color matrix for card / PDP.
  */
 import type { CardColorVariant } from "./card-color-media"
+import { buyerFacingWoodToneLabel } from "./buyer-wood-label"
 import { resolveStorefrontProductImageSrc } from "./product-images"
 import { fallbackHexForToken } from "./swatch-fallback-colors"
 
@@ -64,6 +65,97 @@ export function buildGreenwichPaintMatrixFromExecutions(
   return matrix
 }
 
+/**
+ * Re-bucket paint×wood matrix cells by filename wood detector.
+ *
+ * Repairs corrupted metadata where natural (`greenwich_darkblue…`) and dark
+ * (`greenwich_dark_darkblue…`) URLs were merged into one `frame_material: dark`
+ * cell - which made catalog cards show a dark wood chip over a light-wood hero.
+ *
+ * Call this before lean URL slim so each wood tone keeps its own cell.
+ * Non-Greenwich filenames keep the cell's declared `frame_material`.
+ */
+export function sanitizeGreenwichPaintMatrix(
+  raw: unknown
+): GreenwichPaintMatrixEntry[] {
+  if (!Array.isArray(raw) || raw.length === 0) return []
+
+  type Slot = {
+    label: string
+    natural: string[]
+    dark: string[]
+    seen: Set<string>
+  }
+  const byPaint = new Map<string, Slot>()
+
+  const pushUrl = (slot: Slot, wood: "natural" | "dark", url: string) => {
+    const key = url
+      .trim()
+      .replace(/^https?:\/\/[^/]+/i, "")
+      .toLowerCase()
+    if (slot.seen.has(key)) return
+    slot.seen.add(key)
+    slot[wood].push(url)
+  }
+
+  for (const entry of raw) {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) continue
+    const o = entry as Record<string, unknown>
+    const paint_finish =
+      typeof o.paint_finish === "string" ? o.paint_finish.trim() : ""
+    if (!paint_finish) continue
+    const label =
+      typeof o.label === "string" && o.label.trim()
+        ? o.label.trim()
+        : paint_finish
+    const declaredFrame: "natural" | "dark" =
+      o.frame_material === "dark" ? "dark" : "natural"
+    const urls = Array.isArray(o.urls)
+      ? o.urls.filter(
+          (u): u is string => typeof u === "string" && u.trim().length > 0
+        )
+      : []
+
+    let slot = byPaint.get(paint_finish)
+    if (!slot) {
+      slot = { label, natural: [], dark: [], seen: new Set() }
+      byPaint.set(paint_finish, slot)
+    }
+
+    for (const url of urls) {
+      const hay = (url.split("/").pop() ?? url).toLowerCase()
+      const isGreenwichAsset = /greenwich|gr-\d{2}-\d/i.test(hay)
+      const wood: "natural" | "dark" = isGreenwichAsset
+        ? isGreenwichDarkWoodAssetUrl(url)
+          ? "dark"
+          : "natural"
+        : declaredFrame
+      pushUrl(slot, wood, url)
+    }
+  }
+
+  const out: GreenwichPaintMatrixEntry[] = []
+  for (const [paint_finish, slot] of byPaint) {
+    if (slot.natural.length > 0) {
+      out.push({
+        frame_material: "natural",
+        paint_finish,
+        label: slot.label,
+        urls: slot.natural,
+      })
+    }
+    if (slot.dark.length > 0) {
+      out.push({
+        frame_material: "dark",
+        paint_finish,
+        label: slot.label,
+        urls: slot.dark,
+      })
+    }
+  }
+  return out
+}
+
 export function isGreenwichPaintProduct(product: Record<string, unknown>): boolean {
   const handle = typeof product.handle === "string" ? product.handle : ""
   if (!isGreenwichPaintProductHandle(handle)) return false
@@ -82,20 +174,8 @@ export function greenwichPaintMatrixFromProduct(
   const meta = product.metadata as Record<string, unknown> | undefined
   const raw = meta?.greenwich_paint_execution_matrix
   if (Array.isArray(raw) && raw.length > 0) {
-    const out: GreenwichPaintMatrixEntry[] = []
-    for (const entry of raw) {
-      if (!entry || typeof entry !== "object") continue
-      const o = entry as Record<string, unknown>
-      const frame_material = o.frame_material === "dark" ? "dark" : "natural"
-      const paint_finish = typeof o.paint_finish === "string" ? o.paint_finish : ""
-      const label = typeof o.label === "string" ? o.label : paint_finish
-      const urls = Array.isArray(o.urls)
-        ? o.urls.filter((u): u is string => typeof u === "string" && u.trim().length > 0)
-        : []
-      if (!paint_finish || urls.length === 0) continue
-      out.push({ frame_material, paint_finish, label, urls })
-    }
-    if (out.length > 0) return out
+    const sanitized = sanitizeGreenwichPaintMatrix(raw)
+    if (sanitized.length > 0) return sanitized
   }
 
   const paintRaw = meta?.paint_finish_executions ?? meta?.finish_color_executions
@@ -227,15 +307,18 @@ export function buildGreenwichPaintWoodVariants(
     )
   )
   if (frames.length < 2) return undefined
-  return frames.map((key) => ({
-    key,
-    label:
+  return frames.map((key) => {
+    const rawLabel =
       labelByKey.get(key) ??
-      (key === "natural" ? "Светлое дерево" : "Тёмное дерево"),
-    mainSrc: "",
-    extraSrcs: [],
-    swatchToken: key,
-    swatchSampleRegion: "frame_wood" as const,
-    swatchHex: hexByKey.get(key) ?? fallbackHexForToken(key === "dark" ? "dark" : "natural"),
-  }))
+      (key === "natural" ? "Светлое дерево" : "Тёмное дерево")
+    return {
+      key,
+      label: buyerFacingWoodToneLabel(rawLabel, key),
+      mainSrc: "",
+      extraSrcs: [],
+      swatchToken: key,
+      swatchSampleRegion: "frame_wood" as const,
+      swatchHex: hexByKey.get(key) ?? fallbackHexForToken(key === "dark" ? "dark" : "natural"),
+    }
+  })
 }

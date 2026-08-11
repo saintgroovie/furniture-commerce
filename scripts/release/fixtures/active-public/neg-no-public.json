@@ -1,0 +1,14 @@
+{
+  "state": "active",
+  "health": {
+    "backend": "healthy",
+    "storefront": "healthy"
+  },
+  "public_verification": {
+    "passed": false
+  },
+  "release_manifest_ref": "/srv/woodright/releases/x/release-manifest.json",
+  "release_sha": "643a429927adc934b89596df34dddb4a9d096cf6",
+  "backend_digest": "sha256:8fa5b643b222afda217733d2c652942b7b4fecb12d3d19aef143f55d86efdf17",
+  "storefront_digest": "sha256:a2acd564200ce241c59087c07aa73978e1d12d7824056bb67ef7f0cb434fffc3"
+}

@@ -35,4 +35,25 @@ assertGlued("столы и стеллажи", "столы\u00A0и\u00A0стел�
 const hanging = formatRuInline("мебель в каталоге")
 assert.ok(hanging.includes("в\u00A0каталоге"), hanging)
 
+/* Cyrillic measure units must glue - ASCII `\b` after «см» never matched. */
+assertGlued("124 см в ширину при высоте 63 см", "124\u00A0см")
+assertGlued("124 см в ширину при высоте 63 см", "63\u00A0см")
+assertGlued("глубине 51,2 мм.", "51,2\u00A0мм")
+
+/* Measure + axis role is one wrap unit - amount must not orphan before «в длину». */
+assertGlued(
+  "консоль из коллекции Гринвич: 119 см в длину и 32 см в глубину",
+  "119\u00A0см\u00A0в\u00A0длину"
+)
+assertGlued(
+  "консоль из коллекции Гринвич: 119 см в длину и 32 см в глубину",
+  "32\u00A0см\u00A0в\u00A0глубину"
+)
+assertGlued("при высоте 90 см.", "при\u00A0высоте\u00A090\u00A0см")
+
+/* Counts in words → digits in buyer-facing copy. */
+assertGlued("двенадцать отделок, от белого", "12 отделок")
+assertGlued("в двенадцати отделках", "в\u00A012 отделках")
+assert.equal(formatRuInline("одиночный акцент").includes("1очный"), false)
+
 console.log("format-ru-copy.fidelity.test.ts: ok")

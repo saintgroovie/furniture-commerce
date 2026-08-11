@@ -1,13 +1,22 @@
 import type { Metadata, Viewport } from "next"
 import Link from "next/link"
+import { headers } from "next/headers"
 import { getSiteUrl } from "@/lib/api/base"
+import {
+  HeaderHoverDropdown,
+  HeaderHoverDropdownProvider,
+} from "@/components/contacts-nav-dropdown"
 import { HeaderCartLink } from "@/components/header-cart-link"
 import { HeaderLogo } from "@/components/header-logo"
 import { MobileNav } from "@/components/mobile-nav"
 import { NavDropdown } from "@/components/nav-dropdown"
+import { ShowroomContactsContent } from "@/components/showroom-contacts-content"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import { KidsSectionProvider } from "@/lib/use-kids-section"
+import { getShowroomOrganizationContactLd } from "@/lib/showroom-contacts"
+import { CspNonceProvider } from "@/lib/csp-nonce"
+import { indexingRobotsMetadata } from "@/lib/indexing-policy"
 import { a11yCopy, footer as footerCopy, nav as navCopy, seo } from "@/lib/woodright-copy"
 import { formatRuInline } from "@/lib/format-ru-copy"
 import "./globals.css"
@@ -20,6 +29,8 @@ export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: { default: "Woodright", template: "%s | Woodright" },
   description: seo.home.description,
+  // Demo/staging fail-closed: noindex/nofollow/noarchive (WOODRIGHT_INDEXING_MODE).
+  robots: indexingRobotsMetadata(),
   openGraph: {
     siteName: "Woodright",
     locale: "ru_RU",
@@ -38,6 +49,10 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#faf8f5",
+  width: "device-width",
+  initialScale: 1,
+  /* Enables non-zero env(safe-area-inset-*) on iOS Safari. */
+  viewportFit: "cover",
 }
 
 const organizationJsonLd = {
@@ -45,18 +60,23 @@ const organizationJsonLd = {
   "@type": "Organization",
   name: "Woodright",
   url: getSiteUrl(),
+  ...getShowroomOrganizationContactLd(),
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  // CSP nonce from middleware (x-nonce). Required for JSON-LD + Next bootstrap.
+  const nonce = (await headers()).get("x-nonce") ?? undefined
   return (
     <html lang="ru" className={localSansClass}>
       <body>
+        <CspNonceProvider nonce={nonce}>
         <script
           type="application/ld+json"
+          nonce={nonce}
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
         <a href="#main-content" className="skip-link">
@@ -68,9 +88,23 @@ export default function RootLayout({
         <KidsSectionProvider>
         <SiteHeader>
           {/* Top bar */}
+          <HeaderHoverDropdownProvider>
           <div className="header-top">
             <div className="container header-top-inner">
-              <span className="header-top-left">{navCopy.showroom}</span>
+              <div className="header-top-left">
+                <HeaderHoverDropdown
+                  id="showroom"
+                  href="/contacts"
+                  label={navCopy.showroom}
+                  panelVariant="showroom"
+                  align="start"
+                >
+                  <ShowroomContactsContent
+                    variant="showroom"
+                    idPrefix="header-showroom"
+                  />
+                </HeaderHoverDropdown>
+              </div>
               <HeaderLogo />
               <div className="header-top-right">
                 <NavDropdown
@@ -82,15 +116,28 @@ export default function RootLayout({
                     { label: "Оставить заявку", href: "/designers/request" },
                   ]}
                 />
-                <Link href="/contacts">{navCopy.contacts}</Link>
+                <HeaderHoverDropdown
+                  id="contacts"
+                  href="/contacts"
+                  label={navCopy.contacts}
+                  panelVariant="contacts"
+                  align="end"
+                >
+                  <ShowroomContactsContent
+                    variant="contacts"
+                    idPrefix="header-contacts"
+                  />
+                </HeaderHoverDropdown>
               </div>
             </div>
           </div>
+          </HeaderHoverDropdownProvider>
 
           {/* Main nav */}
           <div className="header-main">
             <div className="container header-main-inner">
               <nav className="header-nav" aria-label="Основная навигация">
+                {/* Canonical IA: Каталог → Комнаты → Детская → По проекту → О бренде */}
                 <NavDropdown
                   href="/catalog"
                   label={navCopy.catalog}
@@ -101,18 +148,19 @@ export default function RootLayout({
                   ]}
                 />
 
+                <Link href="/rooms" className="header-nav-link">{navCopy.rooms}</Link>
+
                 <NavDropdown
                   href="/kids"
                   label={navCopy.kids}
                   className="header-nav-kids"
                   items={[
                     { label: "Каталог", href: "/kids/catalog" },
+                    { label: "Росписи Вилли Винки", href: "/kids/willie-winkie" },
                     { label: "Комнаты", href: "/kids/rooms" },
                     { label: "О разделе", href: "/kids" },
                   ]}
                 />
-
-                <Link href="/rooms" className="header-nav-link">{navCopy.rooms}</Link>
 
                 <NavDropdown
                   href="/bespoke"
@@ -188,6 +236,7 @@ export default function RootLayout({
           }
         />
         </KidsSectionProvider>
+        </CspNonceProvider>
       </body>
     </html>
   )

@@ -53,12 +53,12 @@ export type ProductIdentity = {
 const COLLECTION_LABELS: Record<string, string> = {
   "country-london-paris": "Country London Paris",
   "willie-winkie": "Willie Winkie",
-  oliver: "Оливер",
+  oliver: "Oliver",
   oxford: "Oxford",
-  monchelsea: "Мончелси",
-  provence: "Прованс",
+  monchelsea: "Monchelsea",
+  provence: "Provence",
   "princess-rose": "Princess Rose",
-  greenwich: "Гринвич",
+  greenwich: "Greenwich",
 }
 
 type SeedRow = {
@@ -83,8 +83,15 @@ type BoardProduct = {
 }
 
 function formatDimensions(d?: SeedRow["dimensions_normalized"]): string | null {
-  if (!d?.height_mm && !d?.width_mm && !d?.depth_mm) return null
-  const parts = [d.height_mm, d.width_mm, d.depth_mm].filter((x) => x != null)
+  if (!d) return null
+  const parts: string[] = []
+  // Buyer order: height → width → depth. Zeros are unknown, not sizes.
+  for (const key of ["height_mm", "width_mm", "depth_mm"] as const) {
+    const v = d[key]
+    if (typeof v === "number" && Number.isFinite(v) && v > 0) {
+      parts.push(String(v))
+    }
+  }
   if (!parts.length) return null
   return `${parts.join("×")} мм`
 }

@@ -1,0 +1,9 @@
+{
+  "enforcement_mode": "sole_owner_with_known_ui_bypass",
+  "sole_owner": "Dokploy",
+  "manual_mutation_allowed": false,
+  "direct_mutation_path_open": true,
+  "claim_bypass_closed": false,
+  "dokploy_ui_residual": true,
+  "break_glass_required": true
+}

@@ -1,0 +1,8 @@
+{
+  "image": "docker.io/library/node@sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "privileged": false,
+  "docker_socket_mount": false,
+  "writable_repo_mount": false,
+  "read_only": true,
+  "network_mode": "none"
+}

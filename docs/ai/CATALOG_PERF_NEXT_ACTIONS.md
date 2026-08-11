@@ -1,50 +1,31 @@
-# Catalog perf - next actions (execute order)
+# Catalog perf - next actions
 
 **Date:** 2026-07-12  
-**Repo:** `/Users/leonidmbp/Documents/projects/furniture-commerce`  
-**Codex after W3g:** DEFER W3e/W3f/W3h until Prod H4 + PR hygiene + new bottleneck evidence
+**Local cold-load optimization:** DONE (loop stopped)
 
-## Order (do in sequence)
+## Landed on main
+| PR | What |
+|----|------|
+| #24 | Catalog-perf package (browse API, H4, W3g) |
+| #26 | W3e compact browse VM |
+| #27 | Browse price-split latency |
+| #29 | SSR hero-only catalog extras |
+| #30 | PDP display-group lean fetch |
+| #31 | RoomSet `?view=storefront` lean |
 
-| # | Action | Owner | Status |
-|---|--------|-------|--------|
-| 1 | Commit H4 runbook + plan pointer + `.env.example` warning (scoped) | Agent | NOW |
-| 2 | Split catalog-perf onto `main` via cherry-pick | Agent | **BLOCKED** - conflicts on first commit (`route.ts`, catalog pages, `kids.ts`); needs dedicated resolve pass |
-| 3 | Open new PR / comment on #15 | Agent | blocked by #2 |
-| 4 | Prod H4 on production Medusa | Operator | WAIT (needs prod host) |
-| 5 | W3e / W3f / W3h | - | DEFER |
+## Local measured (worktree production build on :3002 + Medusa :9000)
+| Surface | Result |
+|---------|--------|
+| catalog-products | ~0.13s / ~222KB |
+| `/catalog` | ~310KB, 99 imgs, ~0.24s total |
+| `/kids/catalog` | ~127KB, 39 imgs |
+| PDP (display_group) | TTFB ~0.09–1.3s (was multi-10s) |
 
-## Split blocker (2026-07-12)
-
-Cherry-pick `3defdf9` onto `origin/main` (`4d12dda`) conflicted in:
-
-- `apps/backend/src/api/store/products/route.ts`
-- `apps/backend/src/api/store/room-sets/[slug]/route.ts`
-- `apps/storefront/src/app/catalog/page.tsx`
-- `apps/storefront/src/app/kids/catalog/page.tsx`
-- `apps/storefront/src/lib/kids.ts` (large)
-
-Worktree aborted; no force-push. Backup ref: `refs/backup/pre-catalog-perf-split-*`.
-
-**Next for split:** resolve conflicts in a dedicated session (or rebase/replay onto updated `main` after Willie lands), then resume cherry-pick of `866f537`…`f560329` + runbook.
-
-## Split commit set (slice A)
-
-1. `3defdf9` lean API / client filters / media gates  
-2. `866f537` slim browse DTO + card image contract  
-3. `785c08b` Sharp generate + env-gate heroes  
-4. `c8eaccc` wave-3 browse fields + coverage/baseline scripts  
-5. `f560329` W3g below-fold extras deferral  
-6. (+ runbook commit if not already in history)
+## Operator-only remaining
+1. **Prod H4:** generate → deploy derivatives → `h4-coverage-gate --http` → bake `NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES=1`
+2. Re-measure RoomSet lean on **populated** `room_sets`
+3. Prod smoke: catalog ids / kids / facets / heroes / PDP / rooms
 
 ## Do not
-
-- Force-push or rewrite #15 history in this pass  
-- Bake prod `NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES=1` without step 4  
-- Start W3e/W3f/W3h without new evidence  
-- `git add -A` / touch unrelated dirty tree
-
-## Stop if
-
-- Cherry-pick onto `main` conflicts beyond quick resolve → abort split, report  
-- Prod host unknown → leave step 4 blocked with exact commands from `docs/operator/catalog-card-derivatives-release.md`
+- Restart speculative local levers without new bottleneck evidence
+- Bake prod H4 flag without coverage gate

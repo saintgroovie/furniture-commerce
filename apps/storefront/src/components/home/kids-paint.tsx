@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { kidsHome, roomsCopy } from "@/lib/woodright-copy"
 import { formatRuInline } from "@/lib/format-ru-copy"
+import { safeInternalHref } from "@/lib/safe-internal-href"
 import { kidsMedia } from "./kids-media"
 
 /**
@@ -20,7 +21,10 @@ export function KidsPaint({ hrefByHandle }: { hrefByHandle: Map<string, string> 
         </div>
         <ul className="hp-paint-grid">
           {kidsMedia.paint.map((item, i) => {
-            const href = hrefByHandle.get(item.handle) ?? "/kids/catalog"
+            const href = safeInternalHref(
+              hrefByHandle.get(item.handle),
+              "/kids/catalog"
+            )
             return (
               <li key={item.handle} style={{ "--reveal-i": i } as React.CSSProperties}>
                 <Link href={href} className="hp-paint-item" aria-label={item.alt}>

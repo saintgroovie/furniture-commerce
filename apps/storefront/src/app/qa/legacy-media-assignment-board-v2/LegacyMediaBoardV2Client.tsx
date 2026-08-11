@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react"
 import type {
   InvItem,
   CandidateEntry,
@@ -35,9 +35,11 @@ import {
 import { ProductWorkspace } from "./ProductWorkspace"
 import { ExportToolbar } from "./ExportToolbar"
 import {
+  getV2PersistedServerSnapshot,
   loadV2PersistedState,
   mergeV2ProductStates,
   saveV2PersistedState,
+  subscribeV2PersistedState,
 } from "./legacy-board-v2-persistence"
 import {
   addToGallery as syncAddToGallery,
@@ -56,9 +58,11 @@ import {
 import { V2_BOARD_BUILD, V2_BOARD_BUILD_LABEL } from "./legacy-board-v2-build"
 import type { OrphanP0OverlayCandidate, OrphanP0OverlayData } from "./orphan-p0-overlay-types"
 import {
+  getOrphanP0OverlayServerSnapshot,
   loadOrphanP0OverlayState,
   makeEmptyOrphanP0OverlayState,
   saveOrphanP0OverlayState,
+  subscribeOrphanP0OverlayState,
 } from "./orphan-p0-overlay-persistence"
 import { OrphanP0OverlayPanel, downloadOrphanP0OverlayExport } from "./OrphanP0OverlayPanel"
 import { OrphanP0OverlayMissingPanel } from "./OrphanP0OverlayMissingPanel"
@@ -66,7 +70,6 @@ import {
   isOrphanP0OverlayMissingArtifact,
   type OrphanP0OverlayMissingArtifact,
 } from "./orphan-p0-overlay-missing-types"
-import type { V2ShellBridgeSnapshot } from "./legacy-board-v2-shell-bridge"
 
 const V2_API_BASE = "/qa/legacy-media-assignment-board-v2/api"
 const ORPHAN_P0_OVERLAY_ID = "orphan-p0-top50"
@@ -108,26 +111,19 @@ function makeEmptyProductState(handle: string, variantKey: string): V2ProductSta
 export function LegacyMediaBoardV2Client({
   initialHandle = null,
   overlayMode = null,
-  embeddedInShell = false,
-  highlightInventoryId = null,
-  navFrom = null,
-  legacyQuery = null,
-  onShellBridgeSnapshot = null,
 }: {
   initialHandle?: string | null
   overlayMode?: string | null
-  /** Media Ops shell: hide duplicate title/badge; fit parent flex column. */
-  embeddedInShell?: boolean
-  highlightInventoryId?: string | null
-  navFrom?: string | null
-  legacyQuery?: string | null
-  /** Called when embedded; media-ops adapter builds export bridge externally. */
-  onShellBridgeSnapshot?: ((snapshot: V2ShellBridgeSnapshot | null) => void) | null
 }) {
   const isOrphanP0Overlay = overlayMode === ORPHAN_P0_OVERLAY_ID
   // --- Data loading state ---
-  const [status, setStatus] = useState<V2LoadStatus>("idle")
+  const [status, setStatus] = useState<V2LoadStatus>("loading")
   const [error, setError] = useState<string | null>(null)
+  const [catalogDegraded, setCatalogDegraded] = useState<{
+    missing_file?: string
+    catalog_source?: string
+    fallback_handles_source?: string
+  } | null>(null)
   const [products, setProducts] = useState<ProductRow[]>([])
   const [invById, setInvById] = useState<Map<string, InvItem>>(new Map())
   const [candidatesByHandle, setCandidatesByHandle] = useState<Map<string, string[]>>(new Map())
@@ -135,7 +131,20 @@ export function LegacyMediaBoardV2Client({
   const [recoveryById, setRecoveryById] = useState<Map<string, LegacyMediaPreviewRecoveryEntry>>(new Map())
 
   // --- UI selection state ---
-  const [selectedHandle, setSelectedHandle] = useState<string | null>(null)
+  // Persisted LS via useSyncExternalStore (server snapshot null) — no LS reads in useState
+  // initializers, which would diverge SSR vs first client paint.
+  const persistedV2 = useSyncExternalStore(
+    subscribeV2PersistedState,
+    loadV2PersistedState,
+    getV2PersistedServerSnapshot
+  )
+  const persistedOrphan = useSyncExternalStore(
+    subscribeOrphanP0OverlayState,
+    loadOrphanP0OverlayState,
+    getOrphanP0OverlayServerSnapshot
+  )
+
+  const [selectedHandle, setSelectedHandle] = useState<string | null>(initialHandle ?? null)
   const [search, setSearch] = useState("")
 
   // --- Assignment state (persisted via localStorage Commit 4) ---
@@ -144,57 +153,44 @@ export function LegacyMediaBoardV2Client({
   // --- Persistence state ---
   const [savedAt, setSavedAt] = useState<string | null>(null)
   const hasSavedOnceRef = useRef(false)
-  const hasHydratedRef = useRef(false)
+  const [v2Bootstrapped, setV2Bootstrapped] = useState(false)
+
+  if (!v2Bootstrapped && overlayMode !== ORPHAN_P0_OVERLAY_ID && persistedV2) {
+    setV2Bootstrapped(true)
+    if (!initialHandle) setSelectedHandle(persistedV2.selectedHandle ?? null)
+    setProductStates(persistedV2.productStates ?? {})
+    setSavedAt(persistedV2.savedAt ?? null)
+  }
 
   // --- Orphan P0 overlay (read-only routing; isolated localStorage) ---
   const [overlayData, setOverlayData] = useState<OrphanP0OverlayData | null>(null)
   const [overlayLoadStatus, setOverlayLoadStatus] = useState<
     "idle" | "loading" | "loaded" | "missing" | "error"
-  >("idle")
+  >(() => (overlayMode === ORPHAN_P0_OVERLAY_ID ? "loading" : "idle"))
   const [overlayError, setOverlayError] = useState<string | null>(null)
   const [overlayMissing, setOverlayMissing] = useState<OrphanP0OverlayMissingArtifact | null>(null)
   const [overlayState, setOverlayState] = useState(makeEmptyOrphanP0OverlayState)
   const [overlayFilter, setOverlayFilter] = useState("")
   const [focusedOverlayPackIndex, setFocusedOverlayPackIndex] = useState<number | null>(null)
-  const overlayHydratedRef = useRef(false)
+  const [orphanBootstrapped, setOrphanBootstrapped] = useState(false)
 
+  if (overlayMode === ORPHAN_P0_OVERLAY_ID && !orphanBootstrapped && persistedOrphan) {
+    setOrphanBootstrapped(true)
+    setOverlayState(persistedOrphan)
+    setFocusedOverlayPackIndex(persistedOrphan.focusedPackIndex ?? null)
+    if (!initialHandle) setSelectedHandle(persistedOrphan.focusedCatalogHandle ?? null)
+  }
   // --- Lifted pool filter state (Commit 3) ---
   const [poolFilter, setPoolFilter] = useState<V2RoleFilter>("all")
-
-  // Reset filter when selected handle changes
-  useEffect(() => {
+  const [poolFilterHandle, setPoolFilterHandle] = useState(selectedHandle)
+  if (selectedHandle !== poolFilterHandle) {
+    setPoolFilterHandle(selectedHandle)
     setPoolFilter("all")
-  }, [selectedHandle])
-
-  // --- Late hydrate: merge disk state without clobbering in-memory operator edits ---
-  useEffect(() => {
-    if (hasHydratedRef.current || isOrphanP0Overlay) return
-    hasHydratedRef.current = true
-    const persisted = loadV2PersistedState()
-    if (!persisted) return
-    setProductStates((prev) => mergeV2ProductStates(persisted.productStates, prev))
-    setSelectedHandle((prev) => prev ?? persisted.selectedHandle)
-    setSavedAt((prev) => prev ?? persisted.savedAt)
-  }, [isOrphanP0Overlay])
-
-  useEffect(() => {
-    if (!isOrphanP0Overlay || overlayHydratedRef.current) return
-    overlayHydratedRef.current = true
-    const persisted = loadOrphanP0OverlayState()
-    if (!persisted) return
-    setOverlayState(persisted)
-    setFocusedOverlayPackIndex(persisted.focusedPackIndex)
-    if (persisted.focusedCatalogHandle) {
-      setSelectedHandle(persisted.focusedCatalogHandle)
-    }
-  }, [isOrphanP0Overlay])
+  }
 
   useEffect(() => {
     if (!isOrphanP0Overlay) return
     let cancelled = false
-    setOverlayLoadStatus("loading")
-    setOverlayError(null)
-    setOverlayMissing(null)
     void (async () => {
       try {
         const res = await fetch(`${V2_API_BASE}/orphan-p0-overlay`)
@@ -244,8 +240,6 @@ export function LegacyMediaBoardV2Client({
   // --- Data loading ---
   useEffect(() => {
     let cancelled = false
-    setStatus("loading")
-    setError(null)
 
     async function load() {
       try {
@@ -263,7 +257,13 @@ export function LegacyMediaBoardV2Client({
 
         const invJson = (await invRes.json()) as { items?: InvItem[] }
         const candidatesJson = (await candidatesRes.json()) as { entries?: CandidateEntry[] }
-        const productsJson = (await productsRes.json()) as { products?: ProductRow[] }
+        const productsJson = (await productsRes.json()) as {
+          products?: ProductRow[]
+          degraded?: boolean
+          missing_file?: string
+          catalog_source?: string
+          fallback_handles_source?: string
+        }
         const recoveryJson = (await recoveryRes.json()) as { entries?: Record<string, LegacyMediaPreviewRecoveryEntry> }
 
         if (cancelled) return
@@ -293,6 +293,15 @@ export function LegacyMediaBoardV2Client({
         }
 
         setProducts(prods)
+        setCatalogDegraded(
+          productsJson.degraded
+            ? {
+                missing_file: productsJson.missing_file,
+                catalog_source: productsJson.catalog_source,
+                fallback_handles_source: productsJson.fallback_handles_source,
+              }
+            : null
+        )
         setInvById(byId)
         setCandidatesByHandle(byHandle)
         setEntryByInventoryId(entryById)
@@ -366,27 +375,27 @@ export function LegacyMediaBoardV2Client({
 
   const isSharedColorlessTab = activeVariantKey === NEEDS_COLOR_VARIANT_KEY
 
-  // When product or visible tabs change, ensure active tab is visible (milk default)
-  useEffect(() => {
-    if (!selectedHandle || colorVariants.length === 0) return
+  // Keep active tab visible when product/tabs change (render-time adjust).
+  if (selectedHandle && colorVariants.length > 0) {
     const state = productStates[selectedHandle]
     const saved = state?.activeVariantKey
     const visible =
       saved &&
       saved !== LEGACY_ALL_VARIANT_KEY &&
       colorVariants.some((v) => v.variantKey === saved)
-    if (visible) return
-    const next = pickDefaultVariantKey(colorVariants, state ?? null)
-    if (saved === next) return
-    setProductStates((prev) => {
-      const existing = prev[selectedHandle] ?? makeEmptyProductState(selectedHandle, next)
-      if (existing.activeVariantKey === next) return prev
-      return {
-        ...prev,
-        [selectedHandle]: { ...existing, activeVariantKey: next },
+    if (!visible) {
+      const next = pickDefaultVariantKey(colorVariants, state ?? null)
+      if (saved !== next) {
+        const existing = state ?? makeEmptyProductState(selectedHandle, next)
+        if (existing.activeVariantKey !== next) {
+          setProductStates((prev) => ({
+            ...prev,
+            [selectedHandle]: { ...existing, activeVariantKey: next },
+          }))
+        }
       }
-    })
-  }, [selectedHandle, colorVariants, productStates])
+    }
+  }
 
   // --- Derived: current product assignment state ---
   const currentProductState = useMemo<V2ProductState | null>(() => {
@@ -542,7 +551,7 @@ export function LegacyMediaBoardV2Client({
       const ids = candidatesByHandle.get(selectedHandle) ?? []
       const state = productStates[selectedHandle] ?? null
       const plan = planAddVariant(label, selectedHandle, ids, invById, state)
-      if (!plan.ok) {
+      if (plan.ok === false) {
         if (plan.reason === "duplicate") {
           return {
             ok: false,
@@ -627,54 +636,7 @@ export function LegacyMediaBoardV2Client({
     setSelectedHandle(null)
     setSavedAt(null)
     hasSavedOnceRef.current = false
-    hasHydratedRef.current = false
   }, [])
-
-  const shellBridgeSnapshot = useMemo((): V2ShellBridgeSnapshot | null => {
-    if (!embeddedInShell || !onShellBridgeSnapshot) return null
-    return {
-      boardStatus: status === "error" ? "error" : status,
-      savedAt,
-      productStates,
-      invById,
-      products,
-      selectedHandle,
-      onReset: handleReset,
-    }
-  }, [
-    embeddedInShell,
-    onShellBridgeSnapshot,
-    status,
-    savedAt,
-    productStates,
-    invById,
-    products,
-    selectedHandle,
-    handleReset,
-  ])
-
-  useEffect(() => {
-    if (!embeddedInShell || !onShellBridgeSnapshot) return
-    onShellBridgeSnapshot(shellBridgeSnapshot)
-    return () => {
-      onShellBridgeSnapshot(null)
-    }
-  }, [embeddedInShell, onShellBridgeSnapshot, shellBridgeSnapshot])
-
-  useEffect(() => {
-    if (!highlightInventoryId || status !== "loaded") return
-    const id = highlightInventoryId
-    const timer = window.setTimeout(() => {
-      const escaped =
-        typeof CSS !== "undefined" && "escape" in CSS ? CSS.escape(id) : id.replace(/"/g, '\\"')
-      const el = document.querySelector(`[data-v2-pool-inventory-id="${escaped}"]`)
-      if (!el) return
-      el.scrollIntoView({ block: "center", behavior: "smooth" })
-      el.setAttribute("data-v2-highlight-pulse", "true")
-      window.setTimeout(() => el.removeAttribute("data-v2-highlight-pulse"), 2000)
-    }, 300)
-    return () => window.clearTimeout(timer)
-  }, [highlightInventoryId, status, selectedHandle])
 
   const overlayCatalogHandles = useMemo(() => {
     if (!overlayData) return new Set<string>()
@@ -732,10 +694,11 @@ export function LegacyMediaBoardV2Client({
     if (status === "loading") return "Загрузка inventory, candidates, products…"
     if (status === "loaded") {
       const base = `Загружено: ${products.length} продуктов · ${invById.size} inventory items · ${entryByInventoryId.size} candidate entries`
+      const degradedNote = catalogDegraded ? " · QA fallback catalog" : ""
       if (isOrphanP0Overlay && overlayData) {
-        return `${base} · Orphan P0 overlay: ${overlayData.validation.resolved_candidates} resolved / ${overlayData.validation.pending_unresolved} pending`
+        return `${base}${degradedNote} · Orphan P0 overlay: ${overlayData.validation.resolved_candidates} resolved / ${overlayData.validation.pending_unresolved} pending`
       }
-      return base
+      return `${base}${degradedNote}`
     }
     return null
   })()
@@ -744,40 +707,32 @@ export function LegacyMediaBoardV2Client({
     ? { ...styles.grid, gridTemplateColumns: "360px 200px 1fr 420px" as const }
     : styles.grid
 
-  const rootStyle = embeddedInShell
-    ? { ...styles.root, ...styles.rootEmbedded }
-    : styles.root
-
   return (
-    <div
-      style={rootStyle}
-      data-v2-embedded-in-shell={embeddedInShell ? "true" : "false"}
-      data-v2-highlight-inventory-id={highlightInventoryId || undefined}
-    >
-      {embeddedInShell && navFrom === "orphan" ? (
-        <div style={styles.breadcrumb} data-media-ops-assign-breadcrumb>
-          <a href="/qa/media-ops/inbox?tab=orphan" style={styles.breadcrumbLink}>
-            Inbox
-          </a>
-          <span style={styles.breadcrumbSep}>›</span>
-          <span>{selectedHandle || initialHandle || "Assign"}</span>
-        </div>
-      ) : null}
-
-      {/* Top bar — standalone route only (shell provides product header) */}
-      {!embeddedInShell ? (
-        <header style={styles.header}>
-          <h1 style={styles.title}>Legacy Media Assignment Board v2</h1>
-          <span style={styles.buildBadge} data-v2-board-build-visible title={V2_BOARD_BUILD}>
-            {V2_BOARD_BUILD_LABEL}
+    <div style={styles.root}>
+      {/* Top bar */}
+      <header style={styles.header}>
+        <h1 style={styles.title}>Legacy Media Assignment Board v2</h1>
+        <span style={styles.buildBadge} data-v2-board-build-visible title={V2_BOARD_BUILD}>
+          {V2_BOARD_BUILD_LABEL}
+        </span>
+        <span style={styles.badge}>dev · QA only · no Medusa writes</span>
+        {isOrphanP0Overlay && (
+          <span
+            style={{
+              fontSize: "11px",
+              fontWeight: 700,
+              background: "#fff3cd",
+              border: "1px solid #e6c200",
+              borderRadius: "4px",
+              padding: "2px 8px",
+              color: "#5a4200",
+            }}
+          >
+            Orphan P0 overlay · do_not_auto_apply
           </span>
-          <span style={styles.badge}>dev · QA only · no Medusa writes</span>
-          {isOrphanP0Overlay && (
-            <span style={styles.overlayBadge}>Orphan P0 overlay · do_not_auto_apply</span>
-          )}
-          {selectedHandle && <span style={styles.activeHandle}>{selectedHandle}</span>}
-        </header>
-      ) : null}
+        )}
+        {selectedHandle && <span style={styles.activeHandle}>{selectedHandle}</span>}
+      </header>
 
       {/* Status bar */}
       {status === "loading" && (
@@ -795,22 +750,19 @@ export function LegacyMediaBoardV2Client({
         </div>
       )}
       {status === "loaded" && (
-        <div style={{ ...styles.statusBar, ...styles.successBar }} data-v2-status-loaded>
-          {embeddedInShell ? (
-            <span style={styles.buildBadgeCompact} data-v2-board-build-visible title={V2_BOARD_BUILD}>
-              {V2_BOARD_BUILD_LABEL}
+        <div style={{ ...styles.statusBar, ...styles.successBar }}>{statusLine}</div>
+      )}
+      {catalogDegraded && status === "loaded" && (
+        <div style={{ ...styles.statusBar, ...styles.warningBar }}>
+          <strong>QA fallback catalog loaded;</strong>{" "}
+          <code>{catalogDegraded.missing_file ?? "data/normalized/seed-products.json"}</code> missing.
+          Not production Medusa catalog · do_not_auto_apply.
+          {catalogDegraded.fallback_handles_source && (
+            <span style={styles.warningMeta}>
+              {" "}
+              handles from: {catalogDegraded.fallback_handles_source}
             </span>
-          ) : null}
-          {embeddedInShell && legacyQuery === "v1-deprecated" ? (
-            <span style={styles.legacyNote}>v1 board deprecated — use Media Ops Assign</span>
-          ) : null}
-          {embeddedInShell && isOrphanP0Overlay ? (
-            <span style={styles.overlayBadge}>Orphan P0 overlay · do_not_auto_apply</span>
-          ) : null}
-          {embeddedInShell && selectedHandle ? (
-            <span style={styles.activeHandle}>{selectedHandle}</span>
-          ) : null}
-          <span style={{ flex: 1 }}>{statusLine}</span>
+          )}
         </div>
       )}
       {isOrphanP0Overlay && overlayLoadStatus === "missing" && (
@@ -826,7 +778,7 @@ export function LegacyMediaBoardV2Client({
       )}
 
       {/* Export / persistence toolbar */}
-      {!isOrphanP0Overlay && !embeddedInShell && (
+      {!isOrphanP0Overlay && (
         <ExportToolbar
           productStates={productStates}
           invById={invById}
@@ -834,7 +786,6 @@ export function LegacyMediaBoardV2Client({
           savedAt={savedAt}
           selectedHandle={selectedHandle}
           onReset={handleReset}
-          embeddedInShell={embeddedInShell}
         />
       )}
 
@@ -993,57 +944,6 @@ const styles = {
     background: "#f8f8f8",
     overflow: "hidden",
   },
-  rootEmbedded: {
-    height: "100%",
-    minHeight: 0,
-    flex: 1,
-  },
-  breadcrumb: {
-    display: "flex",
-    alignItems: "center",
-    gap: "6px",
-    padding: "6px 16px",
-    fontSize: "12px",
-    color: "#555",
-    background: "#fff",
-    borderBottom: "1px solid #e8e8e8",
-    flexShrink: 0,
-  },
-  breadcrumbLink: {
-    color: "#1a3a6e",
-    textDecoration: "none",
-    fontWeight: 600,
-  },
-  breadcrumbSep: {
-    color: "#aaa",
-  },
-  buildBadgeCompact: {
-    fontSize: "10px",
-    fontWeight: 700,
-    background: "#1a3a6e",
-    borderRadius: "4px",
-    padding: "2px 6px",
-    color: "#fff",
-    flexShrink: 0,
-  },
-  legacyNote: {
-    fontSize: "11px",
-    color: "#7a5a00",
-    background: "#fff8e6",
-    padding: "2px 8px",
-    borderRadius: "4px",
-    flexShrink: 0,
-  },
-  overlayBadge: {
-    fontSize: "11px",
-    fontWeight: 700,
-    background: "#fff3cd",
-    border: "1px solid #e6c200",
-    borderRadius: "4px",
-    padding: "2px 8px",
-    color: "#5a4200",
-    flexShrink: 0,
-  },
   header: {
     display: "flex",
     alignItems: "center",
@@ -1108,6 +1008,16 @@ const styles = {
     color: "#7a0000",
     flexDirection: "column" as const,
     alignItems: "flex-start",
+  },
+  warningBar: {
+    background: "#fff8e6",
+    borderBottom: "1px solid #e6c200",
+    color: "#5a4200",
+    flexWrap: "wrap" as const,
+  },
+  warningMeta: {
+    fontSize: "12px",
+    color: "#7a5a00",
   },
   errorHint: {
     fontSize: "12px",

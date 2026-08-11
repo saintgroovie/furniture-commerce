@@ -10,11 +10,17 @@ import {
 export const LEGACY_MEDIA_QA_PREVIEW_ROUTE = "/qa/legacy-media-assignment-board/preview"
 
 export function medusaStaticOrigin(): string {
-  const u =
-    (typeof process !== "undefined" && process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL) ||
-    (typeof process !== "undefined" && process.env.MEDUSA_BACKEND_URL) ||
-    "http://localhost:9000"
-  return String(u).replace(/\/$/, "")
+  // Same-origin only — never emit public/local :9000 into QA client previews.
+  // Kept as empty string for any caller that still concatenates `${origin}/…`.
+  return ""
+}
+
+/** QA preview URL via storefront `/product-static` rewrite (not raw Medusa :9000). */
+export function medusaProductStaticUrl(staticRelOrPath: string): string {
+  const n = normPath(staticRelOrPath)
+    .replace(/^apps\/backend\/static\//, "")
+    .replace(/^static\//, "")
+  return `/product-static/${n}`
 }
 
 export type LegacyBoardClientPreviewInput = {
@@ -69,8 +75,7 @@ export function qaMedusaProductsStaticRel(dataRel: string): string | null {
 }
 
 function medusaStaticUrlFromRel(staticRel: string): string {
-  const suffix = normPath(staticRel).replace(/^apps\/backend\/static\//, "")
-  return `${medusaStaticOrigin()}/static/${suffix}`
+  return medusaProductStaticUrl(staticRel)
 }
 
 function previewFromRepoRel(
@@ -94,7 +99,7 @@ function previewFromRepoRel(
 
   if (primary.startsWith("static/")) {
     return {
-      url: `${medusaStaticOrigin()}/${primary}`,
+      url: medusaProductStaticUrl(primary),
       status: "backend_static_url",
       reason: null,
       recoveredPreview: recovered,
@@ -115,7 +120,7 @@ function previewFromRepoRel(
   const medusaProducts = qaMedusaProductsStaticRel(primary)
   if (medusaProducts) {
     return {
-      url: `${medusaStaticOrigin()}/static/${medusaProducts}`,
+      url: medusaProductStaticUrl(`static/${medusaProducts}`),
       status: recovered ? "recovered_backend_static" : "qa_medusa_static_fallback",
       reason: recovered
         ? null
@@ -154,6 +159,18 @@ export function resolveLegacyBoardClientPreview(
   recovery?: LegacyMediaPreviewRecoveryEntry | null
 ): LegacyBoardClientPreview {
   if (inv.url && (inv.url.startsWith("http://") || inv.url.startsWith("https://"))) {
+    try {
+      const u = new URL(inv.url)
+      if (u.pathname.startsWith("/static/")) {
+        return {
+          url: `/product-static${u.pathname.slice("/static".length)}${u.search}${u.hash}`,
+          status: "backend_static_url",
+          reason: null,
+        }
+      }
+    } catch {
+      /* keep remote_http below */
+    }
     return { url: inv.url, status: "remote_http", reason: null }
   }
 
@@ -173,7 +190,7 @@ export function resolveLegacyBoardClientPreview(
 
   if (primary.startsWith("/static/")) {
     return {
-      url: `${medusaStaticOrigin()}${primary}`,
+      url: medusaProductStaticUrl(primary),
       status: "backend_static_url",
       reason: null,
     }

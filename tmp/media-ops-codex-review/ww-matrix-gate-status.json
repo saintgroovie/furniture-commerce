@@ -1,8 +1,0 @@
-{
-  "generated_at": "2026-06-18T20:47:17.443Z",
-  "csv_path": "/Users/leonidmbp/Documents/projects/furniture-commerce/tmp/willie-winkie-flow-a-matrix-template/vv-painting-sku-matrix-filled.csv",
-  "rows": 28,
-  "rows_with_todo_operator": 28,
-  "gate_open": false,
-  "message": "WW media/catalog blocked: 28 row(s) still contain TODO_OPERATOR"
-}

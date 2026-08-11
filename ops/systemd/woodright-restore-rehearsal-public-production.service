@@ -1,0 +1,27 @@
+[Unit]
+Description=Woodright public_production disposable restore rehearsal (owner-authorized oneshot)
+Documentation=file:///srv/woodright/docs/operator/public-production-monitor-backup-recovery.md
+After=docker.service network-online.target
+Wants=network-online.target
+# No companion timer - run only in an explicit owner-authorized cycle.
+# Repository template only - do NOT enable automatically on merge.
+
+[Service]
+Type=oneshot
+User=root
+UMask=0077
+Nice=10
+TimeoutStartSec=7200
+TimeoutStopSec=300
+# No Restart=
+Environment=WOODRIGHT_RESTORE_REPORT_DIR=/srv/woodright/reports/public_production/restore-rehearsal
+# Manifest path must be provided via drop-in or systemctl --property / EnvironmentFile
+# Example:
+#   Environment=WOODRIGHT_RESTORE_MANIFEST=/srv/woodright/backups/automated/public-production/manifests/recovery-point-....json
+ExecStart=/bin/bash -c 'test -n "$WOODRIGHT_RESTORE_MANIFEST" || { echo "WOODRIGHT_RESTORE_MANIFEST required" >&2; exit 2; }; exec /srv/woodright/ops/backup/woodright-public-production-restore-rehearsal.sh --environment public_production --manifest "$WOODRIGHT_RESTORE_MANIFEST"'
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=woodright-restore-rehearsal-public-production
+
+[Install]
+WantedBy=multi-user.target

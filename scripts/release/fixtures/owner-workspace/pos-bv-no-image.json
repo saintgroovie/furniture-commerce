@@ -1,0 +1,12 @@
+{
+  "gate": "BV",
+  "rows": [
+    {
+      "confirmed_no_image": true,
+      "images": [],
+      "auto_defer": true,
+      "expected_auto_defer": true,
+      "defer_confirms_fields": false
+    }
+  ]
+}

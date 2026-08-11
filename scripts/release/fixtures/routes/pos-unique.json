@@ -1,0 +1,15 @@
+{
+  "public_storefront_count": 1,
+  "domains": [
+    {
+      "name": "woodright-demo.ru",
+      "storefront_targets": [
+        "woodright-staging-storefront:3002"
+      ],
+      "backend_targets": [
+        "woodright-staging-backend:9000"
+      ],
+      "candidate_has_public_route": false
+    }
+  ]
+}
