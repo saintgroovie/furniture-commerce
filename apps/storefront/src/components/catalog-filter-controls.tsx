@@ -553,7 +553,7 @@ export function CatalogFilterControls({
             >
               <span>Все</span>
               <span className="catalog-filter-count">
-                {facets.collections.reduce((sum, opt) => sum + opt.count, 0)}
+                {facets.collectionAllCount}
               </span>
             </Link>
             {facets.collections.map((opt) => {
@@ -601,7 +601,7 @@ export function CatalogFilterControls({
             >
               <span>Все</span>
               <span className="catalog-filter-count">
-                {facets.categories.reduce((sum, opt) => sum + opt.count, 0)}
+                {facets.categoryAllCount}
               </span>
             </Link>
             {facets.categories.map((opt) => {

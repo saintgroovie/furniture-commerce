@@ -27,7 +27,7 @@ export function SiteFooter({
       className={`site-footer${snap ? " is-kids-snap" : ""}`}
       data-section={visualKids ? "kids" : "main"}
     >
-      <div className="container footer-inner">
+      <div className="footer-inner">
         <div className="footer-columns">
           <div className="footer-column footer-brand">
             <div className="footer-brand-copy">

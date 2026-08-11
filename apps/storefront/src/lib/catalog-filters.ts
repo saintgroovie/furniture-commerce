@@ -1,4 +1,5 @@
 import type { DisplayEntry } from "./display-group"
+import { groupProductsForDisplay } from "./display-group"
 import { getPrice } from "./format"
 import { getCollectionLabel } from "./product-metadata"
 
@@ -87,6 +88,14 @@ export type CatalogFacets = {
   types: CatalogFacetOption[]
   categories: CatalogFacetOption[]
   collections: CatalogFacetOption[]
+  /**
+   * Buyer-visible card count for the category self-excluding pool
+   * (same unit as «Найдено» / `groupProductsForDisplay`).
+   * Used by the «Все» control - not `sum(option.count)`.
+   */
+  categoryAllCount: number
+  /** Same contract as `categoryAllCount` for the collection facet group. */
+  collectionAllCount: number
   priceRange: { min: number; max: number } | null
 }
 
@@ -243,13 +252,17 @@ export function applyCatalogFilters(
   )
 }
 
-function countByKey(
+/**
+ * Facet option counts in the same unit as «Найдено»: one per display card
+ * after `display_group` collapse. Raw SKU counting inflated «Все» vs heading.
+ */
+function countDisplayEntriesByKey(
   products: Record<string, unknown>[],
   getKey: (p: Record<string, unknown>) => string | null
 ): Map<string, number> {
   const counts = new Map<string, number>()
-  for (const p of products) {
-    const key = getKey(p)
+  for (const entry of groupProductsForDisplay(products)) {
+    const key = getKey(entry.product)
     if (!key) continue
     counts.set(key, (counts.get(key) ?? 0) + 1)
   }
@@ -339,10 +352,19 @@ function facetsFromPools(
       count: currentTypeCounts.get(value) ?? 0,
     }))
 
-  const categoryCounts = countByKey(products, getProductCategoryKey)
-  const currentCategoryCounts = countByKey(pools.category, getProductCategoryKey)
-  const collectionCounts = countByKey(products, getCollectionFilterKey)
-  const currentCollectionCounts = countByKey(
+  const categoryCounts = countDisplayEntriesByKey(
+    products,
+    getProductCategoryKey
+  )
+  const currentCategoryCounts = countDisplayEntriesByKey(
+    pools.category,
+    getProductCategoryKey
+  )
+  const collectionCounts = countDisplayEntriesByKey(
+    products,
+    getCollectionFilterKey
+  )
+  const currentCollectionCounts = countDisplayEntriesByKey(
     pools.collection,
     getCollectionFilterKey
   )
@@ -367,6 +389,8 @@ function facetsFromPools(
       getCollectionFilterLabel,
       currentCollectionCounts
     ),
+    categoryAllCount: groupProductsForDisplay(pools.category).length,
+    collectionAllCount: groupProductsForDisplay(pools.collection).length,
     priceRange,
   }
 }

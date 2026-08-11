@@ -18,7 +18,14 @@ export function CopyLines({ lines, className, style, as: Tag = "p", role }: Prop
     <Comp className={className} style={style} role={role}>
       {parts.map((line, index) => (
         <Fragment key={`${index}:${line.slice(0, 24)}`}>
-          {index > 0 ? <br /> : null}
+          {/* Real text-node boundary so textContent/innerText/a11y do not glue
+              adjacent meaning lines across <br /> (e.g. отделка + Ремесленную). */}
+          {index > 0 ? (
+            <>
+              {"\n"}
+              <br />
+            </>
+          ) : null}
           {formatRuInline(line)}
         </Fragment>
       ))}
