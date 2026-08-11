@@ -1,0 +1,49 @@
+---
+description: Mutation execution serialization - foreground completion gates (Scenario B class)
+alwaysApply: true
+---
+
+# Mutation execution serialization (Woodright)
+
+Complements `foreground-only-execution.mdc`. Precedence / Codex table: `woodright-core.mdc`.
+
+**Incident class (Scenario B):** `AUTHORIZED_MUTATION_PROCESS_OUTLIVED_FOREGROUND_CONTROL_AND_RACED_NEXT_PHASE`  
+Not an “unknown external actor”. Not broad Docker prune.
+
+## Lifecycle (required for mutation phases)
+
+`NOT_STARTED` → `RUNNING` → `COMPLETED_SUCCESSFULLY | FAILED | ABORTED | COMPLETION_UNKNOWN`
+
+Use `ops/lib/woodright-mutation-process-lifecycle.sh` when a scripted/local wrapper can journal phase state.
+
+## Hard bans for mutation execution
+
+- Do not background mutation shells (`&`, `nohup`, `tmux`, detached SSH, Cursor “run in background” for mutators).
+- Do not treat SSH client return / Broken pipe / exit `255` / timeout / wrapper death as mutation **success** or ordinary **failure**.
+- Those cases are `COMPLETION_UNKNOWN` until bounded read-only reconciliation proves termination **and** outcome.
+
+## Phase-advance gate
+
+Before verifier/relock/next mutation that depends on a prior mutation:
+
+1. `PREVIOUS_MUTATION_PROCESS_TERMINATED = true`
+2. `REMOTE_MUTATION_COMPLETION_STATUS_KNOWN = true` (not `COMPLETION_UNKNOWN`)
+
+Else **fail closed**. Do not seal `deletes=0` / “phase not executed” while a mutator may still have run.
+
+## Retry gate
+
+Retry only after previous execution is proven not running **and** completion is known (or explicitly aborted after reconciliation). Never auto-retry on transport loss.
+
+## Locks
+
+Existing cutover/staging mutation locks remain authoritative for those resources.  
+Do **not** reuse cutover locks for unrelated ad-hoc cleanup. Do **not** invent a global lock for this class unless a separate owner packet requires it.
+
+## Evidence
+
+Journal when feasible: run ID, resource scope, started/completed UTC, host, PIDs, exit status, completion confidence. No secrets/private keys.
+
+## Status token
+
+If Cursor backgrounds a mutation or control is lost mid-mutation: Task status cannot be commit-ready `done` for that phase — use `blocked` / `partial` with honest completion-unknown disclosure (`blocked_by_cursor_background_prompt` when that is the cause).
