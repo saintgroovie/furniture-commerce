@@ -244,6 +244,8 @@ FILES=(
   ops/lib/woodright-ops-path-isolation.sh
   ops/lib/woodright-alert-contract.sh
   ops/lib/woodright-recovery-point.sh
+  ops/lib/woodright-memory-limits.sh
+  ops/lib/woodright-recreate-mode.sh
   ops/config/runtime-environments/public_demo.conf
   ops/config/runtime-environments/staging.conf
   ops/config/runtime-environments/production.conf
@@ -311,6 +313,8 @@ role_for() {
     ops/lib/woodright-compose-env-authority.sh) echo compose_env_authority ;;
     ops/lib/woodright-public-demo-metadata-authority.sh) echo public_demo_metadata_authority ;;
     ops/lib/woodright-owner-approved-release.sh) echo owner_approved_release ;;
+    ops/lib/woodright-memory-limits.sh) echo memory_limits ;;
+    ops/lib/woodright-recreate-mode.sh) echo recreate_mode ;;
     ops/release/reconcile-owner-approved-release.sh) echo owner_approved_release_reconciler ;;
     scripts/release/reconcile-public-image-pins.sh) echo pin_reconciler ;;
     scripts/release/restart-active-digest-only.sh) echo legacy_restart_guard ;;
@@ -711,6 +715,8 @@ def role_for(rel: str) -> str:
         "ops/lib/woodright-compose-env-authority.sh": "compose_env_authority",
         "ops/lib/woodright-public-demo-metadata-authority.sh": "public_demo_metadata_authority",
         "ops/lib/woodright-production-release-sha-reconcile.sh": "production_release_sha_reconcile_lib",
+        "ops/lib/woodright-memory-limits.sh": "memory_limits",
+        "ops/lib/woodright-recreate-mode.sh": "recreate_mode",
         "ops/release/install-environment-governance.sh": "installer",
         "ops/release/verify-environment-governance-bundle.sh": "bundle_verifier",
     }

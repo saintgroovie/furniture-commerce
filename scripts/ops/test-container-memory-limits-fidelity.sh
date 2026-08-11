@@ -154,3 +154,10 @@ rm -rf "$MOCKBIN"
 
 [[ "$FAIL" -eq 0 ]] && echo "RESULT: PASS" && exit 0
 echo "RESULT: FAIL count=$FAIL"; exit 1
+
+# P1: staging recreate helpers require explicit --mode (never default execute)
+grep -q 'woodright-recreate-mode.sh\|RECREATE_MODE_REQUIRED' "$BE" "$SF" \
+  && pass "recreate mode contract wired" || fail "recreate mode contract wired"
+grep -q 'MODE="execute"' "$SF" && fail "sf default execute" || pass "sf no default execute"
+grep -q -- '--mode execute' "$ROOT/ops/release/cutover-public-demo-pair.sh" \
+  && pass "pair execute mode to backend" || fail "pair execute mode to backend"

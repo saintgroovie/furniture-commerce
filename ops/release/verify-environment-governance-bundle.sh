@@ -82,6 +82,8 @@ REQUIRED_JSON='[
   "ops/lib/woodright-ops-path-isolation.sh",
   "ops/lib/woodright-alert-contract.sh",
   "ops/lib/woodright-recovery-point.sh",
+  "ops/lib/woodright-memory-limits.sh",
+  "ops/lib/woodright-recreate-mode.sh",
   "ops/config/runtime-environments/public_demo.conf",
   "ops/config/runtime-environments/staging.conf",
   "ops/config/runtime-environments/production.conf",
