@@ -1,0 +1,22 @@
+{
+  "schema_version": "1",
+  "runtime_role": "non_public_candidate",
+  "exposure": "private",
+  "environment_label": "non_public_candidate",
+  "canonical_domain": "none",
+  "canonical_api_origin": "none",
+  "release_sha": "f7f6760fca86ff503529da6696c04159e76ef9c8",
+  "backend_image_digest": "sha256:a69d12004cb78ff519b3159c5d482a6cc802ce678a4a94e5d0d947dc5ee06b76",
+  "storefront_image_digest": "sha256:fe9922df9430505b845f445f4610bb0d71e522c44fcb463d69e6c6a40e355a3d",
+  "backend_container": "woodright-production-backend",
+  "storefront_container": "woodright-production-storefront",
+  "database_identity": "woodright_production",
+  "database_identity_alias": "non_public_candidate_db",
+  "deployment_owner": "manual/unassigned",
+  "traefik_router": "none",
+  "traefik_service": "none",
+  "local_debug_endpoint": "127.0.0.1:9200",
+  "legacy_container_family": "woodright-production-*",
+  "generated_at": "2026-07-22T00:00:00.000Z",
+  "note": "fixture template only — live NON_PUBLIC_CANDIDATE is VM-generated"
+}

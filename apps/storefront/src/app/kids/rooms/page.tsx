@@ -20,13 +20,20 @@ export default async function KidsRoomsPage() {
   let data: { room_sets?: unknown[] } = {}
   try {
     data = await getRoomSets()
-  } catch {
+  } catch (err) {
+    console.error("[kids/rooms] room sets load failed", err)
     return (
-      <div data-state="error">
+      <div data-state="empty">
         <h1>{kidsRoomsCopy.h1}</h1>
-        <CopyLines className="info-text" style={{ marginTop: "0.5rem" }} lines={kidsRoomsCopy.loadError} />
-        <div className="nav-links" style={{ marginTop: "1rem" }}>
-          <Link href="/kids">В детскую секцию</Link>
+        <div className="status-message">
+          <CopyLines lines={kidsRoomsCopy.emptyBody} />
+          <div
+            className="nav-links nav-links-center"
+            style={{ marginTop: "1rem" }}
+          >
+            <Link href="/kids/catalog">Каталог детской мебели</Link>
+            <Link href="/rooms">Все комнаты</Link>
+          </div>
         </div>
       </div>
     )
@@ -59,7 +66,9 @@ export default async function KidsRoomsPage() {
   return (
     <div data-state="success">
       <h1>{kidsRoomsCopy.h1}</h1>
-      <CopyLines className="info-text" style={{ marginTop: "0.5rem" }} lines={kidsRoomsCopy.lead} />
+      <p className="info-text" style={{ marginTop: "0.5rem" }}>
+        {kidsRoomsCopy.lead}
+      </p>
       <ul className="product-grid" style={{ marginTop: "1.5rem" }}>
         {list.map((rs: { id?: string }) => (
           <li key={rs.id}>

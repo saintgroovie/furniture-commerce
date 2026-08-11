@@ -11,7 +11,7 @@
  * («Что дальше»). Группировка Woodright / Woodright Kids сохранена внутри
  * карточки как секции с прежними заголовками.
  */
-import { useEffect, useState } from "react"
+import { useEffect, useState, useSyncExternalStore } from "react"
 import Link from "next/link"
 import { getCartIdFromSession, clearCartIdFromSession } from "@/lib/cart/session"
 import { countCartItems, emitCartUpdated } from "@/lib/cart/cart-events"
@@ -20,7 +20,7 @@ import { formatRub } from "@/lib/format"
 import { resolveStorefrontProductImageSrc } from "@/lib/product-images"
 import { isKidsCartLineItem } from "@/lib/kids"
 import { ChecklistIcon } from "@/components/bespoke-help-icons"
-import { actions, cartCopy } from "@/lib/woodright-copy"
+import { actions, cartCopy, pdpCopy } from "@/lib/woodright-copy"
 import { CopyLines } from "@/components/copy-lines"
 import { flatCopy } from "@/lib/format-ru-copy"
 
@@ -55,18 +55,28 @@ function itemThumbSrc(item: Record<string, unknown>): string | null {
   return null
 }
 
-/** Спецификация исполнения («Цвет: Молочный», «Дерево: Дуб») из metadata. */
+/** Спецификация исполнения («Исполнение: …», «Цвет: Молочный») из metadata. */
 function itemExecutionSpecs(item: Record<string, unknown>): ExecutionSpec[] {
   const meta = (item.metadata ?? {}) as Record<string, unknown>
   const raw = meta.execution_specs
-  if (!Array.isArray(raw)) return []
-  return raw.filter(
+  const specs = (Array.isArray(raw) ? raw : []).filter(
     (s): s is ExecutionSpec =>
       s != null &&
       typeof s === "object" &&
       typeof (s as ExecutionSpec).label === "string" &&
       typeof (s as ExecutionSpec).value === "string"
   )
+  /* Материальное исполнение: сервер пишет авторитетный label в line metadata —
+     показываем его, даже если специфика PDP не попала в execution_specs. */
+  const materialLabel = meta.material_execution_label
+  if (
+    typeof materialLabel === "string" &&
+    materialLabel.trim() &&
+    !specs.some((s) => s.label === pdpCopy.materialTierLabel)
+  ) {
+    return [{ label: pdpCopy.materialTierLabel, value: materialLabel.trim() }, ...specs]
+  }
+  return specs
 }
 
 function itemArticle(item: Record<string, unknown>): string | null {
@@ -74,22 +84,42 @@ function itemArticle(item: Record<string, unknown>): string | null {
   return typeof sku === "string" && sku.trim() ? sku.trim() : null
 }
 
-export function CartSummary() {
+type CartSummaryProps = {
+  /** Server-known empty vs loading: avoids SSR «Загружаем корзину…» with no cookie. */
+  initialViewState?: Extract<CartViewState, "loading" | "empty">
+}
+
+function subscribeNoop() {
+  return () => {}
+}
+
+function useIsClient() {
+  return useSyncExternalStore(subscribeNoop, () => true, () => false)
+}
+
+function useSessionCartId() {
+  return useSyncExternalStore(
+    subscribeNoop,
+    () => getCartIdFromSession(),
+    () => null
+  )
+}
+
+export function CartSummary({ initialViewState = "loading" }: CartSummaryProps) {
+  const isClient = useIsClient()
+  const sessionCartId = useSessionCartId()
   const [cart, setCart] = useState<Record<string, unknown> | null>(null)
-  const [viewState, setViewState] = useState<CartViewState>("loading")
+  const [viewState, setViewState] = useState<CartViewState>(initialViewState)
   const [mutating, setMutating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const cartId = getCartIdFromSession()
-    if (!cartId) {
-      setCart(null)
-      setViewState("empty")
+    if (!isClient || !sessionCartId) {
       return
     }
 
     let cancelled = false
-    getCart(cartId)
+    getCart(sessionCartId)
       .then((data: { cart?: Record<string, unknown> }) => {
         if (cancelled) return
         const c = data.cart ?? null
@@ -116,7 +146,17 @@ export function CartSummary() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [isClient, sessionCartId])
+
+  const effectiveView: CartViewState = !isClient
+    ? initialViewState
+    : !sessionCartId
+      ? viewState === "error" || viewState === "invalid_state"
+        ? viewState
+        : "empty"
+      : viewState === "empty" && !cart
+        ? "loading"
+        : viewState
 
   async function handleRemove(cartId: string, lineId: string) {
     setMutating(true)
@@ -169,14 +209,14 @@ export function CartSummary() {
     )
   }
 
-  if (viewState === "loading") {
+  if (effectiveView === "loading") {
     return cardShell(
       "loading",
       <p className="info-text">Загружаем корзину…</p>
     )
   }
 
-  if (viewState === "error") {
+  if (effectiveView === "error") {
     return cardShell(
       "error",
       <>
@@ -188,7 +228,7 @@ export function CartSummary() {
     )
   }
 
-  if (viewState === "invalid_state") {
+  if (effectiveView === "invalid_state") {
     return cardShell(
       "invalid_state",
       <>

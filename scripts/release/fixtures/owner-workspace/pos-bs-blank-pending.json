@@ -1,0 +1,13 @@
+{
+  "gate": "BS",
+  "expect_blank_pending": true,
+  "sample_blank": {
+    "status": "pending"
+  },
+  "rows": [
+    {
+      "owner_decision": null,
+      "status": "pending"
+    }
+  ]
+}

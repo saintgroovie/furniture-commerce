@@ -1,4 +1,4 @@
-import { getProducts } from "@/lib/api/products"
+import { getCatalogProducts } from "@/lib/api/products"
 import {
   isMedusaCanonicalSeedDemoProduct,
   isProductInActiveCatalogScope,
@@ -12,12 +12,15 @@ export const BESPOKE_PRODUCT_TYPE = "BESPOKE"
  * Pure content-layer filter for /bespoke/catalog display.
  * Does NOT change any business logic or cart rules —
  * those are enforced by backend middleware.
+ *
+ * Uses lean `/store/catalog-products` (same classification field as fat list)
+ * to avoid ~1.4MB `/store/products` browse payload on this route.
  */
 export async function resolveBespokeProducts(): Promise<{
   ids: Set<string>
   products: Array<Record<string, unknown>>
 }> {
-  const data = await getProducts()
+  const data = await getCatalogProducts()
   const all = (data.products ?? []) as Array<Record<string, unknown>>
 
   const ids = new Set<string>()

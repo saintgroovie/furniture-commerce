@@ -1,0 +1,16 @@
+# Optional Traefik middleware: inject public runtime identity headers
+# Apply only on public routers (woodright-demo.ru / api.woodright-demo.ru).
+# Does not replace app env headers after image rollout; defense-in-depth only.
+# Never put secrets here. Update release SHA/digests when public cutover changes.
+#
+# Example (dynamic file under Dokploy Traefik): merge carefully with existing woodright-demo.yml.
+
+http:
+  middlewares:
+    woodright-public-runtime-identity:
+      headers:
+        customResponseHeaders:
+          X-Woodright-Runtime-Role: "public_demo"
+          X-Woodright-Exposure: "public"
+          # X-Woodright-Release-Sha: "<public-release-sha>"
+          X-Woodright-Database-Identity: "public_demo_db"

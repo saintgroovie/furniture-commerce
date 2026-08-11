@@ -3,39 +3,29 @@
   "version": "0.1.0",
   "private": true,
   "description": "Medusa backend for furniture ecommerce + bespoke",
-  "packageManager": "yarn@4.6.0",
+  "packageManager": "yarn@4.17.1",
   "scripts": {
-    "build": "medusa build && node scripts/link-admin-build.mjs",
-    "dev": "node scripts/ensure-admin-dev-stable.mjs && MEDUSA_RUNTIME_COMMAND=develop node scripts/ensure-admin-runtime-ready.mjs && MEDUSA_RUNTIME_COMMAND=develop medusa develop --types",
-    "dev:reset": "bash scripts/clean-admin-vite.sh && node scripts/ensure-admin-dev-stable.mjs && MEDUSA_RUNTIME_COMMAND=develop node scripts/ensure-admin-runtime-ready.mjs && MEDUSA_RUNTIME_COMMAND=develop medusa develop --types",
-    "test:admin-vite": "node --test src/admin/vite/finalize-vite-cache.test.mjs scripts/link-admin-build.test.mjs && node --experimental-strip-types --test src/admin/vite/normalize-admin-host-plugin.test.ts",
-    "clean:admin-vite": "bash scripts/clean-admin-vite.sh",
-    "dev:admin-local": "bash scripts/dev-admin-local.sh",
-    "dev:admin-local:daemon": "bash scripts/dev-admin-local-daemon.sh",
-    "dev:admin-local:stop": "bash scripts/dev-admin-local-stop.sh",
-    "dev:admin-local:cleanup": "bash scripts/dev-admin-local-cleanup.sh",
-    "ensure-local-admin": "medusa exec ./src/scripts/ensure-local-admin.ts",
-    "ensure-checkout-ready": "medusa exec ./src/scripts/ensure-checkout-ready.ts",
-    "normalize-price-amounts": "medusa exec ./src/scripts/normalize-medusa-price-amounts.ts",
-    "start": "node scripts/ensure-admin-runtime-ready.mjs && MEDUSA_RUNTIME_COMMAND=start medusa start",
-    "generate:catalog-card-derivatives": "tsx scripts/generate-catalog-card-derivatives.ts",
+    "build": "medusa build",
+    "dev": "medusa develop",
+    "start": "medusa start",
     "db:generate": "medusa db:generate",
     "db:migrate": "medusa db:migrate",
     "db:sync-links": "medusa db:sync-links",
     "seed": "medusa exec ./src/scripts/seed.ts",
-    "postinstall": "node scripts/patch-skip-cart-promotions.mjs && node scripts/patch-medusa-develop-watch.mjs --warn-only && node scripts/finalize-admin-vite-cache.mjs"
+    "postinstall": "node scripts/patch-skip-cart-promotions.mjs && node scripts/patch-medusa-develop-watch.mjs --warn-only",
+    "generate:catalog-card-derivatives": "tsx scripts/generate-catalog-card-derivatives.ts"
   },
   "dependencies": {
-    "@medusajs/admin-sdk": "2.17.2",
-    "@medusajs/framework": "^2.17.2",
-    "@medusajs/medusa": "^2.17.2",
-    "sharp": "^0.35.3"
+    "@medusajs/admin-sdk": "2.18.0",
+    "@medusajs/framework": "2.18.0",
+    "@medusajs/medusa": "2.18.0",
+    "morgan": "^1.10.0",
+    "sharp": "0.35.3"
   },
   "devDependencies": {
-    "@medusajs/cli": "^2.17.2",
+    "@medusajs/cli": "2.18.0",
     "@types/node": "^20.0.0",
     "ts-node": "^10.9.2",
-    "tsx": "^4.23.0",
     "typescript": "^5.0.0"
   },
   "engines": {

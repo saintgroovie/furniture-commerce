@@ -1,9 +1,6 @@
 import Link from "next/link"
-import { formatRub, getPrice } from "@/lib/format"
-import {
-  formatRequestQuotePriceLabel,
-  isRequestQuoteProduct,
-} from "@/lib/request-quote"
+import { formatRub } from "@/lib/format"
+import { resolveCatalogCardPrice } from "@/lib/catalog-card-price"
 import type { DisplayGroup } from "@/lib/display-group"
 import { formatGroupHint } from "@/lib/display-group"
 import {
@@ -11,13 +8,19 @@ import {
   getSubcollectionLabel,
   getArticle,
   getDimensions,
-  formatDimensionsCompact,
+  formatDimensionsCompactLabeled,
 } from "@/lib/product-metadata"
 import { OliverCardMediaSwitcher } from "@/components/oliver-card-media-switcher"
 import { ProductCardMediaSwitcher } from "@/components/product-card-media-switcher"
 import {
   buildIntraProductExecutionSelectors,
+  collectSameExecutionExtraImageUrls,
+  containCatalogCardExecutionSelectors,
+  enrichCardColorVariantsWithCatalogExtras,
   finishLabelForProduct,
+  hasPdpExecutionControls,
+  isFabricFamilyOnlyUpholstery,
+  isFabricFamilyUpholsteryKey,
   isUpholsteredProduct,
   type CardColorVariant,
   type CardExecutionSelectors,
@@ -34,10 +37,14 @@ import {
   collectExtraProductImageUrls,
   mergeUniqueExtraUrls,
   normalizeImageEntryUrl,
+  resolveCardHeroAndNearDuplicateExtras,
   resolvePdpMediaBundle,
   resolveStorefrontProductImageSrc,
 } from "@/lib/product-images"
-import { resolveCatalogCardHeroSrc } from "@/lib/catalog-card-image"
+import {
+  resolveCatalogCardHeroSrc,
+  resolveCatalogCardMediaBundle,
+} from "@/lib/catalog-card-image"
 import { productTypeBadgeLabels } from "@/lib/woodright-copy"
 
 type Product = {
@@ -94,16 +101,23 @@ export function ProductCard({
     (product as { custom_product_type?: { product_type?: string } }).custom_product_type?.product_type
   const badgeLabel = type ? BADGE_LABELS[type] : undefined
 
-  const price = displayGroup?.minPrice ?? getPrice(product)
-  const pricePrefix = displayGroup ? "от " : ""
-  const requestQuotePrice = isRequestQuoteProduct(product as Record<string, unknown>)
-    ? formatRequestQuotePriceLabel(product as Record<string, unknown>)
-    : null
+  const cardPrice = resolveCatalogCardPrice(product as Record<string, unknown>, displayGroup)
 
   const collectionLabel = getCollectionLabel(product as Record<string, unknown>)
   const subcollectionLabel = getSubcollectionLabel(product as Record<string, unknown>)
   const article = getArticle(product as Record<string, unknown>)
   const dim = getDimensions(product as Record<string, unknown>)
+  /* PASS A: never render axis-caption span (`В × Ш × Г, см`). Values only.
+     Partial axes keep abbreviated labels inside `values` (e.g. `В 90 · Ш 120`). */
+  const dimLabeled = dim != null ? formatDimensionsCompactLabeled(dim) : null
+  const dimDisplay =
+    dimLabeled && dimLabeled.values.length > 0 ? dimLabeled.values : null
+  const dimAria =
+    dimDisplay == null
+      ? null
+      : dimLabeled!.caption === "В × Ш × Г, см"
+        ? `${dimDisplay}, ${dimLabeled!.caption}`
+        : `${dimDisplay} ${dimLabeled!.caption}`
 
   const contextParts = [collectionLabel, subcollectionLabel, article].filter(Boolean)
   const contextLine = contextParts.length > 0 ? contextParts.join(" · ") : null
@@ -118,29 +132,68 @@ export function ProductCard({
     ? product.display_group_color_variants
     : undefined
 
-  const executionSelectors: CardExecutionSelectors =
+  const intraProductSelectors = buildIntraProductExecutionSelectors(
+    product as Record<string, unknown>,
+    mainSrcForCard
+  )
+  const hasCanonicalSelectors = hasPdpExecutionControls(intraProductSelectors)
+  const mergedSelectors: CardExecutionSelectors =
     displayGroupVariants && displayGroupVariants.length > 0
       ? isUpholsteredProduct(product as Record<string, unknown>)
         ? {
-            upholstery: displayGroupVariants,
-            confidence: "heuristic",
+            ...intraProductSelectors,
+            ...(intraProductSelectors.upholstery ||
+            intraProductSelectors.separateFabricRows
+              ? {}
+              : { upholstery: displayGroupVariants }),
+            confidence: hasCanonicalSelectors
+              ? intraProductSelectors.confidence
+              : "heuristic",
           }
         : {
-            finish: displayGroupVariants,
-            finishLabel: finishLabelForProduct(
-              product as Record<string, unknown>
-            ),
-            confidence: "heuristic",
+            ...intraProductSelectors,
+            ...(intraProductSelectors.finish
+              ? {}
+              : {
+                  finish: displayGroupVariants,
+                  finishLabel: finishLabelForProduct(
+                    product as Record<string, unknown>
+                  ),
+                }),
+            confidence: hasCanonicalSelectors
+              ? intraProductSelectors.confidence
+              : "heuristic",
           }
-      : buildIntraProductExecutionSelectors(
-          product as Record<string, unknown>,
-          mainSrcForCard
-        )
+      : intraProductSelectors
+  /* PASS A: keep first fabric-family execution for hero/gallery scoping only.
+     Selector UI uses contained selectors (no vertical fabric-family rows). */
+  const mediaFabricDefault =
+    mergedSelectors.separateFabricRows?.[0] ??
+    (isFabricFamilyOnlyUpholstery(mergedSelectors.upholstery)
+      ? mergedSelectors.upholstery?.[0]
+      : mergedSelectors.upholstery?.find((v) => isFabricFamilyUpholsteryKey(v.key))) ??
+    (isFabricFamilyOnlyUpholstery(mergedSelectors.finish)
+      ? mergedSelectors.finish?.[0]
+      : mergedSelectors.finish?.find((v) => isFabricFamilyUpholsteryKey(v.key)))
+  const executionSelectors = containCatalogCardExecutionSelectors(
+    mergedSelectors,
+    product as Record<string, unknown>
+  )
 
+  const productRecord = product as Record<string, unknown>
   const headboardVariants = executionSelectors.headboard
-  const upholsteryVariants = executionSelectors.upholstery
-  const woodVariants = executionSelectors.wood
-  const finishVariants = executionSelectors.finish
+  const upholsteryVariants = enrichCardColorVariantsWithCatalogExtras(
+    executionSelectors.upholstery,
+    productRecord
+  )
+  const woodVariants = enrichCardColorVariantsWithCatalogExtras(
+    executionSelectors.wood,
+    productRecord
+  )
+  const finishVariants = enrichCardColorVariantsWithCatalogExtras(
+    executionSelectors.finish,
+    productRecord
+  )
   const finishLabel = executionSelectors.finishLabel ?? "Цвет"
   const greenwichBedMatrix = executionSelectors.greenwichBedMatrix
   const greenwichPaintMatrix = executionSelectors.greenwichPaintMatrix
@@ -169,49 +222,76 @@ export function ProductCard({
           )
         : null
 
-  const separateFabricRows = executionSelectors.separateFabricRows
-  const activeSeparateFabric = separateFabricRows?.[0]
   const activeHeadboard = headboardVariants?.[0]
   const activeUpholstery = upholsteryVariants?.[0]
   const activeWood = woodVariants?.[0]
   const activeFinish = finishVariants?.[0]
   const isProvencePaintWood = executionSelectors.provencePaintWood === true
 
+  const pickMain = (...candidates: Array<string | null | undefined>) => {
+    for (const c of candidates) {
+      const t = typeof c === "string" ? c.trim() : ""
+      if (t) return t
+    }
+    return ""
+  }
   const mainSrc = matrixMedia?.mainSrc
     ? matrixMedia.mainSrc
     : isProvencePaintWood
       ? mainSrcForCard
-      : activeHeadboard?.mainSrc ??
-        activeSeparateFabric?.mainSrc ??
-        activeUpholstery?.mainSrc ??
-        activeWood?.mainSrc ??
-        activeFinish?.mainSrc ??
-        mainSrcForCard
-  const extraSrcs = matrixMedia
+      : pickMain(
+          activeHeadboard?.mainSrc,
+          activeUpholstery?.mainSrc,
+          mediaFabricDefault?.mainSrc,
+          activeWood?.mainSrc,
+          activeFinish?.mainSrc,
+          mainSrcForCard
+        )
+  /* Prefer execution/matrix extras. Catalog projection often keeps urls:[main] only —
+     then fill same-token siblings from product.images (never other finishes). */
+  const scopedExecutionExtras = matrixMedia
     ? matrixMedia.extraSrcs
     : isProvencePaintWood && activeFinish != null
       ? activeFinish.extraSrcs
       : activeHeadboard != null
         ? activeHeadboard.extraSrcs
-        : activeSeparateFabric != null
-          ? activeSeparateFabric.extraSrcs
-          : activeUpholstery != null
+        : activeUpholstery != null
           ? activeUpholstery.extraSrcs
-          : activeWood != null
-            ? activeWood.extraSrcs
-            : activeFinish != null
-              ? activeFinish.extraSrcs
-              : mergeUniqueExtraUrls(mainSrcForCard, [
-                  collectExtraProductImageUrls(
-                    product as Record<string, unknown>,
-                    mainSrcForCard
-                  ),
-                ])
+          : mediaFabricDefault != null
+            ? mediaFabricDefault.extraSrcs
+            : activeWood != null
+              ? activeWood.extraSrcs
+              : activeFinish != null
+                ? activeFinish.extraSrcs
+                : null
+  const extraSrcs =
+    scopedExecutionExtras != null && scopedExecutionExtras.length > 0
+      ? scopedExecutionExtras
+      : scopedExecutionExtras != null
+        ? collectSameExecutionExtraImageUrls(
+            productRecord,
+            mainSrc,
+            activeFinish?.key ??
+              activeUpholstery?.key ??
+              mediaFabricDefault?.key ??
+              null
+          )
+        : mergeUniqueExtraUrls(mainSrcForCard, [
+            collectExtraProductImageUrls(productRecord, mainSrcForCard),
+          ])
 
-  const { mainSrc: cardMainSrc, extraSrcs: cardExtraSrcs } = resolvePdpMediaBundle(
-    mainSrc,
-    extraSrcs
+  const storefrontBundle = resolvePdpMediaBundle(mainSrc, extraSrcs)
+  const bundled = resolveCatalogCardMediaBundle(
+    storefrontBundle.mainSrc,
+    storefrontBundle.extraSrcs,
+    resolveStorefrontProductImageSrc
   )
+  const { mainSrc: cardMainSrc, extraSrcs: cardExtraSrcs } =
+    resolveCardHeroAndNearDuplicateExtras(
+      bundled.mainSrc,
+      bundled.extraSrcs,
+      handle
+    )
 
   const mediaBlock = isOliver ? (
     <OliverCardMediaSwitcher
@@ -222,10 +302,10 @@ export function ProductCard({
       woodVariants={woodVariants}
       finishVariants={finishVariants}
       finishLabel={finishLabel}
-      separateFabricRows={separateFabricRows}
       href={productHref}
       title={product.title}
       priorityHero={priorityHero}
+      productHandle={handle}
     />
   ) : (
     <ProductCardMediaSwitcher
@@ -236,6 +316,7 @@ export function ProductCard({
       woodVariants={woodVariants}
       finishVariants={finishVariants}
       finishLabel={finishLabel}
+      productHandle={handle}
       greenwichBedMatrix={greenwichBedMatrix}
       greenwichPaintMatrix={greenwichPaintMatrix}
       href={productHref}
@@ -249,22 +330,26 @@ export function ProductCard({
       {mediaBlock}
       <Link href={productHref} className="card-body card-link">
         <div className="card-text-stack">
-          {contextLine && (
-            <span className="card-context">{contextLine}</span>
+          {(contextLine || (displayGroup && displayGroup.count > 1)) && (
+            <div className="card-context-row">
+              {contextLine && <span className="card-context">{contextLine}</span>}
+              {displayGroup && displayGroup.count > 1 && (
+                <span className="variant-hint">{formatGroupHint(displayGroup.count)}</span>
+              )}
+            </div>
           )}
           <h3>{product.title}</h3>
-          {dim != null && (
-            <span className="card-dimensions">{formatDimensionsCompact(dim)}</span>
+          {dimDisplay != null && (
+            <span className="card-dimensions" aria-label={dimAria ?? undefined}>
+              {dimDisplay}
+            </span>
           )}
           <div className="card-price-row">
-            {requestQuotePrice != null ? (
-              <p className="price">{requestQuotePrice}</p>
-            ) : price != null ? (
-              <p className="price">{pricePrefix}{formatRub(price)}</p>
+            {cardPrice.requestQuoteLabel != null ? (
+              <p className="price">{cardPrice.requestQuoteLabel}</p>
+            ) : cardPrice.amount != null ? (
+              <p className="price">{cardPrice.prefix}{formatRub(cardPrice.amount)}</p>
             ) : null}
-            {displayGroup && displayGroup.count > 1 && (
-              <span className="variant-hint">{formatGroupHint(displayGroup.count)}</span>
-            )}
             {badgeLabel && <span className="badge">{badgeLabel}</span>}
           </div>
         </div>

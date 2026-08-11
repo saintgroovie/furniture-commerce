@@ -19,6 +19,7 @@ type Props = {
   title: string
   oliverMode?: boolean
   heroObjectPosition?: string
+  productHandle?: string
 }
 
 /** PDP with execution swatches — same gallery core as catalog cards. */
@@ -36,6 +37,7 @@ export function ProductPdpExecutionMediaSwitcher({
   title,
   oliverMode = false,
   heroObjectPosition,
+  productHandle,
 }: Props) {
   return (
     <ProductCardMediaGalleryCore
@@ -54,6 +56,7 @@ export function ProductPdpExecutionMediaSwitcher({
       layout="pdp"
       oliverMode={oliverMode}
       heroObjectPosition={heroObjectPosition}
+      productHandle={productHandle}
     />
   )
 }

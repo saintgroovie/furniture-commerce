@@ -44,7 +44,6 @@ export type ReviewRow = {
   source_url: string | null
   source_path: string | null
   source_page_url: string | null
-  local_cache_path?: string | null
   legacy_cache_provenance: string | null
   legacy_newly_included: boolean | null
   sku_guess: string | null

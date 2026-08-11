@@ -1,0 +1,82 @@
+{
+  "schema_version": "2",
+  "bundle_id": "wrb-20260721T120000Z-beaaaaaaaa-sfaaaaaaaa",
+  "environment": "production",
+  "status": "active",
+  "created_at": "2026-07-21T15:56:24Z",
+  "authorized_at": "2026-07-21T15:56:24Z",
+  "activated_at": "2026-07-21T15:56:24Z",
+  "activation_mode": "pair_cutover",
+  "operator": "cursor-agent",
+  "controller": "Dokploy",
+  "transaction_id": "ctx-20260721T155624Z-sf-slim",
+  "compatibility_contract": {
+    "contract_id": "compat-be643a429-sf54d1802",
+    "status": "compatible",
+    "evidence_path": "/srv/woodright/reports/compat-evidence.json",
+    "required_store_api_contract": "store-v1",
+    "provided_store_api_contract": "store-v1",
+    "migrations_compatible": true
+  },
+  "backend": {
+    "component": "backend",
+    "repository": "saintgroovie/furniture-commerce",
+    "source_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "pr_number": 64,
+    "workflow_run_id": 29844537467,
+    "workflow_run_attempt": 1,
+    "unique_build_tag": "build-aaaaaaa-run-29844537467-attempt-1",
+    "digest": "sha256:abababababababababababababababababababababababababababababababab",
+    "oci_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "api_contract_version": "store-v1",
+    "compatibility_claims": [
+      "catalog-products",
+      "products-retrieve"
+    ]
+  },
+  "storefront": {
+    "component": "storefront",
+    "repository": "saintgroovie/furniture-commerce",
+    "source_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "pr_number": 66,
+    "workflow_run_id": 29845801534,
+    "workflow_run_attempt": 1,
+    "unique_build_tag": "build-aaaaaaa-run-29845801534-attempt-1",
+    "digest": "sha256:abababababababababababababababababababababababababababababababab",
+    "oci_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "api_contract_version": "store-v1",
+    "compatibility_claims": [
+      "catalog-products",
+      "products-retrieve"
+    ]
+  },
+  "data_contract": {
+    "catalog_order_version": "merchandising-v1",
+    "data_mutations": "none"
+  },
+  "migrations": [],
+  "rollback": {
+    "mode": "pair",
+    "backend_keeper": "keeper-be",
+    "storefront_keeper": "keeper-sf",
+    "backup_directory": "/srv/woodright/backups/example",
+    "backend_only_allowed": false
+  },
+  "verification": {
+    "public_passed": true,
+    "samples": 5,
+    "first_catalog_title": "\u041a\u0440\u043e\u0432\u0430\u0442\u044c 1-\u0441\u043f. (90\u00d7200)",
+    "mirror_index": 14,
+    "verified_at": "2026-07-21T16:00:00Z",
+    "urls": {
+      "site": "https://woodright-demo.ru/",
+      "catalog": "https://woodright-demo.ru/catalog",
+      "kids_catalog": "https://woodright-demo.ru/kids/catalog"
+    }
+  },
+  "provenance": {
+    "cutover_report": "/tmp/cutover.md",
+    "governance_merged_sha": null
+  },
+  "previous_bundle_id": null
+}

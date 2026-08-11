@@ -1,21 +1,28 @@
 /**
- * G2 / PERF-03: explicit allowlist projection for `/store/catalog-products`.
+ * G2 / PERF-03 + W3e: explicit allowlist projection for `/store/catalog-products`.
  * Replaces G1 metadata denylist — unknown operational keys never enter the
  * catalog wire payload. Default `/store/products` stays untouched.
  *
- * Keys are the union needed by:
- * - catalog filters / facets / display_group
- * - catalog-scope / kids navigation
- * - product-card / card-color-media execution selectors
- * - dimensions / collection labels on cards
+ * W3e: keep the catalog wire lean, but cards still need a short gallery strip
+ * (see storefront `CARD_STRIP_IMAGE_PROBE_LIMIT`). Cap — do not drop to hero-only.
+ * Diversify by finish/color token so later swatches are not starved by the
+ * first cluster of images.
  */
+
+/** Soft total gallery URL budget on the browse wire. */
+export const CATALOG_BROWSE_MAX_IMAGES = 24
+
+/** Per finish/color token budget (main + a few strip extras). */
+export const CATALOG_BROWSE_MAX_IMAGES_PER_TOKEN = 3
+
+/** Max media URLs kept per execution / matrix row on browse (main + strip). */
+export const CATALOG_BROWSE_MAX_EXECUTION_URLS = 5
 
 /** Product root fields kept for catalog listing. */
 export const CATALOG_PRODUCT_ROOT_KEYS = [
   "id",
   "handle",
   "title",
-  "status",
   "thumbnail",
   "metadata",
   "images",
@@ -31,7 +38,13 @@ export const CATALOG_METADATA_ALLOW = new Set([
   "collection",
   "collection_label",
   "category_handle",
+  "buyer_item_type",
+  "buyer_item_type_source",
+  "buyer_default_configuration",
+  "material_tiers",
   "display_group",
+  "display_group_sort",
+  "display_group_title",
   "subcollection_label",
   "canonical_name",
   "dimensions",
@@ -43,6 +56,8 @@ export const CATALOG_METADATA_ALLOW = new Set([
   "frame_material_executions",
   "headboard_model_executions",
   "bed_execution_matrix",
+  "greenwich_paint_execution_matrix",
+  "execution_dimension_contract",
   "paint_finish_labels",
   "finish_color_labels",
   "fabric_upholstery_labels",
@@ -52,12 +67,53 @@ export const CATALOG_METADATA_ALLOW = new Set([
   "material_tier_executions",
   "construction_tier_labels",
   "material_tier_labels",
+  "launch_mode",
   "request_quote",
   "request_quote_price_label",
   "price_mode",
   "storefront_section",
   "cart_group",
 ])
+
+const EXECUTION_URL_KEYS = new Set([
+  "finish_color_executions",
+  "paint_finish_executions",
+  "fabric_upholstery_executions",
+  "frame_material_executions",
+  "headboard_model_executions",
+  "construction_tier_executions",
+  "material_tier_executions",
+  "bed_execution_matrix",
+  "greenwich_paint_execution_matrix",
+])
+
+function slimUrlList(urls: unknown): string[] | undefined {
+  if (!Array.isArray(urls)) return undefined
+  const out: string[] = []
+  for (const u of urls) {
+    if (typeof u !== "string") continue
+    const t = u.trim()
+    if (!t) continue
+    out.push(t)
+    if (out.length >= CATALOG_BROWSE_MAX_EXECUTION_URLS) break
+  }
+  return out
+}
+
+function slimExecutionEntries(value: unknown): unknown {
+  if (!Array.isArray(value)) return value
+  return value.map((entry) => {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) return entry
+    const o = entry as Record<string, unknown>
+    if (!("urls" in o)) return entry
+    const urls = slimUrlList(o.urls)
+    if (urls === undefined) {
+      const { urls: _drop, ...rest } = o
+      return rest
+    }
+    return { ...o, urls }
+  })
+}
 
 export function projectCatalogMetadataAllowlist(
   metadata: unknown
@@ -68,18 +124,39 @@ export function projectCatalogMetadataAllowlist(
   const out: Record<string, unknown> = {}
   for (const [k, v] of Object.entries(metadata as Record<string, unknown>)) {
     if (!CATALOG_METADATA_ALLOW.has(k)) continue
-    out[k] = v
+    out[k] = EXECUTION_URL_KEYS.has(k) ? slimExecutionEntries(v) : v
   }
   return out
+}
+
+function browseImageTokenKey(url: string): string {
+  const base = (url.split("/").pop() ?? url).toLowerCase()
+  const greenwich = base.match(
+    /greenwich(?:[_-]dark)?[_-](grey-blue|darkblue|white|cacao|powder|cream|terracote|graphite|green|olive|capuchino|grey)(?:\d|[_\-.]|$)/
+  )
+  if (greenwich?.[1]) return greenwich[1]
+  const color = base.match(/(?:^|[_-])color[_-]([a-z0-9-]+)/)
+  if (color?.[1]) return color[1]
+  const fabric = base.match(/(?:^|[_-])(?:fabric|upholstery)[_-]([a-z0-9-]+)/)
+  if (fabric?.[1]) return fabric[1]
+  return "_other"
 }
 
 function projectCatalogImages(images: unknown): Array<{ url: string }> {
   if (!Array.isArray(images)) return []
   const out: Array<{ url: string }> = []
+  const perToken = new Map<string, number>()
   for (const entry of images) {
     if (!entry || typeof entry !== "object") continue
     const url = (entry as { url?: unknown }).url
-    if (typeof url === "string" && url.trim()) out.push({ url: url.trim() })
+    if (typeof url !== "string" || !url.trim()) continue
+    const trimmed = url.trim()
+    const token = browseImageTokenKey(trimmed)
+    const used = perToken.get(token) ?? 0
+    if (used >= CATALOG_BROWSE_MAX_IMAGES_PER_TOKEN) continue
+    perToken.set(token, used + 1)
+    out.push({ url: trimmed })
+    if (out.length >= CATALOG_BROWSE_MAX_IMAGES) break
   }
   return out
 }
@@ -109,8 +186,9 @@ function projectCatalogVariants(variants: unknown): Array<Record<string, unknown
 }
 
 /**
- * Slim catalog product DTO (G2).
- * Drops unknown metadata, price_set trees, and non-url image fields.
+ * Slim catalog product DTO (G2 + W3e).
+ * Drops unknown metadata, price_set trees, non-url image fields, and
+ * browse-irrelevant gallery/execution URL fan-out.
  */
 export function projectCatalogBrowseProduct(
   product: Record<string, unknown>
@@ -120,7 +198,6 @@ export function projectCatalogBrowseProduct(
     id: product.id,
     handle: product.handle,
     title: product.title,
-    status: product.status,
     thumbnail: product.thumbnail,
     metadata: projectCatalogMetadataAllowlist(product.metadata),
     images: projectCatalogImages(product.images),

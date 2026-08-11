@@ -13,7 +13,6 @@ import {
   getExportableVariantKeys,
   isVariantHidden,
   DEFAULT_TOKEN_TO_RU,
-  INFERRED_NEUTRAL_MILK_LABEL_RU,
 } from "./legacy-board-v2-color-variants"
 import { resolveOperatorVisibleLabel } from "./legacy-board-v2-color-label-persistence"
 
@@ -158,28 +157,13 @@ export function buildV2ExportJSON(
       if (Object.keys(roleAssignments).length > 0) {
         variant.role_assignments = roleAssignments
       }
-      const collection = meta?.collection ?? null
-      const countryProduct = collection === "country-london-paris"
-      let sourceDefault = DEFAULT_TOKEN_TO_RU[variantKey] ?? variantKey
-      if (
-        countryProduct &&
-        (variantKey === "cream" || variantKey === "milk" || variantKey === "molochny")
-      ) {
-        sourceDefault = INFERRED_NEUTRAL_MILK_LABEL_RU
-      } else if (countryProduct && DEFAULT_TOKEN_TO_RU[variantKey]) {
-        sourceDefault = DEFAULT_TOKEN_TO_RU[variantKey]!
-      }
       const operatorLabel = resolveOperatorVisibleLabel(
         variantKey,
-        sourceDefault,
+        DEFAULT_TOKEN_TO_RU[variantKey] ?? variantKey,
         state
       )
-      if (
-        countryProduct &&
-        (variantKey === "cream" || variantKey === "milk" || variantKey === "molochny")
-      ) {
-        variant.operator_variant_label = operatorLabel || INFERRED_NEUTRAL_MILK_LABEL_RU
-      } else if (operatorLabel && operatorLabel !== variantKey) {
+      const sourceDefault = DEFAULT_TOKEN_TO_RU[variantKey] ?? variantKey
+      if (operatorLabel !== sourceDefault || state.variantColorMeta?.[variantKey]?.labelEditedByOperator) {
         variant.operator_variant_label = operatorLabel
       }
       variants[variantKey] = variant

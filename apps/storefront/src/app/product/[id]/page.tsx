@@ -1,18 +1,28 @@
 import Link from "next/link"
 import type { Metadata } from "next"
+import { headers } from "next/headers"
+import { notFound, redirect } from "next/navigation"
 import { getSiteUrl } from "@/lib/api/base"
-import { getProduct, getProducts, NOT_FOUND } from "@/lib/api/products"
+import { getCatalogProducts, getProduct, NOT_FOUND } from "@/lib/api/products"
+import { getMotifContext } from "@/lib/api/motif-themes"
 import { formatRub, getPrice } from "@/lib/format"
+import { indexingCanonical } from "@/lib/indexing-policy"
 import {
   formatRequestQuotePriceLabel,
   isRequestQuoteProduct,
 } from "@/lib/request-quote"
 import { ProductCta } from "@/components/product-cta"
+import { PdpPriceBlock } from "@/components/pdp-price-block"
+import { PdpMaterialTierSelect } from "@/components/pdp-material-tier-select"
+import { PdpSizeChips } from "@/components/pdp-size-chips"
+import { buildMaterialTierOptions } from "@/lib/material-tiers"
 import { CopyLines } from "@/components/copy-lines"
 import { OliverPdpMediaSwitcher } from "@/components/oliver-pdp-media-switcher"
 import { GreenwichBedPdpMediaSwitcher } from "@/components/greenwich-bed-pdp-media-switcher"
 import { ProductPdpExecutionMediaSwitcher } from "@/components/product-pdp-execution-media-switcher"
 import { ProductPdpMediaSwitcher } from "@/components/product-pdp-media-switcher"
+import { PdpMotifSelector } from "@/components/pdp-motif-selector"
+import { PdpRelatedInMotif } from "@/components/pdp-related-in-motif"
 import {
   buildIntraProductExecutionSelectors,
   cardThumbnailSrcFromProduct,
@@ -21,6 +31,7 @@ import {
 } from "@/lib/card-color-media"
 import {
   defaultGreenwichBedSelection,
+  greenwichBedInteriorUrlsFromProduct,
   isGreenwichBedProduct,
   resolveGreenwichBedMedia,
 } from "@/lib/greenwich-bed-media"
@@ -33,8 +44,11 @@ import {
   collectDisplayGroupExtraImageUrls,
   collectExtraProductImageUrls,
   mergeUniqueExtraUrls,
+  resolveCardHeroAndNearDuplicateExtras,
   resolvePdpMediaBundle,
 } from "@/lib/product-images"
+import { collectProductImageUrls } from "@/lib/oliver-buyer-gallery"
+import { restoreEvidenceProtectedAngles } from "@/lib/media-near-dup-collapse"
 import { filterProvenceSceneOnlyPdpExtras } from "@/lib/provence-scene-only-pdp"
 import { buildPdpBuyerFacingGallery } from "@/lib/pdp-buyer-gallery.server"
 import {
@@ -42,12 +56,23 @@ import {
   getSubcollectionLabel,
   getCanonicalName,
   getBuyerFacingProductTitle,
+  getBuyerFacingProductTitleLayout,
   getArticle,
   getDimensions,
-  formatDimensionsLabeled,
   getPdpHeroObjectPosition,
+  orderedBuyerFacingDimensions,
 } from "@/lib/product-metadata"
-import { labels, pdpCopy, productTypeBadgeLabels } from "@/lib/woodright-copy"
+import { layoutBuyerFacingTitle } from "@/lib/en-name-ru"
+import { formatRuInline } from "@/lib/format-ru-copy"
+import {
+  isPdpCollectionContextSentence,
+  layoutPdpDescription,
+  layoutPdpSubtitle,
+} from "@/lib/pdp-copy-layout"
+import { isKidsStorefrontProduct } from "@/lib/kids"
+import { getCollectionFilterKey } from "@/lib/catalog-filters"
+import { actions, labels, pdpCopy, productTypeBadgeLabels, willieWinkieMotifsCopy } from "@/lib/woodright-copy"
+import { KidsProductSection } from "@/components/kids-product-section"
 
 function pdpHeroThumbnail(product: Record<string, unknown>): string | undefined {
   const t = product.thumbnail
@@ -66,14 +91,34 @@ function truncate(str: string, max: number): string {
   return str.slice(0, max - 3).trim() + "..."
 }
 
+/** Short positioning line under the H1 — real Medusa `subtitle` only. */
+function getPdpSubtitle(product: Record<string, unknown>): string | null {
+  const s = product.subtitle
+  return typeof s === "string" && s.trim() ? s.trim() : null
+}
+
+/** 1244 mm -> "124,4"; 630 mm -> "63" (ru decimal comma, buyer-facing cm). */
+function mmToCmLabel(mm: number): string {
+  const cm = mm / 10
+  return Number.isInteger(cm) ? String(cm) : cm.toFixed(1).replace(".", ",")
+}
+
 const BADGE_LABELS = productTypeBadgeLabels
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}): Promise<Metadata> {
+  const { id } = await params
   const base = getSiteUrl()
   try {
-    const res = await getProduct(params.id)
+    const res = await getProduct(id)
     const product = res.product as Record<string, unknown> | undefined
-    if (!product) return { title: "Товар", alternates: { canonical: `${base}/product/${params.id}` } }
+    if (!product) {
+      notFound()
+    }
+    const selfCanonical = indexingCanonical(`${base}/product/${id}`)
     const title = getBuyerFacingProductTitle(product)
     const desc = product.description ? truncate(String(product.description), 160) : "Товар из каталога Woodright."
     const imageUrl = primaryImageForMeta(product)
@@ -83,31 +128,36 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       openGraph: {
         title,
         description: desc,
-        url: `/product/${params.id}`,
+        url: `/product/${id}`,
         ...(imageUrl && { images: [imageUrl] }),
       },
-      alternates: { canonical: `${base}/product/${params.id}` },
+      ...(selfCanonical ? { alternates: selfCanonical } : {}),
     }
-  } catch {
-    return { title: "Товар", alternates: { canonical: `${base}/product/${params.id}` } }
+  } catch (e) {
+    if (e instanceof Error && e.message === NOT_FOUND) {
+      notFound()
+    }
+    // Framework notFound() throws; rethrow. Operational failures must not become 404.
+    throw e
   }
 }
 
-export default async function ProductPage({ params }: { params: { id: string } }) {
+export default async function ProductPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const { id } = await params
+  const resolvedSearchParams = searchParams ? await searchParams : undefined
   let product: Record<string, unknown> | null = null
   try {
-    const res = await getProduct(params.id)
+    const res = await getProduct(id)
     product = res.product ?? null
   } catch (e) {
     if (e instanceof Error && e.message === NOT_FOUND) {
-      return (
-        <div data-state="not_found" className="status-message">
-          <h1>{pdpCopy.notFoundTitle}</h1>
-          <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
-            <Link href="/catalog">В каталог</Link>
-          </div>
-        </div>
-      )
+      notFound()
     }
     return (
       <div data-state="error" className="status-message">
@@ -120,24 +170,50 @@ export default async function ProductPage({ params }: { params: { id: string } }
     )
   }
   if (!product) {
-    return (
-      <div data-state="not_found" className="status-message">
-        <h1>{pdpCopy.notFoundTitle}</h1>
-        <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
-          <Link href="/catalog">В каталог</Link>
-        </div>
-      </div>
-    )
+    notFound()
   }
 
   const base = getSiteUrl()
   const handle = String(product.handle ?? "")
+  const motifRaw = resolvedSearchParams?.motif
+  const motifQuery =
+    typeof motifRaw === "string"
+      ? motifRaw.trim()
+      : Array.isArray(motifRaw) && typeof motifRaw[0] === "string"
+        ? motifRaw[0].trim()
+        : ""
+
+  let motifContext: Awaited<ReturnType<typeof getMotifContext>> = null
+  if (handle) {
+    try {
+      motifContext = await getMotifContext({
+        handle,
+        motif: motifQuery || null,
+      })
+    } catch {
+      motifContext = null
+    }
+  }
+
+  if (
+    motifContext?.motif_status === "redirect" &&
+    motifContext.redirect_handle &&
+    motifContext.selected_motif?.motif_slug
+  ) {
+    redirect(
+      `/product/${encodeURIComponent(motifContext.redirect_handle)}?motif=${encodeURIComponent(motifContext.selected_motif.motif_slug)}`
+    )
+  }
+
   const isOliver = handle.startsWith("ol-")
   const isGreenwichBed = isGreenwichBedProduct(product)
   const thumbSrc = cardThumbnailSrcFromProduct(product)
   const executionSelectors = buildIntraProductExecutionSelectors(product, thumbSrc)
   const greenwichBedMatrix = executionSelectors.greenwichBedMatrix
   const greenwichPaintMatrix = executionSelectors.greenwichPaintMatrix
+  const bedInteriorSrcs = isGreenwichBed
+    ? greenwichBedInteriorUrlsFromProduct(product)
+    : []
   const bedDefaults =
     greenwichBedMatrix && greenwichBedMatrix.length > 0
       ? defaultGreenwichBedSelection(greenwichBedMatrix)
@@ -152,7 +228,8 @@ export default async function ProductPage({ params }: { params: { id: string } }
           greenwichBedMatrix,
           bedDefaults.headboard,
           bedDefaults.frameMaterial,
-          bedDefaults.fabric
+          bedDefaults.fabric,
+          bedInteriorSrcs.length > 0 ? { interiorUrls: bedInteriorSrcs } : undefined
         )
       : null
   const paintMatrixMedia =
@@ -209,6 +286,21 @@ export default async function ProductPage({ params }: { params: { id: string } }
   const useExecutionPdp =
     isGreenwichBed || hasPdpExecutionControls(executionSelectors)
   const price = getPrice(product)
+  /* Material execution options from metadata.material_tiers (backend SoT). */
+  const materialTiers = buildMaterialTierOptions(product)
+  const backendDefaultMin = (() => {
+    const cfg = (product.metadata as Record<string, unknown> | undefined)
+      ?.buyer_default_configuration
+    if (!cfg || typeof cfg !== "object" || Array.isArray(cfg)) return null
+    const min = (cfg as { min_unit_price?: unknown }).min_unit_price
+    return typeof min === "number" && Number.isFinite(min) && min > 0 ? min : null
+  })()
+  /* Opening PDP amount = backend default, else cheapest tier, else solid_full. */
+  const openingPrice =
+    backendDefaultMin ??
+    (materialTiers?.[0]?.price != null && Number.isFinite(materialTiers[0].price)
+      ? materialTiers[0].price
+      : price)
   const requestQuotePrice = isRequestQuoteProduct(product)
     ? formatRequestQuotePriceLabel(product)
     : null
@@ -219,7 +311,9 @@ export default async function ProductPage({ params }: { params: { id: string } }
   let displayGroupMembers: Record<string, unknown>[] = []
   if (meta?.display_group && meta?.collection) {
     try {
-      const plist = await getProducts()
+      // Lean browse projection keeps display_group* + collection + variant prices.
+      // Avoid full `/store/products` list (~1.4MB) for sibling size chips only.
+      const plist = await getCatalogProducts()
       const list = (plist.products ?? []) as Record<string, unknown>[]
       displayGroupMembers = getDisplayGroupMembers(product, list)
     } catch {
@@ -250,183 +344,429 @@ export default async function ProductPage({ params }: { params: { id: string } }
           ? paintMatrixMedia.extraSrcs
           : collectDisplayGroupExtraImageUrls([product, ...displayGroupMembers], mainNorm)
 
-  const { mainSrc: pdpMainSrc, extraSrcs: pdpResolvedExtras } = resolvePdpMediaBundle(
+  const { mainSrc: bundledMain, extraSrcs: bundledExtras } = resolvePdpMediaBundle(
     mainNorm,
     filterProvenceSceneOnlyPdpExtras(product, mainNorm, pdpExtraSrcs)
   )
+  // Shared PDP boundary: restore evidence-protected angles, then drop true near-dups
+  // (covers Oliver buyer gallery, execution selectors, and plain collect paths).
+  const restoredOrder = restoreEvidenceProtectedAngles(
+    handle,
+    [bundledMain, ...bundledExtras],
+    collectProductImageUrls(product as Record<string, unknown>)
+  )
+  const evidenced = resolveCardHeroAndNearDuplicateExtras(
+    restoredOrder[0] ?? bundledMain,
+    restoredOrder.slice(1),
+    handle
+  )
+  // Normalize again so restored raw pool URLs get `/product-static/…` rewrite.
+  const { mainSrc: pdpMainSrc, extraSrcs: pdpResolvedExtras } =
+    resolvePdpMediaBundle(evidenced.mainSrc, evidenced.extraSrcs)
 
+  const titleLayout = getBuyerFacingProductTitleLayout(product)
   const titleStr = getBuyerFacingProductTitle(product)
   const canonicalName = getCanonicalName(product)
+  const canonicalLayout = canonicalName
+    ? layoutBuyerFacingTitle(canonicalName)
+    : null
+  /* Hide workbook line when it only differs by Latin vs transcribed model. */
   const showCanonicalLine =
-    canonicalName != null &&
-    canonicalName.toLowerCase() !== titleStr.trim().toLowerCase()
+    canonicalLayout != null &&
+    canonicalLayout.text.toLowerCase() !== titleStr.trim().toLowerCase()
+
+  const collectionLabel = getCollectionLabel(product)
+  const subcollectionLabel = getSubcollectionLabel(product)
+  const article = getArticle(product)
+  const dim = getDimensions(product)
+  const subtitle = getPdpSubtitle(product)
+  const description =
+    product.description != null && String(product.description).trim().length > 0
+      ? String(product.description).trim()
+      : null
+
+  /* Buyer-facing order is fixed: height → width → depth (cm hero + mm specs). */
+  const dimensionLabelByAxis = {
+    height: pdpCopy.dimensionHeight,
+    width: pdpCopy.dimensionWidth,
+    depth: pdpCopy.dimensionDepth,
+  } as const
+  const dimensionCells = dim
+    ? orderedBuyerFacingDimensions(dim).map(({ axis, mm }) => ({
+        label: dimensionLabelByAxis[axis],
+        mm,
+      }))
+    : []
+
+  const specRows = [
+    ...dimensionCells.map((c) => ({
+      label: c.label,
+      value: `${c.mm} ${pdpCopy.unitMm}`,
+    })),
+    ...(article ? [{ label: pdpCopy.specArticle, value: article }] : []),
+    ...(collectionLabel
+      ? [
+          {
+            label: pdpCopy.specCollection,
+            value: [collectionLabel, subcollectionLabel].filter(Boolean).join(" · "),
+          },
+        ]
+      : []),
+  ]
+
+  /* Chip prices carry the base (full solid) amount; the client component
+     applies the selected material multiplier so chips and the main price
+     block never show conflicting numbers. */
+  const sizeChips =
+    displayGroupMembers.length > 0
+      ? [
+          {
+            id: product.id as string,
+            label: titleStr,
+            basePrice: price,
+            sort: (meta?.display_group_sort as number | undefined) ?? 99,
+            isCurrent: true,
+          },
+          ...displayGroupMembers.map((m) => {
+            const mMeta = m.metadata as Record<string, unknown> | undefined
+            return {
+              id: m.id as string,
+              label: String(m.title ?? "Вариант"),
+              basePrice: getPrice(m),
+              sort: (mMeta?.display_group_sort as number | undefined) ?? 99,
+              isCurrent: false,
+            }
+          }),
+        ].sort((a, b) => a.sort - b.sort)
+      : []
 
   const productJsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: (product.title as string) ?? "Товар",
-    description: product.description ? String(product.description) : undefined,
-    url: `${base}/product/${params.id}`,
+    description: description ?? undefined,
+    url: `${base}/product/${id}`,
     ...(mainImage && { image: mainImage }),
   }
 
+  const isKidsProduct = isKidsStorefrontProduct(product)
+  const collectionFilterKey = getCollectionFilterKey(product)
+  const catalogHref = isKidsProduct ? "/kids/catalog" : "/catalog"
+  const collectionHref = collectionFilterKey
+    ? `${catalogHref}?collection=${encodeURIComponent(collectionFilterKey)}`
+    : null
+
+  const cspNonce = (await headers()).get("x-nonce") ?? undefined
+
   return (
-    <div data-state="success">
+    <div
+      data-state="success"
+      className="pdp"
+      {...(isKidsProduct ? { "data-kids-product": "" } : {})}
+    >
+      <KidsProductSection active={isKidsProduct} />
+      {isKidsProduct ? (
+        <script
+          nonce={cspNonce}
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){document.querySelectorAll('a.logo,a.footer-brand-logo').forEach(function(a){a.setAttribute('href','/kids');a.setAttribute('aria-label','Woodright Kids - на главную детской');});})();",
+          }}
+        />
+      ) : null}
       <script
         type="application/ld+json"
+        nonce={cspNonce}
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
       />
-      <div className="product-detail">
-        <div className="product-detail-media-col">
-          {isGreenwichBed ? (
-            <GreenwichBedPdpMediaSwitcher
-              mainSrc={pdpMainSrc}
-              extraSrcs={pdpResolvedExtras}
-              headboardVariants={executionSelectors.headboard}
-              upholsteryVariants={executionSelectors.upholstery}
-              woodVariants={executionSelectors.wood}
-              greenwichBedMatrix={greenwichBedMatrix}
-              title={titleStr}
-              heroObjectPosition={heroObjectPosition}
-            />
-          ) : useExecutionPdp ? (
-            <ProductPdpExecutionMediaSwitcher
-              mainSrc={pdpMainSrc}
-              extraSrcs={pdpResolvedExtras}
-              headboardVariants={executionSelectors.headboard}
-              upholsteryVariants={executionSelectors.upholstery}
-              woodVariants={executionSelectors.wood}
-              finishVariants={executionSelectors.finish}
-              finishLabel={
-                executionSelectors.finishLabel ??
-                finishLabelForProduct(product)
-              }
-              greenwichPaintMatrix={greenwichPaintMatrix}
-              title={titleStr}
-              oliverMode={isOliver}
-              separateFabricRows={executionSelectors.separateFabricRows}
-              heroObjectPosition={heroObjectPosition}
-            />
-          ) : isOliver ? (
-            <OliverPdpMediaSwitcher
-              mainSrc={pdpMainSrc}
-              extraSrcs={pdpResolvedExtras}
-              title={titleStr}
-            />
-          ) : (
-            <ProductPdpMediaSwitcher
-              mainSrc={pdpMainSrc}
-              extraSrcs={pdpResolvedExtras}
-              alt={titleStr}
-              heroObjectPosition={heroObjectPosition}
-            />
-          )}
-        </div>
-        <div className="product-detail-info">
-          {(() => {
-            const collectionLabel = getCollectionLabel(product)
-            const subcollectionLabel = getSubcollectionLabel(product)
-            const article = getArticle(product)
-            const dim = getDimensions(product)
-            return (
-              <>
-                {(collectionLabel || subcollectionLabel) && (
-                  <span className="pdp-collection-label">
-                    {[collectionLabel, subcollectionLabel].filter(Boolean).join(" · ")}
-                  </span>
+
+      {/* First screen: full-bleed media + sticky buy panel */}
+      <section className="pdp-hero">
+        <div className="pdp-hero-inner">
+          <div className="pdp-media product-detail-media-col">
+            {isGreenwichBed ? (
+              <GreenwichBedPdpMediaSwitcher
+                mainSrc={pdpMainSrc}
+                extraSrcs={pdpResolvedExtras}
+                headboardVariants={executionSelectors.headboard}
+                upholsteryVariants={executionSelectors.upholstery}
+                woodVariants={executionSelectors.wood}
+                greenwichBedMatrix={greenwichBedMatrix}
+                sharedInteriorSrcs={bedInteriorSrcs}
+                title={titleStr}
+                heroObjectPosition={heroObjectPosition}
+                productHandle={handle}
+              />
+            ) : useExecutionPdp ? (
+              <ProductPdpExecutionMediaSwitcher
+                mainSrc={pdpMainSrc}
+                extraSrcs={pdpResolvedExtras}
+                headboardVariants={executionSelectors.headboard}
+                upholsteryVariants={executionSelectors.upholstery}
+                woodVariants={executionSelectors.wood}
+                finishVariants={executionSelectors.finish}
+                finishLabel={
+                  executionSelectors.finishLabel ??
+                  finishLabelForProduct(product)
+                }
+                greenwichPaintMatrix={greenwichPaintMatrix}
+                title={titleStr}
+                oliverMode={isOliver}
+                separateFabricRows={executionSelectors.separateFabricRows}
+                heroObjectPosition={heroObjectPosition}
+                productHandle={handle}
+              />
+            ) : isOliver ? (
+              <OliverPdpMediaSwitcher
+                mainSrc={pdpMainSrc}
+                extraSrcs={pdpResolvedExtras}
+                title={titleStr}
+              />
+            ) : (
+              <ProductPdpMediaSwitcher
+                mainSrc={pdpMainSrc}
+                extraSrcs={pdpResolvedExtras}
+                alt={titleStr}
+                heroObjectPosition={heroObjectPosition}
+              />
+            )}
+          </div>
+
+          <div className="pdp-panel-col">
+            <div className="pdp-panel">
+              <nav className="pdp-breadcrumbs" aria-label="Навигация по разделам">
+                {isKidsProduct && (
+                  <>
+                    <Link href="/kids">Детская</Link>
+                    <span aria-hidden="true"> / </span>
+                  </>
                 )}
-                <div className="product-detail-header">
-                  <h1>{titleStr}</h1>
-                  {badgeLabel && <span className="badge">{badgeLabel}</span>}
-                </div>
-                {showCanonicalLine && canonicalName && (
-                  <span className="pdp-canonical-name">{canonicalName}</span>
-                )}
-                {article && (
-                  <span className="pdp-article">{pdpCopy.articleLabel} {article}</span>
-                )}
-                {dim && (
-                  <span className="pdp-dimensions">{formatDimensionsLabeled(dim)}</span>
-                )}
-              </>
-            )
-          })()}
-          {requestQuotePrice != null ? (
-            <p className="price product-detail-price">{requestQuotePrice}</p>
-          ) : price != null ? (
-            <p className="price product-detail-price">{formatRub(price)}</p>
-          ) : isRequestQuoteProduct(product) ? (
-            <p className="price product-detail-price">{labels.requestQuotePrice}</p>
-          ) : null}
-          {product.description != null && String(product.description).trim().length > 0 && (
-            <p className="pdp-description">{String(product.description)}</p>
-          )}
-          {displayGroupMembers.length > 0 &&
-            (() => {
-              const currentSort =
-                (meta?.display_group_sort as number | undefined) ?? 99
-              const sizeChips = [
-                {
-                  id: product.id as string,
-                  label: titleStr,
-                  priceLabel:
-                    requestQuotePrice ?? (price != null ? formatRub(price) : null),
-                  sort: currentSort,
-                  isCurrent: true,
-                },
-                ...displayGroupMembers.map((m) => {
-                  const mp = getPrice(m)
-                  const mMeta = m.metadata as Record<string, unknown> | undefined
-                  return {
-                    id: m.id as string,
-                    label: String(m.title ?? "Вариант"),
-                    priceLabel: mp != null ? formatRub(mp) : null,
-                    sort: (mMeta?.display_group_sort as number | undefined) ?? 99,
-                    isCurrent: false,
-                  }
-                }),
-              ].sort((a, b) => a.sort - b.sort)
-              return (
-                <div className="pdp-size-selector" role="group" aria-label={pdpCopy.sizeSelectorLabel}>
-                  <span className="pdp-size-selector-label">{pdpCopy.sizeSelectorLabel}</span>
-                  <div className="pdp-size-chip-row">
-                    {sizeChips.map((chip) =>
-                      chip.isCurrent ? (
-                        <span
-                          key={chip.id}
-                          className="pdp-size-chip is-active"
-                          aria-current="true"
-                        >
-                          <span className="pdp-size-chip-label">{chip.label}</span>
-                          {chip.priceLabel != null && (
-                            <span className="pdp-size-chip-price">{chip.priceLabel}</span>
-                          )}
-                        </span>
-                      ) : (
-                        <Link
-                          key={chip.id}
-                          href={`/product/${chip.id}`}
-                          className="pdp-size-chip"
-                        >
-                          <span className="pdp-size-chip-label">{chip.label}</span>
-                          {chip.priceLabel != null && (
-                            <span className="pdp-size-chip-price">{chip.priceLabel}</span>
-                          )}
-                        </Link>
-                      )
+                <Link href={catalogHref}>Каталог</Link>
+                {collectionLabel && (
+                  <>
+                    <span aria-hidden="true"> / </span>
+                    {collectionHref ? (
+                      <Link href={collectionHref}>{collectionLabel}</Link>
+                    ) : (
+                      <span>{collectionLabel}</span>
                     )}
-                  </div>
+                  </>
+                )}
+                <span aria-hidden="true"> / </span>
+                <span aria-current="page">{titleStr}</span>
+              </nav>
+
+              {/* 1. Context: collection + article — secondary but present */}
+              {(collectionLabel || subcollectionLabel || article) && (
+                <div className="pdp-context-row">
+                  {(collectionLabel || subcollectionLabel) && (
+                    <span className="pdp-collection-label">
+                      {[collectionLabel, subcollectionLabel].filter(Boolean).join(" · ")}
+                    </span>
+                  )}
+                  {article && (
+                    <span className="pdp-article">
+                      {pdpCopy.articleLabel} {article}
+                    </span>
+                  )}
                 </div>
-              )
-            })()}
-          <ProductCta product={product} />
-          {/* Portal target for execution swatches (Дерево/Обивка/Цвет) — rendered
-              below the CTA buttons regardless of product family. Always mounted
-              (even when this product has no swatches) so the media gallery core
-              never renders into a missing node; CSS collapses it when empty. */}
-          <div id="pdp-color-options-slot" className="pdp-color-options-slot" />
+              )}
+
+              {/* 2. Title */}
+              <div className="product-detail-header">
+                <CopyLines
+                  as="h1"
+                  className="pdp-title"
+                  lines={titleLayout.lines}
+                />
+                {badgeLabel && <span className="badge">{badgeLabel}</span>}
+              </div>
+              {showCanonicalLine && canonicalLayout && (
+                <CopyLines
+                  as="span"
+                  className="pdp-canonical-name"
+                  lines={canonicalLayout.lines}
+                />
+              )}
+
+              {/* 3. Short positioning line (real `subtitle` field only).
+                  Layout only: Woodright dashes + meaning breaks via CopyLines. */}
+              {subtitle && (
+                <CopyLines
+                  className="pdp-subtitle"
+                  lines={layoutPdpSubtitle(subtitle)}
+                />
+              )}
+
+              {/* 4. Dimensions: height → width → depth */}
+              {dimensionCells.length > 0 && (
+                <dl className="pdp-dimensions-row">
+                  {dimensionCells.map((c) => (
+                    <div key={c.label} className="pdp-dimension-cell">
+                      <dt>{c.label}</dt>
+                      <dd>
+                        {mmToCmLabel(c.mm)}&nbsp;{pdpCopy.unitCm}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
+
+              {/* Motif selection (Willie Winkie) — before other configuration */}
+              {motifContext &&
+                (motifContext.motif_status === "unsupported" ||
+                  motifContext.motif_status === "unknown") && (
+                  <div className="pdp-motif-notice" role="status">
+                    <p className="pdp-motif-notice-title">
+                      {motifContext.motif_status === "unsupported"
+                        ? willieWinkieMotifsCopy.motifUnavailableTitle
+                        : willieWinkieMotifsCopy.motifUnknownTitle}
+                    </p>
+                    <p className="pdp-motif-notice-body">
+                      {motifContext.motif_status === "unsupported"
+                        ? willieWinkieMotifsCopy.motifUnavailableBody
+                        : willieWinkieMotifsCopy.motifUnknownBody}
+                    </p>
+                  </div>
+                )}
+              {motifContext && motifContext.motif_options.length > 0 && (
+                <PdpMotifSelector
+                  options={motifContext.motif_options}
+                  motifPagePath={motifContext.motif_page_path}
+                />
+              )}
+
+              {/* 5. Configuration — material execution, then size + other
+                  execution groups, all before price / CTA */}
+              {materialTiers && (
+                <PdpMaterialTierSelect
+                  productKey={handle || (product.id as string)}
+                  options={materialTiers}
+                  requestQuote={isRequestQuoteProduct(product)}
+                />
+              )}
+              {sizeChips.length > 0 && (
+                <PdpSizeChips
+                  productKey={handle || (product.id as string)}
+                  chips={sizeChips}
+                  materialTiers={materialTiers}
+                  requestQuote={isRequestQuoteProduct(product)}
+                />
+              )}
+              {/* Portal target for execution option groups (Дерево/Обивка/Цвет/…).
+                  Always mounted so the media gallery core never renders into a
+                  missing node; CSS collapses it when empty. */}
+              <div id="pdp-color-options-slot" className="pdp-color-options-slot" />
+
+              {/* 6. Price — after required options; gated when execution controls exist */}
+              <PdpPriceBlock
+                priceLabel={
+                  requestQuotePrice != null
+                    ? requestQuotePrice
+                    : openingPrice != null
+                      ? formatRub(openingPrice)
+                      : isRequestQuoteProduct(product)
+                        ? labels.requestQuotePrice
+                        : null
+                }
+                basePrice={price}
+                requiresBuyerSelection={
+                  useExecutionPdp &&
+                  !isRequestQuoteProduct(product) &&
+                  productType !== "BESPOKE"
+                }
+                productKey={handle || (product.id as string)}
+                materialTiers={materialTiers}
+                requestQuote={isRequestQuoteProduct(product)}
+              />
+
+              {/* 7. CTA */}
+              <ProductCta
+                product={product}
+                requiresBuyerSelection={
+                  useExecutionPdp &&
+                  !isRequestQuoteProduct(product) &&
+                  productType !== "BESPOKE"
+                }
+                materialTiers={materialTiers}
+              />
+
+              {/* 8. Service block — real brand facts + real contact page only */}
+              <div className="pdp-service-block">
+                {pdpCopy.serviceLines.map((line) => (
+                  <span className="pdp-service-line" key={line}>
+                    {formatRuInline(line)}
+                  </span>
+                ))}
+                <Link href="/contacts" className="pdp-service-link">
+                  <span>{pdpCopy.serviceConsultLabel}</span>
+                  <span aria-hidden="true" className="pdp-service-link-arrow">→</span>
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
+
+      {/* Below the first screen: editorial description + full specs */}
+      {(description || specRows.length > 0) && (
+        <section className="pdp-below">
+          {description && (
+            <div className="pdp-description-block">
+              <h2>{pdpCopy.descriptionHeading}</h2>
+              {layoutPdpDescription(description).map((blocks, pi) => {
+                const collectionOnly = blocks.every((lines) =>
+                  lines.every(isPdpCollectionContextSentence)
+                )
+                return (
+                  <div
+                    key={pi}
+                    className={`pdp-description-group${collectionOnly ? " is-collection-group" : ""}`}
+                  >
+                    {blocks.map((lines, si) => {
+                      const joined = lines.join(" ")
+                      return (
+                        <CopyLines
+                          key={si}
+                          className={`pdp-description${
+                            isPdpCollectionContextSentence(joined) ? " is-collection" : ""
+                          }`}
+                          lines={lines}
+                        />
+                      )
+                    })}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+          {specRows.length > 0 && (
+            <div className="pdp-specs-block">
+              <h2>{pdpCopy.specsHeading}</h2>
+              <dl className="pdp-specs-list">
+                {specRows.map((row) => (
+                  <div key={row.label} className="pdp-specs-row">
+                    <dt>{row.label}</dt>
+                    <dd>{row.value}</dd>
+                  </div>
+                ))}
+              </dl>
+              <Link href="/catalog" className="pdp-service-link pdp-specs-catalog-link">
+                {actions.viewCatalog}
+              </Link>
+            </div>
+          )}
+        </section>
+      )}
+      {motifContext &&
+        motifContext.selected_motif &&
+        motifContext.related_products_in_motif.length > 0 && (
+          <PdpRelatedInMotif
+            products={motifContext.related_products_in_motif}
+            motifSlug={motifContext.selected_motif.motif_slug}
+            motifPagePath={motifContext.motif_page_path}
+          />
+        )}
     </div>
   )
 }

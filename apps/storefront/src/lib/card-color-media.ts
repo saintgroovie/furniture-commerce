@@ -1,6 +1,9 @@
 import {
   collectExtraProductImageUrls,
   collectProductImageUrls,
+  galleryImageBasenameKey,
+  isAngleLikeGalleryBasename,
+  isColorFinishFrameBasename,
   normalizeImageEntryUrl,
   resolveStorefrontProductImageSrc,
 } from "./product-images"
@@ -11,6 +14,8 @@ import {
   shouldSuppressOliverFinishWhenFabricCanonical,
 } from "./oliver-finish-execution-guard"
 import { hasProvencePaintWoodDualFinishEvidence } from "./provence-finish-execution-guard"
+import { formatBuyerFacingFinishLabel } from "./buyer-finish-label"
+import { buyerFacingWoodToneLabel } from "./buyer-wood-label"
 import {
   greenwichBedMatrixFromProduct,
   isGreenwichBedProduct,
@@ -27,6 +32,7 @@ import {
   isGreenwichPaintProduct,
 } from "./greenwich-paint-media"
 import { isMilkLikeFinishKey } from "../../../backend/src/lib/country-finish-labels"
+import { productWithNormalizedUpholsteryMetadata } from "../../../backend/src/lib/upholstery-color-normalization"
 
 export type CardColorVariant = {
   key: string
@@ -84,7 +90,11 @@ export type CardExecutionSelectors = {
   greenwichPaintMatrix?: import("./greenwich-paint-media").GreenwichPaintMatrixEntry[]
   /** Provence pv-* paint (cream) × lacquered wood split — separate Цвет/Дерево rows. */
   provencePaintWood?: boolean
-  /** Oliver standalone bed: one selector row per fabric (Lilian, Lorna), not one grouped rail. */
+  /**
+   * Legacy multi-row Oliver fabric-family axes (one toolbar per family).
+   * PASS B.1: builder must not emit this for family-only lists; kept only for
+   * defensive rendering / containment if an older payload still carries it.
+   */
   separateFabricRows?: CardColorVariant[]
 }
 
@@ -100,6 +110,72 @@ export function hasPdpExecutionControls(sel: CardExecutionSelectors): boolean {
     (sel.finish?.length ?? 0) > 1 ||
     (sel.separateFabricRows?.length ?? 0) >= 2
   )
+}
+
+/**
+ * Oliver fabric *collection* / family keys (LEONA, LILLIAN, …).
+ * These are not individual buyer color swatches and must not become
+ * vertical catalog-card option axes (PASS A containment).
+ */
+export const OLIVER_FABRIC_FAMILY_KEYS = new Set([
+  "leona",
+  "lillian",
+  "linda",
+  "lorna",
+  "torno",
+  "lilian",
+])
+
+export function isFabricFamilyUpholsteryKey(key: string): boolean {
+  return OLIVER_FABRIC_FAMILY_KEYS.has(key.trim().toLowerCase())
+}
+
+/** True when every upholstery entry is a fabric-family key (not a color). */
+export function isFabricFamilyOnlyUpholstery(
+  variants: CardColorVariant[] | undefined
+): boolean {
+  if (!variants?.length) return false
+  return variants.every((v) => isFabricFamilyUpholsteryKey(v.key))
+}
+
+/**
+ * Catalog product-card preview containment (PASS A).
+ * - Always drops `separateFabricRows` (catalog preview never vertical fabric-family toolbars).
+ * - For Oliver (`ol-*`) only: strips fabric-family keys from upholstery/finish
+ *   (card preview stays compact; families are not catalog option axes).
+ * - Other collections may legitimately reuse tokens like `torno` as finish colors.
+ * PDP uses `buildIntraProductExecutionSelectors` directly; PASS B.1 emits at most
+ * one `upholstery` axis for Oliver fabric families (never `separateFabricRows`).
+ */
+export function containCatalogCardExecutionSelectors(
+  sel: CardExecutionSelectors,
+  product?: Record<string, unknown>
+): CardExecutionSelectors {
+  const next: CardExecutionSelectors = { ...sel }
+  delete next.separateFabricRows
+
+  const handle =
+    typeof product?.handle === "string" ? product.handle.toLowerCase() : ""
+  if (!handle.startsWith("ol-")) return next
+
+  if (next.upholstery?.length) {
+    const kept = next.upholstery.filter((v) => !isFabricFamilyUpholsteryKey(v.key))
+    if (kept.length === 0) delete next.upholstery
+    else next.upholstery = kept
+  }
+
+  /* Mis-bucketed fabric families in finish_color_executions (e.g. OL-56 lilian)
+     must not appear as a fake «Цвет» axis on the catalog card. Data repair = PASS B. */
+  if (next.finish?.length) {
+    const kept = next.finish.filter((v) => !isFabricFamilyUpholsteryKey(v.key))
+    if (kept.length === 0) {
+      delete next.finish
+      delete next.finishLabel
+    } else {
+      next.finish = kept
+    }
+  }
+  return next
 }
 
 const EXECUTION_LABELS: Record<string, string> = {
@@ -125,8 +201,8 @@ const EXECUTION_LABELS: Record<string, string> = {
   darkblue: "Син-серый",
   "grey-blue": "Серо-голубой",
   frame: "Каркас",
-  cloud: "Cloud",
-  plane: "Plane",
+  cloud: "Клауд",
+  plane: "Плейн",
   velvet: "Велюр",
   linen: "Лён",
   oak: "Дуб",
@@ -215,6 +291,61 @@ export function isGreenwichNeutralDetailAsset(url: string): boolean {
   if (/sizes\d|габарит|наполнение|noliver_var|bedroom|wideheader|view0/i.test(hay)) return true
   if (!extractGreenwichFinishTokenFromUrl(url)) return true
   return false
+}
+
+/**
+ * Catalog `/store/catalog-products` often keeps finish/matrix `urls: [main]` only,
+ * while `product.images` still has same-finish siblings (e.g. white05/white06).
+ * Fill extras from images scoped to the active execution token - never other finishes.
+ */
+export function collectSameExecutionExtraImageUrls(
+  product: Record<string, unknown>,
+  mainSrc: string,
+  executionKey?: string | null
+): string[] {
+  const mainNorm = typeof mainSrc === "string" ? mainSrc.trim() : ""
+  const key = (
+    (typeof executionKey === "string" && executionKey.trim()) ||
+    extractExecutionTokenFromUrl(mainNorm) ||
+    ""
+  ).toLowerCase()
+  const candidates = collectExtraProductImageUrls(product, mainNorm).map((u) =>
+    resolveStorefrontProductImageSrc(u)
+  )
+  if (!key) {
+    // No execution token: only explicit angle/gallery slots (never finish frames).
+    return candidates.filter((u) => isAngleLikeGalleryBasename(u))
+  }
+  return candidates.filter((u) => {
+    const token = (extractExecutionTokenFromUrl(u) || "").toLowerCase()
+    // Same-token only. Tokenless / unknown finishes must not enter the bucket.
+    return Boolean(token) && token === key
+  })
+}
+
+/** Attach same-token catalog image extras when a variant only has a slim main URL. */
+export function enrichCardColorVariantsWithCatalogExtras(
+  variants: CardColorVariant[] | undefined,
+  product: Record<string, unknown>
+): CardColorVariant[] | undefined {
+  if (!variants?.length) return variants
+  let changed = false
+  const next = variants.map((v) => {
+    const mainSrc = resolveStorefrontProductImageSrc(v.mainSrc)
+    const existing = v.extraSrcs.map((u) => resolveStorefrontProductImageSrc(u))
+    if (existing.length > 0) {
+      if (mainSrc !== v.mainSrc || existing.some((u, i) => u !== v.extraSrcs[i])) {
+        changed = true
+        return { ...v, mainSrc, extraSrcs: existing }
+      }
+      return v
+    }
+    const extras = collectSameExecutionExtraImageUrls(product, mainSrc, v.key)
+    if (!extras.length && mainSrc === v.mainSrc) return v
+    changed = true
+    return { ...v, mainSrc, extraSrcs: extras }
+  })
+  return changed ? next : variants
 }
 
 export function isHeadboardModelToken(
@@ -331,10 +462,14 @@ export function executionLabelForToken(
   product?: Record<string, unknown>
 ): string {
   if (product && token) {
+    const frameLabels = labelsFromMetadata(product, "frame_material_labels")
+    const fromFrame = frameLabels?.[token]
+    if (typeof fromFrame === "string" && fromFrame.trim()) {
+      return buyerFacingWoodToneLabel(fromFrame.trim(), token)
+    }
     const labelMaps = [
       labelsFromMetadata(product, "paint_finish_labels", "finish_color_labels"),
       labelsFromMetadata(product, "fabric_upholstery_labels", "upholstery_color_labels"),
-      labelsFromMetadata(product, "frame_material_labels"),
       labelsFromMetadata(product, "construction_tier_labels", "material_tier_labels"),
     ]
     for (const labels of labelMaps) {
@@ -350,7 +485,7 @@ export function executionLabelForToken(
     }
   }
   if (!token) return EXECUTION_LABELS[NEUTRAL_KEY]!
-  return EXECUTION_LABELS[token] ?? token
+  return EXECUTION_LABELS[token] ?? formatBuyerFacingFinishLabel(token)
 }
 
 export function swatchTokenForProduct(
@@ -501,20 +636,65 @@ export function finishLabelForProduct(
   return "Цвет"
 }
 
+/**
+ * Metadata execution `urls` are often hero-only after browse lean / dimension
+ * pipelines. Card strips need sibling angles from `product.images` for the
+ * same finish token (backend treat images as SoT after hero-only buckets).
+ *
+ * Do **not** merge extra `*_color_<token>_*` finish frames from `product.images`
+ * (e.g. ol-82-1 torno_01..04) - those are the same finish, not camera angles,
+ * and flood kids/catalog strips with lookalike duplicates.
+ */
+function mergeExecutionUrlsWithProductImages(
+  key: string,
+  metaUrls: string[],
+  productImageUrls: string[]
+): string[] {
+  const keyNorm = key.trim().toLowerCase()
+  if (!keyNorm || productImageUrls.length === 0) return metaUrls
+
+  const matched = productImageUrls.filter((u) => {
+    if (extractExecutionTokenFromUrl(u)?.toLowerCase() !== keyNorm) return false
+    // Angle siblings only. Same-token color_* frames stay execution-owned.
+    if (isColorFinishFrameBasename(u)) return false
+    return isAngleLikeGalleryBasename(u)
+  })
+  if (matched.length === 0) return metaUrls
+
+  const out: string[] = []
+  const seen = new Set<string>()
+  const push = (raw: string) => {
+    const t = raw.trim()
+    if (!t) return
+    const stem = galleryImageBasenameKey(t).replace(/\.[^.]+$/, "")
+    if (!stem || seen.has(stem)) return
+    seen.add(stem)
+    out.push(t)
+  }
+  for (const u of metaUrls) push(u)
+  for (const u of matched) push(u)
+  return out.length > 0 ? out : metaUrls
+}
+
 function colorExecutionsFromMetadataArray(
   raw: unknown,
-  opts?: { handle?: string }
+  opts?: { handle?: string; productImageUrls?: string[] }
 ): CardColorVariant[] | undefined {
   if (!Array.isArray(raw) || raw.length < 2) return undefined
+  const productImageUrls = opts?.productImageUrls ?? []
   const variants: CardColorVariant[] = []
   for (const entry of raw) {
     if (!entry || typeof entry !== "object") continue
     const o = entry as Record<string, unknown>
     const key = typeof o.key === "string" ? o.key : null
     const label = typeof o.label === "string" ? o.label.trim() : ""
-    const urls = Array.isArray(o.urls)
+    const metaUrls = Array.isArray(o.urls)
       ? o.urls.filter((u): u is string => typeof u === "string" && u.trim().length > 0)
       : []
+    const urls =
+      key != null
+        ? mergeExecutionUrlsWithProductImages(key, metaUrls, productImageUrls)
+        : metaUrls
     const swatchHex =
       typeof o.swatch_hex === "string" && o.swatch_hex.trim().length > 0
         ? o.swatch_hex.trim()
@@ -583,8 +763,8 @@ function finishExecutionsFromMetadata(
   }
   const raw = metadataExecutionsRaw(
     product,
-    "finish_color_executions",
-    "paint_finish_executions"
+    "paint_finish_executions",
+    "finish_color_executions"
   )
   const urls = collectProductImageUrls(product)
   if (Array.isArray(raw) && isOliverFalseFinishColorSplit(urls, raw as Array<{ key: string; label: string; urls: string[] }>, handle)) {
@@ -599,7 +779,10 @@ function finishExecutionsFromMetadata(
     return undefined
   }
   const source = repaired.changed ? repaired.executions : raw
-  const variants = colorExecutionsFromMetadataArray(source, { handle })
+  const variants = colorExecutionsFromMetadataArray(source, {
+    handle,
+    productImageUrls: urls,
+  })
   if (!variants || variants.length < 2) return variants
   const h = handle?.toLowerCase() ?? ""
   if (h.startsWith("pv-")) {
@@ -624,14 +807,23 @@ function fabricUpholsteryExecutionsFromMetadata(
     "fabric_upholstery_executions",
     "upholstery_color_executions"
   )
-  return colorExecutionsFromMetadataArray(raw)
+  return colorExecutionsFromMetadataArray(raw, {
+    productImageUrls: collectProductImageUrls(product),
+  })
 }
 
 function frameMaterialExecutionsFromMetadata(
   product: Record<string, unknown>
 ): CardColorVariant[] | undefined {
   const raw = metadataExecutionsRaw(product, "frame_material_executions")
-  return colorExecutionsFromMetadataArray(raw)
+  const variants = colorExecutionsFromMetadataArray(raw, {
+    productImageUrls: collectProductImageUrls(product),
+  })
+  if (!variants) return undefined
+  return variants.map((v) => ({
+    ...v,
+    label: buyerFacingWoodToneLabel(v.label, v.key),
+  }))
 }
 
 function constructionTierExecutionsFromMetadata(
@@ -642,7 +834,9 @@ function constructionTierExecutionsFromMetadata(
     "construction_tier_executions",
     "material_tier_executions"
   )
-  return colorExecutionsFromMetadataArray(raw)
+  return colorExecutionsFromMetadataArray(raw, {
+    productImageUrls: collectProductImageUrls(product),
+  })
 }
 
 /** @deprecated use fabricUpholsteryExecutionsFromMetadata */
@@ -656,6 +850,14 @@ function materialTierExecutionsFromMetadata(
   product: Record<string, unknown>
 ): CardColorVariant[] | undefined {
   return constructionTierExecutionsFromMetadata(product)
+}
+
+/* Buyer-facing RU names for headboard models - metadata stores the latin
+   originals (Frame/Cloud/Plane). */
+const HEADBOARD_MODEL_LABELS_RU: Record<string, string> = {
+  frame: "Фрейм",
+  cloud: "Клауд",
+  plane: "Плейн",
 }
 
 function headboardExecutionsFromMetadata(
@@ -677,7 +879,7 @@ function headboardExecutionsFromMetadata(
     const resolved = urls.map((u) => resolveStorefrontProductImageSrc(u))
     variants.push({
       key,
-      label,
+      label: HEADBOARD_MODEL_LABELS_RU[key] ?? label,
       mainSrc: resolved[0]!,
       extraSrcs: resolved.slice(1),
       modelToken: key,
@@ -705,7 +907,10 @@ function dimensionOnlyColorVariants(
         : null
     variants.push({
       key,
-      label,
+      label:
+        sampleRegion === "frame_wood"
+          ? buyerFacingWoodToneLabel(label, key)
+          : label,
       mainSrc: "",
       extraSrcs: [],
       swatchToken: swatchKey(key),
@@ -814,17 +1019,52 @@ function isProvencePaintWoodSplitMeta(
   return meta?.finish_metadata_source === "provence_paint_wood_split"
 }
 
+/**
+ * Provence split evidence lives in execution metadata even when the catalog
+ * browse image projection keeps only the first three generic (`_other`) files.
+ * Use the canonical execution URLs for the guard instead of treating the slim
+ * `product.images` list as the source of truth.
+ */
+function collectProvenceExecutionEvidenceUrls(
+  product: Record<string, unknown>
+): string[] {
+  const out = collectProductImageUrls(product)
+  const seen = new Set(
+    out.map((url) => (url.split("/").pop() ?? url).toLowerCase())
+  )
+  const meta = product.metadata as Record<string, unknown> | undefined
+  for (const key of ["paint_finish_executions", "finish_color_executions"]) {
+    const entries = meta?.[key]
+    if (!Array.isArray(entries)) continue
+    for (const entry of entries) {
+      if (!entry || typeof entry !== "object") continue
+      const urls = (entry as { urls?: unknown }).urls
+      if (!Array.isArray(urls)) continue
+      for (const raw of urls) {
+        if (typeof raw !== "string" || !raw.trim()) continue
+        const url = raw.trim()
+        const basename = (url.split("/").pop() ?? url).toLowerCase()
+        if (seen.has(basename)) continue
+        seen.add(basename)
+        out.push(url)
+      }
+    }
+  }
+  return out
+}
+
 function provencePaintWoodSelectorsFromMetadata(
   product: Record<string, unknown>
 ): CardExecutionSelectors | null {
   const handle = typeof product.handle === "string" ? product.handle : ""
   const meta = product.metadata as Record<string, unknown> | undefined
   if (!isProvencePaintWoodSplitMeta(meta, handle)) return null
-  const urls = collectProductImageUrls(product)
+  const urls = collectProvenceExecutionEvidenceUrls(product)
   if (!hasProvencePaintWoodDualFinishEvidence(urls, handle)) return null
 
   const variants = colorExecutionsFromMetadataArray(meta?.finish_color_executions, {
     handle,
+    productImageUrls: urls,
   })
   if (!variants || variants.length < 2) return null
   const cream = variants.find((v) => v.key === "cream")
@@ -857,12 +1097,26 @@ function isOliverStandaloneMultiFabricProduct(
   return Boolean(metadataFabric && metadataFabric.length >= 2)
 }
 
-function oliverSeparateFabricRowSelectors(
+/**
+ * PASS B.1 — Oliver standalone multi-family fabric list.
+ *
+ * Contract: SINGLE_INTERACTIVE_FAMILY_AXIS
+ * - Families are values of one `Обивка` axis (media preview), not separate section axes.
+ * - Do not emit `separateFabricRows` (that path forces product-thumbnail image swatches).
+ * - PDP renderer must not pass `imageSwatches` for this row (hex/token chips only).
+ * - Price/Medusa variant are unchanged; selection only swaps execution media.
+ */
+function oliverUnifiedFabricFamilySelectors(
   metadataFabric: CardColorVariant[],
   metadataFrame: CardColorVariant[] | undefined
 ): CardExecutionSelectors {
   return {
-    separateFabricRows: metadataFabric,
+    /* Strip any metadata hex: family keys are collections, not evidenced colors. */
+    upholstery: metadataFabric.map((row) => ({
+      ...row,
+      swatchHex: undefined,
+      swatchToken: undefined,
+    })),
     wood: metadataFrame,
     confidence: "canonical",
   }
@@ -872,29 +1126,38 @@ export function buildIntraProductExecutionSelectors(
   product: Record<string, unknown>,
   mainSrc: string
 ): CardExecutionSelectors {
-  const greenwichBed = greenwichBedSelectorsFromMetadata(product)
+  /* PASS B: normalize fabric/finish taxonomy in-memory before selectors.
+     Does not mutate Medusa DB; does not invent colors. */
+  const { product: normalizedProduct } =
+    productWithNormalizedUpholsteryMetadata(product)
+
+  const greenwichBed = greenwichBedSelectorsFromMetadata(normalizedProduct)
   if (greenwichBed) return greenwichBed
 
-  const greenwichPaint = greenwichPaintSelectorsFromMetadata(product)
+  const greenwichPaint = greenwichPaintSelectorsFromMetadata(normalizedProduct)
   if (greenwichPaint) return greenwichPaint
 
-  const provencePaintWood = provencePaintWoodSelectorsFromMetadata(product)
+  const provencePaintWood =
+    provencePaintWoodSelectorsFromMetadata(normalizedProduct)
   if (provencePaintWood) return provencePaintWood
 
   const handleEarly =
-    typeof product.handle === "string" ? product.handle.toLowerCase() : ""
+    typeof normalizedProduct.handle === "string"
+      ? normalizedProduct.handle.toLowerCase()
+      : ""
   if (handleEarly.startsWith("pv-")) {
-    const urls = collectProductImageUrls(product)
+    const urls = collectProvenceExecutionEvidenceUrls(normalizedProduct)
     if (!hasProvencePaintWoodDualFinishEvidence(urls, handleEarly)) {
       return { confidence: "metadata_blocked" }
     }
   }
 
-  const metadataHeadboard = headboardExecutionsFromMetadata(product)
-  const metadataFabric = fabricUpholsteryExecutionsFromMetadata(product)
-  const metadataPaint = finishExecutionsFromMetadata(product)
-  const metadataFrame = frameMaterialExecutionsFromMetadata(product)
-  const metadataConstruction = constructionTierExecutionsFromMetadata(product)
+  const metadataHeadboard = headboardExecutionsFromMetadata(normalizedProduct)
+  const metadataFabric = fabricUpholsteryExecutionsFromMetadata(normalizedProduct)
+  const metadataPaint = finishExecutionsFromMetadata(normalizedProduct)
+  const metadataFrame = frameMaterialExecutionsFromMetadata(normalizedProduct)
+  const metadataConstruction =
+    constructionTierExecutionsFromMetadata(normalizedProduct)
 
   if (metadataHeadboard) {
     const out: CardExecutionSelectors = {
@@ -904,7 +1167,7 @@ export function buildIntraProductExecutionSelectors(
     if (metadataFabric) out.upholstery = metadataFabric
     if (metadataPaint) {
       out.finish = metadataPaint
-      out.finishLabel = finishLabelForProduct(product)
+      out.finishLabel = finishLabelForProduct(normalizedProduct)
     }
     return out
   }
@@ -921,12 +1184,20 @@ export function buildIntraProductExecutionSelectors(
     if (
       executionKeysMatch(metadataPaint, metadataFabric) ||
       shouldSuppressOliverFinishWhenFabricCanonical(
-        typeof product.handle === "string" ? product.handle : undefined,
-        product.metadata as Record<string, unknown> | undefined
+        typeof normalizedProduct.handle === "string"
+          ? normalizedProduct.handle
+          : undefined,
+        normalizedProduct.metadata as Record<string, unknown> | undefined
       )
     ) {
-      if (isOliverStandaloneMultiFabricProduct(product, metadataFabric, metadataHeadboard)) {
-        return oliverSeparateFabricRowSelectors(metadataFabric, metadataFrame)
+      if (
+        isOliverStandaloneMultiFabricProduct(
+          normalizedProduct,
+          metadataFabric,
+          metadataHeadboard
+        )
+      ) {
+        return oliverUnifiedFabricFamilySelectors(metadataFabric, metadataFrame)
       }
       return {
         upholstery: metadataFabric,
@@ -936,7 +1207,7 @@ export function buildIntraProductExecutionSelectors(
     }
     return {
       finish: metadataPaint,
-      finishLabel: finishLabelForProduct(product),
+      finishLabel: finishLabelForProduct(normalizedProduct),
       upholstery: metadataFabric,
       wood: metadataFrame,
       confidence: "canonical",
@@ -946,7 +1217,7 @@ export function buildIntraProductExecutionSelectors(
   if (metadataPaint) {
     const out: CardExecutionSelectors = {
       finish: metadataPaint,
-      finishLabel: finishLabelForProduct(product),
+      finishLabel: finishLabelForProduct(normalizedProduct),
       confidence: "canonical",
     }
     if (metadataFrame) out.wood = metadataFrame
@@ -954,8 +1225,14 @@ export function buildIntraProductExecutionSelectors(
   }
 
   if (metadataFabric) {
-    if (isOliverStandaloneMultiFabricProduct(product, metadataFabric, metadataHeadboard)) {
-      return oliverSeparateFabricRowSelectors(metadataFabric, metadataFrame)
+    if (
+      isOliverStandaloneMultiFabricProduct(
+        normalizedProduct,
+        metadataFabric,
+        metadataHeadboard
+      )
+    ) {
+      return oliverUnifiedFabricFamilySelectors(metadataFabric, metadataFrame)
     }
     return {
       upholstery: metadataFabric,
@@ -971,7 +1248,8 @@ export function buildIntraProductExecutionSelectors(
     }
   }
 
-  const metadataMaterialTier = materialTierExecutionsFromMetadata(product)
+  const metadataMaterialTier =
+    materialTierExecutionsFromMetadata(normalizedProduct)
   if (metadataMaterialTier) {
     return {
       finish: metadataMaterialTier,
@@ -981,24 +1259,31 @@ export function buildIntraProductExecutionSelectors(
   }
 
   const mainNorm = mainSrc.trim()
-  const productUrls = collectProductImageUrls(product)
-  const handle = typeof product.handle === "string" ? product.handle.toLowerCase() : ""
+  const productUrls = collectProductImageUrls(normalizedProduct)
+  const handle =
+    typeof normalizedProduct.handle === "string"
+      ? normalizedProduct.handle.toLowerCase()
+      : ""
   if (detectOliverGalleryColorHeroPair(productUrls) && handle.startsWith("ol-")) {
     return { confidence: "metadata_blocked" }
   }
 
   const { upholsteryBuckets, woodBuckets, modelBuckets } =
-    bucketProductImages(product)
+    bucketProductImages(normalizedProduct)
 
   const headboard = buildModelVariantsFromBuckets(modelBuckets, mainNorm)
   const upholstery = buildColorVariantsFromBuckets(
     upholsteryBuckets,
     mainNorm,
-    product
+    normalizedProduct
   )
-  const wood = buildColorVariantsFromBuckets(woodBuckets, mainNorm, product)
+  const wood = buildColorVariantsFromBuckets(
+    woodBuckets,
+    mainNorm,
+    normalizedProduct
+  )
 
-  const upholstered = isUpholsteredProduct(product)
+  const upholstered = isUpholsteredProduct(normalizedProduct)
   const hasUpholstery = Boolean(upholstery && upholstery.length > 1)
   const hasWood = Boolean(wood && wood.length > 1)
 
@@ -1018,7 +1303,7 @@ export function buildIntraProductExecutionSelectors(
     out.confidence = "metadata_blocked"
   } else if (hasWood && !upholstered) {
     out.finish = wood
-    out.finishLabel = finishLabelForProduct(product)
+    out.finishLabel = finishLabelForProduct(normalizedProduct)
     out.confidence = "heuristic"
   } else if (out.headboard) {
     out.confidence = "metadata_blocked"
@@ -1050,7 +1335,7 @@ function buildModelVariantsFromBuckets(
     if (!main && extras.length === 0) continue
     variants.push({
       key: `model:${token}`,
-      label: EXECUTION_LABELS[token] ?? token,
+      label: HEADBOARD_MODEL_LABELS_RU[token] ?? EXECUTION_LABELS[token] ?? token,
       mainSrc: main,
       extraSrcs: extras,
       modelToken: token,

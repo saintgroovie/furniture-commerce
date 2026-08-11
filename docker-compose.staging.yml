@@ -1,0 +1,181 @@
+# Woodright staging stack for Dokploy / docker compose.
+# Preferred first path: Dokploy builds Dockerfiles from this branch (see build:).
+# After CI/registry exists, override WOODRIGHT_*_IMAGE to immutable SHA tags.
+#
+# Secrets MUST be injected by the orchestrator  -  do not commit real values.
+# Never point DATABASE_URL at Dokploy's own Postgres.
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${WOODRIGHT_DB_NAME:-woodright_staging}
+      POSTGRES_USER: ${WOODRIGHT_DB_USER:-woodright}
+      POSTGRES_PASSWORD: ${WOODRIGHT_DB_PASSWORD:?set WOODRIGHT_DB_PASSWORD}
+    volumes:
+      - woodright_staging_pg:/var/lib/postgresql/data
+    networks:
+      - woodright_staging
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - woodright_staging_redis:/data
+    networks:
+      - woodright_staging
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    image: ${WOODRIGHT_BACKEND_IMAGE:-woodright-backend:local}
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    # Wave 1 memory caps (measurement-backed; see docs/operator/container-memory-limits.md)
+    mem_reservation: "${WOODRIGHT_BACKEND_MEMORY_RESERVATION:-640m}"
+    mem_limit: "${WOODRIGHT_BACKEND_MEMORY_LIMIT:-1536m}"
+    memswap_limit: "${WOODRIGHT_BACKEND_MEMORY_SWAP:-1536m}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL:?set DATABASE_URL}
+      REDIS_URL: ${REDIS_URL:?set REDIS_URL}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET}
+      COOKIE_SECRET: ${COOKIE_SECRET:?set COOKIE_SECRET}
+      STORE_CORS: ${STORE_CORS:?set STORE_CORS}
+      ADMIN_CORS: ${ADMIN_CORS:?set ADMIN_CORS}
+      AUTH_CORS: ${AUTH_CORS:?set AUTH_CORS}
+      MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL:?set MEDUSA_BACKEND_URL}
+      # HTTPS staging/demo: leave unset or 0. Only set MEDUSA_LOCAL_HTTP=1 for
+      # temporary cleartext http://IP admin review (non-production workflow).
+      MEDUSA_LOCAL_HTTP: ${MEDUSA_LOCAL_HTTP:-0}
+      PORT: "9000"
+      # Runtime identity (fail-closed QA). Alias only  -  never put DSN here.
+      WOODRIGHT_RUNTIME_ROLE: ${WOODRIGHT_RUNTIME_ROLE:-public_demo}
+      WOODRIGHT_EXPOSURE: ${WOODRIGHT_EXPOSURE:-public}
+      WOODRIGHT_RELEASE_SHA: ${WOODRIGHT_RELEASE_SHA:-}
+      WOODRIGHT_DATABASE_IDENTITY: ${WOODRIGHT_DATABASE_IDENTITY:-${WOODRIGHT_DATABASE_IDENTITY_ALIAS:-public_demo_db}}
+      WOODRIGHT_DATABASE_IDENTITY_ALIAS: ${WOODRIGHT_DATABASE_IDENTITY_ALIAS:-${WOODRIGHT_DATABASE_IDENTITY:-public_demo_db}}
+      WOODRIGHT_CANONICAL_DOMAIN: ${WOODRIGHT_CANONICAL_DOMAIN:-woodright-demo.ru}
+      WOODRIGHT_CANONICAL_API_ORIGIN: ${WOODRIGHT_CANONICAL_API_ORIGIN:-https://api.woodright-demo.ru}
+    labels:
+      com.woodright.runtime-role: ${WOODRIGHT_RUNTIME_ROLE:-public_demo}
+      com.woodright.exposure: ${WOODRIGHT_EXPOSURE:-public}
+      com.woodright.canonical-domain: ${WOODRIGHT_CANONICAL_DOMAIN:-woodright-demo.ru}
+      com.woodright.release-sha: ${WOODRIGHT_RELEASE_SHA:-unknown}
+      com.woodright.database-identity: ${WOODRIGHT_DATABASE_IDENTITY:-${WOODRIGHT_DATABASE_IDENTITY_ALIAS:-public_demo_db}}
+      com.woodright.deployment-owner: ${WOODRIGHT_DEPLOYMENT_OWNER:-Dokploy}
+    volumes:
+      - woodright_staging_media:/server/static
+    # Storefront rewrites /product-static → http://backend:9000/static (baked
+    # MEDUSA_BACKEND_* default). Service DNS alone is lost when containers are
+    # recreated via docker create/rename cutover with container_name override.
+    # Explicit alias on the shared app network must survive every recreate.
+    networks:
+      woodright_staging:
+        aliases:
+          - backend
+      dokploy-network: {}
+    # No host publish: Traefik (dokploy-network) + internal Docker DNS only.
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:9000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  storefront:
+    image: ${WOODRIGHT_STOREFRONT_IMAGE:-woodright-storefront:local}
+    build:
+      context: .
+      dockerfile: apps/storefront/Dockerfile
+      args:
+        # Empty: browser uses same-origin /store + /product-static (do not bake public :9000).
+        NEXT_PUBLIC_MEDUSA_BACKEND_URL: ${NEXT_PUBLIC_MEDUSA_BACKEND_URL:-}
+        MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL_INTERNAL:-http://backend:9000}
+        MEDUSA_BACKEND_INTERNAL_URL: ${MEDUSA_BACKEND_URL_INTERNAL:-http://backend:9000}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:?set NEXT_PUBLIC_SITE_URL}
+        NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: ${NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY:?set NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY}
+        NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES: ${NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES:-1}
+    restart: unless-stopped
+    # Wave 1 memory caps (measurement-backed; see docs/operator/container-memory-limits.md)
+    mem_reservation: "${WOODRIGHT_STOREFRONT_MEMORY_RESERVATION:-192m}"
+    mem_limit: "${WOODRIGHT_STOREFRONT_MEMORY_LIMIT:-512m}"
+    memswap_limit: "${WOODRIGHT_STOREFRONT_MEMORY_SWAP:-512m}"
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: "3002"
+      MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL_INTERNAL:-http://backend:9000}
+      MEDUSA_BACKEND_INTERNAL_URL: ${MEDUSA_BACKEND_URL_INTERNAL:-http://backend:9000}
+      # Demo/staging SEO: fail-closed noindex (see docs/operator/seo-indexing-policy.md)
+      WOODRIGHT_INDEXING_MODE: ${WOODRIGHT_INDEXING_MODE:-noindex}
+      WOODRIGHT_RUNTIME_ROLE: ${WOODRIGHT_RUNTIME_ROLE:-public_demo}
+      WOODRIGHT_EXPOSURE: ${WOODRIGHT_EXPOSURE:-public}
+      WOODRIGHT_RELEASE_SHA: ${WOODRIGHT_RELEASE_SHA:-}
+      WOODRIGHT_DATABASE_IDENTITY: ${WOODRIGHT_DATABASE_IDENTITY:-${WOODRIGHT_DATABASE_IDENTITY_ALIAS:-public_demo_db}}
+      WOODRIGHT_DATABASE_IDENTITY_ALIAS: ${WOODRIGHT_DATABASE_IDENTITY_ALIAS:-${WOODRIGHT_DATABASE_IDENTITY:-public_demo_db}}
+      WOODRIGHT_CANONICAL_DOMAIN: ${WOODRIGHT_CANONICAL_DOMAIN:-woodright-demo.ru}
+      WOODRIGHT_CANONICAL_API_ORIGIN: ${WOODRIGHT_CANONICAL_API_ORIGIN:-https://api.woodright-demo.ru}
+    labels:
+      com.woodright.runtime-role: ${WOODRIGHT_RUNTIME_ROLE:-public_demo}
+      com.woodright.exposure: ${WOODRIGHT_EXPOSURE:-public}
+      com.woodright.canonical-domain: ${WOODRIGHT_CANONICAL_DOMAIN:-woodright-demo.ru}
+      com.woodright.release-sha: ${WOODRIGHT_RELEASE_SHA:-unknown}
+      com.woodright.database-identity: ${WOODRIGHT_DATABASE_IDENTITY:-${WOODRIGHT_DATABASE_IDENTITY_ALIAS:-public_demo_db}}
+      com.woodright.deployment-owner: ${WOODRIGHT_DEPLOYMENT_OWNER:-Dokploy}
+    networks:
+      - woodright_staging
+      - dokploy-network
+    # No host publish: Traefik Host/TLS via dokploy-network only.
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3002/').then(r=>process.exit(r.status<500?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+volumes:
+  woodright_staging_pg:
+  woodright_staging_redis:
+  # External durable media  -  never create empty replacement volume on compose up.
+  # Full name must match live Docker volume used by public_demo backend.
+  woodright_staging_media:
+    external: true
+    name: woodright-stack-3dsdhd_woodright_staging_media
+
+networks:
+  woodright_staging:
+    driver: bridge
+  dokploy-network:
+    external: true

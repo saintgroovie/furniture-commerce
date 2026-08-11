@@ -9,18 +9,24 @@
  * {@link mergeUniqueExtraUrls} (listing attaches `display_group_color_variants` in `display-group.ts`).
  */
 
+import {
+  mediaNearDupCollapseForHandle,
+  mediaNearDupDropBasenameSet,
+} from "./media-near-dup-collapse"
+
 function medusaBackendBaseForImages(): string {
+  // Host classification only — never used as img src prefix after same-origin rewrite.
+  // Empty when unset so client chunks do not embed localhost:9000.
   const raw =
-    (typeof process !== "undefined" &&
-      (process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ||
-        process.env.MEDUSA_BACKEND_URL)) ||
-    "http://localhost:9000"
+    typeof process !== "undefined"
+      ? process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || ""
+      : ""
   return String(raw).replace(/\/$/, "")
 }
 
 /**
  * Browser-safe product image URL: `/static/...` and `/uploads/...` are served by Medusa, not Next.
- * Rewrites docker `medusa` hostnames to `localhost` for local QA.
+ * Prefer same-origin storefront paths — never emit public `:9000` as img src.
  */
 export function resolveMedusaBackendImageUrl(url: string): string {
   const t = typeof url === "string" ? url.trim() : ""
@@ -29,6 +35,12 @@ export function resolveMedusaBackendImageUrl(url: string): string {
   if (t.startsWith("http://") || t.startsWith("https://")) {
     try {
       const u = new URL(t)
+      if (u.pathname.startsWith("/static/")) {
+        return `/product-static${u.pathname.slice("/static".length)}${u.search}${u.hash}`
+      }
+      if (u.pathname.startsWith("/uploads/")) {
+        return `${u.pathname}${u.search}${u.hash}`
+      }
       if (u.hostname === "medusa" || u.hostname.endsWith(".medusa")) {
         u.hostname = "localhost"
         return u.toString()
@@ -38,8 +50,11 @@ export function resolveMedusaBackendImageUrl(url: string): string {
     }
     return t
   }
-  if (t.startsWith("/static/") || t.startsWith("/uploads/")) {
-    return `${medusaBackendBaseForImages()}${t}`
+  if (t.startsWith("/static/")) {
+    return `/product-static${t.slice("/static".length)}`
+  }
+  if (t.startsWith("/uploads/")) {
+    return t
   }
   return t
 }
@@ -47,10 +62,14 @@ export function resolveMedusaBackendImageUrl(url: string): string {
 function isMedusaBackendHost(hostname: string): boolean {
   const h = hostname.toLowerCase()
   if (h === "medusa" || h.endsWith(".medusa")) return true
-  if (h === "localhost" || h === "127.0.0.1" || h === "host.docker.internal") return true
+  if (h === "localhost" || h === "127.0.0.1" || h === "host.docker.internal") {
+    return true
+  }
   const configured = medusaBackendBaseForImages()
+  if (!configured) return false
   try {
     const backendHost = new URL(configured).hostname.toLowerCase()
+    if (!backendHost || backendHost === "0.0.0.0") return false
     return h === backendHost
   } catch {
     return false
@@ -69,18 +88,20 @@ export function resolvePdpMediaSrc(url: string): string {
     return `/product-static${s.slice("/static".length)}`
   }
   if (s.startsWith("/uploads/")) {
-    return `${medusaBackendBaseForImages()}${s}`
+    // Same-origin via Next rewrite `/uploads` → Medusa `/uploads` (no public :9000).
+    return s
   }
   if (s.startsWith("http://") || s.startsWith("https://")) {
     try {
       const u = new URL(s)
+      if (u.pathname.startsWith("/static/")) {
+        return `/product-static${u.pathname.slice("/static".length)}${u.search}${u.hash}`
+      }
+      if (u.pathname.startsWith("/uploads/")) {
+        return `${u.pathname}${u.search}${u.hash}`
+      }
       if (isMedusaBackendHost(u.hostname)) {
-        if (u.pathname.startsWith("/static/")) {
-          return `/product-static${u.pathname.slice("/static".length)}`
-        }
-        if (u.pathname.startsWith("/uploads/")) {
-          return `${medusaBackendBaseForImages()}${u.pathname}`
-        }
+        return `${u.pathname}${u.search}${u.hash}`
       }
     } catch {
       /* ignore */
@@ -157,10 +178,71 @@ export function galleryImageBasenameKey(url: string): string {
   return base.toLowerCase()
 }
 
+/** Pathname without query; absolute URLs → pathname only. */
+function galleryUrlPathname(url: string): string {
+  const trimmed = typeof url === "string" ? url.trim() : ""
+  if (!trimmed) return ""
+  let path = trimmed.split("?")[0] ?? trimmed
+  try {
+    if (path.startsWith("http://") || path.startsWith("https://")) {
+      path = new URL(path).pathname
+    }
+  } catch {
+    /* keep path */
+  }
+  return path
+}
+
+/**
+ * Stem after stripping `/derivatives/card/` (helper for derivative↔original only).
+ * Do not use alone for gallery dedupe — prefer `isCatalogDerivativeOriginalPair`.
+ */
+export function galleryAssetStemKey(url: string): string {
+  let path = galleryUrlPathname(url)
+  if (!path) return ""
+  path = path.replace(/\/derivatives\/card\//i, "/")
+  const base = path.split("/").pop() ?? path
+  return base.replace(/\.(webp|jpe?g|png|gif|avif)$/i, "").toLowerCase()
+}
+
+/**
+ * True only for catalog card derivative ↔ sibling original:
+ * `…/derivatives/card/foo.webp` ↔ `…/foo.jpg` (same parent dir after strip).
+ * Does NOT collapse arbitrary same-stem different extensions (foo.jpg vs foo.png).
+ */
+export function isCatalogDerivativeOriginalPair(a: string, b: string): boolean {
+  const pathA = galleryUrlPathname(a)
+  const pathB = galleryUrlPathname(b)
+  if (!pathA || !pathB) return false
+  const derA = /\/derivatives\/card\//i.test(pathA)
+  const derB = /\/derivatives\/card\//i.test(pathB)
+  if (derA === derB) return false
+  const derPath = derA ? pathA : pathB
+  const origPath = derA ? pathB : pathA
+  const derBase = derPath.split("/").pop() ?? ""
+  const origBase = origPath.split("/").pop() ?? ""
+  // Catalog card derivatives are webp; originals are raster siblings.
+  if (!/\.webp$/i.test(derBase)) return false
+  if (!/\.(jpe?g|png)$/i.test(origBase)) return false
+  const stemA = galleryAssetStemKey(a)
+  const stemB = galleryAssetStemKey(b)
+  if (!stemA || !stemB || stemA !== stemB) return false
+  const normA = pathA.replace(/\/derivatives\/card\//i, "/")
+  const normB = pathB.replace(/\/derivatives\/card\//i, "/")
+  const slashA = normA.lastIndexOf("/")
+  const slashB = normB.lastIndexOf("/")
+  const dirA = (slashA >= 0 ? normA.slice(0, slashA) : "").toLowerCase()
+  const dirB = (slashB >= 0 ? normB.slice(0, slashB) : "").toLowerCase()
+  return dirA === dirB
+}
+
 function mainSrcMatchesUrl(mainNorm: string, url: string): boolean {
   if (!mainNorm) return false
   if (url === mainNorm) return true
-  return galleryImageBasenameKey(url) === galleryImageBasenameKey(mainNorm)
+  if (galleryImageBasenameKey(url) === galleryImageBasenameKey(mainNorm)) {
+    return true
+  }
+  return isCatalogDerivativeOriginalPair(mainNorm, url)
 }
 
 function pushUniqueGalleryUrl(out: string[], url: string, mainNorm: string): void {
@@ -169,6 +251,106 @@ function pushUniqueGalleryUrl(out: string[], url: string, mainNorm: string): voi
   if (mainSrcMatchesUrl(mainNorm, v)) return
   if (out.some((u) => u === v || galleryImageBasenameKey(u) === galleryImageBasenameKey(v))) return
   out.push(v)
+}
+
+/** Angle / gallery-slot basename (iso, iN, gallery_NN) - not finish color frames. */
+export function isAngleLikeGalleryBasename(url: string): boolean {
+  const b = galleryImageBasenameKey(url)
+  return /(?:^|[-_])(?:iso[-_]?\d*|i\d+|gallery[-_]?\d+)(?:[-_.]|$)/i.test(b)
+}
+
+/** Finish/color execution frame (`*_color_torno_01.jpg`), not a camera-angle sibling. */
+export function isColorFinishFrameBasename(url: string): boolean {
+  return /_color_/i.test(galleryImageBasenameKey(url))
+}
+
+function isBareIsoBasename(b: string): boolean {
+  return /[-_]iso(?![-_]?\d)(?:[._-]|$)/i.test(b)
+}
+
+/**
+ * Exact basename match only. Filename “twins” (iso ↔ iso-1, iN ↔ gallery_0N)
+ * must not collapse without perceptual evidence — see media-near-dup-collapse.
+ */
+export function areNearDuplicateProductImages(a: string, b: string): boolean {
+  const ba = galleryImageBasenameKey(a)
+  const bb = galleryImageBasenameKey(b)
+  if (!ba || !bb) return false
+  return ba === bb
+}
+
+/**
+ * Heuristic quality score (client-safe, no fs). Prefer numbered iso / gallery /
+ * explicit WxH in the filename over bare iso / legacy i-frames.
+ */
+export function productImageQualityScore(url: string): number {
+  const b = galleryImageBasenameKey(url)
+  let score = 0
+  const dim = b.match(/(\d{3,4})x(\d{3,4})/)
+  if (dim) score += Number(dim[1]) * Number(dim[2])
+  if (/iso[-_]?1(?:[._-]|$)/i.test(b)) score += 12_000
+  else if (/iso[-_]?\d+(?:[._-]|$)/i.test(b)) score += 10_000
+  else if (isBareIsoBasename(b)) score += 4_000
+  if (/gallery[_\-.]?\d+/i.test(b)) score += 11_000
+  if (/[-_]i0?\d(?:\.|[-_]|$)/i.test(b)) score += 3_500
+  if (/__1_/.test(b)) score -= 500
+  score += Math.min(b.length, 100)
+  return score
+}
+
+/**
+ * Catalog / PDP: drop evidence-backed near-dups; exact-basename dedupe only otherwise.
+ * Never blind-collapses iso ↔ iso-1 (false twins like av-05-1).
+ */
+export function resolveCardHeroAndNearDuplicateExtras(
+  mainSrc: string,
+  extras: string[],
+  handle?: string | null
+): { mainSrc: string; extraSrcs: string[] } {
+  const rawMain = typeof mainSrc === "string" ? mainSrc.trim() : ""
+  let main = filterObviousGarbageImageUrl(rawMain) || rawMain
+  if (!main) {
+    return { mainSrc: "", extraSrcs: [] }
+  }
+
+  const dropSet = mediaNearDupDropBasenameSet(handle)
+  const collapse = mediaNearDupCollapseForHandle(handle)
+  const keepKey = collapse?.keep_basename
+    ? galleryImageBasenameKey(collapse.keep_basename)
+    : ""
+
+  const pool: string[] = [main]
+  for (const raw of extras) {
+    if (typeof raw !== "string") continue
+    const extra = filterObviousGarbageImageUrl(raw.trim())
+    if (!extra) continue
+    if (mainSrcMatchesUrl(main, extra)) continue
+    if (pool.some((u) => mainSrcMatchesUrl(u, extra))) continue
+    pool.push(extra)
+  }
+
+  const kept = pool.filter((u) => !dropSet.has(galleryImageBasenameKey(u)))
+  if (kept.length === 0) {
+    return { mainSrc: main, extraSrcs: [] }
+  }
+
+  const keepUrl =
+    keepKey.length > 0
+      ? kept.find((u) => galleryImageBasenameKey(u) === keepKey)
+      : undefined
+
+  if (dropSet.has(galleryImageBasenameKey(main))) {
+    main = keepUrl ?? kept[0]!
+  }
+
+  const survivors: string[] = []
+  for (const u of kept) {
+    if (mainSrcMatchesUrl(main, u)) continue
+    if (survivors.some((s) => mainSrcMatchesUrl(s, u))) continue
+    survivors.push(u)
+  }
+
+  return { mainSrc: main, extraSrcs: survivors }
 }
 
 /**
@@ -231,7 +413,8 @@ export function mergeUniqueExtraUrls(mainSrc: string, segments: string[][]): str
 }
 
 /**
- * PDP thumb row: extras only — hero already shows `mainSrc` (no duplicate main thumb).
+ * @deprecated Prefer {@link buildGalleryStripUrls}. Kept for callers that need
+ * extras-only probe lists; buyer rails must include the hero.
  */
 export function buildPdpThumbStripUrls(mainSrc: string, extraSrcs: string[]): string[] {
   const mainNorm = typeof mainSrc === "string" ? mainSrc.trim() : ""
@@ -245,7 +428,7 @@ export function buildPdpThumbStripUrls(mainSrc: string, extraSrcs: string[]): st
 
 /**
  * Gallery thumb strip: `mainSrc` first, then extras; trims and dedupes.
- * Catalog cards: hero is always a selectable thumb. PDP Oliver uses {@link buildPdpThumbStripUrls}.
+ * Catalog cards and PDP buyer rails share this main-first contract.
  */
 export function buildGalleryStripUrls(mainSrc: string, extraSrcs: string[]): string[] {
   const mainNorm = typeof mainSrc === "string" ? mainSrc.trim() : ""

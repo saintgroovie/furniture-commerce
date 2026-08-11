@@ -1,0 +1,12 @@
+{
+  "enforcement_mode": "wrapper_mandatory",
+  "direct_mutation_path_open": false,
+  "claim_bypass_closed": true,
+  "wrapper_decorative": true,
+  "break_glass": {
+    "recovery_reference": "ssh://leonid@host + ACTIVE_RELEASE backup",
+    "contains_secrets": false,
+    "procedure": "docs/operator/dokploy-break-glass.md"
+  },
+  "break_glass_required": true
+}

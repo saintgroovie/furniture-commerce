@@ -1,9 +1,43 @@
+import { formatBuyerFacingMeasureText } from "@/lib/buyer-measure-text"
+import {
+  layoutBuyerFacingTitle,
+  type BuyerFacingTitleLayout,
+} from "@/lib/en-name-ru"
 import { isOliverKidsHandle } from "@/lib/oliver-kids-scope"
 
 type Dimensions = {
   width_mm?: number
   depth_mm?: number
   height_mm?: number
+}
+
+/** Buyer-facing axis order. Storage schema stays width_mm / height_mm / depth_mm. */
+export type BuyerFacingDimensionAxis = "height" | "width" | "depth"
+
+export const BUYER_FACING_DIMENSION_ORDER: readonly BuyerFacingDimensionAxis[] = [
+  "height",
+  "width",
+  "depth",
+] as const
+
+const AXIS_TO_MM_KEY: Record<BuyerFacingDimensionAxis, keyof Dimensions> = {
+  height: "height_mm",
+  width: "width_mm",
+  depth: "depth_mm",
+}
+
+/** Present dimensions in the fixed buyer order: height → width → depth. */
+export function orderedBuyerFacingDimensions(
+  dim: Dimensions
+): Array<{ axis: BuyerFacingDimensionAxis; mm: number }> {
+  const out: Array<{ axis: BuyerFacingDimensionAxis; mm: number }> = []
+  for (const axis of BUYER_FACING_DIMENSION_ORDER) {
+    const mm = dim[AXIS_TO_MM_KEY[axis]]
+    if (typeof mm === "number" && Number.isFinite(mm) && mm > 0) {
+      out.push({ axis, mm })
+    }
+  }
+  return out
 }
 
 type ProductLike = Record<string, unknown>
@@ -158,18 +192,26 @@ export function getCanonicalName(product: ProductLike): string | null {
   return typeof name === "string" && name.trim() ? name.trim() : null
 }
 
-/** Buyer-facing H1 — fixes known workbook typos without mutating Medusa in SSR. */
-export function getBuyerFacingProductTitle(product: ProductLike): string {
+/** Buyer-facing H1 layout: type line + transcribed model (when present). */
+export function getBuyerFacingProductTitleLayout(
+  product: ProductLike
+): BuyerFacingTitleLayout {
   const raw =
     getCanonicalName(product) ??
     (typeof product.title === "string" && product.title.trim()
       ? product.title.trim()
       : "Товар")
-  return raw
-    .replace(/филенгками/gi, "филенками")
-    .replace(/\/\s*филен/gi, " и филен")
-    .replace(/\.\s*$/g, "")
-    .trim()
+  const layout = layoutBuyerFacingTitle(raw)
+  return {
+    ...layout,
+    text: formatBuyerFacingMeasureText(layout.text),
+    lines: layout.lines.map((line) => formatBuyerFacingMeasureText(line)),
+  }
+}
+
+/** Flat buyer-facing title (SEO / single-line). EN model names → Cyrillic. */
+export function getBuyerFacingProductTitle(product: ProductLike): string {
+  return getBuyerFacingProductTitleLayout(product).text
 }
 
 export function getSubcollectionLabel(product: ProductLike): string | null {
@@ -183,29 +225,134 @@ export function getArticle(product: ProductLike): string | null {
   return typeof sku === "string" && sku ? sku : null
 }
 
-export function getDimensions(product: ProductLike): Dimensions | null {
-  const m = meta(product)
-  const dim = (m.dimensions ?? m.dimensions_normalized) as
-    | Dimensions
+function normalizeAxisMm(raw: unknown): number | undefined {
+  if (typeof raw === "number" && Number.isFinite(raw) && raw > 0) return raw
+  if (typeof raw === "string") {
+    const t = raw.trim()
+    if (!/^-?\d+(\.\d+)?$/.test(t)) return undefined
+    const n = Number(t)
+    if (Number.isFinite(n) && n > 0) return n
+  }
+  return undefined
+}
+
+function readEntityDimensions(
+  entity: ProductLike | null | undefined
+): Dimensions | null {
+  if (!entity) return null
+  const m = (entity.metadata as Record<string, unknown> | undefined) ?? {}
+  const raw = (m.dimensions ?? m.dimensions_normalized) as
+    | Record<string, unknown>
     | undefined
-  if (!dim || (!dim.width_mm && !dim.depth_mm && !dim.height_mm)) return null
+  if (!raw || typeof raw !== "object") return null
+  const dim: Dimensions = {}
+  const h = normalizeAxisMm(raw.height_mm)
+  const w = normalizeAxisMm(raw.width_mm)
+  const d = normalizeAxisMm(raw.depth_mm)
+  if (h != null) dim.height_mm = h
+  if (w != null) dim.width_mm = w
+  if (d != null) dim.depth_mm = d
+  if (dim.height_mm == null && dim.width_mm == null && dim.depth_mm == null) {
+    return null
+  }
   return dim
 }
 
+/**
+ * Variant-first furniture dimensions (height → width → depth).
+ * Product-level axes fill only missing variant axes.
+ * Zeros / invalid values are unknown - never shown.
+ *
+ * Does not read Medusa variant.height/width/length (not furniture SoT).
+ */
+export function getDimensions(
+  product: ProductLike,
+  selectedVariant?: ProductLike | null
+): Dimensions | null {
+  const variant =
+    selectedVariant ??
+    (() => {
+      // Prefer explicitly selected variant; do not invent from “first” when
+      // caller passes null. When omitted, product-only (catalog cards).
+      return null
+    })()
+
+  const fromVariant = readEntityDimensions(variant)
+  const fromProduct = readEntityDimensions(product)
+  if (!fromVariant && !fromProduct) return null
+
+  const out: Dimensions = {}
+  for (const key of ["height_mm", "width_mm", "depth_mm"] as const) {
+    const v = fromVariant?.[key]
+    const p = fromProduct?.[key]
+    if (typeof v === "number" && v > 0) out[key] = v
+    else if (typeof p === "number" && p > 0) out[key] = p
+  }
+  if (out.height_mm == null && out.width_mm == null && out.depth_mm == null) {
+    return null
+  }
+  return out
+}
+
+/** Resolve dimensions for a specific variant id on a product payload. */
+export function getDimensionsForVariantId(
+  product: ProductLike,
+  variantId: string | null | undefined
+): Dimensions | null {
+  if (!variantId) return getDimensions(product, null)
+  const variants = product.variants as Array<ProductLike> | undefined
+  const selected =
+    Array.isArray(variants)
+      ? variants.find((v) => v && v.id === variantId) ?? null
+      : null
+  return getDimensions(product, selected)
+}
+
 export function formatDimensionsCompact(dim: Dimensions): string {
-  const parts: string[] = []
-  if (dim.width_mm) parts.push(String(dim.width_mm))
-  if (dim.depth_mm) parts.push(String(dim.depth_mm))
-  if (dim.height_mm) parts.push(String(dim.height_mm))
-  // Compact card meta: no space around × (650×30×1000).
-  return parts.join("×")
+  // Card preview meta: whole centimeters (1244 mm -> 124), no unit label.
+  // Narrow no-break spaces around × - a touch of air, still one unbreakable
+  // run. Order matches PDP: height → width → depth.
+  const cm = (mm: number) => String(Math.round(mm / 10))
+  const parts = orderedBuyerFacingDimensions(dim).map(({ mm }) => cm(mm))
+  return parts.join("\u202F×\u202F")
+}
+
+export function formatDimensionsCompactLabeled(dim: Dimensions): {
+  values: string
+  caption: string
+} {
+  const axes = orderedBuyerFacingDimensions(dim)
+  if (axes.length === 3) {
+    return {
+      values: formatDimensionsCompact(dim),
+      caption: "В × Ш × Г, см",
+    }
+  }
+  // Partial: labeled values only - never imply a full H×W×D triple.
+  const abbr: Record<BuyerFacingDimensionAxis, string> = {
+    height: "В",
+    width: "Ш",
+    depth: "Г",
+  }
+  return {
+    values: axes
+      .map(({ axis, mm }) => `${abbr[axis]} ${Math.round(mm / 10)}`)
+      .join(" · "),
+    caption: "см",
+  }
+}
+
+const LABELED_AXIS_ABBR: Record<BuyerFacingDimensionAxis, string> = {
+  height: "В.",
+  width: "Ш.",
+  depth: "Гл.",
 }
 
 export function formatDimensionsLabeled(dim: Dimensions): string {
-  const parts: string[] = []
-  if (dim.width_mm) parts.push(`Ш. ${dim.width_mm}`)
-  if (dim.depth_mm) parts.push(`Гл. ${dim.depth_mm}`)
-  if (dim.height_mm) parts.push(`В. ${dim.height_mm}`)
+  // Technical / mm form. Same axis order as cm hero and card compact.
+  const parts = orderedBuyerFacingDimensions(dim).map(
+    ({ axis, mm }) => `${LABELED_AXIS_ABBR[axis]} ${mm}`
+  )
   return parts.join(" × ") + " мм"
 }
 

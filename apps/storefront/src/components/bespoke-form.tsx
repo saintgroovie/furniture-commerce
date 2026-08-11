@@ -154,6 +154,8 @@ export function BespokeForm() {
   const searchParams = useSearchParams()
   const productId = searchParams.get("product_id") ?? undefined
   const roomSetId = searchParams.get("room_set_id") ?? undefined
+  /* Материальное исполнение, выбранное на PDP (label из product contract). */
+  const materialLabel = searchParams.get("material")?.trim() || undefined
 
   const [status, setStatus] = useState<Status>("idle")
   const [errorMessage, setErrorMessage] = useState("")
@@ -187,6 +189,7 @@ export function BespokeForm() {
     const headerLines = [
       city ? `${copy.fields.city}: ${city}` : null,
       taskLabel ? `${copy.fields.taskType}: ${taskLabel}` : null,
+      materialLabel ? `Исполнение: ${materialLabel}` : null,
     ].filter((line): line is string => Boolean(line))
     const comment = headerLines.length
       ? `${headerLines.join("\n")}${commentRaw ? `\n\n${commentRaw}` : ""}`
@@ -209,6 +212,7 @@ export function BespokeForm() {
         lead_id: leadId,
         product_id: productId ?? null,
         room_set_id: roomSetId ?? null,
+        materials: materialLabel ?? null,
         comment: comment || null,
       })
       setStatus("success")

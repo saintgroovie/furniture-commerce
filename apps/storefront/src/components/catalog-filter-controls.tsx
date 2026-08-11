@@ -9,6 +9,7 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  useSyncExternalStore,
   useTransition,
 } from "react"
 import {
@@ -24,6 +25,32 @@ import {
   getCollectionFilterLabel,
   hasActiveCatalogFilters,
 } from "@/lib/catalog-filters"
+import {
+  BUYER_CLOSE_PEER_EVENT,
+  BUYER_DIALOG_LAYER,
+  BUYER_MOBILE_MQ,
+  handleDialogKeydown,
+  listFocusable,
+  requestCloseBuyerDialogPeer,
+  setBuyerChromeInert,
+  type BuyerClosePeerDetail,
+} from "@/lib/buyer-dialog-a11y"
+import { useCspNonce } from "@/lib/csp-nonce"
+import { a11yCopy, catalogUiCopy } from "@/lib/woodright-copy"
+
+function subscribeBuyerMobileMq(onChange: () => void) {
+  const mq = window.matchMedia(BUYER_MOBILE_MQ)
+  mq.addEventListener("change", onChange)
+  return () => mq.removeEventListener("change", onChange)
+}
+
+function getBuyerMobileMqSnapshot() {
+  return window.matchMedia(BUYER_MOBILE_MQ).matches
+}
+
+function getBuyerMobileMqServerSnapshot() {
+  return false
+}
 
 type Props = {
   basePath: string
@@ -46,49 +73,26 @@ function toggleMulti(values: string[], value: string): string[] {
 
 type PillBox = { left: number; top: number; width: number; height: number }
 
-/* The sliding pills (active indicator + hover ghost) never animate
-   width/height — those are layout properties, they run on the main thread
-   and stutter the moment React re-renders the product grid after a filter
-   change. Instead each pill is three transform-only parts: two fixed
-   half-round caps and a 1px middle strip stretched with scaleX. Same
-   duration/curve on every part keeps the shape coherent mid-flight, and
-   the whole glide stays on the compositor. Parts overlap by 0.5px so the
-   seams never show (fills are opaque). */
-function pillPartsGeometry(box: PillBox) {
-  const r = box.height / 2
+const CATALOG_FILTER_SIDEBAR_ID = "catalog-filter-sidebar"
+
+function tabBox(tab: HTMLElement): PillBox {
   return {
-    container: {
-      transform: `translate3d(${box.left}px, ${box.top}px, 0)`,
-      height: `${box.height}px`,
-    },
-    capL: {
-      width: `${r}px`,
-      borderRadius: `${r}px 0 0 ${r}px`,
-    },
-    mid: {
-      transform: `translate3d(${r - 0.5}px, 0, 0) scaleX(${Math.max(box.width - 2 * r + 1, 0)})`,
-    },
-    capR: {
-      width: `${r}px`,
-      borderRadius: `0 ${r}px ${r}px 0`,
-      transform: `translate3d(${box.width - r}px, 0, 0)`,
-    },
+    left: Math.round(tab.offsetLeft),
+    top: Math.round(tab.offsetTop),
+    width: Math.round(tab.offsetWidth),
+    height: Math.round(tab.offsetHeight),
   }
 }
 
-/** Imperative twin of pillPartsGeometry for the ref-driven hover ghost. */
-function layoutPillParts(container: HTMLElement, box: PillBox) {
-  const [capL, mid, capR] = Array.from(container.children) as HTMLElement[]
-  if (!capL || !mid || !capR) return
-  const g = pillPartsGeometry(box)
-  container.style.transform = g.container.transform
-  container.style.height = g.container.height
-  capL.style.width = g.capL.width
-  capL.style.borderRadius = g.capL.borderRadius
-  mid.style.transform = g.mid.transform
-  capR.style.width = g.capR.width
-  capR.style.borderRadius = g.capR.borderRadius
-  capR.style.transform = g.capR.transform
+/* Active indicator + hover ghost share one layout helper: a single rounded
+   rect (not 3-part caps). Cap/mid seams and scaleX made the tip arc drift
+   off the track's concentric radius; one border-radius matches the track
+   math exactly (outer R = pill R + pad + border). Width transition is OK
+   here — optimistic pendingType starts the glide before the grid re-render. */
+function layoutPillBox(el: HTMLElement, box: PillBox) {
+  el.style.transform = `translate3d(${box.left}px, ${box.top}px, 0)`
+  el.style.width = `${box.width}px`
+  el.style.height = `${box.height}px`
 }
 
 /* Pre-hydration bootstrap for --catalog-filter-fit (see the sidebar effect
@@ -130,13 +134,23 @@ export function CatalogFilterControls({
   children,
 }: Props) {
   const router = useRouter()
+  const cspNonce = useCspNonce()
   const [isPending, startTransition] = useTransition()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [searchDraft, setSearchDraft] = useState(state.q ?? "")
+  const [searchSyncQ, setSearchSyncQ] = useState(state.q ?? "")
+  const filterToggleRef = useRef<HTMLButtonElement>(null)
+  const compactSearchPlaceholder = useSyncExternalStore(
+    subscribeBuyerMobileMq,
+    getBuyerMobileMqSnapshot,
+    getBuyerMobileMqServerSnapshot
+  )
 
-  useEffect(() => {
-    setSearchDraft(state.q ?? "")
-  }, [state.q])
+  const routeQ = state.q ?? ""
+  if (routeQ !== searchSyncQ) {
+    setSearchSyncQ(routeQ)
+    setSearchDraft(routeQ)
+  }
 
   /* Sliding pill behind the segmented tabs: instead of the dark background
      snapping from one tab to another on navigation, a single absolutely
@@ -160,23 +174,14 @@ export function CatalogFilterControls({
       setTabIndicator(null)
       return
     }
-    setTabIndicator({
-      left: activeTab.offsetLeft,
-      top: activeTab.offsetTop,
-      width: activeTab.offsetWidth,
-      height: activeTab.offsetHeight,
-    })
+    setTabIndicator(tabBox(activeTab))
   }, [])
 
-  /* Hover ghost: a soft flat pill that glides after the cursor between
-     tabs (same magic-motion idea as the active indicator, one layer below
-     it). Fully imperative: pointer handlers write styles straight into the
-     persistent DOM element — zero React re-renders on hover, so the glide
-     can't be delayed by the component tree. Geometry uses the same 3-part
-     transform-only layout as the indicator (see layoutPillParts). When the
-     ghost re-appears after being hidden it snaps into place with
-     transitions off (data-instant + reflow flush), then fades in — no
-     stale glide across the whole track. */
+  /* Hover ghost: single rounded element, styles written imperatively —
+     zero React re-renders on hover. Single piece (not 3-part) so the
+     accent gradient never shows a cap/mid seam at the tip. On leave it
+     fades out in place; on re-enter it snaps under the cursor
+     (data-instant) then fades in — no stale glide across the track. */
   const ghostRef = useRef<HTMLSpanElement>(null)
 
   const onTabsPointerOver = useCallback((e: { target: EventTarget }) => {
@@ -185,25 +190,32 @@ export function CatalogFilterControls({
     if (!nav || !ghost || !(e.target instanceof Element)) return
     const tab = e.target.closest<HTMLElement>(".filter-tab")
     if (!tab || !nav.contains(tab)) return
-    const box = {
-      left: tab.offsetLeft,
-      top: tab.offsetTop,
-      width: tab.offsetWidth,
-      height: tab.offsetHeight,
+    // Active tab already has the dark indicator — hide the ghost so the
+    // two layers never fight for the same silhouette.
+    if (tab.classList.contains("filter-tab-active")) {
+      delete ghost.dataset.shown
+      return
     }
+    const box = tabBox(tab)
     if (ghost.dataset.shown !== "true") {
       ghost.dataset.instant = "true"
-      layoutPillParts(ghost, box)
-      // Flush styles so the reposition lands before transitions re-enable.
+      layoutPillBox(ghost, box)
       void ghost.offsetWidth
       delete ghost.dataset.instant
       ghost.dataset.shown = "true"
     } else {
-      layoutPillParts(ghost, box)
+      layoutPillBox(ghost, box)
     }
   }, [])
 
   const onTabsPointerLeave = useCallback(() => {
+    const ghost = ghostRef.current
+    if (ghost) delete ghost.dataset.shown
+  }, [])
+
+  /* Drop the ghost on press so the dark indicator takes over alone —
+     otherwise both layers sit under the same tab for a beat mid-click. */
+  const onTabsPointerDown = useCallback(() => {
     const ghost = ghostRef.current
     if (ghost) delete ghost.dataset.shown
   }, [])
@@ -217,10 +229,11 @@ export function CatalogFilterControls({
   const [pendingType, setPendingType] = useState<{
     type: CatalogFilterState["type"] | undefined
   } | null>(null)
-
-  useEffect(() => {
-    setPendingType(null)
-  }, [state.type])
+  const [typeForPending, setTypeForPending] = useState(state.type)
+  if (state.type !== typeForPending) {
+    setTypeForPending(state.type)
+    if (pendingType) setPendingType(null)
+  }
 
   const activeType = pendingType ? pendingType.type : state.type
 
@@ -251,6 +264,79 @@ export function CatalogFilterControls({
      mobile — so the sticky top offset is read from whichever is sticky
      rather than hard-coded. 24 mirrors --space-lg. */
   const sidebarRef = useRef<HTMLElement>(null)
+
+  /* Mobile filter drawer: dialog contract (semantics + inert + focus trap).
+     Drawer lives inside #main-content, so we inert background siblings
+     (tabs/search/sort/product area), not the whole main — otherwise the
+     dialog would become inert too. Toggle stays outside inert targets so
+     focus restore remains possible.
+     Layer ownership keeps extras/chrome inert until this layer releases. */
+  const setFilterBackgroundInert = useCallback((enabled: boolean) => {
+    setBuyerChromeInert(
+      enabled,
+      [
+        document.querySelector(".catalog-controls"),
+        document.querySelector(".catalog-search"),
+        document.querySelector(".catalog-sort"),
+        document.querySelector(".catalog-product-area"),
+      ],
+      BUYER_DIALOG_LAYER.catalogFilters
+    )
+  }, [])
+
+  const closeMobileFilters = useCallback((restoreFocus = true) => {
+    setMobileOpen(false)
+    if (restoreFocus) {
+      requestAnimationFrame(() => filterToggleRef.current?.focus())
+    }
+  }, [])
+
+  // Peer dialog (mobile nav) requested exclusive ownership.
+  useEffect(() => {
+    function onPeerClose(e: Event) {
+      const detail = (e as CustomEvent<BuyerClosePeerDetail>).detail
+      if (detail?.exceptLayer === BUYER_DIALOG_LAYER.catalogFilters) return
+      setMobileOpen(false)
+    }
+    document.addEventListener(BUYER_CLOSE_PEER_EVENT, onPeerClose)
+    return () => document.removeEventListener(BUYER_CLOSE_PEER_EVENT, onPeerClose)
+  }, [])
+
+  // Desktop viewport: clear mobile-only drawer state + inert.
+  useEffect(() => {
+    const mq = window.matchMedia(BUYER_MOBILE_MQ)
+    function onChange() {
+      if (!mq.matches) setMobileOpen(false)
+    }
+    onChange()
+    mq.addEventListener("change", onChange)
+    return () => mq.removeEventListener("change", onChange)
+  }, [])
+
+  useEffect(() => {
+    if (!mobileOpen) {
+      setFilterBackgroundInert(false)
+      return
+    }
+    requestCloseBuyerDialogPeer(BUYER_DIALOG_LAYER.catalogFilters)
+    const sidebar = sidebarRef.current
+    setFilterBackgroundInert(true)
+    requestAnimationFrame(() => {
+      listFocusable(sidebar)[0]?.focus()
+    })
+    function onKeyDown(e: globalThis.KeyboardEvent) {
+      handleDialogKeydown(e, {
+        panel: sidebar,
+        trigger: filterToggleRef.current,
+        onEscape: () => closeMobileFilters(true),
+      })
+    }
+    document.addEventListener("keydown", onKeyDown)
+    return () => {
+      document.removeEventListener("keydown", onKeyDown)
+      setFilterBackgroundInert(false)
+    }
+  }, [mobileOpen, closeMobileFilters, setFilterBackgroundInert])
 
   useEffect(() => {
     const sidebar = sidebarRef.current
@@ -364,7 +450,11 @@ export function CatalogFilterControls({
           never pushed below the fold by a long collections/type list. */}
       <div className="catalog-filter-scroll">
       {active && (
-        <div className="catalog-active-chips" aria-label="Активные фильтры">
+        <div
+          className="catalog-active-chips"
+          role="group"
+          aria-label={a11yCopy.activeFiltersLabel}
+        >
           {state.q && (
             <ActiveChip
               label={`«${state.q}»`}
@@ -463,7 +553,7 @@ export function CatalogFilterControls({
             >
               <span>Все</span>
               <span className="catalog-filter-count">
-                {facets.collections.reduce((sum, opt) => sum + opt.count, 0)}
+                {facets.collectionAllCount}
               </span>
             </Link>
             {facets.collections.map((opt) => {
@@ -511,7 +601,7 @@ export function CatalogFilterControls({
             >
               <span>Все</span>
               <span className="catalog-filter-count">
-                {facets.categories.reduce((sum, opt) => sum + opt.count, 0)}
+                {facets.categoryAllCount}
               </span>
             </Link>
             {facets.categories.map((opt) => {
@@ -567,31 +657,24 @@ export function CatalogFilterControls({
           data-slider={tabIndicator ? "true" : undefined}
           onPointerOver={onTabsPointerOver}
           onPointerLeave={onTabsPointerLeave}
+          onPointerDown={onTabsPointerDown}
         >
           <span
             ref={ghostRef}
             className="filter-tabs-hover-ghost"
             aria-hidden="true"
-          >
-            <span className="filter-tabs-pill-cap" />
-            <span className="filter-tabs-pill-mid" />
-            <span className="filter-tabs-pill-cap" />
-          </span>
-          {tabIndicator &&
-            (() => {
-              const g = pillPartsGeometry(tabIndicator)
-              return (
-                <span
-                  className="filter-tabs-indicator"
-                  aria-hidden="true"
-                  style={g.container}
-                >
-                  <span className="filter-tabs-pill-cap" style={g.capL} />
-                  <span className="filter-tabs-pill-mid" style={g.mid} />
-                  <span className="filter-tabs-pill-cap" style={g.capR} />
-                </span>
-              )
-            })()}
+          />
+          {tabIndicator && (
+            <span
+              className="filter-tabs-indicator"
+              aria-hidden="true"
+              style={{
+                transform: `translate3d(${tabIndicator.left}px, ${tabIndicator.top}px, 0)`,
+                width: tabIndicator.width,
+                height: tabIndicator.height,
+              }}
+            />
+          )}
           <Link
             href={buildCatalogHref(basePath, { ...state, type: undefined })}
             className={!activeType ? "filter-tab filter-tab-active" : "filter-tab"}
@@ -664,7 +747,7 @@ export function CatalogFilterControls({
           )}
           {state.sort && <input type="hidden" name="sort" value={state.sort} />}
           <label className="sr-only" htmlFor="catalog-search-input">
-            Поиск по каталогу
+            {catalogUiCopy.searchLabel}
           </label>
           <div className="catalog-search-input-wrap">
             <input
@@ -673,14 +756,18 @@ export function CatalogFilterControls({
               type="search"
               value={searchDraft}
               onChange={(e) => setSearchDraft(e.target.value)}
-              placeholder="Поиск по названию, коллекции или категории"
+              placeholder={
+                compactSearchPlaceholder
+                  ? catalogUiCopy.searchPlaceholderCompact
+                  : catalogUiCopy.searchPlaceholder
+              }
               autoComplete="off"
             />
             {searchDraft && (
               <button
                 type="button"
                 className="catalog-search-clear"
-                aria-label="Очистить поиск"
+                aria-label={catalogUiCopy.searchClear}
                 onClick={() => setSearchDraft("")}
               >
                 <svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true">
@@ -698,7 +785,7 @@ export function CatalogFilterControls({
             Найдено {resultCount}
           </p>
           <button type="submit" className="catalog-search-btn">
-            Найти
+            {catalogUiCopy.searchSubmit}
           </button>
         </form>
 
@@ -724,9 +811,14 @@ export function CatalogFilterControls({
           </div>
 
           <button
+            ref={filterToggleRef}
             type="button"
             className="catalog-filter-mobile-toggle"
             aria-expanded={mobileOpen}
+            aria-controls={CATALOG_FILTER_SIDEBAR_ID}
+            aria-label={
+              mobileOpen ? a11yCopy.closeFilters : a11yCopy.openFilters
+            }
             onClick={() => setMobileOpen((v) => !v)}
           >
             Фильтры
@@ -737,8 +829,15 @@ export function CatalogFilterControls({
       <div className="catalog-filter-layout">
         <aside
           ref={sidebarRef}
+          id={CATALOG_FILTER_SIDEBAR_ID}
           className={`catalog-filter-sidebar ${mobileOpen ? "catalog-filter-sidebar-open" : ""}`}
-          aria-label="Фильтры каталога"
+          aria-label={a11yCopy.catalogFiltersLabel}
+          {...(mobileOpen
+            ? {
+                role: "dialog" as const,
+                "aria-modal": true as const,
+              }
+            : null)}
           /* The bootstrap script mutates this element's style attribute
              before hydration — expected, not a markup mismatch. */
           suppressHydrationWarning
@@ -747,11 +846,15 @@ export function CatalogFilterControls({
           <button
             type="button"
             className="catalog-filter-apply-mobile"
-            onClick={() => setMobileOpen(false)}
+            aria-label={a11yCopy.applyFilters}
+            onClick={() => closeMobileFilters(true)}
           >
             Показать
           </button>
-          <script dangerouslySetInnerHTML={{ __html: FILTER_FIT_BOOTSTRAP }} />
+          <script
+            nonce={cspNonce}
+            dangerouslySetInnerHTML={{ __html: FILTER_FIT_BOOTSTRAP }}
+          />
         </aside>
         <div className="catalog-product-area">{children}</div>
       </div>
@@ -762,7 +865,22 @@ export function CatalogFilterControls({
 /** Draft-based price inputs: navigation happens only on explicit apply
     (button / Enter), never on blur — no surprise page reloads while typing.
     Clearing resets only the price, other filters stay in the query string. */
-function CatalogPriceFilter({
+function CatalogPriceFilter(props: {
+  priceMin?: number
+  priceMax?: number
+  priceRange: CatalogFacets["priceRange"]
+  onApply: (priceMin?: number, priceMax?: number) => void
+}) {
+  const { priceMin, priceMax } = props
+  return (
+    <CatalogPriceFilterInner
+      key={`${priceMin ?? ""}:${priceMax ?? ""}`}
+      {...props}
+    />
+  )
+}
+
+function CatalogPriceFilterInner({
   priceMin,
   priceMax,
   priceRange,
@@ -775,13 +893,6 @@ function CatalogPriceFilter({
 }) {
   const [minDraft, setMinDraft] = useState(priceMin != null ? String(priceMin) : "")
   const [maxDraft, setMaxDraft] = useState(priceMax != null ? String(priceMax) : "")
-
-  useEffect(() => {
-    setMinDraft(priceMin != null ? String(priceMin) : "")
-  }, [priceMin])
-  useEffect(() => {
-    setMaxDraft(priceMax != null ? String(priceMax) : "")
-  }, [priceMax])
 
   const parseDraft = (raw: string): number | undefined => {
     const t = raw.trim()

@@ -1,7 +1,25 @@
 import { getBaseUrl, medusaFetch } from "./base"
 import { getCart } from "./cart"
+import { resolvePaymentLaunchMode } from "../launch-config"
 
+/**
+ * Medusa built-in no-op provider used for manager_payment_link / request_only.
+ * Not a buyer-visible PSP method - checkout copy describes PaymentLink / manager flow.
+ * online_psp must not silently fall back to this provider.
+ */
 const SYSTEM_PAYMENT_PROVIDER = "pp_system_default"
+
+function assertCheckoutPaymentProviderAllowed(): void {
+  const mode = resolvePaymentLaunchMode()
+  if (mode === "invalid") {
+    throw new Error("Некорректный режим оплаты. Обратитесь к менеджеру")
+  }
+  if (mode === "online_psp") {
+    throw new Error(
+      "Онлайн-оплата не настроена для этого запуска. Оформите заказ через менеджера"
+    )
+  }
+}
 
 export async function getRegions() {
   const base = getBaseUrl()
@@ -31,6 +49,7 @@ async function parseError(res: Response, fallback: string): Promise<never> {
  * even when using the built-in no-op system provider (no online payment in MVP).
  */
 export async function prepareCheckoutForCompletion(cartId: string) {
+  assertCheckoutPaymentProviderAllowed()
   const base = getBaseUrl()
 
   const cartPayload = await getCart(cartId)

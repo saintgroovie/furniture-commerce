@@ -1,0 +1,25 @@
+{
+  "field_source_matrix": [
+    {
+      "field": "category_handle",
+      "authoritative_source": "catalog-products"
+    }
+  ],
+  "rows": [
+    {
+      "field": "category_handle",
+      "endpoint_has_field": false,
+      "source_has_field": true,
+      "checked_source": true
+    },
+    {
+      "field": "collection",
+      "endpoint_has_field": true,
+      "source_has_field": true
+    }
+  ],
+  "expect_classifications": {
+    "category_handle": "lost_in_projection",
+    "collection": "present_structured"
+  }
+}

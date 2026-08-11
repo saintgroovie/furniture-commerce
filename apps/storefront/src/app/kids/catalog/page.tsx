@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { CatalogBrowseClient } from "@/components/catalog-browse-client"
 import { getSiteUrl } from "@/lib/api/base"
 import { getCatalogProducts } from "@/lib/api/products"
+import { toCatalogBrowseClientProducts } from "@/lib/catalog-browse-client-product"
 import {
   fetchKidsRoomSetMembership,
   resolveKidsProducts,
@@ -25,9 +26,10 @@ export const metadata: Metadata = {
 export default async function KidsCatalogPage({
   searchParams,
 }: {
-  searchParams: Record<string, string | string[] | undefined>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
-  const filterState = parseCatalogFilterState(searchParams)
+  const resolvedSearchParams = await searchParams
+  const filterState = parseCatalogFilterState(resolvedSearchParams)
 
   let scoped: Array<Record<string, unknown>> = []
 
@@ -86,7 +88,7 @@ export default async function KidsCatalogPage({
       <CatalogBrowseClient
         basePath="/kids/catalog"
         initialState={filterState}
-        products={scoped}
+        products={toCatalogBrowseClientProducts(scoped)}
         showBespokeCta
         siteUrl={getSiteUrl()}
         emptyCopy={{

@@ -1,0 +1,18 @@
+{
+  "gate": "BY",
+  "force_empty": true,
+  "decisions": {},
+  "rows": [
+    {
+      "product_id": "p1",
+      "bucket": "category_gap",
+      "field_keys": [
+        "category"
+      ]
+    }
+  ],
+  "mutation_preview": {
+    "result": "no_approved_mutations",
+    "mutations": []
+  }
+}

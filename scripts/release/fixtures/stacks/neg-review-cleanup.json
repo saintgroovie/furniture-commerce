@@ -1,0 +1,16 @@
+{
+  "stacks": [
+    {
+      "stack_id": "candidate-e34388f",
+      "display_name": "woodright-candidate-e34388f",
+      "actual_role": "preserved_candidate",
+      "owner": "governance",
+      "public_route": false,
+      "environment_identity": "candidate",
+      "review_after": "2026-07-28",
+      "cleanup_requires_owner_approval": true,
+      "cleanup_authorized_by_review_date": true
+    }
+  ],
+  "schema_complete": false
+}

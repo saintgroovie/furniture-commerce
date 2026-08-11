@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://woodright.local/schemas/woodright-live-control-plane.schema.json",
+  "type": "object",
+  "required": ["environment","public_bundle_id","control_plane","sole_owner","claim_bypass_closed","global_lock_path","break_glass"],
+  "properties": {
+    "environment": {"type":"string"},
+    "public_bundle_id": {"type":"string"},
+    "control_plane": {"type":"string"},
+    "sole_owner": {"type":"string"},
+    "allowed_mutation_methods": {"type":"array","items":{"type":"string"}},
+    "forbidden_mutation_methods": {"type":"array","items":{"type":"string"}},
+    "global_lock_path": {"type":"string"},
+    "lease_required": {"type":"boolean"},
+    "compare_and_swap_required": {"type":"boolean"},
+    "audit_required": {"type":"boolean"},
+    "direct_ui_mutation_allowed": {"type":"boolean"},
+    "auto_deploy_allowed": {"type":"boolean"},
+    "break_glass": {"type":"object"},
+    "last_verified": {"type":"string"},
+    "residual_bypass": {"type":"boolean"},
+    "claim_bypass_closed": {"type":"boolean"},
+    "negative_ui_test_status": {"type":"string"}
+  }
+}

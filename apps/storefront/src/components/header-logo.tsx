@@ -1,41 +1,41 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { WoodrightWordmark } from "@/components/woodright-wordmark"
+import { useKidsChromeVisual, useKidsSection } from "@/lib/use-kids-section"
 
 /**
- * Wordmark + «KIDS» pill. The pill is always in the DOM so the switch
- * between the main site and the kids section is a CSS transition (a calm
- * slide-out reveal), not a mount/unmount jump — and since .logo is
- * horizontally centered via translateX(-50%), the wordmark itself glides
- * left to re-center as the badge unfolds, which is the whole effect.
+ * Wordmark + «Детская» pill (UI chrome). The pill stays in the DOM so adult ↔
+ * kids is a CSS tween (not a mount jump). .logo is translateX(-50%)-centered,
+ * so as the slot width opens the pair re-centers and the wordmark glides left.
+ *
+ * Inline SVG (same geometry as the old 273×35 PNG box) so ink stays crisp
+ * at any DPR; kids-slot width is fixed in rem and does not depend on
+ * raster intrinsic size. Kids chrome links to /kids (not the adult home).
+ *
+ * Visual open state comes from `useKidsChromeVisual` so kids catalog → PDP
+ * can snap-closed and replay the enter glide.
+ *
+ * Proper names (Greenwich, Cloud, Woodright Kids in product copy) stay Latin.
  */
 export function HeaderLogo() {
-  const pathname = usePathname()
-  const isKids = pathname === "/kids" || pathname.startsWith("/kids/")
+  const sectionKids = useKidsSection()
+  const { kids: visualKids, snap } = useKidsChromeVisual()
 
   return (
     <Link
-      href="/"
+      href={sectionKids ? "/kids" : "/"}
       className="logo"
-      aria-label={isKids ? "Woodright Kids - на главную" : "Woodright - на главную"}
+      aria-label={
+        sectionKids ? "Woodright Kids - на главную детской" : "Woodright - на главную"
+      }
     >
-      <img
-        src="/brand/woodright-logo-transparent.png"
-        srcSet="/brand/woodright-logo-transparent.png 1x, /brand/woodright-logo-transparent@3x.png 3x"
-        alt="Woodright"
-        className="logo-image"
-        width={273}
-        height={35}
-      />
-      {/* Slot clips; the pill slides within it. Two layers so the pill can
-          physically «выезжать» from behind the wordmark's edge instead of
-          just growing in place. */}
+      <WoodrightWordmark className="logo-image" />
       <span
-        className={`logo-kids-slot${isKids ? " is-visible" : ""}`}
+        className={`logo-kids-slot${visualKids ? " is-visible" : ""}${snap ? " is-snap" : ""}`}
         aria-hidden="true"
       >
-        <span className="logo-kids-badge">Kids</span>
+        <span className="logo-kids-badge">Детская</span>
       </span>
     </Link>
   )

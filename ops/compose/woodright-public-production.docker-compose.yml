@@ -1,0 +1,159 @@
+# Canonical public_production compose (prelaunch / operator validation).
+# Live destination: /etc/dokploy/compose/woodright-public-production/code/docker-compose.yml
+# Secrets via orchestrator .env only - do not commit secret values.
+#
+# Isolation:
+# - Distinct compose project, containers, volumes, DB name from demo + candidate
+# - Loopback host binds only (no Traefik public labels, no apex/www routes)
+# - Does NOT cut over woodright.ru buyer traffic
+#
+# Ports (avoid private candidate 3200/9200/5433 and demo Traefik):
+# - storefront 127.0.0.1:3300
+# - backend    127.0.0.1:9300
+# - postgres   127.0.0.1:5434
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: woodright-public-production-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - woodright-public-production_postgres_data:/var/lib/postgresql/data
+    networks:
+      - woodright_public
+    ports:
+      - "127.0.0.1:5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: woodright-public-production-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - woodright-public-production_redis_data:/data
+    networks:
+      - woodright_public
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    image: ${WOODRIGHT_BACKEND_IMAGE}
+    container_name: woodright-public-production-backend
+    restart: unless-stopped
+    labels:
+      com.woodright.deployment-owner: "Dokploy"
+      com.woodright.runtime-role: "${WOODRIGHT_RUNTIME_ROLE:-public_production}"
+      com.woodright.exposure: "${WOODRIGHT_EXPOSURE:-public}"
+      com.woodright.database-identity: "${WOODRIGHT_DATABASE_IDENTITY_ALIAS:-public_production_db}"
+      com.woodright.release-sha: "${WOODRIGHT_RELEASE_SHA}"
+    # Wave 1 memory caps - docs/operator/container-memory-limits.md
+    # Provisional production baseline: not below private candidate.
+    mem_reservation: "${WOODRIGHT_BACKEND_MEMORY_RESERVATION:-640m}"
+    mem_limit: "${WOODRIGHT_BACKEND_MEMORY_LIMIT:-1536m}"
+    memswap_limit: "${WOODRIGHT_BACKEND_MEMORY_SWAP:-1536m}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      COOKIE_SECRET: ${COOKIE_SECRET}
+      STORE_CORS: ${STORE_CORS}
+      ADMIN_CORS: ${ADMIN_CORS}
+      AUTH_CORS: ${AUTH_CORS}
+      MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL}
+      MEDUSA_LOCAL_HTTP: ${MEDUSA_LOCAL_HTTP}
+      PORT: "9000"
+      WOODRIGHT_RELEASE_SHA: ${WOODRIGHT_RELEASE_SHA}
+      WOODRIGHT_RUNTIME_ROLE: ${WOODRIGHT_RUNTIME_ROLE}
+      WOODRIGHT_EXPOSURE: ${WOODRIGHT_EXPOSURE}
+      WOODRIGHT_DATABASE_IDENTITY: ${WOODRIGHT_DATABASE_IDENTITY}
+      WOODRIGHT_DATABASE_IDENTITY_ALIAS: ${WOODRIGHT_DATABASE_IDENTITY_ALIAS}
+      WOODRIGHT_LAUNCH_CORS_PROFILE: ${WOODRIGHT_LAUNCH_CORS_PROFILE:-production_buyer}
+    volumes:
+      - woodright_public_media:/server/static
+    networks:
+      - woodright_public
+    ports:
+      - "127.0.0.1:9300:9000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:9000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  storefront:
+    image: ${WOODRIGHT_STOREFRONT_IMAGE}
+    container_name: woodright-public-production-storefront
+    restart: unless-stopped
+    labels:
+      com.woodright.deployment-owner: "Dokploy"
+      com.woodright.runtime-role: "${WOODRIGHT_RUNTIME_ROLE:-public_production}"
+      com.woodright.exposure: "${WOODRIGHT_EXPOSURE:-public}"
+      com.woodright.database-identity: "${WOODRIGHT_DATABASE_IDENTITY_ALIAS:-public_production_db}"
+      com.woodright.release-sha: "${WOODRIGHT_RELEASE_SHA}"
+    mem_reservation: "${WOODRIGHT_STOREFRONT_MEMORY_RESERVATION:-192m}"
+    mem_limit: "${WOODRIGHT_STOREFRONT_MEMORY_LIMIT:-512m}"
+    memswap_limit: "${WOODRIGHT_STOREFRONT_MEMORY_SWAP:-512m}"
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: "3002"
+      MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL_INTERNAL}
+      MEDUSA_BACKEND_INTERNAL_URL: ${MEDUSA_BACKEND_URL_INTERNAL}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+      NEXT_PUBLIC_MEDUSA_BACKEND_URL: ${NEXT_PUBLIC_MEDUSA_BACKEND_URL}
+      NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: ${NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY}
+      NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES: ${NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES}
+      WOODRIGHT_RELEASE_SHA: ${WOODRIGHT_RELEASE_SHA}
+      WOODRIGHT_RUNTIME_ROLE: ${WOODRIGHT_RUNTIME_ROLE}
+      WOODRIGHT_EXPOSURE: ${WOODRIGHT_EXPOSURE}
+      WOODRIGHT_DATABASE_IDENTITY: ${WOODRIGHT_DATABASE_IDENTITY}
+      WOODRIGHT_DATABASE_IDENTITY_ALIAS: ${WOODRIGHT_DATABASE_IDENTITY_ALIAS}
+      WOODRIGHT_LAUNCH_MODE: ${WOODRIGHT_LAUNCH_MODE:-public_indexable}
+      WOODRIGHT_SEO_MODE: ${WOODRIGHT_SEO_MODE:-public_indexable}
+      WOODRIGHT_IMAGE_BUILD_PROFILE: ${WOODRIGHT_IMAGE_BUILD_PROFILE:-public_production}
+      WOODRIGHT_LEGAL_CONTENT_STATUS: ${WOODRIGHT_LEGAL_CONTENT_STATUS:-draft}
+      WOODRIGHT_PAYMENT_MODE: ${WOODRIGHT_PAYMENT_MODE:-manual_invoice}
+      WOODRIGHT_PAYMENT_DECISION_STATUS: ${WOODRIGHT_PAYMENT_DECISION_STATUS:-pending}
+    networks:
+      - woodright_public
+    ports:
+      - "127.0.0.1:3300:3002"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3002/').then(r=>process.exit(r.status<500?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+volumes:
+  woodright-public-production_postgres_data:
+  woodright-public-production_redis_data:
+  woodright_public_media:
+    external: true
+    name: woodright-public-production_woodright_public_media
+
+networks:
+  woodright_public:
+    driver: bridge
+    name: woodright-public-production_woodright_public

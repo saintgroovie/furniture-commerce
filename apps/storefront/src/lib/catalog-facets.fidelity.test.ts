@@ -10,6 +10,7 @@ import {
   type CatalogFilterState,
   type CatalogFacets,
 } from "./catalog-filters"
+import { groupProductsForDisplay } from "./display-group"
 
 function product(
   id: string,
@@ -53,10 +54,14 @@ function legacyPageFacets(
   products: Record<string, unknown>[],
   state: CatalogFilterState
 ): CatalogFacets {
+  const categoryFacets = buildCatalogFacets(products, state, "category")
+  const collectionFacets = buildCatalogFacets(products, state, "collection")
   return {
     types: buildCatalogFacets(products, state, "type").types,
-    categories: buildCatalogFacets(products, state, "category").categories,
-    collections: buildCatalogFacets(products, state, "collection").collections,
+    categories: categoryFacets.categories,
+    collections: collectionFacets.collections,
+    categoryAllCount: categoryFacets.categoryAllCount,
+    collectionAllCount: collectionFacets.collectionAllCount,
     priceRange: buildCatalogFacets(products, state, "price").priceRange,
   }
 }
@@ -132,6 +137,45 @@ for (const state of states) {
   )
   const krovati = facets.categories.find((c) => c.value === "krovati")
   assert.equal(krovati?.count, 3) // std-bed, cfg-bed, bsp-1 in pool without category filter
+}
+
+// Count contract: «Все» / allCount uses display cards (display_group collapse),
+// same unit as «Найдено», never sum(raw SKU option counts).
+{
+  const groupedPool = [
+    product("g1-a", "STANDARD", {
+      category: "krovati",
+      collection: "oliver",
+      amount: 10000,
+    }),
+    product("g1-b", "STANDARD", {
+      category: "krovati",
+      collection: "oliver",
+      amount: 11000,
+    }),
+    product("solo", "STANDARD", {
+      category: "shkafy",
+      collection: "greenwich",
+      amount: 20000,
+    }),
+  ]
+  ;(groupedPool[0]!.metadata as Record<string, unknown>).display_group = "bed-g1"
+  ;(groupedPool[1]!.metadata as Record<string, unknown>).display_group = "bed-g1"
+
+  const state = baseState()
+  const facets = buildAllCatalogFacets(groupedPool, state)
+  const heading = groupProductsForDisplay(groupedPool).length
+  assert.equal(heading, 2)
+  assert.equal(facets.collectionAllCount, heading)
+  assert.equal(facets.categoryAllCount, heading)
+  const rawSkuSum = 3
+  assert.notEqual(
+    facets.collectionAllCount,
+    rawSkuSum,
+    "Все must not equal raw SKU sum when display_group collapses"
+  )
+  const oliver = facets.collections.find((c) => c.value === "oliver")
+  assert.equal(oliver?.count, 1, "option count is one card, not two SKUs")
 }
 
 console.log("catalog-facets.fidelity.test.ts: ok")

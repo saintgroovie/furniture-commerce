@@ -5,6 +5,4 @@ export const RoomSetItem = model.define("room_set_item", {
   room_set_id: model.text(),
   quantity: model.number().default(1),
   sort_order: model.number().default(0),
-  created_at: model.dateTime().default(() => new Date()),
-  updated_at: model.dateTime().default(() => new Date()),
 })
