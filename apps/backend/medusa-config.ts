@@ -51,7 +51,8 @@ if (
   woodrightRuntimeRole &&
   !isPublicDemoRole &&
   woodrightRuntimeRole !== "production" &&
-  woodrightRuntimeRole !== "production_candidate"
+  woodrightRuntimeRole !== "production_candidate" &&
+  woodrightRuntimeRole !== "public_production"
 ) {
   throw new Error(
     `WOODRIGHT_EXPOSURE=public with unexpected WOODRIGHT_RUNTIME_ROLE=${woodrightRuntimeRole}`
