@@ -36,7 +36,7 @@ const ALLOWED_ROOT = new Set([
   "notes",
 ])
 const ALLOWED_IMG = new Set(["repository", "unique_tag", "digest", "oci_revision"])
-const ALLOWED_BUILD_PROFILE_NAMES = new Set(["public_demo", "production_candidate"])
+const ALLOWED_BUILD_PROFILE_NAMES = new Set(["public_demo", "production_candidate", "public_production"])
 const ALLOWED_BAKED_STOREFRONT_KEYS = new Set([
   "NEXT_PUBLIC_SITE_URL",
   "NEXT_PUBLIC_MEDUSA_BACKEND_URL",

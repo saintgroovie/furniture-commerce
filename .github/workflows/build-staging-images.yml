@@ -1,4 +1,4 @@
-# Build and push Woodright images to GHCR (public_demo OR production_candidate).
+# Build and push Woodright images to GHCR (public_demo | production_candidate | public_production).
 # Manual only — does not deploy to Dokploy or production.
 # Build ≠ release. Digests are the only deploy identity.
 #
@@ -44,6 +44,7 @@ on:
         options:
           - public_demo
           - production_candidate
+          - public_production
       publish_mutable_sha_alias:
         description: "Also push mutable-sha-<SHA> convenience alias (serialized)."
         required: false
@@ -106,6 +107,10 @@ jobs:
             public_demo)
               NAMESPACE="build-staging-images"
               UNIQUE="build-${SHA}-run-${RUN_ID}-attempt-${ATTEMPT}"
+              ;;
+            public_production)
+              NAMESPACE="build-public-production"
+              UNIQUE="build-public-prod-${SHA}-run-${RUN_ID}-attempt-${ATTEMPT}"
               ;;
             *)
               echo "Unknown build_profile: $PROFILE" >&2
