@@ -112,6 +112,8 @@ source "$HERE/../lib/woodright-oci-provenance.sh"
 source "$HERE/../lib/woodright-compose-env-authority.sh"
 # shellcheck source=../lib/woodright-staging-mutation-lock.sh
 source "$HERE/../lib/woodright-staging-mutation-lock.sh"
+# shellcheck source=../lib/woodright-production-ownership-access.sh
+source "$HERE/../lib/woodright-production-ownership-access.sh"
 
 EXECUTE_CONFIRM_TOKEN="I_UNDERSTAND_PRIVATE_PRODUCTION_CANDIDATE_CUTOVER"
 CANONICAL_LOCK_PATH="/srv/woodright/locks/production/live-cutover.lock"
@@ -1292,7 +1294,16 @@ restore_ownership_metadata() {
     dest="${WOODRIGHT_OWNERSHIP_DIR%/}/$name"
     backup="$EVIDENCE_DIR/pin-backup/$name"
     if [[ -f "$backup" ]]; then
-      prod_atomic_install "$backup" "$dest" || rc=1
+      # Content rollback from backup, then re-apply durable access contract.
+      # Backups may still be root:root 0600 from pre-fix eras; never leave that.
+      if ! prod_atomic_install "$backup" "$dest"; then
+        rc=1
+        continue
+      fi
+      if ! wr_prod_ownership_apply_access "$dest"; then
+        log "ROLLBACK ownership access contract failed for $name"
+        rc=1
+      fi
       continue
     fi
     # File did not exist before mutation - remove any partial create.
@@ -2112,7 +2123,11 @@ PY
       log "ownership install failed for $name"
       return 1
     fi
-    chmod 0600 "$dest" 2>/dev/null || sudo -n chmod 0600 "$dest" 2>/dev/null || true
+    # Durable operator-readable contract (root:woodright-ops 0640). Fail closed.
+    if ! wr_prod_ownership_apply_access "$dest"; then
+      log "ownership access contract failed for $name (required root:woodright-ops 0640)"
+      return 1
+    fi
   done
 
   log "ownership metadata written under $dir (application_source_sha=$SOURCE_SHA helper_install_sha=${HELPER_INSTALL_SHA:-<empty>})"

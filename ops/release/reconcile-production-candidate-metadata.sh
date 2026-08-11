@@ -30,6 +30,8 @@ source "$SCRIPT_DIR/../lib/woodright-install-provenance.sh"
 source "$SCRIPT_DIR/../lib/woodright-compose-env-authority.sh"
 # shellcheck source=../lib/woodright-production-release-sha-reconcile.sh
 source "$SCRIPT_DIR/../lib/woodright-production-release-sha-reconcile.sh"
+# shellcheck source=../lib/woodright-production-ownership-access.sh
+source "$SCRIPT_DIR/../lib/woodright-production-ownership-access.sh"
 
 CONFIRM_TOKEN='I_UNDERSTAND_PRODUCTION_METADATA_PROVENANCE_CORRECTION'
 MODE="dry-run"
@@ -464,8 +466,10 @@ atomic_install() {
   local tmp
   tmp="$(mktemp "${dest}.tmp.XXXXXX")"
   cp "$src" "$tmp"
+  # Staging temp stays private until live install; access contract applied after mv.
   chmod 0600 "$tmp"
   mv -f "$tmp" "$dest"
+  wr_prod_ownership_apply_access "$dest" || return 1
 }
 
 INSTALLED=0

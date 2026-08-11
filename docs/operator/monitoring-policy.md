@@ -32,6 +32,14 @@ Buyer HTTPS routes, SEO noindex headers, CSP/HSTS, API denial without key, conta
 Monitoring **reads** `/srv/woodright/runtime-ownership/ACTIVE_OWNER.json` (or `EXPECTED_RELEASE.json`).  
 It **never** auto-updates expected digests. Updates are release-process / owner-approved only.
 
+### Production ownership file access
+
+Private production ownership JSON under `/srv/woodright/runtime-ownership-production/` is installed as:
+
+`root:woodright-ops` mode `0640`
+
+so systemd/root monitors and members of `woodright-ops` (operator) can read, without world-readable or operator-write authority. Public_demo keeps its own operator-owned access contract.
+
 ## Alerting
 
 If no email/Slack/Telegram/webhook credentials exist:

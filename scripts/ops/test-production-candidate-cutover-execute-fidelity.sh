@@ -276,7 +276,10 @@ base_env() {
     "WR_STAGING_MUTATION_LOCK_TIMEOUT_SEC=5" \
     "WOODRIGHT_CUTOVER_POLL_INTERVAL_SEC=1" \
     "WOODRIGHT_CUTOVER_READY_DEADLINE_SEC=8" \
-    "WOODRIGHT_FAKE_COMPOSE_DEFECT_DIGESTS=$NEW_BE_DIG,$NEW_SF_DIG"
+    "WOODRIGHT_FAKE_COMPOSE_DEFECT_DIGESTS=$NEW_BE_DIG,$NEW_SF_DIG" \
+    "WOODRIGHT_PRODUCTION_OWNERSHIP_OWNER=$(id -un)" \
+    "WOODRIGHT_PRODUCTION_OWNERSHIP_GROUP=$(id -gn)" \
+    "WOODRIGHT_PRODUCTION_OWNERSHIP_MODE=0640"
 }
 
 # run_exec <evidence-dir> <out-file> [extra env assignments...]
@@ -363,6 +366,16 @@ for f in ACTIVE_OWNER.json EXPECTED_RELEASE.json ACTIVE_RELEASE.json; do
   [[ -f "$OWN_DIR/$f" ]] || fail "success: missing $f"
 done
 pass "success: scoped ownership metadata written"
+python3 - "$OWN_DIR" <<'PY' && pass "success: ownership access mode 0640 non-world" || fail "success: ownership access mode"
+import os, stat, sys
+own = sys.argv[1]
+for name in ("ACTIVE_OWNER.json", "EXPECTED_RELEASE.json", "ACTIVE_RELEASE.json"):
+    st = os.stat(os.path.join(own, name))
+    mode = stat.S_IMODE(st.st_mode)
+    assert mode == 0o640, (name, oct(mode))
+    assert (mode & 0o007) == 0, (name, oct(mode))
+print("ok")
+PY
 lock_is_free "$LOCK" && pass "success: production lock released" || fail "success: lock still held"
 grep -q 'application_source_sha=' "${LOCK}.meta" && pass "success: lock metadata records both SHAs" || fail "success: lock metadata"
 grep -q "helper_install_sha=$HELPER_SHA" "${LOCK}.meta" && pass "success: lock metadata names the helper SHA" || fail "success: lock metadata helper sha"
