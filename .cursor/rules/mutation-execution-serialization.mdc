@@ -19,8 +19,9 @@ Use `ops/lib/woodright-mutation-process-lifecycle.sh` when a scripted/local wrap
 ## Hard bans for mutation execution
 
 - Do not background mutation shells (`&`, `nohup`, `tmux`, detached SSH, Cursor “run in background” for mutators).
-- Do not treat SSH client return / Broken pipe / exit `255` / timeout / wrapper death as mutation **success** or ordinary **failure**.
+- Do not treat SSH client return / Broken pipe / exit `255` / timeout (e.g. exit `124`) / wrapper death as mutation **success** or ordinary **failure**.
 - Those cases are `COMPLETION_UNKNOWN` until bounded read-only reconciliation proves termination **and** outcome.
+- Do not launder `COMPLETION_UNKNOWN` into `ABORTED` without explicit post-reconciliation acknowledgement.
 
 ## Phase-advance gate
 

@@ -226,7 +226,8 @@ os.execvp(cmd[0], cmd)
   wait "$_WR_MUT_CHILD_PID" || rc=$?
 
   # Transport/control-loss class: never map to ordinary SUCCESS/FAILED.
-  if [[ "$rc" -eq 129 || "$rc" -eq 130 || "$rc" -eq 137 || "$rc" -eq 143 || "$rc" -eq 255 ]]; then
+  # Includes SSH client loss (255), common signals, and timeout(1) exit 124.
+  if [[ "$rc" -eq 124 || "$rc" -eq 129 || "$rc" -eq 130 || "$rc" -eq 137 || "$rc" -eq 143 || "$rc" -eq 255 ]]; then
     wr_mutation_phase_mark_completion_unknown "waiter_exit_$rc"
     return 5
   fi
@@ -348,5 +349,19 @@ wr_mutation_phase_assert_ready_to_retry() {
 }
 
 wr_mutation_phase_mark_aborted() {
-  wr_mutation_phase_write "ABORTED" "" "${1:-aborted}"
+  local reason="${1:-aborted}"
+  local reconcile_token="${2:-}"
+  local state
+  state="$(wr_mutation_phase_read_state)"
+  # Fail closed: COMPLETION_UNKNOWN cannot be laundered into ABORTED without an
+  # explicit reconciliation token (bounded read-only proof already done by caller).
+  if [[ "$state" == "COMPLETION_UNKNOWN" && "$reconcile_token" != "reconciled=true" ]]; then
+    wr_mutation_phase_log "ERROR: refuse abort over COMPLETION_UNKNOWN without reconciled=true"
+    return 19
+  fi
+  if [[ "$state" == "COMPLETION_UNKNOWN" ]]; then
+    wr_mutation_phase_write "ABORTED" "" "aborted_after_reconcile:${reason}"
+  else
+    wr_mutation_phase_write "ABORTED" "" "$reason"
+  fi
 }

@@ -219,6 +219,49 @@ assert_rc begin_refuses_live_not_started "$brc" 16
 kill "$(cat "$TMP/beginlive.pid")" 2>/dev/null || true
 wait "$(cat "$TMP/beginlive.pid")" 2>/dev/null || true
 
+# --- Timeout exit 124 maps to COMPLETION_UNKNOWN (not ordinary FAILED) ---
+J10="$TMP/j10"
+wr_mutation_phase_begin run_id=t10 scope=test-timeout-124 journal_dir="$J10"
+set +e
+wr_mutation_phase_run_foreground -- sh -c 'exit 124'
+rc=$?
+set -e
+st="$(wr_mutation_phase_read_state)"
+assert_eq timeout124_state "$st" "COMPLETION_UNKNOWN"
+assert_rc timeout124_helper_rc "$rc" 5
+set +e
+wr_mutation_phase_assert_ready_to_advance
+arc=$?
+set -e
+assert_rc timeout124_blocks_advance "$arc" 7
+
+# --- COMPLETION_UNKNOWN cannot be laundered via mark_aborted without reconcile ---
+J11="$TMP/j11"
+wr_mutation_phase_begin run_id=t11 scope=test-abort-launder journal_dir="$J11"
+wr_mutation_phase_write "RUNNING" "" "sim"
+wr_mutation_phase_signal_transport_loss
+set +e
+wr_mutation_phase_mark_aborted "operator_wants_abort"
+arc=$?
+set -e
+assert_rc abort_refuses_unknown_without_reconcile "$arc" 19
+st="$(wr_mutation_phase_read_state)"
+assert_eq abort_refused_state_still_unknown "$st" "COMPLETION_UNKNOWN"
+set +e
+wr_mutation_phase_assert_ready_to_retry
+rrc=$?
+set -e
+assert_rc abort_launder_still_blocks_retry "$rrc" 13
+# After explicit reconciliation token, abort is allowed; then retry may proceed.
+wr_mutation_phase_mark_aborted "reconciled_no_remote_pid" "reconciled=true"
+st="$(wr_mutation_phase_read_state)"
+assert_eq abort_after_reconcile_state "$st" "ABORTED"
+set +e
+wr_mutation_phase_assert_ready_to_retry
+rrc=$?
+set -e
+assert_rc retry_ok_after_reconciled_abort "$rrc" 0
+
 # --- Background-child / forbidden pattern scan (ops mutation scripts) ---
 # Allow reviewed lock-heartbeat patterns; flag dangerous detachers in mutation-capable paths.
 SCAN_FAIL=0
