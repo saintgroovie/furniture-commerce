@@ -27,6 +27,22 @@ Profile: `ops/config/runtime-environments/staging.conf` (`runtime_role=public_de
 | `ops/release/rollback-staging-*-from-keeper.sh` | Keeper rollback |
 | `ops/release/public-demo-critical-http-smoke.sh` | Critical HTTP smoke (no browser) |
 
+## Owner-approval peers (pair nested recreate)
+
+When `cutover-public-demo-pair.sh` runs with `WOODRIGHT_OWNER_APPROVAL_REQUIRE_PAIR=1`,
+nested `recreate-staging-backend-with-media.sh` / `recreate-staging-storefront.sh` must
+receive the **peer** digest of the other component.
+
+The pair orchestrator binds these from the validated pair plan (`--backend-digest` /
+`--storefront-digest`) after Gate A:
+
+- `WOODRIGHT_OWNER_APPROVAL_PEER_SF_DIGEST` (for backend recreate)
+- `WOODRIGHT_OWNER_APPROVAL_PEER_BE_DIGEST` (for storefront recreate)
+
+Caller-supplied peer / `EXPECTED_*` values that disagree with the pair plan are
+**refused** (fail-closed). Matching values are accepted. Manual peer export is not
+required for a correct pair cutover.
+
 ## Target / digest requirements
 
 - Full 40-hex Git SHA

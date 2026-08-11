@@ -376,6 +376,93 @@ else
 fi
 if [[ -f "$TMP/state/log/mutations.log" ]]; then fail "pair dry-run mutated"; else pass "pair dry-run no mutation"; fi
 
+# 5b) pair dry-run binds verified peer digests (release 74fbad4 regression)
+if [[ -f "$EV2/json/owner-approval-peer-sf-digest.txt" ]] \
+  && [[ "$(cat "$EV2/json/owner-approval-peer-sf-digest.txt")" == "$SF_DIG" ]] \
+  && [[ -f "$EV2/json/owner-approval-peer-be-digest.txt" ]] \
+  && [[ "$(cat "$EV2/json/owner-approval-peer-be-digest.txt")" == "$BE_DIG" ]]; then
+  pass "pair dry-run wrote verified peer digest evidence"
+else
+  fail "pair dry-run missing/wrong peer digest evidence"
+fi
+# Nested BE gate under REQUIRE_PAIR must PASS using bound peer SF without manual export
+# shellcheck source=/dev/null
+source "$ROOT/ops/lib/woodright-owner-approved-release.sh"
+export WOODRIGHT_OWNER_APPROVAL_REQUIRE_PAIR=1
+unset WOODRIGHT_OWNER_APPROVAL_PEER_SF_DIGEST WOODRIGHT_OWNER_APPROVAL_PEER_BE_DIGEST
+unset EXPECTED_STOREFRONT_DIGEST EXPECTED_BACKEND_DIGEST
+# Simulate pre-fix nested call (empty peer) → MISMATCH
+if wr_require_owner_approved_release public_demo "$SHA40" "$BE_DIG" "" "$TMP/ev-reg-empty" gate_a_backend 2>/dev/null; then
+  fail "REQUIRE_PAIR with empty peer SF accepted (pre-fix bug still present)"
+else
+  [[ "${WR_OWNER_APPROVAL_RESULT:-}" == "OWNER_APPROVAL_MISMATCH" ]] \
+    && pass "regression: empty peer SF under REQUIRE_PAIR → MISMATCH" \
+    || fail "empty peer token=${WR_OWNER_APPROVAL_RESULT:-}"
+fi
+# After pair bind: peer SF = plan SF → PASS (manual env not required)
+export WOODRIGHT_OWNER_APPROVAL_PEER_SF_DIGEST="$SF_DIG"
+export WOODRIGHT_OWNER_APPROVAL_PEER_BE_DIGEST="$BE_DIG"
+if wr_require_owner_approved_release public_demo "$SHA40" "$BE_DIG" "$WOODRIGHT_OWNER_APPROVAL_PEER_SF_DIGEST" "$TMP/ev-reg-ok" gate_a_backend; then
+  pass "regression: nested BE gate PASS with pair-bound peer SF"
+else
+  fail "nested BE gate failed with bound peer SF result=${WR_OWNER_APPROVAL_RESULT:-}"
+fi
+if wr_require_owner_approved_release public_demo "$SHA40" "$WOODRIGHT_OWNER_APPROVAL_PEER_BE_DIGEST" "$SF_DIG" "$TMP/ev-reg-sf" gate_a_storefront; then
+  pass "regression: nested SF gate PASS with pair-bound peer BE"
+else
+  fail "nested SF gate failed with bound peer BE result=${WR_OWNER_APPROVAL_RESULT:-}"
+fi
+unset WOODRIGHT_OWNER_APPROVAL_REQUIRE_PAIR
+unset WOODRIGHT_OWNER_APPROVAL_PEER_SF_DIGEST WOODRIGHT_OWNER_APPROVAL_PEER_BE_DIGEST
+
+# 5c) spoofed caller peer refused before mutation
+EV_SPOOF="$TMP/ev-pair-spoof"
+mkdir -p "$EV_SPOOF"
+BAD_PEER="sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+set +e
+WOODRIGHT_OWNER_APPROVAL_PEER_SF_DIGEST="$BAD_PEER" \
+  bash "$PAIR" --environment public_demo --component pair --mode dry-run \
+  --target-sha "$SHA40" --backend-digest "$BE_DIG" --storefront-digest "$SF_DIG" \
+  --evidence-dir "$EV_SPOOF" >"$TMP/spoof.out" 2>&1
+SPOOF_RC=$?
+set -e
+if [[ "$SPOOF_RC" -ne 0 ]] && grep -qi 'PEER_SF_DIGEST mismatch\|spoof\|mismatch vs pair plan' "$TMP/spoof.out"; then
+  pass "spoofed caller peer SF refused"
+else
+  fail "spoofed caller peer SF accepted (rc=$SPOOF_RC)"
+  cat "$TMP/spoof.out" || true
+fi
+if [[ -f "$TMP/state/log/mutations.log" ]]; then fail "spoof attempt mutated"; else pass "spoof attempt no mutation"; fi
+# Matching caller peer is allowed (idempotent with plan)
+EV_OKPEER="$TMP/ev-pair-okpeer"
+mkdir -p "$EV_OKPEER"
+if WOODRIGHT_OWNER_APPROVAL_PEER_SF_DIGEST="$SF_DIG" \
+  WOODRIGHT_OWNER_APPROVAL_PEER_BE_DIGEST="$BE_DIG" \
+  bash "$PAIR" --environment public_demo --component pair --mode dry-run \
+  --target-sha "$SHA40" --backend-digest "$BE_DIG" --storefront-digest "$SF_DIG" \
+  --evidence-dir "$EV_OKPEER"; then
+  pass "matching caller peer env accepted"
+else
+  fail "matching caller peer env rejected"
+fi
+
+# 5d) single-component storefront still does not require pair peer when REQUIRE_PAIR unset
+unset WOODRIGHT_OWNER_APPROVAL_REQUIRE_PAIR
+unset WOODRIGHT_OWNER_APPROVAL_PEER_SF_DIGEST WOODRIGHT_OWNER_APPROVAL_PEER_BE_DIGEST
+EV_SC="$TMP/ev-sf-single"
+mkdir -p "$EV_SC"
+rm -f "$TMP/state/log/mutations.log"
+if WOODRIGHT_FAKE_DOCKER_ALLOW_MUTATION=0 \
+  bash "$SF" --environment public_demo --component storefront --mode dry-run \
+  --image "ghcr.io/saintgroovie/woodright-storefront@${SF_DIG}" \
+  --digest "$SF_DIG" --target-sha "$SHA40" \
+  --keep-name "woodright-staging-storefront-keeper-single" \
+  --env-file "$ENVF" --evidence-dir "$EV_SC"; then
+  pass "single-component SF dry-run still works without pair peer env"
+else
+  fail "single-component SF dry-run broken by pair peer fix"
+fi
+
 # 6) pair missing confirm on execute should fail before mutation
 if bash "$PAIR" --environment public_demo --component pair --mode execute \
   --target-sha "$SHA40" --backend-digest "$BE_DIG" --storefront-digest "$SF_DIG" \

@@ -97,6 +97,50 @@ EOF
 log() { printf '%s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*"; }
 die() { log "ERROR: $*"; exit 2; }
 
+# Bind nested recreate owner-approval peers from the already-validated pair plan.
+# Incident (release 74fbad4): pair exported WOODRIGHT_OWNER_APPROVAL_REQUIRE_PAIR=1
+# but nested backend/storefront recreate resolved empty peer digests → OWNER_APPROVAL_MISMATCH
+# unless the operator manually exported WOODRIGHT_OWNER_APPROVAL_PEER_*.
+# Peer values MUST come from pair --backend-digest/--storefront-digest (Gate A identity).
+# Caller-supplied PEER_*/EXPECTED_* that disagree with the pair plan are refused (no spoof).
+bind_pair_owner_approval_peers() {
+  wr_cutover_require_digest "$BE_DIGEST" || die "pair peer bind: backend digest invalid"
+  wr_cutover_require_digest "$SF_DIGEST" || die "pair peer bind: storefront digest invalid"
+  [[ "$BE_DIGEST" != "$SF_DIGEST" ]] || die "pair peer bind: backend and storefront digests must differ"
+
+  local caller_peer_sf="${WOODRIGHT_OWNER_APPROVAL_PEER_SF_DIGEST:-}"
+  local caller_peer_be="${WOODRIGHT_OWNER_APPROVAL_PEER_BE_DIGEST:-}"
+  local caller_exp_sf="${EXPECTED_STOREFRONT_DIGEST:-}"
+  local caller_exp_be="${EXPECTED_BACKEND_DIGEST:-}"
+
+  if [[ -n "$caller_peer_sf" && "$caller_peer_sf" != "$SF_DIGEST" ]]; then
+    die "caller WOODRIGHT_OWNER_APPROVAL_PEER_SF_DIGEST mismatch vs pair plan want=$SF_DIGEST have=$caller_peer_sf"
+  fi
+  if [[ -n "$caller_peer_be" && "$caller_peer_be" != "$BE_DIGEST" ]]; then
+    die "caller WOODRIGHT_OWNER_APPROVAL_PEER_BE_DIGEST mismatch vs pair plan want=$BE_DIGEST have=$caller_peer_be"
+  fi
+  if [[ -n "$caller_exp_sf" && "$caller_exp_sf" != "$SF_DIGEST" ]]; then
+    die "caller EXPECTED_STOREFRONT_DIGEST mismatch vs pair plan want=$SF_DIGEST have=$caller_exp_sf"
+  fi
+  if [[ -n "$caller_exp_be" && "$caller_exp_be" != "$BE_DIGEST" ]]; then
+    die "caller EXPECTED_BACKEND_DIGEST mismatch vs pair plan want=$BE_DIGEST have=$caller_exp_be"
+  fi
+
+  export WOODRIGHT_OWNER_APPROVAL_PEER_SF_DIGEST="$SF_DIGEST"
+  export WOODRIGHT_OWNER_APPROVAL_PEER_BE_DIGEST="$BE_DIGEST"
+  # Secondary fallbacks used by recreate helpers when PEER_* unset; keep aligned to plan.
+  export EXPECTED_STOREFRONT_DIGEST="$SF_DIGEST"
+  export EXPECTED_BACKEND_DIGEST="$BE_DIGEST"
+  export WOODRIGHT_CUTOVER_EVIDENCE_DIR="${WOODRIGHT_CUTOVER_EVIDENCE_DIR:-$EVIDENCE_DIR}"
+
+  if [[ -n "${EVIDENCE_DIR:-}" ]]; then
+    mkdir -p "$EVIDENCE_DIR/json"
+    printf '%s\n' "$SF_DIGEST" >"$EVIDENCE_DIR/json/owner-approval-peer-sf-digest.txt"
+    printf '%s\n' "$BE_DIGEST" >"$EVIDENCE_DIR/json/owner-approval-peer-be-digest.txt"
+  fi
+  log "owner_approval_peers_bound peer_be=$BE_DIGEST peer_sf=$SF_DIGEST"
+}
+
 parse_args() {
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -479,6 +523,9 @@ if ! wr_require_owner_approved_release \
 fi
 OWNER_APPROVAL_CHECKSUM_GATE_A="${WR_OA_CHECKSUM:-}"
 log "owner_approval_ok gate=a sha=$TARGET_SHA checksum=${OWNER_APPROVAL_CHECKSUM_GATE_A:0:12}…"
+# After Gate A: nestable recreate helpers under REQUIRE_PAIR need the peer digest of
+# the other component. Bind from validated pair plan (not live containers / caller spoof).
+bind_pair_owner_approval_peers
 
 default_images
 wr_cutover_require_image_at_digest "$BE_IMAGE" "$BE_DIGEST" || exit 2
@@ -524,6 +571,8 @@ if [[ "$MODE" == "dry-run" || "$MODE" == "preflight" ]]; then
   log "PLANNED pair cutover sha=$TARGET_SHA be=$BE_DIGEST sf=$SF_DIGEST"
   log "PLANNED order=backend_then_storefront lock=$WR_STAGING_MUTATION_LOCK_PATH"
   log "PLANNED containers=${WOODRIGHT_BE_CONTAINER_DEFAULT}+${WOODRIGHT_SF_CONTAINER_DEFAULT}"
+  log "PLANNED owner_approval_peer_be=${WOODRIGHT_OWNER_APPROVAL_PEER_BE_DIGEST:-}"
+  log "PLANNED owner_approval_peer_sf=${WOODRIGHT_OWNER_APPROVAL_PEER_SF_DIGEST:-}"
   log "PLANNED database_identity_alias=${WOODRIGHT_DATABASE_IDENTITY_ALIAS} database_connection_name=${WOODRIGHT_DATABASE_CONNECTION_NAME:-none}"
   log "PLANNED label com.woodright.database-identity=${WOODRIGHT_DATABASE_IDENTITY_ALIAS}"
   log "PLANNED no_migration no_production no_dns"
@@ -572,6 +621,8 @@ if ! wr_require_owner_approved_release_under_lock \
   exit 2
 fi
 log "owner_approval_ok gate=b checksum=${WR_OA_CHECKSUM:0:12}…"
+# Re-bind peers under lock (TOCTOU: refuse drifted caller env before nested recreate).
+bind_pair_owner_approval_peers
 
 # Re-validate under lock (selection freeze + monitor freshness after lock wait)
 wr_prelock_validate_environment_target || die "under-lock environment retarget detected"

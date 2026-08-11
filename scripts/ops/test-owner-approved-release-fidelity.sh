@@ -66,6 +66,11 @@ grep -q 'wr_require_owner_approved_release_under_lock' "$ROOT/ops/release/recrea
   || fail "storefront recreate missing Gate B"
 pass "standalone recreates have Gate B under lock"
 grep -q 'wr_require_owner_approved_release' "$PIN" || fail "pin reconcile missing owner gate"
+grep -q 'bind_pair_owner_approval_peers' "$PAIR" || fail "pair missing peer bind helper"
+grep -q 'WOODRIGHT_OWNER_APPROVAL_PEER_SF_DIGEST' "$PAIR" || fail "pair missing peer SF export"
+grep -q 'WOODRIGHT_OWNER_APPROVAL_PEER_BE_DIGEST' "$PAIR" || fail "pair missing peer BE export"
+grep -q 'mismatch vs pair plan' "$PAIR" || fail "pair missing peer spoof refusal"
+pass "pair peer-authority bind contract present"
 if awk '/WOODRIGHT_VALIDATION_FREEZE_OVERRIDE/ { if ($0 ~ /return 0/ || $0 ~ /OWNER_APPROVAL_OK/) bad=1 } END { exit bad ? 0 : 1 }' "$LIB"; then
   fail "freeze override appears to authorize release"
 else
