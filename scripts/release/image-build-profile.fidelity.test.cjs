@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Fidelity tests for the image-build-profile system:
- *   - ops/config/image-build-profiles/{public_demo,production_candidate}.conf
+ *   - ops/config/image-build-profiles/{public_demo,production_candidate,public_production}.conf
  *   - scripts/release/resolve-image-build-profile.cjs
  *   - apps/storefront/Dockerfile (profile-aware launch validation)
  *   - .github/workflows/build-staging-images.yml wiring
@@ -52,7 +52,7 @@ function check(cond, msg) {
 }
 
 // 3. CLI --print-env / --checksum output shape for both profiles.
-for (const name of ["public_demo", "production_candidate"]) {
+for (const name of ["public_demo", "production_candidate", "public_production"]) {
   const r = spawnSync("node", [resolverPath, "--profile", name, "--print-env", "--checksum"], {
     cwd: root,
     encoding: "utf8",
@@ -70,6 +70,11 @@ const demo = loadProfile("public_demo")
 const prod = loadProfile("production_candidate")
 check(demo.values.NEXT_PUBLIC_SITE_URL === "https://woodright-demo.ru", "public_demo.conf site url")
 check(prod.values.NEXT_PUBLIC_SITE_URL === "https://woodright.ru", "production_candidate.conf site url")
+const pub = loadProfile("public_production")
+check(pub.values.NEXT_PUBLIC_SITE_URL === "https://woodright.ru", "public_production.conf site url")
+check(pub.values.WOODRIGHT_LAUNCH_MODE === "public_indexable", "public_production.conf launch mode indexable")
+check(pub.values.WOODRIGHT_RUNTIME_ROLE === "public_production", "public_production.conf runtime role")
+check(pub.values.WOODRIGHT_DB_ALIAS === "public_production_db", "public_production.conf db alias")
 check(
   (demo.values.WOODRIGHT_FORBIDDEN_SITE_SUBSTRINGS || "").includes("woodright.ru"),
   "public_demo.conf forbids production apex substring"
@@ -94,8 +99,8 @@ check(!/=.*\b(ghp_|sk_live_|-----BEGIN)/i.test(prod.text), "production_candidate
 const dockerfile = fs.readFileSync(path.join(root, "apps/storefront/Dockerfile"), "utf8")
 check(/ARG WOODRIGHT_IMAGE_BUILD_PROFILE=/.test(dockerfile), "Dockerfile declares WOODRIGHT_IMAGE_BUILD_PROFILE ARG")
 check(
-  /production_candidate/.test(dockerfile) && /public_demo/.test(dockerfile),
-  "Dockerfile launch validation branches on both profiles"
+  /production_candidate/.test(dockerfile) && /public_demo/.test(dockerfile) && /public_production/.test(dockerfile),
+  "Dockerfile launch validation branches on public_demo, production_candidate, public_production"
 )
 check(
   /ARG WOODRIGHT_RUNTIME_ROLE=/.test(dockerfile) && /ARG WOODRIGHT_RUNTIME_EXPOSURE=/.test(dockerfile),

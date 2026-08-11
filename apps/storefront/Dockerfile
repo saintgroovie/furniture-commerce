@@ -156,8 +156,30 @@ RUN test -n "$MEDUSA_BACKEND_URL" \
         [ "$WOODRIGHT_DB_ALIAS" = "public_demo_db" ] \
           || { echo "profile=public_demo requires WOODRIGHT_DB_ALIAS=public_demo_db, got: ${WOODRIGHT_DB_ALIAS:-<empty>}" >&2; exit 1; }; \
         ;; \
+      public_production) \
+        case "$WOODRIGHT_LAUNCH_MODE" in \
+          public_indexable) ;; \
+          *) echo "profile=public_production requires WOODRIGHT_LAUNCH_MODE=public_indexable, got: ${WOODRIGHT_LAUNCH_MODE:-<empty>}" >&2; exit 1 ;; \
+        esac; \
+        case "$WOODRIGHT_PAYMENT_MODE" in \
+          manual_invoice) ;; \
+          *) echo "profile=public_production requires WOODRIGHT_PAYMENT_MODE=manual_invoice, got: ${WOODRIGHT_PAYMENT_MODE:-<empty>}" >&2; exit 1 ;; \
+        esac; \
+        echo "$NEXT_PUBLIC_SITE_URL" | grep -Eq '^https://(www\.)?woodright\.ru/?$' \
+          || { echo "profile=public_production requires NEXT_PUBLIC_SITE_URL=https://woodright.ru (or www), got: $NEXT_PUBLIC_SITE_URL" >&2; exit 1; }; \
+        echo "$NEXT_PUBLIC_SITE_URL" | grep -Eiq 'woodright-demo\.ru|127\.0\.0\.1|localhost' \
+          && { echo "profile=public_production rejects demo/loopback NEXT_PUBLIC_SITE_URL: $NEXT_PUBLIC_SITE_URL" >&2; exit 1; }; \
+        echo "$NEXT_PUBLIC_MEDUSA_BACKEND_URL" | grep -Eq '^https://api\.woodright\.ru/?$' \
+          || { echo "profile=public_production requires NEXT_PUBLIC_MEDUSA_BACKEND_URL=https://api.woodright.ru, got: ${NEXT_PUBLIC_MEDUSA_BACKEND_URL:-<empty>}" >&2; exit 1; }; \
+        echo "$NEXT_PUBLIC_MEDUSA_BACKEND_URL" | grep -Eiq 'woodright-demo\.ru|127\.0\.0\.1|localhost' \
+          && { echo "profile=public_production rejects demo/loopback API URL: $NEXT_PUBLIC_MEDUSA_BACKEND_URL" >&2; exit 1; }; \
+        [ "$WOODRIGHT_RUNTIME_ROLE" = "public_production" ] \
+          || { echo "profile=public_production requires WOODRIGHT_RUNTIME_ROLE=public_production, got: ${WOODRIGHT_RUNTIME_ROLE:-<empty>}" >&2; exit 1; }; \
+        [ "$WOODRIGHT_DB_ALIAS" = "public_production_db" ] \
+          || { echo "profile=public_production requires WOODRIGHT_DB_ALIAS=public_production_db, got: ${WOODRIGHT_DB_ALIAS:-<empty>}" >&2; exit 1; }; \
+        ;; \
       *) \
-        echo "Unknown WOODRIGHT_IMAGE_BUILD_PROFILE: $WOODRIGHT_IMAGE_BUILD_PROFILE (expected empty|public_demo|production_candidate)" >&2; exit 1 ;; \
+        echo "Unknown WOODRIGHT_IMAGE_BUILD_PROFILE: $WOODRIGHT_IMAGE_BUILD_PROFILE (expected empty|public_demo|production_candidate|public_production)" >&2; exit 1 ;; \
     esac \
  && yarn build \
  && test -f .next-build/standalone/apps/storefront/server.js \
