@@ -244,6 +244,7 @@ FILES=(
   ops/lib/woodright-ops-path-isolation.sh
   ops/lib/woodright-alert-contract.sh
   ops/lib/woodright-recovery-point.sh
+  ops/lib/woodright-production-ownership-access.sh
   ops/config/runtime-environments/public_demo.conf
   ops/config/runtime-environments/staging.conf
   ops/config/runtime-environments/production.conf
@@ -311,6 +312,7 @@ role_for() {
     ops/lib/woodright-compose-env-authority.sh) echo compose_env_authority ;;
     ops/lib/woodright-public-demo-metadata-authority.sh) echo public_demo_metadata_authority ;;
     ops/lib/woodright-owner-approved-release.sh) echo owner_approved_release ;;
+    ops/lib/woodright-production-ownership-access.sh) echo production_ownership_access ;;
     ops/release/reconcile-owner-approved-release.sh) echo owner_approved_release_reconciler ;;
     scripts/release/reconcile-public-image-pins.sh) echo pin_reconciler ;;
     scripts/release/restart-active-digest-only.sh) echo legacy_restart_guard ;;
@@ -422,6 +424,13 @@ if [[ "$CANONICAL_LAYOUT" == "1" ]]; then
   if [[ ! -s "$WR_ROOT/locks/production/live-cutover.lock" && -e "$WR_ROOT/locks/production-cutover.lock" ]]; then
     log "note: legacy production-cutover.lock present; nested lock file created empty (flock path is nested)"
   fi
+  # Ensure production ownership access group exists for durable EXPECTED readability.
+  # shellcheck source=../lib/woodright-production-ownership-access.sh
+  source "$REPO_ROOT/ops/lib/woodright-production-ownership-access.sh"
+  if ! wr_prod_ownership_ensure_group; then
+    die "failed to ensure production ownership group woodright-ops (required for EXPECTED operator read)"
+  fi
+  log "production ownership access group ensured (woodright-ops)"
 fi
 
 # Preserve previous markers for restore-on-failure
@@ -711,6 +720,7 @@ def role_for(rel: str) -> str:
         "ops/lib/woodright-compose-env-authority.sh": "compose_env_authority",
         "ops/lib/woodright-public-demo-metadata-authority.sh": "public_demo_metadata_authority",
         "ops/lib/woodright-production-release-sha-reconcile.sh": "production_release_sha_reconcile_lib",
+        "ops/lib/woodright-production-ownership-access.sh": "production_ownership_access",
         "ops/release/install-environment-governance.sh": "installer",
         "ops/release/verify-environment-governance-bundle.sh": "bundle_verifier",
     }

@@ -96,6 +96,8 @@ source "$HERE/../lib/woodright-oci-provenance.sh"
 source "$HERE/../lib/woodright-compose-env-authority.sh"
 # shellcheck source=../lib/woodright-staging-mutation-lock.sh
 source "$HERE/../lib/woodright-staging-mutation-lock.sh"
+# shellcheck source=../lib/woodright-production-ownership-access.sh
+source "$HERE/../lib/woodright-production-ownership-access.sh"
 
 EXECUTE_CONFIRM_TOKEN="I_UNDERSTAND_PRODUCTION_PIN_RUNTIME_SKEW_RECOVERY"
 CANONICAL_LOCK_PATH="/srv/woodright/locks/production/live-cutover.lock"
@@ -1341,7 +1343,10 @@ PY
     dest="$dir/$name"
     [[ -f "$staged_src" ]] || { log "staged ownership missing: $name"; return 1; }
     prod_atomic_install "$staged_src" "$dest" || { log "ownership install failed for $name"; return 1; }
-    chmod 0600 "$dest" 2>/dev/null || sudo -n chmod 0600 "$dest" 2>/dev/null || true
+    if ! wr_prod_ownership_apply_access "$dest"; then
+      log "ownership access contract failed for $name (required root:woodright-ops 0640)"
+      return 1
+    fi
   done
   METADATA_INSTALLED=1
   log "ownership metadata written under $dir (application_source_sha=$SOURCE_SHA helper_install_sha=${HELPER_INSTALL_SHA:-<empty>})"
