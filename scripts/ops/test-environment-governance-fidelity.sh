@@ -70,13 +70,17 @@ wr_load_environment_profile public_production || fail "public_production load"
 [[ "$WOODRIGHT_MONITOR_STATE_ROOT" == "/srv/woodright/monitoring/public-production/state" ]] || fail "public_production monitor"
 [[ "${WOODRIGHT_MONITOR_HISTORY:-}" == "/srv/woodright/monitoring/public-production/history" ]] || fail "public_production monitor history"
 [[ "$WOODRIGHT_OWNER_APPROVAL_ENVIRONMENT" == "public_production" ]] || fail "public_production approval env"
-[[ "$WOODRIGHT_ENVIRONMENT_PROVISIONED" == "0" ]] || fail "public_production must be unprovisioned"
+[[ "$WOODRIGHT_ENVIRONMENT_PROVISIONED" == "1" ]] || fail "public_production must be technically provisioned"
+[[ "${WOODRIGHT_MONITOR_BACKUP_RUNTIME_PROVISIONED:-0}" == "1" ]] || fail "public_production monitor/backup runtime must be provisioned"
 [[ "$WOODRIGHT_OWNERSHIP_DIR" != "$PROD_OWN" ]] || fail "ownership must not share with production candidate"
 [[ "$WOODRIGHT_MUTATION_LOCK_PATH" != "$PROD_LOCK" ]] || fail "lock must not share with production candidate"
 if [[ -n "$PROD_BACKUP" && "$WOODRIGHT_BACKUP_ROOT" == "$PROD_BACKUP" ]]; then
   fail "backup must not share with production candidate"
 fi
-if wr_assert_environment_provisioned 2>/dev/null; then fail "public_production provisioned assert should fail"; else ok "public_production unprovisioned fail-closed"; fi
+if wr_assert_environment_provisioned; then ok "public_production provisioned assert passes"; else fail "public_production provisioned assert should pass"; fi
+# Buyer launch gates remain pending even when technically provisioned
+[[ "${WOODRIGHT_LAUNCH_GATE_DNS_TLS:-}" == "required" ]] || fail "DNS/TLS launch gate must remain required"
+[[ "${WOODRIGHT_ALLOW_HOST_PUBLISH:-1}" == "0" ]] || fail "host publish must stay denied pre-cutover"
 ok "public_production profile loads isolated pins"
 
 # 6) inherited conflict

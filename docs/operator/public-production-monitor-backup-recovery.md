@@ -37,11 +37,17 @@ Entrypoint:
 /srv/woodright/ops/monitoring/woodright-health-check.sh --environment public_production
 ```
 
-Fail-closed while `WOODRIGHT_ENVIRONMENT_PROVISIONED=0`:
+When `WOODRIGHT_ENVIRONMENT_PROVISIONED=1` (technical stack present, still
+`PROVISIONED_NOT_PUBLIC` / no buyer DNS cutover):
 
-- path isolation
-- legal / payment / notification pending → critical
-- alert destination missing → critical
+- path isolation still required
+- legal / payment / notification pending → critical for **launch** readiness (not for technical backup)
+- alert destination missing → critical for monitor readiness
+- live discovery against loopback/public_production runtime is allowed
+
+While `WOODRIGHT_ENVIRONMENT_PROVISIONED=0` (historical / undeployed):
+
+- live backup/monitor refuse fail-closed
 - no live discovery against missing runtime (unless `WOODRIGHT_MONITOR_FORCE_LIVE=1`)
 
 ## Backup / recovery point
