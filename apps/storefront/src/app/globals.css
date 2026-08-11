@@ -5967,14 +5967,19 @@ button.pdp-material-trigger:focus-visible {
 
   .catalog-sort .wr-select-trigger {
     min-width: 0;
+    /* Mobile touch target: keep compact desktop 28px toolbar, enlarge only
+       under the phone breakpoint where these controls are primary taps. */
+    height: auto;
+    min-height: 44px;
   }
 
   .catalog-filter-mobile-toggle {
     flex-shrink: 0;
-  }
-
-  .catalog-filter-mobile-toggle {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: auto;
+    min-height: 44px;
   }
 
   .catalog-filter-layout {
