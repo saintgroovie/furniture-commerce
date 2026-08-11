@@ -2733,6 +2733,12 @@ select:focus-visible {
    Shared --footer-head-* / --footer-row-h keep brand + nav on one lattice.
    Warm wash lives on .site-footer and falls from the top rule — no brand card frame. */
 
+
+.site-header.is-kids-snap,
+.site-footer.is-kids-snap {
+  transition: none;
+}
+
 .site-footer {
   /* Same adult ↔ kids tween language as .site-header edge wash. */
   --footer-wash-top: color-mix(in srgb, var(--color-accent) 28%, var(--color-bg));
@@ -2774,59 +2780,60 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .site-footer {
   }
 }
 
+/* Full-bleed footer shell: page gutters only, no .container max-width. */
 .footer-inner {
   display: flex;
   flex-direction: column;
   gap: 0;
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+  padding-inline: clamp(28px, 3vw, 64px);
+  box-sizing: border-box;
 }
 
 .footer-columns {
-  --footer-head-h: 1.35rem;
-  --footer-head-gap: 1rem;
-  /* Roomier row pitch for column link lists (and brand lead on the same lattice). */
+  /* Shared title row + body offset (all six columns). */
+  --footer-head-h: 28px;
+  --footer-title-body-gap: 16px;
   --footer-row-h: 2rem;
-  /* Visible air from each rule to the brand/nav lattice (keep equal). */
-  --footer-band-inset: 0.45rem;
-  /* Trim brand bottom padding to match prior lattice (no card crop). */
-  --footer-brand-crop: 8px;
-  /* Brand pad (also applied as invisible pad on nav columns). */
-  --footer-brand-pad-x: 1.75rem;
-  --footer-brand-pad-y: 1.6rem;
-  /* Base nav gutter; brand stand-off is always 1.2× this.
-     Use a literal Nfr max (not calc(N * 1fr)) - fr-in-calc is unreliable. */
-  --footer-nav-gap: 3.25rem;
+  /*
+    Six content tracks + five spacer tracks (odd = content, even = interval).
+    Left-anchored inset (~150px); spacers carry compact gaps; shell + separator
+    stay full-bleed on page gutters (not tied to this group width).
+  */
   position: relative;
   display: grid;
-  width: 100%;
-  margin-block: var(--footer-band-inset);
+  box-sizing: border-box;
+  /* Horizontal final micro-pass: pull nav toward fixed Buyers; Brand/Buyers held. */
+  width: min(1604px, calc(100% - (167px - clamp(28px, 3vw, 64px))));
+  margin-top: 41px;
+  margin-bottom: 36px;
+  margin-left: calc(167px - clamp(28px, 3vw, 64px));
+  margin-right: auto;
   grid-template-columns:
-    max-content
-    minmax(calc(var(--footer-nav-gap) * 1.2), 1.2fr)
-    max-content
-    minmax(var(--footer-nav-gap), 1fr)
-    max-content
-    minmax(var(--footer-nav-gap), 1fr)
-    max-content
-    minmax(var(--footer-nav-gap), 1fr)
-    max-content;
+    323fr 98fr
+    180fr 60fr
+    145fr 83fr
+    145fr 76fr
+    140fr 54fr
+    300fr;
+  column-gap: 0;
+  row-gap: 0;
   align-items: start;
   align-content: start;
   height: auto;
+  overflow-x: clip;
 }
 
-/* Thin vertical rule between brand and Каталог.
-   Anchored to .footer-brand; extends through --footer-band-inset so the
-   stroke runs the full band between the footer's horizontal rules.
-   Mid-gutter horizontally (half of 1.2× gap, nudged by half brand pad). */
+/* Divider on the RIGHT edge of the brand track (not mid-gap). */
 .footer-brand::after {
   content: "";
   position: absolute;
-  top: calc(-1 * var(--footer-band-inset) - 1px);
-  bottom: calc(-1 * var(--footer-band-inset) - 1px);
+  top: -32px;
+  bottom: -12px;
   left: auto;
-  right: calc(
-    -0.5 * var(--footer-nav-gap) * 1.2 + 0.5 * var(--footer-brand-pad-x)
-  );
+  right: 0;
   width: 1px;
   background: linear-gradient(
     180deg,
@@ -2837,83 +2844,104 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .site-footer {
   pointer-events: none;
 }
 
-/* Children become grid items of .footer-columns (gap tracks stay empty). */
+/* Nav columns participate as siblings of .footer-brand (DOM order = visual). */
 .footer-nav {
   display: contents;
 }
 
-.footer-brand {
-  grid-column: 1;
-}
-
-.footer-nav .footer-column:nth-child(1) {
-  grid-column: 3;
-}
-
-.footer-nav .footer-column:nth-child(2) {
-  grid-column: 5;
-}
-
-.footer-nav .footer-column:nth-child(3) {
-  grid-column: 7;
-}
-
-.footer-nav .footer-column:nth-child(4) {
-  grid-column: 9;
-}
-
+/*
+  Shared column lattice: fixed title row + row-gap, then body (no body margin-top).
+  No per-column horizontal padding/margin - tracks + spacer columns only.
+*/
 .footer-column {
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  max-width: 100%;
+  display: grid;
+  grid-template-rows: var(--footer-head-h) auto;
+  row-gap: var(--footer-title-body-gap);
+  align-content: start;
   align-self: start;
   height: fit-content;
+  margin: 0;
+  padding: 0;
 }
 
-/* Invisible pad matching the brand window so nav titles/rows share the lattice. */
-.footer-nav .footer-column {
-  padding-block: var(--footer-brand-pad-y);
-}
-
-/* Brand column: left edge flush with the Шоурум/Каталог power line.
-   Top-aligned copy keeps wordmark/rows on the shared lattice with nav.
-   No card frame/radius — gradient is on .site-footer from the top rule.
-   Bottom pad is cropped by --footer-brand-crop. */
+/* Brand on track 1; nav columns on odd tracks 3/5/7/9/11 (spacers = intervals).
+   Explicit grid-row:1 — Buyers must never auto-wrap to a second desktop row. */
 .footer-brand {
   position: relative;
   box-sizing: border-box;
-  align-self: start;
-  align-items: center;
-  justify-content: flex-start;
+  display: block;
+  grid-column: 1;
+  grid-row: 1;
+  width: auto;
+  max-width: none;
+  min-width: 0;
   height: auto;
-  padding: var(--footer-brand-pad-y) var(--footer-brand-pad-x)
-    calc(var(--footer-brand-pad-y) - var(--footer-brand-crop));
   margin: 0;
+  padding: 0;
   border: none;
   border-radius: 0;
   box-shadow: none;
   background: transparent;
 }
 
-/* Left-aligned copy cluster on the shared footer lattice. */
-.footer-brand-copy {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  width: max-content;
-  max-width: 100%;
+.footer-nav > .footer-column:nth-child(1) {
+  grid-column: 3;
+  grid-row: 1;
 }
 
-/* Shared header slot: wordmark and caps labels share height + bottom gap.
-   align-items:center so the 18px wordmark and ~12px caps share one optical
-   midline (flex-end left the SVG sitting visibly above the column titles). */
+.footer-nav > .footer-column:nth-child(2) {
+  grid-column: 5;
+  grid-row: 1;
+}
+
+.footer-nav > .footer-column:nth-child(3) {
+  grid-column: 7;
+  grid-row: 1;
+}
+
+.footer-nav > .footer-column:nth-child(4) {
+  grid-column: 9;
+  grid-row: 1;
+}
+
+.footer-nav > .footer-column:nth-child(5) {
+  grid-column: 11;
+  grid-row: 1;
+}
+
+.footer-brand-copy {
+  display: grid;
+  grid-template-rows: var(--footer-head-h) auto;
+  row-gap: var(--footer-title-body-gap);
+  align-content: start;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Brand lead may wrap inside the track; nav links keep nowrap + ellipsis. */
+.footer-brand .footer-row {
+  white-space: normal;
+  max-width: 100%;
+  height: auto;
+  min-height: var(--footer-row-h);
+  line-height: var(--footer-row-h);
+}
+
+/*
+  Title slot: brand and nav share the 28px row.
+  Nav gets a shared padding-top so baselines meet the wordmark (not tops).
+*/
 .footer-column-title {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  align-self: start;
   box-sizing: border-box;
   height: var(--footer-head-h);
-  margin: 0 0 var(--footer-head-gap);
+  margin: 0;
   padding: 0;
   font-size: 0.75rem;
   font-weight: 500;
@@ -2923,21 +2951,20 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .site-footer {
   color: var(--color-fg);
 }
 
+.footer-nav .footer-column-title {
+  padding-top: 4px;
+}
+
 .footer-brand-logo {
   display: inline-flex;
-  align-items: center;
+  align-items: flex-start;
   color: var(--color-fg);
   text-decoration: none;
 }
 
 .footer-brand-mark {
   display: inline-flex;
-  align-items: center;
-}
-
-.footer-brand .footer-column-title {
-  /* Tighter gap from wordmark to the description block (nav keeps 1rem). */
-  margin-bottom: 0.65rem;
+  align-items: flex-start;
 }
 
 .footer-brand-logo:hover {
@@ -2947,7 +2974,6 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .site-footer {
 
 .footer-brand-wordmark {
   display: block;
-  /* Pin both axes like .logo-image so the Kids pill tween stays calm. */
   height: 18px;
   width: calc(18px * 16489 / 2114);
   flex: none;
@@ -2955,18 +2981,18 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .site-footer {
   overflow: visible;
 }
 
-/* Footer wordmark is 18px; keep the shared Kids slot on the same cross-size. */
 .footer-brand-logo .logo-kids-slot {
   height: 18px;
 }
 
-/* Shared body: every row is the same fixed height, no extra gap */
+/* Shared body: margin 0 - vertical offset comes from title row + row-gap. */
 .footer-column-body {
   margin: 0;
   padding: 0;
   list-style: none;
   display: flex;
   flex-direction: column;
+  row-gap: 0;
   font-size: 0.875rem;
   font-weight: 400;
   letter-spacing: -0.01em;
@@ -3012,18 +3038,6 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .site-footer {
   color: var(--color-fg-secondary);
 }
 
-/* Brand lead/bullets: nowrap+fixed height overflows narrow mobile columns. */
-@media (max-width: 1100px) {
-  .footer-brand-lead .footer-row,
-  .footer-brand-bullets .footer-row {
-    white-space: normal;
-    height: auto;
-    min-height: var(--footer-row-h);
-    line-height: 1.35;
-    padding-block: 0.15rem;
-  }
-}
-
 .footer-column-links .footer-row {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -3032,6 +3046,8 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .site-footer {
 .footer-column-links .footer-row a {
   display: block;
   height: 100%;
+  margin: 0;
+  padding: 0;
   color: var(--color-fg-muted);
 }
 
@@ -3039,6 +3055,7 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .site-footer {
   color: var(--color-fg);
 }
 
+/* Separator + copyright stay on page gutters (footer-inner padding), full width. */
 .footer-bottom {
   margin: 0;
   padding-top: var(--space-md);
@@ -3049,17 +3066,31 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .site-footer {
 
 @media (max-width: 1100px) {
   .footer-columns {
-    --footer-nav-gap: 2.5rem;
-    /* Desktop lattice (max-content × 5 + fr gutters) overflows mid tablets
-       (~901–1100). Stack earlier; keep dense lattice for wide desktops. */
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
     grid-template-columns: 1fr;
+    column-gap: 0;
     row-gap: var(--space-xl);
     margin-block: var(--space-lg);
+    overflow-x: visible;
   }
 
   .footer-brand::after {
     content: none;
     display: none;
+  }
+
+  /* Match desktop nth-child placement specificity so late main
+     footer-nav grid contracts (≤1100 / ≤520) are not forced to 11 tracks. */
+  .footer-brand,
+  .footer-nav > .footer-column:nth-child(1),
+  .footer-nav > .footer-column:nth-child(2),
+  .footer-nav > .footer-column:nth-child(3),
+  .footer-nav > .footer-column:nth-child(4),
+  .footer-nav > .footer-column:nth-child(5) {
+    grid-column: auto;
+    grid-row: auto;
   }
 
   .footer-nav {
@@ -3068,20 +3099,18 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .site-footer {
     gap: var(--space-xl);
   }
 
-  .footer-brand,
-  .footer-nav .footer-column:nth-child(1),
-  .footer-nav .footer-column:nth-child(2),
-  .footer-nav .footer-column:nth-child(3),
-  .footer-nav .footer-column:nth-child(4) {
-    grid-column: auto;
+  .footer-nav .footer-column-title {
+    padding-top: 0;
   }
 
   .footer-brand {
     margin: 0;
   }
 
-  .footer-nav .footer-column {
-    padding-block: 0;
+  .footer-brand .footer-row {
+    white-space: nowrap;
+    height: var(--footer-row-h);
+    min-height: 0;
   }
 }
 
