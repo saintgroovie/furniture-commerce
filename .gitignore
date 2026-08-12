@@ -37,3 +37,7 @@ package-lock.json
 # Generated catalog-normalization runtime dumps (keep scripts/docs)
 artifacts/catalog-normalization/
 tmp/
+
+# Night III local evidence (may contain DB URL file)
+tmp/catalog-options-night3/
+**/.dburl
