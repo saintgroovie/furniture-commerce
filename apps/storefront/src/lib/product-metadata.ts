@@ -4,6 +4,7 @@ import {
   type BuyerFacingTitleLayout,
 } from "@/lib/en-name-ru"
 import { isOliverKidsHandle } from "@/lib/oliver-kids-scope"
+import { resolvePublicProductTitle } from "@/lib/catalog-normalization"
 
 type Dimensions = {
   width_mm?: number
@@ -192,16 +193,21 @@ export function getCanonicalName(product: ProductLike): string | null {
   return typeof name === "string" && name.trim() ? name.trim() : null
 }
 
-/** Buyer-facing H1 layout: type line + transcribed model (when present). */
+/**
+ * Buyer-facing H1 layout: type line + transcribed model (when present).
+ *
+ * Uses catalog-normalization public title contract (merge title config +
+ * canonical model; expand verified pedestal codes) before transcription.
+ */
 export function getBuyerFacingProductTitleLayout(
   product: ProductLike
 ): BuyerFacingTitleLayout {
-  const raw =
-    getCanonicalName(product) ??
-    (typeof product.title === "string" && product.title.trim()
-      ? product.title.trim()
-      : "Товар")
-  const layout = layoutBuyerFacingTitle(raw)
+  const resolved = resolvePublicProductTitle({
+    title: typeof product.title === "string" ? product.title : null,
+    handle: typeof product.handle === "string" ? product.handle : null,
+    metadata: meta(product),
+  })
+  const layout = layoutBuyerFacingTitle(resolved.public_title)
   return {
     ...layout,
     text: formatBuyerFacingMeasureText(layout.text),

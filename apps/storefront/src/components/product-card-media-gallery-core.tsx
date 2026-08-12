@@ -2008,7 +2008,12 @@ function ProductCardMediaGalleryCoreInner({
                 onUpholsteryPick,
                 {
                   disabledKeys: upholsteryDisabledKeys,
-                  /* Per-row swatchImageUrl only — never axis-wide hero tiles. */
+                  /* Per-row swatchImageUrl only — never axis-wide hero tiles.
+                     imageSwatches alone never enables hero; allowHeroAsSwatch is separate. */
+                  imageSwatches:
+                    resolveUpholsteryAxisPresentation(
+                      visibleUpholsteryVariants!
+                    ) === "swatch_image",
                 }
               )
             ))}

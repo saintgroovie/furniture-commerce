@@ -1,6 +1,10 @@
 import { formatRub } from "@/lib/format"
 import { resolveCatalogCardPrice } from "@/lib/catalog-card-price"
-import { getArticle, getCollectionLabel } from "@/lib/product-metadata"
+import {
+  getArticle,
+  getBuyerFacingProductTitle,
+  getCollectionLabel,
+} from "@/lib/product-metadata"
 import {
   collectExtraProductImageUrls,
   resolveStorefrontProductImageSrc,
@@ -25,7 +29,10 @@ export type HomeProduct = {
 
 export function toHomeProduct(product: Record<string, unknown>): HomeProduct | null {
   const id = typeof product.id === "string" ? product.id : null
-  const title = typeof product.title === "string" ? product.title : null
+  const rawTitle = typeof product.title === "string" ? product.title : null
+  const title = rawTitle
+    ? getBuyerFacingProductTitle(product)
+    : null
   const thumbRaw = typeof product.thumbnail === "string" ? product.thumbnail.trim() : ""
   if (!id || !title || !thumbRaw) return null
   const cardPrice = resolveCatalogCardPrice(product)

@@ -295,12 +295,14 @@ def run_audit(database_url: str) -> dict:
                 stats["upholstery_values_without_hex"] += 1
             if has_image_field:
                 stats["upholstery_values_with_swatch_image_field"] += 1
+            if "fabric_closeup_candidate" in kinds:
+                stats["upholstery_url_closeup_candidate"] += 1
+
             if has_image_field:
                 status = "HAS_SWATCH_IMAGE_FIELD"
                 stats["upholstery_with_real_image_swatch"] += 1
             elif "fabric_closeup_candidate" in kinds:
                 status = "URL_LOOKS_LIKE_CLOSEUP"
-                stats["upholstery_url_closeup_candidate"] += 1
             elif has_hex:
                 status = "HEX_COLOR_SWATCH"
                 stats["upholstery_with_verified_color_fallback"] += 1
