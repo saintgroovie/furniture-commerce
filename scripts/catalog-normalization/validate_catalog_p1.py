@@ -17,19 +17,15 @@ import re
 import sys
 from pathlib import Path
 
-try:
-    import psycopg
-except ImportError:
-    import psycopg2 as psycopg  # type: ignore
-
 ROOT = Path(__file__).resolve().parents[2]
-# Import sibling module helpers by path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from normalize_catalog import (  # type: ignore
-    CLASS_LINK,
     CODE_TAIL_RE,
     connect,
     fetch_products,
+    is_valid_swatch_hex,
+    normalize_asset_url,
+    product_hero_urls,
     resolve_public_title,
 )
 
@@ -49,6 +45,8 @@ def validate(products: list) -> list[dict]:
         handle = row.get("handle")
         pid = row.get("id")
         meta = row.get("metadata") or {}
+        heroes = {normalize_asset_url(u) for u in product_hero_urls(row) if u}
+        heroes.discard("")
 
         if CODE_TAIL_RE.search(title.strip()):
             p1.append({"code": "PEDESTAL_CODE_LEAK", "handle": handle, "id": pid, "title": title})
@@ -58,10 +56,6 @@ def validate(products: list) -> list[dict]:
             p1.append({"code": "SKU_AS_TITLE", "handle": handle, "id": pid, "title": title})
         if "дверц" in title.lower() and public.get("pedestal_code"):
             p1.append({"code": "DOOR_WORDING_ON_PEDESTAL", "handle": handle, "id": pid, "title": title})
-
-        for opt in row.get("medusa_options") or []:
-            # Medusa Default stub is allowed in DB; buyer leakage checked via title/public fields only
-            pass
 
         for key in (
             "fabric_upholstery_executions",
@@ -75,11 +69,14 @@ def validate(products: list) -> list[dict]:
             for entry in raw:
                 if not isinstance(entry, dict):
                     continue
-                # Hero-as-swatch: swatch_image equal to first product hero is suspicious but hard in SQL;
-                # presentation=swatch_image without swatch_image/url is invalid
-                if entry.get("presentation") == "swatch_image" and not (
-                    entry.get("swatch_image") or entry.get("swatch_url")
-                ):
+                swatch_image = None
+                for sk in ("swatch_image", "swatch_url"):
+                    v = entry.get(sk)
+                    if isinstance(v, str) and v.strip():
+                        swatch_image = v.strip()
+                        break
+
+                if entry.get("presentation") == "swatch_image" and not swatch_image:
                     p1.append(
                         {
                             "code": "SWATCH_IMAGE_WITHOUT_ASSET",
@@ -89,19 +86,40 @@ def validate(products: list) -> list[dict]:
                             "key": entry.get("key"),
                         }
                     )
-                # Invented hex pattern: presentation swatch_color without hex
-                if entry.get("presentation") == "swatch_color" and not (
-                    isinstance(entry.get("swatch_hex"), str) and entry["swatch_hex"].strip()
-                ):
+                if swatch_image and heroes and normalize_asset_url(swatch_image) in heroes:
                     p1.append(
                         {
-                            "code": "SWATCH_COLOR_WITHOUT_HEX",
+                            "code": "HERO_AS_SWATCH",
                             "handle": handle,
                             "id": pid,
                             "axis": key,
                             "key": entry.get("key"),
                         }
                     )
+
+                if entry.get("presentation") == "swatch_color":
+                    hx = entry.get("swatch_hex")
+                    if not isinstance(hx, str) or not hx.strip():
+                        p1.append(
+                            {
+                                "code": "SWATCH_COLOR_WITHOUT_HEX",
+                                "handle": handle,
+                                "id": pid,
+                                "axis": key,
+                                "key": entry.get("key"),
+                            }
+                        )
+                    elif not is_valid_swatch_hex(hx):
+                        p1.append(
+                            {
+                                "code": "SWATCH_COLOR_INVALID_HEX",
+                                "handle": handle,
+                                "id": pid,
+                                "axis": key,
+                                "key": entry.get("key"),
+                                "swatch_hex": hx,
+                            }
+                        )
     return p1
 
 

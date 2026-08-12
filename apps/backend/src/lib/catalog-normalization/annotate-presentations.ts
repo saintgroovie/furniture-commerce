@@ -4,6 +4,7 @@
  *
  * Preserves non-object / unknown entries in execution arrays (fail-closed:
  * never silently drop rows during annotation).
+ * Uses import-guards to strip hero-as-swatch and invalid hex when heroUrls given.
  */
 
 import {
@@ -15,21 +16,42 @@ import {
   isFabricFamilyKey,
   fabricFamilyDisplayLabel,
 } from "../upholstery-color-normalization"
+import { guardExecutionSwatchRow } from "./import-guards"
 
 export type ExecutionRow = Record<string, unknown>
 
+const HEX_RE = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/
+
 function annotateObjectRow(
   row: ExecutionRow,
-  semantic: "upholstery" | "finish" | "frame" | "headboard"
+  semantic: "upholstery" | "finish" | "frame" | "headboard",
+  heroUrls?: string[]
 ): ExecutionRow {
-  const swatch_hex =
+  let swatch_hex =
     typeof row.swatch_hex === "string" ? row.swatch_hex.trim() : null
-  const swatch_image =
+  if (swatch_hex && !HEX_RE.test(swatch_hex)) {
+    swatch_hex = null
+  }
+  let swatch_image =
     typeof row.swatch_image === "string"
       ? row.swatch_image.trim()
       : typeof row.swatch_url === "string"
         ? row.swatch_url.trim()
         : null
+
+  const findings = guardExecutionSwatchRow(
+    {
+      presentation: row.presentation,
+      swatch_hex,
+      swatch_image,
+      swatch_url: swatch_image,
+    },
+    { heroUrls }
+  )
+  if (findings.some((f) => f.code === "HERO_AS_SWATCH_URL")) {
+    swatch_image = null
+  }
+
   const presentation = resolveExecutionPresentation({
     swatch_hex,
     swatch_image,
@@ -50,6 +72,13 @@ function annotateObjectRow(
         : presentation === "swatch_color"
           ? "color"
           : "none",
+  }
+  if (swatch_hex) next.swatch_hex = swatch_hex
+  else delete next.swatch_hex
+  if (swatch_image) next.swatch_image = swatch_image
+  else {
+    delete next.swatch_image
+    delete next.swatch_url
   }
 
   if (semantic === "upholstery" && typeof row.key === "string") {
@@ -74,14 +103,17 @@ export type PresentationNormalizeReport = {
 
 /**
  * Idempotent metadata annotation for buyer execution axes.
+ * Optional heroUrls enables import-guard stripping of hero-as-swatch.
  */
 export function annotateExecutionPresentations(
-  metadata: Record<string, unknown>
+  metadata: Record<string, unknown>,
+  opts?: { heroUrls?: string[] }
 ): { metadata: Record<string, unknown>; report: PresentationNormalizeReport } {
   const next = { ...metadata }
   const axes_touched: string[] = []
   let rows_annotated = 0
   let rows_preserved_non_object = 0
+  const heroUrls = opts?.heroUrls
 
   const pairs: Array<[string, "upholstery" | "finish" | "frame" | "headboard"]> = [
     ["fabric_upholstery_executions", "upholstery"],
@@ -100,7 +132,7 @@ export function annotateExecutionPresentations(
         rows_preserved_non_object += 1
         return entry
       }
-      return annotateObjectRow(entry as ExecutionRow, semantic)
+      return annotateObjectRow(entry as ExecutionRow, semantic, heroUrls)
     })
     const before = JSON.stringify(raw)
     const after = JSON.stringify(annotated)

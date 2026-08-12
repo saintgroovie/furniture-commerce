@@ -77,7 +77,7 @@ def assert_local_db(url: str) -> None:
 
 def fetch_products(conn) -> list[dict[str, Any]]:
     sql = f"""
-    SELECT p.id, p.handle, p.title, p.subtitle, p.status, p.metadata,
+    SELECT p.id, p.handle, p.title, p.subtitle, p.status, p.metadata, p.thumbnail,
            COALESCE(
              (SELECT json_agg(json_build_object(
                 'id', v.id, 'title', v.title, 'sku', v.sku
@@ -102,6 +102,12 @@ def fetch_products(conn) -> list[dict[str, Any]]:
                 AND o.deleted_at IS NULL),
              '[]'::json
            ) AS medusa_options,
+           COALESCE(
+             (SELECT json_agg(i.url ORDER BY i.rank NULLS LAST, i.id)
+              FROM image i
+              WHERE i.product_id = p.id AND i.deleted_at IS NULL),
+             '[]'::json
+           ) AS image_urls,
            (
              SELECT pc.product_type
              FROM {CLASS_LINK} lnk
@@ -123,7 +129,7 @@ def fetch_products(conn) -> list[dict[str, Any]]:
         if isinstance(meta, str):
             meta = json.loads(meta)
         row["metadata"] = meta if isinstance(meta, dict) else {}
-        for k in ("variants", "medusa_options"):
+        for k in ("variants", "medusa_options", "image_urls"):
             v = row.get(k)
             if isinstance(v, str):
                 row[k] = json.loads(v)
@@ -131,6 +137,33 @@ def fetch_products(conn) -> list[dict[str, Any]]:
                 row[k] = []
         rows.append(row)
     return rows
+
+
+def normalize_asset_url(url: str) -> str:
+    u = (url or "").strip().split("?")[0].rstrip("/").lower()
+    # Compare by basename path when hosts differ (localhost vs 127.0.0.1 / CDN)
+    if "/static/" in u:
+        return u.split("/static/", 1)[1]
+    return u
+
+
+def product_hero_urls(row: dict[str, Any]) -> list[str]:
+    """Product hero/gallery assets only (thumbnail + image rows). Not execution media."""
+    urls: list[str] = []
+    thumb = row.get("thumbnail")
+    if isinstance(thumb, str) and thumb.strip():
+        urls.append(thumb.strip())
+    for u in row.get("image_urls") or []:
+        if isinstance(u, str) and u.strip():
+            urls.append(u.strip())
+    return urls
+
+
+HEX_RE = re.compile(r"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$")
+
+
+def is_valid_swatch_hex(value: object) -> bool:
+    return isinstance(value, str) and bool(HEX_RE.match(value.strip()))
 
 
 def extract_latin_model(canonical: str) -> str | None:
@@ -300,7 +333,10 @@ def resolve_public_title(row: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def annotate_presentations(meta: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+def annotate_presentations(
+    meta: dict[str, Any],
+    hero_urls: list[str] | None = None,
+) -> tuple[dict[str, Any], dict[str, Any]]:
     next_meta = dict(meta)
     axes: list[str] = []
     rows_n = 0
@@ -314,6 +350,8 @@ def annotate_presentations(meta: dict[str, Any]) -> tuple[dict[str, Any], dict[s
         ("headboard_model_executions", "headboard"),
     ]
     hex_re = re.compile(r"^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$")
+    heroes = {normalize_asset_url(u) for u in (hero_urls or []) if u}
+    heroes.discard("")
 
     def present(row: dict[str, Any]) -> str:
         img = row.get("swatch_image") or row.get("swatch_url")
@@ -340,6 +378,16 @@ def annotate_presentations(meta: dict[str, Any]) -> tuple[dict[str, Any], dict[s
                 annotated.append(row)
                 continue
             nr = dict(row)
+            # Import guards (Python mirror of import-guards.ts): strip hero-as-swatch + invalid hex
+            for sk in ("swatch_image", "swatch_url"):
+                v = nr.get(sk)
+                if isinstance(v, str) and v.strip() and normalize_asset_url(v) in heroes:
+                    nr.pop(sk, None)
+                    changed = True
+            hx = nr.get("swatch_hex")
+            if isinstance(hx, str) and hx.strip() and not hex_re.match(hx.strip()):
+                nr.pop("swatch_hex", None)
+                changed = True
             pr = present(nr)
             expected_swatch_type = (
                 "image" if pr == "swatch_image" else "color" if pr == "swatch_color" else "none"
@@ -479,7 +527,7 @@ def build_mutations(products: list[dict[str, Any]]) -> list[dict[str, Any]]:
     for row in products:
         meta = dict(row.get("metadata") or {})
         public = resolve_public_title(row)
-        new_meta, pres = annotate_presentations(meta)
+        new_meta, pres = annotate_presentations(meta, product_hero_urls(row))
         title_next = row["title"]
         title_changed = False
         # SAFE title writes: pedestal expansion OR door→shelf correction
@@ -640,8 +688,20 @@ def main(argv: list[str]) -> int:
 
         if mode == "apply":
             result = apply_mutations(conn, mutations)
+            # Post-apply P1 gate (same rules as validate_catalog_p1.py)
+            from validate_catalog_p1 import validate as validate_p1  # type: ignore
+
+            post = fetch_products(conn)
+            p1 = validate_p1(post)
+            result["p1_count"] = len(p1)
+            result["p1_sample"] = p1[:10]
             write_json(ART / f"{label}_apply.json", result)
-            print(json.dumps(result, indent=2))
+            print(json.dumps({k: result[k] for k in result if k != "p1_sample"}, indent=2))
+            if p1:
+                print("P1 violations after apply — refusing success", file=sys.stderr)
+                for row in p1[:20]:
+                    print(row, file=sys.stderr)
+                return 1
             return 0
 
         if mode == "idempotency-check":

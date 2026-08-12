@@ -7,18 +7,20 @@
 import { extractPedestalDeskCode } from "./pedestal-desk-codes"
 import type { OptionPresentation } from "../option-presentation-contract"
 
+const DEFAULT_TITLE_RE = /default\s*variant|\bdefault\b/i
+const HEX_RE = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/
+
 export type ImportGuardFinding = {
   code:
     | "PEDESTAL_CODE_IN_PUBLIC_TITLE"
     | "DEFAULT_VARIANT_PUBLIC_TITLE"
     | "SWATCH_IMAGE_WITHOUT_ASSET"
     | "SWATCH_COLOR_WITHOUT_HEX"
+    | "SWATCH_COLOR_INVALID_HEX"
     | "HERO_AS_SWATCH_URL"
   message: string
   path?: string
 }
-
-const DEFAULT_TITLE_RE = /default\s*variant|\bdefault\b/i
 
 /**
  * Reject buyer-facing titles that still carry verified pedestal letter codes
@@ -74,6 +76,12 @@ export function guardExecutionSwatchRow(
     out.push({
       code: "SWATCH_COLOR_WITHOUT_HEX",
       message: "presentation=swatch_color without swatch_hex",
+      path,
+    })
+  } else if (swatchHex && !HEX_RE.test(swatchHex)) {
+    out.push({
+      code: "SWATCH_COLOR_INVALID_HEX",
+      message: `invalid swatch_hex: ${swatchHex}`,
       path,
     })
   }
