@@ -1,26 +1,37 @@
 import { defineWidgetConfig } from "@medusajs/admin-sdk"
-import { useMemo, type CSSProperties } from "react"
-import { resolvePublicProductTitle } from "../../lib/catalog-normalization/public-title"
-import { isMedusaStubOptionTitle } from "../../lib/catalog-normalization/option-taxonomy"
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+} from "react"
+import { buildAdminProductProjection } from "../../lib/catalog-admin/admin-product-projection"
+import { formatAxisGlance } from "../../lib/catalog-admin/buyer-options-summary"
+import { adminJson } from "../lib/admin-fetch"
 
 type ProductData = {
   id?: string
   title?: string
   handle?: string
+  status?: string
+  thumbnail?: string
   metadata?: Record<string, unknown>
   options?: Array<{ title?: string; values?: Array<{ value?: string }> }>
+  images?: Array<{ url?: string }>
   variants?: Array<{
     id?: string
     title?: string
     sku?: string
     prices?: Array<{ amount?: number; currency_code?: string }>
+    metadata?: Record<string, unknown> | null
   }>
 }
 
 const box: CSSProperties = {
   display: "flex",
   flexDirection: "column",
-  gap: 8,
+  gap: 10,
   padding: 16,
   background: "var(--bg-base, #fff)",
   borderRadius: 8,
@@ -28,129 +39,305 @@ const box: CSSProperties = {
 }
 
 const muted: CSSProperties = { color: "var(--fg-muted, #666)", fontSize: 12 }
+const sectionTitle: CSSProperties = { fontWeight: 600, marginTop: 4 }
+const warn: CSSProperties = {
+  ...muted,
+  color: "var(--fg-error, #9a3412)",
+  background: "var(--bg-subtle, #fff7ed)",
+  padding: "8px 10px",
+  borderRadius: 6,
+}
+
+const DQ_COLORS: Record<string, string> = {
+  ok: "#166534",
+  needs_source: "#9a3412",
+  conflict: "#9a3412",
+  pending_confirmation: "#854d0e",
+  content_improvement: "#1e40af",
+  malformed: "#9a3412",
+}
 
 /**
- * Read-only buyer preview so managers see what the storefront will show,
- * without treating SKU / Medusa stub options as primary labels.
+ * Operational Woodright summary for managers: buyer truth first.
+ * Isolated failure: native product page stays usable if this widget errors.
  */
 const CatalogBuyerPreviewWidget = ({ data }: { data?: ProductData }) => {
-  const preview = useMemo(() => {
-    const resolved = resolvePublicProductTitle({
-      title: data?.title,
-      handle: data?.handle,
-      metadata: data?.metadata ?? null,
-    })
-    const options = (data?.options ?? [])
-      .filter((o) => o?.title && !isMedusaStubOptionTitle(o.title))
-      .map((o) => ({
-        title: o.title!,
-        values: (o.values ?? [])
-          .map((v) => v?.value)
-          .filter((v): v is string => !!v && !isMedusaStubOptionTitle(v)),
-      }))
-      .filter((o) => o.values.length > 0)
+  const [classification, setClassification] = useState<string | null>(null)
+  const [titleDraft, setTitleDraft] = useState("")
+  const [saving, setSaving] = useState(false)
+  const [saveMsg, setSaveMsg] = useState<string | null>(null)
+  const [saveErr, setSaveErr] = useState<string | null>(null)
+  const [techOpen, setTechOpen] = useState(false)
+  /** Saved titles keyed by product id — never leak across navigation. */
+  const [savedTitlesById, setSavedTitlesById] = useState<Record<string, string>>(
+    {}
+  )
+  const [metaFingerprint, setMetaFingerprint] = useState<string | null>(null)
 
-    const meta = data?.metadata ?? {}
-    const execAxes: string[] = []
-    for (const key of [
-      "material_tiers",
-      "finish_color_executions",
-      "paint_finish_executions",
-      "fabric_upholstery_executions",
-      "upholstery_color_executions",
-      "frame_material_executions",
-      "headboard_model_executions",
-    ]) {
-      const v = meta[key]
-      if (Array.isArray(v) && v.length) {
-        /* Count only object rows — legacy string/null entries must not crash the widget. */
-        const objectRows = v.filter((row) => row && typeof row === "object")
-        if (objectRows.length) execAxes.push(`${key}: ${objectRows.length}`)
-      } else if (v && typeof v === "object") {
-        execAxes.push(`${key}: object`)
+  const productId = data?.id ?? ""
+
+  const projection = useMemo(() => {
+    try {
+      return buildAdminProductProjection({
+        ...data,
+        classification,
+      })
+    } catch {
+      return null
+    }
+  }, [data, classification])
+
+  useEffect(() => {
+    setSaveMsg(null)
+    setSaveErr(null)
+    setTechOpen(false)
+    setClassification(null)
+    setMetaFingerprint(null)
+  }, [productId])
+
+  useEffect(() => {
+    if (!projection?.public_title || !productId) return
+    const saved = savedTitlesById[productId]
+    setTitleDraft(saved ?? projection.public_title)
+  }, [productId, projection?.public_title, savedTitlesById])
+
+  useEffect(() => {
+    if (!productId) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await adminJson<{
+          projection?: { classification?: string | null }
+          metadata_fingerprint?: string
+        }>(`/admin/woodright/products/${productId}/buyer-identity`)
+        if (cancelled) return
+        setClassification(res.projection?.classification ?? null)
+        if (typeof res.metadata_fingerprint === "string") {
+          setMetaFingerprint(res.metadata_fingerprint)
+        }
+      } catch {
+        if (!cancelled) setClassification(null)
       }
+    })()
+    return () => {
+      cancelled = true
     }
+  }, [productId])
 
-    const defaultVariant = data?.variants?.[0]
-    const price = defaultVariant?.prices?.[0]
-    const sku = defaultVariant?.sku ?? null
-
-    return {
-      resolved,
-      options,
-      execAxes,
-      defaultVariantTitle: defaultVariant?.title ?? null,
-      sku,
-      priceLabel:
-        price?.amount != null
-          ? `${(Number(price.amount) / (String(price.currency_code).toLowerCase() === "rub" ? 1 : 1)).toLocaleString("ru-RU")} ${price.currency_code ?? ""}`.trim()
-          : null,
-      classification: typeof meta.product_type === "string" ? meta.product_type : null,
-      legacyTitle:
-        typeof meta.legacy_title === "string"
-          ? meta.legacy_title
-          : typeof meta.canonical_name === "string"
-            ? meta.canonical_name
-            : null,
+  const onSaveTitle = useCallback(async () => {
+    if (!productId) return
+    setSaving(true)
+    setSaveErr(null)
+    setSaveMsg(null)
+    try {
+      const res = await adminJson<{
+        public_title: string
+        public_title_source: string
+        metadata_fingerprint?: string
+      }>(`/admin/woodright/products/${productId}/buyer-identity`, {
+        method: "PUT",
+        body: JSON.stringify({
+          public_title: titleDraft,
+          metadata_fingerprint: metaFingerprint,
+        }),
+      })
+      setSavedTitlesById((prev) => ({
+        ...prev,
+        [productId]: res.public_title,
+      }))
+      if (typeof res.metadata_fingerprint === "string") {
+        setMetaFingerprint(res.metadata_fingerprint)
+      }
+      setSaveMsg(`Сохранено · на сайте: ${res.public_title}`)
+    } catch (e) {
+      const err = e as Error
+      setSaveErr(err.message || "Не удалось сохранить")
+    } finally {
+      setSaving(false)
     }
-  }, [data])
+  }, [productId, titleDraft, metaFingerprint])
 
   if (!data?.id) return null
 
+  if (!projection) {
+    return (
+      <div style={box}>
+        <div style={sectionTitle}>Woodright · на сайте</div>
+        <div style={warn}>
+          Не удалось построить buyer-preview. Нативная карточка Medusa доступна ниже
+        </div>
+      </div>
+    )
+  }
+
+  const dqColor = DQ_COLORS[projection.data_quality.kind] ?? "#666"
+  const statusRu =
+    projection.status === "published"
+      ? "Опубликовано"
+      : projection.status === "draft"
+        ? "Черновик"
+        : projection.status ?? "—"
+
   return (
     <div style={box}>
-      <div style={{ fontWeight: 600 }}>Название на сайте</div>
-      <div>{preview.resolved.public_title}</div>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          gap: 12,
+          alignItems: "baseline",
+          flexWrap: "wrap",
+        }}
+      >
+        <div style={{ fontWeight: 600, fontSize: 15 }}>Woodright · на сайте</div>
+        <div style={{ ...muted, color: dqColor, fontWeight: 600 }}>
+          Данные: {projection.data_quality.label_ru}
+        </div>
+      </div>
+
       <div style={muted}>
-        источник: {preview.resolved.source}
-        {preview.resolved.pedestal_code
-          ? ` · код тумб: ${preview.resolved.pedestal_code}`
+        {statusRu}
+        {projection.sku ? ` · SKU ${projection.sku}` : ""}
+        {projection.classification ? ` · ${projection.classification}` : ""}
+        {projection.collection_hint
+          ? ` · ${projection.collection_hint}`
           : ""}
       </div>
 
-      <div style={{ fontWeight: 600, marginTop: 8 }}>Опции на сайте</div>
-      {preview.execAxes.length > 0 ? (
+      <div style={sectionTitle}>Название на сайте</div>
+      <input
+        value={titleDraft}
+        onChange={(e) => setTitleDraft(e.target.value)}
+        style={{
+          padding: "8px 10px",
+          borderRadius: 6,
+          border: "1px solid var(--border-base, #d4d4d4)",
+          fontSize: 14,
+        }}
+        aria-label="Название на сайте"
+      />
+      <div style={muted}>
+        источник: {projection.public_title_source}
+        {projection.technical_title &&
+        projection.technical_title !== projection.public_title
+          ? ` · техническое Medusa: ${projection.technical_title}`
+          : ""}
+      </div>
+      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <button
+          type="button"
+          disabled={saving || titleDraft.trim() === projection.public_title}
+          onClick={() => void onSaveTitle()}
+          style={{
+            padding: "6px 12px",
+            borderRadius: 6,
+            border: "1px solid var(--border-base, #d4d4d4)",
+            background: "var(--bg-field, #fafafa)",
+            cursor: saving ? "wait" : "pointer",
+            fontSize: 13,
+          }}
+        >
+          {saving ? "Сохраняю…" : "Сохранить название"}
+        </button>
+        {saveMsg ? <span style={{ ...muted, color: "#166534" }}>{saveMsg}</span> : null}
+        {saveErr ? <span style={{ ...muted, color: "#9a3412" }}>{saveErr}</span> : null}
+      </div>
+
+      <div style={sectionTitle}>Покупательские опции</div>
+      {projection.buyer_axes.length > 0 ? (
         <ul style={{ margin: 0, paddingLeft: 18 }}>
-          {preview.execAxes.map((a) => (
-            <li key={a}>{a}</li>
+          {projection.buyer_axes.map((a) => (
+            <li key={a.key}>
+              <strong>{a.label_ru}</strong>: {formatAxisGlance(a)}
+            </li>
           ))}
         </ul>
-      ) : preview.options.length > 0 ? (
+      ) : projection.native_option_fallback.length > 0 ? (
         <ul style={{ margin: 0, paddingLeft: 18 }}>
-          {preview.options.map((o) => (
+          {projection.native_option_fallback.map((o) => (
             <li key={o.title}>
-              {o.title}: {o.values.join(", ")}
+              {o.title}: {o.values.join(" · ")}
             </li>
           ))}
         </ul>
       ) : (
-        <div style={muted}>Нет отдельных buyer-facing option groups (Medusa Default скрыт)</div>
+        <div style={muted}>
+          Нет отдельных покупательских опций (технический Default скрыт)
+        </div>
       )}
-
-      <div style={{ fontWeight: 600, marginTop: 8 }}>Вариант по умолчанию</div>
       <div style={muted}>
-        {preview.defaultVariantTitle &&
-        !isMedusaStubOptionTitle(preview.defaultVariantTitle)
-          ? preview.defaultVariantTitle
-          : preview.resolved.public_title}
-        {preview.sku ? ` · SKU ${preview.sku}` : ""}
+        Это не native Medusa variants · technical variants:{" "}
+        {projection.technical_variant_count}
+        {projection.technical_default_hidden ? " · Default скрыт из buyer view" : ""}
       </div>
 
-      <div style={{ fontWeight: 600, marginTop: 8 }}>
-        Сырая цена (первый variant в admin payload)
-      </div>
+      <div style={sectionTitle}>Цена</div>
+      <div>{projection.price.medusa_base_label ?? "не загружена в виджет"}</div>
+      <div style={muted}>{projection.price.semantics_ru}</div>
+
+      <div style={sectionTitle}>Габариты (В → Ш → Г)</div>
       <div>
-        {preview.priceLabel ?? "цена не загружена в виджет"}
+        {projection.dimensions.display_lines.map((line) => (
+          <div key={line}>{line}</div>
+        ))}
       </div>
+      <div style={muted}>{projection.dimensions.trust_label_ru}</div>
+      {projection.dimensions.block_casual_edit ? (
+        <div style={warn}>{projection.dimensions.manager_hint_ru}</div>
+      ) : null}
+
+      <div style={sectionTitle}>Медиа</div>
       <div style={muted}>
-        Не гарантирует совпадение со storefront (material tiers / calculated_price)
+        {projection.media.image_count
+          ? `Изображений: ${projection.media.image_count}`
+          : "Изображений нет"}
+        {" · "}
+        swatch только из подтверждённых execution-полей (hero не образец)
       </div>
 
-      <div style={{ fontWeight: 600, marginTop: 8 }}>Technical / legacy</div>
-      <div style={muted}>
-        handle: {data.handle ?? "-"}
-        {preview.legacyTitle ? ` · legacy/canonical: ${preview.legacyTitle}` : ""}
-      </div>
+      {projection.data_quality.warnings.length > 0 ? (
+        <>
+          <div style={sectionTitle}>Предупреждения</div>
+          {projection.data_quality.warnings.map((w) => (
+            <div key={w} style={warn}>
+              {w}
+            </div>
+          ))}
+        </>
+      ) : null}
+
+      <button
+        type="button"
+        onClick={() => setTechOpen((v) => !v)}
+        style={{
+          ...muted,
+          textAlign: "left",
+          background: "transparent",
+          border: "none",
+          padding: 0,
+          cursor: "pointer",
+          marginTop: 4,
+        }}
+      >
+        {techOpen ? "▾" : "▸"} Технические данные
+      </button>
+      {techOpen ? (
+        <div style={muted}>
+          <div>product id: {projection.product_id}</div>
+          <div>handle: {projection.handle ?? "—"}</div>
+          <div>
+            legacy_cs_cart_product_id:{" "}
+            {projection.legacy_cs_cart_product_id ?? "—"} (поле с исключениями - не
+            «verified identity»)
+          </div>
+          {projection.legacy_title ? (
+            <div>legacy/canonical: {projection.legacy_title}</div>
+          ) : null}
+          {projection.dimensions.technical_note ? (
+            <div>{projection.dimensions.technical_note}</div>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   )
 }
