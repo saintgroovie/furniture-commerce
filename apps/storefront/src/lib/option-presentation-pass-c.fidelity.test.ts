@@ -161,6 +161,19 @@ describe("PASS C Oliver fabric families", () => {
       "swatch_color"
     )
   })
+  it("mixed texture axis never uses sibling mainSrc as image swatch", () => {
+    const axis = resolveUpholsteryAxisPresentation([
+      {
+        swatchHex: "#abcabc",
+        swatchImageUrl: "/static/fabrics/leona-texture.jpg",
+        presentation: "swatch_image",
+      },
+      { swatchHex: "#d8d0c4", presentation: "swatch_color" },
+    ])
+    assert.equal(axis, "swatch_image")
+    /* Rendering contract: non-texture siblings stay color/text chips;
+       only swatchImageUrl may become <img> (see allowHeroAsSwatch). */
+  })
 })
 
 console.log("option-presentation-pass-c.fidelity.test.ts: PASS")

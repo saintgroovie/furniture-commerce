@@ -48,8 +48,9 @@ export function isConfirmedSwatchImageUrl(value: unknown): value is string {
   if (typeof value !== "string") return false
   const t = value.trim()
   if (!t) return false
-  // Reject obvious full-product hero heuristics when marked as swatch_image.
-  // Callers should only set swatch_image for curated texture assets.
+  /* Trust boundary: only the curated metadata field `swatch_image` / `swatch_url`
+     should be passed here. Callers must not feed execution hero `urls` / mainSrc.
+     Non-empty curated values are accepted as-is (no filename heuristics). */
   return true
 }
 

@@ -1554,6 +1554,8 @@ function ProductCardMediaGalleryCoreInner({
     onPick: (v: CardColorVariant) => (e: MouseEvent<HTMLButtonElement>) => void,
     options: {
       imageSwatches?: boolean
+      /** Legacy separateFabricRows only — allow execution mainSrc as tile. */
+      allowHeroAsSwatch?: boolean
       rowKey?: string
       disabledKeys?: Set<string>
     } = {}
@@ -1595,17 +1597,18 @@ function ProductCardMediaGalleryCoreInner({
           const isDisabled = Boolean(options.disabledKeys?.has(variant.key))
           const token = variant.swatchToken
           const sampled = swatchSamples.get(variant.key)
-          const imageSrc =
-            (variant.swatchImageUrl?.trim() ||
-              (options.imageSwatches
-                ? variant.mainSrc?.trim() || sampled?.imageUrl?.trim()
-                : "")) ?? ""
-          // Image swatches: explicit swatchImageUrl (texture) OR legacy
-          // separateFabricRows opt-in. Never treat upholstery execution heroes
-          // as fabric texture tiles (Greenwich beds / Oliver product photos).
+          const textureSrc = variant.swatchImageUrl?.trim() ?? ""
+          const legacyHeroSrc = options.allowHeroAsSwatch
+            ? ((variant.mainSrc?.trim() || sampled?.imageUrl?.trim()) ?? "")
+            : ""
+          const imageSrc = textureSrc || legacyHeroSrc
+          // Texture tiles: only confirmed swatchImageUrl (presentation swatch_image).
+          // Legacy separateFabricRows may opt into allowHeroAsSwatch. Never treat
+          // ordinary upholstery execution heroes as fabric texture tiles.
           const useImageSwatch = Boolean(
-            (variant.presentation === "swatch_image" || options.imageSwatches) &&
-              imageSrc
+            imageSrc &&
+              (Boolean(textureSrc) ||
+                (options.imageSwatches && options.allowHeroAsSwatch))
           )
           // Catalog: never use image-sampled colors. Prefer curated hex, then token.
           const fillColor =
@@ -1944,7 +1947,11 @@ function ProductCardMediaGalleryCoreInner({
                 [variant],
                 activeSeparateFabricKey,
                 onSeparateFabricPick,
-                { imageSwatches: true, rowKey: variant.key }
+                {
+                  imageSwatches: true,
+                  allowHeroAsSwatch: true,
+                  rowKey: variant.key,
+                }
               )
             )}
           {showVisibleUpholstery &&
@@ -2001,12 +2008,7 @@ function ProductCardMediaGalleryCoreInner({
                 onUpholsteryPick,
                 {
                   disabledKeys: upholsteryDisabledKeys,
-                  /* Texture tiles only when rows carry swatchImageUrl / presentation
-                     swatch_image. Never pass imageSwatches from execution mainSrc. */
-                  imageSwatches:
-                    resolveUpholsteryAxisPresentation(
-                      visibleUpholsteryVariants!
-                    ) === "swatch_image",
+                  /* Per-row swatchImageUrl only — never axis-wide hero tiles. */
                 }
               )
             ))}
