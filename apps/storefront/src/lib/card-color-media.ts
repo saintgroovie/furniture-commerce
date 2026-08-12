@@ -33,6 +33,14 @@ import {
 } from "./greenwich-paint-media"
 import { isMilkLikeFinishKey } from "../../../backend/src/lib/country-finish-labels"
 import { productWithNormalizedUpholsteryMetadata } from "../../../backend/src/lib/upholstery-color-normalization"
+import {
+  resolveExecutionPresentation,
+  resolveUpholsteryAxisPresentation,
+  type OptionPresentation,
+} from "../../../backend/src/lib/option-presentation-contract"
+
+export type { OptionPresentation }
+export { resolveUpholsteryAxisPresentation }
 
 export type CardColorVariant = {
   key: string
@@ -45,6 +53,13 @@ export type CardColorVariant = {
   swatchSampleRegion?: "default" | "upholstery" | "frame_wood"
   /** Authoritative swatch fill from product metadata (overrides canvas pipette). */
   swatchHex?: string | null
+  /**
+   * Confirmed fabric/material texture URL only.
+   * Never a full-product hero (those stay in mainSrc for gallery swap).
+   */
+  swatchImageUrl?: string | null
+  /** Semantic presentation from option-presentation-contract. */
+  presentation?: OptionPresentation
 }
 
 export type CardModelVariant = {
@@ -699,6 +714,30 @@ function colorExecutionsFromMetadataArray(
       typeof o.swatch_hex === "string" && o.swatch_hex.trim().length > 0
         ? o.swatch_hex.trim()
         : null
+    const swatchImageRaw =
+      typeof o.swatch_image === "string" && o.swatch_image.trim().length > 0
+        ? o.swatch_image.trim()
+        : typeof o.swatch_url === "string" && o.swatch_url.trim().length > 0
+          ? o.swatch_url.trim()
+          : null
+    const swatchImageUrl = swatchImageRaw
+      ? resolveStorefrontProductImageSrc(swatchImageRaw)
+      : null
+    const presentationHint =
+      o.presentation === "swatch_image" ||
+      o.presentation === "swatch_color" ||
+      o.presentation === "text" ||
+      o.presentation === "model" ||
+      o.presentation === "material" ||
+      o.presentation === "size"
+        ? (o.presentation as OptionPresentation)
+        : undefined
+    const presentation = resolveExecutionPresentation({
+      swatch_hex: swatchHex,
+      swatch_image: swatchImageUrl,
+      presentation: presentationHint,
+      swatch_type: typeof o.swatch_type === "string" ? o.swatch_type : null,
+    })
     if (!key || !label || urls.length === 0) {
       if (!key || !label || !swatchHex) continue
       variants.push({
@@ -708,6 +747,8 @@ function colorExecutionsFromMetadataArray(
         extraSrcs: [],
         swatchToken: key,
         swatchHex,
+        swatchImageUrl,
+        presentation,
       })
       continue
     }
@@ -720,6 +761,8 @@ function colorExecutionsFromMetadataArray(
       extraSrcs: resolvedUrls.slice(1),
       swatchToken: key,
       swatchHex,
+      swatchImageUrl,
+      presentation,
     })
   }
   return variants.length > 1 ? variants : undefined
@@ -905,6 +948,17 @@ function dimensionOnlyColorVariants(
       typeof o.swatch_hex === "string" && o.swatch_hex.trim().length > 0
         ? o.swatch_hex.trim()
         : null
+    const swatchImageRaw =
+      typeof o.swatch_image === "string" && o.swatch_image.trim().length > 0
+        ? o.swatch_image.trim()
+        : null
+    const swatchImageUrl = swatchImageRaw
+      ? resolveStorefrontProductImageSrc(swatchImageRaw)
+      : null
+    const presentation = resolveExecutionPresentation({
+      swatch_hex: swatchHex,
+      swatch_image: swatchImageUrl,
+    })
     variants.push({
       key,
       label:
@@ -916,6 +970,8 @@ function dimensionOnlyColorVariants(
       swatchToken: swatchKey(key),
       swatchSampleRegion: sampleRegion,
       swatchHex,
+      swatchImageUrl,
+      presentation,
     })
   }
   return variants.length > 1 ? variants : undefined
@@ -1098,12 +1154,13 @@ function isOliverStandaloneMultiFabricProduct(
 }
 
 /**
- * PASS B.1 — Oliver standalone multi-family fabric list.
+ * PASS B.1 / PASS C — Oliver standalone multi-family fabric list.
  *
  * Contract: SINGLE_INTERACTIVE_FAMILY_AXIS
  * - Families are values of one `Обивка` axis (media preview), not separate section axes.
  * - Do not emit `separateFabricRows` (that path forces product-thumbnail image swatches).
- * - PDP renderer must not pass `imageSwatches` for this row (hex/token chips only).
+ * - PASS C: keep evidenced `swatch_hex` so PDP can render color swatches (not text-only).
+ *   Product heroes stay in `mainSrc` for gallery swap — never as image swatch tiles.
  * - Price/Medusa variant are unchanged; selection only swaps execution media.
  */
 function oliverUnifiedFabricFamilySelectors(
@@ -1111,12 +1168,19 @@ function oliverUnifiedFabricFamilySelectors(
   metadataFrame: CardColorVariant[] | undefined
 ): CardExecutionSelectors {
   return {
-    /* Strip any metadata hex: family keys are collections, not evidenced colors. */
-    upholstery: metadataFabric.map((row) => ({
-      ...row,
-      swatchHex: undefined,
-      swatchToken: undefined,
-    })),
+    upholstery: metadataFabric.map((row) => {
+      const presentation = resolveExecutionPresentation({
+        swatch_hex: row.swatchHex,
+        swatch_image: row.swatchImageUrl,
+        presentation: row.presentation,
+      })
+      return {
+        ...row,
+        /* Keep curated family hex when present; drop token fallback that invents fills. */
+        swatchToken: row.swatchHex ? row.swatchToken : undefined,
+        presentation,
+      }
+    }),
     wood: metadataFrame,
     confidence: "canonical",
   }
