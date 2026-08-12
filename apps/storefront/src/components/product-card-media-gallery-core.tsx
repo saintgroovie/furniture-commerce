@@ -9,7 +9,7 @@ import { PdpHeroAffordance } from "@/components/pdp-hero-affordance"
 import { PdpImageLightbox } from "@/components/pdp-image-lightbox"
 import { useHeroSwipe } from "@/components/use-hero-swipe"
 import type { CardColorVariant, CardModelVariant } from "@/lib/card-color-media"
-import { isFabricFamilyOnlyUpholstery } from "@/lib/card-color-media"
+import { resolveUpholsteryAxisPresentation } from "@/lib/card-color-media"
 import {
   defaultGreenwichBedSelection,
   resolveGreenwichBedMedia,
@@ -1595,11 +1595,18 @@ function ProductCardMediaGalleryCoreInner({
           const isDisabled = Boolean(options.disabledKeys?.has(variant.key))
           const token = variant.swatchToken
           const sampled = swatchSamples.get(variant.key)
-          const imageSrc = (variant.mainSrc?.trim() || sampled?.imageUrl?.trim()) ?? ""
-          // Image swatches: only when the row opts in (Oliver fabric closeups via
-          // separateFabricRows). «Обивка» must not opt in — Greenwich fills
-          // mainSrc with whole-bed heroes that look like mini product thumbs.
-          const useImageSwatch = Boolean(options.imageSwatches && imageSrc)
+          const imageSrc =
+            (variant.swatchImageUrl?.trim() ||
+              (options.imageSwatches
+                ? variant.mainSrc?.trim() || sampled?.imageUrl?.trim()
+                : "")) ?? ""
+          // Image swatches: explicit swatchImageUrl (texture) OR legacy
+          // separateFabricRows opt-in. Never treat upholstery execution heroes
+          // as fabric texture tiles (Greenwich beds / Oliver product photos).
+          const useImageSwatch = Boolean(
+            (variant.presentation === "swatch_image" || options.imageSwatches) &&
+              imageSrc
+          )
           // Catalog: never use image-sampled colors. Prefer curated hex, then token.
           const fillColor =
             variant.swatchHex?.trim() ||
@@ -1941,9 +1948,10 @@ function ProductCardMediaGalleryCoreInner({
               )
             )}
           {showVisibleUpholstery &&
-            (isFabricFamilyOnlyUpholstery(visibleUpholsteryVariants!) ? (
-              /* PASS B.1: fabric families = text chips under one «Обивка».
-                 Never color swatches / product-thumbnail image tiles. */
+            (resolveUpholsteryAxisPresentation(visibleUpholsteryVariants!) ===
+            "text" ? (
+              /* PASS C fallback: no evidenced hex/texture → accessible text chips.
+                 Fabric-family axes still stay one «Обивка» group (PASS B.1). */
               <div
                 className="product-card-selector-section"
                 role="toolbar"
@@ -1991,11 +1999,15 @@ function ProductCardMediaGalleryCoreInner({
                 visibleUpholsteryVariants!,
                 activeUpholsteryKey,
                 onUpholsteryPick,
-                { disabledKeys: upholsteryDisabledKeys }
-                /* Color chips (curated swatchHex / tokens). Do NOT pass imageSwatches:
-                   execution mainSrc is often a full-product hero. PASS B.1: Oliver
-                   fabric families use text chips above — never separateFabricRows
-                   + product-thumbnail tiles. */
+                {
+                  disabledKeys: upholsteryDisabledKeys,
+                  /* Texture tiles only when rows carry swatchImageUrl / presentation
+                     swatch_image. Never pass imageSwatches from execution mainSrc. */
+                  imageSwatches:
+                    resolveUpholsteryAxisPresentation(
+                      visibleUpholsteryVariants!
+                    ) === "swatch_image",
+                }
               )
             ))}
           {isGreenwichPaint || isProvencePaintWood ? (
