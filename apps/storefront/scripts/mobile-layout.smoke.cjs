@@ -575,6 +575,24 @@ async function main() {
       state: "visible",
       timeout: 20000,
     })
+    await page.setViewportSize({ width: 393, height: 852 })
+    await page.waitForTimeout(200)
+    const catalogTouch = await page.evaluate(() => {
+      const rect = (el) => {
+        if (!el) return null
+        const r = el.getBoundingClientRect()
+        return { h: Math.round(r.height), w: Math.round(r.width) }
+      }
+      return {
+        filter: rect(document.querySelector("button.catalog-filter-mobile-toggle")),
+        sort: rect(document.querySelector(".catalog-sort .wr-select-trigger")),
+      }
+    })
+    if (catalogTouch.filter && catalogTouch.filter.h >= 44 && catalogTouch.sort && catalogTouch.sort.h >= 44) {
+      pass("catalog_filter_sort_touch_393")
+    } else {
+      fail("catalog_filter_sort_touch_393", catalogTouch)
+    }
     await filterToggle.click()
     await page.waitForTimeout(400)
     const filters = await page.evaluate(() => {
