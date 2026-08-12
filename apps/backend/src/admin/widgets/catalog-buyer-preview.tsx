@@ -62,8 +62,13 @@ const CatalogBuyerPreviewWidget = ({ data }: { data?: ProductData }) => {
       "headboard_model_executions",
     ]) {
       const v = meta[key]
-      if (Array.isArray(v) && v.length) execAxes.push(`${key}: ${v.length}`)
-      else if (v && typeof v === "object") execAxes.push(`${key}: object`)
+      if (Array.isArray(v) && v.length) {
+        /* Count only object rows — legacy string/null entries must not crash the widget. */
+        const objectRows = v.filter((row) => row && typeof row === "object")
+        if (objectRows.length) execAxes.push(`${key}: ${objectRows.length}`)
+      } else if (v && typeof v === "object") {
+        execAxes.push(`${key}: object`)
+      }
     }
 
     const defaultVariant = data?.variants?.[0]
@@ -143,7 +148,7 @@ const CatalogBuyerPreviewWidget = ({ data }: { data?: ProductData }) => {
 
       <div style={{ fontWeight: 600, marginTop: 8 }}>Technical / legacy</div>
       <div style={muted}>
-        handle: {data.handle ?? "—"}
+        handle: {data.handle ?? "-"}
         {preview.legacyTitle ? ` · legacy/canonical: ${preview.legacyTitle}` : ""}
       </div>
     </div>

@@ -431,7 +431,7 @@ export default async function ProductPage({
             const mMeta = m.metadata as Record<string, unknown> | undefined
             return {
               id: m.id as string,
-              label: String(m.title ?? "Вариант"),
+              label: getBuyerFacingProductTitle(m as Record<string, unknown>),
               basePrice: getPrice(m),
               sort: (mMeta?.display_group_sort as number | undefined) ?? 99,
               isCurrent: false,
@@ -443,7 +443,7 @@ export default async function ProductPage({
   const productJsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
-    name: (product.title as string) ?? "Товар",
+    name: titleStr || "Товар",
     description: description ?? undefined,
     url: `${base}/product/${id}`,
     ...(mainImage && { image: mainImage }),

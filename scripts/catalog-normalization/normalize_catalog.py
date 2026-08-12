@@ -244,6 +244,11 @@ def ensure_collection(title: str, collection: str | None) -> str:
     return f"{title} {collection}"
 
 
+def polish_measure_stars(s: str) -> str:
+    """Presentation-only: digit*digit → × (matches storefront buyer measure text)."""
+    return re.sub(r"(\d)\s*\*\s*(\d)", r"\1 × \2", s)
+
+
 def resolve_public_title(row: dict[str, Any]) -> dict[str, Any]:
     meta = row.get("metadata") or {}
     stored = (meta.get("public_title") or "").strip() if isinstance(meta.get("public_title"), str) else ""
@@ -261,6 +266,7 @@ def resolve_public_title(row: dict[str, Any]) -> dict[str, Any]:
     notes: list[str] = []
     if stored:
         t, code, ch = expand_pedestal(stored)
+        t = polish_measure_stars(t)
         return {
             "public_title": t,
             "source": "metadata.public_title",
@@ -284,6 +290,7 @@ def resolve_public_title(row: dict[str, Any]) -> dict[str, Any]:
         t = ensure_collection(t, collection)
         if collection and collection.lower() in t.lower():
             notes.append(f"added_collection:{collection}")
+    t = polish_measure_stars(t)
     return {
         "public_title": t,
         "source": source,

@@ -78,6 +78,11 @@ function normalizeWhitespace(s: string): string {
   return s.replace(/\s+/g, " ").replace(/\u00a0/g, " ").trim()
 }
 
+/** Presentation-only: digit*digit → × (matches storefront formatBuyerFacingMeasureText). */
+function polishMeasureStars(s: string): string {
+  return s.replace(/(\d)\s*\*\s*(\d)/g, "$1 × $2")
+}
+
 function stripPedestalCode(s: string): string {
   return s.replace(/(?:^|[\s.])(ЯП|ПЯ|ЯЯ|ПП)\s*$/u, "").trim()
 }
@@ -169,7 +174,7 @@ export function resolvePublicProductTitle(product: PublicTitleInput): PublicTitl
   if (stored) {
     const expanded = expandPedestalDeskCodeInTitle(stored)
     return {
-      public_title: expanded.title,
+      public_title: polishMeasureStars(normalizeWhitespace(expanded.title)),
       source: "metadata.public_title",
       legacy_title: legacy,
       pedestal_code: expanded.code,
@@ -219,7 +224,7 @@ export function resolvePublicProductTitle(product: PublicTitleInput): PublicTitl
   }
 
   return {
-    public_title: normalizeWhitespace(publicTitle),
+    public_title: polishMeasureStars(normalizeWhitespace(publicTitle)),
     source,
     legacy_title: legacy,
     pedestal_code: expanded.code ?? extractPedestalDeskCode(base),
