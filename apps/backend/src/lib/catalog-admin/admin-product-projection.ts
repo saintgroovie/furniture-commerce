@@ -10,6 +10,7 @@ import { formatDimensionsForDisplay } from "../woodright-dimensions/format"
 import { AXIS_OWNER_LABEL, DIMENSION_AXIS_ORDER, AXIS_TO_MM_KEY } from "../woodright-dimensions/types"
 import {
   DIMENSIONS_TRUST_STATE_LABEL_RU,
+  applyLiveDimensionsToTrust,
   lookupDimensionsTrust,
   type DimensionsTrustState,
 } from "./dimensions-trust"
@@ -144,7 +145,10 @@ export function buildAdminProductProjection(
       ? { metadata: defaultVariant.metadata ?? null }
       : null,
   })
-  const trust = lookupDimensionsTrust({ sku, handle: data.handle })
+  const trust = applyLiveDimensionsToTrust(
+    lookupDimensionsTrust({ sku, handle: data.handle }),
+    dims.mm
+  )
   const display = formatDimensionsForDisplay(dims.mm, {
     unit: "mm",
     audience: "admin",

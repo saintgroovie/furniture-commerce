@@ -229,7 +229,8 @@ const CatalogBuyerPreviewWidget = ({ data }: { data?: ProductData }) => {
         aria-label="Название на сайте"
       />
       <div style={muted}>
-        источник: {projection.public_title_source}
+        каталожный resolver · витрина может транскрибировать EN-модель
+        {` · источник: ${projection.public_title_source}`}
         {projection.technical_title &&
         projection.technical_title !== projection.public_title
           ? ` · техническое Medusa: ${projection.technical_title}`
@@ -238,7 +239,11 @@ const CatalogBuyerPreviewWidget = ({ data }: { data?: ProductData }) => {
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
         <button
           type="button"
-          disabled={saving || titleDraft.trim() === projection.public_title}
+          disabled={
+            saving ||
+            !metaFingerprint ||
+            titleDraft.trim() === projection.public_title
+          }
           onClick={() => void onSaveTitle()}
           style={{
             padding: "6px 12px",

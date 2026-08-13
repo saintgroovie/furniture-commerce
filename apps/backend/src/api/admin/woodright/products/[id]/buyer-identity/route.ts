@@ -2,7 +2,7 @@ import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 import { resolvePublicProductTitle } from "../../../../../../lib/catalog-normalization/public-title"
 import { guardBuyerFacingTitle } from "../../../../../../lib/catalog-normalization/import-guards"
-import { mergeProductMetadata } from "../../../../../../lib/catalog-admin/merge-metadata"
+import { mergeProductMetadata, metadataFingerprintWithoutPublicTitle } from "../../../../../../lib/catalog-admin/merge-metadata"
 import { buildAdminProductProjection } from "../../../../../../lib/catalog-admin/admin-product-projection"
 
 async function loadClassification(
@@ -34,13 +34,8 @@ async function loadClassification(
   }
 }
 
-function metadataFingerprintWithoutPublicTitle(meta: unknown): string {
-  const m =
-    meta && typeof meta === "object" && !Array.isArray(meta)
-      ? { ...(meta as Record<string, unknown>) }
-      : {}
-  delete m.public_title
-  return JSON.stringify(m)
+type SqlClient = {
+  raw: (sql: string, bindings?: unknown[]) => Promise<{ rows?: unknown[]; rowCount?: number }>
 }
 
 type ProductModuleLike = {
@@ -171,12 +166,20 @@ export async function PUT(req: MedusaRequest, res: MedusaResponse) {
     return
   }
 
-  const fingerprintBefore = metadataFingerprintWithoutPublicTitle(product.metadata)
   if (
-    typeof body.metadata_fingerprint === "string" &&
-    body.metadata_fingerprint.length > 0 &&
-    body.metadata_fingerprint !== fingerprintBefore
+    typeof body.metadata_fingerprint !== "string" ||
+    body.metadata_fingerprint.length === 0
   ) {
+    res.status(400).json({
+      message:
+        "Сохранение названия требует metadata_fingerprint. Обновите страницу и повторите",
+      code: "METADATA_FINGERPRINT_REQUIRED",
+    })
+    return
+  }
+
+  const fingerprintBefore = metadataFingerprintWithoutPublicTitle(product.metadata)
+  if (body.metadata_fingerprint !== fingerprintBefore) {
     res.status(409).json({
       message:
         "Метаданные товара изменились параллельно. Обновите страницу и сохраните название снова",
@@ -195,33 +198,48 @@ export async function PUT(req: MedusaRequest, res: MedusaResponse) {
   })
   const publicTitle = previewResolved.public_title
 
-  /* Re-read immediately before write to shrink stale-metadata window. */
-  let fresh: Awaited<ReturnType<ProductModuleLike["retrieveProduct"]>>
+  /* Key-level CAS: patch only public_title; refuse if sibling metadata changed. */
+  let sql: SqlClient
   try {
-    fresh = await productModule.retrieveProduct(id)
+    sql = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as SqlClient
   } catch {
-    res.status(404).json({ message: "Товар не найден" })
+    res.status(503).json({
+      message: "Не удалось выполнить безопасную запись названия. Повторите позже",
+      code: "METADATA_CAS_UNAVAILABLE",
+    })
     return
   }
-  const fingerprintFresh = metadataFingerprintWithoutPublicTitle(fresh.metadata)
-  if (fingerprintFresh !== fingerprintBefore) {
+
+  let casRows: unknown[] = []
+  try {
+    const result = await sql.raw(
+      `UPDATE product
+       SET metadata = jsonb_set(
+             COALESCE(metadata, '{}'::jsonb),
+             '{public_title}',
+             to_jsonb(CAST(? AS text)),
+             true
+           ),
+           updated_at = NOW()
+       WHERE id = ?
+         AND deleted_at IS NULL
+         AND COALESCE(metadata, '{}'::jsonb) - 'public_title' = CAST(? AS jsonb)
+       RETURNING id`,
+      [publicTitle, id, fingerprintBefore]
+    )
+    casRows = result.rows ?? []
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "update failed"
+    res.status(500).json({ message: msg })
+    return
+  }
+
+  if (casRows.length === 0) {
     res.status(409).json({
       message:
         "Метаданные товара изменились параллельно. Обновите страницу и сохраните название снова",
       code: "METADATA_CONCURRENT_CHANGE",
     })
-    return
-  }
-
-  const nextMeta = mergeProductMetadata(fresh.metadata, {
-    public_title: publicTitle,
-  })
-
-  try {
-    await productModule.updateProducts(id, { metadata: nextMeta })
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : "update failed"
-    res.status(500).json({ message: msg })
     return
   }
 

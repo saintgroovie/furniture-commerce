@@ -4,8 +4,8 @@
  */
 import assert from "node:assert/strict"
 import { buildAdminProductProjection } from "./admin-product-projection"
-import { lookupDimensionsTrust, listDimensionsTrustSkus } from "./dimensions-trust"
-import { mergeExecutionRowByKey, mergeProductMetadata } from "./merge-metadata"
+import { lookupDimensionsTrust, listDimensionsTrustSkus, applyLiveDimensionsToTrust } from "./dimensions-trust"
+import { mergeExecutionRowByKey, mergeProductMetadata, metadataFingerprintWithoutPublicTitle } from "./merge-metadata"
 import { summarizeBuyerOptions } from "./buyer-options-summary"
 import { resolvePublicProductTitle } from "../catalog-normalization/public-title"
 import { guardBuyerFacingTitle } from "../catalog-normalization/import-guards"
@@ -29,6 +29,38 @@ assert.equal(
   lookupDimensionsTrust({ sku: "TE-05-1", handle: "fa-05-3" }).state,
   "TEMPORARY_PENDING"
 )
+/* unmapped SKU must not inherit a mapped handle */
+assert.equal(
+  lookupDimensionsTrust({ sku: "XX-99-FILLED", handle: "te-05-1" }).state,
+  "UNKNOWN"
+)
+
+/* drifted verified SKU is not confirmed */
+const teDrift = buildAdminProductProjection({
+  id: "prod_te_drift",
+  handle: "te-05-1",
+  metadata: {
+    dimensions: { height_mm: 1, width_mm: 1, depth_mm: 1 },
+  },
+  variants: [{ sku: "TE-05-1" }],
+})
+assert.equal(teDrift.dimensions.trust_state, "UNKNOWN")
+assert.match(teDrift.dimensions.manager_hint_ru, /не совпадают/i)
+
+assert.equal(
+  applyLiveDimensionsToTrust(
+    lookupDimensionsTrust({ sku: "TE-05-1" }),
+    { height_mm: 900, width_mm: 840, depth_mm: 560 }
+  ).state,
+  "VERIFIED_CANONICAL"
+)
+
+const fp = metadataFingerprintWithoutPublicTitle({
+  public_title: "x",
+  mystery: true,
+})
+assert.equal(fp.includes("public_title"), false)
+assert.equal(fp.includes("mystery"), true)
 
 /* C1 must not read as verified */
 const c1 = buildAdminProductProjection({

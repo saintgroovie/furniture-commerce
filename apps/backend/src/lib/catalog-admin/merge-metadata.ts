@@ -29,6 +29,13 @@ export function mergeProductMetadata(
   return next
 }
 
+/** Fingerprint of metadata excluding public_title (JSON.stringify, insertion order). */
+export function metadataFingerprintWithoutPublicTitle(meta: unknown): string {
+  const m = asMetadataRecord(meta)
+  delete m.public_title
+  return JSON.stringify(m)
+}
+
 /**
  * Deep-merge one execution array element by key without dropping unknown fields
  * on that row. Non-object rows are preserved in place.
