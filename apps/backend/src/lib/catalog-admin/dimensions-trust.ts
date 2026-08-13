@@ -5,6 +5,13 @@
  * Live H/W/D still come from product metadata via resolveFurnitureDimensions.
  * This module only answers: how confident / actionable is that value for a manager.
  *
+ * Maintenance:
+ * - File: apps/backend/src/lib/catalog-admin/dimensions-trust.ts
+ * - After a new dimensions baseline, add/update BY_SKU (and BY_HANDLE if needed).
+ * - Default for unmapped products is UNKNOWN ("Статус не размечен") - never VERIFIED.
+ * - Special cases: C1 six TEMPORARY_PENDING; TE/PR-30/OL-08-1-MIR VERIFIED;
+ *   PA-62-1 pending owner; PR-06/PW-06/SH-99/MC-99 conflict; S-OX missing.
+ *
  * Do not invent fills. Do not imply C1 440 is final canonical truth.
  */
 

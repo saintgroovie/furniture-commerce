@@ -6,7 +6,10 @@ import {
   useState,
   type CSSProperties,
 } from "react"
-import { buildAdminProductProjection } from "../../lib/catalog-admin/admin-product-projection"
+import {
+  buildAdminProductProjection,
+  type AdminProductProjection,
+} from "../../lib/catalog-admin/admin-product-projection"
 import { formatAxisGlance } from "../../lib/catalog-admin/buyer-options-summary"
 import { adminJson } from "../lib/admin-fetch"
 
@@ -73,10 +76,13 @@ const CatalogBuyerPreviewWidget = ({ data }: { data?: ProductData }) => {
     {}
   )
   const [metaFingerprint, setMetaFingerprint] = useState<string | null>(null)
+  /** Hydrated from buyer-identity — widget props often omit variants/SKU. */
+  const [serverProjection, setServerProjection] =
+    useState<AdminProductProjection | null>(null)
 
   const productId = data?.id ?? ""
 
-  const projection = useMemo(() => {
+  const clientProjection = useMemo(() => {
     try {
       return buildAdminProductProjection({
         ...data,
@@ -87,12 +93,15 @@ const CatalogBuyerPreviewWidget = ({ data }: { data?: ProductData }) => {
     }
   }, [data, classification])
 
+  const projection = serverProjection ?? clientProjection
+
   useEffect(() => {
     setSaveMsg(null)
     setSaveErr(null)
     setTechOpen(false)
     setClassification(null)
     setMetaFingerprint(null)
+    setServerProjection(null)
   }, [productId])
 
   useEffect(() => {
@@ -107,10 +116,11 @@ const CatalogBuyerPreviewWidget = ({ data }: { data?: ProductData }) => {
     ;(async () => {
       try {
         const res = await adminJson<{
-          projection?: { classification?: string | null }
+          projection?: AdminProductProjection
           metadata_fingerprint?: string
         }>(`/admin/woodright/products/${productId}/buyer-identity`)
         if (cancelled) return
+        if (res.projection) setServerProjection(res.projection)
         setClassification(res.projection?.classification ?? null)
         if (typeof res.metadata_fingerprint === "string") {
           setMetaFingerprint(res.metadata_fingerprint)
@@ -134,6 +144,7 @@ const CatalogBuyerPreviewWidget = ({ data }: { data?: ProductData }) => {
         public_title: string
         public_title_source: string
         metadata_fingerprint?: string
+        projection?: AdminProductProjection
       }>(`/admin/woodright/products/${productId}/buyer-identity`, {
         method: "PUT",
         body: JSON.stringify({
@@ -148,6 +159,7 @@ const CatalogBuyerPreviewWidget = ({ data }: { data?: ProductData }) => {
       if (typeof res.metadata_fingerprint === "string") {
         setMetaFingerprint(res.metadata_fingerprint)
       }
+      if (res.projection) setServerProjection(res.projection)
       setSaveMsg(`Сохранено · на сайте: ${res.public_title}`)
     } catch (e) {
       const err = e as Error
@@ -343,7 +355,7 @@ const CatalogBuyerPreviewWidget = ({ data }: { data?: ProductData }) => {
 }
 
 export const config = defineWidgetConfig({
-  zone: "product.details.after",
+  zone: "product.details.before",
 })
 
 export default CatalogBuyerPreviewWidget
