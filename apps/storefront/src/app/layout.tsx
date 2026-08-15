@@ -107,15 +107,7 @@ export default async function RootLayout({
               </div>
               <HeaderLogo />
               <div className="header-top-right">
-                <NavDropdown
-                  href="/designers/terms"
-                  label={navCopy.designers}
-                  items={[
-                    { label: "Условия сотрудничества", href: "/designers/terms" },
-                    { label: "Материалы", href: "/designers/materials" },
-                    { label: "Оставить заявку", href: "/designers/request" },
-                  ]}
-                />
+                <Link href="/designers">{navCopy.designers}</Link>
                 <HeaderHoverDropdown
                   id="contacts"
                   href="/contacts"

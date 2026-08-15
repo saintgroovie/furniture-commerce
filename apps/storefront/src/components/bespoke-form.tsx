@@ -6,7 +6,7 @@ import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { createLead } from "@/lib/api/leads"
 import { createBespokeRequest } from "@/lib/api/bespoke-requests"
-import { bespokeForm as copy, bespokeRequestCopy } from "@/lib/woodright-copy"
+import { bespokeForm as copy, bespokeRequestCopy, designersLandingCopy } from "@/lib/woodright-copy"
 import { CopyLines } from "@/components/copy-lines"
 import { flatCopy } from "@/lib/format-ru-copy"
 
@@ -156,6 +156,7 @@ export function BespokeForm() {
   const roomSetId = searchParams.get("room_set_id") ?? undefined
   /* Материальное исполнение, выбранное на PDP (label из product contract). */
   const materialLabel = searchParams.get("material")?.trim() || undefined
+  const fromDesigners = searchParams.get("from") === "designers"
 
   const [status, setStatus] = useState<Status>("idle")
   const [errorMessage, setErrorMessage] = useState("")
@@ -187,6 +188,7 @@ export function BespokeForm() {
     // поэтому аккуратно добавляем выбор первыми строками в общий comment.
     const taskLabel = copy.taskOptions.find((option) => option.value === taskType)?.label
     const headerLines = [
+      fromDesigners ? designersLandingCopy.requestContext : null,
       city ? `${copy.fields.city}: ${city}` : null,
       taskLabel ? `${copy.fields.taskType}: ${taskLabel}` : null,
       materialLabel ? `Исполнение: ${materialLabel}` : null,
@@ -205,6 +207,9 @@ export function BespokeForm() {
         email: email || null,
         phone: phone || null,
         comment: comment || null,
+        payload: fromDesigners
+          ? { audience: "designer", intent: "partnership" }
+          : null,
       })
       const leadId = (leadRes.lead as { id?: string })?.id
       if (!leadId) throw new Error("No lead id")

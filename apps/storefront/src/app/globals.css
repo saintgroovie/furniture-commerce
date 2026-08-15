@@ -11432,3 +11432,154 @@ a.pdp-size-chip:hover {
   }
 }
 
+/* ---- Designers partnership page ---- */
+
+.designers-page {
+  max-width: 40rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.designers-eyebrow {
+  margin: 0 0 0.65rem;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--color-fg-muted);
+}
+
+.designers-page h1 {
+  margin: 0;
+  font-size: clamp(1.7rem, 3.2vw, 2.25rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+.designers-lead {
+  margin: 1rem 0 0;
+  max-width: 38rem;
+  font-size: 1.0625rem;
+  line-height: 1.55;
+  color: var(--color-fg-secondary);
+  text-wrap: pretty;
+}
+
+.designers-benefits {
+  margin-top: 1.75rem;
+}
+
+.designers-benefits-intro {
+  margin: 0 0 0.85rem;
+  color: var(--color-fg);
+  line-height: 1.5;
+}
+
+.designers-benefits ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.designers-benefit {
+  position: relative;
+  padding-left: 1.15rem;
+  color: var(--color-fg-secondary);
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.designers-benefit::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-fg-muted) 85%, transparent);
+}
+
+.designers-benefit-lead {
+  font-weight: 600;
+  color: var(--color-fg);
+}
+
+.designers-benefit--key {
+  padding-top: 0.1rem;
+  padding-bottom: 0.15rem;
+}
+
+.designers-benefit--key .designers-benefit-lead {
+  display: block;
+  font-size: 1.02em;
+  line-height: 1.4;
+}
+
+.designers-benefit--key .designers-benefit-rest {
+  display: block;
+  margin-top: 0.2rem;
+}
+
+.designers-closing {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-top: 1.75rem;
+}
+
+.designers-closing-p {
+  margin: 0;
+  max-width: 38rem;
+  color: var(--color-fg-secondary);
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.designers-cta {
+  margin-top: 1.5rem;
+}
+
+.designers-cta .btn-primary {
+  min-height: 44px;
+  padding: 0.75rem 1.4rem;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.25;
+}
+
+.designers-cta .btn-primary:active:not(:disabled) {
+  background: color-mix(in srgb, var(--color-action-hover) 88%, #000);
+}
+
+@media (max-width: 640px) {
+  .designers-page h1 {
+    font-size: 1.65rem;
+  }
+
+  .designers-lead {
+    font-size: 1rem;
+  }
+
+  .designers-benefits {
+    margin-top: 1.5rem;
+  }
+
+  .designers-benefits ul {
+    gap: 1rem;
+  }
+
+  .designers-closing {
+    margin-top: 1.5rem;
+    gap: 0.75rem;
+  }
+
+  .designers-cta {
+    margin-top: 1.35rem;
+  }
+
+  .designers-cta .btn-primary {
+    width: 100%;
+  }
+}
