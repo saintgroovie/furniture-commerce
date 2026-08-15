@@ -61,6 +61,17 @@ const nextConfig = {
    * Defense-in-depth static headers for assets that skip middleware matcher.
    * Dynamic CSP (nonce) lives in `src/proxy.ts`.
    */
+  async redirects() {
+    return [
+      { source: "/designers/terms", destination: "/designers", permanent: true },
+      { source: "/designers/materials", destination: "/designers", permanent: true },
+      {
+        source: "/designers/request",
+        destination: "/bespoke/request?from=designers",
+        permanent: true,
+      },
+    ]
+  },
   async headers() {
     const base = [
       { key: "X-Content-Type-Options", value: "nosniff" },
