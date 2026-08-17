@@ -1,6 +1,8 @@
 /**
- * PASS F: contextual localization — UI chrome «Kids»/«KIDS» → «Детская».
- * Proper names Greenwich / Cloud / Woodright Kids in product copy stay Latin.
+ * Header/footer kids chrome: wordmark + pill must render accepted
+ * «Woodright Kids» (Latin pill «Kids»), not «Woodright Детская».
+ * Nav IA item remains «Детская». Proper names Greenwich / Cloud /
+ * Woodright Kids in product copy stay Latin.
  *
  *   yarn exec tsx src/lib/pass-f-kids-chrome-localization.fidelity.test.ts
  */
@@ -16,17 +18,18 @@ function read(rel: string): string {
 }
 
 const header = read("src/components/header-logo.tsx")
-assert.match(header, /logo-kids-badge">Детская</)
-assert.doesNotMatch(header, /logo-kids-badge">Kids</)
+assert.match(header, /logo-kids-badge">Kids</)
+assert.doesNotMatch(header, /logo-kids-badge">Детская</)
 assert.match(header, /Woodright Kids/)
 
 const footer = read("src/components/site-footer.tsx")
-assert.match(footer, /logo-kids-badge">Детская</)
-assert.doesNotMatch(footer, /logo-kids-badge">Kids</)
+assert.match(footer, /logo-kids-badge">Kids</)
+assert.doesNotMatch(footer, /logo-kids-badge">Детская</)
 
 const css = read("src/app/globals.css")
-assert.match(css, /--logo-kids-w:\s*4\.75rem/)
-assert.match(css, /\.logo-kids-badge\s*\{[^}]*text-transform:\s*none/s)
+assert.match(css, /--logo-kids-w:\s*2\.9375rem/)
+assert.doesNotMatch(css, /--logo-kids-w:\s*4\.75rem/)
+assert.match(css, /\.logo-kids-badge\s*\{[^}]*text-transform:\s*uppercase/s)
 
 const nav = read("src/lib/woodright-copy.ts")
 assert.match(nav, /kids:\s*"Детская"/)
