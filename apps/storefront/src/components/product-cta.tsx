@@ -20,11 +20,11 @@ import { addLineItem } from "@/lib/api/cart"
 import { cartLineConfigurationIdentity } from "@/lib/cart-line-identity"
 import { userFacingError } from "@/lib/user-facing-error"
 import { isRequestQuoteProduct } from "@/lib/request-quote"
-import { isKidsMetadataStorefrontProduct } from "@/lib/kids"
-import { isOliverKidsCollectionProduct } from "@/lib/catalog-scope"
+import { isKidsStorefrontProduct } from "@/lib/kids"
 import { actions, pdpCopy, productCta as copy } from "@/lib/woodright-copy"
 import { flatCopy } from "@/lib/format-ru-copy"
 import {
+  ctaLabelForDirectCartPurchase,
   ctaLabelForPurchase,
   isBespokeLikePurchase,
   isQuoteLikePurchase,
@@ -131,9 +131,7 @@ export function ProductCta({
         gateMatchesProduct(selectionRaw.gate, productKey)
           ? selectionRaw
           : null
-      const isKids =
-        isKidsMetadataStorefrontProduct(product) ||
-        isOliverKidsCollectionProduct(product)
+      const isKids = isKidsStorefrontProduct(product)
       /* Материальное исполнение: на сервер уходит только код — label, multiplier
          и итоговую цену backend пересчитывает сам из product metadata. */
       const materialTier = selectedMaterialTier(true)
@@ -227,7 +225,11 @@ export function ProductCta({
     }
 
     if (purchase.purchase_flow === "cart" || purchase.can_purchase) {
-      const salesCta = ctaLabelForPurchase(purchase, actions.addToCart)
+      const salesCta = ctaLabelForDirectCartPurchase(
+        purchase,
+        actions.addToCart,
+        { kidsStorefront: isKidsStorefrontProduct(product) }
+      )
       const primaryLabel = adding
         ? copy.addingInProgress
         : selectionBlocked

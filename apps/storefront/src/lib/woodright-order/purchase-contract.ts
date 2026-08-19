@@ -80,3 +80,29 @@ export function ctaLabelForPurchase(
   }
   return fallback
 }
+
+/**
+ * Kids cart-flow PDP keeps the owner-approved add-to-cart label even when
+ * the purchase DTO projects sales-mode copy (`Настроить и заказать`,
+ * `Заказать`). Adult configurable / quote / bespoke contracts are unchanged.
+ *
+ * Callers must still use the cart handler (`purchase_flow === "cart"`).
+ * This helper only restores copy; it does not change classification.
+ */
+export function ctaLabelForDirectCartPurchase(
+  p: StorefrontPurchaseDto | null,
+  fallback: string,
+  opts: { kidsStorefront?: boolean } = {}
+): string {
+  if (
+    opts.kidsStorefront &&
+    p &&
+    p.purchase_flow === "cart" &&
+    !isQuoteLikePurchase(p) &&
+    !isBespokeLikePurchase(p) &&
+    !isUnavailablePurchase(p)
+  ) {
+    return fallback
+  }
+  return ctaLabelForPurchase(p, fallback)
+}
