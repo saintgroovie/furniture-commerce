@@ -46,7 +46,7 @@ import {
   resolveCatalogCardHeroSrc,
   resolveCatalogCardMediaBundle,
 } from "@/lib/catalog-card-image"
-import { productTypeBadgeLabels } from "@/lib/woodright-copy"
+import { productTypeBadgeLabels, pdpCopy } from "@/lib/woodright-copy"
 
 type Product = {
   id: string
@@ -126,7 +126,10 @@ export function ProductCard({
   const handle = product.handle ?? ""
   const isOliver = handle.startsWith("ol-")
   const productHref = `/product/${product.id}`
-  const displayTitle = getBuyerFacingProductTitle(product as Record<string, unknown>)
+  const displayTitle =
+    displayGroup && typeof product.title === "string" && product.title.trim()
+      ? product.title.trim()
+      : getBuyerFacingProductTitle(product as Record<string, unknown>)
   const thumbSrc = cardThumbnailSrc(product)
   const mainSrcForCard = thumbSrc ?? ""
 
@@ -330,13 +333,18 @@ export function ProductCard({
   return (
     <div className="card product-card">
       {mediaBlock}
-      <Link href={productHref} className="card-body card-link">
+      <div className="card-body">
+      <Link href={productHref} className="card-link">
         <div className="card-text-stack">
           {(contextLine || (displayGroup && displayGroup.count > 1)) && (
             <div className="card-context-row">
               {contextLine && <span className="card-context">{contextLine}</span>}
-              {displayGroup && displayGroup.count > 1 && (
-                <span className="variant-hint">{formatGroupHint(displayGroup.count)}</span>
+              {displayGroup &&
+                displayGroup.count > 1 &&
+                !(displayGroup.memberChips && displayGroup.memberChips.length > 1) && (
+                <span className="variant-hint">
+                  {displayGroup.hint ?? formatGroupHint(displayGroup.count)}
+                </span>
               )}
             </div>
           )}
@@ -356,6 +364,38 @@ export function ProductCard({
           </div>
         </div>
       </Link>
+      {displayGroup?.memberChips && displayGroup.memberChips.length > 1 && (
+        <div
+          className="product-card-member-chips"
+          role="group"
+          aria-label={
+            displayGroup.axis === "execution"
+              ? pdpCopy.fabricSelectorLabel
+              : pdpCopy.sizeSelectorLabel
+          }
+        >
+          {displayGroup.memberChips.map((chip) =>
+            chip.isRepresentative ? (
+              <span
+                key={chip.id}
+                className="product-card-member-chip is-active"
+                aria-current="true"
+              >
+                {chip.label}
+              </span>
+            ) : (
+              <Link
+                key={chip.id}
+                href={chip.href}
+                className="product-card-member-chip"
+              >
+                {chip.label}
+              </Link>
+            )
+          )}
+        </div>
+      )}
+      </div>
     </div>
   )
 }
