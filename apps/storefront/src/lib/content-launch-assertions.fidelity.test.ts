@@ -73,6 +73,10 @@ assert.match(read("src/components/bespoke-form.tsx"), /href="\/privacy"/)
 
 const layout = read("src/app/layout.tsx")
 assert.doesNotMatch(layout, /\/bespoke\/catalog/)
+assert.match(
+  read("src/app/bespoke/catalog/page.tsx"),
+  /permanentRedirect\(\s*["']\/bespoke["']\s*\)/
+)
 
 for (const path of Object.values(LEGAL_PAGE_PATHS)) {
   const rel = `src/app${path}/page.tsx`
