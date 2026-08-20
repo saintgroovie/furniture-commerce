@@ -77,6 +77,10 @@ assert.match(
   read("src/app/bespoke/catalog/page.tsx"),
   /permanentRedirect\(\s*["']\/bespoke["']\s*\)/
 )
+assert.match(
+  read("next.config.js"),
+  /source:\s*["']\/bespoke\/catalog["'][\s\S]*destination:\s*["']\/bespoke["']/
+)
 
 for (const path of Object.values(LEGAL_PAGE_PATHS)) {
   const rel = `src/app${path}/page.tsx`

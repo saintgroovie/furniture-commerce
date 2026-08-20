@@ -65,6 +65,7 @@ const nextConfig = {
     return [
       { source: "/designers/terms", destination: "/designers", permanent: true },
       { source: "/designers/materials", destination: "/designers", permanent: true },
+      { source: "/bespoke/catalog", destination: "/bespoke", permanent: true },
       {
         source: "/designers/request",
         destination: "/bespoke/request?from=designers",
