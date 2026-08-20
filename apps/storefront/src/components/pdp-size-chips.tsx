@@ -38,13 +38,21 @@ type Props = {
   materialTiers: MaterialTierOption[] | null
   /** request_quote products keep the «от … ₽» reference-price shape. */
   requestQuote: boolean
+  /** Heading for the chip row. Default: size. Fabric pairs use «Ткань». */
+  selectorLabel?: string
 }
 
 /**
  * Size selector chips whose prices follow material × color on the PDP — the
  * big price block and the chips must never show conflicting numbers.
  */
-export function PdpSizeChips({ productKey, chips, materialTiers, requestQuote }: Props) {
+export function PdpSizeChips({
+  productKey,
+  chips,
+  materialTiers,
+  requestQuote,
+  selectorLabel = pdpCopy.sizeSelectorLabel,
+}: Props) {
   const materialSelection = usePdpMaterialSelection()
   const gate = usePdpPurchaseGate()
   const gateOk = gateMatchesProduct(gate, productKey)
@@ -72,9 +80,9 @@ export function PdpSizeChips({ productKey, chips, materialTiers, requestQuote }:
   const current = chips.find((c) => c.isCurrent)
 
   return (
-    <div className="pdp-size-selector" role="group" aria-label={pdpCopy.sizeSelectorLabel}>
+    <div className="pdp-size-selector" role="group" aria-label={selectorLabel}>
       <span className="pdp-option-heading">
-        <span className="pdp-option-heading-label">{pdpCopy.sizeSelectorLabel}</span>
+        <span className="pdp-option-heading-label">{selectorLabel}</span>
         <span className="pdp-option-heading-sep" aria-hidden="true">
           {" - "}
         </span>
