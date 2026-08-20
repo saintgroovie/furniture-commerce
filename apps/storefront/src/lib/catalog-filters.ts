@@ -19,7 +19,7 @@ export type CatalogFilterState = {
 export const PRODUCT_TYPE_FILTER_LABELS: Record<string, string> = {
   STANDARD: "Готовые",
   CONFIGURABLE: "С выбором исполнения",
-  BESPOKE: "По проекту",
+  BESPOKE: "Bespoke",
 }
 
 export const CATALOG_CLASSIFICATION_VALUES = [

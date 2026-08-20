@@ -41,7 +41,7 @@ export function HomeProject() {
             <Link href="/bespoke/request" className="btn btn-primary">
               {projectBlock.ctaPrimary}
             </Link>
-            <Link href="/bespoke/catalog" className="btn btn-secondary">
+            <Link href="/bespoke" className="btn btn-secondary">
               {projectBlock.ctaSecondary}
             </Link>
           </div>

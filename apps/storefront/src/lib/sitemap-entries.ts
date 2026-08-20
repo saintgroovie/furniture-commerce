@@ -2,6 +2,8 @@
  * Production sitemap URL set builder (public_indexable only).
  * Fail-closed: never invent product handles; skip non-public routes.
  */
+import { isLegalLaunchComplete } from "@/lib/legal/owner-inputs"
+
 export type SitemapEntry = { loc: string; lastmod?: string }
 
 const STATIC_PATHS = [
@@ -11,14 +13,20 @@ const STATIC_PATHS = [
   "/kids",
   "/kids/willie-winkie",
   "/bespoke",
+  "/bespoke/request",
+  "/designers",
   "/contacts",
+  "/about",
   "/delivery",
   "/payment",
   "/returns",
+  "/warranty",
   "/privacy",
+  "/personal-data",
+  "/cookies",
   "/terms",
   "/offer",
-  "/warranty",
+  "/requisites",
 ] as const
 
 const BLOCKED_PATH_PREFIXES = [
@@ -56,9 +64,12 @@ export function escapeXml(value: string): string {
 export const SITEMAP_PRODUCT_LIMIT = 5000
 
 export function collectStaticSitemapEntries(origin: string): SitemapEntry[] {
-  return STATIC_PATHS.filter((p) => !isBlockedSitemapPath(p)).map((p) => ({
-    loc: absoluteSitemapLoc(origin, p),
-  }))
+  const legalPackLive = isLegalLaunchComplete()
+  return STATIC_PATHS.filter((p) => !isBlockedSitemapPath(p))
+    .filter((p) => (p === "/offer" ? legalPackLive : true))
+    .map((p) => ({
+      loc: absoluteSitemapLoc(origin, p),
+    }))
 }
 
 export function collectProductSitemapEntries(

@@ -26,7 +26,7 @@ export function BespokeHero() {
             <Link href="/bespoke/request" className="btn btn-primary">
               {bespokeLanding.ctaPrimary}
             </Link>
-            <Link href="/bespoke/catalog" className="btn btn-secondary">
+            <Link href="/designers" className="btn btn-secondary">
               {bespokeLanding.ctaSecondary}
             </Link>
           </div>
