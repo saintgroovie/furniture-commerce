@@ -369,4 +369,24 @@ else
   ok "post-promote uses selected environment"
 fi
 
+# 27) public_production pair helper is installer-listed and isolated
+grep -q 'ops/release/cutover-public-production-pair.sh' "$ROOT/ops/release/install-environment-governance.sh" \
+  || fail "installer missing public_production pair helper"
+grep -q 'docs/operator/public-production-pair-cutover.md' "$ROOT/ops/release/install-environment-governance.sh" \
+  || fail "installer missing public_production pair docs"
+grep -q 'I_UNDERSTAND_PUBLIC_PRODUCTION_PAIR_CUTOVER' "$ROOT/ops/release/cutover-public-production-pair.sh" \
+  || fail "public_production helper missing confirm token"
+if grep -q 'recreate-staging-storefront.sh' "$ROOT/ops/release/cutover-public-production-pair.sh"; then
+  fail "public_production helper must not call demo storefront recreate"
+else
+  ok "public_production helper does not call demo recreate"
+fi
+if grep -q 'recover-production-candidate-skew.sh' "$ROOT/ops/release/cutover-public-production-pair.sh" \
+  && ! grep -q 'do NOT run recover-production-candidate-skew.sh' "$ROOT/ops/release/cutover-public-production-pair.sh"; then
+  fail "public_production helper must not invoke candidate skew recovery"
+else
+  ok "public_production helper does not invoke candidate skew recovery"
+fi
+ok "installer includes public_production pair helper"
+
 echo "ALL_OK passes=$PASS"

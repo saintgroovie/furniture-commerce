@@ -19,6 +19,7 @@ No default. Inherited `WOODRIGHT_ENVIRONMENT` alone is not authority (conflicts 
 | `public_demo` | PUBLIC_DEMO | yes | `woodright-demo.ru` | Canonical public buyer pair. Containers historically named `woodright-staging-*` - **name ≠ environment**. |
 | `staging` | STAGING_PRIVATE | **no** | none | Not an alias for public_demo. Mutators fail closed (`ENVIRONMENT_PROVISIONED=0`). |
 | `production` | PRODUCTION_CANDIDATE | yes | loopback only | Private candidate (`woodright-production-*`). Not public `woodright.ru`. |
+| `public_production` | PUBLIC_PRODUCTION | yes | loopback only (not apex) | Isolated new-stack pair (`woodright-public-production-*`, `:3300`/`:9300`). **Not** DNS/CS-Cart/apex. Helper: `ops/release/cutover-public-production-pair.sh`. |
 
 Dokploy project/app UUIDs are often absent on container labels; profiles pin compose directory/project, name prefixes, media volume, DB alias, ownership dir, identity dir, evidence root, and lock path.
 
@@ -29,6 +30,7 @@ Dokploy project/app UUIDs are often absent on container labels; profiles pin com
 | public_demo | `/srv/woodright/locks/public_demo/live-cutover.lock` |
 | staging | `/srv/woodright/locks/staging/live-cutover.lock` |
 | production | `/srv/woodright/locks/production/live-cutover.lock` |
+| public_production | `/srv/woodright/locks/public_production/live-cutover.lock` |
 
 Legacy shared `/srv/woodright/locks/live-cutover.lock` must not be used for new environment cutovers (incident `formal-pass-24f7dc9`).
 
@@ -41,6 +43,7 @@ Lock metadata includes environment, actor, command, PID, hostname, target SHA/di
 | public_demo | `/srv/woodright/runtime-ownership-public-demo/` | `/srv/woodright/runtime-identity-public-demo/` |
 | staging | `/srv/woodright/runtime-ownership-staging/` | `/srv/woodright/runtime-identity-staging/` |
 | production | `/srv/woodright/runtime-ownership-production/` | `/srv/woodright/runtime-identity-production/` |
+| public_production | `/srv/woodright/runtime-ownership-public-production/` | `/srv/woodright/runtime-identity-public-production/` |
 
 A process for one environment cannot write another environment's ACTIVE/EXPECTED/ACTIVE_PUBLIC paths.
 
@@ -64,6 +67,7 @@ Profile authority (not inherited boolean):
 | `public_demo` | `deny` | none (Traefik only) |
 | `staging` | `deny` | none (unprovisioned) |
 | `production` (private candidate) | `loopback_allowlist` | `storefront:3002/tcp=127.0.0.1:3200`, `backend:9000/tcp=127.0.0.1:9200` |
+| `public_production` | `deny` | none public; operator probes stay `127.0.0.1:3300` / `:9300`. Pair cutover must not enable host publish or Traefik apex. |
 
 Forbidden: `0.0.0.0`, empty HostIp, `::`, public interface IPs, undeclared ports, UDP (unless declared), host networking, role/port mismatches.
 

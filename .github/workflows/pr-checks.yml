@@ -243,6 +243,8 @@ jobs:
           # writes, keeper-based recreate, health gates, rollback and traps.
           # Runs entirely against a /tmp fake filesystem + docker/compose shims.
           bash scripts/ops/test-production-candidate-cutover-execute-fidelity.sh
+          node scripts/release/cutover-public-production-pair.fidelity.test.cjs
+          bash scripts/ops/test-public-production-pair-cutover-execute-fidelity.sh
           bash scripts/ops/test-digest-authority-schema-fidelity.sh
           bash scripts/ops/test-production-candidate-component-identity-rebind-fidelity.sh
           bash scripts/ops/test-public-demo-pair-cutover-fidelity.sh
