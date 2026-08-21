@@ -39,7 +39,12 @@ import {
   defaultGreenwichPaintSelection,
   resolveGreenwichPaintMedia,
 } from "@/lib/greenwich-paint-media"
-import { getDisplayGroupMembers } from "@/lib/display-group"
+import {
+  displayGroupMemberLabel,
+  displayGroupSelectorLabel,
+  getDisplayGroupMembers,
+  inferDisplayGroupAxis,
+} from "@/lib/display-group"
 import {
   collectDisplayGroupExtraImageUrls,
   collectExtraProductImageUrls,
@@ -309,7 +314,7 @@ export default async function ProductPage({
 
   const meta = product.metadata as Record<string, unknown> | undefined
   let displayGroupMembers: Record<string, unknown>[] = []
-  if (meta?.display_group && meta?.collection) {
+  if (meta?.display_group) {
     try {
       // Lean browse projection keeps display_group* + collection + variant prices.
       // Avoid full `/store/products` list (~1.4MB) for sibling size chips only.
@@ -417,12 +422,19 @@ export default async function ProductPage({
   /* Chip prices carry the base (full solid) amount; the client component
      applies the selected material multiplier so chips and the main price
      block never show conflicting numbers. */
+  const displayGroupAxis = inferDisplayGroupAxis([
+    product,
+    ...displayGroupMembers,
+  ])
   const sizeChips =
     displayGroupMembers.length > 0
       ? [
           {
             id: product.id as string,
-            label: titleStr,
+            label:
+              displayGroupAxis === "execution"
+                ? displayGroupMemberLabel(product, displayGroupAxis)
+                : titleStr,
             basePrice: price,
             sort: (meta?.display_group_sort as number | undefined) ?? 99,
             isCurrent: true,
@@ -431,7 +443,10 @@ export default async function ProductPage({
             const mMeta = m.metadata as Record<string, unknown> | undefined
             return {
               id: m.id as string,
-              label: getBuyerFacingProductTitle(m as Record<string, unknown>),
+              label:
+                displayGroupAxis === "execution"
+                  ? displayGroupMemberLabel(m, displayGroupAxis)
+                  : getBuyerFacingProductTitle(m as Record<string, unknown>),
               basePrice: getPrice(m),
               sort: (mMeta?.display_group_sort as number | undefined) ?? 99,
               isCurrent: false,
@@ -439,6 +454,7 @@ export default async function ProductPage({
           }),
         ].sort((a, b) => a.sort - b.sort)
       : []
+  const displayGroupSelector = displayGroupSelectorLabel(displayGroupAxis)
 
   const productJsonLd = {
     "@context": "https://schema.org",
@@ -651,6 +667,7 @@ export default async function ProductPage({
                   chips={sizeChips}
                   materialTiers={materialTiers}
                   requestQuote={isRequestQuoteProduct(product)}
+                  selectorLabel={displayGroupSelector}
                 />
               )}
               {/* Portal target for execution option groups (Дерево/Обивка/Цвет/…).
