@@ -244,6 +244,9 @@ wr_cutover_pin_paths() {
   WOODRIGHT_CUTOVER_ACTIVE_PUBLIC="${WOODRIGHT_CUTOVER_ACTIVE_PUBLIC:-${WOODRIGHT_ACTIVE_PUBLIC:-${identity_dir}/ACTIVE_PUBLIC.json}}"
   WOODRIGHT_CUTOVER_PUBLIC_DEMO_JSON="${WOODRIGHT_CUTOVER_PUBLIC_DEMO_JSON:-${WOODRIGHT_PUBLIC_DEMO_FILE:-${identity_dir}/public-demo.json}}"
   WOODRIGHT_CUTOVER_COMPOSE_ENV="${WOODRIGHT_CUTOVER_COMPOSE_ENV:-${WOODRIGHT_COMPOSE_ENV_FILE:-/etc/dokploy/compose/woodright-stack-3dsdhd/code/.env}}"
+  local ownership_dir="${WOODRIGHT_OWNERSHIP_DIR:-/srv/woodright/runtime-ownership-public-demo}"
+  WOODRIGHT_CUTOVER_ACTIVE_OWNER="${WOODRIGHT_CUTOVER_ACTIVE_OWNER:-${WOODRIGHT_ACTIVE_OWNER:-${ownership_dir}/ACTIVE_OWNER.json}}"
+  WOODRIGHT_CUTOVER_EXPECTED_RELEASE="${WOODRIGHT_CUTOVER_EXPECTED_RELEASE:-${WOODRIGHT_EXPECTED_RELEASE:-${ownership_dir}/EXPECTED_RELEASE.json}}"
 }
 
 wr_cutover_pair_rollback() {
@@ -314,6 +317,14 @@ wr_cutover_pair_rollback() {
     wr_cutover_install_file "$evidence/pin-backup/dokploy-compose.env" \
       "$WOODRIGHT_CUTOVER_COMPOSE_ENV" || pin_ok=0
   fi
+  if [[ -f "$evidence/pin-backup/ACTIVE_OWNER.json" ]]; then
+    wr_cutover_install_file "$evidence/pin-backup/ACTIVE_OWNER.json" \
+      "$WOODRIGHT_CUTOVER_ACTIVE_OWNER" || pin_ok=0
+  fi
+  if [[ -f "$evidence/pin-backup/EXPECTED_RELEASE.json" ]]; then
+    wr_cutover_install_file "$evidence/pin-backup/EXPECTED_RELEASE.json" \
+      "$WOODRIGHT_CUTOVER_EXPECTED_RELEASE" || pin_ok=0
+  fi
   printf '{"backend":%s,"storefront":%s,"pins":%s}\n' "$be_ok" "$sf_ok" "$pin_ok" \
     >"$evidence/json/pair-rollback-result.json"
   if [[ "$be_ok" -eq 1 && "$sf_ok" -eq 1 && "$pin_ok" -eq 1 ]]; then
@@ -336,6 +347,8 @@ wr_cutover_pin_backup() {
   local active="${3:-$WOODRIGHT_CUTOVER_ACTIVE_PUBLIC}"
   local public_demo="${4:-$WOODRIGHT_CUTOVER_PUBLIC_DEMO_JSON}"
   local compose_env="${5:-$WOODRIGHT_CUTOVER_COMPOSE_ENV}"
+  local active_owner="${6:-$WOODRIGHT_CUTOVER_ACTIVE_OWNER}"
+  local expected_release="${7:-$WOODRIGHT_CUTOVER_EXPECTED_RELEASE}"
   umask 077
   mkdir -p "$evidence/pin-backup"
   if [[ -f "$pins" ]]; then
@@ -356,7 +369,9 @@ wr_cutover_pin_backup() {
   for pair in \
     "$active:ACTIVE_PUBLIC.json" \
     "$public_demo:public-demo.json" \
-    "$compose_env:dokploy-compose.env"
+    "$compose_env:dokploy-compose.env" \
+    "$active_owner:ACTIVE_OWNER.json" \
+    "$expected_release:EXPECTED_RELEASE.json"
   do
     local src="${pair%%:*}"
     local name="${pair##*:}"

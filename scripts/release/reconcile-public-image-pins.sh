@@ -11,8 +11,10 @@
 #
 # Updates (pair-only, no secrets):
 #   - Dokploy compose .env: WOODRIGHT_BACKEND_IMAGE, WOODRIGHT_STOREFRONT_IMAGE, STOREFRONT_IMAGE
+#   - pair scope: WOODRIGHT_RELEASE_SHA (application identity marker; no container recreate)
 #   - optional: DOKPLOY_IMAGE_PINS.env
 #   - optional: ACTIVE_PUBLIC.json (+ public-demo.json)
+#   - optional pair: ACTIVE_OWNER.json + EXPECTED_RELEASE.json (scoped lock/digest identity)
 #   - optional: ACTIVE_RELEASE.json (LEGACY compatibility mirror ONLY; default OFF)
 #
 # Legacy ACTIVE_RELEASE.json under runtime-ownership-public-demo/ is non-authoritative.
@@ -78,6 +80,9 @@ APPLY="${APPLY:-0}"
 UPDATE_PINS="${UPDATE_PINS:-1}"
 UPDATE_ACTIVE_PUBLIC="${UPDATE_ACTIVE_PUBLIC:-1}"
 UPDATE_ACTIVE_RELEASE="${UPDATE_ACTIVE_RELEASE:-0}"
+# Pair cutover should converge scoped owner/expected identity. Default OFF so
+# pin-only/component helpers and fixtures without those files keep working.
+UPDATE_SCOPED_OWNERSHIP="${UPDATE_SCOPED_OWNERSHIP:-0}"
 REQUIRE_LIVE_MATCH="${REQUIRE_LIVE_MATCH:-1}"
 READ_ONLY_NO_LOCK="${READ_ONLY_NO_LOCK:-0}"
 COMPONENT_SCOPE=""
@@ -129,6 +134,8 @@ PINS_FILE="${PINS_FILE:-${WOODRIGHT_IDENTITY_DIR}/DOKPLOY_IMAGE_PINS.env}"
 ACTIVE_PUBLIC_FILE="${ACTIVE_PUBLIC_FILE:-$WOODRIGHT_ACTIVE_PUBLIC}"
 PUBLIC_DEMO_FILE="${PUBLIC_DEMO_FILE:-${WOODRIGHT_PUBLIC_DEMO_FILE:-}}"
 ACTIVE_RELEASE_FILE="${ACTIVE_RELEASE_FILE:-${WOODRIGHT_ACTIVE_RELEASE}}"
+ACTIVE_OWNER_FILE="${ACTIVE_OWNER_FILE:-${WOODRIGHT_ACTIVE_OWNER}}"
+EXPECTED_RELEASE_FILE="${EXPECTED_RELEASE_FILE:-${WOODRIGHT_EXPECTED_RELEASE}}"
 BACKUP_DIR="${BACKUP_DIR:-/tmp/wr-ops-reconcile-pins-backup-${WOODRIGHT_ENVIRONMENT}}"
 SKIP_COMPOSE_VALIDATE="${SKIP_COMPOSE_VALIDATE:-0}"
 BE_REPO="${BE_REPO:-ghcr.io/saintgroovie/woodright-backend}"
@@ -168,6 +175,23 @@ fail() {
 }
 
 log() { echo "$*"; }
+
+if [[ "$UPDATE_SCOPED_OWNERSHIP" == "1" ]]; then
+  [[ "$COMPONENT_SCOPE" == "pair" ]] \
+    || fail 2 "UPDATE_SCOPED_OWNERSHIP=1 is pair-only (got scope=$COMPONENT_SCOPE)"
+  if [[ "${WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK:-}" != "1" ]]; then
+    ACTIVE_OWNER_FILE="${WOODRIGHT_ACTIVE_OWNER}"
+    EXPECTED_RELEASE_FILE="${WOODRIGHT_EXPECTED_RELEASE}"
+  fi
+  wr_assert_manifest_path_for_environment "$ACTIVE_OWNER_FILE" \
+    || fail 2 "ACTIVE_OWNER path outside public_demo ownership dir"
+  wr_assert_manifest_path_for_environment "$EXPECTED_RELEASE_FILE" \
+    || fail 2 "EXPECTED_RELEASE path outside public_demo ownership dir"
+  [[ -f "$ACTIVE_OWNER_FILE" ]] \
+    || fail 2 "UPDATE_SCOPED_OWNERSHIP=1 requires ACTIVE_OWNER.json at $ACTIVE_OWNER_FILE"
+  [[ -f "$EXPECTED_RELEASE_FILE" ]] \
+    || fail 2 "UPDATE_SCOPED_OWNERSHIP=1 requires EXPECTED_RELEASE.json at $EXPECTED_RELEASE_FILE"
+fi
 
 release_lock_holder() {
   if [[ -n "${LOCK_HOLDER_PID:-}" ]]; then
@@ -428,6 +452,7 @@ TARGETS=("$ENV_FILE")
 [[ "$UPDATE_ACTIVE_PUBLIC" == "1" && -f "$ACTIVE_PUBLIC_FILE" ]] && TARGETS+=("$ACTIVE_PUBLIC_FILE")
 [[ "$UPDATE_ACTIVE_PUBLIC" == "1" && -f "$PUBLIC_DEMO_FILE" ]] && TARGETS+=("$PUBLIC_DEMO_FILE")
 [[ "$UPDATE_ACTIVE_RELEASE" == "1" && -f "$ACTIVE_RELEASE_FILE" ]] && TARGETS+=("$ACTIVE_RELEASE_FILE")
+[[ "$UPDATE_SCOPED_OWNERSHIP" == "1" ]] && TARGETS+=("$ACTIVE_OWNER_FILE" "$EXPECTED_RELEASE_FILE")
 
 USE_SUDO=0
 for t in "${TARGETS[@]}"; do
@@ -533,17 +558,20 @@ PY
 
 rewrite_env_pins() {
   local src="$1" dst="$2"
+  local include_release_sha="${3:-0}"
   local scope="${WOODRIGHT_COMPONENT_SCOPE}"
-  python3 - "$src" "$dst" "$BE_REF" "$SF_REF" "$scope" <<'PY'
+  python3 - "$src" "$dst" "$BE_REF" "$SF_REF" "$scope" "$EXPECTED_RELEASE_SHA" "$include_release_sha" <<'PY'
 import sys
 from pathlib import Path
-src, dst, be_ref, sf_ref, scope = sys.argv[1:6]
+src, dst, be_ref, sf_ref, scope, sha, include_release_sha = sys.argv[1:8]
 keys = {}
 if scope in ("pair", "backend"):
     keys["WOODRIGHT_BACKEND_IMAGE"] = be_ref
 if scope in ("pair", "storefront"):
     keys["WOODRIGHT_STOREFRONT_IMAGE"] = sf_ref
     keys["STOREFRONT_IMAGE"] = sf_ref
+if scope == "pair" and include_release_sha == "1":
+    keys["WOODRIGHT_RELEASE_SHA"] = sha
 if not keys:
     raise SystemExit(f"unknown component scope={scope}")
 text = Path(src).read_text()
@@ -577,11 +605,12 @@ PY
 
 validate_env_pins() {
   local f="$1"
+  local include_release_sha="${2:-0}"
   local scope="${WOODRIGHT_COMPONENT_SCOPE}"
-  python3 - "$f" "$BE_REF" "$SF_REF" "$scope" <<'PY'
+  python3 - "$f" "$BE_REF" "$SF_REF" "$scope" "$EXPECTED_RELEASE_SHA" "$include_release_sha" <<'PY'
 import sys
 from pathlib import Path
-path, be, sf, scope = sys.argv[1:5]
+path, be, sf, scope, sha, include_release_sha = sys.argv[1:7]
 env={}
 for line in Path(path).read_text().splitlines():
     s=line.strip()
@@ -593,6 +622,8 @@ if scope in ("pair", "backend"):
 if scope in ("pair", "storefront"):
     need['WOODRIGHT_STOREFRONT_IMAGE']=sf
     need['STOREFRONT_IMAGE']=sf
+if scope == "pair" and include_release_sha == "1":
+    need['WOODRIGHT_RELEASE_SHA']=sha
 for k,v in need.items():
     if env.get(k) != v:
         raise SystemExit(f'mismatch {k}')
@@ -650,6 +681,151 @@ except Exception:
 doc["generated_at"]=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 doc["note"]=f"reconciled pins scope={scope} sha={sha[:12]}; peer revisions preserved when component-only"
 Path(dst).write_text(json.dumps(doc, indent=2) + "\n")
+PY
+}
+
+rewrite_scoped_owner() {
+  local src="$1" dst="$2"
+  python3 - "$src" "$dst" "$EXPECTED_RELEASE_SHA" "$EXPECTED_BACKEND_DIGEST" "$EXPECTED_STOREFRONT_DIGEST" <<'PY'
+import json, sys
+from datetime import datetime, timezone
+from pathlib import Path
+src, dst, sha, be_d, sf_d = sys.argv[1:6]
+doc=json.loads(Path(src).read_text())
+prev = doc.get("approved_git_sha") or doc.get("desired_git_sha") or ""
+if prev and prev != sha and "previous_claimed_git_sha" in doc:
+    doc["previous_claimed_git_sha"] = prev
+doc["approved_git_sha"] = sha
+doc["desired_git_sha"] = sha
+doc["backend_revision"] = sha
+doc["storefront_revision"] = sha
+doc["backend_digest"] = be_d
+doc["storefront_digest"] = sf_d
+doc["running_backend_digest"] = be_d
+doc["running_storefront_digest"] = sf_d
+if "backend_desired_registry_digest" in doc:
+    doc["backend_desired_registry_digest"] = be_d
+if "desired_registry_digest" in doc:
+    doc["desired_registry_digest"] = sf_d
+doc["updated_at"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+Path(dst).write_text(json.dumps(doc, indent=2, ensure_ascii=False) + "\n")
+PY
+}
+
+rewrite_expected_release() {
+  local src="$1" dst="$2"
+  python3 - "$src" "$dst" "$EXPECTED_RELEASE_SHA" "$EXPECTED_BACKEND_DIGEST" "$EXPECTED_STOREFRONT_DIGEST" <<'PY'
+import json, sys
+from datetime import datetime, timezone
+from pathlib import Path
+src, dst, sha, be_d, sf_d = sys.argv[1:6]
+doc=json.loads(Path(src).read_text())
+prev = doc.get("application_source_sha") or doc.get("release_sha") or doc.get("git_sha") or ""
+if prev and prev != sha:
+    doc["previous_application_source_sha"] = prev
+doc["application_source_sha"] = sha
+doc["release_sha"] = sha
+doc["git_sha"] = sha
+doc["approved_git_sha"] = sha
+doc["backend_digest"] = be_d
+doc["storefront_digest"] = sf_d
+now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+doc["updated_at"] = now
+if "updated_at_utc" in doc:
+    doc["updated_at_utc"] = now
+Path(dst).write_text(json.dumps(doc, indent=2, ensure_ascii=False) + "\n")
+PY
+}
+
+assert_scoped_ownership_docs() {
+  python3 - "$ACTIVE_OWNER_FILE" "$EXPECTED_RELEASE_FILE" <<'PY'
+import json, re, sys
+from pathlib import Path
+
+SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
+FORBIDDEN_ENV = {"production", "public_production", "PRODUCTION", "PUBLIC_PRODUCTION"}
+ALLOWED_ENV = {"", "public_demo", "PUBLIC_DEMO", "staging", "STAGING"}
+
+def load(path):
+    try:
+        return json.loads(Path(path).read_text(encoding="utf-8"))
+    except Exception as e:
+        raise SystemExit(f"unreadable_or_malformed {path}: {e}")
+
+def pick_sha(doc):
+    for k in ("release_sha", "approved_git_sha", "desired_git_sha", "application_source_sha", "git_sha"):
+        v = doc.get(k)
+        if v:
+            return str(v)
+    return ""
+
+def pick_be(doc):
+    for k in ("backend_digest", "be_digest", "running_backend_digest", "backend_image_digest"):
+        v = doc.get(k)
+        if v:
+            return str(v)
+    return ""
+
+def pick_sf(doc):
+    for k in ("storefront_digest", "sf_digest", "running_storefront_digest", "storefront_image_digest"):
+        v = doc.get(k)
+        if v:
+            return str(v)
+    return ""
+
+def env_bindings(doc):
+    return {
+        "environment": str(doc.get("environment") or ""),
+        "environment_label": str(doc.get("environment_label") or ""),
+        "runtime_role": str(doc.get("runtime_role") or ""),
+    }
+
+owner_p, exp_p = sys.argv[1:3]
+owner, expected = load(owner_p), load(exp_p)
+if not isinstance(owner, dict) or not isinstance(expected, dict):
+    raise SystemExit("scoped docs must be JSON objects")
+for label, doc in (("ACTIVE_OWNER", owner), ("EXPECTED_RELEASE", expected)):
+    for field, env in env_bindings(doc).items():
+        if env in FORBIDDEN_ENV:
+            raise SystemExit(f"{label} {field}={env} is not public_demo")
+        if env not in ALLOWED_ENV:
+            raise SystemExit(f"{label} {field}={env} refused")
+o_sha, e_sha = pick_sha(owner), pick_sha(expected)
+o_be, e_be = pick_be(owner), pick_be(expected)
+o_sf, e_sf = pick_sf(owner), pick_sf(expected)
+if not (SHA_RE.match(o_sha) and SHA_RE.match(e_sha)):
+    raise SystemExit("scoped docs missing 40-hex sha")
+if not (DIGEST_RE.match(o_be) and DIGEST_RE.match(e_be) and DIGEST_RE.match(o_sf) and DIGEST_RE.match(e_sf)):
+    raise SystemExit("scoped docs missing sha256 digests")
+if not (o_sha == e_sha and o_be == e_be and o_sf == e_sf):
+    raise SystemExit(
+        f"OWNER/EXPECTED peer disagreement sha {o_sha} vs {e_sha} be {o_be} vs {e_be} sf {o_sf} vs {e_sf}"
+    )
+print("scoped_docs_peer_ok")
+PY
+}
+
+validate_scoped_ownership_after() {
+  python3 - "$ACTIVE_OWNER_FILE" "$EXPECTED_RELEASE_FILE" "$EXPECTED_RELEASE_SHA" "$EXPECTED_BACKEND_DIGEST" "$EXPECTED_STOREFRONT_DIGEST" <<'PY'
+import json, sys
+from pathlib import Path
+owner_p, exp_p, sha, be, sf = sys.argv[1:6]
+owner = json.loads(Path(owner_p).read_text())
+expected = json.loads(Path(exp_p).read_text())
+def fail(msg):
+    raise SystemExit(msg)
+if owner.get("approved_git_sha") != sha or owner.get("desired_git_sha") != sha:
+    fail("ACTIVE_OWNER sha not converged")
+if owner.get("backend_digest") != be or owner.get("storefront_digest") != sf:
+    fail("ACTIVE_OWNER digests not converged")
+if owner.get("running_backend_digest") != be or owner.get("running_storefront_digest") != sf:
+    fail("ACTIVE_OWNER running digests not converged")
+if expected.get("application_source_sha") != sha or expected.get("release_sha") != sha:
+    fail("EXPECTED_RELEASE sha not converged")
+if expected.get("backend_digest") != be or expected.get("storefront_digest") != sf:
+    fail("EXPECTED_RELEASE digests not converged")
+print("scoped_docs_converged_ok")
 PY
 }
 
@@ -891,6 +1067,8 @@ TMP_ENV="$(mktemp)"
 TMP_PINS="$(mktemp)"
 TMP_AP="$(mktemp)"
 TMP_AR="$(mktemp)"
+TMP_OWNER="$(mktemp)"
+TMP_EXPECTED="$(mktemp)"
 CLEANUP_DONE=0
 cleanup_on_exit() {
   local ec="${1:-$?}"
@@ -902,7 +1080,7 @@ cleanup_on_exit() {
       restore_all || true
     fi
   fi
-  rm -f "${TMP_ENV:-}" "${TMP_PINS:-}" "${TMP_AP:-}" "${TMP_AR:-}"
+  rm -f "${TMP_ENV:-}" "${TMP_PINS:-}" "${TMP_AP:-}" "${TMP_AR:-}" "${TMP_OWNER:-}" "${TMP_EXPECTED:-}"
   # Never unlock/release when lock was inherited from pair orchestrator.
   if [[ "${INHERITED_LOCK:-0}" == "1" ]]; then
     log "inherited_lock_retained_by_parent path=${LOCK_PATH:-}"
@@ -915,13 +1093,13 @@ trap 'cleanup_on_exit 130; exit 130' INT
 trap 'cleanup_on_exit 143; exit 143' TERM
 trap 'cleanup_on_exit 129; exit 129' HUP
 
-rewrite_env_pins "$ENV_FILE" "$TMP_ENV"
-validate_env_pins "$TMP_ENV"
+rewrite_env_pins "$ENV_FILE" "$TMP_ENV" 1
+validate_env_pins "$TMP_ENV" 1
 print_pin_diff "$ENV_FILE" "$TMP_ENV"
 
 if [[ "$UPDATE_PINS" == "1" && -f "$PINS_FILE" ]]; then
-  rewrite_env_pins "$PINS_FILE" "$TMP_PINS"
-  validate_env_pins "$TMP_PINS"
+  rewrite_env_pins "$PINS_FILE" "$TMP_PINS" 0
+  validate_env_pins "$TMP_PINS" 0
   print_pin_diff "$PINS_FILE" "$TMP_PINS"
 fi
 
@@ -931,6 +1109,12 @@ fi
 
 if [[ "$UPDATE_ACTIVE_RELEASE" == "1" && -f "$ACTIVE_RELEASE_FILE" ]]; then
   rewrite_active_release "$ACTIVE_RELEASE_FILE" "$TMP_AR"
+fi
+
+if [[ "$UPDATE_SCOPED_OWNERSHIP" == "1" ]]; then
+  assert_scoped_ownership_docs || fail 2 "scoped OWNER/EXPECTED peer/environment binding failed"
+  rewrite_scoped_owner "$ACTIVE_OWNER_FILE" "$TMP_OWNER"
+  rewrite_expected_release "$EXPECTED_RELEASE_FILE" "$TMP_EXPECTED"
 fi
 
 if [[ "$APPLY" != "1" ]]; then
@@ -978,7 +1162,7 @@ if ! atomic_install "$TMP_ENV" "$ENV_FILE"; then
   tx_fail 6 "failed installing .env"
 fi
 maybe_fault env
-if ! validate_env_pins "$ENV_FILE"; then
+if ! validate_env_pins "$ENV_FILE" 1; then
   tx_fail 7 "post-install .env validation failed"
 fi
 
@@ -987,7 +1171,7 @@ if [[ "$UPDATE_PINS" == "1" && -f "$PINS_FILE" ]]; then
     tx_fail 6 "failed installing pins"
   fi
   maybe_fault pins
-  if ! validate_env_pins "$PINS_FILE"; then
+  if ! validate_env_pins "$PINS_FILE" 0; then
     tx_fail 7 "post-install pins validation failed"
   fi
 fi
@@ -1009,6 +1193,20 @@ if [[ "$UPDATE_ACTIVE_RELEASE" == "1" && -f "$ACTIVE_RELEASE_FILE" ]]; then
     tx_fail 6 "failed installing ACTIVE_RELEASE"
   fi
   log "LEGACY_ACTIVE_RELEASE_COMPATIBILITY_MIRROR_WRITE path=$ACTIVE_RELEASE_FILE"
+fi
+
+if [[ "$UPDATE_SCOPED_OWNERSHIP" == "1" ]]; then
+  if ! atomic_install "$TMP_OWNER" "$ACTIVE_OWNER_FILE"; then
+    tx_fail 6 "failed installing ACTIVE_OWNER"
+  fi
+  maybe_fault scoped_owner
+  if ! atomic_install "$TMP_EXPECTED" "$EXPECTED_RELEASE_FILE"; then
+    tx_fail 6 "failed installing EXPECTED_RELEASE"
+  fi
+  if ! validate_scoped_ownership_after; then
+    tx_fail 7 "post-install scoped OWNER/EXPECTED validation failed"
+  fi
+  log "scoped_ownership_converged sha=$EXPECTED_RELEASE_SHA"
 fi
 
 if [[ "$SKIP_COMPOSE_VALIDATE" == "1" ]]; then

@@ -176,3 +176,10 @@ rewrite, DB, or media mutation. Use dry-run first; execute requires the confirm 
 `I_UNDERSTAND_PUBLIC_DEMO_METADATA_AUTHORITY_RECONCILE` and the canonical
 `/srv/woodright/locks/public_demo/live-cutover.lock`.
 
+Canonical **pair cutover** (`cutover-public-demo-pair.sh`) now also converges scoped
+`ACTIVE_OWNER.json`, `EXPECTED_RELEASE.json`, and compose `WOODRIGHT_RELEASE_SHA` in
+the same pin-reconcile transaction (`UPDATE_SCOPED_OWNERSHIP=1`,
+`UPDATE_ACTIVE_RELEASE=0`). That prevents OWNER/EXPECTED from remaining on a previous
+SHA after a successful live pair cutover. It does not recreate containers and does not
+write the deprecated legacy `ACTIVE_RELEASE.json` mirror.
+

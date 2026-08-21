@@ -742,6 +742,7 @@ EOF
       UPDATE_PINS=1 \
       UPDATE_ACTIVE_PUBLIC=1 \
       UPDATE_ACTIVE_RELEASE=0 \
+      UPDATE_SCOPED_OWNERSHIP=1 \
       bash "$PIN_RECONCILE_SCRIPT" \
         --environment public_demo \
         --component pair; then

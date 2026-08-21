@@ -515,7 +515,8 @@ else
 fi
 
 # 11) pin lifecycle: SUCCESS only after under-lock APPLY; inherit supported
-grep -q 'reconcile-public-image-pins.sh' "$PAIR" && pass "pair references pin reconciler" || fail "pair missing pin reconciler"
+grep -q 'UPDATE_ACTIVE_RELEASE=0' "$PAIR" && pass "pair forces UPDATE_ACTIVE_RELEASE=0" || fail "pair missing UPDATE_ACTIVE_RELEASE=0"
+grep -q 'UPDATE_SCOPED_OWNERSHIP=1' "$PAIR" && pass "pair converges scoped OWNER/EXPECTED" || fail "pair missing UPDATE_SCOPED_OWNERSHIP=1"
 grep -q 'wr_cutover_install_file\|wr_cutover_pair_rollback' "$PAIR" && pass "pair uses sudo-aware pin restore" || fail "pair missing wr_cutover_install_file"
 grep -q 'sudo -n cp' "$COMMON" && pass "common pin backup/install supports sudo -n" || fail "common missing sudo -n cp"
 grep -q 'pin_reconcile_begin under_inherited_lock' "$PAIR" && pass "pair APPLY under inherited lock" || fail "pair missing under-lock APPLY"
@@ -582,16 +583,20 @@ wr_staging_mutation_lock_release
 RB="$TMP/rollback-dyn"
 mkdir -p "$RB/state/containers" "$RB/state/networks" "$RB/state/log" \
   "$RB/evidence/pin-backup" "$RB/evidence/json" \
-  "$RB/pins" "$RB/compose"
+  "$RB/pins" "$RB/compose" "$RB/own"
 setup_state "$RB/state"
 printf 'WOODRIGHT_BACKEND_IMAGE=old-be\nWOODRIGHT_STOREFRONT_IMAGE=old-sf\n' >"$RB/pins/DOKPLOY_IMAGE_PINS.env"
 printf '{"release_sha":"7628056dcc1d150745de1b0fa881f1e9d36b798b"}\n' >"$RB/pins/ACTIVE_PUBLIC.json"
 printf '{"env":"public_demo"}\n' >"$RB/pins/public-demo.json"
 printf 'STOREFRONT_IMAGE=old\nBACKEND_IMAGE=old\n' >"$RB/compose/.env"
+printf '{"approved_git_sha":"7628056dcc1d150745de1b0fa881f1e9d36b798b","desired_git_sha":"7628056dcc1d150745de1b0fa881f1e9d36b798b"}\n' >"$RB/own/ACTIVE_OWNER.json"
+printf '{"application_source_sha":"7628056dcc1d150745de1b0fa881f1e9d36b798b","release_sha":"7628056dcc1d150745de1b0fa881f1e9d36b798b"}\n' >"$RB/own/EXPECTED_RELEASE.json"
 cp -p "$RB/pins/DOKPLOY_IMAGE_PINS.env" "$RB/evidence/pin-backup/DOKPLOY_IMAGE_PINS.env"
 cp -p "$RB/pins/ACTIVE_PUBLIC.json" "$RB/evidence/pin-backup/ACTIVE_PUBLIC.json"
 cp -p "$RB/pins/public-demo.json" "$RB/evidence/pin-backup/public-demo.json"
 cp -p "$RB/compose/.env" "$RB/evidence/pin-backup/dokploy-compose.env"
+cp -p "$RB/own/ACTIVE_OWNER.json" "$RB/evidence/pin-backup/ACTIVE_OWNER.json"
+cp -p "$RB/own/EXPECTED_RELEASE.json" "$RB/evidence/pin-backup/EXPECTED_RELEASE.json"
 python3 - "$RB/state" "$OLD_BE" "$OLD_SF" "$BE_DIG" "$SF_DIG" "$SHA40" <<'PY'
 import json,os,sys
 state,old_be,old_sf,be,sf,sha=sys.argv[1:7]
@@ -624,6 +629,8 @@ printf 'WOODRIGHT_BACKEND_IMAGE=CORRUPT\nWOODRIGHT_STOREFRONT_IMAGE=CORRUPT\n' >
 printf '{"release_sha":"deadbeef"}\n' >"$RB/pins/ACTIVE_PUBLIC.json"
 printf '{"env":"corrupt"}\n' >"$RB/pins/public-demo.json"
 printf 'STOREFRONT_IMAGE=CORRUPT\n' >"$RB/compose/.env"
+printf '{"approved_git_sha":"deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"}\n' >"$RB/own/ACTIVE_OWNER.json"
+printf '{"application_source_sha":"deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"}\n' >"$RB/own/EXPECTED_RELEASE.json"
 
 export WOODRIGHT_FAKE_DOCKER_STATE="$RB/state"
 export WOODRIGHT_FAKE_DOCKER_ALLOW_MUTATION=1
@@ -632,6 +639,8 @@ export WOODRIGHT_CUTOVER_PINS_ENV="$RB/pins/DOKPLOY_IMAGE_PINS.env"
 export WOODRIGHT_CUTOVER_ACTIVE_PUBLIC="$RB/pins/ACTIVE_PUBLIC.json"
 export WOODRIGHT_CUTOVER_PUBLIC_DEMO_JSON="$RB/pins/public-demo.json"
 export WOODRIGHT_CUTOVER_COMPOSE_ENV="$RB/compose/.env"
+export WOODRIGHT_CUTOVER_ACTIVE_OWNER="$RB/own/ACTIVE_OWNER.json"
+export WOODRIGHT_CUTOVER_EXPECTED_RELEASE="$RB/own/EXPECTED_RELEASE.json"
 export WR_STAGING_MUTATION_LOCK_PATH="$RB/live-cutover.lock"
 export WR_STAGING_MUTATION_LOCK_ALLOW_NONCANONICAL=1
 touch "$RB/live-cutover.lock"
@@ -669,6 +678,8 @@ grep -q 'old-be' "$RB/pins/DOKPLOY_IMAGE_PINS.env" && pass "pins restored by pai
 grep -q '7628056d' "$RB/pins/ACTIVE_PUBLIC.json" && pass "ACTIVE_PUBLIC restored by pair_rollback" || fail "ACTIVE_PUBLIC not restored"
 grep -q 'public_demo' "$RB/pins/public-demo.json" && pass "public-demo.json restored by pair_rollback" || fail "public-demo.json not restored"
 grep -q 'STOREFRONT_IMAGE=old' "$RB/compose/.env" && pass "compose .env restored by pair_rollback" || fail "compose .env not restored"
+grep -q '7628056d' "$RB/own/ACTIVE_OWNER.json" && pass "ACTIVE_OWNER restored by pair_rollback" || fail "ACTIVE_OWNER not restored"
+grep -q '7628056d' "$RB/own/EXPECTED_RELEASE.json" && pass "EXPECTED_RELEASE restored by pair_rollback" || fail "EXPECTED_RELEASE not restored"
 grep -q 'identity_verified.:true' "$RB/evidence/json/backend-rollback-result.json" && pass "backend identity evidence" || fail "backend identity evidence missing"
 grep -q 'identity_verified.:true' "$RB/evidence/json/storefront-rollback-result.json" && pass "storefront identity evidence" || fail "storefront identity evidence missing"
 [[ ! -f "$RB/state/containers/woodright-staging-backend-keeper-test.json" ]] && pass "backend keeper consumed" || fail "backend keeper remains"
