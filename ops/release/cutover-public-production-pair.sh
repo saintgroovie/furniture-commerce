@@ -2422,5 +2422,5 @@ inspect_container BE "${WOODRIGHT_BE_CONTAINER_DEFAULT}"
 inspect_container SF "${WOODRIGHT_SF_CONTAINER_DEFAULT}"
 emit_packet execute committed >"$EVIDENCE_DIR/json/final-packet.json"
 cat "$EVIDENCE_DIR/json/final-packet.json"
-log "PRODUCTION_CANDIDATE_CUTOVER_OK component=$COMPONENT application_source_sha=$SOURCE_SHA helper_install_sha=${HELPER_INSTALL_SHA:-<empty>}"
+log "PUBLIC_PRODUCTION_PAIR_CUTOVER_OK component=$COMPONENT application_source_sha=$SOURCE_SHA helper_install_sha=${HELPER_INSTALL_SHA:-<empty>}"
 exit 0
