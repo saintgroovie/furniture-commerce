@@ -108,6 +108,9 @@ wr_resolve_expected_application_source_sha() {
   return 0
 }
 
+# shellcheck source=woodright-component-expected-identity.sh
+source "${BASH_SOURCE[0]%/*}/woodright-component-expected-identity.sh"
+
 wr_container_exists() {
   docker inspect "$1" >/dev/null 2>&1
 }
@@ -204,9 +207,10 @@ wr_validate_backend_candidate() {
       fi
     else
       wr_assert_expected_release_readable "$WOODRIGHT_EXPECTED_RELEASE" || return 1
-      expected_digest=$(wr_json_get "$WOODRIGHT_EXPECTED_RELEASE" backend_digest)
-      wr_resolve_expected_application_source_sha "$WOODRIGHT_EXPECTED_RELEASE" || return 1
-      expected_sha="$WR_EXPECTED_APPLICATION_SOURCE_SHA"
+      wr_expected_component_digest "$WOODRIGHT_EXPECTED_RELEASE" backend || return 1
+      expected_digest="$WR_EXPECTED_COMPONENT_DIGEST"
+      wr_resolve_expected_component_source_sha "$WOODRIGHT_EXPECTED_RELEASE" backend || return 1
+      expected_sha="$WR_EXPECTED_COMPONENT_SOURCE_SHA"
     fi
     if [[ -z "$expected_digest" || ! "$expected_digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
       wr_discovery_set_verdict DIGEST_MISMATCH "expected_backend_digest_missing"
@@ -216,7 +220,7 @@ wr_validate_backend_candidate() {
     # for mid-promotion post-gate (SHA checked when WOODRIGHT_PINNED_GIT_SHA is non-empty).
     if [[ -z "${WOODRIGHT_PINNED_BACKEND_DIGEST}" ]]; then
       if [[ -z "$expected_sha" || ! "$expected_sha" =~ ^[0-9a-f]{40}$ ]]; then
-        wr_discovery_set_verdict DIGEST_MISMATCH "expected_git_sha_missing"
+        wr_discovery_set_verdict DIGEST_MISMATCH "expected_backend_source_sha_missing"
         return 1
       fi
     fi
@@ -297,9 +301,10 @@ wr_validate_storefront_candidate() {
   fi
   if [[ "${WOODRIGHT_REQUIRE_EXPECTED_DIGEST}" == "1" ]]; then
     wr_assert_expected_release_readable "$WOODRIGHT_EXPECTED_RELEASE" || return 1
-    expected_digest=$(wr_json_get "$WOODRIGHT_EXPECTED_RELEASE" storefront_digest)
-    wr_resolve_expected_application_source_sha "$WOODRIGHT_EXPECTED_RELEASE" || return 1
-    expected_sha="$WR_EXPECTED_APPLICATION_SOURCE_SHA"
+    wr_expected_component_digest "$WOODRIGHT_EXPECTED_RELEASE" storefront || return 1
+    expected_digest="$WR_EXPECTED_COMPONENT_DIGEST"
+    wr_resolve_expected_component_source_sha "$WOODRIGHT_EXPECTED_RELEASE" storefront || return 1
+    expected_sha="$WR_EXPECTED_COMPONENT_SOURCE_SHA"
     if [[ -z "$expected_digest" || ! "$expected_digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
       wr_discovery_set_verdict DIGEST_MISMATCH "expected_storefront_digest_missing"
       return 1

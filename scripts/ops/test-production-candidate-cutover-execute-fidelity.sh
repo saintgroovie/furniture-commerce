@@ -46,6 +46,7 @@ NEW_BE_DIG="sha256:$(printf 'a%.0s' {1..64})"
 NEW_SF_DIG="sha256:$(printf 'b%.0s' {1..64})"
 OLD_BE_DIG="sha256:$(printf 'c%.0s' {1..64})"
 OLD_SF_DIG="sha256:$(printf 'd%.0s' {1..64})"
+OLD_PEER_SHA="0000000000000000000000000000000000000000"
 BE_REF="ghcr.io/saintgroovie/woodright-backend@${NEW_BE_DIG}"
 SF_REF="ghcr.io/saintgroovie/woodright-storefront@${NEW_SF_DIG}"
 OLD_BE_REF="ghcr.io/saintgroovie/woodright-backend@${OLD_BE_DIG}"
@@ -85,10 +86,10 @@ wr_fake_runtime_install "$BIN"
 # harness state helpers
 # --------------------------------------------------------------------------
 write_container() {
-  local service="$1" digest="$2" host_ip="${3:-127.0.0.1}" traefik="${4:-0}"
-  python3 - "$STATE" "$service" "$digest" "$host_ip" "$traefik" <<'PY'
+  local service="$1" digest="$2" host_ip="${3:-127.0.0.1}" traefik="${4:-0}" revision="${5:-0000000000000000000000000000000000000000}"
+  python3 - "$STATE" "$service" "$digest" "$host_ip" "$traefik" "$revision" <<'PY'
 import json, os, sys, time
-state, service, digest, host_ip, traefik = sys.argv[1:6]
+state, service, digest, host_ip, traefik, revision = sys.argv[1:7]
 name = f"woodright-production-{service}"
 title = "woodright-backend" if service == "backend" else "woodright-storefront"
 labels = {
@@ -96,6 +97,7 @@ labels = {
     "com.woodright.exposure": "private",
     "com.woodright.database-identity": "non_public_candidate_db",
     "org.opencontainers.image.title": title,
+    "org.opencontainers.image.revision": revision,
     "com.docker.compose.project": "woodright-production",
     "com.docker.compose.service": service,
     "com.docker.compose.container-number": "1",
@@ -296,6 +298,27 @@ run_exec() {
   env "${envs[@]}" bash "$SCRIPT" \
     --environment production --component pair --source-sha "$APP_SHA" \
     --backend-ref "$BE_REF" --storefront-ref "$SF_REF" \
+    --mode execute --confirm-mutation "$CONFIRM" >"$out" 2>&1
+  RC=$?
+  set -e
+}
+
+run_exec_component() {
+  local ev="$1" out="$2" component="$3"
+  local -a envs=()
+  while IFS= read -r line; do envs+=("$line"); done < <(base_env)
+  envs+=("WOODRIGHT_EVIDENCE_DIR=$ev" "WOODRIGHT_FAKE_DOCKER_ALLOW_MUTATION=1")
+  local -a refs=()
+  if [[ "$component" == "storefront" || "$component" == "pair" ]]; then
+    refs+=(--storefront-ref "$SF_REF")
+  fi
+  if [[ "$component" == "backend" || "$component" == "pair" ]]; then
+    refs+=(--backend-ref "$BE_REF")
+  fi
+  set +e
+  env "${envs[@]}" bash "$SCRIPT" \
+    --environment production --component "$component" --source-sha "$APP_SHA" \
+    "${refs[@]}" \
     --mode execute --confirm-mutation "$CONFIRM" >"$out" 2>&1
   RC=$?
   set -e
@@ -830,6 +853,9 @@ for name in ("ACTIVE_OWNER.json", "EXPECTED_RELEASE.json", "ACTIVE_RELEASE.json"
     assert app not in (doc["helper_install_sha"], op)
 expected = json.load(open(os.path.join(own, "EXPECTED_RELEASE.json")))
 assert expected["backend_digest"].startswith("sha256:")
+assert expected["backend_source_sha"] == app
+assert expected["storefront_source_sha"] == app
+assert expected["storefront_digest"].startswith("sha256:")
 PY
 grep -q "$HELPER_SHA" "$EV/json/helper-install-sha.txt" && pass "sha_separation: evidence records the helper SHA" || fail "sha_separation: evidence helper sha"
 grep -q "$APP_SHA" "$EV/json/application-source-sha.txt" && pass "sha_separation: evidence records the application SHA" || fail "sha_separation: evidence app sha"
@@ -1052,6 +1078,133 @@ assert cmp["recovery_helper"].endswith("recover-production-candidate-skew.sh"), 
 assert cmp["blocking_token"] == "existing_pin_runtime_skew_requires_recovery", cmp
 PY
 [[ ! -f "$STATE/log/mutations.log" ]] && pass "existing_skew: dry-run stayed read-only" || fail "existing_skew: dry-run mutated"
+
+# ==========================================================================
+# 26b) storefront-only / backend-only pair identity + fail-closed peer CAS
+# ==========================================================================
+reset_harness
+EV="$TMP/ev-sf-only"
+run_exec_component "$EV" "$TMP/out-sf-only.txt" storefront
+[[ "$RC" -eq 0 ]] && pass "sf_only: exit 0" || { fail "sf_only: rc=$RC"; sed -n '1,80p' "$TMP/out-sf-only.txt"; }
+python3 - "$OWN_DIR/EXPECTED_RELEASE.json" "$NEW_SF_DIG" "$APP_SHA" "$OLD_BE_DIG" "$OLD_PEER_SHA" "$OLD_BE_REF" "$SF_REF" <<'PY' \
+  && pass "sf_only: EXPECTED keeps frozen backend identity" || fail "sf_only: EXPECTED pair identity"
+import json, sys
+doc, sf_dig, sf_sha, be_dig, be_sha, be_ref, sf_ref = sys.argv[1:8]
+d = json.load(open(doc))
+assert d["storefront_digest"] == sf_dig, d
+assert d["storefront_source_sha"] == sf_sha, d
+assert d["backend_digest"] == be_dig, d
+assert d["backend_source_sha"] == be_sha, d
+assert d["backend_image"] == be_ref
+assert d["storefront_image"] == sf_ref
+assert d["application_source_sha"] == sf_sha
+assert d["backend_digest"] and d["storefront_digest"]
+PY
+[[ "$(pin_of WOODRIGHT_BACKEND_IMAGE)" == "$OLD_BE_REF" ]] && pass "sf_only: backend pin frozen" || fail "sf_only: backend pin changed"
+[[ "$(digest_of woodright-production-backend)" == "$OLD_BE_DIG" ]] && pass "sf_only: backend runtime frozen" || fail "sf_only: backend runtime moved"
+[[ "$(digest_of woodright-production-storefront)" == "$NEW_SF_DIG" ]] && pass "sf_only: storefront advanced" || fail "sf_only: storefront digest"
+
+reset_harness
+EV="$TMP/ev-be-only"
+run_exec_component "$EV" "$TMP/out-be-only.txt" backend
+[[ "$RC" -eq 0 ]] && pass "be_only: exit 0" || { fail "be_only: rc=$RC"; sed -n '1,80p' "$TMP/out-be-only.txt"; }
+python3 - "$OWN_DIR/EXPECTED_RELEASE.json" "$NEW_BE_DIG" "$APP_SHA" "$OLD_SF_DIG" "$OLD_PEER_SHA" "$OLD_SF_REF" "$BE_REF" <<'PY' \
+  && pass "be_only: EXPECTED keeps frozen storefront identity" || fail "be_only: EXPECTED pair identity"
+import json, sys
+doc, be_dig, be_sha, sf_dig, sf_sha, sf_ref, be_ref = sys.argv[1:8]
+d = json.load(open(doc))
+assert d["backend_digest"] == be_dig
+assert d["backend_source_sha"] == be_sha
+assert d["storefront_digest"] == sf_dig
+assert d["storefront_source_sha"] == sf_sha
+assert d["storefront_image"] == sf_ref
+assert d["backend_image"] == be_ref
+PY
+[[ "$(pin_of WOODRIGHT_STOREFRONT_IMAGE)" == "$OLD_SF_REF" ]] && pass "be_only: storefront pin frozen" || fail "be_only: storefront pin changed"
+
+reset_harness
+EV="$TMP/ev-sf-spoof"
+ENVS=()
+while IFS= read -r line; do ENVS+=("$line"); done < <(base_env)
+ENVS+=("WOODRIGHT_EVIDENCE_DIR=$EV" "WOODRIGHT_FAKE_DOCKER_ALLOW_MUTATION=1")
+set +e
+env "${ENVS[@]}" bash "$SCRIPT" \
+  --environment production --component storefront --source-sha "$APP_SHA" \
+  --storefront-ref "$SF_REF" --backend-ref "$BE_REF" \
+  --mode execute --confirm-mutation "$CONFIRM" >"$TMP/out-sf-spoof.txt" 2>&1
+RC=$?
+set -e
+[[ "$RC" -ne 0 ]] && pass "sf_spoof: refused caller peer ref" || fail "sf_spoof: rc=$RC"
+grep -qE 'peer backend ref refused|LIVE_COMPONENT_IDENTITY_DRIFT' "$TMP/out-sf-spoof.txt" \
+  && pass "sf_spoof: drift/spoof token" || fail "sf_spoof: error text"
+[[ "$(pin_of WOODRIGHT_STOREFRONT_IMAGE)" == "$OLD_SF_REF" ]] && pass "sf_spoof: no pin write" || fail "sf_spoof: pins mutated"
+
+reset_harness
+python3 - "$OWN_DIR/EXPECTED_RELEASE.json" "$NEW_BE_DIG" "$APP_SHA" "$OLD_SF_DIG" "$OLD_PEER_SHA" <<'PY'
+import json, sys
+path, be_dig, app, sf_dig, sf_sha = sys.argv[1:6]
+json.dump({
+  "schema": "woodright.production_candidate.expected_release.v1",
+  "application_source_sha": app,
+  "backend_digest": be_dig,
+  "backend_source_sha": app,
+  "storefront_digest": sf_dig,
+  "storefront_source_sha": sf_sha,
+}, open(path, "w"))
+PY
+EV="$TMP/ev-stale-expected"
+run_exec_component "$EV" "$TMP/out-stale-expected.txt" storefront
+[[ "$RC" -ne 0 ]] && pass "stale_expected: refused" || fail "stale_expected: rc=$RC"
+grep -q 'LIVE_COMPONENT_IDENTITY_DRIFT' "$TMP/out-stale-expected.txt" \
+  && pass "stale_expected: drift token" || fail "stale_expected: error text"
+
+reset_harness
+python3 - "$OWN_DIR/EXPECTED_RELEASE.json" "$OLD_BE_DIG" "$APP_SHA" "$OLD_SF_DIG" "$OLD_PEER_SHA" <<'PY'
+import json, sys
+path, be_dig, app, sf_dig, sf_sha = sys.argv[1:6]
+json.dump({
+  "schema": "woodright.production_candidate.expected_release.v1",
+  "application_source_sha": app,
+  "backend_digest": be_dig,
+  "backend_source_sha": app,
+  "storefront_digest": sf_dig,
+  "storefront_source_sha": sf_sha,
+}, open(path, "w"))
+PY
+EV="$TMP/ev-rev-disagree"
+run_exec_component "$EV" "$TMP/out-rev-disagree.txt" storefront
+[[ "$RC" -ne 0 ]] && pass "rev_disagree: refused" || fail "rev_disagree: rc=$RC"
+grep -q 'LIVE_COMPONENT_IDENTITY_DRIFT' "$TMP/out-rev-disagree.txt" \
+  && pass "rev_disagree: drift token" || fail "rev_disagree: error text"
+
+reset_harness
+python3 - "$OWN_DIR/EXPECTED_RELEASE.json" "$OLD_BE_DIG" "$OLD_PEER_SHA" <<'PY'
+import json, sys
+path, be_dig, be_sha = sys.argv[1:4]
+json.dump({
+  "backend_digest": be_dig,
+  "backend_source_sha": "not-a-sha",
+}, open(path, "w"))
+PY
+EV="$TMP/ev-malformed-peer-sha"
+run_exec_component "$EV" "$TMP/out-malformed-peer-sha.txt" storefront
+[[ "$RC" -ne 0 ]] && pass "malformed_peer_sha: refused" || fail "malformed_peer_sha: rc=$RC"
+
+reset_harness
+EV="$TMP/ev-peer-change"
+ENVS=()
+while IFS= read -r line; do ENVS+=("$line"); done < <(base_env)
+ENVS+=("WOODRIGHT_EVIDENCE_DIR=$EV" "WOODRIGHT_FAKE_DOCKER_ALLOW_MUTATION=1" "WOODRIGHT_CUTOVER_FAULT=peer_change")
+set +e
+env "${ENVS[@]}" bash "$SCRIPT" \
+  --environment production --component storefront --source-sha "$APP_SHA" \
+  --storefront-ref "$SF_REF" \
+  --mode execute --confirm-mutation "$CONFIRM" >"$TMP/out-peer-change.txt" 2>&1
+RC=$?
+set -e
+[[ "$RC" -ne 0 ]] && pass "peer_change: refused before metadata commit" || fail "peer_change: rc=$RC"
+grep -q 'LIVE_COMPONENT_IDENTITY_DRIFT' "$TMP/out-peer-change.txt" \
+  && pass "peer_change: drift token" || fail "peer_change: error text"
 
 # ==========================================================================
 # 27) static contract checks
