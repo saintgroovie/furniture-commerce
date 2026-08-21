@@ -6594,6 +6594,48 @@ a.product-card-member-chip:hover {
   gap: var(--space-sm);
 }
 
+/* CONFIGURABLE PDP: informational note, not a swatch/control. */
+.pdp-adapt-note {
+  display: inline-block;
+  margin: 0 0 var(--space-sm);
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--color-fg-muted);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.pdp-adapt-request {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-start;
+  min-height: 2.75rem;
+  padding: 0.35rem 0.15rem;
+  margin-top: 0.15rem;
+  font-size: 0.9375rem;
+  line-height: 1.3;
+  color: var(--color-fg-muted);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  background: none;
+  border: none;
+}
+
+.pdp-adapt-request:hover {
+  color: var(--color-fg);
+}
+
+.pdp-panel .pdp-adapt-request {
+  width: auto;
+  min-height: 2.75rem;
+}
+
 /* Same .btn / .btn-primary tokens as everywhere else in the catalog — the
    PDP stretches the button to the panel width and bumps size a step for
    the buy panel. */

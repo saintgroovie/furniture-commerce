@@ -441,6 +441,11 @@ export const bespokeRequestCopy = {
     "Оставьте контакты и пару слов о задаче",
     "Этого достаточно для первого ответа",
   ],
+  pdpNonstandardFormTitle: "Обсудить нестандарт",
+  pdpNonstandardFormCaption: [
+    "Опишите, что нужно изменить",
+    "Менеджер уточнит размеры, материалы и конфигурацию",
+  ],
 }
 
 export const bespokeForm = {
@@ -628,7 +633,9 @@ export const productCta = {
     "Попробуйте ещё раз или оставьте заявку",
   ],
   noVariant: "Этот вариант сейчас недоступен",
-  configureBespoke: "Сделать по моим размерам",
+  canAdaptBadge: "Можно адаптировать",
+  needNonstandard: "Нужен нестандарт?",
+  needNonstandardAria: "Обсудить нестандарт с менеджером",
   bespokeManagerNote: "Финальную стоимость подтвердит менеджер",
   bespokeCtaLabel: "Запросить расчёт",
   requestQuoteCtaLabel: "Оставить заявку",
