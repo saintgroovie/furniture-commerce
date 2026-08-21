@@ -234,6 +234,7 @@ FILES=(
   ops/lib/woodright-hold-validation-freeze.sh
   ops/lib/woodright-staging-mutation-lock.sh
   ops/lib/woodright-runtime-discovery.sh
+  ops/lib/woodright-component-expected-identity.sh
   ops/lib/woodright-cutover-common.sh
   ops/lib/woodright-install-provenance.sh
   ops/lib/woodright-compose-service-recreate.sh
@@ -257,6 +258,7 @@ FILES=(
   ops/release/cutover-production-candidate.sh
   ops/release/recover-production-candidate-skew.sh
   ops/release/reconcile-production-candidate-metadata.sh
+  ops/release/reconcile-production-candidate-component-identities.sh
   ops/release/reconcile-production-release-sha.sh
   ops/release/reconcile-public-demo-metadata.sh
   ops/release/reconcile-owner-approved-release.sh
@@ -307,6 +309,8 @@ role_for() {
     ops/lib/woodright-environment-profile.sh) echo environment_profile ;;
     ops/lib/woodright-host-publish.sh) echo host_publish ;;
     ops/lib/woodright-component-authority.sh) echo component_authority ;;
+    ops/lib/woodright-component-expected-identity.sh) echo component_expected_identity ;;
+    ops/release/reconcile-production-candidate-component-identities.sh) echo production_component_identity_rebind ;;
     ops/release/reconcile-runtime-manifests.sh) echo runtime_manifest_reconciler ;;
     ops/release/reconcile-production-release-sha.sh) echo production_release_sha_reconciler ;;
     ops/release/reconcile-public-demo-metadata.sh) echo public_demo_metadata_reconciler ;;
@@ -716,6 +720,8 @@ def role_for(rel: str) -> str:
         "ops/lib/woodright-environment-profile.sh": "environment_profile",
         "ops/lib/woodright-host-publish.sh": "host_publish",
         "ops/lib/woodright-component-authority.sh": "component_authority",
+        "ops/lib/woodright-component-expected-identity.sh": "component_expected_identity",
+        "ops/release/reconcile-production-candidate-component-identities.sh": "production_component_identity_rebind",
         "ops/release/reconcile-runtime-manifests.sh": "runtime_manifest_reconciler",
         "scripts/release/reconcile-public-image-pins.sh": "pin_reconciler",
         "scripts/release/restart-active-digest-only.sh": "legacy_restart_guard",

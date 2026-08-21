@@ -17,14 +17,20 @@
 # acquired through ops/lib/woodright-staging-mutation-lock.sh (real flock, or
 # the helper's fcntl holder fallback). No other lock path is accepted.
 #
-# TWO DISTINCT SHAs - never conflate them:
-#   application_source_sha  = --source-sha, the OCI revision baked into the
-#                             candidate images (what actually goes live)
+# TWO DISTINCT SHA LAYERS - never conflate them:
+#   application_source_sha  = --source-sha of the MUTATED component (pair: both
+#                             images). Informational / lock metadata. Monitor
+#                             must not use it as the revision of the untouched peer.
+#   storefront_source_sha / backend_source_sha = per-component OCI revisions.
 #   helper_install_sha      = the ops commit that installed THIS script
 #                             (WOODRIGHT_HELPER_INSTALL_SHA, else
 #                             /srv/woodright/INSTALLED_PRODUCTION_CUTOVER_HELPER_SHA.txt,
 #                             else empty). It is recorded next to - never as -
 #                             the release SHA in ACTIVE_*/EXPECTED_RELEASE.
+#
+# EXPECTED_RELEASE after any successful cutover is a complete pair:
+#   storefront_digest + storefront_source_sha AND backend_digest + backend_source_sha.
+# Single-component cutover replaces one identity and preserves the verified peer.
 #
 # Usage:
 #   ops/release/cutover-production-candidate.sh \
@@ -525,6 +531,176 @@ resolve_live_ref() {
     *) ref="" ;;
   esac
   printf '%s\n' "$ref"
+}
+
+live_oci_revision() {
+  prod_docker inspect "$1" --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' 2>/dev/null || true
+}
+
+prev_expected_field() {
+  local file="$1" key="$2"
+  [[ -f "$file" && -r "$file" ]] || return 0
+  python3 -c 'import json,sys
+try:
+  d=json.load(open(sys.argv[1]))
+except Exception:
+  raise SystemExit(0)
+print(d.get(sys.argv[2]) or "")' "$file" "$key" 2>/dev/null || true
+}
+
+prev_expected_has_key() {
+  local file="$1" key="$2"
+  [[ -f "$file" && -r "$file" ]] || return 1
+  python3 -c 'import json,sys
+d=json.load(open(sys.argv[1]))
+raise SystemExit(0 if sys.argv[2] in d else 1)' "$file" "$key" 2>/dev/null
+}
+
+# Untouched peer identity = live digest + OCI revision, CAS-checked against
+# compose pin and previous EXPECTED when those fields are present. Disagreement
+# is LIVE_COMPONENT_IDENTITY_DRIFT (no silent stale-metadata adoption).
+cas_untouched_peer() {
+  local kind="$1"
+  local name title pin_key caller_ref live_ref live_dig live_rev pin pin_dig
+  local exp exp_dig exp_sha app
+
+  if [[ "$kind" == "backend" ]]; then
+    name="${WOODRIGHT_BE_CONTAINER_DEFAULT}"
+    title="${WOODRIGHT_REQUIRED_BE_TITLE:-woodright-backend}"
+    pin_key=WOODRIGHT_BACKEND_IMAGE
+    caller_ref="$BE_REF"
+  else
+    name="${WOODRIGHT_SF_CONTAINER_DEFAULT}"
+    title="${WOODRIGHT_REQUIRED_SF_TITLE:-woodright-storefront}"
+    pin_key=WOODRIGHT_STOREFRONT_IMAGE
+    caller_ref="$SF_REF"
+  fi
+
+  live_ref="$(resolve_live_ref "$name" "$title" "$kind")"
+  [[ "$live_ref" == *@sha256:* ]] || die "LIVE_COMPONENT_IDENTITY_DRIFT cannot prove live $kind digest"
+  live_dig="${live_ref##*@}"
+  [[ "$live_dig" =~ ^sha256:[0-9a-f]{64}$ ]] || die "LIVE_COMPONENT_IDENTITY_DRIFT live $kind digest malformed"
+  live_rev="$(live_oci_revision "$name")"
+  [[ "$live_rev" =~ ^[0-9a-f]{40}$ ]] || die "LIVE_COMPONENT_IDENTITY_DRIFT live $kind OCI revision missing/malformed"
+
+  pin="$(pin_value_of "$pin_key")"
+  if [[ -n "$pin" ]]; then
+    pin_dig="${pin##*@}"
+    [[ "$pin_dig" == "$live_dig" ]] || die "LIVE_COMPONENT_IDENTITY_DRIFT $kind compose pin != live digest"
+  fi
+
+  exp="${WOODRIGHT_OWNERSHIP_DIR%/}/EXPECTED_RELEASE.json"
+  if [[ -f "$exp" && -r "$exp" ]]; then
+    exp_dig="$(prev_expected_field "$exp" "${kind}_digest")"
+    if [[ -n "$exp_dig" ]]; then
+      [[ "$exp_dig" =~ ^sha256:[0-9a-f]{64}$ ]] || die "malformed previous ${kind}_digest"
+      [[ "$exp_dig" == "$live_dig" ]] || die "LIVE_COMPONENT_IDENTITY_DRIFT previous EXPECTED ${kind}_digest != live"
+    fi
+    if prev_expected_has_key "$exp" "${kind}_source_sha"; then
+      exp_sha="$(prev_expected_field "$exp" "${kind}_source_sha")"
+      [[ "$exp_sha" =~ ^[0-9a-f]{40}$ ]] || die "malformed previous ${kind}_source_sha"
+      [[ "$exp_sha" == "$live_rev" ]] || die "LIVE_COMPONENT_IDENTITY_DRIFT previous EXPECTED ${kind}_source_sha != live OCI revision"
+    elif [[ -n "$exp_dig" ]]; then
+      app="$(prev_expected_field "$exp" application_source_sha)"
+      if [[ -n "$app" ]]; then
+        [[ "$app" =~ ^[0-9a-f]{40}$ ]] || die "malformed previous application_source_sha"
+        [[ "$app" == "$live_rev" ]] || die "LIVE_COMPONENT_IDENTITY_DRIFT previous application_source_sha != live $kind revision"
+      fi
+    fi
+  fi
+
+  if [[ -n "$caller_ref" ]]; then
+    [[ "$caller_ref" == "$live_ref" ]] \
+      || die "peer $kind ref refused (caller does not match live): caller='$caller_ref' live='$live_ref'"
+  fi
+
+  if [[ "$kind" == "backend" ]]; then
+    EXPECT_BE_REF="$live_ref"
+    EXPECT_BE_SHA="$live_rev"
+  else
+    EXPECT_SF_REF="$live_ref"
+    EXPECT_SF_SHA="$live_rev"
+  fi
+}
+
+resolve_pair_expected_identities() {
+  EXPECT_BE_REF=""
+  EXPECT_BE_SHA=""
+  EXPECT_SF_REF=""
+  EXPECT_SF_SHA=""
+  if need_be; then
+    EXPECT_BE_REF="$BE_REF"
+    EXPECT_BE_SHA="$SOURCE_SHA"
+  else
+    cas_untouched_peer backend
+  fi
+  if need_sf; then
+    EXPECT_SF_REF="$SF_REF"
+    EXPECT_SF_SHA="$SOURCE_SHA"
+  else
+    cas_untouched_peer storefront
+  fi
+  [[ "${EXPECT_BE_REF##*@}" =~ ^sha256:[0-9a-f]{64}$ ]] || die "missing required backend identity digest after resolve"
+  [[ "$EXPECT_BE_SHA" =~ ^[0-9a-f]{40}$ ]] || die "missing required backend identity SHA after resolve"
+  [[ "${EXPECT_SF_REF##*@}" =~ ^sha256:[0-9a-f]{64}$ ]] || die "missing required storefront identity digest after resolve"
+  [[ "$EXPECT_SF_SHA" =~ ^[0-9a-f]{40}$ ]] || die "missing required storefront identity SHA after resolve"
+  if [[ -n "$EVIDENCE_DIR" ]]; then
+    python3 - "$EVIDENCE_DIR/json/resolved-pair-identities.json" \
+      "$COMPONENT" "$SOURCE_SHA" "$EXPECT_BE_REF" "$EXPECT_BE_SHA" "$EXPECT_SF_REF" "$EXPECT_SF_SHA" <<'PY'
+import json, sys
+path, component, app, be_ref, be_sha, sf_ref, sf_sha = sys.argv[1:8]
+json.dump({
+    "component": component,
+    "application_source_sha": app,
+    "backend_image": be_ref,
+    "backend_digest": be_ref.split("@")[-1],
+    "backend_source_sha": be_sha,
+    "storefront_image": sf_ref,
+    "storefront_digest": sf_ref.split("@")[-1],
+    "storefront_source_sha": sf_sha,
+}, open(path, "w"), indent=2, sort_keys=True)
+PY
+  fi
+  log "pair identity backend=${EXPECT_BE_REF##*@}/$EXPECT_BE_SHA storefront=${EXPECT_SF_REF##*@}/$EXPECT_SF_SHA"
+}
+
+recheck_untouched_peer_before_metadata() {
+  local name title live_ref live_rev
+  if wr_fault peer_change; then
+    python3 - "${WOODRIGHT_FAKE_DOCKER_STATE:-}" <<'PY'
+import json, os, sys
+state = sys.argv[1]
+if not state:
+    raise SystemExit(1)
+path = os.path.join(state, "containers", "woodright-production-backend.json")
+props = os.path.join(state, "containers", "woodright-production-backend.props")
+doc = json.load(open(path))
+spoof = "sha256:" + ("e" * 64)
+img = "ghcr.io/saintgroovie/woodright-backend@" + spoof
+if isinstance(doc, list):
+    doc[0]["Config"]["Image"] = img
+    doc[0]["RepoDigests"] = [img]
+json.dump(doc, open(path, "w"))
+if os.path.exists(props):
+    os.remove(props)
+PY
+  fi
+  if ! need_be; then
+    name="${WOODRIGHT_BE_CONTAINER_DEFAULT}"
+    title="${WOODRIGHT_REQUIRED_BE_TITLE:-woodright-backend}"
+    live_ref="$(resolve_live_ref "$name" "$title" backend)"
+    live_rev="$(live_oci_revision "$name")"
+    [[ "$live_ref" == "$EXPECT_BE_REF" && "$live_rev" == "$EXPECT_BE_SHA" ]] \
+      || die "LIVE_COMPONENT_IDENTITY_DRIFT backend changed before metadata commit live_ref='$live_ref' live_rev='$live_rev'"
+  fi
+  if ! need_sf; then
+    name="${WOODRIGHT_SF_CONTAINER_DEFAULT}"
+    title="${WOODRIGHT_REQUIRED_SF_TITLE:-woodright-storefront}"
+    live_ref="$(resolve_live_ref "$name" "$title" storefront)"
+    live_rev="$(live_oci_revision "$name")"
+    [[ "$live_ref" == "$EXPECT_SF_REF" && "$live_rev" == "$EXPECT_SF_SHA" ]] \
+      || die "LIVE_COMPONENT_IDENTITY_DRIFT storefront changed before metadata commit live_ref='$live_ref' live_rev='$live_rev'"
+  fi
 }
 
 pin_value_of() {
@@ -1720,6 +1896,7 @@ capture_rollback_anchors() {
   log "rollback anchors backend=${PRE_BE_REF:-n/a} storefront=${PRE_SF_REF:-n/a} release_sha=${PRE_RELEASE_SHA:-n/a} (verified present locally; no keepers)"
 }
 capture_rollback_anchors
+resolve_pair_expected_identities
 
 record_state prepared
 
@@ -2007,6 +2184,7 @@ record_state acceptance_passed
 write_ownership_metadata() {
   local dir="${WOODRIGHT_OWNERSHIP_DIR%/}"
   [[ -n "$dir" ]] || { log "ownership dir unset"; return 1; }
+  recheck_untouched_peer_before_metadata
   local f
   for f in ACTIVE_OWNER.json EXPECTED_RELEASE.json ACTIVE_RELEASE.json; do
     wr_assert_manifest_path_for_environment "$dir/$f" || return 1
@@ -2033,8 +2211,10 @@ write_ownership_metadata() {
   WR_META_COMPONENT="$COMPONENT" \
   WR_META_APP_SHA="$SOURCE_SHA" \
   WR_META_HELPER_SHA="$HELPER_INSTALL_SHA" \
-  WR_META_BE_REF="$BE_REF" \
-  WR_META_SF_REF="$SF_REF" \
+  WR_META_BE_REF="$EXPECT_BE_REF" \
+  WR_META_SF_REF="$EXPECT_SF_REF" \
+  WR_META_BE_SHA="$EXPECT_BE_SHA" \
+  WR_META_SF_SHA="$EXPECT_SF_SHA" \
   WR_META_BE_CONTAINER="${WOODRIGHT_BE_CONTAINER_DEFAULT}" \
   WR_META_SF_CONTAINER="${WOODRIGHT_SF_CONTAINER_DEFAULT}" \
   WR_META_PROJECT="${WOODRIGHT_COMPOSE_PROJECT}" \
@@ -2053,6 +2233,18 @@ helper_sha = os.environ.get("WR_META_HELPER_SHA", "")
 component = os.environ["WR_META_COMPONENT"]
 be_ref = os.environ.get("WR_META_BE_REF", "")
 sf_ref = os.environ.get("WR_META_SF_REF", "")
+be_sha = os.environ.get("WR_META_BE_SHA", "")
+sf_sha = os.environ.get("WR_META_SF_SHA", "")
+
+import re
+DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
+SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+if not be_ref or "@" not in be_ref or not DIGEST_RE.match(be_ref.split("@")[-1]):
+    raise SystemExit("ownership writer refused empty/malformed backend identity")
+if not sf_ref or "@" not in sf_ref or not DIGEST_RE.match(sf_ref.split("@")[-1]):
+    raise SystemExit("ownership writer refused empty/malformed storefront identity")
+if not SHA_RE.match(be_sha) or not SHA_RE.match(sf_sha):
+    raise SystemExit("ownership writer refused empty/malformed component source SHA")
 
 common = {
     "environment": os.environ["WR_META_ENV"],
@@ -2079,9 +2271,11 @@ docs = {
         common,
         schema="woodright.production_candidate.expected_release.v1",
         backend_image=be_ref,
-        backend_digest=be_ref.split("@")[-1] if be_ref else "",
+        backend_digest=be_ref.split("@")[-1],
+        backend_source_sha=be_sha,
         storefront_image=sf_ref,
-        storefront_digest=sf_ref.split("@")[-1] if sf_ref else "",
+        storefront_digest=sf_ref.split("@")[-1],
+        storefront_source_sha=sf_sha,
     ),
     "ACTIVE_RELEASE.json": dict(
         common,

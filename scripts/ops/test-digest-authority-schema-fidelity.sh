@@ -207,6 +207,48 @@ export WOODRIGHT_EXPECTED_RELEASE="$f"
 export WOODRIGHT_FAKE_IMG_ID="$DIG_BE" WOODRIGHT_FAKE_REV="$SHA_OK" WOODRIGHT_FAKE_RESOLVE_OK=1
 validate_be match_app_only 1
 
+# Component SHA is independent of application_source_sha
+f="$TMP/prod-component-sha.json"
+write_expected "$f" application_source_sha "$SHA_OTHER" backend_source_sha "$SHA_OK" \
+  backend_digest "$DIG_BE" storefront_digest "$DIG_SF" storefront_source_sha "$SHA_OTHER" >/dev/null
+export WOODRIGHT_EXPECTED_RELEASE="$f"
+export WOODRIGHT_FAKE_REV="$SHA_OK"
+validate_be match_component_sha 1
+
+f="$TMP/prod-component-sha-legacy.json"
+write_expected "$f" application_source_sha "$SHA_OTHER" approved_git_sha "$SHA_OTHER" \
+  backend_source_sha "$SHA_OK" backend_digest "$DIG_BE" \
+  storefront_digest "$DIG_SF" storefront_source_sha "$SHA_OTHER" >/dev/null
+export WOODRIGHT_EXPECTED_RELEASE="$f"
+export WOODRIGHT_FAKE_REV="$SHA_OK"
+validate_be match_component_sha_with_legacy_globals 1
+
+# Empty backend digest is fail-closed even when global SHA is present
+f="$TMP/prod-empty-be.json"
+write_expected "$f" application_source_sha "$SHA_OK" storefront_digest "$DIG_SF" >/dev/null
+export WOODRIGHT_EXPECTED_RELEASE="$f"
+validate_be empty_be_digest 0 expected_backend_digest_missing
+
+# Present empty component SHA key must not fall back to application_source_sha
+f="$TMP/prod-empty-be-sha.json"
+python3 - "$f" "$SHA_OK" "$DIG_BE" "$DIG_SF" <<'PY'
+import json, sys
+json.dump({
+  "application_source_sha": sys.argv[2],
+  "backend_digest": sys.argv[3],
+  "storefront_digest": sys.argv[4],
+  "backend_source_sha": "",
+}, open(sys.argv[1], "w"))
+PY
+export WOODRIGHT_EXPECTED_RELEASE="$f"
+validate_be empty_component_sha 0 expected_backend_source_sha_malformed
+
+f="$TMP/prod-bad-be-sha.json"
+write_expected "$f" application_source_sha "$SHA_OK" backend_source_sha "not-a-sha" \
+  backend_digest "$DIG_BE" storefront_digest "$DIG_SF" >/dev/null
+export WOODRIGHT_EXPECTED_RELEASE="$f"
+validate_be malformed_component_sha 0 expected_backend_source_sha_malformed
+
 # Matching: approved_git_sha only
 f="$TMP/prod-approved.json"
 write_expected "$f" approved_git_sha "$SHA_OK" backend_digest "$DIG_BE" storefront_digest "$DIG_SF" >/dev/null

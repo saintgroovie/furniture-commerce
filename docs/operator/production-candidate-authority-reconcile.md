@@ -25,6 +25,35 @@ Deploy / rollback authority remains:
 
 A stale compose/header marker is classified `production_release_sha_marker_stale_non_blocking`. It does not require a live emergency fix and does not block a valid future pair cutover dry-run.
 
+## Component-aware EXPECTED_RELEASE (pair identity)
+
+`EXPECTED_RELEASE` after any successful cutover must hold both components:
+
+- `storefront_digest` + `storefront_source_sha`
+- `backend_digest` + `backend_source_sha`
+
+`application_source_sha` is informational (mutated component SHA). The monitor compares each role to its own digest and source SHA. `WOODRIGHT_REQUIRE_EXPECTED_DIGEST=1` stays fail-closed on an empty digest.
+
+Single-component cutover preserves the untouched peer by live CAS (digest + OCI revision under the production lock). Do not hand-edit EXPECTED JSON.
+
+If a past storefront-only cutover blanked `backend_digest`, rebind metadata only after proving live identities:
+
+```sh
+ops/release/reconcile-production-candidate-component-identities.sh \
+  --environment production \
+  --storefront-ref ghcr.io/saintgroovie/woodright-storefront@sha256:<live-sf> \
+  --backend-ref ghcr.io/saintgroovie/woodright-backend@sha256:<live-be> \
+  --storefront-source-sha <40hex-live-sf-oci> \
+  --backend-source-sha <40hex-live-be-oci> \
+  --application-source-sha <40hex-mutated-component> \
+  --dry-run
+
+# execute (separate owner authorization):
+# --execute --confirm-mutation I_UNDERSTAND_PRODUCTION_COMPONENT_IDENTITY_REBIND
+```
+
+Install the helper via `ops/release/install-environment-governance.sh` before using a new bundle SHA. No container recreate. If live digest or revision disagrees with the declared args, the helper exits `LIVE_COMPONENT_IDENTITY_DRIFT`.
+
 ## Residuals this tooling closes
 
 1. **Monitor false-critical media_mount** - health check used a hardcoded
