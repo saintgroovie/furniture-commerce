@@ -27,6 +27,8 @@ import {
   ctaLabelForDirectCartPurchase,
   ctaLabelForPurchase,
   isBespokeLikePurchase,
+  isDirectCartPurchase,
+  isIncompleteCartPurchase,
   isQuoteLikePurchase,
   isUnavailablePurchase,
   readProductPurchase,
@@ -76,13 +78,39 @@ export function ProductCta({
   }
 
   /* Selected execution rides into the bespoke/request-quote form. */
-  function bespokeRequestHref(productId: string | undefined): string {
+  function requestQuery(extra?: Record<string, string | undefined>): string {
     const params = new URLSearchParams()
     if (productId) params.set("product_id", productId)
     const tier = selectedMaterialTier()
     if (tier) params.set("material", tier.label)
+    if (extra) {
+      for (const [key, value] of Object.entries(extra)) {
+        if (value?.trim()) params.set(key, value.trim())
+      }
+    }
     const qs = params.toString()
     return qs ? `/bespoke/request?${qs}` : "/bespoke/request"
+  }
+
+  function bespokeRequestHref(): string {
+    return requestQuery()
+  }
+
+  function managerAdaptationHref(): string {
+    const title = typeof product.title === "string" ? product.title : undefined
+    const handle = typeof product.handle === "string" ? product.handle : undefined
+    const sku =
+      firstVariant && typeof firstVariant === "object" && "sku" in firstVariant
+        ? String((firstVariant as { sku?: unknown }).sku ?? "")
+        : undefined
+    return requestQuery({
+      from: "pdp",
+      intent: "nonstandard",
+      title,
+      handle,
+      sku,
+      ...(isKidsStorefrontProduct(product) ? { section: "kids" } : {}),
+    })
   }
 
   const productType = getProductType(product)
@@ -104,6 +132,7 @@ export function ProductCta({
 
   async function handleAddToCart(e: MouseEvent<HTMLButtonElement>) {
     if (!variantId) return
+    if (purchase && !isDirectCartPurchase(purchase)) return
     if (requiresBuyerSelection) {
       const live = readPdpExecutionSelection()?.gate
       if (
@@ -202,7 +231,7 @@ export function ProductCta({
     if (isBespokeLikePurchase(purchase)) {
       return (
         <div className="cta-group">
-          <Link href={bespokeRequestHref(productId)} className="btn btn-primary">
+          <Link href={bespokeRequestHref()} className="btn btn-primary">
             {ctaLabelForPurchase(purchase, copy.bespokeCtaLabel)}
           </Link>
         </div>
@@ -213,7 +242,7 @@ export function ProductCta({
       return (
         <div>
           <div className="cta-group">
-            <Link href={bespokeRequestHref(productId)} className="btn btn-primary">
+            <Link href={bespokeRequestHref()} className="btn btn-primary">
               {ctaLabelForPurchase(purchase, copy.requestQuoteCtaLabel)}
             </Link>
           </div>
@@ -224,12 +253,8 @@ export function ProductCta({
       )
     }
 
-    if (purchase.purchase_flow === "cart" || purchase.can_purchase) {
-      const salesCta = ctaLabelForDirectCartPurchase(
-        purchase,
-        actions.addToCart,
-        { kidsStorefront: isKidsStorefrontProduct(product) }
-      )
+    if (isDirectCartPurchase(purchase)) {
+      const salesCta = ctaLabelForDirectCartPurchase(purchase, actions.addToCart)
       const primaryLabel = adding
         ? copy.addingInProgress
         : selectionBlocked
@@ -252,20 +277,25 @@ export function ProductCta({
         <span className="info-text">{copy.noVariant}</span>
       )
 
-      const showConfigureSecondary =
+      const showManagerAdaptation =
         purchase.sales_mode === "configurable_to_order" ||
         productType === "CONFIGURABLE"
 
       return (
         <div>
-          <div className="cta-group">
-            {primaryButton}
-            {showConfigureSecondary && (
-              <Link href={bespokeRequestHref(productId)} className="btn btn-secondary">
-                {copy.configureBespoke}
-              </Link>
-            )}
-          </div>
+          {showManagerAdaptation && (
+            <p className="pdp-adapt-note">{copy.canAdaptBadge}</p>
+          )}
+          <div className="cta-group">{primaryButton}</div>
+          {showManagerAdaptation && (
+            <Link
+              href={managerAdaptationHref()}
+              className="pdp-adapt-request"
+              aria-label={copy.needNonstandardAria}
+            >
+              {copy.needNonstandard}
+            </Link>
+          )}
           {purchase.availability_label && (
             <p className="info-text" style={{ marginTop: "0.75rem" }}>
               {purchase.availability_label}
@@ -287,12 +317,49 @@ export function ProductCta({
         </div>
       )
     }
+
+    if (isIncompleteCartPurchase(purchase)) {
+      return (
+        <div>
+          <div className="cta-group">
+            <span className="btn btn-primary" aria-disabled="true">
+              {ctaLabelForPurchase(purchase, actions.chooseParameters)}
+            </span>
+          </div>
+          {purchase.availability_label && (
+            <p className="info-text" style={{ marginTop: "0.75rem" }}>
+              {purchase.availability_label}
+            </p>
+          )}
+        </div>
+      )
+    }
+
+    return (
+      <div>
+        <div className="cta-group">
+          <span className="btn btn-primary" aria-disabled="true">
+            {ctaLabelForPurchase(purchase, copy.unavailableCtaLabel)}
+          </span>
+        </div>
+        {purchase.availability_label && (
+          <p className="info-text" style={{ marginTop: "0.75rem" }}>
+            {purchase.availability_label}
+          </p>
+        )}
+        {purchase.buyer_message && (
+          <p className="info-text" style={{ marginTop: "0.5rem" }}>
+            {purchase.buyer_message}
+          </p>
+        )}
+      </div>
+    )
   }
 
   if (productType === "BESPOKE") {
     return (
       <div className="cta-group">
-        <Link href={bespokeRequestHref(productId)} className="btn btn-primary">
+        <Link href={bespokeRequestHref()} className="btn btn-primary">
           {copy.bespokeCtaLabel}
         </Link>
       </div>
@@ -303,7 +370,7 @@ export function ProductCta({
     return (
       <div>
         <div className="cta-group">
-          <Link href={bespokeRequestHref(productId)} className="btn btn-primary">
+          <Link href={bespokeRequestHref()} className="btn btn-primary">
             {copy.requestQuoteCtaLabel}
           </Link>
         </div>
@@ -339,12 +406,15 @@ export function ProductCta({
   if (productType === "CONFIGURABLE") {
     return (
       <div>
-        <div className="cta-group">
-          {primaryButton}
-          <Link href={bespokeRequestHref(productId)} className="btn btn-secondary">
-            {copy.configureBespoke}
-          </Link>
-        </div>
+        <p className="pdp-adapt-note">{copy.canAdaptBadge}</p>
+        <div className="cta-group">{primaryButton}</div>
+        <Link
+          href={managerAdaptationHref()}
+          className="pdp-adapt-request"
+          aria-label={copy.needNonstandardAria}
+        >
+          {copy.needNonstandard}
+        </Link>
         {success && (
           <div className="feedback">
             <span className="feedback-success">{copy.addedTitle}</span>

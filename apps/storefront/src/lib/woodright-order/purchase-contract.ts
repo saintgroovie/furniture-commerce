@@ -82,27 +82,44 @@ export function ctaLabelForPurchase(
 }
 
 /**
- * Kids cart-flow PDP keeps the owner-approved add-to-cart label even when
- * the purchase DTO projects sales-mode copy (`Настроить и заказать`,
- * `Заказать`). Adult configurable / quote / bespoke contracts are unchanged.
+ * True only when the buyer-facing primary action is a real cart add.
+ * Fail-closed: `can_purchase` alone is not enough (`purchase_flow="none"`
+ * must not become add-to-cart even in an invalid DTO combination), and a
+ * cart flow with `can_purchase !== true` must not execute addLineItem.
+ */
+export function isDirectCartPurchase(p: StorefrontPurchaseDto | null): boolean {
+  if (!p) return false
+  if (p.purchase_flow !== "cart") return false
+  if (p.can_purchase !== true) return false
+  if (isQuoteLikePurchase(p) || isBespokeLikePurchase(p) || isUnavailablePurchase(p)) {
+    return false
+  }
+  return true
+}
+
+/** Cart sales flow that is not yet purchasable (e.g. configuration required). */
+export function isIncompleteCartPurchase(p: StorefrontPurchaseDto | null): boolean {
+  if (!p) return false
+  if (p.purchase_flow !== "cart") return false
+  if (p.can_purchase === true) return false
+  if (isQuoteLikePurchase(p) || isBespokeLikePurchase(p) || isUnavailablePurchase(p)) {
+    return false
+  }
+  return true
+}
+
+/**
+ * Buyer-facing primary for a real cart add (`handleAddToCart` → `addLineItem`).
+ * Backend `cta_label` / sales-mode copy (`Заказать`, `Настроить и заказать`)
+ * may still describe operational lifecycle for other consumers; storefront
+ * labels the actual click.
  *
- * Callers must still use the cart handler (`purchase_flow === "cart"`).
- * This helper only restores copy; it does not change classification.
+ * Quote / Bespoke / unavailable keep `ctaLabelForPurchase`.
  */
 export function ctaLabelForDirectCartPurchase(
   p: StorefrontPurchaseDto | null,
-  fallback: string,
-  opts: { kidsStorefront?: boolean } = {}
+  fallback: string
 ): string {
-  if (
-    opts.kidsStorefront &&
-    p &&
-    p.purchase_flow === "cart" &&
-    !isQuoteLikePurchase(p) &&
-    !isBespokeLikePurchase(p) &&
-    !isUnavailablePurchase(p)
-  ) {
-    return fallback
-  }
+  if (isDirectCartPurchase(p)) return fallback
   return ctaLabelForPurchase(p, fallback)
 }

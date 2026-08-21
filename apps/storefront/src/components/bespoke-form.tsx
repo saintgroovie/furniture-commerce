@@ -157,6 +157,13 @@ export function BespokeForm() {
   /* Материальное исполнение, выбранное на PDP (label из product contract). */
   const materialLabel = searchParams.get("material")?.trim() || undefined
   const fromDesigners = searchParams.get("from") === "designers"
+  const fromPdpNonstandard =
+    searchParams.get("from") === "pdp" &&
+    searchParams.get("intent") === "nonstandard"
+  const productTitle = searchParams.get("title")?.trim() || undefined
+  const productSku = searchParams.get("sku")?.trim() || undefined
+  const productHandle = searchParams.get("handle")?.trim() || undefined
+  const storefrontSection = searchParams.get("section")?.trim() || undefined
 
   const [status, setStatus] = useState<Status>("idle")
   const [errorMessage, setErrorMessage] = useState("")
@@ -189,6 +196,11 @@ export function BespokeForm() {
     const taskLabel = copy.taskOptions.find((option) => option.value === taskType)?.label
     const headerLines = [
       fromDesigners ? designersLandingCopy.requestContext : null,
+      fromPdpNonstandard ? "Запрос: нестандарт по товару" : null,
+      productTitle ? `Товар: ${productTitle}` : null,
+      productSku ? `SKU: ${productSku}` : null,
+      productHandle ? `Handle: ${productHandle}` : null,
+      storefrontSection ? `Раздел: ${storefrontSection}` : null,
       city ? `${copy.fields.city}: ${city}` : null,
       taskLabel ? `${copy.fields.taskType}: ${taskLabel}` : null,
       materialLabel ? `Исполнение: ${materialLabel}` : null,
@@ -240,11 +252,17 @@ export function BespokeForm() {
   }
 
   const submitting = status === "submitting"
+  const formTitle = fromPdpNonstandard
+    ? bespokeRequestCopy.pdpNonstandardFormTitle
+    : bespokeRequestCopy.formTitle
+  const formCaption = fromPdpNonstandard
+    ? bespokeRequestCopy.pdpNonstandardFormCaption
+    : bespokeRequestCopy.formCaption
 
   return (
     <>
-      <h2 className="bespoke-request-card-title">{bespokeRequestCopy.formTitle}</h2>
-      <CopyLines className="page-caption bespoke-request-card-caption" lines={bespokeRequestCopy.formCaption} />
+      <h2 className="bespoke-request-card-title">{formTitle}</h2>
+      <CopyLines className="page-caption bespoke-request-card-caption" lines={formCaption} />
 
       <form onSubmit={handleSubmit} data-state={status} className="form-stack bespoke-form">
         <div className="form-field">
