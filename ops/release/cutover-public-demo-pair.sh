@@ -399,12 +399,14 @@ run_backup_gate() {
 pair_rollback() {
   # Peer SF digest must be the pre-mutation OLD_SF_DIGEST (wired by execute path).
   export WOODRIGHT_ROLLBACK_EXPECT_SF_DIGEST="${WOODRIGHT_ROLLBACK_EXPECT_SF_DIGEST:-${OLD_SF_DIGEST:-}}"
+  ROLLBACK_RC=12
   wr_cutover_pair_rollback \
     "$EVIDENCE_DIR" \
     "${BE_KEEP:-}" \
     "${SF_KEEP:-}" \
     "$HERE/rollback-staging-backend-from-keeper.sh" \
-    "$HERE/rollback-staging-storefront-from-keeper.sh"
+    "$HERE/rollback-staging-storefront-from-keeper.sh" \
+    || true
   return "$ROLLBACK_RC"
 }
 
@@ -742,6 +744,7 @@ EOF
       UPDATE_PINS=1 \
       UPDATE_ACTIVE_PUBLIC=1 \
       UPDATE_ACTIVE_RELEASE=0 \
+      UPDATE_SCOPED_OWNERSHIP=1 \
       bash "$PIN_RECONCILE_SCRIPT" \
         --environment public_demo \
         --component pair; then
