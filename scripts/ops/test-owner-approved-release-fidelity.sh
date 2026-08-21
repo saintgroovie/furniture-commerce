@@ -291,6 +291,39 @@ else
   fail "confirm/owner gate relationship unclear"
 fi
 
+PP="$ROOT/ops/release/cutover-public-production-pair.sh"
+grep -q 'wr_require_owner_approved_release' "$PP" || fail "public_production pair missing Gate A"
+grep -q 'wr_require_owner_approved_release_under_lock' "$PP" || fail "public_production pair missing Gate B"
+grep -q 'wr_require_owner_approved_matches_live' "$PP" || fail "public_production pair missing Gate C"
+grep -q 'WOODRIGHT_OWNER_APPROVAL_STRICT_ENVIRONMENT=1' "$PP" || fail "public_production pair missing strict environment"
+pass "public_production pair has Gate A/B/C + strict environment"
+
+WRITE="$ROOT/ops/release/reconcile-owner-approved-release.sh"
+if bash "$WRITE" --environment production --application-sha "$APPROVED_SHA" \
+  --backend-digest "$APPROVED_BE" --storefront-digest "$APPROVED_SF" \
+  --owner-authorization-id OWNER-PASS-test-owner-auth \
+  --evidence-reference "$TMP" --evidence-dir "$TMP/ev-prod-alias" >/dev/null 2>&1; then
+  fail "approval writer accepted --environment production alias"
+else
+  pass "approval writer refuses production alias"
+fi
+
+export WOODRIGHT_OWNER_APPROVAL_STRICT_ENVIRONMENT=1
+write_approval "$WOODRIGHT_META_ROOT/public_production/OWNER_APPROVED_RELEASE.json" public_production
+if wr_require_owner_approved_release public_production "$APPROVED_SHA" "$APPROVED_BE" "$APPROVED_SF" "$TMP/ev" gate_a; then
+  pass "strict public_production approval ALLOW"
+else
+  fail "strict public_production denied result=$WR_OWNER_APPROVAL_RESULT"
+fi
+write_approval "$WOODRIGHT_META_ROOT/public_production/OWNER_APPROVED_RELEASE.json" production
+if wr_require_owner_approved_release public_production "$APPROVED_SHA" "$APPROVED_BE" "$APPROVED_SF" "$TMP/ev" gate_a; then
+  fail "strict mode accepted production-aliased manifest"
+else
+  pass "strict mode rejects production-aliased manifest result=$WR_OWNER_APPROVAL_RESULT"
+fi
+unset WOODRIGHT_OWNER_APPROVAL_STRICT_ENVIRONMENT
+write_approval "$APPROVAL"
+
 if [[ "$FAILED" -eq 0 ]]; then
   echo "ALL OWNER-APPROVED RELEASE FIDELITY TESTS PASSED"
   exit 0

@@ -29,6 +29,21 @@
 
 wr_owner_approved_default_path() {
   local environment="${1:-}"
+  # Strict mode: no aliasing. production must not share the public_production path.
+  if [[ "${WOODRIGHT_OWNER_APPROVAL_STRICT_ENVIRONMENT:-0}" == "1" ]]; then
+    case "$environment" in
+      public_demo)
+        printf '%s\n' "${WOODRIGHT_META_ROOT:-/srv/woodright/meta}/public_demo/OWNER_APPROVED_RELEASE.json"
+        ;;
+      public_production)
+        printf '%s\n' "${WOODRIGHT_META_ROOT:-/srv/woodright/meta}/public_production/OWNER_APPROVED_RELEASE.json"
+        ;;
+      *)
+        printf '%s\n' ""
+        ;;
+    esac
+    return 0
+  fi
   case "$environment" in
     public_demo|staging)
       printf '%s\n' "${WOODRIGHT_META_ROOT:-/srv/woodright/meta}/public_demo/OWNER_APPROVED_RELEASE.json"
@@ -144,7 +159,7 @@ wr_owner_approved_load() {
   local out rc
   set +e
   out="$(python3 - "$path" "$environment" <<'PY'
-import hashlib, json, sys
+import hashlib, json, os, sys
 path, environment = sys.argv[1], sys.argv[2]
 raw = open(path, "rb").read()
 checksum = hashlib.sha256(raw).hexdigest()
@@ -181,8 +196,13 @@ def norm(e):
         return "public_production"
     return e
 
-env_norm = norm(environment)
-file_norm = norm(env_f)
+strict = os.environ.get("WOODRIGHT_OWNER_APPROVAL_STRICT_ENVIRONMENT", "0") == "1"
+if strict:
+    env_norm = environment
+    file_norm = env_f
+else:
+    env_norm = norm(environment)
+    file_norm = norm(env_f)
 if str(schema) != "1":
     print("MALFORMED"); sys.exit(2)
 if decision != "approved":
