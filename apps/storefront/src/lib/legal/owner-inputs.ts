@@ -1,9 +1,15 @@
 /**
  * Owner-supplied legal / commercial fields for Woodright buyer legal pages.
  *
- * Do NOT invent values. Leave unset until the owner provides them.
- * Launch readiness fails closed while required fields are missing.
+ * Confirmed OD-01 identity is baked from `@/lib/legal/woodright-seller`.
+ * Confirmed commercial models (OD-02/03/04/05/10 + 2026-08-20 closures)
+ * fill the remaining required fields. Env WOODRIGHT_LEGAL_* may override.
+ *
+ * Do not invent privacy email, bank details, tariffs, or a claims SLA.
  */
+
+import { showroomContacts } from "@/lib/showroom-contacts"
+import { woodrightSeller } from "@/lib/legal/woodright-seller"
 
 export type LegalOwnerFieldKey =
   | "legal_entity_name"
@@ -30,13 +36,13 @@ export type LegalOwnerFieldMeta = {
   requiredForPublicLaunch: boolean
 }
 
-/** Schema only - values come from env / future sealed owner file (never invent). */
+/** Schema. Values: confirmed SoT defaults, then optional env override. */
 export const LEGAL_OWNER_FIELD_META: LegalOwnerFieldMeta[] = [
   {
     key: "legal_entity_name",
     labelRu: "Юридическое наименование",
     whyRequired: "Оферта и политика ПДн требуют идентификации продавца",
-    whereDisplayed: "/offer, /privacy, footer legal block",
+    whereDisplayed: "/offer, /privacy, /requisites",
     exampleFormat: "ООО «…» или ИП Фамилия И.О.",
     requiredForPublicLaunch: true,
   },
@@ -44,7 +50,7 @@ export const LEGAL_OWNER_FIELD_META: LegalOwnerFieldMeta[] = [
     key: "inn",
     labelRu: "ИНН",
     whyRequired: "Идентификация продавца в оферте и реквизитах",
-    whereDisplayed: "/offer, /privacy",
+    whereDisplayed: "/offer, /privacy, /requisites",
     exampleFormat: "10 или 12 цифр",
     requiredForPublicLaunch: true,
   },
@@ -52,7 +58,7 @@ export const LEGAL_OWNER_FIELD_META: LegalOwnerFieldMeta[] = [
     key: "ogrn_or_ogrnip",
     labelRu: "ОГРН / ОГРНИП",
     whyRequired: "Государственная регистрация продавца",
-    whereDisplayed: "/offer",
+    whereDisplayed: "/offer, /requisites",
     exampleFormat: "ОГРН 13 цифр или ОГРНИП 15 цифр",
     requiredForPublicLaunch: true,
   },
@@ -60,25 +66,25 @@ export const LEGAL_OWNER_FIELD_META: LegalOwnerFieldMeta[] = [
     key: "legal_address",
     labelRu: "Юридический адрес",
     whyRequired: "Реквизиты продавца в оферте",
-    whereDisplayed: "/offer, /privacy",
+    whereDisplayed: "/offer, /privacy, /requisites",
     exampleFormat: "индекс, город, улица, дом",
     requiredForPublicLaunch: true,
   },
   {
     key: "privacy_email",
     labelRu: "Email для запросов по ПДн",
-    whyRequired: "Канал обращений субъекта персональных данных",
-    whereDisplayed: "/privacy, /contacts cross-link",
+    whyRequired: "Optional written channel; not unique 152-FZ requirement if postal + phone published",
+    whereDisplayed: "/privacy",
     exampleFormat: "privacy@woodright.ru",
-    requiredForPublicLaunch: true,
+    requiredForPublicLaunch: false,
   },
   {
     key: "privacy_phone",
     labelRu: "Телефон для запросов по ПДн",
-    whyRequired: "Альтернативный канал обращений по ПДн",
+    whyRequired: "Канал обращений субъекта персональных данных",
     whereDisplayed: "/privacy",
     exampleFormat: "+7 …",
-    requiredForPublicLaunch: false,
+    requiredForPublicLaunch: true,
   },
   {
     key: "personal_data_operator_name",
@@ -90,18 +96,18 @@ export const LEGAL_OWNER_FIELD_META: LegalOwnerFieldMeta[] = [
   },
   {
     key: "personal_data_processing_rules",
-    labelRu: "Правила обработки ПДн (утверждённый текст)",
+    labelRu: "Правила обработки ПДн",
     whyRequired: "Политика не может быть пустой при сборе контактов в checkout",
     whereDisplayed: "/privacy",
-    exampleFormat: "утверждённый owner markdown/text",
+    exampleFormat: "утверждённый текст",
     requiredForPublicLaunch: true,
   },
   {
     key: "delivery_regions_and_terms",
-    labelRu: "Регионы и условия доставки",
+    labelRu: "Условия доставки",
     whyRequired: "Buyer page /delivery и оферта",
     whereDisplayed: "/delivery, /offer",
-    exampleFormat: "регионы, сроки-ориентиры, самовывоз шоурум",
+    exampleFormat: "quote-only; no invented geography",
     requiredForPublicLaunch: true,
   },
   {
@@ -109,7 +115,7 @@ export const LEGAL_OWNER_FIELD_META: LegalOwnerFieldMeta[] = [
     labelRu: "Способы и условия оплаты",
     whyRequired: "Страница /payment и честный checkout copy",
     whereDisplayed: "/payment, checkout",
-    exampleFormat: "PaymentLink менеджера / без онлайн-PSP на старте",
+    exampleFormat: "PaymentLink / invoice after manager",
     requiredForPublicLaunch: true,
   },
   {
@@ -117,7 +123,7 @@ export const LEGAL_OWNER_FIELD_META: LegalOwnerFieldMeta[] = [
     labelRu: "Условия возврата",
     whyRequired: "Страница /returns",
     whereDisplayed: "/returns, /offer",
-    exampleFormat: "сроки и порядок, утверждённые владельцем",
+    exampleFormat: "manager-assisted + statutory baseline",
     requiredForPublicLaunch: true,
   },
   {
@@ -125,15 +131,15 @@ export const LEGAL_OWNER_FIELD_META: LegalOwnerFieldMeta[] = [
     labelRu: "Условия гарантии",
     whyRequired: "Страница /warranty",
     whereDisplayed: "/warranty",
-    exampleFormat: "срок и объём, утверждённые владельцем",
+    exampleFormat: "12 месяцев, owner-set",
     requiredForPublicLaunch: true,
   },
   {
     key: "offer_acceptance_moment",
-    labelRu: "Момент акцепта оферты",
-    whyRequired: "Публичная оферта должна фиксировать акцепт",
+    labelRu: "Статус отправки заказа",
+    whyRequired: "Страница условий продажи не должна называть submit акцептом",
     whereDisplayed: "/offer, checkout",
-    exampleFormat: "например: оформление заказа / оплата по ссылке",
+    exampleFormat: "submit = request; exact acceptance = LEGAL REVIEW",
     requiredForPublicLaunch: true,
   },
   {
@@ -141,17 +147,43 @@ export const LEGAL_OWNER_FIELD_META: LegalOwnerFieldMeta[] = [
     labelRu: "Порядок претензий и связи",
     whyRequired: "Оферта / privacy / returns",
     whereDisplayed: "/offer, /returns, /privacy",
-    exampleFormat: "канал + срок ответа",
+    exampleFormat: "канал без выдуманного SLA",
     requiredForPublicLaunch: true,
   },
 ]
 
 export type LegalOwnerValues = Partial<Record<LegalOwnerFieldKey, string>>
 
+const SHOWROOM_PHONES = `${showroomContacts.freeCall.display}, ${showroomContacts.writeOrCall.display}`
+
 /**
- * Load owner values from env prefix WOODRIGHT_LEGAL_* (optional).
- * Never invent defaults for required legal identity fields.
+ * Confirmed launch defaults. Not env invention: OD-01…05/10 + 2026-08-20 closures.
+ * privacy_email intentionally omitted.
+ * offer_acceptance_moment intentionally omitted: submit≠acceptance is published
+ * in page copy, but the exact civil-law moment stays LEGAL REVIEW and must not
+ * make isLegalLaunchComplete() true.
  */
+export const CONFIRMED_LEGAL_DEFAULTS: LegalOwnerValues = {
+  legal_entity_name: woodrightSeller.shortName,
+  inn: woodrightSeller.inn,
+  ogrn_or_ogrnip: woodrightSeller.ogrn,
+  legal_address: woodrightSeller.legalAddress,
+  privacy_phone: SHOWROOM_PHONES,
+  personal_data_operator_name: woodrightSeller.fullName,
+  personal_data_processing_rules:
+    "Оператор обрабатывает имя, телефон, email и комментарий из заявок и заказов, а также cookie cart_id, чтобы связаться с вами и подтвердить заказ. Полный текст: страница /privacy",
+  delivery_regions_and_terms:
+    "Стоимость и условия доставки зависят от адреса и состава заказа. После оформления менеджер проверит детали и согласует условия до оплаты. Публичного тарифа нет",
+  payment_methods_terms:
+    "Оплачивать заказ сразу на сайте не нужно. После оформления менеджер проверит детали и отправит ссылку на оплату или счёт",
+  return_terms:
+    "Если вы хотите отказаться от заказа, вернуть товар или сообщить о проблеме, свяжитесь с Woodright. Менеджер уточнит номер заказа и обстоятельства. Условия зависят от ситуации и применимого закона. Отдельного коммерческого SLA нет",
+  warranty_terms:
+    "Гарантия Woodright - 12 месяцев. Законные права потребителя сохраняются",
+  dispute_contact_process:
+    `Обращение: ${SHOWROOM_PHONES} или мессенджеры на странице /contacts. Рассмотрим обращение в сроки, предусмотренные законом. Отдельного сервисного SLA Woodright не публикует`,
+}
+
 export function loadLegalOwnerValuesFromEnv(
   env: NodeJS.ProcessEnv = process.env
 ): LegalOwnerValues {
@@ -171,12 +203,21 @@ export function loadLegalOwnerValuesFromEnv(
     offer_acceptance_moment: env.WOODRIGHT_LEGAL_OFFER_ACCEPTANCE,
     dispute_contact_process: env.WOODRIGHT_LEGAL_DISPUTE_PROCESS,
   }
-  const out: LegalOwnerValues = {}
+  const out: LegalOwnerValues = { ...CONFIRMED_LEGAL_DEFAULTS }
   for (const [k, v] of Object.entries(map) as [LegalOwnerFieldKey, string | undefined][]) {
     const t = String(v ?? "").trim()
-    if (t) out[k] = t
+    if (t && fieldIsProvided(k, t)) out[k] = t
   }
   return out
+}
+
+const UNUSABLE_LEGAL_FIELD = /LEGAL REVIEW|правовая оценка|TBD|\bTODO\b|PLACEHOLDER/i
+
+function fieldIsProvided(key: LegalOwnerFieldKey, value: string | undefined): boolean {
+  const t = String(value ?? "").trim()
+  if (!t) return false
+  if (key === "offer_acceptance_moment" && UNUSABLE_LEGAL_FIELD.test(t)) return false
+  return true
 }
 
 export function missingRequiredLegalFields(
@@ -184,13 +225,19 @@ export function missingRequiredLegalFields(
 ): LegalOwnerFieldKey[] {
   return LEGAL_OWNER_FIELD_META.filter((f) => f.requiredForPublicLaunch)
     .map((f) => f.key)
-    .filter((k) => !String(values[k] ?? "").trim())
+    .filter((k) => !fieldIsProvided(k, values[k]))
 }
 
+/**
+ * Fail-closed. Filled commercial copy is not owner legal-pack approval.
+ * Token must be the explicit owner string; this module never sets it.
+ */
 export function isLegalLaunchComplete(
-  values: LegalOwnerValues = loadLegalOwnerValuesFromEnv()
+  values: LegalOwnerValues = loadLegalOwnerValuesFromEnv(),
+  env: NodeJS.ProcessEnv = process.env
 ): boolean {
-  return missingRequiredLegalFields(values).length === 0
+  if (missingRequiredLegalFields(values).length > 0) return false
+  return String(env.WOODRIGHT_LEGAL_PACK_TOKEN ?? "").trim() === "OWNER_LEGAL_CONTENT_APPROVED"
 }
 
 export function legalOwnerInputPacket(
@@ -198,7 +245,7 @@ export function legalOwnerInputPacket(
 ): Array<LegalOwnerFieldMeta & { ownerProvided: boolean; blocking: boolean }> {
   return LEGAL_OWNER_FIELD_META.map((f) => ({
     ...f,
-    ownerProvided: Boolean(String(values[f.key] ?? "").trim()),
-    blocking: f.requiredForPublicLaunch && !String(values[f.key] ?? "").trim(),
+    ownerProvided: fieldIsProvided(f.key, values[f.key]),
+    blocking: f.requiredForPublicLaunch && !fieldIsProvided(f.key, values[f.key]),
   }))
 }

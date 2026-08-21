@@ -2723,6 +2723,25 @@ select:focus-visible {
   text-align: left;
 }
 
+.checkout-legal-note {
+  margin: 0 0 var(--space-sm);
+  color: var(--color-fg-secondary);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.checkout-legal-links {
+  margin: 0 0 var(--space-md);
+  font-size: 0.875rem;
+}
+
+.contacts-page-visit-hint {
+  margin: var(--space-sm) 0 var(--space-lg);
+  color: var(--color-fg-secondary);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
 /* ---- Site Footer ----
    Brand column on the left Шоурум/Каталог power line | four nav columns on
    a 1.2 : 1 : 1 : 1 gap rhythm | last column on the right power line
@@ -7364,6 +7383,18 @@ a.pdp-size-chip:hover {
   margin-bottom: var(--space-sm);
 }
 
+.legal-page-related {
+  margin-top: var(--space-xl);
+}
+
+.legal-page-related ul {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-lg);
+  padding: 0;
+}
+
 /* ---- Kids Section ---- */
 
 .kids-theme {
@@ -8373,6 +8404,11 @@ a.pdp-size-chip:hover {
   color: var(--color-fg-muted);
   line-height: 1.5;
   margin-top: 0;
+}
+
+.form-consent-links {
+  margin: 0;
+  font-size: 0.75rem;
 }
 
 .form-alert-error {

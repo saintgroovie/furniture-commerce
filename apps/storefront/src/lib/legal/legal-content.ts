@@ -1,11 +1,15 @@
 /**
- * Buyer-facing legal page content.
- * Confirmed showroom/contact facts come from showroom-contacts.
- * Owner legal identity fields are never invented.
+ * Buyer-facing legal / information page content.
+ *
+ * Identity: `@/lib/legal/woodright-seller` (OD-01).
+ * Contacts: `@/lib/showroom-contacts`.
+ * Commercial models: OD-02/03/04/05/10 + 2026-08-20 closures.
+ * Bank details are never interpolated here (OD-10 = B).
  */
 
 import { showroomContacts } from "@/lib/showroom-contacts"
 import { checkoutCopy } from "@/lib/woodright-copy"
+import { woodrightSeller } from "@/lib/legal/woodright-seller"
 import {
   isLegalLaunchComplete,
   loadLegalOwnerValuesFromEnv,
@@ -15,12 +19,15 @@ import {
 
 export type LegalPageId =
   | "privacy"
+  | "personal-data"
+  | "cookies"
   | "terms"
   | "offer"
   | "delivery"
   | "payment"
   | "returns"
   | "warranty"
+  | "requisites"
 
 export type LegalPageSection = {
   heading: string
@@ -33,7 +40,7 @@ export type LegalPageModel = {
   path: string
   lead: string[]
   sections: LegalPageSection[]
-  /** True when required owner fields for public launch are still missing. */
+  related?: { label: string; href: string }[]
   incompleteForPublicLaunch: boolean
   missingFieldKeys: string[]
 }
@@ -47,23 +54,71 @@ function confirmedShowroomLines(): string[] {
   ]
 }
 
-function ownerBlock(
-  values: LegalOwnerValues,
-  keys: Array<keyof LegalOwnerValues>,
-  labels: Record<string, string>
-): string[] {
-  const lines: string[] = []
-  for (const k of keys) {
-    const v = String(values[k] ?? "").trim()
-    if (v) lines.push(`${labels[k as string] ?? k}: ${v}`)
-  }
-  return lines
+function sellerIdentityLines(): string[] {
+  return [
+    `Продавец: ${woodrightSeller.fullName}`,
+    `Краткое наименование: ${woodrightSeller.shortName}`,
+    `ОГРН: ${woodrightSeller.ogrn}`,
+    `ИНН: ${woodrightSeller.inn}`,
+    `КПП: ${woodrightSeller.kpp}`,
+    `Юридический адрес: ${woodrightSeller.legalAddress}`,
+  ]
 }
 
-/**
- * Build page model. In incomplete mode we still serve the route with confirmed
- * operational facts only - never TODO/PLACEHOLDER strings for buyers.
- */
+const RELATED: Record<LegalPageId, { label: string; href: string }[]> = {
+  privacy: [
+    { label: "Персональные данные", href: "/personal-data" },
+    { label: "Cookie", href: "/cookies" },
+    { label: "Реквизиты", href: "/requisites" },
+  ],
+  "personal-data": [
+    { label: "Политика конфиденциальности", href: "/privacy" },
+    { label: "Cookie", href: "/cookies" },
+  ],
+  cookies: [
+    { label: "Политика конфиденциальности", href: "/privacy" },
+  ],
+  terms: [
+    { label: "Условия продажи", href: "/offer" },
+    { label: "Оплата", href: "/payment" },
+    { label: "Доставка", href: "/delivery" },
+    { label: "Возврат", href: "/returns" },
+    { label: "Гарантия", href: "/warranty" },
+    { label: "Реквизиты", href: "/requisites" },
+  ],
+  offer: [
+    { label: "Оплата", href: "/payment" },
+    { label: "Доставка", href: "/delivery" },
+    { label: "Возврат", href: "/returns" },
+    { label: "Гарантия", href: "/warranty" },
+    { label: "Реквизиты", href: "/requisites" },
+    { label: "Контакты", href: "/contacts" },
+  ],
+  delivery: [
+    { label: "Оплата", href: "/payment" },
+    { label: "Контакты", href: "/contacts" },
+  ],
+  payment: [
+    { label: "Реквизиты", href: "/requisites" },
+    { label: "Доставка", href: "/delivery" },
+    { label: "Условия продажи", href: "/offer" },
+  ],
+  returns: [
+    { label: "Гарантия", href: "/warranty" },
+    { label: "Контакты", href: "/contacts" },
+    { label: "Условия продажи", href: "/offer" },
+  ],
+  warranty: [
+    { label: "Возврат", href: "/returns" },
+    { label: "Контакты", href: "/contacts" },
+  ],
+  requisites: [
+    { label: "Условия продажи", href: "/offer" },
+    { label: "Оплата", href: "/payment" },
+    { label: "Контакты", href: "/contacts" },
+  ],
+}
+
 export function buildLegalPage(
   id: LegalPageId,
   values: LegalOwnerValues = loadLegalOwnerValuesFromEnv()
@@ -71,28 +126,13 @@ export function buildLegalPage(
   const incomplete = !isLegalLaunchComplete(values)
   const missing = missingRequiredLegalFields(values)
   const showroom = confirmedShowroomLines()
-
-  const identityLines = ownerBlock(
-    values,
-    [
-      "legal_entity_name",
-      "inn",
-      "ogrn_or_ogrnip",
-      "legal_address",
-      "personal_data_operator_name",
-    ],
-    {
-      legal_entity_name: "Продавец",
-      inn: "ИНН",
-      ogrn_or_ogrnip: "ОГРН / ОГРНИП",
-      legal_address: "Юридический адрес",
-      personal_data_operator_name: "Оператор персональных данных",
-    }
-  )
+  const seller = sellerIdentityLines()
+  const privacyEmail = String(values.privacy_email ?? "").trim()
 
   const base = {
     incompleteForPublicLaunch: incomplete,
     missingFieldKeys: missing,
+    related: RELATED[id],
   }
 
   switch (id) {
@@ -100,88 +140,186 @@ export function buildLegalPage(
       return {
         ...base,
         id,
-        title: incomplete
-          ? "Конфиденциальность - подготовка"
-          : "Политика конфиденциальности",
+        title: "Политика конфиденциальности",
         path: "/privacy",
         lead: [
-          incomplete
-            ? "Как связаться с нами по вопросам данных - полный текст политики появится после утверждения владельцем"
-            : "Как Woodright обрабатывает персональные данные при заявках и заказах",
+          "Как Woodright обрабатывает персональные данные при заявках и заказах",
         ],
         sections: [
           {
-            heading: "Контакты для обращений",
+            heading: "Оператор",
             paragraphs: [
-              ...showroom,
-              ...(values.privacy_email
-                ? [`Email: ${values.privacy_email}`]
-                : []),
-              ...(values.privacy_phone
-                ? [`Телефон: ${values.privacy_phone}`]
-                : []),
+              ...seller,
+              "Оператор персональных данных совпадает с продавцом",
             ],
           },
           {
-            heading: "Оператор",
-            paragraphs:
-              identityLines.length > 0
-                ? identityLines
-                : [
-                    "Контакты шоурума для обращений указаны выше",
-                    "Юридические реквизиты оператора появятся на этой странице после утверждения владельцем - до этого момента страница не является полной политикой ПДн",
-                  ],
+            heading: "Как обратиться",
+            paragraphs: [
+              ...showroom,
+              ...(privacyEmail ? [`Email: ${privacyEmail}`] : []),
+              "Письменное обращение можно направить на юридический адрес оператора",
+              "Отдельный email для запросов по персональным данным на сайте не публикуется",
+            ],
           },
           {
-            heading: "Какие данные мы получаем",
+            heading: "Какие данные получаем",
             paragraphs: [
-              "Имя, телефон и комментарий, которые вы оставляете в заявке или при оформлении заказа",
+              "Имя, телефон, email и комментарий, которые вы оставляете в заявке или при оформлении заказа",
+              "Адрес доставки, если вы его указываете",
               "Технические сведения, нужные для работы сайта и защиты от злоупотреблений",
+              "Идентификатор корзины в cookie cart_id",
             ],
           },
           {
             heading: "Зачем обрабатываем",
             paragraphs: [
               "Чтобы связаться с вами по заказу или заявке",
-              "Чтобы подготовить расчёт, доставку и оплату по согласованному сценарию",
+              "Чтобы подтвердить состав, доставку и оплату после согласования с менеджером",
               "Чтобы исполнять договорённости и отвечать на обращения",
             ],
           },
-          ...(values.personal_data_processing_rules
-            ? [
-                {
-                  heading: "Правила обработки",
-                  paragraphs: [values.personal_data_processing_rules],
-                },
-              ]
-            : []),
+          {
+            heading: "Cookie",
+            paragraphs: [
+              "Сайт использует cookie cart_id, чтобы сохранить корзину между посещениями",
+              "Сторонней аналитики и рекламных cookie в витрине нет",
+              "Подробнее: страница /cookies",
+            ],
+          },
+          {
+            heading: "Передача",
+            paragraphs: [
+              "Данные могут получить сотрудники Woodright, которые ведут заказ",
+              "Если для доставки или оплаты нужен подрядчик, передаём только то, что нужно для этой задачи",
+              "Не передаём данные для рекламных рассылок третьим лицам",
+            ],
+          },
+          {
+            heading: "Срок и права",
+            paragraphs: [
+              "Храним данные, пока это нужно для заказа, обращения и требований закона",
+              "Вы можете запросить сведения, уточнение, ограничение обработки или удаление там, где это допускает закон",
+              "Для этого используйте телефоны, мессенджеры или юридический адрес",
+            ],
+          },
+          {
+            heading: "Согласие и документы",
+            paragraphs: [
+              "Отправляя заявку или заказ, вы передаёте контакты, чтобы мы могли связаться с вами",
+              "Краткая страница о персональных данных: /personal-data",
+              "Условия покупки: /terms",
+            ],
+          },
+        ],
+      }
+    case "personal-data":
+      return {
+        ...base,
+        id,
+        title: "Персональные данные",
+        path: "/personal-data",
+        lead: [
+          "Какие данные нужны для заявки и заказа, и как с этим обратиться",
+        ],
+        sections: [
+          {
+            heading: "Оператор",
+            paragraphs: seller,
+          },
+          {
+            heading: "Что вы оставляете",
+            paragraphs: [
+              "В заявке и на оформлении заказа: имя, телефон, при желании email и комментарий",
+              "Адрес нужен, чтобы согласовать доставку",
+              "Cookie cart_id хранит корзину на вашем устройстве",
+            ],
+          },
+          {
+            heading: "Ваши права",
+            paragraphs: [
+              "Можно запросить сведения об обработке, уточнение или удаление данных там, где это допускает закон",
+              "Пишите или звоните по контактам шоурума, либо направьте письмо на юридический адрес",
+            ],
+          },
+          {
+            heading: "Полный текст",
+            paragraphs: [
+              "Политика конфиденциальности: /privacy",
+              "Cookie: /cookies",
+            ],
+          },
+        ],
+      }
+    case "cookies":
+      return {
+        ...base,
+        id,
+        title: "Cookie",
+        path: "/cookies",
+        lead: [
+          "Какие cookie использует витрина Woodright",
+        ],
+        sections: [
+          {
+            heading: "cart_id",
+            paragraphs: [
+              "Это cookie первого лица",
+              "Нужна, чтобы сохранить корзину между страницами и визитами",
+              "Срок: около 30 дней",
+              "SameSite=Lax; на HTTPS ставится флаг Secure",
+            ],
+          },
+          {
+            heading: "Чего нет",
+            paragraphs: [
+              "Google Analytics на витрине нет",
+              "Яндекс Метрики нет",
+              "Meta Pixel и рекламных cookie нет",
+            ],
+          },
+          {
+            heading: "Как отключить",
+            paragraphs: [
+              "Cookie можно удалить в настройках браузера",
+              "Без cart_id корзина на этом устройстве не сохранится",
+            ],
+          },
         ],
       }
     case "terms":
       return {
         ...base,
         id,
-        title: incomplete ? "Условия покупки - подготовка" : "Условия покупки",
+        title: "Условия покупки",
         path: "/terms",
         lead: [
-          incomplete
-            ? "Как проходит оформление - полный текст условий появится после утверждения владельцем"
-            : "Как оформляется заказ на мебель Woodright",
+          "Как оформляется заказ на мебель Woodright",
         ],
         sections: [
           {
-            // Provenance: checkoutCopy.paymentClarity (@/lib/woodright-copy).
             heading: "Как проходит оформление",
             paragraphs: [...checkoutCopy.paymentClarity],
           },
           {
-            heading: "Полные условия",
-            paragraphs:
-              identityLines.length > 0
-                ? identityLines
-                : [
-                    "Полный текст условий покупки появится на этой странице после утверждения владельцем",
-                  ],
+            heading: "Что это значит",
+            paragraphs: [
+              "Отправка заказа на сайте - заявка на подтверждение",
+              "Это не оплата и не акцепт оферты",
+              "Менеджер проверяет состав и согласовывает условия",
+              "Затем отправляет ссылку на оплату или счёт",
+            ],
+          },
+          {
+            heading: "Документы",
+            paragraphs: [
+              "Условия продажи: страница /offer",
+              "Оплата: /payment",
+              "Доставка: /delivery",
+              "Возврат: /returns",
+              "Гарантия: /warranty",
+              "Продавец: /requisites",
+            ],
           },
           {
             heading: "Связь",
@@ -193,41 +331,77 @@ export function buildLegalPage(
       return {
         ...base,
         id,
-        title: incomplete ? "Оферта - черновик для подготовки" : "Публичная оферта",
+        title: "Условия продажи",
         path: "/offer",
-        lead: incomplete
-          ? ["Подготовка условий продажи - полный текст оферты появится после утверждения владельцем"]
-          : ["Условия продажи мебели Woodright"],
+        lead: [
+          "Условия продажи мебели Woodright",
+        ],
         sections: [
           {
             heading: "Продавец",
-            paragraphs:
-              identityLines.length > 0
-                ? identityLines
-                : ["Связь по заказам - через шоурум Woodright (контакты ниже)"],
+            paragraphs: seller,
           },
           {
             heading: "Предмет",
             paragraphs: [
-              "Готовая и заказная мебель из массива, комнатные решения и сопутствующие услуги по согласованию",
+              "Готовая мебель из каталога и модели с предусмотренными вариантами исполнения",
+              "Если каталог и штатные варианты не решают задачу, обсуждаем решение в рамках Woodright Bespoke",
+              "Bespoke - направление той же компании, не отдельный продавец",
             ],
           },
-          ...(values.offer_acceptance_moment
-            ? [
-                {
-                  heading: "Акцепт",
-                  paragraphs: [values.offer_acceptance_moment],
-                },
-              ]
-            : []),
+          {
+            heading: "Заявка на сайте",
+            paragraphs: [
+              "Отправка заказа на сайте - заявка на подтверждение",
+              "Это не оплата и не акцепт оферты",
+              "Менеджер проверяет состав заказа и согласовывает условия",
+              "Оплата проходит по ссылке или счёту, которые менеджер отправляет отдельно",
+            ],
+          },
+          {
+            heading: "Оплата",
+            paragraphs: [
+              "Оплачивать заказ сразу на сайте не нужно",
+              "После согласования менеджер отправляет PaymentLink или счёт",
+              "Банковские реквизиты на сайте не публикуются",
+              "Подробнее: /payment",
+            ],
+          },
+          {
+            heading: "Доставка",
+            paragraphs: [
+              "Стоимость и условия доставки зависят от адреса и состава заказа",
+              "Публичного тарифа нет",
+              "Условия согласовываются менеджером до оплаты",
+              "Подробнее: /delivery",
+            ],
+          },
+          {
+            heading: "Возврат",
+            paragraphs: [
+              "Обязательные права потребителя сохраняются",
+              "Ярлык Bespoke или «с выбором исполнения» сам по себе не отменяет возврат",
+              "Порядок: свяжитесь с Woodright, менеджер уточнит заказ и обстоятельства",
+              "Подробнее: /returns",
+            ],
+          },
+          {
+            heading: "Гарантия",
+            paragraphs: [
+              "Гарантия Woodright - 12 месяцев",
+              "Законные права при недостатках товара сохраняются",
+              "Подробнее: /warranty",
+            ],
+          },
+          {
+            heading: "Споры",
+            paragraphs: [
+              String(values.dispute_contact_process ?? "").trim(),
+            ].filter(Boolean),
+          },
           {
             heading: "Связь",
-            paragraphs: [
-              ...showroom,
-              ...(values.dispute_contact_process
-                ? [values.dispute_contact_process]
-                : []),
-            ],
+            paragraphs: showroom,
           },
         ],
       }
@@ -237,22 +411,47 @@ export function buildLegalPage(
         id,
         title: "Доставка",
         path: "/delivery",
-        lead: ["Как организуем доставку и самовывоз"],
+        lead: [
+          "Стоимость и условия доставки зависят от адреса и состава заказа",
+          "После оформления менеджер проверит детали и согласует условия до оплаты",
+        ],
         sections: [
           {
-            heading: "Шоурум",
+            heading: "Как это работает",
             paragraphs: [
-              ...showroom,
-              "Самовывоз и примерка - через шоурум по записи",
+              "Публичного фиксированного тарифа нет",
+              "Оформление заказа на сайте не назначает цену доставки",
+              "Ноль в техническом поле доставки на оформлении не означает бесплатную доставку",
+              "Менеджер согласует условия до оплаты",
             ],
           },
           {
-            heading: "Условия доставки",
-            paragraphs: values.delivery_regions_and_terms
-              ? [values.delivery_regions_and_terms]
-              : [
-                  "Регионы, сроки и стоимость доставки менеджер подтверждает после согласования состава заказа",
-                ],
+            heading: "Что влияет на расчёт",
+            paragraphs: [
+              "Адрес",
+              "Состав и габариты заказа",
+              "Другие условия, которые нужно уточнить по факту",
+            ],
+          },
+          {
+            heading: "Что уточнит менеджер",
+            paragraphs: [
+              "Адрес и возможность доставки",
+              "Состав и габариты заказа",
+              "Итоговые условия до оплаты",
+            ],
+          },
+          {
+            heading: "Оплата",
+            paragraphs: [
+              "Сначала согласовываем заказ и доставку",
+              "Затем менеджер отправляет ссылку на оплату или счёт",
+              "Подробнее: /payment",
+            ],
+          },
+          {
+            heading: "Связь",
+            paragraphs: showroom,
           },
         ],
       }
@@ -262,58 +461,153 @@ export function buildLegalPage(
         id,
         title: "Оплата",
         path: "/payment",
-        lead: ["Как проходит оплата заказа Woodright"],
+        lead: [
+          "Оплачивать заказ сразу на сайте не нужно",
+          "После оформления менеджер проверит детали и отправит ссылку на оплату или счёт",
+        ],
         sections: [
           {
-            heading: "Стартовый режим",
+            heading: "Как проходит оплата",
             paragraphs: [
-              "На запуске онлайн-эквайринг на сайте не активирован",
-              "После оформления заказа менеджер подтверждает состав и присылает ссылку на оплату (PaymentLink)",
-              "Статусы для покупателя: «Ожидает оплаты», «Оплата отмечена менеджером», «Оплата подтверждена»",
+              "Вы отправляете заказ",
+              "Менеджер проверяет состав и уточняет нужные детали",
+              "Подтверждаются итоговые условия, включая доставку",
+              "Вы получаете PaymentLink или счёт и оплачиваете вне оформления на сайте",
             ],
           },
-          ...(values.payment_methods_terms
-            ? [
-                {
-                  heading: "Утверждённые условия",
-                  paragraphs: [values.payment_methods_terms],
-                },
-              ]
-            : []),
+          {
+            heading: "Чего нет на сайте",
+            paragraphs: [
+              "Оплаты картой на странице оформления",
+              "QR и СБП как публичного способа",
+              "Рассрочки и оплаты частями",
+              "Публичных банковских реквизитов",
+            ],
+          },
+          {
+            heading: "Документы",
+            paragraphs: [
+              "Реквизиты продавца: /requisites",
+              "Банковские данные при необходимости приходят в счёте, не на витрине",
+            ],
+          },
+          {
+            heading: "Связь",
+            paragraphs: showroom,
+          },
         ],
       }
     case "returns":
       return {
         ...base,
         id,
-        title: incomplete ? "Возврат - подготовка" : "Возврат",
+        title: "Возврат",
         path: "/returns",
-        lead: ["Как обсудить возврат или обмен"],
+        lead: [
+          "Если хотите отказаться от заказа, вернуть товар или сообщить о проблеме, свяжитесь с Woodright",
+        ],
         sections: [
           {
-            heading: "Как связаться",
-            paragraphs: showroom,
+            heading: "Как обратиться",
+            paragraphs: [
+              ...showroom,
+              "Назовите номер заказа, если он уже есть",
+              "Менеджер уточнит обстоятельства и подскажет следующий шаг",
+            ],
           },
-          ...(values.return_terms
-            ? [{ heading: "Условия", paragraphs: [values.return_terms] }]
-            : []),
+          {
+            heading: "Разные ситуации",
+            paragraphs: [
+              "Отказ до передачи товара и возврат после получения рассматриваются отдельно",
+              "Недостаток, повреждение при доставке, неполный или неверный состав - это обращения о проблеме с заказом",
+            ],
+          },
+          {
+            heading: "Срок и закон",
+            paragraphs: [
+              "Срок зависит от ситуации и применимого закона",
+              "У Woodright нет своего отдельного окна возврата без причины",
+              "Для изделий по индивидуальным параметрам закон может ограничивать отказ от товара надлежащего качества",
+              "Это зависит от обстоятельств заказа, а не от ярлыка на сайте",
+            ],
+          },
+          {
+            heading: "Права по закону",
+            paragraphs: [
+              "Обязательные права потребителя сохраняются",
+              "Рассмотрим обращение в сроки, предусмотренные законом",
+            ],
+          },
         ],
       }
     case "warranty":
       return {
         ...base,
         id,
-        title: incomplete ? "Гарантия - подготовка" : "Гарантия",
+        title: "Гарантия",
         path: "/warranty",
-        lead: ["Гарантийные обязательства Woodright"],
+        lead: [
+          "Гарантия Woodright - 12 месяцев",
+        ],
         sections: [
           {
-            heading: "Как связаться",
-            paragraphs: showroom,
+            heading: "Срок",
+            paragraphs: [
+              "Базовый коммерческий срок гарантии Woodright - 12 месяцев",
+              "Ярлык товара не создаёт отдельный срок",
+            ],
           },
-          ...(values.warranty_terms
-            ? [{ heading: "Условия", paragraphs: [values.warranty_terms] }]
-            : []),
+          {
+            heading: "Как обратиться",
+            paragraphs: [
+              ...showroom,
+              "Менеджер поможет понять, это гарантийный случай, возврат или другой вопрос",
+            ],
+          },
+          {
+            heading: "Что сохраняется",
+            paragraphs: [
+              "Законные права при недостатках товара сохраняются",
+              "Коммерческая гарантия их не отменяет",
+            ],
+          },
+          {
+            heading: "Что ещё учесть",
+            paragraphs: [
+              "Здесь указан базовый срок гарантии Woodright",
+              "Отдельные сроки на фурнитуру, механизмы или панели не публикуются",
+            ],
+          },
+        ],
+      }
+    case "requisites":
+      return {
+        ...base,
+        id,
+        title: "Реквизиты",
+        path: "/requisites",
+        lead: [
+          "Кто продаёт мебель Woodright",
+        ],
+        sections: [
+          {
+            heading: "Продавец",
+            paragraphs: seller,
+          },
+          {
+            heading: "Банковские реквизиты",
+            paragraphs: [
+              "На сайте их нет",
+              "Если для оплаты по счёту они нужны, менеджер укажет их в счёте",
+            ],
+          },
+          {
+            heading: "Шоурум",
+            paragraphs: [
+              "Адрес шоурума в Химках - место встречи, не юридический адрес",
+              ...showroom,
+            ],
+          },
         ],
       }
   }
@@ -321,20 +615,26 @@ export function buildLegalPage(
 
 export const LEGAL_PAGE_IDS: LegalPageId[] = [
   "privacy",
+  "personal-data",
+  "cookies",
   "terms",
   "offer",
   "delivery",
   "payment",
   "returns",
   "warranty",
+  "requisites",
 ]
 
 export const LEGAL_PAGE_PATHS: Record<LegalPageId, string> = {
   privacy: "/privacy",
+  "personal-data": "/personal-data",
+  cookies: "/cookies",
   terms: "/terms",
   offer: "/offer",
   delivery: "/delivery",
   payment: "/payment",
   returns: "/returns",
   warranty: "/warranty",
+  requisites: "/requisites",
 }

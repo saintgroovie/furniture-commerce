@@ -322,6 +322,9 @@ export function BespokeForm() {
         </button>
 
         <CopyLines className="form-consent-note" lines={copy.consentNote} />
+        <p className="form-consent-links">
+          <Link href="/privacy">{copy.consentPrivacyLabel}</Link>
+        </p>
 
         {status === "error_server" && (
           <div className="form-alert-error" role="alert">{errorMessage}</div>

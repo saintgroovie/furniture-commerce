@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: { default: "По проекту", template: "%s | По проекту | Woodright" },
+  title: { default: "Woodright Bespoke", template: "%s | Woodright Bespoke" },
   description:
     "Мебель по проекту Woodright: подбор мебели, отделок и состава комнаты под интерьер или индивидуальную задачу.",
 }

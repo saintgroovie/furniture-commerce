@@ -713,11 +713,11 @@ export function CatalogFilterControls({
             )
           })}
         </nav>
-        {/* Отдельный сценарий (переход в раздел «По проекту»), поэтому вне
+        {/* Отдельный сценарий (переход в Bespoke), поэтому вне
             segmented control — тёмной pill-кнопкой рядом. */}
         {hasBespokeTab && (
           <Link href="/bespoke" className="catalog-bespoke-cta" scroll={false}>
-            По проекту
+            Bespoke
           </Link>
         )}
       </div>

@@ -318,6 +318,12 @@ export function CheckoutForm() {
           </div>
 
           <CopyLines className="checkout-payment-clarity" lines={copy.paymentClarity} />
+          <CopyLines className="checkout-legal-note" lines={copy.legalNote} />
+          <p className="checkout-legal-links">
+            <Link href="/privacy">{copy.legalPrivacyLabel}</Link>
+            <span aria-hidden="true"> · </span>
+            <Link href="/offer">{copy.legalOfferLabel}</Link>
+          </p>
 
           <button type="submit" className="btn btn-primary bespoke-submit-btn" disabled={submitting}>
             {submitting ? copy.submitting : copy.submit}
@@ -347,7 +353,7 @@ export function CheckoutForm() {
             <ul className="checkout-composition-list">
               {items.map((item) => (
                 <li key={String(item.id)} className="checkout-composition-item">
-                  <span>{(item.title as string) ?? "—"}</span>
+                  <span>{(item.title as string) ?? "Без названия"}</span>
                   <span>× {Number((item as { quantity?: number }).quantity ?? 1)}</span>
                 </li>
               ))}

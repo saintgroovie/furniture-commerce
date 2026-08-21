@@ -18,6 +18,7 @@ import {
   isLegalLaunchComplete,
   missingRequiredLegalFields,
   LEGAL_OWNER_FIELD_META,
+  CONFIRMED_LEGAL_DEFAULTS,
 } from "./legal/owner-inputs"
 import { LEGAL_PAGE_IDS, buildLegalPage } from "./legal/legal-content"
 import { resolveIndexingMode } from "./indexing-policy"
@@ -132,17 +133,47 @@ assert.match(
 )
 
 assert.equal(isLegalLaunchComplete({}), false)
+assert.equal(isLegalLaunchComplete(), false)
 assert.ok(missingRequiredLegalFields({}).length >= 10)
+assert.ok(missingRequiredLegalFields().includes("offer_acceptance_moment"))
+assert.ok(
+  missingRequiredLegalFields({
+    ...CONFIRMED_LEGAL_DEFAULTS,
+    offer_acceptance_moment: "LEGAL REVIEW",
+  }).includes("offer_acceptance_moment")
+)
+assert.equal(
+  isLegalLaunchComplete({
+    ...CONFIRMED_LEGAL_DEFAULTS,
+    offer_acceptance_moment: "LEGAL REVIEW",
+  }),
+  false
+)
+assert.equal(
+  isLegalLaunchComplete(
+    {
+      ...CONFIRMED_LEGAL_DEFAULTS,
+      offer_acceptance_moment: "Заявка на сайте не является акцептом оферты",
+    },
+    { WOODRIGHT_LEGAL_PACK_TOKEN: "OWNER_LEGAL_CONTENT_APPROVED" }
+  ),
+  true
+)
 assert.ok(LEGAL_OWNER_FIELD_META.every((f) => f.labelRu && f.whyRequired))
+assert.equal(
+  LEGAL_OWNER_FIELD_META.find((f) => f.key === "privacy_email")?.requiredForPublicLaunch,
+  false
+)
 
 for (const id of LEGAL_PAGE_IDS) {
-  const page = buildLegalPage(id, {})
+  const page = buildLegalPage(id)
   assert.equal(page.id, id)
   assert.ok(page.title)
   assert.ok(page.path.startsWith("/"))
   assert.equal(page.incompleteForPublicLaunch, true)
   const blob = JSON.stringify(page)
   assert.doesNotMatch(blob, /\bTODO\b|PLACEHOLDER/i)
+  assert.doesNotMatch(blob, /подготовка|черновик|Публичная оферта/i)
 }
 
 for (const id of ["privacy", "offer", "delivery", "returns", "warranty"] as const) {
@@ -150,7 +181,16 @@ for (const id of ["privacy", "offer", "delivery", "returns", "warranty"] as cons
   assert.match(blob, /Шоурум|Химки|Гранд/)
 }
 
-const payment = buildLegalPage("payment", {})
-assert.match(JSON.stringify(payment), /PaymentLink|Ожидает оплаты/)
+const payment = buildLegalPage("payment")
+assert.match(JSON.stringify(payment), /PaymentLink|ссылку на оплату/)
+assert.doesNotMatch(JSON.stringify(payment), /эквайринг на сайте не активирован/)
+
+const warranty = buildLegalPage("warranty")
+assert.match(JSON.stringify(warranty), /12 месяцев/)
+assert.doesNotMatch(JSON.stringify(warranty), /18 месяцев/)
+
+const requisites = buildLegalPage("requisites")
+assert.match(JSON.stringify(requisites), /Роэл-Техник/)
+assert.doesNotMatch(JSON.stringify(requisites), /40702810|БИК:\s*\d/)
 
 console.log("launch-config.fidelity: ok")

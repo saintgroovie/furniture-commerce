@@ -5,6 +5,7 @@ import {
   ContactPhoneAction,
 } from "@/components/contact-action"
 import { ContactMessengerActions } from "@/components/contact-messenger-actions"
+import { CopyLines } from "@/components/copy-lines"
 import { formatRuInline } from "@/lib/format-ru-copy"
 import { contactsCopy } from "@/lib/woodright-copy"
 import { showroomContacts } from "@/lib/showroom-contacts"
@@ -21,6 +22,7 @@ export function ContactsPageLayout() {
     <div className="contacts-page">
       <h1 className="contacts-page-title">{contactsCopy.h1}</h1>
       <p className="contacts-page-intro">{formatRuInline(contactsCopy.lead)}</p>
+      <CopyLines className="contacts-page-visit-hint" lines={contactsCopy.visitHint} />
 
       <div className="contacts-page-stage">
         <section
