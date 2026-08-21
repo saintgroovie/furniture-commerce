@@ -213,40 +213,89 @@ wr_cutover_assert_image_revision() {
 }
 
 wr_cutover_install_file() {
-  # Copy src -> dest; use sudo -n when dest (or parent) is not writable, matching pin reconciler privilege model.
+  # Atomic same-directory install: stage sibling temp, then rename onto dest.
+  # Use sudo -n when dest (or parent) is not writable, matching pin reconciler.
   local src="${1:?}"
   local dest="${2:?}"
+  local dir tmp
   [[ -f "$src" ]] || return 1
-  if [[ -e "$dest" ]]; then
-    if [[ -w "$dest" ]]; then
-      cp -p "$src" "$dest"
+  dir="$(dirname "$dest")"
+  tmp="${dir}/.$(basename "$dest").wr-install.$$"
+  _wr_cutover_copy() {
+    local from="$1" to="$2"
+    if [[ -w "$(dirname "$to")" && ( ! -e "$to" || -w "$to" ) ]]; then
+      cp -p "$from" "$to"
       return $?
     fi
-  else
-    if [[ -w "$(dirname "$dest")" ]]; then
-      cp -p "$src" "$dest"
+    if command -v sudo >/dev/null 2>&1; then
+      sudo -n cp -p "$from" "$to"
       return $?
     fi
+    return 1
+  }
+  _wr_cutover_mv() {
+    local from="$1" to="$2"
+    if [[ -w "$(dirname "$to")" && ( ! -e "$to" || -w "$to" ) ]]; then
+      mv -f "$from" "$to"
+      return $?
+    fi
+    if command -v sudo >/dev/null 2>&1; then
+      sudo -n mv -f "$from" "$to"
+      return $?
+    fi
+    return 1
+  }
+  if ! _wr_cutover_copy "$src" "$tmp"; then
+    rm -f "$tmp" 2>/dev/null || sudo -n rm -f "$tmp" 2>/dev/null || true
+    wr_cutover_die "cannot stage $dest (need writable path or sudo -n)"
+    return 1
   fi
-  if command -v sudo >/dev/null 2>&1; then
-    sudo -n cp -p "$src" "$dest"
-    return $?
+  if ! _wr_cutover_mv "$tmp" "$dest"; then
+    rm -f "$tmp" 2>/dev/null || sudo -n rm -f "$tmp" 2>/dev/null || true
+    wr_cutover_die "cannot atomically install $dest"
+    return 1
   fi
-  wr_cutover_die "cannot write $dest (need writable path or sudo -n)"
-  return 1
+  return 0
+}
+
+wr_cutover_test_path_overrides() {
+  [[ "${WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK:-}" == "1" \
+    || "${WOODRIGHT_CUTOVER_ALLOW_TEST_PATHS:-0}" == "1" ]]
 }
 
 wr_cutover_pin_paths() {
   # Canonical pin/config SoT destinations — environment-scoped via profile when loaded.
-  # Harness may override WOODRIGHT_CUTOVER_* explicitly. Never default to shared legacy root.
+  # Test harness may override WOODRIGHT_CUTOVER_* only with WOODRIGHT_CUTOVER_ALLOW_TEST_PATHS=1
+  # or WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK=1. Never default to shared legacy root.
   local identity_dir="${WOODRIGHT_IDENTITY_DIR:-/srv/woodright/runtime-identity-public-demo}"
   WOODRIGHT_CUTOVER_PINS_ENV="${WOODRIGHT_CUTOVER_PINS_ENV:-${identity_dir}/DOKPLOY_IMAGE_PINS.env}"
   WOODRIGHT_CUTOVER_ACTIVE_PUBLIC="${WOODRIGHT_CUTOVER_ACTIVE_PUBLIC:-${WOODRIGHT_ACTIVE_PUBLIC:-${identity_dir}/ACTIVE_PUBLIC.json}}"
   WOODRIGHT_CUTOVER_PUBLIC_DEMO_JSON="${WOODRIGHT_CUTOVER_PUBLIC_DEMO_JSON:-${WOODRIGHT_PUBLIC_DEMO_FILE:-${identity_dir}/public-demo.json}}"
   WOODRIGHT_CUTOVER_COMPOSE_ENV="${WOODRIGHT_CUTOVER_COMPOSE_ENV:-${WOODRIGHT_COMPOSE_ENV_FILE:-/etc/dokploy/compose/woodright-stack-3dsdhd/code/.env}}"
   local ownership_dir="${WOODRIGHT_OWNERSHIP_DIR:-/srv/woodright/runtime-ownership-public-demo}"
-  WOODRIGHT_CUTOVER_ACTIVE_OWNER="${WOODRIGHT_CUTOVER_ACTIVE_OWNER:-${WOODRIGHT_ACTIVE_OWNER:-${ownership_dir}/ACTIVE_OWNER.json}}"
-  WOODRIGHT_CUTOVER_EXPECTED_RELEASE="${WOODRIGHT_CUTOVER_EXPECTED_RELEASE:-${WOODRIGHT_EXPECTED_RELEASE:-${ownership_dir}/EXPECTED_RELEASE.json}}"
+  local canonical_owner="${WOODRIGHT_ACTIVE_OWNER:-${ownership_dir}/ACTIVE_OWNER.json}"
+  local canonical_expected="${WOODRIGHT_EXPECTED_RELEASE:-${ownership_dir}/EXPECTED_RELEASE.json}"
+  if wr_cutover_test_path_overrides; then
+    WOODRIGHT_CUTOVER_ACTIVE_OWNER="${WOODRIGHT_CUTOVER_ACTIVE_OWNER:-$canonical_owner}"
+    WOODRIGHT_CUTOVER_EXPECTED_RELEASE="${WOODRIGHT_CUTOVER_EXPECTED_RELEASE:-$canonical_expected}"
+  else
+    if [[ -n "${WOODRIGHT_CUTOVER_ACTIVE_OWNER:-}" && "$WOODRIGHT_CUTOVER_ACTIVE_OWNER" != "$canonical_owner" ]]; then
+      wr_cutover_die "WOODRIGHT_CUTOVER_ACTIVE_OWNER override refused outside test mode (got=$WOODRIGHT_CUTOVER_ACTIVE_OWNER want=$canonical_owner)"
+      return 1
+    fi
+    if [[ -n "${WOODRIGHT_CUTOVER_EXPECTED_RELEASE:-}" && "$WOODRIGHT_CUTOVER_EXPECTED_RELEASE" != "$canonical_expected" ]]; then
+      wr_cutover_die "WOODRIGHT_CUTOVER_EXPECTED_RELEASE override refused outside test mode (got=$WOODRIGHT_CUTOVER_EXPECTED_RELEASE want=$canonical_expected)"
+      return 1
+    fi
+    WOODRIGHT_CUTOVER_ACTIVE_OWNER="$canonical_owner"
+    WOODRIGHT_CUTOVER_EXPECTED_RELEASE="$canonical_expected"
+  fi
+  if [[ "${WOODRIGHT_ENV_PROFILE_LOADED:-0}" == "1" ]] && declare -F wr_assert_manifest_path_for_environment >/dev/null; then
+    wr_assert_manifest_path_for_environment "$WOODRIGHT_CUTOVER_ACTIVE_OWNER" \
+      || { wr_cutover_die "ACTIVE_OWNER path outside environment ownership dir"; return 1; }
+    wr_assert_manifest_path_for_environment "$WOODRIGHT_CUTOVER_EXPECTED_RELEASE" \
+      || { wr_cutover_die "EXPECTED_RELEASE path outside environment ownership dir"; return 1; }
+  fi
 }
 
 wr_cutover_pair_rollback() {
@@ -261,7 +310,7 @@ wr_cutover_pair_rollback() {
   local sf_rb="${5:?}"
   local be_ok=0 sf_ok=0 pin_ok=0
   local env_name="${WOODRIGHT_ENVIRONMENT:-public_demo}"
-  wr_cutover_pin_paths
+  wr_cutover_pin_paths || return 1
   mkdir -p "$evidence/json"
   wr_cutover_log() { printf '%s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*"; }
   wr_cutover_log "PAIR_ROLLBACK begin"
@@ -342,7 +391,7 @@ wr_cutover_pair_rollback() {
 
 wr_cutover_pin_backup() {
   local evidence="${1:?}"
-  wr_cutover_pin_paths
+  wr_cutover_pin_paths || return 1
   local pins="${2:-$WOODRIGHT_CUTOVER_PINS_ENV}"
   local active="${3:-$WOODRIGHT_CUTOVER_ACTIVE_PUBLIC}"
   local public_demo="${4:-$WOODRIGHT_CUTOVER_PUBLIC_DEMO_JSON}"

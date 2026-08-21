@@ -301,6 +301,26 @@ else
   fail "scoped_owner fault left partial write"
 fi
 
+# Outer rollback vars must not retarget production ownership outside test mode.
+COMMON="$ROOT/ops/lib/woodright-cutover-common.sh"
+mkdir -p "$TMP/runtime-ownership-public-production"
+cp -p "$OWN/ACTIVE_OWNER.json" "$TMP/runtime-ownership-public-production/ACTIVE_OWNER.json"
+cp -p "$OWN/EXPECTED_RELEASE.json" "$TMP/runtime-ownership-public-production/EXPECTED_RELEASE.json"
+if (
+  unset WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK WOODRIGHT_CUTOVER_ALLOW_TEST_PATHS || true
+  export WOODRIGHT_ACTIVE_OWNER="$OWN/ACTIVE_OWNER.json"
+  export WOODRIGHT_EXPECTED_RELEASE="$OWN/EXPECTED_RELEASE.json"
+  export WOODRIGHT_CUTOVER_ACTIVE_OWNER="$TMP/runtime-ownership-public-production/ACTIVE_OWNER.json"
+  export WOODRIGHT_CUTOVER_EXPECTED_RELEASE="$TMP/runtime-ownership-public-production/EXPECTED_RELEASE.json"
+  # shellcheck source=/dev/null
+  source "$COMMON"
+  wr_cutover_pin_paths
+); then
+  fail "hostile WOODRIGHT_CUTOVER_* production path accepted"
+else
+  pass "hostile WOODRIGHT_CUTOVER_* production path refused"
+fi
+
 if [[ "$FAILED" -ne 0 ]]; then
   echo "---- FAIL=$FAILED ----"
   exit 1
