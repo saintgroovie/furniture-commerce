@@ -2,7 +2,8 @@
 
 **Worktree:** `/Users/leonidmbp/Developer/woodright-content-legal-launch-20260820`
 **Branch:** `content/legal-launch-completion-20260820`
-**Base:** `origin/main` @ `4533c5334b75eab8e353b69c14d894fed0d423ae`
+**Base (implementation cycle):** `4533c5334b75eab8e353b69c14d894fed0d423ae`
+**Converged (2026-08-21):** `origin/main` @ `b4fdd60b3b982b2a8e169870ad813cf8aff87132` via merge commits (PR #197 Provence + PR #196 Kids header chrome). OD tokens unchanged.
 **Mode:** autonomous cycle. Research is a tool, not the product.
 
 This file is the **active** SoT for remaining OD closures and launch IA. Historical packs stay provenance. Do not rewrite 2026-08-12 research as if it already contained these closures.
