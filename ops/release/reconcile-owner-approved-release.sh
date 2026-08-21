@@ -2,7 +2,9 @@
 # LIVE_MUTATING=false for dry-run; APPLY writes owner-approval metadata only.
 #
 # Atomically create/reconcile OWNER_APPROVED_RELEASE.json for public_demo or
-# public_production. Does NOT mutate containers, pins, or ACTIVE_* release state.
+# exact public_production. Does NOT mutate containers, pins, ACTIVE_* release
+# state, legal tokens, DNS, or CS-Cart. The private-candidate alias
+# --environment production is refused.
 #
 # Usage (dry-run default):
 #   bash ops/release/reconcile-owner-approved-release.sh \
@@ -82,14 +84,20 @@ done
 wr_require_environment_from_args "${FULL_ARGV[@]}" || exit 1
 case "$WOODRIGHT_ENVIRONMENT" in
   public_demo) ;;
+  public_production)
+    # Exact target only. Never honor the private-candidate alias "production".
+    ;;
   staging)
     die "use --environment public_demo (staging is not an approval write alias)"
     ;;
   production)
-    die "public_production approval write is out of scope this cycle; do not use production alias"
+    die "refused --environment production (private candidate). public_production approval write requires --environment public_production"
     ;;
-  *) die "unsupported environment=$WOODRIGHT_ENVIRONMENT (this helper writes public_demo only)" ;;
+  *) die "unsupported environment=$WOODRIGHT_ENVIRONMENT (this helper writes public_demo or public_production only)" ;;
 esac
+if [[ "$WOODRIGHT_ENVIRONMENT" == "public_production" ]]; then
+  export WOODRIGHT_OWNER_APPROVAL_STRICT_ENVIRONMENT=1
+fi
 
 [[ "$APP_SHA" =~ ^[0-9a-f]{40}$ ]] || die "application-sha must be full 40-hex"
 [[ "$BE_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]] || die "backend-digest invalid"

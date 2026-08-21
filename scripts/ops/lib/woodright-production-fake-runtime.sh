@@ -388,10 +388,12 @@ def defect(var):
 if defect("WOODRIGHT_FAKE_COMPOSE_WRONG_DIGEST"):
     digest = "sha256:" + ("9" * 64)
     image = image.split("@")[0] + "@" + digest
-name = f"woodright-production-{service}"
+name = os.environ.get("WOODRIGHT_FAKE_CONTAINER_PREFIX", "woodright-production") + f"-{service}"
 title = "woodright-backend" if service == "backend" else "woodright-storefront"
 host_ip = "0.0.0.0" if defect("WOODRIGHT_FAKE_COMPOSE_PUBLIC_BIND") else "127.0.0.1"
-host_port = "9200" if service == "backend" else "3200"
+be_port = os.environ.get("WOODRIGHT_FAKE_BE_HOST_PORT", "9200")
+sf_port = os.environ.get("WOODRIGHT_FAKE_SF_HOST_PORT", "3200")
+host_port = be_port if service == "backend" else sf_port
 container_port = "9000/tcp" if service == "backend" else "3000/tcp"
 health = "unhealthy" if defect("WOODRIGHT_FAKE_COMPOSE_UNHEALTHY") else "healthy"
 
@@ -410,10 +412,11 @@ elif os.path.exists(ready_marker):
 
 labels = {
     "com.woodright.deployment-owner": "Dokploy",
-    "com.woodright.exposure": "private",
-    "com.woodright.database-identity": "non_public_candidate_db",
+    "com.woodright.runtime-role": os.environ.get("WOODRIGHT_FAKE_RUNTIME_ROLE", "production_candidate"),
+    "com.woodright.exposure": os.environ.get("WOODRIGHT_FAKE_EXPOSURE", "private"),
+    "com.woodright.database-identity": os.environ.get("WOODRIGHT_FAKE_DB_ALIAS", "non_public_candidate_db"),
     "org.opencontainers.image.title": title,
-    "com.docker.compose.project": "woodright-production",
+    "com.docker.compose.project": os.environ.get("WOODRIGHT_FAKE_COMPOSE_PROJECT", "woodright-production"),
     "com.docker.compose.service": service,
     "com.docker.compose.container-number": "1",
     "com.woodright.release-sha": os.environ.get("WOODRIGHT_FAKE_RELEASE_SHA", ""),
@@ -430,8 +433,8 @@ doc = [{
     "Config": {
         "Image": image,
         "Env": [
-            "WOODRIGHT_EXPOSURE=private",
-            "WOODRIGHT_DATABASE_IDENTITY_ALIAS=non_public_candidate_db",
+            f"WOODRIGHT_EXPOSURE={os.environ.get('WOODRIGHT_FAKE_EXPOSURE', 'private')}",
+            f"WOODRIGHT_DATABASE_IDENTITY_ALIAS={os.environ.get('WOODRIGHT_FAKE_DB_ALIAS', 'non_public_candidate_db')}",
             "PGPASSWORD=MOCK_SECRET_VALUE",
         ],
         "Labels": labels,
@@ -442,7 +445,7 @@ doc = [{
         "PortBindings": {container_port: [{"HostIp": host_ip, "HostPort": host_port}]},
     },
     "Mounts": (
-        [{"Type": "volume", "Name": "woodright-production_woodright-production_media",
+        [{"Type": "volume", "Name": os.environ.get("WOODRIGHT_FAKE_MEDIA_VOLUME", "woodright-production_woodright-production_media"),
           "Destination": "/server/static"}] if service == "backend" else []
     ),
     "State": {
@@ -484,8 +487,8 @@ STATE="${WOODRIGHT_FAKE_DOCKER_STATE:-}"
 
 port_service() {
   case "$1" in
-    9200) echo backend ;;
-    3200) echo storefront ;;
+    9200|9300) echo backend ;;
+    3200|3300) echo storefront ;;
     *) echo "" ;;
   esac
 }
