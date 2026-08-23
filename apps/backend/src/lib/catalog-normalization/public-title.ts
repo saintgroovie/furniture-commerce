@@ -162,10 +162,8 @@ export function resolvePublicProductTitle(product: PublicTitleInput): PublicTitl
   const stored = asString(meta.public_title)
   const titleRaw = asString(product.title)
   const canonical = asString(meta.canonical_name)
-  const legacy =
-    asString(meta.legacy_title) ??
-    asString(meta.source_title) ??
-    titleRaw
+  /* source_title is import provenance (TECH-WW-IMPORT-METADATA-01), not legacy_title. */
+  const legacy = asString(meta.legacy_title) ?? titleRaw
   const collection =
     asString(meta.collection_label) ??
     asString(meta.collection) ??
