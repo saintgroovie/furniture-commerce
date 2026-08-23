@@ -66,6 +66,9 @@ function assertStaticArtifacts() {
     "docs/operator/env/production-public-private-noindex.env.template",
     "docs/operator/env/production-public-indexable.env.overlay.template",
     "ops/launch/legacy-redirect-map.json",
+    "ops/config/public-launch/traefik-public-production.yml",
+    "ops/release/cutover-public-apex-routing.sh",
+    "docs/operator/public-apex-cutover.md",
     "scripts/ops/admin-bootstrap-dry-run.sh",
   ]
   for (const rel of required) {

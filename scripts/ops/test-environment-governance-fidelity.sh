@@ -376,6 +376,17 @@ grep -q 'docs/operator/public-production-pair-cutover.md' "$ROOT/ops/release/ins
   || fail "installer missing public_production pair docs"
 grep -q 'I_UNDERSTAND_PUBLIC_PRODUCTION_PAIR_CUTOVER' "$ROOT/ops/release/cutover-public-production-pair.sh" \
   || fail "public_production helper missing confirm token"
+grep -q 'ops/release/cutover-public-apex-routing.sh' "$ROOT/ops/release/install-environment-governance.sh" \
+  || fail "installer missing public apex routing helper"
+grep -q 'docs/operator/public-apex-cutover.md' "$ROOT/ops/release/install-environment-governance.sh" \
+  || fail "installer missing public apex cutover docs"
+grep -q 'I_UNDERSTAND_PUBLIC_APEX_ROUTING_CUTOVER' "$ROOT/ops/release/cutover-public-apex-routing.sh" \
+  || fail "apex routing helper missing confirm token"
+if grep -qE '^[^#]*(nsupdate|route53|cloudflare)' "$ROOT/ops/release/cutover-public-apex-routing.sh"; then
+  fail "apex routing helper must not mutate DNS via CLI"
+else
+  ok "apex routing helper does not mutate DNS via CLI"
+fi
 if grep -q 'recreate-staging-storefront.sh' "$ROOT/ops/release/cutover-public-production-pair.sh"; then
   fail "public_production helper must not call demo storefront recreate"
 else

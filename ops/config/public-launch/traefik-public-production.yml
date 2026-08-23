@@ -1,0 +1,75 @@
+# Woodright public_production Traefik dynamic config.
+# Copied to /etc/dokploy/traefik/dynamic/woodright-public-production.yml
+# only by ops/release/cutover-public-apex-routing.sh after owner apex approval.
+#
+# Does not publish a public admin hostname.
+# Does not touch woodright-demo.yml.
+# Buyer noindex middleware is intentionally absent (public_indexable pair).
+#
+# Upstream names are the public_production compose DNS names on dokploy-network.
+# Traefik must share that network (helper connects SF/BE; it does not recreate them).
+
+http:
+  middlewares:
+    wr-pp-www-to-apex:
+      redirectRegex:
+        regex: "^https?://www\\.woodright\\.ru/(.*)"
+        replacement: "https://woodright.ru/${1}"
+        permanent: true
+
+    wr-pp-api-noindex:
+      headers:
+        customResponseHeaders:
+          X-Robots-Tag: "noindex, nofollow, noarchive"
+
+  routers:
+    wr-pp-api-http:
+      rule: Host(`api.woodright.ru`)
+      entryPoints: [web]
+      middlewares: [redirect-to-https]
+      service: wr-pp-backend
+
+    wr-pp-api-https:
+      rule: Host(`api.woodright.ru`)
+      entryPoints: [websecure]
+      tls:
+        certResolver: letsencrypt
+      middlewares: [wr-pp-api-noindex]
+      service: wr-pp-backend
+
+    wr-pp-sf-http:
+      rule: Host(`woodright.ru`)
+      entryPoints: [web]
+      middlewares: [redirect-to-https]
+      service: wr-pp-storefront
+
+    wr-pp-sf-https:
+      rule: Host(`woodright.ru`)
+      entryPoints: [websecure]
+      tls:
+        certResolver: letsencrypt
+      service: wr-pp-storefront
+
+    wr-pp-www-http:
+      rule: Host(`www.woodright.ru`)
+      entryPoints: [web]
+      middlewares: [wr-pp-www-to-apex]
+      service: noop@internal
+
+    wr-pp-www-https:
+      rule: Host(`www.woodright.ru`)
+      entryPoints: [websecure]
+      tls:
+        certResolver: letsencrypt
+      middlewares: [wr-pp-www-to-apex]
+      service: noop@internal
+
+  services:
+    wr-pp-backend:
+      loadBalancer:
+        servers:
+          - url: "http://woodright-public-production-backend:9000"
+    wr-pp-storefront:
+      loadBalancer:
+        servers:
+          - url: "http://woodright-public-production-storefront:3002"
