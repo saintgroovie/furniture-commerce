@@ -20,6 +20,10 @@ import {
   summarizeNativeMedusaOptions,
   type BuyerAxisSummary,
 } from "./buyer-options-summary"
+import {
+  extractImportProvenance,
+  type ImportProvenanceView,
+} from "./import-provenance"
 
 export type DataQualityKind =
   | "ok"
@@ -73,6 +77,8 @@ export type AdminProductProjection = {
     label_ru: string
     warnings: string[]
   }
+  /** Allowlisted import evidence only. Null when absent. Never current SoT. */
+  import_provenance: ImportProvenanceView | null
 }
 
 export type AdminProjectionInput = {
@@ -276,6 +282,7 @@ export function buildAdminProductProjection(
       image_count: Array.isArray(data.images) ? data.images.length : 0,
     },
     data_quality: { kind, label_ru, warnings },
+    import_provenance: extractImportProvenance(meta),
   }
 }
 
