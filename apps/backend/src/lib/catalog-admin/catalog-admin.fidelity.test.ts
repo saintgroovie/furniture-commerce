@@ -76,7 +76,24 @@ const c1 = buildAdminProductProjection({
 assert.equal(c1.dimensions.trust_state, "TEMPORARY_PENDING")
 assert.equal(c1.data_quality.kind, "pending_confirmation")
 assert.match(c1.dimensions.manager_hint_ru, /временно/i)
+assert.doesNotMatch(c1.dimensions.manager_hint_ru, /440\s*\/\s*560/)
+assert.doesNotMatch(c1.dimensions.manager_hint_ru, /\b560\b/)
+assert.doesNotMatch(c1.data_quality.warnings.join(" "), /440\s*\/\s*560/)
+assert.doesNotMatch(c1.data_quality.warnings.join(" "), /\b560\b/)
 assert.equal(c1.dimensions.height_mm, 1370)
+assert.equal(c1.dimensions.depth_mm, 440)
+
+const fk05 = buildAdminProductProjection({
+  id: "prod_fk_c1",
+  handle: "fk-05-3",
+  metadata: {
+    dimensions: { height_mm: 1370, width_mm: 650, depth_mm: 440 },
+  },
+  variants: [{ sku: "FK-05-3" }],
+})
+assert.equal(fk05.dimensions.trust_state, "TEMPORARY_PENDING")
+assert.equal(fk05.dimensions.depth_mm, 440)
+assert.doesNotMatch(fk05.data_quality.warnings.join(" "), /440\s*\/\s*560/)
 
 /* TE verified — no pending warning kind */
 const te = buildAdminProductProjection({
@@ -137,6 +154,8 @@ const pr06 = buildAdminProductProjection({
 })
 assert.equal(pr06.dimensions.trust_state, "CONFLICT_SOURCE_DEBT")
 assert.equal(pr06.dimensions.missing_axes.includes("H"), true)
+assert.equal(pr06.data_quality.kind, "conflict")
+assert.match(pr06.data_quality.warnings.join(" "), /конкурируют/)
 
 /* options + Default hidden + malformed survival */
 const opts = summarizeBuyerOptions({

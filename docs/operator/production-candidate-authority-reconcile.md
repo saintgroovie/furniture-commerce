@@ -4,7 +4,7 @@
 
 Private `PRODUCTION_CANDIDATE` only. Not public launch. Not `public_demo`.
 
-## Four distinct SHA / identity layers
+## SHA / identity layers
 
 Keep these separate. Do not substitute one for another.
 
@@ -13,9 +13,17 @@ Keep these separate. Do not substitute one for another.
 | `application_source_sha` | Full 40-hex Git SHA of the application images (OCI `org.opencontainers.image.revision`) | Yes - cutover target / ownership manifests |
 | `operation_helper_install_sha` | Ops commit that installed the cutover/recovery helper performing an operation | Provenance only |
 | `current_governance_install_sha` | Canonical installed governance bundle marker (`INSTALLED_ENV_GOVERNANCE_SHA.txt`) | Install/verify only |
-| `WOODRIGHT_RELEASE_SHA` | Compose env + runtime header `x-woodright-release-sha` | **No** - informational application identity visible in runtime |
+| `WOODRIGHT_BACKEND_SOURCE_SHA` / `WOODRIGHT_STOREFRONT_SOURCE_SHA` | Compose env + headers `x-woodright-backend-source-sha` / `x-woodright-storefront-source-sha` | **No** for deploy/rollback (EXPECTED_RELEASE + image digests remain authority) - **Yes** for answering "which source SHA is this component running" |
+| `WOODRIGHT_RELEASE_SHA` | Compose env + runtime header `x-woodright-release-sha` | **No** - last-unified-pair informational marker only |
 
-`WOODRIGHT_RELEASE_SHA` means only the application identity exposed in the runtime header. It must **not** mean helper SHA, governance SHA, deployment lineage, Git branch, or current `origin/main`.
+`WOODRIGHT_RELEASE_SHA` is the last **unified** pair marker. It must **not** mean helper SHA, governance SHA, deployment lineage, Git branch, current `origin/main`, or the identity of a split live pair.
+
+When backend OCI revision != storefront OCI revision, do not treat `WOODRIGHT_RELEASE_SHA` as pair identity. Authoritative runtime fields are:
+
+- backend: `WOODRIGHT_BACKEND_SOURCE_SHA` and `EXPECTED_RELEASE.backend_source_sha` / `backend_digest`
+- storefront: `WOODRIGHT_STOREFRONT_SOURCE_SHA` and `EXPECTED_RELEASE.storefront_source_sha` / `storefront_digest`
+
+Monitor comparisons stay component ↔ component. Do not reintroduce a global-SHA digest gate.
 
 Deploy / rollback authority remains:
 
@@ -143,7 +151,11 @@ One governed compose `.env` snapshot writes together:
 
 - `WOODRIGHT_STOREFRONT_IMAGE=<immutable ref>`
 - `WOODRIGHT_BACKEND_IMAGE=<immutable ref>`
-- `WOODRIGHT_RELEASE_SHA=<full application source SHA>`
+- `WOODRIGHT_BACKEND_SOURCE_SHA=<40-hex backend OCI revision>`
+- `WOODRIGHT_STOREFRONT_SOURCE_SHA=<40-hex storefront OCI revision>`
+- `WOODRIGHT_RELEASE_SHA=<full application source SHA>` (only when both OCI revisions equal that SHA)
+
+A single-component cutover still writes **both** source SHA keys (mutated component = `--source-sha`; untouched peer = live OCI revision under lock) and recreates **both** services so the peer picks up identity env without changing its image pin.
 
 Write of the release marker is allowed only when:
 
@@ -173,14 +185,16 @@ mirrors must match after install.
 
 ## Header semantics
 
-`x-woodright-release-sha` continues to reflect `WOODRIGHT_RELEASE_SHA`.
+`x-woodright-backend-source-sha` and `x-woodright-storefront-source-sha` reflect the component compose env keys.
 
-It is diagnostic only: not OCI authority, not a substitute for
-`application_source_sha`, and may be stale on a legacy runtime until a
-governed metadata reconcile or the next atomic pair cutover.
+`x-woodright-release-sha` is emitted only when the pair is unified (both component SHAs present and equal, and equal `WOODRIGHT_RELEASE_SHA`) or when the runtime is legacy (neither component SHA set). A split pair omits the global header.
+
+These headers are diagnostic only: not OCI authority, not a substitute for `EXPECTED_RELEASE` digests, and not a monitor compare key.
 
 ## Success matrix
 
-`WOODRIGHT_RELEASE_SHA` == backend OCI == storefront OCI ==
-`ACTIVE_OWNER.application_source_sha` == `EXPECTED_RELEASE.application_source_sha`
-and production-candidate monitor `overall=ok` with the profile media volume.
+After a **pair** cutover: `WOODRIGHT_RELEASE_SHA` == backend OCI == storefront OCI == both component source SHA pins.
+
+After a **split** cutover: each `WOODRIGHT_*_SOURCE_SHA` equals that component's OCI revision; `WOODRIGHT_RELEASE_SHA` stays the previous unified marker (informational); monitor `discovery_sf`/`discovery_be` and `digest_sf`/`digest_be` still compare component ↔ expected component.
+
+Production-candidate monitor `overall=ok` still requires the profile media volume and is independent of host disk `pct` (disk is a separate task).

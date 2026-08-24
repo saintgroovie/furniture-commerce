@@ -48,8 +48,9 @@ export type DimensionsTrustEntry = {
 const C1_TEMPORARY: DimensionsTrustEntry = {
   state: "TEMPORARY_PENDING",
   manager_hint_ru:
-    "Значение используется на сайте временно. Каноническая глубина 440/560 ожидает технического источника",
-  technical_note: "OD-DIM-05-3-FINAL=C1 · OD-DIM-02=C intact · not VERIFIED_CANONICAL",
+    "Значение используется на сайте временно. Нужен технический источник для подтверждения глубины",
+  technical_note:
+    "OD-DIM-05-3-FINAL=C1 · OD-DIM-02=C intact · not VERIFIED_CANONICAL · historical import depth is provenance only",
   block_casual_verify_implication: true,
 }
 

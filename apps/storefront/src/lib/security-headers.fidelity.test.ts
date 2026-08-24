@@ -50,6 +50,8 @@ assert.match(
 const identityLib = read("src/lib/runtime-identity-headers.ts")
 assert.match(identityLib, /WOODRIGHT_DATABASE_IDENTITY/)
 assert.match(identityLib, /x-woodright-database-identity/)
+assert.match(identityLib, /x-woodright-backend-source-sha/)
+assert.match(identityLib, /WOODRIGHT_BACKEND_SOURCE_SHA/)
 assert.doesNotMatch(identityLib, /NEXT_PUBLIC_WOODRIGHT/)
 assert.doesNotMatch(
   proxySrc,
