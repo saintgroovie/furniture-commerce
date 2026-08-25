@@ -16,9 +16,36 @@ const ALLOWED_DB_ALIASES = new Set([
   "non_public_candidate_db",
 ])
 
+const SHA40 = /^[0-9a-f]{40}$/
+
 function normalizeRole(role: string): string {
   if (role === "production_candidate") return "non_public_candidate"
   return role
+}
+
+function readSha40(raw: string | undefined): string {
+  const value = (raw || "").trim()
+  return SHA40.test(value) ? value : ""
+}
+
+/**
+ * WOODRIGHT_RELEASE_SHA is last-unified-pair informational only.
+ * Split pairs (backend SHA != storefront SHA) must not emit a global SHA header.
+ */
+export function selectUnifiedReleaseSha(input: {
+  backendSha: string
+  storefrontSha: string
+  releaseSha: string
+}): string {
+  const releaseSha = readSha40(input.releaseSha)
+  if (!releaseSha) return ""
+  const backendSha = readSha40(input.backendSha)
+  const storefrontSha = readSha40(input.storefrontSha)
+  if (backendSha && storefrontSha) {
+    return backendSha === storefrontSha && backendSha === releaseSha ? releaseSha : ""
+  }
+  if (!backendSha && !storefrontSha) return releaseSha
+  return ""
 }
 
 function readDbIdentityAlias(env: NodeJS.ProcessEnv): string {
@@ -34,7 +61,13 @@ export function storefrontRuntimeIdentityHeaders(
   const roleRaw = (env.WOODRIGHT_RUNTIME_ROLE || "").trim()
   const role = normalizeRole(roleRaw)
   const exposure = (env.WOODRIGHT_EXPOSURE || "").trim()
-  const releaseSha = (env.WOODRIGHT_RELEASE_SHA || "").trim()
+  const backendSha = readSha40(env.WOODRIGHT_BACKEND_SOURCE_SHA)
+  const storefrontSha = readSha40(env.WOODRIGHT_STOREFRONT_SOURCE_SHA)
+  const releaseSha = selectUnifiedReleaseSha({
+    backendSha,
+    storefrontSha,
+    releaseSha: env.WOODRIGHT_RELEASE_SHA || "",
+  })
   const dbAlias = readDbIdentityAlias(env)
   const out: Record<string, string> = {}
   if (ALLOWED_ROLES.has(roleRaw) || ALLOWED_ROLES.has(role)) {
@@ -43,9 +76,9 @@ export function storefrontRuntimeIdentityHeaders(
   if (ALLOWED_EXPOSURES.has(exposure)) {
     out["x-woodright-exposure"] = exposure
   }
-  if (/^[0-9a-f]{40}$/.test(releaseSha)) {
-    out["x-woodright-release-sha"] = releaseSha
-  }
+  if (backendSha) out["x-woodright-backend-source-sha"] = backendSha
+  if (storefrontSha) out["x-woodright-storefront-source-sha"] = storefrontSha
+  if (releaseSha) out["x-woodright-release-sha"] = releaseSha
   if (dbAlias) {
     out["x-woodright-database-identity"] = dbAlias
   }

@@ -68,6 +68,8 @@ assert.ok(fa.import_provenance)
 assert.equal(fa.import_provenance.family_options?.Размер, "гл.560")
 assert.equal(fa.data_quality.kind, "pending_confirmation")
 assert.doesNotMatch(fa.data_quality.warnings.join(" "), /гл\.560/)
+assert.doesNotMatch(fa.data_quality.warnings.join(" "), /440\s*\/\s*560/)
+assert.doesNotMatch(fa.data_quality.warnings.join(" "), /\b560\b/)
 
 /* Matching provenance: still informational, not an error */
 const te = buildAdminProductProjection({
@@ -96,6 +98,8 @@ const bare = buildAdminProductProjection({
   variants: [{ sku: "OL-01-1" }],
 })
 assert.equal(bare.import_provenance, null)
+assert.doesNotMatch(bare.data_quality.warnings.join(" "), /440\s*\/\s*560/)
+assert.doesNotMatch(bare.data_quality.warnings.join(" "), /\b560\b/)
 
 /* source_title must not become public_title or legacy_title */
 const titles = resolvePublicProductTitle({

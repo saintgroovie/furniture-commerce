@@ -58,11 +58,13 @@ Backend (env-driven):
 
 - `x-woodright-runtime-role`
 - `x-woodright-exposure`
-- `x-woodright-release-sha`
+- `x-woodright-backend-source-sha`
+- `x-woodright-storefront-source-sha`
+- `x-woodright-release-sha` (legacy / last-unified-pair only; omitted on a split pair)
 - `x-woodright-database-identity` (alias only: `public_demo_db` / `non_public_candidate_db`)
 - existing `x-woodright-catalog-order: merchandising-v1` on catalog-products
 
-Storefront: same role / exposure / release-sha headers (no DB name).
+Storefront: same role / exposure / component SHA headers (no DB name).
 
 Never emit DSN, DB host, credentials, or internal IPs in headers.
 
@@ -71,7 +73,9 @@ Env vars:
 ```text
 WOODRIGHT_RUNTIME_ROLE=public_demo|non_public_candidate
 WOODRIGHT_EXPOSURE=public|private
-WOODRIGHT_RELEASE_SHA=<40-hex>
+WOODRIGHT_BACKEND_SOURCE_SHA=<40-hex>
+WOODRIGHT_STOREFRONT_SOURCE_SHA=<40-hex>
+WOODRIGHT_RELEASE_SHA=<40-hex>   # last unified pair only; not pair identity after a split cutover
 WOODRIGHT_DATABASE_IDENTITY=public_demo_db|non_public_candidate_db
 WOODRIGHT_DATABASE_IDENTITY_ALIAS=…   # legacy alias of WOODRIGHT_DATABASE_IDENTITY
 WOODRIGHT_CANONICAL_DOMAIN=woodright-demo.ru|none

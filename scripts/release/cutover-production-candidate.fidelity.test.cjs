@@ -320,6 +320,19 @@ function run(args, extraEnv = {}) {
   if (jsonStart !== -1) {
     const packet = JSON.parse(r.stdout.slice(jsonStart))
     check(packet.candidates.storefront.applicable === false, "backend-only packet marks storefront not applicable")
+    check(
+      JSON.stringify(packet.planned_mutation.recreate.order) === JSON.stringify(["backend", "storefront"]),
+      "backend-only still recreates both services for identity env refresh"
+    )
+    check(
+      Array.isArray(packet.planned_mutation.recreate.env_refresh_only) &&
+        packet.planned_mutation.recreate.env_refresh_only.includes("storefront"),
+      "backend-only marks storefront as env_refresh_only"
+    )
+    check(
+      packet.planned_mutation.pin_plan.keys.WOODRIGHT_BACKEND_SOURCE_SHA === SHA,
+      "backend-only pin plan includes mutated backend source SHA"
+    )
   }
 }
 
