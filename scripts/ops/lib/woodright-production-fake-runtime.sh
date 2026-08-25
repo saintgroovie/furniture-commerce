@@ -410,12 +410,28 @@ if starting_sec > 0:
 elif os.path.exists(ready_marker):
     os.remove(ready_marker)
 
+image_path = os.path.join(state, "images", image.replace("/", "_") + ".json")
+revision = ""
+if os.path.exists(image_path):
+    img = json.load(open(image_path))
+    revision = (
+        img.get("Config", {})
+        .get("Labels", {})
+        .get("org.opencontainers.image.revision", "")
+    )
+if not revision:
+    sha_key = (
+        "WOODRIGHT_BACKEND_SOURCE_SHA" if service == "backend" else "WOODRIGHT_STOREFRONT_SOURCE_SHA"
+    )
+    revision = pins.get(sha_key, "")
+
 labels = {
     "com.woodright.deployment-owner": "Dokploy",
     "com.woodright.runtime-role": os.environ.get("WOODRIGHT_FAKE_RUNTIME_ROLE", "production_candidate"),
     "com.woodright.exposure": os.environ.get("WOODRIGHT_FAKE_EXPOSURE", "private"),
     "com.woodright.database-identity": os.environ.get("WOODRIGHT_FAKE_DB_ALIAS", "non_public_candidate_db"),
     "org.opencontainers.image.title": title,
+    "org.opencontainers.image.revision": revision,
     "com.docker.compose.project": os.environ.get("WOODRIGHT_FAKE_COMPOSE_PROJECT", "woodright-production"),
     "com.docker.compose.service": service,
     "com.docker.compose.container-number": "1",
@@ -435,6 +451,15 @@ doc = [{
         "Env": [
             f"WOODRIGHT_EXPOSURE={os.environ.get('WOODRIGHT_FAKE_EXPOSURE', 'private')}",
             f"WOODRIGHT_DATABASE_IDENTITY_ALIAS={os.environ.get('WOODRIGHT_FAKE_DB_ALIAS', 'non_public_candidate_db')}",
+            *(
+                f"{k}={pins[k]}"
+                for k in (
+                    "WOODRIGHT_RELEASE_SHA",
+                    "WOODRIGHT_BACKEND_SOURCE_SHA",
+                    "WOODRIGHT_STOREFRONT_SOURCE_SHA",
+                )
+                if pins.get(k)
+            ),
             "PGPASSWORD=MOCK_SECRET_VALUE",
         ],
         "Labels": labels,

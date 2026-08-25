@@ -18,6 +18,8 @@ const {
   sameRuntimeForPricingCompare,
   digestsMatch,
   releasePairMismatchWarning,
+  buildIdentityHeadersFromEnv,
+  selectUnifiedReleaseSha,
   SCHEMA_VERSION,
 } = require("./runtime-identity-lib.cjs")
 
@@ -87,6 +89,35 @@ function selfTest() {
     "x-woodright-release-sha": "a".repeat(40),
   }, { release_sha: "a".repeat(40) })
   cases.push(["public headers ok", hdrOk.ok])
+
+  const beSha = "caf82b048b9caefae30679342aec3d4fc42a8d89"
+  const sfSha = "dd304d1bf92d59c85795b5091ed0386365bcca6d"
+  cases.push([
+    "split pair omits global SHA",
+    selectUnifiedReleaseSha(beSha, sfSha, sfSha) === "",
+  ])
+  const splitHdr = buildIdentityHeadersFromEnv({
+    WOODRIGHT_RUNTIME_ROLE: "non_public_candidate",
+    WOODRIGHT_EXPOSURE: "private",
+    WOODRIGHT_BACKEND_SOURCE_SHA: beSha,
+    WOODRIGHT_STOREFRONT_SOURCE_SHA: sfSha,
+    WOODRIGHT_RELEASE_SHA: sfSha,
+  })
+  cases.push([
+    "split headers expose component SHAs only",
+    splitHdr["x-woodright-backend-source-sha"] === beSha &&
+      splitHdr["x-woodright-storefront-source-sha"] === sfSha &&
+      !splitHdr["x-woodright-release-sha"],
+  ])
+  const legacyHdr = buildIdentityHeadersFromEnv({
+    WOODRIGHT_RUNTIME_ROLE: "non_public_candidate",
+    WOODRIGHT_EXPOSURE: "private",
+    WOODRIGHT_RELEASE_SHA: sfSha,
+  })
+  cases.push([
+    "legacy global SHA still emitted",
+    legacyHdr["x-woodright-release-sha"] === sfSha,
+  ])
 
   const hdrMissing = evaluatePublicHeaders({})
   cases.push(["reject missing headers", !hdrMissing.ok])

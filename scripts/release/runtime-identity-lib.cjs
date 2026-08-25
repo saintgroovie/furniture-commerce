@@ -224,15 +224,44 @@ function normalizeLegacyRole(role) {
   return role
 }
 
+function readSha40(raw) {
+  const value = String(raw || "").trim()
+  return /^[0-9a-f]{40}$/.test(value) ? value : ""
+}
+
+/**
+ * WOODRIGHT_RELEASE_SHA is last-unified-pair informational only.
+ * Split pairs must not emit x-woodright-release-sha.
+ */
+function selectUnifiedReleaseSha(backendSha, storefrontSha, releaseSha) {
+  const release = readSha40(releaseSha)
+  if (!release) return ""
+  const be = readSha40(backendSha)
+  const sf = readSha40(storefrontSha)
+  if (be && sf) {
+    return be === sf && be === release ? release : ""
+  }
+  if (!be && !sf) return release
+  return ""
+}
+
 function buildIdentityHeadersFromEnv(env = process.env) {
   const role = normalizeLegacyRole(env.WOODRIGHT_RUNTIME_ROLE || "")
   const exposure = env.WOODRIGHT_EXPOSURE || ""
-  const sha = env.WOODRIGHT_RELEASE_SHA || ""
+  const backendSha = readSha40(env.WOODRIGHT_BACKEND_SOURCE_SHA)
+  const storefrontSha = readSha40(env.WOODRIGHT_STOREFRONT_SOURCE_SHA)
+  const sha = selectUnifiedReleaseSha(
+    backendSha,
+    storefrontSha,
+    env.WOODRIGHT_RELEASE_SHA || ""
+  )
   const dbAlias =
     env.WOODRIGHT_DATABASE_IDENTITY || env.WOODRIGHT_DATABASE_IDENTITY_ALIAS || ""
   const headers = {}
   if (role) headers["x-woodright-runtime-role"] = role
   if (exposure) headers["x-woodright-exposure"] = exposure
+  if (backendSha) headers["x-woodright-backend-source-sha"] = backendSha
+  if (storefrontSha) headers["x-woodright-storefront-source-sha"] = storefrontSha
   if (sha) headers["x-woodright-release-sha"] = sha
   if (dbAlias) headers["x-woodright-database-identity"] = dbAlias
   return headers
@@ -362,6 +391,8 @@ module.exports = {
   validateRuntimeIdentityDoc,
   normalizeLegacyRole,
   buildIdentityHeadersFromEnv,
+  selectUnifiedReleaseSha,
+  readSha40,
   evaluatePublicHeaders,
   evaluateCandidateHeaders,
   digestsMatch,

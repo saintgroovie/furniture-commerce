@@ -196,8 +196,11 @@ Optional:
   --confirm-mutation <token>  (execute only: I_UNDERSTAND_PRIVATE_PRODUCTION_CANDIDATE_CUTOVER)
 
 Dry-run: read-only. No lock held, no pin writes, no recreate, no ACTIVE/EXPECTED writes.
-Execute: pins -> recreate (backend then storefront, --no-deps) -> readiness -> ACTIVE,
-         under /srv/woodright/locks/production/live-cutover.lock, with automatic
+Execute: pins (component source SHAs always; WOODRIGHT_RELEASE_SHA only when both
+         OCI revisions equal SOURCE_SHA) -> recreate BOTH services (image cutover
+         for the mutated component; env refresh of the untouched peer on its CAS
+         live digest) -> readiness of both -> ACTIVE, under
+         /srv/woodright/locks/production/live-cutover.lock, with automatic
          rollback (restore pins, recreate on the pre-cutover digests, verify
          postconditions) on any failure after the first pin write. No keeper
          containers are created or trusted.
@@ -362,6 +365,20 @@ wr_prelock_validate_environment_target || exit 1
 
 need_sf() { [[ "$COMPONENT" == "storefront" || "$COMPONENT" == "pair" ]]; }
 need_be() { [[ "$COMPONENT" == "backend" || "$COMPONENT" == "pair" ]]; }
+is_sha40() { [[ "${1:-}" =~ ^[0-9a-f]{40}$ ]]; }
+
+# Mutated component: SOURCE_SHA. Untouched peer: live OCI revision (CAS), never
+# a caller-supplied peer ref. EXPECT_* wins after resolve_pair_expected_identities.
+packet_backend_source_sha() {
+  if is_sha40 "${EXPECT_BE_SHA:-}"; then printf '%s' "$EXPECT_BE_SHA"; return 0; fi
+  if need_be; then printf '%s' "$SOURCE_SHA"; return 0; fi
+  wr_oci_image_revision "${LIVE_BE_REF:-}"
+}
+packet_storefront_source_sha() {
+  if is_sha40 "${EXPECT_SF_SHA:-}"; then printf '%s' "$EXPECT_SF_SHA"; return 0; fi
+  if need_sf; then printf '%s' "$SOURCE_SHA"; return 0; fi
+  wr_oci_image_revision "${LIVE_SF_REF:-}"
+}
 # Defined early: dry-run packet builders call this before the execute-only
 # section where a duplicate used to live (late definition → command-not-found).
 component_in_scope() {
@@ -1039,7 +1056,6 @@ detect_existing_skew
 rollback_anchor_images_present() {
   local kind ref
   for kind in backend storefront; do
-    component_in_scope "$kind" || continue
     if [[ "$kind" == "backend" ]]; then ref="$LIVE_BE_REF"; else ref="$LIVE_SF_REF"; fi
     [[ -n "$ref" ]] || return 1
     prod_docker image inspect "$ref" >/dev/null 2>&1 || return 1
@@ -1097,11 +1113,14 @@ emit_packet() {
   WR_PACKET_READY_SF_SEC="$(component_ready_deadline_sec storefront "${WOODRIGHT_SF_CONTAINER_DEFAULT}")" \
   WR_PACKET_POLL_SEC="$(ready_poll_interval)" \
   WR_PACKET_PRE_IMAGES_PRESENT="$(rollback_anchor_images_present && echo true || echo false)" \
+  WR_PACKET_BE_SOURCE_SHA="$(packet_backend_source_sha)" \
+  WR_PACKET_SF_SOURCE_SHA="$(packet_storefront_source_sha)" \
   python3 - "$WOODRIGHT_ENVIRONMENT" "$WOODRIGHT_ENVIRONMENT_CLASS" "$COMPONENT" "$SOURCE_SHA" "$packet_mode" \
     "${WOODRIGHT_BE_CONTAINER_DEFAULT}" "${WOODRIGHT_SF_CONTAINER_DEFAULT}" \
     "${WOODRIGHT_MUTATION_LOCK_PATH:-}" <<'PY'
 import json
 import os
+import re
 import sys
 
 (
@@ -1167,12 +1186,20 @@ if need_be:
     pin_keys["WOODRIGHT_BACKEND_IMAGE"] = os.environ.get("WR_BE_REF", "")
 if need_sf:
     pin_keys["WOODRIGHT_STOREFRONT_IMAGE"] = os.environ.get("WR_SF_REF", "")
-# Common release authority: always part of the atomic pin transaction when the
-# pair (or both components after this write) share SOURCE_SHA as OCI revision.
+be_src = os.environ.get("WR_PACKET_BE_SOURCE_SHA", "")
+sf_src = os.environ.get("WR_PACKET_SF_SOURCE_SHA", "")
+if re.fullmatch(r"[0-9a-f]{40}", be_src or ""):
+    pin_keys["WOODRIGHT_BACKEND_SOURCE_SHA"] = be_src
+if re.fullmatch(r"[0-9a-f]{40}", sf_src or ""):
+    pin_keys["WOODRIGHT_STOREFRONT_SOURCE_SHA"] = sf_src
+# Common release marker: only when both resulting pins prove OCI == SOURCE_SHA.
+# It is last-unified-pair informational, never pair-wide identity after a split cutover.
 if os.environ.get("WR_PACKET_WRITE_RELEASE_SHA", "1") == "1":
     pin_keys["WOODRIGHT_RELEASE_SHA"] = source_sha
 
-recreate_order = [c for c in ("backend", "storefront") if (c == "backend" and need_be) or (c == "storefront" and need_sf)]
+recreate_order = ["backend", "storefront"]
+image_cutover = [c for c in recreate_order if (c == "backend" and need_be) or (c == "storefront" and need_sf)]
+env_refresh_only = [c for c in recreate_order if c not in image_cutover]
 
 existing_skew = os.environ.get("WR_PACKET_SKEW", "0") == "1"
 buyer_host = os.environ.get("WR_PACKET_BUYER_HOST", "").rstrip("/")
@@ -1212,6 +1239,8 @@ packet = {
                 k for k in (
                     "WOODRIGHT_BACKEND_IMAGE",
                     "WOODRIGHT_STOREFRONT_IMAGE",
+                    "WOODRIGHT_BACKEND_SOURCE_SHA",
+                    "WOODRIGHT_STOREFRONT_SOURCE_SHA",
                     "WOODRIGHT_RELEASE_SHA",
                 ) if k in pin_keys
             ],
@@ -1220,6 +1249,8 @@ packet = {
         },
         "recreate": {
             "order": recreate_order,
+            "image_cutover": image_cutover,
+            "env_refresh_only": env_refresh_only,
             "compose_file": os.environ.get("WR_PACKET_COMPOSE_FILE", ""),
             "compose_project": os.environ.get("WR_PACKET_COMPOSE_PROJECT", ""),
             # --force-recreate: Compose can consider a same-service container
@@ -1311,11 +1342,14 @@ packet = {
         "blocks_valid_pair_cutover": False,
         "is_deploy_or_rollback_authority": False,
         "note": (
-            "WOODRIGHT_RELEASE_SHA is an informational runtime identity marker "
-            "(x-woodright-release-sha). Stale current values are reported as "
-            "informational_drift and do not block a valid pair cutover plan; "
-            "execute rewrites the marker atomically with image pins when both "
-            "OCI revisions equal application_source_sha."
+            "WOODRIGHT_RELEASE_SHA is last-unified-pair informational identity "
+            "(x-woodright-release-sha) and is omitted from runtime headers when "
+            "backend and storefront source SHAs diverge. Authoritative runtime "
+            "identity is WOODRIGHT_BACKEND_SOURCE_SHA / WOODRIGHT_STOREFRONT_SOURCE_SHA "
+            "and EXPECTED_RELEASE per-component fields. Stale current values are "
+            "reported as informational_drift and do not block a valid pair cutover "
+            "plan; execute rewrites the marker atomically with image pins only when "
+            "both OCI revisions equal application_source_sha."
         ),
     },
     "pin_runtime_comparison": {
@@ -1879,6 +1913,10 @@ capture_rollback_anchors() {
       pinned="$(pin_value_of "$(pin_key_for "$kind")")"
       [[ "$pinned" == "$ref" ]] \
         || die "rollback anchor disagrees with the compose pin for $kind (pin='${pinned:-<unset>}' runtime='$ref') - existing_pin_runtime_skew_requires_recovery"
+    else
+      [[ -n "$ref" ]] || die "cannot resolve the live peer $kind RepoDigest ref - env refresh requires a CAS live identity"
+      [[ "$present" == "true" ]] \
+        || die "peer $kind image is not present locally: $ref (env refresh never pulls - refusing before any write)"
     fi
     if [[ "$kind" == "backend" ]]; then
       PRE_BE_REF="$ref"; be_present="$present"
@@ -1960,20 +1998,25 @@ print("pin_file_ok")
 PY
 }
 
-# Atomic pin install for the required component set: render ALL required
-# image keys AND (when both pins prove OCI==SOURCE_SHA) WOODRIGHT_RELEASE_SHA
+# Atomic pin install for the required component set: render image keys for the
+# mutated component, ALWAYS both WOODRIGHT_*_SOURCE_SHA keys (mutated = SOURCE_SHA,
+# peer = CAS live OCI), and (when both pins prove OCI==SOURCE_SHA) WOODRIGHT_RELEASE_SHA
 # into one temp file, validate the whole file, arm rollback (PHASE=pins_written)
 # BEFORE the single install, then install once.
 # This closes the mixed-pin window where a signal could land after the
 # first key replace but before record_state.
 write_required_pins_atomic() {
-  local tmp be_want sf_want write_release=0
+  local tmp be_want sf_want write_release=0 be_src sf_src
   local -a render_args=() validate_args=()
   local compose_parent
   be_want="$(pin_value_of WOODRIGHT_BACKEND_IMAGE)"
   sf_want="$(pin_value_of WOODRIGHT_STOREFRONT_IMAGE)"
   need_be && be_want="$BE_REF"
   need_sf && sf_want="$SF_REF"
+  be_src="$(packet_backend_source_sha)"
+  sf_src="$(packet_storefront_source_sha)"
+  is_sha40 "$be_src" || { log "missing/invalid WOODRIGHT_BACKEND_SOURCE_SHA"; return 1; }
+  is_sha40 "$sf_src" || { log "missing/invalid WOODRIGHT_STOREFRONT_SOURCE_SHA"; return 1; }
 
   compose_parent="$(dirname -- "$COMPOSE_ENV_FILE")"
   allowed_root="${WOODRIGHT_DOKPLOY_COMPOSE_DIR:-$compose_parent}"
@@ -1994,6 +2037,8 @@ write_required_pins_atomic() {
 
   need_be && render_args+=(WOODRIGHT_BACKEND_IMAGE "$BE_REF")
   need_sf && render_args+=(WOODRIGHT_STOREFRONT_IMAGE "$SF_REF")
+  render_args+=(WOODRIGHT_BACKEND_SOURCE_SHA "$be_src")
+  render_args+=(WOODRIGHT_STOREFRONT_SOURCE_SHA "$sf_src")
   if [[ "$write_release" -eq 1 ]]; then
     render_args+=(WOODRIGHT_RELEASE_SHA "$SOURCE_SHA")
   fi
@@ -2007,6 +2052,8 @@ write_required_pins_atomic() {
 
   need_be && validate_args+=(WOODRIGHT_BACKEND_IMAGE "$BE_REF")
   need_sf && validate_args+=(WOODRIGHT_STOREFRONT_IMAGE "$SF_REF")
+  validate_args+=(WOODRIGHT_BACKEND_SOURCE_SHA "$be_src")
+  validate_args+=(WOODRIGHT_STOREFRONT_SOURCE_SHA "$sf_src")
   if [[ "$write_release" -eq 1 ]]; then
     validate_args+=(WOODRIGHT_RELEASE_SHA "$SOURCE_SHA")
   fi
@@ -2043,6 +2090,9 @@ write_required_pins_atomic() {
     && printf '%s WOODRIGHT_BACKEND_IMAGE=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$BE_REF" >>"$EVIDENCE_DIR/json/pins-written.txt"
   need_sf && PINS_WRITTEN="${PINS_WRITTEN} WOODRIGHT_STOREFRONT_IMAGE" \
     && printf '%s WOODRIGHT_STOREFRONT_IMAGE=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$SF_REF" >>"$EVIDENCE_DIR/json/pins-written.txt"
+  PINS_WRITTEN="${PINS_WRITTEN} WOODRIGHT_BACKEND_SOURCE_SHA WOODRIGHT_STOREFRONT_SOURCE_SHA"
+  printf '%s WOODRIGHT_BACKEND_SOURCE_SHA=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$be_src" >>"$EVIDENCE_DIR/json/pins-written.txt"
+  printf '%s WOODRIGHT_STOREFRONT_SOURCE_SHA=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$sf_src" >>"$EVIDENCE_DIR/json/pins-written.txt"
   if [[ "$write_release" -eq 1 ]]; then
     PINS_WRITTEN="${PINS_WRITTEN} WOODRIGHT_RELEASE_SHA"
     printf '%s WOODRIGHT_RELEASE_SHA=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$SOURCE_SHA" >>"$EVIDENCE_DIR/json/pins-written.txt"
@@ -2070,12 +2120,21 @@ test_pause_at pins_written
 # proof of a new container.
 recreate_component() {
   local kind="$1"
-  local name want_digest fault prev_id up_rc=0
+  local name want_digest fault prev_id up_rc=0 want_ref
   if [[ "$kind" == "backend" ]]; then
-    name="${WOODRIGHT_BE_CONTAINER_DEFAULT}"; want_digest="${BE_REF##*@}"; fault="backend_recreate"
+    name="${WOODRIGHT_BE_CONTAINER_DEFAULT}"
+    want_ref="${EXPECT_BE_REF}"
+    fault="backend_recreate"
   else
-    name="${WOODRIGHT_SF_CONTAINER_DEFAULT}"; want_digest="${SF_REF##*@}"; fault="storefront_recreate"
+    name="${WOODRIGHT_SF_CONTAINER_DEFAULT}"
+    want_ref="${EXPECT_SF_REF}"
+    fault="storefront_recreate"
   fi
+  want_digest="${want_ref##*@}"
+  [[ "$want_digest" =~ ^sha256:[0-9a-f]{64}$ ]] || {
+    log "$kind: missing expected digest for recreate"
+    return 1
+  }
   prev_id="$(prod_docker inspect --format '{{.Id}}' "$name" 2>/dev/null || true)"
   compose_up "$kind" --force-recreate >&2 || up_rc=$?
   if wr_fault "$fault"; then up_rc=1; fi
@@ -2105,43 +2164,36 @@ recreate_component() {
   return 0
 }
 
-if need_be; then
-  if ! recreate_component backend; then
-    die "backend recreate failed"
-  fi
+if ! recreate_component backend; then
+  die "backend recreate failed"
 fi
-if need_sf; then
-  if ! recreate_component storefront; then
-    die "storefront recreate failed"
-  fi
+if ! recreate_component storefront; then
+  die "storefront recreate failed"
 fi
 record_state containers_recreated
 
 # --- readiness --------------------------------------------------------------
 # Docker health "starting" is the NORMAL state of a freshly recreated container
 # (backend --start-period=60s, storefront --start-period=40s), so readiness is
-# polled to a deadline instead of read once.
-if need_be; then
-  BE_DEADLINE="$(component_ready_deadline_sec backend "${WOODRIGHT_BE_CONTAINER_DEFAULT}")"
-  log "readiness plan backend deadline=${BE_DEADLINE}s poll=$(ready_poll_interval)s"
-  if wr_fault backend_health \
-     || ! wait_component_ready backend "${WOODRIGHT_BE_CONTAINER_DEFAULT}" "$BE_DEADLINE"; then
-    die "backend readiness gate failed"
-  fi
-  if wr_fault backend_http; then
-    die "backend HTTP gate failed"
-  fi
+# polled to a deadline instead of read once. Both services are always recreated
+# (image cutover and/or identity-env refresh), so both must pass readiness.
+BE_DEADLINE="$(component_ready_deadline_sec backend "${WOODRIGHT_BE_CONTAINER_DEFAULT}")"
+log "readiness plan backend deadline=${BE_DEADLINE}s poll=$(ready_poll_interval)s"
+if wr_fault backend_health \
+   || ! wait_component_ready backend "${WOODRIGHT_BE_CONTAINER_DEFAULT}" "$BE_DEADLINE"; then
+  die "backend readiness gate failed"
 fi
-if need_sf; then
-  SF_DEADLINE="$(component_ready_deadline_sec storefront "${WOODRIGHT_SF_CONTAINER_DEFAULT}")"
-  log "readiness plan storefront deadline=${SF_DEADLINE}s poll=$(ready_poll_interval)s"
-  if wr_fault storefront_health \
-     || ! wait_component_ready storefront "${WOODRIGHT_SF_CONTAINER_DEFAULT}" "$SF_DEADLINE"; then
-    die "storefront readiness gate failed"
-  fi
-  if wr_fault storefront_http; then
-    die "storefront HTTP gate failed"
-  fi
+if wr_fault backend_http; then
+  die "backend HTTP gate failed"
+fi
+SF_DEADLINE="$(component_ready_deadline_sec storefront "${WOODRIGHT_SF_CONTAINER_DEFAULT}")"
+log "readiness plan storefront deadline=${SF_DEADLINE}s poll=$(ready_poll_interval)s"
+if wr_fault storefront_health \
+   || ! wait_component_ready storefront "${WOODRIGHT_SF_CONTAINER_DEFAULT}" "$SF_DEADLINE"; then
+  die "storefront readiness gate failed"
+fi
+if wr_fault storefront_http; then
+  die "storefront HTTP gate failed"
 fi
 record_state health_passed
 
@@ -2152,32 +2204,25 @@ fi
 if wr_fault public_traefik; then
   die "acceptance failed: public Traefik label detected after recreate"
 fi
-if need_be; then
-  assert_private_binds "${WOODRIGHT_BE_CONTAINER_DEFAULT}" "$BE_PORT" >&2 || die "acceptance failed: backend bind is not private"
-  assert_no_public_traefik "${WOODRIGHT_BE_CONTAINER_DEFAULT}" >&2 || die "acceptance failed: backend Traefik exposure"
-  wr_assert_container_matches_environment "${WOODRIGHT_BE_CONTAINER_DEFAULT}" backend \
-    || die "acceptance failed: backend no longer matches the production profile"
-fi
-if need_sf; then
-  assert_private_binds "${WOODRIGHT_SF_CONTAINER_DEFAULT}" "$SF_PORT" >&2 || die "acceptance failed: storefront bind is not private"
-  assert_no_public_traefik "${WOODRIGHT_SF_CONTAINER_DEFAULT}" >&2 || die "acceptance failed: storefront Traefik exposure"
-  wr_assert_container_matches_environment "${WOODRIGHT_SF_CONTAINER_DEFAULT}" storefront \
-    || die "acceptance failed: storefront no longer matches the production profile"
-fi
+assert_private_binds "${WOODRIGHT_BE_CONTAINER_DEFAULT}" "$BE_PORT" >&2 || die "acceptance failed: backend bind is not private"
+assert_no_public_traefik "${WOODRIGHT_BE_CONTAINER_DEFAULT}" >&2 || die "acceptance failed: backend Traefik exposure"
+wr_assert_container_matches_environment "${WOODRIGHT_BE_CONTAINER_DEFAULT}" backend \
+  || die "acceptance failed: backend no longer matches the production profile"
+assert_private_binds "${WOODRIGHT_SF_CONTAINER_DEFAULT}" "$SF_PORT" >&2 || die "acceptance failed: storefront bind is not private"
+assert_no_public_traefik "${WOODRIGHT_SF_CONTAINER_DEFAULT}" >&2 || die "acceptance failed: storefront Traefik exposure"
+wr_assert_container_matches_environment "${WOODRIGHT_SF_CONTAINER_DEFAULT}" storefront \
+  || die "acceptance failed: storefront no longer matches the production profile"
 assert_media_volume >&2 || die "acceptance failed: media volume gate"
 
 # Final acceptance HTTP gates. Readiness above already proved `/health` and `/`
 # once each; these are the recorded, required gates for the committed release.
-if need_be; then
-  http_gate backend "${WOODRIGHT_API_HOST%/}/health" || die "acceptance failed: backend HTTP gate"
-fi
-if need_sf; then
-  http_gate storefront "${WOODRIGHT_BUYER_HOST%/}/" || die "acceptance failed: storefront HTTP gate"
-  for sf_route in /contacts /catalog /privacy; do
-    http_gate "storefront${sf_route}" "${WOODRIGHT_BUYER_HOST%/}${sf_route}" \
-      || die "acceptance failed: storefront route gate ${sf_route}"
-  done
-fi
+# Both services are always recreated, so both HTTP surfaces are required.
+http_gate backend "${WOODRIGHT_API_HOST%/}/health" || die "acceptance failed: backend HTTP gate"
+http_gate storefront "${WOODRIGHT_BUYER_HOST%/}/" || die "acceptance failed: storefront HTTP gate"
+for sf_route in /contacts /catalog /privacy; do
+  http_gate "storefront${sf_route}" "${WOODRIGHT_BUYER_HOST%/}${sf_route}" \
+    || die "acceptance failed: storefront route gate ${sf_route}"
+done
 record_state acceptance_passed
 
 # --- scoped ownership metadata (ACTIVE only after health + gates) -----------
@@ -2332,14 +2377,26 @@ if ! write_ownership_metadata; then
   die "scoped ownership metadata write failed"
 fi
 
-# Authority matrix postcondition: pair cutover must leave the common compose
-# release key aligned with SOURCE_SHA (same as both component OCI revisions).
-if [[ "$COMPONENT" == "pair" ]]; then
+# Authority matrix postcondition: component source SHA pins always match CAS
+# identities. WOODRIGHT_RELEASE_SHA is last-unified-pair only: write/require it
+# when both component identities equal SOURCE_SHA (pair cutover OR a
+# component-only cutover that happens to unify the pair). Omit/do not rewrite
+# it when EXPECT_BE_SHA != EXPECT_SF_SHA.
+[[ "$(pin_value_of WOODRIGHT_BACKEND_SOURCE_SHA)" == "$EXPECT_BE_SHA" ]] \
+  || die "authority postcondition failed: WOODRIGHT_BACKEND_SOURCE_SHA must equal CAS backend identity"
+[[ "$(pin_value_of WOODRIGHT_STOREFRONT_SOURCE_SHA)" == "$EXPECT_SF_SHA" ]] \
+  || die "authority postcondition failed: WOODRIGHT_STOREFRONT_SOURCE_SHA must equal CAS storefront identity"
+if [[ "$EXPECT_BE_SHA" == "$EXPECT_SF_SHA" ]]; then
+  [[ "$EXPECT_BE_SHA" == "$SOURCE_SHA" ]] \
+    || die "authority postcondition failed: unified component SHAs must equal SOURCE_SHA"
   [[ "$(pin_value_of WOODRIGHT_RELEASE_SHA)" == "$SOURCE_SHA" ]] \
-    || die "authority postcondition failed: WOODRIGHT_RELEASE_SHA must equal application SOURCE_SHA after pair cutover"
-  wr_compose_env_assert_no_duplicate_governed_keys "$COMPOSE_ENV_FILE" \
-    || die "authority postcondition failed: duplicate governed compose keys"
+    || die "authority postcondition failed: unified pair must pin WOODRIGHT_RELEASE_SHA to SOURCE_SHA"
+else
+  should_write_common_release_sha \
+    && die "authority postcondition failed: split pair must not write WOODRIGHT_RELEASE_SHA"
 fi
+wr_compose_env_assert_no_duplicate_governed_keys "$COMPOSE_ENV_FILE" \
+  || die "authority postcondition failed: duplicate governed compose keys"
 
 # --- commit -----------------------------------------------------------------
 COMMITTED=1
