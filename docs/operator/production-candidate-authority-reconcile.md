@@ -33,6 +33,35 @@ Deploy / rollback authority remains:
 
 A stale compose/header marker is classified `production_release_sha_marker_stale_non_blocking`. It does not require a live emergency fix and does not block a valid future pair cutover dry-run.
 
+## Production compose template (component SHA injection)
+
+Live Dokploy compose is:
+
+`/etc/dokploy/compose/woodright-production/code/docker-compose.yml`
+
+Canonical authority:
+
+`ops/compose/woodright-production.docker-compose.yml`
+
+Governance install copies the canonical file into `/srv/woodright/ops/compose/` and ships:
+
+`ops/release/reconcile-production-candidate-compose-template.sh`
+
+That helper is the only apply path onto the live Dokploy compose file. It does not rewrite `.env`, image pins, or `EXPECTED_RELEASE`, and it does not recreate containers. Execute takes the production mutation lock, writes a timestamped backup, validates the staged template with `docker compose config` against a dummy env (live `.env` secrets are not read), then atomically replaces the target while preserving destination owner/mode (same `sudo -n` install path as compose `.env` pins).
+
+```sh
+bash ops/release/reconcile-production-candidate-compose-template.sh \
+  --environment production \
+  --source-sha <40-hex-checkout-HEAD> \
+  --repo-root /path/to/clean/checkout \
+  --dry-run
+
+# execute (separate owner authorization):
+# --execute --confirm-mutation I_UNDERSTAND_PRODUCTION_CANDIDATE_COMPOSE_TEMPLATE_RECONCILE
+```
+
+Unexpected live compose drift fails closed: remainder equality after stripping only comments, component-SHA env lines, `WOODRIGHT_RELEASE_SHA` `:-` form, and equivalent memory defaults. Extra services, env keys/values, healthchecks, volumes, ports, and other fields are not overwritten. Execute reads the canonical blob at `--source-sha:ops/compose/woodright-production.docker-compose.yml` (working tree must match that blob and be clean). Target is the fixed Dokploy production compose path; the fidelity harness may only use that same suffix under `/tmp`.
+
 ## Component-aware EXPECTED_RELEASE (pair identity)
 
 `EXPECTED_RELEASE` after any successful cutover must hold both components:
