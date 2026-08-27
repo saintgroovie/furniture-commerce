@@ -470,6 +470,18 @@ probe_loopback() {
     log "Traefik HTTP probes skipped"
     return 0
   fi
+  # Dry-run (and execute before the helper writes its Traefik file) must not
+  # treat the pre-existing Traefik 404 default as a launch defect.
+  if [[ "$MODE" == "dry-run" ]]; then
+    log "Traefik HTTP probes skipped in dry-run (helper-owned routers not installed yet)"
+    return 0
+  fi
+  local target
+  target="$(apex_traefik_file)"
+  if [[ ! -f "$target" ]]; then
+    log "Traefik HTTP probes skipped; dynamic file absent"
+    return 0
+  fi
   for host in woodright.ru www.woodright.ru api.woodright.ru; do
     code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 8 \
       --resolve "${host}:80:127.0.0.1" "http://${host}/" || true)"
