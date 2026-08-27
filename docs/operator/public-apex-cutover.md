@@ -70,7 +70,20 @@ Do **not** publish raw `:3300` / `:9300`. Do **not** add `admin.woodright.ru`.
 4. Write owner approval JSON (owner, not the agent).
 5. Execute the same helper with `--mode execute --confirm I_UNDERSTAND_PUBLIC_APEX_ROUTING_CUTOVER`.
    This does **not** move buyers. Loopback pair stays on `127.0.0.1`.
-   Helper then probes Traefik on port 80 with `Host`/`--resolve` for apex, www, and api (expect HTTPS redirect). HTTPS/ACME still cannot succeed until DNS.
+   After the owned dynamic file is installed, the helper **polls** Traefik on
+   port 80 (`Host` / `--resolve` for apex, www, and api) until the file-provider
+   watch converges: expected HTTPS redirect Location, twice in a row.
+   Transient Traefik `404` / connection reset during that bounded window is
+   retryable. Persistent `5xx`, a wrong Location, or deadline expiry fail closed
+   and run automatic `rollback_partial` (Traefik file, helper-added networks,
+   **and** owned-state JSON). HTTPS/ACME still cannot succeed until DNS.
+   Overrides: `WOODRIGHT_APEX_TRAEFIK_SETTLE_TIMEOUT_SEC` (default 45),
+   `WOODRIGHT_APEX_TRAEFIK_SETTLE_INTERVAL_SEC` (default 1),
+   `WOODRIGHT_APEX_TRAEFIK_SETTLE_REQUIRED_STREAK` (default 2).
+   Helper-owned Traefik may remain staged while DNS stays on legacy CS-Cart.
+   That is the intended ITB operator window. Do not auto-rollback solely because
+   this identity cannot mutate ITB DNS. Buyers remain on `79.133.175.43` until
+   A records move.
 6. ITB panel DNS (authorized launch mutation, not this readiness cycle):
    - create A `api.woodright.ru` → `89.169.188.29`
    - retarget A `woodright.ru` and `www.woodright.ru` → `89.169.188.29`

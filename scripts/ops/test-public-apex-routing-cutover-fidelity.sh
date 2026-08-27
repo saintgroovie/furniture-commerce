@@ -12,13 +12,40 @@ FAILED=0
 pass() { echo "PASS $*"; }
 fail() { echo "FAIL $*"; FAILED=$((FAILED + 1)); }
 
-TMP="$(cd "$(mktemp -d /tmp/wr-apex-routing-XXXXXX)" && pwd -P)"
+TMP_RAW="$(mktemp -d "${TMPDIR:-/tmp}/wr-apex-routing-XXXXXX")" || {
+  echo "FAIL mktemp for apex routing harness" >&2
+  exit 1
+}
+TMP="$(cd "$TMP_RAW" && pwd -P)"
+case "$TMP" in
+  *wr-apex-routing*)
+    if [[ "$TMP" == "$ROOT" || "$TMP" == "/" || -z "$TMP" ]]; then
+      echo "FAIL harness TMP resolved to unsafe path: $TMP" >&2
+      exit 1
+    fi
+    ;;
+  *)
+    echo "FAIL harness TMP missing wr-apex-routing prefix: $TMP" >&2
+    exit 1
+    ;;
+esac
 cleanup() {
-  if [[ "$FAILED" -eq 0 ]]; then
-    rm -rf "$TMP"
-  else
-    echo "harness kept for inspection: $TMP"
-  fi
+  case "${TMP:-}" in
+    *wr-apex-routing*)
+      if [[ "$TMP" == "$ROOT" || "$TMP" == "/" ]]; then
+        echo "cleanup refused unsafe path: $TMP" >&2
+        return 1
+      fi
+      if [[ "$FAILED" -eq 0 ]]; then
+        rm -rf "$TMP"
+      else
+        echo "harness kept for inspection: $TMP"
+      fi
+      ;;
+    *)
+      echo "cleanup refused unexpected TMP=${TMP:-empty}" >&2
+      ;;
+  esac
 }
 trap cleanup EXIT
 
@@ -117,6 +144,10 @@ if args[:2] == ["network", "connect"]:
 
 if args[:2] == ["network", "disconnect"]:
     net, name = args[2], args[3]
+    fail_name = os.environ.get("WR_FAKE_DOCKER_DISCONNECT_FAIL", "")
+    if fail_name and name == fail_name:
+        print(f"Error: injected disconnect failure for {name}", file=sys.stderr)
+        sys.exit(1)
     c = st["containers"].get(name)
     if not c:
         print(f"Error: No such container: {name}", file=sys.stderr)
@@ -181,6 +212,16 @@ grep -q 'Host(`admin.woodright.ru`)' "$TMPL" && fail "template publishes admin" 
 grep -q 'woodright-demo.ru' "$TMPL" && fail "template includes demo" || pass "template has no demo host"
 grep -q 'woodright-public-production-storefront:3002' "$TMPL" || fail "template missing SF upstream"
 grep -q 'woodright-prod-buyer-noindex' "$TMPL" && fail "buyer noindex leaked" || pass "no buyer noindex"
+grep -Fq 'Host(`woodright.ru`)' "$TMPL" && pass "template Host apex" || fail "template missing Host(woodright.ru)"
+grep -Fq 'Host(`www.woodright.ru`)' "$TMPL" && pass "template Host www" || fail "template missing Host(www.woodright.ru)"
+grep -Fq 'Host(`api.woodright.ru`)' "$TMPL" && pass "template Host api" || fail "template missing Host(api.woodright.ru)"
+grep -Fq 'replacement: "https://woodright.ru/${1}"' "$TMPL" && pass "template www→apex HTTPS replacement" \
+  || fail "template missing www→apex replacement"
+grep -q 'redirect-to-https' "$TMPL" && pass "template HTTP→HTTPS middleware" || fail "template missing redirect-to-https"
+grep -F 'woodright.ru|www.woodright.ru) printf' "$SCRIPT" | grep -q 'https://woodright.ru' \
+  && pass "settle origin matches apex/www template" || fail "helper settle origin drifted from template"
+grep -F 'api.woodright.ru) printf' "$SCRIPT" | grep -q 'https://api.woodright.ru' \
+  && pass "settle origin matches api template" || fail "helper api settle origin drifted from template"
 
 # wrong environment
 if bash "$SCRIPT" --environment production --mode dry-run --source-sha "$SHA" \
@@ -465,6 +506,399 @@ else
   cat "$TMP/rb-unowned.txt"
 fi
 [[ -f "$TARGET" ]] && pass "unowned matching Traefik preserved" || fail "unowned rollback deleted Traefik"
+
+# --- Traefik file-provider settle + rollback_partial owned cleanup ---
+cat >"$BIN/apex-traefik-http-get" <<'PY'
+#!/usr/bin/env python3
+import json, os, sys
+host = sys.argv[1]
+attempt = int(sys.argv[2])
+path = os.environ["WOODRIGHT_APEX_TRAEFIK_FAKE_HTTP_STATE"]
+st = json.load(open(path))
+rounds = st["rounds"]
+idx = min(max(attempt, 1) - 1, len(rounds) - 1)
+item = rounds[idx]
+if host in item:
+    row = item[host]
+elif "*" in item:
+    row = item["*"]
+else:
+    row = {"code": "404", "location": ""}
+code = str(row.get("code", "404"))
+loc = str(row.get("location", ""))
+print(f"{code} {loc}".rstrip())
+PY
+chmod +x "$BIN/apex-traefik-http-get"
+
+write_http_rounds() {
+  python3 - "$STATE/traefik-http.json" "$1" <<'PY'
+import json, sys
+path, raw = sys.argv[1], sys.argv[2]
+json.dump({"rounds": json.loads(raw)}, open(path, "w"))
+PY
+}
+
+ok_round='{"*":{"code":"301","location":"https://woodright.ru/"},"api.woodright.ru":{"code":"301","location":"https://api.woodright.ru/"}}'
+nf_round='{"*":{"code":"404","location":""}}'
+
+enable_settle_harness() {
+  unset WOODRIGHT_APEX_SKIP_HTTP_PROBE
+  export WOODRIGHT_APEX_SKIP_LOOPBACK_PROBE=1
+  export WOODRIGHT_APEX_TRAEFIK_HTTP_GET="$BIN/apex-traefik-http-get"
+  export WOODRIGHT_APEX_TRAEFIK_FAKE_HTTP_STATE="$STATE/traefik-http.json"
+  export WOODRIGHT_APEX_TRAEFIK_SETTLE_TIMEOUT_SEC="${1:-4}"
+  export WOODRIGHT_APEX_TRAEFIK_SETTLE_INTERVAL_SEC="${2:-0}"
+  export WOODRIGHT_APEX_TRAEFIK_SETTLE_REQUIRED_STREAK="${3:-2}"
+}
+
+disable_settle_harness() {
+  unset WOODRIGHT_APEX_SKIP_LOOPBACK_PROBE
+  unset WOODRIGHT_APEX_TRAEFIK_HTTP_GET
+  unset WOODRIGHT_APEX_TRAEFIK_FAKE_HTTP_STATE
+  unset WOODRIGHT_APEX_TRAEFIK_SETTLE_TIMEOUT_SEC
+  unset WOODRIGHT_APEX_TRAEFIK_SETTLE_INTERVAL_SEC
+  unset WOODRIGHT_APEX_TRAEFIK_SETTLE_REQUIRED_STREAK
+  export WOODRIGHT_APEX_SKIP_HTTP_PROBE=1
+}
+
+assert_rolled_back_clean() {
+  local label="$1"
+  [[ ! -f "$TARGET" ]] && pass "$label Traefik absent" || fail "$label left Traefik"
+  [[ ! -f "$WOODRIGHT_APEX_OWNED_STATE" ]] && pass "$label owned-state absent" || fail "$label left owned-state"
+  python3 - "$STATE/docker.json" <<'PY'
+import json,sys
+d=json.load(open(sys.argv[1]))
+assert "dokploy-network" not in d["containers"]["woodright-public-production-storefront"]["networks"]
+assert "dokploy-network" not in d["containers"]["woodright-public-production-backend"]["networks"]
+print("ok")
+PY
+  pass "$label networks disconnected"
+}
+
+prep_settle_execute() {
+  init_state
+  write_approval
+  rm -f "$TARGET" "$WOODRIGHT_APEX_OWNED_STATE"
+  export WOODRIGHT_FAKE_DIG_A='{"woodright.ru":"79.133.175.43","www.woodright.ru":"79.133.175.43","api.woodright.ru":""}'
+}
+
+# A. Immediate expected redirect (streak 2, both attempts ok)
+prep_settle_execute
+enable_settle_harness 4 0 2
+write_http_rounds "[${ok_round},${ok_round}]"
+export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-settle-a"
+if run --mode execute --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    --confirm "$CONFIRM" --approval-path "$APPROVAL" \
+    >"$TMP/settle-a-out.txt" 2>"$TMP/settle-a-err.txt"; then
+  grep -q 'PUBLIC_APEX_ROUTING_PREPARE_OK' "$TMP/settle-a-err.txt" \
+    && pass "A immediate Traefik success" || fail "A missing prepare status"
+else
+  fail "A immediate success should pass"
+  cat "$TMP/settle-a-err.txt"
+fi
+[[ -f "$TARGET" ]] && pass "A Traefik kept" || fail "A Traefik missing"
+[[ -f "$WOODRIGHT_APEX_OWNED_STATE" ]] && pass "A owned-state present" || fail "A owned-state missing"
+
+# B. Production reproduction: first 404, then expected
+prep_settle_execute
+enable_settle_harness 4 0 2
+write_http_rounds "[${nf_round},${ok_round},${ok_round}]"
+export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-settle-b"
+if run --mode execute --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    --confirm "$CONFIRM" --approval-path "$APPROVAL" \
+    >"$TMP/settle-b-out.txt" 2>"$TMP/settle-b-err.txt"; then
+  grep -q 'status=404' "$TMP/settle-b-err.txt" && grep -q 'PUBLIC_APEX_ROUTING_PREPARE_OK' "$TMP/settle-b-err.txt" \
+    && pass "B 404 then expected route" || fail "B missing 404-then-ok evidence"
+else
+  fail "B first-404 should converge"
+  cat "$TMP/settle-b-err.txt"
+fi
+
+# C. Several 404s then expected
+prep_settle_execute
+enable_settle_harness 4 0 2
+write_http_rounds "[${nf_round},${nf_round},${nf_round},${ok_round},${ok_round}]"
+export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-settle-c"
+if run --mode execute --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    --confirm "$CONFIRM" --approval-path "$APPROVAL" \
+    >"$TMP/settle-c-out.txt" 2>"$TMP/settle-c-err.txt"; then
+  grep -q 'PUBLIC_APEX_ROUTING_PREPARE_OK' "$TMP/settle-c-err.txt" \
+    && pass "C multiple 404 then expected" || fail "C missing prepare status"
+else
+  fail "C multi-404 should converge"
+  cat "$TMP/settle-c-err.txt"
+fi
+
+# D + I. Persistent 404 until deadline → rollback_partial cleans owned-state
+prep_settle_execute
+enable_settle_harness 1 0.2 2
+write_http_rounds "[${nf_round}]"
+export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-settle-d"
+if run --mode execute --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    --confirm "$CONFIRM" --approval-path "$APPROVAL" \
+    >"$TMP/settle-d-out.txt" 2>"$TMP/settle-d-err.txt"; then
+  fail "D persistent 404 should fail"
+else
+  grep -q 'convergence deadline' "$TMP/settle-d-err.txt" \
+    && pass "D persistent 404 failed closed" || fail "D missing deadline token"
+fi
+assert_rolled_back_clean "D/I auto-rollback"
+
+# J. Explicit rollback after automatic rollback is idempotent
+export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-settle-j"
+disable_settle_harness
+if run --mode rollback --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    >"$TMP/settle-j-out.txt" 2>"$TMP/settle-j-err.txt"; then
+  grep -q 'PUBLIC_APEX_ROUTING_ROLLBACK_OK' "$TMP/settle-j-err.txt" \
+    && pass "J explicit rollback after auto-rollback" || fail "J missing rollback status"
+else
+  fail "J explicit rollback should be idempotent"
+  cat "$TMP/settle-j-err.txt"
+fi
+[[ ! -f "$TARGET" ]] && pass "J Traefik still absent" || fail "J recreated Traefik"
+
+# E. Connection 000 then expected route
+prep_settle_execute
+enable_settle_harness 4 0 2
+conn_round='{"*":{"code":"000","location":""}}'
+write_http_rounds "[${conn_round},${ok_round},${ok_round}]"
+export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-settle-e"
+if run --mode execute --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    --confirm "$CONFIRM" --approval-path "$APPROVAL" \
+    >"$TMP/settle-e-out.txt" 2>"$TMP/settle-e-err.txt"; then
+  grep -q 'status=000' "$TMP/settle-e-err.txt" && grep -q 'PUBLIC_APEX_ROUTING_PREPARE_OK' "$TMP/settle-e-err.txt" \
+    && pass "E connection transient then expected" || fail "E missing 000-then-ok evidence"
+else
+  fail "E connection transient should converge"
+  cat "$TMP/settle-e-err.txt"
+fi
+
+# F. Persistent 5xx never accepted
+prep_settle_execute
+enable_settle_harness 8 0 2
+write_http_rounds '[{"*":{"code":"503","location":""}}]'
+export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-settle-f"
+if run --mode execute --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    --confirm "$CONFIRM" --approval-path "$APPROVAL" \
+    >"$TMP/settle-f-out.txt" 2>"$TMP/settle-f-err.txt"; then
+  fail "F 5xx should fail"
+else
+  grep -q 'http_5xx' "$TMP/settle-f-err.txt" && grep -vq 'convergence deadline' "$TMP/settle-f-err.txt" \
+    && pass "F 5xx fail-closed without treating as lag" || fail "F 5xx not classified"
+fi
+assert_rolled_back_clean "F 5xx rollback"
+
+# G. Wrong redirect Location
+prep_settle_execute
+enable_settle_harness 8 0 2
+write_http_rounds '[{"*":{"code":"301","location":"https://woodright-demo.ru/"}}]'
+export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-settle-g"
+if run --mode execute --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    --confirm "$CONFIRM" --approval-path "$APPROVAL" \
+    >"$TMP/settle-g-out.txt" 2>"$TMP/settle-g-err.txt"; then
+  fail "G wrong redirect should fail"
+else
+  grep -q 'wrong_redirect' "$TMP/settle-g-err.txt" \
+    && pass "G wrong Location fail-closed" || fail "G wrong redirect not classified"
+fi
+assert_rolled_back_clean "G wrong-redirect rollback"
+
+# H. Deadline is finite (no infinite retry)
+prep_settle_execute
+enable_settle_harness 1 0.2 2
+write_http_rounds "[${nf_round}]"
+export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-settle-h"
+if run --mode execute --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    --confirm "$CONFIRM" --approval-path "$APPROVAL" \
+    >"$TMP/settle-h-out.txt" 2>"$TMP/settle-h-err.txt"; then
+  fail "H timeout should fail"
+else
+  grep -q 'convergence deadline' "$TMP/settle-h-err.txt" \
+    && pass "H bounded timeout" || fail "H missing deadline"
+fi
+
+disable_settle_harness
+
+# K. Dry-run still skips Traefik Host probe (PR #209)
+init_state
+rm -f "$TARGET"
+unset WOODRIGHT_APEX_SKIP_HTTP_PROBE
+export WOODRIGHT_APEX_SKIP_LOOPBACK_PROBE=1
+export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-settle-k"
+if run --mode dry-run --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    >"$TMP/settle-k-out.txt" 2>"$TMP/settle-k-err.txt"; then
+  grep -q 'Traefik HTTP probes skipped in dry-run' "$TMP/settle-k-err.txt" \
+    && grep -q 'PUBLIC_APEX_ROUTING_DRY_RUN_OK' "$TMP/settle-k-err.txt" \
+    && pass "K dry-run skips uncreated Traefik routers" || fail "K dry-run probe contract"
+else
+  fail "K dry-run should pass"
+  cat "$TMP/settle-k-err.txt"
+fi
+[[ ! -f "$TARGET" ]] && pass "K dry-run still non-mutating" || fail "K dry-run wrote Traefik"
+unset WOODRIGHT_APEX_SKIP_LOOPBACK_PROBE
+export WOODRIGHT_APEX_SKIP_HTTP_PROBE=1
+
+# M. Failed network disconnect keeps remaining owned-state (Codex P0)
+prep_settle_execute
+enable_settle_harness 1 0.2 2
+write_http_rounds "[${nf_round}]"
+export WR_FAKE_DOCKER_DISCONNECT_FAIL="woodright-public-production-storefront"
+export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-settle-m"
+if run --mode execute --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    --confirm "$CONFIRM" --approval-path "$APPROVAL" \
+    >"$TMP/settle-m-out.txt" 2>"$TMP/settle-m-err.txt"; then
+  fail "M persistent 404 should fail"
+else
+  grep -q 'PARTIAL_ROLLBACK_INCOMPLETE' "$TMP/settle-m-err.txt" \
+    && pass "M incomplete auto-rollback reported" || fail "M missing incomplete token"
+fi
+[[ ! -f "$TARGET" ]] && pass "M Traefik removed" || fail "M Traefik remained"
+[[ -f "$WOODRIGHT_APEX_OWNED_STATE" ]] && pass "M owned-state retained" || fail "M owned-state wiped after failed disconnect"
+python3 - "$WOODRIGHT_APEX_OWNED_STATE" "$STATE/docker.json" <<'PY'
+import json,sys
+owned=json.load(open(sys.argv[1]))
+d=json.load(open(sys.argv[2]))
+assert owned.get("traefik_created_by_helper") is False
+assert "woodright-public-production-storefront" in (owned.get("networks_added") or [])
+assert "woodright-public-production-backend" not in (owned.get("networks_added") or [])
+assert "dokploy-network" in d["containers"]["woodright-public-production-storefront"]["networks"]
+assert "dokploy-network" not in d["containers"]["woodright-public-production-backend"]["networks"]
+print("ok")
+PY
+pass "M remaining owned network matches live attachment"
+unset WR_FAKE_DOCKER_DISCONNECT_FAIL
+disable_settle_harness
+export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-settle-m-rb"
+if run --mode rollback --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    >"$TMP/settle-m-rb-out.txt" 2>"$TMP/settle-m-rb-err.txt"; then
+  grep -q 'PUBLIC_APEX_ROUTING_ROLLBACK_OK' "$TMP/settle-m-rb-err.txt" \
+    && pass "M explicit rollback finished leftover network" || fail "M explicit rollback status"
+else
+  fail "M explicit rollback should complete leftover cleanup"
+  cat "$TMP/settle-m-rb-err.txt"
+fi
+[[ ! -f "$WOODRIGHT_APEX_OWNED_STATE" ]] && pass "M owned-state cleared after explicit rollback" \
+  || fail "M owned-state remained after explicit rollback"
+
+# N. Failed Traefik rm keeps traefik ownership proof
+prep_settle_execute
+enable_settle_harness 1 0.2 2
+write_http_rounds "[${nf_round}]"
+export WOODRIGHT_APEX_INJECT_FAIL=partial-skip-traefik-rm
+export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-settle-n"
+if run --mode execute --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    --confirm "$CONFIRM" --approval-path "$APPROVAL" \
+    >"$TMP/settle-n-out.txt" 2>"$TMP/settle-n-err.txt"; then
+  fail "N persistent 404 should fail"
+else
+  grep -q 'PARTIAL_ROLLBACK_INCOMPLETE' "$TMP/settle-n-err.txt" \
+    && pass "N incomplete Traefik rm reported" || fail "N missing incomplete token"
+fi
+[[ -f "$TARGET" ]] && pass "N Traefik file retained" || fail "N Traefik was deleted despite skip"
+[[ -f "$WOODRIGHT_APEX_OWNED_STATE" ]] && pass "N owned-state retained" || fail "N owned-state wiped after skipped rm"
+python3 - "$WOODRIGHT_APEX_OWNED_STATE" "$STATE/docker.json" <<'PY'
+import json,sys
+owned=json.load(open(sys.argv[1]))
+d=json.load(open(sys.argv[2]))
+assert owned.get("traefik_created_by_helper") is True
+assert owned.get("networks_added") == []
+assert "dokploy-network" not in d["containers"]["woodright-public-production-storefront"]["networks"]
+assert "dokploy-network" not in d["containers"]["woodright-public-production-backend"]["networks"]
+print("ok")
+PY
+pass "N owned Traefik flag remains while networks cleaned"
+unset WOODRIGHT_APEX_INJECT_FAIL
+disable_settle_harness
+export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-settle-n-rb"
+if run --mode rollback --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    >"$TMP/settle-n-rb-out.txt" 2>"$TMP/settle-n-rb-err.txt"; then
+  grep -q 'PUBLIC_APEX_ROUTING_ROLLBACK_OK' "$TMP/settle-n-rb-err.txt" \
+    && pass "N explicit rollback removed leftover Traefik" || fail "N explicit rollback status"
+else
+  fail "N explicit rollback should delete leftover Traefik"
+  cat "$TMP/settle-n-rb-err.txt"
+fi
+[[ ! -f "$TARGET" ]] && pass "N Traefik removed by explicit rollback" || fail "N Traefik remained"
+[[ ! -f "$WOODRIGHT_APEX_OWNED_STATE" ]] && pass "N owned-state cleared after explicit rollback" \
+  || fail "N owned-state remained after explicit rollback"
+
+# O. Replaced Traefik file is not deleted by automatic rollback (Codex P1)
+prep_settle_execute
+export WOODRIGHT_APEX_INJECT_FAIL=after-owned-replace-traefik
+export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-settle-o"
+if run --mode execute --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    --confirm "$CONFIRM" --approval-path "$APPROVAL" \
+    >"$TMP/settle-o-out.txt" 2>"$TMP/settle-o-err.txt"; then
+  fail "O injected replace should fail"
+else
+  grep -q 'no longer matches helper template' "$TMP/settle-o-err.txt" \
+    && grep -q 'PARTIAL_ROLLBACK_INCOMPLETE' "$TMP/settle-o-err.txt" \
+    && pass "O CAS refused unowned Traefik delete" || fail "O missing CAS refuse"
+fi
+grep -q 'foreign unowned replacement' "$TARGET" && pass "O foreign Traefik preserved" \
+  || fail "O Traefik was deleted or overwritten"
+[[ -f "$WOODRIGHT_APEX_OWNED_STATE" ]] && pass "O owned-state retained" || fail "O owned-state wiped"
+python3 - "$WOODRIGHT_APEX_OWNED_STATE" <<'PY'
+import json,sys
+owned=json.load(open(sys.argv[1]))
+assert owned.get("traefik_created_by_helper") is True
+print("ok")
+PY
+pass "O traefik ownership flag remains"
+unset WOODRIGHT_APEX_INJECT_FAIL
+export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-settle-o-rb"
+if run --mode rollback --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    >"$TMP/settle-o-rb-out.txt" 2>"$TMP/settle-o-rb-err.txt"; then
+  fail "O explicit rollback must refuse foreign Traefik delete"
+else
+  grep -q 'CAS Traefik target differs from template' "$TMP/settle-o-rb-err.txt" \
+    && pass "O explicit rollback CAS-refused foreign file" || fail "O explicit rollback message"
+fi
+grep -q 'foreign unowned replacement' "$TARGET" && pass "O foreign Traefik still present after refused rollback" \
+  || fail "O explicit rollback deleted foreign Traefik"
+
+# P. Journaled ownership in the early mutation window (Codex P1)
+init_state
+write_approval
+rm -f "$TARGET" "$WOODRIGHT_APEX_OWNED_STATE"
+export WOODRIGHT_APEX_INJECT_FAIL=after-first-network
+export WR_FAKE_DOCKER_DISCONNECT_FAIL="woodright-public-production-storefront"
+export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-settle-p"
+if run --mode execute --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    --confirm "$CONFIRM" --approval-path "$APPROVAL" \
+    >"$TMP/settle-p-out.txt" 2>"$TMP/settle-p-err.txt"; then
+  fail "P after-first-network should fail"
+else
+  grep -q 'PARTIAL_ROLLBACK_INCOMPLETE' "$TMP/settle-p-err.txt" \
+    && pass "P incomplete auto-rollback in early window" || fail "P missing incomplete token"
+fi
+[[ ! -f "$TARGET" ]] && pass "P Traefik absent" || fail "P Traefik present"
+[[ -f "$WOODRIGHT_APEX_OWNED_STATE" ]] && pass "P owned-state retained for leftover network" \
+  || fail "P owned-state absent after early-window disconnect fail"
+python3 - "$WOODRIGHT_APEX_OWNED_STATE" "$STATE/docker.json" <<'PY'
+import json,sys
+owned=json.load(open(sys.argv[1]))
+d=json.load(open(sys.argv[2]))
+assert owned.get("traefik_created_by_helper") is False
+assert owned.get("networks_added") == ["woodright-public-production-storefront"]
+assert "dokploy-network" in d["containers"]["woodright-public-production-storefront"]["networks"]
+assert "dokploy-network" not in d["containers"]["woodright-public-production-backend"]["networks"]
+print("ok")
+PY
+pass "P leftover network still recorded"
+unset WOODRIGHT_APEX_INJECT_FAIL
+unset WR_FAKE_DOCKER_DISCONNECT_FAIL
+export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-settle-p-rb"
+if run --mode rollback --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    >"$TMP/settle-p-rb-out.txt" 2>"$TMP/settle-p-rb-err.txt"; then
+  grep -q 'PUBLIC_APEX_ROUTING_ROLLBACK_OK' "$TMP/settle-p-rb-err.txt" \
+    && pass "P explicit rollback finished early-window leftover" || fail "P explicit rollback status"
+else
+  fail "P explicit rollback should complete leftover cleanup"
+  cat "$TMP/settle-p-rb-err.txt"
+fi
+[[ ! -f "$WOODRIGHT_APEX_OWNED_STATE" ]] && pass "P owned-state cleared after explicit rollback" \
+  || fail "P owned-state remained after explicit rollback"
 
 if [[ "$FAILED" -ne 0 ]]; then
   echo "FAILED=$FAILED"
