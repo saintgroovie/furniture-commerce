@@ -299,11 +299,28 @@ connect_network() {
   log "connected $name to $DOKPLOY_NET"
 }
 
+# Treat "already not attached" as success so rollback can retry after a partial disconnect.
+disconnect_one_idempotent() {
+  local name="$1"
+  local net="$2"
+  local out rc=0
+  out="$(docker network disconnect "$net" "$name" 2>&1)" && {
+    log "disconnected $name from $net"
+    return 0
+  }
+  rc=$?
+  if printf '%s\n' "$out" | grep -qiE 'is not connected|not connected to (the )?network|No such container'; then
+    log "network $net already absent on $name"
+    return 0
+  fi
+  log "ERROR docker network disconnect $name $net rc=$rc: $out"
+  return "$rc"
+}
+
 disconnect_network_if_we_added() {
   local name
   for name in "${NETWORKS_CONNECTED[@]+"${NETWORKS_CONNECTED[@]}"}"; do
-    docker network disconnect "$DOKPLOY_NET" "$name" || true
-    log "disconnected $name from $DOKPLOY_NET"
+    disconnect_one_idempotent "$name" "$DOKPLOY_NET" || true
   done
   NETWORKS_CONNECTED=()
 }
@@ -510,18 +527,26 @@ main() {
       cp -a "$target" "$EVIDENCE_DIR/pre-rollback-traefik.yml"
     fi
     if [[ -f "$owned" ]]; then
-      python3 - "$owned" "$target" "$DOKPLOY_NET" <<'PY'
-import json, os, subprocess, sys
-owned_path, target, net = sys.argv[1:4]
+      python3 - "$owned" "$target" <<'PY'
+import json, os, sys
+owned_path, target = sys.argv[1:3]
 owned = json.load(open(owned_path))
 if owned.get("traefik_created_by_helper") and os.path.isfile(target):
     os.remove(target)
     print("removed_traefik", target)
 else:
     print("preserved_traefik")
-for name in owned.get("networks_added") or []:
-    subprocess.check_call(["docker", "network", "disconnect", net, name])
 PY
+      local names name saw_first=0
+      names="$(python3 -c 'import json,sys; print("\n".join(json.load(open(sys.argv[1])).get("networks_added") or []))' "$owned")"
+      while IFS= read -r name; do
+        [[ -n "$name" ]] || continue
+        disconnect_one_idempotent "$name" "$DOKPLOY_NET" || die "rollback network disconnect failed for $name"
+        if [[ "${WOODRIGHT_APEX_INJECT_FAIL:-}" == "rollback-after-first-disconnect" && "$saw_first" == "0" ]]; then
+          die "injected failure at rollback-after-first-disconnect"
+        fi
+        saw_first=1
+      done <<<"$names"
       mv "$owned" "$EVIDENCE_DIR/owned-cleared.json"
     else
       log "no owned-state file; not deleting Traefik or disconnecting networks"

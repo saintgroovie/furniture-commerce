@@ -117,8 +117,17 @@ if args[:2] == ["network", "connect"]:
 
 if args[:2] == ["network", "disconnect"]:
     net, name = args[2], args[3]
-    c = st["containers"][name]
-    c["networks"] = [n for n in c.get("networks", []) if n != net]
+    c = st["containers"].get(name)
+    if not c:
+        print(f"Error: No such container: {name}", file=sys.stderr)
+        sys.exit(1)
+    if net not in c.get("networks", []):
+        print(
+            f"Error response from daemon: container {name} is not connected to the network {net}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    c["networks"] = [n for n in c.get("networks") if n != net]
     st.setdefault("mutations", []).append(f"disconnect {name} {net}")
     save()
     sys.exit(0)
@@ -337,17 +346,43 @@ else
   pass "rollback refused while www still points at new-stack"
 fi
 
-# rollback after DNS restored
+# interrupted rollback then retry (owned network already absent must not block)
 export WOODRIGHT_FAKE_DIG_A='{"woodright.ru":"79.133.175.43","www.woodright.ru":"79.133.175.43","api.woodright.ru":""}'
+export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-rb-interrupt"
+export WOODRIGHT_APEX_INJECT_FAIL=rollback-after-first-disconnect
+if run --mode rollback --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    >/dev/null 2>"$TMP/rb-interrupt.txt"; then
+  fail "interrupted rollback should fail closed"
+else
+  grep -q 'rollback-after-first-disconnect' "$TMP/rb-interrupt.txt" \
+    && pass "interrupted rollback failed after first disconnect" \
+    || fail "interrupt token missing"
+fi
+unset WOODRIGHT_APEX_INJECT_FAIL
+[[ -f "$WOODRIGHT_APEX_OWNED_STATE" ]] && pass "owned-state kept after interrupted rollback" \
+  || fail "interrupted rollback cleared owned-state"
+python3 - "$STATE/docker.json" <<'PY'
+import json,sys
+d=json.load(open(sys.argv[1]))
+sf=d["containers"]["woodright-public-production-storefront"]["networks"]
+be=d["containers"]["woodright-public-production-backend"]["networks"]
+assert "dokploy-network" not in sf
+assert "dokploy-network" in be
+print("ok")
+PY
+pass "interrupted rollback left remaining owned attachment"
+
 export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-rb"
 if run --mode rollback --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
     >"$TMP/rb-out.txt" 2>"$TMP/rb-err.txt"; then
   grep -q 'PUBLIC_APEX_ROUTING_ROLLBACK_OK' "$TMP/rb-err.txt" && pass "rollback OK" || fail "rollback status missing"
 else
-  fail "rollback should pass"
+  fail "rollback retry after interrupt should pass"
   cat "$TMP/rb-err.txt"
 fi
 [[ ! -f "$TARGET" ]] && pass "Traefik removed on rollback" || fail "Traefik remained"
+[[ ! -f "$WOODRIGHT_APEX_OWNED_STATE" ]] && pass "owned-state cleared on rollback retry" \
+  || fail "owned-state remained after rollback retry"
 python3 - "$STATE/docker.json" <<'PY'
 import json,sys
 d=json.load(open(sys.argv[1]))
