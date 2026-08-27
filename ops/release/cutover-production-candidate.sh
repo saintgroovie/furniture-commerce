@@ -1934,6 +1934,57 @@ capture_rollback_anchors() {
   log "rollback anchors backend=${PRE_BE_REF:-n/a} storefront=${PRE_SF_REF:-n/a} release_sha=${PRE_RELEASE_SHA:-n/a} (verified present locally; no keepers)"
 }
 capture_rollback_anchors
+
+# Canonical compose interpolates ${WOODRIGHT_*_SOURCE_SHA:?required}. A pre-PR-207
+# .env snapshot may omit those keys. Seed the pin-backup (not live .env) with the
+# currently running OCI revisions so rollback compose recreate cannot fail-closed
+# on missing required interpolation.
+ensure_pin_backup_component_source_shas() {
+  local backup="$EVIDENCE_DIR/pin-backup/dokploy-compose.env"
+  local be_sha sf_sha
+  [[ -f "$backup" ]] || die "pin backup missing before component SHA seed"
+  be_sha="$(live_oci_revision "${WOODRIGHT_BE_CONTAINER_DEFAULT}")"
+  sf_sha="$(live_oci_revision "${WOODRIGHT_SF_CONTAINER_DEFAULT}")"
+  [[ "$be_sha" =~ ^[0-9a-f]{40}$ ]] || die "cannot seed backup: live backend OCI revision missing"
+  [[ "$sf_sha" =~ ^[0-9a-f]{40}$ ]] || die "cannot seed backup: live storefront OCI revision missing"
+  python3 - "$backup" "$be_sha" "$sf_sha" <<'PY'
+import re, sys
+path, be_sha, sf_sha = sys.argv[1:4]
+sha40 = re.compile(r"^[0-9a-f]{40}$")
+if not sha40.fullmatch(be_sha) or not sha40.fullmatch(sf_sha):
+    raise SystemExit("invalid live revision while seeding pin backup")
+text = open(path, "r", encoding="utf-8").read()
+lines = text.splitlines()
+wanted = {
+    "WOODRIGHT_BACKEND_SOURCE_SHA": be_sha,
+    "WOODRIGHT_STOREFRONT_SOURCE_SHA": sf_sha,
+}
+out = []
+seen = set()
+for line in lines:
+    key = line.split("=", 1)[0].strip() if "=" in line else ""
+    if key in wanted:
+        seen.add(key)
+        val = line.split("=", 1)[1]
+        stripped = val.strip().strip('"').strip("'")
+        if stripped and not sha40.fullmatch(stripped):
+            raise SystemExit(f"pin backup {key} is not a 40-hex SHA")
+        if not stripped:
+            out.append(f"{key}={wanted[key]}")
+        else:
+            out.append(line)
+        continue
+    out.append(line)
+for key, val in wanted.items():
+    if key not in seen:
+        out.append(f"{key}={val}")
+open(path, "w", encoding="utf-8").write("\n".join(out) + "\n")
+PY
+  sha256_of "$backup" >"$EVIDENCE_DIR/pin-backup/dokploy-compose.env.sha256"
+  log "pin-backup component SOURCE_SHA keys seeded from live OCI revisions (backup only; live .env unchanged until pin write)"
+}
+ensure_pin_backup_component_source_shas
+
 resolve_pair_expected_identities
 
 record_state prepared
