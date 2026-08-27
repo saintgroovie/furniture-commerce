@@ -303,6 +303,12 @@ grep -q 'ops/lib/woodright-recreate-mode.sh' "$ROOT/ops/release/install-environm
   || fail "installer missing recreate-mode"
 ok "installer includes pair+storefront helpers"
 
+grep -q 'ops/release/reconcile-production-candidate-compose-template.sh' "$ROOT/ops/release/install-environment-governance.sh" \
+  || fail "installer missing production compose template helper"
+grep -q 'ops/compose/woodright-production.docker-compose.yml' "$ROOT/ops/release/install-environment-governance.sh" \
+  || fail "installer missing canonical production compose template"
+ok "installer includes production compose template reconcile"
+
 # 24c-bis) installer ships the production cutover helper AND its skew recovery
 # companion - shipping only one of the pair leaves the VM unable to recover a
 # pin/runtime skew that the cutover helper now refuses to run against.

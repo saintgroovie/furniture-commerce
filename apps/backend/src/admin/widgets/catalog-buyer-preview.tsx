@@ -11,6 +11,10 @@ import {
   type AdminProductProjection,
 } from "../../lib/catalog-admin/admin-product-projection"
 import { formatAxisGlance } from "../../lib/catalog-admin/buyer-options-summary"
+import {
+  IMPORT_PROVENANCE_EXPLANATION,
+  IMPORT_PROVENANCE_SECTION_TITLE,
+} from "../../lib/catalog-admin/import-provenance"
 import { adminJson } from "../lib/admin-fetch"
 
 type ProductData = {
@@ -71,6 +75,7 @@ const CatalogBuyerPreviewWidget = ({ data }: { data?: ProductData }) => {
   const [saveMsg, setSaveMsg] = useState<string | null>(null)
   const [saveErr, setSaveErr] = useState<string | null>(null)
   const [techOpen, setTechOpen] = useState(false)
+  const [importOpen, setImportOpen] = useState(false)
   /** Saved titles keyed by product id — never leak across navigation. */
   const [savedTitlesById, setSavedTitlesById] = useState<Record<string, string>>(
     {}
@@ -99,6 +104,7 @@ const CatalogBuyerPreviewWidget = ({ data }: { data?: ProductData }) => {
     setSaveMsg(null)
     setSaveErr(null)
     setTechOpen(false)
+    setImportOpen(false)
     setClassification(null)
     setMetaFingerprint(null)
     setServerProjection(null)
@@ -320,6 +326,36 @@ const CatalogBuyerPreviewWidget = ({ data }: { data?: ProductData }) => {
               {w}
             </div>
           ))}
+        </>
+      ) : null}
+
+      {projection.import_provenance ? (
+        <>
+          <button
+            type="button"
+            onClick={() => setImportOpen((v) => !v)}
+            style={{
+              ...muted,
+              textAlign: "left",
+              background: "transparent",
+              border: "none",
+              padding: 0,
+              cursor: "pointer",
+              marginTop: 4,
+            }}
+          >
+            {importOpen ? "▾" : "▸"} {IMPORT_PROVENANCE_SECTION_TITLE}
+          </button>
+          {importOpen ? (
+            <div style={muted}>
+              <div>{IMPORT_PROVENANCE_EXPLANATION}</div>
+              {projection.import_provenance.rows.map((row) => (
+                <div key={row.key}>
+                  {row.label_ru}: {row.value}
+                </div>
+              ))}
+            </div>
+          ) : null}
         </>
       ) : null}
 

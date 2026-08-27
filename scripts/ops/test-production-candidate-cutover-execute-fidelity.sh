@@ -337,6 +337,8 @@ run_exec "$EV" "$TMP/out-success.txt"
 [[ "$(pin_of WOODRIGHT_BACKEND_IMAGE)" == "$BE_REF" ]] && pass "success: backend pin advanced" || fail "success: backend pin=$(pin_of WOODRIGHT_BACKEND_IMAGE)"
 [[ "$(pin_of WOODRIGHT_STOREFRONT_IMAGE)" == "$SF_REF" ]] && pass "success: storefront pin advanced" || fail "success: storefront pin"
 [[ "$(pin_of WOODRIGHT_RELEASE_SHA)" == "$APP_SHA" ]] && pass "success: common WOODRIGHT_RELEASE_SHA advanced" || fail "success: RELEASE_SHA=$(pin_of WOODRIGHT_RELEASE_SHA)"
+[[ "$(pin_of WOODRIGHT_BACKEND_SOURCE_SHA)" == "$APP_SHA" ]] && pass "success: backend source SHA pinned" || fail "success: BE_SOURCE_SHA=$(pin_of WOODRIGHT_BACKEND_SOURCE_SHA)"
+[[ "$(pin_of WOODRIGHT_STOREFRONT_SOURCE_SHA)" == "$APP_SHA" ]] && pass "success: storefront source SHA pinned" || fail "success: SF_SOURCE_SHA=$(pin_of WOODRIGHT_STOREFRONT_SOURCE_SHA)"
 [[ "$(pin_of UNRELATED_KEY)" == "keep-me" ]] && pass "success: unrelated compose keys preserved" || fail "success: unrelated key lost"
 [[ "$(digest_of woodright-production-backend)" == "$NEW_BE_DIG" ]] && pass "success: backend runs the new digest" || fail "success: backend digest"
 [[ "$(digest_of woodright-production-storefront)" == "$NEW_SF_DIG" ]] && pass "success: storefront runs the new digest" || fail "success: storefront digest"
@@ -764,6 +766,9 @@ assert plan["pin_plan"]["keys"]["WOODRIGHT_BACKEND_IMAGE"].endswith("a" * 64)
 assert plan["pin_plan"]["keys"]["WOODRIGHT_RELEASE_SHA"] == sys.argv[2], plan["pin_plan"]["keys"]
 assert plan["pin_plan"]["common_release_sha"] == sys.argv[2]
 assert "WOODRIGHT_RELEASE_SHA" in plan["pin_plan"]["write_order"]
+assert plan["pin_plan"]["keys"]["WOODRIGHT_BACKEND_SOURCE_SHA"] == sys.argv[2]
+assert plan["pin_plan"]["keys"]["WOODRIGHT_STOREFRONT_SOURCE_SHA"] == sys.argv[2]
+assert plan["recreate"]["order"] == ["backend", "storefront"]
 assert "prepared" in plan["state_machine"]
 assert packet["no_mutation_performed"] is True
 
@@ -1101,8 +1106,15 @@ assert d["application_source_sha"] == sf_sha
 assert d["backend_digest"] and d["storefront_digest"]
 PY
 [[ "$(pin_of WOODRIGHT_BACKEND_IMAGE)" == "$OLD_BE_REF" ]] && pass "sf_only: backend pin frozen" || fail "sf_only: backend pin changed"
-[[ "$(digest_of woodright-production-backend)" == "$OLD_BE_DIG" ]] && pass "sf_only: backend runtime frozen" || fail "sf_only: backend runtime moved"
+[[ "$(digest_of woodright-production-backend)" == "$OLD_BE_DIG" ]] && pass "sf_only: backend digest frozen" || fail "sf_only: backend runtime moved"
 [[ "$(digest_of woodright-production-storefront)" == "$NEW_SF_DIG" ]] && pass "sf_only: storefront advanced" || fail "sf_only: storefront digest"
+[[ "$(pin_of WOODRIGHT_STOREFRONT_SOURCE_SHA)" == "$APP_SHA" ]] && pass "sf_only: storefront source SHA mutated" || fail "sf_only: SF_SOURCE_SHA=$(pin_of WOODRIGHT_STOREFRONT_SOURCE_SHA)"
+[[ "$(pin_of WOODRIGHT_BACKEND_SOURCE_SHA)" == "$OLD_PEER_SHA" ]] && pass "sf_only: backend source SHA from live peer" || fail "sf_only: BE_SOURCE_SHA=$(pin_of WOODRIGHT_BACKEND_SOURCE_SHA)"
+[[ "$(pin_of WOODRIGHT_RELEASE_SHA)" == "9946b42aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" ]] \
+  && pass "sf_only: global RELEASE_SHA not rewritten" || fail "sf_only: RELEASE_SHA=$(pin_of WOODRIGHT_RELEASE_SHA)"
+grep -qE 'compose_up backend' "$STATE/log/journal.log" \
+  && grep -qE 'compose_up storefront' "$STATE/log/journal.log" \
+  && pass "sf_only: both services recreated for identity env" || fail "sf_only: journal=$(tr '\n' '|' <"$STATE/log/journal.log")"
 
 reset_harness
 EV="$TMP/ev-be-only"
@@ -1121,6 +1133,26 @@ assert d["storefront_image"] == sf_ref
 assert d["backend_image"] == be_ref
 PY
 [[ "$(pin_of WOODRIGHT_STOREFRONT_IMAGE)" == "$OLD_SF_REF" ]] && pass "be_only: storefront pin frozen" || fail "be_only: storefront pin changed"
+[[ "$(digest_of woodright-production-storefront)" == "$OLD_SF_DIG" ]] && pass "be_only: storefront digest frozen" || fail "be_only: storefront runtime moved"
+[[ "$(digest_of woodright-production-backend)" == "$NEW_BE_DIG" ]] && pass "be_only: backend advanced" || fail "be_only: backend digest"
+[[ "$(pin_of WOODRIGHT_BACKEND_SOURCE_SHA)" == "$APP_SHA" ]] && pass "be_only: backend source SHA mutated" || fail "be_only: BE_SOURCE_SHA=$(pin_of WOODRIGHT_BACKEND_SOURCE_SHA)"
+[[ "$(pin_of WOODRIGHT_STOREFRONT_SOURCE_SHA)" == "$OLD_PEER_SHA" ]] && pass "be_only: storefront source SHA from live peer" || fail "be_only: SF_SOURCE_SHA=$(pin_of WOODRIGHT_STOREFRONT_SOURCE_SHA)"
+[[ "$(pin_of WOODRIGHT_RELEASE_SHA)" == "9946b42aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" ]] \
+  && pass "be_only: global RELEASE_SHA not rewritten" || fail "be_only: RELEASE_SHA=$(pin_of WOODRIGHT_RELEASE_SHA)"
+
+# 26c) backend-only that unifies the pair: live storefront OCI already == SOURCE_SHA
+reset_harness
+write_container storefront "$OLD_SF_DIG" "127.0.0.1" "0" "$APP_SHA"
+write_image "$OLD_SF_REF" woodright-storefront production_candidate "$APP_SHA"
+EV="$TMP/ev-be-only-unify"
+run_exec_component "$EV" "$TMP/out-be-only-unify.txt" backend
+[[ "$RC" -eq 0 ]] && pass "be_only_unify: exit 0" || { fail "be_only_unify: rc=$RC"; sed -n '1,80p' "$TMP/out-be-only-unify.txt"; }
+[[ "$(pin_of WOODRIGHT_STOREFRONT_IMAGE)" == "$OLD_SF_REF" ]] && pass "be_only_unify: storefront pin frozen" || fail "be_only_unify: storefront pin changed"
+[[ "$(digest_of woodright-production-storefront)" == "$OLD_SF_DIG" ]] && pass "be_only_unify: storefront digest frozen" || fail "be_only_unify: storefront runtime moved"
+[[ "$(digest_of woodright-production-backend)" == "$NEW_BE_DIG" ]] && pass "be_only_unify: backend advanced" || fail "be_only_unify: backend digest"
+[[ "$(pin_of WOODRIGHT_BACKEND_SOURCE_SHA)" == "$APP_SHA" ]] && pass "be_only_unify: backend source SHA" || fail "be_only_unify: BE_SOURCE_SHA=$(pin_of WOODRIGHT_BACKEND_SOURCE_SHA)"
+[[ "$(pin_of WOODRIGHT_STOREFRONT_SOURCE_SHA)" == "$APP_SHA" ]] && pass "be_only_unify: storefront source SHA already matched" || fail "be_only_unify: SF_SOURCE_SHA=$(pin_of WOODRIGHT_STOREFRONT_SOURCE_SHA)"
+[[ "$(pin_of WOODRIGHT_RELEASE_SHA)" == "$APP_SHA" ]] && pass "be_only_unify: unified RELEASE_SHA written" || fail "be_only_unify: RELEASE_SHA=$(pin_of WOODRIGHT_RELEASE_SHA)"
 
 reset_harness
 EV="$TMP/ev-sf-spoof"
@@ -1252,7 +1284,7 @@ else
 fi
 grep -q 'pair cutover only supports --environment public_demo' "$ROOT/ops/release/cutover-public-demo-pair.sh" \
   && pass "static: public_demo pair guard unmodified" || fail "static: public_demo pair guard"
-node "$ROOT/scripts/release/check-global-lock-policy.cjs" ops/release >/dev/null 2>&1 \
+( cd "$ROOT" && node scripts/release/check-global-lock-policy.cjs ops/release >/dev/null 2>&1 ) \
   && pass "static: global lock policy passes for ops/release" || fail "static: global lock policy"
 
 if [[ "$FAILED" -eq 0 ]]; then

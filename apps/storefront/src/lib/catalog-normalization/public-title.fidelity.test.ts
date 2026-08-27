@@ -97,6 +97,19 @@ import { annotateExecutionPresentations } from "../../../../backend/src/lib/cata
 }
 
 {
+  const r = resolvePublicProductTitle({
+    title: "Комод высокий Fairies",
+    metadata: {
+      source_title: "Комод высокий Fairies (гл. 560)",
+    },
+  })
+  assert.equal(r.public_title, "Комод высокий Fairies")
+  assert.equal(r.legacy_title, "Комод высокий Fairies")
+  assert.doesNotMatch(r.public_title, /560/)
+  assert.doesNotMatch(r.legacy_title ?? "", /560/)
+}
+
+{
   assert.equal(extractLatinModelName("Кровать GR-09-1"), null)
   assert.equal(extractLatinModelName("Консоль Step"), "Step")
 }
