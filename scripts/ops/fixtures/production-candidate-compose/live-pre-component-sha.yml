@@ -1,7 +1,4 @@
-# Canonical production-candidate compose with Wave 1 memory caps.
-# Live destination: /etc/dokploy/compose/woodright-production/code/docker-compose.yml
-# Secrets via orchestrator .env only - do not commit secret values.
-# Woodright production-candidate - private review only
+# Woodright production-candidate — private review only
 # No public domains / Traefik labels. Localhost binds only.
 # Package WR-PFW first-wave MUST NOT be imported in this stack yet.
 
@@ -45,10 +42,10 @@ services:
     image: ${WOODRIGHT_BACKEND_IMAGE}
     container_name: woodright-production-backend
     restart: unless-stopped
-    # Wave 1 memory caps - docs/operator/container-memory-limits.md
-    mem_reservation: "${WOODRIGHT_BACKEND_MEMORY_RESERVATION:-640m}"
-    mem_limit: "${WOODRIGHT_BACKEND_MEMORY_LIMIT:-1536m}"
-    memswap_limit: "${WOODRIGHT_BACKEND_MEMORY_SWAP:-1536m}"
+    # Wave 1 memory caps - persisted for compose recreate (resource-contract)
+    mem_reservation: "640m"
+    mem_limit: "1536m"
+    memswap_limit: "1536m"
     depends_on:
       postgres:
         condition: service_healthy
@@ -66,9 +63,7 @@ services:
       MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL}
       MEDUSA_LOCAL_HTTP: ${MEDUSA_LOCAL_HTTP}
       PORT: "9000"
-      WOODRIGHT_RELEASE_SHA: ${WOODRIGHT_RELEASE_SHA:-}
-      WOODRIGHT_BACKEND_SOURCE_SHA: ${WOODRIGHT_BACKEND_SOURCE_SHA:?required}
-      WOODRIGHT_STOREFRONT_SOURCE_SHA: ${WOODRIGHT_STOREFRONT_SOURCE_SHA:?required}
+      WOODRIGHT_RELEASE_SHA: ${WOODRIGHT_RELEASE_SHA}
       WOODRIGHT_RUNTIME_ROLE: ${WOODRIGHT_RUNTIME_ROLE}
       WOODRIGHT_EXPOSURE: ${WOODRIGHT_EXPOSURE}
       WOODRIGHT_DATABASE_IDENTITY: ${WOODRIGHT_DATABASE_IDENTITY}
@@ -90,10 +85,10 @@ services:
     image: ${WOODRIGHT_STOREFRONT_IMAGE}
     container_name: woodright-production-storefront
     restart: unless-stopped
-    # Wave 1 memory caps - docs/operator/container-memory-limits.md
-    mem_reservation: "${WOODRIGHT_STOREFRONT_MEMORY_RESERVATION:-192m}"
-    mem_limit: "${WOODRIGHT_STOREFRONT_MEMORY_LIMIT:-512m}"
-    memswap_limit: "${WOODRIGHT_STOREFRONT_MEMORY_SWAP:-512m}"
+    # Wave 1 memory caps - persisted for compose recreate (resource-contract)
+    mem_reservation: "192m"
+    mem_limit: "512m"
+    memswap_limit: "512m"
     depends_on:
       backend:
         condition: service_healthy
@@ -106,9 +101,7 @@ services:
       NEXT_PUBLIC_MEDUSA_BACKEND_URL: ${NEXT_PUBLIC_MEDUSA_BACKEND_URL}
       NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: ${NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY}
       NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES: ${NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES}
-      WOODRIGHT_RELEASE_SHA: ${WOODRIGHT_RELEASE_SHA:-}
-      WOODRIGHT_BACKEND_SOURCE_SHA: ${WOODRIGHT_BACKEND_SOURCE_SHA:?required}
-      WOODRIGHT_STOREFRONT_SOURCE_SHA: ${WOODRIGHT_STOREFRONT_SOURCE_SHA:?required}
+      WOODRIGHT_RELEASE_SHA: ${WOODRIGHT_RELEASE_SHA}
       WOODRIGHT_RUNTIME_ROLE: ${WOODRIGHT_RUNTIME_ROLE}
       WOODRIGHT_EXPOSURE: ${WOODRIGHT_EXPOSURE}
       WOODRIGHT_DATABASE_IDENTITY: ${WOODRIGHT_DATABASE_IDENTITY}
