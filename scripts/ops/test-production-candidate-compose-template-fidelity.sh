@@ -90,6 +90,38 @@ run_helper() {
 python3 "$CLASSIFY" required-keys "$CANON" >/dev/null \
   && pass "canonical contains component SHA interpolations" \
   || fail "canonical missing component SHA interpolations"
+if grep -q 'WOODRIGHT_BACKEND_SOURCE_SHA: \${WOODRIGHT_BACKEND_SOURCE_SHA:?required}' "$CANON" \
+  && grep -q 'WOODRIGHT_STOREFRONT_SOURCE_SHA: \${WOODRIGHT_STOREFRONT_SOURCE_SHA:?required}' "$CANON"; then
+  pass "canonical uses required-value component SHA interpolation"
+else
+  fail "canonical missing :?required component SHA interpolation"
+fi
+if command -v docker >/dev/null 2>&1; then
+  DUMMY_NO_SHA="$TMP/compose-validate-no-sha.env"
+  python3 - "$CANON" "$DUMMY_NO_SHA" <<'PY'
+import re, sys
+from pathlib import Path
+text = Path(sys.argv[1]).read_text(encoding="utf-8")
+keys = sorted(set(re.findall(r"\$\{([A-Z][A-Z0-9_]*)(?::[^}]*)?\}", text)))
+lines = []
+for k in keys:
+    if k.endswith("_SOURCE_SHA"):
+        continue
+    if "MEMORY" in k:
+        val = "640m"
+    elif k.endswith("_IMAGE"):
+        val = "busybox:latest"
+    else:
+        val = "dummy"
+    lines.append(f"{k}={val}\n")
+Path(sys.argv[2]).write_text("".join(lines), encoding="utf-8")
+PY
+  if docker compose --env-file "$DUMMY_NO_SHA" -f "$CANON" config >/dev/null 2>&1; then
+    fail "compose config should fail without component SHA keys"
+  else
+    pass "compose config fails closed without component SHA keys"
+  fi
+fi
 
 CLASS="$(python3 "$CLASSIFY" classify "$COMPOSE_DIR/docker-compose.yml" "$CANON" \
   | python3 -c 'import json,sys; print(json.load(sys.stdin)["class"])')"

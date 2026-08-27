@@ -284,7 +284,7 @@ def canonical_has_required_keys(text: str) -> tuple[bool, list[str]]:
                 continue
             # Required interpolation (no empty default) so a stray recreate
             # cannot inject an empty component identity.
-            want = f"{k}: ${{{k}}}"
+            want = f"{k}: ${{{k}:?required}}"
             found = False
             for line in block.splitlines():
                 if line.strip() == want:

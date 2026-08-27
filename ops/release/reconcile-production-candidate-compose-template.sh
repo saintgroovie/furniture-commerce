@@ -80,7 +80,7 @@ validate_staged_compose() {
 import re, sys
 from pathlib import Path
 text = Path(sys.argv[1]).read_text(encoding="utf-8")
-keys = sorted(set(re.findall(r"\$\{([A-Z][A-Z0-9_]*)(?::-[^}]*)?\}", text)))
+keys = sorted(set(re.findall(r"\$\{([A-Z][A-Z0-9_]*)(?::[^}]*)?\}", text)))
 lines = []
 for k in keys:
     if "MEMORY" in k:
