@@ -1063,6 +1063,16 @@ rollback_anchor_images_present() {
   return 0
 }
 
+# Live compose after PR #207 interpolates ${WOODRIGHT_*_SOURCE_SHA:?required}.
+# Dry-run reports whether the loaded compose file actually has that contract so
+# rollback bootability can be judged without mutating.
+compose_requires_component_source_sha_interpolation() {
+  local f="${WOODRIGHT_COMPOSE_FILE:-}"
+  [[ -f "$f" ]] || return 1
+  grep -qE 'WOODRIGHT_BACKEND_SOURCE_SHA:[[:space:]]*\$\{WOODRIGHT_BACKEND_SOURCE_SHA:\?required\}' "$f" \
+    && grep -qE 'WOODRIGHT_STOREFRONT_SOURCE_SHA:[[:space:]]*\$\{WOODRIGHT_STOREFRONT_SOURCE_SHA:\?required\}' "$f"
+}
+
 # Common WOODRIGHT_RELEASE_SHA is part of the atomic pin transaction when the
 # resulting backend+storefront pin set both prove OCI revision == SOURCE_SHA.
 should_write_common_release_sha() {
@@ -1115,6 +1125,11 @@ emit_packet() {
   WR_PACKET_PRE_IMAGES_PRESENT="$(rollback_anchor_images_present && echo true || echo false)" \
   WR_PACKET_BE_SOURCE_SHA="$(packet_backend_source_sha)" \
   WR_PACKET_SF_SOURCE_SHA="$(packet_storefront_source_sha)" \
+  WR_PACKET_ROLLBACK_BE_SOURCE_SHA="$(live_oci_revision "${WOODRIGHT_BE_CONTAINER_DEFAULT}")" \
+  WR_PACKET_ROLLBACK_SF_SOURCE_SHA="$(live_oci_revision "${WOODRIGHT_SF_CONTAINER_DEFAULT}")" \
+  WR_PACKET_ENV_BE_SOURCE_SHA="$(pin_value_of WOODRIGHT_BACKEND_SOURCE_SHA)" \
+  WR_PACKET_ENV_SF_SOURCE_SHA="$(pin_value_of WOODRIGHT_STOREFRONT_SOURCE_SHA)" \
+  WR_PACKET_COMPOSE_REQUIRES_COMPONENT_SHA="$(compose_requires_component_source_sha_interpolation && echo true || echo false)" \
   python3 - "$WOODRIGHT_ENVIRONMENT" "$WOODRIGHT_ENVIRONMENT_CLASS" "$COMPONENT" "$SOURCE_SHA" "$packet_mode" \
     "${WOODRIGHT_BE_CONTAINER_DEFAULT}" "${WOODRIGHT_SF_CONTAINER_DEFAULT}" \
     "${WOODRIGHT_MUTATION_LOCK_PATH:-}" <<'PY'
@@ -1269,12 +1284,30 @@ packet = {
             # with the pin backup, are the ONLY rollback authority.
             "backend_ref": os.environ.get("WR_PACKET_PRE_BE_REF", ""),
             "storefront_ref": os.environ.get("WR_PACKET_PRE_SF_REF", ""),
+            "backend_source_sha": os.environ.get("WR_PACKET_ROLLBACK_BE_SOURCE_SHA", ""),
+            "storefront_source_sha": os.environ.get("WR_PACKET_ROLLBACK_SF_SOURCE_SHA", ""),
+            "component_source_sha_seed_authority": "live_oci_revision",
+            "pre_cutover_env_backend_source_sha_present": bool(
+                os.environ.get("WR_PACKET_ENV_BE_SOURCE_SHA", "").strip()
+            ),
+            "pre_cutover_env_storefront_source_sha_present": bool(
+                os.environ.get("WR_PACKET_ENV_SF_SOURCE_SHA", "").strip()
+            ),
+            "compose_requires_component_source_sha_interpolation": os.environ.get(
+                "WR_PACKET_COMPOSE_REQUIRES_COMPONENT_SHA", ""
+            )
+            == "true",
+            "rollback_env_satisfies_compose_required_interpolation": bool(
+                re.fullmatch(r"[0-9a-f]{40}", os.environ.get("WR_PACKET_ROLLBACK_BE_SOURCE_SHA", "") or "")
+                and re.fullmatch(r"[0-9a-f]{40}", os.environ.get("WR_PACKET_ROLLBACK_SF_SOURCE_SHA", "") or "")
+            ),
             "images_present_locally": os.environ.get("WR_PACKET_PRE_IMAGES_PRESENT", "") == "true",
             "method": "restore_pins_then_compose_recreate_on_previous_digests",
             "postconditions": [
                 "pins_restored",
                 "runtime_repo_digests_equal_restored_pins",
                 "compose_release_sha_restored_from_pin_backup",
+                "component_source_sha_keys_restored_from_live_oci_seed",
                 "private_loopback_binds",
                 "media_volume_mounted",
                 "no_public_traefik",
@@ -1609,6 +1642,47 @@ verify_runtime_matches_pins() {
 
 # Postcondition 1b: restored WOODRIGHT_RELEASE_SHA must match the pin-backup
 # snapshot. Image digests alone are not enough - a mixed marker is incomplete.
+verify_rollback_component_source_shas() {
+  local backup="$EVIDENCE_DIR/pin-backup/dokploy-compose.env"
+  local want got live
+  [[ -f "$backup" ]] || {
+    log "ROLLBACK_VERIFY component SOURCE_SHA backup missing"
+    return 1
+  }
+  want="$(awk -F= '$1=="WOODRIGHT_BACKEND_SOURCE_SHA" {sub(/^[^=]*=/, ""); print; exit}' "$backup" 2>/dev/null || true)"
+  got="$(pin_value_of WOODRIGHT_BACKEND_SOURCE_SHA)"
+  [[ "$want" =~ ^[0-9a-f]{40}$ ]] || {
+    log "ROLLBACK_VERIFY WOODRIGHT_BACKEND_SOURCE_SHA missing/malformed in backup"
+    return 1
+  }
+  [[ "$got" == "$want" ]] || {
+    log "ROLLBACK_VERIFY WOODRIGHT_BACKEND_SOURCE_SHA MISMATCH want=$want got=${got:-<unset>}"
+    return 1
+  }
+  live="$(live_oci_revision "${WOODRIGHT_BE_CONTAINER_DEFAULT}")"
+  [[ "$live" == "$got" ]] || {
+    log "ROLLBACK_VERIFY backend SOURCE_SHA != live OCI revision env=$got live=${live:-<unset>}"
+    return 1
+  }
+  want="$(awk -F= '$1=="WOODRIGHT_STOREFRONT_SOURCE_SHA" {sub(/^[^=]*=/, ""); print; exit}' "$backup" 2>/dev/null || true)"
+  got="$(pin_value_of WOODRIGHT_STOREFRONT_SOURCE_SHA)"
+  [[ "$want" =~ ^[0-9a-f]{40}$ ]] || {
+    log "ROLLBACK_VERIFY WOODRIGHT_STOREFRONT_SOURCE_SHA missing/malformed in backup"
+    return 1
+  }
+  [[ "$got" == "$want" ]] || {
+    log "ROLLBACK_VERIFY WOODRIGHT_STOREFRONT_SOURCE_SHA MISMATCH want=$want got=${got:-<unset>}"
+    return 1
+  }
+  live="$(live_oci_revision "${WOODRIGHT_SF_CONTAINER_DEFAULT}")"
+  [[ "$live" == "$got" ]] || {
+    log "ROLLBACK_VERIFY storefront SOURCE_SHA != live OCI revision env=$got live=${live:-<unset>}"
+    return 1
+  }
+  log "ROLLBACK_VERIFY component SOURCE_SHA ok backend=$got storefront=$(pin_value_of WOODRIGHT_STOREFRONT_SOURCE_SHA)"
+  return 0
+}
+
 verify_rollback_release_sha() {
   local backup="$EVIDENCE_DIR/pin-backup/dokploy-compose.env"
   local want got
@@ -1663,7 +1737,7 @@ run_rollback() {
   fi
   ROLLBACK_DONE=1
   log "ROLLBACK begin phase=$PHASE recreated=[${COMPONENTS_RECREATED# }] method=restore_pins_then_compose_recreate (no keepers)"
-  local pin_ok=1 runtime_ok=1 verify_ok=1 release_ok=1 exposure_ok=1 http_ok=1 meta_ok=1
+  local pin_ok=1 runtime_ok=1 verify_ok=1 release_ok=1 component_sha_ok=1 exposure_ok=1 http_ok=1 meta_ok=1
   local kind name want deadline
 
   restore_pins || pin_ok=0
@@ -1705,20 +1779,22 @@ run_rollback() {
   # evidence records exactly what is and is not true.
   verify_runtime_matches_pins || verify_ok=0
   verify_rollback_release_sha || release_ok=0
+  verify_rollback_component_source_shas || component_sha_ok=0
   verify_rollback_exposure || exposure_ok=0
   verify_rollback_http || http_ok=0
 
   if [[ -n "$EVIDENCE_DIR" && -d "$EVIDENCE_DIR/json" ]]; then
-    printf '{"phase_at_rollback":"%s","method":"restore_pins_then_compose_recreate","keepers_used":false,"pins":%s,"runtime_recreate":%s,"pins_equal_runtime":%s,"release_sha":%s,"exposure":%s,"http":%s,"metadata":%s,"pre_backend_ref":"%s","pre_storefront_ref":"%s","pre_release_sha":"%s"}\n' \
-      "$PHASE" "$pin_ok" "$runtime_ok" "$verify_ok" "$release_ok" "$exposure_ok" "$http_ok" "$meta_ok" \
+    printf '{"phase_at_rollback":"%s","method":"restore_pins_then_compose_recreate","keepers_used":false,"pins":%s,"runtime_recreate":%s,"pins_equal_runtime":%s,"release_sha":%s,"component_source_sha":%s,"exposure":%s,"http":%s,"metadata":%s,"pre_backend_ref":"%s","pre_storefront_ref":"%s","pre_release_sha":"%s"}\n' \
+      "$PHASE" "$pin_ok" "$runtime_ok" "$verify_ok" "$release_ok" "$component_sha_ok" "$exposure_ok" "$http_ok" "$meta_ok" \
       "$PRE_BE_REF" "$PRE_SF_REF" "${PRE_RELEASE_SHA}" >"$EVIDENCE_DIR/json/rollback-result.json" 2>/dev/null || true
   fi
 
   if [[ "$pin_ok" == "1" && "$runtime_ok" == "1" && "$verify_ok" == "1" \
-     && "$release_ok" == "1" && "$exposure_ok" == "1" && "$http_ok" == "1" && "$meta_ok" == "1" ]]; then
+     && "$release_ok" == "1" && "$component_sha_ok" == "1" \
+     && "$exposure_ok" == "1" && "$http_ok" == "1" && "$meta_ok" == "1" ]]; then
     ROLLBACK_RC=10
     record_state rolled_back
-    log "ROLLBACK_OK (pins restored, runtime digests == pins, RELEASE_SHA restored, private binds, media volume, no public Traefik, HTTP gates)"
+    log "ROLLBACK_OK (pins restored, runtime digests == pins, RELEASE_SHA restored, component SOURCE_SHA restored from live OCI seed, private binds, media volume, no public Traefik, HTTP gates)"
     return "$ROLLBACK_RC"
   fi
 
@@ -1731,7 +1807,7 @@ run_rollback() {
 
   ROLLBACK_RC=13
   record_state rollback_incomplete
-  log "ROLLBACK_INCOMPLETE pins=$pin_ok runtime_recreate=$runtime_ok pins_equal_runtime=$verify_ok release_sha=$release_ok exposure=$exposure_ok http=$http_ok metadata=$meta_ok - NOT reporting ROLLBACK_OK"
+  log "ROLLBACK_INCOMPLETE pins=$pin_ok runtime_recreate=$runtime_ok pins_equal_runtime=$verify_ok release_sha=$release_ok component_source_sha=$component_sha_ok exposure=$exposure_ok http=$http_ok metadata=$meta_ok - NOT reporting ROLLBACK_OK"
   return "$ROLLBACK_RC"
 }
 
@@ -1971,6 +2047,10 @@ for line in lines:
             raise SystemExit(f"pin backup {key} is not a 40-hex SHA")
         if not stripped:
             out.append(f"{key}={wanted[key]}")
+        elif stripped != wanted[key]:
+            raise SystemExit(
+                f"pin backup {key} disagrees with live OCI revision"
+            )
         else:
             out.append(line)
         continue
