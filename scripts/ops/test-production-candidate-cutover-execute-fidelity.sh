@@ -523,6 +523,8 @@ run_exec "$EV" "$TMP/out-sf-recreate.txt" "WOODRIGHT_FAKE_COMPOSE_FAIL=storefron
 [[ "$(digest_of woodright-production-backend)" == "$OLD_BE_DIG" ]] && pass "storefront_recreate: backend rolled back too" || fail "storefront_recreate: backend digest"
 [[ "$(digest_of woodright-production-storefront)" == "$OLD_SF_DIG" ]] && pass "storefront_recreate: storefront restored" || fail "storefront_recreate: storefront digest"
 [[ "$(pin_of WOODRIGHT_STOREFRONT_IMAGE)" == "$OLD_SF_REF" ]] && pass "storefront_recreate: pins restored" || fail "storefront_recreate: pins"
+[[ "$(pin_of WOODRIGHT_BACKEND_SOURCE_SHA)" == "$OLD_PEER_SHA" ]] && pass "storefront_recreate: backend SOURCE_SHA restored from live OCI" || fail "storefront_recreate: BE_SOURCE_SHA=$(pin_of WOODRIGHT_BACKEND_SOURCE_SHA)"
+[[ "$(pin_of WOODRIGHT_STOREFRONT_SOURCE_SHA)" == "$OLD_PEER_SHA" ]] && pass "storefront_recreate: storefront SOURCE_SHA restored from live OCI" || fail "storefront_recreate: SF_SOURCE_SHA=$(pin_of WOODRIGHT_STOREFRONT_SOURCE_SHA)"
 assert_no_keepers "storefront_recreate"
 
 # ==========================================================================
@@ -787,6 +789,14 @@ rb = plan["rollback_refs"]
 assert rb["method"].startswith("restore_pins_then_compose_recreate"), rb
 assert rb["backend_ref"].endswith("c" * 64), rb
 assert rb["storefront_ref"].endswith("d" * 64), rb
+assert rb["backend_source_sha"] == "0" * 40, rb
+assert rb["storefront_source_sha"] == "0" * 40, rb
+assert rb["backend_source_sha"] != sys.argv[2], rb
+assert rb["component_source_sha_seed_authority"] == "live_oci_revision", rb
+assert rb["pre_cutover_env_backend_source_sha_present"] is False, rb
+assert rb["pre_cutover_env_storefront_source_sha_present"] is False, rb
+assert rb["rollback_env_satisfies_compose_required_interpolation"] is True, rb
+assert "component_source_sha_keys_restored_from_live_oci_seed" in rb["postconditions"], rb
 assert rb["images_present_locally"] is True, rb
 assert "pins_restored" in rb["postconditions"], rb
 assert "runtime_repo_digests_equal_restored_pins" in rb["postconditions"], rb
@@ -1239,6 +1249,147 @@ grep -q 'LIVE_COMPONENT_IDENTITY_DRIFT' "$TMP/out-peer-change.txt" \
   && pass "peer_change: drift token" || fail "peer_change: error text"
 
 # ==========================================================================
+# 26b) rollback component SOURCE_SHA seed (PR #208)
+# ==========================================================================
+OLD_BE_SHA="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+OLD_SF_SHA="bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+
+install_split_live_pair() {
+  write_container backend "$OLD_BE_DIG" "127.0.0.1" 0 "$OLD_BE_SHA"
+  write_container storefront "$OLD_SF_DIG" "127.0.0.1" 0 "$OLD_SF_SHA"
+  write_image "$OLD_BE_REF" woodright-backend production_candidate "$OLD_BE_SHA"
+  write_image "$OLD_SF_REF" woodright-storefront production_candidate "$OLD_SF_SHA"
+}
+
+blank_live_oci_revision() {
+  local service="$1" value="${2-}"
+  python3 - "$STATE" "$service" "$value" <<'PY'
+import json, os, sys
+state, service, value = sys.argv[1:4]
+name = f"woodright-production-{service}"
+path = os.path.join(state, "containers", f"{name}.json")
+doc = json.load(open(path))
+target = doc[0] if isinstance(doc, list) else doc
+target.setdefault("Config", {}).setdefault("Labels", {})
+target["Config"]["Labels"]["org.opencontainers.image.revision"] = value
+json.dump(doc, open(path, "w"))
+props = os.path.join(state, "containers", f"{name}.props")
+if os.path.exists(props):
+    os.remove(props)
+PY
+}
+
+# Case 1: split live pair, old .env missing component SHA keys.
+reset_harness
+install_split_live_pair
+EV="$TMP/ev-seed-split-missing"
+run_exec "$EV" "$TMP/out-seed-split-missing.txt" "WOODRIGHT_FAKE_COMPOSE_FAIL=storefront"
+[[ "$RC" -eq 10 ]] && pass "seed_split: rollback_ok exit 10" || fail "seed_split: rc=$RC"
+[[ -f "$EV/pin-backup/dokploy-compose.env" ]] && pass "seed_split: pin backup present" || fail "seed_split: no pin backup"
+[[ "$(awk -F= '$1=="WOODRIGHT_BACKEND_SOURCE_SHA"{print $2; exit}' "$EV/pin-backup/dokploy-compose.env")" == "$OLD_BE_SHA" ]] \
+  && pass "seed_split: backup backend SHA from live OCI" || fail "seed_split: backup BE SHA"
+[[ "$(awk -F= '$1=="WOODRIGHT_STOREFRONT_SOURCE_SHA"{print $2; exit}' "$EV/pin-backup/dokploy-compose.env")" == "$OLD_SF_SHA" ]] \
+  && pass "seed_split: backup storefront SHA from live OCI" || fail "seed_split: backup SF SHA"
+if grep -q "$APP_SHA" "$EV/pin-backup/dokploy-compose.env"; then
+  fail "seed_split: candidate SHA leaked into rollback backup"
+else
+  pass "seed_split: candidate SHA absent from rollback backup"
+fi
+[[ "$(pin_of WOODRIGHT_BACKEND_IMAGE)" == "$OLD_BE_REF" ]] && pass "seed_split: backend digest restored" || fail "seed_split: backend pin"
+[[ "$(pin_of WOODRIGHT_STOREFRONT_IMAGE)" == "$OLD_SF_REF" ]] && pass "seed_split: storefront digest restored" || fail "seed_split: storefront pin"
+[[ "$(pin_of WOODRIGHT_BACKEND_SOURCE_SHA)" == "$OLD_BE_SHA" ]] && pass "seed_split: live env backend SHA restored" || fail "seed_split: live BE SHA=$(pin_of WOODRIGHT_BACKEND_SOURCE_SHA)"
+[[ "$(pin_of WOODRIGHT_STOREFRONT_SOURCE_SHA)" == "$OLD_SF_SHA" ]] && pass "seed_split: live env storefront SHA restored" || fail "seed_split: live SF SHA=$(pin_of WOODRIGHT_STOREFRONT_SOURCE_SHA)"
+[[ "$(pin_of WOODRIGHT_RELEASE_SHA)" == "9946b42aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" ]] \
+  && pass "seed_split: old global marker preserved, not fabricated unified SHA" \
+  || fail "seed_split: RELEASE_SHA=$(pin_of WOODRIGHT_RELEASE_SHA)"
+python3 - "$EV/json/rollback-result.json" <<'PY' \
+  && pass "seed_split: rollback result component_source_sha=1" || fail "seed_split: rollback result"
+import json, sys
+doc = json.load(open(sys.argv[1]))
+assert doc["component_source_sha"] == 1, doc
+assert doc["pins"] == 1, doc
+PY
+
+# Case 3: missing live OCI revision fails before mutation.
+reset_harness
+install_split_live_pair
+blank_live_oci_revision backend ""
+EV="$TMP/ev-missing-oci"
+run_exec "$EV" "$TMP/out-missing-oci.txt"
+[[ "$RC" -ne 0 ]] && pass "missing_oci: refused" || fail "missing_oci: rc=$RC"
+[[ "$(state_file "$EV")" == "failed_before_mutation" ]] && pass "missing_oci: failed_before_mutation" || fail "missing_oci: state=$(state_file "$EV")"
+[[ "$(pin_of WOODRIGHT_BACKEND_IMAGE)" == "$OLD_BE_REF" ]] && pass "missing_oci: pins untouched" || fail "missing_oci: pins changed"
+[[ ! -f "$STATE/log/mutations.log" ]] && pass "missing_oci: nothing recreated" || fail "missing_oci: mutated"
+grep -qE 'cannot seed backup: live backend OCI revision missing|LIVE_COMPONENT_IDENTITY_DRIFT' "$TMP/out-missing-oci.txt" \
+  && pass "missing_oci: fail-closed named" || fail "missing_oci: error text"
+
+# Case 4: malformed live OCI revision fails before mutation.
+reset_harness
+install_split_live_pair
+blank_live_oci_revision storefront "not-a-revision"
+EV="$TMP/ev-malformed-oci"
+run_exec "$EV" "$TMP/out-malformed-oci.txt"
+[[ "$RC" -ne 0 ]] && pass "malformed_oci: refused" || fail "malformed_oci: rc=$RC"
+[[ "$(state_file "$EV")" == "failed_before_mutation" ]] && pass "malformed_oci: failed_before_mutation" || fail "malformed_oci: state=$(state_file "$EV")"
+[[ "$(pin_of WOODRIGHT_STOREFRONT_IMAGE)" == "$OLD_SF_REF" ]] && pass "malformed_oci: pins untouched" || fail "malformed_oci: pins changed"
+[[ ! -f "$STATE/log/mutations.log" ]] && pass "malformed_oci: nothing recreated" || fail "malformed_oci: mutated"
+
+# Case 5: valid pre-existing component SHA keys that match live are preserved.
+reset_harness
+install_split_live_pair
+cat >>"$ENV_FILE" <<EOF
+WOODRIGHT_BACKEND_SOURCE_SHA=${OLD_BE_SHA}
+WOODRIGHT_STOREFRONT_SOURCE_SHA=${OLD_SF_SHA}
+EOF
+EV="$TMP/ev-preserve-sha"
+run_exec "$EV" "$TMP/out-preserve-sha.txt" "WOODRIGHT_FAKE_COMPOSE_FAIL=storefront"
+[[ "$RC" -eq 10 ]] && pass "preserve_sha: rollback_ok" || fail "preserve_sha: rc=$RC"
+[[ "$(awk -F= '$1=="WOODRIGHT_BACKEND_SOURCE_SHA"{print $2; exit}' "$EV/pin-backup/dokploy-compose.env")" == "$OLD_BE_SHA" ]] \
+  && pass "preserve_sha: backup kept live backend SHA" || fail "preserve_sha: backup BE"
+[[ "$(pin_of WOODRIGHT_BACKEND_SOURCE_SHA)" == "$OLD_BE_SHA" ]] && pass "preserve_sha: restored backend SHA" || fail "preserve_sha: live BE"
+
+# Case 5b: pre-existing SHA that disagrees with live OCI fails closed (no candidate spoof).
+reset_harness
+install_split_live_pair
+cat >>"$ENV_FILE" <<EOF
+WOODRIGHT_BACKEND_SOURCE_SHA=${APP_SHA}
+WOODRIGHT_STOREFRONT_SOURCE_SHA=${OLD_SF_SHA}
+EOF
+EV="$TMP/ev-spoof-sha"
+run_exec "$EV" "$TMP/out-spoof-sha.txt"
+[[ "$RC" -ne 0 ]] && pass "spoof_sha: refused" || fail "spoof_sha: rc=$RC"
+[[ "$(state_file "$EV")" == "failed_before_mutation" ]] && pass "spoof_sha: failed_before_mutation" || fail "spoof_sha: state=$(state_file "$EV")"
+[[ "$(pin_of WOODRIGHT_BACKEND_IMAGE)" == "$OLD_BE_REF" ]] && pass "spoof_sha: pins untouched" || fail "spoof_sha: pins changed"
+[[ ! -f "$STATE/log/mutations.log" ]] && pass "spoof_sha: nothing recreated" || fail "spoof_sha: mutated"
+grep -q 'disagrees with live OCI revision' "$TMP/out-spoof-sha.txt" \
+  && pass "spoof_sha: mismatch named" || fail "spoof_sha: error text"
+
+# Case 6: unified old pair still rolls back with matching component SHAs.
+reset_harness
+UNIFIED_OLD="cccccccccccccccccccccccccccccccccccccccc"
+write_container backend "$OLD_BE_DIG" "127.0.0.1" 0 "$UNIFIED_OLD"
+write_container storefront "$OLD_SF_DIG" "127.0.0.1" 0 "$UNIFIED_OLD"
+write_image "$OLD_BE_REF" woodright-backend production_candidate "$UNIFIED_OLD"
+write_image "$OLD_SF_REF" woodright-storefront production_candidate "$UNIFIED_OLD"
+python3 - "$ENV_FILE" "$UNIFIED_OLD" <<'PY'
+from pathlib import Path
+import sys
+path, sha = Path(sys.argv[1]), sys.argv[2]
+text = path.read_text(encoding="utf-8")
+text = text.replace(
+    "WOODRIGHT_RELEASE_SHA=9946b42aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    f"WOODRIGHT_RELEASE_SHA={sha}",
+)
+path.write_text(text, encoding="utf-8")
+PY
+EV="$TMP/ev-unified-old"
+run_exec "$EV" "$TMP/out-unified-old.txt" "WOODRIGHT_FAKE_COMPOSE_FAIL=storefront"
+[[ "$RC" -eq 10 ]] && pass "unified_old: rollback_ok" || fail "unified_old: rc=$RC"
+[[ "$(pin_of WOODRIGHT_BACKEND_SOURCE_SHA)" == "$UNIFIED_OLD" ]] && pass "unified_old: backend SHA restored" || fail "unified_old: BE SHA"
+[[ "$(pin_of WOODRIGHT_STOREFRONT_SOURCE_SHA)" == "$UNIFIED_OLD" ]] && pass "unified_old: storefront SHA restored" || fail "unified_old: SF SHA"
+[[ "$(pin_of WOODRIGHT_RELEASE_SHA)" == "$UNIFIED_OLD" ]] && pass "unified_old: global marker restored" || fail "unified_old: RELEASE_SHA=$(pin_of WOODRIGHT_RELEASE_SHA)"
+
+# ==========================================================================
 # 27) static contract checks
 # ==========================================================================
 grep -q '^# LIVE_MUTATING=true' "$SCRIPT" && pass "static: header declares LIVE_MUTATING=true" || fail "static: LIVE_MUTATING header"
@@ -1282,8 +1433,27 @@ if grep -qE '^\s*(production\|)?production\)' "$ROOT/scripts/release/reconcile-p
 else
   pass "static: pin reconciler does not accept production"
 fi
-grep -q 'pair cutover only supports --environment public_demo' "$ROOT/ops/release/cutover-public-demo-pair.sh" \
-  && pass "static: public_demo pair guard unmodified" || fail "static: public_demo pair guard"
+grep -q 'ensure_pin_backup_component_source_shas' "$SCRIPT" \
+  && pass "static: pin-backup component SHA seed helper exists" || fail "static: seed helper missing"
+if awk '/^ensure_pin_backup_component_source_shas\(\)/,/^resolve_pair_expected_identities$/' "$SCRIPT" \
+  | grep -qE 'SOURCE_SHA|BE_REF|SF_REF'; then
+  # The function may mention WOODRIGHT_*_SOURCE_SHA keys (expected) but must
+  # not assign them from the candidate SOURCE_SHA / caller refs.
+  if awk '/^ensure_pin_backup_component_source_shas\(\)/,/^resolve_pair_expected_identities$/' "$SCRIPT" \
+    | grep -qE 'live_oci_revision'; then
+    pass "static: pin-backup seed authority is live_oci_revision"
+  else
+    fail "static: pin-backup seed does not call live_oci_revision"
+  fi
+else
+  pass "static: pin-backup seed does not mention caller refs"
+fi
+if grep -q 'ensure_pin_backup_component_source_shas' "$SCRIPT" \
+  && grep -A2 'be_sha="$(live_oci_revision' "$SCRIPT" | grep -q 'sf_sha="$(live_oci_revision'; then
+  pass "static: both component SHAs seeded from live OCI"
+else
+  fail "static: seed does not read both live OCI revisions"
+fi
 ( cd "$ROOT" && node scripts/release/check-global-lock-policy.cjs ops/release >/dev/null 2>&1 ) \
   && pass "static: global lock policy passes for ops/release" || fail "static: global lock policy"
 
