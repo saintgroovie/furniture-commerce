@@ -10,7 +10,8 @@
 #   - CAS current public DNS still equals documented legacy A
 #   - connect SF/BE to dokploy-network (Traefik reachability)
 #   - install Traefik dynamic file for woodright.ru / www / api.woodright.ru
-#   - automatic Traefik+network rollback on install failure
+#   - wait (bounded) for Traefik file-provider Host routing to converge
+#   - automatic Traefik+network+owned-state rollback on install/settle failure
 #
 # What this helper never does:
 #   - change ITB DNS records (no API in repo; operator panel)
@@ -51,6 +52,11 @@ NEW_STACK_A="89.169.188.29"
 ACCEPTED_SOURCE_SHA="ced25101f71f34caf98b62d1e7855be4f91ef977"
 ACCEPTED_SF_DIGEST="sha256:39b244717c45249971cb55c7c702a2bbb9fad48a2d0fa7c5d55fca39ade05b9c"
 ACCEPTED_BE_DIGEST="sha256:8f097c9d9f82a6cf79e9ee970ac96aed1577e37d75275e027cc0cef0ca845339"
+# File-provider watch can 404 after atomic install; poll until Host routing exists.
+TRAEFIK_SETTLE_TIMEOUT_DEFAULT=45
+TRAEFIK_SETTLE_INTERVAL_DEFAULT=1
+# Two consecutive full-set successes reject mixed partial router loads.
+TRAEFIK_SETTLE_STREAK_DEFAULT=2
 
 MODE="dry-run"
 CONFIRM=""
@@ -72,7 +78,9 @@ die() {
   log "ERROR: $*"
   if [[ "${MODE:-}" == "execute" && "${MUTATED:-0}" == "1" && "${WOODRIGHT_APEX_IN_DIE_ROLLBACK:-0}" != "1" ]]; then
     WOODRIGHT_APEX_IN_DIE_ROLLBACK=1
-    rollback_partial || true
+    if ! rollback_partial; then
+      log "ERROR automatic rollback incomplete; owned-state retained for explicit retry"
+    fi
   fi
   exit 2
 }
@@ -204,6 +212,11 @@ assert_template_safe() {
   grep -q 'woodright-public-production-storefront:3002' "$tmpl" || die "template missing public_production storefront upstream"
   grep -q 'woodright-public-production-backend:9000' "$tmpl" || die "template missing public_production backend upstream"
   grep -q 'certResolver: letsencrypt' "$tmpl" || die "template missing letsencrypt resolver"
+  grep -Fq 'Host(`woodright.ru`)' "$tmpl" || die "template missing Host(woodright.ru)"
+  grep -Fq 'Host(`www.woodright.ru`)' "$tmpl" || die "template missing Host(www.woodright.ru)"
+  grep -Fq 'Host(`api.woodright.ru`)' "$tmpl" || die "template missing Host(api.woodright.ru)"
+  grep -Fq 'replacement: "https://woodright.ru/${1}"' "$tmpl" || die "template missing www→apex HTTPS replacement"
+  grep -Fq 'redirect-to-https' "$tmpl" || die "template missing HTTP→HTTPS middleware for apex/api"
   if grep -q 'woodright-prod-buyer-noindex' "$tmpl"; then
     die "template must not noindex the buyer storefront"
   fi
@@ -282,9 +295,13 @@ read_approval() {
 
 maybe_inject_fail() {
   local point="$1"
-  if [[ "${WOODRIGHT_APEX_INJECT_FAIL:-}" == "$point" ]]; then
-    die "injected failure at $point"
+  if [[ "${WOODRIGHT_APEX_INJECT_FAIL:-}" != "$point" ]]; then
+    return 0
   fi
+  if [[ "$point" == "after-owned-replace-traefik" ]]; then
+    printf '# foreign unowned replacement\n' >"$(apex_traefik_file)"
+  fi
+  die "injected failure at $point"
 }
 
 connect_network() {
@@ -317,14 +334,6 @@ disconnect_one_idempotent() {
   return "$rc"
 }
 
-disconnect_network_if_we_added() {
-  local name
-  for name in "${NETWORKS_CONNECTED[@]+"${NETWORKS_CONNECTED[@]}"}"; do
-    disconnect_one_idempotent "$name" "$DOKPLOY_NET" || true
-  done
-  NETWORKS_CONNECTED=()
-}
-
 install_traefik() {
   local target tmpl dir
   target="$(apex_traefik_file)"
@@ -353,12 +362,26 @@ install_traefik() {
 }
 
 remove_created_traefik() {
-  local target
+  local target tmpl
   target="$(apex_traefik_file)"
-  if [[ "$TRAEFIK_CREATED" == "1" && -f "$target" ]]; then
-    rm -f "$target"
-    log "removed Traefik dynamic created by this run $target"
+  tmpl="$REPO_ROOT/$TRAEFIK_TEMPLATE_REL"
+  if [[ "$TRAEFIK_CREATED" != "1" ]]; then
+    return 0
   fi
+  if [[ ! -f "$target" ]]; then
+    log "Traefik dynamic already absent $target"
+    return 0
+  fi
+  if [[ "${WOODRIGHT_APEX_INJECT_FAIL:-}" == "partial-skip-traefik-rm" ]]; then
+    log "injected skip of Traefik file removal"
+    return 0
+  fi
+  if ! cmp -s "$target" "$tmpl"; then
+    log "ERROR refusing to delete Traefik file that no longer matches helper template: $target"
+    return 1
+  fi
+  rm -f "$target"
+  log "removed Traefik dynamic created by this run $target"
 }
 
 owned_state_path() {
@@ -440,32 +463,251 @@ acquire_lock() {
   log "lock acquired $lock (pair lock free)"
 }
 
+reconcile_owned_after_partial() {
+  local traefik_removed="$1"
+  shift
+  local -a removed_nets=()
+  if (($#)); then
+    removed_nets=("$@")
+  fi
+  local owned
+  owned="$(owned_state_path)"
+  if [[ ! -f "$owned" ]]; then
+    log "owned-state absent after partial rollback"
+    return 0
+  fi
+  python3 - "$owned" "$EVIDENCE_DIR" "$traefik_removed" ${removed_nets[@]+"${removed_nets[@]}"} <<'PY'
+import json, os, shutil, sys
+owned_path = sys.argv[1]
+evidence_dir = sys.argv[2]
+traefik_removed = sys.argv[3] == "1"
+removed = [n for n in sys.argv[4:] if n]
+os.makedirs(evidence_dir, exist_ok=True)
+with open(owned_path) as f:
+    doc = json.load(f)
+if traefik_removed:
+    doc["traefik_created_by_helper"] = False
+nets = [n for n in (doc.get("networks_added") or []) if n not in removed]
+doc["networks_added"] = nets
+if (not doc.get("traefik_created_by_helper")) and not nets:
+    shutil.copy2(owned_path, os.path.join(evidence_dir, "owned-partial-cleared.json"))
+    os.remove(owned_path)
+    print("owned_cleared")
+else:
+    with open(owned_path, "w") as f:
+        json.dump(doc, f, indent=2)
+        f.write("\n")
+    shutil.copy2(owned_path, os.path.join(evidence_dir, "owned-partial-remaining.json"))
+    print("owned_updated")
+PY
+}
+
 rollback_partial() {
   log "automatic rollback of this helper's Traefik/network writes"
-  remove_created_traefik
-  disconnect_network_if_we_added
+  local created="$TRAEFIK_CREATED"
+  local -a attempted=()
+  local -a verified=()
+  local name
+  local traefik_removed=0
+  local rc=0
+  if ((${#NETWORKS_CONNECTED[@]})); then
+    attempted=("${NETWORKS_CONNECTED[@]}")
+  fi
+  if [[ "$created" == "1" ]]; then
+    remove_created_traefik || true
+    if [[ ! -f "$(apex_traefik_file)" ]]; then
+      traefik_removed=1
+    else
+      log "ERROR Traefik file still present after automatic rollback"
+      rc=1
+    fi
+  fi
+  for name in "${attempted[@]+"${attempted[@]}"}"; do
+    if disconnect_one_idempotent "$name" "$DOKPLOY_NET"; then
+      verified+=("$name")
+    else
+      log "ERROR network disconnect failed for $name; keeping owned-state"
+      rc=1
+    fi
+  done
+  NETWORKS_CONNECTED=()
+  if [[ "$created" == "1" || ${#attempted[@]} -gt 0 ]]; then
+    reconcile_owned_after_partial "$traefik_removed" ${verified[@]+"${verified[@]}"}
+  fi
+  if [[ "$rc" != "0" ]]; then
+    log "STATUS PUBLIC_APEX_ROUTING_PARTIAL_ROLLBACK_INCOMPLETE"
+  fi
+  return "$rc"
 }
 
 on_err() {
   local rc=$?
+  if [[ "${WOODRIGHT_APEX_IN_DIE_ROLLBACK:-0}" == "1" ]]; then
+    exit "$rc"
+  fi
   if [[ "$MUTATED" == "1" && "$MODE" == "execute" ]]; then
-    rollback_partial || true
+    if ! rollback_partial; then
+      log "ERROR automatic rollback incomplete; owned-state retained for explicit retry"
+    fi
     log "STATUS PUBLIC_APEX_ROUTING_ROLLED_BACK rc=$rc"
   fi
   exit "$rc"
 }
 
+apex_positive_int() {
+  local raw="$1" default="$2"
+  if [[ "$raw" =~ ^[1-9][0-9]*$ ]]; then
+    printf '%s\n' "$raw"
+  else
+    printf '%s\n' "$default"
+  fi
+}
+
+apex_nonneg_int() {
+  local raw="$1" default="$2"
+  if [[ "$raw" =~ ^[0-9]+$ ]]; then
+    printf '%s\n' "$raw"
+  else
+    printf '%s\n' "$default"
+  fi
+}
+
+apex_expected_https_origin() {
+  case "$1" in
+    woodright.ru|www.woodright.ru) printf 'https://woodright.ru' ;;
+    api.woodright.ru) printf 'https://api.woodright.ru' ;;
+    *) return 1 ;;
+  esac
+}
+
+apex_location_matches() {
+  local host="$1" loc="$2" exp
+  loc="${loc//$'\r'/}"
+  loc="${loc%%[[:space:]]*}"
+  exp="$(apex_expected_https_origin "$host")" || return 1
+  [[ -n "$loc" ]] || return 1
+  [[ "$loc" == "$exp" || "$loc" == "$exp/" || "$loc" == "$exp/"* ]]
+}
+
+traefik_http_probe_one() {
+  local host="$1" attempt="$2" out
+  if [[ -n "${WOODRIGHT_APEX_TRAEFIK_HTTP_GET:-}" ]]; then
+    out="$("${WOODRIGHT_APEX_TRAEFIK_HTTP_GET}" "$host" "$attempt" || true)"
+    printf '%s\n' "$out"
+    return 0
+  fi
+  out="$(curl -sS -o /dev/null -w '%{http_code} %{redirect_url}' --max-time 8 \
+    --resolve "${host}:80:127.0.0.1" "http://${host}/" || true)"
+  if [[ -z "$out" ]]; then
+    printf '000\n'
+    return 0
+  fi
+  printf '%s\n' "$out"
+}
+
+wait_traefik_http_converged() {
+  local target timeout interval streak start now elapsed attempt consecutive
+  local host raw code location class round_ok round_retry hard_reason file_exists
+  local never_left_404=1 saw_5xx=0 saw_wrong_redirect=0 saw_connect=0
+  target="$(apex_traefik_file)"
+  timeout="$(apex_positive_int "${WOODRIGHT_APEX_TRAEFIK_SETTLE_TIMEOUT_SEC:-}" "$TRAEFIK_SETTLE_TIMEOUT_DEFAULT")"
+  interval="$(apex_nonneg_int "${WOODRIGHT_APEX_TRAEFIK_SETTLE_INTERVAL_SEC:-}" "$TRAEFIK_SETTLE_INTERVAL_DEFAULT")"
+  streak="$(apex_positive_int "${WOODRIGHT_APEX_TRAEFIK_SETTLE_REQUIRED_STREAK:-}" "$TRAEFIK_SETTLE_STREAK_DEFAULT")"
+  start="$(date +%s)"
+  attempt=0
+  consecutive=0
+  hard_reason=""
+  log "Traefik settle start timeout=${timeout}s interval=${interval}s streak=${streak} file=$target"
+  while true; do
+    now="$(date +%s)"
+    elapsed=$((now - start))
+    attempt=$((attempt + 1))
+    if [[ -f "$target" ]]; then
+      file_exists=yes
+    else
+      die "Traefik dynamic file missing during settle: $target elapsed=${elapsed}s attempt=$attempt"
+    fi
+    round_ok=1
+    round_retry=0
+    for host in woodright.ru www.woodright.ru api.woodright.ru; do
+      raw="$(traefik_http_probe_one "$host" "$attempt")"
+      code="${raw%% *}"
+      location="${raw#"$code"}"
+      location="${location## }"
+      location="${location//$'\r'/}"
+      case "$code" in
+        301|302|307|308)
+          if apex_location_matches "$host" "$location"; then
+            class=ok
+            never_left_404=0
+          else
+            class=fail
+            saw_wrong_redirect=1
+            hard_reason="wrong_redirect host=$host status=$code location=$location"
+          fi
+          ;;
+        404)
+          class=retry
+          round_retry=1
+          ;;
+        000|"")
+          class=retry
+          round_retry=1
+          saw_connect=1
+          code="${code:-000}"
+          ;;
+        5*)
+          class=fail
+          saw_5xx=1
+          hard_reason="http_5xx host=$host status=$code"
+          ;;
+        *)
+          class=fail
+          hard_reason="unexpected_status host=$host status=$code location=$location"
+          ;;
+      esac
+      log "Traefik settle attempt=$attempt elapsed=${elapsed}s host=$host status=$code expected=3xx-to-$(apex_expected_https_origin "$host") location=${location:-none} file=$file_exists class=$class"
+      if [[ "$class" == "fail" ]]; then
+        die "Traefik Host probe failed closed: $hard_reason (not a file-provider lag)"
+      fi
+      if [[ "$class" != "ok" ]]; then
+        round_ok=0
+      fi
+    done
+    if [[ "$round_ok" == "1" ]]; then
+      consecutive=$((consecutive + 1))
+      log "Traefik settle consecutive_ok=$consecutive/$streak attempt=$attempt elapsed=${elapsed}s"
+      if ((consecutive >= streak)); then
+        log "Traefik settle OK attempts=$attempt elapsed=${elapsed}s"
+        return 0
+      fi
+    else
+      consecutive=0
+    fi
+    now="$(date +%s)"
+    elapsed=$((now - start))
+    if ((elapsed >= timeout)); then
+      die "Traefik file-provider convergence deadline ${timeout}s exceeded attempts=$attempt last_elapsed=${elapsed}s never_left_404=$never_left_404 saw_5xx=$saw_5xx saw_wrong_redirect=$saw_wrong_redirect saw_connect=$saw_connect retryable=${round_retry}"
+    fi
+    sleep "$interval"
+  done
+}
+
 probe_loopback() {
-  local sf_code be_code host code
+  local sf_code be_code
   if [[ "${WOODRIGHT_APEX_SKIP_HTTP_PROBE:-0}" == "1" ]]; then
     log "HTTP probes skipped WOODRIGHT_APEX_SKIP_HTTP_PROBE=1"
     return 0
   fi
-  sf_code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 8 -H 'Host: woodright.ru' http://127.0.0.1:3300/ || true)"
-  be_code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 8 http://127.0.0.1:9300/health || true)"
-  [[ "$sf_code" == "200" ]] || die "loopback storefront probe failed: $sf_code"
-  [[ "$be_code" == "200" ]] || die "loopback backend health failed: $be_code"
-  log "loopback probes OK sf=$sf_code be=$be_code"
+  if [[ "${WOODRIGHT_APEX_SKIP_LOOPBACK_PROBE:-0}" == "1" ]]; then
+    log "loopback HTTP probes skipped WOODRIGHT_APEX_SKIP_LOOPBACK_PROBE=1"
+  else
+    sf_code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 8 -H 'Host: woodright.ru' http://127.0.0.1:3300/ || true)"
+    be_code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 8 http://127.0.0.1:9300/health || true)"
+    [[ "$sf_code" == "200" ]] || die "loopback storefront probe failed: $sf_code"
+    [[ "$be_code" == "200" ]] || die "loopback backend health failed: $be_code"
+    log "loopback probes OK sf=$sf_code be=$be_code"
+  fi
   if [[ "${WOODRIGHT_APEX_SKIP_TRAEFIK_PROBE:-0}" == "1" ]]; then
     log "Traefik HTTP probes skipped"
     return 0
@@ -482,15 +724,7 @@ probe_loopback() {
     log "Traefik HTTP probes skipped; dynamic file absent"
     return 0
   fi
-  for host in woodright.ru www.woodright.ru api.woodright.ru; do
-    code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 8 \
-      --resolve "${host}:80:127.0.0.1" "http://${host}/" || true)"
-    case "$code" in
-      301|302|307|308) ;;
-      *) die "Traefik HTTP probe for $host expected redirect, got $code (HTTPS/ACME still requires DNS)" ;;
-    esac
-    log "Traefik HTTP $host -> $code"
-  done
+  wait_traefik_http_converged
 }
 
 print_dns_operator_steps() {
@@ -592,12 +826,15 @@ PY
   cas_demo_untouched
   cas_traefik_absent_or_ours
   connect_network "$SF_NAME"
+  write_owned_state
   maybe_inject_fail after-first-network
   connect_network "$BE_NAME"
+  write_owned_state
   maybe_inject_fail after-networks
   install_traefik
-  maybe_inject_fail after-traefik
   write_owned_state
+  maybe_inject_fail after-traefik
+  maybe_inject_fail after-owned-replace-traefik
   cas_demo_untouched
   probe_loopback
   printf 'PUBLIC_APEX_ROUTING_PREPARE_OK\n' >"$EVIDENCE_DIR/status.txt"
