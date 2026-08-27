@@ -47,7 +47,7 @@ Governance install copies the canonical file into `/srv/woodright/ops/compose/` 
 
 `ops/release/reconcile-production-candidate-compose-template.sh`
 
-That helper is the only apply path onto the live Dokploy compose file. It does not rewrite `.env`, image pins, or `EXPECTED_RELEASE`, and it does not recreate containers. Execute takes the production mutation lock, writes a timestamped backup, validates the staged template with `docker compose config` against a dummy env (live `.env` secrets are not read), then atomically replaces the target while preserving destination owner/mode (same `sudo -n` install path as compose `.env` pins).
+That helper is the only apply path onto the live Dokploy compose file. It does not rewrite `.env`, image pins, or `EXPECTED_RELEASE`, and it does not recreate containers. Execute takes the production mutation lock, writes a timestamped backup, validates the staged template with `docker compose config` against a dummy env (live `.env` secrets are not read), then atomically replaces the target while preserving destination owner/mode (same `sudo -n` install path as compose `.env` pins). Canonical component SHA interpolations are required (`${WOODRIGHT_BACKEND_SOURCE_SHA}` / `${WOODRIGHT_STOREFRONT_SOURCE_SHA}` without an empty default) so a stray recreate cannot inject empty identities; pair cutover still writes the 40-hex values into `.env` immediately before recreate.
 
 ```sh
 bash ops/release/reconcile-production-candidate-compose-template.sh \

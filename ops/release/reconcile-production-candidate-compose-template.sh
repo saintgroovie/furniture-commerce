@@ -85,6 +85,8 @@ lines = []
 for k in keys:
     if "MEMORY" in k:
         val = "640m"
+    elif k.endswith("_SOURCE_SHA"):
+        val = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     elif k.endswith("_IMAGE"):
         val = "busybox:latest"
     else:
@@ -97,6 +99,39 @@ PY
     return 0
   fi
   die "docker compose config failed for staged template"
+}
+
+inspect_env_component_sha_keys() {
+  local path="$1"
+  local out="$EVIDENCE_DIR/env-component-sha-keys.json"
+  local runner=(python3)
+  if [[ ! -r "$path" ]] && command -v sudo >/dev/null 2>&1; then
+    runner=(sudo -n python3)
+  fi
+  "${runner[@]}" - "$path" "$out" <<'PY'
+import json, re, sys
+path, out = sys.argv[1:3]
+keys = ("WOODRIGHT_BACKEND_SOURCE_SHA", "WOODRIGHT_STOREFRONT_SOURCE_SHA")
+sha40 = re.compile(r"^[0-9a-f]{40}$")
+status = {}
+try:
+    text = open(path, "r", encoding="utf-8").read()
+except OSError:
+    json.dump({"ok": False, "reason": "unreadable", "keys": {}}, open(out, "w"))
+    sys.exit(2)
+for key in keys:
+    hits = [ln.split("=", 1)[1] if "=" in ln else "" for ln in text.splitlines() if ln.startswith(key + "=")]
+    if not hits:
+        status[key] = "absent"
+    elif len(hits) != 1:
+        status[key] = "duplicate"
+    elif sha40.fullmatch(hits[0].strip().strip('"').strip("'")):
+        status[key] = "sha40"
+    else:
+        status[key] = "invalid"
+json.dump({"ok": True, "reason": "inspected", "keys": status}, open(out, "w"), indent=2, sort_keys=True)
+sys.exit(0)
+PY
 }
 
 copy_file() {
@@ -210,6 +245,19 @@ if [[ -r "$ENV_FILE" ]]; then
 elif command -v sudo >/dev/null 2>&1; then
   ENV_HASH_BEFORE="$(sudo -n sha256sum "$ENV_FILE" 2>/dev/null | awk '{print $1}' || true)"
 fi
+inspect_env_component_sha_keys "$ENV_FILE" || true
+ENV_KEYS_FILE="$EVIDENCE_DIR/env-component-sha-keys.json"
+python3 - "$ENV_KEYS_FILE" <<'PY' || die "compose .env component SHA keys invalid (values not printed)"
+import json, sys
+from pathlib import Path
+p = Path(sys.argv[1])
+if not p.is_file():
+    sys.exit(0)
+data = json.loads(p.read_text())
+keys = data.get("keys") or {}
+bad = [k for k, v in keys.items() if v in ("invalid", "duplicate")]
+sys.exit(1 if bad else 0)
+PY
 
 printf '%s\n' "$CLASS_JSON" >"$EVIDENCE_DIR/classify.json"
 printf '%s\n' "$LIVE_HASH" >"$EVIDENCE_DIR/live-sha256-before.txt"
@@ -236,6 +284,12 @@ print(json.dumps({
   "live_sha256_before": os.environ["WR_CT_LIVE_BEFORE"],
   "live_sha256_after": after,
   "env_sha256_before": os.environ.get("WR_CT_ENV_HASH", ""),
+  "env_sha256_known": bool(os.environ.get("WR_CT_ENV_HASH", "")),
+  "component_sha_env_keys": (
+    json.load(open(os.environ["WR_CT_ENV_KEYS_FILE"])).get("keys") or {}
+    if os.environ.get("WR_CT_ENV_KEYS_FILE") and os.path.isfile(os.environ["WR_CT_ENV_KEYS_FILE"])
+    else {}
+  ),
   "backup_path": backup,
   "evidence_dir": os.environ["WR_CT_EVIDENCE"],
   "rollback": {
@@ -245,7 +299,7 @@ print(json.dumps({
     "allowed_parent": os.environ.get("WR_CT_PARENT", ""),
   },
   "containers_mutated": False,
-  "env_file_mutated": False,
+  "env_file_mutated": False if os.environ.get("WR_CT_ENV_HASH") else None,
   "image_pins_mutated": False,
   "expected_release_mutated": False,
 }, indent=2, sort_keys=True))
@@ -256,7 +310,7 @@ export WR_CT_MODE="$MODE" WR_CT_SHA="$SOURCE_SHA" WR_CT_REPO="$REPO_ROOT" \
   WR_CT_CANON="$CANONICAL" WR_CT_TARGET="$TARGET" WR_CT_ENV="$ENV_FILE" \
   WR_CT_CLASS="$CLASS" WR_CT_CANON_HASH="$CANON_HASH" WR_CT_LIVE_BEFORE="$LIVE_HASH" \
   WR_CT_ENV_HASH="${ENV_HASH_BEFORE:-}" WR_CT_EVIDENCE="$EVIDENCE_DIR" \
-  WR_CT_PARENT="$(dirname "$TARGET")"
+  WR_CT_PARENT="$(dirname "$TARGET")" WR_CT_ENV_KEYS_FILE="${ENV_KEYS_FILE:-}"
 
 case "$CLASS" in
   unexpected_drift)
@@ -282,6 +336,7 @@ if [[ "$MODE" == "dry-run" ]]; then
 fi
 
 [[ "$CONFIRM" == "$CONFIRM_TOKEN" ]] || die "execute requires --confirm-mutation $CONFIRM_TOKEN"
+[[ -n "$ENV_HASH_BEFORE" ]] || die "execute requires a sha256 of compose .env (hash only; sudo -n if needed)"
 
 LOCK_PATH="${WOODRIGHT_MUTATION_LOCK_PATH:-/srv/woodright/locks/production/live-cutover.lock}"
 case "$LOCK_PATH" in

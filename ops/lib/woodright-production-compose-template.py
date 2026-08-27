@@ -276,10 +276,22 @@ def canonical_has_required_keys(text: str) -> tuple[bool, list[str]]:
     missing: list[str] = []
     blocks = service_blocks(text)
     for svc in ("backend", "storefront"):
-        keys = set(env_keys(blocks.get(svc, "")))
+        block = blocks.get(svc, "")
+        keys = set(env_keys(block))
         for k in COMPONENT_SHA_KEYS:
             if k not in keys:
                 missing.append(f"{svc}:{k}")
+                continue
+            # Required interpolation (no empty default) so a stray recreate
+            # cannot inject an empty component identity.
+            want = f"{k}: ${{{k}}}"
+            found = False
+            for line in block.splitlines():
+                if line.strip() == want:
+                    found = True
+                    break
+            if not found:
+                missing.append(f"{svc}:{k}:required_interpolation")
     return (not missing, missing)
 
 
