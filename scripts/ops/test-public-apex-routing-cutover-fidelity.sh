@@ -449,6 +449,9 @@ else
 fi
 grep -q 'nsupdate' "$SCRIPT" && fail "must not call nsupdate" || pass "no DNS CLI mutation"
 grep -q 'I_UNDERSTAND_PUBLIC_APEX_ROUTING_CUTOVER' "$SCRIPT" || fail "missing confirm token"
+grep -q 'Traefik HTTP probes skipped in dry-run' "$SCRIPT" \
+  && pass "dry-run skips Traefik Host probe before routers exist" \
+  || fail "dry-run must skip Traefik probe until helper-owned file exists"
 
 init_state
 cp "$TMPL" "$TARGET"
