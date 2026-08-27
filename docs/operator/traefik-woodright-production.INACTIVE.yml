@@ -3,6 +3,13 @@
 # DO NOT apply on the VM in the preparation cycle.
 # Activation requires separate owner approval for DNS + TLS + public routes.
 #
+# Canonical public_production routing template (correct container names, no
+# buyer noindex): ops/config/public-launch/traefik-public-production.yml
+# installed by ops/release/cutover-public-apex-routing.sh.
+#
+# This file remains a historical inactive sketch. It points at
+# woodright-production-* (private candidate) and must not be copied live.
+#
 # Target (future cutover only): /etc/dokploy/traefik/dynamic/woodright-production.yml
 # Services must resolve on the Dokploy/docker network to woodright-production-* containers.
 # Admin: intentionally omitted (private tunnel only).

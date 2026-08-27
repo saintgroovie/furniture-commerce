@@ -19,7 +19,7 @@ No default. Inherited `WOODRIGHT_ENVIRONMENT` alone is not authority (conflicts 
 | `public_demo` | PUBLIC_DEMO | yes | `woodright-demo.ru` | Canonical public buyer pair. Containers historically named `woodright-staging-*` - **name ≠ environment**. |
 | `staging` | STAGING_PRIVATE | **no** | none | Not an alias for public_demo. Mutators fail closed (`ENVIRONMENT_PROVISIONED=0`). |
 | `production` | PRODUCTION_CANDIDATE | yes | loopback only | Private candidate (`woodright-production-*`). Not public `woodright.ru`. |
-| `public_production` | PUBLIC_PRODUCTION | yes | loopback only (not apex) | Isolated new-stack pair (`woodright-public-production-*`, `:3300`/`:9300`). **Not** DNS/CS-Cart/apex. Helper: `ops/release/cutover-public-production-pair.sh`. |
+| `public_production` | PUBLIC_PRODUCTION | yes | loopback only (not apex) | Isolated new-stack pair (`woodright-public-production-*`, `:3300`/`:9300`). Pair helper: `ops/release/cutover-public-production-pair.sh`. Apex routing helper (no DNS mutation, no app recreate): `ops/release/cutover-public-apex-routing.sh`. Runbook: `docs/operator/public-apex-cutover.md`. |
 
 Dokploy project/app UUIDs are often absent on container labels; profiles pin compose directory/project, name prefixes, media volume, DB alias, ownership dir, identity dir, evidence root, and lock path.
 
@@ -30,7 +30,7 @@ Dokploy project/app UUIDs are often absent on container labels; profiles pin com
 | public_demo | `/srv/woodright/locks/public_demo/live-cutover.lock` |
 | staging | `/srv/woodright/locks/staging/live-cutover.lock` |
 | production | `/srv/woodright/locks/production/live-cutover.lock` |
-| public_production | `/srv/woodright/locks/public_production/live-cutover.lock` |
+| public_production | `/srv/woodright/locks/public_production/live-cutover.lock` (pair) and `/srv/woodright/locks/public_production/apex-routing.lock` (buyer routing) |
 
 Legacy shared `/srv/woodright/locks/live-cutover.lock` must not be used for new environment cutovers (incident `formal-pass-24f7dc9`).
 

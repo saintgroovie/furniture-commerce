@@ -173,6 +173,25 @@ function main() {
     if (!t.includes("public_production.conf")) {
       fail(errors, `${rel} missing public_production.conf allowlist entry`)
     }
+    if (!t.includes("cutover-public-apex-routing.sh")) {
+      fail(errors, `${rel} missing public apex routing helper`)
+    }
+  }
+  const apexHelper = fs.readFileSync(
+    path.join(root, "ops/release/cutover-public-apex-routing.sh"),
+    "utf8"
+  )
+  if (!apexHelper.includes("I_UNDERSTAND_PUBLIC_APEX_ROUTING_CUTOVER")) {
+    fail(errors, "apex routing helper missing confirm token")
+  }
+  if (!apexHelper.includes("OWNER_APPROVE_WOODRIGHT_APEX_LAUNCH_CED2510")) {
+    fail(errors, "apex routing helper must require owner apex token")
+  }
+  if (!fs.existsSync(path.join(root, "docs/operator/public-apex-cutover.md"))) {
+    fail(errors, "missing docs/operator/public-apex-cutover.md")
+  }
+  if (!fs.existsSync(path.join(root, "ops/config/public-launch/traefik-public-production.yml"))) {
+    fail(errors, "missing Traefik public_production template")
   }
 
   // SEO wiring

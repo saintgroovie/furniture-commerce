@@ -259,6 +259,8 @@ FILES=(
   ops/release/cutover-public-demo-pair.sh
   ops/release/cutover-production-candidate.sh
   ops/release/cutover-public-production-pair.sh
+  ops/release/cutover-public-apex-routing.sh
+  ops/config/public-launch/traefik-public-production.yml
   ops/release/recover-production-candidate-skew.sh
   ops/release/reconcile-production-candidate-metadata.sh
   ops/release/reconcile-production-candidate-component-identities.sh
@@ -295,6 +297,7 @@ FILES=(
   docs/operator/backend-media-promotion-gate.md
   docs/operator/production-candidate-rollback.md
   docs/operator/public-production-pair-cutover.md
+  docs/operator/public-apex-cutover.md
   docs/operator/production-helper-install-provenance.md
   docs/operator/production-candidate-authority-reconcile.md
   docs/operator/owner-approved-release-governance.md
@@ -306,6 +309,7 @@ role_for() {
   case "$1" in
     ops/release/cutover-public-demo-pair.sh) echo pair_orchestrator ;;
     ops/release/cutover-public-production-pair.sh) echo public_production_pair_orchestrator ;;
+    ops/release/cutover-public-apex-routing.sh) echo public_production_apex_routing_orchestrator ;;
     ops/release/recreate-staging-backend-with-media.sh) echo backend_recreate ;;
     ops/release/recreate-staging-storefront.sh) echo storefront_recreate ;;
     ops/release/rollback-staging-backend-from-keeper.sh) echo backend_rollback ;;
