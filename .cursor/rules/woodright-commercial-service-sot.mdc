@@ -1,0 +1,27 @@
+---
+description: Woodright commercial/legal website SoT — read before delivery, payment, warranty, returns, service, or Bespoke terms
+alwaysApply: true
+globs:
+  - "**/woodright-copy.ts"
+  - "**/legal/**"
+  - "**/checkout/**"
+  - "**/delivery/**"
+  - "**/warranty/**"
+  - "**/returns/**"
+  - "**/payment/**"
+  - "**/bespoke/**"
+  - "docs/content-audit/**"
+  - "docs/owner/**"
+---
+
+# Woodright commercial/legal website SoT
+
+Before changing or generating buyer-facing content or behavior related to delivery, shipping, payment, warranty, claims, returns, after-sales service, order acceptance, natural-material disclaimers, or Bespoke commercial terms, read this file first:
+
+`docs/content-audit/SITE_COMMERCIAL_SERVICE_SOT.md`
+
+Do not invent commercial/legal facts. Owner decisions recorded there override older contract-derived website assumptions. Unresolved contract conflicts must remain explicit gates.
+
+This rule does **not** duplicate the SoT. The Markdown file is the only detailed source.
+
+Do not ship contract tariffs, a universal lead time, on-site acquiring, public bank details, or contract §5.10 returns wording unless that SoT marks them as currently publishable.

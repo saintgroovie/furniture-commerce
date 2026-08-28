@@ -78,14 +78,22 @@ Live copy ≠ owner-confirmed SoT for the new site. Treat as **PUBLIC OBSERVATIO
 
 Tokens: `OWNER_CONFIRM_WOODRIGHT_SELLER_ROEL_TECHNIK` · `OWNER_DECISION_OD01_A_CONFIRMED` · `OWNER_DECISION_OD10_B_BANK_DETAILS_NOT_PUBLIC`
 
-## F. External verification (existence only; superseded for *seller* SoT)
+## F. 2026 client contract template (persisted 2026-08-28)
+
+| ID | Source | Role |
+| --- | --- | --- |
+| CTR-2026 | Operator file: client `ДОГОВОР ПОСТАВКИ ТОВАРА` template, ООО «Роэл-Техник», dated 2026. **Not stored in git.** | Provenance for commercial/service terms. **Not** automatic public website policy. Canonical persist: `docs/content-audit/SITE_COMMERCIAL_SERVICE_SOT.md` |
+
+Do not treat this template’s ₽/% tariffs, 18-month warranty, or §5.10 returns wording as new-site SoT. Owner decisions in `OWNER_DECISIONS.md` still win for website behavior; unresolved contract/website conflicts stay explicit gates in the commercial SoT.
+
+## G. External verification (existence only; superseded for *seller* SoT)
 
 | Claim | Source | Status |
 | --- | --- | --- |
 | ООО «РОЭЛ-ТЕХНИК» ИНН 3702111074 ОГРН 1153702012848 exists, Ivanovo, furniture retail OKVED | Aggregators citing EGRUL (checko/rusprofile/spark) | `EXTERNAL VERIFICATION` of **existence** (corroboration) |
 | Same entity is the seller for the *new* Woodright site | Owner card 2026-08-15 | **`FACT — CURRENT OWNER CONFIRMED`** (`OD-01 = A`). Privacy email still MISSING. Full legal pack not approved. |
 
-## G. Not used / out of scope
+## H. Not used / out of scope
 
 - Catalog SKU pricing, media boards, Docker/ops evidence (except noting launch gate)
 - Invented tariffs from «industry norms»
