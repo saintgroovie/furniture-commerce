@@ -728,8 +728,19 @@ wr_public_demo_wait_buyer_edge() {
       rm -f "$hdr_file"
       return 1
     fi
-    if [[ "$interval_s" -gt 0 ]]; then
-      sleep "$interval_s"
+    remaining=$((deadline - SECONDS))
+    if (( remaining <= 0 )); then
+      wr_cutover_log "PUBLIC_DEMO_EDGE_CONVERGENCE_TIMEOUT attempts=$attempt last_http=$code last_sha=${sha:-empty}"
+      WR_PUBLIC_DEMO_EDGE_RESULT="PUBLIC_DEMO_EDGE_CONVERGENCE_TIMEOUT"
+      rm -f "$hdr_file"
+      return 1
+    fi
+    sleeptime="$interval_s"
+    if (( sleeptime > remaining )); then
+      sleeptime="$remaining"
+    fi
+    if (( sleeptime > 0 )); then
+      sleep "$sleeptime"
     fi
   done
 }
@@ -749,6 +760,8 @@ wr_public_demo_wait_api_edge() {
   attempt=0
   hdr_file="$(mktemp "${TMPDIR:-/tmp}/wr-edge-api-hdr.XXXXXX")"
   WR_PUBLIC_DEMO_EDGE_RESULT=""
+  WR_PUBLIC_DEMO_EDGE_LAST_SHA=""
+  WR_PUBLIC_DEMO_EDGE_LAST_HTTP=""
   expected_sha="$(printf '%s' "$expected_sha" | tr '[:upper:]' '[:lower:]')"
   previous_sha="$(printf '%s' "$previous_sha" | tr '[:upper:]' '[:lower:]')"
   wr_cutover_require_full_sha "$expected_sha" || {
@@ -768,6 +781,8 @@ wr_public_demo_wait_api_edge() {
       printf '%s\n' "$headers" >"$evidence_hdr"
     fi
     sha="$(wr_public_demo_edge_header_value "$headers" "x-woodright-release-sha" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
+    WR_PUBLIC_DEMO_EDGE_LAST_SHA="$sha"
+    WR_PUBLIC_DEMO_EDGE_LAST_HTTP="$code"
     if [[ "$code" == "200" && "$sha" == "$expected_sha" ]]; then
       wr_cutover_log "EDGE_CONVERGED api attempt=$attempt http=$code sha=$sha"
       WR_PUBLIC_DEMO_EDGE_RESULT="EDGE_CONVERGED"
@@ -789,8 +804,19 @@ wr_public_demo_wait_api_edge() {
       rm -f "$hdr_file"
       return 1
     fi
-    if [[ "$interval_s" -gt 0 ]]; then
-      sleep "$interval_s"
+    remaining=$((deadline - SECONDS))
+    if (( remaining <= 0 )); then
+      wr_cutover_log "PUBLIC_DEMO_EDGE_CONVERGENCE_TIMEOUT api attempts=$attempt"
+      WR_PUBLIC_DEMO_EDGE_RESULT="PUBLIC_DEMO_EDGE_CONVERGENCE_TIMEOUT"
+      rm -f "$hdr_file"
+      return 1
+    fi
+    sleeptime="$interval_s"
+    if (( sleeptime > remaining )); then
+      sleeptime="$remaining"
+    fi
+    if (( sleeptime > 0 )); then
+      sleep "$sleeptime"
     fi
   done
 }

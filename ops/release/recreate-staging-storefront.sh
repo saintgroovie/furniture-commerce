@@ -241,7 +241,7 @@ wait_healthy() {
 }
 
 verify_public_identity() {
-  [[ "$SKIP_PUBLIC_VERIFY" == "1" ]] && return 0
+  [[ "$SKIP_PUBLIC_VERIFY" == "1" && "$MODE" != "execute" ]] && return 0
   local host="${WOODRIGHT_BUYER_HOST%/}"
   local prev=""
   local rc=0

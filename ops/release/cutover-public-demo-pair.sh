@@ -429,7 +429,7 @@ verify_pair() {
   [[ "$role_be" == "public_demo" ]] || return 1
   [[ "$owner_sf" == "Dokploy" && "$owner_be" == "Dokploy" ]] || return 1
   [[ "$db_sf" == "public_demo_db" && "$db_be" == "public_demo_db" ]] || return 1
-  if [[ "${SKIP_PUBLIC_VERIFY:-0}" == "1" ]]; then
+  if [[ "${SKIP_PUBLIC_VERIFY:-0}" == "1" && "$MODE" != "execute" ]]; then
     return 0
   fi
   local prev="${EXPECTED_OLD_SHA:-${OLD_SF_SHA:-${OLD_BE_SHA:-}}}"
@@ -672,7 +672,7 @@ log "post-backend identity gate PASS container=${WOODRIGHT_BE_CONTAINER_DEFAULT}
 
 # Storefront recreate under pair component scope
 if ! REQUIRE_CURRENT_DIGEST=0 \
-  SKIP_PUBLIC_VERIFY="${SKIP_PUBLIC_VERIFY:-0}" \
+  SKIP_PUBLIC_VERIFY=0 \
   WOODRIGHT_EDGE_PREVIOUS_SHA="${EXPECTED_OLD_SHA:-${OLD_SF_SHA:-}}" \
   EXPECTED_OLD_SHA="${EXPECTED_OLD_SHA:-${OLD_SF_SHA:-}}" \
   bash "$HERE/recreate-staging-storefront.sh" \

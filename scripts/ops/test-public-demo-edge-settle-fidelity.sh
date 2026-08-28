@@ -296,6 +296,30 @@ else
   pass "no Traefik/Dokploy retarget in ops helper"
 fi
 
+# Execute must not honor SKIP_PUBLIC_VERIFY (Codex P1)
+if grep -q 'SKIP_PUBLIC_VERIFY" == "1" && "$MODE" != "execute"' "$SF" \
+  && grep -q 'SKIP_PUBLIC_VERIFY:-0}" == "1" && "$MODE" != "execute"' "$PAIR" \
+  && grep -q 'SKIP_PUBLIC_VERIFY=0' "$PAIR"; then
+  pass "execute cannot skip public HTTPS settle via SKIP_PUBLIC_VERIFY"
+else
+  fail "SKIP_PUBLIC_VERIFY still skippable on execute"
+fi
+
+# Oversized interval is capped by remaining deadline
+SECONDS=0
+export WOODRIGHT_PUBLIC_DEMO_EDGE_HTTP_GET="$TMP/curl-stale"
+export WOODRIGHT_PUBLIC_DEMO_EDGE_SETTLE_TIMEOUT_S=1
+export WOODRIGHT_PUBLIC_DEMO_EDGE_SETTLE_INTERVAL_S=999999
+H_RC=0
+wr_public_demo_wait_buyer_edge "$CAF" "public_demo" "public_demo_db" "$DD" >/dev/null || H_RC=$?
+H_ELAPSED=$SECONDS
+unset WOODRIGHT_PUBLIC_DEMO_EDGE_SETTLE_TIMEOUT_S WOODRIGHT_PUBLIC_DEMO_EDGE_SETTLE_INTERVAL_S WOODRIGHT_PUBLIC_DEMO_EDGE_HTTP_GET
+if [[ "$H_RC" -eq 1 && "$WR_PUBLIC_DEMO_EDGE_RESULT" == "PUBLIC_DEMO_EDGE_CONVERGENCE_TIMEOUT" && "$H_ELAPSED" -le 8 ]]; then
+  pass "oversized settle interval still bounded by deadline (${H_ELAPSED}s)"
+else
+  fail "oversized interval rc=$H_RC elapsed=$H_ELAPSED result=${WR_PUBLIC_DEMO_EDGE_RESULT:-empty}"
+fi
+
 if [[ "$FAILED" -ne 0 ]]; then
   echo "FAILED=$FAILED"
   exit 1
