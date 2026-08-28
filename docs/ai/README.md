@@ -13,6 +13,7 @@
 | [`AI_WORKING_RULES.md`](AI_WORKING_RULES.md) | 10 инвариантов + pre-change checklist |
 | [`SYSTEM_BOUNDARIES.md`](SYSTEM_BOUNDARIES.md) | Неизменяемые границы (эскалация) |
 | [`AI_CONTEXT.md`](AI_CONTEXT.md) | Короткий контекст (не заменяет trio) |
+| [`../content-audit/SITE_COMMERCIAL_SERVICE_SOT.md`](../content-audit/SITE_COMMERCIAL_SERVICE_SOT.md) | Commercial/service/legal website SoT (contract 2026 + owner decisions). Mandatory before delivery/payment/warranty/returns/Bespoke copy |
 
 ## Cursor rules
 
@@ -29,6 +30,7 @@
 - `operator-location.mdc` — RU / Europe/Moscow
 - `dash-typography.mdc` — RU тире только ` - `
 - `ux-copywriting.mdc` — точки, отбивки, висячие предлоги (+ pointer на skill)
+- `woodright-commercial-service-sot.mdc` — обязанность читать `docs/content-audit/SITE_COMMERCIAL_SERVICE_SOT.md` до delivery/payment/warranty/returns/Bespoke copy
 
 ### task-specific (globs)
 
