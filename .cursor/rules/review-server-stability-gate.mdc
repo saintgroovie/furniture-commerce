@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Review server stability gate
 
-Complements `foreground-only-execution.mdc`, `durable-local-review-servers.mdc`, and `local-dev-single-instance.mdc`.
+Complements `foreground-only-execution.mdc`, `durable-local-review-servers.mdc`, and (when present) `local-dev-single-instance.mdc`.
 
 Cursor may abort background shells when a chat is summarized or ended. **"Started" / "Ready in" / a PID in a log is not proof the server is still up.**
 
@@ -22,22 +22,40 @@ Do **not** tell the operator to open `http://localhost:…` / `http://127.0.0.1:
    - Medusa: `/health` → 200
    - Storefront: `/` → 200 (not hang / not 000)
 3. **Review path:** bounded `curl` of the **exact** URL (or its path) returns the expected status (usually 200) and a minimal content token (title, `data-state`, route marker) - not only the homepage.
-4. **Steady sample:** repeat steps 1–3 once more after ≥5s. If either sample fails → do not hand out the URL.
-5. **Identity:** listener cwd matches the intended worktree (from `lsof`/`ps`, or durable helper `status` showing verified live cwd). A durable `--name` alone is not enough. Port ownership must not be borrowed from another checkout.
+4. **Storefront CSS gate (mandatory for Next):** from the HTML of `/` (and the review path if different), extract every `/_next/static/css/*.css` href and `curl` each → **200**.
+   HTML `200` + CSS `400`/`404` = **site looks dead** (unstyled purple logo / vertical link list). Token: `qa_css_desync`. Do **not** hand that URL as healthy. Heal via `storefront-qa-build-sync.mdc` (canonical `:3002`) or rebuild + durable restart (alternate ports).
+5. **Worktree identity:** listener cwd matches the intended checkout/branch for the review. Wrong worktree on the right port = wrong site.
+6. **Steady sample:** repeat steps 1–5 once more after ≥5s. If either sample fails → do not hand out the URL.
 
-If any step fails → report `server not stable` (or `server not running`), what failed, and the exact **durable** start command. **No** “откройте …”, **no** success-tone review handoff.
+### When the operator says the site is down («сайт лежит», «не открывается», «опять упал»)
+
+In the **same** turn, triage **all** habitual ports before claiming anything:
+
+| Port / check | Role |
+|------|------|
+| Docker daemon + `:5432` + `:6379` | Hybrid infra (`medusa_postgres` / `medusa_redis`). Down after reboot → heal compose **before** more Medusa kickstarts |
+| `:3002` + `:9000` | Canonical QA LaunchAgent pair (often what the browser still has open) |
+| Named durable alternate (e.g. `:3137` + `:9137`) | Feature-review stack if one was started this thread |
+
+For each storefront: listener + HTML + **CSS** + cwd. Report which is live / `qa_css_desync` / down / wrong worktree. Prefer healing the port the operator actually uses; do not invent a third port for a CSS desync on `:3002`.
+
+Tokens: LaunchAgent Medusa “running” but `:9000` not LISTEN and Postgres down → `qa_postgres_down`. Climbing launchctl `runs` + `ECONNREFUSED` → `qa_keepalive_storm`.
+
+Mutating restore (Compose / LaunchAgent kickstart) is allowed only when the **current message** has reboot-restore intent (`personal-data-mac-safety.mdc`). Bare «сайт лежит» is diagnosis + packet; do not Compose/kickstart on that phrase alone.
+
+If any step fails → report `server not stable` (or `server not running` / `qa_css_desync`), what failed, and the exact **durable** start or heal command. **No** “откройте …”, **no** success-tone review handoff.
 
 ## After Cursor aborts a shell
 
 Abort/error notifications for `next dev` / `medusa develop` / `next start` mean the review session may be dead even if an earlier turn looked healthy.
 
 - Re-run the hard gate before repeating any review URL.
-- Do not assume nohup/disown / Shell `block_until_ms: 0` / unmanaged `screen`/`tmux` survived.
-- Durable viewing: alwaysApply `durable-local-review-servers.mdc` + `local-dev-single-instance.mdc` (`scripts/local-dev/woodright-*.sh` for `:9000`/`:3002`, or `scripts/local/durable_local_server.py` for alternate ports / Terminal). Do not create/modify LaunchAgents (absolute ban in `personal-data-mac-safety.mdc`).
-- Do **not** enter a restart loop in the agent shell. Classify the stop cause first (`killed_by_cursor_agent_shell` vs intentional stop vs crash). One durable start (or reuse), then gate.
+- Do not assume nohup/disown / Shell `block_until_ms: 0` survived.
+- Durable viewing: alwaysApply `durable-local-review-servers.mdc` (`scripts/local/durable_local_server.py` for alternate ports, or operator Terminal). Canonical `:9000`/`:3002` stay on the primary session - do not steal them from a secondary worktree. Do not create/modify LaunchAgents (absolute ban in `personal-data-mac-safety.mdc` when that rule is present; otherwise still forbidden).
+- Do **not** enter a restart loop in the agent shell. One durable start (or reuse), then gate.
 
 ## Honesty in packets
 
-- Review URL sections require a timestamped gate result: ports, health codes, review-path codes, and worktree/cwd identity.
+- Review URL sections require a timestamped gate result: ports, health codes, review-path codes.
 - If the gate was not re-run in this turn → write `review URLs: not re-verified this turn` and do not paste localhost links as live.
 - `blocked_by_cursor_background_prompt` / `killed_by_cursor_agent_shell` when Cursor abort is why the gate fails mid-handoff.
