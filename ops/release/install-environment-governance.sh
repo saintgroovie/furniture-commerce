@@ -248,18 +248,23 @@ FILES=(
   ops/lib/woodright-memory-limits.sh
   ops/lib/woodright-recreate-mode.sh
   ops/lib/woodright-production-ownership-access.sh
+  ops/lib/woodright-production-compose-template.py
   ops/config/runtime-environments/public_demo.conf
   ops/config/runtime-environments/staging.conf
   ops/config/runtime-environments/production.conf
   ops/config/runtime-environments/public_production.conf
+  ops/compose/woodright-production.docker-compose.yml
   ops/release/recreate-staging-backend-with-media.sh
   ops/release/recreate-staging-storefront.sh
   ops/release/cutover-public-demo-pair.sh
   ops/release/cutover-production-candidate.sh
   ops/release/cutover-public-production-pair.sh
+  ops/release/cutover-public-apex-routing.sh
+  ops/config/public-launch/traefik-public-production.yml
   ops/release/recover-production-candidate-skew.sh
   ops/release/reconcile-production-candidate-metadata.sh
   ops/release/reconcile-production-candidate-component-identities.sh
+  ops/release/reconcile-production-candidate-compose-template.sh
   ops/release/reconcile-production-release-sha.sh
   ops/release/reconcile-public-demo-metadata.sh
   ops/release/reconcile-owner-approved-release.sh
@@ -292,6 +297,7 @@ FILES=(
   docs/operator/backend-media-promotion-gate.md
   docs/operator/production-candidate-rollback.md
   docs/operator/public-production-pair-cutover.md
+  docs/operator/public-apex-cutover.md
   docs/operator/production-helper-install-provenance.md
   docs/operator/production-candidate-authority-reconcile.md
   docs/operator/owner-approved-release-governance.md
@@ -303,6 +309,7 @@ role_for() {
   case "$1" in
     ops/release/cutover-public-demo-pair.sh) echo pair_orchestrator ;;
     ops/release/cutover-public-production-pair.sh) echo public_production_pair_orchestrator ;;
+    ops/release/cutover-public-apex-routing.sh) echo public_production_apex_routing_orchestrator ;;
     ops/release/recreate-staging-backend-with-media.sh) echo backend_recreate ;;
     ops/release/recreate-staging-storefront.sh) echo storefront_recreate ;;
     ops/release/rollback-staging-backend-from-keeper.sh) echo backend_rollback ;;
@@ -314,6 +321,9 @@ role_for() {
     ops/lib/woodright-component-authority.sh) echo component_authority ;;
     ops/lib/woodright-component-expected-identity.sh) echo component_expected_identity ;;
     ops/release/reconcile-production-candidate-component-identities.sh) echo production_component_identity_rebind ;;
+    ops/release/reconcile-production-candidate-compose-template.sh) echo production_compose_template_reconciler ;;
+    ops/lib/woodright-production-compose-template.py) echo production_compose_template_classify ;;
+    ops/compose/woodright-production.docker-compose.yml) echo production_compose_template ;;
     ops/release/reconcile-runtime-manifests.sh) echo runtime_manifest_reconciler ;;
     ops/release/reconcile-production-release-sha.sh) echo production_release_sha_reconciler ;;
     ops/release/reconcile-public-demo-metadata.sh) echo public_demo_metadata_reconciler ;;
@@ -348,7 +358,7 @@ dest_for() {
 mode_for() {
   local rel="$1"
   case "$rel" in
-    *.conf|*.md|ops/systemd/*) echo 0644 ;;
+    *.conf|*.md|*.py|ops/compose/*|ops/systemd/*) echo 0644 ;;
     *) echo 0755 ;;
   esac
 }

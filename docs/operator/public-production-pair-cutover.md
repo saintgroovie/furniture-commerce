@@ -14,7 +14,7 @@ It is **not** an apex launch.
 
 `public_production` pair cutover does **not** mutate DNS or CS-Cart.
 
-`woodright.ru` remains the legacy CS-Cart apex until a **separate** owner-authorized apex migration. Do not treat this helper as "launch apex".
+`woodright.ru` remains the legacy CS-Cart apex until a **separate** owner-authorized apex migration. Do not treat this helper as "launch apex". Apex routing (Traefik + documented ITB DNS, no pair recreate) is `docs/operator/public-apex-cutover.md` / `ops/release/cutover-public-apex-routing.sh`.
 
 ## Topology (unchanged by this helper)
 
