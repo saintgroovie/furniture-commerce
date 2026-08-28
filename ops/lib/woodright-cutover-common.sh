@@ -648,6 +648,87 @@ wr_public_demo_edge_http_get() {
   printf '%s\n' "$code"
 }
 
+# Traefik file-provider URLs for public_demo are Docker DNS names
+# (woodright-staging-storefront / woodright-staging-backend). After stop+rename+create
+# the hostname is unchanged but the IP is new; Traefik keeps the old IP until the
+# dynamic file is re-read. This rewrites a comment-only marker on the existing demo
+# file so the same service URLs are resolved again. It does not change backends,
+# hosts, or apex/production files.
+wr_public_demo_nudge_edge_resolver() {
+  local f="${WOODRIGHT_PUBLIC_DEMO_EDGE_RESOLVER_FILE:-/etc/dokploy/traefik/dynamic/woodright-demo.yml}"
+  [[ "${WOODRIGHT_PUBLIC_DEMO_NUDGE_EDGE_RESOLVER:-1}" == "1" ]] || return 0
+  [[ -f "$f" && -w "$f" ]] || return 0
+  python3 - "$f" <<'PY' || return 0
+import os
+import pathlib
+import sys
+import tempfile
+import time
+
+path = pathlib.Path(sys.argv[1])
+orig_stat = path.stat()
+raw = path.read_text(encoding="utf-8")
+demo_host = "Host(`woodright-demo.ru`)"
+demo_url = 'url: "http://woodright-staging-storefront:3002"'
+if demo_host not in raw or demo_url not in raw:
+    sys.exit(2)
+if "woodright-public-production" in raw:
+    sys.exit(2)
+if "Host(`woodright.ru`)" in raw:
+    sys.exit(2)
+marker = "# woodright-edge-resolver-nudge:"
+lines = raw.splitlines(keepends=True)
+if lines and lines[0].startswith(marker):
+    lines = lines[1:]
+    if lines and lines[0] == "\n":
+        lines = lines[1:]
+stamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+new = f"{marker} {stamp}\n" + "".join(lines)
+if new == raw:
+    sys.exit(2)
+directory = str(path.parent)
+fd, tmp_name = tempfile.mkstemp(prefix=".wr-nudge-", suffix=".yml", dir=directory)
+replaced = False
+try:
+    with os.fdopen(fd, "w", encoding="utf-8") as handle:
+        handle.write(new)
+        handle.flush()
+        os.fsync(handle.fileno())
+    os.chmod(tmp_name, orig_stat.st_mode)
+    inject = os.environ.get("WOODRIGHT_PUBLIC_DEMO_NUDGE_CAS_INJECT")
+    if inject:
+        path.write_text(inject, encoding="utf-8")
+    now_stat = path.stat()
+    now = path.read_text(encoding="utf-8")
+    if now != raw or (
+        now_stat.st_ino != orig_stat.st_ino
+        or now_stat.st_size != orig_stat.st_size
+        or now_stat.st_mtime_ns != orig_stat.st_mtime_ns
+    ):
+        sys.exit(3)
+    os.replace(tmp_name, path)
+    replaced = True
+except Exception:
+    if not replaced:
+        try:
+            os.unlink(tmp_name)
+        except OSError:
+            pass
+    raise
+finally:
+    if not replaced:
+        try:
+            os.unlink(tmp_name)
+        except OSError:
+            pass
+
+PY
+  local py_rc=$?
+  if [[ "$py_rc" -eq 0 ]]; then
+    wr_cutover_log "EDGE_RESOLVER_NUDGED path=$f"
+  fi
+}
+
 # Wait until buyer HTTPS matches expected identity.
 # Returns: 0 EDGE_CONVERGED
 #          1 PUBLIC_DEMO_EDGE_CONVERGENCE_TIMEOUT
@@ -683,6 +764,8 @@ wr_public_demo_wait_buyer_edge() {
   if [[ -n "$previous_sha" ]]; then
     wr_cutover_require_full_sha "$previous_sha" || previous_sha=""
   fi
+
+  wr_public_demo_nudge_edge_resolver || true
 
   while :; do
     attempt=$((attempt + 1))
@@ -722,6 +805,7 @@ wr_public_demo_wait_buyer_edge() {
     fi
 
     wr_cutover_log "EDGE_NOT_CONVERGED attempt=$attempt http=$code sha=${sha:-empty} expected=$expected_sha previous=${previous_sha:-none}"
+    wr_public_demo_nudge_edge_resolver || true
     if (( SECONDS >= deadline )); then
       wr_cutover_log "PUBLIC_DEMO_EDGE_CONVERGENCE_TIMEOUT attempts=$attempt last_http=$code last_sha=${sha:-empty}"
       WR_PUBLIC_DEMO_EDGE_RESULT="PUBLIC_DEMO_EDGE_CONVERGENCE_TIMEOUT"
@@ -772,6 +856,7 @@ wr_public_demo_wait_api_edge() {
   if [[ -n "$previous_sha" ]]; then
     wr_cutover_require_full_sha "$previous_sha" || previous_sha=""
   fi
+  wr_public_demo_nudge_edge_resolver || true
   while :; do
     attempt=$((attempt + 1))
     code="$(wr_public_demo_edge_http_get "$url" "$hdr_file")"
@@ -798,6 +883,7 @@ wr_public_demo_wait_api_edge() {
       fi
     fi
     wr_cutover_log "EDGE_NOT_CONVERGED api attempt=$attempt http=$code sha=${sha:-empty}"
+    wr_public_demo_nudge_edge_resolver || true
     if (( SECONDS >= deadline )); then
       wr_cutover_log "PUBLIC_DEMO_EDGE_CONVERGENCE_TIMEOUT api attempts=$attempt"
       WR_PUBLIC_DEMO_EDGE_RESULT="PUBLIC_DEMO_EDGE_CONVERGENCE_TIMEOUT"
