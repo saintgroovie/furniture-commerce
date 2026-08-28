@@ -388,6 +388,12 @@ grep -q 'docs/operator/public-apex-cutover.md' "$ROOT/ops/release/install-enviro
   || fail "installer missing public apex cutover docs"
 grep -q 'I_UNDERSTAND_PUBLIC_APEX_ROUTING_CUTOVER' "$ROOT/ops/release/cutover-public-apex-routing.sh" \
   || fail "apex routing helper missing confirm token"
+grep -q 'wr_public_demo_wait_buyer_edge' "$ROOT/ops/lib/woodright-cutover-common.sh" \
+  || fail "cutover-common missing public_demo edge settle"
+grep -q 'wr_public_demo_wait_buyer_edge' "$ROOT/ops/release/cutover-public-demo-pair.sh" \
+  || fail "public_demo pair helper missing edge settle call"
+grep -q 'EDGE_NOT_CONVERGED' "$ROOT/ops/lib/woodright-cutover-common.sh" \
+  || fail "cutover-common missing EDGE_NOT_CONVERGED"
 if grep -qE '^[^#]*(nsupdate|route53|cloudflare)' "$ROOT/ops/release/cutover-public-apex-routing.sh"; then
   fail "apex routing helper must not mutate DNS via CLI"
 else

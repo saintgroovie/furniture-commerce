@@ -429,19 +429,23 @@ verify_pair() {
   [[ "$role_be" == "public_demo" ]] || return 1
   [[ "$owner_sf" == "Dokploy" && "$owner_be" == "Dokploy" ]] || return 1
   [[ "$db_sf" == "public_demo_db" && "$db_be" == "public_demo_db" ]] || return 1
-  if [[ "${SKIP_PUBLIC_VERIFY:-0}" == "1" ]]; then
+  if [[ "${SKIP_PUBLIC_VERIFY:-0}" == "1" && "$MODE" != "execute" ]]; then
     return 0
   fi
-  local api sfh
-  api="$(curl -sS --max-time 20 -D - -o /dev/null "${WOODRIGHT_API_HOST%/}/health" || true)"
-  sfh="$(curl -sS --max-time 20 -D - -o /dev/null "${WOODRIGHT_BUYER_HOST%/}/" || true)"
-  printf '%s\n' "$api" >"$EVIDENCE_DIR/raw/api-headers.txt"
-  printf '%s\n' "$sfh" >"$EVIDENCE_DIR/raw/sf-headers.txt"
-  echo "$sfh" | grep -qi "x-woodright-release-sha: ${TARGET_SHA}" || return 1
-  echo "$api" | grep -qi "x-woodright-release-sha: ${TARGET_SHA}" || return 1
-  echo "$sfh" | grep -qi "x-robots-tag:.*noindex" || return 1
-  echo "$sfh" | grep -qi "x-woodright-runtime-role: public_demo" || return 1
-  echo "$sfh" | grep -qi "x-woodright-database-identity: public_demo_db" || return 1
+  local prev="${EXPECTED_OLD_SHA:-${OLD_SF_SHA:-${OLD_BE_SHA:-}}}"
+  mkdir -p "$EVIDENCE_DIR/raw"
+  wr_public_demo_wait_buyer_edge \
+    "$TARGET_SHA" "public_demo" "public_demo_db" "$prev" \
+    "$EVIDENCE_DIR/raw/sf-headers.txt" || {
+    log "${WR_PUBLIC_DEMO_EDGE_RESULT:-PUBLIC_DEMO_EDGE_CONVERGENCE_TIMEOUT} buyer last_sha=${WR_PUBLIC_DEMO_EDGE_LAST_SHA:-empty}"
+    return 1
+  }
+  wr_public_demo_wait_api_edge \
+    "$TARGET_SHA" "$prev" \
+    "$EVIDENCE_DIR/raw/api-headers.txt" || {
+    log "${WR_PUBLIC_DEMO_EDGE_RESULT:-PUBLIC_DEMO_EDGE_CONVERGENCE_TIMEOUT} api last_sha=${WR_PUBLIC_DEMO_EDGE_LAST_SHA:-empty}"
+    return 1
+  }
   return 0
 }
 
@@ -668,7 +672,9 @@ log "post-backend identity gate PASS container=${WOODRIGHT_BE_CONTAINER_DEFAULT}
 
 # Storefront recreate under pair component scope
 if ! REQUIRE_CURRENT_DIGEST=0 \
-  SKIP_PUBLIC_VERIFY="${SKIP_PUBLIC_VERIFY:-0}" \
+  SKIP_PUBLIC_VERIFY=0 \
+  WOODRIGHT_EDGE_PREVIOUS_SHA="${EXPECTED_OLD_SHA:-${OLD_SF_SHA:-}}" \
+  EXPECTED_OLD_SHA="${EXPECTED_OLD_SHA:-${OLD_SF_SHA:-}}" \
   bash "$HERE/recreate-staging-storefront.sh" \
   --environment public_demo \
   --component pair \

@@ -241,14 +241,32 @@ wait_healthy() {
 }
 
 verify_public_identity() {
-  [[ "$SKIP_PUBLIC_VERIFY" == "1" ]] && return 0
+  [[ "$SKIP_PUBLIC_VERIFY" == "1" && "$MODE" != "execute" ]] && return 0
   local host="${WOODRIGHT_BUYER_HOST%/}"
-  local hdrs
-  hdrs="$(curl -sS --max-time 20 -D - -o /dev/null "${host}/" || true)"
-  printf '%s\n' "$hdrs" >"$EVIDENCE_DIR/raw/storefront-public-headers.txt"
-  echo "$hdrs" | grep -qi "x-woodright-release-sha: ${TARGET_SHA}" || return 1
-  echo "$hdrs" | grep -qi "x-woodright-runtime-role: public_demo" || return 1
-  echo "$hdrs" | grep -qi "x-robots-tag:.*noindex" || return 1
+  local prev=""
+  local rc=0
+  [[ -n "$host" ]] || die "WOODRIGHT_BUYER_HOST required for public identity settle"
+  if [[ -n "${KEEP_NAME:-}" ]] && wr_cutover_docker inspect "$KEEP_NAME" >/dev/null 2>&1; then
+    prev="$(wr_cutover_docker inspect "$KEEP_NAME" --format '{{index .Config.Labels "com.woodright.release-sha"}}' 2>/dev/null || true)"
+  fi
+  # Verified keeper label first. CLI/captured env fill only if keeper SHA is empty.
+  # Caller env must not override a live keeper identity.
+  prev="${prev:-${EXPECTED_OLD_SHA:-${WOODRIGHT_EDGE_PREVIOUS_SHA:-}}}"
+  # Container digest is asserted by the caller (image id / EXPECTED_DIGEST).
+  # caf82b0 HTTPS has no digest header; SHA/role/DB/200 are the public edge contract.
+  wr_public_demo_wait_buyer_edge \
+    "$TARGET_SHA" \
+    "public_demo" \
+    "public_demo_db" \
+    "$prev" \
+    "${EVIDENCE_DIR:+$EVIDENCE_DIR/raw/storefront-public-headers.txt}" \
+    || rc=$?
+  case "$rc" in
+    0) return 0 ;;
+    1) die "PUBLIC_DEMO_EDGE_CONVERGENCE_TIMEOUT sha_want=$TARGET_SHA last_sha=${WR_PUBLIC_DEMO_EDGE_LAST_SHA:-empty} last_http=${WR_PUBLIC_DEMO_EDGE_LAST_HTTP:-empty}" ;;
+    2) die "PUBLIC_DEMO_EDGE_IDENTITY_MISMATCH sha_want=$TARGET_SHA last_sha=${WR_PUBLIC_DEMO_EDGE_LAST_SHA:-empty}" ;;
+    *) die "public identity verify failed rc=$rc" ;;
+  esac
 }
 
 run_rollback() {

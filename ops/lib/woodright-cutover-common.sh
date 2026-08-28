@@ -601,3 +601,222 @@ wr_cutover_container_immutable_digest() {
   wr_cutover_resolve_container_image_identity "$container" "$component" || return 1
   printf '%s\n' "$WR_CUTOVER_REPO_DIGEST"
 }
+
+# ---------------------------------------------------------------------------
+# Public demo HTTPS edge settle
+#
+# Traefik/Dokploy are not retargeted by the recreate helper. After stop+rename+
+# create, docker health of the new storefront can pass while
+# https://woodright-demo.ru/ still serves the keeper SHA. Treat that as
+# EDGE_NOT_CONVERGED (retry), not an immediate identity failure.
+#
+# caf82b0 storefront HTTPS does not emit an image digest header. Digest is
+# asserted from the live container (caller) separately from this HTTPS settle.
+# ---------------------------------------------------------------------------
+
+wr_public_demo_edge_header_value() {
+  local headers="${1:-}"
+  local name="${2:-}"
+  printf '%s\n' "$headers" | awk -v n="$(printf '%s' "$name" | tr '[:upper:]' '[:lower:]')" '
+    BEGIN { IGNORECASE=1 }
+    {
+      key=$1
+      sub(/:$/, "", key)
+      if (tolower(key) == n) {
+        $1=""
+        sub(/^[[:space:]]+/, "")
+        gsub(/\r/, "")
+        print
+        exit
+      }
+    }
+  '
+}
+
+# Writes headers to $2 (file). Prints HTTP status code to stdout. Never exits.
+wr_public_demo_edge_http_get() {
+  local url="${1:?}"
+  local hdr_file="${2:?}"
+  local code
+  if [[ -n "${WOODRIGHT_PUBLIC_DEMO_EDGE_HTTP_GET:-}" ]]; then
+    "${WOODRIGHT_PUBLIC_DEMO_EDGE_HTTP_GET}" "$url" "$hdr_file"
+    return 0
+  fi
+  : >"$hdr_file"
+  code="$(curl -sS --max-time 20 --http1.1 -D "$hdr_file" -o /dev/null -w '%{http_code}' "$url" 2>/dev/null || true)"
+  [[ -n "$code" ]] || code="000"
+  printf '%s\n' "$code"
+}
+
+# Wait until buyer HTTPS matches expected identity.
+# Returns: 0 EDGE_CONVERGED
+#          1 PUBLIC_DEMO_EDGE_CONVERGENCE_TIMEOUT
+#          2 PUBLIC_DEMO_EDGE_IDENTITY_MISMATCH
+# Sets WR_PUBLIC_DEMO_EDGE_RESULT to the token.
+wr_public_demo_wait_buyer_edge() {
+  local expected_sha="${1:?}"
+  local expected_role="${2:-public_demo}"
+  local expected_db="${3:-public_demo_db}"
+  local previous_sha="${4:-}"
+  local evidence_hdr="${5:-}"
+  local url="${WOODRIGHT_BUYER_HOST%/}/"
+  local timeout_s interval_s
+  timeout_s="${WOODRIGHT_PUBLIC_DEMO_EDGE_SETTLE_TIMEOUT_S:-90}"
+  interval_s="${WOODRIGHT_PUBLIC_DEMO_EDGE_SETTLE_INTERVAL_S:-2}"
+  [[ "$timeout_s" =~ ^[0-9]+$ ]] || timeout_s=90
+  [[ "$interval_s" =~ ^[0-9]+$ ]] || interval_s=2
+  local deadline=$((SECONDS + timeout_s))
+  local attempt=0
+  local hdr_file code headers sha role db
+  hdr_file="$(mktemp "${TMPDIR:-/tmp}/wr-edge-hdr.XXXXXX")"
+  WR_PUBLIC_DEMO_EDGE_RESULT=""
+  WR_PUBLIC_DEMO_EDGE_LAST_SHA=""
+  WR_PUBLIC_DEMO_EDGE_LAST_HTTP=""
+
+  expected_sha="$(printf '%s' "$expected_sha" | tr '[:upper:]' '[:lower:]')"
+  previous_sha="$(printf '%s' "$previous_sha" | tr '[:upper:]' '[:lower:]')"
+  wr_cutover_require_full_sha "$expected_sha" || {
+    rm -f "$hdr_file"
+    WR_PUBLIC_DEMO_EDGE_RESULT="PUBLIC_DEMO_EDGE_IDENTITY_MISMATCH"
+    return 2
+  }
+  if [[ -n "$previous_sha" ]]; then
+    wr_cutover_require_full_sha "$previous_sha" || previous_sha=""
+  fi
+
+  while :; do
+    attempt=$((attempt + 1))
+    code="$(wr_public_demo_edge_http_get "$url" "$hdr_file")"
+    headers="$(cat "$hdr_file" 2>/dev/null || true)"
+    if [[ -n "$evidence_hdr" ]]; then
+      mkdir -p "$(dirname "$evidence_hdr")" 2>/dev/null || true
+      printf '%s\n' "$headers" >"$evidence_hdr"
+    fi
+    sha="$(wr_public_demo_edge_header_value "$headers" "x-woodright-release-sha" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
+    role="$(wr_public_demo_edge_header_value "$headers" "x-woodright-runtime-role" | tr -d '[:space:]')"
+    db="$(wr_public_demo_edge_header_value "$headers" "x-woodright-database-identity" | tr -d '[:space:]')"
+    WR_PUBLIC_DEMO_EDGE_LAST_SHA="$sha"
+    WR_PUBLIC_DEMO_EDGE_LAST_HTTP="$code"
+
+    if [[ "$code" == "200" && "$sha" == "$expected_sha" && "$role" == "$expected_role" && "$db" == "$expected_db" ]] \
+      && printf '%s\n' "$headers" | grep -qi 'x-robots-tag:.*noindex'; then
+      wr_cutover_log "EDGE_CONVERGED attempt=$attempt http=$code sha=$sha role=$role db=$db"
+      WR_PUBLIC_DEMO_EDGE_RESULT="EDGE_CONVERGED"
+      rm -f "$hdr_file"
+      return 0
+    fi
+
+    if [[ "$code" == "200" && -n "$sha" && "$sha" =~ $WR_SHA_RE && "$sha" != "$expected_sha" ]]; then
+      if [[ -z "$previous_sha" || "$sha" != "$previous_sha" ]]; then
+        wr_cutover_log "PUBLIC_DEMO_EDGE_IDENTITY_MISMATCH attempt=$attempt http=$code sha=$sha expected=$expected_sha previous=${previous_sha:-none}"
+        WR_PUBLIC_DEMO_EDGE_RESULT="PUBLIC_DEMO_EDGE_IDENTITY_MISMATCH"
+        rm -f "$hdr_file"
+        return 2
+      fi
+    fi
+    if [[ "$code" == "200" && "$sha" == "$expected_sha" ]]; then
+      wr_cutover_log "PUBLIC_DEMO_EDGE_IDENTITY_MISMATCH attempt=$attempt http=$code sha=$sha role=${role:-empty} db=${db:-empty} (incomplete public identity)"
+      WR_PUBLIC_DEMO_EDGE_RESULT="PUBLIC_DEMO_EDGE_IDENTITY_MISMATCH"
+      rm -f "$hdr_file"
+      return 2
+    fi
+
+    wr_cutover_log "EDGE_NOT_CONVERGED attempt=$attempt http=$code sha=${sha:-empty} expected=$expected_sha previous=${previous_sha:-none}"
+    if (( SECONDS >= deadline )); then
+      wr_cutover_log "PUBLIC_DEMO_EDGE_CONVERGENCE_TIMEOUT attempts=$attempt last_http=$code last_sha=${sha:-empty}"
+      WR_PUBLIC_DEMO_EDGE_RESULT="PUBLIC_DEMO_EDGE_CONVERGENCE_TIMEOUT"
+      rm -f "$hdr_file"
+      return 1
+    fi
+    remaining=$((deadline - SECONDS))
+    if (( remaining <= 0 )); then
+      wr_cutover_log "PUBLIC_DEMO_EDGE_CONVERGENCE_TIMEOUT attempts=$attempt last_http=$code last_sha=${sha:-empty}"
+      WR_PUBLIC_DEMO_EDGE_RESULT="PUBLIC_DEMO_EDGE_CONVERGENCE_TIMEOUT"
+      rm -f "$hdr_file"
+      return 1
+    fi
+    sleeptime="$interval_s"
+    if (( sleeptime > remaining )); then
+      sleeptime="$remaining"
+    fi
+    if (( sleeptime > 0 )); then
+      sleep "$sleeptime"
+    fi
+  done
+}
+
+# Optional API /health SHA settle (same previous-SHA retry rules; role/db skipped).
+wr_public_demo_wait_api_edge() {
+  local expected_sha="${1:?}"
+  local previous_sha="${2:-}"
+  local evidence_hdr="${3:-}"
+  local url timeout_s interval_s deadline attempt hdr_file code headers sha
+  url="${WOODRIGHT_API_HOST%/}/health"
+  timeout_s="${WOODRIGHT_PUBLIC_DEMO_EDGE_SETTLE_TIMEOUT_S:-90}"
+  interval_s="${WOODRIGHT_PUBLIC_DEMO_EDGE_SETTLE_INTERVAL_S:-2}"
+  [[ "$timeout_s" =~ ^[0-9]+$ ]] || timeout_s=90
+  [[ "$interval_s" =~ ^[0-9]+$ ]] || interval_s=2
+  deadline=$((SECONDS + timeout_s))
+  attempt=0
+  hdr_file="$(mktemp "${TMPDIR:-/tmp}/wr-edge-api-hdr.XXXXXX")"
+  WR_PUBLIC_DEMO_EDGE_RESULT=""
+  WR_PUBLIC_DEMO_EDGE_LAST_SHA=""
+  WR_PUBLIC_DEMO_EDGE_LAST_HTTP=""
+  expected_sha="$(printf '%s' "$expected_sha" | tr '[:upper:]' '[:lower:]')"
+  previous_sha="$(printf '%s' "$previous_sha" | tr '[:upper:]' '[:lower:]')"
+  wr_cutover_require_full_sha "$expected_sha" || {
+    rm -f "$hdr_file"
+    WR_PUBLIC_DEMO_EDGE_RESULT="PUBLIC_DEMO_EDGE_IDENTITY_MISMATCH"
+    return 2
+  }
+  if [[ -n "$previous_sha" ]]; then
+    wr_cutover_require_full_sha "$previous_sha" || previous_sha=""
+  fi
+  while :; do
+    attempt=$((attempt + 1))
+    code="$(wr_public_demo_edge_http_get "$url" "$hdr_file")"
+    headers="$(cat "$hdr_file" 2>/dev/null || true)"
+    if [[ -n "$evidence_hdr" ]]; then
+      mkdir -p "$(dirname "$evidence_hdr")" 2>/dev/null || true
+      printf '%s\n' "$headers" >"$evidence_hdr"
+    fi
+    sha="$(wr_public_demo_edge_header_value "$headers" "x-woodright-release-sha" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
+    WR_PUBLIC_DEMO_EDGE_LAST_SHA="$sha"
+    WR_PUBLIC_DEMO_EDGE_LAST_HTTP="$code"
+    if [[ "$code" == "200" && "$sha" == "$expected_sha" ]]; then
+      wr_cutover_log "EDGE_CONVERGED api attempt=$attempt http=$code sha=$sha"
+      WR_PUBLIC_DEMO_EDGE_RESULT="EDGE_CONVERGED"
+      rm -f "$hdr_file"
+      return 0
+    fi
+    if [[ "$code" == "200" && -n "$sha" && "$sha" =~ $WR_SHA_RE && "$sha" != "$expected_sha" ]]; then
+      if [[ -z "$previous_sha" || "$sha" != "$previous_sha" ]]; then
+        wr_cutover_log "PUBLIC_DEMO_EDGE_IDENTITY_MISMATCH api sha=$sha expected=$expected_sha previous=${previous_sha:-none}"
+        WR_PUBLIC_DEMO_EDGE_RESULT="PUBLIC_DEMO_EDGE_IDENTITY_MISMATCH"
+        rm -f "$hdr_file"
+        return 2
+      fi
+    fi
+    wr_cutover_log "EDGE_NOT_CONVERGED api attempt=$attempt http=$code sha=${sha:-empty}"
+    if (( SECONDS >= deadline )); then
+      wr_cutover_log "PUBLIC_DEMO_EDGE_CONVERGENCE_TIMEOUT api attempts=$attempt"
+      WR_PUBLIC_DEMO_EDGE_RESULT="PUBLIC_DEMO_EDGE_CONVERGENCE_TIMEOUT"
+      rm -f "$hdr_file"
+      return 1
+    fi
+    remaining=$((deadline - SECONDS))
+    if (( remaining <= 0 )); then
+      wr_cutover_log "PUBLIC_DEMO_EDGE_CONVERGENCE_TIMEOUT api attempts=$attempt"
+      WR_PUBLIC_DEMO_EDGE_RESULT="PUBLIC_DEMO_EDGE_CONVERGENCE_TIMEOUT"
+      rm -f "$hdr_file"
+      return 1
+    fi
+    sleeptime="$interval_s"
+    if (( sleeptime > remaining )); then
+      sleeptime="$remaining"
+    fi
+    if (( sleeptime > 0 )); then
+      sleep "$sleeptime"
+    fi
+  done
+}

@@ -825,6 +825,11 @@ else
   fi
 fi
 
+grep -q 'wr_public_demo_wait_buyer_edge' "$PAIR" && pass "pair verify_pair settles buyer HTTPS" || fail "pair missing buyer edge settle"
+grep -q 'EXPECTED_OLD_SHA:-${OLD_SF_SHA' "$PAIR" && pass "pair previous SHA falls back to OLD_SF_SHA" || fail "pair missing OLD_SF_SHA previous-SHA fallback"
+grep -q 'PUBLIC_DEMO_EDGE_CONVERGENCE_TIMEOUT' "$SF" && pass "storefront recreate has convergence timeout token" || fail "storefront missing timeout token"
+grep -q 'wait_healthy' "$SF" && grep -q 'wr_public_demo_wait_buyer_edge' "$SF" && pass "storefront keeps health+edge settle" || fail "storefront settle missing"
+
 if [[ "$FAILED" -eq 0 ]]; then
   echo "OK public-demo pair cutover fidelity ($TMP)"
   exit 0
