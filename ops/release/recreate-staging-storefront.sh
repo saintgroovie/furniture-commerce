@@ -84,6 +84,9 @@ recover() {
     bash "$HERE/rollback-staging-storefront-from-keeper.sh" \
       --environment public_demo --keep-name "$KEEP_NAME" --evidence-dir "${EVIDENCE_DIR}" \
       || log "AUTO_ROLLBACK_FAILED"
+    WOODRIGHT_PUBLIC_DEMO_RESTORE_ENDPOINTS=1
+    wr_public_demo_restore_traefik_hostnames \
+      || log "TRAEFIK_ENDPOINT_RESTORE_FAILED after storefront auto-rollback"
   fi
   RECOVERING=0
   return "$rc"
@@ -254,6 +257,19 @@ verify_public_identity() {
   prev="${prev:-${EXPECTED_OLD_SHA:-${WOODRIGHT_EDGE_PREVIOUS_SHA:-}}}"
   # Container digest is asserted by the caller (image id / EXPECTED_DIGEST).
   # caf82b0 HTTPS has no digest header; SHA/role/DB/200 are the public edge contract.
+  local be_name be_sha be_digest sf_id be_id
+  be_name="${WOODRIGHT_BE_CONTAINER_DEFAULT:-woodright-staging-backend}"
+  be_sha="$(wr_cutover_docker inspect "$be_name" --format '{{index .Config.Labels "com.woodright.release-sha"}}' 2>/dev/null | tr '[:upper:]' '[:lower:]')"
+  be_digest="$(wr_cutover_container_immutable_digest "$be_name" backend)" || die "peer backend digest resolve failed before Traefik endpoint apply"
+  if [[ "${WOODRIGHT_COMPONENT_SCOPE:-}" == "pair" && "$be_sha" != "$TARGET_SHA" ]]; then
+    die "peer backend SHA is not target before Traefik endpoint apply have=${be_sha:-empty} want=$TARGET_SHA"
+  fi
+  sf_id="$(wr_cutover_docker inspect "$NAME" --format '{{.Id}}')" || die "storefront id inspect failed"
+  be_id="$(wr_cutover_docker inspect "$be_name" --format '{{.Id}}')" || die "backend id inspect failed"
+  wr_public_demo_apply_traefik_pair_endpoints \
+    "$NAME" "$TARGET_SHA" "$EXPECTED_DIGEST" "$sf_id" \
+    "$be_name" "$be_sha" "$be_digest" "$be_id" \
+    || die "TRAEFIK_ENDPOINT_APPLY_FAILED before public edge settle"
   wr_public_demo_wait_buyer_edge \
     "$TARGET_SHA" \
     "public_demo" \
@@ -426,6 +442,7 @@ log "stopped_live $NAME"
 wr_cutover_docker rename "$NAME" "$KEEP_NAME"
 PHASE=2
 log "renamed_to_keeper $KEEP_NAME"
+wr_public_demo_detach_keeper_from_traefik_net "$KEEP_NAME" || die "keeper Traefik-net detach failed"
 
 create_storefront "$IMAGE"
 wr_cutover_docker start "$NAME"

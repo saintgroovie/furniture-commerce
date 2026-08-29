@@ -434,6 +434,13 @@ verify_pair() {
   fi
   local prev="${EXPECTED_OLD_SHA:-${OLD_SF_SHA:-${OLD_BE_SHA:-}}}"
   mkdir -p "$EVIDENCE_DIR/raw"
+  local sf_id be_id
+  sf_id="$(wr_cutover_docker inspect "$sf" --format '{{.Id}}')" || return 1
+  be_id="$(wr_cutover_docker inspect "$be" --format '{{.Id}}')" || return 1
+  wr_public_demo_apply_traefik_pair_endpoints \
+    "$sf" "$TARGET_SHA" "$SF_DIGEST" "$sf_id" \
+    "$be" "$TARGET_SHA" "$BE_DIGEST" "$be_id" \
+    || return 1
   wr_public_demo_wait_buyer_edge \
     "$TARGET_SHA" "public_demo" "public_demo_db" "$prev" \
     "$EVIDENCE_DIR/raw/sf-headers.txt" || {

@@ -392,6 +392,12 @@ grep -q 'wr_public_demo_wait_buyer_edge' "$ROOT/ops/lib/woodright-cutover-common
   || fail "cutover-common missing public_demo edge settle"
 grep -q 'wr_public_demo_wait_buyer_edge' "$ROOT/ops/release/cutover-public-demo-pair.sh" \
   || fail "public_demo pair helper missing edge settle call"
+grep -q 'wr_public_demo_apply_traefik_pair_endpoints' "$ROOT/ops/lib/woodright-cutover-common.sh" \
+  || fail "cutover-common missing Traefik endpoint apply"
+grep -q 'ops/release/apply-public-demo-traefik-endpoints.sh' "$ROOT/ops/release/install-environment-governance.sh" \
+  || fail "installer missing Traefik endpoint apply helper"
+grep -q 'ops/lib/woodright-public-demo-traefik-endpoint.py' "$ROOT/ops/release/install-environment-governance.sh" \
+  || fail "installer missing Traefik endpoint python helper"
 grep -q 'EDGE_NOT_CONVERGED' "$ROOT/ops/lib/woodright-cutover-common.sh" \
   || fail "cutover-common missing EDGE_NOT_CONVERGED"
 if grep -qE '^[^#]*(nsupdate|route53|cloudflare)' "$ROOT/ops/release/cutover-public-apex-routing.sh"; then

@@ -318,6 +318,7 @@ log "stopped_live $NAME"
 docker rename "$NAME" "$KEEP_NAME"
 PHASE=2
 log "renamed_to_keeper $KEEP_NAME"
+wr_public_demo_detach_keeper_from_traefik_net "$KEEP_NAME" || die "keeper Traefik-net detach failed"
 
 docker create "${CREATE_ARGS[@]}"
 
