@@ -5,21 +5,64 @@ alwaysApply: true
 
 # Storefront QA build sync (:3002)
 
-**Problem:** `next start` (LaunchAgent `com.woodright.storefront-qa`, mode `qa`) caches asset manifests. A bare `yarn build` rewrites `.next-build` CSS hashes → HTML 200 + CSS **400** → unstyled page (purple logo, vertical link list).
+**Problem:** `next start` (LaunchAgent `com.woodright.storefront-qa`, mode `qa`) caches asset manifests. A bare `yarn build` rewrites `.next-build` CSS hashes → HTML 200 + CSS **400**/**404** → unstyled page (purple logo, vertical link list). Operators report this as «сайт лежит» even though `/` returns 200.
 
 **Durable fix:**
 1. `yarn build` runs `sync-qa-build-marker.mjs` → writes `~/.woodright/qa-dev-servers/storefront-3002.build-id`
 2. `run-storefront-qa.sh` (LaunchAgent) watches that marker and exits so KeepAlive reloads
 3. Prefer `yarn build:qa` when browsing `:3002` (adds kickstart backup + CSS verify)
-4. `yarn check:landing-css` / `:heal` for diagnosis
+4. `yarn check:landing-css` for diagnosis; `:heal` is mutation (authorization below)
 
 Launchd often cannot read files under Documents/ (TCC). Do not teach the watcher to poll `.next-build/BUILD_ID` directly.
 
+## Heal ladder authorization
+
+Diagnosis is always allowed: listener, HTML, CSS `curl`, and `yarn check:landing-css` **without** `--heal`.
+
+Mutating steps below (`check:landing-css:heal`, `rm -rf .next-build`, rebuild, copy to `~/.woodright/qa-dev-servers/run-storefront.sh`, `launchctl kickstart`) need an **explicit current-message** operator ask to heal `:3002` CSS / QA storefront. Bare «сайт лежит» is diagnosis only (`personal-data-mac-safety.mdc`, `review-server-stability-gate.mdc`). After-reboot restore is a separate named exception in `personal-data-mac-safety.mdc` (probe-gated Compose, then at most one kickstart per failed service). Do not infer heal permission from «fix it».
+
+## Heal ladder (stop at first green CSS; mutating steps need current-message heal ask)
+
+1. `yarn check:landing-css` on `http://127.0.0.1:3002` - if OK, done. Diagnosis only.
+2. `yarn check:landing-css:heal` (kickstart `com.woodright.storefront-qa`) - re-probe CSS. Mutation: only with current-message heal ask, or the reboot-restore exception after a failed `:3002` probe.
+3. If HTML still references a CSS hash **missing** from `.next-build/static/css/`:
+ - In the LaunchAgent worktree (`WOODRIGHT_REPO_ROOT` from the plist - read path only):
+ - `rm -rf .next-build`
+ - Rebuild with loopback Medusa (`MEDUSA_BACKEND_INTERNAL_URL=http://localhost:9000` and matching `MEDUSA_BACKEND_URL` / `NEXT_PUBLIC_*`). Prefer hostname `localhost` when an older `medusa-backend-internal-url.cjs` rejects bare IPv4 `127.0.0.1`.
+ - `node scripts/sync-qa-build-marker.mjs`
+ - `launchctl kickstart -k gui/$(id -u)/com.woodright.storefront-qa`
+ - Wait until listen + `yarn check:landing-css` PASS.
+ - Mutation: same authorization as step 2. Do not run this ladder on a diagnosis-only «сайт лежит».
+4. Never claim `:3002` healthy on HTML-only 200.
+
+## Canonical identity (`:3002` / `:9000`)
+
+Ports `:3002` and `:9000` are **canonical-primary only**:
+`/Users/leonidmbp/Documents/projects/furniture-commerce`.
+
+A drifted LaunchAgent `WOODRIGHT_REPO_ROOT` (other worktree / July hotfix checkout) is a P0. HTML 200 on `:3002` is not proof of canon.
+
+If `realpath` of the Documents canonical checkout contains `iCloud Drive`, **do not** exec LaunchAgent Medusa/Next from that tree (hangs at "Creating server" / stalled `/health`).
+
+**Degraded runtime (not canon):** wrappers source `~/.woodright/qa-dev-servers/runtime-root.env` (`WOODRIGHT_RUNTIME_ROOT`). That path is an operator-configured **on-disk clone**, not git SoT and not `~/furniture-commerce` (thin rules mirror, no apps). If the env file is missing, wrappers **exit 1** rather than hanging on iCloud or inventing a worktree. Disclose degraded mode: listener cwd + SHA of the runtime clone, plus canonical SHA. Do **not** claim cwd equals Documents canonical.
+
+**Heal without editing `~/Library` plists** (plist edit is forbidden; mutating steps still need the authorization above, or the reboot-restore exception):
+1. Wrappers `~/.woodright/qa-dev-servers/run-storefront.sh` and `run-backend.sh` skip iCloud canonical; they use `WOODRIGHT_RUNTIME_ROOT` when configured.
+2. After editing `apps/storefront/scripts/run-storefront-qa.sh`, copy to the wrapper path and kickstart (below) only when authorized.
+3. Kickstart existing labels only: `com.woodright.storefront-qa` and `com.woodright.medusa-backend`.
+4. Same-turn proof: `/health` on `:9000` returns full `OK` (not a stalled `O`); storefront CSS 200; cwd is either canonical (non-iCloud) **or** the configured runtime clone (degraded).
+
+After reboot, `:3002` may survive while `:9000` dies. Storefront CSS 200 is not Medusa health. If `/health` fails with `ECONNREFUSED` / `qa_postgres_down`, heal Docker postgres+redis first (`durable-local-review-servers.mdc`); do not kickstart-loop the backend.
+
+Feature / PR review stays on durable alternate ports (`durable-local-review-servers.mdc`). Do not steal `:3002`/`:9000`.
+
 ## Agent contract
 
-1. Prefer **`yarn build:qa`** in `apps/storefront` when the operator uses `:3002`.
-2. After editing `scripts/run-storefront-qa.sh`, redeploy (TCC blocks Documents/ exec). Confirm plist `WOODRIGHT_REPO_ROOT` points at the canonical repo, then:
-   `cp apps/storefront/scripts/run-storefront-qa.sh ~/.woodright/qa-dev-servers/run-storefront.sh && chmod +x ~/.woodright/qa-dev-servers/run-storefront.sh && launchctl kickstart -k gui/$(id -u)/com.woodright.storefront-qa`
-3. After any bare `yarn build`, confirm marker sync ran; run **`yarn check:landing-css`** (or `:heal`). Do not claim visual QA if CSS check fails.
-4. Do **not** invent a second preview port (3012…) for this failure mode - heal `:3002` instead.
-5. Foreground-only: bounded waits; no `yarn dev` autostart (see `foreground-only-execution.mdc`).
+1. Prefer **`yarn build:qa`** in the **LaunchAgent** storefront worktree when the operator uses `:3002`.
+2. After editing `scripts/run-storefront-qa.sh`, redeploy (TCC blocks Documents/ exec) only with current-message authorization to mutate the QA wrapper. Confirm plist `WOODRIGHT_REPO_ROOT` points at the intended checkout, then:
+ `cp apps/storefront/scripts/run-storefront-qa.sh ~/.woodright/qa-dev-servers/run-storefront.sh && chmod +x ~/.woodright/qa-dev-servers/run-storefront.sh && launchctl kickstart -k gui/$(id -u)/com.woodright.storefront-qa`
+3. After any bare `yarn build`, confirm marker sync ran; run **`yarn check:landing-css`**. Use `:heal` only with the heal-ladder authorization above. Do not claim visual QA if CSS check fails.
+4. Do **not** invent a second preview port (3012…) for this failure mode - heal `:3002` instead (still authorization-gated for mutating steps).
+5. Feature branches / contacts / MAX UI review: do **not** assume `:3002` is that branch. Confirm cwd. Use durable alternate (`durable-local-review-servers.mdc`) when LaunchAgent root is a different worktree.
+6. Foreground-only: bounded waits; no `yarn dev` autostart (see `foreground-only-execution.mdc`).
+7. Do **not** create/edit LaunchAgent plists from the agent (`personal-data-mac-safety.mdc`). Kickstart of the existing `com.woodright.storefront-qa` label is the allowed process exception, and only when the current message authorizes heal or reboot-restore after a failed probe.
