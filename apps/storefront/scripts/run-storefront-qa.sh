@@ -30,6 +30,42 @@ if [[ -z "$REPO_ROOT" ]]; then
     exit 1
   fi
 fi
+# :3002 is canonical-primary. If Documents checkout realpath is iCloud Drive
+# (архив), do not exec from that tree. Use operator WOODRIGHT_RUNTIME_ROOT
+# from ~/.woodright/qa-dev-servers/runtime-root.env (degraded, not SoT).
+CANONICAL_ROOT="/Users/leonidmbp/Documents/projects/furniture-commerce"
+QA_DIR_EARLY="${WOODRIGHT_QA_DIR:-$HOME/.woodright/qa-dev-servers}"
+if [[ -f "$QA_DIR_EARLY/runtime-root.env" ]]; then
+  # shellcheck disable=SC1091
+  source "$QA_DIR_EARLY/runtime-root.env"
+fi
+PORT_EARLY="${WOODRIGHT_STOREFRONT_PORT:-3002}"
+if [[ "$PORT_EARLY" == "3002" && "${WOODRIGHT_ALLOW_NONCANONICAL_PRIMARY:-}" != "1" ]]; then
+  if ! rp="$(python3 -c "import os,sys; print(os.path.realpath(sys.argv[1]))" "$CANONICAL_ROOT")"; then
+    echo "error: cannot realpath $CANONICAL_ROOT (python failed); fail closed" >&2
+    exit 1
+  fi
+  if [[ "$rp" == *"iCloud Drive"* ]]; then
+    if [[ -z "${WOODRIGHT_RUNTIME_ROOT:-}" || ! -d "${WOODRIGHT_RUNTIME_ROOT}/apps/storefront" ]]; then
+      echo "error: canonical root is iCloud-archived ($rp); set WOODRIGHT_RUNTIME_ROOT in $QA_DIR_EARLY/runtime-root.env to an on-disk clone with apps/storefront" >&2
+      exit 1
+    fi
+    if ! rr="$(python3 -c "import os,sys; print(os.path.realpath(sys.argv[1]))" "$WOODRIGHT_RUNTIME_ROOT")"; then
+      echo "error: cannot realpath WOODRIGHT_RUNTIME_ROOT=$WOODRIGHT_RUNTIME_ROOT; fail closed" >&2
+      exit 1
+    fi
+    if [[ "$rr" == *"iCloud Drive"* ]]; then
+      echo "error: WOODRIGHT_RUNTIME_ROOT is iCloud-archived ($rr); use an on-disk clone" >&2
+      exit 1
+    fi
+    echo "warn: DEGRADED :3002 runtime $rr (canonical is iCloud-archived)" >&2
+    REPO_ROOT="$rr"
+  else
+    REPO_ROOT="$CANONICAL_ROOT"
+  fi
+  export WOODRIGHT_REPO_ROOT="$REPO_ROOT"
+  export FURNITURE_REPO_ROOT="$REPO_ROOT"
+fi
 if [[ ! -d "$REPO_ROOT/apps/storefront" ]]; then
   echo "error: REPO_ROOT=$REPO_ROOT has no apps/storefront" >&2
   exit 1

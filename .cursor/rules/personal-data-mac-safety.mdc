@@ -16,7 +16,8 @@ An **explicit current user instruction** may authorize only the **permission-gat
 * mutate macOS system processes/services (see §2);
 * `sudo`; Cursor global user settings; shell profiles; global Git config;
 * Keychain / browser credential stores;
-* destructive mass actions (`killall`, broad `pkill`, `rm -rf` outside approved paths).
+* destructive mass actions (`killall`, broad `pkill`, `rm -rf` outside approved paths);
+* create / edit / load / unload / bootout of LaunchAgents or LaunchDaemons (including other labels). The **only** process exception is a kickstart of the two existing Woodright user labels named in §3 (after a failed probe).
 
 **Permission-gated (needs exact named target in the same user message):**
 
@@ -34,7 +35,7 @@ Do not search for, open, read, copy, index, summarize, upload, or modify persona
 Protected locations and data include:
 
 * `~/Desktop`, `~/Downloads`, and personal folders outside the active project;
-* `~/Library`;
+* `~/Library` (except the two Woodright plist **read-only** inspects in §4);
 * browser profiles, history, cookies, sessions, and saved passwords;
 * Keychain data;
 * email, messages, photos, contacts, calendars, and personal documents;
@@ -71,8 +72,8 @@ This includes:
 Never use `sudo` or modify:
 
 * macOS system settings;
-* startup services;
-* LaunchAgents or LaunchDaemons;
+* startup services **except** one `launchctl kickstart` of the existing Woodright user labels named in §3 (no plist write, no bootout/unload, no other labels);
+* LaunchAgents or LaunchDaemons (create / edit / load / unload / bootout) - same kickstart-only exception;
 * firewall, VPN, DNS, routing, or network interfaces;
 * file permissions or ownership outside the active project;
 * Cursor global user settings;
@@ -91,13 +92,27 @@ Without an explicit user command naming the exact target, do not:
 
 A general request such as “fix it”, “optimize everything”, “free memory”, or “clean up the environment” is **not** permission for these actions.
 
+### Hybrid stack restore after reboot (narrow named exception)
+
+This exception applies only when the operator **in this message** asks to restore the local Woodright stack **after reboot** (close forms that include reboot context: «после перезагрузки», «запусти все что упало после перезагрузки»). Bare «подними стек» / «docker postgres» / «fix it» is **not** enough - those stay permission-gated.
+
+Each action is allowed **only if its probe failed** in this turn:
+
+1. `docker info` fails → `open -a Docker` (Docker Desktop), then bounded wait until `docker info` succeeds (do not run Compose against a dead daemon).
+2. `:5432` and/or `:6379` not LISTEN → `docker compose up -d postgres redis` from the intended checkout, targeting **only** `medusa_postgres` and `medusa_redis`. Wait until Postgres is healthy before Medusa.
+3. Postgres/Redis healthy **and** `:9000` not LISTEN / `/health` not 200 → **one** `launchctl kickstart` of existing `com.woodright.medusa-backend`.
+4. `:3002` not LISTEN → **one** `launchctl kickstart` of existing `com.woodright.storefront-qa`. Do not kickstart storefront if it is already listening.
+
+Still forbidden in the same restore: `docker compose --profile full`; `docker system prune`; other containers; creating/editing/loading/unloading plists; `sudo`; mass-start of `~/.woodright/durable-local-servers/*`. Ladder: `durable-local-review-servers.mdc`.
+
 ## 4. Allowed read-only diagnostics (no extra permission)
 
 Without additional permission, the agent may run **bounded read-only** diagnostics:
 
 * `curl` / `lsof` / `ps` / `pgrep` (including `localhost`);
 * `docker ps`, `docker inspect`, and project-scoped `docker logs` (no mutating `docker exec`);
-* reading **project-owned** logs under the canonical repository / genuine worktree (e.g. repo `tmp/`, `.woodright` project logs if inside scope).
+* reading **project-owned** logs under the canonical repository / genuine worktree (e.g. repo `tmp/`, `.woodright` project logs if inside scope);
+* **read-only** inspect of the two existing Woodright user LaunchAgent plists (`~/Library/LaunchAgents/com.woodright.storefront-qa.plist`, `com.woodright.medusa-backend.plist`) for `WOODRIGHT_REPO_ROOT` / mode keys only. No write, copy-out of unrelated keys, or other `~/Library` paths.
 
 Read-only process inspection is allowed. Log inspection outside the active project requires an explicitly named path. Do not display or persist env values, CLI secrets, browser data, or unrelated file paths.
 
