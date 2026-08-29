@@ -250,6 +250,7 @@ jobs:
           bash scripts/ops/test-production-candidate-compose-template-fidelity.sh
           bash scripts/ops/test-public-demo-pair-cutover-fidelity.sh
           bash scripts/ops/test-public-demo-edge-settle-fidelity.sh
+          bash scripts/ops/test-public-demo-traefik-endpoint-fidelity.sh
           bash scripts/ops/test-public-demo-scoped-ownership-converge-fidelity.sh
           bash scripts/ops/test-public-demo-legacy-active-cleanup-fidelity.sh
           bash scripts/ops/test-public-demo-metadata-authority-fidelity.sh

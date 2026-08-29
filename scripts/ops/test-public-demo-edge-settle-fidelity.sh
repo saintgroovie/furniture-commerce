@@ -289,11 +289,11 @@ else
   fail "pair digest/settle order changed"
 fi
 
-# No Traefik/Dokploy mutation added (comment mentions are allowed)
-if grep -Eiq 'dokploy.*(reload|retarget)|traefik.*(reload|update)' "$SF" "$PAIR"; then
-  fail "unexpected Traefik/Dokploy retarget in helper"
+# File-provider endpoint pin is governed; process restart / Dokploy API retarget are not.
+if grep -Eiq 'docker[[:space:]]+restart[[:space:]].*traefik|dokploy.*(reload|retarget)' "$SF" "$PAIR"; then
+  fail "unexpected Traefik process restart or Dokploy control-plane retarget"
 else
-  pass "no Traefik/Dokploy retarget in ops helper"
+  pass "no Traefik process restart / Dokploy control-plane retarget"
 fi
 
 # Execute must not honor SKIP_PUBLIC_VERIFY (Codex P1)
@@ -320,99 +320,16 @@ else
   fail "oversized interval rc=$H_RC elapsed=$H_ELAPSED result=${WR_PUBLIC_DEMO_EDGE_RESULT:-empty}"
 fi
 
-# Resolver nudge rewrites a comment on the demo file-provider only (same URLs)
-NUDGE_FILE="$TMP/woodright-demo.yml"
-cat >"$NUDGE_FILE" <<'EOF'
-http:
-  routers:
-    woodright-sf-https:
-      rule: Host(`woodright-demo.ru`)
-      service: woodright-storefront
-  services:
-    woodright-storefront:
-      loadBalancer:
-        servers:
-          - url: "http://woodright-staging-storefront:3002"
-EOF
-cp "$NUDGE_FILE" "$TMP/woodright-demo.yml.before"
-export WOODRIGHT_PUBLIC_DEMO_EDGE_RESOLVER_FILE="$NUDGE_FILE"
-wr_public_demo_nudge_edge_resolver
-python3 - "$NUDGE_FILE" "$TMP/woodright-demo.yml.before" <<'PY'
-import pathlib, sys
-after = pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")
-before = pathlib.Path(sys.argv[2]).read_text(encoding="utf-8")
-lines = after.splitlines(True)
-if not lines or not lines[0].startswith("# woodright-edge-resolver-nudge:"):
-    sys.exit(1)
-rest = lines[1:]
-if rest and rest[0] == "\n":
-    rest = rest[1:]
-sys.exit(0 if "".join(rest) == before else 1)
-PY
-if [[ $? -eq 0 ]] && grep -q 'http://woodright-staging-storefront:3002' "$NUDGE_FILE"; then
-  pass "edge resolver nudge is comment-only and keeps demo URLs"
+# Comment-only Traefik nudge is retired; settle is read-only HTTPS polling.
+if grep -q 'wr_public_demo_nudge_edge_resolver' "$ROOT/ops/lib/woodright-cutover-common.sh"; then
+  fail "comment-only resolver nudge still present in cutover-common"
 else
-  fail "edge resolver nudge changed routing or missing marker"
+  pass "comment-only resolver nudge removed from settle path"
 fi
-APEX_FILE="$TMP/woodright-public-production.yml"
-cat >"$APEX_FILE" <<'EOF'
-# woodright-public-production
-http:
-  routers:
-    apex:
-      rule: Host(`woodright.ru`)
-  services:
-    prod:
-      loadBalancer:
-        servers:
-          - url: "http://woodright-public-production-storefront:3000"
-EOF
-cp "$APEX_FILE" "$TMP/apex.before"
-WOODRIGHT_PUBLIC_DEMO_EDGE_RESOLVER_FILE="$APEX_FILE"
-wr_public_demo_nudge_edge_resolver
-if cmp -s "$APEX_FILE" "$TMP/apex.before"; then
-  pass "nudge refuses public-production Traefik file"
+if grep -q 'wr_public_demo_nudge_edge_resolver' "$SF" "$PAIR"; then
+  fail "storefront/pair still call comment-only nudge"
 else
-  fail "nudge must not touch public-production Traefik file"
-fi
-DECOY="$TMP/decoy-mentions-demo.yml"
-cat >"$DECOY" <<'EOF'
-# mentions woodright-demo.ru and woodright-staging-storefront but is not the demo file-provider
-note: see woodright-demo.ru
-container: woodright-staging-storefront
-EOF
-cp "$DECOY" "$TMP/decoy.before"
-WOODRIGHT_PUBLIC_DEMO_EDGE_RESOLVER_FILE="$DECOY"
-wr_public_demo_nudge_edge_resolver
-if cmp -s "$DECOY" "$TMP/decoy.before"; then
-  pass "nudge skips non-demo file that only mentions demo substrings"
-else
-  fail "nudge mutated decoy file"
-fi
-CAS_FILE="$TMP/cas-demo.yml"
-cat >"$CAS_FILE" <<'EOF'
-http:
-  routers:
-    woodright-sf-https:
-      rule: Host(`woodright-demo.ru`)
-      service: woodright-storefront
-  services:
-    woodright-storefront:
-      loadBalancer:
-        servers:
-          - url: "http://woodright-staging-storefront:3002"
-EOF
-FOREIGN="$TMP/cas-foreign.yml"
-printf '%s\n' 'foreign-update: preserved' >"$FOREIGN"
-WOODRIGHT_PUBLIC_DEMO_EDGE_RESOLVER_FILE="$CAS_FILE"
-export WOODRIGHT_PUBLIC_DEMO_NUDGE_CAS_INJECT="$(cat "$FOREIGN")"
-wr_public_demo_nudge_edge_resolver
-unset WOODRIGHT_PUBLIC_DEMO_NUDGE_CAS_INJECT
-if grep -q 'foreign-update: preserved' "$CAS_FILE" \
-  && ! grep -q 'woodright-edge-resolver-nudge' "$CAS_FILE"; then
-  pass "nudge CAS skips replace when destination changed concurrently"
-else
-  fail "nudge CAS clobbered a concurrent Traefik file update"
+  pass "storefront/pair no longer call comment-only nudge"
 fi
 unset WOODRIGHT_PUBLIC_DEMO_EDGE_RESOLVER_FILE
 

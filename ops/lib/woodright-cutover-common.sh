@@ -4,6 +4,7 @@
 # shellcheck shell=bash
 
 : "${WOODRIGHT_DOCKER_BIN:=docker}"
+_WR_CUTOVER_COMMON_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 WR_SHA_RE='^[0-9a-f]{40}$'
 WR_DIGEST_RE='^sha256:[0-9a-f]{64}$'
@@ -376,7 +377,13 @@ wr_cutover_pair_rollback() {
   fi
   printf '{"backend":%s,"storefront":%s,"pins":%s}\n' "$be_ok" "$sf_ok" "$pin_ok" \
     >"$evidence/json/pair-rollback-result.json"
-  if [[ "$be_ok" -eq 1 && "$sf_ok" -eq 1 && "$pin_ok" -eq 1 ]]; then
+  local endpoint_ok=1
+  WOODRIGHT_PUBLIC_DEMO_RESTORE_ENDPOINTS=1
+  if ! wr_public_demo_restore_traefik_hostnames; then
+    endpoint_ok=0
+    wr_cutover_log "ERROR: Traefik hostname restore failed after pair rollback"
+  fi
+  if [[ "$be_ok" -eq 1 && "$sf_ok" -eq 1 && "$pin_ok" -eq 1 && "$endpoint_ok" -eq 1 ]]; then
     ROLLBACK_RC=10
     wr_cutover_log "PAIR_ROLLBACK_OK"
   elif [[ "$be_ok" -eq 1 || "$sf_ok" -eq 1 ]]; then
@@ -648,85 +655,301 @@ wr_public_demo_edge_http_get() {
   printf '%s\n' "$code"
 }
 
-# Traefik file-provider URLs for public_demo are Docker DNS names
-# (woodright-staging-storefront / woodright-staging-backend). After stop+rename+create
-# the hostname is unchanged but the IP is new; Traefik keeps the old IP until the
-# dynamic file is re-read. This rewrites a comment-only marker on the existing demo
-# file so the same service URLs are resolved again. It does not change backends,
-# hosts, or apex/production files.
-wr_public_demo_nudge_edge_resolver() {
-  local f="${WOODRIGHT_PUBLIC_DEMO_EDGE_RESOLVER_FILE:-/etc/dokploy/traefik/dynamic/woodright-demo.yml}"
-  [[ "${WOODRIGHT_PUBLIC_DEMO_NUDGE_EDGE_RESOLVER:-1}" == "1" ]] || return 0
-  [[ -f "$f" && -w "$f" ]] || return 0
-  python3 - "$f" <<'PY' || return 0
-import os
-import pathlib
-import sys
-import tempfile
-import time
+# Traefik 3.6.7 file-provider loadBalancer servers.url hostnames are resolved
+# when the parsed service object is built. A comment-only rewrite does not change
+# that object, so Traefik keeps the previous endpoint IP across stop+rename+create.
+# Governed fix: write the verified dokploy-network IPv4 of the target containers
+# into only the eligible public_demo service URLs, then settle HTTPS.
+wr_public_demo_traefik_endpoint_py() {
+  printf '%s\n' "${_WR_CUTOVER_COMMON_DIR}/woodright-public-demo-traefik-endpoint.py"
+}
 
-path = pathlib.Path(sys.argv[1])
-orig_stat = path.stat()
-raw = path.read_text(encoding="utf-8")
-demo_host = "Host(`woodright-demo.ru`)"
-demo_url = 'url: "http://woodright-staging-storefront:3002"'
-if demo_host not in raw or demo_url not in raw:
-    sys.exit(2)
-if "woodright-public-production" in raw:
-    sys.exit(2)
-if "Host(`woodright.ru`)" in raw:
-    sys.exit(2)
-marker = "# woodright-edge-resolver-nudge:"
-lines = raw.splitlines(keepends=True)
-if lines and lines[0].startswith(marker):
-    lines = lines[1:]
-    if lines and lines[0] == "\n":
-        lines = lines[1:]
-stamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-new = f"{marker} {stamp}\n" + "".join(lines)
-if new == raw:
-    sys.exit(2)
-directory = str(path.parent)
-fd, tmp_name = tempfile.mkstemp(prefix=".wr-nudge-", suffix=".yml", dir=directory)
-replaced = False
-try:
-    with os.fdopen(fd, "w", encoding="utf-8") as handle:
-        handle.write(new)
-        handle.flush()
-        os.fsync(handle.fileno())
-    os.chmod(tmp_name, orig_stat.st_mode)
-    inject = os.environ.get("WOODRIGHT_PUBLIC_DEMO_NUDGE_CAS_INJECT")
-    if inject:
-        path.write_text(inject, encoding="utf-8")
-    now_stat = path.stat()
-    now = path.read_text(encoding="utf-8")
-    if now != raw or (
-        now_stat.st_ino != orig_stat.st_ino
-        or now_stat.st_size != orig_stat.st_size
-        or now_stat.st_mtime_ns != orig_stat.st_mtime_ns
-    ):
-        sys.exit(3)
-    os.replace(tmp_name, path)
-    replaced = True
-except Exception:
-    if not replaced:
-        try:
-            os.unlink(tmp_name)
-        except OSError:
-            pass
-    raise
-finally:
-    if not replaced:
-        try:
-            os.unlink(tmp_name)
-        except OSError:
-            pass
+wr_public_demo_resolver_file() {
+  printf '%s\n' "${WOODRIGHT_PUBLIC_DEMO_EDGE_RESOLVER_FILE:-/etc/dokploy/traefik/dynamic/woodright-demo.yml}"
+}
 
-PY
-  local py_rc=$?
-  if [[ "$py_rc" -eq 0 ]]; then
-    wr_cutover_log "EDGE_RESOLVER_NUDGED path=$f"
+wr_public_demo_resolver_file_exists() {
+  local f="$1"
+  [[ -f "$f" ]] && return 0
+  command -v sudo >/dev/null 2>&1 || return 1
+  sudo -n test -f "$f" 2>/dev/null
+}
+
+wr_public_demo_read_resolver_file() {
+  local f="$1"
+  if [[ -r "$f" ]]; then
+    cat "$f"
+    return 0
   fi
+  command -v sudo >/dev/null 2>&1 || return 1
+  sudo -n cat "$f"
+}
+
+_wr_public_demo_ipv4_ok() {
+  local ip="$1"
+  [[ "$ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] || return 1
+  python3 -c 'import ipaddress,sys
+a=ipaddress.ip_address(sys.argv[1])
+sys.exit(0 if a.version==4 and a.is_private and not a.is_loopback and not a.is_unspecified and not a.is_link_local else 1)
+' "$ip"
+}
+
+# Discover the Traefik-reachable IPv4 for a proven public_demo container.
+# Network is WOODRIGHT_NET_DOKPLOY (dokploy-network), never "first IP".
+wr_public_demo_container_dokploy_ip() {
+  local name="${1:?}"
+  local expect_sha="${2:?}"
+  local expect_digest="${3:?}"
+  local expect_id="${4:-}"
+  local component="${5:?}"
+  local net="${WOODRIGHT_NET_DOKPLOY:-dokploy-network}"
+  local traefik="${WOODRIGHT_TRAEFIK_CONTAINER:-dokploy-traefik}"
+  local id status health sha role db digest ip tf_net
+  wr_cutover_require_full_sha "$expect_sha" || return 1
+  wr_cutover_require_digest "$expect_digest" || return 1
+  wr_cutover_docker inspect "$name" >/dev/null 2>&1 || {
+    wr_cutover_die "endpoint discovery: container missing $name"
+    return 1
+  }
+  id="$(wr_cutover_docker inspect "$name" --format '{{.Id}}')"
+  if [[ -n "$expect_id" ]]; then
+    case "$id" in
+      "$expect_id"|"$expect_id"*) ;;
+      *)
+        wr_cutover_die "endpoint discovery: container id CAS drift name=$name have=$id want=$expect_id"
+        return 1
+        ;;
+    esac
+  fi
+  status="$(wr_cutover_docker inspect "$name" --format '{{.State.Status}}')"
+  health="$(wr_cutover_docker inspect "$name" --format '{{if .State.Health}}{{.State.Health.Status}}{{end}}')"
+  [[ "$status" == "running" ]] || {
+    wr_cutover_die "endpoint discovery: not running name=$name status=$status"
+    return 1
+  }
+  [[ "$health" == "healthy" ]] || {
+    wr_cutover_die "endpoint discovery: not healthy name=$name health=${health:-empty}"
+    return 1
+  }
+  sha="$(wr_cutover_docker inspect "$name" --format '{{index .Config.Labels "com.woodright.release-sha"}}' | tr '[:upper:]' '[:lower:]')"
+  role="$(wr_cutover_docker inspect "$name" --format '{{index .Config.Labels "com.woodright.runtime-role"}}')"
+  db="$(wr_cutover_docker inspect "$name" --format '{{index .Config.Labels "com.woodright.database-identity"}}')"
+  [[ "$sha" == "$expect_sha" ]] || {
+    wr_cutover_die "endpoint discovery: SHA mismatch name=$name have=$sha want=$expect_sha"
+    return 1
+  }
+  [[ "$role" == "public_demo" ]] || {
+    wr_cutover_die "endpoint discovery: role mismatch name=$name have=${role:-empty}"
+    return 1
+  }
+  [[ "$db" == "public_demo_db" ]] || {
+    wr_cutover_die "endpoint discovery: db mismatch name=$name have=${db:-empty}"
+    return 1
+  }
+  digest="$(wr_cutover_container_immutable_digest "$name" "$component")" || {
+    wr_cutover_die "endpoint discovery: digest resolve failed name=$name"
+    return 1
+  }
+  [[ "$digest" == "$expect_digest" ]] || {
+    wr_cutover_die "endpoint discovery: digest mismatch name=$name have=$digest want=$expect_digest"
+    return 1
+  }
+  ip="$(wr_cutover_docker inspect "$name" --format "{{(index .NetworkSettings.Networks \"$net\").IPAddress}}")"
+  if [[ -z "$ip" || "$ip" == "<no value>" ]]; then
+    wr_cutover_die "endpoint discovery: missing $net IP for $name"
+    return 1
+  fi
+  _wr_public_demo_ipv4_ok "$ip" || {
+    wr_cutover_die "endpoint discovery: refused IP $ip on $net for $name"
+    return 1
+  }
+  if [[ "${WOODRIGHT_PUBLIC_DEMO_SKIP_TRAEFIK_NET_CHECK:-0}" != "1" ]]; then
+    wr_cutover_docker inspect "$traefik" >/dev/null 2>&1 || {
+      wr_cutover_die "endpoint discovery: Traefik container missing $traefik"
+      return 1
+    }
+    tf_net="$(wr_cutover_docker inspect "$traefik" --format "{{(index .NetworkSettings.Networks \"$net\").IPAddress}}")"
+    if [[ -z "$tf_net" || "$tf_net" == "<no value>" ]]; then
+      wr_cutover_die "endpoint discovery: Traefik $traefik is not on $net"
+      return 1
+    fi
+  fi
+  # Re-read id after inspect work to close a recycle race.
+  local id2
+  id2="$(wr_cutover_docker inspect "$name" --format '{{.Id}}')"
+  [[ "$id2" == "$id" ]] || {
+    wr_cutover_die "endpoint discovery: container id changed during inspect name=$name"
+    return 1
+  }
+  printf '%s\n' "$ip"
+}
+
+wr_public_demo_privileged_apply_urls() {
+  # Byte-preserving CAS for dest files that are not user-writable (sudo install).
+  # Args: dest_file python_subcommand [extra python args...]
+  # Extra args follow after dest; for rewrite they are --sf-url/--be-url.
+  local dest="$1"
+  local sub="$2"
+  shift 2
+  local py orig now newc
+  py="$(wr_public_demo_traefik_endpoint_py)"
+  orig="$(mktemp "${TMPDIR:-/tmp}/wr-tf-ep-orig.XXXXXX.yml")"
+  now="$(mktemp "${TMPDIR:-/tmp}/wr-tf-ep-now.XXXXXX.yml")"
+  newc="$(mktemp "${TMPDIR:-/tmp}/wr-tf-ep-new.XXXXXX.yml")"
+  wr_public_demo_read_resolver_file "$dest" >"$orig" || {
+    rm -f "$orig" "$now" "$newc"
+    wr_cutover_die "cannot read $dest"
+    return 1
+  }
+  cp "$orig" "$newc"
+  if ! python3 "$py" "$sub" --file "$newc" "$@" >/dev/null; then
+    rm -f "$orig" "$now" "$newc"
+    wr_cutover_die "Traefik endpoint $sub refused for $dest"
+    return 1
+  fi
+  wr_public_demo_read_resolver_file "$dest" >"$now" || {
+    rm -f "$orig" "$now" "$newc"
+    wr_cutover_die "cannot re-read $dest"
+    return 1
+  }
+  if ! cmp -s "$orig" "$now"; then
+    rm -f "$orig" "$now" "$newc"
+    wr_cutover_log "TRAEFIK_ENDPOINT_CAS_SKIP path=$dest"
+    return 1
+  fi
+  wr_cutover_install_file "$newc" "$dest" || {
+    rm -f "$orig" "$now" "$newc"
+    return 1
+  }
+  rm -f "$orig" "$now" "$newc"
+  return 0
+}
+
+wr_public_demo_rewrite_traefik_urls() {
+  local sf_url="${1:?}"
+  local be_url="${2:?}"
+  local f py rc json
+  f="$(wr_public_demo_resolver_file)"
+  py="$(wr_public_demo_traefik_endpoint_py)"
+  [[ -f "$py" ]] || {
+    wr_cutover_die "missing Traefik endpoint helper $py"
+    return 1
+  }
+  wr_public_demo_resolver_file_exists "$f" || {
+    wr_cutover_die "demo Traefik file missing $f"
+    return 1
+  }
+  if [[ -w "$f" ]]; then
+    set +e
+    json="$(python3 "$py" rewrite --file "$f" --sf-url "$sf_url" --be-url "$be_url")"
+    rc=$?
+    set -e
+  else
+    wr_public_demo_privileged_apply_urls "$f" rewrite --sf-url "$sf_url" --be-url "$be_url" || return 1
+    json='{"status":"replaced"}'
+    rc=0
+  fi
+  if [[ "$rc" -eq 3 ]]; then
+    wr_cutover_log "TRAEFIK_ENDPOINT_CAS_SKIP path=$f"
+    return 1
+  fi
+  if [[ "$rc" -ne 0 ]]; then
+    wr_cutover_log "TRAEFIK_ENDPOINT_REWRITE_REFUSED path=$f json=${json:-empty}"
+    return 1
+  fi
+  wr_cutover_log "TRAEFIK_ENDPOINT_APPLIED path=$f sf=$sf_url be=$be_url"
+  return 0
+}
+
+wr_public_demo_restore_traefik_hostnames() {
+  if [[ -z "${WOODRIGHT_PUBLIC_DEMO_EDGE_RESOLVER_FILE:-}" \
+    && "${WOODRIGHT_PUBLIC_DEMO_RESTORE_ENDPOINTS:-0}" != "1" ]]; then
+    wr_cutover_log "TRAEFIK_ENDPOINT_RESTORE_SKIP not_enabled"
+    return 0
+  fi
+  local f py json rc
+  f="$(wr_public_demo_resolver_file)"
+  py="$(wr_public_demo_traefik_endpoint_py)"
+  if ! wr_public_demo_resolver_file_exists "$f"; then
+    wr_cutover_log "TRAEFIK_ENDPOINT_RESTORE_SKIP missing=$f"
+    return 0
+  fi
+  [[ -f "$py" ]] || {
+    wr_cutover_die "missing Traefik endpoint helper $py"
+    return 1
+  }
+  if [[ -w "$f" ]]; then
+    set +e
+    json="$(python3 "$py" restore-hostnames --file "$f")"
+    rc=$?
+    set -e
+  else
+    wr_public_demo_privileged_apply_urls "$f" restore-hostnames || return 1
+    json='{"status":"replaced"}'
+    rc=0
+  fi
+  if [[ "$rc" -eq 3 ]]; then
+    wr_cutover_log "TRAEFIK_ENDPOINT_CAS_SKIP restore path=$f"
+    return 1
+  fi
+  if [[ "$rc" -ne 0 ]]; then
+    wr_cutover_log "TRAEFIK_ENDPOINT_RESTORE_REFUSED path=$f json=${json:-empty}"
+    return 1
+  fi
+  wr_cutover_log "TRAEFIK_ENDPOINT_HOSTNAMES_RESTORED path=$f"
+  return 0
+}
+
+# Pin both public_demo file-provider URLs to verified dokploy-network IPs.
+wr_public_demo_apply_traefik_pair_endpoints() {
+  local sf_name="${1:-${WOODRIGHT_SF_CONTAINER_DEFAULT:-woodright-staging-storefront}}"
+  local sf_sha="${2:?}"
+  local sf_digest="${3:?}"
+  local sf_id="${4:-}"
+  local be_name="${5:-${WOODRIGHT_BE_CONTAINER_DEFAULT:-woodright-staging-backend}}"
+  local be_sha="${6:?}"
+  local be_digest="${7:?}"
+  local be_id="${8:-}"
+  local sf_ip be_ip sf_id2 be_id2 sf_ip2 be_ip2 net
+  net="${WOODRIGHT_NET_DOKPLOY:-dokploy-network}"
+  [[ "${WOODRIGHT_PUBLIC_DEMO_APPLY_ENDPOINTS:-1}" == "1" ]] || return 0
+  if [[ -z "$sf_id" ]]; then
+    sf_id="$(wr_cutover_docker inspect "$sf_name" --format '{{.Id}}')" || return 1
+  fi
+  if [[ -z "$be_id" ]]; then
+    be_id="$(wr_cutover_docker inspect "$be_name" --format '{{.Id}}')" || return 1
+  fi
+  sf_ip="$(wr_public_demo_container_dokploy_ip "$sf_name" "$sf_sha" "$sf_digest" "$sf_id" storefront)" || return 1
+  be_ip="$(wr_public_demo_container_dokploy_ip "$be_name" "$be_sha" "$be_digest" "$be_id" backend)" || return 1
+  sf_id2="$(wr_cutover_docker inspect "$sf_name" --format '{{.Id}}')" || return 1
+  be_id2="$(wr_cutover_docker inspect "$be_name" --format '{{.Id}}')" || return 1
+  sf_ip2="$(wr_cutover_docker inspect "$sf_name" --format "{{(index .NetworkSettings.Networks \"$net\").IPAddress}}")" || return 1
+  be_ip2="$(wr_cutover_docker inspect "$be_name" --format "{{(index .NetworkSettings.Networks \"$net\").IPAddress}}")" || return 1
+  if [[ "$sf_id2" != "$sf_id" || "$be_id2" != "$be_id" ]]; then
+    wr_cutover_die "endpoint apply: container id changed before YAML commit"
+    return 1
+  fi
+  if [[ "$sf_ip2" != "$sf_ip" || "$be_ip2" != "$be_ip" ]]; then
+    wr_cutover_die "endpoint apply: container IP changed before YAML commit"
+    return 1
+  fi
+  wr_public_demo_rewrite_traefik_urls \
+    "http://${sf_ip}:3002" \
+    "http://${be_ip}:9000"
+}
+
+# Detach a renamed keeper from the Traefik network so a stale LB IP cannot
+# keep serving the previous pair. Rollback reconnects dokploy-network.
+wr_public_demo_detach_keeper_from_traefik_net() {
+  local keep="${1:?}"
+  local net="${WOODRIGHT_NET_DOKPLOY:-dokploy-network}"
+  wr_cutover_docker inspect "$keep" >/dev/null 2>&1 || return 0
+  if wr_cutover_docker network disconnect "$net" "$keep"; then
+    wr_cutover_log "KEEPER_DETACHED_TRAEFIK_NET keep=$keep net=$net"
+    return 0
+  fi
+  wr_cutover_die "failed to detach keeper $keep from $net"
+  return 1
 }
 
 # Wait until buyer HTTPS matches expected identity.
@@ -764,8 +987,6 @@ wr_public_demo_wait_buyer_edge() {
   if [[ -n "$previous_sha" ]]; then
     wr_cutover_require_full_sha "$previous_sha" || previous_sha=""
   fi
-
-  wr_public_demo_nudge_edge_resolver || true
 
   while :; do
     attempt=$((attempt + 1))
@@ -805,7 +1026,6 @@ wr_public_demo_wait_buyer_edge() {
     fi
 
     wr_cutover_log "EDGE_NOT_CONVERGED attempt=$attempt http=$code sha=${sha:-empty} expected=$expected_sha previous=${previous_sha:-none}"
-    wr_public_demo_nudge_edge_resolver || true
     if (( SECONDS >= deadline )); then
       wr_cutover_log "PUBLIC_DEMO_EDGE_CONVERGENCE_TIMEOUT attempts=$attempt last_http=$code last_sha=${sha:-empty}"
       WR_PUBLIC_DEMO_EDGE_RESULT="PUBLIC_DEMO_EDGE_CONVERGENCE_TIMEOUT"
@@ -856,7 +1076,6 @@ wr_public_demo_wait_api_edge() {
   if [[ -n "$previous_sha" ]]; then
     wr_cutover_require_full_sha "$previous_sha" || previous_sha=""
   fi
-  wr_public_demo_nudge_edge_resolver || true
   while :; do
     attempt=$((attempt + 1))
     code="$(wr_public_demo_edge_http_get "$url" "$hdr_file")"
@@ -883,7 +1102,6 @@ wr_public_demo_wait_api_edge() {
       fi
     fi
     wr_cutover_log "EDGE_NOT_CONVERGED api attempt=$attempt http=$code sha=${sha:-empty}"
-    wr_public_demo_nudge_edge_resolver || true
     if (( SECONDS >= deadline )); then
       wr_cutover_log "PUBLIC_DEMO_EDGE_CONVERGENCE_TIMEOUT api attempts=$attempt"
       WR_PUBLIC_DEMO_EDGE_RESULT="PUBLIC_DEMO_EDGE_CONVERGENCE_TIMEOUT"

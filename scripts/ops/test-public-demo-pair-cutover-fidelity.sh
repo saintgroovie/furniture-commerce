@@ -10,6 +10,8 @@ LOCK="$ROOT/ops/lib/woodright-staging-mutation-lock.sh"
 FAILED=0
 TMP="$(mktemp -d /tmp/wr-pair-cutover-test-XXXXXX)"
 trap 'rm -rf "$TMP"' EXIT
+# Isolate Traefik restore from any host /etc/dokploy file.
+export WOODRIGHT_PUBLIC_DEMO_EDGE_RESOLVER_FILE="$TMP/no-such-woodright-demo.yml"
 
 pass() { echo "PASS $*"; }
 fail() { echo "FAIL $*"; FAILED=$((FAILED + 1)); }
@@ -826,6 +828,7 @@ else
 fi
 
 grep -q 'wr_public_demo_wait_buyer_edge' "$PAIR" && pass "pair verify_pair settles buyer HTTPS" || fail "pair missing buyer edge settle"
+grep -q 'wr_public_demo_apply_traefik_pair_endpoints' "$PAIR" && pass "pair verify_pair applies Traefik endpoints" || fail "pair missing Traefik endpoint apply"
 grep -q 'EXPECTED_OLD_SHA:-${OLD_SF_SHA' "$PAIR" && pass "pair previous SHA falls back to OLD_SF_SHA" || fail "pair missing OLD_SF_SHA previous-SHA fallback"
 grep -q 'PUBLIC_DEMO_EDGE_CONVERGENCE_TIMEOUT' "$SF" && pass "storefront recreate has convergence timeout token" || fail "storefront missing timeout token"
 grep -q 'wait_healthy' "$SF" && grep -q 'wr_public_demo_wait_buyer_edge' "$SF" && pass "storefront keeps health+edge settle" || fail "storefront settle missing"
