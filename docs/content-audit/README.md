@@ -3,10 +3,13 @@
 **Mode:** read-only research. Local audit files only.
 **No** buyer-facing mutations, deploy, commit, push, PR.
 
+**Durable commercial/service website SoT:** [`SITE_COMMERCIAL_SERVICE_SOT.md`](SITE_COMMERCIAL_SERVICE_SOT.md). Commercial/service website facts, publication status, contract provenance, and owner-decision constraints. Read it before delivery, payment, warranty, claims, returns, service, or Bespoke commercial/legal website work. This folder’s FACT_LEDGER / OD packs remain verification evidence; they do not replace that SoT.
+
 ## Canonical artifacts (use these)
 
 | File | Purpose |
 | --- | --- |
+| `SITE_COMMERCIAL_SERVICE_SOT.md` | **Canonical** commercial/service/legal website SoT (contract 2026 + owner decisions + publication status) |
 | `00_NIGHT_AUDIT_PACKET.md` | Morning human packet (this narrative also in chat) |
 | `SOURCE_INDEX.md` | Provenance of all sources |
 | `CONTENT_INVENTORY.md` | Pages / materials inventory |

@@ -4,6 +4,8 @@ Only claims that affect buyer trust or obligations. Status vocabulary per audit 
 
 **Current remaining-OD / launch status (2026-08-20):** `docs/content-audit/20260820_LAUNCH_COMPLETION.md`. Rows dated earlier that still say `OD-06 remains OPEN` or `nav label still OPEN` are historical; they are not the active launch-blocking state.
 
+Commercial/service website facts, publication status, contract provenance, and owner-decision constraints: `docs/content-audit/SITE_COMMERCIAL_SERVICE_SOT.md`. This ledger remains evidence; it is not a second publication SoT.
+
 | ID | TOPIC | CLAIM | SOURCE | AGE | TYPE | CONFIDENCE | STATUS | CONFLICT_WITH | PUBLIC | LEGAL | OWNER_DECISION | NOTES |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | CON-001 | CONTACTS | Шоурум Woodright, МТК «Гранд-2», вход 3, 4 этаж, подиум; Химки, Бутаково 4 | SHOW-REM; OWN-REV §A | 2026-08 | storefront+owner | high | `FACT — CURRENT OWNER CONFIRMED` | - | yes | no | no | Presentation line order may vary |

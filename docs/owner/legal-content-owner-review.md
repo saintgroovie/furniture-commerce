@@ -5,6 +5,7 @@
 **This file is not** `OWNER_LEGAL_CONTENT_APPROVED`.
 
 Decision board SoT: `docs/content-audit/OWNER_DECISIONS.md`
+Commercial/service website facts, publication status, contract provenance, and owner-decision constraints: `docs/content-audit/SITE_COMMERCIAL_SERVICE_SOT.md`.
 Historical 2026-08-04 packet (remediation worktree only): identity was still `MISSING` there; seller identity is now recorded **here** (canonical).
 
 ---

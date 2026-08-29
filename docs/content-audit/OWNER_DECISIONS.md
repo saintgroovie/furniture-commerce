@@ -2,6 +2,7 @@
 
 Goal: few strong decisions, not 80 micro-questions.
 Identity packet: `docs/owner/legal-content-owner-review.md`
+Commercial/service website facts, publication status, contract provenance, and owner-decision constraints: `docs/content-audit/SITE_COMMERCIAL_SERVICE_SOT.md`. This board stays the OD index; it is not the full contract-derived publication SoT.
 
 Silence ≠ approval of the **full** legal pack.
 

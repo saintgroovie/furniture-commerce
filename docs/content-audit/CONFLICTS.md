@@ -62,6 +62,8 @@ Only **incompatible** conditions. Editorial paraphrases excluded.
 
 **Still unresolved (not a second OD number):** start wording; manufacturer / warranty obligor; component scope (hardware / mechanisms / upholstery / third-party); exclusions (`SUSPECT / LEGAL REVIEW`); claims SOP.
 
+**Addendum 2026-08-28 (do not collapse into “resolved”):** a 2026 client supply-contract template still states seller warranty **18 months from transfer**. That is a live contractual instrument, not only legacy CS-Cart HTML. Website owner decision remains **12 months** (`OD-04 = B`). Status: `UNRESOLVED CONTRACT/WEBSITE CONSISTENCY GATE`. Canonical record: `docs/content-audit/SITE_COMMERCIAL_SERVICE_SOT.md`. Do not change 12 → 18 on the site or 18 → 12 in the contract in a content task.
+
 ---
 
 ## CF-04 — Returns window + return logistics
