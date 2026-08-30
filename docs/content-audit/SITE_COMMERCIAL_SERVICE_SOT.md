@@ -13,6 +13,7 @@ Related boards (do not treat as competing SoT):
 | --- | --- |
 | `docs/content-audit/OWNER_DECISIONS.md` | Compact OD board. Owner decisions here remain authoritative. |
 | `docs/owner/legal-content-owner-review.md` | Seller identity packet. Full legal pack still `owner_review`. |
+| `docs/owner/contract-template-reconciliation.md` | Controlled Word-template amendment for `OD-04 = B` (12 months). Not a replacement contract. Does **not** close the 12/18 gate until the external `.docx` is actually edited. |
 | `docs/content-audit/FACT_LEDGER.md` | Research ledger. Evidence, not a second commercial policy. |
 | `docs/content-audit/OD02_*.md` … `OD05_*.md` | Verification packs for individual ODs. |
 | `docs/content-audit/BESPOKE_POSITIONING.md` | Product/IA positioning for Woodright Bespoke. |
@@ -410,10 +411,12 @@ STATUS = UNRESOLVED CONTRACT/WEBSITE CONSISTENCY GATE
 Do **not**:
 
 - change the website 12 → 18;
-- change the contract 18 → 12;
-- pretend there is no conflict.
+- pretend there is no conflict;
+- mark this gate `ALIGNED` only because a Markdown instruction exists.
 
-For buyer-facing **website** work, use the owner decision **12 months**. Keep the contract conflict visible as a legal-pack gate.
+The authorized *future* contract wording is **12 months** (`OD-04 = B`). Exact Word edit: `docs/owner/contract-template-reconciliation.md`. That instruction is **not** itself a source-contract change.
+
+For buyer-facing **website** work, use the owner decision **12 months**. Keep the contract conflict visible until the external template is updated.
 
 This 18-month figure is **not** “only old CS-Cart”. It is in the 2026 client template. Live `/oferta/` 18 months remains `LEGACY PUBLIC DIVERGENCE` as well.
 
@@ -584,7 +587,7 @@ Safe storage FAQ sense (not a published penalty):
 
 ### GATE-WARRANT-18-12 (P0/P1)
 
-Contract template 18 months vs website owner decision 12 months. Unresolved. Website copy uses 12 months and must keep the gate visible in legal/governance work.
+Contract template 18 months vs website owner decision 12 months. **Still unresolved as source consistency.** Website copy uses 12 months. Controlled amendment instruction: `docs/owner/contract-template-reconciliation.md`. Status until Word is edited: `WAITING FOR CONTRACT SOURCE UPDATE`.
 
 ### GATE-CLAIMS-SLA / acceptance
 
@@ -596,7 +599,7 @@ Full returns policy open. Do not ship contract §5.10 / PP 55. `OD-03 = B` is co
 
 ### GATE-POSTAL-INDEX
 
-`153025` (owner card) vs `153000` (contract template).
+`153025` (owner card) vs `153000` (contract template). Token: `POSTAL_INDEX_RECONCILIATION_REQUIRED`. Evidence matrix: `docs/owner/contract-template-reconciliation.md`. Do not guess.
 
 ### GATE-TARIFFS
 
@@ -637,7 +640,7 @@ Do **not** rewrite buyer-facing product pages in the task that only maintains th
 | Live `https://woodright.ru/dostavka-i-sborka/` | Fixed ₽/% tariffs | P0 live | Conflicts with `OD-02` |
 | Live `https://woodright.ru/vozvrat/` | 14 days + ООО «Демо Магазин» + PP 55 | P0 live | `LEGACY PUBLIC DEFECT` |
 | Live `https://woodright.ru/oplata-i-dostavka/` | Card / QR / installment | P0 live | Conflicts with `OD-05` |
-| Canonical `apps/storefront/src/lib/woodright-copy.ts` and `apps/storefront/src/lib/legal/legal-content.ts` | Buyer-facing «Гарантия Woodright - 12 месяцев» without the 18-month contract consistency gate | P1 canonical copy | Matches `OD-04 = B`. Do **not** change 12 → 18 in this docs task. Legal pack still must sync the contract. |
+| Canonical `apps/storefront/src/lib/woodright-copy.ts` and `apps/storefront/src/lib/legal/legal-content.ts` | Buyer-facing «Гарантия Woodright - 12 месяцев» | P2 classification | **Aligned with `OD-04 = B`.** Not a website-vs-owner conflict. Remaining issue is the *external* 18-month Word template (`GATE-WARRANT-18-12`). Do **not** change 12 → 18. |
 | Canonical checkout shipping `0` | Technical zero | P2 if copy ever says «бесплатно» | Already documented as non-commercial |
 | Stale local worktrees (not canonical) | May contain «Гарантия Woodright - 12 месяцев» without the 18-month contract gate | P2 evidence only | Do not treat worktrees as SoT; do not copy into this repo as authority |
 | `docs/content-audit/FACT_LEDGER.md` DEL-009 | Delivery geography `MISSING` for the new site | P2 | Contract allows RF carrier delivery as *possibility* only; still not a public tariff |
@@ -652,4 +655,5 @@ No second commercial SoT should be created. Point here instead of restating tari
 | --- | --- |
 | 2026-08-28 | Initial persist of 2026 client-contract facts + current owner decisions + publication matrix. No buyer-facing code changed. |
 | 2026-08-28 | Promoted onto fresh `origin/main`. OD-06 text aligned to current registry (`OD-06A` / `OD-06B`); pointers added to tracked content-audit/owner docs. |
+| 2026-08-30 | Warranty 12/18: added controlled Word amendment (`docs/owner/contract-template-reconciliation.md`). Gate stays open until the external template is edited. Postal index still `POSTAL_INDEX_RECONCILIATION_REQUIRED`. No buyer-facing code. |
 )

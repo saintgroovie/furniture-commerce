@@ -3,6 +3,7 @@
 Goal: few strong decisions, not 80 micro-questions.
 Identity packet: `docs/owner/legal-content-owner-review.md`
 Commercial/service website facts, publication status, contract provenance, and owner-decision constraints: `docs/content-audit/SITE_COMMERCIAL_SERVICE_SOT.md`. This board stays the OD index; it is not the full contract-derived publication SoT.
+Future customer-contract warranty wording (12 months, start from transfer): `docs/owner/contract-template-reconciliation.md`. That file is an `OD-04 = B` amendment instruction, not a new OD. The external Word source is still 18 months until edited.
 
 Silence ≠ approval of the **full** legal pack.
 
@@ -277,6 +278,8 @@ This **B** is an owner-set business rule. It is **not** research Candidate B («
 **Not confirmed by OD-04 = B (do not invent):** start «с момента передачи»; manufacturer name; «гарантия производителя»; hardware / mechanisms / upholstery / finish / third-party / panels separate terms; assembly/DIY/humidity voids; natural-material blanket «не дефект»; talon; free master visit; claims email; claims SLA (`OD-06`). STANDARD / CONFIGURABLE / BESPOKE do **not** get different terms from the label.
 
 `/warranty` = **READY_FOR_COPY_PHASE_WITH_LEGAL_REVIEW** (not production). Storefront not shipped in this task.
+
+**2026-08-30 (pointer only, not a new OD):** the 2026 client Word template still says **18 months**. Exact future wording **12 (Двенадцать) месяцев с момента передачи Товара** is in `docs/owner/contract-template-reconciliation.md`. Consistency gate stays open until that external file is updated.
 
 ---
 

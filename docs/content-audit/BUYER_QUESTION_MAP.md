@@ -109,7 +109,8 @@ Do not treat live `/oferta/` 18 months as answers. Pack: `docs/content-audit/OD0
 | На Bespoke / штатную обивку / штатный размер? | `ANSWERABLE` (principle) | Label does not set a different term. Base = 12 months. Contract-specific exceptions must be separate |
 | На стеновые панели / монтаж? | `MISSING` | OD-08 OPEN. Do not invent |
 | Что делать при недостатке? | `PARTIAL` / `ANSWERABLE FOR LAUNCH` | Contact showroom phones (`OD-03`). Detailed SOP not approved. Claims email `MISSING` |
-| Когда ответят? | `MISSING` | `OD-06` OPEN. Do not invent SLA |
+| Когда ответят? | `MISSING` | `OD-06B` = no extra public SLA. Do not invent SLA |
+| Как рекламация? | `PARTIAL` | Contact showroom; no extra Woodright SLA (`OD-06B`). Warranty-specific SOP `MISSING` (term closed by `OD-04 = B`) |
 | Приедет мастер / кто платит ремонт / везти мебель? | `MISSING` | Do not promise a free visit |
 | Сам собрал / сторонние сборщики? | `LEGAL REVIEW` | Dogovor 5.6 `SUSPECT` - do not port |
 | Что после коммерческого срока? | `ANSWERABLE` at law | ЗоЗПП ст. 19 (2 years / proof). `EXTERNAL VERIFICATION`. 12 months does not wipe statutory rights |
@@ -120,7 +121,7 @@ Do not treat live `/oferta/` 18 months as answers. Pack: `docs/content-audit/OD0
 
 | Question | Status | Notes |
 | --- | --- | --- |
-| Как рекламация? | `PARTIAL` | Contact showroom; SLA TBD (`OD-06` OPEN). Warranty-specific SOP `MISSING` (term closed by `OD-04 = B`) |
+| Как рекламация? | `PARTIAL` | Contact showroom; no extra Woodright SLA (`OD-06B`). Warranty-specific SOP `MISSING` (term closed by `OD-04 = B`) |
 | Возврат надлежащего качества? | `CONFLICT` / `MISSING` current | Public 14 days + Demo Magazin = invalid. Rem TBD |
 | Исключения для заказных? | `LEGAL REVIEW` + `OWNER DECISION` only for extra goodwill | Not «запретить всё» |
 

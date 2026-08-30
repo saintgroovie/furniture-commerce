@@ -4,7 +4,7 @@
 **Status token:** `WOODRIGHT_OD03_MANAGER_ASSISTED_RETURNS_OWNER_RATIFIED`
 **Not issued:** `OWNER_LEGAL_CONTENT_APPROVED` / `LEGAL APPROVED`.
 
-Related closed: `OD-01 = A`, `OD-02 = B`, `OD-03 = B`, `OD-04 = B`, `OD-05 = A`, `OD-10 = B`. `OD-06` remains OPEN. Warranty pack (not a rewrite of this file): `docs/content-audit/OD04_WARRANTY_VERIFICATION.md`.
+Related closed: `OD-01 = A`, `OD-02 = B`, `OD-03 = B`, `OD-04 = B`, `OD-05 = A`, `OD-10 = B`. `OD-06` is split: `OD-06A` LEGAL REVIEW (submit ≠ acceptance); `OD-06B` no extra public SLA. Warranty pack (not a rewrite of this file): `docs/content-audit/OD04_WARRANTY_VERIFICATION.md`.
 
 `OD-03` ratifies launch communication/process model; it does **not** constitute legal approval of all return clauses.
 
@@ -28,7 +28,9 @@ MEDUSA_REFUND_CAPABILITY ≠ WOODRIGHT_PUBLIC_PROMISE
 WOODRIGHT_REFUND_OPERATIONAL_SOP = MISSING
 AUTOMATED_REFUND = NO EVIDENCE
 REVERSE_LOGISTICS_SOP = MISSING
-OD-06 CLAIMS SLA = NOT CLOSED
+OD-06A = LEGAL REVIEW (submit = request, not acceptance)
+OD-06B = NO ADDITIONAL COMMERCIAL PROMISE
+PUBLIC_CLAIMS_SLA = NO
 BESPOKE LABEL != AUTOMATIC NO-RETURN RULE
 CONFIGURABLE LABEL != AUTOMATIC INDIVIDUALLY-DEFINED PROPERTY
 WOODRIGHT_BESPOKE = NEW NAME + PREMIUM RETHINK OF «По проекту»
@@ -60,7 +62,7 @@ Primary sources (ConsultantPlus texts of the statutes, 2026-08-17):
 
 **Не owner choice:** отменить права при недостатке; запретить любой отказ до передачи при дистанционной продаже потребителю; заменить закон числом из CS-Cart.
 
-**Информация Роспотребнадзора** «О новых правилах продажи товаров в розницу» ([Consultant](https://www.consultant.ru/document/cons_doc_LAW_373815/)): возврат **некачественного** товара - за счёт продавца; для надлежащего качества договор может освободить потребителя от оплаты обратной доставки. Срок ответа на претензию в публичном SoT Woodright **не задан** (`OD-06` OPEN). Не использовать SEO-комментарии Consultant «мебель по заказу не возвращается» как primary source.
+**Информация Роспотребнадзора** «О новых правилах продажи товаров в розницу» ([Consultant](https://www.consultant.ru/document/cons_doc_LAW_373815/)): возврат **некачественного** товара - за счёт продавца; для надлежащего качества договор может освободить потребителя от оплаты обратной доставки. Срок ответа на претензию в публичном SoT Woodright **не задан** (`OD-06B` = no extra commercial SLA; `OD-06A` = LEGAL REVIEW). Не использовать SEO-комментарии Consultant «мебель по заказу не возвращается» как primary source.
 
 **Где нужен LEGAL REVIEW, а не blanket rule:** штатные опции CONFIGURABLE (обивка/размер из линейки) vs нестандарт за пределами пресетов; BESPOKE / «По проекту»; изготовление после заказа стандартного SKU; что именно «может быть использовано исключительно этим потребителем»; эффект КС РФ 17.02.2026 № 7-П.
 
@@ -177,14 +179,15 @@ Not the same as return after delivery. Do not invent fees.
 
 ---
 
-## Claims SLA (`OD-06` not closed)
+## Claims SLA (`OD-06A` / `OD-06B`)
 
 - Rem `dispute_contact_process`: empty.
 - Legacy dogovor: 30 calendar days to consider claims between parties - **`STALE`**, not launch SLA.
+- CTR-2026: 5 working days (warranty claims) and 5 calendar days (dispute pretension) = **contract provenance only**.
 - No current «ответим за N рабочих дней».
-**`MISSING`. `OD-06 REMAINS OPEN`.**
+**`OD-06A` = LEGAL REVIEW (submit ≠ acceptance). `OD-06B` = NO ADDITIONAL COMMERCIAL PROMISE.** Do not publish a Woodright 5-day SLA.
 
-Warranty 18 months (`OD-04`) is **not** the returns window.
+Warranty commercial term is **12 months** (`OD-04 = B`). That is **not** the returns window. Legacy/template 18 months is not new-site SoT.
 
 ---
 
