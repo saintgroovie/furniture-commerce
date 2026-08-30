@@ -62,7 +62,9 @@ Only **incompatible** conditions. Editorial paraphrases excluded.
 
 **Still unresolved (not a second OD number):** start wording; manufacturer / warranty obligor; component scope (hardware / mechanisms / upholstery / third-party); exclusions (`SUSPECT / LEGAL REVIEW`); claims SOP.
 
-**Addendum 2026-08-28 (do not collapse into “resolved”):** a 2026 client supply-contract template still states seller warranty **18 months from transfer**. That is a live contractual instrument, not only legacy CS-Cart HTML. Website owner decision remains **12 months** (`OD-04 = B`). Status: `UNRESOLVED CONTRACT/WEBSITE CONSISTENCY GATE`. Canonical record: `docs/content-audit/SITE_COMMERCIAL_SERVICE_SOT.md`. Do not change 12 → 18 on the site or 18 → 12 in the contract in a content task.
+**Addendum 2026-08-28 (do not collapse into “resolved”):** a 2026 client supply-contract template still states seller warranty **18 months from transfer**. That is a live contractual instrument, not only legacy CS-Cart HTML. Website owner decision remains **12 months** (`OD-04 = B`). Status: `UNRESOLVED CONTRACT/WEBSITE CONSISTENCY GATE`. Canonical record: `docs/content-audit/SITE_COMMERCIAL_SERVICE_SOT.md`. Do not change 12 → 18 on the site.
+
+**Addendum 2026-08-30:** exact Word-template edit to **12 (Двенадцать) месяцев с момента передачи Товара** is recorded in `docs/owner/contract-template-reconciliation.md` (`OWNER-DECIDED COMMERCIAL TERM RECONCILIATION` / `OD-04 = B`). The external `.docx` is **not** in git and was **not** edited this cycle. Do **not** mark CF-03 source-contract consistency closed. Postal `153025` vs `153000` remains `POSTAL_INDEX_RECONCILIATION_REQUIRED`.
 
 ---
 

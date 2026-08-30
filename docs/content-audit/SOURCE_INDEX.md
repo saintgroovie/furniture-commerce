@@ -83,6 +83,7 @@ Tokens: `OWNER_CONFIRM_WOODRIGHT_SELLER_ROEL_TECHNIK` · `OWNER_DECISION_OD01_A_
 | ID | Source | Role |
 | --- | --- | --- |
 | CTR-2026 | Operator file: client `ДОГОВОР ПОСТАВКИ ТОВАРА` template, ООО «Роэл-Техник», dated 2026. **Not stored in git.** | Provenance for commercial/service terms. **Not** automatic public website policy. Canonical persist: `docs/content-audit/SITE_COMMERCIAL_SERVICE_SOT.md` |
+| CTR-2026-AMEND | `docs/owner/contract-template-reconciliation.md` | Controlled amendment instruction: future customer contract warranty **12 months** (`OD-04 = B`); keep start-from-transfer. **Not** a stored `.docx`. Gate stays open until the operator file is edited. |
 
 Do not treat this template’s ₽/% tariffs, 18-month warranty, or §5.10 returns wording as new-site SoT. Owner decisions in `OWNER_DECISIONS.md` still win for website behavior; unresolved contract/website conflicts stay explicit gates in the commercial SoT.
 

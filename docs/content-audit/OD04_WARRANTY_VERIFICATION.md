@@ -3,7 +3,7 @@
 **Launch status 2026-08-20:** commercial term 12 months unchanged. OD-08 on-site services are unpublished, not a remaining owner-open launch gate. See `20260820_LAUNCH_COMPLETION.md`.
 
 Related closed: `OD-01 = A`, `OD-02 = B`, `OD-03 = B`, `OD-04 = B`, `OD-05 = A`, `OD-10 = B`.
-Related open: `OD-06` (claims SLA / offer acceptance). Do not close SLA here.
+Related open: `OD-06` split (`OD-06A` / `OD-06B`). Do not close SLA here. Do not treat the 2026 Word template 18-month term as current website SoT.
 
 ```text
 BEFORE OWNER DECISION:
@@ -301,7 +301,7 @@ Reuse OD-03. Do not invent email or SLA.
 | Repair / replacement / other | Legacy dogovor 5.7 paid service after warranty / excluded cases; **current promise `MISSING`**. Do not promise a free technician visit |
 | Geography / cost of repair visit | **`MISSING`** |
 
-**Claims SLA = `OD-06` remains OPEN.** Do not add 3 / 10 / 30 days as Woodright SLA. Statutory clocks stay `EXTERNAL VERIFICATION`.
+**Claims SLA = `OD-06B` (no extra commercial promise).** `OD-06A` remains LEGAL REVIEW (submit ≠ acceptance). Do not add 3 / 5 / 10 / 30 days as Woodright SLA. Statutory clocks stay `EXTERNAL VERIFICATION`.
 
 ---
 
@@ -399,6 +399,16 @@ Purpose: **объяснить 12-месячный гарантийный сро�
 9. Link `/offer`.
 
 Readiness: **READY_FOR_COPY_PHASE_WITH_LEGAL_REVIEW**. Not `READY_FOR_PRODUCTION`. Not a duplicate of `/offer` or `/returns`.
+
+---
+
+## Addendum 2026-08-30 (contract source, not a new OD)
+
+The 2026 client Word template (CTR-2026, **not in git**) still says **18 months**. That is a third 18-month source besides live `/oferta/` and `/dogovor-postavki/`. It does **not** reopen OD-04.
+
+Future customer-contract wording is recorded in `docs/owner/contract-template-reconciliation.md`: **12 (Двенадцать) месяцев с момента передачи Товара**. Start-from-transfer is **contract provenance** to preserve in that edit. It does **not** close `WARRANTY_START = LEGAL REVIEW / CONTENT COMPLETION` for website `/warranty` copy.
+
+Do not mark the 12/18 consistency gate closed until the operator `.docx` is actually changed.
 
 ---
 

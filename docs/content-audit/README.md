@@ -10,6 +10,7 @@
 | File | Purpose |
 | --- | --- |
 | `SITE_COMMERCIAL_SERVICE_SOT.md` | **Canonical** commercial/service/legal website SoT (contract 2026 + owner decisions + publication status) |
+| `docs/owner/contract-template-reconciliation.md` | Controlled 2026 Word-template warranty amendment (`OD-04 = B`). Not a replacement contract |
 | `00_NIGHT_AUDIT_PACKET.md` | Morning human packet (this narrative also in chat) |
 | `SOURCE_INDEX.md` | Provenance of all sources |
 | `CONTENT_INVENTORY.md` | Pages / materials inventory |
