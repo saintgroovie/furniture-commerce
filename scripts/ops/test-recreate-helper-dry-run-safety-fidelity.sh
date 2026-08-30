@@ -70,6 +70,7 @@ awk '
   /docker stop/ { stop=NR }
   /docker rename/ { ren=NR }
   /docker create/ { cre=NR }
+  /wr_public_demo_docker_create_sealed_env/ { cre=NR }
   END {
     if (!dry) exit 1
     if (!(stop>dry && ren>dry && cre>dry)) exit 2
@@ -396,7 +397,7 @@ export WOODRIGHT_OWNERSHIP_DIR="$TMP/own"
 setup_state "$TMP/state"
 ENVF="$TMP/app.env"
 umask 077
-printf 'WOODRIGHT_RUNTIME_ROLE=public_demo\n' >"$ENVF"
+printf 'WOODRIGHT_RUNTIME_ROLE=public_demo\nWOODRIGHT_RELEASE_SHA=%s\n' "$SHA40" >"$ENVF"
 chmod 600 "$ENVF"
 
 # Snapshot IDs / ACTIVE checksums (file fixtures)
