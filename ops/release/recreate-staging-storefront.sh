@@ -217,7 +217,6 @@ create_storefront() {
     --label "com.woodright.release-sha=${TARGET_SHA}"
     --label "com.woodright.database-identity=${db_identity_alias}"
     "${_wr_mem_sf[@]}"
-    --env-file "$ENV_FILE"
     --health-cmd="node -e \"fetch('http://127.0.0.1:3002/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""
     --health-interval=30s
     --health-timeout=5s
@@ -226,7 +225,10 @@ create_storefront() {
     "$image"
   )
   wr_hp_refuse_publish_flags "${create_args[@]}" || return 1
-  wr_cutover_docker create "${create_args[@]}"
+  wr_public_demo_assert_env_cas_hash "$ENV_FILE" "$ENV_CAS_SHA256" || return 1
+  wr_public_demo_assert_one_target_env_release_identity "$TARGET_SHA" "$ENV_FILE" storefront || return 1
+  wr_public_demo_docker_create_sealed_env storefront \
+    "${WOODRIGHT_DOCKER_BIN:-docker}" create --env-file '{SEALED}' "${create_args[@]}"
   wr_cutover_docker network connect "$NET_DOKPLOY" "$NAME"
 }
 
@@ -357,6 +359,9 @@ wr_cutover_refuse_production_name "$KEEP_NAME" || exit 2
 env_mode="$(stat -c '%a' "$ENV_FILE" 2>/dev/null || stat -f '%Lp' "$ENV_FILE")"
 [[ "$env_mode" == "600" || "$env_mode" == "0600" ]] || die "ENV_FILE mode must be 600 (have $env_mode)"
 log "env_file_path=$ENV_FILE mode=$env_mode (contents not logged)"
+wr_public_demo_assert_one_target_env_release_identity "$TARGET_SHA" "$ENV_FILE" storefront \
+  || die "TARGET_ENV_RELEASE_SHA_MISMATCH"
+ENV_PRELOCK_SHA256="$(wr_public_demo_env_file_sha256 "$ENV_FILE")" || die "TARGET_ENV_SOURCE_CAS"
 
 wr_cutover_evidence_init "$EVIDENCE_DIR" "storefront-$MODE" || exit 2
 
@@ -435,6 +440,10 @@ fi
 
 save_restore_manifest "$EVIDENCE_DIR/json/storefront-restore-manifest.json" || die "manifest save failed"
 printf '{"path":"%s","mode":"%s"}\n' "$ENV_FILE" "$env_mode" >"$EVIDENCE_DIR/json/env-file-meta.json"
+
+wr_public_demo_bind_env_cas_for_create storefront || die "TARGET_ENV_SOURCE_CAS"
+wr_public_demo_assert_one_target_env_release_identity "$TARGET_SHA" "$ENV_FILE" storefront \
+  || die "TARGET_ENV_RELEASE_SHA_MISMATCH"
 
 wr_cutover_docker stop "$NAME"
 PHASE=1

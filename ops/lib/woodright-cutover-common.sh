@@ -38,6 +38,119 @@ wr_cutover_require_digest() {
   esac
 }
 
+# Target env runtime identity must equal --target-sha (and therefore OCI revision)
+# BEFORE any live mutation. Owner confirm does not bypass this gate.
+wr_public_demo_target_env_py() {
+  printf '%s\n' "${_WR_CUTOVER_COMMON_DIR}/woodright-public-demo-target-env.py"
+}
+
+wr_public_demo_assert_target_env_release_identity() {
+  local target_sha="${1:-}"
+  local be_env="${2:-}"
+  local sf_env="${3:-}"
+  wr_cutover_require_full_sha "$target_sha" || return 1
+  [[ -n "$be_env" && -n "$sf_env" ]] || {
+    wr_cutover_die "TARGET_ENV_RELEASE_SHA_MISMATCH missing backend/storefront env paths"
+    return 1
+  }
+  if ! python3 "$(wr_public_demo_target_env_py)" validate-pair \
+    --target-sha "$target_sha" \
+    --backend-env "$be_env" \
+    --storefront-env "$sf_env"; then
+    wr_cutover_log "TARGET_ENV_RELEASE_SHA_MISMATCH"
+    return 1
+  fi
+  wr_cutover_log "TARGET_ENV_IDENTITY_OK sha=$target_sha"
+  return 0
+}
+
+wr_public_demo_env_file_sha256() {
+  python3 "$(wr_public_demo_target_env_py)" hash --env-file "$1"
+}
+
+wr_public_demo_snapshot_env_cas() {
+  local src="${1:-}" dest="${2:-}" expected="${3:-}"
+  [[ -n "$src" && -n "$dest" ]] || {
+    wr_cutover_die "TARGET_ENV_SOURCE_CAS missing snapshot paths"
+    return 1
+  }
+  if [[ -n "$expected" ]]; then
+    python3 "$(wr_public_demo_target_env_py)" snapshot --source "$src" --dest "$dest" --source-sha256 "$expected"
+  else
+    python3 "$(wr_public_demo_target_env_py)" snapshot --source "$src" --dest "$dest"
+  fi
+}
+
+wr_public_demo_assert_env_cas_hash() {
+  local env_file="${1:-}" expected="${2:-}"
+  [[ -n "$env_file" && -n "$expected" ]] || {
+    wr_cutover_die "TARGET_ENV_SOURCE_CAS missing hash"
+    return 1
+  }
+  python3 "$(wr_public_demo_target_env_py)" assert-hash --env-file "$env_file" --sha256 "$expected" >/dev/null
+}
+
+wr_public_demo_bind_env_cas_for_create() {
+  # Snapshot validated env to evidence cas-env/<component>.env; rebind caller ENV_FILE.
+  # Requires ENV_PRELOCK_SHA256 and an evidence directory. Fails closed on drift.
+  local component="${1:-}"
+  local cas_dir="${WOODRIGHT_CUTOVER_EVIDENCE_DIR:-${EVIDENCE_DIR:-}}"
+  [[ -n "$component" && -n "${ENV_FILE:-}" && -n "${ENV_PRELOCK_SHA256:-}" ]] || {
+    wr_cutover_die "TARGET_ENV_SOURCE_CAS missing component/env/prelock hash"
+    return 1
+  }
+  [[ -n "$cas_dir" ]] || {
+    wr_cutover_die "TARGET_ENV_CAS_DIR_REQUIRED"
+    return 1
+  }
+  mkdir -p "$cas_dir/cas-env"
+  chmod 700 "$cas_dir/cas-env" 2>/dev/null || true
+  local dest="$cas_dir/cas-env/${component}.env"
+  wr_public_demo_snapshot_env_cas "$ENV_FILE" "$dest" "$ENV_PRELOCK_SHA256" >/dev/null || return 1
+  ENV_FILE="$dest"
+  ENV_CAS_SHA256="$(wr_public_demo_env_file_sha256 "$ENV_FILE")" || return 1
+  [[ "$ENV_CAS_SHA256" == "$ENV_PRELOCK_SHA256" ]] || {
+    wr_cutover_die "TARGET_ENV_SOURCE_CAS snapshot hash mismatch"
+    return 1
+  }
+  wr_cutover_log "TARGET_ENV_CAS_OK component=$component sha256=$ENV_CAS_SHA256"
+}
+
+wr_public_demo_docker_create_sealed_env() {
+  local component="${1:-}"
+  shift || true
+  [[ -n "$component" && -n "${ENV_FILE:-}" && -n "${ENV_CAS_SHA256:-}" && -n "${TARGET_SHA:-}" ]] || {
+    wr_cutover_die "TARGET_ENV_SOURCE_CAS missing sealed create args"
+    return 1
+  }
+  python3 "$(wr_public_demo_target_env_py)" docker-create \
+    --env-file "$ENV_FILE" \
+    --expected-sha256 "$ENV_CAS_SHA256" \
+    --target-sha "$TARGET_SHA" \
+    --component "$component" \
+    -- \
+    "$@"
+}
+
+wr_public_demo_assert_one_target_env_release_identity() {
+  local target_sha="${1:-}"
+  local env_file="${2:-}"
+  local component="${3:-}"
+  wr_cutover_require_full_sha "$target_sha" || return 1
+  [[ -n "$env_file" && -n "$component" ]] || {
+    wr_cutover_die "TARGET_ENV_RELEASE_SHA_MISMATCH missing env path/component"
+    return 1
+  }
+  if ! python3 "$(wr_public_demo_target_env_py)" validate \
+    --target-sha "$target_sha" \
+    --env-file "$env_file" \
+    --component "$component"; then
+    wr_cutover_log "TARGET_ENV_RELEASE_SHA_MISMATCH component=$component"
+    return 1
+  fi
+  return 0
+}
+
 wr_cutover_require_image_at_digest() {
   local image="${1:-}"
   local digest="${2:-}"

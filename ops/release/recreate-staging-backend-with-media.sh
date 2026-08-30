@@ -153,6 +153,9 @@ TARGET_SHA="${TARGET_SHA:-${WOODRIGHT_TARGET_SHA:-}}"
 ENV_MODE="$(stat -c '%a' "$ENV_FILE" 2>/dev/null || stat -f '%Lp' "$ENV_FILE")"
 [[ "$ENV_MODE" == "600" || "$ENV_MODE" == "0600" ]] || die "ENV_FILE mode must be 600 (have $ENV_MODE)"
 [[ -f "$ROLLBACK_SCRIPT" ]] || die "missing ROLLBACK_SCRIPT=$ROLLBACK_SCRIPT"
+wr_public_demo_assert_one_target_env_release_identity "$TARGET_SHA" "$ENV_FILE" backend \
+  || die_early "TARGET_ENV_RELEASE_SHA_MISMATCH"
+ENV_PRELOCK_SHA256="$(wr_public_demo_env_file_sha256 "$ENV_FILE")" || die_early "TARGET_ENV_SOURCE_CAS"
 
 # Static infrastructure prechecks (no live container mutation) before lock / dry-run exit.
 docker volume inspect "$VOLUME" >/dev/null || die "missing volume $VOLUME"
@@ -242,7 +245,6 @@ CREATE_ARGS=(
   --label "com.woodright.release-sha=${TARGET_SHA}"
   --label "com.woodright.database-identity=${DB_IDENTITY_ALIAS}"
   "${_wr_mem_be[@]}"
-  --env-file "$ENV_FILE"
   --mount "type=volume,source=${VOLUME},destination=${DEST}"
   --health-cmd="node -e \"fetch('http://127.0.0.1:9000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""
   --health-interval=30s
@@ -310,6 +312,11 @@ if [[ "$REQUIRE_CURRENT_DIGEST" == "1" ]]; then
 fi
 # Digest-advance path: REQUIRE_CURRENT_DIGEST=0 allows current != target; Mode A + Mode B pin target.
 
+# Bind immutable env snapshot (pre-lock hash) before any stop/rename/create.
+wr_public_demo_bind_env_cas_for_create backend || die "TARGET_ENV_SOURCE_CAS"
+wr_public_demo_assert_one_target_env_release_identity "$TARGET_SHA" "$ENV_FILE" backend \
+  || die "TARGET_ENV_RELEASE_SHA_MISMATCH"
+
 # All non-destructive checks completed BEFORE stop
 docker stop "$NAME"
 PHASE=1
@@ -320,7 +327,11 @@ PHASE=2
 log "renamed_to_keeper $KEEP_NAME"
 wr_public_demo_detach_keeper_from_traefik_net "$KEEP_NAME" || die "keeper Traefik-net detach failed"
 
-docker create "${CREATE_ARGS[@]}"
+wr_public_demo_assert_env_cas_hash "$ENV_FILE" "$ENV_CAS_SHA256" || die "TARGET_ENV_SOURCE_CAS"
+wr_public_demo_assert_one_target_env_release_identity "$TARGET_SHA" "$ENV_FILE" backend \
+  || die "TARGET_ENV_RELEASE_SHA_MISMATCH"
+wr_public_demo_docker_create_sealed_env backend \
+  "${WOODRIGHT_DOCKER_BIN:-docker}" create --env-file '{SEALED}' "${CREATE_ARGS[@]}"
 
 docker network connect "$NET_DOKPLOY" "$NAME"
 docker start "$NAME"

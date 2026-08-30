@@ -579,6 +579,17 @@ fi
 
 check_monitor
 
+# Env identity vs --target-sha must fail closed before dry-run success or mutation.
+# Filename caf82b0-* is not authority. Owner confirm cannot skip this (re-checked on execute).
+if [[ -n "$BE_ENV_FILE" || -n "$SF_ENV_FILE" ]]; then
+  [[ -n "$BE_ENV_FILE" && -n "$SF_ENV_FILE" ]] || die "backend and storefront env files must be provided together"
+  [[ -f "$BE_ENV_FILE" && -f "$SF_ENV_FILE" ]] || die "env files missing"
+  wr_public_demo_assert_target_env_release_identity "$TARGET_SHA" "$BE_ENV_FILE" "$SF_ENV_FILE" \
+    || die "TARGET_ENV_RELEASE_SHA_MISMATCH"
+else
+  log "TARGET_ENV_IDENTITY_NOT_CHECKED mode=$MODE (env files omitted; execute still requires them)"
+fi
+
 if [[ "$MODE" == "dry-run" || "$MODE" == "preflight" ]]; then
   wr_require_canonical_db_identity || exit 1
   log "PLANNED pair cutover sha=$TARGET_SHA be=$BE_DIGEST sf=$SF_DIGEST"
@@ -607,6 +618,8 @@ fi
 wr_cutover_require_confirm "$CONFIRM" || exit 2
 [[ -n "$BE_ENV_FILE" && -n "$SF_ENV_FILE" ]] || die "execute requires backend/storefront env files"
 [[ -f "$BE_ENV_FILE" && -f "$SF_ENV_FILE" ]] || die "env files missing"
+wr_public_demo_assert_target_env_release_identity "$TARGET_SHA" "$BE_ENV_FILE" "$SF_ENV_FILE" \
+  || die "TARGET_ENV_RELEASE_SHA_MISMATCH"
 
 # Re-check durable install journal immediately before runtime lock (defense in depth).
 if [[ -f "$GOV_IN_PROGRESS" ]]; then

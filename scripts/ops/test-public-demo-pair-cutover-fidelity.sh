@@ -833,6 +833,67 @@ grep -q 'EXPECTED_OLD_SHA:-${OLD_SF_SHA' "$PAIR" && pass "pair previous SHA fall
 grep -q 'PUBLIC_DEMO_EDGE_CONVERGENCE_TIMEOUT' "$SF" && pass "storefront recreate has convergence timeout token" || fail "storefront missing timeout token"
 grep -q 'wait_healthy' "$SF" && grep -q 'wr_public_demo_wait_buyer_edge' "$SF" && pass "storefront keeps health+edge settle" || fail "storefront settle missing"
 
+# N) pair dry-run with keeper env SHA vs target SHA fails closed, no mutation
+ENV_BAD="$TMP/keeper.env"
+umask 077
+printf 'WOODRIGHT_RUNTIME_ROLE=public_demo\nWOODRIGHT_RELEASE_SHA=dd304d1bf92d59c85795b5091ed0386365bcca6d\n' >"$ENV_BAD"
+chmod 600 "$ENV_BAD"
+EVN="$TMP/ev-env-mismatch-dry"
+mkdir -p "$EVN"
+rm -f "$TMP/state/log/mutations.log"
+if WOODRIGHT_FAKE_DOCKER_ALLOW_MUTATION=0 \
+  bash "$PAIR" --environment public_demo --component pair --mode dry-run \
+  --target-sha "$SHA40" --backend-digest "$BE_DIG" --storefront-digest "$SF_DIG" \
+  --evidence-dir "$EVN" --backend-env-file "$ENV_BAD" --storefront-env-file "$ENV_BAD" \
+  >"$TMP/n.out" 2>"$TMP/n.err"; then
+  fail "N dry-run accepted keeper env identity"
+else
+  if grep -q TARGET_ENV_RELEASE_SHA_MISMATCH "$TMP/n.err" "$TMP/n.out"; then
+    pass "N dry-run rejects keeper env before mutation"
+  else
+    fail "N missing TARGET_ENV_RELEASE_SHA_MISMATCH"
+  fi
+fi
+if [[ -f "$TMP/state/log/mutations.log" ]]; then fail "N dry-run mutated docker"; else pass "N dry-run no docker mutation"; fi
+
+# O) execute + owner confirm still cannot bypass mismatch (zero stop/rename/detach)
+EVO="$TMP/ev-env-mismatch-ex"
+mkdir -p "$EVO"
+rm -f "$TMP/state/log/mutations.log" "$TMP/state/log/commands.log"
+if WOODRIGHT_FAKE_DOCKER_ALLOW_MUTATION=0 \
+  bash "$PAIR" --environment public_demo --component pair --mode execute \
+  --target-sha "$SHA40" --backend-digest "$BE_DIG" --storefront-digest "$SF_DIG" \
+  --evidence-dir "$EVO" --backend-env-file "$ENV_BAD" --storefront-env-file "$ENV_BAD" \
+  --confirm-mutation I_UNDERSTAND_PUBLIC_DEMO_CUTOVER \
+  >"$TMP/o.out" 2>"$TMP/o.err"; then
+  fail "O execute accepted keeper env identity"
+else
+  grep -q TARGET_ENV_RELEASE_SHA_MISMATCH "$TMP/o.err" "$TMP/o.out" \
+    && pass "O confirm does not bypass env mismatch" || fail "O missing mismatch token"
+fi
+if [[ -f "$TMP/state/log/mutations.log" ]]; then
+  fail "O execute mutated docker"
+else
+  pass "O execute no stop/rename/create"
+fi
+if [[ -f "$TMP/state/log/commands.log" ]] && grep -qE 'stop|rename|network disconnect' "$TMP/state/log/commands.log"; then
+  fail "O docker commands include mutation"
+else
+  pass "O no docker stop/rename/disconnect"
+fi
+
+# matching env dry-run still passes when env files provided
+EVM="$TMP/ev-env-match-dry"
+mkdir -p "$EVM"
+if WOODRIGHT_FAKE_DOCKER_ALLOW_MUTATION=0 \
+  bash "$PAIR" --environment public_demo --component pair --mode dry-run \
+  --target-sha "$SHA40" --backend-digest "$BE_DIG" --storefront-digest "$SF_DIG" \
+  --evidence-dir "$EVM" --backend-env-file "$ENVF" --storefront-env-file "$ENVF"; then
+  pass "pair dry-run matching env identity"
+else
+  fail "pair dry-run matching env identity"
+fi
+
 if [[ "$FAILED" -eq 0 ]]; then
   echo "OK public-demo pair cutover fidelity ($TMP)"
   exit 0

@@ -237,6 +237,7 @@ FILES=(
   ops/lib/woodright-component-expected-identity.sh
   ops/lib/woodright-cutover-common.sh
   ops/lib/woodright-public-demo-traefik-endpoint.py
+  ops/lib/woodright-public-demo-target-env.py
   ops/lib/woodright-install-provenance.sh
   ops/lib/woodright-compose-service-recreate.sh
   ops/lib/woodright-compose-env-authority.sh
@@ -259,6 +260,7 @@ FILES=(
   ops/release/recreate-staging-storefront.sh
   ops/release/cutover-public-demo-pair.sh
   ops/release/apply-public-demo-traefik-endpoints.sh
+  ops/release/prepare-public-demo-target-env.sh
   ops/release/cutover-production-candidate.sh
   ops/release/cutover-public-production-pair.sh
   ops/release/cutover-public-apex-routing.sh
@@ -318,7 +320,9 @@ role_for() {
     ops/release/rollback-staging-storefront-from-keeper.sh) echo storefront_rollback ;;
     ops/lib/woodright-cutover-common.sh) echo cutover_common ;;
     ops/lib/woodright-public-demo-traefik-endpoint.py) echo public_demo_traefik_endpoint ;;
+    ops/lib/woodright-public-demo-target-env.py) echo public_demo_target_env ;;
     ops/release/apply-public-demo-traefik-endpoints.sh) echo public_demo_traefik_endpoint_apply ;;
+    ops/release/prepare-public-demo-target-env.sh) echo public_demo_target_env_prepare ;;
     ops/lib/woodright-compose-service-recreate.sh) echo compose_service_recreate ;;
     ops/lib/woodright-environment-profile.sh) echo environment_profile ;;
     ops/lib/woodright-host-publish.sh) echo host_publish ;;
@@ -734,7 +738,9 @@ def role_for(rel: str) -> str:
         "ops/release/rollback-staging-storefront-from-keeper.sh": "storefront_rollback",
         "ops/lib/woodright-cutover-common.sh": "cutover_common",
         "ops/lib/woodright-public-demo-traefik-endpoint.py": "public_demo_traefik_endpoint",
+        "ops/lib/woodright-public-demo-target-env.py": "public_demo_target_env",
         "ops/release/apply-public-demo-traefik-endpoints.sh": "public_demo_traefik_endpoint_apply",
+        "ops/release/prepare-public-demo-target-env.sh": "public_demo_target_env_prepare",
         "ops/lib/woodright-compose-service-recreate.sh": "compose_service_recreate",
         "ops/lib/woodright-environment-profile.sh": "environment_profile",
         "ops/lib/woodright-host-publish.sh": "host_publish",
