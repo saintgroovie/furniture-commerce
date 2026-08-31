@@ -13,7 +13,7 @@ Related boards (do not treat as competing SoT):
 | --- | --- |
 | `docs/content-audit/OWNER_DECISIONS.md` | Compact OD board. Owner decisions here remain authoritative. |
 | `docs/owner/legal-content-owner-review.md` | Seller identity packet. Full legal pack still `owner_review`. |
-| `docs/owner/contract-template-reconciliation.md` | Controlled Word-template amendment for `OD-04 = B` (12 months). Not a replacement contract. Does **not** close the 12/18 gate until the external `.docx` is actually edited. |
+| `docs/owner/contract-template-reconciliation.md` | Word-template warranty-term record (`OD-04 = B`). External `.docx` verified **12 months** 2026-08-31. Not a replacement contract. |
 | `docs/content-audit/FACT_LEDGER.md` | Research ledger. Evidence, not a second commercial policy. |
 | `docs/content-audit/OD02_*.md` … `OD05_*.md` | Verification packs for individual ODs. |
 | `docs/content-audit/BESPOKE_POSITIONING.md` | Product/IA positioning for Woodright Bespoke. |
@@ -122,7 +122,7 @@ Public launch commercial warranty: **12 months**.
 Token: `OWNER_DECISION_OD04_B_WARRANTY_12_MONTHS_OWNER_SET`  
 Provenance: explicit owner decision 2026-08-19, **not** inheritance of legacy 12/18-month wording.
 
-**P0/P1 gate:** 2026 contract template still says **18 months**. See Warranty.
+**P0/P1 gate (closed 2026-08-31 for Word vs website term):** current contract template **12 months**. See Warranty. Live CS-Cart 18 months remains `LEGACY PUBLIC DIVERGENCE`.
 
 ### OD-05 - Payment
 
@@ -395,41 +395,40 @@ Relevant to: PDP, materials/help, FAQ, cart/order confirmation, showroom/sample 
 
 ## Warranty
 
-### P0/P1 - term conflict (do not resolve in this file)
+### Term (aligned 2026-08-31)
 
 | Side | Term | Authority |
 | --- | --- | --- |
-| 2026 client contract template | **18 months** from transfer of the goods | `CONTRACT — 2026 TEMPLATE` |
+| Current 2026 client Word template (verified) | **12 months** from transfer of the goods | `CONTRACT — 2026 TEMPLATE` after `OD-04 = B` source edit |
 | New-site owner decision `OD-04 = B` | **12 months** | `CURRENT OWNER DECISION` |
+| Previous CTR-2026 Word wording (historical) | **18 months** from transfer | provenance; not current template term |
+| Live CS-Cart `/oferta/` `/dogovor-postavki/` | **18 months** | `LEGACY PUBLIC DIVERGENCE` |
 
 ```text
-CONTRACT WARRANTY = 18 MONTHS
+CURRENT CONTRACT TEMPLATE WARRANTY = 12 MONTHS
 CURRENT WEBSITE OWNER DECISION = 12 MONTHS
-STATUS = UNRESOLVED CONTRACT/WEBSITE CONSISTENCY GATE
+WARRANTY START = FROM TRANSFER OF GOODS TO BUYER
+STATUS = CONTRACT/WEBSITE WARRANTY TERM ALIGNED
+PREVIOUS CTR-2026 TEMPLATE WORDING = 18 MONTHS
+RECONCILED UNDER OD-04 = B
+ACTUAL WORD SOURCE UPDATED = YES
+VERIFIED = 2026-08-31
 ```
 
-Do **not**:
+Do **not** change the website 12 → 18. Do **not** treat live CS-Cart 18 months as current template. Evidence: `docs/owner/contract-template-reconciliation.md`.
 
-- change the website 12 → 18;
-- pretend there is no conflict;
-- mark this gate `ALIGNED` only because a Markdown instruction exists.
-
-The authorized *future* contract wording is **12 months** (`OD-04 = B`). Exact Word edit: `docs/owner/contract-template-reconciliation.md`. That instruction is **not** itself a source-contract change.
-
-For buyer-facing **website** work, use the owner decision **12 months**. Keep the contract conflict visible until the external template is updated.
-
-This 18-month figure is **not** “only old CS-Cart”. It is in the 2026 client template. Live `/oferta/` 18 months remains `LEGACY PUBLIC DIVERGENCE` as well.
+Physical contract **term** alignment does **not** close `/warranty` obligor, exclusions, or start-*copy* `LEGAL REVIEW`.
 
 ### Start date
 
 Contract: warranty starts **at transfer of the goods to the buyer**.  
-Status: `CONTRACT CONFIRMED` (as contract wording).
+Status: `CONTRACT CONFIRMED` (as contract wording). Unchanged in the 2026-08-31 Word edit.
 
-Website semantic model **if** using `OD-04 = B`:
+Website semantic model with `OD-04 = B`:
 
 > 12 месяцев с момента передачи товара покупателю
 
-Mark every such use: the legal contract pack still needs synchronisation because of the 18-month conflict. `OD-04` verification previously left start wording as `LEGAL REVIEW`; the contract now supplies the start rule as provenance, not as a silent close of the 18/12 gate.
+`OD-04` verification still leaves public start *wording* as `LEGAL REVIEW` for the `/warranty` page. Term alignment ≠ full warranty legal-page approval.
 
 ### What is a warranty case
 
@@ -571,8 +570,8 @@ Safe storage FAQ sense (not a published penalty):
 | Acceptance | Inspect; record on the act | Contract | `SAFE WITH EDITORIAL ADAPTATION` | Presence process = verify |
 | Natural wood | Variation ≠ defect by itself | Contract | `SAFE WITH EDITORIAL ADAPTATION` | Not a blanket defect waiver |
 | Upholstery batches | Slight shade difference | Contract | `SAFE WITH EDITORIAL ADAPTATION` | |
-| Warranty term | Website **12 months**; contract **18 months** | OD-04 vs contract | `OWNER DECISION` + `OPEN LEGAL GATE` | Do not hide the gate |
-| Warranty start | From transfer | Contract | `SAFE WITH EDITORIAL ADAPTATION` only with 12/18 warning | |
+| Warranty term | Website **12 months**; current Word template **12 months** | OD-04 + verified CTR-2026 | `ALIGNED` (term) | Live CS-Cart 18 months = legacy. History: template was 18 until 2026-08-31 |
+| Warranty start | From transfer | Contract | `SAFE WITH EDITORIAL ADAPTATION` for *sense*; `/warranty` start sentence still `LEGAL REVIEW` | |
 | Warranty defects | Manufacturing defects; seller remedies | Contract | `SAFE WITH EDITORIAL ADAPTATION` | |
 | Claims SLA | Not a public Woodright promise; contract 5 working / 5 calendar days | OD-06B + contract | `OWNER DECISION` (no extra SLA) + contract provenance | Do not publish 5 days |
 | Claims channel | Khimki showroom address in contract | Contract | `VERIFY CURRENT OPS` | Not the only channel |
@@ -585,9 +584,9 @@ Safe storage FAQ sense (not a published penalty):
 
 ## Open conflicts and governance gates
 
-### GATE-WARRANT-18-12 (P0/P1)
+### GATE-WARRANT-TERM (closed 2026-08-31 for Word vs website)
 
-Contract template 18 months vs website owner decision 12 months. **Still unresolved as source consistency.** Website copy uses 12 months. Controlled amendment instruction: `docs/owner/contract-template-reconciliation.md`. Status until Word is edited: `WAITING FOR CONTRACT SOURCE UPDATE`.
+Current Word template **12 months** and `OD-04 = B` **12 months** are aligned. Previous CTR-2026 wording **18 months** is historical provenance. Live CS-Cart 18 months remains `LEGACY PUBLIC DIVERGENCE`. Record: `docs/owner/contract-template-reconciliation.md`. `/warranty` obligor/exclusions/start copy remain `LEGAL REVIEW`.
 
 ### GATE-CLAIMS-SLA / acceptance
 
@@ -633,14 +632,14 @@ Do **not** rewrite buyer-facing product pages in the task that only maintains th
 
 | Location | What conflicts | Severity | Notes |
 | --- | --- | --- | --- |
-| `docs/content-audit/CONFLICTS.md` CF-03 | Website term closed as 12 months (`OD-04 = B`); 2026-08-28 addendum records the **2026 contract template** 18-month term as `UNRESOLVED CONTRACT/WEBSITE CONSISTENCY GATE` | P1 legal pack | Canonical gate record: this SoT. Do not collapse the addendum back into “fully resolved”. |
-| `docs/content-audit/OWNER_DECISIONS.md` / `OD04_WARRANTY_VERIFICATION.md` | `LEGACY_18_MONTHS = NOT NEW-SITE SOT` is correct for *website* copy; understates that the 2026 client template still uses 18 months | P1 docs | Do not flip OD-04 to 18 |
-| `docs/content-audit/OD04_WARRANTY_VERIFICATION.md` start section | Forbids publishing «12 месяцев с момента передачи» as start wording (`LEGAL REVIEW`) | P2 docs | Contract now confirms start-from-transfer as provenance; 12/18 gate remains |
+| `docs/content-audit/CONFLICTS.md` CF-03 | Website term 12 months (`OD-04 = B`); **current Word template 12 months** (verified 2026-08-31). Historical CTR-2026 wording was 18 months | closed for template-vs-website term | Live CS-Cart 18 months still `LEGACY PUBLIC DIVERGENCE` |
+| `docs/content-audit/OWNER_DECISIONS.md` / `OD04_WARRANTY_VERIFICATION.md` | `LEGACY_18_MONTHS = NOT NEW-SITE SOT` | P2 docs | Do not flip OD-04 to 18. Template term now matches |
+| `docs/content-audit/OD04_WARRANTY_VERIFICATION.md` start section | Public «12 месяцев с момента передачи» still `LEGAL REVIEW` for `/warranty` copy | P2 | Contract start-from-transfer is provenance; term alignment ≠ page approval |
+| Canonical `apps/storefront/src/lib/woodright-copy.ts` and `apps/storefront/src/lib/legal/legal-content.ts` | Buyer-facing «Гарантия Woodright - 12 месяцев» | aligned (term) | Matches `OD-04 = B` and current Word template. Do **not** change 12 → 18. Obligor/exclusions still open. |
 | Live `https://woodright.ru/oferta/` | Public 18-month warranty + bank block | P0 live (legacy) | Already `LEGACY PUBLIC DIVERGENCE`; not this repo’s storefront |
 | Live `https://woodright.ru/dostavka-i-sborka/` | Fixed ₽/% tariffs | P0 live | Conflicts with `OD-02` |
 | Live `https://woodright.ru/vozvrat/` | 14 days + ООО «Демо Магазин» + PP 55 | P0 live | `LEGACY PUBLIC DEFECT` |
 | Live `https://woodright.ru/oplata-i-dostavka/` | Card / QR / installment | P0 live | Conflicts with `OD-05` |
-| Canonical `apps/storefront/src/lib/woodright-copy.ts` and `apps/storefront/src/lib/legal/legal-content.ts` | Buyer-facing «Гарантия Woodright - 12 месяцев» | P2 classification | **Aligned with `OD-04 = B`.** Not a website-vs-owner conflict. Remaining issue is the *external* 18-month Word template (`GATE-WARRANT-18-12`). Do **not** change 12 → 18. |
 | Canonical checkout shipping `0` | Technical zero | P2 if copy ever says «бесплатно» | Already documented as non-commercial |
 | Stale local worktrees (not canonical) | May contain «Гарантия Woodright - 12 месяцев» without the 18-month contract gate | P2 evidence only | Do not treat worktrees as SoT; do not copy into this repo as authority |
 | `docs/content-audit/FACT_LEDGER.md` DEL-009 | Delivery geography `MISSING` for the new site | P2 | Contract allows RF carrier delivery as *possibility* only; still not a public tariff |
@@ -656,4 +655,5 @@ No second commercial SoT should be created. Point here instead of restating tari
 | 2026-08-28 | Initial persist of 2026 client-contract facts + current owner decisions + publication matrix. No buyer-facing code changed. |
 | 2026-08-28 | Promoted onto fresh `origin/main`. OD-06 text aligned to current registry (`OD-06A` / `OD-06B`); pointers added to tracked content-audit/owner docs. |
 | 2026-08-30 | Warranty 12/18: added controlled Word amendment (`docs/owner/contract-template-reconciliation.md`). Gate stays open until the external template is edited. Postal index still `POSTAL_INDEX_RECONCILIATION_REQUIRED`. No buyer-facing code. |
+| 2026-08-31 | External Word template warranty term verified `18 → 12` months (start-from-transfer unchanged). Template vs website term **aligned**. Historical 18-month wording retained. Postal/returns/claims gates unchanged. No buyer-facing code. |
 )

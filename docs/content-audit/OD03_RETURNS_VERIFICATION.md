@@ -187,7 +187,7 @@ Not the same as return after delivery. Do not invent fees.
 - No current «ответим за N рабочих дней».
 **`OD-06A` = LEGAL REVIEW (submit ≠ acceptance). `OD-06B` = NO ADDITIONAL COMMERCIAL PROMISE.** Do not publish a Woodright 5-day SLA.
 
-Warranty commercial term is **12 months** (`OD-04 = B`). That is **not** the returns window. Legacy/template 18 months is not new-site SoT.
+Warranty commercial term is **12 months** (`OD-04 = B`). That is **not** the returns window. Live CS-Cart 18 months remains `LEGACY PUBLIC DIVERGENCE`. Current Word template term is 12 months (2026-08-31).
 
 ---
 

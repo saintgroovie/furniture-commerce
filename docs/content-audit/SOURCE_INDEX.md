@@ -83,9 +83,9 @@ Tokens: `OWNER_CONFIRM_WOODRIGHT_SELLER_ROEL_TECHNIK` · `OWNER_DECISION_OD01_A_
 | ID | Source | Role |
 | --- | --- | --- |
 | CTR-2026 | Operator file: client `ДОГОВОР ПОСТАВКИ ТОВАРА` template, ООО «Роэл-Техник», dated 2026. **Not stored in git.** | Provenance for commercial/service terms. **Not** automatic public website policy. Canonical persist: `docs/content-audit/SITE_COMMERCIAL_SERVICE_SOT.md` |
-| CTR-2026-AMEND | `docs/owner/contract-template-reconciliation.md` | Controlled amendment instruction: future customer contract warranty **12 months** (`OD-04 = B`); keep start-from-transfer. **Not** a stored `.docx`. Gate stays open until the operator file is edited. |
+| CTR-2026-AMEND | `docs/owner/contract-template-reconciliation.md` | Word term **12 months** verified 2026-08-31 (`OD-04 = B`); start-from-transfer preserved. Historical 18-month wording recorded. **Not** a stored `.docx`. |
 
-Do not treat this template’s ₽/% tariffs, 18-month warranty, or §5.10 returns wording as new-site SoT. Owner decisions in `OWNER_DECISIONS.md` still win for website behavior; unresolved contract/website conflicts stay explicit gates in the commercial SoT.
+Do not treat this template’s ₽/% tariffs or §5.10 returns wording as new-site SoT. Warranty **term** of the current Word file is **12 months** (verified 2026-08-31); earlier 18-month wording is provenance. Owner decisions in `OWNER_DECISIONS.md` still win for website behavior; remaining contract/website conflicts stay explicit gates in the commercial SoT.
 
 ## G. External verification (existence only; superseded for *seller* SoT)
 

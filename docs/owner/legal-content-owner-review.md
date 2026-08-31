@@ -6,7 +6,7 @@
 
 Decision board SoT: `docs/content-audit/OWNER_DECISIONS.md`
 Commercial/service website facts, publication status, contract provenance, and owner-decision constraints: `docs/content-audit/SITE_COMMERCIAL_SERVICE_SOT.md`.
-Controlled 2026 Word-template warranty amendment (`OD-04 = B`, 12 months, start from transfer): `docs/owner/contract-template-reconciliation.md`. Not legal approval of the full pack. The external `.docx` is not in git.
+Controlled 2026 Word-template warranty term (`OD-04 = B`, 12 months, start from transfer): `docs/owner/contract-template-reconciliation.md`. External `.docx` verified 12 months on 2026-08-31. Not legal approval of the full pack. Binary not in git.
 Historical 2026-08-04 packet (remediation worktree only): identity was still `MISSING` there; seller identity is now recorded **here** (canonical).
 
 ---
@@ -106,7 +106,7 @@ Do not treat a later `/requisites` page as permission to publish bank details (`
 Remaining unanswered in this packet:
 
 1. ~~Возврат (`OD-03`)~~ **closed: OD-03 = B** (`OWNER_DECISION_OD03_B_MANAGER_ASSISTED_RETURNS_WITH_LEGAL_BASELINE`). Launch model = manager-assisted; rights preserved. Custom SOP / logistics / mapping **not** approved. `/returns` READY_FOR_COPY_PHASE_WITH_LEGAL_REVIEW. Live Demo Magazin remains `LEGACY PUBLIC DEFECT`. Pack: `docs/content-audit/OD03_RETURNS_VERIFICATION.md`.
-2. ~~Гарантия (`OD-04`)~~ **closed: OD-04 = B** (`OWNER_DECISION_OD04_B_WARRANTY_12_MONTHS_OWNER_SET`). Launch commercial term = **12 months** (owner-set 2026-08-19). Not legacy 18m; not generic dump 12m. Start / obligor / exclusions / claims SOP **not** approved. `/warranty` READY_FOR_COPY_PHASE_WITH_LEGAL_REVIEW. Pack: `docs/content-audit/OD04_WARRANTY_VERIFICATION.md`. External 2026 Word template still 18 months - controlled amendment: `docs/owner/contract-template-reconciliation.md` (gate open until the `.docx` is edited).
+2. ~~Гарантия (`OD-04`)~~ **closed: OD-04 = B** (`OWNER_DECISION_OD04_B_WARRANTY_12_MONTHS_OWNER_SET`). Launch commercial term = **12 months** (owner-set 2026-08-19). External 2026 Word template verified **12 months** 2026-08-31 (start from transfer unchanged). Start / obligor / exclusions / claims SOP for `/warranty` copy **not** approved. Pack: `docs/content-audit/OD04_WARRANTY_VERIFICATION.md`. Record: `docs/owner/contract-template-reconciliation.md`.
 3. ~~Доставка (`OD-02`)~~ **closed: OD-02 = B** (`OWNER_DECISION_OD02_B_DELIVERY_QUOTE_ONLY`). Quote-only; no public tariff; checkout `0 ₽` is technical. `/delivery` READY_FOR_COPY_PHASE_WITH_SERVICE_GAPS. Does **not** confirm geography, lift, assembly, or pickup. Pack: `docs/content-audit/OD02_DELIVERY_SERVICES_VERIFICATION.md`.
 4. Индивидуальные товары - product labels closed as UX model; **legal** mapping still `LEGAL REVIEW` (not a separate OD; not closed by OD-03 = B)
 5. ~~Оплата (`OD-05`)~~ **closed: OD-05 = A** (`OWNER_DECISION_OD05_A_MANUAL_INVOICE_PAYMENT_LINK`). `/payment` READY_FOR_COPY_PHASE.
