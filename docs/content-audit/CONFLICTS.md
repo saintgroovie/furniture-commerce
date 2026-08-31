@@ -64,7 +64,9 @@ Only **incompatible** conditions. Editorial paraphrases excluded.
 
 **Addendum 2026-08-28 (historical; superseded for current Word term by 2026-08-31):** at that date the 2026 client supply-contract template still stated seller warranty **18 months from transfer**. That addendum must not be read as the current template term.
 
-**Addendum 2026-08-31:** the operator Word template was physically updated and verified: **12 (Двенадцать) месяцев с момента передачи Товара**. Template vs website term is **aligned**. Historical CTR-2026 wording remains **18 months**. Live CS-Cart 18 months remains `LEGACY PUBLIC DIVERGENCE`. Postal `153025` vs `153000` still `POSTAL_INDEX_RECONCILIATION_REQUIRED`. Record: `docs/owner/contract-template-reconciliation.md`.
+**Addendum 2026-08-31:** the operator Word template was physically updated and verified: **12 (Двенадцать) месяцев с момента передачи Товара**. Template vs website term is **aligned**. Historical CTR-2026 wording remains **18 months**. Live CS-Cart 18 months remains `LEGACY PUBLIC DIVERGENCE`. Record: `docs/owner/contract-template-reconciliation.md`.
+
+**Addendum 2026-08-31 (postal):** the same Word template seller requisites were then updated and verified: **153025 г. Иваново, ул. Дзержинского,39, оф 514**. Owner card / `woodright-seller.ts` / current template **aligned**. Previous CTR-2026 value **153000** is historical provenance. Token: `WOODRIGHT_POSTAL_INDEX_RECONCILED`.
 
 ---
 
