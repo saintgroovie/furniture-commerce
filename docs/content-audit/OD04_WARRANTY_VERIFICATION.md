@@ -402,13 +402,13 @@ Readiness: **READY_FOR_COPY_PHASE_WITH_LEGAL_REVIEW**. Not `READY_FOR_PRODUCTION
 
 ---
 
-## Addendum 2026-08-30 (contract source, not a new OD)
+## Addendum 2026-08-31 (Word source term aligned; not a new OD)
 
-The 2026 client Word template (CTR-2026, **not in git**) still says **18 months**. That is a third 18-month source besides live `/oferta/` and `/dogovor-postavki/`. It does **not** reopen OD-04.
+The 2026 client Word template (CTR-2026, **not in git**) now says **12 months from transfer**. Verified 2026-08-31. Previous wording **18 months** is historical provenance. Live `/oferta/` and `/dogovor-postavki/` 18 months remain `LEGACY PUBLIC DIVERGENCE`.
 
-Future customer-contract wording is recorded in `docs/owner/contract-template-reconciliation.md`: **12 (Двенадцать) месяцев с момента передачи Товара**. Start-from-transfer is **contract provenance** to preserve in that edit. It does **not** close `WARRANTY_START = LEGAL REVIEW / CONTENT COMPLETION` for website `/warranty` copy.
+This **does not** close `WARRANTY_START = LEGAL REVIEW / CONTENT COMPLETION` for website `/warranty` copy, nor obligor / exclusions.
 
-Do not mark the 12/18 consistency gate closed until the operator `.docx` is actually changed.
+CAS and exact before/after: `docs/owner/contract-template-reconciliation.md`.
 
 ---
 

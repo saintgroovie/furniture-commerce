@@ -1,9 +1,9 @@
 # Woodright client contract template - controlled reconciliation
 
-**Document role:** operator instruction for the *external* 2026 client supply-contract Word template. Not a replacement contract. Not buyer-facing copy. Not a new owner decision.  
-**Created:** 2026-08-30 (Europe/Moscow).  
-**Status token:** `WOODRIGHT_WARRANTY_CONTRACT_UPDATE_READY`  
-**Does not close:** `UNRESOLVED CONTRACT/WEBSITE CONSISTENCY GATE` until the actual future customer contract source is edited.
+**Document role:** operator record for the *external* 2026 client supply-contract Word template. Not a replacement contract. Not buyer-facing copy. Not a new owner decision.
+**Created:** 2026-08-30 (Europe/Moscow).
+**Updated:** 2026-08-31 (Europe/Moscow) after verified Word mutation.
+**Status token:** `WOODRIGHT_WARRANTY_WORD_SOURCE_RECONCILED`
 
 Website commercial SoT: `docs/content-audit/SITE_COMMERCIAL_SERVICE_SOT.md`  
 OD board: `docs/content-audit/OWNER_DECISIONS.md`
@@ -27,15 +27,15 @@ Searched tracked `docs/`, `docs/owner/`, `docs/content-audit/`, and storefront l
 | --- | --- | --- | --- |
 | 2026 client supply-contract Word template | Operator file `ДОГОВОР с клиентами Роэл-Техник.docx` (title in file: `ДОГОВОР ПОСТАВКИ ТОВАРА`, ООО «Роэл-Техник», year line `2026 г.`) | **No** - not in git | **Canonical editable business template** (external). Authority for *future customer paper* until replaced. |
 | Persist of extracted facts | `docs/content-audit/SITE_COMMERCIAL_SERVICE_SOT.md` | Yes | **Legal/content SoT** - provenance of the template, not the contract itself |
-| This instruction | this file | Yes | **Controlled amendment / draft instruction** |
+| This file | this file | Yes | Verification record of the 2026-08-31 Word term edit; not the contract binary |
 | Live CS-Cart `/dogovor-postavki/` | `https://woodright.ru/dogovor-postavki/` | n/a | **Legacy public HTML** - not the editable 2026 Word source; `LEGACY PUBLIC` |
 | Live CS-Cart `/oferta/` | `https://woodright.ru/oferta/` | n/a | **Legacy public HTML** (2022 oferta still served) |
 | Dump EN oferta/dogovor | LEG-SQL | n/a | **Stale other-seller** (ИП Елисеев) |
 | Storefront `legal-content.ts` / `woodright-copy.ts` | `apps/storefront/src/lib/legal/` | Yes | **Website copy** - `OD-04 = B` 12 months. Not the contract. **Not edited this cycle.** |
 
-**Absence this cycle:** the original `.docx` is not in the isolated worktree or git. Do not reconstruct a full juridical contract from memory. Do not invent a second Word file in the repo.
+The `.docx` is **not** stored in git. Do not invent a second Word file in the repo.
 
-When the operator next edits the Word template, use **section 2** as the exact warranty change. Do not re-open the 12 vs 18 commercial-term choice: `OD-04 = B` already closed it for new Woodright.
+**2026-08-31:** the operator Word file `ДОГОВОР с клиентами Роэл-Техник.docx` (CTR-2026, not in git) was edited for the warranty **term only**. See §2 verification. Postal index, returns, claims, and other clauses were **not** changed.
 
 ---
 
@@ -77,21 +77,49 @@ NOT legacy CS-Cart 18
 NOT generic dump / ИП Елисеев 12
 ```
 
-After the Word file is actually saved with 12 months, record that fact in `SITE_COMMERCIAL_SERVICE_SOT.md` and only then flip:
+### Verification 2026-08-31 (Europe/Moscow)
 
 ```text
-CONTRACT TEMPLATE RECONCILED TO 12 MONTHS
-WEBSITE OWNER DECISION = 12 MONTHS
-CONSISTENCY = ALIGNED
+OWNER-DECIDED COMMERCIAL TERM RECONCILIATION
+OD-04 = B
+ACTUAL WORD SOURCE UPDATED = YES
+VERIFIED WARRANTY TERM = 12 MONTHS
+WARRANTY START = FROM TRANSFER OF GOODS
+STATUS = WARRANTY TERM RECONCILED
+THIS IS NOT EXTERNAL LEGAL REVIEW
 ```
 
-Until that source edit exists:
+Location category: operator Downloads. Filename: `ДОГОВОР с клиентами Роэл-Техник.docx`. Binary **not** stored in git. Absolute machine path is operator-local only.
+
+| CAS | SHA-256 |
+| --- | --- |
+| Pre-change source / immutable backup | `c0ab92bd43f73d56c14f92b5c18c1d2268a52da3b7280c0d8f12cd3875fd308e` |
+| Post-change active template | `7770b1fe6cbf3af51448e66e6aefe6b907833993048db9f89dbec3049167fb20` |
+
+Backup filename (sibling, not in git): `ДОГОВОР с клиентами Роэл-Техник.PRE-OD04-18M.20260831T173111.docx` 
+`BACKUP_SHA256 ==` pre-change source SHA-256.
+
+Before (one commercial-warranty clause):
 
 ```text
-CONTRACT TEMPLATE = 18 MONTHS
-APPROVED AMENDMENT INSTRUCTION = 12 MONTHS
-STATUS = WAITING FOR CONTRACT SOURCE UPDATE
-UNRESOLVED CONTRACT/WEBSITE CONSISTENCY GATE  (still open)
+18 (Восемнадцать) месяцев с момента передачи Товара
+```
+
+After (same clause; start rule unchanged):
+
+```text
+12 (Двенадцать) месяцев с момента передачи Товара
+```
+
+Structural check: only `word/document.xml` content hash changed; zip member list unchanged; three Word runs only (`18`→`12`, `В`→`Д`, `осемнадцать`→`венадцать`). Delivery `18.00` window, postal `153000`, returns/PP 55, claims days, and requisites **not** edited.
+
+```text
+CURRENT CONTRACT TEMPLATE WARRANTY = 12 MONTHS
+CURRENT WEBSITE OWNER DECISION = 12 MONTHS
+WARRANTY START = FROM TRANSFER OF GOODS TO BUYER
+STATUS = CONTRACT/WEBSITE WARRANTY TERM ALIGNED
+PREVIOUS CTR-2026 TEMPLATE WORDING = 18 MONTHS
+RECONCILED UNDER OD-04 = B
 ```
 
 ---
@@ -101,7 +129,7 @@ UNRESOLVED CONTRACT/WEBSITE CONSISTENCY GATE  (still open)
 | Topic | Contract template (CTR-2026) | Owner / current website | Status | Action |
 | --- | --- | --- | --- | --- |
 | Seller | ООО «Роэл-Техник»; ОГРН `1153702012848`; ИНН `3702111074`; КПП `370201001` | Same (`OD-01 = A`) | aligned | none |
-| Warranty term | 18 months | 12 months (`OD-04 = B`) | conflict | apply section 2 to Word source; do not change website 12 → 18 |
+| Warranty term | **12 months** (verified Word 2026-08-31; previous wording 18 months) | 12 months (`OD-04 = B`) | **aligned** | live CS-Cart `/oferta/` `/dogovor-postavki/` 18 months remain `LEGACY PUBLIC DIVERGENCE` |
 | Warranty start | from transfer of goods to buyer | contract provenance same; website start wording still `LEGAL REVIEW` for `/warranty` pack | aligned as *contract provenance*; website copy not auto-closed | preserve transfer start in the template; do not invent a different clock |
 | Warranty scope | production defects at assembly or during warranty use; seller inspects, acts, remedies confirmed defects at own cost | SoT + OD-04 pack: do not expand to wear / mechanical / misuse; do not waive statutory rights | scoped - keep | no public expansion |
 | DIY delivery/lift/assembly vs warranty | service may be withheld except manufacturing defects | SoT: do not treat DIY as universal loss of warranty on production defects | watch | do not broaden the exclusion |
@@ -212,13 +240,13 @@ Observed from CTR-2026 persist + live `/dogovor-postavki/` lineage. **Not** a ma
 
 | ID | Severity | Issue | Action this cycle |
 | --- | --- | --- | --- |
-| CTI-P0-01 | P0 | Warranty **18** months vs owner-approved **12** (`OD-04 = B`) | instruction in §2; gate stays open until Word is edited |
+| CTI-P0-01 | P0 (closed 2026-08-31 for *Word template term*) | Was: warranty **18** vs `OD-04 = B` **12** | Word source verified `12 (Двенадцать) месяцев с момента передачи Товара`. Live CS-Cart 18 months still legacy. |
 | CTI-P0-02 | P0 | Returns §5.10 + PP 55 (1998) as furniture non-return rule | do not publish; legal review; keep OD-03 = B nuance |
 | CTI-P0-03 | P0 | Postal `153000` vs owner card `153025` | `POSTAL_INDEX_RECONCILIATION_REQUIRED` |
 | CTI-P1-01 | P1 | Warranty claim **5 working days** vs dispute **5 calendar days** | keep both as provenance; no public SLA |
 | CTI-P1-02 | P1 | DIY delivery/lift/assembly vs warranty - must keep manufacturing-defect exception | do not broaden |
 | CTI-P1-03 | P1 | Natural-material sentence can be over-read as a blanket defect waiver | keep SoT narrow wording |
-| CTI-P1-04 | P1 | Live oferta annex = manufacturer 18 months vs dogovor/template = seller 18 months (obligor) | `WARRANTY_OBLIGOR_LEGAL_WORDING = LEGAL REVIEW`; OD-04 does not close it |
+| CTI-P1-04 | P1 | Live oferta annex = manufacturer 18 months vs live dogovor = seller 18 months (obligor). Current Word template term is now **12** months seller | `WARRANTY_OBLIGOR_LEGAL_WORDING = LEGAL REVIEW`; OD-04 does not close obligor |
 | CTI-P1-05 | P1 | Obsolete legal reference PP 55 | `DO NOT PUBLISH AS-IS` |
 | CTI-P2-01 | P2 | Delivery clause numbering restarts after `3.1.4` at `3.1.1` (known CTR-2026 extract) | editorial; no rewrite this cycle |
 | CTI-P2-02 | P2 | `Счет-заказ` / `Счёт-заказ` spelling mix in the family of texts | editorial |
@@ -232,16 +260,15 @@ Delivery/payment **tariffs and cashier wording** are intentional website diverge
 
 | Item | Status |
 | --- | --- |
-| Website commercial warranty term | **12 months** - already `OD-04 = B` |
-| Controlled Word amendment for that term | **this file** - ready for the person who edits the template |
-| Actual 2026 Word source | **still 18 months** (not in git; not edited here) |
-| 12/18 consistency gate | **still open** |
-| Warranty start in template | preserve transfer |
-| Postal index | **open** owner/data gate |
+| Website commercial warranty term | **12 months** - `OD-04 = B` |
+| Actual 2026 Word source | **12 months** - verified 2026-08-31 (CAS in §2) |
+| 12/18 *template vs website* consistency gate | **closed** for the Word source |
+| Historical 18-month CTR-2026 wording | retained as provenance |
+| Warranty start in template | from transfer - unchanged |
+| `/warranty` obligor / exclusions / start *copy* | still `LEGAL REVIEW` |
+| Postal index | **open** (`POSTAL_INDEX_RECONCILIATION_REQUIRED`) |
 | Returns SOP | **open** (`OD-03 = B` model only) |
 | Public claims SLA | **must not add** (`OD-06B`) |
 | Full legal pack token | `OWNER_LEGAL_CONTENT_APPROVED` **not** issued |
 | Live CS-Cart | untouched; separate cutover |
 | Storefront / runtime / deploy | untouched |
-
-Do not treat writing this Markdown as reconciliation of the customer contract.
