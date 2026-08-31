@@ -129,7 +129,7 @@ export default async function RootLayout({
           <div className="header-main">
             <div className="container header-main-inner">
               <nav className="header-nav" aria-label="Основная навигация">
-                {/* Canonical IA: Каталог → Комнаты → Детская → Bespoke → О бренде */}
+                {/* Canonical IA: Каталог → Комнаты → Детская → По проекту → О бренде */}
                 <NavDropdown
                   href="/catalog"
                   label={navCopy.catalog}

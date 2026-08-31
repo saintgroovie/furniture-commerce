@@ -42,9 +42,17 @@ assert.match(JSON.stringify(buildLegalPage("offer")), /заявка на под�
 assert.doesNotMatch(JSON.stringify(buildLegalPage("offer")), /акцепт происходит/)
 assert.equal(buildLegalPage("offer").title, "Условия продажи")
 
-assert.equal(nav.bespoke, "Bespoke")
+assert.equal(nav.bespoke, "По проекту")
 assert.equal(productTypeBadgeLabels.BESPOKE, "Bespoke")
 assert.equal(PRODUCT_TYPE_FILTER_LABELS.BESPOKE, "Bespoke")
+assert.equal(
+  footer.columns.find((col) => col.links.some((l) => l.href === "/bespoke"))?.title,
+  "По проекту"
+)
+assert.ok(
+  !footer.columns.some((col) => col.title === "Bespoke"),
+  "global/footer nav must not use Bespoke as the entry label"
+)
 
 const footerHrefs = footer.columns.flatMap((col) => col.links.map((l) => l.href))
 for (const href of [
