@@ -3,7 +3,7 @@
 Goal: few strong decisions, not 80 micro-questions.
 Identity packet: `docs/owner/legal-content-owner-review.md`
 Commercial/service website facts, publication status, contract provenance, and owner-decision constraints: `docs/content-audit/SITE_COMMERCIAL_SERVICE_SOT.md`. This board stays the OD index; it is not the full contract-derived publication SoT.
-Future customer-contract warranty wording (12 months, start from transfer): `docs/owner/contract-template-reconciliation.md`. External Word source verified **12 months** 2026-08-31 (`OD-04 = B`). Not a new OD.
+Future customer-contract warranty wording (12 months, start from transfer) and seller postal index (`153025`): `docs/owner/contract-template-reconciliation.md`. External Word source verified **12 months** and **153025** 2026-08-31 (`OD-04 = B`; postal not a new OD). Not a new OD.
 
 Silence ≠ approval of the **full** legal pack.
 
@@ -279,7 +279,9 @@ This **B** is an owner-set business rule. It is **not** research Candidate B («
 
 `/warranty` = **READY_FOR_COPY_PHASE_WITH_LEGAL_REVIEW** (not production). Storefront not shipped in this task.
 
-**2026-08-31 (pointer only, not a new OD):** the 2026 client Word template was updated and verified to **12 (Двенадцать) месяцев с момента передачи Товара**. Template vs website term aligned. Live CS-Cart 18 months remains legacy. Postal/returns/claims gates unchanged. Record: `docs/owner/contract-template-reconciliation.md`.
+**2026-08-31 (pointer only, not a new OD):** the 2026 client Word template was updated and verified to **12 (Двенадцать) месяцев с момента передачи Товара**. Template vs website term aligned. Live CS-Cart 18 months remains legacy. Record: `docs/owner/contract-template-reconciliation.md`.
+
+**2026-08-31 (pointer only, not a new OD):** the same Word template seller postal index was then updated and verified to **153025** (previous CTR-2026 value **153000**). Owner card / seller source / current template aligned. Returns/claims/`/warranty` copy gates unchanged.
 
 ---
 

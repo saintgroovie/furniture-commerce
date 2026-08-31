@@ -13,7 +13,7 @@ Related boards (do not treat as competing SoT):
 | --- | --- |
 | `docs/content-audit/OWNER_DECISIONS.md` | Compact OD board. Owner decisions here remain authoritative. |
 | `docs/owner/legal-content-owner-review.md` | Seller identity packet. Full legal pack still `owner_review`. |
-| `docs/owner/contract-template-reconciliation.md` | Word-template warranty-term record (`OD-04 = B`). External `.docx` verified **12 months** 2026-08-31. Not a replacement contract. |
+| `docs/owner/contract-template-reconciliation.md` | Word-template warranty-term and postal-index record (`OD-04 = B`; postal `153025`). External `.docx` verified **12 months** and **153025** 2026-08-31. Not a replacement contract. |
 | `docs/content-audit/FACT_LEDGER.md` | Research ledger. Evidence, not a second commercial policy. |
 | `docs/content-audit/OD02_*.md` … `OD05_*.md` | Verification packs for individual ODs. |
 | `docs/content-audit/BESPOKE_POSITIONING.md` | Product/IA positioning for Woodright Bespoke. |
@@ -166,9 +166,9 @@ Autonomous launch closures 2026-08-20 (not owner tokens; see `OWNER_DECISIONS.md
 | KPP | `370201001` | same | `SAFE` |
 | Director | Парадзинская Ирина Григорьевна | `CONTRACT — 2026 TEMPLATE` | `INTERNAL ONLY` until a public-requisites task asks for it |
 | Legal address (owner card) | `153025, г. Иваново, ул. Дзержинского, д. 39, оф. 514` | `CURRENT OWNER CONFIRMED` | `SAFE` for identity pages after legal pack |
-| Legal address (contract template) | `153000, г. Иваново, ул. Дзержинского, 39, оф. 514` | `CONTRACT — 2026 TEMPLATE` | `OPEN / NEEDS RECONCILIATION` on postal code only |
+| Legal address (current contract template) | `153025, г. Иваново, ул. Дзержинского, 39, оф. 514` | `CONTRACT — 2026 TEMPLATE` (verified 2026-08-31) | **aligned** with owner card |
 
-**Postal-code conflict:** owner card `153025` vs contract template `153000`. Same street and office. Do not invent a third index. For new-site identity copy follow the owner card until owner/legal reconciles the index.
+**Postal index:** current seller and current Word template are **153025**. CTR-2026 previously contained `153000` (same street and office). Historical discrepancy retained; gate closed. Record: `docs/owner/contract-template-reconciliation.md`.
 
 **Bank details:** present in the 2026 contract template and on the owner card. **Do not duplicate account numbers in this website SoT.** `OD-10 = NOT PUBLIC`. Invoice as a private payment document may include them; that does not authorize `/requisites`, footer, `/payment`, offer, FAQ, or structured data.
 
@@ -556,7 +556,7 @@ Safe storage FAQ sense (not a published penalty):
 | Topic | Fact / rule | Authority | Public status | Notes |
 | --- | --- | --- | --- | --- |
 | Seller identity | ООО «Роэл-Техник»; OGRN/INN/KPP as above | Owner + contract | `SAFE` | OD-01 |
-| Legal address | Owner card `153025` … оф. 514 | Owner card | `OWNER DECISION` | Postal `153000` in contract = open index conflict |
+| Legal address | Owner card + current Word `153025` … оф. 514 | Owner card | `OWNER DECISION` | CTR-2026 previously `153000`; reconciled 2026-08-31 |
 | Bank details | Exist in contract and card | OD-10 | `INTERNAL ONLY` | Never public |
 | Manufacturing/delivery timing | Individual; manager confirms | Contract + no universal SLA | `SAFE WITH EDITORIAL ADAPTATION` | Do not invent 30/45/60 days |
 | Payment | Manager → invoice / PaymentLink; handover after full payment | OD-05; contract full-pay | `OWNER DECISION` | Mix neither with cashier/QR/acquiring |
@@ -596,9 +596,9 @@ Current Word template **12 months** and `OD-04 = B` **12 months** are aligned. P
 
 Full returns policy open. Do not ship contract §5.10 / PP 55. `OD-03 = B` is communication model only.
 
-### GATE-POSTAL-INDEX
+### GATE-POSTAL-INDEX (closed 2026-08-31)
 
-`153025` (owner card) vs `153000` (contract template). Token: `POSTAL_INDEX_RECONCILIATION_REQUIRED`. Evidence matrix: `docs/owner/contract-template-reconciliation.md`. Do not guess.
+Current seller postal index and current Word template postal index are **153025**. Previous CTR-2026 template value was **153000** (same street/office). Token: `WOODRIGHT_POSTAL_INDEX_RECONCILED`. Evidence: `docs/owner/contract-template-reconciliation.md`. Do not reopen from historical `153000` wording.
 
 ### GATE-TARIFFS
 
@@ -655,5 +655,6 @@ No second commercial SoT should be created. Point here instead of restating tari
 | 2026-08-28 | Initial persist of 2026 client-contract facts + current owner decisions + publication matrix. No buyer-facing code changed. |
 | 2026-08-28 | Promoted onto fresh `origin/main`. OD-06 text aligned to current registry (`OD-06A` / `OD-06B`); pointers added to tracked content-audit/owner docs. |
 | 2026-08-30 | Warranty 12/18: added controlled Word amendment (`docs/owner/contract-template-reconciliation.md`). Gate stays open until the external template is edited. Postal index still `POSTAL_INDEX_RECONCILIATION_REQUIRED`. No buyer-facing code. |
-| 2026-08-31 | External Word template warranty term verified `18 → 12` months (start-from-transfer unchanged). Template vs website term **aligned**. Historical 18-month wording retained. Postal/returns/claims gates unchanged. No buyer-facing code. |
+| 2026-08-31 | External Word template warranty term verified `18 → 12` months (start-from-transfer unchanged). Template vs website term **aligned**. Historical 18-month wording retained. Postal/returns/claims gates unchanged at that pass. No buyer-facing code. |
+| 2026-08-31 | External Word template seller postal index verified `153000 → 153025` (warranty 12 months unchanged). Owner card / seller source / current template **aligned**. Historical `153000` retained. Returns/claims/`/warranty` copy gates unchanged. No buyer-facing code. |
 )

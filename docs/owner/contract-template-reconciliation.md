@@ -2,8 +2,8 @@
 
 **Document role:** operator record for the *external* 2026 client supply-contract Word template. Not a replacement contract. Not buyer-facing copy. Not a new owner decision.
 **Created:** 2026-08-30 (Europe/Moscow).
-**Updated:** 2026-08-31 (Europe/Moscow) after verified Word mutation.
-**Status token:** `WOODRIGHT_WARRANTY_WORD_SOURCE_RECONCILED`
+**Updated:** 2026-08-31 (Europe/Moscow) after verified Word warranty mutation, then postal-index mutation.
+**Status tokens:** `WOODRIGHT_WARRANTY_WORD_SOURCE_RECONCILED`; `WOODRIGHT_POSTAL_INDEX_RECONCILED`
 
 Website commercial SoT: `docs/content-audit/SITE_COMMERCIAL_SERVICE_SOT.md`  
 OD board: `docs/content-audit/OWNER_DECISIONS.md`
@@ -27,7 +27,7 @@ Searched tracked `docs/`, `docs/owner/`, `docs/content-audit/`, and storefront l
 | --- | --- | --- | --- |
 | 2026 client supply-contract Word template | Operator file `ДОГОВОР с клиентами Роэл-Техник.docx` (title in file: `ДОГОВОР ПОСТАВКИ ТОВАРА`, ООО «Роэл-Техник», year line `2026 г.`) | **No** - not in git | **Canonical editable business template** (external). Authority for *future customer paper* until replaced. |
 | Persist of extracted facts | `docs/content-audit/SITE_COMMERCIAL_SERVICE_SOT.md` | Yes | **Legal/content SoT** - provenance of the template, not the contract itself |
-| This file | this file | Yes | Verification record of the 2026-08-31 Word term edit; not the contract binary |
+| This file | this file | Yes | Verification record of the 2026-08-31 Word warranty-term and postal-index edits; not the contract binary |
 | Live CS-Cart `/dogovor-postavki/` | `https://woodright.ru/dogovor-postavki/` | n/a | **Legacy public HTML** - not the editable 2026 Word source; `LEGACY PUBLIC` |
 | Live CS-Cart `/oferta/` | `https://woodright.ru/oferta/` | n/a | **Legacy public HTML** (2022 oferta still served) |
 | Dump EN oferta/dogovor | LEG-SQL | n/a | **Stale other-seller** (ИП Елисеев) |
@@ -35,7 +35,9 @@ Searched tracked `docs/`, `docs/owner/`, `docs/content-audit/`, and storefront l
 
 The `.docx` is **not** stored in git. Do not invent a second Word file in the repo.
 
-**2026-08-31:** the operator Word file `ДОГОВОР с клиентами Роэл-Техник.docx` (CTR-2026, not in git) was edited for the warranty **term only**. See §2 verification. Postal index, returns, claims, and other clauses were **not** changed.
+**2026-08-31 (warranty):** the operator Word file `ДОГОВОР с клиентами Роэл-Техник.docx` (CTR-2026, not in git) was edited for the warranty **term only**. See §2. Returns, claims, and other non-warranty clauses were not changed in that pass.
+
+**2026-08-31 (postal, later the same day):** the same Word file was then edited for the seller **postal index only** (`153000` → `153025`). See §4. Warranty 12 months / start-from-transfer, returns, claims, and other clauses were not changed in that pass.
 
 ---
 
@@ -111,7 +113,7 @@ After (same clause; start rule unchanged):
 12 (Двенадцать) месяцев с момента передачи Товара
 ```
 
-Structural check: only `word/document.xml` content hash changed; zip member list unchanged; three Word runs only (`18`→`12`, `В`→`Д`, `осемнадцать`→`венадцать`). Delivery `18.00` window, postal `153000`, returns/PP 55, claims days, and requisites **not** edited.
+Structural check: only `word/document.xml` content hash changed; zip member list unchanged; three Word runs only (`18`→`12`, `В`→`Д`, `осемнадцать`→`венадцать`). Delivery `18.00` window, then-current postal `153000`, returns/PP 55, claims days, and requisites **not** edited in the warranty pass. Postal index was reconciled in a later same-day pass (§4).
 
 ```text
 CURRENT CONTRACT TEMPLATE WARRANTY = 12 MONTHS
@@ -138,31 +140,54 @@ RECONCILED UNDER OD-04 = B
 | Delivery tariffs | Moscow 2000; МО 1000+50/km; lift %; assembly 3% | `OD-02 = B` quote-only | intentional divergence | do not publish tariff |
 | Payment | cash to cashier and/or bank transfer; prepayment mechanics | `OD-05 = A` manager → invoice / PaymentLink | website constrained | preserve OD-05; do not rewrite site to cashier story |
 | Returns | §5.10 + ПП РФ №55 от 19.01.1998; household furniture proper quality non-returnable | `OD-03 = B` manager-assisted + legal baseline; full SOP open | outdated contract wording | `LEGAL REFERENCE REQUIRES CURRENT LEGAL REVIEW` / `DO NOT PUBLISH AS-IS` |
-| Postal index | `153000`, Иваново, Дзержинского 39, оф. 514 | owner card / `woodright-seller.ts` `153025` | conflict | `POSTAL_INDEX_RECONCILIATION_REQUIRED` - do not guess |
+| Postal index | **153025**, Иваново, Дзержинского 39, оф. 514 (verified Word 2026-08-31; previous wording **153000**) | owner card / `woodright-seller.ts` `153025` | **aligned** | historical CTR-2026 `153000` retained as provenance |
 | Bank details | present in contract (legitimate in customer paper) | `OD-10 = B` not public on website | contextual difference | OK in contract / invoice; never copy account numbers into website SoT |
 | Bespoke / spec | custom sizes + sketches in Счёт-заказ | Woodright Bespoke = same entity as «По проекту»; no cart | aligned concept | preserve; `BESPOKE` ≠ automatic no-return |
 
 ---
 
-## 4. Postal index evidence
+## 4. Postal index evidence (reconciled 2026-08-31)
 
-Do **not** change the contract index from this file. Company-card / owner confirmation is required to pick a side. EGRUL aggregators are not a substitute owner authority here.
+Primary authority is the owner company card (`CURRENT OWNER CONFIRMED`, 2026-08-15), not aggregators. EGRUL aggregators are corroboration only. FNS `egrul.nalog.ru` interactive extract was not obtained this cycle (search UI without a session returned no extract); that absence is **not** a contradiction.
 
-| Source | Address | Postal index | Authority / status |
+| Source | Address | Postal index | Classification |
 | --- | --- | --- | --- |
-| Owner company card (2026-08-15), recorded in `docs/owner/legal-content-owner-review.md` | г. Иваново, ул. Дзержинского, д. 39, оф. 514 | **153025** | `CURRENT OWNER CONFIRMED` for new-site identity |
-| Canonical `apps/storefront/src/lib/legal/woodright-seller.ts` | same street/office | **153025** | follows owner card (code **not** changed this cycle) |
+| Owner company card (2026-08-15), recorded in `docs/owner/legal-content-owner-review.md` | г. Иваново, ул. Дзержинского, д. 39, оф. 514 | **153025** | `CURRENT OWNER CONFIRMED` |
+| Canonical `apps/storefront/src/lib/legal/woodright-seller.ts` | same street/office | **153025** | `CURRENT CANONICAL IMPLEMENTATION` (code **not** changed this cycle) |
+| `docs/content-audit/SITE_COMMERCIAL_SERVICE_SOT.md` / `OWNER_DECISIONS.md` OD-01 | same | **153025** | `CURRENT GOVERNANCE` |
 | `docs/content-audit/FACT_LEDGER.md` LEG-001 | same | **153025** | owner card |
-| 2026 client contract template (CTR-2026) | same street/office | **153000** | `CONTRACT — 2026 TEMPLATE` |
-| Live CS-Cart legal HTML | not used as index authority this cycle | n/a | legacy public |
+| Current 2026 client Word template (CTR-2026, after 2026-08-31 postal edit) | `153025 г. Иваново, ул. Дзержинского,39, оф 514` | **153025** | `CONTRACT TEMPLATE` aligned |
+| CTR-2026 Word before postal edit (same file, post-warranty CAS) | `153000 г. Иваново, ул. Дзержинского,39, оф 514` | **153000** | `HISTORICAL` / previous contract-template value |
+| Live CS-Cart legal HTML | not used as index authority this cycle | n/a | `LEGACY` public |
 
 ```text
-POSTAL_INDEX_RECONCILIATION_REQUIRED
-153025 = company card / current seller source for the new site
-153000 = 2026 contract template
-Do not invent a third index.
-Do not silently rewrite the Word template postal code in this cycle.
+CURRENT AUTHORITATIVE POSTAL INDEX = 153025
+CURRENT SELLER POSTAL INDEX = 153025
+CURRENT CONTRACT TEMPLATE POSTAL INDEX = 153025
+PREVIOUS CONTRACT TEMPLATE VALUE = 153000
+AUTHORITY = CURRENT OWNER CONFIRMED COMPANY CARD
+ACTUAL WORD SOURCE UPDATED = YES
+STATUS = POSTAL INDEX RECONCILED
+CTR-2026 previously contained 153000
 ```
+
+### Verification 2026-08-31 (Europe/Moscow) - postal
+
+CAS continuity from the verified post-warranty Word (`7770b1fe6cbf3af51448e66e6aefe6b907833993048db9f89dbec3049167fb20`) held before the postal edit (`WORD_CAS_CONTINUITY = PASS`). Immutable sibling backup (not in git): `ДОГОВОР с клиентами Роэл-Техник.PRE-POSTAL-153000.20260831T184508.docx`. `BACKUP_SHA256` equals the pre-postal source SHA.
+
+| CAS | SHA-256 |
+| --- | --- |
+| Pre-postal source / PRE-POSTAL backup (post-warranty Word) | `7770b1fe6cbf3af51448e66e6aefe6b907833993048db9f89dbec3049167fb20` |
+| Post-postal active template | `d5adce0e3de51b4b440f817c491f99522a1b33fe4f13831a09d28cb96fe3ad65` |
+
+Exact seller-requisites run (Word punctuation preserved; one `w:t` run only):
+
+```text
+before: 153000 г. Иваново, ул. Дзержинского,39, оф 514
+after:  153025 г. Иваново, ул. Дзержинского,39, оф 514
+```
+
+Structural check: only `word/document.xml` content hash changed; zip member list unchanged; one text run (`153000` → `153025`). Warranty `12 (Двенадцать) месяцев с момента передачи Товара` unchanged. Seller, street, house, office, ОГРН, ИНН, КПП, payment, delivery, claims, returns, and bank requisites unchanged. Binary **not** in git.
 
 ---
 
@@ -242,7 +267,7 @@ Observed from CTR-2026 persist + live `/dogovor-postavki/` lineage. **Not** a ma
 | --- | --- | --- | --- |
 | CTI-P0-01 | P0 (closed 2026-08-31 for *Word template term*) | Was: warranty **18** vs `OD-04 = B` **12** | Word source verified `12 (Двенадцать) месяцев с момента передачи Товара`. Live CS-Cart 18 months still legacy. |
 | CTI-P0-02 | P0 | Returns §5.10 + PP 55 (1998) as furniture non-return rule | do not publish; legal review; keep OD-03 = B nuance |
-| CTI-P0-03 | P0 | Postal `153000` vs owner card `153025` | `POSTAL_INDEX_RECONCILIATION_REQUIRED` |
+| CTI-P0-03 | P0 (closed 2026-08-31 for *Word template index*) | Was: postal **153000** vs owner card **153025** | Word source verified `153025 г. Иваново, ул. Дзержинского,39, оф 514`. Historical `153000` retained as provenance. |
 | CTI-P1-01 | P1 | Warranty claim **5 working days** vs dispute **5 calendar days** | keep both as provenance; no public SLA |
 | CTI-P1-02 | P1 | DIY delivery/lift/assembly vs warranty - must keep manufacturing-defect exception | do not broaden |
 | CTI-P1-03 | P1 | Natural-material sentence can be over-read as a blanket defect waiver | keep SoT narrow wording |
@@ -266,7 +291,7 @@ Delivery/payment **tariffs and cashier wording** are intentional website diverge
 | Historical 18-month CTR-2026 wording | retained as provenance |
 | Warranty start in template | from transfer - unchanged |
 | `/warranty` obligor / exclusions / start *copy* | still `LEGAL REVIEW` |
-| Postal index | **open** (`POSTAL_INDEX_RECONCILIATION_REQUIRED`) |
+| Postal index | **closed** (`WOODRIGHT_POSTAL_INDEX_RECONCILED`; previous CTR-2026 value `153000`) |
 | Returns SOP | **open** (`OD-03 = B` model only) |
 | Public claims SLA | **must not add** (`OD-06B`) |
 | Full legal pack token | `OWNER_LEGAL_CONTENT_APPROVED` **not** issued |
