@@ -1,9 +1,9 @@
 import type { Metadata } from "next"
+import { seo } from "@/lib/woodright-copy"
 
 export const metadata: Metadata = {
-  title: { default: "Woodright Bespoke", template: "%s | Woodright Bespoke" },
-  description:
-    "Мебель по проекту Woodright: подбор мебели, отделок и состава комнаты под интерьер или индивидуальную задачу.",
+  title: seo.bespoke.title,
+  description: seo.bespoke.description,
 }
 
 export default function BespokeLayout({

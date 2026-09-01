@@ -36,7 +36,7 @@ import {
   type BuyerClosePeerDetail,
 } from "@/lib/buyer-dialog-a11y"
 import { useCspNonce } from "@/lib/csp-nonce"
-import { a11yCopy, catalogUiCopy } from "@/lib/woodright-copy"
+import { a11yCopy, catalogUiCopy, nav as navCopy } from "@/lib/woodright-copy"
 
 function subscribeBuyerMobileMq(onChange: () => void) {
   const mq = window.matchMedia(BUYER_MOBILE_MQ)
@@ -713,11 +713,11 @@ export function CatalogFilterControls({
             )
           })}
         </nav>
-        {/* Отдельный сценарий (переход в Bespoke), поэтому вне
-            segmented control — тёмной pill-кнопкой рядом. */}
+        {/* Отдельный сценарий (переход в «По проекту»), поэтому вне
+            segmented control - тёмной pill-кнопкой рядом. */}
         {hasBespokeTab && (
           <Link href="/bespoke" className="catalog-bespoke-cta" scroll={false}>
-            Bespoke
+            {navCopy.bespoke}
           </Link>
         )}
       </div>
