@@ -144,7 +144,7 @@ const offerText = legalPageText("offer")
 assert.match(offerText, /12 месяцев/)
 assert.match(offerText, /с момента передачи товара покупателю/)
 assert.match(offerText, /ООО «Роэл-Техник»/)
-assert.match(offerText, /Ярлык Bespoke/)
+assert.match(offerText, /Ярлык «По проекту»/)
 assert.doesNotMatch(offerText, /акцепт происходит/)
 
 for (const slug of FOOTER_LEGAL_SLUGS) {
