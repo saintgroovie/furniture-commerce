@@ -16,10 +16,10 @@ Related closed: `OD-01 = A`, `OD-02 = B`, `OD-03 = B`, `OD-04 = B`, `OD-05 = A`,
 OD-03 = B — OWNER CONFIRMED
 RETURNS_LAUNCH_MODEL = MANAGER_ASSISTED
 MANDATORY_CONSUMER_RIGHTS = PRESERVED
-WOODRIGHT_CUSTOM_RETURN_SOP = NOT YET APPROVED
-CURRENT_RETURN_POLICY_SOT = PARTIAL
-WOODRIGHT_APPROVED_RETURN_POLICY = NOT FOUND
-LEGAL_BASELINE = EXTERNAL VERIFICATION (not OWNER CONFIRMED)
+WOODRIGHT_CUSTOM_RETURN_SOP = NOT YET APPROVED   ← historical 2026-08-19
+WOODRIGHT_CUSTOM_RETURN_SOP = VERIFIED_AND_READY (2026-09-01; docs/owner/returns-sop.md)
+CURRENT_RETURN_POLICY_SOT = SOP READY; STOREFRONT NOT SHIPPED
+LEGAL_BASELINE = VERIFIED 2026-09-01 (`docs/owner/returns-sop.md` + ledger; not a new OD)
 DEMO_MAGAZIN_RETURN_COPY = INVALID
 LEGACY_14_DAYS = REJECT AS NEW-SITE SOT
 LEGACY_14_DAYS = NOT OWNER-RATIFIED RETURN WINDOW
@@ -39,7 +39,7 @@ TOKEN = OWNER_DECISION_OD03_B_MANAGER_ASSISTED_RETURNS_WITH_LEGAL_BASELINE
 WOODRIGHT_OD03_MANAGER_ASSISTED_RETURNS_OWNER_RATIFIED
 ```
 
-`FACT — CURRENT OWNER CONFIRMED` applies **only** to the manager-assisted launch interaction model. Statutory windows stay `EXTERNAL VERIFICATION`. Combined SoT remains **`PARTIAL`** because custom SOP / logistics / mapping are still missing.
+`FACT — CURRENT OWNER CONFIRMED` applies **only** to the manager-assisted launch interaction model. Statutory windows stay `EXTERNAL VERIFICATION` (not owner-chosen numbers). Combined custom SOP is **verified 2026-09-01**; storefront `/returns` is not shipped. Extra goodwill still not chosen.
 
 ---
 
@@ -56,7 +56,7 @@ Primary sources (ConsultantPlus texts of the statutes, 2026-08-17):
 - Возврат денег - не позднее **10 дней** с требования; продавец вправе удержать расходы на доставку **от потребителя** возвращённого товара.
 - Недостаток при дистанционной продаже → **ст. 18–24** того же закона (не «окно 7 дней» как для надлежащего качества).
 
-**Постановление КС РФ от 17.02.2026 N 7-П:** Consultant отмечает, что п. 3 и п. 4 ст. 26.1 признаны **частично** не соответствующими Конституции. Применение к Woodright до изменения закона: **`LEGAL REVIEW`**, не owner choice «соблюдать / не соблюдать».
+**Постановление КС РФ от 17.02.2026 N 7-П:** п. 3 и п. 4 ст. 26.1 признаны не соответствующими Конституции **в части отсутствия дистанционного способа возврата**. Окна 7 дней / 3 месяца и индивидуально-определённое исключение **не отменены**. Впредь до поправки закона: покупатель выбирает способ возврата (в т.ч. перевозчик / связь), несёт риск и транспорт; продавец должен иметь возможность проверить товар при получении. Official: Российская газета 12.03.2026. Application: `docs/owner/returns-sop.md` (verified 2026-09-01).
 
 **Постановление Правительства РФ от 31.12.2020 N 2463**, перечень непродовольственных товаров надлежащего качества, не подлежащих обмену, п. 8: **«Мебельные гарнитуры бытового назначения»**. ConsultantPlus note on that list (2026-08-17): **к дистанционному способу продажи данный перечень не применяется** (ссылка на Информацию Роспотребнадзора). Это **не** основание объявить весь каталог Woodright невозвратным. Ст. 25 / перечень 2463 ≠ ст. 26.1. Маппинг «гарнитур» на конкретный SKU при **недистанционной** продаже: **`LEGAL REVIEW`**.
 
@@ -64,7 +64,7 @@ Primary sources (ConsultantPlus texts of the statutes, 2026-08-17):
 
 **Информация Роспотребнадзора** «О новых правилах продажи товаров в розницу» ([Consultant](https://www.consultant.ru/document/cons_doc_LAW_373815/)): возврат **некачественного** товара - за счёт продавца; для надлежащего качества договор может освободить потребителя от оплаты обратной доставки. Срок ответа на претензию в публичном SoT Woodright **не задан** (`OD-06B` = no extra commercial SLA; `OD-06A` = LEGAL REVIEW). Не использовать SEO-комментарии Consultant «мебель по заказу не возвращается» как primary source.
 
-**Где нужен LEGAL REVIEW, а не blanket rule:** штатные опции CONFIGURABLE (обивка/размер из линейки) vs нестандарт за пределами пресетов; BESPOKE / «По проекту»; изготовление после заказа стандартного SKU; что именно «может быть использовано исключительно этим потребителем»; эффект КС РФ 17.02.2026 № 7-П.
+**Где нужен LEGAL REVIEW на *конкретный заказ*, а не blanket rule:** штатные опции CONFIGURABLE vs нестандарт за пределами пресетов; является ли конкретный RoomSet **гарнитуром** для ст. 25 / перечень 2463 п. 8. SOP 2026-09-01 already forbids label-based bans.
 
 ---
 
@@ -87,8 +87,8 @@ Three layers (do not collapse):
 | Layer | Role |
 | --- | --- |
 | LEGAL BASELINE | ЗоЗПП 26.1 / 18–24; KS 7-П; PP 2463 note on remote sale. Not owner-selectable |
-| WOODRIGHT POLICY | Approved process, channel, extra goodwill. **NOT FOUND** as a document |
-| BUYER-FACING COPY | Explains the two layers. Not a source of law. Not implemented |
+| WOODRIGHT POLICY | Approved process + extra goodwill. Process: `docs/owner/returns-sop.md` (2026-09-01). Extra goodwill **not** chosen. Historical «NOT FOUND» below is pre-SOP research |
+| BUYER-FACING COPY | Explains the two layers. Not a source of law. **Not implemented** |
 
 ---
 
@@ -113,19 +113,19 @@ This matrix is **not** launch copy and **not** a production no-return policy. OD
 
 | Scenario | Current Woodright rule | Legal baseline | Evidence | Status |
 | --- | --- | --- | --- | --- |
-| Standard, good quality | **MISSING** current policy | Remote: ст. 26.1 (7 дней / 3 мес.; individually-defined exception) | rem stub; live 14 days invalid | `MISSING` + `LEGAL REVIEW` |
-| Standard, defect | **MISSING** | ст. 18–24 | oferta/dogovor historical; rem: contact manager | `MISSING` process |
-| Configurable, good quality | **MISSING** | 26.1 + individually-defined test | oferta 13.3 over-claims | `LEGAL REVIEW` |
-| Configurable, defect | **MISSING** | ст. 18–24 | none current | `MISSING` |
-| Bespoke, good quality | **MISSING** | individually-defined *may* apply; not automatic | classification ≠ law | `LEGAL REVIEW` |
-| Bespoke, defect | **MISSING** | ст. 18–24 still apply to consumers | none current | `MISSING` / `LEGAL REVIEW` |
-| Damage at delivery | **MISSING** current SOP | inspect on receipt; not the same as warranty (`OD-04`) | oferta 11.7 signature = no claims on appearance; dogovor акт на площадке | `PARTIAL` historical / `MISSING` now |
-| Wrong / incomplete | Live page: notify in **7 calendar days** (legacy) | not adopted | dump/live vozvrat | `STALE`; current `MISSING` |
-| Cancel before PaymentLink (unpaid order) | **MISSING** | Order exists under `OD-05` before pay; abandon vs contract `LEGAL REVIEW` | checkout + PaymentLink module | `MISSING` ops |
-| Cancel after PaymentLink, before pay | **MISSING** | Same | no SOP | `MISSING` |
-| Cancel after pay, before production / before handover | **MISSING** ops | 26.1: refuse **anytime before transfer** (`LEGAL REQUIREMENT` for consumer remote sale) | statute; no Woodright SOP | `PARTIAL` law / `MISSING` ops |
-| Cancel after production started, before handover | **MISSING** | May still be «before transfer»; individually-defined + actual costs **LEGAL REVIEW**. No retainer / cancellation-fee SoT | none current | `MISSING / LEGAL REVIEW` |
-| Cancel after handover | see good-quality / defect rows | 26.1 after transfer / 18–24 | - | - |
+| Standard, good quality | SOP 2026-09-01: remote 26.1 unless facts meet individually-determined test | ст. 26.1 | `docs/owner/returns-sop.md` | `ANSWERABLE` as SOP; storefront not shipped |
+| Standard, defect | SOP: ст. 18–24; buyer chooses statutory remedy | ст. 18–24 | same | `ANSWERABLE` as SOP |
+| Configurable, good quality | Preset option ≠ automatic exception. Run 26.1 test on facts | 26.1 | SOP + ledger | `ANSWERABLE` as principle; SKU facts case-by-case |
+| Configurable, defect | Same as any defect | ст. 18–24 | SOP | `ANSWERABLE` as SOP |
+| Bespoke, good quality | Stronger *candidate* for individually-determined; **not** automatic no-return | 26.1 two-limb test | SOP | `ANSWERABLE` as criterion; deal facts required |
+| Bespoke, defect | ст. 18–24 still apply | ст. 18–24 | SOP | `ANSWERABLE` as SOP |
+| Damage at delivery | Visible vs hidden/manufacturing. Act does not wipe later hidden defects | inspect on receipt; not the same as warranty (`OD-04`) | SOP + historical oferta | `ANSWERABLE` as SOP; ops photos optional |
+| Wrong / incomplete | Live page: notify in **7 calendar days** (legacy) | not adopted | dump/live vozvrat | `STALE` live; current = defect/shortage SOP |
+| Cancel before PaymentLink (unpaid order) | Manager-assisted; unpaid request may be withdrawn | `OD-05` / `OD-06A` | checkout | `PARTIAL` ops |
+| Cancel after PaymentLink, before pay | Same | Same | no extra SOP | `PARTIAL` ops |
+| Cancel after pay, before production / before handover | 26.1: refuse **anytime before transfer** | `LEGAL REQUIREMENT` for consumer remote sale | SOP | `ANSWERABLE` as law; arranger ops `MISSING` |
+| Cancel after production started, before handover | May still be «before transfer»; individually-determined + actual costs case-by-case. No retainer SoT | 26.1 | SOP | `PARTIAL` / case `LEGAL REVIEW` |
+| Cancel after handover | see good-quality / defect rows | 26.1 after transfer / 18–24 | SOP | `ANSWERABLE` as SOP |
 
 ---
 
@@ -241,7 +241,7 @@ OWNER_DECISION_OD03_B_MANAGER_ASSISTED_RETURNS_WITH_LEGAL_BASELINE
 WOODRIGHT_OD03_MANAGER_ASSISTED_RETURNS_OWNER_RATIFIED
 ```
 
-Ratifies launch interaction model only. Remaining owner/legal work: cases 1–6 mapping; ops to replace live `/vozvrat/`; claims email; reverse logistics SOP; refund SOP; how much of the statutory baseline to explain on `/returns` (cannot omit mandatory consumer information at transfer).
+Ratifies launch interaction model only. SOP 2026-09-01: `docs/owner/returns-sop.md`. Remaining: extra goodwill; claims email; reverse-logistics arranger playbook; live `/vozvrat/`; Word §5.10; named-SKU гарнитур mapping.
 
 ---
 
@@ -255,7 +255,7 @@ Do not write as if the manager *sets* statutory deadlines. Do not add: 14 дне
 
 ## IA (`/returns`, does not close OD-11)
 
-`/returns` = **READY_FOR_COPY_PHASE_WITH_LEGAL_REVIEW** (not production). Separate from `/warranty` and `/offer`. Proposed H2: intro → отказаться от заказа/товара → недостаток → повреждение при доставке → некомплект → индивидуальные изделия (`LEGAL REVIEW` text, not a ban) → как обратиться → что дальше (confirmed steps only) → ссылка на оферту. Defect journey on `/returns`; warranty **scope** on `/warranty` (`OD-04`).
+`/returns` = SOP verified 2026-09-01 (`docs/owner/returns-sop.md`); **not** production. Separate from `/warranty` and `/offer`. Proposed H2: intro → отказаться от заказа/товара → недостаток → повреждение при доставке → некомплект → индивидуальные изделия (criterion, not a ban) → как обратиться → что дальше (SOP steps) → ссылка на оферту. Defect journey on `/returns`; warranty **scope** on `/warranty` (`OD-04`).
 
 ---
 
@@ -263,7 +263,7 @@ Do not write as if the manager *sets* statutory deadlines. Do not add: 14 дне
 
 ## Mandatory legal baseline
 
-Consumer remote sale (ЗоЗПП ст. 26.1): refuse before transfer anytime; after transfer 7 days (3 months if no written return info); individually-defined exception; money back in 10 days minus return-shipping from consumer; defects → ст. 18–24. KS RF 17.02.2026 N 7-П on p.3–4 → `LEGAL REVIEW`. PP 2463 p.8 furniture **sets** list is **not** a remote-sale override (Consultant note). Defect return shipping: Rospotrebnadzor Information - seller’s expense. **Not owner-selectable.**
+Consumer remote sale (ЗоЗПП ст. 26.1): refuse before transfer anytime; after transfer 7 days (3 months if no written return info); individually-defined exception; money back in 10 days minus return-shipping from consumer; defects → ст. 18–24. КС РФ 17.02.2026 N 7-П: interim **remote return method** (buyer-chosen, inspection on receipt; buyer pays transport + transit risk). PP 2463 p.8 furniture **sets** list is **not** a remote-sale override. Defect reverse shipping: Роспотребнадзор - seller’s expense. **Not owner-selectable.** SOP: `docs/owner/returns-sop.md`.
 
 ## Confirmed operational facts
 
@@ -275,7 +275,7 @@ Demo Magazin / demostore.ru / а/я 1000; 14 days (CS-Cart template + repealed P
 
 ## Still missing
 
-Approved policy SoT; claims email; photos/act SOP; reverse logistics arranger; refund rail/timing SOP; cancellation after production; product-to-legal mapping; claims SLA (`OD-06`).
+Claims email; reverse-logistics *arranger* playbook; automated refund; extra goodwill; live `/vozvrat/` cutover. Launch SOP exists (2026-09-01). Claims SLA remains `OD-06B` (no extra promise).
 
 ## Recommended launch model
 
@@ -283,10 +283,10 @@ Approved policy SoT; claims email; photos/act SOP; reverse logistics arranger; r
 
 ## Remaining after ratification (not owner «14 vs 7» choice)
 
-1. Extra goodwill beyond statutory minimum (optional).
-2. Formal claims channel vs phones as launch contact (`LEGAL REVIEW` for TG/WA as claim filing).
-3. Counsel for cases 1–6 + KS 7-П.
+1. Extra goodwill beyond statutory minimum (optional; **not** chosen 2026-09-01).
+2. Formal claims channel vs phones as launch contact (`LEGAL REVIEW` for TG/WA as exclusive filing).
+3. Named-order facts for гарнитур / exclusive-use test (case-by-case; SOP forbids label bans).
 4. Ops: replace live `/vozvrat/` (separate step).
-5. How plainly `/returns` restates statutory rights (cannot waive them).
+5. How plainly `/returns` restates statutory rights when storefront ships.
 
-Not remaining as a choice: comply vs not comply with ЗоЗПП; inherit 14; Demo Magazin; `BESPOKE = невозвратный`; две политики для «По проекту» и Bespoke.
+Not remaining as a choice: comply vs not comply with ЗоЗПП; inherit 14; Demo Magazin; `BESPOKE = невозвратный`; две политики для «По проекту» и Bespoke; treat PP 55 as current law.

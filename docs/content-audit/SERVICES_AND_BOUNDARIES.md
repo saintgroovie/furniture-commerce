@@ -110,4 +110,4 @@ Safer (until OD defines turnkey): `…и с комплектацией комн�
 Was: `Условия сотрудничества`
 Safer: `Дизайнерам и архитекторам` (drop «условия» until terms exist)
 
-Do **not** rewrite returns until remaining SOP/legal mapping; warranty **term** is closed (`OD-04 = B` = 12 months) but start/obligor/exclusions still `LEGAL REVIEW`. Delivery **pricing** (`OD-02 = B`) and payment (`OD-05 = A`) are ready for copy phase - storefront not updated in the ratification tasks. Do not add lift/assembly/pickup/geography to `/delivery` without further owner authority. Warranty pack: `OD04_WARRANTY_VERIFICATION.md`.
+Returns SOP verified 2026-09-01 (`docs/owner/returns-sop.md`); storefront `/returns` not shipped. Warranty **term** 12 months (`OD-04 = B`); start / seller-obligor / narrow exclusions in `docs/owner/warranty-public-policy.md` (spec ready; storefront not shipped). Delivery **pricing** (`OD-02 = B`) and payment (`OD-05 = A`) remain copy-phase - storefront not updated in the ratification tasks. Do not add lift/assembly/pickup/geography to `/delivery` without further owner authority.

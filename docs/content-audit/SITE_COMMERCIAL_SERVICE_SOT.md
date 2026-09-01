@@ -14,6 +14,9 @@ Related boards (do not treat as competing SoT):
 | `docs/content-audit/OWNER_DECISIONS.md` | Compact OD board. Owner decisions here remain authoritative. |
 | `docs/owner/legal-content-owner-review.md` | Seller identity packet. Full legal pack still `owner_review`. |
 | `docs/owner/contract-template-reconciliation.md` | Word-template warranty-term and postal-index record (`OD-04 = B`; postal `153025`). External `.docx` verified **12 months** and **153025** 2026-08-31. Not a replacement contract. |
+| `docs/owner/returns-sop.md` | Launch returns SOP (`RETURNS_SOP_VERIFIED_AND_READY`). Not production `/returns` copy. |
+| `docs/owner/warranty-public-policy.md` | `/warranty` public-policy spec (`WARRANTY_PUBLIC_POLICY_VERIFIED_AND_READY`). Not production copy. |
+| `docs/content-audit/RETURNS_WARRANTY_LEGAL_LEDGER.md` | Current-law ledger (ст. 26.1 / 18–25 / PP 2463 / КС 7-П). Not a second SoT. |
 | `docs/content-audit/FACT_LEDGER.md` | Research ledger. Evidence, not a second commercial policy. |
 | `docs/content-audit/OD02_*.md` … `OD05_*.md` | Verification packs for individual ODs. |
 | `docs/content-audit/BESPOKE_POSITIONING.md` | Product/IA positioning for Woodright Bespoke. |
@@ -110,10 +113,12 @@ Token: `OWNER_DECISION_OD02_B_DELIVERY_QUOTE_ONLY`
 Recorded board: `OD-03 = B` (2026-08-19) - launch **communication/process** = manager-assisted; mandatory consumer rights preserved.  
 Token: `OWNER_DECISION_OD03_B_MANAGER_ASSISTED_RETURNS_WITH_LEGAL_BASELINE`
 
-**Public returns policy / SOP / contract §5.10:** `OPEN` / **not ratified** as standalone website copy.  
-Do not publish a self-contained new returns policy until owner/legal closure of remaining gates.  
-`OD-03 = B` is **not** legal approval of all return clauses.  
+**Launch SOP (2026-09-01):** `docs/owner/returns-sop.md` - `RETURNS_SOP_VERIFIED_AND_READY`. Manager-assisted; statutory remote / defect / individually-determined tests recorded. Extra goodwill window **not** chosen.
+
+`OD-03 = B` is still **not** `OWNER_LEGAL_CONTENT_APPROVED`.
+
 `BESPOKE` label is **not** an automatic no-return rule.
+Contract §5.10 / PP 55: `SUPERSEDED / NOT CURRENT PUBLIC AUTHORITY` - do not publish. Future Word mutation.
 
 ### OD-04 - Warranty
 
@@ -417,18 +422,16 @@ VERIFIED = 2026-08-31
 
 Do **not** change the website 12 → 18. Do **not** treat live CS-Cart 18 months as current template. Evidence: `docs/owner/contract-template-reconciliation.md`.
 
-Physical contract **term** alignment does **not** close `/warranty` obligor, exclusions, or start-*copy* `LEGAL REVIEW`.
+Physical contract **term** alignment plus 2026-09-01 legal verification **closes** the public-policy spec for start / seller-obligor / narrow exclusions: `docs/owner/warranty-public-policy.md` (`WARRANTY_PUBLIC_POLICY_VERIFIED_AND_READY`). Storefront `/warranty` is still not implemented. `OWNER_LEGAL_CONTENT_APPROVED` is not issued.
 
 ### Start date
 
 Contract: warranty starts **at transfer of the goods to the buyer**.  
-Status: `CONTRACT CONFIRMED` (as contract wording). Unchanged in the 2026-08-31 Word edit.
+Status: `CONTRACT CONFIRMED`. ЗоЗПП ст. 19 п. 2 matches. Public-policy wording **verified 2026-09-01** (not a new OD):
 
-Website semantic model with `OD-04 = B`:
+> Гарантийный срок - 12 месяцев с момента передачи товара покупателю
 
-> 12 месяцев с момента передачи товара покупателю
-
-`OD-04` verification still leaves public start *wording* as `LEGAL REVIEW` for the `/warranty` page. Term alignment ≠ full warranty legal-page approval.
+Implementation of that sentence on `/warranty` is a later storefront task.
 
 ### What is a warranty case
 
@@ -494,17 +497,17 @@ Do not promise a work list or SLA without further confirmation.
 **Do not use contract §5.10 as new-site returns copy.**  
 Tag: `DO NOT USE CONTRACT §5.10 AS NEW-SITE RETURNS COPY`
 
-The template cites `Постановление Правительства РФ №55 от 19.01.1998` and treats household furniture of proper quality as non-returnable/non-exchangeable.
+The template cites `Постановление Правительства РФ №55 от 19.01.1998` (`SUPERSEDED` from 01.01.2021; current list is ПП 2463 п. 8 **гарнитуры**, and **not** a remote-sale override).
 
-Do **not** port that as a universal current-site rule:
+Do **not** port §5.10 as a universal current-site rule:
 
-- it needs current legal review;
-- distance-selling rules are not automatically replaced by in-salon rules;
+- PP 55 is not current public authority;
+- distance-selling (ст. 26.1 + КС 7-П) is not replaced by in-salon ст. 25;
 - a `BESPOKE` label is not an automatic returns ban;
 - buyer rights depend on the legal circumstances of the specific sale.
 
-Launch communication model (`OD-03 = B`): manager-assisted; statutory rights preserved.  
-**Full public returns policy:** `OPEN` / not ratified.
+Launch communication model (`OD-03 = B`) plus verified SOP: `docs/owner/returns-sop.md`.
+Storefront `/returns` still not shipped. Extra goodwill **not** chosen.
 
 Showroom/exposition goods (special case, `CONTRACT CONFIRMED`): buyer inspects visually; condition is recorded in the Счёт-заказ or act; known defects are recorded. Do not apply this to the whole catalogue.
 
@@ -571,12 +574,12 @@ Safe storage FAQ sense (not a published penalty):
 | Natural wood | Variation ≠ defect by itself | Contract | `SAFE WITH EDITORIAL ADAPTATION` | Not a blanket defect waiver |
 | Upholstery batches | Slight shade difference | Contract | `SAFE WITH EDITORIAL ADAPTATION` | |
 | Warranty term | Website **12 months**; current Word template **12 months** | OD-04 + verified CTR-2026 | `ALIGNED` (term) | Live CS-Cart 18 months = legacy. History: template was 18 until 2026-08-31 |
-| Warranty start | From transfer | Contract | `SAFE WITH EDITORIAL ADAPTATION` for *sense*; `/warranty` start sentence still `LEGAL REVIEW` | |
+| Warranty start | From transfer | Contract + ст. 19 п. 2 | `SAFE WITH EDITORIAL ADAPTATION`; spec closed 2026-09-01; `/warranty` not shipped | |
 | Warranty defects | Manufacturing defects; seller remedies | Contract | `SAFE WITH EDITORIAL ADAPTATION` | |
 | Claims SLA | Not a public Woodright promise; contract 5 working / 5 calendar days | OD-06B + contract | `OWNER DECISION` (no extra SLA) + contract provenance | Do not publish 5 days |
 | Claims channel | Khimki showroom address in contract | Contract | `VERIFY CURRENT OPS` | Not the only channel |
 | After-warranty service | Paid service possible | Contract | `SAFE WITH EDITORIAL ADAPTATION` | No SLA/list |
-| Returns | Manager-assisted model; §5.10 not copy | OD-03 B + OPEN policy | `OPEN LEGAL GATE` | No PP 55; no Bespoke auto-ban |
+| Returns | Manager-assisted + verified SOP | OD-03 B + `returns-sop.md` | `SOP READY`; `/returns` not shipped | PP 55 superseded; no Bespoke auto-ban |
 | Bespoke | Spec/sketch/manager; no cart | Contract + product model | `OWNER DECISION` | Not “we make anything” |
 | Deferred delivery | 6-month hold then seller may revise | Contract | `INTERNAL ONLY` | |
 
@@ -586,15 +589,15 @@ Safe storage FAQ sense (not a published penalty):
 
 ### GATE-WARRANT-TERM (closed 2026-08-31 for Word vs website)
 
-Current Word template **12 months** and `OD-04 = B` **12 months** are aligned. Previous CTR-2026 wording **18 months** is historical provenance. Live CS-Cart 18 months remains `LEGACY PUBLIC DIVERGENCE`. Record: `docs/owner/contract-template-reconciliation.md`. `/warranty` obligor/exclusions/start copy remain `LEGAL REVIEW`.
+Current Word template **12 months** and `OD-04 = B` **12 months** are aligned. Previous CTR-2026 wording **18 months** is historical provenance. Live CS-Cart 18 months remains `LEGACY PUBLIC DIVERGENCE`. Record: `docs/owner/contract-template-reconciliation.md`. Public-policy spec (start / seller-obligor / narrow exclusions): `docs/owner/warranty-public-policy.md`. Storefront `/warranty` not shipped.
 
 ### GATE-CLAIMS-SLA / acceptance
 
 `OD-06B`: no public Woodright SLA. Contract 5 working vs 5 calendar days remain provenance. `OD-06A`: civil-law acceptance moment is `LEGAL REVIEW`, not an owner-closed rule.
 
-### GATE-RETURNS (P0)
+### GATE-RETURNS (SOP closed 2026-09-01; storefront not shipped)
 
-Full returns policy open. Do not ship contract §5.10 / PP 55. `OD-03 = B` is communication model only.
+Launch SOP: `RETURNS_SOP_VERIFIED_AND_READY`. Do not ship contract §5.10 / PP 55 (`SUPERSEDED`). `OD-03 = B` remains the communication model. Extra goodwill / live `/vozvrat/` cutover / Word §5.10 remain follow-ups.
 
 ### GATE-POSTAL-INDEX (closed 2026-08-31)
 
@@ -634,8 +637,8 @@ Do **not** rewrite buyer-facing product pages in the task that only maintains th
 | --- | --- | --- | --- |
 | `docs/content-audit/CONFLICTS.md` CF-03 | Website term 12 months (`OD-04 = B`); **current Word template 12 months** (verified 2026-08-31). Historical CTR-2026 wording was 18 months | closed for template-vs-website term | Live CS-Cart 18 months still `LEGACY PUBLIC DIVERGENCE` |
 | `docs/content-audit/OWNER_DECISIONS.md` / `OD04_WARRANTY_VERIFICATION.md` | `LEGACY_18_MONTHS = NOT NEW-SITE SOT` | P2 docs | Do not flip OD-04 to 18. Template term now matches |
-| `docs/content-audit/OD04_WARRANTY_VERIFICATION.md` start section | Public «12 месяцев с момента передачи» still `LEGAL REVIEW` for `/warranty` copy | P2 | Contract start-from-transfer is provenance; term alignment ≠ page approval |
-| Canonical `apps/storefront/src/lib/woodright-copy.ts` and `apps/storefront/src/lib/legal/legal-content.ts` | Buyer-facing «Гарантия Woodright - 12 месяцев» | aligned (term) | Matches `OD-04 = B` and current Word template. Do **not** change 12 → 18. Obligor/exclusions still open. |
+| `docs/content-audit/OD04_WARRANTY_VERIFICATION.md` start section | Public start wording **verified** in `warranty-public-policy.md` (2026-09-01); `/warranty` still unimplemented | P2 | Spec ≠ storefront ship |
+| Canonical `apps/storefront/src/lib/woodright-copy.ts` and `apps/storefront/src/lib/legal/legal-content.ts` | Buyer-facing «Гарантия Woodright - 12 месяцев»; no start / seller / exclusions | term aligned; spec 2026-09-01 has start/obligor/exclusions | Next implementation cycle; **do not** change 12 → 18 |
 | Live `https://woodright.ru/oferta/` | Public 18-month warranty + bank block | P0 live (legacy) | Already `LEGACY PUBLIC DIVERGENCE`; not this repo’s storefront |
 | Live `https://woodright.ru/dostavka-i-sborka/` | Fixed ₽/% tariffs | P0 live | Conflicts with `OD-02` |
 | Live `https://woodright.ru/vozvrat/` | 14 days + ООО «Демо Магазин» + PP 55 | P0 live | `LEGACY PUBLIC DEFECT` |
@@ -657,4 +660,5 @@ No second commercial SoT should be created. Point here instead of restating tari
 | 2026-08-30 | Warranty 12/18: added controlled Word amendment (`docs/owner/contract-template-reconciliation.md`). Gate stays open until the external template is edited. Postal index still `POSTAL_INDEX_RECONCILIATION_REQUIRED`. No buyer-facing code. |
 | 2026-08-31 | External Word template warranty term verified `18 → 12` months (start-from-transfer unchanged). Template vs website term **aligned**. Historical 18-month wording retained. Postal/returns/claims gates unchanged at that pass. No buyer-facing code. |
 | 2026-08-31 | External Word template seller postal index verified `153000 → 153025` (warranty 12 months unchanged). Owner card / seller source / current template **aligned**. Historical `153000` retained. Returns/claims/`/warranty` copy gates unchanged. No buyer-facing code. |
+| 2026-09-01 | Returns SOP + warranty public-policy spec verified (no Word / storefront mutation). PP 55 classified `SUPERSEDED`. КС 7-П interim remote-return method recorded. Postal and warranty **term** unchanged. |
 )

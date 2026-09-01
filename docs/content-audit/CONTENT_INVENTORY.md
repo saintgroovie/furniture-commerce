@@ -6,8 +6,8 @@
 | --- | --- | --- | --- | --- | --- | --- |
 | Доставка | `/delivery` | LEGAL-CONTENT + OD-02 = B | Как привезут / самовывоз? | **Owner-confirmed** quote-only journey; geography/lift/assembly `MISSING`/`PARTIAL` | No public tariff; do not promise extra services | Delivery hub; READY_FOR_COPY_PHASE_WITH_SERVICE_GAPS |
 | Оплата | `/payment` | LEGAL-CONTENT / checkoutCopy | Как платить? | **Owner-confirmed** PaymentLink/invoice | Page may be missing in this tree; copy phase allowed | Payment hub |
-| Возврат | `/returns` | LEGAL-CONTENT + OD-03 = B | Можно вернуть? | Launch model **owner-confirmed**; custom SOP incomplete | Window TBD legally; Demo Magazin live only | Hub; READY_FOR_COPY_PHASE_WITH_LEGAL_REVIEW |
-| Гарантия | `/warranty` | LEGAL-CONTENT + OD-04 = B | Что если недостаток / какой срок? | **Owner-confirmed** commercial term **12 months**; start/obligor/exclusions `LEGAL REVIEW` | Rem stub; no canon route; live 18m = legacy divergence | Hub; **READY_FOR_COPY_PHASE_WITH_LEGAL_REVIEW** |
+| Возврат | `/returns` | LEGAL-CONTENT + OD-03 = B | Можно вернуть? | Launch model **owner-confirmed**; SOP verified 2026-09-01 (`docs/owner/returns-sop.md`) | Storefront not shipped; Demo Magazin live only | Hub; spec ready, not production |
+| Гарантия | `/warranty` | LEGAL-CONTENT + OD-04 = B | Что если недостаток / какой срок? | **Owner-confirmed** 12 months + spec 2026-09-01 (`docs/owner/warranty-public-policy.md`) | Rem stub; live 18m = legacy divergence | Hub; spec ready, not production |
 | Оферта | `/offer` | LEGAL-CONTENT | Юр. условия продажи | Skeleton | Acceptance TBD; **seller identity now confirmed** (not wired into page yet) | Legal document |
 | Политика ПДн | `/privacy` | LEGAL-CONTENT | Что с данными? | Partial skeleton | Operator copy + privacy email still MISSING | Legal document |
 | Персональные данные | `/personal-data` | LEGAL-CONTENT | На что соглашаюсь в форме? | Partial | - | Consent companion |
@@ -48,8 +48,8 @@ Remediation footer lists full legal set while status remains `owner_review`.
 | --- | --- | --- |
 | Delivery | public CS-Cart, LEG-SQL RU ₽ page vs dogovor/EN 1%, rem `/delivery`, checkout 0 ₽ (`DEL-007`), owner OD-02 = B | Single hub; quote-only COPY; do not port ₽ |
 | Payment | public, rem `/payment`, checkout `paymentClarity`, offer | Hub + checkout short |
-| Returns | public polluted, rem stub, offer refs | Hub after OD |
-| Warranty | owner-set 12 months (`OD-04 = B`); live `/oferta/` 18m = `LEGACY PUBLIC DIVERGENCE`; dump generic 12m = not source; rem stub; no canon route | Hub READY_FOR_COPY_PHASE_WITH_LEGAL_REVIEW; pack `OD04_WARRANTY_VERIFICATION.md`; do not port 18m |
+| Returns | public polluted, rem stub, offer refs | Hub after SOP: `docs/owner/returns-sop.md` (2026-09-01). Storefront not shipped |
+| Warranty | owner-set 12 months (`OD-04 = B`); spec 2026-09-01 `docs/owner/warranty-public-policy.md`; live `/oferta/` 18m = `LEGACY PUBLIC DIVERGENCE`; rem stub | Hub spec ready, not production; do not port 18m |
 | Contacts | showroom SoT, public footer (hours/emails extra), legal pages embed showroom | Showroom SoT primary |
 | Designers vs Bespoke | three designer pages + bespoke request | Keep separate pages: Bespoke = what Woodright can make; Designers = how professionals work with Woodright. Shared request form OK; do not duplicate story |
 

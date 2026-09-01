@@ -3,7 +3,9 @@
 Date: 2026-08-12 (Europe/Moscow)
 Mode: read-only (+ local `docs/content-audit/` only)
 
-**Addendum 2026-08-19 (OD-04 = B ratification):** owner set launch commercial warranty term = **12 months** (`OWNER_DECISION_OD04_B_WARRANTY_12_MONTHS_OWNER_SET`). Provenance = explicit owner decision, **not** generic dump 12 months and **not** live 18 months. Research addendum below stays historical (`NOT FOUND` before this decision). `/warranty` READY_FOR_COPY_PHASE_WITH_LEGAL_REVIEW. Start/obligor/exclusions still `LEGAL REVIEW`. Full legal pack is **still not approved**.
+**Addendum 2026-09-01:** returns SOP + warranty public-policy spec verified (`docs/owner/returns-sop.md`, `docs/owner/warranty-public-policy.md`). Start from transfer; seller commercial obligor. PP 55 = `SUPERSEDED`. Storefront / Word / live CS-Cart not mutated in that cycle. Full legal pack token still not issued.
+
+**Addendum 2026-08-19 (OD-04 = B ratification):** owner set launch commercial warranty term = **12 months** (`OWNER_DECISION_OD04_B_WARRANTY_12_MONTHS_OWNER_SET`). Provenance = explicit owner decision, **not** generic dump 12 months and **not** live 18 months. Research addendum below stays historical (`NOT FOUND` before this decision). At that date `/warranty` was READY_FOR_COPY_PHASE_WITH_LEGAL_REVIEW and start/obligor/exclusions were still `LEGAL REVIEW`. Full legal pack is **still not approved**.
 
 **Addendum 2026-08-19 (OD-04 research, not ratification):** approved commercial warranty SoT **`NOT FOUND`**. Live `/oferta/` re-probed HTTP 200: manufacturer **18 months from transfer**; `/dogovor-postavki/` seller **18 months**. Rem `/warranty` still empty. 12 months in dump = ИП Елисеев / CS-Cart theme. Recommended publication **C**. Pack: `OD04_WARRANTY_VERIFICATION.md`. OD-04 remains unanswered. Full legal pack is **still not approved**.
 

@@ -82,23 +82,23 @@ Current three pages share one CTA and no distinct facts. One page with sections 
 - **UX:** answer-first: оплачивать сразу на сайте не нужно → менеджер отправит ссылку или счёт
 - **Readiness:** payment facts **READY_FOR_COPY_PHASE**. Route may still be absent in this tree. Offer acceptance (`OD-06`) is a separate legal dependency - do not invent it on this page.
 
-### `/returns` — READY_FOR_COPY_PHASE_WITH_LEGAL_REVIEW (`OD-03 = B`)
+### `/returns` - spec ready 2026-09-01 (`OD-03 = B`; not production)
 
-- **SoT:** `docs/content-audit/OD03_RETURNS_VERIFICATION.md`
-- **Answers now:** contact Woodright; manager handles the case; mandatory consumer rights not waived; 14 days / Demo Magazin are **not** new-site SoT; Bespoke label is **not** automatic no-return
-- **Must not:** Demo Magazin; inherit 14; blanket «под заказ невозвратно»; duplicate `/warranty`; invent SLA (`OD-06`); invent reverse logistics / auto-refund; write as if manager *sets* statutory deadlines
-- **UX:** intro → отказаться от заказа/товара → недостаток → повреждение при доставке → некомплект → индивидуальные изделия (`LEGAL REVIEW`, not a ban) → как обратиться → что дальше (only confirmed steps) → ссылка на оферту
-- **Readiness:** **READY_FOR_COPY_PHASE_WITH_LEGAL_REVIEW**. Not `READY_FOR_PRODUCTION`. Mapping / logistics / formal channel still incomplete
+- **SoT:** `docs/owner/returns-sop.md` (+ `OD03_RETURNS_VERIFICATION.md`)
+- **Answers now:** contact Woodright; manager handles the case; mandatory consumer rights not waived; remote 26.1 / defect 18–24 / individually-determined two-limb test; 14 days / Demo Magazin are **not** new-site SoT; Bespoke label is **not** automatic no-return
+- **Must not:** Demo Magazin; inherit 14; blanket «под заказ невозвратно»; duplicate `/warranty`; invent SLA (`OD-06B`); invent extra goodwill / auto-refund; write as if manager *sets* statutory deadlines
+- **UX:** intro → отказаться от заказа/товара → недостаток → повреждение при доставке → некомплект → индивидуальные изделия (criterion, not a ban) → как обратиться → что дальше (SOP steps) → ссылка на оферту
+- **Readiness:** SOP verified. Not `READY_FOR_PRODUCTION`. Reverse-logistics arranger / claims email still incomplete
 - **Contact:** showroom phones (claims email `MISSING`; TG/WA not formal claims channel without legal review)
 
-### `/warranty` — READY_FOR_COPY_PHASE_WITH_LEGAL_REVIEW (`OD-04 = B`)
+### `/warranty` - spec ready 2026-09-01 (`OD-04 = B`; not production)
 
-- **SoT:** `docs/content-audit/OD04_WARRANTY_VERIFICATION.md`
+- **SoT:** `docs/owner/warranty-public-policy.md` (+ `OD04_WARRANTY_VERIFICATION.md`)
 - **Buyer purpose:** explain the **12-month** commercial warranty term and what to do if a defect is found
-- **Answers now:** commercial term = 12 months (owner-set 2026-08-19). Statutory defect rights preserved (`EXTERNAL VERIFICATION`). Contact = showroom phones (`OD-03`)
-- **Must not:** inherit live 18 months; treat generic dump 12 months as source; «гарантии нет»; «с момента передачи» until start is confirmed; «гарантия производителя»; Demo-style talon; assembly-void from dogovor 5.6; SLA (`OD-06`); privacy email; Bespoke-specific term from the label; duplicate `/returns` or `/offer`; invented component matrix
-- **UX:** answer-first 12 months → start only after legal/content completion → scope if confirmed → if defect found → what is needed → care only if proven → exclusions only after legal review → links to `/returns` and `/offer`
-- **Readiness:** **READY_FOR_COPY_PHASE_WITH_LEGAL_REVIEW**. Not `READY_FOR_PRODUCTION`
+- **Answers now:** commercial term = 12 months; start from transfer; seller ООО «Роэл-Техник»; statutory defect rights preserved. Contact = showroom phones (`OD-03`)
+- **Must not:** inherit live 18 months; treat generic dump 12 months as source; «гарантии нет»; «гарантия производителя»; Demo-style talon; assembly as total void; SLA (`OD-06B`); privacy email; Bespoke-specific term from the label; duplicate `/returns` or `/offer`; invented component matrix
+- **UX:** answer-first 12 months → start from transfer → manufacturing-defect scope → if defect found → what is needed → care → narrow exclusions → links to `/returns` and `/offer`
+- **Readiness:** spec verified. Not `READY_FOR_PRODUCTION`
 - **Contact:** showroom phones (claims email `MISSING`)
 
 ### Legal docs — entity identity READY for later `/requisites`; PD/offer still BLOCKED

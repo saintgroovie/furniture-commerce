@@ -41,11 +41,13 @@ WOODRIGHT_OD04_WARRANTY_12_MONTHS_OWNER_RATIFIED
 
 This **B** is a **new owner-set launch rule**. It is not research Candidate B («a different current operational term was found»). Research below remains historically correct: before this decision the approved SoT was `NOT FOUND`, and the research recommendation was **C**.
 
-**Confirmed by this ratification:** public commercial term = 12 months. Neutral buyer phrasing: «Гарантия Woodright» until obligor wording is reviewed.
+**Confirmed by this ratification:** public commercial term = 12 months.
 
-**Not confirmed:** start point; manufacturer name; obligor legal wording; hardware / mechanisms / upholstery / finish / third-party / wall-panel separate terms; legacy exclusions; claims SOP; claims email; claims SLA (`OD-06`). STANDARD / CONFIGURABLE / BESPOKE do not get different terms from the product label. Contract-specific Bespoke exceptions, if any, must be written separately.
+**Addendum 2026-09-01 (spec, not a new OD):** start = from transfer; commercial obligor = seller ООО «Роэл-Техник»; manufacturing-defect scope; narrow verified exclusions. File: `docs/owner/warranty-public-policy.md`. Storefront not shipped.
 
-`/warranty` = **READY_FOR_COPY_PHASE_WITH_LEGAL_REVIEW** (not production). COPY below is **not implemented**.
+**Not confirmed:** manufacturer **name**; hardware / mechanisms / upholstery / finish / third-party / wall-panel separate terms; extra goodwill; claims email; claims SLA (`OD-06B`). STANDARD / CONFIGURABLE / BESPOKE do not get different terms from the product label. Contract-specific Bespoke exceptions, if any, must be written separately.
+
+`/warranty` = spec ready 2026-09-01; **not** production. COPY in this file is **not implemented**.
 
 ---
 
@@ -75,7 +77,7 @@ RESEARCH_RECOMMENDATION = C
 | --- | --- | --- |
 | Commercial warranty | Voluntary term Woodright sets | **12 months** owner-set 2026-08-19. Not legacy 18m. Not generic dump 12m |
 | Statutory consumer rights | ЗоЗПП / ГК on defects, independent of a published «гарантия» | `EXTERNAL VERIFICATION`; **preserved**; 12 months is not a blanket limit |
-| Buyer-facing explanation | Future `/warranty` | READY_FOR_COPY_PHASE_WITH_LEGAL_REVIEW; term may be stated; start/obligor/exclusions still review |
+| Buyer-facing explanation | Future `/warranty` | Spec 2026-09-01 ready (`warranty-public-policy.md`). Storefront not shipped. Not production |
 
 Do not use «гарантия» as the name of all defect rights.
 
@@ -167,7 +169,7 @@ Same live oferta annex:
 | Live oferta §1.1 | ООО «Роэл-Техник» |
 | Live oferta §15 | still prints **ЗАО «Роэл-Техник»** (legacy entity chrome) — identity for new site is **not** reopened; `OD-01 = A` stands |
 | Manufacturer / изготовитель legal name | **Not stated.** Documents say «производитель», «фабрика-производитель», «маркировочные ярлыки производителя». **Do not invent.** `MANUFACTURER = NOT YET CONFIRMED` |
-| Warranty obligor in texts | **Conflict:** annex = manufacturer; dogovor = seller; §12.1 = manufacturer via label. `WARRANTY_OBLIGOR_LEGAL_WORDING = LEGAL REVIEW`. OD-04 = B does **not** resolve this. Do not publish «гарантия производителя» |
+| Warranty obligor in texts | **Live conflict (historical):** annex = manufacturer; dogovor = seller. **Current contract + spec:** commercial warranty = **Продавец** ООО «Роэл-Техник». `MANUFACTURER` name still unconfirmed. Do not publish «гарантия производителя» |
 | Same-entity assumption | Brand Woodright ≠ proven legal identity of manufacturer. `LEGAL REVIEW` |
 
 ---
@@ -179,7 +181,7 @@ Same live oferta annex:
 | From **transfer** to buyer or representative | Live oferta annex | High as **published**; not owner-confirmed |
 | From **transfer** of goods | Live dogovor §5.4 | Same |
 | From sale / delivery / assembly / act / payment as *the* start | Not found as the 18-month clock | Assembly mentioned as **condition** (dogovor 5.6; oferta «после сборки считается в эксплуатации»), not as start of the 18 months |
-| Current approved start rule | Owner did **not** set a start in OD-04 = B | **`WARRANTY_START = LEGAL REVIEW / CONTENT COMPLETION`**. Do not publish «12 месяцев с момента передачи» yet |
+| Current approved start rule (2026-09-01 spec) | CTR-2026 + ст. 19 п. 2 + `warranty-public-policy.md` | **From transfer.** Storefront not shipped. Historical row above was pre-spec. |
 
 Default statutory clock if a warranty exists: ЗоЗПП ст. 19 / ГК ст. 477 — generally from transfer unless contract says otherwise (`EXTERNAL VERIFICATION`).
 
@@ -193,7 +195,7 @@ OD-04 = B sets a **base public term of 12 months**. It does **not** create a com
 
 | Bucket | Commercial term | Source | Current confidence |
 | --- | --- | --- | --- |
-| STANDARD | Base **12 months** | owner decision 2026-08-19 | Term confirmed; scope wording `LEGAL REVIEW` |
+| STANDARD | Base **12 months** | owner decision 2026-08-19 + spec 2026-09-01 | Term confirmed; manufacturing-defect scope in spec; no component matrix |
 | CONFIGURABLE (preset upholstery/finish/size) | Same 12 months; preset does not change term | owner + product model | Confirmed as method |
 | BESPOKE / «По проекту» | Same 12 months; label does not change term | owner + BESPOKE_POSITIONING | Contract-specific exceptions must be separate |
 | Furniture structure | Base 12 months; legacy annex was materials/manufacturing defects | owner vs legacy 18m | Legacy scope not auto-ported |
@@ -293,12 +295,12 @@ Reuse OD-03. Do not invent email or SLA.
 
 | Step | Status |
 | --- | --- |
-| Customer contacts Woodright | **PARTIAL** — showroom phones / messengers confirmed; live oferta 14.4 also lists `+7 967 258-71-44` and **Woodright.Grand@yandex.ru** — **not** owner-confirmed claims email (OD-03: claims email `MISSING`; do not adopt this address in the warranty cycle) |
-| Order identified | **MISSING** as SOP |
-| Issue documented | **MISSING** |
-| Photos / inspection | Legacy: keep packaging for specialist visit; **current SOP `MISSING`** |
-| Assessment | **MISSING** |
-| Repair / replacement / other | Legacy dogovor 5.7 paid service after warranty / excluded cases; **current promise `MISSING`**. Do not promise a free technician visit |
+| Customer contacts Woodright | **PARTIAL** — showroom phones / messengers confirmed; live oferta 14.4 also lists `+7 967 258-71-44` and **Woodright.Grand@yandex.ru** — **not** owner-confirmed claims email (OD-03: claims email `MISSING`; do not adopt this address) |
+| Order identified | SOP 2026-09-01: manager registers order / contact (`docs/owner/returns-sop.md`) |
+| Issue documented | SOP: description + optional photos; photos not a bar |
+| Photos / inspection | Photos optional. Quality check per ст. 18. Reverse-logistics arranger still ops `MISSING` |
+| Assessment | Seller may inspect; not sole judge vs ст. 18 |
+| Repair / replacement / other | Consumer-chosen statutory remedies. After-warranty paid service: spec. Do not promise a free technician visit |
 | Geography / cost of repair visit | **`MISSING`** |
 
 **Claims SLA = `OD-06B` (no extra commercial promise).** `OD-06A` remains LEGAL REVIEW (submit ≠ acceptance). Do not add 3 / 5 / 10 / 30 days as Woodright SLA. Statutory clocks stay `EXTERNAL VERIFICATION`.
@@ -323,7 +325,7 @@ Rem **consciously** refused to port 18 months. That is 2026 new-stack intent, no
 | --- | --- |
 | Есть ли гарантия? | `ANSWERABLE` — commercial term 12 months (owner-set); statutory rights also exist |
 | Сколько действует коммерческий срок? | `ANSWERABLE` — 12 months (`OD-04 = B`) |
-| С какого момента? | `LEGAL REVIEW / CONTENT COMPLETION` (legacy: передача - not owner-confirmed) |
+| С какого момента? | `ANSWERABLE` (spec 2026-09-01): from transfer. Storefront sentence not shipped. |
 | На что распространяется? | `PARTIAL` / `LEGAL REVIEW` — base 12 months; no component matrix |
 | На фурнитуру? | `PARTIAL` / `LEGAL REVIEW` — not separately confirmed; not «0 months» |
 | На обивку? | `NOT SEPARATELY CONFIRMED` |
@@ -389,16 +391,16 @@ Do not write «Гарантии нет». Do not use privacy email. Do not use `
 Purpose: **объяснить 12-месячный гарантийный срок и что делать при обнаружении недостатка.**
 
 1. Answer-first: 12 months (Woodright).
-2. Start **only after** `LEGAL REVIEW / CONTENT COMPLETION`.
-3. Scope / exclusions **only after** legal review - no invented matrix.
+2. Start: from transfer (spec 2026-09-01). Storefront not shipped.
+3. Scope / exclusions: manufacturing defects + narrow verified list only (`warranty-public-policy.md`).
 4. If a defect is found → contact (phones already confirmed).
-5. What is needed for a claim — only confirmed items (today: order identity; not talon).
-6. Materials / care — only if later proven, as care not as a void list.
-7. What is not a warranty case — only after legal review.
+5. What is needed for a claim — order identity; not talon; cheque not exclusive.
+6. Materials / care — care, not a void list.
+7. DIY / natural material — narrow spec wording only.
 8. Link `/returns`.
 9. Link `/offer`.
 
-Readiness: **READY_FOR_COPY_PHASE_WITH_LEGAL_REVIEW**. Not `READY_FOR_PRODUCTION`. Not a duplicate of `/offer` or `/returns`.
+Readiness: **spec ready**; **not** `READY_FOR_PRODUCTION`. Not a duplicate of `/offer` or `/returns`.
 
 ---
 
@@ -406,7 +408,7 @@ Readiness: **READY_FOR_COPY_PHASE_WITH_LEGAL_REVIEW**. Not `READY_FOR_PRODUCTION
 
 The 2026 client Word template (CTR-2026, **not in git**) now says **12 months from transfer**. Verified 2026-08-31. Previous wording **18 months** is historical provenance. Live `/oferta/` and `/dogovor-postavki/` 18 months remain `LEGACY PUBLIC DIVERGENCE`.
 
-This **does not** close `WARRANTY_START = LEGAL REVIEW / CONTENT COMPLETION` for website `/warranty` copy, nor obligor / exclusions.
+This **does not** by itself ship `/warranty`. Public-policy spec 2026-09-01 (`docs/owner/warranty-public-policy.md`) records start-from-transfer and seller-as-commercial-obligor for future copy. Manufacturer **name** still unconfirmed. Exclusions stay narrow.
 
 CAS and exact before/after: `docs/owner/contract-template-reconciliation.md`.
 
