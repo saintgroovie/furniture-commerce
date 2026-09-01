@@ -6,7 +6,7 @@
 
 Decision board SoT: `docs/content-audit/OWNER_DECISIONS.md`
 Commercial/service website facts, publication status, contract provenance, and owner-decision constraints: `docs/content-audit/SITE_COMMERCIAL_SERVICE_SOT.md`.
-Controlled 2026 Word-template warranty term (`OD-04 = B`, 12 months, start from transfer) and seller postal index (`153025`): `docs/owner/contract-template-reconciliation.md`. External `.docx` verified 12 months and 153025 on 2026-08-31. Not legal approval of the full pack. Binary not in git.
+Controlled 2026 Word-template warranty term (`OD-04 = B`, 12 months, start from transfer) and seller postal index (`153025`): `docs/owner/contract-template-reconciliation.md`. External `.docx` verified 12 months and 153025 on 2026-08-31. Returns SOP / warranty spec 2026-09-01: `docs/owner/returns-sop.md`, `docs/owner/warranty-public-policy.md`. Not legal approval of the full pack. Binary not in git.
 Historical 2026-08-04 packet (remediation worktree only): identity was still `MISSING` there; seller identity is now recorded **here** (canonical).
 
 ---
@@ -28,13 +28,13 @@ WOODRIGHT_OD03_MANAGER_ASSISTED_RETURNS_OWNER_RATIFIED
 WOODRIGHT_OD04_WARRANTY_12_MONTHS_OWNER_RATIFIED
 ```
 
-Do **not** treat these as approval of warranty **start/obligor/exclusions**, reverse-logistics SOP, or the full legal pack.
+Do **not** treat OD-03/OD-04 ratification as `OWNER_LEGAL_CONTENT_APPROVED`, storefront ship, or Word mutation.
 
 `OD-06` is **split** (2026-08-20): submit = request (`IMPLEMENTATION DECISION` + `LEGAL REVIEW`); no extra commercial claims SLA. Not kept as an owner-open mixed P0. Pack: `docs/content-audit/20260820_LAUNCH_COMPLETION.md`.
 
-`OD-03 = B` (2026-08-19): launch interaction model confirmed. Pack: `docs/content-audit/OD03_RETURNS_VERIFICATION.md`. Combined SoT still `PARTIAL` (custom SOP NOT FOUND; legal baseline EXTERNAL VERIFICATION). `BESPOKE LABEL != AUTOMATIC NO-RETURN RULE`.
+`OD-03 = B` (2026-08-19): launch interaction model confirmed. **Addendum 2026-09-01:** returns SOP verified (`docs/owner/returns-sop.md`; `RETURNS_SOP_VERIFIED_AND_READY`). Extra goodwill / reverse-logistics arranger **not** chosen. Storefront `/returns` not shipped. `BESPOKE LABEL != AUTOMATIC NO-RETURN RULE`.
 
-`OD-04 = B` (2026-08-19): commercial term **12 months** owner-set (`OWNER_DECISION_OD04_B_WARRANTY_12_MONTHS_OWNER_SET`). Provenance = explicit owner decision, **not** legacy 18 months and **not** generic dump 12 months. Pack: `docs/content-audit/OD04_WARRANTY_VERIFICATION.md`. `/warranty` READY_FOR_COPY_PHASE_WITH_LEGAL_REVIEW. `PRODUCT LABEL != AUTOMATIC WARRANTY TERM`. Start / manufacturer / obligor / exclusions remain `LEGAL REVIEW`.
+`OD-04 = B` (2026-08-19): commercial term **12 months** owner-set (`OWNER_DECISION_OD04_B_WARRANTY_12_MONTHS_OWNER_SET`). Provenance = explicit owner decision, **not** legacy 18 months and **not** generic dump 12 months. **Addendum 2026-09-01:** public-policy spec verified (`docs/owner/warranty-public-policy.md`; `WARRANTY_PUBLIC_POLICY_VERIFIED_AND_READY`) - start from transfer; seller obligor ООО «Роэл-Техник»; narrow exclusions; statutory disclaimer. Storefront `/warranty` not shipped. `PRODUCT LABEL != AUTOMATIC WARRANTY TERM`.
 
 ---
 
@@ -105,10 +105,10 @@ Do not treat a later `/requisites` page as permission to publish bank details (`
 
 Remaining unanswered in this packet:
 
-1. ~~Возврат (`OD-03`)~~ **closed: OD-03 = B** (`OWNER_DECISION_OD03_B_MANAGER_ASSISTED_RETURNS_WITH_LEGAL_BASELINE`). Launch model = manager-assisted; rights preserved. Custom SOP / logistics / mapping **not** approved. `/returns` READY_FOR_COPY_PHASE_WITH_LEGAL_REVIEW. Live Demo Magazin remains `LEGACY PUBLIC DEFECT`. Pack: `docs/content-audit/OD03_RETURNS_VERIFICATION.md`.
-2. ~~Гарантия (`OD-04`)~~ **closed: OD-04 = B** (`OWNER_DECISION_OD04_B_WARRANTY_12_MONTHS_OWNER_SET`). Launch commercial term = **12 months** (owner-set 2026-08-19). External 2026 Word template verified **12 months** 2026-08-31 (start from transfer unchanged). Seller postal index of the same Word file verified **153025** the same day (previous template value **153000**). Start / obligor / exclusions / claims SOP for `/warranty` copy **not** approved. Pack: `docs/content-audit/OD04_WARRANTY_VERIFICATION.md`. Record: `docs/owner/contract-template-reconciliation.md`.
+1. ~~Возврат (`OD-03`)~~ **closed: OD-03 = B**. Launch SOP verified 2026-09-01: `docs/owner/returns-sop.md`. Extra goodwill / live Demo Magazin / Word §5.10 remain follow-ups. `/returns` not shipped.
+2. ~~Гарантия (`OD-04`)~~ **closed: OD-04 = B**. Public-policy spec 2026-09-01: `docs/owner/warranty-public-policy.md` (12 months; start from transfer; seller obligor). `/warranty` not shipped. Manufacturer **name** still missing. Pack: `docs/content-audit/OD04_WARRANTY_VERIFICATION.md`.
 3. ~~Доставка (`OD-02`)~~ **closed: OD-02 = B** (`OWNER_DECISION_OD02_B_DELIVERY_QUOTE_ONLY`). Quote-only; no public tariff; checkout `0 ₽` is technical. `/delivery` READY_FOR_COPY_PHASE_WITH_SERVICE_GAPS. Does **not** confirm geography, lift, assembly, or pickup. Pack: `docs/content-audit/OD02_DELIVERY_SERVICES_VERIFICATION.md`.
-4. Индивидуальные товары - product labels closed as UX model; **legal** mapping still `LEGAL REVIEW` (not a separate OD; not closed by OD-03 = B)
+4. ~~Индивидуальные товары (legal mapping)~~ **2026-09-01:** criterion in `docs/owner/returns-sop.md` (ст. 26.1). Product labels still not automatic no-return. Not a new OD.
 5. ~~Оплата (`OD-05`)~~ **closed: OD-05 = A** (`OWNER_DECISION_OD05_A_MANUAL_INVOICE_PAYMENT_LINK`). `/payment` READY_FOR_COPY_PHASE.
 6. ~~Момент акцепта (`OD-06A`)~~ **2026-08-20:** `IMPLEMENTATION DECISION` + `LEGAL REVIEW`. Site submit = request, not acceptance. Not an owner-open mixed P0.
 7. ~~Претензии / SLA (`OD-06B`)~~ **2026-08-20:** `NO ADDITIONAL COMMERCIAL PROMISE`. No invented 3/10/30/45-day SLA.

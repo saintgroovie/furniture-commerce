@@ -4,6 +4,7 @@ Goal: few strong decisions, not 80 micro-questions.
 Identity packet: `docs/owner/legal-content-owner-review.md`
 Commercial/service website facts, publication status, contract provenance, and owner-decision constraints: `docs/content-audit/SITE_COMMERCIAL_SERVICE_SOT.md`. This board stays the OD index; it is not the full contract-derived publication SoT.
 Future customer-contract warranty wording (12 months, start from transfer) and seller postal index (`153025`): `docs/owner/contract-template-reconciliation.md`. External Word source verified **12 months** and **153025** 2026-08-31 (`OD-04 = B`; postal not a new OD). Not a new OD.
+Returns SOP / warranty public-policy spec (2026-09-01): `docs/owner/returns-sop.md`, `docs/owner/warranty-public-policy.md`. Not new ODs. Not `OWNER_LEGAL_CONTENT_APPROVED`.
 
 Silence ≠ approval of the **full** legal pack.
 
@@ -52,7 +53,7 @@ LEGACY_DELIVERY_TARIFFS = NOT NEW-SITE SOT
 
 RETURNS_LAUNCH_MODEL = MANAGER_ASSISTED
 MANDATORY_CONSUMER_RIGHTS = PRESERVED
-WOODRIGHT_CUSTOM_RETURN_SOP = NOT YET APPROVED
+WOODRIGHT_CUSTOM_RETURN_SOP = VERIFIED_AND_READY (2026-09-01)
 LEGACY_14_DAYS = NOT NEW-SITE SOT
 DEMO_MAGAZIN_RETURN_COPY = INVALID
 BESPOKE_LABEL_AUTOMATIC_NO_RETURN = NO
@@ -90,8 +91,8 @@ OWNER_LEGAL_CONTENT_APPROVED = NOT ISSUED
 These are **not** remaining owner-open launch blockers. Unconfirmed geography / lift / assembly / hours / email / trade pack / component warranty are **omitted**, not invented.
 
 Delivery **subfacts** still unpublished: geography, lift, assembly, fleet, dates, pickup.
-Returns **subfacts** still `LEGAL REVIEW`: reverse logistics SOP; refund SOP; claims email; product-to-legal mapping. Claims SLA is **not** a public Woodright promise (`OD-06B`).
-Warranty **subfacts** still `LEGAL REVIEW`: start wording; obligor; component scope; exclusions; claims SOP. Term 12 months is closed (`OD-04 = B`).
+Returns **subfacts** still open as ops/commercial (not blocking the 2026-09-01 SOP): reverse-logistics *arranger*; extra goodwill window; dedicated claims email. Statutory remote/defect/individually-determined tests are in `docs/owner/returns-sop.md`. Claims SLA is **not** a public Woodright promise (`OD-06B`).
+Warranty **subfacts** still open: manufacturer **name**; component-specific terms; unsupported exclusion sentences. **Closed 2026-09-01 in spec** (not storefront): start from transfer; commercial obligor = seller ООО «Роэл-Техник»; manufacturing-defect scope; narrow verified exclusions. Term 12 months is closed (`OD-04 = B`). Spec: `docs/owner/warranty-public-policy.md`.
 **Not recorded:** `OWNER_LEGAL_CONTENT_APPROVED`. Full legal pack still `owner_review` / `READY_FOR_OWNER_LEGAL_ACCEPTANCE` after implementation.
 
 `OD-03` ratifies launch communication/process model; it does **not** constitute legal approval of all return clauses.
@@ -204,7 +205,7 @@ Checkout `0 ₽` is **not** free delivery, not a commercial tariff.
 OD-03 = B
 RETURNS_LAUNCH_MODEL = MANAGER_ASSISTED
 MANDATORY_CONSUMER_RIGHTS = PRESERVED
-WOODRIGHT_CUSTOM_RETURN_SOP = NOT YET APPROVED
+WOODRIGHT_CUSTOM_RETURN_SOP = VERIFIED_AND_READY (2026-09-01; docs/owner/returns-sop.md)
 LEGACY_14_DAYS = NOT NEW-SITE SOT
 LEGACY_14_DAYS = NOT OWNER-RATIFIED RETURN WINDOW
 DEMO_MAGAZIN_RETURN_COPY = INVALID
@@ -231,11 +232,9 @@ Buyer-facing COPY sense (SoT only; **not** shipped):
 
 > Если вы хотите отказаться от заказа, вернуть товар или сообщить о проблеме, свяжитесь с Woodright. Менеджер уточнит номер заказа и обстоятельства и подскажет дальнейшие действия. Условия возврата зависят от ситуации и применимых требований закона.
 
-`/returns` = **READY_FOR_COPY_PHASE_WITH_LEGAL_REVIEW**. Not `READY_FOR_PRODUCTION`.
+**2026-09-01 (pointer only, not a new OD):** launch returns SOP verified: `docs/owner/returns-sop.md`. Extra goodwill still not chosen. Live `/vozvrat/` still legacy.
 
-**Legal facts stay `EXTERNAL VERIFICATION`:** ЗоЗПП ст. 26.1 / 18–24; KS РФ 17.02.2026 № 7-П; ПП 2463 (дистанционка). This ratification does **not** mean `OWNER CONFIRMED: 7 days` or `OWNER CONFIRMED: 10 days`.
-
-**Not confirmed by OD-03 = B (do not invent):** reverse logistics arranger/payer as a Woodright SOP; automated refund; claims email; TG/WA as the *formal* claims channel without legal review; cancellation fee / non-refundable advance / production-start = impossible; blanket Bespoke/CONFIGURABLE no-return; warranty **start/obligor/exclusions** (term closed separately as `OD-04 = B` = 12 months); claims SLA (`OD-06`).
+**Not confirmed by OD-03 = B (do not invent):** reverse logistics arranger/payer as a Woodright *ops* playbook; automated refund; claims email; TG/WA as the *formal* claims channel without legal review; cancellation fee / non-refundable advance / production-start = impossible; blanket Bespoke/CONFIGURABLE no-return; extra goodwill window; claims SLA (`OD-06B`). Warranty **start / seller-obligor / narrow exclusions** are in `docs/owner/warranty-public-policy.md` (2026-09-01 spec; storefront not shipped). Term remains `OD-04 = B` = 12 months. Manufacturer name still missing.
 
 **Invalid as new-site SoT (historical evidence kept):** live `/vozvrat/` 14 days + ООО «Демо Магазин» + `sales@demostore.ru` = `LEGACY PUBLIC DEFECT`. Demo Magazin is **not** an unresolved identity question (`OD-01 = A` = ООО «Роэл-Техник»).
 
@@ -260,14 +259,14 @@ LEGACY_18_MONTHS = NOT NEW-SITE SOT
 LEGACY_GENERIC_12_MONTHS = NOT SOURCE OF CURRENT DECISION
 PRODUCT LABEL != AUTOMATIC WARRANTY TERM
 STATUTORY_DEFECT_RIGHTS = PRESERVED
-WARRANTY_START = LEGAL REVIEW / CONTENT COMPLETION
+WARRANTY_START = FROM TRANSFER (public-policy spec 2026-09-01)
 MANUFACTURER = NOT YET CONFIRMED
-WARRANTY_OBLIGOR_LEGAL_WORDING = LEGAL REVIEW
+COMMERCIAL_WARRANTY_OBLIGOR = SELLER ООО «Роэл-Техник»
 ```
 
 **Confirmed** (`FACT — CURRENT OWNER CONFIRMED`; provenance: **explicit owner decision 2026-08-19**, not a legacy source):
 
-Launch public commercial warranty term = **12 months**. Neutral buyer label: «Гарантия Woodright» until legal review of obligor.
+Launch public commercial warranty term = **12 months**. Commercial obligor for future copy = seller ООО «Роэл-Техник» (spec 2026-09-01; not a new OD).
 
 This **B** is an owner-set business rule. It is **not** research Candidate B («found another current operational term»). Research 2026-08-19 found **no** current approved term (`NOT FOUND`) and recommended **C**. Owner then set 12 months as new launch policy.
 
@@ -275,9 +274,11 @@ This **B** is an owner-set business rule. It is **not** research Candidate B («
 
 **Invalid as new-site SoT (historical evidence kept):** live `/oferta/` **18 months** = `REJECT AS NEW-SITE SOT` / `LEGACY PUBLIC DIVERGENCE` if CS-Cart still prints it. Generic dump **12 months** remains `STALE / GENERIC TEMPLATE`. Coincidence of the digit 12 does **not** promote that template.
 
-**Not confirmed by OD-04 = B (do not invent):** start «с момента передачи»; manufacturer name; «гарантия производителя»; hardware / mechanisms / upholstery / finish / third-party / panels separate terms; assembly/DIY/humidity voids; natural-material blanket «не дефект»; talon; free master visit; claims email; claims SLA (`OD-06`). STANDARD / CONFIGURABLE / BESPOKE do **not** get different terms from the label.
+**Not confirmed by OD-04 = B (do not invent):** manufacturer **name**; hardware / mechanisms / upholstery / finish / third-party / panels separate terms; humidity/floor voids; talon; free master visit; claims email; claims SLA (`OD-06`). STANDARD / CONFIGURABLE / BESPOKE do **not** get different terms from the label.
 
-`/warranty` = **READY_FOR_COPY_PHASE_WITH_LEGAL_REVIEW** (not production). Storefront not shipped in this task.
+`/warranty` = spec ready (`docs/owner/warranty-public-policy.md`); storefront **not** shipped.
+
+**2026-09-01 (pointer only, not a new OD):** public-policy spec closes start-from-transfer and seller-as-commercial-obligor for future copy. Not a new commercial term.
 
 **2026-08-31 (pointer only, not a new OD):** the 2026 client Word template was updated and verified to **12 (Двенадцать) месяцев с момента передачи Товара**. Template vs website term aligned. Live CS-Cart 18 months remains legacy. Record: `docs/owner/contract-template-reconciliation.md`.
 

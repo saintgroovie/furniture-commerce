@@ -22,8 +22,8 @@
 | `OWNER_DECISIONS.md` | Compact decision board |
 | `OD05_PAYMENT_MODE_VERIFICATION.md` | Canonical payment journey vs OD-05 Candidate A |
 | `OD02_DELIVERY_SERVICES_VERIFICATION.md` | Delivery quote-only vs legacy tariffs |
-| `OD03_RETURNS_VERIFICATION.md` | Returns verification + OD-03 = B launch model (not full legal approval) |
-| `OD04_WARRANTY_VERIFICATION.md` | Warranty pack; research 2026-08-19 + **OD-04 = B** owner-set 12 months |
+| `OD03_RETURNS_VERIFICATION.md` | Returns verification + OD-03 = B launch model; SOP 2026-09-01 in `docs/owner/returns-sop.md` |
+| `OD04_WARRANTY_VERIFICATION.md` | Warranty pack; **OD-04 = B** 12 months; public-policy spec 2026-09-01 |
 | `BESPOKE_POSITIONING.md` | Woodright Bespoke = rethink of «По проекту»; proof, IA, COPY candidates; storefront not shipped |
 | `20260820_LAUNCH_COMPLETION.md` | Autonomous cycle: remaining OD closures, launch IA, privacy/cookies, FINAL_OWNER_GATE |
 
@@ -53,8 +53,8 @@ Owner-confirmed: OD-01, OD-02, OD-03, OD-04 (12 months owner-set), OD-05, OD-10.
 - Privacy email / PD copy / remaining OD board (not OD-01/02/03/05/10) / full legal token: **still open**.
 - `OD-05 = A` ratified 2026-08-15: `OWNER_DECISION_OD05_A_MANUAL_INVOICE_PAYMENT_LINK`. `/payment` READY_FOR_COPY_PHASE. Storefront copy not shipped in that task.
 - `OD-02 = B` ratified 2026-08-17: `OWNER_DECISION_OD02_B_DELIVERY_QUOTE_ONLY`. `/delivery` READY_FOR_COPY_PHASE_WITH_SERVICE_GAPS. Checkout `0 ₽` is technical, not free delivery. Geography / lift / assembly / pickup **not** confirmed. Storefront copy not shipped in that task.
-- `OD-03 = B` ratified 2026-08-19: `OWNER_DECISION_OD03_B_MANAGER_ASSISTED_RETURNS_WITH_LEGAL_BASELINE`. Launch interaction model confirmed. Custom SOP / reverse logistics / refund SOP **not** approved. `/returns` READY_FOR_COPY_PHASE_WITH_LEGAL_REVIEW. Live `/vozvrat/` Demo Magazin remains `LEGACY PUBLIC DEFECT`. `OD-06` still OPEN at that date. Pack: `OD03_RETURNS_VERIFICATION.md`.
-- `OD-04 = B` ratified 2026-08-19: `OWNER_DECISION_OD04_B_WARRANTY_12_MONTHS_OWNER_SET`. Launch commercial term = **12 months** (owner-set; not legacy 18m; not generic dump 12m). `/warranty` READY_FOR_COPY_PHASE_WITH_LEGAL_REVIEW. Start/obligor/exclusions still `LEGAL REVIEW`. Pack: `OD04_WARRANTY_VERIFICATION.md`.
+- `OD-03 = B` ratified 2026-08-19: `OWNER_DECISION_OD03_B_MANAGER_ASSISTED_RETURNS_WITH_LEGAL_BASELINE`. Launch interaction model confirmed. **Addendum 2026-09-01:** SOP verified (`docs/owner/returns-sop.md`; `RETURNS_SOP_VERIFIED_AND_READY`). Extra goodwill **not** chosen. `/returns` still not shipped. Live `/vozvrat/` remains `LEGACY PUBLIC DEFECT`. Pack: `OD03_RETURNS_VERIFICATION.md`.
+- `OD-04 = B` ratified 2026-08-19: `OWNER_DECISION_OD04_B_WARRANTY_12_MONTHS_OWNER_SET`. Launch commercial term = **12 months**. **Addendum 2026-09-01:** public-policy spec verified (`docs/owner/warranty-public-policy.md`; `WARRANTY_PUBLIC_POLICY_VERIFIED_AND_READY`). Storefront `/warranty` not shipped. Pack: `OD04_WARRANTY_VERIFICATION.md`.
 - Bespoke proof pack 2026-08-17: `docs/content-audit/BESPOKE_POSITIONING.md`. Owner-confirmed: 20+ years; private + corporate/institutional cases. «30%» / gift-sketch rejected. **Clarification (same day):** Bespoke = new name + premium rethink of «По проекту» (same entity); `/bespoke/catalog` not default IA. `OD-08` / `OD-09` still OPEN **as of 2026-08-17**. Storefront not changed in that task.
 - Packet: `docs/owner/legal-content-owner-review.md`
 - **Status update 2026-08-20:** remaining OD-06…12 closed conservatively (not as fake owner tokens). Active pack: `docs/content-audit/20260820_LAUNCH_COMPLETION.md`. `FINAL_OWNER_GATE = NONE`. `OWNER_LEGAL_CONTENT_APPROVED` still not issued. Privacy email still missing; PD contact = seller identity + legal address + showroom phones. Storefront implementation is in the isolated worktree `content/legal-launch-completion-20260820`.

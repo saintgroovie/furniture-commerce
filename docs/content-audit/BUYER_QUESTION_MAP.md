@@ -67,33 +67,32 @@ Do not treat live `/vozvrat/` as answers. Pack: `docs/content-audit/OD03_RETURNS
 
 | Question | Status | Notes |
 | --- | --- | --- |
-| Можно вернуть товар? | `PARTIAL` | Launch: обратиться в Woodright (`OD-03 = B`). Custom SOP `NOT YET APPROVED`. Live 14 days = not new-site SoT |
-| Сколько есть времени? | `LEGAL REVIEW` / `PARTIAL` | Do **not** publish 14. Statutory windows remain `EXTERNAL VERIFICATION`, not owner numbers. Mapping `LEGAL REVIEW` |
+| Можно вернуть товар? | `PARTIAL` | Launch SOP: `docs/owner/returns-sop.md`. Contact Woodright. Live 14 days = not new-site SoT |
+| Сколько есть времени? | `ANSWERABLE` as **law**, not Woodright extra | Remote: 7 days / 3 months (26.1). Offline exchange: ст. 25. Not owner-set 14 |
+| Можно обменять? | `PARTIAL` | Offline ст. 25; гарнитур list 2463 п. 8; remote uses 26.1 not 14-day theme |
+| Можно вернуть стандартный товар? | `PARTIAL` | Remote 26.1 *may* apply; individually-determined test on **facts**. SOP ready |
+| Что если товар с дефектом? | `PARTIAL` | ст. 18–24; consumer chooses remedy. Intake in SOP |
+| Какие документы нужны? | `ANSWERABLE` | Order id; other proof OK. No cheque-only bar |
+| Кто платит за обратную доставку? | `PARTIAL` | Good-quality remote: seller may deduct consumer-to-seller ship (26.1). Defects / bulky: seller (18 п. 7 / Rospotrebnadzor). Arranger playbook still ops |
+| Когда вернут деньги? | `PARTIAL` | 10 days = `LEGAL OBLIGATION` (26.1 / 22). PaymentLink ≠ auto-refund |
 | Использует ли Woodright старое правило 14 дней? | `ANSWERABLE` | Нет. `LEGACY_14_DAYS = NOT NEW-SITE SOT` |
 | Bespoke всегда невозвратен? | `ANSWERABLE` | Нет. `BESPOKE LABEL != AUTOMATIC NO-RETURN RULE` |
-| Куда обращаться по возврату / проблеме с заказом? | `PARTIAL` / `ANSWERABLE FOR LAUNCH` | Showroom phones / messengers. Claims email `MISSING`. TG/WA not ratified as formal claims filing |
-| Можно обменять? | `MISSING` | No current exchange SOP |
-| Можно вернуть стандартный товар? | `LEGAL REVIEW` / `PARTIAL` | Case 1: 26.1 *may* apply; make-to-order after pay **MISSING**. No Woodright policy |
-| Можно вернуть товар с выбранной штатной обивкой? | `LEGAL REVIEW` | Case 2: CONFIGURABLE preset ≠ automatic individually-defined. Do not publish «обивка = невозврат» |
-| Можно вернуть товар штатного цвета / штатного размера? | `LEGAL REVIEW` | Case 3: same as preset options |
-| Что если размер сделали специально (вне списка, напр. 187 см)? | `LEGAL REVIEW` | Case 4: product-wise BESPOKE; legal exception is a *candidate*, not a published ban |
-| Что если мебель по проекту / Woodright Bespoke? | `LEGAL REVIEW` | Same entity as «По проекту». `BESPOKE LABEL != AUTOMATIC NO-RETURN RULE`. Cases 5–6 |
-| Можно ли отменить заказ до оплаты / до PaymentLink? | `MISSING` / `LEGAL REVIEW` | `OD-05`: order may exist unpaid. No SOP |
+| Куда обращаться по возврату / проблеме с заказом? | `PARTIAL` / `ANSWERABLE FOR LAUNCH` | Showroom phones / messengers. Claims email `MISSING`. TG/WA not ratified as exclusive filing |
+| Можно вернуть товар с выбранной штатной обивкой? | `ANSWERABLE` as method | CONFIGURABLE preset ≠ automatic individually-defined. SOP: do not publish «обивка = невозврат» |
+| Можно вернуть товар штатного цвета / штатного размера? | `ANSWERABLE` as method | Same as preset options |
+| Что если размер сделали специально (вне списка, напр. 187 см)? | `PARTIAL` | Stronger *candidate* for individually-defined; not a published ban. SOP facts test |
+| Что если мебель по проекту / Woodright Bespoke? | `ANSWERABLE` as method | `BESPOKE LABEL != AUTOMATIC NO-RETURN RULE`. Defects still 18–24 |
+| Можно ли отменить заказ до оплаты / до PaymentLink? | `MISSING` / `LEGAL REVIEW` | `OD-05`: order may exist unpaid. No cancellation-fee SoT |
 | Можно ли отменить после PaymentLink, но до оплаты? | `MISSING` | No SOP |
-| Можно ли отменить после оплаты, до производства? | `PARTIAL` | 26.1 before transfer; ops `MISSING` |
-| Что вместо возврата: ремонт / замена? | `MISSING` ops; law 18–24 for defects | Journey on `/returns`; commercial term 12 months on `/warranty` (`OD-04 = B`) |
-| Что если товар с дефектом? | `PARTIAL` | Statutory 18–24 cannot be waived (`EXTERNAL VERIFICATION`). Woodright process `MISSING`. Not the same as a published 18-month commercial term |
-| Что если повредили при доставке? | `PARTIAL` / `MISSING` | Historical: inspect / act. Current SOP `MISSING`. Not warranty |
-| Что если не хватает детали? | `MISSING` current | Live page 7 calendar days = `STALE` |
-| Куда обращаться? | `PARTIAL` | Showroom phones/messengers confirmed. Dedicated claims email `MISSING`. Not demostore / not privacy email |
-| Какие документы нужны? | `MISSING` ops; law allows other proof of purchase | Photos/act not in current SOP |
-| Кто забирает мебель? | `MISSING` | |
-| Кто платит за обратную доставку? | `MISSING` ops / `LEGAL REVIEW` | 26.1 deduct for good-quality remote refuse; Rospotrebnadzor: defective return at seller expense. Not an unconstrained owner pick |
-| Когда вернут деньги? | `MISSING` ops; 26.1 says 10 days from demand for that scenario | PaymentLink ≠ auto-refund |
-| Можно ли отказаться до доставки? | `PARTIAL` | 26.1: anytime before transfer (`LEGAL REQUIREMENT` for consumer remote sale). Ops `MISSING` |
-| Можно ли отменить заказ после оплаты? | `MISSING` / `LEGAL REVIEW` | Before handover: 26.1 may still apply. After production start: do not invent fee |
-| Что происходит, если производство уже началось? | `MISSING` / `LEGAL REVIEW` | No retainer / cancellation-fee SoT. Do not invent |
-| Гарантийный срок? | `ANSWERABLE` | `OD-04 = B`: **12 months** owner-set. Live 18 months = `LEGACY PUBLIC DIVERGENCE`. Statutory defect rights remain (`EXTERNAL VERIFICATION`) |
+| Можно ли отменить после оплаты, до производства? | `PARTIAL` | 26.1 before transfer; ops arranger `MISSING` |
+| Что вместо возврата: ремонт / замена? | `PARTIAL` | ст. 18–24 consumer choice. Journey on `/returns` when shipped |
+| Что если повредили при доставке? | `PARTIAL` | Inspect / act for visible defects. Hidden defects later. Not warranty void |
+| Что если не хватает детали? | `PARTIAL` | Treat as defect / incomplete delivery. Live 7-day notice = `STALE` |
+| Кто забирает мебель? | `PARTIAL` | Law: bulky defects seller’s cost (18 п. 7). Good-quality remote: buyer-side ship may be deducted. Arranger playbook ops |
+| Можно ли отказаться до доставки? | `ANSWERABLE` as law | 26.1 anytime before transfer. Ops `MISSING` |
+| Можно ли отменить заказ после оплаты? | `PARTIAL` | Before handover: 26.1 may apply. After production start: do not invent fee |
+| Что происходит, если производство уже началось? | `PARTIAL` | Do not invent retainer. Individually-defined facts may matter |
+| Гарантийный срок? | `ANSWERABLE` | `OD-04 = B`: **12 months**. Live 18 months = `LEGACY PUBLIC DIVERGENCE`. Statutory rights remain |
 
 ## Warranty (verified 2026-08-19; `OD-04 = B` 2026-08-19)
 
@@ -103,27 +102,27 @@ Do not treat live `/oferta/` 18 months as answers. Pack: `docs/content-audit/OD0
 | --- | --- | --- |
 | Есть ли коммерческая гарантия Woodright? | `ANSWERABLE` | Да. Launch commercial term = **12 months** (`OD-04 = B`). Provenance = explicit owner decision 2026-08-19, not legacy sources |
 | Сколько действует? | `ANSWERABLE` | 12 месяцев |
-| С какого момента? | `LEGAL REVIEW` / `CONTENT COMPLETION` | Legacy «с момента передачи» not owner-confirmed. Do not publish that phrase yet |
-| На изделие целиком / конструкцию? | `PARTIAL` / `LEGAL REVIEW` | Base public term 12 months; no approved scope matrix |
-| На фурнитуру / механизмы / обивку / ЛКП? | `PARTIAL` / `LEGAL REVIEW` | `NOT SEPARATELY CONFIRMED`. Not «0 months» / not «no warranty» |
-| На Bespoke / штатную обивку / штатный размер? | `ANSWERABLE` (principle) | Label does not set a different term. Base = 12 months. Contract-specific exceptions must be separate |
+| С какого момента? | `ANSWERABLE` (spec 2026-09-01) | From transfer. Storefront not shipped. Spec: `docs/owner/warranty-public-policy.md` |
+| На изделие целиком / конструкцию? | `PARTIAL` | Manufacturing defects; no component matrix |
+| На фурнитуру / механизмы / обивку / ЛКП? | `PARTIAL` | `NOT SEPARATELY CONFIRMED`. Not «0 months» |
+| На Bespoke / штатную обивку / штатный размер? | `ANSWERABLE` (principle) | Label does not set a different term. Base = 12 months |
 | На стеновые панели / монтаж? | `MISSING` | OD-08 OPEN. Do not invent |
-| Что делать при недостатке? | `PARTIAL` / `ANSWERABLE FOR LAUNCH` | Contact showroom phones (`OD-03`). Detailed SOP not approved. Claims email `MISSING` |
-| Когда ответят? | `MISSING` | `OD-06B` = no extra public SLA. Do not invent SLA |
-| Как рекламация? | `PARTIAL` | Contact showroom; no extra Woodright SLA (`OD-06B`). Warranty-specific SOP `MISSING` (term closed by `OD-04 = B`) |
-| Приедет мастер / кто платит ремонт / везти мебель? | `MISSING` | Do not promise a free visit |
-| Сам собрал / сторонние сборщики? | `LEGAL REVIEW` | Dogovor 5.6 `SUSPECT` - do not port |
-| Что после коммерческого срока? | `ANSWERABLE` at law | ЗоЗПП ст. 19 (2 years / proof). `EXTERNAL VERIFICATION`. 12 months does not wipe statutory rights |
+| Что делать при недостатке? | `PARTIAL` / `ANSWERABLE FOR LAUNCH` | Contact showroom. SOP: `docs/owner/returns-sop.md`. Claims email `MISSING` |
+| Когда ответят? | `MISSING` as Woodright SLA | `OD-06B`. Statutory 10 days are legal duties, not a commercial promise |
+| Как рекламация? | `PARTIAL` | Contact showroom; no extra Woodright SLA (`OD-06B`) |
+| Приедет мастер / кто платит ремонт / везти мебель? | `PARTIAL` | Do not promise a free visit. Bulky defects: ст. 18 п. 7 |
+| Сам собрал / сторонние сборщики? | `ANSWERABLE` as spec | DIY damages vs independent manufacturing defects. Not total void |
+| Что после коммерческого срока? | `ANSWERABLE` at law | ЗоЗПП ст. 19 (2 years / proof). 12 months does not wipe statutory rights |
 | Нужен гарантийный талон? | `ANSWERABLE` | Current talon **not found**. Do not tell buyers to keep one |
-| Какие фото / документы? | `MISSING` ops | Legacy: packaging/labels. Law: purchase proof not only receipt |
+| Какие фото / документы? | `PARTIAL` | Photos optional. Purchase proof not only receipt |
 
 ## After purchase / returns (continued)
 
 | Question | Status | Notes |
 | --- | --- | --- |
-| Как рекламация? | `PARTIAL` | Contact showroom; no extra Woodright SLA (`OD-06B`). Warranty-specific SOP `MISSING` (term closed by `OD-04 = B`) |
-| Возврат надлежащего качества? | `CONFLICT` / `MISSING` current | Public 14 days + Demo Magazin = invalid. Rem TBD |
-| Исключения для заказных? | `LEGAL REVIEW` + `OWNER DECISION` only for extra goodwill | Not «запретить всё» |
+| Как рекламация? | `PARTIAL` / `ANSWERABLE FOR LAUNCH` | Contact showroom. Intake: `docs/owner/returns-sop.md` + `docs/owner/warranty-public-policy.md`. Claims email `MISSING`. No extra Woodright SLA (`OD-06B`) |
+| Возврат надлежащего качества? | `ANSWERABLE` as SOP; live still `CONFLICT` | SOP: remote 26.1. Public 14 days + Demo Magazin = invalid live. Rem `/returns` not shipped |
+| Исключения для заказных? | `ANSWERABLE` as criterion | Individually-determined two-limb test. Extra goodwill **not** chosen. Not «запретить всё» |
 
 ## Legal / identity
 

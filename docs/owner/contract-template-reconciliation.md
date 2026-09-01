@@ -132,14 +132,14 @@ RECONCILED UNDER OD-04 = B
 | --- | --- | --- | --- | --- |
 | Seller | ООО «Роэл-Техник»; ОГРН `1153702012848`; ИНН `3702111074`; КПП `370201001` | Same (`OD-01 = A`) | aligned | none |
 | Warranty term | **12 months** (verified Word 2026-08-31; previous wording 18 months) | 12 months (`OD-04 = B`) | **aligned** | live CS-Cart `/oferta/` `/dogovor-postavki/` 18 months remain `LEGACY PUBLIC DIVERGENCE` |
-| Warranty start | from transfer of goods to buyer | contract provenance same; website start wording still `LEGAL REVIEW` for `/warranty` pack | aligned as *contract provenance*; website copy not auto-closed | preserve transfer start in the template; do not invent a different clock |
+| Warranty start | from transfer of goods to buyer | `OD-04` pack + `docs/owner/warranty-public-policy.md` (2026-09-01): public start **from transfer** is verified for future `/warranty`. Storefront not shipped | aligned (contract + spec); implementation pending | preserve transfer start in the template; do not invent a different clock |
 | Warranty scope | production defects at assembly or during warranty use; seller inspects, acts, remedies confirmed defects at own cost | SoT + OD-04 pack: do not expand to wear / mechanical / misuse; do not waive statutory rights | scoped - keep | no public expansion |
 | DIY delivery/lift/assembly vs warranty | service may be withheld except manufacturing defects | SoT: do not treat DIY as universal loss of warranty on production defects | watch | do not broaden the exclusion |
 | Natural material | grain / texture / shade / fabric batch variation ≠ defect *by themselves* | SoT: not a blanket «any wood difference is not a defect» | aligned if kept narrow | do not broaden |
 | Claims timing | 5 working days (warranty claims); 5 calendar days (dispute pretension) | `OD-06B` = no extra public SLA; `OD-06A` = submit is request, not acceptance | scoped mismatch | **no** public «ответим за 5 дней» |
 | Delivery tariffs | Moscow 2000; МО 1000+50/km; lift %; assembly 3% | `OD-02 = B` quote-only | intentional divergence | do not publish tariff |
 | Payment | cash to cashier and/or bank transfer; prepayment mechanics | `OD-05 = A` manager → invoice / PaymentLink | website constrained | preserve OD-05; do not rewrite site to cashier story |
-| Returns | §5.10 + ПП РФ №55 от 19.01.1998; household furniture proper quality non-returnable | `OD-03 = B` manager-assisted + legal baseline; full SOP open | outdated contract wording | `LEGAL REFERENCE REQUIRES CURRENT LEGAL REVIEW` / `DO NOT PUBLISH AS-IS` |
+| Returns | §5.10 + ПП РФ №55 от 19.01.1998; household furniture proper quality non-returnable | `OD-03 = B` + `docs/owner/returns-sop.md` (`RETURNS_SOP_VERIFIED_AND_READY`). Extra goodwill not chosen | outdated contract wording | `SUPERSEDED / NOT CURRENT PUBLIC AUTHORITY` / `DO NOT PUBLISH AS-IS`. Future Word mutation |
 | Postal index | **153025**, Иваново, Дзержинского 39, оф. 514 (verified Word 2026-08-31; previous wording **153000**) | owner card / `woodright-seller.ts` `153025` | **aligned** | historical CTR-2026 `153000` retained as provenance |
 | Bank details | present in contract (legitimate in customer paper) | `OD-10 = B` not public on website | contextual difference | OK in contract / invoice; never copy account numbers into website SoT |
 | Bespoke / spec | custom sizes + sketches in Счёт-заказ | Woodright Bespoke = same entity as «По проекту»; no cart | aligned concept | preserve; `BESPOKE` ≠ automatic no-return |
@@ -193,7 +193,7 @@ Structural check: only `word/document.xml` content hash changed; zip member list
 
 ## 5. Warranty start, scope, exclusions, natural material
 
-**Start (contract):** from transfer of the goods to the buyer. Preserve. Website `/warranty` start sentence remains `LEGAL REVIEW` in `OD04_WARRANTY_VERIFICATION.md` until the legal pack says otherwise. Provenance ≠ silent close of that review.
+**Start (contract):** from transfer of the goods to the buyer. Preserve. Public start wording is verified 2026-09-01 in `docs/owner/warranty-public-policy.md` (storefront `/warranty` still unimplemented). Provenance matches the spec.
 
 **Scope (contract):** manufacturing defects found at assembly or during the warranty period. Seller may inspect quality, record an act, choose the remedy, and fix confirmed defects at the seller’s cost. Do not expand to any damage, natural wear, mechanical damage, or misuse. Do not add extra limits on statutory consumer rights.
 
@@ -218,10 +218,10 @@ Contract 5 working / 5 calendar days stay **provenance**. Not a website SLA.
 ```text
 OD-03 = B
 RETURNS_LAUNCH_MODEL = MANAGER_ASSISTED
-WOODRIGHT_CUSTOM_RETURN_SOP = NOT YET APPROVED
+WOODRIGHT_CUSTOM_RETURN_SOP = VERIFIED_AND_READY (2026-09-01; docs/owner/returns-sop.md)
 ```
 
-Launch communication is ratified. Full returns legal pack / SOP is **not** closed. Do not flatten to `OD-03 OPEN`. Do not claim returns completely solved.
+Launch communication is ratified. SOP is verified; storefront `/returns` and extra goodwill are **not** shipped. Do not flatten to `OD-03 OPEN`. `OWNER_LEGAL_CONTENT_APPROVED` is not issued.
 
 ПП РФ №55 от 19.01.1998 in the template:
 
@@ -266,13 +266,13 @@ Observed from CTR-2026 persist + live `/dogovor-postavki/` lineage. **Not** a ma
 | ID | Severity | Issue | Action this cycle |
 | --- | --- | --- | --- |
 | CTI-P0-01 | P0 (closed 2026-08-31 for *Word template term*) | Was: warranty **18** vs `OD-04 = B` **12** | Word source verified `12 (Двенадцать) месяцев с момента передачи Товара`. Live CS-Cart 18 months still legacy. |
-| CTI-P0-02 | P0 | Returns §5.10 + PP 55 (1998) as furniture non-return rule | do not publish; legal review; keep OD-03 = B nuance |
+| CTI-P0-02 | P0 | Returns §5.10 + PP 55 (1998) as furniture non-return rule | `SUPERSEDED / NOT CURRENT PUBLIC AUTHORITY`. Do not publish. **Future Word mutation.** SOP: `docs/owner/returns-sop.md` |
 | CTI-P0-03 | P0 (closed 2026-08-31 for *Word template index*) | Was: postal **153000** vs owner card **153025** | Word source verified `153025 г. Иваново, ул. Дзержинского,39, оф 514`. Historical `153000` retained as provenance. |
 | CTI-P1-01 | P1 | Warranty claim **5 working days** vs dispute **5 calendar days** | keep both as provenance; no public SLA |
 | CTI-P1-02 | P1 | DIY delivery/lift/assembly vs warranty - must keep manufacturing-defect exception | do not broaden |
 | CTI-P1-03 | P1 | Natural-material sentence can be over-read as a blanket defect waiver | keep SoT narrow wording |
-| CTI-P1-04 | P1 | Live oferta annex = manufacturer 18 months vs live dogovor = seller 18 months (obligor). Current Word template term is now **12** months seller | `WARRANTY_OBLIGOR_LEGAL_WORDING = LEGAL REVIEW`; OD-04 does not close obligor |
-| CTI-P1-05 | P1 | Obsolete legal reference PP 55 | `DO NOT PUBLISH AS-IS` |
+| CTI-P1-04 | P1 | Live oferta annex = manufacturer 18 months vs live dogovor = seller 18 months. Current Word = **12** months **seller** | New-site commercial obligor = seller ООО «Роэл-Техник» (`warranty-public-policy.md`). Live HTML still legacy |
+| CTI-P1-05 | P1 | Obsolete legal reference PP 55 | `SUPERSEDED / NOT CURRENT PUBLIC AUTHORITY`. Future Word mutation |
 | CTI-P2-01 | P2 | Delivery clause numbering restarts after `3.1.4` at `3.1.1` (known CTR-2026 extract) | editorial; no rewrite this cycle |
 | CTI-P2-02 | P2 | `Счет-заказ` / `Счёт-заказ` spelling mix in the family of texts | editorial |
 | CTI-P2-03 | P2 | Live dogovor care URL still `wdrt.ru` | legacy HTML; not Word-edit this cycle |
@@ -290,10 +290,26 @@ Delivery/payment **tariffs and cashier wording** are intentional website diverge
 | 12/18 *template vs website* consistency gate | **closed** for the Word source |
 | Historical 18-month CTR-2026 wording | retained as provenance |
 | Warranty start in template | from transfer - unchanged |
-| `/warranty` obligor / exclusions / start *copy* | still `LEGAL REVIEW` |
+| `/warranty` start / seller-obligor / narrow exclusions | **spec ready** 2026-09-01 (`docs/owner/warranty-public-policy.md`); storefront not shipped |
 | Postal index | **closed** (`WOODRIGHT_POSTAL_INDEX_RECONCILED`; previous CTR-2026 value `153000`) |
-| Returns SOP | **open** (`OD-03 = B` model only) |
+| Returns SOP | **verified** 2026-09-01 (`docs/owner/returns-sop.md`); `/returns` not shipped |
 | Public claims SLA | **must not add** (`OD-06B`) |
 | Full legal pack token | `OWNER_LEGAL_CONTENT_APPROVED` **not** issued |
 | Live CS-Cart | untouched; separate cutover |
 | Storefront / runtime / deploy | untouched |
+
+---
+
+## 11. Future Word mutations (not this cycle)
+
+`CHANGE REQUIRES WORD MUTATION = YES` for each. Actual `.docx` **not** edited 2026-09-01.
+
+| CURRENT TEXT (sense) | ISSUE | TARGET SEMANTIC RULE | AUTHORITY |
+| --- | --- | --- | --- |
+| §5.10 + ПП РФ №55 от 19.01.1998; household furniture proper quality non-returnable | Obsolete law; mixes remote / salon / all furniture | Point to current ЗоЗПП 26.1 / 18–24 / ст. 25 + PP 2463 п. 8 **гарнитуры** only; no universal furniture ban; no BESPOKE auto-ban | PP 2463 in force 01.01.2021; КС 7-П; SOP |
+| Warranty claims **5 working days** vs dispute **5 calendar days** | Inconsistent paper clocks; easy to misread as public SLA | Align internally **or** drop from customer paper; website stays `OD-06B` | OD-06B |
+| DIY delivery/lift/assembly: warranty **service** withheld except manufacturing defect | Over-read as total void | Keep manufacturing-defect exception; match warranty spec DIY sentence | ст. 16 / 18 |
+| Acceptance: inspect / act or lose claims (if overbroad) | Must not wipe hidden defects | Visible-at-handover vs later manufacturing defects | SOP acceptance row |
+| Any waiver worse than ЗоЗПП | Invalid vs consumers | Remove or narrow | ст. 16 |
+
+Word file itself: **NOT MODIFIED** this cycle.
