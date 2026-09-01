@@ -102,7 +102,7 @@ const KEEP_TOGETHER_PHRASES = [
  * so `\b` never matches after «см» and the glue silently fails.
  */
 const MEASURE_UNIT =
-  /(\d+(?:[.,]\d+)?)\s+(см|мм|м)(?=$|[^\p{L}\p{N}])/giu
+  /(\d+(?:[.,]\d+)?)\s+(см|мм|м|дней|дня|день|месяцев|месяца|месяц)(?=$|[^\p{L}\p{N}])/giu
 
 /**
  * Cardinal number-words → digits (counts in buyer-facing copy).

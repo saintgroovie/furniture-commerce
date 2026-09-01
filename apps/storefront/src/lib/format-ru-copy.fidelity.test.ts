@@ -51,6 +51,12 @@ assertGlued(
 )
 assertGlued("при высоте 90 см.", "при\u00A0высоте\u00A090\u00A0см")
 
+/* Warranty / returns statutory periods stay with the unit. */
+assertGlued("Гарантийный срок - 12 месяцев с момента", "12\u00A0месяцев")
+assertGlued("закон даёт 7 дней, если", "7\u00A0дней")
+assertGlued("срок - 3 месяца с момента", "3\u00A0месяца")
+assertGlued("в течение 14 дней, не считая", "14\u00A0дней")
+
 /* Counts in words → digits in buyer-facing copy. */
 assertGlued("двенадцать отделок, от белого", "12 отделок")
 assertGlued("в двенадцати отделках", "в\u00A012 отделках")

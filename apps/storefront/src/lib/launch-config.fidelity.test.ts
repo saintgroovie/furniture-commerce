@@ -187,7 +187,10 @@ assert.doesNotMatch(JSON.stringify(payment), /эквайринг на сайте
 
 const warranty = buildLegalPage("warranty")
 assert.match(JSON.stringify(warranty), /12 месяцев/)
+assert.match(JSON.stringify(warranty), /с момента передачи/)
+assert.match(JSON.stringify(warranty), /Роэл-Техник/)
 assert.doesNotMatch(JSON.stringify(warranty), /18 месяцев/)
+assert.doesNotMatch(JSON.stringify(warranty), /гарантия производителя/)
 
 const requisites = buildLegalPage("requisites")
 assert.match(JSON.stringify(requisites), /Роэл-Техник/)
