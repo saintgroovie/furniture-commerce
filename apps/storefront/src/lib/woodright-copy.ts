@@ -30,7 +30,8 @@ export const nav = {
   catalog: "Каталог",
   rooms: "Комнаты",
   kids: "Детская",
-  bespoke: "Bespoke",
+  /** Global nav / catalog exit label. Page brand stays Woodright Bespoke. */
+  bespoke: "По проекту",
   about: "О бренде",
   cart: "Корзина",
 }
@@ -116,7 +117,7 @@ export const footer = {
       ],
     },
     {
-      title: "Bespoke",
+      title: "По проекту",
       links: [
         { label: "Как это работает", href: "/bespoke" },
         { label: "Оставить заявку", href: "/bespoke/request" },
@@ -182,7 +183,7 @@ export const labels = {
   kidsCollection: "Детская коллекция",
 }
 
-/** BESPOKE badge label unified with the Bespoke nav section / tab. */
+/** Product-type badge: destination brand, not the global nav label. */
 export const productTypeBadgeLabels: Record<string, string> = {
   BESPOKE: "Bespoke",
 }
@@ -363,9 +364,8 @@ export const roomSetDetail = {
 export const bespokeLanding = {
   h1: "Woodright Bespoke",
   lead: [
-    "Если каталог и штатные варианты не решают задачу, разработаем решение",
-    "Начните с заявки",
-    "остальное уточним вместе",
+    "Bespoke - работа по индивидуальному проекту: формат мебельного ателье или мастерской на заказ",
+    "Если каталог и штатные варианты не решают задачу, разработаем решение под ваше пространство и требования",
   ],
   supporting: "Работаем с отдельными предметами и с составом комнаты",
   ctaPrimary: "Обсудить проект",
@@ -823,7 +823,7 @@ export const homeCopy = {
     note: "Собственное производство: от массива до ручной отделки",
     ctaPrimary: "Смотреть каталог",
     ctaSecondary: "Собрать комнату",
-    chips: ["Массив дерева", "Ручная отделка", "Готовые модели", "Детские коллекции", "Bespoke"],
+    chips: ["Массив дерева", "Ручная отделка", "Готовые модели", "Детские коллекции", "По проекту"],
   },
   quickEntries: {
     title: "С чего начать",
@@ -915,8 +915,9 @@ export const seo = {
     description: "Готовые комплекты детской мебели Woodright - от первых лет до школы, с ручной росписью и массивом дерева.",
   },
   bespoke: {
-    title: "Woodright Bespoke - мебель, когда каталога недостаточно",
-    description: "Woodright Bespoke: если готовая модель и штатные варианты не решают задачу, обсудим состав, размеры и исполнение.",
+    title: "Woodright Bespoke",
+    description:
+      "Woodright Bespoke - мебель по индивидуальному проекту для задач, которые не решаются каталогом и штатными вариантами.",
   },
   bespokeCatalog: {
     title: "Каталог по проекту Woodright - кухни, гардеробные, шкафы",

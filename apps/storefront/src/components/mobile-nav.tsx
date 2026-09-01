@@ -20,6 +20,7 @@ import {
   type BuyerClosePeerDetail,
 } from "@/lib/buyer-dialog-a11y"
 import { a11yCopy, nav as navCopy } from "@/lib/woodright-copy"
+import { isPrimaryNavCurrent } from "@/lib/nav-current"
 
 type NavLink = {
   href: string
@@ -171,6 +172,9 @@ export function MobileNav() {
                   key={item.href}
                   href={item.href}
                   className={item.className}
+                  aria-current={
+                    isPrimaryNavCurrent(pathname, item.href) ? "page" : undefined
+                  }
                   onClick={() => close(false)}
                 >
                   {item.label}
