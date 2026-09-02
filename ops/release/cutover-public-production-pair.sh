@@ -382,7 +382,15 @@ assert_not_private_candidate_name "compose dir" "${WOODRIGHT_DOKPLOY_COMPOSE_DIR
 assert_not_private_candidate_name "lock" "${WOODRIGHT_MUTATION_LOCK_PATH:-}"
 [[ "${WOODRIGHT_BE_CONTAINER_DEFAULT}" == "woodright-public-production-backend" ]]   || die "backend container must be woodright-public-production-backend"
 [[ "${WOODRIGHT_SF_CONTAINER_DEFAULT}" == "woodright-public-production-storefront" ]]   || die "storefront container must be woodright-public-production-storefront"
-[[ "${WOODRIGHT_HOST_PUBLISH_POLICY:-}" == "deny" ]]   || die "HOST_PUBLISH_POLICY must remain deny (got ${WOODRIGHT_HOST_PUBLISH_POLICY:-empty})"
+[[ "${WOODRIGHT_HOST_PUBLISH_POLICY:-}" == "loopback_allowlist" ]] \
+  || die "HOST_PUBLISH_POLICY must be loopback_allowlist for isolated 127.0.0.1:3300/9300 (got ${WOODRIGHT_HOST_PUBLISH_POLICY:-empty})"
+[[ "${WOODRIGHT_ALLOWED_HOST_BINDINGS:-}" == *"127.0.0.1:3300"* ]] \
+  || die "ALLOWED_HOST_BINDINGS must include storefront 127.0.0.1:3300"
+[[ "${WOODRIGHT_ALLOWED_HOST_BINDINGS:-}" == *"127.0.0.1:9300"* ]] \
+  || die "ALLOWED_HOST_BINDINGS must include backend 127.0.0.1:9300"
+case "${WOODRIGHT_ALLOWED_HOST_BINDINGS:-}" in
+  *0.0.0.0*|*::/*|*::,*) die "ALLOWED_HOST_BINDINGS must stay loopback (got ${WOODRIGHT_ALLOWED_HOST_BINDINGS})" ;;
+esac
 if [[ "${WR_STAGING_MUTATION_LOCK_ALLOW_NONCANONICAL:-0}" == "1" ]]; then
   case "${WOODRIGHT_MUTATION_LOCK_PATH}" in
     */locks/public_production/live-cutover.lock) ;;
