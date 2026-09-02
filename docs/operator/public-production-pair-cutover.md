@@ -10,7 +10,7 @@ It is **not** an apex launch.
 |---|---|---|
 | `public_demo` | `ops/release/cutover-public-demo-pair.sh` | Buyer-accessible demo (`woodright-demo.ru`) |
 | `production` | `ops/release/cutover-production-candidate.sh` | Private / noindex candidate (`127.0.0.1:3200` / `:9200`) |
-| `public_production` | `ops/release/cutover-public-production-pair.sh` | Isolated new-stack production pair (`127.0.0.1:3300` / `:9300`), loopback, `HOST_PUBLISH_POLICY=deny` |
+| `public_production` | `ops/release/cutover-public-production-pair.sh` | Isolated new-stack production pair (`127.0.0.1:3300` / `:9300`), loopback, `HOST_PUBLISH_POLICY=loopback_allowlist` |
 
 `public_production` pair cutover does **not** mutate DNS or CS-Cart.
 

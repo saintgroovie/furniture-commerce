@@ -61,16 +61,18 @@ TARGET="$TRAEFIK_DIR/woodright-public-production.yml"
 DEMO="$TRAEFIK_DIR/woodright-demo.yml"
 APPROVAL="$SRV/meta/public_production/OWNER_APPROVED_APEX_LAUNCH.json"
 
-SHA="ced25101f71f34caf98b62d1e7855be4f91ef977"
-SF_DIG="sha256:39b244717c45249971cb55c7c702a2bbb9fad48a2d0fa7c5d55fca39ade05b9c"
-BE_DIG="sha256:8f097c9d9f82a6cf79e9ee970ac96aed1577e37d75275e027cc0cef0ca845339"
+SHA="caf82b048b9caefae30679342aec3d4fc42a8d89"
+SF_DIG="sha256:4f05f9400b5d228e6217d90c4e53d8552e8bdb13ec72776eea265a6e16162ac4"
+BE_DIG="sha256:5bd38b417fb5141c43fe7e6f5d4f8f2a4283e69c5d3f497f534005322a86618d"
+STALE_SHA="ced25101f71f34caf98b62d1e7855be4f91ef977"
 CONFIRM="I_UNDERSTAND_PUBLIC_APEX_ROUTING_CUTOVER"
 
 mkdir -p "$BIN" "$STATE" "$PROFILES" "$TRAEFIK_DIR" "$COMPOSE_DIR" \
   "$SRV/locks/public_production" "$SRV/meta/public_production" \
-  "$SRV/reports/public_production" "$SRV/runtime-ownership-public-production"
+  "$SRV/reports/public_production" "$SRV/runtime-ownership-public-production" \
+  "$SRV/backups/automated/public-production/manifests"
 
-sed -e "s#=/srv/#=${SRV}/#g" -e "s#=/etc/dokploy/#=${TMP}/etc/dokploy/#g" \
+sed -e "s#=/srv/woodright/#=${SRV}/#g" -e "s#=/etc/dokploy/#=${TMP}/etc/dokploy/#g" \
   "$REAL_CONF" >"$CONF"
 
 cat >"$DEMO" <<'EOF'
@@ -84,7 +86,7 @@ write_approval() {
   cat >"$APPROVAL" <<EOF
 {
   "schema": "woodright.public_production.apex_launch_approval.v1",
-  "token": "OWNER_APPROVE_WOODRIGHT_APEX_LAUNCH_CED2510",
+  "token": "OWNER_APPROVE_WOODRIGHT_APEX_LAUNCH",
   "environment": "public_production",
   "application_source_sha": "$SHA",
   "storefront_digest": "$SF_DIG",
@@ -102,6 +104,14 @@ args = sys.argv[1:]
 def save():
     json.dump(st, open(os.environ["WR_FAKE_DOCKER_STATE"], "w"), indent=2)
 
+def resolve(ref):
+    if ref in st["containers"]:
+        return ref, st["containers"][ref]
+    for n, c in st["containers"].items():
+        if c.get("id") == ref:
+            return n, c
+    return None, None
+
 if args[:1] == ["inspect"]:
     fmt = ""
     name = ""
@@ -113,44 +123,87 @@ if args[:1] == ["inspect"]:
             continue
         name = args[i]
         i += 1
-    c = st["containers"].get(name)
+    _, c = resolve(name)
     if not c:
         sys.exit(1)
     if "Config.Image" in fmt:
         print(c["image"])
     elif "RestartCount" in fmt:
         print(c.get("restarts", 0))
-    elif "release-sha" in fmt:
+    elif "release-sha" in fmt or "org.opencontainers.image.revision" in fmt:
         print(c["sha"])
+    elif "build_profile" in fmt:
+        print(c.get("profile", "public_production"))
+    elif ".Id" in fmt:
+        print(c.get("id", "id-" + name))
     elif "Health.Status" in fmt:
         print(c["health"])
     elif "Networks" in fmt:
         for n in c.get("networks", []):
             print(n)
+    elif "Config.Env" in fmt:
+        env = c.get("env") or {
+            "WOODRIGHT_RELEASE_SHA": c["sha"],
+            "WOODRIGHT_RUNTIME_ROLE": c.get("role", "public_production"),
+            "WOODRIGHT_DATABASE_IDENTITY": c.get("db", "public_production_db"),
+        }
+        for k, v in env.items():
+            print(f"{k}={v}")
     else:
         print("")
     sys.exit(0)
 
+if args[:2] == ["network", "inspect"]:
+    net = args[-1]
+    containers = {}
+    for name, c in st["containers"].items():
+        if net in (c.get("networks") or []):
+            containers[c.get("id", name)] = {
+                "Name": name,
+                "IPv4Address": "10.0.1.99/24",
+                "Aliases": c.get("aliases") or [name],
+            }
+    extra = st.get("network_extra") or {}
+    for cid, row in extra.get(net, {}).items():
+        containers[cid] = row
+    json.dump([{"Name": net, "Containers": containers}], sys.stdout)
+    sys.exit(0)
+
 if args[:2] == ["network", "connect"]:
-    net, name = args[2], args[3]
-    c = st["containers"][name]
+    aliases = []
+    rest = []
+    i = 2
+    while i < len(args):
+        if args[i] == "--alias":
+            aliases.append(args[i + 1])
+            i += 2
+            continue
+        rest.append(args[i])
+        i += 1
+    net, ref = rest[0], rest[1]
+    name, c = resolve(ref)
+    if not c:
+        print(f"Error: No such container: {ref}", file=sys.stderr)
+        sys.exit(1)
     if net in c.get("networks", []):
         print(f"Error: endpoint with name {name} already exists", file=sys.stderr)
         sys.exit(1)
     c.setdefault("networks", []).append(net)
-    st.setdefault("mutations", []).append(f"connect {name} {net}")
+    if aliases:
+        c["aliases"] = aliases
+    st.setdefault("mutations", []).append(f"connect {name} {net} aliases={aliases}")
     save()
     sys.exit(0)
 
 if args[:2] == ["network", "disconnect"]:
-    net, name = args[2], args[3]
+    net, ref = args[2], args[3]
+    name, c = resolve(ref)
     fail_name = os.environ.get("WR_FAKE_DOCKER_DISCONNECT_FAIL", "")
-    if fail_name and name == fail_name:
-        print(f"Error: injected disconnect failure for {name}", file=sys.stderr)
+    if fail_name and (name == fail_name or ref == fail_name):
+        print(f"Error: injected disconnect failure for {name or ref}", file=sys.stderr)
         sys.exit(1)
-    c = st["containers"].get(name)
     if not c:
-        print(f"Error: No such container: {name}", file=sys.stderr)
+        print(f"Error: No such container: {ref}", file=sys.stderr)
         sys.exit(1)
     if net not in c.get("networks", []):
         print(
@@ -168,6 +221,63 @@ sys.exit(99)
 PY
 chmod +x "$BIN/docker"
 
+write_authority() {
+  local sha="${1:-$SHA}" sf="${2:-$SF_DIG}" be="${3:-$BE_DIG}"
+  mkdir -p "$SRV/meta/public_production" \
+    "$SRV/runtime-ownership-public-production" \
+    "$SRV/backups/automated/public-production/manifests"
+  cat >"$SRV/meta/public_production/OWNER_APPROVED_RELEASE.json" <<EOF
+{
+  "schema_version": 1,
+  "environment": "public_production",
+  "owner_decision": "approved",
+  "application_sha": "$sha",
+  "storefront_digest": "$sf",
+  "backend_digest": "$be",
+  "owner_authorization_id": "OWNER-PASS-PUBLIC-PRODUCTION-TEST"
+}
+EOF
+  chmod 644 "$SRV/meta/public_production/OWNER_APPROVED_RELEASE.json"
+  cat >"$SRV/runtime-ownership-public-production/EXPECTED_RELEASE.json" <<EOF
+{
+  "application_source_sha": "$sha",
+  "storefront_digest": "$sf",
+  "backend_digest": "$be",
+  "environment": "public_production"
+}
+EOF
+  cat >"$SRV/runtime-ownership-public-production/ACTIVE_RELEASE.json" <<EOF
+{
+  "application_source_sha": "$sha",
+  "storefront_image": "ghcr.io/saintgroovie/woodright-storefront@$sf",
+  "backend_image": "ghcr.io/saintgroovie/woodright-backend@$be",
+  "state": "committed",
+  "environment": "public_production"
+}
+EOF
+  python3 - "$SRV/backups/automated/public-production/manifests/recovery-point-20260902T091459Z.json" "$sha" "$sf" "$be" <<'PY'
+import json, sys, datetime
+path, sha, sf, be = sys.argv[1:5]
+now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+json.dump({
+  "kind": "woodright_recovery_point",
+  "schema": "woodright_recovery_point_v2",
+  "status": "success",
+  "partial": False,
+  "environment": "public_production",
+  "recovery_point_id": "rp-public-production-test",
+  "created_at_utc": now,
+  "application_sha": sha,
+  "backend_digest": be,
+  "storefront_digest": sf,
+  "db": {"alias": "public_production_db", "name": "woodright_public_production",
+         "path": "/tmp/wr-apex-db.dump", "sha256": "a"*64, "size_bytes": 1},
+  "media": {"path": "/tmp/wr-apex-media.tar.gz", "sha256": "b"*64, "size_bytes": 1, "file_count": 1},
+  "verification_status": "pending_rehearsal",
+}, open(path, "w"), indent=2)
+PY
+}
+
 init_state() {
   python3 - "$STATE/docker.json" "$SHA" "$SF_DIG" "$BE_DIG" <<'PY'
 import json, sys
@@ -176,21 +286,41 @@ json.dump({
   "mutations": [],
   "containers": {
     "woodright-public-production-storefront": {
+      "id": "sfid" + "a"*56,
       "image": f"ghcr.io/saintgroovie/woodright-storefront@{sf}",
-      "sha": sha, "health": "healthy", "restarts": 0, "networks": []
+      "sha": sha, "health": "healthy", "restarts": 0, "networks": [],
+      "profile": "public_production",
+      "role": "public_production",
+      "db": "public_production_db",
+      "env": {
+        "WOODRIGHT_RELEASE_SHA": sha,
+        "WOODRIGHT_RUNTIME_ROLE": "public_production",
+        "WOODRIGHT_DATABASE_IDENTITY": "public_production_db",
+      },
     },
     "woodright-public-production-backend": {
+      "id": "beid" + "b"*56,
       "image": f"ghcr.io/saintgroovie/woodright-backend@{be}",
-      "sha": sha, "health": "healthy", "restarts": 0, "networks": []
+      "sha": sha, "health": "healthy", "restarts": 0, "networks": [],
+      "profile": "public_production",
+      "role": "public_production",
+      "db": "public_production_db",
+      "env": {
+        "WOODRIGHT_RELEASE_SHA": sha,
+        "WOODRIGHT_RUNTIME_ROLE": "public_production",
+        "WOODRIGHT_DATABASE_IDENTITY": "public_production_db",
+      },
     }
   }
 }, open(path, "w"), indent=2)
 PY
+  write_authority
 }
 
 export PATH="$BIN:$PATH"
 export WR_FAKE_DOCKER_STATE="$STATE/docker.json"
 export WOODRIGHT_ENV_PROFILE_DIR="$PROFILES"
+export WOODRIGHT_META_ROOT="$SRV/meta"
 export WOODRIGHT_APEX_TRAEFIK_FILE="$TARGET"
 export WOODRIGHT_DEMO_TRAEFIK_FILE="$DEMO"
 export WOODRIGHT_APEX_LOCK_PATH="$LOCK"
@@ -231,12 +361,23 @@ else
   pass "wrong environment refused"
 fi
 
-# wrong SHA
+# wrong SHA vs accepted metadata
 if run --mode dry-run --source-sha 1111111111111111111111111111111111111111 \
     --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" >/dev/null 2>"$TMP/wrong-sha.txt"; then
   fail "wrong SHA should be refused"
 else
   pass "wrong application SHA refused"
+fi
+
+# hardcoded obsolete SHA is no longer accepted merely by asking for it
+if run --mode dry-run --source-sha "$STALE_SHA" \
+    --storefront-digest sha256:39b244717c45249971cb55c7c702a2bbb9fad48a2d0fa7c5d55fca39ade05b9c \
+    --backend-digest sha256:8f097c9d9f82a6cf79e9ee970ac96aed1577e37d75275e027cc0cef0ca845339 \
+    >/dev/null 2>"$TMP/stale-sha.txt"; then
+  fail "obsolete ced2510 SHA should be refused"
+else
+  grep -q 'authoritative accepted SHA' "$TMP/stale-sha.txt" && pass "obsolete hardcoded SHA refused" \
+    || pass "obsolete SHA refused"
 fi
 
 # stale DNS
@@ -362,8 +503,10 @@ python3 - "$WOODRIGHT_APEX_OWNED_STATE" <<'PY'
 import json,sys
 d=json.load(open(sys.argv[1]))
 nets=d.get("networks_added") or []
-assert "woodright-public-production-storefront" in nets, nets
-assert "woodright-public-production-backend" in nets, nets
+names=[n["name"] if isinstance(n, dict) else n for n in nets]
+assert "woodright-public-production-storefront" in names, nets
+assert "woodright-public-production-backend" in names, nets
+assert all(isinstance(n, dict) and n.get("id") for n in nets), nets
 assert d.get("traefik_created_by_helper") is True
 print("ok")
 PY
@@ -759,8 +902,10 @@ import json,sys
 owned=json.load(open(sys.argv[1]))
 d=json.load(open(sys.argv[2]))
 assert owned.get("traefik_created_by_helper") is False
-assert "woodright-public-production-storefront" in (owned.get("networks_added") or [])
-assert "woodright-public-production-backend" not in (owned.get("networks_added") or [])
+names=[n["name"] if isinstance(n, dict) else n for n in (owned.get("networks_added") or [])]
+assert "woodright-public-production-storefront" in names
+assert "woodright-public-production-backend" not in names
+assert all(isinstance(n, dict) and n.get("id") for n in (owned.get("networks_added") or []))
 assert "dokploy-network" in d["containers"]["woodright-public-production-storefront"]["networks"]
 assert "dokploy-network" not in d["containers"]["woodright-public-production-backend"]["networks"]
 print("ok")
@@ -880,7 +1025,10 @@ import json,sys
 owned=json.load(open(sys.argv[1]))
 d=json.load(open(sys.argv[2]))
 assert owned.get("traefik_created_by_helper") is False
-assert owned.get("networks_added") == ["woodright-public-production-storefront"]
+nets=owned.get("networks_added") or []
+names=[n["name"] if isinstance(n, dict) else n for n in nets]
+assert names == ["woodright-public-production-storefront"], nets
+assert all(isinstance(n, dict) and n.get("id") for n in nets)
 assert "dokploy-network" in d["containers"]["woodright-public-production-storefront"]["networks"]
 assert "dokploy-network" not in d["containers"]["woodright-public-production-backend"]["networks"]
 print("ok")
@@ -899,6 +1047,232 @@ else
 fi
 [[ ! -f "$WOODRIGHT_APEX_OWNED_STATE" ]] && pass "P owned-state cleared after explicit rollback" \
   || fail "P owned-state remained after explicit rollback"
+
+# Q. EXPECTED_RELEASE mismatch
+init_state
+python3 - "$SRV/runtime-ownership-public-production/EXPECTED_RELEASE.json" <<'PY'
+import json,sys
+p=sys.argv[1]; d=json.load(open(p)); d["application_source_sha"]="eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"; json.dump(d, open(p,"w"))
+PY
+if run --mode dry-run --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    >/dev/null 2>"$TMP/expected-mismatch.txt"; then
+  fail "EXPECTED mismatch should refuse"
+else
+  pass "EXPECTED_RELEASE mismatch refused"
+fi
+
+# R. ACTIVE_RELEASE mismatch
+init_state
+python3 - "$SRV/runtime-ownership-public-production/ACTIVE_RELEASE.json" <<'PY'
+import json,sys
+p=sys.argv[1]; d=json.load(open(p)); d["state"]="prepared"; json.dump(d, open(p,"w"))
+PY
+if run --mode dry-run --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    >/dev/null 2>"$TMP/active-mismatch.txt"; then
+  fail "ACTIVE state mismatch should refuse"
+else
+  pass "ACTIVE_RELEASE state mismatch refused"
+fi
+
+# S. wrong build profile
+init_state
+python3 - "$STATE/docker.json" <<'PY'
+import json,sys
+p=sys.argv[1]; d=json.load(open(p))
+d["containers"]["woodright-public-production-storefront"]["profile"]="public_demo"
+json.dump(d, open(p,"w"), indent=2)
+PY
+if run --mode dry-run --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    >/dev/null 2>"$TMP/bad-profile.txt"; then
+  fail "wrong profile should refuse"
+else
+  pass "wrong build profile refused"
+fi
+
+# T. wrong role
+init_state
+python3 - "$STATE/docker.json" <<'PY'
+import json,sys
+p=sys.argv[1]; d=json.load(open(p))
+d["containers"]["woodright-public-production-backend"]["env"]["WOODRIGHT_RUNTIME_ROLE"]="production_candidate"
+json.dump(d, open(p,"w"), indent=2)
+PY
+if run --mode dry-run --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    >/dev/null 2>"$TMP/bad-role.txt"; then
+  fail "wrong role should refuse"
+else
+  pass "wrong runtime role refused"
+fi
+
+# U. alias collision
+init_state
+python3 - "$STATE/docker.json" <<'PY'
+import json,sys
+p=sys.argv[1]; d=json.load(open(p))
+d["network_extra"]={"dokploy-network":{"deadbeef":{"Name":"ghost-pp-sf","Aliases":["woodright-public-production-storefront"]}}}
+json.dump(d, open(p,"w"), indent=2)
+PY
+if run --mode dry-run --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    >/dev/null 2>"$TMP/alias-conflict.txt"; then
+  fail "alias collision should refuse"
+else
+  grep -q 'PUBLIC_PRODUCTION_NETWORK_ALIAS_CONFLICT' "$TMP/alias-conflict.txt" \
+    && pass "alias collision refused" || pass "alias collision refused (generic)"
+fi
+
+# V. pre-existing SF membership is retained on rollback of transaction-owned BE
+init_state
+write_approval
+python3 - "$STATE/docker.json" <<'PY'
+import json,sys
+p=sys.argv[1]; d=json.load(open(p))
+d["containers"]["woodright-public-production-storefront"]["networks"]=["dokploy-network"]
+json.dump(d, open(p,"w"), indent=2)
+PY
+rm -f "$TARGET" "$WOODRIGHT_APEX_OWNED_STATE"
+export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-preexist"
+export WOODRIGHT_APEX_INJECT_FAIL=after-networks
+if run --mode execute --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    --confirm "$CONFIRM" --approval-path "$APPROVAL" >/dev/null 2>"$TMP/preexist.txt"; then
+  fail "injected after-networks should fail"
+else
+  pass "pre-existing SF execute failed after BE connect"
+fi
+unset WOODRIGHT_APEX_INJECT_FAIL
+python3 - "$STATE/docker.json" <<'PY'
+import json,sys
+d=json.load(open(sys.argv[1]))
+assert "dokploy-network" in d["containers"]["woodright-public-production-storefront"]["networks"]
+assert "dokploy-network" not in d["containers"]["woodright-public-production-backend"]["networks"]
+print("ok")
+PY
+pass "pre-existing SF membership retained after BE rollback"
+
+# W. missing RP
+init_state
+rm -f "$SRV/backups/automated/public-production/manifests"/recovery-point-*.json
+if run --mode dry-run --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    >/dev/null 2>"$TMP/no-rp.txt"; then
+  fail "missing RP should refuse"
+else
+  grep -q 'FRESH_RECOVERY_POINT_REQUIRED' "$TMP/no-rp.txt" && pass "missing RP refused" || pass "missing RP refused"
+fi
+
+# X. helper no longer hardcodes ced2510 accepted SHA
+grep -E 'ACCEPTED_SOURCE_SHA="ced2510' "$SCRIPT" \
+  && fail "hardcoded ced2510 accepted SHA still present" \
+  || pass "no hardcoded ced2510 accepted SHA"
+
+grep -q 'OWNER_APPROVE_WOODRIGHT_APEX_LAUNCH_CED2510' "$SCRIPT" \
+  && fail "ced2510 apex launch token still present" \
+  || pass "apex launch token is SHA-agnostic"
+
+# Y. execute must not honor RP/alias skip hatches
+init_state
+write_approval
+rm -f "$TARGET" "$WOODRIGHT_APEX_OWNED_STATE"
+export WOODRIGHT_APEX_SKIP_RP_GATE=1
+export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-skip-rp-exec"
+if run --mode execute --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    --confirm "$CONFIRM" --approval-path "$APPROVAL" >/dev/null 2>"$TMP/skip-rp-exec.txt"; then
+  fail "execute SKIP_RP_GATE should refuse"
+else
+  grep -q 'WOODRIGHT_APEX_SKIP_RP_GATE is forbidden in execute' "$TMP/skip-rp-exec.txt" \
+    && pass "execute forbids SKIP_RP_GATE" || fail "execute skip RP message"
+fi
+unset WOODRIGHT_APEX_SKIP_RP_GATE
+export WOODRIGHT_APEX_SKIP_ALIAS_GATE=1
+export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-skip-alias-exec"
+if run --mode execute --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    --confirm "$CONFIRM" --approval-path "$APPROVAL" >/dev/null 2>"$TMP/skip-alias-exec.txt"; then
+  fail "execute SKIP_ALIAS_GATE should refuse"
+else
+  grep -q 'WOODRIGHT_APEX_SKIP_ALIAS_GATE is forbidden in execute' "$TMP/skip-alias-exec.txt" \
+    && pass "execute forbids SKIP_ALIAS_GATE" || fail "execute skip alias message"
+fi
+unset WOODRIGHT_APEX_SKIP_ALIAS_GATE
+
+# Z. after-lock EXPECTED drift is re-CAS'd
+init_state
+write_approval
+rm -f "$TARGET" "$WOODRIGHT_APEX_OWNED_STATE"
+export WOODRIGHT_APEX_INJECT_FAIL=after-lock-expected-drift
+export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-lock-cas"
+if run --mode execute --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    --confirm "$CONFIRM" --approval-path "$APPROVAL" >/dev/null 2>"$TMP/lock-cas.txt"; then
+  fail "after-lock EXPECTED drift should refuse"
+else
+  grep -q 'OWNER_APPROVED_RELEASE SHA != EXPECTED_RELEASE' "$TMP/lock-cas.txt" \
+    && pass "after-lock authority revalidated" || fail "after-lock CAS message"
+fi
+unset WOODRIGHT_APEX_INJECT_FAIL
+python3 - "$STATE/docker.json" <<'PY'
+import json,sys
+d=json.load(open(sys.argv[1]))
+assert "dokploy-network" not in d["containers"]["woodright-public-production-storefront"]["networks"]
+assert "dokploy-network" not in d["containers"]["woodright-public-production-backend"]["networks"]
+print("ok")
+PY
+pass "after-lock drift did not attach networks"
+
+# AA. rollback refuses if journaled container ID was replaced
+init_state
+write_approval
+rm -f "$TARGET" "$WOODRIGHT_APEX_OWNED_STATE"
+export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-id-cas"
+if run --mode execute --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    --confirm "$CONFIRM" --approval-path "$APPROVAL" >/dev/null 2>"$TMP/id-cas-exec.txt"; then
+  pass "execute for ID-mismatch rollback fixture"
+else
+  fail "execute for ID-mismatch fixture should pass"
+  cat "$TMP/id-cas-exec.txt"
+fi
+python3 - "$STATE/docker.json" <<'PY'
+import json,sys
+p=sys.argv[1]; d=json.load(open(p))
+d["containers"]["woodright-public-production-storefront"]["id"]="replaced"+"c"*55
+json.dump(d, open(p,"w"), indent=2)
+PY
+export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-id-cas-rb"
+if run --mode rollback --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    >/dev/null 2>"$TMP/id-cas-rb.txt"; then
+  fail "rollback after container ID replacement should refuse"
+else
+  grep -q 'PUBLIC_APEX_ROUTING_ROLLBACK_IDENTITY_MISMATCH' "$TMP/id-cas-rb.txt" \
+    && pass "rollback identity mismatch refused" || fail "rollback identity mismatch token"
+fi
+[[ -f "$TARGET" ]] && pass "Traefik kept after identity mismatch" || fail "Traefik deleted before identity preflight"
+[[ -f "$WOODRIGHT_APEX_OWNED_STATE" ]] && pass "owned-state kept after identity mismatch" \
+  || fail "owned-state cleared on identity mismatch"
+python3 - "$STATE/docker.json" <<'PY'
+import json,sys
+d=json.load(open(sys.argv[1]))
+assert "dokploy-network" in d["containers"]["woodright-public-production-storefront"]["networks"]
+assert "dokploy-network" in d["containers"]["woodright-public-production-backend"]["networks"]
+print("ok")
+PY
+pass "replaced container kept its network (not transaction-owned endpoint)"
+
+# AB. dry-run documents evidence writes without Docker mutation
+init_state
+export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-dry-docs"
+if run --mode dry-run --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    >/dev/null 2>"$TMP/dry-docs.txt"; then
+  grep -q 'Docker/Traefik/DNS mutation=NO' "$TMP/dry-docs.txt" \
+    && grep -q 'evidence files written' "$TMP/dry-docs.txt" \
+    && pass "dry-run evidence-write contract logged" || fail "dry-run evidence contract log"
+else
+  fail "dry-run for evidence contract should pass"
+fi
+[[ -f "$TMP/evidence-dry-docs/routing-plan.json" ]] && pass "dry-run wrote routing-plan.json" \
+  || fail "dry-run missing routing-plan.json"
+python3 - "$STATE/docker.json" <<'PY'
+import json,sys
+d=json.load(open(sys.argv[1]))
+assert not d.get("mutations"), d.get("mutations")
+print("ok")
+PY
+pass "dry-run docker mutations empty"
 
 if [[ "$FAILED" -ne 0 ]]; then
   echo "FAILED=$FAILED"
