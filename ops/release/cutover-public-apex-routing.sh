@@ -29,6 +29,9 @@
 # Confirm token: I_UNDERSTAND_PUBLIC_APEX_ROUTING_CUTOVER
 # Lock: /srv/woodright/locks/public_production/apex-routing.lock
 # Operator: docs/operator/public-apex-cutover.md
+#
+# Dry-run writes evidence JSON only (routing-plan.json, preflight.json).
+# It does not mutate Docker networks, Traefik files, application containers, or DNS.
 set -Eeuo pipefail
 IFS=$'\n\t'
 
@@ -36,8 +39,14 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$HERE/../.." && pwd)"
 # shellcheck source=../lib/woodright-environment-profile.sh
 source "$HERE/../lib/woodright-environment-profile.sh"
+# shellcheck source=../lib/woodright-owner-approved-release.sh
+source "$HERE/../lib/woodright-owner-approved-release.sh"
+# shellcheck source=../lib/woodright-recovery-point.sh
+source "$HERE/../lib/woodright-recovery-point.sh"
 
 EXECUTE_CONFIRM_TOKEN="I_UNDERSTAND_PUBLIC_APEX_ROUTING_CUTOVER"
+# SHA-agnostic execute approval (must still match accepted live pair).
+APEX_LAUNCH_APPROVAL_TOKEN="OWNER_APPROVE_WOODRIGHT_APEX_LAUNCH"
 CANONICAL_LOCK_PATH="/srv/woodright/locks/public_production/apex-routing.lock"
 PAIR_LOCK_PATH="/srv/woodright/locks/public_production/live-cutover.lock"
 APPROVAL_PATH_DEFAULT="/srv/woodright/meta/public_production/OWNER_APPROVED_APEX_LAUNCH.json"
@@ -49,9 +58,18 @@ SF_NAME="woodright-public-production-storefront"
 BE_NAME="woodright-public-production-backend"
 LEGACY_APEX_A="79.133.175.43"
 NEW_STACK_A="89.169.188.29"
-ACCEPTED_SOURCE_SHA="ced25101f71f34caf98b62d1e7855be4f91ef977"
-ACCEPTED_SF_DIGEST="sha256:39b244717c45249971cb55c7c702a2bbb9fad48a2d0fa7c5d55fca39ade05b9c"
-ACCEPTED_BE_DIGEST="sha256:8f097c9d9f82a6cf79e9ee970ac96aed1577e37d75275e027cc0cef0ca845339"
+REQUIRED_BUILD_PROFILE="public_production"
+REQUIRED_RUNTIME_ROLE="public_production"
+REQUIRED_DB_ALIAS="public_production_db"
+BACKUP_CRIT_H="${WOODRIGHT_BACKUP_CRIT_HOURS:-48}"
+ACCEPTED_SOURCE_SHA=""
+ACCEPTED_SF_DIGEST=""
+ACCEPTED_BE_DIGEST=""
+LIVE_SF_ID=""
+LIVE_BE_ID=""
+SF_CONNECT_REQUIRED=0
+BE_CONNECT_REQUIRED=0
+YAML_CHANGE_NEEDED=0
 # File-provider watch can 404 after atomic install; poll until Host routing exists.
 TRAEFIK_SETTLE_TIMEOUT_DEFAULT=45
 TRAEFIK_SETTLE_INTERVAL_DEFAULT=1
@@ -98,6 +116,8 @@ Usage:
     [--approval-path PATH]
 
 execute requires owner approval JSON + confirm token.
+Accepted SHA/digests are derived from OWNER_APPROVED_RELEASE + EXPECTED_RELEASE +
+ACTIVE_RELEASE + live Docker (not a hardcoded release constant).
 This helper does not change DNS.
 Rollback is refused until apex and www are the legacy A and api is empty.
 EOF
@@ -185,9 +205,41 @@ container_image_digest() {
   printf '%s\n' "$digest"
 }
 
+container_id() {
+  docker inspect --format '{{.Id}}' "$1" 2>/dev/null || true
+}
+
+container_oci_revision() {
+  local name="$1" rev
+  rev="$(docker inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$name" 2>/dev/null || true)"
+  if [[ -z "$rev" ]]; then
+    rev="$(docker inspect --format '{{index .Config.Labels "com.woodright.release-sha"}}' "$name" 2>/dev/null || true)"
+  fi
+  printf '%s\n' "$rev"
+}
+
+container_env() {
+  local name="$1" key="$2"
+  docker inspect --format '{{range .Config.Env}}{{println .}}{{end}}' "$name" 2>/dev/null \
+    | awk -F= -v k="$key" '$1==k {print substr($0, index($0,"=")+1); exit}'
+}
+
+container_build_profile() {
+  docker inspect --format '{{index .Config.Labels "woodright.image.build_profile"}}' "$1" 2>/dev/null || true
+}
+
 container_release_sha() {
-  local name="$1"
-  docker inspect --format '{{index .Config.Labels "com.woodright.release-sha"}}' "$name" 2>/dev/null || true
+  local name="$1" oci env_sha
+  oci="$(container_oci_revision "$name")"
+  env_sha="$(container_env "$name" WOODRIGHT_RELEASE_SHA)"
+  if [[ -n "$oci" && -n "$env_sha" && "$oci" != "$env_sha" ]]; then
+    die "CAS $name OCI revision '$oci' != WOODRIGHT_RELEASE_SHA '$env_sha'"
+  fi
+  if [[ -n "$oci" ]]; then
+    printf '%s\n' "$oci"
+    return 0
+  fi
+  printf '%s\n' "$env_sha"
 }
 
 container_restart_count() {
@@ -202,6 +254,173 @@ container_on_network() {
   local name="$1" net="$2"
   docker inspect --format '{{range $k,$v := .NetworkSettings.Networks}}{{println $k}}{{end}}' "$name" \
     | grep -Fx "$net" >/dev/null
+}
+
+json_file_get() {
+  local path="$1" key="$2"
+  [[ -f "$path" ]] || { printf '\n'; return 0; }
+  python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get(sys.argv[2],"") or "")' "$path" "$key"
+}
+
+derive_accepted_authority() {
+  local expected_path active_path expected_sha active_sha expected_sf expected_be active_sf_img active_be_img active_sf active_be active_state
+  if ! wr_owner_approved_load public_production; then
+    die "OWNER_APPROVED_RELEASE unusable: ${WR_OWNER_APPROVAL_RESULT:-missing} path=${WR_OA_PATH:-}"
+  fi
+  expected_path="${WOODRIGHT_EXPECTED_RELEASE}"
+  active_path="${WOODRIGHT_ACTIVE_RELEASE}"
+  [[ -f "$expected_path" ]] || die "EXPECTED_RELEASE missing: $expected_path"
+  [[ -f "$active_path" ]] || die "ACTIVE_RELEASE missing: $active_path"
+  expected_sha="$(json_file_get "$expected_path" application_source_sha)"
+  active_sha="$(json_file_get "$active_path" application_source_sha)"
+  expected_sf="$(json_file_get "$expected_path" storefront_digest)"
+  expected_be="$(json_file_get "$expected_path" backend_digest)"
+  active_sf_img="$(json_file_get "$active_path" storefront_image)"
+  active_be_img="$(json_file_get "$active_path" backend_image)"
+  active_state="$(json_file_get "$active_path" state)"
+  active_sf="${active_sf_img##*@}"
+  active_be="${active_be_img##*@}"
+  [[ "$active_state" == "committed" ]] || die "ACTIVE_RELEASE.state='$active_state' (require committed)"
+  [[ "$WR_OA_APPLICATION_SHA" == "$expected_sha" ]] || die "OWNER_APPROVED_RELEASE SHA != EXPECTED_RELEASE ($WR_OA_APPLICATION_SHA vs $expected_sha)"
+  [[ "$WR_OA_APPLICATION_SHA" == "$active_sha" ]] || die "OWNER_APPROVED_RELEASE SHA != ACTIVE_RELEASE ($WR_OA_APPLICATION_SHA vs $active_sha)"
+  [[ "$WR_OA_STOREFRONT_DIGEST" == "$expected_sf" && "$expected_sf" == "$active_sf" ]] \
+    || die "storefront digest metadata mismatch approved=$WR_OA_STOREFRONT_DIGEST expected=$expected_sf active=$active_sf"
+  [[ "$WR_OA_BACKEND_DIGEST" == "$expected_be" && "$expected_be" == "$active_be" ]] \
+    || die "backend digest metadata mismatch approved=$WR_OA_BACKEND_DIGEST expected=$expected_be active=$active_be"
+  ACCEPTED_SOURCE_SHA="$WR_OA_APPLICATION_SHA"
+  ACCEPTED_SF_DIGEST="$WR_OA_STOREFRONT_DIGEST"
+  ACCEPTED_BE_DIGEST="$WR_OA_BACKEND_DIGEST"
+  [[ "$SOURCE_SHA" == "$ACCEPTED_SOURCE_SHA" ]] \
+    || die "requested --source-sha '$SOURCE_SHA' != authoritative accepted SHA '$ACCEPTED_SOURCE_SHA'"
+  [[ "$SF_DIGEST" == "$ACCEPTED_SF_DIGEST" ]] \
+    || die "requested storefront digest != accepted $ACCEPTED_SF_DIGEST"
+  [[ "$BE_DIGEST" == "$ACCEPTED_BE_DIGEST" ]] \
+    || die "requested backend digest != accepted $ACCEPTED_BE_DIGEST"
+  log "accepted authority OK sha=${ACCEPTED_SOURCE_SHA:0:7} sf=$ACCEPTED_SF_DIGEST be=$ACCEPTED_BE_DIGEST owner_approval=$WR_OA_PATH"
+}
+
+cas_recovery_point() {
+  local glob latest age created env_rp db_alias app_sha
+  if [[ "${WOODRIGHT_APEX_SKIP_RP_GATE:-0}" == "1" ]]; then
+    [[ "$MODE" == "execute" ]] && die "WOODRIGHT_APEX_SKIP_RP_GATE is forbidden in execute"
+    log "RP gate skipped WOODRIGHT_APEX_SKIP_RP_GATE=1"
+    return 0
+  fi
+  glob="${WOODRIGHT_RECOVERY_MANIFEST_GLOB:-/srv/woodright/backups/automated/public-production/manifests/recovery-point-*.json}"
+  latest="$(ls -1t $glob 2>/dev/null | head -1 || true)"
+  [[ -n "$latest" && -f "$latest" ]] || die "FRESH_RECOVERY_POINT_REQUIRED no manifest matching $glob"
+  wr_validate_recovery_point_manifest "$latest" || die "recovery-point manifest invalid: $latest"
+  env_rp="$(json_file_get "$latest" environment)"
+  app_sha="$(json_file_get "$latest" application_sha)"
+  db_alias="$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print((d.get("db") or {}).get("alias") or "")' "$latest")"
+  created="$(json_file_get "$latest" created_at_utc)"
+  [[ "$env_rp" == "public_production" ]] || die "wrong-environment RP env=$env_rp"
+  [[ "$app_sha" == "$SOURCE_SHA" ]] || die "RP application_sha=$app_sha != requested $SOURCE_SHA"
+  [[ "$db_alias" == "$REQUIRED_DB_ALIAS" ]] || die "RP db alias='$db_alias' expected $REQUIRED_DB_ALIAS"
+  age="$(python3 -c 'import datetime,sys
+raw=sys.argv[1]
+# 20260902T091459Z or ISO
+for fmt in ("%Y%m%dT%H%M%SZ","%Y-%m-%dT%H:%M:%SZ"):
+    try:
+        ts=datetime.datetime.strptime(raw, fmt).replace(tzinfo=datetime.timezone.utc)
+        break
+    except ValueError:
+        ts=None
+if ts is None:
+    raise SystemExit("unparsed")
+age=int((datetime.datetime.now(datetime.timezone.utc)-ts).total_seconds()//3600)
+print(age)' "$created")"
+  [[ "$age" =~ ^[0-9]+$ ]] || die "RP age unparsed created=$created"
+  if (( age > BACKUP_CRIT_H )); then
+    die "stale RP age_h=$age crit_h=$BACKUP_CRIT_H path=$latest"
+  fi
+  log "RP gate OK id=$(json_file_get "$latest" recovery_point_id) age_h=$age path=$latest"
+}
+
+cas_alias_collision() {
+  local net="$1" want="$2"
+  if [[ "${WOODRIGHT_APEX_SKIP_ALIAS_GATE:-0}" == "1" ]]; then
+    [[ "$MODE" == "execute" ]] && die "WOODRIGHT_APEX_SKIP_ALIAS_GATE is forbidden in execute"
+    return 0
+  fi
+  python3 - "$net" "$want" <<'PY' || die "PUBLIC_PRODUCTION_NETWORK_ALIAS_CONFLICT alias=$want"
+import json, subprocess, sys
+net, want = sys.argv[1], sys.argv[2]
+try:
+    raw = subprocess.check_output(["docker", "network", "inspect", net], text=True)
+except subprocess.CalledProcessError:
+    # network missing is a later connect failure; collision check is empty
+    sys.exit(0)
+data = json.loads(raw)[0]
+for cid, c in (data.get("Containers") or {}).items():
+    name = c.get("Name") or ""
+    aliases = c.get("Aliases") or []
+    if name == want:
+        continue
+    if want in aliases or name.endswith("/" + want):
+        print(f"conflict name={name} id={cid} aliases={aliases}", file=sys.stderr)
+        sys.exit(1)
+sys.exit(0)
+PY
+}
+
+plan_network_membership() {
+  SF_CONNECT_REQUIRED=0
+  BE_CONNECT_REQUIRED=0
+  if container_on_network "$SF_NAME" "$DOKPLOY_NET"; then
+    log "SF already on $DOKPLOY_NET"
+  else
+    SF_CONNECT_REQUIRED=1
+    log "SF connect required to $DOKPLOY_NET alias=$SF_NAME"
+  fi
+  if container_on_network "$BE_NAME" "$DOKPLOY_NET"; then
+    log "BE already on $DOKPLOY_NET"
+  else
+    BE_CONNECT_REQUIRED=1
+    log "BE connect required to $DOKPLOY_NET alias=$BE_NAME"
+  fi
+  cas_alias_collision "$DOKPLOY_NET" "$SF_NAME"
+  cas_alias_collision "$DOKPLOY_NET" "$BE_NAME"
+}
+
+write_routing_plan() {
+  local target tmpl yaml_needed="false"
+  target="$(apex_traefik_file)"
+  tmpl="$REPO_ROOT/$TRAEFIK_TEMPLATE_REL"
+  YAML_CHANGE_NEEDED=0
+  if [[ -f "$target" ]]; then
+    if cmp -s "$target" "$tmpl"; then
+      yaml_needed="false"
+    else
+      die "PUBLIC_APEX_TRAEFIK_AUTHORITY_DRIFT target differs from template: $target"
+    fi
+  else
+    yaml_needed="true"
+    YAML_CHANGE_NEEDED=1
+  fi
+  mkdir -p "$EVIDENCE_DIR"
+  cat >"$EVIDENCE_DIR/routing-plan.json" <<EOF
+{
+  "schema": "woodright.public_production.apex_routing_plan.v1",
+  "application_source_sha": "$SOURCE_SHA",
+  "storefront_digest": "$SF_DIGEST",
+  "backend_digest": "$BE_DIGEST",
+  "storefront_id": "$LIVE_SF_ID",
+  "backend_id": "$LIVE_BE_ID",
+  "target_network": "$DOKPLOY_NET",
+  "sf_connect_required": $([ "$SF_CONNECT_REQUIRED" = 1 ] && echo true || echo false),
+  "be_connect_required": $([ "$BE_CONNECT_REQUIRED" = 1 ] && echo true || echo false),
+  "aliases": ["$SF_NAME", "$BE_NAME"],
+  "yaml_change_needed": $yaml_needed,
+  "application_recreate": "NO",
+  "dns_mutation": "NO",
+  "docker_traefik_mutation": "NO_IN_DRY_RUN",
+  "evidence_writes": "routing-plan.json preflight.json (not Docker/Traefik/DNS)",
+  "host_route_plan": "execute polls Traefik Host woodright.ru/www/api on 127.0.0.1:80; dry-run skips uncreated routers",
+  "rollback": "disconnect only transaction-added $DOKPLOY_NET memberships for journaled container IDs; preserve pre-existing membership"
+}
+EOF
+  log "routing plan written yaml_change_needed=$yaml_needed sf_connect=$SF_CONNECT_REQUIRED be_connect=$BE_CONNECT_REQUIRED"
 }
 
 assert_template_safe() {
@@ -223,22 +442,45 @@ assert_template_safe() {
 }
 
 cas_pair() {
-  local live_sf live_be live_sha sf_h be_h sf_r be_r
+  local live_sf live_be live_sha_sf live_sha_be sf_h be_h sf_r be_r sf_role be_role sf_db be_db sf_prof be_prof
   live_sf="$(container_image_digest "$SF_NAME")"
   live_be="$(container_image_digest "$BE_NAME")"
-  live_sha="$(container_release_sha "$SF_NAME")"
+  live_sha_sf="$(container_release_sha "$SF_NAME")"
+  live_sha_be="$(container_release_sha "$BE_NAME")"
+  LIVE_SF_ID="$(container_id "$SF_NAME")"
+  LIVE_BE_ID="$(container_id "$BE_NAME")"
   sf_h="$(container_health "$SF_NAME")"
   be_h="$(container_health "$BE_NAME")"
   sf_r="$(container_restart_count "$SF_NAME")"
   be_r="$(container_restart_count "$BE_NAME")"
-  [[ "$live_sha" == "$SOURCE_SHA" ]] || die "CAS pair SHA mismatch live='$live_sha' expected='$SOURCE_SHA'"
+  sf_role="$(container_env "$SF_NAME" WOODRIGHT_RUNTIME_ROLE)"
+  be_role="$(container_env "$BE_NAME" WOODRIGHT_RUNTIME_ROLE)"
+  sf_db="$(container_env "$SF_NAME" WOODRIGHT_DATABASE_IDENTITY)"
+  be_db="$(container_env "$BE_NAME" WOODRIGHT_DATABASE_IDENTITY)"
+  sf_prof="$(container_build_profile "$SF_NAME")"
+  be_prof="$(container_build_profile "$BE_NAME")"
+  [[ -n "$LIVE_SF_ID" && -n "$LIVE_BE_ID" ]] || die "CAS missing container IDs"
+  [[ "$live_sha_sf" == "$SOURCE_SHA" ]] || die "CAS storefront SHA mismatch live='$live_sha_sf' expected='$SOURCE_SHA'"
+  [[ "$live_sha_be" == "$SOURCE_SHA" ]] || die "CAS backend SHA mismatch live='$live_sha_be' expected='$SOURCE_SHA'"
   [[ "$live_sf" == "$SF_DIGEST" ]] || die "CAS storefront digest mismatch live='$live_sf' expected='$SF_DIGEST'"
   [[ "$live_be" == "$BE_DIGEST" ]] || die "CAS backend digest mismatch live='$live_be' expected='$BE_DIGEST'"
+  [[ "$sf_prof" == "$REQUIRED_BUILD_PROFILE" ]] || die "storefront build_profile='$sf_prof' expected $REQUIRED_BUILD_PROFILE"
+  [[ "$be_prof" == "$REQUIRED_BUILD_PROFILE" ]] || die "backend build_profile='$be_prof' expected $REQUIRED_BUILD_PROFILE"
+  [[ "$sf_role" == "$REQUIRED_RUNTIME_ROLE" ]] || die "storefront role='$sf_role' expected $REQUIRED_RUNTIME_ROLE"
+  [[ "$be_role" == "$REQUIRED_RUNTIME_ROLE" ]] || die "backend role='$be_role' expected $REQUIRED_RUNTIME_ROLE"
+  [[ "$sf_db" == "$REQUIRED_DB_ALIAS" ]] || die "storefront db='$sf_db' expected $REQUIRED_DB_ALIAS"
+  [[ "$be_db" == "$REQUIRED_DB_ALIAS" ]] || die "backend db='$be_db' expected $REQUIRED_DB_ALIAS"
   [[ "$sf_h" == "healthy" ]] || die "storefront not healthy: $sf_h"
   [[ "$be_h" == "healthy" ]] || die "backend not healthy: $be_h"
   [[ "$sf_r" == "0" ]] || die "storefront RestartCount=$sf_r (require 0)"
   [[ "$be_r" == "0" ]] || die "backend RestartCount=$be_r (require 0)"
-  log "CAS pair OK sha=${SOURCE_SHA:0:7} sf=$SF_DIGEST be=$BE_DIGEST restarts=0"
+  log "CAS pair OK sha=${SOURCE_SHA:0:7} sf_id=${LIVE_SF_ID:0:12} be_id=${LIVE_BE_ID:0:12} profile=$REQUIRED_BUILD_PROFILE"
+}
+
+assert_container_id_unchanged() {
+  local name="$1" expected="$2" now
+  now="$(container_id "$name")"
+  [[ "$now" == "$expected" ]] || die "CAS container $name changed id live='$now' expected='$expected'"
 }
 
 cas_dns_legacy() {
@@ -284,8 +526,8 @@ read_approval() {
   sha="$(json_get "$path" application_source_sha)"
   sf="$(json_get "$path" storefront_digest)"
   be="$(json_get "$path" backend_digest)"
-  [[ "$token" == "OWNER_APPROVE_WOODRIGHT_APEX_LAUNCH_CED2510" ]] \
-    || die "approval token mismatch (got '$token')"
+  [[ "$token" == "$APEX_LAUNCH_APPROVAL_TOKEN" ]] \
+    || die "approval token mismatch (got '$token' expected $APEX_LAUNCH_APPROVAL_TOKEN)"
   [[ "$env" == "public_production" ]] || die "approval environment mismatch: $env"
   [[ "$sha" == "$SOURCE_SHA" ]] || die "approval SHA mismatch"
   [[ "$sf" == "$SF_DIGEST" ]] || die "approval storefront digest mismatch"
@@ -301,28 +543,55 @@ maybe_inject_fail() {
   if [[ "$point" == "after-owned-replace-traefik" ]]; then
     printf '# foreign unowned replacement\n' >"$(apex_traefik_file)"
   fi
+  if [[ "$point" == "after-lock-expected-drift" ]]; then
+    python3 - "${WOODRIGHT_EXPECTED_RELEASE}" <<'PY'
+import json, sys
+p = sys.argv[1]
+d = json.load(open(p))
+d["application_source_sha"] = "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+json.dump(d, open(p, "w"))
+PY
+    return 0
+  fi
   die "injected failure at $point"
 }
 
 connect_network() {
-  local name="$1"
+  local name="$1" expected_id="$2"
+  assert_container_id_unchanged "$name" "$expected_id"
   if container_on_network "$name" "$DOKPLOY_NET"; then
-    log "network $DOKPLOY_NET already on $name"
+    log "network $DOKPLOY_NET already on $name (pre-existing; not transaction-owned)"
     return 0
   fi
-  docker network connect "$DOKPLOY_NET" "$name"
-  NETWORKS_CONNECTED+=("$name")
+  cas_alias_collision "$DOKPLOY_NET" "$name"
+  docker network connect --alias "$name" "$DOKPLOY_NET" "$expected_id"
+  NETWORKS_CONNECTED+=("${name}|${expected_id}")
   MUTATED=1
-  log "connected $name to $DOKPLOY_NET"
+  log "connected $name id=${expected_id:0:12} to $DOKPLOY_NET alias=$name"
 }
 
 # Treat "already not attached" as success so rollback can retry after a partial disconnect.
+# Journaled container ID is required: refuse if the live name now points at a different ID.
 disconnect_one_idempotent() {
   local name="$1"
   local net="$2"
-  local out rc=0
-  out="$(docker network disconnect "$net" "$name" 2>&1)" && {
-    log "disconnected $name from $net"
+  local expected_id="${3:-}"
+  local live_id out rc=0
+  live_id="$(container_id "$name")"
+  if [[ -z "$live_id" ]]; then
+    log "container $name absent; treating $net membership as already gone"
+    return 0
+  fi
+  if [[ -z "$expected_id" ]]; then
+    log "ERROR refusing nameless/ID-less rollback for $name (owned-state must journal container id)"
+    return 1
+  fi
+  if [[ "$live_id" != "$expected_id" ]]; then
+    log "ERROR PUBLIC_APEX_ROUTING_ROLLBACK_IDENTITY_MISMATCH name=$name live=${live_id:0:12} expected=${expected_id:0:12}"
+    return 1
+  fi
+  out="$(docker network disconnect "$net" "$expected_id" 2>&1)" && {
+    log "disconnected $name id=${expected_id:0:12} from $net"
     return 0
   }
   rc=$?
@@ -332,6 +601,44 @@ disconnect_one_idempotent() {
   fi
   log "ERROR docker network disconnect $name $net rc=$rc: $out"
   return "$rc"
+}
+
+iter_owned_network_records() {
+  local owned="$1"
+  python3 - "$owned" <<'PY'
+import json, sys
+owned = json.load(open(sys.argv[1]))
+for item in owned.get("networks_added") or []:
+    if isinstance(item, str):
+        if "|" in item:
+            name, cid = item.split("|", 1)
+        else:
+            name, cid = item, ""
+    else:
+        name, cid = item.get("name") or "", item.get("id") or ""
+    if name:
+        print(f"{name}\t{cid}")
+PY
+}
+
+preflight_owned_network_identities() {
+  local owned="$1" rec name expected_id live_id
+  [[ -f "$owned" ]] || return 0
+  while IFS= read -r rec; do
+    [[ -n "$rec" ]] || continue
+    name="${rec%%$'\t'*}"
+    expected_id="${rec#*$'\t'}"
+    [[ -n "$expected_id" ]] || die "owned-state missing container id for $name; refuse rollback mutation"
+    live_id="$(container_id "$name")"
+    if [[ -z "$live_id" ]]; then
+      log "preflight $name absent; network membership already gone"
+      continue
+    fi
+    if [[ "$live_id" != "$expected_id" ]]; then
+      die "PUBLIC_APEX_ROUTING_ROLLBACK_IDENTITY_MISMATCH name=$name live=${live_id:0:12} expected=${expected_id:0:12}"
+    fi
+  done < <(iter_owned_network_records "$owned")
+  log "owned network identity preflight OK"
 }
 
 install_traefik() {
@@ -401,18 +708,36 @@ write_owned_state() {
 import json, sys
 path = sys.argv[1]
 created = sys.argv[2] == "1"
-new_nets = list(sys.argv[3:])
+
+def norm(item):
+    if isinstance(item, str):
+        if "|" in item:
+            name, cid = item.split("|", 1)
+            return {"name": name, "id": cid}
+        return {"name": item, "id": ""}
+    if isinstance(item, dict) and item.get("name"):
+        return {"name": item["name"], "id": item.get("id") or ""}
+    return None
+
+new_nets = [n for n in (norm(x) for x in sys.argv[3:]) if n]
 prev = {}
 try:
     with open(path) as f:
         prev = json.load(f)
 except Exception:
     prev = {}
-old = prev.get("networks_added") or prev.get("networks_connected") or []
 merged = []
-for n in list(old) + new_nets:
-    if n and n not in merged:
-        merged.append(n)
+seen = set()
+for item in list(prev.get("networks_added") or []) + new_nets:
+    rec = norm(item)
+    if not rec or rec["name"] in seen:
+        if rec and rec["name"] in seen and rec.get("id"):
+            for m in merged:
+                if m["name"] == rec["name"] and rec["id"]:
+                    m["id"] = rec["id"]
+        continue
+    seen.add(rec["name"])
+    merged.append(rec)
 doc = {
     "schema": "woodright.public_production.apex_routing_owned.v1",
     "traefik_created_by_helper": bool(prev.get("traefik_created_by_helper")) or created,
@@ -420,6 +745,7 @@ doc = {
 }
 with open(path, "w") as f:
     json.dump(doc, f, indent=2)
+    f.write("\n")
 PY
   chmod 0600 "$path" 2>/dev/null || true
   cp -a "$path" "$EVIDENCE_DIR/owned.json" 2>/dev/null || true
@@ -481,13 +807,27 @@ import json, os, shutil, sys
 owned_path = sys.argv[1]
 evidence_dir = sys.argv[2]
 traefik_removed = sys.argv[3] == "1"
-removed = [n for n in sys.argv[4:] if n]
+removed_raw = [n for n in sys.argv[4:] if n]
+removed_names = set()
+for item in removed_raw:
+    if "|" in item:
+        removed_names.add(item.split("|", 1)[0])
+    else:
+        removed_names.add(item)
+
+def rec_name(item):
+    if isinstance(item, str):
+        return item.split("|", 1)[0]
+    if isinstance(item, dict):
+        return item.get("name") or ""
+    return ""
+
 os.makedirs(evidence_dir, exist_ok=True)
 with open(owned_path) as f:
     doc = json.load(f)
 if traefik_removed:
     doc["traefik_created_by_helper"] = False
-nets = [n for n in (doc.get("networks_added") or []) if n not in removed]
+nets = [n for n in (doc.get("networks_added") or []) if rec_name(n) not in removed_names]
 doc["networks_added"] = nets
 if (not doc.get("traefik_created_by_helper")) and not nets:
     shutil.copy2(owned_path, os.path.join(evidence_dir, "owned-partial-cleared.json"))
@@ -522,9 +862,14 @@ rollback_partial() {
       rc=1
     fi
   fi
-  for name in "${attempted[@]+"${attempted[@]}"}"; do
-    if disconnect_one_idempotent "$name" "$DOKPLOY_NET"; then
-      verified+=("$name")
+  for rec in "${attempted[@]+"${attempted[@]}"}"; do
+    name="${rec%%|*}"
+    expected_id="${rec#*|}"
+    if [[ "$name" == "$expected_id" ]]; then
+      expected_id=""
+    fi
+    if disconnect_one_idempotent "$name" "$DOKPLOY_NET" "$expected_id"; then
+      verified+=("$rec")
     else
       log "ERROR network disconnect failed for $name; keeping owned-state"
       rc=1
@@ -752,9 +1097,6 @@ main() {
   require_sha "$SOURCE_SHA"
   require_digest "$SF_DIGEST"
   require_digest "$BE_DIGEST"
-  [[ "$SOURCE_SHA" == "$ACCEPTED_SOURCE_SHA" ]] || die "refusing non-accepted application SHA (launch candidate is ced2510)"
-  [[ "$SF_DIGEST" == "$ACCEPTED_SF_DIGEST" ]] || die "refusing non-accepted storefront digest"
-  [[ "$BE_DIGEST" == "$ACCEPTED_BE_DIGEST" ]] || die "refusing non-accepted backend digest"
 
   assert_template_safe
   EVIDENCE_DIR="${WOODRIGHT_APEX_EVIDENCE_DIR:-${WOODRIGHT_EVIDENCE_ROOT}/apex-routing-${TS_RUN}}"
@@ -773,6 +1115,7 @@ main() {
       cp -a "$target" "$EVIDENCE_DIR/pre-rollback-traefik.yml"
     fi
     if [[ -f "$owned" ]]; then
+      preflight_owned_network_identities "$owned"
       python3 - "$owned" "$target" <<'PY'
 import json, os, sys
 owned_path, target = sys.argv[1:3]
@@ -783,16 +1126,17 @@ if owned.get("traefik_created_by_helper") and os.path.isfile(target):
 else:
     print("preserved_traefik")
 PY
-      local names name saw_first=0
-      names="$(python3 -c 'import json,sys; print("\n".join(json.load(open(sys.argv[1])).get("networks_added") or []))' "$owned")"
-      while IFS= read -r name; do
-        [[ -n "$name" ]] || continue
-        disconnect_one_idempotent "$name" "$DOKPLOY_NET" || die "rollback network disconnect failed for $name"
+      local rec name expected_id saw_first=0
+      while IFS= read -r rec; do
+        [[ -n "$rec" ]] || continue
+        name="${rec%%$'\t'*}"
+        expected_id="${rec#*$'\t'}"
+        disconnect_one_idempotent "$name" "$DOKPLOY_NET" "$expected_id" || die "rollback network disconnect failed for $name"
         if [[ "${WOODRIGHT_APEX_INJECT_FAIL:-}" == "rollback-after-first-disconnect" && "$saw_first" == "0" ]]; then
           die "injected failure at rollback-after-first-disconnect"
         fi
         saw_first=1
-      done <<<"$names"
+      done < <(iter_owned_network_records "$owned")
       mv "$owned" "$EVIDENCE_DIR/owned-cleared.json"
     else
       log "no owned-state file; not deleting Traefik or disconnecting networks"
@@ -803,16 +1147,24 @@ PY
     exit 0
   fi
 
+  derive_accepted_authority
   cas_pair
+  cas_recovery_point
   cas_dns_legacy
   cas_demo_untouched
   cas_traefik_absent_or_ours
+  plan_network_membership
+  write_routing_plan
   probe_loopback
   write_evidence_pre
   print_dns_operator_steps
 
   if [[ "$MODE" == "dry-run" ]]; then
     log "STATUS PUBLIC_APEX_ROUTING_DRY_RUN_OK"
+    log "dry-run Docker/Traefik/DNS mutation=NO; evidence files written under $EVIDENCE_DIR"
+    if [[ "$SOURCE_SHA" == "caf82b048b9caefae30679342aec3d4fc42a8d89" ]]; then
+      log "STATUS PUBLIC_APEX_ROUTING_CAF82B0_DRY_RUN_PASS sha=${SOURCE_SHA:0:7}"
+    fi
     echo "$EVIDENCE_DIR"
     exit 0
   fi
@@ -821,14 +1173,19 @@ PY
   read_approval "$APPROVAL_PATH"
   trap on_err ERR
   acquire_lock
+  maybe_inject_fail after-lock-expected-drift
+  derive_accepted_authority
+  read_approval "$APPROVAL_PATH"
   cas_pair
+  cas_recovery_point
   cas_dns_legacy
   cas_demo_untouched
   cas_traefik_absent_or_ours
-  connect_network "$SF_NAME"
+  plan_network_membership
+  connect_network "$SF_NAME" "$LIVE_SF_ID"
   write_owned_state
   maybe_inject_fail after-first-network
-  connect_network "$BE_NAME"
+  connect_network "$BE_NAME" "$LIVE_BE_ID"
   write_owned_state
   maybe_inject_fail after-networks
   install_traefik

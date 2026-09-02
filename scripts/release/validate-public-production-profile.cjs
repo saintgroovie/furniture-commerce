@@ -75,7 +75,8 @@ function main() {
       ["WOODRIGHT_LEGAL_CONTENT_STATUS", "draft"],
       ["WOODRIGHT_NOTIFICATION_DECISION_STATUS", "pending"],
       ["WOODRIGHT_ENVIRONMENT_PROVISIONED", "1"],
-      ["WOODRIGHT_HOST_PUBLISH_POLICY", "deny"],
+      ["WOODRIGHT_HOST_PUBLISH_POLICY", "loopback_allowlist"],
+      ["WOODRIGHT_ALLOWED_HOST_BINDINGS", "storefront:3002/tcp=127.0.0.1:3300,backend:9000/tcp=127.0.0.1:9300"],
       ["WOODRIGHT_ALLOW_HOST_PUBLISH", "0"],
       ["WOODRIGHT_LAUNCH_GATE_OWNER_APPROVAL", "required"],
       ["WOODRIGHT_LAUNCH_GATE_LEGAL", "required"],
@@ -184,8 +185,14 @@ function main() {
   if (!apexHelper.includes("I_UNDERSTAND_PUBLIC_APEX_ROUTING_CUTOVER")) {
     fail(errors, "apex routing helper missing confirm token")
   }
-  if (!apexHelper.includes("OWNER_APPROVE_WOODRIGHT_APEX_LAUNCH_CED2510")) {
+  if (!apexHelper.includes("OWNER_APPROVE_WOODRIGHT_APEX_LAUNCH")) {
     fail(errors, "apex routing helper must require owner apex token")
+  }
+  if (apexHelper.includes("OWNER_APPROVE_WOODRIGHT_APEX_LAUNCH_CED2510")) {
+    fail(errors, "apex routing helper must not hardcode ced2510 owner token")
+  }
+  if (/ACCEPTED_SOURCE_SHA="ced2510/.test(apexHelper)) {
+    fail(errors, "apex routing helper must not hardcode ced2510 as accepted SHA")
   }
   if (!fs.existsSync(path.join(root, "docs/operator/public-apex-cutover.md"))) {
     fail(errors, "missing docs/operator/public-apex-cutover.md")

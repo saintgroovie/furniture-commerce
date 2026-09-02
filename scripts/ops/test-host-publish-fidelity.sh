@@ -189,6 +189,14 @@ fi
 # 31. production policy is loopback_allowlist not deniable by boolean
 [[ "${WOODRIGHT_HOST_PUBLISH_POLICY}" == "loopback_allowlist" ]] && ok "31_production_policy" || fail "31_production_policy"
 
+# 31b. public_production loopback allowlist (3300/9300) is the governed verify path
+unset WOODRIGHT_ENVIRONMENT WOODRIGHT_ENV_PROFILE_LOADED || true
+wr_load_environment_profile public_production >/dev/null
+[[ "${WOODRIGHT_HOST_PUBLISH_POLICY}" == "loopback_allowlist" ]] && ok "31b_public_production_loopback" \
+  || fail "31b_public_production_policy=${WOODRIGHT_HOST_PUBLISH_POLICY}"
+[[ "${WOODRIGHT_ALLOWED_HOST_BINDINGS}" == *"127.0.0.1:3300"* ]] && ok "31b_public_production_sf_bind" \
+  || fail "31b_public_production_bindings"
+
 # 32. conflicting inherited environment
 export WOODRIGHT_ENVIRONMENT=public_demo
 unset WOODRIGHT_ENV_PROFILE_LOADED || true
