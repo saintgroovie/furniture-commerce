@@ -208,14 +208,16 @@ CREATED_CTR=1
 DISPOSABLE_CTR_ID="${DISPOSABLE_CTR_ID//$'\r'/}"
 DISPOSABLE_NET_ID="${DISPOSABLE_NET_ID//$'\r'/}"
 
-# Wait ready
+# Wait ready. pg_isready can succeed before the app database accepts queries.
 for _ in $(seq 1 60); do
-  if docker exec "$DISPOSABLE_CTR" pg_isready -U woodright >/dev/null 2>&1; then
+  if docker exec "$DISPOSABLE_CTR" pg_isready -U woodright >/dev/null 2>&1 \
+    && docker exec "$DISPOSABLE_CTR" psql -U woodright -d woodright_restore_rehearsal -tA -c 'SELECT 1' >/dev/null 2>&1; then
     break
   fi
   sleep 1
 done
-docker exec "$DISPOSABLE_CTR" pg_isready -U woodright >/dev/null || die "disposable pg not ready"
+docker exec "$DISPOSABLE_CTR" psql -U woodright -d woodright_restore_rehearsal -tA -c 'SELECT 1' >/dev/null \
+  || die "disposable pg not accepting queries"
 
 PG_VER=$(docker exec "$DISPOSABLE_CTR" psql -U woodright -d woodright_restore_rehearsal -tAc 'SHOW server_version;' | tr -d '[:space:]')
 if [[ -n "$EXPECT_PG" && "$PG_VER" != "$EXPECT_PG"* && "$EXPECT_PG" != "$PG_VER" ]]; then
@@ -278,7 +280,7 @@ for logical, names in aliases.items():
       f"THEN (SELECT count(*) FROM \"{t}\") ELSE 0 END;"
     )
     p = subprocess.run(
-      ["docker","exec",ctr,"psql","-U","woodright","-d","woodright_restore_rehearsal","-tAc", "-v", "ON_ERROR_STOP=1", sql],
+      ["docker","exec",ctr,"psql","-U","woodright","-d","woodright_restore_rehearsal","-tA", "-v", "ON_ERROR_STOP=1", "-c", sql],
       capture_output=True, text=True,
     )
     if p.returncode != 0:
