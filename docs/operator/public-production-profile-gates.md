@@ -60,7 +60,7 @@ Rules:
 - status flip without `manual_invoice` never unlocks
 - payment gate readiness ≠ `launch_ready` and ≠ deploy / DNS / indexing approval
 - fake notifications are unrelated to payment readiness
-- production conf may stay `PAYMENT_DECISION_STATUS=pending` until a separate decision-recording batch
+- public_production conf records OD-05 as `accepted_manual` (launch-prep reconciliation; not a new owner choice)
 - rollback: set decision back to `pending` (or `rejected`) and keep non-public / non-indexable until re-attested
 
 SoT helpers: `apps/storefront/src/lib/payment-readiness.ts`, `scripts/release/lib/payment-readiness.cjs`.

@@ -38,12 +38,12 @@ const acceptedCopy = path.join(tmp, "accepted_manual.conf")
 fs.copyFileSync(canonical, pendingCopy)
 fs.copyFileSync(canonical, acceptedCopy)
 fs.writeFileSync(
-  acceptedCopy,
+  pendingCopy,
   fs
-    .readFileSync(acceptedCopy, "utf8")
+    .readFileSync(pendingCopy, "utf8")
     .replace(
-      /^WOODRIGHT_PAYMENT_DECISION_STATUS=pending$/m,
-      "WOODRIGHT_PAYMENT_DECISION_STATUS=accepted_manual"
+      /^WOODRIGHT_PAYMENT_DECISION_STATUS=accepted_manual$/m,
+      "WOODRIGHT_PAYMENT_DECISION_STATUS=pending"
     )
 )
 
@@ -108,7 +108,7 @@ fs.writeFileSync(
 }
 
 {
-  // Canonical path (default) must still be pending / not launch_ready
+  // Canonical path (default) records OD-05 as accepted_manual; launch_ready stays false
   const r = spawnSync(process.execPath, [script, "--repo-root", root], { encoding: "utf8" })
   assert.equal(r.status, 0)
   const start = r.stdout.indexOf("{")
@@ -116,9 +116,9 @@ fs.writeFileSync(
   const report = JSON.parse(r.stdout.slice(start, end + 1))
   assert.equal(report.profile_valid, true)
   assert.equal(report.launch_ready, false)
-  assert.equal(report.payment_contract_ready, false)
+  assert.equal(report.payment_contract_ready, true)
   const conf = fs.readFileSync(canonical, "utf8")
-  assert.match(conf, /^WOODRIGHT_PAYMENT_DECISION_STATUS=pending$/m)
+  assert.match(conf, /^WOODRIGHT_PAYMENT_DECISION_STATUS=accepted_manual$/m)
   assert.match(conf, /^WOODRIGHT_LEGAL_CONTENT_STATUS=draft$/m)
   assert.match(conf, /^WOODRIGHT_NOTIFICATION_DECISION_STATUS=pending$/m)
 }

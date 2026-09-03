@@ -247,6 +247,16 @@ grep -q 'tar -tzf\|tar -tf' "$OPS/backup/woodright-public-production-restore-reh
   && pass "restore lists media archive" || fail "restore media list"
 grep -q 'pg_restore nonzero without warnings' "$OPS/backup/woodright-public-production-restore-rehearsal.sh" \
   && pass "pg_restore fail-closed" || fail "pg_restore fail-closed"
+if grep -q '"-tAc", "-v"' "$OPS/backup/woodright-public-production-restore-rehearsal.sh"; then
+  fail "psql -c must not be glued before -v ON_ERROR_STOP"
+else
+  pass "psql aggregate queries keep -c after -v"
+fi
+grep -q 'disposable pg not accepting queries' "$OPS/backup/woodright-public-production-restore-rehearsal.sh" \
+  && pass "restore waits for query-ready pg" || fail "restore query-ready wait"
+grep -q "psql -U woodright -d woodright_restore_rehearsal -tA -c 'SELECT 1'" \
+  "$OPS/backup/woodright-public-production-restore-rehearsal.sh" \
+  && pass "restore SELECT 1 probe present" || fail "restore SELECT 1 probe"
 grep -q 'Type=oneshot' "$SYS/woodright-backup-public-production.service" \
   && pass "backup oneshot" || fail "backup oneshot"
 if grep -E '^(Environment|ExecStart).*(DATABASE_URL|PASSWORD)=' "$SYS"/woodright-*-public-production.* >/dev/null 2>&1; then
