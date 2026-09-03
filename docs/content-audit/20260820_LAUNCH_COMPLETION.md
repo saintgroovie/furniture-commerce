@@ -9,8 +9,8 @@
 This file is the **active** SoT for remaining OD closures and launch IA. Historical packs stay provenance. Do not rewrite 2026-08-12 research as if it already contained these closures.
 
 ```text
-OWNER_LEGAL_CONTENT_APPROVED = NOT ISSUED
-READY_FOR_OWNER_LEGAL_ACCEPTANCE = TARGET OF THIS CYCLE
+OWNER_LEGAL_CONTENT_APPROVED = ISSUED (2026-09-03)
+READY_FOR_OWNER_LEGAL_ACCEPTANCE = CLOSED_BY_OWNER_TOKEN
 FINAL_OWNER_GATE = NONE (see §9)
 ```
 
@@ -80,7 +80,7 @@ Buyer copy: contact Woodright; the case is reviewed under applicable law. No vol
 ### OD-06 combined
 
 **Status:** `NOT OWNER-OPEN FOR LAUNCH BLOCKING`
-Split, not a mixed owner question. Full legal pack still needs `OWNER_LEGAL_CONTENT_APPROVED` (owner token, not this cycle).
+Split, not a mixed owner question. Full legal pack token `OWNER_LEGAL_CONTENT_APPROVED` issued 2026-09-03 (not this 2026-08-20 cycle).
 
 ### OD-07 - showroom hours / emails
 
@@ -203,13 +203,13 @@ Cookies (re-verified 2026-08-20 on this branch): first-party `cart_id` only. No 
 
 ## 6. Legal review remaining (not owner micro-questions)
 
-Keep marked `LEGAL REVIEW` / not production legal approval:
+Keep marked `LEGAL REVIEW` / not a second owner quiz:
 
 - exact civil-law acceptance moment wording in a court sense
 - ZoZPP 26.1 / KS RF 17.02.2026 № 7-П application to specific Woodright deals
-- warranty start / obligor / component exclusions
-- reverse logistics and refund SOP
-- `OWNER_LEGAL_CONTENT_APPROVED`
+- reverse logistics arranger / extra goodwill (ops follow-ups; not pack refusal)
+
+Pack token `OWNER_LEGAL_CONTENT_APPROVED` issued 2026-09-03. Warranty start / obligor / narrow exclusions: spec closed 2026-09-01.
 
 Safe launch copy does not convert these into fake numbers or blanket Bespoke no-return.
 
@@ -237,7 +237,7 @@ Presentation only: compact chrome **Bespoke**; landing **Woodright Bespoke**. No
 
 ## 9. FINAL_OWNER_GATE
 
-`OWNER_LEGAL_CONTENT_APPROVED` is a later owner token, not an OD-06…12 quiz. Storefront `isLegalLaunchComplete()` stays fail-closed until that token / the remaining legal-review field is actually supplied. Buyer pages can still show honest production copy.
+`OWNER_LEGAL_CONTENT_APPROVED` issued 2026-09-03. Storefront `isLegalLaunchComplete()` still requires runtime `WOODRIGHT_LEGAL_PACK_TOKEN=OWNER_LEGAL_CONTENT_APPROVED` in the storefront process (ops profile ≠ container env). Buyer pages can still show honest production copy.
 
 ```text
 FINAL_OWNER_GATE = NONE
@@ -245,7 +245,7 @@ FINAL_OWNER_GATE = NONE
 
 Optional later (not blocking; not asked tonight): official privacy email; mall hours; trade programme; measurement/install if those services actually exist.
 
-Owner still must later issue or refuse `OWNER_LEGAL_CONTENT_APPROVED`. That is legal-pack acceptance, not an OD-06…12 quiz.
+Owner issued `OWNER_LEGAL_CONTENT_APPROVED` on 2026-09-03. That is legal-pack acceptance, not an OD-06…12 quiz.
 
 ---
 

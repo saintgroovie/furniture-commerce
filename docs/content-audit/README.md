@@ -44,7 +44,7 @@ Historical 2026-08-12 research verdict (kept as provenance, **not** current stat
 
 ### Current status 2026-08-20 (supersedes the 2026-08-12 one-line for remaining ODs)
 
-Owner-confirmed: OD-01, OD-02, OD-03, OD-04 (12 months owner-set), OD-05, OD-10. Bespoke = rethink of «По проекту». Remaining OD-06…12 closed conservatively in `20260820_LAUNCH_COMPLETION.md` (`FINAL_OWNER_GATE = NONE`). `OWNER_LEGAL_CONTENT_APPROVED` is **not** issued. Live CS-Cart defects remain a separate legacy public problem.
+Owner-confirmed: OD-01, OD-02, OD-03, OD-04 (12 months owner-set), OD-05, OD-10. Bespoke = rethink of «По проекту». Remaining OD-06…12 closed conservatively in `20260820_LAUNCH_COMPLETION.md` (`FINAL_OWNER_GATE = NONE`). `OWNER_LEGAL_CONTENT_APPROVED` **issued 2026-09-03**. Live CS-Cart defects remain a separate legacy public problem.
 
 ### Status update 2026-08-15 (not a full legal approval)
 
@@ -57,4 +57,5 @@ Owner-confirmed: OD-01, OD-02, OD-03, OD-04 (12 months owner-set), OD-05, OD-10.
 - `OD-04 = B` ratified 2026-08-19: `OWNER_DECISION_OD04_B_WARRANTY_12_MONTHS_OWNER_SET`. Launch commercial term = **12 months**. **Addendum 2026-09-01:** public-policy spec verified (`docs/owner/warranty-public-policy.md`; `WARRANTY_PUBLIC_POLICY_VERIFIED_AND_READY`). Storefront `/warranty` not shipped. Pack: `OD04_WARRANTY_VERIFICATION.md`.
 - Bespoke proof pack 2026-08-17: `docs/content-audit/BESPOKE_POSITIONING.md`. Owner-confirmed: 20+ years; private + corporate/institutional cases. «30%» / gift-sketch rejected. **Clarification (same day):** Bespoke = new name + premium rethink of «По проекту» (same entity); `/bespoke/catalog` not default IA. `OD-08` / `OD-09` still OPEN **as of 2026-08-17**. Storefront not changed in that task.
 - Packet: `docs/owner/legal-content-owner-review.md`
-- **Status update 2026-08-20:** remaining OD-06…12 closed conservatively (not as fake owner tokens). Active pack: `docs/content-audit/20260820_LAUNCH_COMPLETION.md`. `FINAL_OWNER_GATE = NONE`. `OWNER_LEGAL_CONTENT_APPROVED` still not issued. Privacy email still missing; PD contact = seller identity + legal address + showroom phones. Storefront implementation is in the isolated worktree `content/legal-launch-completion-20260820`.
+- **Status update 2026-09-03:** owner issued `OWNER_LEGAL_CONTENT_APPROVED` and `OWNER APPROVE NOTIFICATION MODEL ADMIN_POLLING_ONLY`. Not DNS. Not pair execute. Not an email vendor.
+- **Status update 2026-08-20:** remaining OD-06…12 closed conservatively (not as fake owner tokens). Active pack: `docs/content-audit/20260820_LAUNCH_COMPLETION.md`. `FINAL_OWNER_GATE = NONE`. Privacy email still missing; PD contact = seller identity + legal address + showroom phones. Storefront implementation is in the isolated worktree `content/legal-launch-completion-20260820`.

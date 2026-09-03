@@ -35,9 +35,9 @@ Missing PDP: framework `notFound()` (true HTTP 404)
 Profile schema can validate while launch remains blocked until:
 
 1. exact `public_production` owner approval manifest
-2. `LEGAL_CONTENT_STATUS=approved`
+2. `LEGAL_CONTENT_STATUS=approved` + `WOODRIGHT_LEGAL_PACK_TOKEN=OWNER_LEGAL_CONTENT_APPROVED`
 3. payment owner decision (`WOODRIGHT_PAYMENT_DECISION_STATUS=accepted_manual` with `WOODRIGHT_PAYMENT_MODE=manual_invoice`)
-4. notification/SMTP owner decision
+4. notification owner decision (`WOODRIGHT_NOTIFICATION_DECISION_STATUS=accepted` with `WOODRIGHT_NOTIFICATION_MODE=admin_polling`)
 5. public-production monitor + backup **contracts** present (repository); runtime provision still required
 6. DNS/TLS/Traefik pre-DNS proof
 7. qualified application images for the final application SHA (does **not** inherit `22cbd68` OWNER PASS)
@@ -61,6 +61,8 @@ Rules:
 - payment gate readiness ≠ `launch_ready` and ≠ deploy / DNS / indexing approval
 - fake notifications are unrelated to payment readiness
 - public_production conf records OD-05 as `accepted_manual` (launch-prep reconciliation; not a new owner choice)
+- public_production conf records legal pack as `approved` + `OWNER_LEGAL_CONTENT_APPROVED` (owner 2026-09-03; not a new OD-01…05)
+- public_production conf records notification as `accepted` + `admin_polling` (owner 2026-09-03 `ADMIN_POLLING_ONLY`; no email/SMS vendor)
 - rollback: set decision back to `pending` (or `rejected`) and keep non-public / non-indexable until re-attested
 
 SoT helpers: `apps/storefront/src/lib/payment-readiness.ts`, `scripts/release/lib/payment-readiness.cjs`.

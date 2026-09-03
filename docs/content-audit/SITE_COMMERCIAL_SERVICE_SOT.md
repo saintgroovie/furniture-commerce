@@ -12,7 +12,7 @@ Related boards (do not treat as competing SoT):
 | File | Role vs this SoT |
 | --- | --- |
 | `docs/content-audit/OWNER_DECISIONS.md` | Compact OD board. Owner decisions here remain authoritative. |
-| `docs/owner/legal-content-owner-review.md` | Seller identity packet. Full legal pack still `owner_review`. |
+| `docs/owner/legal-content-owner-review.md` | Seller identity packet. Full legal pack token `OWNER_LEGAL_CONTENT_APPROVED` issued 2026-09-03. |
 | `docs/owner/contract-template-reconciliation.md` | Word-template warranty-term and postal-index record (`OD-04 = B`; postal `153025`). External `.docx` verified **12 months** and **153025** 2026-08-31. Not a replacement contract. |
 | `docs/owner/returns-sop.md` | Launch returns SOP (`RETURNS_SOP_VERIFIED_AND_READY`). Not production `/returns` copy. |
 | `docs/owner/warranty-public-policy.md` | `/warranty` public-policy spec (`WARRANTY_PUBLIC_POLICY_VERIFIED_AND_READY`). Not production copy. |
@@ -115,7 +115,7 @@ Token: `OWNER_DECISION_OD03_B_MANAGER_ASSISTED_RETURNS_WITH_LEGAL_BASELINE`
 
 **Launch SOP (2026-09-01):** `docs/owner/returns-sop.md` - `RETURNS_SOP_VERIFIED_AND_READY`. Manager-assisted; statutory remote / defect / individually-determined tests recorded. Extra goodwill window **not** chosen.
 
-`OD-03 = B` is still **not** `OWNER_LEGAL_CONTENT_APPROVED`.
+`OD-03 = B` is still **not** by itself `OWNER_LEGAL_CONTENT_APPROVED`. The pack token was issued separately on 2026-09-03.
 
 `BESPOKE` label is **not** an automatic no-return rule.
 Contract §5.10 / PP 55: `SUPERSEDED / NOT CURRENT PUBLIC AUTHORITY` - do not publish. Future Word mutation.
@@ -157,7 +157,7 @@ The 2026 contract template still contains **5 working days** (warranty claims) a
 Token: `OWNER_DECISION_OD10_B_BANK_DETAILS_NOT_PUBLIC`  
 Do not show bank account / correspondent account / BIK to the website visitor.
 
-Autonomous launch closures 2026-08-20 (not owner tokens; see `OWNER_DECISIONS.md` / `20260820_LAUNCH_COMPLETION.md`): OD-07, OD-08, OD-09, OD-11, OD-12 are **not** remaining owner-open launch blockers. Privacy email / PD copy remain incomplete. Full legal pack token `OWNER_LEGAL_CONTENT_APPROVED` is **not** issued.
+Autonomous launch closures 2026-08-20 (not owner tokens; see `OWNER_DECISIONS.md` / `20260820_LAUNCH_COMPLETION.md`): OD-07, OD-08, OD-09, OD-11, OD-12 are **not** remaining owner-open launch blockers. Privacy email / PD copy remain incomplete. Full legal pack token `OWNER_LEGAL_CONTENT_APPROVED` **issued 2026-09-03** (fail-closed pack acceptance of the published caf82b0 buyer legal pages; does not invent a privacy email).
 
 ---
 
@@ -422,7 +422,7 @@ VERIFIED = 2026-08-31
 
 Do **not** change the website 12 → 18. Do **not** treat live CS-Cart 18 months as current template. Evidence: `docs/owner/contract-template-reconciliation.md`.
 
-Physical contract **term** alignment plus 2026-09-01 legal verification **closes** the public-policy spec for start / seller-obligor / narrow exclusions: `docs/owner/warranty-public-policy.md` (`WARRANTY_PUBLIC_POLICY_VERIFIED_AND_READY`). Storefront `/warranty` is still not implemented. `OWNER_LEGAL_CONTENT_APPROVED` is not issued.
+Physical contract **term** alignment plus 2026-09-01 legal verification **closes** the public-policy spec for start / seller-obligor / narrow exclusions: `docs/owner/warranty-public-policy.md` (`WARRANTY_PUBLIC_POLICY_VERIFIED_AND_READY`). `OWNER_LEGAL_CONTENT_APPROVED` issued 2026-09-03 for the published caf82b0 pack. This line does not reopen commercial warranty facts.
 
 ### Start date
 
