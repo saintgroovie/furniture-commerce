@@ -184,21 +184,25 @@ if [[ "${WOODRIGHT_ENVIRONMENT:-}" == "public_production" ]]; then
   else
     add_check "environment_provisioned" critical fail "unprovisioned_fail_closed"
   fi
-  case "${WOODRIGHT_LEGAL_CONTENT_STATUS:-}" in
-    approved) add_check "legal_status" info pass "approved" ;;
-    owner_review|draft|"") add_check "legal_status" critical fail "status=${WOODRIGHT_LEGAL_CONTENT_STATUS:-unset}" ;;
-    *) add_check "legal_status" critical fail "status=${WOODRIGHT_LEGAL_CONTENT_STATUS}" ;;
-  esac
+  if [[ "${WOODRIGHT_LEGAL_CONTENT_STATUS:-}" == "approved" \
+    && "${WOODRIGHT_LEGAL_PACK_TOKEN:-}" == "OWNER_LEGAL_CONTENT_APPROVED" ]]; then
+    add_check "legal_status" info pass "approved"
+  else
+    legal_pack_token_state="unset"
+    [[ -n "${WOODRIGHT_LEGAL_PACK_TOKEN:-}" ]] && legal_pack_token_state="set"
+    add_check "legal_status" critical fail "status=${WOODRIGHT_LEGAL_CONTENT_STATUS:-unset};pack_token=${legal_pack_token_state}"
+  fi
   if [[ "${WOODRIGHT_PAYMENT_DECISION_STATUS:-pending}" == "accepted_manual" \
     && "${WOODRIGHT_PAYMENT_MODE:-}" == "manual_invoice" ]]; then
     add_check "payment_decision" info pass "manual_invoice+accepted_manual"
   else
     add_check "payment_decision" critical fail "mode=${WOODRIGHT_PAYMENT_MODE:-unset};status=${WOODRIGHT_PAYMENT_DECISION_STATUS:-pending}"
   fi
-  if [[ "${WOODRIGHT_NOTIFICATION_DECISION_STATUS:-pending}" == "accepted" ]]; then
-    add_check "notification_decision" info pass "accepted"
+  if [[ "${WOODRIGHT_NOTIFICATION_DECISION_STATUS:-pending}" == "accepted" \
+    && "${WOODRIGHT_NOTIFICATION_MODE:-}" == "admin_polling" ]]; then
+    add_check "notification_decision" info pass "admin_polling+accepted"
   else
-    add_check "notification_decision" critical fail "status=${WOODRIGHT_NOTIFICATION_DECISION_STATUS:-pending}"
+    add_check "notification_decision" critical fail "mode=${WOODRIGHT_NOTIFICATION_MODE:-unset};status=${WOODRIGHT_NOTIFICATION_DECISION_STATUS:-pending}"
   fi
   if wr_alert_assert_public_production_destination 2>/dev/null; then
     add_check "alert_destination" info pass "configured"

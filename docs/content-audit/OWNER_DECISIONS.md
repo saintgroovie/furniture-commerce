@@ -4,9 +4,25 @@ Goal: few strong decisions, not 80 micro-questions.
 Identity packet: `docs/owner/legal-content-owner-review.md`
 Commercial/service website facts, publication status, contract provenance, and owner-decision constraints: `docs/content-audit/SITE_COMMERCIAL_SERVICE_SOT.md`. This board stays the OD index; it is not the full contract-derived publication SoT.
 Future customer-contract warranty wording (12 months, start from transfer) and seller postal index (`153025`): `docs/owner/contract-template-reconciliation.md`. External Word source verified **12 months** and **153025** 2026-08-31 (`OD-04 = B`; postal not a new OD). Not a new OD.
-Returns SOP / warranty public-policy spec (2026-09-01): `docs/owner/returns-sop.md`, `docs/owner/warranty-public-policy.md`. Not new ODs. Not `OWNER_LEGAL_CONTENT_APPROVED`.
+Returns SOP / warranty public-policy spec (2026-09-01): `docs/owner/returns-sop.md`, `docs/owner/warranty-public-policy.md`. Not new ODs. Full pack token issued separately 2026-09-03 (`OWNER_LEGAL_CONTENT_APPROVED`).
 
-Silence ≠ approval of the **full** legal pack.
+Silence ≠ approval of the **full** legal pack until the owner issues an explicit pack token. Pack token issued 2026-09-03: `OWNER_LEGAL_CONTENT_APPROVED`.
+
+### Recorded (2026-09-03)
+
+```text
+OWNER_LEGAL_CONTENT_APPROVED
+WOODRIGHT_LEGAL_CONTENT_STATUS=approved
+WOODRIGHT_LEGAL_PACK_TOKEN=OWNER_LEGAL_CONTENT_APPROVED
+
+OWNER APPROVE NOTIFICATION MODEL ADMIN_POLLING_ONLY
+WOODRIGHT_NOTIFICATION_MODE=admin_polling
+WOODRIGHT_NOTIFICATION_DECISION_STATUS=accepted
+```
+
+Not DNS cutover. Not pair execute. Not application SHA change. Not an email/SMS vendor.
+
+---
 
 ### Recorded (2026-08-15 / 2026-08-17 / 2026-08-19)
 
@@ -85,7 +101,7 @@ OD-11  = INFORMATION ARCHITECTURE DECISION
 OD-12  = DEFERRED / NOT LAUNCH-CRITICAL
          OD12_DO_NOT_REVIVE_WEAK_LEGACY_CARE_PAGES
 FINAL_OWNER_GATE = NONE
-OWNER_LEGAL_CONTENT_APPROVED = NOT ISSUED
+OWNER_LEGAL_CONTENT_APPROVED = ISSUED (2026-09-03)
 ```
 
 These are **not** remaining owner-open launch blockers. Unconfirmed geography / lift / assembly / hours / email / trade pack / component warranty are **omitted**, not invented.
@@ -93,7 +109,7 @@ These are **not** remaining owner-open launch blockers. Unconfirmed geography / 
 Delivery **subfacts** still unpublished: geography, lift, assembly, fleet, dates, pickup.
 Returns **subfacts** still open as ops/commercial (not blocking the 2026-09-01 SOP): reverse-logistics *arranger*; extra goodwill window; dedicated claims email. Statutory remote/defect/individually-determined tests are in `docs/owner/returns-sop.md`. Claims SLA is **not** a public Woodright promise (`OD-06B`).
 Warranty **subfacts** still open: manufacturer **name**; component-specific terms; unsupported exclusion sentences. **Closed 2026-09-01 in spec** (not storefront): start from transfer; commercial obligor = seller ООО «Роэл-Техник»; manufacturing-defect scope; narrow verified exclusions. Term 12 months is closed (`OD-04 = B`). Spec: `docs/owner/warranty-public-policy.md`.
-**Not recorded:** `OWNER_LEGAL_CONTENT_APPROVED`. Full legal pack still `owner_review` / `READY_FOR_OWNER_LEGAL_ACCEPTANCE` after implementation.
+**Recorded 2026-09-03:** `OWNER_LEGAL_CONTENT_APPROVED` for the published caf82b0 buyer legal pack (fail-closed pack acceptance, not a new OD-01…05). Notification launch model: `ADMIN_POLLING_ONLY` (`WOODRIGHT_NOTIFICATION_MODE=admin_polling`, `WOODRIGHT_NOTIFICATION_DECISION_STATUS=accepted`). No email/SMS vendor. Not DNS / pair / application SHA.
 
 `OD-03` ratifies launch communication/process model; it does **not** constitute legal approval of all return clauses.
 
@@ -447,8 +463,10 @@ OD-11: NO GENERIC /services
 OD-12: DEFERRED, not launch-critical
 FINAL_OWNER_GATE = NONE
 
-LEGAL TOKEN (when ready; not issued):
-OWNER_LEGAL_CONTENT_APPROVED | …_WITH_NOTES | …_REJECTED
+LEGAL TOKEN (issued 2026-09-03):
+OWNER_LEGAL_CONTENT_APPROVED
+NOTIFICATION (issued 2026-09-03):
+OWNER APPROVE NOTIFICATION MODEL ADMIN_POLLING_ONLY
 ```
 
-Keep `owner_review` for the full legal pack. Do not treat live CS-Cart numbers as new-site SoT.
+Keep `approved` for the full legal pack after the 2026-09-03 owner token. Do not treat live CS-Cart numbers as new-site SoT.

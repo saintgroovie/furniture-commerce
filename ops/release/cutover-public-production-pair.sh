@@ -10,7 +10,8 @@
 #   - legacy CS-Cart / nginx vhost mutation
 #   - public_demo pair cutover (use cutover-public-demo-pair.sh)
 #   - private production-candidate cutover (use cutover-production-candidate.sh)
-#   - legal-pack approval (OWNER_LEGAL_CONTENT_APPROVED must stay unissued)
+#   - writing a legal-pack token (owner records OWNER_LEGAL_CONTENT_APPROVED
+#     in the environment profile; this helper never issues or clears it)
 #
 # The only accepted --environment is public_production. Pair-only.
 # Canonical lock: /srv/woodright/locks/public_production/live-cutover.lock
@@ -291,13 +292,12 @@ resolve_helper_install_sha
 export WOODRIGHT_OWNER_APPROVAL_STRICT_ENVIRONMENT=1
 export WOODRIGHT_OWNER_APPROVAL_REQUIRE_PAIR=1
 
-# Legal pack must remain fail-closed. This helper never writes a legal token.
-if [[ -n "${WOODRIGHT_LEGAL_PACK_TOKEN:-}" || -n "${OWNER_LEGAL_CONTENT_APPROVED:-}" ]]; then
-  die "refused legal-pack token in environment (OWNER_LEGAL_CONTENT_APPROVED must stay unissued)"
-fi
+# This helper never writes a legal-pack token. An already-recorded owner
+# approval in the loaded profile (approved + WOODRIGHT_LEGAL_PACK_TOKEN) is
+# allowed and left untouched. Unexpected status values still fail closed.
 case "${WOODRIGHT_LEGAL_CONTENT_STATUS:-}" in
-  draft|"") ;;
-  approved) die "refused WOODRIGHT_LEGAL_CONTENT_STATUS=approved (legal launch is a separate owner event)" ;;
+  draft|approved|"") ;;
+  *) die "unexpected WOODRIGHT_LEGAL_CONTENT_STATUS=${WOODRIGHT_LEGAL_CONTENT_STATUS}" ;;
 esac
 
 if [[ "${WOODRIGHT_CUTOVER_HARNESS:-0}" == "1" ]]; then

@@ -44,7 +44,7 @@ Exact already-baked `ced2510` pair (example of invocation identity, not script c
 - Fresh live CAS under lock is rollback authority. Caller-supplied old digests are not.
 - Automatic pin-restore rollback on second-component / health / Gate C failure.
 - Keepers are not used (Compose project labels would destroy them).
-- Legal pack stays fail-closed. This helper never sets `OWNER_LEGAL_CONTENT_APPROVED` or `WOODRIGHT_LEGAL_PACK_TOKEN`.
+- Legal pack: this helper never **writes** `OWNER_LEGAL_CONTENT_APPROVED` or `WOODRIGHT_LEGAL_PACK_TOKEN`. An already-recorded owner approval in `public_production.conf` is allowed and left untouched.
 
 SSH identity is operator input (`ssh -i <IdentityFile>` or host alias). Do not hardcode a machine-specific private-key path in this repo.
 

@@ -52,6 +52,11 @@ function main() {
     : path.join(root, "ops/config/runtime-environments/public_production.conf")
   let paymentDecisionRaw = ""
   let paymentModeRaw = ""
+  let legalStatusRaw = ""
+  let legalPackTokenRaw = ""
+  let notificationStatusRaw = ""
+  let notificationModeRaw = ""
+  let notificationReady = false
   let environmentProvisioned = false
   let monitorBackupRuntimeProvisioned = false
   if (!fs.existsSync(profilePath)) {
@@ -72,8 +77,6 @@ function main() {
       ["WOODRIGHT_REQUIRED_DB_ALIAS", "public_production_db"],
       ["WOODRIGHT_OWNER_APPROVAL_ENVIRONMENT", "public_production"],
       ["WOODRIGHT_ADMIN_EXPOSURE", "private"],
-      ["WOODRIGHT_LEGAL_CONTENT_STATUS", "draft"],
-      ["WOODRIGHT_NOTIFICATION_DECISION_STATUS", "pending"],
       ["WOODRIGHT_ENVIRONMENT_PROVISIONED", "1"],
       ["WOODRIGHT_HOST_PUBLISH_POLICY", "loopback_allowlist"],
       ["WOODRIGHT_ALLOWED_HOST_BINDINGS", "storefront:3002/tcp=127.0.0.1:3300,backend:9000/tcp=127.0.0.1:9300"],
@@ -113,6 +116,63 @@ function main() {
           `WOODRIGHT_PAYMENT_DECISION_STATUS must be pending|accepted_manual (got ${paymentDecisionRaw})`
         )
       }
+    }
+    const legalMatch = conf.match(/^WOODRIGHT_LEGAL_CONTENT_STATUS=(.*)$/m)
+    if (!legalMatch) fail(errors, "missing WOODRIGHT_LEGAL_CONTENT_STATUS")
+    else {
+      legalStatusRaw = legalMatch[1].trim()
+      if (legalStatusRaw !== "draft" && legalStatusRaw !== "approved") {
+        fail(
+          errors,
+          `WOODRIGHT_LEGAL_CONTENT_STATUS must be draft|approved (got ${legalStatusRaw})`
+        )
+      }
+    }
+    const legalTokenMatch = conf.match(/^WOODRIGHT_LEGAL_PACK_TOKEN=(.*)$/m)
+    legalPackTokenRaw = legalTokenMatch ? legalTokenMatch[1].trim() : ""
+    if (legalStatusRaw === "approved" && legalPackTokenRaw !== "OWNER_LEGAL_CONTENT_APPROVED") {
+      fail(
+        errors,
+        "WOODRIGHT_LEGAL_PACK_TOKEN must be OWNER_LEGAL_CONTENT_APPROVED when legal status is approved"
+      )
+    }
+    if (legalStatusRaw === "draft" && legalPackTokenRaw === "OWNER_LEGAL_CONTENT_APPROVED") {
+      fail(
+        errors,
+        "WOODRIGHT_LEGAL_PACK_TOKEN=OWNER_LEGAL_CONTENT_APPROVED conflicts with WOODRIGHT_LEGAL_CONTENT_STATUS=draft"
+      )
+    }
+    const notifModeMatch = conf.match(/^WOODRIGHT_NOTIFICATION_MODE=(.*)$/m)
+    if (!notifModeMatch) fail(errors, "missing WOODRIGHT_NOTIFICATION_MODE")
+    else {
+      notificationModeRaw = notifModeMatch[1].trim()
+      if (notificationModeRaw !== "unset" && notificationModeRaw !== "admin_polling") {
+        fail(
+          errors,
+          `WOODRIGHT_NOTIFICATION_MODE must be unset|admin_polling (got ${notificationModeRaw})`
+        )
+      }
+    }
+    const notifDecMatch = conf.match(/^WOODRIGHT_NOTIFICATION_DECISION_STATUS=(.*)$/m)
+    if (!notifDecMatch) fail(errors, "missing WOODRIGHT_NOTIFICATION_DECISION_STATUS")
+    else {
+      notificationStatusRaw = notifDecMatch[1].trim()
+      if (notificationStatusRaw !== "pending" && notificationStatusRaw !== "accepted") {
+        fail(
+          errors,
+          `WOODRIGHT_NOTIFICATION_DECISION_STATUS must be pending|accepted (got ${notificationStatusRaw})`
+        )
+      }
+    }
+    const notificationPending =
+      notificationStatusRaw === "pending" && notificationModeRaw === "unset"
+    notificationReady =
+      notificationStatusRaw === "accepted" && notificationModeRaw === "admin_polling"
+    if (!notificationReady && !notificationPending) {
+      fail(
+        errors,
+        `notification pairing must be pending+unset or accepted+admin_polling (got mode=${notificationModeRaw} status=${notificationStatusRaw})`
+      )
     }
     for (const banned of [
       "runtime-ownership-public-demo",
@@ -334,6 +394,12 @@ function main() {
   if (!/WOODRIGHT_PAYMENT_MODE.*manual_invoice/.test(health)) {
     fail(errors, "health-check must require WOODRIGHT_PAYMENT_MODE=manual_invoice with accepted_manual")
   }
+  if (!health.includes("OWNER_LEGAL_CONTENT_APPROVED")) {
+    fail(errors, "health-check must require OWNER_LEGAL_CONTENT_APPROVED pack token with approved legal status")
+  }
+  if (!health.includes("admin_polling")) {
+    fail(errors, "health-check must require admin_polling for notification decision pass")
+  }
 
   // Backup helper must refuse wrong env / demo DB
   const bak = fs.readFileSync(
@@ -347,9 +413,13 @@ function main() {
   }
 
   // Remaining launch / runtime gates (expected pending on real profile).
-  // Payment gate clears only when owner-attested accepted_manual + manual_invoice;
-  // that never alone makes launch_ready true.
-  blockers.push("LEGAL_CONTENT_STATUS!=approved")
+  // Payment / legal / notification gates clear only when owner-attested pairings
+  // match; none of them alone makes launch_ready true.
+  if (legalStatusRaw !== "approved" || legalPackTokenRaw !== "OWNER_LEGAL_CONTENT_APPROVED") {
+    blockers.push("LEGAL_CONTENT_STATUS!=approved")
+  } else {
+    contractReady.push("legal_pack_ready:OWNER_LEGAL_CONTENT_APPROVED")
+  }
   const paymentReady = evaluatePublicPaymentReady({
     paymentMode: paymentModeRaw,
     paymentDecisionStatus: paymentDecisionRaw,
@@ -369,7 +439,11 @@ function main() {
   } else {
     blockers.push(`PAYMENT_DECISION_STATUS=unsupported:${paymentDecisionRaw || "<empty>"}`)
   }
-  blockers.push("NOTIFICATION_DECISION_STATUS=pending")
+  if (notificationReady) {
+    contractReady.push("notification_contract_ready:admin_polling")
+  } else {
+    blockers.push("NOTIFICATION_DECISION_STATUS=pending")
+  }
   blockers.push("owner_approval_manifest_public_production_missing")
   if (!monitorBackupRuntimeProvisioned) {
     blockers.push("monitor_backup_runtime_not_provisioned")
@@ -387,6 +461,8 @@ function main() {
     monitor_backup_contracts_present: errors.length === 0,
     payment_contract_ready: paymentReady.ready,
     payment_contract_detail: paymentReady.reason,
+    legal_pack_ready: legalStatusRaw === "approved" && legalPackTokenRaw === "OWNER_LEGAL_CONTENT_APPROVED",
+    notification_contract_ready: notificationReady,
     launch_ready: false,
     runtime_provisioned: environmentProvisioned,
     monitor_backup_runtime_provisioned: monitorBackupRuntimeProvisioned,

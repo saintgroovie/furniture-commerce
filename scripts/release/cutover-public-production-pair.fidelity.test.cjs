@@ -74,7 +74,9 @@ function run(args, extraEnv = {}) {
   check(!text.includes("recreate-staging-storefront.sh"), "does not call demo storefront recreate")
   check(!text.includes("recreate-staging-backend-with-media.sh"), "does not call demo backend recreate")
   check(!/\bgcloud dns\b|\broute53\b/.test(text) || /refused DNS/.test(text), "no DNS mutation helpers (refuse-only mentions ok)")
-  check(text.includes("refused legal-pack token"), "refuses legal-pack token in environment")
+  check(text.includes("never writes a legal-pack token"), "never writes a legal-pack token")
+  check(!text.includes("OWNER_LEGAL_CONTENT_APPROVED must stay unissued"), "does not require unissued legal pack")
+  check(!/die "refused WOODRIGHT_LEGAL_CONTENT_STATUS=approved/.test(text), "does not refuse already-approved legal status")
   check(fs.statSync(helper).mode & 0o111, "script is executable")
 }
 

@@ -1,8 +1,8 @@
 # Legal content - owner review packet (canonical)
 
-**Document status:** `owner_review`
-**Full legal pack:** **NOT APPROVED**
-**This file is not** `OWNER_LEGAL_CONTENT_APPROVED`.
+**Document status:** `approved` (owner pack token 2026-09-03)
+**Full legal pack:** **APPROVED** `OWNER_LEGAL_CONTENT_APPROVED`
+**This file records** the seller identity packet plus the 2026-09-03 pack token. Individual SOP/spec files remain provenance; they are not themselves the pack token.
 
 Decision board SoT: `docs/content-audit/OWNER_DECISIONS.md`
 Commercial/service website facts, publication status, contract provenance, and owner-decision constraints: `docs/content-audit/SITE_COMMERCIAL_SERVICE_SOT.md`.
@@ -28,7 +28,7 @@ WOODRIGHT_OD03_MANAGER_ASSISTED_RETURNS_OWNER_RATIFIED
 WOODRIGHT_OD04_WARRANTY_12_MONTHS_OWNER_RATIFIED
 ```
 
-Do **not** treat OD-03/OD-04 ratification as `OWNER_LEGAL_CONTENT_APPROVED`, storefront ship, or Word mutation.
+Do **not** treat OD-03/OD-04 ratification as `OWNER_LEGAL_CONTENT_APPROVED`, storefront ship, or Word mutation. The pack token was issued separately on 2026-09-03.
 
 `OD-06` is **split** (2026-08-20): submit = request (`IMPLEMENTATION DECISION` + `LEGAL REVIEW`); no extra commercial claims SLA. Not kept as an owner-open mixed P0. Pack: `docs/content-audit/20260820_LAUNCH_COMPLETION.md`.
 
@@ -66,7 +66,7 @@ SELLER = ООО «Роэл-Техник»
 OD-01 = A
 PRIVACY CONTACT: STILL MISSING
 PD OPERATOR COPY: STILL REQUIRES CONTENT/LEGAL COMPLETION
-FULL LEGAL PACK: NOT YET APPROVED
+FULL LEGAL PACK: APPROVED 2026-09-03 (`OWNER_LEGAL_CONTENT_APPROVED`)
 ```
 
 ---
@@ -120,8 +120,11 @@ Remaining unanswered in this packet:
 
 See `docs/content-audit/20260820_LAUNCH_COMPLETION.md`. `FINAL_OWNER_GATE = NONE`.
 
-Required full-pack tokens (not issued):
+Pack token issued 2026-09-03:
 
 - `OWNER_LEGAL_CONTENT_APPROVED`
+
+Refusal/notes variants remain available if the owner later revises:
+
 - `OWNER_LEGAL_CONTENT_APPROVED_WITH_NOTES`
 - `OWNER_LEGAL_CONTENT_REJECTED`

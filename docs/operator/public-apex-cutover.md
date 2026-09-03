@@ -34,9 +34,11 @@ is **not** authority. Live approval is
 `/srv/woodright/meta/public_production/OWNER_APPROVED_RELEASE.json`.
 
 Do not self-issue those tokens. Do not issue `OWNER_LEGAL_CONTENT_APPROVED` from
-this runbook. Legal pack remains fail-closed (`isLegalLaunchComplete()` false)
-and is **not** a hard apex-traffic gate: buyer pages already publish honest
-production copy; `/offer` stays out of the sitemap until the legal token.
+this runbook. Owner recorded the pack token on 2026-09-03 in
+`public_production.conf`; this routing helper still must not write or clear it.
+Storefront `isLegalLaunchComplete()` also needs runtime
+`WOODRIGHT_LEGAL_PACK_TOKEN` in the storefront process (separate from this
+helper). `/offer` stays out of the sitemap until that runtime token is present.
 Legal / payment / notification remain DNS-launch gates, not this routing helper.
 
 ## Topology (read-only snapshot, 2026-09-02)
