@@ -1159,10 +1159,9 @@ function isOliverStandaloneMultiFabricProduct(
  * Contract: SINGLE_INTERACTIVE_FAMILY_AXIS
  * - Families are values of one `Обивка` axis (media preview), not separate section axes.
  * - Do not emit `separateFabricRows` (that path forces product-thumbnail image swatches).
- * - Fabric-*family* keys (leona/lillian/…) are collections, not a single color:
- *   strip `swatchHex` even if metadata carries one — a family hex would fake a color tile.
- * - Confirmed color keys (beige/darkblue/…) keep evidenced hex via the normal builder path.
- * - Product heroes stay in `mainSrc` for gallery swap — never as image swatch tiles.
+ * - PASS C: keep evidenced `swatch_hex` so PDP can render color swatches (not text-only).
+ *   Product heroes stay in `mainSrc` for gallery swap — never as image swatch tiles.
+ * - Night III: do not strip family hex — that reverts PASS C to text chips.
  * - Price/Medusa variant are unchanged; selection only swaps execution media.
  */
 function oliverUnifiedFabricFamilySelectors(
@@ -1171,19 +1170,15 @@ function oliverUnifiedFabricFamilySelectors(
 ): CardExecutionSelectors {
   return {
     upholstery: metadataFabric.map((row) => {
-      const isFamily = isFabricFamilyUpholsteryKey(row.key)
-      const swatchHex = isFamily ? undefined : row.swatchHex
-      const swatchImageUrl = isFamily ? undefined : row.swatchImageUrl
       const presentation = resolveExecutionPresentation({
-        swatch_hex: swatchHex,
-        swatch_image: swatchImageUrl,
-        presentation: isFamily ? "text" : row.presentation,
+        swatch_hex: row.swatchHex,
+        swatch_image: row.swatchImageUrl,
+        presentation: row.presentation,
       })
       return {
         ...row,
-        swatchHex,
-        swatchImageUrl,
-        swatchToken: swatchHex ? row.swatchToken : undefined,
+        /* Keep curated family hex when present; drop token fallback that invents fills. */
+        swatchToken: row.swatchHex ? row.swatchToken : undefined,
         presentation,
       }
     }),
