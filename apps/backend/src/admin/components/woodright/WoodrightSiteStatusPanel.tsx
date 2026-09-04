@@ -1,5 +1,6 @@
 import { Badge, Container, Heading, StatusBadge, Text } from "@medusajs/ui"
 import type { SiteReadinessResponse } from "../../../lib/woodright-admin/site-readiness"
+import { localizeCollectionDisplayTitle } from "../../lib/collection-display-labels"
 import { ctaLabel, productTypeBadge, severityColor } from "./site-status-labels"
 
 type Props = {
@@ -116,7 +117,7 @@ export function WoodrightSiteStatusPanel({ data, loading, error, rawMetadata }: 
               Тип товара
             </Text>
             <Badge size="small">
-              {storefront.product_type} — {productTypeBadge(storefront.product_type)}
+              {storefront.product_type} - {productTypeBadge(storefront.product_type)}
             </Badge>
           </div>
           {storefront.buyer_facing_section && (
@@ -146,9 +147,11 @@ export function WoodrightSiteStatusPanel({ data, loading, error, rawMetadata }: 
           {product.collection && (
             <div className="flex flex-wrap items-center gap-2">
               <Text size="small" weight="plus" className="text-ui-fg-subtle w-40">
-                Collection
+                Коллекция
               </Text>
-              <Text size="small">{product.collection}</Text>
+              <Text size="small">
+                {localizeCollectionDisplayTitle(product.collection) ?? product.collection}
+              </Text>
             </div>
           )}
         </div>
@@ -187,8 +190,8 @@ export function WoodrightSiteStatusPanel({ data, loading, error, rawMetadata }: 
                 Миниатюра в списке админки
               </Text>
               <Text size="xsmall" className="text-ui-fg-subtle mb-2">
-                Medusa Admin: список товаров — поле product.thumbnail; таблица SKU/вариантов на карточке
-                товара — variant.thumbnail (без fallback на галерею).
+                Medusa Admin: список товаров - поле product.thumbnail; таблица SKU/вариантов на карточке
+                товара - variant.thumbnail (без fallback на галерею).
               </Text>
               {media.thumbnail_health.variants_missing_thumbnail > 0 && (
                 <Text size="xsmall" className="text-ui-fg-subtle mb-2">
@@ -276,7 +279,7 @@ export function WoodrightSiteStatusPanel({ data, loading, error, rawMetadata }: 
                 {media.execution_variants.map((v) => (
                   <tr key={v.key} className="border-b border-ui-border-base">
                     <td className="py-2 pr-3">{v.key}</td>
-                    <td className="py-2 pr-3">{v.label ?? "—"}</td>
+                    <td className="py-2 pr-3">{v.label ?? "-"}</td>
                     <td className="py-2 pr-3">{v.gallery_count}</td>
                   </tr>
                 ))}
@@ -313,16 +316,18 @@ export function WoodrightSiteStatusPanel({ data, loading, error, rawMetadata }: 
         )}
       </Section>
 
-      <Section title="Raw metadata">
-        <details>
-          <summary className="cursor-pointer text-sm text-ui-fg-subtle">
-            metadata JSON
-          </summary>
-          <pre className="mt-2 max-h-64 overflow-auto rounded-md bg-ui-bg-subtle p-3 text-xs">
-            {JSON.stringify(rawMetadata ?? {}, null, 2)}
-          </pre>
-        </details>
-      </Section>
+      {rawMetadata != null && (
+        <Section title="Raw metadata">
+          <details>
+            <summary className="cursor-pointer text-sm text-ui-fg-subtle">
+              metadata JSON
+            </summary>
+            <pre className="mt-2 max-h-64 overflow-auto rounded-md bg-ui-bg-subtle p-3 text-xs">
+              {JSON.stringify(rawMetadata, null, 2)}
+            </pre>
+          </details>
+        </Section>
+      )}
     </Container>
   )
 }

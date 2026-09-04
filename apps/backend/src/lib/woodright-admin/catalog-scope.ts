@@ -39,14 +39,22 @@ const PAUSED_COLLECTION_KEYS = new Set([
   "provence",
 ])
 
-const ACTIVE_COLLECTION_KEYS = new Set([
+export const WOODRIGHT_ACTIVE_COLLECTION_KEYS = [
   "greenwich",
   "oliver",
   "oliver-adult",
   "oliver-kids",
   "willie-winkie",
   "monchelsea",
-])
+] as const
+
+export type WoodrightActiveCollectionKey = (typeof WOODRIGHT_ACTIVE_COLLECTION_KEYS)[number]
+
+const ACTIVE_COLLECTION_KEYS = new Set<string>(WOODRIGHT_ACTIVE_COLLECTION_KEYS)
+
+export function isActiveSellerCollectionKey(key: string): boolean {
+  return ACTIVE_COLLECTION_KEYS.has(key)
+}
 
 export function isProductInActiveCatalogScope(product: Record<string, unknown>): boolean {
   const meta = product.metadata as Record<string, unknown> | undefined

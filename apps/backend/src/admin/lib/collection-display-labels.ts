@@ -6,6 +6,7 @@
  */
 const COLLECTION_DISPLAY_LABELS: Record<string, string> = {
   oliver: "Оливер",
+  "oliver-adult": "Оливер",
   "oliver-kids": "Оливер · детская",
   greenwich: "Гринвич",
   monchelsea: "Мончелси",
@@ -16,6 +17,7 @@ const COLLECTION_DISPLAY_LABELS: Record<string, string> = {
 const TITLE_ALIASES: Record<string, string> = {
   oliver: "Оливер",
   оливер: "Оливер",
+  "oliver-adult": "Оливер",
   "oliver-kids": "Оливер · детская",
   "oliver-kids-line": "Оливер · детская",
   "оливер-детская": "Оливер · детская",
