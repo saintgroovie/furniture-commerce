@@ -426,4 +426,19 @@ else
 fi
 ok "installer includes public_production pair helper"
 
+grep -q 'ops/release/reconcile-public-production-owner-env.sh' "$ROOT/ops/release/install-environment-governance.sh" \
+  || fail "installer missing public_production owner-env helper"
+grep -q 'ops/lib/woodright-public-production-owner-env.py' "$ROOT/ops/release/install-environment-governance.sh" \
+  || fail "installer missing public_production owner-env planner"
+grep -q 'docs/operator/public-production-owner-env-reconcile.md' "$ROOT/ops/release/install-environment-governance.sh" \
+  || fail "installer missing public_production owner-env docs"
+grep -q 'I_UNDERSTAND_PUBLIC_PRODUCTION_OWNER_ENV_RECONCILE' "$ROOT/ops/release/reconcile-public-production-owner-env.sh" \
+  || fail "owner-env helper missing confirm token"
+if grep -qE '^[^#]*(nsupdate|route53|cloudflare)' "$ROOT/ops/release/reconcile-public-production-owner-env.sh"; then
+  fail "owner-env helper must not mutate DNS via CLI"
+else
+  ok "owner-env helper does not mutate DNS via CLI"
+fi
+ok "installer includes public_production owner-env helper"
+
 echo "ALL_OK passes=$PASS"

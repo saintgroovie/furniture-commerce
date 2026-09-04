@@ -251,6 +251,7 @@ FILES=(
   ops/lib/woodright-recreate-mode.sh
   ops/lib/woodright-production-ownership-access.sh
   ops/lib/woodright-production-compose-template.py
+  ops/lib/woodright-public-production-owner-env.py
   ops/config/runtime-environments/public_demo.conf
   ops/config/runtime-environments/staging.conf
   ops/config/runtime-environments/production.conf
@@ -272,6 +273,7 @@ FILES=(
   ops/release/reconcile-production-release-sha.sh
   ops/release/reconcile-public-demo-metadata.sh
   ops/release/reconcile-owner-approved-release.sh
+  ops/release/reconcile-public-production-owner-env.sh
   ops/release/public-demo-critical-http-smoke.sh
   ops/release/rollback-staging-backend-from-keeper.sh
   ops/release/rollback-staging-storefront-from-keeper.sh
@@ -301,6 +303,7 @@ FILES=(
   docs/operator/backend-media-promotion-gate.md
   docs/operator/production-candidate-rollback.md
   docs/operator/public-production-pair-cutover.md
+  docs/operator/public-production-owner-env-reconcile.md
   docs/operator/public-apex-cutover.md
   docs/operator/production-helper-install-provenance.md
   docs/operator/production-candidate-authority-reconcile.md
@@ -343,6 +346,8 @@ role_for() {
     ops/lib/woodright-recreate-mode.sh) echo recreate_mode ;;
     ops/lib/woodright-production-ownership-access.sh) echo production_ownership_access ;;
     ops/release/reconcile-owner-approved-release.sh) echo owner_approved_release_reconciler ;;
+    ops/release/reconcile-public-production-owner-env.sh) echo public_production_owner_env_reconciler ;;
+    ops/lib/woodright-public-production-owner-env.py) echo public_production_owner_env_plan ;;
     scripts/release/reconcile-public-image-pins.sh) echo pin_reconciler ;;
     scripts/release/restart-active-digest-only.sh) echo legacy_restart_guard ;;
     ops/monitoring/*) echo monitor_helper ;;
@@ -758,6 +763,8 @@ def role_for(rel: str) -> str:
         "ops/lib/woodright-memory-limits.sh": "memory_limits",
         "ops/lib/woodright-recreate-mode.sh": "recreate_mode",
         "ops/lib/woodright-production-ownership-access.sh": "production_ownership_access",
+        "ops/release/reconcile-public-production-owner-env.sh": "public_production_owner_env_reconciler",
+        "ops/lib/woodright-public-production-owner-env.py": "public_production_owner_env_plan",
         "ops/release/install-environment-governance.sh": "installer",
         "ops/release/verify-environment-governance-bundle.sh": "bundle_verifier",
     }
