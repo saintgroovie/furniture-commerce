@@ -9,6 +9,4 @@ export const Lead = model.define("lead", {
   comment: model.text().nullable(),
   payload: model.json().nullable(),
   status: model.text().nullable(),
-  created_at: model.dateTime().default(() => new Date()),
-  updated_at: model.dateTime().default(() => new Date()),
 })

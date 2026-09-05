@@ -542,7 +542,7 @@ export function LegacyMediaBoardV2Client({
       const ids = candidatesByHandle.get(selectedHandle) ?? []
       const state = productStates[selectedHandle] ?? null
       const plan = planAddVariant(label, selectedHandle, ids, invById, state)
-      if (!plan.ok) {
+      if (plan.ok === false) {
         if (plan.reason === "duplicate") {
           return {
             ok: false,

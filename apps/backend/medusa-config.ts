@@ -1,6 +1,7 @@
 import { loadEnv, defineConfig } from "@medusajs/framework/utils"
 import { woodrightAdminDefaultLocalePlugin } from "./src/admin/vite/default-locale-plugin"
 import { woodrightDisableAdminHmrPlugin } from "./src/admin/vite/disable-hmr-plugin"
+import { woodrightAdminNormalizeHostPlugin } from "./src/admin/vite/normalize-admin-host-plugin"
 import { adminViteCacheDir, finalizeOrPruneViteCache } from "./src/admin/vite/finalize-vite-cache.mjs"
 import { woodrightPruneViteCachePlugin } from "./src/admin/vite/prune-vite-cache-plugin"
 import { woodrightStaleChunkReloadPlugin } from "./src/admin/vite/stale-chunk-reload-plugin"
@@ -81,6 +82,11 @@ export default defineConfig({
         : undefined,
   },
   admin: {
+    // Embedded Admin must call the same origin. Absolute MEDUSA_BACKEND_URL
+    // breaks login when the tab host differs (cross-host session cookie / CORS).
+    backendUrl:
+      process.env.ADMIN_BACKEND_URL ??
+      (localHttp || !isProduction ? "" : process.env.MEDUSA_BACKEND_URL || ""),
     vite: (config) => {
       const baseHmr =
         config.server?.hmr && typeof config.server.hmr === "object"
@@ -97,6 +103,7 @@ export default defineConfig({
         plugins: [
           ...(config.plugins ?? []),
           woodrightPruneViteCachePlugin(adminViteCacheDirPath),
+          woodrightAdminNormalizeHostPlugin(),
           woodrightAdminDefaultLocalePlugin(),
           woodrightStaleChunkReloadPlugin(),
           ...stabilityPlugins,

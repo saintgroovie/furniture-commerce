@@ -311,7 +311,7 @@ export function MediaPoolPanel({
       gallerySet,
       runtimeFailedIds,
       recoveryById
-    )
+    ) as PoolItem[]
   }, [
     poolItems,
     activeFilter,

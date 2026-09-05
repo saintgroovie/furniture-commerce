@@ -494,15 +494,8 @@ export function ProductCardMediaGalleryCore({
       bundled.extraSrcs,
       productHandle
     )
+    // Committed catalog bundle has no derivative fallback map.
     const fallbackBySrc: Record<string, string> = {}
-    for (const [display, original] of Object.entries(bundled.fallbackBySrc)) {
-      if (
-        evidenced.mainSrc === display ||
-        evidenced.extraSrcs.includes(display)
-      ) {
-        fallbackBySrc[display] = original
-      }
-    }
     return { ...evidenced, fallbackBySrc }
   }, [layout, variantMain, variantExtras, productHandle])
 
@@ -2312,7 +2305,6 @@ export function ProductCardMediaGalleryCore({
       displayHeroSrc={displayHeroSrc}
       pendingPreloadUrl={pendingPreloadUrl}
       onThumbPick={onThumbPick}
-      srcFallbackByUrl={derivativeFallbackBySrc}
       onThumbError={(url) => {
         if (url === effectiveMain) return
         setFailedExtras((prev) => {
