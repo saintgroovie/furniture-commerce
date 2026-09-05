@@ -200,6 +200,83 @@ wr_compose_env_sha256() {
   fi
 }
 
+# Parse `sha256sum`/`shasum` stdout; never treat the remainder as file contents.
+wr_compose_env_parse_digest() {
+  local line="$1"
+  local digest="${line%%[[:space:]]*}"
+  [[ "$digest" =~ ^[0-9a-f]{64}$ ]] || {
+    wr_compose_env_die "invalid sha256 digest from hasher"
+    return 1
+  }
+  printf '%s\n' "$digest"
+}
+
+# Fingerprint a governed compose .env without printing secrets.
+# Unreadable files are hashed only via `sudo -n sha256sum -- <realpath>` and
+# only when realpath(path) == realpath(expected_profile_path) under allowed_parent.
+# Never cats the file. Never sudo-hashes an arbitrary caller path.
+# Sets WR_COMPOSE_ENV_FINGERPRINT_METHOD=unprivileged|privileged on success.
+wr_compose_env_sha256_fingerprint() {
+  local path="$1"
+  local expected="$2"
+  local allowed_parent="$3"
+  local resolved expected_resolved hasher_out hasher_rc method digest
+  WR_COMPOSE_ENV_FINGERPRINT_METHOD=""
+  [[ -n "$path" && -n "$expected" && -n "$allowed_parent" ]] \
+    || { wr_compose_env_die "fingerprint requires path, expected profile path, and allowed parent"; return 1; }
+  command -v realpath >/dev/null 2>&1 \
+    || { wr_compose_env_die "realpath required for compose env fingerprint"; return 1; }
+  wr_compose_env_assert_path_under "$path" "$allowed_parent" || return 1
+  wr_compose_env_assert_path_under "$expected" "$allowed_parent" || return 1
+  wr_compose_env_is_regular_file "$path" || return 1
+  wr_compose_env_is_regular_file "$expected" || return 1
+  resolved="$(realpath "$path" 2>/dev/null || true)"
+  expected_resolved="$(realpath "$expected" 2>/dev/null || true)"
+  [[ -n "$resolved" && -n "$expected_resolved" ]] \
+    || { wr_compose_env_die "cannot canonicalize fingerprint paths"; return 1; }
+  [[ "$resolved" == "$expected_resolved" ]] \
+    || { wr_compose_env_die "fingerprint path is not the profile compose env"; return 1; }
+
+  if [[ -r "$resolved" ]]; then
+    method="unprivileged"
+    wr_compose_env_log "fingerprint_method=unprivileged"
+    if command -v sha256sum >/dev/null 2>&1; then
+      hasher_out="$(sha256sum -- "$resolved")" || {
+        wr_compose_env_die "unprivileged sha256sum failed"
+        return 1
+      }
+    elif command -v shasum >/dev/null 2>&1; then
+      hasher_out="$(shasum -a 256 -- "$resolved")" || {
+        wr_compose_env_die "unprivileged shasum failed"
+        return 1
+      }
+    else
+      wr_compose_env_die "no sha256sum/shasum"
+      return 1
+    fi
+    digest="$(wr_compose_env_parse_digest "$hasher_out")" || return 1
+    WR_COMPOSE_ENV_FINGERPRINT_METHOD="$method"
+    printf '%s %s\n' "$method" "$digest"
+    return 0
+  fi
+
+  command -v sudo >/dev/null 2>&1 \
+    || { wr_compose_env_die "compose env is unreadable and sudo is unavailable"; return 1; }
+  command -v sha256sum >/dev/null 2>&1 \
+    || { wr_compose_env_die "compose env is unreadable and sha256sum is unavailable"; return 1; }
+  method="privileged"
+  wr_compose_env_log "fingerprint_method=privileged hasher=sudo-n-sha256sum"
+  hasher_rc=0
+  hasher_out="$(sudo -n sha256sum -- "$resolved")" || hasher_rc=$?
+  [[ "$hasher_rc" -eq 0 ]] || {
+    wr_compose_env_die "privileged sha256sum failed rc=$hasher_rc"
+    return 1
+  }
+  digest="$(wr_compose_env_parse_digest "$hasher_out")" || return 1
+  WR_COMPOSE_ENV_FINGERPRINT_METHOD="$method"
+  printf '%s %s\n' "$method" "$digest"
+}
+
 # Atomic install: src temp -> dest. Temp should already live in dest's directory
 # when possible. Preserves DESTINATION owner/group/mode (not staged umask/owner).
 # Does not print file contents.

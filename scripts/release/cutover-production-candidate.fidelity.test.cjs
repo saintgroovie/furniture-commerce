@@ -157,6 +157,20 @@ function run(args, extraEnv = {}) {
     check(packet.no_lock_held === true, "packet asserts no_lock_held")
     check(packet.no_pin_writes === true, "packet asserts no_pin_writes")
     check(packet.no_dns_change === true, "packet asserts no_dns_change")
+    check(
+      packet.compose_env_fingerprint &&
+        typeof packet.compose_env_fingerprint.status === "string",
+      "packet exposes compose_env_fingerprint.status"
+    )
+    check(
+      packet.compose_env_fingerprint.status === "absent" ||
+        packet.compose_env_fingerprint.status === "ok",
+      "compose_env_fingerprint.status is absent or ok on this host"
+    )
+    check(
+      !/THIS_MUST_NEVER_APPEAR_IN_OUTPUT/.test(r.stdout + r.stderr),
+      "dry-run output does not contain the secret-leakage sentinel"
+    )
     check(packet.candidates.backend.applicable === true, "packet includes applicable backend candidate")
     check(packet.candidates.storefront.applicable === true, "packet includes applicable storefront candidate")
 
@@ -457,6 +471,19 @@ function run(args, extraEnv = {}) {
   const text = fs.readFileSync(helper, "utf8")
   check(text.includes(PRODUCTION_LOCK), "helper names the canonical production lock path")
   check(/wr_staging_mutation_lock_acquire/.test(text), "execute path acquires the shared flock")
+  check(
+    /fingerprint_compose_env/.test(text) && /wr_compose_env_sha256_fingerprint/.test(text),
+    "compose .env fingerprint uses the privileged-hash helper, not unprivileged sha256_of"
+  )
+  check(
+    !/PRELOCK_PIN_SHA="\$\(sha256_of "\$COMPOSE_ENV_FILE"\)"/.test(text),
+    "PRELOCK pin hash no longer calls unprivileged sha256_of on compose .env"
+  )
+  check(!/sudo\s+cat/.test(text), "helper does not sudo-cat the compose .env")
+  check(
+    !/sudo\s+-n\s+cat/.test(text),
+    "helper does not sudo-n-cat the compose .env"
+  )
   check(
     !/reconcile-public-image-pins|recreate-staging-(backend|storefront)/.test(text),
     "helper does not call public_demo-only runtime helpers"

@@ -773,6 +773,10 @@ assert plan["pin_plan"]["keys"]["WOODRIGHT_STOREFRONT_SOURCE_SHA"] == sys.argv[2
 assert plan["recreate"]["order"] == ["backend", "storefront"]
 assert "prepared" in plan["state_machine"]
 assert packet["no_mutation_performed"] is True
+fp = packet["compose_env_fingerprint"]
+assert fp["status"] == "ok", fp
+assert fp["method"] == "unprivileged", fp
+assert len(fp["sha256"]) == 64, fp
 
 # Stale informational marker is reported but does not block a valid plan.
 crs = packet["compose_release_sha"]
@@ -822,6 +826,96 @@ assert "13" in codes and "incomplete" in codes["13"], codes
 assert packet["existing_pin_runtime_skew"] is False, packet
 assert packet["normal_execute_blocked"] is False, packet
 PY
+
+# ==========================================================================
+# 17b) protected compose .env: privileged fingerprint dry-run, fail-closed
+# ==========================================================================
+reset_harness
+printf 'SECRET=THIS_MUST_NEVER_APPEAR_IN_OUTPUT\n' >>"$ENV_FILE"
+if command -v shasum >/dev/null 2>&1; then
+  PROT_WANT="$(shasum -a 256 "$ENV_FILE" | awk '{print $1}')"
+else
+  PROT_WANT="$(sha256sum -- "$ENV_FILE" | awk '{print $1}')"
+fi
+PRIVBIN="$TMP/privbin"
+mkdir -p "$PRIVBIN"
+cat >"$PRIVBIN/sha256sum" <<'EOF'
+#!/bin/sh
+echo "protected dry-run must not hash via unprivileged sha256sum" >&2
+exit 97
+EOF
+cat >"$PRIVBIN/sudo" <<EOF
+#!/usr/bin/env bash
+if [[ "\${1:-}" == "-n" && "\${2:-}" == "sha256sum" && "\${3:-}" == "--" && -n "\${4:-}" ]]; then
+  printf '%s  %s\n' "$PROT_WANT" "\$4"
+  exit 0
+fi
+echo "unexpected sudo: \$*" >&2
+exit 1
+EOF
+chmod +x "$PRIVBIN/sha256sum" "$PRIVBIN/sudo"
+chmod 000 "$ENV_FILE"
+ENVS=()
+while IFS= read -r line; do ENVS+=("$line"); done < <(base_env)
+ENVS+=("WOODRIGHT_FAKE_DOCKER_ALLOW_MUTATION=0" "PATH=$PRIVBIN:$BIN:$PATH")
+set +e
+env "${ENVS[@]}" bash "$SCRIPT" \
+  --environment production --component pair --source-sha "$APP_SHA" \
+  --backend-ref "$BE_REF" --storefront-ref "$SF_REF" >"$TMP/out-dryrun-priv.txt" 2>"$TMP/err-dryrun-priv.txt"
+RC=$?
+set -e
+[[ "$RC" -eq 0 ]] && pass "protected-env dry-run: exit 0" || { fail "protected-env dry-run: rc=$RC"; cat "$TMP/err-dryrun-priv.txt"; }
+python3 - "$TMP/out-dryrun-priv.txt" "$PROT_WANT" <<'PY' && pass "protected-env dry-run: privileged fingerprint in packet" || fail "protected-env dry-run: packet fingerprint"
+import json, sys
+raw = open(sys.argv[1]).read()
+packet = json.loads(raw[raw.index("{"):])
+fp = packet["compose_env_fingerprint"]
+assert fp["status"] == "ok", fp
+assert fp["method"] == "privileged", fp
+assert fp["sha256"] == sys.argv[2], fp
+assert packet["no_mutation_performed"] is True
+PY
+if grep -F -q 'THIS_MUST_NEVER_APPEAR_IN_OUTPUT' "$TMP/out-dryrun-priv.txt" "$TMP/err-dryrun-priv.txt"; then
+  fail "protected-env dry-run: sentinel leaked"
+else
+  pass "protected-env dry-run: sentinel absent from stdout/stderr"
+fi
+chmod u+rw "$ENV_FILE" 2>/dev/null || true
+
+reset_harness
+printf 'SECRET=THIS_MUST_NEVER_APPEAR_IN_OUTPUT\n' >>"$ENV_FILE"
+FAILBIN="$TMP/failbin"
+mkdir -p "$FAILBIN"
+cat >"$FAILBIN/sha256sum" <<'EOF'
+#!/bin/sh
+exit 97
+EOF
+cat >"$FAILBIN/sudo" <<'EOF'
+#!/usr/bin/env bash
+echo "simulated privileged hasher failure" >&2
+exit 42
+EOF
+chmod +x "$FAILBIN/sha256sum" "$FAILBIN/sudo"
+chmod 000 "$ENV_FILE"
+ENVS=()
+while IFS= read -r line; do ENVS+=("$line"); done < <(base_env)
+ENVS+=("WOODRIGHT_FAKE_DOCKER_ALLOW_MUTATION=0" "PATH=$FAILBIN:$BIN:$PATH")
+set +e
+env "${ENVS[@]}" bash "$SCRIPT" \
+  --environment production --component pair --source-sha "$APP_SHA" \
+  --backend-ref "$BE_REF" --storefront-ref "$SF_REF" >"$TMP/out-dryrun-privfail.txt" 2>"$TMP/err-dryrun-privfail.txt"
+RC=$?
+set -e
+[[ "$RC" -ne 0 ]] && pass "protected-env sudo-fail: fail closed rc=$RC" || fail "protected-env sudo-fail: unexpectedly succeeded"
+grep -q 'compose env fingerprint failed\|privileged sha256sum failed' "$TMP/out-dryrun-privfail.txt" "$TMP/err-dryrun-privfail.txt" \
+  && pass "protected-env sudo-fail: fingerprint error" || fail "protected-env sudo-fail: missing fingerprint error"
+if grep -F -q 'THIS_MUST_NEVER_APPEAR_IN_OUTPUT' "$TMP/out-dryrun-privfail.txt" "$TMP/err-dryrun-privfail.txt"; then
+  fail "protected-env sudo-fail: sentinel leaked"
+else
+  pass "protected-env sudo-fail: sentinel absent"
+fi
+[[ ! -f "$STATE/log/mutations.log" ]] && pass "protected-env sudo-fail: no docker mutation" || fail "protected-env sudo-fail: docker mutated"
+chmod u+rw "$ENV_FILE" 2>/dev/null || true
 
 # ==========================================================================
 # 18) wrong / missing execute confirmation
@@ -1456,6 +1550,14 @@ else
 fi
 ( cd "$ROOT" && node scripts/release/check-global-lock-policy.cjs ops/release >/dev/null 2>&1 ) \
   && pass "static: global lock policy passes for ops/release" || fail "static: global lock policy"
+grep -q 'PRELOCK_PIN_SHA="$COMPOSE_ENV_FINGERPRINT"' "$SCRIPT" \
+  && grep -q 'apply_compose_env_fingerprint_record' "$SCRIPT" \
+  && pass "static: PRELOCK uses fingerprint_compose_env" || fail "static: PRELOCK still sha256_of compose env"
+if grep -qE 'sudo[[:space:]]+cat|sudo[[:space:]]+-n[[:space:]]+cat' "$SCRIPT"; then
+  fail "static: sudo cat on compose env"
+else
+  pass "static: no sudo cat"
+fi
 
 if [[ "$FAILED" -eq 0 ]]; then
   echo "OK production-candidate cutover execute fidelity"
