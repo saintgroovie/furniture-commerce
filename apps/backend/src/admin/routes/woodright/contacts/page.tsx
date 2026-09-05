@@ -2,6 +2,7 @@ import { Button, Container, Heading, Input, Label, Text } from "@medusajs/ui"
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import { adminJson, sellerErrorMessage } from "../../../lib/admin-fetch"
+import { useDirtyGuard } from "../../../lib/use-dirty-guard"
 import type { WoodrightSiteContacts } from "../../../../lib/woodright-admin/site-contacts"
 import { WOODRIGHT_CONTACTS_SOURCE_STATUS } from "../../../../lib/woodright-admin/site-contacts"
 
@@ -28,6 +29,9 @@ const WoodrightContactsPrepPage = () => {
   const [error, setError] = useState<string | null>(null)
   const [note, setNote] = useState<string | null>(null)
   const [form, setForm] = useState(emptyForm)
+  const [saved, setSaved] = useState(emptyForm)
+  const dirty = JSON.stringify(form) !== JSON.stringify(saved)
+  useDirtyGuard(dirty)
 
   const load = async () => {
     setLoading(true)
@@ -35,7 +39,7 @@ const WoodrightContactsPrepPage = () => {
     try {
       const json = await adminJson<ContactsResponse>("/admin/woodright/contacts")
       if (json.contacts) {
-        setForm({
+        const next = {
           free_display: json.contacts.free_call.display,
           free_e164: json.contacts.free_call.e164,
           write_display: json.contacts.write_or_call.display,
@@ -43,7 +47,9 @@ const WoodrightContactsPrepPage = () => {
           telegram: json.contacts.messengers.telegram.enabled,
           whatsapp: json.contacts.messengers.whatsapp.enabled,
           max: json.contacts.messengers.max.enabled,
-        })
+        }
+        setForm(next)
+        setSaved(next)
       }
     } catch (err) {
       setError(sellerErrorMessage(err, "Не удалось загрузить контакты"))
@@ -74,6 +80,7 @@ const WoodrightContactsPrepPage = () => {
         }),
       })
       setNote(json.message ?? "Черновик контактов сохранён")
+      setSaved(form)
     } catch (err) {
       setError(sellerErrorMessage(err, "Не удалось сохранить контакты"))
     }

@@ -41,11 +41,29 @@ describe("toSellerProduct variant prices", () => {
       amount: 210000,
       currency_code: "rub",
     })
+    assert.equal(product.subtitle, "")
+    assert.equal(product.description, "")
     assert.equal(product.price_display.kind, "range")
     if (product.price_display.kind === "range") {
       assert.equal(product.price_display.min, 189000)
       assert.equal(product.price_display.max, 210000)
       assert.equal(product.price_display.variant_count, 2)
     }
+  })
+
+  it("maps subtitle and description", () => {
+    const mapped = toSellerProduct({
+      id: "prod_2",
+      title: "Комод",
+      subtitle: "90 см по фронту",
+      description: "Базовый спальный формат.",
+      handle: "co-05-1",
+      status: "published",
+      metadata: { collection: "oliver" },
+      variants: [{ id: "var_a", sku: "CO-05-1" }],
+      product_classification: { product_type: "STANDARD" },
+    })
+    assert.equal(mapped.subtitle, "90 см по фронту")
+    assert.equal(mapped.description, "Базовый спальный формат.")
   })
 })

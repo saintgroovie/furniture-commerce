@@ -34,17 +34,23 @@ export function formatRubAmount(amount: number): string {
   return `${formatted}${NBSP}₽`
 }
 
+export function formatSellerPriceInput(amount: number): string {
+  return new Intl.NumberFormat("ru-RU", {
+    maximumFractionDigits: 0,
+  }).format(amount)
+}
+
 export function parseSellerPriceInput(raw: string): PriceParseResult {
   const trimmed = raw.replace(/\s|\u00a0/g, "").trim()
   if (!trimmed) {
     return { ok: false, code: "empty", message: "Укажите цену" }
   }
   if (!/^-?\d+$/.test(trimmed)) {
-    return { ok: false, code: "not_integer", message: "Цена должна быть целым числом" }
+    return { ok: false, code: "not_integer", message: "Укажите цену без копеек" }
   }
   const amount = Number(trimmed)
   if (!Number.isSafeInteger(amount)) {
-    return { ok: false, code: "not_integer", message: "Цена должна быть целым числом" }
+    return { ok: false, code: "not_integer", message: "Укажите цену без копеек" }
   }
   if (amount <= 0) {
     return { ok: false, code: "not_positive", message: "Укажите цену" }

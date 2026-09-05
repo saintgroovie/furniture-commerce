@@ -2,6 +2,7 @@ import assert from "node:assert/strict"
 import { describe, it } from "node:test"
 import type { SellerProduct } from "./seller-product-types.ts"
 import {
+  findExactSkuMatch,
   formatSellerVariantCount,
   isWoodrightCreateProductSegment,
   matchesAttentionFilter,
@@ -32,8 +33,13 @@ function product(partial: Partial<SellerProduct> & Pick<SellerProduct, "id" | "t
     execution_media_guard: false,
     dimensions: {},
     image_urls: [],
+    general_image_urls: [],
+    execution_photo_count: 0,
+    execution_finishes: [],
     has_material_tiers: false,
     collection_key: "oliver",
+    subtitle: "",
+    description: "",
     publish: {
       ready: true,
       blockers: [],
@@ -68,20 +74,6 @@ describe("workspace query", () => {
     assert.equal(matchesAttentionFilter(row, "drafts"), true)
     assert.equal(matchesAttentionFilter(row, "missing_media"), true)
     assert.equal(matchesAttentionFilter(row, "missing_price"), false)
-    assert.equal(matchesAttentionFilter(row, "not_ready"), false)
-  })
-
-  it("filters not-ready from publish readiness", () => {
-    const row = product({
-      id: "2",
-      title: "Y",
-      publish: {
-        ready: false,
-        blockers: [{ severity: "error", code: "missing_price", message: "Добавьте цену" }],
-        warnings: [],
-      },
-    })
-    assert.equal(matchesAttentionFilter(row, "not_ready"), true)
   })
 
   it("declines variant count in Russian", () => {
@@ -97,5 +89,21 @@ describe("workspace query", () => {
     assert.equal(isWoodrightCreateProductSegment("new"), true)
     assert.equal(isWoodrightCreateProductSegment("prod_01"), false)
     assert.equal(isWoodrightCreateProductSegment(undefined), false)
+  })
+
+  it("opens only a unique exact SKU match", () => {
+    const rows = [
+      product({ id: "a", title: "A", skus: ["GR-05-1"] }),
+      product({ id: "b", title: "B", skus: ["GR-05-2"] }),
+    ]
+    assert.equal(findExactSkuMatch(rows, "GR-05-1")?.id, "a")
+    assert.equal(findExactSkuMatch(rows, " gr-05-1 ")?.id, "a")
+    assert.equal(findExactSkuMatch(rows, "GR-05"), null)
+    assert.equal(findExactSkuMatch(rows, "GR-05-1-M"), null)
+    const dupes = [
+      product({ id: "a", title: "A", skus: ["GR-05-1"] }),
+      product({ id: "c", title: "C", skus: ["GR-05-1"] }),
+    ]
+    assert.equal(findExactSkuMatch(dupes, "GR-05-1"), null)
   })
 })

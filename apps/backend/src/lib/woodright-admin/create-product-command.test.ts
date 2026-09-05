@@ -3,7 +3,9 @@ import { describe, it } from "node:test"
 import {
   buildCreateProductDraftSpec,
   createWoodrightDraftProduct,
+  normalizeSellerSku,
   parseCreateProductBody,
+  sellerSkuHasCyrillic,
   type CreateProductPorts,
 } from "./create-product-command.ts"
 import type { SellerProduct } from "./seller-product-types.ts"
@@ -34,8 +36,13 @@ function sellerDraft(overrides: Partial<SellerProduct> = {}): SellerProduct {
     execution_media_guard: false,
     dimensions: {},
     image_urls: [],
+    general_image_urls: [],
+    execution_photo_count: 0,
+    execution_finishes: [],
     has_material_tiers: false,
     collection_key: "oliver",
+    subtitle: "",
+    description: "",
     publish: computeWorkspacePublishReadiness({
       title: "Новая кровать",
       status: "draft",
@@ -61,6 +68,13 @@ function ports(overrides: Partial<CreateProductPorts> = {}): CreateProductPorts 
 }
 
 describe("create product command", () => {
+  it("uppercases and trims SKU", () => {
+    assert.equal(normalizeSellerSku("  ol-test-1  "), "OL-TEST-1")
+    assert.equal(normalizeSellerSku("ol  05  1"), "OL 05 1")
+    assert.equal(sellerSkuHasCyrillic("OL-05-Н"), true)
+    assert.equal(sellerSkuHasCyrillic("OL-05-1"), false)
+  })
+
   it("parses a STANDARD draft payload", () => {
     const parsed = parseCreateProductBody({
       title: "Oliver",

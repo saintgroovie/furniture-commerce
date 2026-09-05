@@ -72,7 +72,6 @@ export function aggregateAttention(summaries: ProductReadinessSummary[]): Attent
     missing_price: 0,
     drafts: 0,
     published_invisible: 0,
-    not_ready: 0,
   }
   for (const summary of summaries) {
     if (summary.codes.includes("missing_media")) counts.missing_media += 1

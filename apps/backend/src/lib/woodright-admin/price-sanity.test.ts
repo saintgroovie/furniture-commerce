@@ -49,7 +49,10 @@ describe("parseSellerPriceInput", () => {
   it("rejects malformed decimals", () => {
     const parsed = parseSellerPriceInput("189000.5")
     assert.equal(parsed.ok, false)
-    if (!parsed.ok) assert.equal(parsed.code, "not_integer")
+    if (!parsed.ok) {
+      assert.equal(parsed.code, "not_integer")
+      assert.equal(parsed.message, "Укажите цену без копеек")
+    }
   })
 })
 

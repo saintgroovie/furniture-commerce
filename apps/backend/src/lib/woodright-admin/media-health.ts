@@ -90,6 +90,51 @@ export function parseExecutionVariants(
   return out
 }
 
+export type SellerMediaPartition = {
+  general_image_urls: string[]
+  execution_photo_count: number
+  execution_finishes: Array<{ key: string; label: string; photo_count: number }>
+}
+
+function collectExecutionUrlSet(product: Record<string, unknown>): Set<string> {
+  const urls = new Set<string>()
+  const variants = parseExecutionVariants(product)
+  for (const variant of variants) {
+    if (variant.main) urls.add(variant.main)
+  }
+  const meta = (product.metadata as Record<string, unknown> | undefined) ?? {}
+  const raw =
+    meta.finish_color_executions ?? meta.paint_finish_executions ?? meta.display_group_color_variants
+  if (!Array.isArray(raw)) return urls
+  for (const item of raw as ColorExecution[]) {
+    if (!item || typeof item !== "object") continue
+    if (typeof item.main === "string" && item.main.trim()) urls.add(item.main)
+    if (!Array.isArray(item.urls)) continue
+    for (const url of item.urls) {
+      if (typeof url === "string" && url.trim()) urls.add(url)
+    }
+  }
+  return urls
+}
+
+export function partitionSellerMedia(
+  imageUrls: string[],
+  product: Record<string, unknown>
+): SellerMediaPartition {
+  const executionUrls = collectExecutionUrlSet(product)
+  const general_image_urls = imageUrls.filter((url) => !executionUrls.has(url))
+  const finishes = parseExecutionVariants(product).map((variant) => ({
+    key: variant.key,
+    label: variant.label ?? variant.key,
+    photo_count: variant.gallery_count,
+  }))
+  return {
+    general_image_urls,
+    execution_photo_count: executionUrls.size,
+    execution_finishes: finishes,
+  }
+}
+
 export function checkStaticMediaPaths(
   urls: string[],
   backendRoot: string

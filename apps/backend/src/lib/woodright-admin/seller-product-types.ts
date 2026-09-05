@@ -15,7 +15,6 @@ export type AttentionCounts = {
   missing_price: number
   drafts: number
   published_invisible: number
-  not_ready: number
 }
 
 export type VariantRubPrice = {
@@ -42,9 +41,17 @@ export type SellerDimensionsMm = {
   depth_mm?: number
 }
 
+export type SellerExecutionFinish = {
+  key: string
+  label: string
+  photo_count: number
+}
+
 export type SellerProduct = {
   id: string
   title: string
+  subtitle: string
+  description: string
   handle: string
   status: string
   thumbnail: string | null
@@ -58,6 +65,9 @@ export type SellerProduct = {
   execution_media_guard: boolean
   dimensions: SellerDimensionsMm
   image_urls: string[]
+  general_image_urls: string[]
+  execution_photo_count: number
+  execution_finishes: SellerExecutionFinish[]
   has_material_tiers: boolean
   collection_key: string | null
   publish: WorkspacePublishReadiness
@@ -81,4 +91,3 @@ export type AttentionFilter =
   | "missing_price"
   | "drafts"
   | "published_invisible"
-  | "not_ready"

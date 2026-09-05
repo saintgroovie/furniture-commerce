@@ -1,19 +1,28 @@
 import { Button, Text } from "@medusajs/ui"
 import { Link } from "react-router-dom"
 import { resolveAdminImageSrc } from "./site-status-labels"
+import type { SellerExecutionFinish } from "../../../lib/woodright-admin/seller-product-types"
 
 type Props = {
   productId: string
   thumbnail: string | null
-  imageUrls: string[]
-  executionGuard: boolean
+  generalImageUrls: string[]
+  executionPhotoCount: number
+  executionFinishes: SellerExecutionFinish[]
 }
 
-export function MediaSection({ productId, thumbnail, imageUrls, executionGuard }: Props) {
-  const previews = imageUrls.slice(0, 8)
+export function MediaSection({
+  productId,
+  thumbnail,
+  generalImageUrls,
+  executionPhotoCount,
+  executionFinishes,
+}: Props) {
+  const previews = generalImageUrls.slice(0, 8)
+  const productCount = generalImageUrls.length
 
   return (
-    <section className="px-6 py-4">
+    <section className="px-6 py-4" id="woodright-media">
       <Text weight="plus" className="mb-1">
         Фотографии
       </Text>
@@ -25,7 +34,8 @@ export function MediaSection({ productId, thumbnail, imageUrls, executionGuard }
         <div className="mb-3 flex flex-wrap gap-2">
           {previews.map((url) => {
             const src = resolveAdminImageSrc(url)
-            const isHero = thumbnail != null && (url === thumbnail || src === resolveAdminImageSrc(thumbnail))
+            const isHero =
+              thumbnail != null && (url === thumbnail || src === resolveAdminImageSrc(thumbnail))
             return (
               <img
                 key={url}
@@ -43,23 +53,27 @@ export function MediaSection({ productId, thumbnail, imageUrls, executionGuard }
         </div>
       )}
       <Text size="small" className="text-ui-fg-subtle mb-3">
-        {thumbnail ? "Обложка отмечена рамкой" : "Обложка не выбрана"}
-        {imageUrls.length > 0 ? ` · ${imageUrls.length} фото` : ""}
+        {productCount} фото товара · {executionPhotoCount} фото исполнений
+        {thumbnail ? " · обложка отмечена рамкой" : productCount > 0 ? " · обложка не выбрана" : ""}
       </Text>
-      {executionGuard && (
+      {executionFinishes.length > 0 && (
         <div className="mb-3 rounded-md border border-ui-border-base bg-ui-bg-subtle p-3">
           <Text size="small" weight="plus">
-            У этого товара есть фотографии исполнений
+            Фотографии исполнений
           </Text>
-          <Text size="small" className="text-ui-fg-subtle">
-            Обычные фотографии товара можно изменить здесь, но фотографии отдельных материалов и отделок управляются отдельно
-          </Text>
+          <ul className="mt-2 flex flex-col gap-1">
+            {executionFinishes.map((finish) => (
+              <li key={finish.key}>
+                <Text size="small" className="text-ui-fg-subtle">
+                  {finish.label} · {finish.photo_count} фото
+                </Text>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
       <Button variant="secondary" size="small" asChild>
-        <Link to={`/products/${productId}`} aria-label="Редактировать фотографии в карточке товара">
-          Редактировать фотографии
-        </Link>
+        <Link to={`/products/${productId}`}>Изменить фотографии в Medusa ↗</Link>
       </Button>
     </section>
   )

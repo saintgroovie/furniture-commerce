@@ -64,7 +64,11 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 export function normalizeSellerSku(raw: string): string {
-  return raw.trim().replace(/\s+/g, " ")
+  return raw.trim().replace(/\s+/g, " ").toUpperCase()
+}
+
+export function sellerSkuHasCyrillic(raw: string): boolean {
+  return /[а-яё]/i.test(raw)
 }
 
 export function handleFromSellerSku(sku: string): string {

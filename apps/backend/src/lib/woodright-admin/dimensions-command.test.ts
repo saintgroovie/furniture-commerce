@@ -2,6 +2,8 @@ import assert from "node:assert/strict"
 import { describe, it } from "node:test"
 import {
   applyDimensionsToMetadata,
+  cmToMm,
+  mmToSellerCm,
   parseDimensionsBody,
 } from "./dimensions-command.ts"
 
@@ -101,5 +103,10 @@ describe("dimensions command", () => {
     assert.equal(result.metadata.collection, "greenwich")
     assert.equal(result.metadata.launch_mode, "request_quote")
     assert.deepEqual(result.metadata.material_tiers, { solid_full: { key: "solid_full" } })
+  })
+
+  it("canonicalizes 10.0 cm to the same saved display as 10", () => {
+    assert.equal(mmToSellerCm(cmToMm(10.0)), "10")
+    assert.equal(mmToSellerCm(cmToMm(10)), mmToSellerCm(cmToMm(10.0)))
   })
 })

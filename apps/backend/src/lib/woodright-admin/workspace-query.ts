@@ -18,7 +18,6 @@ export function matchesAttentionFilter(
   if (filter === "published_invisible") {
     return product.readiness.codes.includes("published_invisible")
   }
-  if (filter === "not_ready") return !product.publish.ready
   return true
 }
 
@@ -39,4 +38,13 @@ export function matchesSellerSearch(product: SellerProduct, query: string): bool
   if (product.handle.toLowerCase().includes(needle)) return true
   if (product.collection_label?.toLowerCase().includes(needle)) return true
   return product.skus.some((sku) => sku.toLowerCase().includes(needle))
+}
+
+export function findExactSkuMatch(products: SellerProduct[], query: string): SellerProduct | null {
+  const needle = query.trim().toLowerCase()
+  if (!needle) return null
+  const matches = products.filter((product) =>
+    product.skus.some((sku) => sku.toLowerCase() === needle)
+  )
+  return matches.length === 1 ? matches[0] : null
 }

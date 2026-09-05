@@ -1,7 +1,13 @@
 import { Button, Input, Label, Prompt, Text } from "@medusajs/ui"
 import { useEffect, useMemo, useState } from "react"
 import { adminJson, sellerErrorMessage } from "../../lib/admin-fetch"
-import { assessPriceSave, formatRubAmount, parseSellerPriceInput } from "../../../lib/woodright-admin/price-sanity"
+import { useRegisterDirty } from "../../lib/use-dirty-guard"
+import {
+  assessPriceSave,
+  formatRubAmount,
+  formatSellerPriceInput,
+  parseSellerPriceInput,
+} from "../../../lib/woodright-admin/price-sanity"
 import type { SellerVariant } from "../../../lib/woodright-admin/seller-product-types"
 
 type Props = {
@@ -21,12 +27,19 @@ type DraftState = {
 
 function emptyDraft(amount: number | null): DraftState {
   return {
-    input: amount != null ? String(amount) : "",
+    input: amount != null ? formatSellerPriceInput(amount) : "",
     error: null,
     note: null,
     pendingConfirm: null,
     saving: false,
   }
+}
+
+function isDraftDirty(input: string, current: number | null): boolean {
+  const parsed = parseSellerPriceInput(input)
+  if (!parsed.ok) return input.trim().length > 0
+  if (current == null) return true
+  return parsed.amount !== current
 }
 
 export function PriceSection({ productId, variants, hasMaterialTiers, onSaved }: Props) {
@@ -42,14 +55,31 @@ export function PriceSection({ productId, variants, hasMaterialTiers, onSaved }:
     setDrafts((prev) => {
       const next: Record<string, DraftState> = {}
       for (const variant of variants) {
+        const current = variant.rub_price?.amount ?? null
         const existing = prev[variant.id]
-        next[variant.id] = existing?.saving
-          ? existing
-          : emptyDraft(variant.rub_price?.amount ?? null)
+        if (existing?.saving) {
+          next[variant.id] = existing
+          continue
+        }
+        if (existing && isDraftDirty(existing.input, current)) {
+          next[variant.id] = existing
+          continue
+        }
+        next[variant.id] = {
+          ...emptyDraft(current),
+          note: existing?.note ?? null,
+        }
       }
       return next
     })
   }, [variants])
+
+  const dirty = variants.some((variant) => {
+    const draft = drafts[variant.id]
+    if (!draft || draft.saving) return false
+    return isDraftDirty(draft.input, variant.rub_price?.amount ?? null)
+  })
+  useRegisterDirty("price", dirty)
 
   const rows = useMemo(() => variants, [variants])
   const single = rows.length <= 1
@@ -73,7 +103,15 @@ export function PriceSection({ productId, variants, hasMaterialTiers, onSaved }:
         body: JSON.stringify({ prices }),
       })
       await onSaved()
-      updateDraft(variant.id, { saving: false, input: String(amount), error: null })
+      updateDraft(variant.id, {
+        saving: false,
+        input: formatSellerPriceInput(amount),
+        error: null,
+        note: `Сохранено · На сайте будет ${formatRubAmount(amount)} (базовая цена)`,
+      })
+      window.setTimeout(() => {
+        updateDraft(variant.id, { note: null })
+      }, 5000)
     } catch (error) {
       updateDraft(variant.id, {
         saving: false,
@@ -105,12 +143,11 @@ export function PriceSection({ productId, variants, hasMaterialTiers, onSaved }:
         pendingConfirm: null,
       })
       void saveVariant(variant, assessment.amount)
-      return
     }
   }
 
   return (
-    <section className="px-6 py-4">
+    <section className="px-6 py-4" id="woodright-price">
       <Text weight="plus" className="mb-1">
         Цена
       </Text>
@@ -119,7 +156,8 @@ export function PriceSection({ productId, variants, hasMaterialTiers, onSaved }:
       </Text>
       {hasMaterialTiers && (
         <Text size="small" className="text-ui-fg-subtle mb-4">
-          Это базовая цена исполнения «Полностью из массива». Цены других исполнений рассчитываются автоматически
+          Это базовая цена исполнения «Полностью из массива». Цены других исполнений рассчитываются
+          автоматически
         </Text>
       )}
       <div className="flex flex-col gap-4">
@@ -128,7 +166,9 @@ export function PriceSection({ productId, variants, hasMaterialTiers, onSaved }:
           const current = variant.rub_price?.amount
           const fieldId = `price-${variant.id}`
           const label = single
-            ? "Новая цена"
+            ? current == null
+              ? "Цена"
+              : "Новая цена"
             : [variant.title, variant.sku].filter(Boolean).join(" · ") || "Вариант"
           return (
             <div key={variant.id} className="flex flex-col gap-2">
@@ -144,7 +184,7 @@ export function PriceSection({ productId, variants, hasMaterialTiers, onSaved }:
               )}
               <div className="flex flex-wrap items-end gap-2">
                 <div className="flex min-w-[12rem] flex-col gap-1">
-                  <Label htmlFor={fieldId}>{single ? "Новая цена" : "Цена"}</Label>
+                  <Label htmlFor={fieldId}>{single ? (current == null ? "Цена" : "Новая цена") : "Цена"}</Label>
                   <Input
                     id={fieldId}
                     inputMode="numeric"
@@ -152,8 +192,14 @@ export function PriceSection({ productId, variants, hasMaterialTiers, onSaved }:
                     aria-invalid={Boolean(draft.error)}
                     aria-describedby={draft.error ? `${fieldId}-error` : undefined}
                     onChange={(event) =>
-                      updateDraft(variant.id, { input: event.target.value, error: null })
+                      updateDraft(variant.id, { input: event.target.value, error: null, note: null })
                     }
+                    onBlur={() => {
+                      const parsed = parseSellerPriceInput(draft.input)
+                      if (parsed.ok) {
+                        updateDraft(variant.id, { input: formatSellerPriceInput(parsed.amount) })
+                      }
+                    }}
                   />
                 </div>
                 <Text size="small" className="pb-2">
@@ -182,6 +228,7 @@ export function PriceSection({ productId, variants, hasMaterialTiers, onSaved }:
                 onOpenChange={(open) => {
                   if (!open) updateDraft(variant.id, { pendingConfirm: null })
                 }}
+                variant="confirmation"
               >
                 <Prompt.Content>
                   <Prompt.Header>

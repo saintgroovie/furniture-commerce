@@ -6,6 +6,10 @@ import {
   SELLER_CLASSIFICATION_CHOICES,
   sellerCollectionChoices,
 } from "../../../../../lib/woodright-admin/seller-choices"
+import {
+  normalizeSellerSku,
+  sellerSkuHasCyrillic,
+} from "../../../../../lib/woodright-admin/create-product-command"
 import type { SellerProduct } from "../../../../../lib/woodright-admin/seller-product-types"
 
 const WoodrightCreateProductPage = () => {
@@ -14,11 +18,24 @@ const WoodrightCreateProductPage = () => {
   const [title, setTitle] = useState("")
   const [sku, setSku] = useState("")
   const [classification, setClassification] = useState("STANDARD")
-  const [collectionKey, setCollectionKey] = useState(collections[0]?.key ?? "oliver")
+  const [collectionKey, setCollectionKey] = useState("")
+  const [fieldErrors, setFieldErrors] = useState<{ title?: string; sku?: string; collection?: string }>(
+    {}
+  )
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const skuCyrillic = sellerSkuHasCyrillic(sku)
 
   const submit = async () => {
+    const nextErrors: { title?: string; sku?: string; collection?: string } = {}
+    if (!title.trim()) nextErrors.title = "Укажите название"
+    const nextSku = normalizeSellerSku(sku)
+    if (!sku.trim()) nextErrors.sku = "Укажите артикул"
+    if (!collectionKey) nextErrors.collection = "Выберите коллекцию"
+    setFieldErrors(nextErrors)
+    if (Object.keys(nextErrors).length > 0) return
+    setSku(nextSku)
+
     setSaving(true)
     setError(null)
     try {
@@ -26,12 +43,12 @@ const WoodrightCreateProductPage = () => {
         method: "POST",
         body: JSON.stringify({
           title,
-          sku,
+          sku: nextSku,
           classification,
           collection_key: collectionKey,
         }),
       })
-      navigate(`/woodright/products/${json.product.id}?wizard=price`)
+      navigate(`/woodright/products/${json.product.id}`, { state: { focus: "price" } })
     } catch (err) {
       setError(sellerErrorMessage(err, "Не удалось создать товар"))
     } finally {
@@ -51,6 +68,7 @@ const WoodrightCreateProductPage = () => {
         </Text>
       </div>
       <form
+        noValidate
         className="flex flex-col gap-4 px-6 py-4"
         onSubmit={(event) => {
           event.preventDefault()
@@ -63,18 +81,41 @@ const WoodrightCreateProductPage = () => {
           <Input
             id="create-title"
             value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            required
+            aria-invalid={Boolean(fieldErrors.title)}
+            onChange={(event) => {
+              setFieldErrors((prev) => ({ ...prev, title: undefined }))
+              setTitle(event.target.value)
+            }}
           />
+          {fieldErrors.title && (
+            <Text size="small" className="text-ui-fg-error">
+              {fieldErrors.title}
+            </Text>
+          )}
         </div>
         <div className="flex flex-col gap-1">
           <Label htmlFor="create-sku">Артикул</Label>
           <Input
             id="create-sku"
             value={sku}
-            onChange={(event) => setSku(event.target.value)}
-            required
+            placeholder="Например: OL-05-1"
+            aria-invalid={Boolean(fieldErrors.sku)}
+            onChange={(event) => {
+              setFieldErrors((prev) => ({ ...prev, sku: undefined }))
+              setSku(event.target.value)
+            }}
+            onBlur={() => setSku((prev) => normalizeSellerSku(prev))}
           />
+          {skuCyrillic && (
+            <Text size="small" className="text-ui-fg-subtle">
+              В артикуле есть русские буквы - проверьте
+            </Text>
+          )}
+          {fieldErrors.sku && (
+            <Text size="small" className="text-ui-fg-error">
+              {fieldErrors.sku}
+            </Text>
+          )}
         </div>
         <div className="flex flex-col gap-1">
           <Label htmlFor="create-type">Тип товара</Label>
@@ -97,18 +138,28 @@ const WoodrightCreateProductPage = () => {
             id="create-collection"
             className="bg-ui-bg-field border-ui-border-base h-8 rounded-md border px-2 text-sm"
             value={collectionKey}
-            onChange={(event) => setCollectionKey(event.target.value)}
+            aria-invalid={Boolean(fieldErrors.collection)}
+            onChange={(event) => {
+              setFieldErrors((prev) => ({ ...prev, collection: undefined }))
+              setCollectionKey(event.target.value)
+            }}
           >
+            <option value="">Выберите коллекцию</option>
             {collections.map((choice) => (
               <option key={choice.key} value={choice.key}>
                 {choice.label}
               </option>
             ))}
           </select>
+          {fieldErrors.collection && (
+            <Text size="small" className="text-ui-fg-error">
+              {fieldErrors.collection}
+            </Text>
+          )}
         </div>
         {classification === "CONFIGURABLE" && (
           <Text size="small" className="text-ui-fg-subtle">
-            Обычные фотографии товара можно добавить позже. Фотографии отдельных исполнений настраиваются отдельно
+            Исполнения настроит администратор после создания
           </Text>
         )}
         {error && (

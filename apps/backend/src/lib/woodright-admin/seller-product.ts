@@ -1,6 +1,7 @@
 import { resolveAdminCollectionLabel } from "../../admin/lib/collection-display-labels"
 import { readDimensionsMm } from "./dimensions-command"
 import { hasExecutionMediaContract } from "./execution-media-guard"
+import { collectProductImageUrls, partitionSellerMedia } from "./media-health"
 import { pickPrimaryRubPrice } from "./price-sanity"
 import { catalogPublishGateAudit, computeWorkspacePublishReadiness } from "./publish-readiness"
 import { aggregateAttention, summarizeProductReadiness } from "./readiness-summary"
@@ -64,26 +65,7 @@ function classificationOf(product: Record<string, unknown>): string {
 }
 
 function imageUrlsOf(product: Record<string, unknown>): string[] {
-  const urls: string[] = []
-  const seen = new Set<string>()
-  const push = (raw: unknown) => {
-    if (typeof raw !== "string") return
-    const url = raw.trim()
-    if (!url || seen.has(url)) return
-    seen.add(url)
-    urls.push(url)
-  }
-  push(product.thumbnail)
-  if (Array.isArray(product.images)) {
-    for (const image of product.images) {
-      if (typeof image === "string") push(image)
-      else {
-        const row = asRecord(image)
-        push(row?.url)
-      }
-    }
-  }
-  return urls
+  return collectProductImageUrls(product)
 }
 
 export function toSellerProduct(raw: Record<string, unknown>): SellerProduct {
@@ -94,6 +76,8 @@ export function toSellerProduct(raw: Record<string, unknown>): SellerProduct {
     .filter((v): v is SellerVariant => v != null)
   const skus = variants.map((v) => v.sku).filter((sku): sku is string => Boolean(sku))
   const collection = asRecord(product.collection)
+  const image_urls = imageUrlsOf(product)
+  const media = partitionSellerMedia(image_urls, product)
 
   const collectionKey =
     typeof meta.collection === "string" && meta.collection.trim() ? meta.collection : null
@@ -101,6 +85,8 @@ export function toSellerProduct(raw: Record<string, unknown>): SellerProduct {
   return {
     id: String(product.id ?? ""),
     title: typeof product.title === "string" ? product.title : "",
+    subtitle: typeof product.subtitle === "string" ? product.subtitle : "",
+    description: typeof product.description === "string" ? product.description : "",
     handle: typeof product.handle === "string" ? product.handle : "",
     status: typeof product.status === "string" ? product.status : "unknown",
     thumbnail: typeof product.thumbnail === "string" && product.thumbnail ? product.thumbnail : null,
@@ -119,7 +105,10 @@ export function toSellerProduct(raw: Record<string, unknown>): SellerProduct {
     readiness: summarizeProductReadiness(product),
     execution_media_guard: hasExecutionMediaContract(meta),
     dimensions: readDimensionsMm(meta),
-    image_urls: imageUrlsOf(product),
+    image_urls,
+    general_image_urls: media.general_image_urls,
+    execution_photo_count: media.execution_photo_count,
+    execution_finishes: media.execution_finishes,
     has_material_tiers: Boolean(meta.material_tiers && typeof meta.material_tiers === "object"),
     collection_key: collectionKey,
     publish: computeWorkspacePublishReadiness(product),
@@ -133,7 +122,6 @@ export function toSellerProductList(products: Record<string, unknown>[]): {
 } {
   const mapped = products.map(toSellerProduct)
   const attention = aggregateAttention(mapped.map((p) => p.readiness))
-  attention.not_ready = mapped.filter((p) => !p.publish.ready).length
   return {
     products: mapped,
     attention,
@@ -145,6 +133,8 @@ export const SELLER_PRODUCT_GRAPH_FIELDS = [
   "id",
   "handle",
   "title",
+  "subtitle",
+  "description",
   "status",
   "thumbnail",
   "metadata",
