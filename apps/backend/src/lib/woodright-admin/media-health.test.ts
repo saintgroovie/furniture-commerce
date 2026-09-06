@@ -46,4 +46,29 @@ describe("partitionSellerMedia", () => {
     assert.equal(partitioned.execution_finishes[0]?.label, "Молочный")
     assert.equal(partitioned.execution_finishes[0]?.photo_count, 2)
   })
+
+  it("treats fabric upholstery executions as execution photos, not general gallery", () => {
+    const product = {
+      images: [
+        { url: "/static/products/ol-05-1/main.jpg" },
+        { url: "/static/products/ol-05-1/leona-1.jpg" },
+      ],
+      metadata: {
+        fabric_upholstery_executions: [
+          {
+            key: "leona",
+            label: "Leona",
+            urls: ["/static/products/ol-05-1/leona-1.jpg", "/static/products/ol-05-1/leona-2.jpg"],
+          },
+        ],
+      },
+    }
+    const partitioned = partitionSellerMedia(
+      ["/static/products/ol-05-1/main.jpg", "/static/products/ol-05-1/leona-1.jpg"],
+      product
+    )
+    assert.deepEqual(partitioned.general_image_urls, ["/static/products/ol-05-1/main.jpg"])
+    assert.equal(partitioned.execution_photo_count, 2)
+    assert.equal(partitioned.execution_finishes[0]?.label, "Leona")
+  })
 })

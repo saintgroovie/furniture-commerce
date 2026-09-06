@@ -1,6 +1,7 @@
 import fs from "node:fs"
 import path from "node:path"
 import { extractStaticProductPath } from "../oliver-static-url"
+import { EXECUTION_ARRAY_KEYS } from "./execution-media-guard"
 
 export type ExecutionVariantSummary = {
   key: string
@@ -59,26 +60,57 @@ export function collectProductImageUrls(product: Record<string, unknown>): strin
   return urls
 }
 
+function executionRecordsFromValue(raw: unknown, depth = 0): ColorExecution[] {
+  if (depth > 3 || raw == null) return []
+  if (Array.isArray(raw)) {
+    return raw.flatMap((item) => executionRecordsFromValue(item, depth + 1))
+  }
+  if (typeof raw !== "object") return []
+  const item = raw as ColorExecution & Record<string, unknown>
+  const self: ColorExecution[] = []
+  if (
+    typeof item.key === "string" ||
+    typeof item.main === "string" ||
+    Array.isArray(item.urls)
+  ) {
+    self.push(item)
+  }
+  const nested = Object.values(item).flatMap((value) => {
+    if (!Array.isArray(value)) return []
+    const looksLikeExecutions = value.some(
+      (entry) =>
+        entry &&
+        typeof entry === "object" &&
+        ("urls" in entry || "main" in entry || "key" in entry)
+    )
+    return looksLikeExecutions ? executionRecordsFromValue(value, depth + 1) : []
+  })
+  return [...self, ...nested]
+}
+
 export function parseExecutionVariants(
   product: Record<string, unknown>
 ): ExecutionVariantSummary[] {
   const meta = (product.metadata as Record<string, unknown> | undefined) ?? {}
   const labels = (meta.finish_color_labels as Record<string, string> | undefined) ?? {}
-  const raw =
-    meta.finish_color_executions ?? meta.paint_finish_executions ?? meta.display_group_color_variants
-
-  if (!Array.isArray(raw)) return []
+  const records = [
+    ...EXECUTION_ARRAY_KEYS.flatMap((key) => executionRecordsFromValue(meta[key])),
+    ...executionRecordsFromValue(meta.display_group_color_variants),
+  ]
 
   const out: ExecutionVariantSummary[] = []
-  for (const item of raw as ColorExecution[]) {
-    if (!item || typeof item !== "object") continue
-    const key = typeof item.key === "string" ? item.key : ""
-    if (!key) continue
+  const seen = new Set<string>()
+  for (const item of records) {
     const urls = Array.isArray(item.urls) ? item.urls.filter((u) => typeof u === "string") : []
-    const main =
-      typeof item.main === "string"
-        ? item.main
-        : urls[0]
+    const key =
+      typeof item.key === "string" && item.key
+        ? item.key
+        : typeof item.main === "string"
+          ? item.main
+          : urls[0] ?? ""
+    if (!key || seen.has(key)) continue
+    seen.add(key)
+    const main = typeof item.main === "string" ? item.main : urls[0]
     out.push({
       key,
       label: item.label ?? labels[key] ?? key,
@@ -98,16 +130,12 @@ export type SellerMediaPartition = {
 
 function collectExecutionUrlSet(product: Record<string, unknown>): Set<string> {
   const urls = new Set<string>()
-  const variants = parseExecutionVariants(product)
-  for (const variant of variants) {
-    if (variant.main) urls.add(variant.main)
-  }
   const meta = (product.metadata as Record<string, unknown> | undefined) ?? {}
-  const raw =
-    meta.finish_color_executions ?? meta.paint_finish_executions ?? meta.display_group_color_variants
-  if (!Array.isArray(raw)) return urls
-  for (const item of raw as ColorExecution[]) {
-    if (!item || typeof item !== "object") continue
+  const records = [
+    ...EXECUTION_ARRAY_KEYS.flatMap((key) => executionRecordsFromValue(meta[key])),
+    ...executionRecordsFromValue(meta.display_group_color_variants),
+  ]
+  for (const item of records) {
     if (typeof item.main === "string" && item.main.trim()) urls.add(item.main)
     if (!Array.isArray(item.urls)) continue
     for (const url of item.urls) {

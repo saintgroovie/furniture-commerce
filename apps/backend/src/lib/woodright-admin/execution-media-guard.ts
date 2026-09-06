@@ -2,7 +2,7 @@
  * Detect Woodright execution/finish media contracts on product metadata.
  * Pricing-only `material_tiers` is not a media contract.
  */
-const EXECUTION_ARRAY_KEYS = [
+export const EXECUTION_ARRAY_KEYS = [
   "paint_finish_executions",
   "finish_color_executions",
   "fabric_upholstery_executions",
