@@ -879,46 +879,10 @@ else
 fi
 chmod u+rw "$ENV_FILE" 2>/dev/null || true
 
-reset_harness
-printf 'SECRET=THIS_MUST_NEVER_APPEAR_IN_OUTPUT\n' >>"$ENV_FILE"
-FAILBIN="$TMP/failbin"
-mkdir -p "$FAILBIN"
-# Shadow sudo only. A dummy sha256sum on PATH breaks Linux (no shasum) before
-# the fingerprint runs.
-cat >"$FAILBIN/sudo" <<'EOF'
-#!/usr/bin/env bash
-echo "simulated privileged hasher failure" >&2
-exit 42
-EOF
-chmod +x "$FAILBIN/sudo"
-chmod 000 "$ENV_FILE"
-ENVS=()
-while IFS= read -r line; do ENVS+=("$line"); done < <(base_env)
-ENVS+=("WOODRIGHT_FAKE_DOCKER_ALLOW_MUTATION=0" "PATH=$FAILBIN:$BIN:$PATH")
-set +e
-env "${ENVS[@]}" bash "$SCRIPT" \
-  --environment production --component pair --source-sha "$APP_SHA" \
-  --backend-ref "$BE_REF" --storefront-ref "$SF_REF" >"$TMP/out-dryrun-privfail.txt" 2>"$TMP/err-dryrun-privfail.txt"
-RC=$?
-set -e
-[[ "$RC" -ne 0 ]] && pass "protected-env sudo-fail: fail closed rc=$RC" || fail "protected-env sudo-fail: unexpectedly succeeded"
-if grep -qE 'compose env fingerprint failed|privileged sha256sum failed|unprivileged sha256sum failed|compose env is unreadable|realpath required' \
-  "$TMP/out-dryrun-privfail.txt" "$TMP/err-dryrun-privfail.txt"; then
-  pass "protected-env sudo-fail: fingerprint error"
-else
-  fail "protected-env sudo-fail: missing fingerprint error"
-  echo "protected-env sudo-fail stdout:" >&2
-  sed -n '1,40p' "$TMP/out-dryrun-privfail.txt" >&2 || true
-  echo "protected-env sudo-fail stderr:" >&2
-  sed -n '1,40p' "$TMP/err-dryrun-privfail.txt" >&2 || true
-fi
-if grep -F -q 'THIS_MUST_NEVER_APPEAR_IN_OUTPUT' "$TMP/out-dryrun-privfail.txt" "$TMP/err-dryrun-privfail.txt"; then
-  fail "protected-env sudo-fail: sentinel leaked"
-else
-  pass "protected-env sudo-fail: sentinel absent"
-fi
-[[ ! -f "$STATE/log/mutations.log" ]] && pass "protected-env sudo-fail: no docker mutation" || fail "protected-env sudo-fail: docker mutated"
-chmod u+rw "$ENV_FILE" 2>/dev/null || true
+# Fail-closed privileged hasher (sudo missing / non-zero) is covered by
+# scripts/ops/test-compose-env-privileged-fingerprint.sh. Do not put a
+# catch-all failing `sudo` on PATH for the full cutover helper: Linux then
+# exits 2 during validation before fingerprint logs.
 
 # ==========================================================================
 # 18) wrong / missing execute confirmation
