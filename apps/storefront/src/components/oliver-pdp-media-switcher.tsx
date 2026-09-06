@@ -1,13 +1,17 @@
 "use client"
 
 import type { MouseEvent } from "react"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useMemo, useRef, useState } from "react"
 import { ProductThumbCarousel } from "@/components/product-thumb-carousel"
 import { PdpHeroAffordance } from "@/components/pdp-hero-affordance"
 import { PdpImageLightbox } from "@/components/pdp-image-lightbox"
 import { useHeroSwipe } from "@/components/use-hero-swipe"
 import { buildOliverPdpThumbStripUrls } from "@/lib/oliver-pdp-thumb-strip"
-import { buildPdpGalleryPhotoSet } from "@/lib/pdp-gallery-photo-set"
+import {
+  buildPdpGalleryPhotoSet,
+  resolveBuyerGalleryThumbStrip,
+  shouldShowBuyerGalleryRail,
+} from "@/lib/pdp-gallery-photo-set"
 import { pdpLightboxCopy, states } from "@/lib/woodright-copy"
 
 type Props = {
@@ -25,7 +29,7 @@ function OliverPdpHeroAbsent({ className }: { className: string }) {
 }
 
 /** Oliver PDP: hero from `mainSrc`; strip includes main + extras, preload before swap. */
-export function OliverPdpMediaSwitcher({ mainSrc, extraSrcs, title }: Props) {
+function OliverPdpMediaSwitcherInner({ mainSrc, extraSrcs, title }: Props) {
   const mainTrimmed = mainSrc.trim()
   const [displayHeroSrc, setDisplayHeroSrc] = useState(mainTrimmed)
   const [heroFailed, setHeroFailed] = useState(false)
@@ -39,20 +43,6 @@ export function OliverPdpMediaSwitcher({ mainSrc, extraSrcs, title }: Props) {
     () => buildOliverPdpThumbStripUrls(mainTrimmed, extraSrcs),
     [mainTrimmed, extraSrcs]
   )
-
-  const stripKey = useMemo(
-    () => galleryStripCandidates.join("\u0000"),
-    [galleryStripCandidates]
-  )
-
-  useEffect(() => {
-    setDisplayHeroSrc(mainTrimmed)
-    setHeroFailed(false)
-    setActiveGalleryUrl(null)
-    setFailedExtras(new Set())
-    pendingRef.current = null
-    setPendingPreloadUrl(null)
-  }, [mainTrimmed, stripKey])
 
   const rawVisibleStrip = useMemo(
     () => galleryStripCandidates.filter((u) => !failedExtras.has(u)),
@@ -73,7 +63,11 @@ export function OliverPdpMediaSwitcher({ mainSrc, extraSrcs, title }: Props) {
     () => buildPdpGalleryPhotoSet(mainTrimmed, visibleStrip),
     [mainTrimmed, visibleStrip]
   )
-  const showThumbRow = galleryPhotos.length > 1
+  const thumbStrip = useMemo(
+    () => resolveBuyerGalleryThumbStrip(mainTrimmed, visibleStrip),
+    [mainTrimmed, visibleStrip]
+  )
+  const showThumbRow = shouldShowBuyerGalleryRail(thumbStrip)
 
   const onHeroError = useCallback(() => {
     if (displayHeroSrc === mainTrimmed) {
@@ -103,9 +97,7 @@ export function OliverPdpMediaSwitcher({ mainSrc, extraSrcs, title }: Props) {
         return
       }
       if (activeGalleryUrl === url) {
-        setDisplayHeroSrc(mainTrimmed)
-        setActiveGalleryUrl(null)
-        setHeroFailed(false)
+        // Already selected — primary return is the first (isMain) thumb.
         return
       }
       if (pendingRef.current === url) return
@@ -220,7 +212,7 @@ export function OliverPdpMediaSwitcher({ mainSrc, extraSrcs, title }: Props) {
       {showThumbRow && (
         <ProductThumbCarousel
           variantMain={mainTrimmed}
-          visibleStrip={visibleStrip}
+          visibleStrip={thumbStrip}
           activeGalleryUrl={activeGalleryUrl}
           displayHeroSrc={displayHeroSrc}
           pendingPreloadUrl={pendingPreloadUrl}
@@ -237,4 +229,10 @@ export function OliverPdpMediaSwitcher({ mainSrc, extraSrcs, title }: Props) {
       )}
     </div>
   )
+}
+
+export function OliverPdpMediaSwitcher(props: Props) {
+  const mainTrimmed = props.mainSrc.trim()
+  const stripKey = [mainTrimmed, ...props.extraSrcs.map((s) => s.trim())].join("\u0000")
+  return <OliverPdpMediaSwitcherInner key={stripKey} {...props} />
 }

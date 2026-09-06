@@ -1,0 +1,86 @@
+# Traefik dynamic snippet — Woodright PRODUCTION (INACTIVE TEMPLATE)
+#
+# DO NOT apply on the VM in the preparation cycle.
+# Activation requires separate owner approval for DNS + TLS + public routes.
+#
+# Canonical public_production routing template (correct container names, no
+# buyer noindex): ops/config/public-launch/traefik-public-production.yml
+# installed by ops/release/cutover-public-apex-routing.sh.
+#
+# This file remains a historical inactive sketch. It points at
+# woodright-production-* (private candidate) and must not be copied live.
+#
+# Target (future cutover only): /etc/dokploy/traefik/dynamic/woodright-production.yml
+# Services must resolve on the Dokploy/docker network to woodright-production-* containers.
+# Admin: intentionally omitted (private tunnel only).
+
+http:
+  middlewares:
+    woodright-prod-www-to-apex:
+      redirectRegex:
+        regex: "^https?://www\\.woodright\\.ru/(.*)"
+        replacement: "https://woodright.ru/${1}"
+        permanent: true
+
+    woodright-prod-api-noindex:
+      headers:
+        customResponseHeaders:
+          X-Robots-Tag: "noindex, nofollow, noarchive"
+
+    woodright-prod-buyer-noindex:
+      headers:
+        customResponseHeaders:
+          X-Robots-Tag: "noindex, nofollow, noarchive"
+
+  routers:
+    woodright-prod-api-http:
+      rule: Host(`api.woodright.ru`)
+      entryPoints: [web]
+      middlewares: [redirect-to-https]
+      service: woodright-production-backend
+
+    woodright-prod-api-https:
+      rule: Host(`api.woodright.ru`)
+      entryPoints: [websecure]
+      tls:
+        certResolver: letsencrypt
+      middlewares: [woodright-prod-api-noindex]
+      service: woodright-production-backend
+
+    woodright-prod-sf-http:
+      rule: Host(`woodright.ru`)
+      entryPoints: [web]
+      middlewares: [redirect-to-https]
+      service: woodright-production-storefront
+
+    woodright-prod-sf-https:
+      rule: Host(`woodright.ru`)
+      entryPoints: [websecure]
+      tls:
+        certResolver: letsencrypt
+      middlewares: [woodright-prod-buyer-noindex]
+      service: woodright-production-storefront
+
+    woodright-prod-www-http:
+      rule: Host(`www.woodright.ru`)
+      entryPoints: [web]
+      middlewares: [woodright-prod-www-to-apex]
+      service: noop@internal
+
+    woodright-prod-www-https:
+      rule: Host(`www.woodright.ru`)
+      entryPoints: [websecure]
+      tls:
+        certResolver: letsencrypt
+      middlewares: [woodright-prod-www-to-apex]
+      service: noop@internal
+
+  services:
+    woodright-production-backend:
+      loadBalancer:
+        servers:
+          - url: "http://woodright-production-backend:9000"
+    woodright-production-storefront:
+      loadBalancer:
+        servers:
+          - url: "http://woodright-production-storefront:3002"

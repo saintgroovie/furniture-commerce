@@ -1,0 +1,59 @@
+{
+  "expect": "pass",
+  "shared_network": "woodright_staging",
+  "alias": "backend",
+  "expected_backend_container": "woodright-staging-backend",
+  "expected_storefront_container": "woodright-staging-storefront",
+  "expected_release_sha": "646d4e6c313deb2ba3c2ccbc6f57566959e53d71",
+  "containers": [
+    {
+      "name": "woodright-staging-backend",
+      "running": true,
+      "role": "public_demo",
+      "exposure": "public",
+      "release_sha": "646d4e6c313deb2ba3c2ccbc6f57566959e53d71",
+      "networks": {
+        "woodright_staging": {
+          "aliases": ["backend"],
+          "ipv4": "172.19.0.4"
+        },
+        "dokploy-network": {
+          "aliases": [],
+          "ipv4": "10.0.1.90"
+        }
+      }
+    },
+    {
+      "name": "woodright-staging-storefront",
+      "running": true,
+      "role": "public_demo",
+      "exposure": "public",
+      "release_sha": "646d4e6c313deb2ba3c2ccbc6f57566959e53d71",
+      "networks": {
+        "woodright_staging": {
+          "aliases": ["storefront"],
+          "ipv4": "172.19.0.7"
+        },
+        "dokploy-network": {
+          "aliases": [],
+          "ipv4": "10.0.1.89"
+        }
+      }
+    },
+    {
+      "name": "woodright-staging-backend-rollback-old",
+      "running": false,
+      "role": "public_demo",
+      "exposure": "public",
+      "networks": {
+        "woodright_staging": {
+          "aliases": ["backend"],
+          "ipv4": "172.19.0.99"
+        }
+      }
+    }
+  ],
+  "dns_from_storefront": {
+    "backend": "172.19.0.4"
+  }
+}

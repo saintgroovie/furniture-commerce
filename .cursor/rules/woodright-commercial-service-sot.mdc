@@ -20,10 +20,6 @@ Before changing or generating buyer-facing content or behavior related to delive
 
 `docs/content-audit/SITE_COMMERCIAL_SERVICE_SOT.md`
 
-Canonical absolute path:
-
-`/Users/leonidmbp/Documents/projects/furniture-commerce/docs/content-audit/SITE_COMMERCIAL_SERVICE_SOT.md`
-
 Do not invent commercial/legal facts. Owner decisions recorded there override older contract-derived website assumptions. Unresolved contract conflicts must remain explicit gates.
 
 This rule does **not** duplicate the SoT. The Markdown file is the only detailed source.

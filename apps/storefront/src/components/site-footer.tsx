@@ -3,11 +3,12 @@
 import Link from "next/link"
 import type { ReactNode } from "react"
 import { WoodrightWordmark } from "@/components/woodright-wordmark"
-import { useKidsSection } from "@/lib/use-kids-section"
+import { useKidsChromeVisual, useKidsSection } from "@/lib/use-kids-section"
 
 /**
  * Footer shell: kids sage wash via data-section (same flag as the header),
  * and Woodright Kids wordmark linking to /kids when the section is active.
+ * Visual chrome follows `useKidsChromeVisual` so kids → PDP replays enter.
  */
 export function SiteFooter({
   brandBody,
@@ -19,11 +20,12 @@ export function SiteFooter({
   bottom: ReactNode
 }) {
   const sectionKids = useKidsSection()
+  const { kids: visualKids, snap } = useKidsChromeVisual()
 
   return (
     <footer
-      className="site-footer"
-      data-section={sectionKids ? "kids" : "main"}
+      className={`site-footer${snap ? " is-kids-snap" : ""}`}
+      data-section={visualKids ? "kids" : "main"}
     >
       <div className="footer-inner">
         <div className="footer-columns">
@@ -41,7 +43,7 @@ export function SiteFooter({
                 <span className="footer-brand-mark">
                   <WoodrightWordmark className="footer-brand-wordmark" />
                   <span
-                    className={`logo-kids-slot${sectionKids ? " is-visible" : ""}`}
+                    className={`logo-kids-slot${visualKids ? " is-visible" : ""}${snap ? " is-snap" : ""}`}
                     aria-hidden="true"
                   >
                     <span className="logo-kids-badge">Kids</span>

@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://woodright.local/schemas/woodright-candidate-registry.schema.json",
+  "title": "WoodrightCandidateRegistry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "updated_at", "candidates"],
+  "properties": {
+    "schema_version": { "type": "string", "const": "1" },
+    "updated_at": { "type": "string", "minLength": 1 },
+    "candidates": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/candidate" }
+    }
+  },
+  "$defs": {
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "candidate_id",
+        "task",
+        "owner",
+        "created_at",
+        "last_verified_at",
+        "review_after",
+        "storefront_port",
+        "backend_port",
+        "sha",
+        "public_route",
+        "competing_with_live",
+        "status",
+        "cleanup_requires_owner_approval"
+      ],
+      "properties": {
+        "candidate_id": { "type": "string", "minLength": 1 },
+        "task": { "type": "string", "minLength": 1 },
+        "owner": { "type": "string", "minLength": 1 },
+        "created_at": { "type": "string" },
+        "last_verified_at": { "type": "string" },
+        "review_after": { "type": "string" },
+        "storefront_port": { "type": ["integer", "null"] },
+        "backend_port": { "type": ["integer", "null"] },
+        "branch": { "type": ["string", "null"] },
+        "sha": { "type": "string", "pattern": "^[0-9a-f]{7,40}$" },
+        "worktree_path": { "type": ["string", "null"] },
+        "container_ids": { "type": "array", "items": { "type": "string" } },
+        "public_route": { "type": "boolean" },
+        "competing_with_live": { "type": "boolean" },
+        "status": {
+          "type": "string",
+          "enum": ["active", "preserved", "stopped", "review_required", "unknown"]
+        },
+        "cleanup_requires_owner_approval": { "type": "boolean" },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}

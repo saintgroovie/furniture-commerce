@@ -1,0 +1,15 @@
+[Unit]
+Description=Woodright public_production daily recovery-point backup timer
+Documentation=file:///srv/woodright/docs/operator/public-production-monitor-backup-recovery.md
+# Repository template only - do NOT enable automatically on merge.
+
+[Timer]
+# Daily at 03:17 UTC with jitter; offset from demo 02:17 to avoid overlap.
+OnCalendar=*-*-* 03:17:00 UTC
+Persistent=true
+RandomizedDelaySec=900
+Unit=woodright-backup-public-production.service
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target

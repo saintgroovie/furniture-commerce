@@ -1,0 +1,10 @@
+{
+  "stacks": [
+    {
+      "stack_id": "production-named",
+      "container_id_changed": true,
+      "attribution_status": "attributed_controller_actor_unknown",
+      "public_role_from_name_alone": false
+    }
+  ]
+}

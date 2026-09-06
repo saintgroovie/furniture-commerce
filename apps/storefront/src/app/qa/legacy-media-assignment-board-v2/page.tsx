@@ -1,32 +1,19 @@
 import type { Metadata } from "next"
-import { redirect } from "next/navigation"
+import { LegacyMediaBoardV2Client } from "./LegacyMediaBoardV2Client"
 
 export const metadata: Metadata = {
   title: "Legacy Media Assignment Board v2 (QA)",
-  description: "Redirects to Woodright Media Ops Assign mode.",
+  description:
+    "Dev-only v2 triage board for legacy media assignment. Reads v1 QA API routes. No Medusa writes. No export or localStorage in Commit 1.",
 }
 
 type PageProps = {
-  searchParams?:
-    | Promise<Record<string, string | string[] | undefined>>
-    | Record<string, string | string[] | undefined>
-}
-
-function toQueryString(params: Record<string, string | string[] | undefined>): string {
-  const sp = new URLSearchParams()
-  for (const [key, value] of Object.entries(params)) {
-    if (value == null) continue
-    if (Array.isArray(value)) {
-      for (const v of value) sp.append(key, v)
-    } else {
-      sp.set(key, value)
-    }
-  }
-  const q = sp.toString()
-  return q ? `?${q}` : ""
+  searchParams?: Promise<{ handle?: string; overlay?: string }> | { handle?: string; overlay?: string }
 }
 
 export default async function LegacyMediaBoardV2Page({ searchParams }: PageProps) {
   const resolved = searchParams ? await Promise.resolve(searchParams) : {}
-  redirect(`/qa/media-ops/assign${toQueryString(resolved)}`)
+  const initialHandle = (resolved.handle || "").trim().toLowerCase() || null
+  const overlayMode = (resolved.overlay || "").trim() || null
+  return <LegacyMediaBoardV2Client initialHandle={initialHandle} overlayMode={overlayMode} />
 }

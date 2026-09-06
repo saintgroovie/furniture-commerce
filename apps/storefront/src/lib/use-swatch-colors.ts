@@ -75,7 +75,10 @@ export function useSwatchColors(
     () => new Map()
   )
   const variantsRef = useRef(colorVariants)
-  variantsRef.current = colorVariants
+
+  useEffect(() => {
+    variantsRef.current = colorVariants
+  }, [colorVariants])
 
   const variantKey =
     colorVariants && colorVariants.length > 1

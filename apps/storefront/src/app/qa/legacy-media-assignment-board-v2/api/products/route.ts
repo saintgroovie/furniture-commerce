@@ -3,6 +3,7 @@ import * as path from "path"
 import { NextResponse } from "next/server"
 import { getFurnitureRepoDataResolution, legacyMediaQaRepoRootFailurePayload } from "../_lib/furniture-repo-data-root"
 import { legacyMediaQaProdBlocked } from "../_lib/normalized-json-route"
+import { buildQaProductsFallback } from "../_lib/products-fallback"
 
 export const dynamic = "force-dynamic"
 
@@ -33,16 +34,28 @@ export async function GET(): Promise<Response> {
   const rel = useBoard ? BOARD_REL : SEED_REL
 
   if (!fs.existsSync(abs)) {
+    const fallback = buildQaProductsFallback(repoRoot, rel)
     return NextResponse.json(
       {
-        error: "missing_file",
-        missing_file: rel,
+        available: true,
+        degraded: true,
+        catalog_source: fallback.catalog_source,
+        missing_file: fallback.missing_file,
+        fallback_handles_source: fallback.fallback_handles_source,
         resolved_repo_root: repoRoot,
         cwd,
         absolute_path_checked: abs,
-        hint: `Expected ${BOARD_REL} or ${SEED_REL}`,
+        products_count: fallback.products.length,
+        count: fallback.products.length,
+        products: fallback.products,
+        hint:
+          "QA fallback catalog loaded from read-only overlay/candidate-map sources. Not production Medusa catalog.",
+        do_not_auto_apply: true,
       },
-      { status: 500 }
+      {
+        status: 200,
+        headers: { "Cache-Control": "private, max-age=30" },
+      }
     )
   }
 
@@ -121,8 +134,18 @@ export async function GET(): Promise<Response> {
     }
   })
 
-  return new NextResponse(JSON.stringify({ products }), {
-    status: 200,
-    headers: { "Content-Type": "application/json", "Cache-Control": "private, max-age=60" },
-  })
+  return new NextResponse(
+    JSON.stringify({
+      available: true,
+      degraded: false,
+      catalog_source: useBoard ? "legacy-media-board-products" : "seed-products",
+      products_count: products.length,
+      count: products.length,
+      products,
+    }),
+    {
+      status: 200,
+      headers: { "Content-Type": "application/json", "Cache-Control": "private, max-age=60" },
+    }
+  )
 }

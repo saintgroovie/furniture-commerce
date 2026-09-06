@@ -1,7 +1,18 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { projectDefaultBuyerConfigurationOntoProduct } from "../../../../lib/default-buyer-configuration"
+import { attachBuyerPurchaseContract } from "../attach-buyer-purchase"
 
 /**
- * Детали продукта по id. Возвращает продукт с вариантами, изображениями и product_classification для storefront.
+ * Product detail by id. Variants must include flattened `prices` so PDP
+ * `getPrice()` works without a separate pricing round-trip.
+ *
+ * Medusa graph `variants.*` does not nest `price_set`; request
+ * `variants.price_set.prices.*` and mirror into `prices` (same contract as
+ * `/store/products` list loader).
+ *
+ * Also projects `metadata.buyer_default_configuration` so PDP opening price
+ * shares the same backend-resolved default as catalog browse cards.
+ * Attaches buyer-safe `purchase` from sales policy / classification.
  */
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const id = req.params.id as string
@@ -14,7 +25,14 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   }
   const { data } = await query.graph({
     entity: "product",
-    fields: ["*", "variants.*", "variants.price_set.prices.*", "images.*", "product_classification.*"],
+    fields: [
+      "*",
+      "variants.*",
+      "variants.price_set.prices.*",
+      "images.*",
+      "product_classification.*",
+      "product_sales_policy.*",
+    ],
     filters: { id },
   })
   const product = Array.isArray(data) ? data[0] : undefined
@@ -23,7 +41,9 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     return
   }
   const raw = product as Record<string, unknown> & {
-    variants?: Array<Record<string, unknown> & { price_set?: { prices?: unknown[] } }>
+    variants?: Array<
+      Record<string, unknown> & { price_set?: { prices?: unknown[] } }
+    >
   }
   if (Array.isArray(raw.variants)) {
     raw.variants = raw.variants.map((variant) => {
@@ -33,5 +53,6 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       return variant
     })
   }
-  res.json({ product: raw })
+  const withDefaults = projectDefaultBuyerConfigurationOntoProduct(raw)
+  res.json({ product: attachBuyerPurchaseContract(withDefaults) })
 }

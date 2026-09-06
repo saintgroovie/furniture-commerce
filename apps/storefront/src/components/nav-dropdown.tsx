@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { isPrimaryNavCurrent } from "@/lib/nav-current"
 
 type Props = {
   label: string
@@ -14,6 +16,8 @@ export function NavDropdown({ label, href, items, className }: Props) {
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const menuId = `menu-${href.replace(/\W/g, "")}`
+  const pathname = usePathname()
+  const current = isPrimaryNavCurrent(pathname, href)
 
   useEffect(() => {
     if (!open) return
@@ -54,6 +58,7 @@ export function NavDropdown({ label, href, items, className }: Props) {
       <Link
         href={href}
         className="nav-dropdown-link"
+        aria-current={current ? "page" : undefined}
         onClick={() => setOpen(false)}
       >
         {label}
@@ -63,12 +68,16 @@ export function NavDropdown({ label, href, items, className }: Props) {
         className="nav-dropdown-toggle"
         aria-expanded={open}
         aria-controls={menuId}
-        aria-haspopup="true"
         aria-label={`${label}, подменю`}
         onClick={() => setOpen((v) => !v)}
       />
       {open && (
-        <div id={menuId} className="nav-dropdown-menu">
+        <div
+          id={menuId}
+          className="nav-dropdown-menu"
+          role="region"
+          aria-label={`${label}, подменю`}
+        >
           {items.map((item) => (
             <Link
               key={item.href}

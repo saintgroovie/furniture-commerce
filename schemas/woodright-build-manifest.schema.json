@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://woodright.local/schemas/woodright-build-manifest.schema.json",
+  "title": "WoodrightBuildManifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "source_sha",
+    "source_branch",
+    "workflow_name",
+    "workflow_run_id",
+    "workflow_run_attempt",
+    "event_name",
+    "build_started_at",
+    "build_completed_at",
+    "backend",
+    "storefront",
+    "convenience_aliases",
+    "build_argument_names",
+    "build_config_fingerprint",
+    "release_authorized"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "const": "1" },
+    "source_sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "source_branch": { "type": "string", "minLength": 1 },
+    "workflow_name": { "type": "string", "minLength": 1 },
+    "workflow_run_id": { "type": ["string", "integer"] },
+    "workflow_run_attempt": { "type": "integer", "minimum": 1 },
+    "event_name": { "type": "string", "minLength": 1 },
+    "actor": { "type": ["string", "null"] },
+    "build_started_at": { "type": "string", "minLength": 1 },
+    "build_completed_at": { "type": "string", "minLength": 1 },
+    "backend": { "$ref": "#/$defs/buildImage" },
+    "storefront": { "$ref": "#/$defs/buildImage" },
+    "convenience_aliases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["repository", "tag", "mutable"],
+        "properties": {
+          "repository": { "type": "string" },
+          "tag": { "type": "string" },
+          "mutable": { "type": "boolean", "const": true }
+        }
+      }
+    },
+    "build_argument_names": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "build_config_fingerprint": { "type": "string", "minLength": 1 },
+    "tests_summary": { "type": ["object", "null"] },
+    "release_authorized": { "type": "boolean", "const": false },
+    "notes": { "type": "string" }
+  },
+  "$defs": {
+    "buildImage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "unique_tag", "digest", "oci_revision"],
+      "properties": {
+        "repository": { "type": "string", "minLength": 1 },
+        "unique_tag": { "type": "string", "minLength": 1 },
+        "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "oci_revision": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+      }
+    }
+  }
+}

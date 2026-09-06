@@ -1,9 +1,6 @@
 import Link from "next/link"
-import { formatRub, getPrice } from "@/lib/format"
-import {
-  formatRequestQuotePriceLabel,
-  isRequestQuoteProduct,
-} from "@/lib/request-quote"
+import { formatRub } from "@/lib/format"
+import { resolveCatalogCardPrice } from "@/lib/catalog-card-price"
 import type { DisplayGroup } from "@/lib/display-group"
 import { formatGroupHint } from "@/lib/display-group"
 import {
@@ -11,16 +8,20 @@ import {
   getSubcollectionLabel,
   getArticle,
   getDimensions,
-  formatDimensionsCompact,
+  formatDimensionsCompactLabeled,
+  getBuyerFacingProductTitle,
 } from "@/lib/product-metadata"
 import { OliverCardMediaSwitcher } from "@/components/oliver-card-media-switcher"
 import { ProductCardMediaSwitcher } from "@/components/product-card-media-switcher"
 import {
   buildIntraProductExecutionSelectors,
   collectSameExecutionExtraImageUrls,
+  containCatalogCardExecutionSelectors,
   enrichCardColorVariantsWithCatalogExtras,
   finishLabelForProduct,
   hasPdpExecutionControls,
+  isFabricFamilyOnlyUpholstery,
+  isFabricFamilyUpholsteryKey,
   isUpholsteredProduct,
   type CardColorVariant,
   type CardExecutionSelectors,
@@ -45,7 +46,7 @@ import {
   resolveCatalogCardHeroSrc,
   resolveCatalogCardMediaBundle,
 } from "@/lib/catalog-card-image"
-import { productTypeBadgeLabels } from "@/lib/woodright-copy"
+import { productTypeBadgeLabels, pdpCopy } from "@/lib/woodright-copy"
 
 type Product = {
   id: string
@@ -101,16 +102,23 @@ export function ProductCard({
     (product as { custom_product_type?: { product_type?: string } }).custom_product_type?.product_type
   const badgeLabel = type ? BADGE_LABELS[type] : undefined
 
-  const price = displayGroup?.minPrice ?? getPrice(product)
-  const pricePrefix = displayGroup ? "от " : ""
-  const requestQuotePrice = isRequestQuoteProduct(product as Record<string, unknown>)
-    ? formatRequestQuotePriceLabel(product as Record<string, unknown>)
-    : null
+  const cardPrice = resolveCatalogCardPrice(product as Record<string, unknown>, displayGroup)
 
   const collectionLabel = getCollectionLabel(product as Record<string, unknown>)
   const subcollectionLabel = getSubcollectionLabel(product as Record<string, unknown>)
   const article = getArticle(product as Record<string, unknown>)
   const dim = getDimensions(product as Record<string, unknown>)
+  /* PASS A: never render axis-caption span (`В × Ш × Г, см`). Values only.
+     Partial axes keep abbreviated labels inside `values` (e.g. `В 90 · Ш 120`). */
+  const dimLabeled = dim != null ? formatDimensionsCompactLabeled(dim) : null
+  const dimDisplay =
+    dimLabeled && dimLabeled.values.length > 0 ? dimLabeled.values : null
+  const dimAria =
+    dimDisplay == null
+      ? null
+      : dimLabeled!.caption === "В × Ш × Г, см"
+        ? `${dimDisplay}, ${dimLabeled!.caption}`
+        : `${dimDisplay} ${dimLabeled!.caption}`
 
   const contextParts = [collectionLabel, subcollectionLabel, article].filter(Boolean)
   const contextLine = contextParts.length > 0 ? contextParts.join(" · ") : null
@@ -118,6 +126,10 @@ export function ProductCard({
   const handle = product.handle ?? ""
   const isOliver = handle.startsWith("ol-")
   const productHref = `/product/${product.id}`
+  const displayTitle =
+    displayGroup && typeof product.title === "string" && product.title.trim()
+      ? product.title.trim()
+      : getBuyerFacingProductTitle(product as Record<string, unknown>)
   const thumbSrc = cardThumbnailSrc(product)
   const mainSrcForCard = thumbSrc ?? ""
 
@@ -130,7 +142,7 @@ export function ProductCard({
     mainSrcForCard
   )
   const hasCanonicalSelectors = hasPdpExecutionControls(intraProductSelectors)
-  const executionSelectors: CardExecutionSelectors =
+  const mergedSelectors: CardExecutionSelectors =
     displayGroupVariants && displayGroupVariants.length > 0
       ? isUpholsteredProduct(product as Record<string, unknown>)
         ? {
@@ -158,6 +170,20 @@ export function ProductCard({
               : "heuristic",
           }
       : intraProductSelectors
+  /* PASS A: keep first fabric-family execution for hero/gallery scoping only.
+     Selector UI uses contained selectors (no vertical fabric-family rows). */
+  const mediaFabricDefault =
+    mergedSelectors.separateFabricRows?.[0] ??
+    (isFabricFamilyOnlyUpholstery(mergedSelectors.upholstery)
+      ? mergedSelectors.upholstery?.[0]
+      : mergedSelectors.upholstery?.find((v) => isFabricFamilyUpholsteryKey(v.key))) ??
+    (isFabricFamilyOnlyUpholstery(mergedSelectors.finish)
+      ? mergedSelectors.finish?.[0]
+      : mergedSelectors.finish?.find((v) => isFabricFamilyUpholsteryKey(v.key)))
+  const executionSelectors = containCatalogCardExecutionSelectors(
+    mergedSelectors,
+    product as Record<string, unknown>
+  )
 
   const productRecord = product as Record<string, unknown>
   const headboardVariants = executionSelectors.headboard
@@ -201,8 +227,6 @@ export function ProductCard({
           )
         : null
 
-  const separateFabricRows = executionSelectors.separateFabricRows
-  const activeSeparateFabric = separateFabricRows?.[0]
   const activeHeadboard = headboardVariants?.[0]
   const activeUpholstery = upholsteryVariants?.[0]
   const activeWood = woodVariants?.[0]
@@ -222,8 +246,8 @@ export function ProductCard({
       ? mainSrcForCard
       : pickMain(
           activeHeadboard?.mainSrc,
-          activeSeparateFabric?.mainSrc,
           activeUpholstery?.mainSrc,
+          mediaFabricDefault?.mainSrc,
           activeWood?.mainSrc,
           activeFinish?.mainSrc,
           mainSrcForCard
@@ -236,10 +260,10 @@ export function ProductCard({
       ? activeFinish.extraSrcs
       : activeHeadboard != null
         ? activeHeadboard.extraSrcs
-        : activeSeparateFabric != null
-          ? activeSeparateFabric.extraSrcs
-          : activeUpholstery != null
-            ? activeUpholstery.extraSrcs
+        : activeUpholstery != null
+          ? activeUpholstery.extraSrcs
+          : mediaFabricDefault != null
+            ? mediaFabricDefault.extraSrcs
             : activeWood != null
               ? activeWood.extraSrcs
               : activeFinish != null
@@ -254,7 +278,7 @@ export function ProductCard({
             mainSrc,
             activeFinish?.key ??
               activeUpholstery?.key ??
-              activeSeparateFabric?.key ??
+              mediaFabricDefault?.key ??
               null
           )
         : mergeUniqueExtraUrls(mainSrcForCard, [
@@ -283,9 +307,8 @@ export function ProductCard({
       woodVariants={woodVariants}
       finishVariants={finishVariants}
       finishLabel={finishLabel}
-      separateFabricRows={separateFabricRows}
       href={productHref}
-      title={product.title}
+      title={displayTitle}
       priorityHero={priorityHero}
       productHandle={handle}
     />
@@ -302,7 +325,7 @@ export function ProductCard({
       greenwichBedMatrix={greenwichBedMatrix}
       greenwichPaintMatrix={greenwichPaintMatrix}
       href={productHref}
-      alt={product.title}
+      alt={displayTitle}
       priorityHero={priorityHero}
     />
   )
@@ -310,30 +333,69 @@ export function ProductCard({
   return (
     <div className="card product-card">
       {mediaBlock}
-      <Link href={productHref} className="card-body card-link">
+      <div className="card-body">
+      <Link href={productHref} className="card-link">
         <div className="card-text-stack">
           {(contextLine || (displayGroup && displayGroup.count > 1)) && (
             <div className="card-context-row">
               {contextLine && <span className="card-context">{contextLine}</span>}
-              {displayGroup && displayGroup.count > 1 && (
-                <span className="variant-hint">{formatGroupHint(displayGroup.count)}</span>
+              {displayGroup &&
+                displayGroup.count > 1 &&
+                !(displayGroup.memberChips && displayGroup.memberChips.length > 1) && (
+                <span className="variant-hint">
+                  {displayGroup.hint ?? formatGroupHint(displayGroup.count)}
+                </span>
               )}
             </div>
           )}
-          <h3>{product.title}</h3>
-          {dim != null && (
-            <span className="card-dimensions">{formatDimensionsCompact(dim)}</span>
+          <h3>{displayTitle}</h3>
+          {dimDisplay != null && (
+            <span className="card-dimensions" aria-label={dimAria ?? undefined}>
+              {dimDisplay}
+            </span>
           )}
           <div className="card-price-row">
-            {requestQuotePrice != null ? (
-              <p className="price">{requestQuotePrice}</p>
-            ) : price != null ? (
-              <p className="price">{pricePrefix}{formatRub(price)}</p>
+            {cardPrice.requestQuoteLabel != null ? (
+              <p className="price">{cardPrice.requestQuoteLabel}</p>
+            ) : cardPrice.amount != null ? (
+              <p className="price">{cardPrice.prefix}{formatRub(cardPrice.amount)}</p>
             ) : null}
             {badgeLabel && <span className="badge">{badgeLabel}</span>}
           </div>
         </div>
       </Link>
+      {displayGroup?.memberChips && displayGroup.memberChips.length > 1 && (
+        <div
+          className="product-card-member-chips"
+          role="group"
+          aria-label={
+            displayGroup.axis === "execution"
+              ? pdpCopy.fabricSelectorLabel
+              : pdpCopy.sizeSelectorLabel
+          }
+        >
+          {displayGroup.memberChips.map((chip) =>
+            chip.isRepresentative ? (
+              <span
+                key={chip.id}
+                className="product-card-member-chip is-active"
+                aria-current="true"
+              >
+                {chip.label}
+              </span>
+            ) : (
+              <Link
+                key={chip.id}
+                href={chip.href}
+                className="product-card-member-chip"
+              >
+                {chip.label}
+              </Link>
+            )
+          )}
+        </div>
+      )}
+      </div>
     </div>
   )
 }

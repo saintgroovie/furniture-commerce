@@ -6,7 +6,7 @@ import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { createLead } from "@/lib/api/leads"
 import { createBespokeRequest } from "@/lib/api/bespoke-requests"
-import { bespokeForm as copy, bespokeRequestCopy } from "@/lib/woodright-copy"
+import { bespokeForm as copy, bespokeRequestCopy, designersLandingCopy } from "@/lib/woodright-copy"
 import { CopyLines } from "@/components/copy-lines"
 import { flatCopy } from "@/lib/format-ru-copy"
 
@@ -156,6 +156,14 @@ export function BespokeForm() {
   const roomSetId = searchParams.get("room_set_id") ?? undefined
   /* Материальное исполнение, выбранное на PDP (label из product contract). */
   const materialLabel = searchParams.get("material")?.trim() || undefined
+  const fromDesigners = searchParams.get("from") === "designers"
+  const fromPdpNonstandard =
+    searchParams.get("from") === "pdp" &&
+    searchParams.get("intent") === "nonstandard"
+  const productTitle = searchParams.get("title")?.trim() || undefined
+  const productSku = searchParams.get("sku")?.trim() || undefined
+  const productHandle = searchParams.get("handle")?.trim() || undefined
+  const storefrontSection = searchParams.get("section")?.trim() || undefined
 
   const [status, setStatus] = useState<Status>("idle")
   const [errorMessage, setErrorMessage] = useState("")
@@ -187,6 +195,12 @@ export function BespokeForm() {
     // поэтому аккуратно добавляем выбор первыми строками в общий comment.
     const taskLabel = copy.taskOptions.find((option) => option.value === taskType)?.label
     const headerLines = [
+      fromDesigners ? designersLandingCopy.requestContext : null,
+      fromPdpNonstandard ? "Запрос: нестандарт по товару" : null,
+      productTitle ? `Товар: ${productTitle}` : null,
+      productSku ? `SKU: ${productSku}` : null,
+      productHandle ? `Handle: ${productHandle}` : null,
+      storefrontSection ? `Раздел: ${storefrontSection}` : null,
       city ? `${copy.fields.city}: ${city}` : null,
       taskLabel ? `${copy.fields.taskType}: ${taskLabel}` : null,
       materialLabel ? `Исполнение: ${materialLabel}` : null,
@@ -205,6 +219,9 @@ export function BespokeForm() {
         email: email || null,
         phone: phone || null,
         comment: comment || null,
+        payload: fromDesigners
+          ? { audience: "designer", intent: "partnership" }
+          : null,
       })
       const leadId = (leadRes.lead as { id?: string })?.id
       if (!leadId) throw new Error("No lead id")
@@ -235,11 +252,17 @@ export function BespokeForm() {
   }
 
   const submitting = status === "submitting"
+  const formTitle = fromPdpNonstandard
+    ? bespokeRequestCopy.pdpNonstandardFormTitle
+    : bespokeRequestCopy.formTitle
+  const formCaption = fromPdpNonstandard
+    ? bespokeRequestCopy.pdpNonstandardFormCaption
+    : bespokeRequestCopy.formCaption
 
   return (
     <>
-      <h2 className="bespoke-request-card-title">{bespokeRequestCopy.formTitle}</h2>
-      <CopyLines className="page-caption bespoke-request-card-caption" lines={bespokeRequestCopy.formCaption} />
+      <h2 className="bespoke-request-card-title">{formTitle}</h2>
+      <CopyLines className="page-caption bespoke-request-card-caption" lines={formCaption} />
 
       <form onSubmit={handleSubmit} data-state={status} className="form-stack bespoke-form">
         <div className="form-field">
@@ -317,6 +340,9 @@ export function BespokeForm() {
         </button>
 
         <CopyLines className="form-consent-note" lines={copy.consentNote} />
+        <p className="form-consent-links">
+          <Link href="/privacy">{copy.consentPrivacyLabel}</Link>
+        </p>
 
         {status === "error_server" && (
           <div className="form-alert-error" role="alert">{errorMessage}</div>

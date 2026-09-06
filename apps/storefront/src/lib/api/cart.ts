@@ -27,9 +27,18 @@ export async function createCart() {
 
 export const CART_NOT_FOUND = "CART_NOT_FOUND"
 
+/**
+ * Expand line-item product metadata so cart Kids grouping can use
+ * storefront_section / willie-winkie collection without a catalog fan-out.
+ * `+` keeps default cart retrieve fields.
+ */
+const CART_RETRIEVE_FIELDS = "+items.product.metadata"
+
 export async function getCart(cartId: string) {
   const base = getBaseUrl()
-  const res = await medusaFetch(`${base}/store/carts/${cartId}`)
+  const res = await medusaFetch(
+    `${base}/store/carts/${cartId}?fields=${encodeURIComponent(CART_RETRIEVE_FIELDS)}`
+  )
   if (res.status === 404) throw new Error(CART_NOT_FOUND)
   if (!res.ok) throw new Error(await res.text())
   return res.json()

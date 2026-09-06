@@ -9,6 +9,7 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  useSyncExternalStore,
   useTransition,
 } from "react"
 import {
@@ -24,6 +25,32 @@ import {
   getCollectionFilterLabel,
   hasActiveCatalogFilters,
 } from "@/lib/catalog-filters"
+import {
+  BUYER_CLOSE_PEER_EVENT,
+  BUYER_DIALOG_LAYER,
+  BUYER_MOBILE_MQ,
+  handleDialogKeydown,
+  listFocusable,
+  requestCloseBuyerDialogPeer,
+  setBuyerChromeInert,
+  type BuyerClosePeerDetail,
+} from "@/lib/buyer-dialog-a11y"
+import { useCspNonce } from "@/lib/csp-nonce"
+import { a11yCopy, catalogUiCopy, nav as navCopy } from "@/lib/woodright-copy"
+
+function subscribeBuyerMobileMq(onChange: () => void) {
+  const mq = window.matchMedia(BUYER_MOBILE_MQ)
+  mq.addEventListener("change", onChange)
+  return () => mq.removeEventListener("change", onChange)
+}
+
+function getBuyerMobileMqSnapshot() {
+  return window.matchMedia(BUYER_MOBILE_MQ).matches
+}
+
+function getBuyerMobileMqServerSnapshot() {
+  return false
+}
 
 type Props = {
   basePath: string
@@ -45,6 +72,8 @@ function toggleMulti(values: string[], value: string): string[] {
 }
 
 type PillBox = { left: number; top: number; width: number; height: number }
+
+const CATALOG_FILTER_SIDEBAR_ID = "catalog-filter-sidebar"
 
 function tabBox(tab: HTMLElement): PillBox {
   return {
@@ -105,13 +134,23 @@ export function CatalogFilterControls({
   children,
 }: Props) {
   const router = useRouter()
+  const cspNonce = useCspNonce()
   const [isPending, startTransition] = useTransition()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [searchDraft, setSearchDraft] = useState(state.q ?? "")
+  const [searchSyncQ, setSearchSyncQ] = useState(state.q ?? "")
+  const filterToggleRef = useRef<HTMLButtonElement>(null)
+  const compactSearchPlaceholder = useSyncExternalStore(
+    subscribeBuyerMobileMq,
+    getBuyerMobileMqSnapshot,
+    getBuyerMobileMqServerSnapshot
+  )
 
-  useEffect(() => {
-    setSearchDraft(state.q ?? "")
-  }, [state.q])
+  const routeQ = state.q ?? ""
+  if (routeQ !== searchSyncQ) {
+    setSearchSyncQ(routeQ)
+    setSearchDraft(routeQ)
+  }
 
   /* Sliding pill behind the segmented tabs: instead of the dark background
      snapping from one tab to another on navigation, a single absolutely
@@ -190,10 +229,11 @@ export function CatalogFilterControls({
   const [pendingType, setPendingType] = useState<{
     type: CatalogFilterState["type"] | undefined
   } | null>(null)
-
-  useEffect(() => {
-    setPendingType(null)
-  }, [state.type])
+  const [typeForPending, setTypeForPending] = useState(state.type)
+  if (state.type !== typeForPending) {
+    setTypeForPending(state.type)
+    if (pendingType) setPendingType(null)
+  }
 
   const activeType = pendingType ? pendingType.type : state.type
 
@@ -224,6 +264,79 @@ export function CatalogFilterControls({
      mobile — so the sticky top offset is read from whichever is sticky
      rather than hard-coded. 24 mirrors --space-lg. */
   const sidebarRef = useRef<HTMLElement>(null)
+
+  /* Mobile filter drawer: dialog contract (semantics + inert + focus trap).
+     Drawer lives inside #main-content, so we inert background siblings
+     (tabs/search/sort/product area), not the whole main — otherwise the
+     dialog would become inert too. Toggle stays outside inert targets so
+     focus restore remains possible.
+     Layer ownership keeps extras/chrome inert until this layer releases. */
+  const setFilterBackgroundInert = useCallback((enabled: boolean) => {
+    setBuyerChromeInert(
+      enabled,
+      [
+        document.querySelector(".catalog-controls"),
+        document.querySelector(".catalog-search"),
+        document.querySelector(".catalog-sort"),
+        document.querySelector(".catalog-product-area"),
+      ],
+      BUYER_DIALOG_LAYER.catalogFilters
+    )
+  }, [])
+
+  const closeMobileFilters = useCallback((restoreFocus = true) => {
+    setMobileOpen(false)
+    if (restoreFocus) {
+      requestAnimationFrame(() => filterToggleRef.current?.focus())
+    }
+  }, [])
+
+  // Peer dialog (mobile nav) requested exclusive ownership.
+  useEffect(() => {
+    function onPeerClose(e: Event) {
+      const detail = (e as CustomEvent<BuyerClosePeerDetail>).detail
+      if (detail?.exceptLayer === BUYER_DIALOG_LAYER.catalogFilters) return
+      setMobileOpen(false)
+    }
+    document.addEventListener(BUYER_CLOSE_PEER_EVENT, onPeerClose)
+    return () => document.removeEventListener(BUYER_CLOSE_PEER_EVENT, onPeerClose)
+  }, [])
+
+  // Desktop viewport: clear mobile-only drawer state + inert.
+  useEffect(() => {
+    const mq = window.matchMedia(BUYER_MOBILE_MQ)
+    function onChange() {
+      if (!mq.matches) setMobileOpen(false)
+    }
+    onChange()
+    mq.addEventListener("change", onChange)
+    return () => mq.removeEventListener("change", onChange)
+  }, [])
+
+  useEffect(() => {
+    if (!mobileOpen) {
+      setFilterBackgroundInert(false)
+      return
+    }
+    requestCloseBuyerDialogPeer(BUYER_DIALOG_LAYER.catalogFilters)
+    const sidebar = sidebarRef.current
+    setFilterBackgroundInert(true)
+    requestAnimationFrame(() => {
+      listFocusable(sidebar)[0]?.focus()
+    })
+    function onKeyDown(e: globalThis.KeyboardEvent) {
+      handleDialogKeydown(e, {
+        panel: sidebar,
+        trigger: filterToggleRef.current,
+        onEscape: () => closeMobileFilters(true),
+      })
+    }
+    document.addEventListener("keydown", onKeyDown)
+    return () => {
+      document.removeEventListener("keydown", onKeyDown)
+      setFilterBackgroundInert(false)
+    }
+  }, [mobileOpen, closeMobileFilters, setFilterBackgroundInert])
 
   useEffect(() => {
     const sidebar = sidebarRef.current
@@ -337,7 +450,11 @@ export function CatalogFilterControls({
           never pushed below the fold by a long collections/type list. */}
       <div className="catalog-filter-scroll">
       {active && (
-        <div className="catalog-active-chips" aria-label="Активные фильтры">
+        <div
+          className="catalog-active-chips"
+          role="group"
+          aria-label={a11yCopy.activeFiltersLabel}
+        >
           {state.q && (
             <ActiveChip
               label={`«${state.q}»`}
@@ -436,7 +553,7 @@ export function CatalogFilterControls({
             >
               <span>Все</span>
               <span className="catalog-filter-count">
-                {facets.collections.reduce((sum, opt) => sum + opt.count, 0)}
+                {facets.collectionAllCount}
               </span>
             </Link>
             {facets.collections.map((opt) => {
@@ -484,7 +601,7 @@ export function CatalogFilterControls({
             >
               <span>Все</span>
               <span className="catalog-filter-count">
-                {facets.categories.reduce((sum, opt) => sum + opt.count, 0)}
+                {facets.categoryAllCount}
               </span>
             </Link>
             {facets.categories.map((opt) => {
@@ -596,11 +713,11 @@ export function CatalogFilterControls({
             )
           })}
         </nav>
-        {/* Отдельный сценарий (переход в раздел «По проекту»), поэтому вне
-            segmented control — тёмной pill-кнопкой рядом. */}
+        {/* Отдельный сценарий (переход в «По проекту»), поэтому вне
+            segmented control - тёмной pill-кнопкой рядом. */}
         {hasBespokeTab && (
           <Link href="/bespoke" className="catalog-bespoke-cta" scroll={false}>
-            По проекту
+            {navCopy.bespoke}
           </Link>
         )}
       </div>
@@ -630,7 +747,7 @@ export function CatalogFilterControls({
           )}
           {state.sort && <input type="hidden" name="sort" value={state.sort} />}
           <label className="sr-only" htmlFor="catalog-search-input">
-            Поиск по каталогу
+            {catalogUiCopy.searchLabel}
           </label>
           <div className="catalog-search-input-wrap">
             <input
@@ -639,14 +756,18 @@ export function CatalogFilterControls({
               type="search"
               value={searchDraft}
               onChange={(e) => setSearchDraft(e.target.value)}
-              placeholder="Поиск по названию, коллекции или категории"
+              placeholder={
+                compactSearchPlaceholder
+                  ? catalogUiCopy.searchPlaceholderCompact
+                  : catalogUiCopy.searchPlaceholder
+              }
               autoComplete="off"
             />
             {searchDraft && (
               <button
                 type="button"
                 className="catalog-search-clear"
-                aria-label="Очистить поиск"
+                aria-label={catalogUiCopy.searchClear}
                 onClick={() => setSearchDraft("")}
               >
                 <svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true">
@@ -664,7 +785,7 @@ export function CatalogFilterControls({
             Найдено {resultCount}
           </p>
           <button type="submit" className="catalog-search-btn">
-            Найти
+            {catalogUiCopy.searchSubmit}
           </button>
         </form>
 
@@ -690,9 +811,14 @@ export function CatalogFilterControls({
           </div>
 
           <button
+            ref={filterToggleRef}
             type="button"
             className="catalog-filter-mobile-toggle"
             aria-expanded={mobileOpen}
+            aria-controls={CATALOG_FILTER_SIDEBAR_ID}
+            aria-label={
+              mobileOpen ? a11yCopy.closeFilters : a11yCopy.openFilters
+            }
             onClick={() => setMobileOpen((v) => !v)}
           >
             Фильтры
@@ -703,8 +829,15 @@ export function CatalogFilterControls({
       <div className="catalog-filter-layout">
         <aside
           ref={sidebarRef}
+          id={CATALOG_FILTER_SIDEBAR_ID}
           className={`catalog-filter-sidebar ${mobileOpen ? "catalog-filter-sidebar-open" : ""}`}
-          aria-label="Фильтры каталога"
+          aria-label={a11yCopy.catalogFiltersLabel}
+          {...(mobileOpen
+            ? {
+                role: "dialog" as const,
+                "aria-modal": true as const,
+              }
+            : null)}
           /* The bootstrap script mutates this element's style attribute
              before hydration — expected, not a markup mismatch. */
           suppressHydrationWarning
@@ -713,11 +846,15 @@ export function CatalogFilterControls({
           <button
             type="button"
             className="catalog-filter-apply-mobile"
-            onClick={() => setMobileOpen(false)}
+            aria-label={a11yCopy.applyFilters}
+            onClick={() => closeMobileFilters(true)}
           >
             Показать
           </button>
-          <script dangerouslySetInnerHTML={{ __html: FILTER_FIT_BOOTSTRAP }} />
+          <script
+            nonce={cspNonce}
+            dangerouslySetInnerHTML={{ __html: FILTER_FIT_BOOTSTRAP }}
+          />
         </aside>
         <div className="catalog-product-area">{children}</div>
       </div>
@@ -728,7 +865,22 @@ export function CatalogFilterControls({
 /** Draft-based price inputs: navigation happens only on explicit apply
     (button / Enter), never on blur — no surprise page reloads while typing.
     Clearing resets only the price, other filters stay in the query string. */
-function CatalogPriceFilter({
+function CatalogPriceFilter(props: {
+  priceMin?: number
+  priceMax?: number
+  priceRange: CatalogFacets["priceRange"]
+  onApply: (priceMin?: number, priceMax?: number) => void
+}) {
+  const { priceMin, priceMax } = props
+  return (
+    <CatalogPriceFilterInner
+      key={`${priceMin ?? ""}:${priceMax ?? ""}`}
+      {...props}
+    />
+  )
+}
+
+function CatalogPriceFilterInner({
   priceMin,
   priceMax,
   priceRange,
@@ -741,13 +893,6 @@ function CatalogPriceFilter({
 }) {
   const [minDraft, setMinDraft] = useState(priceMin != null ? String(priceMin) : "")
   const [maxDraft, setMaxDraft] = useState(priceMax != null ? String(priceMax) : "")
-
-  useEffect(() => {
-    setMinDraft(priceMin != null ? String(priceMin) : "")
-  }, [priceMin])
-  useEffect(() => {
-    setMaxDraft(priceMax != null ? String(priceMax) : "")
-  }, [priceMax])
 
   const parseDraft = (raw: string): number | undefined => {
     const t = raw.trim()

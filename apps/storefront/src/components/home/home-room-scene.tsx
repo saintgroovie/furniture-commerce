@@ -3,7 +3,8 @@
 import Link from "next/link"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { homeCopy } from "@/lib/woodright-copy"
-
+import { safeInternalHref } from "@/lib/safe-internal-href"
+import { HomeImg } from "./home-img"
 export type HomeSceneSpot = {
   /** Percent offsets inside the scene image. */
   x: number
@@ -134,7 +135,8 @@ export function HomeRoomScene({ scenes }: { scenes: HomeScene[] }) {
       <div className="hp-scene-stage">
         {scenes.map((s, i) =>
           mounted.has(i) ? (
-            <img
+            <HomeImg
+              surface="ROOM_COMPOSITION"
               key={s.id}
               src={s.img}
               alt={i === active ? s.alt : ""}
@@ -151,6 +153,7 @@ export function HomeRoomScene({ scenes }: { scenes: HomeScene[] }) {
         {scene.spots.map((spot, i) => {
           const open = openSpot === i
           const flip = spot.x > 55
+          const spotHref = safeInternalHref(spot.href, "")
           return (
             <div
               key={`${scene.id}-${i}`}
@@ -166,9 +169,9 @@ export function HomeRoomScene({ scenes }: { scenes: HomeScene[] }) {
               >
                 <span aria-hidden="true" />
               </button>
-              {open && (
+              {open && spotHref && (
                 <Link
-                  href={spot.href}
+                  href={spotHref}
                   className="hp-scene-card"
                   data-flip={flip ? "true" : "false"}
                 >

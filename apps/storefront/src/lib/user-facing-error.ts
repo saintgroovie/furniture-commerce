@@ -1,12 +1,12 @@
 /** Maps network/API failures to short Russian copy for storefront CTAs. */
 export function userFacingError(e: unknown, fallback = "Ошибка"): string {
   if (e instanceof TypeError) {
-    return "Не удалось связаться с сервером. Проверьте, что backend запущен (порт 9000)."
+    return "Не удалось связаться с сервером. Обновите страницу или зайдите чуть позже"
   }
   if (e instanceof Error) {
     const m = e.message.trim()
     if (m === "Failed to fetch" || /failed to fetch/i.test(m)) {
-      return "Не удалось связаться с сервером. Проверьте, что backend запущен (порт 9000)."
+      return "Не удалось связаться с сервером. Обновите страницу или зайдите чуть позже"
     }
     try {
       const data = JSON.parse(m) as { message?: string }

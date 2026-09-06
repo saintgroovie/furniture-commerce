@@ -116,6 +116,8 @@ type Props = {
   mainActionDisabledTitle?: string
   /** Override gallery button label (e.g. «+ Во все галереи») */
   galleryButtonLabel?: string
+  /** Operator role override for this media (null = inferred) */
+  roleOverride?: V2RoleSlot | null
   /** Called when operator changes the role override via dropdown */
   onSetRoleOverride?: (mediaId: string, role: V2RoleSlot | null) => void
   /** Parent-owned effective preview — drives filter, sort, and DOM proof attributes */
@@ -297,7 +299,6 @@ export function MediaCardV2({
     return (
       <div
         data-v2-pool-card="true"
-        data-v2-pool-inventory-id={inv.id}
         data-v2-pool-preview-ok="false"
         draggable
         onDragStart={handleDragStart}
@@ -363,7 +364,6 @@ export function MediaCardV2({
   return (
     <div
       data-v2-pool-card="true"
-      data-v2-pool-inventory-id={inv.id}
       data-v2-pool-preview-ok={domPreviewOk ? "true" : "false"}
       draggable
       onDragStart={handleDragStart}

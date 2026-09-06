@@ -5,15 +5,14 @@
  * Prefill/heuristic metadata wrongly buckets them as two finish colors (cream + lilian).
  */
 import type { ColorExecution } from "./gallery-buyer-sort"
+import { extractStaticProductPath, normalizeOliverFabricKey } from "./oliver-static-url"
 
 function basenameKey(url: string): string {
   return (url.split("/").pop() ?? url).toLowerCase()
 }
 
 function normalizeUrlKey(url: string): string {
-  const s = url.trim()
-  const m = s.match(/(\/static\/products\/[^\s?#]+)/i)
-  return (m?.[1] ?? s).toLowerCase()
+  return extractStaticProductPath(url).toLowerCase()
 }
 
 export function extractOliverColorTokenFromUrl(url: string): string | null {
@@ -21,7 +20,7 @@ export function extractOliverColorTokenFromUrl(url: string): string | null {
   const explicit = hay.match(/(?:color|colour)[_-]([a-z0-9-]+)/i)
   if (explicit?.[1]) {
     const t = explicit[1].toLowerCase()
-    return t === "lillian" ? "lilian" : t
+    return t === "lilian" ? "lillian" : t
   }
   return null
 }
@@ -317,6 +316,14 @@ function finishExecutionsRaw(meta: Record<string, unknown>): ColorExecution[] | 
   return Array.isArray(raw) && raw.length > 0 ? (raw as ColorExecution[]) : null
 }
 
+function finishOverlapsFabricKeys(
+  fabric: ColorExecution[],
+  finish: ColorExecution[]
+): boolean {
+  const fabricKeys = new Set(fabric.map((f) => normalizeOliverFabricKey(f.key)))
+  return finish.some((f) => fabricKeys.has(normalizeOliverFabricKey(f.key)))
+}
+
 /**
  * Oliver multi-fabric SKU: `fabric_upholstery_executions` is canonical;
  * legacy prefill also wrote duplicate keys (+ spurious `cream`) to `finish_color_executions`.
@@ -328,7 +335,9 @@ export function shouldSuppressOliverFinishWhenFabricCanonical(
   if (!handle?.toLowerCase().startsWith("ol-") || !meta) return false
   const fabric = fabricExecutionsRaw(meta)
   const finish = finishExecutionsRaw(meta)
-  return Boolean(fabric && fabric.length >= 2 && finish && finish.length >= 2)
+  if (!fabric || fabric.length < 2 || !finish || finish.length === 0) return false
+  if (finish.length >= 2) return true
+  return finishOverlapsFabricKeys(fabric, finish)
 }
 
 /** Drop duplicate finish metadata when fabric upholstery is canonical (ol-23-1 class). */

@@ -1,0 +1,135 @@
+---
+description: Durable local servers — never pin Next/Medusa/review apps to Cursor agent shells
+alwaysApply: true
+---
+
+# Durable local review / preview servers
+
+Complements `foreground-only-execution.mdc`, `review-server-stability-gate.mdc`, and (when present) `local-dev-single-instance.mdc`.
+
+## Why
+
+Cursor aborts agent shells (often exit **143** / SIGTERM). Children of that shell die even with plain `nohup … &` or Shell `block_until_ms: 0`.
+
+**Health 200 in a previous turn ≠ process still alive.**
+
+## Absolute ban - agent-shell review servers
+
+**Never** start or keep a review/preview HTTP server as a child of the Cursor agent shell.
+
+Forbidden patterns (any of these → wrong):
+
+- Shell tool with `block_until_ms: 0` running `next start` / `next dev` / `medusa develop` / `yarn start`
+- `command … &` / bare `nohup … &` / `disown` from the agent shell
+- “restart preview in agent background again” after `killed_by_cursor_agent_shell`
+
+Correct patterns only:
+
+1. `python3 scripts/local/durable_local_server.py start …` (alternate ports, not `:9000`/`:3002`)
+2. Operator Terminal / `scripts/local-dev/woodright-*.sh` for canonical `:9000`/`:3002`
+3. Exact GUI Terminal launch **only** when the operator named Terminal/`open` in the same message (`personal-data-mac-safety.mdc`)
+
+If the agent already used a forbidden pattern and Cursor aborted it → report `killed_by_cursor_agent_shell`, then recover with (1) or (2). Do **not** repeat the forbidden pattern.
+
+## Mandatory check - operator asks to look visually
+
+Triggers (RU/EN, any close form): «где посмотреть», «визуально», «открой preview», «посмотреть в браузере», «review URL», «localhost», «покажи на сайте», «дай рабочую ссылку», «рабочая ссылка», «подними preview».
+
+**Before answering with any localhost link or “откройте …”, the agent MUST:**
+
+1. **Probe** intended port with `lsof` + bounded `curl` in **this** turn.
+2. If down → start **only** via durable path below (or give the operator the same command for their Terminal). **Forbidden:** agent-shell background / `block_until_ms: 0` / bare `nohup`.
+3. Pass full `review-server-stability-gate.mdc` (listener + health + exact review path + ≥5s second sample) in **this** turn.
+4. Prove the runtime is the **intended worktree/branch** (cwd of listener + unique content token), not a random other `:3002` process.
+5. If Cursor abort killed a prior preview → say `killed_by_cursor_agent_shell` once; recover with durable launcher - **never** a third agent-shell restart.
+
+If any step fails → `server not stable` / `server not running` + exact durable start command. **No** live URL.
+
+Packet honesty when visual review was requested but gate failed: Task status cannot claim visual QA `done`.
+
+## Hard bans
+
+- Do not pin long-lived `next` / `medusa` / review HTTP apps to the Cursor agent shell (`block_until_ms: 0`, bare `nohup &`).
+- unmanaged `screen` / `tmux` started from the agent shell to hold a preview
+- Do not restart a stack that is already healthy on the intended port/worktree.
+- Do not hand localhost URLs without same-turn `review-server-stability-gate.mdc`.
+- No create / edit / load / unload of LaunchAgents or LaunchDaemons. The only allowed **agent LaunchAgent** process action is kickstart of existing Woodright user labels named in `personal-data-mac-safety.mdc` (after a failed probe). This does not forbid operator Terminal or `scripts/local-dev/woodright-*.sh` when the operator asked to raise a preview.
+- No autostart without **explicit** operator request (visual-look / «дай рабочую ссылку» counts as request to raise/reuse preview).
+- Never `killall node` / broad `pkill`.
+
+## Shared ports `:9000` / `:3002` (canonical primary)
+
+Do **not** bind secondary worktrees to `:9000` / `:3002` for feature review. Those ports are reserved for the operator’s primary session.
+
+Exception (degraded, must disclose): when the Documents canonical `realpath` is iCloud-archived, LaunchAgent wrappers may bind `:9000`/`:3002` to operator-configured `WOODRIGHT_RUNTIME_ROOT` (`storefront-qa-build-sync.mdc`). That is not a second SoT. Heal via wrappers + `launchctl kickstart` of existing labels - do not edit `~/Library` plists.
+
+`scripts/local/durable_local_server.py` **refuses** ports `9000` and `3002`. For alternate preview ports use that launcher (below) or the operator’s own Terminal from the intended worktree.
+
+If project entrypoints under `scripts/local-dev/woodright-*.sh` exist in the checkout, prefer them for canonical `:9000`/`:3002` only - never invent a second policy that steals those ports.
+
+## Prefer production `next start` for durable review (anti-crash)
+
+`next dev` + Turbopack/HMR regularly dies mid-review (restarts, panic on symlink `node_modules`, overlay noise). For operator visual review lasting more than a quick edit:
+
+1. **Prefer** `yarn build` (or existing `.next-build`) + durable **`yarn next start`** (or `node .next-build/standalone/.../server.js` when `output: "standalone"` warns).
+2. Use `next dev` only when the operator explicitly needs HMR, and say in the packet that the preview is **dev-fragile**.
+3. Keep Medusa on durable start too (`medusa develop` or `medusa start` per task) - same launcher, not agent-shell.
+4. After Cursor abort: one durable restart of the **same** `--name`, then full stability gate (including CSS). Never a second agent-shell preview.
+
+## Alternate preview ports (worktree SF/BE)
+
+When the operator asks for a preview on another port (e.g. `3003`, `3004`, `3028`/`3029`, `3137`):
+
+1. Probe → if up and cwd matches intended worktree, **reuse**.
+2. Start via durable detach (not agent-shell background):
+
+```sh
+# Helper: prefer <canonical-or-worktree>/scripts/local/durable_local_server.py
+# If that path is missing, fail closed. Do not fall back to another machine-specific tree.
+python3 /path/to/checkout/scripts/local/durable_local_server.py start \
+  --name sf-3137-feature \
+  --cwd /path/to/intended-worktree/apps/storefront \
+  --port 3137 \
+  --cmd 'yarn next start --port 3137 --hostname 127.0.0.1' \
+  --env MEDUSA_BACKEND_INTERNAL_URL=http://127.0.0.1:9137 \
+  --env MEDUSA_BACKEND_URL=http://127.0.0.1:9137 \
+  --env NEXT_PUBLIC_MEDUSA_BACKEND_URL=http://127.0.0.1:9137 \
+  --env NEXT_PUBLIC_SITE_URL=http://127.0.0.1:3137 \
+  --env NEXT_DIST_DIR=.next-build
+```
+
+(Ensure `.next` → `.next-build` or `NEXT_DIST_DIR` matches the build output. Use `next dev` + `.next-dev` only when a production build is not available.)
+
+3. Re-run stability gate (including **CSS 200**) before any URL.
+4. `stop` only after identity match (pid + lstart + cmdline + cwd). Stale/recycled PIDs are refused, not killed.
+
+State dir (ops exception, mode `0700`): `~/.woodright/durable-local-servers/<name>/`
+(same family as `~/.woodright/qa-dev-servers/` used by local-dev entrypoints).
+
+## After macOS reboot (daily hybrid only)
+
+Triggers (RU/EN): the current message must include **reboot context** («после перезагрузки», «запусти все что упало после перезагрузки»). Bare «подними стек» / «docker postgres» is not enough (`personal-data-mac-safety.mdc`).
+
+Restore the **daily hybrid**, not every leftover preview. Each step only after its probe failed:
+
+1. Probe `docker info`, `:5432`, `:6379`. If the Docker daemon is down → `open -a Docker`, then bounded wait until `docker info` succeeds. Re-probe `:5432` / `:6379`. Start Compose **only** for missing infra: `docker compose up -d postgres redis` from the intended checkout (named containers `medusa_postgres`, `medusa_redis`). If both ports already LISTEN, do not run Compose.
+2. Do **not** kickstart Medusa in a loop while Postgres is down (`ECONNREFUSED` + climbing launchctl `runs` = KeepAlive storm). Heal DB first, then **at most one** kickstart of existing `com.woodright.medusa-backend` only if `:9000` is still down. **At most one** kickstart of `com.woodright.storefront-qa` only if `:3002` is down.
+3. Storefront `:3002` may still LISTEN after reboot while `:9000` is dead. HTML/CSS 200 ≠ Medusa healthy.
+4. Do **not** start the durable leftover zoo (`~/.woodright/durable-local-servers/*`, historical `:3188` / `:9141` / matrix `:3004`, …) unless the operator **named** that preview or board. Leftover Medusas exhaust the Postgres pool.
+
+Forbidden: `docker compose --profile full` as part of reboot restore (steals `:9000`/`:3002`); creating LaunchAgents; agent-shell `next`/`medusa`.
+
+## Port confusion (why «сайт лежит» while another port is fine)
+
+- Browser habit is often `http://127.0.0.1:3002` (LaunchAgent QA).
+- Feature review may live on a durable alternate (e.g. `:3137`) with current branch UI.
+- HTML 200 on `:3002` with CSS 400/404 still looks “down” - heal that stack (`storefront-qa-build-sync.mdc`), **and** tell the operator the correct URL for the task they asked about.
+- Never silently swap ports in the handoff without naming both.
+
+## Owner-review / V12 apps
+
+Use that app’s `scripts/daemon_server.py` / Start|Stop `.command`. Do not substitute agent-shell Python.
+
+## Honesty
+
+After Cursor abort: say `killed_by_cursor_agent_shell`. Fix = durable entrypoint / Terminal - not another agent-shell restart.

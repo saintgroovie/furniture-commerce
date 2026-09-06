@@ -13,6 +13,7 @@ export function BespokeHero() {
           alt={bespokeMedia.hero.alt}
           className="hp-hero-img"
           data-slide={0}
+          data-active="true"
           fetchPriority="high"
           decoding="async"
           draggable={false}
@@ -25,7 +26,7 @@ export function BespokeHero() {
             <Link href="/bespoke/request" className="btn btn-primary">
               {bespokeLanding.ctaPrimary}
             </Link>
-            <Link href="/bespoke/catalog" className="btn btn-secondary">
+            <Link href="/designers" className="btn btn-secondary">
               {bespokeLanding.ctaSecondary}
             </Link>
           </div>

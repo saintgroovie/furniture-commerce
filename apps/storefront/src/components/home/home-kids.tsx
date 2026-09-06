@@ -3,6 +3,7 @@ import { homeCopy } from "@/lib/woodright-copy"
 import { CopyLines } from "@/components/copy-lines"
 import type { HomeProduct } from "./home-data"
 import { HomeDeferredCardLayers } from "./home-deferred-card-layers"
+import { HomeImg } from "./home-img"
 
 /** Kids scene: existing kids block copy + real Woodright Kids pieces. */
 export function HomeKids({ products }: { products: HomeProduct[] }) {
@@ -31,7 +32,7 @@ export function HomeKids({ products }: { products: HomeProduct[] }) {
                 style={{ "--reveal-i": i } as React.CSSProperties}
               >
                 <span className="hp-kids-object-media">
-                  <img
+                  <HomeImg
                     src={p.img}
                     alt={p.title}
                     loading="lazy"

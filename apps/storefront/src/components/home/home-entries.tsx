@@ -2,6 +2,7 @@ import Link from "next/link"
 import { homeCopy } from "@/lib/woodright-copy"
 import { CopyLines } from "@/components/copy-lines"
 import { homeMedia } from "./home-media"
+import { HomeImg } from "./home-img"
 
 /* Varied piece types: bed / interior / kids bed / vitrine (no wardrobe row). */
 const ENTRY_MEDIA: Record<string, { src: string; alt: string }> = {
@@ -43,7 +44,8 @@ export function HomeEntries() {
             >
               {media && (
                 <span className="hp-entry-media">
-                  <img
+                  <HomeImg
+                    surface="LIFESTYLE_BLOCK"
                     src={media.src}
                     alt=""
                     aria-hidden="true"

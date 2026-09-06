@@ -1,22 +1,12 @@
-import { redirect } from "next/navigation"
+import type { Metadata } from "next"
+import { SourceMediaOrphanReviewClient } from "./SourceMediaOrphanReviewClient"
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Source Media Orphan Review (QA)",
-  description: "Redirects to Media Ops Inbox orphan tab.",
+  description:
+    "Dev-only review queue for unmapped_orphan and needs_manual_mapping source rows from full-cache audit.",
 }
 
-type PageProps = {
-  searchParams?: Promise<Record<string, string | string[] | undefined>>
-}
-
-export default async function SourceMediaOrphanReviewPage({ searchParams }: PageProps) {
-  const sp = (await searchParams) ?? {}
-  const q = new URLSearchParams()
-  q.set("tab", "orphan")
-  for (const [key, val] of Object.entries(sp)) {
-    if (key === "tab") continue
-    if (typeof val === "string") q.set(key, val)
-    else if (Array.isArray(val) && val[0]) q.set(key, val[0])
-  }
-  redirect(`/qa/media-ops/inbox?${q.toString()}`)
+export default function SourceMediaOrphanReviewPage() {
+  return <SourceMediaOrphanReviewClient />
 }

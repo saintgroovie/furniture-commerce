@@ -1,0 +1,12 @@
+{
+  "public_storefront_count": 2,
+  "domains": [
+    {
+      "name": "woodright-demo.ru",
+      "storefront_targets": [
+        "a",
+        "b"
+      ]
+    }
+  ]
+}

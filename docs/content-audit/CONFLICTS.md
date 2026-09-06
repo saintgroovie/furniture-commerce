@@ -60,9 +60,15 @@ Only **incompatible** conditions. Editorial paraphrases excluded.
 
 **Owner decision:** **OD-04 = B CONFIRMED** (`OWNER_DECISION_OD04_B_WARRANTY_12_MONTHS_OWNER_SET`). Pack: `docs/content-audit/OD04_WARRANTY_VERIFICATION.md`. `PRODUCT LABEL != AUTOMATIC WARRANTY TERM`. Statutory defect rights preserved (`EXTERNAL VERIFICATION`). Board no longer offers «pick live 18 vs rem empty» as the launch number.
 
-**Still unresolved (not a second OD number):** start wording; manufacturer / warranty obligor; component scope (hardware / mechanisms / upholstery / third-party); exclusions (`SUSPECT / LEGAL REVIEW`); claims SOP.
+**Still unresolved (not a second OD number):** manufacturer **name**; component matrix; humidity/floor voids; storefront `/warranty` implementation.
 
-**Addendum 2026-08-28 (do not collapse into “resolved”):** a 2026 client supply-contract template still states seller warranty **18 months from transfer**. That is a live contractual instrument, not only legacy CS-Cart HTML. Website owner decision remains **12 months** (`OD-04 = B`). Status: `UNRESOLVED CONTRACT/WEBSITE CONSISTENCY GATE`. Canonical record: `docs/content-audit/SITE_COMMERCIAL_SERVICE_SOT.md`. Do not change 12 → 18 on the site or 18 → 12 in the contract in a content task.
+**Addendum 2026-09-01:** public-policy spec `docs/owner/warranty-public-policy.md` - start from transfer and seller-obligor verified for future copy. Not a new OD. Live CS-Cart 18 months remains `LEGACY PUBLIC DIVERGENCE`.
+
+**Addendum 2026-08-28 (historical; superseded for current Word term by 2026-08-31):** at that date the 2026 client supply-contract template still stated seller warranty **18 months from transfer**. That addendum must not be read as the current template term.
+
+**Addendum 2026-08-31:** the operator Word template was physically updated and verified: **12 (Двенадцать) месяцев с момента передачи Товара**. Template vs website term is **aligned**. Historical CTR-2026 wording remains **18 months**. Live CS-Cart 18 months remains `LEGACY PUBLIC DIVERGENCE`. Record: `docs/owner/contract-template-reconciliation.md`.
+
+**Addendum 2026-08-31 (postal):** the same Word template seller requisites were then updated and verified: **153025 г. Иваново, ул. Дзержинского,39, оф 514**. Owner card / `woodright-seller.ts` / current template **aligned**. Previous CTR-2026 value **153000** is historical provenance. Token: `WOODRIGHT_POSTAL_INDEX_RECONCILED`.
 
 ---
 
@@ -72,15 +78,17 @@ Only **incompatible** conditions. Editorial paraphrases excluded.
 
 **Source A:** Live `/vozvrat/` (HTTP 200, **2026-08-17 still live**) - **14 calendar days**; **ООО «Демо Магазин»**; **sales@demostore.ru**; cites repealed ПП РФ 19.01.1998 № 55. Same HTML in dump Jun 2025. Also dump theme «30 дней» and oferta §13 **7 days**.
 
-**Source B:** Rem `/returns` - no window; owner must approve; contact showroom. Canonical: footer `/returns`, **no route**. Woodright approved policy **NOT FOUND**; combined SoT **`PARTIAL`**.
+**Source B (historical, pre-2026-09-01):** Rem `/returns` - no window; owner must approve; contact showroom. Canonical: footer `/returns`, **no route**. Combined SoT was **`PARTIAL`**.
+
+**Source B (current, 2026-09-01):** launch SOP verified: `docs/owner/returns-sop.md` (`RETURNS_SOP_VERIFIED_AND_READY`). Storefront `/returns` still not shipped. Extra goodwill **not** chosen.
 
 **Likely explanation:** CS-Cart generic template (ст. 25 «14 дней» retail exchange language) left on live site; not a 2026 Woodright SoT.
 
-**Resolvable?** Commercial/legacy-window conflict **RESOLVED BY OWNER — OD-03 = B** (2026-08-19): legacy 14/7/30 do **not** become new-site SoT; launch flow = applicable legal baseline + manager-assisted case handling. Product-to-legal mapping and reverse logistics remain **open** (`LEGAL REVIEW` / `MISSING`). Demo Magazin must never be new-site copy (`LEGACY PUBLIC DEFECT`). Do not port 14.
+**Resolvable?** Commercial/legacy-window conflict **RESOLVED BY OWNER — OD-03 = B** (2026-08-19): legacy 14/7/30 do **not** become new-site SoT; launch flow = applicable legal baseline + manager-assisted case handling. Product-to-legal **tests** are in the SOP (labels still not automatic outcomes). Reverse-logistics *arranger* remains ops `MISSING`. Demo Magazin must never be new-site copy (`LEGACY PUBLIC DEFECT`). Do not port 14.
 
 **Owner decision:** **OD-03 = B CONFIRMED** (`OWNER_DECISION_OD03_B_MANAGER_ASSISTED_RETURNS_WITH_LEGAL_BASELINE`). Pack: `docs/content-audit/OD03_RETURNS_VERIFICATION.md`. `BESPOKE LABEL != AUTOMATIC NO-RETURN RULE`. Board no longer offers «pick 14 vs 7 vs 30» as a business choice.
 
-**Immediate risk:** Live public page is actively harmful (wrong legal entity for returns). This cycle did **not** unpublish it.
+**Addendum 2026-09-01:** launch returns SOP verified (`docs/owner/returns-sop.md`). PP 55 = `SUPERSEDED / NOT CURRENT PUBLIC AUTHORITY`. Extra goodwill not chosen. Live `/vozvrat/` still `LEGACY PUBLIC DEFECT`.
 
 ---
 

@@ -1,0 +1,6 @@
+{
+  "intent_registry_separate": true,
+  "active_state_contains_pending_intent": true,
+  "intents": [],
+  "schema_version": "1"
+}

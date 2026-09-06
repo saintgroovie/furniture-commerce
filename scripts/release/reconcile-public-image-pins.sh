@@ -1,0 +1,1239 @@
+#!/usr/bin/env bash
+# LIVE_MUTATING=true
+# requires_global_lock=true
+#
+# Atomically reconcile public image pin sources to an exact release pair.
+# Holds environment-scoped exclusive flock for the entire authoritative transaction:
+#   lock → live revalidation → backup → writes → compose/verify → rollback → release
+#
+# Canonical lock (public_demo): /srv/woodright/locks/public_demo/live-cutover.lock
+# Legacy allowlisted path remains: /srv/woodright/locks/live-cutover.lock
+#
+# Updates (pair-only, no secrets):
+#   - Dokploy compose .env: WOODRIGHT_BACKEND_IMAGE, WOODRIGHT_STOREFRONT_IMAGE, STOREFRONT_IMAGE
+#   - pair scope: WOODRIGHT_RELEASE_SHA (application identity marker; no container recreate)
+#   - optional: DOKPLOY_IMAGE_PINS.env
+#   - optional: ACTIVE_PUBLIC.json (+ public-demo.json)
+#   - optional pair: ACTIVE_OWNER.json + EXPECTED_RELEASE.json (scoped lock/digest identity)
+#   - optional: ACTIVE_RELEASE.json (LEGACY compatibility mirror ONLY; default OFF)
+#
+# Legacy ACTIVE_RELEASE.json under runtime-ownership-public-demo/ is non-authoritative.
+# UPDATE_ACTIVE_RELEASE defaults to 0. Normal cutover/recreate must leave it off.
+# Enabling UPDATE_ACTIVE_RELEASE=1 requires:
+#   --confirm-mutation I_UNDERSTAND_LEGACY_ACTIVE_RELEASE_IS_NON_AUTHORITATIVE
+# Evidence records LEGACY_ACTIVE_RELEASE_COMPATIBILITY_MIRROR_WRITE.
+# Stale legacy mirror is NOT treated as pin/runtime drift.
+#
+# Does NOT recreate containers. Does NOT print secret values.
+#
+# Exit codes:
+#   0 success
+#   2 validation / usage
+#   3 lock contention
+#   4 permission / root failure
+#   5 live drift after lock
+#   6 transaction write failure
+#   7 post-write verification failure
+#   8 rollback failure
+#
+# Usage (authoritative dry-run default; takes exclusive lock):
+#   EXPECTED_RELEASE_SHA=... EXPECTED_BACKEND_DIGEST=... EXPECTED_STOREFRONT_DIGEST=... \
+#     ./scripts/release/reconcile-public-image-pins.sh --environment public_demo
+#
+# Apply:
+#   APPLY=1 ... ./scripts/release/reconcile-public-image-pins.sh --environment public_demo
+#
+# Non-authoritative diagnostics only:
+#   READ_ONLY_NO_LOCK=1 ... ./scripts/release/reconcile-public-image-pins.sh --environment public_demo
+set -euo pipefail
+
+# Resolve repository root even when invoked via symlink (install places the
+# canonical file under /srv/woodright/tools/release and may expose scripts/release → tools/release).
+_wr_pin_script_src="${BASH_SOURCE[0]}"
+while [[ -L "$_wr_pin_script_src" ]]; do
+  _wr_pin_script_dir="$(cd -P "$(dirname "$_wr_pin_script_src")" && pwd)"
+  _wr_pin_script_link="$(readlink "$_wr_pin_script_src")"
+  if [[ "$_wr_pin_script_link" != /* ]]; then
+    _wr_pin_script_src="$_wr_pin_script_dir/$_wr_pin_script_link"
+  else
+    _wr_pin_script_src="$_wr_pin_script_link"
+  fi
+done
+ROOT="$(cd -P "$(dirname "$_wr_pin_script_src")/../.." && pwd)"
+unset _wr_pin_script_src _wr_pin_script_dir _wr_pin_script_link
+# shellcheck source=../../ops/lib/woodright-environment-profile.sh
+source "$ROOT/ops/lib/woodright-environment-profile.sh"
+# shellcheck source=../../ops/lib/woodright-oci-provenance.sh
+source "$ROOT/ops/lib/woodright-oci-provenance.sh"
+# shellcheck source=../../ops/lib/woodright-component-authority.sh
+source "$ROOT/ops/lib/woodright-component-authority.sh"
+# shellcheck source=../../ops/lib/woodright-owner-approved-release.sh
+source "$ROOT/ops/lib/woodright-owner-approved-release.sh"
+
+DIGEST_RE='^sha256:[0-9a-f]{64}$'
+SHA_RE='^[0-9a-f]{40}$'
+
+EXPECTED_RELEASE_SHA="${EXPECTED_RELEASE_SHA:-}"
+EXPECTED_BACKEND_DIGEST="${EXPECTED_BACKEND_DIGEST:-}"
+EXPECTED_STOREFRONT_DIGEST="${EXPECTED_STOREFRONT_DIGEST:-}"
+APPLY="${APPLY:-0}"
+UPDATE_PINS="${UPDATE_PINS:-1}"
+UPDATE_ACTIVE_PUBLIC="${UPDATE_ACTIVE_PUBLIC:-1}"
+UPDATE_ACTIVE_RELEASE="${UPDATE_ACTIVE_RELEASE:-0}"
+# Pair cutover should converge scoped owner/expected identity. Default OFF so
+# pin-only/component helpers and fixtures without those files keep working.
+UPDATE_SCOPED_OWNERSHIP="${UPDATE_SCOPED_OWNERSHIP:-0}"
+REQUIRE_LIVE_MATCH="${REQUIRE_LIVE_MATCH:-1}"
+READ_ONLY_NO_LOCK="${READ_ONLY_NO_LOCK:-0}"
+COMPONENT_SCOPE=""
+LEGACY_ACTIVE_CONFIRM_TOKEN='I_UNDERSTAND_LEGACY_ACTIVE_RELEASE_IS_NON_AUTHORITATIVE'
+CONFIRM_MUTATION=""
+# Parse --environment / --component from argv (remaining env vars still supported)
+ENV_ARG=""
+COMP_ARG=""
+_filtered=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --environment) ENV_ARG="$2"; shift 2 ;;
+    --environment=*) ENV_ARG="${1#--environment=}"; shift ;;
+    --component) COMP_ARG="$2"; shift 2 ;;
+    --component=*) COMP_ARG="${1#--component=}"; shift ;;
+    --confirm-mutation) CONFIRM_MUTATION="$2"; shift 2 ;;
+    --confirm-mutation=*) CONFIRM_MUTATION="${1#--confirm-mutation=}"; shift ;;
+    *) _filtered+=("$1"); shift ;;
+  esac
+done
+set -- "${_filtered[@]+"${_filtered[@]}"}"
+
+[[ -n "$ENV_ARG" ]] || { echo "error: missing required --environment <public_demo|staging|production>" >&2; exit 2; }
+wr_load_environment_profile "$ENV_ARG" || exit 2
+wr_assert_environment_provisioned || exit 2
+[[ "${WOODRIGHT_ENVIRONMENT}" == "public_demo" ]] || {
+  echo "error: reconcile-public-image-pins only mutates public_demo pins (got ${WOODRIGHT_ENVIRONMENT})" >&2
+  exit 2
+}
+[[ -n "$COMP_ARG" ]] || { echo "error: missing required --component <storefront|backend|pair>" >&2; exit 2; }
+wr_assert_component_scope "$COMP_ARG" || exit 2
+COMPONENT_SCOPE="$WOODRIGHT_COMPONENT_SCOPE"
+
+# Legacy ACTIVE_RELEASE mirror is opt-in only and never part of normal cutover.
+if [[ "$UPDATE_ACTIVE_RELEASE" == "1" ]]; then
+  if [[ "$CONFIRM_MUTATION" != "$LEGACY_ACTIVE_CONFIRM_TOKEN" ]]; then
+    echo "error: UPDATE_ACTIVE_RELEASE=1 requires --confirm-mutation $LEGACY_ACTIVE_CONFIRM_TOKEN (legacy non-authoritative mirror)" >&2
+    exit 2
+  fi
+  log "LEGACY_ACTIVE_RELEASE_COMPATIBILITY_MIRROR_WRITE_REQUESTED environment=${WOODRIGHT_ENVIRONMENT} apply=${APPLY}"
+fi
+
+BACKEND_CONTAINER="${BACKEND_CONTAINER:-$WOODRIGHT_BE_CONTAINER_DEFAULT}"
+STOREFRONT_CONTAINER="${STOREFRONT_CONTAINER:-$WOODRIGHT_SF_CONTAINER_DEFAULT}"
+
+ENV_FILE="${ENV_FILE:-$WOODRIGHT_COMPOSE_ENV_FILE}"
+COMPOSE_FILE="${COMPOSE_FILE:-$WOODRIGHT_COMPOSE_FILE}"
+PINS_FILE="${PINS_FILE:-${WOODRIGHT_IDENTITY_DIR}/DOKPLOY_IMAGE_PINS.env}"
+ACTIVE_PUBLIC_FILE="${ACTIVE_PUBLIC_FILE:-$WOODRIGHT_ACTIVE_PUBLIC}"
+PUBLIC_DEMO_FILE="${PUBLIC_DEMO_FILE:-${WOODRIGHT_PUBLIC_DEMO_FILE:-}}"
+ACTIVE_RELEASE_FILE="${ACTIVE_RELEASE_FILE:-${WOODRIGHT_ACTIVE_RELEASE}}"
+ACTIVE_OWNER_FILE="${ACTIVE_OWNER_FILE:-${WOODRIGHT_ACTIVE_OWNER}}"
+EXPECTED_RELEASE_FILE="${EXPECTED_RELEASE_FILE:-${WOODRIGHT_EXPECTED_RELEASE}}"
+BACKUP_DIR="${BACKUP_DIR:-/tmp/wr-ops-reconcile-pins-backup-${WOODRIGHT_ENVIRONMENT}}"
+SKIP_COMPOSE_VALIDATE="${SKIP_COMPOSE_VALIDATE:-0}"
+BE_REPO="${BE_REPO:-ghcr.io/saintgroovie/woodright-backend}"
+SF_REPO="${SF_REPO:-ghcr.io/saintgroovie/woodright-storefront}"
+
+CANONICAL_LOCK_PATH="${WOODRIGHT_MUTATION_LOCK_PATH}"
+LOCK_TIMEOUT_SEC="${LOCK_TIMEOUT_SEC:-30}"
+LOCK_FD="${WR_STAGING_MUTATION_LOCK_FD:-9}"
+LOCK_HELD=0
+LOCK_HOLDER_PID=""
+INHERITED_LOCK=0
+TRANSACTION_STARTED=0
+ROLLBACK_PERFORMED=0
+LOCK_PATH=""
+
+# Test-only fault injection (requires WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK=1)
+FAULT_AFTER="${WOODRIGHT_PIN_RECONCILE_FAULT_AFTER:-}"
+
+# Strict compose/identity path checks only when using profile-canonical paths (not fixture overrides)
+if [[ "${WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK:-}" != "1" ]]; then
+  if [[ "$ENV_FILE" == "${WOODRIGHT_COMPOSE_ENV_FILE}" && "$COMPOSE_FILE" == "${WOODRIGHT_COMPOSE_FILE}" ]]; then
+    wr_assert_compose_paths_for_environment "$ENV_FILE" "$COMPOSE_FILE" || exit 2
+  fi
+  if [[ "$ACTIVE_PUBLIC_FILE" == "${WOODRIGHT_ACTIVE_PUBLIC}" ]]; then
+    wr_assert_identity_path_for_environment "$ACTIVE_PUBLIC_FILE" || exit 2
+  fi
+fi
+
+# Test-only fault injection continues below (original fail() helpers)
+
+fail() {
+  local code="$1"
+  shift
+  echo "error: $*" >&2
+  echo "summary mode=$([ "$APPLY" = "1" ] && echo apply || echo dry_run) lock_path=${LOCK_PATH:-none} lock_acquired=$([ "$LOCK_HELD" = "1" ] && echo yes || echo no) transaction_started=$([ "$TRANSACTION_STARTED" = "1" ] && echo yes || echo no) rollback_performed=$([ "$ROLLBACK_PERFORMED" = "1" ] && echo yes || echo no)" >&2
+  exit "$code"
+}
+
+log() { echo "$*"; }
+
+if [[ "$UPDATE_SCOPED_OWNERSHIP" == "1" ]]; then
+  [[ "$COMPONENT_SCOPE" == "pair" ]] \
+    || fail 2 "UPDATE_SCOPED_OWNERSHIP=1 is pair-only (got scope=$COMPONENT_SCOPE)"
+  if [[ "${WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK:-}" != "1" ]]; then
+    ACTIVE_OWNER_FILE="${WOODRIGHT_ACTIVE_OWNER}"
+    EXPECTED_RELEASE_FILE="${WOODRIGHT_EXPECTED_RELEASE}"
+  fi
+  wr_assert_manifest_path_for_environment "$ACTIVE_OWNER_FILE" \
+    || fail 2 "ACTIVE_OWNER path outside public_demo ownership dir"
+  wr_assert_manifest_path_for_environment "$EXPECTED_RELEASE_FILE" \
+    || fail 2 "EXPECTED_RELEASE path outside public_demo ownership dir"
+  [[ -f "$ACTIVE_OWNER_FILE" ]] \
+    || fail 2 "UPDATE_SCOPED_OWNERSHIP=1 requires ACTIVE_OWNER.json at $ACTIVE_OWNER_FILE"
+  [[ -f "$EXPECTED_RELEASE_FILE" ]] \
+    || fail 2 "UPDATE_SCOPED_OWNERSHIP=1 requires EXPECTED_RELEASE.json at $EXPECTED_RELEASE_FILE"
+fi
+
+release_lock_holder() {
+  if [[ -n "${LOCK_HOLDER_PID:-}" ]]; then
+    kill "$LOCK_HOLDER_PID" 2>/dev/null || true
+    wait "$LOCK_HOLDER_PID" 2>/dev/null || true
+    LOCK_HOLDER_PID=""
+  fi
+}
+
+need_sudo_for() {
+  local f="$1"
+  local d
+  d="$(dirname "$f")"
+  # Atomic install stages a sibling temp inside dirname, then renames onto dest.
+  # A user-writable dest file inside a root-owned parent still needs sudo.
+  if [[ ! -w "$d" ]]; then
+    return 0
+  fi
+  if [[ -e "$f" ]]; then
+    [[ -w "$f" ]] && return 1
+    return 0
+  fi
+  return 1
+}
+
+resolve_lock_path() {
+  if [[ "${WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK:-}" == "1" && -n "${WOODRIGHT_CUTOVER_LOCK_PATH:-}" ]]; then
+    printf '%s' "$WOODRIGHT_CUTOVER_LOCK_PATH"
+    return 0
+  fi
+  if [[ -n "${WOODRIGHT_CUTOVER_LOCK_PATH:-}" && "${WOODRIGHT_CUTOVER_LOCK_PATH}" != "$CANONICAL_LOCK_PATH" ]]; then
+    fail 2 "WOODRIGHT_CUTOVER_LOCK_PATH override rejected without WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK=1"
+  fi
+  printf '%s' "$CANONICAL_LOCK_PATH"
+}
+
+acquire_lock() {
+  if [[ "$READ_ONLY_NO_LOCK" == "1" ]]; then
+    if [[ "$APPLY" == "1" ]]; then
+      fail 2 "APPLY forbids READ_ONLY_NO_LOCK"
+    fi
+    LOCK_PATH="(none)"
+    log "lock_acquired=no mode=read_only_no_lock warning=non_authoritative_preview"
+    return 0
+  fi
+  LOCK_PATH="$(resolve_lock_path)"
+  if [[ ! "$LOCK_TIMEOUT_SEC" =~ ^[0-9]+$ ]] || [[ "$LOCK_TIMEOUT_SEC" -lt 1 ]] || [[ "$LOCK_TIMEOUT_SEC" -gt 600 ]]; then
+    fail 2 "invalid LOCK_TIMEOUT_SEC"
+  fi
+
+  # Inherited hold from pair cutover (or other owner of woodright-staging-mutation-lock.sh).
+  # Env flag alone is insufficient: require owned marker + FD that is the lock file (or live fcntl holder).
+  if [[ "${WOODRIGHT_STAGING_MUTATION_LOCK_HELD:-0}" == "1" ]]; then
+    local fd_ok=0 holder_ok=0 path_ok=0
+    local holder_var="WR_STAGING_FCNTL_HOLDER_${LOCK_FD}"
+    local holder_pid="${!holder_var:-}"
+    if { : >&"$LOCK_FD"; } 2>/dev/null; then
+      fd_ok=1
+      # Prove FD refers to the lock path when /proc is available (Linux VM).
+      if [[ -e "/proc/$$/fd/${LOCK_FD}" ]]; then
+        local got want
+        got="$(readlink -f "/proc/$$/fd/${LOCK_FD}" 2>/dev/null || readlink "/proc/$$/fd/${LOCK_FD}" 2>/dev/null || true)"
+        want="$(readlink -f "$LOCK_PATH" 2>/dev/null || echo "$LOCK_PATH")"
+        if [[ -n "$got" && "$got" == "$want" ]]; then
+          path_ok=1
+        fi
+      else
+        # macOS/local harness: require live fcntl holder exported by mutation-lock helper
+        path_ok=0
+      fi
+    fi
+    if [[ "${_WR_STAGING_LOCK_OWNED:-0}" == "1" && -n "$holder_pid" ]] && kill -0 "$holder_pid" 2>/dev/null; then
+      holder_ok=1
+    fi
+    # Accept only: (owned + FD path matches lock) OR (owned + fcntl holder alive)
+    if [[ "${_WR_STAGING_LOCK_OWNED:-0}" == "1" && ( "$path_ok" -eq 1 || "$holder_ok" -eq 1 ) ]]; then
+      if [[ -n "${WR_STAGING_MUTATION_LOCK_PATH:-}" && "$LOCK_PATH" != "$WR_STAGING_MUTATION_LOCK_PATH" ]]; then
+        fail 2 "inherited lock path mismatch want=$WR_STAGING_MUTATION_LOCK_PATH have=$LOCK_PATH"
+      fi
+      # Production inherit must hold the environment-canonical lock (or legacy allowlisted path).
+      if [[ "${WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK:-}" != "1" ]]; then
+        case "$LOCK_PATH" in
+          "$CANONICAL_LOCK_PATH"|/srv/woodright/locks/live-cutover.lock) ;;
+          *)
+            fail 2 "inherited lock path not allowlisted for ${WOODRIGHT_ENVIRONMENT}: $LOCK_PATH"
+            ;;
+        esac
+      fi
+      INHERITED_LOCK=1
+      LOCK_HELD=1
+      log "lock_acquired=yes path=$LOCK_PATH mode=inherited fd=$LOCK_FD path_ok=$path_ok holder_ok=$holder_ok"
+      return 0
+    fi
+    fail 4 "forged_or_stale WOODRIGHT_STAGING_MUTATION_LOCK_HELD without proven lock FD/holder"
+  fi
+
+  mkdir -p "$(dirname "$LOCK_PATH")"
+  # Create/open lock file; do not delete on release.
+  if [[ ! -e "$LOCK_PATH" ]]; then
+    : >>"$LOCK_PATH" || fail 4 "cannot create lock file $LOCK_PATH"
+  fi
+
+  if command -v flock >/dev/null 2>&1; then
+    eval "exec ${LOCK_FD}>>\"\$LOCK_PATH\""
+    if ! flock -x -w "$LOCK_TIMEOUT_SEC" "$LOCK_FD"; then
+      log "lock_acquired=no path=$LOCK_PATH reason=contention timeout=${LOCK_TIMEOUT_SEC}s"
+      fail 3 "lock contention on $LOCK_PATH"
+    fi
+    LOCK_HELD=1
+    log "lock_acquired=yes path=$LOCK_PATH timeout_sec=$LOCK_TIMEOUT_SEC via=flock"
+    return 0
+  fi
+
+  # Portable fallback when util-linux flock is absent (e.g. macOS local fidelity).
+  # A dedicated holder process keeps the exclusive lock until EXIT.
+  local ready
+  ready="$(mktemp)"
+  python3 - "$LOCK_PATH" "$LOCK_TIMEOUT_SEC" "$ready" <<'PY' &
+import fcntl, os, sys, time
+path, timeout, ready = sys.argv[1], float(sys.argv[2]), sys.argv[3]
+deadline = time.time() + timeout
+fd = os.open(path, os.O_RDWR | os.O_CREAT, 0o644)
+while True:
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        break
+    except BlockingIOError:
+        if time.time() >= deadline:
+            with open(ready, "w", encoding="utf-8") as fh:
+                fh.write("fail\n")
+            raise SystemExit(1)
+        time.sleep(0.05)
+with open(ready, "w", encoding="utf-8") as fh:
+    fh.write("ok\n")
+while True:
+    time.sleep(3600)
+PY
+  LOCK_HOLDER_PID=$!
+  local deadline=$((SECONDS + LOCK_TIMEOUT_SEC + 2))
+  while (( SECONDS < deadline )); do
+    if [[ -s "$ready" ]]; then
+      break
+    fi
+    if ! kill -0 "$LOCK_HOLDER_PID" 2>/dev/null; then
+      break
+    fi
+    sleep 0.05
+  done
+  local status
+  status="$(cat "$ready" 2>/dev/null || true)"
+  rm -f "$ready"
+  if [[ "$status" != "ok" ]]; then
+    release_lock_holder
+    log "lock_acquired=no path=$LOCK_PATH reason=contention timeout=${LOCK_TIMEOUT_SEC}s"
+    fail 3 "lock contention on $LOCK_PATH"
+  fi
+  LOCK_HELD=1
+  log "lock_acquired=yes path=$LOCK_PATH timeout_sec=$LOCK_TIMEOUT_SEC via=python_holder"
+}
+
+maybe_fault() {
+  local stage="$1"
+  if [[ "${WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK:-}" == "1" && -n "$FAULT_AFTER" && "$FAULT_AFTER" == "$stage" ]]; then
+    if [[ "$TRANSACTION_STARTED" == "1" ]] && declare -F tx_fail >/dev/null 2>&1; then
+      tx_fail 7 "injected fault after $stage"
+    fi
+    fail 7 "injected fault after $stage"
+  fi
+}
+
+[[ "$EXPECTED_RELEASE_SHA" =~ $SHA_RE ]] || fail 2 "EXPECTED_RELEASE_SHA invalid"
+[[ "$EXPECTED_BACKEND_DIGEST" =~ $DIGEST_RE ]] || fail 2 "EXPECTED_BACKEND_DIGEST invalid"
+[[ "$EXPECTED_STOREFRONT_DIGEST" =~ $DIGEST_RE ]] || fail 2 "EXPECTED_STOREFRONT_DIGEST invalid"
+[[ -f "$ENV_FILE" ]] || fail 2 "missing ENV_FILE=$ENV_FILE"
+[[ -f "$COMPOSE_FILE" ]] || fail 2 "missing COMPOSE_FILE=$COMPOSE_FILE"
+
+# Fixture harness only: write matching owner approval under WOODRIGHT_META_ROOT.
+# Production / VM paths never set WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK.
+if [[ "${WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK:-}" == "1" ]]; then
+  : "${WOODRIGHT_META_ROOT:?WOODRIGHT_META_ROOT required when WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK=1}"
+  _wr_oa_dir="${WOODRIGHT_META_ROOT}/public_demo"
+  mkdir -p "$_wr_oa_dir"
+  _wr_oa_fixture="${_wr_oa_dir}/OWNER_APPROVED_RELEASE.json"
+  cat >"$_wr_oa_fixture" <<EOF
+{
+  "schema_version": 1,
+  "environment": "public_demo",
+  "application_sha": "${EXPECTED_RELEASE_SHA}",
+  "backend_digest": "${EXPECTED_BACKEND_DIGEST}",
+  "storefront_digest": "${EXPECTED_STOREFRONT_DIGEST}",
+  "owner_decision": "approved",
+  "owner_authorization_id": "OWNER-PASS-fixture-pin-reconcile-test",
+  "issued_at": "1970-01-01T00:00:00Z",
+  "tooling_schema_version": "owner-approved-release-v1"
+}
+EOF
+  chmod 0644 "$_wr_oa_fixture"
+  unset WOODRIGHT_OWNER_APPROVED_RELEASE_PATH
+  log "owner_approval_fixture_for_test_lock path=$_wr_oa_fixture meta_root=$WOODRIGHT_META_ROOT"
+fi
+
+if [[ "${WOODRIGHT_COMPONENT_SCOPE}" == "storefront" ]]; then
+  if [[ "${WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK:-}" == "1" ]]; then
+    # Fixture unit tests: freeze from expected backend digest itself
+    export WOODRIGHT_FROZEN_BACKEND_DIGEST="$EXPECTED_BACKEND_DIGEST"
+  else
+    command -v docker >/dev/null || fail 2 "docker required to freeze backend for storefront-only"
+    docker inspect "$BACKEND_CONTAINER" >/dev/null 2>&1 || fail 2 "backend container missing for storefront-only freeze"
+    wr_freeze_peer_digest backend "$BACKEND_CONTAINER" || fail 2 "cannot freeze backend for storefront-only"
+    wr_assert_storefront_only_does_not_mutate_backend "$EXPECTED_BACKEND_DIGEST" || fail 2 "storefront-only backend freeze violated"
+  fi
+fi
+if [[ "${WOODRIGHT_COMPONENT_SCOPE}" == "backend" ]]; then
+  if [[ "${WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK:-}" == "1" ]]; then
+    export WOODRIGHT_FROZEN_STOREFRONT_DIGEST="$EXPECTED_STOREFRONT_DIGEST"
+  else
+    command -v docker >/dev/null || fail 2 "docker required to freeze storefront for backend-only"
+    docker inspect "$STOREFRONT_CONTAINER" >/dev/null 2>&1 || fail 2 "storefront container missing for backend-only freeze"
+    wr_freeze_peer_digest storefront "$STOREFRONT_CONTAINER" || fail 2 "cannot freeze storefront for backend-only"
+    [[ "$EXPECTED_STOREFRONT_DIGEST" == "${WOODRIGHT_FROZEN_STOREFRONT_DIGEST}" ]] \
+      || fail 2 "backend-only refuses storefront digest change planned=$EXPECTED_STOREFRONT_DIGEST frozen=${WOODRIGHT_FROZEN_STOREFRONT_DIGEST}"
+  fi
+fi
+
+# OCI gate on APPLY: Docker required; prove provenance for mutated component(s) only.
+# Only WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK=1 may skip (fixture unit tests).
+if [[ "$APPLY" == "1" && "${WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK:-}" != "1" ]]; then
+  command -v docker >/dev/null || fail 2 "docker required for APPLY OCI provenance"
+  if [[ "${WOODRIGHT_COMPONENT_SCOPE}" == "pair" || "${WOODRIGHT_COMPONENT_SCOPE}" == "storefront" ]]; then
+    docker image inspect "${SF_REPO}@${EXPECTED_STOREFRONT_DIGEST}" >/dev/null 2>&1 \
+      || fail 2 "storefront image not local for OCI provenance: ${SF_REPO}@${EXPECTED_STOREFRONT_DIGEST}"
+    wr_assert_oci_revision_matches_sha "${SF_REPO}@${EXPECTED_STOREFRONT_DIGEST}" "$EXPECTED_RELEASE_SHA" \
+      || fail 2 "storefront OCI revision mismatch vs EXPECTED_RELEASE_SHA"
+  fi
+  if [[ "${WOODRIGHT_COMPONENT_SCOPE}" == "pair" || "${WOODRIGHT_COMPONENT_SCOPE}" == "backend" ]]; then
+    docker image inspect "${BE_REPO}@${EXPECTED_BACKEND_DIGEST}" >/dev/null 2>&1 \
+      || fail 2 "backend image not local for OCI provenance: ${BE_REPO}@${EXPECTED_BACKEND_DIGEST}"
+    wr_assert_oci_revision_matches_sha "${BE_REPO}@${EXPECTED_BACKEND_DIGEST}" "$EXPECTED_RELEASE_SHA" \
+      || fail 2 "backend OCI revision mismatch vs EXPECTED_RELEASE_SHA"
+  fi
+elif command -v docker >/dev/null 2>&1; then
+  if [[ "${WOODRIGHT_COMPONENT_SCOPE}" == "pair" || "${WOODRIGHT_COMPONENT_SCOPE}" == "storefront" ]]; then
+    if docker image inspect "${SF_REPO}@${EXPECTED_STOREFRONT_DIGEST}" >/dev/null 2>&1; then
+      wr_assert_oci_revision_matches_sha "${SF_REPO}@${EXPECTED_STOREFRONT_DIGEST}" "$EXPECTED_RELEASE_SHA" \
+        || fail 2 "storefront OCI revision mismatch vs EXPECTED_RELEASE_SHA"
+    fi
+  fi
+fi
+
+BE_REF="${BE_REPO}@${EXPECTED_BACKEND_DIGEST}"
+SF_REF="${SF_REPO}@${EXPECTED_STOREFRONT_DIGEST}"
+
+TS="$(date -u +%Y%m%dT%H%M%SZ)"
+mkdir -p "$BACKUP_DIR"
+
+TARGETS=("$ENV_FILE")
+[[ "$UPDATE_PINS" == "1" && -f "$PINS_FILE" ]] && TARGETS+=("$PINS_FILE")
+[[ "$UPDATE_ACTIVE_PUBLIC" == "1" && -f "$ACTIVE_PUBLIC_FILE" ]] && TARGETS+=("$ACTIVE_PUBLIC_FILE")
+[[ "$UPDATE_ACTIVE_PUBLIC" == "1" && -f "$PUBLIC_DEMO_FILE" ]] && TARGETS+=("$PUBLIC_DEMO_FILE")
+[[ "$UPDATE_ACTIVE_RELEASE" == "1" && -f "$ACTIVE_RELEASE_FILE" ]] && TARGETS+=("$ACTIVE_RELEASE_FILE")
+[[ "$UPDATE_SCOPED_OWNERSHIP" == "1" ]] && TARGETS+=("$ACTIVE_OWNER_FILE" "$EXPECTED_RELEASE_FILE")
+
+USE_SUDO=0
+for t in "${TARGETS[@]}"; do
+  if need_sudo_for "$t"; then
+    USE_SUDO=1
+  fi
+done
+if [[ "$USE_SUDO" == "1" ]]; then
+  if sudo -n true 2>/dev/null; then
+    log "privilege=sudo-n for root-owned targets"
+  else
+    fail 4 "blocked_root_env_write: need sudo -n for one or more targets"
+  fi
+fi
+
+run_priv() {
+  if [[ "${USE_SUDO:-0}" == "1" ]]; then
+    sudo -n "$@"
+  else
+    "$@"
+  fi
+}
+
+assert_live_match() {
+  [[ "$REQUIRE_LIVE_MATCH" == "1" ]] || { log "live_match=skipped"; return 0; }
+  command -v docker >/dev/null || fail 2 "docker required for live match"
+  local scope="${WOODRIGHT_COMPONENT_SCOPE}"
+  if ! python3 - "$BACKEND_CONTAINER" "$STOREFRONT_CONTAINER" "$EXPECTED_RELEASE_SHA" "$EXPECTED_BACKEND_DIGEST" "$EXPECTED_STOREFRONT_DIGEST" "$scope" <<'PY'
+import json, re, subprocess, sys
+be_name, sf_name, want_sha, want_be, want_sf, scope = sys.argv[1:7]
+DIGEST_RE = re.compile(r"sha256:[0-9a-f]{64}")
+
+def inspect(name):
+    r = subprocess.run(["docker", "inspect", name], capture_output=True, text=True)
+    if r.returncode != 0:
+        raise SystemExit(f"inspect failed: {name}")
+    return json.loads(r.stdout)[0]
+
+def digest(ins):
+    cfg = (ins.get("Config") or {}).get("Image") or ""
+    m = DIGEST_RE.search(cfg)
+    if m:
+        return m.group(0)
+    for d in ins.get("RepoDigests") or []:
+        m = DIGEST_RE.search(d)
+        if m:
+            return m.group(0)
+    return None
+
+def label(ins, key, env_key):
+    labs = (ins.get("Config") or {}).get("Labels") or {}
+    if labs.get(key):
+        return labs[key]
+    pref = env_key + "="
+    for e in (ins.get("Config") or {}).get("Env") or []:
+        if e.startswith(pref):
+            return e[len(pref):]
+    return None
+
+checks = []
+if scope in ("pair", "backend"):
+    checks.append((be_name, want_be, True if scope == "pair" else True))
+if scope in ("pair", "storefront"):
+    checks.append((sf_name, want_sf, True))
+# For component-only, only require release-sha match on the mutated component.
+for name, want_dig, _ in checks:
+    ins = inspect(name)
+    if not (ins.get("State") or {}).get("Running"):
+        raise SystemExit(f"{name} not running")
+    role = label(ins, "com.woodright.runtime-role", "WOODRIGHT_RUNTIME_ROLE")
+    exp = label(ins, "com.woodright.exposure", "WOODRIGHT_EXPOSURE")
+    sha = label(ins, "com.woodright.release-sha", "WOODRIGHT_RELEASE_SHA")
+    dig = digest(ins)
+    if role != "public_demo":
+        raise SystemExit(f"{name} role={role}")
+    if exp != "public":
+        raise SystemExit(f"{name} exposure={exp}")
+    mutated = (scope == "pair") or (scope == "backend" and name == be_name) or (scope == "storefront" and name == sf_name)
+    if mutated and sha != want_sha:
+        raise SystemExit(f"{name} release_sha mismatch")
+    if dig != want_dig:
+        raise SystemExit(f"{name} digest mismatch live={dig} want={want_dig}")
+# Peer must remain at expected frozen digest for component-only
+if scope == "storefront":
+    ins = inspect(be_name)
+    dig = digest(ins)
+    if dig != want_be:
+        raise SystemExit(f"frozen backend digest mismatch live={dig} want={want_be}")
+if scope == "backend":
+    ins = inspect(sf_name)
+    dig = digest(ins)
+    if dig != want_sf:
+        raise SystemExit(f"frozen storefront digest mismatch live={dig} want={want_sf}")
+print("live_match_ok")
+PY
+  then
+    if [[ "$TRANSACTION_STARTED" == "1" ]] && declare -F tx_fail >/dev/null 2>&1; then
+      tx_fail 5 "live drift after mutation"
+    fi
+    fail 5 "live drift after lock acquire"
+  fi
+}
+
+rewrite_env_pins() {
+  local src="$1" dst="$2"
+  local include_release_sha="${3:-0}"
+  local scope="${WOODRIGHT_COMPONENT_SCOPE}"
+  python3 - "$src" "$dst" "$BE_REF" "$SF_REF" "$scope" "$EXPECTED_RELEASE_SHA" "$include_release_sha" <<'PY'
+import sys
+from pathlib import Path
+src, dst, be_ref, sf_ref, scope, sha, include_release_sha = sys.argv[1:8]
+keys = {}
+if scope in ("pair", "backend"):
+    keys["WOODRIGHT_BACKEND_IMAGE"] = be_ref
+if scope in ("pair", "storefront"):
+    keys["WOODRIGHT_STOREFRONT_IMAGE"] = sf_ref
+    keys["STOREFRONT_IMAGE"] = sf_ref
+if scope == "pair" and include_release_sha == "1":
+    keys["WOODRIGHT_RELEASE_SHA"] = sha
+if not keys:
+    raise SystemExit(f"unknown component scope={scope}")
+text = Path(src).read_text()
+lines = text.splitlines(keepends=True)
+seen = set()
+out = []
+for line in lines:
+    raw = line
+    if line.endswith("\n"):
+        body, nl = line[:-1], "\n"
+    else:
+        body, nl = line, ""
+    if body.lstrip().startswith("#") or "=" not in body:
+        out.append(raw)
+        continue
+    k, _, _v = body.partition("=")
+    if k in keys:
+        out.append(f"{k}={keys[k]}{nl}")
+        seen.add(k)
+    else:
+        out.append(raw)
+missing = [k for k in keys if k not in seen]
+if missing:
+    if out and not str(out[-1]).endswith("\n"):
+        out[-1] = out[-1] + "\n"
+    for k in missing:
+        out.append(f"{k}={keys[k]}\n")
+Path(dst).write_text("".join(out))
+PY
+}
+
+validate_env_pins() {
+  local f="$1"
+  local include_release_sha="${2:-0}"
+  local scope="${WOODRIGHT_COMPONENT_SCOPE}"
+  python3 - "$f" "$BE_REF" "$SF_REF" "$scope" "$EXPECTED_RELEASE_SHA" "$include_release_sha" <<'PY'
+import sys
+from pathlib import Path
+path, be, sf, scope, sha, include_release_sha = sys.argv[1:7]
+env={}
+for line in Path(path).read_text().splitlines():
+    s=line.strip()
+    if not s or s.startswith('#') or '=' not in s: continue
+    k,v=s.split('=',1); env[k]=v
+need={}
+if scope in ("pair", "backend"):
+    need['WOODRIGHT_BACKEND_IMAGE']=be
+if scope in ("pair", "storefront"):
+    need['WOODRIGHT_STOREFRONT_IMAGE']=sf
+    need['STOREFRONT_IMAGE']=sf
+if scope == "pair" and include_release_sha == "1":
+    need['WOODRIGHT_RELEASE_SHA']=sha
+for k,v in need.items():
+    if env.get(k) != v:
+        raise SystemExit(f'mismatch {k}')
+print('env_pins_ok')
+PY
+}
+
+rewrite_active_public() {
+  local src="$1" dst="$2"
+  local scope="${WOODRIGHT_COMPONENT_SCOPE}"
+  python3 - "$src" "$dst" "$EXPECTED_RELEASE_SHA" "$EXPECTED_BACKEND_DIGEST" "$EXPECTED_STOREFRONT_DIGEST" "$BE_REF" "$SF_REF" "$BACKEND_CONTAINER" "$STOREFRONT_CONTAINER" "$scope" <<'PY'
+import json, subprocess, sys
+from pathlib import Path
+from datetime import datetime, timezone
+src, dst, sha, be_d, sf_d, be_ref, sf_ref, be_name, sf_name, scope = sys.argv[1:11]
+doc=json.loads(Path(src).read_text())
+# Component-scoped: never rewrite untouched peer revision to the new SHA.
+if scope == "pair":
+    doc["release_sha"]=sha
+    doc["backend_revision"]=sha
+    doc["storefront_revision"]=sha
+    doc["backend_image_digest"]=be_d
+    doc["storefront_image_digest"]=sf_d
+elif scope == "storefront":
+    doc["release_sha"]=sha
+    doc["storefront_revision"]=sha
+    doc["storefront_image_digest"]=sf_d
+    # keep backend_revision as-is; update digest to frozen expectation
+    doc["backend_image_digest"]=be_d
+elif scope == "backend":
+    doc["backend_revision"]=sha
+    doc["backend_image_digest"]=be_d
+    # keep release_sha / storefront_revision (buyer marker) unchanged
+    doc["storefront_image_digest"]=sf_d
+else:
+    raise SystemExit(f"unknown scope {scope}")
+doc["backend_container"]=be_name
+doc["storefront_container"]=sf_name
+pins=doc.get("dokploy_image_pins") or {}
+if scope in ("pair", "backend"):
+    pins["WOODRIGHT_BACKEND_IMAGE"]=be_ref
+if scope in ("pair", "storefront"):
+    pins["WOODRIGHT_STOREFRONT_IMAGE"]=sf_ref
+doc["dokploy_image_pins"]=pins
+try:
+    for name, key_full in (
+        (be_name, "backend_container_id"),
+        (sf_name, "storefront_container_id"),
+    ):
+        r=subprocess.run(["docker","inspect","-f","{{.Id}}",name],capture_output=True,text=True)
+        if r.returncode==0:
+            doc[key_full]=r.stdout.strip()
+except Exception:
+    pass
+doc["generated_at"]=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+doc["note"]=f"reconciled pins scope={scope} sha={sha[:12]}; peer revisions preserved when component-only"
+Path(dst).write_text(json.dumps(doc, indent=2) + "\n")
+PY
+}
+
+rewrite_scoped_owner() {
+  local src="$1" dst="$2"
+  python3 - "$src" "$dst" "$EXPECTED_RELEASE_SHA" "$EXPECTED_BACKEND_DIGEST" "$EXPECTED_STOREFRONT_DIGEST" <<'PY'
+import json, sys
+from datetime import datetime, timezone
+from pathlib import Path
+src, dst, sha, be_d, sf_d = sys.argv[1:6]
+doc=json.loads(Path(src).read_text())
+prev = doc.get("approved_git_sha") or doc.get("desired_git_sha") or ""
+if prev and prev != sha and "previous_claimed_git_sha" in doc:
+    doc["previous_claimed_git_sha"] = prev
+doc["approved_git_sha"] = sha
+doc["desired_git_sha"] = sha
+doc["backend_revision"] = sha
+doc["storefront_revision"] = sha
+doc["backend_digest"] = be_d
+doc["storefront_digest"] = sf_d
+doc["running_backend_digest"] = be_d
+doc["running_storefront_digest"] = sf_d
+if "backend_desired_registry_digest" in doc:
+    doc["backend_desired_registry_digest"] = be_d
+if "desired_registry_digest" in doc:
+    doc["desired_registry_digest"] = sf_d
+doc["updated_at"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+Path(dst).write_text(json.dumps(doc, indent=2, ensure_ascii=False) + "\n")
+PY
+}
+
+rewrite_expected_release() {
+  local src="$1" dst="$2"
+  python3 - "$src" "$dst" "$EXPECTED_RELEASE_SHA" "$EXPECTED_BACKEND_DIGEST" "$EXPECTED_STOREFRONT_DIGEST" <<'PY'
+import json, sys
+from datetime import datetime, timezone
+from pathlib import Path
+src, dst, sha, be_d, sf_d = sys.argv[1:6]
+doc=json.loads(Path(src).read_text())
+prev = doc.get("application_source_sha") or doc.get("release_sha") or doc.get("git_sha") or ""
+if prev and prev != sha:
+    doc["previous_application_source_sha"] = prev
+doc["application_source_sha"] = sha
+doc["release_sha"] = sha
+doc["git_sha"] = sha
+doc["approved_git_sha"] = sha
+doc["backend_digest"] = be_d
+doc["storefront_digest"] = sf_d
+now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+doc["updated_at"] = now
+if "updated_at_utc" in doc:
+    doc["updated_at_utc"] = now
+Path(dst).write_text(json.dumps(doc, indent=2, ensure_ascii=False) + "\n")
+PY
+}
+
+assert_scoped_ownership_docs() {
+  python3 - "$ACTIVE_OWNER_FILE" "$EXPECTED_RELEASE_FILE" <<'PY'
+import json, re, sys
+from pathlib import Path
+
+SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
+FORBIDDEN_ENV = {"production", "public_production", "PRODUCTION", "PUBLIC_PRODUCTION"}
+ALLOWED_ENV = {"", "public_demo", "PUBLIC_DEMO", "staging", "STAGING"}
+
+def load(path):
+    try:
+        return json.loads(Path(path).read_text(encoding="utf-8"))
+    except Exception as e:
+        raise SystemExit(f"unreadable_or_malformed {path}: {e}")
+
+def pick_sha(doc):
+    for k in ("release_sha", "approved_git_sha", "desired_git_sha", "application_source_sha", "git_sha"):
+        v = doc.get(k)
+        if v:
+            return str(v)
+    return ""
+
+def pick_be(doc):
+    for k in ("backend_digest", "be_digest", "running_backend_digest", "backend_image_digest"):
+        v = doc.get(k)
+        if v:
+            return str(v)
+    return ""
+
+def pick_sf(doc):
+    for k in ("storefront_digest", "sf_digest", "running_storefront_digest", "storefront_image_digest"):
+        v = doc.get(k)
+        if v:
+            return str(v)
+    return ""
+
+def env_bindings(doc):
+    return {
+        "environment": str(doc.get("environment") or ""),
+        "environment_label": str(doc.get("environment_label") or ""),
+        "runtime_role": str(doc.get("runtime_role") or ""),
+    }
+
+owner_p, exp_p = sys.argv[1:3]
+owner, expected = load(owner_p), load(exp_p)
+if not isinstance(owner, dict) or not isinstance(expected, dict):
+    raise SystemExit("scoped docs must be JSON objects")
+for label, doc in (("ACTIVE_OWNER", owner), ("EXPECTED_RELEASE", expected)):
+    for field, env in env_bindings(doc).items():
+        if env in FORBIDDEN_ENV:
+            raise SystemExit(f"{label} {field}={env} is not public_demo")
+        if env not in ALLOWED_ENV:
+            raise SystemExit(f"{label} {field}={env} refused")
+o_sha, e_sha = pick_sha(owner), pick_sha(expected)
+o_be, e_be = pick_be(owner), pick_be(expected)
+o_sf, e_sf = pick_sf(owner), pick_sf(expected)
+if not (SHA_RE.match(o_sha) and SHA_RE.match(e_sha)):
+    raise SystemExit("scoped docs missing 40-hex sha")
+if not (DIGEST_RE.match(o_be) and DIGEST_RE.match(e_be) and DIGEST_RE.match(o_sf) and DIGEST_RE.match(e_sf)):
+    raise SystemExit("scoped docs missing sha256 digests")
+if not (o_sha == e_sha and o_be == e_be and o_sf == e_sf):
+    raise SystemExit(
+        f"OWNER/EXPECTED peer disagreement sha {o_sha} vs {e_sha} be {o_be} vs {e_be} sf {o_sf} vs {e_sf}"
+    )
+print("scoped_docs_peer_ok")
+PY
+}
+
+validate_scoped_ownership_after() {
+  python3 - "$ACTIVE_OWNER_FILE" "$EXPECTED_RELEASE_FILE" "$EXPECTED_RELEASE_SHA" "$EXPECTED_BACKEND_DIGEST" "$EXPECTED_STOREFRONT_DIGEST" <<'PY'
+import json, sys
+from pathlib import Path
+owner_p, exp_p, sha, be, sf = sys.argv[1:6]
+owner = json.loads(Path(owner_p).read_text())
+expected = json.loads(Path(exp_p).read_text())
+def fail(msg):
+    raise SystemExit(msg)
+if owner.get("approved_git_sha") != sha or owner.get("desired_git_sha") != sha:
+    fail("ACTIVE_OWNER sha not converged")
+if owner.get("backend_digest") != be or owner.get("storefront_digest") != sf:
+    fail("ACTIVE_OWNER digests not converged")
+if owner.get("running_backend_digest") != be or owner.get("running_storefront_digest") != sf:
+    fail("ACTIVE_OWNER running digests not converged")
+if expected.get("application_source_sha") != sha or expected.get("release_sha") != sha:
+    fail("EXPECTED_RELEASE sha not converged")
+if expected.get("backend_digest") != be or expected.get("storefront_digest") != sf:
+    fail("EXPECTED_RELEASE digests not converged")
+print("scoped_docs_converged_ok")
+PY
+}
+
+rewrite_active_release() {
+  local src="$1" dst="$2"
+  local scope="${WOODRIGHT_COMPONENT_SCOPE}"
+  python3 - "$src" "$dst" "$EXPECTED_RELEASE_SHA" "$EXPECTED_BACKEND_DIGEST" "$EXPECTED_STOREFRONT_DIGEST" "$BACKEND_CONTAINER" "$STOREFRONT_CONTAINER" "$scope" <<'PY'
+import json, subprocess, sys
+from pathlib import Path
+from datetime import datetime, timezone
+src, dst, sha, be_d, sf_d, be_name, sf_name, scope = sys.argv[1:9]
+doc=json.loads(Path(src).read_text())
+comps=dict(doc.get("component_revisions") or {})
+if scope == "pair":
+    doc["active_release_sha"]=sha
+    doc["release_sha"]=sha
+    doc["backend_revision"]=sha
+    doc["storefront_revision"]=sha
+    doc["backend_digest"]=be_d
+    doc["storefront_digest"]=sf_d
+    comps={"backend": sha, "storefront": sha}
+elif scope == "storefront":
+    doc["active_release_sha"]=sha
+    doc["release_sha"]=sha
+    doc["storefront_revision"]=sha
+    doc["storefront_digest"]=sf_d
+    doc["backend_digest"]=be_d
+    comps["storefront"]=sha
+elif scope == "backend":
+    doc["backend_revision"]=sha
+    doc["backend_digest"]=be_d
+    doc["storefront_digest"]=sf_d
+    comps["backend"]=sha
+else:
+    raise SystemExit(f"unknown scope {scope}")
+doc["component_revisions"]=comps
+doc["updated_utc"]=datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+doc["notes"]=f"legacy compatibility mirror reconciled under environment lock scope={scope}; non-authoritative"
+# Schema-v2 / bundle pointer residue: never claim authority after governed rewrite.
+doc["deprecated"]=True
+doc["do_not_use_as_current_identity"]=True
+doc["authority"]=False
+doc["compatibility_only"]=True
+doc["superseded_by"]="WOODRIGHT_ACTIVE_OWNER+WOODRIGHT_EXPECTED_RELEASE+WOODRIGHT_ACTIVE_PUBLIC"
+try:
+    for name, short, full in (
+        (be_name, "backend_container_id", "backend_container_id_full"),
+        (sf_name, "storefront_container_id", "storefront_container_id_full"),
+    ):
+        r=subprocess.run(["docker","inspect","-f","{{.Id}}",name],capture_output=True,text=True)
+        if r.returncode==0:
+            cid=r.stdout.strip()
+            doc[short]=cid[:12]
+            doc[full]=cid
+except Exception:
+    pass
+Path(dst).write_text(json.dumps(doc, indent=2) + "\n")
+PY
+}
+
+# Verify regular-file metadata (no symlink). Used before rename and after.
+# When use_sudo=1, inspect via sudo -n (staged temps may be in root-only dirs).
+_wr_pin_verify_meta() {
+  local path="$1" mode="$2" owner="$3" group="$4" label="${5:-path}" use_sudo="${6:-0}"
+  local -a runner=(python3)
+  if [[ "$use_sudo" == "1" ]]; then
+    runner=(sudo -n python3)
+  fi
+  "${runner[@]}" - "$path" "$mode" "$owner" "$group" "$label" <<'PY'
+import os, stat, sys
+path, mode, owner, group, label = sys.argv[1:6]
+if os.path.islink(path):
+    raise SystemExit(f"{label} is a symlink: {path}")
+st = os.lstat(path)
+if not stat.S_ISREG(st.st_mode):
+    raise SystemExit(f"{label} is not a regular file: {path}")
+amode = oct(stat.S_IMODE(st.st_mode))[2:]
+aowner = f"{st.st_uid}:{st.st_gid}"
+if amode != mode:
+    raise SystemExit(f"mode not preserved for {path} ({amode} != {mode})")
+if aowner != f"{owner}:{group}":
+    raise SystemExit(f"owner not preserved for {path} ({aowner} != {owner}:{group})")
+PY
+}
+
+# Resolve canonical owner/group/mode for an authority/pin destination.
+# Existing dest wins; missing dest inherits from non-symlink parent directory
+# (never effective root ownership as a silent fallback).
+_wr_pin_dest_meta() {
+  local dest="$1"
+  local parent mode owner group
+  parent="$(dirname "$dest")"
+  if [[ -L "$parent" ]]; then
+    echo "error: parent directory is a symlink: $parent" >&2
+    return 1
+  fi
+  if [[ -e "$dest" || -L "$dest" ]]; then
+    if [[ -L "$dest" ]]; then
+      echo "error: destination is a symlink: $dest" >&2
+      return 1
+    fi
+    if [[ ! -f "$dest" ]]; then
+      echo "error: destination is not a regular file: $dest" >&2
+      return 1
+    fi
+    mode="$(python3 -c 'import os,stat; st=os.lstat("'"$dest"'"); print(oct(stat.S_IMODE(st.st_mode))[2:])')"
+    owner="$(python3 -c 'import os; print(os.lstat("'"$dest"'").st_uid)')"
+    group="$(python3 -c 'import os; print(os.lstat("'"$dest"'").st_gid)')"
+  else
+    [[ -d "$parent" ]] || {
+      echo "error: destination parent missing: $parent" >&2
+      return 1
+    }
+    # New authority files default to mode 0600; inherit parent ownership.
+    mode="${WOODRIGHT_PIN_NEW_FILE_MODE:-600}"
+    owner="$(python3 -c 'import os; print(os.stat("'"$parent"'").st_uid)')"
+    group="$(python3 -c 'import os; print(os.stat("'"$parent"'").st_gid)')"
+  fi
+  printf '%s %s %s' "$mode" "$owner" "$group"
+}
+
+atomic_install() {
+  local src_tmp="$1" dest="$2"
+  local mode owner group meta
+  local dir base safe_base staged
+  local euid
+  euid="$(id -u)"
+
+  meta="$(_wr_pin_dest_meta "$dest")" || return 1
+  # shellcheck disable=SC2086
+  set -- $meta
+  mode="$1"
+  owner="$2"
+  group="$3"
+
+  dir="$(dirname "$dest")"
+  base="$(basename "$dest")"
+  # Avoid ".env" → staged name "..env.*" (hidden-dot collision).
+  safe_base="${base#.}"
+  [[ -n "$safe_base" ]] || safe_base="target"
+
+  # Secure exclusive create in dest dir (same filesystem → rename(2) keeps staged ownership).
+  # Incident 2026-08-03: pair cutover under `sudo` runs reconciler with euid=0, so
+  # need_sudo_for returns false (root can write) and USE_SUDO=0. The previous
+  # non-sudo branch never chown'd → final owner 0:0 vs canonical 1000:1000.
+  # Contract: always apply exact destination UID:GID:mode on the staged file
+  # before atomic rename, whether elevated via sudo or already root.
+  if [[ "$USE_SUDO" == "1" ]]; then
+    staged="$(sudo -n mktemp "${dir}/.wr-reconcile.${safe_base}.XXXXXX")"
+    sudo -n cp "$src_tmp" "$staged"
+    sudo -n chmod "$mode" "$staged"
+    sudo -n chown "${owner}:${group}" "$staged"
+    _wr_pin_verify_meta "$staged" "$mode" "$owner" "$group" "staged" 1 || {
+      sudo -n rm -f "$staged" 2>/dev/null || true
+      return 1
+    }
+    sudo -n mv -f "$staged" "$dest"
+  else
+    staged="$(mktemp "${dir}/.wr-reconcile.${safe_base}.XXXXXX")"
+    cp "$src_tmp" "$staged"
+    chmod "$mode" "$staged"
+    # Preserve canonical destination ownership when creating as root (euid=0)
+    # or whenever staged ownership already differs from the destination contract.
+    if [[ "$euid" -eq 0 ]]; then
+      chown "${owner}:${group}" "$staged"
+    elif [[ "$(python3 -c 'import os; print(os.lstat("'"$staged"'").st_uid)')" != "$owner" \
+         || "$(python3 -c 'import os; print(os.lstat("'"$staged"'").st_gid)')" != "$group" ]]; then
+      # Non-root: only succeed when permitted (typically owner==self).
+      chown "${owner}:${group}" "$staged" 2>/dev/null || {
+        rm -f "$staged"
+        echo "error: cannot set staged ownership ${owner}:${group} for $dest (euid=$euid)" >&2
+        return 1
+      }
+    fi
+    _wr_pin_verify_meta "$staged" "$mode" "$owner" "$group" "staged" 0 || {
+      rm -f "$staged"
+      return 1
+    }
+    mv -f "$staged" "$dest"
+  fi
+  _wr_pin_verify_meta "$dest" "$mode" "$owner" "$group" "destination" "$USE_SUDO" || return 1
+}
+
+print_pin_diff() {
+  local src="$1" dst="$2"
+  python3 - "$src" "$dst" <<'PY'
+import re, sys
+from pathlib import Path
+ALLOW={"WOODRIGHT_BACKEND_IMAGE","WOODRIGHT_STOREFRONT_IMAGE","STOREFRONT_IMAGE"}
+DIGEST_RE=re.compile(r"sha256:[0-9a-f]{64}")
+def pins(path):
+    out={}
+    for line in Path(path).read_text().splitlines():
+        if not line or line.lstrip().startswith('#') or '=' not in line: continue
+        k,v=line.split('=',1)
+        if k in ALLOW:
+            m=DIGEST_RE.search(v)
+            out[k]=m.group(0) if m else "missing_or_invalid"
+    return out
+a,b=pins(sys.argv[1]),pins(sys.argv[2])
+for k in sorted(ALLOW):
+    if a.get(k)!=b.get(k):
+        print(f"change {k}")
+        print(f"  old_digest={a.get(k)}")
+        print(f"  new_digest={b.get(k)}")
+PY
+}
+
+log "planned be=$EXPECTED_BACKEND_DIGEST"
+log "planned sf=$EXPECTED_STOREFRONT_DIGEST"
+log "planned sha=$EXPECTED_RELEASE_SHA"
+log "env_file=$ENV_FILE"
+log "targets=${#TARGETS[@]}"
+log "dry_run=$([ "$APPLY" = "1" ] && echo no || echo yes)"
+log "canonical_lock=$CANONICAL_LOCK_PATH"
+
+# Exclusive lock before authoritative live read / mutation planning.
+acquire_lock
+
+# Owner-approved exact identity before pin staging / authority write (Gate A under lock).
+# READ_ONLY_NO_LOCK may skip only with explicit WOODRIGHT_OWNER_APPROVAL_SKIP_READONLY=1.
+if [[ "$READ_ONLY_NO_LOCK" != "1" || "${WOODRIGHT_OWNER_APPROVAL_SKIP_READONLY:-0}" != "1" ]]; then
+  export WOODRIGHT_OWNER_APPROVAL_REQUIRE_PAIR=1
+  _oa_ev="${WOODRIGHT_PIN_EVIDENCE_DIR:-${EVIDENCE_DIR:-}}"
+  if ! wr_require_owner_approved_release \
+    "${WOODRIGHT_ENVIRONMENT}" "$EXPECTED_RELEASE_SHA" \
+    "$EXPECTED_BACKEND_DIGEST" "$EXPECTED_STOREFRONT_DIGEST" \
+    "${_oa_ev}" "gate_a_pins"; then
+    fail 2 "OWNER_APPROVAL_DENIED result=${WR_OWNER_APPROVAL_RESULT:-unknown} (pin reconcile)"
+  fi
+  unset _oa_ev
+  log "owner_approval_ok gate=pins sha=$EXPECTED_RELEASE_SHA"
+fi
+
+# Authoritative snapshot only after lock.
+assert_live_match
+
+TMP_ENV="$(mktemp)"
+TMP_PINS="$(mktemp)"
+TMP_AP="$(mktemp)"
+TMP_AR="$(mktemp)"
+TMP_OWNER="$(mktemp)"
+TMP_EXPECTED="$(mktemp)"
+CLEANUP_DONE=0
+cleanup_on_exit() {
+  local ec="${1:-$?}"
+  [[ "$CLEANUP_DONE" == "1" ]] && return 0
+  CLEANUP_DONE=1
+  if [[ "$TRANSACTION_STARTED" == "1" && "$ROLLBACK_PERFORMED" != "1" && "$ec" -ne 0 ]]; then
+    if declare -F restore_all >/dev/null 2>&1; then
+      log "exit_path_rollback under_lock=yes exit_code=$ec"
+      restore_all || true
+    fi
+  fi
+  rm -f "${TMP_ENV:-}" "${TMP_PINS:-}" "${TMP_AP:-}" "${TMP_AR:-}" "${TMP_OWNER:-}" "${TMP_EXPECTED:-}"
+  # Never unlock/release when lock was inherited from pair orchestrator.
+  if [[ "${INHERITED_LOCK:-0}" == "1" ]]; then
+    log "inherited_lock_retained_by_parent path=${LOCK_PATH:-}"
+    return 0
+  fi
+  release_lock_holder
+}
+trap 'cleanup_on_exit $?' EXIT
+trap 'cleanup_on_exit 130; exit 130' INT
+trap 'cleanup_on_exit 143; exit 143' TERM
+trap 'cleanup_on_exit 129; exit 129' HUP
+
+rewrite_env_pins "$ENV_FILE" "$TMP_ENV" 1
+validate_env_pins "$TMP_ENV" 1
+print_pin_diff "$ENV_FILE" "$TMP_ENV"
+
+if [[ "$UPDATE_PINS" == "1" && -f "$PINS_FILE" ]]; then
+  rewrite_env_pins "$PINS_FILE" "$TMP_PINS" 0
+  validate_env_pins "$TMP_PINS" 0
+  print_pin_diff "$PINS_FILE" "$TMP_PINS"
+fi
+
+if [[ "$UPDATE_ACTIVE_PUBLIC" == "1" && -f "$ACTIVE_PUBLIC_FILE" ]]; then
+  rewrite_active_public "$ACTIVE_PUBLIC_FILE" "$TMP_AP"
+fi
+
+if [[ "$UPDATE_ACTIVE_RELEASE" == "1" && -f "$ACTIVE_RELEASE_FILE" ]]; then
+  rewrite_active_release "$ACTIVE_RELEASE_FILE" "$TMP_AR"
+fi
+
+if [[ "$UPDATE_SCOPED_OWNERSHIP" == "1" ]]; then
+  assert_scoped_ownership_docs || fail 2 "scoped OWNER/EXPECTED peer/environment binding failed"
+  rewrite_scoped_owner "$ACTIVE_OWNER_FILE" "$TMP_OWNER"
+  rewrite_expected_release "$EXPECTED_RELEASE_FILE" "$TMP_EXPECTED"
+fi
+
+if [[ "$APPLY" != "1" ]]; then
+  log "dry_run_complete; set APPLY=1 to write"
+  log "summary mode=dry_run lock_path=$LOCK_PATH lock_acquired=$([ "$LOCK_HELD" = "1" ] && echo yes || echo no) transaction_started=no rollback_performed=no consistency=preview_ok"
+  exit 0
+fi
+
+# Backups inside lock
+declare -a BACKED=()
+for t in "${TARGETS[@]}"; do
+  base="$(basename "$t")"
+  bak="$BACKUP_DIR/${base}.pre-apply-$TS"
+  run_priv cp -a "$t" "$bak"
+  BACKED+=("$t|$bak")
+done
+log "backup_dir=$BACKUP_DIR"
+TRANSACTION_STARTED=1
+
+restore_all() {
+  log "restoring_all_targets under_lock=yes"
+  ROLLBACK_PERFORMED=1
+  local pair dest bak
+  local ok=1
+  for pair in "${BACKED[@]}"; do
+    dest="${pair%%|*}"
+    bak="${pair#*|}"
+    if ! atomic_install "$bak" "$dest"; then
+      ok=0
+    fi
+  done
+  if [[ "$ok" != "1" ]]; then
+    fail 8 "rollback failed while holding lock"
+  fi
+}
+
+tx_fail() {
+  local code="$1"
+  shift
+  restore_all
+  fail "$code" "$*"
+}
+
+if ! atomic_install "$TMP_ENV" "$ENV_FILE"; then
+  tx_fail 6 "failed installing .env"
+fi
+maybe_fault env
+if ! validate_env_pins "$ENV_FILE" 1; then
+  tx_fail 7 "post-install .env validation failed"
+fi
+
+if [[ "$UPDATE_PINS" == "1" && -f "$PINS_FILE" ]]; then
+  if ! atomic_install "$TMP_PINS" "$PINS_FILE"; then
+    tx_fail 6 "failed installing pins"
+  fi
+  maybe_fault pins
+  if ! validate_env_pins "$PINS_FILE" 0; then
+    tx_fail 7 "post-install pins validation failed"
+  fi
+fi
+
+if [[ "$UPDATE_ACTIVE_PUBLIC" == "1" && -f "$ACTIVE_PUBLIC_FILE" ]]; then
+  if ! atomic_install "$TMP_AP" "$ACTIVE_PUBLIC_FILE"; then
+    tx_fail 6 "failed installing ACTIVE_PUBLIC"
+  fi
+  maybe_fault active_public
+  if [[ -f "$PUBLIC_DEMO_FILE" ]]; then
+    if ! atomic_install "$TMP_AP" "$PUBLIC_DEMO_FILE"; then
+      tx_fail 6 "failed installing public-demo.json"
+    fi
+  fi
+fi
+
+if [[ "$UPDATE_ACTIVE_RELEASE" == "1" && -f "$ACTIVE_RELEASE_FILE" ]]; then
+  if ! atomic_install "$TMP_AR" "$ACTIVE_RELEASE_FILE"; then
+    tx_fail 6 "failed installing ACTIVE_RELEASE"
+  fi
+  log "LEGACY_ACTIVE_RELEASE_COMPATIBILITY_MIRROR_WRITE path=$ACTIVE_RELEASE_FILE"
+fi
+
+if [[ "$UPDATE_SCOPED_OWNERSHIP" == "1" ]]; then
+  if ! atomic_install "$TMP_OWNER" "$ACTIVE_OWNER_FILE"; then
+    tx_fail 6 "failed installing ACTIVE_OWNER"
+  fi
+  maybe_fault scoped_owner
+  if ! atomic_install "$TMP_EXPECTED" "$EXPECTED_RELEASE_FILE"; then
+    tx_fail 6 "failed installing EXPECTED_RELEASE"
+  fi
+  if ! validate_scoped_ownership_after; then
+    tx_fail 7 "post-install scoped OWNER/EXPECTED validation failed"
+  fi
+  log "scoped_ownership_converged sha=$EXPECTED_RELEASE_SHA"
+fi
+
+if [[ "$SKIP_COMPOSE_VALIDATE" == "1" ]]; then
+  log "compose_validate=skipped"
+else
+  maybe_fault compose
+  if ! COMPOSE_IMAGES="$(docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" config --images)"; then
+    tx_fail 7 "docker compose config failed"
+  fi
+  if ! echo "$COMPOSE_IMAGES" | grep -F "${EXPECTED_BACKEND_DIGEST#sha256:}" >/dev/null && \
+     ! echo "$COMPOSE_IMAGES" | grep -F "$EXPECTED_BACKEND_DIGEST" >/dev/null; then
+    tx_fail 7 "compose config did not resolve backend digest"
+  fi
+  if ! echo "$COMPOSE_IMAGES" | grep -F "${EXPECTED_STOREFRONT_DIGEST#sha256:}" >/dev/null && \
+     ! echo "$COMPOSE_IMAGES" | grep -F "$EXPECTED_STOREFRONT_DIGEST" >/dev/null; then
+    tx_fail 7 "compose config did not resolve storefront digest"
+  fi
+  if echo "$COMPOSE_IMAGES" | grep -E '5243c7c8f1146c2832af7093f1a98f4f8c4f8e5039f733d406d9571c9c657fe8|034db9486b9be45e282f543f7f26cbeb862a38b1282218bd0528831a44cf0828' >/dev/null; then
+    tx_fail 7 "stale digests still present in compose config"
+  fi
+  log "compose_resolved_ok"
+fi
+
+maybe_fault verify
+# Final authoritative live match still under lock.
+assert_live_match
+
+log "apply_complete"
+log "summary mode=apply lock_path=$LOCK_PATH lock_acquired=yes transaction_started=yes rollback_performed=no consistency=pass"
+# Lock FD closes automatically on process exit.

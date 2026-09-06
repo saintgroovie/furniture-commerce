@@ -1,0 +1,130 @@
+# Woodright production-candidate — private review only
+# No public domains / Traefik labels. Localhost binds only.
+# Package WR-PFW first-wave MUST NOT be imported in this stack yet.
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: woodright-production-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - woodright-production_postgres_data:/var/lib/postgresql/data
+    networks:
+      - woodright-production_internal
+    ports:
+      - "127.0.0.1:5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: woodright-production-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - woodright-production_redis_data:/data
+    networks:
+      - woodright-production_internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    image: ${WOODRIGHT_BACKEND_IMAGE}
+    container_name: woodright-production-backend
+    restart: unless-stopped
+    # Wave 1 memory caps - persisted for compose recreate (resource-contract)
+    mem_reservation: "640m"
+    mem_limit: "1536m"
+    memswap_limit: "1536m"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      COOKIE_SECRET: ${COOKIE_SECRET}
+      STORE_CORS: ${STORE_CORS}
+      ADMIN_CORS: ${ADMIN_CORS}
+      AUTH_CORS: ${AUTH_CORS}
+      MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL}
+      MEDUSA_LOCAL_HTTP: ${MEDUSA_LOCAL_HTTP}
+      PORT: "9000"
+      WOODRIGHT_RELEASE_SHA: ${WOODRIGHT_RELEASE_SHA}
+      WOODRIGHT_RUNTIME_ROLE: ${WOODRIGHT_RUNTIME_ROLE}
+      WOODRIGHT_EXPOSURE: ${WOODRIGHT_EXPOSURE}
+      WOODRIGHT_DATABASE_IDENTITY: ${WOODRIGHT_DATABASE_IDENTITY}
+      WOODRIGHT_DATABASE_IDENTITY_ALIAS: ${WOODRIGHT_DATABASE_IDENTITY_ALIAS}
+    volumes:
+      - woodright-production_media:/server/static
+    networks:
+      - woodright-production_internal
+    ports:
+      - "127.0.0.1:9200:9000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:9000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  storefront:
+    image: ${WOODRIGHT_STOREFRONT_IMAGE}
+    container_name: woodright-production-storefront
+    restart: unless-stopped
+    # Wave 1 memory caps - persisted for compose recreate (resource-contract)
+    mem_reservation: "192m"
+    mem_limit: "512m"
+    memswap_limit: "512m"
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: "3002"
+      MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL_INTERNAL}
+      MEDUSA_BACKEND_INTERNAL_URL: ${MEDUSA_BACKEND_URL_INTERNAL}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+      NEXT_PUBLIC_MEDUSA_BACKEND_URL: ${NEXT_PUBLIC_MEDUSA_BACKEND_URL}
+      NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: ${NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY}
+      NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES: ${NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES}
+      WOODRIGHT_RELEASE_SHA: ${WOODRIGHT_RELEASE_SHA}
+      WOODRIGHT_RUNTIME_ROLE: ${WOODRIGHT_RUNTIME_ROLE}
+      WOODRIGHT_EXPOSURE: ${WOODRIGHT_EXPOSURE}
+      WOODRIGHT_DATABASE_IDENTITY: ${WOODRIGHT_DATABASE_IDENTITY}
+      WOODRIGHT_DATABASE_IDENTITY_ALIAS: ${WOODRIGHT_DATABASE_IDENTITY_ALIAS}
+    networks:
+      - woodright-production_internal
+    ports:
+      - "127.0.0.1:3200:3002"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3002/').then(r=>process.exit(r.status<500?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+volumes:
+  woodright-production_postgres_data:
+  woodright-production_redis_data:
+  woodright-production_media:
+    external: true
+    name: woodright-production_woodright-production_media
+
+networks:
+  woodright-production_internal:
+    driver: bridge
+    name: woodright-production_internal

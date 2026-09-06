@@ -1,0 +1,15 @@
+{
+  "packet_id": "or",
+  "source_bundle_id": "wrb-20260721T155624Z-be643a429-sf54d1802",
+  "source_checksum_sha256": "872c84713fba61ea2e0c203bc789dc93e6ed972bad0f94ab0f6ba985d349013c",
+  "rejects_store_products_as_completeness": true,
+  "mutations": false,
+  "automatic_apply": true,
+  "rows": [
+    {
+      "product_id": "p1",
+      "owner_decision": "pending",
+      "automatic_apply_allowed": true
+    }
+  ]
+}

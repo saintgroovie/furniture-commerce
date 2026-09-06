@@ -14,17 +14,23 @@
  * Точки / отбивки / висячие предлоги: `.cursor/rules/ux-copywriting.mdc`.
  * Одно предложение в UI - без конечной точки; две мысли - две строки (`string[]`).
  *
- * Некоторые поля (`note`, `supporting`, `showroomNote`) пока не выводятся в JSX -
+ * Некоторые поля (`note`, `supporting`) пока не выводятся в JSX -
  * они готовы к использованию, точечные правки разметки описаны в отчёте.
+ * Публичные контакты шоурума (адрес, телефоны, мессенджеры, shortLabel) - только
+ * `@/lib/showroom-contacts`, не дублировать здесь.
  */
 
+import { showroomContacts } from "@/lib/showroom-contacts"
+
 export const nav = {
-  showroom: "Шоурум: Москва",
+  /** Desktop/mobile chrome label - SoT: showroomContacts.shortLabel */
+  showroom: showroomContacts.shortLabel,
   designers: "Дизайнерам",
   contacts: "Контакты",
   catalog: "Каталог",
   rooms: "Комнаты",
   kids: "Детская",
+  /** Global nav / catalog exit label. Page brand stays Woodright Bespoke. */
   bespoke: "По проекту",
   about: "О бренде",
   cart: "Корзина",
@@ -35,6 +41,26 @@ export const a11yCopy = {
   openMenu: "Открыть меню",
   closeMenu: "Закрыть меню",
   mobileNavLabel: "Мобильная навигация",
+  openFilters: "Открыть фильтры",
+  closeFilters: "Закрыть фильтры",
+  catalogFiltersLabel: "Фильтры каталога",
+  activeFiltersLabel: "Активные фильтры",
+  applyFilters: "Показать результаты",
+}
+
+/** Buyer catalog toolbar microcopy (search / filters chrome). */
+export const catalogUiCopy = {
+  searchLabel: "Поиск по каталогу",
+  /** Desktop / wide: full hint; fits the single-line search bubble. */
+  searchPlaceholder: "Поиск по названию, коллекции или категории",
+  /**
+   * ≤768px: same three search targets without the "Поиск по …" prefix so the
+   * placeholder does not clip mid-word inside the narrow input. The visible
+   * label remains `searchLabel` via sr-only.
+   */
+  searchPlaceholderCompact: "Название, коллекция или категория",
+  searchClear: "Очистить поиск",
+  searchSubmit: "Найти",
 }
 
 export const systemCopy = {
@@ -69,7 +95,7 @@ export const footer = {
   brandText: {
     lead: ["Мебель из массива", "для взрослых и детских комнат"],
     bullets: ["Готовые модели", "Окрашивание и роспись", "Стеновые панели"],
-    closing: ["Проекты любой сложности"],
+    closing: ["Woodright Bespoke"],
   },
   columns: [
     {
@@ -86,15 +112,16 @@ export const footer = {
       links: [
         { label: "О разделе", href: "/kids" },
         { label: "Каталог", href: "/kids/catalog" },
+        { label: "Росписи Вилли Винки", href: "/kids/willie-winkie" },
         { label: "Детские комнаты", href: "/kids/rooms" },
       ],
     },
     {
       title: "По проекту",
       links: [
-        { label: "Оставить заявку", href: "/bespoke/request" },
-        { label: "Направления", href: "/bespoke/catalog" },
         { label: "Как это работает", href: "/bespoke" },
+        { label: "Оставить заявку", href: "/bespoke/request" },
+        { label: "Дизайнерам", href: "/designers" },
       ],
     },
     {
@@ -103,18 +130,22 @@ export const footer = {
         { label: "О бренде", href: "/about" },
         { label: "Производство", href: "/about/production" },
         { label: "Материалы", href: "/about/materials" },
-        { label: "Дизайнерам", href: "/designers/terms" },
+        { label: "Дизайнерам", href: "/designers" },
         { label: "Контакты", href: "/contacts" },
       ],
     },
     {
       title: "Покупателям",
       links: [
-        { label: "Политика конфиденциальности", href: "/privacy" },
-        { label: "Условия покупки", href: "/terms" },
         { label: "Доставка", href: "/delivery" },
         { label: "Оплата", href: "/payment" },
         { label: "Возврат", href: "/returns" },
+        { label: "Гарантия", href: "/warranty" },
+        { label: "Политика конфиденциальности", href: "/privacy" },
+        { label: "Условия продажи", href: "/offer" },
+        { label: "Реквизиты", href: "/requisites" },
+        { label: "Условия покупки", href: "/terms" },
+        { label: "Cookie", href: "/cookies" },
       ],
     },
   ],
@@ -145,16 +176,16 @@ export const actions = {
 export const labels = {
   ready: "Готовый товар",
   configurable: "С выбором исполнения",
-  bespoke: "По проекту",
+  bespoke: "Bespoke",
   requestQuotePrice: "Цена по запросу",
   wood: "Массив дерева",
   handPainted: "Ручная роспись",
   kidsCollection: "Детская коллекция",
 }
 
-/** BESPOKE badge label unified with the "По проекту" nav section / tab. */
+/** Product-type badge: destination brand, not the global nav label. */
 export const productTypeBadgeLabels: Record<string, string> = {
-  BESPOKE: "По проекту",
+  BESPOKE: "Bespoke",
 }
 
 export const states = {
@@ -212,6 +243,77 @@ export const kidsHome = {
   ctaCatalog: "Смотреть детскую мебель",
   ctaRooms: "Готовые детские комнаты",
   ctaBespoke: "Обсудить проект",
+  ctaWillieWinkie: "Росписи Вилли Винки",
+}
+
+export const willieWinkieMotifsCopy = {
+  directoryH1: "Росписи Вилли Винки",
+  directoryCrumb: "Детская / Вилли Винки",
+  directoryLead: [
+    "Ручная роспись на массиве дерева",
+    "Каждая тема - свой характер рисунка и свой набор мебели",
+  ],
+  directoryHeroCta: "Смотреть росписи",
+  directorySectionTitle: "Выберите роспись",
+  directorySectionLead: "Откройте тему и посмотрите доступную мебель",
+  directoryMeta: (motifs: number, products: number) =>
+    `${willieWinkieMotifsCopy.motifCountLabel(motifs)} · ${willieWinkieMotifsCopy.productCountLabel(products)}`,
+  motifCountLabel: (n: number) =>
+    n === 1 ? "1 роспись" : n >= 2 && n <= 4 ? `${n} росписи` : `${n} росписей`,
+  directoryLoadError: [
+    "Росписи не загрузились",
+    "Обновите страницу или зайдите чуть позже",
+  ],
+  directoryEmptyTitle: "Росписи временно недоступны",
+  directoryEmptyBody: "Загляните в каталог детской мебели",
+  motifNotFoundTitle: "Такой росписи нет",
+  motifNotFoundBody: "Выберите тему из каталога росписей Вилли Винки",
+  motifLoadError: [
+    "Не удалось загрузить роспись",
+    "Обновите страницу или зайдите чуть позже",
+  ],
+  motifEmptyTitle: "В этой росписи пока нет доступной мебели",
+  motifEmptyBody: "Загляните в другие темы или в каталог детской мебели",
+  availableTypesPrefix: "Мебель",
+  productsSectionTitle: "Мебель с этой росписью",
+  /** Neutral availability copy - never use restrictive «только». */
+  productsOnlySubhead: "Доступны эти предметы",
+  productsSectionMeta: (n: number) =>
+    n === 1
+      ? "1 доступный предмет"
+      : n >= 2 && n <= 4
+        ? `${n} доступных предмета`
+        : `${n} доступных предметов`,
+  productsToAnchor: "К предметам",
+  productCountLabel: (n: number) =>
+    n === 1 ? "1 предмет" : n >= 2 && n <= 4 ? `${n} предмета` : `${n} предметов`,
+  familyCountLabel: (n: number) =>
+    n === 1 ? "1 вид мебели" : n >= 2 && n <= 4 ? `${n} вида мебели` : `${n} видов мебели`,
+  familiesLine: (titles: string[]) => {
+    if (titles.length === 0) return null
+    if (titles.length <= 3) return titles.join(", ")
+    return `${titles.slice(0, 3).join(", ")} и ещё ${titles.length - 3}`
+  },
+  tileMeta: (familyCount: number, productCount: number) =>
+    `${willieWinkieMotifsCopy.familyCountLabel(familyCount)} · ${willieWinkieMotifsCopy.productCountLabel(productCount)}`,
+  cardCta: "Смотреть",
+  youAreHere: "Вы здесь",
+  backToDirectory: "Все росписи Вилли Винки",
+  backToDirectoryShort: "Вилли Винки",
+  backToKids: "В детскую секцию",
+  openCatalog: "В каталог детской мебели",
+  reloadPage: "Обновить страницу",
+  detailItemsMeta: (n: number) => `Предметов - ${n}`,
+  viewAllInMotif: "Посмотреть всю мебель в этой росписи",
+  relatedTitle: "Другие предметы в этой росписи",
+  motifSelectorLabel: "Роспись",
+  motifChooseLink: "Все росписи",
+  motifUnavailableTitle: "Эта роспись недоступна для выбранного предмета",
+  motifUnavailableBody: "Показана штатная конфигурация товара",
+  motifUnknownTitle: "Выбранная роспись не найдена",
+  motifUnknownBody: "Показана штатная конфигурация товара",
+  priceUnavailable: "Цену уточним",
+  imageMissing: "Фото скоро появится",
 }
 
 export const roomsCopy = {
@@ -256,18 +358,18 @@ export const roomSetDetail = {
   priceFromLabel: "Цена от",
   priceUnknown: "уточняется",
   compositionTitle: "Что входит в комплект",
+  openProduct: "Открыть товар",
 }
 
 export const bespokeLanding = {
-  h1: "Мебель под конкретный интерьер",
+  h1: "Woodright Bespoke",
   lead: [
-    "Цельная комната, особая отделка или мебель под ваши размеры",
-    "Начните с заявки",
-    "остальное подскажем",
+    "Bespoke - работа по индивидуальному проекту: формат мебельного ателье или мастерской на заказ",
+    "Если каталог и штатные варианты не решают задачу, разработаем решение под ваше пространство и требования",
   ],
-  supporting: "Работаем и с отдельными предметами, и с комнатой под ключ",
+  supporting: "Работаем с отдельными предметами и с составом комнаты",
   ctaPrimary: "Обсудить проект",
-  ctaSecondary: "Смотреть направления",
+  ctaSecondary: "Дизайнерам",
   whenTitle: "Когда это ваш вариант",
   whenItems: [
     { title: "Комната целиком", text: "спальня, детская, кабинет или гостиная в едином стиле" },
@@ -305,9 +407,10 @@ export const bespokeCatalogCopy = {
   ],
   emptyBody: [
     "Позиции скоро появятся",
-    "Опишите задачу",
-    "соберём решение под вас",
+    "Опишите задачу - соберём решение под вас",
   ],
+  emptyCtaRequest: "Заявка на расчёт",
+  emptyCtaSection: "На страницу Woodright Bespoke",
 }
 
 export const bespokeRequestCopy = {
@@ -337,6 +440,11 @@ export const bespokeRequestCopy = {
   formCaption: [
     "Оставьте контакты и пару слов о задаче",
     "Этого достаточно для первого ответа",
+  ],
+  pdpNonstandardFormTitle: "Обсудить нестандарт",
+  pdpNonstandardFormCaption: [
+    "Опишите, что нужно изменить",
+    "Менеджер уточнит размеры, материалы и конфигурацию",
   ],
 }
 
@@ -385,6 +493,7 @@ export const bespokeForm = {
     "Нажимая кнопку, вы соглашаетесь на обработку данных",
     "Мы используем контакты только для ответа по заявке",
   ],
+  consentPrivacyLabel: "Политика конфиденциальности",
 }
 
 export const cartCopy = {
@@ -425,7 +534,7 @@ export const cartCopy = {
   nextStepsBullets: [
     "Укажете контакты и адрес доставки",
     "Подтвердим состав и сроки",
-    "Свяжемся по доставке, сборке и оплате",
+    "Свяжемся по доставке и оплате",
   ],
   asideCaption: [
     "Если хочется что-то поменять в исполнении",
@@ -437,7 +546,7 @@ export const checkoutCopy = {
   title: "Оформление заказа",
   lead: [
     "Контакты и адрес доставки",
-    "Подтвердим заказ и свяжемся по доставке и сборке",
+    "Подтвердим заказ и свяжемся по доставке",
   ],
   formTitle: "Контакты и доставка",
   formCaption: [
@@ -469,11 +578,16 @@ export const checkoutCopy = {
     "Сейчас оплачивать заказ не нужно",
     "После оформления менеджер подтвердит состав заказа, согласует доставку и пришлёт ссылку на оплату",
   ],
+  legalNote: [
+    "Отправка заказа - заявка на подтверждение, не оплата и не акцепт оферты",
+  ],
+  legalPrivacyLabel: "Политика конфиденциальности",
+  legalOfferLabel: "Условия продажи",
   compositionTitle: "Состав заказа",
   nextStepsTitle: "Что дальше",
   nextStepsBullets: [
     "Подтвердим состав и сроки",
-    "Уточним адрес, детали доставки и сборки",
+    "Уточним адрес и детали доставки",
     "Пришлём ссылку на оплату",
   ],
   asideCaption: [
@@ -487,6 +601,8 @@ export const checkoutCopy = {
     "Сохраните номер",
     "он понадобится при оплате и вопросах менеджеру",
   ],
+  trackOrderCta: "Следить за заказом",
+  trackOrderHint: "Откройте ссылку, чтобы видеть статус изготовления",
   paymentNote:
     [
     "Заказ отправлен на подтверждение",
@@ -517,11 +633,35 @@ export const productCta = {
     "Попробуйте ещё раз или оставьте заявку",
   ],
   noVariant: "Этот вариант сейчас недоступен",
-  configureBespoke: "Сделать по моим размерам",
+  canAdaptBadge: "Можно адаптировать",
+  needNonstandard: "Нужен нестандарт?",
+  needNonstandardAria: "Обсудить нестандарт с менеджером",
   bespokeManagerNote: "Финальную стоимость подтвердит менеджер",
   bespokeCtaLabel: "Запросить расчёт",
   requestQuoteCtaLabel: "Оставить заявку",
   requestQuoteManagerNote: "Уточним состав, отделку и подготовим расчёт",
+  unavailableCtaLabel: "Узнать о возобновлении",
+  madeToOrderCtaLabel: "Заказать",
+  configurableToOrderCtaLabel: "Настроить и заказать",
+  discussProjectCtaLabel: "Обсудить проект",
+}
+
+export const orderTrackCopy = {
+  title: "Статус заказа",
+  loading: "Загружаем статус…",
+  missingParams: "Откройте ссылку из письма или экрана оформления заказа",
+  loadError: [
+    "Не удалось загрузить статус",
+    "Проверьте ссылку или напишите нам",
+  ],
+  consolidatedHeading: "Сейчас по заказу",
+  paymentHeading: "Оплата",
+  productionHeading: "Изготовление",
+  deliveryHeading: "Доставка",
+  timelineHeading: "Этапы",
+  eventsHeading: "История",
+  nextActionLabel: "Что дальше",
+  noEvents: "Пока нет обновлений",
 }
 
 export const pdpCopy = {
@@ -529,6 +669,9 @@ export const pdpCopy = {
   errorTitle: "Не удалось загрузить товар",
   errorBody: "Обновите страницу или вернитесь в каталог",
   sizeSelectorLabel: "Размер",
+  fabricSelectorLabel: "Ткань",
+  fabricChipWith: "С тканью",
+  fabricChipWithout: "Без ткани",
   articleLabel: "Арт.",
   dimensionHeight: "Высота",
   dimensionWidth: "Ширина",
@@ -545,7 +688,7 @@ export const pdpCopy = {
   materialTierLabel: "Исполнение",
   serviceLines: [
     "Массив дерева и ручная отделка",
-    "Шоурум в Москве - принимаем по договорённости",
+    "Шоурум в Химках - принимаем по договорённости",
   ],
   serviceConsultLabel: "Получить консультацию",
 }
@@ -602,69 +745,72 @@ export const aboutProductionCopy = {
 
 export const designersLandingCopy = {
   eyebrow: "Дизайнерам и архитекторам",
-  h1: "Мебель для частных и общественных интерьеров",
-  lead:
-    [
-    "Помогаем подобрать модели, материалы и исполнения под интерьерный проект",
-    "Для нестандартных задач можно отправить описание проекта и получить обратную связь от команды Woodright",
-  ],
-  ctaPrimary: "Обсудить проект",
-  ctaSecondary: "Перейти в каталог",
-  termsLink: "Условия сотрудничества",
-  materialsLink: "Материалы",
-}
-
-export const designersTermsCopy = {
-  h1: "Дизайнерам и архитекторам",
-  lead: "Подбираем мебель из массива для частных интерьеров, детских и проектных комплектаций",
-  body: [
-    "Расскажите о проекте клиента",
-    "соберём предметы, отделки и состав комнаты, поможем со сроками и сметой",
-  ],
-  ctaPrimary: "Оставить заявку",
-  ctaSecondary: "Каталог",
-}
-
-export const designersMaterialsCopy = {
-  h1: "Материалы для дизайнеров",
+  h1: "Woodright для ваших проектов",
   lead: [
-    "Отделки, ткани и варианты исполнения",
-    "для проектной работы",
+    "Работаем с дизайнерами и архитекторами",
+    "Помогаем с подбором и с задачами, которых нет в каталоге",
   ],
-  body: [
-    "Нужны подборка материалов, образцы или технические параметры",
-    "опишите задачу, вернёмся с материалами под проект",
+  benefitsIntro: "Что можно обсудить",
+  benefits: [
+    {
+      lead: "нестандартные и индивидуальные задачи",
+      rest: "мебель по проекту, особые размеры и конфигурации, стеновые панели и другие интерьерные решения",
+      key: true,
+    },
+    {
+      lead: "подбор из каталога",
+      rest: "модели, отделки и состав под задачу клиента",
+    },
+    {
+      lead: "Woodright Bespoke",
+      rest: "если штатных вариантов недостаточно",
+    },
+  ] satisfies ReadonlyArray<{ lead: string; rest: string; key?: boolean }>,
+  closing: [
+    "Если каталога недостаточно, обсудим задачу в Woodright Bespoke",
+    "Условия обсуждаем индивидуально",
   ],
-  ctaPrimary: "Оставить заявку",
-  ctaSecondary: "Условия сотрудничества",
-}
-
-export const designersRequestCopy = {
-  h1: "Заявка на сотрудничество",
-  lead: [
-    "Комната, задача, желаемые предметы и сроки",
-    "Свяжемся, обсудим подбор и условия",
-  ],
-  ctaPrimary: "Оставить заявку на расчёт",
-  ctaSecondary: "Условия сотрудничества",
+  ctaPrimary: "Обсудить задачу",
+  ctaHref: "/bespoke/request?from=designers",
+  /** Prefixed onto the shared request form comment so operators see the audience. */
+  requestContext: "Запрос от дизайнера / архитектора",
 }
 
 export const contactsCopy = {
   h1: "Контакты",
-  lead: [
-    "Уточнить наличие, подобрать исполнение, обсудить детскую или проект",
-    "напишите нам",
+  /** Single flowing intro - width driven by master-grid span, no forced breaks. */
+  lead: "Уточнить наличие, подобрать исполнение или обсудить индивидуальный проект можно по телефону или в мессенджерах",
+  visitHint: [
+    "Перед визитом лучше позвонить или написать",
+    "Так проще попасть, когда шоурум может принять",
   ],
-  showroomNote: [
-    "Шоурум в Москве",
-    "принимаем по договорённости",
-  ],
-  formHelper: [
-    "Оставьте заявку",
-    "подскажем, как быстрее решить задачу",
-  ],
+  showroomEyebrow: "Шоурум",
+  /** Action-title pair with `channelsHeading` on the contacts column. */
+  showroomHeading: "Посетить магазин Woodright",
+  channelsEyebrow: "Контакты",
+  channelsHeading: "Связаться с Woodright",
+  messengersLabel: "Мессенджеры",
+  /** Full accessible name for the Yandex Maps link. */
+  mapCta: "Посмотреть в Яндекс Картах",
+  /** Page map tile kicker - pairs with phone kicker/value rhythm. */
+  mapKicker: "Маршрут",
+  /** Page/dropdown visible map value (one line). */
+  mapValue: "Яндекс Карты",
+  /** Compact showroom phone CTA for header dropdown. */
+  showroomCallCta: "Позвонить в шоурум",
+  /**
+   * Page messenger tile kicker (secondary). Service name is the large value
+   * from `showroomContacts.messengers[].label`. Dropdown stays name-only.
+   */
+  messengerWriteKicker: "Написать в",
+  /** Accessible names for messenger links (visible label stays short in dropdown). */
+  messengerTelegramAria: "Написать в Telegram",
+  messengerWhatsappAria: "Написать в WhatsApp",
+  messengerMaxAria: "Написать в MAX",
+  ctaTitle: "Есть вопрос по мебели или индивидуальному проекту?",
+  ctaBody:
+    "Оставьте заявку - менеджер свяжется с вами и поможет подобрать решение",
   ctaPrimary: "Оставить заявку",
-  ctaSecondary: "Перейти в каталог",
 }
 
 export const homeCopy = {
@@ -688,7 +834,7 @@ export const homeCopy = {
         "Массив и ручная роспись",
         "комната, из которой не вырастают за год",
       ], cta: "В детский раздел", href: "/kids" },
-      { title: "По проекту", text: "Подбор моделей, отделок и состава комнаты под ваш интерьер", cta: "Обсудить проект", href: "/bespoke" },
+      { title: "Woodright Bespoke", text: "Если каталога недостаточно - обсудим состав, размеры и исполнение", cta: "Обсудить проект", href: "/bespoke" },
     ],
   },
   woodBlock: {
@@ -714,14 +860,13 @@ export const homeCopy = {
     cta: "Смотреть детскую мебель",
   },
   projectBlock: {
-    title: "Нужен не предмет, а интерьер целиком?",
+    title: "Нужно решение, которого нет в каталоге?",
     text: [
-      "Подберём модели, цвет, ткань и композицию комнаты",
+      "Подберём модели, цвет, ткань и состав комнаты",
       "Можно начать с одного предмета",
-      "или собрать комнату под ключ",
     ],
     ctaPrimary: "Обсудить проект",
-    ctaSecondary: "Мебель по проекту",
+    ctaSecondary: "Как это работает",
   },
   /** Assistive label for the room-scene switcher on the homepage. */
   sceneNav: "Сцены",
@@ -752,6 +897,15 @@ export const seo = {
     title: "Каталог детской мебели Woodright",
     description: "Детская мебель Woodright из массива: кровати, шкафы, комоды, столы и стеллажи с ручной росписью.",
   },
+  willieWinkieMotifs: {
+    title: "Росписи Вилли Винки - детская мебель Woodright",
+    description:
+      "Художественные росписи Вилли Винки: выберите тему и посмотрите доступную мебель в этой росписи.",
+  },
+  willieWinkieMotif: (title: string) => ({
+    title: `${title} - роспись Вилли Винки | Woodright`,
+    description: `Мебель Вилли Винки в росписи ${title}: предметы с подтверждёнными сочетаниями и ручной росписью.`,
+  }),
   rooms: {
     title: "Мебель по комнатам Woodright - спальни, детские, кабинеты, гостиные",
     description: "Готовые сочетания мебели Woodright для спальни, детской, кабинета, гостиной и прихожей. Комплект целиком или по предметам.",
@@ -761,8 +915,9 @@ export const seo = {
     description: "Готовые комплекты детской мебели Woodright - от первых лет до школы, с ручной росписью и массивом дерева.",
   },
   bespoke: {
-    title: "Мебель по проекту Woodright - подбор и расчёт для интерьера",
-    description: "Мебель Woodright под конкретный интерьер: подбор моделей, отделок и состава комнаты под дизайн-проект или ваши размеры.",
+    title: "Woodright Bespoke",
+    description:
+      "Woodright Bespoke - мебель по индивидуальному проекту для задач, которые не решаются каталогом и штатными вариантами.",
   },
   bespokeCatalog: {
     title: "Каталог по проекту Woodright - кухни, гардеробные, шкафы",
@@ -773,21 +928,9 @@ export const seo = {
     description: "Опишите проект - подготовим расчёт мебели по вашим размерам и отделке и вернёмся с составом и сроками.",
   },
   designersLanding: {
-    title: "Дизайнерам и архитекторам - Woodright",
-    description:
-      "Мебель Woodright для частных и общественных интерьеров: подбор моделей, материалов и исполнений под проект.",
-  },
-  designersTerms: {
     title: "Woodright для дизайнеров и архитекторов",
-    description: "Сотрудничество с дизайнерами и архитекторами: мебель из массива, детские коллекции, отделки и проектные расчёты Woodright.",
-  },
-  designersMaterials: {
-    title: "Материалы для дизайнеров - Woodright",
-    description: "Отделки, ткани и варианты исполнения Woodright для проектной работы дизайнеров и архитекторов.",
-  },
-  designersRequest: {
-    title: "Заявка на сотрудничество - Woodright",
-    description: "Заявка на сотрудничество с Woodright: подбор мебели, отделок и проектных решений для клиентских интерьеров.",
+    description:
+      "Woodright работает с дизайнерами и архитекторами: подбор, нестандартные задачи и Woodright Bespoke. Условия обсуждаются индивидуально.",
   },
   about: {
     title: "О бренде Woodright - мебель из массива с характером",
@@ -803,6 +946,47 @@ export const seo = {
   },
   contacts: {
     title: "Контакты Woodright",
-    description: "Контакты Woodright: консультация по каталогу, детской мебели, отделкам и проектным заявкам. Шоурум в Москве.",
+    description:
+      "Контакты Woodright: консультация по каталогу, детской мебели, отделкам и проектным заявкам. Шоурум в Химках, МТК «Гранд-2».",
+  },
+  privacy: {
+    title: "Политика конфиденциальности - Woodright",
+    description: "Как Woodright обрабатывает персональные данные покупателей",
+  },
+  terms: {
+    title: "Условия покупки - Woodright",
+    description: "Как оформляется заказ на мебель Woodright",
+  },
+  delivery: {
+    title: "Доставка - Woodright",
+    description: "Условия доставки мебели Woodright",
+  },
+  payment: {
+    title: "Оплата - Woodright",
+    description: "Оплачивать заказ сразу на сайте не нужно. После оформления менеджер отправит ссылку на оплату или счёт.",
+  },
+  returns: {
+    title: "Возврат - Woodright",
+    description: "Если нужно вернуть товар или вы обнаружили недостаток, свяжитесь с менеджером Woodright. Порядок зависит от ситуации и требований закона.",
+  },
+  warranty: {
+    title: "Гарантия Woodright - 12 месяцев",
+    description: "Гарантийный срок - 12 месяцев с момента передачи товара покупателю. Гарантию предоставляет продавец ООО «Роэл-Техник». Обязательные права при недостатках сохраняются.",
+  },
+  offer: {
+    title: "Условия продажи - Woodright",
+    description: "Как оформляется заказ Woodright: заявка на подтверждение, оплата после согласования, доставка, возврат и гарантия.",
+  },
+  cookies: {
+    title: "Cookie - Woodright",
+    description: "Витрина Woodright использует cookie cart_id для корзины. Сторонней аналитики нет.",
+  },
+  requisites: {
+    title: "Реквизиты - Woodright",
+    description: "Продавец Woodright: ООО «Роэл-Техник». Банковские реквизиты на сайте не публикуются.",
+  },
+  personalData: {
+    title: "Персональные данные - Woodright",
+    description: "Какие данные нужны для заявки и заказа Woodright и как обратиться по их обработке.",
   },
 }

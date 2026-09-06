@@ -9,7 +9,12 @@
  * Caps must leave room for the card gallery strip
  * (`CARD_STRIP_IMAGE_PROBE_LIMIT` = 4) — hero-only (1) hid all extras.
  * Diversify by finish token so later swatches keep strip candidates.
+ *
+ * Greenwich paint matrix is sanitized before URL slim so mixed natural/dark
+ * URLs under one declared frame still yield both wood chips on catalog cards.
  */
+
+import { sanitizeGreenwichPaintMatrix } from "./greenwich-paint-media"
 
 const CATALOG_BROWSE_MAX_IMAGES = 24
 const CATALOG_BROWSE_MAX_IMAGES_PER_TOKEN = 3
@@ -19,6 +24,10 @@ const META_ALLOW = new Set([
   "collection",
   "collection_label",
   "category_handle",
+  "buyer_item_type",
+  "buyer_item_type_source",
+  "buyer_default_configuration",
+  "material_tiers",
   "display_group",
   "display_group_sort",
   "display_group_title",
@@ -99,6 +108,10 @@ function projectMetadata(metadata: unknown): Record<string, unknown> | undefined
   const out: Record<string, unknown> = {}
   for (const [k, v] of Object.entries(metadata as Record<string, unknown>)) {
     if (!META_ALLOW.has(k)) continue
+    if (k === "greenwich_paint_execution_matrix") {
+      out[k] = slimExecutionEntries(sanitizeGreenwichPaintMatrix(v))
+      continue
+    }
     out[k] = EXECUTION_URL_KEYS.has(k) ? slimExecutionEntries(v) : v
   }
   return out

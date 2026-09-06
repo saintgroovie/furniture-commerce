@@ -1,7 +1,17 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { addToCartWorkflow } from "@medusajs/core-flows"
 import { QueryContext } from "@medusajs/framework/utils"
-import { resolveConfiguredLineItemPricing } from "../../../../../lib/configured-line-item-pricing"
+import {
+  findMaterialTier,
+  parseMaterialTiers,
+} from "../../../../../lib/material-tier-contract"
+import { resolveDefaultBuyerConfiguration } from "../../../../../lib/default-buyer-configuration"
+import {
+  resolveConfiguredUnitPrice,
+  resolveFinishColorMultiplier,
+  finishLabelFromMetadata,
+  isKnownFinishExecutionKey,
+} from "../../../../../lib/finish-color-premium-contract"
 
 /**
  * Override of the core POST /store/carts/:id/line-items route.
@@ -10,10 +20,8 @@ import { resolveConfiguredLineItemPricing } from "../../../../../lib/configured-
  *   round(solid_full_base × material_multiplier × color_multiplier)
  *
  * - material_multiplier from `product.metadata.material_tiers`
- *   (code required when tiers exist — no silent LDSP default)
+ *   (omitted code → position 0 / LDSP when tiers exist — PDP default contract)
  * - color_multiplier: 1 for the first (standard) finish, 1.05 otherwise
- * - base amount must come from Medusa `calculated_price` in cart
- *   currency/region context — raw `prices[]` is never used
  *
  * Client-sent label / multiplier / resolved price values are discarded and
  * rewritten with authoritative ones. Products without material tiers and
@@ -39,6 +47,11 @@ type QueryGraph = {
   }) => Promise<{ data: unknown[] }>
 }
 
+type VariantPriceRow = {
+  amount?: number | string | null
+  currency_code?: string | null
+}
+
 const CART_RESPONSE_FALLBACK_FIELDS = [
   "id",
   "currency_code",
@@ -51,12 +64,30 @@ const CART_RESPONSE_FALLBACK_FIELDS = [
   "items.metadata",
 ]
 
-function resolveCalculatedBaseAmount(variant: {
-  calculated_price?: { calculated_amount?: number | string | null }
-}): number | null {
+function resolveBaseAmount(
+  variant: {
+    calculated_price?: { calculated_amount?: number | string | null }
+    prices?: VariantPriceRow[]
+  },
+  currencyCode: string | undefined
+): { amount: number; usedPriceFallback: boolean } | null {
   const calculated = Number(variant.calculated_price?.calculated_amount)
   if (Number.isFinite(calculated) && calculated > 0) {
-    return calculated
+    return { amount: calculated, usedPriceFallback: false }
+  }
+  const prices = Array.isArray(variant.prices) ? variant.prices : []
+  const currency = typeof currencyCode === "string" ? currencyCode.trim().toLowerCase() : ""
+  const matched =
+    (currency
+      ? prices.find(
+          (p) =>
+            typeof p.currency_code === "string" &&
+            p.currency_code.trim().toLowerCase() === currency
+        )
+      : undefined) ?? prices[0]
+  const fallback = Number(matched?.amount)
+  if (Number.isFinite(fallback) && fallback > 0) {
+    return { amount: fallback, usedPriceFallback: true }
   }
   return null
 }
@@ -103,6 +134,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   if (!finishKey) delete metadata.finish_execution_key
 
   const query = req.scope.resolve("query") as QueryGraph
+  let unitPrice: number | undefined
 
   const { data: carts } = await query.graph({
     entity: "cart",
@@ -124,6 +156,8 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       "product.id",
       "product.metadata",
       "calculated_price.*",
+      "prices.amount",
+      "prices.currency_code",
     ],
     filters: { id: variantId },
     context: {
@@ -137,6 +171,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     | {
         product?: { metadata?: Record<string, unknown> }
         calculated_price?: { calculated_amount?: number | string | null }
+        prices?: VariantPriceRow[]
       }
     | undefined
   if (!variant) {
@@ -144,19 +179,81 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     return
   }
 
-  const priced = resolveConfiguredLineItemPricing({
-    productMetadata: variant.product?.metadata,
-    materialExecutionCode: executionCode,
-    finishExecutionKey: finishKey,
-    calculatedBaseAmount: resolveCalculatedBaseAmount(variant),
-    metadata,
-  })
-  if (!priced.ok) {
-    res.status(priced.status).json({
-      message: priced.message,
-      code: priced.code,
-    })
-    return
+  const productMeta = variant.product?.metadata
+  const tiers = parseMaterialTiers(productMeta)
+  const needsConfiguredPricing = Boolean(tiers) || Boolean(executionCode) || Boolean(finishKey)
+
+  if (needsConfiguredPricing) {
+    let materialMultiplier = 1
+    if (executionCode) {
+      const tier = tiers ? findMaterialTier(tiers, executionCode) : null
+      if (!tier) {
+        res.status(400).json({
+          message: `Unknown material execution "${executionCode}" for this product.`,
+          code: "UNKNOWN_MATERIAL_EXECUTION",
+        })
+        return
+      }
+      materialMultiplier = tier.price_multiplier
+      metadata.material_execution_code = tier.key
+      metadata.material_execution_label = tier.label_ru
+      metadata.material_price_multiplier = tier.price_multiplier
+    } else if (tiers && tiers.length > 0) {
+      /* Same default as browse/PDP: resolveDefaultBuyerConfiguration (tiers[0]). */
+      const defaults = resolveDefaultBuyerConfiguration({
+        variants: [
+          {
+            id: variantId,
+            calculated_price: variant.calculated_price,
+            prices: variant.prices,
+          },
+        ],
+        metadata: productMeta ?? {},
+      })
+      const tier =
+        (defaults?.material_execution_code
+          ? findMaterialTier(tiers, defaults.material_execution_code)
+          : null) ?? tiers[0]!
+      materialMultiplier = tier.price_multiplier
+      metadata.material_execution_code = tier.key
+      metadata.material_execution_label = tier.label_ru
+      metadata.material_price_multiplier = tier.price_multiplier
+    }
+
+    let colorMultiplier = 1
+    if (finishKey) {
+      if (!isKnownFinishExecutionKey(productMeta, finishKey)) {
+        res.status(400).json({
+          message: `Unknown finish execution "${finishKey}" for this product.`,
+          code: "UNKNOWN_FINISH_EXECUTION",
+        })
+        return
+      }
+      colorMultiplier = resolveFinishColorMultiplier(productMeta, finishKey)
+      metadata.finish_execution_key = finishKey
+      metadata.finish_color_multiplier = colorMultiplier
+      const finishLabel = finishLabelFromMetadata(productMeta, finishKey)
+      if (finishLabel) metadata.finish_execution_label = finishLabel
+    }
+
+    const base = resolveBaseAmount(variant, cart.currency_code)
+    if (!base) {
+      res.status(400).json({
+        message: "Variant has no calculated price for this cart.",
+        code: "VARIANT_PRICE_NOT_FOUND",
+      })
+      return
+    }
+
+    const resolved = resolveConfiguredUnitPrice(
+      base.amount,
+      materialMultiplier,
+      colorMultiplier
+    )
+    metadata.resolved_unit_price = resolved
+    /* Always pin unit_price on the configured path so Medusa cannot replace the
+       amount after add-to-cart (including when resolved === base). */
+    unitPrice = resolved
   }
 
   await addToCartWorkflow(req.scope).run({
@@ -166,10 +263,8 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         {
           variant_id: variantId,
           quantity,
-          ...(Object.keys(priced.metadata).length > 0
-            ? { metadata: priced.metadata }
-            : {}),
-          ...(priced.unitPrice != null ? { unit_price: priced.unitPrice } : {}),
+          ...(Object.keys(metadata).length > 0 ? { metadata } : {}),
+          ...(unitPrice != null ? { unit_price: unitPrice } : {}),
         },
       ],
       // Same contract as the core route: workflow hooks receive additional_data.

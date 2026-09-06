@@ -2,6 +2,7 @@ import Link from "next/link"
 import { homeCopy } from "@/lib/woodright-copy"
 import { CopyLines } from "@/components/copy-lines"
 import { homeMedia } from "./home-media"
+import { HomeImg } from "./home-img"
 
 /**
  * «По проекту»: layered collage showing what the service actually varies —
@@ -16,13 +17,13 @@ export function HomeProject() {
         <div className="hp-project-collage" aria-hidden="true">
           <span className="hp-project-lines" />
           <span className="hp-project-shot hp-project-shot-a">
-            <img src={homeMedia.projectFinishGraphite} alt="" loading="lazy" decoding="async" draggable={false} />
+            <HomeImg surface="LIFESTYLE_BLOCK" src={homeMedia.projectFinishGraphite} alt="" loading="lazy" decoding="async" draggable={false} />
           </span>
           <span className="hp-project-shot hp-project-shot-b">
-            <img src={homeMedia.projectFinishWhite} alt="" loading="lazy" decoding="async" draggable={false} />
+            <HomeImg surface="LIFESTYLE_BLOCK" src={homeMedia.projectFinishWhite} alt="" loading="lazy" decoding="async" draggable={false} />
           </span>
           <span className="hp-project-shot hp-project-shot-c">
-            <img src={homeMedia.projectFabricChair} alt="" loading="lazy" decoding="async" draggable={false} />
+            <HomeImg surface="LIFESTYLE_BLOCK" src={homeMedia.projectFabricChair} alt="" loading="lazy" decoding="async" draggable={false} />
           </span>
           <span className="hp-project-swatches">
             <i />
@@ -40,7 +41,7 @@ export function HomeProject() {
             <Link href="/bespoke/request" className="btn btn-primary">
               {projectBlock.ctaPrimary}
             </Link>
-            <Link href="/bespoke/catalog" className="btn btn-secondary">
+            <Link href="/bespoke" className="btn btn-secondary">
               {projectBlock.ctaSecondary}
             </Link>
           </div>

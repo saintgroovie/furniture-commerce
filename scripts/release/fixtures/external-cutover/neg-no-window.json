@@ -1,0 +1,25 @@
+{
+  "event_name": "reconciled_external_security_cutover",
+  "component_provenance": {
+    "backend_revision": "006d4f7",
+    "backend_workflow_run_id": "1",
+    "storefront_revision": "006d4f7",
+    "storefront_workflow_run_id": "1"
+  },
+  "runtime_unchanged_proof": {
+    "before_backend_container_id": "de972e56dcaa",
+    "after_backend_container_id": "de972e56dcaa",
+    "before_storefront_container_id": "dcbfcf1ca4af",
+    "after_storefront_container_id": "dcbfcf1ca4af",
+    "before_backend_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "after_backend_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "before_storefront_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "after_storefront_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "before_routes": {
+      "sf": "woodright-staging-storefront:3002"
+    },
+    "after_routes": {
+      "sf": "woodright-staging-storefront:3002"
+    }
+  }
+}

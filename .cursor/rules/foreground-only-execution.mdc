@@ -14,8 +14,15 @@ Complements `woodright-core.mdc` (precedence, Codex table, FORMAT summary).
 - Never wait on Cursor “Run in the background” / “continue in background” / “background task” / “resumed task”.
 - Work in foreground: bounded commands, read-only checks, scoped validation. Persistent servers/watch only on **explicit** user request.
 - Prefer: `yarn build`, `tsc --noEmit`, `yarn test` (no watch), `curl --max-time`, `lsof`. Always set Shell `block_until_ms`.
-- **Do not start:** `yarn/npm/pnpm dev`, `next dev`, `medusa develop`, `* --watch` / `--ui`, interactive prompts (`git rebase -i`, pagers).
-- Dev server: probe with `curl`/`lsof`; reuse if up; if down → report `server not running` + exact start command + bounded fallback; **no autostart**.
+- **Do not start:** `yarn/npm/pnpm dev`, `next dev`, `medusa develop`, `* --watch` / `--ui`, interactive prompts (`git rebase -i`, pagers) - unless the operator **explicitly** asked to raise a local preview.
+- When the operator **does** ask to raise/keep a local preview (including «где посмотреть» / «дай рабочую ссылку» / visual review):
+  - `:9000` / `:3002` → `scripts/local-dev/woodright-backend.sh` / `woodright-storefront.sh` (canonical root; `local-dev-single-instance.mdc`)
+  - other ports → alwaysApply `durable-local-review-servers.mdc` (`scripts/local/durable_local_server.py` or Terminal) - follow that rule’s **Absolute ban** and **Mandatory check**
+  - **Forbidden:** pinning servers to the Cursor agent shell (`block_until_ms: 0`, bare `nohup &`, `command &`, `disown`, unmanaged `screen`/`tmux`)
+  - after `killed_by_cursor_agent_shell` → durable restart only; never a second agent-shell preview
+- «после перезагрузки» / «запусти все что упало после перезагрузки» = daily hybrid restore in `durable-local-review-servers.mdc` (Docker postgres+redis, then at most one LaunchAgent kickstart per failed probe). Bare «подними стек» is **not** permission. It is **not** permission to `yarn dev` everything or to start leftover durable previews.
+- Dev server: probe with `curl`/`lsof`; reuse if up **and** cwd matches the intended worktree; if down and not asked to start → report `server not running` + exact durable start command; **no autostart**.
+- **Review URLs:** before handing any localhost link to the operator, pass alwaysApply `review-server-stability-gate.mdc` (listener + health + exact path + steady sample). “Ready in” / PID in a log is not enough.
 - No `killall node` / `pkill node`; only a specific PID when truly needed and safe.
 - No unbounded `find` on huge trees.
 

@@ -5,6 +5,7 @@ import { ProductCard } from "@/components/product-card"
 import { CatalogBrowseClient } from "@/components/catalog-browse-client"
 import { CatalogFilterControls } from "@/components/catalog-filter-controls"
 import { getSiteUrl } from "@/lib/api/base"
+import { indexingCanonical } from "@/lib/indexing-policy"
 import { getCatalogProducts } from "@/lib/api/products"
 import { toCatalogBrowseClientProducts } from "@/lib/catalog-browse-client-product"
 import {
@@ -30,6 +31,10 @@ import { actions, catalogCopy, seo } from "@/lib/woodright-copy"
 import { CopyLines } from "@/components/copy-lines"
 import { formatRuInline } from "@/lib/format-ru-copy"
 
+// Base catalog path only - filter/sort/pagination query strings are not
+// separate canonical targets (SEO contract: one indexable catalog URL).
+const catalogCanonical = indexingCanonical(`${getSiteUrl()}/catalog`)
+
 export const metadata: Metadata = {
   title: seo.catalog.title,
   description: seo.catalog.description,
@@ -38,17 +43,19 @@ export const metadata: Metadata = {
     description: seo.catalog.description,
     url: "/catalog",
   },
+  ...(catalogCanonical ? { alternates: catalogCanonical } : {}),
 }
 
 export default async function CatalogPage({
   searchParams,
 }: {
-  searchParams: Record<string, string | string[] | undefined>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
-  const legacyQs = catalogLegacyTypeRedirectQuery(searchParams)
+  const resolvedSearchParams = await searchParams
+  const legacyQs = catalogLegacyTypeRedirectQuery(resolvedSearchParams)
   if (legacyQs) redirect(`/catalog?${legacyQs}`)
 
-  const filterState = parseCatalogFilterState(searchParams)
+  const filterState = parseCatalogFilterState(resolvedSearchParams)
   const bespokeOnly = filterState.type === BESPOKE_PRODUCT_TYPE
 
   let allRaw: Record<string, unknown>[] = []

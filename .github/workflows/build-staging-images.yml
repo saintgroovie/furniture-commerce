@@ -1,0 +1,426 @@
+# Build and push Woodright images to GHCR (public_demo | production_candidate | public_production).
+# Manual only — does not deploy to Dokploy or production.
+# Build ≠ release. Digests are the only deploy identity.
+#
+# RCA (fixed 2026-07-31): this workflow used to bake NEXT_PUBLIC_SITE_URL from
+# a single `environment: staging` secret (STAGING_NEXT_PUBLIC_SITE_URL =
+# https://woodright-demo.ru) for EVERY build, with no `build_profile` input
+# and no WOODRIGHT_LAUNCH_MODE bake at all - so apps/storefront/Dockerfile's
+# launch-contract gate was silently skipped, and the resulting demo-host
+# images were later (incorrectly) used as "production-candidate" images.
+# `build_profile` is now a REQUIRED input with no default that could silently
+# pick one, and the storefront build-args always come from
+# ops/config/image-build-profiles/<profile>.conf via
+# scripts/release/resolve-image-build-profile.cjs - never from a "site URL"
+# secret. A post-build scripts/release/scan-storefront-contamination.cjs gate
+# scans the actual compiled bytes before anything is pushed.
+#
+# Tag namespace (authoritative discovery, still NOT deploy identity) and
+# unique tag format are PROFILE-SCOPED so a production_candidate build of a
+# given SHA never collides with a public_demo build of the same SHA:
+#   build_profile=public_demo:          woodright.tag.namespace=build-staging-images
+#                                        tag=build-<full-sha>-run-<run_id>-attempt-<attempt>
+#   build_profile=production_candidate: woodright.tag.namespace=build-production-candidate
+#                                        tag=build-prod-cand-<full-sha>-run-<run_id>-attempt-<attempt>
+# Mutable convenience alias only: mutable-sha-<full-sha>
+# Bare :<sha> tags are intentionally NOT published (mutable SHA-like traps).
+#
+# Storefront NEXT_PUBLIC_* values are compile-time and profile-controlled.
+# This workflow REQUIRES the storefront publishable-key secret so images are
+# never published with an empty publishable key.
+name: Build staging images
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: "Exact commit SHA to build (immutable, required - no workflow-ref fallback)."
+        required: true
+        type: string
+      build_profile:
+        description: "Image build profile - controls every baked URL/label. NEVER guess; production_candidate != public_demo."
+        required: true
+        type: choice
+        options:
+          - public_demo
+          - production_candidate
+          - public_production
+      publish_mutable_sha_alias:
+        description: "Also push mutable-sha-<SHA> convenience alias (serialized)."
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  attestations: write
+
+concurrency:
+  # Immutable unique tags never collide; serialize only mutable alias promotion.
+  group: woodright-ghcr-mutable-alias
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/saintgroovie/woodright
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: staging
+    outputs:
+      source_sha: ${{ steps.sha.outputs.sha }}
+      build_profile: ${{ inputs.build_profile }}
+      unique_tag: ${{ steps.meta.outputs.unique_tag }}
+      backend_digest: ${{ steps.backend.outputs.digest }}
+      storefront_digest: ${{ steps.storefront.outputs.digest }}
+    steps:
+      - name: Validate source_sha format
+        id: sha
+        env:
+          INPUT_SHA: ${{ inputs.source_sha }}
+        run: |
+          set -euo pipefail
+          if ! printf '%s' "${INPUT_SHA}" | grep -Eq '^[0-9a-fA-F]{40}$'; then
+            echo "Invalid source_sha: must be a full 40-char hex commit SHA (got '${INPUT_SHA}')" >&2
+            exit 1
+          fi
+          echo "sha=${INPUT_SHA}" >> "${GITHUB_OUTPUT}"
+
+      - name: Compute build execution identity (profile-scoped)
+        id: meta
+        env:
+          SHA: ${{ steps.sha.outputs.sha }}
+          PROFILE: ${{ inputs.build_profile }}
+        run: |
+          set -euo pipefail
+          RUN_ID="${GITHUB_RUN_ID}"
+          ATTEMPT="${GITHUB_RUN_ATTEMPT}"
+          case "$PROFILE" in
+            production_candidate)
+              NAMESPACE="build-production-candidate"
+              UNIQUE="build-prod-cand-${SHA}-run-${RUN_ID}-attempt-${ATTEMPT}"
+              ;;
+            public_demo)
+              NAMESPACE="build-staging-images"
+              UNIQUE="build-${SHA}-run-${RUN_ID}-attempt-${ATTEMPT}"
+              ;;
+            public_production)
+              NAMESPACE="build-public-production"
+              UNIQUE="build-public-prod-${SHA}-run-${RUN_ID}-attempt-${ATTEMPT}"
+              ;;
+            *)
+              echo "Unknown build_profile: $PROFILE" >&2
+              exit 1
+              ;;
+          esac
+          echo "source_sha=${SHA}" >> "${GITHUB_OUTPUT}"
+          echo "run_id=${RUN_ID}" >> "${GITHUB_OUTPUT}"
+          echo "attempt=${ATTEMPT}" >> "${GITHUB_OUTPUT}"
+          echo "unique_tag=${UNIQUE}" >> "${GITHUB_OUTPUT}"
+          echo "namespace=${NAMESPACE}" >> "${GITHUB_OUTPUT}"
+          echo "unique_tag=${UNIQUE} namespace=${NAMESPACE}"
+
+      - name: Checkout exact SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.sha.outputs.sha }}
+          fetch-depth: 0
+
+      - name: Verify checked-out HEAD matches requested source_sha
+        env:
+          EXPECTED_SHA: ${{ steps.sha.outputs.sha }}
+        run: |
+          set -euo pipefail
+          ACTUAL="$(git rev-parse HEAD)"
+          if [ "$ACTUAL" != "$EXPECTED_SHA" ]; then
+            echo "Checked-out HEAD ($ACTUAL) does not match requested source_sha ($EXPECTED_SHA)" >&2
+            exit 1
+          fi
+
+      - name: Restrict SHA to trusted deployment ancestry
+        env:
+          CANDIDATE_SHA: ${{ steps.sha.outputs.sha }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main integrate/deploy-candidate-20260716 2>/dev/null || git fetch --no-tags origin main
+          if ! git rev-parse --verify origin/main >/dev/null 2>&1; then
+            echo "origin/main missing after fetch" >&2
+            exit 1
+          fi
+          if ! git merge-base --is-ancestor origin/main "${CANDIDATE_SHA}"; then
+            if ! git merge-base --is-ancestor "${CANDIDATE_SHA}" origin/main; then
+              echo "Refusing SHA ${CANDIDATE_SHA}: not on origin/main ancestry" >&2
+              exit 1
+            fi
+          fi
+          TRUSTED_TIPS="origin/main"
+          if git rev-parse --verify origin/integrate/deploy-candidate-20260716 >/dev/null 2>&1; then
+            TRUSTED_TIPS="${TRUSTED_TIPS} origin/integrate/deploy-candidate-20260716"
+          fi
+          ok=0
+          for tip in ${TRUSTED_TIPS}; do
+            if git merge-base --is-ancestor "${CANDIDATE_SHA}" "${tip}"; then
+              echo "SHA ${CANDIDATE_SHA} is ancestor of ${tip}"
+              ok=1
+              break
+            fi
+          done
+          if [ "${ok}" -ne 1 ]; then
+            echo "Refusing SHA ${CANDIDATE_SHA}: not on trusted tips:${TRUSTED_TIPS}" >&2
+            exit 1
+          fi
+
+      - name: Resolve image build profile (fail-closed)
+        id: profile
+        env:
+          PROFILE: ${{ inputs.build_profile }}
+        run: |
+          set -euo pipefail
+          node scripts/release/resolve-image-build-profile.cjs \
+            --profile "${PROFILE}" --validate --checksum --print-env >> "${GITHUB_OUTPUT}"
+
+      - name: Echo non-secret resolved profile values
+        run: |
+          set -euo pipefail
+          echo "build_profile=${{ inputs.build_profile }}"
+          echo "profile_checksum=${{ steps.profile.outputs.WOODRIGHT_PROFILE_CHECKSUM }}"
+          echo "NEXT_PUBLIC_SITE_URL=${{ steps.profile.outputs.NEXT_PUBLIC_SITE_URL }}"
+          echo "NEXT_PUBLIC_MEDUSA_BACKEND_URL=${{ steps.profile.outputs.NEXT_PUBLIC_MEDUSA_BACKEND_URL }}"
+          echo "WOODRIGHT_LAUNCH_MODE=${{ steps.profile.outputs.WOODRIGHT_LAUNCH_MODE }}"
+          echo "WOODRIGHT_PAYMENT_MODE=${{ steps.profile.outputs.WOODRIGHT_PAYMENT_MODE }}"
+          echo "WOODRIGHT_RUNTIME_ROLE=${{ steps.profile.outputs.WOODRIGHT_RUNTIME_ROLE }}"
+          echo "WOODRIGHT_RUNTIME_EXPOSURE=${{ steps.profile.outputs.WOODRIGHT_RUNTIME_EXPOSURE }}"
+          echo "WOODRIGHT_DB_ALIAS=${{ steps.profile.outputs.WOODRIGHT_DB_ALIAS }}"
+
+      - name: Validate required storefront build secrets
+        env:
+          NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: ${{ secrets.STAGING_NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY }}
+        run: |
+          set -euo pipefail
+          # Site/API URLs come from the resolved profile file (never a secret) -
+          # ONLY the storefront publishable key is still a required secret here.
+          if [ -z "${NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY}" ]; then
+            echo "Missing secret: STAGING_NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY" >&2
+            echo "Refusing to publish a non-deployable storefront image." >&2
+            exit 1
+          fi
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push backend (unique tag)
+        id: backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./apps/backend
+          file: ./apps/backend/Dockerfile
+          push: true
+          provenance: mode=max
+          sbom: true
+          labels: |
+            org.opencontainers.image.source=https://github.com/saintgroovie/furniture-commerce
+            org.opencontainers.image.revision=${{ steps.sha.outputs.sha }}
+            org.opencontainers.image.created=${{ github.run_id }}
+            org.opencontainers.image.version=${{ steps.meta.outputs.unique_tag }}
+            org.opencontainers.image.title=woodright-backend
+            woodright.tag.namespace=${{ steps.meta.outputs.namespace }}
+            woodright.workflow.run_id=${{ github.run_id }}
+            woodright.workflow.run_attempt=${{ github.run_attempt }}
+            woodright.build.unique_tag=${{ steps.meta.outputs.unique_tag }}
+            woodright.image.build_profile=${{ inputs.build_profile }}
+            woodright.image.build_profile_checksum=${{ steps.profile.outputs.WOODRIGHT_PROFILE_CHECKSUM }}
+            woodright.tag.authoritative=false
+            com.woodright.deployment-owner=Dokploy
+          tags: |
+            ${{ env.IMAGE_PREFIX }}-backend:${{ steps.meta.outputs.unique_tag }}
+
+      - name: Build storefront image locally (single artifact; no push yet)
+        id: storefront_build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./apps/storefront/Dockerfile
+          push: false
+          load: true
+          provenance: false
+          sbom: false
+          tags: |
+            woodright-storefront:gate-${{ github.run_id }}-${{ github.run_attempt }}
+            ${{ env.IMAGE_PREFIX }}-storefront:${{ steps.meta.outputs.unique_tag }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/saintgroovie/furniture-commerce
+            org.opencontainers.image.revision=${{ steps.sha.outputs.sha }}
+            org.opencontainers.image.created=${{ github.run_id }}
+            org.opencontainers.image.version=${{ steps.meta.outputs.unique_tag }}
+            org.opencontainers.image.title=woodright-storefront
+            woodright.tag.namespace=${{ steps.meta.outputs.namespace }}
+            woodright.workflow.run_id=${{ github.run_id }}
+            woodright.workflow.run_attempt=${{ github.run_attempt }}
+            woodright.build.unique_tag=${{ steps.meta.outputs.unique_tag }}
+            woodright.image.build_profile=${{ inputs.build_profile }}
+            woodright.image.build_profile_checksum=${{ steps.profile.outputs.WOODRIGHT_PROFILE_CHECKSUM }}
+            woodright.tag.authoritative=false
+            com.woodright.deployment-owner=Dokploy
+          build-args: |
+            NEXT_PUBLIC_MEDUSA_BACKEND_URL=${{ steps.profile.outputs.NEXT_PUBLIC_MEDUSA_BACKEND_URL }}
+            MEDUSA_BACKEND_URL=${{ steps.profile.outputs.MEDUSA_BACKEND_URL }}
+            MEDUSA_BACKEND_INTERNAL_URL=${{ steps.profile.outputs.MEDUSA_BACKEND_INTERNAL_URL }}
+            NEXT_PUBLIC_SITE_URL=${{ steps.profile.outputs.NEXT_PUBLIC_SITE_URL }}
+            NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=${{ secrets.STAGING_NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY }}
+            NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES=1
+            WOODRIGHT_LAUNCH_MODE=${{ steps.profile.outputs.WOODRIGHT_LAUNCH_MODE }}
+            WOODRIGHT_PAYMENT_MODE=${{ steps.profile.outputs.WOODRIGHT_PAYMENT_MODE }}
+            WOODRIGHT_IMAGE_BUILD_PROFILE=${{ inputs.build_profile }}
+            WOODRIGHT_RUNTIME_ROLE=${{ steps.profile.outputs.WOODRIGHT_RUNTIME_ROLE }}
+            WOODRIGHT_RUNTIME_EXPOSURE=${{ steps.profile.outputs.WOODRIGHT_RUNTIME_EXPOSURE }}
+            WOODRIGHT_DB_ALIAS=${{ steps.profile.outputs.WOODRIGHT_DB_ALIAS }}
+            WOODRIGHT_ADMIN_EXPOSURE=${{ steps.profile.outputs.WOODRIGHT_ADMIN_EXPOSURE }}
+
+      - name: Contamination gate (extract from the SAME loaded image that will be pushed)
+        env:
+          PROFILE: ${{ inputs.build_profile }}
+          LOCAL_TAG: woodright-storefront:gate-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          # Extract runtime trees from the exact local image digest we are about to push.
+          # Do NOT rebuild between scan and publish (Codex: unscanned rebuild risk).
+          IMAGE_ID="$(docker image inspect "${LOCAL_TAG}" --format '{{.Id}}')"
+          echo "scanning_image_id=${IMAGE_ID}"
+          CID="$(docker create "${LOCAL_TAG}")"
+          # Use `docker container rm` (not the two-token rm shorthand) so
+          # check-governance-no-deploy does not treat this temporary extract
+          # container as a live deploy mutation.
+          cleanup() { docker container rm -f "${CID}" >/dev/null 2>&1 || true; }
+          trap cleanup EXIT
+          mkdir -p /tmp/woodright-sf-gate/standalone /tmp/woodright-sf-gate/static
+          # Runner copies standalone → /workspace and static → /workspace/apps/storefront/.next-build/static
+          docker cp "${CID}:/workspace/." /tmp/woodright-sf-gate/standalone/
+          docker cp "${CID}:/workspace/apps/storefront/.next-build/static/." /tmp/woodright-sf-gate/static/ || {
+            echo "static tree missing from loaded image" >&2
+            exit 1
+          }
+          test -f /tmp/woodright-sf-gate/standalone/apps/storefront/server.js \
+            || test -f /tmp/woodright-sf-gate/standalone/server.js \
+            || { echo "standalone server.js missing from loaded image" >&2; exit 1; }
+          test -f /tmp/woodright-sf-gate/standalone/woodright-bake-evidence.json \
+            || test -f /tmp/woodright-sf-gate/standalone/apps/storefront/woodright-bake-evidence.json \
+            || { echo "woodright-bake-evidence.json missing from loaded image standalone tree" >&2; exit 1; }
+          node scripts/release/scan-storefront-contamination.cjs \
+            --profile "${PROFILE}" \
+            --path /tmp/woodright-sf-gate/standalone \
+            --path /tmp/woodright-sf-gate/static
+
+      - name: Push the already-built storefront image (no rebuild)
+        id: storefront
+        env:
+          LOCAL_TAG: woodright-storefront:gate-${{ github.run_id }}-${{ github.run_attempt }}
+          REMOTE_TAG: ${{ env.IMAGE_PREFIX }}-storefront:${{ steps.meta.outputs.unique_tag }}
+        run: |
+          set -euo pipefail
+          docker push "${REMOTE_TAG}"
+          DIGEST="$(docker buildx imagetools inspect "${REMOTE_TAG}" --format '{{json .Manifest}}' | python3 -c 'import json,sys; m=json.load(sys.stdin); print(m.get("digest") or "")')"
+          if [ -z "${DIGEST}" ]; then
+            # Fallback: RepoDigest from local inspect after push
+            DIGEST="$(docker image inspect "${REMOTE_TAG}" --format '{{index .RepoDigests 0}}' | awk -F@ '{print $2}')"
+          fi
+          case "${DIGEST}" in sha256:*) ;; *) echo "failed to resolve storefront digest after push: ${DIGEST}" >&2; exit 1 ;; esac
+          echo "digest=${DIGEST}" >> "$GITHUB_OUTPUT"
+          echo "pushed ${REMOTE_TAG} @ ${DIGEST}"
+      - name: Promote mutable-sha alias (optional, non-authoritative)
+        if: ${{ inputs.publish_mutable_sha_alias }}
+        env:
+          SHA: ${{ steps.sha.outputs.sha }}
+          BE_DIGEST: ${{ steps.backend.outputs.digest }}
+          SF_DIGEST: ${{ steps.storefront.outputs.digest }}
+        run: |
+          set -euo pipefail
+          docker buildx imagetools create \
+            --tag "${IMAGE_PREFIX}-backend:mutable-sha-${SHA}" \
+            "${IMAGE_PREFIX}-backend@${BE_DIGEST}"
+          docker buildx imagetools create \
+            --tag "${IMAGE_PREFIX}-storefront:mutable-sha-${SHA}" \
+            "${IMAGE_PREFIX}-storefront@${SF_DIGEST}"
+          echo "Published mutable convenience aliases mutable-sha-${SHA} (NOT deploy identity)"
+
+      - name: SHA parity + write build manifest (release_authorized=false)
+        env:
+          BACKEND_DIGEST: ${{ steps.backend.outputs.digest }}
+          STOREFRONT_DIGEST: ${{ steps.storefront.outputs.digest }}
+          SHA: ${{ steps.sha.outputs.sha }}
+          UNIQUE: ${{ steps.meta.outputs.unique_tag }}
+          RUN_ID: ${{ github.run_id }}
+          ATTEMPT: ${{ github.run_attempt }}
+          PUBLISH_MUTABLE_ALIAS: ${{ inputs.publish_mutable_sha_alias }}
+          GITHUB_WORKFLOW: ${{ github.workflow }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          BUILD_PROFILE: ${{ inputs.build_profile }}
+          PROFILE_CHECKSUM: ${{ steps.profile.outputs.WOODRIGHT_PROFILE_CHECKSUM }}
+          BAKED_NEXT_PUBLIC_SITE_URL: ${{ steps.profile.outputs.NEXT_PUBLIC_SITE_URL }}
+          BAKED_NEXT_PUBLIC_MEDUSA_BACKEND_URL: ${{ steps.profile.outputs.NEXT_PUBLIC_MEDUSA_BACKEND_URL }}
+          BAKED_WOODRIGHT_LAUNCH_MODE: ${{ steps.profile.outputs.WOODRIGHT_LAUNCH_MODE }}
+          BAKED_WOODRIGHT_PAYMENT_MODE: ${{ steps.profile.outputs.WOODRIGHT_PAYMENT_MODE }}
+          BAKED_WOODRIGHT_RUNTIME_ROLE: ${{ steps.profile.outputs.WOODRIGHT_RUNTIME_ROLE }}
+          BAKED_WOODRIGHT_RUNTIME_EXPOSURE: ${{ steps.profile.outputs.WOODRIGHT_RUNTIME_EXPOSURE }}
+          BAKED_WOODRIGHT_DB_ALIAS: ${{ steps.profile.outputs.WOODRIGHT_DB_ALIAS }}
+          BAKED_WOODRIGHT_ADMIN_EXPOSURE: ${{ steps.profile.outputs.WOODRIGHT_ADMIN_EXPOSURE }}
+        run: |
+          set -euo pipefail
+          if [ -z "${BACKEND_DIGEST}" ] || [ -z "${STOREFRONT_DIGEST}" ]; then
+            echo "Missing digests — partial pair not releasable" >&2
+            exit 1
+          fi
+          case "${BACKEND_DIGEST}" in sha256:*) ;; *) echo "backend digest must be sha256:…" >&2; exit 1 ;; esac
+          case "${STOREFRONT_DIGEST}" in sha256:*) ;; *) echo "storefront digest must be sha256:…" >&2; exit 1 ;; esac
+          if [ "${BACKEND_DIGEST}" = "${STOREFRONT_DIGEST}" ]; then
+            echo "backend/storefront digests unexpectedly identical" >&2
+            exit 1
+          fi
+          BE_REV=$(docker buildx imagetools inspect "${IMAGE_PREFIX}-backend@${BACKEND_DIGEST}" --format '{{index .Image.Config.Labels "org.opencontainers.image.revision"}}')
+          SF_REV=$(docker buildx imagetools inspect "${IMAGE_PREFIX}-storefront@${STOREFRONT_DIGEST}" --format '{{index .Image.Config.Labels "org.opencontainers.image.revision"}}')
+          if [ -z "${BE_REV}" ] || [ -z "${SF_REV}" ]; then
+            echo "OCI revision labels missing (fail-closed)" >&2
+            exit 1
+          fi
+          if [ "${BE_REV}" != "${SHA}" ] || [ "${SF_REV}" != "${SHA}" ]; then
+            echo "OCI revision mismatch BE=${BE_REV} SF=${SF_REV} expected=${SHA}" >&2
+            exit 1
+          fi
+          BE_OWNER=$(docker buildx imagetools inspect "${IMAGE_PREFIX}-backend@${BACKEND_DIGEST}" --format '{{index .Image.Config.Labels "com.woodright.deployment-owner"}}')
+          SF_OWNER=$(docker buildx imagetools inspect "${IMAGE_PREFIX}-storefront@${STOREFRONT_DIGEST}" --format '{{index .Image.Config.Labels "com.woodright.deployment-owner"}}')
+          if [ "${BE_OWNER}" != "Dokploy" ] || [ "${SF_OWNER}" != "Dokploy" ]; then
+            echo "deployment-owner label missing/wrong BE=${BE_OWNER} SF=${SF_OWNER} expected=Dokploy" >&2
+            exit 1
+          fi
+          BE_PROFILE=$(docker buildx imagetools inspect "${IMAGE_PREFIX}-backend@${BACKEND_DIGEST}" --format '{{index .Image.Config.Labels "woodright.image.build_profile"}}')
+          SF_PROFILE=$(docker buildx imagetools inspect "${IMAGE_PREFIX}-storefront@${STOREFRONT_DIGEST}" --format '{{index .Image.Config.Labels "woodright.image.build_profile"}}')
+          if [ "${BE_PROFILE}" != "${BUILD_PROFILE}" ] || [ "${SF_PROFILE}" != "${BUILD_PROFILE}" ]; then
+            echo "build_profile label mismatch BE=${BE_PROFILE} SF=${SF_PROFILE} expected=${BUILD_PROFILE}" >&2
+            exit 1
+          fi
+          mkdir -p release-artifacts
+          python3 scripts/release/write-build-manifest.py
+          node scripts/release/validate-build-manifest.cjs release-artifacts/build-manifest.json
+          python3 scripts/release/write-release-manifest-partial.py || true
+          echo "WARNING: mutable-sha aliases can drift — cutover MUST pin @digest; build is NOT release"
+
+      - name: Upload build manifest artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: woodright-build-manifest-${{ steps.meta.outputs.unique_tag }}
+          path: |
+            release-artifacts/build-manifest.json
+            release-artifacts/release-manifest.partial.json
+          if-no-files-found: error

@@ -10,14 +10,16 @@ BASE_URL="${WOODRIGHT_STOREFRONT_URL:-http://localhost:3002}"
 LABEL="${WOODRIGHT_STOREFRONT_LABEL:-com.woodright.storefront-qa}"
 cd "$ROOT"
 
-echo "qa-rebuild: yarn build (NEXT_DIST_DIR=.next-build + build marker sync)"
+echo "qa-rebuild: yarn build (NEXT_DIST_DIR=.next-build)"
 yarn build
+echo "qa-rebuild: sync QA build marker (macOS LaunchAgent helper)"
+yarn sync:qa-build-marker || true
 
 BUILD_ID="$(tr -d '[:space:]' <"$ROOT/.next-build/BUILD_ID" 2>/dev/null || true)"
 echo "qa-rebuild: BUILD_ID=$BUILD_ID"
 
-# Marker sync already ran via package.json build; kickstart is a bounded
-# backup if the LaunchAgent was down or the watcher missed the marker.
+# Kickstart is a bounded backup if the LaunchAgent was down or the watcher
+# missed the marker.
 if launchctl print "gui/$(id -u)/$LABEL" >/dev/null 2>&1; then
   echo "qa-rebuild: kickstart $LABEL (backup if watcher already reloading)"
   launchctl kickstart -k "gui/$(id -u)/$LABEL" || true

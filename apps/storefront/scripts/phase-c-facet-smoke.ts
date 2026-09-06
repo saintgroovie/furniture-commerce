@@ -53,10 +53,14 @@ async function main() {
   })
 
   function legacy(state: CatalogFilterState) {
+    const categoryFacets = buildCatalogFacets(scoped, state, "category")
+    const collectionFacets = buildCatalogFacets(scoped, state, "collection")
     return {
       types: buildCatalogFacets(scoped, state, "type").types,
-      categories: buildCatalogFacets(scoped, state, "category").categories,
-      collections: buildCatalogFacets(scoped, state, "collection").collections,
+      categories: categoryFacets.categories,
+      collections: collectionFacets.collections,
+      categoryAllCount: categoryFacets.categoryAllCount,
+      collectionAllCount: collectionFacets.collectionAllCount,
       priceRange: buildCatalogFacets(scoped, state, "price").priceRange,
     }
   }

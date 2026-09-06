@@ -1,0 +1,28 @@
+[Unit]
+Description=Woodright public_production automated recovery-point backup (oneshot)
+Documentation=file:///srv/woodright/docs/operator/public-production-monitor-backup-recovery.md
+After=docker.service network-online.target
+Wants=network-online.target
+# Does not manage application containers.
+# Repository template only - do NOT enable automatically on merge.
+
+[Service]
+Type=oneshot
+User=root
+UMask=0077
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+TimeoutStartSec=7200
+TimeoutStopSec=120
+# No Restart= - oneshot must not loop
+Environment=WOODRIGHT_BACKUP_ROOT=/srv/woodright/backups/automated/public-production
+Environment=WOODRIGHT_ACTIVE_OWNER=/srv/woodright/runtime-ownership-public-production/ACTIVE_OWNER.json
+# Credentials remain inside postgres container; never put DATABASE_URL here.
+ExecStart=/srv/woodright/ops/backup/woodright-public-production-backup-run.sh --environment public_production
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=woodright-backup-public-production
+
+[Install]
+WantedBy=multi-user.target

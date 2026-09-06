@@ -1,10 +1,9 @@
 import type { Metadata } from "next"
-import Link from "next/link"
+import { seo } from "@/lib/woodright-copy"
 
 export const metadata: Metadata = {
-  title: { default: "По проекту", template: "%s | По проекту | Woodright" },
-  description:
-    "Мебель по проекту Woodright: подбор мебели, отделок и состава комнаты под интерьер или индивидуальную задачу.",
+  title: seo.bespoke.title,
+  description: seo.bespoke.description,
 }
 
 export default function BespokeLayout({
@@ -12,18 +11,5 @@ export default function BespokeLayout({
 }: {
   children: React.ReactNode
 }) {
-  return (
-    <div className="bespoke-theme">
-      <nav className="bespoke-nav" aria-label="По проекту">
-        <Link href="/bespoke" className="bespoke-nav-title">
-          По проекту
-        </Link>
-        <div className="bespoke-nav-links">
-          <Link href="/bespoke/catalog">Каталог</Link>
-          <Link href="/bespoke/request">Заявка на расчёт</Link>
-        </div>
-      </nav>
-      {children}
-    </div>
-  )
+  return <div className="bespoke-theme">{children}</div>
 }

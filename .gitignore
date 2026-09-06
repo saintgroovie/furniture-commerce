@@ -17,3 +17,23 @@ node_modules/
 *credentials*
 woodright-legacy-private-export/
 legacy-private-export/
+
+# Local legacy/media exports and generated artifacts
+data/raw/
+data/processed/
+
+# Local build/tool artifacts
+apps/backend/.medusa/
+dist/
+.yarn/
+*.tsbuildinfo
+apps/storefront/.next/
+apps/storefront/.next-*/
+apps/storefront/next-env.d.ts
+
+# Stray npm lockfile (project uses Yarn; yarn.lock is the tracked lockfile)
+package-lock.json
+
+# Generated catalog-normalization runtime dumps (keep scripts/docs)
+artifacts/catalog-normalization/
+tmp/

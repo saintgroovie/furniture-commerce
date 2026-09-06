@@ -8,7 +8,6 @@ import {
   catalogCardDerivativesEnabled,
   resolveCatalogCardHeroSrc,
   resolveCatalogCardImageSrc,
-  resolveCatalogCardMediaBundle,
   toCatalogCardDerivativePath,
 } from "./catalog-card-image"
 
@@ -69,24 +68,6 @@ assert.equal(
     identity
   ),
   "/product-static/products/greenwich/derivatives/card/GR-09-1_main_01.webp"
-)
-assert.deepEqual(
-  resolveCatalogCardMediaBundle(
-    "/product-static/products/greenwich/GR-05-1_greenwich_cream04.jpg",
-    [
-      "/product-static/products/greenwich/GR-05-1_greenwich_cream05.jpg",
-      "/product-static/products/greenwich/GR-05-1_greenwich_cream06.jpg",
-    ],
-    identity
-  ),
-  {
-    mainSrc:
-      "/product-static/products/greenwich/derivatives/card/GR-05-1_greenwich_cream04.webp",
-    extraSrcs: [
-      "/product-static/products/greenwich/derivatives/card/GR-05-1_greenwich_cream05.webp",
-      "/product-static/products/greenwich/derivatives/card/GR-05-1_greenwich_cream06.webp",
-    ],
-  }
 )
 if (prev === undefined) delete process.env.NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES
 else process.env.NEXT_PUBLIC_CATALOG_CARD_DERIVATIVES = prev

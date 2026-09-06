@@ -1,0 +1,14 @@
+[Unit]
+Description=Woodright P0 DOCKER-USER/INPUT port blocks for Dokploy published ports
+Documentation=file:///srv/woodright/docs/operator/dokploy-ssh-tunnel-access.md
+After=docker.service ufw.service network-online.target
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/wr-p0-docker-user-blocks.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
