@@ -839,11 +839,8 @@ else
 fi
 PRIVBIN="$TMP/privbin"
 mkdir -p "$PRIVBIN"
-cat >"$PRIVBIN/sha256sum" <<'EOF'
-#!/bin/sh
-echo "protected dry-run must not hash via unprivileged sha256sum" >&2
-exit 97
-EOF
+# Do not shadow sha256sum: Linux dry-run may need the real hasher for other
+# readable files. Only wrap sudo -n sha256sum.
 cat >"$PRIVBIN/sudo" <<EOF
 #!/usr/bin/env bash
 if [[ "\${1:-}" == "-n" && "\${2:-}" == "sha256sum" && "\${3:-}" == "--" && -n "\${4:-}" ]]; then
@@ -853,7 +850,7 @@ fi
 echo "unexpected sudo: \$*" >&2
 exit 1
 EOF
-chmod +x "$PRIVBIN/sha256sum" "$PRIVBIN/sudo"
+chmod +x "$PRIVBIN/sudo"
 chmod 000 "$ENV_FILE"
 ENVS=()
 while IFS= read -r line; do ENVS+=("$line"); done < <(base_env)
@@ -886,16 +883,14 @@ reset_harness
 printf 'SECRET=THIS_MUST_NEVER_APPEAR_IN_OUTPUT\n' >>"$ENV_FILE"
 FAILBIN="$TMP/failbin"
 mkdir -p "$FAILBIN"
-cat >"$FAILBIN/sha256sum" <<'EOF'
-#!/bin/sh
-exit 97
-EOF
+# Shadow sudo only. A dummy sha256sum on PATH breaks Linux (no shasum) before
+# the fingerprint runs.
 cat >"$FAILBIN/sudo" <<'EOF'
 #!/usr/bin/env bash
 echo "simulated privileged hasher failure" >&2
 exit 42
 EOF
-chmod +x "$FAILBIN/sha256sum" "$FAILBIN/sudo"
+chmod +x "$FAILBIN/sudo"
 chmod 000 "$ENV_FILE"
 ENVS=()
 while IFS= read -r line; do ENVS+=("$line"); done < <(base_env)
@@ -907,7 +902,7 @@ env "${ENVS[@]}" bash "$SCRIPT" \
 RC=$?
 set -e
 [[ "$RC" -ne 0 ]] && pass "protected-env sudo-fail: fail closed rc=$RC" || fail "protected-env sudo-fail: unexpectedly succeeded"
-if grep -qE 'fingerprint failed|fingerprint record is not sha256|privileged sha256sum failed|unprivileged sha256sum failed|compose env is unreadable|realpath required' \
+if grep -qE 'compose env fingerprint failed|privileged sha256sum failed|unprivileged sha256sum failed|compose env is unreadable|realpath required' \
   "$TMP/out-dryrun-privfail.txt" "$TMP/err-dryrun-privfail.txt"; then
   pass "protected-env sudo-fail: fingerprint error"
 else

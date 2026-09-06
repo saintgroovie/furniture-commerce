@@ -284,25 +284,28 @@ sha256_of() {
 # candidate .env uses sudo -n sha256sum -- <realpath>. Never cats secrets.
 # Prints "method digest" on stdout. Callers must parse that record in the
 # current shell (not inside $()) so the method survives for the packet.
+# Prints "method digest" on stdout. Returns 1 on failure without exiting the
+# caller (so command substitution cannot swallow the parent `die`).
 fingerprint_compose_env() {
   local digest allowed_root expected
-  [[ -n "${COMPOSE_ENV_FILE:-}" ]] || die "compose env file unset"
+  [[ -n "${COMPOSE_ENV_FILE:-}" ]] || { log "ERROR: compose env file unset"; return 1; }
   expected="${WOODRIGHT_COMPOSE_ENV_FILE:-$COMPOSE_ENV_FILE}"
   allowed_root="${WOODRIGHT_DOKPLOY_COMPOSE_DIR:-$(dirname -- "$COMPOSE_ENV_FILE")}"
   case "$COMPOSE_ENV_FILE$expected$allowed_root" in
     *public_demo*|*public-demo*|*woodright-stack-3dsdhd*|*woodright-public-production*|*public_production*)
-      die "refused fingerprint of non-candidate compose env"
+      log "ERROR: refused fingerprint of non-candidate compose env"
+      return 1
       ;;
   esac
   case "$allowed_root" in
     *woodright-production*) ;;
-    *) die "fingerprint allowed parent is not the production-candidate compose root" ;;
+    *) log "ERROR: fingerprint allowed parent is not the production-candidate compose root"; return 1 ;;
   esac
   digest="$(wr_compose_env_sha256_fingerprint "$COMPOSE_ENV_FILE" "$expected" "$allowed_root")" \
-    || die "compose env fingerprint failed (privileged hasher is sudo -n sha256sum; file contents are not read)"
+    || { log "ERROR: compose env fingerprint failed (privileged hasher is sudo -n sha256sum; file contents are not read)"; return 1; }
   case "$digest" in
     unprivileged\ [0-9a-f]*|privileged\ [0-9a-f]*) ;;
-    *) die "compose env fingerprint returned an invalid record" ;;
+    *) log "ERROR: compose env fingerprint returned an invalid record"; return 1 ;;
   esac
   printf '%s\n' "$digest"
 }
@@ -1483,10 +1486,14 @@ if [[ "$MODE" == "dry-run" ]]; then
   COMPOSE_ENV_FINGERPRINT_STATUS="absent"
   COMPOSE_ENV_FINGERPRINT_METHOD=""
   if [[ -f "$COMPOSE_ENV_FILE" ]]; then
+    set +e
     _wr_fp_rec="$(fingerprint_compose_env)"
+    _wr_fp_rc=$?
+    set -e
+    [[ "$_wr_fp_rc" -eq 0 ]] || die "compose env fingerprint failed (privileged hasher is sudo -n sha256sum; file contents are not read)"
     apply_compose_env_fingerprint_record "$_wr_fp_rec" \
       || die "compose env fingerprint record is not sha256"
-    unset _wr_fp_rec
+    unset _wr_fp_rec _wr_fp_rc
     COMPOSE_ENV_FINGERPRINT_STATUS="ok"
   fi
   emit_packet dry-run planned
@@ -1931,10 +1938,14 @@ PRELOCK_BE_ID="$(container_id "${WOODRIGHT_BE_CONTAINER_DEFAULT}")"
 PRELOCK_SF_ID="$(container_id "${WOODRIGHT_SF_CONTAINER_DEFAULT}")"
 PRELOCK_BE_DIGEST="$(container_digest "${WOODRIGHT_BE_CONTAINER_DEFAULT}")"
 PRELOCK_SF_DIGEST="$(container_digest "${WOODRIGHT_SF_CONTAINER_DEFAULT}")"
+set +e
 _wr_fp_rec="$(fingerprint_compose_env)"
+_wr_fp_rc=$?
+set -e
+[[ "$_wr_fp_rc" -eq 0 ]] || die "compose env fingerprint failed (privileged hasher is sudo -n sha256sum; file contents are not read)"
 apply_compose_env_fingerprint_record "$_wr_fp_rec" \
   || die "compose env fingerprint record is not sha256"
-unset _wr_fp_rec
+unset _wr_fp_rec _wr_fp_rc
 PRELOCK_PIN_SHA="$COMPOSE_ENV_FINGERPRINT"
 COMPOSE_ENV_FINGERPRINT_STATUS="ok"
 
@@ -1980,10 +1991,14 @@ UNDER_BE_ID="$(container_id "${WOODRIGHT_BE_CONTAINER_DEFAULT}")"
 UNDER_SF_ID="$(container_id "${WOODRIGHT_SF_CONTAINER_DEFAULT}")"
 UNDER_BE_DIGEST="$(container_digest "${WOODRIGHT_BE_CONTAINER_DEFAULT}")"
 UNDER_SF_DIGEST="$(container_digest "${WOODRIGHT_SF_CONTAINER_DEFAULT}")"
+set +e
 _wr_fp_rec="$(fingerprint_compose_env)"
+_wr_fp_rc=$?
+set -e
+[[ "$_wr_fp_rc" -eq 0 ]] || die "compose env fingerprint failed (privileged hasher is sudo -n sha256sum; file contents are not read)"
 apply_compose_env_fingerprint_record "$_wr_fp_rec" \
   || die "compose env fingerprint record is not sha256"
-unset _wr_fp_rec
+unset _wr_fp_rec _wr_fp_rc
 UNDER_PIN_SHA="$COMPOSE_ENV_FINGERPRINT"
 [[ "$UNDER_BE_ID" == "$PRELOCK_BE_ID" ]] || die "TOCTOU backend container id changed pre=$PRELOCK_BE_ID under=$UNDER_BE_ID"
 [[ "$UNDER_SF_ID" == "$PRELOCK_SF_ID" ]] || die "TOCTOU storefront container id changed pre=$PRELOCK_SF_ID under=$UNDER_SF_ID"
