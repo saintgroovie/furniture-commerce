@@ -33,3 +33,19 @@ export async function adminJson<T = unknown>(
   }
   return data as T
 }
+
+export function sellerErrorMessage(error: unknown, fallback: string): string {
+  if (!(error instanceof Error) || !error.message || error.message.startsWith("HTTP ")) {
+    return fallback
+  }
+  const message = error.message.trim()
+  if (
+    message.length > 180 ||
+    /validationerror|price_set|stack|internal server|cannot read|econnrefused|zoderror/i.test(
+      message
+    )
+  ) {
+    return fallback
+  }
+  return message
+}

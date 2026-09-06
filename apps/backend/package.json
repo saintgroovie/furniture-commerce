@@ -8,6 +8,7 @@
     "build": "medusa build",
     "dev": "medusa develop",
     "start": "medusa start",
+    "test:woodright-admin": "node ./node_modules/tsx/dist/cli.mjs --test src/lib/woodright-admin/price-sanity.test.ts src/lib/woodright-admin/readiness-summary.test.ts src/lib/woodright-admin/dimensions-command.test.ts src/lib/woodright-admin/execution-media-guard.test.ts src/lib/woodright-admin/site-preview-url.test.ts src/lib/woodright-admin/workspace-query.test.ts src/lib/woodright-admin/site-contacts.test.ts src/lib/woodright-admin/create-product-command.test.ts src/lib/woodright-admin/publish-readiness.test.ts src/lib/woodright-admin/seller-product.test.ts src/lib/woodright-admin/seller-site-state.test.ts src/lib/woodright-admin/publish-checklist.test.ts src/lib/woodright-admin/media-health.test.ts",
     "db:generate": "medusa db:generate",
     "db:migrate": "medusa db:migrate",
     "db:sync-links": "medusa db:sync-links",
@@ -26,6 +27,7 @@
     "@medusajs/cli": "2.18.0",
     "@types/node": "^20.0.0",
     "ts-node": "^10.9.2",
+    "tsx": "^4.23.0",
     "typescript": "^5.0.0"
   },
   "engines": {
