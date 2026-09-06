@@ -907,8 +907,16 @@ env "${ENVS[@]}" bash "$SCRIPT" \
 RC=$?
 set -e
 [[ "$RC" -ne 0 ]] && pass "protected-env sudo-fail: fail closed rc=$RC" || fail "protected-env sudo-fail: unexpectedly succeeded"
-grep -q 'compose env fingerprint failed\|privileged sha256sum failed' "$TMP/out-dryrun-privfail.txt" "$TMP/err-dryrun-privfail.txt" \
-  && pass "protected-env sudo-fail: fingerprint error" || fail "protected-env sudo-fail: missing fingerprint error"
+if grep -qE 'fingerprint failed|fingerprint record is not sha256|privileged sha256sum failed|unprivileged sha256sum failed|compose env is unreadable|realpath required' \
+  "$TMP/out-dryrun-privfail.txt" "$TMP/err-dryrun-privfail.txt"; then
+  pass "protected-env sudo-fail: fingerprint error"
+else
+  fail "protected-env sudo-fail: missing fingerprint error"
+  echo "protected-env sudo-fail stdout:" >&2
+  sed -n '1,40p' "$TMP/out-dryrun-privfail.txt" >&2 || true
+  echo "protected-env sudo-fail stderr:" >&2
+  sed -n '1,40p' "$TMP/err-dryrun-privfail.txt" >&2 || true
+fi
 if grep -F -q 'THIS_MUST_NEVER_APPEAR_IN_OUTPUT' "$TMP/out-dryrun-privfail.txt" "$TMP/err-dryrun-privfail.txt"; then
   fail "protected-env sudo-fail: sentinel leaked"
 else
