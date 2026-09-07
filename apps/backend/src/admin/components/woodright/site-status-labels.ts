@@ -40,9 +40,42 @@ export function severityColor(severity: "info" | "warning" | "error"): "green" |
   }
 }
 
+/**
+ * Admin thumbnails must load from the current Medusa origin.
+ * Stored file URLs are often stamped `http://localhost:9000/static/...` from
+ * another local runtime; the browser would then hit canonical `:9000`.
+ * Loopback `/static` and `/uploads` become same-origin relative paths.
+ */
 export function resolveAdminImageSrc(url: string): string {
-  if (url.startsWith("http://") || url.startsWith("https://")) return url
-  if (url.startsWith("/static/")) return url
-  if (url.startsWith("static/")) return `/${url}`
-  return url
+  const t = typeof url === "string" ? url.trim() : ""
+  if (!t) return t
+  if (/^https?:\/\//i.test(t)) {
+    try {
+      const parsed = new URL(t)
+      const host = parsed.hostname.toLowerCase()
+      const loopback =
+        host === "localhost" ||
+        host === "127.0.0.1" ||
+        host === "::1" ||
+        host === "[::1]"
+      const localFile =
+        parsed.pathname.startsWith("/static/") ||
+        parsed.pathname.startsWith("/uploads/")
+      if (loopback && localFile) {
+        return `${parsed.pathname}${parsed.search}${parsed.hash}`
+      }
+    } catch {
+      return t
+    }
+    return t
+  }
+  if (
+    t.startsWith("/static/") ||
+    t.startsWith("/uploads/") ||
+    t.startsWith("/product-static/")
+  ) {
+    return t
+  }
+  if (t.startsWith("static/")) return `/${t}`
+  return t
 }

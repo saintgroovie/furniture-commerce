@@ -7,7 +7,7 @@ import { MediaSection } from "../../../../components/woodright/MediaSection"
 import { PreviewActions } from "../../../../components/woodright/PreviewLink"
 import { PriceSection } from "../../../../components/woodright/PriceSection"
 import { PublishChecklist } from "../../../../components/woodright/PublishChecklist"
-import { productTypeBadge } from "../../../../components/woodright/site-status-labels"
+import { productTypeBadge, resolveAdminImageSrc } from "../../../../components/woodright/site-status-labels"
 import { VisibilitySection } from "../../../../components/woodright/VisibilitySection"
 import { adminJson, sellerErrorMessage } from "../../../../lib/admin-fetch"
 import { DirtyGuardProvider } from "../../../../lib/use-dirty-guard"
@@ -165,7 +165,7 @@ const WoodrightProductEditorPage = () => {
               <div className="flex items-start gap-3">
                 {product.thumbnail ? (
                   <img
-                    src={product.thumbnail}
+                    src={resolveAdminImageSrc(product.thumbnail)}
                     alt=""
                     className="h-16 w-16 rounded-md object-cover"
                   />
