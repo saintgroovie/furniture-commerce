@@ -23,6 +23,7 @@ import {
 import { highestAttentionChip, sellerSiteState, SELLER_STATE_LABELS } from "../../../lib/woodright-admin/seller-site-state"
 import { AttentionChipBadge } from "./AttentionChips"
 import { HighlightText } from "./HighlightText"
+import { resolveAdminImageSrc } from "./site-status-labels"
 
 const PAGE_SIZE = 20
 
@@ -135,7 +136,7 @@ export function SellerProductsList({
         cell: ({ row }) =>
           row.original.thumbnail ? (
             <img
-              src={row.original.thumbnail}
+              src={resolveAdminImageSrc(row.original.thumbnail)}
               alt=""
               className="h-12 w-12 rounded-md object-cover"
               onError={(event) => {
@@ -271,7 +272,7 @@ export function SellerProductsList({
                       aria-label={`${product.title}${sku ? ` · ${sku}` : ""}`}
                     >
                       {product.thumbnail ? (
-                        <img src={product.thumbnail} alt="" className="h-8 w-8 rounded-md object-cover" />
+                        <img src={resolveAdminImageSrc(product.thumbnail)} alt="" className="h-8 w-8 rounded-md object-cover" />
                       ) : (
                         <div className="h-8 w-8 rounded-md bg-ui-bg-subtle" />
                       )}
