@@ -5,10 +5,10 @@
   "description": "Medusa backend for furniture ecommerce + bespoke",
   "packageManager": "yarn@4.17.1",
   "scripts": {
-    "build": "medusa build",
+    "build": "medusa build && node scripts/link-admin-build.mjs",
     "dev": "medusa develop",
     "start": "medusa start",
-    "test:woodright-admin": "node ./node_modules/tsx/dist/cli.mjs --test src/lib/woodright-admin/price-sanity.test.ts src/lib/woodright-admin/readiness-summary.test.ts src/lib/woodright-admin/dimensions-command.test.ts src/lib/woodright-admin/execution-media-guard.test.ts src/lib/woodright-admin/site-preview-url.test.ts src/lib/woodright-admin/workspace-query.test.ts src/lib/woodright-admin/site-contacts.test.ts src/lib/woodright-admin/create-product-command.test.ts src/lib/woodright-admin/publish-readiness.test.ts src/lib/woodright-admin/seller-product.test.ts src/lib/woodright-admin/seller-site-state.test.ts src/lib/woodright-admin/publish-checklist.test.ts src/lib/woodright-admin/media-health.test.ts",
+    "test:woodright-admin": "node ./node_modules/tsx/dist/cli.mjs --test src/lib/woodright-admin/price-sanity.test.ts src/lib/woodright-admin/readiness-summary.test.ts src/lib/woodright-admin/dimensions-command.test.ts src/lib/woodright-admin/execution-media-guard.test.ts src/lib/woodright-admin/site-preview-url.test.ts src/lib/woodright-admin/workspace-query.test.ts src/lib/woodright-admin/site-contacts.test.ts src/lib/woodright-admin/create-product-command.test.ts src/lib/woodright-admin/publish-readiness.test.ts src/lib/woodright-admin/seller-product.test.ts src/lib/woodright-admin/seller-site-state.test.ts src/lib/woodright-admin/publish-checklist.test.ts src/lib/woodright-admin/media-health.test.ts src/admin/components/woodright/site-status-labels.test.ts && node --test scripts/link-admin-build.test.mjs",
     "db:generate": "medusa db:generate",
     "db:migrate": "medusa db:migrate",
     "db:sync-links": "medusa db:sync-links",
