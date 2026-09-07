@@ -12,6 +12,7 @@ import json
 import os
 import pathlib
 import re
+import stat
 import sys
 import tempfile
 from typing import Optional
@@ -194,6 +195,44 @@ def rewrite_content(
     return new, before, after
 
 
+def _assert_canonical_file_arg(path: pathlib.Path) -> None:
+    """Refuse caller-supplied paths that are not the governed resolver file.
+
+    Tests omit WOODRIGHT_PUBLIC_DEMO_ENDPOINT_CANONICAL_FILE. Live helpers
+    always set it to wr_public_demo_resolver_file() so sudo python cannot
+    be pointed at an arbitrary inode.
+    """
+    canon = os.environ.get("WOODRIGHT_PUBLIC_DEMO_ENDPOINT_CANONICAL_FILE", "").strip()
+    if not canon:
+        return
+    try:
+        if path.resolve() != pathlib.Path(canon).resolve():
+            raise Refuse("file_not_canonical_resolver")
+    except OSError as exc:
+        raise Refuse(f"canonical_path_unresolved:{exc}") from exc
+
+
+def _restore_file_metadata(path: pathlib.Path, orig_stat: os.stat_result) -> None:
+    """Keep owner/group/mode of the live YAML, not the mkstemp caller identity.
+
+    Incident 20260907T112434Z: sudo python replace left root:root 0600 even
+    when the previous inode was leonid:leonid 0600. Canonical contract is
+    preserve-preimage metadata (typically 0600 + the uid/gid that already
+    owned the file).
+    """
+    mode = stat.S_IMODE(orig_stat.st_mode)
+    try:
+        os.chmod(path, mode)
+    except OSError as exc:
+        if os.geteuid() == 0:
+            raise Refuse(f"chmod_restore_failed:{exc}") from exc
+    try:
+        os.chown(path, orig_stat.st_uid, orig_stat.st_gid)
+    except OSError as exc:
+        if os.geteuid() == 0:
+            raise Refuse(f"chown_restore_failed:{exc}") from exc
+
+
 def atomic_write(path: pathlib.Path, new: str, orig: str) -> str:
     orig_stat = path.stat()
     inject = os.environ.get("WOODRIGHT_PUBLIC_DEMO_ENDPOINT_CAS_INJECT")
@@ -205,7 +244,11 @@ def atomic_write(path: pathlib.Path, new: str, orig: str) -> str:
             handle.write(new)
             handle.flush()
             os.fsync(handle.fileno())
-        os.chmod(tmp_name, orig_stat.st_mode)
+        os.chmod(tmp_name, stat.S_IMODE(orig_stat.st_mode))
+        try:
+            os.chown(tmp_name, orig_stat.st_uid, orig_stat.st_gid)
+        except OSError as exc:
+            raise Refuse(f"chown_restore_failed:{exc}") from exc
         if inject:
             path.write_text(inject, encoding="utf-8")
         now_stat = path.stat()
@@ -218,11 +261,68 @@ def atomic_write(path: pathlib.Path, new: str, orig: str) -> str:
             return "cas_skip"
         os.replace(tmp_name, path)
         replaced = True
+        _restore_file_metadata(path, orig_stat)
         return "replaced"
     finally:
         if not replaced:
             try:
                 os.unlink(tmp_name)
+            except OSError:
+                pass
+
+
+def probe_atomic_write(path: pathlib.Path) -> dict:
+    """Prove sibling mkstemp + atomic replace without mutating the live YAML.
+
+    `test -w` on the YAML is not sufficient: Traefik parent
+    /etc/dokploy/traefik/dynamic may be root:root 0755 while the YAML itself
+    is caller-writable. The execute writer uses tempfile.mkstemp in the parent.
+    """
+    if not path.is_file():
+        raise Refuse("target_missing")
+    before = path.read_bytes()
+    before_stat = path.stat()
+    directory = str(path.parent)
+    fd, tmp_name = tempfile.mkstemp(prefix=".wr-tf-ep-probe-", suffix=".tmp", dir=directory)
+    probe_dest: Optional[pathlib.Path] = None
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write("# woodright-traefik-endpoint-capability-probe\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        probe_dest = pathlib.Path(directory) / (
+            ".wr-tf-ep-probe-dest-" + os.urandom(4).hex() + ".tmp"
+        )
+        os.replace(tmp_name, probe_dest)
+        tmp_name = ""
+        try:
+            os.chown(probe_dest, before_stat.st_uid, before_stat.st_gid)
+            os.chmod(probe_dest, stat.S_IMODE(before_stat.st_mode))
+        except OSError as exc:
+            raise Refuse(f"metadata_restore_unproven:{exc}") from exc
+        probe_dest.unlink()
+        probe_dest = None
+        after = path.read_bytes()
+        after_stat = path.stat()
+        if after != before or after_stat.st_ino != before_stat.st_ino:
+            raise Refuse("probe_mutated_target")
+        return {
+            "status": "ok",
+            "parent": directory,
+            "target": str(path),
+            "mode": oct(stat.S_IMODE(before_stat.st_mode)),
+        }
+    except OSError as exc:
+        raise Refuse(f"atomic_probe_failed:{type(exc).__name__}:{exc}") from exc
+    finally:
+        if tmp_name:
+            try:
+                os.unlink(tmp_name)
+            except OSError:
+                pass
+        if probe_dest is not None:
+            try:
+                probe_dest.unlink()
             except OSError:
                 pass
 
@@ -248,9 +348,19 @@ def main(argv: list[str]) -> int:
     p_rs.add_argument("--file", required=True)
     p_rs.add_argument("--stdout", action="store_true")
 
+    p_pr = sub.add_parser("probe-atomic-write")
+    p_pr.add_argument("--file", required=True)
+
     args = parser.parse_args(argv)
     path = pathlib.Path(args.file)
     try:
+        _assert_canonical_file_arg(path)
+        if args.cmd == "probe-atomic-write":
+            raw = path.read_text(encoding="utf-8")
+            _require_eligible_demo_file(raw)
+            result = probe_atomic_write(path)
+            _print_json(result)
+            return 0
         raw = path.read_text(encoding="utf-8")
         if args.cmd == "extract":
             urls = extract_service_urls(raw)

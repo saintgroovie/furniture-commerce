@@ -307,10 +307,14 @@ check_monitor() {
   # non-root runs can mis-read root-only backup manifests and overwrite
   # last-status.json to a false critical. Read the authoritative state file.
   local state_json="${WOODRIGHT_MONITOR_STATE_JSON:-/srv/woodright/monitoring/state/last-status.json}"
-  local max_age_s="${WOODRIGHT_MONITOR_MAX_AGE_S:-1800}"
+  local max_age_s="${WOODRIGHT_MONITOR_MAX_AGE_S:-300}"
   local skew_s="${WOODRIGHT_MONITOR_CLOCK_SKEW_S:-120}"
-  local refresh="${WOODRIGHT_REFRESH_MONITOR:-0}"
+  local refresh="${WOODRIGHT_REFRESH_MONITOR:-}"
   local use_sudo_reader=0
+
+  if [[ -z "$refresh" && "$MODE" == "execute" ]]; then
+    refresh=1
+  fi
 
   if [[ "$refresh" == "1" && "$MODE" == "execute" ]]; then
     if command -v systemctl >/dev/null 2>&1 && sudo -n systemctl start woodright-monitor.service >/dev/null 2>&1; then
@@ -340,6 +344,9 @@ PY
 import json,sys,time,re
 from datetime import datetime,timezone
 obj=json.load(open(sys.argv[1]))
+unix=obj.get("generated_at_unix")
+if isinstance(unix,(int,float)):
+  print(int(time.time()-float(unix))); raise SystemExit
 ts=str(obj.get("timestamp_utc") or "")
 m=re.fullmatch(r"(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z", ts)
 if not m:
@@ -358,6 +365,9 @@ PY
 import json,sys,time,re
 from datetime import datetime,timezone
 obj=json.load(open(sys.argv[1]))
+unix=obj.get("generated_at_unix")
+if isinstance(unix,(int,float)):
+  print(int(time.time()-float(unix))); raise SystemExit
 ts=str(obj.get("timestamp_utc") or "")
 m=re.fullmatch(r"(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z", ts)
 if not m:
@@ -374,7 +384,7 @@ PY
     die "monitor timestamp in the future age_s=$age_s skew_s=$skew_s from $state_json"
   fi
   if [[ "$age_s" -gt "$max_age_s" ]]; then
-    die "monitor stale age_s=$age_s max_age_s=$max_age_s from $state_json"
+    die "PUBLIC_MONITOR_STALE age_s=$age_s max_age_s=$max_age_s from $state_json"
   fi
   log "monitor gate pass overall=ok age_s=$age_s"
 }
@@ -440,17 +450,20 @@ verify_pair() {
   wr_public_demo_apply_traefik_pair_endpoints \
     "$sf" "$TARGET_SHA" "$SF_DIGEST" "$sf_id" \
     "$be" "$TARGET_SHA" "$BE_DIGEST" "$be_id" \
-    || return 1
+    || {
+    log "TRAEFIK_ENDPOINT_APPLY_FAILED"
+    return 1
+  }
   wr_public_demo_wait_buyer_edge \
     "$TARGET_SHA" "public_demo" "public_demo_db" "$prev" \
     "$EVIDENCE_DIR/raw/sf-headers.txt" || {
-    log "${WR_PUBLIC_DEMO_EDGE_RESULT:-PUBLIC_DEMO_EDGE_CONVERGENCE_TIMEOUT} buyer last_sha=${WR_PUBLIC_DEMO_EDGE_LAST_SHA:-empty}"
+    log "PUBLIC_EDGE_VERIFY_FAILED ${WR_PUBLIC_DEMO_EDGE_RESULT:-PUBLIC_DEMO_EDGE_CONVERGENCE_TIMEOUT} buyer last_sha=${WR_PUBLIC_DEMO_EDGE_LAST_SHA:-empty} last_http=${WR_PUBLIC_DEMO_EDGE_LAST_HTTP:-empty}"
     return 1
   }
   wr_public_demo_wait_api_edge \
     "$TARGET_SHA" "$prev" \
     "$EVIDENCE_DIR/raw/api-headers.txt" || {
-    log "${WR_PUBLIC_DEMO_EDGE_RESULT:-PUBLIC_DEMO_EDGE_CONVERGENCE_TIMEOUT} api last_sha=${WR_PUBLIC_DEMO_EDGE_LAST_SHA:-empty}"
+    log "PUBLIC_EDGE_VERIFY_FAILED ${WR_PUBLIC_DEMO_EDGE_RESULT:-PUBLIC_DEMO_EDGE_CONVERGENCE_TIMEOUT} api last_sha=${WR_PUBLIC_DEMO_EDGE_LAST_SHA:-empty} last_http=${WR_PUBLIC_DEMO_EDGE_LAST_HTTP:-empty}"
     return 1
   }
   return 0
@@ -590,6 +603,9 @@ else
   log "TARGET_ENV_IDENTITY_NOT_CHECKED mode=$MODE (env files omitted; execute still requires them)"
 fi
 
+wr_public_demo_require_endpoint_write_capability \
+  || die "TRAEFIK_ENDPOINT_CAPABILITY_FAILED"
+
 if [[ "$MODE" == "dry-run" || "$MODE" == "preflight" ]]; then
   wr_require_canonical_db_identity || exit 1
   log "PLANNED pair cutover sha=$TARGET_SHA be=$BE_DIGEST sf=$SF_DIGEST"
@@ -657,6 +673,8 @@ wr_assert_container_matches_environment "${WOODRIGHT_SF_CONTAINER_DEFAULT}" stor
 capture_old_identity
 assert_identity_stable_under_lock
 check_monitor
+wr_public_demo_require_endpoint_write_capability \
+  || die "TRAEFIK_ENDPOINT_CAPABILITY_FAILED"
 run_backup_gate
 
 # Wire peer-SF identity for BE-only auto-rollback (no SF keeper yet).

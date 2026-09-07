@@ -771,8 +771,14 @@ wr_public_demo_edge_http_get() {
 # Traefik 3.6.7 file-provider loadBalancer servers.url hostnames are resolved
 # when the parsed service object is built. A comment-only rewrite does not change
 # that object, so Traefik keeps the previous endpoint IP across stop+rename+create.
-# Governed fix: write the verified dokploy-network IPv4 of the target containers
-# into only the eligible public_demo service URLs, then settle HTTPS.
+#
+# Forward cutover therefore pins verified dokploy-network IPv4 after recreate
+# (IPs are ephemeral; they must be refreshed, never treated as a durable
+# baseline). Rollback restores woodright-staging-{backend,storefront} hostnames
+# so a later recreate cannot leave stale literal IPs on the public edge.
+#
+# Atomic YAML replace requires sibling mkstemp in the parent directory.
+# `test -w` on the YAML is not a capability proof (incident 20260907T112434Z).
 wr_public_demo_traefik_endpoint_py() {
   printf '%s\n' "${_WR_CUTOVER_COMMON_DIR}/woodright-public-demo-traefik-endpoint.py"
 }
@@ -796,6 +802,123 @@ wr_public_demo_read_resolver_file() {
   fi
   command -v sudo >/dev/null 2>&1 || return 1
   sudo -n cat "$f"
+}
+
+wr_public_demo_resolver_sha256() {
+  local f="$1"
+  if [[ -r "$f" ]]; then
+    sha256sum "$f" | awk '{print $1}'
+    return 0
+  fi
+  command -v sudo >/dev/null 2>&1 || return 1
+  sudo -n sha256sum "$f" | awk '{print $1}'
+}
+
+wr_public_demo_assert_resolver_path() {
+  local f="$1"
+  local base
+  base="$(basename -- "$f")"
+  if [[ "${WOODRIGHT_CUTOVER_ALLOW_TEST_PATHS:-0}" == "1" \
+    || "${WOODRIGHT_PUBLIC_DEMO_ENDPOINT_ALLOW_TEST_PATHS:-0}" == "1" ]]; then
+    return 0
+  fi
+  [[ "$base" == "woodright-demo.yml" ]] || {
+    wr_cutover_die "TRAEFIK_ENDPOINT_CAPABILITY_FAILED path_not_woodright-demo.yml"
+    return 1
+  }
+  if [[ "$f" != "/etc/dokploy/traefik/dynamic/woodright-demo.yml" ]]; then
+    wr_cutover_die "TRAEFIK_ENDPOINT_CAPABILITY_FAILED noncanonical_path"
+    return 1
+  fi
+  return 0
+}
+
+# Single python invocation path for probe / rewrite / restore-hostnames.
+# Privilege is a prefix only: sudo -n python3 <canonical py> <subcommand> --file <resolver>.
+# Tests may set WOODRIGHT_TRAEFIK_ENDPOINT_SUDO to a fake sudo binary.
+wr_public_demo_endpoint_run_py() {
+  local py json rc restore_e=0
+  local -a runner
+  py="$(wr_public_demo_traefik_endpoint_py)"
+  [[ -f "$py" ]] || {
+    wr_cutover_die "missing Traefik endpoint helper $py"
+    return 1
+  }
+  WOODRIGHT_PUBLIC_DEMO_ENDPOINT_CANONICAL_FILE="$(wr_public_demo_resolver_file)"
+  export WOODRIGHT_PUBLIC_DEMO_ENDPOINT_CANONICAL_FILE
+  runner=(python3)
+  if [[ "${WR_PUBLIC_DEMO_ENDPOINT_PRIVILEGED:-0}" == "1" ]]; then
+    if [[ -n "${WOODRIGHT_TRAEFIK_ENDPOINT_SUDO:-}" ]]; then
+      runner=("${WOODRIGHT_TRAEFIK_ENDPOINT_SUDO}" -n python3)
+    else
+      runner=(sudo -n python3)
+    fi
+  fi
+  [[ $- == *e* ]] && restore_e=1
+  set +e
+  json="$("${runner[@]}" "$py" "$@")"
+  rc=$?
+  [[ "$restore_e" -eq 1 ]] && set -e
+  printf '%s\n' "$json"
+  return "$rc"
+}
+
+wr_public_demo_probe_endpoint_writer() {
+  local privileged="${1:-0}"
+  local f json rc restore_e=0
+  f="$(wr_public_demo_resolver_file)"
+  WR_PUBLIC_DEMO_ENDPOINT_PRIVILEGED="$privileged"
+  [[ $- == *e* ]] && restore_e=1
+  set +e
+  json="$(wr_public_demo_endpoint_run_py probe-atomic-write --file "$f")"
+  rc=$?
+  [[ "$restore_e" -eq 1 ]] && set -e
+  [[ "$rc" -eq 0 ]] || return 1
+  printf '%s' "$json" | grep -q '"status": "ok"\|"status":"ok"' || return 1
+  return 0
+}
+
+# Must run before first container mutation. Fail-closed: no recreate if the
+# same atomic writer (or the same sudo -n python3 path) cannot sibling-mkstemp.
+wr_public_demo_require_endpoint_write_capability() {
+  local f before after
+  if [[ "${WOODRIGHT_SKIP_ENDPOINT_CAPABILITY:-0}" == "1" ]]; then
+    wr_cutover_log "TRAEFIK_ENDPOINT_CAPABILITY_SKIP harness"
+    return 0
+  fi
+  f="$(wr_public_demo_resolver_file)"
+  wr_public_demo_assert_resolver_path "$f" || return 1
+  wr_public_demo_resolver_file_exists "$f" || {
+    wr_cutover_log "TRAEFIK_ENDPOINT_CAPABILITY_FAILED missing=$f"
+    return 1
+  }
+  before="$(wr_public_demo_resolver_sha256 "$f")" || {
+    wr_cutover_log "TRAEFIK_ENDPOINT_CAPABILITY_FAILED unreadable=$f"
+    return 1
+  }
+  WR_PUBLIC_DEMO_ENDPOINT_PRIVILEGED=0
+  if wr_public_demo_probe_endpoint_writer 0; then
+    after="$(wr_public_demo_resolver_sha256 "$f")"
+    [[ "$before" == "$after" ]] || {
+      wr_cutover_log "TRAEFIK_ENDPOINT_CAPABILITY_FAILED probe_mutated_target"
+      return 1
+    }
+    export WR_PUBLIC_DEMO_ENDPOINT_PRIVILEGED=0
+    wr_cutover_log "TRAEFIK_ENDPOINT_CAPABILITY_OK privileged=0"
+    return 0
+  fi
+  if wr_public_demo_probe_endpoint_writer 1; then
+    after="$(wr_public_demo_resolver_sha256 "$f")"
+    [[ "$before" == "$after" ]] || {
+      wr_cutover_log "TRAEFIK_ENDPOINT_CAPABILITY_FAILED probe_mutated_target"
+      return 1
+    }
+    export WR_PUBLIC_DEMO_ENDPOINT_PRIVILEGED=1
+    wr_cutover_log "TRAEFIK_ENDPOINT_CAPABILITY_OK privileged=1"
+    return 0
+  fi
+  wr_cutover_log "TRAEFIK_ENDPOINT_CAPABILITY_FAILED parent_mkstemp_or_privilege"
+  return 1
 }
 
 _wr_public_demo_ipv4_ok() {
@@ -897,76 +1020,34 @@ wr_public_demo_container_dokploy_ip() {
   printf '%s\n' "$ip"
 }
 
-wr_public_demo_privileged_apply_urls() {
-  # Byte-preserving CAS for dest files that are not user-writable (sudo install).
-  # Args: dest_file python_subcommand [extra python args...]
-  # Extra args follow after dest; for rewrite they are --sf-url/--be-url.
-  local dest="$1"
-  local sub="$2"
-  shift 2
-  local py orig now newc
-  py="$(wr_public_demo_traefik_endpoint_py)"
-  orig="$(mktemp "${TMPDIR:-/tmp}/wr-tf-ep-orig.XXXXXX.yml")"
-  now="$(mktemp "${TMPDIR:-/tmp}/wr-tf-ep-now.XXXXXX.yml")"
-  newc="$(mktemp "${TMPDIR:-/tmp}/wr-tf-ep-new.XXXXXX.yml")"
-  wr_public_demo_read_resolver_file "$dest" >"$orig" || {
-    rm -f "$orig" "$now" "$newc"
-    wr_cutover_die "cannot read $dest"
-    return 1
-  }
-  cp "$orig" "$newc"
-  if ! python3 "$py" "$sub" --file "$newc" "$@" >/dev/null; then
-    rm -f "$orig" "$now" "$newc"
-    wr_cutover_die "Traefik endpoint $sub refused for $dest"
-    return 1
-  fi
-  wr_public_demo_read_resolver_file "$dest" >"$now" || {
-    rm -f "$orig" "$now" "$newc"
-    wr_cutover_die "cannot re-read $dest"
-    return 1
-  }
-  if ! cmp -s "$orig" "$now"; then
-    rm -f "$orig" "$now" "$newc"
-    wr_cutover_log "TRAEFIK_ENDPOINT_CAS_SKIP path=$dest"
-    return 1
-  fi
-  wr_cutover_install_file "$newc" "$dest" || {
-    rm -f "$orig" "$now" "$newc"
-    return 1
-  }
-  rm -f "$orig" "$now" "$newc"
-  return 0
-}
-
 wr_public_demo_rewrite_traefik_urls() {
   local sf_url="${1:?}"
   local be_url="${2:?}"
-  local f py rc json
+  local f rc json restore_e=0
   f="$(wr_public_demo_resolver_file)"
-  py="$(wr_public_demo_traefik_endpoint_py)"
-  [[ -f "$py" ]] || {
-    wr_cutover_die "missing Traefik endpoint helper $py"
-    return 1
-  }
+  wr_public_demo_assert_resolver_path "$f" || return 1
   wr_public_demo_resolver_file_exists "$f" || {
     wr_cutover_die "demo Traefik file missing $f"
     return 1
   }
-  if [[ -w "$f" ]]; then
-    set +e
-    json="$(python3 "$py" rewrite --file "$f" --sf-url "$sf_url" --be-url "$be_url")"
-    rc=$?
-    set -e
-  else
-    wr_public_demo_privileged_apply_urls "$f" rewrite --sf-url "$sf_url" --be-url "$be_url" || return 1
-    json='{"status":"replaced"}'
-    rc=0
+  if [[ -z "${WR_PUBLIC_DEMO_ENDPOINT_PRIVILEGED:-}" ]]; then
+    wr_public_demo_require_endpoint_write_capability || {
+      wr_cutover_log "TRAEFIK_ENDPOINT_APPLY_FAILED capability"
+      return 1
+    }
   fi
+  local restore_e=0
+  [[ $- == *e* ]] && restore_e=1
+  set +e
+  json="$(wr_public_demo_endpoint_run_py rewrite --file "$f" --sf-url "$sf_url" --be-url "$be_url")"
+  rc=$?
+  [[ "$restore_e" -eq 1 ]] && set -e
   if [[ "$rc" -eq 3 ]]; then
     wr_cutover_log "TRAEFIK_ENDPOINT_CAS_SKIP path=$f"
     return 1
   fi
   if [[ "$rc" -ne 0 ]]; then
+    wr_cutover_log "TRAEFIK_ENDPOINT_APPLY_FAILED path=$f json=${json:-empty}"
     wr_cutover_log "TRAEFIK_ENDPOINT_REWRITE_REFUSED path=$f json=${json:-empty}"
     return 1
   fi
@@ -980,32 +1061,38 @@ wr_public_demo_restore_traefik_hostnames() {
     wr_cutover_log "TRAEFIK_ENDPOINT_RESTORE_SKIP not_enabled"
     return 0
   fi
-  local f py json rc
+  local f json rc
   f="$(wr_public_demo_resolver_file)"
-  py="$(wr_public_demo_traefik_endpoint_py)"
   if ! wr_public_demo_resolver_file_exists "$f"; then
+    if [[ "${WOODRIGHT_PUBLIC_DEMO_RESTORE_ENDPOINTS:-0}" == "1" ]]; then
+      wr_cutover_log "TRAEFIK_ENDPOINT_RESTORE_FAILED missing=$f"
+      return 1
+    fi
     wr_cutover_log "TRAEFIK_ENDPOINT_RESTORE_SKIP missing=$f"
     return 0
   fi
-  [[ -f "$py" ]] || {
-    wr_cutover_die "missing Traefik endpoint helper $py"
+  wr_public_demo_assert_resolver_path "$f" || {
+    wr_cutover_log "TRAEFIK_ENDPOINT_RESTORE_FAILED path"
     return 1
   }
-  if [[ -w "$f" ]]; then
-    set +e
-    json="$(python3 "$py" restore-hostnames --file "$f")"
-    rc=$?
-    set -e
-  else
-    wr_public_demo_privileged_apply_urls "$f" restore-hostnames || return 1
-    json='{"status":"replaced"}'
-    rc=0
+  if [[ -z "${WR_PUBLIC_DEMO_ENDPOINT_PRIVILEGED:-}" ]]; then
+    wr_public_demo_require_endpoint_write_capability || {
+      wr_cutover_log "TRAEFIK_ENDPOINT_RESTORE_FAILED capability"
+      return 1
+    }
   fi
+  local restore_e=0
+  [[ $- == *e* ]] && restore_e=1
+  set +e
+  json="$(wr_public_demo_endpoint_run_py restore-hostnames --file "$f")"
+  rc=$?
+  [[ "$restore_e" -eq 1 ]] && set -e
   if [[ "$rc" -eq 3 ]]; then
     wr_cutover_log "TRAEFIK_ENDPOINT_CAS_SKIP restore path=$f"
     return 1
   fi
   if [[ "$rc" -ne 0 ]]; then
+    wr_cutover_log "TRAEFIK_ENDPOINT_RESTORE_FAILED path=$f json=${json:-empty}"
     wr_cutover_log "TRAEFIK_ENDPOINT_RESTORE_REFUSED path=$f json=${json:-empty}"
     return 1
   fi

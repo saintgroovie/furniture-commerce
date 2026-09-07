@@ -10,8 +10,29 @@ LOCK="$ROOT/ops/lib/woodright-staging-mutation-lock.sh"
 FAILED=0
 TMP="$(mktemp -d /tmp/wr-pair-cutover-test-XXXXXX)"
 trap 'rm -rf "$TMP"' EXIT
-# Isolate Traefik restore from any host /etc/dokploy file.
-export WOODRIGHT_PUBLIC_DEMO_EDGE_RESOLVER_FILE="$TMP/no-such-woodright-demo.yml"
+mkdir -p "$TMP/traefik/dynamic"
+cat >"$TMP/traefik/dynamic/woodright-demo.yml" <<'EOF'
+http:
+  routers:
+    woodright-api-https:
+      rule: Host(`api.woodright-demo.ru`)
+      service: woodright-backend
+    woodright-sf-https:
+      rule: Host(`woodright-demo.ru`)
+      service: woodright-storefront
+  services:
+    woodright-backend:
+      loadBalancer:
+        servers:
+          - url: "http://woodright-staging-backend:9000"
+    woodright-storefront:
+      loadBalancer:
+        servers:
+          - url: "http://woodright-staging-storefront:3002"
+EOF
+export WOODRIGHT_PUBLIC_DEMO_EDGE_RESOLVER_FILE="$TMP/traefik/dynamic/woodright-demo.yml"
+export WOODRIGHT_PUBLIC_DEMO_ENDPOINT_ALLOW_TEST_PATHS=1
+export WOODRIGHT_CUTOVER_ALLOW_TEST_PATHS=1
 
 pass() { echo "PASS $*"; }
 fail() { echo "FAIL $*"; FAILED=$((FAILED + 1)); }
@@ -366,15 +387,41 @@ if git -C "$ROOT" cat-file -e "${OLD_SHA_FOR_GATE}^{commit}" 2>/dev/null \
 else
   echo "NOTE: skipping --expected-old-sha (git objects not present in this clone)" >&2
 fi
+YAML_BEFORE="$(sha256sum "$WOODRIGHT_PUBLIC_DEMO_EDGE_RESOLVER_FILE" | awk '{print $1}')"
+YAML_MODE_BEFORE="$(stat -f '%Lp' "$WOODRIGHT_PUBLIC_DEMO_EDGE_RESOLVER_FILE" 2>/dev/null || stat -c '%a' "$WOODRIGHT_PUBLIC_DEMO_EDGE_RESOLVER_FILE")"
 if bash "$PAIR" --environment public_demo --component pair --mode dry-run \
   --target-sha "$SHA40" \
   --backend-digest "$BE_DIG" \
   --storefront-digest "$SF_DIG" \
   --evidence-dir "$EV2" \
-  "${PAIR_DRY_EXTRA[@]}"; then
+  "${PAIR_DRY_EXTRA[@]}" >"$TMP/pair-dry.out" 2>&1; then
   pass "pair dry-run exit 0"
 else
   fail "pair dry-run failed"
+  cat "$TMP/pair-dry.out" || true
+fi
+if grep -q 'TRAEFIK_ENDPOINT_CAPABILITY_OK' "$TMP/pair-dry.out" \
+  && grep -q 'DRY_RUN_OR_PREFLIGHT_OK' "$TMP/pair-dry.out"; then
+  pass "pair dry-run emits capability OK then DRY_RUN_OR_PREFLIGHT_OK"
+else
+  fail "pair dry-run missing capability or success marker"
+  cat "$TMP/pair-dry.out" || true
+fi
+YAML_AFTER="$(sha256sum "$WOODRIGHT_PUBLIC_DEMO_EDGE_RESOLVER_FILE" | awk '{print $1}')"
+YAML_MODE_AFTER="$(stat -f '%Lp' "$WOODRIGHT_PUBLIC_DEMO_EDGE_RESOLVER_FILE" 2>/dev/null || stat -c '%a' "$WOODRIGHT_PUBLIC_DEMO_EDGE_RESOLVER_FILE")"
+if [[ "$YAML_BEFORE" == "$YAML_AFTER" && "$YAML_MODE_BEFORE" == "$YAML_MODE_AFTER" ]]; then
+  pass "pair dry-run left Traefik YAML hash+mode unchanged"
+else
+  fail "pair dry-run mutated Traefik YAML"
+fi
+parent_tf="$(dirname "$WOODRIGHT_PUBLIC_DEMO_EDGE_RESOLVER_FILE")"
+shopt -s nullglob
+PROBE_LEAK=( "$parent_tf"/.wr-tf-ep-* )
+shopt -u nullglob
+if [[ ${#PROBE_LEAK[@]} -eq 0 ]]; then
+  pass "pair dry-run left no Traefik probe temp files"
+else
+  fail "pair dry-run leaked probe temps: ${PROBE_LEAK[*]}"
 fi
 if [[ -f "$TMP/state/log/mutations.log" ]]; then fail "pair dry-run mutated"; else pass "pair dry-run no mutation"; fi
 
@@ -747,6 +794,18 @@ if awk '/wr_staging_mutation_lock_acquire/,/MUTATION_STARTED=1/' "$PAIR" | grep 
 else
   fail "check_monitor missing under lock before mutation"
 fi
+if awk '/wr_public_demo_require_endpoint_write_capability/,/DRY_RUN_OR_PREFLIGHT_OK/' "$PAIR" | grep -q 'DRY_RUN_OR_PREFLIGHT_OK'; then
+  pass "pair dry-run requires endpoint capability before DRY_RUN_OR_PREFLIGHT_OK"
+else
+  fail "pair dry-run missing capability-before-success ordering"
+fi
+if awk '/wr_staging_mutation_lock_acquire/,/MUTATION_STARTED=1/' "$PAIR" | grep -q 'wr_public_demo_require_endpoint_write_capability'; then
+  pass "endpoint capability revalidated under lock before mutation"
+else
+  fail "under-lock endpoint capability missing"
+fi
+grep -q 'PUBLIC_MONITOR_STALE' "$PAIR" && pass "pair emits PUBLIC_MONITOR_STALE" || fail "pair missing PUBLIC_MONITOR_STALE"
+grep -q 'PUBLIC_EDGE_VERIFY_FAILED' "$PAIR" && pass "pair emits PUBLIC_EDGE_VERIFY_FAILED" || fail "pair missing PUBLIC_EDGE_VERIFY_FAILED"
 # Fail if check_monitor still invokes the monitor script (not merely comments)
 if awk '/^check_monitor\(\)/,/^}/' "$PAIR" | grep -E '\$mon|/\s*ops/monitoring/woodright-health-check\.sh|bash .+woodright-health-check'; then
   fail "check_monitor still execs health-check"
@@ -800,6 +859,25 @@ if bash "$PAIR" --environment public_demo --component pair --mode dry-run \
 else
   fail "pair dry-run with expected-old digests failed"
 fi
+# stale overall=ok cannot satisfy cutover acceptance
+mkdir -p "$TMP/ev-mon-stale"
+printf '{"timestamp_utc":"20200101T000000Z","generated_at_unix":1,"overall":"ok","exit_code":0,"checks":[]}\n' \
+  >"$TMP/mon-state/last-status.json"
+export WOODRIGHT_MONITOR_MAX_AGE_S=300
+set +e
+bash "$PAIR" --environment public_demo --component pair --mode dry-run \
+  --target-sha "$SHA40" --backend-digest "$BE_DIG" --storefront-digest "$SF_DIG" \
+  --evidence-dir "$TMP/ev-mon-stale" >"$TMP/mon-stale.out" 2>&1
+STALE_RC=$?
+set -e
+if [[ "$STALE_RC" -ne 0 ]] && grep -q 'PUBLIC_MONITOR_STALE' "$TMP/mon-stale.out"; then
+  pass "stale overall=ok refused with PUBLIC_MONITOR_STALE"
+else
+  fail "stale monitor accepted (rc=$STALE_RC)"
+  cat "$TMP/mon-stale.out" || true
+fi
+export WOODRIGHT_MONITOR_MAX_AGE_S=1800
+printf '{"timestamp_utc":"%s","overall":"ok","exit_code":0,"checks":[]}\n' "$FRESH_TS" >"$TMP/mon-state/last-status.json"
 export SKIP_MONITOR=1
 unset WOODRIGHT_MONITOR_STATE_JSON
 
