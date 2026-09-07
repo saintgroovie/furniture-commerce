@@ -259,13 +259,7 @@ wr_fault() {
 prod_docker() { wr_cutover_docker "$@"; }
 
 prod_compose() {
-  local -a cmd=()
-  if [[ -n "${WOODRIGHT_COMPOSE_BIN:-}" ]]; then
-    IFS=' ' read -r -a cmd <<<"${WOODRIGHT_COMPOSE_BIN}"
-  else
-    cmd=("${WOODRIGHT_DOCKER_BIN:-docker}" compose)
-  fi
-  command "${cmd[@]}" "$@"
+  wr_candidate_compose "$@"
 }
 
 sha256_of() {
@@ -1530,9 +1524,15 @@ fi
 # Defined before the rollback helpers: the EXIT trap may need it from any phase.
 compose_up() {
   local service="$1"
+  local proj_dir
   shift
-  prod_compose -f "${WOODRIGHT_COMPOSE_FILE}" --env-file "$COMPOSE_ENV_FILE" \
-    --project-name "${WOODRIGHT_COMPOSE_PROJECT}" up -d --no-deps "$@" "$service"
+  proj_dir="$(dirname -- "${WOODRIGHT_COMPOSE_FILE}")"
+  prod_compose \
+    --project-directory "$proj_dir" \
+    -f "${WOODRIGHT_COMPOSE_FILE}" \
+    --env-file "$COMPOSE_ENV_FILE" \
+    --project-name "${WOODRIGHT_COMPOSE_PROJECT}" \
+    up -d --no-deps "$@" "$service"
 }
 
 record_state() {

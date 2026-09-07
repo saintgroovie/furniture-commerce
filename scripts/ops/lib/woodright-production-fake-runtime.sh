@@ -338,6 +338,8 @@ while [[ $# -gt 0 ]]; do
     -f|--file) compose_file="$2"; shift 2 ;;
     --env-file) env_file="$2"; shift 2 ;;
     --project-name|-p) project="$2"; shift 2 ;;
+    --project-directory) shift 2 ;;
+    --project-directory=*) shift ;;
     up) up=1; shift ;;
     --force-recreate) force=1; shift ;;
     -d|--detach|--no-deps) shift ;;

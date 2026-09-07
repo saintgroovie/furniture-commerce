@@ -243,6 +243,8 @@ write_cutover_priv_sudo() {
 set -euo pipefail
 ENV_FILE=$(printf '%q' "$ENV_FILE")
 COMPOSE_DIR=$(printf '%q' "$COMPOSE_DIR")
+DOCKER_BIN=$(printf '%q' "$BIN/docker")
+STATE_DIR=$(printf '%q' "$STATE")
 lock_denied() {
   chmod 000 "\$ENV_FILE" 2>/dev/null || true
   chmod 000 "\$COMPOSE_DIR"/.wr-prod-pin-* 2>/dev/null || true
@@ -303,6 +305,25 @@ case "\$cmd" in
     exit \$rc
     ;;
   *)
+    cmd_base="\$(basename -- "\$cmd")"
+    cmd_resolved="\$(realpath "\$cmd" 2>/dev/null || true)"
+    want_resolved="\$(realpath "\$DOCKER_BIN" 2>/dev/null || true)"
+    if [[ "\$cmd_base" == "docker" && -n "\$cmd_resolved" && "\$cmd_resolved" == "\$want_resolved" ]]; then
+      if [[ "\${1:-}" != "compose" ]]; then
+        echo "unexpected docker argv (want compose): \$*" >&2
+        exit 1
+      fi
+      shift
+      mkdir -p "\$STATE_DIR/log"
+      printf 'sudo-compose %s\n' "\$*" >>"\$STATE_DIR/log/sudo-compose.log"
+      unlock_env
+      set +e
+      "\$cmd" compose "\$@"
+      rc=\$?
+      set -e
+      lock_denied
+      exit \$rc
+    fi
     echo "unexpected sudo command: \$cmd \$*" >&2
     exit 1
     ;;
@@ -1002,6 +1023,28 @@ else
 fi
 leftover="$(find "$COMPOSE_DIR" \( -name '.wr-prod-pin-*' -o -name '.wr-prod-new-*' -o -name '.wr-compose-env-publish-*' -o -name '.env.wr-prod-new-*' \) | wc -l | tr -d ' ')"
 [[ "$leftover" == "0" ]] && pass "protected-env execute: temp cleanup" || fail "protected-env execute: leftover temps=$leftover"
+if grep -q 'compose_method=privileged' "$TMP/out-protected-exec.txt" \
+  && [[ -s "$STATE/log/sudo-compose.log" ]] \
+  && grep -q -- '--project-name woodright-production' "$STATE/log/sudo-compose.log" \
+  && grep -q -- '--project-directory' "$STATE/log/sudo-compose.log" \
+  && grep -q -- '--env-file' "$STATE/log/sudo-compose.log" \
+  && grep -q 'backend' "$STATE/log/sudo-compose.log" \
+  && grep -q 'storefront' "$STATE/log/sudo-compose.log"; then
+  pass "protected-env execute: PRIVILEGED_COMPOSE_ENV_CONSUMPTION=PASS"
+else
+  fail "protected-env execute: privileged compose argv missing"
+  sed -n '1,80p' "$STATE/log/sudo-compose.log" 2>/dev/null || true
+fi
+if grep -qE '(^| )config( |$)' "$STATE/log/sudo-compose.log" 2>/dev/null; then
+  fail "protected-env execute: compose config invoked"
+else
+  pass "protected-env execute: no compose config"
+fi
+if grep -q 'compose_method=unprivileged' "$TMP/out-protected-exec.txt"; then
+  fail "protected-env execute: fell back to unprivileged compose"
+else
+  pass "protected-env execute: no unprivileged compose fallback"
+fi
 
 # Duplicate governed key: fail before mutation, hash unchanged.
 reset_harness
@@ -1114,6 +1157,74 @@ fi
 unlock_env
 leftover="$(find "$COMPOSE_DIR" \( -name '.wr-prod-pin-*' -o -name '.wr-compose-env-publish-*' -o -name '.env.wr-prod-new-*' \) | wc -l | tr -d ' ')"
 [[ "$leftover" == "0" ]] && pass "protected-env rollback: temp cleanup" || fail "protected-env rollback: leftover=$leftover"
+if grep -q 'compose_method=privileged' "$TMP/out-protected-rb.txt" \
+  && grep -q -- '--project-name woodright-production' "$STATE/log/sudo-compose.log"; then
+  pass "protected-env rollback: privileged compose used"
+else
+  fail "protected-env rollback: privileged compose missing"
+fi
+
+# Privileged compose unavailable after pins: fail closed, no unprivileged fallback.
+reset_harness
+printf 'SECRET=THIS_MUST_NEVER_APPEAR_IN_OUTPUT\n' >>"$ENV_FILE"
+NOSUDO_COMPOSE="$TMP/privbin-nodocker"
+write_cutover_priv_sudo "$NOSUDO_COMPOSE"
+# Replace docker branch with hard fail (pin-write primitives stay).
+python3 - "$NOSUDO_COMPOSE/sudo" <<'PY'
+from pathlib import Path
+import sys
+p = Path(sys.argv[1])
+text = p.read_text()
+needle = 'if [[ "$cmd_base" == "docker"'
+if needle not in text:
+    raise SystemExit('sudo shim missing docker branch')
+text = text.replace(
+    needle,
+    'echo "sudo-compose-denied" >&2; exit 1\nif false && [[ "$cmd_base" == "docker"',
+    1,
+)
+p.write_text(text)
+PY
+lock_env
+EV="$TMP/ev-protected-compose-denied"
+run_exec "$EV" "$TMP/out-protected-compose-denied.txt" "PATH=$NOSUDO_COMPOSE:$BIN:$PATH"
+[[ "$RC" -ne 0 ]] && pass "protected-env sudo-compose denied: fail closed" \
+  || fail "protected-env sudo-compose denied: rc=$RC"
+[[ "$(pin_of_any WOODRIGHT_BACKEND_IMAGE)" == "$OLD_BE_REF" ]] \
+  && pass "protected-env sudo-compose denied: pins restored or untouched" \
+  || fail "protected-env sudo-compose denied: pin=$(pin_of_any WOODRIGHT_BACKEND_IMAGE)"
+if grep -q 'UNEXPECTED_MUTATION compose' "$TMP/out-protected-compose-denied.txt"; then
+  fail "protected-env sudo-compose denied: unprivileged compose attempted"
+else
+  pass "protected-env sudo-compose denied: no unprivileged compose fallback"
+fi
+if grep -F -q 'THIS_MUST_NEVER_APPEAR_IN_OUTPUT' "$TMP/out-protected-compose-denied.txt"; then
+  fail "protected-env sudo-compose denied: sentinel leaked"
+else
+  pass "protected-env sudo-compose denied: sentinel absent"
+fi
+
+# WOODRIGHT_COMPOSE_BIN must not be executed under sudo on protected env.
+reset_harness
+printf 'SECRET=THIS_MUST_NEVER_APPEAR_IN_OUTPUT\n' >>"$ENV_FILE"
+write_cutover_priv_sudo "$PRIVBIN"
+cat >"$TMP/evil-compose" <<'EOF'
+#!/usr/bin/env bash
+echo "EVIL_COMPOSE_RAN $*" >&2
+exit 0
+EOF
+chmod +x "$TMP/evil-compose"
+lock_env
+EV="$TMP/ev-protected-compose-bin"
+run_exec "$EV" "$TMP/out-protected-compose-bin.txt" \
+  "PATH=$PRIVBIN:$BIN:$PATH" "WOODRIGHT_COMPOSE_BIN=$TMP/evil-compose"
+if grep -q 'EVIL_COMPOSE_RAN' "$TMP/out-protected-compose-bin.txt"; then
+  fail "protected-env COMPOSE_BIN: executed under/instead of privileged docker"
+else
+  pass "protected-env COMPOSE_BIN: ignored on protected env"
+fi
+[[ "$RC" -eq 0 ]] && pass "protected-env COMPOSE_BIN: execute still used privileged docker" \
+  || { fail "protected-env COMPOSE_BIN: rc=$RC"; sed -n '1,40p' "$TMP/out-protected-compose-bin.txt"; }
 
 # Deny-list: public-production compose env must not be a pin-write target.
 PUB_PARENT="$TMP/etc/dokploy/compose/woodright-public-production"
@@ -1783,6 +1894,34 @@ if grep -qE 'sudo[[:space:]]+cat|sudo[[:space:]]+-n[[:space:]]+cat' "$SCRIPT"; t
   fail "static: sudo cat on compose env"
 else
   pass "static: no sudo cat"
+fi
+grep -q 'wr_candidate_compose' "$SCRIPT" \
+  && grep -q 'wr_candidate_compose' "$ROOT/ops/lib/woodright-compose-env-authority.sh" \
+  && pass "static: candidate compose wrapper is wired" || fail "static: wr_candidate_compose missing"
+grep -q -- '--project-directory' "$SCRIPT" \
+  && pass "static: compose_up pins project-directory" || fail "static: compose_up missing project-directory"
+if grep -nE '^\s*eval |sudo sh -c' "$ROOT/ops/lib/woodright-compose-env-authority.sh"; then
+  fail "static: authority lib uses eval or sudo sh -c"
+else
+  pass "static: authority lib has no eval/sudo-sh"
+fi
+if grep -nE 'sudo -n \$\{?WOODRIGHT_COMPOSE_BIN|sudo[[:space:]].*"\$\{?WOODRIGHT_COMPOSE_BIN' \
+  "$ROOT/ops/lib/woodright-compose-env-authority.sh"; then
+  fail "static: COMPOSE_BIN used under sudo"
+else
+  pass "static: COMPOSE_BIN is not sudoed"
+fi
+if grep -nE 'sudo -n \$\{?WOODRIGHT_DOCKER_BIN|sudo[[:space:]].*"\$\{?WOODRIGHT_DOCKER_BIN' \
+  "$ROOT/ops/lib/woodright-compose-env-authority.sh"; then
+  fail "static: DOCKER_BIN used under sudo"
+else
+  pass "static: DOCKER_BIN is not sudoed on protected path"
+fi
+if ! grep -q 'wr_compose_env_resolve_docker_bin no-override' \
+  "$ROOT/ops/lib/woodright-compose-env-authority.sh"; then
+  fail "static: privileged compose does not ignore DOCKER_BIN override"
+else
+  pass "static: privileged compose resolves docker without env override"
 fi
 
 if [[ "$FAILED" -eq 0 ]]; then

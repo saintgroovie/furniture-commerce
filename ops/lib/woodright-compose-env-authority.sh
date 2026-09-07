@@ -659,3 +659,235 @@ wr_compose_env_restore_backup() {
   wr_compose_env_log "restore_ok checksum_matched"
   return 0
 }
+
+# Resolve the Docker CLI that Compose will exec. Absolute regular file whose
+# basename is exactly "docker". Never a command string. Protected/privileged
+# calls must pass "no-override" so WOODRIGHT_DOCKER_BIN cannot become a sudo
+# target.
+wr_compose_env_resolve_docker_bin() {
+  local cand="" resolved="" base=""
+  local mode="${1:-allow}"
+  if [[ "$mode" != "allow" && "$mode" != "no-override" ]]; then
+    wr_compose_env_die "docker bin resolve mode must be allow|no-override"
+    return 1
+  fi
+  if [[ "$mode" == "allow" && -n "${WOODRIGHT_DOCKER_BIN:-}" ]]; then
+    cand="$WOODRIGHT_DOCKER_BIN"
+    case "$cand" in
+      *$'\n'*|*[[:space:]]*)
+        wr_compose_env_die "WOODRIGHT_DOCKER_BIN must be a single absolute path"
+        return 1
+        ;;
+      /*) ;;
+      *)
+        wr_compose_env_die "WOODRIGHT_DOCKER_BIN must be an absolute path"
+        return 1
+        ;;
+    esac
+  else
+    if [[ "$mode" == "no-override" && -n "${WOODRIGHT_DOCKER_BIN:-}" ]]; then
+      wr_compose_env_log "ignoring WOODRIGHT_DOCKER_BIN on protected compose (not a sudo target)"
+    fi
+    cand="$(command -v docker 2>/dev/null || true)"
+    [[ -n "$cand" ]] || { wr_compose_env_die "docker executable not found"; return 1; }
+  fi
+  command -v realpath >/dev/null 2>&1 \
+    || { wr_compose_env_die "realpath required to pin docker executable"; return 1; }
+  resolved="$(realpath "$cand" 2>/dev/null || true)"
+  [[ -n "$resolved" && -f "$resolved" && -x "$resolved" ]] \
+    || { wr_compose_env_die "docker executable is missing or not executable"; return 1; }
+  base="$(basename -- "$resolved")"
+  [[ "$base" == "docker" ]] \
+    || { wr_compose_env_die "docker executable basename must be docker, got $base"; return 1; }
+  printf '%s\n' "$resolved"
+}
+
+# Candidate Compose wrapper: unprivileged when env is readable; otherwise
+# `sudo -n <resolved-docker> compose ...` against the exact governed env.
+# Command arrays only. The test compose hook is never passed to sudo.
+wr_candidate_compose() {
+  local -a orig=("$@")
+  local env_file="" compose_file="" project="" proj_dir="" sub=""
+  local i=0 n=${#orig[@]}
+  local allowed_parent expected_env expected_compose expected_project
+  local resolved_env="" docker_bin="" rc=0
+  local -a services=()
+
+  WR_CANDIDATE_COMPOSE_METHOD=""
+
+  while (( i < n )); do
+    case "${orig[$i]}" in
+      --env-file)
+        [[ -z "$env_file" ]] || { wr_compose_env_die "duplicate --env-file"; return 1; }
+        env_file="${orig[$((i + 1))]:-}"
+        [[ -n "$env_file" ]] || { wr_compose_env_die "missing --env-file value"; return 1; }
+        i=$((i + 2))
+        ;;
+      --env-file=*)
+        [[ -z "$env_file" ]] || { wr_compose_env_die "duplicate --env-file"; return 1; }
+        env_file="${orig[$i]#--env-file=}"
+        [[ -n "$env_file" ]] || { wr_compose_env_die "missing --env-file value"; return 1; }
+        i=$((i + 1))
+        ;;
+      -f|--file)
+        [[ -z "$compose_file" ]] || { wr_compose_env_die "duplicate compose --file"; return 1; }
+        compose_file="${orig[$((i + 1))]:-}"
+        [[ -n "$compose_file" ]] || { wr_compose_env_die "missing compose --file value"; return 1; }
+        i=$((i + 2))
+        ;;
+      --file=*)
+        [[ -z "$compose_file" ]] || { wr_compose_env_die "duplicate compose --file"; return 1; }
+        compose_file="${orig[$i]#--file=}"
+        [[ -n "$compose_file" ]] || { wr_compose_env_die "missing compose --file value"; return 1; }
+        i=$((i + 1))
+        ;;
+      --project-name|-p)
+        [[ -z "$project" ]] || { wr_compose_env_die "duplicate --project-name"; return 1; }
+        project="${orig[$((i + 1))]:-}"
+        [[ -n "$project" ]] || { wr_compose_env_die "missing --project-name value"; return 1; }
+        i=$((i + 2))
+        ;;
+      --project-name=*)
+        [[ -z "$project" ]] || { wr_compose_env_die "duplicate --project-name"; return 1; }
+        project="${orig[$i]#--project-name=}"
+        [[ -n "$project" ]] || { wr_compose_env_die "missing --project-name value"; return 1; }
+        i=$((i + 1))
+        ;;
+      --project-directory)
+        [[ -z "$proj_dir" ]] || { wr_compose_env_die "duplicate --project-directory"; return 1; }
+        proj_dir="${orig[$((i + 1))]:-}"
+        [[ -n "$proj_dir" ]] || { wr_compose_env_die "missing --project-directory value"; return 1; }
+        i=$((i + 2))
+        ;;
+      --project-directory=*)
+        [[ -z "$proj_dir" ]] || { wr_compose_env_die "duplicate --project-directory"; return 1; }
+        proj_dir="${orig[$i]#--project-directory=}"
+        [[ -n "$proj_dir" ]] || { wr_compose_env_die "missing --project-directory value"; return 1; }
+        i=$((i + 1))
+        ;;
+      -d|--detach|--no-deps|--force-recreate|--wait|--renew-anon-volumes)
+        i=$((i + 1))
+        ;;
+      up)
+        [[ -z "$sub" ]] || { wr_compose_env_die "multiple compose verbs"; return 1; }
+        sub="up"
+        i=$((i + 1))
+        ;;
+      config|ps|down|stop|rm|run|exec|logs|pull|build|create|start|restart|kill|pause|unpause|top|events|port|images|version|cp|convert)
+        wr_compose_env_die "refusing compose subcommand ${orig[$i]} (candidate wrapper allows only up)"
+        return 1
+        ;;
+      -*)
+        wr_compose_env_die "refusing unknown compose flag ${orig[$i]}"
+        return 1
+        ;;
+      *)
+        services+=("${orig[$i]}")
+        i=$((i + 1))
+        ;;
+    esac
+  done
+
+  [[ "$sub" == "up" ]] || { wr_compose_env_die "candidate compose requires verb up"; return 1; }
+  [[ -n "$env_file" && -n "$compose_file" && -n "$project" && -n "$proj_dir" ]] \
+    || { wr_compose_env_die "candidate compose requires --env-file, --file, --project-name, --project-directory"; return 1; }
+  (( ${#services[@]} >= 1 )) || { wr_compose_env_die "candidate compose up requires a service"; return 1; }
+  local svc
+  for svc in "${services[@]}"; do
+    case "$svc" in
+      backend|storefront) ;;
+      *)
+        wr_compose_env_die "refusing compose service $svc (backend|storefront only)"
+        return 1
+        ;;
+    esac
+  done
+
+  allowed_parent="${WOODRIGHT_DOKPLOY_COMPOSE_DIR:-}"
+  [[ -n "$allowed_parent" ]] || { wr_compose_env_die "WOODRIGHT_DOKPLOY_COMPOSE_DIR unset"; return 1; }
+  expected_env="${WOODRIGHT_COMPOSE_ENV_FILE:-}"
+  expected_compose="${WOODRIGHT_COMPOSE_FILE:-}"
+  expected_project="${WOODRIGHT_COMPOSE_PROJECT:-woodright-production}"
+
+  wr_compose_env_assert_not_public_target "$env_file$compose_file$proj_dir$allowed_parent$project" || return 1
+  wr_compose_env_assert_candidate_parent "$allowed_parent" || return 1
+  wr_compose_env_assert_path_under "$env_file" "$allowed_parent" || return 1
+  wr_compose_env_assert_path_under "$compose_file" "$allowed_parent" || return 1
+  wr_compose_env_is_regular_file "$env_file" || return 1
+  wr_compose_env_is_regular_file "$compose_file" || return 1
+  command -v realpath >/dev/null 2>&1 \
+    || { wr_compose_env_die "realpath required for candidate compose identity"; return 1; }
+  resolved_env="$(realpath "$env_file" 2>/dev/null || true)"
+  local resolved_compose resolved_proj resolved_allowed
+  resolved_compose="$(realpath "$compose_file" 2>/dev/null || true)"
+  resolved_proj="$(realpath "$proj_dir" 2>/dev/null || true)"
+  resolved_allowed="$(realpath "$allowed_parent" 2>/dev/null || true)"
+  [[ -n "$resolved_env" && -n "$resolved_compose" && -n "$resolved_proj" && -n "$resolved_allowed" ]] \
+    || { wr_compose_env_die "cannot canonicalize candidate compose paths"; return 1; }
+  [[ "$resolved_proj" == "$(dirname -- "$resolved_compose")" ]] \
+    || { wr_compose_env_die "project-directory is not the compose file parent"; return 1; }
+  case "$resolved_proj" in
+    "$resolved_allowed"|"$resolved_allowed"/*) ;;
+    *)
+      wr_compose_env_die "project-directory escapes candidate compose parent"
+      return 1
+      ;;
+  esac
+  if [[ -n "$expected_env" ]]; then
+    wr_compose_env_assert_exact_env_path "$env_file" "$expected_env" "$allowed_parent" || return 1
+  fi
+  if [[ -n "$expected_compose" ]]; then
+    local expected_compose_resolved
+    expected_compose_resolved="$(realpath "$expected_compose" 2>/dev/null || true)"
+    [[ "$resolved_compose" == "$expected_compose_resolved" ]] \
+      || { wr_compose_env_die "compose file is not the profile compose file"; return 1; }
+  fi
+  [[ "$project" == "$expected_project" ]] \
+    || { wr_compose_env_die "compose project name mismatch want=$expected_project got=$project"; return 1; }
+  case "$project" in
+    woodright-production) ;;
+    *)
+      wr_compose_env_die "compose project must be woodright-production"
+      return 1
+      ;;
+  esac
+
+  if [[ -r "$resolved_env" ]]; then
+    docker_bin="$(wr_compose_env_resolve_docker_bin allow)" || return 1
+    if [[ -n "${WOODRIGHT_COMPOSE_BIN:-}" ]]; then
+      case "${WOODRIGHT_COMPOSE_BIN}" in
+        *sudo*)
+          wr_compose_env_die "WOODRIGHT_COMPOSE_BIN must not invoke sudo"
+          return 1
+          ;;
+      esac
+      local -a hook=()
+      IFS=' ' read -r -a hook <<<"${WOODRIGHT_COMPOSE_BIN}"
+      [[ ${#hook[@]} -ge 1 ]] || { wr_compose_env_die "WOODRIGHT_COMPOSE_BIN is empty"; return 1; }
+      WR_CANDIDATE_COMPOSE_METHOD="compose_bin"
+      wr_compose_env_log "compose_method=compose_bin project=$project"
+      command "${hook[@]}" "${orig[@]}"
+      return $?
+    fi
+    WR_CANDIDATE_COMPOSE_METHOD="unprivileged"
+    wr_compose_env_log "compose_method=unprivileged docker_bin=$docker_bin project=$project"
+    command "$docker_bin" compose "${orig[@]}"
+    return $?
+  fi
+
+  docker_bin="$(wr_compose_env_resolve_docker_bin no-override)" || return 1
+  if [[ -n "${WOODRIGHT_COMPOSE_BIN:-}" ]]; then
+    wr_compose_env_log "ignoring WOODRIGHT_COMPOSE_BIN on protected env (hook is not a privileged argv)"
+  fi
+  command -v sudo >/dev/null 2>&1 \
+    || { wr_compose_env_die "compose env is unreadable and sudo is unavailable"; return 1; }
+  WR_CANDIDATE_COMPOSE_METHOD="privileged"
+  wr_compose_env_log "compose_method=privileged docker_bin=$docker_bin project=$project verb=up"
+  sudo -n "$docker_bin" compose "${orig[@]}"
+  rc=$?
+  [[ "$rc" -eq 0 ]] || {
+    wr_compose_env_die "privileged docker compose failed rc=$rc"
+    return "$rc"
+  }
+  return 0
+}
