@@ -98,10 +98,12 @@ else
 fi
 
 # --- privileged capability pass via fake sudo that can write the parent ---
+# Scrub sudo-filtered env so the probe cannot depend on CANONICAL_FILE.
 cat >"$TMP/fake-sudo" <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
 [[ "\${1:-}" == "-n" ]] && shift
+unset WOODRIGHT_PUBLIC_DEMO_ENDPOINT_CANONICAL_FILE || true
 chmod 0755 "$PARENT"
 "\$@"
 rc=\$?
@@ -132,6 +134,38 @@ if [[ "${WR_PUBLIC_DEMO_ENDPOINT_PRIVILEGED:-}" == "1" ]]; then
   pass "forward path remembers privileged=1"
 else
   fail "privileged flag not exported (have=${WR_PUBLIC_DEMO_ENDPOINT_PRIVILEGED:-empty})"
+fi
+
+# Privileged identity must ignore ALLOW_TEST_PATHS and refuse a caller --file.
+set +e
+WOODRIGHT_PUBLIC_DEMO_ENDPOINT_SIMULATE_EUID=0 \
+  WOODRIGHT_PUBLIC_DEMO_ENDPOINT_ALLOW_TEST_PATHS=1 \
+  python3 "$PY" probe-atomic-write --file "$YAML" \
+  >"$TMP/root-refuse.json" 2>"$TMP/root-refuse.err"
+ROOT_REFUSE_RC=$?
+set -e
+if [[ "$ROOT_REFUSE_RC" -eq 2 ]] && grep -q 'file_not_canonical_resolver' "$TMP/root-refuse.json"; then
+  pass "simulated euid=0 refuses non-canonical --file despite ALLOW_TEST_PATHS"
+else
+  fail "privileged path did not refuse alternate file rc=$ROOT_REFUSE_RC $(cat "$TMP/root-refuse.json" 2>/dev/null || true)"
+fi
+EVIL="$TMP/evil.yml"
+demo_yaml >"$EVIL"
+set +e
+WOODRIGHT_PUBLIC_DEMO_ENDPOINT_SIMULATE_EUID=0 \
+  python3 "$PY" rewrite --file "$EVIL" --sf-url "http://10.0.1.42:3002" --be-url "http://10.0.1.41:9000" \
+  >"$TMP/evil-refuse.json" 2>"$TMP/evil-refuse.err"
+EVIL_RC=$?
+set -e
+if [[ "$EVIL_RC" -eq 2 ]] && grep -q 'file_not_canonical_resolver' "$TMP/evil-refuse.json"; then
+  pass "simulated privileged writer cannot target an arbitrary YAML path"
+else
+  fail "arbitrary-file privileged write not refused rc=$EVIL_RC $(cat "$TMP/evil-refuse.json" 2>/dev/null || true)"
+fi
+if grep -q 'woodright-staging-storefront:3002' "$EVIL" && ! grep -q '10.0.1.42' "$EVIL"; then
+  pass "refused privileged rewrite left arbitrary YAML unchanged"
+else
+  fail "refused rewrite mutated arbitrary YAML"
 fi
 
 # Forward apply + rollback restore through the same privileged python path

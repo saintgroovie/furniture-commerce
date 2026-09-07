@@ -70,6 +70,10 @@ else
   pass "live helpers no longer call comment nudge"
 fi
 
+# Fixture YAML lives under $TMP, not the live Dokploy path. Unprivileged tests
+# may override the hardcoded destination; euid 0 still cannot.
+export WOODRIGHT_PUBLIC_DEMO_ENDPOINT_ALLOW_TEST_PATHS=1
+
 # --- Case A exact target endpoint ---
 demo_yaml >"$TMP/demo.yml"
 python3 "$PY" rewrite --file "$TMP/demo.yml" \

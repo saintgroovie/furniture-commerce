@@ -834,8 +834,10 @@ wr_public_demo_assert_resolver_path() {
 }
 
 # Single python invocation path for probe / rewrite / restore-hostnames.
-# Privilege is a prefix only: sudo -n python3 <canonical py> <subcommand> --file <resolver>.
-# Tests may set WOODRIGHT_TRAEFIK_ENDPOINT_SUDO to a fake sudo binary.
+# Privilege is a prefix only: sudo -n python3 <canonical py> ...
+# Python hardcodes /etc/dokploy/traefik/dynamic/woodright-demo.yml when euid=0;
+# sudo env filtering cannot widen the destination. Tests may set
+# WOODRIGHT_TRAEFIK_ENDPOINT_SUDO to a fake sudo binary.
 wr_public_demo_endpoint_run_py() {
   local py json rc restore_e=0
   local -a runner
@@ -844,13 +846,13 @@ wr_public_demo_endpoint_run_py() {
     wr_cutover_die "missing Traefik endpoint helper $py"
     return 1
   }
-  WOODRIGHT_PUBLIC_DEMO_ENDPOINT_CANONICAL_FILE="$(wr_public_demo_resolver_file)"
-  export WOODRIGHT_PUBLIC_DEMO_ENDPOINT_CANONICAL_FILE
   runner=(python3)
   if [[ "${WR_PUBLIC_DEMO_ENDPOINT_PRIVILEGED:-0}" == "1" ]]; then
     if [[ -n "${WOODRIGHT_TRAEFIK_ENDPOINT_SUDO:-}" ]]; then
       runner=("${WOODRIGHT_TRAEFIK_ENDPOINT_SUDO}" -n python3)
     else
+      # Do not pass caller env: typical sudoers reset env, and Python must
+      # still refuse non-canonical --file when running as root.
       runner=(sudo -n python3)
     fi
   fi

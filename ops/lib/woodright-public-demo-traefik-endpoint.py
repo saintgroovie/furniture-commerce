@@ -21,6 +21,7 @@ SF_HOST_URL = "http://woodright-staging-storefront:3002"
 BE_HOST_URL = "http://woodright-staging-backend:9000"
 SF_SERVICE = "woodright-storefront"
 BE_SERVICE = "woodright-backend"
+CANONICAL_LIVE_FILE = "/etc/dokploy/traefik/dynamic/woodright-demo.yml"
 URL_LINE_RE = re.compile(r'^(\s*- url:\s*")([^"]+)("\s*)$')
 NUDGE_PREFIX = "# woodright-edge-resolver-nudge:"
 IPV4_URL_RE = re.compile(r"^http://(\d{1,3}(?:\.\d{1,3}){3}):(\d{1,5})$")
@@ -195,18 +196,39 @@ def rewrite_content(
     return new, before, after
 
 
+def _effective_euid() -> int:
+    """Real euid, or a test-only simulation of privileged identity.
+
+    WOODRIGHT_PUBLIC_DEMO_ENDPOINT_SIMULATE_EUID is ignored when already root
+    so a caller cannot downgrade the privileged fail-closed path.
+    """
+    real = os.geteuid()
+    if real == 0:
+        return 0
+    fake = os.environ.get("WOODRIGHT_PUBLIC_DEMO_ENDPOINT_SIMULATE_EUID", "").strip()
+    if fake.isdigit():
+        return int(fake)
+    return real
+
+
+def _allow_noncanonical_test_path() -> bool:
+    if _effective_euid() == 0:
+        return False
+    return os.environ.get("WOODRIGHT_PUBLIC_DEMO_ENDPOINT_ALLOW_TEST_PATHS", "") == "1"
+
+
 def _assert_canonical_file_arg(path: pathlib.Path) -> None:
     """Refuse caller-supplied paths that are not the governed resolver file.
 
-    Tests omit WOODRIGHT_PUBLIC_DEMO_ENDPOINT_CANONICAL_FILE. Live helpers
-    always set it to wr_public_demo_resolver_file() so sudo python cannot
-    be pointed at an arbitrary inode.
+    Live destination is hardcoded. sudo typically strips env, so a
+    WOODRIGHT_* path variable is not a privilege boundary. euid 0 (or a
+    simulated privileged identity) may only touch CANONICAL_LIVE_FILE.
+    Fixture paths are allowed only for unprivileged tests.
     """
-    canon = os.environ.get("WOODRIGHT_PUBLIC_DEMO_ENDPOINT_CANONICAL_FILE", "").strip()
-    if not canon:
+    if _allow_noncanonical_test_path():
         return
     try:
-        if path.resolve() != pathlib.Path(canon).resolve():
+        if path.resolve() != pathlib.Path(CANONICAL_LIVE_FILE).resolve():
             raise Refuse("file_not_canonical_resolver")
     except OSError as exc:
         raise Refuse(f"canonical_path_unresolved:{exc}") from exc
