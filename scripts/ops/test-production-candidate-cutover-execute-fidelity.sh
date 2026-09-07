@@ -17,8 +17,17 @@ fail() { echo "FAIL $*"; FAILED=$((FAILED + 1)); }
 
 # Real path (macOS /tmp -> /private/tmp): the profile loader resolves the
 # profile with realpath and requires it to stay inside WOODRIGHT_ENV_PROFILE_DIR.
-TMP="$(cd "$(mktemp -d /tmp/wr-prod-cutover-exec-XXXXXX)" && pwd -P)"
+TMP_RAW="$(mktemp -d /tmp/wr-prod-cutover-exec-XXXXXX)" || exit 1
+TMP="$(cd "$TMP_RAW" && pwd -P)" || exit 1
+case "$TMP" in
+  /tmp/wr-prod-cutover-exec-*|/private/tmp/wr-prod-cutover-exec-*) ;;
+  *) echo "refusing unexpected tmp dir: $TMP" >&2; exit 1 ;;
+esac
 cleanup() {
+  case "$TMP" in
+    /tmp/wr-prod-cutover-exec-*|/private/tmp/wr-prod-cutover-exec-*) ;;
+    *) echo "refusing cleanup of $TMP" >&2; return 1 ;;
+  esac
   if [[ "$FAILED" -eq 0 ]]; then
     rm -rf "$TMP"
   else
@@ -171,6 +180,7 @@ PY
 }
 
 reset_harness() {
+  chmod u+rw "$ENV_FILE" 2>/dev/null || true
   rm -rf "$STATE"
   mkdir -p "$STATE/containers" "$STATE/images" "$STATE/volumes" "$STATE/log" \
     "$STATE/health-ready-at" "$STATE/deployed"
@@ -194,6 +204,8 @@ PY
   write_image "$OLD_SF_REF" woodright-storefront production_candidate "0000000000000000000000000000000000000000"
 
   mkdir -p "$COMPOSE_DIR"
+  find "$COMPOSE_DIR" \( -name '.wr-prod-pin-*' -o -name '.wr-compose-env-publish-*' -o -name '.env.wr-prod-new-*' \) \
+    -exec chmod u+rw {} + -delete 2>/dev/null || true
   cat >"$ENV_FILE" <<EOF
 # Dokploy compose environment (harness copy)
 WOODRIGHT_BACKEND_IMAGE=${OLD_BE_REF}
@@ -217,6 +229,87 @@ EOF
 }
 
 pin_of() { awk -F= -v k="$1" '$1==k {sub(/^[^=]*=/,""); print; exit}' "$ENV_FILE"; }
+lock_env() { chmod 000 "$ENV_FILE" 2>/dev/null || true; }
+unlock_env() { chmod u+rw "$ENV_FILE" 2>/dev/null || true; }
+pin_of_any() { unlock_env; pin_of "$1"; }
+
+# Fake sudo for chmod-000 compose .env: unlock, run the real command, relock.
+# Models root-only access without host root. Stdin (python programs) is passed through.
+write_cutover_priv_sudo() {
+  local dest="$1"
+  mkdir -p "$dest"
+  cat >"$dest/sudo" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+ENV_FILE=$(printf '%q' "$ENV_FILE")
+COMPOSE_DIR=$(printf '%q' "$COMPOSE_DIR")
+lock_denied() {
+  chmod 000 "\$ENV_FILE" 2>/dev/null || true
+  chmod 000 "\$COMPOSE_DIR"/.wr-prod-pin-* 2>/dev/null || true
+}
+unlock_env() { chmod u+rw "\$ENV_FILE" 2>/dev/null || true; }
+unlock_args() {
+  local a
+  for a in "\$@"; do
+    case "\$a" in -*) continue ;; esac
+    chmod u+rw "\$a" 2>/dev/null || true
+  done
+}
+if [[ "\${1:-}" != "-n" ]]; then
+  echo "unexpected sudo (want -n): \$*" >&2
+  exit 1
+fi
+shift
+cmd="\${1:-}"
+shift || true
+case "\$cmd" in
+  sha256sum)
+    if [[ "\${1:-}" == "--" ]]; then shift; fi
+    unlock_env
+    set +e
+    if command -v sha256sum >/dev/null 2>&1; then sha256sum -- "\$1"; else shasum -a 256 -- "\$1"; fi
+    rc=\$?
+    set -e
+    lock_denied
+    exit \$rc
+    ;;
+  python3)
+    unlock_env
+    unlock_args "\$@"
+    set +e
+    python3 "\$@"
+    rc=\$?
+    set -e
+    lock_denied
+    exit \$rc
+    ;;
+  cp|mv)
+    unlock_env
+    unlock_args "\$@"
+    set +e
+    command "\$cmd" "\$@"
+    rc=\$?
+    set -e
+    lock_denied
+    exit \$rc
+    ;;
+  rm|mkdir|chmod|chown)
+    unlock_args "\$@"
+    set +e
+    command "\$cmd" "\$@"
+    rc=\$?
+    set -e
+    lock_denied
+    exit \$rc
+    ;;
+  *)
+    echo "unexpected sudo command: \$cmd \$*" >&2
+    exit 1
+    ;;
+esac
+EOF
+  chmod +x "$dest/sudo"
+}
 digest_of() {
   WOODRIGHT_FAKE_DOCKER_STATE="$STATE" "$BIN/docker" inspect "$1" --format '{{.Config.Image}}' 2>/dev/null \
     | grep -oE 'sha256:[0-9a-f]{64}' | head -1 || true
@@ -838,20 +931,8 @@ else
   PROT_WANT="$(sha256sum -- "$ENV_FILE" | awk '{print $1}')"
 fi
 PRIVBIN="$TMP/privbin"
-mkdir -p "$PRIVBIN"
-# Do not shadow sha256sum: Linux dry-run may need the real hasher for other
-# readable files. Only wrap sudo -n sha256sum.
-cat >"$PRIVBIN/sudo" <<EOF
-#!/usr/bin/env bash
-if [[ "\${1:-}" == "-n" && "\${2:-}" == "sha256sum" && "\${3:-}" == "--" && -n "\${4:-}" ]]; then
-  printf '%s  %s\n' "$PROT_WANT" "\$4"
-  exit 0
-fi
-echo "unexpected sudo: \$*" >&2
-exit 1
-EOF
-chmod +x "$PRIVBIN/sudo"
-chmod 000 "$ENV_FILE"
+write_cutover_priv_sudo "$PRIVBIN"
+lock_env
 ENVS=()
 while IFS= read -r line; do ENVS+=("$line"); done < <(base_env)
 ENVS+=("WOODRIGHT_FAKE_DOCKER_ALLOW_MUTATION=0" "PATH=$PRIVBIN:$BIN:$PATH")
@@ -878,6 +959,184 @@ else
   pass "protected-env dry-run: sentinel absent from stdout/stderr"
 fi
 chmod u+rw "$ENV_FILE" 2>/dev/null || true
+
+# ==========================================================================
+# 17c) protected compose .env: execute pin-write path (chmod 000 / fake sudo)
+# ==========================================================================
+reset_harness
+printf 'SECRET=THIS_MUST_NEVER_APPEAR_IN_OUTPUT\n' >>"$ENV_FILE"
+PRIVBIN="$TMP/privbin-exec"
+write_cutover_priv_sudo "$PRIVBIN"
+[[ ! -r "$ENV_FILE" ]] || lock_env
+lock_env
+if [[ -r "$ENV_FILE" ]]; then
+  fail "protected-env execute: DIRECT_READ_DENIED false"
+else
+  pass "protected-env execute: DIRECT_READ_DENIED=true"
+fi
+EV="$TMP/ev-protected-exec"
+run_exec "$EV" "$TMP/out-protected-exec.txt" "PATH=$PRIVBIN:$BIN:$PATH"
+[[ "$RC" -eq 0 ]] && pass "protected-env execute: PRIVILEGED_PIN_WRITE_PATH=PASS rc=0" \
+  || { fail "protected-env execute: rc=$RC"; sed -n '1,80p' "$TMP/out-protected-exec.txt"; }
+[[ "$(pin_of_any WOODRIGHT_BACKEND_IMAGE)" == "$BE_REF" ]] && pass "protected-env execute: backend pin" \
+  || fail "protected-env execute: backend pin=$(pin_of_any WOODRIGHT_BACKEND_IMAGE)"
+[[ "$(pin_of_any WOODRIGHT_STOREFRONT_IMAGE)" == "$SF_REF" ]] && pass "protected-env execute: storefront pin" \
+  || fail "protected-env execute: storefront pin"
+[[ "$(pin_of_any WOODRIGHT_RELEASE_SHA)" == "$APP_SHA" ]] && pass "protected-env execute: release sha" \
+  || fail "protected-env execute: release sha=$(pin_of_any WOODRIGHT_RELEASE_SHA)"
+unlock_env
+grep -qx 'UNRELATED_KEY=keep-me' "$ENV_FILE" && pass "protected-env execute: unrelated key preserved" \
+  || fail "protected-env execute: unrelated key lost"
+grep -qx 'SECRET=THIS_MUST_NEVER_APPEAR_IN_OUTPUT' "$ENV_FILE" && pass "protected-env execute: secret remains in file" \
+  || fail "protected-env execute: secret stripped"
+if grep -F -q 'THIS_MUST_NEVER_APPEAR_IN_OUTPUT' "$TMP/out-protected-exec.txt"; then
+  fail "protected-env execute: sentinel leaked"
+else
+  pass "protected-env execute: sentinel absent from stdout/stderr"
+fi
+lock_env
+if [[ -r "$ENV_FILE" ]]; then
+  fail "protected-env execute: live file readable after success"
+else
+  pass "protected-env execute: live file still unreadable"
+fi
+leftover="$(find "$COMPOSE_DIR" \( -name '.wr-prod-pin-*' -o -name '.wr-prod-new-*' -o -name '.wr-compose-env-publish-*' -o -name '.env.wr-prod-new-*' \) | wc -l | tr -d ' ')"
+[[ "$leftover" == "0" ]] && pass "protected-env execute: temp cleanup" || fail "protected-env execute: leftover temps=$leftover"
+
+# Duplicate governed key: fail before mutation, hash unchanged.
+reset_harness
+printf 'SECRET=THIS_MUST_NEVER_APPEAR_IN_OUTPUT\nWOODRIGHT_BACKEND_IMAGE=%s\n' "$OLD_BE_REF" >>"$ENV_FILE"
+write_cutover_priv_sudo "$PRIVBIN"
+unlock_env
+DUP_HASH="$(if command -v shasum >/dev/null; then shasum -a 256 "$ENV_FILE"; else sha256sum -- "$ENV_FILE"; fi | awk '{print $1}')"
+lock_env
+EV="$TMP/ev-protected-dup"
+run_exec "$EV" "$TMP/out-protected-dup.txt" "PATH=$PRIVBIN:$BIN:$PATH"
+[[ "$RC" -ne 0 ]] && pass "protected-env duplicate: fail closed" || fail "protected-env duplicate: unexpectedly succeeded"
+unlock_env
+NOW="$(if command -v shasum >/dev/null; then shasum -a 256 "$ENV_FILE"; else sha256sum -- "$ENV_FILE"; fi | awk '{print $1}')"
+[[ "$NOW" == "$DUP_HASH" ]] && pass "protected-env duplicate: original hash unchanged" || fail "protected-env duplicate: mutated"
+if grep -F -q 'THIS_MUST_NEVER_APPEAR_IN_OUTPUT' "$TMP/out-protected-dup.txt"; then
+  fail "protected-env duplicate: sentinel leaked"
+else
+  pass "protected-env duplicate: sentinel absent"
+fi
+
+# first_pin fault: fail before install, original pins remain.
+reset_harness
+printf 'SECRET=THIS_MUST_NEVER_APPEAR_IN_OUTPUT\n' >>"$ENV_FILE"
+write_cutover_priv_sudo "$PRIVBIN"
+lock_env
+EV="$TMP/ev-protected-first-pin"
+run_exec "$EV" "$TMP/out-protected-first-pin.txt" "PATH=$PRIVBIN:$BIN:$PATH" "WOODRIGHT_CUTOVER_FAULT=first_pin"
+[[ "$RC" -ne 0 ]] && pass "protected-env first_pin: fail closed" || fail "protected-env first_pin: succeeded"
+[[ "$(pin_of_any WOODRIGHT_BACKEND_IMAGE)" == "$OLD_BE_REF" ]] && pass "protected-env first_pin: pins untouched" \
+  || fail "protected-env first_pin: pins changed"
+leftover="$(find "$COMPOSE_DIR" \( -name '.wr-prod-pin-*' \) | wc -l | tr -d ' ')"
+[[ "$leftover" == "0" ]] && pass "protected-env first_pin: temp cleanup" || fail "protected-env first_pin: leftover=$leftover"
+
+# pin_install after pins_written: live still exact original, restore skipped.
+reset_harness
+printf 'SECRET=THIS_MUST_NEVER_APPEAR_IN_OUTPUT\n' >>"$ENV_FILE"
+write_cutover_priv_sudo "$PRIVBIN"
+unlock_env
+PIN_INSTALL_HASH="$(if command -v shasum >/dev/null; then shasum -a 256 "$ENV_FILE"; else sha256sum -- "$ENV_FILE"; fi | awk '{print $1}')"
+lock_env
+EV="$TMP/ev-protected-pin-install"
+run_exec "$EV" "$TMP/out-protected-pin-install.txt" "PATH=$PRIVBIN:$BIN:$PATH" "WOODRIGHT_CUTOVER_FAULT=pin_install"
+[[ "$RC" -ne 0 ]] && pass "protected-env pin_install: fail closed" || fail "protected-env pin_install: succeeded"
+[[ "$(pin_of_any WOODRIGHT_BACKEND_IMAGE)" == "$OLD_BE_REF" ]] && pass "protected-env pin_install: pins untouched" \
+  || fail "protected-env pin_install: pins changed"
+unlock_env
+NOW="$(if command -v shasum >/dev/null; then shasum -a 256 "$ENV_FILE"; else sha256sum -- "$ENV_FILE"; fi | awk '{print $1}')"
+[[ "$NOW" == "$PIN_INSTALL_HASH" ]] && pass "protected-env pin_install: original hash unchanged" \
+  || fail "protected-env pin_install: mutated"
+[[ -f "$EV/pin-backup/dokploy-compose.env.exact" ]] && pass "protected-env pin_install: exact backup frozen" \
+  || fail "protected-env pin_install: exact backup missing"
+leftover="$(find "$COMPOSE_DIR" \( -name '.wr-prod-pin-*' \) | wc -l | tr -d ' ')"
+[[ "$leftover" == "0" ]] && pass "protected-env pin_install: temp cleanup" || fail "protected-env pin_install: leftover=$leftover"
+
+# SIGTERM during staging window: failed_before_mutation, no leftover temps.
+reset_harness
+printf 'SECRET=THIS_MUST_NEVER_APPEAR_IN_OUTPUT\n' >>"$ENV_FILE"
+write_cutover_priv_sudo "$PRIVBIN"
+lock_env
+EV="$TMP/ev-protected-sig-stage"
+ENVS=()
+while IFS= read -r line; do ENVS+=("$line"); done < <(base_env)
+ENVS+=("WOODRIGHT_EVIDENCE_DIR=$EV" "WOODRIGHT_FAKE_DOCKER_ALLOW_MUTATION=1"
+  "PATH=$PRIVBIN:$BIN:$PATH"
+  "WOODRIGHT_CUTOVER_TEST_PAUSE_AT=pin_staging" "WOODRIGHT_CUTOVER_TEST_PAUSE_SEC=20")
+env "${ENVS[@]}" bash "$SCRIPT" \
+  --environment production --component pair --source-sha "$APP_SHA" \
+  --backend-ref "$BE_REF" --storefront-ref "$SF_REF" \
+  --mode execute --confirm-mutation "$CONFIRM" >"$TMP/out-protected-sig-stage.txt" 2>&1 &
+SIG_PID=$!
+for _ in $(seq 1 150); do
+  grep -q 'HARNESS pause at pin_staging' "$TMP/out-protected-sig-stage.txt" 2>/dev/null && break
+  sleep 0.1
+done
+kill -TERM "$SIG_PID" 2>/dev/null || true
+set +e
+wait "$SIG_PID"
+RC=$?
+set -e
+[[ "$RC" -eq 143 ]] && pass "protected-env staging signal: exit 143" || fail "protected-env staging signal: rc=$RC"
+[[ "$(state_file "$EV")" == "failed_before_mutation" ]] && pass "protected-env staging signal: failed_before_mutation" \
+  || fail "protected-env staging signal: state=$(state_file "$EV")"
+[[ "$(pin_of_any WOODRIGHT_BACKEND_IMAGE)" == "$OLD_BE_REF" ]] && pass "protected-env staging signal: pins untouched" \
+  || fail "protected-env staging signal: pins changed"
+leftover="$(find "$COMPOSE_DIR" \( -name '.wr-prod-pin-*' -o -name '.wr-compose-env-publish-*' -o -name '.env.wr-prod-new-*' \) | wc -l | tr -d ' ')"
+[[ "$leftover" == "0" ]] && pass "protected-env staging signal: temp cleanup" || fail "protected-env staging signal: leftover=$leftover"
+if grep -F -q 'THIS_MUST_NEVER_APPEAR_IN_OUTPUT' "$TMP/out-protected-sig-stage.txt"; then
+  fail "protected-env staging signal: sentinel leaked"
+else
+  pass "protected-env staging signal: sentinel absent"
+fi
+
+# Recreate fault after pin write: rollback restores original pins.
+reset_harness
+printf 'SECRET=THIS_MUST_NEVER_APPEAR_IN_OUTPUT\n' >>"$ENV_FILE"
+write_cutover_priv_sudo "$PRIVBIN"
+lock_env
+EV="$TMP/ev-protected-rb"
+run_exec "$EV" "$TMP/out-protected-rb.txt" "PATH=$PRIVBIN:$BIN:$PATH" "WOODRIGHT_CUTOVER_FAULT=backend_recreate"
+[[ "$RC" -eq 10 ]] && pass "protected-env rollback: exit 10" || fail "protected-env rollback: rc=$RC"
+[[ "$(pin_of_any WOODRIGHT_BACKEND_IMAGE)" == "$OLD_BE_REF" ]] && pass "protected-env rollback: pins restored" \
+  || fail "protected-env rollback: pin=$(pin_of_any WOODRIGHT_BACKEND_IMAGE)"
+[[ "$(pin_of_any WOODRIGHT_RELEASE_SHA)" == "9946b42aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" ]] \
+  && pass "protected-env rollback: release sha restored" || fail "protected-env rollback: release sha"
+if grep -F -q 'THIS_MUST_NEVER_APPEAR_IN_OUTPUT' "$TMP/out-protected-rb.txt"; then
+  fail "protected-env rollback: sentinel leaked"
+else
+  pass "protected-env rollback: sentinel absent"
+fi
+unlock_env
+leftover="$(find "$COMPOSE_DIR" \( -name '.wr-prod-pin-*' -o -name '.wr-compose-env-publish-*' -o -name '.env.wr-prod-new-*' \) | wc -l | tr -d ' ')"
+[[ "$leftover" == "0" ]] && pass "protected-env rollback: temp cleanup" || fail "protected-env rollback: leftover=$leftover"
+
+# Deny-list: public-production compose env must not be a pin-write target.
+PUB_PARENT="$TMP/etc/dokploy/compose/woodright-public-production"
+mkdir -p "$PUB_PARENT/code"
+printf 'WOODRIGHT_BACKEND_IMAGE=x\nSECRET=THIS_MUST_NEVER_APPEAR_IN_OUTPUT\n' >"$PUB_PARENT/code/.env"
+chmod 000 "$PUB_PARENT/code/.env" 2>/dev/null || true
+set +e
+(
+  # shellcheck source=../../ops/lib/woodright-compose-env-authority.sh
+  source "$ROOT/ops/lib/woodright-compose-env-authority.sh"
+  wr_compose_env_stage_rendered_pins "$PUB_PARENT/code/.env" "$PUB_PARENT" \
+    WOODRIGHT_BACKEND_IMAGE "$BE_REF"
+) >"$TMP/out-deny-pub.txt" 2>"$TMP/err-deny-pub.txt"
+RC=$?
+set -e
+[[ "$RC" -ne 0 ]] && pass "protected-env deny-list: public-production refused" \
+  || fail "protected-env deny-list: public-production allowed"
+if grep -F -q 'THIS_MUST_NEVER_APPEAR_IN_OUTPUT' "$TMP/out-deny-pub.txt" "$TMP/err-deny-pub.txt"; then
+  fail "protected-env deny-list: sentinel leaked"
+else
+  pass "protected-env deny-list: sentinel absent"
+fi
+chmod u+rw "$PUB_PARENT/code/.env" 2>/dev/null || true
 
 # Fail-closed privileged hasher (sudo missing / non-zero) is covered by
 # scripts/ops/test-compose-env-privileged-fingerprint.sh. Do not put a
