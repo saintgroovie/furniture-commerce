@@ -1,7 +1,7 @@
 import { Button, Container, Heading, StatusBadge, Text } from "@medusajs/ui"
 import { useMemo, useState } from "react"
 import { Link, Navigate, useParams, useSearchParams } from "react-router-dom"
-import { productTypeBadge } from "../../../../components/woodright/site-status-labels"
+import { productTypeBadge, resolveAdminImageSrc } from "../../../../components/woodright/site-status-labels"
 import { DimensionsSection } from "../../../../components/woodright/DimensionsSection"
 import { MediaSection } from "../../../../components/woodright/MediaSection"
 import { PreviewLink } from "../../../../components/woodright/PreviewLink"
@@ -123,7 +123,7 @@ const WoodrightProductEditorPage = () => {
             <div className="flex items-start gap-3">
               {product.thumbnail ? (
                 <img
-                  src={product.thumbnail}
+                  src={resolveAdminImageSrc(product.thumbnail)}
                   alt=""
                   className="h-16 w-16 rounded-md object-cover"
                 />

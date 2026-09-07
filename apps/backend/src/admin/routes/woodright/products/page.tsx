@@ -23,6 +23,7 @@ import {
   matchesSellerSearch,
 } from "../../../../lib/woodright-admin/workspace-query"
 import { AttentionChips, sellerStatusLabel } from "../../../components/woodright/AttentionChips"
+import { resolveAdminImageSrc } from "../../../components/woodright/site-status-labels"
 import { useWoodrightProducts } from "../../../lib/use-woodright-products"
 
 const PAGE_SIZE = 20
@@ -63,7 +64,7 @@ const columns = [
     cell: ({ row }) =>
       row.original.thumbnail ? (
         <img
-          src={row.original.thumbnail}
+          src={resolveAdminImageSrc(row.original.thumbnail)}
           alt=""
           className="h-8 w-8 rounded-md object-cover"
           onError={(event) => {
