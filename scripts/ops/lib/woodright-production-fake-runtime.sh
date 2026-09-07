@@ -359,10 +359,26 @@ if [[ "${WOODRIGHT_FAKE_COMPOSE_FAIL:-}" == "$service" ]]; then
 fi
 
 python3 - "$STATE" "$env_file" "$service" <<'PY'
-import json, os, sys, time
+import json, os, stat, sys, time
 state, env_file, service = sys.argv[1:4]
 pins = {}
-for line in open(env_file, encoding="utf-8"):
+
+def read_env_lines(path):
+    try:
+        with open(path, encoding="utf-8") as fh:
+            return fh.readlines()
+    except PermissionError:
+        # Model docker/root reading a root-only compose .env without leaving
+        # the file operator-readable after the call.
+        mode = stat.S_IMODE(os.stat(path).st_mode)
+        os.chmod(path, 0o600)
+        try:
+            with open(path, encoding="utf-8") as fh:
+                return fh.readlines()
+        finally:
+            os.chmod(path, mode)
+
+for line in read_env_lines(env_file):
     if "=" in line and not line.strip().startswith("#"):
         k, v = line.rstrip("\n").split("=", 1)
         pins[k] = v

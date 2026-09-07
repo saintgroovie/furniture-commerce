@@ -479,6 +479,22 @@ function run(args, extraEnv = {}) {
     !/PRELOCK_PIN_SHA="\$\(sha256_of "\$COMPOSE_ENV_FILE"\)"/.test(text),
     "PRELOCK pin hash no longer calls unprivileged sha256_of on compose .env"
   )
+  check(
+    /wr_compose_env_query_governed_value/.test(text) && /wr_compose_env_stage_rendered_pins/.test(text),
+    "pin-write uses privileged governed query and staging, not direct leonid reads"
+  )
+  check(
+    !/awk -F= '\$1=="WOODRIGHT_/.test(text),
+    "rollback backup verification does not unprivileged-awk the pin backup"
+  )
+  check(
+    /dokploy-compose\.env\.exact/.test(text),
+    "helper freezes a byte-exact pin backup before SOURCE_SHA seed"
+  )
+  check(
+    !/cp\s+-p\s+"\$COMPOSE_ENV_FILE"/.test(text),
+    "pin-write does not unprivileged-copy the live compose .env"
+  )
   check(!/sudo\s+cat/.test(text), "helper does not sudo-cat the compose .env")
   check(
     !/sudo\s+-n\s+cat/.test(text),

@@ -764,9 +764,18 @@ PY
 }
 
 pin_value_of() {
-  local key="$1"
-  [[ -r "$COMPOSE_ENV_FILE" ]] || return 0
-  awk -F= -v k="$key" '$1==k {sub(/^[^=]*=/, ""); print; exit}' "$COMPOSE_ENV_FILE" 2>/dev/null || true
+  local key="$1" out rc
+  [[ -n "${COMPOSE_ENV_FILE:-}" ]] || die "compose env file unset"
+  [[ -f "$COMPOSE_ENV_FILE" ]] || return 0
+  set +e
+  out="$(wr_compose_env_query_governed_value "$COMPOSE_ENV_FILE" "$key")"
+  rc=$?
+  set -e
+  case "$rc" in
+    0) printf '%s\n' "$out" ;;
+    2) return 0 ;;
+    *) die "compose env pin query failed key=$key rc=$rc (privileged reader; file contents are not printed)" ;;
+  esac
 }
 
 # Read-only comparison of the compose .env pins against the live runtime.
@@ -1553,7 +1562,12 @@ prod_atomic_install() {
   [[ -f "$src" ]] || return 1
   dir="$(dirname "$dest")"
   published="${dest}.wr-prod-new-$$"
-  if [[ -d "$dir" && -w "$dir" ]]; then
+  # Unreadable source (root 0600) cannot use the unprivileged cp even when the
+  # destination directory is writable by this user. An unreadable/unwritable
+  # DESTINATION must also take the sudo path: otherwise a user-owned staged
+  # copy would replace root:root 0600 and broaden secret access.
+  if [[ -r "$src" && -d "$dir" && -w "$dir" ]] \
+    && { [[ ! -e "$dest" ]] || [[ -r "$dest" && -w "$dest" ]]; }; then
     cp -p "$src" "$published" || return 1
     mv -f "$published" "$dest" || { rm -f "$published"; return 1; }
     return 0
@@ -1563,30 +1577,49 @@ prod_atomic_install() {
     sudo -n mv -f "$published" "$dest" || { sudo -n rm -f "$published" 2>/dev/null || true; return 1; }
     return 0
   fi
-  log "cannot atomically install $src -> $dest (dir not writable and no sudo -n)"
+  log "cannot atomically install $src -> $dest (unreadable source or dest, or dir not writable, and no sudo -n)"
   return 1
 }
 
 restore_pins() {
   local backup="$EVIDENCE_DIR/pin-backup/dokploy-compose.env"
+  local exact="$EVIDENCE_DIR/pin-backup/dokploy-compose.env.exact"
+  local live_h exact_h
   [[ -f "$backup" ]] || { log "ROLLBACK no pin backup to restore"; return 0; }
+  if [[ -f "$exact" ]]; then
+    live_h="$(wr_compose_env_sha256_auto "$COMPOSE_ENV_FILE")" || return 1
+    exact_h="$(wr_compose_env_sha256_auto "$exact")" || return 1
+    if [[ "$live_h" == "$exact_h" ]]; then
+      log "ROLLBACK pins already exact pre-mutation content - skipping restore"
+      return 0
+    fi
+  fi
   if prod_atomic_install "$backup" "$COMPOSE_ENV_FILE"; then
     log "ROLLBACK pins restored -> $COMPOSE_ENV_FILE"
     # Harness-only: corrupt RELEASE_SHA after a successful pin restore so the
     # incomplete-marker path can be proven (must not report false rolled_back).
     if wr_fault rollback_release_sha_mismatch; then
       log "HARNESS corrupting WOODRIGHT_RELEASE_SHA after pin restore"
-      python3 - "$COMPOSE_ENV_FILE" <<'PY'
-import pathlib, re, sys
-path = pathlib.Path(sys.argv[1])
-text = path.read_text(encoding="utf-8")
+      wr_compose_env_select_python "$COMPOSE_ENV_FILE" || return 1
+      "${WR_COMPOSE_ENV_PYTHON[@]}" - "$COMPOSE_ENV_FILE" <<'PY'
+import os, re, sys
+path = sys.argv[1]
+try:
+    text = open(path, "r", encoding="utf-8").read()
+except OSError:
+    print("COMPOSE_ENV_READ_DENIED", file=sys.stderr)
+    sys.exit(1)
 new = re.sub(
     r'(?m)^([ \t]*(?:export[ \t]+)?)WOODRIGHT_RELEASE_SHA[ \t]*=.*$',
     r'\1WOODRIGHT_RELEASE_SHA=deadbeefdeadbeefdeadbeefdeadbeefdeadbeef',
     text,
     count=1,
 )
-path.write_text(new, encoding="utf-8")
+fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+try:
+    os.write(fd, new.encode("utf-8"))
+finally:
+    os.close(fd)
 PY
     fi
     return 0
@@ -1709,12 +1742,28 @@ verify_runtime_matches_pins() {
 # snapshot. Image digests alone are not enough - a mixed marker is incomplete.
 verify_rollback_component_source_shas() {
   local backup="$EVIDENCE_DIR/pin-backup/dokploy-compose.env"
-  local want got live
+  local exact="$EVIDENCE_DIR/pin-backup/dokploy-compose.env.exact"
+  local want got live qrc live_h exact_h
   [[ -f "$backup" ]] || {
     log "ROLLBACK_VERIFY component SOURCE_SHA backup missing"
     return 1
   }
-  want="$(awk -F= '$1=="WOODRIGHT_BACKEND_SOURCE_SHA" {sub(/^[^=]*=/, ""); print; exit}' "$backup" 2>/dev/null || true)"
+  if [[ -f "$exact" ]]; then
+    live_h="$(wr_compose_env_sha256_auto "$COMPOSE_ENV_FILE")" || return 1
+    exact_h="$(wr_compose_env_sha256_auto "$exact")" || return 1
+    if [[ "$live_h" == "$exact_h" ]]; then
+      log "ROLLBACK_VERIFY component SOURCE_SHA skipped (live is exact pre-mutation content)"
+      return 0
+    fi
+  fi
+  set +e
+  want="$(wr_compose_env_query_governed_value "$backup" WOODRIGHT_BACKEND_SOURCE_SHA)"
+  qrc=$?
+  set -e
+  [[ "$qrc" -eq 0 ]] || {
+    log "ROLLBACK_VERIFY WOODRIGHT_BACKEND_SOURCE_SHA backup query failed rc=$qrc"
+    return 1
+  }
   got="$(pin_value_of WOODRIGHT_BACKEND_SOURCE_SHA)"
   [[ "$want" =~ ^[0-9a-f]{40}$ ]] || {
     log "ROLLBACK_VERIFY WOODRIGHT_BACKEND_SOURCE_SHA missing/malformed in backup"
@@ -1729,7 +1778,14 @@ verify_rollback_component_source_shas() {
     log "ROLLBACK_VERIFY backend SOURCE_SHA != live OCI revision env=$got live=${live:-<unset>}"
     return 1
   }
-  want="$(awk -F= '$1=="WOODRIGHT_STOREFRONT_SOURCE_SHA" {sub(/^[^=]*=/, ""); print; exit}' "$backup" 2>/dev/null || true)"
+  set +e
+  want="$(wr_compose_env_query_governed_value "$backup" WOODRIGHT_STOREFRONT_SOURCE_SHA)"
+  qrc=$?
+  set -e
+  [[ "$qrc" -eq 0 ]] || {
+    log "ROLLBACK_VERIFY WOODRIGHT_STOREFRONT_SOURCE_SHA backup query failed rc=$qrc"
+    return 1
+  }
   got="$(pin_value_of WOODRIGHT_STOREFRONT_SOURCE_SHA)"
   [[ "$want" =~ ^[0-9a-f]{40}$ ]] || {
     log "ROLLBACK_VERIFY WOODRIGHT_STOREFRONT_SOURCE_SHA missing/malformed in backup"
@@ -1750,12 +1806,23 @@ verify_rollback_component_source_shas() {
 
 verify_rollback_release_sha() {
   local backup="$EVIDENCE_DIR/pin-backup/dokploy-compose.env"
-  local want got
+  local want got qrc
   [[ -f "$backup" ]] || {
     log "ROLLBACK_VERIFY RELEASE_SHA backup missing"
     return 1
   }
-  want="$(awk -F= '$1=="WOODRIGHT_RELEASE_SHA" {sub(/^[^=]*=/, ""); print; exit}' "$backup" 2>/dev/null || true)"
+  set +e
+  want="$(wr_compose_env_query_governed_value "$backup" WOODRIGHT_RELEASE_SHA)"
+  qrc=$?
+  set -e
+  case "$qrc" in
+    0) ;;
+    2) want="" ;;
+    *)
+      log "ROLLBACK_VERIFY WOODRIGHT_RELEASE_SHA backup query failed rc=$qrc"
+      return 1
+      ;;
+  esac
   got="$(pin_value_of WOODRIGHT_RELEASE_SHA)"
   if [[ -z "$want" ]]; then
     # Pre-cutover env had no marker - restored env must also lack it (or be empty).
@@ -1881,6 +1948,7 @@ prod_on_exit() {
   # Disarm every trap first: rollback must never re-enter itself, and a
   # successful commit must never be undone by a late signal.
   trap - EXIT INT TERM HUP
+  wr_compose_env_cleanup_pin_staging "$(dirname -- "${COMPOSE_ENV_FILE:-.}")"
   if [[ "$COMMITTED" == "1" || "$ROLLBACK_DONE" == "1" ]]; then
     release_lock
     exit "$rc"
@@ -2028,19 +2096,35 @@ wr_cutover_assert_no_secret_leak "$EVIDENCE_DIR/sanitized/storefront-before.json
 
 # --- backup -----------------------------------------------------------------
 backup_file() {
-  local src="$1" name="$2"
+  local src="$1" name="$2" dest hash
   [[ -f "$src" ]] || return 0
+  dest="$EVIDENCE_DIR/pin-backup/$name"
   if [[ -r "$src" ]]; then
-    cp -p "$src" "$EVIDENCE_DIR/pin-backup/$name" || return 1
+    cp -p "$src" "$dest" || return 1
   elif command -v sudo >/dev/null 2>&1; then
-    sudo -n cp -p "$src" "$EVIDENCE_DIR/pin-backup/$name" || return 1
+    sudo -n cp -p "$src" "$dest" || return 1
   else
     return 1
   fi
-  sha256_of "$EVIDENCE_DIR/pin-backup/$name" >"$EVIDENCE_DIR/pin-backup/${name}.sha256"
+  hash="$(wr_compose_env_sha256_auto "$dest")" || return 1
+  printf '%s\n' "$hash" >"$EVIDENCE_DIR/pin-backup/${name}.sha256"
 }
 backup_file "$COMPOSE_ENV_FILE" dokploy-compose.env || die "compose .env backup failed"
 [[ -f "$EVIDENCE_DIR/pin-backup/dokploy-compose.env" ]] || die "compose .env backup missing after backup step"
+# Freeze byte-exact original bytes before SOURCE_SHA seed. Restore skips if
+# live still matches this hash (install never committed).
+if [[ -r "$EVIDENCE_DIR/pin-backup/dokploy-compose.env" ]]; then
+  cp -p "$EVIDENCE_DIR/pin-backup/dokploy-compose.env" \
+    "$EVIDENCE_DIR/pin-backup/dokploy-compose.env.exact" \
+    || die "exact pin-backup freeze failed"
+else
+  sudo -n cp -p "$EVIDENCE_DIR/pin-backup/dokploy-compose.env" \
+    "$EVIDENCE_DIR/pin-backup/dokploy-compose.env.exact" \
+    || die "exact pin-backup freeze failed"
+fi
+wr_compose_env_sha256_auto "$EVIDENCE_DIR/pin-backup/dokploy-compose.env.exact" \
+  >"$EVIDENCE_DIR/pin-backup/dokploy-compose.env.exact.sha256" \
+  || die "exact pin-backup hash failed"
 for own in ACTIVE_OWNER.json EXPECTED_RELEASE.json ACTIVE_RELEASE.json; do
   backup_file "${WOODRIGHT_OWNERSHIP_DIR%/}/$own" "$own" || die "ownership backup failed: $own"
 done
@@ -2105,13 +2189,18 @@ ensure_pin_backup_component_source_shas() {
   sf_sha="$(live_oci_revision "${WOODRIGHT_SF_CONTAINER_DEFAULT}")"
   [[ "$be_sha" =~ ^[0-9a-f]{40}$ ]] || die "cannot seed backup: live backend OCI revision missing"
   [[ "$sf_sha" =~ ^[0-9a-f]{40}$ ]] || die "cannot seed backup: live storefront OCI revision missing"
-  python3 - "$backup" "$be_sha" "$sf_sha" <<'PY'
-import re, sys
+  wr_compose_env_select_python "$backup" || die "cannot select python for pin backup seed"
+  "${WR_COMPOSE_ENV_PYTHON[@]}" - "$backup" "$be_sha" "$sf_sha" <<'PY'
+import os, re, sys
 path, be_sha, sf_sha = sys.argv[1:4]
 sha40 = re.compile(r"^[0-9a-f]{40}$")
 if not sha40.fullmatch(be_sha) or not sha40.fullmatch(sf_sha):
     raise SystemExit("invalid live revision while seeding pin backup")
-text = open(path, "r", encoding="utf-8").read()
+try:
+    text = open(path, "r", encoding="utf-8").read()
+except OSError:
+    print("COMPOSE_ENV_READ_DENIED", file=sys.stderr)
+    sys.exit(1)
 lines = text.splitlines()
 wanted = {
     "WOODRIGHT_BACKEND_SOURCE_SHA": be_sha,
@@ -2140,9 +2229,15 @@ for line in lines:
 for key, val in wanted.items():
     if key not in seen:
         out.append(f"{key}={val}")
-open(path, "w", encoding="utf-8").write("\n".join(out) + "\n")
+text = "\n".join(out) + "\n"
+fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+try:
+    os.write(fd, text.encode("utf-8"))
+finally:
+    os.close(fd)
 PY
-  sha256_of "$backup" >"$EVIDENCE_DIR/pin-backup/dokploy-compose.env.sha256"
+  hash="$(wr_compose_env_sha256_auto "$backup")" || die "pin backup hash failed after SHA seed"
+  printf '%s\n' "$hash" >"$EVIDENCE_DIR/pin-backup/dokploy-compose.env.sha256"
   log "pin-backup component SOURCE_SHA keys seeded from live OCI revisions (backup only; live .env unchanged until pin write)"
 }
 ensure_pin_backup_component_source_shas
@@ -2234,19 +2329,13 @@ write_required_pins_atomic() {
   compose_parent="$(dirname -- "$COMPOSE_ENV_FILE")"
   allowed_root="${WOODRIGHT_DOKPLOY_COMPOSE_DIR:-$compose_parent}"
   wr_compose_env_assert_path_under "$COMPOSE_ENV_FILE" "$allowed_root" || return 1
+  wr_compose_env_assert_not_public_target "$COMPOSE_ENV_FILE$allowed_root" || return 1
+  wr_compose_env_assert_candidate_parent "$allowed_root" || return 1
   wr_compose_env_assert_no_duplicate_governed_keys "$COMPOSE_ENV_FILE" || return 1
 
   if should_write_common_release_sha; then
     write_release=1
   fi
-
-  tmp="$(mktemp "${compose_parent}/.wr-prod-pin-XXXXXX" 2>/dev/null || true)"
-  if [[ -z "$tmp" ]]; then
-    log "NOTE pin tmp falls back to the evidence dir (compose dir not writable by this user)"
-    tmp="$(mktemp "$EVIDENCE_DIR/pin-backup/.wr-prod-pin-XXXXXX")"
-  fi
-  [[ ! -L "$tmp" ]] || { rm -f "$tmp"; return 1; }
-  cp -p "$COMPOSE_ENV_FILE" "$tmp" || { rm -f "$tmp"; return 1; }
 
   need_be && render_args+=(WOODRIGHT_BACKEND_IMAGE "$BE_REF")
   need_sf && render_args+=(WOODRIGHT_STOREFRONT_IMAGE "$SF_REF")
@@ -2255,13 +2344,16 @@ write_required_pins_atomic() {
   if [[ "$write_release" -eq 1 ]]; then
     render_args+=(WOODRIGHT_RELEASE_SHA "$SOURCE_SHA")
   fi
-  [[ "${#render_args[@]}" -gt 0 ]] || { rm -f "$tmp"; return 1; }
+  [[ "${#render_args[@]}" -gt 0 ]] || return 1
 
-  if ! wr_compose_env_render_keys "$tmp" "${tmp}.next" "${render_args[@]}"; then
-    rm -f "$tmp" "${tmp}.next"
+  tmp="$(wr_compose_env_stage_rendered_pins "$COMPOSE_ENV_FILE" "$allowed_root" "${render_args[@]}")" \
+    || return 1
+  if [[ -L "$tmp" ]]; then
+    wr_compose_env_rm "$tmp"
+    wr_compose_env_cleanup_pin_staging "$compose_parent"
     return 1
   fi
-  mv -f "${tmp}.next" "$tmp" || { rm -f "$tmp" "${tmp}.next"; return 1; }
+  test_pause_at pin_staging
 
   need_be && validate_args+=(WOODRIGHT_BACKEND_IMAGE "$BE_REF")
   need_sf && validate_args+=(WOODRIGHT_STOREFRONT_IMAGE "$SF_REF")
@@ -2279,26 +2371,39 @@ write_required_pins_atomic() {
   fi
 
   if ! wr_compose_env_validate_keys "$tmp" "${validate_args[@]}" >&2; then
-    rm -f "$tmp"
+    wr_compose_env_rm "$tmp"
+    wr_compose_env_cleanup_pin_staging "$compose_parent"
     return 1
   fi
-  wr_compose_env_assert_no_duplicate_governed_keys "$tmp" || { rm -f "$tmp"; return 1; }
+  if ! wr_compose_env_assert_no_duplicate_governed_keys "$tmp"; then
+    wr_compose_env_rm "$tmp"
+    wr_compose_env_cleanup_pin_staging "$compose_parent"
+    return 1
+  fi
 
   # Fault injection: first_pin = fail before any install (no writes).
   # second_pin kept for harness compatibility = also fail before install
   # now that the pair is a single atomic install (no mixed state possible).
   if wr_fault first_pin || wr_fault second_pin; then
-    rm -f "$tmp"
+    wr_compose_env_rm "$tmp"
+    wr_compose_env_cleanup_pin_staging "$compose_parent"
     return 1
   fi
 
   # Same-filesystem atomic publish via prod_atomic_install (sibling + mv).
   record_state pins_written
-  if ! prod_atomic_install "$tmp" "$COMPOSE_ENV_FILE"; then
-    rm -f "$tmp"
+  if wr_fault pin_install; then
+    wr_compose_env_rm "$tmp"
+    wr_compose_env_cleanup_pin_staging "$compose_parent"
     return 1
   fi
-  rm -f "$tmp"
+  if ! prod_atomic_install "$tmp" "$COMPOSE_ENV_FILE"; then
+    wr_compose_env_rm "$tmp"
+    wr_compose_env_cleanup_pin_staging "$compose_parent"
+    return 1
+  fi
+  wr_compose_env_rm "$tmp"
+  wr_compose_env_cleanup_pin_staging "$compose_parent"
   need_be && PINS_WRITTEN="${PINS_WRITTEN} WOODRIGHT_BACKEND_IMAGE" \
     && printf '%s WOODRIGHT_BACKEND_IMAGE=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$BE_REF" >>"$EVIDENCE_DIR/json/pins-written.txt"
   need_sf && PINS_WRITTEN="${PINS_WRITTEN} WOODRIGHT_STOREFRONT_IMAGE" \
