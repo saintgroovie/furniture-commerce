@@ -43,9 +43,10 @@ Usage:
     [--sf-id <id> --be-id <id>]
 
 Modes:
-  dry-run            Discover live IPs and print planned URLs. No write.
+  dry-run            Discover live IPs, prove atomic-write capability, print planned URLs. No YAML write.
   execute            CAS-write verified dokploy-network IPs into demo YAML.
   restore-hostnames  Restore woodright-staging-* hostname URLs.
+  probe-capability   Sibling mkstemp capability probe only. No YAML write.
 
 Does not start caf82b0, change DNS, apex, candidate, or public production.
 EOF
@@ -89,11 +90,11 @@ done
 
 [[ -n "$MODE" ]] || die "missing --mode"
 case "$MODE" in
-  dry-run|execute|restore-hostnames) ;;
+  dry-run|execute|restore-hostnames|probe-capability) ;;
   *) die "invalid mode=$MODE" ;;
 esac
 
-if [[ "$MODE" != "dry-run" ]]; then
+if [[ "$MODE" != "dry-run" && "$MODE" != "probe-capability" ]]; then
   wr_staging_mutation_lock_acquire \
     "actor=apply-public-demo-traefik-endpoints" \
     "command=$0" \
@@ -103,6 +104,12 @@ fi
 
 SF_NAME="${WOODRIGHT_SF_CONTAINER_DEFAULT:-woodright-staging-storefront}"
 BE_NAME="${WOODRIGHT_BE_CONTAINER_DEFAULT:-woodright-staging-backend}"
+
+if [[ "$MODE" == "probe-capability" ]]; then
+  wr_public_demo_require_endpoint_write_capability || die "TRAEFIK_ENDPOINT_CAPABILITY_FAILED"
+  log "TRAEFIK_ENDPOINT_CAPABILITY_OK"
+  exit 0
+fi
 
 if [[ "$MODE" == "restore-hostnames" ]]; then
   if [[ "$CONFIRM" != "$WR_TF_EP_TOKEN" ]]; then
@@ -140,6 +147,8 @@ be_url="http://${be_ip}:9000"
 log "PLANNED sf=$sf_url be=$be_url sha=$SF_SHA file=$(wr_public_demo_resolver_file)"
 
 if [[ "$MODE" == "dry-run" ]]; then
+  wr_public_demo_require_endpoint_write_capability || die "TRAEFIK_ENDPOINT_CAPABILITY_FAILED"
+  log "TRAEFIK_ENDPOINT_CAPABILITY_OK"
   log "DRY_RUN no write"
   exit 0
 fi

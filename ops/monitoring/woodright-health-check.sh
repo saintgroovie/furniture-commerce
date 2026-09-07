@@ -128,7 +128,39 @@ print(json.dumps(arr))
 
 curl_code() {
   local url="$1"
+  if [[ -n "${WOODRIGHT_FIXTURE_HTTP_CODES_JSON:-}" ]]; then
+    python3 -c '
+import json, sys, time
+url, raw = sys.argv[1], sys.argv[2]
+try:
+    doc = json.loads(raw)
+except Exception:
+    print("000")
+    raise SystemExit(0)
+for key in (url, url.rstrip("/"), url.rstrip("/") + "/"):
+    if key in doc:
+        print(str(doc[key]))
+        raise SystemExit(0)
+print("000")
+' "$url" "$WOODRIGHT_FIXTURE_HTTP_CODES_JSON"
+    return 0
+  fi
   curl -sS -o /dev/null -w '%{http_code}' --max-time 15 "$url" 2>/dev/null || echo "000"
+}
+
+wr_monitor_http_is_success() {
+  local code="${1:-}"
+  [[ "$code" == "200" || "$code" == "204" ]]
+}
+
+wr_monitor_http_is_buyer_ok() {
+  local code="${1:-}"
+  [[ "$code" == "200" ]]
+}
+
+wr_monitor_http_is_unavailable() {
+  local code="${1:-}"
+  [[ "$code" == "000" || "$code" =~ ^5[0-9][0-9]$ ]]
 }
 
 curl_hdr() {
@@ -137,7 +169,7 @@ curl_hdr() {
   # Missing key => empty header (simulates absent). Unset fixture => live curl.
   if [[ -n "${WOODRIGHT_FIXTURE_RESPONSE_HEADERS_JSON:-}" ]]; then
     python3 -c '
-import json, sys
+import json, sys, time
 url, hdr, raw = sys.argv[1], sys.argv[2].lower(), sys.argv[3]
 try:
     doc = json.loads(raw)
@@ -220,10 +252,11 @@ if [[ "${WOODRIGHT_ENVIRONMENT:-}" == "public_production" ]]; then
     HIST="$HISTORY_DIR/status-${TS}.json"
     if [[ "$WR_MONITOR_WRITE" != "1" ]]; then
       python3 - "$TS" "$OVERALL" "$EXIT_CODE" "$CHECKS_JSON" "$SF_IMG" "$BE_IMG" <<'PY'
-import json, sys
+import json, sys, time
 ts, overall, code, checks, sf, be = sys.argv[1:]
 obj = {
   "timestamp_utc": ts,
+  "generated_at_unix": int(time.time()),
   "overall": overall,
   "exit_code": int(code),
   "storefront_image": sf,
@@ -240,10 +273,11 @@ PY
     fi
     mkdir -p "$STATE_DIR" "$HISTORY_DIR" 2>/dev/null || true
     python3 - "$OUT_JSON" "$HIST" "$TS" "$OVERALL" "$EXIT_CODE" "$CHECKS_JSON" "$SF_IMG" "$BE_IMG" <<'PY'
-import json, sys, os
+import json, sys, time, os
 out, hist, ts, overall, code, checks, sf, be = sys.argv[1:]
 obj = {
   "timestamp_utc": ts,
+  "generated_at_unix": int(time.time()),
   "overall": overall,
   "exit_code": int(code),
   "storefront_image": sf,
@@ -292,7 +326,7 @@ fi
 # --- BUYER ---
 for path in / /catalog /kids/catalog; do
   code=$(curl_code "${BUYER_HOST}${path}")
-  if [[ "$code" == "200" ]]; then
+  if wr_monitor_http_is_buyer_ok "$code"; then
     add_check "buyer${path}" info pass "http=$code"
   else
     add_check "buyer${path}" critical fail "http=$code"
@@ -300,8 +334,12 @@ for path in / /catalog /kids/catalog; do
 done
 # /product-static index may 301/404; probe a known asset instead (media integrity).
 PS_ASSET="${WOODRIGHT_PRODUCT_STATIC_PROBE:-/product-static/products/oliver/OL-95-1_gallery_02.jpg}"
-PS_CODE=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 -L "${BUYER_HOST}${PS_ASSET}" 2>/dev/null || echo "000")
-if [[ "$PS_CODE" == "200" ]]; then
+if [[ -n "${WOODRIGHT_FIXTURE_HTTP_CODES_JSON:-}" ]]; then
+  PS_CODE=$(curl_code "${BUYER_HOST}${PS_ASSET}")
+else
+  PS_CODE=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 -L "${BUYER_HOST}${PS_ASSET}" 2>/dev/null || echo "000")
+fi
+if wr_monitor_http_is_buyer_ok "$PS_CODE"; then
   add_check "buyer_product_static_asset" info pass "http=$PS_CODE path=$PS_ASSET"
 else
   add_check "buyer_product_static_asset" critical fail "http=$PS_CODE path=$PS_ASSET"
@@ -309,6 +347,31 @@ fi
 # PDP - try a known handle or skip soft
 PDP_CODE=$(curl_code "${BUYER_HOST}/products" || true)
 # soft: catalog already covered
+
+# Buyer release identity: participate when the header is present.
+# Missing header is warning (not critical) so APIs/routes without the header
+# cannot fail-closed the whole monitor. Mismatch vs EXPECTED_RELEASE is warning;
+# cutover execute still requires fresh HTTPS identity via wait_buyer_edge.
+BUYER_SHA="$(curl_hdr "$BUYER_HOST/" "x-woodright-release-sha" || true)"
+BUYER_SHA="$(printf '%s' "$BUYER_SHA" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
+EXPECTED_SHA=""
+if [[ -r "$EXPECTED_RELEASE" ]]; then
+  EXPECTED_SHA="$(python3 -c 'import json,sys
+p=sys.argv[1]
+try:
+  d=json.load(open(p))
+except Exception:
+  raise SystemExit(0)
+print(str(d.get("release_sha") or d.get("application_sha") or d.get("sha") or "").strip().lower())
+' "$EXPECTED_RELEASE" 2>/dev/null || true)"
+fi
+if [[ -z "$BUYER_SHA" ]]; then
+  add_check "buyer_release_sha" warning fail "header_absent"
+elif [[ -n "$EXPECTED_SHA" && "$BUYER_SHA" != "$EXPECTED_SHA" ]]; then
+  add_check "buyer_release_sha" warning fail "mismatch have=${BUYER_SHA:0:12} want=${EXPECTED_SHA:0:12}"
+else
+  add_check "buyer_release_sha" info pass "present"
+fi
 
 # SEO / security headers on buyer /
 XR=$(curl_hdr "$BUYER_HOST/" "x-robots-tag" || true)
@@ -347,9 +410,19 @@ ROBOTS=$(curl_code "${BUYER_HOST}/robots.txt")
 SITEMAP=$(curl_code "${BUYER_HOST}/sitemap.xml")
 [[ "$SITEMAP" == "404" ]] && add_check "sitemap_disabled" info pass "http=404" || add_check "sitemap_disabled" warning fail "http=$SITEMAP"
 
-# API
+# API public edge: /health success is required. A 5xx on "/" must not pass as "reachable".
 API_CODE=$(curl_code "${API_HOST}/")
-[[ "$API_CODE" != "000" ]] && add_check "api_host" info pass "http=$API_CODE" || add_check "api_host" critical fail "unreachable"
+if wr_monitor_http_is_unavailable "$API_CODE"; then
+  add_check "api_host" critical fail "http=$API_CODE"
+else
+  add_check "api_host" info pass "http=$API_CODE"
+fi
+API_HEALTH=$(curl_code "${API_HOST}/health")
+if wr_monitor_http_is_success "$API_HEALTH"; then
+  add_check "api_health" info pass "http=$API_HEALTH"
+else
+  add_check "api_health" critical fail "http=$API_HEALTH"
+fi
 # Profile-aware API X-Robots: private loopback => not_applicable; public/public_demo stays strict.
 _API_XR_POLICY="$(wr_monitor_api_x_robots_policy "${WOODRIGHT_PUBLIC_EXPOSURE:-}" "$API_HOST")"
 _API_XR_ACTION="${_API_XR_POLICY%%$'\t'*}"
@@ -739,10 +812,11 @@ HIST="$HISTORY_DIR/status-${TS}.json"
 
 if [[ "$WR_MONITOR_WRITE" != "1" ]]; then
   python3 - "$TS" "$OVERALL" "$EXIT_CODE" "$CHECKS_JSON" "$SF_IMG" "$BE_IMG" <<'PY'
-import json, sys
+import json, sys, time
 ts, overall, code, checks, sf, be = sys.argv[1:]
 obj = {
   "timestamp_utc": ts,
+  "generated_at_unix": int(time.time()),
   "overall": overall,
   "exit_code": int(code),
   "storefront_image": sf,
@@ -759,10 +833,11 @@ PY
 fi
 
 python3 - "$OUT_JSON" "$HIST" "$TS" "$OVERALL" "$EXIT_CODE" "$CHECKS_JSON" "$SF_IMG" "$BE_IMG" <<'PY'
-import json, sys, os
+import json, sys, time, os
 out, hist, ts, overall, code, checks, sf, be = sys.argv[1:]
 obj = {
   "timestamp_utc": ts,
+  "generated_at_unix": int(time.time()),
   "overall": overall,
   "exit_code": int(code),
   "storefront_image": sf,
@@ -785,7 +860,7 @@ PY
 {
   echo "Woodright monitor $TS overall=$OVERALL exit=$EXIT_CODE"
   python3 -c 'import json,sys; d=json.load(open(sys.argv[1]));
-[print(f"  [{c[\"severity\"]}] {c[\"name\"]}: {c[\"status\"]} — {c[\"detail\"]}".replace("—","-")) for c in d["checks"]]' "$OUT_JSON" 2>/dev/null \
+  [print("  [%s] %s: %s - %s" % (c["severity"], c["name"], c["status"], c["detail"])) for c in d["checks"]]' "$OUT_JSON" 2>/dev/null \
   || python3 -c 'import json,sys; d=json.load(open(sys.argv[1]));
 [print("  [%s] %s: %s - %s" % (c["severity"], c["name"], c["status"], c["detail"])) for c in d["checks"]]' "$OUT_JSON"
 } >"$OUT_TXT"

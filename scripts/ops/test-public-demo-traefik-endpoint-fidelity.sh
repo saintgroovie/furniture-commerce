@@ -70,6 +70,10 @@ else
   pass "live helpers no longer call comment nudge"
 fi
 
+# Fixture YAML lives under $TMP, not the live Dokploy path. Unprivileged tests
+# may override the hardcoded destination; euid 0 still cannot.
+export WOODRIGHT_PUBLIC_DEMO_ENDPOINT_ALLOW_TEST_PATHS=1
+
 # --- Case A exact target endpoint ---
 demo_yaml >"$TMP/demo.yml"
 python3 "$PY" rewrite --file "$TMP/demo.yml" \
@@ -399,6 +403,8 @@ chmod +x "$FAKE/docker"
 # Identity helper talks to container inspect JSON then image. Read how resolve works.
 # shellcheck source=../../ops/lib/woodright-cutover-common.sh
 # We'll inspect wr_cutover_resolve_container_image_identity
+export WOODRIGHT_PUBLIC_DEMO_ENDPOINT_ALLOW_TEST_PATHS=1
+export WOODRIGHT_CUTOVER_ALLOW_TEST_PATHS=1
 source "$COMMON"
 
 python3 - <<PY
@@ -556,11 +562,21 @@ else
   fail "missing final id CAS before YAML commit"
 fi
 
-if grep -q 'wr_public_demo_privileged_apply_urls' "$COMMON" \
-  && grep -q 'cmp -s "$orig" "$now"' "$COMMON"; then
-  pass "privileged rewrite/restore uses byte-preserving dest CAS"
+if grep -q 'wr_public_demo_endpoint_run_py' "$COMMON" \
+  && grep -q 'wr_public_demo_require_endpoint_write_capability' "$COMMON"; then
+  pass "unified endpoint python + capability preflight"
 else
-  fail "privileged CAS helper missing orig/now cmp"
+  fail "unified endpoint capability path missing"
+fi
+if grep -q 'probe-atomic-write' "$PY" && grep -q '_restore_file_metadata' "$PY"; then
+  pass "python probe + metadata restore present"
+else
+  fail "python probe/metadata contract missing"
+fi
+if awk '/wr_public_demo_rewrite_traefik_urls\(\)/,/^wr_public_demo_restore_traefik_hostnames/' "$COMMON" | grep -q '\[\[ -w "\$f" \]\]'; then
+  fail "rewrite still uses test -w YAML as capability"
+else
+  pass "rewrite does not treat YAML -w as atomic-write proof"
 fi
 if grep -q 'container id changed before YAML commit' "$COMMON" \
   && grep -q 'container IP changed before YAML commit' "$COMMON"; then
