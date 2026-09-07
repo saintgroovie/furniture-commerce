@@ -164,15 +164,18 @@ unset WOODRIGHT_PUBLIC_DEMO_RESTORE_ENDPOINTS
 # File metadata: mode/owner preserved across atomic replace
 chmod 0755 "$PARENT"
 chmod 0640 "$YAML"
-OWNER_BEFORE="$(stat -f '%u:%g' "$YAML" 2>/dev/null || stat -c '%u:%g' "$YAML")"
-MODE_BEFORE="$(stat -f '%Lp' "$YAML" 2>/dev/null || stat -c '%a' "$YAML")"
+file_owner_mode() {
+  python3 -c 'import os, stat, sys
+st=os.stat(sys.argv[1])
+print("%s:%s %o" % (st.st_uid, st.st_gid, stat.S_IMODE(st.st_mode)))' "$1"
+}
+OWNER_MODE_BEFORE="$(file_owner_mode "$YAML")"
 python3 "$PY" rewrite --file "$YAML" --sf-url "http://10.0.1.42:3002" --be-url "http://10.0.1.41:9000" >/dev/null
-OWNER_AFTER="$(stat -f '%u:%g' "$YAML" 2>/dev/null || stat -c '%u:%g' "$YAML")"
-MODE_AFTER="$(stat -f '%Lp' "$YAML" 2>/dev/null || stat -c '%a' "$YAML")"
-if [[ "$OWNER_BEFORE" == "$OWNER_AFTER" && "$MODE_BEFORE" == "$MODE_AFTER" ]]; then
-  pass "atomic write preserves owner/group/mode ($OWNER_AFTER mode=$MODE_AFTER)"
+OWNER_MODE_AFTER="$(file_owner_mode "$YAML")"
+if [[ "$OWNER_MODE_BEFORE" == "$OWNER_MODE_AFTER" ]]; then
+  pass "atomic write preserves owner/group/mode ($OWNER_MODE_AFTER)"
 else
-  fail "metadata drift before=$OWNER_BEFORE/$MODE_BEFORE after=$OWNER_AFTER/$MODE_AFTER"
+  fail "metadata drift before=$OWNER_MODE_BEFORE after=$OWNER_MODE_AFTER"
 fi
 python3 "$PY" restore-hostnames --file "$YAML" >/dev/null
 if grep -q '_restore_file_metadata' "$PY" && grep -q 'chown_restore_failed' "$PY"; then

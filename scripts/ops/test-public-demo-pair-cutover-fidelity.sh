@@ -387,8 +387,11 @@ if git -C "$ROOT" cat-file -e "${OLD_SHA_FOR_GATE}^{commit}" 2>/dev/null \
 else
   echo "NOTE: skipping --expected-old-sha (git objects not present in this clone)" >&2
 fi
+file_mode() {
+  python3 -c 'import os, stat, sys; print("%o" % stat.S_IMODE(os.stat(sys.argv[1]).st_mode))' "$1"
+}
 YAML_BEFORE="$(sha256sum "$WOODRIGHT_PUBLIC_DEMO_EDGE_RESOLVER_FILE" | awk '{print $1}')"
-YAML_MODE_BEFORE="$(stat -f '%Lp' "$WOODRIGHT_PUBLIC_DEMO_EDGE_RESOLVER_FILE" 2>/dev/null || stat -c '%a' "$WOODRIGHT_PUBLIC_DEMO_EDGE_RESOLVER_FILE")"
+YAML_MODE_BEFORE="$(file_mode "$WOODRIGHT_PUBLIC_DEMO_EDGE_RESOLVER_FILE")"
 if bash "$PAIR" --environment public_demo --component pair --mode dry-run \
   --target-sha "$SHA40" \
   --backend-digest "$BE_DIG" \
@@ -408,7 +411,7 @@ else
   cat "$TMP/pair-dry.out" || true
 fi
 YAML_AFTER="$(sha256sum "$WOODRIGHT_PUBLIC_DEMO_EDGE_RESOLVER_FILE" | awk '{print $1}')"
-YAML_MODE_AFTER="$(stat -f '%Lp' "$WOODRIGHT_PUBLIC_DEMO_EDGE_RESOLVER_FILE" 2>/dev/null || stat -c '%a' "$WOODRIGHT_PUBLIC_DEMO_EDGE_RESOLVER_FILE")"
+YAML_MODE_AFTER="$(file_mode "$WOODRIGHT_PUBLIC_DEMO_EDGE_RESOLVER_FILE")"
 if [[ "$YAML_BEFORE" == "$YAML_AFTER" && "$YAML_MODE_BEFORE" == "$YAML_MODE_AFTER" ]]; then
   pass "pair dry-run left Traefik YAML hash+mode unchanged"
 else
