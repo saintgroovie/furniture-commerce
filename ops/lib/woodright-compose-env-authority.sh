@@ -660,10 +660,14 @@ wr_compose_env_restore_backup() {
   return 0
 }
 
+# Privileged Compose may sudo only this allowlisted path. Never PATH or
+# WOODRIGHT_DOCKER_BIN. Root follows the path; callers cannot retarget it.
+WR_COMPOSE_ENV_PRIVILEGED_DOCKER_BIN="/usr/bin/docker"
+
 # Resolve the Docker CLI that Compose will exec. Absolute regular file whose
 # basename is exactly "docker". Never a command string. Protected/privileged
-# calls must pass "no-override" so WOODRIGHT_DOCKER_BIN cannot become a sudo
-# target.
+# calls must pass "no-override" so neither WOODRIGHT_DOCKER_BIN nor PATH can
+# become a sudo target.
 wr_compose_env_resolve_docker_bin() {
   local cand="" resolved="" base=""
   local mode="${1:-allow}"
@@ -671,7 +675,25 @@ wr_compose_env_resolve_docker_bin() {
     wr_compose_env_die "docker bin resolve mode must be allow|no-override"
     return 1
   fi
-  if [[ "$mode" == "allow" && -n "${WOODRIGHT_DOCKER_BIN:-}" ]]; then
+  if [[ "$mode" == "no-override" ]]; then
+    if [[ -n "${WOODRIGHT_DOCKER_BIN:-}" ]]; then
+      wr_compose_env_log "ignoring WOODRIGHT_DOCKER_BIN on protected compose (not a sudo target)"
+    fi
+    cand="$WR_COMPOSE_ENV_PRIVILEGED_DOCKER_BIN"
+    [[ "$cand" == "/usr/bin/docker" ]] \
+      || { wr_compose_env_die "privileged docker allowlist is not /usr/bin/docker"; return 1; }
+    # Pass the allowlisted path string to sudo. Do not PATH-hunt or realpath
+    # into a caller-selected inode. Root follows /usr/bin/docker. Existence is
+    # optional here so tests can intercept sudo; production sudo fails closed
+    # if the binary is missing.
+    if [[ -e "$cand" && -w "$cand" ]]; then
+      wr_compose_env_die "privileged docker path is writable by the caller"
+      return 1
+    fi
+    printf '%s\n' "$cand"
+    return 0
+  fi
+  if [[ -n "${WOODRIGHT_DOCKER_BIN:-}" ]]; then
     cand="$WOODRIGHT_DOCKER_BIN"
     case "$cand" in
       *$'\n'*|*[[:space:]]*)
@@ -685,9 +707,6 @@ wr_compose_env_resolve_docker_bin() {
         ;;
     esac
   else
-    if [[ "$mode" == "no-override" && -n "${WOODRIGHT_DOCKER_BIN:-}" ]]; then
-      wr_compose_env_log "ignoring WOODRIGHT_DOCKER_BIN on protected compose (not a sudo target)"
-    fi
     cand="$(command -v docker 2>/dev/null || true)"
     [[ -n "$cand" ]] || { wr_compose_env_die "docker executable not found"; return 1; }
   fi

@@ -305,20 +305,17 @@ case "\$cmd" in
     exit \$rc
     ;;
   *)
-    cmd_base="\$(basename -- "\$cmd")"
-    cmd_resolved="\$(realpath "\$cmd" 2>/dev/null || true)"
-    want_resolved="\$(realpath "\$DOCKER_BIN" 2>/dev/null || true)"
-    if [[ "\$cmd_base" == "docker" && -n "\$cmd_resolved" && "\$cmd_resolved" == "\$want_resolved" ]]; then
+    if [[ "\$cmd" == "/usr/bin/docker" ]]; then
       if [[ "\${1:-}" != "compose" ]]; then
         echo "unexpected docker argv (want compose): \$*" >&2
         exit 1
       fi
       shift
       mkdir -p "\$STATE_DIR/log"
-      printf 'sudo-compose %s\n' "\$*" >>"\$STATE_DIR/log/sudo-compose.log"
+      printf 'sudo-compose docker=%s %s\n' "\$cmd" "\$*" >>"\$STATE_DIR/log/sudo-compose.log"
       unlock_env
       set +e
-      "\$cmd" compose "\$@"
+      "\$DOCKER_BIN" compose "\$@"
       rc=\$?
       set -e
       lock_denied
@@ -1025,6 +1022,7 @@ leftover="$(find "$COMPOSE_DIR" \( -name '.wr-prod-pin-*' -o -name '.wr-prod-new
 [[ "$leftover" == "0" ]] && pass "protected-env execute: temp cleanup" || fail "protected-env execute: leftover temps=$leftover"
 if grep -q 'compose_method=privileged' "$TMP/out-protected-exec.txt" \
   && [[ -s "$STATE/log/sudo-compose.log" ]] \
+  && grep -q 'docker=/usr/bin/docker' "$STATE/log/sudo-compose.log" \
   && grep -q -- '--project-name woodright-production' "$STATE/log/sudo-compose.log" \
   && grep -q -- '--project-directory' "$STATE/log/sudo-compose.log" \
   && grep -q -- '--env-file' "$STATE/log/sudo-compose.log" \
@@ -1158,6 +1156,7 @@ unlock_env
 leftover="$(find "$COMPOSE_DIR" \( -name '.wr-prod-pin-*' -o -name '.wr-compose-env-publish-*' -o -name '.env.wr-prod-new-*' \) | wc -l | tr -d ' ')"
 [[ "$leftover" == "0" ]] && pass "protected-env rollback: temp cleanup" || fail "protected-env rollback: leftover=$leftover"
 if grep -q 'compose_method=privileged' "$TMP/out-protected-rb.txt" \
+  && grep -q 'docker=/usr/bin/docker' "$STATE/log/sudo-compose.log" \
   && grep -q -- '--project-name woodright-production' "$STATE/log/sudo-compose.log"; then
   pass "protected-env rollback: privileged compose used"
 else
@@ -1175,12 +1174,12 @@ from pathlib import Path
 import sys
 p = Path(sys.argv[1])
 text = p.read_text()
-needle = 'if [[ "$cmd_base" == "docker"'
+needle = 'if [[ "$cmd" == "/usr/bin/docker" ]]'
 if needle not in text:
     raise SystemExit('sudo shim missing docker branch')
 text = text.replace(
     needle,
-    'echo "sudo-compose-denied" >&2; exit 1\nif false && [[ "$cmd_base" == "docker"',
+    'echo "sudo-compose-denied" >&2; exit 1\nif false && [[ "$cmd" == "/usr/bin/docker" ]]',
     1,
 )
 p.write_text(text)
@@ -1922,6 +1921,28 @@ if ! grep -q 'wr_compose_env_resolve_docker_bin no-override' \
   fail "static: privileged compose does not ignore DOCKER_BIN override"
 else
   pass "static: privileged compose resolves docker without env override"
+fi
+if ! grep -q 'WR_COMPOSE_ENV_PRIVILEGED_DOCKER_BIN="/usr/bin/docker"' \
+  "$ROOT/ops/lib/woodright-compose-env-authority.sh"; then
+  fail "static: privileged docker allowlist is not /usr/bin/docker"
+else
+  pass "static: privileged docker allowlist is /usr/bin/docker"
+fi
+if python3 - "$ROOT/ops/lib/woodright-compose-env-authority.sh" <<'PY'
+import pathlib, sys
+text = pathlib.Path(sys.argv[1]).read_text()
+start = text.find('if [[ "$mode" == "no-override" ]]; then')
+end = text.find('if [[ -n "${WOODRIGHT_DOCKER_BIN:-}" ]]; then', start + 1)
+if start < 0 or end < 0 or end <= start:
+    raise SystemExit(2)
+chunk = text[start:end]
+if 'command -v docker' in chunk:
+    raise SystemExit(1)
+PY
+then
+  pass "static: no-override does not PATH-hunt docker"
+else
+  fail "static: no-override PATH-hunts docker"
 fi
 
 if [[ "$FAILED" -eq 0 ]]; then

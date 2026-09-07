@@ -90,17 +90,16 @@ fi
 shift
 cmd="\${1:-}"
 shift || true
-cmd_resolved="\$(realpath "\$cmd" 2>/dev/null || true)"
-want_resolved="\$(realpath "\$DOCKER_BIN" 2>/dev/null || true)"
-if [[ "\$(basename -- "\$cmd")" != "docker" || "\$cmd_resolved" != "\$want_resolved" ]]; then
+if [[ "\$cmd" != "/usr/bin/docker" ]]; then
   echo "unexpected sudo command: \$cmd \$*" >&2
   exit 1
 fi
 [[ "\${1:-}" == "compose" ]] || { echo "want compose" >&2; exit 1; }
+printf 'sudo-docker-bin %s\n' "\$cmd" >>"\$LOG"
 printf 'sudo-docker %s\n' "\$*" >>"\$LOG"
 chmod u+rw "\$ENV_FILE" 2>/dev/null || true
 set +e
-"\$cmd" "\$@"
+"\$DOCKER_BIN" "\$@"
 rc=\$?
 set -e
 chmod 000 "\$ENV_FILE" 2>/dev/null || true
@@ -181,8 +180,34 @@ else
   pass "protected env: DOCKER_BIN override not executed"
 fi
 grep -q 'sudo-docker' "$TMP/log/sudo.log" \
-  && pass "protected env: DOCKER_BIN ignore still used PATH docker" \
+  && pass "protected env: DOCKER_BIN ignore still used allowlisted docker" \
   || fail "protected env: DOCKER_BIN ignore missing sudo docker"
+
+# PATH-selected docker must never be the sudo target on protected env.
+mkdir -p "$TMP/pathbin"
+cat >"$TMP/pathbin/docker" <<'EOF'
+#!/usr/bin/env bash
+echo "EVIL_PATH_DOCKER_RAN $*" >&2
+exit 1
+EOF
+chmod +x "$TMP/pathbin/docker"
+chmod 000 "$ENV_FILE"
+: >"$TMP/log/docker.log"
+: >"$TMP/log/sudo.log"
+RC=0
+PATH="$TMP/pathbin:$BIN:$PATH" canon_args backend \
+  >"$TMP/out-path-docker.txt" 2>"$TMP/err-path-docker.txt" || RC=$?
+[[ "$RC" -eq 0 && "${WR_CANDIDATE_COMPOSE_METHOD:-}" == "privileged" ]] \
+  && pass "protected env: PATH docker ignored" \
+  || fail "protected env: PATH docker method=${WR_CANDIDATE_COMPOSE_METHOD:-} rc=$RC"
+if grep -q 'EVIL_PATH_DOCKER_RAN' "$TMP/out-path-docker.txt" "$TMP/err-path-docker.txt"; then
+  fail "protected env: PATH docker executed"
+else
+  pass "protected env: PATH docker not executed"
+fi
+grep -q 'sudo-docker-bin /usr/bin/docker' "$TMP/log/sudo.log" \
+  && pass "protected env: sudo target is /usr/bin/docker" \
+  || fail "protected env: sudo target is not allowlisted /usr/bin/docker"
 
 # No unprivileged fallback when sudo compose fails.
 chmod 000 "$ENV_FILE"
