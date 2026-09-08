@@ -1,3 +1,4 @@
+import { isKidsMetadataStorefrontProduct } from "../../../lib/woodright-admin/kids-metadata"
 import { buildBuyerPurchaseContract } from "../../../lib/woodright-sales/buyer-purchase-contract"
 import type {
   ProductClassificationType,
@@ -47,6 +48,7 @@ export function attachBuyerPurchaseContract(
     modifiers: (policy?.modifiers as SalesModifier[] | undefined) ?? [],
     classification: classification ?? null,
     launch_mode: readLaunchMode(product),
+    kids_storefront: isKidsMetadataStorefrontProduct(product),
     manager_confirmation_required: policy?.manager_confirmation_required,
     lead_time_text: policy?.lead_time_text ?? null,
     buyer_message: policy?.buyer_message ?? null,

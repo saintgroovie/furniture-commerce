@@ -114,6 +114,7 @@ export function ProductCta({
   }
 
   const productType = getProductType(product)
+  const isKids = isKidsStorefrontProduct(product)
   const variants = (product.variants as unknown[]) ?? []
   const firstVariant = Array.isArray(variants) ? variants[0] : undefined
   const variantId =
@@ -238,7 +239,7 @@ export function ProductCta({
       )
     }
 
-    if (isQuoteLikePurchase(purchase)) {
+    if (isQuoteLikePurchase(purchase) || isRequestQuoteProduct(product)) {
       return (
         <div>
           <div className="cta-group">
@@ -278,8 +279,9 @@ export function ProductCta({
       )
 
       const showManagerAdaptation =
-        purchase.sales_mode === "configurable_to_order" ||
-        productType === "CONFIGURABLE"
+        !isKids &&
+        (purchase.sales_mode === "configurable_to_order" ||
+          productType === "CONFIGURABLE")
 
       return (
         <div>
@@ -403,7 +405,7 @@ export function ProductCta({
     <span className="info-text">{copy.noVariant}</span>
   )
 
-  if (productType === "CONFIGURABLE") {
+  if (productType === "CONFIGURABLE" && !isKids) {
     return (
       <div>
         <p className="pdp-adapt-note">{copy.canAdaptBadge}</p>

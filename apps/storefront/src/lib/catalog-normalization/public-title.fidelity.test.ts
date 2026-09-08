@@ -156,4 +156,80 @@ import { annotateExecutionPresentations } from "../../../../backend/src/lib/cata
   assert.equal(rows[1]!.presentation, "swatch_image")
 }
 
+{
+  const r = resolvePublicProductTitle({
+    title: "Стеллаж для книг Ballet (гл. 440)",
+    handle: "ba-62-1",
+    metadata: {
+      collection: "willie-winkie",
+      storefront_section: "kids",
+      family_canonical_title: "Стеллаж для книг",
+      motif_slug: "ballet",
+      motif_title: "Ballet",
+      painting_name: "Ballet",
+      family_options: { Размер: "гл.440", "Роспись (мотив)": "Ballet" },
+    },
+  })
+  assert.equal(r.public_title, "Стеллаж для книг")
+  assert.doesNotMatch(r.public_title, /Ballet|Баллет|гл\.|440/)
+}
+
+{
+  const r = resolvePublicProductTitle({
+    title: "Комод высокий Ballet (гл. 440)",
+    handle: "ba-05-3",
+    metadata: {
+      collection: "willie-winkie",
+      storefront_section: "kids",
+      family_canonical_title: "Комод",
+      motif_slug: "ballet",
+      painting_name: "Ballet",
+      family_options: { Размер: "гл.440", "Роспись (мотив)": "Ballet" },
+    },
+  })
+  assert.equal(r.public_title, "Комод высокий")
+  assert.doesNotMatch(r.public_title, /Ballet|гл\./)
+}
+
+{
+  const r = resolvePublicProductTitle({
+    title: "Стол рабочий Infanta",
+    handle: "in-67-1",
+    metadata: {
+      collection: "willie-winkie",
+      storefront_section: "kids",
+      family_canonical_title: "Стол рабочий",
+      motif_slug: "infanta",
+      painting_name: "Infanta",
+    },
+  })
+  assert.equal(r.public_title, "Стол рабочий")
+}
+
+{
+  const adult = resolvePublicProductTitle({
+    title: "Консоль Step (экспозиция)",
+    handle: "st-01-1",
+    metadata: { collection: "provence" },
+  })
+  assert.equal(adult.public_title, "Консоль Step (экспозиция)")
+}
+
+{
+  /* Adult + motif-shaped metadata must not enter Kids title cleanup. */
+  const adultMotif = resolvePublicProductTitle({
+    title: "Консоль Ballet (гл. 440)",
+    handle: "st-01-1",
+    metadata: {
+      collection: "provence",
+      motif_slug: "ballet",
+      painting_name: "Ballet",
+      family_options: { "Роспись (мотив)": "Ballet" },
+    },
+  })
+  assert.equal(adultMotif.public_title, "Консоль Ballet (гл. 440)")
+  assert.match(adultMotif.public_title, /Ballet/)
+  assert.match(adultMotif.public_title, /\(гл\. 440\)/)
+}
+
 console.log("catalog-normalization public-title fidelity: ok")

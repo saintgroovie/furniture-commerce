@@ -14,12 +14,17 @@ import {
   expandPedestalDeskCodeInTitle,
   extractPedestalDeskCode,
 } from "./pedestal-desk-codes"
+import {
+  MOTIF_LEGACY_ENGLISH_TITLES,
+  motifBuyerDisplayName,
+} from "../motif-theme"
 
 export type PublicTitleParts = {
   /** Final buyer-facing flat title. */
   public_title: string
   source:
     | "metadata.public_title"
+    | "metadata.family_canonical_title"
     | "merged_title_canonical"
     | "canonical_name"
     | "title"
@@ -93,6 +98,115 @@ function collectionFromHandle(handle: string | null | undefined): string | null 
   if (h.startsWith("greenwich-")) return "Greenwich"
   const prefix = h.split("-")[0] ?? ""
   return HANDLE_COLLECTION[prefix] ?? null
+}
+
+/** Legacy CS-Cart depth/width/height tails that already live in structured data. */
+const TECH_DIM_TAIL_RE =
+  /\s*\(\s*(?:гл|шир|выс)\.?\s*\d+(?:\s*мм)?\s*\)\s*$/iu
+
+function isWillieOrKidsTitleScope(meta: Record<string, unknown>): boolean {
+  if (meta.storefront_section === "kids") return true
+  return asString(meta.collection) === "willie-winkie"
+}
+
+function familyPaintValue(meta: Record<string, unknown>): string | null {
+  const fam = meta.family_options
+  if (!fam || typeof fam !== "object" || Array.isArray(fam)) return null
+  const rec = fam as Record<string, unknown>
+  return asString(rec["Роспись (мотив)"]) ?? asString(rec["Роспись"])
+}
+
+function hasSelectableMotif(meta: Record<string, unknown>): boolean {
+  return Boolean(
+    asString(meta.motif_slug) ||
+      asString(meta.painting_name) ||
+      asString(meta.motif) ||
+      familyPaintValue(meta)
+  )
+}
+
+function collectSelectableMotifPhrases(meta: Record<string, unknown>): string[] {
+  const phrases: string[] = []
+  const push = (s: string | null | undefined) => {
+    const t = s?.trim()
+    if (t) phrases.push(t)
+  }
+  push(asString(meta.painting_name))
+  push(asString(meta.motif))
+  push(asString(meta.motif_title))
+  push(familyPaintValue(meta))
+  const slug = asString(meta.motif_slug)
+  if (slug) {
+    push(motifBuyerDisplayName(slug))
+    push(slug.replace(/-/g, " "))
+    const slugNorm = slug.toLowerCase()
+    for (const en of MOTIF_LEGACY_ENGLISH_TITLES) {
+      const guess = en.toLowerCase().replace(/['’]/g, "").replace(/\s+/g, "-")
+      if (guess === slugNorm) push(en)
+    }
+  }
+  const uniq = [...new Set(phrases)]
+  uniq.sort((a, b) => b.length - a.length)
+  return uniq
+}
+
+function stripWholePhrase(title: string, phrase: string): string {
+  const escaped = phrase
+    .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    .replace(/\s+/g, "\\s+")
+  const re = new RegExp(`(?<![\\p{L}\\p{N}])${escaped}(?![\\p{L}\\p{N}])`, "giu")
+  return title.replace(re, " ")
+}
+
+function tidyStrippedTitle(s: string): string {
+  return s
+    .replace(/\.\s*,/g, ".")
+    .replace(/\s+,/g, ",")
+    .replace(/,\s*,/g, ",")
+    .replace(/^[, \s]+|[, \s]+$/g, "")
+    .replace(/\s{2,}/g, " ")
+    .trim()
+}
+
+/**
+ * Deterministic Kids / Willie Winkie title cleanup:
+ * - drop `(гл. 440)` / `(шир. N)` / `(выс. N)` when already represented as options/dims
+ * - drop the selectable painting name so H1 is the furniture type, not the motif
+ *
+ * Does not strip arbitrary parentheses. Adult titles are unchanged.
+ */
+export function stripLegacyKidsCatalogTitleNoise(
+  title: string,
+  meta: Record<string, unknown>
+): { title: string; notes: string[] } {
+  if (!isWillieOrKidsTitleScope(meta)) {
+    return { title, notes: [] }
+  }
+  const notes: string[] = []
+  let next = title
+  const withoutDim = next.replace(TECH_DIM_TAIL_RE, "")
+  if (withoutDim !== next) {
+    next = withoutDim.trim()
+    notes.push("stripped_technical_dimension_tail")
+  }
+  if (hasSelectableMotif(meta)) {
+    for (const phrase of collectSelectableMotifPhrases(meta)) {
+      const after = stripWholePhrase(next, phrase)
+      if (after !== next) {
+        next = after
+        notes.push(`stripped_selectable_motif:${phrase}`)
+      }
+    }
+  }
+  next = tidyStrippedTitle(next)
+  if (!next) {
+    const family = asString(meta.family_canonical_title)
+    if (family) {
+      notes.push("fallback_family_canonical_title")
+      return { title: family, notes }
+    }
+  }
+  return { title: next || title, notes }
 }
 
 /**
@@ -205,6 +319,15 @@ export function resolvePublicProductTitle(product: PublicTitleInput): PublicTitl
     notes.push("skip_merge_title_has_model")
   }
 
+  const stripped = stripLegacyKidsCatalogTitleNoise(base, meta)
+  if (stripped.notes.length) {
+    if (stripped.title !== base) base = stripped.title
+    notes.push(...stripped.notes)
+    if (stripped.notes.includes("fallback_family_canonical_title")) {
+      source = "metadata.family_canonical_title"
+    }
+  }
+
   const expanded = expandPedestalDeskCodeInTitle(base)
   if (expanded.changed) {
     notes.push(`expanded_pedestal:${expanded.code}`)
@@ -230,4 +353,4 @@ export function resolvePublicProductTitle(product: PublicTitleInput): PublicTitl
   }
 }
 
-export const PUBLIC_TITLE_TRANSFORM_VERSION = "catalog-normalization-public-title-v1"
+export const PUBLIC_TITLE_TRANSFORM_VERSION = "catalog-normalization-public-title-v2"

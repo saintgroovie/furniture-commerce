@@ -9,6 +9,7 @@ export {
   resolvePublicProductTitle,
   extractLatinModelName,
   titleAlreadyHasModelName,
+  stripLegacyKidsCatalogTitleNoise,
   PUBLIC_TITLE_TRANSFORM_VERSION,
   type PublicTitleParts,
   type PublicTitleInput,

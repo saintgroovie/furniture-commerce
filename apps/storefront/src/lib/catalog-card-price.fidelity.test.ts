@@ -145,4 +145,37 @@ function product(
   assert.equal(resolved.prefix, "от ")
 }
 
+// Kids launch freeze must not hide a real catalog price behind quote-only copy
+{
+  const p = product({
+    metadata: {
+      collection: "willie-winkie",
+      storefront_section: "kids",
+      launch_mode: "request_quote",
+      buyer_default_configuration: {
+        min_unit_price: 69_573,
+        material_execution_code: "solid_front_ldsp_body",
+      },
+      material_tiers: {
+        solid_front_ldsp_body: {
+          key: "solid_front_ldsp_body",
+          label_ru: "ЛДСП",
+          price_multiplier: 0.7,
+          position: 0,
+        },
+        solid_full: {
+          key: "solid_full",
+          label_ru: "Массив",
+          price_multiplier: 1,
+          position: 1,
+        },
+      },
+    },
+  })
+  const resolved = resolveCatalogCardPrice(p)
+  assert.equal(resolved.amount, 69_573)
+  assert.equal(resolved.requestQuoteLabel, null)
+  assert.equal(resolved.prefix, "от ")
+}
+
 console.log("catalog-card-price.fidelity.test.ts: ok")

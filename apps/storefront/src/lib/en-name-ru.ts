@@ -3,6 +3,25 @@
  * Brand locks stay Latin: Woodright, Woodright Kids.
  */
 
+import {
+  MOTIF_BUYER_DISPLAY_NAMES_RU,
+  MOTIF_LEGACY_ENGLISH_TITLES,
+  motifBuyerDisplayName,
+} from "../../../backend/src/lib/motif-theme"
+
+function motifExactNames(): Record<string, string> {
+  const out: Record<string, string> = {}
+  for (const [slug, ru] of Object.entries(MOTIF_BUYER_DISPLAY_NAMES_RU)) {
+    out[slug] = ru
+    out[slug.replace(/-/g, " ")] = ru
+  }
+  for (const en of MOTIF_LEGACY_ENGLISH_TITLES) {
+    const slug = en.toLowerCase().replace(/['’]/g, "").replace(/\s+/g, "-")
+    out[en.toLowerCase()] = motifBuyerDisplayName(slug)
+  }
+  return out
+}
+
 /** Exact tokens / short phrases (case-insensitive match). */
 const EXACT_NAME_RU: Record<string, string> = {
   hole: "Хоул",
@@ -39,6 +58,7 @@ const EXACT_NAME_RU: Record<string, string> = {
   winkie: "Винки",
   "willie winkie": "Вилли Винки",
   "willie-winkie": "Вилли Винки",
+  ...motifExactNames(),
 }
 
 /** Never transliterate these (match longest first). */
