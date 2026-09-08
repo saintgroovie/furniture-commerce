@@ -64,6 +64,12 @@ type Props = {
    */
   onClientNavigate?: (next: CatalogFilterState) => void
   children: ReactNode
+  /**
+   * Optional right-gutter rail (Promotion Window). Rendered as a sibling of
+   * the product area inside `.catalog-filter-layout`, mirroring the filter
+   * sidebar on the left; the caller owns the `<aside>` markup.
+   */
+  sideRail?: ReactNode
 }
 
 function toggleMulti(values: string[], value: string): string[] {
@@ -132,6 +138,7 @@ export function CatalogFilterControls({
   showBespokeCta = false,
   onClientNavigate,
   children,
+  sideRail = null,
 }: Props) {
   const router = useRouter()
   const cspNonce = useCspNonce()
@@ -279,6 +286,7 @@ export function CatalogFilterControls({
         document.querySelector(".catalog-search"),
         document.querySelector(".catalog-sort"),
         document.querySelector(".catalog-product-area"),
+        document.querySelector(".catalog-promo-sidebar"),
       ],
       BUYER_DIALOG_LAYER.catalogFilters
     )
@@ -857,6 +865,7 @@ export function CatalogFilterControls({
           />
         </aside>
         <div className="catalog-product-area">{children}</div>
+        {sideRail}
       </div>
     </div>
   )

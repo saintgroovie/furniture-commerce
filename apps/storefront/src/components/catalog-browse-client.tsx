@@ -7,7 +7,7 @@ import { PromotionCard } from "@/components/promotion-card"
 import { CatalogFilterControls } from "@/components/catalog-filter-controls"
 import { CopyLines } from "@/components/copy-lines"
 import type { PromotionSlotPayload } from "@/lib/api/promotion-slot"
-import { buildCatalogGridItems } from "@/lib/catalog-grid-items"
+import { shouldShowPromotionWindow } from "@/lib/promotion-window-placement"
 import {
   buildCatalogHref,
   parseCatalogFilterState,
@@ -20,7 +20,7 @@ import {
 } from "@/lib/catalog-filters"
 import { groupProductsForDisplay } from "@/lib/display-group"
 import { isUnmodifiedPrimaryClick } from "@/lib/client/is-unmodified-primary-click"
-import { actions } from "@/lib/woodright-copy"
+import { actions, promotionCopy } from "@/lib/woodright-copy"
 import { useCspNonce } from "@/lib/csp-nonce"
 
 export type CatalogBrowseCopy = {
@@ -40,9 +40,9 @@ type Props = {
   /** Absolute site origin for ItemList JSON-LD (e.g. getSiteUrl()). */
   siteUrl?: string
   /**
-   * Resolved Promotion Window payload (server-fetched). Rendered once as the
-   * last cell of the first desktop row, only on the default main-catalog view
-   * (see `buildCatalogGridItems`). `null` = plain catalog.
+   * Resolved Promotion Window payload (server-fetched). Rendered once as a
+   * separate sticky window in the right gutter next to the grid (see
+   * `promotion-window-placement.ts`). `null` = plain catalog.
    */
   promotionSlot?: PromotionSlotPayload | null
 }
@@ -105,11 +105,15 @@ export function CatalogBrowseClient({
     [filtered, state.sort]
   )
 
-  /* Products + (at most) one promotion card. JSON-LD below stays products-only. */
-  const gridItems = useMemo(
-    () => buildCatalogGridItems(displayEntries, promotionSlot, state),
-    [displayEntries, promotionSlot, state]
-  )
+  /* Promotion Window lives outside the grid (right gutter rail); JSON-LD
+     ItemList below stays products-only. */
+  const promotionWindow = shouldShowPromotionWindow(promotionSlot, displayEntries.length) ? (
+    <aside className="catalog-promo-sidebar" aria-label={promotionCopy.windowLabel}>
+      <div className="catalog-promo-panel">
+        <PromotionCard slot={promotionSlot} />
+      </div>
+    </aside>
+  ) : null
 
   const itemListJsonLd = useMemo(() => {
     if (!siteUrl || displayEntries.length === 0) return null
@@ -148,6 +152,7 @@ export function CatalogBrowseClient({
         resultCount={displayEntries.length}
         showBespokeCta={showBespokeCta}
         onClientNavigate={onClientNavigate}
+        sideRail={promotionWindow}
       >
         {displayEntries.length === 0 ? (
           <div className="status-message catalog-empty-state">
@@ -174,21 +179,15 @@ export function CatalogBrowseClient({
           </div>
         ) : (
           <ul className="product-grid catalog-product-grid">
-            {gridItems.map((item) =>
-              item.kind === "promotion" ? (
-                <li key={item.key} className="catalog-grid-promotion">
-                  <PromotionCard slot={item.slot} priorityHero />
-                </li>
-              ) : (
-                <li key={item.key}>
-                  <ProductCard
-                    product={item.entry.product as never}
-                    displayGroup={item.entry.displayGroup}
-                    priorityHero={item.productIndex === 0}
-                  />
-                </li>
-              )
-            )}
+            {displayEntries.map((entry, index) => (
+              <li key={(entry.product as Record<string, unknown>).id as string}>
+                <ProductCard
+                  product={entry.product as never}
+                  displayGroup={entry.displayGroup}
+                  priorityHero={index === 0}
+                />
+              </li>
+            ))}
           </ul>
         )}
       </CatalogFilterControls>

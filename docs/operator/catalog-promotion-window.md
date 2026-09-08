@@ -1,18 +1,17 @@
 # Catalog Promotion Window («Промо в каталоге»)
 
-One special cell in the main catalog grid that rotates discounted products. Not a banner, not a second catalog.
+A separate rotating window next to the main catalog grid - in the leftover space to the right of the last catalog column. Not a grid cell, not a banner, not a second catalog.
 
 ## Product contract
 
 | Rule | Value |
 | --- | --- |
-| Where | `/catalog` default view only (no search, type, category, collection, price filter or explicit sort). Kids, Rooms, Bespoke and filtered / sorted result sets render the plain grid |
-| Position | Last cell of the first row on the widest breakpoint. `.catalog-product-grid` is 3 columns on desktop, so the card is DOM index 2 (`PROMOTION_SLOT_INDEX = CATALOG_DESKTOP_COLUMNS - 1`). On 2 / 1 column breakpoints it flows with the grid |
-| Count | Exactly one card per result set. Never padded with placeholder cards; a shorter result set puts the card last |
+| Where | `/catalog` (any browse view with a non-empty result set - it sits outside the result list, so filters / search / sort are untouched). Kids, Rooms and Bespoke render no window |
+| Position | Right page gutter, mirroring the filter card on the left: `.catalog-promo-sidebar` is an absolutely positioned height rail (= grid height) with the filter card's width formula (`--catalog-sidebar-w`, ≤ 200px); the panel inside is sticky under the header (`top: 112px`). The product grid keeps its own columns, rows and order |
+| Breakpoints | Visible from **1500px** viewport (rail ≥ 150px; a 14" MacBook at 1512px gets it). Below that there is no usable leftover right of the grid → no window (it never folds into the grid or becomes a horizontal banner). Contract: `apps/storefront/src/lib/promotion-window-placement.ts` |
+| Count | Exactly one window per page |
 | Rotation | 6-8 s (seller value clamped), crossfade between stacked square images, pause on hover / focus / hidden tab, static under `prefers-reduced-motion`, one product = static card |
-| Empty | Slot disabled, no valid products, or backend error → plain catalog (fail-open, no card) |
-
-The spec assumed a 4-column desktop grid; the live grid is 3 columns and is kept as-is (search bubble alignment depends on it). The contract «special cell closes the first row» is preserved.
+| Empty | Slot disabled, no valid products, empty result set, or backend error → plain catalog (fail-open, no window) |
 
 ## Architecture (Medusa = SoT)
 
@@ -105,4 +104,4 @@ WOODRIGHT_PROMO_ARTIFACT_DIR=tmp/promotion-window-qa \
   node apps/storefront/scripts/promotion-window.smoke.cjs
 ```
 
-The browser smoke checks placement on 4 breakpoints, rotation, pause on hover / focus, reduced motion, thumb rail a11y, and promo → PDP → cart price equality for every rotating product.
+The browser smoke checks rail placement on 7 breakpoints (visible right of the grid and sticky from 1500px, absent below, grid never contains the card), rotation, pause on hover / focus, reduced motion, thumb rail a11y, and promo → PDP → cart price equality for every rotating product.

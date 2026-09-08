@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /**
- * Promotion Window browser smoke: catalog placement per breakpoint, rotation,
- * pause on hover / focus, prefers-reduced-motion, promo → PDP → cart economics
- * for every rotating product, plus visual evidence screenshots.
+ * Promotion Window browser smoke: right-gutter rail placement per breakpoint
+ * (visible ≥ 1500px, absent below, grid never touched), sticky behaviour,
+ * rotation, pause on hover / focus, prefers-reduced-motion, promo → PDP → cart
+ * economics for every rotating product, plus visual evidence screenshots.
  *
  *   WOODRIGHT_A11Y_BASE_URL=http://127.0.0.1:3150 \
  *   WOODRIGHT_PROMO_ARTIFACT_DIR=tmp/promotion-window-qa \
@@ -43,12 +44,21 @@ const NAV_TIMEOUT = Number(process.env.WOODRIGHT_A11Y_NAV_TIMEOUT_MS || 90000)
 /** Rotation interval upper bound (slot clamps to 6-8 s) + transition slack. */
 const ROTATION_WAIT_MS = Number(process.env.WOODRIGHT_PROMO_ROTATION_WAIT_MS || 9500)
 
+/* Placement contract (lib/promotion-window-placement.ts): the window is a
+   separate sticky card in the RIGHT gutter next to the grid, visible only
+   where that gutter can hold a legible card (≥ 1500px). Narrower viewports:
+   no window, grid untouched. */
 const VIEWPORTS = [
-  { name: "desktop-large", width: 1600, height: 1000, expectPromoIndex: 2 },
-  { name: "desktop", width: 1280, height: 900, expectPromoIndex: 2 },
-  { name: "tablet", width: 900, height: 1100, expectPromoIndex: 2 },
-  { name: "mobile", width: 390, height: 844, expectPromoIndex: 2 },
+  { name: "desktop-xl", width: 1920, height: 1080, expectRail: true },
+  { name: "desktop-large", width: 1600, height: 1000, expectRail: true },
+  { name: "macbook-14", width: 1512, height: 982, expectRail: true },
+  { name: "desktop", width: 1440, height: 900, expectRail: false },
+  { name: "laptop", width: 1280, height: 900, expectRail: false },
+  { name: "tablet", width: 900, height: 1100, expectRail: false },
+  { name: "mobile", width: 390, height: 844, expectRail: false },
 ]
+/** Viewport for rotation / a11y / commerce checks (rail visible). */
+const WIDE = { width: 1600, height: 1000 }
 
 const results = []
 let failures = 0
@@ -76,22 +86,35 @@ async function gridSnapshot(page) {
     const ul = document.querySelector(".catalog-product-grid")
     if (!ul) return null
     const lis = Array.from(ul.children)
-    const promoIndex = lis.findIndex((li) => li.querySelector("[data-promotion-card]"))
-    const rects = lis.slice(0, 4).map((li) => {
-      const r = li.getBoundingClientRect()
-      return { x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height) }
-    })
-    const card = ul.querySelector("[data-promotion-card]")
+    const rect = (el) => {
+      const r = el.getBoundingClientRect()
+      return {
+        x: Math.round(r.x),
+        y: Math.round(r.y),
+        w: Math.round(r.width),
+        h: Math.round(r.height),
+        right: Math.round(r.right),
+      }
+    }
+    const rail = document.querySelector(".catalog-promo-sidebar")
+    const railVisible = Boolean(rail && getComputedStyle(rail).display !== "none")
+    const card = document.querySelector("[data-promotion-card]")
     const stage = card && card.querySelector(".promotion-card-stage")
-    const stageRect = stage ? stage.getBoundingClientRect() : null
+    const filter = document.querySelector(".catalog-filter-sidebar")
     return {
       count: lis.length,
-      promoIndex,
-      rects,
+      promoInGrid: lis.some((li) => li.querySelector("[data-promotion-card]")),
+      grid: rect(ul),
+      firstCard: lis[0] ? rect(lis[0]) : null,
+      railPresent: Boolean(rail),
+      railVisible,
+      rail: railVisible ? rect(rail) : null,
+      card: railVisible && card ? rect(card) : null,
+      filter: filter && getComputedStyle(filter).display !== "none" ? rect(filter) : null,
       active: card ? card.getAttribute("data-promotion-active") : null,
       running: card ? card.getAttribute("data-promotion-running") : null,
       itemCount: card ? Number(card.getAttribute("data-promotion-count")) : 0,
-      stage: stageRect ? { w: Math.round(stageRect.width), h: Math.round(stageRect.height) } : null,
+      stage: railVisible && stage ? rect(stage) : null,
       docWidth: document.documentElement.scrollWidth,
       viewportWidth: window.innerWidth,
     }
@@ -110,36 +133,64 @@ async function checkPlacement(browser) {
       await context.close()
       continue
     }
+    // The grid is never touched by the window - no promo <li> at any width.
+    record(`grid-products-only:${vp.name}`, !snap.promoInGrid, { count: snap.count })
     if (EXPECT_EMPTY) {
-      record(`empty-state:${vp.name}`, snap.promoIndex === -1, { count: snap.count })
-    } else {
-      const at = Math.min(vp.expectPromoIndex, Math.max(0, snap.count - 1))
-      record(`placement:${vp.name}`, snap.promoIndex === at, { promoIndex: snap.promoIndex, expected: at })
-      // Same row as the neighbours on ≥3 columns; square media on every breakpoint.
-      if (vp.width > 1180) {
-        const [a, , c] = snap.rects
-        record(`row-align:${vp.name}`, a && c && Math.abs(a.y - c.y) <= 1, { a: a && a.y, c: c && c.y })
-        record(`equal-height:${vp.name}`, a && c && Math.abs(a.h - c.h) <= 2, { a: a && a.h, c: c && c.h })
+      record(`empty-state:${vp.name}`, !snap.railPresent, { railPresent: snap.railPresent })
+    } else if (vp.expectRail) {
+      record(`rail-visible:${vp.name}`, snap.railVisible, { railPresent: snap.railPresent })
+      if (snap.railVisible && snap.rail && snap.card) {
+        // Right of the last column: rail starts after the grid's right edge (+ gap).
+        record(`rail-right-of-grid:${vp.name}`, snap.rail.x >= snap.grid.right + 16, {
+          gridRight: snap.grid.right,
+          railX: snap.rail.x,
+        })
+        // Top aligned with the first product row.
+        record(`rail-top-aligned:${vp.name}`, snap.firstCard && Math.abs(snap.card.y - snap.firstCard.y) <= 1, {
+          card: snap.card.y,
+          firstCard: snap.firstCard && snap.firstCard.y,
+        })
+        // Mirrors the filter card width (symmetric gutters), never wider than 200px.
+        record(`rail-width:${vp.name}`, snap.rail.w > 0 && snap.rail.w <= 200, { w: snap.rail.w })
+        // From 1551px the filter card bleeds into the left gutter with the same
+        // width formula; below that it sits inside the content at a fixed 176px.
+        if (snap.filter && vp.width >= 1551) {
+          record(`rail-mirrors-filter:${vp.name}`, Math.abs(snap.rail.w - snap.filter.w) <= 1, {
+            rail: snap.rail.w,
+            filter: snap.filter.w,
+          })
+        }
+        record(`square-stage:${vp.name}`, snap.stage && Math.abs(snap.stage.w - snap.stage.h) <= 1, snap.stage)
+        record(`card-fits-rail:${vp.name}`, snap.card.w <= snap.rail.w + 1, { card: snap.card.w, rail: snap.rail.w })
+
+        // Sticky: after scrolling past the first row the window stays pinned
+        // under the header (top ≈ 112px) while the grid moves.
+        await page.evaluate(() => window.scrollBy(0, 700))
+        await page.waitForTimeout(250)
+        const stuck = await page.evaluate(() => {
+          const p = document.querySelector(".catalog-promo-panel")
+          return p ? Math.round(p.getBoundingClientRect().top) : null
+        })
+        record(`rail-sticky:${vp.name}`, stuck != null && Math.abs(stuck - 112) <= 2, { top: stuck })
+        await page.evaluate(() => window.scrollTo(0, 0))
+        await page.waitForTimeout(150)
       }
-      record(`square-stage:${vp.name}`, snap.stage && Math.abs(snap.stage.w - snap.stage.h) <= 1, snap.stage)
+    } else {
+      // No gutter → no window (not folded into the grid, not a banner).
+      record(`rail-hidden:${vp.name}`, !snap.railVisible, { railPresent: snap.railPresent })
     }
     record(`no-overflow:${vp.name}`, snap.docWidth <= snap.viewportWidth + 1, {
       docWidth: snap.docWidth,
       viewportWidth: snap.viewportWidth,
     })
-    await page.evaluate(() => {
-      const card = document.querySelector("[data-promotion-card]")
-      if (card) card.scrollIntoView({ block: "center" })
-      else window.scrollTo(0, 0)
-    })
-    await page.waitForTimeout(400)
+    await page.waitForTimeout(300)
     await shot(page, `${EXPECT_EMPTY ? "empty-" : ""}catalog-${vp.name}`)
     await context.close()
   }
 }
 
 async function checkRotation(browser) {
-  const context = await browser.newContext({ viewport: { width: 1280, height: 900 } })
+  const context = await browser.newContext({ viewport: WIDE })
   const page = await context.newPage()
   page.setDefaultNavigationTimeout(NAV_TIMEOUT)
   await page.goto(`${BASE}/catalog`, { waitUntil: "networkidle" })
@@ -222,7 +273,7 @@ async function checkRotation(browser) {
 
 async function checkReducedMotion(browser) {
   const context = await browser.newContext({
-    viewport: { width: 1280, height: 900 },
+    viewport: WIDE,
     reducedMotion: "reduce",
   })
   const page = await context.newPage()
@@ -248,7 +299,7 @@ async function checkReducedMotion(browser) {
 
 async function checkCommerce(browser) {
   // Each rotating product: promo card → PDP → cart; card price == PDP price == cart line total.
-  const probe = await browser.newContext({ viewport: { width: 1280, height: 900 } })
+  const probe = await browser.newContext({ viewport: WIDE })
   const probePage = await probe.newPage()
   probePage.setDefaultNavigationTimeout(NAV_TIMEOUT)
   await probePage.goto(`${BASE}/catalog`, { waitUntil: "networkidle" })
@@ -270,7 +321,7 @@ async function checkCommerce(browser) {
   await probe.close()
 
   for (const item of items) {
-    const context = await browser.newContext({ viewport: { width: 1280, height: 900 } })
+    const context = await browser.newContext({ viewport: WIDE })
     const page = await context.newPage()
     page.setDefaultNavigationTimeout(NAV_TIMEOUT)
     await page.goto(`${BASE}/catalog`, { waitUntil: "networkidle" })

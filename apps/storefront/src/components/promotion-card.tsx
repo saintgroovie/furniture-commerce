@@ -25,8 +25,6 @@ import { promotionCopy } from "@/lib/woodright-copy"
 
 type Props = {
   slot: PromotionSlotPayload
-  /** First above-fold row: eager hero for the initially visible item. */
-  priorityHero?: boolean
 }
 
 type PromoView = {
@@ -84,12 +82,14 @@ function toViews(slot: PromotionSlotPayload): PromoView[] {
 }
 
 /**
- * Catalog Promotion Window - one grid cell, rotating discounted products.
- * Same subgrid rows as ProductCard (media / rails / body) so it aligns with
- * neighbours. Crossfade between stacked images (no layout shift), pauses on
- * hover / focus / hidden tab, static under prefers-reduced-motion.
+ * Catalog Promotion Window - a separate rotating card in the right gutter
+ * next to the product grid (not a grid cell; placement contract in
+ * `lib/promotion-window-placement.ts`). Reuses ProductCard primitives
+ * (media / thumb rail / body) in a compact ≤200px column. Crossfade between
+ * stacked images (no layout shift), pauses on hover / focus / hidden tab,
+ * static under prefers-reduced-motion.
  */
-export function PromotionCard({ slot, priorityHero = false }: Props) {
+export function PromotionCard({ slot }: Props) {
   const views = useMemo(() => toViews(slot), [slot])
   const intervalMs = clampRotationInterval(slot.slot?.rotation_interval_ms)
   const [state, dispatch] = useReducer(rotationReducer, views.length, (count) =>
@@ -169,8 +169,10 @@ export function PromotionCard({ slot, priorityHero = false }: Props) {
                 src={view.imageSrc ?? undefined}
                 alt=""
                 className={`card-img promotion-card-img${i === state.index ? " is-active" : ""}`}
-                loading={priorityHero && i === 0 ? "eager" : "lazy"}
-                fetchPriority={priorityHero && i === 0 ? "high" : undefined}
+                /* Lazy for every frame: below 1500px the whole rail is
+                   display:none, so nothing is fetched there; at wide
+                   viewports the above-fold frame still loads immediately. */
+                loading="lazy"
                 aria-hidden={i !== state.index}
                 draggable={false}
               />
