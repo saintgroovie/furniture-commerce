@@ -77,9 +77,16 @@ Card / PDP / cart show the tier-aware opening price (LDSP tier): 68 985 ₽ вм
 | `CATALOG_PROMO_PRODUCTION_ACK` | unset | `I_UNDERSTAND_THIS_WRITES_PRODUCTION` |
 
 ```sh
+# local / worktree (TypeScript)
 CATALOG_PROMO_TARGET=production CATALOG_PROMO_MODE=dry-run \
   npx medusa exec ./src/scripts/bootstrap-catalog-promo-launch.ts
+
+# immutable backend image (compiled by scripts/compile-ops-seeds.mjs into dist/src/scripts/)
+CATALOG_PROMO_TARGET=production CATALOG_PROMO_MODE=dry-run \
+  ./node_modules/.bin/medusa exec ./src/scripts/bootstrap-catalog-promo-launch.js
 ```
+
+The bootstrap is never part of CMD / HEALTHCHECK / migrate. Run the migration first, then `dry-run`, then `apply` with both production tokens set.
 
 The script verifies every manifest product against the live DB (id, handle, SKU, base price), creates the price list once, upserts exactly two sale prices, upserts the `catalog_main` slot and prints a before / after diff. A second `apply` is a no-op. Any mismatch → `FAIL_CLOSED`, nothing written.
 

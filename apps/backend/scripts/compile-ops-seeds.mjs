@@ -28,6 +28,10 @@ const OPS_SEED_FILES = [
   "seed-rooms-v1-manifest.ts",
   "seed-rooms-v1-target-gate.ts",
   "seed-rooms-v1-owner-approved.ts",
+  // Catalog Promotion Window launch bootstrap (fail-closed, idempotent).
+  "catalog-promo-launch-manifest.ts",
+  "catalog-promo-launch-gate.ts",
+  "bootstrap-catalog-promo-launch.ts",
 ]
 
 fs.mkdirSync(OUT_DIR, { recursive: true })
