@@ -144,6 +144,32 @@ assert.match(gateJsText, /ROOMSET_V1_PRODUCTION_OWNER_APPROVED/)
 assert.match(gateJsText, /I_UNDERSTAND_THIS_WRITES_PRODUCTION/)
 assert.doesNotMatch(seedJsText, /medusa start/, "seed artifact is not a startup entry")
 
+// Catalog Promotion Window launch bootstrap ships the same way (fail-closed gate).
+for (const name of [
+  "catalog-promo-launch-manifest",
+  "catalog-promo-launch-gate",
+  "bootstrap-catalog-promo-launch",
+]) {
+  assert.match(compileScript, new RegExp(`${name}\\.ts`), `compile allowlist includes ${name}`)
+  assert.match(
+    dockerfile,
+    new RegExp(`dist/src/scripts/${name}\\.js`),
+    `Dockerfile must assert compiled ${name} artifact`
+  )
+  const js = path.join(ROOT, "dist", "src", "scripts", `${name}.js`)
+  assert.ok(fs.existsSync(js) && fs.statSync(js).size > 32, `compiled ${name} js non-empty`)
+}
+const promoGateJsText = fs.readFileSync(
+  path.join(ROOT, "dist", "src", "scripts", "catalog-promo-launch-gate.js"),
+  "utf8"
+)
+assert.match(promoGateJsText, /CATALOG_PROMO_TARGET/, "promo target gate wired")
+assert.match(promoGateJsText, /CATALOG_PROMO_MODE/, "promo explicit mode gate wired")
+assert.match(promoGateJsText, /woodright_production/, "promo production DB name guard present")
+assert.match(promoGateJsText, /CATALOG_PROMO_LAUNCH_V1_PRODUCTION_OWNER_APPROVED/)
+assert.match(promoGateJsText, /I_UNDERSTAND_THIS_WRITES_PRODUCTION/)
+assert.doesNotMatch(dockerfile, /CMD[^\n]*catalog-promo/, "promo bootstrap must not be in CMD")
+
 // Fidelity tests must not be compiled into dist/src/scripts
 assert.equal(
   fs.existsSync(
