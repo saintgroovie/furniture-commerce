@@ -10,12 +10,19 @@
  * Default `/store/products` unchanged.
  */
 import type { MedusaRequest } from "@medusajs/framework/http"
+import { QueryContext } from "@medusajs/framework/utils"
 import {
   dedupeCatalogProductsById,
   projectBuyerItemTypesOntoProducts,
 } from "../../../lib/buyer-item-type"
 import { projectDefaultBuyerConfigurationsOntoProducts } from "../../../lib/default-buyer-configuration"
 import { sortProductsByMerchandisingOrder } from "../../../lib/catalog-merchandising-order"
+import {
+  attachStoreCalculatedPrices,
+  resolveStorePricingContext,
+  slimStoreCalculatedPrice,
+  type StoreCalculatedPrice,
+} from "../../../lib/store-pricing/store-calculated-price"
 import { attachBuyerPurchaseContract } from "./attach-buyer-purchase"
 
 export type StoreProductListMode = "default" | "browse"
@@ -72,6 +79,7 @@ type QueryGraph = {
     entity: string
     fields: string[]
     filters?: Record<string, unknown>
+    context?: Record<string, unknown>
   }) => Promise<{ data: unknown[] }>
 }
 
@@ -116,21 +124,41 @@ async function attachBrowseVariantPrices(
     return products.map((p) => ({ ...p, images: Array.isArray(p.images) ? p.images : [] }))
   }
 
+  /* Base prices (`price_set.prices` excludes price-list rows) + native
+     calculated price (sale price lists) in one variant graph. The calculated
+     context mirrors the cart line-item override (first region / currency). */
+  const pricingContext = await resolveStorePricingContext(query)
   const { data: pricedVariants } = await query.graph({
     entity: "product_variant",
-    fields: ["id", "price_set.prices.amount"],
+    fields: pricingContext
+      ? ["id", "price_set.prices.amount", "calculated_price.*"]
+      : ["id", "price_set.prices.amount"],
     filters: { id: variantIds },
+    ...(pricingContext
+      ? {
+          context: {
+            calculated_price: QueryContext({
+              region_id: pricingContext.region_id,
+              currency_code: pricingContext.currency_code,
+            }),
+          },
+        }
+      : {}),
   })
 
   const pricesByVariantId = new Map<string, Array<{ amount: number }>>()
+  const calculatedByVariantId = new Map<string, StoreCalculatedPrice>()
   for (const row of pricedVariants ?? []) {
     if (!row || typeof row !== "object") continue
     const v = row as {
       id?: unknown
       price_set?: { prices?: Array<{ amount?: unknown }> }
       prices?: Array<{ amount?: unknown }>
+      calculated_price?: unknown
     }
     if (typeof v.id !== "string") continue
+    const calculated = slimStoreCalculatedPrice(v.calculated_price)
+    if (calculated) calculatedByVariantId.set(v.id, calculated)
     const raw = v.prices ?? v.price_set?.prices
     if (!Array.isArray(raw)) continue
     const amounts = raw
@@ -151,11 +179,13 @@ async function attachBrowseVariantPrices(
           const v = variant as Record<string, unknown>
           const id = typeof v.id === "string" ? v.id : undefined
           const prices = id ? pricesByVariantId.get(id) : undefined
+          const calculated = id ? calculatedByVariantId.get(id) : undefined
           const slim: Record<string, unknown> = {
             id: v.id,
             sku: v.sku,
           }
           if (prices) slim.prices = prices
+          if (calculated) slim.calculated_price = calculated
           return slim
         })
       : variants
@@ -169,7 +199,11 @@ async function attachBrowseVariantPrices(
 
 export async function loadStoreProductList(
   req: MedusaRequest,
-  options?: { mode?: StoreProductListMode }
+  options?: {
+    mode?: StoreProductListMode
+    /** Exact product ids (server-side callers, e.g. promotion slot). */
+    ids?: string[]
+  }
 ): Promise<Array<Record<string, unknown>>> {
   const mode = options?.mode ?? "default"
   const query = req.scope.resolve("query") as QueryGraph
@@ -179,6 +213,10 @@ export async function loadStoreProductList(
 
   const filters: Record<string, unknown> = { status: "published" }
   if (handle) filters.handle = handle
+  if (options?.ids) {
+    if (options.ids.length === 0) return []
+    filters.id = options.ids
+  }
 
   let fields: string[]
   if (mode === "browse") {
@@ -203,6 +241,7 @@ export async function loadStoreProductList(
     result = await attachBrowseVariantPrices(query, result)
   } else {
     result = flattenVariantPrices(result)
+    result = await attachStoreCalculatedPrices(query, result)
   }
 
   if (categoryId) {

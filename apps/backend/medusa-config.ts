@@ -277,5 +277,8 @@ export default defineConfig({
     {
       resolve: "./src/modules/order-process",
     },
+    {
+      resolve: "./src/modules/promotion-slot",
+    },
   ],
 })

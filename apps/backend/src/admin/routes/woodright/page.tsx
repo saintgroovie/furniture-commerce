@@ -40,6 +40,9 @@ const WoodrightOverviewPage = () => {
           <Link to="/woodright/partners" className="text-ui-fg-subtle">
             Партнёры
           </Link>
+          <Link to="/woodright/catalog-promo" className="text-ui-fg-subtle">
+            Промо в каталоге
+          </Link>
         </div>
       </div>
       {error && (

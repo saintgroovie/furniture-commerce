@@ -3,8 +3,11 @@
 import Link from "next/link"
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react"
 import { ProductCard } from "@/components/product-card"
+import { PromotionCard } from "@/components/promotion-card"
 import { CatalogFilterControls } from "@/components/catalog-filter-controls"
 import { CopyLines } from "@/components/copy-lines"
+import type { PromotionSlotPayload } from "@/lib/api/promotion-slot"
+import { buildCatalogGridItems } from "@/lib/catalog-grid-items"
 import {
   buildCatalogHref,
   parseCatalogFilterState,
@@ -36,6 +39,12 @@ type Props = {
   emptySecondaryLabel?: string
   /** Absolute site origin for ItemList JSON-LD (e.g. getSiteUrl()). */
   siteUrl?: string
+  /**
+   * Resolved Promotion Window payload (server-fetched). Rendered once as the
+   * last cell of the first desktop row, only on the default main-catalog view
+   * (see `buildCatalogGridItems`). `null` = plain catalog.
+   */
+  promotionSlot?: PromotionSlotPayload | null
 }
 
 function stateFromLocation(): CatalogFilterState {
@@ -61,6 +70,7 @@ export function CatalogBrowseClient({
   emptySecondaryHref,
   emptySecondaryLabel,
   siteUrl,
+  promotionSlot = null,
 }: Props) {
   const [state, setState] = useState<CatalogFilterState>(initialState)
   const [, startTransition] = useTransition()
@@ -93,6 +103,12 @@ export function CatalogBrowseClient({
   const displayEntries = useMemo(
     () => sortDisplayEntries(groupProductsForDisplay(filtered), state.sort),
     [filtered, state.sort]
+  )
+
+  /* Products + (at most) one promotion card. JSON-LD below stays products-only. */
+  const gridItems = useMemo(
+    () => buildCatalogGridItems(displayEntries, promotionSlot, state),
+    [displayEntries, promotionSlot, state]
   )
 
   const itemListJsonLd = useMemo(() => {
@@ -158,15 +174,21 @@ export function CatalogBrowseClient({
           </div>
         ) : (
           <ul className="product-grid catalog-product-grid">
-            {displayEntries.map((entry, index) => (
-              <li key={(entry.product as Record<string, unknown>).id as string}>
-                <ProductCard
-                  product={entry.product as never}
-                  displayGroup={entry.displayGroup}
-                  priorityHero={index === 0}
-                />
-              </li>
-            ))}
+            {gridItems.map((item) =>
+              item.kind === "promotion" ? (
+                <li key={item.key} className="catalog-grid-promotion">
+                  <PromotionCard slot={item.slot} priorityHero />
+                </li>
+              ) : (
+                <li key={item.key}>
+                  <ProductCard
+                    product={item.entry.product as never}
+                    displayGroup={item.entry.displayGroup}
+                    priorityHero={item.productIndex === 0}
+                  />
+                </li>
+              )
+            )}
           </ul>
         )}
       </CatalogFilterControls>

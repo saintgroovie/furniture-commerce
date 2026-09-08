@@ -1,5 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { projectDefaultBuyerConfigurationOntoProduct } from "../../../../lib/default-buyer-configuration"
+import { attachStoreCalculatedPrices } from "../../../../lib/store-pricing/store-calculated-price"
 import { attachBuyerPurchaseContract } from "../attach-buyer-purchase"
 
 /**
@@ -21,6 +22,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       entity: string
       fields: string[]
       filters?: Record<string, unknown>
+      context?: Record<string, unknown>
     }) => Promise<{ data: unknown[] }>
   }
   const { data } = await query.graph({
@@ -53,6 +55,9 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       return variant
     })
   }
-  const withDefaults = projectDefaultBuyerConfigurationOntoProduct(raw)
+  /* Native sale price (price list) in the store region context - same
+     truth the cart line-item override uses. */
+  const [priced] = await attachStoreCalculatedPrices(query, [raw])
+  const withDefaults = projectDefaultBuyerConfigurationOntoProduct(priced ?? raw)
   res.json({ product: attachBuyerPurchaseContract(withDefaults) })
 }
