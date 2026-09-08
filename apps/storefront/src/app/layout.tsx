@@ -169,6 +169,7 @@ export default async function RootLayout({
                   label={navCopy.about}
                   items={[
                     { label: "О компании", href: "/about" },
+                    { label: navCopy.partners, href: "/partners" },
                     { label: "Производство", href: "/about/production" },
                     { label: "Материалы", href: "/about/materials" },
                   ]}

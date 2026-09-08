@@ -37,6 +37,7 @@ const PRIMARY: NavLink[] = [
 
 const SECONDARY: NavLink[] = [
   { href: "/about", label: navCopy.about },
+  { href: "/partners", label: navCopy.partners },
   { href: "/designers", label: navCopy.designers },
 ]
 

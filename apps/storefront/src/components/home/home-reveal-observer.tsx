@@ -10,7 +10,9 @@ import { useEffect } from "react"
  */
 export function HomeRevealObserver() {
   useEffect(() => {
-    const els = Array.from(document.querySelectorAll<HTMLElement>(".hp [data-reveal]"))
+    const els = Array.from(
+      document.querySelectorAll<HTMLElement>(".hp [data-reveal], .ed [data-reveal]")
+    )
     if (els.length === 0) return
 
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches
