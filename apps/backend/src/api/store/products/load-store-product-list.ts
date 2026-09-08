@@ -16,6 +16,7 @@ import {
 } from "../../../lib/buyer-item-type"
 import { projectDefaultBuyerConfigurationsOntoProducts } from "../../../lib/default-buyer-configuration"
 import { sortProductsByMerchandisingOrder } from "../../../lib/catalog-merchandising-order"
+import { attachBuyerPurchaseContract } from "./attach-buyer-purchase"
 
 export type StoreProductListMode = "default" | "browse"
 
@@ -233,6 +234,8 @@ export async function loadStoreProductList(
     result = sortProductsByMerchandisingOrder(result)
   } else {
     result = projectDefaultBuyerConfigurationsOntoProducts(result)
+    /* PDP handle fallback uses this list; attach the same purchase DTO as /:id. */
+    result = result.map((product) => attachBuyerPurchaseContract(product))
   }
 
   return result

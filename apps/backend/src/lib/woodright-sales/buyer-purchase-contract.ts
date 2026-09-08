@@ -29,6 +29,13 @@ export type BuyerPurchaseInput = {
   modifiers?: SalesModifier[]
   classification?: ProductClassificationType | null
   launch_mode?: string | null
+  /**
+   * Kids storefront products (Willie Winkie / kids section).
+   * Stale `launch_mode=request_quote` must not force quote when the product is
+   * otherwise STANDARD/CONFIGURABLE and cart-eligible. Explicit sales_mode
+   * `quote_required` / BESPOKE still win.
+   */
+  kids_storefront?: boolean
   manager_confirmation_required?: boolean
   lead_time_text?: string | null
   buyer_message?: string | null
@@ -52,8 +59,13 @@ export function buildBuyerPurchaseContract(
   const launchQuote = input.launch_mode === "request_quote"
   const lead_time_text = input.lead_time_text ?? null
   const buyer_message = input.buyer_message ?? null
+  const explicitQuotePolicy = input.sales_mode === "quote_required"
+  const skipStaleKidsLaunchQuote =
+    Boolean(input.kids_storefront) &&
+    input.classification !== "BESPOKE" &&
+    !explicitQuotePolicy
 
-  if (launchQuote && sales_mode !== "bespoke_project") {
+  if (launchQuote && !skipStaleKidsLaunchQuote && sales_mode !== "bespoke_project") {
     return {
       sales_mode: "quote_required",
       modifiers,

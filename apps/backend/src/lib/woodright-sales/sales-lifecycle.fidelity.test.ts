@@ -111,6 +111,57 @@ import { validateSalesPolicy } from "./validate-sales-policy"
   assert.equal(c.sales_mode, "made_to_order")
 }
 
+{
+  const kidsQuoteFreeze = buildBuyerPurchaseContract({
+    classification: "CONFIGURABLE",
+    launch_mode: "request_quote",
+    kids_storefront: true,
+  })
+  assert.equal(kidsQuoteFreeze.purchase_flow, "cart")
+  assert.equal(kidsQuoteFreeze.can_purchase, true)
+  assert.equal(kidsQuoteFreeze.reason_code, null)
+}
+
+{
+  const adultQuoteFreeze = buildBuyerPurchaseContract({
+    classification: "CONFIGURABLE",
+    launch_mode: "request_quote",
+    kids_storefront: false,
+  })
+  assert.equal(adultQuoteFreeze.purchase_flow, "quote")
+  assert.equal(adultQuoteFreeze.can_purchase, false)
+  assert.equal(adultQuoteFreeze.reason_code, "LAUNCH_MODE_REQUEST_QUOTE")
+}
+
+{
+  const kidsExplicitQuote = buildBuyerPurchaseContract({
+    classification: "CONFIGURABLE",
+    sales_mode: "quote_required",
+    launch_mode: "request_quote",
+    kids_storefront: true,
+  })
+  assert.equal(kidsExplicitQuote.purchase_flow, "quote")
+  assert.equal(kidsExplicitQuote.can_purchase, false)
+}
+
+{
+  const kidsBespoke = buildBuyerPurchaseContract({
+    classification: "BESPOKE",
+    launch_mode: "request_quote",
+    kids_storefront: true,
+  })
+  assert.equal(kidsBespoke.purchase_flow, "bespoke")
+}
+
+{
+  const adultConfigurableCart = buildBuyerPurchaseContract({
+    classification: "CONFIGURABLE",
+    kids_storefront: false,
+  })
+  assert.equal(adultConfigurableCart.purchase_flow, "cart")
+  assert.equal(adultConfigurableCart.sales_mode, "configurable_to_order")
+}
+
 // --- cart gate: BESPOKE + unavailable + quote ---
 {
   const g = evaluateCartSalesGate({ classification: "BESPOKE" })

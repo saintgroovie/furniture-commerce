@@ -136,6 +136,12 @@ assert.match(ctaSrc, /copy\.canAdaptBadge/)
 assert.match(ctaSrc, /copy\.needNonstandard/)
 assert.match(ctaSrc, /isIncompleteCartPurchase\(purchase\)/)
 assert.match(ctaSrc, /if \(purchase && !isDirectCartPurchase\(purchase\)\) return/)
+assert.match(ctaSrc, /const isKids = isKidsStorefrontProduct\(product\)/)
+assert.match(
+  ctaSrc,
+  /showManagerAdaptation =\s*!isKids &&/
+)
+assert.match(ctaSrc, /productType === "CONFIGURABLE" && !isKids/)
 assert.match(
   ctaSrc,
   /isDirectCartPurchase\(purchase\)[\s\S]*isIncompleteCartPurchase\(purchase\)[\s\S]*ctaLabelForPurchase\(purchase, copy\.unavailableCtaLabel\)/

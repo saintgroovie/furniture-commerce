@@ -47,7 +47,7 @@ export function PdpMotifSelector({
           </span>
         </div>
         {motifPagePath ? (
-          <Link href={motifPagePath} className="pdp-motif-all-link">
+          <Link href={motifPagePath} className="pdp-motif-all-link pdp-motif-all-link--row">
             {willieWinkieMotifsCopy.viewAllInMotif}
           </Link>
         ) : null}
@@ -65,31 +65,16 @@ export function PdpMotifSelector({
             : null
           const href = `/product/${encodeURIComponent(option.product_handle)}?motif=${encodeURIComponent(option.motif_slug)}`
           const className = `pdp-motif-option${option.selected ? " is-selected" : ""}`
-          if (option.selected) {
-            return (
-              <span
-                key={option.motif_slug}
-                className={className}
-                aria-current="true"
-              >
-                <span className="pdp-motif-option-media">
-                  {img ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={img} alt="" />
-                  ) : (
-                    <span className="pdp-motif-option-empty" />
-                  )}
-                </span>
-                <span className="pdp-motif-option-title">{option.motif_title}</span>
-              </span>
-            )
-          }
           return (
             <button
               key={option.motif_slug}
               type="button"
               className={className}
-              onClick={() => router.push(href)}
+              aria-pressed={option.selected}
+              aria-current={option.selected ? "true" : undefined}
+              onClick={() => {
+                if (!option.selected) router.push(href)
+              }}
             >
               <span className="pdp-motif-option-media">
                 {img ? (
@@ -105,7 +90,7 @@ export function PdpMotifSelector({
         })}
       </div>
       {motifPagePath && (
-        <Link href={motifPagePath} className="pdp-motif-all-link">
+        <Link href={motifPagePath} className="pdp-motif-all-link pdp-motif-all-link--row">
           {willieWinkieMotifsCopy.viewAllInMotif}
         </Link>
       )}
