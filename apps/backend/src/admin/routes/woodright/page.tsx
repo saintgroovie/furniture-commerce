@@ -37,6 +37,9 @@ const WoodrightOverviewPage = () => {
           <Link to="/woodright/contacts" className="text-ui-fg-subtle">
             Контакты
           </Link>
+          <Link to="/woodright/partners" className="text-ui-fg-subtle">
+            Партнёры
+          </Link>
         </div>
       </div>
       {error && (

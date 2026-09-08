@@ -72,6 +72,7 @@ for (const href of [
   "/cookies",
   "/bespoke",
   "/designers",
+  "/partners",
 ]) {
   assert.ok(footerHrefs.includes(href), `footer missing ${href}`)
 }

@@ -8,6 +8,7 @@ import { ContactMessengerActions } from "@/components/contact-messenger-actions"
 import { CopyLines } from "@/components/copy-lines"
 import { formatRuInline } from "@/lib/format-ru-copy"
 import { contactsCopy } from "@/lib/woodright-copy"
+import { editorialMedia } from "@/lib/editorial-media"
 import { showroomContacts } from "@/lib/showroom-contacts"
 
 /**
@@ -20,6 +21,12 @@ import { showroomContacts } from "@/lib/showroom-contacts"
 export function ContactsPageLayout() {
   return (
     <div className="contacts-page">
+      <figure className="contacts-page-media">
+        <img
+          src={editorialMedia.contactsMaterial.src}
+          alt={editorialMedia.contactsMaterial.alt}
+        />
+      </figure>
       <h1 className="contacts-page-title">{contactsCopy.h1}</h1>
       <p className="contacts-page-intro">{formatRuInline(contactsCopy.lead)}</p>
       <CopyLines className="contacts-page-visit-hint" lines={contactsCopy.visitHint} />

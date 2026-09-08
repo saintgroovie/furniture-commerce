@@ -33,6 +33,7 @@ export const nav = {
   /** Global nav / catalog exit label. Page brand stays Woodright Bespoke. */
   bespoke: "По проекту",
   about: "О бренде",
+  partners: "Партнёры",
   cart: "Корзина",
 }
 
@@ -128,9 +129,10 @@ export const footer = {
       title: "Woodright",
       links: [
         { label: "О бренде", href: "/about" },
+        { label: "Партнёры", href: "/partners" },
+        { label: "Дизайнерам", href: "/designers" },
         { label: "Производство", href: "/about/production" },
         { label: "Материалы", href: "/about/materials" },
-        { label: "Дизайнерам", href: "/designers" },
         { label: "Контакты", href: "/contacts" },
       ],
     },
@@ -715,6 +717,36 @@ export const aboutCopy = {
     "Нам важны материал, пропорции и отделка",
     "Ремесленную основу переводим в понятный выбор: каталог, коллекции, готовые комнаты и работа по проекту",
   ],
+  statement: [
+    "Массив, пропорции и отделка",
+    "в готовых моделях и работе по проекту",
+  ],
+  facts: [
+    { value: "20+", label: "лет опыта" },
+    { value: "массив", label: "в основе каждой модели" },
+    { value: "два мира", label: "взрослые и детские комнаты" },
+  ],
+  projectsTitle: "Среди реализованных проектов",
+  projectsLead: [
+    "Частные интерьеры, культурные учреждения и компании",
+    "Это реализованные проекты, не текущий партнёрский список",
+  ],
+  projects: [
+    { name: "Большой театр", caption: "Реставрация кресел зала" },
+    { name: "ВГБИЛ им. М. И. Рудомино", caption: "Проектирование и изготовление мебели" },
+    { name: "Городское собрание Сочи", caption: "Конференц-зал" },
+    { name: "Академия управления МВД", caption: "Библиотеки" },
+    { name: "Мариинский дворец", caption: "Чертежи, изготовление, монтаж" },
+    { name: "ПАО «Совкомфлот»", caption: "Зал заседаний" },
+    { name: "Тверская картинная галерея", caption: "Музейные витрины и постаменты" },
+  ],
+  quote: "Классика, которой не нужно обновляться",
+  links: [
+    { label: "Каталог", href: "/catalog" },
+    { label: "По проекту", href: "/bespoke" },
+    { label: "Дизайнерам", href: "/designers" },
+    { label: "Партнёры", href: "/partners" },
+  ],
 }
 
 export const aboutMaterialsCopy = {
@@ -729,6 +761,7 @@ export const aboutMaterialsCopy = {
     "Нужны своя фактура, цвет или сочетание",
     "опишите в заявке, подберём",
   ],
+  mosaicCaption: "Одна модель - разные отделки",
 }
 
 export const aboutProductionCopy = {
@@ -740,6 +773,11 @@ export const aboutProductionCopy = {
   body: [
     "Каждая модель проходит путь от массива до готового предмета с ручной отделкой",
     "Серийные - из готовых вариантов, проектные - под задачу",
+  ],
+  sequence: [
+    { title: "Массив", text: "Форма и конструкция предмета" },
+    { title: "Отделка", text: "Цвет и фактура под комнату" },
+    { title: "Роспись", text: "Там, где нужен характер коллекции" },
   ],
 }
 
@@ -770,6 +808,7 @@ export const designersLandingCopy = {
     "Если каталога недостаточно, обсудим задачу в Woodright Bespoke",
     "Условия обсуждаем индивидуально",
   ],
+  scenariosTitle: "Как обычно начинаем",
   ctaPrimary: "Обсудить задачу",
   ctaHref: "/bespoke/request?from=designers",
   /** Prefixed onto the shared request form comment so operators see the audience. */
@@ -811,6 +850,34 @@ export const contactsCopy = {
   ctaBody:
     "Оставьте заявку - менеджер свяжется с вами и поможет подобрать решение",
   ctaPrimary: "Оставить заявку",
+}
+
+export const partnersCopy = {
+  h1: "Партнёры",
+  statement: [
+    "Работаем с дизайнерами, архитекторами и студиями",
+    "когда мебель должна сесть в чужой проект",
+  ],
+  emptyTitle: "Индекс пока собирается",
+  emptyBody: [
+    "Публикуем только подтверждённые материалы",
+    "без выдуманных логотипов и чужих знаков",
+  ],
+  emptyCta: "Дизайнерам",
+  featuredLabel: "В фокусе",
+  materialsTitle: "Материалы",
+  presentationsTitle: "Презентации",
+  viewPresentation: "Смотреть презентацию",
+  openFile: "Открыть файл",
+  downloadFile: "Скачать",
+  pages: (count: number) => `${count} стр.`,
+  pdfLabel: "PDF",
+  backToIndex: "Все партнёры",
+  website: "Сайт",
+  viewerFallback: [
+    "Если просмотр не открылся, скачайте файл",
+    "или откройте его в новой вкладке",
+  ],
 }
 
 export const homeCopy = {
@@ -935,6 +1002,11 @@ export const seo = {
   about: {
     title: "О бренде Woodright - мебель из массива с характером",
     description: "Woodright делает мебель из массива для взрослых и детских комнат: коллекции, ручная отделка, готовые модели и работа по проекту.",
+  },
+  partners: {
+    title: "Партнёры Woodright",
+    description:
+      "Дизайнеры, архитекторы и студии, с которыми работает Woodright. Презентации и материалы - когда они подтверждены.",
   },
   aboutMaterials: {
     title: "Материалы и отделки Woodright",
