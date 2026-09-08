@@ -217,6 +217,19 @@ export const catalogCopy = {
   ],
 }
 
+/** Catalog Promotion Window (one rotating card in the first row). */
+export const promotionCopy = {
+  /** Eyebrow when the seller left the slot label empty. */
+  defaultLabel: "Специальная цена",
+  /** Card context line when the product has no collection label. */
+  contextFallback: "Со скидкой",
+  /** Screen-reader prefix before the struck-through price. */
+  wasPriceSr: "Обычная цена",
+  /** Screen-reader prefix before the current price on PDP / cards. */
+  nowPriceSr: "Цена со скидкой",
+  thumbsLabel: "Товары в промо-окне",
+}
+
 export const kidsCatalogCopy = {
   h1: "Мебель для детской комнаты",
   lead: [

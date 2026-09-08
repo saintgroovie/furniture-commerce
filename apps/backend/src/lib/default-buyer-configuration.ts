@@ -17,6 +17,12 @@ import {
 export type BuyerDefaultConfiguration = {
   /** Cheapest valid unit price in RUB (integer). */
   min_unit_price: number
+  /**
+   * Pre-sale opening price (same tier multiplier applied to the native
+   * `calculated_price.original_amount`). Present only when a native price
+   * list lowers the price - strike-through candidate for card / PDP.
+   */
+  original_min_unit_price?: number
   /** Default material tier code (position 0 / LDSP when tiers exist). */
   material_execution_code: string | null
   material_execution_label: string | null
@@ -51,9 +57,35 @@ function variantUnitPrice(variant: Record<string, unknown>): number | null {
   return null
 }
 
+/**
+ * Native sale: price list lowers the calculated amount below the base
+ * (`original_amount`). Returns the original amount or null when no sale.
+ */
+function variantOriginalUnitPrice(
+  variant: Record<string, unknown>,
+  basePrice: number
+): number | null {
+  const calculated = variant.calculated_price as
+    | {
+        original_amount?: unknown
+        is_calculated_price_price_list?: unknown
+      }
+    | undefined
+  if (!calculated || calculated.is_calculated_price_price_list !== true) return null
+  const original = calculated.original_amount
+  if (
+    typeof original === "number" &&
+    Number.isFinite(original) &&
+    original > basePrice
+  ) {
+    return original
+  }
+  return null
+}
+
 function openingPurchasableVariant(
   product: Record<string, unknown>
-): { id: string; basePrice: number } | null {
+): { id: string; basePrice: number; originalPrice: number | null } | null {
   /* Same opening variant as storefront getPrice / ProductCta: variants[0].
      Do not skip to a later priced variant — that would diverge card vs PDP/cart. */
   const variants = product.variants
@@ -65,7 +97,7 @@ function openingPurchasableVariant(
   if (!id) return null
   const basePrice = variantUnitPrice(v)
   if (basePrice == null) return null
-  return { id, basePrice }
+  return { id, basePrice, originalPrice: variantOriginalUnitPrice(v, basePrice) }
 }
 
 /**
@@ -89,11 +121,21 @@ export function resolveDefaultBuyerConfiguration(
   if (tiers && tiers.length > 0) {
     /* parseMaterialTiers already sorts by position; position 0 = cheapest default. */
     const tier = tiers[0]!
+    const minUnitPrice = resolveMaterialTierPrice(
+      purchasable.basePrice,
+      tier.price_multiplier
+    )
+    /* Original goes through the same tier formula so card / PDP strike-through
+       and cart share one rounding path. */
+    const originalMinUnitPrice =
+      purchasable.originalPrice != null
+        ? resolveMaterialTierPrice(purchasable.originalPrice, tier.price_multiplier)
+        : null
     return {
-      min_unit_price: resolveMaterialTierPrice(
-        purchasable.basePrice,
-        tier.price_multiplier
-      ),
+      min_unit_price: minUnitPrice,
+      ...(originalMinUnitPrice != null && originalMinUnitPrice > minUnitPrice
+        ? { original_min_unit_price: originalMinUnitPrice }
+        : {}),
       material_execution_code: tier.key,
       material_execution_label: tier.label_ru,
       material_price_multiplier: tier.price_multiplier,
@@ -104,6 +146,9 @@ export function resolveDefaultBuyerConfiguration(
 
   return {
     min_unit_price: purchasable.basePrice,
+    ...(purchasable.originalPrice != null
+      ? { original_min_unit_price: purchasable.originalPrice }
+      : {}),
     material_execution_code: null,
     material_execution_label: null,
     material_price_multiplier: 1,

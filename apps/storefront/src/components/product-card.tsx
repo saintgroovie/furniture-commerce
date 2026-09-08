@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { formatRub } from "@/lib/format"
 import { resolveCatalogCardPrice } from "@/lib/catalog-card-price"
+import { resolveSalePrice } from "@/lib/sale-price"
 import type { DisplayGroup } from "@/lib/display-group"
 import { formatGroupHint } from "@/lib/display-group"
 import {
@@ -46,7 +47,7 @@ import {
   resolveCatalogCardHeroSrc,
   resolveCatalogCardMediaBundle,
 } from "@/lib/catalog-card-image"
-import { productTypeBadgeLabels, pdpCopy } from "@/lib/woodright-copy"
+import { productTypeBadgeLabels, pdpCopy, promotionCopy } from "@/lib/woodright-copy"
 
 type Product = {
   id: string
@@ -103,6 +104,12 @@ export function ProductCard({
   const badgeLabel = type ? BADGE_LABELS[type] : undefined
 
   const cardPrice = resolveCatalogCardPrice(product as Record<string, unknown>, displayGroup)
+  /* Native price-list sale only (backend-confirmed original); grouped cards
+     show the group min price, so the strike-through applies to singles only. */
+  const cardSale =
+    displayGroup == null && cardPrice.requestQuoteLabel == null
+      ? resolveSalePrice(product as Record<string, unknown>, cardPrice.amount)
+      : null
 
   const collectionLabel = getCollectionLabel(product as Record<string, unknown>)
   const subcollectionLabel = getSubcollectionLabel(product as Record<string, unknown>)
@@ -357,6 +364,18 @@ export function ProductCard({
           <div className="card-price-row">
             {cardPrice.requestQuoteLabel != null ? (
               <p className="price">{cardPrice.requestQuoteLabel}</p>
+            ) : cardPrice.amount != null && cardSale ? (
+              <p className="price price-sale">
+                <span className="price-sale-now">
+                  <span className="sr-only">{promotionCopy.nowPriceSr} </span>
+                  {cardPrice.prefix}
+                  {formatRub(cardSale.amount)}
+                </span>
+                <span className="price-sale-was">
+                  <span className="sr-only">{promotionCopy.wasPriceSr} </span>
+                  <s>{formatRub(cardSale.originalAmount)}</s>
+                </span>
+              </p>
             ) : cardPrice.amount != null ? (
               <p className="price">{cardPrice.prefix}{formatRub(cardPrice.amount)}</p>
             ) : null}

@@ -7,7 +7,14 @@ import { CatalogFilterControls } from "@/components/catalog-filter-controls"
 import { getSiteUrl } from "@/lib/api/base"
 import { indexingCanonical } from "@/lib/indexing-policy"
 import { getCatalogProducts } from "@/lib/api/products"
-import { toCatalogBrowseClientProducts } from "@/lib/catalog-browse-client-product"
+import {
+  getPromotionSlot,
+  type PromotionSlotPayload,
+} from "@/lib/api/promotion-slot"
+import {
+  toCatalogBrowseClientProducts,
+  toClientPromotionSlot,
+} from "@/lib/catalog-browse-client-product"
 import {
   fetchKidsRoomSetMembership,
   resolveKidsProducts,
@@ -60,11 +67,15 @@ export default async function CatalogPage({
 
   let allRaw: Record<string, unknown>[] = []
   let kidsIds: Set<string>
+  let promotionSlot: PromotionSlotPayload | null = null
   try {
-    const [storeData, membership] = await Promise.all([
+    const [storeData, membership, slot] = await Promise.all([
       getCatalogProducts(),
       fetchKidsRoomSetMembership(),
+      /* Fail-open (empty payload on error) - never blocks the catalog. */
+      bespokeOnly ? Promise.resolve(null) : getPromotionSlot(),
     ])
+    promotionSlot = slot
     const products = storeData.products ?? []
     allRaw = (Array.isArray(products) ? products : []) as Record<
       string,
@@ -186,6 +197,7 @@ export default async function CatalogPage({
         basePath="/catalog"
         initialState={filterState}
         products={toCatalogBrowseClientProducts(scopedMain)}
+        promotionSlot={toClientPromotionSlot(promotionSlot)}
         showBespokeCta
         siteUrl={getSiteUrl()}
         emptyCopy={{

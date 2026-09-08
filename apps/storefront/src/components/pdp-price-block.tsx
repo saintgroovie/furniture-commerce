@@ -14,6 +14,7 @@ import {
   resolveFinishColorMultiplier,
 } from "@/lib/finish-color-premium"
 import { formatRub } from "@/lib/format"
+import { promotionCopy } from "@/lib/woodright-copy"
 
 type Props = {
   /** Preformatted price label from server (existing getPrice / request-quote). */
@@ -23,6 +24,12 @@ type Props = {
    * multipliers so the shown price matches the cart line formula.
    */
   basePrice?: number | null
+  /**
+   * Pre-sale base (native price list `original_amount`). Goes through the same
+   * material × color formula as `basePrice` and renders struck-through next
+   * to the current price. Null / not lower than base → no sale presentation.
+   */
+  originalBasePrice?: number | null
   /**
    * When true, hide price only for an unavailable combination. Defaults
    * (LDSP + first/standard color) show immediately — including SSR before the
@@ -49,6 +56,7 @@ type Props = {
 export function PdpPriceBlock({
   priceLabel,
   basePrice = null,
+  originalBasePrice = null,
   requiresBuyerSelection,
   productKey,
   materialTiers = null,
@@ -66,6 +74,8 @@ export function PdpPriceBlock({
     !gate.combinationAvailable
 
   let effectiveLabel = priceLabel
+  /** Struck-through pre-sale price (same multipliers) when a native sale applies. */
+  let originalLabel: string | null = null
   const colorMultiplier =
     gateOk
       ? resolveFinishColorMultiplier(gate.finishKey, gate.standardFinishKey)
@@ -84,6 +94,18 @@ export function PdpPriceBlock({
       colorMultiplier
     )
     effectiveLabel = requestQuote ? `от ${formatRub(amount)}` : formatRub(amount)
+    if (
+      originalBasePrice != null &&
+      Number.isFinite(originalBasePrice) &&
+      originalBasePrice > basePrice
+    ) {
+      const originalAmount = resolveConfiguredUnitPrice(
+        originalBasePrice,
+        materialMultiplier,
+        colorMultiplier
+      )
+      if (originalAmount > amount) originalLabel = formatRub(originalAmount)
+    }
   } else if (materialTiers && materialTiers.length > 0) {
     const code = materialCodeForProduct(materialSelection, productKey)
     const tier = materialTiers.find((t) => t.code === code) ?? materialTiers[0]
@@ -107,7 +129,18 @@ export function PdpPriceBlock({
 
   return (
     <div className="pdp-price-area" aria-live="polite">
-      {showPrice ? (
+      {showPrice && originalLabel ? (
+        <p className="price product-detail-price price-sale">
+          <span className="price-sale-now">
+            <span className="sr-only">{promotionCopy.nowPriceSr} </span>
+            {effectiveLabel}
+          </span>
+          <span className="price-sale-was">
+            <span className="sr-only">{promotionCopy.wasPriceSr} </span>
+            <s>{originalLabel}</s>
+          </span>
+        </p>
+      ) : showPrice ? (
         <p className="price product-detail-price">{effectiveLabel}</p>
       ) : hint ? (
         <p className="pdp-price-hint">{hint}</p>

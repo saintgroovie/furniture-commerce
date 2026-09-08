@@ -15,6 +15,7 @@
  */
 
 import { sanitizeGreenwichPaintMatrix } from "./greenwich-paint-media"
+import type { PromotionSlotPayload } from "./api/promotion-slot"
 
 const CATALOG_BROWSE_MAX_IMAGES = 24
 const CATALOG_BROWSE_MAX_IMAGES_PER_TOKEN = 3
@@ -166,6 +167,21 @@ function projectVariants(variants: unknown): Array<Record<string, unknown>> {
       : []
     const slim: Record<string, unknown> = { id: v.id, prices }
     if (typeof v.sku === "string") slim.sku = v.sku
+    /* Native sale truth (price list) - keep only the amounts the card reads. */
+    const cp = v.calculated_price
+    if (cp && typeof cp === "object") {
+      const c = cp as Record<string, unknown>
+      if (
+        typeof c.calculated_amount === "number" &&
+        typeof c.original_amount === "number"
+      ) {
+        slim.calculated_price = {
+          calculated_amount: c.calculated_amount,
+          original_amount: c.original_amount,
+          is_calculated_price_price_list: c.is_calculated_price_price_list === true,
+        }
+      }
+    }
     return slim
   })
 }
@@ -197,4 +213,22 @@ export function toCatalogBrowseClientProducts(
   products: Array<Record<string, unknown>>
 ): Array<Record<string, unknown>> {
   return products.map(toCatalogBrowseClientProduct)
+}
+
+/**
+ * Promotion Window payload for the client island: same compact product
+ * projection as the grid cards, so the promo card reads identical fields.
+ * `null` / empty slot → `null` (grid renders without the card).
+ */
+export function toClientPromotionSlot(
+  slot: PromotionSlotPayload | null | undefined
+): PromotionSlotPayload | null {
+  if (!slot || !slot.slot || slot.items.length === 0) return null
+  return {
+    slot: slot.slot,
+    items: slot.items.map((item) => ({
+      ...item,
+      product: toCatalogBrowseClientProduct(item.product),
+    })),
+  }
 }

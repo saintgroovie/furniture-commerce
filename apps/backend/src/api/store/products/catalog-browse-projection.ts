@@ -181,6 +181,22 @@ function projectCatalogVariants(variants: unknown): Array<Record<string, unknown
       prices,
     }
     if (typeof v.sku === "string") slim.sku = v.sku
+    /* Native sale truth (price list) - already slimmed by the loader. */
+    const cp = v.calculated_price
+    if (cp && typeof cp === "object") {
+      const c = cp as Record<string, unknown>
+      if (
+        typeof c.calculated_amount === "number" &&
+        typeof c.original_amount === "number"
+      ) {
+        slim.calculated_price = {
+          calculated_amount: c.calculated_amount,
+          original_amount: c.original_amount,
+          currency_code: c.currency_code,
+          is_calculated_price_price_list: c.is_calculated_price_price_list === true,
+        }
+      }
+    }
     return slim
   })
 }
