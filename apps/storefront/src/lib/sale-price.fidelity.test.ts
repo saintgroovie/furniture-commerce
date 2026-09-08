@@ -148,10 +148,11 @@ assert.equal(resolveSalePrice(product(), null), null)
   assert.match(catalog, /getPromotionSlot\(\)/)
   assert.match(catalog, /promotionSlot=\{toClientPromotionSlot\(promotionSlot\)\}/)
 
-  // Kids catalog must stay plain (no promo prop)
+  // Browse client: window rendered as a right-gutter aside, grid stays products-only
   const browse = readFileSync(join(root, "components/catalog-browse-client.tsx"), "utf8")
-  assert.match(browse, /buildCatalogGridItems\(displayEntries, promotionSlot, state\)/)
-  assert.match(browse, /item\.kind === "promotion"/)
+  assert.match(browse, /shouldShowPromotionWindow\(promotionSlot, displayEntries\.length\)/)
+  assert.match(browse, /className="catalog-promo-sidebar"/)
+  assert.doesNotMatch(browse, /catalog-grid-promotion/)
 }
 
 console.log("sale-price.fidelity.test.ts: ok")

@@ -228,6 +228,8 @@ export const promotionCopy = {
   /** Screen-reader prefix before the current price on PDP / cards. */
   nowPriceSr: "Цена со скидкой",
   thumbsLabel: "Товары в промо-окне",
+  /** aria-label of the right-gutter <aside> that holds the window. */
+  windowLabel: "Промо-окно: товары со скидкой",
 }
 
 export const kidsCatalogCopy = {
